@@ -1,0 +1,39 @@
+{
+  "name": "elevenisland",
+  "version": "1.0.0",
+  "description": "Transform a directory of templates into HTML.",
+  "main": "cmd.js",
+  "scripts": {
+    "default": "node cmd.js",
+    "watch": "node cmd.js --watch",
+    "test": "ava"
+  },
+  "author": {
+    "name": "Zach Leatherman",
+    "email": "zachleatherman@gmail.com",
+    "url": "https://zachleat.com/"
+  },
+  "bin": {
+    "elevenisland": "./cmd.js"
+  },
+  "devDependencies": {
+    "ava": "^0.23.0"
+  },
+  "dependencies": {
+    "consolidate": "^0.15.0",
+    "ejs": "^2.5.7",
+    "fs-extra": "^4.0.2",
+    "globby": "^7.1.1",
+    "glob-watcher": "^4.0.0",
+    "gray-matter": "^3.1.1",
+    "hamljs": "^0.6.2",
+    "handlebars": "^4.0.11",
+    "markdown-it": "^8.4.0",
+    "minimist": "^1.2.0",
+    "mustache": "^2.3.0",
+    "nunjucks": "^3.0.1",
+    "parse-filepath": "^1.0.1",
+    "promise": "^8.0.1",
+    "pug": "^2.0.0-rc.4"
+  }
+}

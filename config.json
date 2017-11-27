@@ -1,0 +1,8 @@
+{
+	"dataFileName": "./data.json",
+	"templateFormats": ["ejs", "md", "hbs", "mustache", "haml", "pug", "njk"],
+	"dir": {
+		"templates": "templates",
+		"output": "dist"
+	}
+}
