@@ -27,6 +27,11 @@ elevenisland --watch
 * Modify template format whitelist in `config.json`, the first one listed there is the default templating engine (default: `ejs`) and will be used to pre-process `data.json`.
 * Markdown doesn’t render `data` and is also pre-processed using the default tempalting engine (default: `ejs`).
 
+## TODO
+
+* Partials/helpers
+* Think about default transforming the current directory instead of `templates/`
+
 ## Tests
 
 ```
