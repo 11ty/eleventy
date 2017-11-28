@@ -5,11 +5,7 @@ import TemplateRender from "../src/TemplateRender";
 // EJS
 test(t => {
 	t.is( (new TemplateRender( "default.ejs" )).parsed.ext, ".ejs" );
-
-	t.is( (new TemplateRender()).getRenderFunction(), ejs.render );
 	t.is( (new TemplateRender()).getRenderFunction()("<p><%= name %></p>", {name: "Zach"}), "<p>Zach</p>" );
-
-	t.is( (new TemplateRender( "default.ejs" )).getRenderFunction(), ejs.render );
 	t.is( (new TemplateRender( "default.ejs" )).getRenderFunction()("<p><%= name %></p>", {name: "Zach"}), "<p>Zach</p>" );
 });
 

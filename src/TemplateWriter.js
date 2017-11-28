@@ -1,6 +1,7 @@
 const fs = require("fs-extra");
 const globby = require('globby');
 const normalize = require('normalize-path');
+const parsePath = require('parse-filepath');
 
 const Template = require( "./Template" );
 const TemplateRender = require( "./TemplateRender" );
@@ -18,11 +19,23 @@ function TemplateWriter(baseDir, files, globalDataPath, outputDir) {
 }
 
 TemplateWriter.prototype.addFiles = function(baseDir, files) {
-	return files.concat( "!" + normalize( baseDir + "/_layouts/*" ) );
+	return files.concat( "!" + normalize( baseDir + "/_layouts/*" ), "!" + normalize( baseDir + "/_components/*" ) );
 };
 
 TemplateWriter.prototype.mergeDataImports = function(data) {
 	data._package = PKG;
+	data._components = {};
+
+	let self = this;
+	globby.sync(this.baseDir + "/_components/*" ).forEach(function(component) {
+		let parsed = parsePath( component );
+		data._components[ parsed.name ] = function(data) {
+			let tmpl = new Template( component, self.globalData, false );
+			let merged = tmpl.mergeData(self.globalData, tmpl.getMatter().data, data);
+			return tmpl.getCompiledTemplate()(merged);
+		};
+	});
+
 	return data;
 };
 
@@ -32,14 +45,9 @@ TemplateWriter.prototype.readJsonAsTemplate = function( path ) {
 
 TemplateWriter.prototype.write = function() {
 	let self = this;
-	globby(this.files).then(function(templates) {
-		templates.forEach(function(path) {
-			console.log( "Reading", path );
-			let tmpl = new Template( path, self.globalData, self.outputDir );
-			tmpl.write();
-		});
-
-		console.log( "Finished", (new Date()).toLocaleTimeString() );
+	globby.sync(this.files).forEach(function(path) {
+		let tmpl = new Template( path, self.globalData, self.outputDir );
+		tmpl.write();
 	});
 };
 

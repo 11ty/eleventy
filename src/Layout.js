@@ -15,7 +15,7 @@ Layout.prototype.getFullPath = function() {
 Layout.prototype.findFileName = function() {
 	let file;
 	if( !fs.existsSync(this.dir) ) {
-		throw Error( "Layout directory does not exist: " + this.dir );
+		throw Error( "Layout directory does not exist for " + this.name + ": " + this.dir );
 	}
 	CFG.templateFormats.forEach(function( extension ) {
 		let filename = this.name + "." + extension;

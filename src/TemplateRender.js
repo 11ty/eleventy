@@ -11,9 +11,31 @@ function TemplateRender( path ) {
 	this.parsed = path ? parsePath( path ) : undefined;
 }
 
+TemplateRender.prototype.getCompiledTemplate = function(str) {
+	if( !this.parsed || this.parsed.ext === ".ejs" ) {
+		return ejs.compile(str);
+	} else if( this.parsed.ext === ".md" ) {
+		throw new Error( "Markdown is not a supported compiled template in TemplateRender.getCompiledTemplate");
+	} else if( this.parsed.ext === ".hbs" ) {
+		return Handlebars.compile(str);
+	} else if( this.parsed.ext === ".mustache" ) {
+		return function(data) {
+			return Mustache.render(str, data).trim();
+		};
+	} else if( this.parsed.ext === ".haml" ) {
+		return haml.compile(str);
+	} else if( this.parsed.ext === ".pug" ) {
+		return pug.compile(str);
+	} else if( this.parsed.ext === ".njk" ) {
+		return (new nunjucks.Template(str)).render;
+	}
+};
+
 TemplateRender.prototype.getRenderFunction = function() {
 	if( !this.parsed || this.parsed.ext === ".ejs" ) {
-		return ejs.render;
+		return function(str, data) {
+			return ejs.compile(str)(data);
+		};
 	} else if( this.parsed.ext === ".md" ) {
 		return function(str, data) {
 			var render = (new TemplateRender()).getRenderFunction();
@@ -22,11 +44,11 @@ TemplateRender.prototype.getRenderFunction = function() {
 	} else if( this.parsed.ext === ".hbs" ) {
 		return function(str, data) {
 			return Handlebars.compile(str)(data).trim();
-		}
+		};
 	} else if( this.parsed.ext === ".mustache" ) {
 		return function(str, data) {
 			return Mustache.render(str, data).trim();
-		}
+		};
 	} else if( this.parsed.ext === ".haml" ) {
 		return function(str, data) {
 			return haml.compile(str)(data).trim();

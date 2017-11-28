@@ -10,6 +10,7 @@ const cfg = require("./config.json");
 // argv._ ? argv._ : 
 const dir = argv.input ? argv.input : cfg.dir.templates;
 
+let start = new Date();
 let files = cfg.templateFormats.map(function(extension) {
 	return normalize( dir + "/**/*." + extension );
 });
@@ -55,5 +56,6 @@ if( argv.version ) {
 	});
 } else {
 	writer.write();
+	console.log( "Finished in", (((new Date()) - start)/1000).toFixed(2),"seconds" );
 }
 

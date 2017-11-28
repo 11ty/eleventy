@@ -12,17 +12,17 @@ function Template( path, globalData, outputDir ) {
 	this.path = path;
 	this.inputContent = this.getInput();
 	this.parsed = parsePath( path );
-	this.dir = this.cleanDir();
 	this.frontMatter = this.getMatter();
 	this.data = this.mergeData( globalData, this.frontMatter.data );
 	this.outputDir = outputDir;
 	this.outputPath = this.getOutputPath();
 }
-Template.prototype.cleanDir = function() {
+Template.prototype.cleanOutputDir = function() {
 	return normalize( this.parsed.dir.replace( /^\.\//, "" ).replace( new RegExp( "^" + cfg.dir.templates ), "" ) );
 };
 Template.prototype.getOutputPath = function() {
-	return normalize( this.outputDir + "/" + ( this.dir ? this.dir + "/" : "" ) + this.parsed.name + ".html" );
+	let dir = this.cleanOutputDir();
+	return normalize( this.outputDir + "/" + ( dir ? dir + "/" : "" ) + this.parsed.name + ".html" );
 };
 Template.prototype.getInput = function() {
 	return fs.readFileSync(this.path, "utf-8");
@@ -31,10 +31,10 @@ Template.prototype.getMatter = function() {
 	return matter( this.inputContent );
 };
 Template.prototype.isIgnored = function() {
-	return this.parsed.name.match(/^\_/) !== null;
+	return this.parsed.name.match(/^\_/) !== null || this.outputDir === false;
 };
 
-Template.prototype.mergeData = function( globalData, pageData ) {
+Template.prototype.mergeData = function( globalData, pageData, localData ) {
 	let data = {};
 	for( let j in globalData ) {
 		data[ j ] = globalData[ j ];
@@ -42,15 +42,20 @@ Template.prototype.mergeData = function( globalData, pageData ) {
 	for( let j in pageData ) {
 		data[ j ] = pageData[ j ];
 	}
+	if( localData ) {
+		for( let j in localData ) {
+			data[ j ] = localData[ j ];
+		}	
+	}
 	return data;
 };
 Template.prototype.getPreRender = function() {
 	return this.frontMatter.content;
 };
 Template.prototype.renderLayout = function(tmpl, data) {
-	let layoutPath = (new Layout( tmpl.data.layout, cfg.dir.templates + "/_layouts" )).getFullPath();
+	let layoutPath = (new Layout( tmpl.data.layout, this.parsed.dir + "/_layouts" )).getFullPath();
 
-	console.log( "Reading layout " + tmpl.data.layout + ":", layoutPath );
+	console.log( "Found layout `" + tmpl.data.layout + "`:", layoutPath );
 	let layout = new Template( layoutPath, {}, this.outputDir );
 	let layoutData = this.mergeData( layout.data, data );
 	layoutData._layoutContent = this.renderContent( tmpl.getPreRender(), data );
@@ -61,8 +66,14 @@ Template.prototype.renderLayout = function(tmpl, data) {
 
 	return rendered;
 };
+Template.prototype.getTemplateRender = function() {
+	return ( new TemplateRender( this.path ));
+};
+Template.prototype.getCompiledTemplate = function() {
+	return this.getTemplateRender().getCompiledTemplate(this.getPreRender());
+};
 Template.prototype.renderContent = function( str, data ) {
-	return ( new TemplateRender( this.path )).getRenderFunction()( str, data );
+	return this.getTemplateRender().getRenderFunction()( str, data );
 };
 Template.prototype.render = function() {
 	if( this.data.layout ) {
@@ -79,7 +90,7 @@ Template.prototype.write = function() {
 		if(err) {
 			throw err;
 		}
-		console.log( "Writing", this.outputPath );
+		console.log( "Writing", this.outputPath, "from", this.path );
 	}
 };
 
