@@ -30,6 +30,8 @@ TemplateWriter.prototype.write = function() {
 			let tmpl = new Template( path, self.globalData );
 			tmpl.write();
 		});
+
+		console.log( "Finished", (new Date()).toLocaleTimeString() );
 	});
 };
 

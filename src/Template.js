@@ -2,6 +2,7 @@ const ejs = require("ejs");
 const fs = require("fs-extra");
 const parsePath = require('parse-filepath');
 const matter = require('gray-matter');
+const normalize = require('normalize-path');
 const TemplateRender = require( "./TemplateRender" );
 const Layout = require( "./Layout" );
 
@@ -11,13 +12,16 @@ function Template( path, globalData ) {
 	this.path = path;
 	this.inputContent = this.getInput();
 	this.parsed = parsePath( path );
-	this.dir = this.parsed.dir.replace( new RegExp( "^" + cfg.dir.templates ), "" );
+	this.dir = this.cleanDir();
 	this.frontMatter = this.getMatter();
 	this.data = this.mergeData( globalData, this.frontMatter.data );
 	this.outputPath = this.getOutputPath();
 }
+Template.prototype.cleanDir = function() {
+	return normalize( this.parsed.dir.replace( /^\.\//, "" ).replace( new RegExp( "^" + cfg.dir.templates ), "" ) );
+};
 Template.prototype.getOutputPath = function() {
-	return cfg.dir.output + "/" + ( this.dir ? this.dir + "/" : "" ) + this.parsed.name + ".html";
+	return normalize( cfg.dir.output + "/" + ( this.dir ? this.dir + "/" : "" ) + this.parsed.name + ".html" );
 };
 Template.prototype.getInput = function() {
 	return fs.readFileSync(this.path, "utf-8");
