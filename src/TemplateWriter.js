@@ -1,12 +1,14 @@
 const fs = require("fs-extra");
 const globby = require('globby');
+const normalize = require('normalize-path');
 
 const Template = require( "./Template" );
 const TemplateRender = require( "./TemplateRender" );
 const PKG = require("../package.json");
 
-function TemplateWriter(files, globalDataPath, outputDir) {
-	this.files = files;
+function TemplateWriter(baseDir, files, globalDataPath, outputDir) {
+	this.baseDir = baseDir;
+	this.files = this.addFiles(baseDir, files);
 	this.globalRenderFunction = (new TemplateRender()).getRenderFunction();
 
 	this.globalDataPath = globalDataPath;
@@ -14,6 +16,10 @@ function TemplateWriter(files, globalDataPath, outputDir) {
 
 	this.outputDir = outputDir;
 }
+
+TemplateWriter.prototype.addFiles = function(baseDir, files) {
+	return files.concat( "!" + normalize( baseDir + "/_layouts/*" ) );
+};
 
 TemplateWriter.prototype.mergeDataImports = function(data) {
 	data._package = PKG;

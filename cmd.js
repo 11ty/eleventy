@@ -8,13 +8,14 @@ const TemplateWriter = require("./src/TemplateWriter");
 const pkg = require("./package.json");
 const cfg = require("./config.json");
 // argv._ ? argv._ : 
-const dir = argv.dir ? argv.dir : cfg.dir.templates;
+const dir = argv.input ? argv.input : cfg.dir.templates;
 
 let files = cfg.templateFormats.map(function(extension) {
 	return normalize( dir + "/**/*." + extension );
-}).concat( "!" + normalize( dir + "/_layouts/*" ) );
+});
 
 let writer = new TemplateWriter(
+	dir,
 	files,
 	cfg.dataFileName,
 	argv.output || cfg.dir.output
@@ -26,13 +27,13 @@ if( argv.version ) {
 	let out = [];
 	out.push( "usage: elevenisland" );
 	out.push( "       elevenisland --watch" );
-	out.push( "       elevenisland --dir=./templates --output=./dist" );
+	out.push( "       elevenisland --input=./templates --output=./dist" );
 	out.push( "" );
 	out.push( "arguments: " );
 	out.push( "  --version" );
 	out.push( "  --watch" );
 	out.push( "       Wait for files to change and automatically rewrite." );
-	out.push( "  --dir" );
+	out.push( "  --input" );
 	out.push( "       Input template files (default: `templates`)" );
 	out.push( "  --output" );
 	out.push( "       Write HTML output to this folder (default: `dist`)" );
