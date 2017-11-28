@@ -29,6 +29,10 @@ Template.prototype.getInput = function() {
 Template.prototype.getMatter = function() {
 	return matter( this.inputContent );
 };
+Template.prototype.isIgnored = function() {
+	return this.parsed.name.match(/^\_/) !== null;
+};
+
 Template.prototype.mergeData = function( globalData, pageData ) {
 	let data = {};
 	for( let j in globalData ) {
@@ -67,11 +71,15 @@ Template.prototype.render = function() {
 	}
 };
 Template.prototype.write = function() {
-	let err = fs.outputFileSync(this.outputPath, this.render());
-	if(err) {
-		throw err;
+	if( this.isIgnored() ) {
+		console.log( "Ignoring", this.outputPath );
+	} else {
+		let err = fs.outputFileSync(this.outputPath, this.render());
+		if(err) {
+			throw err;
+		}
+		console.log( "Writing", this.outputPath );
 	}
-	console.log( "Writing", this.outputPath );
 };
 
 module.exports = Template;

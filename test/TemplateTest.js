@@ -15,3 +15,8 @@ test(t => {
 	let tmpl = new Template("./test/stubs/subfolder/subfolder.ejs", {});
 	t.is(tmpl.getOutputPath(), "dist/test/stubs/subfolder/subfolder.html");
 });
+
+test(t => {
+	let tmpl = new Template("./test/stubs/_ignored.ejs", {});
+	t.is(tmpl.isIgnored(), true);
+});
