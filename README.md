@@ -19,6 +19,13 @@ elevenisland
 
 # Watch
 elevenisland --watch
+
+# Modify directories
+elevenisland --input=./templates --output=./dist
+
+# Version and Help
+elevenisland --version
+elevenisland --help
 ```
 
 ### Advanced
@@ -30,7 +37,6 @@ elevenisland --watch
 ## TODO
 
 * Partials/helpers
-* Think about default transforming the current directory instead of `templates/`
 
 ## Tests
 
