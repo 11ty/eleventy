@@ -16,7 +16,8 @@ let files = cfg.templateFormats.map(function(extension) {
 
 let writer = new TemplateWriter(
 	files,
-	cfg.dataFileName
+	cfg.dataFileName,
+	argv.output || cfg.dir.output
 );
 
 if( argv.version ) {
@@ -25,13 +26,18 @@ if( argv.version ) {
 	let out = [];
 	out.push( "usage: elevenisland" );
 	out.push( "       elevenisland --watch" );
+	out.push( "       elevenisland --dir=./templates --output=./dist" );
 	out.push( "" );
 	out.push( "arguments: " );
 	out.push( "  --version" );
 	out.push( "  --watch" );
 	out.push( "       Wait for files to change and automatically rewrite." );
+	out.push( "  --dir" );
+	out.push( "       Input template files (default: `templates`)" );
+	out.push( "  --output" );
+	out.push( "       Write HTML output to this folder (default: `dist`)" );
 	out.push( "  --help" );
-	out.push( "       Output this message." );
+	out.push( "       Show this message." );
 	console.log( out.join( "\n" ) );
 } else if( argv.watch ) {
 	console.log( "Watching…" );

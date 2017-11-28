@@ -5,12 +5,14 @@ const Template = require( "./Template" );
 const TemplateRender = require( "./TemplateRender" );
 const PKG = require("../package.json");
 
-function TemplateWriter(files, globalDataPath) {
+function TemplateWriter(files, globalDataPath, outputDir) {
 	this.files = files;
 	this.globalRenderFunction = (new TemplateRender()).getRenderFunction();
 
 	this.globalDataPath = globalDataPath;
 	this.globalData = this.mergeDataImports(this.readJsonAsTemplate(globalDataPath));
+
+	this.outputDir = outputDir;
 }
 
 TemplateWriter.prototype.mergeDataImports = function(data) {
@@ -27,7 +29,7 @@ TemplateWriter.prototype.write = function() {
 	globby(this.files).then(function(templates) {
 		templates.forEach(function(path) {
 			console.log( "Reading", path );
-			let tmpl = new Template( path, self.globalData );
+			let tmpl = new Template( path, self.globalData, self.outputDir );
 			tmpl.write();
 		});
 

@@ -8,20 +8,21 @@ const Layout = require( "./Layout" );
 
 const cfg = require("../config.json");
 
-function Template( path, globalData ) {
+function Template( path, globalData, outputDir ) {
 	this.path = path;
 	this.inputContent = this.getInput();
 	this.parsed = parsePath( path );
 	this.dir = this.cleanDir();
 	this.frontMatter = this.getMatter();
 	this.data = this.mergeData( globalData, this.frontMatter.data );
+	this.outputDir = outputDir;
 	this.outputPath = this.getOutputPath();
 }
 Template.prototype.cleanDir = function() {
 	return normalize( this.parsed.dir.replace( /^\.\//, "" ).replace( new RegExp( "^" + cfg.dir.templates ), "" ) );
 };
 Template.prototype.getOutputPath = function() {
-	return normalize( cfg.dir.output + "/" + ( this.dir ? this.dir + "/" : "" ) + this.parsed.name + ".html" );
+	return normalize( this.outputDir + "/" + ( this.dir ? this.dir + "/" : "" ) + this.parsed.name + ".html" );
 };
 Template.prototype.getInput = function() {
 	return fs.readFileSync(this.path, "utf-8");
@@ -50,7 +51,7 @@ Template.prototype.renderLayout = function(tmpl, data) {
 	let layoutPath = (new Layout( tmpl.data.layout, cfg.dir.templates + "/_layouts" )).getFullPath();
 
 	console.log( "Reading layout " + tmpl.data.layout + ":", layoutPath );
-	let layout = new Template( layoutPath, {} );
+	let layout = new Template( layoutPath, {}, this.outputDir );
 	let layoutData = this.mergeData( layout.data, data );
 	layoutData._layoutContent = this.renderContent( tmpl.getPreRender(), data );
 	let rendered = layout.renderContent( layout.getPreRender(), layoutData );
