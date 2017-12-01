@@ -6,7 +6,8 @@
   "scripts": {
     "default": "node cmd.js",
     "watch": "node cmd.js --watch",
-    "test": "ava"
+    "test": "ava",
+    "watch:test": "ava --watch --verbose"
   },
   "author": {
     "name": "Zach Leatherman",
@@ -17,7 +18,7 @@
     "elevenisland": "./cmd.js"
   },
   "devDependencies": {
-    "ava": "^0.23.0"
+    "ava": "^0.24.0"
   },
   "dependencies": {
     "chalk": "^2.3.0",
@@ -29,12 +30,14 @@
     "gray-matter": "^3.1.1",
     "hamljs": "^0.6.2",
     "handlebars": "^4.0.11",
+    "liquidjs": "^2.0.3",
     "markdown-it": "^8.4.0",
     "minimist": "^1.2.0",
     "mustache": "^2.3.0",
     "normalize-path": "^2.1.1",
     "nunjucks": "^3.0.1",
     "parse-filepath": "^1.0.1",
+    "pretty": "^2.0.0",
     "promise": "^8.0.1",
     "pug": "^2.0.0-rc.4"
   }

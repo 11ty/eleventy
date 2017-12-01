@@ -1,8 +1,10 @@
 {
-	"dataFileName": "./data.json",
-	"templateFormats": ["ejs", "md", "hbs", "mustache", "haml", "pug", "njk"],
+	"globalDataFile": "./data.json",
+	"templateFormats": ["ejs", "md", "hbs", "mustache", "haml", "pug", "njk", "liquid"],
 	"dir": {
 		"templates": "templates",
+		"layouts": "_layouts",
+		"components": "_components",
 		"output": "dist"
 	}
 }

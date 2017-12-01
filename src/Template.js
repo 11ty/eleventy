@@ -1,96 +1,161 @@
 const ejs = require("ejs");
 const fs = require("fs-extra");
-const parsePath = require('parse-filepath');
-const matter = require('gray-matter');
-const normalize = require('normalize-path');
-const TemplateRender = require( "./TemplateRender" );
-const Layout = require( "./Layout" );
+const parsePath = require("parse-filepath");
+const matter = require("gray-matter");
+const normalize = require("normalize-path");
+const TemplateRender = require("./TemplateRender");
+const Layout = require("./Layout");
 
 const cfg = require("../config.json");
 
-function Template( path, globalData, outputDir ) {
-	this.path = path;
-	this.inputContent = this.getInput();
-	this.parsed = parsePath( path );
+function Template(path, outputDir, templateData) {
+	this.inputPath = path;
+	this.inputContent = fs.readFileSync(this.inputPath, "utf-8");
+
+	this.parsed = parsePath(path);
 	this.frontMatter = this.getMatter();
-	this.data = this.mergeData( globalData, this.frontMatter.data );
+
+	this.layoutsDir = this.cleanLayoutDir(this.parsed.dir + "/" + cfg.dir.layouts);
+
 	this.outputDir = outputDir;
 	this.outputPath = this.getOutputPath();
+
+	this.postProcessFilters = [];
+	this.templateData = templateData;
+
+	this.templateRender = new TemplateRender(this.inputPath);
 }
-Template.prototype.cleanOutputDir = function() {
-	return normalize( this.parsed.dir.replace( /^\.\//, "" ).replace( new RegExp( "^" + cfg.dir.templates ), "" ) );
+
+Template.prototype.cleanLayoutDir = function(dir) {
+	return (
+		dir
+			.replace(new RegExp("/?" + cfg.dir.layouts, "g"), "")
+			.replace(new RegExp("/?" + cfg.dir.components, "g"), "") +
+		"/" +
+		cfg.dir.layouts
+	);
 };
+
+Template.prototype.cleanOutputDir = function() {
+	return normalize(
+		this.parsed.dir.replace(/^\.\//, "").replace(new RegExp("^" + cfg.dir.templates), "")
+	);
+};
+
 Template.prototype.getOutputPath = function() {
 	let dir = this.cleanOutputDir();
-	return normalize( this.outputDir + "/" + ( dir ? dir + "/" : "" ) + this.parsed.name + ".html" );
+	return normalize(this.outputDir + "/" + (dir ? dir + "/" : "") + this.parsed.name + ".html");
 };
-Template.prototype.getInput = function() {
-	return fs.readFileSync(this.path, "utf-8");
-};
-Template.prototype.getMatter = function() {
-	return matter( this.inputContent );
-};
+
 Template.prototype.isIgnored = function() {
 	return this.parsed.name.match(/^\_/) !== null || this.outputDir === false;
 };
 
-Template.prototype.mergeData = function( globalData, pageData, localData ) {
-	let data = {};
-	for( let j in globalData ) {
-		data[ j ] = globalData[ j ];
-	}
-	for( let j in pageData ) {
-		data[ j ] = pageData[ j ];
-	}
-	if( localData ) {
-		for( let j in localData ) {
-			data[ j ] = localData[ j ];
-		}	
-	}
-	return data;
+Template.prototype.getMatter = function() {
+	return matter(this.inputContent);
 };
+
 Template.prototype.getPreRender = function() {
 	return this.frontMatter.content;
 };
-Template.prototype.renderLayout = function(tmpl, data) {
-	let layoutPath = (new Layout( tmpl.data.layout, this.parsed.dir + "/_layouts" )).getFullPath();
 
-	console.log( "Found layout `" + tmpl.data.layout + "`:", layoutPath );
-	let layout = new Template( layoutPath, {}, this.outputDir );
-	let layoutData = this.mergeData( layout.data, data );
-	layoutData._layoutContent = this.renderContent( tmpl.getPreRender(), data );
-	let rendered = layout.renderContent( layout.getPreRender(), layoutData );
-	if( layout.data.layout ) {
-		return this.renderLayout( layout, layoutData );
+Template.prototype.getLayoutTemplate = function(name) {
+	let path = new Layout(name, this.layoutsDir).getFullPath();
+	return new Template(path, this.outputDir);
+};
+
+Template.prototype.getFrontMatterData = function() {
+	return this.frontMatter.data || {};
+};
+
+Template.prototype.getAllLayoutFrontMatterData = function(tmpl, data, merged) {
+	if (!merged) {
+		merged = data;
 	}
 
-	return rendered;
+	if (data.layout) {
+		let layout = tmpl.getLayoutTemplate(data.layout);
+		let layoutData = layout.getFrontMatterData();
+
+		return this.getAllLayoutFrontMatterData(
+			tmpl,
+			layoutData,
+			Object.assign({}, layoutData, merged)
+		);
+	}
+
+	return merged;
 };
-Template.prototype.getTemplateRender = function() {
-	return ( new TemplateRender( this.path ));
+
+Template.prototype.getData = async function(localData) {
+	let data = {};
+
+	if (this.templateData) {
+		data = await this.templateData.getData();
+	}
+
+	let mergedLayoutData = this.getAllLayoutFrontMatterData(this, this.getFrontMatterData());
+	return Object.assign({}, data, mergedLayoutData, localData);
 };
-Template.prototype.getCompiledTemplate = function() {
-	return this.getTemplateRender().getCompiledTemplate(this.getPreRender());
+
+Template.prototype.renderLayout = async function(tmpl, tmplData) {
+	let layoutName = tmplData.layout;
+	// TODO make layout key to be available to templates (without it causing issues with merge below)
+	delete tmplData.layout;
+
+	let layout = this.getLayoutTemplate(layoutName);
+	let layoutData = await layout.getData(tmplData);
+
+	// console.log( "LAYOUT CONTENT", tmpl.outputPath );
+	// console.log( await this.renderContent( tmpl.getPreRender(), tmplData ) );
+	layoutData._layoutContent = await this.renderContent(tmpl.getPreRender(), tmplData);
+
+	if (layoutData.layout) {
+		return await this.renderLayout(layout, layoutData);
+	}
+
+	return await layout.renderContent(layout.getPreRender(), layoutData);
 };
-Template.prototype.renderContent = function( str, data ) {
-	return this.getTemplateRender().getRenderFunction()( str, data );
+
+Template.prototype.getCompiledPromise = async function() {
+	return await this.templateRender.getCompiledTemplatePromise(this.getPreRender());
 };
-Template.prototype.render = function() {
-	if( this.data.layout ) {
-		return this.renderLayout(this, this.data);
+
+Template.prototype.renderContent = async function(str, data) {
+	return await this.templateRender.render(str, data);
+};
+
+Template.prototype.render = async function() {
+	let data = await this.getData();
+	if (data.layout) {
+		return await this.renderLayout(this, data);
 	} else {
-		return this.renderContent(this.getPreRender(), this.data);
+		return await this.renderContent(this.getPreRender(), data);
 	}
 };
-Template.prototype.write = function() {
-	if( this.isIgnored() ) {
-		console.log( "Ignoring", this.outputPath );
+
+Template.prototype.addPostProcessFilter = function(callback) {
+	this.postProcessFilters.push(callback);
+};
+
+Template.prototype.runFilters = function(str) {
+	this.postProcessFilters.forEach(function(filter) {
+		str = filter(str);
+	});
+	return str;
+};
+
+Template.prototype.write = async function() {
+	if (this.isIgnored()) {
+		console.log("Ignoring", this.outputPath);
 	} else {
-		let err = fs.outputFileSync(this.outputPath, this.render());
-		if(err) {
+		// let renderStr = this.runFilters(await this.render());
+		let renderStr = await this.render();
+		let err = fs.outputFileSync(this.outputPath, renderStr);
+		if (err) {
 			throw err;
 		}
-		console.log( "Writing", this.outputPath, "from", this.path );
+		console.log("Writing", this.outputPath, "from", this.inputPath);
 	}
 };
 

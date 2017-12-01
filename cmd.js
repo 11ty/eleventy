@@ -3,23 +3,27 @@ const watch = require("glob-watcher");
 const chalk = require("chalk");
 const argv = require( "minimist" )( process.argv.slice(2) );
 const normalize = require('normalize-path');
+const TemplateData = require("./src/TemplateData");
+const TemplateComponents = require("./src/TemplateComponents");
 const TemplateWriter = require("./src/TemplateWriter");
 
 const pkg = require("./package.json");
 const cfg = require("./config.json");
 // argv._ ? argv._ : 
-const dir = argv.input ? argv.input : cfg.dir.templates;
+const inputDir = argv.input ? argv.input : cfg.dir.templates;
 
 let start = new Date();
 let files = cfg.templateFormats.map(function(extension) {
-	return normalize( dir + "/**/*." + extension );
+	return normalize( inputDir + "/**/*." + extension );
 });
 
+let components = new TemplateComponents( argv.components || (inputDir + "/" + cfg.dir.components) );
+let data = new TemplateData(argv.data || cfg.globalDataFile, components );
 let writer = new TemplateWriter(
-	dir,
+	inputDir,
 	files,
-	cfg.dataFileName,
-	argv.output || cfg.dir.output
+	argv.output || cfg.dir.output,
+	data
 );
 
 if( argv.version ) {
@@ -38,12 +42,14 @@ if( argv.version ) {
 	out.push( "       Input template files (default: `templates`)" );
 	out.push( "  --output" );
 	out.push( "       Write HTML output to this folder (default: `dist`)" );
+	out.push( "  --data" );
+	out.push( "       Choose a different global data file (default: `data.json`)" );
 	out.push( "  --help" );
 	out.push( "       Show this message." );
 	console.log( out.join( "\n" ) );
 } else if( argv.watch ) {
 	console.log( "Watching…" );
-	var watcher = watch(files.concat(cfg.dataFileName));
+	var watcher = watch(files.concat(cfg.globalDataFile));
 
 	watcher.on("change", function(path, stat) {
 		console.log("File changed:", path);

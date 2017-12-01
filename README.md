@@ -11,6 +11,7 @@ Works with:
 * Haml (.haml)
 * Pug (formerly Jade, .pug)
 * Nunjucks (.njk)
+* [Liquid (.liquid)](https://www.npmjs.com/package/liquidjs)
 
 ## Usage
 
