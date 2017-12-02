@@ -11,15 +11,24 @@ const liquidEngine = require('liquidjs')();
 
 const cfg = require("../config.json");
 
-// TODO make path and str for template content independent, why do we even need a path here?
+// works with full path names or short engine name
 function TemplateRender( path ) {
 	this.parsed = path ? parsePath( path ) : undefined;
 	this.engine = this.parsed && this.parsed.ext ? this.parsed.ext.substr(1) : path;
 	this.defaultMarkdownEngine = cfg.markdownTemplateEngine || "liquid";
+	this.defaultHtmlEngine = cfg.htmlTemplateEngine || "liquid";
 }
 
 TemplateRender.prototype.setDefaultMarkdownEngine = function(markdownEngine) {
 	this.defaultMarkdownEngine = markdownEngine;
+};
+
+TemplateRender.prototype.setDefaultHtmlEngine = function(htmlEngine) {
+	this.defaultHtmlEngine = htmlEngine;
+};
+
+TemplateRender.prototype.isEngine = function(engine) {
+	return this.engine === engine;
 };
 
 TemplateRender.prototype.render = async function(str, data) {
@@ -29,7 +38,8 @@ TemplateRender.prototype.render = async function(str, data) {
 
 TemplateRender.prototype.getCompiledTemplatePromise = async function(str, options) {
 	options = Object.assign({
-		parseMarkdownWith: this.defaultMarkdownEngine
+		parseMarkdownWith: this.defaultMarkdownEngine,
+		parseHtmlWith: this.defaultHtmlEngine
 	}, options);
 
 	if( !this.engine || this.engine === "ejs" ) {
@@ -45,6 +55,19 @@ TemplateRender.prototype.getCompiledTemplatePromise = async function(str, option
 			return function(data) {
 				// do nothing with data if parseMarkdownWith is falsy
 				return md.render(str);
+			};
+		}
+	} else if( this.engine === "html" ) {
+		if( options.parseHtmlWith ) {
+			let fn = await ((new TemplateRender(options.parseHtmlWith)).getCompiledTemplatePromise(str));
+
+			return async function(data) {
+				return await fn(data);
+			};
+		} else {
+			return function(data) {
+				// do nothing with data if parseHtmlWith is falsy
+				return str;
 			};
 		}
 	} else if( this.engine === "hbs" ) {

@@ -21,7 +21,6 @@ function Template(path, inputDir, outputDir, templateData) {
 	}
 	if( outputDir ) {
 		this.outputDir = normalize( outputDir );
-		this.outputPath = this.getOutputPath();
 	} else {
 		this.outputDir = false;
 	}
@@ -32,6 +31,13 @@ function Template(path, inputDir, outputDir, templateData) {
 	this.templateData = templateData;
 
 	this.templateRender = new TemplateRender(this.inputPath);
+
+	// HTML output can’t overwrite the HTML input file.
+	this.isHtmlIOException = this.inputDir === this.outputDir && this.templateRender.isEngine("html");
+
+	if( outputDir ) {
+		this.outputPath = this.getOutputPath();
+	}
 }
 
 Template.prototype.stripLeadingDotSlash = function(dir) {
@@ -48,7 +54,7 @@ Template.prototype.getTemplateSubfolder = function() {
 Template.prototype.getOutputPath = function() {
 	let dir = this.getTemplateSubfolder();
 // console.log( this.inputPath,"|", this.inputDir, "|", dir );
-	return normalize(this.outputDir + "/" + (dir ? dir + "/" : "") + this.parsed.name + ".html");
+	return normalize(this.outputDir + "/" + (dir ? dir + "/" : "") + this.parsed.name + (this.isHtmlIOException ? "-output" : "") + ".html");
 };
 
 Template.prototype.isIgnored = function() {

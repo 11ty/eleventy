@@ -19,6 +19,53 @@ test("Unsupported engine", async t => {
 	await t.throws( (new TemplateRender( "doesnotexist" )).getCompiledTemplatePromise("<p></p>") );
 });
 
+// HTML
+test("HTML", async t => {
+	t.is( (new TemplateRender( "html" )).engine, "html" );
+
+	let fn = await (new TemplateRender( "html" )).getCompiledTemplatePromise("<p>Paragraph</p>");
+	t.is( await fn(), "<p>Paragraph</p>" );
+	t.is( await fn({}), "<p>Paragraph</p>" );
+});
+
+test("HTML: Parses markdown using liquid engine (default, with data)", async t => {
+	let fn = await (new TemplateRender( "html" )).getCompiledTemplatePromise("<h1>{{title}}</h1>");
+	t.is( (await fn({title: "My Title"})).trim(), "<h1>My Title</h1>" );
+});
+
+test("HTML: Parses markdown using ejs engine", async t => {
+	let fn = await (new TemplateRender( "html" )).getCompiledTemplatePromise("<h1><%=title %></h1>", {
+		parseHtmlWith: "ejs"
+	});
+	t.is( (await fn({title: "My Title"})).trim(), "<h1>My Title</h1>" );
+});
+test("HTML: Set markdown engine to false, don’t parse", async t => {
+	let fn = await ((new TemplateRender( "html" )).getCompiledTemplatePromise("<h1>{{title}}</h1>", {
+		parseHtmlWith: false
+	}));
+	t.is( (await fn()).trim(), "<h1>{{title}}</h1>" );
+});
+
+test("HTML: Change the default engine", async t => {
+	let tr = new TemplateRender( "html" );
+	tr.setDefaultHtmlEngine("ejs");
+
+	let fn = await (tr.getCompiledTemplatePromise("<h1><%= title %></h1>"));
+	t.is( (await fn({title: "My Title"})).trim(), "<h1>My Title</h1>" );
+});
+
+test("HTML: Change the default engine and pass in an override", async t => {
+	let tr = new TemplateRender( "html" );
+	tr.setDefaultHtmlEngine("njk");
+
+	let fn = await (tr.getCompiledTemplatePromise("<h1>{{title}}</h1>", {
+		parseHtmlWith: "liquid"
+	}));
+
+	t.is( (await fn({title: "My Title"})).trim(), "<h1>My Title</h1>" );
+});
+
+
 // EJS
 test("EJS", async t => {
 	t.is( (new TemplateRender( "ejs" )).engine, "ejs" );
@@ -33,11 +80,6 @@ test("Markdown", t => {
 });
 
 test("Markdown: Parses base markdown, no data", async t => {
-	let fn = await (new TemplateRender( "md" )).getCompiledTemplatePromise("# Header");
-	t.is( (await fn()).trim(), "<h1>Header</h1>" );
-});
-
-test("Markdown: Parses markdown using liquid engine (default, no data)", async t => {
 	let fn = await (new TemplateRender( "md" )).getCompiledTemplatePromise("# My Title");
 	t.is( (await fn()).trim(), "<h1>My Title</h1>" );
 });
@@ -45,7 +87,6 @@ test("Markdown: Parses markdown using liquid engine (default, with data)", async
 	let fn = await (new TemplateRender( "md" )).getCompiledTemplatePromise("# {{title}}");
 	t.is( (await fn({title: "My Title"})).trim(), "<h1>My Title</h1>" );
 });
-
 test("Markdown: Parses markdown using ejs engine", async t => {
 	let fn = await (new TemplateRender( "md" )).getCompiledTemplatePromise("# <%=title %>", {
 		parseMarkdownWith: "ejs"

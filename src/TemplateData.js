@@ -4,6 +4,7 @@ const TemplateComponents = require("./TemplateComponents");
 const TemplateRender = require("./TemplateRender");
 
 const pkg = require("../package.json");
+const cfg = require("../config.json");
 
 function TemplateData(globalDataPath, templateComponents) {
 	this.globalDataPath = globalDataPath;
@@ -41,7 +42,7 @@ TemplateData.prototype.getJson = async function(path, rawImports) {
 		return {};
 	}
 
-	let fn = await (new TemplateRender()).getCompiledTemplatePromise(rawInput);
+	let fn = await (new TemplateRender(cfg.jsonDataTemplateEngine)).getCompiledTemplatePromise(rawInput);
 
 	// no components allowed here
 	// <%= _components.component({componentStr: 'test'}) %>

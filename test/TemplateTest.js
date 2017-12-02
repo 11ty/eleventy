@@ -48,6 +48,11 @@ test("ignored files start with an underscore", t => {
 	t.is(tmpl.isIgnored(), true);
 });
 
+test("HTML files cannot output to the same as the input directory, throws error.", async t => {
+	let tmpl = new Template("./test/stubs/testing.html", "./test/stubs", "./test/stubs");
+	t.is(tmpl.getOutputPath(), "./test/stubs/testing-output.html");
+});
+
 test("Test raw front matter from template", t => {
 	let tmpl = new Template("./test/stubs/templateFrontMatter.ejs", "./test/stubs/", "./dist");
 	t.truthy( tmpl.inputContent, "template exists and can be opened." );
