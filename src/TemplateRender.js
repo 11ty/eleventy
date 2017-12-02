@@ -9,11 +9,13 @@ const pug = require('pug');
 const nunjucks = require('nunjucks');
 const liquidEngine = require('liquidjs')();
 
+const cfg = require("../config.json");
+
 // TODO make path and str for template content independent, why do we even need a path here?
 function TemplateRender( path ) {
 	this.parsed = path ? parsePath( path ) : undefined;
 	this.engine = this.parsed && this.parsed.ext ? this.parsed.ext.substr(1) : path;
-	this.defaultMarkdownEngine = "ejs";
+	this.defaultMarkdownEngine = cfg.markdownTemplateEngine || "liquid";
 }
 
 TemplateRender.prototype.setDefaultMarkdownEngine = function(markdownEngine) {

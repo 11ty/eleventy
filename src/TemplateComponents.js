@@ -1,9 +1,11 @@
 const Template = require( "./Template" );
 const globby = require('globby');
 const parsePath = require('parse-filepath');
+const cfg = require('../config.json');
 
-function TemplateComponents(componentsPath) {
-	this.componentsPath = componentsPath;
+function TemplateComponents(inputDir) {
+	this.inputDir = inputDir;
+	this.componentsPath = inputDir + "/" + cfg.dir.components;
 }
 
 TemplateComponents.prototype.getComponents = async function(templateData) {
@@ -19,7 +21,7 @@ TemplateComponents.prototype.getComponents = async function(templateData) {
 };
 
 TemplateComponents.prototype.getComponentFn = async function(componentFile, templateData) {
-	let tmpl = new Template( componentFile, false, templateData );
+	let tmpl = new Template( componentFile, this.inputDir, false, templateData );
 	let templateFunction = await tmpl.getCompiledPromise();
 
 	return function(data) {

@@ -7,29 +7,50 @@ const TemplateRender = require("./TemplateRender");
 const pkg = require("../package.json");
 const cfg = require("../config.json");
 
-function TemplateWriter(baseDir, files, outputDir, templateData) {
+function TemplateWriter(baseDir, outputDir, extensions, templateData) {
 	this.baseDir = baseDir;
-	this.files = this.addFiles(baseDir, files);
+	this.templateExtensions = extensions;
 	this.outputDir = outputDir;
 	this.templateData = templateData;
+
+	this.rawFiles = this.templateExtensions.map(function(extension) {
+		return normalize( this.baseDir + "/**/*." + extension );
+	}.bind(this));
+
+	this.files = this.addIgnores(baseDir, this.rawFiles);
 }
 
-TemplateWriter.prototype.addFiles = function(baseDir, files) {
+TemplateWriter.prototype.getFiles = function() {
+	return this.files;
+};
+
+TemplateWriter.prototype.addIgnores = function(baseDir, files) {
 	return files.concat(
+		"!" + normalize(baseDir + "/" + cfg.dir.output + "/*"),
 		"!" + normalize(baseDir + "/" + cfg.dir.layouts + "/*"),
 		"!" + normalize(baseDir + "/" + cfg.dir.components + "/*")
 	);
 };
 
-TemplateWriter.prototype.write = function() {
-	let self = this;
-	globby.sync(this.files).forEach(function(path) {
-		let tmpl = new Template(path, self.outputDir, self.templateData);
-		tmpl.addPostProcessFilter(function(str) {
-			return pretty(str, { ocd: true });
-		});
-		tmpl.write();
+TemplateWriter.prototype._getTemplate = function(path) {
+	let tmpl = new Template(path, this.baseDir, this.outputDir, this.templateData);
+	tmpl.addPostProcessFilter(function(str) {
+		return pretty(str, { ocd: true });
 	});
+	return tmpl;
+};
+
+TemplateWriter.prototype._writeTemplate = async function(path) {
+	let tmpl = this._getTemplate( path );
+	await tmpl.write();
+	return tmpl;
+};
+
+TemplateWriter.prototype.write = async function() {
+	var paths = globby.sync(this.files);
+	for( var j = 0, k = paths.length; j < k; j++ ) {
+		await this._writeTemplate( paths[j] );
+	}
 };
 
 module.exports = TemplateWriter;

@@ -8,17 +8,25 @@ const Layout = require("./Layout");
 
 const cfg = require("../config.json");
 
-function Template(path, outputDir, templateData) {
+function Template(path, inputDir, outputDir, templateData) {
 	this.inputPath = path;
-	this.inputContent = fs.readFileSync(this.inputPath, "utf-8");
-
+	this.inputContent = fs.readFileSync(path, "utf-8");
 	this.parsed = parsePath(path);
+
+	if( inputDir ) {
+		this.inputDir = normalize( inputDir );
+		this.layoutsDir = this.inputDir + "/" + cfg.dir.layouts;
+	} else {
+		this.inputDir = false;
+	}
+	if( outputDir ) {
+		this.outputDir = normalize( outputDir );
+		this.outputPath = this.getOutputPath();
+	} else {
+		this.outputDir = false;
+	}
+
 	this.frontMatter = this.getMatter();
-
-	this.layoutsDir = this.cleanLayoutDir(this.parsed.dir + "/" + cfg.dir.layouts);
-
-	this.outputDir = outputDir;
-	this.outputPath = this.getOutputPath();
 
 	this.postProcessFilters = [];
 	this.templateData = templateData;
@@ -26,24 +34,20 @@ function Template(path, outputDir, templateData) {
 	this.templateRender = new TemplateRender(this.inputPath);
 }
 
-Template.prototype.cleanLayoutDir = function(dir) {
-	return (
-		dir
-			.replace(new RegExp("/?" + cfg.dir.layouts, "g"), "")
-			.replace(new RegExp("/?" + cfg.dir.components, "g"), "") +
-		"/" +
-		cfg.dir.layouts
-	);
+Template.prototype.stripLeadingDotSlash = function(dir) {
+	return dir.replace(/^\.\//, "");
 };
 
-Template.prototype.cleanOutputDir = function() {
-	return normalize(
-		this.parsed.dir.replace(/^\.\//, "").replace(new RegExp("^" + cfg.dir.templates), "")
-	);
+Template.prototype.getTemplateSubfolder = function() {
+	var pathDir = this.parsed.dir;
+	var index = pathDir.indexOf( this.inputDir );
+
+	return this.stripLeadingDotSlash( index > -1 ? pathDir.substr( this.inputDir.length + 1 ) : this.inputDir );
 };
 
 Template.prototype.getOutputPath = function() {
-	let dir = this.cleanOutputDir();
+	let dir = this.getTemplateSubfolder();
+// console.log( this.inputPath,"|", this.inputDir, "|", dir );
 	return normalize(this.outputDir + "/" + (dir ? dir + "/" : "") + this.parsed.name + ".html");
 };
 
@@ -61,7 +65,7 @@ Template.prototype.getPreRender = function() {
 
 Template.prototype.getLayoutTemplate = function(name) {
 	let path = new Layout(name, this.layoutsDir).getFullPath();
-	return new Template(path, this.outputDir);
+	return new Template(path, this.inputDir, this.outputDir);
 };
 
 Template.prototype.getFrontMatterData = function() {
@@ -149,9 +153,9 @@ Template.prototype.write = async function() {
 	if (this.isIgnored()) {
 		console.log("Ignoring", this.outputPath);
 	} else {
-		// let renderStr = this.runFilters(await this.render());
-		let renderStr = await this.render();
-		let err = fs.outputFileSync(this.outputPath, renderStr);
+		let str = await this.render();
+		let filtered = this.runFilters(str);
+		let err = fs.outputFileSync(this.outputPath, filtered);
 		if (err) {
 			throw err;
 		}

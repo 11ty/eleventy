@@ -3,48 +3,59 @@ import TemplateComponents from "../src/TemplateComponents";
 import TemplateData from "../src/TemplateData";
 import Template from "../src/Template";
 import pretty from "pretty";
+import normalize from "normalize-path";
 
 function cleanHtml(str) {
 	return pretty(str, {ocd: true});
 }
 
-test(t => {
-	let tmpl = new Template("./test/stubs/template.ejs", "dist");
-	t.is(tmpl.cleanOutputDir(), "test/stubs");
+test("stripLeadingDotSlash", t => {
+	let tmpl = new Template("./test/stubs/template.ejs", "./test/stubs/", "./dist");
+	t.is( tmpl.stripLeadingDotSlash("./test/stubs"), "test/stubs" );
+	t.is( tmpl.stripLeadingDotSlash("./dist"), "dist" );
+	t.is( tmpl.stripLeadingDotSlash("../dist"), "../dist" );
+	t.is( tmpl.stripLeadingDotSlash("dist"), "dist" );
+});
+
+test("getTemplateSubFolder", t => {
+	let tmpl = new Template("./test/stubs/template.ejs", "./test/stubs/", "./dist");
+	t.is(tmpl.getTemplateSubfolder(), "");
+});
+
+test("getTemplateSubFolder, output is a subdir of input", t => {
+	let tmpl = new Template("./test/stubs/template.ejs", "./test/stubs/", "./test/stubs/_site");
+	t.is(tmpl.getTemplateSubfolder(), "");
 });
 
 test("output path maps to an html file", t => {
-	let tmpl = new Template("./test/stubs/template.ejs", "dist");
-	t.is(tmpl.getOutputPath(), "dist/test/stubs/template.html");
+	let tmpl = new Template("./test/stubs/template.ejs", "./test/stubs/", "./dist");
+	t.is(tmpl.parsed.dir, "./test/stubs");
+	t.is(tmpl.inputDir, "./test/stubs");
+	t.is(tmpl.outputDir, "./dist");
+	t.is(tmpl.getTemplateSubfolder(), "");
+	t.is(tmpl.getOutputPath(), "./dist/template.html");
 });
 
 test("subfolder outputs to a subfolder", t => {
-	let tmpl = new Template("./test/stubs/subfolder/subfolder.ejs", "dist");
-	t.is(tmpl.getOutputPath(), "dist/test/stubs/subfolder/subfolder.html");
+	let tmpl = new Template("./test/stubs/subfolder/subfolder.ejs", "./test/stubs/", "./dist");
+	t.is(tmpl.parsed.dir, "./test/stubs/subfolder");
+	t.is(tmpl.getTemplateSubfolder(), "subfolder");
+	t.is(tmpl.getOutputPath(), "./dist/subfolder/subfolder.html");
 });
 
 test("ignored files start with an underscore", t => {
-	let tmpl = new Template("./test/stubs/_ignored.ejs", "dist");
+	let tmpl = new Template("./test/stubs/_ignored.ejs", "./test/stubs/", "./dist");
 	t.is(tmpl.isIgnored(), true);
 });
 
-test("cleanLayoutDir", t => {
-	let tmpl = new Template("./test/stubs/_ignored.ejs", "dist");
-	t.is(tmpl.cleanLayoutDir("./test/stubs"), "./test/stubs/_layouts");
-	t.is(tmpl.cleanLayoutDir("./test/stubs/_components"), "./test/stubs/_layouts");
-	t.is(tmpl.cleanLayoutDir("./test/stubs/_components/_layouts"), "./test/stubs/_layouts");
-	t.is(tmpl.cleanLayoutDir("./test/stubs/_layouts"), "./test/stubs/_layouts");
-	t.is(tmpl.cleanLayoutDir("./test/stubs/_layouts/_layouts"), "./test/stubs/_layouts");
-});
-
 test("Test raw front matter from template", t => {
-	let tmpl = new Template("./test/stubs/templateFrontMatter.ejs", "dist");
+	let tmpl = new Template("./test/stubs/templateFrontMatter.ejs", "./test/stubs/", "./dist");
 	t.truthy( tmpl.inputContent, "template exists and can be opened." );
 	t.is( tmpl.frontMatter.data.key1, "value1" );
 });
 
 test("Test that getData() works", async t => {
-	let tmpl = new Template("./test/stubs/templateFrontMatter.ejs", "dist");
+	let tmpl = new Template("./test/stubs/templateFrontMatter.ejs", "./test/stubs/", "./dist");
 	let data = await tmpl.getData();
 
 	t.is( data.key1, "value1" );
@@ -57,9 +68,9 @@ test("Test that getData() works", async t => {
 });
 
 test("More advanced getData()", async t => {
-	let componentsObj = new TemplateComponents( "./test/stubs/_components" );
+	let componentsObj = new TemplateComponents( "./test/stubs" );
 	let dataObj = new TemplateData( "./test/stubs/globalData.json", componentsObj );
-	let tmpl = new Template("./test/stubs/templateFrontMatter.ejs", "dist", dataObj);
+	let tmpl = new Template("./test/stubs/templateFrontMatter.ejs", "./test/stubs/", "dist", dataObj);
 	let data = await tmpl.getData({
 		key1: "value1override",
 		key2: "value2"
@@ -73,7 +84,7 @@ test("More advanced getData()", async t => {
 
 test( "One Layout", async t => {
 	let dataObj = new TemplateData( "./test/stubs/globalData.json" );
-	let tmpl = new Template("./test/stubs/templateWithLayout.ejs", "dist", dataObj);
+	let tmpl = new Template("./test/stubs/templateWithLayout.ejs", "./test/stubs/", "dist", dataObj);
 
 	t.is(tmpl.frontMatter.data.layout, "defaultLayout");
 	
@@ -92,7 +103,7 @@ test( "One Layout", async t => {
 
 test( "Two Layouts", async t => {
 	let dataObj = new TemplateData( "./test/stubs/globalData.json" );
-	let tmpl = new Template("./test/stubs/templateTwoLayouts.ejs", "dist", dataObj);
+	let tmpl = new Template("./test/stubs/templateTwoLayouts.ejs", "./test/stubs/", "dist", dataObj);
 
 	t.is(tmpl.frontMatter.data.layout, "layout-a");
 	
@@ -113,7 +124,7 @@ test( "Two Layouts", async t => {
 
 test( "Liquid template", async t => {
 	let dataObj = new TemplateData( "./test/stubs/globalData.json" );
-	let tmpl = new Template("./test/stubs/formatTest.liquid", "dist", dataObj);
+	let tmpl = new Template("./test/stubs/formatTest.liquid", "./test/stubs/", "dist", dataObj);
 
 	t.is( await tmpl.render(), `<p>Zach</p>` );
 });

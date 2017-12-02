@@ -11,11 +11,11 @@ test("create without components", async t => {
 });
 
 test("getData()", async t => {
-	let componentsObj = new TemplateComponents( "./test/stubs/_components" );
+	let componentsObj = new TemplateComponents( "./test/stubs" );
 	let dataObj = new TemplateData( "./test/stubs/globalData.json", componentsObj );
 
 	t.is( dataObj.getData().toString(), "[object Promise]" );
-	
+
 	let globalData = await dataObj.getData();
 	t.is( globalData.datakey1, "datavalue1", "simple data value" );
 	t.is( globalData.datakey2, "elevenisland", "variables, resolve _package to its value." );
@@ -29,11 +29,20 @@ test("getData()", async t => {
 });
 
 test("getJson()", async t => {
-	let componentsObj = new TemplateComponents( "./test/stubs/_components" );
+	let componentsObj = new TemplateComponents( "./test/stubs" );
 	let dataObj = new TemplateData( "./test/stubs/globalData.json", componentsObj );
 
 	let data = await dataObj.getJson(dataObj.globalDataPath, dataObj.rawImports)
 
 	t.is( data.datakey1, "datavalue1" );
 	t.is( data.datakey2, "elevenisland" );
+});
+
+test("getJson() file does not exist", async t => {
+	let dataObj = new TemplateData( "./test/stubs/thisfiledoesnotexist.json" );
+
+	let data = await dataObj.getJson(dataObj.globalDataPath, dataObj.rawImports)
+
+	t.is( typeof data, "object" );
+	t.is( Object.keys( data ).length, 0 );
 });

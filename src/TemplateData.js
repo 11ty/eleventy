@@ -14,8 +14,10 @@ function TemplateData(globalDataPath, templateComponents) {
 }
 
 TemplateData.prototype.getData = async function() {
+	let json = await this.getJson(this.globalDataPath, this.rawImports);
+
 	// without components
-	this.rawData = Object.assign({}, await this.getJson(this.globalDataPath, this.rawImports), this.rawImports );
+	this.rawData = Object.assign({}, json, this.rawImports );
 
 	// with components
 	this.globalData = Object.assign({}, this.rawData, {
@@ -30,8 +32,16 @@ TemplateData.prototype.getData = async function() {
 };
 
 TemplateData.prototype.getJson = async function(path, rawImports) {
-	let rawInput = fs.readFileSync(path, "utf-8");
-	let fn = await new TemplateRender().getCompiledTemplatePromise(rawInput);
+	// todo convert to readFile with await (and promisify?)
+	let rawInput;
+	try {
+		rawInput = fs.readFileSync(path, "utf-8");
+	} catch(e) {
+		// if file does not exist, return empty obj
+		return {};
+	}
+
+	let fn = await (new TemplateRender()).getCompiledTemplatePromise(rawInput);
 
 	// no components allowed here
 	// <%= _components.component({componentStr: 'test'}) %>

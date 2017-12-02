@@ -28,6 +28,16 @@ elevenisland --input=./templates --output=./dist
 elevenisland --help
 ```
 
+### Examples
+
+```
+# Watch a directory for any changes to markdown files, then
+# automatically parse and output as HTML files, respecting
+# directory structure.
+
+elevenisland --input=. --output=. --watch --formats=md
+```
+
 ### Advanced
 
 * Modify `data.json` to set global static data available to templates.

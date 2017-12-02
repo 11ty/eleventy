@@ -12,17 +12,19 @@ const cfg = require("./config.json");
 // argv._ ? argv._ : 
 const inputDir = argv.input ? argv.input : cfg.dir.templates;
 
-let start = new Date();
-let files = cfg.templateFormats.map(function(extension) {
-	return normalize( inputDir + "/**/*." + extension );
-});
+let formats = cfg.templateFormats;
+if( argv.formats && argv.formats !== "*" ) {
+	formats = argv.formats.split(",");
+}
 
-let components = new TemplateComponents( argv.components || (inputDir + "/" + cfg.dir.components) );
+let start = new Date();
+
+let components = new TemplateComponents( inputDir );
 let data = new TemplateData(argv.data || cfg.globalDataFile, components );
 let writer = new TemplateWriter(
 	inputDir,
-	files,
 	argv.output || cfg.dir.output,
+	formats,
 	data
 );
 
@@ -42,14 +44,16 @@ if( argv.version ) {
 	out.push( "       Input template files (default: `templates`)" );
 	out.push( "  --output" );
 	out.push( "       Write HTML output to this folder (default: `dist`)" );
+	out.push( "  --formats=liquid,md" );
+	out.push( "       Whitelist only certain template types (default: `*`)" );
 	out.push( "  --data" );
-	out.push( "       Choose a different global data file (default: `data.json`)" );
+	out.push( "       Set your own global data file (default: `data.json`)" );
 	out.push( "  --help" );
 	out.push( "       Show this message." );
 	console.log( out.join( "\n" ) );
 } else if( argv.watch ) {
 	console.log( "Watching…" );
-	var watcher = watch(files.concat(cfg.globalDataFile));
+	var watcher = watch(writer.getFiles().concat(cfg.globalDataFile));
 
 	watcher.on("change", function(path, stat) {
 		console.log("File changed:", path);
