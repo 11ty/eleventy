@@ -5,7 +5,7 @@ Transform a directory of templates into HTML.
 Works with:
 
 * HTML (`html`)
-* [Liquid (`liquid`)](https://www.npmjs.com/package/liquidjs) (used by Jekyll, defaulted on for HTML and Markdown files unless otherwise specified)
+* [Liquid (`liquid`)](https://www.npmjs.com/package/liquidjs) (used by Jekyll)
 * EJS (`ejs`)
 * Mustache (`mustache`)
 * Handlebars (`hbs`)
