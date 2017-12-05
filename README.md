@@ -6,9 +6,7 @@ Works with:
 
 * HTML (`html`)
 * [Liquid](https://www.npmjs.com/package/liquidjs) (`liquid`) (used by Jekyll)
-  * Includes ✅
 * [EJS](https://www.npmjs.com/package/ejs) (`ejs`)
-  * Includes ✅
 * Mustache (`mustache`)
 * Handlebars (`hbs`)
 * Markdown (`md`)
@@ -75,6 +73,21 @@ For example:
 ### Template Engines with Markdown and HTML
 
 In the `config.json` file, the `markdownTemplateEngine` and `htmlTemplateEngine` values specify which templating engine will be used to process Markdown and HTML respectively. Set them to false to turn off templating engines and just do straight Markdown and HTML conversion (will still remove frontMatter and layout concatenation).
+
+### Template Engine Includes
+
+#### EJS
+
+✅ Preprocessor Directive: `<% include user/show %>`
+✅ Helper Function: `<%- include('user/show', {user: user}) %>`
+
+#### Liquid
+
+_Careful, this does not match the [default Jekyll include syntax](https://jekyllrb.com/docs/includes/)._
+
+✅ `{% include 'color' %}`
+✅ `{% include 'color' with 'red' %}`
+✅ `{% include 'color', color: 'yellow', shape: 'square' %}`
 
 ## Tests
 
