@@ -5,8 +5,9 @@ Transform a directory of templates into HTML.
 Works with:
 
 * HTML (`html`)
-* [Liquid (`liquid`)](https://www.npmjs.com/package/liquidjs) (used by Jekyll)
-* EJS (`ejs`)
+* [Liquid](https://www.npmjs.com/package/liquidjs) (`liquid`) (used by Jekyll)
+	* Layouts and includes are supported.
+* [EJS](https://www.npmjs.com/package/ejs) (`ejs`)
 * Mustache (`mustache`)
 * Handlebars (`hbs`)
 * Markdown (`md`)
@@ -42,22 +43,37 @@ elevenisland --help
 elevenisland --input=. --output=. --watch --formats=md
 ```
 
-#### Don’t overwrite your HTML templates
+#### Don’t overwrite HTML templates
 
 ```
 # Template types output to HTML. So when you take an HTML file
 # as input and attempt to write it to the same directory, we
-# add a "-output" suffix to the file name so that you don’t
-# lose anything.
+# add an "-output.html" suffix to the output file name.
 
 elevenisland --input=. --output=. --formats=html
 ```
 
-### Advanced
+### Data
 
-* (optional) Modify `data.json` to set global static data available to templates.
-* Modify template format whitelist in `config.json`, the first one listed there is the default templating engine (default: `liquid`) and will be used to pre-process `data.json`.
-* Markdown doesn’t render `data` by itself, but this tool will also pre-process it using the default templating engine (default: `ejs`).
+#### Front Matter on Everything
+
+#### Global Data File
+
+Optionally add a global data file (default is `data.json`) to set global static data available to templates. This file name is set in `config.json` under `globalDataFile`.
+
+The global data file will be pre-processed by a template engine specified in `config.json` under `jsonDataTemplateEngine` and by default `package.json` data is available in the `_package` variable.
+
+For example:
+
+```
+{
+	"version": "<%= _package.version %>"
+}
+```
+
+### Template Engines with Markdown and HTML
+
+In the `config.json` file, the `markdownTemplateEngine` and `htmlTemplateEngine` values specify which templating engine will be used to process Markdown and HTML respectively. Set them to false to turn off templating engines and just do straight Markdown and HTML conversion (will still remove frontMatter and layout concatenation).
 
 ## Tests
 

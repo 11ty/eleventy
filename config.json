@@ -8,6 +8,7 @@
 		"templates": "templates",
 		"layouts": "_layouts",
 		"components": "_components",
+		"includes": "_includes",
 		"output": "_site"
 	}
 }

@@ -1,5 +1,5 @@
 const parsePath = require('parse-filepath');
-
+const path = require("path");
 const ejs = require( "ejs" );
 const md = require('markdown-it')();
 const Handlebars = require('handlebars');
@@ -7,16 +7,19 @@ const Mustache = require('mustache');
 const haml = require('hamljs');
 const pug = require('pug');
 const nunjucks = require('nunjucks');
-const liquidEngine = require('liquidjs')();
+const Liquid = require('liquidjs');
 
 const cfg = require("../config.json");
+const TemplatePath = require("./TemplatePath");
 
 // works with full path names or short engine name
-function TemplateRender( path ) {
-	this.parsed = path ? parsePath( path ) : undefined;
-	this.engine = this.parsed && this.parsed.ext ? this.parsed.ext.substr(1) : path;
+function TemplateRender( tmplPath, inputDir ) {
+	this.path = tmplPath;
+	this.parsed = tmplPath ? parsePath( tmplPath ) : undefined;
+	this.engineName = this.parsed && this.parsed.ext ? this.parsed.ext.substr(1) : tmplPath;
 	this.defaultMarkdownEngine = cfg.markdownTemplateEngine || "liquid";
 	this.defaultHtmlEngine = cfg.htmlTemplateEngine || "liquid";
+	this.inputDir = inputDir;
 }
 
 TemplateRender.prototype.setDefaultMarkdownEngine = function(markdownEngine) {
@@ -27,8 +30,18 @@ TemplateRender.prototype.setDefaultHtmlEngine = function(htmlEngine) {
 	this.defaultHtmlEngine = htmlEngine;
 };
 
+TemplateRender.prototype.getEngineName = function() {
+	return this.engineName;
+};
+
+TemplateRender.prototype.getInputDir = function() {
+	return this.inputDir ?
+		TemplatePath.normalize( this.inputDir, cfg.dir.includes ) :
+		TemplatePath.normalize( cfg.dir.templates );
+};
+
 TemplateRender.prototype.isEngine = function(engine) {
-	return this.engine === engine;
+	return this.engineName === engine;
 };
 
 TemplateRender.prototype.render = async function(str, data) {
@@ -42,11 +55,18 @@ TemplateRender.prototype.getCompiledTemplatePromise = async function(str, option
 		parseHtmlWith: this.defaultHtmlEngine
 	}, options);
 
-	if( !this.engine || this.engine === "ejs" ) {
-		return ejs.compile(str);
-	} else if( this.engine === "md" ) {
+	if( this.engineName === "ejs" ) {
+		let fn = ejs.compile(str, {
+			root: "./" + this.getInputDir(),
+			compileDebug: true
+		});
+
+		return function(data) {
+			return fn(data);
+		};
+	} else if( this.engineName === "md" ) {
 		if( options.parseMarkdownWith ) {
-			let fn = await ((new TemplateRender(options.parseMarkdownWith)).getCompiledTemplatePromise(str));
+			let fn = await ((new TemplateRender(options.parseMarkdownWith, this.inputDir)).getCompiledTemplatePromise(str));
 
 			return async function(data) {
 				return md.render(await fn(data));
@@ -57,9 +77,9 @@ TemplateRender.prototype.getCompiledTemplatePromise = async function(str, option
 				return md.render(str);
 			};
 		}
-	} else if( this.engine === "html" ) {
+	} else if( this.engineName === "html" ) {
 		if( options.parseHtmlWith ) {
-			let fn = await ((new TemplateRender(options.parseHtmlWith)).getCompiledTemplatePromise(str));
+			let fn = await ((new TemplateRender(options.parseHtmlWith, this.inputDir)).getCompiledTemplatePromise(str));
 
 			return async function(data) {
 				return await fn(data);
@@ -70,25 +90,30 @@ TemplateRender.prototype.getCompiledTemplatePromise = async function(str, option
 				return str;
 			};
 		}
-	} else if( this.engine === "hbs" ) {
+	} else if( this.engineName === "hbs" ) {
 		return Handlebars.compile(str);
-	} else if( this.engine === "mustache" ) {
+	} else if( this.engineName === "mustache" ) {
 		return function(data) {
 			return Mustache.render(str, data).trim();
 		};
-	} else if( this.engine === "haml" ) {
+	} else if( this.engineName === "haml" ) {
 		return haml.compile(str);
-	} else if( this.engine === "pug" ) {
+	} else if( this.engineName === "pug" ) {
 		return pug.compile(str);
-	} else if( this.engine === "njk" ) {
+	} else if( this.engineName === "njk" ) {
 		let tmpl = new nunjucks.Template(str);
 		return function(data) {
 			return tmpl.render(data);
 		};
-	} else if( this.engine === "liquid" ) {
-		let tmpl = await liquidEngine.parse(str);
+	} else if( this.engineName === "liquid" ) {
+		// warning, the include syntax supported here does not match what jekyll uses.
+		let engine = Liquid({
+			root: [this.getInputDir()],
+			extname: '.liquid'
+		});
+		let tmpl = await engine.parse(str);
 		return async function(data) {
-			return await liquidEngine.render(tmpl, data);
+			return await engine.render(tmpl, data);
 		};
 	} else {
 		throw new Error(engine + " is not a supported template engine.");

@@ -133,3 +133,9 @@ test( "Liquid template", async t => {
 
 	t.is( await tmpl.render(), `<p>Zach</p>` );
 });
+
+test( "Liquid template with include", async t => {
+	let tmpl = new Template("./test/stubs/includer.liquid", "./test/stubs/", "dist");
+
+	t.is( await tmpl.render(), `<p>This is an include.</p>` );
+});

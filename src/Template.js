@@ -30,7 +30,7 @@ function Template(path, inputDir, outputDir, templateData) {
 	this.postProcessFilters = [];
 	this.templateData = templateData;
 
-	this.templateRender = new TemplateRender(this.inputPath);
+	this.templateRender = new TemplateRender(this.inputPath, this.inputDir);
 
 	// HTML output can’t overwrite the HTML input file.
 	this.isHtmlIOException = this.inputDir === this.outputDir && this.templateRender.isEngine("html");

@@ -2,6 +2,7 @@
   "name": "elevenisland",
   "version": "1.0.0",
   "description": "Transform a directory of templates into HTML.",
+  "license": "MIT",
   "main": "cmd.js",
   "scripts": {
     "default": "node cmd.js",
@@ -17,13 +18,17 @@
   "bin": {
     "elevenisland": "./cmd.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/zachleat/elevenisland.git"
+  },
   "devDependencies": {
     "ava": "^0.24.0"
   },
   "dependencies": {
     "chalk": "^2.3.0",
     "consolidate": "^0.15.0",
-    "ejs": "^2.5.7",
+    "ejs": "git+ssh://git@github.com:zachleat/ejs.git#v2.5.7-h1",
     "fs-extra": "^4.0.2",
     "glob-watcher": "^4.0.0",
     "globby": "^7.1.1",
