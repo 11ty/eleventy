@@ -4,7 +4,6 @@ const chalk = require("chalk");
 const argv = require( "minimist" )( process.argv.slice(2) );
 const normalize = require('normalize-path');
 const TemplateData = require("./src/TemplateData");
-const TemplateComponents = require("./src/TemplateComponents");
 const TemplateWriter = require("./src/TemplateWriter");
 
 const pkg = require("./package.json");
@@ -19,8 +18,7 @@ if( argv.formats && argv.formats !== "*" ) {
 
 let start = new Date();
 
-let components = new TemplateComponents( inputDir );
-let data = new TemplateData(argv.data || cfg.globalDataFile, components );
+let data = new TemplateData(argv.data || cfg.globalDataFile );
 let writer = new TemplateWriter(
 	inputDir,
 	argv.output || cfg.dir.output,

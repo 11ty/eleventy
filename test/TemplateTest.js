@@ -1,5 +1,4 @@
 import test from "ava";
-import TemplateComponents from "../src/TemplateComponents";
 import TemplateData from "../src/TemplateData";
 import Template from "../src/Template";
 import pretty from "pretty";
@@ -73,8 +72,7 @@ test("Test that getData() works", async t => {
 });
 
 test("More advanced getData()", async t => {
-	let componentsObj = new TemplateComponents( "./test/stubs" );
-	let dataObj = new TemplateData( "./test/stubs/globalData.json", componentsObj );
+	let dataObj = new TemplateData( "./test/stubs/globalData.json" );
 	let tmpl = new Template("./test/stubs/templateFrontMatter.ejs", "./test/stubs/", "dist", dataObj);
 	let data = await tmpl.getData({
 		key1: "value1override",

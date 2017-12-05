@@ -27,8 +27,7 @@ TemplateWriter.prototype.getFiles = function() {
 TemplateWriter.prototype.addIgnores = function(baseDir, files) {
 	return files.concat(
 		"!" + normalize(baseDir + "/" + cfg.dir.output + "/*"),
-		"!" + normalize(baseDir + "/" + cfg.dir.layouts + "/*"),
-		"!" + normalize(baseDir + "/" + cfg.dir.components + "/*")
+		"!" + normalize(baseDir + "/" + cfg.dir.layouts + "/*")
 	);
 };
 
