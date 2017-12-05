@@ -8,6 +8,8 @@ const haml = require('hamljs');
 const pug = require('pug');
 const nunjucks = require('nunjucks');
 const Liquid = require('liquidjs');
+const fs = require("fs-extra");
+const globby = require("globby");
 
 const cfg = require("../config.json");
 const TemplatePath = require("./TemplatePath");
@@ -20,6 +22,11 @@ function TemplateRender( tmplPath, inputDir ) {
 	this.defaultMarkdownEngine = cfg.markdownTemplateEngine || "liquid";
 	this.defaultHtmlEngine = cfg.htmlTemplateEngine || "liquid";
 	this.inputDir = inputDir;
+	this.mustachePartials = {};
+
+	if( this.engineName === "mustache" ) {
+		this.mustachePartials = this.cacheMustachePartials();
+	}
 }
 
 TemplateRender.prototype.setDefaultMarkdownEngine = function(markdownEngine) {
@@ -37,11 +44,21 @@ TemplateRender.prototype.getEngineName = function() {
 TemplateRender.prototype.getInputDir = function() {
 	return this.inputDir ?
 		TemplatePath.normalize( this.inputDir, cfg.dir.includes ) :
-		TemplatePath.normalize( cfg.dir.templates );
+		TemplatePath.normalize( cfg.dir.templates, cfg.dir.includes );
 };
 
 TemplateRender.prototype.isEngine = function(engine) {
 	return this.engineName === engine;
+};
+
+TemplateRender.prototype.cacheMustachePartials = function() {
+	let partials = {};
+	let partialFiles = globby.sync( this.getInputDir() + "/*.mustache" );
+	for( var j = 0, k = partialFiles.length; j < k; j++ ) {
+		let key = parsePath( partialFiles[ j ] ).name;
+		partials[ key ] = fs.readFileSync(partialFiles[ j ], "utf-8");
+	}
+	return partials;
 };
 
 TemplateRender.prototype.render = async function(str, data) {
@@ -94,8 +111,8 @@ TemplateRender.prototype.getCompiledTemplatePromise = async function(str, option
 		return Handlebars.compile(str);
 	} else if( this.engineName === "mustache" ) {
 		return function(data) {
-			return Mustache.render(str, data).trim();
-		};
+			return Mustache.render(str, data, this.mustachePartials).trim();
+		}.bind( this );
 	} else if( this.engineName === "haml" ) {
 		return haml.compile(str);
 	} else if( this.engineName === "pug" ) {

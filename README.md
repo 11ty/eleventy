@@ -74,20 +74,25 @@ For example:
 
 In the `config.json` file, the `markdownTemplateEngine` and `htmlTemplateEngine` values specify which templating engine will be used to process Markdown and HTML respectively. Set them to false to turn off templating engines and just do straight Markdown and HTML conversion (will still remove frontMatter and layout concatenation).
 
-### Template Engine Includes
+### Template Engine Includes/Partials/Helpers
 
-#### EJS
+#### EJS Includes
 
-✅ Preprocessor Directive: `<% include user/show %>`
-✅ Helper Function: `<%- include('user/show', {user: user}) %>`
+✅ Preprocessor Directive: `<% include user %>` looks for `_includes/user.ejs`
+✅ Preprocessor Directive Subdirectory: `<% include user/show %>` looks for `_includes/user/show.ejs`
+✅ Newer Syntax, Helper Function with Data: `<%- include('user/show', {user: 'Ava'}) %>` looks for `_includes/user/show.ejs`
 
-#### Liquid
+#### Liquid Includes
 
-_Careful, this does not match the [default Jekyll include syntax](https://jekyllrb.com/docs/includes/)._
+_Careful, this does not match the [default Jekyll Liquid include syntax](https://jekyllrb.com/docs/includes/)._
 
-✅ `{% include 'color' %}`
-✅ `{% include 'color' with 'red' %}`
-✅ `{% include 'color', color: 'yellow', shape: 'square' %}`
+✅ `{% include 'user' %}` looks for `_includes/user.liquid`
+✅ `{% include 'user' with 'Ava' %}`
+✅ `{% include 'user', user1: 'Ava', user2: 'Bill' %}`
+
+#### Mustache.js Partials
+
+✅ `{{> user}}` looks for `_includes/user.mustache`
 
 ## Tests
 

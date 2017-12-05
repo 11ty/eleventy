@@ -26,33 +26,35 @@ test("Unsupported engine", async t => {
 });
 
 // HTML
-test("HTML", async t => {
+test("HTML", t => {
 	t.is( (new TemplateRender( "html" )).getEngineName(), "html" );
+});
 
+test("HTML Render", async t => {
 	let fn = await (new TemplateRender( "html" )).getCompiledTemplatePromise("<p>Paragraph</p>");
 	t.is( await fn(), "<p>Paragraph</p>" );
 	t.is( await fn({}), "<p>Paragraph</p>" );
 });
 
-test("HTML: Parses markdown using liquid engine (default, with data)", async t => {
+test("HTML Render: Parses markdown using liquid engine (default, with data)", async t => {
 	let fn = await (new TemplateRender( "html" )).getCompiledTemplatePromise("<h1>{{title}}</h1>");
 	t.is( (await fn({title: "My Title"})).trim(), "<h1>My Title</h1>" );
 });
 
-test("HTML: Parses markdown using ejs engine", async t => {
+test("HTML Render: Parses markdown using ejs engine", async t => {
 	let fn = await (new TemplateRender( "html" )).getCompiledTemplatePromise("<h1><%=title %></h1>", {
 		parseHtmlWith: "ejs"
 	});
 	t.is( (await fn({title: "My Title"})).trim(), "<h1>My Title</h1>" );
 });
-test("HTML: Set markdown engine to false, don’t parse", async t => {
+test("HTML Render: Set markdown engine to false, don’t parse", async t => {
 	let fn = await ((new TemplateRender( "html" )).getCompiledTemplatePromise("<h1>{{title}}</h1>", {
 		parseHtmlWith: false
 	}));
 	t.is( (await fn()).trim(), "<h1>{{title}}</h1>" );
 });
 
-test("HTML: Change the default engine", async t => {
+test("HTML Render: Change the default engine", async t => {
 	let tr = new TemplateRender( "html" );
 	tr.setDefaultHtmlEngine("ejs");
 
@@ -60,7 +62,7 @@ test("HTML: Change the default engine", async t => {
 	t.is( (await fn({title: "My Title"})).trim(), "<h1>My Title</h1>" );
 });
 
-test("HTML: Change the default engine and pass in an override", async t => {
+test("HTML Render: Change the default engine and pass in an override", async t => {
 	let tr = new TemplateRender( "html" );
 	tr.setDefaultHtmlEngine("njk");
 
@@ -73,26 +75,28 @@ test("HTML: Change the default engine and pass in an override", async t => {
 
 
 // EJS
-test("EJS", async t => {
+test("EJS", t => {
 	t.is( (new TemplateRender( "ejs" )).getEngineName(), "ejs" );
+});
 
+test("EJS Render", async t => {
 	let fn = await (new TemplateRender( "ejs" )).getCompiledTemplatePromise("<p><%= name %></p>");
 	t.is( await fn({name: "Zach"}), "<p>Zach</p>" );
 });
 
-test("EJS Include", async t => {
+test("EJS Render Include", async t => {
 	t.is( path.resolve(undefined, "/included" ), "/included" );
 
 	let fn = await (new TemplateRender( "ejs", "./test/stubs/" )).getCompiledTemplatePromise("<p><% include /included %></p>");
 	t.is(await fn(), "<p>This is an include.</p>" );
 });
 
-test("EJS Include, New Style", async t => {
+test("EJS Render Include, New Style", async t => {
 	let fn = await (new TemplateRender( "ejs", "./test/stubs/" )).getCompiledTemplatePromise("<p><%- include('/included', {}) %></p>");
 	t.is(await fn(), "<p>This is an include.</p>" );
 });
 
-test("EJS Include, New Style with Data", async t => {
+test("EJS Render Include, New Style with Data", async t => {
 	let fn = await (new TemplateRender( "ejs", "./test/stubs/" )).getCompiledTemplatePromise("<p><%- include('/includedvar', { name: 'Bill' }) %></p>");
 	t.is(await fn(), "<p>This is an Bill.</p>" );
 });
@@ -103,28 +107,31 @@ test("Markdown", t => {
 	t.is( (new TemplateRender( "md" )).getEngineName(), "md" );
 });
 
-test("Markdown: Parses base markdown, no data", async t => {
+test("Markdown Render: Parses base markdown, no data", async t => {
 	let fn = await (new TemplateRender( "md" )).getCompiledTemplatePromise("# My Title");
 	t.is( (await fn()).trim(), "<h1>My Title</h1>" );
 });
-test("Markdown: Parses markdown using liquid engine (default, with data)", async t => {
+
+test("Markdown Render: Parses markdown using liquid engine (default, with data)", async t => {
 	let fn = await (new TemplateRender( "md" )).getCompiledTemplatePromise("# {{title}}");
 	t.is( (await fn({title: "My Title"})).trim(), "<h1>My Title</h1>" );
 });
-test("Markdown: Parses markdown using ejs engine", async t => {
+
+test("Markdown Render: Parses markdown using ejs engine", async t => {
 	let fn = await (new TemplateRender( "md" )).getCompiledTemplatePromise("# <%=title %>", {
 		parseMarkdownWith: "ejs"
 	});
 	t.is( (await fn({title: "My Title"})).trim(), "<h1>My Title</h1>" );
 });
-test("Markdown: Set markdown engine to false, don’t parse", async t => {
+
+test("Markdown Render: Set markdown engine to false, don’t parse", async t => {
 	let fn = await ((new TemplateRender( "md" )).getCompiledTemplatePromise("# {{title}}", {
 		parseMarkdownWith: false
 	}));
 	t.is( (await fn()).trim(), "<h1>{{title}}</h1>" );
 });
 
-test("Markdown: Change the default engine", async t => {
+test("Markdown Render: Change the default engine", async t => {
 	let tr = new TemplateRender( "md" );
 	tr.setDefaultMarkdownEngine("ejs");
 
@@ -132,7 +139,7 @@ test("Markdown: Change the default engine", async t => {
 	t.is( (await fn({title: "My Title"})).trim(), "<h1>My Title</h1>" );
 });
 
-test("Markdown: Change the default engine and pass in an override", async t => {
+test("Markdown Render: Change the default engine and pass in an override", async t => {
 	let tr = new TemplateRender( "md" );
 	tr.setDefaultMarkdownEngine("njk");
 
@@ -144,9 +151,11 @@ test("Markdown: Change the default engine and pass in an override", async t => {
 });
 
 // Handlebars
-test("Handlebars", async t => {
+test("Handlebars", t => {
 	t.is( (new TemplateRender( "hbs" )).getEngineName(), "hbs" );
+});
 
+test("Handlebars Render", async t => {
 	let fn = await (new TemplateRender( "hbs" )).getCompiledTemplatePromise("<p>{{name}}</p>");
 	t.is( await fn({name: "Zach"}), "<p>Zach</p>" );
 });
@@ -154,44 +163,64 @@ test("Handlebars", async t => {
 // Mustache
 test("Mustache", async t => {
 	t.is( (new TemplateRender( "mustache" )).getEngineName(), "mustache" );
+});
 
+test("Mustache Render", async t => {
 	let fn = await (new TemplateRender( "mustache" )).getCompiledTemplatePromise("<p>{{name}}</p>");
 	t.is( await fn({name: "Zach"}), "<p>Zach</p>" );
 });
 
-// Haml
-test("Haml", async t => {
-	t.is( (new TemplateRender( "haml" )).getEngineName(), "haml" );
+test("Mustache Render Partial", async t => {
+	let fn = await (new TemplateRender( "mustache", "./test/stubs/" )).getCompiledTemplatePromise("<p>{{> included}}</p>");
+	t.is( await fn(), "<p>This is an include.</p>" );
+});
 
+test("Mustache Render Partial", async t => {
+	let fn = await (new TemplateRender( "mustache", "./test/stubs/" )).getCompiledTemplatePromise("<p>{{> includedvar}}</p>");
+	t.is( await fn({name: "Zach"}), "<p>This is a Zach.</p>" );
+});
+
+// Haml
+test("Haml", t => {
+	t.is( (new TemplateRender( "haml" )).getEngineName(), "haml" );
+});
+
+test("Haml Render", async t => {
 	let fn = await (new TemplateRender( "haml" )).getCompiledTemplatePromise("%p= name");
 	t.is( (await fn({name: "Zach"})).trim(), "<p>Zach</p>" );
 });
 
 // Pug
-test("Pug", async t => {
+test("Pug", t => {
 	t.is( (new TemplateRender( "pug" )).getEngineName(), "pug" );
+});
 
+test("Pug Render", async t => {
 	let fn = await (new TemplateRender( "pug" )).getCompiledTemplatePromise("p= name");
 	t.is( await fn({name: "Zach"}), "<p>Zach</p>" );
 });
 
 // Nunjucks
-test("Nunjucks", async t => {
+test("Nunjucks", t => {
 	t.is( (new TemplateRender( "njk" )).getEngineName(), "njk" );
+});
 
+test("Nunjucks Render", async t => {
 	let fn = await (new TemplateRender( "njk" )).getCompiledTemplatePromise("<p>{{ name }}</p>");
 	t.is( await fn({name: "Zach"}), "<p>Zach</p>" );
 });
 
 // Liquid
-test("Liquid", async t => {
+test("Liquid", t => {
 	t.is( (new TemplateRender( "liquid" )).getEngineName(), "liquid" );
+});
 
+test("Liquid Render", async t => {
 	let fn = await (new TemplateRender( "liquid" )).getCompiledTemplatePromise("<p>{{name | capitalize}}</p>");
 	t.is(await fn({name: "tim"}), "<p>Tim</p>" );
 });
 
-test("Liquid Include", async t => {
+test("Liquid Render Include", async t => {
 	t.is( (new TemplateRender( "liquid", "./test/stubs/" )).getEngineName(), "liquid" );
 
 	let fn = await (new TemplateRender( "liquid_include_test.liquid", "./test/stubs/" )).getCompiledTemplatePromise("<p>{% include 'included' %}</p>");
