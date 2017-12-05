@@ -6,8 +6,9 @@ Works with:
 
 * HTML (`html`)
 * [Liquid](https://www.npmjs.com/package/liquidjs) (`liquid`) (used by Jekyll)
-	* Layouts and includes are supported.
+  * Includes ✅
 * [EJS](https://www.npmjs.com/package/ejs) (`ejs`)
+  * Includes ✅
 * Mustache (`mustache`)
 * Handlebars (`hbs`)
 * Markdown (`md`)

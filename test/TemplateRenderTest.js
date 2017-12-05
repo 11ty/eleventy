@@ -87,6 +87,17 @@ test("EJS Include", async t => {
 	t.is(await fn(), "<p>This is an include.</p>" );
 });
 
+test("EJS Include, New Style", async t => {
+	let fn = await (new TemplateRender( "ejs", "./test/stubs/" )).getCompiledTemplatePromise("<p><%- include('/included', {}) %></p>");
+	t.is(await fn(), "<p>This is an include.</p>" );
+});
+
+test("EJS Include, New Style with Data", async t => {
+	let fn = await (new TemplateRender( "ejs", "./test/stubs/" )).getCompiledTemplatePromise("<p><%- include('/includedvar', { name: 'Bill' }) %></p>");
+	t.is(await fn(), "<p>This is an Bill.</p>" );
+});
+
+
 // Markdown
 test("Markdown", t => {
 	t.is( (new TemplateRender( "md" )).getEngineName(), "md" );
