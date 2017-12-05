@@ -22,10 +22,10 @@ function TemplateRender( tmplPath, inputDir ) {
 	this.defaultMarkdownEngine = cfg.markdownTemplateEngine || "liquid";
 	this.defaultHtmlEngine = cfg.htmlTemplateEngine || "liquid";
 	this.inputDir = inputDir;
-	this.mustachePartials = {};
+	this.partials = this.cachePartialFiles( this.engineName );
 
-	if( this.engineName === "mustache" ) {
-		this.mustachePartials = this.cacheMustachePartials();
+	if( this.engineName === "hbs" ) {
+		this.registerHandlebarsPartials();
 	}
 }
 
@@ -51,14 +51,21 @@ TemplateRender.prototype.isEngine = function(engine) {
 	return this.engineName === engine;
 };
 
-TemplateRender.prototype.cacheMustachePartials = function() {
+TemplateRender.prototype.cachePartialFiles = function(engineName) {
 	let partials = {};
-	let partialFiles = globby.sync( this.getInputDir() + "/*.mustache" );
+	// TODO: reuse mustache partials in handlebars?
+	let partialFiles = globby.sync( this.getInputDir() + "/*." + engineName );
 	for( var j = 0, k = partialFiles.length; j < k; j++ ) {
 		let key = parsePath( partialFiles[ j ] ).name;
 		partials[ key ] = fs.readFileSync(partialFiles[ j ], "utf-8");
 	}
 	return partials;
+};
+
+TemplateRender.prototype.registerHandlebarsPartials = function() {
+	for( var name in this.partials ) {
+		Handlebars.registerPartial( name, this.partials[ name ] );
+	}
 };
 
 TemplateRender.prototype.render = async function(str, data) {
@@ -108,10 +115,13 @@ TemplateRender.prototype.getCompiledTemplatePromise = async function(str, option
 			};
 		}
 	} else if( this.engineName === "hbs" ) {
-		return Handlebars.compile(str);
+		let fn = Handlebars.compile(str);
+		return function(data) {
+			return fn(data);
+		};
 	} else if( this.engineName === "mustache" ) {
 		return function(data) {
-			return Mustache.render(str, data, this.mustachePartials).trim();
+			return Mustache.render(str, data, this.partials).trim();
 		}.bind( this );
 	} else if( this.engineName === "haml" ) {
 		return haml.compile(str);

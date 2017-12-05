@@ -7,8 +7,8 @@ Works with:
 * HTML (`html`)
 * [Liquid](https://www.npmjs.com/package/liquidjs) (`liquid`) (used by Jekyll)
 * [EJS](https://www.npmjs.com/package/ejs) (`ejs`)
-* Mustache (`mustache`)
-* Handlebars (`hbs`)
+* [Handlebars](https://github.com/wycats/handlebars.js) (`hbs`)
+* [Mustache](https://github.com/janl/mustache.js/) (`mustache`)
 * Markdown (`md`)
 * Haml (`haml`)
 * Pug (formerly Jade, `pug`)
@@ -80,19 +80,25 @@ In the `config.json` file, the `markdownTemplateEngine` and `htmlTemplateEngine`
 
 ✅ Preprocessor Directive: `<% include user %>` looks for `_includes/user.ejs`
 ✅ Preprocessor Directive Subdirectory: `<% include user/show %>` looks for `_includes/user/show.ejs`
-✅ Newer Syntax, Helper Function with Data: `<%- include('user/show', {user: 'Ava'}) %>` looks for `_includes/user/show.ejs`
+✅ Helper, pass in local data: `<%- include('user/show', {user: 'Ava'}) %>` looks for `_includes/user/show.ejs`
 
 #### Liquid Includes
 
 _Careful, this does not match the [default Jekyll Liquid include syntax](https://jekyllrb.com/docs/includes/)._
 
 ✅ `{% include 'user' %}` looks for `_includes/user.liquid`
-✅ `{% include 'user' with 'Ava' %}`
-✅ `{% include 'user', user1: 'Ava', user2: 'Bill' %}`
+✅ Pass in local data: `{% include 'user' with 'Ava' %}`
+✅ Pass in local data: `{% include 'user', user1: 'Ava', user2: 'Bill' %}`
 
 #### Mustache.js Partials
 
 ✅ `{{> user}}` looks for `_includes/user.mustache`
+
+#### handlebars.js Partials
+
+✅ `{{> user}}` looks for `_includes/user.hbs`
+🔜 Helpers
+
 
 ## Tests
 
