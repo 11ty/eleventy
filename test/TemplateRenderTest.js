@@ -210,6 +210,33 @@ test("Pug Render", async t => {
 	t.is( await fn({name: "Zach"}), "<p>Zach</p>" );
 });
 
+test("Pug Render Include", async t => {
+	let fn = await (new TemplateRender( "pug", "./test/stubs/" )).getCompiledTemplatePromise(`p
+	include /included.pug`);
+	t.is( await fn({name: "Zach"}), "<p><span>This is an include.</span></p>" );
+});
+
+test("Pug Render Include with Data", async t => {
+	let fn = await (new TemplateRender( "pug", "./test/stubs/" )).getCompiledTemplatePromise(`p
+	include /includedvar.pug`);
+	t.is( await fn({name: "Zach"}), "<p><span>This is Zach.</span></p>" );
+});
+
+test("Pug Render Include with Data, inline var overrides data", async t => {
+	let fn = await (new TemplateRender( "pug", "./test/stubs/" )).getCompiledTemplatePromise(`
+- var name = "Bill";
+p
+	include /includedvar.pug`);
+	t.is( await fn({name: "Zach"}), "<p><span>This is Bill.</span></p>" );
+});
+
+test("Pug Render Extends (Layouts)", async t => {
+	let fn = await (new TemplateRender( "pug", "./test/stubs/" )).getCompiledTemplatePromise(`extends /layout.pug
+block content
+  h1= name`);
+	t.is( await fn({name: "Zach"}), "<html><body><h1>Zach</h1></body></html>" );
+});
+
 // Nunjucks
 test("Nunjucks", t => {
 	t.is( (new TemplateRender( "njk" )).getEngineName(), "njk" );

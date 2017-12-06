@@ -126,7 +126,9 @@ TemplateRender.prototype.getCompiledTemplatePromise = async function(str, option
 	} else if( this.engineName === "haml" ) {
 		return haml.compile(str);
 	} else if( this.engineName === "pug" ) {
-		return pug.compile(str);
+		return pug.compile(str, {
+			basedir: this.getInputDir()
+		});
 	} else if( this.engineName === "njk" ) {
 		let tmpl = new nunjucks.Template(str);
 		return function(data) {
