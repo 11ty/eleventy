@@ -247,6 +247,26 @@ test("Nunjucks Render", async t => {
 	t.is( await fn({name: "Zach"}), "<p>Zach</p>" );
 });
 
+test("Nunjucks Render Extends", async t => {
+	let fn = await (new TemplateRender( "njk", "test/stubs" )).getCompiledTemplatePromise("{% extends 'base.njk' %}{% block content %}This is a child.{% endblock %}");
+	t.is( await fn(), "<p>This is a child.</p>" );
+});
+
+test("Nunjucks Render Include", async t => {
+	let fn = await (new TemplateRender( "njk", "test/stubs" )).getCompiledTemplatePromise("<p>{% include 'included.njk' %}</p>");
+	t.is( await fn(), "<p>This is an include.</p>" );
+});
+
+test("Nunjucks Render Imports", async t => {
+	let fn = await (new TemplateRender( "njk", "test/stubs" )).getCompiledTemplatePromise("{% import 'imports.njk' as forms %}<div>{{ forms.label('Name') }}</div>");
+	t.is( await fn(), "<div><label>Name</label></div>" );
+});
+
+test("Nunjucks Render Imports From", async t => {
+	let fn = await (new TemplateRender( "njk", "test/stubs" )).getCompiledTemplatePromise("{% from 'imports.njk' import label %}<div>{{ label('Name') }}</div>");
+	t.is( await fn(), "<div><label>Name</label></div>" );
+});
+
 // Liquid
 test("Liquid", t => {
 	t.is( (new TemplateRender( "liquid" )).getEngineName(), "liquid" );

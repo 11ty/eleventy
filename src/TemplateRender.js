@@ -27,6 +27,10 @@ function TemplateRender( tmplPath, inputDir ) {
 	if( this.engineName === "hbs" ) {
 		this.registerHandlebarsPartials();
 	}
+
+	if( this.engineName === "njk" ) {
+		this.njkEnv = new nunjucks.Environment(new nunjucks.FileSystemLoader(this.getInputDir()));
+	}
 }
 
 TemplateRender.prototype.setDefaultMarkdownEngine = function(markdownEngine) {
@@ -130,7 +134,7 @@ TemplateRender.prototype.getCompiledTemplatePromise = async function(str, option
 			basedir: this.getInputDir()
 		});
 	} else if( this.engineName === "njk" ) {
-		let tmpl = new nunjucks.Template(str);
+		let tmpl = nunjucks.compile(str, this.njkEnv);
 		return function(data) {
 			return tmpl.render(data);
 		};
