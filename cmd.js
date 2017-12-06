@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 const watch = require("glob-watcher");
-const chalk = require("chalk");
 const argv = require( "minimist" )( process.argv.slice(2) );
 const normalize = require('normalize-path');
 const TemplateData = require("./src/TemplateData");
