@@ -59,9 +59,9 @@ elevenisland --input=. --output=. --formats=html
 
 #### Front Matter on Everything
 
-#### Global Data File
+#### (Optional) Global Data File
 
-Optionally add a global data file (default is `data.json`) to set global static data available to templates. This file name is can be set using the `globalDataFile` configuration option.
+Optionally add a global data file to set global static data available to all templates. See the `globalDataFile` configuration below.
 
 The global data file will be pre-processed by a template engine specified under the `jsonDataTemplateEngine` configuration option. Note that `package.json` data is available to these options under the `_package` variable.
 
@@ -77,18 +77,18 @@ For example:
 
 Add a `.elevenisland.js` file to your directory to override these configuration options with your own preferences.
 
-|Configuration Option Key|Default Option|Valid Options|Description|
+|Configuration Option Key|Command Line Override|Default Option|Valid Options|Description|
 |---|---|---|---|
-|`globalDataFile`|`data.json`|A valid JSON filename|Control the file name used for global data available to all templates.|
-|`jsonDataTemplateEngine`|`ejs`|_A valid template engine_ or `false`|Run the `globalDataFile` through this template engine before transforming it to JSON.|
-|`markdownTemplateEngine`|`liquid`|_A valid template engine_ or `false`|Run markdown through this template engine before transforming it to HTML.|
+|`globalDataFile`|`data.json`|A valid JSON filename|`--data`|Control the file name used for global data available to all templates.|
+|`jsonDataTemplateEngine`|N/A|`ejs`|_A valid template engine_ or `false`|N/A|Run the `globalDataFile` through this template engine before transforming it to JSON.|
+|`markdownTemplateEngine`|`liquid`|_A valid template engine_ or `false`|N/A|Run markdown through this template engine before transforming it to HTML.|
 |`htmlTemplateEngine`|`liquid`|_A valid template engine_ or `false`|Run HTML templates through this template engine before transforming it to (better) HTML.|
-|`templateFormats`|`["liquid","ejs","md","hbs","mustache","haml","pug","njk","html"]`|_Any combination of these_|Specify which type of templates should be transformed.|
-|`htmlOutputSuffix`|`-output`|`String`|If the input and output directory match, HTML files will have this suffix added to their output filename (to prevent overwriting the template).|
-|`dir.input`|`.`|_Any valid directory._|Controls the top level directory inside which the templates should be found.|
-|`dir.layouts`|`_layouts`|_Any valid directory inside of `dir.input`._|Controls the directory inside which the elevenisland layouts can be found.|
-|`dir.includes`|`_includes`|_Any valid directory inside of `dir.input`._|Controls the directory inside which the template includes/extends/partials/etc can be found.|
-|`dir.output`|`_site`|_Any valid directory._|Controls the directory inside which the transformed finished templates can be found.|
+|`templateFormats`|`["liquid","ejs","md","hbs","mustache","haml","pug","njk","html"]`|_Any combination of these_|`--formats`|Specify which type of templates should be transformed.|
+|`htmlOutputSuffix`|`-output`|`String`|N/A|If the input and output directory match, HTML files will have this suffix added to their output filename (to prevent overwriting the template).|
+|`dir.input`|`.`|_Any valid directory._|`--input`|Controls the top level directory inside which the templates should be found.|
+|`dir.layouts`|`_layouts`|_Any valid directory inside of `dir.input`._|N/A|Controls the directory inside which the elevenisland layouts can be found.|
+|`dir.includes`|`_includes`|_Any valid directory inside of `dir.input`._|N/A|Controls the directory inside which the template includes/extends/partials/etc can be found.|
+|`dir.output`|`_site`|_Any valid directory._|`--output`|Controls the directory inside which the transformed finished templates can be found.|
 
 ### Template Engine Features
 
