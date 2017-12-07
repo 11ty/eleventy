@@ -56,7 +56,7 @@ Template.prototype.getTemplateSubfolder = function() {
 Template.prototype.getOutputPath = function() {
 	let dir = this.getTemplateSubfolder();
 // console.log( this.inputPath,"|", this.inputDir, "|", dir );
-	return normalize(this.outputDir + "/" + (dir ? dir + "/" : "") + this.parsed.name + (this.isHtmlIOException ? "-output" : "") + ".html");
+	return normalize(this.outputDir + "/" + (dir ? dir + "/" : "") + this.parsed.name + (this.isHtmlIOException ? cfg.htmlOutputSuffix : "") + ".html");
 };
 
 Template.prototype.isIgnored = function() {

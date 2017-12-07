@@ -17,18 +17,19 @@ Works with:
 ## Usage
 
 ```
+# Searches the current directory, outputs to ./_site
 elevenisland
 
-# Watch
+# Automatically render changes to template files.
 elevenisland --watch
 
-# Change directories
+# Override default directories for input/output
 elevenisland --input=./templates --output=./dist
 
 # Control which template types get translated
 elevenisland --formats=md,html,ejs
 
-# Use help to find out the most up-to-date list of commands
+# Find out the most up-to-date list of commands (there are more)
 elevenisland --help
 ```
 
@@ -43,6 +44,8 @@ elevenisland --input=. --output=. --watch --formats=md
 ```
 
 #### Don’t overwrite HTML templates
+
+See the `htmlOutputSuffix` configuration option.
 
 ```
 # Template types output to HTML. So when you take an HTML file
@@ -70,7 +73,9 @@ For example:
 }
 ```
 
-### Configuration to override Convention
+### (Optional) Configuration
+
+Add a `.elevenisland.js` file to your directory to override these configuration options with your own preferences.
 
 |Configuration Option Key|Default Option|Valid Options|Description|
 |---|---|---|---|
@@ -79,6 +84,7 @@ For example:
 |`markdownTemplateEngine`|`liquid`|_A valid template engine_ or `false`|Run markdown through this template engine before transforming it to HTML.|
 |`htmlTemplateEngine`|`liquid`|_A valid template engine_ or `false`|Run HTML templates through this template engine before transforming it to (better) HTML.|
 |`templateFormats`|`["liquid","ejs","md","hbs","mustache","haml","pug","njk","html"]`|_Any combination of these_|Specify which type of templates should be transformed.|
+|`htmlOutputSuffix`|`-output`|`String`|If the input and output directory match, HTML files will have this suffix added to their output filename (to prevent overwriting the template).|
 |`dir.input`|`.`|_Any valid directory._|Controls the top level directory inside which the templates should be found.|
 |`dir.layouts`|`_layouts`|_Any valid directory inside of `dir.input`._|Controls the directory inside which the elevenisland layouts can be found.|
 |`dir.includes`|`_includes`|_Any valid directory inside of `dir.input`._|Controls the directory inside which the template includes/extends/partials/etc can be found.|

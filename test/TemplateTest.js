@@ -47,7 +47,7 @@ test("ignored files start with an underscore", t => {
 	t.is(tmpl.isIgnored(), true);
 });
 
-test("HTML files cannot output to the same as the input directory, throws error.", async t => {
+test("HTML files output to the same as the input directory have a file suffix added.", async t => {
 	let tmpl = new Template("./test/stubs/testing.html", "./test/stubs", "./test/stubs");
 	t.is(tmpl.getOutputPath(), "./test/stubs/testing-output.html");
 });
