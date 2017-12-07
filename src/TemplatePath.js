@@ -2,9 +2,7 @@ const path = require("path");
 const cfg = require("../config.json");
 const normalize = require("normalize-path");
 
-function TemplatePath() {
-
-}
+function TemplatePath() {}
 
 TemplatePath.getModuleDir = function() {
 	return path.resolve(__dirname, "..");

@@ -1,8 +1,5 @@
 import test from "ava";
-import ejs from "ejs";
 import TemplateRender from "../src/TemplateRender";
-import normalize from "normalize-path";
-import parsePath from "parse-filepath";
 import path from "path";
 
 test(t => {

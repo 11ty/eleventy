@@ -48,7 +48,7 @@ TemplateRender.prototype.getEngineName = function() {
 TemplateRender.prototype.getInputDir = function() {
 	return this.inputDir ?
 		TemplatePath.normalize( this.inputDir, cfg.dir.includes ) :
-		TemplatePath.normalize( cfg.dir.templates, cfg.dir.includes );
+		TemplatePath.normalize( cfg.dir.input, cfg.dir.includes );
 };
 
 TemplateRender.prototype.isEngine = function(engine) {

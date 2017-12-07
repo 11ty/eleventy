@@ -22,6 +22,11 @@
     "type": "git",
     "url": "git://github.com/zachleat/elevenisland.git"
   },
+  "ava": {
+    "files": [
+      "test/*.js"
+    ]
+  },
   "devDependencies": {
     "ava": "^0.24.0"
   },

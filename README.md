@@ -28,7 +28,7 @@ elevenisland --input=./templates --output=./dist
 # Control which template types get translated
 elevenisland --formats=md,html,ejs
 
-# Use help to find out the latest commands
+# Use help to find out the most up-to-date list of commands
 elevenisland --help
 ```
 
@@ -58,9 +58,9 @@ elevenisland --input=. --output=. --formats=html
 
 #### Global Data File
 
-Optionally add a global data file (default is `data.json`) to set global static data available to templates. This file name is set in `config.json` under `globalDataFile`.
+Optionally add a global data file (default is `data.json`) to set global static data available to templates. This file name is can be set using the `globalDataFile` configuration option.
 
-The global data file will be pre-processed by a template engine specified in `config.json` under `jsonDataTemplateEngine` and by default `package.json` data is available in the `_package` variable.
+The global data file will be pre-processed by a template engine specified under the `jsonDataTemplateEngine` configuration option. Note that `package.json` data is available to these options under the `_package` variable.
 
 For example:
 
@@ -70,9 +70,19 @@ For example:
 }
 ```
 
-### Template Engines with Markdown and HTML
+### Configuration to override Convention
 
-In the `config.json` file, the `markdownTemplateEngine` and `htmlTemplateEngine` values specify which templating engine will be used to process Markdown and HTML respectively. Set them to false to turn off templating engines and just do straight Markdown and HTML conversion (will still remove frontMatter and layout concatenation).
+|Configuration Option Key|Default Option|Valid Options|Description|
+|---|---|---|---|
+|`globalDataFile`|`data.json`|A valid JSON filename|Control the file name used for global data available to all templates.|
+|`jsonDataTemplateEngine`|`ejs`|_A valid template engine_ or `false`|Run the `globalDataFile` through this template engine before transforming it to JSON.|
+|`markdownTemplateEngine`|`liquid`|_A valid template engine_ or `false`|Run markdown through this template engine before transforming it to HTML.|
+|`htmlTemplateEngine`|`liquid`|_A valid template engine_ or `false`|Run HTML templates through this template engine before transforming it to (better) HTML.|
+|`templateFormats`|`["liquid","ejs","md","hbs","mustache","haml","pug","njk","html"]`|_Any combination of these_|Specify which type of templates should be transformed.|
+|`dir.input`|`.`|_Any valid directory._|Controls the top level directory inside which the templates should be found.|
+|`dir.layouts`|`_layouts`|_Any valid directory inside of `dir.input`._|Controls the directory inside which the elevenisland layouts can be found.|
+|`dir.includes`|`_includes`|_Any valid directory inside of `dir.input`._|Controls the directory inside which the template includes/extends/partials/etc can be found.|
+|`dir.output`|`_site`|_Any valid directory._|Controls the directory inside which the transformed finished templates can be found.|
 
 ### Template Engine Features
 
@@ -80,9 +90,9 @@ Here are the features tested with each template engine that use external files a
 
 #### EJS Includes
 
-* ✅ Preprocessor Directive: `<% include user %>` looks for `_includes/user.ejs`
-* ✅ Preprocessor Directive Subdirectory: `<% include user/show %>` looks for `_includes/user/show.ejs`
-* ✅ Helper, pass in local data: `<%- include('user/show', {user: 'Ava'}) %>` looks for `_includes/user/show.ejs`
+* ✅ Preprocessor Directive: `<% include /user %>` looks for `_includes/user.ejs`
+* ✅ Preprocessor Directive in a subdirectory: `<% include /user/show %>` looks for `_includes/user/show.ejs`
+* ✅ Helper, pass in local data: `<%- include('/user/show', {user: 'Ava'}) %>` looks for `_includes/user/show.ejs`
 
 #### Liquid Includes
 
