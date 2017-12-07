@@ -80,7 +80,7 @@ Add a `.elevenisland.js` file to your directory to override these configuration 
 |Configuration Option Key|Default Option|Valid Options|Command Line Override|Description|
 |---|---|---|---|---|
 |`globalDataFile`|`data.json`|A valid JSON filename|`--data`|Control the file name used for global data available to all templates.|
-|`jsonDataTemplateEngine`|N/A|`ejs`|_A valid template engine_ or `false`|N/A|Run the `globalDataFile` through this template engine before transforming it to JSON.|
+|`jsonDataTemplateEngine`|`ejs`|_A valid template engine_ or `false`|N/A|Run the `globalDataFile` through this template engine before transforming it to JSON.|
 |`markdownTemplateEngine`|`liquid`|_A valid template engine_ or `false`|N/A|Run markdown through this template engine before transforming it to HTML.|
 |`htmlTemplateEngine`|`liquid`|_A valid template engine_ or `false`|N/A|Run HTML templates through this template engine before transforming it to (better) HTML.|
 |`templateFormats`|`["liquid", "ejs", "md", "hbs", "mustache", "haml", "pug", "njk", "html"]`|_Any combination of these_|`--formats`|Specify which type of templates should be transformed.|
