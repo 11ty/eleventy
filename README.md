@@ -82,7 +82,7 @@ Add a `.elevenisland.js` file to your directory to override these configuration 
 |`globalDataFile`|`data.json`|A valid JSON filename|`--data`|Control the file name used for global data available to all templates.|
 |`jsonDataTemplateEngine`|N/A|`ejs`|_A valid template engine_ or `false`|N/A|Run the `globalDataFile` through this template engine before transforming it to JSON.|
 |`markdownTemplateEngine`|`liquid`|_A valid template engine_ or `false`|N/A|Run markdown through this template engine before transforming it to HTML.|
-|`htmlTemplateEngine`|`liquid`|_A valid template engine_ or `false`|Run HTML templates through this template engine before transforming it to (better) HTML.|
+|`htmlTemplateEngine`|`liquid`|_A valid template engine_ or `false`|N/A|Run HTML templates through this template engine before transforming it to (better) HTML.|
 |`templateFormats`|`["liquid", "ejs", "md", "hbs", "mustache", "haml", "pug", "njk", "html"]`|_Any combination of these_|`--formats`|Specify which type of templates should be transformed.|
 |`htmlOutputSuffix`|`-output`|`String`|N/A|If the input and output directory match, HTML files will have this suffix added to their output filename (to prevent overwriting the template).|
 |`dir.input`|`.`|_Any valid directory._|`--input`|Controls the top level directory inside which the templates should be found.|
