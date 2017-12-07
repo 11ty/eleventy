@@ -1,9 +1,11 @@
 const fs = require("fs-extra");
-
 const TemplateRender = require("./TemplateRender");
+const TemplateConfig = require("./TemplateConfig");
 
 const pkg = require("../package.json");
-const cfg = require("../config.json");
+
+let templateCfg = new TemplateConfig(require("../config.json"));
+let cfg = templateCfg.getConfig();
 
 function TemplateData(globalDataPath) {
 	this.globalDataPath = globalDataPath;

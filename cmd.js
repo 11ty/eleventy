@@ -4,11 +4,16 @@ const argv = require( "minimist" )( process.argv.slice(2) );
 const normalize = require('normalize-path');
 const TemplateData = require("./src/TemplateData");
 const TemplateWriter = require("./src/TemplateWriter");
+const cfg = require("./src/TemplateConfig");
 
 const pkg = require("./package.json");
-const cfg = require("./config.json");
+
+// No command line override for the local filename
+let templateCfg = new TemplateConfig(require("./config.json"));
+let cfg = templateCfg.getConfig();
+
 // argv._ ? argv._ : 
-const inputDir = argv.input ? argv.input : cfg.dir.templates;
+let inputDir = argv.input ? argv.input : cfg.dir.input;
 
 let formats = cfg.templateFormats;
 if( argv.formats && argv.formats !== "*" ) {
@@ -45,6 +50,8 @@ if( argv.version ) {
 	out.push( "       Whitelist only certain template types (default: `*`)" );
 	out.push( "  --data" );
 	out.push( "       Set your own global data file (default: `data.json`)" );
+	// out.push( "  --config" );
+	// out.push( "       Set your own local configuration file (default: `elevenisland.config.js`)" );
 	out.push( "  --help" );
 	out.push( "       Show this message." );
 	console.log( out.join( "\n" ) );

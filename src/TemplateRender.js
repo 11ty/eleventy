@@ -11,8 +11,11 @@ const Liquid = require('liquidjs');
 const fs = require("fs-extra");
 const globby = require("globby");
 
-const cfg = require("../config.json");
+const TemplateConfig = require("./TemplateConfig");
 const TemplatePath = require("./TemplatePath");
+
+let templateCfg = new TemplateConfig(require("../config.json"));
+let cfg = templateCfg.getConfig();
 
 // works with full path names or short engine name
 function TemplateRender( tmplPath, inputDir ) {

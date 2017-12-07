@@ -1,11 +1,21 @@
 {
 	"globalDataFile": "./data.json",
-	"templateFormats": ["liquid", "ejs", "md", "hbs", "mustache", "haml", "pug", "njk", "html"],
+	"templateFormats": [
+		"liquid",
+		"ejs",
+		"md",
+		"hbs",
+		"mustache",
+		"haml",
+		"pug",
+		"njk",
+		"html"
+	],
 	"markdownTemplateEngine": "liquid",
 	"htmlTemplateEngine": "liquid",
 	"jsonDataTemplateEngine": "ejs",
 	"dir": {
-		"templates": "templates",
+		"input": ".",
 		"layouts": "_layouts",
 		"includes": "_includes",
 		"output": "_site"

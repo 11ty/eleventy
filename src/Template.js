@@ -5,8 +5,10 @@ const matter = require("gray-matter");
 const normalize = require("normalize-path");
 const TemplateRender = require("./TemplateRender");
 const Layout = require("./Layout");
+const TemplateConfig = require("./TemplateConfig");
 
-const cfg = require("../config.json");
+let templateCfg = new TemplateConfig(require("../config.json"));
+let cfg = templateCfg.getConfig();
 
 function Template(path, inputDir, outputDir, templateData) {
 	this.inputPath = path;

@@ -1,5 +1,4 @@
 const path = require("path");
-const cfg = require("../config.json");
 const normalize = require("normalize-path");
 
 function TemplatePath() {}

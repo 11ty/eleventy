@@ -1,11 +1,15 @@
 const globby = require("globby");
 const normalize = require("normalize-path");
 const pretty = require("pretty");
-
 const Template = require("./Template");
 const TemplateRender = require("./TemplateRender");
+const TemplateConfig = require("./TemplateConfig");
+
 const pkg = require("../package.json");
-const cfg = require("../config.json");
+
+let templateCfg = new TemplateConfig(require("../config.json"));
+let cfg = templateCfg.getConfig();
+
 
 function TemplateWriter(baseDir, outputDir, extensions, templateData) {
 	this.baseDir = baseDir;

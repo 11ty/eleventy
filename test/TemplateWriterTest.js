@@ -1,10 +1,7 @@
 import fs from "fs-extra";
 import test from "ava";
 import globby from "globby";
-
 import TemplateWriter from "../src/TemplateWriter";
-
-import cfg from "../config.json";
 
 
 test("Mutually exclusive Input and Output dirs", t => {
