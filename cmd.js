@@ -34,9 +34,9 @@ if( argv.version ) {
 	console.log( pkg.version );
 } else if( argv.help ) {
 	let out = [];
-	out.push( "usage: elevenisland" );
-	out.push( "       elevenisland --watch" );
-	out.push( "       elevenisland --input=./templates --output=./dist" );
+	out.push( "usage: eleventy" );
+	out.push( "       eleventy --watch" );
+	out.push( "       eleventy --input=./templates --output=./dist" );
 	out.push( "" );
 	out.push( "arguments: " );
 	out.push( "  --version" );
@@ -51,7 +51,7 @@ if( argv.version ) {
 	out.push( "  --data" );
 	out.push( "       Set your own global data file (default: `data.json`)" );
 	// out.push( "  --config" );
-	// out.push( "       Set your own local configuration file (default: `elevenisland.config.js`)" );
+	// out.push( "       Set your own local configuration file (default: `eleventy.config.js`)" );
 	out.push( "  --help" );
 	out.push( "       Show this message." );
 	console.log( out.join( "\n" ) );

@@ -1,4 +1,4 @@
-# elevenisland
+# eleventy
 
 Transform a directory of templates into HTML.
 
@@ -18,19 +18,19 @@ Works with:
 
 ```
 # Searches the current directory, outputs to ./_site
-elevenisland
+eleventy
 
 # Automatically render changes to template files.
-elevenisland --watch
+eleventy --watch
 
 # Override default directories for input/output
-elevenisland --input=./templates --output=./dist
+eleventy --input=./templates --output=./dist
 
 # Control which template types get translated
-elevenisland --formats=md,html,ejs
+eleventy --formats=md,html,ejs
 
 # Find out the most up-to-date list of commands (there are more)
-elevenisland --help
+eleventy --help
 ```
 
 ### Examples
@@ -40,7 +40,7 @@ elevenisland --help
 # automatically parse and output as HTML files, respecting
 # directory structure.
 
-elevenisland --input=. --output=. --watch --formats=md
+eleventy --input=. --output=. --watch --formats=md
 ```
 
 #### Don’t overwrite HTML templates
@@ -52,7 +52,7 @@ See the `htmlOutputSuffix` configuration option.
 # as input and attempt to write it to the same directory, we
 # add an "-output.html" suffix to the output file name.
 
-elevenisland --input=. --output=. --formats=html
+eleventy --input=. --output=. --formats=html
 ```
 
 ### Data
@@ -75,7 +75,7 @@ For example:
 
 ### (Optional) Configuration
 
-Add a `.elevenisland.js` file to your directory to override these configuration options with your own preferences.
+Add a `.eleventy.js` file to your directory to override these configuration options with your own preferences.
 
 |Configuration Option Key|Default Option|Valid Options|Command Line Override|Description|
 |---|---|---|---|---|
@@ -86,7 +86,7 @@ Add a `.elevenisland.js` file to your directory to override these configuration 
 |`templateFormats`|`["liquid", "ejs", "md", "hbs", "mustache", "haml", "pug", "njk", "html"]`|_Any combination of these_|`--formats`|Specify which type of templates should be transformed.|
 |`htmlOutputSuffix`|`-output`|`String`|N/A|If the input and output directory match, HTML files will have this suffix added to their output filename (to prevent overwriting the template).|
 |`dir.input`|`.`|_Any valid directory._|`--input`|Controls the top level directory inside which the templates should be found.|
-|`dir.layouts`|`_layouts`|_Any valid directory inside of `dir.input`._|N/A|Controls the directory inside which the elevenisland layouts can be found.|
+|`dir.layouts`|`_layouts`|_Any valid directory inside of `dir.input`._|N/A|Controls the directory inside which the eleventy layouts can be found.|
 |`dir.includes`|`_includes`|_Any valid directory inside of `dir.input`._|N/A|Controls the directory inside which the template includes/extends/partials/etc can be found.|
 |`dir.output`|`_site`|_Any valid directory._|`--output`|Controls the directory inside which the transformed finished templates can be found.|
 

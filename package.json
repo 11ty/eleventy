@@ -1,5 +1,5 @@
 {
-  "name": "elevenisland",
+  "name": "eleventy",
   "version": "0.1.0",
   "description": "Transform a directory of templates into HTML.",
   "license": "MIT",
@@ -16,11 +16,11 @@
     "url": "https://zachleat.com/"
   },
   "bin": {
-    "elevenisland": "./cmd.js"
+    "eleventy": "./cmd.js"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/zachleat/elevenisland.git"
+    "url": "git://github.com/zachleat/eleventy.git"
   },
   "ava": {
     "files": [

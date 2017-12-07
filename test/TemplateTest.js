@@ -79,7 +79,7 @@ test("More advanced getData()", async t => {
 		key2: "value2"
 	});
 
-	t.is( data._package.name, "elevenisland" );
+	t.is( data._package.name, "eleventy" );
 	t.is( data.key1, "value1override", "local data argument overrides front matter" );
 	t.is( data.key2, "value2", "local data argument, no front matter" );
 	t.is( data.key3, "value3", "front matter only" );

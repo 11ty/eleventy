@@ -15,7 +15,7 @@ test("getData()", async t => {
 
 	let globalData = await dataObj.getData();
 	t.is( globalData.datakey1, "datavalue1", "simple data value" );
-	t.is( globalData.datakey2, "elevenisland", "variables, resolve _package to its value." );
+	t.is( globalData.datakey2, "eleventy", "variables, resolve _package to its value." );
 
 	t.true( Object.keys( globalData._package ).length > 0, "package.json imported to data in _package" );
 });
@@ -26,7 +26,7 @@ test("getJson()", async t => {
 	let data = await dataObj.getJson(dataObj.globalDataPath, dataObj.rawImports)
 
 	t.is( data.datakey1, "datavalue1" );
-	t.is( data.datakey2, "elevenisland" );
+	t.is( data.datakey2, "eleventy" );
 });
 
 test("getJson() file does not exist", async t => {

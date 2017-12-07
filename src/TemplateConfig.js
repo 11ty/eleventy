@@ -2,7 +2,7 @@ const fs = require("fs-extra");
 const TemplatePath = require("./TemplatePath");
 
 function TemplateConfig(globalConfig, localConfigPath) {
-	this.localConfigPath = localConfigPath || ".elevenisland.js";
+	this.localConfigPath = localConfigPath || ".eleventy.js";
 	this.config = this.mergeConfig(globalConfig);
 }
 
