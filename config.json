@@ -21,5 +21,6 @@
 		"layouts": "_layouts",
 		"includes": "_includes",
 		"output": "_site"
-	}
+	},
+	"handlebarsHelpers": {}
 }
