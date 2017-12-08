@@ -9,7 +9,8 @@
 		"haml",
 		"pug",
 		"njk",
-		"html"
+		"html",
+		"js"
 	],
 	"markdownTemplateEngine": "liquid",
 	"htmlTemplateEngine": "liquid",

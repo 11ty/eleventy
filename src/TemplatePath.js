@@ -12,8 +12,8 @@ TemplatePath.getWorkingDir = function() {
 };
 
 /* Outputs ./SAFE/LOCAL/PATHS/WITHOUT/TRAILING/SLASHES */
-TemplatePath.normalize = function() {
-	return normalize( path.join.apply(null, [...arguments]) );
+TemplatePath.normalize = function(...paths) {
+	return normalize( path.join(...paths) );
 };
 
 module.exports = TemplatePath;

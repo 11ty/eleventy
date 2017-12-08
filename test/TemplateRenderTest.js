@@ -16,12 +16,6 @@ test("Input Dir", async t => {
 	t.is( (new TemplateRender( "ejs", "./test/stubs" )).getInputDir(), "test/stubs/_includes" );
 });
 
-test("Unsupported engine", async t => {
-	t.is( (new TemplateRender( "doesnotexist" )).getEngineName(), "doesnotexist" );
-
-	await t.throws( (new TemplateRender( "doesnotexist" )).getCompiledTemplatePromise("<p></p>") );
-});
-
 // HTML
 test("HTML", t => {
 	t.is( (new TemplateRender( "html" )).getEngineName(), "html" );
@@ -269,7 +263,7 @@ test("Liquid", t => {
 	t.is( (new TemplateRender( "liquid" )).getEngineName(), "liquid" );
 });
 
-test("Liquid Render", async t => {
+test("Liquid Render (with Helper)", async t => {
 	let fn = await (new TemplateRender( "liquid" )).getCompiledTemplatePromise("<p>{{name | capitalize}}</p>");
 	t.is(await fn({name: "tim"}), "<p>Tim</p>" );
 });
@@ -279,4 +273,22 @@ test("Liquid Render Include", async t => {
 
 	let fn = await (new TemplateRender( "liquid_include_test.liquid", "./test/stubs/" )).getCompiledTemplatePromise("<p>{% include 'included' %}</p>");
 	t.is(await fn(), "<p>This is an include.</p>" );
+});
+
+// ES6
+test("ES6 Template Literal", t => {
+	t.is( (new TemplateRender( "js" )).getEngineName(), "js" );
+});
+
+// TODO work with or without ` in template
+test("ES6 Template Literal Render", async t => {
+	// pass in a string here, we don’t want to compile the template in the test :O
+	let fn = await (new TemplateRender( "js" )).getCompiledTemplatePromise("`<p>${name.toUpperCase()}</p>`");
+	t.is(await fn({name: "Tim"}), "<p>TIM</p>" );
+});
+
+test("ES6 Template Literal Render", async t => {
+	// pass in a string here, we don’t want to compile the template in the test :O
+	let fn = await (new TemplateRender( "js" )).getCompiledTemplatePromise("<p>${name.toUpperCase()}</p>");
+	t.is(await fn({name: "Tim"}), "<p>TIM</p>" );
 });

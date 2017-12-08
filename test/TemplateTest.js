@@ -137,3 +137,10 @@ test( "Liquid template with include", async t => {
 
 	t.is( await tmpl.render(), `<p>This is an include.</p>` );
 });
+
+test( "ES6 Template Literal", async t => {
+	let dataObj = new TemplateData( "./test/stubs/globalData.json" );
+	let tmpl = new Template("./test/stubs/formatTest.js", "./test/stubs/", "dist", dataObj);
+
+	t.is( await tmpl.render(), `<p>ZACH</p>` );
+});
