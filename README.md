@@ -105,7 +105,7 @@ Here are the features tested with each template engine that use external files a
 |Mustache|✅ Partials|`{{> user}}` looks for `_includes/user.mustache`|
 |Handlebars|✅ Partials|`{{> user}}` looks for `_includes/user.hbs`|
 |Handlebars|✅ Helpers|See `handlebarsHelpers` configuration options.|
-|HAML|❌ Filters||
+|HAML|❌ but 🔜 Filters||
 |Pug|✅ Includes|`include /includedvar.pug` looks in `_includes/includedvar.pug`|
 |Pug|✅ Excludes|`extends /layout.pug` looks in `_includes/layout.pug`|
 |Nunjucks|✅ Includes|`{% include 'included.njk' %}` looks in `_includes/included.njk`|
