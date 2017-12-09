@@ -4,7 +4,7 @@ const argv = require( "minimist" )( process.argv.slice(2) );
 const normalize = require('normalize-path');
 const TemplateData = require("./src/TemplateData");
 const TemplateWriter = require("./src/TemplateWriter");
-const cfg = require("./src/TemplateConfig");
+const TemplateConfig = require("./src/TemplateConfig");
 
 const pkg = require("./package.json");
 
