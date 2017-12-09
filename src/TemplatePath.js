@@ -16,4 +16,8 @@ TemplatePath.normalize = function(...paths) {
 	return normalize( path.join(...paths) );
 };
 
+TemplatePath.localPath = function(...paths) {
+	return normalize( path.join(TemplatePath.getWorkingDir(), ...paths));
+};
+
 module.exports = TemplatePath;
