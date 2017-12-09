@@ -28,7 +28,7 @@ TemplateData.prototype._getLocalJson = function(path) {
 		rawInput = fs.readFileSync(path, "utf-8");
 	} catch(e) {
 		// if file does not exist, return empty obj
-		return {};
+		return "{}";
 	}
 
 	return rawInput;
