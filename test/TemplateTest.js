@@ -1,8 +1,12 @@
 import test from "ava";
 import TemplateData from "../src/TemplateData";
+import TemplateConfig from "../src/TemplateConfig";
 import Template from "../src/Template";
 import pretty from "pretty";
 import normalize from "normalize-path";
+
+let templateCfg = new TemplateConfig(require("../config.json"));
+let cfg = templateCfg.getConfig();
 
 function cleanHtml(str) {
   return pretty(str, { ocd: true });
@@ -123,7 +127,7 @@ test("More advanced getData()", async t => {
     key2: "value2"
   });
 
-  t.is(data._package.name, "eleventy");
+  t.is(data[cfg.keys.package].name, "eleventy");
   t.is(
     data.key1,
     "value1override",
@@ -227,4 +231,13 @@ test("ES6 Template Literal", async t => {
   );
 
   t.is(await tmpl.render(), `<p>ZACH</p>`);
+});
+
+test("Permalink output directory", t => {
+  let tmpl = new Template(
+    "./test/stubs/permalinked.ejs",
+    "./test/stubs/",
+    "./dist"
+  );
+  t.is(tmpl.getOutputPath(), "dist/permalinksubfolder/index.html");
 });

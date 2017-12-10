@@ -16,6 +16,10 @@
   "htmlTemplateEngine": "liquid",
   "jsonDataTemplateEngine": "liquid",
   "htmlOutputSuffix": "-output",
+  "keys": {
+    "permalink": "_permalink",
+    "package": "_package"
+  },
   "dir": {
     "input": ".",
     "includes": "_includes",

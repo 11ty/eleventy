@@ -4,6 +4,7 @@ const parsePath = require("parse-filepath");
 const matter = require("gray-matter");
 const normalize = require("normalize-path");
 const TemplateRender = require("./TemplateRender");
+const TemplatePath = require("./TemplatePath");
 const Layout = require("./Layout");
 const TemplateConfig = require("./TemplateConfig");
 
@@ -57,16 +58,20 @@ Template.prototype.getTemplateSubfolder = function() {
 };
 
 Template.prototype.getOutputPath = function() {
+  let permalink = this.getFrontMatterData()[cfg.keys.permalink];
+  if (permalink) {
+    return TemplatePath.normalize(this.outputDir, permalink);
+  }
+
   let dir = this.getTemplateSubfolder();
+  let path =
+    "/" +
+    (dir ? dir + "/" : "") +
+    this.parsed.name +
+    (this.isHtmlIOException ? cfg.htmlOutputSuffix : "") +
+    ".html";
   // console.log( this.inputPath,"|", this.inputDir, "|", dir );
-  return normalize(
-    this.outputDir +
-      "/" +
-      (dir ? dir + "/" : "") +
-      this.parsed.name +
-      (this.isHtmlIOException ? cfg.htmlOutputSuffix : "") +
-      ".html"
-  );
+  return normalize(this.outputDir + path);
 };
 
 Template.prototype.isIgnored = function() {

@@ -58,6 +58,11 @@ eleventy --input=. --output=. --formats=html
 
 #### Front Matter on Everything
 
+##### Special variables:
+
+* `_permalink`: Change the output subfolder of the current template.
+* `_package`: The local project’s `package.json` values.
+
 #### (Optional) Global Data File
 
 Optionally add a global data file to set global static data available to all templates. See the `globalDataFile` configuration below.

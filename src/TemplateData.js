@@ -8,9 +8,11 @@ let cfg = templateCfg.getConfig();
 
 function TemplateData(globalDataPath) {
   this.globalDataPath = globalDataPath;
-  this.rawImports = {
-    _package: this.getJsonRaw(TemplatePath.localPath("package.json"))
-  };
+
+  this.rawImports = {};
+  this.rawImports[cfg.keys.package] = this.getJsonRaw(
+    TemplatePath.localPath("package.json")
+  );
 }
 
 TemplateData.prototype.getData = async function() {
