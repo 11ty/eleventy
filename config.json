@@ -1,26 +1,26 @@
 {
-	"globalDataFile": "./data.json",
-	"templateFormats": [
-		"liquid",
-		"ejs",
-		"md",
-		"hbs",
-		"mustache",
-		"haml",
-		"pug",
-		"njk",
-		"html",
-		"js"
-	],
-	"markdownTemplateEngine": "liquid",
-	"htmlTemplateEngine": "liquid",
-	"jsonDataTemplateEngine": "ejs",
-	"htmlOutputSuffix": "-output",
-	"dir": {
-		"input": ".",
-		"layouts": "_layouts",
-		"includes": "_includes",
-		"output": "_site"
-	},
-	"handlebarsHelpers": {}
+  "globalDataFile": "./data.json",
+  "templateFormats": [
+    "liquid",
+    "ejs",
+    "md",
+    "hbs",
+    "mustache",
+    "haml",
+    "pug",
+    "njk",
+    "html",
+    "jstl"
+  ],
+  "markdownTemplateEngine": "liquid",
+  "htmlTemplateEngine": "liquid",
+  "jsonDataTemplateEngine": "ejs",
+  "htmlOutputSuffix": "-output",
+  "dir": {
+    "input": ".",
+    "layouts": "_layouts",
+    "includes": "_includes",
+    "output": "_site"
+  },
+  "handlebarsHelpers": {}
 }

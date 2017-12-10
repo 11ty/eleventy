@@ -4,15 +4,16 @@ Transform a directory of templates into HTML.
 
 Works with:
 
-* HTML (`html`)
-* Markdown (`md`) (using [`markdown-it`](https://github.com/markdown-it/markdown-it))
-* [Liquid](https://www.npmjs.com/package/liquidjs) (`liquid`) (used by Jekyll)
-* [EJS](https://www.npmjs.com/package/ejs) (`ejs`)
-* [Handlebars](https://github.com/wycats/handlebars.js) (`hbs`)
-* [Mustache](https://github.com/janl/mustache.js/) (`mustache`)
-* [Haml](https://github.com/tj/haml.js) (`haml`)
-* [Pug](https://github.com/pugjs/pug) (formerly Jade, `pug`)
-* [Nunjucks](https://mozilla.github.io/nunjucks/) (`njk`)
+* HTML (`.html`)
+* Markdown (`.md`) (using [`markdown-it`](https://github.com/markdown-it/markdown-it))
+* [Liquid](https://www.npmjs.com/package/liquidjs) (`.liquid`) (used by Jekyll)
+* [EJS](https://www.npmjs.com/package/ejs) (`.ejs`)
+* [Handlebars](https://github.com/wycats/handlebars.js) (`.hbs`)
+* [Mustache](https://github.com/janl/mustache.js/) (`.mustache`)
+* [Haml](https://github.com/tj/haml.js) (`.haml`)
+* [Pug](https://github.com/pugjs/pug) (formerly Jade, `.pug`)
+* [Nunjucks](https://mozilla.github.io/nunjucks/) (`.njk`)
+* JavaScript Template Literals (`.jstl`)
 
 ## Usage
 
