@@ -18,7 +18,6 @@
   "htmlOutputSuffix": "-output",
   "dir": {
     "input": ".",
-    "layouts": "_layouts",
     "includes": "_includes",
     "output": "_site"
   },

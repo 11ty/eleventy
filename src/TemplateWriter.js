@@ -63,11 +63,6 @@ TemplateWriter.prototype.addIgnores = function(baseDir, files) {
       "!" + normalize(baseDir + "/" + cfg.dir.output + "/**")
     );
   }
-  if (cfg.dir.layouts) {
-    files = files.concat(
-      "!" + normalize(baseDir + "/" + cfg.dir.layouts + "/**")
-    );
-  }
   if (cfg.dir.includes) {
     files = files.concat(
       "!" + normalize(baseDir + "/" + cfg.dir.includes + "/**")
