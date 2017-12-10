@@ -46,12 +46,10 @@ eleventy --input=. --output=. --watch --formats=md
 
 #### Don’t overwrite HTML templates
 
-See the `htmlOutputSuffix` configuration option.
+Template types output to HTML. When you take an HTML file as input and attempt to write it to the same directory, we add an "-output.html" suffix to the output file name. See the `htmlOutputSuffix` configuration option.
 
 ```
-# Template types output to HTML. So when you take an HTML file
-# as input and attempt to write it to the same directory, we
-# add an "-output.html" suffix to the output file name.
+# Adds `-output` to file names to avoid overwriting matching files.
 
 eleventy --input=. --output=. --formats=html
 ```
@@ -76,11 +74,19 @@ For example:
 
 ### (Optional) Ignore files
 
-Add an `.eleventyignore` file to the root of your input directory to have a new line-separated list of files that will not be processed. Eleventy will also ignore paths listed in your project’s `.gitignore` file.
+Add an `.eleventyignore` file to the _root of your input directory_ for a new line-separated list of files that will not be processed. Eleventy will also ignore paths listed in your project’s `.gitignore` file.
 
 ### (Optional) Configuration
 
-Add a `.eleventy.js` file to your directory to override these configuration options with your own preferences.
+Add an `.eleventy.js` file to root directory of your project to override these configuration options with your own preferences. Example:
+
+```
+module.exports = {
+  dir: {
+    input: "views"
+  }
+};
+```
 
 | Configuration Option Key | Default Option                                                             | Valid Options                                | Command Line Override | Description                                                                                                                                     |
 | ------------------------ | -------------------------------------------------------------------------- | -------------------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
