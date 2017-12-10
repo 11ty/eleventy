@@ -8,7 +8,8 @@
     "default": "node cmd.js",
     "watch": "node cmd.js --watch",
     "test": "ava",
-    "watch:test": "ava --watch --verbose"
+    "watch:test": "ava --watch --verbose",
+    "precommit": "lint-staged"
   },
   "author": {
     "name": "Zach Leatherman",
@@ -23,12 +24,17 @@
     "url": "git://github.com/zachleat/eleventy.git"
   },
   "ava": {
-    "files": [
-      "test/*.js"
-    ]
+    "files": ["test/*.js"],
+    "source": ["**/.eleventyignore", "src/**/*.js"]
+  },
+  "lint-staged": {
+    "*.{js,json,css,md}": ["prettier --write", "git add"]
   },
   "devDependencies": {
-    "ava": "^0.24.0"
+    "ava": "^0.24.0",
+    "husky": "^0.14.3",
+    "lint-staged": "^6.0.0",
+    "prettier": "1.9.1"
   },
   "dependencies": {
     "ejs": "git+ssh://git@github.com:zachleat/ejs.git#v2.5.7-h1",
@@ -39,6 +45,7 @@
     "hamljs": "^0.6.2",
     "handlebars": "^4.0.11",
     "liquidjs": "^2.0.3",
+    "lodash.merge": "^4.6.0",
     "markdown-it": "^8.4.0",
     "minimist": "^1.2.0",
     "mustache": "^2.3.0",
