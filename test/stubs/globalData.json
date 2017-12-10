@@ -1,4 +1,4 @@
 {
-	"datakey1": "datavalue1",
-	"datakey2": "<%= _package.name %>"
+  "datakey1": "datavalue1",
+  "datakey2": "{{_package.name}}"
 }

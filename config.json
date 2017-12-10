@@ -14,7 +14,7 @@
   ],
   "markdownTemplateEngine": "liquid",
   "htmlTemplateEngine": "liquid",
-  "jsonDataTemplateEngine": "ejs",
+  "jsonDataTemplateEngine": "liquid",
   "htmlOutputSuffix": "-output",
   "dir": {
     "input": ".",
