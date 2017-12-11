@@ -100,8 +100,8 @@ Template.prototype.getAllLayoutFrontMatterData = function(tmpl, data, merged) {
     merged = data;
   }
 
-  if (data.layout) {
-    let layout = tmpl.getLayoutTemplate(data.layout);
+  if (data[cfg.keys.layout]) {
+    let layout = tmpl.getLayoutTemplate(data[cfg.keys.layout]);
     let layoutData = layout.getFrontMatterData();
 
     return this.getAllLayoutFrontMatterData(
@@ -129,9 +129,9 @@ Template.prototype.getData = async function(localData) {
 };
 
 Template.prototype.renderLayout = async function(tmpl, tmplData) {
-  let layoutName = tmplData.layout;
+  let layoutName = tmplData[cfg.keys.layout];
   // TODO make layout key to be available to templates (without it causing issues with merge below)
-  delete tmplData.layout;
+  delete tmplData[cfg.keys.layout];
 
   let layout = this.getLayoutTemplate(layoutName);
   let layoutData = await layout.getData(tmplData);
@@ -143,7 +143,7 @@ Template.prototype.renderLayout = async function(tmpl, tmplData) {
     tmplData
   );
 
-  if (layoutData.layout) {
+  if (layoutData[cfg.keys.layout]) {
     return await this.renderLayout(layout, layoutData);
   }
 
@@ -162,7 +162,7 @@ Template.prototype.renderContent = async function(str, data) {
 
 Template.prototype.render = async function() {
   let data = await this.getData();
-  if (data.layout) {
+  if (data[cfg.keys.layout]) {
     return await this.renderLayout(this, data);
   } else {
     return await this.renderContent(this.getPreRender(), data);

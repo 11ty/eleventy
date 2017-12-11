@@ -60,8 +60,9 @@ eleventy --input=. --output=. --formats=html
 
 ##### Special variables:
 
-* `_permalink`: Change the output subfolder of the current template.
 * `_package`: The local project’s `package.json` values.
+* `permalink`: Add in front matter to change the output subfolder of the current template.
+* `layout`: Wrap in a layout template in the `_includes` folder.
 
 #### (Optional) Global Data File
 

@@ -146,10 +146,10 @@ test("One Layout", async t => {
     dataObj
   );
 
-  t.is(tmpl.frontMatter.data.layout, "defaultLayout");
+  t.is(tmpl.frontMatter.data[cfg.keys.layout], "defaultLayout");
 
   let data = await tmpl.getData();
-  t.is(data.layout, "defaultLayout");
+  t.is(data[cfg.keys.layout], "defaultLayout");
 
   t.is(
     cleanHtml(await tmpl.renderLayout(tmpl, data)),
@@ -176,10 +176,10 @@ test("Two Layouts", async t => {
     dataObj
   );
 
-  t.is(tmpl.frontMatter.data.layout, "layout-a");
+  t.is(tmpl.frontMatter.data[cfg.keys.layout], "layout-a");
 
   let data = await tmpl.getData();
-  t.is(data.layout, "layout-a");
+  t.is(data[cfg.keys.layout], "layout-a");
   t.is(data.key1, "value1");
 
   t.is(
