@@ -92,7 +92,7 @@ TemplateWriter.prototype._writeTemplate = async function(path) {
 };
 
 TemplateWriter.prototype.write = async function() {
-  var paths = globby.sync(this.files, { gitignore: true });
+  var paths = await globby(this.files, { gitignore: true });
   for (var j = 0, k = paths.length; j < k; j++) {
     await this._writeTemplate(paths[j]);
   }

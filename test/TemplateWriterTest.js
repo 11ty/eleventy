@@ -3,13 +3,14 @@ import test from "ava";
 import globby from "globby";
 import TemplateWriter from "../src/TemplateWriter";
 
-test("Mutually exclusive Input and Output dirs", t => {
+test("Mutually exclusive Input and Output dirs", async t => {
   let tw = new TemplateWriter(
     "./test/stubs/writeTest",
     "./test/stubs/_writeTestSite",
     ["ejs", "md"]
   );
-  let files = globby.sync(tw.files);
+
+  let files = await globby(tw.files);
   t.is(tw.rawFiles.length, 2);
   t.true(files.length > 0);
   t.is(files[0], "./test/stubs/writeTest/test.md");
@@ -22,7 +23,7 @@ test("Output is a subdir of input", async t => {
     "./test/stubs/writeTest/_writeTestSite",
     ["ejs", "md"]
   );
-  let files = globby.sync(tw.files);
+  let files = await globby(tw.files);
   t.is(tw.rawFiles.length, 2);
   t.true(files.length > 0);
 
@@ -42,12 +43,12 @@ test(".eleventyignore ignores parsing", t => {
   t.is(ignores[1], "!test/stubs/ignoredFolder/ignored.md");
 });
 
-test(".eleventyignore files", t => {
+test(".eleventyignore files", async t => {
   let tw = new TemplateWriter("test/stubs", "test/stubs/_site", ["ejs", "md"]);
-  let ignoredFiles = globby.sync("test/stubs/ignoredFolder/*.md");
+  let ignoredFiles = await globby("test/stubs/ignoredFolder/*.md");
   t.is(ignoredFiles.length, 1);
 
-  let files = globby.sync(tw.files);
+  let files = await globby(tw.files);
   t.true(files.length > 0);
 
   t.is(

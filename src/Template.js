@@ -1,5 +1,6 @@
 const ejs = require("ejs");
-const fs = require("fs-extra");
+const pify = require("pify");
+const fs = pify(require("fs-extra"));
 const parsePath = require("parse-filepath");
 const matter = require("gray-matter");
 const normalize = require("normalize-path");
@@ -186,10 +187,7 @@ Template.prototype.write = async function() {
   } else {
     let str = await this.render();
     let filtered = this.runFilters(str);
-    let err = fs.outputFileSync(this.outputPath, filtered);
-    if (err) {
-      throw err;
-    }
+    await pify(fs.outputFile)(this.outputPath, filtered);
     console.log("Writing", this.outputPath, "from", this.inputPath);
   }
 };

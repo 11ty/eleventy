@@ -34,6 +34,7 @@
     "ava": "^0.24.0",
     "husky": "^0.14.3",
     "lint-staged": "^6.0.0",
+    "pify": "^3.0.0",
     "prettier": "1.9.1"
   },
   "dependencies": {
