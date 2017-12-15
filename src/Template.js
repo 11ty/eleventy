@@ -119,17 +119,22 @@ Template.prototype.getAllLayoutFrontMatterData = async function(
   return merged;
 };
 
+Template.prototype.getLocalDataPath = function() {
+  return this.parsed.dir + "/" + this.parsed.name + ".json";
+};
+
 Template.prototype.getData = async function(localData) {
   let data = {};
 
   if (this.templateData) {
-    data = await this.templateData.getData();
+    data = await this.templateData.getLocalData(this.getLocalDataPath());
   }
 
   let mergedLayoutData = await this.getAllLayoutFrontMatterData(
     this,
     this.getFrontMatterData()
   );
+
   return Object.assign({}, data, mergedLayoutData, localData);
 };
 

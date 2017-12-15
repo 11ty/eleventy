@@ -1,4 +1,5 @@
 const fs = require("fs-extra");
+const parsePath = require("parse-filepath");
 const TemplateRender = require("./TemplateRender");
 const TemplateConfig = require("./TemplateConfig");
 const TemplatePath = require("./TemplatePath");
@@ -13,14 +14,45 @@ function TemplateData(globalDataPath) {
   this.rawImports[cfg.keys.package] = this.getJsonRaw(
     TemplatePath.localPath("package.json")
   );
+
+  this.globalData = null;
 }
 
-TemplateData.prototype.getData = async function() {
-  let json = await this.getJson(this.globalDataPath, this.rawImports);
+TemplateData.prototype.clearData = function() {
+  this.globalData = null;
+};
 
-  this.globalData = Object.assign({}, json, this.rawImports);
+TemplateData.prototype.cacheData = async function() {
+  this.clearData();
+
+  return await this.getData();
+};
+
+TemplateData.prototype.getData = async function() {
+  if (!this.globalData) {
+    let json = {};
+
+    if (this.globalDataPath) {
+      json = await this.getJson(this.globalDataPath, this.rawImports);
+    }
+
+    this.globalData = Object.assign({}, json, this.rawImports);
+  }
 
   return this.globalData;
+};
+
+TemplateData.prototype.getLocalData = async function(localDataPath) {
+  let localFilename = parsePath(localDataPath).name;
+  let importedData = {};
+  importedData[localFilename] = await this.getJson(
+    localDataPath,
+    this.rawImports
+  );
+
+  let globalData = await this.getData();
+
+  return Object.assign({}, globalData, importedData);
 };
 
 TemplateData.prototype._getLocalJson = function(path) {

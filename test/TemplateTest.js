@@ -241,3 +241,20 @@ test("Permalink output directory", t => {
   );
   t.is(tmpl.getOutputPath(), "dist/permalinksubfolder/index.html");
 });
+
+test("Local template data file import (without a global data json)", async t => {
+  let dataObj = new TemplateData();
+  await dataObj.cacheData();
+
+  let tmpl = new Template(
+    "./test/stubs/component/component.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj
+  );
+
+  let data = await tmpl.getData();
+  t.is(tmpl.getLocalDataPath(), "./test/stubs/component/component.json");
+  t.is(data.component.localdatakey1, "localdatavalue1");
+  t.is(await tmpl.render(), "localdatavalue1");
+});

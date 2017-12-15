@@ -48,3 +48,30 @@ test("getJson() file does not exist", async t => {
   t.is(typeof data, "object");
   t.is(Object.keys(data).length, 0);
 });
+
+test("addLocalData()", async t => {
+  let dataObj = new TemplateData("./test/stubs/globalData.json");
+  let data = await dataObj.cacheData();
+
+  t.is(data.datakey1, "datavalue1");
+  t.is(data.datakey2, "eleventy");
+
+  let withLocalData = await dataObj.getLocalData(
+    "./test/stubs/component/component.json"
+  );
+  t.is(withLocalData.datakey1, "datavalue1");
+  t.is(withLocalData.datakey2, "eleventy");
+  t.is(withLocalData.component.localdatakey1, "localdatavalue1");
+});
+
+test("addLocalData() doesn’t exist but doesn’t fail", async t => {
+  let dataObj = new TemplateData("./test/stubs/globalData.json");
+  let data = await dataObj.cacheData();
+
+  let withLocalData = await dataObj.getLocalData(
+    "./test/stubs/component/thisfiledoesnotexist.json"
+  );
+  t.is(withLocalData.datakey1, "datavalue1");
+  t.is(withLocalData.datakey2, "eleventy");
+  t.deepEqual(withLocalData.thisfiledoesnotexist, {});
+});

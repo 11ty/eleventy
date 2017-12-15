@@ -22,6 +22,10 @@ if (argv.formats && argv.formats !== "*") {
 let start = new Date();
 
 let data = new TemplateData(argv.data || cfg.globalDataFile);
+(async function() {
+  await data.cacheData();
+})();
+
 let writer = new TemplateWriter(
   inputDir,
   argv.output || cfg.dir.output,
