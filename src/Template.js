@@ -161,9 +161,7 @@ Template.prototype.renderLayout = async function(tmpl, tmplData) {
 };
 
 Template.prototype.getCompiledPromise = async function() {
-  return await this.templateRender.getCompiledTemplatePromise(
-    this.getPreRender()
-  );
+  return await this.templateRender.getCompiledTemplate(this.getPreRender());
 };
 
 Template.prototype.renderContent = async function(str, data) {

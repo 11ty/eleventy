@@ -25,7 +25,7 @@ test("HTML", t => {
 });
 
 test("HTML Render", async t => {
-  let fn = await new TemplateRender("html").getCompiledTemplatePromise(
+  let fn = await new TemplateRender("html").getCompiledTemplate(
     "<p>Paragraph</p>"
   );
   t.is(await fn(), "<p>Paragraph</p>");
@@ -33,14 +33,14 @@ test("HTML Render", async t => {
 });
 
 test("HTML Render: Parses markdown using liquid engine (default, with data)", async t => {
-  let fn = await new TemplateRender("html").getCompiledTemplatePromise(
+  let fn = await new TemplateRender("html").getCompiledTemplate(
     "<h1>{{title}}</h1>"
   );
   t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
 });
 
 test("HTML Render: Parses markdown using ejs engine", async t => {
-  let fn = await new TemplateRender("html").getCompiledTemplatePromise(
+  let fn = await new TemplateRender("html").getCompiledTemplate(
     "<h1><%=title %></h1>",
     {
       parseHtmlWith: "ejs"
@@ -49,7 +49,7 @@ test("HTML Render: Parses markdown using ejs engine", async t => {
   t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
 });
 test("HTML Render: Set markdown engine to false, don’t parse", async t => {
-  let fn = await new TemplateRender("html").getCompiledTemplatePromise(
+  let fn = await new TemplateRender("html").getCompiledTemplate(
     "<h1>{{title}}</h1>",
     {
       parseHtmlWith: false
@@ -62,7 +62,7 @@ test("HTML Render: Change the default engine", async t => {
   let tr = new TemplateRender("html");
   tr.setDefaultHtmlEngine("ejs");
 
-  let fn = await tr.getCompiledTemplatePromise("<h1><%= title %></h1>");
+  let fn = await tr.getCompiledTemplate("<h1><%= title %></h1>");
   t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
 });
 
@@ -70,7 +70,7 @@ test("HTML Render: Change the default engine and pass in an override", async t =
   let tr = new TemplateRender("html");
   tr.setDefaultHtmlEngine("njk");
 
-  let fn = await tr.getCompiledTemplatePromise("<h1>{{title}}</h1>", {
+  let fn = await tr.getCompiledTemplate("<h1>{{title}}</h1>", {
     parseHtmlWith: "liquid"
   });
 
@@ -83,7 +83,7 @@ test("EJS", t => {
 });
 
 test("EJS Render", async t => {
-  let fn = await new TemplateRender("ejs").getCompiledTemplatePromise(
+  let fn = await new TemplateRender("ejs").getCompiledTemplate(
     "<p><%= name %></p>"
   );
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
@@ -92,26 +92,21 @@ test("EJS Render", async t => {
 test("EJS Render Include", async t => {
   t.is(path.resolve(undefined, "/included"), "/included");
 
-  let fn = await new TemplateRender(
-    "ejs",
-    "./test/stubs/"
-  ).getCompiledTemplatePromise("<p><% include /included %></p>");
+  let fn = await new TemplateRender("ejs", "./test/stubs/").getCompiledTemplate(
+    "<p><% include /included %></p>"
+  );
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
 test("EJS Render Include, New Style", async t => {
-  let fn = await new TemplateRender(
-    "ejs",
-    "./test/stubs/"
-  ).getCompiledTemplatePromise("<p><%- include('/included', {}) %></p>");
+  let fn = await new TemplateRender("ejs", "./test/stubs/").getCompiledTemplate(
+    "<p><%- include('/included', {}) %></p>"
+  );
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
 test("EJS Render Include, New Style with Data", async t => {
-  let fn = await new TemplateRender(
-    "ejs",
-    "./test/stubs/"
-  ).getCompiledTemplatePromise(
+  let fn = await new TemplateRender("ejs", "./test/stubs/").getCompiledTemplate(
     "<p><%- include('/includedvar', { name: 'Bill' }) %></p>"
   );
   t.is(await fn(), "<p>This is an Bill.</p>");
@@ -123,36 +118,26 @@ test("Markdown", t => {
 });
 
 test("Markdown Render: Parses base markdown, no data", async t => {
-  let fn = await new TemplateRender("md").getCompiledTemplatePromise(
-    "# My Title"
-  );
+  let fn = await new TemplateRender("md").getCompiledTemplate("# My Title");
   t.is((await fn()).trim(), "<h1>My Title</h1>");
 });
 
 test("Markdown Render: Parses markdown using liquid engine (default, with data)", async t => {
-  let fn = await new TemplateRender("md").getCompiledTemplatePromise(
-    "# {{title}}"
-  );
+  let fn = await new TemplateRender("md").getCompiledTemplate("# {{title}}");
   t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
 });
 
 test("Markdown Render: Parses markdown using ejs engine", async t => {
-  let fn = await new TemplateRender("md").getCompiledTemplatePromise(
-    "# <%=title %>",
-    {
-      parseMarkdownWith: "ejs"
-    }
-  );
+  let fn = await new TemplateRender("md").getCompiledTemplate("# <%=title %>", {
+    parseMarkdownWith: "ejs"
+  });
   t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
 });
 
 test("Markdown Render: Set markdown engine to false, don’t parse", async t => {
-  let fn = await new TemplateRender("md").getCompiledTemplatePromise(
-    "# {{title}}",
-    {
-      parseMarkdownWith: false
-    }
-  );
+  let fn = await new TemplateRender("md").getCompiledTemplate("# {{title}}", {
+    parseMarkdownWith: false
+  });
   t.is((await fn()).trim(), "<h1>{{title}}</h1>");
 });
 
@@ -160,7 +145,7 @@ test("Markdown Render: Change the default engine", async t => {
   let tr = new TemplateRender("md");
   tr.setDefaultMarkdownEngine("ejs");
 
-  let fn = await tr.getCompiledTemplatePromise("# <%= title %>");
+  let fn = await tr.getCompiledTemplate("# <%= title %>");
   t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
 });
 
@@ -168,7 +153,7 @@ test("Markdown Render: Change the default engine and pass in an override", async
   let tr = new TemplateRender("md");
   tr.setDefaultMarkdownEngine("njk");
 
-  let fn = await tr.getCompiledTemplatePromise("# {{title}}", {
+  let fn = await tr.getCompiledTemplate("# {{title}}", {
     parseMarkdownWith: "liquid"
   });
 
@@ -181,25 +166,23 @@ test("Handlebars", t => {
 });
 
 test("Handlebars Render", async t => {
-  let fn = await new TemplateRender("hbs").getCompiledTemplatePromise(
+  let fn = await new TemplateRender("hbs").getCompiledTemplate(
     "<p>{{name}}</p>"
   );
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });
 
 test("Handlebars Render Partial", async t => {
-  let fn = await new TemplateRender(
-    "hbs",
-    "./test/stubs/"
-  ).getCompiledTemplatePromise("<p>{{> included}}</p>");
+  let fn = await new TemplateRender("hbs", "./test/stubs/").getCompiledTemplate(
+    "<p>{{> included}}</p>"
+  );
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
 test("Handlebars Render Partial", async t => {
-  let fn = await new TemplateRender(
-    "hbs",
-    "./test/stubs/"
-  ).getCompiledTemplatePromise("<p>{{> includedvar}}</p>");
+  let fn = await new TemplateRender("hbs", "./test/stubs/").getCompiledTemplate(
+    "<p>{{> includedvar}}</p>"
+  );
   t.is(await fn({ name: "Zach" }), "<p>This is a Zach.</p>");
 });
 
@@ -209,7 +192,7 @@ test("Mustache", async t => {
 });
 
 test("Mustache Render", async t => {
-  let fn = await new TemplateRender("mustache").getCompiledTemplatePromise(
+  let fn = await new TemplateRender("mustache").getCompiledTemplate(
     "<p>{{name}}</p>"
   );
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
@@ -219,7 +202,7 @@ test("Mustache Render Partial", async t => {
   let fn = await new TemplateRender(
     "mustache",
     "./test/stubs/"
-  ).getCompiledTemplatePromise("<p>{{> included}}</p>");
+  ).getCompiledTemplate("<p>{{> included}}</p>");
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
@@ -227,7 +210,7 @@ test("Mustache Render Partial", async t => {
   let fn = await new TemplateRender(
     "mustache",
     "./test/stubs/"
-  ).getCompiledTemplatePromise("<p>{{> includedvar}}</p>");
+  ).getCompiledTemplate("<p>{{> includedvar}}</p>");
   t.is(await fn({ name: "Zach" }), "<p>This is a Zach.</p>");
 });
 
@@ -237,9 +220,7 @@ test("Haml", t => {
 });
 
 test("Haml Render", async t => {
-  let fn = await new TemplateRender("haml").getCompiledTemplatePromise(
-    "%p= name"
-  );
+  let fn = await new TemplateRender("haml").getCompiledTemplate("%p= name");
   t.is((await fn({ name: "Zach" })).trim(), "<p>Zach</p>");
 });
 
@@ -249,29 +230,27 @@ test("Pug", t => {
 });
 
 test("Pug Render", async t => {
-  let fn = await new TemplateRender("pug").getCompiledTemplatePromise(
-    "p= name"
-  );
+  let fn = await new TemplateRender("pug").getCompiledTemplate("p= name");
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });
 
 test("Pug Render Include", async t => {
   let fn = await new TemplateRender("pug", "./test/stubs/")
-    .getCompiledTemplatePromise(`p
+    .getCompiledTemplate(`p
 	include /included.pug`);
   t.is(await fn({ name: "Zach" }), "<p><span>This is an include.</span></p>");
 });
 
 test("Pug Render Include with Data", async t => {
   let fn = await new TemplateRender("pug", "./test/stubs/")
-    .getCompiledTemplatePromise(`p
+    .getCompiledTemplate(`p
 	include /includedvar.pug`);
   t.is(await fn({ name: "Zach" }), "<p><span>This is Zach.</span></p>");
 });
 
 test("Pug Render Include with Data, inline var overrides data", async t => {
   let fn = await new TemplateRender("pug", "./test/stubs/")
-    .getCompiledTemplatePromise(`
+    .getCompiledTemplate(`
 - var name = "Bill";
 p
 	include /includedvar.pug`);
@@ -280,7 +259,7 @@ p
 
 test("Pug Render Extends (Layouts)", async t => {
   let fn = await new TemplateRender("pug", "./test/stubs/")
-    .getCompiledTemplatePromise(`extends /layout.pug
+    .getCompiledTemplate(`extends /layout.pug
 block content
   h1= name`);
   t.is(await fn({ name: "Zach" }), "<html><body><h1>Zach</h1></body></html>");
@@ -292,45 +271,35 @@ test("Nunjucks", t => {
 });
 
 test("Nunjucks Render", async t => {
-  let fn = await new TemplateRender("njk").getCompiledTemplatePromise(
+  let fn = await new TemplateRender("njk").getCompiledTemplate(
     "<p>{{ name }}</p>"
   );
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });
 
 test("Nunjucks Render Extends", async t => {
-  let fn = await new TemplateRender(
-    "njk",
-    "test/stubs"
-  ).getCompiledTemplatePromise(
+  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
     "{% extends 'base.njk' %}{% block content %}This is a child.{% endblock %}"
   );
   t.is(await fn(), "<p>This is a child.</p>");
 });
 
 test("Nunjucks Render Include", async t => {
-  let fn = await new TemplateRender(
-    "njk",
-    "test/stubs"
-  ).getCompiledTemplatePromise("<p>{% include 'included.njk' %}</p>");
+  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
+    "<p>{% include 'included.njk' %}</p>"
+  );
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
 test("Nunjucks Render Imports", async t => {
-  let fn = await new TemplateRender(
-    "njk",
-    "test/stubs"
-  ).getCompiledTemplatePromise(
+  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
     "{% import 'imports.njk' as forms %}<div>{{ forms.label('Name') }}</div>"
   );
   t.is(await fn(), "<div><label>Name</label></div>");
 });
 
 test("Nunjucks Render Imports From", async t => {
-  let fn = await new TemplateRender(
-    "njk",
-    "test/stubs"
-  ).getCompiledTemplatePromise(
+  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
     "{% from 'imports.njk' import label %}<div>{{ label('Name') }}</div>"
   );
   t.is(await fn(), "<div><label>Name</label></div>");
@@ -342,7 +311,7 @@ test("Liquid", t => {
 });
 
 test("Liquid Render (with Helper)", async t => {
-  let fn = await new TemplateRender("liquid").getCompiledTemplatePromise(
+  let fn = await new TemplateRender("liquid").getCompiledTemplate(
     "<p>{{name | capitalize}}</p>"
   );
   t.is(await fn({ name: "tim" }), "<p>Tim</p>");
@@ -354,7 +323,7 @@ test("Liquid Render Include", async t => {
   let fn = await new TemplateRender(
     "liquid_include_test.liquid",
     "./test/stubs/"
-  ).getCompiledTemplatePromise("<p>{% include 'included' %}</p>");
+  ).getCompiledTemplate("<p>{% include 'included' %}</p>");
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
@@ -366,7 +335,7 @@ test("ES6 Template Literal", t => {
 // TODO work with or without ` in template
 test("ES6 Template Literal Render", async t => {
   // pass in a string here, we don’t want to compile the template in the test :O
-  let fn = await new TemplateRender("jstl").getCompiledTemplatePromise(
+  let fn = await new TemplateRender("jstl").getCompiledTemplate(
     "`<p>${name.toUpperCase()}</p>`"
   );
   t.is(await fn({ name: "Tim" }), "<p>TIM</p>");
@@ -374,7 +343,7 @@ test("ES6 Template Literal Render", async t => {
 
 test("ES6 Template Literal Render", async t => {
   // pass in a string here, we don’t want to compile the template in the test :O
-  let fn = await new TemplateRender("jstl").getCompiledTemplatePromise(
+  let fn = await new TemplateRender("jstl").getCompiledTemplate(
     "<p>${name.toUpperCase()}</p>"
   );
   t.is(await fn({ name: "Tim" }), "<p>TIM</p>");
