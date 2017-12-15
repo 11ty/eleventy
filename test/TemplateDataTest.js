@@ -75,3 +75,26 @@ test("addLocalData() doesn’t exist but doesn’t fail", async t => {
   t.is(withLocalData.datakey2, "eleventy");
   t.deepEqual(withLocalData.thisfiledoesnotexist, {});
 });
+
+test("Global Dir Directory", async t => {
+  let dataObj = new TemplateData();
+
+  t.is(await dataObj.getGlobalDataGlob(), "_data/**/*.json");
+});
+
+test("Global Dir Directory with Constructor Path Arg", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+
+  t.is(await dataObj.getGlobalDataGlob(), "test/stubs/_data/**/*.json");
+});
+
+test("getAllGlobalData() with other data files", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+  let data = await dataObj.cacheData();
+
+  t.true((await dataObj.getGlobalDataFiles()).length > 0);
+  t.not(typeof data.testData, "undefined");
+  t.deepEqual(data.testData, {
+    testdatakey1: "testdatavalue1"
+  });
+});

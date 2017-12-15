@@ -1,4 +1,5 @@
 const fs = require("fs-extra");
+const pify = require("pify");
 const globby = require("globby");
 const parsePath = require("parse-filepath");
 const TemplateRender = require("./TemplateRender");
@@ -29,8 +30,40 @@ TemplateData.prototype.cacheData = async function() {
   return this.getData();
 };
 
+TemplateData.prototype.getGlobalDataGlob = async function(inputDir) {
+  let dir = ".";
+
+  if (this.globalDataPath) {
+    let globalPathStat = await pify(fs.stat)(this.globalDataPath);
+
+    if (globalPathStat.isDirectory()) {
+      dir = this.globalDataPath;
+    } else {
+      dir = parsePath(this.globalDataPath).dir;
+    }
+  }
+
+  return TemplatePath.normalize(dir, "/", cfg.dir.data) + "/**/*.json";
+};
+
+TemplateData.prototype.getGlobalDataFiles = async function() {
+  return globby(await this.getGlobalDataGlob(), { gitignore: true });
+};
+
 TemplateData.prototype.getAllGlobalData = async function() {
-  return this.getJson(this.globalDataPath, this.rawImports);
+  let globalData = {};
+  let files = await this.getGlobalDataFiles();
+
+  for (var j = 0, k = files.length; j < k; j++) {
+    let key = parsePath(files[j]).name;
+    globalData[key] = await this.getJson(files[j], this.rawImports);
+  }
+
+  return Object.assign(
+    {},
+    globalData,
+    await this.getJson(this.globalDataPath, this.rawImports)
+  );
 };
 
 TemplateData.prototype.getData = async function() {
@@ -61,7 +94,7 @@ TemplateData.prototype.getLocalData = async function(localDataPath) {
 };
 
 TemplateData.prototype._getLocalJson = function(path) {
-  // todo convert to readFile with await (and promisify?)
+  // TODO convert to pify and async
   let rawInput;
   try {
     rawInput = fs.readFileSync(path, "utf-8");
