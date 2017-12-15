@@ -105,7 +105,7 @@ test("Test that getData() works", async t => {
   t.is(data.key1, "value1");
   t.is(data.key3, "value3");
 
-  let mergedFrontMatter = tmpl.getAllLayoutFrontMatterData(
+  let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
     tmpl,
     tmpl.getFrontMatterData()
   );
@@ -158,7 +158,7 @@ test("One Layout", async t => {
 </div>`
   );
 
-  let mergedFrontMatter = tmpl.getAllLayoutFrontMatterData(
+  let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
     tmpl,
     tmpl.getFrontMatterData()
   );
@@ -191,7 +191,7 @@ test("Two Layouts", async t => {
 </div>`
   );
 
-  let mergedFrontMatter = tmpl.getAllLayoutFrontMatterData(
+  let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
     tmpl,
     tmpl.getFrontMatterData()
   );

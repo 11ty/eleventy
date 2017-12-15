@@ -1,6 +1,6 @@
 const ejs = require("ejs");
 const pify = require("pify");
-const fs = pify(require("fs-extra"));
+const fs = require("fs-extra");
 const parsePath = require("parse-filepath");
 const matter = require("gray-matter");
 const normalize = require("normalize-path");
@@ -96,7 +96,11 @@ Template.prototype.getFrontMatterData = function() {
   return this.frontMatter.data || {};
 };
 
-Template.prototype.getAllLayoutFrontMatterData = function(tmpl, data, merged) {
+Template.prototype.getAllLayoutFrontMatterData = async function(
+  tmpl,
+  data,
+  merged
+) {
   if (!merged) {
     merged = data;
   }
@@ -105,7 +109,7 @@ Template.prototype.getAllLayoutFrontMatterData = function(tmpl, data, merged) {
     let layout = tmpl.getLayoutTemplate(data[cfg.keys.layout]);
     let layoutData = layout.getFrontMatterData();
 
-    return this.getAllLayoutFrontMatterData(
+    return await this.getAllLayoutFrontMatterData(
       tmpl,
       layoutData,
       Object.assign({}, layoutData, merged)
@@ -122,7 +126,7 @@ Template.prototype.getData = async function(localData) {
     data = await this.templateData.getData();
   }
 
-  let mergedLayoutData = this.getAllLayoutFrontMatterData(
+  let mergedLayoutData = await this.getAllLayoutFrontMatterData(
     this,
     this.getFrontMatterData()
   );
