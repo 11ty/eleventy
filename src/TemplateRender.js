@@ -60,11 +60,11 @@ TemplateRender.prototype.getCompiledTemplate = async function(str, options) {
 
   // TODO refactor better
   if (this.engineName === "md") {
-    return await this.engine.compile(str, options.parseMarkdownWith);
+    return this.engine.compile(str, options.parseMarkdownWith);
   } else if (this.engineName === "html") {
-    return await this.engine.compile(str, options.parseHtmlWith);
+    return this.engine.compile(str, options.parseHtmlWith);
   } else {
-    return await this.engine.compile(str);
+    return this.engine.compile(str);
   }
 };
 

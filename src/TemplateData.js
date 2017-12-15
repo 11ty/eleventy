@@ -1,4 +1,5 @@
 const fs = require("fs-extra");
+const globby = require("globby");
 const parsePath = require("parse-filepath");
 const TemplateRender = require("./TemplateRender");
 const TemplateConfig = require("./TemplateConfig");
@@ -25,18 +26,22 @@ TemplateData.prototype.clearData = function() {
 TemplateData.prototype.cacheData = async function() {
   this.clearData();
 
-  return await this.getData();
+  return this.getData();
+};
+
+TemplateData.prototype.getAllGlobalData = async function() {
+  return this.getJson(this.globalDataPath, this.rawImports);
 };
 
 TemplateData.prototype.getData = async function() {
   if (!this.globalData) {
-    let json = {};
+    let globalJson = {};
 
     if (this.globalDataPath) {
-      json = await this.getJson(this.globalDataPath, this.rawImports);
+      globalJson = await this.getAllGlobalData();
     }
 
-    this.globalData = Object.assign({}, json, this.rawImports);
+    this.globalData = Object.assign({}, globalJson, this.rawImports);
   }
 
   return this.globalData;

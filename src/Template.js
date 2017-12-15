@@ -109,7 +109,7 @@ Template.prototype.getAllLayoutFrontMatterData = async function(
     let layout = tmpl.getLayoutTemplate(data[cfg.keys.layout]);
     let layoutData = layout.getFrontMatterData();
 
-    return await this.getAllLayoutFrontMatterData(
+    return this.getAllLayoutFrontMatterData(
       tmpl,
       layoutData,
       Object.assign({}, layoutData, merged)
@@ -154,26 +154,26 @@ Template.prototype.renderLayout = async function(tmpl, tmplData) {
   );
 
   if (layoutData[cfg.keys.layout]) {
-    return await this.renderLayout(layout, layoutData);
+    return this.renderLayout(layout, layoutData);
   }
 
-  return await layout.renderContent(layout.getPreRender(), layoutData);
+  return layout.renderContent(layout.getPreRender(), layoutData);
 };
 
 Template.prototype.getCompiledPromise = async function() {
-  return await this.templateRender.getCompiledTemplate(this.getPreRender());
+  return this.templateRender.getCompiledTemplate(this.getPreRender());
 };
 
 Template.prototype.renderContent = async function(str, data) {
-  return await this.templateRender.render(str, data);
+  return this.templateRender.render(str, data);
 };
 
 Template.prototype.render = async function() {
   let data = await this.getData();
   if (data[cfg.keys.layout]) {
-    return await this.renderLayout(this, data);
+    return this.renderLayout(this, data);
   } else {
-    return await this.renderContent(this.getPreRender(), data);
+    return this.renderContent(this.getPreRender(), data);
   }
 };
 
