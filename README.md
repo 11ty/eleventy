@@ -68,7 +68,7 @@ eleventy --input=. --output=. --formats=html
 
 Optionally add data files to add global static data available to all templates. See the `dir.data` configuration below.
 
-The global data files will be pre-processed by a template engine specified under the `jsonDataTemplateEngine` configuration option. Note that `package.json` data is available to these options under the `_package` variable.
+The global data files will be pre-processed by a template engine specified under the `dataTemplateEngine` configuration option. Note that `package.json` data is available to these options under the `_package` variable.
 
 For example:
 
@@ -100,7 +100,7 @@ module.exports = {
 | `dir.includes`           | `_includes`                                                                | _Any valid directory inside of `dir.input`._ | N/A                   | Controls the directory inside which the template includes/extends/partials/etc can be found.                                                    |
 | `dir.data`               | `_data`                                                                    | _Any valid directory inside of `dir.input`._ | N/A                   | Controls the directory inside which the global data template files, available to all templates, can be found.                                   |
 | `dir.output`             | `_site`                                                                    | _Any valid directory._                       | `--output`            | Controls the directory inside which the transformed finished templates can be found.                                                            |
-| `jsonDataTemplateEngine` | `ejs`                                                                      | _A valid template engine_ or `false`         | N/A                   | Run the `data.dir` global data files through this template engine before transforming it to JSON.                                               |
+| `dataTemplateEngine`     | `ejs`                                                                      | _A valid template engine_ or `false`         | N/A                   | Run the `data.dir` global data files through this template engine before transforming it to JSON.                                               |
 | `markdownTemplateEngine` | `liquid`                                                                   | _A valid template engine_ or `false`         | N/A                   | Run markdown through this template engine before transforming it to HTML.                                                                       |
 | `htmlTemplateEngine`     | `liquid`                                                                   | _A valid template engine_ or `false`         | N/A                   | Run HTML templates through this template engine before transforming it to (better) HTML.                                                        |
 | `templateFormats`        | `["liquid", "ejs", "md", "hbs", "mustache", "haml", "pug", "njk", "html"]` | _Any combination of these_                   | `--formats`           | Specify which type of templates should be transformed.                                                                                          |

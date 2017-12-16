@@ -13,7 +13,7 @@
   ],
   "markdownTemplateEngine": "liquid",
   "htmlTemplateEngine": "liquid",
-  "jsonDataTemplateEngine": "liquid",
+  "dataTemplateEngine": "liquid",
   "htmlOutputSuffix": "-output",
   "keys": {
     "package": "_package",

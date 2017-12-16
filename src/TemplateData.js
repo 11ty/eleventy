@@ -106,9 +106,9 @@ TemplateData.prototype.getJsonRaw = function(path) {
 
 TemplateData.prototype.getJson = async function(path, rawImports) {
   let rawInput = this._getLocalJson(path);
-  let fn = await new TemplateRender(
-    cfg.jsonDataTemplateEngine
-  ).getCompiledTemplate(rawInput);
+  let fn = await new TemplateRender(cfg.dataTemplateEngine).getCompiledTemplate(
+    rawInput
+  );
 
   // pass in rawImports, don’t pass in global data, that’s what we’re parsing
   let str = await fn(rawImports);
