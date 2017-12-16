@@ -243,6 +243,6 @@ test("Local template data file import (without a global data json)", async t => 
 
   let data = await tmpl.getData();
   t.is(tmpl.getLocalDataPath(), "./test/stubs/component/component.json");
-  t.is(data.component.localdatakey1, "localdatavalue1");
+  t.is(data.localdatakey1, "localdatavalue1");
   t.is(await tmpl.render(), "localdatavalue1");
 });

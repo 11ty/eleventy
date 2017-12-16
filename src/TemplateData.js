@@ -76,12 +76,7 @@ TemplateData.prototype.getData = async function() {
 
 TemplateData.prototype.getLocalData = async function(localDataPath) {
   let localFilename = parsePath(localDataPath).name;
-  let importedData = {};
-  importedData[localFilename] = await this.getJson(
-    localDataPath,
-    this.rawImports
-  );
-
+  let importedData = await this.getJson(localDataPath, this.rawImports);
   let globalData = await this.getData();
 
   return Object.assign({}, globalData, importedData);

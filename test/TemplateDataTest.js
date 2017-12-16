@@ -56,19 +56,20 @@ test("addLocalData()", async t => {
   );
   t.is(withLocalData.globalData.datakey1, "datavalue1");
   t.is(withLocalData.globalData.datakey2, "eleventy");
-  t.is(withLocalData.component.localdatakey1, "localdatavalue1");
+  t.is(withLocalData.localdatakey1, "localdatavalue1");
 });
 
 test("addLocalData() doesn’t exist but doesn’t fail", async t => {
   let dataObj = new TemplateData("./test/stubs/");
   let data = await dataObj.getData();
+  let beforeDataKeyCount = Object.keys(data);
 
   let withLocalData = await dataObj.getLocalData(
     "./test/stubs/component/thisfiledoesnotexist.json"
   );
   t.is(withLocalData.globalData.datakey1, "datavalue1");
   t.is(withLocalData.globalData.datakey2, "eleventy");
-  t.deepEqual(withLocalData.thisfiledoesnotexist, {});
+  t.deepEqual(Object.keys(withLocalData), beforeDataKeyCount);
 });
 
 test("Global Dir Directory", async t => {
