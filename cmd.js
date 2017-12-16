@@ -59,7 +59,9 @@ if (argv.formats && argv.formats !== "*") {
     console.log(out.join("\n"));
   } else if (argv.watch) {
     console.log("Watching…");
-    var watcher = watch(writer.getFiles().concat(cfg.globalDataFile));
+    var watcher = watch(writer.getRawFiles(), {
+      ignored: writer.getWatchedIgnores()
+    });
 
     watcher.on("change", function(path, stat) {
       console.log("File changed:", path);

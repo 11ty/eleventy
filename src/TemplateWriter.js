@@ -24,8 +24,19 @@ function TemplateWriter(baseDir, outputDir, extensions, templateData) {
     }.bind(this)
   );
 
-  this.files = this.addIgnores(baseDir, this.rawFiles);
+  this.watchedFiles = this.addIgnores(baseDir, this.rawFiles);
+  this.files = this.addWritingIgnores(baseDir, this.watchedFiles);
 }
+
+TemplateWriter.prototype.getRawFiles = function() {
+  return this.rawFiles;
+};
+
+TemplateWriter.prototype.getWatchedIgnores = function() {
+  return this.addIgnores(this.baseDir, []).map(ignore =>
+    TemplatePath.stripLeadingDotSlash(ignore.substr(1))
+  );
+};
 
 TemplateWriter.prototype.getFiles = function() {
   return this.files;
@@ -63,10 +74,18 @@ TemplateWriter.prototype.addIgnores = function(baseDir, files) {
       "!" + normalize(baseDir + "/" + cfg.dir.output + "/**")
     );
   }
+
+  return files;
+};
+
+TemplateWriter.prototype.addWritingIgnores = function(baseDir, files) {
   if (cfg.dir.includes) {
     files = files.concat(
       "!" + normalize(baseDir + "/" + cfg.dir.includes + "/**")
     );
+  }
+  if (cfg.dir.data) {
+    files = files.concat("!" + normalize(baseDir + "/" + cfg.dir.data + "/**"));
   }
 
   return files;

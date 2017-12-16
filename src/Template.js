@@ -45,15 +45,11 @@ function Template(path, inputDir, outputDir, templateData) {
   }
 }
 
-Template.prototype.stripLeadingDotSlash = function(dir) {
-  return dir.replace(/^\.\//, "");
-};
-
 Template.prototype.getTemplateSubfolder = function() {
   var pathDir = this.parsed.dir;
   var index = pathDir.indexOf(this.inputDir);
 
-  return this.stripLeadingDotSlash(
+  return TemplatePath.stripLeadingDotSlash(
     index > -1 ? pathDir.substr(this.inputDir.length + 1) : this.inputDir
   );
 };
