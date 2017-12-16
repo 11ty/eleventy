@@ -16,7 +16,7 @@
   "dataTemplateEngine": "liquid",
   "htmlOutputSuffix": "-output",
   "keys": {
-    "package": "_package",
+    "package": "pkg",
     "layout": "layout",
     "permalink": "permalink"
   },

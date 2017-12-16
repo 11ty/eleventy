@@ -8,13 +8,21 @@ class JavaScript extends TemplateEngine {
       for (var j in data) {
         dataStr += `let ${j} = ${JSON.stringify(data[j])};\n`;
       }
+
       // add ` around template if it doesn’t exist.
       let trimmedStr = str.trim();
       if (trimmedStr.charAt(trimmedStr.length - 1) !== "`") {
         str = "`" + str + "`";
       }
-      // TODO switch to https://www.npmjs.com/package/es6-template-strings
-      return eval(dataStr + "\n" + str + ";");
+
+      try {
+        // TODO switch to https://www.npmjs.com/package/es6-template-strings
+        let val = eval(dataStr + "\n" + str + ";");
+        return val;
+      } catch (e) {
+        console.log("Broken ES6 template: ", dataStr + "\n" + str + ";");
+        throw e;
+      }
     };
   }
 }

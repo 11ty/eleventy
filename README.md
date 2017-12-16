@@ -60,7 +60,7 @@ eleventy --input=. --output=. --formats=html
 
 ##### Special variables:
 
-* `_package`: The local project’s `package.json` values.
+* `pkg`: The local project’s `package.json` values.
 * `permalink`: Add in front matter to change the output subfolder of the current template.
 * `layout`: Wrap current template with a layout template found in the `_includes` folder.
 
@@ -68,13 +68,13 @@ eleventy --input=. --output=. --formats=html
 
 Optionally add data files to add global static data available to all templates. See the `dir.data` configuration below.
 
-The global data files will be pre-processed by a template engine specified under the `dataTemplateEngine` configuration option. Note that `package.json` data is available to these options under the `_package` variable.
+The global data files will be pre-processed by a template engine specified under the `dataTemplateEngine` configuration option. Note that `package.json` data is available to these options under the `pkg` variable.
 
 For example:
 
 ```
 {
-	"version": "<%= _package.version %>"
+	"version": "<%= pkg.version %>"
 }
 ```
 
