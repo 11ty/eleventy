@@ -30,17 +30,19 @@ TemplateData.prototype.cacheData = async function() {
   return this.getData();
 };
 
-TemplateData.prototype.getGlobalDataGlob = async function(inputDir) {
+TemplateData.prototype.getGlobalDataGlob = async function() {
   let dir = ".";
 
   if (this.globalDataPath) {
     let globalPathStat = await pify(fs.stat)(this.globalDataPath);
 
-    if (globalPathStat.isDirectory()) {
-      dir = this.globalDataPath;
-    } else {
-      dir = parsePath(this.globalDataPath).dir;
+    if (!globalPathStat.isDirectory()) {
+      throw new Error(
+        "Could not find data path directory: " + this.globalDataPath
+      );
     }
+
+    dir = this.globalDataPath;
   }
 
   return TemplatePath.normalize(dir, "/", cfg.dir.data) + "/**/*.json";
@@ -59,20 +61,12 @@ TemplateData.prototype.getAllGlobalData = async function() {
     globalData[key] = await this.getJson(files[j], this.rawImports);
   }
 
-  return Object.assign(
-    {},
-    globalData,
-    await this.getJson(this.globalDataPath, this.rawImports)
-  );
+  return globalData;
 };
 
 TemplateData.prototype.getData = async function() {
   if (!this.globalData) {
-    let globalJson = {};
-
-    if (this.globalDataPath) {
-      globalJson = await this.getAllGlobalData();
-    }
+    let globalJson = await this.getAllGlobalData();
 
     this.globalData = Object.assign({}, globalJson, this.rawImports);
   }

@@ -6,73 +6,68 @@ let templateCfg = new TemplateConfig(require("../config.json"));
 let cfg = templateCfg.getConfig();
 
 test("Create", async t => {
-  let dataObj = new TemplateData("./test/stubs/globalData.json");
+  let dataObj = new TemplateData("./test/stubs/");
   let data = await dataObj.getData();
 
   t.true(Object.keys(data[cfg.keys.package]).length > 0);
 });
 
+// test("Create (old method, file name not dir)", async t => {
+//   let dataObj = new TemplateData("./test/stubs/globalData.json");
+//   let data = await dataObj.getData();
+
+//   t.true(Object.keys(data[cfg.keys.package]).length > 0);
+// });
+
 test("getData()", async t => {
-  let dataObj = new TemplateData("./test/stubs/globalData.json");
+  let dataObj = new TemplateData("./test/stubs/");
 
   t.is(dataObj.getData().toString(), "[object Promise]");
 
-  let globalData = await dataObj.getData();
-  t.is(globalData.datakey1, "datavalue1", "simple data value");
+  let data = await dataObj.getData();
+  t.is(data.globalData.datakey1, "datavalue1", "simple data value");
   t.is(
-    globalData.datakey2,
+    data.globalData.datakey2,
     "eleventy",
     `variables, resolve ${cfg.keys.package} to its value.`
   );
 
   t.true(
-    Object.keys(globalData[cfg.keys.package]).length > 0,
+    Object.keys(data[cfg.keys.package]).length > 0,
     `package.json imported to data in ${cfg.keys.package}`
   );
 });
 
-test("getJson()", async t => {
-  let dataObj = new TemplateData("./test/stubs/globalData.json");
+test("Data dir does not exist", async t => {
+  let dataObj = new TemplateData("./test/thisdirectorydoesnotexist");
 
-  let data = await dataObj.getJson(dataObj.globalDataPath, dataObj.rawImports);
-
-  t.is(data.datakey1, "datavalue1");
-  t.is(data.datakey2, "eleventy");
-});
-
-test("getJson() file does not exist", async t => {
-  let dataObj = new TemplateData("./test/stubs/thisfiledoesnotexist.json");
-
-  let data = await dataObj.getJson(dataObj.globalDataPath, dataObj.rawImports);
-
-  t.is(typeof data, "object");
-  t.is(Object.keys(data).length, 0);
+  await t.throws(dataObj.getData());
 });
 
 test("addLocalData()", async t => {
-  let dataObj = new TemplateData("./test/stubs/globalData.json");
-  let data = await dataObj.cacheData();
+  let dataObj = new TemplateData("./test/stubs/");
+  let data = await dataObj.getData();
 
-  t.is(data.datakey1, "datavalue1");
-  t.is(data.datakey2, "eleventy");
+  t.is(data.globalData.datakey1, "datavalue1");
+  t.is(data.globalData.datakey2, "eleventy");
 
   let withLocalData = await dataObj.getLocalData(
     "./test/stubs/component/component.json"
   );
-  t.is(withLocalData.datakey1, "datavalue1");
-  t.is(withLocalData.datakey2, "eleventy");
+  t.is(withLocalData.globalData.datakey1, "datavalue1");
+  t.is(withLocalData.globalData.datakey2, "eleventy");
   t.is(withLocalData.component.localdatakey1, "localdatavalue1");
 });
 
 test("addLocalData() doesn’t exist but doesn’t fail", async t => {
-  let dataObj = new TemplateData("./test/stubs/globalData.json");
-  let data = await dataObj.cacheData();
+  let dataObj = new TemplateData("./test/stubs/");
+  let data = await dataObj.getData();
 
   let withLocalData = await dataObj.getLocalData(
     "./test/stubs/component/thisfiledoesnotexist.json"
   );
-  t.is(withLocalData.datakey1, "datavalue1");
-  t.is(withLocalData.datakey2, "eleventy");
+  t.is(withLocalData.globalData.datakey1, "datavalue1");
+  t.is(withLocalData.globalData.datakey2, "eleventy");
   t.deepEqual(withLocalData.thisfiledoesnotexist, {});
 });
 

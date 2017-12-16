@@ -1,5 +1,4 @@
 {
-  "globalDataFile": "./data.json",
   "templateFormats": [
     "liquid",
     "ejs",

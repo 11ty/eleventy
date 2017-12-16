@@ -12,18 +12,6 @@ function cleanHtml(str) {
   return pretty(str, { ocd: true });
 }
 
-test("stripLeadingDotSlash", t => {
-  let tmpl = new Template(
-    "./test/stubs/template.ejs",
-    "./test/stubs/",
-    "./dist"
-  );
-  t.is(tmpl.stripLeadingDotSlash("./test/stubs"), "test/stubs");
-  t.is(tmpl.stripLeadingDotSlash("./dist"), "dist");
-  t.is(tmpl.stripLeadingDotSlash("../dist"), "../dist");
-  t.is(tmpl.stripLeadingDotSlash("dist"), "dist");
-});
-
 test("getTemplateSubFolder", t => {
   let tmpl = new Template(
     "./test/stubs/template.ejs",
@@ -115,7 +103,7 @@ test("Test that getData() works", async t => {
 });
 
 test("More advanced getData()", async t => {
-  let dataObj = new TemplateData("./test/stubs/globalData.json");
+  let dataObj = new TemplateData("./test/stubs/");
   let tmpl = new Template(
     "./test/stubs/templateFrontMatter.ejs",
     "./test/stubs/",
@@ -138,7 +126,7 @@ test("More advanced getData()", async t => {
 });
 
 test("One Layout", async t => {
-  let dataObj = new TemplateData("./test/stubs/globalData.json");
+  let dataObj = new TemplateData("./test/stubs/");
   let tmpl = new Template(
     "./test/stubs/templateWithLayout.ejs",
     "./test/stubs/",
@@ -168,7 +156,7 @@ test("One Layout", async t => {
 });
 
 test("Two Layouts", async t => {
-  let dataObj = new TemplateData("./test/stubs/globalData.json");
+  let dataObj = new TemplateData("./test/stubs/");
   let tmpl = new Template(
     "./test/stubs/templateTwoLayouts.ejs",
     "./test/stubs/",
@@ -200,7 +188,7 @@ test("Two Layouts", async t => {
 });
 
 test("Liquid template", async t => {
-  let dataObj = new TemplateData("./test/stubs/globalData.json");
+  let dataObj = new TemplateData("./test/stubs/");
   let tmpl = new Template(
     "./test/stubs/formatTest.liquid",
     "./test/stubs/",
@@ -222,7 +210,7 @@ test("Liquid template with include", async t => {
 });
 
 test("ES6 Template Literal", async t => {
-  let dataObj = new TemplateData("./test/stubs/globalData.json");
+  let dataObj = new TemplateData("./test/stubs/");
   let tmpl = new Template(
     "./test/stubs/formatTest.jstl",
     "./test/stubs/",
