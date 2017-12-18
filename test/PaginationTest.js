@@ -3,6 +3,36 @@ import Template from "../src/Template";
 import TemplateData from "../src/TemplateData";
 import Pagination from "../src/Plugins/Pagination";
 
+test("No data passed to pagination", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/notpaged.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let paging = new Pagination();
+  paging.setTemplate(tmpl);
+
+  t.is(paging.getPagedItems().length, 0);
+  t.is((await paging.getTemplates()).length, 0);
+});
+
+test("No pagination", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/notpaged.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let paging = new Pagination(data);
+  paging.setTemplate(tmpl);
+
+  t.falsy(data.pagination);
+  t.is(paging.getPagedItems().length, 0);
+  t.is((await paging.getTemplates()).length, 0);
+});
+
 test("Pagination enabled in frontmatter", async t => {
   let tmpl = new Template(
     "./test/stubs/paged/pagedresolve.njk",
@@ -32,7 +62,7 @@ test("Resolve paged data in frontmatter", async t => {
   let paging = new Pagination(await tmpl.getData());
   paging.setTemplate(tmpl);
   t.is(paging._resolveItems().length, 8);
-  t.is(paging._getItems().length, 2);
+  t.is(paging.getPagedItems().length, 2);
 });
 
 test("Paginate data in frontmatter", async t => {
@@ -45,7 +75,7 @@ test("Paginate data in frontmatter", async t => {
   let data = await tmpl.getData();
   let paging = new Pagination(data);
   paging.setTemplate(tmpl);
-  let pages = await paging.getPageTemplates();
+  let pages = await paging.getTemplates();
   t.is(pages.length, 2);
 
   t.is(pages[0].getOutputPath(), "./dist/paged/pagedinlinedata/index.html");
@@ -79,7 +109,7 @@ test("Paginate external data file", async t => {
 
   let paging = new Pagination(data);
   paging.setTemplate(tmpl);
-  let pages = await paging.getPageTemplates();
+  let pages = await paging.getTemplates();
   t.is(pages.length, 2);
 
   t.is(pages[0].getOutputPath(), "./dist/paged/paged/index.html");
