@@ -35,19 +35,32 @@ Pagination.prototype.getPageTemplates = async function() {
   if (this.data.pagination) {
     let items = chunk(this._getItems(), this._getSize());
     let tmpl = this.template;
+    let templates = [];
+    let links = [];
 
-    items.forEach(
-      function(chunk, pageNumber) {
-        let cloned = tmpl.clone();
+    items.forEach(function(chunk, pageNumber) {
+      let cloned = tmpl.clone();
+      if (pageNumber > 0) {
         cloned.setExtraOutputSubdirectory(pageNumber);
-        cloned.removePlugin("pagination");
+      }
+      cloned.removePlugin("pagination");
+      templates.push(cloned);
+      links.push("/" + cloned.getOutputLink());
+    });
 
+    templates.forEach(
+      function(cloned, pageNumber) {
         cloned.setDataOverrides({
           pagination: {
             data: this.data.pagination.data,
             size: this.data.pagination.size,
-            items: chunk,
-            pageNumber: pageNumber
+            items: items[pageNumber],
+            pageNumber: pageNumber,
+            // TO DO if the site doesn’t live at /
+            previousPageLink: pageNumber > 0 ? links[pageNumber - 1] : null,
+            nextPageLink:
+              pageNumber < templates.length - 1 ? links[pageNumber + 1] : null,
+            pageLinks: links
           }
         });
 

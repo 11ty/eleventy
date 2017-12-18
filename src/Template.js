@@ -62,15 +62,12 @@ Template.prototype.setExtraOutputSubdirectory = function(dir) {
   this.extraOutputSubdirectory = dir + "/";
 };
 
-// TODO check for conflicts, see if file already exists?
-Template.prototype.getOutputPath = function() {
+Template.prototype.getOutputLink = function() {
   let permalink = this.getFrontMatterData()[cfg.keys.permalink];
   if (permalink) {
     let permalinkParsed = parsePath(permalink);
     return TemplatePath.normalize(
-      this.outputDir +
-        "/" +
-        permalinkParsed.dir +
+      permalinkParsed.dir +
         "/" +
         this.extraOutputSubdirectory +
         permalinkParsed.base
@@ -79,7 +76,6 @@ Template.prototype.getOutputPath = function() {
 
   let dir = this.getTemplateSubfolder();
   let path =
-    "/" +
     (dir ? dir + "/" : "") +
     (this.parsed.name !== "index" ? this.parsed.name + "/" : "") +
     this.extraOutputSubdirectory +
@@ -87,7 +83,12 @@ Template.prototype.getOutputPath = function() {
     (this.isHtmlIOException ? cfg.htmlOutputSuffix : "") +
     ".html";
   // console.log( this.inputPath,"|", this.inputDir, "|", dir );
-  return normalize(this.outputDir + path);
+  return normalize(path);
+};
+
+// TODO check for conflicts, see if file already exists?
+Template.prototype.getOutputPath = function() {
+  return normalize(this.outputDir + "/" + this.getOutputLink());
 };
 
 Template.prototype.setDataOverrides = function(overrides) {

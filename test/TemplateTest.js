@@ -236,7 +236,7 @@ test("Permalink output directory", t => {
     "./test/stubs/",
     "./dist"
   );
-  t.is(tmpl.getOutputPath(), "dist/permalinksubfolder/index.html");
+  t.is(tmpl.getOutputPath(), "./dist/permalinksubfolder/index.html");
 });
 
 test("Local template data file import (without a global data json)", async t => {

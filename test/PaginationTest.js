@@ -28,7 +28,7 @@ test("Test that getData() works", async t => {
   let pages = await paging.getPageTemplates();
   t.is(pages.length, 2);
 
-  t.is(pages[0].getOutputPath(), "./dist/paged/paged/0/index.html");
+  t.is(pages[0].getOutputPath(), "./dist/paged/paged/index.html");
   t.is(
     (await pages[0].render()).trim(),
     "<ol><li>item1</li><li>item2</li><li>item3</li><li>item4</li><li>item5</li></ol>"
