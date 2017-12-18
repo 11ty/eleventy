@@ -108,6 +108,7 @@ TemplateWriter.prototype._getTemplate = function(path) {
     var paging = new Pagination(data);
     paging.setTemplate(this);
     await paging.write();
+
     if (paging.cancel()) {
       return false;
     }

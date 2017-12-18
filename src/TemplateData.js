@@ -57,6 +57,7 @@ TemplateData.prototype.getAllGlobalData = async function() {
   let files = await this.getGlobalDataFiles();
 
   for (var j = 0, k = files.length; j < k; j++) {
+    // TODO doesn’t take subdirectories into account in name
     let key = parsePath(files[j]).name;
     globalData[key] = await this.getJson(files[j], this.rawImports);
   }

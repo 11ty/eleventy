@@ -9,7 +9,7 @@ Pagination.prototype.setTemplate = function(tmpl) {
   this.template = tmpl;
 };
 
-Pagination.prototype._getItems = function() {
+Pagination.prototype._resolveItems = function() {
   // todo targets that are children of arrays: [] not just .
   let keys = this.data.pagination.data.split(".");
   let target = this.data;
@@ -21,10 +21,15 @@ Pagination.prototype._getItems = function() {
   return target;
 };
 
+Pagination.prototype._getItems = function() {
+  return chunk(this._resolveItems(), this._getSize());
+};
+
 Pagination.prototype._getSize = function() {
   return this.data.pagination.size || this.defaultSize;
 };
 
+// don’t write the original root template
 Pagination.prototype.cancel = function() {
   return "pagination" in this.data;
 };
@@ -33,7 +38,7 @@ Pagination.prototype.getPageTemplates = async function() {
   let pages = [];
 
   if (this.data.pagination) {
-    let items = chunk(this._getItems(), this._getSize());
+    let items = this._getItems();
     let tmpl = this.template;
     let templates = [];
     let links = [];
@@ -49,6 +54,7 @@ Pagination.prototype.getPageTemplates = async function() {
       links.push("/" + cloned.getOutputLink());
     });
 
+    // we loop twice to pass in the appropriate prev/next links (already full generated now)
     templates.forEach(
       function(cloned, pageNumber) {
         cloned.setDataOverrides({
