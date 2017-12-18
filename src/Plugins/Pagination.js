@@ -45,6 +45,7 @@ Pagination.prototype.getPageTemplates = async function() {
       }
       cloned.removePlugin("pagination");
       templates.push(cloned);
+      // TO DO subdirectory to links if the site doesn’t live at /
       links.push("/" + cloned.getOutputLink());
     });
 
@@ -56,7 +57,6 @@ Pagination.prototype.getPageTemplates = async function() {
             size: this.data.pagination.size,
             items: items[pageNumber],
             pageNumber: pageNumber,
-            // TO DO if the site doesn’t live at /
             previousPageLink: pageNumber > 0 ? links[pageNumber - 1] : null,
             nextPageLink:
               pageNumber < templates.length - 1 ? links[pageNumber + 1] : null,
