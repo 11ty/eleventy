@@ -4,6 +4,7 @@ const fs = require("fs-extra");
 const parsePath = require("parse-filepath");
 const matter = require("gray-matter");
 const normalize = require("normalize-path");
+const clone = require("lodash.clone");
 const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
 const Layout = require("./Layout");
@@ -16,6 +17,9 @@ function Template(path, inputDir, outputDir, templateData) {
   this.inputPath = path;
   this.inputContent = fs.readFileSync(path, "utf-8");
   this.parsed = parsePath(path);
+
+  // for pagination
+  this.extraOutputSubdirectory = "";
 
   if (inputDir) {
     this.inputDir = normalize(inputDir);
@@ -31,18 +35,18 @@ function Template(path, inputDir, outputDir, templateData) {
 
   this.frontMatter = this.getMatter();
 
-  this.postProcessFilters = [];
+  this.filters = [];
+  this.plugins = {};
   this.templateData = templateData;
+  this.dataOverrides = {};
 
   this.templateRender = new TemplateRender(this.inputPath, this.inputDir);
 
   // HTML output can’t overwrite the HTML input file.
   this.isHtmlIOException =
-    this.inputDir === this.outputDir && this.templateRender.isEngine("html");
-
-  if (outputDir) {
-    this.outputPath = this.getOutputPath();
-  }
+    this.inputDir === this.outputDir &&
+    this.templateRender.isEngine("html") &&
+    this.parsed.name === "index";
 }
 
 Template.prototype.getTemplateSubfolder = function() {
@@ -54,21 +58,40 @@ Template.prototype.getTemplateSubfolder = function() {
   );
 };
 
+Template.prototype.setExtraOutputSubdirectory = function(dir) {
+  this.extraOutputSubdirectory = dir + "/";
+};
+
+// TODO check for conflicts, see if file already exists?
 Template.prototype.getOutputPath = function() {
   let permalink = this.getFrontMatterData()[cfg.keys.permalink];
   if (permalink) {
-    return TemplatePath.normalize(this.outputDir, permalink);
+    let permalinkParsed = parsePath(permalink);
+    return TemplatePath.normalize(
+      this.outputDir +
+        "/" +
+        permalinkParsed.dir +
+        "/" +
+        this.extraOutputSubdirectory +
+        permalinkParsed.base
+    );
   }
 
   let dir = this.getTemplateSubfolder();
   let path =
     "/" +
     (dir ? dir + "/" : "") +
-    this.parsed.name +
+    (this.parsed.name !== "index" ? this.parsed.name + "/" : "") +
+    this.extraOutputSubdirectory +
+    "index" +
     (this.isHtmlIOException ? cfg.htmlOutputSuffix : "") +
     ".html";
   // console.log( this.inputPath,"|", this.inputDir, "|", dir );
   return normalize(this.outputDir + path);
+};
+
+Template.prototype.setDataOverrides = function(overrides) {
+  this.dataOverrides = overrides;
 };
 
 Template.prototype.isIgnored = function() {
@@ -131,7 +154,13 @@ Template.prototype.getData = async function(localData) {
     this.getFrontMatterData()
   );
 
-  return Object.assign({}, data, mergedLayoutData, localData);
+  return Object.assign(
+    {},
+    data,
+    mergedLayoutData,
+    localData,
+    this.dataOverrides
+  );
 };
 
 Template.prototype.renderLayout = async function(tmpl, tmplData) {
@@ -142,7 +171,6 @@ Template.prototype.renderLayout = async function(tmpl, tmplData) {
   let layout = this.getLayoutTemplate(layoutName);
   let layoutData = await layout.getData(tmplData);
 
-  // console.log( "LAYOUT CONTENT", tmpl.outputPath );
   // console.log( await this.renderContent( tmpl.getPreRender(), tmplData ) );
   layoutData._layoutContent = await this.renderContent(
     tmpl.getPreRender(),
@@ -164,8 +192,11 @@ Template.prototype.renderContent = async function(str, data) {
   return this.templateRender.render(str, data);
 };
 
-Template.prototype.render = async function() {
-  let data = await this.getData();
+Template.prototype.render = async function(data) {
+  if (!data) {
+    data = await this.getData();
+  }
+
   if (data[cfg.keys.layout]) {
     return this.renderLayout(this, data);
   } else {
@@ -173,26 +204,62 @@ Template.prototype.render = async function() {
   }
 };
 
-Template.prototype.addPostProcessFilter = function(callback) {
-  this.postProcessFilters.push(callback);
+Template.prototype.addFilter = function(callback) {
+  this.filters.push(callback);
 };
 
 Template.prototype.runFilters = function(str) {
-  this.postProcessFilters.forEach(function(filter) {
-    str = filter(str);
+  this.filters.forEach(function(filter) {
+    str = filter.call(this, str);
   });
+
   return str;
 };
 
-Template.prototype.write = async function() {
-  if (this.isIgnored()) {
-    console.log("Ignoring", this.outputPath);
-  } else {
-    let str = await this.render();
-    let filtered = this.runFilters(str);
-    await pify(fs.outputFile)(this.outputPath, filtered);
-    console.log("Writing", this.outputPath, "from", this.inputPath);
+Template.prototype.addPlugin = function(key, callback) {
+  this.plugins[key] = callback;
+};
+
+Template.prototype.removePlugin = function(key) {
+  delete this.plugins[key];
+};
+
+Template.prototype.runPlugins = async function(data) {
+  let ret = true;
+  for (let key in this.plugins) {
+    let pluginRet = await this.plugins[key].call(this, data);
+    if (pluginRet === false) {
+      ret = false;
+    }
   }
+
+  return ret;
+};
+
+Template.prototype.write = async function() {
+  let outputPath = this.getOutputPath();
+  if (this.isIgnored()) {
+    console.log("Ignoring", outputPath);
+  } else {
+    let data = await this.getData();
+    let str = await this.render(data);
+    let pluginRet = await this.runPlugins(data);
+
+    if (pluginRet) {
+      let filtered = this.runFilters(str);
+      await pify(fs.outputFile)(outputPath, filtered);
+      console.log("Writing", outputPath, "from", this.inputPath);
+    }
+  }
+};
+
+Template.prototype.clone = function() {
+  return new Template(
+    this.inputPath,
+    this.inputDir,
+    this.outputDir,
+    this.templateData
+  );
 };
 
 module.exports = Template;

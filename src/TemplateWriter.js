@@ -6,6 +6,7 @@ const Template = require("./Template");
 const TemplatePath = require("./TemplatePath");
 const TemplateRender = require("./TemplateRender");
 const TemplateConfig = require("./TemplateConfig");
+const Pagination = require("./Plugins/Pagination");
 
 const pkg = require("../package.json");
 
@@ -98,9 +99,20 @@ TemplateWriter.prototype._getTemplate = function(path) {
     this.outputDir,
     this.templateData
   );
-  tmpl.addPostProcessFilter(function(str) {
+
+  tmpl.addFilter(function(str) {
     return pretty(str, { ocd: true });
   });
+
+  tmpl.addPlugin("pagination", async function(data) {
+    var paging = new Pagination(data);
+    paging.setTemplate(this);
+    await paging.write();
+    if (paging.cancel()) {
+      return false;
+    }
+  });
+
   return tmpl;
 };
 

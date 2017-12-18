@@ -40,7 +40,7 @@ test("output path maps to an html file", t => {
   t.is(tmpl.inputDir, "./test/stubs");
   t.is(tmpl.outputDir, "./dist");
   t.is(tmpl.getTemplateSubfolder(), "");
-  t.is(tmpl.getOutputPath(), "./dist/template.html");
+  t.is(tmpl.getOutputPath(), "./dist/template/index.html");
 });
 
 test("subfolder outputs to a subfolder", t => {
@@ -51,7 +51,7 @@ test("subfolder outputs to a subfolder", t => {
   );
   t.is(tmpl.parsed.dir, "./test/stubs/subfolder");
   t.is(tmpl.getTemplateSubfolder(), "subfolder");
-  t.is(tmpl.getOutputPath(), "./dist/subfolder/subfolder.html");
+  t.is(tmpl.getOutputPath(), "./dist/subfolder/subfolder/index.html");
 });
 
 test("ignored files start with an underscore", t => {
@@ -63,13 +63,22 @@ test("ignored files start with an underscore", t => {
   t.is(tmpl.isIgnored(), true);
 });
 
-test("HTML files output to the same as the input directory have a file suffix added.", async t => {
+test("HTML files output to the same as the input directory have a file suffix added (only if index, this is not index).", async t => {
   let tmpl = new Template(
     "./test/stubs/testing.html",
     "./test/stubs",
     "./test/stubs"
   );
-  t.is(tmpl.getOutputPath(), "./test/stubs/testing-output.html");
+  t.is(tmpl.getOutputPath(), "./test/stubs/testing/index.html");
+});
+
+test("HTML files output to the same as the input directory have a file suffix added (only if index, this _is_ index).", async t => {
+  let tmpl = new Template(
+    "./test/stubs/index.html",
+    "./test/stubs",
+    "./test/stubs"
+  );
+  t.is(tmpl.getOutputPath(), "./test/stubs/index-output.html");
 });
 
 test("Test raw front matter from template", t => {
@@ -245,4 +254,17 @@ test("Local template data file import (without a global data json)", async t => 
   t.is(tmpl.getLocalDataPath(), "./test/stubs/component/component.json");
   t.is(data.localdatakey1, "localdatavalue1");
   t.is(await tmpl.render(), "localdatavalue1");
+});
+
+test("Clone the template", t => {
+  let tmpl = new Template(
+    "./test/stubs/default.ejs",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let cloned = tmpl.clone();
+
+  t.is(tmpl.getOutputPath(), "./dist/default/index.html");
+  t.is(cloned.getOutputPath(), "./dist/default/index.html");
 });

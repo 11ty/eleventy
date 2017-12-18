@@ -45,6 +45,8 @@
     "hamljs": "^0.6.2",
     "handlebars": "^4.0.11",
     "liquidjs": "^2.0.3",
+    "lodash.chunk": "^4.2.0",
+    "lodash.clone": "^4.5.0",
     "lodash.merge": "^4.6.0",
     "markdown-it": "^8.4.0",
     "minimist": "^1.2.0",

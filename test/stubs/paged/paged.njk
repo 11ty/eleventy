@@ -1,0 +1,6 @@
+---
+pagination:
+  data: items.sub
+  size: 5
+---
+<ol>{% for item in pagination.items %}<li>{{ item }}</li>{% endfor %}</ol>

@@ -29,7 +29,10 @@ test("Output is a subdir of input", async t => {
 
   let tmpl = tw._getTemplate(files[0]);
   t.is(tmpl.inputDir, "./test/stubs/writeTest");
-  t.is(tmpl.outputPath, "./test/stubs/writeTest/_writeTestSite/test.html");
+  t.is(
+    tmpl.getOutputPath(),
+    "./test/stubs/writeTest/_writeTestSite/test/index.html"
+  );
 
   // don’t write because this messes with ava’s watch
   // fs.removeSync( "./test/stubs/writeTest/_site" );
