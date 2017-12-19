@@ -177,3 +177,28 @@ test("Permalink with pagination variables (numeric)", async t => {
   t.falsy(page1Data.pagination.nextPageLink);
   t.is(page1Data.pagination.pageLinks.length, 2);
 });
+
+test("Permalink with pagination variables (numeric, one indexed)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/pagedpermalinknumericoneindexed.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let paging = new Pagination(data);
+  paging.setTemplate(tmpl);
+  let pages = await paging.getTemplates();
+
+  let page0Data = await pages[0].getData();
+  t.is(await pages[0].getOutputPath(), "./dist/paged/page-1/index.html");
+  t.falsy(page0Data.pagination.previousPageLink);
+  t.is(page0Data.pagination.nextPageLink, "/paged/page-2/index.html");
+  t.is(page0Data.pagination.pageLinks.length, 2);
+
+  let page1Data = await pages[1].getData();
+  t.is(await pages[1].getOutputPath(), "./dist/paged/page-2/index.html");
+  t.is(page1Data.pagination.previousPageLink, "/paged/page-1/index.html");
+  t.falsy(page1Data.pagination.nextPageLink);
+  t.is(page1Data.pagination.pageLinks.length, 2);
+});

@@ -61,22 +61,13 @@ eleventy --input=. --output=. --formats=html
 ##### Special variables:
 
 * `pkg`: The local project’s `package.json` values.
-* `permalink`: Add in front matter to change the output subfolder of the current template.
+* `permalink`: Add in front matter to change the output target of the current template. You can use template syntax for variables here. [Read more about Permalinks](docs/permalinks.md).
 * `layout`: Wrap current template with a layout template found in the `_includes` folder.
+* `pagination`: (when enabled in front matter) [Read more about Pagination](docs/pagination.md).
 
-#### (Optional) Global Data Files
+#### (Optional) Data Files
 
-Optionally add data files to add global static data available to all templates. See the `dir.data` configuration below.
-
-The global data files will be pre-processed by a template engine specified under the `dataTemplateEngine` configuration option. Note that `package.json` data is available to these options under the `pkg` variable.
-
-For example:
-
-```
-{
-	"version": "<%= pkg.version %>"
-}
-```
+Optionally add data files to add global static data available to all templates. Uses the `dir.data` configuration option. [Read more about Template Data Files](docs/data.md).
 
 ### (Optional) Ignore files
 
@@ -128,7 +119,7 @@ Here are the features tested with each template engine that use external files a
 | Nunjucks   | ✅ Extends                          | `{% extends 'base.njk' %}` looks in `_includes/base.njk`                          |
 | Nunjucks   | ✅ Imports                          | `{% import 'macros.njk' %}` looks in `_includes/macros.njk`                       |
 
-_Careful, the liquidjs npm package syntax does not match the [default Jekyll Liquid include syntax](https://jekyllrb.com/docs/includes/)._
+_Careful, the liquidjs npm package syntax does not match the [default Jekyll Liquid include syntax](https://jekyllrb.com/docs/includes/). Specifically, includes file names are quoted._
 
 ## Tests
 
