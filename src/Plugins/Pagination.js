@@ -1,4 +1,5 @@
-const chunk = require("lodash.chunk");
+const lodashchunk = require("lodash.chunk");
+const lodashget = require("lodash.get");
 
 function Pagination(data) {
   this.data = data || {};
@@ -30,25 +31,20 @@ Pagination.prototype._getDataKey = function() {
 };
 
 Pagination.prototype._resolveItems = function() {
-  // todo targets that are children of arrays: [] not just .
-  let keys = this._getDataKey().split(".");
-  let target = this.data;
+  let notFoundValue = "__NOT_FOUND_ERROR__";
+  let ret = lodashget(this.data, this._getDataKey(), notFoundValue);
 
-  keys.forEach(function(key) {
-    if (!(key in target)) {
-      throw new Error(
-        `Could not resolve pagination key in front matter: ${this._getDataKey()}`
-      );
-    }
+  if (ret === notFoundValue) {
+    throw new Error(
+      `Could not resolve pagination key in template data: ${this._getDataKey()}`
+    );
+  }
 
-    target = target[key];
-  });
-
-  return target;
+  return ret;
 };
 
 Pagination.prototype.getPagedItems = function() {
-  return chunk(this.target, this.size);
+  return lodashchunk(this.target, this.size);
 };
 
 // TODO this name is not good
@@ -70,6 +66,10 @@ Pagination.prototype.getTemplates = async function() {
 
   items.forEach(function(chunk, pageNumber) {
     let cloned = tmpl.clone();
+    // TODO make permalinks work better? We want to be able to iterate over a data set and generate
+    // templates for all things without having numeric keys in urls
+    // Read: fonts/noto-sans instead of fonts/2
+    // maybe also move this permalink additions up into the pagination class
     if (pageNumber > 0) {
       cloned.setExtraOutputSubdirectory(pageNumber);
     }
