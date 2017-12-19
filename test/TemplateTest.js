@@ -81,6 +81,15 @@ test("HTML files output to the same as the input directory have a file suffix ad
   t.is(await tmpl.getOutputPath(), "./test/stubs/index-output.html");
 });
 
+test("HTML files output to the same as the input directory have a file suffix added (only if index, this _is_ index).", async t => {
+  let tmpl = new Template(
+    "./test/stubs/subfolder/index.html",
+    "./test/stubs",
+    "./test/stubs"
+  );
+  t.is(await tmpl.getOutputPath(), "./test/stubs/subfolder/index-output.html");
+});
+
 test("Test raw front matter from template", t => {
   let tmpl = new Template(
     "./test/stubs/templateFrontMatter.ejs",
