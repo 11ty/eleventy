@@ -2,8 +2,14 @@
   "name": "eleventy",
   "version": "0.1.0",
   "description": "Transform a directory of templates into HTML.",
-  "license": "MIT",
   "main": "cmd.js",
+  "license": "MIT",
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "bin": {
+    "eleventy": "./cmd.js"
+  },
   "scripts": {
     "default": "node cmd.js",
     "watch": "node cmd.js --watch",
@@ -15,9 +21,6 @@
     "name": "Zach Leatherman",
     "email": "zachleatherman@gmail.com",
     "url": "https://zachleat.com/"
-  },
-  "bin": {
-    "eleventy": "./cmd.js"
   },
   "repository": {
     "type": "git",
