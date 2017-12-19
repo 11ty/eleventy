@@ -1,5 +1,9 @@
 const lodashchunk = require("lodash.chunk");
 const lodashget = require("lodash.get");
+const TemplateConfig = require("../TemplateConfig");
+
+let templateCfg = new TemplateConfig(require("../../config.json"));
+let cfg = templateCfg.getConfig();
 
 function Pagination(data) {
   this.data = data || {};
@@ -58,42 +62,48 @@ Pagination.prototype.getTemplates = async function() {
     return [];
   }
 
+  let data = this.data;
   let pages = [];
   let items = this.items;
   let tmpl = this.template;
   let templates = [];
   let links = [];
+  let overrides = [];
 
-  items.forEach(function(chunk, pageNumber) {
+  for (var pageNumber = 0, k = items.length; pageNumber < k; pageNumber++) {
+    let chunk = items[pageNumber];
     let cloned = tmpl.clone();
-    // TODO make permalinks work better? We want to be able to iterate over a data set and generate
-    // templates for all things without having numeric keys in urls
-    // Read: fonts/noto-sans instead of fonts/2
-    // maybe also move this permalink additions up into the pagination class
-    if (pageNumber > 0) {
+    // TODO maybe also move this permalink additions up into the pagination class
+    if (pageNumber > 0 && !this.data[cfg.keys.permalink]) {
       cloned.setExtraOutputSubdirectory(pageNumber);
     }
+
     cloned.removePlugin("pagination");
     templates.push(cloned);
+
+    overrides.push({
+      pagination: {
+        data: this.data.pagination.data,
+        size: this.data.pagination.size,
+        items: items[pageNumber],
+        pageNumber: pageNumber
+      }
+    });
+    cloned.setDataOverrides(overrides[pageNumber]);
+
     // TO DO subdirectory to links if the site doesn’t live at /
-    links.push("/" + cloned.getOutputLink());
-  });
+    links.push("/" + (await cloned.getOutputLink()));
+  }
 
   // we loop twice to pass in the appropriate prev/next links (already full generated now)
   templates.forEach(
     function(cloned, pageNumber) {
-      cloned.setDataOverrides({
-        pagination: {
-          data: this.data.pagination.data,
-          size: this.data.pagination.size,
-          items: items[pageNumber],
-          pageNumber: pageNumber,
-          previousPageLink: pageNumber > 0 ? links[pageNumber - 1] : null,
-          nextPageLink:
-            pageNumber < templates.length - 1 ? links[pageNumber + 1] : null,
-          pageLinks: links
-        }
-      });
+      overrides[pageNumber].pagination.previousPageLink =
+        pageNumber > 0 ? links[pageNumber - 1] : null;
+      overrides[pageNumber].pagination.nextPageLink =
+        pageNumber < templates.length - 1 ? links[pageNumber + 1] : null;
+      overrides[pageNumber].pagination.pageLinks = links;
+      cloned.setDataOverrides(overrides[pageNumber]);
 
       pages.push(cloned);
     }.bind(this)

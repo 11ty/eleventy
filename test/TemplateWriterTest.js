@@ -30,7 +30,7 @@ test("Output is a subdir of input", async t => {
   let tmpl = tw._getTemplate(files[0]);
   t.is(tmpl.inputDir, "./test/stubs/writeTest");
   t.is(
-    tmpl.getOutputPath(),
+    await tmpl.getOutputPath(),
     "./test/stubs/writeTest/_writeTestSite/test/index.html"
   );
 

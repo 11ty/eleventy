@@ -50,27 +50,23 @@ function Template(path, inputDir, outputDir, templateData) {
 }
 
 Template.prototype.getTemplateSubfolder = function() {
-  var pathDir = this.parsed.dir;
-  var index = pathDir.indexOf(this.inputDir);
-
-  return TemplatePath.stripLeadingDotSlash(
-    index > -1 ? pathDir.substr(this.inputDir.length + 1) : this.inputDir
-  );
+  return TemplatePath.stripPathFromDir(this.parsed.dir, this.inputDir);
 };
 
 Template.prototype.setExtraOutputSubdirectory = function(dir) {
   this.extraOutputSubdirectory = dir + "/";
 };
 
-Template.prototype.getOutputLink = function() {
+Template.prototype.getOutputLink = async function() {
   let permalink = this.getFrontMatterData()[cfg.keys.permalink];
   if (permalink) {
-    let permalinkParsed = parsePath(permalink);
+    let data = await this.getData();
+    let permalinkParsed = parsePath(await this.renderContent(permalink, data));
     return TemplatePath.normalize(
       permalinkParsed.dir +
         "/" +
         this.extraOutputSubdirectory +
-        permalinkParsed.base
+        permalinkParsed.base // name with extension
     );
   }
 
@@ -87,8 +83,9 @@ Template.prototype.getOutputLink = function() {
 };
 
 // TODO check for conflicts, see if file already exists?
-Template.prototype.getOutputPath = function() {
-  return normalize(this.outputDir + "/" + this.getOutputLink());
+Template.prototype.getOutputPath = async function() {
+  let uri = await this.getOutputLink();
+  return normalize(this.outputDir + "/" + uri);
 };
 
 Template.prototype.setDataOverrides = function(overrides) {
@@ -238,14 +235,13 @@ Template.prototype.runPlugins = async function(data) {
 };
 
 Template.prototype.write = async function() {
-  let outputPath = this.getOutputPath();
+  let outputPath = await this.getOutputPath();
   if (this.isIgnored()) {
     console.log("Ignoring", outputPath);
   } else {
     let data = await this.getData();
     let str = await this.render(data);
     let pluginRet = await this.runPlugins(data);
-
     if (pluginRet) {
       let filtered = this.runFilters(str);
       await pify(fs.outputFile)(outputPath, filtered);

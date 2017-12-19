@@ -1,5 +1,6 @@
 const NunjucksLib = require("nunjucks");
 const TemplateEngine = require("./TemplateEngine");
+const slug = require("slug-rfc");
 
 class Nunjucks extends TemplateEngine {
   constructor(name, inputDir) {
@@ -8,6 +9,12 @@ class Nunjucks extends TemplateEngine {
     this.njkEnv = new NunjucksLib.Environment(
       new NunjucksLib.FileSystemLoader(super.getInputDir())
     );
+
+    this.njkEnv.addFilter("slug", function(str) {
+      return slug(str, {
+        lower: true
+      });
+    });
   }
 
   async compile(str) {

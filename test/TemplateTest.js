@@ -30,7 +30,7 @@ test("getTemplateSubFolder, output is a subdir of input", t => {
   t.is(tmpl.getTemplateSubfolder(), "");
 });
 
-test("output path maps to an html file", t => {
+test("output path maps to an html file", async t => {
   let tmpl = new Template(
     "./test/stubs/template.ejs",
     "./test/stubs/",
@@ -40,10 +40,10 @@ test("output path maps to an html file", t => {
   t.is(tmpl.inputDir, "./test/stubs");
   t.is(tmpl.outputDir, "./dist");
   t.is(tmpl.getTemplateSubfolder(), "");
-  t.is(tmpl.getOutputPath(), "./dist/template/index.html");
+  t.is(await tmpl.getOutputPath(), "./dist/template/index.html");
 });
 
-test("subfolder outputs to a subfolder", t => {
+test("subfolder outputs to a subfolder", async t => {
   let tmpl = new Template(
     "./test/stubs/subfolder/subfolder.ejs",
     "./test/stubs/",
@@ -51,7 +51,7 @@ test("subfolder outputs to a subfolder", t => {
   );
   t.is(tmpl.parsed.dir, "./test/stubs/subfolder");
   t.is(tmpl.getTemplateSubfolder(), "subfolder");
-  t.is(tmpl.getOutputPath(), "./dist/subfolder/subfolder/index.html");
+  t.is(await tmpl.getOutputPath(), "./dist/subfolder/subfolder/index.html");
 });
 
 test("ignored files start with an underscore", t => {
@@ -69,7 +69,7 @@ test("HTML files output to the same as the input directory have a file suffix ad
     "./test/stubs",
     "./test/stubs"
   );
-  t.is(tmpl.getOutputPath(), "./test/stubs/testing/index.html");
+  t.is(await tmpl.getOutputPath(), "./test/stubs/testing/index.html");
 });
 
 test("HTML files output to the same as the input directory have a file suffix added (only if index, this _is_ index).", async t => {
@@ -78,7 +78,7 @@ test("HTML files output to the same as the input directory have a file suffix ad
     "./test/stubs",
     "./test/stubs"
   );
-  t.is(tmpl.getOutputPath(), "./test/stubs/index-output.html");
+  t.is(await tmpl.getOutputPath(), "./test/stubs/index-output.html");
 });
 
 test("Test raw front matter from template", t => {
@@ -230,13 +230,13 @@ test("ES6 Template Literal", async t => {
   t.is(await tmpl.render(), `<p>ZACH</p>`);
 });
 
-test("Permalink output directory", t => {
+test("Permalink output directory", async t => {
   let tmpl = new Template(
     "./test/stubs/permalinked.ejs",
     "./test/stubs/",
     "./dist"
   );
-  t.is(tmpl.getOutputPath(), "./dist/permalinksubfolder/index.html");
+  t.is(await tmpl.getOutputPath(), "./dist/permalinksubfolder/index.html");
 });
 
 test("Local template data file import (without a global data json)", async t => {
@@ -256,7 +256,7 @@ test("Local template data file import (without a global data json)", async t => 
   t.is(await tmpl.render(), "localdatavalue1");
 });
 
-test("Clone the template", t => {
+test("Clone the template", async t => {
   let tmpl = new Template(
     "./test/stubs/default.ejs",
     "./test/stubs/",
@@ -265,6 +265,16 @@ test("Clone the template", t => {
 
   let cloned = tmpl.clone();
 
-  t.is(tmpl.getOutputPath(), "./dist/default/index.html");
-  t.is(cloned.getOutputPath(), "./dist/default/index.html");
+  t.is(await tmpl.getOutputPath(), "./dist/default/index.html");
+  t.is(await cloned.getOutputPath(), "./dist/default/index.html");
+});
+
+test("Permalink with variables!", async t => {
+  let tmpl = new Template(
+    "./test/stubs/permalinkdata.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is(await tmpl.getOutputPath(), "./dist/subdir/slug-candidate/index.html");
 });
