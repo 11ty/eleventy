@@ -30,29 +30,7 @@ We enable pagination and then give it a dataset with the `data` key. We (optiona
 }
 ```
 
-If the above file were named `paged.njk`, it would create two pages: `_site/paged/0/index.html` and `_site/paged/1/index.html`.
-
-## Remapping with permalinks
-
-Pagination variables also work here. Here’s an example of a permalink using the pagination page number:
-
-```
----
-permalink: paged/page-{{ pagination.pageNumber }}/index.html
----
-```
-
-Writes to `_site/paged/page-0/index.html`, `_site/paged/page-1/index.html`, et cetera.
-
-That means Nunjucks will also let you start your page numbers with 1 instead of 0, by just adding 1 here:
-
-```
----
-permalink: paged/page-{{ pagination.pageNumber + 1 }}/index.html
----
-```
-
-Writes to `_site/paged/page-1/index.html`, `_site/paged/page-2/index.html`, et cetera.
+If the above file were named `paged.njk`, it would create two pages: `_site/paged/0/index.html` and `_site/paged/1/index.html`. These output paths are configurable with `permalink` (see below).
 
 ## Paginate a global or local data file
 
@@ -78,3 +56,41 @@ pagination:
 ---
 <ol>{% for item in pagination.items %}<li>{{ item }}</li>{% endfor %}</ol>
 ```
+
+## Remapping with permalinks
+
+Pagination variables also work here. Here’s an example of a permalink using the pagination page number:
+
+```
+---
+permalink: different/page-{{ pagination.pageNumber }}/index.html
+---
+```
+
+Writes to `_site/different/page-0/index.html`, `_site/different/page-1/index.html`, et cetera.
+
+That means Nunjucks will also let you start your page numbers with 1 instead of 0, by just adding 1 here:
+
+```
+---
+permalink: different/page-{{ pagination.pageNumber + 1 }}/index.html
+---
+```
+
+Writes to `_site/different/page-1/index.html`, `_site/different/page-2/index.html`, et cetera.
+
+### Use page item data in the permalink
+
+You can do more advanced things like this:
+
+```
+---
+pagination:
+  data: testdata
+testdata:
+  - My Item
+permalink: different/{{ pagination.items[0] | slug }}/index.html
+---
+```
+
+Using a Nunjucks `slug` filter (transforms `My Item` to `my-item`), this outputs: `_site/different/my-item/index.html`.
