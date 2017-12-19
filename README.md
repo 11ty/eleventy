@@ -62,11 +62,12 @@ You can use front matter on any template file to add local data. Here are a few 
 
 * `permalink`: Add in front matter to change the output target of the current template. You can use template syntax for variables here. [Read more about Permalinks](docs/permalinks.md).
 * `layout`: Wrap current template with a layout template found in the `_includes` folder.
-* `pagination`: (when enabled in front matter) [Read more about Pagination](docs/pagination.md).
+* `pagination`: Enable to iterate over data. [Read more about Pagination](docs/pagination.md).
 
 ##### Special template variables:
 
 * `pkg`: The local project’s `package.json` values.
+* `pagination`: (When enabled in front matter) [Read more about Pagination](docs/pagination.md).
 
 #### Data Files (Optional)
 
