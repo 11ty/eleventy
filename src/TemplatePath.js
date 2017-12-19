@@ -24,4 +24,15 @@ TemplatePath.stripLeadingDotSlash = function(dir) {
   return dir.replace(/^\.\//, "");
 };
 
+TemplatePath.stripPathFromDir = function(targetDir, prunedPath) {
+  targetDir = TemplatePath.stripLeadingDotSlash(normalize(targetDir));
+  prunedPath = TemplatePath.stripLeadingDotSlash(normalize(prunedPath));
+
+  if (targetDir.indexOf(prunedPath) === 0) {
+    return targetDir.substr(prunedPath.length + 1);
+  }
+
+  return targetDir;
+};
+
 module.exports = TemplatePath;

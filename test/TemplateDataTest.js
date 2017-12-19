@@ -90,7 +90,12 @@ test("getAllGlobalData() with other data files", async t => {
 
   t.true((await dataObj.getGlobalDataFiles()).length > 0);
   t.not(typeof data.testData, "undefined");
+
   t.deepEqual(data.testData, {
     testdatakey1: "testdatavalue1"
+  });
+
+  t.deepEqual(data.subdir.testDataSubdir, {
+    subdirkey: "subdirvalue"
   });
 });

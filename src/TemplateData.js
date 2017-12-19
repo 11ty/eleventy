@@ -2,6 +2,7 @@ const fs = require("fs-extra");
 const pify = require("pify");
 const globby = require("globby");
 const parsePath = require("parse-filepath");
+const lodashset = require("lodash.set");
 const TemplateRender = require("./TemplateRender");
 const TemplateConfig = require("./TemplateConfig");
 const TemplatePath = require("./TemplatePath");
@@ -52,14 +53,26 @@ TemplateData.prototype.getGlobalDataFiles = async function() {
   return globby(await this.getGlobalDataGlob(), { gitignore: true });
 };
 
+TemplateData.prototype.getObjectPathForDataFile = function(path) {
+  let reducedPath = TemplatePath.stripPathFromDir(
+    path,
+    this.globalDataPath + "/" + cfg.dir.data
+  );
+  let parsed = parsePath(reducedPath);
+  let folders = parsed.dir ? parsed.dir.split("/") : [];
+  folders.push(parsed.name);
+
+  return folders.join(".");
+};
+
 TemplateData.prototype.getAllGlobalData = async function() {
   let globalData = {};
   let files = await this.getGlobalDataFiles();
 
   for (var j = 0, k = files.length; j < k; j++) {
-    // TODO doesn’t take subdirectories into account in name
-    let key = parsePath(files[j]).name;
-    globalData[key] = await this.getJson(files[j], this.rawImports);
+    let folders = await this.getObjectPathForDataFile(files[j]);
+    let data = await this.getJson(files[j], this.rawImports);
+    lodashset(globalData, folders, data);
   }
 
   return globalData;

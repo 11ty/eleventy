@@ -22,3 +22,18 @@ test("stripLeadingDotSlash", t => {
   t.is(TemplatePath.stripLeadingDotSlash("../dist"), "../dist");
   t.is(TemplatePath.stripLeadingDotSlash("dist"), "dist");
 });
+
+test("stripPathFromDir", t => {
+  t.is(
+    TemplatePath.stripPathFromDir("./testing/hello", "./lskdjklfjz"),
+    "testing/hello"
+  );
+  t.is(TemplatePath.stripPathFromDir("./test/stubs", "./test"), "stubs");
+  t.is(TemplatePath.stripPathFromDir("./testing/hello", "testing"), "hello");
+  t.is(TemplatePath.stripPathFromDir("testing/hello", "testing"), "hello");
+  t.is(TemplatePath.stripPathFromDir("testing/hello", "./testing"), "hello");
+  t.is(
+    TemplatePath.stripPathFromDir("testing/hello/subdir/test", "testing"),
+    "hello/subdir/test"
+  );
+});
