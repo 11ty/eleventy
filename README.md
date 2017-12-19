@@ -56,24 +56,27 @@ eleventy --input=. --output=. --formats=html
 
 ### Data
 
-#### Front Matter on Everything
+#### Front Matter on any Template
 
-##### Special variables:
+You can use front matter on any template file to add local data. Here are a few keys we use for special things:
 
-* `pkg`: The local project’s `package.json` values.
 * `permalink`: Add in front matter to change the output target of the current template. You can use template syntax for variables here. [Read more about Permalinks](docs/permalinks.md).
 * `layout`: Wrap current template with a layout template found in the `_includes` folder.
 * `pagination`: (when enabled in front matter) [Read more about Pagination](docs/pagination.md).
 
-#### (Optional) Data Files
+##### Special template variables:
+
+* `pkg`: The local project’s `package.json` values.
+
+#### Data Files (Optional)
 
 Optionally add data files to add global static data available to all templates. Uses the `dir.data` configuration option. [Read more about Template Data Files](docs/data.md).
 
-### (Optional) Ignore files
+### Ignore files (Optional)
 
 Add an `.eleventyignore` file to the _root of your input directory_ for a new line-separated list of files that will not be processed. Eleventy will also ignore paths listed in your project’s `.gitignore` file.
 
-### (Optional) Configuration
+### Configuration (Optional)
 
 Add an `.eleventy.js` file to root directory of your project to override these configuration options with your own preferences. Example:
 
