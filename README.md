@@ -13,7 +13,7 @@ Works with:
 * [EJS](https://www.npmjs.com/package/ejs) (`.ejs`)
 * [Haml](https://github.com/tj/haml.js) (`.haml`)
 * [Pug](https://github.com/pugjs/pug) (formerly Jade, `.pug`)
-* JavaScript Template Literals (`.jstl`) (strings with backticks \`)
+* JavaScript Template Literals (`.jstl`) (\`strings with backticks\`)
 
 ## Installation
 
