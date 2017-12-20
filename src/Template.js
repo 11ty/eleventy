@@ -7,6 +7,7 @@ const normalize = require("normalize-path");
 const clone = require("lodash.clone");
 const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
+const TemplatePermalink = require("./TemplatePermalink");
 const Layout = require("./Layout");
 const TemplateConfig = require("./TemplateConfig");
 
@@ -57,19 +58,17 @@ Template.prototype.setExtraOutputSubdirectory = function(dir) {
 };
 
 Template.prototype.getOutputLink = async function() {
-  // TODO move permalink logic into TemplateUri
   let permalink = this.getFrontMatterData()[cfg.keys.permalink];
   if (permalink) {
     let data = await this.getData();
-    let permalinkParsed = parsePath(await this.renderContent(permalink, data));
-    return TemplatePath.normalize(
-      permalinkParsed.dir +
-        "/" +
-        this.extraOutputSubdirectory +
-        permalinkParsed.base // name with extension
+    let perm = new TemplatePermalink(
+      await this.renderContent(permalink, data),
+      this.extraOutputSubdirectory
     );
+    return perm.toString();
   }
 
+  // TODO move this into permalink (or new obj?)
   let dir = this.getTemplateSubfolder();
   let path =
     (dir ? dir + "/" : "") +
@@ -78,7 +77,7 @@ Template.prototype.getOutputLink = async function() {
     "index" +
     (this.isHtmlIOException ? cfg.htmlOutputSuffix : "") +
     ".html";
-  // console.log( this.inputPath,"|", this.inputDir, "|", dir );
+
   return normalize(path);
 };
 
