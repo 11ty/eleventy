@@ -143,7 +143,7 @@ test("More advanced getData()", async t => {
     key2: "value2"
   });
 
-  t.is(data[cfg.keys.package].name, "eleventy");
+  t.is(data[cfg.keys.package].name, "eleventy-cli");
   t.is(
     data.key1,
     "value1override",
