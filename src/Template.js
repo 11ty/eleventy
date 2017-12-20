@@ -68,17 +68,12 @@ Template.prototype.getOutputLink = async function() {
     return perm.toString();
   }
 
-  // TODO move this into permalink (or new obj?)
-  let dir = this.getTemplateSubfolder();
-  let path =
-    (dir ? dir + "/" : "") +
-    (this.parsed.name !== "index" ? this.parsed.name + "/" : "") +
-    this.extraOutputSubdirectory +
-    "index" +
-    (this.isHtmlIOException ? cfg.htmlOutputSuffix : "") +
-    ".html";
-
-  return normalize(path);
+  return TemplatePermalink.generate(
+    this.getTemplateSubfolder(),
+    this.parsed.name,
+    this.extraOutputSubdirectory,
+    this.isHtmlIOException ? cfg.htmlOutputSuffix : ""
+  ).toString();
 };
 
 // TODO check for conflicts, see if file already exists?

@@ -50,6 +50,17 @@ test("subfolder outputs to a subfolder", async t => {
   );
   t.is(tmpl.parsed.dir, "./test/stubs/subfolder");
   t.is(tmpl.getTemplateSubfolder(), "subfolder");
+  t.is(await tmpl.getOutputPath(), "./dist/subfolder/index.html");
+});
+
+test("subfolder outputs to double subfolder", async t => {
+  let tmpl = new Template(
+    "./test/stubs/subfolder/subfolder/subfolder.ejs",
+    "./test/stubs/",
+    "./dist"
+  );
+  t.is(tmpl.parsed.dir, "./test/stubs/subfolder/subfolder");
+  t.is(tmpl.getTemplateSubfolder(), "subfolder/subfolder");
   t.is(await tmpl.getOutputPath(), "./dist/subfolder/subfolder/index.html");
 });
 

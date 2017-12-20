@@ -11,6 +11,7 @@ Assuming your `--output` directory is the default, `_site`:
 
 * `template.njk` outputs to `_site/template/index.html`, pairs nicely with `<a href="/template/">`
 * `subdir/template.njk` outputs to `_site/subdir/template/index.html`, pairs nicely with `<a href="/subdir/template/">`
+* _Notably_, if your template file name and parent directory match, it’ll be simplified to a single folder. So, `subdir/template/template.njk` outputs to `_site/subdir/template/index.html` (note only one template folder).
 
 ## Remapping Output (Permalink)
 
