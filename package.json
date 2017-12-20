@@ -40,7 +40,7 @@
     "prettier": "1.9.1"
   },
   "dependencies": {
-    "ejs": "git+ssh://git@github.com:zachleat/ejs.git#v2.5.7-h1",
+    "ejs": "https://github.com/zachleat/ejs.git#v2.5.7-h1",
     "fs-extra": "^4.0.2",
     "glob-watcher": "^4.0.0",
     "globby": "^7.1.1",
