@@ -1,4 +1,3 @@
-const slug = require("slug-rfc");
 const NunjucksLib = require("nunjucks");
 const TemplateEngine = require("./TemplateEngine");
 const TemplateConfig = require("../TemplateConfig");

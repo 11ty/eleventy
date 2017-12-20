@@ -1,4 +1,4 @@
-const slug = require("slug-rfc");
+const slugify = require("slugify");
 
 module.exports = {
   templateFormats: [
@@ -31,7 +31,8 @@ module.exports = {
   handlebarsHelpers: {},
   nunjucksFilters: {
     slug: function(str) {
-      return slug(str, {
+      return slugify(str, {
+        replacement: "-",
         lower: true
       });
     }

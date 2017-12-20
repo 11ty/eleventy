@@ -17,6 +17,8 @@ Works with:
 
 ## Installation
 
+Available [on npm](https://www.npmjs.com/package/eleventy-cli).
+
 ```
 npm install -g eleventy-cli
 ```
