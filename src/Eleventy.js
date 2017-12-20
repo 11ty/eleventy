@@ -10,9 +10,19 @@ let cfg = templateCfg.getConfig();
 function Eleventy(input, output) {
   this.input = input || cfg.dir.input;
   this.output = output || cfg.dir.output;
-  this.formats = null;
+  this.formats = cfg.templateFormats;
   this.data = null;
+  this.start = new Date();
 }
+
+Eleventy.prototype.restart = function() {
+  this.start = new Date();
+};
+
+Eleventy.prototype.getElapsedTime = function() {
+  let time = ((new Date() - this.start) / 1000).toFixed(2);
+  return `Finished in ${time} second` + (time !== 1 ? "s" : "");
+};
 
 Eleventy.prototype.init = async function() {
   this.data = new TemplateData(this.input);
@@ -28,18 +38,16 @@ Eleventy.prototype.init = async function() {
 };
 
 Eleventy.prototype.setFormats = function(formats) {
-  this.formats = cfg.templateFormats;
-
   if (formats && formats !== "*") {
     this.formats = formats.split(",");
   }
 };
 
-Eleventy.prototype.printVersion = function() {
-  console.log(pkg.version);
+Eleventy.prototype.getVersion = function() {
+  return pkg.version;
 };
 
-Eleventy.prototype.printHelp = function() {
+Eleventy.prototype.getHelp = function() {
   let out = [];
   out.push("usage: eleventy");
   out.push("       eleventy --watch");
@@ -61,7 +69,7 @@ Eleventy.prototype.printHelp = function() {
   // out.push( "       Set your own local configuration file (default: `.eleventy.js`)" );
   out.push("  --help");
   out.push("       Show this message.");
-  console.log(out.join("\n"));
+  return out.join("\n");
 };
 
 Eleventy.prototype.watch = function() {

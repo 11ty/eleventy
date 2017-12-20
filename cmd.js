@@ -7,23 +7,17 @@ let eleven = new Eleventy(argv.input, argv.output);
 eleven.setFormats(argv.formats);
 
 (async function() {
-  let start = new Date();
-
   await eleven.init();
 
   if (argv.version) {
-    eleven.printVersion();
+    console.log(eleven.getVersion());
   } else if (argv.help) {
-    eleven.printHelp();
+    console.log(eleven.getHelp());
   } else if (argv.watch) {
     eleven.watch();
   } else {
     await eleven.write();
 
-    console.log(
-      "Finished in",
-      ((new Date() - start) / 1000).toFixed(2),
-      "seconds"
-    );
+    console.log(eleven.getElapsedTime());
   }
 })();

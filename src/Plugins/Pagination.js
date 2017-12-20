@@ -114,8 +114,8 @@ Pagination.prototype.getTemplates = async function() {
 
 Pagination.prototype.write = async function() {
   let pages = await this.getTemplates();
-  for (var j = 0, k = pages.length; j < k; j++) {
-    await pages[j].write();
+  for (let page of pages) {
+    await page.write();
   }
 };
 
