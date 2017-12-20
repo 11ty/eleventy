@@ -70,7 +70,18 @@ eleventy --input=. --output=. --formats=html
 
 #### Front Matter on any Template
 
-You may use front matter on any template file to add local data. Here are a few keys we use for special things:
+You may use front matter on any template file to add local data. Front matter looks like this:
+
+```
+---
+title: My page title
+---
+<!doctype html>
+<html>
+…
+```
+
+This allows you to assign data values right in the template itself. Here are a few front matter keys that we use for special things:
 
 * `permalink`: Add in front matter to change the output target of the current template. You can use template syntax for variables here. [Read more about Permalinks](docs/permalinks.md).
 * `layout`: Wrap current template with a layout template found in the `_includes` folder.
