@@ -25,6 +25,13 @@ test("Eleventy, get help", t => {
   t.truthy(elev.getHelp());
 });
 
+test("Eleventy, set is verbose", t => {
+  let elev = new Eleventy();
+  elev.setIsVerbose(true);
+
+  t.true(elev.isVerbose);
+});
+
 test("Eleventy set input/output", async t => {
   let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
 

@@ -10,6 +10,7 @@ const TemplatePath = require("./TemplatePath");
 const TemplatePermalink = require("./TemplatePermalink");
 const Layout = require("./Layout");
 const TemplateConfig = require("./TemplateConfig");
+const Eleventy = require("./Eleventy");
 
 let cfg = TemplateConfig.getDefaultConfig();
 
@@ -47,7 +48,14 @@ function Template(path, inputDir, outputDir, templateData) {
     this.inputDir === this.outputDir &&
     this.templateRender.isEngine("html") &&
     this.parsed.name === "index";
+
+  this.isVerbose = true;
+  this.writeCount = 0;
 }
+
+Template.prototype.setIsVerbose = function(isVerbose) {
+  this.isVerbose = isVerbose;
+};
 
 Template.prototype.getTemplateSubfolder = function() {
   return TemplatePath.stripPathFromDir(this.parsed.dir, this.inputDir);
@@ -231,26 +239,40 @@ Template.prototype.runPlugins = async function(data) {
 Template.prototype.write = async function() {
   let outputPath = await this.getOutputPath();
   if (this.isIgnored()) {
-    console.log("Ignoring", outputPath);
+    if (this.isVerbose) {
+      console.log("Ignoring", outputPath);
+    }
   } else {
+    this.writeCount++;
+
     let data = await this.getData();
     let str = await this.render(data);
     let pluginRet = await this.runPlugins(data);
     if (pluginRet) {
       let filtered = this.runFilters(str);
       await pify(fs.outputFile)(outputPath, filtered);
-      console.log("Writing", outputPath, "from", this.inputPath);
+
+      if (this.isVerbose) {
+        console.log("Writing", outputPath, "from", this.inputPath);
+      }
     }
   }
 };
 
 Template.prototype.clone = function() {
-  return new Template(
+  // TODO better clone
+  var tmpl = new Template(
     this.inputPath,
     this.inputDir,
     this.outputDir,
     this.templateData
   );
+  tmpl.setIsVerbose(this.isVerbose);
+  return tmpl;
+};
+
+Template.prototype.getWriteCount = function() {
+  return this.writeCount;
 };
 
 module.exports = Template;

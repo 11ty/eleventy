@@ -18,9 +18,28 @@ Eleventy.prototype.restart = function() {
   this.start = new Date();
 };
 
-Eleventy.prototype.getElapsedTime = function() {
+Eleventy.prototype._simplePlural = function(count, singleWord, pluralWord) {
+  return count === 1 ? singleWord : pluralWord;
+};
+
+Eleventy.prototype.getFinishedLog = function() {
+  if (!this.writer) {
+    throw new Error(
+      "Did you call Eleventy.init to create the TemplateWriter instance? Hint: you probably didn’t."
+    );
+  }
+
+  let ret = [];
+
+  let writeCount = this.writer.getWriteCount();
+  ret.push(
+    `Wrote ${writeCount} ${this._simplePlural(writeCount, "file", "files")}`
+  );
+
   let time = ((new Date() - this.start) / 1000).toFixed(2);
-  return `Finished in ${time} second` + (time !== 1 ? "s" : "");
+  ret.push(`in ${time} ${this._simplePlural(time, "second", "seconds")}`);
+
+  return ret.join(" ");
 };
 
 Eleventy.prototype.init = async function() {
@@ -33,7 +52,17 @@ Eleventy.prototype.init = async function() {
     this.data
   );
 
+  this.writer.setVerboseOutput(this.isVerbose);
+
   return this.data.cacheData();
+};
+
+Eleventy.prototype.setIsVerbose = function(isVerbose) {
+  this.isVerbose = !!isVerbose;
+
+  if (this.writer) {
+    this.writer.setVerboseOutput(this.isVerbose);
+  }
 };
 
 Eleventy.prototype.setFormats = function(formats) {
@@ -52,7 +81,7 @@ Eleventy.prototype.getHelp = function() {
   out.push("       eleventy --watch");
   out.push("       eleventy --input=./templates --output=./dist");
   out.push("");
-  out.push("arguments: ");
+  out.push("Arguments: ");
   out.push("  --version");
   out.push("  --watch");
   out.push("       Wait for files to change and automatically rewrite.");
@@ -62,12 +91,11 @@ Eleventy.prototype.getHelp = function() {
   out.push("       Write HTML output to this folder (default: `dist`)");
   out.push("  --formats=liquid,md");
   out.push("       Whitelist only certain template types (default: `*`)");
-  out.push("  --data");
-  out.push("       Set your own global data file (default: `data.json`)");
+  out.push("  --quiet");
+  out.push("       Don’t print all written files (default: `false`)");
   // out.push( "  --config" );
   // out.push( "       Set your own local configuration file (default: `.eleventy.js`)" );
   out.push("  --help");
-  out.push("       Show this message.");
   return out.join("\n");
 };
 

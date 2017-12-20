@@ -16,6 +16,8 @@ function TemplateWriter(baseDir, outputDir, extensions, templateData) {
   this.templateExtensions = extensions;
   this.outputDir = outputDir;
   this.templateData = templateData;
+  this.isVerbose = true;
+  this.writeCount = 0;
 
   this.rawFiles = this.templateExtensions.map(
     function(extension) {
@@ -98,14 +100,18 @@ TemplateWriter.prototype._getTemplate = function(path) {
     this.templateData
   );
 
+  tmpl.setIsVerbose(this.isVerbose);
+
   tmpl.addFilter(function(str) {
     return pretty(str, { ocd: true });
   });
 
+  let writer = this;
   tmpl.addPlugin("pagination", async function(data) {
-    var paging = new Pagination(data);
+    let paging = new Pagination(data);
     paging.setTemplate(this);
     await paging.write();
+    writer.writeCount += paging.getWriteCount();
 
     if (paging.cancel()) {
       return false;
@@ -118,6 +124,7 @@ TemplateWriter.prototype._getTemplate = function(path) {
 TemplateWriter.prototype._writeTemplate = async function(path) {
   let tmpl = this._getTemplate(path);
   await tmpl.write();
+  this.writeCount += tmpl.getWriteCount();
   return tmpl;
 };
 
@@ -126,6 +133,14 @@ TemplateWriter.prototype.write = async function() {
   for (var j = 0, k = paths.length; j < k; j++) {
     await this._writeTemplate(paths[j]);
   }
+};
+
+TemplateWriter.prototype.setVerboseOutput = function(isVerbose) {
+  this.isVerbose = isVerbose;
+};
+
+TemplateWriter.prototype.getWriteCount = function() {
+  return this.writeCount;
 };
 
 module.exports = TemplateWriter;

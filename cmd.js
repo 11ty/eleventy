@@ -4,6 +4,7 @@ const Eleventy = require("./src/Eleventy");
 
 let eleven = new Eleventy(argv.input, argv.output);
 eleven.setFormats(argv.formats);
+eleven.setIsVerbose(!argv.quiet);
 
 (async function() {
   await eleven.init();
@@ -17,6 +18,6 @@ eleven.setFormats(argv.formats);
   } else {
     await eleven.write();
 
-    console.log(eleven.getElapsedTime());
+    console.log(eleven.getFinishedLog());
   }
 })();

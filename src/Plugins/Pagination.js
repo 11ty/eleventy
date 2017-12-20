@@ -19,6 +19,7 @@ function Pagination(data) {
 
   this.target = this._resolveItems(data);
   this.items = this.getPagedItems();
+  this.writeCount = 0;
 }
 
 Pagination.prototype.hasPagination = function() {
@@ -115,7 +116,12 @@ Pagination.prototype.write = async function() {
   let pages = await this.getTemplates();
   for (let page of pages) {
     await page.write();
+    this.writeCount += page.getWriteCount();
   }
+};
+
+Pagination.prototype.getWriteCount = function() {
+  return this.writeCount;
 };
 
 module.exports = Pagination;
