@@ -15,6 +15,12 @@ Works with:
 * [Pug](https://github.com/pugjs/pug) (formerly Jade, `.pug`)
 * JavaScript Template Literals (`.jstl`) (strings with backticks \`)
 
+## Installation
+
+```
+npm install -g eleventy-cli
+```
+
 ## Usage
 
 ```

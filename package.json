@@ -1,5 +1,5 @@
 {
-  "name": "eleventy",
+  "name": "eleventy-cli",
   "version": "0.1.0",
   "description": "Transform a directory of templates into HTML.",
   "main": "cmd.js",
