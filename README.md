@@ -113,6 +113,7 @@ module.exports = {
 | `templateFormats`        | `liquid,ejs,\ md,hbs,\ mustache,haml,\ pug,njk,html` | _Any combination of these_                   | `--formats`           | Specify which type of templates should be transformed.                                                                                          |
 | `htmlOutputSuffix`       | `-o`                                                 | `String`                                     | N/A                   | If the input and output directory match, HTML files will have this suffix added to their output filename (to prevent overwriting the template). |
 | `handlebarsHelpers`      | `{}`                                                 | `Object`                                     | N/A                   | The helper functions passed to `Handlebars.registerHelper`. Helper names are keys, functions are the values.                                    |
+| `nunjucksFilters`        | `{}`                                                 | `Object`                                     | N/A                   | The helper functions passed to `nunjucksEnv.addFilter`. Helper names are keys, functions are the values.                                        |
 
 ### Template Engine Features
 
@@ -127,14 +128,14 @@ Here are the features tested with each template engine that use external files a
 | Liquid     | ✅ Include (pass in Data)           | `{% include 'user', user1: 'Ava', user2: 'Bill' %}`                               |
 | Mustache   | ✅ Partials                         | `{{> user}}` looks for `_includes/user.mustache`                                  |
 | Handlebars | ✅ Partials                         | `{{> user}}` looks for `_includes/user.hbs`                                       |
-| Handlebars | ✅ Helpers                          | See `handlebarsHelpers` configuration options.                                    |
+| Handlebars | ✅ Helpers                          | See `handlebarsHelpers` configuration option.                                     |
 | HAML       | ❌ but 🔜 Filters                   |                                                                                   |
 | Pug        | ✅ Includes                         | `include /includedvar.pug` looks in `_includes/includedvar.pug`                   |
 | Pug        | ✅ Excludes                         | `extends /layout.pug` looks in `_includes/layout.pug`                             |
 | Nunjucks   | ✅ Includes                         | `{% include 'included.njk' %}` looks in `_includes/included.njk`                  |
 | Nunjucks   | ✅ Extends                          | `{% extends 'base.njk' %}` looks in `_includes/base.njk`                          |
-| Nunjucks   | ❌ but 🔜 Filters                   | `{{ myString | myFilter }}`                                                       |
 | Nunjucks   | ✅ Imports                          | `{% import 'macros.njk' %}` looks in `_includes/macros.njk`                       |
+| Nunjucks   | ✅ Filters                          | See `nunjucksFilters` configuration option.                                       |
 
 _Careful, the liquidjs npm package syntax does not match the [default Jekyll Liquid include syntax](https://jekyllrb.com/docs/includes/). Specifically, includes file names are quoted._
 
