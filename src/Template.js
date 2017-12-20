@@ -10,8 +10,7 @@ const TemplatePath = require("./TemplatePath");
 const Layout = require("./Layout");
 const TemplateConfig = require("./TemplateConfig");
 
-let templateCfg = new TemplateConfig(require("../config.json"));
-let cfg = templateCfg.getConfig();
+let cfg = TemplateConfig.getDefaultConfig();
 
 function Template(path, inputDir, outputDir, templateData) {
   this.inputPath = path;
@@ -58,6 +57,7 @@ Template.prototype.setExtraOutputSubdirectory = function(dir) {
 };
 
 Template.prototype.getOutputLink = async function() {
+  // TODO move permalink logic into TemplateUri
   let permalink = this.getFrontMatterData()[cfg.keys.permalink];
   if (permalink) {
     let data = await this.getData();

@@ -2,8 +2,7 @@ import test from "ava";
 import Eleventy from "../src/Eleventy";
 import TemplateConfig from "../src/TemplateConfig";
 
-let templateCfg = new TemplateConfig(require("../config.json"));
-let cfg = templateCfg.getConfig();
+let cfg = TemplateConfig.getDefaultConfig();
 
 test("Eleventy, defaults inherit from config", async t => {
   let elev = new Eleventy();

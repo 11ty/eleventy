@@ -7,11 +7,9 @@ const TemplatePath = require("./TemplatePath");
 const TemplateRender = require("./TemplateRender");
 const TemplateConfig = require("./TemplateConfig");
 const Pagination = require("./Plugins/Pagination");
-
 const pkg = require("../package.json");
 
-let templateCfg = new TemplateConfig(require("../config.json"));
-let cfg = templateCfg.getConfig();
+let cfg = TemplateConfig.getDefaultConfig();
 
 function TemplateWriter(baseDir, outputDir, extensions, templateData) {
   this.baseDir = baseDir;

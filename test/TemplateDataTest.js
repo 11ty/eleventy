@@ -2,8 +2,7 @@ import test from "ava";
 import TemplateData from "../src/TemplateData";
 import TemplateConfig from "../src/TemplateConfig";
 
-let templateCfg = new TemplateConfig(require("../config.json"));
-let cfg = templateCfg.getConfig();
+let cfg = TemplateConfig.getDefaultConfig();
 
 test("Create", async t => {
   let dataObj = new TemplateData("./test/stubs/");

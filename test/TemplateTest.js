@@ -5,8 +5,7 @@ import Template from "../src/Template";
 import pretty from "pretty";
 import normalize from "normalize-path";
 
-let templateCfg = new TemplateConfig(require("../config.json"));
-let cfg = templateCfg.getConfig();
+let cfg = TemplateConfig.getDefaultConfig();
 
 function cleanHtml(str) {
   return pretty(str, { ocd: true });

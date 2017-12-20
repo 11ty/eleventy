@@ -7,8 +7,7 @@ const TemplateRender = require("./TemplateRender");
 const TemplateConfig = require("./TemplateConfig");
 const TemplatePath = require("./TemplatePath");
 
-let templateCfg = new TemplateConfig(require("../config.json"));
-let cfg = templateCfg.getConfig();
+let cfg = TemplateConfig.getDefaultConfig();
 
 function TemplateData(globalDataPath) {
   this.globalDataPath = globalDataPath;

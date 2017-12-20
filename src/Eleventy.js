@@ -4,8 +4,7 @@ const TemplateData = require("./TemplateData");
 const TemplateWriter = require("./TemplateWriter");
 const pkg = require("../package.json");
 
-let templateCfg = new TemplateConfig(require("../config.json"));
-let cfg = templateCfg.getConfig();
+let cfg = TemplateConfig.getDefaultConfig();
 
 function Eleventy(input, output) {
   this.input = input || cfg.dir.input;

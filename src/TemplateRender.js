@@ -3,8 +3,7 @@ const TemplatePath = require("./TemplatePath");
 const TemplateEngine = require("./Engines/TemplateEngine");
 const TemplateConfig = require("./TemplateConfig");
 
-let templateCfg = new TemplateConfig(require("../config.json"));
-let cfg = templateCfg.getConfig();
+let cfg = TemplateConfig.getDefaultConfig();
 
 // works with full path names or short engine name
 function TemplateRender(tmplPath, inputDir) {

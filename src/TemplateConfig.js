@@ -7,6 +7,11 @@ function TemplateConfig(globalConfig, localConfigPath) {
   this.config = this.mergeConfig(globalConfig);
 }
 
+TemplateConfig.getDefaultConfig = function() {
+  let templateCfg = new TemplateConfig(require("../config.js"));
+  return templateCfg.getConfig();
+};
+
 TemplateConfig.prototype.getConfig = function() {
   return this.config;
 };

@@ -1,8 +1,7 @@
 const TemplateConfig = require("./TemplateConfig");
 const fs = require("fs-extra");
 
-let templateCfg = new TemplateConfig(require("../config.json"));
-let cfg = templateCfg.getConfig();
+let cfg = TemplateConfig.getDefaultConfig();
 
 function Layout(name, dir) {
   this.dir = dir;

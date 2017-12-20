@@ -2,8 +2,7 @@ const HandlebarsLib = require("handlebars");
 const TemplateEngine = require("./TemplateEngine");
 const TemplateConfig = require("../TemplateConfig");
 
-let templateCfg = new TemplateConfig(require("../../config.json"));
-let cfg = templateCfg.getConfig();
+let cfg = TemplateConfig.getDefaultConfig();
 
 class Handlebars extends TemplateEngine {
   constructor(name, inputDir) {

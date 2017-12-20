@@ -2,8 +2,7 @@ const lodashchunk = require("lodash.chunk");
 const lodashget = require("lodash.get");
 const TemplateConfig = require("../TemplateConfig");
 
-let templateCfg = new TemplateConfig(require("../../config.json"));
-let cfg = templateCfg.getConfig();
+let cfg = TemplateConfig.getDefaultConfig();
 
 function Pagination(data) {
   this.data = data || {};

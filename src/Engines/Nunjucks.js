@@ -3,8 +3,7 @@ const NunjucksLib = require("nunjucks");
 const TemplateEngine = require("./TemplateEngine");
 const TemplateConfig = require("../TemplateConfig");
 
-let templateCfg = new TemplateConfig(require("../../config.json"));
-let cfg = templateCfg.getConfig();
+let cfg = TemplateConfig.getDefaultConfig();
 
 class Nunjucks extends TemplateEngine {
   constructor(name, inputDir) {
@@ -13,13 +12,6 @@ class Nunjucks extends TemplateEngine {
     this.njkEnv = new NunjucksLib.Environment(
       new NunjucksLib.FileSystemLoader(super.getInputDir())
     );
-
-    // TODO move into cfg
-    this.njkEnv.addFilter("slug", function(str) {
-      return slug(str, {
-        lower: true
-      });
-    });
 
     this.addFilters(cfg.nunjucksFilters);
   }
