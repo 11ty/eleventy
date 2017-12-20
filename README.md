@@ -1,4 +1,4 @@
-# eleventy
+# eleventy 🕚
 
 A static site generator. Alternative to Jekyll. Written in JavaScript. Transforms a directory of templates (of varying types) into HTML.
 
