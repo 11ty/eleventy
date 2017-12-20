@@ -16,7 +16,7 @@ module.exports = {
   markdownTemplateEngine: "liquid",
   htmlTemplateEngine: "liquid",
   dataTemplateEngine: "liquid",
-  htmlOutputSuffix: "-output",
+  htmlOutputSuffix: "-o",
   keys: {
     package: "pkg",
     layout: "layout",

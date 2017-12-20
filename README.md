@@ -58,10 +58,10 @@ eleventy --input=. --output=. --watch --formats=md
 
 ##### Exception: index.html Templates
 
-When the input and output directories are the same, and if the source template is named `index.html`, it will output as `index-output.html` to avoid overwriting itself. This is a special case that only applies to `index.html` filenames. You can customize this `-output` suffix with the `htmlOutputSuffix` configuration option.
+When the input and output directories are the same, and if the source template is named `index.html`, it will output as `index-o.html` to avoid overwriting itself. This is a special case that only applies to `index.html` filenames. You can customize the `-o` suffix with the `htmlOutputSuffix` configuration option.
 
 ```
-# Adds `-output` to index.html file names to avoid overwriting matching files.
+# Adds `-o` to index.html file names to avoid overwriting matching files.
 
 eleventy --input=. --output=. --formats=html
 ```

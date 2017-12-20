@@ -48,11 +48,8 @@ test("Permalink generate", t => {
 test("Permalink generate with suffix", t => {
   let gen = TemplatePermalink.generate;
 
-  t.is(gen(".", "test", null, "-output").toString(), "test/index-output.html");
-  t.is(
-    gen(".", "test", "1/", "-output").toString(),
-    "test/1/index-output.html"
-  );
+  t.is(gen(".", "test", null, "-o").toString(), "test/index-o.html");
+  t.is(gen(".", "test", "1/", "-o").toString(), "test/1/index-o.html");
 });
 
 test("Permalink generate with subfolders", t => {
@@ -67,8 +64,8 @@ test("Permalink generate with subfolders", t => {
     "permalinksubfolder/test/index.html"
   );
   t.is(
-    gen("permalinksubfolder/", "test", "1/", "-output").toString(),
-    "permalinksubfolder/test/1/index-output.html"
+    gen("permalinksubfolder/", "test", "1/", "-o").toString(),
+    "permalinksubfolder/test/1/index-o.html"
   );
 });
 

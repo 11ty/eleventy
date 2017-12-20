@@ -88,7 +88,7 @@ test("HTML files output to the same as the input directory have a file suffix ad
     "./test/stubs",
     "./test/stubs"
   );
-  t.is(await tmpl.getOutputPath(), "./test/stubs/index-output.html");
+  t.is(await tmpl.getOutputPath(), "./test/stubs/index-o.html");
 });
 
 test("HTML files output to the same as the input directory have a file suffix added (only if index, this _is_ index).", async t => {
@@ -97,7 +97,7 @@ test("HTML files output to the same as the input directory have a file suffix ad
     "./test/stubs",
     "./test/stubs"
   );
-  t.is(await tmpl.getOutputPath(), "./test/stubs/subfolder/index-output.html");
+  t.is(await tmpl.getOutputPath(), "./test/stubs/subfolder/index-o.html");
 });
 
 test("Test raw front matter from template", t => {
