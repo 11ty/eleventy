@@ -323,7 +323,7 @@ test("Liquid Render Include", async t => {
   let fn = await new TemplateRender(
     "liquid",
     "./test/stubs/"
-  ).getCompiledTemplate("<p>{% include 'included' %}</p>");
+  ).getCompiledTemplate("<p>{% include included %}</p>");
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
@@ -333,7 +333,7 @@ test("Liquid Render Include with Liquid Suffix", async t => {
   let fn = await new TemplateRender(
     "liquid",
     "./test/stubs/"
-  ).getCompiledTemplate("<p>{% include 'included.liquid' %}</p>");
+  ).getCompiledTemplate("<p>{% include included.liquid %}</p>");
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
@@ -343,7 +343,7 @@ test("Liquid Render Include with HTML Suffix", async t => {
   let fn = await new TemplateRender(
     "liquid",
     "./test/stubs/"
-  ).getCompiledTemplate("<p>{% include 'included.html' %}</p>");
+  ).getCompiledTemplate("<p>{% include included.html %}</p>");
   t.is(await fn(), "<p>This is an include.</p>");
 });
 

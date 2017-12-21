@@ -234,7 +234,7 @@ test("Liquid template with include", async t => {
     "dist"
   );
 
-  t.is(await tmpl.render(), `<p>This is an include.</p>`);
+  t.is((await tmpl.render()).trim(), `<p>This is an include.</p>`);
 });
 
 test("ES6 Template Literal", async t => {

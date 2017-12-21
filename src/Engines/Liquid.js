@@ -6,7 +6,8 @@ class Liquid extends TemplateEngine {
     // warning, the include syntax supported here does not match what jekyll uses.
     let engine = LiquidLib({
       root: [super.getInputDir()],
-      extname: ".liquid"
+      extname: ".liquid",
+      dynamicPartials: false
     });
 
     let tmpl = await engine.parse(str);

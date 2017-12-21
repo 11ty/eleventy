@@ -1,6 +1,6 @@
 # eleventy 🕚
 
-A static site generator. Alternative to Jekyll. Written in JavaScript. Transforms a directory of templates (of varying types) into HTML.
+A static site generator. An alternative to Jekyll. Written in JavaScript. Transforms a directory of templates (of varying types) into HTML.
 
 Works with:
 
@@ -155,8 +155,6 @@ Here are the features tested with each template engine that use external files a
 | Nunjucks   | ✅ Extends                          | `{% extends 'base.njk' %}` looks in `_includes/base.njk`                          |
 | Nunjucks   | ✅ Imports                          | `{% import 'macros.njk' %}` looks in `_includes/macros.njk`                       |
 | Nunjucks   | ✅ Filters                          | See `nunjucksFilters` configuration option.                                       |
-
-_Careful, the liquidjs npm package syntax does not match the [default Jekyll Liquid include syntax](https://jekyllrb.com/docs/includes/). Specifically, includes file names are quoted._
 
 ## Tests
 
