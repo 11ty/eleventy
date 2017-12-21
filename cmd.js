@@ -6,7 +6,7 @@ let eleven = new Eleventy(argv.input, argv.output);
 eleven.setFormats(argv.formats);
 eleven.setIsVerbose(!argv.quiet);
 
-(async function() {
+(async () => {
   await eleven.init();
 
   if (argv.version) {
@@ -17,7 +17,6 @@ eleven.setIsVerbose(!argv.quiet);
     eleven.watch();
   } else {
     await eleven.write();
-
     console.log(eleven.getFinishedLog());
   }
 })();
