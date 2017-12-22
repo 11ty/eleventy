@@ -30,7 +30,7 @@ module.exports = {
   },
   handlebarsHelpers: {},
   nunjucksFilters: {
-    slug: function(str) {
+    slug: str => {
       return slugify(str, {
         replacement: "-",
         lower: true
