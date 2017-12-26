@@ -8,6 +8,7 @@ function Pagination(data) {
   this.data = data || {};
   this.size = 10;
   this.target = [];
+  this.writeCount = 0;
 
   if (!this.hasPagination()) {
     return;
@@ -19,7 +20,6 @@ function Pagination(data) {
 
   this.target = this._resolveItems(data);
   this.items = this.getPagedItems();
-  this.writeCount = 0;
 }
 
 Pagination.prototype.hasPagination = function() {
@@ -81,6 +81,7 @@ Pagination.prototype.getTemplates = async function() {
     cloned.removePlugin("pagination");
     templates.push(cloned);
 
+    // TODO if only one item, maybe name it pagination.item and don’t array it?
     overrides.push({
       pagination: {
         data: this.data.pagination.data,
