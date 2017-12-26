@@ -131,6 +131,13 @@ test("Paginate external data file", async t => {
   );
 });
 
+test("Slugify test", t => {
+  const slugify = require("slugify");
+  t.is(slugify("This is a test", { lower: true }), "this-is-a-test");
+  t.is(slugify("This", { lower: true }), "this");
+  t.is(slugify("ThisLKSDFDS", { lower: true }), "thislksdfds");
+});
+
 test("Permalink with pagination variables", async t => {
   let tmpl = new Template(
     "./test/stubs/paged/pagedpermalink.njk",
