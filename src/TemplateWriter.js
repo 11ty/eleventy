@@ -70,7 +70,6 @@ TemplateWriter.getFileIgnores = function(baseDir) {
 
 TemplateWriter.prototype.addIgnores = function(baseDir, files) {
   files = files.concat(TemplateWriter.getFileIgnores(baseDir));
-  console.log(files);
   if (cfg.dir.output) {
     files = files.concat(
       "!" + normalize(baseDir + "/" + cfg.dir.output + "/**")
