@@ -55,14 +55,19 @@ TemplateWriter.getFileIgnores = function(baseDir) {
   let ignores = [];
 
   if (ignoreContent) {
-    ignores = ignoreContent.split("\n").map(line => {
-      line = line.trim();
-      path = TemplatePath.normalize(baseDir, "/", line);
-      if (fs.statSync(path).isDirectory()) {
-        return "!" + path + "/**";
-      }
-      return "!" + path;
-    });
+    ignores = ignoreContent
+      .split("\n")
+      .filter(line => {
+        return line.trim().length > 0;
+      })
+      .map(line => {
+        line = line.trim();
+        path = TemplatePath.normalize(baseDir, "/", line);
+        if (fs.statSync(path).isDirectory()) {
+          return "!" + path + "/**";
+        }
+        return "!" + path;
+      });
   }
 
   return ignores;
