@@ -6,7 +6,7 @@ let cfg = TemplateConfig.getDefaultConfig();
 
 function Pagination(data) {
   this.data = data || {};
-  this.size = 10;
+  this.size = 1;
   this.target = [];
   this.writeCount = 0;
 
@@ -14,9 +14,15 @@ function Pagination(data) {
     return;
   }
 
-  if (data.pagination.size) {
-    this.size = data.pagination.size;
+  if (!data.pagination) {
+    throw new Error(
+      "Misconfigured pagination data in template front matter (did you use tabs and not spaces?)."
+    );
+  } else if (!("size" in data.pagination)) {
+    throw new Error("Missing pagination size in front matter data.");
   }
+
+  this.size = data.pagination.size;
 
   this.target = this._resolveItems(data);
   this.items = this.getPagedItems();

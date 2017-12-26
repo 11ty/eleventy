@@ -6,6 +6,7 @@ const Template = require("./Template");
 const TemplatePath = require("./TemplatePath");
 const TemplateRender = require("./TemplateRender");
 const TemplateConfig = require("./TemplateConfig");
+const EleventyError = require("./EleventyError");
 const Pagination = require("./Plugins/Pagination");
 const pkg = require("../package.json");
 
@@ -69,7 +70,7 @@ TemplateWriter.getFileIgnores = function(baseDir) {
 
 TemplateWriter.prototype.addIgnores = function(baseDir, files) {
   files = files.concat(TemplateWriter.getFileIgnores(baseDir));
-
+  console.log(files);
   if (cfg.dir.output) {
     files = files.concat(
       "!" + normalize(baseDir + "/" + cfg.dir.output + "/**")
@@ -123,7 +124,14 @@ TemplateWriter.prototype._getTemplate = function(path) {
 
 TemplateWriter.prototype._writeTemplate = async function(path) {
   let tmpl = this._getTemplate(path);
-  await tmpl.write();
+  try {
+    await tmpl.write();
+  } catch (e) {
+    throw EleventyError.make(
+      new Error(`Having trouble writing template: ${path}`),
+      e
+    );
+  }
   this.writeCount += tmpl.getWriteCount();
   return tmpl;
 };

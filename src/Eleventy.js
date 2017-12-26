@@ -1,7 +1,9 @@
 const watch = require("glob-watcher");
+const chalk = require("chalk");
 const TemplateConfig = require("./TemplateConfig");
 const TemplateData = require("./TemplateData");
 const TemplateWriter = require("./TemplateWriter");
+const EleventyError = require("./EleventyError");
 const pkg = require("../package.json");
 
 let cfg = TemplateConfig.getDefaultConfig();
@@ -109,7 +111,7 @@ Eleventy.prototype.watch = function() {
     "change",
     function(path, stat) {
       console.log("File changed:", path);
-      this.writer.write();
+      this.write();
     }.bind(this)
   );
 
@@ -117,13 +119,23 @@ Eleventy.prototype.watch = function() {
     "add",
     function(path, stat) {
       console.log("File added:", path);
-      this.writer.write();
+      this.write();
     }.bind(this)
   );
 };
 
 Eleventy.prototype.write = async function() {
-  return this.writer.write();
+  try {
+    await this.writer.write();
+  } catch (e) {
+    console.log("\n" + chalk.red("Problem writing eleventy templates: "));
+    if (e instanceof EleventyError) {
+      console.log(chalk.red(e.log()));
+      console.log("\n" + e.dump());
+    } else {
+      console.log(e);
+    }
+  }
 };
 
 module.exports = Eleventy;

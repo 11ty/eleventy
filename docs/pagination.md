@@ -16,7 +16,7 @@ testdata:
 <ol>{% for item in pagination.items %}<li>{{ item }}</li>{% endfor %}</ol>
 ```
 
-We enable pagination and then give it a dataset with the `data` key. We (optionally) control the number of items in each chunk with `size`. If left off, the default size is 10. The pagination data variable will be populated with what you need to create each template. Here’s what’s in `pagination`:
+We enable pagination and then give it a dataset with the `data` key. We control the number of items in each chunk with `size`. The pagination data variable will be populated with what you need to create each template. Here’s what’s in `pagination`:
 
 ```
 {
@@ -26,7 +26,7 @@ We enable pagination and then give it a dataset with the `data` key. We (optiona
   previousPageLink: "", // put inside <a href="{{ pagination.previousPageLink }}">Previous Page</a>
   pageLinks: [], // all page links
   data: "", // pointer to dataset
-  size: 10, // chunk sizes
+  size: 1, // chunk sizes
 }
 ```
 
