@@ -42,8 +42,8 @@ test("Output is a subdir of input", async t => {
 
 test(".eleventyignore ignores parsing", t => {
   let ignores = new TemplateWriter.getFileIgnores("./test/stubs");
-  t.is(ignores[0], "!test/stubs/ignoredFolder/**");
-  t.is(ignores[1], "!test/stubs/ignoredFolder/ignored.md");
+  t.is(ignores[0], "!./test/stubs/ignoredFolder/**");
+  t.is(ignores[1], "!./test/stubs/ignoredFolder/ignored.md");
 });
 
 test(".eleventyignore files", async t => {
@@ -56,7 +56,7 @@ test(".eleventyignore files", async t => {
 
   t.is(
     files.filter(file => {
-      return file.indexOf("test/stubs/ignoredFolder") > -1;
+      return file.indexOf("./test/stubs/ignoredFolder") > -1;
     }).length,
     0
   );

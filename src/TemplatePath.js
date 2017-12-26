@@ -20,6 +20,13 @@ TemplatePath.localPath = function(...paths) {
   return normalize(path.join(TemplatePath.getWorkingDir(), ...paths));
 };
 
+TemplatePath.addLeadingDotSlash = function(path) {
+  if (path.indexOf("/") === 0 || path.indexOf(".") === 0) {
+    return path;
+  }
+  return "./" + path;
+};
+
 TemplatePath.stripLeadingDotSlash = function(dir) {
   return dir.replace(/^\.\//, "");
 };

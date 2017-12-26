@@ -62,7 +62,9 @@ TemplateWriter.getFileIgnores = function(baseDir) {
       })
       .map(line => {
         line = line.trim();
-        path = TemplatePath.normalize(baseDir, "/", line);
+        path = TemplatePath.addLeadingDotSlash(
+          TemplatePath.normalize(baseDir, "/", line)
+        );
         if (fs.statSync(path).isDirectory()) {
           return "!" + path + "/**";
         }
