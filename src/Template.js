@@ -4,7 +4,8 @@ const fs = require("fs-extra");
 const parsePath = require("parse-filepath");
 const matter = require("gray-matter");
 const normalize = require("normalize-path");
-const clone = require("lodash.clone");
+const _isArray = require("lodash.isarray");
+const _isObject = require("lodash.isobject");
 const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
 const TemplatePermalink = require("./TemplatePermalink");
@@ -70,6 +71,7 @@ Template.prototype.getOutputLink = async function() {
   if (permalink) {
     let data = await this.getData();
     let perm = new TemplatePermalink(
+      // render variables inside permalink front matter
       await this.renderContent(permalink, data),
       this.extraOutputSubdirectory
     );
@@ -146,6 +148,33 @@ Template.prototype.getLocalDataPath = function() {
   return this.parsed.dir + "/" + this.parsed.name + ".json";
 };
 
+Template.prototype.mapDataAsRenderedTemplates = async function(
+  data,
+  templateData
+) {
+  if (_isArray(data)) {
+    let arr = [];
+    for (let j = 0, k = data.length; j < k; j++) {
+      arr.push(await this.mapDataAsRenderedTemplates(data[j], templateData));
+    }
+    return arr;
+  } else if (_isObject(data)) {
+    let obj = {};
+    for (let value in data) {
+      obj[value] = await this.mapDataAsRenderedTemplates(
+        data[value],
+        templateData
+      );
+    }
+    return obj;
+  } else if (typeof data === "string") {
+    let str = await this.renderContent(data, templateData);
+    return str;
+  }
+
+  return data;
+};
+
 Template.prototype.getData = async function(localData) {
   let data = {};
 
@@ -153,18 +182,16 @@ Template.prototype.getData = async function(localData) {
     data = await this.templateData.getLocalData(this.getLocalDataPath());
   }
 
+  let mergedLocalData = Object.assign({}, localData, this.dataOverrides);
+
+  let frontMatterData = this.getFrontMatterData();
+
   let mergedLayoutData = await this.getAllLayoutFrontMatterData(
     this,
-    this.getFrontMatterData()
+    frontMatterData
   );
 
-  return Object.assign(
-    {},
-    data,
-    mergedLayoutData,
-    localData,
-    this.dataOverrides
-  );
+  return Object.assign({}, data, mergedLayoutData, mergedLocalData);
 };
 
 Template.prototype.renderLayout = async function(tmpl, tmplData) {
@@ -250,9 +277,16 @@ Template.prototype.write = async function() {
     this.writeCount++;
 
     let data = await this.getData();
-    let str = await this.render(data);
+    if (data.renderData) {
+      data.renderData = await this.mapDataAsRenderedTemplates(
+        data.renderData,
+        data
+      );
+    }
+
     let pluginRet = await this.runPlugins(data);
     if (pluginRet) {
+      let str = await this.render(data);
       let filtered = this.runFilters(str);
       await pify(fs.outputFile)(outputPath, filtered);
 

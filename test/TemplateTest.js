@@ -309,3 +309,55 @@ test("Permalink with variables!", async t => {
 
   t.is(await tmpl.getOutputPath(), "./dist/subdir/slug-candidate/index.html");
 });
+
+test("mapDataAsRenderedTemplates", async t => {
+  let tmpl = new Template(
+    "./test/stubs/default.ejs",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.deepEqual(
+    await tmpl.mapDataAsRenderedTemplates(
+      {
+        key1: "value1",
+        key2: "value2",
+        key3: "value3"
+      },
+      { parsedKey: "parsedValue" }
+    ),
+    {
+      key1: "value1",
+      key2: "value2",
+      key3: "value3"
+    }
+  );
+
+  t.deepEqual(
+    await tmpl.mapDataAsRenderedTemplates(
+      {
+        key1: "value1",
+        key2: "<%= parsedKey %>"
+      },
+      { parsedKey: "parsedValue" }
+    ),
+    {
+      key1: "value1",
+      key2: "parsedValue"
+    }
+  );
+
+  t.deepEqual(
+    await tmpl.mapDataAsRenderedTemplates(
+      {
+        key1: "value1",
+        key2: ["<%= parsedKey %>", 2]
+      },
+      { parsedKey: "parsedValue" }
+    ),
+    {
+      key1: "value1",
+      key2: ["parsedValue", 2]
+    }
+  );
+});
