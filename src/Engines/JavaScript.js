@@ -1,4 +1,5 @@
 const TemplateEngine = require("./TemplateEngine");
+const EleventyError = require("../EleventyError");
 
 class JavaScript extends TemplateEngine {
   async compile(str) {
@@ -15,13 +16,13 @@ class JavaScript extends TemplateEngine {
         str = "`" + str + "`";
       }
 
+      let evalStr = `${dataStr}\n${str};`;
       try {
         // TODO switch to https://www.npmjs.com/package/es6-template-strings
-        let val = eval(dataStr + "\n" + str + ";");
+        let val = eval(evalStr);
         return val;
       } catch (e) {
-        console.log("Broken ES6 template: ", dataStr + "\n" + str + ";");
-        throw e;
+        EleventyError.make(`Broken ES6 template:\n${evalStr}`, e);
       }
     };
   }

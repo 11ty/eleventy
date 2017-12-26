@@ -1,4 +1,4 @@
 ---
 name: zach
 ---
-`<p>${name.toUpperCase()}</p>`
+<p>${name.toUpperCase()}</p>

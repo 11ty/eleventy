@@ -363,7 +363,6 @@ test("ES6 Template Literal", t => {
   t.is(new TemplateRender("jstl").getEngineName(), "jstl");
 });
 
-// TODO work with or without ` in template
 test("ES6 Template Literal Render", async t => {
   // pass in a string here, we don’t want to compile the template in the test :O
   let fn = await new TemplateRender("jstl").getCompiledTemplate(

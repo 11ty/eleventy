@@ -237,7 +237,7 @@ test("Liquid template with include", async t => {
   t.is((await tmpl.render()).trim(), `<p>This is an include.</p>`);
 });
 
-test("ES6 Template Literal", async t => {
+test("ES6 Template Literal (No Backticks)", async t => {
   let dataObj = new TemplateData("./test/stubs/");
   let tmpl = new Template(
     "./test/stubs/formatTest.jstl",
@@ -246,7 +246,19 @@ test("ES6 Template Literal", async t => {
     dataObj
   );
 
-  t.is(await tmpl.render(), `<p>ZACH</p>`);
+  t.is((await tmpl.render()).trim(), `<p>ZACH</p>`);
+});
+
+test("ES6 Template Literal (with Backticks)", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+  let tmpl = new Template(
+    "./test/stubs/formatTestBackticks.jstl",
+    "./test/stubs/",
+    "dist",
+    dataObj
+  );
+
+  t.is((await tmpl.render()).trim(), `<p>ZACH</p>`);
 });
 
 test("Permalink output directory", async t => {
