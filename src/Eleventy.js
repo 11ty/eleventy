@@ -109,24 +109,26 @@ Eleventy.prototype.watch = function() {
 
   watcher.on(
     "change",
-    function(path, stat) {
+    async function(path, stat) {
       console.log("File changed:", path);
-      this.write();
+      await this.write();
+      console.log("Watching…");
     }.bind(this)
   );
 
   watcher.on(
     "add",
-    function(path, stat) {
+    async function(path, stat) {
       console.log("File added:", path);
-      this.write();
+      await this.write();
+      console.log("Watching…");
     }.bind(this)
   );
 };
 
 Eleventy.prototype.write = async function() {
   try {
-    await this.writer.write();
+    return await this.writer.write();
   } catch (e) {
     console.log("\n" + chalk.red("Problem writing eleventy templates: "));
     if (e instanceof EleventyError) {
