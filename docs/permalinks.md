@@ -38,6 +38,18 @@ permalink: subdir/{{ mySlug }}/index.html
 
 Writes to `_site/subdir/this-is-a-new-path/index.html`.
 
+### Permalink, ignore output directory
+
+To remap your template’s output to a directory independent of the output directory (`--output`), use `permalinkBypassOutputDir: true` in your front matter.
+
+```
+---
+permalink: _includes/index.html
+---
+```
+
+Writes to `_includes/index.html` even though the output directory is `_site`. This is useful for writing child templates to the `_includes` directory for re-use in your other templates.
+
 ### Pagination
 
 Pagination variables also work here. [Read more about Pagination](pagination.md)

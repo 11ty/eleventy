@@ -87,7 +87,11 @@ Template.prototype.getOutputLink = async function() {
 // TODO check for conflicts, see if file already exists?
 Template.prototype.getOutputPath = async function() {
   let uri = await this.getOutputLink();
-  return normalize(this.outputDir + "/" + uri);
+  if (this.getFrontMatterData()[cfg.keys.permalinkRoot]) {
+    return normalize(uri);
+  } else {
+    return normalize(this.outputDir + "/" + uri);
+  }
 };
 
 Template.prototype.setDataOverrides = function(overrides) {

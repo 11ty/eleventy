@@ -20,7 +20,8 @@ module.exports = {
   keys: {
     package: "pkg",
     layout: "layout",
-    permalink: "permalink"
+    permalink: "permalink",
+    permalinkRoot: "permalinkBypassOutputDir"
   },
   dir: {
     input: ".",
