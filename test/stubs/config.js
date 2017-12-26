@@ -1,3 +1,9 @@
 module.exports = {
-	"markdownTemplateEngine": "ejs"
+  markdownTemplateEngine: "ejs",
+  templateFormats: ["md", "njk"],
+  nunjucksFilters: {
+    testing: str => {
+      return str;
+    }
+  }
 };

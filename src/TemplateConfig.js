@@ -27,7 +27,14 @@ TemplateConfig.prototype.mergeConfig = function(globalConfig) {
     // if file does not exist, return empty obj
     localConfig = {};
   }
-  return merge({}, globalConfig, localConfig);
+  // Object assign overrides original values (good for templateFormats) but not good for helpers/filters
+  // Handle those separately.
+  let overrides = Object.assign({}, globalConfig, localConfig);
+  let merges = ["handlebarsHelpers", "nunjucksFilters"];
+  for (let key of merges) {
+    overrides[key] = merge({}, globalConfig[key], localConfig[key]);
+  }
+  return overrides;
 };
 
 module.exports = TemplateConfig;

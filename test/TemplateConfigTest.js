@@ -9,4 +9,8 @@ test("Template Config local config overrides base config", async t => {
   let cfg = templateCfg.getConfig();
 
   t.is(cfg.markdownTemplateEngine, "ejs");
+  t.is(cfg.templateFormats.join(","), "md,njk");
+
+  t.is(Object.keys(cfg.handlebarsHelpers).length, 0);
+  t.is(Object.keys(cfg.nunjucksFilters).length, 2);
 });
