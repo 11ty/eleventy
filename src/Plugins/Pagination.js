@@ -1,5 +1,6 @@
 const lodashchunk = require("lodash.chunk");
 const lodashget = require("lodash.get");
+const lodashset = require("lodash.set");
 const TemplateConfig = require("../TemplateConfig");
 
 let cfg = TemplateConfig.getDefaultConfig();
@@ -23,6 +24,7 @@ function Pagination(data) {
   }
 
   this.size = data.pagination.size;
+  this.alias = data.pagination.alias;
 
   this.target = this._resolveItems(data);
   this.items = this.getPagedItems();
@@ -87,15 +89,23 @@ Pagination.prototype.getTemplates = async function() {
     cloned.removePlugin("pagination");
     templates.push(cloned);
 
-    // TODO if only one item, maybe name it pagination.item and don’t array it?
-    overrides.push({
+    let override = {
       pagination: {
         data: this.data.pagination.data,
         size: this.data.pagination.size,
         items: items[pageNumber],
         pageNumber: pageNumber
       }
-    });
+    };
+    if (this.alias) {
+      lodashset(
+        override,
+        this.alias,
+        this.size === 1 ? items[pageNumber][0] : items[pageNumber]
+      );
+    }
+
+    overrides.push(override);
     cloned.setDataOverrides(overrides[pageNumber]);
 
     // TO DO subdirectory to links if the site doesn’t live at /

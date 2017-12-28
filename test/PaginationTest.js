@@ -209,3 +209,41 @@ test("Permalink with pagination variables (numeric, one indexed)", async t => {
   t.falsy(page1Data.pagination.nextPageLink);
   t.is(page1Data.pagination.pageLinks.length, 2);
 });
+
+test("Alias to page data", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/pagedalias.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let paging = new Pagination(data);
+  paging.setTemplate(tmpl);
+  let pages = await paging.getTemplates();
+
+  t.is(await pages[0].getOutputPath(), "./dist/pagedalias/item1/index.html");
+  t.is(await pages[1].getOutputPath(), "./dist/pagedalias/item2/index.html");
+
+  t.is((await pages[0].render()).trim(), "item1");
+  t.is((await pages[1].render()).trim(), "item2");
+});
+
+test("Alias to page data (size 2)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/pagedaliassize2.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let paging = new Pagination(data);
+  paging.setTemplate(tmpl);
+  let pages = await paging.getTemplates();
+
+  t.is(await pages[0].getOutputPath(), "./dist/pagedalias/item1/index.html");
+  t.is(await pages[1].getOutputPath(), "./dist/pagedalias/item3/index.html");
+
+  t.is((await pages[0].render()).trim(), "item1");
+  t.is((await pages[1].render()).trim(), "item3");
+});

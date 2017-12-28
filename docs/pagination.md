@@ -53,6 +53,7 @@ Your front matter would look like this:
 ---
 pagination:
   data: globalDataSet.myData
+  size: 1
 ---
 <ol>{% for item in pagination.items %}<li>{{ item }}</li>{% endfor %}</ol>
 ```
@@ -87,6 +88,7 @@ You can do more advanced things like this:
 ---
 pagination:
   data: testdata
+  size: 1
 testdata:
   - My Item
 permalink: different/{{ pagination.items[0] | slug }}/index.html
@@ -94,3 +96,43 @@ permalink: different/{{ pagination.items[0] | slug }}/index.html
 ```
 
 Using a Nunjucks `slug` filter (transforms `My Item` to `my-item`), this outputs: `_site/different/my-item/index.html`.
+
+#### Aliasing pagination items to a different variable
+
+Ok, so `pagination.items[0]` is ugly. We provide an option to alias this to something different.
+
+```
+---
+pagination:
+  data: testdata
+  size: 1
+  alias: wonder
+testdata:
+  - Item1
+  - Item2
+permalink: different/{{ wonder | slug }}/index.html
+---
+You can use the alias in your content too {{ wonder }}.
+```
+
+This writes to `_site/different/item1/index.html`.
+
+If your chunk `size` is greater than 1, the alias will be an array instead of a single value.
+
+```
+---
+pagination:
+  data: testdata
+  size: 2
+  alias: wonder
+testdata:
+  - Item1
+  - Item2
+  - Item3
+  - Item4
+permalink: different/{{ wonder[0] | slug }}/index.html
+---
+You can use the alias in your content too {{ wonder[0] }}.
+```
+
+This writes to `_site/different/item1/index.html`.
