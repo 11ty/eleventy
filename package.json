@@ -1,6 +1,6 @@
 {
   "name": "eleventy-cli",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Transform a directory of templates into HTML.",
   "main": "src/Eleventy.js",
   "license": "MIT",
