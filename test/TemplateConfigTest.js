@@ -11,6 +11,9 @@ test("Template Config local config overrides base config", async t => {
   t.is(cfg.markdownTemplateEngine, "ejs");
   t.is(cfg.templateFormats.join(","), "md,njk");
 
+  // merged, not overwritten
+  t.true(Object.keys(cfg.keys).length > 1);
+
   t.is(Object.keys(cfg.handlebarsHelpers).length, 0);
   t.is(Object.keys(cfg.nunjucksFilters).length, 2);
 });
