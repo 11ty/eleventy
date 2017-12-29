@@ -73,7 +73,9 @@ Template.prototype.getOutputLink = async function() {
     let data = await this.getData();
     let perm = new TemplatePermalink(
       // render variables inside permalink front matter
-      await this.renderContent(permalink, data),
+      await this.renderContent(permalink, data, {
+        bypassMarkdown: true
+      }),
       this.extraOutputSubdirectory
     );
     return perm.toString();
@@ -221,9 +223,7 @@ Template.prototype.getCompiledPromise = async function() {
 };
 
 Template.prototype.renderContent = async function(str, data, options) {
-  let fn = await this.templateRender.getCompiledTemplate(str, {
-    bypassMarkdown: true
-  });
+  let fn = await this.templateRender.getCompiledTemplate(str, options);
   return fn(data);
 };
 
