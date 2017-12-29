@@ -66,6 +66,7 @@ Template.prototype.setExtraOutputSubdirectory = function(dir) {
   this.extraOutputSubdirectory = dir + "/";
 };
 
+// TODO instead of isHTMLIOException, do a global search to check if output path = input path and then add extra suffix
 Template.prototype.getOutputLink = async function() {
   let permalink = this.getFrontMatterData()[cfg.keys.permalink];
   if (permalink) {
@@ -239,9 +240,10 @@ Template.prototype.addFilter = function(callback) {
   this.filters.push(callback);
 };
 
-Template.prototype.runFilters = function(str) {
+Template.prototype.runFilters = async function(str) {
+  let outputPath = await this.getOutputPath();
   this.filters.forEach(function(filter) {
-    str = filter.call(this, str);
+    str = filter.call(this, str, outputPath);
   });
 
   return str;
@@ -287,7 +289,7 @@ Template.prototype.write = async function() {
     let pluginRet = await this.runPlugins(data);
     if (pluginRet) {
       let str = await this.render(data);
-      let filtered = this.runFilters(str);
+      let filtered = await this.runFilters(str);
       await pify(fs.outputFile)(outputPath, filtered);
 
       if (this.isVerbose) {

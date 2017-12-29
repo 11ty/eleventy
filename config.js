@@ -29,6 +29,7 @@ module.exports = {
     data: "_data",
     output: "_site"
   },
+  filters: {},
   handlebarsHelpers: {},
   nunjucksFilters: {
     slug: str => {

@@ -1,6 +1,5 @@
 const globby = require("globby");
 const normalize = require("normalize-path");
-const pretty = require("pretty");
 const fs = require("fs-extra");
 const Template = require("./Template");
 const TemplatePath = require("./TemplatePath");
@@ -109,9 +108,18 @@ TemplateWriter.prototype._getTemplate = function(path) {
 
   tmpl.setIsVerbose(this.isVerbose);
 
-  tmpl.addFilter(function(str) {
-    return pretty(str, { ocd: true });
-  });
+  /*
+   * Sample filter: arg str, return pretty HTML string
+   * function(str) {
+   *   return pretty(str, { ocd: true });
+   * }
+   */
+  for (let filterName in cfg.filters) {
+    let filter = cfg.filters[filterName];
+    if (typeof filter === "function") {
+      tmpl.addFilter(filter);
+    }
+  }
 
   let writer = this;
   tmpl.addPlugin("pagination", async function(data) {
