@@ -91,7 +91,7 @@ TemplateWriter.prototype.addWritingIgnores = function(baseDir, files) {
       "!" + normalize(baseDir + "/" + cfg.dir.includes + "/**")
     );
   }
-  if (cfg.dir.data) {
+  if (cfg.dir.data && cfg.dir.data !== ".") {
     files = files.concat("!" + normalize(baseDir + "/" + cfg.dir.data + "/**"));
   }
 

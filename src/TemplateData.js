@@ -45,7 +45,10 @@ TemplateData.prototype.getGlobalDataGlob = async function() {
     dir = this.globalDataPath;
   }
 
-  return TemplatePath.normalize(dir, "/", cfg.dir.data) + "/**/*.json";
+  return (
+    TemplatePath.normalize(dir, "/", cfg.dir.data !== "." ? cfg.dir.data : "") +
+    "/**/*.json"
+  );
 };
 
 TemplateData.prototype.getGlobalDataFiles = async function() {
@@ -55,7 +58,7 @@ TemplateData.prototype.getGlobalDataFiles = async function() {
 TemplateData.prototype.getObjectPathForDataFile = function(path) {
   let reducedPath = TemplatePath.stripPathFromDir(
     path,
-    this.globalDataPath + "/" + cfg.dir.data
+    this.globalDataPath + "/" + (cfg.dir.data !== "." ? cfg.dir.data : "")
   );
   let parsed = parsePath(reducedPath);
   let folders = parsed.dir ? parsed.dir.split("/") : [];
