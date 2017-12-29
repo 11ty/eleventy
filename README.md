@@ -15,13 +15,19 @@ Works with:
 * [Pug](https://github.com/pugjs/pug) (formerly Jade, `.pug`)
 * JavaScript Template Literals (`.jstl`) (\`strings with backticks\`)
 
-## Installation
+## Getting Started
+
+### Installation
 
 Available [on npm](https://www.npmjs.com/package/eleventy-cli).
 
 ```
 npm install -g eleventy-cli
 ```
+
+### Sample project
+
+Have a look at @Heydon’s lovely [Inclusive Web Design Checklist, converted to use `eleventy`](https://github.com/zachleat/eleventy-inclusive-design-checklist). The [original](https://github.com/Heydon/inclusive-design-checklist) project took a JSON file and converted it HTML with some one-off JavaScript. This uses eleventy to transform the data using a nunjucks template, resulting in a cleaner, templated setup.
 
 ## Usage
 
