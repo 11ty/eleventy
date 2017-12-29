@@ -101,7 +101,9 @@ Eleventy.prototype.getHelp = function() {
   return out.join("\n");
 };
 
-Eleventy.prototype.watch = function() {
+Eleventy.prototype.watch = async function() {
+  await this.write();
+
   console.log("Watching…");
   var watcher = watch(this.writer.getRawFiles(), {
     ignored: this.writer.getWatchedIgnores()

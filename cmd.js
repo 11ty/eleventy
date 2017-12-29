@@ -14,7 +14,7 @@ eleven.setIsVerbose(!argv.quiet);
   } else if (argv.help) {
     console.log(eleven.getHelp());
   } else if (argv.watch) {
-    eleven.watch();
+    await eleven.watch();
   } else {
     await eleven.write();
     console.log(eleven.getFinishedLog());
