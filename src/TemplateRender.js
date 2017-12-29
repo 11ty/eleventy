@@ -14,8 +14,8 @@ function TemplateRender(tmplPath, inputDir) {
   this.inputDir = this._normalizeInputDir(inputDir);
   this.engine = TemplateEngine.getEngine(this.engineName, this.inputDir);
 
-  this.defaultMarkdownEngine = cfg.markdownTemplateEngine || "liquid";
-  this.defaultHtmlEngine = cfg.htmlTemplateEngine || "liquid";
+  this.defaultMarkdownEngine = cfg.markdownTemplateEngine;
+  this.defaultHtmlEngine = cfg.htmlTemplateEngine;
 }
 
 TemplateRender.prototype.setDefaultMarkdownEngine = function(markdownEngine) {
@@ -52,14 +52,19 @@ TemplateRender.prototype.getCompiledTemplate = async function(str, options) {
   options = Object.assign(
     {
       parseMarkdownWith: this.defaultMarkdownEngine,
-      parseHtmlWith: this.defaultHtmlEngine
+      parseHtmlWith: this.defaultHtmlEngine,
+      bypassMarkdown: false
     },
     options
   );
 
   // TODO refactor better
   if (this.engineName === "md") {
-    return this.engine.compile(str, options.parseMarkdownWith);
+    return this.engine.compile(
+      str,
+      options.parseMarkdownWith,
+      options.bypassMarkdown
+    );
   } else if (this.engineName === "html") {
     return this.engine.compile(str, options.parseHtmlWith);
   } else {

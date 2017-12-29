@@ -220,8 +220,11 @@ Template.prototype.getCompiledPromise = async function() {
   return this.templateRender.getCompiledTemplate(this.getPreRender());
 };
 
-Template.prototype.renderContent = async function(str, data) {
-  return this.templateRender.render(str, data);
+Template.prototype.renderContent = async function(str, data, options) {
+  let fn = await this.templateRender.getCompiledTemplate(str, {
+    bypassMarkdown: true
+  });
+  return fn(data);
 };
 
 Template.prototype.render = async function(data) {

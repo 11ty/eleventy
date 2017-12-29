@@ -48,6 +48,7 @@ test("HTML Render: Parses markdown using ejs engine", async t => {
   );
   t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
 });
+
 test("HTML Render: Set markdown engine to false, don’t parse", async t => {
   let fn = await new TemplateRender("html").getCompiledTemplate(
     "<h1>{{title}}</h1>",
@@ -128,10 +129,17 @@ test("Markdown Render: Parses markdown using liquid engine (default, with data)"
 });
 
 test("Markdown Render: Parses markdown using ejs engine", async t => {
-  let fn = await new TemplateRender("md").getCompiledTemplate("# <%=title %>", {
+  let fn = await new TemplateRender("md").getCompiledTemplate("<%=title %>", {
     parseMarkdownWith: "ejs"
   });
-  t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
+  t.is((await fn({ title: "My Title" })).trim(), "<p>My Title</p>");
+});
+
+test("Markdown Render: Ignore markdown, use only preprocess engine (useful for variable resolution in permalinks)", async t => {
+  let fn = await new TemplateRender("md").getCompiledTemplate("{{title}}", {
+    bypassMarkdown: true
+  });
+  t.is((await fn({ title: "My Title" })).trim(), "My Title");
 });
 
 test("Markdown Render: Set markdown engine to false, don’t parse", async t => {
