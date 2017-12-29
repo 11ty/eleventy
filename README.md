@@ -66,7 +66,7 @@ eleventy --input=. --output=. --watch --formats=md
 
 ##### Exception: index.html Templates
 
-When the input and output directories are the same, and if the source template is named `index.html`, it will output as `index-o.html` to avoid overwriting itself. This is a special case that only applies to `index.html` filenames. You can customize the `-o` suffix with the `htmlOutputSuffix` configuration option.
+When the input and output directories are the same _and_ the source template is named `index.html`, it will output as `index-o.html` to avoid overwriting itself. This is a special case that only applies to `index.html` filenames. You can customize the `-o` suffix with the `htmlOutputSuffix` configuration option.
 
 ```
 # Adds `-o` to index.html file names to avoid overwriting matching files.
@@ -93,7 +93,7 @@ This allows you to assign data values right in the template itself. Here are a f
 
 * `permalink`: Add in front matter to change the output target of the current template. You can use template syntax for variables here. [Read more about Permalinks](docs/permalinks.md).
 * `layout`: Wrap current template with a layout template found in the `_includes` folder.
-* `pagination`: Enable to iterate over data. [Read more about Pagination](docs/pagination.md).
+* `pagination`: Enable to iterate over data. Output multiple HTML files from a single template. [Read more about Pagination](docs/pagination.md).
 
 #### Special Variables
 
@@ -106,7 +106,7 @@ Optionally add data files to add global static data available to all templates. 
 
 ### Ignore files (optional)
 
-Add an `.eleventyignore` file to the _root of your input directory_ for a new line-separated list of files that will not be processed. Eleventy will also ignore paths listed in your project’s `.gitignore` file.
+Add an `.eleventyignore` file to the _root of your input directory_ for a new line-separated list of files that will not be processed. Paths listed in your project’s `.gitignore` file are automatically ignored.
 
 ### Configuration (optional)
 
