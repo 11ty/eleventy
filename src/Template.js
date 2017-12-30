@@ -4,7 +4,6 @@ const fs = require("fs-extra");
 const parsePath = require("parse-filepath");
 const matter = require("gray-matter");
 const normalize = require("normalize-path");
-const _isArray = require("lodash.isarray");
 const _isObject = require("lodash.isobject");
 const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
@@ -155,7 +154,7 @@ Template.prototype.mapDataAsRenderedTemplates = async function(
   data,
   templateData
 ) {
-  if (_isArray(data)) {
+  if (Array.isArray(data)) {
     let arr = [];
     for (let j = 0, k = data.length; j < k; j++) {
       arr.push(await this.mapDataAsRenderedTemplates(data[j], templateData));

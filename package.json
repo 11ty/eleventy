@@ -1,6 +1,6 @@
 {
   "name": "eleventy-cli",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Transform a directory of templates into HTML.",
   "main": "src/Eleventy.js",
   "license": "MIT",
@@ -50,7 +50,6 @@
     "liquidjs": "^2.2.0",
     "lodash.chunk": "^4.2.0",
     "lodash.get": "^4.4.2",
-    "lodash.isarray": "^4.0.0",
     "lodash.isobject": "^3.0.2",
     "lodash.merge": "^4.6.0",
     "lodash.set": "^4.3.2",
