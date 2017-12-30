@@ -165,6 +165,8 @@ Here are the features tested with each template engine that use external files a
 
 ## Tests
 
+Build Status: [![Build Status](https://travis-ci.org/zachleat/eleventy.svg?branch=master)](https://travis-ci.org/zachleat/eleventy)
+
 ```
 npm run test
 npm run watch:test
