@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "chalk": "^2.3.0",
-    "ejs": "git+https://github.com/zachleat/ejs.git#v2.5.7-h1",
+    "ejs": "^2.5.7",
     "fs-extra": "^4.0.2",
     "glob-watcher": "^4.0.0",
     "globby": "^7.1.1",

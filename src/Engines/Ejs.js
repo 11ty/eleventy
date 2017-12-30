@@ -5,7 +5,8 @@ class Ejs extends TemplateEngine {
   async compile(str) {
     let fn = ejsLib.compile(str, {
       root: "./" + super.getInputDir(),
-      compileDebug: true
+      compileDebug: true,
+      filename: "./" + super.getInputDir()
     });
 
     return function(data) {

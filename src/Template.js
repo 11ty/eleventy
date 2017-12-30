@@ -1,4 +1,3 @@
-const ejs = require("ejs");
 const pify = require("pify");
 const fs = require("fs-extra");
 const parsePath = require("parse-filepath");
