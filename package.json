@@ -12,9 +12,10 @@
   },
   "scripts": {
     "default": "node cmd.js --input=playground --output=_site",
-    "test": "ava",
+    "test": "npx ava",
     "watch:test": "ava --watch --verbose",
-    "precommit": "lint-staged"
+    "precommit": "lint-staged",
+    "prepush": "npx ava"
   },
   "author": {
     "name": "Zach Leatherman",
