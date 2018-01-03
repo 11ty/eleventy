@@ -3,22 +3,25 @@ const fs = require("fs-extra");
 
 let cfg = TemplateConfig.getDefaultConfig();
 
-function Layout(name, dir) {
+function TemplateLayout(name, dir) {
   this.dir = dir;
   this.name = name;
   this.filename = this.findFileName();
   this.fullPath = this.dir + "/" + this.filename;
 }
 
-Layout.prototype.getFullPath = function() {
+TemplateLayout.prototype.getFullPath = function() {
   return this.fullPath;
 };
 
-Layout.prototype.findFileName = function() {
+TemplateLayout.prototype.findFileName = function() {
   let file;
   if (!fs.existsSync(this.dir)) {
     throw Error(
-      "Layout directory does not exist for " + this.name + ": " + this.dir
+      "TemplateLayout directory does not exist for " +
+        this.name +
+        ": " +
+        this.dir
     );
   }
   cfg.templateFormats.forEach(
@@ -33,4 +36,4 @@ Layout.prototype.findFileName = function() {
   return file;
 };
 
-module.exports = Layout;
+module.exports = TemplateLayout;

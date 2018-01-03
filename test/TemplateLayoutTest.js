@@ -1,5 +1,5 @@
 import test from "ava";
-import Layout from "../src/Layout";
+import Layout from "../src/TemplateLayout";
 
 test(t => {
   t.is(new Layout("default", "./test/stubs").findFileName(), "default.ejs");

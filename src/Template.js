@@ -7,7 +7,7 @@ const _isObject = require("lodash.isobject");
 const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
 const TemplatePermalink = require("./TemplatePermalink");
-const Layout = require("./Layout");
+const Layout = require("./TemplateLayout");
 const TemplateConfig = require("./TemplateConfig");
 const Eleventy = require("./Eleventy");
 
