@@ -9,7 +9,6 @@ const TemplatePath = require("./TemplatePath");
 const TemplatePermalink = require("./TemplatePermalink");
 const Layout = require("./TemplateLayout");
 const TemplateConfig = require("./TemplateConfig");
-const Collection = require("./TemplateCollection");
 const Eleventy = require("./Eleventy");
 
 let cfg = TemplateConfig.getDefaultConfig();
@@ -177,36 +176,12 @@ Template.prototype.mapDataAsRenderedTemplates = async function(
   return data;
 };
 
-Template.prototype._getCollectionLinks = async function(files) {
-  // TODO start here this is going to be expensive
-  return files.map(function() {
-    return "";
-  });
-};
-
-Template.prototype.getCollectionData = async function() {
-  let c = new Collection(this.inputPath);
-  let files = await c.getSortedFiles();
-  let links = this._getCollectionLinks(files);
-  let index = c.getTemplatePathIndex(files);
-
-  return {
-    collection: {
-      links: links,
-      next: index < links.length - 1 ? links[index + 1] : null,
-      previous: index > 0 ? links[index - 1] : null
-    }
-  };
-};
-
 Template.prototype.getData = async function(localData) {
   let data = {};
 
   if (this.templateData) {
     data = await this.templateData.getLocalData(this.getLocalDataPath());
   }
-
-  // data.collection =
 
   let mergedLocalData = Object.assign({}, localData, this.dataOverrides);
 
