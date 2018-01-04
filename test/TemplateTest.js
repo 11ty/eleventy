@@ -64,15 +64,6 @@ test("subfolder outputs to double subfolder", async t => {
   t.is(await tmpl.getOutputPath(), "./dist/subfolder/subfolder/index.html");
 });
 
-test("ignored files start with an underscore", t => {
-  let tmpl = new Template(
-    "./test/stubs/_ignored.ejs",
-    "./test/stubs/",
-    "./dist"
-  );
-  t.is(tmpl.isIgnored(), true);
-});
-
 test("HTML files output to the same as the input directory have a file suffix added (only if index, this is not index).", async t => {
   let tmpl = new Template(
     "./test/stubs/testing.html",
