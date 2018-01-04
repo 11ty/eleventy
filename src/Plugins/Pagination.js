@@ -117,9 +117,18 @@ Pagination.prototype.getTemplates = async function() {
     function(cloned, pageNumber) {
       overrides[pageNumber].pagination.previousPageLink =
         pageNumber > 0 ? links[pageNumber - 1] : null;
+      overrides[pageNumber].pagination.previous =
+        overrides[pageNumber].pagination.previousPageLink;
+
       overrides[pageNumber].pagination.nextPageLink =
         pageNumber < templates.length - 1 ? links[pageNumber + 1] : null;
+      overrides[pageNumber].pagination.next =
+        overrides[pageNumber].pagination.nextPageLink;
+
+      overrides[pageNumber].pagination.links = links;
+      // todo deprecated, consistency with collections and use links instead
       overrides[pageNumber].pagination.pageLinks = links;
+
       cloned.setDataOverrides(overrides[pageNumber]);
 
       pages.push(cloned);
