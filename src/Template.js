@@ -189,6 +189,17 @@ class Template {
     return Object.assign({}, data, mergedLayoutData, mergedLocalData);
   }
 
+  async getRenderedData() {
+    let data = await this.getData();
+    if (data.renderData) {
+      data.renderData = await this.mapDataAsRenderedTemplates(
+        data.renderData,
+        data
+      );
+    }
+    return data;
+  }
+
   async renderLayout(tmpl, tmplData) {
     let layoutName = tmplData[cfg.keys.layout];
     // TODO make layout key to be available to templates (without it causing issues with merge below)
@@ -221,7 +232,7 @@ class Template {
 
   async render(data) {
     if (!data) {
-      data = await this.getData();
+      data = await this.getRenderedData();
     }
 
     if (data[cfg.keys.layout]) {
@@ -264,7 +275,7 @@ class Template {
     return ret;
   }
 
-  async write() {
+  async writeWithData(data) {
     let outputPath = await this.getOutputPath();
     if (this.isIgnored()) {
       if (this.isVerbose) {
@@ -272,14 +283,6 @@ class Template {
       }
     } else {
       this.writeCount++;
-
-      let data = await this.getData();
-      if (data.renderData) {
-        data.renderData = await this.mapDataAsRenderedTemplates(
-          data.renderData,
-          data
-        );
-      }
 
       let pluginRet = await this.runPlugins(data);
       if (pluginRet) {
@@ -294,9 +297,14 @@ class Template {
     }
   }
 
+  async write() {
+    let data = await this.getRenderedData();
+    await this.writeWithData(data);
+  }
+
   clone() {
     // TODO better clone
-    var tmpl = new Template(
+    let tmpl = new Template(
       this.inputPath,
       this.inputDir,
       this.outputDir,

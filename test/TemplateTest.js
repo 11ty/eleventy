@@ -352,3 +352,13 @@ test("mapDataAsRenderedTemplates", async t => {
     }
   );
 });
+
+test("renderData", async t => {
+  let tmpl = new Template(
+    "./test/stubs/renderData/renderData.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is((await tmpl.render()).trim(), `hi:value2-value1.css`);
+});
