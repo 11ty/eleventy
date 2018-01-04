@@ -105,7 +105,7 @@ Eleventy.prototype.watch = async function() {
   await this.write();
 
   console.log("Watching…");
-  var watcher = watch(this.writer.getRawFiles(), {
+  let watcher = watch(this.writer.getRawFiles(), {
     ignored: this.writer.getWatchedIgnores()
   });
 

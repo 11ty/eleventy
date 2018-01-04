@@ -78,7 +78,7 @@ Pagination.prototype.getTemplates = async function() {
   let links = [];
   let overrides = [];
 
-  for (var pageNumber = 0, k = items.length; pageNumber < k; pageNumber++) {
+  for (let pageNumber = 0, k = items.length; pageNumber < k; pageNumber++) {
     let chunk = items[pageNumber];
     let cloned = tmpl.clone();
     // TODO maybe also move this permalink additions up into the pagination class

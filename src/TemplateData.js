@@ -71,7 +71,7 @@ TemplateData.prototype.getAllGlobalData = async function() {
   let globalData = {};
   let files = await this.getGlobalDataFiles();
 
-  for (var j = 0, k = files.length; j < k; j++) {
+  for (let j = 0, k = files.length; j < k; j++) {
     let folders = await this.getObjectPathForDataFile(files[j]);
     let data = await this.getJson(files[j], this.rawImports);
     lodashset(globalData, folders, data);
