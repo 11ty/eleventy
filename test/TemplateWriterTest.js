@@ -2,6 +2,8 @@ import fs from "fs-extra";
 import test from "ava";
 import globby from "globby";
 import TemplateWriter from "../src/TemplateWriter";
+// Not sure why but this import up `ava` and _getTemplate 👀
+// import Template from "../src/Template";
 
 test("Mutually exclusive Input and Output dirs", async t => {
   let tw = new TemplateWriter(
@@ -23,6 +25,7 @@ test("Output is a subdir of input", async t => {
     "./test/stubs/writeTest/_writeTestSite",
     ["ejs", "md"]
   );
+
   let files = await globby(tw.files);
   t.is(tw.rawFiles.length, 2);
   t.true(files.length > 0);
@@ -33,14 +36,9 @@ test("Output is a subdir of input", async t => {
     await tmpl.getOutputPath(),
     "./test/stubs/writeTest/_writeTestSite/test/index.html"
   );
-
-  // don’t write because this messes with ava’s watch
-  // fs.removeSync( "./test/stubs/writeTest/_site" );
-  // await tw.write();
-  // t.true( fs.existsSync( "./test/stubs/writeTest/_site/test.html" ) );
 });
 
-test(".eleventyignore ignores parsing", t => {
+test(".eleventyignore parsing", t => {
   let ignores = new TemplateWriter.getFileIgnores("./test/stubs");
   t.is(ignores[0], "!./test/stubs/ignoredFolder/**");
   t.is(ignores[1], "!./test/stubs/ignoredFolder/ignored.md");
@@ -60,4 +58,20 @@ test(".eleventyignore files", async t => {
     }).length,
     0
   );
+});
+
+test("_getTemplatesMap", async t => {
+  let tw = new TemplateWriter(
+    "./test/stubs/writeTest",
+    "./test/stubs/_writeTestSite",
+    ["ejs", "md"]
+  );
+
+  let paths = await tw._getAllPaths();
+  t.true(paths.length > 0);
+
+  let templatesMap = await tw._getTemplatesMap(paths);
+  t.true(templatesMap.length > 0);
+  t.truthy(templatesMap[0].template);
+  t.truthy(templatesMap[0].data);
 });

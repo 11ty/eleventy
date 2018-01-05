@@ -2,6 +2,19 @@ class Sortable {
   constructor() {
     this.sortAscending = true;
     this.sortNumeric = false;
+    this.items = [];
+  }
+
+  add(item) {
+    this.items.push(item);
+  }
+
+  sort(sortFunction) {
+    if (!sortFunction) {
+      sortFunction = this.getSortFunction();
+    }
+
+    return this.items.sort(sortFunction);
   }
 
   isSortAscending() {
@@ -10,6 +23,10 @@ class Sortable {
 
   isSortNumeric() {
     return this.sortNumeric;
+  }
+
+  setSortDescending() {
+    this.sortAscending = false;
   }
 
   setSortAscending(isAscending) {

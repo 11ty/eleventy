@@ -98,6 +98,24 @@ TemplateWriter.prototype.addWritingIgnores = function(baseDir, files) {
   return files;
 };
 
+TemplateWriter.prototype._getAllPaths = async function() {
+  return globby(this.files, { gitignore: true });
+};
+
+TemplateWriter.prototype._getTemplatesMap = async function(paths) {
+  let templates = [];
+  for (let path of paths) {
+    let tmpl = this._getTemplate(path);
+    templates.push({
+      inputPath: tmpl.getInputPath(),
+      outputPath: await tmpl.getOutputPath(),
+      template: tmpl,
+      data: await tmpl.getRenderedData()
+    });
+  }
+  return templates;
+};
+
 TemplateWriter.prototype._getTemplate = function(path) {
   let tmpl = new Template(
     path,
@@ -136,24 +154,40 @@ TemplateWriter.prototype._getTemplate = function(path) {
   return tmpl;
 };
 
-TemplateWriter.prototype._writeTemplate = async function(path) {
-  let tmpl = this._getTemplate(path);
+TemplateWriter.prototype._writeTemplate = async function(
+  tmpl,
+  outputPath,
+  data
+) {
   try {
-    await tmpl.write();
+    await tmpl.writeWithData(outputPath, data);
   } catch (e) {
     throw EleventyError.make(
       new Error(`Having trouble writing template: ${path}`),
       e
     );
   }
+
   this.writeCount += tmpl.getWriteCount();
   return tmpl;
 };
 
+TemplateWriter.prototype.buildDataMap = function(templatesMap) {
+  let dataMap = [];
+};
+
 TemplateWriter.prototype.write = async function() {
-  var paths = await globby(this.files, { gitignore: true });
-  for (var j = 0, k = paths.length; j < k; j++) {
-    await this._writeTemplate(paths[j]);
+  let paths = await this._getAllPaths();
+  let templatesMap = await this._getTemplatesMap(paths);
+
+  this.buildDataMap(templatesMap);
+
+  for (let template of templatesMap) {
+    await this._writeTemplate(
+      template.template,
+      template.outputPath,
+      template.data
+    );
   }
 };
 

@@ -4,23 +4,8 @@ const Path = require("./TemplatePath");
 const Sortable = require("./Util/Sortable");
 
 class TemplateCollection extends Sortable {
-  constructor(templatePath) {
+  constructor() {
     super();
-    this.globSelector = null;
-    this.templatePath = templatePath;
-
-    if (templatePath) {
-      this.setDefaultGlobFromTemplatePath(templatePath);
-    }
-  }
-
-  setDefaultGlobFromTemplatePath(path) {
-    let parsed = parsePath(path);
-    this.globSelector = parsed.dir + "/*";
-  }
-
-  setGlob(glob) {
-    this.globSelector = glob;
   }
 
   getTemplatePathIndex(files) {

@@ -53,6 +53,10 @@ class Template {
     this.writeCount = 0;
   }
 
+  getInputPath() {
+    return this.inputPath;
+  }
+
   setIsVerbose(isVerbose) {
     this.isVerbose = isVerbose;
   }
@@ -275,8 +279,7 @@ class Template {
     return ret;
   }
 
-  async writeWithData(data) {
-    let outputPath = await this.getOutputPath();
+  async writeWithData(outputPath, data) {
     if (this.isIgnored()) {
       if (this.isVerbose) {
         console.log("Ignoring", outputPath);
@@ -298,8 +301,9 @@ class Template {
   }
 
   async write() {
+    let outputPath = await this.getOutputPath();
     let data = await this.getRenderedData();
-    await this.writeWithData(data);
+    await this.writeWithData(outputPath, data);
   }
 
   clone() {
