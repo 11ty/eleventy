@@ -32,14 +32,14 @@ test("HTML Render", async t => {
   t.is(await fn({}), "<p>Paragraph</p>");
 });
 
-test("HTML Render: Parses markdown using liquid engine (default, with data)", async t => {
+test("HTML Render: Parses HTML using liquid engine (default, with data)", async t => {
   let fn = await new TemplateRender("html").getCompiledTemplate(
     "<h1>{{title}}</h1>"
   );
   t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
 });
 
-test("HTML Render: Parses markdown using ejs engine", async t => {
+test("HTML Render: Parses HTML using ejs engine", async t => {
   let fn = await new TemplateRender("html").getCompiledTemplate(
     "<h1><%=title %></h1>",
     {
@@ -49,7 +49,7 @@ test("HTML Render: Parses markdown using ejs engine", async t => {
   t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
 });
 
-test("HTML Render: Set markdown engine to false, don’t parse", async t => {
+test("HTML Render: Set HTML engine to false, don’t parse", async t => {
   let fn = await new TemplateRender("html").getCompiledTemplate(
     "<h1>{{title}}</h1>",
     {
@@ -146,6 +146,13 @@ test("Markdown Render: Parses base markdown, no data", async t => {
   t.is((await fn()).trim(), "<h1>My Title</h1>");
 });
 
+test("Markdown Render: Markdown should work with HTML too", async t => {
+  let fn = await new TemplateRender("md").getCompiledTemplate(
+    "<h1>My Title</h1>"
+  );
+  t.is((await fn()).trim(), "<h1>My Title</h1>");
+});
+
 test("Markdown Render: Parses markdown using liquid engine (default, with data)", async t => {
   let fn = await new TemplateRender("md").getCompiledTemplate("# {{title}}");
   t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
@@ -169,6 +176,17 @@ test("Markdown Render: Set markdown engine to false, don’t parse", async t => 
   let fn = await new TemplateRender("md").getCompiledTemplate("# {{title}}", {
     parseMarkdownWith: false
   });
+  t.is((await fn()).trim(), "<h1>{{title}}</h1>");
+});
+
+test("Markdown Render: Set markdown engine to false, don’t parse (test with HTML input)", async t => {
+  let fn = await new TemplateRender("md").getCompiledTemplate(
+    "<h1>{{title}}</h1>",
+    {
+      parseMarkdownWith: false
+    }
+  );
+
   t.is((await fn()).trim(), "<h1>{{title}}</h1>");
 });
 

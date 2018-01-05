@@ -1,4 +1,6 @@
-const mdlib = require("markdown-it")();
+const mdlib = require("markdown-it")({
+  html: true
+});
 const TemplateEngine = require("./TemplateEngine");
 
 class Markdown extends TemplateEngine {
