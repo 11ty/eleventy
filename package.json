@@ -11,7 +11,7 @@
     "eleventy": "./cmd.js"
   },
   "scripts": {
-    "default": "node cmd.js --input=playground --output=_site",
+    "default": "cd playground && node ../cmd.js --input=. --output=_site",
     "test": "npx ava",
     "watch:test": "ava --watch --verbose",
     "precommit": "lint-staged",

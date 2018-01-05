@@ -321,6 +321,18 @@ class Template {
   getWriteCount() {
     return this.writeCount;
   }
+
+  async getMapped() {
+    let outputPath = await this.getOutputPath();
+    let data = await this.getRenderedData();
+    let map = {
+      template: this,
+      inputPath: this.getInputPath(),
+      outputPath: outputPath,
+      data: data
+    };
+    return map;
+  }
 }
 
 module.exports = Template;

@@ -5,6 +5,10 @@ class Sortable {
     this.items = [];
   }
 
+  get length() {
+    return this.items.length;
+  }
+
   add(item) {
     this.items.push(item);
   }

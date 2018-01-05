@@ -75,3 +75,15 @@ test("_getTemplatesMap", async t => {
   t.truthy(templatesMap[0].template);
   t.truthy(templatesMap[0].data);
 });
+
+test("_addCollectionsToData", async t => {
+  let tw = new TemplateWriter("./test/stubs/collection", "./test/stubs/_site", [
+    "md"
+  ]);
+
+  let paths = await tw._getAllPaths();
+  let templatesMap = await tw._getTemplatesMap(paths);
+  tw._populateCollection(templatesMap);
+
+  t.is(tw._addCollectionsToData({}).posts.length, 2);
+});

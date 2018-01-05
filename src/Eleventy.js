@@ -54,6 +54,10 @@ Eleventy.prototype.init = async function() {
     this.data
   );
 
+  if (this.isVerbose) {
+    console.log("Formats:", this.formats.join(", "));
+  }
+
   this.writer.setVerboseOutput(this.isVerbose);
 
   return this.data.cacheData();

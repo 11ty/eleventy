@@ -30,6 +30,14 @@ module.exports = {
     output: "_site"
   },
   filters: {},
+  contentMapCollectionFilters: {
+    posts: function(collection, activeTemplate) {
+      return collection.getFilteredByTag("post", activeTemplate);
+    }
+  },
+  onContentMapped: function(map) {
+    // console.log( "Content map", map );
+  },
   handlebarsHelpers: {},
   nunjucksFilters: {
     slug: str => {

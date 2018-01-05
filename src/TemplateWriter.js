@@ -7,6 +7,7 @@ const TemplateRender = require("./TemplateRender");
 const TemplateConfig = require("./TemplateConfig");
 const EleventyError = require("./EleventyError");
 const Pagination = require("./Plugins/Pagination");
+const Collection = require("./TemplateCollection");
 const pkg = require("../package.json");
 
 let cfg = TemplateConfig.getDefaultConfig();
@@ -18,6 +19,7 @@ function TemplateWriter(baseDir, outputDir, extensions, templateData) {
   this.templateData = templateData;
   this.isVerbose = true;
   this.writeCount = 0;
+  this.collection = new Collection();
 
   this.rawFiles = this.templateExtensions.map(
     function(extension) {
@@ -102,16 +104,18 @@ TemplateWriter.prototype._getAllPaths = async function() {
   return globby(this.files, { gitignore: true });
 };
 
+TemplateWriter.prototype._populateCollection = function(templateMaps) {
+  for (let map of templateMaps) {
+    this.collection.add(map);
+  }
+};
+
 TemplateWriter.prototype._getTemplatesMap = async function(paths) {
   let templates = [];
   for (let path of paths) {
     let tmpl = this._getTemplate(path);
-    templates.push({
-      inputPath: tmpl.getInputPath(),
-      outputPath: await tmpl.getOutputPath(),
-      template: tmpl,
-      data: await tmpl.getRenderedData()
-    });
+    let map = await tmpl.getMapped();
+    templates.push(map);
   }
   return templates;
 };
@@ -154,12 +158,22 @@ TemplateWriter.prototype._getTemplate = function(path) {
   return tmpl;
 };
 
+TemplateWriter.prototype._addCollectionsToData = function(data, template) {
+  let filters = cfg.contentMapCollectionFilters;
+  for (let filterName in filters) {
+    data[filterName] = filters[filterName](this.collection, template);
+  }
+  return data;
+};
+
 TemplateWriter.prototype._writeTemplate = async function(
   tmpl,
   outputPath,
   data
 ) {
   try {
+    data = this._addCollectionsToData(data, tmpl);
+
     await tmpl.writeWithData(outputPath, data);
   } catch (e) {
     throw EleventyError.make(
@@ -172,21 +186,22 @@ TemplateWriter.prototype._writeTemplate = async function(
   return tmpl;
 };
 
-TemplateWriter.prototype.buildDataMap = function(templatesMap) {
-  let dataMap = [];
-};
-
 TemplateWriter.prototype.write = async function() {
   let paths = await this._getAllPaths();
   let templatesMap = await this._getTemplatesMap(paths);
+  this._populateCollection(templatesMap);
 
-  this.buildDataMap(templatesMap);
+  let contentMap = this.collection.getSortedByInputPath();
+  if (typeof cfg.onContentMapped === "function") {
+    cfg.onContentMapped(contentMap);
+  }
 
   for (let template of templatesMap) {
     await this._writeTemplate(
       template.template,
       template.outputPath,
-      template.data
+      template.data,
+      contentMap
     );
   }
 };
