@@ -1,6 +1,7 @@
 const globby = require("globby");
 const normalize = require("normalize-path");
 const fs = require("fs-extra");
+const lodashCloneDeep = require("lodash.clonedeep");
 const Template = require("./Template");
 const TemplatePath = require("./TemplatePath");
 const TemplateRender = require("./TemplateRender");
@@ -19,7 +20,7 @@ function TemplateWriter(baseDir, outputDir, extensions, templateData) {
   this.templateData = templateData;
   this.isVerbose = true;
   this.writeCount = 0;
-  this.collection = new Collection();
+  this.collection = null;
 
   this.rawFiles = this.templateExtensions.map(
     function(extension) {
@@ -63,7 +64,7 @@ TemplateWriter.getFileIgnores = function(baseDir) {
       })
       .map(line => {
         line = line.trim();
-        path = TemplatePath.addLeadingDotSlash(
+        let path = TemplatePath.addLeadingDotSlash(
           TemplatePath.normalize(baseDir, "/", line)
         );
         if (fs.statSync(path).isDirectory()) {
@@ -105,6 +106,8 @@ TemplateWriter.prototype._getAllPaths = async function() {
 };
 
 TemplateWriter.prototype._populateCollection = function(templateMaps) {
+  this.collection = new Collection();
+
   for (let map of templateMaps) {
     this.collection.add(map);
   }
@@ -158,12 +161,36 @@ TemplateWriter.prototype._getTemplate = function(path) {
   return tmpl;
 };
 
-TemplateWriter.prototype._addCollectionsToData = function(data, template) {
-  let filters = cfg.contentMapCollectionFilters;
-  for (let filterName in filters) {
-    data[filterName] = filters[filterName](this.collection, template);
+TemplateWriter.prototype._createTemplateMapCopy = function(templatesMap) {
+  let copy = [];
+  for (let map of templatesMap) {
+    let mapCopy = lodashCloneDeep(map);
+
+    // For simplification, maybe re-add this later?
+    delete mapCopy.template;
+
+    // Circular reference
+    delete mapCopy.data.collections;
+
+    copy.push(mapCopy);
   }
-  return data;
+
+  return copy;
+};
+
+TemplateWriter.prototype._getCollectionsData = function(template) {
+  let filters = cfg.contentMapCollectionFilters;
+  let collections = {};
+
+  for (let filterName in filters) {
+    collections[filterName] = this._createTemplateMapCopy(
+      filters[filterName](this.collection, template)
+    );
+  }
+  // console.log( "collections>>>>", collections );
+  // console.log( ">>>>> end collections" );
+
+  return collections;
 };
 
 TemplateWriter.prototype._writeTemplate = async function(
@@ -172,12 +199,12 @@ TemplateWriter.prototype._writeTemplate = async function(
   data
 ) {
   try {
-    data = this._addCollectionsToData(data, tmpl);
+    data.collections = this._getCollectionsData(tmpl);
 
     await tmpl.writeWithData(outputPath, data);
   } catch (e) {
     throw EleventyError.make(
-      new Error(`Having trouble writing template: ${path}`),
+      new Error(`Having trouble writing template: ${outputPath}`),
       e
     );
   }
@@ -191,8 +218,8 @@ TemplateWriter.prototype.write = async function() {
   let templatesMap = await this._getTemplatesMap(paths);
   this._populateCollection(templatesMap);
 
-  let contentMap = this.collection.getSortedByInputPath();
   if (typeof cfg.onContentMapped === "function") {
+    let contentMap = this.collection.getSortedByInputPath();
     cfg.onContentMapped(contentMap);
   }
 
@@ -200,8 +227,7 @@ TemplateWriter.prototype.write = async function() {
     await this._writeTemplate(
       template.template,
       template.outputPath,
-      template.data,
-      contentMap
+      template.data
     );
   }
 };

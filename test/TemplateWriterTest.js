@@ -76,7 +76,7 @@ test("_getTemplatesMap", async t => {
   t.truthy(templatesMap[0].data);
 });
 
-test("_addCollectionsToData", async t => {
+test("_getCollectionsData", async t => {
   let tw = new TemplateWriter("./test/stubs/collection", "./test/stubs/_site", [
     "md"
   ]);
@@ -85,5 +85,18 @@ test("_addCollectionsToData", async t => {
   let templatesMap = await tw._getTemplatesMap(paths);
   tw._populateCollection(templatesMap);
 
-  t.is(tw._addCollectionsToData({}).posts.length, 2);
+  t.is(tw._getCollectionsData().posts.length, 2);
+});
+
+test("populating the collection twice should clear the previous values (--watch was making it cumulative)", async t => {
+  let tw = new TemplateWriter("./test/stubs/collection", "./test/stubs/_site", [
+    "md"
+  ]);
+
+  let paths = await tw._getAllPaths();
+  let templatesMap = await tw._getTemplatesMap(paths);
+  tw._populateCollection(templatesMap);
+  tw._populateCollection(templatesMap);
+
+  t.is(tw._getCollectionsData().posts.length, 2);
 });

@@ -33,6 +33,9 @@ module.exports = {
   contentMapCollectionFilters: {
     posts: function(collection, activeTemplate) {
       return collection.getFilteredByTag("post", activeTemplate);
+    },
+    all: function(collection, activeTemplate) {
+      return collection.getAll(activeTemplate);
     }
   },
   onContentMapped: function(map) {

@@ -51,6 +51,7 @@
     "handlebars": "^4.0.11",
     "liquidjs": "^2.2.0",
     "lodash.chunk": "^4.2.0",
+    "lodash.clonedeep": "^4.5.0",
     "lodash.get": "^4.4.2",
     "lodash.isobject": "^3.0.2",
     "lodash.merge": "^4.6.0",

@@ -28,24 +28,25 @@ class TemplateCollection extends Sortable {
     });
   }
 
+  getAll(activeTemplate) {
+    return this.getSortedByInputPath().map(function(templateMap) {
+      templateMap.active =
+        activeTemplate && templateMap.template === activeTemplate;
+      return templateMap;
+    });
+  }
+
   getFiltered(callback) {
-    return this.getSortedByInputPath().filter(callback);
+    return this.getAll().filter(callback);
   }
 
   getFilteredByTag(tagName, activeTemplate) {
-    return this.getSortedByInputPath()
-      .filter(function(item) {
-        return (
-          !tagName ||
-          (Array.isArray(item.data.tags) &&
-            item.data.tags.indexOf(tagName) > -1)
-        );
-      })
-      .map(function(templateMap) {
-        templateMap.active =
-          activeTemplate && templateMap.template === activeTemplate;
-        return templateMap;
-      });
+    return this.getAll(activeTemplate).filter(function(item) {
+      return (
+        !tagName ||
+        (Array.isArray(item.data.tags) && item.data.tags.indexOf(tagName) > -1)
+      );
+    });
   }
 }
 module.exports = TemplateCollection;

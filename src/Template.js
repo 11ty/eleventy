@@ -324,11 +324,13 @@ class Template {
 
   async getMapped() {
     let outputPath = await this.getOutputPath();
+    let url = await this.getOutputLink();
     let data = await this.getRenderedData();
     let map = {
       template: this,
       inputPath: this.getInputPath(),
       outputPath: outputPath,
+      url: url,
       data: data
     };
     return map;
