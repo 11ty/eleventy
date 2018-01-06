@@ -1,6 +1,6 @@
 # eleventy 🕚
 
-A static site generator. An alternative to Jekyll. Written in JavaScript. Transforms a directory of templates (of varying types) into HTML.
+A simpler static site generator. An alternative to Jekyll. Written in JavaScript. Transforms a directory of templates (of varying types) into HTML.
 
 Works with:
 
@@ -17,6 +17,8 @@ Works with:
 
 ## Getting Started
 
+Requires Node version 8 or above. `node --version` will tell you what version you’re running.
+
 ### Installation
 
 Available [on npm](https://www.npmjs.com/package/eleventy-cli).
@@ -25,9 +27,10 @@ Available [on npm](https://www.npmjs.com/package/eleventy-cli).
 npm install -g eleventy-cli
 ```
 
-### Sample project
+### Sample projects
 
-Have a look at @Heydon’s lovely [Inclusive Web Design Checklist, converted to use `eleventy`](https://github.com/zachleat/eleventy-inclusive-design-checklist). The [original](https://github.com/Heydon/inclusive-design-checklist) project took a JSON file and converted it HTML with some one-off JavaScript. This uses eleventy to transform the data using a nunjucks template, resulting in a cleaner, templated setup.
+1. @Heydon’s lovely [Inclusive Web Design Checklist, converted to use `eleventy`](https://github.com/zachleat/eleventy-inclusive-design-checklist). The [original](https://github.com/Heydon/inclusive-design-checklist) project took a JSON file and converted it HTML with some one-off JavaScript. This uses eleventy to transform the data using a nunjucks template, resulting in a cleaner, templated setup.
+1. [11ty-logo](https://github.com/11ty/logo) generates a template with `eleventy` that has hundreds of different font combinations in an attempt to pick a logo.
 
 ## Usage
 
@@ -173,3 +176,19 @@ Build Status: [![Build Status](https://travis-ci.org/zachleat/eleventy.svg?branc
 npm run test
 npm run watch:test
 ```
+
+## Competitors
+
+* [Jekyll](https://jekyllrb.com/) (Ruby)
+* [Hugo](http://gohugo.io/) (Go)
+* [Hexo](https://hexo.io/) (JavaScript)
+* [Gatsby](https://www.gatsbyjs.org/) (JavaScript using React)
+* [Nuxt](https://www.staticgen.com/nuxt) (JavaScript using Vue)
+* _More at [staticgen.com](https://www.staticgen.com/)_
+
+## Major Roadmapped Features
+
+* [x] Pagination
+* [ ] Tagging of content **IN PROGRESS**
+* [ ] Extensibility with system-wide content mapping **IN PROGRESS**
+* [ ] Plugin system
