@@ -52,11 +52,11 @@ test("getFilteredByTag", async t => {
   t.deepEqual(posts[1].template, tmpl3);
 
   let cats = c.getFilteredByTag("cat");
-  t.truthy(cats.length);
-  t.deepEqual(cats[0].template, tmpl3);
+  t.is(cats.length, 2);
+  t.deepEqual(cats[0].template, tmpl2);
 
   let dogs = c.getFilteredByTag("dog");
-  t.truthy(dogs.length);
+  t.is(dogs.length, 1);
   t.deepEqual(dogs[0].template, tmpl1);
 });
 
@@ -74,7 +74,8 @@ test("getFilteredByTag (added out of order, sorted)", async t => {
 
   let cats = c.getFilteredByTag("cat", tmpl1);
   t.truthy(cats.length);
-  t.deepEqual(cats[0].template, tmpl3);
+  t.is(cats.length, 2);
+  t.deepEqual(cats[0].template, tmpl2);
   t.false(cats[0].active);
 
   let dogs = c.getFilteredByTag("dog", tmpl2);

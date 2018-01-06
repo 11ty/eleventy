@@ -44,7 +44,9 @@ class TemplateCollection extends Sortable {
     return this.getAll(activeTemplate).filter(function(item) {
       return (
         !tagName ||
-        (Array.isArray(item.data.tags) && item.data.tags.indexOf(tagName) > -1)
+        ((Array.isArray(item.data.tags) ||
+          typeof item.data.tags === "string") &&
+          item.data.tags.indexOf(tagName) > -1)
       );
     });
   }
