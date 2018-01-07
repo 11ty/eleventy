@@ -161,6 +161,21 @@ TemplateWriter.prototype._getTemplate = function(path) {
   return tmpl;
 };
 
+TemplateWriter.prototype._getAllTagsFromMap = function(templatesMap) {
+  let allTags = {};
+  for (let map of templatesMap) {
+    let tags = map.data.tags;
+    if (Array.isArray(tags)) {
+      for (let tag of tags) {
+        allTags[tag] = true;
+      }
+    } else if (tags) {
+      allTags[tags] = true;
+    }
+  }
+  return Object.keys(allTags);
+};
+
 TemplateWriter.prototype._createTemplateMapCopy = function(templatesMap) {
   let copy = [];
   for (let map of templatesMap) {
@@ -168,7 +183,6 @@ TemplateWriter.prototype._createTemplateMapCopy = function(templatesMap) {
 
     // For simplification, maybe re-add this later?
     delete mapCopy.template;
-
     // Circular reference
     delete mapCopy.data.collections;
 
@@ -181,10 +195,14 @@ TemplateWriter.prototype._createTemplateMapCopy = function(templatesMap) {
 TemplateWriter.prototype._getCollectionsData = function(template) {
   let filters = cfg.contentMapCollectionFilters;
   let collections = {};
+  collections.all = this._createTemplateMapCopy(
+    filters.all(this.collection, template)
+  );
 
-  for (let filterName in filters) {
-    collections[filterName] = this._createTemplateMapCopy(
-      filters[filterName](this.collection, template)
+  let tags = this._getAllTagsFromMap(collections.all);
+  for (let tag of tags) {
+    collections[tag] = this._createTemplateMapCopy(
+      this.collection.getFilteredByTag(tag, template)
     );
   }
   // console.log( "collections>>>>", collections );

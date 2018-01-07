@@ -85,7 +85,22 @@ test("_getCollectionsData", async t => {
   let templatesMap = await tw._getTemplatesMap(paths);
   tw._populateCollection(templatesMap);
 
-  t.is(tw._getCollectionsData().posts.length, 2);
+  let collectionsData = tw._getCollectionsData();
+  t.is(collectionsData.post.length, 2);
+  t.is(collectionsData.cat.length, 2);
+  t.is(collectionsData.dog.length, 1);
+});
+
+test("_getAllTags", async t => {
+  let tw = new TemplateWriter("./test/stubs/collection", "./test/stubs/_site", [
+    "md"
+  ]);
+
+  let paths = await tw._getAllPaths();
+  let templatesMap = await tw._getTemplatesMap(paths);
+  let tags = tw._getAllTagsFromMap(templatesMap);
+
+  t.deepEqual(tags.sort(), ["cat", "dog", "post"].sort());
 });
 
 test("populating the collection twice should clear the previous values (--watch was making it cumulative)", async t => {
@@ -98,5 +113,5 @@ test("populating the collection twice should clear the previous values (--watch 
   tw._populateCollection(templatesMap);
   tw._populateCollection(templatesMap);
 
-  t.is(tw._getCollectionsData().posts.length, 2);
+  t.is(tw._getCollectionsData().post.length, 2);
 });
