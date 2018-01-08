@@ -4,16 +4,14 @@ const globby = require("globby");
 const parsePath = require("parse-filepath");
 const lodashset = require("lodash.set");
 const TemplateRender = require("./TemplateRender");
-const TemplateConfig = require("./TemplateConfig");
 const TemplatePath = require("./TemplatePath");
-
-let cfg = TemplateConfig.getDefaultConfig();
+const config = require("./Config");
 
 function TemplateData(globalDataPath) {
   this.globalDataPath = globalDataPath;
 
   this.rawImports = {};
-  this.rawImports[cfg.keys.package] = this.getJsonRaw(
+  this.rawImports[config.keys.package] = this.getJsonRaw(
     TemplatePath.localPath("package.json")
   );
 
@@ -46,8 +44,11 @@ TemplateData.prototype.getGlobalDataGlob = async function() {
   }
 
   return (
-    TemplatePath.normalize(dir, "/", cfg.dir.data !== "." ? cfg.dir.data : "") +
-    "/**/*.json"
+    TemplatePath.normalize(
+      dir,
+      "/",
+      config.dir.data !== "." ? config.dir.data : ""
+    ) + "/**/*.json"
   );
 };
 
@@ -58,7 +59,7 @@ TemplateData.prototype.getGlobalDataFiles = async function() {
 TemplateData.prototype.getObjectPathForDataFile = function(path) {
   let reducedPath = TemplatePath.stripPathFromDir(
     path,
-    this.globalDataPath + "/" + (cfg.dir.data !== "." ? cfg.dir.data : "")
+    this.globalDataPath + "/" + (config.dir.data !== "." ? config.dir.data : "")
   );
   let parsed = parsePath(reducedPath);
   let folders = parsed.dir ? parsed.dir.split("/") : [];
@@ -116,9 +117,9 @@ TemplateData.prototype.getJsonRaw = function(path) {
 
 TemplateData.prototype.getJson = async function(path, rawImports) {
   let rawInput = this._getLocalJson(path);
-  let fn = await new TemplateRender(cfg.dataTemplateEngine).getCompiledTemplate(
-    rawInput
-  );
+  let fn = await new TemplateRender(
+    config.dataTemplateEngine
+  ).getCompiledTemplate(rawInput);
 
   // pass in rawImports, don’t pass in global data, that’s what we’re parsing
   let str = await fn(rawImports);

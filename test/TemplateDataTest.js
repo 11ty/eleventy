@@ -1,21 +1,19 @@
 import test from "ava";
 import TemplateData from "../src/TemplateData";
-import TemplateConfig from "../src/TemplateConfig";
-
-let cfg = TemplateConfig.getDefaultConfig();
+import config from "../src/Config";
 
 test("Create", async t => {
   let dataObj = new TemplateData("./test/stubs/");
   let data = await dataObj.getData();
 
-  t.true(Object.keys(data[cfg.keys.package]).length > 0);
+  t.true(Object.keys(data[config.keys.package]).length > 0);
 });
 
 // test("Create (old method, file name not dir)", async t => {
 //   let dataObj = new TemplateData("./test/stubs/globalData.json");
 //   let data = await dataObj.getData();
 
-//   t.true(Object.keys(data[cfg.keys.package]).length > 0);
+//   t.true(Object.keys(data[config.keys.package]).length > 0);
 // });
 
 test("getData()", async t => {
@@ -28,12 +26,12 @@ test("getData()", async t => {
   t.is(
     data.globalData.datakey2,
     "eleventy-cli",
-    `variables, resolve ${cfg.keys.package} to its value.`
+    `variables, resolve ${config.keys.package} to its value.`
   );
 
   t.true(
-    Object.keys(data[cfg.keys.package]).length > 0,
-    `package.json imported to data in ${cfg.keys.package}`
+    Object.keys(data[config.keys.package]).length > 0,
+    `package.json imported to data in ${config.keys.package}`
   );
 });
 

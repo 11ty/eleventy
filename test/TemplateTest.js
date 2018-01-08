@@ -1,11 +1,9 @@
 import test from "ava";
 import TemplateData from "../src/TemplateData";
-import TemplateConfig from "../src/TemplateConfig";
 import Template from "../src/Template";
 import pretty from "pretty";
 import normalize from "normalize-path";
-
-let cfg = TemplateConfig.getDefaultConfig();
+import config from "../src/Config";
 
 function cleanHtml(str) {
   return pretty(str, { ocd: true });
@@ -134,7 +132,7 @@ test("More advanced getData()", async t => {
     key2: "value2"
   });
 
-  t.is(data[cfg.keys.package].name, "eleventy-cli");
+  t.is(data[config.keys.package].name, "eleventy-cli");
   t.is(
     data.key1,
     "value1override",
@@ -153,10 +151,10 @@ test("One Layout", async t => {
     dataObj
   );
 
-  t.is(tmpl.frontMatter.data[cfg.keys.layout], "defaultLayout");
+  t.is(tmpl.frontMatter.data[config.keys.layout], "defaultLayout");
 
   let data = await tmpl.getData();
-  t.is(data[cfg.keys.layout], "defaultLayout");
+  t.is(data[config.keys.layout], "defaultLayout");
 
   t.is(
     cleanHtml(await tmpl.renderLayout(tmpl, data)),
@@ -183,10 +181,10 @@ test("Two Layouts", async t => {
     dataObj
   );
 
-  t.is(tmpl.frontMatter.data[cfg.keys.layout], "layout-a");
+  t.is(tmpl.frontMatter.data[config.keys.layout], "layout-a");
 
   let data = await tmpl.getData();
-  t.is(data[cfg.keys.layout], "layout-a");
+  t.is(data[config.keys.layout], "layout-a");
   t.is(data.key1, "value1");
 
   t.is(
