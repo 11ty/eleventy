@@ -1,27 +1,22 @@
 const watch = require("glob-watcher");
 const chalk = require("chalk");
-const TemplateConfig = require("./TemplateConfig");
 const TemplateData = require("./TemplateData");
 const TemplateWriter = require("./TemplateWriter");
 const EleventyError = require("./EleventyError");
+const simplePlural = require("./Util/Pluralize");
+const config = require("./Config");
 const pkg = require("../package.json");
 
-let cfg = TemplateConfig.getDefaultConfig();
-
 function Eleventy(input, output) {
-  this.input = input || cfg.dir.input;
-  this.output = output || cfg.dir.output;
-  this.formats = cfg.templateFormats;
+  this.input = input || config.dir.input;
+  this.output = output || config.dir.output;
+  this.formats = config.templateFormats;
   this.data = null;
   this.start = new Date();
 }
 
 Eleventy.prototype.restart = function() {
   this.start = new Date();
-};
-
-Eleventy.prototype._simplePlural = function(count, singleWord, pluralWord) {
-  return count === 1 ? singleWord : pluralWord;
 };
 
 Eleventy.prototype.getFinishedLog = function() {
@@ -34,12 +29,10 @@ Eleventy.prototype.getFinishedLog = function() {
   let ret = [];
 
   let writeCount = this.writer.getWriteCount();
-  ret.push(
-    `Wrote ${writeCount} ${this._simplePlural(writeCount, "file", "files")}`
-  );
+  ret.push(`Wrote ${writeCount} ${simplePlural(writeCount, "file", "files")}`);
 
   let time = ((new Date() - this.start) / 1000).toFixed(2);
-  ret.push(`in ${time} ${this._simplePlural(time, "second", "seconds")}`);
+  ret.push(`in ${time} ${simplePlural(time, "second", "seconds")}`);
 
   return ret.join(" ");
 };
