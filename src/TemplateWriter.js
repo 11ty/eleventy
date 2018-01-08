@@ -8,7 +8,6 @@ const TemplateRender = require("./TemplateRender");
 const EleventyError = require("./EleventyError");
 const Pagination = require("./Plugins/Pagination");
 const Collection = require("./TemplateCollection");
-const eleventyEmitter = require("./EleventyEmitter");
 const pkg = require("../package.json");
 const config = require("./Config");
 
@@ -194,10 +193,9 @@ TemplateWriter.prototype._createTemplateMapCopy = function(templatesMap) {
 };
 
 TemplateWriter.prototype._getCollectionsData = function(template) {
-  let filters = config.contentMapCollectionFilters;
   let collections = {};
   collections.all = this._createTemplateMapCopy(
-    filters.all(this.collection, template)
+    this.collection.getAll(template)
   );
 
   let tags = this._getAllTagsFromMap(collections.all);
@@ -244,6 +242,7 @@ TemplateWriter.prototype.write = async function() {
       template.data
     );
   }
+
   console.log("emitting event");
   eleventyEmitter.emit("11ty.datamap", this.collection.getSortedByInputPath());
 };
