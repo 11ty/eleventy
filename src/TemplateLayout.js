@@ -1,7 +1,5 @@
-const TemplateConfig = require("./TemplateConfig");
 const fs = require("fs-extra");
-
-let cfg = TemplateConfig.getDefaultConfig();
+const config = require("./Config");
 
 function TemplateLayout(name, dir) {
   this.dir = dir;
@@ -24,7 +22,7 @@ TemplateLayout.prototype.findFileName = function() {
         this.dir
     );
   }
-  cfg.templateFormats.forEach(
+  config.templateFormats.forEach(
     function(extension) {
       let filename = this.name + "." + extension;
       if (!file && fs.existsSync(this.dir + "/" + filename)) {

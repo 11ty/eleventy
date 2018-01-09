@@ -6,7 +6,7 @@ class JavaScript extends TemplateEngine {
     return function(data) {
       // avoid `with`
       let dataStr = "";
-      for (var j in data) {
+      for (let j in data) {
         dataStr += `let ${j} = ${JSON.stringify(data[j])};\n`;
       }
 

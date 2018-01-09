@@ -1,15 +1,16 @@
 const globby = require("globby");
 const normalize = require("normalize-path");
 const fs = require("fs-extra");
+const lodashCloneDeep = require("lodash.clonedeep");
 const Template = require("./Template");
 const TemplatePath = require("./TemplatePath");
 const TemplateRender = require("./TemplateRender");
-const TemplateConfig = require("./TemplateConfig");
 const EleventyError = require("./EleventyError");
 const Pagination = require("./Plugins/Pagination");
+const Collection = require("./TemplateCollection");
 const pkg = require("../package.json");
-
-let cfg = TemplateConfig.getDefaultConfig();
+const eleventyConfig = require("./EleventyConfig");
+const config = require("./Config");
 
 function TemplateWriter(baseDir, outputDir, extensions, templateData) {
   this.baseDir = baseDir;
@@ -18,6 +19,7 @@ function TemplateWriter(baseDir, outputDir, extensions, templateData) {
   this.templateData = templateData;
   this.isVerbose = true;
   this.writeCount = 0;
+  this.collection = null;
 
   this.rawFiles = this.templateExtensions.map(
     function(extension) {
@@ -61,7 +63,7 @@ TemplateWriter.getFileIgnores = function(baseDir) {
       })
       .map(line => {
         line = line.trim();
-        path = TemplatePath.addLeadingDotSlash(
+        let path = TemplatePath.addLeadingDotSlash(
           TemplatePath.normalize(baseDir, "/", line)
         );
         if (fs.statSync(path).isDirectory()) {
@@ -76,9 +78,9 @@ TemplateWriter.getFileIgnores = function(baseDir) {
 
 TemplateWriter.prototype.addIgnores = function(baseDir, files) {
   files = files.concat(TemplateWriter.getFileIgnores(baseDir));
-  if (cfg.dir.output) {
+  if (config.dir.output) {
     files = files.concat(
-      "!" + normalize(baseDir + "/" + cfg.dir.output + "/**")
+      "!" + normalize(baseDir + "/" + config.dir.output + "/**")
     );
   }
 
@@ -86,16 +88,40 @@ TemplateWriter.prototype.addIgnores = function(baseDir, files) {
 };
 
 TemplateWriter.prototype.addWritingIgnores = function(baseDir, files) {
-  if (cfg.dir.includes) {
+  if (config.dir.includes) {
     files = files.concat(
-      "!" + normalize(baseDir + "/" + cfg.dir.includes + "/**")
+      "!" + normalize(baseDir + "/" + config.dir.includes + "/**")
     );
   }
-  if (cfg.dir.data && cfg.dir.data !== ".") {
-    files = files.concat("!" + normalize(baseDir + "/" + cfg.dir.data + "/**"));
+  if (config.dir.data && config.dir.data !== ".") {
+    files = files.concat(
+      "!" + normalize(baseDir + "/" + config.dir.data + "/**")
+    );
   }
 
   return files;
+};
+
+TemplateWriter.prototype._getAllPaths = async function() {
+  return globby(this.files, { gitignore: true });
+};
+
+TemplateWriter.prototype._populateCollection = function(templateMaps) {
+  this.collection = new Collection();
+
+  for (let map of templateMaps) {
+    this.collection.add(map);
+  }
+};
+
+TemplateWriter.prototype._getTemplatesMap = async function(paths) {
+  let templates = [];
+  for (let path of paths) {
+    let tmpl = this._getTemplate(path);
+    let map = await tmpl.getMapped();
+    templates.push(map);
+  }
+  return templates;
 };
 
 TemplateWriter.prototype._getTemplate = function(path) {
@@ -114,8 +140,8 @@ TemplateWriter.prototype._getTemplate = function(path) {
    *   return pretty(str, { ocd: true });
    * }
    */
-  for (let filterName in cfg.filters) {
-    let filter = cfg.filters[filterName];
+  for (let filterName in config.filters) {
+    let filter = config.filters[filterName];
     if (typeof filter === "function") {
       tmpl.addFilter(filter);
     }
@@ -136,25 +162,97 @@ TemplateWriter.prototype._getTemplate = function(path) {
   return tmpl;
 };
 
-TemplateWriter.prototype._writeTemplate = async function(path) {
-  let tmpl = this._getTemplate(path);
+TemplateWriter.prototype._getAllTagsFromMap = function(templatesMap) {
+  let allTags = {};
+  for (let map of templatesMap) {
+    let tags = map.data.tags;
+    if (Array.isArray(tags)) {
+      for (let tag of tags) {
+        allTags[tag] = true;
+      }
+    } else if (tags) {
+      allTags[tags] = true;
+    }
+  }
+  return Object.keys(allTags);
+};
+
+TemplateWriter.prototype._createTemplateMapCopy = function(templatesMap) {
+  let copy = [];
+  for (let map of templatesMap) {
+    let mapCopy = lodashCloneDeep(map);
+
+    // For simplification, maybe re-add this later?
+    delete mapCopy.template;
+    // Circular reference
+    delete mapCopy.data.collections;
+
+    copy.push(mapCopy);
+  }
+
+  return copy;
+};
+
+TemplateWriter.prototype._getCollectionsData = function(activeTemplate) {
+  let collections = {};
+  collections.all = this._createTemplateMapCopy(
+    this.collection.getAllSorted(activeTemplate)
+  );
+
+  let tags = this._getAllTagsFromMap(collections.all);
+  for (let tag of tags) {
+    collections[tag] = this._createTemplateMapCopy(
+      this.collection.getFilteredByTag(tag, activeTemplate)
+    );
+  }
+
+  let configCollections = eleventyConfig.getCollections();
+  for (let name in configCollections) {
+    collections[name] = this._createTemplateMapCopy(
+      configCollections[name](this.collection)
+    );
+  }
+
+  // console.log( "collections>>>>", collections );
+  // console.log( ">>>>> end collections" );
+
+  return collections;
+};
+
+TemplateWriter.prototype._writeTemplate = async function(
+  tmpl,
+  outputPath,
+  data
+) {
   try {
-    await tmpl.write();
+    data.collections = this._getCollectionsData(tmpl);
+
+    await tmpl.writeWithData(outputPath, data);
   } catch (e) {
     throw EleventyError.make(
-      new Error(`Having trouble writing template: ${path}`),
+      new Error(`Having trouble writing template: ${outputPath}`),
       e
     );
   }
+
   this.writeCount += tmpl.getWriteCount();
   return tmpl;
 };
 
 TemplateWriter.prototype.write = async function() {
-  var paths = await globby(this.files, { gitignore: true });
-  for (var j = 0, k = paths.length; j < k; j++) {
-    await this._writeTemplate(paths[j]);
+  let paths = await this._getAllPaths();
+  let templatesMap = await this._getTemplatesMap(paths);
+  this._populateCollection(templatesMap);
+
+  for (let template of templatesMap) {
+    await this._writeTemplate(
+      template.template,
+      template.outputPath,
+      template.data
+    );
   }
+
+  eleventyConfig.emit("alldata", this.collection.getAllSorted());
 };
 
 TemplateWriter.prototype.setVerboseOutput = function(isVerbose) {

@@ -11,7 +11,7 @@
     "eleventy": "./cmd.js"
   },
   "scripts": {
-    "default": "node cmd.js --input=playground --output=_site",
+    "default": "cd playground && node ../cmd.js --input=. --output=_site",
     "test": "npx ava",
     "watch:test": "ava --watch --verbose",
     "precommit": "lint-staged",
@@ -51,10 +51,12 @@
     "handlebars": "^4.0.11",
     "liquidjs": "^2.2.0",
     "lodash.chunk": "^4.2.0",
+    "lodash.clonedeep": "^4.5.0",
     "lodash.get": "^4.4.2",
     "lodash.isobject": "^3.0.2",
     "lodash.merge": "^4.6.0",
     "lodash.set": "^4.3.2",
+    "luxon": "^0.2.12",
     "markdown-it": "^8.4.0",
     "minimist": "^1.2.0",
     "mustache": "^2.3.0",

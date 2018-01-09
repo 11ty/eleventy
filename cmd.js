@@ -5,20 +5,20 @@ const EleventyNodeVersionCheck = require("./src/VersionCheck");
 EleventyNodeVersionCheck().then(function() {
   const Eleventy = require("./src/Eleventy");
 
-  let eleven = new Eleventy(argv.input, argv.output);
-  eleven.setFormats(argv.formats);
-  eleven.setIsVerbose(!argv.quiet);
+  let elev = new Eleventy(argv.input, argv.output);
+  elev.setFormats(argv.formats);
+  elev.setIsVerbose(!argv.quiet);
 
-  eleven.init().then(function() {
+  elev.init().then(function() {
     if (argv.version) {
-      console.log(eleven.getVersion());
+      console.log(elev.getVersion());
     } else if (argv.help) {
-      console.log(eleven.getHelp());
+      console.log(elev.getHelp());
     } else if (argv.watch) {
-      eleven.watch();
+      elev.watch();
     } else {
-      eleven.write().then(function() {
-        console.log(eleven.getFinishedLog());
+      elev.write().then(function() {
+        console.log(elev.getFinishedLog());
       });
     }
   });

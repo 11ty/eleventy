@@ -1,10 +1,12 @@
-const mdlib = require("markdown-it")();
+const mdlib = require("markdown-it")({
+  html: true
+});
 const TemplateEngine = require("./TemplateEngine");
 
 class Markdown extends TemplateEngine {
   async compile(str, preTemplateEngine, bypassMarkdown) {
     if (preTemplateEngine) {
-      var engine = TemplateEngine.getEngine(
+      let engine = TemplateEngine.getEngine(
         preTemplateEngine,
         super.getInputDir()
       );

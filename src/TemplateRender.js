@@ -1,9 +1,7 @@
 const parsePath = require("parse-filepath");
 const TemplatePath = require("./TemplatePath");
 const TemplateEngine = require("./Engines/TemplateEngine");
-const TemplateConfig = require("./TemplateConfig");
-
-let cfg = TemplateConfig.getDefaultConfig();
+const config = require("./Config");
 
 // works with full path names or short engine name
 function TemplateRender(tmplPath, inputDir) {
@@ -14,8 +12,8 @@ function TemplateRender(tmplPath, inputDir) {
   this.inputDir = this._normalizeInputDir(inputDir);
   this.engine = TemplateEngine.getEngine(this.engineName, this.inputDir);
 
-  this.defaultMarkdownEngine = cfg.markdownTemplateEngine;
-  this.defaultHtmlEngine = cfg.htmlTemplateEngine;
+  this.defaultMarkdownEngine = config.markdownTemplateEngine;
+  this.defaultHtmlEngine = config.htmlTemplateEngine;
 }
 
 TemplateRender.prototype.setDefaultMarkdownEngine = function(markdownEngine) {
@@ -32,8 +30,8 @@ TemplateRender.prototype.getEngineName = function() {
 
 TemplateRender.prototype._normalizeInputDir = function(dir) {
   return dir
-    ? TemplatePath.normalize(dir, cfg.dir.includes)
-    : TemplatePath.normalize(cfg.dir.input, cfg.dir.includes);
+    ? TemplatePath.normalize(dir, config.dir.includes)
+    : TemplatePath.normalize(config.dir.input, config.dir.includes);
 };
 
 TemplateRender.prototype.getInputDir = function() {

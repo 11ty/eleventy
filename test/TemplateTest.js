@@ -1,11 +1,10 @@
 import test from "ava";
+import { DateTime } from "luxon";
 import TemplateData from "../src/TemplateData";
-import TemplateConfig from "../src/TemplateConfig";
 import Template from "../src/Template";
 import pretty from "pretty";
 import normalize from "normalize-path";
-
-let cfg = TemplateConfig.getDefaultConfig();
+import config from "../src/Config";
 
 function cleanHtml(str) {
   return pretty(str, { ocd: true });
@@ -134,7 +133,7 @@ test("More advanced getData()", async t => {
     key2: "value2"
   });
 
-  t.is(data[cfg.keys.package].name, "eleventy-cli");
+  t.is(data[config.keys.package].name, "eleventy-cli");
   t.is(
     data.key1,
     "value1override",
@@ -153,10 +152,10 @@ test("One Layout", async t => {
     dataObj
   );
 
-  t.is(tmpl.frontMatter.data[cfg.keys.layout], "defaultLayout");
+  t.is(tmpl.frontMatter.data[config.keys.layout], "defaultLayout");
 
   let data = await tmpl.getData();
-  t.is(data[cfg.keys.layout], "defaultLayout");
+  t.is(data[config.keys.layout], "defaultLayout");
 
   t.is(
     cleanHtml(await tmpl.renderLayout(tmpl, data)),
@@ -183,10 +182,10 @@ test("Two Layouts", async t => {
     dataObj
   );
 
-  t.is(tmpl.frontMatter.data[cfg.keys.layout], "layout-a");
+  t.is(tmpl.frontMatter.data[config.keys.layout], "layout-a");
 
   let data = await tmpl.getData();
-  t.is(data[cfg.keys.layout], "layout-a");
+  t.is(data[config.keys.layout], "layout-a");
   t.is(data.key1, "value1");
 
   t.is(
@@ -351,4 +350,101 @@ test("mapDataAsRenderedTemplates", async t => {
       key2: ["parsedValue", 2]
     }
   );
+});
+
+test("renderData", async t => {
+  let tmpl = new Template(
+    "./test/stubs/renderData/renderData.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is((await tmpl.render()).trim(), `hi:value2-value1.css`);
+});
+
+test("getMappedDate (empty, assume created)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/dates/file1.md",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getRenderedData();
+  let date = await tmpl.getMappedDate(data);
+
+  t.true(date instanceof Date);
+  t.truthy(date.getTime());
+});
+
+test("getMappedDate (explicit date, yaml String)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/dates/file2.md",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getRenderedData();
+  let date = await tmpl.getMappedDate(data);
+
+  t.true(date instanceof Date);
+  t.truthy(date.getTime());
+});
+
+test("getMappedDate (explicit date, yaml Date)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/dates/file2b.md",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getRenderedData();
+  let date = await tmpl.getMappedDate(data);
+
+  t.true(date instanceof Date);
+  t.truthy(date.getTime());
+});
+
+test("getMappedDate (explicit date, yaml Date and string should be the same)", async t => {
+  let tmplA = new Template(
+    "./test/stubs/dates/file2.md",
+    "./test/stubs/",
+    "./dist"
+  );
+  let dataA = await tmplA.getRenderedData();
+  let stringDate = await tmplA.getMappedDate(dataA);
+
+  let tmplB = new Template(
+    "./test/stubs/dates/file2b.md",
+    "./test/stubs/",
+    "./dist"
+  );
+  let dataB = await tmplB.getRenderedData();
+  let yamlDate = await tmplB.getMappedDate(dataB);
+
+  t.truthy(stringDate);
+  t.truthy(yamlDate);
+  t.deepEqual(stringDate, yamlDate);
+});
+
+test("getMappedDate (modified date)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/dates/file3.md",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getRenderedData();
+  let date = await tmpl.getMappedDate(data);
+
+  t.true(date instanceof Date);
+  t.truthy(date.getTime());
+});
+
+test("getMappedDate (created date)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/dates/file4.md",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getRenderedData();
+  let date = await tmpl.getMappedDate(data);
+
+  t.true(date instanceof Date);
+  t.truthy(date.getTime());
 });

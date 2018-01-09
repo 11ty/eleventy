@@ -26,7 +26,7 @@ class TemplateEngine {
     let partialFiles = this.inputDir
       ? globby.sync(this.inputDir + "/*" + this.extension)
       : [];
-    for (var j = 0, k = partialFiles.length; j < k; j++) {
+    for (let j = 0, k = partialFiles.length; j < k; j++) {
       let key = parsePath(partialFiles[j]).name;
       partials[key] = fs.readFileSync(partialFiles[j], "utf-8");
     }
@@ -34,7 +34,7 @@ class TemplateEngine {
   }
 
   async render(str, data) {
-    var fn = await this.compile(str);
+    let fn = await this.compile(str);
     return fn(data);
   }
 

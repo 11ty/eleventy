@@ -1,6 +1,6 @@
 # eleventy 🕚
 
-A static site generator. An alternative to Jekyll. Written in JavaScript. Transforms a directory of templates (of varying types) into HTML.
+A simpler static site generator. An alternative to Jekyll. Written in JavaScript. Transforms a directory of templates (of varying types) into HTML.
 
 Works with:
 
@@ -17,6 +17,8 @@ Works with:
 
 ## Getting Started
 
+Requires Node version 8 or above. `node --version` will tell you what version you’re running.
+
 ### Installation
 
 Available [on npm](https://www.npmjs.com/package/eleventy-cli).
@@ -25,9 +27,10 @@ Available [on npm](https://www.npmjs.com/package/eleventy-cli).
 npm install -g eleventy-cli
 ```
 
-### Sample project
+### Sample projects
 
-Have a look at @Heydon’s lovely [Inclusive Web Design Checklist, converted to use `eleventy`](https://github.com/zachleat/eleventy-inclusive-design-checklist). The [original](https://github.com/Heydon/inclusive-design-checklist) project took a JSON file and converted it HTML with some one-off JavaScript. This uses eleventy to transform the data using a nunjucks template, resulting in a cleaner, templated setup.
+1. @Heydon’s lovely [Inclusive Web Design Checklist, converted to use `eleventy`](https://github.com/zachleat/eleventy-inclusive-design-checklist). The [original](https://github.com/Heydon/inclusive-design-checklist) project took a JSON file and converted it HTML with some one-off JavaScript. This uses eleventy to transform the data using a nunjucks template, resulting in a cleaner, templated setup.
+1. [11ty-logo](https://github.com/11ty/logo) generates a template with `eleventy` that has hundreds of different font combinations in an attempt to pick a logo.
 
 ## Usage
 
@@ -100,11 +103,14 @@ This allows you to assign data values right in the template itself. Here are a f
 * `permalink`: Add in front matter to change the output target of the current template. You can use template syntax for variables here. [Read more about Permalinks](docs/permalinks.md).
 * `layout`: Wrap current template with a layout template found in the `_includes` folder.
 * `pagination`: Enable to iterate over data. Output multiple HTML files from a single template. [Read more about Pagination](docs/pagination.md).
+* `tags`: A single string or array that identifies that a piece of content is part of a collection. Collections can be reused in any other template. [Read more about Collections](docs/collections.md).
+* `date`: Override the default date (file creation) to customize how the file is sorted in a collection. [Read more about Collections](docs/collections.md).
 
 #### Special Variables
 
 * `pkg`: The local project’s `package.json` values.
 * `pagination`: (When enabled in front matter) [Read more about Pagination](docs/pagination.md).
+* `collection`: links to the other sorted templates in the current folder. [Read more about Collections](docs/collections.md)
 
 #### Data Files
 
@@ -138,6 +144,7 @@ module.exports = {
 | `templateFormats`        | `liquid,ejs, md,hbs, mustache,haml, pug,njk,html` | _Any combination of these_                   | `--formats`           | Specify which type of templates should be transformed.                                                                                                                            |
 | `htmlOutputSuffix`       | `-o`                                              | `String`                                     | N/A                   | If the input and output directory match, `index.html` files will have this suffix added to their output filename to prevent overwriting the template.                             |
 | `filters`                | `{}`                                              | `Object`                                     | N/A                   | Filters can transform output on a template. Take the format `function(str, outputPath) { return str; }`. For example, use a filter to format an HTML file with proper whitespace. |
+| `onContentMapped`        | `function(map) {}`                                | `Function`                                   | N/A                   | Callback executes when the full data map for all content is generated.                                                                                                            |
 | `handlebarsHelpers`      | `{}`                                              | `Object`                                     | N/A                   | The helper functions passed to `Handlebars.registerHelper`. Helper names are keys, functions are the values.                                                                      |
 | `nunjucksFilters`        | `{}`                                              | `Object`                                     | N/A                   | The helper functions passed to `nunjucksEnv.addFilter`. Helper names are keys, functions are the values.                                                                          |
 
@@ -171,3 +178,19 @@ Build Status: [![Build Status](https://travis-ci.org/zachleat/eleventy.svg?branc
 npm run test
 npm run watch:test
 ```
+
+## Competitors
+
+* [Jekyll](https://jekyllrb.com/) (Ruby)
+* [Hugo](http://gohugo.io/) (Go)
+* [Hexo](https://hexo.io/) (JavaScript)
+* [Gatsby](https://www.gatsbyjs.org/) (JavaScript using React)
+* [Nuxt](https://www.staticgen.com/nuxt) (JavaScript using Vue)
+* _More at [staticgen.com](https://www.staticgen.com/)_
+
+## Major Roadmapped Features
+
+* [x] Pagination
+* [ ] Tagging of content **IN PROGRESS**
+* [ ] Extensibility with system-wide content mapping **IN PROGRESS**
+* [ ] Plugin system

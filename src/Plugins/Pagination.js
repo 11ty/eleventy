@@ -1,9 +1,7 @@
 const lodashchunk = require("lodash.chunk");
 const lodashget = require("lodash.get");
 const lodashset = require("lodash.set");
-const TemplateConfig = require("../TemplateConfig");
-
-let cfg = TemplateConfig.getDefaultConfig();
+const config = require("../Config");
 
 function Pagination(data) {
   this.data = data || {};
@@ -78,11 +76,11 @@ Pagination.prototype.getTemplates = async function() {
   let links = [];
   let overrides = [];
 
-  for (var pageNumber = 0, k = items.length; pageNumber < k; pageNumber++) {
+  for (let pageNumber = 0, k = items.length; pageNumber < k; pageNumber++) {
     let chunk = items[pageNumber];
     let cloned = tmpl.clone();
     // TODO maybe also move this permalink additions up into the pagination class
-    if (pageNumber > 0 && !this.data[cfg.keys.permalink]) {
+    if (pageNumber > 0 && !this.data[config.keys.permalink]) {
       cloned.setExtraOutputSubdirectory(pageNumber);
     }
 
@@ -117,9 +115,18 @@ Pagination.prototype.getTemplates = async function() {
     function(cloned, pageNumber) {
       overrides[pageNumber].pagination.previousPageLink =
         pageNumber > 0 ? links[pageNumber - 1] : null;
+      overrides[pageNumber].pagination.previous =
+        overrides[pageNumber].pagination.previousPageLink;
+
       overrides[pageNumber].pagination.nextPageLink =
         pageNumber < templates.length - 1 ? links[pageNumber + 1] : null;
+      overrides[pageNumber].pagination.next =
+        overrides[pageNumber].pagination.nextPageLink;
+
+      overrides[pageNumber].pagination.links = links;
+      // todo deprecated, consistency with collections and use links instead
       overrides[pageNumber].pagination.pageLinks = links;
+
       cloned.setDataOverrides(overrides[pageNumber]);
 
       pages.push(cloned);

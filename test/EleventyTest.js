@@ -1,16 +1,14 @@
 import test from "ava";
 import Eleventy from "../src/Eleventy";
-import TemplateConfig from "../src/TemplateConfig";
-
-let cfg = TemplateConfig.getDefaultConfig();
+import config from "../src/Config";
 
 test("Eleventy, defaults inherit from config", async t => {
   let elev = new Eleventy();
 
   t.truthy(elev.input);
   t.truthy(elev.output);
-  t.is(elev.input, cfg.dir.input);
-  t.is(elev.output, cfg.dir.output);
+  t.is(elev.input, config.dir.input);
+  t.is(elev.output, config.dir.output);
 });
 
 test("Eleventy, get version", t => {

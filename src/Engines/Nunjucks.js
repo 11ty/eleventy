@@ -1,8 +1,6 @@
 const NunjucksLib = require("nunjucks");
 const TemplateEngine = require("./TemplateEngine");
-const TemplateConfig = require("../TemplateConfig");
-
-let cfg = TemplateConfig.getDefaultConfig();
+const config = require("../Config");
 
 class Nunjucks extends TemplateEngine {
   constructor(name, inputDir) {
@@ -12,7 +10,7 @@ class Nunjucks extends TemplateEngine {
       new NunjucksLib.FileSystemLoader(super.getInputDir())
     );
 
-    this.addFilters(cfg.nunjucksFilters);
+    this.addFilters(config.nunjucksFilters);
   }
 
   addFilters(helpers) {

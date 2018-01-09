@@ -1,8 +1,6 @@
 const HandlebarsLib = require("handlebars");
 const TemplateEngine = require("./TemplateEngine");
-const TemplateConfig = require("../TemplateConfig");
-
-let cfg = TemplateConfig.getDefaultConfig();
+const config = require("../Config");
 
 class Handlebars extends TemplateEngine {
   constructor(name, inputDir) {
@@ -13,7 +11,7 @@ class Handlebars extends TemplateEngine {
       HandlebarsLib.registerPartial(name, partials[name]);
     }
 
-    this.addHelpers(cfg.handlebarsHelpers);
+    this.addHelpers(config.handlebarsHelpers);
   }
 
   addHelpers(helpers) {
