@@ -56,6 +56,7 @@
     "lodash.isobject": "^3.0.2",
     "lodash.merge": "^4.6.0",
     "lodash.set": "^4.3.2",
+    "luxon": "^0.2.12",
     "markdown-it": "^8.4.0",
     "minimist": "^1.2.0",
     "mustache": "^2.3.0",

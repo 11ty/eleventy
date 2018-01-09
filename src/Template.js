@@ -4,6 +4,7 @@ const parsePath = require("parse-filepath");
 const matter = require("gray-matter");
 const normalize = require("normalize-path");
 const _isObject = require("lodash.isobject");
+const { DateTime } = require("luxon");
 const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
 const TemplatePermalink = require("./TemplatePermalink");
@@ -320,6 +321,42 @@ class Template {
     return this.writeCount;
   }
 
+  async getMappedDate(data) {
+    let stat = await pify(fs.stat)(this.inputPath);
+
+    // should we use Luxon dates everywhere? Right now using built-in `Date`
+    if ("date" in data) {
+      if (data.date instanceof Date) {
+        // YAML does its own date parsing
+        return data.date;
+      } else {
+        // string
+        if (data.date.toLowerCase() === "last modified") {
+          return new Date(stat.ctimeMs);
+        } else if (data.date.toLowerCase() === "created") {
+          return new Date(stat.birthtimeMs);
+        } else {
+          // try to parse with Luxon
+          let date = DateTime.fromISO(data.date, { zone: "utc" });
+          if (!date.isValid) {
+            throw new Error(
+              `date front matter value (${data.date}) is invalid for ${
+                this.inputPath
+              }`
+            );
+          }
+
+          return date.toJSDate();
+        }
+      }
+    } else {
+      // CREATED
+      return new Date(stat.birthtimeMs);
+    }
+
+    return date;
+  }
+
   async getMapped() {
     let outputPath = await this.getOutputPath();
     let url = await this.getOutputLink();
@@ -331,6 +368,9 @@ class Template {
       url: url,
       data: data
     };
+
+    map.date = await this.getMappedDate(data);
+
     return map;
   }
 }

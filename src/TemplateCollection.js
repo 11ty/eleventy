@@ -1,7 +1,3 @@
-const globby = require("globby");
-const parsePath = require("parse-filepath");
-const Template = require("./Template");
-const Path = require("./TemplatePath");
 const Sortable = require("./Util/Sortable");
 
 class TemplateCollection extends Sortable {
@@ -14,24 +10,13 @@ class TemplateCollection extends Sortable {
     super.add(templateMap);
   }
 
-  getTemplatePathIndex(template) {
-    if (!template) {
-      return -1;
-    }
-
-    return this.items.indexOf(template);
-  }
-
-  getSortedByInputPath() {
-    return this.sort(function(mapA, mapB) {
-      return Sortable.sortAlphabeticAscending(mapA.inputPath, mapB.inputPath);
-    });
-  }
-
   getAll(activeTemplate) {
-    return this.getSortedByInputPath().map(function(templateMap) {
-      templateMap.active =
-        activeTemplate && templateMap.template === activeTemplate;
+    return this.sort(Sortable.sortFunctionDirDateFilename).map(function(
+      templateMap
+    ) {
+      if (activeTemplate) {
+        templateMap.active = templateMap.template === activeTemplate;
+      }
       return templateMap;
     });
   }

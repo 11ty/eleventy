@@ -1,7 +1,7 @@
 const fs = require("fs-extra");
 const lodashMerge = require("lodash.merge");
 const TemplatePath = require("./TemplatePath");
-const eleventyEmitter = require("./EleventyEmitter");
+const eleventyConfig = require("./EleventyConfig");
 
 function TemplateConfig(rootConfig, projectConfigPath) {
   this.projectConfigPath = projectConfigPath || ".eleventy.js";
@@ -27,12 +27,13 @@ TemplateConfig.prototype.mergeConfig = function() {
 
   try {
     localConfig = require(path);
-    if (typeof localConfig === "function") {
-      localConfig = localConfig(eleventyEmitter);
-    }
   } catch (e) {
     // if file does not exist, return empty obj
     localConfig = {};
+  }
+
+  if (typeof localConfig === "function") {
+    localConfig = localConfig(eleventyConfig);
   }
 
   // Object assign overrides original values (good only for templateFormats) but not good for everything else

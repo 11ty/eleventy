@@ -1,6 +1,7 @@
 import test from "ava";
 import Template from "../src/Template";
 import Collection from "../src/TemplateCollection";
+import Sortable from "../src/Util/Sortable";
 
 let tmpl1 = new Template(
   "./test/stubs/collection/test1.md",
@@ -14,6 +15,16 @@ let tmpl2 = new Template(
 );
 let tmpl3 = new Template(
   "./test/stubs/collection/test3.md",
+  "./test/stubs/",
+  "./test/stubs/_site"
+);
+let tmpl4 = new Template(
+  "./test/stubs/collection/test4.md",
+  "./test/stubs/",
+  "./test/stubs/_site"
+);
+let tmpl5 = new Template(
+  "./test/stubs/collection/test5.md",
   "./test/stubs/",
   "./test/stubs/_site"
 );
@@ -38,6 +49,19 @@ test("getFiltered", async t => {
   });
 
   t.deepEqual(filtered[0].template, tmpl1);
+});
+
+test("getSortedByDirAndDate", async t => {
+  let c = new Collection();
+  await c.addTemplate(tmpl1);
+  await c.addTemplate(tmpl4);
+  await c.addTemplate(tmpl5);
+
+  let posts = c.sort(Sortable.sortFunctionDirDateFilename);
+  t.is(posts.length, 3);
+  t.deepEqual(posts[0].template, tmpl4);
+  t.deepEqual(posts[1].template, tmpl1);
+  t.deepEqual(posts[2].template, tmpl5);
 });
 
 test("getFilteredByTag", async t => {

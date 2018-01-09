@@ -9,6 +9,7 @@ const EleventyError = require("./EleventyError");
 const Pagination = require("./Plugins/Pagination");
 const Collection = require("./TemplateCollection");
 const pkg = require("../package.json");
+const eleventyConfig = require("./EleventyConfig");
 const config = require("./Config");
 
 function TemplateWriter(baseDir, outputDir, extensions, templateData) {
@@ -192,18 +193,26 @@ TemplateWriter.prototype._createTemplateMapCopy = function(templatesMap) {
   return copy;
 };
 
-TemplateWriter.prototype._getCollectionsData = function(template) {
+TemplateWriter.prototype._getCollectionsData = function(activeTemplate) {
   let collections = {};
   collections.all = this._createTemplateMapCopy(
-    this.collection.getAll(template)
+    this.collection.getAll(activeTemplate)
   );
 
   let tags = this._getAllTagsFromMap(collections.all);
   for (let tag of tags) {
     collections[tag] = this._createTemplateMapCopy(
-      this.collection.getFilteredByTag(tag, template)
+      this.collection.getFilteredByTag(tag, activeTemplate)
     );
   }
+
+  let configCollections = eleventyConfig.getCollections();
+  for (let name in configCollections) {
+    collections[name] = this._createTemplateMapCopy(
+      configCollections[name](this.collection)
+    );
+  }
+
   // console.log( "collections>>>>", collections );
   // console.log( ">>>>> end collections" );
 
@@ -243,8 +252,7 @@ TemplateWriter.prototype.write = async function() {
     );
   }
 
-  console.log("emitting event");
-  eleventyEmitter.emit("11ty.datamap", this.collection.getSortedByInputPath());
+  eleventyEmitter.emit("alldata", this.collection.getAll());
 };
 
 TemplateWriter.prototype.setVerboseOutput = function(isVerbose) {

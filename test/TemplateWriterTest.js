@@ -1,9 +1,11 @@
 import fs from "fs-extra";
 import test from "ava";
 import globby from "globby";
+import parsePath from "parse-filepath";
 import TemplateWriter from "../src/TemplateWriter";
 // Not sure why but this import up `ava` and _getTemplate 👀
 // import Template from "../src/Template";
+import eleventyConfig from "../src/EleventyConfig";
 
 test("Mutually exclusive Input and Output dirs", async t => {
   let tw = new TemplateWriter(
@@ -114,4 +116,63 @@ test("populating the collection twice should clear the previous values (--watch 
   tw._populateCollection(templatesMap);
 
   t.is(tw._getCollectionsData().post.length, 2);
+});
+
+test("Collection of files sorted by date", async t => {
+  let tw = new TemplateWriter("./test/stubs/dates", "./test/stubs/_site", [
+    "md"
+  ]);
+
+  let paths = await tw._getAllPaths();
+  let templatesMap = await tw._getTemplatesMap(paths);
+  tw._populateCollection(templatesMap);
+
+  let collectionsData = tw._getCollectionsData();
+  t.is(collectionsData.dateTestTag.length, 5);
+});
+
+test("_getCollectionsData with custom collections (descending)", async t => {
+  let tw = new TemplateWriter(
+    "./test/stubs/collection2",
+    "./test/stubs/_site",
+    ["md"]
+  );
+
+  let paths = await tw._getAllPaths();
+  let templatesMap = await tw._getTemplatesMap(paths);
+  tw._populateCollection(templatesMap);
+
+  eleventyConfig.addCollection("customPosts", function(collection) {
+    return collection.getFilteredByTag("post").sort(function(a, b) {
+      return a.date - b.date;
+    });
+  });
+
+  let collectionsData = tw._getCollectionsData();
+  t.is(collectionsData.customPosts.length, 2);
+  t.is(parsePath(collectionsData.customPosts[0].inputPath).base, "test1.md");
+  t.is(parsePath(collectionsData.customPosts[1].inputPath).base, "test2.md");
+});
+
+test("_getCollectionsData with custom collection (ascending)", async t => {
+  let tw = new TemplateWriter(
+    "./test/stubs/collection2",
+    "./test/stubs/_site",
+    ["md"]
+  );
+
+  let paths = await tw._getAllPaths();
+  let templatesMap = await tw._getTemplatesMap(paths);
+  tw._populateCollection(templatesMap);
+
+  eleventyConfig.addCollection("customPosts", function(collection) {
+    return collection.getFilteredByTag("post").sort(function(a, b) {
+      return b.date - a.date;
+    });
+  });
+
+  let collectionsData = tw._getCollectionsData();
+  t.is(collectionsData.customPosts.length, 2);
+  t.is(parsePath(collectionsData.customPosts[0].inputPath).base, "test2.md");
+  t.is(parsePath(collectionsData.customPosts[1].inputPath).base, "test1.md");
 });

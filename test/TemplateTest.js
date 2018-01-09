@@ -1,4 +1,5 @@
 import test from "ava";
+import { DateTime } from "luxon";
 import TemplateData from "../src/TemplateData";
 import Template from "../src/Template";
 import pretty from "pretty";
@@ -359,4 +360,91 @@ test("renderData", async t => {
   );
 
   t.is((await tmpl.render()).trim(), `hi:value2-value1.css`);
+});
+
+test("getMappedDate (empty, assume created)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/dates/file1.md",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getRenderedData();
+  let date = await tmpl.getMappedDate(data);
+
+  t.true(date instanceof Date);
+  t.truthy(date.getTime());
+});
+
+test("getMappedDate (explicit date, yaml String)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/dates/file2.md",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getRenderedData();
+  let date = await tmpl.getMappedDate(data);
+
+  t.true(date instanceof Date);
+  t.truthy(date.getTime());
+});
+
+test("getMappedDate (explicit date, yaml Date)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/dates/file2b.md",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getRenderedData();
+  let date = await tmpl.getMappedDate(data);
+
+  t.true(date instanceof Date);
+  t.truthy(date.getTime());
+});
+
+test("getMappedDate (explicit date, yaml Date and string should be the same)", async t => {
+  let tmplA = new Template(
+    "./test/stubs/dates/file2.md",
+    "./test/stubs/",
+    "./dist"
+  );
+  let dataA = await tmplA.getRenderedData();
+  let stringDate = await tmplA.getMappedDate(dataA);
+
+  let tmplB = new Template(
+    "./test/stubs/dates/file2b.md",
+    "./test/stubs/",
+    "./dist"
+  );
+  let dataB = await tmplB.getRenderedData();
+  let yamlDate = await tmplB.getMappedDate(dataB);
+
+  t.truthy(stringDate);
+  t.truthy(yamlDate);
+  t.deepEqual(stringDate, yamlDate);
+});
+
+test("getMappedDate (modified date)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/dates/file3.md",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getRenderedData();
+  let date = await tmpl.getMappedDate(data);
+
+  t.true(date instanceof Date);
+  t.truthy(date.getTime());
+});
+
+test("getMappedDate (created date)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/dates/file4.md",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getRenderedData();
+  let date = await tmpl.getMappedDate(data);
+
+  t.true(date instanceof Date);
+  t.truthy(date.getTime());
 });
