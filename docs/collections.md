@@ -1,10 +1,10 @@
-# Collections
+# Collections (and Tags)
 
-While [pagination](pagination.md) allows you do iterate over a data set to create multiple templates, a collection allows you to group content in interesting ways. A piece of content can be a part of multiple collections, merely by assigning a value to the `tags` key in the front matter.
+While [pagination](pagination.md) allows you do iterate over a data set to create multiple templates, a collection allows you to group content in interesting ways. A piece of content can be a part of multiple collections, merely by assigning the same string value to the `tags` key in the front matter.
 
-## A single tag
+## A Blog Example
 
-**Example**, `mypost.md` has a single tag `post`:
+For a blog site, your individual post files may use a tag called `post`, but it can be whatever you want. In this example, `mypost.md` has a single tag `post`:
 
 ```
 ---
@@ -13,7 +13,7 @@ title: Hot Take—Social Media is Considered Harmful
 ---
 ```
 
-This will place this `mypost.md` into a `post` collection with all other pieces of content sharing the `post` tag. To reference this collection and make a list of all posts, you can reference the `collections` object in any template (this example is using Nunjucks syntax):
+This will place this `mypost.md` into the `post` collection with all other pieces of content sharing the `post` tag. To reference this collection and make a list of all posts, use the `collections` object in any template (this example is using Nunjucks syntax):
 
 ```
 <ul>
@@ -25,7 +25,7 @@ This will place this `mypost.md` into a `post` collection with all other pieces 
 
 ## Tag Syntax
 
-You can use any number of tags for the content, using YAML syntax for a list:
+You can use a single tag, as in the above example OR you can use any number of tags for the content, using YAML syntax for a list.
 
 ### A single tag, cat
 
@@ -35,6 +35,8 @@ tags: cat
 ---
 ```
 
+This content would show up in the template data inside of `collections.cat`.
+
 ### Multiple tags, single line
 
 ```
@@ -42,6 +44,8 @@ tags: cat
 tags: ['cat', 'dog']
 ---
 ```
+
+This content would show up in the template data inside of `collections.cat` and `collections.dog`.
 
 ### Multiple tags, multiple lines
 
@@ -53,32 +57,34 @@ tags:
 ---
 ```
 
-## Built-in Collection Sorting
+This content would show up in the template data inside of `collections.cat` and `collections.dog`.
+
+## Sorting
 
 The default collection sorting algorithm sorts in ascending order using:
 
-1. Input file’s Created Date (override as shown below)
-2. The input file’s full path including filename
+1. The input file’s Created Date (you can override using `date` in front matter, as shown below)
+2. Files created at the exact same time are tiebroken using the input file’s full path including filename
 
 For example, assume I only write blog posts on New Years Day:
 
 ```
-posts/postA.md (assume a creation date of 2008-01-01)
-posts/postB.md (assume a matching creation date of 2008-01-01)
-posts/post3.md (assume a creation date of 2007-01-01)
-another-posts/post1.md (assume a creation date of 2011-01-01)
+posts/postA.md (created on 2008-01-01)
+posts/postB.md (created on 2008-01-01)
+posts/post3.md (created on 2007-01-01)
+another-posts/post1.md (created on 2011-01-01)
 ```
 
 This collection would be sorted like this:
 
-3. `posts/post3.md`
-1. `posts/postA.md`
-1. `posts/postB.md`
-1. `another-posts/post1.md`
+1. `posts/post3.md`
+2. `posts/postA.md`
+3. `posts/postB.md`
+4. `another-posts/post1.md`
 
 ### Sort descending
 
-To sort descending in your template, just use `Array.reverse()` (using Nunjucks here):
+To sort descending in your template, just use `Array.reverse()`. For example, in Nunjucks it’d look like this:
 
 ```
 <ul>
@@ -105,7 +111,7 @@ Valid `date` values:
 * `2016-01-01` or any other valid YAML date value
 * `"2016-01-01"` or any other valid UTC **string** that [Luxon’s `DateTime.fromISO`](https://moment.github.io/luxon/docs/manual/parsing.html#parsing-technical-formats) can parse (see also the [Luxon API docs](https://moment.github.io/luxon/docs/class/src/datetime.js~DateTime.html#static-method-fromISO)).
 
-## Advanced: Custom Collection Filtering and Sorting
+## Advanced: Custom Filtering and Sorting
 
 To get fancier with your collections (and even do a bit of your own custom filtering, if you’d like), you can use our Configuration API.
 
