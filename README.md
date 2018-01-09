@@ -21,11 +21,13 @@ Requires Node version 8 or above. `node --version` will tell you what version yo
 
 ### Installation
 
-Available [on npm](https://www.npmjs.com/package/eleventy-cli).
+Available [on npm](https://www.npmjs.com/package/@11ty/cli).
 
 ```
-npm install -g eleventy-cli
+npm install -g @11ty/eleventy
 ```
+
+_(You can also install locally using `npm install --save-dev @11ty/eleventy`)._
 
 ### Sample projects
 

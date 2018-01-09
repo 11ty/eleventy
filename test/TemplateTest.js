@@ -133,7 +133,7 @@ test("More advanced getData()", async t => {
     key2: "value2"
   });
 
-  t.is(data[config.keys.package].name, "eleventy-cli");
+  t.is(data[config.keys.package].name, "@11ty/eleventy");
   t.is(
     data.key1,
     "value1override",

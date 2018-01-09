@@ -25,7 +25,7 @@ test("getData()", async t => {
   t.is(data.globalData.datakey1, "datavalue1", "simple data value");
   t.is(
     data.globalData.datakey2,
-    "eleventy-cli",
+    "@11ty/eleventy",
     `variables, resolve ${config.keys.package} to its value.`
   );
 
@@ -46,13 +46,13 @@ test("addLocalData()", async t => {
   let data = await dataObj.getData();
 
   t.is(data.globalData.datakey1, "datavalue1");
-  t.is(data.globalData.datakey2, "eleventy-cli");
+  t.is(data.globalData.datakey2, "@11ty/eleventy");
 
   let withLocalData = await dataObj.getLocalData(
     "./test/stubs/component/component.json"
   );
   t.is(withLocalData.globalData.datakey1, "datavalue1");
-  t.is(withLocalData.globalData.datakey2, "eleventy-cli");
+  t.is(withLocalData.globalData.datakey2, "@11ty/eleventy");
   t.is(withLocalData.localdatakey1, "localdatavalue1");
 });
 
@@ -65,7 +65,7 @@ test("addLocalData() doesn’t exist but doesn’t fail", async t => {
     "./test/stubs/component/thisfiledoesnotexist.json"
   );
   t.is(withLocalData.globalData.datakey1, "datavalue1");
-  t.is(withLocalData.globalData.datakey2, "eleventy-cli");
+  t.is(withLocalData.globalData.datakey2, "@11ty/eleventy");
   t.deepEqual(Object.keys(withLocalData), beforeDataKeyCount);
 });
 
