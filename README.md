@@ -21,7 +21,7 @@ Requires Node version 8 or above. `node --version` will tell you what version yo
 
 ### Installation
 
-Available [on npm](https://www.npmjs.com/package/@11ty/cli).
+Available [on npm](https://www.npmjs.com/package/@11ty/eleventy).
 
 ```
 npm install -g @11ty/eleventy
