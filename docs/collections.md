@@ -132,27 +132,27 @@ return collection.getAllSorted().reverse();
 return collection.getFilteredByTag("post");
 
 // Filter using `Array.filter`
-return collection.filter(function(item) {
+return collection.getAll().filter(function(item) {
   // Side-step tags and do your own filtering
   return "myCustomDataKey" in item.data;
 });
 
 // Filter using `Array.filter`
-return collection.filter(function(item) {
+return collection.getAll().filter(function(item) {
   // Only return content that was originally a markdown file
   let extension = item.inputPath.split('.').pop();
   return extension === "md";
 });
 
-// Get tagged content and sort by date only (descending)
-return collection.getFilteredByTag("post").sort(function(a, b) {
+// Sort with `Array.sort`
+return collection.getAll().sort(function(a, b) {
   return b.date - a.date;
 });
 ```
 
 ### Individual collection items (useful for sort callbacks)
 
-See how the `sort` function above uses `a.date` and `b.date`? Well, any of the following items can be used for sorting and filtering the content.
+See how the `Array.sort` function above uses `a.date` and `b.date`? Similarly, any of the following items can be used for sorting and filtering the content.
 
 * `inputPath`: the path to the source input file
 * `outputPath`: the path to the output file to be written for this content
