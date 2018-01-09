@@ -196,7 +196,7 @@ TemplateWriter.prototype._createTemplateMapCopy = function(templatesMap) {
 TemplateWriter.prototype._getCollectionsData = function(activeTemplate) {
   let collections = {};
   collections.all = this._createTemplateMapCopy(
-    this.collection.getAll(activeTemplate)
+    this.collection.getAllSorted(activeTemplate)
   );
 
   let tags = this._getAllTagsFromMap(collections.all);
@@ -252,7 +252,7 @@ TemplateWriter.prototype.write = async function() {
     );
   }
 
-  eleventyEmitter.emit("alldata", this.collection.getAll());
+  eleventyConfig.emit("alldata", this.collection.getAllSorted());
 };
 
 TemplateWriter.prototype.setVerboseOutput = function(isVerbose) {

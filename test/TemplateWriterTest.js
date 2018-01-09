@@ -176,3 +176,27 @@ test("_getCollectionsData with custom collection (ascending)", async t => {
   t.is(parsePath(collectionsData.customPosts[0].inputPath).base, "test2.md");
   t.is(parsePath(collectionsData.customPosts[1].inputPath).base, "test1.md");
 });
+
+test("_getCollectionsData with custom collection (filter only to markdown input)", async t => {
+  let tw = new TemplateWriter(
+    "./test/stubs/collection2",
+    "./test/stubs/_site",
+    ["md"]
+  );
+
+  let paths = await tw._getAllPaths();
+  let templatesMap = await tw._getTemplatesMap(paths);
+  tw._populateCollection(templatesMap);
+
+  eleventyConfig.addCollection("onlyMarkdown", function(collection) {
+    return collection.getAllSorted().filter(function(item) {
+      let extension = item.inputPath.split(".").pop();
+      return extension === "md";
+    });
+  });
+
+  let collectionsData = tw._getCollectionsData();
+  t.is(collectionsData.onlyMarkdown.length, 2);
+  t.is(parsePath(collectionsData.onlyMarkdown[0].inputPath).base, "test1.md");
+  t.is(parsePath(collectionsData.onlyMarkdown[1].inputPath).base, "test2.md");
+});

@@ -10,23 +10,30 @@ class TemplateCollection extends Sortable {
     super.add(templateMap);
   }
 
-  getAll(activeTemplate) {
-    return this.sort(Sortable.sortFunctionDirDateFilename).map(function(
-      templateMap
-    ) {
-      if (activeTemplate) {
+  _assignActiveTemplate(items, activeTemplate) {
+    if (activeTemplate) {
+      return items.map(function(templateMap) {
         templateMap.active = templateMap.template === activeTemplate;
-      }
-      return templateMap;
-    });
+        return templateMap;
+      });
+    } else {
+      return items;
+    }
   }
 
-  getFiltered(callback) {
-    return this.getAll().filter(callback);
+  getAll() {
+    return this.items;
+  }
+
+  getAllSorted(activeTemplate) {
+    return this._assignActiveTemplate(
+      this.sort(Sortable.sortFunctionDirDateFilename),
+      activeTemplate
+    );
   }
 
   getFilteredByTag(tagName, activeTemplate) {
-    return this.getAll(activeTemplate).filter(function(item) {
+    return this.getAllSorted(activeTemplate).filter(function(item) {
       return (
         !tagName ||
         ((Array.isArray(item.data.tags) ||

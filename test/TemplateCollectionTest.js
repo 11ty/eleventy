@@ -38,19 +38,6 @@ test("Basic setup", async t => {
   t.is(c.length, 3);
 });
 
-test("getFiltered", async t => {
-  let c = new Collection();
-  await c.addTemplate(tmpl1);
-  await c.addTemplate(tmpl2);
-  await c.addTemplate(tmpl3);
-
-  let filtered = c.getFiltered(function(item) {
-    return item.data && item.data.title;
-  });
-
-  t.deepEqual(filtered[0].template, tmpl1);
-});
-
 test("getSortedByDirAndDate", async t => {
   let c = new Collection();
   await c.addTemplate(tmpl1);
