@@ -1,4 +1,3 @@
-const parsePath = require("parse-filepath");
 const capitalize = require("./Capitalize");
 
 class Sortable {
@@ -95,27 +94,15 @@ class Sortable {
     return Sortable.sortFunctionAscending(b, a);
   }
 
-  static sortFunctionDirDateFilename(mapA, mapB) {
-    let parsedA = parsePath(mapA.inputPath);
-    let parsedB = parsePath(mapB.inputPath);
-    let sortDir = Sortable.sortFunctionAlphabeticAscending(
-      parsedA.dir,
-      parsedB.dir
-    );
-    if (sortDir === 0) {
-      let sortDate = Sortable.sortFunctionNumericAscending(
-        mapA.date,
-        mapB.date
+  static sortFunctionDateInputPath(mapA, mapB) {
+    let sortDate = Sortable.sortFunctionNumericAscending(mapA.date, mapB.date);
+    if (sortDate === 0) {
+      return Sortable.sortFunctionAlphabeticAscending(
+        mapA.inputPath,
+        mapB.inputPath
       );
-      if (sortDate === 0) {
-        return Sortable.sortFunctionAlphabeticAscending(
-          parsedA.base,
-          parsedB.base
-        );
-      }
-      return sortDate;
     }
-    return sortDir;
+    return sortDate;
   }
   /* End sort functions */
 

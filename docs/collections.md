@@ -57,13 +57,28 @@ tags:
 
 The default collection sorting algorithm sorts in ascending order using:
 
-1. Directory the file lives in
-2. File’s Created Date (override as shown below)
-3. The filename including extension
+1. Input file’s Created Date (override as shown below)
+2. The input file’s full path including filename
+
+For example, assume I only write blog posts on New Years Day:
+
+```
+posts/postA.md (assume a creation date of 2008-01-01)
+posts/postB.md (assume a matching creation date of 2008-01-01)
+posts/post3.md (assume a creation date of 2007-01-01)
+another-posts/post1.md (assume a creation date of 2011-01-01)
+```
+
+This collection would be sorted like this:
+
+3. `posts/post3.md`
+1. `posts/postA.md`
+1. `posts/postB.md`
+1. `another-posts/post1.md`
 
 ### Sort descending
 
-To sort descending, just use `Array.reverse()`:
+To sort descending in your template, just use `Array.reverse()` (using Nunjucks here):
 
 ```
 <ul>

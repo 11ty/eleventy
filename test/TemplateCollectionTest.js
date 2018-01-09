@@ -38,13 +38,13 @@ test("Basic setup", async t => {
   t.is(c.length, 3);
 });
 
-test("getSortedByDirAndDate", async t => {
+test("sortFunctionDateInputPath", async t => {
   let c = new Collection();
   await c.addTemplate(tmpl1);
   await c.addTemplate(tmpl4);
   await c.addTemplate(tmpl5);
 
-  let posts = c.sort(Sortable.sortFunctionDirDateFilename);
+  let posts = c.sort(Sortable.sortFunctionDateInputPath);
   t.is(posts.length, 3);
   t.deepEqual(posts[0].template, tmpl4);
   t.deepEqual(posts[1].template, tmpl1);

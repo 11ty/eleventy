@@ -27,7 +27,7 @@ class TemplateCollection extends Sortable {
 
   getAllSorted(activeTemplate) {
     return this._assignActiveTemplate(
-      this.sort(Sortable.sortFunctionDirDateFilename),
+      this.sort(Sortable.sortFunctionDateInputPath),
       activeTemplate
     );
   }
