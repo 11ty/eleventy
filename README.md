@@ -29,6 +29,8 @@ npm install -g @11ty/eleventy
 
 _(You can also install locally using `npm install --save-dev @11ty/eleventy`)._
 
+Notably, this package was renamed from [`eleventy-cli`](https://www.npmjs.com/package/eleventy-cli) at `v0.2.0`.
+
 ### Sample projects
 
 1. @Heydon’s lovely [Inclusive Web Design Checklist, converted to use `eleventy`](https://github.com/11ty/eleventy-inclusive-design-checklist). The [original](https://github.com/Heydon/inclusive-design-checklist) project took a JSON file and converted it HTML with some one-off JavaScript. This uses eleventy to transform the data using a nunjucks template, resulting in a cleaner, templated setup.
