@@ -42,6 +42,7 @@
   "dependencies": {
     "chalk": "^2.3.0",
     "check-node-version": "^3.1.1",
+    "debug": "^3.1.0",
     "ejs": "^2.5.7",
     "fs-extra": "^4.0.2",
     "glob-watcher": "^4.0.0",

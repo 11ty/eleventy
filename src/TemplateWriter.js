@@ -11,6 +11,7 @@ const Collection = require("./TemplateCollection");
 const pkg = require("../package.json");
 const eleventyConfig = require("./EleventyConfig");
 const config = require("./Config");
+const debug = require("debug")("Eleventy:TemplateWriter");
 
 function TemplateWriter(baseDir, outputDir, extensions, templateData) {
   this.baseDir = baseDir;
@@ -46,6 +47,7 @@ TemplateWriter.prototype.getFiles = function() {
 };
 
 TemplateWriter.getFileIgnores = function(baseDir) {
+  debug("Getting ignored files in .eleventyignore");
   let ignorePath = TemplatePath.normalize(baseDir + "/.eleventyignore");
   let ignoreContent;
   try {
@@ -72,12 +74,12 @@ TemplateWriter.getFileIgnores = function(baseDir) {
         return "!" + path;
       });
   }
-
   return ignores;
 };
 
 TemplateWriter.prototype.addIgnores = function(baseDir, files) {
   files = files.concat(TemplateWriter.getFileIgnores(baseDir));
+
   if (config.dir.output) {
     files = files.concat(
       "!" + normalize(baseDir + "/" + config.dir.output + "/**")
@@ -115,12 +117,16 @@ TemplateWriter.prototype._populateCollection = function(templateMaps) {
 };
 
 TemplateWriter.prototype._getTemplatesMap = async function(paths) {
+  debug("Iterating over paths");
   let templates = [];
   for (let path of paths) {
     let tmpl = this._getTemplate(path);
+    debug(`Template for ${path} retrieved.`);
     let map = await tmpl.getMapped();
+    debug("Map for template retrieved.");
     templates.push(map);
   }
+  debug("All templates mapped.");
   return templates;
 };
 
@@ -131,6 +137,7 @@ TemplateWriter.prototype._getTemplate = function(path) {
     this.outputDir,
     this.templateData
   );
+  debug("new Template object created.");
 
   tmpl.setIsVerbose(this.isVerbose);
 
@@ -146,6 +153,7 @@ TemplateWriter.prototype._getTemplate = function(path) {
       tmpl.addFilter(filter);
     }
   }
+  debug("Add filters from config to template.");
 
   let writer = this;
   tmpl.addPlugin("pagination", async function(data) {
@@ -158,6 +166,7 @@ TemplateWriter.prototype._getTemplate = function(path) {
       return false;
     }
   });
+  debug("Pagination plugin added.");
 
   return tmpl;
 };
@@ -240,11 +249,17 @@ TemplateWriter.prototype._writeTemplate = async function(
 };
 
 TemplateWriter.prototype.write = async function() {
+  debug("Creating templates map.");
   let paths = await this._getAllPaths();
+  debug("Paths retrieved.");
   let templatesMap = await this._getTemplatesMap(paths);
+  debug("Got the templates map.");
   this._populateCollection(templatesMap);
+  debug("Populating the collections.");
 
+  debug("Writing templates");
   for (let template of templatesMap) {
+    debug(`Writing template ${template.outputPath} from ${template.inputPath}`);
     await this._writeTemplate(
       template.template,
       template.outputPath,
@@ -252,6 +267,7 @@ TemplateWriter.prototype.write = async function() {
     );
   }
 
+  debug("Triggering `alldata` event.");
   eleventyConfig.emit("alldata", this.collection.getAllSorted());
 };
 

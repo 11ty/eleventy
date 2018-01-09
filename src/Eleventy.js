@@ -6,20 +6,30 @@ const EleventyError = require("./EleventyError");
 const simplePlural = require("./Util/Pluralize");
 const config = require("./Config");
 const pkg = require("../package.json");
+const debug = require("debug")("Eleventy");
 
 function Eleventy(input, output) {
   this.input = input || config.dir.input;
   this.output = output || config.dir.output;
   this.formats = config.templateFormats;
   this.data = null;
+  this.isVerbose = true;
+  this.isDebug = false;
+  debug("Starting");
   this.start = new Date();
 }
 
 Eleventy.prototype.restart = function() {
+  debug("Restarting");
   this.start = new Date();
 };
 
-Eleventy.prototype.getFinishedLog = function() {
+Eleventy.prototype.finish = function() {
+  console.log(this.logFinished());
+  debug("Finished writing templates.");
+};
+
+Eleventy.prototype.logFinished = function() {
   if (!this.writer) {
     throw new Error(
       "Did you call Eleventy.init to create the TemplateWriter instance? Hint: you probably didn’t."
@@ -54,6 +64,10 @@ Eleventy.prototype.init = async function() {
   this.writer.setVerboseOutput(this.isVerbose);
 
   return this.data.cacheData();
+};
+
+Eleventy.prototype.setIsDebug = function(isDebug) {
+  this.isDebug = !!isDebug;
 };
 
 Eleventy.prototype.setIsVerbose = function(isVerbose) {
@@ -127,7 +141,9 @@ Eleventy.prototype.watch = async function() {
 
 Eleventy.prototype.write = async function() {
   try {
-    return await this.writer.write();
+    let ret = await this.writer.write();
+    this.finish();
+    return ret;
   } catch (e) {
     console.log("\n" + chalk.red("Problem writing eleventy templates: "));
     if (e instanceof EleventyError) {
