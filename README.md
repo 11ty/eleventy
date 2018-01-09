@@ -31,7 +31,7 @@ _(You can also install locally using `npm install --save-dev @11ty/eleventy`)._
 
 ### Sample projects
 
-1. @Heydon’s lovely [Inclusive Web Design Checklist, converted to use `eleventy`](https://github.com/zachleat/eleventy-inclusive-design-checklist). The [original](https://github.com/Heydon/inclusive-design-checklist) project took a JSON file and converted it HTML with some one-off JavaScript. This uses eleventy to transform the data using a nunjucks template, resulting in a cleaner, templated setup.
+1. @Heydon’s lovely [Inclusive Web Design Checklist, converted to use `eleventy`](https://github.com/11ty/eleventy-inclusive-design-checklist). The [original](https://github.com/Heydon/inclusive-design-checklist) project took a JSON file and converted it HTML with some one-off JavaScript. This uses eleventy to transform the data using a nunjucks template, resulting in a cleaner, templated setup.
 1. [11ty-logo](https://github.com/11ty/logo) generates a template with `eleventy` that has hundreds of different font combinations in an attempt to pick a logo.
 
 ## Usage
@@ -174,7 +174,7 @@ Here are the features tested with each template engine that use external files a
 
 ## Tests
 
-Build Status: [![Build Status](https://travis-ci.org/zachleat/eleventy.svg?branch=master)](https://travis-ci.org/zachleat/eleventy)
+Build Status: [![Build Status](https://travis-ci.org/11ty/eleventy.svg?branch=master)](https://travis-ci.org/11ty/eleventy)
 
 ```
 npm run test

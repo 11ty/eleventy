@@ -1,6 +1,6 @@
 {
   "name": "@11ty/eleventy",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Transform a directory of templates into HTML.",
   "main": "src/Eleventy.js",
   "license": "MIT",
@@ -24,7 +24,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/zachleat/eleventy.git"
+    "url": "git://github.com/11ty/eleventy.git"
   },
   "ava": {
     "files": ["test/*.js"],
