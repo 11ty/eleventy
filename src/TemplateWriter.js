@@ -15,7 +15,7 @@ const config = require("./Config");
 
 function TemplateWriter(inputPath, outputDir, extensions, templateData) {
   this.input = inputPath;
-  this.inputDir = this._getInputPathDir(inputPath);
+  this.inputDir = this._getInputPathDir(inputPath) || ".";
   this.templateExtensions = extensions;
   this.outputDir = outputDir;
   this.templateData = templateData;

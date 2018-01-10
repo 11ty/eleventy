@@ -32,6 +32,15 @@ test("Single File Input", async t => {
   t.is(files[0], "./test/stubs/index.html");
 });
 
+test("Single File Input", async t => {
+  let tw = new TemplateWriter("README.md", "./test/stubs/_site", ["md"]);
+
+  let files = await globby(tw.files);
+  t.is(tw.rawFiles.length, 1);
+  t.is(files.length, 1);
+  t.is(files[0], "README.md");
+});
+
 // TODO make sure if output is a subdir of input dir that they don’t conflict.
 test("Output is a subdir of input", async t => {
   let tw = new TemplateWriter(

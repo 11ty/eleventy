@@ -11,7 +11,7 @@ const pkg = require("../package.json");
 
 function Eleventy(input, output) {
   this.input = input || config.dir.input;
-  this.inputDir = this._getDir(this.input);
+  this.inputDir = this._getDir(this.input) || ".";
   this.output = output || config.dir.output;
   this.formats = config.templateFormats;
   this.data = null;
