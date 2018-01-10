@@ -52,16 +52,15 @@ All of this would output the following HTML content:
 
 Here’s how to prevent double escaping in other template languages:
 
-| Template Language | Unescaped Content | Comparison with an Escaped Output | Docs |
-| | (Use with layout content) | (Use with everything else) | |
-| - | - | - | - |
-| Nunjucks | `{{ content | safe }}` | `{{ value }}` | [Docs](https://mozilla.github.io/nunjucks/templating.html#safe) |
-| EJS | `<%- content %>` | `<%= value %>` | [Docs](https://www.npmjs.com/package/ejs#tags) |
-| Handlebars | `{{{ content }}}` (triple stash) | `{{ value }}` (double stash) | [Docs](http://handlebarsjs.com/#html-escaping) |
-| Mustache | `{{{ content }}}` (triple stash) | `{{ value }}` (double stash) | [Docs](https://github.com/janl/mustache.js#variables)
-| Liquid | is by default unescaped so you can use `{{ content }}` | `{{ value | escape}}` | [Docs](http://shopify.github.io/liquid/filters/escape/) |
-| HAML | `! #{ content }` | `= #{ content }` | [Docs](http://haml.info/docs/yardoc/file.REFERENCE.html#unescaping_html) |
-| Pug | `!{content}` | `#{value}` | [Docs](https://pugjs.org/language/interpolation.html#string-interpolation-unescaped) |
+| Template Language | Unescaped Content (for layout content)                 | Comparison with an Escaped Output | Docs                                                                                 |
+| ----------------- | ------------------------------------------------------ | --------------------------------- | ------------------------------------------------------------------------------------ |
+| Nunjucks          | `{{ content | safe }}`                                 | `{{ value }}`                     | [Docs](https://mozilla.github.io/nunjucks/templating.html#safe)                      |
+| EJS               | `<%- content %>`                                       | `<%= value %>`                    | [Docs](https://www.npmjs.com/package/ejs#tags)                                       |
+| Handlebars        | `{{{ content }}}` (triple stash)                       | `{{ value }}` (double stash)      | [Docs](http://handlebarsjs.com/#html-escaping)                                       |
+| Mustache          | `{{{ content }}}` (triple stash)                       | `{{ value }}` (double stash)      | [Docs](https://github.com/janl/mustache.js#variables)                                |
+| Liquid            | is by default unescaped so you can use `{{ content }}` | `{{ value | escape}}`             | [Docs](http://shopify.github.io/liquid/filters/escape/)                              |
+| HAML              | `! #{ content }`                                       | `= #{ content }`                  | [Docs](http://haml.info/docs/yardoc/file.REFERENCE.html#unescaping_html)             |
+| Pug               | `!{content}`                                           | `#{value}`                        | [Docs](https://pugjs.org/language/interpolation.html#string-interpolation-unescaped) |
 
 ## Layout Chaining
 
