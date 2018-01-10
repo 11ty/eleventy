@@ -14,7 +14,7 @@ This will look for a `mylayout.njk` Nunjucks template file in your `_includes` f
 
 If you omit the file extension (`layout: mylayout`), eleventy will cycle through all of the supported template formats (`mylayout.*`) to look for a matching layout file.
 
-Next, we need to create a `mylayout.njk` file. It can contain anything type of text, but here we’re using HTML:
+Next, we need to create a `mylayout.njk` file. It can contain any type of text, but here we’re using HTML:
 
 ```
 <!doctype html>
