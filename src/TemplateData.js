@@ -7,8 +7,10 @@ const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
 const config = require("./Config");
 
-function TemplateData(globalDataPath) {
-  this.globalDataPath = globalDataPath;
+function TemplateData(inputDir) {
+  this.inputDir = inputDir;
+  this.dataDir =
+    inputDir + "/" + (config.dir.data !== "." ? config.dir.data : "");
 
   this.rawImports = {};
   this.rawImports[config.keys.package] = this.getJsonRaw(
@@ -31,16 +33,14 @@ TemplateData.prototype.cacheData = async function() {
 TemplateData.prototype.getGlobalDataGlob = async function() {
   let dir = ".";
 
-  if (this.globalDataPath) {
-    let globalPathStat = await pify(fs.stat)(this.globalDataPath);
+  if (this.inputDir) {
+    let globalPathStat = await pify(fs.stat)(this.inputDir);
 
     if (!globalPathStat.isDirectory()) {
-      throw new Error(
-        "Could not find data path directory: " + this.globalDataPath
-      );
+      throw new Error("Could not find data path directory: " + this.inputDir);
     }
 
-    dir = this.globalDataPath;
+    dir = this.inputDir;
   }
 
   return (
@@ -57,10 +57,7 @@ TemplateData.prototype.getGlobalDataFiles = async function() {
 };
 
 TemplateData.prototype.getObjectPathForDataFile = function(path) {
-  let reducedPath = TemplatePath.stripPathFromDir(
-    path,
-    this.globalDataPath + "/" + (config.dir.data !== "." ? config.dir.data : "")
-  );
+  let reducedPath = TemplatePath.stripPathFromDir(path, this.dataDir);
   let parsed = parsePath(reducedPath);
   let folders = parsed.dir ? parsed.dir.split("/") : [];
   folders.push(parsed.name);

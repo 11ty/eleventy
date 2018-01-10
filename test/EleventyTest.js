@@ -40,3 +40,11 @@ test("Eleventy set input/output", async t => {
   t.truthy(elev.data);
   t.truthy(elev.writer);
 });
+
+test("Eleventy set input/output, one file input", async t => {
+  let elev = new Eleventy("./test/stubs/index.html", "./test/stubs/_site");
+
+  t.is(elev.input, "./test/stubs/index.html");
+  t.is(elev.inputDir, "./test/stubs");
+  t.is(elev.output, "./test/stubs/_site");
+});

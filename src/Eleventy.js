@@ -1,5 +1,7 @@
+const fs = require("fs");
 const watch = require("glob-watcher");
 const chalk = require("chalk");
+const parsePath = require("parse-filepath");
 const TemplateData = require("./TemplateData");
 const TemplateWriter = require("./TemplateWriter");
 const EleventyError = require("./EleventyError");
@@ -9,11 +11,19 @@ const pkg = require("../package.json");
 
 function Eleventy(input, output) {
   this.input = input || config.dir.input;
+  this.inputDir = this._getDir(this.input);
   this.output = output || config.dir.output;
   this.formats = config.templateFormats;
   this.data = null;
   this.start = new Date();
 }
+
+Eleventy.prototype._getDir = function(inputPath) {
+  if (!fs.statSync(inputPath).isDirectory()) {
+    return parsePath(inputPath).dir;
+  }
+  return inputPath;
+};
 
 Eleventy.prototype.restart = function() {
   this.start = new Date();
@@ -38,7 +48,7 @@ Eleventy.prototype.getFinishedLog = function() {
 };
 
 Eleventy.prototype.init = async function() {
-  this.data = new TemplateData(this.input);
+  this.data = new TemplateData(this.inputDir);
 
   this.writer = new TemplateWriter(
     this.input,

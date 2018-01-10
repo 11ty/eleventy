@@ -20,6 +20,18 @@ test("Mutually exclusive Input and Output dirs", async t => {
   t.is(files[0], "./test/stubs/writeTest/test.md");
 });
 
+test("Single File Input", async t => {
+  let tw = new TemplateWriter("./test/stubs/index.html", "./test/stubs/_site", [
+    "ejs",
+    "md"
+  ]);
+
+  let files = await globby(tw.files);
+  t.is(tw.rawFiles.length, 1);
+  t.is(files.length, 1);
+  t.is(files[0], "./test/stubs/index.html");
+});
+
 // TODO make sure if output is a subdir of input dir that they don’t conflict.
 test("Output is a subdir of input", async t => {
   let tw = new TemplateWriter(

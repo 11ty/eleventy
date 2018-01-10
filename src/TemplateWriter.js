@@ -2,6 +2,7 @@ const globby = require("globby");
 const normalize = require("normalize-path");
 const fs = require("fs-extra");
 const lodashCloneDeep = require("lodash.clonedeep");
+const parsePath = require("parse-filepath");
 const Template = require("./Template");
 const TemplatePath = require("./TemplatePath");
 const TemplateRender = require("./TemplateRender");
@@ -12,8 +13,9 @@ const pkg = require("../package.json");
 const eleventyConfig = require("./EleventyConfig");
 const config = require("./Config");
 
-function TemplateWriter(baseDir, outputDir, extensions, templateData) {
-  this.baseDir = baseDir;
+function TemplateWriter(inputPath, outputDir, extensions, templateData) {
+  this.input = inputPath;
+  this.inputDir = this._getInputPathDir(inputPath);
   this.templateExtensions = extensions;
   this.outputDir = outputDir;
   this.templateData = templateData;
@@ -21,22 +23,34 @@ function TemplateWriter(baseDir, outputDir, extensions, templateData) {
   this.writeCount = 0;
   this.collection = null;
 
-  this.rawFiles = this.templateExtensions.map(
-    function(extension) {
-      return normalize(this.baseDir + "/**/*." + extension);
-    }.bind(this)
-  );
+  // Input was a directory
+  if (this.input === this.inputDir) {
+    this.rawFiles = this.templateExtensions.map(
+      function(extension) {
+        return normalize(this.inputDir + "/**/*." + extension);
+      }.bind(this)
+    );
+  } else {
+    this.rawFiles = [normalize(inputPath)];
+  }
 
-  this.watchedFiles = this.addIgnores(baseDir, this.rawFiles);
-  this.files = this.addWritingIgnores(baseDir, this.watchedFiles);
+  this.watchedFiles = this.addIgnores(this.inputDir, this.rawFiles);
+  this.files = this.addWritingIgnores(this.inputDir, this.watchedFiles);
 }
+
+TemplateWriter.prototype._getInputPathDir = function(inputPath) {
+  if (!fs.statSync(inputPath).isDirectory()) {
+    return parsePath(inputPath).dir;
+  }
+  return inputPath;
+};
 
 TemplateWriter.prototype.getRawFiles = function() {
   return this.rawFiles;
 };
 
 TemplateWriter.prototype.getWatchedIgnores = function() {
-  return this.addIgnores(this.baseDir, []).map(ignore =>
+  return this.addIgnores(this.inputDir, []).map(ignore =>
     TemplatePath.stripLeadingDotSlash(ignore.substr(1))
   );
 };
@@ -45,8 +59,8 @@ TemplateWriter.prototype.getFiles = function() {
   return this.files;
 };
 
-TemplateWriter.getFileIgnores = function(baseDir) {
-  let ignorePath = TemplatePath.normalize(baseDir + "/.eleventyignore");
+TemplateWriter.getFileIgnores = function(inputDir) {
+  let ignorePath = TemplatePath.normalize(inputDir + "/.eleventyignore");
   let ignoreContent;
   try {
     ignoreContent = fs.readFileSync(ignorePath, "utf-8");
@@ -64,7 +78,7 @@ TemplateWriter.getFileIgnores = function(baseDir) {
       .map(line => {
         line = line.trim();
         let path = TemplatePath.addLeadingDotSlash(
-          TemplatePath.normalize(baseDir, "/", line)
+          TemplatePath.normalize(inputDir, "/", line)
         );
         if (fs.statSync(path).isDirectory()) {
           return "!" + path + "/**";
@@ -76,26 +90,26 @@ TemplateWriter.getFileIgnores = function(baseDir) {
   return ignores;
 };
 
-TemplateWriter.prototype.addIgnores = function(baseDir, files) {
-  files = files.concat(TemplateWriter.getFileIgnores(baseDir));
+TemplateWriter.prototype.addIgnores = function(inputDir, files) {
+  files = files.concat(TemplateWriter.getFileIgnores(inputDir));
   if (config.dir.output) {
     files = files.concat(
-      "!" + normalize(baseDir + "/" + config.dir.output + "/**")
+      "!" + normalize(inputDir + "/" + config.dir.output + "/**")
     );
   }
 
   return files;
 };
 
-TemplateWriter.prototype.addWritingIgnores = function(baseDir, files) {
+TemplateWriter.prototype.addWritingIgnores = function(inputDir, files) {
   if (config.dir.includes) {
     files = files.concat(
-      "!" + normalize(baseDir + "/" + config.dir.includes + "/**")
+      "!" + normalize(inputDir + "/" + config.dir.includes + "/**")
     );
   }
   if (config.dir.data && config.dir.data !== ".") {
     files = files.concat(
-      "!" + normalize(baseDir + "/" + config.dir.data + "/**")
+      "!" + normalize(inputDir + "/" + config.dir.data + "/**")
     );
   }
 
@@ -127,7 +141,7 @@ TemplateWriter.prototype._getTemplatesMap = async function(paths) {
 TemplateWriter.prototype._getTemplate = function(path) {
   let tmpl = new Template(
     path,
-    this.baseDir,
+    this.inputDir,
     this.outputDir,
     this.templateData
   );
