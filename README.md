@@ -140,7 +140,7 @@ This allows you to assign data values right in the template itself. Here are a f
 
 * `pkg`: The local project’s `package.json` values.
 * `pagination`: (When enabled in front matter) [Read more about Pagination](docs/pagination.md).
-* `collection`: links to the other sorted templates in the current folder. [Read more about Collections](docs/collections.md)
+* `collections`: Lists of all of your content, grouped by tags. [Read more about Collections](docs/collections.md)
 
 #### Data Files
 
