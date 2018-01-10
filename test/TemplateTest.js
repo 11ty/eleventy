@@ -206,6 +206,36 @@ test("One Layout (_layoutContent deprecated but supported)", async t => {
   t.is(mergedFrontMatter.keylayout, "valuelayout");
 });
 
+test("One Layout (liquid test)", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+  let tmpl = new Template(
+    "./test/stubs/templateWithLayout.liquid",
+    "./test/stubs/",
+    "dist",
+    dataObj
+  );
+
+  t.is(tmpl.frontMatter.data[config.keys.layout], "layoutLiquid.liquid");
+
+  let data = await tmpl.getData();
+  t.is(data[config.keys.layout], "layoutLiquid.liquid");
+
+  t.is(
+    cleanHtml(await tmpl.renderLayout(tmpl, data)),
+    `<div id="layout">
+  <p>Hello.</p>
+</div>`
+  );
+
+  let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
+    tmpl,
+    tmpl.getFrontMatterData()
+  );
+
+  t.is(mergedFrontMatter.keymain, "valuemain");
+  t.is(mergedFrontMatter.keylayout, "valuelayout");
+});
+
 test("Two Layouts", async t => {
   let dataObj = new TemplateData("./test/stubs/");
   let tmpl = new Template(

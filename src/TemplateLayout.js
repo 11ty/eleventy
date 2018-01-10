@@ -4,9 +4,22 @@ const config = require("./Config");
 function TemplateLayout(name, dir) {
   this.dir = dir;
   this.name = name;
-  this.filename = this.findFileName();
-  this.fullPath = this.dir + "/" + this.filename;
+  this.pathNameAlreadyHasExtension = this.dir + "/" + this.name;
+  if (
+    this.name.split(".").length > 0 &&
+    fs.existsSync(this.pathNameAlreadyHasExtension)
+  ) {
+    this.filename = this.name;
+    this.fullPath = this.pathNameAlreadyHasExtension;
+  } else {
+    this.filename = this.findFileName();
+    this.fullPath = this.dir + "/" + this.filename;
+  }
 }
+
+TemplateLayout.prototype.getFileName = function() {
+  return this.filename;
+};
 
 TemplateLayout.prototype.getFullPath = function() {
   return this.fullPath;
@@ -22,6 +35,7 @@ TemplateLayout.prototype.findFileName = function() {
         this.dir
     );
   }
+
   config.templateFormats.forEach(
     function(extension) {
       let filename = this.name + "." + extension;
