@@ -48,7 +48,7 @@ $ echo "<!doctype html><title>Page title</title>" > index.html
 $ echo "# Page header" > README.md
 ```
 
-We’ve now created an HTML and a markdown template. Now run `eleventy` again:
+We’ve now created an HTML template and a markdown template. Now run `eleventy` again:
 
 ```
 $ eleventy
