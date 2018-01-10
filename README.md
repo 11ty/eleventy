@@ -27,30 +27,31 @@ Available [on npm](https://www.npmjs.com/package/@11ty/eleventy). Previously kno
 
 ### Run Eleventy
 
-Make a directory with your project in it:
+Make a directory with your project in it. Don’t include the first `$` when you run these commands.
 
 ```
-~ ᐅ mkdir eleventy-sample
+$ mkdir eleventy-sample
+$ cd eleventy-sample
 ```
 
 Run `eleventy`:
 
 ```
-~/eleventy-sample ᐅ eleventy
+$ eleventy
 Wrote 0 files in 0.02 seconds
 ```
 
 Makes sense—this is an empty folder with no templates inside. So, let’s make a few templates.
 
 ```
-~/eleventy-sample ᐅ echo "<!doctype html><title>Page title</title>" > index.html
-~/eleventy-sample ᐅ echo "# Page header" > README.md
+$ echo "<!doctype html><title>Page title</title>" > index.html
+$ echo "# Page header" > README.md
 ```
 
 We’ve now created an HTML and a markdown template. Now run `eleventy` again:
 
 ```
-~/Code/eleventy-sample ᐅ eleventy
+$ eleventy
 Writing _site/README/index.html from ./README.md
 Writing _site/index.html from ./index.html
 Wrote 2 files in 0.10 seconds
