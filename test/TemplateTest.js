@@ -143,7 +143,7 @@ test("More advanced getData()", async t => {
   t.is(data.key3, "value3", "front matter only");
 });
 
-test("One Layout", async t => {
+test("One Layout (using new content var)", async t => {
   let dataObj = new TemplateData("./test/stubs/");
   let tmpl = new Template(
     "./test/stubs/templateWithLayout.ejs",
@@ -156,6 +156,39 @@ test("One Layout", async t => {
 
   let data = await tmpl.getData();
   t.is(data[config.keys.layout], "defaultLayout");
+
+  t.is(
+    cleanHtml(await tmpl.renderLayout(tmpl, data)),
+    `<div id="layout">
+  <p>Hello.</p>
+</div>`
+  );
+
+  let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
+    tmpl,
+    tmpl.getFrontMatterData()
+  );
+
+  t.is(mergedFrontMatter.keymain, "valuemain");
+  t.is(mergedFrontMatter.keylayout, "valuelayout");
+});
+
+test("One Layout (_layoutContent deprecated but supported)", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+  let tmpl = new Template(
+    "./test/stubs/templateWithLayoutBackCompat.ejs",
+    "./test/stubs/",
+    "dist",
+    dataObj
+  );
+
+  t.is(
+    tmpl.frontMatter.data[config.keys.layout],
+    "defaultLayout_layoutContent"
+  );
+
+  let data = await tmpl.getData();
+  t.is(data[config.keys.layout], "defaultLayout_layoutContent");
 
   t.is(
     cleanHtml(await tmpl.renderLayout(tmpl, data)),

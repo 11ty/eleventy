@@ -212,10 +212,10 @@ class Template {
     let layoutData = await layout.getData(tmplData);
 
     // console.log( await this.renderContent( tmpl.getPreRender(), tmplData ) );
-    layoutData._layoutContent = await this.renderContent(
-      tmpl.getPreRender(),
-      tmplData
-    );
+    let layoutContent = await this.renderContent(tmpl.getPreRender(), tmplData);
+    layoutData.content = layoutContent;
+    // Deprecated
+    layoutData._layoutContent = layoutContent;
 
     if (layoutData[config.keys.layout]) {
       return this.renderLayout(layout, layoutData);
