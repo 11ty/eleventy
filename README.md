@@ -17,26 +17,53 @@ Works with:
 
 ## Getting Started
 
-Requires Node version 8 or above. `node --version` will tell you what version you’re running.
-
-### Installation
-
-Available [on npm](https://www.npmjs.com/package/@11ty/eleventy).
+Requires version 8 of Node.js or higher.
 
 ```
 npm install -g @11ty/eleventy
 ```
 
-_(You can also install locally using `npm install --save-dev @11ty/eleventy`)._
+Available [on npm](https://www.npmjs.com/package/@11ty/eleventy). Previously known as [`eleventy-cli`](https://www.npmjs.com/package/eleventy-cli). [Read more about local installation.](docs/install-local.md)
 
-Notably, this package was renamed from [`eleventy-cli`](https://www.npmjs.com/package/eleventy-cli) at `v0.2.0`.
+### Run Eleventy
 
-### Sample projects
+Make a directory with your project in it:
+
+```
+~ ᐅ mkdir eleventy-sample
+```
+
+Run `eleventy`:
+
+```
+~/eleventy-sample ᐅ eleventy
+Wrote 0 files in 0.02 seconds
+```
+
+Makes sense—this is an empty folder with no templates inside. So, let’s make a few templates.
+
+```
+~/eleventy-sample ᐅ echo "<html><title>Page title</title>" > index.html
+~/eleventy-sample ᐅ echo "# Page header" > README.md
+```
+
+We’ve now created an HTML and a markdown template. Now run `eleventy` again:
+
+```
+~/Code/eleventy-sample ᐅ eleventy
+Writing _site/README/index.html from ./README.md
+Writing _site/index.html from ./index.html
+Wrote 2 files in 0.10 seconds
+```
+
+This will compile any content templates in the current directory or subdirectories into the output folder (defaults to `_site`). Congratulations—you made something with eleventy! Now put it to work with templating syntax, front matter, and data files (read on below).
+
+### See more sample projects
 
 1. @Heydon’s lovely [Inclusive Web Design Checklist, converted to use `eleventy`](https://github.com/11ty/eleventy-inclusive-design-checklist). The [original](https://github.com/Heydon/inclusive-design-checklist) project took a JSON file and converted it HTML with some one-off JavaScript. This uses eleventy to transform the data using a nunjucks template, resulting in a cleaner, templated setup.
 1. [11ty-logo](https://github.com/11ty/logo) generates a template with `eleventy` that has hundreds of different font combinations in an attempt to pick a logo.
 
-## Usage
+### Command line usage
 
 ```
 # Searches the current directory, outputs to ./_site
@@ -54,8 +81,6 @@ eleventy --formats=md,html,ejs
 # Find out the most up-to-date list of commands (there are more)
 eleventy --help
 ```
-
-### Examples
 
 #### Example: Default options
 
@@ -195,6 +220,7 @@ npm run watch:test
 ## Major Roadmapped Features
 
 * [x] Pagination
-* [ ] Tagging of content **IN PROGRESS**
+* [x] Tagging of content
 * [ ] Extensibility with system-wide content mapping **IN PROGRESS**
+* [ ] Components system for development reusability
 * [ ] Plugin system
