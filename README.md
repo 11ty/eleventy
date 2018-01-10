@@ -64,7 +64,7 @@ This will compile any content templates in the current directory or subdirectori
 1. @Heydon’s lovely [Inclusive Web Design Checklist, converted to use `eleventy`](https://github.com/11ty/eleventy-inclusive-design-checklist). The [original](https://github.com/Heydon/inclusive-design-checklist) project took a JSON file and converted it HTML with some one-off JavaScript. This uses eleventy to transform the data using a nunjucks template, resulting in a cleaner, templated setup.
 1. [11ty-logo](https://github.com/11ty/logo) generates a template with `eleventy` that has hundreds of different font combinations in an attempt to pick a logo.
 
-### Command line usage
+## Command line usage
 
 ```
 # Searches the current directory, outputs to ./_site
@@ -83,7 +83,7 @@ eleventy --formats=md,html,ejs
 eleventy --help
 ```
 
-#### Example: Default options
+### Example: Default options
 
 ```
 eleventy --input=. --output=_site
@@ -91,7 +91,7 @@ eleventy --input=. --output=_site
 
 A `template.md` in the current directory will be rendered to `_site/template/index.html`. [Read more about Permalinks](docs/permalinks.md)
 
-#### Example: Same Input and Output
+### Example: Same Input and Output
 
 Yes, you can use the same `input` and `output` directories, like so:
 
@@ -103,7 +103,7 @@ Yes, you can use the same `input` and `output` directories, like so:
 eleventy --input=. --output=. --watch --formats=md
 ```
 
-##### Exception: index.html Templates
+#### Exception: index.html Templates
 
 When the input and output directories are the same _and_ the source template is named `index.html`, it will output as `index-o.html` to avoid overwriting itself. This is a special case that only applies to `index.html` filenames. You can customize the `-o` suffix with the `htmlOutputSuffix` configuration option.
 
@@ -113,9 +113,9 @@ When the input and output directories are the same _and_ the source template is 
 eleventy --input=. --output=. --formats=html
 ```
 
-### Data (optional)
+## Using Data (optional)
 
-#### Front Matter on any Template
+### Front Matter on any Template
 
 You may use front matter on any template file to add local data. Front matter looks like this:
 
@@ -136,21 +136,21 @@ This allows you to assign data values right in the template itself. Here are a f
 * `tags`: A single string or array that identifies that a piece of content is part of a collection. Collections can be reused in any other template. [Read more about Collections](docs/collections.md).
 * `date`: Override the default date (file creation) to customize how the file is sorted in a collection. [Read more about Collections](docs/collections.md).
 
-#### Special Variables
+### Special Variables
 
 * `pkg`: The local project’s `package.json` values.
 * `pagination`: (When enabled in front matter) [Read more about Pagination](docs/pagination.md).
 * `collections`: Lists of all of your content, grouped by tags. [Read more about Collections](docs/collections.md)
 
-#### Data Files
+### Data Files
 
 Optionally add data files to add global static data available to all templates. Uses the `dir.data` configuration option. [Read more about Template Data Files](docs/data.md).
 
-### Ignore files (optional)
+## Ignore files (optional)
 
 Add an `.eleventyignore` file to the _root of your input directory_ for a new line-separated list of files that will not be processed. Paths listed in your project’s `.gitignore` file are automatically ignored.
 
-### Configuration (optional)
+## Configuration (optional)
 
 Add an `.eleventy.js` file to root directory of your project to override these configuration options with your own preferences. Example:
 
@@ -178,7 +178,7 @@ module.exports = {
 | `handlebarsHelpers`      | `{}`                                              | `Object`                                     | N/A                   | The helper functions passed to `Handlebars.registerHelper`. Helper names are keys, functions are the values.                                                                      |
 | `nunjucksFilters`        | `{}`                                              | `Object`                                     | N/A                   | The helper functions passed to `nunjucksEnv.addFilter`. Helper names are keys, functions are the values.                                                                          |
 
-### Template Engine Features
+## Template Engine Features
 
 Here are the features tested with each template engine that use external files and thus are subject to setup and scaffolding.
 
