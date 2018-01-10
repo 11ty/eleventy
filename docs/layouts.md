@@ -50,8 +50,6 @@ All of this would output the following HTML content:
 
 ## Prevent double-escaping in layouts
 
-Here’s how to prevent double escaping in other template languages:
-
 | Template Language | Unescaped Content (for layout content)                 | Comparison with an Escaped Output | Docs                                                                                 |
 | ----------------- | ------------------------------------------------------ | --------------------------------- | ------------------------------------------------------------------------------------ |
 | Nunjucks          | `{{ content \| safe }}`                                | `{{ value }}`                     | [Docs](https://mozilla.github.io/nunjucks/templating.html#safe)                      |
