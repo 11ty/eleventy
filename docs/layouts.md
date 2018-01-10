@@ -30,7 +30,7 @@ Next, we need to create a `mylayout.njk` file. It can contain any type of text, 
 </html>
 ```
 
-Note that the layout template will populate the `content` data with the child template’s content. Also note that we don’t want to double-escape the output, so we’re using the provided Nunjuck’s `safe` filter here (see more language double-escaping syntax below).
+Note that the layout template will populate the `content` data with the child template’s content. Also note that we don’t want to double-escape the output, so we’re using the provided Nunjuck’s `safe` filter here (see more language double-escaping syntax below). Note that layouts can contain their own front matter data! It’ll be merged with the content’s data on render (content data takes precedence, if conflicting keys arise).
 
 All of this would output the following HTML content:
 
