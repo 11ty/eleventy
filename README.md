@@ -131,7 +131,7 @@ title: My page title
 This allows you to assign data values right in the template itself. Here are a few front matter keys that we use for special things:
 
 * `permalink`: Add in front matter to change the output target of the current template. You can use template syntax for variables here. [Read more about Permalinks](docs/permalinks.md).
-* `layout`: Wrap current template with a layout template found in the `_includes` folder. [Read more about Layouts](docs/layout.md).
+* `layout`: Wrap current template with a layout template found in the `_includes` folder. [Read more about Layouts](docs/layouts.md).
 * `pagination`: Enable to iterate over data. Output multiple HTML files from a single template. [Read more about Pagination](docs/pagination.md).
 * `tags`: A single string or array that identifies that a piece of content is part of a collection. Collections can be reused in any other template. [Read more about Collections](docs/collections.md).
 * `date`: Override the default date (file creation) to customize how the file is sorted in a collection. [Read more about Collections](docs/collections.md).
