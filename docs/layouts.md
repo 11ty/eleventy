@@ -30,7 +30,9 @@ Next, we need to create a `mylayout.njk` file. It can contain any type of text, 
 </html>
 ```
 
-Note that the layout template will populate the `content` data with the child template’s content. Also note that we don’t want to double-escape the output, so we’re using the provided Nunjuck’s `safe` filter here (see more language double-escaping syntax below). Note that layouts can contain their own front matter data! It’ll be merged with the content’s data on render (content data takes precedence, if conflicting keys arise).
+Note that the layout template will populate the `content` data with the child template’s content. Also note that we don’t want to double-escape the output, so we’re using the provided Nunjuck’s `safe` filter here (see more language double-escaping syntax below).
+
+Layouts can contain their own front matter data! It’ll be merged with the content’s data on render (content data takes precedence, if conflicting keys arise).
 
 All of this would output the following HTML content:
 
@@ -66,7 +68,7 @@ Your layouts can also use a layout! Add the same `layout` front matter data to y
 
 ```
 ---
-layout: mypostlayout.njk
+layout: mainlayout.njk
 title: My Rad Blog
 ---
 # My Rad Markdown Blog Post
@@ -100,3 +102,7 @@ This would build on the previous `mylayout.njk` layout to write a file with:
   </body>
 </html>
 ```
+
+## Addendum about existing Templating features
+
+It is worth noting that existing template reuse mechanisms built into different templating languages are still available to you. For instance, Nunjucks calls it [Template Inheritance](https://mozilla.github.io/nunjucks/templating.html#template-inheritance) and exposes with `{% extends %}`. Eleventy’s layout system exists a layer above this and exposes a nice multi-template-language mechanism to configure layouts in your content’s front matter and share data between them.
