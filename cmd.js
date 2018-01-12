@@ -7,7 +7,12 @@ EleventyNodeVersionCheck().then(function() {
 
   let elev = new Eleventy(argv.input, argv.output);
   elev.setFormats(argv.formats);
-  elev.setIsVerbose(!argv.quiet);
+
+  if (process.env.DEBUG) {
+    elev.setIsVerbose(false);
+  } else {
+    elev.setIsVerbose(!argv.quiet);
+  }
 
   elev.init().then(function() {
     if (argv.version) {
@@ -18,7 +23,7 @@ EleventyNodeVersionCheck().then(function() {
       elev.watch();
     } else {
       elev.write().then(function() {
-        console.log(elev.getFinishedLog());
+        // do something custom if you want
       });
     }
   });
