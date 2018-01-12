@@ -1,4 +1,5 @@
 node_modules/
 .nyc_output/
 coverage/
+playground/_site/
 package-lock.json
