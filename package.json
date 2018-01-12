@@ -13,7 +13,6 @@
   "scripts": {
     "default": "cd playground && npx eleventy --input=. --output=_site",
     "test": "npx nyc ava",
-    "watch:test": "npx ava --watch --verbose",
     "coverage":
       "npx nyc report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && npx eleventy --config=docs-src/.eleventy.docs.js",
     "precommit": "lint-staged",

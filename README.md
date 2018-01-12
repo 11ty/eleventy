@@ -222,7 +222,6 @@ Here are the features tested with each template engine that use external files a
 
 ```
 npm run test
-npm run watch:test
 ```
 
 ## Competitors

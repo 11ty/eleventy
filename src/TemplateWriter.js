@@ -104,10 +104,15 @@ TemplateWriter.getFileIgnores = function(ignoreFile) {
           TemplatePath.normalize(dir, "/", line)
         );
         debug(`${ignoreFile} ignoring: ${path}`);
-        if (fs.statSync(path).isDirectory()) {
-          return "!" + path + "/**";
+        try {
+          let stat = fs.statSync(path);
+          if (stat.isDirectory()) {
+            return "!" + path + "/**";
+          }
+          return "!" + path;
+        } catch (e) {
+          return "!" + path;
         }
-        return "!" + path;
       });
   }
 
