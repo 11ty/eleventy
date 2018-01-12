@@ -241,11 +241,15 @@ TemplateWriter.prototype._getCollectionsData = function(activeTemplate) {
   collections.all = this._createTemplateMapCopy(
     this.collection.getAllSorted(activeTemplate)
   );
+  debug(`Collection: collections.all has ${collections.all.length} items.`);
 
   let tags = this._getAllTagsFromMap(collections.all);
   for (let tag of tags) {
     collections[tag] = this._createTemplateMapCopy(
       this.collection.getFilteredByTag(tag, activeTemplate)
+    );
+    debug(
+      `Collection: collections.${tag} has ${collections[tag].length} items.`
     );
   }
 
@@ -253,6 +257,9 @@ TemplateWriter.prototype._getCollectionsData = function(activeTemplate) {
   for (let name in configCollections) {
     collections[name] = this._createTemplateMapCopy(
       configCollections[name](this.collection)
+    );
+    debug(
+      `Collection: collections.${name} has ${collections[name].length} items.`
     );
   }
 
