@@ -1,0 +1,10 @@
+---
+permalink: coverage.md
+---
+# Code Coverage
+
+| Filename | % Lines | % Statements | % Functions | % Branches |
+| --- | --- | --- | --- | --- |
+{% for file, line in coverage -%}
+| `{{ file | removeDir }}` | {{ line.lines.pct }}% | {{ line.statements.pct }}% | {{ line.functions.pct }}% | {{ line.branches.pct }}% |
+{% endfor -%}

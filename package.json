@@ -11,9 +11,11 @@
     "eleventy": "./cmd.js"
   },
   "scripts": {
-    "default": "cd playground && node ../cmd.js --input=. --output=_site",
-    "test": "npx ava",
-    "watch:test": "ava --watch --verbose",
+    "default": "cd playground && npx eleventy --input=. --output=_site",
+    "test": "npx nyc ava",
+    "watch:test": "npx ava --watch --verbose",
+    "coverage":
+      "npx nyc report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && npx eleventy --config=docs-src/.eleventy.docs.js",
     "precommit": "lint-staged",
     "prepush": "npx ava"
   },
@@ -37,6 +39,7 @@
     "ava": "^0.24.0",
     "husky": "^0.14.3",
     "lint-staged": "^6.0.0",
+    "nyc": "^11.4.1",
     "prettier": "1.9.1"
   },
   "dependencies": {
