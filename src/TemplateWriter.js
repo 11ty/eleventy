@@ -15,6 +15,7 @@ const config = require("./Config");
 const debug = require("debug")("Eleventy:TemplateWriter");
 
 function TemplateWriter(inputPath, outputDir, extensions, templateData) {
+  this.config = config.getConfig();
   this.input = inputPath;
   this.inputDir = this._getInputPathDir(inputPath) || ".";
   this.templateExtensions = extensions;
@@ -94,9 +95,9 @@ TemplateWriter.getFileIgnores = function(inputDir) {
 TemplateWriter.prototype.addIgnores = function(inputDir, files) {
   files = files.concat(TemplateWriter.getFileIgnores(inputDir));
 
-  if (config.dir.output) {
+  if (this.config.dir.output) {
     files = files.concat(
-      "!" + normalize(inputDir + "/" + config.dir.output + "/**")
+      "!" + normalize(inputDir + "/" + this.config.dir.output + "/**")
     );
   }
 
@@ -104,14 +105,14 @@ TemplateWriter.prototype.addIgnores = function(inputDir, files) {
 };
 
 TemplateWriter.prototype.addWritingIgnores = function(inputDir, files) {
-  if (config.dir.includes) {
+  if (this.config.dir.includes) {
     files = files.concat(
-      "!" + normalize(inputDir + "/" + config.dir.includes + "/**")
+      "!" + normalize(inputDir + "/" + this.config.dir.includes + "/**")
     );
   }
-  if (config.dir.data && config.dir.data !== ".") {
+  if (this.config.dir.data && this.config.dir.data !== ".") {
     files = files.concat(
-      "!" + normalize(inputDir + "/" + config.dir.data + "/**")
+      "!" + normalize(inputDir + "/" + this.config.dir.data + "/**")
     );
   }
 
@@ -161,8 +162,8 @@ TemplateWriter.prototype._getTemplate = function(path) {
    *   return pretty(str, { ocd: true });
    * }
    */
-  for (let filterName in config.filters) {
-    let filter = config.filters[filterName];
+  for (let filterName in this.config.filters) {
+    let filter = this.config.filters[filterName];
     if (typeof filter === "function") {
       tmpl.addFilter(filter);
     }

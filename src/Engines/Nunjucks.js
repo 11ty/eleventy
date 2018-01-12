@@ -6,11 +6,13 @@ class Nunjucks extends TemplateEngine {
   constructor(name, inputDir) {
     super(name, inputDir);
 
+    this.config = config.getConfig();
+
     this.njkEnv = new NunjucksLib.Environment(
       new NunjucksLib.FileSystemLoader(super.getInputDir())
     );
 
-    this.addFilters(config.nunjucksFilters);
+    this.addFilters(this.config.nunjucksFilters);
   }
 
   addFilters(helpers) {

@@ -4,6 +4,8 @@ const lodashset = require("lodash.set");
 const config = require("../Config");
 
 function Pagination(data) {
+  this.config = config.getConfig();
+
   this.data = data || {};
   this.size = 1;
   this.target = [];
@@ -80,7 +82,7 @@ Pagination.prototype.getTemplates = async function() {
     let chunk = items[pageNumber];
     let cloned = tmpl.clone();
     // TODO maybe also move this permalink additions up into the pagination class
-    if (pageNumber > 0 && !this.data[config.keys.permalink]) {
+    if (pageNumber > 0 && !this.data[this.config.keys.permalink]) {
       cloned.setExtraOutputSubdirectory(pageNumber);
     }
 

@@ -6,14 +6,16 @@ const lodashset = require("lodash.set");
 const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
 const config = require("./Config");
+const debug = require("debug")("Eleventy:TemplateData");
 
 function TemplateData(inputDir) {
+  this.config = config.getConfig();
   this.inputDir = inputDir;
   this.dataDir =
-    inputDir + "/" + (config.dir.data !== "." ? config.dir.data : "");
+    inputDir + "/" + (this.config.dir.data !== "." ? this.config.dir.data : "");
 
   this.rawImports = {};
-  this.rawImports[config.keys.package] = this.getJsonRaw(
+  this.rawImports[this.config.keys.package] = this.getJsonRaw(
     TemplatePath.localPath("package.json")
   );
 
@@ -47,7 +49,7 @@ TemplateData.prototype.getGlobalDataGlob = async function() {
     TemplatePath.normalize(
       dir,
       "/",
-      config.dir.data !== "." ? config.dir.data : ""
+      this.config.dir.data !== "." ? this.config.dir.data : ""
     ) + "/**/*.json"
   );
 };
@@ -71,10 +73,14 @@ TemplateData.prototype.getAllGlobalData = async function() {
 
   for (let j = 0, k = files.length; j < k; j++) {
     let folders = await this.getObjectPathForDataFile(files[j]);
+    debug(
+      `Found global data file ${
+        files[j]
+      } and inserting into data key ${folders}`
+    );
     let data = await this.getJson(files[j], this.rawImports);
     lodashset(globalData, folders, data);
   }
-
   return globalData;
 };
 
@@ -115,7 +121,7 @@ TemplateData.prototype.getJsonRaw = function(path) {
 TemplateData.prototype.getJson = async function(path, rawImports) {
   let rawInput = this._getLocalJson(path);
   let fn = await new TemplateRender(
-    config.dataTemplateEngine
+    this.config.dataTemplateEngine
   ).getCompiledTemplate(rawInput);
 
   // pass in rawImports, don’t pass in global data, that’s what we’re parsing

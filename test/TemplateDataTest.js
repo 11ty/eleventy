@@ -1,6 +1,8 @@
 import test from "ava";
 import TemplateData from "../src/TemplateData";
-import config from "../src/Config";
+import templateConfig from "../src/Config";
+
+const config = templateConfig.getConfig();
 
 test("Create", async t => {
   let dataObj = new TemplateData("./test/stubs/");

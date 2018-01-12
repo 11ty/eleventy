@@ -14,6 +14,7 @@ const config = require("./Config");
 
 class Template {
   constructor(path, inputDir, outputDir, templateData) {
+    this.config = config.getConfig();
     this.inputPath = path;
     this.inputContent = fs.readFileSync(path, "utf-8");
     this.parsed = parsePath(path);
@@ -23,7 +24,7 @@ class Template {
 
     if (inputDir) {
       this.inputDir = normalize(inputDir);
-      this.layoutsDir = this.inputDir + "/" + config.dir.includes;
+      this.layoutsDir = this.inputDir + "/" + this.config.dir.includes;
     } else {
       this.inputDir = false;
     }
@@ -70,7 +71,7 @@ class Template {
 
   // TODO instead of isHTMLIOException, do a global search to check if output path = input path and then add extra suffix
   async getOutputLink() {
-    let permalink = this.getFrontMatterData()[config.keys.permalink];
+    let permalink = this.getFrontMatterData()[this.config.keys.permalink];
     if (permalink) {
       let data = await this.getData();
       let perm = new TemplatePermalink(
@@ -87,14 +88,14 @@ class Template {
       this.getTemplateSubfolder(),
       this.parsed.name,
       this.extraOutputSubdirectory,
-      this.isHtmlIOException ? config.htmlOutputSuffix : ""
+      this.isHtmlIOException ? this.config.htmlOutputSuffix : ""
     ).toString();
   }
 
   // TODO check for conflicts, see if file already exists?
   async getOutputPath() {
     let uri = await this.getOutputLink();
-    if (this.getFrontMatterData()[config.keys.permalinkRoot]) {
+    if (this.getFrontMatterData()[this.config.keys.permalinkRoot]) {
       return normalize(uri);
     } else {
       return normalize(this.outputDir + "/" + uri);
@@ -131,8 +132,8 @@ class Template {
       merged = data;
     }
 
-    if (data[config.keys.layout]) {
-      let layout = tmpl.getLayoutTemplate(data[config.keys.layout]);
+    if (data[this.config.keys.layout]) {
+      let layout = tmpl.getLayoutTemplate(data[this.config.keys.layout]);
       let layoutData = layout.getFrontMatterData();
 
       return this.getAllLayoutFrontMatterData(
@@ -204,9 +205,9 @@ class Template {
   }
 
   async renderLayout(tmpl, tmplData) {
-    let layoutName = tmplData[config.keys.layout];
+    let layoutName = tmplData[this.config.keys.layout];
     // TODO make layout key to be available to templates (without it causing issues with merge below)
-    delete tmplData[config.keys.layout];
+    delete tmplData[this.config.keys.layout];
 
     let layout = this.getLayoutTemplate(layoutName);
     let layoutData = await layout.getData(tmplData);
@@ -217,7 +218,7 @@ class Template {
     // Deprecated
     layoutData._layoutContent = layoutContent;
 
-    if (layoutData[config.keys.layout]) {
+    if (layoutData[this.config.keys.layout]) {
       return this.renderLayout(layout, layoutData);
     }
 
@@ -238,7 +239,7 @@ class Template {
       data = await this.getRenderedData();
     }
 
-    if (data[config.keys.layout]) {
+    if (data[this.config.keys.layout]) {
       return this.renderLayout(this, data);
     } else {
       return this.renderContent(this.getPreRender(), data);

@@ -73,8 +73,11 @@ eleventy
 # Equivalent to
 eleventy --input=. --output=_site
 
-# Automatically run when template files change.
+# Automatically run when input template files change.
 eleventy --watch
+
+# Override the default eleventy project config filename (.eleventy.js)
+eleventy --config=myeleventyconfig.js
 
 # Use only a subset of template types
 eleventy --formats=md,html,ejs
@@ -89,29 +92,18 @@ eleventy --help
 eleventy --input=. --output=_site
 ```
 
-A `template.md` in the current directory will be rendered to `_site/template/index.html`. [Read more about Permalinks](docs/permalinks.md)
+A `template.md` in the current directory will be rendered to `_site/template/index.html`. [Read more at Permalinks](docs/permalinks.md)
 
 ### Example: Same Input and Output
 
 Yes, you can use the same `input` and `output` directories, like so:
 
 ```
-# Watch a directory for any changes to markdown files, then
-# automatically parse and output as HTML files, respecting
-# directory structure.
-
-eleventy --input=. --output=. --watch --formats=md
+# Parse and write Markdown to HTML, respecting directory structure.
+eleventy --input=. --output=. --formats=md
 ```
 
-#### Exception: index.html Templates
-
-When the input and output directories are the same _and_ the source template is named `index.html`, it will output as `index-o.html` to avoid overwriting itself. This is a special case that only applies to `index.html` filenames. You can customize the `-o` suffix with the `htmlOutputSuffix` configuration option.
-
-```
-# Adds `-o` to index.html file names to avoid overwriting matching files.
-
-eleventy --input=. --output=. --formats=html
-```
+⚠️ Careful with `--formats=html` here! If you run eleventy more than once, it’ll try to process the output files too. Read more at [Common Pitfalls](/docs/pitfalls.md#same-input-output).
 
 ## Using Data (optional)
 
@@ -202,7 +194,8 @@ Here are the features tested with each template engine that use external files a
 
 ## Tests
 
-Build Status: [![Build Status](https://travis-ci.org/11ty/eleventy.svg?branch=master)](https://travis-ci.org/11ty/eleventy)
+* Build Status: [![Build Status](https://travis-ci.org/11ty/eleventy.svg?branch=master)](https://travis-ci.org/11ty/eleventy)
+* [Code Coverage Statistics](docs/coverage.md)
 
 ```
 npm run test

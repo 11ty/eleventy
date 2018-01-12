@@ -5,15 +5,23 @@ const config = require("./Config");
 
 // works with full path names or short engine name
 function TemplateRender(tmplPath, inputDir) {
+  if (!tmplPath) {
+    throw new Error(
+      `TemplateRender requires a tmplPath argument, instead of ${tmplPath}`
+    );
+  }
+
+  this.config = config.getConfig();
   this.path = tmplPath;
+
   this.parsed = tmplPath ? parsePath(tmplPath) : undefined;
   this.engineName =
     this.parsed && this.parsed.ext ? this.parsed.ext.substr(1) : tmplPath;
   this.inputDir = this._normalizeInputDir(inputDir);
-  this.engine = TemplateEngine.getEngine(this.engineName, this.inputDir);
 
-  this.defaultMarkdownEngine = config.markdownTemplateEngine;
-  this.defaultHtmlEngine = config.htmlTemplateEngine;
+  this.engine = TemplateEngine.getEngine(this.engineName, this.inputDir);
+  this.defaultMarkdownEngine = this.config.markdownTemplateEngine;
+  this.defaultHtmlEngine = this.config.htmlTemplateEngine;
 }
 
 TemplateRender.prototype.setDefaultMarkdownEngine = function(markdownEngine) {
@@ -30,8 +38,8 @@ TemplateRender.prototype.getEngineName = function() {
 
 TemplateRender.prototype._normalizeInputDir = function(dir) {
   return dir
-    ? TemplatePath.normalize(dir, config.dir.includes)
-    : TemplatePath.normalize(config.dir.input, config.dir.includes);
+    ? TemplatePath.normalize(dir, this.config.dir.includes)
+    : TemplatePath.normalize(this.config.dir.input, this.config.dir.includes);
 };
 
 TemplateRender.prototype.getInputDir = function() {

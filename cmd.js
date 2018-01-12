@@ -6,6 +6,7 @@ EleventyNodeVersionCheck().then(function() {
   const Eleventy = require("./src/Eleventy");
 
   let elev = new Eleventy(argv.input, argv.output);
+  elev.setConfigPath(argv.config);
   elev.setFormats(argv.formats);
 
   if (process.env.DEBUG) {

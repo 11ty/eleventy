@@ -4,7 +4,9 @@ import TemplateData from "../src/TemplateData";
 import Template from "../src/Template";
 import pretty from "pretty";
 import normalize from "normalize-path";
-import config from "../src/Config";
+import templateConfig from "../src/Config";
+
+const config = templateConfig.getConfig();
 
 function cleanHtml(str) {
   return pretty(str, { ocd: true });

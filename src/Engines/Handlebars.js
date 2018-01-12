@@ -6,12 +6,14 @@ class Handlebars extends TemplateEngine {
   constructor(name, inputDir) {
     super(name, inputDir);
 
+    this.config = config.getConfig();
+
     let partials = super.getPartials();
     for (let name in partials) {
       HandlebarsLib.registerPartial(name, partials[name]);
     }
 
-    this.addHelpers(config.handlebarsHelpers);
+    this.addHelpers(this.config.handlebarsHelpers);
   }
 
   addHelpers(helpers) {

@@ -11,22 +11,42 @@ const pkg = require("../package.json");
 const debug = require("debug")("Eleventy");
 
 function Eleventy(input, output) {
-  this.input = input || config.dir.input;
-  this.inputDir = this._getDir(this.input) || ".";
-  this.output = output || config.dir.output;
-  this.formats = config.templateFormats;
+  this.config = config.getConfig();
+  this.rawInput = input;
+  this.rawOutput = output;
+  this.configPath = null;
   this.data = null;
   this.isVerbose = true;
   this.isDebug = false;
   debug("Starting");
   this.start = new Date();
+  this.formats = this.config.templateFormats;
+
+  this.initDirs(input, output);
 }
+
+Eleventy.prototype.initDirs = function() {
+  this.input = this.rawInput || this.config.dir.input;
+  this.inputDir = this._getDir(this.input) || ".";
+  this.output = this.rawOutput || this.config.dir.output;
+};
 
 Eleventy.prototype._getDir = function(inputPath) {
   if (!fs.statSync(inputPath).isDirectory()) {
     return parsePath(inputPath).dir;
   }
   return inputPath;
+};
+
+Eleventy.prototype.setConfigPath = function(configPath) {
+  if (configPath) {
+    this.configPath = configPath;
+
+    config.setProjectConfigPath(configPath);
+    this.config = config.getConfig();
+
+    this.initDirs();
+  }
 };
 
 Eleventy.prototype.restart = function() {
@@ -116,8 +136,10 @@ Eleventy.prototype.getHelp = function() {
   out.push("       Whitelist only certain template types (default: `*`)");
   out.push("  --quiet");
   out.push("       Don’t print all written files (default: `false`)");
-  // out.push( "  --config" );
-  // out.push( "       Set your own local configuration file (default: `.eleventy.js`)" );
+  out.push("  --config");
+  out.push(
+    "      Override the eleventy config file path (default: `.eleventy.js`)"
+  );
   out.push("  --help");
   return out.join("\n");
 };

@@ -1,6 +1,8 @@
 import test from "ava";
 import Eleventy from "../src/Eleventy";
-import config from "../src/Config";
+import templateConfig from "../src/Config";
+
+const config = templateConfig.getConfig();
 
 test("Eleventy, defaults inherit from config", async t => {
   let elev = new Eleventy();

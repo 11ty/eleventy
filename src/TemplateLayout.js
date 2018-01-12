@@ -2,6 +2,7 @@ const fs = require("fs-extra");
 const config = require("./Config");
 
 function TemplateLayout(name, dir) {
+  this.config = config.getConfig();
   this.dir = dir;
   this.name = name;
   this.pathNameAlreadyHasExtension = this.dir + "/" + this.name;
@@ -36,7 +37,7 @@ TemplateLayout.prototype.findFileName = function() {
     );
   }
 
-  config.templateFormats.forEach(
+  this.config.templateFormats.forEach(
     function(extension) {
       let filename = this.name + "." + extension;
       if (!file && fs.existsSync(this.dir + "/" + filename)) {
