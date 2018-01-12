@@ -22,6 +22,10 @@ function TemplateData(inputDir) {
   this.globalData = null;
 }
 
+TemplateData.prototype.getDataDir = function() {
+  return this.dataDir;
+};
+
 TemplateData.prototype.clearData = function() {
   this.globalData = null;
 };
@@ -55,7 +59,7 @@ TemplateData.prototype.getGlobalDataGlob = async function() {
 };
 
 TemplateData.prototype.getGlobalDataFiles = async function() {
-  return globby(await this.getGlobalDataGlob(), { gitignore: true });
+  return globby(await this.getGlobalDataGlob());
 };
 
 TemplateData.prototype.getObjectPathForDataFile = function(path) {
@@ -73,11 +77,7 @@ TemplateData.prototype.getAllGlobalData = async function() {
 
   for (let j = 0, k = files.length; j < k; j++) {
     let folders = await this.getObjectPathForDataFile(files[j]);
-    debug(
-      `Found global data file ${
-        files[j]
-      } and inserting into data key ${folders}`
-    );
+    debug(`Found global data file ${files[j]} and adding as: ${folders}`);
     let data = await this.getJson(files[j], this.rawImports);
     lodashset(globalData, folders, data);
   }

@@ -18,9 +18,9 @@ function Eleventy(input, output) {
   this.data = null;
   this.isVerbose = true;
   this.isDebug = false;
-  debug("Starting");
+
   this.start = new Date();
-  this.formats = this.config.templateFormats;
+  this.formatsOverride = null;
 
   this.initDirs(input, output);
 }
@@ -28,7 +28,7 @@ function Eleventy(input, output) {
 Eleventy.prototype.initDirs = function() {
   this.input = this.rawInput || this.config.dir.input;
   this.inputDir = this._getDir(this.input) || ".";
-  this.output = this.rawOutput || this.config.dir.output;
+  this.outputDir = this.rawOutput || this.config.dir.output;
 };
 
 Eleventy.prototype._getDir = function(inputPath) {
@@ -80,16 +80,22 @@ Eleventy.prototype.logFinished = function() {
 Eleventy.prototype.init = async function() {
   this.data = new TemplateData(this.inputDir);
 
+  let formats = this.formatsOverride || this.config.templateFormats;
+
   this.writer = new TemplateWriter(
     this.input,
-    this.output,
-    this.formats,
+    this.outputDir,
+    formats,
     this.data
   );
 
-  // if (this.isVerbose) {
-  //   console.log("Formats:", this.formats.join(", "));
-  // }
+  // TODO maybe isVerbose -> console.log?
+  debug(`Directories:
+Input: ${this.inputDir}
+Data: ${this.data.getDataDir()}
+Includes: ${this.writer.getIncludesDir()}
+Output: ${this.outputDir}
+Template Formats: ${formats.join(",")}`);
 
   this.writer.setVerboseOutput(this.isVerbose);
 
@@ -110,7 +116,7 @@ Eleventy.prototype.setIsVerbose = function(isVerbose) {
 
 Eleventy.prototype.setFormats = function(formats) {
   if (formats && formats !== "*") {
-    this.formats = formats.split(",");
+    this.formatsOverride = formats.split(",");
   }
 };
 

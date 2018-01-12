@@ -29,6 +29,7 @@ test("addLeadingDotSlash", t => {
   t.is(TemplatePath.addLeadingDotSlash("../dist"), "../dist");
   t.is(TemplatePath.addLeadingDotSlash("/dist"), "/dist");
   t.is(TemplatePath.addLeadingDotSlash("dist"), "./dist");
+  t.is(TemplatePath.addLeadingDotSlash(".nyc_output"), "./.nyc_output");
 });
 
 test("stripPathFromDir", t => {

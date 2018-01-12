@@ -8,9 +8,9 @@ test("Eleventy, defaults inherit from config", async t => {
   let elev = new Eleventy();
 
   t.truthy(elev.input);
-  t.truthy(elev.output);
+  t.truthy(elev.outputDir);
   t.is(elev.input, config.dir.input);
-  t.is(elev.output, config.dir.output);
+  t.is(elev.outputDir, config.dir.output);
 });
 
 test("Eleventy, get version", t => {
@@ -36,7 +36,7 @@ test("Eleventy set input/output", async t => {
   let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
 
   t.is(elev.input, "./test/stubs");
-  t.is(elev.output, "./test/stubs/_site");
+  t.is(elev.outputDir, "./test/stubs/_site");
 
   await elev.init();
   t.truthy(elev.data);
@@ -48,5 +48,5 @@ test("Eleventy set input/output, one file input", async t => {
 
   t.is(elev.input, "./test/stubs/index.html");
   t.is(elev.inputDir, "./test/stubs");
-  t.is(elev.output, "./test/stubs/_site");
+  t.is(elev.outputDir, "./test/stubs/_site");
 });

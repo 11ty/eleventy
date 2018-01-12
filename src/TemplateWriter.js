@@ -17,13 +17,17 @@ const debug = require("debug")("Eleventy:TemplateWriter");
 function TemplateWriter(inputPath, outputDir, extensions, templateData) {
   this.config = config.getConfig();
   this.input = inputPath;
-  this.inputDir = this._getInputPathDir(inputPath) || ".";
+  this.inputDir = this._getInputPathDir(inputPath);
   this.templateExtensions = extensions;
   this.outputDir = outputDir;
   this.templateData = templateData;
   this.isVerbose = true;
   this.writeCount = 0;
   this.collection = null;
+
+  this.includesDir = this.inputDir + "/" + this.config.dir.includes;
+  // Duplicated with TemplateData.getDataDir();
+  this.dataDir = this.inputDir + "/" + this.config.dir.data;
 
   // Input was a directory
   if (this.input === this.inputDir) {
@@ -40,11 +44,26 @@ function TemplateWriter(inputPath, outputDir, extensions, templateData) {
   this.files = this.addWritingIgnores(this.inputDir, this.watchedFiles);
 }
 
+TemplateWriter.prototype.getIncludesDir = function() {
+  return this.includesDir;
+};
+
+TemplateWriter.prototype.getDataDir = function() {
+  return this.dataDir;
+};
+
 TemplateWriter.prototype._getInputPathDir = function(inputPath) {
+  // Input points to a file
   if (!fs.statSync(inputPath).isDirectory()) {
     return parsePath(inputPath).dir;
   }
-  return inputPath;
+
+  // Input is a dir
+  if (inputPath) {
+    return inputPath;
+  }
+
+  return ".";
 };
 
 TemplateWriter.prototype.getRawFiles = function() {
@@ -61,15 +80,16 @@ TemplateWriter.prototype.getFiles = function() {
   return this.files;
 };
 
-TemplateWriter.getFileIgnores = function(inputDir) {
-  debug("Getting ignored files in .eleventyignore");
-  let ignorePath = TemplatePath.normalize(inputDir + "/.eleventyignore");
+TemplateWriter.getFileIgnores = function(ignoreFile) {
+  let dir = parsePath(ignoreFile).dir || ".";
+  let ignorePath = TemplatePath.normalize(ignoreFile);
   let ignoreContent;
   try {
     ignoreContent = fs.readFileSync(ignorePath, "utf-8");
   } catch (e) {
     ignoreContent = "";
   }
+
   let ignores = [];
 
   if (ignoreContent) {
@@ -81,25 +101,28 @@ TemplateWriter.getFileIgnores = function(inputDir) {
       .map(line => {
         line = line.trim();
         let path = TemplatePath.addLeadingDotSlash(
-          TemplatePath.normalize(inputDir, "/", line)
+          TemplatePath.normalize(dir, "/", line)
         );
+        debug(`${ignoreFile} ignoring: ${path}`);
         if (fs.statSync(path).isDirectory()) {
           return "!" + path + "/**";
         }
         return "!" + path;
       });
   }
+
   return ignores;
 };
 
 TemplateWriter.prototype.addIgnores = function(inputDir, files) {
-  files = files.concat(TemplateWriter.getFileIgnores(inputDir));
+  files = files.concat(
+    TemplateWriter.getFileIgnores(inputDir + "/.eleventyignore")
+  );
+  files = files.concat(TemplateWriter.getFileIgnores(".gitignore"));
 
-  if (this.config.dir.output) {
-    files = files.concat(
-      "!" + normalize(inputDir + "/" + this.config.dir.output + "/**")
-    );
-  }
+  files = files.concat(
+    "!" + TemplatePath.addLeadingDotSlash(normalize(this.outputDir + "/**"))
+  );
 
   return files;
 };
@@ -107,12 +130,13 @@ TemplateWriter.prototype.addIgnores = function(inputDir, files) {
 TemplateWriter.prototype.addWritingIgnores = function(inputDir, files) {
   if (this.config.dir.includes) {
     files = files.concat(
-      "!" + normalize(inputDir + "/" + this.config.dir.includes + "/**")
+      "!" + TemplatePath.addLeadingDotSlash(normalize(this.includesDir + "/**"))
     );
   }
+
   if (this.config.dir.data && this.config.dir.data !== ".") {
     files = files.concat(
-      "!" + normalize(inputDir + "/" + this.config.dir.data + "/**")
+      "!" + TemplatePath.addLeadingDotSlash(normalize(this.dataDir + "/**"))
     );
   }
 
@@ -120,7 +144,8 @@ TemplateWriter.prototype.addWritingIgnores = function(inputDir, files) {
 };
 
 TemplateWriter.prototype._getAllPaths = async function() {
-  return globby(this.files, { gitignore: true });
+  // Note the gitignore: true option for globby is _really slow_
+  return globby(this.files); //, { gitignore: true });
 };
 
 TemplateWriter.prototype._populateCollection = function(templateMaps) {
@@ -132,16 +157,13 @@ TemplateWriter.prototype._populateCollection = function(templateMaps) {
 };
 
 TemplateWriter.prototype._getTemplatesMap = async function(paths) {
-  debug("Iterating over paths");
   let templates = [];
   for (let path of paths) {
     let tmpl = this._getTemplate(path);
-    debug(`Template for ${path} retrieved.`);
     let map = await tmpl.getMapped();
-    debug("Map for template retrieved.");
     templates.push(map);
+    debug(`Template for ${path} added to map.`);
   }
-  debug("All templates mapped.");
   return templates;
 };
 
@@ -152,7 +174,6 @@ TemplateWriter.prototype._getTemplate = function(path) {
     this.outputDir,
     this.templateData
   );
-  debug("new Template object created.");
 
   tmpl.setIsVerbose(this.isVerbose);
 
@@ -168,7 +189,6 @@ TemplateWriter.prototype._getTemplate = function(path) {
       tmpl.addFilter(filter);
     }
   }
-  debug("Add filters from config to template.");
 
   let writer = this;
   tmpl.addPlugin("pagination", async function(data) {
@@ -181,7 +201,6 @@ TemplateWriter.prototype._getTemplate = function(path) {
       return false;
     }
   });
-  debug("Pagination plugin added.");
 
   return tmpl;
 };
@@ -264,26 +283,25 @@ TemplateWriter.prototype._writeTemplate = async function(
 };
 
 TemplateWriter.prototype.write = async function() {
-  debug("Creating templates map.");
+  debug("Searching for:");
+  debug(this.files);
   let paths = await this._getAllPaths();
-  debug("Paths retrieved.");
+  debug("Found:");
+  debug(paths);
   let templatesMap = await this._getTemplatesMap(paths);
-  debug("Got the templates map.");
   this._populateCollection(templatesMap);
-  debug("Populating the collections.");
 
-  debug("Writing templates");
   for (let template of templatesMap) {
-    debug(`Writing template ${template.outputPath} from ${template.inputPath}`);
     await this._writeTemplate(
       template.template,
       template.outputPath,
       template.data
     );
+    debug(`Wrote template ${template.outputPath} from ${template.inputPath}`);
   }
 
-  debug("Triggering `alldata` event.");
   eleventyConfig.emit("alldata", this.collection.getAllSorted());
+  debug("`alldata` event triggered.");
 };
 
 TemplateWriter.prototype.setVerboseOutput = function(isVerbose) {

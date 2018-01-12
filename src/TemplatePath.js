@@ -21,7 +21,11 @@ TemplatePath.localPath = function(...paths) {
 };
 
 TemplatePath.addLeadingDotSlash = function(path) {
-  if (path.indexOf("/") === 0 || path.indexOf(".") === 0) {
+  if (
+    path.indexOf("/") === 0 ||
+    path.indexOf("./") === 0 ||
+    path.indexOf("../") === 0
+  ) {
     return path;
   }
   return "./" + path;
