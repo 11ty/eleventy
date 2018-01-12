@@ -86,6 +86,27 @@ eleventy --formats=md,html,ejs
 eleventy --help
 ```
 
+### Debugging
+
+Having trouble? Want to see what Eleventy is doing behind the scenes? Use `DEBUG` mode. We’re taking advantage of the excellent `debug` package here—read more at [the debug documentation](https://www.npmjs.com/package/debug). Enable with the `DEBUG` env variable, either specific to eleventy (`DEBUG=Eleventy*`) or globally (`DEBUG=*`):
+
+```
+DEBUG=Eleventy* eleventy
+```
+
+This will tell you exactly what directories Eleventy is using for data, includes, input, and output. It’ll tell you what search globs it uses to find your templates and what templates it finds. If you’re having trouble, enable this.
+
+A small sample of the output:
+
+```
+Eleventy Directories:
+Eleventy Input: docs-src
+Eleventy Data: docs-src/_data
+Eleventy Includes: docs-src/_includes
+Eleventy Output: docs
+Eleventy Template Formats: njk
+```
+
 ### Example: Default options
 
 ```
