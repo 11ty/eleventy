@@ -74,13 +74,13 @@ test("addLocalData() doesn’t exist but doesn’t fail", async t => {
 test("Global Dir Directory", async t => {
   let dataObj = new TemplateData();
 
-  t.is(await dataObj.getGlobalDataGlob(), "_data/**/*.json");
+  t.is(await dataObj.getGlobalDataGlob(), "./_data/**/*.json");
 });
 
 test("Global Dir Directory with Constructor Path Arg", async t => {
   let dataObj = new TemplateData("./test/stubs/");
 
-  t.is(await dataObj.getGlobalDataGlob(), "test/stubs/_data/**/*.json");
+  t.is(await dataObj.getGlobalDataGlob(), "./test/stubs/_data/**/*.json");
 });
 
 test("getAllGlobalData() with other data files", async t => {

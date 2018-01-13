@@ -35,10 +35,6 @@ TemplatePath.stripLeadingDotSlash = function(dir) {
   return dir.replace(/^\.\//, "");
 };
 
-TemplatePath.cleanupPathForGlobby = function(path) {
-  return TemplatePath.addLeadingDotSlash(TemplatePath.normalize(path));
-};
-
 TemplatePath.stripPathFromDir = function(targetDir, prunedPath) {
   targetDir = TemplatePath.stripLeadingDotSlash(normalize(targetDir));
   prunedPath = TemplatePath.stripLeadingDotSlash(normalize(prunedPath));

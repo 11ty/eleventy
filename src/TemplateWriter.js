@@ -1,5 +1,4 @@
 const globby = require("globby");
-const normalize = require("normalize-path");
 const fs = require("fs-extra");
 const lodashCloneDeep = require("lodash.clonedeep");
 const parsePath = require("parse-filepath");
@@ -9,6 +8,7 @@ const TemplateRender = require("./TemplateRender");
 const EleventyError = require("./EleventyError");
 const Pagination = require("./Plugins/Pagination");
 const Collection = require("./TemplateCollection");
+const TemplateGlob = require("./TemplateGlob");
 const pkg = require("../package.json");
 const eleventyConfig = require("./EleventyConfig");
 const config = require("./Config");
@@ -31,15 +31,15 @@ function TemplateWriter(inputPath, outputDir, extensions, templateData) {
 
   // Input was a directory
   if (this.input === this.inputDir) {
-    this.rawFiles = this.templateExtensions.map(
-      function(extension) {
-        return TemplatePath.cleanupPathForGlobby(
-          this.inputDir + "/**/*." + extension
-        );
-      }.bind(this)
+    this.rawFiles = TemplateGlob.map(
+      this.templateExtensions.map(
+        function(extension) {
+          return this.inputDir + "/**/*." + extension;
+        }.bind(this)
+      )
     );
   } else {
-    this.rawFiles = [TemplatePath.cleanupPathForGlobby(inputPath)];
+    this.rawFiles = TemplateGlob.map([inputPath]);
   }
 
   this.watchedFiles = this.addIgnores(this.inputDir, this.rawFiles);
@@ -105,9 +105,7 @@ TemplateWriter.getFileIgnores = function(ignoreFile) {
         return line.length > 0 && line.charAt(0) !== "#";
       })
       .map(line => {
-        let path = TemplatePath.addLeadingDotSlash(
-          TemplatePath.normalize(dir, "/", line)
-        );
+        let path = TemplateGlob.normalizePath(dir, "/", line);
         debug(`${ignoreFile} ignoring: ${path}`);
         try {
           let stat = fs.statSync(path);
@@ -130,24 +128,18 @@ TemplateWriter.prototype.addIgnores = function(inputDir, files) {
   );
   files = files.concat(TemplateWriter.getFileIgnores(".gitignore"));
 
-  files = files.concat(
-    "!" + TemplatePath.addLeadingDotSlash(normalize(this.outputDir + "/**"))
-  );
+  files = files.concat(TemplateGlob.map("!" + this.outputDir + "/**"));
 
   return files;
 };
 
 TemplateWriter.prototype.addWritingIgnores = function(inputDir, files) {
   if (this.config.dir.includes) {
-    files = files.concat(
-      "!" + TemplatePath.addLeadingDotSlash(normalize(this.includesDir + "/**"))
-    );
+    files = files.concat(TemplateGlob.map("!" + this.includesDir + "/**"));
   }
 
   if (this.config.dir.data && this.config.dir.data !== ".") {
-    files = files.concat(
-      "!" + TemplatePath.addLeadingDotSlash(normalize(this.dataDir + "/**"))
-    );
+    files = files.concat(TemplateGlob.map("!" + this.dataDir + "/**"));
   }
 
   return files;

@@ -5,6 +5,7 @@ const parsePath = require("parse-filepath");
 const lodashset = require("lodash.set");
 const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
+const TemplateGlob = require("./TemplateGlob");
 const config = require("./Config");
 const debug = require("debug")("Eleventy:TemplateData");
 
@@ -49,12 +50,11 @@ TemplateData.prototype.getGlobalDataGlob = async function() {
     dir = this.inputDir;
   }
 
-  return (
-    TemplatePath.normalize(
-      dir,
-      "/",
-      this.config.dir.data !== "." ? this.config.dir.data : ""
-    ) + "/**/*.json"
+  return TemplateGlob.normalizePath(
+    dir,
+    "/",
+    this.config.dir.data !== "." ? this.config.dir.data : "",
+    "/**/*.json"
   );
 };
 
