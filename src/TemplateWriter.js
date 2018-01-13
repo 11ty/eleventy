@@ -33,11 +33,13 @@ function TemplateWriter(inputPath, outputDir, extensions, templateData) {
   if (this.input === this.inputDir) {
     this.rawFiles = this.templateExtensions.map(
       function(extension) {
-        return normalize(this.inputDir + "/**/*." + extension);
+        return TemplatePath.cleanupPathForGlobby(
+          this.inputDir + "/**/*." + extension
+        );
       }.bind(this)
     );
   } else {
-    this.rawFiles = [normalize(inputPath)];
+    this.rawFiles = [TemplatePath.cleanupPathForGlobby(inputPath)];
   }
 
   this.watchedFiles = this.addIgnores(this.inputDir, this.rawFiles);
