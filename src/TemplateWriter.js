@@ -95,11 +95,14 @@ TemplateWriter.getFileIgnores = function(ignoreFile) {
   if (ignoreContent) {
     ignores = ignoreContent
       .split("\n")
+      .map(line => {
+        return line.trim();
+      })
       .filter(line => {
-        return line.trim().length > 0;
+        // empty lines or comments get filtered out
+        return line.length > 0 && line.charAt(0) !== "#";
       })
       .map(line => {
-        line = line.trim();
         let path = TemplatePath.addLeadingDotSlash(
           TemplatePath.normalize(dir, "/", line)
         );
@@ -298,8 +301,10 @@ TemplateWriter.prototype.write = async function() {
   debug("Searching for:");
   debug(this.files);
   let paths = await this._getAllPaths();
-  debug("Found:");
-  debug(paths);
+  debug("Found:" + (!paths.length ? " no eligible tempates." : ""));
+  if (paths.length) {
+    debug(paths);
+  }
   let templatesMap = await this._getTemplatesMap(paths);
   this._populateCollection(templatesMap);
 

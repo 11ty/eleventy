@@ -3,6 +3,7 @@ const lodashMerge = require("lodash.merge");
 const TemplatePath = require("./TemplatePath");
 const mainRootConfig = require("../config.js");
 const eleventyConfig = require("./EleventyConfig");
+const debug = require("debug")("Eleventy:TemplateConfig");
 
 class TemplateConfig {
   constructor(rootConfig, projectConfigPath) {
@@ -23,6 +24,7 @@ class TemplateConfig {
   }
 
   mergeConfig(projectConfigPath) {
+    debug(`Merging config with ${projectConfigPath}`);
     let localConfig;
     let path = TemplatePath.normalize(
       TemplatePath.getWorkingDir() + "/" + projectConfigPath
@@ -45,6 +47,14 @@ class TemplateConfig {
     let overrides = ["templateFormats"];
     for (let key of overrides) {
       merged[key] = localConfig[key] || this.rootConfig[key];
+    }
+
+    for (let key in merged) {
+      let str = merged[key];
+      if (typeof merged[key] === "object") {
+        str = JSON.stringify(merged[key]);
+      }
+      debug(`Config ${key} = ${str}`);
     }
 
     return merged;

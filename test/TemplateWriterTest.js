@@ -65,6 +65,7 @@ test(".eleventyignore parsing", t => {
   let ignores = new TemplateWriter.getFileIgnores(
     "./test/stubs/.eleventyignore"
   );
+  t.is(ignores.length, 2);
   t.is(ignores[0], "!./test/stubs/ignoredFolder/**");
   t.is(ignores[1], "!./test/stubs/ignoredFolder/ignored.md");
 });
