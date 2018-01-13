@@ -181,6 +181,11 @@ Eleventy.prototype.write = async function() {
   try {
     let ret = await this.writer.write();
     this.finish();
+
+    debug(`
+Getting frustrated? Have a suggestion/feature request/feedback?
+I want to hear it! Open an issue: https://github.com/11ty/eleventy/issues/new`);
+
     return ret;
   } catch (e) {
     console.log("\n" + chalk.red("Problem writing eleventy templates: "));
