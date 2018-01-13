@@ -49,13 +49,7 @@ class TemplateConfig {
       merged[key] = localConfig[key] || this.rootConfig[key];
     }
 
-    for (let key in merged) {
-      let str = merged[key];
-      if (typeof merged[key] === "object") {
-        str = JSON.stringify(merged[key]);
-      }
-      debug(`Config ${key} = ${str}`);
-    }
+    debug("Current configuration: %o", merged);
 
     return merged;
   }
