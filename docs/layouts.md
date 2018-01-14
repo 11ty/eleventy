@@ -10,7 +10,7 @@ title: My Rad Blog
 # My Rad Markdown Blog Post
 ```
 
-This will look for a `mylayout.njk` Nunjucks template file in your `_includes` folder. You can use any template type in your layout—it doesn’t have to match the template type of the content. An `ejs` template can use a `njk` layout, for example.
+This will look for a `mylayout.njk` Nunjucks template file in your `_includes` folder (`_includes/mylayout.njk`). You can use any template type in your layout—it doesn’t have to match the template type of the content. An `ejs` template can use a `njk` layout, for example.
 
 If you omit the file extension (`layout: mylayout`), eleventy will cycle through all of the supported template formats (`mylayout.*`) to look for a matching layout file.
 
@@ -34,7 +34,7 @@ Note that the layout template will populate the `content` data with the child te
 
 Layouts can contain their own front matter data! It’ll be merged with the content’s data on render (content data takes precedence, if conflicting keys arise).
 
-All of this would output the following HTML content:
+All of this will output the following HTML content:
 
 ```
 <!doctype html>
@@ -49,6 +49,18 @@ All of this would output the following HTML content:
   </body>
 </html>
 ```
+
+## Layouts in a Subdirectory
+
+As of Eleventy `v0.2.7`, layouts can be a full path inside of the `_includes` folder, like so:
+
+```
+---
+layout: layouts/base.njk
+---
+```
+
+This will look for `_includes/layouts/base.njk`.
 
 ## Prevent double-escaping in layouts
 

@@ -8,9 +8,10 @@ const { DateTime } = require("luxon");
 const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
 const TemplatePermalink = require("./TemplatePermalink");
-const Layout = require("./TemplateLayout");
+const TemplateLayout = require("./TemplateLayout");
 const Eleventy = require("./Eleventy");
 const config = require("./Config");
+const debug = require("debug")("Eleventy:Template");
 
 class Template {
   constructor(path, inputDir, outputDir, templateData) {
@@ -118,8 +119,8 @@ class Template {
     return this.frontMatter.content;
   }
 
-  getLayoutTemplate(name) {
-    let path = new Layout(name, this.layoutsDir).getFullPath();
+  getLayoutTemplate(layoutPath) {
+    let path = new TemplateLayout(layoutPath, this.layoutsDir).getFullPath();
     return new Template(path, this.inputDir, this.outputDir);
   }
 
@@ -205,11 +206,12 @@ class Template {
   }
 
   async renderLayout(tmpl, tmplData) {
-    let layoutName = tmplData[this.config.keys.layout];
+    let layoutPath = tmplData[this.config.keys.layout];
+    debug(`Template ${this.inputPath} is using layout: ${layoutPath}`);
     // TODO make layout key to be available to templates (without it causing issues with merge below)
     delete tmplData[this.config.keys.layout];
 
-    let layout = this.getLayoutTemplate(layoutName);
+    let layout = this.getLayoutTemplate(layoutPath);
     let layoutData = await layout.getData(tmplData);
 
     // console.log( await this.renderContent( tmpl.getPreRender(), tmplData ) );
