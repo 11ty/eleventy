@@ -87,7 +87,7 @@ test(".eleventyignore files", async t => {
   );
 });
 
-test("_getTemplatesMap", async t => {
+test("_createTemplateMap", async t => {
   let tw = new TemplateWriter(
     "./test/stubs/writeTest",
     "./test/stubs/_writeTestSite",
@@ -97,22 +97,21 @@ test("_getTemplatesMap", async t => {
   let paths = await tw._getAllPaths();
   t.true(paths.length > 0);
 
-  let templatesMap = await tw._getTemplatesMap(paths);
-  t.true(templatesMap.length > 0);
-  t.truthy(templatesMap[0].template);
-  t.truthy(templatesMap[0].data);
+  let templateMap = await tw._createTemplateMap(paths);
+  let map = templateMap.getMap();
+  t.true(map.length > 0);
+  t.truthy(map[0].template);
+  t.truthy(map[0].data);
 });
 
-test("_getCollectionsData", async t => {
+test("getCollectionsDataForTemplate", async t => {
   let tw = new TemplateWriter("./test/stubs/collection", "./test/stubs/_site", [
     "md"
   ]);
 
   let paths = await tw._getAllPaths();
-  let templatesMap = await tw._getTemplatesMap(paths);
-  tw._populateCollection(templatesMap);
-
-  let collectionsData = tw._getCollectionsData();
+  let templateMap = await tw._createTemplateMap(paths);
+  let collectionsData = await templateMap.getCollectionsDataForTemplate();
   t.is(collectionsData.post.length, 2);
   t.is(collectionsData.cat.length, 2);
   t.is(collectionsData.dog.length, 1);
@@ -124,23 +123,10 @@ test("_getAllTags", async t => {
   ]);
 
   let paths = await tw._getAllPaths();
-  let templatesMap = await tw._getTemplatesMap(paths);
-  let tags = tw._getAllTagsFromMap(templatesMap);
+  let templateMap = await tw._createTemplateMap(paths);
+  let tags = templateMap.getAllTags();
 
   t.deepEqual(tags.sort(), ["cat", "dog", "post"].sort());
-});
-
-test("populating the collection twice should clear the previous values (--watch was making it cumulative)", async t => {
-  let tw = new TemplateWriter("./test/stubs/collection", "./test/stubs/_site", [
-    "md"
-  ]);
-
-  let paths = await tw._getAllPaths();
-  let templatesMap = await tw._getTemplatesMap(paths);
-  tw._populateCollection(templatesMap);
-  tw._populateCollection(templatesMap);
-
-  t.is(tw._getCollectionsData().post.length, 2);
 });
 
 test("Collection of files sorted by date", async t => {
@@ -149,10 +135,8 @@ test("Collection of files sorted by date", async t => {
   ]);
 
   let paths = await tw._getAllPaths();
-  let templatesMap = await tw._getTemplatesMap(paths);
-  tw._populateCollection(templatesMap);
-
-  let collectionsData = tw._getCollectionsData();
+  let templateMap = await tw._createTemplateMap(paths);
+  let collectionsData = await templateMap.getCollectionsDataForTemplate();
   t.is(collectionsData.dateTestTag.length, 5);
 });
 
@@ -163,20 +147,18 @@ test("_getCollectionsData with custom collection (ascending)", async t => {
     ["md"]
   );
 
-  let paths = await tw._getAllPaths();
-  let templatesMap = await tw._getTemplatesMap(paths);
-  tw._populateCollection(templatesMap);
-
-  eleventyConfig.addCollection("customPosts", function(collection) {
+  eleventyConfig.addCollection("customPostsAsc", function(collection) {
     return collection.getFilteredByTag("post").sort(function(a, b) {
       return a.date - b.date;
     });
   });
 
-  let collectionsData = tw._getCollectionsData();
-  t.is(collectionsData.customPosts.length, 2);
-  t.is(parsePath(collectionsData.customPosts[0].inputPath).base, "test1.md");
-  t.is(parsePath(collectionsData.customPosts[1].inputPath).base, "test2.md");
+  let paths = await tw._getAllPaths();
+  let templateMap = await tw._createTemplateMap(paths);
+  let collectionsData = await templateMap.getCollectionsDataForTemplate();
+  t.is(collectionsData.customPostsAsc.length, 2);
+  t.is(parsePath(collectionsData.customPostsAsc[0].inputPath).base, "test1.md");
+  t.is(parsePath(collectionsData.customPostsAsc[1].inputPath).base, "test2.md");
 });
 
 test("_getCollectionsData with custom collection (descending)", async t => {
@@ -186,17 +168,15 @@ test("_getCollectionsData with custom collection (descending)", async t => {
     ["md"]
   );
 
-  let paths = await tw._getAllPaths();
-  let templatesMap = await tw._getTemplatesMap(paths);
-  tw._populateCollection(templatesMap);
-
   eleventyConfig.addCollection("customPosts", function(collection) {
     return collection.getFilteredByTag("post").sort(function(a, b) {
       return b.date - a.date;
     });
   });
 
-  let collectionsData = tw._getCollectionsData();
+  let paths = await tw._getAllPaths();
+  let templateMap = await tw._createTemplateMap(paths);
+  let collectionsData = await templateMap.getCollectionsDataForTemplate();
   t.is(collectionsData.customPosts.length, 2);
   t.is(parsePath(collectionsData.customPosts[0].inputPath).base, "test2.md");
   t.is(parsePath(collectionsData.customPosts[1].inputPath).base, "test1.md");
@@ -209,10 +189,6 @@ test("_getCollectionsData with custom collection (filter only to markdown input)
     ["md"]
   );
 
-  let paths = await tw._getAllPaths();
-  let templatesMap = await tw._getTemplatesMap(paths);
-  tw._populateCollection(templatesMap);
-
   eleventyConfig.addCollection("onlyMarkdown", function(collection) {
     return collection.getAllSorted().filter(function(item) {
       let extension = item.inputPath.split(".").pop();
@@ -220,7 +196,9 @@ test("_getCollectionsData with custom collection (filter only to markdown input)
     });
   });
 
-  let collectionsData = tw._getCollectionsData();
+  let paths = await tw._getAllPaths();
+  let templateMap = await tw._createTemplateMap(paths);
+  let collectionsData = await templateMap.getCollectionsDataForTemplate();
   t.is(collectionsData.onlyMarkdown.length, 2);
   t.is(parsePath(collectionsData.onlyMarkdown[0].inputPath).base, "test1.md");
   t.is(parsePath(collectionsData.onlyMarkdown[1].inputPath).base, "test2.md");

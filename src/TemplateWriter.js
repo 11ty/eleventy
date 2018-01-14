@@ -1,13 +1,13 @@
 const globby = require("globby");
 const fs = require("fs-extra");
-const lodashCloneDeep = require("lodash.clonedeep");
 const parsePath = require("parse-filepath");
 const Template = require("./Template");
 const TemplatePath = require("./TemplatePath");
 const TemplateRender = require("./TemplateRender");
+const TemplateMap = require("./TemplateMap");
 const EleventyError = require("./EleventyError");
 const Pagination = require("./Plugins/Pagination");
-const Collection = require("./TemplateCollection");
+const TemplateCollection = require("./TemplateCollection");
 const TemplateGlob = require("./TemplateGlob");
 const pkg = require("../package.json");
 const eleventyConfig = require("./EleventyConfig");
@@ -44,6 +44,8 @@ function TemplateWriter(inputPath, outputDir, extensions, templateData) {
 
   this.watchedFiles = this.addIgnores(this.inputDir, this.rawFiles);
   this.files = this.addWritingIgnores(this.inputDir, this.watchedFiles);
+
+  this.templateMap;
 }
 
 TemplateWriter.prototype.getIncludesDir = function() {
@@ -150,25 +152,6 @@ TemplateWriter.prototype._getAllPaths = async function() {
   return globby(this.files); //, { gitignore: true });
 };
 
-TemplateWriter.prototype._populateCollection = function(templateMaps) {
-  this.collection = new Collection();
-
-  for (let map of templateMaps) {
-    this.collection.add(map);
-  }
-};
-
-TemplateWriter.prototype._getTemplatesMap = async function(paths) {
-  let templates = [];
-  for (let path of paths) {
-    let tmpl = this._getTemplate(path);
-    let map = await tmpl.getMapped();
-    templates.push(map);
-    debug(`Template for ${path} added to map.`);
-  }
-  return templates;
-};
-
 TemplateWriter.prototype._getTemplate = function(path) {
   let tmpl = new Template(
     path,
@@ -207,68 +190,15 @@ TemplateWriter.prototype._getTemplate = function(path) {
   return tmpl;
 };
 
-TemplateWriter.prototype._getAllTagsFromMap = function(templatesMap) {
-  let allTags = {};
-  for (let map of templatesMap) {
-    let tags = map.data.tags;
-    if (Array.isArray(tags)) {
-      for (let tag of tags) {
-        allTags[tag] = true;
-      }
-    } else if (tags) {
-      allTags[tags] = true;
-    }
-  }
-  return Object.keys(allTags);
-};
-
-TemplateWriter.prototype._createTemplateMapCopy = function(templatesMap) {
-  let copy = [];
-  for (let map of templatesMap) {
-    let mapCopy = lodashCloneDeep(map);
-
-    // For simplification, maybe re-add this later?
-    delete mapCopy.template;
-    // Circular reference
-    delete mapCopy.data.collections;
-
-    copy.push(mapCopy);
+TemplateWriter.prototype._createTemplateMap = async function(paths) {
+  this.templateMap = new TemplateMap();
+  for (let path of paths) {
+    await this.templateMap.add(this._getTemplate(path));
+    debug(`Template for ${path} added to map.`);
   }
 
-  return copy;
-};
-
-TemplateWriter.prototype._getCollectionsData = function(activeTemplate) {
-  let collections = {};
-  collections.all = this._createTemplateMapCopy(
-    this.collection.getAllSorted(activeTemplate)
-  );
-  debug(`Collection: collections.all has ${collections.all.length} items.`);
-
-  let tags = this._getAllTagsFromMap(collections.all);
-  for (let tag of tags) {
-    collections[tag] = this._createTemplateMapCopy(
-      this.collection.getFilteredByTag(tag, activeTemplate)
-    );
-    debug(
-      `Collection: collections.${tag} has ${collections[tag].length} items.`
-    );
-  }
-
-  let configCollections = eleventyConfig.getCollections();
-  for (let name in configCollections) {
-    collections[name] = this._createTemplateMapCopy(
-      configCollections[name](this.collection)
-    );
-    debug(
-      `Collection: collections.${name} has ${collections[name].length} items.`
-    );
-  }
-
-  // console.log( "collections>>>>", collections );
-  // console.log( ">>>>> end collections" );
-
-  return collections;
+  this.templateMap.cache();
+  return this.templateMap;
 };
 
 TemplateWriter.prototype._writeTemplate = async function(
@@ -277,7 +207,9 @@ TemplateWriter.prototype._writeTemplate = async function(
   data
 ) {
   try {
-    data.collections = this._getCollectionsData(tmpl);
+    data.collections = await this.templateMap.getCollectionsDataForTemplate(
+      tmpl
+    );
 
     await tmpl.writeWithData(outputPath, data);
   } catch (e) {
@@ -292,23 +224,19 @@ TemplateWriter.prototype._writeTemplate = async function(
 };
 
 TemplateWriter.prototype.write = async function() {
-  debug("Searching for:");
-  debug(this.files);
+  debug("Searching for: %O", this.files);
   let paths = await this._getAllPaths();
-  debug("Found:" + (!paths.length ? " no eligible tempates." : ""));
-  if (paths.length) {
-    debug(paths);
-  }
-  let templatesMap = await this._getTemplatesMap(paths);
-  this._populateCollection(templatesMap);
+  debug("Found: %o", paths);
 
-  for (let template of templatesMap) {
-    await this._writeTemplate(
-      template.template,
-      template.outputPath,
-      template.data
-    );
-    debug(`Wrote template ${template.outputPath} from ${template.inputPath}`);
+  await this._createTemplateMap(paths);
+
+  for (let map of this.templateMap.getMap()) {
+    // START HERE, we’re trying to add .content to our templateMap
+    // map.data.collections = this.collectionsData;
+    // map.content = map.template.render(map.data);
+
+    await this._writeTemplate(map.template, map.outputPath, map.data);
+    debug(`Wrote template ${map.outputPath} from ${map.inputPath}`);
   }
 
   eleventyConfig.emit("alldata", this.collection.getAllSorted());

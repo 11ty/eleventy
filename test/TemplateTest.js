@@ -353,6 +353,7 @@ test("Clone the template", async t => {
 
   t.is(await tmpl.getOutputPath(), "./dist/default/index.html");
   t.is(await cloned.getOutputPath(), "./dist/default/index.html");
+  t.is(await tmpl.isEqual(cloned), true);
 });
 
 test("Permalink with variables!", async t => {

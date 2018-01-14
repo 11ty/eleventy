@@ -22,6 +22,12 @@ class EleventyConfig {
   }
 
   addCollection(name, callback) {
+    if (this.collections[name]) {
+      throw new Error(
+        `config.addCollection(${name}) already exists. Try a different name for your collection.`
+      );
+    }
+
     this.collections[name] = callback;
   }
 }

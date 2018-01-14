@@ -77,20 +77,17 @@ test("getFilteredByTag (added out of order, sorted)", async t => {
   await c.addTemplate(tmpl2);
   await c.addTemplate(tmpl1);
 
-  let posts = c.getFilteredByTag("post", tmpl3);
+  let posts = c.getFilteredByTag("post");
   t.is(posts.length, 2);
   t.deepEqual(posts[0].template, tmpl1);
   t.deepEqual(posts[1].template, tmpl3);
-  t.true(posts[1].active);
 
-  let cats = c.getFilteredByTag("cat", tmpl1);
+  let cats = c.getFilteredByTag("cat");
   t.truthy(cats.length);
   t.is(cats.length, 2);
   t.deepEqual(cats[0].template, tmpl2);
-  t.false(cats[0].active);
 
-  let dogs = c.getFilteredByTag("dog", tmpl2);
+  let dogs = c.getFilteredByTag("dog");
   t.truthy(dogs.length);
   t.deepEqual(dogs[0].template, tmpl1);
-  t.false(dogs[0].active);
 });

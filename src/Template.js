@@ -360,6 +360,13 @@ class Template {
     return date;
   }
 
+  async isEqual(compareTo) {
+    return (
+      compareTo.getInputPath() === this.getInputPath() &&
+      (await compareTo.getOutputPath()) === (await this.getOutputPath())
+    );
+  }
+
   async getMapped() {
     let outputPath = await this.getOutputPath();
     let url = await this.getOutputLink();
@@ -372,6 +379,7 @@ class Template {
       data: data
     };
 
+    // console.log( await this.render(data) );
     map.date = await this.getMappedDate(data);
 
     return map;

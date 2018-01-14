@@ -10,36 +10,25 @@ class TemplateCollection extends Sortable {
     super.add(templateMap);
   }
 
-  _assignActiveTemplate(items, activeTemplate) {
-    if (activeTemplate) {
-      return items.map(function(templateMap) {
-        templateMap.active = templateMap.template === activeTemplate;
-        return templateMap;
-      });
-    } else {
-      return items;
-    }
-  }
-
   getAll() {
     return this.items;
   }
 
-  getAllSorted(activeTemplate) {
-    return this._assignActiveTemplate(
-      this.sort(Sortable.sortFunctionDateInputPath),
-      activeTemplate
-    );
+  getAllSorted() {
+    return this.sort(Sortable.sortFunctionDateInputPath);
   }
 
-  getFilteredByTag(tagName, activeTemplate) {
-    return this.getAllSorted(activeTemplate).filter(function(item) {
-      return (
-        !tagName ||
-        ((Array.isArray(item.data.tags) ||
-          typeof item.data.tags === "string") &&
-          item.data.tags.indexOf(tagName) > -1)
-      );
+  getFilteredByTag(tagName) {
+    return this.getAllSorted().filter(function(item) {
+      if (!tagName) {
+        return true;
+      } else if (
+        Array.isArray(item.data.tags) ||
+        typeof item.data.tags === "string"
+      ) {
+        return item.data.tags.indexOf(tagName) > -1;
+      }
+      return false;
     });
   }
 }
