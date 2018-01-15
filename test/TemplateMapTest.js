@@ -33,16 +33,6 @@ test("populating the collection twice should clear the previous values (--watch 
   t.is(tm.getMap().length, 2);
 });
 
-test("Active template flags are set properly by `assignActiveTemplate`", async t => {
-  let tm = new TemplateMap();
-  await tm.add(tmpl1);
-  await tm.add(tmpl2);
-  let collectionsData = await tm.getCollectionsDataForTemplate(tmpl1);
-  t.is(collectionsData.all.length, 2);
-  t.true(collectionsData.all[0].active);
-  t.false(collectionsData.all[1].active);
-});
-
 test("TemplateMap adds collections data and has templateContent values", async t => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);

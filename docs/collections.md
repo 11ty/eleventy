@@ -23,6 +23,18 @@ This will place this `mypost.md` into the `post` collection with all other piece
 </ul>
 ```
 
+### Example: Navigation Links with an `active` class added for on the current page
+
+Comapre the `post.url` and special Eleventy-provided `page.url` variable to find the current page. Building on the previous example:
+
+```
+<ul>
+{%- for post in collections.post -%}
+  <li{% if page.url == post.url %} class="active"{% endif %}>{{ post.data.title }}</li>
+{%- endfor -%}
+</ul>
+```
+
 ## Tag Syntax
 
 You can use a single tag, as in the above example OR you can use any number of tags for the content, using YAML syntax for a list.

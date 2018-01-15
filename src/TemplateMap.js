@@ -35,6 +35,7 @@ class TemplateMap {
   getMapTemplateIndex(item) {
     let inputPath = item.inputPath;
     for (let j = 0, k = this.map.length; j < k; j++) {
+      // inputPath should be unique (even with pagination?)
       if (this.map[j].inputPath === inputPath) {
         return j;
       }
@@ -129,23 +130,10 @@ class TemplateMap {
     }
   }
 
-  async assignActiveTemplate(activeTemplate) {
-    if (activeTemplate) {
-      for (let collectionName in this.collectionsData) {
-        for (let item of this.collectionsData[collectionName]) {
-          // Assign active keys for all templates (both true and false)
-          item.active = await item.template.isEqual(activeTemplate);
-        }
-      }
-    }
-  }
-
   async getCollectionsDataForTemplate(template) {
     if (!this.collectionsData) {
       await this.cache();
     }
-
-    await this.assignActiveTemplate(template);
 
     return this.collectionsData;
   }

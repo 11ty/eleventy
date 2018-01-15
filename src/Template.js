@@ -210,8 +210,24 @@ class Template {
     return Object.assign({}, data, mergedLayoutData, mergedLocalData);
   }
 
+  async addPageUrlToData(data) {
+    if ("page" in data && "url" in data.page) {
+      debug(
+        "Warning: data.page.url is in use by the application will be overwritten: %o",
+        data.page.url
+      );
+    }
+    if (!("page" in data)) {
+      data.page = {};
+    }
+    data.page.url = await this.getOutputHref();
+  }
+
+  // getData (with renderData and page.url added)
   async getRenderedData() {
     let data = await this.getData();
+    await this.addPageUrlToData(data);
+
     if (data.renderData) {
       data.renderData = await this.mapDataAsRenderedTemplates(
         data.renderData,
@@ -432,7 +448,6 @@ class Template {
       data: data
     };
 
-    // console.log( await this.render(data) );
     map.date = await this.getMappedDate(data);
 
     return map;

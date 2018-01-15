@@ -156,6 +156,7 @@ This allows you to assign data values right in the template itself. Here are a f
 * `pkg`: The local project’s `package.json` values.
 * `pagination`: (When enabled in front matter) [Read more about Pagination](docs/pagination.md).
 * `collections`: Lists of all of your content, grouped by tags. [Read more about Collections](docs/collections.md)
+* `page`: Has information about the current page. Currently holds: `{ url: "/current/page/url.html" }`. Useful for finding the current page in a collection. [Read more about Collections](docs/collections.md) (look at _Example: Navigation Links with an `active` class added for on the current page_).
 
 ### Data Files
 

@@ -571,3 +571,14 @@ test("getMappedDate (created date)", async t => {
   t.true(date instanceof Date);
   t.truthy(date.getTime());
 });
+
+test("getRenderedData() has page.url", async t => {
+  let tmpl = new Template(
+    "./test/stubs/template.ejs",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getRenderedData();
+
+  t.truthy(data.page.url);
+});

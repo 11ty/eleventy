@@ -3,7 +3,6 @@ const fs = require("fs-extra");
 const parsePath = require("parse-filepath");
 const Template = require("./Template");
 const TemplatePath = require("./TemplatePath");
-const TemplateRender = require("./TemplateRender");
 const TemplateMap = require("./TemplateMap");
 const EleventyError = require("./EleventyError");
 const Pagination = require("./Plugins/Pagination");
@@ -199,11 +198,11 @@ TemplateWriter.prototype._createTemplateMap = async function(paths) {
   return this.templateMap;
 };
 
-TemplateWriter.prototype._writeTemplate = async function(
-  tmpl,
-  outputPath,
-  data
-) {
+TemplateWriter.prototype._writeTemplate = async function(mapEntry) {
+  let outputPath = mapEntry.outputPath;
+  let data = mapEntry.data;
+  let tmpl = mapEntry.template;
+  console.log(mapEntry.data.page.url);
   try {
     await tmpl.writeWithData(outputPath, data);
   } catch (e) {
@@ -225,11 +224,7 @@ TemplateWriter.prototype.write = async function() {
   await this._createTemplateMap(paths);
 
   for (let mapEntry of this.templateMap.getMap()) {
-    await this._writeTemplate(
-      mapEntry.template,
-      mapEntry.outputPath,
-      mapEntry.data
-    );
+    await this._writeTemplate(mapEntry);
   }
 
   eleventyConfig.emit(
