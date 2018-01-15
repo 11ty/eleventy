@@ -1,33 +1,33 @@
 {
   "total": {
-    "lines": { "total": 857, "covered": 733, "skipped": 0, "pct": 85.53 },
-    "statements": { "total": 857, "covered": 733, "skipped": 0, "pct": 85.53 },
-    "functions": { "total": 201, "covered": 160, "skipped": 0, "pct": 79.6 },
-    "branches": { "total": 225, "covered": 180, "skipped": 0, "pct": 80 }
+    "lines": { "total": 1007, "covered": 874, "skipped": 0, "pct": 86.79 },
+    "statements": { "total": 1007, "covered": 874, "skipped": 0, "pct": 86.79 },
+    "functions": { "total": 230, "covered": 185, "skipped": 0, "pct": 80.43 },
+    "branches": { "total": 269, "covered": 222, "skipped": 0, "pct": 82.53 }
   },
   "/Users/zachleat/Code/eleventy/config.js": {
-    "lines": { "total": 3, "covered": 3, "skipped": 0, "pct": 100 },
-    "functions": { "total": 1, "covered": 1, "skipped": 0, "pct": 100 },
-    "statements": { "total": 3, "covered": 3, "skipped": 0, "pct": 100 },
+    "lines": { "total": 7, "covered": 4, "skipped": 0, "pct": 57.14 },
+    "functions": { "total": 4, "covered": 1, "skipped": 0, "pct": 25 },
+    "statements": { "total": 7, "covered": 4, "skipped": 0, "pct": 57.14 },
     "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
   },
   "/Users/zachleat/Code/eleventy/src/Config.js": {
-    "lines": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 },
+    "lines": { "total": 4, "covered": 4, "skipped": 0, "pct": 100 },
     "functions": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 },
-    "statements": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 },
+    "statements": { "total": 4, "covered": 4, "skipped": 0, "pct": 100 },
     "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
   },
   "/Users/zachleat/Code/eleventy/src/Eleventy.js": {
-    "lines": { "total": 86, "covered": 56, "skipped": 0, "pct": 65.12 },
-    "functions": { "total": 13, "covered": 6, "skipped": 0, "pct": 46.15 },
-    "statements": { "total": 86, "covered": 56, "skipped": 0, "pct": 65.12 },
-    "branches": { "total": 18, "covered": 8, "skipped": 0, "pct": 44.44 }
+    "lines": { "total": 114, "covered": 72, "skipped": 0, "pct": 63.16 },
+    "functions": { "total": 17, "covered": 7, "skipped": 0, "pct": 41.18 },
+    "statements": { "total": 114, "covered": 72, "skipped": 0, "pct": 63.16 },
+    "branches": { "total": 22, "covered": 10, "skipped": 0, "pct": 45.45 }
   },
   "/Users/zachleat/Code/eleventy/src/EleventyConfig.js": {
-    "lines": { "total": 11, "covered": 11, "skipped": 0, "pct": 100 },
-    "functions": { "total": 5, "covered": 5, "skipped": 0, "pct": 100 },
-    "statements": { "total": 11, "covered": 11, "skipped": 0, "pct": 100 },
-    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
+    "lines": { "total": 15, "covered": 14, "skipped": 0, "pct": 93.33 },
+    "functions": { "total": 6, "covered": 5, "skipped": 0, "pct": 83.33 },
+    "statements": { "total": 15, "covered": 14, "skipped": 0, "pct": 93.33 },
+    "branches": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 }
   },
   "/Users/zachleat/Code/eleventy/src/EleventyError.js": {
     "lines": { "total": 13, "covered": 1, "skipped": 0, "pct": 7.69 },
@@ -36,58 +36,70 @@
     "branches": { "total": 2, "covered": 0, "skipped": 0, "pct": 0 }
   },
   "/Users/zachleat/Code/eleventy/src/Template.js": {
-    "lines": { "total": 157, "covered": 123, "skipped": 0, "pct": 78.34 },
-    "functions": { "total": 34, "covered": 25, "skipped": 0, "pct": 73.53 },
-    "statements": { "total": 157, "covered": 123, "skipped": 0, "pct": 78.34 },
-    "branches": { "total": 55, "covered": 38, "skipped": 0, "pct": 69.09 }
+    "lines": { "total": 180, "covered": 154, "skipped": 0, "pct": 85.56 },
+    "functions": { "total": 39, "covered": 32, "skipped": 0, "pct": 82.05 },
+    "statements": { "total": 180, "covered": 154, "skipped": 0, "pct": 85.56 },
+    "branches": { "total": 66, "covered": 52, "skipped": 0, "pct": 78.79 }
   },
   "/Users/zachleat/Code/eleventy/src/TemplateCollection.js": {
-    "lines": { "total": 14, "covered": 13, "skipped": 0, "pct": 92.86 },
-    "functions": { "total": 8, "covered": 7, "skipped": 0, "pct": 87.5 },
-    "statements": { "total": 14, "covered": 13, "skipped": 0, "pct": 92.86 },
-    "branches": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 }
+    "lines": { "total": 13, "covered": 11, "skipped": 0, "pct": 84.62 },
+    "functions": { "total": 6, "covered": 5, "skipped": 0, "pct": 83.33 },
+    "statements": { "total": 13, "covered": 11, "skipped": 0, "pct": 84.62 },
+    "branches": { "total": 6, "covered": 5, "skipped": 0, "pct": 83.33 }
   },
   "/Users/zachleat/Code/eleventy/src/TemplateConfig.js": {
-    "lines": { "total": 25, "covered": 25, "skipped": 0, "pct": 100 },
-    "functions": { "total": 4, "covered": 4, "skipped": 0, "pct": 100 },
-    "statements": { "total": 25, "covered": 25, "skipped": 0, "pct": 100 },
-    "branches": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 }
+    "lines": { "total": 26, "covered": 24, "skipped": 0, "pct": 92.31 },
+    "functions": { "total": 4, "covered": 3, "skipped": 0, "pct": 75 },
+    "statements": { "total": 26, "covered": 24, "skipped": 0, "pct": 92.31 },
+    "branches": { "total": 8, "covered": 8, "skipped": 0, "pct": 100 }
   },
   "/Users/zachleat/Code/eleventy/src/TemplateData.js": {
-    "lines": { "total": 64, "covered": 63, "skipped": 0, "pct": 98.44 },
-    "functions": { "total": 12, "covered": 12, "skipped": 0, "pct": 100 },
-    "statements": { "total": 64, "covered": 63, "skipped": 0, "pct": 98.44 },
+    "lines": { "total": 70, "covered": 69, "skipped": 0, "pct": 98.57 },
+    "functions": { "total": 13, "covered": 13, "skipped": 0, "pct": 100 },
+    "statements": { "total": 70, "covered": 69, "skipped": 0, "pct": 98.57 },
     "branches": { "total": 12, "covered": 9, "skipped": 0, "pct": 75 }
   },
+  "/Users/zachleat/Code/eleventy/src/TemplateGlob.js": {
+    "lines": { "total": 16, "covered": 15, "skipped": 0, "pct": 93.75 },
+    "functions": { "total": 4, "covered": 4, "skipped": 0, "pct": 100 },
+    "statements": { "total": 16, "covered": 15, "skipped": 0, "pct": 93.75 },
+    "branches": { "total": 8, "covered": 7, "skipped": 0, "pct": 87.5 }
+  },
   "/Users/zachleat/Code/eleventy/src/TemplateLayout.js": {
-    "lines": { "total": 23, "covered": 22, "skipped": 0, "pct": 95.65 },
+    "lines": { "total": 24, "covered": 23, "skipped": 0, "pct": 95.83 },
     "functions": { "total": 5, "covered": 5, "skipped": 0, "pct": 100 },
-    "statements": { "total": 23, "covered": 22, "skipped": 0, "pct": 95.65 },
+    "statements": { "total": 24, "covered": 23, "skipped": 0, "pct": 95.83 },
     "branches": { "total": 10, "covered": 9, "skipped": 0, "pct": 90 }
+  },
+  "/Users/zachleat/Code/eleventy/src/TemplateMap.js": {
+    "lines": { "total": 68, "covered": 66, "skipped": 0, "pct": 97.06 },
+    "functions": { "total": 13, "covered": 12, "skipped": 0, "pct": 92.31 },
+    "statements": { "total": 68, "covered": 66, "skipped": 0, "pct": 97.06 },
+    "branches": { "total": 12, "covered": 11, "skipped": 0, "pct": 91.67 }
   },
   "/Users/zachleat/Code/eleventy/src/TemplatePath.js": {
     "lines": { "total": 23, "covered": 23, "skipped": 0, "pct": 100 },
     "functions": { "total": 8, "covered": 7, "skipped": 0, "pct": 87.5 },
     "statements": { "total": 23, "covered": 23, "skipped": 0, "pct": 100 },
-    "branches": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 }
+    "branches": { "total": 7, "covered": 7, "skipped": 0, "pct": 100 }
   },
   "/Users/zachleat/Code/eleventy/src/TemplatePermalink.js": {
-    "lines": { "total": 22, "covered": 22, "skipped": 0, "pct": 100 },
-    "functions": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 },
-    "statements": { "total": 22, "covered": 22, "skipped": 0, "pct": 100 },
-    "branches": { "total": 14, "covered": 14, "skipped": 0, "pct": 100 }
+    "lines": { "total": 31, "covered": 31, "skipped": 0, "pct": 100 },
+    "functions": { "total": 7, "covered": 7, "skipped": 0, "pct": 100 },
+    "statements": { "total": 31, "covered": 31, "skipped": 0, "pct": 100 },
+    "branches": { "total": 18, "covered": 18, "skipped": 0, "pct": 100 }
   },
   "/Users/zachleat/Code/eleventy/src/TemplateRender.js": {
-    "lines": { "total": 33, "covered": 32, "skipped": 0, "pct": 96.97 },
+    "lines": { "total": 36, "covered": 34, "skipped": 0, "pct": 94.44 },
     "functions": { "total": 9, "covered": 8, "skipped": 0, "pct": 88.89 },
-    "statements": { "total": 33, "covered": 32, "skipped": 0, "pct": 96.97 },
-    "branches": { "total": 12, "covered": 11, "skipped": 0, "pct": 91.67 }
+    "statements": { "total": 36, "covered": 34, "skipped": 0, "pct": 94.44 },
+    "branches": { "total": 14, "covered": 12, "skipped": 0, "pct": 85.71 }
   },
   "/Users/zachleat/Code/eleventy/src/TemplateWriter.js": {
-    "lines": { "total": 141, "covered": 115, "skipped": 0, "pct": 81.56 },
-    "functions": { "total": 24, "covered": 16, "skipped": 0, "pct": 66.67 },
-    "statements": { "total": 141, "covered": 115, "skipped": 0, "pct": 81.56 },
-    "branches": { "total": 26, "covered": 19, "skipped": 0, "pct": 73.08 }
+    "lines": { "total": 124, "covered": 100, "skipped": 0, "pct": 80.65 },
+    "functions": { "total": 23, "covered": 15, "skipped": 0, "pct": 65.22 },
+    "statements": { "total": 124, "covered": 100, "skipped": 0, "pct": 80.65 },
+    "branches": { "total": 24, "covered": 18, "skipped": 0, "pct": 75 }
   },
   "/Users/zachleat/Code/eleventy/src/Engines/Ejs.js": {
     "lines": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 },
@@ -102,9 +114,9 @@
     "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
   },
   "/Users/zachleat/Code/eleventy/src/Engines/Handlebars.js": {
-    "lines": { "total": 14, "covered": 14, "skipped": 0, "pct": 100 },
+    "lines": { "total": 15, "covered": 15, "skipped": 0, "pct": 100 },
     "functions": { "total": 4, "covered": 4, "skipped": 0, "pct": 100 },
-    "statements": { "total": 14, "covered": 14, "skipped": 0, "pct": 100 },
+    "statements": { "total": 15, "covered": 15, "skipped": 0, "pct": 100 },
     "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
   },
   "/Users/zachleat/Code/eleventy/src/Engines/Html.js": {
@@ -138,9 +150,9 @@
     "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
   },
   "/Users/zachleat/Code/eleventy/src/Engines/Nunjucks.js": {
-    "lines": { "total": 12, "covered": 12, "skipped": 0, "pct": 100 },
+    "lines": { "total": 13, "covered": 13, "skipped": 0, "pct": 100 },
     "functions": { "total": 4, "covered": 4, "skipped": 0, "pct": 100 },
-    "statements": { "total": 12, "covered": 12, "skipped": 0, "pct": 100 },
+    "statements": { "total": 13, "covered": 13, "skipped": 0, "pct": 100 },
     "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
   },
   "/Users/zachleat/Code/eleventy/src/Engines/Pug.js": {
@@ -156,9 +168,9 @@
     "branches": { "total": 4, "covered": 4, "skipped": 0, "pct": 100 }
   },
   "/Users/zachleat/Code/eleventy/src/Plugins/Pagination.js": {
-    "lines": { "total": 75, "covered": 66, "skipped": 0, "pct": 88 },
-    "functions": { "total": 11, "covered": 8, "skipped": 0, "pct": 72.73 },
-    "statements": { "total": 75, "covered": 66, "skipped": 0, "pct": 88 },
+    "lines": { "total": 76, "covered": 71, "skipped": 0, "pct": 93.42 },
+    "functions": { "total": 11, "covered": 11, "skipped": 0, "pct": 100 },
+    "statements": { "total": 76, "covered": 71, "skipped": 0, "pct": 93.42 },
     "branches": { "total": 24, "covered": 21, "skipped": 0, "pct": 87.5 }
   },
   "/Users/zachleat/Code/eleventy/src/Util/Capitalize.js": {

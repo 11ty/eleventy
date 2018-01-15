@@ -1,5 +1,5 @@
 const TemplatePath = require("../src/TemplatePath");
-console.log();
+
 module.exports = {
   templateFormats: ["njk"],
   dir: {
