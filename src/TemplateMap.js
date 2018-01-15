@@ -26,6 +26,7 @@ class TemplateMap {
   }
 
   async cache() {
+    debug("Caching collections objects.");
     this.collectionsData = await this.getAllCollectionsData();
     await this.populateDataInMap();
     this.populateCollectionsWithContent();
@@ -48,12 +49,14 @@ class TemplateMap {
         map.template
       );
     }
+    debug("Added this.map[...].data.collections");
 
     for (let map of this.map) {
       map.template.setWrapWithLayouts(false);
       map.templateContent = await map.template.getFinalContent(map.data);
       map.template.setWrapWithLayouts(true);
     }
+    debug("Added this.map[...].templateContent");
   }
 
   async createTemplateMapCopy(filteredMap) {

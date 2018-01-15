@@ -256,6 +256,13 @@ class Template {
     return fn(data);
   }
 
+  async renderWithoutLayouts(data) {
+    this.setWrapWithLayouts(false);
+    let ret = await this.render(data);
+    this.setWrapWithLayouts(true);
+    return ret;
+  }
+
   async render(data) {
     if (!data) {
       data = await this.getRenderedData();
