@@ -261,12 +261,20 @@ class Template {
       data = await this.getRenderedData();
     }
 
+    if (!this.wrapWithLayouts) {
+      debug(
+        "Template.render is bypassing wrapping content in layouts for %o.",
+        this.inputPath
+      );
+    }
+
     if (
       this.wrapWithLayouts &&
       (data[this.config.keys.layout] || this.initialLayout)
     ) {
       return this.renderLayout(this, data, this.initialLayout);
     } else {
+      debug("Template.render renderContent for %o", this.inputPath);
       return this.renderContent(this.getPreRender(), data);
     }
   }
