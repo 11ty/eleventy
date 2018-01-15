@@ -23,6 +23,19 @@ TemplatePermalink.prototype.toString = function() {
   return this.resolve();
 };
 
+// remove all index.html’s from links
+TemplatePermalink.prototype.toHref = function() {
+  let original = this.toString();
+  let str = "/" + original;
+  let needle = "/index.html";
+  if (str === needle) {
+    return ".";
+  } else if (str.substr(-1 * needle.length) === needle) {
+    return original.substr(0, original.length - needle.length) + "/";
+  }
+  return original;
+};
+
 TemplatePermalink._hasDuplicateFolder = function(dir, base) {
   let folders = dir.split("/");
   if (!folders[folders.length - 1]) {

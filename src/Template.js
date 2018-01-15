@@ -52,6 +52,8 @@ class Template {
 
     this.isVerbose = true;
     this.writeCount = 0;
+    this.initialLayout = undefined;
+    this.wrapWithLayouts = true;
   }
 
   getInputPath() {
@@ -62,6 +64,10 @@ class Template {
     this.isVerbose = isVerbose;
   }
 
+  setWrapWithLayouts(wrap) {
+    this.wrapWithLayouts = wrap;
+  }
+
   getTemplateSubfolder() {
     return TemplatePath.stripPathFromDir(this.parsed.dir, this.inputDir);
   }
@@ -70,8 +76,7 @@ class Template {
     this.extraOutputSubdirectory = dir + "/";
   }
 
-  // TODO instead of isHTMLIOException, do a global search to check if output path = input path and then add extra suffix
-  async getOutputLink() {
+  async _getLink() {
     let permalink = this.getFrontMatterData()[this.config.keys.permalink];
     if (permalink) {
       let data = await this.getData();
@@ -82,7 +87,7 @@ class Template {
         }),
         this.extraOutputSubdirectory
       );
-      return perm.toString();
+      return perm;
     }
 
     return TemplatePermalink.generate(
@@ -90,7 +95,18 @@ class Template {
       this.parsed.name,
       this.extraOutputSubdirectory,
       this.isHtmlIOException ? this.config.htmlOutputSuffix : ""
-    ).toString();
+    );
+  }
+
+  // TODO instead of isHTMLIOException, do a global search to check if output path = input path and then add extra suffix
+  async getOutputLink() {
+    let link = await this._getLink();
+    return link.toString();
+  }
+
+  async getOutputHref() {
+    let link = await this._getLink();
+    return link.toHref();
   }
 
   // TODO check for conflicts, see if file already exists?
@@ -205,18 +221,22 @@ class Template {
     return data;
   }
 
-  async renderLayout(tmpl, tmplData) {
-    let layoutPath = tmplData[this.config.keys.layout];
-    debug(`Template ${this.inputPath} is using layout: ${layoutPath}`);
+  async renderLayout(tmpl, tmplData, forcedLayoutPath) {
+    let layoutPath = forcedLayoutPath || tmplData[this.config.keys.layout];
+    debug("Template %o is using layout: %o", this.inputPath, layoutPath);
+
+    if (!this.initialLayout) {
+      this.initialLayout = tmplData[this.config.keys.layout];
+      debug("Saved layout: %o for %o", this.initialLayout, this.inputPath);
+    }
     // TODO make layout key to be available to templates (without it causing issues with merge below)
     delete tmplData[this.config.keys.layout];
 
     let layout = this.getLayoutTemplate(layoutPath);
     let layoutData = await layout.getData(tmplData);
-
-    // console.log( await this.renderContent( tmpl.getPreRender(), tmplData ) );
     let layoutContent = await this.renderContent(tmpl.getPreRender(), tmplData);
     layoutData.content = layoutContent;
+    layoutData.layoutContent = layoutContent;
     // Deprecated
     layoutData._layoutContent = layoutContent;
 
@@ -241,8 +261,11 @@ class Template {
       data = await this.getRenderedData();
     }
 
-    if (data[this.config.keys.layout]) {
-      return this.renderLayout(this, data);
+    if (
+      this.wrapWithLayouts &&
+      (data[this.config.keys.layout] || this.initialLayout)
+    ) {
+      return this.renderLayout(this, data, this.initialLayout);
     } else {
       return this.renderContent(this.getPreRender(), data);
     }
@@ -281,31 +304,46 @@ class Template {
     return ret;
   }
 
+  async getFinalContent(data) {
+    let pluginRet = await this.runPlugins(data);
+    if (pluginRet) {
+      let str = await this.render(data);
+      let filtered = await this.runFilters(str);
+      return filtered;
+    }
+
+    return undefined;
+  }
+
   async writeWithData(outputPath, data) {
-    if (this.isIgnored()) {
+    let finalContent = await this.getFinalContent(data);
+    if (finalContent !== undefined) {
+      //       debug(`Template.writeWithData: ${outputPath}
+      // ${finalContent}`);
+      this.writeCount++;
+      await pify(fs.outputFile)(outputPath, finalContent);
+
       if (this.isVerbose) {
-        console.log("Ignoring", outputPath);
+        console.log(`Writing ${outputPath} from ${this.inputPath}.`);
+      } else {
+        debug(`Writing ${outputPath} from ${this.inputPath}.`);
       }
     } else {
-      this.writeCount++;
-
-      let pluginRet = await this.runPlugins(data);
-      if (pluginRet) {
-        let str = await this.render(data);
-        let filtered = await this.runFilters(str);
-        await pify(fs.outputFile)(outputPath, filtered);
-
-        if (this.isVerbose) {
-          console.log("Writing", outputPath, "from", this.inputPath);
-        }
-      }
+      debug(
+        `Did not write ${outputPath} because writing was canceled by a plugin.`
+      );
     }
   }
 
   async write() {
     let outputPath = await this.getOutputPath();
-    let data = await this.getRenderedData();
-    await this.writeWithData(outputPath, data);
+
+    if (!this.isIgnored()) {
+      let data = await this.getRenderedData();
+      await this.writeWithData(outputPath, data);
+    } else {
+      debug(`Ignoring ${outputPath}.`);
+    }
   }
 
   clone() {
@@ -369,7 +407,7 @@ class Template {
 
   async getMapped() {
     let outputPath = await this.getOutputPath();
-    let url = await this.getOutputLink();
+    let url = await this.getOutputHref();
     let data = await this.getRenderedData();
     let map = {
       template: this,
