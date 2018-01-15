@@ -9,37 +9,58 @@ class TemplateMap {
     this.map = [];
     this.collection = new TemplateCollection();
     this.collectionsData = null;
-    this.tags = [];
   }
 
   async add(template) {
-    this.map.push(await template.getMapped());
+    let map = await template.getMapped();
+    this.map.push(map);
+    this.collection.add(map);
   }
 
   getMap() {
     return this.map;
   }
 
-  cache() {
-    this.populateCollection();
-    this.tags = this.getAllTags();
-    this.collectionsData = this.getAllCollectionsData();
+  getCollection() {
+    return this.collection;
   }
 
-  populateCollection() {
-    this.collection = new TemplateCollection();
+  async cache() {
+    this.collectionsData = await this.getAllCollectionsData();
+    await this.populateDataInMap();
+    this.populateCollectionsWithContent();
+  }
+
+  getMapTemplateIndex(item) {
+    let inputPath = item.inputPath;
+    for (let j = 0, k = this.map.length; j < k; j++) {
+      if (this.map[j].inputPath === inputPath) {
+        return j;
+      }
+    }
+
+    return -1;
+  }
+
+  async populateDataInMap() {
     for (let map of this.map) {
-      this.collection.add(map);
+      map.data.collections = await this.getCollectionsDataForTemplate(
+        map.template
+      );
+    }
+
+    for (let map of this.map) {
+      map.template.setWrapWithLayouts(false);
+      map.templateContent = await map.template.getFinalContent(map.data);
+      map.template.setWrapWithLayouts(true);
     }
   }
 
-  createTemplateMapCopy(filteredMap) {
+  async createTemplateMapCopy(filteredMap) {
     let copy = [];
     for (let map of filteredMap) {
       let mapCopy = lodashCloneDeep(map);
 
-      // For simplification, maybe re-add this later?
-      // delete mapCopy.template;
       // Circular reference
       delete mapCopy.data.collections;
 
@@ -64,15 +85,16 @@ class TemplateMap {
     return Object.keys(allTags);
   }
 
-  getAllCollectionsData() {
+  async getAllCollectionsData() {
     let collections = {};
-    collections.all = this.createTemplateMapCopy(
+    collections.all = await this.createTemplateMapCopy(
       this.collection.getAllSorted()
     );
     debug(`Collection: collections.all has ${collections.all.length} items.`);
 
-    for (let tag of this.tags) {
-      collections[tag] = this.createTemplateMapCopy(
+    let tags = this.getAllTags();
+    for (let tag of tags) {
+      collections[tag] = await this.createTemplateMapCopy(
         this.collection.getFilteredByTag(tag)
       );
       debug(
@@ -82,7 +104,7 @@ class TemplateMap {
 
     let configCollections = eleventyConfig.getCollections();
     for (let name in configCollections) {
-      collections[name] = this.createTemplateMapCopy(
+      collections[name] = await this.createTemplateMapCopy(
         configCollections[name](this.collection)
       );
       debug(
@@ -90,10 +112,18 @@ class TemplateMap {
       );
     }
 
-    // console.log( "collections>>>>", collections );
-    // console.log( ">>>>> end collections" );
-
     return collections;
+  }
+
+  populateCollectionsWithContent() {
+    for (let collectionName in this.collectionsData) {
+      for (let item of this.collectionsData[collectionName]) {
+        let index = this.getMapTemplateIndex(item);
+        if (index !== -1) {
+          item.templateContent = this.map[index].templateContent;
+        }
+      }
+    }
   }
 
   async assignActiveTemplate(activeTemplate) {
@@ -109,7 +139,7 @@ class TemplateMap {
 
   async getCollectionsDataForTemplate(template) {
     if (!this.collectionsData) {
-      this.cache();
+      await this.cache();
     }
 
     await this.assignActiveTemplate(template);

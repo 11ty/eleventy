@@ -7,7 +7,6 @@ const TemplateRender = require("./TemplateRender");
 const TemplateMap = require("./TemplateMap");
 const EleventyError = require("./EleventyError");
 const Pagination = require("./Plugins/Pagination");
-const TemplateCollection = require("./TemplateCollection");
 const TemplateGlob = require("./TemplateGlob");
 const pkg = require("../package.json");
 const eleventyConfig = require("./EleventyConfig");
@@ -23,7 +22,6 @@ function TemplateWriter(inputPath, outputDir, extensions, templateData) {
   this.templateData = templateData;
   this.isVerbose = true;
   this.writeCount = 0;
-  this.collection = null;
 
   this.includesDir = this.inputDir + "/" + this.config.dir.includes;
   // Duplicated with TemplateData.getDataDir();
@@ -197,7 +195,7 @@ TemplateWriter.prototype._createTemplateMap = async function(paths) {
     debug(`Template for ${path} added to map.`);
   }
 
-  this.templateMap.cache();
+  await this.templateMap.cache();
   return this.templateMap;
 };
 
@@ -207,10 +205,6 @@ TemplateWriter.prototype._writeTemplate = async function(
   data
 ) {
   try {
-    data.collections = await this.templateMap.getCollectionsDataForTemplate(
-      tmpl
-    );
-
     await tmpl.writeWithData(outputPath, data);
   } catch (e) {
     throw EleventyError.make(
@@ -230,16 +224,18 @@ TemplateWriter.prototype.write = async function() {
 
   await this._createTemplateMap(paths);
 
-  for (let map of this.templateMap.getMap()) {
-    // START HERE, we’re trying to add .content to our templateMap
-    // map.data.collections = this.collectionsData;
-    // map.content = map.template.render(map.data);
-
-    await this._writeTemplate(map.template, map.outputPath, map.data);
-    debug(`Wrote template ${map.outputPath} from ${map.inputPath}`);
+  for (let mapEntry of this.templateMap.getMap()) {
+    await this._writeTemplate(
+      mapEntry.template,
+      mapEntry.outputPath,
+      mapEntry.data
+    );
   }
 
-  eleventyConfig.emit("alldata", this.collection.getAllSorted());
+  eleventyConfig.emit(
+    "alldata",
+    this.templateMap.getCollection().getAllSorted()
+  );
   debug("`alldata` event triggered.");
 };
 

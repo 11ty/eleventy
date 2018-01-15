@@ -175,6 +175,63 @@ test("One Layout (using new content var)", async t => {
   t.is(mergedFrontMatter.keylayout, "valuelayout");
 });
 
+test("One Layout (using layoutContent)", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+  let tmpl = new Template(
+    "./test/stubs/templateWithLayoutContent.ejs",
+    "./test/stubs/",
+    "dist",
+    dataObj
+  );
+
+  t.is(tmpl.frontMatter.data[config.keys.layout], "defaultLayoutLayoutContent");
+
+  let data = await tmpl.getData();
+  t.is(data[config.keys.layout], "defaultLayoutLayoutContent");
+
+  t.is(
+    cleanHtml(await tmpl.renderLayout(tmpl, data)),
+    `<div id="layout">
+  <p>Hello.</p>
+</div>`
+  );
+
+  let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
+    tmpl,
+    tmpl.getFrontMatterData()
+  );
+
+  t.is(mergedFrontMatter.keymain, "valuemain");
+  t.is(mergedFrontMatter.keylayout, "valuelayout");
+});
+
+test("One Layout (layouts disabled)", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+  let tmpl = new Template(
+    "./test/stubs/templateWithLayoutContent.ejs",
+    "./test/stubs/",
+    "dist",
+    dataObj
+  );
+
+  tmpl.setWrapWithLayouts(false);
+
+  t.is(tmpl.frontMatter.data[config.keys.layout], "defaultLayoutLayoutContent");
+
+  let data = await tmpl.getData();
+  t.is(data[config.keys.layout], "defaultLayoutLayoutContent");
+
+  t.is(cleanHtml(await tmpl.render(data)), `<p>Hello.</p>`);
+
+  let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
+    tmpl,
+    tmpl.getFrontMatterData()
+  );
+
+  t.is(mergedFrontMatter.keymain, "valuemain");
+  t.is(mergedFrontMatter.keylayout, "valuelayout");
+});
+
 test("One Layout (_layoutContent deprecated but supported)", async t => {
   let dataObj = new TemplateData("./test/stubs/");
   let tmpl = new Template(

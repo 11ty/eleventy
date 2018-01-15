@@ -18,8 +18,8 @@ test("populating the collection twice should clear the previous values (--watch 
   await tm.add(tmpl1);
   await tm.add(tmpl2);
 
-  tm.cache();
-  tm.cache();
+  await tm.cache();
+  await tm.cache();
 
   t.is(tm.getMap().length, 2);
 });
