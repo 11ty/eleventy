@@ -4,7 +4,8 @@ const parsePath = require("parse-filepath");
 const Template = require("./Template");
 const TemplatePath = require("./TemplatePath");
 const TemplateMap = require("./TemplateMap");
-const TemplateEngine = require("./Engines/TemplateEngine");
+const TemplateRender = require("./TemplateRender");
+const TemplatePassthrough = require("./TemplatePassthrough");
 const EleventyError = require("./EleventyError");
 const Pagination = require("./Plugins/Pagination");
 const TemplateGlob = require("./TemplateGlob");
@@ -193,20 +194,34 @@ TemplateWriter.prototype._getTemplate = function(path) {
   return tmpl;
 };
 
-TemplateWriter.prototype._createTemplateMap = async function(paths) {
-  this.templateMap = new TemplateMap();
-  // START HERE
-  // this.copyFiles = new TemplateCopy();
+TemplateWriter.prototype._copyPassthroughs = async function(paths) {
+  if (!this.config.passthroughFileCopy) {
+    debug("`passthroughFileCopy` is disabled in config, bypassing.");
+    return;
+  }
 
   for (let path of paths) {
-    let parsed = parsePath(path);
-    if (TemplateEngine.hasEngine(parsed.ext.substr(1))) {
+    if (!TemplateRender.hasEngine(path)) {
+      let pass = new TemplatePassthrough(path, this.outputDir);
+      try {
+        await pass.write();
+      } catch (e) {
+        throw EleventyError.make(
+          new Error(`Having trouble copying: ${path}`),
+          e
+        );
+      }
+    }
+  }
+};
+
+TemplateWriter.prototype._createTemplateMap = async function(paths) {
+  this.templateMap = new TemplateMap();
+
+  for (let path of paths) {
+    if (TemplateRender.hasEngine(path)) {
       await this.templateMap.add(this._getTemplate(path));
       debug(`Template for ${path} added to map.`);
-    } else {
-      debug(
-        `${path} has no TemplateEngine engine and will just passthrough copy`
-      );
     }
   }
 
@@ -237,6 +252,7 @@ TemplateWriter.prototype.write = async function() {
   let paths = await this._getAllPaths();
   debug("Found: %o", paths);
 
+  await this._copyPassthroughs(paths);
   await this._createTemplateMap(paths);
 
   for (let mapEntry of this.templateMap.getMap()) {
