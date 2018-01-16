@@ -52,6 +52,7 @@ Eleventy.prototype.setConfigPath = function(configPath) {
 Eleventy.prototype.restart = function() {
   debug("Restarting");
   this.start = new Date();
+  this.writer.restart();
 };
 
 Eleventy.prototype.finish = function() {
@@ -150,6 +151,12 @@ Eleventy.prototype.getHelp = function() {
   return out.join("\n");
 };
 
+Eleventy.prototype._watch = async function() {
+  this.restart();
+  await this.write();
+  console.log("Watching…");
+};
+
 Eleventy.prototype.watch = async function() {
   await this.write();
 
@@ -162,8 +169,7 @@ Eleventy.prototype.watch = async function() {
     "change",
     async function(path, stat) {
       console.log("File changed:", path);
-      await this.write();
-      console.log("Watching…");
+      this._watch();
     }.bind(this)
   );
 
@@ -171,8 +177,7 @@ Eleventy.prototype.watch = async function() {
     "add",
     async function(path, stat) {
       console.log("File added:", path);
-      await this.write();
-      console.log("Watching…");
+      this._watch();
     }.bind(this)
   );
 };

@@ -4,6 +4,7 @@ const parsePath = require("parse-filepath");
 const Template = require("./Template");
 const TemplatePath = require("./TemplatePath");
 const TemplateMap = require("./TemplateMap");
+const TemplateEngine = require("./Engines/TemplateEngine");
 const EleventyError = require("./EleventyError");
 const Pagination = require("./Plugins/Pagination");
 const TemplateGlob = require("./TemplateGlob");
@@ -44,6 +45,11 @@ function TemplateWriter(inputPath, outputDir, extensions, templateData) {
 
   this.templateMap;
 }
+
+TemplateWriter.prototype.restart = function() {
+  this.writeCount = 0;
+  debug("Resetting writeCount to 0");
+};
 
 TemplateWriter.prototype.getIncludesDir = function() {
   return this.includesDir;
@@ -189,9 +195,19 @@ TemplateWriter.prototype._getTemplate = function(path) {
 
 TemplateWriter.prototype._createTemplateMap = async function(paths) {
   this.templateMap = new TemplateMap();
+  // START HERE
+  // this.copyFiles = new TemplateCopy();
+
   for (let path of paths) {
-    await this.templateMap.add(this._getTemplate(path));
-    debug(`Template for ${path} added to map.`);
+    let parsed = parsePath(path);
+    if (TemplateEngine.hasEngine(parsed.ext.substr(1))) {
+      await this.templateMap.add(this._getTemplate(path));
+      debug(`Template for ${path} added to map.`);
+    } else {
+      debug(
+        `${path} has no TemplateEngine engine and will just passthrough copy`
+      );
+    }
   }
 
   await this.templateMap.cache();
@@ -202,7 +218,7 @@ TemplateWriter.prototype._writeTemplate = async function(mapEntry) {
   let outputPath = mapEntry.outputPath;
   let data = mapEntry.data;
   let tmpl = mapEntry.template;
-  console.log(mapEntry.data.page.url);
+
   try {
     await tmpl.writeWithData(outputPath, data);
   } catch (e) {
