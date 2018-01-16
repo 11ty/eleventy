@@ -16,7 +16,7 @@ module.exports = {
   markdownTemplateEngine: "liquid",
   htmlTemplateEngine: "liquid",
   dataTemplateEngine: "liquid",
-  passthroughFileCopy: false,
+  passthroughFileCopy: true,
   htmlOutputSuffix: "-o",
   keys: {
     package: "pkg",
