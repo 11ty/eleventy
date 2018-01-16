@@ -134,15 +134,15 @@ Eleventy.prototype.getHelp = function() {
   out.push("  --version");
   out.push("  --watch");
   out.push("       Wait for files to change and automatically rewrite");
-  out.push("  --input");
+  out.push("  --input=.");
   out.push("       Input template files (default: `.`)");
-  out.push("  --output");
+  out.push("  --output=_site");
   out.push("       Write HTML output to this folder (default: `_site`)");
   out.push("  --formats=liquid,md");
   out.push("       Whitelist only certain template types (default: `*`)");
   out.push("  --quiet");
   out.push("       Don’t print all written files (default: `false`)");
-  out.push("  --config");
+  out.push("  --config=filename.js");
   out.push(
     "      Override the eleventy config file path (default: `.eleventy.js`)"
   );
