@@ -2,6 +2,7 @@ const parsePath = require("parse-filepath");
 const TemplatePath = require("./TemplatePath");
 const TemplateEngine = require("./Engines/TemplateEngine");
 const config = require("./Config");
+const debug = require("debug")("TemplateRender");
 
 // works with full path names or short engine name
 function TemplateRender(tmplPath, inputDir) {
@@ -14,22 +15,26 @@ function TemplateRender(tmplPath, inputDir) {
   this.config = config.getConfig();
   this.path = tmplPath;
 
-  this.parsed = tmplPath ? parsePath(tmplPath) : undefined;
-  this.engineName =
-    this.parsed && this.parsed.ext ? this.parsed.ext.substr(1) : tmplPath;
+  // if( inputDir ) {
+  //   debug("New TemplateRender, tmplPath: %o, inputDir: %o", tmplPath, inputDir);
+  // }
+
+  this.engineName = TemplateRender.cleanupEngineName(tmplPath);
   this.inputDir = this._normalizeInputDir(inputDir);
 
   this.engine = TemplateEngine.getEngine(this.engineName, this.inputDir);
-  this.defaultMarkdownEngine = this.config.markdownTemplateEngine;
-  this.defaultHtmlEngine = this.config.htmlTemplateEngine;
 }
 
-TemplateRender.prototype.setDefaultMarkdownEngine = function(markdownEngine) {
-  this.defaultMarkdownEngine = markdownEngine;
+TemplateRender.cleanupEngineName = function(tmplPath) {
+  tmplPath = tmplPath.toLowerCase();
+
+  let parsed = tmplPath ? parsePath(tmplPath) : undefined;
+  return parsed && parsed.ext ? parsed.ext.substr(1) : tmplPath;
 };
 
-TemplateRender.prototype.setDefaultHtmlEngine = function(htmlEngine) {
-  this.defaultHtmlEngine = htmlEngine;
+TemplateRender.hasEngine = function(tmplPath) {
+  let name = TemplateRender.cleanupEngineName(tmplPath);
+  return name in TemplateEngine.engineMap;
 };
 
 TemplateRender.prototype.getEngineName = function() {
@@ -57,14 +62,14 @@ TemplateRender.prototype.render = async function(str, data) {
 TemplateRender.prototype.getCompiledTemplate = async function(str, options) {
   options = Object.assign(
     {
-      parseMarkdownWith: this.defaultMarkdownEngine,
-      parseHtmlWith: this.defaultHtmlEngine,
+      parseMarkdownWith: this.config.markdownTemplateEngine,
+      parseHtmlWith: this.config.htmlTemplateEngine,
       bypassMarkdown: false
     },
     options
   );
 
-  // TODO refactor better
+  // TODO refactor better, move into TemplateEngine logic
   if (this.engineName === "md") {
     return this.engine.compile(
       str,

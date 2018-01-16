@@ -4,12 +4,19 @@ import path from "path";
 
 test(t => {
   // Path is unnecessary but supported
-  t.truthy(new TemplateRender("default.ejs").parsed);
+  t.is(TemplateRender.cleanupEngineName("default.ejs"), "ejs");
+  t.true(TemplateRender.hasEngine("default.ejs"));
   t.is(new TemplateRender("default.ejs").getEngineName(), "ejs");
 
   // Better
-  t.truthy(new TemplateRender("ejs").parsed);
+  t.is(TemplateRender.cleanupEngineName("ejs"), "ejs");
+  t.is(TemplateRender.cleanupEngineName("EjS"), "ejs");
+  t.true(TemplateRender.hasEngine("EjS"));
+  t.true(TemplateRender.hasEngine("ejs"));
   t.is(new TemplateRender("ejs").getEngineName(), "ejs");
+
+  t.is(TemplateRender.cleanupEngineName("sldkjfkldsj"), "sldkjfkldsj");
+  t.false(TemplateRender.hasEngine("sldkjfkldsj"));
 });
 
 test("Input Dir", async t => {
@@ -59,17 +66,17 @@ test("HTML Render: Set HTML engine to false, don’t parse", async t => {
   t.is((await fn()).trim(), "<h1>{{title}}</h1>");
 });
 
-test("HTML Render: Change the default engine", async t => {
+test("HTML Render: Pass in an override (ejs)", async t => {
   let tr = new TemplateRender("html");
-  tr.setDefaultHtmlEngine("ejs");
 
-  let fn = await tr.getCompiledTemplate("<h1><%= title %></h1>");
+  let fn = await tr.getCompiledTemplate("<h1><%= title %></h1>", {
+    parseHtmlWith: "ejs"
+  });
   t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
 });
 
-test("HTML Render: Change the default engine and pass in an override", async t => {
+test("HTML Render: Pass in an override (liquid)", async t => {
   let tr = new TemplateRender("html");
-  tr.setDefaultHtmlEngine("njk");
 
   let fn = await tr.getCompiledTemplate("<h1>{{title}}</h1>", {
     parseHtmlWith: "liquid"
@@ -190,17 +197,17 @@ test("Markdown Render: Set markdown engine to false, don’t parse (test with HT
   t.is((await fn()).trim(), "<h1>{{title}}</h1>");
 });
 
-test("Markdown Render: Change the default engine", async t => {
+test("Markdown Render: Pass in engine override (ejs)", async t => {
   let tr = new TemplateRender("md");
-  tr.setDefaultMarkdownEngine("ejs");
 
-  let fn = await tr.getCompiledTemplate("# <%= title %>");
+  let fn = await tr.getCompiledTemplate("# <%= title %>", {
+    parseMarkdownWith: "ejs"
+  });
   t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
 });
 
-test("Markdown Render: Change the default engine and pass in an override", async t => {
+test("Markdown Render: Pass in an override (liquid)", async t => {
   let tr = new TemplateRender("md");
-  tr.setDefaultMarkdownEngine("njk");
 
   let fn = await tr.getCompiledTemplate("# {{title}}", {
     parseMarkdownWith: "liquid"

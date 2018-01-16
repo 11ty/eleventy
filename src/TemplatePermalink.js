@@ -24,6 +24,8 @@ TemplatePermalink.prototype.toString = function() {
 };
 
 // remove all index.html’s from links
+// index.html becomes /
+// test/index.html becomes test/
 TemplatePermalink.prototype.toHref = function() {
   let original = this.toString();
   let str = "/" + original;
