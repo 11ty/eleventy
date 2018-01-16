@@ -52,7 +52,7 @@ All of this will output the following HTML content:
 
 ## Layouts in a Subdirectory
 
-As of Eleventy `v0.2.7`, layouts can be a full path inside of the `_includes` folder, like so:
+_New in Eleventy v0.2.7._ Layouts can be a full path inside of the `_includes` folder, like so:
 
 ```
 ---
