@@ -1,14 +1,14 @@
 {
   "total": {
-    "lines": { "total": 1007, "covered": 874, "skipped": 0, "pct": 86.79 },
-    "statements": { "total": 1007, "covered": 874, "skipped": 0, "pct": 86.79 },
-    "functions": { "total": 230, "covered": 185, "skipped": 0, "pct": 80.43 },
-    "branches": { "total": 269, "covered": 222, "skipped": 0, "pct": 82.53 }
+    "lines": { "total": 1050, "covered": 900, "skipped": 0, "pct": 85.71 },
+    "statements": { "total": 1050, "covered": 900, "skipped": 0, "pct": 85.71 },
+    "functions": { "total": 236, "covered": 192, "skipped": 0, "pct": 81.36 },
+    "branches": { "total": 281, "covered": 225, "skipped": 0, "pct": 80.07 }
   },
   "/Users/zachleat/Code/eleventy/config.js": {
-    "lines": { "total": 7, "covered": 4, "skipped": 0, "pct": 57.14 },
-    "functions": { "total": 4, "covered": 1, "skipped": 0, "pct": 25 },
-    "statements": { "total": 7, "covered": 4, "skipped": 0, "pct": 57.14 },
+    "lines": { "total": 3, "covered": 3, "skipped": 0, "pct": 100 },
+    "functions": { "total": 1, "covered": 1, "skipped": 0, "pct": 100 },
+    "statements": { "total": 3, "covered": 3, "skipped": 0, "pct": 100 },
     "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
   },
   "/Users/zachleat/Code/eleventy/src/Config.js": {
@@ -18,15 +18,15 @@
     "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
   },
   "/Users/zachleat/Code/eleventy/src/Eleventy.js": {
-    "lines": { "total": 114, "covered": 72, "skipped": 0, "pct": 63.16 },
-    "functions": { "total": 17, "covered": 7, "skipped": 0, "pct": 41.18 },
-    "statements": { "total": 114, "covered": 72, "skipped": 0, "pct": 63.16 },
+    "lines": { "total": 117, "covered": 73, "skipped": 0, "pct": 62.39 },
+    "functions": { "total": 18, "covered": 7, "skipped": 0, "pct": 38.89 },
+    "statements": { "total": 117, "covered": 73, "skipped": 0, "pct": 62.39 },
     "branches": { "total": 22, "covered": 10, "skipped": 0, "pct": 45.45 }
   },
   "/Users/zachleat/Code/eleventy/src/EleventyConfig.js": {
-    "lines": { "total": 15, "covered": 14, "skipped": 0, "pct": 93.33 },
-    "functions": { "total": 6, "covered": 5, "skipped": 0, "pct": 83.33 },
-    "statements": { "total": 15, "covered": 14, "skipped": 0, "pct": 93.33 },
+    "lines": { "total": 13, "covered": 13, "skipped": 0, "pct": 100 },
+    "functions": { "total": 5, "covered": 5, "skipped": 0, "pct": 100 },
+    "statements": { "total": 13, "covered": 13, "skipped": 0, "pct": 100 },
     "branches": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 }
   },
   "/Users/zachleat/Code/eleventy/src/EleventyError.js": {
@@ -36,15 +36,15 @@
     "branches": { "total": 2, "covered": 0, "skipped": 0, "pct": 0 }
   },
   "/Users/zachleat/Code/eleventy/src/Template.js": {
-    "lines": { "total": 180, "covered": 154, "skipped": 0, "pct": 85.56 },
-    "functions": { "total": 39, "covered": 32, "skipped": 0, "pct": 82.05 },
-    "statements": { "total": 180, "covered": 154, "skipped": 0, "pct": 85.56 },
-    "branches": { "total": 66, "covered": 52, "skipped": 0, "pct": 78.79 }
+    "lines": { "total": 190, "covered": 163, "skipped": 0, "pct": 85.79 },
+    "functions": { "total": 41, "covered": 34, "skipped": 0, "pct": 82.93 },
+    "statements": { "total": 190, "covered": 163, "skipped": 0, "pct": 85.79 },
+    "branches": { "total": 72, "covered": 55, "skipped": 0, "pct": 76.39 }
   },
   "/Users/zachleat/Code/eleventy/src/TemplateCollection.js": {
-    "lines": { "total": 13, "covered": 11, "skipped": 0, "pct": 84.62 },
-    "functions": { "total": 6, "covered": 5, "skipped": 0, "pct": 83.33 },
-    "statements": { "total": 13, "covered": 11, "skipped": 0, "pct": 84.62 },
+    "lines": { "total": 13, "covered": 12, "skipped": 0, "pct": 92.31 },
+    "functions": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 },
+    "statements": { "total": 13, "covered": 12, "skipped": 0, "pct": 92.31 },
     "branches": { "total": 6, "covered": 5, "skipped": 0, "pct": 83.33 }
   },
   "/Users/zachleat/Code/eleventy/src/TemplateConfig.js": {
@@ -72,10 +72,16 @@
     "branches": { "total": 10, "covered": 9, "skipped": 0, "pct": 90 }
   },
   "/Users/zachleat/Code/eleventy/src/TemplateMap.js": {
-    "lines": { "total": 68, "covered": 66, "skipped": 0, "pct": 97.06 },
-    "functions": { "total": 13, "covered": 12, "skipped": 0, "pct": 92.31 },
-    "statements": { "total": 68, "covered": 66, "skipped": 0, "pct": 97.06 },
-    "branches": { "total": 12, "covered": 11, "skipped": 0, "pct": 91.67 }
+    "lines": { "total": 66, "covered": 64, "skipped": 0, "pct": 96.97 },
+    "functions": { "total": 12, "covered": 12, "skipped": 0, "pct": 100 },
+    "statements": { "total": 66, "covered": 64, "skipped": 0, "pct": 96.97 },
+    "branches": { "total": 10, "covered": 8, "skipped": 0, "pct": 80 }
+  },
+  "/Users/zachleat/Code/eleventy/src/TemplatePassthrough.js": {
+    "lines": { "total": 9, "covered": 7, "skipped": 0, "pct": 77.78 },
+    "functions": { "total": 3, "covered": 2, "skipped": 0, "pct": 66.67 },
+    "statements": { "total": 9, "covered": 7, "skipped": 0, "pct": 77.78 },
+    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
   },
   "/Users/zachleat/Code/eleventy/src/TemplatePath.js": {
     "lines": { "total": 23, "covered": 23, "skipped": 0, "pct": 100 },
@@ -90,16 +96,16 @@
     "branches": { "total": 18, "covered": 18, "skipped": 0, "pct": 100 }
   },
   "/Users/zachleat/Code/eleventy/src/TemplateRender.js": {
-    "lines": { "total": 36, "covered": 34, "skipped": 0, "pct": 94.44 },
+    "lines": { "total": 37, "covered": 35, "skipped": 0, "pct": 94.59 },
     "functions": { "total": 9, "covered": 8, "skipped": 0, "pct": 88.89 },
-    "statements": { "total": 36, "covered": 34, "skipped": 0, "pct": 94.44 },
+    "statements": { "total": 37, "covered": 35, "skipped": 0, "pct": 94.59 },
     "branches": { "total": 14, "covered": 12, "skipped": 0, "pct": 85.71 }
   },
   "/Users/zachleat/Code/eleventy/src/TemplateWriter.js": {
-    "lines": { "total": 124, "covered": 100, "skipped": 0, "pct": 80.65 },
-    "functions": { "total": 23, "covered": 15, "skipped": 0, "pct": 65.22 },
-    "statements": { "total": 124, "covered": 100, "skipped": 0, "pct": 80.65 },
-    "branches": { "total": 24, "covered": 18, "skipped": 0, "pct": 75 }
+    "lines": { "total": 143, "covered": 103, "skipped": 0, "pct": 72.03 },
+    "functions": { "total": 25, "covered": 15, "skipped": 0, "pct": 60 },
+    "statements": { "total": 143, "covered": 103, "skipped": 0, "pct": 72.03 },
+    "branches": { "total": 30, "covered": 19, "skipped": 0, "pct": 63.33 }
   },
   "/Users/zachleat/Code/eleventy/src/Engines/Ejs.js": {
     "lines": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 },
@@ -144,9 +150,9 @@
     "branches": { "total": 4, "covered": 4, "skipped": 0, "pct": 100 }
   },
   "/Users/zachleat/Code/eleventy/src/Engines/Mustache.js": {
-    "lines": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 },
-    "functions": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 },
-    "statements": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 },
+    "lines": { "total": 8, "covered": 8, "skipped": 0, "pct": 100 },
+    "functions": { "total": 3, "covered": 3, "skipped": 0, "pct": 100 },
+    "statements": { "total": 8, "covered": 8, "skipped": 0, "pct": 100 },
     "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
   },
   "/Users/zachleat/Code/eleventy/src/Engines/Nunjucks.js": {
@@ -162,10 +168,10 @@
     "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
   },
   "/Users/zachleat/Code/eleventy/src/Engines/TemplateEngine.js": {
-    "lines": { "total": 24, "covered": 22, "skipped": 0, "pct": 91.67 },
-    "functions": { "total": 7, "covered": 6, "skipped": 0, "pct": 85.71 },
-    "statements": { "total": 24, "covered": 22, "skipped": 0, "pct": 91.67 },
-    "branches": { "total": 4, "covered": 4, "skipped": 0, "pct": 100 }
+    "lines": { "total": 31, "covered": 28, "skipped": 0, "pct": 90.32 },
+    "functions": { "total": 9, "covered": 7, "skipped": 0, "pct": 77.78 },
+    "statements": { "total": 31, "covered": 28, "skipped": 0, "pct": 90.32 },
+    "branches": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 }
   },
   "/Users/zachleat/Code/eleventy/src/Plugins/Pagination.js": {
     "lines": { "total": 76, "covered": 71, "skipped": 0, "pct": 93.42 },
