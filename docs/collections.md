@@ -192,11 +192,13 @@ See how the `Array.sort` function above uses `a.date` and `b.date`? Similarly, a
 * `url`: actual url used to link to the content on the site
 * `data`: all data for this content
 * `date`: the resolved date used for sorting
+* `templateContent`: the rendered content of this template (does _not_ include layout wrappers)
 
 ```
 { inputPath: './test1.md',
   outputPath: './_site/test1/index.html',
   url: 'test1/index.html',
   data: { title: 'Test Title', tags: ['tag1', 'tag2'], date: 'Last Modified' },
-  date: 2018-01-09T04:10:17.000Z }
+  date: 2018-01-09T04:10:17.000Z,
+  templateContent: '<h1>This is my title</h1>\n\n<p>This is content…' }
 ```
