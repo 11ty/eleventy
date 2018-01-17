@@ -9,8 +9,8 @@ EleventyNodeVersionCheck().then(function() {
     "command: eleventy" +
       (argv.input ? " --input=" + argv.input : "") +
       (argv.output ? " --output=" + argv.output : "") +
-      (argv.formats ? " --formats=" + arg.formats : "") +
-      (argv.config ? " --config=" + arg.config : "") +
+      (argv.formats ? " --formats=" + argv.formats : "") +
+      (argv.config ? " --config=" + argv.config : "") +
       (argv.quiet ? " --quiet" : "") +
       (argv.version ? " --version" : "") +
       (argv.watch ? " --watch" : "")
