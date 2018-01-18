@@ -207,6 +207,8 @@ Here are the features tested with each template engine that use external files a
 | Liquid     | ✅ Include                          | `{% include 'show/user' %}` looks for `_includes/show/user.liquid`                |
 | Liquid     | ✅ Include (pass in Data)           | `{% include 'user' with 'Ava' %}`                                                 |
 | Liquid     | ✅ Include (pass in Data)           | `{% include 'user', user1: 'Ava', user2: 'Bill' %}`                               |
+| Liquid     | ❌ but 🔜 Custom Filters            | `{{ name | upper }}`                                                              |
+| Liquid     | ❌ but 🔜 Custom Tags               | `{% upper name %}`                                                                |
 | Mustache   | ✅ Partials                         | `{{> user}}` looks for `_includes/user.mustache`                                  |
 | Handlebars | ✅ Partials                         | `{{> user}}` looks for `_includes/user.hbs`                                       |
 | Handlebars | ✅ Helpers                          | See `handlebarsHelpers` configuration option.                                     |
