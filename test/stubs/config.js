@@ -27,8 +27,11 @@ module.exports = function(config) {
     },
     filters: {
       prettyHtml: function(str, outputPath) {
-        // todo check if HTML output before transforming
-        return pretty(str, { ocd: true });
+        if (outputPath.split(".").pop() === "html") {
+          return pretty(str, { ocd: true });
+        } else {
+          return str;
+        }
       }
     },
     nunjucksFilters: {
