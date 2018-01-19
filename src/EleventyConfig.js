@@ -7,6 +7,8 @@ class EleventyConfig {
   constructor() {
     this.events = new EventEmitter();
     this.collections = {};
+    this.liquidTags = {};
+    this.liquidFilters = {};
   }
 
   on(eventName, callback) {
@@ -15,6 +17,17 @@ class EleventyConfig {
 
   emit(eventName, ...args) {
     return this.events.emit(eventName, ...args);
+  }
+
+  addLiquidTag(name, parseCallback, renderCallback) {
+    this.liquidTags[name] = {
+      parse: parseCallback,
+      render: renderCallback
+    };
+  }
+
+  addLiquidFilter(name, callback) {
+    this.liquidFilters[name] = callback;
   }
 
   getCollections() {

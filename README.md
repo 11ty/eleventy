@@ -196,6 +196,57 @@ module.exports = {
 | `handlebarsHelpers`      | `{}`                                              | `Object`                                     | N/A                   | The helper functions passed to `Handlebars.registerHelper`. Helper names are keys, functions are the values.                                                                      |
 | `nunjucksFilters`        | `{}`                                              | `Object`                                     | N/A                   | The helper functions passed to `nunjucksEnv.addFilter`. Helper names are keys, functions are the values.                                                                          |
 
+### Configuration API
+
+If you expose your config as a function instead of an object, we’ll pass in a `config` argument that you can use!
+
+```
+module.exports = function(config) {
+  return {
+    dir: {
+      input: "views"
+    }
+  };
+};
+```
+
+This allows you to customize your template engines by using the Config helper methods.
+
+#### Add liquid tags or filters
+
+```
+module.exports = function(eleventyConfig) {
+  eleventyConfig.addLiquidTag(name, function(tagToken, remainingTokens) {}, function(scope, hash) {});
+  eleventyConfig.addLiquidFilter(name, function(value) {});
+
+  return {};
+};
+```
+
+#### Add custom collections
+
+```
+module.exports = function(eleventyConfig) {
+  // only markdown files
+  eleventyConfig.addCollection("onlyMarkdown", function(collection) {
+    return collection.getAllSorted().filter(function(item) {
+      let extension = item.inputPath.split(".").pop();
+      return extension === "md";
+    });
+  });
+
+  // post collection in descending order
+  // (note that it’s easier to use a `reverse` filter for this)
+  config.addCollection("postDescendingByDate", function(collection) {
+    return collection.getFilteredByTag("post").sort(function(a, b) {
+      return a.date - b.date;
+    });
+  });
+
+  return {};
+};
+```
+
 ## Template Engine Features
 
 Here are the features tested with each template engine that use external files and thus are subject to setup and scaffolding.
@@ -207,8 +258,8 @@ Here are the features tested with each template engine that use external files a
 | Liquid     | ✅ Include                          | `{% include 'show/user' %}` looks for `_includes/show/user.liquid`                |
 | Liquid     | ✅ Include (pass in Data)           | `{% include 'user' with 'Ava' %}`                                                 |
 | Liquid     | ✅ Include (pass in Data)           | `{% include 'user', user1: 'Ava', user2: 'Bill' %}`                               |
-| Liquid     | ❌ but 🔜 Custom Filters            | `{{ name | upper }}`                                                              |
-| Liquid     | ❌ but 🔜 Custom Tags               | `{% upper name %}`                                                                |
+| Liquid     | ✅ Custom Filters                   | `{{ name | upper }}` (see `config.addLiquidFilter` documentation)                 |
+| Liquid     | ✅ Custom Tags                      | `{% upper name %}` (see `config.addLiquidTag` documentation)                      |
 | Mustache   | ✅ Partials                         | `{{> user}}` looks for `_includes/user.mustache`                                  |
 | Handlebars | ✅ Partials                         | `{{> user}}` looks for `_includes/user.hbs`                                       |
 | Handlebars | ✅ Helpers                          | See `handlebarsHelpers` configuration option.                                     |
