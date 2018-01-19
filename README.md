@@ -193,8 +193,6 @@ module.exports = {
 | `passthroughFileCopy`    | `true`                                            | `true` or `false`                            | N/A                   | Files found (that aren’t templates) from white-listed file extensions will pass-through to the output directory. [Read more about Pass-through Copy](docs/copy.md).               |
 | `htmlOutputSuffix`       | `-o`                                              | `String`                                     | N/A                   | If the input and output directory match, `index.html` files will have this suffix added to their output filename to prevent overwriting the template.                             |
 | `filters`                | `{}`                                              | `Object`                                     | N/A                   | Filters can transform output on a template. Take the format `function(str, outputPath) { return str; }`. For example, use a filter to format an HTML file with proper whitespace. |
-| `handlebarsHelpers`      | `{}`                                              | `Object`                                     | N/A                   | The helper functions passed to `Handlebars.registerHelper`. Helper names are keys, functions are the values.                                                                      |
-| `nunjucksFilters`        | `{}`                                              | `Object`                                     | N/A                   | The helper functions passed to `nunjucksEnv.addFilter`. Helper names are keys, functions are the values.                                                                          |
 
 ### Configuration API
 
@@ -212,40 +210,37 @@ module.exports = function(config) {
 
 This allows you to customize your template engines by using the Config helper methods.
 
-#### Add liquid tags or filters
+#### Add Tags/Filters to Template Engines
 
 ```
 module.exports = function(eleventyConfig) {
-  eleventyConfig.addLiquidTag(name, function(tagToken, remainingTokens) {}, function(scope, hash) {});
-  eleventyConfig.addLiquidFilter(name, function(value) {});
+
+  // Liquid
+  eleventyConfig.addLiquidTag(name, function(tagToken, remainingTokens) {}, function(scope, hash) { … });
+  eleventyConfig.addLiquidFilter(name, function(value) { … });
+
+  // Nunjucks
+  eleventyConfig.addNunjucksFilter(name, function(value) { … });
+
+  // Handlebars
+  eleventyConfig.addHandlebarsHelper(name, function(value) { … });
+
+  // Universal filters (Experimental! Supports Liquid, Nunjucks, Handlebars)
+  eleventyConfig.addFilter(name, function(value) {});
 
   return {};
 };
 ```
+
+More information:
+
+* [Nunjucks Filters](https://mozilla.github.io/nunjucks/templating.html#filters)
+* [Handlebars Helpers](http://handlebarsjs.com/#helpers)
+* [Liquid Filters](https://github.com/harttle/liquidjs#register-filters) and [Liquid Tags](https://github.com/harttle/liquidjs#register-tags)
 
 #### Add custom collections
 
-```
-module.exports = function(eleventyConfig) {
-  // only markdown files
-  eleventyConfig.addCollection("onlyMarkdown", function(collection) {
-    return collection.getAllSorted().filter(function(item) {
-      let extension = item.inputPath.split(".").pop();
-      return extension === "md";
-    });
-  });
-
-  // post collection in descending order
-  // (note that it’s easier to use a `reverse` filter for this)
-  config.addCollection("postDescendingByDate", function(collection) {
-    return collection.getFilteredByTag("post").sort(function(a, b) {
-      return a.date - b.date;
-    });
-  });
-
-  return {};
-};
-```
+Read more about this on the [Collections documentation: Advanced Custom Filtering and Sorting](collections.md#advanced-custom-filtering-and-sorting).
 
 ## Template Engine Features
 

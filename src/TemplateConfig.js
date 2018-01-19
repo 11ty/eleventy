@@ -9,6 +9,13 @@ class TemplateConfig {
   constructor(rootConfig, projectConfigPath) {
     this.projectConfigPath = projectConfigPath || ".eleventy.js";
     this.rootConfig = rootConfig || mainRootConfig;
+    if (rootConfig) {
+      debug("Warning: Using custom root config!");
+    }
+
+    if (typeof this.rootConfig === "function") {
+      this.rootConfig = this.rootConfig(eleventyConfig);
+    }
 
     this.config = this.mergeConfig(this.projectConfigPath);
   }
@@ -40,10 +47,16 @@ class TemplateConfig {
     if (typeof localConfig === "function") {
       localConfig = localConfig(eleventyConfig);
     }
+    localConfig = lodashMerge(
+      localConfig,
+      eleventyConfig.getMergingConfigObject()
+    );
+    debug("localConfig: %O", localConfig);
 
     // Object assign overrides original values (good only for templateFormats) but not good for anything else
     let merged = lodashMerge({}, this.rootConfig, localConfig);
 
+    // blow away any templateFormats upstream (don’t merge)
     let overrides = ["templateFormats"];
     for (let key of overrides) {
       merged[key] = localConfig[key] || this.rootConfig[key];

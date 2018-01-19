@@ -21,6 +21,7 @@ test("Add Collections throws error on key collision", t => {
   eleventyConfig.addCollection("myCollectionCollision", function(
     collection
   ) {});
+
   t.throws(() => {
     eleventyConfig.addCollection("myCollectionCollision", function(
       collection
