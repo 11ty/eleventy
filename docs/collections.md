@@ -127,11 +127,11 @@ Valid `date` values:
 
 To get fancier with your collections (and even do a bit of your own custom filtering, if you’d like), you can use our Configuration API.
 
-Inside of your `.eleventy.js` config file, use the first argument to the config function (`config` below) to call the API (note that module exports is a function and not an object literal):
+Inside of your `.eleventy.js` config file, use the first argument to the config function (`eleventyConfig` below) to call the API (note that module exports is a function and not an object literal):
 
 ```
-module.exports = function(config) {
-  // API is available in `config` argument
+module.exports = function(eleventyConfig) {
+  // API is available in `eleventyConfig` argument
 
   return {
     // your normal config options
@@ -140,10 +140,10 @@ module.exports = function(config) {
 };
 ```
 
-You can use `config` (or whatever you name it) like so:
+You can use `eleventyConfig` (or whatever you name it) like so:
 
 ```
-config.addCollection("myCollectionName", function(collection) {
+eleventyConfig.addCollection("myCollectionName", function(collection) {
   // get unsorted items
   return collection.getAll();
 });
@@ -153,35 +153,52 @@ The data collection gets passed to the callback. You can use it in all sorts of 
 
 ```
 // Unsorted items (in whatever order they were added)
-return collection.getAll();
+eleventyConfig.addCollection("allMyContent", function(collection) {
+  return collection.getAll();
+});
 
-// Use the default sorting algorithm (ascending dir, date, filename)
-return collection.getAllSorted();
+// Use the default sorting algorithm (ascending by date, filename tiebreaker)
+eleventyConfig.addCollection("allMySortedContent", function(collection) {
+  return collection.getAllSorted();
+});
 
 // Use the default sorting algorithm in reverse (descending dir, date, filename)
-return collection.getAllSorted().reverse();
+// Note that using a template engine’s `reverse` filter might be easier here
+eleventyConfig.addCollection("myPostsReverse", function(collection) {
+  return collection.getAllSorted().reverse();
+});
 
 // Get only content that matches a tag
-return collection.getFilteredByTag("post");
-
-// Filter using `Array.filter`
-return collection.getAll().filter(function(item) {
-  // Side-step tags and do your own filtering
-  return "myCustomDataKey" in item.data;
+eleventyConfig.addCollection("myPosts", function(collection) {
+  return collection.getFilteredByTag("post");
 });
 
 // Filter using `Array.filter`
-return collection.getAll().filter(function(item) {
-  // Only return content that was originally a markdown file
-  let extension = item.inputPath.split('.').pop();
-  return extension === "md";
+eleventyConfig.addCollection("keyMustExistInData", function(collection) {
+  return collection.getAll().filter(function(item) {
+    // Side-step tags and do your own filtering
+    return "myCustomDataKey" in item.data;
+  });
+});
+
+// Filter using `Array.filter`
+eleventyConfig.addCollection("onlyMarkdown", function(collection) {
+  return collection.getAllSorted().filter(function(item) {
+    // Only return content that was originally a markdown file
+    let extension = item.inputPath.split('.').pop();
+    return extension === "md";
+  });
 });
 
 // Sort with `Array.sort`
-return collection.getAll().sort(function(a, b) {
-  return b.date - a.date;
+eleventyConfig.addCollection("myCustomSort", function(collection) {
+  return collection.getAll().sort(function(a, b) {
+    return b.date - a.date;
+  });
 });
 ```
+
+For example, that last `myCustomSort` collection will be available in your templates as `collections.myCustomSort`.
 
 ### Individual collection items (useful for sort callbacks)
 
