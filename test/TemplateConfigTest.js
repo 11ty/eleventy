@@ -1,6 +1,6 @@
 import test from "ava";
 import TemplateConfig from "../src/TemplateConfig";
-// import eleventyConfig from "../src/EleventyConfig";
+import eleventyConfig from "../src/EleventyConfig";
 
 test("Template Config local config overrides base config", async t => {
   let templateCfg = new TemplateConfig(
@@ -32,13 +32,63 @@ test("Template Config local config overrides base config", async t => {
   );
 });
 
-// test("Add liquid tag", t => {
-//   let templateCfg = new TemplateConfig(
-//     require("../config.js"),
-//     "./test/stubs/config.js"
-//   );
-//   eleventyConfig.addLiquidTag("myTagName", function() {}, function() {});
+test("Add liquid tag", t => {
+  eleventyConfig.addLiquidTag("myTagName", function() {}, function() {});
 
-//   let cfg = templateCfg.getConfig();
-//   t.true(Object.keys(cfg.liquidTags).length > 1);
-// });
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.not(Object.keys(cfg.liquidTags).indexOf("myTagName"), -1);
+});
+
+test("Add liquid filter", t => {
+  eleventyConfig.addLiquidFilter("myFilterName", function() {}, function() {});
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.not(Object.keys(cfg.liquidFilters).indexOf("myFilterName"), -1);
+});
+
+test("Add handlebars helper", t => {
+  eleventyConfig.addHandlebarsHelper("myHelperName", function() {});
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.not(Object.keys(cfg.handlebarsHelpers).indexOf("myHelperName"), -1);
+});
+
+test("Add nunjucks filter", t => {
+  eleventyConfig.addNunjucksFilter(
+    "myFilterName",
+    function() {},
+    function() {}
+  );
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
+});
+
+test("Add universal filter", t => {
+  eleventyConfig.addFilter("myFilterName", function() {}, function() {});
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.not(Object.keys(cfg.liquidFilters).indexOf("myFilterName"), -1);
+  t.not(Object.keys(cfg.handlebarsHelpers).indexOf("myFilterName"), -1);
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
+});

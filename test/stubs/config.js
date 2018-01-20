@@ -13,11 +13,6 @@ module.exports = function(config) {
     data,
     date
   } */
-  config.addCollection("postDescendingByDate", function(collection) {
-    return collection.getFilteredByTag("post").sort(function(a, b) {
-      return a.date - b.date;
-    });
-  });
 
   return {
     markdownTemplateEngine: "ejs",
