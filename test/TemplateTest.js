@@ -572,6 +572,19 @@ test("getMappedDate (created date)", async t => {
   t.truthy(date.getTime());
 });
 
+test("getMappedDate (falls back to filename date)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/dates/2018-01-01-file5.md",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getRenderedData();
+  let date = await tmpl.getMappedDate(data);
+
+  t.true(date instanceof Date);
+  t.truthy(date.getTime());
+});
+
 test("getRenderedData() has page.url", async t => {
   let tmpl = new Template(
     "./test/stubs/template.ejs",

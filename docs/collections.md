@@ -123,6 +123,11 @@ Valid `date` values:
 * `2016-01-01` or any other valid YAML date value
 * `"2016-01-01"` or any other valid UTC **string** that [Luxon’s `DateTime.fromISO`](https://moment.github.io/luxon/docs/manual/parsing.html#parsing-technical-formats) can parse (see also the [Luxon API docs](https://moment.github.io/luxon/docs/class/src/datetime.js~DateTime.html#static-method-fromISO)).
 
+If a `date` key is omitted from the file, the date is assumed to be:
+
+1. If the file name matches `YYYY-MM-DD`, this date is used.
+1. File creation date.
+
 ## Advanced: Custom Filtering and Sorting
 
 To get fancier with your collections (and even do a bit of your own custom filtering, if you’d like), you can use our Configuration API.

@@ -136,6 +136,7 @@ class Template {
   }
 
   getLayoutTemplate(layoutPath) {
+    debug("getLayoutTemplate for %o", this.inputPath);
     let path = new TemplateLayout(layoutPath, this.layoutsDir).getFullPath();
     return new Template(path, this.inputDir, this.outputDir);
   }
@@ -422,6 +423,11 @@ class Template {
         }
       }
     } else {
+      let filenameRegex = this.inputPath.match(/(\d{4}-\d{2}-\d{2})/);
+      if (filenameRegex !== null) {
+        return DateTime.fromISO(filenameRegex[1]).toJSDate();
+      }
+
       // CREATED
       return new Date(stat.birthtimeMs);
     }

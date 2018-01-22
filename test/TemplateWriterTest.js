@@ -137,7 +137,7 @@ test("Collection of files sorted by date", async t => {
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
   let collectionsData = await templateMap.getCollectionsDataForTemplate();
-  t.is(collectionsData.dateTestTag.length, 5);
+  t.is(collectionsData.dateTestTag.length, 6);
 });
 
 test("_getCollectionsData with custom collection (ascending)", async t => {
