@@ -14,6 +14,8 @@ class EleventyConfig {
     this.nunjucksFilters = {};
     this.handlebarsHelpers = {};
 
+    this.layoutAliases = {};
+
     // now named `transforms` in API
     this.filters = {};
   }
@@ -26,11 +28,15 @@ class EleventyConfig {
     return this.events.emit(eventName, ...args);
   }
 
-  addLiquidTag(name, parseCallback, renderCallback) {
-    this.liquidTags[name] = {
-      parse: parseCallback,
-      render: renderCallback
-    };
+  // tagCallback: function(liquidEngine) { return { parse: …, render: … }} };
+  addLiquidTag(name, tagFn) {
+    if (typeof tagFn !== "function") {
+      throw new Error(
+        "EleventyConfig.addLiquidTag expects a callback function to be passed in: addLiquidTag(name, function(liquidEngine) { return { parse: …, render: … } })"
+      );
+    }
+
+    this.liquidTags[name] = tagFn;
   }
 
   addLiquidFilter(name, callback) {
@@ -58,6 +64,10 @@ class EleventyConfig {
     this.filters[name] = callback;
   }
 
+  addLayoutAlias(from, to) {
+    this.layoutAliases[from] = to;
+  }
+
   getCollections() {
     return this.collections;
   }
@@ -78,7 +88,8 @@ class EleventyConfig {
       liquidFilters: this.liquidFilters,
       nunjucksFilters: this.nunjucksFilters,
       handlebarsHelpers: this.handlebarsHelpers,
-      filters: this.filters
+      filters: this.filters,
+      layoutAliases: this.layoutAliases
     };
   }
 }

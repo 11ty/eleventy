@@ -53,3 +53,25 @@ test("Multiple layouts exist but we are being explicit—layout already has exte
     "multiple.md"
   );
 });
+
+test("Layout is aliased to a new location", t => {
+  let tl = new TemplateLayout("post", "./test/stubs/_includes");
+  tl.addLayoutAlias("post", "layouts/post.ejs");
+  tl.init();
+
+  t.is(tl.getFileName(), "layouts/post.ejs");
+});
+
+test("Layout has no alias and does not exist", async t => {
+  let tl = new TemplateLayout("default", "./test/stubs/_includes");
+  tl.addLayoutAlias("post", "layouts/post.ejs");
+  tl.init();
+
+  t.throws(() => {
+    tl.getFileName();
+  });
+
+  t.throws(() => {
+    tl.getFullPath();
+  });
+});
