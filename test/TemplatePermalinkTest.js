@@ -36,6 +36,10 @@ test("Permalink without filename", t => {
     new TemplatePermalink("./permalinksubfolder/").toString(),
     "permalinksubfolder/index.html"
   );
+  t.is(
+    new TemplatePermalink("/permalinksubfolder/").toString(),
+    "/permalinksubfolder/index.html"
+  );
 
   t.is(
     new TemplatePermalink("permalinksubfolder/").toHref(),
@@ -44,6 +48,10 @@ test("Permalink without filename", t => {
   t.is(
     new TemplatePermalink("./permalinksubfolder/").toHref(),
     "permalinksubfolder/"
+  );
+  t.is(
+    new TemplatePermalink("/permalinksubfolder/").toHref(),
+    "/permalinksubfolder/"
   );
 });
 
