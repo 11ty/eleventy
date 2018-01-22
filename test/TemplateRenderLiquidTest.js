@@ -67,14 +67,16 @@ test("Liquid Custom Filter", async t => {
 
 test("Liquid Custom Tag prefixWithZach", async t => {
   let tr = new TemplateRender("liquid", "./test/stubs/");
-  tr.engine.addTag("prefixWithZach", {
-    parse: function(tagToken, remainTokens) {
-      this.str = tagToken.args; // name
-    },
-    render: function(scope, hash) {
-      var str = LiquidLib.evalValue(this.str, scope); // 'alice'
-      return Promise.resolve("Zach" + str); // 'Alice'
-    }
+  tr.engine.addTag("prefixWithZach", function(liquidEngine) {
+    return {
+      parse: function(tagToken, remainTokens) {
+        this.str = tagToken.args; // name
+      },
+      render: function(scope, hash) {
+        var str = liquidEngine.evalValue(this.str, scope); // 'alice'
+        return Promise.resolve("Zach" + str); // 'Alice'
+      }
+    };
   });
 
   t.is(
@@ -85,14 +87,16 @@ test("Liquid Custom Tag prefixWithZach", async t => {
 
 test("Liquid Custom Tag postfixWithZach", async t => {
   let tr = new TemplateRender("liquid", "./test/stubs/");
-  tr.engine.addTag("postfixWithZach", {
-    parse: function(tagToken, remainTokens) {
-      this.str = tagToken.args;
-    },
-    render: function(scope, hash) {
-      var str = LiquidLib.evalValue(this.str, scope);
-      return Promise.resolve(str + "Zach");
-    }
+  tr.engine.addTag("postfixWithZach", function(liquidEngine) {
+    return {
+      parse: function(tagToken, remainTokens) {
+        this.str = tagToken.args;
+      },
+      render: function(scope, hash) {
+        var str = liquidEngine.evalValue(this.str, scope);
+        return Promise.resolve(str + "Zach");
+      }
+    };
   });
 
   t.is(

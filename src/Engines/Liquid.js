@@ -1,6 +1,7 @@
 const LiquidLib = require("liquidjs");
 const TemplateEngine = require("./TemplateEngine");
 const config = require("../Config");
+const debug = require("debug")("Eleventy:Liquid");
 
 class Liquid extends TemplateEngine {
   constructor(name, inputDir) {
@@ -16,7 +17,10 @@ class Liquid extends TemplateEngine {
     });
 
     this.addTags(this.config.liquidTags);
+    // debug( "Adding %o liquid tags", Object.keys(this.config.liquidTags).length);
+
     this.addFilters(this.config.liquidFilters);
+    // debug( "Adding %o liquid filters", Object.keys(this.config.liquidFilters).length);
   }
 
   addTags(tags) {
@@ -32,7 +36,15 @@ class Liquid extends TemplateEngine {
   }
 
   addTag(name, tag) {
-    this.liquidEngine.registerTag(name, tag);
+    let tagFn;
+    if (typeof tag === "function") {
+      tagFn = tag(this.liquidEngine);
+    } else {
+      throw new Error(
+        "Liquid.addTag expects a callback function to be passed in: addTag(name, function(liquidEngine) { return { parse: …, render: … } })"
+      );
+    }
+    this.liquidEngine.registerTag(name, tagFn);
   }
 
   addFilter(name, filter) {
