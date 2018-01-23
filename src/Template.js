@@ -249,12 +249,13 @@ class Template {
   async renderLayout(tmpl, tmplData, forcedLayoutPath) {
     // debug(`${tmpl.inputPath} renderLayout()`);
     let layoutPath = forcedLayoutPath || tmplData[tmpl.config.keys.layout];
-    // debug("Template %o is using layout: %o", this.inputPath, layoutPath);
+    debug("Template %o is using layout: %o", this.inputPath, layoutPath);
 
     if (!this.initialLayout) {
       this.initialLayout = tmplData[tmpl.config.keys.layout];
-      // debug("Saved layout: %o for %o", this.initialLayout, this.inputPath);
+      debug("Saved layout: %o for %o", this.initialLayout, this.inputPath);
     }
+
     // TODO make layout key to be available to templates (without it causing issues with merge below)
     delete tmplData[tmpl.config.keys.layout];
 
@@ -265,6 +266,7 @@ class Template {
     // debug("renderLayout -> renderContent(%o)", tmpl.getPreRender());
     let layoutContent = await tmpl.renderContent(tmpl.getPreRender(), tmplData);
     // debug("renderLayout -> layoutContent %o", layoutContent);
+
     layoutData.content = layoutContent;
     layoutData.layoutContent = layoutContent;
     // Deprecated

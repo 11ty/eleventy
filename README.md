@@ -190,6 +190,7 @@ module.exports = {
 | `markdownTemplateEngine` | `liquid`                                          | _A valid template engine_ or `false`         | N/A                   | Run markdown through this template engine before transforming it to HTML.                                                                                                         |
 | `htmlTemplateEngine`     | `liquid`                                          | _A valid template engine_ or `false`         | N/A                   | Run HTML templates through this template engine before transforming it to (better) HTML.                                                                                          |
 | `templateFormats`        | `liquid,ejs, md,hbs, mustache,haml, pug,njk,html` | _Any combination of these_                   | `--formats`           | Specify which type of templates should be transformed.                                                                                                                            |
+| `urlPrefix`              | `/`                                               | _A prefix directory added to links_          | N/A                   | Used by the url filter and inserted at the beginning of all href links. Use if your blog lives in a subdirectory outside of eleventy’s control.                                   |
 | `passthroughFileCopy`    | `true`                                            | `true` or `false`                            | N/A                   | Files found (that aren’t templates) from white-listed file extensions will pass-through to the output directory. [Read more about Pass-through Copy](docs/copy.md).               |
 | `htmlOutputSuffix`       | `-o`                                              | `String`                                     | N/A                   | If the input and output directory match, `index.html` files will have this suffix added to their output filename to prevent overwriting the template.                             |
 | `filters`                | `{}`                                              | `Object`                                     | N/A                   | Filters can transform output on a template. Take the format `function(str, outputPath) { return str; }`. For example, use a filter to format an HTML file with proper whitespace. |
@@ -212,6 +213,8 @@ This allows you to customize your template engines by using the Config helper me
 
 #### Add Tags/Filters to Template Engines
 
+Read more about [eleventy-provided universal filters](docs/filters.md).
+
 ```
 module.exports = function(eleventyConfig) {
 
@@ -225,18 +228,12 @@ module.exports = function(eleventyConfig) {
   // Handlebars
   eleventyConfig.addHandlebarsHelper(name, function(value) { … });
 
-  // Universal filters (Experimental! Supports Liquid, Nunjucks, Handlebars)
+  // Universal filters (Experimental! Adds to Liquid, Nunjucks, and Handlebars)
   eleventyConfig.addFilter(name, function(value) {});
 
   return {};
 };
 ```
-
-More information:
-
-* [Nunjucks Filters](https://mozilla.github.io/nunjucks/templating.html#filters)
-* [Handlebars Helpers](http://handlebarsjs.com/#helpers)
-* [Liquid Filters](https://github.com/harttle/liquidjs#register-filters) and [Liquid Tags](https://github.com/harttle/liquidjs#register-tags)
 
 #### Add custom collections
 
@@ -291,3 +288,15 @@ npm run test
 * [ ] Extensibility with system-wide content mapping **IN PROGRESS**
 * [ ] Components system for development reusability
 * [ ] Plugin system
+
+## Read more
+
+* [docs/collections.md](Collections)
+* [docs/pitfalls.md](Common Pitfalls)
+* [docs/filters.md](Custom Filters and Tags)
+* [docs/install-local.md](Install eleventy into a specific project)
+* [docs/pagination.md](Pagination, splitting content across multiple files)
+* [docs/copy.md](Pass-through file copy) for images, JS, CSS.
+* [docs/permalinks.md](Permalinks, remapping content to a new output location)
+* [docs/data.md](Template Data Files)
+* [docs/layouts.md](Template Layouts)

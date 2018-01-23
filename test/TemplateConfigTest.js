@@ -14,8 +14,8 @@ test("Template Config local config overrides base config", async t => {
 
   // merged, not overwritten
   t.true(Object.keys(cfg.keys).length > 1);
-  t.is(Object.keys(cfg.handlebarsHelpers).length, 1);
-  t.is(Object.keys(cfg.nunjucksFilters).length, 2);
+  t.truthy(Object.keys(cfg.handlebarsHelpers).length);
+  t.truthy(Object.keys(cfg.nunjucksFilters).length);
 
   t.is(Object.keys(cfg.filters).length, 1);
 
@@ -91,4 +91,24 @@ test("Add universal filter", t => {
   t.not(Object.keys(cfg.liquidFilters).indexOf("myFilterName"), -1);
   t.not(Object.keys(cfg.handlebarsHelpers).indexOf("myFilterName"), -1);
   t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
+});
+
+test("Test url universal filter", t => {
+  eleventyConfig.addFilter("myFilterName", function() {}, function() {});
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+
+  t.is(cfg.liquidFilters.url("/", cfg.urlPrefix), "/");
+  t.is(cfg.liquidFilters.url("//", cfg.urlPrefix), "/");
+  t.is(cfg.liquidFilters.url("/test", cfg.urlPrefix), "/test");
+  t.is(cfg.liquidFilters.url("//test", cfg.urlPrefix), "/test");
+  t.is(cfg.liquidFilters.url("../test", cfg.urlPrefix), "../test");
+
+  // Prefix with rootDir
+  t.is(cfg.liquidFilters.url("./test", cfg.urlPrefix), "/testdir/test");
+  t.is(cfg.liquidFilters.url("test", cfg.urlPrefix), "/testdir/test");
 });
