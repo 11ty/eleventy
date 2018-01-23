@@ -62,6 +62,18 @@ layout: layouts/base.njk
 
 This will look for `_includes/layouts/base.njk`.
 
+## Layout Aliasing
+
+_New in Eleventy v0.2.8._ Configuration API: use `eleventyConfig.addLayoutAlias(from, to)` to add layout aliases! Say you have a bunch of existing content using `layout: post`. If you don’t want to rewrite all of those values, just map `post` to a new file like this:
+
+```
+module.exports = function(eleventyConfig) {
+  eleventyConfig.addLayoutAlias('post', 'layouts/post.njk');
+
+  return {};
+};
+```
+
 ## Prevent double-escaping in layouts
 
 | Template Language | Unescaped Content (for layout content)                 | Comparison with an Escaped Output | Docs                                                                                 |
@@ -76,7 +88,9 @@ This will look for `_includes/layouts/base.njk`.
 
 ## Layout Chaining
 
-Your layouts can also use a layout! Add the same `layout` front matter data to your layout template file and it’ll chain. Say we have a piece of content:
+Your layouts can also use a layout! Add the same `layout` front matter data to your layout template file and it’ll chain. You do not have to use the same template engine across layouts and content! You can mix and match.
+
+To chain a layout, let’s look at an example:
 
 ```
 ---

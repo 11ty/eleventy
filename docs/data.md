@@ -1,4 +1,4 @@
-# Template Data
+# Data Files
 
 All data files will be pre-processed with the template engine specified under the `dataTemplateEngine` configuration option. Note that `package.json` data is available here under the `pkg` variable.
 
@@ -42,4 +42,15 @@ This data will be available to your templates like so:
 
 ## Local Template Data
 
-_TO DO_
+Of course, you can also add data in your template front matter, like this:
+
+```
+---
+title: My page title
+---
+<!doctype html>
+<html>
+…
+```
+
+Locally assigned front matter values override things further up the chain. Note also that layouts can contain front matter variables as well. Leaf template front matter takes precedence over layout front matter.
