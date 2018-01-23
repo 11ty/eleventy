@@ -1,7 +1,6 @@
-const mdlib = require("markdown-it")({
-  html: true
-});
+const mdlib = require("markdown-it")("commonmark");
 const TemplateEngine = require("./TemplateEngine");
+const debug = require("debug")("Eleventy:Markdown");
 
 class Markdown extends TemplateEngine {
   async compile(str, preTemplateEngine, bypassMarkdown) {
@@ -18,11 +17,13 @@ class Markdown extends TemplateEngine {
         };
       } else {
         return async function(data) {
-          return mdlib.render(await fn(data));
+          let preTemplateEngineRender = await fn(data);
+          let finishedRender = mdlib.render(preTemplateEngineRender);
+          return finishedRender;
         };
       }
     } else {
-      return function(data) {
+      return function() {
         // throw away data if preTemplateEngine is falsy
         return mdlib.render(str);
       };

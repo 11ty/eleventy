@@ -80,7 +80,7 @@ class Template {
     let permalink = this.getFrontMatterData()[this.config.keys.permalink];
     if (permalink) {
       let data = await this.getData();
-      debug("Rendering permalink for %o", this.inputPath);
+      // debug("Rendering permalink for %o", this.inputPath);
       let perm = new TemplatePermalink(
         // render variables inside permalink front matter
         await this.renderContent(permalink, data, {
@@ -138,11 +138,11 @@ class Template {
 
   getLayoutTemplate(layoutPath) {
     let path = new TemplateLayout(layoutPath, this.layoutsDir).getFullPath();
-    debug(
-      "creating new Template %o in getLayoutTemplate for %o",
-      path,
-      this.inputPath
-    );
+    // debug(
+    //   "creating new Template %o in getLayoutTemplate for %o",
+    //   path,
+    //   this.inputPath
+    // );
     return new Template(path, this.inputDir, this.outputDir);
   }
 
@@ -190,7 +190,7 @@ class Template {
       }
       return obj;
     } else if (typeof data === "string") {
-      debug("rendering renderData variables for %o", this.inputPath);
+      debug("rendering data.renderData for %o", this.inputPath);
       let str = await this.renderContent(data, templateData, {
         bypassMarkdown: true
       });
@@ -247,13 +247,13 @@ class Template {
   }
 
   async renderLayout(tmpl, tmplData, forcedLayoutPath) {
-    debug(`${tmpl.inputPath} renderLayout()`);
+    // debug(`${tmpl.inputPath} renderLayout()`);
     let layoutPath = forcedLayoutPath || tmplData[tmpl.config.keys.layout];
     // debug("Template %o is using layout: %o", this.inputPath, layoutPath);
 
     if (!this.initialLayout) {
       this.initialLayout = tmplData[tmpl.config.keys.layout];
-      debug("Saved layout: %o for %o", this.initialLayout, this.inputPath);
+      // debug("Saved layout: %o for %o", this.initialLayout, this.inputPath);
     }
     // TODO make layout key to be available to templates (without it causing issues with merge below)
     delete tmplData[tmpl.config.keys.layout];
@@ -262,9 +262,9 @@ class Template {
     let layoutData = await layout.getData(tmplData);
     // debug("layoutData: %O", layoutData)
     // debug("tmplData (passed to layoutContent = renderContent(): %O", tmplData);
-    debug("renderLayout -> renderContent(%o)", tmpl.getPreRender());
+    // debug("renderLayout -> renderContent(%o)", tmpl.getPreRender());
     let layoutContent = await tmpl.renderContent(tmpl.getPreRender(), tmplData);
-    debug("renderLayout -> layoutContent %o", layoutContent);
+    // debug("renderLayout -> layoutContent %o", layoutContent);
     layoutData.content = layoutContent;
     layoutData.layoutContent = layoutContent;
     // Deprecated
@@ -291,9 +291,10 @@ class Template {
         this.templateRender.engineName
       }`
     );
-    if (data.layoutContent) {
-      debug("renderContent -> layoutContent %o", data.layoutContent);
-    }
+
+    // if (data.layoutContent) {
+    //   debug("renderContent -> layoutContent %o", data.layoutContent);
+    // }
     let fn = await this.templateRender.getCompiledTemplate(str, options);
     return fn(data);
   }
@@ -306,7 +307,7 @@ class Template {
   }
 
   async render(data) {
-    debug(`${this.inputPath} render()`);
+    // debug(`${this.inputPath} render()`);
     if (!data) {
       data = await this.getRenderedData();
     }
@@ -324,7 +325,7 @@ class Template {
     ) {
       return this.renderLayout(this, data, this.initialLayout);
     } else {
-      debug("Template.render renderContent for %o", this.inputPath);
+      // debug("Template.render renderContent for %o", this.inputPath);
       return this.renderContent(this.getPreRender(), data);
     }
   }
