@@ -1,9 +1,9 @@
-# Code Coverage for Eleventy v0.2.8
+# Code Coverage for Eleventy v0.2.9
 
 | Filename                        | % Lines | % Statements | % Functions | % Branches |
 | ------------------------------- | ------- | ------------ | ----------- | ---------- |
-| `total`                         | 86.3%   | 86.3%        | 82.61%      | 80.26%     |
-| `config.js`                     | 81.25%  | 81.25%       | 100%        | 83.33%     |
+| `total`                         | 86.58%  | 86.58%       | 82.61%      | 81.33%     |
+| `config.js`                     | 100%    | 100%         | 100%        | 100%       |
 | `src/Config.js`                 | 100%    | 100%         | 100%        | 100%       |
 | `src/Eleventy.js`               | 62.39%  | 62.39%       | 38.89%      | 45.45%     |
 | `src/EleventyConfig.js`         | 90.91%  | 90.91%       | 84.62%      | 75%        |

@@ -1,6 +1,6 @@
 {
   "name": "@11ty/eleventy",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "Transform a directory of templates into HTML.",
   "main": "src/Eleventy.js",
   "license": "MIT",
@@ -14,7 +14,7 @@
     "default": "cd playground && npx eleventy --input=. --output=_site",
     "test": "npx nyc ava",
     "coverage":
-      "npm run test && npx nyc report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && npx eleventy --config=docs-src/.eleventy.docs.js",
+      "npm run test && npx nyc report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && node cmd.js --config=docs-src/.eleventy.docs.js",
     "precommit": "lint-staged",
     "prepush": "npx ava"
   },
