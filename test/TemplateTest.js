@@ -485,6 +485,16 @@ test("renderData", async t => {
   t.is((await tmpl.render()).trim(), `hi:value2-value1.css`);
 });
 
+test("renderData markdown (issue #40)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/renderData/renderData.md",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is((await tmpl.render()).trim(), `<title>value2-value1.css</title>`);
+});
+
 test("getMappedDate (empty, assume created)", async t => {
   let tmpl = new Template(
     "./test/stubs/dates/file1.md",
