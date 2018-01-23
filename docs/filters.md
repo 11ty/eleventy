@@ -13,11 +13,35 @@ More information:
 
 ## Url
 
-Works with the `urlPrefix` configuration option to properly normalize relative and absolute paths to your content.
+Works with the `pathPrefix` configuration option to properly normalize relative and absolute paths to your content.
 
 ```
 <a href="{{ post.url | url }}">Liquid or Nunjucks Link</a>
 ```
+
+### Sample URL Transformations
+
+| Sample URL   | `pathPrefix` | Return value |
+| ------------ | ------------ | ------------ |
+| `''`         | `'/'`        | `'/'`        |
+| `'/'`        | `'/'`        | `'/'`        |
+| `'./'`       | `'/'`        | `'./'`       |
+| `'..'`       | `'/'`        | `'..'`       |
+| `'myDir'`    | `'/'`        | `'/myDir'`   |
+| `'/myDir'`   | `'/'`        | `'/myDir'`   |
+| `'./myDir'`  | `'/'`        | `'myDir'`    |
+| `'../myDir'` | `'/'`        | `'../myDir'` |
+
+| Sample URL   | `pathPrefix` | Return value       |
+| ------------ | ------------ | ------------------ |
+| `''`         | `'/rootDir'` | `'/rootDir/'`      |
+| `'/'`        | `'/rootDir'` | `'/rootDir/'`      |
+| `'./'`       | `'/rootDir'` | `'./'`             |
+| `'..'`       | `'/rootDir'` | `'..'`             |
+| `'myDir'`    | `'/rootDir'` | `'/rootDir/myDir'` |
+| `'/myDir'`   | `'/rootDir'` | `'/rootDir/myDir'` |
+| `'./myDir'`  | `'/rootDir'` | `'myDir'`          |
+| `'../myDir'` | `'/rootDir'` | `'../myDir'`       |
 
 ## Slug
 

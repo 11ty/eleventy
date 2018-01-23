@@ -18,7 +18,7 @@ module.exports = function(config) {
     markdownTemplateEngine: "ejs",
     templateFormats: ["md", "njk"],
 
-    urlPrefix: "/testdir",
+    pathPrefix: "/testdir",
 
     keys: {
       package: "pkg2"

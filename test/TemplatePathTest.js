@@ -8,6 +8,18 @@ test("Working dir", t => {
 });
 
 test("Normalizer", async t => {
+  t.is(TemplatePath.normalize(""), ".");
+  t.is(TemplatePath.normalize("."), ".");
+  t.is(TemplatePath.normalize("/"), "/");
+  t.is(TemplatePath.normalize("/testing"), "/testing");
+  t.is(TemplatePath.normalize("/testing/"), "/testing");
+
+  t.is(TemplatePath.normalize("./"), "./");
+  t.is(TemplatePath.normalize("./testing"), "testing");
+
+  t.is(TemplatePath.normalize("../"), "..");
+  t.is(TemplatePath.normalize("../testing"), "../testing");
+
   t.is(TemplatePath.normalize("testing", "hello"), "testing/hello");
   t.is(TemplatePath.normalize("testing", "hello/"), "testing/hello");
   t.is(TemplatePath.normalize("./testing", "hello"), "testing/hello");

@@ -2,7 +2,6 @@ const slugify = require("slugify");
 const TemplatePath = require("./src/TemplatePath");
 
 module.exports = function(config) {
-  // universal filter
   config.addFilter("slug", str => {
     return slugify(str, {
       replacement: "-",
@@ -10,22 +9,36 @@ module.exports = function(config) {
     });
   });
 
-  config.addFilter("url", function(url, urlPrefix) {
-    if (!urlPrefix || typeof urlPrefix !== "string") {
+  config.addFilter("url", function(url, pathPrefix) {
+    if (!pathPrefix || typeof pathPrefix !== "string") {
       let projectConfig = require("./src/Config").getConfig();
-      urlPrefix = projectConfig.urlPrefix;
+      pathPrefix = projectConfig.pathPrefix;
     }
 
-    let rootDir = urlPrefix;
+    let normUrl = TemplatePath.normalize(url);
+    let normRootDir = TemplatePath.normalize("/", pathPrefix);
+    let normFull = TemplatePath.normalize("/", pathPrefix, url);
 
-    if (!url || url === rootDir) {
-      return TemplatePath.normalize(rootDir);
-      // absolute or relative url
-    } else if (url.charAt(0) === "/" || url.indexOf("../") === 0) {
-      return TemplatePath.normalize(url);
+    // minor difference with straight `normalize`, "" resolves to root dir and not "."
+    // minor difference with straight `normalize`, "/" resolves to root dir
+    if (!url || normUrl === "/" || normUrl === normRootDir) {
+      return (
+        normRootDir +
+        (normRootDir.length &&
+        normRootDir.charAt(normRootDir.length - 1) !== "/"
+          ? "/"
+          : "")
+      );
+    } else if (
+      url === ".." ||
+      url.indexOf("../") === 0 ||
+      url === "." ||
+      url.indexOf("./") === 0
+    ) {
+      return normUrl;
     }
 
-    return TemplatePath.normalize(rootDir, url);
+    return normFull;
   });
 
   return {
@@ -42,7 +55,7 @@ module.exports = function(config) {
       "jstl"
     ],
     // if your site lives in a subdirectory, change this
-    urlPrefix: "/",
+    pathPrefix: "/",
     markdownTemplateEngine: "liquid",
     htmlTemplateEngine: "liquid",
     dataTemplateEngine: "liquid",

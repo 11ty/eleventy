@@ -94,21 +94,145 @@ test("Add universal filter", t => {
 });
 
 test("Test url universal filter", t => {
-  eleventyConfig.addFilter("myFilterName", function() {}, function() {});
-
   let templateCfg = new TemplateConfig(
     require("../config.js"),
     "./test/stubs/config.js"
   );
   let cfg = templateCfg.getConfig();
 
-  t.is(cfg.liquidFilters.url("/", cfg.urlPrefix), "/");
-  t.is(cfg.liquidFilters.url("//", cfg.urlPrefix), "/");
-  t.is(cfg.liquidFilters.url("/test", cfg.urlPrefix), "/test");
-  t.is(cfg.liquidFilters.url("//test", cfg.urlPrefix), "/test");
-  t.is(cfg.liquidFilters.url("../test", cfg.urlPrefix), "../test");
+  t.is(cfg.liquidFilters.url("/", "/"), "/");
+  t.is(cfg.liquidFilters.url("//", "/"), "/");
+  t.is(cfg.liquidFilters.url("", "/"), "/");
 
-  // Prefix with rootDir
-  t.is(cfg.liquidFilters.url("./test", cfg.urlPrefix), "/testdir/test");
-  t.is(cfg.liquidFilters.url("test", cfg.urlPrefix), "/testdir/test");
+  // leave . and .. alone
+  t.is(cfg.liquidFilters.url(".", "/"), ".");
+  t.is(cfg.liquidFilters.url("./", "/"), "./");
+  t.is(cfg.liquidFilters.url("..", "/"), "..");
+  t.is(cfg.liquidFilters.url("../", "/"), "..");
+
+  t.is(cfg.liquidFilters.url("test", "/"), "/test");
+  t.is(cfg.liquidFilters.url("/test", "/"), "/test");
+  t.is(cfg.liquidFilters.url("//test", "/"), "/test");
+  t.is(cfg.liquidFilters.url("./test", "/"), "test");
+  t.is(cfg.liquidFilters.url("../test", "/"), "../test");
+});
+
+test("Test url universal filter with custom pathPrefix (empty, gets overwritten by root config `/`)", t => {
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+
+  t.is(cfg.liquidFilters.url("/", ""), "/");
+  t.is(cfg.liquidFilters.url("//", ""), "/");
+  t.is(cfg.liquidFilters.url("", ""), "/");
+
+  // leave . and .. alone
+  t.is(cfg.liquidFilters.url(".", ""), ".");
+  t.is(cfg.liquidFilters.url("./", ""), "./");
+  t.is(cfg.liquidFilters.url("..", ""), "..");
+  t.is(cfg.liquidFilters.url("../", ""), "..");
+
+  t.is(cfg.liquidFilters.url("test", ""), "/test");
+  t.is(cfg.liquidFilters.url("/test", ""), "/test");
+  t.is(cfg.liquidFilters.url("//test", ""), "/test");
+  t.is(cfg.liquidFilters.url("./test", ""), "test");
+  t.is(cfg.liquidFilters.url("../test", ""), "../test");
+});
+
+test("Test url universal filter with custom pathPrefix (leading slash)", t => {
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+
+  t.is(cfg.liquidFilters.url("/", "/testdir"), "/testdir/");
+  t.is(cfg.liquidFilters.url("//", "/testdir"), "/testdir/");
+  t.is(cfg.liquidFilters.url("", "/testdir"), "/testdir/");
+
+  // leave . and .. alone
+  t.is(cfg.liquidFilters.url(".", "/testdir"), ".");
+  t.is(cfg.liquidFilters.url("./", "/testdir"), "./");
+  t.is(cfg.liquidFilters.url("..", "/testdir"), "..");
+  t.is(cfg.liquidFilters.url("../", "/testdir"), "..");
+
+  t.is(cfg.liquidFilters.url("test", "/testdir"), "/testdir/test");
+  t.is(cfg.liquidFilters.url("/test", "/testdir"), "/testdir/test");
+  t.is(cfg.liquidFilters.url("//test", "/testdir"), "/testdir/test");
+  t.is(cfg.liquidFilters.url("./test", "/testdir"), "test");
+  t.is(cfg.liquidFilters.url("../test", "/testdir"), "../test");
+});
+
+test("Test url universal filter with custom pathPrefix (double slash)", t => {
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+
+  t.is(cfg.liquidFilters.url("/", "/testdir/"), "/testdir/");
+  t.is(cfg.liquidFilters.url("//", "/testdir/"), "/testdir/");
+  t.is(cfg.liquidFilters.url("", "/testdir/"), "/testdir/");
+
+  // leave . and .. alone
+  t.is(cfg.liquidFilters.url(".", "/testdir/"), ".");
+  t.is(cfg.liquidFilters.url("./", "/testdir/"), "./");
+  t.is(cfg.liquidFilters.url("..", "/testdir/"), "..");
+  t.is(cfg.liquidFilters.url("../", "/testdir/"), "..");
+
+  t.is(cfg.liquidFilters.url("test", "/testdir/"), "/testdir/test");
+  t.is(cfg.liquidFilters.url("/test", "/testdir/"), "/testdir/test");
+  t.is(cfg.liquidFilters.url("//test", "/testdir/"), "/testdir/test");
+  t.is(cfg.liquidFilters.url("./test", "/testdir/"), "test");
+  t.is(cfg.liquidFilters.url("../test", "/testdir/"), "../test");
+});
+
+test("Test url universal filter with custom pathPrefix (trailing slash)", t => {
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+
+  t.is(cfg.liquidFilters.url("/", "testdir/"), "/testdir/");
+  t.is(cfg.liquidFilters.url("//", "testdir/"), "/testdir/");
+  t.is(cfg.liquidFilters.url("", "testdir/"), "/testdir/");
+
+  // leave . and .. alone
+  t.is(cfg.liquidFilters.url(".", "testdir/"), ".");
+  t.is(cfg.liquidFilters.url("./", "testdir/"), "./");
+  t.is(cfg.liquidFilters.url("..", "testdir/"), "..");
+  t.is(cfg.liquidFilters.url("../", "testdir/"), "..");
+
+  t.is(cfg.liquidFilters.url("test", "testdir/"), "/testdir/test");
+  t.is(cfg.liquidFilters.url("/test", "testdir/"), "/testdir/test");
+  t.is(cfg.liquidFilters.url("//test", "testdir/"), "/testdir/test");
+  t.is(cfg.liquidFilters.url("./test", "testdir/"), "test");
+  t.is(cfg.liquidFilters.url("../test", "testdir/"), "../test");
+});
+
+test("Test url universal filter with custom pathPrefix (no slash)", t => {
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+
+  t.is(cfg.liquidFilters.url("/", "testdir"), "/testdir/");
+  t.is(cfg.liquidFilters.url("//", "testdir"), "/testdir/");
+  t.is(cfg.liquidFilters.url("", "testdir"), "/testdir/");
+
+  // leave . and .. alone
+  t.is(cfg.liquidFilters.url(".", "testdir"), ".");
+  t.is(cfg.liquidFilters.url("./", "testdir"), "./");
+  t.is(cfg.liquidFilters.url("..", "testdir"), "..");
+  t.is(cfg.liquidFilters.url("../", "testdir"), "..");
+
+  t.is(cfg.liquidFilters.url("test", "testdir"), "/testdir/test");
+  t.is(cfg.liquidFilters.url("/test", "testdir"), "/testdir/test");
+  t.is(cfg.liquidFilters.url("//test", "testdir"), "/testdir/test");
+  t.is(cfg.liquidFilters.url("./test", "testdir"), "test");
+  t.is(cfg.liquidFilters.url("../test", "testdir"), "../test");
 });
