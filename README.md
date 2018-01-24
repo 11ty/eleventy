@@ -291,12 +291,12 @@ npm run test
 
 ## Read more
 
-* [docs/collections.md](Collections)
-* [docs/pitfalls.md](Common Pitfalls)
-* [docs/filters.md](Custom Filters and Tags)
-* [docs/install-local.md](Install eleventy into a specific project)
-* [docs/pagination.md](Pagination, splitting content across multiple files)
-* [docs/copy.md](Pass-through file copy) for images, JS, CSS.
-* [docs/permalinks.md](Permalinks, remapping content to a new output location)
-* [docs/data.md](Template Data Files)
-* [docs/layouts.md](Template Layouts)
+* [Collections](docs/collections.md)
+* [Common Pitfalls](docs/pitfalls.md)
+* [Custom Filters and Tags](docs/filters.md)
+* [Install eleventy into a specific project](docs/install-local.md)
+* [Pagination, splitting content across multiple files](docs/pagination.md)
+* [Pass-through file copy](docs/copy.md) for images, JS, CSS.
+* [Permalinks, remapping content to a new output location](docs/permalinks.md)
+* [Template Data Files](docs/data.md)
+* [Template Layouts](docs/layouts.md)
