@@ -16,6 +16,21 @@ TemplatePath.normalize = function(...paths) {
   return normalize(path.join(...paths));
 };
 
+TemplatePath.hasTrailingSlash = function(thePath) {
+  return thePath.length && thePath.charAt(thePath.length - 1) === "/";
+};
+
+TemplatePath.normalizeUrlPath = function(...paths) {
+  let thePath = path.join(...paths);
+  let hasTrailingSlashBefore = TemplatePath.hasTrailingSlash(thePath);
+  let normalizedPath = normalize(thePath);
+  let hasTrailingSlashAfter = TemplatePath.hasTrailingSlash(normalizedPath);
+  return (
+    normalizedPath +
+    (hasTrailingSlashBefore && !hasTrailingSlashAfter ? "/" : "")
+  );
+};
+
 TemplatePath.localPath = function(...paths) {
   return normalize(path.join(TemplatePath.getWorkingDir(), ...paths));
 };
