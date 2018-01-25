@@ -34,21 +34,25 @@ class TemplateConfig {
   }
 
   mergeConfig(projectConfigPath) {
-    let localConfig;
+    let localConfig = {};
     let path = TemplatePath.normalize(
       TemplatePath.getWorkingDir() + "/" + projectConfigPath
     );
     debug(`Merging config with ${path}`);
 
-    try {
-      localConfig = require(path);
-      // debug( "localConfig require return value: %o", localConfig );
-    } catch (err) {
-      // TODO if file does exist, rethrow the error or console.log the error (file has syntax problem)
+    if (fs.existsSync(path)) {
+      try {
+        localConfig = require(path);
+        // debug( "localConfig require return value: %o", localConfig );
+      } catch (err) {
+        // TODO if file does exist, rethrow the error or console.log the error (file has syntax problem)
 
-      // if file does not exist, return empty obj
-      localConfig = {};
-      debug(chalk.red("Problem getting localConfig file, %o"), err);
+        // if file does not exist, return empty obj
+        localConfig = {};
+        debug(chalk.red("Problem getting localConfig file, %o"), err);
+      }
+    } else {
+      debug("Eleventy local project config file not found, skipping.");
     }
 
     if (typeof localConfig === "function") {
