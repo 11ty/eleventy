@@ -2,17 +2,17 @@ const validUrl = require("valid-url");
 const TemplatePath = require("../TemplatePath");
 
 module.exports = function(url, pathPrefix) {
-  if (pathPrefix === undefined || typeof pathPrefix !== "string") {
-    let projectConfig = require("../Config").getConfig();
-    pathPrefix = projectConfig.pathPrefix;
-  }
-
   if (
     validUrl.isUri(url) ||
     url.indexOf("http://") === 0 ||
     url.indexOf("https://") === 0
   ) {
     return url;
+  }
+
+  if (pathPrefix === undefined || typeof pathPrefix !== "string") {
+    let projectConfig = require("../Config").getConfig();
+    pathPrefix = projectConfig.pathPrefix;
   }
 
   let normUrl = TemplatePath.normalizeUrlPath(url);
