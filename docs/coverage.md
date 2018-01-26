@@ -1,16 +1,16 @@
-# Code Coverage for Eleventy v0.2.10
+# Code Coverage for Eleventy v0.2.11
 
 | Filename                        | % Lines | % Statements | % Functions | % Branches |
 | ------------------------------- | ------- | ------------ | ----------- | ---------- |
-| `total`                         | 86.47%  | 86.47%       | 82.75%      | 81.87%     |
+| `total`                         | 87.46%  | 87.46%       | 84.44%      | 81.79%     |
 | `config.js`                     | 100%    | 100%         | 100%        | 100%       |
 | `src/Config.js`                 | 100%    | 100%         | 100%        | 100%       |
-| `src/Eleventy.js`               | 62.39%  | 62.39%       | 38.89%      | 45.45%     |
+| `src/Eleventy.js`               | 61.29%  | 61.29%       | 36.84%      | 38.46%     |
 | `src/EleventyConfig.js`         | 90.91%  | 90.91%       | 84.62%      | 75%        |
-| `src/EleventyError.js`          | 7.69%   | 7.69%        | 0%          | 0%         |
+| `src/EleventyError.js`          | 100%    | 100%         | 100%        | 100%       |
 | `src/Template.js`               | 86.15%  | 86.15%       | 82.93%      | 77.03%     |
 | `src/TemplateCollection.js`     | 92.31%  | 92.31%       | 100%        | 83.33%     |
-| `src/TemplateConfig.js`         | 89.47%  | 89.47%       | 75%         | 92.86%     |
+| `src/TemplateConfig.js`         | 90.7%   | 90.7%        | 80%         | 92.86%     |
 | `src/TemplateData.js`           | 98.57%  | 98.57%       | 100%        | 75%        |
 | `src/TemplateGlob.js`           | 93.75%  | 93.75%       | 100%        | 87.5%      |
 | `src/TemplateLayout.js`         | 97.44%  | 97.44%       | 100%        | 93.75%     |
@@ -32,7 +32,7 @@
 | `src/Engines/Pug.js`            | 100%    | 100%         | 100%        | 100%       |
 | `src/Engines/TemplateEngine.js` | 96.77%  | 96.77%       | 88.89%      | 100%       |
 | `src/Filters/Slug.js`           | 100%    | 100%         | 100%        | 100%       |
-| `src/Filters/Url.js`            | 88.89%  | 88.89%       | 100%        | 96.15%     |
+| `src/Filters/Url.js`            | 100%    | 100%         | 100%        | 100%       |
 | `src/Plugins/Pagination.js`     | 93.42%  | 93.42%       | 100%        | 87.5%      |
 | `src/Util/Capitalize.js`        | 100%    | 100%         | 100%        | 100%       |
 | `src/Util/Pluralize.js`         | 100%    | 100%         | 100%        | 100%       |
