@@ -205,7 +205,9 @@ I want to hear it! Open an issue: https://github.com/11ty/eleventy/issues/new`);
     console.log("\n" + chalk.red("Problem writing eleventy templates: "));
     if (e instanceof EleventyError) {
       console.log(chalk.red(e.log()));
-      console.log("\n" + e.dump());
+      for (let err of e.getAll()) {
+        debug("%o", err);
+      }
     } else {
       console.log(e);
     }

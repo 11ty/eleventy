@@ -17,10 +17,8 @@ class EleventyError {
     this.errors.push(errorObj);
   }
 
-  dump() {
-    for (let err of this.errors) {
-      console.log(err);
-    }
+  getAll() {
+    return this.errors;
   }
 
   log() {
