@@ -11,6 +11,7 @@ EleventyNodeVersionCheck().then(function() {
       (argv.output ? " --output=" + argv.output : "") +
       (argv.formats ? " --formats=" + argv.formats : "") +
       (argv.config ? " --config=" + argv.config : "") +
+      (argv.config ? " --pathprefix=" + argv.pathprefix : "") +
       (argv.quiet ? " --quiet" : "") +
       (argv.version ? " --version" : "") +
       (argv.watch ? " --watch" : "")
@@ -18,6 +19,7 @@ EleventyNodeVersionCheck().then(function() {
 
   let elev = new Eleventy(argv.input, argv.output);
   elev.setConfigPath(argv.config);
+  elev.setPathPrefix(argv.pathprefix);
   elev.setFormats(argv.formats);
 
   if (process.env.DEBUG) {

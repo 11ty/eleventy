@@ -8,6 +8,7 @@ const debug = require("debug")("Eleventy:TemplateConfig");
 
 class TemplateConfig {
   constructor(rootConfig, projectConfigPath) {
+    this.overrides = {};
     this.projectConfigPath = projectConfigPath || ".eleventy.js";
     this.rootConfig = rootConfig || mainRootConfig;
     if (rootConfig) {
@@ -31,6 +32,12 @@ class TemplateConfig {
     this.projectConfigPath = path;
 
     this.config = this.mergeConfig(path);
+  }
+
+  setPathPrefix(pathPrefix) {
+    debug("Setting pathPrefix to %o", pathPrefix);
+    this.overrides.pathPrefix = pathPrefix;
+    this.config.pathPrefix = pathPrefix;
   }
 
   mergeConfig(projectConfigPath) {
@@ -65,9 +72,10 @@ class TemplateConfig {
     );
     // debug("eleventyConfig.getMergingConfigObject: %o", eleventyConfig.getMergingConfigObject());
     debug("localConfig: %o", localConfig);
+    debug("overrides: %o", this.overrides);
 
     // Object assign overrides original values (good only for templateFormats) but not good for anything else
-    let merged = lodashMerge({}, this.rootConfig, localConfig);
+    let merged = lodashMerge({}, this.rootConfig, localConfig, this.overrides);
 
     // blow away any templateFormats upstream (don’t merge)
     let overrides = ["templateFormats"];

@@ -38,6 +38,13 @@ Eleventy.prototype._getDir = function(inputPath) {
   return inputPath;
 };
 
+Eleventy.prototype.setPathPrefix = function(pathPrefix) {
+  if (pathPrefix || pathPrefix === "") {
+    config.setPathPrefix(pathPrefix);
+    this.config = config.getConfig();
+  }
+};
+
 Eleventy.prototype.setConfigPath = function(configPath) {
   if (configPath) {
     this.configPath = configPath;
@@ -143,6 +150,8 @@ Eleventy.prototype.getHelp = function() {
   out.push("       Whitelist only certain template types (default: `*`)");
   out.push("  --quiet");
   out.push("       Don’t print all written files (default: `false`)");
+  out.push("  --pathprefix='/'");
+  out.push("       Change all url template filters to use this subdirectory.");
   out.push("  --config=filename.js");
   out.push(
     "      Override the eleventy config file path (default: `.eleventy.js`)"
