@@ -36,15 +36,15 @@ class Liquid extends TemplateEngine {
   }
 
   addTag(name, tag) {
-    let tagFn;
+    let tagObj;
     if (typeof tag === "function") {
-      tagFn = tag(this.liquidEngine);
+      tagObj = tag(this.liquidEngine);
     } else {
       throw new Error(
         "Liquid.addTag expects a callback function to be passed in: addTag(name, function(liquidEngine) { return { parse: …, render: … } })"
       );
     }
-    this.liquidEngine.registerTag(name, tagFn);
+    this.liquidEngine.registerTag(name, tagObj);
   }
 
   addFilter(name, filter) {
