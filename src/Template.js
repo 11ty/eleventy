@@ -428,6 +428,11 @@ class Template {
 
     // should we use Luxon dates everywhere? Right now using built-in `Date`
     if ("date" in data) {
+      debug(
+        "getMappedDate: using a date in the data for %o of %o",
+        this.inputPath,
+        data.date
+      );
       if (data.date instanceof Date) {
         // YAML does its own date parsing
         return data.date;
@@ -454,11 +459,23 @@ class Template {
     } else {
       let filenameRegex = this.inputPath.match(/(\d{4}-\d{2}-\d{2})/);
       if (filenameRegex !== null) {
+        debug(
+          "getMappedDate: using filename regex time for %o of %o",
+          this.inputPath,
+          filenameRegex[1]
+        );
         return DateTime.fromISO(filenameRegex[1]).toJSDate();
       }
 
+      let createdDate = new Date(stat.birthtimeMs);
+      debug(
+        "getMappedDate: using file created time for %o of %o",
+        this.inputPath,
+        createdDate
+      );
+
       // CREATED
-      return new Date(stat.birthtimeMs);
+      return createdDate;
     }
 
     return date;
