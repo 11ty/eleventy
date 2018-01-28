@@ -107,6 +107,10 @@ class EleventyConfig {
       layoutAliases: this.layoutAliases
     };
   }
+
+  addPlugin(pluginCallback) {
+    pluginCallback(this);
+  }
 }
 
 let config = new EleventyConfig();
