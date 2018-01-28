@@ -44,6 +44,11 @@ class EleventyConfig {
     this.liquidFilters[name] = callback;
   }
 
+  addNunjucksAsyncFilter(name, callback) {
+    this.nunjucksAsyncFilters[name] = callback;
+  }
+
+  // Support the nunjucks style syntax for asynchronous filter add
   addNunjucksFilter(name, callback, isAsync) {
     if (isAsync) {
       this.nunjucksAsyncFilters[name] = callback;
