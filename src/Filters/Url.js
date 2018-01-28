@@ -24,16 +24,11 @@ module.exports = function(url, pathPrefix) {
 
   // minor difference with straight `normalize`, "" resolves to root dir and not "."
   // minor difference with straight `normalize`, "/" resolves to root dir
-  if (!url || normUrl === "/" || normUrl === normRootDir) {
+  if (normUrl === "/" || normUrl === normRootDir) {
     return normRootDir + (!isRootDirTrailingSlash ? "/" : "");
-  } else if (
-    url === ".." ||
-    url.indexOf("../") === 0 ||
-    url === "." ||
-    url.indexOf("./") === 0
-  ) {
-    return normUrl;
+  } else if (normUrl.indexOf("/") === 0) {
+    return normFull;
   }
 
-  return normFull;
+  return normUrl;
 };

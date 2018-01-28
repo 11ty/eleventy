@@ -4,7 +4,9 @@ import url from "../src/Filters/Url.js";
 test("Test url filter without passing in pathPrefix", t => {
   let projectConfig = require("../src/Config").getConfig();
   t.is(projectConfig.pathPrefix, "/");
-  t.is(url("test"), "/test");
+
+  t.is(url("test"), "test");
+  t.is(url("/test"), "/test");
 });
 
 test("Test url filter with passthrough urls", t => {
@@ -103,7 +105,7 @@ test("Test url filter with passthrough urls", t => {
 test("Test url filter", t => {
   t.is(url("/", "/"), "/");
   t.is(url("//", "/"), "/");
-  t.is(url("", "/"), "/");
+  t.is(url("", "/"), ".");
 
   // leave . and .. alone
   t.is(url(".", "/"), ".");
@@ -111,13 +113,13 @@ test("Test url filter", t => {
   t.is(url("..", "/"), "..");
   t.is(url("../", "/"), "../");
 
-  t.is(url("test", "/"), "/test");
+  t.is(url("test", "/"), "test");
   t.is(url("/test", "/"), "/test");
   t.is(url("//test", "/"), "/test");
   t.is(url("./test", "/"), "test");
   t.is(url("../test", "/"), "../test");
 
-  t.is(url("test/", "/"), "/test/");
+  t.is(url("test/", "/"), "test/");
   t.is(url("/test/", "/"), "/test/");
   t.is(url("//test/", "/"), "/test/");
   t.is(url("./test/", "/"), "test/");
@@ -127,7 +129,7 @@ test("Test url filter", t => {
 test("Test url filter with custom pathPrefix (empty, gets overwritten by root config `/`)", t => {
   t.is(url("/", ""), "/");
   t.is(url("//", ""), "/");
-  t.is(url("", ""), "/");
+  t.is(url("", ""), ".");
 
   // leave . and .. alone
   t.is(url(".", ""), ".");
@@ -135,13 +137,13 @@ test("Test url filter with custom pathPrefix (empty, gets overwritten by root co
   t.is(url("..", ""), "..");
   t.is(url("../", ""), "../");
 
-  t.is(url("test", ""), "/test");
+  t.is(url("test", ""), "test");
   t.is(url("/test", ""), "/test");
   t.is(url("//test", ""), "/test");
   t.is(url("./test", ""), "test");
   t.is(url("../test", ""), "../test");
 
-  t.is(url("test/", ""), "/test/");
+  t.is(url("test/", ""), "test/");
   t.is(url("/test/", ""), "/test/");
   t.is(url("//test/", ""), "/test/");
   t.is(url("./test/", ""), "test/");
@@ -151,7 +153,7 @@ test("Test url filter with custom pathPrefix (empty, gets overwritten by root co
 test("Test url filter with custom pathPrefix (leading slash)", t => {
   t.is(url("/", "/testdir"), "/testdir/");
   t.is(url("//", "/testdir"), "/testdir/");
-  t.is(url("", "/testdir"), "/testdir/");
+  t.is(url("", "/testdir"), ".");
 
   // leave . and .. alone
   t.is(url(".", "/testdir"), ".");
@@ -159,13 +161,13 @@ test("Test url filter with custom pathPrefix (leading slash)", t => {
   t.is(url("..", "/testdir"), "..");
   t.is(url("../", "/testdir"), "../");
 
-  t.is(url("test", "/testdir"), "/testdir/test");
+  t.is(url("test", "/testdir"), "test");
   t.is(url("/test", "/testdir"), "/testdir/test");
   t.is(url("//test", "/testdir"), "/testdir/test");
   t.is(url("./test", "/testdir"), "test");
   t.is(url("../test", "/testdir"), "../test");
 
-  t.is(url("test/", "/testdir"), "/testdir/test/");
+  t.is(url("test/", "/testdir"), "test/");
   t.is(url("/test/", "/testdir"), "/testdir/test/");
   t.is(url("//test/", "/testdir"), "/testdir/test/");
   t.is(url("./test/", "/testdir"), "test/");
@@ -175,7 +177,7 @@ test("Test url filter with custom pathPrefix (leading slash)", t => {
 test("Test url filter with custom pathPrefix (double slash)", t => {
   t.is(url("/", "/testdir/"), "/testdir/");
   t.is(url("//", "/testdir/"), "/testdir/");
-  t.is(url("", "/testdir/"), "/testdir/");
+  t.is(url("", "/testdir/"), ".");
 
   // leave . and .. alone
   t.is(url(".", "/testdir/"), ".");
@@ -183,13 +185,13 @@ test("Test url filter with custom pathPrefix (double slash)", t => {
   t.is(url("..", "/testdir/"), "..");
   t.is(url("../", "/testdir/"), "../");
 
-  t.is(url("test", "/testdir/"), "/testdir/test");
+  t.is(url("test", "/testdir/"), "test");
   t.is(url("/test", "/testdir/"), "/testdir/test");
   t.is(url("//test", "/testdir/"), "/testdir/test");
   t.is(url("./test", "/testdir/"), "test");
   t.is(url("../test", "/testdir/"), "../test");
 
-  t.is(url("test/", "/testdir/"), "/testdir/test/");
+  t.is(url("test/", "/testdir/"), "test/");
   t.is(url("/test/", "/testdir/"), "/testdir/test/");
   t.is(url("//test/", "/testdir/"), "/testdir/test/");
   t.is(url("./test/", "/testdir/"), "test/");
@@ -199,7 +201,7 @@ test("Test url filter with custom pathPrefix (double slash)", t => {
 test("Test url filter with custom pathPrefix (trailing slash)", t => {
   t.is(url("/", "testdir/"), "/testdir/");
   t.is(url("//", "testdir/"), "/testdir/");
-  t.is(url("", "testdir/"), "/testdir/");
+  t.is(url("", "testdir/"), ".");
 
   // leave . and .. alone
   t.is(url(".", "testdir/"), ".");
@@ -207,13 +209,13 @@ test("Test url filter with custom pathPrefix (trailing slash)", t => {
   t.is(url("..", "testdir/"), "..");
   t.is(url("../", "testdir/"), "../");
 
-  t.is(url("test", "testdir/"), "/testdir/test");
+  t.is(url("test", "testdir/"), "test");
   t.is(url("/test", "testdir/"), "/testdir/test");
   t.is(url("//test", "testdir/"), "/testdir/test");
   t.is(url("./test", "testdir/"), "test");
   t.is(url("../test", "testdir/"), "../test");
 
-  t.is(url("test/", "testdir/"), "/testdir/test/");
+  t.is(url("test/", "testdir/"), "test/");
   t.is(url("/test/", "testdir/"), "/testdir/test/");
   t.is(url("//test/", "testdir/"), "/testdir/test/");
   t.is(url("./test/", "testdir/"), "test/");
@@ -223,7 +225,7 @@ test("Test url filter with custom pathPrefix (trailing slash)", t => {
 test("Test url filter with custom pathPrefix (no slash)", t => {
   t.is(url("/", "testdir"), "/testdir/");
   t.is(url("//", "testdir"), "/testdir/");
-  t.is(url("", "testdir"), "/testdir/");
+  t.is(url("", "testdir"), ".");
 
   // leave . and .. alone
   t.is(url(".", "testdir"), ".");
@@ -231,13 +233,13 @@ test("Test url filter with custom pathPrefix (no slash)", t => {
   t.is(url("..", "testdir"), "..");
   t.is(url("../", "testdir"), "../");
 
-  t.is(url("test", "testdir"), "/testdir/test");
+  t.is(url("test", "testdir"), "test");
   t.is(url("/test", "testdir"), "/testdir/test");
   t.is(url("//test", "testdir"), "/testdir/test");
   t.is(url("./test", "testdir"), "test");
   t.is(url("../test", "testdir"), "../test");
 
-  t.is(url("test/", "testdir"), "/testdir/test/");
+  t.is(url("test/", "testdir"), "test/");
   t.is(url("/test/", "testdir"), "/testdir/test/");
   t.is(url("//test/", "testdir"), "/testdir/test/");
   t.is(url("./test/", "testdir"), "test/");

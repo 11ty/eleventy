@@ -27,12 +27,12 @@ TemplatePermalink.prototype.toString = function() {
 // index.html becomes /
 // test/index.html becomes test/
 TemplatePermalink.prototype.toHref = function() {
-  let original = this.toString();
-  let str = "/" + original;
+  let str = this.toString();
+  let original = (str.charAt(0) !== "/" ? "/" : "") + this.toString();
   let needle = "/index.html";
-  if (str === needle) {
-    return ".";
-  } else if (str.substr(-1 * needle.length) === needle) {
+  if (original === needle) {
+    return "/";
+  } else if (original.substr(-1 * needle.length) === needle) {
     return original.substr(0, original.length - needle.length) + "/";
   }
   return original;
