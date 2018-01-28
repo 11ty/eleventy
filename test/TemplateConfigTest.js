@@ -44,7 +44,7 @@ test("Add liquid tag", t => {
 });
 
 test("Add liquid filter", t => {
-  eleventyConfig.addLiquidFilter("myFilterName", function() {}, function() {});
+  eleventyConfig.addLiquidFilter("myFilterName", function() {});
 
   let templateCfg = new TemplateConfig(
     require("../config.js"),
@@ -66,11 +66,7 @@ test("Add handlebars helper", t => {
 });
 
 test("Add nunjucks filter", t => {
-  eleventyConfig.addNunjucksFilter(
-    "myFilterName",
-    function() {},
-    function() {}
-  );
+  eleventyConfig.addNunjucksFilter("myFilterName", function() {});
 
   let templateCfg = new TemplateConfig(
     require("../config.js"),
@@ -81,7 +77,7 @@ test("Add nunjucks filter", t => {
 });
 
 test("Add universal filter", t => {
-  eleventyConfig.addFilter("myFilterName", function() {}, function() {});
+  eleventyConfig.addFilter("myFilterName", function() {});
 
   let templateCfg = new TemplateConfig(
     require("../config.js"),

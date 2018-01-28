@@ -12,6 +12,7 @@ class EleventyConfig {
     this.liquidTags = {};
     this.liquidFilters = {};
     this.nunjucksFilters = {};
+    this.nunjucksAsyncFilters = {};
     this.handlebarsHelpers = {};
 
     this.layoutAliases = {};
@@ -43,13 +44,21 @@ class EleventyConfig {
     this.liquidFilters[name] = callback;
   }
 
-  addNunjucksFilter(name, callback) {
-    this.nunjucksFilters[name] = callback;
+  addNunjucksFilter(name, callback, isAsync) {
+    if (isAsync) {
+      this.nunjucksAsyncFilters[name] = callback;
+    } else {
+      this.nunjucksFilters[name] = callback;
+    }
   }
 
   addHandlebarsHelper(name, callback) {
     this.handlebarsHelpers[name] = callback;
   }
+
+  // TODO
+  // getTemplateEngine(name) {
+  // }
 
   addFilter(name, callback) {
     debug("Adding universal filter %o", name);
@@ -87,6 +96,7 @@ class EleventyConfig {
       liquidTags: this.liquidTags,
       liquidFilters: this.liquidFilters,
       nunjucksFilters: this.nunjucksFilters,
+      nunjucksAsyncFilters: this.nunjucksAsyncFilters,
       handlebarsHelpers: this.handlebarsHelpers,
       filters: this.filters,
       layoutAliases: this.layoutAliases

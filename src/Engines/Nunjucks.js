@@ -13,18 +13,27 @@ class Nunjucks extends TemplateEngine {
     );
 
     this.addFilters(this.config.nunjucksFilters);
+    this.addFilters(this.config.nunjucksAsyncFilters, true);
   }
 
-  addFilters(helpers) {
+  addFilters(helpers, isAsync) {
     for (let name in helpers) {
-      this.njkEnv.addFilter(name, helpers[name]);
+      this.njkEnv.addFilter(name, helpers[name], isAsync);
     }
   }
 
   async compile(str) {
     let tmpl = NunjucksLib.compile(str, this.njkEnv);
-    return function(data) {
-      return tmpl.render(data);
+    return async function(data) {
+      return new Promise(function(resolve, reject) {
+        tmpl.render(data, function(err, res) {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(res);
+          }
+        });
+      });
     };
   }
 }
