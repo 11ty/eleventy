@@ -1,6 +1,7 @@
 const EventEmitter = require("events");
 const lodashget = require("lodash.get");
 const Sortable = require("./Util/Sortable");
+const chalk = require("chalk");
 const debug = require("debug")("Eleventy:EleventyConfig");
 
 // API to expose configuration options in config file
@@ -37,27 +38,71 @@ class EleventyConfig {
       );
     }
 
+    if (this.liquidTags[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Liquid tag with `addLiquidTag(%o)`"
+        ),
+        name
+      );
+    }
     this.liquidTags[name] = tagFn;
   }
 
   addLiquidFilter(name, callback) {
+    if (this.liquidFilters[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Liquid filter with `addLiquidFilter(%o)`"
+        ),
+        name
+      );
+    }
+
     this.liquidFilters[name] = callback;
   }
 
   addNunjucksAsyncFilter(name, callback) {
+    if (this.nunjucksAsyncFilters[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Nunjucks filter with `addNunjucksAsyncFilter(%o)`"
+        ),
+        name
+      );
+    }
+
     this.nunjucksAsyncFilters[name] = callback;
   }
 
   // Support the nunjucks style syntax for asynchronous filter add
   addNunjucksFilter(name, callback, isAsync) {
     if (isAsync) {
-      this.nunjucksAsyncFilters[name] = callback;
+      this.addNunjucksAsyncFilter(name, callback);
     } else {
+      if (this.nunjucksFilters[name]) {
+        debug(
+          chalk.yellow(
+            "Warning, overwriting a Nunjucks filter with `addNunjucksFilter(%o)`"
+          ),
+          name
+        );
+      }
+
       this.nunjucksFilters[name] = callback;
     }
   }
 
   addHandlebarsHelper(name, callback) {
+    if (this.handlebarsHelpers[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Handlebars helper with `addHandlebarsHelper(%o)`"
+        ),
+        name
+      );
+    }
+
     this.handlebarsHelpers[name] = callback;
   }
 
@@ -109,6 +154,12 @@ class EleventyConfig {
   }
 
   addPlugin(pluginCallback) {
+    if (typeof pluginCallback !== "function") {
+      throw new Error(
+        "EleventyConfig.addPlugin expects the first argument to be a function."
+      );
+    }
+
     pluginCallback(this);
   }
 }
