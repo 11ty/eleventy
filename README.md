@@ -239,6 +239,10 @@ module.exports = function(eleventyConfig) {
 
 Read more about this on the [Collections documentation: Advanced Custom Filtering and Sorting](collections.md#advanced-custom-filtering-and-sorting).
 
+#### Add official or third-party plugins
+
+Read more about [Plugins](docs/plugins.md).
+
 ## Template Engine Features
 
 Here are the features tested with each template engine that use external files and thus are subject to setup and scaffolding.
@@ -285,9 +289,9 @@ npm run test
 
 * [x] Pagination
 * [x] Tagging of content
+* [x] Plugin system
 * [ ] Extensibility with system-wide content mapping **IN PROGRESS**
 * [ ] Components system for development reusability
-* [ ] Plugin system
 
 ## Read more
 
@@ -297,6 +301,7 @@ npm run test
 * [Install eleventy into a specific project](docs/install-local.md)
 * [Pagination, splitting content across multiple files](docs/pagination.md)
 * [Pass-through file copy](docs/copy.md) for images, JS, CSS.
+* [Plugins](docs/plugins.md)
 * [Permalinks, remapping content to a new output location](docs/permalinks.md)
 * [Template Data Files](docs/data.md)
 * [Template Layouts](docs/layouts.md)
