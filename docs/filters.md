@@ -1,8 +1,6 @@
 # Filters, Tags, etc.
 
-Various template engines can be extended with custom `filters` or custom tags.
-
-_Experimental._ Eleventy provides a few universal filters that can be used in supported template types (currently Nunjucks, Liquid, and Handlebars).
+Various template engines can be extended with custom filters, helpers, or tags.
 
 More information:
 
@@ -11,48 +9,26 @@ More information:
 * [Liquid Filters](https://github.com/harttle/liquidjs#register-filters)
 * [Liquid Tags](https://github.com/harttle/liquidjs#register-tags)
 
-## Built-in Filters
-
-### Url
-
-Works with the `pathPrefix` configuration option to properly normalize absolute paths in your content with the `pathPrefix` added. Useful if you host your site on GitHub Pages, which normally live in a subdirectory, e.g. `https://11ty.github.io/eleventy-base-blog/`. We set `pathPrefix: "/eleventy-base-blog/"` and our absolute links all have this prepended to the beginning.
-
-_If you don’t need `pathPrefix` (or don’t ever plan on moving your site’s top-level directory structure), you probably don’t need to use the `url` filter._
+This can be customized using the Configuration API (an `.eleventy.js` file). Here are a few examples:
 
 ```
-<a href="{{ post.url | url }}">Liquid or Nunjucks Link</a>
-```
+module.exports = function(eleventyConfig) {
 
-#### Sample URL Transformations
+  // Liquid
+  eleventyConfig.addLiquidTag(name, function(tagToken, remainingTokens) {}, function(scope, hash) { … });
+  eleventyConfig.addLiquidFilter(name, function(value) { … });
 
-| Sample URL   | `pathPrefix` | Return value                                                                           |
-| ------------ | ------------ | -------------------------------------------------------------------------------------- |
-| `''`         | `'/'`        | `'.'` ⚠️ This style is probably not what you want—careful!                             |
-| `'/'`        | `'/'`        | `'/'`                                                                                  |
-| `'./'`       | `'/'`        | `'./'`                                                                                 |
-| `'..'`       | `'/'`        | `'..'`                                                                                 |
-| `'myDir'`    | `'/'`        | `'myDir'` ⚠️ This style is not safe for globally linking to other content. Be careful! |
-| `'/myDir'`   | `'/'`        | `'/myDir'`                                                                             |
-| `'./myDir'`  | `'/'`        | `'myDir'` ⚠️ This style is not safe for globally linking to other content. Be careful! |
-| `'../myDir'` | `'/'`        | `'../myDir'`                                                                           |
+  // Nunjucks
+  eleventyConfig.addNunjucksFilter(name, function(value) { … });
 
-| Sample URL   | `pathPrefix` | Return value                                                   |
-| ------------ | ------------ | -------------------------------------------------------------- |
-| `''`         | `'/rootDir'` | `'.'` ⚠️ This style is probably not what you want—careful!     |
-| `'/'`        | `'/rootDir'` | `'/rootDir/'`                                                  |
-| `'./'`       | `'/rootDir'` | `'./'`                                                         |
-| `'..'`       | `'/rootDir'` | `'..'`                                                         |
-| `'myDir'`    | `'/rootDir'` | `'myDir'` ⚠️ This style is probably not what you want—careful! |
-| `'/myDir'`   | `'/rootDir'` | `'/rootDir/myDir'`                                             |
-| `'./myDir'`  | `'/rootDir'` | `'myDir'` ⚠️ This style is probably not what you want—careful! |
-| `'../myDir'` | `'/rootDir'` | `'../myDir'`                                                   |
+  // Handlebars
+  eleventyConfig.addHandlebarsHelper(name, function(value) { … });
 
-### Slug
+  // Universal filters (Experimental! Adds to Liquid, Nunjucks, and Handlebars)
+  eleventyConfig.addFilter(name, function(value) { … });
 
-Uses the `slugify` package to convert a string into a URL slug. Can be used in pagination or permalinks.
-
-```
-{{ "My Title" | slug }} -> `my-title`
+  return {};
+};
 ```
 
 ## Asynchronous Nunjucks Filters
@@ -80,3 +56,51 @@ eleventyConfig.addNunjucksAsyncFilter("myAsyncFilter", function(value1, value2, 
 ```
 
 Multi-argument filters in Nunjucks are called like this: `{{ myValue1 | myAsyncFilter(myValue2) }}`.
+
+## Universal Filters
+
+_Experimental._ Eleventy provides a few universal filters that can be used in supported template types (currently Nunjucks, Liquid, and Handlebars). This allows you to add the filter in one place and it will be available in multiple templating engines.
+
+### Built-in Universal Filters
+
+#### Url
+
+Works with the `pathPrefix` configuration option to properly normalize absolute paths in your content with the `pathPrefix` added. Useful if you host your site on GitHub Pages, which normally live in a subdirectory, e.g. `https://11ty.github.io/eleventy-base-blog/`. We set `pathPrefix: "/eleventy-base-blog/"` and our absolute links all have this prepended to the beginning.
+
+_If you don’t need `pathPrefix` (or don’t ever plan on moving your site’s top-level directory structure), you probably don’t need to use the `url` filter._
+
+```
+<a href="{{ post.url | url }}">Liquid or Nunjucks Link</a>
+```
+
+##### Sample URL Transformations
+
+| Sample URL   | `pathPrefix` | Return value                                                                           |
+| ------------ | ------------ | -------------------------------------------------------------------------------------- |
+| `''`         | `'/'`        | `'.'` ⚠️ This style is probably not what you want—careful!                             |
+| `'/'`        | `'/'`        | `'/'`                                                                                  |
+| `'./'`       | `'/'`        | `'./'`                                                                                 |
+| `'..'`       | `'/'`        | `'..'`                                                                                 |
+| `'myDir'`    | `'/'`        | `'myDir'` ⚠️ This style is not safe for globally linking to other content. Be careful! |
+| `'/myDir'`   | `'/'`        | `'/myDir'`                                                                             |
+| `'./myDir'`  | `'/'`        | `'myDir'` ⚠️ This style is not safe for globally linking to other content. Be careful! |
+| `'../myDir'` | `'/'`        | `'../myDir'`                                                                           |
+
+| Sample URL   | `pathPrefix` | Return value                                                   |
+| ------------ | ------------ | -------------------------------------------------------------- |
+| `''`         | `'/rootDir'` | `'.'` ⚠️ This style is probably not what you want—careful!     |
+| `'/'`        | `'/rootDir'` | `'/rootDir/'`                                                  |
+| `'./'`       | `'/rootDir'` | `'./'`                                                         |
+| `'..'`       | `'/rootDir'` | `'..'`                                                         |
+| `'myDir'`    | `'/rootDir'` | `'myDir'` ⚠️ This style is probably not what you want—careful! |
+| `'/myDir'`   | `'/rootDir'` | `'/rootDir/myDir'`                                             |
+| `'./myDir'`  | `'/rootDir'` | `'myDir'` ⚠️ This style is probably not what you want—careful! |
+| `'../myDir'` | `'/rootDir'` | `'../myDir'`                                                   |
+
+#### Slug
+
+Uses the `slugify` package to convert a string into a URL slug. Can be used in pagination or permalinks.
+
+```
+{{ "My Title" | slug }} -> `my-title`
+```

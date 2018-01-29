@@ -213,31 +213,11 @@ This allows you to customize your template engines by using the Config helper me
 
 #### Add Tags/Filters to Template Engines
 
-Read more about [eleventy-provided universal filters](docs/filters.md).
-
-```
-module.exports = function(eleventyConfig) {
-
-  // Liquid
-  eleventyConfig.addLiquidTag(name, function(tagToken, remainingTokens) {}, function(scope, hash) { … });
-  eleventyConfig.addLiquidFilter(name, function(value) { … });
-
-  // Nunjucks
-  eleventyConfig.addNunjucksFilter(name, function(value) { … });
-
-  // Handlebars
-  eleventyConfig.addHandlebarsHelper(name, function(value) { … });
-
-  // Universal filters (Experimental! Adds to Liquid, Nunjucks, and Handlebars)
-  eleventyConfig.addFilter(name, function(value) {});
-
-  return {};
-};
-```
+Read more about [filters](docs/filters.md).
 
 #### Add custom collections
 
-Read more about this on the [Collections documentation: Advanced Custom Filtering and Sorting](collections.md#advanced-custom-filtering-and-sorting).
+Read more about [Collections: Advanced Custom Filtering and Sorting](collections.md#advanced-custom-filtering-and-sorting).
 
 #### Add official or third-party plugins
 
@@ -247,25 +227,25 @@ Read more about [Plugins](docs/plugins.md).
 
 Here are the features tested with each template engine that use external files and thus are subject to setup and scaffolding.
 
-| Engine     | Feature                             | Syntax                                                                                                                                                        |
-| ---------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ejs        | ✅ Include (Preprocessor Directive) | `<% include /user/show %>` looks for `_includes/show/user.ejs`                                                                                                |
-| ejs        | ✅ Include (pass in Data)           | `<%- include('/user/show', {user: 'Ava'}) %>` looks for `_includes/user/show.ejs`                                                                             |
-| Liquid     | ✅ Include                          | `{% include 'show/user' %}` looks for `_includes/show/user.liquid`                                                                                            |
-| Liquid     | ✅ Include (pass in Data)           | `{% include 'user' with 'Ava' %}`                                                                                                                             |
-| Liquid     | ✅ Include (pass in Data)           | `{% include 'user', user1: 'Ava', user2: 'Bill' %}`                                                                                                           |
-| Liquid     | ✅ Custom Filters                   | `{{ name | upper }}` (see `config.addLiquidFilter` documentation)                                                                                             |
-| Liquid     | ✅ Custom Tags                      | `{% upper name %}` (see `config.addLiquidTag` documentation)                                                                                                  |
-| Mustache   | ✅ Partials                         | `{{> user}}` looks for `_includes/user.mustache`                                                                                                              |
-| Handlebars | ✅ Partials                         | `{{> user}}` looks for `_includes/user.hbs`                                                                                                                   |
-| Handlebars | ✅ Helpers                          | See `handlebarsHelpers` configuration option.                                                                                                                 |
-| HAML       | ❌ but 🔜 Filters                   |                                                                                                                                                               |
-| Pug        | ✅ Includes                         | `include /includedvar.pug` looks in `_includes/includedvar.pug`                                                                                               |
-| Pug        | ✅ Excludes                         | `extends /layout.pug` looks in `_includes/layout.pug`                                                                                                         |
-| Nunjucks   | ✅ Includes                         | `{% include 'included.njk' %}` looks in `_includes/included.njk`                                                                                              |
-| Nunjucks   | ✅ Extends                          | `{% extends 'base.njk' %}` looks in `_includes/base.njk`                                                                                                      |
-| Nunjucks   | ✅ Imports                          | `{% import 'macros.njk' %}` looks in `_includes/macros.njk`                                                                                                   |
-| Nunjucks   | ✅ Filters                          | See `nunjucksFilters` configuration option. Asynchronous Filters are supported with Eleventy v0.2.13. Read more at [Custom Filters and Tags](docs/filters.md) |
+| Engine     | Feature                             | Syntax                                                                            |
+| ---------- | ----------------------------------- | --------------------------------------------------------------------------------- |
+| ejs        | ✅ Include (Preprocessor Directive) | `<% include /user/show %>` looks for `_includes/show/user.ejs`                    |
+| ejs        | ✅ Include (pass in Data)           | `<%- include('/user/show', {user: 'Ava'}) %>` looks for `_includes/user/show.ejs` |
+| Liquid     | ✅ Include                          | `{% include 'show/user' %}` looks for `_includes/show/user.liquid`                |
+| Liquid     | ✅ Include (pass in Data)           | `{% include 'user' with 'Ava' %}`                                                 |
+| Liquid     | ✅ Include (pass in Data)           | `{% include 'user', user1: 'Ava', user2: 'Bill' %}`                               |
+| Liquid     | ✅ Custom Filters                   | `{{ name | upper }}` (see `config.addLiquidFilter` documentation)                 |
+| Liquid     | ✅ Custom Tags                      | `{% upper name %}` (see `config.addLiquidTag` documentation)                      |
+| Mustache   | ✅ Partials                         | `{{> user}}` looks for `_includes/user.mustache`                                  |
+| Handlebars | ✅ Partials                         | `{{> user}}` looks for `_includes/user.hbs`                                       |
+| Handlebars | ✅ Helpers                          | See `handlebarsHelpers` configuration option.                                     |
+| HAML       | ❌ but 🔜 Filters                   |                                                                                   |
+| Pug        | ✅ Includes                         | `include /includedvar.pug` looks in `_includes/includedvar.pug`                   |
+| Pug        | ✅ Excludes                         | `extends /layout.pug` looks in `_includes/layout.pug`                             |
+| Nunjucks   | ✅ Includes                         | `{% include 'included.njk' %}` looks in `_includes/included.njk`                  |
+| Nunjucks   | ✅ Extends                          | `{% extends 'base.njk' %}` looks in `_includes/base.njk`                          |
+| Nunjucks   | ✅ Imports                          | `{% import 'macros.njk' %}` looks in `_includes/macros.njk`                       |
+| Nunjucks   | ✅ Filters                          | Read more about [Filters](docs/filters.md)                                        |
 
 ## Tests
 
