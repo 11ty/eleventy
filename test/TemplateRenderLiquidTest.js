@@ -45,6 +45,18 @@ test("Liquid Render Include with HTML Suffix", async t => {
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
+test("Liquid Render Include with HTML Suffix and Data Pass in", async t => {
+  t.is(new TemplateRender("liquid", "./test/stubs/").getEngineName(), "liquid");
+
+  let fn = await new TemplateRender(
+    "liquid",
+    "./test/stubs/"
+  ).getCompiledTemplate(
+    "{% include included-data.html, myVariable: 'myValue' %}"
+  );
+  t.is((await fn()).trim(), "This is an include. myValue");
+});
+
 // This is an upstream limitation of the Liquid implementation
 // test("Liquid Render Include No Quotes", async t => {
 //   t.is(new TemplateRender("liquid", "./test/stubs/").getEngineName(), "liquid");
