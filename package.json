@@ -35,7 +35,7 @@
     "*.{js,json,css,md}": ["prettier --write", "git add"]
   },
   "devDependencies": {
-    "ava": "^0.24.0",
+    "ava": "^0.25.0",
     "husky": "^0.14.3",
     "lint-staged": "^6.0.0",
     "nyc": "^11.4.1",
