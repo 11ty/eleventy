@@ -15,6 +15,30 @@ Works with:
 * [Pug](https://github.com/pugjs/pug) (formerly Jade, `.pug`)
 * JavaScript Template Literals (`.jstl`) (\`strings with backticks\`)
 
+## Table of Contents
+
+* [Getting Started](#getting-started)
+* [Command line usage](#command-line-usage)
+* [Using Data](#using-data-optional)
+* [Ignore Files](#ignore-files-optional)
+* [Configuration](#configuration-optional)
+* [Template Engine Features](#template-engine-features)
+* [Tests](#tests)
+* [Competitors](#competitors)
+* [Roadmap](#major-roadmapped-features)
+
+### Read More at:
+
+* [Collections](docs/collections.md), grouping content together
+* [Common Pitfalls](docs/pitfalls.md)
+* [Custom Filters, Helpers, Tags](docs/filters.md)
+* [Pagination](docs/pagination.md), splitting content to multiple files
+* [Pass-through file copy](docs/copy.md) for images, JS, CSS
+* [Plugins](docs/plugins.md)
+* [Permalinks](docs/permalinks.md), map content to a new output location
+* [Template Data Files](docs/data.md)
+* [Template Layouts](docs/layouts.md)
+
 ## Getting Started
 
 Requires version 8 of Node.js or higher.
@@ -98,17 +122,6 @@ DEBUG=Eleventy* eleventy
 
 This will tell you exactly what directories Eleventy is using for data, includes, input, and output. It’ll tell you what search globs it uses to find your templates and what templates it finds. If you’re having trouble, enable this.
 
-A small sample of the output:
-
-```
-Eleventy Directories:
-Eleventy Input: docs-src
-Eleventy Data: docs-src/_data
-Eleventy Includes: docs-src/_includes
-Eleventy Output: docs
-Eleventy Template Formats: njk
-```
-
 Read more at the [`debug` package documentation](https://www.npmjs.com/package/debug).
 
 ### Example: Default options
@@ -142,27 +155,24 @@ title: My page title
 ---
 <!doctype html>
 <html>
+<title>{{ title }}</title>
 …
 ```
 
-This allows you to assign data values right in the template itself. Here are a few front matter keys that we use for special things:
+This allows you to assign data values right in the template itself. There are special keys in front matter that are used for special things in Eleventy, like `permalink`, `pagination`, `layout`, `tags`, and `date`. [Read more about special keys in front matter data](docs/data.md).
 
-* `permalink`: Add in front matter to change the output target of the current template. You can use template syntax for variables here. [Read more about Permalinks](docs/permalinks.md).
-* `layout`: Wrap current template with a layout template found in the `_includes` folder. [Read more about Layouts](docs/layouts.md).
-* `pagination`: Enable to iterate over data. Output multiple HTML files from a single template. [Read more about Pagination](docs/pagination.md).
-* `tags`: A single string or array that identifies that a piece of content is part of a collection. Collections can be reused in any other template. [Read more about Collections](docs/collections.md).
-* `date`: Override the default date (file creation) to customize how the file is sorted in a collection. [Read more about Collections](docs/collections.md).
+### Data Files
+
+Optionally add data files to add global static data available to all templates. Uses the `dir.data` configuration option. [Read more about Using Data](docs/data.md).
 
 ### Special Variables
+
+Note that `{{ title }}` above outputs the `title` data value (this can come from front matter or an external data file). Eleventy also exposes a few other variables to your templates:
 
 * `pkg`: The local project’s `package.json` values.
 * `pagination`: (When enabled in front matter) [Read more about Pagination](docs/pagination.md).
 * `collections`: Lists of all of your content, grouped by tags. [Read more about Collections](docs/collections.md)
 * `page`: Has information about the current page. Currently holds: `{ url: "/current/page/url.html" }`. Useful for finding the current page in a collection. [Read more about Collections](docs/collections.md) (look at _Example: Navigation Links with an `active` class added for on the current page_).
-
-### Data Files
-
-Optionally add data files to add global static data available to all templates. Uses the `dir.data` configuration option. [Read more about Template Data Files](docs/data.md).
 
 ## Ignore files (optional)
 
@@ -217,7 +227,7 @@ Read more about [filters](docs/filters.md).
 
 #### Add custom collections
 
-Read more about [Collections: Advanced Custom Filtering and Sorting](collections.md#advanced-custom-filtering-and-sorting).
+Read more about [Collections: Advanced Custom Filtering and Sorting](docs/collections.md#advanced-custom-filtering-and-sorting).
 
 #### Add official or third-party plugins
 
@@ -272,16 +282,3 @@ npm run test
 * [x] Plugin system
 * [ ] Extensibility with system-wide content mapping **IN PROGRESS**
 * [ ] Components system for development reusability
-
-## Read more
-
-* [Collections](docs/collections.md)
-* [Common Pitfalls](docs/pitfalls.md)
-* [Custom Filters and Tags](docs/filters.md)
-* [Install eleventy into a specific project](docs/install-local.md)
-* [Pagination, splitting content across multiple files](docs/pagination.md)
-* [Pass-through file copy](docs/copy.md) for images, JS, CSS.
-* [Plugins](docs/plugins.md)
-* [Permalinks, remapping content to a new output location](docs/permalinks.md)
-* [Template Data Files](docs/data.md)
-* [Template Layouts](docs/layouts.md)
