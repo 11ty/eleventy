@@ -18,11 +18,11 @@ TemplateLayout.prototype.init = function() {
   // debug("Current layout aliases: %o", this.aliases);
 
   if (this.path in this.aliases) {
-    debug(
-      "Substituting layout: %o maps to %o",
-      this.path,
-      this.aliases[this.path]
-    );
+    // debug(
+    //   "Substituting layout: %o maps to %o",
+    //   this.path,
+    //   this.aliases[this.path]
+    // );
     this.path = this.aliases[this.path];
   }
 

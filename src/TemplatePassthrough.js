@@ -13,11 +13,11 @@ class TemplatePassthrough {
   }
 
   async write() {
-    debug(
-      `${this.path} has no TemplateEngine engine and will copy to ${
-        this.outputDir
-      }`
-    );
+    // debug(
+    //   `${this.path} has no TemplateEngine engine and will copy to ${
+    //     this.outputDir
+    //   }`
+    // );
 
     return fs.copy(this.path, this.getOutputPath());
   }
