@@ -77,7 +77,15 @@ Eleventy.prototype.logFinished = function() {
   let ret = [];
 
   let writeCount = this.writer.getWriteCount();
-  ret.push(`Wrote ${writeCount} ${simplePlural(writeCount, "file", "files")}`);
+  let copyCount = this.writer.getCopyCount();
+  if (copyCount) {
+    ret.push(
+      `Copied ${copyCount} ${simplePlural(copyCount, "file", "files")} and`
+    );
+  }
+  ret.push(
+    `Processed ${writeCount} ${simplePlural(writeCount, "file", "files")}`
+  );
 
   let time = ((new Date() - this.start) / 1000).toFixed(2);
   ret.push(`in ${time} ${simplePlural(time, "second", "seconds")}`);

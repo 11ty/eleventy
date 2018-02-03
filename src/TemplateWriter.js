@@ -23,6 +23,7 @@ function TemplateWriter(inputPath, outputDir, extensions, templateData) {
   this.templateData = templateData;
   this.isVerbose = true;
   this.writeCount = 0;
+  this.copyCount = 0;
 
   this.includesDir = this.inputDir + "/" + this.config.dir.includes;
   // Duplicated with TemplateData.getDataDir();
@@ -49,7 +50,8 @@ function TemplateWriter(inputPath, outputDir, extensions, templateData) {
 
 TemplateWriter.prototype.restart = function() {
   this.writeCount = 0;
-  debug("Resetting writeCount to 0");
+  this.copyCount = 0;
+  debug("Resetting counts to 0");
 };
 
 TemplateWriter.prototype.getIncludesDir = function() {
@@ -200,8 +202,11 @@ TemplateWriter.prototype._copyPassthroughs = async function(paths) {
     return;
   }
 
+  let count = 0;
+  debug("TemplatePassthrough copy started.");
   for (let path of paths) {
     if (!TemplateRender.hasEngine(path)) {
+      count++;
       let pass = new TemplatePassthrough(path, this.outputDir);
       try {
         await pass.write();
@@ -213,6 +218,9 @@ TemplateWriter.prototype._copyPassthroughs = async function(paths) {
       }
     }
   }
+
+  this.copyCount += count;
+  debug(`TemplatePassthrough copied ${count} file${count !== 1 ? "s" : ""}.`);
 };
 
 TemplateWriter.prototype._createTemplateMap = async function(paths) {
@@ -235,7 +243,7 @@ TemplateWriter.prototype._writeTemplate = async function(mapEntry) {
   let tmpl = mapEntry.template;
 
   try {
-    await tmpl.writeWithData(outputPath, data);
+    await tmpl.write(outputPath, data);
   } catch (e) {
     throw EleventyError.make(
       new Error(`Having trouble writing template: ${outputPath}`),
@@ -268,6 +276,10 @@ TemplateWriter.prototype.write = async function() {
 
 TemplateWriter.prototype.setVerboseOutput = function(isVerbose) {
   this.isVerbose = isVerbose;
+};
+
+TemplateWriter.prototype.getCopyCount = function() {
+  return this.copyCount;
 };
 
 TemplateWriter.prototype.getWriteCount = function() {
