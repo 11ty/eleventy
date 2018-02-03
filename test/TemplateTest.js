@@ -605,3 +605,17 @@ test("getRenderedData() has page.url", async t => {
 
   t.truthy(data.page.url);
 });
+
+test("getRenderedData() has page.url", async t => {
+  let tmpl = new Template(
+    "./test/stubs/template.ejs",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getRenderedData();
+
+  t.truthy(data.page.url);
+  t.truthy(data.page.date);
+  t.truthy(data.page.inputPath);
+  t.truthy(data.page.outputPath);
+});

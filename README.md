@@ -172,11 +172,11 @@ Note that `{{ title }}` above outputs the `title` data value (this can come from
 * `pkg`: The local project’s `package.json` values.
 * `pagination`: (When enabled in front matter) [Read more about Pagination](docs/pagination.md).
 * `collections`: Lists of all of your content, grouped by tags. [Read more about Collections](docs/collections.md)
-* `page`: Has information about the current page. Currently holds: `{ url: "/current/page/url.html" }`. Useful for finding the current page in a collection. [Read more about Collections](docs/collections.md) (look at _Example: Navigation Links with an `active` class added for on the current page_).
+* `page`: Has information about the current page. Currently holds: `{ url: "/current/page/url.html", date: [JS Date Object for current page] }`. Useful for finding the current page in a collection. [Read more about Collections](docs/collections.md) (look at _Example: Navigation Links with an `active` class added for on the current page_).
 
 ## Ignore files (optional)
 
-Add an `.eleventyignore` file to the _root of your input directory_ for a new line-separated list of files that will not be processed. Paths listed in your project’s `.gitignore` file are automatically ignored.
+Add an `.eleventyignore` file to the _root of your input directory_ for a new line-separated list of files (or globs) that will not be processed. Paths listed in your project’s `.gitignore` file are automatically ignored.
 
 ## Configuration (optional)
 
