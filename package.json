@@ -70,6 +70,7 @@
     "pretty": "^2.0.0",
     "pug": "^2.0.0-rc.4",
     "slugify": "^1.2.7",
+    "time-require": "^0.1.2",
     "valid-url": "^1.0.9"
   }
 }

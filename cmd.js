@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+if (process.env.DEBUG) {
+  require("time-require");
+}
+
 const argv = require("minimist")(process.argv.slice(2));
 const EleventyNodeVersionCheck = require("./src/VersionCheck");
 const debug = require("debug")("Eleventy-CLI");
