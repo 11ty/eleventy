@@ -74,3 +74,13 @@ test("Markdown Render: Pass in an override (liquid)", async t => {
 
   t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
 });
+
+test("Markdown Render: Strikethrough", async t => {
+  let fn = await new TemplateRender("md").getCompiledTemplate("~~No~~");
+  t.is((await fn()).trim(), "<p><s>No</s></p>");
+});
+
+test("Markdown Render: Strikethrough in a Header", async t => {
+  let fn = await new TemplateRender("md").getCompiledTemplate("# ~~No~~");
+  t.is((await fn()).trim(), "<h1><s>No</s></h1>");
+});

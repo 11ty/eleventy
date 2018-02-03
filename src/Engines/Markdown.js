@@ -1,4 +1,7 @@
-const mdlib = require("markdown-it")("commonmark");
+const mdlib = require("markdown-it")({
+  html: true,
+  langPrefix: "language-"
+});
 const TemplateEngine = require("./TemplateEngine");
 const debug = require("debug")("Eleventy:Markdown");
 
