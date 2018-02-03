@@ -15,6 +15,7 @@ class EleventyConfig {
     this.nunjucksFilters = {};
     this.nunjucksAsyncFilters = {};
     this.handlebarsHelpers = {};
+    this.passthroughCopies = {};
 
     this.layoutAliases = {};
 
@@ -149,7 +150,8 @@ class EleventyConfig {
       nunjucksAsyncFilters: this.nunjucksAsyncFilters,
       handlebarsHelpers: this.handlebarsHelpers,
       filters: this.filters,
-      layoutAliases: this.layoutAliases
+      layoutAliases: this.layoutAliases,
+      passthroughCopies: this.passthroughCopies
     };
   }
 
@@ -161,6 +163,10 @@ class EleventyConfig {
     }
 
     pluginCallback(this);
+  }
+
+  addPassthroughCopy(fileOrDir) {
+    this.passthroughCopies[fileOrDir] = true;
   }
 }
 

@@ -16,3 +16,25 @@ module.exports = {
 ```
 
 Although `png` is not a recognized Eleventy template, Eleventy will now search for any `*.png` files inside of the input directory and copy them to output (keeping directory structure).
+
+## Manual Passthrough Copy (Faster)
+
+_New in Eleventy v0.2.14_ Searching the entire directory structure for files to copy based on file extensions is not optimal with large directory structures. If we know what non-template static content we want to appear in our output, we can opt-in to specify _files_ or _directories_ for Eleventy to copy for you. This will probably speed up your build times.
+
+```
+// .eleventy.js
+module.exports = function(eleventyConfig) {
+
+  eleventyConfig.addPassthroughCopy("img");
+
+  // use a subdirectory, it’ll copy using the same directory structure.
+  eleventyConfig.addPassthroughCopy("css/fonts");
+
+  return {
+    templateFormats: [
+      "md"
+    ],
+    passthroughFileCopy: true
+  };
+};
+```

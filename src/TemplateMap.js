@@ -3,6 +3,7 @@ const Template = require("./Template");
 const TemplateCollection = require("./TemplateCollection");
 const eleventyConfig = require("./EleventyConfig");
 const debug = require("debug")("Eleventy:TemplateMap");
+const debugDev = require("debug")("Dev:Eleventy:TemplateMap");
 
 class TemplateMap {
   constructor() {
@@ -50,14 +51,14 @@ class TemplateMap {
         map.template
       );
     }
-    debug("Added this.map[...].data.collections");
+    debugDev("Added this.map[...].data.collections");
 
     for (let map of this.map) {
       map.template.setWrapWithLayouts(false);
       map.templateContent = await map.template.getFinalContent(map.data);
       map.template.setWrapWithLayouts(true);
     }
-    debug("Added this.map[...].templateContent");
+    debugDev("Added this.map[...].templateContent");
   }
 
   async createTemplateMapCopy(filteredMap) {

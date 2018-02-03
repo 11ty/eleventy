@@ -13,6 +13,7 @@ const pkg = require("../package.json");
 const eleventyConfig = require("./EleventyConfig");
 const config = require("./Config");
 const debug = require("debug")("Eleventy:TemplateWriter");
+const debugDev = require("debug")("Dev:Eleventy:TemplateWriter");
 
 function TemplateWriter(inputPath, outputDir, extensions, templateData) {
   this.config = config.getConfig();
@@ -196,6 +197,16 @@ TemplateWriter.prototype._getTemplate = function(path) {
   return tmpl;
 };
 
+TemplateWriter.prototype._copyPass = async function(path) {
+  let pass = new TemplatePassthrough(path, this.outputDir);
+  try {
+    await pass.write();
+    debugDev("Copied %o", path);
+  } catch (e) {
+    throw EleventyError.make(new Error(`Having trouble copying: ${path}`), e);
+  }
+};
+
 TemplateWriter.prototype._copyPassthroughs = async function(paths) {
   if (!this.config.passthroughFileCopy) {
     debug("`passthroughFileCopy` is disabled in config, bypassing.");
@@ -203,24 +214,22 @@ TemplateWriter.prototype._copyPassthroughs = async function(paths) {
   }
 
   let count = 0;
+
   debug("TemplatePassthrough copy started.");
+  for (let cfgPath in this.config.passthroughCopies) {
+    count++;
+    this._copyPass(cfgPath);
+  }
+
   for (let path of paths) {
     if (!TemplateRender.hasEngine(path)) {
       count++;
-      let pass = new TemplatePassthrough(path, this.outputDir);
-      try {
-        await pass.write();
-      } catch (e) {
-        throw EleventyError.make(
-          new Error(`Having trouble copying: ${path}`),
-          e
-        );
-      }
+      this._copyPass(path);
     }
   }
 
   this.copyCount += count;
-  debug(`TemplatePassthrough copied ${count} file${count !== 1 ? "s" : ""}.`);
+  debug(`TemplatePassthrough copied ${count} item${count !== 1 ? "s" : ""}.`);
 };
 
 TemplateWriter.prototype._createTemplateMap = async function(paths) {
@@ -234,6 +243,7 @@ TemplateWriter.prototype._createTemplateMap = async function(paths) {
   }
 
   await this.templateMap.cache();
+  debugDev(`TemplateMap cache complete.`);
   return this.templateMap;
 };
 

@@ -1,5 +1,4 @@
 const fs = require("fs");
-const watch = require("glob-watcher");
 const chalk = require("chalk");
 const parsePath = require("parse-filepath");
 const TemplateData = require("./TemplateData");
@@ -80,7 +79,7 @@ Eleventy.prototype.logFinished = function() {
   let copyCount = this.writer.getCopyCount();
   if (copyCount) {
     ret.push(
-      `Copied ${copyCount} ${simplePlural(copyCount, "file", "files")} and`
+      `Copied ${copyCount} ${simplePlural(copyCount, "item", "items")} and`
     );
   }
   ret.push(
@@ -176,6 +175,8 @@ Eleventy.prototype._watch = async function() {
 
 Eleventy.prototype.watch = async function() {
   await this.write();
+
+  const watch = require("glob-watcher");
 
   console.log("Watching…");
   let watcher = watch(this.writer.getRawFiles(), {

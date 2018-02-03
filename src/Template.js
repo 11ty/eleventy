@@ -276,7 +276,7 @@ class Template {
     if (!this.initialLayout) {
       this.initialLayout = tmplData[tmpl.config.keys.layout];
       debugDev(
-        "No layout cached, saving layout: %o for %o",
+        "No layout name saved, saving: %o for %o",
         this.initialLayout,
         this.inputPath
       );
