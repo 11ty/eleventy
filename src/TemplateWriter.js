@@ -91,14 +91,17 @@ TemplateWriter.prototype.getFiles = function() {
   return this.files;
 };
 
-TemplateWriter.getFileIgnores = function(ignoreFile) {
+TemplateWriter.getFileIgnores = function(
+  ignoreFile,
+  defaultIfFileDoesNotExist
+) {
   let dir = parsePath(ignoreFile).dir || ".";
   let ignorePath = TemplatePath.normalize(ignoreFile);
   let ignoreContent;
   try {
     ignoreContent = fs.readFileSync(ignorePath, "utf-8");
   } catch (e) {
-    ignoreContent = "";
+    ignoreContent = defaultIfFileDoesNotExist || "";
   }
 
   let ignores = [];
@@ -133,9 +136,12 @@ TemplateWriter.getFileIgnores = function(ignoreFile) {
 
 TemplateWriter.prototype.addIgnores = function(inputDir, files) {
   files = files.concat(
+    TemplateWriter.getFileIgnores(".gitignore", "node_modules/")
+  );
+
+  files = files.concat(
     TemplateWriter.getFileIgnores(inputDir + "/.eleventyignore")
   );
-  files = files.concat(TemplateWriter.getFileIgnores(".gitignore"));
 
   files = files.concat(TemplateGlob.map("!" + this.outputDir + "/**"));
 

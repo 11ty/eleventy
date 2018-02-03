@@ -71,6 +71,15 @@ test(".eleventyignore parsing", t => {
   t.is(ignores[1], "!./test/stubs/ignoredFolder/ignored.md");
 });
 
+test("defaults if .gitignore does not exist", t => {
+  let ignores = new TemplateWriter.getFileIgnores(
+    ".thisfiledoesnotexist",
+    "node_modules/"
+  );
+  t.truthy(ignores.length);
+  t.is(ignores[0], "!./node_modules/**");
+});
+
 test(".eleventyignore files", async t => {
   let tw = new TemplateWriter("test/stubs", "test/stubs/_site", ["ejs", "md"]);
   let ignoredFiles = await globby("test/stubs/ignoredFolder/*.md");
