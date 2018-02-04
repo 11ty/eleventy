@@ -195,6 +195,16 @@ eleventyConfig.addCollection("onlyMarkdown", function(collection) {
   });
 });
 
+// Filter source file names using a glob (new in Eleventy v0.2.14)
+eleventyConfig.addCollection("onlyMarkdown", function(collection) {
+  return collection.getFilteredByGlob("**/*.md");
+});
+
+// Filter source file names using a glob (new in Eleventy v0.2.14)
+eleventyConfig.addCollection("posts", function(collection) {
+  return collection.getFilteredByGlob("_posts/*.md");
+});
+
 // Sort with `Array.sort`
 eleventyConfig.addCollection("myCustomSort", function(collection) {
   return collection.getAll().sort(function(a, b) {

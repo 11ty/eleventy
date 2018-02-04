@@ -28,6 +28,16 @@ let tmpl5 = new Template(
   "./test/stubs/",
   "./test/stubs/_site"
 );
+let tmpl6 = new Template(
+  "./test/stubs/collection/test6.html",
+  "./test/stubs/",
+  "./test/stubs/_site"
+);
+let tmpl7 = new Template(
+  "./test/stubs/collection/test7.njk",
+  "./test/stubs/",
+  "./test/stubs/_site"
+);
 
 test("Basic setup", async t => {
   let c = new Collection();
@@ -90,4 +100,31 @@ test("getFilteredByTag (added out of order, sorted)", async t => {
   let dogs = c.getFilteredByTag("dog");
   t.truthy(dogs.length);
   t.deepEqual(dogs[0].template, tmpl1);
+});
+
+test("getFilteredByGlob", async t => {
+  let c = new Collection();
+  await c.addTemplate(tmpl1);
+  await c.addTemplate(tmpl6);
+  await c.addTemplate(tmpl7);
+
+  let markdowns = c.getFilteredByGlob("./**/*.md");
+  t.is(markdowns.length, 1);
+  t.deepEqual(markdowns[0].template, tmpl1);
+});
+
+test("getFilteredByGlob no dash dot", async t => {
+  let c = new Collection();
+  await c.addTemplate(tmpl1);
+  await c.addTemplate(tmpl6);
+  await c.addTemplate(tmpl7);
+
+  let markdowns = c.getFilteredByGlob("**/*.md");
+  t.is(markdowns.length, 1);
+  t.deepEqual(markdowns[0].template, tmpl1);
+
+  let htmls = c.getFilteredByGlob("**/*.{html,njk}");
+  t.is(htmls.length, 2);
+  t.deepEqual(htmls[0].template, tmpl6);
+  t.deepEqual(htmls[1].template, tmpl7);
 });

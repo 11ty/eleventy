@@ -94,8 +94,18 @@ class Sortable {
     return Sortable.sortFunctionAscending(b, a);
   }
 
+  static sortFunctionDate(mapA, mapB) {
+    return Sortable.sortFunctionNumericAscending(
+      mapA.date.getTime(),
+      mapB.date.getTime()
+    );
+  }
+
   static sortFunctionDateInputPath(mapA, mapB) {
-    let sortDate = Sortable.sortFunctionNumericAscending(mapA.date, mapB.date);
+    let sortDate = Sortable.sortFunctionNumericAscending(
+      mapA.date.getTime(),
+      mapB.date.getTime()
+    );
     if (sortDate === 0) {
       return Sortable.sortFunctionAlphabeticAscending(
         mapA.inputPath,

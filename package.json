@@ -62,6 +62,7 @@
     "luxon": "^0.2.12",
     "markdown-it": "^8.4.0",
     "minimist": "^1.2.0",
+    "multimatch": "^2.1.0",
     "mustache": "^2.3.0",
     "normalize-path": "^2.1.1",
     "nunjucks": "^3.0.1",
