@@ -71,7 +71,7 @@ test(".eleventyignore parsing", t => {
   t.is(ignores[1], "!./test/stubs/ignoredFolder/ignored.md");
 });
 
-test("defaults if .gitignore does not exist", t => {
+test("defaults if passed file name does not exist", t => {
   let ignores = new TemplateWriter.getFileIgnores(
     ".thisfiledoesnotexist",
     "node_modules/"

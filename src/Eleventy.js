@@ -3,6 +3,7 @@ const chalk = require("chalk");
 const parsePath = require("parse-filepath");
 const TemplateData = require("./TemplateData");
 const TemplateWriter = require("./TemplateWriter");
+const templateCache = require("./TemplateCache");
 const EleventyError = require("./EleventyError");
 const simplePlural = require("./Util/Pluralize");
 const config = require("./Config");
@@ -59,6 +60,7 @@ Eleventy.prototype.restart = function() {
   debug("Restarting");
   this.start = new Date();
   this.writer.restart();
+  templateCache.clear();
 };
 
 Eleventy.prototype.finish = function() {
