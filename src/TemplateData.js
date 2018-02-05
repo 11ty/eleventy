@@ -15,13 +15,23 @@ function TemplateData(inputDir) {
   this.dataDir =
     inputDir + "/" + (this.config.dir.data !== "." ? this.config.dir.data : "");
 
+  this.fetchedRawImports = false;
   this.rawImports = {};
-  this.rawImports[this.config.keys.package] = this.getJsonRaw(
-    TemplatePath.localPath("package.json")
-  );
 
   this.globalData = null;
 }
+
+TemplateData.prototype.getRawImports = async function() {
+  if (!this.fetchedRawImports) {
+    this.fetchedRawImports = true;
+
+    this.rawImports[this.config.keys.package] = await this.getJsonRaw(
+      TemplatePath.localPath("package.json")
+    );
+  }
+
+  return this.rawImports;
+};
 
 TemplateData.prototype.getDataDir = function() {
   return this.dataDir;
@@ -72,61 +82,68 @@ TemplateData.prototype.getObjectPathForDataFile = function(path) {
 };
 
 TemplateData.prototype.getAllGlobalData = async function() {
+  let rawImports = await this.getRawImports();
   let globalData = {};
   let files = await this.getGlobalDataFiles();
 
   for (let j = 0, k = files.length; j < k; j++) {
     let folders = await this.getObjectPathForDataFile(files[j]);
     debug(`Found global data file ${files[j]} and adding as: ${folders}`);
-    let data = await this.getJson(files[j], this.rawImports);
+    let data = await this.getJson(files[j], rawImports);
     lodashset(globalData, folders, data);
   }
   return globalData;
 };
 
 TemplateData.prototype.getData = async function() {
+  let rawImports = await this.getRawImports();
+
   if (!this.globalData) {
     let globalJson = await this.getAllGlobalData();
 
-    this.globalData = Object.assign({}, globalJson, this.rawImports);
+    this.globalData = Object.assign({}, globalJson, rawImports);
   }
 
   return this.globalData;
 };
 
 TemplateData.prototype.getLocalData = async function(localDataPath) {
-  let importedData = await this.getJson(localDataPath, this.rawImports);
+  let rawImports = await this.getRawImports();
+  let importedData = await this.getJson(localDataPath, rawImports);
   let globalData = await this.getData();
 
   return Object.assign({}, globalData, importedData);
 };
 
-TemplateData.prototype._getLocalJson = function(path) {
-  // TODO convert to pify and async
+TemplateData.prototype._getLocalJson = async function(path) {
   let rawInput;
   try {
-    rawInput = fs.readFileSync(path, "utf-8");
+    rawInput = await pify(fs.readFile)(path, "utf-8");
   } catch (e) {
-    // if file does not exist, return empty obj
-    return "{}";
+    // if file does not exist, return nothing
   }
-
   return rawInput;
 };
 
-TemplateData.prototype.getJsonRaw = function(path) {
-  return JSON.parse(this._getLocalJson(path));
+TemplateData.prototype.getJsonRaw = async function(path) {
+  let rawContent = await this._getLocalJson(path);
+  return rawContent ? JSON.parse(rawContent) : {};
 };
 
 TemplateData.prototype.getJson = async function(path, rawImports) {
-  let rawInput = this._getLocalJson(path);
-  let fn = await new TemplateRender(
-    this.config.dataTemplateEngine
-  ).getCompiledTemplate(rawInput);
+  let rawInput = await this._getLocalJson(path);
 
-  // pass in rawImports, don’t pass in global data, that’s what we’re parsing
-  let str = await fn(rawImports);
-  return JSON.parse(str);
+  if (rawInput) {
+    let fn = await new TemplateRender(
+      this.config.dataTemplateEngine
+    ).getCompiledTemplate(rawInput);
+
+    // pass in rawImports, don’t pass in global data, that’s what we’re parsing
+    let str = await fn(rawImports);
+    return JSON.parse(str);
+  }
+
+  return {};
 };
 
 module.exports = TemplateData;
