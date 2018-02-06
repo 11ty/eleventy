@@ -3,6 +3,7 @@ const pify = require("pify");
 const globby = require("globby");
 const parsePath = require("parse-filepath");
 const lodashset = require("lodash.set");
+const lodashMerge = require("lodash.merge");
 const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
 const TemplateGlob = require("./TemplateGlob");
@@ -107,9 +108,22 @@ TemplateData.prototype.getData = async function() {
   return this.globalData;
 };
 
-TemplateData.prototype.getLocalData = async function(localDataPath) {
+TemplateData.prototype.combineLocalData = async function(localDataPaths) {
   let rawImports = await this.getRawImports();
-  let importedData = await this.getJson(localDataPath, rawImports);
+  let localData = {};
+  if (!Array.isArray(localDataPaths)) {
+    localDataPaths = [localDataPaths];
+  }
+
+  for (let path of localDataPaths) {
+    let dataForPath = await this.getJson(path, rawImports);
+    lodashMerge(localData, dataForPath);
+  }
+  return localData;
+};
+
+TemplateData.prototype.getLocalData = async function(localDataPaths) {
+  let importedData = await this.combineLocalData(localDataPaths);
   let globalData = await this.getData();
 
   return Object.assign({}, globalData, importedData);

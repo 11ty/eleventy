@@ -58,3 +58,11 @@ test("stripPathFromDir", t => {
     "hello/subdir/test"
   );
 });
+
+test("getLastDir", t => {
+  t.is(TemplatePath.getLastDir("./testing/hello"), "hello");
+  t.is(TemplatePath.getLastDir("./testing"), "testing");
+  t.is(TemplatePath.getLastDir("./testing/"), "testing");
+  t.is(TemplatePath.getLastDir("testing/"), "testing");
+  t.is(TemplatePath.getLastDir("testing"), "testing");
+});

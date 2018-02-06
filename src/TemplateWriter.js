@@ -203,7 +203,7 @@ TemplateWriter.prototype._getTemplate = function(path) {
   return tmpl;
 };
 
-TemplateWriter.prototype._copyPass = async function(path) {
+TemplateWriter.prototype._copyPassthroughPath = async function(path) {
   let pass = new TemplatePassthrough(path, this.outputDir);
   try {
     await pass.write();
@@ -224,13 +224,13 @@ TemplateWriter.prototype._copyPassthroughs = async function(paths) {
   debug("TemplatePassthrough copy started.");
   for (let cfgPath in this.config.passthroughCopies) {
     count++;
-    this._copyPass(cfgPath);
+    this._copyPassthroughPath(cfgPath);
   }
 
   for (let path of paths) {
     if (!TemplateRender.hasEngine(path)) {
       count++;
-      this._copyPass(path);
+      this._copyPassthroughPath(path);
     }
   }
 

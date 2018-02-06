@@ -180,8 +180,23 @@ class Template {
     return merged;
   }
 
-  getLocalDataPath() {
-    return this.parsed.dir + "/" + this.parsed.name + ".json";
+  getLocalDataPaths() {
+    let paths = [];
+
+    if (this.parsed.dir) {
+      let lastDir = TemplatePath.getLastDir(this.parsed.dir);
+      let dirPath = this.parsed.dir + "/" + lastDir + ".json";
+      let filePath = this.parsed.dir + "/" + this.parsed.name + ".json";
+
+      paths.push(dirPath);
+
+      // unique
+      if (filePath !== dirPath) {
+        paths.push(filePath);
+      }
+    }
+
+    return paths;
   }
 
   async mapDataAsRenderedTemplates(data, templateData) {
@@ -216,7 +231,7 @@ class Template {
     let data = {};
 
     if (this.templateData) {
-      data = await this.templateData.getLocalData(this.getLocalDataPath());
+      data = await this.templateData.getLocalData(this.getLocalDataPaths());
     }
 
     let mergedLocalData = Object.assign({}, localData, this.dataOverrides);

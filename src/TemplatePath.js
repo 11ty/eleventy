@@ -11,6 +11,20 @@ TemplatePath.getWorkingDir = function() {
   return path.resolve("./");
 };
 
+// can assume a parse-filepath .dir is passed in here
+TemplatePath.getLastDir = function(path) {
+  let slashIndex = path.lastIndexOf("/");
+
+  if (slashIndex === -1) {
+    return path;
+  } else if (slashIndex === path.length - 1) {
+    // last character is a slash
+    path = path.substring(0, path.length - 1);
+  }
+
+  return path.substr(path.lastIndexOf("/") + 1);
+};
+
 /* Outputs ./SAFE/LOCAL/PATHS/WITHOUT/TRAILING/SLASHES */
 TemplatePath.normalize = function(...paths) {
   return normalize(path.join(...paths));

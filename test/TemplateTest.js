@@ -394,9 +394,59 @@ test("Local template data file import (without a global data json)", async t => 
   );
 
   let data = await tmpl.getData();
-  t.is(tmpl.getLocalDataPath(), "./test/stubs/component/component.json");
+  t.deepEqual(tmpl.getLocalDataPaths(), [
+    "./test/stubs/component/component.json"
+  ]);
   t.is(data.localdatakey1, "localdatavalue1");
   t.is(await tmpl.render(), "localdatavalue1");
+});
+
+test("Local template data file import (two subdirectories deep)", async t => {
+  let dataObj = new TemplateData();
+  await dataObj.cacheData();
+
+  let tmpl = new Template(
+    "./test/stubs/firstdir/seconddir/component.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj
+  );
+
+  t.deepEqual(tmpl.getLocalDataPaths(), [
+    "./test/stubs/firstdir/seconddir/seconddir.json",
+    "./test/stubs/firstdir/seconddir/component.json"
+  ]);
+});
+
+test("Posts inherits local JSON, layouts", async t => {
+  let dataObj = new TemplateData();
+  await dataObj.cacheData();
+
+  let tmpl = new Template(
+    "./test/stubs/posts/post1.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj
+  );
+
+  let localDataPaths = tmpl.getLocalDataPaths();
+  t.deepEqual(localDataPaths, [
+    "./test/stubs/posts/posts.json",
+    "./test/stubs/posts/post1.json"
+  ]);
+
+  let localData = await dataObj.getLocalData(localDataPaths);
+  t.is(localData.layout, "mylocallayout.njk");
+  t.truthy(localData.pkg);
+
+  let data = await tmpl.getData();
+  t.is(localData.layout, "mylocallayout.njk");
+
+  t.is(
+    (await tmpl.render(data)).trim(),
+    `<div id="locallayout">Post1
+</div>`
+  );
 });
 
 test("Clone the template", async t => {

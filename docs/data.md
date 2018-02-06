@@ -55,6 +55,20 @@ This data will be available to your templates like so:
 }
 ```
 
+### Template and Directory Specific Data Files
+
+_New in Eleventy v0.2.14_ While it is useful to have globally available data to all of your templates, you may want some of your data to be available locally only to one specific template or to a directory of templates. For that use, we also search for JSON data files in specific places in your directory structure.
+
+For example, consider a template located at `posts/my-first-blog-post.md`. Eleventy will look for data in the following places (starting with highest priority, local data keys override global data):
+
+1. `posts/my-first-blog-post.json` (data only applied to `posts/my-first-blog-post.json`)
+1. `posts/posts.json` (data applied to `posts/*`)
+1. `_data/*` (global data files available to all templates)
+
+#### Apply a default layout to multiple templates
+
+Try adding `{ "layout": "layouts/post.njk" }` to `posts/posts.json` to configure a layout for all of the templates inside of `posts/*`.
+
 ### Pre-processing
 
 All data files will be pre-processed with the template engine specified under the `dataTemplateEngine` configuration option. Note that `package.json` data is available here under the `pkg` variable.
