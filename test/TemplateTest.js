@@ -449,6 +449,34 @@ test("Posts inherits local JSON, layouts", async t => {
   );
 });
 
+test("Template and folder name are the same, make sure data imports work ok", async t => {
+  let dataObj = new TemplateData();
+  await dataObj.cacheData();
+
+  let tmpl = new Template(
+    "./test/stubs/posts/posts.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj
+  );
+
+  let localDataPaths = tmpl.getLocalDataPaths();
+  t.deepEqual(localDataPaths, ["./test/stubs/posts/posts.json"]);
+
+  let localData = await dataObj.getLocalData(localDataPaths);
+  t.is(localData.layout, "mylocallayout.njk");
+  t.truthy(localData.pkg);
+
+  let data = await tmpl.getData();
+  t.is(localData.layout, "mylocallayout.njk");
+
+  t.is(
+    (await tmpl.render(data)).trim(),
+    `<div id="locallayout">Posts
+</div>`
+  );
+});
+
 test("Clone the template", async t => {
   let tmpl = new Template(
     "./test/stubs/default.ejs",

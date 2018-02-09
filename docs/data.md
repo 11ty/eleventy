@@ -61,8 +61,8 @@ _New in Eleventy v0.2.14_ While it is useful to have globally available data to 
 
 For example, consider a template located at `posts/my-first-blog-post.md`. Eleventy will look for data in the following places (starting with highest priority, local data keys override global data):
 
-1. `posts/my-first-blog-post.json` (data only applied to `posts/my-first-blog-post.json`)
-1. `posts/posts.json` (data applied to `posts/*`)
+1. `posts/my-first-blog-post.json` (data only applied to `posts/my-first-blog-post.md`)
+1. `posts/posts.json` (data applied to all templates `posts/*`)
 1. `_data/*` (global data files available to all templates)
 
 #### Apply a default layout to multiple templates
