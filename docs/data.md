@@ -24,6 +24,7 @@ Here are a few special front matter keys you can use:
 * `pagination`: Enable to iterate over data. Output multiple HTML files from a single template. [Read more about Pagination](pagination.md).
 * `tags`: A single string or array that identifies that a piece of content is part of a collection. Collections can be reused in any other template. [Read more about Collections](collections.md).
 * `date`: Override the default date (file creation) to customize how the file is sorted in a collection. [Read more about Collections](collections.md).
+* `templateEngineOverride`: Override the template engine on a per-file basis, usually configured with a file extension or globally using the `markdownTemplateEngine` and `htmlTemplateEngine` configuration options. [Read more about Changing a Template’s Rendering Engine](engines.md).
 
 ## External Data Files
 

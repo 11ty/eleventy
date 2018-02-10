@@ -29,6 +29,7 @@ Works with:
 
 ### Read More at:
 
+* [Changing a Template’s Rendering Engine](docs/engines.md)
 * [Collections](docs/collections.md), grouping content together
 * [Common Pitfalls](docs/pitfalls.md)
 * [Custom Filters, Helpers, Tags](docs/filters.md)
