@@ -33,7 +33,7 @@ test("Template Config local config overrides base config", async t => {
 });
 
 test("Add liquid tag", t => {
-  eleventyConfig.addLiquidTag("myTagName", function() {}, function() {});
+  eleventyConfig.addLiquidTag("myTagName", function() {});
 
   let templateCfg = new TemplateConfig(
     require("../config.js"),
@@ -44,7 +44,9 @@ test("Add liquid tag", t => {
 });
 
 test("Add liquid filter", t => {
-  eleventyConfig.addLiquidFilter("myFilterName", function() {});
+  eleventyConfig.addLiquidFilter("myFilterName", function(liquidEngine) {
+    return {};
+  });
 
   let templateCfg = new TemplateConfig(
     require("../config.js"),

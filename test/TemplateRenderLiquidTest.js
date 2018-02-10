@@ -116,3 +116,32 @@ test("Liquid Custom Tag postfixWithZach", async t => {
     "testZach"
   );
 });
+
+test("Liquid addTag errors", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  t.throws(() => {
+    tr.engine.addTag("badSecondArgument", {});
+  });
+});
+
+test("Liquid addTags", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addTags({
+    postfixWithZach: function(liquidEngine) {
+      return {
+        parse: function(tagToken, remainTokens) {
+          this.str = tagToken.args;
+        },
+        render: function(scope, hash) {
+          var str = liquidEngine.evalValue(this.str, scope);
+          return Promise.resolve(str + "Zach");
+        }
+      };
+    }
+  });
+
+  t.is(
+    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    "testZach"
+  );
+});
