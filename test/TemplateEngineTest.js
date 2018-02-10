@@ -9,6 +9,11 @@ test("Unsupported engine", async t => {
   });
 });
 
+test("Supported engine", async t => {
+  t.is(new TemplateEngine("ejs").getName(), "ejs");
+  t.truthy(TemplateEngine.hasEngine("ejs"));
+});
+
 test("Handlebars Helpers", async t => {
   let engine = TemplateEngine.getEngine("hbs");
   engine.addHelpers({

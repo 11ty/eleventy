@@ -25,52 +25,45 @@ test("Markdown Render: Parses markdown using liquid engine (default, with data)"
 });
 
 test("Markdown Render: Parses markdown using ejs engine", async t => {
-  let fn = await new TemplateRender("md").getCompiledTemplate("<%=title %>", {
-    parseMarkdownWith: "ejs"
-  });
+  let tr = new TemplateRender("md");
+  tr.setMarkdownEngine("ejs");
+  let fn = await tr.getCompiledTemplate("<%=title %>");
   t.is((await fn({ title: "My Title" })).trim(), "<p>My Title</p>");
 });
 
 test("Markdown Render: Ignore markdown, use only preprocess engine (useful for variable resolution in permalinks)", async t => {
-  let fn = await new TemplateRender("md").getCompiledTemplate("{{title}}", {
-    bypassMarkdown: true
-  });
+  let tr = new TemplateRender("md");
+  tr.setUseMarkdown(false);
+  let fn = await tr.getCompiledTemplate("{{title}}");
   t.is((await fn({ title: "My Title" })).trim(), "My Title");
 });
 
 test("Markdown Render: Set markdown engine to false, don’t parse", async t => {
-  let fn = await new TemplateRender("md").getCompiledTemplate("# {{title}}", {
-    parseMarkdownWith: false
-  });
+  let tr = new TemplateRender("md");
+  tr.setMarkdownEngine(false);
+  let fn = await tr.getCompiledTemplate("# {{title}}");
   t.is((await fn()).trim(), "<h1>{{title}}</h1>");
 });
 
 test("Markdown Render: Set markdown engine to false, don’t parse (test with HTML input)", async t => {
-  let fn = await new TemplateRender("md").getCompiledTemplate(
-    "<h1>{{title}}</h1>",
-    {
-      parseMarkdownWith: false
-    }
-  );
+  let tr = new TemplateRender("md");
+  tr.setMarkdownEngine(false);
+  let fn = await tr.getCompiledTemplate("<h1>{{title}}</h1>");
 
   t.is((await fn()).trim(), "<h1>{{title}}</h1>");
 });
 
 test("Markdown Render: Pass in engine override (ejs)", async t => {
   let tr = new TemplateRender("md");
-
-  let fn = await tr.getCompiledTemplate("# <%= title %>", {
-    parseMarkdownWith: "ejs"
-  });
+  tr.setMarkdownEngine("ejs");
+  let fn = await tr.getCompiledTemplate("# <%= title %>");
   t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
 });
 
 test("Markdown Render: Pass in an override (liquid)", async t => {
   let tr = new TemplateRender("md");
-
-  let fn = await tr.getCompiledTemplate("# {{title}}", {
-    parseMarkdownWith: "liquid"
-  });
+  tr.setMarkdownEngine("liquid");
+  let fn = await tr.getCompiledTemplate("# {{title}}");
 
   t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
 });

@@ -15,15 +15,21 @@ function TemplateRender(tmplPath, inputDir) {
   this.config = config.getConfig();
   this.path = tmplPath;
 
-  // if( inputDir ) {
-  //   debug("New TemplateRender, tmplPath: %o, inputDir: %o", tmplPath, inputDir);
-  // }
-
-  this.engineName = TemplateRender.cleanupEngineName(tmplPath);
+  // optional
   this.inputDir = this._normalizeInputDir(inputDir);
 
-  this.engine = TemplateEngine.getEngine(this.engineName, this.inputDir);
+  this.parseMarkdownWith = this.config.markdownTemplateEngine;
+  this.parseHtmlWith = this.config.htmlTemplateEngine;
+
+  this.init(tmplPath);
+
+  this.useMarkdown = this.engineName === "md";
 }
+
+TemplateRender.prototype.init = function(engineNameOrPath) {
+  this.engineName = TemplateRender.cleanupEngineName(engineNameOrPath);
+  this.engine = TemplateEngine.getEngine(this.engineName, this.inputDir);
+};
 
 TemplateRender.cleanupEngineName = function(tmplPath) {
   tmplPath = tmplPath.toLowerCase();
@@ -34,7 +40,76 @@ TemplateRender.cleanupEngineName = function(tmplPath) {
 
 TemplateRender.hasEngine = function(tmplPath) {
   let name = TemplateRender.cleanupEngineName(tmplPath);
-  return name in TemplateEngine.engineMap;
+  return TemplateEngine.hasEngine(name);
+};
+
+// html is assumed
+TemplateRender.parseEngineOverrides = function(engineName) {
+  let overlappingEngineWarningCount = 0;
+  let engines = [];
+  let uniqueLookup = {};
+  let usingMarkdown = false;
+  (engineName || "")
+    .split(",")
+    .map(name => {
+      return name.toLowerCase().trim();
+    })
+    .forEach(name => {
+      if (!name || name === "html") {
+        return;
+      }
+
+      if (name === "md") {
+        usingMarkdown = true;
+        return;
+      }
+
+      if (!uniqueLookup[name]) {
+        engines.push(name);
+        uniqueLookup[name] = true;
+
+        // we already short circuit md and html types above
+        overlappingEngineWarningCount++;
+      }
+    });
+
+  if (overlappingEngineWarningCount > 1) {
+    throw new Error(
+      `Don’t mix multiple templating engines in your front matter overrides (exceptions for HTML and Markdown). You used: ${engineName}`
+    );
+  }
+
+  // markdown should always be first
+  if (usingMarkdown) {
+    // todo use unshift or something (no wifi here to look up docs :D)
+    engines = ["md"].concat(engines);
+  }
+
+  return engines;
+};
+
+TemplateRender.prototype.setEngineOverride = function(engineName) {
+  let engines = TemplateRender.parseEngineOverrides(engineName);
+
+  // when overriding, Template Engines with HTML will instead use the Template Engine as primary and output HTML
+  // So any HTML engine usage here will never use a preprocessor templating engine.
+  this.setHtmlEngine(false);
+
+  if (!engines.length) {
+    this.init("html");
+    return;
+  }
+
+  this.init(engines[0]);
+
+  let usingMarkdown = engines[0] === "md";
+
+  this.setUseMarkdown(usingMarkdown);
+
+  if (usingMarkdown) {
+    // false means only parse markdown and not with a preprocessor template engine
+    this.setMarkdownEngine(engines.length > 1 ? engines[1] : false);
+  }
 };
 
 TemplateRender.prototype.getEngineName = function() {
@@ -55,29 +130,28 @@ TemplateRender.prototype.isEngine = function(engine) {
   return this.engineName === engine;
 };
 
+TemplateRender.prototype.setUseMarkdown = function(useMarkdown) {
+  this.useMarkdown = !!useMarkdown;
+};
+
+TemplateRender.prototype.setMarkdownEngine = function(markdownEngine) {
+  this.parseMarkdownWith = markdownEngine;
+};
+
+TemplateRender.prototype.setHtmlEngine = function(htmlEngineName) {
+  this.parseHtmlWith = htmlEngineName;
+};
+
 TemplateRender.prototype.render = async function(str, data) {
   return this.engine.render(str, data);
 };
 
-TemplateRender.prototype.getCompiledTemplate = async function(str, options) {
-  options = Object.assign(
-    {
-      parseMarkdownWith: this.config.markdownTemplateEngine,
-      parseHtmlWith: this.config.htmlTemplateEngine,
-      bypassMarkdown: false
-    },
-    options
-  );
-
+TemplateRender.prototype.getCompiledTemplate = async function(str) {
   // TODO refactor better, move into TemplateEngine logic
   if (this.engineName === "md") {
-    return this.engine.compile(
-      str,
-      options.parseMarkdownWith,
-      options.bypassMarkdown
-    );
+    return this.engine.compile(str, this.parseMarkdownWith, !this.useMarkdown);
   } else if (this.engineName === "html") {
-    return this.engine.compile(str, options.parseHtmlWith);
+    return this.engine.compile(str, this.parseHtmlWith);
   } else {
     return this.engine.compile(str);
   }

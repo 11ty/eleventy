@@ -697,3 +697,104 @@ test("getRenderedData() has page.url", async t => {
   t.truthy(data.page.inputPath);
   t.truthy(data.page.outputPath);
 });
+
+test("Override base templating engine from .liquid to ejs", async t => {
+  let tmpl = new Template(
+    "./test/stubs/overrides/test-ejs.liquid",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is((await tmpl.render()).trim(), "My Title");
+});
+
+test("Override base templating engine from .liquid to md", async t => {
+  let tmpl = new Template(
+    "./test/stubs/overrides/test-md.liquid",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is((await tmpl.render()).trim(), "<h1>My Title</h1>");
+});
+
+test("Override base templating engine from .liquid to ejs,md", async t => {
+  let tmpl = new Template(
+    "./test/stubs/overrides/test-multiple.md",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is((await tmpl.render()).trim(), "<h1>My Title</h1>");
+});
+
+test("Override base templating engine from .njk to ejs,md", async t => {
+  let tmpl = new Template(
+    "./test/stubs/overrides/test-multiple2.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is((await tmpl.render()).trim(), "<h1>My Title</h1>");
+});
+
+test("Override base templating engine from .html to ejs", async t => {
+  let tmpl = new Template(
+    "./test/stubs/overrides/test.html",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is((await tmpl.render()).trim(), "<h2>My Title</h2>");
+});
+
+test("Override base templating engine from .html to (nothing)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/overrides/test-empty.html",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is((await tmpl.render()).trim(), "<h2><%= title %></h2>");
+});
+
+test("Override base templating engine should error with bad string", async t => {
+  let tmpl = new Template(
+    "./test/stubs/overrides/test-error.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  await t.throws(tmpl.render());
+});
+
+test("Override base templating engine (bypasses markdown)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/overrides/test-bypass.md",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is((await tmpl.render()).trim(), "# My Title");
+});
+
+test("Override base templating engine to (nothing)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/overrides/test-empty.md",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  // not parsed
+  t.is((await tmpl.render()).trim(), "# <%= title %>");
+});
+
+test("Override base templating engine from .ejs to njk", async t => {
+  let tmpl = new Template(
+    "./test/stubs/overrides/test.ejs",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is((await tmpl.render()).trim(), "My Title");
+});

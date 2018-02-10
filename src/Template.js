@@ -86,10 +86,8 @@ class Template {
       let data = await this.getData();
       // debug("Rendering permalink for %o", this.inputPath);
       let perm = new TemplatePermalink(
-        // render variables inside permalink front matter
-        await this.renderContent(permalink, data, {
-          bypassMarkdown: true
-        }),
+        // render variables inside permalink front matter, bypass markdown
+        await this.renderContent(permalink, data, true),
         this.extraOutputSubdirectory
       );
       return perm;
@@ -217,9 +215,8 @@ class Template {
       return obj;
     } else if (typeof data === "string") {
       debug("rendering data.renderData for %o", this.inputPath);
-      let str = await this.renderContent(data, templateData, {
-        bypassMarkdown: true
-      });
+      // bypassMarkdown
+      let str = await this.renderContent(data, templateData, true);
       return str;
     }
 
@@ -330,11 +327,21 @@ class Template {
     return layout.renderContent(layout.getPreRender(), layoutData);
   }
 
-  async getCompiledPromise() {
-    return this.templateRender.getCompiledTemplate(this.getPreRender());
-  }
+  async renderContent(str, data, bypassMarkdown) {
+    this.templateRender.setUseMarkdown(!bypassMarkdown);
 
-  async renderContent(str, data, options) {
+    // must happen after markdown bypass above.
+    // TODO test for layouts and overrides
+    if ("templateEngineOverride" in data) {
+      debugDev(
+        "%o overriding template engine to use %o",
+        this.inputPath,
+        data.templateEngineOverride
+      );
+
+      this.templateRender.setEngineOverride(data.templateEngineOverride);
+    }
+
     debugDev(
       "%o renderContent() using %o",
       this.inputPath,
@@ -344,7 +351,7 @@ class Template {
     // if (data.layoutContent) {
     //   debug("renderContent -> layoutContent %o", data.layoutContent);
     // }
-    let fn = await this.templateRender.getCompiledTemplate(str, options);
+    let fn = await this.templateRender.getCompiledTemplate(str);
     return fn(data);
   }
 
