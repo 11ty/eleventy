@@ -12,6 +12,8 @@ const debug = require("debug")("Eleventy:TemplateData");
 
 function TemplateData(inputDir) {
   this.config = config.getConfig();
+  this.dataTemplateEngine = this.config.dataTemplateEngine;
+
   this.inputDir = inputDir;
   this.dataDir =
     inputDir + "/" + (this.config.dir.data !== "." ? this.config.dir.data : "");
@@ -21,6 +23,10 @@ function TemplateData(inputDir) {
 
   this.globalData = null;
 }
+
+TemplateData.prototype.setDataTemplateEngine = function(engineName) {
+  this.dataTemplateEngine = engineName;
+};
 
 TemplateData.prototype.getRawImports = async function() {
   if (!this.fetchedRawImports) {
@@ -146,14 +152,22 @@ TemplateData.prototype.getJsonRaw = async function(path) {
 
 TemplateData.prototype.getJson = async function(path, rawImports) {
   let rawInput = await this._getLocalJson(path);
+  let engineName = this.dataTemplateEngine;
 
   if (rawInput) {
-    let fn = await new TemplateRender(
-      this.config.dataTemplateEngine
-    ).getCompiledTemplate(rawInput);
+    let str;
 
-    // pass in rawImports, don’t pass in global data, that’s what we’re parsing
-    let str = await fn(rawImports);
+    if (engineName) {
+      let fn = await new TemplateRender(engineName).getCompiledTemplate(
+        rawInput
+      );
+
+      // pass in rawImports, don’t pass in global data, that’s what we’re parsing
+      str = await fn(rawImports);
+    } else {
+      str = rawInput;
+    }
+
     return JSON.parse(str);
   }
 

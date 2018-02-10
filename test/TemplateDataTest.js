@@ -98,3 +98,31 @@ test("getAllGlobalData() with other data files", async t => {
     subdirkey: "subdirvalue"
   });
 });
+
+test("getJson() without a dataTemplateEngine", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+  dataObj.setDataTemplateEngine(false);
+
+  let data = await dataObj.getJson("./test/stubs/_data/testDataEjs.json", {
+    pkg: { name: "pkgname" }
+  });
+
+  t.deepEqual(data, {
+    datakey1: "datavalue1",
+    datakey2: "<%= pkg.name %>"
+  });
+});
+
+test("getJson() without dataTemplateEngine changed to `ejs`", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+  dataObj.setDataTemplateEngine("ejs");
+
+  let data = await dataObj.getJson("./test/stubs/_data/testDataEjs.json", {
+    pkg: { name: "pkgname" }
+  });
+
+  t.deepEqual(data, {
+    datakey1: "datavalue1",
+    datakey2: "pkgname"
+  });
+});
