@@ -170,12 +170,29 @@ Eleventy.prototype.getHelp = function() {
 };
 
 Eleventy.prototype._watch = async function() {
+  if (this.active) {
+    this.queuedToRun = true;
+    return;
+  }
+
+  this.active = true;
   this.restart();
   await this.write();
-  console.log("Watching…");
+  this.active = false;
+
+  if (this.queuedToRun) {
+    console.log("You saved while Eleventy was running, let’s run again.");
+    this.queuedToRun = false;
+    await this._watch();
+  } else {
+    console.log("Watching…");
+  }
 };
 
 Eleventy.prototype.watch = async function() {
+  this.active = false;
+  this.queuedToRun = false;
+
   await this.write();
 
   const watch = require("glob-watcher");
