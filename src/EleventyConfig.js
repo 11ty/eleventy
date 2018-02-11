@@ -142,19 +142,6 @@ class EleventyConfig {
     this.collections[name] = callback;
   }
 
-  getMergingConfigObject() {
-    return {
-      liquidTags: this.liquidTags,
-      liquidFilters: this.liquidFilters,
-      nunjucksFilters: this.nunjucksFilters,
-      nunjucksAsyncFilters: this.nunjucksAsyncFilters,
-      handlebarsHelpers: this.handlebarsHelpers,
-      filters: this.filters,
-      layoutAliases: this.layoutAliases,
-      passthroughCopies: this.passthroughCopies
-    };
-  }
-
   addPlugin(pluginCallback) {
     if (typeof pluginCallback !== "function") {
       throw new Error(
@@ -167,6 +154,28 @@ class EleventyConfig {
 
   addPassthroughCopy(fileOrDir) {
     this.passthroughCopies[fileOrDir] = true;
+  }
+
+  setTemplateFormats(templateFormats) {
+    if (typeof templateFormats === "string") {
+      templateFormats = templateFormats.split(",").map(format => format.trim());
+    }
+
+    this.templateFormats = templateFormats;
+  }
+
+  getMergingConfigObject() {
+    return {
+      liquidTags: this.liquidTags,
+      liquidFilters: this.liquidFilters,
+      nunjucksFilters: this.nunjucksFilters,
+      nunjucksAsyncFilters: this.nunjucksAsyncFilters,
+      handlebarsHelpers: this.handlebarsHelpers,
+      filters: this.filters,
+      layoutAliases: this.layoutAliases,
+      passthroughCopies: this.passthroughCopies,
+      templateFormats: this.templateFormats
+    };
   }
 }
 

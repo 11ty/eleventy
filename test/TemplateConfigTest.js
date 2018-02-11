@@ -100,3 +100,47 @@ test("Test url universal filter with custom pathPrefix (no slash)", t => {
   let cfg = templateCfg.getConfig();
   t.is(cfg.pathPrefix, "/testdirectory/");
 });
+
+test("setTemplateFormats(string)", t => {
+  eleventyConfig.setTemplateFormats("ejs,njk, liquid");
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.deepEqual(cfg.templateFormats, ["ejs", "njk", "liquid"]);
+});
+
+test("setTemplateFormats(array)", t => {
+  eleventyConfig.setTemplateFormats(["ejs", "njk", "liquid"]);
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.deepEqual(cfg.templateFormats, ["ejs", "njk", "liquid"]);
+});
+
+test("setTemplateFormats(array, size 1)", t => {
+  eleventyConfig.setTemplateFormats(["liquid"]);
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.deepEqual(cfg.templateFormats, ["liquid"]);
+});
+
+test("setTemplateFormats(empty array)", t => {
+  eleventyConfig.setTemplateFormats([]);
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.deepEqual(cfg.templateFormats, []);
+});

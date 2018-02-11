@@ -41,6 +41,7 @@ class TemplateConfig {
   }
 
   mergeConfig(projectConfigPath) {
+    let overrides = ["templateFormats"];
     let localConfig = {};
     let path = TemplatePath.normalize(
       TemplatePath.getWorkingDir() + "/" + projectConfigPath
@@ -66,10 +67,17 @@ class TemplateConfig {
       localConfig = localConfig(eleventyConfig);
       // debug( "localConfig is a function, after calling, eleventyConfig is %o", eleventyConfig );
     }
-    localConfig = lodashMerge(
-      localConfig,
-      eleventyConfig.getMergingConfigObject()
-    );
+
+    let eleventyConfigApiMergingObject = eleventyConfig.getMergingConfigObject();
+    localConfig = lodashMerge(localConfig, eleventyConfigApiMergingObject);
+
+    // blow away any templateFormats set in config return object and prefer those set in config API.
+    for (let localConfigKey of overrides) {
+      localConfig[localConfigKey] =
+        eleventyConfigApiMergingObject[localConfigKey] ||
+        localConfig[localConfigKey];
+    }
+
     // debug("eleventyConfig.getMergingConfigObject: %o", eleventyConfig.getMergingConfigObject());
     debug("localConfig: %o", localConfig);
     debug("overrides: %o", this.overrides);
@@ -78,7 +86,6 @@ class TemplateConfig {
     let merged = lodashMerge({}, this.rootConfig, localConfig, this.overrides);
 
     // blow away any templateFormats upstream (don’t merge)
-    let overrides = ["templateFormats"];
     for (let key of overrides) {
       merged[key] = localConfig[key] || this.rootConfig[key];
     }

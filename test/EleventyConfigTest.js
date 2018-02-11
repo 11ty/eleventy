@@ -28,3 +28,13 @@ test("Add Collections throws error on key collision", t => {
     ) {});
   });
 });
+
+test("Set Template Formats (string)", t => {
+  eleventyConfig.setTemplateFormats("ejs, njk, liquid");
+  t.deepEqual(eleventyConfig.templateFormats, ["ejs", "njk", "liquid"]);
+});
+
+test("Set Template Formats (array)", t => {
+  eleventyConfig.setTemplateFormats(["ejs", "njk", "liquid"]);
+  t.deepEqual(eleventyConfig.templateFormats, ["ejs", "njk", "liquid"]);
+});
