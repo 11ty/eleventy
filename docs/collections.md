@@ -25,7 +25,7 @@ This will place this `mypost.md` into the `post` collection with all other piece
 
 ### Example: Navigation Links with an `active` class added for on the current page
 
-Comapre the `post.url` and special Eleventy-provided `page.url` variable to find the current page. Building on the previous example:
+Compare the `post.url` and special Eleventy-provided `page.url` variable to find the current page. Building on the previous example:
 
 ```
 <ul>
