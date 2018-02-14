@@ -798,3 +798,29 @@ test("Override base templating engine from .ejs to njk", async t => {
 
   t.is((await tmpl.render()).trim(), "My Title");
 });
+
+test("Override base templating engine from .njk to ejs (with a layout that uses njk)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/overrides/layout.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is(
+    (await tmpl.render()).trim(),
+    '<div id="layoutvalue"><h2>My Title</h2></div>'
+  );
+});
+
+test("Override base templating engine from .njk to nothing (with a layout that uses njk)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/overrides/layoutfalse.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is(
+    (await tmpl.render()).trim(),
+    `<div id="layoutvalue"><h2><%= title %></h2></div>`
+  );
+});

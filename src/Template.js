@@ -315,6 +315,9 @@ class Template {
     // Deprecated
     layoutData._layoutContent = layoutContent;
 
+    // don’t propagate engine overrides to layout render
+    delete layoutData[tmpl.config.keys.engineOverride];
+
     if (layoutData[tmpl.config.keys.layout]) {
       debugDev(
         "renderLayout found another layout %o (%o)",
@@ -332,14 +335,16 @@ class Template {
 
     // must happen after markdown bypass above.
     // TODO test for layouts and overrides
-    if ("templateEngineOverride" in data) {
+    if (this.config.keys.engineOverride in data) {
       debugDev(
         "%o overriding template engine to use %o",
         this.inputPath,
-        data.templateEngineOverride
+        data[this.config.keys.engineOverride]
       );
 
-      this.templateRender.setEngineOverride(data.templateEngineOverride);
+      this.templateRender.setEngineOverride(
+        data[this.config.keys.engineOverride]
+      );
     }
 
     debugDev(

@@ -29,7 +29,8 @@ module.exports = function(config) {
       package: "pkg",
       layout: "layout",
       permalink: "permalink",
-      permalinkRoot: "permalinkBypassOutputDir"
+      permalinkRoot: "permalinkBypassOutputDir",
+      engineOverride: "templateEngineOverride"
     },
     dir: {
       input: ".",

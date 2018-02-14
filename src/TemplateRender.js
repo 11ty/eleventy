@@ -43,7 +43,6 @@ TemplateRender.hasEngine = function(tmplPath) {
   return TemplateEngine.hasEngine(name);
 };
 
-// html is assumed
 TemplateRender.parseEngineOverrides = function(engineName) {
   let overlappingEngineWarningCount = 0;
   let engines = [];
@@ -55,6 +54,7 @@ TemplateRender.parseEngineOverrides = function(engineName) {
       return name.toLowerCase().trim();
     })
     .forEach(name => {
+      // html is assumed (treated as plaintext by the system)
       if (!name || name === "html") {
         return;
       }
