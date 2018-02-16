@@ -2,16 +2,16 @@
 
 | Filename                        | % Lines | % Statements | % Functions | % Branches |
 | ------------------------------- | ------- | ------------ | ----------- | ---------- |
-| `total`                         | 87.57%  | 87.58%       | 84.56%      | 82.4%      |
+| `total`                         | 86.93%  | 86.95%       | 84.67%      | 81.77%     |
 | `config.js`                     | 100%    | 100%         | 100%        | 100%       |
 | `src/Config.js`                 | 100%    | 100%         | 100%        | 100%       |
-| `src/Eleventy.js`               | 58.91%  | 58.91%       | 36.84%      | 35.71%     |
-| `src/EleventyConfig.js`         | 77.36%  | 77.36%       | 68.75%      | 61.11%     |
+| `src/Eleventy.js`               | 54.29%  | 54.29%       | 36.84%      | 31.25%     |
+| `src/EleventyConfig.js`         | 78.57%  | 78.95%       | 72.22%      | 65%        |
 | `src/EleventyError.js`          | 100%    | 100%         | 100%        | 100%       |
-| `src/Template.js`               | 90.31%  | 90.31%       | 87.18%      | 82.02%     |
+| `src/Template.js`               | 90.35%  | 90.35%       | 87.18%      | 82.02%     |
 | `src/TemplateCache.js`          | 100%    | 100%         | 100%        | 100%       |
 | `src/TemplateCollection.js`     | 91.3%   | 91.67%       | 90%         | 80%        |
-| `src/TemplateConfig.js`         | 90.7%   | 90.7%        | 80%         | 92.86%     |
+| `src/TemplateConfig.js`         | 91.3%   | 91.3%        | 80%         | 93.75%     |
 | `src/TemplateData.js`           | 98.95%  | 98.95%       | 100%        | 81.82%     |
 | `src/TemplateGlob.js`           | 93.75%  | 93.75%       | 100%        | 87.5%      |
 | `src/TemplateLayout.js`         | 97.37%  | 97.37%       | 100%        | 93.75%     |
