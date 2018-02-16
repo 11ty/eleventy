@@ -824,3 +824,35 @@ test("Override base templating engine from .njk to nothing (with a layout that u
     `<div id="layoutvalue"><h2><%= title %></h2></div>`
   );
 });
+
+test("Using a markdown source file (with a layout that uses njk), markdown shouldn’t render in layout file", async t => {
+  let tmpl = new Template(
+    "./test/stubs/overrides/test.md",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is(
+    (await tmpl.render()).trim(),
+    `# Layout header
+
+<div id="layoutvalue"><h1>My Title</h1>
+</div>`
+  );
+});
+
+test("Override base templating engine from .md to ejs,md (with a layout that uses njk), markdown shouldn’t render in layout file", async t => {
+  let tmpl = new Template(
+    "./test/stubs/overrides/test2.md",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is(
+    (await tmpl.render()).trim(),
+    `# Layout header
+
+<div id="layoutvalue"><h1>My Title</h1>
+</div>`
+  );
+});
