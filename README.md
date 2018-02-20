@@ -69,8 +69,8 @@ Wrote 0 files in 0.02 seconds
 Makes sense—this is an empty folder with no templates inside. So, let’s make a few templates.
 
 ```
-~/eleventy-sample $ echo "<!doctype html><title>Page title</title>" > index.html
-~/eleventy-sample $ echo "# Page header" > README.md
+~/eleventy-sample $ echo '<!doctype html><title>Page title</title>' > index.html
+~/eleventy-sample $ echo '# Page header' > README.md
 ```
 
 We’ve now created an HTML template and a markdown template. Now run `eleventy` again:
