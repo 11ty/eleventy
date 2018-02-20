@@ -1,6 +1,8 @@
 import test from "ava";
 import TemplateRender from "../src/TemplateRender";
 import path from "path";
+import eleventyConfig from "../src/EleventyConfig";
+import config from "../src/Config";
 
 // Pug
 test("Pug", t => {
@@ -12,7 +14,7 @@ test("Pug Render", async t => {
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });
 
-test("Pug Render Include", async t => {
+test("Pug Render Include (Absolute)", async t => {
   let fn = await new TemplateRender("pug", "./test/stubs/")
     .getCompiledTemplate(`p
 	include /included.pug`);
@@ -41,4 +43,19 @@ test("Pug Render Extends (Layouts)", async t => {
 block content
   h1= name`);
   t.is(await fn({ name: "Zach" }), "<html><body><h1>Zach</h1></body></html>");
+});
+
+test("Pug Render Include (Relative)", async t => {
+  let fn = await new TemplateRender("pug", "./test/stubs/")
+    .getCompiledTemplate(`p
+  include _includes/included.pug`);
+  t.is(await fn({ name: "Zach" }), "<p><span>This is an include.</span></p>");
+});
+
+test("Pug Options Overrides", async t => {
+  let tr = new TemplateRender("pug", "./test/stubs/");
+  tr.engine.setPugOptions({ testoption: "testoverride" });
+
+  let options = tr.engine.getPugOptions();
+  t.is(options.testoption, "testoverride");
 });

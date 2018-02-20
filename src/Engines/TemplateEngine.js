@@ -15,9 +15,11 @@ class TemplateEngine {
   getName() {
     return this.name;
   }
+
   getInputDir() {
     return this.inputDir;
   }
+
   getPartials() {
     if (!this.partialsHaveBeenCached) {
       this.partials = this.cachePartialFiles();

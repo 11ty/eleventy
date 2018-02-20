@@ -164,6 +164,10 @@ class EleventyConfig {
     this.templateFormats = templateFormats;
   }
 
+  setPugOptions(options) {
+    this.pugOptions = options;
+  }
+
   getMergingConfigObject() {
     return {
       liquidTags: this.liquidTags,
@@ -174,7 +178,8 @@ class EleventyConfig {
       filters: this.filters,
       layoutAliases: this.layoutAliases,
       passthroughCopies: this.passthroughCopies,
-      templateFormats: this.templateFormats
+      templateFormats: this.templateFormats,
+      pugOptions: this.pugOptions
     };
   }
 }

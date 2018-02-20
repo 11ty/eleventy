@@ -1,11 +1,36 @@
 const PugLib = require("pug");
 const TemplateEngine = require("./TemplateEngine");
+const lodashMerge = require("lodash.merge");
+const config = require("../Config");
 
 class Pug extends TemplateEngine {
+  constructor(name, inputDir) {
+    super(name, inputDir);
+
+    this.config = config.getConfig();
+    this.pugOptions = this.config.pugOptions;
+  }
+
+  setPugOptions(options) {
+    this.pugOptions = options;
+  }
+
+  getPugOptions() {
+    let inputDir = super.getInputDir();
+
+    return lodashMerge(
+      {
+        basedir: inputDir,
+        filename: inputDir
+      },
+      this.pugOptions || {}
+    );
+  }
+
   async compile(str) {
-    return PugLib.compile(str, {
-      basedir: super.getInputDir()
-    });
+    let options = this.getPugOptions();
+
+    return PugLib.compile(str, options);
   }
 }
 
