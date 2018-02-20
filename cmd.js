@@ -15,7 +15,7 @@ EleventyNodeVersionCheck().then(function() {
       (argv.output ? " --output=" + argv.output : "") +
       (argv.formats ? " --formats=" + argv.formats : "") +
       (argv.config ? " --config=" + argv.config : "") +
-      (argv.config ? " --pathprefix=" + argv.pathprefix : "") +
+      (argv.pathprefix ? " --pathprefix=" + argv.pathprefix : "") +
       (argv.quiet ? " --quiet" : "") +
       (argv.version ? " --version" : "") +
       (argv.watch ? " --watch" : "")
