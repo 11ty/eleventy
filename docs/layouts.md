@@ -52,7 +52,7 @@ All of this will output the following HTML content:
 
 ## Layouts in a Subdirectory
 
-_New in Eleventy v0.2.7._ Layouts can be a full path inside of the `_includes` folder, like so:
+_(New in Eleventy `v0.2.7`)_ Layouts can be a full path inside of the `_includes` folder, like so:
 
 ```
 ---
@@ -64,7 +64,7 @@ This will look for `_includes/layouts/base.njk`.
 
 ## Layout Aliasing
 
-_New in Eleventy v0.2.8._ Configuration API: use `eleventyConfig.addLayoutAlias(from, to)` to add layout aliases! Say you have a bunch of existing content using `layout: post`. If you don’t want to rewrite all of those values, just map `post` to a new file like this:
+_(New in Eleventy `v0.2.8`)_ Configuration API: use `eleventyConfig.addLayoutAlias(from, to)` to add layout aliases! Say you have a bunch of existing content using `layout: post`. If you don’t want to rewrite all of those values, just map `post` to a new file like this:
 
 ```
 module.exports = function(eleventyConfig) {

@@ -40,7 +40,7 @@ Writes to `_site/subdir/this-is-a-new-path/index.html`.
 
 ### Permalink, ignore output directory
 
-_New in Eleventy v0.1.4._ To remap your template’s output to a directory independent of the output directory (`--output`), use `permalinkBypassOutputDir: true` in your front matter.
+_(New in Eleventy `v0.1.4`)_ To remap your template’s output to a directory independent of the output directory (`--output`), use `permalinkBypassOutputDir: true` in your front matter.
 
 ```
 ---

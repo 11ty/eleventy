@@ -33,7 +33,7 @@ module.exports = function(eleventyConfig) {
 
 ## Asynchronous Nunjucks Filters
 
-_New in Eleventy v0.2.13+_ By default, almost all templating engines are synchronous. Nunjucks supports some asynchronous behavior, like filters. Here’s how that works:
+_(New in Eleventy `v0.2.13`)_ By default, almost all templating engines are synchronous. Nunjucks supports some asynchronous behavior, like filters. Here’s how that works:
 
 ```
 eleventyConfig.addNunjucksAsyncFilter("myAsyncFilter", function(value, callback) {

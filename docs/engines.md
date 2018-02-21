@@ -1,6 +1,6 @@
 # Changing a Template’s Rendering Engine
 
-_New in Eleventy `v0.2.14`_ There are a couple of different ways you can tell Eleventy how you want to process a file:
+_(New in Eleventy `v0.2.14`)_ There are a couple of different ways you can tell Eleventy how you want to process a file:
 
 1. The file extension (importantly, this is also used to find files to process).
 2. [Configuration options](../README.md#configuration-optional)
