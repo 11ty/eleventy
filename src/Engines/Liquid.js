@@ -1,5 +1,6 @@
 const LiquidLib = require("liquidjs");
 const TemplateEngine = require("./TemplateEngine");
+const lodashMerge = require("lodash.merge");
 const config = require("../Config");
 const debug = require("debug")("Eleventy:Liquid");
 
@@ -8,19 +9,32 @@ class Liquid extends TemplateEngine {
     super(name, inputDir);
 
     this.config = config.getConfig();
+    this.liquidOptions = this.config.liquidOptions;
 
     // warning, the include syntax supported here does not match what jekyll uses.
-    this.liquidEngine = LiquidLib({
-      root: [super.getInputDir()],
-      extname: ".liquid",
-      dynamicPartials: false
-    });
+    this.liquidEngine = LiquidLib(this.getLiquidOptions());
 
     this.addTags(this.config.liquidTags);
     // debug( "Adding %o liquid tags", Object.keys(this.config.liquidTags).length);
 
     this.addFilters(this.config.liquidFilters);
     // debug( "Adding %o liquid filters", Object.keys(this.config.liquidFilters).length);
+  }
+
+  setLiquidOptions(options) {
+    this.liquidOptions = options;
+
+    this.liquidEngine = LiquidLib(this.getLiquidOptions());
+  }
+
+  getLiquidOptions() {
+    let defaults = {
+      root: [super.getInputDir()],
+      extname: ".liquid",
+      dynamicPartials: false
+    };
+
+    return lodashMerge(defaults, this.liquidOptions || {});
   }
 
   addTags(tags) {

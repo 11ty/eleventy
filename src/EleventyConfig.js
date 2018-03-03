@@ -10,12 +10,14 @@ class EleventyConfig {
     this.events = new EventEmitter();
     this.collections = {};
 
+    this.liquidOptions = {};
     this.liquidTags = {};
     this.liquidFilters = {};
     this.nunjucksFilters = {};
     this.nunjucksAsyncFilters = {};
     this.handlebarsHelpers = {};
     this.passthroughCopies = {};
+    this.pugOptions = {};
 
     this.layoutAliases = {};
 
@@ -168,8 +170,13 @@ class EleventyConfig {
     this.pugOptions = options;
   }
 
+  setLiquidOptions(options) {
+    this.liquidOptions = options;
+  }
+
   getMergingConfigObject() {
     return {
+      liquidOptions: this.liquidOptions,
       liquidTags: this.liquidTags,
       liquidFilters: this.liquidFilters,
       nunjucksFilters: this.nunjucksFilters,

@@ -28,6 +28,13 @@ test("Nunjucks Render Include", async t => {
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
+test("Nunjucks Render Include Subfolder", async t => {
+  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
+    "<p>{% include 'subfolder/included.html' %}</p>"
+  );
+  t.is(await fn(), "<p>This is an include.</p>");
+});
+
 test("Nunjucks Render Imports", async t => {
   let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
     "{% import 'imports.njk' as forms %}<div>{{ forms.label('Name') }}</div>"
