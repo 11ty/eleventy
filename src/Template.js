@@ -138,15 +138,16 @@ class Template {
     return this.frontMatter.content;
   }
 
-  getLayoutTemplate(layoutPath) {
-    let path = new TemplateLayout(layoutPath, this.layoutsDir).getFullPath();
+  getLayoutTemplateFilePath(layoutPath) {
+    return new TemplateLayout(layoutPath, this.layoutsDir).getFullPath();
+  }
 
+  getLayoutTemplate(path) {
     if (templateCache.has(path)) {
       debugDev("Found %o in TemplateCache", path);
       return templateCache.get(path);
     }
 
-    // debug("%o getLayoutTemplate(%o) is using layout: %o", this.inputPath, layoutPath, path);
     let tmpl = new Template(path, this.inputDir, this.outputDir);
     templateCache.add(path, tmpl);
 
@@ -165,7 +166,10 @@ class Template {
     }
 
     if (data[this.config.keys.layout]) {
-      let layout = tmpl.getLayoutTemplate(data[this.config.keys.layout]);
+      let layoutFilePath = tmpl.getLayoutTemplateFilePath(
+        data[this.config.keys.layout]
+      );
+      let layout = tmpl.getLayoutTemplate(layoutFilePath);
       let layoutData = layout.getFrontMatterData();
 
       return this.getAllLayoutFrontMatterData(
@@ -302,7 +306,15 @@ class Template {
       tmplData[tmpl.config.keys.layout]
     );
 
-    let layout = tmpl.getLayoutTemplate(layoutPath);
+    let layoutFilePath = tmpl.getLayoutTemplateFilePath(layoutPath);
+    let layout = tmpl.getLayoutTemplate(layoutFilePath);
+    debug(
+      "%o is using layout %o: %o",
+      this.inputPath,
+      layoutPath,
+      layoutFilePath
+    );
+
     let layoutData = await layout.getData(tmplData);
     // debug("layoutData: %O", layoutData)
     // debug("tmplData (passed to layoutContent = renderContent(): %O", tmplData);
