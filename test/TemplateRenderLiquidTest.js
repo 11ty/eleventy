@@ -57,17 +57,6 @@ test("Liquid Render Include with HTML Suffix and Data Pass in", async t => {
   t.is((await fn()).trim(), "This is an include. myValue");
 });
 
-// This is an upstream limitation of the Liquid implementation
-// test("Liquid Render Include No Quotes", async t => {
-//   t.is(new TemplateRender("liquid", "./test/stubs/").getEngineName(), "liquid");
-
-//   let fn = await new TemplateRender(
-//     "liquid",
-//     "./test/stubs/"
-//   ).getCompiledTemplate("<p>{% include included.liquid %}</p>");
-//   t.is(await fn(), "<p>This is an include.</p>");
-// });
-
 test("Liquid Custom Filter", async t => {
   let tr = new TemplateRender("liquid", "./test/stubs/");
   tr.engine.addFilter("prefixWithZach", function(val) {
@@ -284,6 +273,26 @@ test("Liquid Render Include Subfolder Double quotes HTML dynamicPartials true", 
 
   let fn = await tr.getCompiledTemplate(
     `<p>{% include "subfolder/included.html" %}</p>`
+  );
+  t.is(await fn(), "<p>This is an include.</p>");
+});
+
+test("Liquid Render Include Subfolder Single quotes HTML dynamicPartials true, data passed in", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.setLiquidOptions({ dynamicPartials: true });
+
+  let fn = await tr.getCompiledTemplate(
+    `<p>{% include 'subfolder/included.html', myVariable: 'myValue' %}</p>`
+  );
+  t.is(await fn(), "<p>This is an include.</p>");
+});
+
+test("Liquid Render Include Subfolder Double quotes HTML dynamicPartials true, data passed in", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.setLiquidOptions({ dynamicPartials: true });
+
+  let fn = await tr.getCompiledTemplate(
+    `<p>{% include "subfolder/included.html", myVariable: "myValue" %}</p>`
   );
   t.is(await fn(), "<p>This is an include.</p>");
 });
