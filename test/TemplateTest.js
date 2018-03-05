@@ -521,6 +521,18 @@ test("Permalink with dates on file name regex!", async t => {
   t.is(await tmpl.getOutputPath(), "./dist/2016/02/01/index.html");
 });
 
+test("Reuse permalink in directory specific data file", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+  let tmpl = new Template(
+    "./test/stubs/reuse-permalink/test1.liquid",
+    "./test/stubs/",
+    "./dist",
+    dataObj
+  );
+
+  t.is(await tmpl.getOutputPath(), "./dist/2016/01/01/index.html");
+});
+
 test("mapDataAsRenderedTemplates", async t => {
   let tmpl = new Template(
     "./test/stubs/default.ejs",

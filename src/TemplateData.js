@@ -122,7 +122,7 @@ TemplateData.prototype.combineLocalData = async function(localDataPaths) {
   }
 
   for (let path of localDataPaths) {
-    let dataForPath = await this.getJson(path, rawImports);
+    let dataForPath = await this.getJson(path, rawImports, true);
     lodashMerge(localData, dataForPath);
   }
   return localData;
@@ -150,9 +150,17 @@ TemplateData.prototype.getJsonRaw = async function(path) {
   return rawContent ? JSON.parse(rawContent) : {};
 };
 
-TemplateData.prototype.getJson = async function(path, rawImports) {
+TemplateData.prototype.getJson = async function(
+  path,
+  rawImports,
+  ignoreProcessing
+) {
   let rawInput = await this._getLocalJson(path);
-  let engineName = this.dataTemplateEngine;
+  let engineName;
+
+  if (!ignoreProcessing) {
+    engineName = this.dataTemplateEngine;
+  }
 
   if (rawInput) {
     let str;

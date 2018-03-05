@@ -81,10 +81,9 @@ class Template {
   }
 
   async _getLink() {
-    let permalink = this.getFrontMatterData()[this.config.keys.permalink];
+    let data = await this.getData();
+    let permalink = data[this.config.keys.permalink];
     if (permalink) {
-      let data = await this.getData();
-
       // render variables inside permalink front matter, bypass markdown
       let permalinkValue = await this.renderContent(permalink, data, true);
       debug(

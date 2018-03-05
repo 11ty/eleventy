@@ -1,0 +1,3 @@
+{
+  "permalink": "/{{ page.date | date: '%Y/%m/%d' }}/index.html"
+}
