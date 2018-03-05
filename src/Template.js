@@ -191,25 +191,6 @@ class Template {
     return merged;
   }
 
-  getLocalDataPaths() {
-    let paths = [];
-
-    if (this.parsed.dir) {
-      let lastDir = TemplatePath.getLastDir(this.parsed.dir);
-      let dirPath = this.parsed.dir + "/" + lastDir + ".json";
-      let filePath = this.parsed.dir + "/" + this.parsed.name + ".json";
-
-      paths.push(dirPath);
-
-      // unique
-      if (filePath !== dirPath) {
-        paths.push(filePath);
-      }
-    }
-
-    return paths;
-  }
-
   async mapDataAsRenderedTemplates(data, templateData) {
     if (Array.isArray(data)) {
       let arr = [];
@@ -242,7 +223,7 @@ class Template {
       let data = {};
 
       if (this.templateData) {
-        data = await this.templateData.getLocalData(this.getLocalDataPaths());
+        data = await this.templateData.getLocalData(this.inputPath);
       }
 
       let frontMatterData = this.getFrontMatterData();

@@ -128,7 +128,8 @@ TemplateData.prototype.combineLocalData = async function(localDataPaths) {
   return localData;
 };
 
-TemplateData.prototype.getLocalData = async function(localDataPaths) {
+TemplateData.prototype.getLocalData = async function(templatePath) {
+  let localDataPaths = this.getLocalDataPaths(templatePath);
   let importedData = await this.combineLocalData(localDataPaths);
   let globalData = await this.getData();
 
@@ -180,6 +181,26 @@ TemplateData.prototype.getJson = async function(
   }
 
   return {};
+};
+
+TemplateData.prototype.getLocalDataPaths = function(templatePath) {
+  let paths = [];
+  let parsed = parsePath(templatePath);
+
+  if (parsed.dir) {
+    let lastDir = TemplatePath.getLastDir(parsed.dir);
+    let dirPath = parsed.dir + "/" + lastDir + ".json";
+    let filePath = parsed.dir + "/" + parsed.name + ".json";
+
+    paths.push(dirPath);
+
+    // unique
+    if (filePath !== dirPath) {
+      paths.push(filePath);
+    }
+  }
+
+  return paths;
 };
 
 module.exports = TemplateData;
