@@ -125,7 +125,7 @@ Valid `date` values:
 
 If a `date` key is omitted from the file, the date is assumed to be:
 
-1. If the file name matches `YYYY-MM-DD`, this date is used.
+1. If the file name has a `YYYY-MM-DD` format (anywhere), this date is used.
 1. File creation date.
 
 ## Advanced: Custom Filtering and Sorting

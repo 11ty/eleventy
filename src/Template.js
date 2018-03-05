@@ -84,12 +84,22 @@ class Template {
     let permalink = this.getFrontMatterData()[this.config.keys.permalink];
     if (permalink) {
       let data = await this.getData();
-      // debug("Rendering permalink for %o", this.inputPath);
+
+      // render variables inside permalink front matter, bypass markdown
+      let permalinkValue = await this.renderContent(permalink, data, true);
+      debug(
+        "Rendering permalink for %o: %s becomes %o",
+        this.inputPath,
+        permalink,
+        permalinkValue
+      );
+      debugDev("Permalink rendered with data: %o", data);
+
       let perm = new TemplatePermalink(
-        // render variables inside permalink front matter, bypass markdown
-        await this.renderContent(permalink, data, true),
+        permalinkValue,
         this.extraOutputSubdirectory
       );
+
       return perm;
     }
 
@@ -228,23 +238,44 @@ class Template {
   }
 
   async getData(localData) {
-    debugDev("%o getData()", this.inputPath);
-    let data = {};
+    if (!this.data) {
+      debugDev("%o getData()", this.inputPath);
+      let data = {};
 
-    if (this.templateData) {
-      data = await this.templateData.getLocalData(this.getLocalDataPaths());
+      if (this.templateData) {
+        data = await this.templateData.getLocalData(this.getLocalDataPaths());
+      }
+
+      let frontMatterData = this.getFrontMatterData();
+
+      let mergedLayoutData = await this.getAllLayoutFrontMatterData(
+        this,
+        frontMatterData
+      );
+
+      let mergedData = Object.assign({}, data, mergedLayoutData);
+      mergedData = await this.addPageDate(mergedData);
+
+      this.data = mergedData;
     }
 
-    let mergedLocalData = Object.assign({}, localData, this.dataOverrides);
+    return Object.assign({}, this.data, localData, this.dataOverrides);
+  }
 
-    let frontMatterData = this.getFrontMatterData();
+  async addPageDate(data) {
+    if (!("page" in data)) {
+      data.page = {};
+    }
 
-    let mergedLayoutData = await this.getAllLayoutFrontMatterData(
-      this,
-      frontMatterData
-    );
+    if ("page" in data && "date" in data.page) {
+      debug(
+        "Warning: data.page.date is in use by the application will be overwritten: %o",
+        data.page.date
+      );
+    }
+    data.page.date = await this.getMappedDate(data);
 
-    return Object.assign({}, data, mergedLayoutData, mergedLocalData);
+    return data;
   }
 
   async addPageData(data) {
@@ -258,16 +289,9 @@ class Template {
         data.page.url
       );
     }
-    if ("page" in data && "date" in data.page) {
-      debug(
-        "Warning: data.page.date is in use by the application will be overwritten: %o",
-        data.page.date
-      );
-    }
 
-    data.page.url = await this.getOutputHref();
-    data.page.date = await this.getMappedDate(data);
     data.page.inputPath = this.inputPath;
+    data.page.url = await this.getOutputHref();
     data.page.outputPath = await this.getOutputPath();
   }
 
@@ -503,6 +527,7 @@ class Template {
       );
       if (data.date instanceof Date) {
         // YAML does its own date parsing
+        debug("getMappedDate: YAML parsed it: %o", data.date);
         return data.date;
       } else {
         // string
@@ -520,6 +545,12 @@ class Template {
               }`
             );
           }
+          debug(
+            "getMappedDate: Luxon parsed %o: %o and %o",
+            data.date,
+            date,
+            date.toJSDate()
+          );
 
           return date.toJSDate();
         }
@@ -527,12 +558,14 @@ class Template {
     } else {
       let filenameRegex = this.inputPath.match(/(\d{4}-\d{2}-\d{2})/);
       if (filenameRegex !== null) {
+        let dateObj = DateTime.fromISO(filenameRegex[1]).toJSDate();
         debug(
-          "getMappedDate: using filename regex time for %o of %o",
+          "getMappedDate: using filename regex time for %o of %o: %o",
           this.inputPath,
-          filenameRegex[1]
+          filenameRegex[1],
+          dateObj
         );
-        return DateTime.fromISO(filenameRegex[1]).toJSDate();
+        return dateObj;
       }
 
       let createdDate = new Date(stat.birthtimeMs);
@@ -558,19 +591,17 @@ class Template {
 
   async getMapped() {
     debugDev("%o getMapped()", this.inputPath);
-    let outputPath = await this.getOutputPath();
-    let url = await this.getOutputHref();
     let data = await this.getRenderedData();
     let map = {
       template: this,
-      inputPath: this.getInputPath(),
-      outputPath: outputPath,
-      url: url,
+      inputPath: this.inputPath,
       data: data
     };
 
     // we can reuse the mapped date stored in the data obj
     map.date = data.page.date;
+    map.url = data.page.url;
+    map.outputPath = data.page.outputPath;
 
     return map;
   }

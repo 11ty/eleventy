@@ -238,29 +238,29 @@ Read more about [Plugins](docs/plugins.md).
 
 Here are the features tested with each template engine that use external files and thus are subject to setup and scaffolding.
 
-| Engine     | Feature                                                  | Syntax                                                                            |
-| ---------- | -------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| ejs        | ✅ Include (Preprocessor Directive)                      | `<% include /user/show %>` looks for `_includes/user/show.ejs`                    |
-| ejs        | ✅ Include (pass in Data)                                | `<%- include('/user/show', {user: 'Ava'}) %>` looks for `_includes/user/show.ejs` |
-| Liquid     | ✅ Include                                               | `{% include 'user' %}` looks for `_includes/user.liquid`                          |
-| Liquid     | ✅ Include (pass in Data)                                | `{% include 'user' with 'Ava' %}`                                                 |
-| Liquid     | ✅ Include (pass in Data)                                | `{% include 'user', user1: 'Ava', user2: 'Bill' %}`                               |
-| Liquid     | ✅ Set `liquidjs` library options with Configuration API | `eleventyConfig.setLiquidOptions({"dynamicPartials": true});`                     |
-| Liquid     | ✅ Custom Filters                                        | `{{ name \| upper }}` (see `config.addLiquidFilter` documentation)                |
-| Liquid     | ✅ Custom Tags                                           | `{% upper name %}` (see `config.addLiquidTag` documentation)                      |
-| Mustache   | ✅ Partials                                              | `{{> user}}` looks for `_includes/user.mustache`                                  |
-| Handlebars | ✅ Partials                                              | `{{> user}}` looks for `_includes/user.hbs`                                       |
-| Handlebars | ✅ Helpers                                               | See `handlebarsHelpers` configuration option.                                     |
-| HAML       | ❌ but 🔜 Filters                                        |                                                                                   |
-| Pug        | ✅ Includes (Absolute)                                   | `include /includedvar.pug` looks in `_includes/includedvar.pug`                   |
-| Pug        | ✅ Includes (Relative) _(New in Eleventy `v0.2.15`)_     | `include includedvar.pug` looks in `_includes/includedvar.pug`                    |
-| Pug        | ✅ Extends (Absolute)                                    | `extends /layout.pug` looks in `_includes/layout.pug`                             |
-| Pug        | ✅ Extends (Relative) _(New in Eleventy `v0.2.15`)_      | `extends layout.pug` looks in `_includes/layout.pug`                              |
-| Pug        | ✅ Set render/compile options with Configuration API     | `eleventyConfig.setPugOptions({"debug": true});`                                  |
-| Nunjucks   | ✅ Includes                                              | `{% include 'included.njk' %}` looks in `_includes/included.njk`                  |
-| Nunjucks   | ✅ Extends                                               | `{% extends 'base.njk' %}` looks in `_includes/base.njk`                          |
-| Nunjucks   | ✅ Imports                                               | `{% import 'macros.njk' %}` looks in `_includes/macros.njk`                       |
-| Nunjucks   | ✅ Filters                                               | Read more about [Filters](docs/filters.md)                                        |
+| Engine     | Feature                                                                                | Syntax                                                                            |
+| ---------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| ejs        | ✅ Include (Preprocessor Directive)                                                    | `<% include /user/show %>` looks for `_includes/user/show.ejs`                    |
+| ejs        | ✅ Include (pass in Data)                                                              | `<%- include('/user/show', {user: 'Ava'}) %>` looks for `_includes/user/show.ejs` |
+| Liquid     | ✅ Include                                                                             | `{% include 'user' %}` looks for `_includes/user.liquid`                          |
+| Liquid     | ✅ Include (pass in Data)                                                              | `{% include 'user' with 'Ava' %}`                                                 |
+| Liquid     | ✅ Include (pass in Data)                                                              | `{% include 'user', user1: 'Ava', user2: 'Bill' %}`                               |
+| Liquid     | ✅ Set `liquidjs` library options with Configuration API _(New in Eleventy `v0.2.15`)_ | `eleventyConfig.setLiquidOptions({"dynamicPartials": true});`                     |
+| Liquid     | ✅ Custom Filters                                                                      | `{{ name \| upper }}` (see `config.addLiquidFilter` documentation)                |
+| Liquid     | ✅ Custom Tags                                                                         | `{% upper name %}` (see `config.addLiquidTag` documentation)                      |
+| Mustache   | ✅ Partials                                                                            | `{{> user}}` looks for `_includes/user.mustache`                                  |
+| Handlebars | ✅ Partials                                                                            | `{{> user}}` looks for `_includes/user.hbs`                                       |
+| Handlebars | ✅ Helpers                                                                             | See `handlebarsHelpers` configuration option.                                     |
+| HAML       | ❌ but 🔜 Filters                                                                      |                                                                                   |
+| Pug        | ✅ Includes (Absolute)                                                                 | `include /includedvar.pug` looks in `_includes/includedvar.pug`                   |
+| Pug        | ✅ Includes (Relative) _(New in Eleventy `v0.2.15`)_                                   | `include includedvar.pug` looks in `_includes/includedvar.pug`                    |
+| Pug        | ✅ Extends (Absolute)                                                                  | `extends /layout.pug` looks in `_includes/layout.pug`                             |
+| Pug        | ✅ Extends (Relative) _(New in Eleventy `v0.2.15`)_                                    | `extends layout.pug` looks in `_includes/layout.pug`                              |
+| Pug        | ✅ Set render/compile options with Configuration API _(New in Eleventy `v0.2.15`)_     | `eleventyConfig.setPugOptions({"debug": true});`                                  |
+| Nunjucks   | ✅ Includes                                                                            | `{% include 'included.njk' %}` looks in `_includes/included.njk`                  |
+| Nunjucks   | ✅ Extends                                                                             | `{% extends 'base.njk' %}` looks in `_includes/base.njk`                          |
+| Nunjucks   | ✅ Imports                                                                             | `{% import 'macros.njk' %}` looks in `_includes/macros.njk`                       |
+| Nunjucks   | ✅ Filters                                                                             | Read more about [Filters](docs/filters.md)                                        |
 
 ## Tests
 

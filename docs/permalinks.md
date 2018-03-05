@@ -25,6 +25,8 @@ permalink: this-is-a-new-path/subdirectory/testing/index.html
 
 The above will write to `_site/this-is-a-new-path/subdirectory/testing/index.html`.
 
+### Use data variables in Permalink
+
 You may use data variables available here. These will be parsed with the current template’s rendering engine.
 
 For example, in a Nunjucks template:
@@ -38,13 +40,40 @@ permalink: subdir/{{ mySlug }}/index.html
 
 Writes to `_site/subdir/this-is-a-new-path/index.html`.
 
-### Permalink, ignore output directory
+### Use filters!
+
+Use the provided [`slug` filter](filters.md#slug) to modify other data available in the template.
+
+```
+---
+title: My Article Title
+permalink: subdir/{{ title | slug }}/index.html
+---
+```
+
+_(the above is using syntax that works in at least Liquid and Nunjucks)_
+
+Writes to `_site/subdir/my-article-title/index.html`.
+
+```
+---
+date: "2016-01-01T06:00-06:00"
+permalink: "/{{ page.date | date: '%Y/%m/%d' }}/index.html"
+---
+```
+
+_(the above is using Liquid syntax and was buggy (sorry!)—fixed in Eleventy 0.2.15)_
+
+Writes to `_site/2016/01/01/index.html`. There are a variety of ways that the page.date variable can be set (using `date` in your front matter is just one of them). Read more about [Overriding content dates](collections.md#overriding-content-dates).
+
+### Ignore the output directory
 
 _(New in Eleventy `v0.1.4`)_ To remap your template’s output to a directory independent of the output directory (`--output`), use `permalinkBypassOutputDir: true` in your front matter.
 
 ```
 ---
 permalink: _includes/index.html
+permalinkBypassOutputDir: true
 ---
 ```
 
