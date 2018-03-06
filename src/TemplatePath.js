@@ -25,12 +25,32 @@ TemplatePath.getLastDir = function(path) {
   return path.substr(path.lastIndexOf("/") + 1);
 };
 
+TemplatePath.getAllDirs = function(path) {
+  if (path.indexOf("/") === -1) {
+    return [path];
+  }
+
+  let split = path.split("/");
+  let results = [];
+  while (split.length) {
+    let folder = split.pop();
+    let parent = split.join("/");
+    if (folder && folder !== ".") {
+      results.push((parent ? parent + "/" : "") + folder);
+    }
+  }
+  return results;
+};
+
 /* Outputs ./SAFE/LOCAL/PATHS/WITHOUT/TRAILING/SLASHES */
 TemplatePath.normalize = function(...paths) {
   return normalize(path.join(...paths));
 };
 
 TemplatePath.hasTrailingSlash = function(thePath) {
+  if (!thePath) {
+    return false;
+  }
   return thePath.length && thePath.charAt(thePath.length - 1) === "/";
 };
 

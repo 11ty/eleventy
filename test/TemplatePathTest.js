@@ -35,6 +35,16 @@ test("stripLeadingDotSlash", t => {
   t.is(TemplatePath.stripLeadingDotSlash("dist"), "dist");
 });
 
+test("hasTrailingSlash", t => {
+  t.is(TemplatePath.hasTrailingSlash(), false);
+  t.is(TemplatePath.hasTrailingSlash(""), false);
+  t.is(TemplatePath.hasTrailingSlash("dist"), false);
+  t.is(TemplatePath.hasTrailingSlash("./test/stubs"), false);
+  t.is(TemplatePath.hasTrailingSlash("/"), true);
+  t.is(TemplatePath.hasTrailingSlash("dist/"), true);
+  t.is(TemplatePath.hasTrailingSlash("./test/stubs/"), true);
+});
+
 test("addLeadingDotSlash", t => {
   t.is(TemplatePath.addLeadingDotSlash("./test/stubs"), "./test/stubs");
   t.is(TemplatePath.addLeadingDotSlash("./dist"), "./dist");
@@ -65,4 +75,15 @@ test("getLastDir", t => {
   t.is(TemplatePath.getLastDir("./testing/"), "testing");
   t.is(TemplatePath.getLastDir("testing/"), "testing");
   t.is(TemplatePath.getLastDir("testing"), "testing");
+});
+
+test("getAllDirs", t => {
+  t.deepEqual(TemplatePath.getAllDirs("./testing/hello"), [
+    "./testing/hello",
+    "./testing"
+  ]);
+  t.deepEqual(TemplatePath.getAllDirs("./testing"), ["./testing"]);
+  t.deepEqual(TemplatePath.getAllDirs("./testing/"), ["./testing"]);
+  t.deepEqual(TemplatePath.getAllDirs("testing/"), ["testing"]);
+  t.deepEqual(TemplatePath.getAllDirs("testing"), ["testing"]);
 });

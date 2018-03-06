@@ -140,3 +140,39 @@ test("getJson() without dataTemplateEngine changed to `ejs`", async t => {
     datakey2: "pkgname"
   });
 });
+
+test("getLocalDataPaths", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+  let paths = dataObj.getLocalDataPaths(
+    "./test/stubs/component/component.liquid"
+  );
+
+  t.deepEqual(paths, [
+    "./test/stubs/component/component.json",
+    "./test/stubs/stubs.json"
+  ]);
+});
+
+test("getLocalDataPaths with inputDir passed in (trailing slash)", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+  let paths = dataObj.getLocalDataPaths(
+    "./test/stubs/component/component.liquid"
+  );
+
+  t.deepEqual(paths, [
+    "./test/stubs/component/component.json",
+    "./test/stubs/stubs.json"
+  ]);
+});
+
+test("getLocalDataPaths with inputDir passed in (no trailing slash)", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+  let paths = dataObj.getLocalDataPaths(
+    "./test/stubs/component/component.liquid"
+  );
+
+  t.deepEqual(paths, [
+    "./test/stubs/component/component.json",
+    "./test/stubs/stubs.json"
+  ]);
+});

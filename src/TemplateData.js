@@ -4,6 +4,7 @@ const globby = require("globby");
 const parsePath = require("parse-filepath");
 const lodashset = require("lodash.set");
 const lodashMerge = require("lodash.merge");
+const lodashUniq = require("lodash.uniq");
 const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
 const TemplateGlob = require("./TemplateGlob");
@@ -14,15 +15,19 @@ function TemplateData(inputDir) {
   this.config = config.getConfig();
   this.dataTemplateEngine = this.config.dataTemplateEngine;
 
-  this.inputDir = inputDir;
-  this.dataDir =
-    inputDir + "/" + (this.config.dir.data !== "." ? this.config.dir.data : "");
+  this.setInputDir(inputDir);
 
   this.fetchedRawImports = false;
   this.rawImports = {};
 
   this.globalData = null;
 }
+
+TemplateData.prototype.setInputDir = function(inputDir) {
+  this.inputDir = inputDir;
+  this.dataDir =
+    inputDir + "/" + (this.config.dir.data !== "." ? this.config.dir.data : "");
+};
 
 TemplateData.prototype.setDataTemplateEngine = function(engineName) {
   this.dataTemplateEngine = engineName;
@@ -186,21 +191,31 @@ TemplateData.prototype.getJson = async function(
 TemplateData.prototype.getLocalDataPaths = function(templatePath) {
   let paths = [];
   let parsed = parsePath(templatePath);
+  let inputDir = this.inputDir;
+  let inputDirHasTrailingSlash = TemplatePath.hasTrailingSlash(inputDir);
 
   if (parsed.dir) {
-    let lastDir = TemplatePath.getLastDir(parsed.dir);
-    let dirPath = parsed.dir + "/" + lastDir + ".json";
     let filePath = parsed.dir + "/" + parsed.name + ".json";
+    paths.push(filePath);
 
-    paths.push(dirPath);
+    let allDirs = TemplatePath.getAllDirs(parsed.dir);
+    for (let dir of allDirs) {
+      let lastDir = TemplatePath.getLastDir(dir);
+      let dirPath = dir + "/" + lastDir + ".json";
 
-    // unique
-    if (filePath !== dirPath) {
-      paths.push(filePath);
+      if (!inputDir) {
+        paths.push(dirPath);
+      } else {
+        if (
+          (dir + (inputDirHasTrailingSlash ? "/" : "")).indexOf(inputDir) === 0
+        ) {
+          paths.push(dirPath);
+        }
+      }
     }
   }
 
-  return paths;
+  return lodashUniq(paths);
 };
 
 module.exports = TemplateData;

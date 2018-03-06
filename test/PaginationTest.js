@@ -98,7 +98,7 @@ test("Paginate data in frontmatter", async t => {
 });
 
 test("Paginate external data file", async t => {
-  let dataObj = new TemplateData();
+  let dataObj = new TemplateData("./test/stubs/");
   await dataObj.cacheData();
 
   let tmpl = new Template(

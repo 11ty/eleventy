@@ -33,6 +33,7 @@ class Template {
     } else {
       this.inputDir = false;
     }
+
     if (outputDir) {
       this.outputDir = normalize(outputDir);
     } else {
@@ -44,6 +45,9 @@ class Template {
     this.filters = [];
     this.plugins = {};
     this.templateData = templateData;
+    if (this.templateData) {
+      this.templateData.setInputDir(this.inputDir);
+    }
     this.dataOverrides = {};
 
     this.templateRender = new TemplateRender(this.inputPath, this.inputDir);
