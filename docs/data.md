@@ -62,11 +62,14 @@ _(New in Eleventy `v0.2.14`)_ While it is useful to have globally available data
 
 _Important exception:_ Template and Directory Specific Data Files are **not** processed through a templating engine. Global Data files are.
 
-For example, consider a template located at `posts/my-first-blog-post.md`. Eleventy will look for data in the following places (starting with highest priority, local data keys override global data):
+For example, consider a template located at `posts/subdir/my-first-blog-post.md`. Eleventy will look for data in the following places (starting with highest priority, local data keys override global data):
 
-1. `posts/my-first-blog-post.json` (data only applied to `posts/my-first-blog-post.md`)
-1. `posts/posts.json` (data applied to all templates `posts/*`)
+1. `posts/subdir/my-first-blog-post.json` (data only applied to `posts/my-first-blog-post.md`)
+1. `posts/subdir/subdir.json` (on all templates in `posts/subdir/*`)
+1. `posts/posts.json` (on all templates in `posts/**/*`, including subdirectories)
 1. `_data/*` (global data files available to all templates)
+
+_(Changed in Eleventy `v0.2.15` to search parent directories for data files—specifically step 3 above was added in the sequence)_
 
 #### Apply a default layout to multiple templates
 
