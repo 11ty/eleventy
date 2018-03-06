@@ -147,10 +147,7 @@ test("getLocalDataPaths", async t => {
     "./test/stubs/component/component.liquid"
   );
 
-  t.deepEqual(paths, [
-    "./test/stubs/component/component.json",
-    "./test/stubs/stubs.json"
-  ]);
+  t.deepEqual(paths, ["./test/stubs/component/component.json"]);
 });
 
 test("getLocalDataPaths with inputDir passed in (trailing slash)", async t => {
@@ -159,10 +156,7 @@ test("getLocalDataPaths with inputDir passed in (trailing slash)", async t => {
     "./test/stubs/component/component.liquid"
   );
 
-  t.deepEqual(paths, [
-    "./test/stubs/component/component.json",
-    "./test/stubs/stubs.json"
-  ]);
+  t.deepEqual(paths, ["./test/stubs/component/component.json"]);
 });
 
 test("getLocalDataPaths with inputDir passed in (no trailing slash)", async t => {
@@ -171,8 +165,5 @@ test("getLocalDataPaths with inputDir passed in (no trailing slash)", async t =>
     "./test/stubs/component/component.liquid"
   );
 
-  t.deepEqual(paths, [
-    "./test/stubs/component/component.json",
-    "./test/stubs/stubs.json"
-  ]);
+  t.deepEqual(paths, ["./test/stubs/component/component.json"]);
 });

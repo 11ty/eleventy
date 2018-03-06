@@ -206,9 +206,8 @@ TemplateData.prototype.getLocalDataPaths = function(templatePath) {
       if (!inputDir) {
         paths.push(dirPath);
       } else {
-        if (
-          (dir + (inputDirHasTrailingSlash ? "/" : "")).indexOf(inputDir) === 0
-        ) {
+        let dirStr = dir + (inputDirHasTrailingSlash ? "/" : "");
+        if (dirStr.indexOf(inputDir) === 0 && dirStr !== inputDir) {
           paths.push(dirPath);
         }
       }
