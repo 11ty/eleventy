@@ -123,6 +123,8 @@ DEBUG=Eleventy* eleventy
 
 This will tell you exactly what directories Eleventy is using for data, includes, input, and output. It’ll tell you what search globs it uses to find your templates and what templates it finds. If you’re having trouble, enable this.
 
+_(New in Eleventy `v0.2.16`)_ Works great with `--dryrun` if you want to run Eleventy but not actually write any files.
+
 Read more at the [`debug` package documentation](https://www.npmjs.com/package/debug).
 
 ### Example: Default options

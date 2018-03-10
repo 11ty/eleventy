@@ -23,6 +23,7 @@ function TemplateWriter(inputPath, outputDir, extensions, templateData) {
   this.outputDir = outputDir;
   this.templateData = templateData;
   this.isVerbose = true;
+  this.isDryRun = false;
   this.writeCount = 0;
   this.copyCount = 0;
 
@@ -174,6 +175,7 @@ TemplateWriter.prototype._getTemplate = function(path) {
   );
 
   tmpl.setIsVerbose(this.isVerbose);
+  tmpl.setDryRun(this.isDryRun);
 
   /*
    * Sample filter: arg str, return pretty HTML string
@@ -205,6 +207,7 @@ TemplateWriter.prototype._getTemplate = function(path) {
 
 TemplateWriter.prototype._copyPassthroughPath = async function(path) {
   let pass = new TemplatePassthrough(path, this.outputDir);
+  pass.setDryRun(this.isDryRun);
   try {
     await pass.write();
     debugDev("Copied %o", path);
@@ -292,6 +295,10 @@ TemplateWriter.prototype.write = async function() {
 
 TemplateWriter.prototype.setVerboseOutput = function(isVerbose) {
   this.isVerbose = isVerbose;
+};
+
+TemplateWriter.prototype.setDryRun = function(isDryRun) {
+  this.isDryRun = !!isDryRun;
 };
 
 TemplateWriter.prototype.getCopyCount = function() {

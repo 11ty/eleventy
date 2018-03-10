@@ -18,12 +18,14 @@ EleventyNodeVersionCheck().then(function() {
       (argv.pathprefix ? " --pathprefix=" + argv.pathprefix : "") +
       (argv.quiet ? " --quiet" : "") +
       (argv.version ? " --version" : "") +
-      (argv.watch ? " --watch" : "")
+      (argv.watch ? " --watch" : "") +
+      (argv.dryrun ? " --dryrun" : "")
   );
 
   let elev = new Eleventy(argv.input, argv.output);
   elev.setConfigPath(argv.config);
   elev.setPathPrefix(argv.pathprefix);
+  elev.setDryRun(argv.dryrun);
   elev.setFormats(argv.formats);
 
   if (process.env.DEBUG) {

@@ -6,10 +6,15 @@ class TemplatePassthrough {
   constructor(inputPath, outputDir) {
     this.path = inputPath;
     this.outputDir = outputDir;
+    this.isDryRun = false;
   }
 
   getOutputPath() {
     return TemplatePath.normalize(this.outputDir, this.path);
+  }
+
+  setDryRun(isDryRun) {
+    this.isDryRun = !!isDryRun;
   }
 
   async write() {
@@ -19,7 +24,9 @@ class TemplatePassthrough {
     //   }`
     // );
 
-    return fs.copy(this.path, this.getOutputPath());
+    if (!this.isDryRun) {
+      return fs.copy(this.path, this.getOutputPath());
+    }
   }
 }
 

@@ -59,6 +59,7 @@ class Template {
       this.parsed.name === "index";
 
     this.isVerbose = true;
+    this.isDryRun = false;
     this.writeCount = 0;
     this.initialLayout = undefined;
     this.wrapWithLayouts = true;
@@ -70,6 +71,10 @@ class Template {
 
   setIsVerbose(isVerbose) {
     this.isVerbose = isVerbose;
+  }
+
+  setDryRun(isDryRun) {
+    this.isDryRun = !!isDryRun;
   }
 
   setWrapWithLayouts(wrap) {
@@ -257,6 +262,7 @@ class Template {
         data.page.date
       );
     }
+
     data.page.date = await this.getMappedDate(data);
 
     return data;
@@ -469,12 +475,15 @@ class Template {
       //       debug(`Template.write: ${outputPath}
       // ${finalContent}`);
       this.writeCount++;
-      await pify(fs.outputFile)(outputPath, finalContent);
+      if (!this.isDryRun) {
+        await pify(fs.outputFile)(outputPath, finalContent);
+      }
 
+      let writeDesc = this.isDryRun ? "Pretending to write" : "Writing";
       if (this.isVerbose) {
-        console.log(`Writing ${outputPath} from ${this.inputPath}.`);
+        console.log(`${writeDesc} ${outputPath} from ${this.inputPath}.`);
       } else {
-        debug("Writing %o from %o.", outputPath, this.inputPath);
+        debug(`${writeDesc} %o from %o.`, outputPath, this.inputPath);
       }
     } else {
       debug(
@@ -492,6 +501,7 @@ class Template {
       this.templateData
     );
     tmpl.setIsVerbose(this.isVerbose);
+    tmpl.setDryRun(this.isDryRun);
     return tmpl;
   }
 
@@ -562,8 +572,6 @@ class Template {
       // CREATED
       return createdDate;
     }
-
-    return date;
   }
 
   async isEqual(compareTo) {

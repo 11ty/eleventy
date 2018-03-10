@@ -18,6 +18,7 @@ function Eleventy(input, output) {
   this.data = null;
   this.isVerbose = true;
   this.isDebug = false;
+  this.isDryRun = false;
 
   this.start = new Date();
   this.formatsOverride = null;
@@ -36,6 +37,10 @@ Eleventy.prototype._getDir = function(inputPath) {
     return parsePath(inputPath).dir;
   }
   return inputPath;
+};
+
+Eleventy.prototype.setDryRun = function(isDryRun) {
+  this.isDryRun = !!isDryRun;
 };
 
 Eleventy.prototype.setPathPrefix = function(pathPrefix) {
@@ -115,6 +120,7 @@ Output: ${this.outputDir}
 Template Formats: ${formats.join(",")}`);
 
   this.writer.setVerboseOutput(this.isVerbose);
+  this.writer.setDryRun(this.isDryRun);
 
   return this.data.cacheData();
 };
@@ -165,6 +171,8 @@ Eleventy.prototype.getHelp = function() {
   out.push(
     "      Override the eleventy config file path (default: `.eleventy.js`)"
   );
+  out.push("  --dryrun");
+  out.push("       Don’t write any files.");
   out.push("  --help");
   return out.join("\n");
 };
