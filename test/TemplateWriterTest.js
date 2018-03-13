@@ -212,3 +212,53 @@ test("_getCollectionsData with custom collection (filter only to markdown input)
   t.is(parsePath(collectionsData.onlyMarkdown[0].inputPath).base, "test1.md");
   t.is(parsePath(collectionsData.onlyMarkdown[1].inputPath).base, "test2.md");
 });
+
+test("Pagination with a Collection", async t => {
+  let tw = new TemplateWriter(
+    "./test/stubs/paged/collection",
+    "./test/stubs/_site",
+    ["njk"]
+  );
+
+  let paths = await tw._getAllPaths();
+  let templateMap = await tw._createTemplateMap(paths);
+  await templateMap.cache();
+
+  let collectionsData = await templateMap.getCollectionsDataForTemplate();
+  t.is(collectionsData.tag1.length, 3);
+  t.is(collectionsData.pagingtag.length, 1);
+
+  let mapEntry = templateMap.getMapEntryForPath(
+    "./test/stubs/paged/collection/main.njk"
+  );
+  t.truthy(mapEntry);
+  t.is(mapEntry.inputPath, "./test/stubs/paged/collection/main.njk");
+
+  let mainTmpl = tw._getTemplate("./test/stubs/paged/collection/main.njk");
+  let outputPath = await mainTmpl.getOutputPath();
+  t.is(outputPath, "./test/stubs/_site/main/index.html");
+  t.is(mapEntry.outputPath, "./test/stubs/_site/main/index.html");
+
+  let templates = await mapEntry.template.getRenderedTemplates(
+    mapEntry.outputPath,
+    mapEntry.data
+  );
+  t.is(templates.length, 2);
+  t.is(
+    await templates[0].template.getOutputPath(),
+    "./test/stubs/_site/main/index.html"
+  );
+  t.is(templates[0].outputPath, "./test/stubs/_site/main/index.html");
+  t.is(
+    await templates[1].template.getOutputPath(),
+    "./test/stubs/_site/main/1/index.html"
+  );
+  t.is(templates[1].outputPath, "./test/stubs/_site/main/1/index.html");
+
+  // test content
+  t.is(
+    templates[0].templateContent.trim(),
+    "<ol><li>/test1/</li><li>/test2/</li></ol>"
+  );
+  t.is(templates[1].templateContent.trim(), "<ol><li>/test3/</li></ol>");
+});

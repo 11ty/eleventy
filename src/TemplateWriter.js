@@ -7,9 +7,7 @@ const TemplateMap = require("./TemplateMap");
 const TemplateRender = require("./TemplateRender");
 const TemplatePassthrough = require("./TemplatePassthrough");
 const EleventyError = require("./EleventyError");
-const Pagination = require("./Plugins/Pagination");
 const TemplateGlob = require("./TemplateGlob");
-const pkg = require("../package.json");
 const eleventyConfig = require("./EleventyConfig");
 const config = require("./Config");
 const debug = require("debug")("Eleventy:TemplateWriter");
@@ -186,21 +184,9 @@ TemplateWriter.prototype._getTemplate = function(path) {
   for (let filterName in this.config.filters) {
     let filter = this.config.filters[filterName];
     if (typeof filter === "function") {
-      tmpl.addFilter(filter);
+      tmpl.addTransform(filter);
     }
   }
-
-  let writer = this;
-  tmpl.addPlugin("pagination", async function(data) {
-    let paging = new Pagination(data);
-    paging.setTemplate(this);
-    await paging.write();
-    writer.writeCount += paging.getWriteCount();
-
-    if (paging.cancel()) {
-      return false;
-    }
-  });
 
   return tmpl;
 };
@@ -281,7 +267,6 @@ TemplateWriter.prototype.write = async function() {
 
   await this._copyPassthroughs(paths);
   await this._createTemplateMap(paths);
-
   for (let mapEntry of this.templateMap.getMap()) {
     await this._writeTemplate(mapEntry);
   }

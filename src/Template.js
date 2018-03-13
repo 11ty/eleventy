@@ -10,7 +10,7 @@ const TemplatePath = require("./TemplatePath");
 const TemplatePermalink = require("./TemplatePermalink");
 const TemplateLayout = require("./TemplateLayout");
 const templateCache = require("./TemplateCache");
-const Eleventy = require("./Eleventy");
+const Pagination = require("./Plugins/Pagination");
 const config = require("./Config");
 const debug = require("debug")("Eleventy:Template");
 const debugDev = require("debug")("Dev:Eleventy:Template");
@@ -42,7 +42,7 @@ class Template {
 
     this.frontMatter = this.getMatter();
 
-    this.filters = [];
+    this.transforms = [];
     this.plugins = {};
     this.templateData = templateData;
     if (this.templateData) {
@@ -226,8 +226,16 @@ class Template {
     return data;
   }
 
+  setDataCache(data) {
+    this.dataCache = data;
+  }
+
+  getDataCache() {
+    return this.dataCache;
+  }
+
   async getData(localData) {
-    if (!this.data) {
+    if (!this.dataCache) {
       debugDev("%o getData()", this.inputPath);
       let data = {};
 
@@ -245,10 +253,10 @@ class Template {
       let mergedData = Object.assign({}, data, mergedLayoutData);
       mergedData = await this.addPageDate(mergedData);
 
-      this.data = mergedData;
+      this.dataCache = mergedData;
     }
 
-    return Object.assign({}, this.data, localData, this.dataOverrides);
+    return Object.assign({}, this.dataCache, localData, this.dataOverrides);
   }
 
   async addPageDate(data) {
@@ -256,14 +264,17 @@ class Template {
       data.page = {};
     }
 
+    let newDate = await this.getMappedDate(data);
+
     if ("page" in data && "date" in data.page) {
       debug(
-        "Warning: data.page.date is in use by the application will be overwritten: %o",
-        data.page.date
+        "Warning: data.page.date is in use (%o) will be overwritten with: %o",
+        data.page.date,
+        newDate
       );
     }
 
-    data.page.date = await this.getMappedDate(data);
+    data.page.date = newDate;
 
     return data;
   }
@@ -273,15 +284,20 @@ class Template {
       data.page = {};
     }
 
+    let newUrl = await this.getOutputHref();
+
     if ("page" in data && "url" in data.page) {
-      debug(
-        "Warning: data.page.url is in use by the application will be overwritten: %o",
-        data.page.url
-      );
+      if (data.page.url !== newUrl) {
+        debug(
+          "Warning: data.page.url is in use (%o) will be overwritten with: %o",
+          data.page.url,
+          newUrl
+        );
+      }
     }
 
     data.page.inputPath = this.inputPath;
-    data.page.url = await this.getOutputHref();
+    data.page.url = newUrl;
     data.page.outputPath = await this.getOutputPath();
   }
 
@@ -425,83 +441,95 @@ class Template {
     }
   }
 
-  addFilter(callback) {
-    this.filters.push(callback);
+  addTransform(callback) {
+    this.transforms.push(callback);
   }
 
-  async runFilters(str) {
+  async runTransforms(str) {
     let outputPath = await this.getOutputPath();
-    this.filters.forEach(function(filter) {
+    this.transforms.forEach(function(filter) {
       str = filter.call(this, str, outputPath);
     });
 
     return str;
   }
 
-  addPlugin(key, callback) {
-    this.plugins[key] = callback;
-  }
+  async getRenderedTemplates(outputPath, data) {
+    let results = [];
+    if (!this.paging) {
+      this.paging = new Pagination(data);
+    }
 
-  removePlugin(key) {
-    delete this.plugins[key];
-  }
+    if (!this.paging.hasPagination()) {
+      results.push({
+        outputPath: outputPath,
+        data: data,
+        template: this,
+        templateContent: await this._getContent(data)
+      });
+    } else {
+      this.paging.setTemplate(this);
 
-  async runPlugins(data) {
-    let ret = true;
-    for (let key in this.plugins) {
-      let pluginRet = await this.plugins[key].call(this, data);
-      if (pluginRet === false) {
-        ret = false;
+      let templates = await this.paging.getPageTemplates();
+      for (let page of templates) {
+        let pageData = await page.getRenderedData();
+
+        results.push({
+          outputPath: await page.getOutputPath(),
+          data: pageData,
+          template: page,
+          templateContent: await page._getContent(pageData)
+        });
       }
     }
 
-    return ret;
+    return results;
   }
 
-  async getFinalContent(data) {
-    let pluginRet = await this.runPlugins(data);
-    if (pluginRet) {
-      let str = await this.render(data);
-      let filtered = await this.runFilters(str);
-      return filtered;
+  async _getContent(data) {
+    let str = await this.render(data);
+    let filtered = await this.runTransforms(str);
+    return filtered;
+  }
+
+  async _write(outputPath, finalContent) {
+    this.writeCount++;
+
+    if (!this.isDryRun) {
+      await pify(fs.outputFile)(outputPath, finalContent);
     }
 
-    return undefined;
+    let writeDesc = this.isDryRun ? "Pretending to write" : "Writing";
+    if (this.isVerbose) {
+      console.log(`${writeDesc} ${outputPath} from ${this.inputPath}.`);
+    } else {
+      debug(`${writeDesc} %o from %o.`, outputPath, this.inputPath);
+    }
   }
 
   async write(outputPath, data) {
-    let finalContent = await this.getFinalContent(data);
-    if (finalContent !== undefined) {
-      //       debug(`Template.write: ${outputPath}
-      // ${finalContent}`);
-      this.writeCount++;
-      if (!this.isDryRun) {
-        await pify(fs.outputFile)(outputPath, finalContent);
-      }
-
-      let writeDesc = this.isDryRun ? "Pretending to write" : "Writing";
-      if (this.isVerbose) {
-        console.log(`${writeDesc} ${outputPath} from ${this.inputPath}.`);
-      } else {
-        debug(`${writeDesc} %o from %o.`, outputPath, this.inputPath);
-      }
-    } else {
-      debug(
-        `Did not write ${outputPath} because writing was canceled by a plugin.`
-      );
+    let templates = await this.getRenderedTemplates(outputPath, data);
+    for (let tmpl of templates) {
+      await this._write(tmpl.outputPath, tmpl.templateContent);
     }
   }
 
+  // TODO this but better
   clone() {
-    // TODO better clone
     let tmpl = new Template(
       this.inputPath,
       this.inputDir,
       this.outputDir,
       this.templateData
     );
+
+    // let newData = Object.assign({}, this.getDataCache());
+    // delete newData.page.url;
+    // tmpl.setDataCache(newData);
+
     tmpl.setIsVerbose(this.isVerbose);
     tmpl.setDryRun(this.isDryRun);
+
     return tmpl;
   }
 
@@ -510,8 +538,6 @@ class Template {
   }
 
   async getMappedDate(data) {
-    let stat = await pify(fs.stat)(this.inputPath);
-
     // should we use Luxon dates everywhere? Right now using built-in `Date`
     if ("date" in data) {
       debug(
@@ -524,6 +550,7 @@ class Template {
         debug("getMappedDate: YAML parsed it: %o", data.date);
         return data.date;
       } else {
+        let stat = await pify(fs.stat)(this.inputPath);
         // string
         if (data.date.toLowerCase() === "last modified") {
           return new Date(stat.ctimeMs);
@@ -562,6 +589,7 @@ class Template {
         return dateObj;
       }
 
+      let stat = await pify(fs.stat)(this.inputPath);
       let createdDate = new Date(stat.birthtimeMs);
       debug(
         "getMappedDate: using file created time for %o of %o",

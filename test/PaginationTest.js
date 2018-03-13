@@ -14,7 +14,7 @@ test("No data passed to pagination", async t => {
   paging.setTemplate(tmpl);
 
   t.is(paging.getPagedItems().length, 0);
-  t.is((await paging.getTemplates()).length, 0);
+  t.is((await paging.getPageTemplates()).length, 0);
 });
 
 test("No pagination", async t => {
@@ -30,7 +30,7 @@ test("No pagination", async t => {
 
   t.falsy(data.pagination);
   t.is(paging.getPagedItems().length, 0);
-  t.is((await paging.getTemplates()).length, 0);
+  t.is((await paging.getPageTemplates()).length, 0);
 });
 
 test("Pagination enabled in frontmatter", async t => {
@@ -59,7 +59,8 @@ test("Resolve paged data in frontmatter", async t => {
     "./dist"
   );
 
-  let paging = new Pagination(await tmpl.getData());
+  let data = await tmpl.getData();
+  let paging = new Pagination(data);
   paging.setTemplate(tmpl);
   t.is(paging._resolveItems().length, 8);
   t.is(paging.getPagedItems().length, 2);
@@ -75,7 +76,7 @@ test("Paginate data in frontmatter", async t => {
   let data = await tmpl.getData();
   let paging = new Pagination(data);
   paging.setTemplate(tmpl);
-  let pages = await paging.getTemplates();
+  let pages = await paging.getPageTemplates();
   t.is(pages.length, 2);
 
   t.is(
@@ -115,7 +116,7 @@ test("Paginate external data file", async t => {
 
   let paging = new Pagination(data);
   paging.setTemplate(tmpl);
-  let pages = await paging.getTemplates();
+  let pages = await paging.getPageTemplates();
   t.is(pages.length, 2);
 
   t.is(await pages[0].getOutputPath(), "./dist/paged/index.html");
@@ -148,7 +149,7 @@ test("Permalink with pagination variables", async t => {
   let data = await tmpl.getData();
   let paging = new Pagination(data);
   paging.setTemplate(tmpl);
-  let pages = await paging.getTemplates();
+  let pages = await paging.getPageTemplates();
 
   t.is(
     await pages[0].getOutputPath(),
@@ -170,7 +171,7 @@ test("Permalink with pagination variables (numeric)", async t => {
   let data = await tmpl.getData();
   let paging = new Pagination(data);
   paging.setTemplate(tmpl);
-  let pages = await paging.getTemplates();
+  let pages = await paging.getPageTemplates();
 
   let page0Data = await pages[0].getData();
   t.is(await pages[0].getOutputPath(), "./dist/paged/page-0/index.html");
@@ -195,7 +196,7 @@ test("Permalink with pagination variables (numeric, one indexed)", async t => {
   let data = await tmpl.getData();
   let paging = new Pagination(data);
   paging.setTemplate(tmpl);
-  let pages = await paging.getTemplates();
+  let pages = await paging.getPageTemplates();
 
   let page0Data = await pages[0].getData();
   t.is(await pages[0].getOutputPath(), "./dist/paged/page-1/index.html");
@@ -220,7 +221,7 @@ test("Alias to page data", async t => {
   let data = await tmpl.getData();
   let paging = new Pagination(data);
   paging.setTemplate(tmpl);
-  let pages = await paging.getTemplates();
+  let pages = await paging.getPageTemplates();
 
   t.is(await pages[0].getOutputPath(), "./dist/pagedalias/item1/index.html");
   t.is(await pages[1].getOutputPath(), "./dist/pagedalias/item2/index.html");
@@ -239,11 +240,60 @@ test("Alias to page data (size 2)", async t => {
   let data = await tmpl.getData();
   let paging = new Pagination(data);
   paging.setTemplate(tmpl);
-  let pages = await paging.getTemplates();
+  let pages = await paging.getPageTemplates();
 
   t.is(await pages[0].getOutputPath(), "./dist/pagedalias/item1/index.html");
   t.is(await pages[1].getOutputPath(), "./dist/pagedalias/item3/index.html");
 
   t.is((await pages[0].render()).trim(), "item1");
   t.is((await pages[1].render()).trim(), "item3");
+});
+
+// TODO
+// don’t add root paginated templates to the global map?
+test("Permalink with pagination variables (and an if statement, nunjucks)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/pagedpermalinkif.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let paging = new Pagination(data);
+  paging.setTemplate(tmpl);
+  let pages = await paging.getPageTemplates();
+
+  t.is(await pages[0].getOutputPath(), "./dist/paged/index.html");
+  t.is(await pages[1].getOutputPath(), "./dist/paged/page-1/index.html");
+});
+
+test("Permalink with pagination variables (and an if statement, liquid)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/pagedpermalinkif.liquid",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let paging = new Pagination(data);
+  paging.setTemplate(tmpl);
+  let pages = await paging.getPageTemplates();
+
+  t.is(await pages[0].getOutputPath(), "./dist/paged/index.html");
+  t.is(await pages[1].getOutputPath(), "./dist/paged/page-1/index.html");
+});
+
+test("Template with Pagination, getRenderedTemplates", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/pagedpermalinkif.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let outputPath = await tmpl.getOutputPath();
+  let data = await tmpl.getData();
+  t.is(outputPath, "./dist/paged/index.html");
+
+  let templates = await tmpl.getRenderedTemplates(outputPath, data);
+  t.is(templates.length, 2);
 });

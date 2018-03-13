@@ -33,6 +33,15 @@ class TemplateMap {
     this.populateCollectionsWithContent();
   }
 
+  getMapEntryForPath(inputPath) {
+    for (let j = 0, k = this.map.length; j < k; j++) {
+      // inputPath should be unique (even with pagination?)
+      if (this.map[j].inputPath === inputPath) {
+        return this.map[j];
+      }
+    }
+  }
+
   getMapTemplateIndex(item) {
     let inputPath = item.inputPath;
     for (let j = 0, k = this.map.length; j < k; j++) {
@@ -47,15 +56,16 @@ class TemplateMap {
 
   async populateDataInMap() {
     for (let map of this.map) {
-      map.data.collections = await this.getCollectionsDataForTemplate(
-        map.template
-      );
+      map.data.collections = await this.getCollectionsDataForTemplate();
     }
     debugDev("Added this.map[...].data.collections");
 
     for (let map of this.map) {
       map.template.setWrapWithLayouts(false);
-      map.templateContent = await map.template.getFinalContent(map.data);
+      map.templateContent = (await map.template.getRenderedTemplates(
+        map.outputPath,
+        map.data
+      ))[0].templateContent;
       map.template.setWrapWithLayouts(true);
     }
     debugDev("Added this.map[...].templateContent");
@@ -95,16 +105,14 @@ class TemplateMap {
     collections.all = await this.createTemplateMapCopy(
       this.collection.getAllSorted()
     );
-    debug(`Collection: collections.all has ${collections.all.length} items.`);
+    debug(`Collection: collections.all size: ${collections.all.length}`);
 
     let tags = this.getAllTags();
     for (let tag of tags) {
       collections[tag] = await this.createTemplateMapCopy(
         this.collection.getFilteredByTag(tag)
       );
-      debug(
-        `Collection: collections.${tag} has ${collections[tag].length} items.`
-      );
+      debug(`Collection: collections.${tag} size: ${collections[tag].length}`);
     }
 
     let configCollections = eleventyConfig.getCollections();
@@ -113,7 +121,7 @@ class TemplateMap {
         configCollections[name](this.collection)
       );
       debug(
-        `Collection: collections.${name} has ${collections[name].length} items.`
+        `Collection: collections.${name} size: ${collections[name].length}`
       );
     }
 
@@ -131,7 +139,7 @@ class TemplateMap {
     }
   }
 
-  async getCollectionsDataForTemplate(template) {
+  async getCollectionsDataForTemplate() {
     if (!this.collectionsData) {
       await this.cache();
     }

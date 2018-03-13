@@ -9,7 +9,6 @@ function Pagination(data) {
   this.data = data || {};
   this.size = 1;
   this.target = [];
-  this.writeCount = 0;
 
   if (!this.hasPagination()) {
     return;
@@ -44,11 +43,12 @@ Pagination.prototype._getDataKey = function() {
 
 Pagination.prototype._resolveItems = function() {
   let notFoundValue = "__NOT_FOUND_ERROR__";
-  let ret = lodashget(this.data, this._getDataKey(), notFoundValue);
+  let key = this._getDataKey();
+  let ret = lodashget(this.data, key, notFoundValue);
 
   if (ret === notFoundValue) {
     throw new Error(
-      `Could not resolve pagination key in template data: ${this._getDataKey()}`
+      `Could not resolve pagination key in template data: ${key}`
     );
   }
 
@@ -65,12 +65,15 @@ Pagination.prototype.cancel = function() {
   return this.hasPagination();
 };
 
-Pagination.prototype.getTemplates = async function() {
+Pagination.prototype.getPageTemplates = async function() {
   if (!this.hasPagination()) {
     return [];
   }
 
-  let data = this.data;
+  if (this.pagesCache) {
+    return this.pagesCache;
+  }
+
   let pages = [];
   let items = this.items;
   let tmpl = this.template;
@@ -79,14 +82,13 @@ Pagination.prototype.getTemplates = async function() {
   let overrides = [];
 
   for (let pageNumber = 0, k = items.length; pageNumber < k; pageNumber++) {
-    let chunk = items[pageNumber];
     let cloned = tmpl.clone();
+
     // TODO maybe also move this permalink additions up into the pagination class
     if (pageNumber > 0 && !this.data[this.config.keys.permalink]) {
       cloned.setExtraOutputSubdirectory(pageNumber);
     }
 
-    cloned.removePlugin("pagination");
     templates.push(cloned);
 
     let override = {
@@ -97,6 +99,7 @@ Pagination.prototype.getTemplates = async function() {
         pageNumber: pageNumber
       }
     };
+
     if (this.alias) {
       lodashset(
         override,
@@ -135,19 +138,9 @@ Pagination.prototype.getTemplates = async function() {
     }.bind(this)
   );
 
+  this.pagesCache = pages;
+
   return pages;
-};
-
-Pagination.prototype.write = async function() {
-  let pages = await this.getTemplates();
-  for (let page of pages) {
-    await page.write();
-    this.writeCount += page.getWriteCount();
-  }
-};
-
-Pagination.prototype.getWriteCount = function() {
-  return this.writeCount;
 };
 
 module.exports = Pagination;
