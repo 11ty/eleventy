@@ -5,22 +5,19 @@ if (process.env.DEBUG) {
 
 const argv = require("minimist")(process.argv.slice(2));
 const EleventyNodeVersionCheck = require("./src/VersionCheck");
-const debug = require("debug")("Eleventy-CLI");
 
 EleventyNodeVersionCheck().then(function() {
   const Eleventy = require("./src/Eleventy");
-  debug(
-    "command: eleventy" +
-      (argv.input ? " --input=" + argv.input : "") +
-      (argv.output ? " --output=" + argv.output : "") +
-      (argv.formats ? " --formats=" + argv.formats : "") +
-      (argv.config ? " --config=" + argv.config : "") +
-      (argv.pathprefix ? " --pathprefix=" + argv.pathprefix : "") +
-      (argv.quiet ? " --quiet" : "") +
-      (argv.version ? " --version" : "") +
-      (argv.watch ? " --watch" : "") +
-      (argv.dryrun ? " --dryrun" : "")
-  );
+  const EleventyCommandCheck = require("./src/EleventyCommandCheck");
+
+  let cmdCheck = new EleventyCommandCheck(argv);
+  try {
+    cmdCheck.hasUnknownArguments();
+  } catch (e) {
+    const chalk = require("chalk");
+    console.log(chalk.red(e.toString()));
+    return;
+  }
 
   let elev = new Eleventy(argv.input, argv.output);
   elev.setConfigPath(argv.config);
