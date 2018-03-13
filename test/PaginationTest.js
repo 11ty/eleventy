@@ -249,8 +249,6 @@ test("Alias to page data (size 2)", async t => {
   t.is((await pages[1].render()).trim(), "item3");
 });
 
-// TODO
-// don’t add root paginated templates to the global map?
 test("Permalink with pagination variables (and an if statement, nunjucks)", async t => {
   let tmpl = new Template(
     "./test/stubs/paged/pagedpermalinkif.njk",
