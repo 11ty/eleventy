@@ -10,6 +10,7 @@ const TemplatePath = require("./TemplatePath");
 const TemplateGlob = require("./TemplateGlob");
 const config = require("./Config");
 const debug = require("debug")("Eleventy:TemplateData");
+const debugDev = require("debug")("Dev:Eleventy:TemplateData");
 
 function TemplateData(inputDir) {
   this.config = config.getConfig();
@@ -191,8 +192,11 @@ TemplateData.prototype.getJson = async function(
 TemplateData.prototype.getLocalDataPaths = function(templatePath) {
   let paths = [];
   let parsed = parsePath(templatePath);
-  let inputDir = this.inputDir;
-  let inputDirHasTrailingSlash = TemplatePath.hasTrailingSlash(inputDir);
+  let inputDir = TemplatePath.addLeadingDotSlash(
+    TemplatePath.normalize(this.inputDir)
+  );
+  debugDev("getLocalDataPaths(%o)", templatePath);
+  debugDev("parsed.dir: %o", parsed.dir);
 
   if (parsed.dir) {
     let filePath = parsed.dir + "/" + parsed.name + ".json";
@@ -206,14 +210,14 @@ TemplateData.prototype.getLocalDataPaths = function(templatePath) {
       if (!inputDir) {
         paths.push(dirPath);
       } else {
-        let dirStr = dir + (inputDirHasTrailingSlash ? "/" : "");
-        if (dirStr.indexOf(inputDir) === 0 && dirStr !== inputDir) {
+        debugDev("dirStr: %o; inputDir: %o", dir, inputDir);
+        if (dir.indexOf(inputDir) === 0 && dir !== inputDir) {
           paths.push(dirPath);
         }
       }
     }
   }
-
+  debug("getLocalDataPaths(%o): %o", templatePath, paths);
   return lodashUniq(paths);
 };
 

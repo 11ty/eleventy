@@ -86,4 +86,9 @@ test("getAllDirs", t => {
   t.deepEqual(TemplatePath.getAllDirs("./testing/"), ["./testing"]);
   t.deepEqual(TemplatePath.getAllDirs("testing/"), ["testing"]);
   t.deepEqual(TemplatePath.getAllDirs("testing"), ["testing"]);
+  t.deepEqual(TemplatePath.getAllDirs("./src/collections/posts"), [
+    "./src/collections/posts",
+    "./src/collections",
+    "./src"
+  ]);
 });

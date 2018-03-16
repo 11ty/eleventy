@@ -167,3 +167,12 @@ test("getLocalDataPaths with inputDir passed in (no trailing slash)", async t =>
 
   t.deepEqual(paths, ["./test/stubs/component/component.json"]);
 });
+
+test("getLocalDataPaths with inputDir passed in (no leading slash)", async t => {
+  let dataObj = new TemplateData("test/stubs");
+  let paths = dataObj.getLocalDataPaths(
+    "./test/stubs/component/component.liquid"
+  );
+
+  t.deepEqual(paths, ["./test/stubs/component/component.json"]);
+});
