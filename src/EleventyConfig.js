@@ -154,8 +154,19 @@ class EleventyConfig {
     pluginCallback(this);
   }
 
+  /**
+   * Adds a path to a file or directory to the list of pass-through copies
+   * which are copied as-is to the output.
+   *
+   * @param {String} fileOrDir The path to the file or directory that should
+   * be copied.
+   * @returns {any} a reference to the `EleventyConfig` object.
+   * @memberof EleventyConfig
+   */
   addPassthroughCopy(fileOrDir) {
     this.passthroughCopies[fileOrDir] = true;
+
+    return this;
   }
 
   setTemplateFormats(templateFormats) {
