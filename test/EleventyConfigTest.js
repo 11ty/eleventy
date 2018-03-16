@@ -29,6 +29,19 @@ test("Add Collections throws error on key collision", t => {
   });
 });
 
+test("Set manual Pass-through File Copy (single call)", t => {
+  eleventyConfig.addPassthroughCopy("img");
+
+  t.is(eleventyConfig.passthroughCopies["img"], true);
+});
+
+test("Set manual Pass-through File Copy (chained calls)", t => {
+  eleventyConfig.addPassthroughCopy("css").addPassthroughCopy("js");
+
+  t.is(eleventyConfig.passthroughCopies["css"], true);
+  t.is(eleventyConfig.passthroughCopies["js"], true);
+});
+
 test("Set Template Formats (string)", t => {
   eleventyConfig.setTemplateFormats("ejs, njk, liquid");
   t.deepEqual(eleventyConfig.templateFormats, ["ejs", "njk", "liquid"]);
