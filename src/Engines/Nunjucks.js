@@ -7,13 +7,19 @@ class Nunjucks extends TemplateEngine {
     super(name, inputDir);
 
     this.config = config.getConfig();
+    this.setLibrary(this.config.libraryOverrides.njk);
+  }
 
-    this.njkEnv = new NunjucksLib.Environment(
-      new NunjucksLib.FileSystemLoader(super.getInputDir())
-    );
+  setLibrary(env) {
+    this.njkEnv =
+      env ||
+      new NunjucksLib.Environment(
+        new NunjucksLib.FileSystemLoader(super.getInputDir())
+      );
 
     this.addFilters(this.config.nunjucksFilters);
     this.addFilters(this.config.nunjucksAsyncFilters, true);
+    this.setEngineLib(this.njkEnv);
   }
 
   addFilters(helpers, isAsync) {

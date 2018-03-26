@@ -59,3 +59,13 @@ test("EJS Render Include, New Style with Data", async t => {
 
 //   t.is(await fn(), "<p>This is a relative include.</p>");
 // });
+
+test("EJS Render: with Library Override", async t => {
+  let tr = new TemplateRender("ejs");
+
+  let lib = require("ejs");
+  tr.engine.setLibrary(lib);
+
+  let fn = await tr.getCompiledTemplate("<p><%= name %></p>");
+  t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
+});

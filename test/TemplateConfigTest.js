@@ -1,4 +1,5 @@
 import test from "ava";
+import md from "markdown-it";
 import TemplateConfig from "../src/TemplateConfig";
 import eleventyConfig from "../src/EleventyConfig";
 
@@ -143,4 +144,19 @@ test("setTemplateFormats(empty array)", t => {
   );
   let cfg = templateCfg.getConfig();
   t.deepEqual(cfg.templateFormats, []);
+});
+
+test("libraryOverrides", t => {
+  let mdLib = md();
+  eleventyConfig.setLibrary("md", mdLib);
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.falsy(cfg.libraryOverrides.ldkja);
+  t.falsy(cfg.libraryOverrides.njk);
+  t.truthy(cfg.libraryOverrides.md);
+  t.deepEqual(mdLib, cfg.libraryOverrides.md);
 });

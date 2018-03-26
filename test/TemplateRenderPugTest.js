@@ -1,8 +1,5 @@
 import test from "ava";
 import TemplateRender from "../src/TemplateRender";
-import path from "path";
-import eleventyConfig from "../src/EleventyConfig";
-import config from "../src/Config";
 
 // Pug
 test("Pug", t => {
@@ -58,4 +55,19 @@ test("Pug Options Overrides", async t => {
 
   let options = tr.engine.getPugOptions();
   t.is(options.testoption, "testoverride");
+});
+
+test("Pug getEngineLib", async t => {
+  let tr = new TemplateRender("pug", "./test/stubs/");
+  t.truthy(tr.engine.getEngineLib());
+});
+
+test("Pug Render: with Library Override", async t => {
+  let tr = new TemplateRender("pug");
+
+  let lib = require("pug");
+  tr.engine.setLibrary(lib);
+
+  let fn = await tr.getCompiledTemplate("p= name");
+  t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });

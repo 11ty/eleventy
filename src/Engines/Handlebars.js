@@ -7,10 +7,16 @@ class Handlebars extends TemplateEngine {
     super(name, inputDir);
 
     this.config = config.getConfig();
+    this.setLibrary(this.config.libraryOverrides.hbs);
+  }
+
+  setLibrary(lib) {
+    this.handlebarsLib = lib || HandlebarsLib;
+    this.setEngineLib(this.handlebarsLib);
 
     let partials = super.getPartials();
     for (let name in partials) {
-      HandlebarsLib.registerPartial(name, partials[name]);
+      this.handlebarsLib.registerPartial(name, partials[name]);
     }
 
     this.addHelpers(this.config.handlebarsHelpers);
@@ -18,12 +24,12 @@ class Handlebars extends TemplateEngine {
 
   addHelpers(helpers) {
     for (let name in helpers) {
-      HandlebarsLib.registerHelper(name, helpers[name]);
+      this.handlebarsLib.registerHelper(name, helpers[name]);
     }
   }
 
   async compile(str) {
-    let fn = HandlebarsLib.compile(str);
+    let fn = this.handlebarsLib.compile(str);
     return function(data) {
       return fn(data);
     };

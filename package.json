@@ -1,6 +1,6 @@
 {
   "name": "@11ty/eleventy",
-  "version": "0.2.15",
+  "version": "0.3.0",
   "description": "Transform a directory of templates into HTML.",
   "main": "src/Eleventy.js",
   "license": "MIT",
@@ -38,6 +38,7 @@
     "ava": "^0.25.0",
     "husky": "^0.14.3",
     "lint-staged": "^6.0.0",
+    "markdown-it-emoji": "^1.4.0",
     "nyc": "^11.4.1",
     "prettier": "1.9.1"
   },

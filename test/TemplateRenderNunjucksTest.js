@@ -1,6 +1,5 @@
 import test from "ava";
 import TemplateRender from "../src/TemplateRender";
-import path from "path";
 
 // Nunjucks
 test("Nunjucks", t => {
@@ -47,4 +46,22 @@ test("Nunjucks Render Imports From", async t => {
     "{% from 'imports.njk' import label %}<div>{{ label('Name') }}</div>"
   );
   t.is(await fn(), "<div><label>Name</label></div>");
+});
+
+test("Nunjucks getEngineLib", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  t.truthy(tr.engine.getEngineLib());
+});
+
+test("Nunjucks Render: with Library Override", async t => {
+  let tr = new TemplateRender("njk");
+
+  let lib = require("nunjucks");
+  let env = new lib.Environment(
+    new lib.FileSystemLoader("./test/stubs/_includes/")
+  );
+  tr.engine.setLibrary(env);
+
+  let fn = await tr.getCompiledTemplate("<p>{{ name }}</p>");
+  t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });

@@ -27,3 +27,13 @@ test("Handlebars Render Partial", async t => {
   );
   t.is(await fn({ name: "Zach" }), "<p>This is a Zach.</p>");
 });
+
+test("Handlebars Render: with Library Override", async t => {
+  let tr = new TemplateRender("hbs");
+
+  let lib = require("handlebars");
+  tr.engine.setLibrary(lib);
+
+  let fn = await tr.getCompiledTemplate("<p>{{name}}</p>");
+  t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
+});

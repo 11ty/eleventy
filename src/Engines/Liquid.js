@@ -11,20 +11,24 @@ class Liquid extends TemplateEngine {
     this.config = config.getConfig();
     this.liquidOptions = this.config.liquidOptions;
 
-    // warning, the include syntax supported here does not match what jekyll uses.
-    this.liquidEngine = LiquidLib(this.getLiquidOptions());
+    this.setLibrary(this.config.libraryOverrides.liquid);
+  }
+
+  setLibrary(lib) {
+    this.liquidLibOverride = lib;
+
+    // warning, the include syntax supported here does not exactly match what Jekyll uses.
+    this.liquidLib = lib || LiquidLib(this.getLiquidOptions());
+    this.setEngineLib(this.liquidLib);
 
     this.addTags(this.config.liquidTags);
-    // debug( "Adding %o liquid tags", Object.keys(this.config.liquidTags).length);
-
     this.addFilters(this.config.liquidFilters);
-    // debug( "Adding %o liquid filters", Object.keys(this.config.liquidFilters).length);
   }
 
   setLiquidOptions(options) {
     this.liquidOptions = options;
 
-    this.liquidEngine = LiquidLib(this.getLiquidOptions());
+    this.setLibrary(this.liquidLibOverride);
   }
 
   getLiquidOptions() {
@@ -34,7 +38,10 @@ class Liquid extends TemplateEngine {
       dynamicPartials: false
     };
 
-    return lodashMerge(defaults, this.liquidOptions || {});
+    let options = lodashMerge(defaults, this.liquidOptions || {});
+    // debug("Liquid constructor options: %o", options);
+
+    return options;
   }
 
   addTags(tags) {
@@ -52,21 +59,21 @@ class Liquid extends TemplateEngine {
   addTag(name, tag) {
     let tagObj;
     if (typeof tag === "function") {
-      tagObj = tag(this.liquidEngine);
+      tagObj = tag(this.liquidLib);
     } else {
       throw new Error(
         "Liquid.addTag expects a callback function to be passed in: addTag(name, function(liquidEngine) { return { parse: …, render: … } })"
       );
     }
-    this.liquidEngine.registerTag(name, tagObj);
+    this.liquidLib.registerTag(name, tagObj);
   }
 
   addFilter(name, filter) {
-    this.liquidEngine.registerFilter(name, filter);
+    this.liquidLib.registerFilter(name, filter);
   }
 
   async compile(str) {
-    let engine = this.liquidEngine;
+    let engine = this.liquidLib;
     let tmpl = await engine.parse(str);
     return async function(data) {
       return engine.render(tmpl, data);

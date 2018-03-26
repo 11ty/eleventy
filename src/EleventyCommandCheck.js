@@ -1,4 +1,4 @@
-const debug = require("debug")("Eleventy-CommandCheck");
+const debug = require("debug")("Eleventy:CommandCheck");
 
 class EleventyCommandCheck {
   constructor(argv) {

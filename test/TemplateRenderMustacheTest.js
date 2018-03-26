@@ -29,3 +29,13 @@ test("Mustache Render Partial", async t => {
   ).getCompiledTemplate("<p>{{> includedvar}}</p>");
   t.is(await fn({ name: "Zach" }), "<p>This is a Zach.</p>");
 });
+
+test("Mustache Render: with Library Override", async t => {
+  let tr = new TemplateRender("mustache");
+
+  let lib = require("mustache");
+  tr.engine.setLibrary(lib);
+
+  let fn = await tr.getCompiledTemplate("<p>{{name}}</p>");
+  t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
+});

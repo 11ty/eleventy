@@ -1,6 +1,4 @@
 import test from "ava";
-import path from "path";
-import LiquidLib from "liquidjs";
 import TemplateRender from "../src/TemplateRender";
 
 // Liquid
@@ -295,4 +293,14 @@ test("Liquid Render Include Subfolder Double quotes HTML dynamicPartials true, d
     `<p>{% include "subfolder/included.html", myVariable: "myValue" %}</p>`
   );
   t.is(await fn(), "<p>This is an include.</p>");
+});
+
+test("Liquid Render: with Library Override", async t => {
+  let tr = new TemplateRender("liquid");
+
+  let lib = require("liquidjs")();
+  tr.engine.setLibrary(lib);
+
+  let fn = await tr.getCompiledTemplate("<p>{{name | capitalize}}</p>");
+  t.is(await fn({ name: "tim" }), "<p>Tim</p>");
 });

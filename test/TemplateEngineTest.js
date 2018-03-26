@@ -25,3 +25,7 @@ test("Handlebars Helpers", async t => {
   let fn = await engine.compile("<p>{{uppercase author}}</p>");
   t.is(await fn({ author: "zach" }), "<p>ZACH</p>");
 });
+
+test("getEngineLib", async t => {
+  t.truthy(TemplateEngine.getEngine("md").getEngineLib());
+});

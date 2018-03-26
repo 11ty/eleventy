@@ -46,6 +46,8 @@ test("hasTrailingSlash", t => {
 });
 
 test("addLeadingDotSlash", t => {
+  t.is(TemplatePath.addLeadingDotSlash("."), "./");
+  t.is(TemplatePath.addLeadingDotSlash(".."), "../");
   t.is(TemplatePath.addLeadingDotSlash("./test/stubs"), "./test/stubs");
   t.is(TemplatePath.addLeadingDotSlash("./dist"), "./dist");
   t.is(TemplatePath.addLeadingDotSlash("../dist"), "../dist");
@@ -78,6 +80,7 @@ test("getLastDir", t => {
 });
 
 test("getAllDirs", t => {
+  t.deepEqual(TemplatePath.getAllDirs("."), ["."]);
   t.deepEqual(TemplatePath.getAllDirs("./testing/hello"), [
     "./testing/hello",
     "./testing"

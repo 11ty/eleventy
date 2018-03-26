@@ -70,7 +70,9 @@ TemplatePath.localPath = function(...paths) {
 };
 
 TemplatePath.addLeadingDotSlash = function(path) {
-  if (
+  if (path === "." || path === "..") {
+    return path + "/";
+  } else if (
     path.indexOf("/") === 0 ||
     path.indexOf("./") === 0 ||
     path.indexOf("../") === 0

@@ -1,12 +1,44 @@
-const mdlib = require("markdown-it")({
-  html: true,
-  langPrefix: "language-"
-});
+const markdownIt = require("markdown-it");
 const TemplateEngine = require("./TemplateEngine");
-const debug = require("debug")("Eleventy:Markdown");
+const lodashMerge = require("lodash.merge");
+const config = require("../Config");
+// const debug = require("debug")("Eleventy:Markdown");
 
 class Markdown extends TemplateEngine {
+  constructor(name, inputDir) {
+    super(name, inputDir);
+
+    this.markdownOptions = {};
+
+    this.config = config.getConfig();
+    this.setLibrary(this.config.libraryOverrides.md);
+  }
+
+  setLibrary(mdLib) {
+    this.mdLib = mdLib || markdownIt(this.getMarkdownOptions());
+    this.setEngineLib(this.mdLib);
+  }
+
+  setMarkdownOptions(options) {
+    this.markdownOptions = options;
+  }
+
+  getMarkdownOptions() {
+    // work with "mode" presets https://github.com/markdown-it/markdown-it#init-with-presets-and-options
+    if (typeof this.markdownOptions === "string") {
+      return this.markdownOptions;
+    }
+
+    return lodashMerge(
+      {
+        html: true
+      },
+      this.markdownOptions || {}
+    );
+  }
+
   async compile(str, preTemplateEngine, bypassMarkdown) {
+    let mdlib = this.mdLib;
     if (preTemplateEngine) {
       let engine = TemplateEngine.getEngine(
         preTemplateEngine,

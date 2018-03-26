@@ -19,6 +19,8 @@ class EleventyConfig {
     this.passthroughCopies = {};
     this.pugOptions = {};
 
+    this.libraryOverrides = {};
+
     this.layoutAliases = {};
 
     // now named `transforms` in API
@@ -109,10 +111,6 @@ class EleventyConfig {
     this.handlebarsHelpers[name] = callback;
   }
 
-  // TODO
-  // getTemplateEngine(name) {
-  // }
-
   addFilter(name, callback) {
     debug("Adding universal filter %o", name);
     this.addLiquidFilter(name, callback);
@@ -177,6 +175,17 @@ class EleventyConfig {
     this.templateFormats = templateFormats;
   }
 
+  setLibrary(engineName, libraryInstance) {
+    // Pug options are passed to `compile` and not in the library constructor so we don’t need to warn
+    if (engineName === "liquid" && this.mdOptions) {
+      debug(
+        "WARNING: using `eleventyConfig.setLibrary` will override any configuration set using `.setLiquidOptions` or with the `liquidOptions` key in the config object. You’ll need to pass these options to the library yourself."
+      );
+    }
+
+    this.libraryOverrides[engineName.toLowerCase()] = libraryInstance;
+  }
+
   setPugOptions(options) {
     this.pugOptions = options;
   }
@@ -187,17 +196,18 @@ class EleventyConfig {
 
   getMergingConfigObject() {
     return {
+      templateFormats: this.templateFormats,
+      filters: this.filters,
+      layoutAliases: this.layoutAliases,
+      passthroughCopies: this.passthroughCopies,
       liquidOptions: this.liquidOptions,
       liquidTags: this.liquidTags,
       liquidFilters: this.liquidFilters,
       nunjucksFilters: this.nunjucksFilters,
       nunjucksAsyncFilters: this.nunjucksAsyncFilters,
       handlebarsHelpers: this.handlebarsHelpers,
-      filters: this.filters,
-      layoutAliases: this.layoutAliases,
-      passthroughCopies: this.passthroughCopies,
-      templateFormats: this.templateFormats,
-      pugOptions: this.pugOptions
+      pugOptions: this.pugOptions,
+      libraryOverrides: this.libraryOverrides
     };
   }
 }

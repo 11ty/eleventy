@@ -1,6 +1,7 @@
 import test from "ava";
 import TemplateRender from "../src/TemplateRender";
-import path from "path";
+import md from "markdown-it";
+import mdEmoji from "markdown-it-emoji";
 
 // Markdown
 test("Markdown", t => {
@@ -76,4 +77,26 @@ test("Markdown Render: Strikethrough", async t => {
 test("Markdown Render: Strikethrough in a Header", async t => {
   let fn = await new TemplateRender("md").getCompiledTemplate("# ~~No~~");
   t.is((await fn()).trim(), "<h1><s>No</s></h1>");
+});
+
+test("Markdown Render: with Library Override", async t => {
+  let tr = new TemplateRender("md");
+
+  let mdLib = md();
+  tr.engine.setLibrary(mdLib);
+  t.is(mdLib.render(":)").trim(), "<p>:)</p>");
+
+  let fn = await tr.getCompiledTemplate(":)");
+  t.is((await fn()).trim(), "<p>:)</p>");
+});
+
+test("Markdown Render: with Library Override and a Plugin", async t => {
+  let tr = new TemplateRender("md");
+
+  let mdLib = md().use(mdEmoji);
+  tr.engine.setLibrary(mdLib);
+  t.is(mdLib.render(":)").trim(), "<p>😃</p>");
+
+  let fn = await tr.getCompiledTemplate(":)");
+  t.is((await fn()).trim(), "<p>😃</p>");
 });

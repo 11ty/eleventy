@@ -1,7 +1,7 @@
 const globby = require("globby");
 const fs = require("fs-extra");
 const parsePath = require("parse-filepath");
-const debug = require("debug")("TemplateEngine");
+const debug = require("debug")("Eleventy:TemplateEngine");
 
 class TemplateEngine {
   constructor(name, inputDir) {
@@ -10,6 +10,7 @@ class TemplateEngine {
     this.inputDir = inputDir;
     this.partialsHaveBeenCached = false;
     this.partials = [];
+    this.engineLib = null;
   }
 
   getName() {
@@ -20,6 +21,7 @@ class TemplateEngine {
     return this.inputDir;
   }
 
+  // TODO make async
   getPartials() {
     if (!this.partialsHaveBeenCached) {
       this.partials = this.cachePartialFiles();
@@ -28,6 +30,7 @@ class TemplateEngine {
     return this.partials;
   }
 
+  // TODO make async
   cachePartialFiles() {
     this.partialsHaveBeenCached = true;
 
@@ -45,7 +48,16 @@ class TemplateEngine {
       `${this.inputDir}/*${this.extension} found partials for: %o`,
       Object.keys(this.partials)
     );
+
     return partials;
+  }
+
+  setEngineLib(engineLib) {
+    this.engineLib = engineLib;
+  }
+
+  getEngineLib() {
+    return this.engineLib;
   }
 
   async render(str, data) {

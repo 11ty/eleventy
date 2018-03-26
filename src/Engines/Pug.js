@@ -9,6 +9,13 @@ class Pug extends TemplateEngine {
 
     this.config = config.getConfig();
     this.pugOptions = this.config.pugOptions;
+
+    this.setLibrary(this.config.libraryOverrides.pug);
+  }
+
+  setLibrary(lib) {
+    this.pugLib = lib || PugLib;
+    this.setEngineLib(this.pugLib);
   }
 
   setPugOptions(options) {
@@ -30,7 +37,7 @@ class Pug extends TemplateEngine {
   async compile(str) {
     let options = this.getPugOptions();
 
-    return PugLib.compile(str, options);
+    return this.pugLib.compile(str, options);
   }
 }
 

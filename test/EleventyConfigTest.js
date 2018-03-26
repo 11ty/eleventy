@@ -1,6 +1,8 @@
 import test from "ava";
 import eleventyConfig from "../src/EleventyConfig";
 
+// more in TemplateConfigTest.js
+
 test.cb("Events", t => {
   eleventyConfig.on("testEvent", function(arg1, arg2, arg3) {
     t.is(arg1, "arg1");

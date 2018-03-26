@@ -203,6 +203,7 @@ TemplateData.prototype.getLocalDataPaths = function(templatePath) {
     paths.push(filePath);
 
     let allDirs = TemplatePath.getAllDirs(parsed.dir);
+    debugDev("allDirs: %o", allDirs);
     for (let dir of allDirs) {
       let lastDir = TemplatePath.getLastDir(dir);
       let dirPath = dir + "/" + lastDir + ".json";
