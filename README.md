@@ -4,7 +4,7 @@ A simpler static site generator. An alternative to Jekyll. Written in JavaScript
 
 Works with:
 
-* [HTML (`.html`)](/docs/engines.html.md)
+* [HTML (`.html`)](/docs/engines/html.md)
 * [Markdown (`.md`)](/docs/engines/markdown.md)
 * [Liquid (`.liquid`)](/docs/engines/liquid.md) (Jekyll’s default)
 * [Nunjucks (`.njk`)](/docs/engines/nunjucks.md)
@@ -28,7 +28,7 @@ Works with:
 
 ### Read More at:
 
-* Template Engines: [HTML](/docs/engines.html.md), [Markdown](/docs/engines/markdown.md), [Liquid](/docs/engines/liquid.md), [Nunjucks](/docs/engines/nunjucks.md), [Handlebars](/docs/engines/handlebars.md), [Mustache](/docs/engines/mustache.md), [EJS](/docs/engines/ejs.md), [Haml](/docs/engines/haml.md), [Pug](/docs/engines/pug.md), [JavaScript Template Literals](/docs/engines/jstl.md)
+* Template Engines: [HTML](/docs/engines/html.md), [Markdown](/docs/engines/markdown.md), [Liquid](/docs/engines/liquid.md), [Nunjucks](/docs/engines/nunjucks.md), [Handlebars](/docs/engines/handlebars.md), [Mustache](/docs/engines/mustache.md), [EJS](/docs/engines/ejs.md), [Haml](/docs/engines/haml.md), [Pug](/docs/engines/pug.md), [JavaScript Template Literals](/docs/engines/jstl.md)
   * [Changing a Template’s Rendering Engine](docs/engines.md)
   * [Custom Filters, Helpers, Tags](docs/filters.md)
 * [Collections](docs/collections.md), grouping content together
