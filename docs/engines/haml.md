@@ -19,9 +19,7 @@ module.exports = function(eleventyConfig) {
 
 ## Supported Features
 
-| Feature                                                                          | Syntax                                                                 |
-| -------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| <!--                                                                             | _TODO_ Filters                                                         |  |
-| _TODO_ [Eleventy Universal Filters](/docs/filters.md#built-in-universal-filters) | `:filterName some text` (see `eleventyConfig.addFilter` documentation) |
-
--->
+| Feature                                                                             | Syntax                                                                 |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| 🚫 _TODO_ Filters                                                                   | `:filterName some text`                                                |
+| 🚫 _TODO_ [Eleventy Universal Filters](/docs/filters.md#built-in-universal-filters) | `:filterName some text` (see `eleventyConfig.addFilter` documentation) |
