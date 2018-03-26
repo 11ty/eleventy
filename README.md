@@ -15,8 +15,6 @@ Works with:
 * [Pug (`.pug`)](/docs/engines/pug.md) (formerly known as Jade)
 * [JavaScript Template Literals (`.jstl`)](/docs/engines/jstl.md) (\`strings with backticks\`)
 
-**New**: Use the above links to learn more about each type and how they work in Eleventy.
-
 ## Table of Contents
 
 * [Getting Started](#getting-started)
@@ -30,10 +28,11 @@ Works with:
 
 ### Read More at:
 
-* [Changing a Template’s Rendering Engine](docs/engines.md)
+* Template Engines: [HTML](/docs/engines.html.md), [Markdown](/docs/engines/markdown.md), [Liquid](/docs/engines/liquid.md), [Nunjucks](/docs/engines/nunjucks.md), [Handlebars](/docs/engines/handlebars.md), [Mustache](/docs/engines/mustache.md), [EJS](/docs/engines/ejs.md), [Haml](/docs/engines/haml.md), [Pug](/docs/engines/pug.md), [JavaScript Template Literals](/docs/engines/jstl.md)
+  * [Changing a Template’s Rendering Engine](docs/engines.md)
+  * [Custom Filters, Helpers, Tags](docs/filters.md)
 * [Collections](docs/collections.md), grouping content together
 * [Common Pitfalls](docs/pitfalls.md)
-* [Custom Filters, Helpers, Tags](docs/filters.md)
 * [Pagination](docs/pagination.md), splitting content to multiple files
 * [Pass-through file copy](docs/copy.md) for images, JS, CSS
 * [Plugins](docs/plugins.md)
