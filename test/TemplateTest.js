@@ -1,9 +1,7 @@
 import test from "ava";
-import { DateTime } from "luxon";
 import TemplateData from "../src/TemplateData";
 import Template from "../src/Template";
 import pretty from "pretty";
-import normalize from "normalize-path";
 import templateConfig from "../src/Config";
 
 const config = templateConfig.getConfig();

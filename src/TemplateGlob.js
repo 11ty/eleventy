@@ -1,4 +1,3 @@
-const globby = require("globby");
 const TemplatePath = require("./TemplatePath");
 
 class TemplateGlob {
