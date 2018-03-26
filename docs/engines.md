@@ -3,7 +3,7 @@
 _(New in Eleventy `v0.2.14`)_ There are a couple of different ways you can tell Eleventy how you want to process a file:
 
 1. The file extension (importantly, this is also used to find files to process).
-2. [Configuration options](../README.md#configuration-optional)
+2. [Configuration options](/README.md#configuration-optional)
 
 * `markdownTemplateEngine`: The default global template engine to pre-process markdown files. Use `false` to avoid pre-processing and only transform markdown.
 * `htmlTemplateEngine`: The default global template engine to pre-process HTML files. Use `false` to avoid pre-processing and passthrough copy the content (HTML is not transformed, so technically this could be any plaintext).

@@ -1,19 +1,21 @@
-# eleventy 🕚
+# eleventy 🕚 v0.3.0
 
 A simpler static site generator. An alternative to Jekyll. Written in JavaScript. Transforms a directory of templates (of varying types) into HTML.
 
 Works with:
 
-* HTML (`.html`)
-* Markdown (`.md`) (using [`markdown-it`](https://github.com/markdown-it/markdown-it))
-* [Liquid](https://www.npmjs.com/package/liquidjs) (`.liquid`) (used by Jekyll)
-* [Nunjucks](https://mozilla.github.io/nunjucks/) (`.njk`)
-* [Handlebars](https://github.com/wycats/handlebars.js) (`.hbs`)
-* [Mustache](https://github.com/janl/mustache.js/) (`.mustache`)
-* [EJS](https://www.npmjs.com/package/ejs) (`.ejs`)
-* [Haml](https://github.com/tj/haml.js) (`.haml`)
-* [Pug](https://github.com/pugjs/pug) (formerly Jade, `.pug`)
-* JavaScript Template Literals (`.jstl`) (\`strings with backticks\`)
+* [HTML (`.html`)](/docs/engines.html.md)
+* [Markdown (`.md`)](/docs/engines/markdown.md)
+* [Liquid (`.liquid`)](/docs/engines/liquid.md) (Jekyll’s default)
+* [Nunjucks (`.njk`)](/docs/engines/nunjucks.md)
+* [Handlebars (`.hbs`)](/docs/engines/handlebars.md)
+* [Mustache (`.mustache`)](/docs/engines/mustache.md)
+* [EJS (`.ejs`)](/docs/engines/ejs.md)
+* [Haml (`.haml`)](/docs/engines/haml.md)
+* [Pug (`.pug`)](/docs/engines/pug.md) (formerly known as Jade)
+* [JavaScript Template Literals (`.jstl`)](/docs/engines/jstl.md) (\`strings with backticks\`)
+
+**New**: Use the above links to learn more about each type and how they work in Eleventy.
 
 ## Table of Contents
 
@@ -22,9 +24,8 @@ Works with:
 * [Using Data](#using-data-optional)
 * [Ignore Files](#ignore-files-optional)
 * [Configuration](#configuration-optional)
-* [Template Engine Features](#template-engine-features)
-* [Tests](#tests)
 * [Competitors](#competitors)
+* [Tests](#tests)
 * [Roadmap](#major-roadmapped-features)
 
 ### Read More at:
@@ -123,7 +124,7 @@ DEBUG=Eleventy* eleventy
 
 This will tell you exactly what directories Eleventy is using for data, includes, input, and output. It’ll tell you what search globs it uses to find your templates and what templates it finds. If you’re having trouble, enable this.
 
-_(New in Eleventy `v0.2.16`)_ Works great with `--dryrun` if you want to run Eleventy but not actually write any files.
+_(New in Eleventy `v0.3.0`)_ Works great with `--dryrun` if you want to run Eleventy but not actually write any files.
 
 Read more at the [`debug` package documentation](https://www.npmjs.com/package/debug).
 
@@ -177,10 +178,6 @@ Note that `{{ title }}` above outputs the `title` data value (this can come from
 * `collections`: Lists of all of your content, grouped by tags. [Read more about Collections](docs/collections.md)
 * `page`: Has information about the current page. Currently holds: `{ url: "/current/page/url.html", date: [JS Date Object for current page] }`. Useful for finding the current page in a collection. [Read more about Collections](docs/collections.md) (look at _Example: Navigation Links with an `active` class added for on the current page_).
 
-## Ignore files (optional)
-
-Add an `.eleventyignore` file to the _root of your input directory_ for a new line-separated list of files (or globs) that will not be processed. Paths listed in your project’s `.gitignore` file are automatically ignored.
-
 ## Configuration (optional)
 
 Add an `.eleventy.js` file to root directory of your project to override these configuration options with your own preferences. Example:
@@ -213,7 +210,7 @@ module.exports = {
 If you expose your config as a function instead of an object, we’ll pass in a `config` argument that you can use!
 
 ```
-module.exports = function(config) {
+module.exports = function(eleventyConfig) {
   return {
     dir: {
       input: "views"
@@ -222,7 +219,7 @@ module.exports = function(config) {
 };
 ```
 
-This allows you to customize your template engines by using the Config helper methods.
+This allows you further customization options using the provided Config helper methods.
 
 #### Add Tags/Filters to Template Engines
 
@@ -236,33 +233,22 @@ Read more about [Collections: Advanced Custom Filtering and Sorting](docs/collec
 
 Read more about [Plugins](docs/plugins.md).
 
-## Template Engine Features
+## Ignore files (optional)
 
-Here are the features tested with each template engine that use external files and thus are subject to setup and scaffolding.
+Add an `.eleventyignore` file to the _root of your input directory_ for a new line-separated list of files (or globs) that will not be processed. Paths listed in your project’s `.gitignore` file are automatically ignored.
 
-| Engine     | Feature                                                                                | Syntax                                                                            |
-| ---------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| ejs        | ✅ Include (Preprocessor Directive)                                                    | `<% include /user/show %>` looks for `_includes/user/show.ejs`                    |
-| ejs        | ✅ Include (pass in Data)                                                              | `<%- include('/user/show', {user: 'Ava'}) %>` looks for `_includes/user/show.ejs` |
-| Liquid     | ✅ Include                                                                             | `{% include 'user' %}` looks for `_includes/user.liquid`                          |
-| Liquid     | ✅ Include (pass in Data)                                                              | `{% include 'user' with 'Ava' %}`                                                 |
-| Liquid     | ✅ Include (pass in Data)                                                              | `{% include 'user', user1: 'Ava', user2: 'Bill' %}`                               |
-| Liquid     | ✅ Set `liquidjs` library options with Configuration API _(New in Eleventy `v0.2.15`)_ | `eleventyConfig.setLiquidOptions({"dynamicPartials": true});`                     |
-| Liquid     | ✅ Custom Filters                                                                      | `{{ name \| upper }}` (see `config.addLiquidFilter` documentation)                |
-| Liquid     | ✅ Custom Tags                                                                         | `{% upper name %}` (see `config.addLiquidTag` documentation)                      |
-| Mustache   | ✅ Partials                                                                            | `{{> user}}` looks for `_includes/user.mustache`                                  |
-| Handlebars | ✅ Partials                                                                            | `{{> user}}` looks for `_includes/user.hbs`                                       |
-| Handlebars | ✅ Helpers                                                                             | See `handlebarsHelpers` configuration option.                                     |
-| HAML       | ❌ but 🔜 Filters                                                                      |                                                                                   |
-| Pug        | ✅ Includes (Absolute)                                                                 | `include /includedvar.pug` looks in `_includes/includedvar.pug`                   |
-| Pug        | ✅ Includes (Relative) _(New in Eleventy `v0.2.15`)_                                   | `include includedvar.pug` looks in `_includes/includedvar.pug`                    |
-| Pug        | ✅ Extends (Absolute)                                                                  | `extends /layout.pug` looks in `_includes/layout.pug`                             |
-| Pug        | ✅ Extends (Relative) _(New in Eleventy `v0.2.15`)_                                    | `extends layout.pug` looks in `_includes/layout.pug`                              |
-| Pug        | ✅ Set render/compile options with Configuration API _(New in Eleventy `v0.2.15`)_     | `eleventyConfig.setPugOptions({"debug": true});`                                  |
-| Nunjucks   | ✅ Includes                                                                            | `{% include 'included.njk' %}` looks in `_includes/included.njk`                  |
-| Nunjucks   | ✅ Extends                                                                             | `{% extends 'base.njk' %}` looks in `_includes/base.njk`                          |
-| Nunjucks   | ✅ Imports                                                                             | `{% import 'macros.njk' %}` looks in `_includes/macros.njk`                       |
-| Nunjucks   | ✅ Filters                                                                             | Read more about [Filters](docs/filters.md)                                        |
+_Exception: node_modules will be ignored automatically if a `.gitignore` does not exist._
+
+## Competitors
+
+This project aims to directly compete with all other Static Site Generators. Try out our competition:
+
+* [Jekyll](https://jekyllrb.com/) (Ruby)
+* [Hugo](http://gohugo.io/) (Go)
+* [Hexo](https://hexo.io/) (JavaScript)
+* [Gatsby](https://www.gatsbyjs.org/) (JavaScript using React)
+* [Nuxt](https://www.staticgen.com/nuxt) (JavaScript using Vue)
+* _More at [staticgen.com](https://www.staticgen.com/)_
 
 ## Tests
 
@@ -273,19 +259,10 @@ Here are the features tested with each template engine that use external files a
 npm run test
 ```
 
-## Competitors
-
-* [Jekyll](https://jekyllrb.com/) (Ruby)
-* [Hugo](http://gohugo.io/) (Go)
-* [Hexo](https://hexo.io/) (JavaScript)
-* [Gatsby](https://www.gatsbyjs.org/) (JavaScript using React)
-* [Nuxt](https://www.staticgen.com/nuxt) (JavaScript using Vue)
-* _More at [staticgen.com](https://www.staticgen.com/)_
-
 ## Major Roadmapped Features
 
 * [x] Pagination
 * [x] Tagging of content
 * [x] Plugin system
-* [ ] Extensibility with system-wide content mapping **IN PROGRESS**
+* [ ] Extensibility with system-wide content mapping
 * [ ] Components system for development reusability
