@@ -62,6 +62,24 @@ test("Layout is aliased to a new location", t => {
   t.is(tl.getFileName(), "layouts/post.ejs");
 });
 
+test("Global default with empty string alias", t => {
+  let tl = new TemplateLayout("", "./test/stubs/_includes");
+  tl.addLayoutAlias("", "layouts/post.ejs");
+  tl.init();
+
+  t.is(tl.getFileName(), "layouts/post.ejs");
+});
+
+test("Global default with empty string alias (but no alias exists for this instance)", t => {
+  let tl = new TemplateLayout("layout.ejs", "./test/stubs/_includes");
+  tl.addLayoutAlias("", "layouts/post.ejs");
+  tl.init();
+
+  t.throws(() => {
+    tl.getFileName();
+  });
+});
+
 test("Layout has no alias and does not exist", async t => {
   let tl = new TemplateLayout("default", "./test/stubs/_includes");
   tl.addLayoutAlias("post", "layouts/post.ejs");
