@@ -262,3 +262,88 @@ test("Pagination with a Collection", async t => {
   );
   t.is(templates[1].templateContent.trim(), "<ol><li>/test3/</li></ol>");
 });
+
+test("Use a collection inside of a template", async t => {
+  let tw = new TemplateWriter(
+    "./test/stubs/collection-template",
+    "./test/stubs/collection-template/_site",
+    ["ejs"]
+  );
+
+  let paths = await tw._getAllPaths();
+  let templateMap = await tw._createTemplateMap(paths);
+  await templateMap.cache();
+
+  let collectionsData = await templateMap.getCollectionsDataForTemplate();
+  t.is(collectionsData.dog.length, 1);
+
+  let mapEntry = templateMap.getMapEntryForPath(
+    "./test/stubs/collection-template/template.ejs"
+  );
+  t.truthy(mapEntry);
+  t.is(mapEntry.inputPath, "./test/stubs/collection-template/template.ejs");
+
+  let mainTmpl = tw._getTemplate(
+    "./test/stubs/collection-template/template.ejs"
+  );
+  let outputPath = await mainTmpl.getOutputPath();
+  t.is(
+    outputPath,
+    "./test/stubs/collection-template/_site/template/index.html"
+  );
+
+  let templates = await mapEntry.template.getRenderedTemplates(
+    mapEntry.outputPath,
+    mapEntry.data
+  );
+
+  // test content
+  t.is(
+    templates[0].templateContent.trim(),
+    `Layout
+
+Template
+
+Template 1 dog`
+  );
+});
+
+test("Use a collection inside of a layout", async t => {
+  let tw = new TemplateWriter(
+    "./test/stubs/collection-layout",
+    "./test/stubs/collection-layout/_site",
+    ["ejs"]
+  );
+
+  let paths = await tw._getAllPaths();
+  let templateMap = await tw._createTemplateMap(paths);
+  await templateMap.cache();
+
+  let collectionsData = await templateMap.getCollectionsDataForTemplate();
+  t.is(collectionsData.dog.length, 1);
+
+  let mapEntry = templateMap.getMapEntryForPath(
+    "./test/stubs/collection-layout/template.ejs"
+  );
+  t.truthy(mapEntry);
+  t.is(mapEntry.inputPath, "./test/stubs/collection-layout/template.ejs");
+
+  let mainTmpl = tw._getTemplate("./test/stubs/collection-layout/template.ejs");
+  let outputPath = await mainTmpl.getOutputPath();
+  t.is(outputPath, "./test/stubs/collection-layout/_site/template/index.html");
+
+  let templates = await mapEntry.template.getRenderedTemplates(
+    mapEntry.outputPath,
+    mapEntry.data
+  );
+
+  // test content
+  t.is(
+    templates[0].templateContent.trim(),
+    `Layout
+
+Template
+
+Layout 1 dog`
+  );
+});
