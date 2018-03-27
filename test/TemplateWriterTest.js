@@ -304,6 +304,7 @@ test("Use a collection inside of a template", async t => {
 
 Template
 
+All 2 templates
 Template 1 dog`
   );
 });
@@ -344,6 +345,7 @@ test("Use a collection inside of a layout", async t => {
 
 Template
 
+All 2 templates
 Layout 1 dog`
   );
 });
