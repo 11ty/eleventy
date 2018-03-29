@@ -15,8 +15,6 @@ test("EJS Render", async t => {
 });
 
 test("EJS Render Include Preprocessor Directive", async t => {
-  t.is(path.resolve(undefined, "/included"), "/included");
-
   let fn = await new TemplateRender("ejs", "./test/stubs/").getCompiledTemplate(
     "<p><% include /included %></p>"
   );
