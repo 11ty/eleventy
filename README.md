@@ -86,10 +86,10 @@ This will compile any content templates in the current directory or subdirectori
 
 ### See more sample projects
 
-1. [eleventy-base-blog](https://github.com/11ty/eleventy-base-blog): How to build a blog web site with Eleventy.
-1. [@Heydon](https://github.com/heydon)’s lovely [Inclusive Web Design Checklist, converted to use `eleventy`](https://github.com/11ty/eleventy-inclusive-design-checklist). The [original](https://github.com/Heydon/inclusive-design-checklist) project took a JSON file and converted it HTML with some one-off JavaScript. This uses eleventy to transform the data using a nunjucks template, resulting in a cleaner, templated setup.
-1. [11ty-logo](https://github.com/11ty/logo) generates a template with `eleventy` that has hundreds of different font combinations in an attempt to pick a logo.
-1. Have a suggestion? [File an issue!](https://github.com/11ty/eleventy/issues/new?labels=sample-project)
+1.  [eleventy-base-blog](https://github.com/11ty/eleventy-base-blog): How to build a blog web site with Eleventy.
+1.  [@Heydon](https://github.com/heydon)’s lovely [Inclusive Web Design Checklist, converted to use `eleventy`](https://github.com/11ty/eleventy-inclusive-design-checklist). The [original](https://github.com/Heydon/inclusive-design-checklist) project took a JSON file and converted it HTML with some one-off JavaScript. This uses eleventy to transform the data using a nunjucks template, resulting in a cleaner, templated setup.
+1.  [11ty-logo](https://github.com/11ty/logo) generates a template with `eleventy` that has hundreds of different font combinations in an attempt to pick a logo.
+1.  Have a suggestion? [File an issue!](https://github.com/11ty/eleventy/issues/new?labels=sample-project)
 
 ## Command line usage
 
@@ -117,9 +117,11 @@ eleventy --help
 
 Having trouble? Want to see what Eleventy is doing behind the scenes? Use `DEBUG` mode. We’re taking advantage of the [excellent `debug` package](https://www.npmjs.com/package/debug) for this. Enable with the `DEBUG` env variable, either specific to eleventy (`DEBUG=Eleventy*`) or globally (`DEBUG=*`):
 
-```
+```sh
 DEBUG=Eleventy* eleventy
 ```
+
+It’s [different if you’re on Windows](https://www.npmjs.com/package/debug#windows-note).
 
 This will tell you exactly what directories Eleventy is using for data, includes, input, and output. It’ll tell you what search globs it uses to find your templates and what templates it finds. If you’re having trouble, enable this.
 
