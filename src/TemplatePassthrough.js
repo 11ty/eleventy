@@ -3,9 +3,10 @@ const TemplatePath = require("./TemplatePath");
 const debug = require("debug")("Eleventy:TemplatePassthrough");
 
 class TemplatePassthrough {
-  constructor(inputPath, outputDir) {
+  constructor(inputPath, outputDir, inputDir) {
     this.path = inputPath;
     this.outputDir = outputDir;
+    this.inputDir = inputDir;
     this.isDryRun = false;
   }
 
