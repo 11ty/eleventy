@@ -11,7 +11,10 @@ class TemplatePassthrough {
   }
 
   getOutputPath() {
-    return TemplatePath.normalize(this.outputDir, this.path);
+    return TemplatePath.normalizeUrlPath(
+      this.outputDir,
+      TemplatePath.getLastDir(this.path)
+    );
   }
 
   setDryRun(isDryRun) {
