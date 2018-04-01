@@ -887,3 +887,52 @@ test("Override base templating engine from .md to ejs,md (with a layout that use
 </div>`
   );
 });
+
+test("renderContent on a markdown file, permalink should not render markdown", async t => {
+  let tmpl = new Template(
+    "./test/stubs/permalink-markdown.md",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is(
+    await tmpl.renderContent("/news/my-test-file/index.html", {}, true),
+    "/news/my-test-file/index.html"
+  );
+
+  t.is(await tmpl.getOutputLink(), "/news/my-test-file/index.html");
+});
+
+test("renderContent on a markdown file, permalink should not render markdown (with variable)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/permalink-markdown-var.md",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is(
+    await tmpl.renderContent(
+      "/news/{{ slug }}/index.html",
+      { slug: "my-title" },
+      true
+    ),
+    "/news/my-title/index.html"
+  );
+
+  t.is(await tmpl.getOutputLink(), "/news/my-title/index.html");
+});
+
+test("renderContent on a markdown file, permalink should not render markdown (has override)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/permalink-markdown-override.md",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is(
+    await tmpl.renderContent("/news/my-test-file/index.html", {}, true),
+    "/news/my-test-file/index.html"
+  );
+
+  t.is(await tmpl.getOutputLink(), "/news/my-test-file/index.html");
+});

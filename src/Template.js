@@ -373,9 +373,6 @@ class Template {
   }
 
   async renderContent(str, data, bypassMarkdown) {
-    this.templateRender.setUseMarkdown(!bypassMarkdown);
-
-    // must happen after markdown bypass above.
     // TODO test for layouts and overrides
     if (this.config.keys.engineOverride in data) {
       debugDev(
@@ -385,8 +382,11 @@ class Template {
       );
 
       this.templateRender.setEngineOverride(
-        data[this.config.keys.engineOverride]
+        data[this.config.keys.engineOverride],
+        bypassMarkdown
       );
+    } else {
+      this.templateRender.setUseMarkdown(!bypassMarkdown);
     }
 
     debugDev(
@@ -395,11 +395,9 @@ class Template {
       this.templateRender.engineName
     );
 
-    // if (data.layoutContent) {
-    //   debug("renderContent -> layoutContent %o", data.layoutContent);
-    // }
     let fn = await this.templateRender.getCompiledTemplate(str);
-    return fn(data);
+    let rendered = fn(data);
+    return rendered;
   }
 
   async renderWithoutLayouts(data) {
