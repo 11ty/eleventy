@@ -1,8 +1,9 @@
 const EventEmitter = require("events");
-const lodashget = require("lodash.get");
-const Sortable = require("./Util/Sortable");
 const chalk = require("chalk");
+const semver = require("semver");
+const { DateTime } = require("luxon");
 const debug = require("debug")("Eleventy:EleventyConfig");
+const pkg = require("../package.json");
 
 // API to expose configuration options in config file
 class EleventyConfig {
@@ -25,6 +26,18 @@ class EleventyConfig {
 
     // now named `transforms` in API
     this.filters = {};
+
+    this.DateTime = DateTime;
+  }
+
+  versionCheck(expected) {
+    if (!semver.satisfies(pkg.version, expected)) {
+      throw new Error(
+        `This project requires the eleventy version to match '${expected}' but found ${
+          pkg.version
+        }`
+      );
+    }
   }
 
   on(eventName, callback) {

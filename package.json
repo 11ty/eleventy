@@ -32,7 +32,7 @@
     "source": ["**/.eleventyignore", "src/**/*.js"]
   },
   "lint-staged": {
-    "*.{js,json,css,md}": ["prettier --write", "git add"]
+    "*.{js,css,md}": ["prettier --write", "git add"]
   },
   "devDependencies": {
     "ava": "^0.25.0",
@@ -72,6 +72,7 @@
     "pify": "^3.0.0",
     "pretty": "^2.0.0",
     "pug": "^2.0.3",
+    "semver": "^5.5.0",
     "slugify": "^1.2.9",
     "time-require": "^0.1.2",
     "valid-url": "^1.0.9"
