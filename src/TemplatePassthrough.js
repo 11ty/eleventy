@@ -11,9 +11,9 @@ class TemplatePassthrough {
   }
 
   getOutputPath() {
-    return TemplatePath.normalizeUrlPath(
+    return TemplatePath.normalize(
       this.outputDir,
-      TemplatePath.getLastDir(this.path)
+      TemplatePath.stripPathFromDir(this.path, this.inputDir)
     );
   }
 
