@@ -220,7 +220,7 @@ module.exports = function(eleventyConfig) {
 };
 ```
 
-This allows you further customization options using the provided Config helper methods.
+This allows you further customization options using the provided helper methods.
 
 #### Add Tags/Filters to Template Engines
 

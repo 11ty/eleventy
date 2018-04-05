@@ -25,3 +25,19 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPlugin(pluginRss);
 };
 ```
+
+### Namespace the plugin additions
+
+You can namespace parts of your configuration using `eleventyConfig.namespace`. This will add a string prefix to all filters, tags, helpers, collections, and transforms.
+
+```
+const pluginRss = require("@11ty/eleventy-plugin-rss");
+module.exports = function(eleventyConfig) {
+  eleventyConfig.namespace("myPrefix_", () => {
+    // the rssLastUpdatedDate filter is now myPrefix_rssLastUpdatedDate
+    eleventyConfig.addPlugin(pluginRss);
+  });
+};
+```
+
+This feature isn’t limited to plugins, you could use it yourself with `addFilter` or `addCollection` in your config but your code will be more readable if you just change the name string arguments manually (it’s your call).
