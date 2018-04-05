@@ -2,26 +2,32 @@ const chalk = require("chalk");
 const fs = require("fs-extra");
 const lodashMerge = require("lodash.merge");
 const TemplatePath = require("./TemplatePath");
-const mainRootConfig = require("../config.js");
 const eleventyConfig = require("./EleventyConfig");
 const debug = require("debug")("Eleventy:TemplateConfig");
 
 class TemplateConfig {
-  constructor(rootConfig, projectConfigPath) {
+  constructor(customRootConfig, localProjectConfigPath) {
     this.overrides = {};
-    this.projectConfigPath = projectConfigPath || ".eleventy.js";
-    this.rootConfig = rootConfig || mainRootConfig;
-    if (rootConfig) {
+    this.localProjectConfigPath = localProjectConfigPath || ".eleventy.js";
+
+    if (customRootConfig) {
+      this.customRootConfig = customRootConfig;
       debug("Warning: Using custom root config!");
+    } else {
+      this.customRootConfig = null;
     }
+    this.initializeRootConfig();
+    this.config = this.mergeConfig(this.localProjectConfigPath);
+  }
 
-    if (typeof this.rootConfig === "function") {
-      this.rootConfig = this.rootConfig(eleventyConfig);
-      // debug( "rootConfig is a function, after calling, eleventyConfig is %o", eleventyConfig );
-    }
-    debug("rootConfig %o", this.rootConfig);
+  getLocalProjectConfigFile() {
+    return this.localProjectConfigPath;
+  }
 
-    this.config = this.mergeConfig(this.projectConfigPath);
+  reset() {
+    eleventyConfig.reset();
+    this.initializeRootConfig();
+    this.config = this.mergeConfig(this.localProjectConfigPath);
   }
 
   getConfig() {
@@ -29,7 +35,7 @@ class TemplateConfig {
   }
 
   setProjectConfigPath(path) {
-    this.projectConfigPath = path;
+    this.localProjectConfigPath = path;
 
     this.config = this.mergeConfig(path);
   }
@@ -40,16 +46,31 @@ class TemplateConfig {
     this.config.pathPrefix = pathPrefix;
   }
 
-  mergeConfig(projectConfigPath) {
+  initializeRootConfig() {
+    this.rootConfig = this.customRootConfig || require("../config.js");
+
+    if (typeof this.rootConfig === "function") {
+      this.rootConfig = this.rootConfig(eleventyConfig);
+      // debug( "rootConfig is a function, after calling, eleventyConfig is %o", eleventyConfig );
+    }
+    debug("rootConfig %o", this.rootConfig);
+  }
+
+  mergeConfig(localProjectConfigPath) {
     let overrides = ["templateFormats"];
     let localConfig = {};
     let path = TemplatePath.normalize(
-      TemplatePath.getWorkingDir() + "/" + projectConfigPath
+      TemplatePath.getWorkingDir() + "/" + localProjectConfigPath
     );
     debug(`Merging config with ${path}`);
 
     if (fs.existsSync(path)) {
       try {
+        // remove from require cache so it will grab a fresh copy
+        if (path in require.cache) {
+          delete require.cache[path];
+        }
+
         localConfig = require(path);
         // debug( "localConfig require return value: %o", localConfig );
       } catch (err) {

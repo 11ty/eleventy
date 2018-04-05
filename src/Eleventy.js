@@ -177,13 +177,19 @@ Eleventy.prototype.getHelp = function() {
   return out.join("\n");
 };
 
-Eleventy.prototype._watch = async function() {
+Eleventy.prototype._watch = async function(path) {
   if (this.active) {
-    this.queuedToRun = true;
+    this.queuedToRun = path;
     return;
   }
 
   this.active = true;
+
+  // reset and reload global configuration :O
+  if (path === config.getLocalProjectConfigFile()) {
+    config.reset();
+  }
+
   this.restart();
   await this.write();
   this.active = false;
@@ -191,7 +197,7 @@ Eleventy.prototype._watch = async function() {
   if (this.queuedToRun) {
     console.log("You saved while Eleventy was running, let’s run again.");
     this.queuedToRun = false;
-    await this._watch();
+    await this._watch(this.queuedToRun);
   } else {
     console.log("Watching…");
   }
@@ -205,8 +211,13 @@ Eleventy.prototype.watch = async function() {
 
   const watch = require("glob-watcher");
 
+  let rawFiles = this.writer.getRawFiles();
+  // Watch the local project config file
+  rawFiles.push(config.getLocalProjectConfigFile());
+  debug("Eleventy.watch rawFiles: %o", rawFiles);
+
   console.log("Watching…");
-  let watcher = watch(this.writer.getRawFiles(), {
+  let watcher = watch(rawFiles, {
     ignored: this.writer.getWatchedIgnores()
   });
 
@@ -214,7 +225,7 @@ Eleventy.prototype.watch = async function() {
     "change",
     async function(path, stat) {
       console.log("File changed:", path);
-      this._watch();
+      this._watch(path);
     }.bind(this)
   );
 
@@ -222,7 +233,7 @@ Eleventy.prototype.watch = async function() {
     "add",
     async function(path, stat) {
       console.log("File added:", path);
-      this._watch();
+      this._watch(path);
     }.bind(this)
   );
 };

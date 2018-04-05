@@ -8,6 +8,11 @@ const pkg = require("../package.json");
 // API to expose configuration options in config file
 class EleventyConfig {
   constructor() {
+    this.reset();
+  }
+
+  reset() {
+    debug("Resetting EleventyConfig to initial values.");
     this.events = new EventEmitter();
     this.collections = {};
 
