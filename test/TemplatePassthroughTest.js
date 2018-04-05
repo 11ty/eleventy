@@ -42,3 +42,54 @@ test("Origin path isn’t included in output when targeting a file several level
   t.truthy(pass);
   t.is(pass.getOutputPath(), "_site/avatar.png");
 });
+
+test("Full input file path and deep input path", t => {
+  t.is(
+    new TemplatePassthrough(
+      "src/views/avatar.png",
+      "_site",
+      "src/views/"
+    ).getOutputPath(),
+    "_site/avatar.png"
+  );
+  t.is(
+    new TemplatePassthrough(
+      "src/views/avatar.png",
+      "_site",
+      "src/views"
+    ).getOutputPath(),
+    "_site/avatar.png"
+  );
+  t.is(
+    new TemplatePassthrough(
+      "src/views/avatar.png",
+      "_site/",
+      "src/views"
+    ).getOutputPath(),
+    "_site/avatar.png"
+  );
+  t.is(
+    new TemplatePassthrough(
+      "src/views/avatar.png",
+      "./_site",
+      "./src/views"
+    ).getOutputPath(),
+    "_site/avatar.png"
+  );
+  t.is(
+    new TemplatePassthrough(
+      "./src/views/avatar.png",
+      "./_site/",
+      "./src/views/"
+    ).getOutputPath(),
+    "_site/avatar.png"
+  );
+  t.is(
+    new TemplatePassthrough(
+      "./src/views/avatar.png",
+      "_site",
+      "src/views/"
+    ).getOutputPath(),
+    "_site/avatar.png"
+  );
+});
