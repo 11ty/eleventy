@@ -43,15 +43,19 @@ class TemplateCollection extends Sortable {
 
   getFilteredByTag(tagName) {
     return this.getAllSorted().filter(function(item) {
+      let match = false;
       if (!tagName) {
         return true;
-      } else if (
-        Array.isArray(item.data.tags) ||
-        typeof item.data.tags === "string"
-      ) {
-        return item.data.tags.indexOf(tagName) > -1;
+      } else if (Array.isArray(item.data.tags)) {
+        item.data.tags.forEach(tag => {
+          if (tag === tagName) {
+            match = true;
+          }
+        });
+      } else if (typeof item.data.tags === "string") {
+        match = item.data.tags === tagName;
       }
-      return false;
+      return match;
     });
   }
 }
