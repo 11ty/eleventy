@@ -1,12 +1,18 @@
 const EventEmitter = require("events");
-const lodashget = require("lodash.get");
-const Sortable = require("./Util/Sortable");
 const chalk = require("chalk");
+const semver = require("semver");
+const { DateTime } = require("luxon");
 const debug = require("debug")("Eleventy:EleventyConfig");
+const pkg = require("../package.json");
 
 // API to expose configuration options in config file
 class EleventyConfig {
   constructor() {
+    this.reset();
+  }
+
+  reset() {
+    debug("Resetting EleventyConfig to initial values.");
     this.events = new EventEmitter();
     this.collections = {};
 
@@ -25,6 +31,20 @@ class EleventyConfig {
 
     // now named `transforms` in API
     this.filters = {};
+
+    this.activeNamespace = "";
+
+    this.DateTime = DateTime;
+  }
+
+  versionCheck(expected) {
+    if (!semver.satisfies(pkg.version, expected)) {
+      throw new Error(
+        `This project requires the eleventy version to match '${expected}' but found ${
+          pkg.version
+        }. Use \`npm update @11ty/eleventy -g\` to upgrade the eleventy global or \`npm update @11ty/eleventy --save\` to upgrade your local project version.`
+      );
+    }
   }
 
   on(eventName, callback) {
@@ -37,9 +57,11 @@ class EleventyConfig {
 
   // tagCallback: function(liquidEngine) { return { parse: …, render: … }} };
   addLiquidTag(name, tagFn) {
+    name = this.getNamespacedName(name);
+
     if (typeof tagFn !== "function") {
       throw new Error(
-        "EleventyConfig.addLiquidTag expects a callback function to be passed in: addLiquidTag(name, function(liquidEngine) { return { parse: …, render: … } })"
+        `EleventyConfig.addLiquidTag expects a callback function to be passed in for ${name}: addLiquidTag(name, function(liquidEngine) { return { parse: …, render: … } })`
       );
     }
 
@@ -55,6 +77,8 @@ class EleventyConfig {
   }
 
   addLiquidFilter(name, callback) {
+    name = this.getNamespacedName(name);
+
     if (this.liquidFilters[name]) {
       debug(
         chalk.yellow(
@@ -68,6 +92,8 @@ class EleventyConfig {
   }
 
   addNunjucksAsyncFilter(name, callback) {
+    name = this.getNamespacedName(name);
+
     if (this.nunjucksAsyncFilters[name]) {
       debug(
         chalk.yellow(
@@ -85,6 +111,8 @@ class EleventyConfig {
     if (isAsync) {
       this.addNunjucksAsyncFilter(name, callback);
     } else {
+      name = this.getNamespacedName(name);
+
       if (this.nunjucksFilters[name]) {
         debug(
           chalk.yellow(
@@ -99,6 +127,8 @@ class EleventyConfig {
   }
 
   addHandlebarsHelper(name, callback) {
+    name = this.getNamespacedName(name);
+
     if (this.handlebarsHelpers[name]) {
       debug(
         chalk.yellow(
@@ -112,7 +142,7 @@ class EleventyConfig {
   }
 
   addFilter(name, callback) {
-    debug("Adding universal filter %o", name);
+    debug("Adding universal filter %o", this.getNamespacedName(name));
     this.addLiquidFilter(name, callback);
     this.addNunjucksFilter(name, callback);
 
@@ -121,6 +151,8 @@ class EleventyConfig {
   }
 
   addTransform(name, callback) {
+    name = this.getNamespacedName(name);
+
     this.filters[name] = callback;
   }
 
@@ -133,6 +165,8 @@ class EleventyConfig {
   }
 
   addCollection(name, callback) {
+    name = this.getNamespacedName(name);
+
     if (this.collections[name]) {
       throw new Error(
         `config.addCollection(${name}) already exists. Try a different name for your collection.`
@@ -150,6 +184,16 @@ class EleventyConfig {
     }
 
     pluginCallback(this);
+  }
+
+  getNamespacedName(name) {
+    return this.activeNamespace + name;
+  }
+
+  namespace(pluginNamespace, callback) {
+    this.activeNamespace = pluginNamespace || "";
+    callback();
+    this.activeNamespace = "";
   }
 
   /**
@@ -194,6 +238,10 @@ class EleventyConfig {
     this.liquidOptions = options;
   }
 
+  setEjsOptions(options) {
+    this.ejsOptions = options;
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
@@ -207,6 +255,7 @@ class EleventyConfig {
       nunjucksAsyncFilters: this.nunjucksAsyncFilters,
       handlebarsHelpers: this.handlebarsHelpers,
       pugOptions: this.pugOptions,
+      ejsOptions: this.ejsOptions,
       libraryOverrides: this.libraryOverrides
     };
   }
