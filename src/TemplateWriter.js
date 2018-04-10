@@ -192,8 +192,9 @@ TemplateWriter.prototype._getTemplate = function(path) {
 };
 
 TemplateWriter.prototype._copyPassthroughPath = async function(path) {
-  let pass = new TemplatePassthrough(path, this.outputDir);
+  let pass = new TemplatePassthrough(path, this.outputDir, this.inputDir);
   pass.setDryRun(this.isDryRun);
+
   try {
     await pass.write();
     debugDev("Copied %o", path);

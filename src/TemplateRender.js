@@ -88,7 +88,10 @@ TemplateRender.parseEngineOverrides = function(engineName) {
   return engines;
 };
 
-TemplateRender.prototype.setEngineOverride = function(engineName) {
+TemplateRender.prototype.setEngineOverride = function(
+  engineName,
+  bypassMarkdown
+) {
   let engines = TemplateRender.parseEngineOverrides(engineName);
 
   // when overriding, Template Engines with HTML will instead use the Template Engine as primary and output HTML
@@ -102,7 +105,7 @@ TemplateRender.prototype.setEngineOverride = function(engineName) {
 
   this.init(engines[0]);
 
-  let usingMarkdown = engines[0] === "md";
+  let usingMarkdown = engines[0] === "md" && !bypassMarkdown;
 
   this.setUseMarkdown(usingMarkdown);
 

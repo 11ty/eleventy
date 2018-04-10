@@ -92,6 +92,54 @@ test("Add universal filter", t => {
   t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
 });
 
+test("Add namespaced universal filter", t => {
+  eleventyConfig.namespace("testNamespace", function() {
+    eleventyConfig.addFilter("MyFilterName", function() {});
+  });
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.not(
+    Object.keys(cfg.liquidFilters).indexOf("testNamespaceMyFilterName"),
+    -1
+  );
+  t.not(
+    Object.keys(cfg.handlebarsHelpers).indexOf("testNamespaceMyFilterName"),
+    -1
+  );
+  t.not(
+    Object.keys(cfg.nunjucksFilters).indexOf("testNamespaceMyFilterName"),
+    -1
+  );
+});
+
+test("Add namespaced universal filter using underscore", t => {
+  eleventyConfig.namespace("testNamespace_", function() {
+    eleventyConfig.addFilter("myFilterName", function() {});
+  });
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.not(
+    Object.keys(cfg.liquidFilters).indexOf("testNamespace_myFilterName"),
+    -1
+  );
+  t.not(
+    Object.keys(cfg.handlebarsHelpers).indexOf("testNamespace_myFilterName"),
+    -1
+  );
+  t.not(
+    Object.keys(cfg.nunjucksFilters).indexOf("testNamespace_myFilterName"),
+    -1
+  );
+});
+
 test("Test url universal filter with custom pathPrefix (no slash)", t => {
   let templateCfg = new TemplateConfig(
     require("../config.js"),

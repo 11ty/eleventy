@@ -128,3 +128,23 @@ test("getFilteredByGlob no dash dot", async t => {
   t.deepEqual(htmls[0].template, tmpl6);
   t.deepEqual(htmls[1].template, tmpl7);
 });
+
+test("partial match on tag string, issue 95", async t => {
+  let cat = new Template(
+    "./test/stubs/issue-95/cat.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  let notacat = new Template(
+    "./test/stubs/issue-95/notacat.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let c = new Collection();
+  await c.addTemplate(cat);
+  await c.addTemplate(notacat);
+
+  let posts = c.getFilteredByTag("cat");
+  t.is(posts.length, 1);
+});

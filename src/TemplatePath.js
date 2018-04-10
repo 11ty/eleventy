@@ -47,16 +47,22 @@ TemplatePath.normalize = function(...paths) {
   return normalize(path.join(...paths));
 };
 
-TemplatePath.hasTrailingSlash = function(thePath) {
+TemplatePath.hasTrailingSlash = function(thePath, isPreNormalized) {
   if (!thePath) {
     return false;
   }
-  return thePath.length && thePath.charAt(thePath.length - 1) === "/";
+
+  let slash = "/";
+  // handle windows slashes too
+  if (isPreNormalized && process.platform === "win32") {
+    slash = "\\";
+  }
+  return thePath.length && thePath.charAt(thePath.length - 1) === slash;
 };
 
 TemplatePath.normalizeUrlPath = function(...paths) {
   let thePath = path.join(...paths);
-  let hasTrailingSlashBefore = TemplatePath.hasTrailingSlash(thePath);
+  let hasTrailingSlashBefore = TemplatePath.hasTrailingSlash(thePath, true);
   let normalizedPath = normalize(thePath);
   let hasTrailingSlashAfter = TemplatePath.hasTrailingSlash(normalizedPath);
   return (

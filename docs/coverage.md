@@ -1,26 +1,26 @@
-# Code Coverage for Eleventy v0.3.0
+# Code Coverage for Eleventy v0.3.1
 
 | Filename                        | % Lines | % Statements | % Functions | % Branches |
 | ------------------------------- | ------- | ------------ | ----------- | ---------- |
-| `total`                         | 87.57%  | 87.59%       | 83.69%      | 82%        |
+| `total`                         | 87.01%  | 87.03%       | 83.18%      | 81.39%     |
 | `config.js`                     | 100%    | 100%         | 100%        | 100%       |
 | `src/Config.js`                 | 100%    | 100%         | 100%        | 100%       |
-| `src/Eleventy.js`               | 55.48%  | 55.48%       | 35%         | 31.25%     |
+| `src/Eleventy.js`               | 53.64%  | 53.64%       | 35%         | 29.41%     |
 | `src/EleventyCommandCheck.js`   | 100%    | 100%         | 100%        | 87.5%      |
-| `src/EleventyConfig.js`         | 78.46%  | 78.79%       | 71.43%      | 62.5%      |
+| `src/EleventyConfig.js`         | 78.31%  | 78.57%       | 72%         | 57.14%     |
 | `src/EleventyError.js`          | 100%    | 100%         | 100%        | 100%       |
-| `src/Template.js`               | 90.24%  | 90.24%       | 80.95%      | 83.16%     |
+| `src/Template.js`               | 90.28%  | 90.28%       | 80.95%      | 83.16%     |
 | `src/TemplateCache.js`          | 100%    | 100%         | 100%        | 100%       |
-| `src/TemplateCollection.js`     | 91.3%   | 91.67%       | 90%         | 80%        |
-| `src/TemplateConfig.js`         | 91.3%   | 91.3%        | 80%         | 93.75%     |
+| `src/TemplateCollection.js`     | 92.86%  | 93.1%        | 90.91%      | 83.33%     |
+| `src/TemplateConfig.js`         | 85.19%  | 85.19%       | 62.5%       | 94.44%     |
 | `src/TemplateData.js`           | 97.54%  | 97.54%       | 100%        | 78.13%     |
 | `src/TemplateGlob.js`           | 93.33%  | 93.33%       | 100%        | 87.5%      |
 | `src/TemplateLayout.js`         | 97.37%  | 97.37%       | 100%        | 93.75%     |
 | `src/TemplateMap.js`            | 97.14%  | 97.14%       | 100%        | 83.33%     |
-| `src/TemplatePassthrough.js`    | 81.82%  | 81.82%       | 75%         | 0%         |
-| `src/TemplatePath.js`           | 100%    | 100%         | 91.67%      | 100%       |
+| `src/TemplatePassthrough.js`    | 83.33%  | 83.33%       | 75%         | 0%         |
+| `src/TemplatePath.js`           | 98.21%  | 98.21%       | 91.67%      | 97.14%     |
 | `src/TemplatePermalink.js`      | 100%    | 100%         | 100%        | 100%       |
-| `src/TemplateRender.js`         | 98.73%  | 98.73%       | 100%        | 94.12%     |
+| `src/TemplateRender.js`         | 98.73%  | 98.73%       | 100%        | 94.44%     |
 | `src/TemplateWriter.js`         | 66.45%  | 66.45%       | 55.56%      | 62.5%      |
 | `src/Engines/Ejs.js`            | 88.89%  | 88.89%       | 71.43%      | 75%        |
 | `src/Engines/Haml.js`           | 100%    | 100%         | 100%        | 100%       |

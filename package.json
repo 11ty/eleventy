@@ -1,6 +1,6 @@
 {
   "name": "@11ty/eleventy",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Transform a directory of templates into HTML.",
   "main": "src/Eleventy.js",
   "license": "MIT",
@@ -13,8 +13,7 @@
   "scripts": {
     "default": "cd playground && npx eleventy --input=. --output=_site",
     "test": "npx nyc ava",
-    "coverage":
-      "npm run test && npx nyc report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && node cmd.js --config=docs-src/.eleventy.docs.js",
+    "coverage": "npm run test && npx nyc report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && node cmd.js --config=docs-src/.eleventy.docs.js",
     "precommit": "lint-staged",
     "prepush": "npx ava"
   },
@@ -28,11 +27,19 @@
     "url": "git://github.com/11ty/eleventy.git"
   },
   "ava": {
-    "files": ["test/*.js"],
-    "source": ["**/.eleventyignore", "src/**/*.js"]
+    "files": [
+      "test/*.js"
+    ],
+    "source": [
+      "**/.eleventyignore",
+      "src/**/*.js"
+    ]
   },
   "lint-staged": {
-    "*.{js,json,css,md}": ["prettier --write", "git add"]
+    "*.{js,css,md}": [
+      "prettier --write",
+      "git add"
+    ]
   },
   "devDependencies": {
     "ava": "^0.25.0",
@@ -72,6 +79,7 @@
     "pify": "^3.0.0",
     "pretty": "^2.0.0",
     "pug": "^2.0.3",
+    "semver": "^5.5.0",
     "slugify": "^1.2.9",
     "time-require": "^0.1.2",
     "valid-url": "^1.0.9"

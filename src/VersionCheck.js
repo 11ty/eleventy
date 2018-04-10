@@ -7,9 +7,16 @@ const versionCheck = require("check-node-version");
  */
 module.exports = function() {
   return new Promise(function(resolve, reject) {
+    // Try the .versionCheck in EleventyConfig
+    try {
+      require("./Config");
+    } catch (e) {
+      reject(e.toString());
+    }
+
     versionCheck({ node: pkg.engines.node }, function(err, result) {
       if (!result.versions.node.isSatisfied) {
-        console.log(
+        reject(
           "Eleventy requires Node version 8 or above. You’re currently using " +
             result.versions.node.version +
             "."
