@@ -11,6 +11,7 @@ class Ejs extends TemplateEngine {
 
     this.config = config.getConfig();
     this.setLibrary(this.config.libraryOverrides.ejs);
+    this.setEjsOptions(this.config.ejsOptions);
   }
 
   setLibrary(lib) {

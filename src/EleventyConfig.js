@@ -24,6 +24,7 @@ class EleventyConfig {
     this.handlebarsHelpers = {};
     this.passthroughCopies = {};
     this.pugOptions = {};
+    this.ejsOptions = {};
 
     this.libraryOverrides = {};
 

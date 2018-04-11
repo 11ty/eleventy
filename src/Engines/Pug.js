@@ -8,9 +8,10 @@ class Pug extends TemplateEngine {
     super(name, inputDir);
 
     this.config = config.getConfig();
-    this.pugOptions = this.config.pugOptions;
+    this.pugOptions = {};
 
     this.setLibrary(this.config.libraryOverrides.pug);
+    this.setPugOptions(this.config.pugOptions);
   }
 
   setLibrary(lib) {
