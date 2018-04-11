@@ -154,9 +154,9 @@ TemplateRender.prototype.getCompiledTemplate = async function(str, inputPath) {
   if (this.engineName === "md") {
     return this.engine.compile(
       str,
+      inputPath,
       this.parseMarkdownWith,
-      !this.useMarkdown,
-      inputPath
+      !this.useMarkdown
     );
   } else if (this.engineName === "html") {
     return this.engine.compile(str, this.parseHtmlWith);
