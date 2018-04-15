@@ -24,6 +24,7 @@ class EleventyConfig {
     this.handlebarsHelpers = {};
     this.passthroughCopies = {};
     this.pugOptions = {};
+    this.ejsOptions = {};
 
     this.libraryOverrides = {};
 
@@ -238,6 +239,10 @@ class EleventyConfig {
     this.liquidOptions = options;
   }
 
+  setEjsOptions(options) {
+    this.ejsOptions = options;
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
@@ -251,6 +256,7 @@ class EleventyConfig {
       nunjucksAsyncFilters: this.nunjucksAsyncFilters,
       handlebarsHelpers: this.handlebarsHelpers,
       pugOptions: this.pugOptions,
+      ejsOptions: this.ejsOptions,
       libraryOverrides: this.libraryOverrides
     };
   }
