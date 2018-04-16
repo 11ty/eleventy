@@ -16,6 +16,15 @@ class Markdown extends TemplateEngine {
 
   setLibrary(mdLib) {
     this.mdLib = mdLib || markdownIt(this.getMarkdownOptions());
+
+    // Overrides a highlighter set in `markdownOptions`
+    // This is separate so devs can pass in a new mdLib and still use the official eleventy plugin for markdown highlighting
+    if (this.config.markdownHighlighter) {
+      this.mdLib.set({
+        highlight: this.config.markdownHighlighter
+      });
+    }
+
     this.setEngineLib(this.mdLib);
   }
 
