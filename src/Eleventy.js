@@ -39,6 +39,10 @@ Eleventy.prototype._getDir = function(inputPath) {
   return inputPath;
 };
 
+Eleventy.prototype.getOutputDir = function() {
+  return this.outputDir;
+};
+
 Eleventy.prototype.setDryRun = function(isDryRun) {
   this.isDryRun = !!isDryRun;
 };
@@ -155,6 +159,8 @@ Eleventy.prototype.getHelp = function() {
   out.push("");
   out.push("Arguments: ");
   out.push("  --version");
+  out.push("  --serve");
+  out.push("       Run web server on --port (default 8080) and --watch too");
   out.push("  --watch");
   out.push("       Wait for files to change and automatically rewrite");
   out.push("  --input=.");

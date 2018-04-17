@@ -26,17 +26,27 @@ EleventyNodeVersionCheck().then(
     elev.setDryRun(argv.dryrun);
     elev.setFormats(argv.formats);
 
-    if (process.env.DEBUG) {
-      elev.setIsVerbose(false);
-    } else {
-      elev.setIsVerbose(!argv.quiet);
-    }
+    let isVerbose = process.env.DEBUG ? false : !argv.quiet;
+    elev.setIsVerbose(isVerbose);
 
     elev.init().then(function() {
       if (argv.version) {
         console.log(elev.getVersion());
       } else if (argv.help) {
         console.log(elev.getHelp());
+      } else if (argv.serve) {
+        elev.watch().then(function() {
+          const serve = require("serve");
+          const server = serve(elev.getOutputDir(), {
+            port: argv.port || 8080,
+            ignore: ["node_modules"]
+          });
+
+          process.on("SIGINT", function() {
+            server.stop();
+            process.exit();
+          });
+        });
       } else if (argv.watch) {
         elev.watch();
       } else {

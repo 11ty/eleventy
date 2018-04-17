@@ -2,9 +2,16 @@ const debug = require("debug")("Eleventy:CommandCheck");
 
 class EleventyCommandCheck {
   constructor(argv) {
-    this.valueArgs = ["input", "output", "formats", "config", "pathprefix"];
+    this.valueArgs = [
+      "input",
+      "output",
+      "formats",
+      "config",
+      "pathprefix",
+      "port"
+    ];
 
-    this.booleanArgs = ["quiet", "version", "watch", "dryrun", "help"];
+    this.booleanArgs = ["quiet", "version", "watch", "dryrun", "help", "serve"];
 
     this.args = argv;
     this.argsMap = this.getArgumentLookupMap();

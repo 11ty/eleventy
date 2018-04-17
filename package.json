@@ -47,7 +47,8 @@
     "lint-staged": "^7.0.0",
     "markdown-it-emoji": "^1.4.0",
     "nyc": "^11.6.0",
-    "prettier": "1.11.1"
+    "prettier": "1.11.1",
+    "serve": "^6.5.5"
   },
   "dependencies": {
     "chalk": "^2.3.2",
