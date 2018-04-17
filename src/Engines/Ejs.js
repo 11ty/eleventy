@@ -2,6 +2,7 @@ const ejsLib = require("ejs");
 const TemplateEngine = require("./TemplateEngine");
 const lodashMerge = require("lodash.merge");
 const config = require("../Config");
+const path = require("path");
 
 class Ejs extends TemplateEngine {
   constructor(name, inputDir) {
@@ -40,8 +41,11 @@ class Ejs extends TemplateEngine {
     );
   }
 
-  async compile(str) {
-    let fn = this.ejsLib.compile(str, this.getEjsOptions());
+  async compile(str, inputPath) {
+    let options = this.getEjsOptions();
+    options.filename = inputPath || options.filename;
+
+    let fn = this.ejsLib.compile(str, options);
 
     return function(data) {
       return fn(data);

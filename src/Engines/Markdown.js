@@ -46,14 +46,21 @@ class Markdown extends TemplateEngine {
     );
   }
 
-  async compile(str, preTemplateEngine, bypassMarkdown) {
+  async compile(str, inputPath, preTemplateEngine, bypassMarkdown) {
     let mdlib = this.mdLib;
+
     if (preTemplateEngine) {
+      let fn;
       let engine = TemplateEngine.getEngine(
         preTemplateEngine,
         super.getInputDir()
       );
-      let fn = await engine.compile(str);
+
+      if (preTemplateEngine === "ejs") {
+        fn = await engine.compile(str, inputPath);
+      } else {
+        fn = await engine.compile(str);
+      }
 
       if (bypassMarkdown) {
         return async function(data) {
