@@ -120,7 +120,7 @@ This is some code.
   t.is((await fn()).trim(), "<pre><code>This is overrrrrrride</code></pre>");
 });
 
-// Uncomment these after syntax-highlighter v1.0.4 is bundled (see #97)
+// TODO Uncomment these after syntax-highlighter v1.0.4 is released (and/or bundled—see #97)
 
 // test("Markdown Render: use prism highlighter (no language)", async t => {
 //   let tr = new TemplateRender("md");
