@@ -149,12 +149,19 @@ TemplateRender.prototype.render = async function(str, data) {
   return this.engine.render(str, data);
 };
 
-TemplateRender.prototype.getCompiledTemplate = async function(str) {
+TemplateRender.prototype.getCompiledTemplate = async function(str, inputPath) {
   // TODO refactor better, move into TemplateEngine logic
   if (this.engineName === "md") {
-    return this.engine.compile(str, this.parseMarkdownWith, !this.useMarkdown);
+    return this.engine.compile(
+      str,
+      inputPath,
+      this.parseMarkdownWith,
+      !this.useMarkdown
+    );
   } else if (this.engineName === "html") {
     return this.engine.compile(str, this.parseHtmlWith);
+  } else if (this.engineName === "ejs") {
+    return this.engine.compile(str, inputPath);
   } else {
     return this.engine.compile(str);
   }

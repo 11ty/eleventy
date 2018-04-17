@@ -14,49 +14,47 @@ test("EJS Render", async t => {
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });
 
-test("EJS Render Include Preprocessor Directive", async t => {
+test("EJS Render Absolute Include, Preprocessor Directive", async t => {
   let fn = await new TemplateRender("ejs", "./test/stubs/").getCompiledTemplate(
     "<p><% include /included %></p>"
   );
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-test("EJS Render Include, New Style no Data", async t => {
+test("EJS Render Absolute Include, Fxn no Data", async t => {
   let fn = await new TemplateRender("ejs", "./test/stubs/").getCompiledTemplate(
     "<p><%- include('/included') %></p>"
   );
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-test("EJS Render Include, New Style", async t => {
-  let fn = await new TemplateRender("ejs", "./test/stubs/").getCompiledTemplate(
-    "<p><%- include('/included', {}) %></p>"
-  );
-  t.is(await fn(), "<p>This is an include.</p>");
-});
-
-test("EJS Render Include, New Style with Data", async t => {
+test("EJS Render Absolute Include, Fxn with Data", async t => {
   let fn = await new TemplateRender("ejs", "./test/stubs/").getCompiledTemplate(
     "<p><%- include('/includedvar', { name: 'Bill' }) %></p>"
   );
   t.is(await fn(), "<p>This is an Bill.</p>");
 });
 
-// test("EJS Render Include Preprocessor Directive Relative", async t => {
+test("EJS Render Relative Include, Preprocessor Directive", async t => {
+  let fn = await new TemplateRender("ejs", "./test/stubs/").getCompiledTemplate(
+    "<p><% include _includes/included %></p>"
+  );
+  t.is(await fn(), "<p>This is an include.</p>");
+});
 
-//   let fn = await new TemplateRender("ejs", "./test/stubs/").getCompiledTemplate(
-//     "<p><% include included %></p>"
-//   );
-//   t.is(await fn(), "<p>This is an include.</p>");
-// });
+test("EJS Render Relative Include, Fxn no Data", async t => {
+  let fn = await new TemplateRender("ejs", "./test/stubs/").getCompiledTemplate(
+    "<p><%- include('_includes/included', {}) %></p>"
+  );
+  t.is(await fn(), "<p>This is an include.</p>");
+});
 
-// test("EJS Render Include, Relative Path New Style", async t => {
-//   let fn = await new TemplateRender("ejs", "./test/stubs/").getCompiledTemplate(
-//     "<p><%- include('stubs/includedrelative', {}) %></p>"
-//   );
-
-//   t.is(await fn(), "<p>This is a relative include.</p>");
-// });
+test("EJS Render Relative Include, Fxn with Data", async t => {
+  let fn = await new TemplateRender("ejs", "./test/stubs/").getCompiledTemplate(
+    "<p><%- include('_includes/includedvar', { name: 'Bill' }) %></p>"
+  );
+  t.is(await fn(), "<p>This is an Bill.</p>");
+});
 
 test("EJS Render: with Library Override", async t => {
   let tr = new TemplateRender("ejs");
