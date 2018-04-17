@@ -79,6 +79,18 @@ permalinkBypassOutputDir: true
 
 Writes to `_includes/index.html` even though the output directory is `_site`. This is useful for writing child templates to the `_includes` directory for re-use in your other templates.
 
+### Custom File Formats
+To generate different file formats for your built site, you can use a different extension in the `permalink` option of your front matter.
+
+For example, to generate a JSON search index to be used by popular search libraries.
+
+```
+---
+permalink: index.json
+---
+<%- JSON.stringify(collections.all) _%>
+```
+
 ### Pagination
 
 Pagination variables also work here. [Read more about Pagination](pagination.md)
