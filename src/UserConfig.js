@@ -26,17 +26,14 @@ class UserConfig {
     this.pugOptions = {};
     this.ejsOptions = {};
     this.markdownHighlighter = null;
-
     this.libraryOverrides = {};
 
     this.layoutAliases = {};
-
     // now named `transforms` in API
     this.filters = {};
-
     this.activeNamespace = "";
-
     this.DateTime = DateTime;
+    this.dynamicPermalinks = true;
   }
 
   versionCheck(expected) {
