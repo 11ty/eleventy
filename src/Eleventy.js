@@ -98,13 +98,11 @@ Eleventy.prototype.logFinished = function() {
   );
 
   let time = ((new Date() - this.start) / 1000).toFixed(2);
-  ret.push(
-    `in ${time} ${simplePlural(time, "second", "seconds")} (${(
-      time *
-      1000 /
-      writeCount
-    ).toFixed(1)}ms each)`
-  );
+  ret.push(`in ${time} ${simplePlural(time, "second", "seconds")}`);
+
+  if (writeCount >= 10) {
+    ret.push(`(${(time * 1000 / writeCount).toFixed(1)}ms each)`);
+  }
 
   return ret.join(" ");
 };
