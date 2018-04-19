@@ -24,6 +24,7 @@ function TemplateWriter(inputPath, outputDir, extensions, templateData) {
   this.isDryRun = false;
   this.writeCount = 0;
   this.copyCount = 0;
+  this.copyTimes = [];
 
   this.includesDir = this.inputDir + "/" + this.config.dir.includes;
   // Duplicated with TemplateData.getDataDir();
@@ -51,6 +52,7 @@ function TemplateWriter(inputPath, outputDir, extensions, templateData) {
 TemplateWriter.prototype.restart = function() {
   this.writeCount = 0;
   this.copyCount = 0;
+  this.copyTimes = [];
   debug("Resetting counts to 0");
 };
 
@@ -192,6 +194,7 @@ TemplateWriter.prototype._getTemplate = function(path) {
 };
 
 TemplateWriter.prototype._copyPassthroughPath = async function(path) {
+  let timer = new Date();
   let pass = new TemplatePassthrough(path, this.outputDir, this.inputDir);
   pass.setDryRun(this.isDryRun);
 
@@ -201,8 +204,12 @@ TemplateWriter.prototype._copyPassthroughPath = async function(path) {
   } catch (e) {
     throw EleventyError.make(new Error(`Having trouble copying: ${path}`), e);
   }
+  this.copyTimes.push(new Date() - timer);
 };
 
+// Performance note: these can actually take a fair bit of time, but aren’t a
+// bottleneck to eleventy. The copies are performed asynchronously and don’t affect eleventy
+// write times in a significant way.
 TemplateWriter.prototype._copyPassthroughs = async function(paths) {
   if (!this.config.passthroughFileCopy) {
     debug("`passthroughFileCopy` is disabled in config, bypassing.");
@@ -217,14 +224,21 @@ TemplateWriter.prototype._copyPassthroughs = async function(paths) {
     this._copyPassthroughPath(cfgPath);
   }
 
+  let templateCount = 0;
+  let timer = new Date();
   for (let path of paths) {
     if (!TemplateRender.hasEngine(path)) {
       count++;
+      templateCount++;
       this._copyPassthroughPath(path);
     }
   }
+  if (templateCount) {
+    this.copyTimes.push(new Date() - timer);
+  }
 
   this.copyCount += count;
+
   debug(`TemplatePassthrough copied ${count} item${count !== 1 ? "s" : ""}.`);
 };
 
@@ -285,6 +299,17 @@ TemplateWriter.prototype.setVerboseOutput = function(isVerbose) {
 
 TemplateWriter.prototype.setDryRun = function(isDryRun) {
   this.isDryRun = !!isDryRun;
+};
+
+TemplateWriter.prototype.getCopyTimes = function() {
+  return this.copyTimes
+    .map(val => {
+      if (val < 500) {
+        return val + "ms";
+      }
+      return (val / 1000).toFixed(1) + "s";
+    })
+    .join(", ");
 };
 
 TemplateWriter.prototype.getCopyCount = function() {
