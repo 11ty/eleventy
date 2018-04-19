@@ -10,7 +10,7 @@ class TemplateCollection extends Sortable {
   // right now this is only used by the tests
   async addTemplate(template) {
     let templateMap = await template.getMapped();
-    super.add(templateMap);
+    this.add(templateMap);
   }
 
   getAll() {
@@ -18,11 +18,15 @@ class TemplateCollection extends Sortable {
   }
 
   getAllSorted() {
-    return this.sort(Sortable.sortFunctionDateInputPath);
+    return this._cache("allSorted", function() {
+      return this.sort(Sortable.sortFunctionDateInputPath);
+    });
   }
 
   getSortedByDate() {
-    return this.sort(Sortable.sortFunctionDate);
+    return this._cache("sortedByDate", function() {
+      return this.sort(Sortable.sortFunctionDate);
+    });
   }
 
   getFilteredByGlob(globs) {
@@ -30,14 +34,16 @@ class TemplateCollection extends Sortable {
       globs = [globs];
     }
 
-    globs = globs.map(glob => TemplatePath.addLeadingDotSlash(glob));
+    return this._cache("getFilteredByGlob:" + globs.join(","), function() {
+      globs = globs.map(glob => TemplatePath.addLeadingDotSlash(glob));
 
-    return this.getAllSorted().filter(item => {
-      if (multimatch([item.inputPath], globs).length) {
-        return true;
-      }
+      return this.getAllSorted().filter(item => {
+        if (multimatch([item.inputPath], globs).length) {
+          return true;
+        }
 
-      return false;
+        return false;
+      });
     });
   }
 
@@ -59,4 +65,5 @@ class TemplateCollection extends Sortable {
     });
   }
 }
+
 module.exports = TemplateCollection;

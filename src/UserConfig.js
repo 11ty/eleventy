@@ -169,6 +169,7 @@ class UserConfig {
     this.layoutAliases[from] = to;
   }
 
+  // get config defined collections
   getCollections() {
     return this.collections;
   }
@@ -251,6 +252,10 @@ class UserConfig {
     this.ejsOptions = options;
   }
 
+  setDynamicPermalinks(enabled) {
+    this.dynamicPermalinks = !!enabled;
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
@@ -266,7 +271,8 @@ class UserConfig {
       pugOptions: this.pugOptions,
       ejsOptions: this.ejsOptions,
       markdownHighlighter: this.markdownHighlighter,
-      libraryOverrides: this.libraryOverrides
+      libraryOverrides: this.libraryOverrides,
+      dynamicPermalinks: this.dynamicPermalinks
     };
   }
 }

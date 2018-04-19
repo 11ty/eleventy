@@ -94,14 +94,20 @@ class Template {
     let permalink = data[this.config.keys.permalink];
     if (permalink) {
       // render variables inside permalink front matter, bypass markdown
-      let permalinkValue = await this.renderContent(permalink, data, true);
-      debug(
-        "Rendering permalink for %o: %s becomes %o",
-        this.inputPath,
-        permalink,
-        permalinkValue
-      );
-      debugDev("Permalink rendered with data: %o", data);
+      let permalinkValue;
+      if (!this.config.dynamicPermalinks || data.dynamicPermalink === true) {
+        debugDev("Not using dynamicPermalinks, using %o", permalink);
+        permalinkValue = permalink;
+      } else {
+        permalinkValue = await this.renderContent(permalink, data, true);
+        debug(
+          "Rendering permalink for %o: %s becomes %o",
+          this.inputPath,
+          permalink,
+          permalinkValue
+        );
+        debugDev("Permalink rendered with data: %o", data);
+      }
 
       let perm = new TemplatePermalink(
         permalinkValue,
