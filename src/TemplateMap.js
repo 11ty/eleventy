@@ -1,5 +1,4 @@
 const lodashClone = require("lodash.clone");
-const lodashCloneDeep = require("lodash.clonedeep");
 const TemplateCollection = require("./TemplateCollection");
 const eleventyConfig = require("./EleventyConfig");
 const debug = require("debug")("Eleventy:TemplateMap");
@@ -74,7 +73,6 @@ class TemplateMap {
   async createTemplateMapCopy(filteredMap) {
     let copy = [];
     for (let map of filteredMap) {
-      // let mapCopy = lodashCloneDeep(map);
       let mapCopy = lodashClone(map);
 
       // Circular reference
