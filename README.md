@@ -190,6 +190,7 @@ Note that `{{ title }}` above outputs the `title` data value (this can come from
   // the path to the original source file for the template
   inputPath: "/current/page/file.md",
 
+  // New in Eleventy v0.3.4
   // mapped from inputPath, useful for clean permalinks
   fileSlug: "file"
 
