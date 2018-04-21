@@ -177,7 +177,31 @@ Note that `{{ title }}` above outputs the `title` data value (this can come from
 * `pkg`: The local project’s `package.json` values.
 * `pagination`: (When enabled in front matter) [Read more about Pagination](docs/pagination.md).
 * `collections`: Lists of all of your content, grouped by tags. [Read more about Collections](docs/collections.md)
-* `page`: Has information about the current page. Currently holds: `{ url: "/current/page/url.html", date: [JS Date Object for current page] }`. Useful for finding the current page in a collection. [Read more about Collections](docs/collections.md) (look at _Example: Navigation Links with an `active` class added for on the current page_).
+* `page`: Has information about the current page. See code block below for `page` contents. For example, `page.url` is useful for finding the current page in a collection. [Read more about Collections](docs/collections.md) (look at _Example: Navigation Links with an `active` class added for on the current page_).
+
+```js
+{
+  // URL can be used in <a href> to link to other templates
+  url: "/current/page/file.html",
+
+  // JS Date Object for current page
+  date: new Date(),
+
+  // the path to the original source file for the template
+  inputPath: "/current/page/file.md",
+
+  // mapped from inputPath, useful for clean permalinks
+  fileSlug: "file"
+
+  // More inputPath => fileSlug examples:
+  //    2018-01-01-file.md       => file
+  //    dir/file.md              => file
+  // Returns parent directory if an `index` template
+  //    index.md                 => "" (empty)
+  //    dir/index.md             => dir
+  //    dir/2018-01-01-index.md  => dir
+}
+```
 
 ## Configuration (optional)
 
