@@ -9,6 +9,7 @@ const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
 const TemplatePermalink = require("./TemplatePermalink");
 const TemplateLayout = require("./TemplateLayout");
+const TemplateFileSlug = require("./TemplateFileSlug");
 const templateCache = require("./TemplateCache");
 const Pagination = require("./Plugins/Pagination");
 const config = require("./Config");
@@ -63,6 +64,7 @@ class Template {
     this.writeCount = 0;
     this.initialLayout = undefined;
     this.wrapWithLayouts = true;
+    this.fileSlug = new TemplateFileSlug(this.inputPath, this.inputDir);
   }
 
   getInputPath() {
@@ -290,8 +292,10 @@ class Template {
       data.page = {};
     }
 
-    let newUrl = await this.getOutputHref();
+    data.page.inputPath = this.inputPath;
+    data.page.fileSlug = this.fileSlug.getSlug();
 
+    let newUrl = await this.getOutputHref();
     if ("page" in data && "url" in data.page) {
       if (data.page.url !== newUrl) {
         debug(
@@ -302,7 +306,6 @@ class Template {
       }
     }
 
-    data.page.inputPath = this.inputPath;
     data.page.url = newUrl;
     data.page.outputPath = await this.getOutputPath();
   }

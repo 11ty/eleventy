@@ -725,8 +725,25 @@ test("getRenderedData() has page.url", async t => {
 
   t.truthy(data.page.url);
   t.truthy(data.page.date);
-  t.truthy(data.page.inputPath);
+  t.is(data.page.inputPath, "./test/stubs/template.ejs");
+  t.is(data.page.fileSlug, "template");
   t.truthy(data.page.outputPath);
+});
+
+test("getRenderedData() has good slug (empty, index)", async t => {
+  let tmpl = new Template("./test/stubs/index.ejs", "./test/stubs/", "./dist");
+  let data = await tmpl.getRenderedData();
+  t.is(data.page.fileSlug, "");
+});
+
+test("getRenderedData() has good slug", async t => {
+  let tmpl = new Template(
+    "./test/stubs/includer.liquid",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getRenderedData();
+  t.is(data.page.fileSlug, "includer");
 });
 
 test("Override base templating engine from .liquid to ejs", async t => {
