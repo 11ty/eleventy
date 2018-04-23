@@ -1,20 +1,20 @@
-module.exports = function(str, options) {
-  options = Object.assign(
-    {
-      lowercaseRestOfWord: false
-    },
-    options
-  );
+module.exports = (str, options) => {
+  options = {
+    lowercaseRestOfWord: false,
+    ...options
+  };
+
+  const _captilize = word => {
+    const firstLetterCapitalized = word.substr(0, 1).toUpperCase();
+    const restOfWords = options.lowercaseRestOfWord
+      ? word.substr(1).toLowerCase()
+      : word.substr(1);
+
+    return `${firstLetterCapitalized}${restOfWords}`;
+  };
 
   return str
     .split(" ")
-    .map(function(word) {
-      return (
-        word.substr(0, 1).toUpperCase() +
-        (options.lowercaseRestOfWord
-          ? word.substr(1).toLowerCase()
-          : word.substr(1))
-      );
-    })
+    .map(_captilize)
     .join(" ");
 };
