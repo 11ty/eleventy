@@ -15,7 +15,7 @@ class Mustache extends TemplateEngine {
     this.setEngineLib(this.mustacheLib);
   }
 
-  async compile(str) {
+  async compile(str, inputPath) {
     let partials = super.getPartials();
 
     return function(data) {

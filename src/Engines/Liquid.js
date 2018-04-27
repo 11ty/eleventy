@@ -73,7 +73,7 @@ class Liquid extends TemplateEngine {
     this.liquidLib.registerFilter(name, filter);
   }
 
-  async compile(str) {
+  async compile(str, inputPath) {
     let engine = this.liquidLib;
     let tmpl = await engine.parse(str);
     return async function(data) {

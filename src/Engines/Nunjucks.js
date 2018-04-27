@@ -28,7 +28,7 @@ class Nunjucks extends TemplateEngine {
     }
   }
 
-  async compile(str) {
+  async compile(str, inputPath) {
     let tmpl = NunjucksLib.compile(str, this.njkEnv);
     return async function(data) {
       return new Promise(function(resolve, reject) {

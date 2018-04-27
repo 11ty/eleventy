@@ -8,16 +8,17 @@ const TemplateRender = require("./TemplateRender");
 const TemplatePassthrough = require("./TemplatePassthrough");
 const EleventyError = require("./EleventyError");
 const TemplateGlob = require("./TemplateGlob");
+const EleventyExtensionMap = require("./EleventyExtensionMap");
 const eleventyConfig = require("./EleventyConfig");
 const config = require("./Config");
 const debug = require("debug")("Eleventy:TemplateWriter");
 const debugDev = require("debug")("Dev:Eleventy:TemplateWriter");
 
-function TemplateWriter(inputPath, outputDir, extensions, templateData) {
+function TemplateWriter(inputPath, outputDir, templateKeys, templateData) {
   this.config = config.getConfig();
   this.input = inputPath;
   this.inputDir = this._getInputPathDir(inputPath);
-  this.templateExtensions = extensions;
+  this.templateKeys = templateKeys;
   this.outputDir = outputDir;
   this.templateData = templateData;
   this.isVerbose = true;
@@ -30,15 +31,11 @@ function TemplateWriter(inputPath, outputDir, extensions, templateData) {
   // Duplicated with TemplateData.getDataDir();
   this.dataDir = this.inputDir + "/" + this.config.dir.data;
 
+  this.extensionMap = new EleventyExtensionMap(this.templateKeys);
+
   // Input was a directory
   if (this.input === this.inputDir) {
-    this.rawFiles = TemplateGlob.map(
-      this.templateExtensions.map(
-        function(extension) {
-          return this.inputDir + "/**/*." + extension;
-        }.bind(this)
-      )
-    );
+    this.rawFiles = TemplateGlob.map(this.extensionMap.getGlobs(this.inputDir));
   } else {
     this.rawFiles = TemplateGlob.map([inputPath]);
   }

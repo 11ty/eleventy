@@ -404,7 +404,7 @@ class Template {
       this.templateRender.engineName
     );
 
-    let fn = await this.templateRender.getCompiledTemplate(str, this.inputPath);
+    let fn = await this.templateRender.getCompiledTemplate(str);
     let rendered = fn(data);
     return rendered;
   }

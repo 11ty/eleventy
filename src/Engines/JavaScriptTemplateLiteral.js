@@ -2,7 +2,7 @@ const TemplateEngine = require("./TemplateEngine");
 const EleventyError = require("../EleventyError");
 
 class JavaScript extends TemplateEngine {
-  async compile(str) {
+  async compile(str, inputPath) {
     return function(data) {
       // avoid `with`
       let dataStr = "";

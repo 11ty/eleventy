@@ -1,5 +1,6 @@
 const fs = require("fs-extra");
 const config = require("./Config");
+const EleventyExtensionMap = require("./EleventyExtensionMap");
 const debug = require("debug")("Eleventy:TemplateLayout");
 
 function TemplateLayout(path, dir) {
@@ -69,7 +70,6 @@ TemplateLayout.prototype.getFullPath = function() {
 };
 
 TemplateLayout.prototype.findFileName = function() {
-  let file;
   if (!fs.existsSync(this.dir)) {
     throw Error(
       "TemplateLayout directory does not exist for " +
@@ -79,16 +79,13 @@ TemplateLayout.prototype.findFileName = function() {
     );
   }
 
-  this.config.templateFormats.forEach(
-    function(extension) {
-      let filename = this.path + "." + extension;
-      if (!file && fs.existsSync(this.dir + "/" + filename)) {
-        file = filename;
-      }
-    }.bind(this)
-  );
-
-  return file;
+  let extensionMap = new EleventyExtensionMap(this.config.templateFormats);
+  for (let filename of extensionMap.getFileList(this.path)) {
+    // TODO async
+    if (fs.existsSync(this.dir + "/" + filename)) {
+      return filename;
+    }
+  }
 };
 
 module.exports = TemplateLayout;

@@ -56,11 +56,7 @@ class Markdown extends TemplateEngine {
         super.getInputDir()
       );
 
-      if (preTemplateEngine === "ejs") {
-        fn = await engine.compile(str, inputPath);
-      } else {
-        fn = await engine.compile(str);
-      }
+      fn = await engine.compile(str, inputPath);
 
       if (bypassMarkdown) {
         return async function(data) {

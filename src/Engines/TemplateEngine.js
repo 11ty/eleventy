@@ -6,6 +6,8 @@ const debug = require("debug")("Eleventy:TemplateEngine");
 class TemplateEngine {
   constructor(name, inputDir) {
     this.name = name;
+
+    // TODO use EleventyExtensionMap
     this.extension = "." + name;
     this.inputDir = inputDir;
     this.partialsHaveBeenCached = false;
@@ -61,38 +63,39 @@ class TemplateEngine {
   }
 
   async render(str, data) {
+    /* TODO compile needs to pass in inputPath? */
     let fn = await this.compile(str);
     return fn(data);
   }
 
-  static get engineMap() {
+  static get templateKeyMapToClassName() {
     return {
       ejs: "Ejs",
       md: "Markdown",
-      jstl: "JavaScript",
+      jstl: "JavaScriptTemplateLiteral",
       html: "Html",
       hbs: "Handlebars",
       mustache: "Mustache",
       haml: "Haml",
       pug: "Pug",
       njk: "Nunjucks",
-      liquid: "Liquid"
+      liquid: "Liquid",
+      js: "JavaScript"
     };
   }
 
   static hasEngine(name) {
-    return name in TemplateEngine.engineMap;
+    return name in TemplateEngine.templateKeyMapToClassName;
   }
 
   static getEngine(name, inputDir) {
-    if (!(name in TemplateEngine.engineMap)) {
+    if (!(name in TemplateEngine.templateKeyMapToClassName)) {
       throw new Error(
         "Template Engine " + name + " does not exist in getEngine"
       );
     }
 
-    // TODO don’t require this every time
-    const cls = require("./" + TemplateEngine.engineMap[name]);
+    const cls = require("./" + TemplateEngine.templateKeyMapToClassName[name]);
     return new cls(name, inputDir);
   }
 }

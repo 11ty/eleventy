@@ -1,13 +1,13 @@
 const TemplateEngine = require("./TemplateEngine");
 
 class Html extends TemplateEngine {
-  async compile(str, preTemplateEngine) {
+  async compile(str, inputPath, preTemplateEngine) {
     if (preTemplateEngine) {
       let engine = TemplateEngine.getEngine(
         preTemplateEngine,
         super.getInputDir()
       );
-      let fn = await engine.compile(str);
+      let fn = await engine.compile(str, inputPath);
 
       return async function(data) {
         return fn(data);
