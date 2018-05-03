@@ -287,8 +287,4 @@ npm run test
 
 ## Major Roadmapped Features
 
-* [x] Pagination
-* [x] Tagging of content
-* [x] Plugin system
-* [ ] Extensibility with system-wide content mapping
-* [ ] Components system for development reusability
+* [Top Feature Requests](https://github.com/11ty/eleventy/issues?q=is%3Aopen+label%3Aneeds-votes+sort%3Areactions-%2B1-desc) (Add your own votes using the 👍 reaction)
