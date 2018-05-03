@@ -88,13 +88,24 @@ Eleventy.prototype.logFinished = function() {
 
   let writeCount = this.writer.getWriteCount();
   let copyCount = this.writer.getCopyCount();
+  if (this.isDryRun) {
+    ret.push("Pretended to");
+  }
   if (copyCount) {
     ret.push(
-      `Copied ${copyCount} ${simplePlural(copyCount, "item", "items")} and`
+      `${this.isDryRun ? "Copy" : "Copied"} ${copyCount} ${simplePlural(
+        copyCount,
+        "item",
+        "items"
+      )} and`
     );
   }
   ret.push(
-    `Processed ${writeCount} ${simplePlural(writeCount, "file", "files")}`
+    `${this.isDryRun ? "Process" : "Processed"} ${writeCount} ${simplePlural(
+      writeCount,
+      "file",
+      "files"
+    )}`
   );
 
   let time = ((new Date() - this.start) / 1000).toFixed(2);
