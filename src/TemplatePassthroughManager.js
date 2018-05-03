@@ -12,7 +12,6 @@ class TemplatePassthroughManager {
 
   reset() {
     this.count = 0;
-    this.copyTimes = [];
     debug("Resetting counts to 0");
   }
 
@@ -45,19 +44,7 @@ class TemplatePassthroughManager {
     return this.count;
   }
 
-  getCopyTimes() {
-    return this.copyTimes
-      .map(val => {
-        if (val < 500) {
-          return val + "ms";
-        }
-        return (val / 1000).toFixed(1) + "s";
-      })
-      .join(", ");
-  }
-
   async copyPath(path) {
-    let timer = new Date();
     let pass = new TemplatePassthrough(path, this.outputDir, this.inputDir);
     pass.setDryRun(this.isDryRun);
 
@@ -67,7 +54,6 @@ class TemplatePassthroughManager {
     } catch (e) {
       throw EleventyError.make(new Error(`Having trouble copying: ${path}`), e);
     }
-    this.copyTimes.push(new Date() - timer);
   }
 
   async copyConfigPaths() {
@@ -98,10 +84,6 @@ class TemplatePassthroughManager {
         templateCount++;
         this.copyPath(path);
       }
-    }
-
-    if (templateCount) {
-      this.copyTimes.push(new Date() - timer);
     }
 
     debug(`TemplatePassthrough copy finished. Current count: ${this.count}`);
