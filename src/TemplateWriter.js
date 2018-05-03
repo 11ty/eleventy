@@ -5,7 +5,7 @@ const Template = require("./Template");
 const TemplatePath = require("./TemplatePath");
 const TemplateMap = require("./TemplateMap");
 const TemplateRender = require("./TemplateRender");
-const TemplatePassthrough = require("./TemplatePassthrough");
+const TemplatePassthroughManager = require("./TemplatePassthroughManager");
 const EleventyError = require("./EleventyError");
 const TemplateGlob = require("./TemplateGlob");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
@@ -24,8 +24,6 @@ function TemplateWriter(inputPath, outputDir, templateKeys, templateData) {
   this.isVerbose = true;
   this.isDryRun = false;
   this.writeCount = 0;
-  this.copyCount = 0;
-  this.copyTimes = [];
 
   this.includesDir = this.inputDir + "/" + this.config.dir.includes;
   // Duplicated with TemplateData.getDataDir();
@@ -43,14 +41,18 @@ function TemplateWriter(inputPath, outputDir, templateKeys, templateData) {
   this.watchedFiles = this.addIgnores(this.inputDir, this.rawFiles);
   this.files = this.addWritingIgnores(this.inputDir, this.watchedFiles);
 
+  let mgr = new TemplatePassthroughManager();
+  mgr.setInputDir(this.inputDir);
+  mgr.setOutputDir(this.outputDir);
+  this.passthroughManager = mgr;
+
   this.templateMap;
 }
 
 TemplateWriter.prototype.restart = function() {
   this.writeCount = 0;
-  this.copyCount = 0;
-  this.copyTimes = [];
-  debug("Resetting counts to 0");
+  this.passthroughManager.reset();
+  debugDev("Resetting counts to 0");
 };
 
 TemplateWriter.prototype.getIncludesDir = function() {
@@ -190,55 +192,6 @@ TemplateWriter.prototype._getTemplate = function(path) {
   return tmpl;
 };
 
-TemplateWriter.prototype._copyPassthroughPath = async function(path) {
-  let timer = new Date();
-  let pass = new TemplatePassthrough(path, this.outputDir, this.inputDir);
-  pass.setDryRun(this.isDryRun);
-
-  try {
-    await pass.write();
-    debugDev("Copied %o", path);
-  } catch (e) {
-    throw EleventyError.make(new Error(`Having trouble copying: ${path}`), e);
-  }
-  this.copyTimes.push(new Date() - timer);
-};
-
-// Performance note: these can actually take a fair bit of time, but aren’t a
-// bottleneck to eleventy. The copies are performed asynchronously and don’t affect eleventy
-// write times in a significant way.
-TemplateWriter.prototype._copyPassthroughs = async function(paths) {
-  if (!this.config.passthroughFileCopy) {
-    debug("`passthroughFileCopy` is disabled in config, bypassing.");
-    return;
-  }
-
-  let count = 0;
-
-  debug("TemplatePassthrough copy started.");
-  for (let cfgPath in this.config.passthroughCopies) {
-    count++;
-    this._copyPassthroughPath(cfgPath);
-  }
-
-  let templateCount = 0;
-  let timer = new Date();
-  for (let path of paths) {
-    if (!TemplateRender.hasEngine(path)) {
-      count++;
-      templateCount++;
-      this._copyPassthroughPath(path);
-    }
-  }
-  if (templateCount) {
-    this.copyTimes.push(new Date() - timer);
-  }
-
-  this.copyCount += count;
-
-  debug(`TemplatePassthrough copied ${count} item${count !== 1 ? "s" : ""}.`);
-};
-
 TemplateWriter.prototype._createTemplateMap = async function(paths) {
   this.templateMap = new TemplateMap();
 
@@ -277,7 +230,7 @@ TemplateWriter.prototype.write = async function() {
   let paths = await this._getAllPaths();
   debug("Found: %o", paths);
 
-  await this._copyPassthroughs(paths);
+  await this.passthroughManager.copyAll(paths);
   await this._createTemplateMap(paths);
   for (let mapEntry of this.templateMap.getMap()) {
     await this._writeTemplate(mapEntry);
@@ -296,21 +249,12 @@ TemplateWriter.prototype.setVerboseOutput = function(isVerbose) {
 
 TemplateWriter.prototype.setDryRun = function(isDryRun) {
   this.isDryRun = !!isDryRun;
-};
 
-TemplateWriter.prototype.getCopyTimes = function() {
-  return this.copyTimes
-    .map(val => {
-      if (val < 500) {
-        return val + "ms";
-      }
-      return (val / 1000).toFixed(1) + "s";
-    })
-    .join(", ");
+  this.passthroughManager.setDryRun(this.isDryRun);
 };
 
 TemplateWriter.prototype.getCopyCount = function() {
-  return this.copyCount;
+  return this.passthroughManager.getCopyCount();
 };
 
 TemplateWriter.prototype.getWriteCount = function() {
