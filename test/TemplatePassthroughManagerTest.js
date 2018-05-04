@@ -1,7 +1,7 @@
 import test from "ava";
 import TemplatePassthroughManager from "../src/TemplatePassthroughManager";
 
-test("Get Paths from Config", async t => {
+test("Get paths from Config", async t => {
   let mgr = new TemplatePassthroughManager();
   mgr.setConfig({
     passthroughFileCopy: true,
@@ -23,4 +23,40 @@ test("Empty config paths when disabled in config", async t => {
   });
 
   t.deepEqual(mgr.getConfigPaths(), {});
+});
+
+test("Get file paths", async t => {
+  let mgr = new TemplatePassthroughManager();
+  mgr.setConfig({
+    passthroughFileCopy: true
+  });
+
+  t.deepEqual(mgr.getFilePaths(["test.png"]), ["test.png"]);
+});
+
+test("Get file paths (filter out real templates)", async t => {
+  let mgr = new TemplatePassthroughManager();
+  mgr.setConfig({
+    passthroughFileCopy: true
+  });
+
+  t.deepEqual(mgr.getFilePaths(["test.njk"]), []);
+});
+
+test("Get file paths (filter out real templates), multiple", async t => {
+  let mgr = new TemplatePassthroughManager();
+  mgr.setConfig({
+    passthroughFileCopy: true
+  });
+
+  t.deepEqual(mgr.getFilePaths(["test.njk", "test.png"]), ["test.png"]);
+});
+
+test("Get file paths when disabled in config", async t => {
+  let mgr = new TemplatePassthroughManager();
+  mgr.setConfig({
+    passthroughFileCopy: false
+  });
+
+  t.deepEqual(mgr.getFilePaths(["test.png"]), []);
 });

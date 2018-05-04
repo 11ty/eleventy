@@ -32,12 +32,28 @@ class TemplatePassthroughManager {
   }
 
   getConfigPaths() {
-    if (this.config.passthroughFileCopy) {
-      return this.config.passthroughCopies || {};
+    if (!this.config.passthroughFileCopy) {
+      debug("`passthroughFileCopy` is disabled in config, bypassing.");
+      return {};
     }
 
-    debug("`passthroughFileCopy` is disabled in config, bypassing.");
-    return {};
+    return this.config.passthroughCopies || {};
+  }
+
+  getFilePaths(paths) {
+    if (!this.config.passthroughFileCopy) {
+      debug("`passthroughFileCopy` is disabled in config, bypassing.");
+      return [];
+    }
+
+    let matches = [];
+    for (let path of paths) {
+      if (!TemplateRender.hasEngine(path)) {
+        matches.push(path);
+      }
+    }
+
+    return matches;
   }
 
   getCopyCount() {
@@ -66,7 +82,8 @@ class TemplatePassthroughManager {
   // Performance note: these can actually take a fair bit of time, but aren’t a
   // bottleneck to eleventy. The copies are performed asynchronously and don’t affect eleventy
   // write times in a significant way.
-  // TODO because we aren’t using await here—eleventy could finish before the copy is done.
+
+  // TODO Hmm—we aren’t using await here—eleventy could finish before the copy is done.
   async copyAll(paths) {
     if (!this.config.passthroughFileCopy) {
       debug("`passthroughFileCopy` is disabled in config, bypassing.");
@@ -76,14 +93,10 @@ class TemplatePassthroughManager {
     debug("TemplatePassthrough copy started.");
     this.copyConfigPaths();
 
-    let templateCount = 0;
-    let timer = new Date();
-    for (let path of paths) {
-      if (!TemplateRender.hasEngine(path)) {
-        this.count++;
-        templateCount++;
-        this.copyPath(path);
-      }
+    let passthroughPaths = this.getFilePaths(paths);
+    for (let path of passthroughPaths) {
+      this.count++;
+      this.copyPath(path);
     }
 
     debug(`TemplatePassthrough copy finished. Current count: ${this.count}`);

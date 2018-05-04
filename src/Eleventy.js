@@ -68,6 +68,7 @@ Eleventy.prototype.setConfigPath = function(configPath) {
 Eleventy.prototype.restart = function() {
   debug("Restarting");
   this.start = new Date();
+  this.data.clearData();
   this.writer.restart();
   templateCache.clear();
 };
@@ -232,14 +233,14 @@ Eleventy.prototype.watch = async function() {
 
   const watch = require("glob-watcher");
 
-  let rawFiles = this.writer.getRawFiles();
+  let rawFiles = this.writer.getGlobWatcherFiles();
   // Watch the local project config file
   rawFiles.push(config.getLocalProjectConfigFile());
   debug("Eleventy.watch rawFiles: %o", rawFiles);
 
   console.log("Watching…");
   let watcher = watch(rawFiles, {
-    ignored: this.writer.getWatchedIgnores()
+    ignored: this.writer.getGlobWatcherIgnores()
   });
 
   watcher.on(

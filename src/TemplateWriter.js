@@ -33,13 +33,18 @@ function TemplateWriter(inputPath, outputDir, templateKeys, templateData) {
 
   // Input was a directory
   if (this.input === this.inputDir) {
-    this.rawFiles = TemplateGlob.map(this.extensionMap.getGlobs(this.inputDir));
+    this.templateGlobs = TemplateGlob.map(
+      this.extensionMap.getGlobs(this.inputDir)
+    );
   } else {
-    this.rawFiles = TemplateGlob.map([inputPath]);
+    this.templateGlobs = TemplateGlob.map([inputPath]);
   }
 
-  this.watchedFiles = this.addIgnores(this.inputDir, this.rawFiles);
-  this.files = this.addWritingIgnores(this.inputDir, this.watchedFiles);
+  this.cachedIgnores = this.getIgnores();
+  this.watchedGlobs = this.templateGlobs.concat(this.cachedIgnores);
+  this.templateGlobsWithIgnores = this.watchedGlobs.concat(
+    this.getWritingIgnores()
+  );
 
   let mgr = new TemplatePassthroughManager();
   mgr.setInputDir(this.inputDir);
@@ -77,18 +82,12 @@ TemplateWriter.prototype._getInputPathDir = function(inputPath) {
   return ".";
 };
 
-TemplateWriter.prototype.getRawFiles = function() {
-  return this.rawFiles;
-};
-
-TemplateWriter.prototype.getWatchedIgnores = function() {
-  return this.addIgnores(this.inputDir, []).map(ignore =>
-    TemplatePath.stripLeadingDotSlash(ignore.substr(1))
-  );
-};
-
 TemplateWriter.prototype.getFiles = function() {
-  return this.files;
+  return this.templateGlobsWithIgnores;
+};
+
+TemplateWriter.prototype.getRawFiles = function() {
+  return this.templateGlobs;
 };
 
 TemplateWriter.getFileIgnores = function(
@@ -134,13 +133,28 @@ TemplateWriter.getFileIgnores = function(
   return ignores;
 };
 
-TemplateWriter.prototype.addIgnores = function(inputDir, files) {
+TemplateWriter.prototype.getGlobWatcherFiles = function() {
+  return this.templateGlobs.concat(this.getIncludesAndDataDirs());
+};
+
+TemplateWriter.prototype.getGlobWatcherIgnores = function() {
+  return this.cachedIgnores.map(ignore =>
+    TemplatePath.stripLeadingDotSlash(ignore.substr(1))
+  );
+};
+
+TemplateWriter.prototype.getIgnores = function() {
+  let files = [];
+
   files = files.concat(
-    TemplateWriter.getFileIgnores(".gitignore", "node_modules/")
+    TemplateWriter.getFileIgnores(
+      this.inputDir + "/.gitignore",
+      "node_modules/"
+    )
   );
 
   files = files.concat(
-    TemplateWriter.getFileIgnores(inputDir + "/.eleventyignore")
+    TemplateWriter.getFileIgnores(this.inputDir + "/.eleventyignore")
   );
 
   files = files.concat(TemplateGlob.map("!" + this.outputDir + "/**"));
@@ -148,21 +162,28 @@ TemplateWriter.prototype.addIgnores = function(inputDir, files) {
   return files;
 };
 
-TemplateWriter.prototype.addWritingIgnores = function(inputDir, files) {
+TemplateWriter.prototype.getIncludesAndDataDirs = function() {
+  let files = [];
   if (this.config.dir.includes) {
-    files = files.concat(TemplateGlob.map("!" + this.includesDir + "/**"));
+    files = files.concat(TemplateGlob.map(this.includesDir + "/**"));
   }
 
   if (this.config.dir.data && this.config.dir.data !== ".") {
-    files = files.concat(TemplateGlob.map("!" + this.dataDir + "/**"));
+    files = files.concat(TemplateGlob.map(this.dataDir + "/**"));
   }
 
   return files;
 };
 
+TemplateWriter.prototype.getWritingIgnores = function() {
+  return this.getIncludesAndDataDirs().map(function(dir) {
+    return "!" + dir;
+  });
+};
+
 TemplateWriter.prototype._getAllPaths = async function() {
   // Note the gitignore: true option for globby is _really slow_
-  return globby(this.files); //, { gitignore: true });
+  return globby(this.templateGlobsWithIgnores); //, { gitignore: true });
 };
 
 TemplateWriter.prototype._getTemplate = function(path) {
@@ -226,7 +247,7 @@ TemplateWriter.prototype._writeTemplate = async function(mapEntry) {
 };
 
 TemplateWriter.prototype.write = async function() {
-  debug("Searching for: %O", this.files);
+  debug("Searching for: %O", this.templateGlobsWithIgnores);
   let paths = await this._getAllPaths();
   debug("Found: %o", paths);
 

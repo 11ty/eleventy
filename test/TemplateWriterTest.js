@@ -15,8 +15,8 @@ test("Mutually exclusive Input and Output dirs", async t => {
     ["ejs", "md"]
   );
 
-  let files = await globby(tw.files);
-  t.is(tw.rawFiles.length, 2);
+  let files = await globby(tw.getFiles());
+  t.is(tw.getRawFiles().length, 2);
   t.true(files.length > 0);
   t.is(files[0], "./test/stubs/writeTest/test.md");
 });
@@ -27,8 +27,8 @@ test("Single File Input", async t => {
     "md"
   ]);
 
-  let files = await globby(tw.files);
-  t.is(tw.rawFiles.length, 1);
+  let files = await globby(tw.getFiles());
+  t.is(tw.getRawFiles().length, 1);
   t.is(files.length, 1);
   t.is(files[0], "./test/stubs/index.html");
 });
@@ -36,8 +36,8 @@ test("Single File Input", async t => {
 test("Single File Input", async t => {
   let tw = new TemplateWriter("README.md", "./test/stubs/_site", ["md"]);
 
-  let files = await globby(tw.files);
-  t.is(tw.rawFiles.length, 1);
+  let files = await globby(tw.getFiles());
+  t.is(tw.getRawFiles().length, 1);
   t.is(files.length, 1);
   t.is(files[0], "./README.md");
 });
@@ -50,8 +50,8 @@ test("Output is a subdir of input", async t => {
     ["ejs", "md"]
   );
 
-  let files = await globby(tw.files);
-  t.is(tw.rawFiles.length, 2);
+  let files = await globby(tw.getFiles());
+  t.is(tw.getRawFiles().length, 2);
   t.true(files.length > 0);
 
   let tmpl = tw._getTemplate(files[0]);
@@ -85,7 +85,7 @@ test(".eleventyignore files", async t => {
   let ignoredFiles = await globby("test/stubs/ignoredFolder/*.md");
   t.is(ignoredFiles.length, 1);
 
-  let files = await globby(tw.files);
+  let files = await globby(tw.getFiles());
   t.true(files.length > 0);
 
   t.is(
@@ -348,4 +348,33 @@ Template
 All 2 templates
 Layout 1 dog`
   );
+});
+
+test("Get ignores", t => {
+  let tw = new TemplateWriter("test/stubs", "test/stubs/_site", []);
+
+  t.deepEqual(tw.getIgnores(), [
+    "!./test/stubs/node_modules",
+    "!./test/stubs/ignoredFolder/**",
+    "!./test/stubs/ignoredFolder/ignored.md",
+    "!./test/stubs/_site/**"
+  ]);
+});
+
+test("Include and Data Dirs", t => {
+  let tw = new TemplateWriter("test/stubs", "test/stubs/_site", []);
+
+  t.deepEqual(tw.getIncludesAndDataDirs(), [
+    "./test/stubs/_includes/**",
+    "./test/stubs/_data/**"
+  ]);
+});
+
+test("Ignore Include and Data Dirs", t => {
+  let tw = new TemplateWriter("test/stubs", "test/stubs/_site", []);
+
+  t.deepEqual(tw.getWritingIgnores(), [
+    "!./test/stubs/_includes/**",
+    "!./test/stubs/_data/**"
+  ]);
 });
