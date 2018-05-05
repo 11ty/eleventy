@@ -4,6 +4,7 @@ import globby from "globby";
 import parsePath from "parse-filepath";
 import TemplateWriter from "../src/TemplateWriter";
 import TemplatePath from "../src/TemplatePath";
+import TemplatePassthroughManager from "../src/TemplatePassthroughManager";
 // Not sure why but this import up `ava` and _getTemplate 👀
 // import Template from "../src/Template";
 import eleventyConfig from "../src/EleventyConfig";
@@ -373,8 +374,56 @@ test("Include and Data Dirs", t => {
 test("Ignore Include and Data Dirs", t => {
   let tw = new TemplateWriter("test/stubs", "test/stubs/_site", []);
 
-  t.deepEqual(tw.getWritingIgnores(), [
+  t.deepEqual(tw.getTemplateIgnores(), [
     "!./test/stubs/_includes/**",
     "!./test/stubs/_data/**"
+  ]);
+});
+
+test("Glob Watcher Files", async t => {
+  let tw = new TemplateWriter("test/stubs", "test/stubs/_site", ["njk"]);
+
+  t.deepEqual(tw.getGlobWatcherFiles(), [
+    "./test/stubs/**/*.njk",
+    "./test/stubs/_includes/**",
+    "./test/stubs/_data/**"
+  ]);
+});
+
+test("Glob Watcher Files with Passthroughs", t => {
+  let tw = new TemplateWriter("test/stubs", "test/stubs/_site", ["njk", "png"]);
+  t.deepEqual(tw.getPassthroughPaths(), []);
+});
+
+test("Glob Watcher Files with File Extension Passthroughs", async t => {
+  let tw = new TemplateWriter("test/stubs", "test/stubs/_site", ["njk", "png"]);
+
+  t.deepEqual(tw.getGlobWatcherFiles(), [
+    "./test/stubs/**/*.njk",
+    "./test/stubs/**/*.png",
+    "./test/stubs/_includes/**",
+    "./test/stubs/_data/**"
+  ]);
+});
+
+test("Glob Watcher Files with Config Passthroughs", async t => {
+  let tw = new TemplateWriter("test/stubs", "test/stubs/_site", ["njk"]);
+
+  let mgr = new TemplatePassthroughManager();
+  mgr.setInputDir("test/stubs");
+  mgr.setOutputDir("test/stubs/_site");
+  mgr.setConfig({
+    passthroughFileCopy: true,
+    passthroughCopies: {
+      "test/stubs/img/": true
+    }
+  });
+  tw.setPassthroughManager(mgr);
+
+  t.deepEqual(tw.getGlobWatcherFiles(), [
+    "./test/stubs/**/*.njk",
+    "./test/stubs/_includes/**",
+    "./test/stubs/_data/**",
+    "./test/stubs/img/**"
   ]);
 });

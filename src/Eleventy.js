@@ -233,7 +233,7 @@ Eleventy.prototype.watch = async function() {
 
   const watch = require("glob-watcher");
 
-  let rawFiles = this.writer.getGlobWatcherFiles();
+  let rawFiles = await this.writer.getGlobWatcherFiles();
   // Watch the local project config file
   rawFiles.push(config.getLocalProjectConfigFile());
   debug("Eleventy.watch rawFiles: %o", rawFiles);

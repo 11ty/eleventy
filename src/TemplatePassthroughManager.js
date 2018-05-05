@@ -1,6 +1,7 @@
 const config = require("./Config");
 const TemplatePassthrough = require("./TemplatePassthrough");
 const TemplateRender = require("./TemplateRender");
+const TemplatePath = require("./TemplatePath");
 const debug = require("debug")("Eleventy:TemplatePassthroughManager");
 
 class TemplatePassthroughManager {
@@ -34,10 +35,21 @@ class TemplatePassthroughManager {
   getConfigPaths() {
     if (!this.config.passthroughFileCopy) {
       debug("`passthroughFileCopy` is disabled in config, bypassing.");
-      return {};
+      return [];
     }
 
-    return this.config.passthroughCopies || {};
+    let paths = [];
+    let target = this.config.passthroughCopies || {};
+    for (let path in target) {
+      paths.push(TemplatePath.addLeadingDotSlash(path));
+    }
+    return paths;
+  }
+
+  getConfigPathGlobs() {
+    return this.getConfigPaths().map(path => {
+      return TemplatePath.convertToGlob(path);
+    });
   }
 
   getFilePaths(paths) {
@@ -72,13 +84,6 @@ class TemplatePassthroughManager {
     }
   }
 
-  async copyConfigPaths() {
-    for (let cfgPath in this.getConfigPaths()) {
-      this.count++;
-      this.copyPath(cfgPath);
-    }
-  }
-
   // Performance note: these can actually take a fair bit of time, but aren’t a
   // bottleneck to eleventy. The copies are performed asynchronously and don’t affect eleventy
   // write times in a significant way.
@@ -91,7 +96,10 @@ class TemplatePassthroughManager {
     }
 
     debug("TemplatePassthrough copy started.");
-    this.copyConfigPaths();
+    for (let cfgPath of this.getConfigPaths()) {
+      this.count++;
+      this.copyPath(cfgPath);
+    }
 
     let passthroughPaths = this.getFilePaths(paths);
     for (let path of passthroughPaths) {

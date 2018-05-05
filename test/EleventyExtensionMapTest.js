@@ -7,18 +7,39 @@ test("Empty formats", t => {
 });
 test("Single format", t => {
   let map = new EleventyExtensionMap(["pug"]);
-  t.deepEqual(map.getGlobs(), ["**/*.pug"]);
-  t.deepEqual(map.getGlobs("src"), ["src/**/*.pug"]);
+  t.deepEqual(map.getGlobs(), ["./**/*.pug"]);
+  t.deepEqual(map.getGlobs("src"), ["./src/**/*.pug"]);
 });
 test("Multiple formats", t => {
   let map = new EleventyExtensionMap(["njk", "pug"]);
-  t.deepEqual(map.getGlobs(), ["**/*.njk", "**/*.pug"]);
-  t.deepEqual(map.getGlobs("src"), ["src/**/*.njk", "src/**/*.pug"]);
+  t.deepEqual(map.getGlobs(), ["./**/*.njk", "./**/*.pug"]);
+  t.deepEqual(map.getGlobs("src"), ["./src/**/*.njk", "./src/**/*.pug"]);
 });
 
 test("Invalid keys are filtered", t => {
   let map = new EleventyExtensionMap(["lksdjfjlsk"]);
+  map.setConfig({
+    passthroughFileCopy: false
+  });
   t.deepEqual(map.getGlobs(), []);
+});
+
+test("Invalid keys are filtered", t => {
+  let map = new EleventyExtensionMap(["lksdjfjlsk"]);
+  map.setConfig({
+    passthroughFileCopy: true
+  });
+  t.deepEqual(map.getGlobs(), ["./**/*.lksdjfjlsk"]);
+});
+
+test("Keys are mapped to lower case", t => {
+  let map = new EleventyExtensionMap(["PUG", "NJK"]);
+  t.deepEqual(map.getGlobs(), ["./**/*.pug", "./**/*.njk"]);
+});
+
+test("Pruned globs", t => {
+  let map = new EleventyExtensionMap(["pug", "njk", "png"]);
+  t.deepEqual(map.getPrunedGlobs(), ["./**/*.png"]);
 });
 
 test("Empty path for fileList", t => {

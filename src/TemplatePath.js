@@ -1,5 +1,7 @@
 const path = require("path");
 const normalize = require("normalize-path");
+const pify = require("pify");
+const fs = require("fs-extra");
 
 function TemplatePath() {}
 
@@ -101,6 +103,24 @@ TemplatePath.stripPathFromDir = function(targetDir, prunedPath) {
   }
 
   return targetDir;
+};
+
+TemplatePath.isDirectorySync = function(path) {
+  return fs.statSync(path).isDirectory();
+};
+
+TemplatePath.convertToGlob = function(path) {
+  if (!path) {
+    return "./**";
+  }
+
+  path = TemplatePath.addLeadingDotSlash(path);
+
+  if (TemplatePath.isDirectorySync(path)) {
+    return path + (!TemplatePath.hasTrailingSlash(path) ? "/" : "") + "**";
+  }
+
+  return path;
 };
 
 module.exports = TemplatePath;

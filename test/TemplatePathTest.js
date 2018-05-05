@@ -95,3 +95,10 @@ test("getAllDirs", t => {
     "./src"
   ]);
 });
+
+test("Convert to glob", t => {
+  t.is(TemplatePath.convertToGlob(""), "./**");
+  t.is(TemplatePath.convertToGlob("test/stubs"), "./test/stubs/**");
+  t.is(TemplatePath.convertToGlob("test/stubs/"), "./test/stubs/**");
+  t.is(TemplatePath.convertToGlob("./test/stubs/"), "./test/stubs/**");
+});

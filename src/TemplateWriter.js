@@ -31,6 +31,8 @@ function TemplateWriter(inputPath, outputDir, templateKeys, templateData) {
 
   this.extensionMap = new EleventyExtensionMap(this.templateKeys);
 
+  this.setPassthroughManager();
+
   // Input was a directory
   if (this.input === this.inputDir) {
     this.templateGlobs = TemplateGlob.map(
@@ -43,20 +45,24 @@ function TemplateWriter(inputPath, outputDir, templateKeys, templateData) {
   this.cachedIgnores = this.getIgnores();
   this.watchedGlobs = this.templateGlobs.concat(this.cachedIgnores);
   this.templateGlobsWithIgnores = this.watchedGlobs.concat(
-    this.getWritingIgnores()
+    this.getTemplateIgnores()
   );
-
-  let mgr = new TemplatePassthroughManager();
-  mgr.setInputDir(this.inputDir);
-  mgr.setOutputDir(this.outputDir);
-  this.passthroughManager = mgr;
-
-  this.templateMap;
 }
+
+TemplateWriter.prototype.setPassthroughManager = function(mgr) {
+  if (!mgr) {
+    mgr = new TemplatePassthroughManager();
+    mgr.setInputDir(this.inputDir);
+    mgr.setOutputDir(this.outputDir);
+  }
+
+  this.passthroughManager = mgr;
+};
 
 TemplateWriter.prototype.restart = function() {
   this.writeCount = 0;
   this.passthroughManager.reset();
+  this.cachedPaths = null;
   debugDev("Resetting counts to 0");
 };
 
@@ -70,7 +76,7 @@ TemplateWriter.prototype.getDataDir = function() {
 
 TemplateWriter.prototype._getInputPathDir = function(inputPath) {
   // Input points to a file
-  if (!fs.statSync(inputPath).isDirectory()) {
+  if (!TemplatePath.isDirectorySync(inputPath)) {
     return parsePath(inputPath).dir;
   }
 
@@ -134,10 +140,14 @@ TemplateWriter.getFileIgnores = function(
 };
 
 TemplateWriter.prototype.getGlobWatcherFiles = function() {
-  return this.templateGlobs.concat(this.getIncludesAndDataDirs());
+  // TODO is it better to tie the includes and data to specific file extensions or keep the **?
+  return this.templateGlobs
+    .concat(this.getIncludesAndDataDirs())
+    .concat(this.getPassthroughPaths());
 };
 
 TemplateWriter.prototype.getGlobWatcherIgnores = function() {
+  // convert to format without ! since they are passed in as a separate argument to glob watcher
   return this.cachedIgnores.map(ignore =>
     TemplatePath.stripLeadingDotSlash(ignore.substr(1))
   );
@@ -162,6 +172,14 @@ TemplateWriter.prototype.getIgnores = function() {
   return files;
 };
 
+TemplateWriter.prototype.getPassthroughPaths = function() {
+  let paths = [];
+  paths = paths.concat(this.passthroughManager.getConfigPathGlobs());
+  // These are already added in the root templateGlobs
+  // paths = paths.concat(this.extensionMap.getPrunedGlobs(this.inputDir));
+  return paths;
+};
+
 TemplateWriter.prototype.getIncludesAndDataDirs = function() {
   let files = [];
   if (this.config.dir.includes) {
@@ -175,15 +193,20 @@ TemplateWriter.prototype.getIncludesAndDataDirs = function() {
   return files;
 };
 
-TemplateWriter.prototype.getWritingIgnores = function() {
+TemplateWriter.prototype.getTemplateIgnores = function() {
   return this.getIncludesAndDataDirs().map(function(dir) {
     return "!" + dir;
   });
 };
 
 TemplateWriter.prototype._getAllPaths = async function() {
-  // Note the gitignore: true option for globby is _really slow_
-  return globby(this.templateGlobsWithIgnores); //, { gitignore: true });
+  debug("Searching for: %O", this.templateGlobsWithIgnores);
+  if (!this.cachedPaths) {
+    // Note the gitignore: true option for globby is _really slow_
+    this.cachedPaths = await globby(this.templateGlobsWithIgnores); //, { gitignore: true });
+  }
+
+  return this.cachedPaths;
 };
 
 TemplateWriter.prototype._getTemplate = function(path) {
@@ -247,7 +270,6 @@ TemplateWriter.prototype._writeTemplate = async function(mapEntry) {
 };
 
 TemplateWriter.prototype.write = async function() {
-  debug("Searching for: %O", this.templateGlobsWithIgnores);
   let paths = await this._getAllPaths();
   debug("Found: %o", paths);
 

@@ -1,8 +1,25 @@
+const TemplatePath = require("./TemplatePath");
+const config = require("./Config");
+
 class EleventyExtensionMap {
   constructor(formats) {
-    this.formats = formats.filter(function(key) {
+    this.config = config.getConfig();
+
+    this.unfilteredFormats = formats.map(function(key) {
+      return key.trim().toLowerCase();
+    });
+
+    this.formats = this.unfilteredFormats.filter(function(key) {
       return EleventyExtensionMap.hasExtension(key);
     });
+
+    this.prunedFormats = this.unfilteredFormats.filter(function(key) {
+      return !EleventyExtensionMap.hasExtension(key);
+    });
+  }
+
+  setConfig(configOverride) {
+    this.config = configOverride || {};
   }
 
   getFileList(path, dir) {
@@ -19,12 +36,26 @@ class EleventyExtensionMap {
     });
   }
 
+  getPrunedGlobs(inputDir) {
+    return this._getGlobs(this.prunedFormats, inputDir);
+  }
+
   getGlobs(inputDir) {
-    return this.formats.map(function(key) {
+    if (this.config.passthroughFileCopy) {
+      return this._getGlobs(this.unfilteredFormats, inputDir);
+    }
+
+    return this._getGlobs(this.formats, inputDir);
+  }
+
+  _getGlobs(formats, inputDir) {
+    return formats.map(function(key) {
       return (
-        (inputDir ? inputDir + "/" : "") +
-        "**/*." +
-        EleventyExtensionMap.getExtension(key)
+        TemplatePath.convertToGlob(inputDir) +
+        "/*." +
+        (EleventyExtensionMap.hasExtension(key)
+          ? EleventyExtensionMap.getExtension(key)
+          : key)
       );
     });
   }
