@@ -1,6 +1,7 @@
 import test from "ava";
 import Template from "../src/Template";
 import TemplateMap from "../src/TemplateMap";
+import TemplateCollection from "../src/TemplateCollection";
 
 let tmpl1 = new Template(
   "./test/stubs/templateMapCollection/test1.md",
@@ -9,6 +10,11 @@ let tmpl1 = new Template(
 );
 let tmpl2 = new Template(
   "./test/stubs/templateMapCollection/test2.md",
+  "./test/stubs/",
+  "./test/stubs/_site"
+);
+let tmpl4 = new Template(
+  "./test/stubs/templateMapCollection/test4.md",
   "./test/stubs/",
   "./test/stubs/_site"
 );
@@ -21,6 +27,30 @@ test("TemplateMap has collections added", async t => {
   t.is(tm.getMap().length, 2);
   t.is(tm.getCollection().getAll().length, 2);
 });
+
+
+test("TemplateMap compared to Collection API", async t => {
+  let tm = new TemplateMap();
+  await tm.add(tmpl1);
+  await tm.add(tmpl4);
+
+  let map = tm.getMap();
+  await tm.cache();
+  t.deepEqual(map[0].template, tmpl1);
+  t.deepEqual(map[0].data.collections.post[0].template, tmpl1);
+  t.deepEqual(map[1].template, tmpl4);
+  t.deepEqual(map[1].data.collections.post[1].template, tmpl4);
+
+  let c = new TemplateCollection();
+  await c.addTemplate(tmpl1);
+  await c.addTemplate(tmpl4);
+
+  let posts = c.getFilteredByTag("post");
+  t.is(posts.length, 2);
+  t.deepEqual(posts[0].template, tmpl1);
+  t.deepEqual(posts[1].template, tmpl4);
+});
+
 
 test("populating the collection twice should clear the previous values (--watch was making it cumulative)", async t => {
   let tm = new TemplateMap();
