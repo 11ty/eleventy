@@ -1,7 +1,7 @@
 const TemplateEngine = require("./TemplateEngine");
 const EleventyError = require("../EleventyError");
 
-class JavaScript extends TemplateEngine {
+class JavaScriptTemplateLiteral extends TemplateEngine {
   async compile(str, inputPath) {
     return function(data) {
       // avoid `with`
@@ -28,4 +28,4 @@ class JavaScript extends TemplateEngine {
   }
 }
 
-module.exports = JavaScript;
+module.exports = JavaScriptTemplateLiteral;
