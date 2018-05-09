@@ -10,12 +10,12 @@ class EleventyExtensionMap {
     });
 
     this.formats = this.unfilteredFormats.filter(function(key) {
-      return EleventyExtensionMap.hasExtension(key);
-    });
+      return this.hasExtension(key);
+    }.bind(this));
 
     this.prunedFormats = this.unfilteredFormats.filter(function(key) {
-      return !EleventyExtensionMap.hasExtension(key);
-    });
+      return !this.hasExtension(key);
+    }.bind(this));
   }
 
   setConfig(configOverride) {
@@ -31,9 +31,9 @@ class EleventyExtensionMap {
         (dir ? dir + "/" : "") +
         path +
         "." +
-        EleventyExtensionMap.getExtension(key)
+        this.getExtension(key)
       );
-    });
+    }.bind(this));
   }
 
   getPrunedGlobs(inputDir) {
@@ -53,22 +53,22 @@ class EleventyExtensionMap {
       return (
         TemplatePath.convertToGlob(inputDir) +
         "/*." +
-        (EleventyExtensionMap.hasExtension(key)
-          ? EleventyExtensionMap.getExtension(key)
+        (this.hasExtension(key)
+          ? this.getExtension(key)
           : key)
       );
-    });
+    }.bind(this));
   }
 
-  static hasExtension(key) {
+  hasExtension(key) {
     return key in this.keyMapToExtension;
   }
 
-  static getExtension(key) {
+  getExtension(key) {
     return this.keyMapToExtension[key];
   }
 
-  static get keyMapToExtension() {
+  get keyMapToExtension() {
     return {
       ejs: "ejs",
       md: "md",
