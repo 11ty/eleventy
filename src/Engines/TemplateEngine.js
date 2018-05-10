@@ -89,7 +89,7 @@ class TemplateEngine {
   }
 
   static getEngine(name, inputDir) {
-    if (!(name in TemplateEngine.templateKeyMapToClassName)) {
+    if (!this.hasEngine(name)) {
       throw new Error(
         "Template Engine " + name + " does not exist in getEngine"
       );

@@ -34,6 +34,8 @@ class UserConfig {
     this.activeNamespace = "";
     this.DateTime = DateTime;
     this.dynamicPermalinks = true;
+
+    // this.userExtensionMap = {};
   }
 
   versionCheck(expected) {
@@ -272,6 +274,10 @@ class UserConfig {
       dynamicPermalinks: this.dynamicPermalinks
     };
   }
+
+  // addExtension(fileExtension, userClass) {
+  //   this.userExtensionMap[ fileExtension ] = userClass;
+  // }
 }
 
 module.exports = UserConfig;
