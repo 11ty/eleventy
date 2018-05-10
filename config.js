@@ -1,7 +1,7 @@
 const urlFilter = require("./src/Filters/Url");
 const slugFilter = require("./src/Filters/Slug");
 
-module.exports = function(config) {
+module.exports = config => {
   config.addFilter("slug", slugFilter);
   config.addFilter("url", urlFilter);
 

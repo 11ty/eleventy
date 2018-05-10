@@ -1,11 +1,11 @@
 const validUrl = require("valid-url");
 const TemplatePath = require("../TemplatePath");
 
-module.exports = function(url, pathPrefix) {
+module.exports = (url, pathPrefix) => {
   if (
     validUrl.isUri(url) ||
-    url.indexOf("http://") === 0 ||
-    url.indexOf("https://") === 0
+    url.includes("http://") ||
+    url.includes("https://")
   ) {
     return url;
   }
@@ -25,7 +25,8 @@ module.exports = function(url, pathPrefix) {
   // minor difference with straight `normalize`, "" resolves to root dir and not "."
   // minor difference with straight `normalize`, "/" resolves to root dir
   if (normUrl === "/" || normUrl === normRootDir) {
-    return normRootDir + (!isRootDirTrailingSlash ? "/" : "");
+    const rootDirType = !isRootDirTrailingSlash ? "/" : "";
+    return `${normRootDir}${rootDirType}`;
   } else if (normUrl.indexOf("/") === 0) {
     return normFull;
   }
