@@ -1,11 +1,18 @@
 const TemplateEngine = require("./TemplateEngine");
-const EleventyError = require("../EleventyError");
 
 class JavaScript extends TemplateEngine {
   async compile(str, inputPath) {
     const cls = require(inputPath);
-    let inst = new cls(inputPath);
-    return inst.compile();
+    if (typeof cls === "function") {
+      if (cls.prototype && "render" in cls.prototype) {
+        let inst = new cls(inputPath);
+        return function(data) {
+          return inst.render(data);
+        };
+      }
+
+      return cls;
+    }
   }
 }
 

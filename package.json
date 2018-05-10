@@ -32,7 +32,8 @@
     ],
     "source": [
       "**/.eleventyignore",
-      "src/**/*.js"
+      "src/**/*.js",
+      "test/stubs/**"
     ]
   },
   "lint-staged": {
@@ -46,8 +47,11 @@
     "husky": "^0.14.3",
     "lint-staged": "^7.0.0",
     "markdown-it-emoji": "^1.4.0",
-    "nyc": "^11.6.0",
-    "prettier": "1.11.1"
+    "nyc": "^11.7.3",
+    "prettier": "1.11.1",
+    "viperhtml": "^2.12.0",
+    "vue": "^2.5.16",
+    "vue-server-renderer": "^2.5.16"
   },
   "dependencies": {
     "chalk": "^2.3.2",
