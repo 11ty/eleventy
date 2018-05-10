@@ -6,7 +6,14 @@ test("JS", t => {
   t.is(new TemplateRender("./test/stubs/filename.js").getEngineName(), "js");
 });
 
-test("JS Render", async t => {
+test("JS Render a string (no data)", async t => {
+  let fn = await new TemplateRender(
+    "../../test/stubs/string.js"
+  ).getCompiledTemplate();
+  t.is(await fn({ name: "Bill" }), "<p>Zach</p>");
+});
+
+test("JS Render a function", async t => {
   let fn = await new TemplateRender(
     "../../test/stubs/template-literal.js"
   ).getCompiledTemplate();
