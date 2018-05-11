@@ -36,16 +36,7 @@ EleventyNodeVersionCheck().then(
         console.log(elev.getHelp());
       } else if (argv.serve) {
         elev.watch().then(function() {
-          const serve = require("serve");
-          const server = serve(elev.getOutputDir(), {
-            port: argv.port || 8080,
-            ignore: ["node_modules"]
-          });
-
-          process.on("SIGINT", function() {
-            server.stop();
-            process.exit();
-          });
+          elev.serve(argv.port);
         });
       } else if (argv.watch) {
         elev.watch();

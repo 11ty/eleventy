@@ -503,7 +503,7 @@ class Template {
     this.writeCount++;
 
     if (!this.isDryRun) {
-      await pify(fs.outputFile)(outputPath, finalContent);
+      await fs.outputFile(outputPath, finalContent);
     }
 
     let writeDesc = this.isDryRun ? "Pretending to write" : "Writing";

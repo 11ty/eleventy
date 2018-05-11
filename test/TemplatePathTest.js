@@ -56,6 +56,31 @@ test("addLeadingDotSlash", t => {
   t.is(TemplatePath.addLeadingDotSlash(".nyc_output"), "./.nyc_output");
 });
 
+test("contains", t => {
+  t.false(TemplatePath.contains("./testing/hello", "./lskdjklfjz"));
+  t.false(TemplatePath.contains("./testing/hello", "lskdjklfjz"));
+  t.false(TemplatePath.contains("testing/hello", "./lskdjklfjz"));
+  t.false(TemplatePath.contains("testing/hello", "lskdjklfjz"));
+
+  t.true(TemplatePath.contains("./testing/hello", "./testing"));
+  t.true(TemplatePath.contains("./testing/hello", "testing"));
+  t.true(TemplatePath.contains("testing/hello", "./testing"));
+  t.true(TemplatePath.contains("testing/hello", "testing"));
+
+  t.true(TemplatePath.contains("testing/hello/subdir/test", "testing"));
+  t.false(TemplatePath.contains("testing/hello/subdir/test", "hello"));
+  t.false(TemplatePath.contains("testing/hello/subdir/test", "hello/subdir"));
+  t.true(
+    TemplatePath.contains("testing/hello/subdir/test", "testing/hello/subdir")
+  );
+  t.true(
+    TemplatePath.contains(
+      "testing/hello/subdir/test",
+      "testing/hello/subdir/test"
+    )
+  );
+});
+
 test("stripPathFromDir", t => {
   t.is(
     TemplatePath.stripPathFromDir("./testing/hello", "./lskdjklfjz"),

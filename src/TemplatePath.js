@@ -94,6 +94,13 @@ TemplatePath.stripLeadingDotSlash = function(dir) {
   return dir.replace(/^\.\//, "");
 };
 
+TemplatePath.contains = function(haystack, needle) {
+  haystack = TemplatePath.stripLeadingDotSlash(normalize(haystack));
+  needle = TemplatePath.stripLeadingDotSlash(normalize(needle));
+
+  return haystack.indexOf(needle) === 0;
+};
+
 TemplatePath.stripPathFromDir = function(targetDir, prunedPath) {
   targetDir = TemplatePath.stripLeadingDotSlash(normalize(targetDir));
   prunedPath = TemplatePath.stripLeadingDotSlash(normalize(prunedPath));
