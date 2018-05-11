@@ -1,6 +1,9 @@
-const fs = require("fs");
+const fs = require("fs-extra");
 const chalk = require("chalk");
 const parsePath = require("parse-filepath");
+const browserSync = require("browser-sync");
+
+const TemplatePath = require("./TemplatePath");
 const TemplateData = require("./TemplateData");
 const TemplateWriter = require("./TemplateWriter");
 const templateCache = require("./TemplateCache");
@@ -214,6 +217,20 @@ Eleventy.prototype._watch = async function(path) {
 
   this.restart();
   await this.write();
+
+  if (this.server) {
+    // Is a CSS input file and is not in the includes folder
+    // TODO check output path file extension of this template (not input path)
+    if (
+      path.split(".").pop() === "css" &&
+      !TemplatePath.contains(path, this.writer.getIncludesDir())
+    ) {
+      this.server.reload("*.css");
+    } else {
+      this.server.reload();
+    }
+  }
+
   this.active = false;
 
   if (this.queuedToRun) {
@@ -256,6 +273,49 @@ Eleventy.prototype.watch = async function() {
     async function(path, stat) {
       console.log("File added:", path);
       this._watch(path);
+    }.bind(this)
+  );
+};
+
+Eleventy.prototype.serve = function(port) {
+  this.server = browserSync.create();
+
+  // TODO customize this in Configuration API?
+  let serverConfig = {
+    baseDir: this.getOutputDir()
+  };
+
+  if (this.config.pathPrefix !== "/") {
+    let redirectDirectoryName = "_eleventy_redirect";
+    let redirectDir = this.getOutputDir() + "/" + redirectDirectoryName;
+
+    fs.outputFile(
+      redirectDir + "/index.html",
+      `<!doctype html>
+<meta http-equiv="refresh" content="0; url=${this.config.pathPrefix}">
+<title>Browsersync pathPrefix Redirect</title>
+<a href="${this.config.pathPrefix}">Go to ${this.config.pathPrefix}</a>`
+    );
+
+    serverConfig.baseDir = redirectDir;
+    serverConfig.routes = {};
+    serverConfig.routes[this.config.pathPrefix] = this.getOutputDir();
+  }
+
+  this.server.init({
+    server: serverConfig,
+    port: port || 8080,
+    ignore: ["node_modules"],
+    watch: false,
+    open: false,
+    index: "index.html"
+  });
+
+  process.on(
+    "SIGINT",
+    function() {
+      this.server.exit();
+      process.exit();
     }.bind(this)
   );
 };

@@ -50,6 +50,7 @@
     "prettier": "1.11.1"
   },
   "dependencies": {
+    "browser-sync": "^2.24.4",
     "chalk": "^2.3.2",
     "check-node-version": "^3.2.0",
     "debug": "^3.1.0",
@@ -80,7 +81,6 @@
     "pretty": "^2.0.0",
     "pug": "^2.0.3",
     "semver": "^5.5.0",
-    "serve": "^6.5.5",
     "slugify": "^1.2.9",
     "time-require": "^0.1.2",
     "valid-url": "^1.0.9"
