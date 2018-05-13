@@ -260,6 +260,7 @@ class Template {
 
       let mergedData = Object.assign({}, data, mergedLayoutData);
       mergedData = await this.addPageDate(mergedData);
+      mergedData = this.addPageData(mergedData);
 
       this.dataCache = mergedData;
     }
@@ -287,13 +288,21 @@ class Template {
     return data;
   }
 
-  async addPageData(data) {
+  addPageData(data) {
     if (!("page" in data)) {
       data.page = {};
     }
 
     data.page.inputPath = this.inputPath;
     data.page.fileSlug = this.fileSlug.getSlug();
+
+    return data;
+  }
+
+  async addPageRenderedData(data) {
+    if (!("page" in data)) {
+      data.page = {};
+    }
 
     let newUrl = await this.getOutputHref();
     if ("page" in data && "url" in data.page) {
@@ -308,12 +317,14 @@ class Template {
 
     data.page.url = newUrl;
     data.page.outputPath = await this.getOutputPath();
+
+    return data;
   }
 
   // getData (with renderData and page.url added)
   async getRenderedData() {
     let data = await this.getData();
-    await this.addPageData(data);
+    data = await this.addPageRenderedData(data);
 
     if (data.renderData) {
       data.renderData = await this.mapDataAsRenderedTemplates(

@@ -380,6 +380,27 @@ test("Permalink output directory", async t => {
   t.is(await tmpl.getOutputPath(), "./dist/permalinksubfolder/index.html");
 });
 
+test("Permalink output directory from layout", async t => {
+  let tmpl = new Template(
+    "./test/stubs/permalink-in-layout.ejs",
+    "./test/stubs/",
+    "./dist"
+  );
+  t.is(await tmpl.getOutputPath(), "./dist/hello/index.html");
+});
+
+test("Permalink output directory from layout (fileslug)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/permalink-in-layout-fileslug.ejs",
+    "./test/stubs/",
+    "./dist"
+  );
+  t.is(
+    await tmpl.getOutputPath(),
+    "./dist/test/permalink-in-layout-fileslug/index.html"
+  );
+});
+
 test("Local template data file import (without a global data json)", async t => {
   let dataObj = new TemplateData();
   await dataObj.cacheData();
