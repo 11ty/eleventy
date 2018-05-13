@@ -61,7 +61,7 @@
     "gray-matter": "^3.1.1",
     "hamljs": "^0.6.2",
     "handlebars": "^4.0.11",
-    "liquidjs": "^2.2.1",
+    "liquidjs": "^4.0.0",
     "lodash.chunk": "^4.2.0",
     "lodash.clone": "^4.5.0",
     "lodash.get": "^4.4.2",
