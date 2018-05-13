@@ -492,6 +492,11 @@ class Template {
       for (let page of templates) {
         let pageData = await page.getRenderedData();
 
+        // Issue #115
+        if (data.collections) {
+          pageData.collections = data.collections;
+        }
+
         results.push({
           outputPath: await page.getOutputPath(),
           data: pageData,

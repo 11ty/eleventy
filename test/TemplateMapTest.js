@@ -28,14 +28,13 @@ test("TemplateMap has collections added", async t => {
   t.is(tm.getCollection().getAll().length, 2);
 });
 
-
 test("TemplateMap compared to Collection API", async t => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   await tm.add(tmpl4);
+  await tm.cache();
 
   let map = tm.getMap();
-  await tm.cache();
   t.deepEqual(map[0].template, tmpl1);
   t.deepEqual(map[0].data.collections.post[0].template, tmpl1);
   t.deepEqual(map[1].template, tmpl4);
@@ -50,7 +49,6 @@ test("TemplateMap compared to Collection API", async t => {
   t.deepEqual(posts[0].template, tmpl1);
   t.deepEqual(posts[1].template, tmpl4);
 });
-
 
 test("populating the collection twice should clear the previous values (--watch was making it cumulative)", async t => {
   let tm = new TemplateMap();
@@ -144,5 +142,125 @@ test("TemplateMap circular references (map.templateContent)", async t => {
   t.is(
     (await map[0].template.renderWithoutLayouts(map[0].data)).trim(),
     "<h1>Test</h1>\n<h1>Test</h1>"
+  );
+});
+
+test("Issue #115, mixing pagination and collections", async t => {
+  let tmplFoos = new Template(
+    "./test/stubs/issue-115/template-foos.liquid",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  let tmplBars = new Template(
+    "./test/stubs/issue-115/template-bars.liquid",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  let tmplIndex = new Template(
+    "./test/stubs/issue-115/index.liquid",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let tm = new TemplateMap();
+  await tm.add(tmplFoos);
+  await tm.add(tmplBars);
+  await tm.add(tmplIndex);
+  await tm.cache();
+
+  let map = tm.getMap();
+  t.is(map.length, 3);
+  t.deepEqual(map[2].template, tmplIndex);
+
+  let collections = await tm.getAllCollectionsData();
+  t.is(Object.keys(collections.all).length, 3);
+  t.is(Object.keys(collections.foos).length, 1);
+  t.is(Object.keys(collections.bars).length, 1);
+  t.is(Object.keys((await tm.getCollectionsDataForTemplate()).all).length, 3);
+  t.is(Object.keys((await tm.getCollectionsDataForTemplate()).foos).length, 1);
+  t.is(Object.keys((await tm.getCollectionsDataForTemplate()).bars).length, 1);
+
+  t.truthy(map[0].data.collections);
+  t.truthy(map[1].data.collections);
+  t.truthy(map[2].data.collections);
+  t.truthy(Object.keys(map[2].data.collections).length);
+
+  t.is(Object.keys(map[0].data.collections.all).length, 3);
+  t.is(Object.keys(map[0].data.collections.foos).length, 1);
+  t.is(Object.keys(map[0].data.collections.bars).length, 1);
+
+  t.is(Object.keys(map[1].data.collections.all).length, 3);
+  t.is(Object.keys(map[1].data.collections.foos).length, 1);
+  t.is(Object.keys(map[1].data.collections.bars).length, 1);
+
+  t.is(Object.keys(map[2].data.collections.all).length, 3);
+  t.is(Object.keys(map[2].data.collections.foos).length, 1);
+  t.is(Object.keys(map[2].data.collections.bars).length, 1);
+
+  t.deepEqual(
+    map[2].templateContent,
+    `This page is foos
+This page is bars
+`
+  );
+});
+
+test("Issue #115 with layout, mixing pagination and collections", async t => {
+  let tmplFoos = new Template(
+    "./test/stubs/issue-115/template-foos.liquid",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  let tmplBars = new Template(
+    "./test/stubs/issue-115/template-bars.liquid",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  let tmplIndex = new Template(
+    "./test/stubs/issue-115/index-with-layout.liquid",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let tm = new TemplateMap();
+  await tm.add(tmplFoos);
+  await tm.add(tmplBars);
+  await tm.add(tmplIndex);
+  await tm.cache();
+
+  let map = tm.getMap();
+  t.is(map.length, 3);
+  t.deepEqual(map[2].template, tmplIndex);
+
+  let collections = await tm.getAllCollectionsData();
+  t.is(Object.keys(collections.all).length, 3);
+  t.is(Object.keys(collections.foos).length, 1);
+  t.is(Object.keys(collections.bars).length, 1);
+  t.is(Object.keys((await tm.getCollectionsDataForTemplate()).all).length, 3);
+  t.is(Object.keys((await tm.getCollectionsDataForTemplate()).foos).length, 1);
+  t.is(Object.keys((await tm.getCollectionsDataForTemplate()).bars).length, 1);
+
+  t.truthy(map[0].data.collections);
+  t.truthy(map[1].data.collections);
+  t.truthy(map[2].data.collections);
+  t.truthy(Object.keys(map[2].data.collections).length);
+
+  t.is(Object.keys(map[0].data.collections.all).length, 3);
+  t.is(Object.keys(map[0].data.collections.foos).length, 1);
+  t.is(Object.keys(map[0].data.collections.bars).length, 1);
+
+  t.is(Object.keys(map[1].data.collections.all).length, 3);
+  t.is(Object.keys(map[1].data.collections.foos).length, 1);
+  t.is(Object.keys(map[1].data.collections.bars).length, 1);
+
+  t.is(Object.keys(map[2].data.collections.all).length, 3);
+  t.is(Object.keys(map[2].data.collections.foos).length, 1);
+  t.is(Object.keys(map[2].data.collections.bars).length, 1);
+
+  t.deepEqual(
+    map[2].templateContent,
+    `This page is foos
+This page is bars
+`
   );
 });

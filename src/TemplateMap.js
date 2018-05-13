@@ -54,29 +54,26 @@ class TemplateMap {
   }
 
   async populateDataInMap() {
+    let collectionsData = await this.getCollectionsDataForTemplate();
     for (let map of this.map) {
-      map.data.collections = await this.getCollectionsDataForTemplate();
-    }
-    debugDev("Added this.map[...].data.collections");
+      map.data.collections = collectionsData;
+      debugDev("Added this.map[...].data.collections for one map entry");
 
-    for (let map of this.map) {
       map.template.setWrapWithLayouts(false);
       map.templateContent = (await map.template.getRenderedTemplates(
         map.outputPath,
         map.data
       ))[0].templateContent;
       map.template.setWrapWithLayouts(true);
+
+      debugDev("Added this.map[...].templateContent for one map entry");
     }
-    debugDev("Added this.map[...].templateContent");
   }
 
-  async createTemplateMapCopy(filteredMap) {
+  createTemplateMapCopy(filteredMap) {
     let copy = [];
     for (let map of filteredMap) {
       let mapCopy = lodashClone(map);
-
-      // Circular reference
-      delete mapCopy.data.collections;
 
       copy.push(mapCopy);
     }
@@ -101,14 +98,14 @@ class TemplateMap {
 
   async getAllCollectionsData() {
     let collections = {};
-    collections.all = await this.createTemplateMapCopy(
+    collections.all = this.createTemplateMapCopy(
       this.collection.getAllSorted()
     );
     debug(`Collection: collections.all size: ${collections.all.length}`);
 
     let tags = this.getAllTags();
     for (let tag of tags) {
-      collections[tag] = await this.createTemplateMapCopy(
+      collections[tag] = this.createTemplateMapCopy(
         this.collection.getFilteredByTag(tag)
       );
       debug(`Collection: collections.${tag} size: ${collections[tag].length}`);
@@ -116,7 +113,7 @@ class TemplateMap {
 
     let configCollections = eleventyConfig.getCollections();
     for (let name in configCollections) {
-      collections[name] = await this.createTemplateMapCopy(
+      collections[name] = this.createTemplateMapCopy(
         configCollections[name](this.collection)
       );
       debug(
