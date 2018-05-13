@@ -157,7 +157,9 @@ test("Liquid Render Include Subfolder No file extension", async t => {
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-/* Skipped tests pending https://github.com/harttle/liquidjs/issues/61 */
+// Skipped tests pending https://github.com/harttle/liquidjs/issues/61
+// Resolution: we’re going to leave this skipped as LiquidJS will require dynamicPartials
+// to be on for quoted includes!
 test.skip("Liquid Render Include Subfolder Single quotes", async t => {
   let fn = await new TemplateRender(
     "liquid",

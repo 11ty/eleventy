@@ -45,11 +45,12 @@ module.exports = function(eleventyConfig) {
 
 ## Supported Features
 
-| Feature                                                                      | Syntax                                                                     |
-| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| ✅ Include                                                                   | `{% include 'user' %}` looks for `_includes/user.liquid`                   |
-| ✅ Include (pass in Data)                                                    | `{% include 'user' with 'Ava' %}`                                          |
-| ✅ Include (pass in Data)                                                    | `{% include 'user', user1: 'Ava', user2: 'Bill' %}`                        |
-| ✅ Custom Filters                                                            | `{{ name \| upper }}` (see `eleventyConfig.addLiquidFilter` documentation) |
-| ✅ [Eleventy Universal Filters](/docs/filters.md#built-in-universal-filters) | `{% name \| filterName %}` (see `eleventyConfig.addFilter` documentation)  |
-| ✅ Custom Tags                                                               | `{% upper name %}` (see `eleventyConfig.addLiquidTag` documentation)       |
+| Feature                                                                      | Syntax                                                                                                                             |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| ✅ Include                                                                   | `{% include user %}` looks for `_includes/user.liquid`                                                                             |
+| ✅ Include                                                                   | `{% include 'user' %}` looks for `_includes/user.liquid` (quotes around includes require `dynamicPartials: true`—read more at #72) |
+| ✅ Include (pass in Data)                                                    | `{% include 'user' with 'Ava' %}`                                                                                                  |
+| ✅ Include (pass in Data)                                                    | `{% include 'user', user1: 'Ava', user2: 'Bill' %}`                                                                                |
+| ✅ Custom Filters                                                            | `{{ name \| upper }}` (see `eleventyConfig.addLiquidFilter` documentation)                                                         |
+| ✅ [Eleventy Universal Filters](/docs/filters.md#built-in-universal-filters) | `{% name \| filterName %}` (see `eleventyConfig.addFilter` documentation)                                                          |
+| ✅ Custom Tags                                                               | `{% upper name %}` (see `eleventyConfig.addLiquidTag` documentation)                                                               |
