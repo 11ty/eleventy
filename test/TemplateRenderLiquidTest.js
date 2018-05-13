@@ -133,8 +133,7 @@ test("Liquid addTags", async t => {
   );
 });
 
-/* Skipped tests pending https://github.com/harttle/liquidjs/issues/61 */
-test.skip("Liquid Render Include Subfolder", async t => {
+test("Liquid Render Include Subfolder", async t => {
   let fn = await new TemplateRender(
     "liquid",
     "./test/stubs/"
@@ -142,6 +141,23 @@ test.skip("Liquid Render Include Subfolder", async t => {
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
+test("Liquid Render Include Subfolder HTML", async t => {
+  let fn = await new TemplateRender(
+    "liquid",
+    "./test/stubs/"
+  ).getCompiledTemplate(`<p>{% include subfolder/included.html %}</p>`);
+  t.is(await fn(), "<p>This is an include.</p>");
+});
+
+test("Liquid Render Include Subfolder No file extension", async t => {
+  let fn = await new TemplateRender(
+    "liquid",
+    "./test/stubs/"
+  ).getCompiledTemplate(`<p>{% include subfolder/included %}</p>`);
+  t.is(await fn(), "<p>This is an include.</p>");
+});
+
+/* Skipped tests pending https://github.com/harttle/liquidjs/issues/61 */
 test.skip("Liquid Render Include Subfolder Single quotes", async t => {
   let fn = await new TemplateRender(
     "liquid",
@@ -158,14 +174,6 @@ test.skip("Liquid Render Include Subfolder Double quotes", async t => {
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-test.skip("Liquid Render Include Subfolder HTML", async t => {
-  let fn = await new TemplateRender(
-    "liquid",
-    "./test/stubs/"
-  ).getCompiledTemplate(`<p>{% include subfolder/included.html %}</p>`);
-  t.is(await fn(), "<p>This is an include.</p>");
-});
-
 test.skip("Liquid Render Include Subfolder Single quotes HTML", async t => {
   let fn = await new TemplateRender(
     "liquid",
@@ -179,14 +187,6 @@ test.skip("Liquid Render Include Subfolder Double quotes HTML", async t => {
     "liquid",
     "./test/stubs/"
   ).getCompiledTemplate(`<p>{% include "subfolder/included.html" %}</p>`);
-  t.is(await fn(), "<p>This is an include.</p>");
-});
-
-test.skip("Liquid Render Include Subfolder No file extension", async t => {
-  let fn = await new TemplateRender(
-    "liquid",
-    "./test/stubs/"
-  ).getCompiledTemplate(`<p>{% include subfolder/included %}</p>`);
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
