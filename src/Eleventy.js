@@ -292,6 +292,33 @@ Eleventy.prototype._getRedirectFilename = function(dirName) {
   return TemplatePath.normalize(this._getRedirectDir(dirName), "index.html");
 };
 
+Eleventy.prototype._cleanupRedirect = function(dirName) {
+  if (dirName && dirName !== "/") {
+    let savedPathFilename = this._getRedirectFilename(dirName);
+
+    setTimeout(function() {
+      if (!fs.existsSync(savedPathFilename)) {
+        debug(`Cleanup redirect: Could not find ${savedPathFilename}`);
+        return;
+      }
+
+      let savedPathContent = fs.readFileSync(savedPathFilename, "utf-8");
+      if (savedPathContent.indexOf("Browsersync pathPrefix Redirect") === -1) {
+        debug(
+          `Cleanup redirect: Found ${savedPathFilename} but it wasn’t an eleventy redirect.`
+        );
+        return;
+      }
+
+      fs.unlink(savedPathFilename, err => {
+        if (!err) {
+          debug(`Cleanup redirect: Deleted ${savedPathFilename}`);
+        }
+      });
+    }, 2000);
+  }
+};
+
 Eleventy.prototype._serveRedirect = function(dirName) {
   fs.outputFile(
     this._getRedirectFilename(dirName),
@@ -307,6 +334,11 @@ Eleventy.prototype.serve = function(port) {
   if (this.savedPathPrefix && this.config.pathPrefix !== this.savedPathPrefix) {
     let redirectFilename = this._getRedirectFilename(this.savedPathPrefix);
     if (!fs.existsSync(redirectFilename)) {
+      debug(
+        `Redirecting BrowserSync from ${this.savedPathPrefix} to ${
+          this.config.pathPrefix
+        }`
+      );
       this._serveRedirect(this.savedPathPrefix);
     } else {
       debug(
@@ -314,8 +346,6 @@ Eleventy.prototype.serve = function(port) {
       );
     }
   }
-
-  this.savedPathPrefix = this.config.pathPrefix;
 
   // TODO customize this in Configuration API?
   let serverConfig = {
@@ -328,7 +358,16 @@ Eleventy.prototype.serve = function(port) {
     serverConfig.baseDir = this._getRedirectDir(redirectDirName);
     serverConfig.routes = {};
     serverConfig.routes[this.config.pathPrefix] = this.getOutputDir();
+    if (this.savedPathPrefix) {
+      serverConfig.routes[this.savedPathPrefix] = TemplatePath.normalize(
+        this.getOutputDir(),
+        this.savedPathPrefix
+      );
+    }
   }
+
+  this._cleanupRedirect(this.savedPathPrefix);
+  this.savedPathPrefix = this.config.pathPrefix;
 
   this.server.init({
     server: serverConfig,
