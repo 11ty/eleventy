@@ -213,21 +213,28 @@ Eleventy.prototype._watch = async function(path) {
   // reset and reload global configuration :O
   if (path === config.getLocalProjectConfigFile()) {
     config.reset();
+
+    this.config = config.getConfig();
   }
 
   this.restart();
   await this.write();
 
   if (this.server) {
-    // Is a CSS input file and is not in the includes folder
-    // TODO check output path file extension of this template (not input path)
-    if (
-      path.split(".").pop() === "css" &&
-      !TemplatePath.contains(path, this.writer.getIncludesDir())
-    ) {
-      this.server.reload("*.css");
+    if (this.config.pathPrefix !== this.savedPathPrefix) {
+      this.server.exit();
+      this.serve();
     } else {
-      this.server.reload();
+      // Is a CSS input file and is not in the includes folder
+      // TODO check output path file extension of this template (not input path)
+      if (
+        path.split(".").pop() === "css" &&
+        !TemplatePath.contains(path, this.writer.getIncludesDir())
+      ) {
+        this.server.reload("*.css");
+      } else {
+        this.server.reload();
+      }
     }
   }
 
@@ -277,8 +284,38 @@ Eleventy.prototype.watch = async function() {
   );
 };
 
+Eleventy.prototype._getRedirectDir = function(dirName) {
+  return TemplatePath.normalize(this.getOutputDir(), dirName);
+};
+
+Eleventy.prototype._getRedirectFilename = function(dirName) {
+  return TemplatePath.normalize(this._getRedirectDir(dirName), "index.html");
+};
+
+Eleventy.prototype._serveRedirect = function(dirName) {
+  fs.outputFile(
+    this._getRedirectFilename(dirName),
+    `<!doctype html>
+<meta http-equiv="refresh" content="0; url=${this.config.pathPrefix}">
+<title>Browsersync pathPrefix Redirect</title>
+<a href="${this.config.pathPrefix}">Go to ${this.config.pathPrefix}</a>`
+  );
+};
+
 Eleventy.prototype.serve = function(port) {
   this.server = browserSync.create();
+  if (this.savedPathPrefix && this.config.pathPrefix !== this.savedPathPrefix) {
+    let redirectFilename = this._getRedirectFilename(this.savedPathPrefix);
+    if (!fs.existsSync(redirectFilename)) {
+      this._serveRedirect(this.savedPathPrefix);
+    } else {
+      debug(
+        `Config updated with a new pathPrefix. Tried to set up a transparent redirect but found a template already existing at ${redirectFilename}. You’ll have to navigate manually.`
+      );
+    }
+  }
+
+  this.savedPathPrefix = this.config.pathPrefix;
 
   // TODO customize this in Configuration API?
   let serverConfig = {
@@ -286,18 +323,9 @@ Eleventy.prototype.serve = function(port) {
   };
 
   if (this.config.pathPrefix !== "/") {
-    let redirectDirectoryName = "_eleventy_redirect";
-    let redirectDir = this.getOutputDir() + "/" + redirectDirectoryName;
-
-    fs.outputFile(
-      redirectDir + "/index.html",
-      `<!doctype html>
-<meta http-equiv="refresh" content="0; url=${this.config.pathPrefix}">
-<title>Browsersync pathPrefix Redirect</title>
-<a href="${this.config.pathPrefix}">Go to ${this.config.pathPrefix}</a>`
-    );
-
-    serverConfig.baseDir = redirectDir;
+    let redirectDirName = "_eleventy_redirect";
+    this._serveRedirect(redirectDirName);
+    serverConfig.baseDir = this._getRedirectDir(redirectDirName);
     serverConfig.routes = {};
     serverConfig.routes[this.config.pathPrefix] = this.getOutputDir();
   }
