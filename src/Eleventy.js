@@ -1,11 +1,11 @@
 const fs = require("fs-extra");
 const chalk = require("chalk");
 const parsePath = require("parse-filepath");
-const browserSync = require("browser-sync");
 
 const TemplatePath = require("./TemplatePath");
 const TemplateData = require("./TemplateData");
 const TemplateWriter = require("./TemplateWriter");
+const EleventyServe = require("./EleventyServe");
 const templateCache = require("./TemplateCache");
 const EleventyError = require("./EleventyError");
 const simplePlural = require("./Util/Pluralize");
@@ -25,6 +25,7 @@ function Eleventy(input, output) {
 
   this.start = new Date();
   this.formatsOverride = null;
+  this.eleventyServe = new EleventyServe();
 
   this.initDirs(input, output);
 }
@@ -33,6 +34,8 @@ Eleventy.prototype.initDirs = function() {
   this.input = this.rawInput || this.config.dir.input;
   this.inputDir = this._getDir(this.input) || ".";
   this.outputDir = this.rawOutput || this.config.dir.output;
+
+  this.eleventyServe.setOutputDir(this.getOutputDir());
 };
 
 Eleventy.prototype._getDir = function(inputPath) {
@@ -202,6 +205,13 @@ Eleventy.prototype.getHelp = function() {
   return out.join("\n");
 };
 
+Eleventy.prototype.resetConfig = function() {
+  config.reset();
+
+  this.config = config.getConfig();
+  this.eleventyServe.updateConfig(this.config);
+};
+
 Eleventy.prototype._watch = async function(path) {
   if (this.active) {
     this.queuedToRun = path;
@@ -212,31 +222,14 @@ Eleventy.prototype._watch = async function(path) {
 
   // reset and reload global configuration :O
   if (path === config.getLocalProjectConfigFile()) {
-    config.reset();
-
-    this.config = config.getConfig();
+    this.resetConfig();
   }
 
   this.restart();
   await this.write();
 
-  if (this.server) {
-    if (this.config.pathPrefix !== this.savedPathPrefix) {
-      this.server.exit();
-      this.serve();
-    } else {
-      // Is a CSS input file and is not in the includes folder
-      // TODO check output path file extension of this template (not input path)
-      if (
-        path.split(".").pop() === "css" &&
-        !TemplatePath.contains(path, this.writer.getIncludesDir())
-      ) {
-        this.server.reload("*.css");
-      } else {
-        this.server.reload();
-      }
-    }
-  }
+  let isInclude = TemplatePath.contains(path, this.writer.getIncludesDir());
+  this.eleventyServe.reload(path, isInclude);
 
   this.active = false;
 
@@ -284,107 +277,8 @@ Eleventy.prototype.watch = async function() {
   );
 };
 
-Eleventy.prototype._getRedirectDir = function(dirName) {
-  return TemplatePath.normalize(this.getOutputDir(), dirName);
-};
-
-Eleventy.prototype._getRedirectFilename = function(dirName) {
-  return TemplatePath.normalize(this._getRedirectDir(dirName), "index.html");
-};
-
-Eleventy.prototype._cleanupRedirect = function(dirName) {
-  if (dirName && dirName !== "/") {
-    let savedPathFilename = this._getRedirectFilename(dirName);
-
-    setTimeout(function() {
-      if (!fs.existsSync(savedPathFilename)) {
-        debug(`Cleanup redirect: Could not find ${savedPathFilename}`);
-        return;
-      }
-
-      let savedPathContent = fs.readFileSync(savedPathFilename, "utf-8");
-      if (savedPathContent.indexOf("Browsersync pathPrefix Redirect") === -1) {
-        debug(
-          `Cleanup redirect: Found ${savedPathFilename} but it wasn’t an eleventy redirect.`
-        );
-        return;
-      }
-
-      fs.unlink(savedPathFilename, err => {
-        if (!err) {
-          debug(`Cleanup redirect: Deleted ${savedPathFilename}`);
-        }
-      });
-    }, 2000);
-  }
-};
-
-Eleventy.prototype._serveRedirect = function(dirName) {
-  fs.outputFile(
-    this._getRedirectFilename(dirName),
-    `<!doctype html>
-<meta http-equiv="refresh" content="0; url=${this.config.pathPrefix}">
-<title>Browsersync pathPrefix Redirect</title>
-<a href="${this.config.pathPrefix}">Go to ${this.config.pathPrefix}</a>`
-  );
-};
-
 Eleventy.prototype.serve = function(port) {
-  this.server = browserSync.create();
-  if (this.savedPathPrefix && this.config.pathPrefix !== this.savedPathPrefix) {
-    let redirectFilename = this._getRedirectFilename(this.savedPathPrefix);
-    if (!fs.existsSync(redirectFilename)) {
-      debug(
-        `Redirecting BrowserSync from ${this.savedPathPrefix} to ${
-          this.config.pathPrefix
-        }`
-      );
-      this._serveRedirect(this.savedPathPrefix);
-    } else {
-      debug(
-        `Config updated with a new pathPrefix. Tried to set up a transparent redirect but found a template already existing at ${redirectFilename}. You’ll have to navigate manually.`
-      );
-    }
-  }
-
-  // TODO customize this in Configuration API?
-  let serverConfig = {
-    baseDir: this.getOutputDir()
-  };
-
-  if (this.config.pathPrefix !== "/") {
-    let redirectDirName = "_eleventy_redirect";
-    this._serveRedirect(redirectDirName);
-    serverConfig.baseDir = this._getRedirectDir(redirectDirName);
-    serverConfig.routes = {};
-    serverConfig.routes[this.config.pathPrefix] = this.getOutputDir();
-    if (this.savedPathPrefix) {
-      serverConfig.routes[this.savedPathPrefix] = TemplatePath.normalize(
-        this.getOutputDir(),
-        this.savedPathPrefix
-      );
-    }
-  }
-
-  this._cleanupRedirect(this.savedPathPrefix);
-  this.savedPathPrefix = this.config.pathPrefix;
-
-  this.server.init({
-    server: serverConfig,
-    port: port || 8080,
-    ignore: ["node_modules"],
-    watch: false,
-    open: false,
-    index: "index.html"
-  });
-
-  process.on(
-    "SIGINT",
-    function() {
-      this.server.exit();
-      process.exit();
-    }.bind(this)
-  );
+  this.eleventyServe.serve(port);
 };
 
 Eleventy.prototype.write = async function() {
