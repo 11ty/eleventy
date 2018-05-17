@@ -22,7 +22,6 @@ class Template {
 
     this.config = config.getConfig();
     this.inputPath = path;
-    this.inputContent = fs.readFileSync(path, "utf-8");
     this.parsed = parsePath(path);
 
     // for pagination
@@ -40,8 +39,6 @@ class Template {
     } else {
       this.outputDir = false;
     }
-
-    this.frontMatter = this.getMatter();
 
     this.transforms = [];
     this.plugins = {};
@@ -141,7 +138,7 @@ class Template {
   // TODO check for conflicts, see if file already exists?
   async getOutputPath() {
     let uri = await this.getOutputLink();
-    if (this.getFrontMatterData()[this.config.keys.permalinkRoot]) {
+    if ((await this.getFrontMatterData())[this.config.keys.permalinkRoot]) {
       return normalize(uri);
     } else {
       return normalize(this.outputDir + "/" + uri);
@@ -156,12 +153,37 @@ class Template {
     return this.outputDir === false;
   }
 
-  getMatter() {
-    return matter(this.inputContent);
+  async read() {
+    this.inputContent = await this.getInputContent();
+    this.frontMatter = matter(this.inputContent);
   }
 
-  getPreRender() {
+  async getInputContent() {
+    return fs.readFile(this.inputPath, "utf-8");
+  }
+
+  async getPreRender() {
+    if (!this.frontMatter) {
+      await this.read();
+    }
+
     return this.frontMatter.content;
+  }
+
+  async getFrontMatter() {
+    if (!this.frontMatter) {
+      await this.read();
+    }
+
+    return this.frontMatter;
+  }
+
+  async getFrontMatterData() {
+    if (!this.frontMatter) {
+      await this.read();
+    }
+
+    return this.frontMatter.data || {};
   }
 
   getLayoutTemplateFilePath(layoutPath) {
@@ -180,10 +202,6 @@ class Template {
     return tmpl;
   }
 
-  getFrontMatterData() {
-    return this.frontMatter.data || {};
-  }
-
   async getAllLayoutFrontMatterData(tmpl, data, merged) {
     debugDev("%o getAllLayoutFrontMatterData", this.inputPath);
 
@@ -196,7 +214,7 @@ class Template {
         data[this.config.keys.layout]
       );
       let layout = tmpl.getLayoutTemplate(layoutFilePath);
-      let layoutData = layout.getFrontMatterData();
+      let layoutData = await layout.getFrontMatterData();
 
       return this.getAllLayoutFrontMatterData(
         tmpl,
@@ -251,7 +269,7 @@ class Template {
         data = await this.templateData.getLocalData(this.inputPath);
       }
 
-      let frontMatterData = this.getFrontMatterData();
+      let frontMatterData = await this.getFrontMatterData();
 
       let mergedLayoutData = await this.getAllLayoutFrontMatterData(
         this,
@@ -368,8 +386,11 @@ class Template {
     let layoutData = await layout.getData(tmplData);
     // debug("layoutData: %O", layoutData)
     // debug("tmplData (passed to layoutContent = renderContent(): %O", tmplData);
-    // debug("renderLayout -> renderContent(%o)", tmpl.getPreRender());
-    let layoutContent = await tmpl.renderContent(tmpl.getPreRender(), tmplData);
+    // debug("renderLayout -> renderContent(%o)", await tmpl.getPreRender());
+    let layoutContent = await tmpl.renderContent(
+      await tmpl.getPreRender(),
+      tmplData
+    );
     // debug("renderLayout -> layoutContent %o", layoutContent);
 
     layoutData.content = layoutContent;
@@ -389,7 +410,7 @@ class Template {
       return tmpl.renderLayout(layout, layoutData);
     }
 
-    return layout.renderContent(layout.getPreRender(), layoutData);
+    return layout.renderContent(await layout.getPreRender(), layoutData);
   }
 
   async renderContent(str, data, bypassMarkdown) {
@@ -455,7 +476,7 @@ class Template {
       return this.renderLayout(this, data, this.initialLayout);
     } else {
       debugDev("Template.render renderContent for %o", this.inputPath);
-      return this.renderContent(this.getPreRender(), data);
+      return this.renderContent(await this.getPreRender(), data);
     }
   }
 

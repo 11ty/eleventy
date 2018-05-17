@@ -90,14 +90,15 @@ test("HTML files output to the same as the input directory have a file suffix ad
   t.is(await tmpl.getOutputPath(), "./test/stubs/subfolder/index-o.html");
 });
 
-test("Test raw front matter from template", t => {
+test("Test raw front matter from template", async t => {
   let tmpl = new Template(
     "./test/stubs/templateFrontMatter.ejs",
     "./test/stubs/",
     "./dist"
   );
-  t.truthy(tmpl.inputContent, "template exists and can be opened.");
-  t.is(tmpl.frontMatter.data.key1, "value1");
+  t.truthy(await tmpl.getInputContent(), "template exists and can be opened.");
+
+  t.is((await tmpl.getFrontMatter()).data.key1, "value1");
 });
 
 test("Test that getData() works", async t => {
@@ -113,7 +114,7 @@ test("Test that getData() works", async t => {
 
   let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
     tmpl,
-    tmpl.getFrontMatterData()
+    await tmpl.getFrontMatterData()
   );
 
   t.is(mergedFrontMatter.key1, "value1");
@@ -152,7 +153,7 @@ test("One Layout (using new content var)", async t => {
     dataObj
   );
 
-  t.is(tmpl.frontMatter.data[config.keys.layout], "defaultLayout");
+  t.is((await tmpl.getFrontMatter()).data[config.keys.layout], "defaultLayout");
 
   let data = await tmpl.getData();
   t.is(data[config.keys.layout], "defaultLayout");
@@ -166,7 +167,7 @@ test("One Layout (using new content var)", async t => {
 
   let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
     tmpl,
-    tmpl.getFrontMatterData()
+    await tmpl.getFrontMatterData()
   );
 
   t.is(mergedFrontMatter.keymain, "valuemain");
@@ -182,7 +183,10 @@ test("One Layout (using layoutContent)", async t => {
     dataObj
   );
 
-  t.is(tmpl.frontMatter.data[config.keys.layout], "defaultLayoutLayoutContent");
+  t.is(
+    (await tmpl.getFrontMatter()).data[config.keys.layout],
+    "defaultLayoutLayoutContent"
+  );
 
   let data = await tmpl.getData();
   t.is(data[config.keys.layout], "defaultLayoutLayoutContent");
@@ -196,7 +200,7 @@ test("One Layout (using layoutContent)", async t => {
 
   let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
     tmpl,
-    tmpl.getFrontMatterData()
+    await tmpl.getFrontMatterData()
   );
 
   t.is(mergedFrontMatter.keymain, "valuemain");
@@ -214,7 +218,10 @@ test("One Layout (layouts disabled)", async t => {
 
   tmpl.setWrapWithLayouts(false);
 
-  t.is(tmpl.frontMatter.data[config.keys.layout], "defaultLayoutLayoutContent");
+  t.is(
+    (await tmpl.getFrontMatter()).data[config.keys.layout],
+    "defaultLayoutLayoutContent"
+  );
 
   let data = await tmpl.getData();
   t.is(data[config.keys.layout], "defaultLayoutLayoutContent");
@@ -223,7 +230,7 @@ test("One Layout (layouts disabled)", async t => {
 
   let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
     tmpl,
-    tmpl.getFrontMatterData()
+    await tmpl.getFrontMatterData()
   );
 
   t.is(mergedFrontMatter.keymain, "valuemain");
@@ -240,7 +247,7 @@ test("One Layout (_layoutContent deprecated but supported)", async t => {
   );
 
   t.is(
-    tmpl.frontMatter.data[config.keys.layout],
+    (await tmpl.getFrontMatter()).data[config.keys.layout],
     "defaultLayout_layoutContent"
   );
 
@@ -256,7 +263,7 @@ test("One Layout (_layoutContent deprecated but supported)", async t => {
 
   let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
     tmpl,
-    tmpl.getFrontMatterData()
+    await tmpl.getFrontMatterData()
   );
 
   t.is(mergedFrontMatter.keymain, "valuemain");
@@ -272,7 +279,10 @@ test("One Layout (liquid test)", async t => {
     dataObj
   );
 
-  t.is(tmpl.frontMatter.data[config.keys.layout], "layoutLiquid.liquid");
+  t.is(
+    (await tmpl.getFrontMatter()).data[config.keys.layout],
+    "layoutLiquid.liquid"
+  );
 
   let data = await tmpl.getData();
   t.is(data[config.keys.layout], "layoutLiquid.liquid");
@@ -286,7 +296,7 @@ test("One Layout (liquid test)", async t => {
 
   let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
     tmpl,
-    tmpl.getFrontMatterData()
+    await tmpl.getFrontMatterData()
   );
 
   t.is(mergedFrontMatter.keymain, "valuemain");
@@ -302,7 +312,7 @@ test("Two Layouts", async t => {
     dataObj
   );
 
-  t.is(tmpl.frontMatter.data[config.keys.layout], "layout-a");
+  t.is((await tmpl.getFrontMatter()).data[config.keys.layout], "layout-a");
 
   let data = await tmpl.getData();
   t.is(data[config.keys.layout], "layout-a");
@@ -319,7 +329,7 @@ test("Two Layouts", async t => {
 
   let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
     tmpl,
-    tmpl.getFrontMatterData()
+    await tmpl.getFrontMatterData()
   );
 
   t.is(mergedFrontMatter.daysPosted, 152);
