@@ -93,3 +93,15 @@ test("Full input file path and deep input path", t => {
     "_site/avatar.png"
   );
 });
+
+test(".htaccess", t => {
+  let pass = new TemplatePassthrough(".htaccess", "_site", ".");
+  t.truthy(pass);
+  t.is(pass.getOutputPath(), "_site/.htaccess");
+});
+
+test(".htaccess with input dir", t => {
+  let pass = new TemplatePassthrough(".htaccess", "_site", "_src");
+  t.truthy(pass);
+  t.is(pass.getOutputPath(), "_site/.htaccess");
+});

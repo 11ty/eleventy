@@ -1,6 +1,5 @@
 const path = require("path");
 const normalize = require("normalize-path");
-const pify = require("pify");
 const fs = require("fs-extra");
 
 function TemplatePath() {}
@@ -105,7 +104,7 @@ TemplatePath.stripPathFromDir = function(targetDir, prunedPath) {
   targetDir = TemplatePath.stripLeadingDotSlash(normalize(targetDir));
   prunedPath = TemplatePath.stripLeadingDotSlash(normalize(prunedPath));
 
-  if (targetDir.indexOf(prunedPath) === 0) {
+  if (prunedPath && prunedPath !== "." && targetDir.indexOf(prunedPath) === 0) {
     return targetDir.substr(prunedPath.length + 1);
   }
 
