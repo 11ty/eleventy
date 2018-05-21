@@ -1,4 +1,3 @@
-const browserSync = require("browser-sync");
 const fs = require("fs-extra");
 
 const TemplatePath = require("./TemplatePath");
@@ -70,6 +69,8 @@ class EleventyServe {
   }
 
   serve(port) {
+    // only load on serve—this is pretty expensive
+    const browserSync = require("browser-sync");
     this.server = browserSync.create();
 
     let pathPrefix = this.getPathPrefix();
