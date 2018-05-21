@@ -263,7 +263,9 @@ Read more about [Plugins](docs/plugins.md).
 
 Add an `.eleventyignore` file to the _root of your input directory_ for a new line-separated list of files (or globs) that will not be processed. Paths listed in your project’s `.gitignore` file are automatically ignored.
 
-_Exception: node_modules will be ignored automatically if a `.gitignore` does not exist._
+_Exception: `node_modules` will be ignored automatically if a `.gitignore` does not exist._
+
+_Option: in v0.3.5 use `eleventyConfig.setUseGitIgnore(false);` to uses files listed in the `.gitignore` in Eleventy (this ignores the `.gitignore`). `.eleventyignore` will be the only source of truth for files that will be ignored. `node_modules` will also be included unless otherwise specified in your `.eleventyignore` file._
 
 ## Competitors
 

@@ -34,6 +34,7 @@ class UserConfig {
     this.activeNamespace = "";
     this.DateTime = DateTime;
     this.dynamicPermalinks = true;
+    this.useGitIgnore = true;
   }
 
   versionCheck(expected) {
@@ -253,6 +254,10 @@ class UserConfig {
     this.dynamicPermalinks = !!enabled;
   }
 
+  setUseGitIgnore(enabled) {
+    this.useGitIgnore = !!enabled;
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
@@ -269,7 +274,8 @@ class UserConfig {
       ejsOptions: this.ejsOptions,
       markdownHighlighter: this.markdownHighlighter,
       libraryOverrides: this.libraryOverrides,
-      dynamicPermalinks: this.dynamicPermalinks
+      dynamicPermalinks: this.dynamicPermalinks,
+      useGitIgnore: this.useGitIgnore
     };
   }
 }

@@ -351,16 +351,95 @@ Layout 1 dog`
   );
 });
 
-test("Get ignores", t => {
-  let tw = new TemplateWriter("test/stubs", "test/stubs/_site", []);
+/* .eleventyignore and .gitignore combos */
+test("Get ignores (no .eleventyignore no .gitignore)", t => {
+  let tw = new TemplateWriter(
+    "test/stubs/ignore1",
+    "test/stubs/ignore1/_site",
+    []
+  );
 
   t.deepEqual(tw.getIgnores(), [
-    "!./test/stubs/node_modules",
-    "!./test/stubs/ignoredFolder/**",
-    "!./test/stubs/ignoredFolder/ignored.md",
-    "!./test/stubs/_site/**"
+    "!./test/stubs/ignore1/node_modules",
+    "!./test/stubs/ignore1/_site/**"
   ]);
 });
+
+test("Get ignores (no .eleventyignore)", t => {
+  let tw = new TemplateWriter(
+    "test/stubs/ignore2",
+    "test/stubs/ignore2/_site",
+    []
+  );
+
+  t.deepEqual(tw.getIgnores(), [
+    "!./test/stubs/ignore2/thisshouldnotexist12345",
+    "!./test/stubs/ignore2/_site/**"
+  ]);
+});
+
+test("Get ignores (no .eleventyignore, using setUseGitIgnore(false))", t => {
+  let tw = new TemplateWriter(
+    "test/stubs/ignore2",
+    "test/stubs/ignore2/_site",
+    []
+  );
+
+  tw.overrideConfig({
+    useGitIgnore: false
+  });
+
+  t.deepEqual(tw.getIgnores(), ["!./test/stubs/ignore2/_site/**"]);
+});
+
+test("Get ignores (no .gitignore)", t => {
+  let tw = new TemplateWriter(
+    "test/stubs/ignore3",
+    "test/stubs/ignore3/_site",
+    []
+  );
+
+  t.deepEqual(tw.getIgnores(), [
+    "!./test/stubs/ignore3/node_modules",
+    "!./test/stubs/ignore3/ignoredFolder/**",
+    "!./test/stubs/ignore3/ignoredFolder/ignored.md",
+    "!./test/stubs/ignore3/_site/**"
+  ]);
+});
+
+test("Get ignores (both .eleventyignore and .gitignore)", t => {
+  let tw = new TemplateWriter(
+    "test/stubs/ignore4",
+    "test/stubs/ignore4/_site",
+    []
+  );
+
+  t.deepEqual(tw.getIgnores(), [
+    "!./test/stubs/ignore4/thisshouldnotexist12345",
+    "!./test/stubs/ignore4/ignoredFolder/**",
+    "!./test/stubs/ignore4/ignoredFolder/ignored.md",
+    "!./test/stubs/ignore4/_site/**"
+  ]);
+});
+
+test("Get ignores (both .eleventyignore and .gitignore, using setUseGitIgnore(false))", t => {
+  let tw = new TemplateWriter(
+    "test/stubs/ignore4",
+    "test/stubs/ignore4/_site",
+    []
+  );
+
+  tw.overrideConfig({
+    useGitIgnore: false
+  });
+
+  t.deepEqual(tw.getIgnores(), [
+    "!./test/stubs/ignore4/ignoredFolder/**",
+    "!./test/stubs/ignore4/ignoredFolder/ignored.md",
+    "!./test/stubs/ignore4/_site/**"
+  ]);
+});
+/* End .eleventyignore and .gitignore combos */
 
 test("Include and Data Dirs", t => {
   let tw = new TemplateWriter("test/stubs", "test/stubs/_site", []);

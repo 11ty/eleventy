@@ -49,6 +49,11 @@ function TemplateWriter(inputPath, outputDir, templateKeys, templateData) {
   );
 }
 
+/* For testing */
+TemplateWriter.prototype.overrideConfig = function(config) {
+  this.config = config;
+};
+
 TemplateWriter.prototype.setPassthroughManager = function(mgr) {
   if (!mgr) {
     mgr = new TemplatePassthroughManager();
@@ -156,12 +161,14 @@ TemplateWriter.prototype.getGlobWatcherIgnores = function() {
 TemplateWriter.prototype.getIgnores = function() {
   let files = [];
 
-  files = files.concat(
-    TemplateWriter.getFileIgnores(
-      this.inputDir + "/.gitignore",
-      "node_modules/"
-    )
-  );
+  if (this.config.useGitIgnore) {
+    files = files.concat(
+      TemplateWriter.getFileIgnores(
+        this.inputDir + "/.gitignore",
+        "node_modules/"
+      )
+    );
+  }
 
   files = files.concat(
     TemplateWriter.getFileIgnores(this.inputDir + "/.eleventyignore")
