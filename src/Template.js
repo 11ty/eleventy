@@ -1,4 +1,3 @@
-const pify = require("pify");
 const fs = require("fs-extra");
 const parsePath = require("parse-filepath");
 const matter = require("gray-matter");
@@ -594,7 +593,7 @@ class Template {
         debug("getMappedDate: YAML parsed it: %o", data.date);
         return data.date;
       } else {
-        let stat = await pify(fs.stat)(this.inputPath);
+        let stat = await fs.stat(this.inputPath);
         // string
         if (data.date.toLowerCase() === "last modified") {
           return new Date(stat.ctimeMs);
@@ -633,7 +632,7 @@ class Template {
         return dateObj;
       }
 
-      let stat = await pify(fs.stat)(this.inputPath);
+      let stat = await fs.stat(this.inputPath);
       let createdDate = new Date(stat.birthtimeMs);
       debug(
         "getMappedDate: using file created time for %o of %o",

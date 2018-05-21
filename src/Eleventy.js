@@ -10,7 +10,6 @@ const templateCache = require("./TemplateCache");
 const EleventyError = require("./EleventyError");
 const simplePlural = require("./Util/Pluralize");
 const config = require("./Config");
-const pkg = require("../package.json");
 const debug = require("debug")("Eleventy");
 
 function Eleventy(input, output) {
@@ -170,7 +169,7 @@ Eleventy.prototype.setFormats = function(formats) {
 };
 
 Eleventy.prototype.getVersion = function() {
-  return pkg.version;
+  return require("../package.json").version;
 };
 
 Eleventy.prototype.getHelp = function() {
@@ -228,7 +227,8 @@ Eleventy.prototype._watch = async function(path) {
   this.restart();
   await this.write();
 
-  let isInclude = TemplatePath.contains(path, this.writer.getIncludesDir());
+  let isInclude =
+    path && TemplatePath.contains(path, this.writer.getIncludesDir());
   this.eleventyServe.reload(path, isInclude);
 
   this.active = false;

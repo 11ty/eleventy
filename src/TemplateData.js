@@ -1,5 +1,4 @@
 const fs = require("fs-extra");
-const pify = require("pify");
 const globby = require("globby");
 const parsePath = require("parse-filepath");
 const lodashset = require("lodash.set");
@@ -64,7 +63,7 @@ TemplateData.prototype.getGlobalDataGlob = async function() {
   let dir = ".";
 
   if (this.inputDir) {
-    let globalPathStat = await pify(fs.stat)(this.inputDir);
+    let globalPathStat = await fs.stat(this.inputDir);
 
     if (!globalPathStat.isDirectory()) {
       throw new Error("Could not find data path directory: " + this.inputDir);
@@ -145,7 +144,7 @@ TemplateData.prototype.getLocalData = async function(templatePath) {
 TemplateData.prototype._getLocalJson = async function(path) {
   let rawInput;
   try {
-    rawInput = await pify(fs.readFile)(path, "utf-8");
+    rawInput = await fs.readFile(path, "utf-8");
   } catch (e) {
     // if file does not exist, return nothing
   }

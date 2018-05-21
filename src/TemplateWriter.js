@@ -200,7 +200,7 @@ TemplateWriter.prototype.getTemplateIgnores = function() {
 };
 
 TemplateWriter.prototype._getAllPaths = async function() {
-  debug("Searching for: %O", this.templateGlobsWithIgnores);
+  debug("Searching for: %o", this.templateGlobsWithIgnores);
   if (!this.cachedPaths) {
     // Note the gitignore: true option for globby is _really slow_
     this.cachedPaths = await globby(this.templateGlobsWithIgnores); //, { gitignore: true });
