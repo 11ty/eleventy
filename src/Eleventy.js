@@ -292,7 +292,12 @@ I want to hear it! Open an issue: https://github.com/11ty/eleventy/issues/new`);
 
     return ret;
   } catch (e) {
-    console.log("\n" + chalk.red("Problem writing eleventy templates: "));
+    console.log(
+      "\n" +
+        chalk.red(
+          "Problem writing eleventy templates (more info in DEBUG output): "
+        )
+    );
     if (e instanceof EleventyError) {
       console.log(chalk.red(e.log()));
       for (let err of e.getAll()) {

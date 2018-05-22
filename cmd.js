@@ -42,9 +42,7 @@ EleventyNodeVersionCheck().then(
         } else if (argv.watch) {
           elev.watch();
         } else {
-          elev.write().then(function() {
-            // do something custom if you want
-          });
+          elev.write();
         }
       });
     } catch (e) {
