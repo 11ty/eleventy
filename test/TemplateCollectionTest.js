@@ -1,4 +1,5 @@
 import test from "ava";
+import multimatch from "multimatch";
 import Template from "../src/Template";
 import Collection from "../src/TemplateCollection";
 import Sortable from "../src/Util/Sortable";
@@ -147,4 +148,35 @@ test("partial match on tag string, issue 95", async t => {
 
   let posts = c.getFilteredByTag("cat");
   t.is(posts.length, 1);
+});
+
+test("multimatch assumptions, issue #127", async t => {
+  t.deepEqual(
+    multimatch(
+      ["src/bookmarks/test.md"],
+      "**/+(bookmarks|posts|screencasts)/**/!(index)*.md"
+    ),
+    ["src/bookmarks/test.md"]
+  );
+  t.deepEqual(
+    multimatch(
+      ["./src/bookmarks/test.md"],
+      "./**/+(bookmarks|posts|screencasts)/**/!(index)*.md"
+    ),
+    ["./src/bookmarks/test.md"]
+  );
+
+  let c = new Collection();
+  let globs = c.getGlobs("**/+(bookmarks|posts|screencasts)/**/!(index)*.md");
+  t.deepEqual(globs, ["./**/+(bookmarks|posts|screencasts)/**/!(index)*.md"]);
+
+  t.deepEqual(multimatch(["./src/bookmarks/test.md"], globs), [
+    "./src/bookmarks/test.md"
+  ]);
+  t.deepEqual(multimatch(["./src/bookmarks/index.md"], globs), []);
+  t.deepEqual(multimatch(["./src/bookmarks/index2.md"], globs), []);
+  t.deepEqual(
+    multimatch(["./src/_content/bookmarks/2018-03-27-git-message.md"], globs),
+    ["./src/_content/bookmarks/2018-03-27-git-message.md"]
+  );
 });
