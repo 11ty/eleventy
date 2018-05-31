@@ -216,7 +216,7 @@ TemplateWriter.prototype._getAllPaths = async function() {
   return this.cachedPaths;
 };
 
-TemplateWriter.prototype._getTemplate = function(path) {
+TemplateWriter.prototype._createTemplate = function(path) {
   let tmpl = new Template(
     path,
     this.inputDir,
@@ -248,7 +248,7 @@ TemplateWriter.prototype._createTemplateMap = async function(paths) {
 
   for (let path of paths) {
     if (TemplateRender.hasEngine(path)) {
-      await this.templateMap.add(this._getTemplate(path));
+      await this.templateMap.add(this._createTemplate(path));
       debug(`Template for ${path} added to map.`);
     }
   }
@@ -259,15 +259,12 @@ TemplateWriter.prototype._createTemplateMap = async function(paths) {
 };
 
 TemplateWriter.prototype._writeTemplate = async function(mapEntry) {
-  let outputPath = mapEntry.outputPath;
-  let data = mapEntry.data;
   let tmpl = mapEntry.template;
-
   try {
-    await tmpl.write(outputPath, data);
+    await tmpl.write(mapEntry.outputPath, mapEntry.data);
   } catch (e) {
     throw EleventyError.make(
-      new Error(`Having trouble writing template: ${outputPath}`),
+      new Error(`Having trouble writing template: ${mapEntry.outputPath}`),
       e
     );
   }
@@ -285,12 +282,6 @@ TemplateWriter.prototype.write = async function() {
   for (let mapEntry of this.templateMap.getMap()) {
     await this._writeTemplate(mapEntry);
   }
-
-  eleventyConfig.emit(
-    "alldata",
-    this.templateMap.getCollection().getAllSorted()
-  );
-  debug("`alldata` event triggered.");
 };
 
 TemplateWriter.prototype.setVerboseOutput = function(isVerbose) {

@@ -292,6 +292,36 @@ test("Template with Pagination, getRenderedTemplates", async t => {
   let data = await tmpl.getData();
   t.is(outputPath, "./dist/paged/index.html");
 
-  let templates = await tmpl.getRenderedTemplates(outputPath, data);
+  let templates = await tmpl.getRenderedTemplates(data);
   t.is(templates.length, 2);
+});
+
+test("Issue 135", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+  await dataObj.cacheData();
+
+  let tmpl = new Template(
+    "./test/stubs/issue-135/template.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj
+  );
+
+  let data = await tmpl.getData();
+  let templates = await tmpl.getRenderedTemplates(data);
+  t.is(data.articles.length, 1);
+  t.is(data.articles[0].title, "Do you even paginate bro?");
+  t.is(
+    await templates[0].outputPath,
+    "./dist/blog/do-you-even-paginate-bro/index.html"
+  );
+
+  let paging = new Pagination(data);
+  paging.setTemplate(tmpl);
+  let pages = await paging.getPageTemplates();
+  t.is(pages.length, 1);
+  t.is(
+    await pages[0].getOutputPath(),
+    "./dist/blog/do-you-even-paginate-bro/index.html"
+  );
 });

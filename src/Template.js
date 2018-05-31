@@ -63,10 +63,6 @@ class Template {
     this.fileSlug = new TemplateFileSlug(this.inputPath, this.inputDir);
   }
 
-  getInputPath() {
-    return this.inputPath;
-  }
-
   setIsVerbose(isVerbose) {
     this.isVerbose = isVerbose;
   }
@@ -79,16 +75,23 @@ class Template {
     this.wrapWithLayouts = wrap;
   }
 
-  getTemplateSubfolder() {
-    return TemplatePath.stripPathFromDir(this.parsed.dir, this.inputDir);
-  }
-
   setExtraOutputSubdirectory(dir) {
     this.extraOutputSubdirectory = dir + "/";
   }
 
-  async _getLink() {
-    let data = await this.getData();
+  getInputPath() {
+    return this.inputPath;
+  }
+
+  getTemplateSubfolder() {
+    return TemplatePath.stripPathFromDir(this.parsed.dir, this.inputDir);
+  }
+
+  async _getLink(data) {
+    if (!data) {
+      data = await this.getData();
+    }
+
     let permalink = data[this.config.keys.permalink];
     if (permalink) {
       // render variables inside permalink front matter, bypass markdown
@@ -124,19 +127,19 @@ class Template {
   }
 
   // TODO instead of isHTMLIOException, do a global search to check if output path = input path and then add extra suffix
-  async getOutputLink() {
-    let link = await this._getLink();
+  async getOutputLink(data) {
+    let link = await this._getLink(data);
     return link.toString();
   }
 
-  async getOutputHref() {
-    let link = await this._getLink();
+  async getOutputHref(data) {
+    let link = await this._getLink(data);
     return link.toHref();
   }
 
   // TODO check for conflicts, see if file already exists?
-  async getOutputPath() {
-    let uri = await this.getOutputLink();
+  async getOutputPath(data) {
+    let uri = await this.getOutputLink(data);
     if ((await this.getFrontMatterData())[this.config.keys.permalinkRoot]) {
       return normalize(uri);
     } else {
@@ -321,7 +324,7 @@ class Template {
       data.page = {};
     }
 
-    let newUrl = await this.getOutputHref();
+    let newUrl = await this.getOutputHref(data);
     if ("page" in data && "url" in data.page) {
       if (data.page.url !== newUrl) {
         debug(
@@ -333,7 +336,7 @@ class Template {
     }
 
     data.page.url = newUrl;
-    data.page.outputPath = await this.getOutputPath();
+    data.page.outputPath = await this.getOutputPath(data);
 
     return data;
   }
@@ -430,7 +433,7 @@ class Template {
     }
 
     debugDev(
-      "%o renderContent() using %o",
+      "%o renderContent() using engine: %o",
       this.inputPath,
       this.templateRender.engineName
     );
@@ -440,7 +443,7 @@ class Template {
     return rendered;
   }
 
-  async renderWithoutLayouts(data) {
+  async _testRenderWithoutLayouts(data) {
     this.setWrapWithLayouts(false);
     let ret = await this.render(data);
     this.setWrapWithLayouts(true);
@@ -483,8 +486,7 @@ class Template {
     this.transforms.push(callback);
   }
 
-  async runTransforms(str) {
-    let outputPath = await this.getOutputPath();
+  async runTransforms(str, outputPath) {
     this.transforms.forEach(function(filter) {
       str = filter.call(this, str, outputPath);
     });
@@ -492,22 +494,24 @@ class Template {
     return str;
   }
 
-  async getRenderedTemplates(outputPath, data) {
+  async getTemplates(data) {
+    // TODO cache this result
     let results = [];
-    if (!this.paging) {
-      this.paging = new Pagination(data);
-    }
 
-    if (!this.paging.hasPagination()) {
+    if (!Pagination.hasPagination(data)) {
       results.push({
-        outputPath: outputPath,
-        data: data,
         template: this,
-        templateContent: await this._getContent(data)
+        inputPath: this.inputPath,
+        data: data,
+        date: data.page.date,
+        outputPath: await this.getOutputPath(data),
+        url: await this.getOutputHref(data)
       });
     } else {
+      // needs collections for pagination items
+      // but individual pagination entries won’t be part of a collection
+      this.paging = new Pagination(data);
       this.paging.setTemplate(this);
-
       let templates = await this.paging.getPageTemplates();
       for (let page of templates) {
         let pageData = await page.getRenderedData();
@@ -517,11 +521,15 @@ class Template {
           pageData.collections = data.collections;
         }
 
+        // TODO try to reuse data instead of a new copy
+        // let pageData = this.augmentDataWithRenderedContent(data);
         results.push({
-          outputPath: await page.getOutputPath(),
-          data: pageData,
           template: page,
-          templateContent: await page._getContent(pageData)
+          inputPath: this.inputPath,
+          data: pageData,
+          date: data.page.date,
+          outputPath: await page.getOutputPath(pageData),
+          url: await page.getOutputHref(pageData)
         });
       }
     }
@@ -529,9 +537,20 @@ class Template {
     return results;
   }
 
-  async _getContent(data) {
+  async getRenderedTemplates(data) {
+    let pages = await this.getTemplates(data);
+    for (let page of pages) {
+      page.templateContent = await page.template._getContent(
+        page.outputPath,
+        page.data
+      );
+    }
+    return pages;
+  }
+
+  async _getContent(outputPath, data) {
     let str = await this.render(data);
-    let filtered = await this.runTransforms(str);
+    let filtered = await this.runTransforms(str, outputPath);
     return filtered;
   }
 
@@ -551,7 +570,7 @@ class Template {
   }
 
   async write(outputPath, data) {
-    let templates = await this.getRenderedTemplates(outputPath, data);
+    let templates = await this.getRenderedTemplates(data);
     for (let tmpl of templates) {
       await this._write(tmpl.outputPath, tmpl.templateContent);
     }
@@ -645,28 +664,33 @@ class Template {
     }
   }
 
-  async isEqual(compareTo) {
-    return (
-      compareTo.getInputPath() === this.getInputPath() &&
-      (await compareTo.getOutputPath()) === (await this.getOutputPath())
-    );
+  async getInitialMapEntry() {
+    let data = await this.getData();
+
+    // does not return outputPath or url, we don’t want to render permalinks yet
+    return {
+      template: this,
+      inputPath: this.inputPath,
+      data: data,
+      date: data.page.date
+    };
+  }
+
+  async getSecondaryMapEntry(data) {
+    this.setWrapWithLayouts(false);
+    let mapEntry = (await this.getRenderedTemplates(data))[0];
+    this.setWrapWithLayouts(true);
+
+    return {
+      outputPath: mapEntry.outputPath,
+      url: mapEntry.url,
+      templateContent: mapEntry.templateContent
+    };
   }
 
   async getMapped() {
     debugDev("%o getMapped()", this.inputPath);
-    let data = await this.getRenderedData();
-    let map = {
-      template: this,
-      inputPath: this.inputPath,
-      data: data
-    };
-
-    // we can reuse the mapped date stored in the data obj
-    map.date = data.page.date;
-    map.url = data.page.url;
-    map.outputPath = data.page.outputPath;
-
-    return map;
+    return await this.getInitialMapEntry();
   }
 }
 

@@ -9,6 +9,7 @@ class TemplateMap {
     this.map = [];
     this.collection = new TemplateCollection();
     this.collectionsData = null;
+    this.cached = false;
   }
 
   async add(template) {
@@ -30,6 +31,7 @@ class TemplateMap {
     this.collectionsData = await this.getAllCollectionsData();
     await this.populateDataInMap();
     this.populateCollectionsWithContent();
+    this.cached = true;
   }
 
   getMapEntryForPath(inputPath) {
@@ -54,26 +56,26 @@ class TemplateMap {
   }
 
   async populateDataInMap() {
-    let collectionsData = await this.getCollectionsDataForTemplate();
     for (let map of this.map) {
-      map.data.collections = collectionsData;
-      debugDev("Added this.map[...].data.collections for one map entry");
+      // TODO these collections shouldn’t be passed around in a cached data object like this
+      map.data.collections = this.collectionsData;
 
-      map.template.setWrapWithLayouts(false);
-      map.templateContent = (await map.template.getRenderedTemplates(
-        map.outputPath,
-        map.data
-      ))[0].templateContent;
-      map.template.setWrapWithLayouts(true);
+      let mapEntry = await map.template.getSecondaryMapEntry(map.data);
+      Object.assign(map, mapEntry);
 
-      debugDev("Added this.map[...].templateContent for one map entry");
+      debugDev(
+        "Added this.map[...].templateContent, outputPath, et al for one map entry"
+      );
     }
   }
 
   createTemplateMapCopy(filteredMap) {
     let copy = [];
     for (let map of filteredMap) {
-      let mapCopy = lodashClone(map);
+      // let mapCopy = lodashClone(map);
+
+      // TODO try this instead of lodash.clone
+      let mapCopy = Object.assign({}, map);
 
       copy.push(mapCopy);
     }
@@ -135,8 +137,8 @@ class TemplateMap {
     }
   }
 
-  async getCollectionsDataForTemplate() {
-    if (!this.collectionsData) {
+  async getCollectionsData() {
+    if (!this.cached) {
       await this.cache();
     }
 

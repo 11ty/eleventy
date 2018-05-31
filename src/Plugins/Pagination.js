@@ -6,6 +6,21 @@ const config = require("../Config");
 function Pagination(data) {
   this.config = config.getConfig();
 
+  this.setData(data);
+}
+
+Pagination.hasPagination = function(data) {
+  return "pagination" in data;
+};
+
+Pagination.prototype.hasPagination = function() {
+  if (!this.data) {
+    throw new Error("Missing `setData` call for Pagination object.");
+  }
+  return Pagination.hasPagination(this.data);
+};
+
+Pagination.prototype.setData = function(data) {
   this.data = data || {};
   this.size = 1;
   this.target = [];
@@ -27,10 +42,6 @@ function Pagination(data) {
 
   this.target = this._resolveItems(data);
   this.items = this.getPagedItems();
-}
-
-Pagination.prototype.hasPagination = function() {
-  return "pagination" in this.data;
 };
 
 Pagination.prototype.setTemplate = function(tmpl) {
@@ -56,16 +67,23 @@ Pagination.prototype._resolveItems = function() {
 };
 
 Pagination.prototype.getPagedItems = function() {
+  if (!this.data) {
+    throw new Error("Missing `setData` call for Pagination object.");
+  }
   return lodashchunk(this.target, this.size);
 };
 
 // TODO this name is not good
-// don’t write the original root template
+// “To cancel” means to not write the original root template
 Pagination.prototype.cancel = function() {
   return this.hasPagination();
 };
 
 Pagination.prototype.getPageTemplates = async function() {
+  if (!this.data) {
+    throw new Error("Missing `setData` call for Pagination object.");
+  }
+
   if (!this.hasPagination()) {
     return [];
   }

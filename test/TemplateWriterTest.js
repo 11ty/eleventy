@@ -5,7 +5,7 @@ import parsePath from "parse-filepath";
 import TemplateWriter from "../src/TemplateWriter";
 import TemplatePath from "../src/TemplatePath";
 import TemplatePassthroughManager from "../src/TemplatePassthroughManager";
-// Not sure why but this import up `ava` and _getTemplate 👀
+// Not sure why but this import up `ava` and _createTemplate 👀
 // import Template from "../src/Template";
 import eleventyConfig from "../src/EleventyConfig";
 
@@ -55,7 +55,7 @@ test("Output is a subdir of input", async t => {
   t.is(tw.getRawFiles().length, 2);
   t.true(files.length > 0);
 
-  let tmpl = tw._getTemplate(files[0]);
+  let tmpl = tw._createTemplate(files[0]);
   t.is(tmpl.inputDir, "./test/stubs/writeTest");
   t.is(
     await tmpl.getOutputPath(),
@@ -114,14 +114,14 @@ test("_createTemplateMap", async t => {
   t.truthy(map[0].data);
 });
 
-test("getCollectionsDataForTemplate", async t => {
+test("getCollectionsData", async t => {
   let tw = new TemplateWriter("./test/stubs/collection", "./test/stubs/_site", [
     "md"
   ]);
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
-  let collectionsData = await templateMap.getCollectionsDataForTemplate();
+  let collectionsData = await templateMap.getCollectionsData();
   t.is(collectionsData.post.length, 2);
   t.is(collectionsData.cat.length, 2);
   t.is(collectionsData.dog.length, 1);
@@ -146,7 +146,7 @@ test("Collection of files sorted by date", async t => {
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
-  let collectionsData = await templateMap.getCollectionsDataForTemplate();
+  let collectionsData = await templateMap.getCollectionsData();
   t.is(collectionsData.dateTestTag.length, 6);
 });
 
@@ -165,7 +165,7 @@ test("_getCollectionsData with custom collection (ascending)", async t => {
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
-  let collectionsData = await templateMap.getCollectionsDataForTemplate();
+  let collectionsData = await templateMap.getCollectionsData();
   t.is(collectionsData.customPostsAsc.length, 2);
   t.is(parsePath(collectionsData.customPostsAsc[0].inputPath).base, "test1.md");
   t.is(parsePath(collectionsData.customPostsAsc[1].inputPath).base, "test2.md");
@@ -186,7 +186,7 @@ test("_getCollectionsData with custom collection (descending)", async t => {
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
-  let collectionsData = await templateMap.getCollectionsDataForTemplate();
+  let collectionsData = await templateMap.getCollectionsData();
   t.is(collectionsData.customPosts.length, 2);
   t.is(parsePath(collectionsData.customPosts[0].inputPath).base, "test2.md");
   t.is(parsePath(collectionsData.customPosts[1].inputPath).base, "test1.md");
@@ -208,7 +208,7 @@ test("_getCollectionsData with custom collection (filter only to markdown input)
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
-  let collectionsData = await templateMap.getCollectionsDataForTemplate();
+  let collectionsData = await templateMap.getCollectionsData();
   t.is(collectionsData.onlyMarkdown.length, 2);
   t.is(parsePath(collectionsData.onlyMarkdown[0].inputPath).base, "test1.md");
   t.is(parsePath(collectionsData.onlyMarkdown[1].inputPath).base, "test2.md");
@@ -225,7 +225,7 @@ test("Pagination with a Collection", async t => {
   let templateMap = await tw._createTemplateMap(paths);
   await templateMap.cache();
 
-  let collectionsData = await templateMap.getCollectionsDataForTemplate();
+  let collectionsData = await templateMap.getCollectionsData();
   t.is(collectionsData.tag1.length, 3);
   t.is(collectionsData.pagingtag.length, 1);
 
@@ -235,15 +235,12 @@ test("Pagination with a Collection", async t => {
   t.truthy(mapEntry);
   t.is(mapEntry.inputPath, "./test/stubs/paged/collection/main.njk");
 
-  let mainTmpl = tw._getTemplate("./test/stubs/paged/collection/main.njk");
+  let mainTmpl = tw._createTemplate("./test/stubs/paged/collection/main.njk");
   let outputPath = await mainTmpl.getOutputPath();
   t.is(outputPath, "./test/stubs/_site/main/index.html");
   t.is(mapEntry.outputPath, "./test/stubs/_site/main/index.html");
 
-  let templates = await mapEntry.template.getRenderedTemplates(
-    mapEntry.outputPath,
-    mapEntry.data
-  );
+  let templates = await mapEntry.template.getRenderedTemplates(mapEntry.data);
   t.is(templates.length, 2);
   t.is(
     await templates[0].template.getOutputPath(),
@@ -275,7 +272,7 @@ test("Use a collection inside of a template", async t => {
   let templateMap = await tw._createTemplateMap(paths);
   await templateMap.cache();
 
-  let collectionsData = await templateMap.getCollectionsDataForTemplate();
+  let collectionsData = await templateMap.getCollectionsData();
   t.is(collectionsData.dog.length, 1);
 
   let mapEntry = templateMap.getMapEntryForPath(
@@ -284,7 +281,7 @@ test("Use a collection inside of a template", async t => {
   t.truthy(mapEntry);
   t.is(mapEntry.inputPath, "./test/stubs/collection-template/template.ejs");
 
-  let mainTmpl = tw._getTemplate(
+  let mainTmpl = tw._createTemplate(
     "./test/stubs/collection-template/template.ejs"
   );
   let outputPath = await mainTmpl.getOutputPath();
@@ -293,10 +290,7 @@ test("Use a collection inside of a template", async t => {
     "./test/stubs/collection-template/_site/template/index.html"
   );
 
-  let templates = await mapEntry.template.getRenderedTemplates(
-    mapEntry.outputPath,
-    mapEntry.data
-  );
+  let templates = await mapEntry.template.getRenderedTemplates(mapEntry.data);
 
   // test content
   t.is(
@@ -321,7 +315,7 @@ test("Use a collection inside of a layout", async t => {
   let templateMap = await tw._createTemplateMap(paths);
   await templateMap.cache();
 
-  let collectionsData = await templateMap.getCollectionsDataForTemplate();
+  let collectionsData = await templateMap.getCollectionsData();
   t.is(collectionsData.dog.length, 1);
 
   let mapEntry = templateMap.getMapEntryForPath(
@@ -330,14 +324,13 @@ test("Use a collection inside of a layout", async t => {
   t.truthy(mapEntry);
   t.is(mapEntry.inputPath, "./test/stubs/collection-layout/template.ejs");
 
-  let mainTmpl = tw._getTemplate("./test/stubs/collection-layout/template.ejs");
+  let mainTmpl = tw._createTemplate(
+    "./test/stubs/collection-layout/template.ejs"
+  );
   let outputPath = await mainTmpl.getOutputPath();
   t.is(outputPath, "./test/stubs/collection-layout/_site/template/index.html");
 
-  let templates = await mapEntry.template.getRenderedTemplates(
-    mapEntry.outputPath,
-    mapEntry.data
-  );
+  let templates = await mapEntry.template.getRenderedTemplates(mapEntry.data);
 
   // test content
   t.is(

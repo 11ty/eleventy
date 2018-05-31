@@ -41,8 +41,8 @@ test("TemplateMap compared to Collection API", async t => {
   t.deepEqual(map[1].data.collections.post[1].template, tmpl4);
 
   let c = new TemplateCollection();
-  await c.addTemplate(tmpl1);
-  await c.addTemplate(tmpl4);
+  await c._testAddTemplate(tmpl1);
+  await c._testAddTemplate(tmpl4);
 
   let posts = c.getFilteredByTag("post");
   t.is(posts.length, 2);
@@ -83,11 +83,11 @@ test("TemplateMap adds collections data and has templateContent values", async t
   t.is(map[1].data.collections.all.length, 2);
 
   t.is(
-    await map[0].template.renderWithoutLayouts(map[0].data),
+    await map[0].template._testRenderWithoutLayouts(map[0].data),
     map[0].templateContent
   );
   t.is(
-    await map[1].template.renderWithoutLayouts(map[1].data),
+    await map[1].template._testRenderWithoutLayouts(map[1].data),
     map[1].templateContent
   );
 });
@@ -111,7 +111,7 @@ test("TemplateMap circular references (map without templateContent)", async t =>
   t.truthy(map[0].data.collections);
   t.is(map[0].data.collections.all.length, 1);
   t.is(
-    await map[0].template.renderWithoutLayouts(map[0].data),
+    await map[0].template._testRenderWithoutLayouts(map[0].data),
     map[0].templateContent
   );
 });
@@ -140,7 +140,7 @@ test("TemplateMap circular references (map.templateContent)", async t => {
 
   // first cached templateContent is available to future render calls (but will not loop in any way).
   t.is(
-    (await map[0].template.renderWithoutLayouts(map[0].data)).trim(),
+    (await map[0].template._testRenderWithoutLayouts(map[0].data)).trim(),
     "<h1>Test</h1>\n<h1>Test</h1>"
   );
 });
@@ -176,9 +176,9 @@ test("Issue #115, mixing pagination and collections", async t => {
   t.is(Object.keys(collections.all).length, 3);
   t.is(Object.keys(collections.foos).length, 1);
   t.is(Object.keys(collections.bars).length, 1);
-  t.is(Object.keys((await tm.getCollectionsDataForTemplate()).all).length, 3);
-  t.is(Object.keys((await tm.getCollectionsDataForTemplate()).foos).length, 1);
-  t.is(Object.keys((await tm.getCollectionsDataForTemplate()).bars).length, 1);
+  t.is(Object.keys((await tm.getCollectionsData()).all).length, 3);
+  t.is(Object.keys((await tm.getCollectionsData()).foos).length, 1);
+  t.is(Object.keys((await tm.getCollectionsData()).bars).length, 1);
 
   t.truthy(map[0].data.collections);
   t.truthy(map[1].data.collections);
@@ -236,9 +236,9 @@ test("Issue #115 with layout, mixing pagination and collections", async t => {
   t.is(Object.keys(collections.all).length, 3);
   t.is(Object.keys(collections.foos).length, 1);
   t.is(Object.keys(collections.bars).length, 1);
-  t.is(Object.keys((await tm.getCollectionsDataForTemplate()).all).length, 3);
-  t.is(Object.keys((await tm.getCollectionsDataForTemplate()).foos).length, 1);
-  t.is(Object.keys((await tm.getCollectionsDataForTemplate()).bars).length, 1);
+  t.is(Object.keys((await tm.getCollectionsData()).all).length, 3);
+  t.is(Object.keys((await tm.getCollectionsData()).foos).length, 1);
+  t.is(Object.keys((await tm.getCollectionsData()).bars).length, 1);
 
   t.truthy(map[0].data.collections);
   t.truthy(map[1].data.collections);
