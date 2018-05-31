@@ -745,6 +745,32 @@ test("getRenderedData() has page.url", async t => {
   t.truthy(data.page.url);
 });
 
+test("getTemplates() data has page.url", async t => {
+  let tmpl = new Template(
+    "./test/stubs/template.ejs",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getData();
+  let templates = await tmpl.getTemplates(data);
+
+  t.is(templates[0].data.page.url, "/template/");
+  t.is(templates[0].data.page.outputPath, "./dist/template/index.html");
+});
+
+test("getRenderedTemplates() data has page.url", async t => {
+  let tmpl = new Template(
+    "./test/stubs/template.ejs",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getData();
+
+  let templates = await tmpl.getRenderedTemplates(data);
+  t.is(templates[0].data.page.url, "/template/");
+  t.is(templates[0].data.page.outputPath, "./dist/template/index.html");
+});
+
 test("getRenderedData() has page.url", async t => {
   let tmpl = new Template(
     "./test/stubs/template.ejs",

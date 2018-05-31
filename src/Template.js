@@ -499,13 +499,16 @@ class Template {
     let results = [];
 
     if (!Pagination.hasPagination(data)) {
+      data.page.url = await this.getOutputHref(data);
+      data.page.outputPath = await this.getOutputPath(data);
+
       results.push({
         template: this,
         inputPath: this.inputPath,
         data: data,
         date: data.page.date,
-        outputPath: await this.getOutputPath(data),
-        url: await this.getOutputHref(data)
+        outputPath: data.page.outputPath,
+        url: data.page.url
       });
     } else {
       // needs collections for pagination items

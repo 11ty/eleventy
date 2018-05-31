@@ -325,3 +325,35 @@ test("Issue 135", async t => {
     "./dist/blog/do-you-even-paginate-bro/index.html"
   );
 });
+
+test("Template with Pagination, getTemplates has page variables set", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/pagedpermalinkif.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let templates = await tmpl.getTemplates(data);
+  t.is(templates[0].data.page.url, "/paged/");
+  t.is(templates[0].data.page.outputPath, "./dist/paged/index.html");
+
+  t.is(templates[1].data.page.url, "/paged/page-1/");
+  t.is(templates[1].data.page.outputPath, "./dist/paged/page-1/index.html");
+});
+
+test("Template with Pagination, getRenderedTemplates has page variables set", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/pagedpermalinkif.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let templates = await tmpl.getRenderedTemplates(data);
+  t.is(templates[0].data.page.url, "/paged/");
+  t.is(templates[0].data.page.outputPath, "./dist/paged/index.html");
+
+  t.is(templates[1].data.page.url, "/paged/page-1/");
+  t.is(templates[1].data.page.outputPath, "./dist/paged/page-1/index.html");
+});
