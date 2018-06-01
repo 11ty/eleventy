@@ -56,12 +56,26 @@ class TemplateMap {
   }
 
   async populateDataInMap() {
+    let pages = [];
     for (let map of this.map) {
       // TODO these collections shouldn’t be passed around in a cached data object like this
       map.data.collections = this.collectionsData;
+      let pages = await map.template.getTemplates(map.data);
+      map._initialPage = pages[0];
 
-      let mapEntry = await map.template.getSecondaryMapEntry(map.data);
-      Object.assign(map, mapEntry);
+      Object.assign(
+        map,
+        await map.template.getSecondaryMapEntry(map._initialPage)
+      );
+    }
+
+    this.populateCollectionsWithData();
+
+    for (let map of this.map) {
+      Object.assign(
+        map,
+        await map.template.getTertiaryMapEntry(map._initialPage)
+      );
 
       debugDev(
         "Added this.map[...].templateContent, outputPath, et al for one map entry"
@@ -124,6 +138,18 @@ class TemplateMap {
     }
 
     return collections;
+  }
+
+  populateCollectionsWithData() {
+    for (let collectionName in this.collectionsData) {
+      for (let item of this.collectionsData[collectionName]) {
+        let index = this.getMapTemplateIndex(item);
+        if (index !== -1) {
+          item.outputPath = this.map[index].outputPath;
+          item.url = this.map[index].url;
+        }
+      }
+    }
   }
 
   populateCollectionsWithContent() {

@@ -110,6 +110,7 @@ test("TemplateMap circular references (map without templateContent)", async t =>
   t.truthy(map[0].templateContent);
   t.truthy(map[0].data.collections);
   t.is(map[0].data.collections.all.length, 1);
+
   t.is(
     await map[0].template._testRenderWithoutLayouts(map[0].data),
     map[0].templateContent
@@ -262,5 +263,38 @@ test("Issue #115 with layout, mixing pagination and collections", async t => {
     `This page is foos
 This page is bars
 `
+  );
+});
+
+test("TemplateMap adds collections data and has page data values", async t => {
+  let tm = new TemplateMap();
+  await tm.add(tmpl1);
+  await tm.add(tmpl2);
+
+  let map = tm.getMap();
+  await tm.cache();
+  t.is(map[0].data.page.url, "/templateMapCollection/test1/");
+  t.is(
+    map[0].data.page.outputPath,
+    "./test/stubs/_site/templateMapCollection/test1/index.html"
+  );
+});
+
+test("TemplateMap adds collections data and has page data values", async t => {
+  let tm = new TemplateMap();
+  await tm.add(tmpl1);
+  await tm.add(tmpl2);
+
+  let collections = await tm.getCollectionsData();
+  t.is(collections.all[0].url, "/templateMapCollection/test1/");
+  t.is(
+    collections.all[0].outputPath,
+    "./test/stubs/_site/templateMapCollection/test1/index.html"
+  );
+
+  t.is(collections.all[0].data.page.url, "/templateMapCollection/test1/");
+  t.is(
+    collections.all[0].data.page.outputPath,
+    "./test/stubs/_site/templateMapCollection/test1/index.html"
   );
 });

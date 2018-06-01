@@ -11,6 +11,7 @@ const TemplateLayout = require("./TemplateLayout");
 const TemplateFileSlug = require("./TemplateFileSlug");
 const templateCache = require("./TemplateCache");
 const Pagination = require("./Plugins/Pagination");
+const EleventyError = require("./EleventyError");
 const config = require("./Config");
 const debug = require("debug")("Eleventy:Template");
 const debugDev = require("debug")("Dev:Eleventy:Template");
@@ -438,9 +439,18 @@ class Template {
       this.templateRender.engineName
     );
 
-    let fn = await this.templateRender.getCompiledTemplate(str);
-    let rendered = fn(data);
-    return rendered;
+    try {
+      let fn = await this.templateRender.getCompiledTemplate(str);
+      let rendered = await fn(data);
+      return rendered;
+    } catch (e) {
+      throw EleventyError.make(
+        new Error(
+          `Having trouble rendering template ${this.inputPath}: ${str}`
+        ),
+        e
+      );
+    }
   }
 
   async _testRenderWithoutLayouts(data) {
@@ -495,7 +505,7 @@ class Template {
   }
 
   async getTemplates(data) {
-    // TODO cache this result
+    // TODO cache this
     let results = [];
 
     if (!Pagination.hasPagination(data)) {
@@ -679,16 +689,24 @@ class Template {
     };
   }
 
-  async getSecondaryMapEntry(data) {
+  async getSecondaryMapEntry(page) {
+    return {
+      url: page.url,
+      outputPath: page.outputPath
+    };
+  }
+
+  async getTertiaryMapEntry(page) {
     this.setWrapWithLayouts(false);
-    let mapEntry = (await this.getRenderedTemplates(data))[0];
+    let mapEntry = {
+      templateContent: await page.template._getContent(
+        page.outputPath,
+        page.data
+      )
+    };
     this.setWrapWithLayouts(true);
 
-    return {
-      outputPath: mapEntry.outputPath,
-      url: mapEntry.url,
-      templateContent: mapEntry.templateContent
-    };
+    return mapEntry;
   }
 
   async getMapped() {
