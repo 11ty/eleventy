@@ -2,6 +2,9 @@ const validUrl = require("valid-url");
 const TemplatePath = require("../TemplatePath");
 
 module.exports = function(url, pathPrefix) {
+  // work with undefined
+  url = url || "";
+
   if (
     validUrl.isUri(url) ||
     url.indexOf("http://") === 0 ||
