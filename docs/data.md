@@ -13,6 +13,8 @@ title: My page title
 …
 ```
 
+The above is using [YAML syntax](https://learnxinyminutes.com/docs/yaml/).
+
 Locally assigned front matter values override things further up the chain. Note also that layouts can contain front matter variables as well. Leaf template front matter takes precedence over layout front matter.
 
 ### Special front matter keys:
@@ -25,6 +27,40 @@ Here are a few special front matter keys you can use:
 * `tags`: A single string or array that identifies that a piece of content is part of a collection. Collections can be reused in any other template. [Read more about Collections](collections.md).
 * `date`: Override the default date (file creation) to customize how the file is sorted in a collection. [Read more about Collections](collections.md).
 * `templateEngineOverride`: Override the template engine on a per-file basis, usually configured with a file extension or globally using the `markdownTemplateEngine` and `htmlTemplateEngine` configuration options. [Read more about Changing a Template’s Rendering Engine](engines.md).
+
+### Alternative Front Matter Formats
+
+Eleventy uses the [`gray-matter` package](https://github.com/jonschlinkert/gray-matter) for front matter processing. `gray-matter` includes support for YAML, JSON, and even arbitrary JavaScript front matter.
+
+#### JSON Front Matter
+
+```
+---json
+{
+  "title": "My page title"
+}
+---
+<!doctype html>
+<html>
+…
+```
+
+#### JavaScript Front Matter
+
+```
+---js
+{
+  title: "My page title"
+  currentDate: function() {
+    // wow you can have a function in here
+    return (new Date()).toLocaleString();
+  }
+}
+---
+<!doctype html>
+<html>
+…
+```
 
 ## External Data Files
 
@@ -64,10 +100,10 @@ _Important exception:_ Template and Directory Specific Data Files are **not** pr
 
 For example, consider a template located at `posts/subdir/my-first-blog-post.md`. Eleventy will look for data in the following places (starting with highest priority, local data keys override global data):
 
-1. `posts/subdir/my-first-blog-post.json` (data only applied to `posts/my-first-blog-post.md`)
-1. `posts/subdir/subdir.json` (on all templates in `posts/subdir/*`)
-1. `posts/posts.json` (on all templates in `posts/**/*`, including subdirectories)
-1. `_data/*` (global data files available to all templates)
+1.  `posts/subdir/my-first-blog-post.json` (data only applied to `posts/my-first-blog-post.md`)
+1.  `posts/subdir/subdir.json` (on all templates in `posts/subdir/*`)
+1.  `posts/posts.json` (on all templates in `posts/**/*`, including subdirectories)
+1.  `_data/*` (global data files available to all templates)
 
 _(Changed in Eleventy `v0.2.15` to search parent directories for data files—specifically step 3 above was added in the sequence)_
 

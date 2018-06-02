@@ -90,7 +90,8 @@ test("HTML files output to the same as the input directory have a file suffix ad
   t.is(await tmpl.getOutputPath(), "./test/stubs/subfolder/index-o.html");
 });
 
-test("Test raw front matter from template", async t => {
+test("Test raw front matter from template (yaml)", async t => {
+  // https://github.com/jonschlinkert/gray-matter/blob/master/examples/yaml.js
   let tmpl = new Template(
     "./test/stubs/templateFrontMatter.ejs",
     "./test/stubs/",
@@ -99,6 +100,52 @@ test("Test raw front matter from template", async t => {
   t.truthy(await tmpl.getInputContent(), "template exists and can be opened.");
 
   t.is((await tmpl.getFrontMatter()).data.key1, "value1");
+  t.is((await tmpl.getFrontMatter()).data.key3, "value3");
+
+  let data = await tmpl.getData();
+  t.is(data.key1, "value1");
+  t.is(data.key3, "value3");
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), "c:value1:value2:value3");
+});
+
+test("Test raw front matter from template (json)", async t => {
+  // https://github.com/jonschlinkert/gray-matter/blob/master/examples/json.js
+  let tmpl = new Template(
+    "./test/stubs/templateFrontMatterJson.ejs",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is((await tmpl.getFrontMatter()).data.key1, "value1");
+  t.is((await tmpl.getFrontMatter()).data.key3, "value3");
+
+  let data = await tmpl.getData();
+  t.is(data.key1, "value1");
+  t.is(data.key3, "value3");
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), "c:value1:value2:value3");
+});
+
+test("Test raw front matter from template (js)", async t => {
+  // https://github.com/jonschlinkert/gray-matter/blob/master/examples/javascript.js
+  let tmpl = new Template(
+    "./test/stubs/templateFrontMatterJs.ejs",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is((await tmpl.getFrontMatter()).data.key1, "value1");
+  t.is((await tmpl.getFrontMatter()).data.key3, "value3");
+
+  let data = await tmpl.getData();
+  t.is(data.key1, "value1");
+  t.is(data.key3, "value3");
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), "c:value1:VALUE2:value3");
 });
 
 test("Test that getData() works", async t => {
