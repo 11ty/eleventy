@@ -1,10 +1,14 @@
-# eleventy 🕚 v0.3.5
+<center>
+  <img src="docs/logo-github.png" alt="eleventy Logo">
+</center>
+
+# eleventy 🕚
 
 A simpler static site generator. An alternative to Jekyll. Written in JavaScript. Transforms a directory of templates (of varying types) into HTML.
 
 Works with HTML, Markdown, Liquid, Nunjucks, Handlebars, Mustache, EJS, Haml, Pug, and JavaScript Template Literals.
 
-## Our [documentation has moved](https://www.11ty.io/docs/)
+## ➡ [Our documentation has moved](https://www.11ty.io/docs/)
 
 ## Tests
 

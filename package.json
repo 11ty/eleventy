@@ -7,6 +7,28 @@
   "engines": {
     "node": ">=8.0.0"
   },
+  "keywords": [
+    "static-site-generator",
+    "ssg",
+    "documentation",
+    "website",
+    "jekyll",
+    "blog",
+    "templates",
+    "generator",
+    "framework",
+    "eleventy",
+    "11ty",
+    "html",
+    "markdown",
+    "liquid",
+    "nunjucks",
+    "pug",
+    "handlebars",
+    "mustache",
+    "ejs",
+    "haml"
+  ],
   "bin": {
     "eleventy": "./cmd.js"
   },
