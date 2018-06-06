@@ -1,6 +1,4 @@
-<center>
-  <img src="docs/logo-github.png" alt="eleventy Logo">
-</center>
+<img src="docs/logo-github.png" alt="eleventy Logo" style="display: block; margin: 0 auto;">
 
 # eleventy 🕚
 
