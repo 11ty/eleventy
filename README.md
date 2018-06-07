@@ -6,7 +6,14 @@ A simpler static site generator. An alternative to Jekyll. Written in JavaScript
 
 Works with HTML, Markdown, Liquid, Nunjucks, Handlebars, Mustache, EJS, Haml, Pug, and JavaScript Template Literals.
 
-## ➡ [Our documentation has moved](https://www.11ty.io/docs/)
+## ➡ [Documentation](https://www.11ty.io/docs/)
+
+## Pay the piper
+
+* Please star [this repo on GitHub](https://github.com/11ty/eleventy/)!
+* Follow us on Twitter [@eleven_ty](https://twitter.com/eleven_ty)
+* [@11ty on npm](https://www.npmjs.com/org/11ty)
+* [@11ty on GitHub](https://github.com/11ty)
 
 ## Tests
 
