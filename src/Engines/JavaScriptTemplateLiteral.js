@@ -10,6 +10,7 @@ class JavaScriptTemplateLiteral extends TemplateEngine {
         dataStr += `let ${j} = ${JSON.stringify(data[j])};\n`;
       }
 
+      // TODO get rid of this as it doesn’t allow things like: html``
       // add ` around template if it doesn’t exist.
       let trimmedStr = str.trim();
       if (trimmedStr.charAt(trimmedStr.length - 1) !== "`") {
