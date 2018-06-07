@@ -125,10 +125,10 @@ TemplateData.prototype.combineLocalData = async function(localDataPaths) {
   if (!Array.isArray(localDataPaths)) {
     localDataPaths = [localDataPaths];
   }
-
   for (let path of localDataPaths) {
     let dataForPath = await this.getJson(path, rawImports, true);
     lodashMerge(localData, dataForPath);
+    // debug("`combineLocalData` (iterating) for %o: %O", path, localData);
   }
   return localData;
 };
@@ -138,7 +138,9 @@ TemplateData.prototype.getLocalData = async function(templatePath) {
   let importedData = await this.combineLocalData(localDataPaths);
   let globalData = await this.getData();
 
-  return Object.assign({}, globalData, importedData);
+  let localData = Object.assign({}, globalData, importedData);
+  // debug("`getLocalData` for %o: %O", templatePath, localData);
+  return localData;
 };
 
 TemplateData.prototype._getLocalJson = async function(path) {
@@ -218,7 +220,7 @@ TemplateData.prototype.getLocalDataPaths = function(templatePath) {
     }
   }
   debug("getLocalDataPaths(%o): %o", templatePath, paths);
-  return lodashUniq(paths);
+  return lodashUniq(paths).reverse();
 };
 
 module.exports = TemplateData;
