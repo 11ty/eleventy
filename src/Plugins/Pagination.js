@@ -1,6 +1,6 @@
-const lodashchunk = require("lodash.chunk");
-const lodashget = require("lodash.get");
-const lodashset = require("lodash.set");
+const lodashChunk = require("lodash.chunk");
+const lodashGet = require("lodash.get");
+const lodashSet = require("lodash.set");
 const config = require("../Config");
 
 function Pagination(data) {
@@ -52,15 +52,29 @@ Pagination.prototype._getDataKey = function() {
   return this.data.pagination.data;
 };
 
+Pagination.prototype.resolveObjectToValues = function() {
+  if ("resolve" in this.data.pagination) {
+    return this.data.pagination.resolve === "values";
+  }
+  return false;
+};
+
 Pagination.prototype._resolveItems = function() {
   let notFoundValue = "__NOT_FOUND_ERROR__";
   let key = this._getDataKey();
-  let ret = lodashget(this.data, key, notFoundValue);
-
+  let ret = lodashGet(this.data, key, notFoundValue);
   if (ret === notFoundValue) {
     throw new Error(
       `Could not resolve pagination key in template data: ${key}`
     );
+  }
+
+  if (!Array.isArray(ret)) {
+    if (this.resolveObjectToValues()) {
+      ret = Object.values(ret);
+    } else {
+      ret = Object.keys(ret);
+    }
   }
 
   return ret;
@@ -70,7 +84,7 @@ Pagination.prototype.getPagedItems = function() {
   if (!this.data) {
     throw new Error("Missing `setData` call for Pagination object.");
   }
-  return lodashchunk(this.target, this.size);
+  return lodashChunk(this.target, this.size);
 };
 
 // TODO this name is not good
@@ -119,7 +133,7 @@ Pagination.prototype.getPageTemplates = async function() {
     };
 
     if (this.alias) {
-      lodashset(
+      lodashSet(
         override,
         this.alias,
         this.size === 1 ? items[pageNumber][0] : items[pageNumber]
