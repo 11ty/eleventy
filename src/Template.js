@@ -141,6 +141,7 @@ class Template {
   // TODO check for conflicts, see if file already exists?
   async getOutputPath(data) {
     let uri = await this.getOutputLink(data);
+    // TODO permalinkRoot doesn’t inherit from the data chain—should it?
     if ((await this.getFrontMatterData())[this.config.keys.permalinkRoot]) {
       return normalize(uri);
     } else {

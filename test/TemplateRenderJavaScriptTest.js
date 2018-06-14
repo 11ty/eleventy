@@ -29,6 +29,30 @@ test("JS Render with a Class", async t => {
   t.is(await fn({ name: "Bill" }), "<p>Bill</p>");
 });
 
+test("JS Render with a Class, async render", async t => {
+  let fn = await new TemplateRender(
+    "../../test/stubs/class-template-literal-async.js"
+  ).getCompiledTemplate();
+  t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
+  t.is(await fn({ name: "Bill" }), "<p>Bill</p>");
+});
+
+test("JS Render with a Class and Data getter", async t => {
+  let fn = await new TemplateRender(
+    "../../test/stubs/class-template-literal-data.js"
+  ).getCompiledTemplate();
+  t.is(await fn(), "<p>Ted</p>");
+  t.is(await fn({ name: "Bill" }), "<p>Ted</p>");
+});
+
+test("JS Render with a Class and Data function", async t => {
+  let fn = await new TemplateRender(
+    "../../test/stubs/class-template-literal-data-fn.js"
+  ).getCompiledTemplate();
+  t.is(await fn(), "<p>Ted</p>");
+  t.is(await fn({ name: "Bill" }), "<p>Ted</p>");
+});
+
 test("JS Render using Vue", async t => {
   let fn = await new TemplateRender(
     "../../test/stubs/vue.js"
