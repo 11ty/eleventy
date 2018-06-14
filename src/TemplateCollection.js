@@ -8,7 +8,7 @@ class TemplateCollection extends Sortable {
   }
 
   // right now this is only used by the tests
-  async addTemplate(template) {
+  async _testAddTemplate(template) {
     let templateMap = await template.getMapped();
     this.add(templateMap);
   }
@@ -29,14 +29,20 @@ class TemplateCollection extends Sortable {
     });
   }
 
-  getFilteredByGlob(globs) {
+  getGlobs(globs) {
     if (typeof globs === "string") {
       globs = [globs];
     }
 
-    return this._cache("getFilteredByGlob:" + globs.join(","), function() {
-      globs = globs.map(glob => TemplatePath.addLeadingDotSlash(glob));
+    globs = globs.map(glob => TemplatePath.addLeadingDotSlash(glob));
 
+    return globs;
+  }
+
+  getFilteredByGlob(globs) {
+    globs = this.getGlobs(globs);
+
+    return this._cache("getFilteredByGlob:" + globs.join(","), function() {
       return this.getAllSorted().filter(item => {
         if (multimatch([item.inputPath], globs).length) {
           return true;

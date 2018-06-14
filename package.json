@@ -1,12 +1,35 @@
 {
   "name": "@11ty/eleventy",
-  "version": "0.3.3",
+  "version": "0.3.6",
   "description": "Transform a directory of templates into HTML.",
   "main": "src/Eleventy.js",
   "license": "MIT",
   "engines": {
     "node": ">=8.0.0"
   },
+  "keywords": [
+    "static-site-generator",
+    "static-site",
+    "ssg",
+    "documentation",
+    "website",
+    "jekyll",
+    "blog",
+    "templates",
+    "generator",
+    "framework",
+    "eleventy",
+    "11ty",
+    "html",
+    "markdown",
+    "liquid",
+    "nunjucks",
+    "pug",
+    "handlebars",
+    "mustache",
+    "ejs",
+    "haml"
+  ],
   "bin": {
     "eleventy": "./cmd.js"
   },
@@ -54,6 +77,7 @@
     "vue-server-renderer": "^2.5.16"
   },
   "dependencies": {
+    "browser-sync": "^2.24.4",
     "chalk": "^2.3.2",
     "check-node-version": "^3.2.0",
     "debug": "^3.1.0",
@@ -64,7 +88,7 @@
     "gray-matter": "^3.1.1",
     "hamljs": "^0.6.2",
     "handlebars": "^4.0.11",
-    "liquidjs": "^2.2.1",
+    "liquidjs": "^4.0.0",
     "lodash.chunk": "^4.2.0",
     "lodash.clone": "^4.5.0",
     "lodash.get": "^4.4.2",
@@ -84,7 +108,6 @@
     "pretty": "^2.0.0",
     "pug": "^2.0.3",
     "semver": "^5.5.0",
-    "serve": "^6.5.5",
     "slugify": "^1.2.9",
     "time-require": "^0.1.2",
     "valid-url": "^1.0.9"

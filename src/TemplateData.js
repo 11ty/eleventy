@@ -1,5 +1,4 @@
 const fs = require("fs-extra");
-const pify = require("pify");
 const globby = require("globby");
 const parsePath = require("parse-filepath");
 const lodashset = require("lodash.set");
@@ -64,7 +63,7 @@ TemplateData.prototype.getGlobalDataGlob = async function() {
   let dir = ".";
 
   if (this.inputDir) {
-    let globalPathStat = await pify(fs.stat)(this.inputDir);
+    let globalPathStat = await fs.stat(this.inputDir);
 
     if (!globalPathStat.isDirectory()) {
       throw new Error("Could not find data path directory: " + this.inputDir);
@@ -126,10 +125,10 @@ TemplateData.prototype.combineLocalData = async function(localDataPaths) {
   if (!Array.isArray(localDataPaths)) {
     localDataPaths = [localDataPaths];
   }
-
   for (let path of localDataPaths) {
     let dataForPath = await this.getJson(path, rawImports, true);
     lodashMerge(localData, dataForPath);
+    // debug("`combineLocalData` (iterating) for %o: %O", path, localData);
   }
   return localData;
 };
@@ -139,13 +138,15 @@ TemplateData.prototype.getLocalData = async function(templatePath) {
   let importedData = await this.combineLocalData(localDataPaths);
   let globalData = await this.getData();
 
-  return Object.assign({}, globalData, importedData);
+  let localData = Object.assign({}, globalData, importedData);
+  // debug("`getLocalData` for %o: %O", templatePath, localData);
+  return localData;
 };
 
 TemplateData.prototype._getLocalJson = async function(path) {
   let rawInput;
   try {
-    rawInput = await pify(fs.readFile)(path, "utf-8");
+    rawInput = await fs.readFile(path, "utf-8");
   } catch (e) {
     // if file does not exist, return nothing
   }
@@ -219,7 +220,7 @@ TemplateData.prototype.getLocalDataPaths = function(templatePath) {
     }
   }
   debug("getLocalDataPaths(%o): %o", templatePath, paths);
-  return lodashUniq(paths);
+  return lodashUniq(paths).reverse();
 };
 
 module.exports = TemplateData;

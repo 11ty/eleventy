@@ -1,13 +1,15 @@
-const fs = require("fs");
+const fs = require("fs-extra");
 const chalk = require("chalk");
 const parsePath = require("parse-filepath");
+
+const TemplatePath = require("./TemplatePath");
 const TemplateData = require("./TemplateData");
 const TemplateWriter = require("./TemplateWriter");
+const EleventyServe = require("./EleventyServe");
 const templateCache = require("./TemplateCache");
 const EleventyError = require("./EleventyError");
 const simplePlural = require("./Util/Pluralize");
 const config = require("./Config");
-const pkg = require("../package.json");
 const debug = require("debug")("Eleventy");
 
 function Eleventy(input, output) {
@@ -22,6 +24,7 @@ function Eleventy(input, output) {
 
   this.start = new Date();
   this.formatsOverride = null;
+  this.eleventyServe = new EleventyServe();
 
   this.initDirs(input, output);
 }
@@ -30,6 +33,8 @@ Eleventy.prototype.initDirs = function() {
   this.input = this.rawInput || this.config.dir.input;
   this.inputDir = this._getDir(this.input) || ".";
   this.outputDir = this.rawOutput || this.config.dir.output;
+
+  this.eleventyServe.setOutputDir(this.getOutputDir());
 };
 
 Eleventy.prototype._getDir = function(inputPath) {
@@ -164,7 +169,7 @@ Eleventy.prototype.setFormats = function(formats) {
 };
 
 Eleventy.prototype.getVersion = function() {
-  return pkg.version;
+  return require("../package.json").version;
 };
 
 Eleventy.prototype.getHelp = function() {
@@ -199,6 +204,13 @@ Eleventy.prototype.getHelp = function() {
   return out.join("\n");
 };
 
+Eleventy.prototype.resetConfig = function() {
+  config.reset();
+
+  this.config = config.getConfig();
+  this.eleventyServe.updateConfig(this.config);
+};
+
 Eleventy.prototype._watch = async function(path) {
   if (this.active) {
     this.queuedToRun = path;
@@ -209,11 +221,16 @@ Eleventy.prototype._watch = async function(path) {
 
   // reset and reload global configuration :O
   if (path === config.getLocalProjectConfigFile()) {
-    config.reset();
+    this.resetConfig();
   }
 
   this.restart();
   await this.write();
+
+  let isInclude =
+    path && TemplatePath.contains(path, this.writer.getIncludesDir());
+  this.eleventyServe.reload(path, isInclude);
+
   this.active = false;
 
   if (this.queuedToRun) {
@@ -260,6 +277,10 @@ Eleventy.prototype.watch = async function() {
   );
 };
 
+Eleventy.prototype.serve = function(port) {
+  this.eleventyServe.serve(port);
+};
+
 Eleventy.prototype.write = async function() {
   try {
     let ret = await this.writer.write();
@@ -271,7 +292,12 @@ I want to hear it! Open an issue: https://github.com/11ty/eleventy/issues/new`);
 
     return ret;
   } catch (e) {
-    console.log("\n" + chalk.red("Problem writing eleventy templates: "));
+    console.log(
+      "\n" +
+        chalk.red(
+          "Problem writing eleventy templates (more info in DEBUG output): "
+        )
+    );
     if (e instanceof EleventyError) {
       console.log(chalk.red(e.log()));
       for (let err of e.getAll()) {

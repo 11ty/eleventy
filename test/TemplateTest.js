@@ -90,14 +90,62 @@ test("HTML files output to the same as the input directory have a file suffix ad
   t.is(await tmpl.getOutputPath(), "./test/stubs/subfolder/index-o.html");
 });
 
-test("Test raw front matter from template", t => {
+test("Test raw front matter from template (yaml)", async t => {
+  // https://github.com/jonschlinkert/gray-matter/blob/master/examples/yaml.js
   let tmpl = new Template(
     "./test/stubs/templateFrontMatter.ejs",
     "./test/stubs/",
     "./dist"
   );
-  t.truthy(tmpl.inputContent, "template exists and can be opened.");
-  t.is(tmpl.frontMatter.data.key1, "value1");
+  t.truthy(await tmpl.getInputContent(), "template exists and can be opened.");
+
+  t.is((await tmpl.getFrontMatter()).data.key1, "value1");
+  t.is((await tmpl.getFrontMatter()).data.key3, "value3");
+
+  let data = await tmpl.getData();
+  t.is(data.key1, "value1");
+  t.is(data.key3, "value3");
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), "c:value1:value2:value3");
+});
+
+test("Test raw front matter from template (json)", async t => {
+  // https://github.com/jonschlinkert/gray-matter/blob/master/examples/json.js
+  let tmpl = new Template(
+    "./test/stubs/templateFrontMatterJson.ejs",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is((await tmpl.getFrontMatter()).data.key1, "value1");
+  t.is((await tmpl.getFrontMatter()).data.key3, "value3");
+
+  let data = await tmpl.getData();
+  t.is(data.key1, "value1");
+  t.is(data.key3, "value3");
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), "c:value1:value2:value3");
+});
+
+test("Test raw front matter from template (js)", async t => {
+  // https://github.com/jonschlinkert/gray-matter/blob/master/examples/javascript.js
+  let tmpl = new Template(
+    "./test/stubs/templateFrontMatterJs.ejs",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is((await tmpl.getFrontMatter()).data.key1, "value1");
+  t.is((await tmpl.getFrontMatter()).data.key3, "value3");
+
+  let data = await tmpl.getData();
+  t.is(data.key1, "value1");
+  t.is(data.key3, "value3");
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), "c:value1:VALUE2:value3");
 });
 
 test("Test that getData() works", async t => {
@@ -113,7 +161,7 @@ test("Test that getData() works", async t => {
 
   let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
     tmpl,
-    tmpl.getFrontMatterData()
+    await tmpl.getFrontMatterData()
   );
 
   t.is(mergedFrontMatter.key1, "value1");
@@ -152,7 +200,7 @@ test("One Layout (using new content var)", async t => {
     dataObj
   );
 
-  t.is(tmpl.frontMatter.data[config.keys.layout], "defaultLayout");
+  t.is((await tmpl.getFrontMatter()).data[config.keys.layout], "defaultLayout");
 
   let data = await tmpl.getData();
   t.is(data[config.keys.layout], "defaultLayout");
@@ -166,7 +214,7 @@ test("One Layout (using new content var)", async t => {
 
   let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
     tmpl,
-    tmpl.getFrontMatterData()
+    await tmpl.getFrontMatterData()
   );
 
   t.is(mergedFrontMatter.keymain, "valuemain");
@@ -182,7 +230,10 @@ test("One Layout (using layoutContent)", async t => {
     dataObj
   );
 
-  t.is(tmpl.frontMatter.data[config.keys.layout], "defaultLayoutLayoutContent");
+  t.is(
+    (await tmpl.getFrontMatter()).data[config.keys.layout],
+    "defaultLayoutLayoutContent"
+  );
 
   let data = await tmpl.getData();
   t.is(data[config.keys.layout], "defaultLayoutLayoutContent");
@@ -196,7 +247,7 @@ test("One Layout (using layoutContent)", async t => {
 
   let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
     tmpl,
-    tmpl.getFrontMatterData()
+    await tmpl.getFrontMatterData()
   );
 
   t.is(mergedFrontMatter.keymain, "valuemain");
@@ -214,7 +265,10 @@ test("One Layout (layouts disabled)", async t => {
 
   tmpl.setWrapWithLayouts(false);
 
-  t.is(tmpl.frontMatter.data[config.keys.layout], "defaultLayoutLayoutContent");
+  t.is(
+    (await tmpl.getFrontMatter()).data[config.keys.layout],
+    "defaultLayoutLayoutContent"
+  );
 
   let data = await tmpl.getData();
   t.is(data[config.keys.layout], "defaultLayoutLayoutContent");
@@ -223,7 +277,7 @@ test("One Layout (layouts disabled)", async t => {
 
   let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
     tmpl,
-    tmpl.getFrontMatterData()
+    await tmpl.getFrontMatterData()
   );
 
   t.is(mergedFrontMatter.keymain, "valuemain");
@@ -240,7 +294,7 @@ test("One Layout (_layoutContent deprecated but supported)", async t => {
   );
 
   t.is(
-    tmpl.frontMatter.data[config.keys.layout],
+    (await tmpl.getFrontMatter()).data[config.keys.layout],
     "defaultLayout_layoutContent"
   );
 
@@ -256,7 +310,7 @@ test("One Layout (_layoutContent deprecated but supported)", async t => {
 
   let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
     tmpl,
-    tmpl.getFrontMatterData()
+    await tmpl.getFrontMatterData()
   );
 
   t.is(mergedFrontMatter.keymain, "valuemain");
@@ -272,7 +326,10 @@ test("One Layout (liquid test)", async t => {
     dataObj
   );
 
-  t.is(tmpl.frontMatter.data[config.keys.layout], "layoutLiquid.liquid");
+  t.is(
+    (await tmpl.getFrontMatter()).data[config.keys.layout],
+    "layoutLiquid.liquid"
+  );
 
   let data = await tmpl.getData();
   t.is(data[config.keys.layout], "layoutLiquid.liquid");
@@ -286,7 +343,7 @@ test("One Layout (liquid test)", async t => {
 
   let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
     tmpl,
-    tmpl.getFrontMatterData()
+    await tmpl.getFrontMatterData()
   );
 
   t.is(mergedFrontMatter.keymain, "valuemain");
@@ -302,7 +359,7 @@ test("Two Layouts", async t => {
     dataObj
   );
 
-  t.is(tmpl.frontMatter.data[config.keys.layout], "layout-a");
+  t.is((await tmpl.getFrontMatter()).data[config.keys.layout], "layout-a");
 
   let data = await tmpl.getData();
   t.is(data[config.keys.layout], "layout-a");
@@ -319,7 +376,7 @@ test("Two Layouts", async t => {
 
   let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
     tmpl,
-    tmpl.getFrontMatterData()
+    await tmpl.getFrontMatterData()
   );
 
   t.is(mergedFrontMatter.daysPosted, 152);
@@ -380,6 +437,27 @@ test("Permalink output directory", async t => {
   t.is(await tmpl.getOutputPath(), "./dist/permalinksubfolder/index.html");
 });
 
+test("Permalink output directory from layout", async t => {
+  let tmpl = new Template(
+    "./test/stubs/permalink-in-layout.ejs",
+    "./test/stubs/",
+    "./dist"
+  );
+  t.is(await tmpl.getOutputPath(), "./dist/hello/index.html");
+});
+
+test("Permalink output directory from layout (fileslug)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/permalink-in-layout-fileslug.ejs",
+    "./test/stubs/",
+    "./dist"
+  );
+  t.is(
+    await tmpl.getOutputPath(),
+    "./dist/test/permalink-in-layout-fileslug/index.html"
+  );
+});
+
 test("Local template data file import (without a global data json)", async t => {
   let dataObj = new TemplateData();
   await dataObj.cacheData();
@@ -411,9 +489,9 @@ test("Local template data file import (two subdirectories deep)", async t => {
   );
 
   t.deepEqual(dataObj.getLocalDataPaths(tmpl.getInputPath()), [
-    "./test/stubs/firstdir/seconddir/component.json",
+    "./test/stubs/firstdir/firstdir.json",
     "./test/stubs/firstdir/seconddir/seconddir.json",
-    "./test/stubs/firstdir/firstdir.json"
+    "./test/stubs/firstdir/seconddir/component.json"
   ]);
 });
 
@@ -430,8 +508,8 @@ test("Posts inherits local JSON, layouts", async t => {
 
   let localDataPaths = dataObj.getLocalDataPaths(tmpl.getInputPath());
   t.deepEqual(localDataPaths, [
-    "./test/stubs/posts/post1.json",
-    "./test/stubs/posts/posts.json"
+    "./test/stubs/posts/posts.json",
+    "./test/stubs/posts/post1.json"
   ]);
 
   let localData = await dataObj.getLocalData(tmpl.getInputPath());
@@ -487,7 +565,6 @@ test("Clone the template", async t => {
 
   t.is(await tmpl.getOutputPath(), "./dist/default/index.html");
   t.is(await cloned.getOutputPath(), "./dist/default/index.html");
-  t.is(await tmpl.isEqual(cloned), true);
 });
 
 test("Permalink with variables!", async t => {
@@ -713,6 +790,32 @@ test("getRenderedData() has page.url", async t => {
   let data = await tmpl.getRenderedData();
 
   t.truthy(data.page.url);
+});
+
+test("getTemplates() data has page.url", async t => {
+  let tmpl = new Template(
+    "./test/stubs/template.ejs",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getData();
+  let templates = await tmpl.getTemplates(data);
+
+  t.is(templates[0].data.page.url, "/template/");
+  t.is(templates[0].data.page.outputPath, "./dist/template/index.html");
+});
+
+test("getRenderedTemplates() data has page.url", async t => {
+  let tmpl = new Template(
+    "./test/stubs/template.ejs",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getData();
+
+  let templates = await tmpl.getRenderedTemplates(data);
+  t.is(templates[0].data.page.url, "/template/");
+  t.is(templates[0].data.page.outputPath, "./dist/template/index.html");
 });
 
 test("getRenderedData() has page.url", async t => {

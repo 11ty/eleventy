@@ -1,0 +1,16 @@
+{
+  "articles":
+  [
+    {
+      "title": "Do you even paginate bro?",
+      "author": "Bill Ted",
+      "publish_date": "2018-06-22",
+      "tags": [
+        "post"
+      ],
+      "image": "/url/thing",
+      "teaser": "Teaser copy",
+      "body": "<p>Raw HTML</p>"
+    }
+  ]
+}

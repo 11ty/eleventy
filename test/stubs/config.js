@@ -1,10 +1,6 @@
 const pretty = require("pretty");
 
 module.exports = function(config) {
-  // config.on("alldata", function(dataMap) {
-  //   console.log( "alldata", dataMap );
-  // });
-
   /* {
     template,
     inputPath,

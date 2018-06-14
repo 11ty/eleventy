@@ -1,4 +1,5 @@
 const config = require("./Config");
+const EleventyError = require("./EleventyError");
 const TemplatePassthrough = require("./TemplatePassthrough");
 const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
@@ -87,8 +88,6 @@ class TemplatePassthroughManager {
   // Performance note: these can actually take a fair bit of time, but aren’t a
   // bottleneck to eleventy. The copies are performed asynchronously and don’t affect eleventy
   // write times in a significant way.
-
-  // TODO Hmm—we aren’t using await here—eleventy could finish before the copy is done.
   async copyAll(paths) {
     if (!this.config.passthroughFileCopy) {
       debug("`passthroughFileCopy` is disabled in config, bypassing.");
@@ -98,13 +97,13 @@ class TemplatePassthroughManager {
     debug("TemplatePassthrough copy started.");
     for (let cfgPath of this.getConfigPaths()) {
       this.count++;
-      this.copyPath(cfgPath);
+      await this.copyPath(cfgPath);
     }
 
     let passthroughPaths = this.getFilePaths(paths);
     for (let path of passthroughPaths) {
       this.count++;
-      this.copyPath(path);
+      await this.copyPath(path);
     }
 
     debug(`TemplatePassthrough copy finished. Current count: ${this.count}`);

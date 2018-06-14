@@ -9,6 +9,7 @@ class TemplateMap {
     this.map = [];
     this.collection = new TemplateCollection();
     this.collectionsData = null;
+    this.cached = false;
   }
 
   async add(template) {
@@ -30,6 +31,7 @@ class TemplateMap {
     this.collectionsData = await this.getAllCollectionsData();
     await this.populateDataInMap();
     this.populateCollectionsWithContent();
+    this.cached = true;
   }
 
   getMapEntryForPath(inputPath) {
@@ -54,29 +56,40 @@ class TemplateMap {
   }
 
   async populateDataInMap() {
+    let pages = [];
     for (let map of this.map) {
-      map.data.collections = await this.getCollectionsDataForTemplate();
+      // TODO these collections shouldn’t be passed around in a cached data object like this
+      map.data.collections = this.collectionsData;
+      let pages = await map.template.getTemplates(map.data);
+      map._initialPage = pages[0];
+
+      Object.assign(
+        map,
+        await map.template.getSecondaryMapEntry(map._initialPage)
+      );
     }
-    debugDev("Added this.map[...].data.collections");
+
+    this.populateCollectionsWithData();
 
     for (let map of this.map) {
-      map.template.setWrapWithLayouts(false);
-      map.templateContent = (await map.template.getRenderedTemplates(
-        map.outputPath,
-        map.data
-      ))[0].templateContent;
-      map.template.setWrapWithLayouts(true);
+      Object.assign(
+        map,
+        await map.template.getTertiaryMapEntry(map._initialPage)
+      );
+
+      debugDev(
+        "Added this.map[...].templateContent, outputPath, et al for one map entry"
+      );
     }
-    debugDev("Added this.map[...].templateContent");
   }
 
-  async createTemplateMapCopy(filteredMap) {
+  createTemplateMapCopy(filteredMap) {
     let copy = [];
     for (let map of filteredMap) {
-      let mapCopy = lodashClone(map);
+      // let mapCopy = lodashClone(map);
 
-      // Circular reference
-      delete mapCopy.data.collections;
+      // TODO try this instead of lodash.clone
+      let mapCopy = Object.assign({}, map);
 
       copy.push(mapCopy);
     }
@@ -101,14 +114,14 @@ class TemplateMap {
 
   async getAllCollectionsData() {
     let collections = {};
-    collections.all = await this.createTemplateMapCopy(
+    collections.all = this.createTemplateMapCopy(
       this.collection.getAllSorted()
     );
     debug(`Collection: collections.all size: ${collections.all.length}`);
 
     let tags = this.getAllTags();
     for (let tag of tags) {
-      collections[tag] = await this.createTemplateMapCopy(
+      collections[tag] = this.createTemplateMapCopy(
         this.collection.getFilteredByTag(tag)
       );
       debug(`Collection: collections.${tag} size: ${collections[tag].length}`);
@@ -116,7 +129,7 @@ class TemplateMap {
 
     let configCollections = eleventyConfig.getCollections();
     for (let name in configCollections) {
-      collections[name] = await this.createTemplateMapCopy(
+      collections[name] = this.createTemplateMapCopy(
         configCollections[name](this.collection)
       );
       debug(
@@ -125,6 +138,18 @@ class TemplateMap {
     }
 
     return collections;
+  }
+
+  populateCollectionsWithData() {
+    for (let collectionName in this.collectionsData) {
+      for (let item of this.collectionsData[collectionName]) {
+        let index = this.getMapTemplateIndex(item);
+        if (index !== -1) {
+          item.outputPath = this.map[index].outputPath;
+          item.url = this.map[index].url;
+        }
+      }
+    }
   }
 
   populateCollectionsWithContent() {
@@ -138,8 +163,8 @@ class TemplateMap {
     }
   }
 
-  async getCollectionsDataForTemplate() {
-    if (!this.collectionsData) {
+  async getCollectionsData() {
+    if (!this.cached) {
       await this.cache();
     }
 

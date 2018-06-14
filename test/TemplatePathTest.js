@@ -1,5 +1,6 @@
 import test from "ava";
 import path from "path";
+import normalize from "normalize-path";
 import TemplatePath from "../src/TemplatePath";
 
 test("Working dir", t => {
@@ -26,6 +27,9 @@ test("Normalizer", async t => {
   t.is(TemplatePath.normalize("./testing", "hello/"), "testing/hello");
   t.is(TemplatePath.normalize("./testing/hello"), "testing/hello");
   t.is(TemplatePath.normalize("./testing/hello/"), "testing/hello");
+
+  t.is(normalize(".htaccess"), ".htaccess");
+  t.is(TemplatePath.normalize(".htaccess"), ".htaccess");
 });
 
 test("stripLeadingDotSlash", t => {
@@ -33,6 +37,8 @@ test("stripLeadingDotSlash", t => {
   t.is(TemplatePath.stripLeadingDotSlash("./dist"), "dist");
   t.is(TemplatePath.stripLeadingDotSlash("../dist"), "../dist");
   t.is(TemplatePath.stripLeadingDotSlash("dist"), "dist");
+
+  t.is(TemplatePath.stripLeadingDotSlash(".htaccess"), ".htaccess");
 });
 
 test("hasTrailingSlash", t => {
@@ -56,6 +62,31 @@ test("addLeadingDotSlash", t => {
   t.is(TemplatePath.addLeadingDotSlash(".nyc_output"), "./.nyc_output");
 });
 
+test("contains", t => {
+  t.false(TemplatePath.contains("./testing/hello", "./lskdjklfjz"));
+  t.false(TemplatePath.contains("./testing/hello", "lskdjklfjz"));
+  t.false(TemplatePath.contains("testing/hello", "./lskdjklfjz"));
+  t.false(TemplatePath.contains("testing/hello", "lskdjklfjz"));
+
+  t.true(TemplatePath.contains("./testing/hello", "./testing"));
+  t.true(TemplatePath.contains("./testing/hello", "testing"));
+  t.true(TemplatePath.contains("testing/hello", "./testing"));
+  t.true(TemplatePath.contains("testing/hello", "testing"));
+
+  t.true(TemplatePath.contains("testing/hello/subdir/test", "testing"));
+  t.false(TemplatePath.contains("testing/hello/subdir/test", "hello"));
+  t.false(TemplatePath.contains("testing/hello/subdir/test", "hello/subdir"));
+  t.true(
+    TemplatePath.contains("testing/hello/subdir/test", "testing/hello/subdir")
+  );
+  t.true(
+    TemplatePath.contains(
+      "testing/hello/subdir/test",
+      "testing/hello/subdir/test"
+    )
+  );
+});
+
 test("stripPathFromDir", t => {
   t.is(
     TemplatePath.stripPathFromDir("./testing/hello", "./lskdjklfjz"),
@@ -69,6 +100,9 @@ test("stripPathFromDir", t => {
     TemplatePath.stripPathFromDir("testing/hello/subdir/test", "testing"),
     "hello/subdir/test"
   );
+
+  t.is(TemplatePath.stripPathFromDir(".htaccess", "./"), ".htaccess");
+  t.is(TemplatePath.stripPathFromDir(".htaccess", "."), ".htaccess");
 });
 
 test("getLastDir", t => {

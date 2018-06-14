@@ -105,6 +105,7 @@ test("Test url filter with passthrough urls", t => {
 test("Test url filter", t => {
   t.is(url("/", "/"), "/");
   t.is(url("//", "/"), "/");
+  t.is(url(undefined, "/"), ".");
   t.is(url("", "/"), ".");
 
   // leave . and .. alone
@@ -129,6 +130,7 @@ test("Test url filter", t => {
 test("Test url filter with custom pathPrefix (empty, gets overwritten by root config `/`)", t => {
   t.is(url("/", ""), "/");
   t.is(url("//", ""), "/");
+  t.is(url(undefined, ""), ".");
   t.is(url("", ""), ".");
 
   // leave . and .. alone
@@ -153,6 +155,7 @@ test("Test url filter with custom pathPrefix (empty, gets overwritten by root co
 test("Test url filter with custom pathPrefix (leading slash)", t => {
   t.is(url("/", "/testdir"), "/testdir/");
   t.is(url("//", "/testdir"), "/testdir/");
+  t.is(url(undefined, "/testdir"), ".");
   t.is(url("", "/testdir"), ".");
 
   // leave . and .. alone
@@ -177,6 +180,7 @@ test("Test url filter with custom pathPrefix (leading slash)", t => {
 test("Test url filter with custom pathPrefix (double slash)", t => {
   t.is(url("/", "/testdir/"), "/testdir/");
   t.is(url("//", "/testdir/"), "/testdir/");
+  t.is(url(undefined, "/testdir/"), ".");
   t.is(url("", "/testdir/"), ".");
 
   // leave . and .. alone
@@ -201,6 +205,7 @@ test("Test url filter with custom pathPrefix (double slash)", t => {
 test("Test url filter with custom pathPrefix (trailing slash)", t => {
   t.is(url("/", "testdir/"), "/testdir/");
   t.is(url("//", "testdir/"), "/testdir/");
+  t.is(url(undefined, "testdir/"), ".");
   t.is(url("", "testdir/"), ".");
 
   // leave . and .. alone
@@ -225,6 +230,7 @@ test("Test url filter with custom pathPrefix (trailing slash)", t => {
 test("Test url filter with custom pathPrefix (no slash)", t => {
   t.is(url("/", "testdir"), "/testdir/");
   t.is(url("//", "testdir"), "/testdir/");
+  t.is(url(undefined, "testdir"), ".");
   t.is(url("", "testdir"), ".");
 
   // leave . and .. alone
