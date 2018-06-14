@@ -415,3 +415,51 @@ test("Page over an object (use values)", async t => {
     "<ol><li>itemvalue5</li><li>itemvalue6</li><li>itemvalue7</li><li>itemvalue8</li></ol>"
   );
 });
+
+test("Page over an object (filtered, array)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/pagedobjectfilterarray.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let paging = new Pagination(data);
+  paging.setTemplate(tmpl);
+  let pages = await paging.getPageTemplates();
+  t.is(pages.length, 2);
+
+  t.is(
+    (await pages[0].render()).trim(),
+    "<ol><li>item1</li><li>item2</li><li>item3</li><li>item5</li></ol>"
+  );
+
+  t.is(
+    (await pages[1].render()).trim(),
+    "<ol><li>item6</li><li>item7</li><li>item8</li><li>item9</li></ol>"
+  );
+});
+
+test("Page over an object (filtered, string)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/pagedobjectfilterstring.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let paging = new Pagination(data);
+  paging.setTemplate(tmpl);
+  let pages = await paging.getPageTemplates();
+  t.is(pages.length, 2);
+
+  t.is(
+    (await pages[0].render()).trim(),
+    "<ol><li>item1</li><li>item2</li><li>item3</li><li>item5</li></ol>"
+  );
+
+  t.is(
+    (await pages[1].render()).trim(),
+    "<ol><li>item6</li><li>item7</li><li>item8</li><li>item9</li></ol>"
+  );
+});

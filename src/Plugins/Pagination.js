@@ -59,6 +59,19 @@ Pagination.prototype.resolveObjectToValues = function() {
   return false;
 };
 
+Pagination.prototype.isFiltered = function(value) {
+  if ("filter" in this.data.pagination) {
+    let filtered = this.data.pagination.filter;
+    if (Array.isArray(filtered)) {
+      return filtered.indexOf(value) > -1;
+    }
+
+    return filtered === value;
+  }
+
+  return false;
+};
+
 Pagination.prototype._resolveItems = function() {
   let notFoundValue = "__NOT_FOUND_ERROR__";
   let key = this._getDataKey();
@@ -77,7 +90,11 @@ Pagination.prototype._resolveItems = function() {
     }
   }
 
-  return ret;
+  return ret.filter(
+    function(value) {
+      return !this.isFiltered(value);
+    }.bind(this)
+  );
 };
 
 Pagination.prototype.getPagedItems = function() {
