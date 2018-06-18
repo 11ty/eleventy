@@ -667,9 +667,10 @@ class Template {
       let stat = await fs.stat(this.inputPath);
       let createdDate = new Date(stat.birthtimeMs);
       debug(
-        "getMappedDate: using file created time for %o of %o",
+        "getMappedDate: using file created time for %o of %o (from %o)",
         this.inputPath,
-        createdDate
+        createdDate,
+        stat.birthtimeMs
       );
 
       // CREATED
