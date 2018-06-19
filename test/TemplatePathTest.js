@@ -15,7 +15,9 @@ test("Normalizer", async t => {
   t.is(TemplatePath.normalize("/testing"), "/testing");
   t.is(TemplatePath.normalize("/testing/"), "/testing");
 
-  t.is(TemplatePath.normalize("./"), "./");
+  // v0.4.0 changed from `./` to `.`
+  // normalize removes trailing slashes so it should probably be `.`
+  t.is(TemplatePath.normalize("./"), ".");
   t.is(TemplatePath.normalize("./testing"), "testing");
 
   t.is(TemplatePath.normalize("../"), "..");
