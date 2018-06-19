@@ -458,6 +458,21 @@ test("Permalink output directory from layout (fileslug)", async t => {
   );
 });
 
+test("Layout from template-data-file that has a permalink (fileslug) Issue #121", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+  let tmpl = new Template(
+    "./test/stubs/permalink-data-layout/test.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj
+  );
+
+  let data = await tmpl.getData();
+  let renderedTmpl = (await tmpl.getRenderedTemplates(data))[0];
+  t.is(renderedTmpl.templateContent, "Wrapper:Test 1:test");
+  t.is(await tmpl.getOutputPath(), "./dist/test/index.html");
+});
+
 test("Local template data file import (without a global data json)", async t => {
   let dataObj = new TemplateData();
   await dataObj.cacheData();

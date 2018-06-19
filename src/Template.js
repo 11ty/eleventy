@@ -141,6 +141,7 @@ class Template {
   // TODO check for conflicts, see if file already exists?
   async getOutputPath(data) {
     let uri = await this.getOutputLink(data);
+    // TODO this only works with immediate front matter and not data files
     if ((await this.getFrontMatterData())[this.config.keys.permalinkRoot]) {
       return normalize(uri);
     } else {
@@ -266,20 +267,19 @@ class Template {
   async getData(localData) {
     if (!this.dataCache) {
       debugDev("%o getData()", this.inputPath);
-      let data = {};
+      let localData = {};
 
       if (this.templateData) {
-        data = await this.templateData.getLocalData(this.inputPath);
+        localData = await this.templateData.getLocalData(this.inputPath);
       }
 
-      let frontMatterData = await this.getFrontMatterData();
-
+      Object.assign(localData, await this.getFrontMatterData());
       let mergedLayoutData = await this.getAllLayoutFrontMatterData(
         this,
-        frontMatterData
+        localData
       );
 
-      let mergedData = Object.assign({}, data, mergedLayoutData);
+      let mergedData = Object.assign({}, localData, mergedLayoutData);
       mergedData = await this.addPageDate(mergedData);
       mergedData = this.addPageData(mergedData);
 
