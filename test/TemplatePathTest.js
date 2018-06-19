@@ -64,6 +64,21 @@ test("addLeadingDotSlash", t => {
   t.is(TemplatePath.addLeadingDotSlash(".nyc_output"), "./.nyc_output");
 });
 
+test("addLeadingDotSlashArray", t => {
+  t.deepEqual(TemplatePath.addLeadingDotSlashArray(["."]), ["./"]);
+  t.deepEqual(TemplatePath.addLeadingDotSlashArray([".."]), ["../"]);
+  t.deepEqual(TemplatePath.addLeadingDotSlashArray(["./test/stubs"]), [
+    "./test/stubs"
+  ]);
+  t.deepEqual(TemplatePath.addLeadingDotSlashArray(["./dist"]), ["./dist"]);
+  t.deepEqual(TemplatePath.addLeadingDotSlashArray(["../dist"]), ["../dist"]);
+  t.deepEqual(TemplatePath.addLeadingDotSlashArray(["/dist"]), ["/dist"]);
+  t.deepEqual(TemplatePath.addLeadingDotSlashArray(["dist"]), ["./dist"]);
+  t.deepEqual(TemplatePath.addLeadingDotSlashArray([".nyc_output"]), [
+    "./.nyc_output"
+  ]);
+});
+
 test("contains", t => {
   t.false(TemplatePath.contains("./testing/hello", "./lskdjklfjz"));
   t.false(TemplatePath.contains("./testing/hello", "lskdjklfjz"));

@@ -1,9 +1,7 @@
-import fs from "fs-extra";
 import test from "ava";
-import globby from "globby";
+import fastglob from "fast-glob";
 import parsePath from "parse-filepath";
 import TemplateWriter from "../src/TemplateWriter";
-import TemplatePath from "../src/TemplatePath";
 import TemplatePassthroughManager from "../src/TemplatePassthroughManager";
 // Not sure why but this import up `ava` and _createTemplate 👀
 // import Template from "../src/Template";
@@ -16,7 +14,7 @@ test("Mutually exclusive Input and Output dirs", async t => {
     ["ejs", "md"]
   );
 
-  let files = await globby(tw.getFiles());
+  let files = await fastglob.async(tw.getFiles());
   t.is(tw.getRawFiles().length, 2);
   t.true(files.length > 0);
   t.is(files[0], "./test/stubs/writeTest/test.md");
@@ -28,7 +26,7 @@ test("Single File Input", async t => {
     "md"
   ]);
 
-  let files = await globby(tw.getFiles());
+  let files = await fastglob.async(tw.getFiles());
   t.is(tw.getRawFiles().length, 1);
   t.is(files.length, 1);
   t.is(files[0], "./test/stubs/index.html");
@@ -37,7 +35,7 @@ test("Single File Input", async t => {
 test("Single File Input", async t => {
   let tw = new TemplateWriter("README.md", "./test/stubs/_site", ["md"]);
 
-  let files = await globby(tw.getFiles());
+  let files = await fastglob.async(tw.getFiles());
   t.is(tw.getRawFiles().length, 1);
   t.is(files.length, 1);
   t.is(files[0], "./README.md");
@@ -51,7 +49,7 @@ test("Output is a subdir of input", async t => {
     ["ejs", "md"]
   );
 
-  let files = await globby(tw.getFiles());
+  let files = await fastglob.async(tw.getFiles());
   t.is(tw.getRawFiles().length, 2);
   t.true(files.length > 0);
 
@@ -83,10 +81,10 @@ test("defaults if passed file name does not exist", t => {
 
 test(".eleventyignore files", async t => {
   let tw = new TemplateWriter("test/stubs", "test/stubs/_site", ["ejs", "md"]);
-  let ignoredFiles = await globby("test/stubs/ignoredFolder/*.md");
+  let ignoredFiles = await fastglob.async("test/stubs/ignoredFolder/*.md");
   t.is(ignoredFiles.length, 1);
 
-  let files = await globby(tw.getFiles());
+  let files = await fastglob.async(tw.getFiles());
   t.true(files.length > 0);
 
   t.is(
@@ -106,12 +104,25 @@ test("_createTemplateMap", async t => {
 
   let paths = await tw._getAllPaths();
   t.true(paths.length > 0);
+  t.is(paths[0], "./test/stubs/writeTest/test.md");
 
   let templateMap = await tw._createTemplateMap(paths);
   let map = templateMap.getMap();
   t.true(map.length > 0);
   t.truthy(map[0].template);
   t.truthy(map[0].data);
+});
+
+test("_createTemplateMap (no leading dot slash)", async t => {
+  let tw = new TemplateWriter(
+    "test/stubs/writeTest",
+    "test/stubs/_writeTestSite",
+    ["ejs", "md"]
+  );
+
+  let paths = await tw._getAllPaths();
+  t.true(paths.length > 0);
+  t.is(paths[0], "./test/stubs/writeTest/test.md");
 });
 
 test("getCollectionsData", async t => {

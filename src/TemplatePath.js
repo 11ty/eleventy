@@ -76,6 +76,12 @@ TemplatePath.localPath = function(...paths) {
   return normalize(path.join(TemplatePath.getWorkingDir(), ...paths));
 };
 
+TemplatePath.addLeadingDotSlashArray = function(paths) {
+  return paths.map(function(path) {
+    return TemplatePath.addLeadingDotSlash(path);
+  });
+};
+
 TemplatePath.addLeadingDotSlash = function(path) {
   if (path === "." || path === "..") {
     return path + "/";

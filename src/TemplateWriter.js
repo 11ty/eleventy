@@ -1,4 +1,4 @@
-const globby = require("globby");
+const fastglob = require("fast-glob");
 const fs = require("fs-extra");
 const parsePath = require("parse-filepath");
 const Template = require("./Template");
@@ -9,7 +9,6 @@ const TemplatePassthroughManager = require("./TemplatePassthroughManager");
 const EleventyError = require("./EleventyError");
 const TemplateGlob = require("./TemplateGlob");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
-const eleventyConfig = require("./EleventyConfig");
 const config = require("./Config");
 const debug = require("debug")("Eleventy:TemplateWriter");
 const debugDev = require("debug")("Dev:Eleventy:TemplateWriter");
@@ -209,8 +208,9 @@ TemplateWriter.prototype.getTemplateIgnores = function() {
 TemplateWriter.prototype._getAllPaths = async function() {
   debug("Searching for: %o", this.templateGlobsWithIgnores);
   if (!this.cachedPaths) {
-    // Note the gitignore: true option for globby is _really slow_
-    this.cachedPaths = await globby(this.templateGlobsWithIgnores); //, { gitignore: true });
+    this.cachedPaths = TemplatePath.addLeadingDotSlashArray(
+      await fastglob.async(this.templateGlobsWithIgnores)
+    );
   }
 
   return this.cachedPaths;

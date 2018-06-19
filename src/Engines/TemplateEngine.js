@@ -1,6 +1,7 @@
-const globby = require("globby");
+const fastglob = require("fast-glob");
 const fs = require("fs-extra");
 const parsePath = require("parse-filepath");
+const TemplatePath = require("../TemplatePath");
 const debug = require("debug")("Eleventy:TemplateEngine");
 
 class TemplateEngine {
@@ -39,7 +40,9 @@ class TemplateEngine {
     let partials = {};
     // TODO: reuse mustache partials in handlebars?
     let partialFiles = this.inputDir
-      ? globby.sync(this.inputDir + "/*" + this.extension)
+      ? TemplatePath.addLeadingDotSlashArray(
+          fastglob.sync(this.inputDir + "/*" + this.extension)
+        )
       : [];
     for (let j = 0, k = partialFiles.length; j < k; j++) {
       let key = parsePath(partialFiles[j]).name;

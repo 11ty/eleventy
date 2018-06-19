@@ -1,5 +1,5 @@
 const fs = require("fs-extra");
-const globby = require("globby");
+const fastglob = require("fast-glob");
 const parsePath = require("parse-filepath");
 const lodashset = require("lodash.set");
 const lodashMerge = require("lodash.merge");
@@ -81,7 +81,7 @@ TemplateData.prototype.getGlobalDataGlob = async function() {
 };
 
 TemplateData.prototype.getGlobalDataFiles = async function() {
-  return globby(await this.getGlobalDataGlob());
+  return fastglob.async(await this.getGlobalDataGlob());
 };
 
 TemplateData.prototype.getObjectPathForDataFile = function(path) {
@@ -96,7 +96,9 @@ TemplateData.prototype.getObjectPathForDataFile = function(path) {
 TemplateData.prototype.getAllGlobalData = async function() {
   let rawImports = await this.getRawImports();
   let globalData = {};
-  let files = await this.getGlobalDataFiles();
+  let files = TemplatePath.addLeadingDotSlashArray(
+    await this.getGlobalDataFiles()
+  );
 
   for (let j = 0, k = files.length; j < k; j++) {
     let folders = await this.getObjectPathForDataFile(files[j]);
