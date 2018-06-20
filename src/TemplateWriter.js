@@ -31,14 +31,22 @@ function TemplateWriter(inputPath, outputDir, templateKeys, templateData) {
   this.extensionMap = new EleventyExtensionMap(this.templateKeys);
 
   this.setPassthroughManager();
+  this.setupGlobs();
+}
 
+/* For testing */
+TemplateWriter.prototype.overrideConfig = function(config) {
+  this.config = config;
+};
+
+TemplateWriter.prototype.setupGlobs = function() {
   // Input was a directory
   if (this.input === this.inputDir) {
     this.templateGlobs = TemplateGlob.map(
       this.extensionMap.getGlobs(this.inputDir)
     );
   } else {
-    this.templateGlobs = TemplateGlob.map([inputPath]);
+    this.templateGlobs = TemplateGlob.map([this.input]);
   }
 
   this.cachedIgnores = this.getIgnores();
@@ -46,11 +54,6 @@ function TemplateWriter(inputPath, outputDir, templateKeys, templateData) {
   this.templateGlobsWithIgnores = this.watchedGlobs.concat(
     this.getTemplateIgnores()
   );
-}
-
-/* For testing */
-TemplateWriter.prototype.overrideConfig = function(config) {
-  this.config = config;
 };
 
 TemplateWriter.prototype.setPassthroughManager = function(mgr) {
@@ -67,6 +70,7 @@ TemplateWriter.prototype.restart = function() {
   this.writeCount = 0;
   this.passthroughManager.reset();
   this.cachedPaths = null;
+  this.setupGlobs();
   debugDev("Resetting counts to 0");
 };
 

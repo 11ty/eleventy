@@ -14,10 +14,7 @@ const debug = require("debug")("Eleventy");
 
 function Eleventy(input, output) {
   this.config = config.getConfig();
-  this.rawInput = input;
-  this.rawOutput = output;
   this.configPath = null;
-  this.data = null;
   this.isVerbose = true;
   this.isDebug = false;
   this.isDryRun = false;
@@ -26,8 +23,14 @@ function Eleventy(input, output) {
   this.formatsOverride = null;
   this.eleventyServe = new EleventyServe();
 
-  this.initDirs(input, output);
+  this.setRawDirs(input, output);
+  this.initDirs();
 }
+
+Eleventy.prototype.setRawDirs = function(input, output) {
+  this.rawInput = input;
+  this.rawOutput = output;
+};
 
 Eleventy.prototype.initDirs = function() {
   this.input = this.rawInput || this.config.dir.input;
@@ -70,12 +73,13 @@ Eleventy.prototype.setConfigPath = function(configPath) {
   }
 };
 
-Eleventy.prototype.restart = function() {
+Eleventy.prototype.restart = async function() {
   debug("Restarting");
   this.start = new Date();
-  this.data.clearData();
-  this.writer.restart();
   templateCache.clear();
+
+  this.initDirs();
+  await this.init();
 };
 
 Eleventy.prototype.finish = function() {
@@ -118,7 +122,7 @@ Eleventy.prototype.logFinished = function() {
   ret.push(`in ${time} ${simplePlural(time, "second", "seconds")}`);
 
   if (writeCount >= 10) {
-    ret.push(`(${(time * 1000 / writeCount).toFixed(1)}ms each)`);
+    ret.push(`(${((time * 1000) / writeCount).toFixed(1)}ms each)`);
   }
 
   return ret.join(" ");
@@ -224,7 +228,7 @@ Eleventy.prototype._watch = async function(path) {
     this.resetConfig();
   }
 
-  this.restart();
+  await this.restart();
   await this.write();
 
   let isInclude =
