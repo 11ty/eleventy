@@ -17,12 +17,11 @@ Works with HTML, Markdown, Liquid, Nunjucks, Handlebars, Mustache, EJS, Haml, Pu
 
 ## Tests
 
-- Build Status: [![Build Status](https://img.shields.io/travis/11ty/eleventy/master.svg?style=for-the-badge)](https://travis-ci.org/11ty/eleventy)
-- [Code Coverage Statistics](https://github.com/11ty/eleventy/blob/master/docs/coverage.md)
-
 ```
 npm run test
 ```
+
+- [Code Coverage Statistics](https://github.com/11ty/eleventy/blob/master/docs/coverage.md)
 
 ## Major Roadmapped Features
 
@@ -30,4 +29,4 @@ npm run test
 
 ## Badges
 
-[![GitHub issues](https://img.shields.io/github/issues/11ty/eleventy.svg?style=for-the-badge)](https://github.com/11ty/eleventy/issues) [![GitHub stars](https://img.shields.io/github/stars/11ty/eleventy.svg?style=for-the-badge)](https://github.com/11ty/eleventy/stargazers)
+[![Build Status](https://img.shields.io/travis/11ty/eleventy/master.svg?style=for-the-badge)](https://travis-ci.org/11ty/eleventy) [![GitHub issues](https://img.shields.io/github/issues/11ty/eleventy.svg?style=for-the-badge)](https://github.com/11ty/eleventy/issues) [![GitHub stars](https://img.shields.io/github/stars/11ty/eleventy.svg?style=for-the-badge)](https://github.com/11ty/eleventy/stargazers)
