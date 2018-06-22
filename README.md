@@ -10,15 +10,15 @@ Works with HTML, Markdown, Liquid, Nunjucks, Handlebars, Mustache, EJS, Haml, Pu
 
 ## Pay the piper
 
-* Please star [this repo on GitHub](https://github.com/11ty/eleventy/)!
-* Follow us on Twitter [@eleven_ty](https://twitter.com/eleven_ty)
-* [@11ty on npm](https://www.npmjs.com/org/11ty)
-* [@11ty on GitHub](https://github.com/11ty)
+- Please star [this repo on GitHub](https://github.com/11ty/eleventy/)!
+- Follow us on Twitter [@eleven_ty](https://twitter.com/eleven_ty)
+- [@11ty on npm](https://www.npmjs.com/org/11ty)
+- [@11ty on GitHub](https://github.com/11ty)
 
 ## Tests
 
-* Build Status: [![Build Status](https://travis-ci.org/11ty/eleventy.svg?branch=master)](https://travis-ci.org/11ty/eleventy)
-* [Code Coverage Statistics](docs/coverage.md)
+- Build Status: [![Build Status](https://img.shields.io/travis/11ty/eleventy/master.svg?style=for-the-badge)](https://travis-ci.org/11ty/eleventy)
+- [Code Coverage Statistics](https://github.com/11ty/eleventy/blob/master/docs/coverage.md)
 
 ```
 npm run test
@@ -26,4 +26,8 @@ npm run test
 
 ## Major Roadmapped Features
 
-* [Top Feature Requests](https://github.com/11ty/eleventy/issues?q=label%3Aneeds-votes+sort%3Areactions-%2B1-desc) (Add your own votes using the 👍 reaction)
+- [Top Feature Requests](https://github.com/11ty/eleventy/issues?q=label%3Aneeds-votes+sort%3Areactions-%2B1-desc) (Add your own votes using the 👍 reaction)
+
+## Badges
+
+[![GitHub issues](https://img.shields.io/github/issues/11ty/eleventy.svg?style=for-the-badge)](https://github.com/11ty/eleventy/issues) [![GitHub stars](https://img.shields.io/github/stars/11ty/eleventy.svg?style=for-the-badge)](https://github.com/11ty/eleventy/stargazers)
