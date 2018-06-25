@@ -14,6 +14,27 @@ test("Handlebars Render", async t => {
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });
 
+test("Handlebars Render Unescaped Output (no HTML)", async t => {
+  let fn = await new TemplateRender("hbs").getCompiledTemplate(
+    "<p>{{{name}}}</p>"
+  );
+  t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
+});
+
+test("Handlebars Render Escaped Output", async t => {
+  let fn = await new TemplateRender("hbs").getCompiledTemplate(
+    "<p>{{name}}</p>"
+  );
+  t.is(await fn({ name: "<b>Zach</b>" }), "<p>&lt;b&gt;Zach&lt;/b&gt;</p>");
+});
+
+test("Handlebars Render Unescaped Output (HTML)", async t => {
+  let fn = await new TemplateRender("hbs").getCompiledTemplate(
+    "<p>{{{name}}}</p>"
+  );
+  t.is(await fn({ name: "<b>Zach</b>" }), "<p><b>Zach</b></p>");
+});
+
 test("Handlebars Render Partial", async t => {
   let fn = await new TemplateRender("hbs", "./test/stubs/").getCompiledTemplate(
     "<p>{{> included}}</p>"
