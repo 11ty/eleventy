@@ -19,6 +19,7 @@ class Nunjucks extends TemplateEngine {
 
     this.addFilters(this.config.nunjucksFilters);
     this.addFilters(this.config.nunjucksAsyncFilters, true);
+    this.addCustomTags(this.config.nunjucksTags);
     this.setEngineLib(this.njkEnv);
   }
 
@@ -26,6 +27,25 @@ class Nunjucks extends TemplateEngine {
     for (let name in helpers) {
       this.njkEnv.addFilter(name, helpers[name], isAsync);
     }
+  }
+
+  addCustomTags(tags) {
+    for (let name in tags) {
+      this.addTag(name, tags[name]);
+    }
+  }
+
+  addTag(name, tag) {
+    let tagObj;
+    if (typeof tag === "function") {
+      tagObj = tag(NunjucksLib, this.njkEnv);
+    } else {
+      throw new Error(
+        "Nunjucks.addTag expects a callback function to be passed in: addTag(name, function(nunjucksEngine) {})"
+      );
+    }
+
+    this.njkEnv.addExtension(name, tagObj);
   }
 
   async compile(str, inputPath) {

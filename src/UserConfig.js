@@ -2,6 +2,7 @@ const EventEmitter = require("events");
 const chalk = require("chalk");
 const semver = require("semver");
 const { DateTime } = require("luxon");
+const Liquid = require("liquidjs");
 const debug = require("debug")("Eleventy:UserConfig");
 const pkg = require("../package.json");
 
@@ -21,6 +22,7 @@ class UserConfig {
     this.liquidFilters = {};
     this.nunjucksFilters = {};
     this.nunjucksAsyncFilters = {};
+    this.nunjucksTags = {};
     this.handlebarsHelpers = {};
     this.passthroughCopies = {};
     this.pugOptions = {};
@@ -157,6 +159,27 @@ class UserConfig {
     this.addHandlebarsHelper(name, callback);
   }
 
+  addNunjucksTag(name, tagFn) {
+    name = this.getNamespacedName(name);
+
+    if (typeof tagFn !== "function") {
+      throw new Error(
+        `EleventyConfig.addNunjucksTag expects a callback function to be passed in for ${name}: addNunjucksTag(name, function(nunjucksEngine) {})`
+      );
+    }
+
+    if (this.nunjucksTags[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Nunjucks tag with `addNunjucksTag(%o)`"
+        ),
+        name
+      );
+    }
+
+    this.nunjucksTags[name] = tagFn;
+  }
+
   addTransform(name, callback) {
     name = this.getNamespacedName(name);
 
@@ -258,6 +281,136 @@ class UserConfig {
     this.useGitIgnore = !!enabled;
   }
 
+  addShortcode(shortcodeName, shortcodeCallback) {
+    this.addNunjucksShortcode(shortcodeName, shortcodeCallback);
+    this.addLiquidShortcode(shortcodeName, shortcodeCallback);
+  }
+
+  addNunjucksShortcode(shortcodeName, shortcodeCallback) {
+    this.addNunjucksTag(shortcodeName, function(nunjucksEngine) {
+      return new function() {
+        this.tags = [shortcodeName];
+
+        this.parse = function(parser, nodes, lexer) {
+          var tok = parser.nextToken();
+
+          var args = parser.parseSignature(null, true);
+          parser.advanceAfterBlockEnd(tok.value);
+
+          return new nodes.CallExtensionAsync(this, "run", args);
+        };
+
+        this.run = function(...args) {
+          let callback = args.pop();
+          let [context, ...argArray] = args;
+
+          let ret = new nunjucksEngine.runtime.SafeString(
+            shortcodeCallback(...argArray)
+          );
+          callback(null, ret);
+        };
+      }();
+    });
+  }
+
+  addLiquidShortcode(shortcodeName, shortcodeCallback) {
+    this.addLiquidTag(shortcodeName, function(liquidEngine) {
+      return {
+        parse: function(tagToken, remainTokens) {
+          this.name = tagToken.name;
+          this.args = tagToken.args;
+        },
+        render: function(scope, hash) {
+          let argArray = [];
+          if (typeof this.args === "string") {
+            // TODO key=value key2=value
+            // TODO JSON?
+            let args = this.args.split(" ");
+            for (let arg of args) {
+              argArray.push(Liquid.evalExp(arg, scope)); // or evalValue
+            }
+          }
+
+          return Promise.resolve(shortcodeCallback(...argArray));
+        }
+      };
+    });
+  }
+
+  addPairedShortcode(shortcodeName, shortcodeCallback) {
+    this.addPairedNunjucksShortcode(shortcodeName, shortcodeCallback);
+    this.addPairedLiquidShortcode(shortcodeName, shortcodeCallback);
+  }
+
+  addPairedNunjucksShortcode(shortcodeName, shortcodeCallback) {
+    this.addNunjucksTag(shortcodeName, function(nunjucksEngine, nunjucksEnv) {
+      return new function() {
+        this.tags = [shortcodeName];
+
+        this.parse = function(parser, nodes, lexer) {
+          var tok = parser.nextToken();
+
+          var args = parser.parseSignature(null, true);
+          parser.advanceAfterBlockEnd(tok.value);
+
+          var body = parser.parseUntilBlocks("end" + shortcodeName);
+          parser.advanceAfterBlockEnd();
+
+          return new nodes.CallExtensionAsync(this, "run", args, [body]);
+        };
+
+        // run: function(context, arg1, arg2, body, callback) {
+        this.run = function(...args) {
+          let callback = args.pop();
+          let body = args.pop();
+          let [context, ...argArray] = args;
+
+          let ret = new nunjucksEngine.runtime.SafeString(
+            shortcodeCallback(body(), ...argArray)
+          );
+          callback(null, ret);
+        };
+      }();
+    });
+  }
+
+  addPairedLiquidShortcode(shortcodeName, shortcodeCallback) {
+    this.addLiquidTag(shortcodeName, function(liquidEngine) {
+      return {
+        parse: function(tagToken, remainTokens) {
+          this.name = tagToken.name;
+          this.args = tagToken.args;
+          this.templates = [];
+
+          var stream = liquidEngine.parser
+            .parseStream(remainTokens)
+            .on("template", tpl => this.templates.push(tpl))
+            .on("tag:end" + shortcodeName, token => stream.stop())
+            .on("end", x => {
+              throw new Error(`tag ${tagToken.raw} not closed`);
+            });
+
+          stream.start();
+        },
+        render: function(scope, hash) {
+          let argArray = [];
+          let args = this.args.split(" ");
+          for (let arg of args) {
+            argArray.push(Liquid.evalExp(arg, scope)); // or evalValue
+          }
+
+          return new Promise((resolve, reject) => {
+            liquidEngine.renderer
+              .renderTemplates(this.templates, scope)
+              .then(function(html) {
+                resolve(shortcodeCallback(html, ...argArray));
+              });
+          });
+        }
+      };
+    });
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
@@ -269,6 +422,7 @@ class UserConfig {
       liquidFilters: this.liquidFilters,
       nunjucksFilters: this.nunjucksFilters,
       nunjucksAsyncFilters: this.nunjucksAsyncFilters,
+      nunjucksTags: this.nunjucksTags,
       handlebarsHelpers: this.handlebarsHelpers,
       pugOptions: this.pugOptions,
       ejsOptions: this.ejsOptions,
