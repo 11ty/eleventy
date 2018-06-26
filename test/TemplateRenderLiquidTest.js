@@ -333,3 +333,48 @@ test("Liquid Render: with Library Override", async t => {
   let fn = await tr.getCompiledTemplate("<p>{{name | capitalize}}</p>");
   t.is(await fn({ name: "tim" }), "<p>Tim</p>");
 });
+
+test("Liquid Paired Shortcode with Tag Inside", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
+    return str + content + "Zach";
+  });
+
+  t.is(
+    await tr.render(
+      "{% postfixWithZach name %}Content{% if tester %}If{% endif %}{% endpostfixWithZach %}",
+      { name: "test", tester: true }
+    ),
+    "testContentIfZach"
+  );
+});
+
+test("Liquid Nested Paired Shortcode", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
+    return str + content + "Zach";
+  });
+
+  t.is(
+    await tr.render(
+      "{% postfixWithZach name %}Content{% postfixWithZach name2 %}Content{% endpostfixWithZach %}{% endpostfixWithZach %}",
+      { name: "test", name2: "test2" }
+    ),
+    "testContenttest2ContentZachZach"
+  );
+});
+
+test("Liquid Shortcode Multiple Args", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", function(str, str2) {
+    return str + str2 + "Zach";
+  });
+
+  t.is(
+    await tr.render("{% postfixWithZach name other %}", {
+      name: "test",
+      other: "howdy"
+    }),
+    "testhowdyZach"
+  );
+});

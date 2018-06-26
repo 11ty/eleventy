@@ -92,3 +92,78 @@ test("Nunjucks Paired Shortcode", async t => {
     "testContentZach"
   );
 });
+
+test("Nunjucks Paired Shortcode with Tag Inside", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
+    return str + content + "Zach";
+  });
+
+  t.is(
+    await tr.render(
+      "{% postfixWithZach name %}Content{% if tester %}If{% endif %}{% endpostfixWithZach %}",
+      { name: "test", tester: true }
+    ),
+    "testContentIfZach"
+  );
+});
+
+test("Nunjucks Nested Paired Shortcode", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
+    return str + content + "Zach";
+  });
+
+  t.is(
+    await tr.render(
+      "{% postfixWithZach name %}Content{% postfixWithZach name2 %}Content{% endpostfixWithZach %}{% endpostfixWithZach %}",
+      { name: "test", name2: "test2" }
+    ),
+    "testContenttest2ContentZachZach"
+  );
+});
+
+test("Nunjucks Shortcode Multiple Args", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", function(str, str2) {
+    return str + str2 + "Zach";
+  });
+
+  t.is(
+    await tr.render("{% postfixWithZach name, other %}", {
+      name: "test",
+      other: "howdy"
+    }),
+    "testhowdyZach"
+  );
+});
+
+test("Nunjucks Shortcode Named Args", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", function(arg) {
+    return arg.arg1 + arg.arg2 + "Zach";
+  });
+
+  t.is(
+    await tr.render("{% postfixWithZach arg1=name, arg2=other %}", {
+      name: "test",
+      other: "howdy"
+    }),
+    "testhowdyZach"
+  );
+});
+
+test("Nunjucks Shortcode Named Args (JS notation)", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", function(arg) {
+    return arg.arg1 + arg.arg2 + "Zach";
+  });
+
+  t.is(
+    await tr.render("{% postfixWithZach { arg1: name, arg2: other } %}", {
+      name: "test",
+      other: "howdy"
+    }),
+    "testhowdyZach"
+  );
+});
