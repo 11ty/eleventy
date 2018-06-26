@@ -2,6 +2,7 @@ const EventEmitter = require("events");
 const chalk = require("chalk");
 const semver = require("semver");
 const { DateTime } = require("luxon");
+const Liquid = require("liquidjs");
 const debug = require("debug")("Eleventy:UserConfig");
 const pkg = require("../package.json");
 
@@ -19,8 +20,13 @@ class UserConfig {
     this.liquidOptions = {};
     this.liquidTags = {};
     this.liquidFilters = {};
+    this.liquidShortcodes = {};
+    this.liquidPairedShortcodes = {};
     this.nunjucksFilters = {};
     this.nunjucksAsyncFilters = {};
+    this.nunjucksTags = {};
+    this.nunjucksShortcodes = {};
+    this.nunjucksPairedShortcodes = {};
     this.handlebarsHelpers = {};
     this.passthroughCopies = {};
     this.pugOptions = {};
@@ -157,6 +163,27 @@ class UserConfig {
     this.addHandlebarsHelper(name, callback);
   }
 
+  addNunjucksTag(name, tagFn) {
+    name = this.getNamespacedName(name);
+
+    if (typeof tagFn !== "function") {
+      throw new Error(
+        `EleventyConfig.addNunjucksTag expects a callback function to be passed in for ${name}: addNunjucksTag(name, function(nunjucksEngine) {})`
+      );
+    }
+
+    if (this.nunjucksTags[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Nunjucks tag with `addNunjucksTag(%o)`"
+        ),
+        name
+      );
+    }
+
+    this.nunjucksTags[name] = tagFn;
+  }
+
   addTransform(name, callback) {
     name = this.getNamespacedName(name);
 
@@ -258,6 +285,32 @@ class UserConfig {
     this.useGitIgnore = !!enabled;
   }
 
+  addShortcode(name, callback) {
+    this.addNunjucksShortcode(name, callback);
+    this.addLiquidShortcode(name, callback);
+  }
+
+  addNunjucksShortcode(name, callback) {
+    this.nunjucksShortcodes[name] = callback;
+  }
+
+  addLiquidShortcode(name, callback) {
+    this.liquidShortcodes[name] = callback;
+  }
+
+  addPairedShortcode(name, callback) {
+    this.addPairedNunjucksShortcode(name, callback);
+    this.addPairedLiquidShortcode(name, callback);
+  }
+
+  addPairedNunjucksShortcode(name, callback) {
+    this.nunjucksPairedShortcodes[name] = callback;
+  }
+
+  addPairedLiquidShortcode(name, callback) {
+    this.liquidPairedShortcodes[name] = callback;
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
@@ -267,8 +320,13 @@ class UserConfig {
       liquidOptions: this.liquidOptions,
       liquidTags: this.liquidTags,
       liquidFilters: this.liquidFilters,
+      liquidShortcodes: this.liquidShortcodes,
+      liquidPairedShortcodes: this.liquidPairedShortcodes,
       nunjucksFilters: this.nunjucksFilters,
       nunjucksAsyncFilters: this.nunjucksAsyncFilters,
+      nunjucksTags: this.nunjucksTags,
+      nunjucksShortcodes: this.nunjucksShortcodes,
+      nunjucksPairedShortcodes: this.nunjucksPairedShortcodes,
       handlebarsHelpers: this.handlebarsHelpers,
       pugOptions: this.pugOptions,
       ejsOptions: this.ejsOptions,

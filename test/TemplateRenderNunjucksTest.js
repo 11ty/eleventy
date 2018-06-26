@@ -65,3 +65,30 @@ test("Nunjucks Render: with Library Override", async t => {
   let fn = await tr.getCompiledTemplate("<p>{{ name }}</p>");
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });
+
+test("Nunjucks Shortcode", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", function(str) {
+    return str + "Zach";
+  });
+
+  t.is(
+    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    "testZach"
+  );
+});
+
+test("Nunjucks Paired Shortcode", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
+    return str + content + "Zach";
+  });
+
+  t.is(
+    await tr.render(
+      "{% postfixWithZach name %}Content{% endpostfixWithZach %}",
+      { name: "test" }
+    ),
+    "testContentZach"
+  );
+});
