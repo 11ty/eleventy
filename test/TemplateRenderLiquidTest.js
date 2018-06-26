@@ -113,7 +113,7 @@ test("Liquid addTag errors", async t => {
 
 test("Liquid addTags", async t => {
   let tr = new TemplateRender("liquid", "./test/stubs/");
-  tr.engine.addTags({
+  tr.engine.addCustomTags({
     postfixWithZach: function(liquidEngine) {
       return {
         parse: function(tagToken, remainTokens) {
@@ -130,6 +130,33 @@ test("Liquid addTags", async t => {
   t.is(
     await tr.render("{% postfixWithZach name %}", { name: "test" }),
     "testZach"
+  );
+});
+
+test("Liquid Shortcode", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", function(str) {
+    return str + "Zach";
+  });
+
+  t.is(
+    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    "testZach"
+  );
+});
+
+test("Liquid Paired Shortcode", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
+    return str + content + "Zach";
+  });
+
+  t.is(
+    await tr.render(
+      "{% postfixWithZach name %}Content{% endpostfixWithZach %}",
+      { name: "test" }
+    ),
+    "testContentZach"
   );
 });
 
