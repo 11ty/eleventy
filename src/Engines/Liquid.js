@@ -59,6 +59,10 @@ class Liquid extends TemplateEngine {
     }
   }
 
+  addFilter(name, filter) {
+    this.liquidLib.registerFilter(name, filter);
+  }
+
   addTag(name, tagFn) {
     let tagObj;
     if (typeof tagFn === "function") {
@@ -142,10 +146,6 @@ class Liquid extends TemplateEngine {
         }
       };
     });
-  }
-
-  addFilter(name, filter) {
-    this.liquidLib.registerFilter(name, filter);
   }
 
   async compile(str, inputPath) {
