@@ -173,7 +173,7 @@ test("Issue #115, mixing pagination and collections", async t => {
   t.is(map.length, 3);
   t.deepEqual(map[2].template, tmplIndex);
 
-  let collections = await tm.getAllCollectionsData();
+  let collections = await tm._testGetAllCollectionsData();
   t.is(Object.keys(collections.all).length, 3);
   t.is(Object.keys(collections.foos).length, 1);
   t.is(Object.keys(collections.bars).length, 1);
@@ -233,7 +233,7 @@ test("Issue #115 with layout, mixing pagination and collections", async t => {
   t.is(map.length, 3);
   t.deepEqual(map[2].template, tmplIndex);
 
-  let collections = await tm.getAllCollectionsData();
+  let collections = await tm._testGetAllCollectionsData();
   t.is(Object.keys(collections.all).length, 3);
   t.is(Object.keys(collections.foos).length, 1);
   t.is(Object.keys(collections.bars).length, 1);
@@ -297,4 +297,59 @@ test("TemplateMap adds collections data and has page data values", async t => {
     collections.all[0].data.page.outputPath,
     "./test/stubs/_site/templateMapCollection/test1/index.html"
   );
+});
+
+test("Url should be available in user config collections API calls", async t => {
+  let tm = new TemplateMap();
+  await tm.add(tmpl1);
+  await tm.add(tmpl2);
+  tm.setUserConfigCollections({
+    userCollection: function(collection) {
+      let all = collection.getAll();
+      return all;
+    }
+  });
+
+  let collections = await tm.getCollectionsData();
+  t.truthy(collections.userCollection);
+  t.truthy(collections.userCollection.length);
+  t.is(collections.userCollection[0].url, "/templateMapCollection/test1/");
+  t.is(
+    collections.userCollection[0].outputPath,
+    "./test/stubs/_site/templateMapCollection/test1/index.html"
+  );
+
+  t.is(
+    collections.userCollection[0].data.page.url,
+    "/templateMapCollection/test1/"
+  );
+  t.is(
+    collections.userCollection[0].data.page.outputPath,
+    "./test/stubs/_site/templateMapCollection/test1/index.html"
+  );
+});
+
+test("Url should be available in user config collections API calls (test in callback)", async t => {
+  let tm = new TemplateMap();
+  tm.setUserConfigCollections({
+    userCollection: function(collection) {
+      let all = collection.getAll();
+      t.is(all[0].url, "/templateMapCollection/test1/");
+      t.is(
+        all[0].outputPath,
+        "./test/stubs/_site/templateMapCollection/test1/index.html"
+      );
+      t.is(all[1].url, "/templateMapCollection/test2/");
+      t.is(
+        all[1].outputPath,
+        "./test/stubs/_site/templateMapCollection/test2/index.html"
+      );
+
+      return all;
+    }
+  });
+
+  await tm.add(tmpl1);
+  await tm.add(tmpl2);
+  await tm.cache();
 });

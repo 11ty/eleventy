@@ -2,7 +2,6 @@ const EventEmitter = require("events");
 const chalk = require("chalk");
 const semver = require("semver");
 const { DateTime } = require("luxon");
-const Liquid = require("liquidjs");
 const debug = require("debug")("Eleventy:UserConfig");
 const pkg = require("../package.json");
 
