@@ -29,6 +29,14 @@ test("Mustache Render Partial", async t => {
   t.is(await fn({ name: "Zach" }), "<p>This is a Zach.</p>");
 });
 
+test("Mustache Render Partial (Subdirectory)", async t => {
+  let fn = await new TemplateRender(
+    "mustache",
+    "./test/stubs/"
+  ).getCompiledTemplate("<p>{{> subfolder/included}}</p>");
+  t.is(await fn({ name: "Zach" }), "<p>This is an include.</p>");
+});
+
 test("Mustache Render: with Library Override", async t => {
   let tr = new TemplateRender("mustache");
 
