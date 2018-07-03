@@ -34,6 +34,20 @@ test("Nunjucks Render Include Subfolder", async t => {
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
+test("Nunjucks Render Include Double Quotes", async t => {
+  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
+    `<p>{% include "included.njk" %}</p>`
+  );
+  t.is(await fn(), "<p>This is an include.</p>");
+});
+
+test("Nunjucks Render Include Subfolder Double Quotes", async t => {
+  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
+    `<p>{% include "subfolder/included.html" %}</p>`
+  );
+  t.is(await fn(), "<p>This is an include.</p>");
+});
+
 test("Nunjucks Render Imports", async t => {
   let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
     "{% import 'imports.njk' as forms %}<div>{{ forms.label('Name') }}</div>"
@@ -146,6 +160,21 @@ test("Nunjucks Shortcode Named Args", async t => {
 
   t.is(
     await tr.render("{% postfixWithZach arg1=name, arg2=other %}", {
+      name: "test",
+      other: "howdy"
+    }),
+    "testhowdyZach"
+  );
+});
+
+test("Nunjucks Shortcode Named Args (Reverse Order)", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", function(arg) {
+    return arg.arg1 + arg.arg2 + "Zach";
+  });
+
+  t.is(
+    await tr.render("{% postfixWithZach arg2=other, arg1=name %}", {
       name: "test",
       other: "howdy"
     }),
