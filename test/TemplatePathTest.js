@@ -153,3 +153,35 @@ test("Convert to glob", t => {
   t.is(TemplatePath.convertToGlob("test/stubs/"), "./test/stubs/**");
   t.is(TemplatePath.convertToGlob("./test/stubs/"), "./test/stubs/**");
 });
+
+test("Remove extension", t => {
+  t.is(TemplatePath.removeExtension(""), "");
+  t.is(TemplatePath.removeExtension("", "hbs"), "");
+
+  t.is(TemplatePath.removeExtension("test/stubs", "hbs"), "test/stubs");
+  t.is(TemplatePath.removeExtension("test/stubs.njk"), "test/stubs.njk");
+  t.is(TemplatePath.removeExtension("test/stubs.njk", "hbs"), "test/stubs.njk");
+  t.is(TemplatePath.removeExtension("test/stubs.hbs", "hbs"), "test/stubs");
+
+  t.is(TemplatePath.removeExtension("./test/stubs.njk"), "./test/stubs.njk");
+  t.is(
+    TemplatePath.removeExtension("./test/stubs.njk", "hbs"),
+    "./test/stubs.njk"
+  );
+  t.is(TemplatePath.removeExtension("./test/stubs.hbs", "hbs"), "./test/stubs");
+
+  t.is(TemplatePath.removeExtension("test/stubs", ".hbs"), "test/stubs");
+  t.is(
+    TemplatePath.removeExtension("test/stubs.njk", ".hbs"),
+    "test/stubs.njk"
+  );
+  t.is(TemplatePath.removeExtension("test/stubs.hbs", ".hbs"), "test/stubs");
+  t.is(
+    TemplatePath.removeExtension("./test/stubs.njk", ".hbs"),
+    "./test/stubs.njk"
+  );
+  t.is(
+    TemplatePath.removeExtension("./test/stubs.hbs", ".hbs"),
+    "./test/stubs"
+  );
+});

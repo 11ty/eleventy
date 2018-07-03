@@ -36,17 +36,25 @@ class TemplateEngine {
   // TODO make async
   cachePartialFiles() {
     this.partialsHaveBeenCached = true;
-
     let partials = {};
     // TODO: reuse mustache partials in handlebars?
     let partialFiles = this.inputDir
       ? TemplatePath.addLeadingDotSlashArray(
-          fastglob.sync(this.inputDir + "/*" + this.extension)
+          fastglob.sync(this.inputDir + "/**/*" + this.extension)
         )
       : [];
+
     for (let j = 0, k = partialFiles.length; j < k; j++) {
-      let key = parsePath(partialFiles[j]).name;
-      partials[key] = fs.readFileSync(partialFiles[j], "utf-8");
+      let partialPath = TemplatePath.stripPathFromDir(
+        partialFiles[j],
+        this.inputDir
+      );
+      let partialPathNoExt = TemplatePath.removeExtension(
+        partialPath,
+        this.extension
+      );
+
+      partials[partialPathNoExt] = fs.readFileSync(partialFiles[j], "utf-8");
     }
 
     debug(

@@ -135,4 +135,18 @@ TemplatePath.convertToGlob = function(path) {
   return path;
 };
 
+TemplatePath.removeExtension = function(path, extension) {
+  let split = path.split(".");
+
+  if (extension && split.length > 1) {
+    let ext = split.pop();
+    if (extension.charAt(0) === ".") {
+      extension = extension.substr(1);
+    }
+    return split.join(".") + (!extension || ext === extension ? "" : "." + ext);
+  }
+
+  return path;
+};
+
 module.exports = TemplatePath;

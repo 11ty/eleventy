@@ -41,7 +41,14 @@ test("Handlebars Render Partial", async t => {
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-test("Handlebars Render Partial", async t => {
+test("Handlebars Render Partial (Subdirectory)", async t => {
+  let fn = await new TemplateRender("hbs", "./test/stubs/").getCompiledTemplate(
+    "<p>{{> subfolder/included}}</p>"
+  );
+  t.is(await fn(), "<p>This is an include.</p>");
+});
+
+test("Handlebars Render Partial with variable", async t => {
   let fn = await new TemplateRender("hbs", "./test/stubs/").getCompiledTemplate(
     "<p>{{> includedvar}}</p>"
   );
