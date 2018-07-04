@@ -27,6 +27,8 @@ class UserConfig {
     this.nunjucksShortcodes = {};
     this.nunjucksPairedShortcodes = {};
     this.handlebarsHelpers = {};
+    this.handlebarsShortcodes = {};
+    this.handlebarsPairedShortcodes = {};
     this.passthroughCopies = {};
     this.pugOptions = {};
     this.ejsOptions = {};
@@ -287,6 +289,7 @@ class UserConfig {
   addShortcode(name, callback) {
     this.addNunjucksShortcode(name, callback);
     this.addLiquidShortcode(name, callback);
+    this.addHandlebarsShortcode(name, callback);
   }
 
   addNunjucksShortcode(name, callback) {
@@ -297,9 +300,14 @@ class UserConfig {
     this.liquidShortcodes[name] = callback;
   }
 
+  addHandlebarsShortcode(name, callback) {
+    this.handlebarsShortcodes[name] = callback;
+  }
+
   addPairedShortcode(name, callback) {
     this.addPairedNunjucksShortcode(name, callback);
     this.addPairedLiquidShortcode(name, callback);
+    this.addPairedHandlebarsShortcode(name, callback);
   }
 
   addPairedNunjucksShortcode(name, callback) {
@@ -308,6 +316,10 @@ class UserConfig {
 
   addPairedLiquidShortcode(name, callback) {
     this.liquidPairedShortcodes[name] = callback;
+  }
+
+  addPairedHandlebarsShortcode(name, callback) {
+    this.handlebarsPairedShortcodes[name] = callback;
   }
 
   getMergingConfigObject() {
@@ -327,6 +339,8 @@ class UserConfig {
       nunjucksShortcodes: this.nunjucksShortcodes,
       nunjucksPairedShortcodes: this.nunjucksPairedShortcodes,
       handlebarsHelpers: this.handlebarsHelpers,
+      handlebarsShortcodes: this.handlebarsShortcodes,
+      handlebarsPairedShortcodes: this.handlebarsPairedShortcodes,
       pugOptions: this.pugOptions,
       ejsOptions: this.ejsOptions,
       markdownHighlighter: this.markdownHighlighter,

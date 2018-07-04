@@ -64,3 +64,59 @@ test("Handlebars Render: with Library Override", async t => {
   let fn = await tr.getCompiledTemplate("<p>{{name}}</p>");
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });
+
+test("Handlebars Render Helper", async t => {
+  let tr = new TemplateRender("hbs");
+  tr.engine.addHelpers({
+    helpername: function() {
+      return "Zach";
+    }
+  });
+
+  let fn = await tr.getCompiledTemplate(
+    "<p>This is a {{helpername}} {{name}}.</p>"
+  );
+  t.is(await fn({ name: "Zach" }), "<p>This is a Zach Zach.</p>");
+});
+
+test("Handlebars Render Helper", async t => {
+  let tr = new TemplateRender("hbs");
+  tr.engine.addHelpers({
+    helpername2: function(name) {
+      return "Zach";
+    }
+  });
+
+  let fn = await tr.getCompiledTemplate(
+    "<p>This is a {{helpername2 name}}.</p>"
+  );
+  t.is(await fn({ name: "Zach" }), "<p>This is a Zach.</p>");
+});
+
+test("Handlebars Render Shortcode", async t => {
+  let tr = new TemplateRender("hbs");
+  tr.engine.addShortcodes({
+    shortcodename: function(name) {
+      return name.toUpperCase();
+    }
+  });
+
+  let fn = await tr.getCompiledTemplate(
+    "<p>This is a {{shortcodename name}}.</p>"
+  );
+  t.is(await fn({ name: "Howdy" }), "<p>This is a HOWDY.</p>");
+});
+
+test("Handlebars Render Paired Shortcode", async t => {
+  let tr = new TemplateRender("hbs");
+  tr.engine.addPairedShortcodes({
+    shortcodename: function(content, name, options) {
+      return (content + name).toUpperCase();
+    }
+  });
+
+  let fn = await tr.getCompiledTemplate(
+    "<p>This is a {{#shortcodename name}}Testing{{/shortcodename}}.</p>"
+  );
+  t.is(await fn({ name: "Howdy" }), "<p>This is a TESTINGHOWDY.</p>");
+});
