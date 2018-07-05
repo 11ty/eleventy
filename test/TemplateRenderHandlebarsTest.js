@@ -137,3 +137,17 @@ test("Handlebars Render Paired Shortcode", async t => {
   );
   t.is(await fn({ name: "Howdy" }), "<p>This is a TESTINGHOWDY.</p>");
 });
+
+test("Handlebars Render Paired Shortcode", async t => {
+  let tr = new TemplateRender("hbs");
+  tr.engine.addPairedShortcodes({
+    shortcodename4: function(content, name, options) {
+      return (content + name).toUpperCase();
+    }
+  });
+
+  let fn = await tr.getCompiledTemplate(
+    "<p>This is a {{# shortcodename4 name }}Testing{{/ shortcodename4 }}.</p>"
+  );
+  t.is(await fn({ name: "Howdy" }), "<p>This is a TESTINGHOWDY.</p>");
+});
