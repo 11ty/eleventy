@@ -138,7 +138,7 @@ test("Handlebars Render Paired Shortcode", async t => {
   t.is(await fn({ name: "Howdy" }), "<p>This is a TESTINGHOWDY.</p>");
 });
 
-test("Handlebars Render Paired Shortcode", async t => {
+test("Handlebars Render Paired Shortcode (Spaces)", async t => {
   let tr = new TemplateRender("hbs");
   tr.engine.addPairedShortcodes({
     shortcodename4: function(content, name, options) {
@@ -150,4 +150,27 @@ test("Handlebars Render Paired Shortcode", async t => {
     "<p>This is a {{# shortcodename4 name }}Testing{{/ shortcodename4 }}.</p>"
   );
   t.is(await fn({ name: "Howdy" }), "<p>This is a TESTINGHOWDY.</p>");
+});
+
+test("Handlebars Render Paired Shortcode with a Nested Single Shortcode", async t => {
+  let tr = new TemplateRender("hbs");
+  tr.engine.addShortcodes({
+    shortcodechild: function(txt, options) {
+      return txt;
+    }
+  });
+
+  tr.engine.addPairedShortcodes({
+    shortcodeparent: function(content, name, name2, options) {
+      return (content + name + name2).toUpperCase();
+    }
+  });
+
+  let fn = await tr.getCompiledTemplate(
+    "<p>This is a {{# shortcodeparent name name2 }}{{shortcodechild 'CHILD CONTENT'}}{{/ shortcodeparent }}.</p>"
+  );
+  t.is(
+    await fn({ name: "Howdy", name2: "Zach" }),
+    "<p>This is a CHILD CONTENTHOWDYZACH.</p>"
+  );
 });
