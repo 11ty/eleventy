@@ -19,6 +19,7 @@ class Handlebars extends TemplateEngine {
       this.handlebarsLib.registerPartial(name, partials[name]);
     }
 
+    // TODO these all go to the same place (addHelper), add warnings for overwrites
     this.addHelpers(this.config.handlebarsHelpers);
     this.addShortcodes(this.config.handlebarsShortcodes);
     this.addPairedShortcodes(this.config.handlebarsPairedShortcodes);

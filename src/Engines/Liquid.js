@@ -23,6 +23,8 @@ class Liquid extends TemplateEngine {
     this.setEngineLib(this.liquidLib);
 
     this.addFilters(this.config.liquidFilters);
+
+    // TODO these all go to the same place (addTag), add warnings for overwrites
     this.addCustomTags(this.config.liquidTags);
     this.addAllShortcodes(this.config.liquidShortcodes);
     this.addAllPairedShortcodes(this.config.liquidPairedShortcodes);

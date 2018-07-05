@@ -146,7 +146,7 @@ class UserConfig {
     if (this.handlebarsHelpers[name]) {
       debug(
         chalk.yellow(
-          "Warning, overwriting a Handlebars helper with `addHandlebarsHelper(%o)`"
+          "Warning, overwriting a Handlebars helper with `addHandlebarsHelper(%o)`."
         ),
         name
       );
@@ -160,7 +160,7 @@ class UserConfig {
     this.addLiquidFilter(name, callback);
     this.addNunjucksFilter(name, callback);
 
-    // these seem more akin to tags but they’re all handlebars has, so
+    // TODO remove Handlebars helpers in Universal Filters. Use shortcodes instead (the Handlebars template syntax is the same).
     this.addHandlebarsHelper(name, callback);
   }
 
@@ -293,14 +293,41 @@ class UserConfig {
   }
 
   addNunjucksShortcode(name, callback) {
+    if (this.nunjucksShortcodes[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Nunjucks Shortcode with `addNunjucksShortcode(%o)`"
+        ),
+        name
+      );
+    }
+
     this.nunjucksShortcodes[name] = callback;
   }
 
   addLiquidShortcode(name, callback) {
+    if (this.liquidShortcodes[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Liquid Shortcode with `addLiquidShortcode(%o)`"
+        ),
+        name
+      );
+    }
+
     this.liquidShortcodes[name] = callback;
   }
 
   addHandlebarsShortcode(name, callback) {
+    if (this.handlebarsShortcodes[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Handlebars Shortcode with `addHandlebarsShortcode(%o)`"
+        ),
+        name
+      );
+    }
+
     this.handlebarsShortcodes[name] = callback;
   }
 
@@ -311,14 +338,41 @@ class UserConfig {
   }
 
   addPairedNunjucksShortcode(name, callback) {
+    if (this.nunjucksPairedShortcodes[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Nunjucks Paired Shortcode with `addPairedNunjucksShortcode(%o)`"
+        ),
+        name
+      );
+    }
+
     this.nunjucksPairedShortcodes[name] = callback;
   }
 
   addPairedLiquidShortcode(name, callback) {
+    if (this.liquidPairedShortcodes[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Liquid Paired Shortcode with `addPairedLiquidShortcode(%o)`"
+        ),
+        name
+      );
+    }
+
     this.liquidPairedShortcodes[name] = callback;
   }
 
   addPairedHandlebarsShortcode(name, callback) {
+    if (this.handlebarsPairedShortcodes[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Handlebars Paired Shortcode with `addPairedHandlebarsShortcode(%o)`"
+        ),
+        name
+      );
+    }
+
     this.handlebarsPairedShortcodes[name] = callback;
   }
 

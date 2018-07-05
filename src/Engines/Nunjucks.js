@@ -20,6 +20,8 @@ class Nunjucks extends TemplateEngine {
 
     this.addFilters(this.config.nunjucksFilters);
     this.addFilters(this.config.nunjucksAsyncFilters, true);
+
+    // TODO these all go to the same place (addTag), add warnings for overwrites
     this.addCustomTags(this.config.nunjucksTags);
     this.addAllShortcodes(this.config.nunjucksShortcodes);
     this.addAllPairedShortcodes(this.config.nunjucksPairedShortcodes);
