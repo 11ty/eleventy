@@ -107,16 +107,33 @@ test("Handlebars Render Shortcode", async t => {
   t.is(await fn({ name: "Howdy" }), "<p>This is a HOWDY.</p>");
 });
 
+test("Handlebars Render Shortcode (Multiple args)", async t => {
+  let tr = new TemplateRender("hbs");
+  tr.engine.addShortcodes({
+    shortcodename2: function(name, name2) {
+      return name.toUpperCase() + name2.toUpperCase();
+    }
+  });
+
+  let fn = await tr.getCompiledTemplate(
+    "<p>This is a {{shortcodename2 name name2}}.</p>"
+  );
+  t.is(
+    await fn({ name: "Howdy", name2: "Zach" }),
+    "<p>This is a HOWDYZACH.</p>"
+  );
+});
+
 test("Handlebars Render Paired Shortcode", async t => {
   let tr = new TemplateRender("hbs");
   tr.engine.addPairedShortcodes({
-    shortcodename: function(content, name, options) {
+    shortcodename3: function(content, name, options) {
       return (content + name).toUpperCase();
     }
   });
 
   let fn = await tr.getCompiledTemplate(
-    "<p>This is a {{#shortcodename name}}Testing{{/shortcodename}}.</p>"
+    "<p>This is a {{#shortcodename3 name}}Testing{{/shortcodename3}}.</p>"
   );
   t.is(await fn({ name: "Howdy" }), "<p>This is a TESTINGHOWDY.</p>");
 });
