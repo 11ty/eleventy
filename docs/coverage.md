@@ -1,8 +1,8 @@
-# Code Coverage for Eleventy v0.4.0
+# Code Coverage for Eleventy v0.5.0
 
 | Filename                                   | % Lines | % Statements | % Functions | % Branches |
 | ------------------------------------------ | ------- | ------------ | ----------- | ---------- |
-| `total`                                    | 85.39%  | 85.4%        | 82.97%      | 76.16%     |
+| `total`                                    | 85.02%  | 85.04%       | 83.22%      | 75.26%     |
 | `config.js`                                | 100%    | 100%         | 100%        | 100%       |
 | `src/Config.js`                            | 100%    | 100%         | 100%        | 100%       |
 | `src/Eleventy.js`                          | 52.91%  | 52.91%       | 37.5%       | 22.73%     |
@@ -19,23 +19,23 @@
 | `src/TemplateFileSlug.js`                  | 100%    | 100%         | 100%        | 100%       |
 | `src/TemplateGlob.js`                      | 93.33%  | 93.33%       | 100%        | 87.5%      |
 | `src/TemplateLayout.js`                    | 97.37%  | 97.37%       | 100%        | 92.86%     |
-| `src/TemplateMap.js`                       | 98.72%  | 98.72%       | 100%        | 77.78%     |
+| `src/TemplateMap.js`                       | 98.99%  | 98.99%       | 100%        | 81.82%     |
 | `src/TemplatePassthrough.js`               | 83.33%  | 83.33%       | 75%         | 0%         |
 | `src/TemplatePassthroughManager.js`        | 63.46%  | 63.46%       | 76.92%      | 66.67%     |
-| `src/TemplatePath.js`                      | 97.26%  | 97.26%       | 94.12%      | 95.45%     |
+| `src/TemplatePath.js`                      | 97.53%  | 97.53%       | 94.44%      | 96.3%      |
 | `src/TemplatePermalink.js`                 | 100%    | 100%         | 100%        | 100%       |
 | `src/TemplateRender.js`                    | 98.73%  | 98.73%       | 100%        | 94.44%     |
 | `src/TemplateWriter.js`                    | 83.33%  | 83.33%       | 74.19%      | 78.13%     |
-| `src/UserConfig.js`                        | 75.56%  | 75.82%       | 62.07%      | 57.14%     |
+| `src/UserConfig.js`                        | 64.57%  | 64.84%       | 55.26%      | 45.45%     |
 | `src/Engines/Ejs.js`                       | 95.45%  | 95.45%       | 85.71%      | 66.67%     |
 | `src/Engines/Haml.js`                      | 100%    | 100%         | 100%        | 100%       |
-| `src/Engines/Handlebars.js`                | 100%    | 100%         | 100%        | 100%       |
+| `src/Engines/Handlebars.js`                | 100%    | 100%         | 100%        | 83.33%     |
 | `src/Engines/Html.js`                      | 100%    | 100%         | 100%        | 100%       |
 | `src/Engines/JavaScriptTemplateLiteral.js` | 93.33%  | 93.33%       | 100%        | 100%       |
-| `src/Engines/Liquid.js`                    | 100%    | 100%         | 100%        | 83.33%     |
+| `src/Engines/Liquid.js`                    | 95.52%  | 95.52%       | 96%         | 75%        |
 | `src/Engines/Markdown.js`                  | 90%     | 90%          | 87.5%       | 75%        |
 | `src/Engines/Mustache.js`                  | 100%    | 100%         | 100%        | 100%       |
-| `src/Engines/Nunjucks.js`                  | 95%     | 95%          | 100%        | 75%        |
+| `src/Engines/Nunjucks.js`                  | 91.94%  | 91.94%       | 100%        | 66.67%     |
 | `src/Engines/Pug.js`                       | 100%    | 100%         | 100%        | 75%        |
 | `src/Engines/TemplateEngine.js`            | 100%    | 100%         | 100%        | 100%       |
 | `src/Filters/Slug.js`                      | 100%    | 100%         | 100%        | 100%       |
