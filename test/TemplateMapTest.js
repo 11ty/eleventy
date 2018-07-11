@@ -422,7 +422,12 @@ test("Should be able to paginate a user config collection (uses rendered permali
   let collections = await tm.getCollectionsData();
   t.truthy(collections.userCollection);
   t.truthy(collections.userCollection.length);
-  t.is(collections.all[2].url, "/test-title/hello/");
+
+  let urls = [];
+  for (let item of collections.all) {
+    urls.push(item.url);
+  }
+  t.is(urls.indexOf("/test-title/hello/") > -1, true);
 });
 
 test("Should be able to paginate a user config collection (paged template is also tagged)", async t => {
