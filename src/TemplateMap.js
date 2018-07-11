@@ -34,7 +34,7 @@ class TemplateMap {
 
     this.taggedCollectionsData = await this.getTaggedCollectionsData();
     Object.assign(this.collectionsData, this.taggedCollectionsData);
-    await this.populateUrlDataInMap();
+    await this.populateUrlDataInMap(true);
     await this.populateCollectionsWithOutputPaths(this.collectionsData);
 
     this.userConfigCollectionsData = await this.getUserConfigCollectionsData();
@@ -43,7 +43,7 @@ class TemplateMap {
     await this.populateUrlDataInMap();
     await this.populateCollectionsWithOutputPaths(this.collectionsData);
 
-    await this.populateContentDataInMap(this.collectionsData);
+    await this.populateContentDataInMap();
     this.populateCollectionsWithContent();
     this.cached = true;
   }
@@ -76,9 +76,12 @@ class TemplateMap {
     }
   }
 
-  async populateUrlDataInMap() {
+  async populateUrlDataInMap(skipPagination) {
     for (let map of this.map) {
       if (map._initialPage) {
+        continue;
+      }
+      if (skipPagination && "pagination" in map.data) {
         continue;
       }
 
@@ -94,7 +97,7 @@ class TemplateMap {
     }
   }
 
-  async populateContentDataInMap(collectionsData) {
+  async populateContentDataInMap() {
     for (let map of this.map) {
       if (map._initialPage) {
         Object.assign(

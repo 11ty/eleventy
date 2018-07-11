@@ -22,7 +22,6 @@ Pagination.prototype.hasPagination = function() {
 
 Pagination.prototype.setData = function(data) {
   this.data = data || {};
-  this.size = 1;
   this.target = [];
 
   if (!this.hasPagination()) {
@@ -31,7 +30,7 @@ Pagination.prototype.setData = function(data) {
 
   if (!data.pagination) {
     throw new Error(
-      "Misconfigured pagination data in template front matter (did you use tabs and not spaces?)."
+      "Misconfigured pagination data in template front matter (YAML front matter precaution: did you use tabs and not spaces for indentation?)."
     );
   } else if (!("size" in data.pagination)) {
     throw new Error("Missing pagination size in front matter data.");

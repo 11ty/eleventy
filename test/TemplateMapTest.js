@@ -353,3 +353,124 @@ test("Url should be available in user config collections API calls (test in call
   await tm.add(tmpl2);
   await tm.cache();
 });
+
+test("Should be able to paginate a tag generated collection", async t => {
+  let tm = new TemplateMap();
+  await tm.add(tmpl1);
+  await tm.add(tmpl2);
+
+  let pagedTmpl = new Template(
+    "./test/stubs/templateMapCollection/paged-tag.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  await tm.add(pagedTmpl);
+
+  let collections = await tm.getCollectionsData();
+  t.truthy(collections.dog);
+  t.truthy(collections.dog.length);
+});
+
+test("Should be able to paginate a user config collection", async t => {
+  let tm = new TemplateMap();
+  await tm.add(tmpl1);
+  await tm.add(tmpl2);
+
+  let pagedTmpl = new Template(
+    "./test/stubs/templateMapCollection/paged-cfg.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  await tm.add(pagedTmpl);
+
+  tm.setUserConfigCollections({
+    userCollection: function(collection) {
+      let all = collection.getFilteredByTag("dog");
+      return all;
+    }
+  });
+
+  let collections = await tm.getCollectionsData();
+  t.truthy(collections.userCollection);
+  t.truthy(collections.userCollection.length);
+});
+
+test("Should be able to paginate a user config collection (uses rendered permalink)", async t => {
+  let tm = new TemplateMap();
+  await tm.add(tmpl1);
+  await tm.add(tmpl2);
+
+  let pagedTmpl = new Template(
+    "./test/stubs/templateMapCollection/paged-cfg-permalink.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  await tm.add(pagedTmpl);
+
+  tm.setUserConfigCollections({
+    userCollection: function(collection) {
+      let all = collection.getFilteredByTag("dog");
+      t.is(all[0].url, "/templateMapCollection/test1/");
+      t.is(
+        all[0].outputPath,
+        "./test/stubs/_site/templateMapCollection/test1/index.html"
+      );
+      return all;
+    }
+  });
+
+  let collections = await tm.getCollectionsData();
+  t.truthy(collections.userCollection);
+  t.truthy(collections.userCollection.length);
+  t.is(collections.all[2].url, "/test-title/hello/");
+});
+
+test("Should be able to paginate a user config collection (paged template is also tagged)", async t => {
+  let tm = new TemplateMap();
+  await tm.add(tmpl1);
+  await tm.add(tmpl2);
+
+  let pagedTmpl = new Template(
+    "./test/stubs/templateMapCollection/paged-cfg-tagged.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  await tm.add(pagedTmpl);
+
+  tm.setUserConfigCollections({
+    userCollection: function(collection) {
+      let all = collection.getFilteredByTag("dog");
+      return all;
+    }
+  });
+
+  let collections = await tm.getCollectionsData();
+  t.truthy(collections.haha);
+  t.truthy(collections.haha.length);
+  t.is(collections.haha[0].url, "/templateMapCollection/paged-cfg-tagged/");
+});
+
+test("Should be able to paginate a user config collection (paged template is also tagged, uses custom rendered permalink)", async t => {
+  let tm = new TemplateMap();
+  await tm.add(tmpl1);
+  await tm.add(tmpl2);
+
+  let pagedTmpl = new Template(
+    "./test/stubs/templateMapCollection/paged-cfg-tagged-permalink.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  await tm.add(pagedTmpl);
+
+  tm.setUserConfigCollections({
+    userCollection: function(collection) {
+      let all = collection.getFilteredByTag("dog");
+      return all;
+    }
+  });
+
+  let collections = await tm.getCollectionsData();
+  t.truthy(collections.haha);
+  t.truthy(collections.haha.length);
+  t.is(collections.haha[0].url, "/test-title/goodbye/");
+});
