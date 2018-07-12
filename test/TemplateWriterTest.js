@@ -20,7 +20,7 @@ test("Mutually exclusive Input and Output dirs", async t => {
   t.is(files[0], "./test/stubs/writeTest/test.md");
 });
 
-test("Single File Input", async t => {
+test("Single File Input (deep path)", async t => {
   let tw = new TemplateWriter("./test/stubs/index.html", "./test/stubs/_site", [
     "ejs",
     "md"
@@ -32,13 +32,18 @@ test("Single File Input", async t => {
   t.is(files[0], "./test/stubs/index.html");
 });
 
-test("Single File Input", async t => {
+test("Single File Input (shallow path)", async t => {
   let tw = new TemplateWriter("README.md", "./test/stubs/_site", ["md"]);
-
-  let files = await fastglob.async(tw.getFiles());
+  let globs = tw.getFiles().filter(path => path !== "!./README.md");
+  let files = await fastglob.async(globs);
   t.is(tw.getRawFiles().length, 1);
   t.is(files.length, 1);
   t.is(files[0], "./README.md");
+});
+
+test("Single File Input (shallow path)", async t => {
+  let tw = new TemplateWriter("README.md", ".", ["md"]);
+  t.is(tw._getInputPathDir("README.md"), ".");
 });
 
 // TODO make sure if output is a subdir of input dir that they don’t conflict.

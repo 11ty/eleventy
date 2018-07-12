@@ -85,7 +85,7 @@ TemplateWriter.prototype.getDataDir = function() {
 TemplateWriter.prototype._getInputPathDir = function(inputPath) {
   // Input points to a file
   if (!TemplatePath.isDirectorySync(inputPath)) {
-    return parsePath(inputPath).dir;
+    return parsePath(inputPath).dir || ".";
   }
 
   // Input is a dir
