@@ -11,20 +11,20 @@ class TemplateCache {
     return Object.keys(this.cache).length;
   }
 
-  add(inputPath, template) {
-    this.cache[inputPath] = template;
+  add(key, template) {
+    this.cache[key] = template;
   }
 
-  has(inputPath) {
-    return inputPath in this.cache;
+  has(key) {
+    return key in this.cache;
   }
 
-  get(inputPath) {
-    if (!this.has(inputPath)) {
-      throw new Error(`Could not find ${inputPath} in TemplateCache.`);
+  get(key) {
+    if (!this.has(key)) {
+      throw new Error(`Could not find ${key} in TemplateCache.`);
     }
 
-    return this.cache[inputPath];
+    return this.cache[key];
   }
 }
 
