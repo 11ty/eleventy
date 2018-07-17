@@ -45,7 +45,6 @@ class Template extends TemplateContent {
     this.isVerbose = true;
     this.isDryRun = false;
     this.writeCount = 0;
-    this.initialLayout = undefined;
     this.wrapWithLayouts = true;
     this.fileSlug = new TemplateFileSlug(this.inputPath, this.inputDir);
   }
@@ -280,27 +279,8 @@ class Template extends TemplateContent {
     return data;
   }
 
-  async renderLayout(tmpl, tmplData, forcedLayoutPath) {
-    if (!this.initialLayout) {
-      this.initialLayout = tmplData[tmpl.config.keys.layout];
-      debugDev(
-        "No layout name saved, saving: %o for %o",
-        this.initialLayout,
-        this.inputPath
-      );
-    }
-
-    let layoutKey = forcedLayoutPath || tmplData[tmpl.config.keys.layout];
-    debugDev("renderLayout(%o): %o", tmpl.inputPath, layoutKey);
-
-    // TODO make layout key to be available to templates (without it causing issues with merge below)
-    delete tmplData[tmpl.config.keys.layout];
-    debugDev(
-      "Layout deleted from data (%o): %o",
-      tmpl.config.keys.layout,
-      tmplData[tmpl.config.keys.layout]
-    );
-
+  async renderLayout(tmpl, tmplData) {
+    let layoutKey = tmplData[tmpl.config.keys.layout];
     let layout = TemplateLayout.getTemplate(layoutKey, this.getInputDir());
     debug("%o is using layout %o", this.inputPath, layoutKey);
 
@@ -329,26 +309,16 @@ class Template extends TemplateContent {
       data = await this.getRenderedData();
     }
 
-    if (
-      !this.wrapWithLayouts &&
-      (data[this.config.keys.layout] || this.initialLayout)
-    ) {
+    if (!this.wrapWithLayouts && data[this.config.keys.layout]) {
       debugDev("Template.render is bypassing layouts for %o.", this.inputPath);
     }
 
-    if (
-      this.wrapWithLayouts &&
-      (data[this.config.keys.layout] || this.initialLayout)
-    ) {
-      if (data[this.config.keys.layout]) {
-        debugDev(
-          "Template.render found layout: %o",
-          data[this.config.keys.layout]
-        );
-      } else {
-        debugDev("Template.render found initialLayout: %o", this.initialLayout);
-      }
-      return this.renderLayout(this, data, this.initialLayout);
+    if (this.wrapWithLayouts && data[this.config.keys.layout]) {
+      debugDev(
+        "Template.render found layout: %o",
+        data[this.config.keys.layout]
+      );
+      return this.renderLayout(this, data);
     } else {
       debugDev("Template.render renderContent for %o", this.inputPath);
       return super.render(await this.getPreRender(), data);
