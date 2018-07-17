@@ -479,3 +479,19 @@ test("Should be able to paginate a user config collection (paged template is als
   t.truthy(collections.haha.length);
   t.is(collections.haha[0].url, "/test-title/goodbye/");
 });
+
+test("TemplateMap render and templateContent are the same (templateContent doesn’t have layout but makes proper use of layout front matter data)", async t => {
+  let tm = new TemplateMap();
+  let tmplLayout = new Template(
+    "./test/stubs/templateMapCollection/testWithLayout.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  await tm.add(tmplLayout);
+
+  let map = tm.getMap();
+  await tm.cache();
+  t.is(map[0].templateContent.trim(), "<p>Inherited</p>");
+  t.is((await map[0].template.render(map[0].data)).trim(), "<p>Inherited</p>");
+});

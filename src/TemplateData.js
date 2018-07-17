@@ -221,6 +221,7 @@ TemplateData.prototype.getLocalDataPaths = function(templatePath) {
       }
     }
   }
+  debugDev("getLocalDataPaths(%o): %o", templatePath, paths);
   debug("getLocalDataPaths(%o): %o", templatePath, paths);
   return lodashUniq(paths).reverse();
 };

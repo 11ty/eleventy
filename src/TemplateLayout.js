@@ -1,92 +1,136 @@
-const fs = require("fs-extra");
+const TemplateLayoutPathResolver = require("./TemplateLayoutPathResolver");
+const TemplateContent = require("./TemplateContent");
+
+const templateCache = require("./TemplateCache");
 const config = require("./Config");
-const EleventyExtensionMap = require("./EleventyExtensionMap");
 const debug = require("debug")("Eleventy:TemplateLayout");
+const debugDev = require("debug")("Dev:Eleventy:TemplateLayout");
 
-class TemplateLayout {
-  constructor(path, dir) {
-    this.config = config.getConfig();
-    this.dir = dir;
-    this.originalPath = path;
-    this.path = path;
-    this.aliases = {};
+class TemplateLayout extends TemplateContent {
+  constructor(key, inputDir) {
+    // TODO getConfig() is duplicated in TemplateContent (super)
+    let cfg = config.getConfig();
+    let layoutsDir = inputDir + "/" + cfg.dir.includes;
+    let resolvedPath = new TemplateLayoutPathResolver(
+      key,
+      layoutsDir
+    ).getFullPath();
+    super(resolvedPath, inputDir);
 
-    this.init();
+    this.dataKeyLayoutPath = key;
+    this.inputPath = resolvedPath;
+    this.inputDir = inputDir;
+    this.config = cfg;
   }
 
-  init() {
-    // we might be able to move this into the constructor?
-    this.aliases = Object.assign({}, this.config.layoutAliases, this.aliases);
-    // debug("Current layout aliases: %o", this.aliases);
+  static resolveFullKey(key, inputDir) {
+    return inputDir + key;
+  }
 
-    if (this.path in this.aliases) {
-      // debug(
-      //   "Substituting layout: %o maps to %o",
-      //   this.path,
-      //   this.aliases[this.path]
-      // );
-      this.path = this.aliases[this.path];
+  static getTemplate(key, inputDir) {
+    let fullKey = TemplateLayout.resolveFullKey(key, inputDir);
+    if (templateCache.has(fullKey)) {
+      debugDev("Found %o in TemplateCache", key);
+      return templateCache.get(fullKey);
     }
 
-    this.pathAlreadyHasExtension = this.dir + "/" + this.path;
+    let tmpl = new TemplateLayout(key, inputDir);
+    templateCache.add(fullKey, tmpl);
 
-    if (
-      this.path.split(".").length > 0 &&
-      fs.existsSync(this.pathAlreadyHasExtension)
-    ) {
-      this.filename = this.path;
-      this.fullPath = this.pathAlreadyHasExtension;
-    } else {
-      this.filename = this.findFileName();
-      this.fullPath = this.dir + "/" + this.filename;
+    return tmpl;
+  }
+
+  async getTemplateLayoutMapEntry() {
+    return {
+      key: this.dataKeyLayoutPath,
+      template: this,
+      frontMatterData: await this.getFrontMatterData()
+    };
+  }
+
+  async getTemplateLayoutMap() {
+    if (this.mapCache) {
+      return this.mapCache;
     }
+
+    let cfgKey = this.config.keys.layout;
+    let map = [];
+    let mapEntry = await this.getTemplateLayoutMapEntry();
+    map.push(mapEntry);
+
+    while (mapEntry.frontMatterData && cfgKey in mapEntry.frontMatterData) {
+      let layout = TemplateLayout.getTemplate(
+        mapEntry.frontMatterData[cfgKey],
+        this.inputDir
+      );
+      mapEntry = await layout.getTemplateLayoutMapEntry();
+      map.push(mapEntry);
+    }
+
+    this.mapCache = map;
+    return map;
   }
 
-  addLayoutAlias(from, to) {
-    this.aliases[from] = to;
+  async getData() {
+    if (this.dataCache) {
+      return this.dataCache;
+    }
+
+    let data = {};
+    let map = await this.getTemplateLayoutMap();
+    for (let j = map.length - 1; j >= 0; j--) {
+      Object.assign(data, map[j].frontMatterData);
+    }
+    delete data[this.config.keys.layout];
+
+    this.dataCache = data;
+    return data;
   }
 
-  getFileName() {
-    if (!this.filename) {
-      throw new Error(
-        `You’re trying to use a layout that does not exist: ${
-          this.originalPath
-        } (${this.filename})`
+  async getCompiledLayoutFunctions() {
+    if (this.compileCache) {
+      return this.compileCache;
+    }
+
+    let map = await this.getTemplateLayoutMap();
+    let fns = [];
+    for (let layoutMap of map) {
+      fns.push(
+        await layoutMap.template.compile(
+          await layoutMap.template.getPreRender()
+        )
       );
     }
-
-    return this.filename;
+    this.compileCache = fns;
+    return fns;
   }
 
-  getFullPath() {
-    if (!this.filename) {
-      throw new Error(
-        `You’re trying to use a layout that does not exist: ${
-          this.originalPath
-        } (${this.filename})`
-      );
+  static augmentDataWithContent(data, templateContent) {
+    data = data || {};
+
+    if (templateContent !== undefined) {
+      data.content = templateContent;
+      data.layoutContent = templateContent;
+
+      // deprecated
+      data._layoutContent = templateContent;
     }
 
-    return this.fullPath;
+    return data;
   }
 
-  findFileName() {
-    if (!fs.existsSync(this.dir)) {
-      throw Error(
-        "TemplateLayout directory does not exist for " +
-          this.path +
-          ": " +
-          this.dir
-      );
+  // Inefficient? We want to compile all the templatelayouts into a single reusable callback?
+  // Trouble: layouts may need data variables present downstream/upstream
+  async render(data, templateContent) {
+    data = TemplateLayout.augmentDataWithContent(data, templateContent);
+
+    let fns = await this.getCompiledLayoutFunctions();
+    for (let fn of fns) {
+      templateContent = await fn(data);
+      data = TemplateLayout.augmentDataWithContent(data, templateContent);
     }
 
-    let extensionMap = new EleventyExtensionMap(this.config.templateFormats);
-    for (let filename of extensionMap.getFileList(this.path)) {
-      // TODO async
-      if (fs.existsSync(this.dir + "/" + filename)) {
-        return filename;
-      }
-    }
+    return templateContent;
   }
 }
 

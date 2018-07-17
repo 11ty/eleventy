@@ -213,6 +213,7 @@ class UserConfig {
   }
 
   addPlugin(pluginCallback) {
+    debug("Adding plugin (unknown name: check your config file).");
     if (typeof pluginCallback !== "function") {
       throw new Error(
         "EleventyConfig.addPlugin expects the first argument to be a function."
@@ -287,6 +288,7 @@ class UserConfig {
   }
 
   addShortcode(name, callback) {
+    debug("Adding universal shortcode %o", this.getNamespacedName(name));
     this.addNunjucksShortcode(name, callback);
     this.addLiquidShortcode(name, callback);
     this.addHandlebarsShortcode(name, callback);
