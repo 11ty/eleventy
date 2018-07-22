@@ -34,7 +34,7 @@ class Template extends TemplateContent {
     if (this.templateData) {
       this.templateData.setInputDir(this.inputDir);
     }
-    this.dataOverrides = {};
+    this.paginationData = {};
 
     // HTML output can’t overwrite the HTML input file.
     this.isHtmlIOException =
@@ -130,8 +130,8 @@ class Template extends TemplateContent {
     }
   }
 
-  setDataOverrides(overrides) {
-    this.dataOverrides = overrides;
+  setPaginationData(paginationData) {
+    this.paginationData = paginationData;
   }
 
   isIgnored() {
@@ -209,7 +209,7 @@ class Template extends TemplateContent {
       this.dataCache = mergedData;
     }
 
-    return Object.assign({}, this.dataCache, localData, this.dataOverrides);
+    return Object.assign({}, this.dataCache, localData, this.paginationData);
   }
 
   async addPageDate(data) {
