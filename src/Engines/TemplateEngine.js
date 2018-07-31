@@ -1,6 +1,5 @@
 const fastglob = require("fast-glob");
 const fs = require("fs-extra");
-const parsePath = require("parse-filepath");
 const TemplatePath = require("../TemplatePath");
 const debug = require("debug")("Eleventy:TemplateEngine");
 
@@ -91,7 +90,7 @@ class TemplateEngine {
       pug: "Pug",
       njk: "Nunjucks",
       liquid: "Liquid",
-      js: "JavaScript"
+      "11ty.js": "JavaScript"
     };
   }
 
