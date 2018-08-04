@@ -55,6 +55,10 @@ Eleventy.prototype.setDryRun = function(isDryRun) {
   this.isDryRun = !!isDryRun;
 };
 
+Eleventy.prototype.setPassthroughAll = function(isPassthroughAll) {
+  this.isPassthroughAll = !!isPassthroughAll;
+};
+
 Eleventy.prototype.setPathPrefix = function(pathPrefix) {
   if (pathPrefix || pathPrefix === "") {
     config.setPathPrefix(pathPrefix);
@@ -137,7 +141,8 @@ Eleventy.prototype.init = async function() {
     this.input,
     this.outputDir,
     formats,
-    this.data
+    this.data,
+    this.isPassthroughAll
   );
 
   // TODO maybe isVerbose -> console.log?
@@ -264,21 +269,15 @@ Eleventy.prototype.watch = async function() {
     ignored: this.writer.getGlobWatcherIgnores()
   });
 
-  watcher.on(
-    "change",
-    async function(path, stat) {
-      console.log("File changed:", path);
-      this._watch(path);
-    }.bind(this)
-  );
+  watcher.on("change", async path => {
+    console.log("File changed:", path);
+    this._watch(path);
+  });
 
-  watcher.on(
-    "add",
-    async function(path, stat) {
-      console.log("File added:", path);
-      this._watch(path);
-    }.bind(this)
-  );
+  watcher.on("add", async path => {
+    console.log("File added:", path);
+    this._watch(path);
+  });
 };
 
 Eleventy.prototype.serve = function(port) {

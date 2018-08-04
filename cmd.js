@@ -25,6 +25,7 @@ EleventyNodeVersionCheck().then(
       elev.setConfigPath(argv.config);
       elev.setPathPrefix(argv.pathprefix);
       elev.setDryRun(argv.dryrun);
+      elev.setPassthroughAll(argv.passthroughall);
       elev.setFormats(argv.formats);
 
       let isVerbose = process.env.DEBUG ? false : !argv.quiet;

@@ -13,7 +13,13 @@ const config = require("./Config");
 const debug = require("debug")("Eleventy:TemplateWriter");
 const debugDev = require("debug")("Dev:Eleventy:TemplateWriter");
 
-function TemplateWriter(inputPath, outputDir, templateKeys, templateData) {
+function TemplateWriter(
+  inputPath,
+  outputDir,
+  templateKeys,
+  templateData,
+  isPassthroughAll
+) {
   this.config = config.getConfig();
   this.input = inputPath;
   this.inputDir = this._getInputPathDir(inputPath);
@@ -29,6 +35,7 @@ function TemplateWriter(inputPath, outputDir, templateKeys, templateData) {
   this.dataDir = this.inputDir + "/" + this.config.dir.data;
 
   this.extensionMap = new EleventyExtensionMap(this.templateKeys);
+  this.passthroughAll = isPassthroughAll;
 
   this.setPassthroughManager();
   this.setupGlobs();
@@ -50,7 +57,15 @@ TemplateWriter.prototype.setupGlobs = function() {
   }
 
   this.cachedIgnores = this.getIgnores();
-  this.watchedGlobs = this.templateGlobs.concat(this.cachedIgnores);
+
+  if (this.passthroughAll) {
+    this.watchedGlobs = TemplateGlob.map([
+      TemplateGlob.normalizePath(this.input, "/**")
+    ]).concat(this.cachedIgnores);
+  } else {
+    this.watchedGlobs = this.templateGlobs.concat(this.cachedIgnores);
+  }
+
   this.templateGlobsWithIgnores = this.watchedGlobs.concat(
     this.getTemplateIgnores()
   );
