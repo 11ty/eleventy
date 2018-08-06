@@ -537,7 +537,11 @@ test("Pagination and TemplateContent", async t => {
 <h1>Post 2</h1>`
   );
 
-  fs.unlink("./test/stubs/pagination-templatecontent/_site/index.html");
-  fs.unlink("./test/stubs/pagination-templatecontent/_site/post-1/index.html");
-  fs.unlink("./test/stubs/pagination-templatecontent/_site/post-2/index.html");
+  fs.unlinkSync("./test/stubs/pagination-templatecontent/_site/index.html");
+  fs.unlinkSync(
+    "./test/stubs/pagination-templatecontent/_site/post-1/index.html"
+  );
+  fs.unlinkSync(
+    "./test/stubs/pagination-templatecontent/_site/post-2/index.html"
+  );
 });
