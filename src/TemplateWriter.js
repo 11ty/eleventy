@@ -247,45 +247,60 @@ TemplateWriter.prototype._createTemplate = function(path) {
   return tmpl;
 };
 
-TemplateWriter.prototype._createTemplateMap = async function(paths) {
-  this.templateMap = new TemplateMap();
-
+TemplateWriter.prototype._addToTemplateMap = async function(paths) {
+  let promises = [];
   for (let path of paths) {
     if (TemplateRender.hasEngine(path)) {
-      await this.templateMap.add(this._createTemplate(path));
-      debug(`Template for ${path} added to map.`);
+      promises.push(
+        this.templateMap.add(this._createTemplate(path)).then(() => {
+          debug(`${path} added to map.`);
+        })
+      );
     }
   }
 
+  return Promise.all(promises);
+};
+
+TemplateWriter.prototype._createTemplateMap = async function(paths) {
+  this.templateMap = new TemplateMap();
+
+  await this._addToTemplateMap(paths);
   await this.templateMap.cache();
-  debugDev(`TemplateMap cache complete.`);
+
+  debugDev("TemplateMap cache complete.");
   return this.templateMap;
 };
 
 TemplateWriter.prototype._writeTemplate = async function(mapEntry) {
   let tmpl = mapEntry.template;
   try {
-    await tmpl.write(mapEntry.outputPath, mapEntry.data);
+    return tmpl.write(mapEntry.outputPath, mapEntry.data).then(() => {
+      this.writeCount += tmpl.getWriteCount();
+    });
   } catch (e) {
     throw EleventyError.make(
       new Error(`Having trouble writing template: ${mapEntry.outputPath}`),
       e
     );
   }
-
-  this.writeCount += tmpl.getWriteCount();
-  return tmpl;
 };
 
 TemplateWriter.prototype.write = async function() {
+  let promises = [];
   let paths = await this._getAllPaths();
   debug("Found: %o", paths);
 
-  await this.passthroughManager.copyAll(paths);
+  promises.push(this.passthroughManager.copyAll(paths));
+
+  // TODO optimize await here
   await this._createTemplateMap(paths);
+  debug("Template map created.");
+
   for (let mapEntry of this.templateMap.getMap()) {
-    await this._writeTemplate(mapEntry);
+    promises.push(this._writeTemplate(mapEntry));
   }
+  return Promise.all(promises);
 };
 
 TemplateWriter.prototype.setVerboseOutput = function(isVerbose) {

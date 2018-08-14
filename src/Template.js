@@ -404,27 +404,36 @@ class Template extends TemplateContent {
   async _write(outputPath, finalContent) {
     this.writeCount++;
 
-    if (!this.isDryRun) {
-      await fs.outputFile(outputPath, finalContent);
-    }
-
     let writeDesc = this.isDryRun ? "Pretending to write" : "Writing";
     if (this.isVerbose) {
       console.log(`${writeDesc} ${outputPath} from ${this.inputPath}.`);
     } else {
       debug(`${writeDesc} %o from %o.`, outputPath, this.inputPath);
     }
+
+    if (!this.isDryRun) {
+      return fs.outputFile(outputPath, finalContent).then(() => {
+        debug(
+          `${outputPath} ${
+            !this.isDryRun ? "written" : "pretended to be written"
+          }.`
+        );
+      });
+    }
   }
 
   async writeContent(outputPath, templateContent) {
-    await this._write(outputPath, templateContent);
+    return this._write(outputPath, templateContent);
   }
 
   async write(outputPath, data) {
     let templates = await this.getRenderedTemplates(data);
+    let promises = [];
     for (let tmpl of templates) {
-      await this._write(tmpl.outputPath, tmpl.templateContent);
+      promises.push(this._write(tmpl.outputPath, tmpl.templateContent));
     }
+
+    return Promise.all(promises);
   }
 
   // TODO this but better
