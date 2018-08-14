@@ -22,6 +22,7 @@ try {
   cmdCheck.hasUnknownArguments();
 } catch (e) {
   console.log(chalk.red("Eleventy error:"), chalk.red(e.toString()));
+  process.exitCode = 1;
   return;
 }
 
@@ -52,4 +53,5 @@ try {
   });
 } catch (e) {
   console.log(chalk.red("Eleventy error:"), e);
+  process.exitCode = 1;
 }
