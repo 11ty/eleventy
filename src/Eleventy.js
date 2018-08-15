@@ -9,6 +9,7 @@ const EleventyServe = require("./EleventyServe");
 const templateCache = require("./TemplateCache");
 const EleventyError = require("./EleventyError");
 const simplePlural = require("./Util/Pluralize");
+const eleventyConfig = require("./EleventyConfig");
 const config = require("./Config");
 const debug = require("debug")("Eleventy");
 
@@ -83,6 +84,8 @@ Eleventy.prototype.restart = async function() {
 };
 
 Eleventy.prototype.finish = function() {
+  eleventyConfig.logSlowConfigOptions(new Date() - this.start, this.isVerbose);
+
   console.log(this.logFinished());
   debug("Finished writing templates.");
 };
