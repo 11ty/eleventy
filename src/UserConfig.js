@@ -47,6 +47,10 @@ class UserConfig {
     this.benchmarks = {};
   }
 
+  resetOnWatch() {
+    this.benchmarks = {};
+  }
+
   versionCheck(expected) {
     if (!semver.satisfies(pkg.version, expected)) {
       throw new Error(

@@ -229,6 +229,9 @@ Eleventy.prototype._watch = async function(path) {
   // reset and reload global configuration :O
   if (path === config.getLocalProjectConfigFile()) {
     this.resetConfig();
+  } else {
+    // a lighter config reset (mostly benchmarks)
+    config.resetOnWatch();
   }
 
   await this.restart();
