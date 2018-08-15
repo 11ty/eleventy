@@ -1,32 +1,35 @@
-# Code Coverage for Eleventy v0.5.0
+# Code Coverage for Eleventy v0.5.1
 
 | Filename                                   | % Lines | % Statements | % Functions | % Branches |
 | ------------------------------------------ | ------- | ------------ | ----------- | ---------- |
-| `total`                                    | 85.02%  | 85.04%       | 83.22%      | 75.26%     |
+| `total`                                    | 86.31%  | 86.34%       | 85.24%      | 75.33%     |
 | `config.js`                                | 100%    | 100%         | 100%        | 100%       |
+| `src/Benchmark.js`                         | 91.67%  | 91.67%       | 83.33%      | 66.67%     |
 | `src/Config.js`                            | 100%    | 100%         | 100%        | 100%       |
-| `src/Eleventy.js`                          | 52.91%  | 52.91%       | 37.5%       | 22.73%     |
+| `src/Eleventy.js`                          | 52.87%  | 52.87%       | 37.5%       | 22.73%     |
 | `src/EleventyCommandCheck.js`              | 100%    | 100%         | 100%        | 87.5%      |
 | `src/EleventyConfig.js`                    | 100%    | 100%         | 100%        | 100%       |
 | `src/EleventyError.js`                     | 100%    | 100%         | 100%        | 100%       |
 | `src/EleventyExtensionMap.js`              | 100%    | 100%         | 100%        | 90%        |
 | `src/EleventyServe.js`                     | 19.64%  | 19.64%       | 46.15%      | 0%         |
-| `src/Template.js`                          | 89.09%  | 89.09%       | 83.33%      | 80.37%     |
+| `src/Template.js`                          | 90.99%  | 90.99%       | 87.5%       | 80%        |
 | `src/TemplateCache.js`                     | 100%    | 100%         | 100%        | 100%       |
-| `src/TemplateCollection.js`                | 90.91%  | 91.18%       | 86.67%      | 83.33%     |
+| `src/TemplateCollection.js`                | 93.33%  | 93.75%       | 92.31%      | 83.33%     |
 | `src/TemplateConfig.js`                    | 85.19%  | 85.19%       | 62.5%       | 94.44%     |
-| `src/TemplateData.js`                      | 97.54%  | 97.54%       | 100%        | 78.13%     |
+| `src/TemplateContent.js`                   | 93.88%  | 93.88%       | 100%        | 75%        |
+| `src/TemplateData.js`                      | 97.56%  | 97.56%       | 100%        | 78.13%     |
 | `src/TemplateFileSlug.js`                  | 100%    | 100%         | 100%        | 100%       |
 | `src/TemplateGlob.js`                      | 93.33%  | 93.33%       | 100%        | 87.5%      |
-| `src/TemplateLayout.js`                    | 97.37%  | 97.37%       | 100%        | 92.86%     |
-| `src/TemplateMap.js`                       | 98.99%  | 98.99%       | 100%        | 81.82%     |
-| `src/TemplatePassthrough.js`               | 83.33%  | 83.33%       | 75%         | 0%         |
-| `src/TemplatePassthroughManager.js`        | 63.46%  | 63.46%       | 76.92%      | 66.67%     |
+| `src/TemplateLayout.js`                    | 100%    | 100%         | 100%        | 100%       |
+| `src/TemplateLayoutPathResolver.js`        | 96.97%  | 96.97%       | 100%        | 92.86%     |
+| `src/TemplateMap.js`                       | 99.01%  | 99.01%       | 100%        | 84.62%     |
+| `src/TemplatePassthrough.js`               | 81.82%  | 81.82%       | 75%         | 0%         |
+| `src/TemplatePassthroughManager.js`        | 75.93%  | 75.93%       | 80%         | 75%        |
 | `src/TemplatePath.js`                      | 97.53%  | 97.53%       | 94.44%      | 96.3%      |
 | `src/TemplatePermalink.js`                 | 100%    | 100%         | 100%        | 100%       |
-| `src/TemplateRender.js`                    | 98.73%  | 98.73%       | 100%        | 94.44%     |
-| `src/TemplateWriter.js`                    | 83.33%  | 83.33%       | 74.19%      | 78.13%     |
-| `src/UserConfig.js`                        | 64.57%  | 64.84%       | 55.26%      | 45.45%     |
+| `src/TemplateRender.js`                    | 98.72%  | 98.72%       | 100%        | 94.44%     |
+| `src/TemplateWriter.js`                    | 90.74%  | 90.74%       | 82.35%      | 79.41%     |
+| `src/UserConfig.js`                        | 62%     | 62.25%       | 56.1%       | 44%        |
 | `src/Engines/Ejs.js`                       | 95.45%  | 95.45%       | 85.71%      | 66.67%     |
 | `src/Engines/Haml.js`                      | 100%    | 100%         | 100%        | 100%       |
 | `src/Engines/Handlebars.js`                | 100%    | 100%         | 100%        | 83.33%     |
@@ -40,7 +43,7 @@
 | `src/Engines/TemplateEngine.js`            | 100%    | 100%         | 100%        | 100%       |
 | `src/Filters/Slug.js`                      | 100%    | 100%         | 100%        | 100%       |
 | `src/Filters/Url.js`                       | 100%    | 100%         | 100%        | 100%       |
-| `src/Plugins/Pagination.js`                | 91.58%  | 91.58%       | 92.86%      | 83.33%     |
+| `src/Plugins/Pagination.js`                | 91.49%  | 91.49%       | 92.86%      | 83.33%     |
 | `src/Util/Capitalize.js`                   | 100%    | 100%         | 100%        | 100%       |
 | `src/Util/Pluralize.js`                    | 100%    | 100%         | 100%        | 100%       |
-| `src/Util/Sortable.js`                     | 82.14%  | 82.14%       | 69.23%      | 95%        |
+| `src/Util/Sortable.js`                     | 84.78%  | 85.11%       | 73.91%      | 94.44%     |
