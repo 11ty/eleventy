@@ -58,7 +58,7 @@ class TemplateEngine {
 
     debug(
       `${this.inputDir}/*${this.extension} found partials for: %o`,
-      Object.keys(this.partials)
+      Object.keys(partials)
     );
 
     return partials;
