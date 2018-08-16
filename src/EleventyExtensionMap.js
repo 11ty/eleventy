@@ -9,16 +9,10 @@ class EleventyExtensionMap {
       return key.trim().toLowerCase();
     });
 
-    this.formats = this.unfilteredFormats.filter(
-      function(key) {
-        return this.hasExtension(key);
-      }.bind(this)
-    );
+    this.formats = this.unfilteredFormats.filter(key => this.hasExtension(key));
 
     this.prunedFormats = this.unfilteredFormats.filter(
-      function(key) {
-        return !this.hasExtension(key);
-      }.bind(this)
+      key => !this.hasExtension(key)
     );
   }
 
@@ -31,9 +25,7 @@ class EleventyExtensionMap {
       return [];
     }
     return this.formats.map(
-      function(key) {
-        return (dir ? dir + "/" : "") + path + "." + this.getExtension(key);
-      }.bind(this)
+      key => (dir ? dir + "/" : "") + path + "." + this.getExtension(key)
     );
   }
 
