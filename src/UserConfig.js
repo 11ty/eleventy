@@ -3,6 +3,7 @@ const chalk = require("chalk");
 const semver = require("semver");
 const { DateTime } = require("luxon");
 const debug = require("debug")("Eleventy:UserConfig");
+const debugWarn = require("debug")("Eleventy:Warnings");
 const pkg = require("../package.json");
 const Benchmark = require("./Benchmark");
 
@@ -476,15 +477,15 @@ class UserConfig {
         let percent = (totalForBenchmark * 100) / totalTimeSpent;
         if (percent > thresholdPercent) {
           let str = chalk.yellow(
-            `Warning: a slow "${name}" ${type} was found in your config file (${bench.getTotal()}ms, ${percent.toFixed(
+            `A slow "${name}" ${type} was found in your config file (${bench.getTotal()}ms, ${percent.toFixed(
               1
             )}%)`
           );
           if (isVerbose) {
-            console.log(str);
-          } else {
-            debug(str);
+            console.log("Warning:", str);
           }
+
+          debugWarn(str);
         }
       }
     }
