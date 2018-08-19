@@ -1,3 +1,3 @@
 module.exports = {
-  localdatakeyfromjs: "howdy"
+  localdatakeyfromjs: "howdydoody"
 };

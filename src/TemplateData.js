@@ -244,9 +244,9 @@ TemplateData.prototype.getLocalDataPaths = async function(templatePath) {
     let filePathNoExt = parsed.dir + "/" + fileNameNoExt;
     let dataSuffix = this.config.jsDataFileSuffix;
     debug("Using %o to find data files.", dataSuffix);
-    paths.push(filePathNoExt + ".json");
     paths.push(filePathNoExt + dataSuffix + ".js");
     paths.push(filePathNoExt + dataSuffix + ".json");
+    paths.push(filePathNoExt + ".json");
 
     let allDirs = TemplatePath.getAllDirs(parsed.dir);
     debugDev("allDirs: %o", allDirs);
@@ -255,15 +255,15 @@ TemplateData.prototype.getLocalDataPaths = async function(templatePath) {
       let dirPathNoExt = dir + "/" + lastDir;
 
       if (!inputDir) {
-        paths.push(dirPathNoExt + ".json");
         paths.push(dirPathNoExt + dataSuffix + ".js");
         paths.push(dirPathNoExt + dataSuffix + ".json");
+        paths.push(dirPathNoExt + ".json");
       } else {
         debugDev("dirStr: %o; inputDir: %o", dir, inputDir);
         if (dir.indexOf(inputDir) === 0 && dir !== inputDir) {
-          paths.push(dirPathNoExt + ".json");
           paths.push(dirPathNoExt + dataSuffix + ".js");
           paths.push(dirPathNoExt + dataSuffix + ".json");
+          paths.push(dirPathNoExt + ".json");
         }
       }
     }
