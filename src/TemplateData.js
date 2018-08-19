@@ -7,6 +7,7 @@ const lodashUniq = require("lodash.uniq");
 const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
 const TemplateGlob = require("./TemplateGlob");
+const EleventyExtensionMap = require("./EleventyExtensionMap");
 const config = require("./Config");
 const debugWarn = require("debug")("Eleventy:Warnings");
 const debug = require("debug")("Eleventy:TemplateData");
@@ -237,9 +238,19 @@ TemplateData.prototype.getLocalDataPaths = async function(templatePath) {
   debugDev("parsed.dir: %o", parsed.dir);
 
   if (parsed.dir) {
-    let filePathNoExt = parsed.dir + "/" + parsed.name;
+    let fileNameNoExt = EleventyExtensionMap.removeTemplateExtension(
+      parsed.base
+    );
+    let filePathNoExt = parsed.dir + "/" + fileNameNoExt;
+    let isFilenameMatch = parsed.base === fileNameNoExt + ".11tydata.js";
+    let dataSuffix = this.config.jsDataFileSuffix;
+    debug("Using %o to find data files.", dataSuffix);
     paths.push(filePathNoExt + ".json");
-    paths.push(filePathNoExt + ".js");
+
+    // ignore if any .js template (including .11ty.js) since the filenames will be the same
+    if (!isFilenameMatch) {
+      paths.push(filePathNoExt + dataSuffix);
+    }
 
     let allDirs = TemplatePath.getAllDirs(parsed.dir);
     debugDev("allDirs: %o", allDirs);
@@ -249,12 +260,18 @@ TemplateData.prototype.getLocalDataPaths = async function(templatePath) {
 
       if (!inputDir) {
         paths.push(dirPathNoExt + ".json");
-        paths.push(dirPathNoExt + ".js");
+
+        if (!isFilenameMatch) {
+          paths.push(dirPathNoExt + dataSuffix);
+        }
       } else {
         debugDev("dirStr: %o; inputDir: %o", dir, inputDir);
         if (dir.indexOf(inputDir) === 0 && dir !== inputDir) {
           paths.push(dirPathNoExt + ".json");
-          paths.push(dirPathNoExt + ".js");
+
+          if (!isFilenameMatch) {
+            paths.push(dirPathNoExt + dataSuffix);
+          }
         }
       }
     }

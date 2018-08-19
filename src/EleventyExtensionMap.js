@@ -61,7 +61,19 @@ class EleventyExtensionMap {
     return this.keyMapToExtension[key];
   }
 
-  get keyMapToExtension() {
+  static removeTemplateExtension(path) {
+    for (var key in EleventyExtensionMap.keyMap) {
+      if (path.endsWith(EleventyExtensionMap.keyMap[key])) {
+        return path.substr(
+          0,
+          path.length - 1 - EleventyExtensionMap.keyMap[key].length
+        );
+      }
+    }
+    return path;
+  }
+
+  static get keyMap() {
     return {
       ejs: "ejs",
       md: "md",
@@ -75,6 +87,10 @@ class EleventyExtensionMap {
       liquid: "liquid",
       "11ty.js": "11ty.js"
     };
+  }
+
+  get keyMapToExtension() {
+    return EleventyExtensionMap.keyMap;
   }
 }
 

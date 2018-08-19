@@ -43,7 +43,7 @@ test("Data dir does not exist", async t => {
   await t.throws(dataObj.getData());
 });
 
-test("addLocalData()", async t => {
+test("Add local data", async t => {
   let dataObj = new TemplateData("./test/stubs/");
   let data = await dataObj.getData();
 
@@ -191,7 +191,19 @@ test("getLocalDataPaths", async t => {
   );
 
   t.deepEqual(paths, [
-    "./test/stubs/component/component.js",
+    "./test/stubs/component/component.11tydata.js",
+    "./test/stubs/component/component.json"
+  ]);
+});
+
+test("getLocalDataPaths with an 11ty js template", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+  let paths = await dataObj.getLocalDataPaths(
+    "./test/stubs/component/component.11ty.js"
+  );
+
+  t.deepEqual(paths, [
+    "./test/stubs/component/component.11tydata.js",
     "./test/stubs/component/component.json"
   ]);
 });
@@ -203,7 +215,7 @@ test("getLocalDataPaths with inputDir passed in (trailing slash)", async t => {
   );
 
   t.deepEqual(paths, [
-    "./test/stubs/component/component.js",
+    "./test/stubs/component/component.11tydata.js",
     "./test/stubs/component/component.json"
   ]);
 });
@@ -215,7 +227,7 @@ test("getLocalDataPaths with inputDir passed in (no trailing slash)", async t =>
   );
 
   t.deepEqual(paths, [
-    "./test/stubs/component/component.js",
+    "./test/stubs/component/component.11tydata.js",
     "./test/stubs/component/component.json"
   ]);
 });
@@ -227,7 +239,7 @@ test("getLocalDataPaths with inputDir passed in (no leading slash)", async t => 
   );
 
   t.deepEqual(paths, [
-    "./test/stubs/component/component.js",
+    "./test/stubs/component/component.11tydata.js",
     "./test/stubs/component/component.json"
   ]);
 });

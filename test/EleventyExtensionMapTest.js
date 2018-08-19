@@ -75,3 +75,21 @@ test("fileList with dir in path and dir", t => {
     "_includes/layouts/filename.pug"
   ]);
 });
+
+test("removeTemplateExtension", t => {
+  t.is(
+    EleventyExtensionMap.removeTemplateExtension("component.njk"),
+    "component"
+  );
+  t.is(
+    EleventyExtensionMap.removeTemplateExtension("component.11ty.js"),
+    "component"
+  );
+
+  t.is(EleventyExtensionMap.removeTemplateExtension(""), "");
+  t.is(EleventyExtensionMap.removeTemplateExtension("component"), "component");
+  t.is(
+    EleventyExtensionMap.removeTemplateExtension("component.js"),
+    "component.js"
+  );
+});
