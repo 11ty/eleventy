@@ -242,15 +242,11 @@ TemplateData.prototype.getLocalDataPaths = async function(templatePath) {
       parsed.base
     );
     let filePathNoExt = parsed.dir + "/" + fileNameNoExt;
-    let isFilenameMatch = parsed.base === fileNameNoExt + ".11tydata.js";
     let dataSuffix = this.config.jsDataFileSuffix;
     debug("Using %o to find data files.", dataSuffix);
     paths.push(filePathNoExt + ".json");
-
-    // ignore if any .js template (including .11ty.js) since the filenames will be the same
-    if (!isFilenameMatch) {
-      paths.push(filePathNoExt + dataSuffix);
-    }
+    paths.push(filePathNoExt + dataSuffix + ".js");
+    paths.push(filePathNoExt + dataSuffix + ".json");
 
     let allDirs = TemplatePath.getAllDirs(parsed.dir);
     debugDev("allDirs: %o", allDirs);
@@ -260,18 +256,14 @@ TemplateData.prototype.getLocalDataPaths = async function(templatePath) {
 
       if (!inputDir) {
         paths.push(dirPathNoExt + ".json");
-
-        if (!isFilenameMatch) {
-          paths.push(dirPathNoExt + dataSuffix);
-        }
+        paths.push(dirPathNoExt + dataSuffix + ".js");
+        paths.push(dirPathNoExt + dataSuffix + ".json");
       } else {
         debugDev("dirStr: %o; inputDir: %o", dir, inputDir);
         if (dir.indexOf(inputDir) === 0 && dir !== inputDir) {
           paths.push(dirPathNoExt + ".json");
-
-          if (!isFilenameMatch) {
-            paths.push(dirPathNoExt + dataSuffix);
-          }
+          paths.push(dirPathNoExt + dataSuffix + ".js");
+          paths.push(dirPathNoExt + dataSuffix + ".json");
         }
       }
     }
