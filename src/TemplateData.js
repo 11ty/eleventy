@@ -199,7 +199,7 @@ TemplateData.prototype.getDataValue = async function(
     if (await fs.pathExists(localPath)) {
       let returnValue = require(localPath);
       if (typeof returnValue === "function") {
-        return returnValue();
+        return await returnValue();
       }
       return returnValue;
     } else {

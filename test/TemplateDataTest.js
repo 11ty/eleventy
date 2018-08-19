@@ -62,6 +62,17 @@ test("Add local data", async t => {
   t.is(withLocalData.localdatakeyfromjs2, "howdy2");
 });
 
+test("Get local data async JS", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+
+  let withLocalData = await dataObj.getLocalData(
+    "./test/stubs/component-async/component.njk"
+  );
+
+  // from the js file
+  t.is(withLocalData.localdatakeyfromjs, "howdydoody");
+});
+
 test("addLocalData() doesn’t exist but doesn’t fail (template file does exist)", async t => {
   let dataObj = new TemplateData("./test/stubs/");
   let data = await dataObj.getData();
