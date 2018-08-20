@@ -447,8 +447,10 @@ test("Local template data file import (without a global data json)", async t => 
   );
 
   let data = await tmpl.getData();
-  t.deepEqual(dataObj.getLocalDataPaths(tmpl.getInputPath()), [
-    "./test/stubs/component/component.json"
+  t.deepEqual(await dataObj.getLocalDataPaths(tmpl.getInputPath()), [
+    "./test/stubs/component/component.json",
+    "./test/stubs/component/component.11tydata.json",
+    "./test/stubs/component/component.11tydata.js"
   ]);
   t.is(data.localdatakey1, "localdatavalue1");
   t.is(await tmpl.render(), "localdatavalue1");
@@ -465,10 +467,16 @@ test("Local template data file import (two subdirectories deep)", async t => {
     dataObj
   );
 
-  t.deepEqual(dataObj.getLocalDataPaths(tmpl.getInputPath()), [
+  t.deepEqual(await dataObj.getLocalDataPaths(tmpl.getInputPath()), [
     "./test/stubs/firstdir/firstdir.json",
+    "./test/stubs/firstdir/firstdir.11tydata.json",
+    "./test/stubs/firstdir/firstdir.11tydata.js",
     "./test/stubs/firstdir/seconddir/seconddir.json",
-    "./test/stubs/firstdir/seconddir/component.json"
+    "./test/stubs/firstdir/seconddir/seconddir.11tydata.json",
+    "./test/stubs/firstdir/seconddir/seconddir.11tydata.js",
+    "./test/stubs/firstdir/seconddir/component.json",
+    "./test/stubs/firstdir/seconddir/component.11tydata.json",
+    "./test/stubs/firstdir/seconddir/component.11tydata.js"
   ]);
 });
 
@@ -483,10 +491,14 @@ test("Posts inherits local JSON, layouts", async t => {
     dataObj
   );
 
-  let localDataPaths = dataObj.getLocalDataPaths(tmpl.getInputPath());
+  let localDataPaths = await dataObj.getLocalDataPaths(tmpl.getInputPath());
   t.deepEqual(localDataPaths, [
     "./test/stubs/posts/posts.json",
-    "./test/stubs/posts/post1.json"
+    "./test/stubs/posts/posts.11tydata.json",
+    "./test/stubs/posts/posts.11tydata.js",
+    "./test/stubs/posts/post1.json",
+    "./test/stubs/posts/post1.11tydata.json",
+    "./test/stubs/posts/post1.11tydata.js"
   ]);
 
   let localData = await dataObj.getLocalData(tmpl.getInputPath());
@@ -514,8 +526,12 @@ test("Template and folder name are the same, make sure data imports work ok", as
     dataObj
   );
 
-  let localDataPaths = dataObj.getLocalDataPaths(tmpl.getInputPath());
-  t.deepEqual(localDataPaths, ["./test/stubs/posts/posts.json"]);
+  let localDataPaths = await dataObj.getLocalDataPaths(tmpl.getInputPath());
+  t.deepEqual(localDataPaths, [
+    "./test/stubs/posts/posts.json",
+    "./test/stubs/posts/posts.11tydata.json",
+    "./test/stubs/posts/posts.11tydata.js"
+  ]);
 
   let localData = await dataObj.getLocalData(tmpl.getInputPath());
   t.is(localData.layout, "mylocallayout.njk");

@@ -25,6 +25,7 @@ module.exports = function(config) {
     dataTemplateEngine: "liquid",
     passthroughFileCopy: true,
     htmlOutputSuffix: "-o",
+    jsDataFileSuffix: ".11tydata",
     keys: {
       package: "pkg",
       layout: "layout",

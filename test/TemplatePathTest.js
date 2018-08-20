@@ -154,6 +154,13 @@ test("Convert to glob", t => {
   t.is(TemplatePath.convertToGlob("./test/stubs/"), "./test/stubs/**");
 });
 
+test("Get extension", t => {
+  t.is(TemplatePath.getExtension(""), "");
+  t.is(TemplatePath.getExtension("test/stubs"), "");
+  t.is(TemplatePath.getExtension("test/stubs.njk"), "njk");
+  t.is(TemplatePath.getExtension("test/stubs.hbs"), "hbs");
+});
+
 test("Remove extension", t => {
   t.is(TemplatePath.removeExtension(""), "");
   t.is(TemplatePath.removeExtension("", "hbs"), "");
