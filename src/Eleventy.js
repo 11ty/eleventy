@@ -9,8 +9,8 @@ const EleventyServe = require("./EleventyServe");
 const templateCache = require("./TemplateCache");
 const EleventyError = require("./EleventyError");
 const simplePlural = require("./Util/Pluralize");
-const eleventyConfig = require("./EleventyConfig");
 const config = require("./Config");
+const bench = require("./BenchmarkManager");
 const debug = require("debug")("Eleventy");
 
 function Eleventy(input, output) {
@@ -82,13 +82,14 @@ Eleventy.prototype.restart = async function() {
   debug("Restarting");
   this.start = new Date();
   templateCache.clear();
+  bench.reset();
 
   this.initDirs();
   await this.init();
 };
 
 Eleventy.prototype.finish = function() {
-  eleventyConfig.logSlowConfigOptions(new Date() - this.start, this.isVerbose);
+  bench.finish();
 
   console.log(this.logFinished());
   debug("Finished writing templates.");
@@ -172,6 +173,9 @@ Eleventy.prototype.setIsVerbose = function(isVerbose) {
   if (this.writer) {
     this.writer.setVerboseOutput(this.isVerbose);
   }
+  if (bench) {
+    bench.setVerboseOutput(this.isVerbose);
+  }
 };
 
 Eleventy.prototype.setFormats = function(formats) {
@@ -234,10 +238,8 @@ Eleventy.prototype._watch = async function(path) {
   // reset and reload global configuration :O
   if (path === config.getLocalProjectConfigFile()) {
     this.resetConfig();
-  } else {
-    // a lighter config reset (mostly benchmarks)
-    config.resetOnWatch();
   }
+  config.resetOnWatch();
 
   await this.restart();
   await this.write();

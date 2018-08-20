@@ -31,7 +31,7 @@ class TemplateConfig {
   }
 
   resetOnWatch() {
-    eleventyConfig.resetOnWatch();
+    // nothing yet
   }
 
   getConfig() {

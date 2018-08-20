@@ -2,10 +2,9 @@ const EventEmitter = require("events");
 const chalk = require("chalk");
 const semver = require("semver");
 const { DateTime } = require("luxon");
+const bench = require("./BenchmarkManager").get(".eleventy.js");
 const debug = require("debug")("Eleventy:UserConfig");
-const debugWarn = require("debug")("Eleventy:Warnings");
 const pkg = require("../package.json");
-const Benchmark = require("./Benchmark");
 
 // API to expose configuration options in config file
 class UserConfig {
@@ -44,12 +43,6 @@ class UserConfig {
     this.DateTime = DateTime;
     this.dynamicPermalinks = true;
     this.useGitIgnore = true;
-
-    this.benchmarks = {};
-  }
-
-  resetOnWatch() {
-    this.benchmarks = {};
   }
 
   versionCheck(expected) {
@@ -68,20 +61,6 @@ class UserConfig {
 
   emit(eventName, ...args) {
     return this.events.emit(eventName, ...args);
-  }
-
-  benchmark(type, name, callback) {
-    if (!this.benchmarks[type]) {
-      this.benchmarks[type] = {};
-    }
-
-    let benchmark = (this.benchmarks[type][name] = new Benchmark());
-    return function(...args) {
-      benchmark.before();
-      let ret = callback.call(this, ...args);
-      benchmark.after();
-      return ret;
-    };
   }
 
   // This is a method for plugins, probably shouldn’t use this in projects.
@@ -109,7 +88,7 @@ class UserConfig {
         name
       );
     }
-    this.liquidTags[name] = this.benchmark("Liquid Custom Tag", name, tagFn);
+    this.liquidTags[name] = bench.add(`"${name}" Liquid Custom Tag`, tagFn);
   }
 
   addLiquidFilter(name, callback) {
@@ -124,7 +103,7 @@ class UserConfig {
       );
     }
 
-    this.liquidFilters[name] = this.benchmark("Liquid Filter", name, callback);
+    this.liquidFilters[name] = bench.add(`"${name}" Liquid Filter`, callback);
   }
 
   addNunjucksAsyncFilter(name, callback) {
@@ -139,9 +118,8 @@ class UserConfig {
       );
     }
 
-    this.nunjucksAsyncFilters[name] = this.benchmark(
-      "Liquid Async Filter",
-      name,
+    this.nunjucksAsyncFilters[name] = bench.add(
+      `"${name}" Liquid Async Filter`,
       callback
     );
   }
@@ -162,9 +140,8 @@ class UserConfig {
         );
       }
 
-      this.nunjucksFilters[name] = this.benchmark(
-        "Nunjucks Filter",
-        name,
+      this.nunjucksFilters[name] = bench.add(
+        `"${name}" Nunjucks Filter`,
         callback
       );
     }
@@ -182,9 +159,8 @@ class UserConfig {
       );
     }
 
-    this.handlebarsHelpers[name] = this.benchmark(
-      "Handlebars Helper",
-      name,
+    this.handlebarsHelpers[name] = bench.add(
+      `"${name}" Handlebars Helper`,
       callback
     );
   }
@@ -216,11 +192,7 @@ class UserConfig {
       );
     }
 
-    this.nunjucksTags[name] = this.benchmark(
-      "Nunjucks Custom Tag",
-      name,
-      tagFn
-    );
+    this.nunjucksTags[name] = bench.add(`"${name}" Nunjucks Custom Tag`, tagFn);
   }
 
   addTransform(name, callback) {
@@ -342,9 +314,8 @@ class UserConfig {
       );
     }
 
-    this.nunjucksShortcodes[name] = this.benchmark(
-      "Nunjucks Shortcode",
-      name,
+    this.nunjucksShortcodes[name] = bench.add(
+      `"${name}" Nunjucks Shortcode`,
       callback
     );
   }
@@ -359,9 +330,8 @@ class UserConfig {
       );
     }
 
-    this.liquidShortcodes[name] = this.benchmark(
-      "Liquid Shortcode",
-      name,
+    this.liquidShortcodes[name] = bench.add(
+      `"${name}" Liquid Shortcode`,
       callback
     );
   }
@@ -376,9 +346,8 @@ class UserConfig {
       );
     }
 
-    this.handlebarsShortcodes[name] = this.benchmark(
-      "Handlebars Shortcode",
-      name,
+    this.handlebarsShortcodes[name] = bench.add(
+      `"${name}" Handlebars Shortcode`,
       callback
     );
   }
@@ -399,9 +368,8 @@ class UserConfig {
       );
     }
 
-    this.nunjucksPairedShortcodes[name] = this.benchmark(
-      "Nunjucks Paired Shortcode",
-      name,
+    this.nunjucksPairedShortcodes[name] = bench.add(
+      `"${name}" Nunjucks Paired Shortcode`,
       callback
     );
   }
@@ -416,9 +384,8 @@ class UserConfig {
       );
     }
 
-    this.liquidPairedShortcodes[name] = this.benchmark(
-      "Liquid Paired Shortcode",
-      name,
+    this.liquidPairedShortcodes[name] = bench.add(
+      `"${name}" Liquid Paired Shortcode`,
       callback
     );
   }
@@ -433,9 +400,8 @@ class UserConfig {
       );
     }
 
-    this.handlebarsPairedShortcodes[name] = this.benchmark(
-      "Handlebars Paired Shortcode",
-      name,
+    this.handlebarsPairedShortcodes[name] = bench.add(
+      `"${name}" Handlebars Paired Shortcode`,
       callback
     );
   }
@@ -466,29 +432,6 @@ class UserConfig {
       dynamicPermalinks: this.dynamicPermalinks,
       useGitIgnore: this.useGitIgnore
     };
-  }
-
-  logSlowConfigOptions(totalTimeSpent, isVerbose) {
-    let thresholdPercent = 10;
-    for (var type in this.benchmarks) {
-      for (var name in this.benchmarks[type]) {
-        let bench = this.benchmarks[type][name];
-        let totalForBenchmark = bench.getTotal();
-        let percent = (totalForBenchmark * 100) / totalTimeSpent;
-        if (percent > thresholdPercent) {
-          let str = chalk.yellow(
-            `A slow "${name}" ${type} was found in your config file (${bench.getTotal()}ms, ${percent.toFixed(
-              1
-            )}%)`
-          );
-          if (isVerbose) {
-            console.log("Warning:", str);
-          }
-
-          debugWarn(str);
-        }
-      }
-    }
   }
 }
 

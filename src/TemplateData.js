@@ -8,6 +8,7 @@ const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
 const TemplateGlob = require("./TemplateGlob");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
+const bench = require("./BenchmarkManager").get("Data");
 const config = require("./Config");
 const debugWarn = require("debug")("Eleventy:Warnings");
 const debug = require("debug")("Eleventy:TemplateData");
@@ -193,10 +194,15 @@ class TemplateData {
     if (ignoreProcessing || TemplatePath.getExtension(path) === "js") {
       let localPath = TemplatePath.localPath(path);
       if (await fs.pathExists(localPath)) {
+        let dataBench = bench.get(`data file "${path}"`);
+        dataBench.before();
+
         let returnValue = require(localPath);
         if (typeof returnValue === "function") {
-          return await returnValue();
+          returnValue = await returnValue();
         }
+
+        dataBench.after();
         return returnValue;
       } else {
         return {};
