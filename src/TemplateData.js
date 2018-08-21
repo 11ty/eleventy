@@ -194,7 +194,7 @@ class TemplateData {
     if (ignoreProcessing || TemplatePath.getExtension(path) === "js") {
       let localPath = TemplatePath.localPath(path);
       if (await fs.pathExists(localPath)) {
-        let dataBench = bench.get(`data file "${path}"`);
+        let dataBench = bench.get(`\`${path}\``);
         dataBench.before();
 
         let returnValue = require(localPath);

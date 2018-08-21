@@ -44,7 +44,7 @@ class BenchmarkGroup {
       let percent = (totalForBenchmark * 100) / totalTimeSpent;
       if (percent > thresholdPercent) {
         let str = chalk.yellow(
-          `${location}: Found a slow ${type} (${bench.getTotal()}ms, ${percent.toFixed(
+          `Benchmark (${location}): ${type} took ${bench.getTotal()}ms (${percent.toFixed(
             1
           )}%)`
         );

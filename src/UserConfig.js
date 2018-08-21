@@ -2,7 +2,7 @@ const EventEmitter = require("events");
 const chalk = require("chalk");
 const semver = require("semver");
 const { DateTime } = require("luxon");
-const bench = require("./BenchmarkManager").get(".eleventy.js");
+const bench = require("./BenchmarkManager").get("Configuration");
 const debug = require("debug")("Eleventy:UserConfig");
 const pkg = require("../package.json");
 
