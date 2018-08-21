@@ -84,6 +84,9 @@ Eleventy.prototype.restart = async function() {
   templateCache.clear();
   bench.reset();
 
+  // reload package.json values (if applicable)
+  delete require.cache[TemplatePath.localPath("package.json")];
+
   this.initDirs();
   await this.init();
 };

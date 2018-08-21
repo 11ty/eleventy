@@ -196,7 +196,7 @@ class TemplateData {
       if (await fs.pathExists(localPath)) {
         let dataBench = bench.get(`\`${path}\``);
         dataBench.before();
-
+        delete require.cache[localPath];
         let returnValue = require(localPath);
         if (typeof returnValue === "function") {
           returnValue = await returnValue();
