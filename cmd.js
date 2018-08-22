@@ -37,21 +37,27 @@ try {
   let isVerbose = process.env.DEBUG ? false : !argv.quiet;
   elev.setIsVerbose(isVerbose);
 
-  elev.init().then(function() {
-    if (argv.version) {
-      console.log(elev.getVersion());
-    } else if (argv.help) {
-      console.log(elev.getHelp());
-    } else if (argv.serve) {
-      elev.watch().then(function() {
-        elev.serve(argv.port);
-      });
-    } else if (argv.watch) {
-      elev.watch();
-    } else {
-      elev.write();
+  elev.init().then(
+    function() {
+      if (argv.version) {
+        console.log(elev.getVersion());
+      } else if (argv.help) {
+        console.log(elev.getHelp());
+      } else if (argv.serve) {
+        elev.watch().then(function() {
+          elev.serve(argv.port);
+        });
+      } else if (argv.watch) {
+        elev.watch();
+      } else {
+        elev.write();
+      }
+    },
+    function(e) {
+      console.log(chalk.red("Eleventy error:"), e);
+      process.exitCode = 1;
     }
-  });
+  );
 } catch (e) {
   console.log(chalk.red("Eleventy error:"), e);
   process.exitCode = 1;

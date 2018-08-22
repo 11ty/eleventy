@@ -50,3 +50,19 @@ test("Eleventy set input/output, one file input", async t => {
   t.is(elev.inputDir, "./test/stubs");
   t.is(elev.outputDir, "./test/stubs/_site");
 });
+
+test("Eleventy set input/output, one file input root dir", async t => {
+  let elev = new Eleventy("./README.md", "./test/stubs/_site");
+
+  t.is(elev.input, "./README.md");
+  t.is(elev.inputDir, ".");
+  t.is(elev.outputDir, "./test/stubs/_site");
+});
+
+test("Eleventy set input/output, one file input root dir without leading dot/slash", async t => {
+  let elev = new Eleventy("README.md", "./test/stubs/_site");
+
+  t.is(elev.input, "README.md");
+  t.is(elev.inputDir, ".");
+  t.is(elev.outputDir, "./test/stubs/_site");
+});

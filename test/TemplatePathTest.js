@@ -122,6 +122,12 @@ test("stripPathFromDir", t => {
   t.is(TemplatePath.stripPathFromDir(".htaccess", "."), ".htaccess");
 });
 
+test("getDir", t => {
+  t.is(TemplatePath.getDir("README.md"), ".");
+  t.is(TemplatePath.getDir("test/stubs/config.js"), "test/stubs");
+  t.is(TemplatePath.getDir("./test/stubs/config.js"), "./test/stubs");
+});
+
 test("getLastDir", t => {
   t.is(TemplatePath.getLastDir("./testing/hello"), "hello");
   t.is(TemplatePath.getLastDir("./testing"), "testing");

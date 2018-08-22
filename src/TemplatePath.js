@@ -1,5 +1,6 @@
 const path = require("path");
 const normalize = require("normalize-path");
+const parsePath = require("parse-filepath");
 const fs = require("fs-extra");
 
 function TemplatePath() {}
@@ -10,6 +11,20 @@ TemplatePath.getModuleDir = function() {
 
 TemplatePath.getWorkingDir = function() {
   return path.resolve("./");
+};
+
+// input is ambiguous—maybe a folder, maybe a file
+TemplatePath.getDir = function(path) {
+  if (TemplatePath.isDirectorySync(path)) {
+    return path;
+  }
+
+  return TemplatePath.getDirFromFilePath(path);
+};
+
+// Input points to a file
+TemplatePath.getDirFromFilePath = function(filepath) {
+  return parsePath(filepath).dir || ".";
 };
 
 // can assume a parse-filepath .dir is passed in here
