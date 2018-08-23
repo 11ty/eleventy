@@ -3,6 +3,16 @@ import fastglob from "fast-glob";
 import EleventyFiles from "../src/EleventyFiles";
 import TemplatePassthroughManager from "../src/TemplatePassthroughManager";
 
+test("getFiles", async t => {
+  let evf = new EleventyFiles(
+    "./test/stubs/writeTest",
+    "./test/stubs/_writeTestSite",
+    ["ejs", "md"]
+  );
+
+  t.deepEqual(await evf.getFiles(), ["./test/stubs/writeTest/test.md"]);
+});
+
 test("Mutually exclusive Input and Output dirs", async t => {
   let evf = new EleventyFiles(
     "./test/stubs/writeTest",
@@ -10,7 +20,7 @@ test("Mutually exclusive Input and Output dirs", async t => {
     ["ejs", "md"]
   );
 
-  let files = await fastglob.async(evf.getFiles());
+  let files = await fastglob.async(evf.getFileGlobs());
   t.is(evf.getRawFiles().length, 2);
   t.true(files.length > 0);
   t.is(files[0], "./test/stubs/writeTest/test.md");
@@ -22,7 +32,7 @@ test("Single File Input (deep path)", async t => {
     "md"
   ]);
 
-  let files = await fastglob.async(evf.getFiles());
+  let files = await fastglob.async(evf.getFileGlobs());
   t.is(evf.getRawFiles().length, 1);
   t.is(files.length, 1);
   t.is(files[0], "./test/stubs/index.html");
@@ -31,7 +41,7 @@ test("Single File Input (deep path)", async t => {
 test("Single File Input (shallow path)", async t => {
   let evf = new EleventyFiles("README.md", "./test/stubs/_site", ["md"]);
 
-  let globs = evf.getFiles().filter(path => path !== "!./README.md");
+  let globs = evf.getFileGlobs().filter(path => path !== "!./README.md");
   let files = await fastglob.async(globs);
   t.is(evf.getRawFiles().length, 1);
   t.is(files.length, 1);
@@ -59,7 +69,7 @@ test(".eleventyignore files", async t => {
   let ignoredFiles = await fastglob.async("test/stubs/ignoredFolder/*.md");
   t.is(ignoredFiles.length, 1);
 
-  let files = await fastglob.async(evf.getFiles());
+  let files = await fastglob.async(evf.getFileGlobs());
   t.true(files.length > 0);
 
   t.is(
@@ -160,6 +170,16 @@ test("Get ignores (both .eleventyignore and .gitignore, using setUseGitIgnore(fa
 });
 /* End .eleventyignore and .gitignore combos */
 
+test("getDataDir", t => {
+  let tw = new EleventyFiles(".", "_site", []);
+  t.is(tw.getDataDir(), "./_data");
+});
+
+test("getDataDir subdir", t => {
+  let tw = new EleventyFiles("test/stubs", "test/stubs/_site", []);
+  t.is(tw.getDataDir(), "test/stubs/_data");
+});
+
 test("Include and Data Dirs", t => {
   let tw = new EleventyFiles("test/stubs", "test/stubs/_site", []);
 
@@ -218,5 +238,14 @@ test("Glob Watcher Files with Config Passthroughs", async t => {
     "./test/stubs/_includes/**",
     "./test/stubs/_data/**",
     "./test/stubs/img/**"
+  ]);
+});
+
+test("Glob Watcher Files with Config Passthroughs", async t => {
+  let tw = new EleventyFiles("test/stubs", "test/stubs/_site", []);
+
+  t.deepEqual(await tw.getGlobWatcherTemplateDataFiles(), [
+    "./test/stubs/**/*.json",
+    "./test/stubs/**/*.11tydata.js"
   ]);
 });

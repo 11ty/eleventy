@@ -127,13 +127,15 @@ Eleventy.prototype.logFinished = function() {
 Eleventy.prototype.init = async function() {
   let formats = this.formatsOverride || this.config.templateFormats;
   this.eleventyFiles = new EleventyFiles(this.input, this.outputDir, formats);
-  this.data = new TemplateData(this.inputDir);
+
+  this.templateData = new TemplateData(this.inputDir);
+  this.eleventyFiles.setTemplateData(this.templateData);
 
   this.writer = new TemplateWriter(
     this.input,
     this.outputDir,
     formats,
-    this.data,
+    this.templateData,
     this.isPassthroughAll
   );
 
@@ -142,7 +144,7 @@ Eleventy.prototype.init = async function() {
   // TODO maybe isVerbose -> console.log?
   debug(`Directories:
 Input: ${this.inputDir}
-Data: ${this.data.getDataDir()}
+Data: ${this.templateData.getDataDir()}
 Includes: ${this.eleventyFiles.getIncludesDir()}
 Output: ${this.outputDir}
 Template Formats: ${formats.join(",")}`);
@@ -150,7 +152,7 @@ Template Formats: ${formats.join(",")}`);
   this.writer.setVerboseOutput(this.isVerbose);
   this.writer.setDryRun(this.isDryRun);
 
-  return this.data.cacheData();
+  return this.templateData.cacheData();
 };
 
 Eleventy.prototype.setIsDebug = function(isDebug) {
@@ -253,14 +255,17 @@ Eleventy.prototype.watch = async function() {
 
   const watch = require("glob-watcher");
 
-  let rawFiles = await this.writer.getGlobWatcherFiles();
+  let rawFiles = this.eleventyFiles.getGlobWatcherFiles();
   // Watch the local project config file
   rawFiles.push(config.getLocalProjectConfigFile());
-  debug("Eleventy.watch rawFiles: %o", rawFiles);
+  rawFiles = rawFiles.concat(
+    await this.eleventyFiles.getGlobWatcherTemplateDataFiles()
+  );
+  debug("Watching for changes to: %o", rawFiles);
 
   console.log("Watching…");
   let watcher = watch(rawFiles, {
-    ignored: this.writer.getGlobWatcherIgnores()
+    ignored: this.eleventyFiles.getGlobWatcherIgnores()
   });
 
   watcher.on("change", async path => {

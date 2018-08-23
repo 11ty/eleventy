@@ -267,3 +267,12 @@ test("getRawImports", async t => {
 
   t.is(data.pkg.name, "@11ty/eleventy");
 });
+
+test("getTemplateDataFileGlob", async t => {
+  let tw = new TemplateData("test/stubs");
+
+  t.deepEqual(await tw.getTemplateDataFileGlob(), [
+    "./test/stubs/**/*.json",
+    "./test/stubs/**/*.11tydata.js"
+  ]);
+});

@@ -68,7 +68,7 @@ class TemplateData {
     return this.getData();
   }
 
-  async _getGlobalDataGlobByExtension(dir, extension) {
+  _getGlobalDataGlobByExtension(dir, extension) {
     return TemplateGlob.normalizePath(
       dir,
       "/",
@@ -89,7 +89,7 @@ class TemplateData {
     }
   }
 
-  async getGlobalDataGlob() {
+  async getInputDir() {
     let dir = ".";
 
     if (this.inputDir) {
@@ -97,7 +97,20 @@ class TemplateData {
       dir = this.inputDir;
     }
 
-    return [await this._getGlobalDataGlobByExtension(dir, "(json|js)")];
+    return dir;
+  }
+
+  async getTemplateDataFileGlob() {
+    let dir = await this.getInputDir();
+    return TemplatePath.addLeadingDotSlashArray([
+      `${dir}/**/*.json`, // covers .11tydata.json too
+      `${dir}/**/*${this.config.jsDataFileSuffix}.js`
+    ]);
+  }
+
+  async getGlobalDataGlob() {
+    let dir = await this.getInputDir();
+    return [this._getGlobalDataGlobByExtension(dir, "(json|js)")];
   }
 
   async getGlobalDataFiles() {

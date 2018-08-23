@@ -1,5 +1,3 @@
-const fastglob = require("fast-glob");
-
 const Template = require("./Template");
 const TemplatePath = require("./TemplatePath");
 const TemplateMap = require("./TemplateMap");
@@ -59,10 +57,7 @@ TemplateWriter.prototype.getFileManager = function() {
 };
 
 TemplateWriter.prototype._getAllPaths = async function() {
-  let files = this.getFileManager().getFiles();
-
-  debug("Searching for: %o", files);
-  return TemplatePath.addLeadingDotSlashArray(await fastglob.async(files));
+  return await this.getFileManager().getFiles();
 };
 
 TemplateWriter.prototype._createTemplate = function(path) {

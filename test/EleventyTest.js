@@ -39,7 +39,7 @@ test("Eleventy set input/output", async t => {
   t.is(elev.outputDir, "./test/stubs/_site");
 
   await elev.init();
-  t.truthy(elev.data);
+  t.truthy(elev.templateData);
   t.truthy(elev.writer);
 });
 

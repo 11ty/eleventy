@@ -1,6 +1,8 @@
 const fs = require("fs-extra");
+const fastglob = require("fast-glob");
 
 const EleventyExtensionMap = require("./EleventyExtensionMap");
+const TemplateData = require("./TemplateData");
 const TemplateGlob = require("./TemplateGlob");
 const TemplatePath = require("./TemplatePath");
 const TemplatePassthroughManager = require("./TemplatePassthroughManager");
@@ -17,8 +19,6 @@ class EleventyFiles {
     this.outputDir = outputDir;
 
     this.includesDir = this.inputDir + "/" + this.config.dir.includes;
-    // Duplicated with TemplateData.getDataDir();
-    this.dataDir = this.inputDir + "/" + this.config.dir.data;
 
     this.setFormats(formats);
     this.setPassthroughManager();
@@ -61,6 +61,23 @@ class EleventyFiles {
     }
 
     this.passthroughManager = mgr;
+  }
+
+  setTemplateData(templateData) {
+    this.templateData = templateData;
+  }
+
+  getTemplateData() {
+    if (!this.templateData) {
+      this.templateData = new TemplateData(this.inputDir);
+    }
+    return this.templateData;
+  }
+
+  getDataDir() {
+    let data = this.getTemplateData();
+
+    return data.getDataDir();
   }
 
   setupGlobs() {
@@ -144,11 +161,7 @@ class EleventyFiles {
     return this.includesDir;
   }
 
-  getDataDir() {
-    return this.dataDir;
-  }
-
-  getFiles() {
+  getFileGlobs() {
     return this.templateGlobsWithIgnores;
   }
 
@@ -156,11 +169,23 @@ class EleventyFiles {
     return this.templateGlobs;
   }
 
+  async getFiles() {
+    let globs = this.getFileGlobs();
+
+    debug("Searching for: %o", globs);
+    return TemplatePath.addLeadingDotSlashArray(await fastglob.async(globs));
+  }
+
   getGlobWatcherFiles() {
     // TODO is it better to tie the includes and data to specific file extensions or keep the **?
     return this.templateGlobs
       .concat(this.getIncludesAndDataDirs())
       .concat(this.getPassthroughPaths());
+  }
+
+  async getGlobWatcherTemplateDataFiles() {
+    let templateData = this.getTemplateData();
+    return await templateData.getTemplateDataFileGlob();
   }
 
   getGlobWatcherIgnores() {
@@ -185,7 +210,8 @@ class EleventyFiles {
     }
 
     if (this.config.dir.data && this.config.dir.data !== ".") {
-      files = files.concat(TemplateGlob.map(this.dataDir + "/**"));
+      let dataDir = this.getDataDir();
+      files = files.concat(TemplateGlob.map(dataDir + "/**"));
     }
 
     return files;

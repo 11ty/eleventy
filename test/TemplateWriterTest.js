@@ -20,7 +20,7 @@ test("Output is a subdir of input", async t => {
     ["ejs", "md"]
   );
 
-  let files = await fastglob.async(evf.getFiles());
+  let files = await fastglob.async(evf.getFileGlobs());
   t.is(evf.getRawFiles().length, 2);
   t.true(files.length > 0);
 
