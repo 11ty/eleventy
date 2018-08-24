@@ -105,6 +105,7 @@ test("_getCollectionsData with custom collection (ascending)", async t => {
     ["md"]
   );
 
+  /* Careful here, eleventyConfig is a global */
   eleventyConfig.addCollection("customPostsAsc", function(collection) {
     return collection.getFilteredByTag("post").sort(function(a, b) {
       return a.date - b.date;
@@ -126,6 +127,7 @@ test("_getCollectionsData with custom collection (descending)", async t => {
     ["md"]
   );
 
+  /* Careful here, eleventyConfig is a global */
   eleventyConfig.addCollection("customPosts", function(collection) {
     return collection.getFilteredByTag("post").sort(function(a, b) {
       return b.date - a.date;
@@ -147,6 +149,7 @@ test("_getCollectionsData with custom collection (filter only to markdown input)
     ["md"]
   );
 
+  /* Careful here, eleventyConfig is a global */
   eleventyConfig.addCollection("onlyMarkdown", function(collection) {
     return collection.getAllSorted().filter(function(item) {
       let extension = item.inputPath.split(".").pop();
@@ -324,4 +327,44 @@ test("Pagination and TemplateContent", async t => {
   fs.unlinkSync(
     "./test/stubs/pagination-templatecontent/_site/post-2/index.html"
   );
+});
+
+test("Custom collection returns array", async t => {
+  let tw = new TemplateWriter(
+    "./test/stubs/collection2",
+    "./test/stubs/_site",
+    ["md"]
+  );
+
+  /* Careful here, eleventyConfig is a global */
+  eleventyConfig.addCollection("returnAllInputPaths", function(collection) {
+    return collection.getAllSorted().map(function(item) {
+      return item.inputPath;
+    });
+  });
+
+  let paths = await tw._getAllPaths();
+  let templateMap = await tw._createTemplateMap(paths);
+  let collectionsData = await templateMap.getCollectionsData();
+  t.is(collectionsData.returnAllInputPaths.length, 2);
+  t.is(parsePath(collectionsData.returnAllInputPaths[0]).base, "test1.md");
+  t.is(parsePath(collectionsData.returnAllInputPaths[1]).base, "test2.md");
+});
+
+test("Custom collection returns a string", async t => {
+  let tw = new TemplateWriter(
+    "./test/stubs/collection2",
+    "./test/stubs/_site",
+    ["md"]
+  );
+
+  /* Careful here, eleventyConfig is a global */
+  eleventyConfig.addCollection("returnATestString", function(collection) {
+    return "test";
+  });
+
+  let paths = await tw._getAllPaths();
+  let templateMap = await tw._createTemplateMap(paths);
+  let collectionsData = await templateMap.getCollectionsData();
+  t.is(collectionsData.returnATestString, "test");
 });
