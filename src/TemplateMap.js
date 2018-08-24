@@ -167,9 +167,20 @@ class TemplateMap {
     let configCollections =
       this.configCollections || eleventyConfig.getCollections();
     for (let name in configCollections) {
-      collections[name] = this.createTemplateMapCopy(
-        configCollections[name](this.collection)
-      );
+      let ret = configCollections[name](this.collection);
+
+      // work with arrays and strings returned from UserConfig.addCollection
+      if (
+        Array.isArray(ret) &&
+        ret.length &&
+        ret[0].inputPath &&
+        ret[0].outputPath
+      ) {
+        collections[name] = this.createTemplateMapCopy(ret);
+      } else {
+        collections[name] = ret;
+      }
+
       debug(
         `Collection: collections.${name} size: ${collections[name].length}`
       );
