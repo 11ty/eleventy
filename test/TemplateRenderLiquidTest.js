@@ -390,3 +390,13 @@ test("Liquid Shortcode Multiple Args", async t => {
     "testhowdyZach"
   );
 });
+
+test.skip("Liquid Include Scope Leak", async t => {
+  t.is(new TemplateRender("liquid", "./test/stubs/").getEngineName(), "liquid");
+
+  let fn = await new TemplateRender(
+    "liquid",
+    "./test/stubs/"
+  ).getCompiledTemplate("<p>{% include scopeleak %}{{ test }}</p>");
+  t.is(await fn({ test: 1 }), "<p>21</p>");
+});
