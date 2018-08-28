@@ -1061,3 +1061,36 @@ test("renderContent on a markdown file, permalink should not render markdown (ha
 
   t.is(await tmpl.getOutputLink(), "/news/my-test-file/index.html");
 });
+
+/* Transforms */
+test("Test a transform", async t => {
+  let tmpl = new Template(
+    "./test/stubs/template.ejs",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  tmpl.addTransform(function() {
+    return "OVERRIDE BY A TRANSFORM";
+  });
+
+  let data = await tmpl.getData();
+  let rendered = await tmpl.getRenderedTemplates(data);
+  t.is(rendered[0].templateContent, "OVERRIDE BY A TRANSFORM");
+});
+
+test("Test a transform with pages", async t => {
+  let tmpl = new Template(
+    "./test/stubs/transform-pages/template.njk",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  tmpl.addTransform(function() {
+    return "OVERRIDE BY A TRANSFORM";
+  });
+
+  let data = await tmpl.getData();
+  let rendered = await tmpl.getRenderedTemplates(data);
+  t.is(rendered[0].templateContent, "OVERRIDE BY A TRANSFORM");
+});

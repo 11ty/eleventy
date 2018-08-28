@@ -448,6 +448,9 @@ class Template extends TemplateContent {
       this.templateData
     );
 
+    for (let transform of this.transforms) {
+      tmpl.addTransform(transform);
+    }
     tmpl.setIsVerbose(this.isVerbose);
     tmpl.setDryRun(this.isDryRun);
 
