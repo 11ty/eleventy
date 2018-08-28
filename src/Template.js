@@ -47,6 +47,7 @@ class Template extends TemplateContent {
     this.writeCount = 0;
     this.wrapWithLayouts = true;
     this.fileSlug = new TemplateFileSlug(this.inputPath, this.inputDir);
+    this.fileSlugStr = this.fileSlug.getSlug();
   }
 
   setIsVerbose(isVerbose) {
@@ -238,7 +239,7 @@ class Template extends TemplateContent {
     }
 
     data.page.inputPath = this.inputPath;
-    data.page.fileSlug = this.fileSlug.getSlug();
+    data.page.fileSlug = this.fileSlugStr;
 
     return data;
   }
@@ -351,7 +352,8 @@ class Template extends TemplateContent {
         data: data,
         date: data.page.date,
         outputPath: data.page.outputPath,
-        url: data.page.url
+        url: data.page.url,
+        fileSlug: this.fileSlugStr
       });
     } else {
       // needs collections for pagination items
@@ -372,6 +374,7 @@ class Template extends TemplateContent {
         results.push({
           template: page,
           inputPath: this.inputPath,
+          fileSlug: this.fileSlugStr,
           data: pageData,
           date: data.page.date,
           outputPath: await page.getOutputPath(pageData),
@@ -528,6 +531,7 @@ class Template extends TemplateContent {
     return {
       template: this,
       inputPath: this.inputPath,
+      fileSlug: this.fileSlugStr,
       data: data,
       date: data.page.date
     };

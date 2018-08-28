@@ -368,3 +368,27 @@ test("Custom collection returns a string", async t => {
   let collectionsData = await templateMap.getCollectionsData();
   t.is(collectionsData.returnATestString, "test");
 });
+
+test("fileSlug should exist in a collection", async t => {
+  let tw = new TemplateWriter(
+    "./test/stubs/collection-slug",
+    "./test/stubs/collection-slug/_site",
+    ["njk"]
+  );
+
+  let paths = await tw._getAllPaths();
+  let templateMap = await tw._createTemplateMap(paths);
+  await templateMap.cache();
+
+  let collectionsData = await templateMap.getCollectionsData();
+  t.is(collectionsData.dog.length, 1);
+
+  let mapEntry = templateMap.getMapEntryForPath(
+    "./test/stubs/collection-slug/template.njk"
+  );
+  t.truthy(mapEntry);
+  t.is(mapEntry.inputPath, "./test/stubs/collection-slug/template.njk");
+
+  let templates = await mapEntry.template.getRenderedTemplates(mapEntry.data);
+  t.is(templates[0].templateContent.trim(), "fileSlug:/dog1/:dog1");
+});

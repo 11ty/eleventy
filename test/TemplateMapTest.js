@@ -278,6 +278,12 @@ test("TemplateMap adds collections data and has page data values", async t => {
     map[0].data.page.outputPath,
     "./test/stubs/_site/templateMapCollection/test1/index.html"
   );
+  t.is(
+    map[0].data.page.inputPath,
+    "./test/stubs/templateMapCollection/test1.md"
+  );
+  t.is(map[0].data.page.fileSlug, "test1");
+  t.truthy(map[0].data.page.date);
 });
 
 test("TemplateMap adds collections data and has page data values", async t => {
@@ -297,6 +303,11 @@ test("TemplateMap adds collections data and has page data values", async t => {
     collections.all[0].data.page.outputPath,
     "./test/stubs/_site/templateMapCollection/test1/index.html"
   );
+  t.is(
+    collections.all[0].data.page.inputPath,
+    "./test/stubs/templateMapCollection/test1.md"
+  );
+  t.is(collections.all[0].data.page.fileSlug, "test1");
 });
 
 test("Url should be available in user config collections API calls", async t => {

@@ -774,7 +774,7 @@ test("getMappedDate (falls back to filename date)", async t => {
   t.truthy(date.getTime());
 });
 
-test("getRenderedData() has page.url", async t => {
+test("getRenderedData() has all the page variables", async t => {
   let tmpl = new Template(
     "./test/stubs/template.ejs",
     "./test/stubs/",
@@ -783,9 +783,30 @@ test("getRenderedData() has page.url", async t => {
   let data = await tmpl.getRenderedData();
 
   t.truthy(data.page.url);
+  t.is(data.page.url, "/template/");
+  t.is(data.page.fileSlug, "template");
+  t.truthy(data.page.date.getTime());
+  t.is(data.page.inputPath, "./test/stubs/template.ejs");
+  t.is(data.page.outputPath, "./dist/template/index.html");
 });
 
-test("getTemplates() data has page.url", async t => {
+test("getTemplates() data has all the root variables", async t => {
+  let tmpl = new Template(
+    "./test/stubs/template.ejs",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getData();
+  let templates = await tmpl.getTemplates(data);
+
+  t.is(templates[0].url, "/template/");
+  t.is(templates[0].fileSlug, "template");
+  t.truthy(templates[0].date.getTime());
+  t.is(templates[0].inputPath, "./test/stubs/template.ejs");
+  t.is(templates[0].outputPath, "./dist/template/index.html");
+});
+
+test("getTemplates() data has all the page variables", async t => {
   let tmpl = new Template(
     "./test/stubs/template.ejs",
     "./test/stubs/",
@@ -795,10 +816,13 @@ test("getTemplates() data has page.url", async t => {
   let templates = await tmpl.getTemplates(data);
 
   t.is(templates[0].data.page.url, "/template/");
+  t.is(templates[0].data.page.fileSlug, "template");
+  t.truthy(templates[0].data.page.date.getTime());
+  t.is(templates[0].data.page.inputPath, "./test/stubs/template.ejs");
   t.is(templates[0].data.page.outputPath, "./dist/template/index.html");
 });
 
-test("getRenderedTemplates() data has page.url", async t => {
+test("getRenderedTemplates() data has all the page variables", async t => {
   let tmpl = new Template(
     "./test/stubs/template.ejs",
     "./test/stubs/",
@@ -808,22 +832,10 @@ test("getRenderedTemplates() data has page.url", async t => {
 
   let templates = await tmpl.getRenderedTemplates(data);
   t.is(templates[0].data.page.url, "/template/");
+  t.is(templates[0].data.page.fileSlug, "template");
+  t.truthy(templates[0].data.page.date.getTime());
+  t.is(templates[0].data.page.inputPath, "./test/stubs/template.ejs");
   t.is(templates[0].data.page.outputPath, "./dist/template/index.html");
-});
-
-test("getRenderedData() has page.url", async t => {
-  let tmpl = new Template(
-    "./test/stubs/template.ejs",
-    "./test/stubs/",
-    "./dist"
-  );
-  let data = await tmpl.getRenderedData();
-
-  t.truthy(data.page.url);
-  t.truthy(data.page.date);
-  t.is(data.page.inputPath, "./test/stubs/template.ejs");
-  t.is(data.page.fileSlug, "template");
-  t.truthy(data.page.outputPath);
 });
 
 test("getRenderedData() has good slug (empty, index)", async t => {
