@@ -249,3 +249,9 @@ test("Glob Watcher Files with Config Passthroughs", async t => {
     "./test/stubs/**/*.11tydata.js"
   ]);
 });
+
+test("Glob Watcher Files with passthroughAll", async t => {
+  let tw = new EleventyFiles("test/stubs", "test/stubs/_site", [], true);
+
+  t.is((await tw.getFileGlobs())[0], "./test/stubs/**");
+});

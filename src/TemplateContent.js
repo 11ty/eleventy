@@ -3,10 +3,13 @@ const normalize = require("normalize-path");
 const matter = require("gray-matter");
 
 const TemplateRender = require("./TemplateRender");
-const EleventyError = require("./EleventyError");
+const EleventyBaseError = require("./EleventyBaseError");
 const config = require("./Config");
 const debug = require("debug")("Eleventy:TemplateContent");
 const debugDev = require("debug")("Dev:Eleventy:TemplateContent");
+
+class TemplateContentCompileError extends EleventyBaseError {}
+class TemplateContentRenderError extends EleventyBaseError {}
 
 class TemplateContent {
   constructor(inputPath, inputDir) {
@@ -97,10 +100,9 @@ class TemplateContent {
       debugDev("%o getCompiledTemplate function created", this.inputPath);
       return fn;
     } catch (e) {
-      throw EleventyError.make(
-        new Error(
-          `Having trouble compiling template ${this.inputPath}: ${str}`
-        ),
+      debug(`Having trouble compiling template ${this.inputPath}: %O`, str);
+      throw new TemplateContentRenderError(
+        `Having trouble compiling template ${this.inputPath}`,
         e
       );
     }
@@ -116,10 +118,9 @@ class TemplateContent {
       );
       return rendered;
     } catch (e) {
-      throw EleventyError.make(
-        new Error(
-          `Having trouble rendering template ${this.inputPath}: ${str}`
-        ),
+      debug(`Having trouble rendering template ${this.inputPath}: %O`, str);
+      throw new TemplateContentRenderError(
+        `Having trouble rendering template ${this.inputPath}`,
         e
       );
     }

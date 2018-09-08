@@ -12,13 +12,14 @@ const debug = require("debug")("Eleventy:EleventyFiles");
 // const debugDev = require("debug")("Dev:Eleventy:EleventyFiles");
 
 class EleventyFiles {
-  constructor(input, outputDir, formats) {
+  constructor(input, outputDir, formats, passthroughAll) {
     this.config = config.getConfig();
     this.input = input;
     this.inputDir = TemplatePath.getDir(this.input);
     this.outputDir = outputDir;
 
     this.includesDir = this.inputDir + "/" + this.config.dir.includes;
+    this.passthroughAll = !!passthroughAll;
 
     this.setFormats(formats);
     this.setPassthroughManager();
@@ -33,6 +34,10 @@ class EleventyFiles {
   /* For testing */
   overrideConfig(config) {
     this.config = config;
+  }
+
+  setPassthroughAll(passthroughAll) {
+    this.passthroughAll = !!passthroughAll;
   }
 
   setFormats(formats) {

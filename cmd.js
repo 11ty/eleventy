@@ -16,17 +16,25 @@ if (process.env.DEBUG) {
 const argv = require("minimist")(process.argv.slice(2));
 const Eleventy = require("./src/Eleventy");
 const EleventyCommandCheck = require("./src/EleventyCommandCheck");
+const EleventyErrorHandler = require("./src/EleventyErrorHandler");
+
+process.on("unhandledRejection", (error, promise) => {
+  EleventyErrorHandler.error(promise, "Unhandled rejection in promise");
+});
+process.on("uncaughtException", e => {
+  EleventyErrorHandler.fatal(e, "Uncaught exception");
+});
+process.on("rejectionHandled", promise => {
+  EleventyErrorHandler.warn(
+    promise,
+    "A promise rejection was handled asynchronously"
+  );
+});
 
 try {
   let cmdCheck = new EleventyCommandCheck(argv);
   cmdCheck.hasUnknownArguments();
-} catch (e) {
-  console.log(chalk.red("Eleventy error:"), chalk.red(e.toString()));
-  process.exitCode = 1;
-  return;
-}
 
-try {
   let elev = new Eleventy(argv.input, argv.output);
   elev.setConfigPath(argv.config);
   elev.setPathPrefix(argv.pathprefix);
@@ -37,8 +45,11 @@ try {
   let isVerbose = process.env.DEBUG ? false : !argv.quiet;
   elev.setIsVerbose(isVerbose);
 
-  elev.init().then(
-    function() {
+  // careful, we can’t use async/await here to error properly
+  // with old node versions in `please-upgrade-node` above.
+  elev
+    .init()
+    .then(function() {
       if (argv.version) {
         console.log(elev.getVersion());
       } else if (argv.help) {
@@ -52,13 +63,8 @@ try {
       } else {
         elev.write();
       }
-    },
-    function(e) {
-      console.log(chalk.red("Eleventy error:"), e);
-      process.exitCode = 1;
-    }
-  );
+    })
+    .catch(EleventyErrorHandler.fatal);
 } catch (e) {
-  console.log(chalk.red("Eleventy error:"), e);
-  process.exitCode = 1;
+  EleventyErrorHandler.fatal(e);
 }

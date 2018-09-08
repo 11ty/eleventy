@@ -1,4 +1,4 @@
-const fs = require("fs-extra");
+const copy = require("recursive-copy");
 const TemplatePath = require("./TemplatePath");
 // const debug = require("debug")("Eleventy:TemplatePassthrough");
 
@@ -29,7 +29,12 @@ class TemplatePassthrough {
     // );
 
     if (!this.isDryRun) {
-      return fs.copy(this.path, this.getOutputPath());
+      return copy(this.path, this.getOutputPath(), {
+        overwrite: true,
+        dot: true,
+        junk: false,
+        results: false
+      });
     }
   }
 }

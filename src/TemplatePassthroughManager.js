@@ -1,9 +1,11 @@
 const config = require("./Config");
-const EleventyError = require("./EleventyError");
+const EleventyBaseError = require("./EleventyBaseError");
 const TemplatePassthrough = require("./TemplatePassthrough");
 const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
 const debug = require("debug")("Eleventy:TemplatePassthroughManager");
+
+class TemplatePassthroughManagerCopyError extends EleventyBaseError {}
 
 class TemplatePassthroughManager {
   constructor(inputDir, outputDir, isDryRun) {
@@ -77,13 +79,20 @@ class TemplatePassthroughManager {
     let pass = new TemplatePassthrough(path, this.outputDir, this.inputDir);
     pass.setDryRun(this.isDryRun);
 
-    try {
-      return pass.write().then(function() {
-        debug("Copied %o", path);
+    return pass
+      .write()
+      .then(
+        function() {
+          this.count++;
+          debug("Copied %o", path);
+        }.bind(this)
+      )
+      .catch(function(e) {
+        throw new TemplatePassthroughManagerCopyError(
+          `Having trouble copying '${path}'`,
+          e
+        );
       });
-    } catch (e) {
-      throw EleventyError.make(new Error(`Having trouble copying: ${path}`), e);
-    }
   }
 
   // Performance note: these can actually take a fair bit of time, but aren’t a
@@ -97,14 +106,12 @@ class TemplatePassthroughManager {
 
     let promises = [];
     debug("TemplatePassthrough copy started.");
-    for (let cfgPath of this.getConfigPaths()) {
-      this.count++;
-      promises.push(this.copyPath(cfgPath));
+    for (let path of this.getConfigPaths()) {
+      promises.push(this.copyPath(path));
     }
 
     let passthroughPaths = this.getFilePaths(paths);
     for (let path of passthroughPaths) {
-      this.count++;
       promises.push(this.copyPath(path));
     }
 

@@ -1,5 +1,7 @@
 const TemplateEngine = require("./TemplateEngine");
-const EleventyError = require("../EleventyError");
+const EleventyBaseError = require("../EleventyBaseError");
+
+class JavaScriptTemplateLiteralCompileError extends EleventyBaseError {}
 
 class JavaScriptTemplateLiteral extends TemplateEngine {
   async compile(str, inputPath) {
@@ -23,7 +25,10 @@ class JavaScriptTemplateLiteral extends TemplateEngine {
         let val = eval(evalStr);
         return val;
       } catch (e) {
-        EleventyError.make(`Broken ES6 template:\n${evalStr}`, e);
+        throw new JavaScriptTemplateLiteralCompileError(
+          `Broken ES6 template:\n${evalStr}`,
+          e
+        );
       }
     };
   }

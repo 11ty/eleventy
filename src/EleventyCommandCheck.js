@@ -1,4 +1,7 @@
+const EleventyBaseError = require("./EleventyBaseError");
 const debug = require("debug")("Eleventy:CommandCheck");
+
+class EleventyCommandCheckError extends EleventyBaseError {}
 
 class EleventyCommandCheck {
   constructor(argv) {
@@ -68,8 +71,8 @@ class EleventyCommandCheck {
   hasUnknownArguments() {
     for (let argName in this.args) {
       if (!this.isKnownArgument(argName)) {
-        throw new Error(
-          `Command does not compute! We don’t know what '${argName}' is. Use --help to see the list of supported commands.`
+        throw new EleventyCommandCheckError(
+          `We don’t know what '${argName}' is. Use --help to see the list of supported commands.`
         );
       }
     }

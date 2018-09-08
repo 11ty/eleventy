@@ -3,10 +3,10 @@ const chalk = require("chalk");
 const TemplatePath = require("./TemplatePath");
 const TemplateData = require("./TemplateData");
 const TemplateWriter = require("./TemplateWriter");
+const EleventyErrorHandler = require("./EleventyErrorHandler");
 const EleventyServe = require("./EleventyServe");
 const EleventyFiles = require("./EleventyFiles");
 const templateCache = require("./TemplateCache");
-const EleventyError = require("./EleventyError");
 const simplePlural = require("./Util/Pluralize");
 const config = require("./Config");
 const bench = require("./BenchmarkManager");
@@ -126,7 +126,12 @@ Eleventy.prototype.logFinished = function() {
 
 Eleventy.prototype.init = async function() {
   let formats = this.formatsOverride || this.config.templateFormats;
-  this.eleventyFiles = new EleventyFiles(this.input, this.outputDir, formats);
+  this.eleventyFiles = new EleventyFiles(
+    this.input,
+    this.outputDir,
+    formats,
+    this.isPassthroughAll
+  );
 
   this.templateData = new TemplateData(this.inputDir);
   this.eleventyFiles.setTemplateData(this.templateData);
@@ -284,31 +289,29 @@ Eleventy.prototype.serve = function(port) {
 };
 
 Eleventy.prototype.write = async function() {
+  let ret;
   try {
-    let ret = await this.writer.write();
-    this.finish();
+    let promise = this.writer.write();
 
-    debug(`
-Getting frustrated? Have a suggestion/feature request/feedback?
-I want to hear it! Open an issue: https://github.com/11ty/eleventy/issues/new`);
-
-    return ret;
+    ret = await promise;
   } catch (e) {
     console.log(
       "\n" +
         chalk.red(
-          "Problem writing eleventy templates (more info in DEBUG output): "
+          "Problem writing Eleventy templates (more info in DEBUG output): "
         )
     );
-    if (e instanceof EleventyError) {
-      console.log(chalk.red(e.log()));
-      for (let err of e.getAll()) {
-        debug("%o", err);
-      }
-    } else {
-      console.log(e);
-    }
+
+    EleventyErrorHandler.log(e);
   }
+
+  this.finish();
+
+  debug(`
+Getting frustrated? Have a suggestion/feature request/feedback?
+I want to hear it! Open an issue: https://github.com/11ty/eleventy/issues/new`);
+
+  return ret;
 };
 
 module.exports = Eleventy;

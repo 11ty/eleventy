@@ -3,11 +3,14 @@ const TemplatePath = require("./TemplatePath");
 const TemplateMap = require("./TemplateMap");
 const TemplateRender = require("./TemplateRender");
 const EleventyFiles = require("./EleventyFiles");
-const EleventyError = require("./EleventyError");
+const EleventyBaseError = require("./EleventyBaseError");
+const EleventyErrorHandler = require("./EleventyErrorHandler");
 
 const config = require("./Config");
 const debug = require("debug")("Eleventy:TemplateWriter");
 const debugDev = require("debug")("Dev:Eleventy:TemplateWriter");
+
+class TemplateWriterWriteError extends EleventyBaseError {}
 
 function TemplateWriter(
   inputPath,
@@ -25,6 +28,8 @@ function TemplateWriter(
   this.isVerbose = true;
   this.isDryRun = false;
   this.writeCount = 0;
+
+  // TODO can we get rid of this? It’s only used for tests in getFileManager()
   this.passthroughAll = isPassthroughAll;
 }
 
@@ -44,12 +49,13 @@ TemplateWriter.prototype.setEleventyFiles = function(eleventyFiles) {
 
 TemplateWriter.prototype.getFileManager = function() {
   // usually Eleventy.js will setEleventyFiles with the EleventyFiles manager
-  // if not, we can create one (used only by tests)
   if (!this.eleventyFiles) {
+    // if not, we can create one (used only by tests)
     this.eleventyFiles = new EleventyFiles(
       this.input,
       this.outputDir,
-      this.templateFormats
+      this.templateFormats,
+      this.passthroughAll
     );
   }
 
@@ -114,16 +120,17 @@ TemplateWriter.prototype._createTemplateMap = async function(paths) {
 
 TemplateWriter.prototype._writeTemplate = async function(mapEntry) {
   let tmpl = mapEntry.template;
-  try {
-    return tmpl.write(mapEntry.outputPath, mapEntry.data).then(() => {
+  return tmpl
+    .write(mapEntry.outputPath, mapEntry.data)
+    .then(() => {
       this.writeCount += tmpl.getWriteCount();
+    })
+    .catch(function(e) {
+      throw new TemplateWriterWriteError(
+        `Having trouble writing template: ${mapEntry.outputPath}`,
+        e
+      );
     });
-  } catch (e) {
-    throw EleventyError.make(
-      new Error(`Having trouble writing template: ${mapEntry.outputPath}`),
-      e
-    );
-  }
 };
 
 TemplateWriter.prototype.write = async function() {
@@ -135,6 +142,9 @@ TemplateWriter.prototype.write = async function() {
     this.getFileManager()
       .getPassthroughManager()
       .copyAll(paths)
+      .catch(e => {
+        EleventyErrorHandler.warn(e, "Error with passthrough copy");
+      })
   );
 
   // TODO optimize await here
@@ -144,7 +154,9 @@ TemplateWriter.prototype.write = async function() {
   for (let mapEntry of this.templateMap.getMap()) {
     promises.push(this._writeTemplate(mapEntry));
   }
-  return Promise.all(promises);
+  return Promise.all(promises).catch(e => {
+    EleventyErrorHandler.error(e, "Error writing templates");
+  });
 };
 
 TemplateWriter.prototype.setVerboseOutput = function(isVerbose) {
