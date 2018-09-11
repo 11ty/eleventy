@@ -40,7 +40,8 @@ class Liquid extends TemplateEngine {
     let defaults = {
       root: [super.getInputDir()],
       extname: ".liquid",
-      dynamicPartials: false
+      dynamicPartials: false,
+      strict_filters: false
     };
 
     let options = lodashMerge(defaults, this.liquidOptions || {});

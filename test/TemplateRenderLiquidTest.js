@@ -400,3 +400,27 @@ test.skip("Liquid Include Scope Leak", async t => {
   ).getCompiledTemplate("<p>{% include scopeleak %}{{ test }}</p>");
   t.is(await fn({ test: 1 }), "<p>21</p>");
 });
+
+// TODO this will change in 1.0
+test("Liquid Missing Filter Issue #183 (no strict_filters)", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+
+  try {
+    await tr.render("{{ 'test' | prefixWithZach }}", {});
+    t.pass("Did not error.");
+  } catch (e) {
+    t.fail("Threw an error.");
+  }
+});
+
+test("Liquid Missing Filter Issue #183", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.setLiquidOptions({ strict_filters: true });
+
+  try {
+    await tr.render("{{ 'test' | prefixWithZach }}", {});
+    t.fail("Did not error.");
+  } catch (e) {
+    t.pass("Threw an error.");
+  }
+});
