@@ -219,3 +219,12 @@ test("libraryOverrides", t => {
   t.truthy(cfg.libraryOverrides.md);
   t.deepEqual(mdLib, cfg.libraryOverrides.md);
 });
+
+test("Properly throws error on missing module #182", t => {
+  t.throws(function() {
+    new TemplateConfig(
+      require("../config.js"),
+      "./test/stubs/broken-config.js"
+    );
+  });
+});

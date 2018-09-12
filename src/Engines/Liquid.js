@@ -2,7 +2,7 @@ const LiquidLib = require("liquidjs");
 const TemplateEngine = require("./TemplateEngine");
 const lodashMerge = require("lodash.merge");
 const config = require("../Config");
-const debug = require("debug")("Eleventy:Liquid");
+// const debug = require("debug")("Eleventy:Liquid");
 
 class Liquid extends TemplateEngine {
   constructor(name, inputDir) {
