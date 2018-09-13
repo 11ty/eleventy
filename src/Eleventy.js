@@ -295,13 +295,11 @@ Eleventy.prototype.write = async function() {
 
     ret = await promise;
   } catch (e) {
-    console.log(
-      "\n" +
-        chalk.red(
-          "Problem writing Eleventy templates (more info in DEBUG output): "
-        )
+    EleventyErrorHandler.initialMessage(
+      "Problem writing Eleventy templates",
+      "error",
+      "red"
     );
-
     EleventyErrorHandler.log(e);
   }
 

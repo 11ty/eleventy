@@ -33,7 +33,9 @@ class EleventyErrorHandler {
   static initialMessage(message, type = "log", chalkColor = "blue") {
     if (message) {
       EleventyErrorHandler.message(
-        message + ": (full stack in DEBUG output)",
+        message +
+          ":" +
+          (process.env.DEBUG ? "" : " (full stack in DEBUG output)"),
         type,
         chalkColor
       );
@@ -42,7 +44,7 @@ class EleventyErrorHandler {
 
   static message(message, type = "log", chalkColor) {
     if (process.env.DEBUG) {
-      debug(`(${type}): ${message}`);
+      debug(message);
     } else {
       if (chalkColor) {
         console[type](chalk[chalkColor](message));
