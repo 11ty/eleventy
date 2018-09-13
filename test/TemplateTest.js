@@ -1,4 +1,5 @@
 import test from "ava";
+import fs from "fs-extra";
 import TemplateData from "../src/TemplateData";
 import Template from "../src/Template";
 import pretty from "pretty";
@@ -1113,4 +1114,30 @@ test("Test a linter", async t => {
   } catch (e) {
     t.pass("Threw an error:" + e);
   }
+});
+
+test("permalink: false", async t => {
+  let tmpl = new Template(
+    "./test/stubs/permalink-false/test.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  t.is(await tmpl.getOutputLink(), false);
+  t.is(await tmpl.getOutputHref(), false);
+
+  let data = await tmpl.getData();
+  await tmpl.write(false, data);
+
+  // Input file exists (sanity check for paths)
+  t.is(fs.existsSync("./test/stubs/permalink-false/"), true);
+  t.is(fs.existsSync("./test/stubs/permalink-false/test.md"), true);
+
+  // Output does not exist
+  t.is(fs.existsSync("./test/stubs/_site/permalink-false/"), false);
+  t.is(fs.existsSync("./test/stubs/_site/permalink-false/test/"), false);
+  t.is(
+    fs.existsSync("./test/stubs/_site/permalink-false/test/index.html"),
+    false
+  );
 });

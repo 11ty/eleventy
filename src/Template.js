@@ -6,6 +6,7 @@ const { DateTime } = require("luxon");
 const TemplateContent = require("./TemplateContent");
 const TemplatePath = require("./TemplatePath");
 const TemplatePermalink = require("./TemplatePermalink");
+const TemplatePermalinkNoWrite = require("./TemplatePermalinkNoWrite");
 const TemplateLayout = require("./TemplateLayout");
 const TemplateFileSlug = require("./TemplateFileSlug");
 const Pagination = require("./Plugins/Pagination");
@@ -100,6 +101,8 @@ class Template extends TemplateContent {
       );
 
       return perm;
+    } else if (permalink === false) {
+      return new TemplatePermalinkNoWrite();
     }
 
     return TemplatePermalink.generate(
@@ -124,8 +127,12 @@ class Template extends TemplateContent {
   // TODO check for conflicts, see if file already exists?
   async getOutputPath(data) {
     let uri = await this.getOutputLink(data);
-    // TODO this only works with immediate front matter and not data files
-    if ((await this.getFrontMatterData())[this.config.keys.permalinkRoot]) {
+    if (uri === false) {
+      return false;
+    } else if (
+      (await this.getFrontMatterData())[this.config.keys.permalinkRoot]
+    ) {
+      // TODO this only works with immediate front matter and not data files
       return normalize(uri);
     } else {
       return normalize(this.outputDir + "/" + uri);
@@ -134,10 +141,6 @@ class Template extends TemplateContent {
 
   setPaginationData(paginationData) {
     this.paginationData = paginationData;
-  }
-
-  isIgnored() {
-    return this.outputDir === false;
   }
 
   async mapDataAsRenderedTemplates(data, templateData) {
@@ -417,22 +420,38 @@ class Template extends TemplateContent {
   }
 
   async _write(outputPath, finalContent) {
+    if (outputPath === false) {
+      debug(
+        "Ignored %o from %o (permalink: false).",
+        outputPath,
+        this.inputPath
+      );
+      return;
+    }
+
     this.writeCount++;
 
-    let writeDesc = this.isDryRun ? "Pretending to write" : "Writing";
+    let lang = {
+      start: "Writing",
+      finished: "written."
+    };
+
+    if (this.isDryRun) {
+      lang = {
+        start: "Pretending to write",
+        finished: "" // not used
+      };
+    }
+
     if (this.isVerbose) {
-      console.log(`${writeDesc} ${outputPath} from ${this.inputPath}.`);
+      console.log(`${lang.start} ${outputPath} from ${this.inputPath}.`);
     } else {
-      debug(`${writeDesc} %o from %o.`, outputPath, this.inputPath);
+      debug(`${lang.start} %o from %o.`, outputPath, this.inputPath);
     }
 
     if (!this.isDryRun) {
       return fs.outputFile(outputPath, finalContent).then(() => {
-        debug(
-          `${outputPath} ${
-            !this.isDryRun ? "written" : "pretended to be written"
-          }.`
-        );
+        debug(`${outputPath} ${lang.finished}.`);
       });
     }
   }
