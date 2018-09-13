@@ -10,28 +10,29 @@ require("please-upgrade-node")(pkg, {
 });
 
 if (process.env.DEBUG) {
-  require("time-require");
+  let timeRequire = require("time-require");
 }
 
-const argv = require("minimist")(process.argv.slice(2));
-const Eleventy = require("./src/Eleventy");
-const EleventyCommandCheck = require("./src/EleventyCommandCheck");
 const EleventyErrorHandler = require("./src/EleventyErrorHandler");
 
-process.on("unhandledRejection", (error, promise) => {
-  EleventyErrorHandler.error(promise, "Unhandled rejection in promise");
-});
-process.on("uncaughtException", e => {
-  EleventyErrorHandler.fatal(e, "Uncaught exception");
-});
-process.on("rejectionHandled", promise => {
-  EleventyErrorHandler.warn(
-    promise,
-    "A promise rejection was handled asynchronously"
-  );
-});
-
 try {
+  const argv = require("minimist")(process.argv.slice(2));
+  const Eleventy = require("./src/Eleventy");
+  const EleventyCommandCheck = require("./src/EleventyCommandCheck");
+
+  process.on("unhandledRejection", (error, promise) => {
+    EleventyErrorHandler.error(promise, "Unhandled rejection in promise");
+  });
+  process.on("uncaughtException", e => {
+    EleventyErrorHandler.fatal(e, "Uncaught exception");
+  });
+  process.on("rejectionHandled", promise => {
+    EleventyErrorHandler.warn(
+      promise,
+      "A promise rejection was handled asynchronously"
+    );
+  });
+
   let cmdCheck = new EleventyCommandCheck(argv);
   cmdCheck.hasUnknownArguments();
 
@@ -66,5 +67,5 @@ try {
     })
     .catch(EleventyErrorHandler.fatal);
 } catch (e) {
-  EleventyErrorHandler.fatal(e);
+  EleventyErrorHandler.fatal(e, "Eleventy fatal error");
 }

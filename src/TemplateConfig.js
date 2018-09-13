@@ -1,9 +1,7 @@
-const chalk = require("chalk");
 const fs = require("fs-extra");
 const lodashMerge = require("lodash.merge");
 const TemplatePath = require("./TemplatePath");
 const EleventyBaseError = require("./EleventyBaseError");
-const EleventyErrorHandler = require("./EleventyErrorHandler");
 const eleventyConfig = require("./EleventyConfig");
 const debug = require("debug")("Eleventy:TemplateConfig");
 

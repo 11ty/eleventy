@@ -3,7 +3,7 @@ const debug = require("debug")("Eleventy:EleventyErrorHandler");
 
 class EleventyErrorHandler {
   static warn(e, msg) {
-    EleventyErrorHandler.message(msg, "warn", "yellow");
+    EleventyErrorHandler.initialMessage(msg, "warn", "yellow");
     EleventyErrorHandler.log(e, "warn");
   }
 
@@ -13,24 +13,42 @@ class EleventyErrorHandler {
   }
 
   static error(e, msg) {
-    EleventyErrorHandler.message(msg, "error", "red");
+    EleventyErrorHandler.initialMessage(msg, "error", "red");
     EleventyErrorHandler.log(e, "error");
-  }
-
-  static message(message, type = "log", chalkColor = "blue") {
-    if (message) {
-      console[type](
-        chalk[chalkColor](message + ": (full stack in DEBUG output)")
-      );
-    }
   }
 
   static log(e, type = "log", prefix = ">") {
     let ref = e;
     while (ref) {
-      console[type](`${prefix} ${ref.message} (${ref.name})`);
-      debug(`(${type}): %O`, ref.stack);
+      EleventyErrorHandler.message(
+        (process.env.DEBUG ? "" : `${prefix} `) +
+          `${ref.message} (${ref.name})`,
+        type
+      );
+      debug(`(${type} stack): %O`, ref.stack);
       ref = ref.originalError;
+    }
+  }
+
+  static initialMessage(message, type = "log", chalkColor = "blue") {
+    if (message) {
+      EleventyErrorHandler.message(
+        message + ": (full stack in DEBUG output)",
+        type,
+        chalkColor
+      );
+    }
+  }
+
+  static message(message, type = "log", chalkColor) {
+    if (process.env.DEBUG) {
+      debug(`(${type}): ${message}`);
+    } else {
+      if (chalkColor) {
+        console[type](chalk[chalkColor](message));
+      } else {
+        console[type](message);
+      }
     }
   }
 }
