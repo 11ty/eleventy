@@ -1094,3 +1094,23 @@ test("Test a transform with pages", async t => {
   let rendered = await tmpl.getRenderedTemplates(data);
   t.is(rendered[0].templateContent, "OVERRIDE BY A TRANSFORM");
 });
+
+test("Test a linter", async t => {
+  let tmpl = new Template(
+    "./test/stubs/transform-pages/template.njk",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  tmpl.addLinter(function(str) {
+    throw new Error("this is a lint rule");
+  });
+
+  let data = await tmpl.getData();
+  try {
+    await tmpl.getRenderedTemplates(data);
+    t.fail("Should have errored");
+  } catch (e) {
+    t.pass("Threw an error:" + e);
+  }
+});

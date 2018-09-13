@@ -37,6 +37,7 @@ class UserConfig {
     this.libraryOverrides = {};
 
     this.layoutAliases = {};
+    this.linters = {};
     // now named `transforms` in API
     this.filters = {};
     this.activeNamespace = "";
@@ -199,6 +200,12 @@ class UserConfig {
     name = this.getNamespacedName(name);
 
     this.filters[name] = callback;
+  }
+
+  addLinter(name, callback) {
+    name = this.getNamespacedName(name);
+
+    this.linters[name] = callback;
   }
 
   addLayoutAlias(from, to) {
@@ -409,7 +416,9 @@ class UserConfig {
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
+      // now called transforms
       filters: this.filters,
+      linters: this.linters,
       layoutAliases: this.layoutAliases,
       passthroughCopies: this.passthroughCopies,
       liquidOptions: this.liquidOptions,

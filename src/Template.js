@@ -28,6 +28,7 @@ class Template extends TemplateContent {
       this.outputDir = false;
     }
 
+    this.linters = [];
     this.transforms = [];
     this.plugins = {};
     this.templateData = templateData;
@@ -326,13 +327,23 @@ class Template extends TemplateContent {
     }
   }
 
+  addLinter(callback) {
+    this.linters.push(callback);
+  }
+
+  async runLinters(str, inputPath, outputPath) {
+    this.linters.forEach(function(linter) {
+      linter.call(this, str, inputPath, outputPath);
+    });
+  }
+
   addTransform(callback) {
     this.transforms.push(callback);
   }
 
-  async runTransforms(str, outputPath) {
+  async runTransforms(str, outputPath, inputPath) {
     this.transforms.forEach(function(transform) {
-      str = transform.call(this, str, outputPath);
+      str = transform.call(this, str, outputPath, inputPath);
     });
 
     return str;
@@ -389,10 +400,11 @@ class Template extends TemplateContent {
   async getRenderedTemplates(data) {
     let pages = await this.getTemplates(data);
     for (let page of pages) {
-      page.templateContent = await page.template._getContent(
-        page.outputPath,
-        page.data
-      );
+      let content = await page.template._getContent(page.outputPath, page.data);
+
+      await this.runLinters(content, page.inputPath, page.outputPath);
+
+      page.templateContent = content;
     }
     return pages;
   }
@@ -450,6 +462,9 @@ class Template extends TemplateContent {
 
     for (let transform of this.transforms) {
       tmpl.addTransform(transform);
+    }
+    for (let linter of this.linters) {
+      tmpl.addLinter(linter);
     }
     tmpl.setIsVerbose(this.isVerbose);
     tmpl.setDryRun(this.isDryRun);

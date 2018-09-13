@@ -83,10 +83,17 @@ TemplateWriter.prototype._createTemplate = function(path) {
    *   return pretty(str, { ocd: true });
    * }
    */
-  for (let filterName in this.config.filters) {
-    let filter = this.config.filters[filterName];
-    if (typeof filter === "function") {
-      tmpl.addTransform(filter);
+  for (let transformName in this.config.filters) {
+    let transform = this.config.filters[transformName];
+    if (typeof transform === "function") {
+      tmpl.addTransform(transform);
+    }
+  }
+
+  for (let linterName in this.config.linters) {
+    let linter = this.config.linters[linterName];
+    if (typeof linter === "function") {
+      tmpl.addLinter(linter);
     }
   }
 
