@@ -1,4 +1,5 @@
 const fs = require("fs-extra");
+const chalk = require("chalk");
 const lodashMerge = require("lodash.merge");
 const TemplatePath = require("./TemplatePath");
 const EleventyBaseError = require("./EleventyBaseError");
@@ -81,7 +82,10 @@ class TemplateConfig {
         // debug( "localConfig require return value: %o", localConfig );
       } catch (err) {
         throw new EleventyConfigError(
-          `Error in your Eleventy config file '${path}'`,
+          `Error in your Eleventy config file '${path}'.` +
+            (err.message.includes("Cannot find module")
+              ? chalk.blueBright(" You may need to run `npm install`.")
+              : ""),
           err
         );
       }

@@ -1,5 +1,3 @@
-const chalk = require("chalk");
-
 const TemplatePath = require("./TemplatePath");
 const TemplateData = require("./TemplateData");
 const TemplateWriter = require("./TemplateWriter");
