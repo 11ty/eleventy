@@ -10,7 +10,7 @@ require("please-upgrade-node")(pkg, {
 });
 
 if (process.env.DEBUG) {
-  let timeRequire = require("time-require");
+  require("time-require");
 }
 
 const EleventyErrorHandler = require("./src/EleventyErrorHandler");
