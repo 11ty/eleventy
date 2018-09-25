@@ -1141,3 +1141,23 @@ test("permalink: false", async t => {
     false
   );
 });
+
+test("Front Matter Tags (Single)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/templatetest-frontmatter/single.njk",
+    "./test/stubs/",
+    "dist"
+  );
+  let frontmatter = await tmpl.getFrontMatterData();
+  t.deepEqual(frontmatter.tags, ["single-tag"]);
+});
+
+test("Front Matter Tags (Multiple)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/templatetest-frontmatter/multiple.njk",
+    "./test/stubs/",
+    "dist"
+  );
+  let frontmatter = await tmpl.getFrontMatterData();
+  t.deepEqual(frontmatter.tags, ["multi-tag", "multi-tag-2"]);
+});

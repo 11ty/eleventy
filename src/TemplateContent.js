@@ -58,12 +58,19 @@ class TemplateContent {
     return this.frontMatter.content;
   }
 
+  cleanupFrontMatterData(data) {
+    if ("tags" in data && typeof data.tags === "string") {
+      data.tags = [data.tags];
+    }
+    return data;
+  }
+
   async getFrontMatterData() {
     if (!this.frontMatter) {
       await this.read();
     }
 
-    return this.frontMatter.data || {};
+    return this.cleanupFrontMatterData(this.frontMatter.data || {});
   }
 
   async getEngineOverride() {

@@ -134,6 +134,7 @@ class TemplateMap {
         for (let tag of tags) {
           allTags[tag] = true;
         }
+        // This branch should no longer be necessary per TemplateContent.cleanupFrontMatterData
       } else if (tags) {
         allTags[tags] = true;
       }
