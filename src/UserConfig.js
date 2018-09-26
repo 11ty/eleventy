@@ -131,6 +131,7 @@ class UserConfig {
   // Support the nunjucks style syntax for asynchronous filter add
   addNunjucksFilter(name, callback, isAsync) {
     if (isAsync) {
+      // namespacing happens downstream
       this.addNunjucksAsyncFilter(name, callback);
     } else {
       name = this.getNamespacedName(name);
@@ -171,6 +172,8 @@ class UserConfig {
 
   addFilter(name, callback) {
     debug("Adding universal filter %o", this.getNamespacedName(name));
+
+    // namespacing happens downstream
     this.addLiquidFilter(name, callback);
     this.addNunjucksFilter(name, callback);
 
@@ -232,7 +235,7 @@ class UserConfig {
     this.collections[name] = callback;
   }
 
-  addPlugin(pluginCallback, initializer) {
+  addPlugin(pluginCallback) {
     debug("Adding plugin (unknown name: check your config file).");
     if (typeof pluginCallback !== "function") {
       throw new UserConfigError(
@@ -240,7 +243,7 @@ class UserConfig {
       );
     }
 
-    pluginCallback(this, initializer);
+    pluginCallback(this);
   }
 
   getNamespacedName(name) {
@@ -248,9 +251,16 @@ class UserConfig {
   }
 
   namespace(pluginNamespace, callback) {
-    this.activeNamespace = pluginNamespace || "";
+    let validNamespace = pluginNamespace && typeof pluginNamespace === "string";
+    if (validNamespace) {
+      this.activeNamespace = pluginNamespace || "";
+    }
+
     callback();
-    this.activeNamespace = "";
+
+    if (validNamespace) {
+      this.activeNamespace = "";
+    }
   }
 
   /**

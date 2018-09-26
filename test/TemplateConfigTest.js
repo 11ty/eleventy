@@ -34,6 +34,7 @@ test("Template Config local config overrides base config", async t => {
 });
 
 test("Add liquid tag", t => {
+  eleventyConfig.reset();
   eleventyConfig.addLiquidTag("myTagName", function() {});
 
   let templateCfg = new TemplateConfig(
@@ -45,6 +46,7 @@ test("Add liquid tag", t => {
 });
 
 test("Add nunjucks tag", t => {
+  eleventyConfig.reset();
   eleventyConfig.addNunjucksTag("myNunjucksTag", function() {});
 
   let templateCfg = new TemplateConfig(
@@ -56,6 +58,7 @@ test("Add nunjucks tag", t => {
 });
 
 test("Add liquid filter", t => {
+  eleventyConfig.reset();
   eleventyConfig.addLiquidFilter("myFilterName", function(liquidEngine) {
     return {};
   });
@@ -69,6 +72,7 @@ test("Add liquid filter", t => {
 });
 
 test("Add handlebars helper", t => {
+  eleventyConfig.reset();
   eleventyConfig.addHandlebarsHelper("myHelperName", function() {});
 
   let templateCfg = new TemplateConfig(
@@ -80,6 +84,7 @@ test("Add handlebars helper", t => {
 });
 
 test("Add nunjucks filter", t => {
+  eleventyConfig.reset();
   eleventyConfig.addNunjucksFilter("myFilterName", function() {});
 
   let templateCfg = new TemplateConfig(
@@ -91,6 +96,7 @@ test("Add nunjucks filter", t => {
 });
 
 test("Add universal filter", t => {
+  eleventyConfig.reset();
   eleventyConfig.addFilter("myFilterName", function() {});
 
   let templateCfg = new TemplateConfig(
@@ -104,6 +110,7 @@ test("Add universal filter", t => {
 });
 
 test("Add namespaced universal filter", t => {
+  eleventyConfig.reset();
   eleventyConfig.namespace("testNamespace", function() {
     eleventyConfig.addFilter("MyFilterName", function() {});
   });
@@ -128,6 +135,7 @@ test("Add namespaced universal filter", t => {
 });
 
 test("Add namespaced universal filter using underscore", t => {
+  eleventyConfig.reset();
   eleventyConfig.namespace("testNamespace_", function() {
     eleventyConfig.addFilter("myFilterName", function() {});
   });
@@ -151,6 +159,66 @@ test("Add namespaced universal filter using underscore", t => {
   );
 });
 
+test("Empty namespace", t => {
+  eleventyConfig.reset();
+  eleventyConfig.namespace("", function() {
+    eleventyConfig.addNunjucksFilter("myFilterName", function() {});
+  });
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
+});
+
+test("Nested Empty Inner namespace", t => {
+  eleventyConfig.reset();
+  eleventyConfig.namespace("testNs", function() {
+    eleventyConfig.namespace("", function() {
+      eleventyConfig.addNunjucksFilter("myFilterName", function() {});
+    });
+  });
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("testNsmyFilterName"), -1);
+});
+
+test("Nested Empty Outer namespace", t => {
+  eleventyConfig.reset();
+  eleventyConfig.namespace("", function() {
+    eleventyConfig.namespace("testNs", function() {
+      eleventyConfig.addNunjucksFilter("myFilterName", function() {});
+    });
+  });
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("testNsmyFilterName"), -1);
+});
+
+test("Non-string namespaces are ignored", t => {
+  eleventyConfig.reset();
+  eleventyConfig.namespace(["lkdsjflksd"], function() {
+    eleventyConfig.addNunjucksFilter("myFilterName", function() {});
+  });
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
+});
+
 test("Test url universal filter with custom pathPrefix (no slash)", t => {
   let templateCfg = new TemplateConfig(
     require("../config.js"),
@@ -162,6 +230,7 @@ test("Test url universal filter with custom pathPrefix (no slash)", t => {
 });
 
 test("setTemplateFormats(string)", t => {
+  eleventyConfig.reset();
   eleventyConfig.setTemplateFormats("ejs,njk, liquid");
 
   let templateCfg = new TemplateConfig(
@@ -173,6 +242,7 @@ test("setTemplateFormats(string)", t => {
 });
 
 test("setTemplateFormats(array)", t => {
+  eleventyConfig.reset();
   eleventyConfig.setTemplateFormats(["ejs", "njk", "liquid"]);
 
   let templateCfg = new TemplateConfig(
@@ -184,6 +254,7 @@ test("setTemplateFormats(array)", t => {
 });
 
 test("setTemplateFormats(array, size 1)", t => {
+  eleventyConfig.reset();
   eleventyConfig.setTemplateFormats(["liquid"]);
 
   let templateCfg = new TemplateConfig(
@@ -195,6 +266,7 @@ test("setTemplateFormats(array, size 1)", t => {
 });
 
 test("setTemplateFormats(empty array)", t => {
+  eleventyConfig.reset();
   eleventyConfig.setTemplateFormats([]);
 
   let templateCfg = new TemplateConfig(
