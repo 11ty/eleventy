@@ -2,9 +2,12 @@ const EventEmitter = require("events");
 const chalk = require("chalk");
 const semver = require("semver");
 const { DateTime } = require("luxon");
+const EleventyBaseError = require("./EleventyBaseError");
 const bench = require("./BenchmarkManager").get("Configuration");
 const debug = require("debug")("Eleventy:UserConfig");
 const pkg = require("../package.json");
+
+class UserConfigError extends EleventyBaseError {}
 
 // API to expose configuration options in config file
 class UserConfig {
@@ -48,7 +51,7 @@ class UserConfig {
 
   versionCheck(expected) {
     if (!semver.satisfies(pkg.version, expected)) {
-      throw new Error(
+      throw new UserConfigError(
         `This project requires the eleventy version to match '${expected}' but found ${
           pkg.version
         }. Use \`npm update @11ty/eleventy -g\` to upgrade the eleventy global or \`npm update @11ty/eleventy --save\` to upgrade your local project version.`
@@ -76,7 +79,7 @@ class UserConfig {
     name = this.getNamespacedName(name);
 
     if (typeof tagFn !== "function") {
-      throw new Error(
+      throw new UserConfigError(
         `EleventyConfig.addLiquidTag expects a callback function to be passed in for ${name}: addLiquidTag(name, function(liquidEngine) { return { parse: …, render: … } })`
       );
     }
@@ -179,7 +182,7 @@ class UserConfig {
     name = this.getNamespacedName(name);
 
     if (typeof tagFn !== "function") {
-      throw new Error(
+      throw new UserConfigError(
         `EleventyConfig.addNunjucksTag expects a callback function to be passed in for ${name}: addNunjucksTag(name, function(nunjucksEngine) {})`
       );
     }
@@ -221,7 +224,7 @@ class UserConfig {
     name = this.getNamespacedName(name);
 
     if (this.collections[name]) {
-      throw new Error(
+      throw new UserConfigError(
         `config.addCollection(${name}) already exists. Try a different name for your collection.`
       );
     }
@@ -229,15 +232,15 @@ class UserConfig {
     this.collections[name] = callback;
   }
 
-  addPlugin(pluginCallback) {
+  addPlugin(pluginCallback, initializer) {
     debug("Adding plugin (unknown name: check your config file).");
     if (typeof pluginCallback !== "function") {
-      throw new Error(
+      throw new UserConfigError(
         "EleventyConfig.addPlugin expects the first argument to be a function."
       );
     }
 
-    pluginCallback(this);
+    pluginCallback(this, initializer);
   }
 
   getNamespacedName(name) {

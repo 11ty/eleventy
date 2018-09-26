@@ -25,7 +25,7 @@ class EleventyErrorHandler {
           `${ref.message} (${ref.name})`,
         type
       );
-      debug(`(${type} stack): %O`, ref.stack);
+      debug(`(${type} stack): ${ref.stack}`);
       ref = ref.originalError;
     }
   }
