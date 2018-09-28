@@ -235,15 +235,21 @@ class UserConfig {
     this.collections[name] = callback;
   }
 
-  addPlugin(pluginCallback) {
+  addPlugin(plugin, options = {}) {
     debug("Adding plugin (unknown name: check your config file).");
-    if (typeof pluginCallback !== "function") {
+    if (typeof plugin === "function") {
+      plugin(this);
+    } else if (plugin && plugin.configFunction) {
+      if (typeof options.init === "function") {
+        options.init.call(this, plugin.initArguments || {});
+      }
+
+      plugin.configFunction(this, options);
+    } else {
       throw new UserConfigError(
-        "EleventyConfig.addPlugin expects the first argument to be a function."
+        "Invalid EleventyConfig.addPlugin signature. Should be a function or a valid Eleventy plugin object."
       );
     }
-
-    pluginCallback(this);
   }
 
   getNamespacedName(name) {
