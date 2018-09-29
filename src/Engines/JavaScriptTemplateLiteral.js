@@ -1,3 +1,4 @@
+const stringify = require("javascript-stringify");
 const TemplateEngine = require("./TemplateEngine");
 const EleventyBaseError = require("../EleventyBaseError");
 
@@ -9,7 +10,9 @@ class JavaScriptTemplateLiteral extends TemplateEngine {
       // avoid `with`
       let dataStr = "";
       for (let j in data) {
-        dataStr += `let ${j} = ${JSON.stringify(data[j])};\n`;
+        dataStr += `let ${j} = ${stringify(data[j], null, null, {
+          references: true
+        })};\n`;
       }
 
       // TODO get rid of this as it doesn’t allow things like: html``
