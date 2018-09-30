@@ -66,3 +66,22 @@ test("Eleventy set input/output, one file input root dir without leading dot/sla
   t.is(elev.inputDir, ".");
   t.is(elev.outputDir, "./test/stubs/_site");
 });
+
+test("Eleventy set input/output, one file input root dir without leading dot/slash", async t => {
+  let elev = new Eleventy(
+    "./test/stubs/exitCode/failure.njk",
+    "./test/stubs/exitCode/_site"
+  );
+
+  // TODO make this output quieter
+  elev.setLogger({
+    log: function() {},
+    warn: function() {},
+    error: function() {}
+  });
+
+  await elev.init();
+  await elev.write();
+
+  t.is(process.exitCode, 1);
+});

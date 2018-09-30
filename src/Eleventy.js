@@ -77,7 +77,7 @@ Eleventy.prototype.restart = async function() {
 Eleventy.prototype.finish = function() {
   bench.finish();
 
-  console.log(this.logFinished());
+  (this.logger || console).log(this.logFinished());
   debug("Finished writing templates.");
 };
 
@@ -286,8 +286,17 @@ Eleventy.prototype.serve = function(port) {
   this.eleventyServe.serve(port);
 };
 
+/* For testing */
+Eleventy.prototype.setLogger = function(logger) {
+  this.logger = logger;
+};
+
 Eleventy.prototype.write = async function() {
   let ret;
+  if (this.logger) {
+    EleventyErrorHandler.logger = this.logger;
+  }
+
   try {
     let promise = this.writer.write();
 
@@ -298,7 +307,7 @@ Eleventy.prototype.write = async function() {
       "error",
       "red"
     );
-    EleventyErrorHandler.log(e);
+    EleventyErrorHandler.fatal(e);
   }
 
   this.finish();
@@ -306,6 +315,9 @@ Eleventy.prototype.write = async function() {
   debug(`
 Getting frustrated? Have a suggestion/feature request/feedback?
 I want to hear it! Open an issue: https://github.com/11ty/eleventy/issues/new`);
+
+  // unset the logger
+  EleventyErrorHandler.logger = undefined;
 
   return ret;
 };

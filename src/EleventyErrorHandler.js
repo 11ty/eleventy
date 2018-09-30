@@ -46,10 +46,11 @@ class EleventyErrorHandler {
     if (process.env.DEBUG) {
       debug(message);
     } else {
+      let logger = EleventyErrorHandler.logger || console;
       if (chalkColor) {
-        console[type](chalk[chalkColor](message));
+        logger[type](chalk[chalkColor](message));
       } else {
-        console[type](message);
+        logger[type](message);
       }
     }
   }
