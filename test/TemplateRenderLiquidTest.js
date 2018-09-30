@@ -424,3 +424,13 @@ test("Liquid Missing Filter Issue #183", async t => {
     t.pass("Threw an error.");
   }
 });
+
+test.skip("Liquid Render Date, Issue #258", async t => {
+  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+    "<p>{{ myDate }}</p>"
+  );
+  t.is(
+    await fn({ myDate: new Date(Date.UTC(2016, 0, 1, 0, 0, 0)) }),
+    "<p>2016-01-01T00:00:00.000Z</p>"
+  );
+});

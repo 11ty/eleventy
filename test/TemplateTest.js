@@ -1161,3 +1161,31 @@ test("Front Matter Tags (Multiple)", async t => {
   let frontmatter = await tmpl.getFrontMatterData();
   t.deepEqual(frontmatter.tags, ["multi-tag", "multi-tag-2"]);
 });
+
+test.skip("Front matter date with quotes (liquid), issue #258", async t => {
+  let tmpl = new Template(
+    "./test/stubs/frontmatter-date/test.liquid",
+    "./test/stubs/",
+    "dist"
+  );
+
+  let data = await tmpl.getData();
+  t.is(data.mydate.toISOString(), "2009-04-15T00:34:34.000Z");
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), `2009-04-15T00:34:34.000Z`);
+});
+
+test("Front matter date with quotes (njk), issue #258", async t => {
+  let tmpl = new Template(
+    "./test/stubs/frontmatter-date/test.njk",
+    "./test/stubs/",
+    "dist"
+  );
+
+  let data = await tmpl.getData();
+  t.is(data.mydate.toISOString(), "2009-04-15T00:34:34.000Z");
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), `2009-04-15T00:34:34.000Z`);
+});
