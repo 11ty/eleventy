@@ -163,7 +163,7 @@ var key = "value";
 \`\`\``);
   t.is(
     (await fn()).trim(),
-    `<pre class="language-js"><code class="language-js"><div class="highlight-line"><span class="token keyword">var</span> key <span class="token operator">=</span> <span class="token string">"value"</span><span class="token punctuation">;</span></div></code></pre>`
+    `<pre class="language-js"><code class="language-js"><span class="highlight-line"><span class="token keyword">var</span> key <span class="token operator">=</span> <span class="token string">"value"</span><span class="token punctuation">;</span></span></code></pre>`
   );
 });
 
@@ -186,7 +186,7 @@ var key = "value";
 \`\`\``);
   t.is(
     (await fn()).trim(),
-    `<pre class="language-js"><code class="language-js"><div class="highlight-line"><span class="token keyword">var</span> key <span class="token operator">=</span> <span class="token string">"value"</span><span class="token punctuation">;</span></div></code></pre>`
+    `<pre class="language-js"><code class="language-js"><span class="highlight-line"><span class="token keyword">var</span> key <span class="token operator">=</span> <span class="token string">"value"</span><span class="token punctuation">;</span></span></code></pre>`
   );
 });
 
@@ -209,7 +209,7 @@ var key = "value";
 \`\`\``);
   t.is(
     (await fn()).trim(),
-    `<pre class="language-js"><code class="language-js"><div class="highlight-line highlight-line-active"><span class="token keyword">var</span> key <span class="token operator">=</span> <span class="token string">"value"</span><span class="token punctuation">;</span></div></code></pre>`
+    `<pre class="language-js"><code class="language-js"><mark class="highlight-line highlight-line-active"><span class="token keyword">var</span> key <span class="token operator">=</span> <span class="token string">"value"</span><span class="token punctuation">;</span></mark></code></pre>`
   );
 });
 
@@ -232,6 +232,6 @@ var key = "value";
 \`\`\``);
   t.is(
     (await fn()).trim(),
-    `<pre class="language-text"><code class="language-text"><div class="highlight-line highlight-line-active">var key = "value";</div></code></pre>`
+    `<pre class="language-text"><code class="language-text"><mark class="highlight-line highlight-line-active">var key = "value";</mark></code></pre>`
   );
 });
