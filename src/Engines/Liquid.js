@@ -1,6 +1,5 @@
 const LiquidLib = require("liquidjs");
 const TemplateEngine = require("./TemplateEngine");
-const lodashMerge = require("lodash.merge");
 const config = require("../Config");
 // const debug = require("debug")("Eleventy:Liquid");
 
@@ -44,7 +43,7 @@ class Liquid extends TemplateEngine {
       strict_filters: false
     };
 
-    let options = lodashMerge(defaults, this.liquidOptions || {});
+    let options = Object.assign(defaults, this.liquidOptions || {});
     // debug("Liquid constructor options: %o", options);
 
     return options;

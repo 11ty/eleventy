@@ -1,5 +1,6 @@
 const TemplateLayoutPathResolver = require("./TemplateLayoutPathResolver");
 const TemplateContent = require("./TemplateContent");
+const TemplateData = require("./TemplateData");
 
 const templateCache = require("./TemplateCache");
 const config = require("./Config");
@@ -76,11 +77,14 @@ class TemplateLayout extends TemplateContent {
       return this.dataCache;
     }
 
-    let data = {};
     let map = await this.getTemplateLayoutMap();
+    let dataToMerge = [];
     for (let j = map.length - 1; j >= 0; j--) {
-      Object.assign(data, map[j].frontMatterData);
+      dataToMerge.push(map[j].frontMatterData);
     }
+
+    // Deep merge of layout front matter
+    let data = TemplateData.merge({}, ...dataToMerge);
     delete data[this.config.keys.layout];
 
     this.dataCache = data;

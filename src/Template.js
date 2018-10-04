@@ -1,8 +1,9 @@
 const fs = require("fs-extra");
 const parsePath = require("parse-filepath");
 const normalize = require("normalize-path");
-const _isObject = require("lodash.isobject");
+const lodashIsObject = require("lodash.isobject");
 const { DateTime } = require("luxon");
+const TemplateData = require("./TemplateData");
 const TemplateContent = require("./TemplateContent");
 const TemplatePath = require("./TemplatePath");
 const TemplatePermalink = require("./TemplatePermalink");
@@ -150,7 +151,7 @@ class Template extends TemplateContent {
         arr.push(await this.mapDataAsRenderedTemplates(data[j], templateData));
       }
       return arr;
-    } else if (_isObject(data)) {
+    } else if (lodashIsObject(data)) {
       let obj = {};
       for (let value in data) {
         obj[value] = await this.mapDataAsRenderedTemplates(
@@ -181,7 +182,7 @@ class Template extends TemplateContent {
     return {};
   }
 
-  async getData(localData) {
+  async getData() {
     if (!this.dataCache) {
       debugDev("%o getData()", this.inputPath);
       let localData = {};
@@ -191,12 +192,15 @@ class Template extends TemplateContent {
         debugDev("%o getData() getLocalData", this.inputPath);
       }
 
-      Object.assign(localData, await this.getFrontMatterData());
+      let frontMatterData = await this.getFrontMatterData();
+      let foundLayout =
+        frontMatterData[this.config.keys.layout] ||
+        localData[this.config.keys.layout];
 
       let mergedLayoutData = {};
-      if (localData[this.config.keys.layout]) {
+      if (foundLayout) {
         let layout = TemplateLayout.getTemplate(
-          localData[this.config.keys.layout],
+          foundLayout,
           this.getInputDir()
         );
         mergedLayoutData = await layout.getData();
@@ -206,7 +210,12 @@ class Template extends TemplateContent {
         );
       }
 
-      let mergedData = Object.assign({}, mergedLayoutData, localData);
+      let mergedData = TemplateData.merge(
+        {},
+        mergedLayoutData,
+        localData,
+        frontMatterData
+      );
       mergedData = await this.addPageDate(mergedData);
       mergedData = this.addPageData(mergedData);
       debugDev("%o getData() mergedData", this.inputPath);
@@ -214,7 +223,7 @@ class Template extends TemplateContent {
       this.dataCache = mergedData;
     }
 
-    return Object.assign({}, this.dataCache, localData, this.paginationData);
+    return TemplateData.merge({}, this.dataCache, this.paginationData);
   }
 
   async addPageDate(data) {
