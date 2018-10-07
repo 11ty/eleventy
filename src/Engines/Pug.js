@@ -1,6 +1,5 @@
 const PugLib = require("pug");
 const TemplateEngine = require("./TemplateEngine");
-const lodashMerge = require("lodash.merge");
 const config = require("../Config");
 
 class Pug extends TemplateEngine {
@@ -26,7 +25,7 @@ class Pug extends TemplateEngine {
   getPugOptions() {
     let inputDir = super.getInputDir();
 
-    return lodashMerge(
+    return Object.assign(
       {
         basedir: inputDir,
         filename: inputDir

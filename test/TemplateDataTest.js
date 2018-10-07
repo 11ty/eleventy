@@ -276,3 +276,17 @@ test("getTemplateDataFileGlob", async t => {
     "./test/stubs/**/*.11tydata.js"
   ]);
 });
+
+test("TemplateData.merge", t => {
+  t.deepEqual(
+    TemplateData.merge(
+      {
+        tags: [1, 2, 3]
+      },
+      {
+        tags: [4, 5, 6]
+      }
+    ),
+    { tags: [1, 2, 3, 4, 5, 6] }
+  );
+});

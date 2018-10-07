@@ -1,6 +1,5 @@
 const ejsLib = require("ejs");
 const TemplateEngine = require("./TemplateEngine");
-const lodashMerge = require("lodash.merge");
 const config = require("../Config");
 const path = require("path");
 
@@ -31,7 +30,7 @@ class Ejs extends TemplateEngine {
   getEjsOptions() {
     let inputDir = super.getInputDir();
 
-    return lodashMerge(
+    return Object.assign(
       {
         root: "./" + inputDir,
         compileDebug: true,

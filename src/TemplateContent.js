@@ -25,6 +25,11 @@ class TemplateContent {
     this.templateRender = new TemplateRender(this.inputPath, this.inputDir);
   }
 
+  /* Used by tests */
+  _setConfig(config) {
+    this.config = config;
+  }
+
   getInputPath() {
     return this.inputPath;
   }

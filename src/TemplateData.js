@@ -2,7 +2,7 @@ const fs = require("fs-extra");
 const fastglob = require("fast-glob");
 const parsePath = require("parse-filepath");
 const lodashset = require("lodash.set");
-const lodashMerge = require("lodash.merge");
+const lodashMergeWith = require("lodash.mergewith");
 const lodashUniq = require("lodash.uniq");
 const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
@@ -24,6 +24,11 @@ class TemplateData {
 
     this.rawImports = {};
     this.globalData = null;
+  }
+
+  /* Used by tests */
+  _setConfig(config) {
+    this.config = config;
   }
 
   setInputDir(inputDir) {
@@ -163,21 +168,22 @@ class TemplateData {
     if (!this.globalData) {
       let globalJson = await this.getAllGlobalData();
 
+      // OK: Shallow merge when combining rawImports (pkg) with global data files
       this.globalData = Object.assign({}, globalJson, rawImports);
     }
 
     return this.globalData;
   }
 
+  /* Template and Directory data files */
   async combineLocalData(localDataPaths) {
-    let rawImports = this.getRawImports();
     let localData = {};
     if (!Array.isArray(localDataPaths)) {
       localDataPaths = [localDataPaths];
     }
     for (let path of localDataPaths) {
-      let dataForPath = await this.getDataValue(path, rawImports, true);
-      lodashMerge(localData, dataForPath);
+      let dataForPath = await this.getDataValue(path, null, true);
+      TemplateData.mergeExperiment(this.config, localData, dataForPath);
       // debug("`combineLocalData` (iterating) for %o: %O", path, localData);
     }
     return localData;
@@ -188,6 +194,7 @@ class TemplateData {
     let importedData = await this.combineLocalData(localDataPaths);
     let globalData = await this.getData();
 
+    // OK-ish: shallow merge when combining template/data dir files with global data files
     let localData = Object.assign({}, globalData, importedData);
     // debug("`getLocalData` for %o: %O", templatePath, localData);
     return localData;
@@ -221,21 +228,19 @@ class TemplateData {
         return {};
       }
     } else {
-      let engineName;
-      if (!ignoreProcessing) {
-        engineName = this.dataTemplateEngine;
-      }
       let rawInput = await this._getLocalJsonString(path);
+      let engineName = this.dataTemplateEngine;
+
       if (rawInput) {
-        if (engineName) {
+        if (ignoreProcessing || engineName === false) {
+          return JSON.parse(rawInput);
+        } else {
           let fn = await new TemplateRender(engineName).getCompiledTemplate(
             rawInput
           );
 
           // pass in rawImports, don’t pass in global data, that’s what we’re parsing
           return JSON.parse(await fn(rawImports));
-        } else {
-          return JSON.parse(rawInput);
         }
       }
     }
@@ -286,6 +291,25 @@ class TemplateData {
 
     debug("getLocalDataPaths(%o): %o", templatePath, paths);
     return lodashUniq(paths).reverse();
+  }
+
+  static mergeExperiment(config, target, ...source) {
+    if (config.experiments.has("DATA_DEEP_MERGE")) {
+      return TemplateData.merge(target, ...source);
+    } else {
+      return Object.assign(target, ...source);
+    }
+  }
+
+  static merge(target, ...source) {
+    return lodashMergeWith(target, ...source, function dataMergeCustomizer(
+      target,
+      source
+    ) {
+      if (Array.isArray(target)) {
+        return target.concat(source);
+      }
+    });
   }
 }
 
