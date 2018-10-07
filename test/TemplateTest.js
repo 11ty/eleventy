@@ -1167,8 +1167,12 @@ test("Front matter date with quotes (njk), issue #258", async t => {
   t.is(pages[0].templateContent.trim(), `2009-04-15T00:34:34.000Z`);
 });
 
-test("Data Cascade", async t => {
+test("Data Cascade (Deep merge)", async t => {
+  let newConfig = Object.assign({}, config);
+  newConfig.experiments = new Set(["DATA_DEEP_MERGE"]);
+
   let dataObj = new TemplateData();
+  dataObj._setConfig(newConfig);
   await dataObj.cacheData();
 
   let tmpl = new Template(
@@ -1177,6 +1181,7 @@ test("Data Cascade", async t => {
     "./dist",
     dataObj
   );
+  tmpl._setConfig(newConfig);
 
   let data = await tmpl.getData();
   t.deepEqual(Object.keys(data).sort(), [
@@ -1197,7 +1202,7 @@ test("Data Cascade", async t => {
   t.is(data.parent.child, -2);
 });
 
-test("Data Cascade Tag Merge", async t => {
+test("Data Cascade (Shallow merge)", async t => {
   let dataObj = new TemplateData();
   await dataObj.cacheData();
 
@@ -1209,5 +1214,51 @@ test("Data Cascade Tag Merge", async t => {
   );
 
   let data = await tmpl.getData();
+  t.deepEqual(Object.keys(data).sort(), [
+    "datafile",
+    "frontmatter",
+    "page",
+    "parent",
+    "pkg",
+    "tags"
+  ]);
+
+  t.deepEqual(Object.keys(data.parent).sort(), ["child", "frontmatter"]);
+
+  t.is(data.parent.child, -2);
+});
+
+test("Data Cascade Tag Merge (Deep merge)", async t => {
+  let newConfig = Object.assign({}, config);
+  newConfig.experiments = new Set(["DATA_DEEP_MERGE"]);
+
+  let dataObj = new TemplateData();
+  dataObj._setConfig(newConfig);
+  await dataObj.cacheData();
+
+  let tmpl = new Template(
+    "./test/stubs/data-cascade/template.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj
+  );
+  tmpl._setConfig(newConfig);
+
+  let data = await tmpl.getData();
   t.deepEqual(data.tags.sort(), ["tagA", "tagB", "tagC", "tagD"]);
+});
+
+test("Data Cascade Tag Merge (Shallow merge)", async t => {
+  let dataObj = new TemplateData();
+  await dataObj.cacheData();
+
+  let tmpl = new Template(
+    "./test/stubs/data-cascade/template.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj
+  );
+
+  let data = await tmpl.getData();
+  t.deepEqual(data.tags.sort(), ["tagA", "tagB"]);
 });

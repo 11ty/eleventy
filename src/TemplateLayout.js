@@ -28,7 +28,7 @@ class TemplateLayout extends TemplateContent {
     return inputDir + key;
   }
 
-  static getTemplate(key, inputDir) {
+  static getTemplate(key, inputDir, config) {
     let fullKey = TemplateLayout.resolveFullKey(key, inputDir);
     if (templateCache.has(fullKey)) {
       debugDev("Found %o in TemplateCache", key);
@@ -36,6 +36,7 @@ class TemplateLayout extends TemplateContent {
     }
 
     let tmpl = new TemplateLayout(key, inputDir);
+    tmpl._setConfig(config);
     templateCache.add(fullKey, tmpl);
 
     return tmpl;
@@ -62,7 +63,8 @@ class TemplateLayout extends TemplateContent {
     while (mapEntry.frontMatterData && cfgKey in mapEntry.frontMatterData) {
       let layout = TemplateLayout.getTemplate(
         mapEntry.frontMatterData[cfgKey],
-        this.inputDir
+        this.inputDir,
+        this.config
       );
       mapEntry = await layout.getTemplateLayoutMapEntry();
       map.push(mapEntry);
@@ -84,7 +86,7 @@ class TemplateLayout extends TemplateContent {
     }
 
     // Deep merge of layout front matter
-    let data = TemplateData.merge({}, ...dataToMerge);
+    let data = TemplateData.mergeExperiment(this.config, {}, ...dataToMerge);
     delete data[this.config.keys.layout];
 
     this.dataCache = data;

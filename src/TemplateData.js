@@ -26,6 +26,11 @@ class TemplateData {
     this.globalData = null;
   }
 
+  /* Used by tests */
+  _setConfig(config) {
+    this.config = config;
+  }
+
   setInputDir(inputDir) {
     this.inputDirNeedsCheck = true;
     this.inputDir = inputDir;
@@ -178,7 +183,7 @@ class TemplateData {
     }
     for (let path of localDataPaths) {
       let dataForPath = await this.getDataValue(path, null, true);
-      TemplateData.merge(localData, dataForPath);
+      TemplateData.mergeExperiment(this.config, localData, dataForPath);
       // debug("`combineLocalData` (iterating) for %o: %O", path, localData);
     }
     return localData;
@@ -286,6 +291,14 @@ class TemplateData {
 
     debug("getLocalDataPaths(%o): %o", templatePath, paths);
     return lodashUniq(paths).reverse();
+  }
+
+  static mergeExperiment(config, target, ...source) {
+    if (config.experiments.has("DATA_DEEP_MERGE")) {
+      return TemplateData.merge(target, ...source);
+    } else {
+      return Object.assign(target, ...source);
+    }
   }
 
   static merge(target, ...source) {

@@ -47,6 +47,7 @@ class UserConfig {
     this.DateTime = DateTime;
     this.dynamicPermalinks = true;
     this.useGitIgnore = true;
+    this.experiments = new Set();
   }
 
   versionCheck(expected) {
@@ -432,6 +433,10 @@ class UserConfig {
     );
   }
 
+  addExperiment(key) {
+    this.experiments.add(key);
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
@@ -458,7 +463,8 @@ class UserConfig {
       markdownHighlighter: this.markdownHighlighter,
       libraryOverrides: this.libraryOverrides,
       dynamicPermalinks: this.dynamicPermalinks,
-      useGitIgnore: this.useGitIgnore
+      useGitIgnore: this.useGitIgnore,
+      experiments: this.experiments
     };
   }
 }

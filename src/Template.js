@@ -175,7 +175,8 @@ class Template extends TemplateContent {
     if (frontMatterData[this.config.keys.layout]) {
       let layout = TemplateLayout.getTemplate(
         frontMatterData[this.config.keys.layout],
-        this.getInputDir()
+        this.getInputDir(),
+        this.config
       );
       return await layout.getData();
     }
@@ -201,7 +202,8 @@ class Template extends TemplateContent {
       if (foundLayout) {
         let layout = TemplateLayout.getTemplate(
           foundLayout,
-          this.getInputDir()
+          this.getInputDir(),
+          this.config
         );
         mergedLayoutData = await layout.getData();
         debugDev(
@@ -210,7 +212,8 @@ class Template extends TemplateContent {
         );
       }
 
-      let mergedData = TemplateData.merge(
+      let mergedData = TemplateData.mergeExperiment(
+        this.config,
         {},
         mergedLayoutData,
         localData,
@@ -223,7 +226,12 @@ class Template extends TemplateContent {
       this.dataCache = mergedData;
     }
 
-    return TemplateData.merge({}, this.dataCache, this.paginationData);
+    return TemplateData.mergeExperiment(
+      this.config,
+      {},
+      this.dataCache,
+      this.paginationData
+    );
   }
 
   async addPageDate(data) {
@@ -295,7 +303,11 @@ class Template extends TemplateContent {
 
   async renderLayout(tmpl, tmplData) {
     let layoutKey = tmplData[tmpl.config.keys.layout];
-    let layout = TemplateLayout.getTemplate(layoutKey, this.getInputDir());
+    let layout = TemplateLayout.getTemplate(
+      layoutKey,
+      this.getInputDir(),
+      this.config
+    );
     debug("%o is using layout %o", this.inputPath, layoutKey);
 
     // TODO reuse templateContent from templateMap
