@@ -2,8 +2,8 @@ const fs = require("fs-extra");
 const fastglob = require("fast-glob");
 const parsePath = require("parse-filepath");
 const lodashset = require("lodash.set");
-const lodashMergeWith = require("lodash.mergewith");
 const lodashUniq = require("lodash.uniq");
+const merge = require("./Util/Merge");
 const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
 const TemplateGlob = require("./TemplateGlob");
@@ -302,14 +302,7 @@ class TemplateData {
   }
 
   static merge(target, ...source) {
-    return lodashMergeWith(target, ...source, function dataMergeCustomizer(
-      target,
-      source
-    ) {
-      if (Array.isArray(target)) {
-        return target.concat(source);
-      }
-    });
+    return merge(target, ...source);
   }
 }
 
