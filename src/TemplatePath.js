@@ -133,7 +133,7 @@ TemplatePath.stripPathFromDir = function(targetDir, prunedPath) {
 };
 
 TemplatePath.isDirectorySync = function(path) {
-  return fs.statSync(path).isDirectory();
+  return fs.existsSync(path) && fs.statSync(path).isDirectory();
 };
 
 TemplatePath.convertToGlob = function(path) {
