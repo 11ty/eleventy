@@ -224,12 +224,10 @@ test("Permalink first and last page link with pagination variables (numeric)", a
   let pages = await paging.getPageTemplates();
 
   let page0Data = await pages[0].getData();
-  t.is(await pages[0].getOutputPath(), "./dist/paged/page-0/index.html");
   t.is(page0Data.pagination.firstPageLink, "/paged/page-0/index.html");
   t.is(page0Data.pagination.lastPageLink, "/paged/page-1/index.html");
 
   let page1Data = await pages[1].getData();
-  t.is(await pages[1].getOutputPath(), "./dist/paged/page-1/index.html");
   t.is(page1Data.pagination.firstPageLink, "/paged/page-0/index.html");
   t.is(page1Data.pagination.lastPageLink, "/paged/page-1/index.html");
 });
@@ -247,7 +245,6 @@ test("Permalink first and last page link with pagination variables (numeric, one
   let pages = await paging.getPageTemplates();
 
   let page0Data = await pages[0].getData();
-  t.is(await pages[0].getOutputPath(), "./dist/paged/page-1/index.html");
   t.is(page0Data.pagination.firstPageLink, "/paged/page-1/index.html");
   t.is(page0Data.pagination.lastPageLink, "/paged/page-2/index.html");
 
