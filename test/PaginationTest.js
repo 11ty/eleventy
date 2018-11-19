@@ -177,13 +177,19 @@ test("Permalink with pagination variables (numeric)", async t => {
   t.is(await pages[0].getOutputPath(), "./dist/paged/page-0/index.html");
   t.falsy(page0Data.pagination.previousPageLink);
   t.is(page0Data.pagination.nextPageLink, "/paged/page-1/index.html");
+  t.is(page0Data.pagination.nextPageHref, "/paged/page-1/");
   t.is(page0Data.pagination.pageLinks.length, 2);
+  t.is(page0Data.pagination.links.length, 2);
+  t.is(page0Data.pagination.hrefs.length, 2);
 
   let page1Data = await pages[1].getData();
   t.is(await pages[1].getOutputPath(), "./dist/paged/page-1/index.html");
   t.is(page1Data.pagination.previousPageLink, "/paged/page-0/index.html");
+  t.is(page1Data.pagination.previousPageHref, "/paged/page-0/");
   t.falsy(page1Data.pagination.nextPageLink);
   t.is(page1Data.pagination.pageLinks.length, 2);
+  t.is(page1Data.pagination.links.length, 2);
+  t.is(page1Data.pagination.hrefs.length, 2);
 });
 
 test("Permalink with pagination variables (numeric, one indexed)", async t => {
@@ -202,13 +208,19 @@ test("Permalink with pagination variables (numeric, one indexed)", async t => {
   t.is(await pages[0].getOutputPath(), "./dist/paged/page-1/index.html");
   t.falsy(page0Data.pagination.previousPageLink);
   t.is(page0Data.pagination.nextPageLink, "/paged/page-2/index.html");
+  t.is(page0Data.pagination.nextPageHref, "/paged/page-2/");
   t.is(page0Data.pagination.pageLinks.length, 2);
+  t.is(page0Data.pagination.links.length, 2);
+  t.is(page0Data.pagination.hrefs.length, 2);
 
   let page1Data = await pages[1].getData();
   t.is(await pages[1].getOutputPath(), "./dist/paged/page-2/index.html");
   t.is(page1Data.pagination.previousPageLink, "/paged/page-1/index.html");
+  t.is(page1Data.pagination.previousPageHref, "/paged/page-1/");
   t.falsy(page1Data.pagination.nextPageLink);
   t.is(page1Data.pagination.pageLinks.length, 2);
+  t.is(page1Data.pagination.links.length, 2);
+  t.is(page1Data.pagination.hrefs.length, 2);
 });
 
 test("Alias to page data", async t => {

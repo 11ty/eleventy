@@ -127,6 +127,7 @@ Pagination.prototype.getPageTemplates = async function() {
   let tmpl = this.template;
   let templates = [];
   let links = [];
+  let hrefs = [];
   let overrides = [];
 
   for (let pageNumber = 0, k = items.length; pageNumber < k; pageNumber++) {
@@ -161,11 +162,13 @@ Pagination.prototype.getPageTemplates = async function() {
 
     // TO DO subdirectory to links if the site doesn’t live at /
     links.push("/" + (await cloned.getOutputLink()));
+    hrefs.push(await cloned.getOutputHref());
   }
 
   // we loop twice to pass in the appropriate prev/next links (already full generated now)
   templates.forEach(
     function(cloned, pageNumber) {
+      // links
       overrides[pageNumber].pagination.previousPageLink =
         pageNumber > 0 ? links[pageNumber - 1] : null;
       overrides[pageNumber].pagination.previous =
@@ -179,6 +182,14 @@ Pagination.prototype.getPageTemplates = async function() {
       overrides[pageNumber].pagination.links = links;
       // todo deprecated, consistency with collections and use links instead
       overrides[pageNumber].pagination.pageLinks = links;
+
+      // hrefs
+      overrides[pageNumber].pagination.previousPageHref =
+        pageNumber > 0 ? hrefs[pageNumber - 1] : null;
+      overrides[pageNumber].pagination.nextPageHref =
+        pageNumber < templates.length - 1 ? hrefs[pageNumber + 1] : null;
+
+      overrides[pageNumber].pagination.hrefs = hrefs;
 
       cloned.setPaginationData(overrides[pageNumber]);
 
