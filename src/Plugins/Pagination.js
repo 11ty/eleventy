@@ -194,6 +194,11 @@ Pagination.prototype.getPageTemplates = async function() {
       overrides[pageNumber].pagination.nextPageHref =
         pageNumber < templates.length - 1 ? hrefs[pageNumber + 1] : null;
 
+      overrides[pageNumber].pagination.firstPageHref =
+        hrefs.length > 0 ? hrefs[0] : null;
+      overrides[pageNumber].pagination.lastPageHref =
+        hrefs.length > 0 ? hrefs[hrefs.length - 1] : null;
+
       overrides[pageNumber].pagination.hrefs = hrefs;
 
       cloned.setPaginationData(overrides[pageNumber]);

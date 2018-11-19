@@ -174,6 +174,10 @@ test("Permalink with pagination variables (numeric)", async t => {
   let pages = await paging.getPageTemplates();
 
   let page0Data = await pages[0].getData();
+  t.truthy(page0Data.pagination.firstPageLink);
+  t.truthy(page0Data.pagination.firstPageHref);
+  t.truthy(page0Data.pagination.lastPageLink);
+  t.truthy(page0Data.pagination.lastPageHref);
   t.is(await pages[0].getOutputPath(), "./dist/paged/page-0/index.html");
   t.falsy(page0Data.pagination.previousPageLink);
   t.is(page0Data.pagination.nextPageLink, "/paged/page-1/index.html");
