@@ -179,6 +179,11 @@ Pagination.prototype.getPageTemplates = async function() {
       overrides[pageNumber].pagination.next =
         overrides[pageNumber].pagination.nextPageLink;
 
+      overrides[pageNumber].pagination.firstPageLink =
+        links.length > 0 ? links[0] : null;
+      overrides[pageNumber].pagination.lastPageLink =
+        links.length > 0 ? links[links.length - 1] : null;
+
       overrides[pageNumber].pagination.links = links;
       // todo deprecated, consistency with collections and use links instead
       overrides[pageNumber].pagination.pageLinks = links;

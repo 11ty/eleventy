@@ -223,6 +223,48 @@ test("Permalink with pagination variables (numeric, one indexed)", async t => {
   t.is(page1Data.pagination.hrefs.length, 2);
 });
 
+test("Permalink first and last page link with pagination variables (numeric)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/pagedpermalinknumeric.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let paging = new Pagination(data);
+  paging.setTemplate(tmpl);
+  let pages = await paging.getPageTemplates();
+
+  let page0Data = await pages[0].getData();
+  t.is(page0Data.pagination.firstPageLink, "/paged/page-0/index.html");
+  t.is(page0Data.pagination.lastPageLink, "/paged/page-1/index.html");
+
+  let page1Data = await pages[1].getData();
+  t.is(page1Data.pagination.firstPageLink, "/paged/page-0/index.html");
+  t.is(page1Data.pagination.lastPageLink, "/paged/page-1/index.html");
+});
+
+test("Permalink first and last page link with pagination variables (numeric, one indexed)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/pagedpermalinknumericoneindexed.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let paging = new Pagination(data);
+  paging.setTemplate(tmpl);
+  let pages = await paging.getPageTemplates();
+
+  let page0Data = await pages[0].getData();
+  t.is(page0Data.pagination.firstPageLink, "/paged/page-1/index.html");
+  t.is(page0Data.pagination.lastPageLink, "/paged/page-2/index.html");
+
+  let page1Data = await pages[1].getData();
+  t.is(page0Data.pagination.firstPageLink, "/paged/page-1/index.html");
+  t.is(page0Data.pagination.lastPageLink, "/paged/page-2/index.html");
+});
+
 test("Alias to page data", async t => {
   let tmpl = new Template(
     "./test/stubs/paged/pagedalias.njk",
