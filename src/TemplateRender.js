@@ -88,6 +88,14 @@ TemplateRender.parseEngineOverrides = function(engineName) {
   return engines;
 };
 
+// used for error logging.
+TemplateRender.prototype.getEnginesStr = function() {
+  if (this.engineName === "md" && this.useMarkdown) {
+    return this.parseMarkdownWith + " (and markdown)";
+  }
+  return this.engineName;
+};
+
 TemplateRender.prototype.setEngineOverride = function(
   engineName,
   bypassMarkdown

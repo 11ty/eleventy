@@ -113,7 +113,7 @@ class TemplateContent {
       return fn;
     } catch (e) {
       debug(`Having trouble compiling template ${this.inputPath}: %O`, str);
-      throw new TemplateContentRenderError(
+      throw new TemplateContentCompileError(
         `Having trouble compiling template ${this.inputPath}`,
         e
       );
@@ -130,9 +130,13 @@ class TemplateContent {
       );
       return rendered;
     } catch (e) {
-      debug(`Having trouble rendering template ${this.inputPath}: %O`, str);
+      let engine = this.templateRender.getEnginesStr();
+      debug(
+        `Having trouble rendering ${engine} template ${this.inputPath}: %O`,
+        str
+      );
       throw new TemplateContentRenderError(
-        `Having trouble rendering template ${this.inputPath}`,
+        `Having trouble rendering ${engine} template ${this.inputPath}`,
         e
       );
     }
