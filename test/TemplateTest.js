@@ -1169,7 +1169,7 @@ test("Front matter date with quotes (njk), issue #258", async t => {
 
 test("Data Cascade (Deep merge)", async t => {
   let newConfig = Object.assign({}, config);
-  newConfig.experiments = new Set(["DATA_DEEP_MERGE"]);
+  newConfig.dataDeepMerge = true;
 
   let dataObj = new TemplateData();
   dataObj._setConfig(newConfig);
@@ -1230,7 +1230,7 @@ test("Data Cascade (Shallow merge)", async t => {
 
 test("Data Cascade Tag Merge (Deep merge)", async t => {
   let newConfig = Object.assign({}, config);
-  newConfig.experiments = new Set(["DATA_DEEP_MERGE"]);
+  newConfig.dataDeepMerge = true;
 
   let dataObj = new TemplateData();
   dataObj._setConfig(newConfig);

@@ -86,7 +86,7 @@ class TemplateLayout extends TemplateContent {
     }
 
     // Deep merge of layout front matter
-    let data = TemplateData.mergeExperiment(this.config, {}, ...dataToMerge);
+    let data = TemplateData.mergeDeep(this.config, {}, ...dataToMerge);
     delete data[this.config.keys.layout];
 
     this.dataCache = data;

@@ -212,7 +212,7 @@ class Template extends TemplateContent {
         );
       }
 
-      let mergedData = TemplateData.mergeExperiment(
+      let mergedData = TemplateData.mergeDeep(
         this.config,
         {},
         mergedLayoutData,
@@ -226,7 +226,7 @@ class Template extends TemplateContent {
       this.dataCache = mergedData;
     }
 
-    return TemplateData.mergeExperiment(
+    return TemplateData.mergeDeep(
       this.config,
       {},
       this.dataCache,

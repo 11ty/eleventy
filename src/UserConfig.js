@@ -437,6 +437,10 @@ class UserConfig {
     this.experiments.add(key);
   }
 
+  setDataDeepMerge(deepMerge) {
+    this.dataDeepMerge = !!deepMerge;
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
@@ -464,6 +468,7 @@ class UserConfig {
       libraryOverrides: this.libraryOverrides,
       dynamicPermalinks: this.dynamicPermalinks,
       useGitIgnore: this.useGitIgnore,
+      dataDeepMerge: this.dataDeepMerge,
       experiments: this.experiments
     };
   }

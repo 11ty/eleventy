@@ -183,7 +183,7 @@ class TemplateData {
     }
     for (let path of localDataPaths) {
       let dataForPath = await this.getDataValue(path, null, true);
-      TemplateData.mergeExperiment(this.config, localData, dataForPath);
+      TemplateData.mergeDeep(this.config, localData, dataForPath);
       // debug("`combineLocalData` (iterating) for %o: %O", path, localData);
     }
     return localData;
@@ -293,8 +293,8 @@ class TemplateData {
     return lodashUniq(paths).reverse();
   }
 
-  static mergeExperiment(config, target, ...source) {
-    if (config.experiments.has("DATA_DEEP_MERGE")) {
+  static mergeDeep(config, target, ...source) {
+    if (config.dataDeepMerge) {
       return TemplateData.merge(target, ...source);
     } else {
       return Object.assign(target, ...source);
