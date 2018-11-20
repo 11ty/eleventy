@@ -48,6 +48,16 @@ test("Single File Input (shallow path)", async t => {
   t.is(files[0], "./README.md");
 });
 
+test("Glob Input", async t => {
+  let evf = new EleventyFiles("./test/stubs/glob-pages/!(contact.md)", "./test/stubs/_site", ["md"]);
+
+  let globs = evf.getFileGlobs();
+  let files = await fastglob.async(globs);
+  t.is(files.length, 2);
+  t.is(files[0], "./test/stubs/glob-pages/about.md");
+  t.is(files[1], "./test/stubs/glob-pages/home.md");
+});
+
 test(".eleventyignore parsing", t => {
   let ignores = EleventyFiles.getFileIgnores("./test/stubs/.eleventyignore");
   t.is(ignores.length, 2);
