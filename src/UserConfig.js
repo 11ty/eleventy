@@ -47,6 +47,7 @@ class UserConfig {
     this.DateTime = DateTime;
     this.dynamicPermalinks = true;
     this.useGitIgnore = true;
+    this.dataDeepMerge = false;
     this.experiments = new Set();
   }
 
