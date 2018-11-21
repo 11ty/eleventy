@@ -15,7 +15,7 @@ test(t => {
   t.true(TemplateRender.hasEngine("ejs"));
   t.is(new TemplateRender("ejs").getEngineName(), "ejs");
 
-  t.is(TemplateRender.cleanupEngineName("sldkjfkldsj"), "sldkjfkldsj");
+  t.falsy(TemplateRender.cleanupEngineName("sldkjfkldsj"));
   t.false(TemplateRender.hasEngine("sldkjfkldsj"));
 });
 

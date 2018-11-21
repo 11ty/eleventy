@@ -3,19 +3,22 @@ import TemplateRender from "../src/TemplateRender";
 
 test("JS", t => {
   t.is(new TemplateRender("js").getEngineName(), "js");
-  t.is(new TemplateRender("./test/stubs/filename.js").getEngineName(), "js");
+  t.is(
+    new TemplateRender("./test/stubs/filename.11ty.js").getEngineName(),
+    "js"
+  );
 });
 
 test("JS Render a string (no data)", async t => {
   let fn = await new TemplateRender(
-    "../../test/stubs/string.js"
+    "../../test/stubs/string.11ty.js"
   ).getCompiledTemplate();
   t.is(await fn({ name: "Bill" }), "<p>Zach</p>");
 });
 
 test("JS Render a function", async t => {
   let fn = await new TemplateRender(
-    "../../test/stubs/template-literal.js"
+    "../../test/stubs/template-literal.11ty.js"
   ).getCompiledTemplate();
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
   t.is(await fn({ name: "Bill" }), "<p>Bill</p>");
@@ -23,7 +26,7 @@ test("JS Render a function", async t => {
 
 test("JS Render with a Class", async t => {
   let fn = await new TemplateRender(
-    "../../test/stubs/class-template-literal.js"
+    "../../test/stubs/class-template-literal.11ty.js"
   ).getCompiledTemplate();
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
   t.is(await fn({ name: "Bill" }), "<p>Bill</p>");
@@ -31,7 +34,7 @@ test("JS Render with a Class", async t => {
 
 test("JS Render with a Class, async render", async t => {
   let fn = await new TemplateRender(
-    "../../test/stubs/class-template-literal-async.js"
+    "../../test/stubs/class-template-literal-async.11ty.js"
   ).getCompiledTemplate();
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
   t.is(await fn({ name: "Bill" }), "<p>Bill</p>");
@@ -39,7 +42,7 @@ test("JS Render with a Class, async render", async t => {
 
 test("JS Render with a Class and Data getter", async t => {
   let fn = await new TemplateRender(
-    "../../test/stubs/class-template-literal-data.js"
+    "../../test/stubs/class-template-literal-data.11ty.js"
   ).getCompiledTemplate();
   t.is(await fn(), "<p>Ted</p>");
   t.is(await fn({ name: "Bill" }), "<p>Ted</p>");
@@ -47,7 +50,7 @@ test("JS Render with a Class and Data getter", async t => {
 
 test("JS Render with a Class and Data function", async t => {
   let fn = await new TemplateRender(
-    "../../test/stubs/class-template-literal-data-fn.js"
+    "../../test/stubs/class-template-literal-data-fn.11ty.js"
   ).getCompiledTemplate();
   t.is(await fn(), "<p>Ted</p>");
   t.is(await fn({ name: "Bill" }), "<p>Ted</p>");
@@ -55,7 +58,7 @@ test("JS Render with a Class and Data function", async t => {
 
 test("JS Render using Vue", async t => {
   let fn = await new TemplateRender(
-    "../../test/stubs/vue.js"
+    "../../test/stubs/vue.11ty.js"
   ).getCompiledTemplate();
   t.is(
     await fn({ name: "Zach" }),
@@ -69,7 +72,7 @@ test("JS Render using Vue", async t => {
 
 test("JS Render using Vue (with a layout)", async t => {
   let fn = await new TemplateRender(
-    "../../test/stubs/vue-layout.js"
+    "../../test/stubs/vue-layout.11ty.js"
   ).getCompiledTemplate();
   t.is(
     await fn({ name: "Zach" }),
@@ -81,7 +84,7 @@ test("JS Render using Vue (with a layout)", async t => {
 
 test("JS Render using ViperHTML", async t => {
   let fn = await new TemplateRender(
-    "../../test/stubs/viperhtml.js"
+    "../../test/stubs/viperhtml.11ty.js"
   ).getCompiledTemplate();
   t.is(
     await fn({ name: "Zach", html: "<strong>Hi</strong>" }),
