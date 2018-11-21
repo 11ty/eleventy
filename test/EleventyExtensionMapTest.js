@@ -75,3 +75,42 @@ test("fileList with dir in path and dir", t => {
     "_includes/layouts/filename.pug"
   ]);
 });
+
+test("removeTemplateExtension", t => {
+  t.is(
+    EleventyExtensionMap.removeTemplateExtension("component.njk"),
+    "component"
+  );
+  t.is(
+    EleventyExtensionMap.removeTemplateExtension("component.11ty.js"),
+    "component"
+  );
+
+  t.is(EleventyExtensionMap.removeTemplateExtension(""), "");
+  t.is(EleventyExtensionMap.removeTemplateExtension("component"), "component");
+  t.is(
+    EleventyExtensionMap.removeTemplateExtension("component.js"),
+    "component.js"
+  );
+});
+
+test("getKey", t => {
+  t.is(EleventyExtensionMap.getKey("component.njk"), "njk");
+  t.is(EleventyExtensionMap.getKey("component.11ty.js"), "js");
+
+  t.is(EleventyExtensionMap.getKey(""), undefined);
+  t.is(EleventyExtensionMap.getKey("component"), undefined);
+  t.is(EleventyExtensionMap.getKey("component.js"), undefined);
+});
+
+test("getExtensionFromPath", t => {
+  t.is(EleventyExtensionMap.getExtensionFromPath("component.njk"), "njk");
+  t.is(
+    EleventyExtensionMap.getExtensionFromPath("component.11ty.js"),
+    "11ty.js"
+  );
+
+  t.is(EleventyExtensionMap.getExtensionFromPath(""), undefined);
+  t.is(EleventyExtensionMap.getExtensionFromPath("component"), undefined);
+  t.is(EleventyExtensionMap.getExtensionFromPath("component.js"), undefined);
+});

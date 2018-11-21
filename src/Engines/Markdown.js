@@ -1,6 +1,5 @@
 const markdownIt = require("markdown-it");
 const TemplateEngine = require("./TemplateEngine");
-const lodashMerge = require("lodash.merge");
 const config = require("../Config");
 // const debug = require("debug")("Eleventy:Markdown");
 
@@ -38,7 +37,7 @@ class Markdown extends TemplateEngine {
       return this.markdownOptions;
     }
 
-    return lodashMerge(
+    return Object.assign(
       {
         html: true
       },

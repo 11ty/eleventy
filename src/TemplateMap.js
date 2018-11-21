@@ -1,4 +1,3 @@
-const lodashClone = require("lodash.clone");
 const TemplateCollection = require("./TemplateCollection");
 const eleventyConfig = require("./EleventyConfig");
 const debug = require("debug")("Eleventy:TemplateMap");
@@ -10,6 +9,7 @@ class TemplateMap {
     this.collection = new TemplateCollection();
     this.collectionsData = null;
     this.cached = false;
+    this.configCollections = null;
   }
 
   async add(template) {
@@ -28,8 +28,23 @@ class TemplateMap {
 
   async cache() {
     debug("Caching collections objects.");
-    this.collectionsData = await this.getAllCollectionsData();
-    await this.populateDataInMap();
+    this.collectionsData = {};
+
+    await this.populateCollectionsDataInMap(this.collectionsData);
+
+    this.taggedCollectionsData = await this.getTaggedCollectionsData();
+    Object.assign(this.collectionsData, this.taggedCollectionsData);
+    await this.populateUrlDataInMap(true);
+    await this.populateCollectionsWithOutputPaths(this.collectionsData);
+
+    this.userConfigCollectionsData = await this.getUserConfigCollectionsData();
+    Object.assign(this.collectionsData, this.userConfigCollectionsData);
+
+    await this.populateUrlDataInMap();
+    // TODO this is repeated, unnecessary?
+    await this.populateCollectionsWithOutputPaths(this.collectionsData);
+
+    await this.populateContentDataInMap();
     this.populateCollectionsWithContent();
     this.cached = true;
   }
@@ -55,31 +70,45 @@ class TemplateMap {
     return -1;
   }
 
-  async populateDataInMap() {
-    let pages = [];
+  async populateCollectionsDataInMap(collectionsData) {
     for (let map of this.map) {
       // TODO these collections shouldn’t be passed around in a cached data object like this
-      map.data.collections = this.collectionsData;
-      let pages = await map.template.getTemplates(map.data);
-      map._initialPage = pages[0];
-
-      Object.assign(
-        map,
-        await map.template.getSecondaryMapEntry(map._initialPage)
-      );
+      map.data.collections = collectionsData;
     }
+  }
 
-    this.populateCollectionsWithData();
-
+  async populateUrlDataInMap(skipPagination) {
     for (let map of this.map) {
-      Object.assign(
-        map,
-        await map.template.getTertiaryMapEntry(map._initialPage)
-      );
+      if (map._pages) {
+        continue;
+      }
+      if (skipPagination && "pagination" in map.data) {
+        continue;
+      }
 
-      debugDev(
-        "Added this.map[...].templateContent, outputPath, et al for one map entry"
-      );
+      let pages = await map.template.getTemplates(map.data);
+      if (pages.length) {
+        map._pages = pages;
+
+        Object.assign(
+          map,
+          await map.template.getSecondaryMapEntry(map._pages[0])
+        );
+      }
+    }
+  }
+
+  async populateContentDataInMap() {
+    for (let map of this.map) {
+      if (map._pages) {
+        Object.assign(
+          map,
+          await map.template.getTertiaryMapEntry(map._pages[0])
+        );
+        debugDev(
+          "Added this.map[...].templateContent, outputPath, et al for one map entry"
+        );
+      }
     }
   }
 
@@ -105,6 +134,7 @@ class TemplateMap {
         for (let tag of tags) {
           allTags[tag] = true;
         }
+        // This branch should no longer be necessary per TemplateContent.cleanupFrontMatterData
       } else if (tags) {
         allTags[tags] = true;
       }
@@ -112,7 +142,7 @@ class TemplateMap {
     return Object.keys(allTags);
   }
 
-  async getAllCollectionsData() {
+  async getTaggedCollectionsData() {
     let collections = {};
     collections.all = this.createTemplateMapCopy(
       this.collection.getAllSorted()
@@ -126,23 +156,53 @@ class TemplateMap {
       );
       debug(`Collection: collections.${tag} size: ${collections[tag].length}`);
     }
+    return collections;
+  }
 
-    let configCollections = eleventyConfig.getCollections();
+  setUserConfigCollections(configCollections) {
+    return (this.configCollections = configCollections);
+  }
+
+  async getUserConfigCollectionsData() {
+    let collections = {};
+    let configCollections =
+      this.configCollections || eleventyConfig.getCollections();
     for (let name in configCollections) {
-      collections[name] = this.createTemplateMapCopy(
-        configCollections[name](this.collection)
-      );
+      let ret = configCollections[name](this.collection);
+
+      // work with arrays and strings returned from UserConfig.addCollection
+      if (
+        Array.isArray(ret) &&
+        ret.length &&
+        ret[0].inputPath &&
+        ret[0].outputPath
+      ) {
+        collections[name] = this.createTemplateMapCopy(ret);
+      } else {
+        collections[name] = ret;
+      }
+
       debug(
         `Collection: collections.${name} size: ${collections[name].length}`
       );
     }
+    return collections;
+  }
+
+  async _testGetAllCollectionsData() {
+    let collections = {};
+    let taggedCollections = await this.getTaggedCollectionsData();
+    Object.assign(collections, taggedCollections);
+
+    let userConfigCollections = await this.getUserConfigCollectionsData();
+    Object.assign(collections, userConfigCollections);
 
     return collections;
   }
 
-  populateCollectionsWithData() {
-    for (let collectionName in this.collectionsData) {
-      for (let item of this.collectionsData[collectionName]) {
+  populateCollectionsWithOutputPaths(collections) {
+    for (let collectionName in collections) {
+      for (let item of collections[collectionName]) {
         let index = this.getMapTemplateIndex(item);
         if (index !== -1) {
           item.outputPath = this.map[index].outputPath;

@@ -1,3 +1,4 @@
 {
-  "localdatakey1": "localdatavalue1"
+  "localdatakey1": "localdatavalue1",
+  "localdatakeyfromjs": "this_is_also_overridden"
 }

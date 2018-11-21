@@ -22,7 +22,6 @@ Pagination.prototype.hasPagination = function() {
 
 Pagination.prototype.setData = function(data) {
   this.data = data || {};
-  this.size = 1;
   this.target = [];
 
   if (!this.hasPagination()) {
@@ -31,7 +30,7 @@ Pagination.prototype.setData = function(data) {
 
   if (!data.pagination) {
     throw new Error(
-      "Misconfigured pagination data in template front matter (did you use tabs and not spaces?)."
+      "Misconfigured pagination data in template front matter (YAML front matter precaution: did you use tabs and not spaces for indentation?)."
     );
   } else if (!("size" in data.pagination)) {
     throw new Error("Missing pagination size in front matter data.");
@@ -128,6 +127,7 @@ Pagination.prototype.getPageTemplates = async function() {
   let tmpl = this.template;
   let templates = [];
   let links = [];
+  let hrefs = [];
   let overrides = [];
 
   for (let pageNumber = 0, k = items.length; pageNumber < k; pageNumber++) {
@@ -158,15 +158,17 @@ Pagination.prototype.getPageTemplates = async function() {
     }
 
     overrides.push(override);
-    cloned.setDataOverrides(overrides[pageNumber]);
+    cloned.setPaginationData(override);
 
     // TO DO subdirectory to links if the site doesn’t live at /
     links.push("/" + (await cloned.getOutputLink()));
+    hrefs.push(await cloned.getOutputHref());
   }
 
   // we loop twice to pass in the appropriate prev/next links (already full generated now)
   templates.forEach(
     function(cloned, pageNumber) {
+      // links
       overrides[pageNumber].pagination.previousPageLink =
         pageNumber > 0 ? links[pageNumber - 1] : null;
       overrides[pageNumber].pagination.previous =
@@ -177,11 +179,29 @@ Pagination.prototype.getPageTemplates = async function() {
       overrides[pageNumber].pagination.next =
         overrides[pageNumber].pagination.nextPageLink;
 
+      overrides[pageNumber].pagination.firstPageLink =
+        links.length > 0 ? links[0] : null;
+      overrides[pageNumber].pagination.lastPageLink =
+        links.length > 0 ? links[links.length - 1] : null;
+
       overrides[pageNumber].pagination.links = links;
       // todo deprecated, consistency with collections and use links instead
       overrides[pageNumber].pagination.pageLinks = links;
 
-      cloned.setDataOverrides(overrides[pageNumber]);
+      // hrefs
+      overrides[pageNumber].pagination.previousPageHref =
+        pageNumber > 0 ? hrefs[pageNumber - 1] : null;
+      overrides[pageNumber].pagination.nextPageHref =
+        pageNumber < templates.length - 1 ? hrefs[pageNumber + 1] : null;
+
+      overrides[pageNumber].pagination.firstPageHref =
+        hrefs.length > 0 ? hrefs[0] : null;
+      overrides[pageNumber].pagination.lastPageHref =
+        hrefs.length > 0 ? hrefs[hrefs.length - 1] : null;
+
+      overrides[pageNumber].pagination.hrefs = hrefs;
+
+      cloned.setPaginationData(overrides[pageNumber]);
 
       pages.push(cloned);
     }.bind(this)

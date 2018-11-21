@@ -1,23 +1,18 @@
-const fs = require("fs-extra");
-const chalk = require("chalk");
-const parsePath = require("parse-filepath");
-
 const TemplatePath = require("./TemplatePath");
 const TemplateData = require("./TemplateData");
 const TemplateWriter = require("./TemplateWriter");
+const EleventyErrorHandler = require("./EleventyErrorHandler");
 const EleventyServe = require("./EleventyServe");
+const EleventyFiles = require("./EleventyFiles");
 const templateCache = require("./TemplateCache");
-const EleventyError = require("./EleventyError");
 const simplePlural = require("./Util/Pluralize");
 const config = require("./Config");
+const bench = require("./BenchmarkManager");
 const debug = require("debug")("Eleventy");
 
 function Eleventy(input, output) {
   this.config = config.getConfig();
-  this.rawInput = input;
-  this.rawOutput = output;
   this.configPath = null;
-  this.data = null;
   this.isVerbose = true;
   this.isDebug = false;
   this.isDryRun = false;
@@ -26,30 +21,25 @@ function Eleventy(input, output) {
   this.formatsOverride = null;
   this.eleventyServe = new EleventyServe();
 
-  this.initDirs(input, output);
+  this.rawInput = input;
+  this.rawOutput = output;
+  this.initDirs();
 }
 
 Eleventy.prototype.initDirs = function() {
   this.input = this.rawInput || this.config.dir.input;
-  this.inputDir = this._getDir(this.input) || ".";
+  this.inputDir = TemplatePath.getDir(this.input);
   this.outputDir = this.rawOutput || this.config.dir.output;
 
-  this.eleventyServe.setOutputDir(this.getOutputDir());
-};
-
-Eleventy.prototype._getDir = function(inputPath) {
-  if (!fs.statSync(inputPath).isDirectory()) {
-    return parsePath(inputPath).dir;
-  }
-  return inputPath;
-};
-
-Eleventy.prototype.getOutputDir = function() {
-  return this.outputDir;
+  this.eleventyServe.setOutputDir(this.outputDir);
 };
 
 Eleventy.prototype.setDryRun = function(isDryRun) {
   this.isDryRun = !!isDryRun;
+};
+
+Eleventy.prototype.setPassthroughAll = function(isPassthroughAll) {
+  this.isPassthroughAll = !!isPassthroughAll;
 };
 
 Eleventy.prototype.setPathPrefix = function(pathPrefix) {
@@ -70,16 +60,24 @@ Eleventy.prototype.setConfigPath = function(configPath) {
   }
 };
 
-Eleventy.prototype.restart = function() {
+Eleventy.prototype.restart = async function() {
   debug("Restarting");
   this.start = new Date();
-  this.data.clearData();
-  this.writer.restart();
   templateCache.clear();
+  bench.reset();
+  this.eleventyFiles.restart();
+
+  // reload package.json values (if applicable)
+  delete require.cache[TemplatePath.localPath("package.json")];
+
+  this.initDirs();
+  await this.init();
 };
 
 Eleventy.prototype.finish = function() {
-  console.log(this.logFinished());
+  bench.finish();
+
+  (this.logger || console).log(this.logFinished());
   debug("Finished writing templates.");
 };
 
@@ -118,36 +116,46 @@ Eleventy.prototype.logFinished = function() {
   ret.push(`in ${time} ${simplePlural(time, "second", "seconds")}`);
 
   if (writeCount >= 10) {
-    ret.push(`(${(time * 1000 / writeCount).toFixed(1)}ms each)`);
+    ret.push(`(${((time * 1000) / writeCount).toFixed(1)}ms each)`);
   }
 
   return ret.join(" ");
 };
 
 Eleventy.prototype.init = async function() {
-  this.data = new TemplateData(this.inputDir);
-
   let formats = this.formatsOverride || this.config.templateFormats;
+  this.eleventyFiles = new EleventyFiles(
+    this.input,
+    this.outputDir,
+    formats,
+    this.isPassthroughAll
+  );
+
+  this.templateData = new TemplateData(this.inputDir);
+  this.eleventyFiles.setTemplateData(this.templateData);
 
   this.writer = new TemplateWriter(
     this.input,
     this.outputDir,
     formats,
-    this.data
+    this.templateData,
+    this.isPassthroughAll
   );
+
+  this.writer.setEleventyFiles(this.eleventyFiles);
 
   // TODO maybe isVerbose -> console.log?
   debug(`Directories:
 Input: ${this.inputDir}
-Data: ${this.data.getDataDir()}
-Includes: ${this.writer.getIncludesDir()}
+Data: ${this.templateData.getDataDir()}
+Includes: ${this.eleventyFiles.getIncludesDir()}
 Output: ${this.outputDir}
 Template Formats: ${formats.join(",")}`);
 
   this.writer.setVerboseOutput(this.isVerbose);
   this.writer.setDryRun(this.isDryRun);
 
-  return this.data.cacheData();
+  return this.templateData.cacheData();
 };
 
 Eleventy.prototype.setIsDebug = function(isDebug) {
@@ -159,6 +167,9 @@ Eleventy.prototype.setIsVerbose = function(isVerbose) {
 
   if (this.writer) {
     this.writer.setVerboseOutput(this.isVerbose);
+  }
+  if (bench) {
+    bench.setVerboseOutput(this.isVerbose);
   }
 };
 
@@ -173,35 +184,31 @@ Eleventy.prototype.getVersion = function() {
 };
 
 Eleventy.prototype.getHelp = function() {
-  let out = [];
-  out.push("usage: eleventy");
-  out.push("       eleventy --watch");
-  out.push("       eleventy --input=. --output=./_site");
-  out.push("");
-  out.push("Arguments: ");
-  out.push("  --version");
-  out.push("  --serve");
-  out.push("       Run web server on --port (default 8080) and --watch too");
-  out.push("  --watch");
-  out.push("       Wait for files to change and automatically rewrite");
-  out.push("  --input=.");
-  out.push("       Input template files (default: `.`)");
-  out.push("  --output=_site");
-  out.push("       Write HTML output to this folder (default: `_site`)");
-  out.push("  --formats=liquid,md");
-  out.push("       Whitelist only certain template types (default: `*`)");
-  out.push("  --quiet");
-  out.push("       Don’t print all written files (default: `false`)");
-  out.push("  --pathprefix='/'");
-  out.push("       Change all url template filters to use this subdirectory.");
-  out.push("  --config=filename.js");
-  out.push(
-    "      Override the eleventy config file path (default: `.eleventy.js`)"
-  );
-  out.push("  --dryrun");
-  out.push("       Don’t write any files.");
-  out.push("  --help");
-  return out.join("\n");
+  return `usage: eleventy
+       eleventy --input=. --output=./_site
+       eleventy --serve
+
+Arguments:
+     --version
+     --input=.
+       Input template files (default: \`.\`)
+     --output=_site
+       Write HTML output to this folder (default: \`_site\`)
+     --serve
+       Run web server on --port (default 8080) and watch them too
+     --watch
+       Wait for files to change and automatically rewrite (no web server)
+     --formats=liquid,md
+       Whitelist only certain template types (default: \`*\`)
+     --quiet
+       Don’t print all written files (off by default)
+     --config=filename.js
+       Override the eleventy config file path (default: \`.eleventy.js\`)
+     --pathprefix='/'
+       Change all url template filters to use this subdirectory.
+     --dryrun
+       Don’t write any files. Useful with \`DEBUG=Eleventy* npx eleventy\`
+     --help`;
 };
 
 Eleventy.prototype.resetConfig = function() {
@@ -223,12 +230,13 @@ Eleventy.prototype._watch = async function(path) {
   if (path === config.getLocalProjectConfigFile()) {
     this.resetConfig();
   }
+  config.resetOnWatch();
 
-  this.restart();
+  await this.restart();
   await this.write();
 
   let isInclude =
-    path && TemplatePath.contains(path, this.writer.getIncludesDir());
+    path && TemplatePath.contains(path, this.eleventyFiles.getIncludesDir());
   this.eleventyServe.reload(path, isInclude);
 
   this.active = false;
@@ -250,63 +258,68 @@ Eleventy.prototype.watch = async function() {
 
   const watch = require("glob-watcher");
 
-  let rawFiles = await this.writer.getGlobWatcherFiles();
+  let rawFiles = this.eleventyFiles.getGlobWatcherFiles();
   // Watch the local project config file
   rawFiles.push(config.getLocalProjectConfigFile());
-  debug("Eleventy.watch rawFiles: %o", rawFiles);
+  rawFiles = rawFiles.concat(
+    await this.eleventyFiles.getGlobWatcherTemplateDataFiles()
+  );
+  debug("Watching for changes to: %o", rawFiles);
 
   console.log("Watching…");
   let watcher = watch(rawFiles, {
-    ignored: this.writer.getGlobWatcherIgnores()
+    ignored: this.eleventyFiles.getGlobWatcherIgnores()
   });
 
-  watcher.on(
-    "change",
-    async function(path, stat) {
-      console.log("File changed:", path);
-      this._watch(path);
-    }.bind(this)
-  );
+  watcher.on("change", async path => {
+    console.log("File changed:", path);
+    this._watch(path);
+  });
 
-  watcher.on(
-    "add",
-    async function(path, stat) {
-      console.log("File added:", path);
-      this._watch(path);
-    }.bind(this)
-  );
+  watcher.on("add", async path => {
+    console.log("File added:", path);
+    this._watch(path);
+  });
 };
 
 Eleventy.prototype.serve = function(port) {
   this.eleventyServe.serve(port);
 };
 
-Eleventy.prototype.write = async function() {
-  try {
-    let ret = await this.writer.write();
-    this.finish();
+/* For testing */
+Eleventy.prototype.setLogger = function(logger) {
+  this.logger = logger;
+};
 
-    debug(`
+Eleventy.prototype.write = async function() {
+  let ret;
+  if (this.logger) {
+    EleventyErrorHandler.logger = this.logger;
+  }
+
+  try {
+    let promise = this.writer.write();
+
+    ret = await promise;
+  } catch (e) {
+    EleventyErrorHandler.initialMessage(
+      "Problem writing Eleventy templates",
+      "error",
+      "red"
+    );
+    EleventyErrorHandler.fatal(e);
+  }
+
+  this.finish();
+
+  debug(`
 Getting frustrated? Have a suggestion/feature request/feedback?
 I want to hear it! Open an issue: https://github.com/11ty/eleventy/issues/new`);
 
-    return ret;
-  } catch (e) {
-    console.log(
-      "\n" +
-        chalk.red(
-          "Problem writing eleventy templates (more info in DEBUG output): "
-        )
-    );
-    if (e instanceof EleventyError) {
-      console.log(chalk.red(e.log()));
-      for (let err of e.getAll()) {
-        debug("%o", err);
-      }
-    } else {
-      console.log(e);
-    }
-  }
+  // unset the logger
+  EleventyErrorHandler.logger = undefined;
+
+  return ret;
 };
 
 module.exports = Eleventy;

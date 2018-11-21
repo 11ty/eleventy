@@ -1,58 +1,27 @@
-import fs from "fs-extra";
 import test from "ava";
-import globby from "globby";
+import fs from "fs-extra";
+import fastglob from "fast-glob";
 import parsePath from "parse-filepath";
+import EleventyFiles from "../src/EleventyFiles";
 import TemplateWriter from "../src/TemplateWriter";
-import TemplatePath from "../src/TemplatePath";
-import TemplatePassthroughManager from "../src/TemplatePassthroughManager";
 // Not sure why but this import up `ava` and _createTemplate 👀
 // import Template from "../src/Template";
 import eleventyConfig from "../src/EleventyConfig";
-
-test("Mutually exclusive Input and Output dirs", async t => {
-  let tw = new TemplateWriter(
-    "./test/stubs/writeTest",
-    "./test/stubs/_writeTestSite",
-    ["ejs", "md"]
-  );
-
-  let files = await globby(tw.getFiles());
-  t.is(tw.getRawFiles().length, 2);
-  t.true(files.length > 0);
-  t.is(files[0], "./test/stubs/writeTest/test.md");
-});
-
-test("Single File Input", async t => {
-  let tw = new TemplateWriter("./test/stubs/index.html", "./test/stubs/_site", [
-    "ejs",
-    "md"
-  ]);
-
-  let files = await globby(tw.getFiles());
-  t.is(tw.getRawFiles().length, 1);
-  t.is(files.length, 1);
-  t.is(files[0], "./test/stubs/index.html");
-});
-
-test("Single File Input", async t => {
-  let tw = new TemplateWriter("README.md", "./test/stubs/_site", ["md"]);
-
-  let files = await globby(tw.getFiles());
-  t.is(tw.getRawFiles().length, 1);
-  t.is(files.length, 1);
-  t.is(files[0], "./README.md");
-});
 
 // TODO make sure if output is a subdir of input dir that they don’t conflict.
 test("Output is a subdir of input", async t => {
   let tw = new TemplateWriter(
     "./test/stubs/writeTest",
+    "./test/stubs/writeTest/_writeTestSite"
+  );
+  let evf = new EleventyFiles(
+    "./test/stubs/writeTest",
     "./test/stubs/writeTest/_writeTestSite",
     ["ejs", "md"]
   );
 
-  let files = await globby(tw.getFiles());
-  t.is(tw.getRawFiles().length, 2);
+  let files = await fastglob.async(evf.getFileGlobs());
+  t.is(evf.getRawFiles().length, 2);
   t.true(files.length > 0);
 
   let tmpl = tw._createTemplate(files[0]);
@@ -60,40 +29,6 @@ test("Output is a subdir of input", async t => {
   t.is(
     await tmpl.getOutputPath(),
     "./test/stubs/writeTest/_writeTestSite/test/index.html"
-  );
-});
-
-test(".eleventyignore parsing", t => {
-  let ignores = new TemplateWriter.getFileIgnores(
-    "./test/stubs/.eleventyignore"
-  );
-  t.is(ignores.length, 2);
-  t.is(ignores[0], "!./test/stubs/ignoredFolder/**");
-  t.is(ignores[1], "!./test/stubs/ignoredFolder/ignored.md");
-});
-
-test("defaults if passed file name does not exist", t => {
-  let ignores = new TemplateWriter.getFileIgnores(
-    ".thisfiledoesnotexist",
-    "node_modules/"
-  );
-  t.truthy(ignores.length);
-  t.is(ignores[0], "!./node_modules/**");
-});
-
-test(".eleventyignore files", async t => {
-  let tw = new TemplateWriter("test/stubs", "test/stubs/_site", ["ejs", "md"]);
-  let ignoredFiles = await globby("test/stubs/ignoredFolder/*.md");
-  t.is(ignoredFiles.length, 1);
-
-  let files = await globby(tw.getFiles());
-  t.true(files.length > 0);
-
-  t.is(
-    files.filter(file => {
-      return file.indexOf("./test/stubs/ignoredFolder") > -1;
-    }).length,
-    0
   );
 });
 
@@ -106,12 +41,25 @@ test("_createTemplateMap", async t => {
 
   let paths = await tw._getAllPaths();
   t.true(paths.length > 0);
+  t.is(paths[0], "./test/stubs/writeTest/test.md");
 
   let templateMap = await tw._createTemplateMap(paths);
   let map = templateMap.getMap();
   t.true(map.length > 0);
   t.truthy(map[0].template);
   t.truthy(map[0].data);
+});
+
+test("_createTemplateMap (no leading dot slash)", async t => {
+  let tw = new TemplateWriter(
+    "test/stubs/writeTest",
+    "test/stubs/_writeTestSite",
+    ["ejs", "md"]
+  );
+
+  let paths = await tw._getAllPaths();
+  t.true(paths.length > 0);
+  t.is(paths[0], "./test/stubs/writeTest/test.md");
 });
 
 test("getCollectionsData", async t => {
@@ -157,6 +105,7 @@ test("_getCollectionsData with custom collection (ascending)", async t => {
     ["md"]
   );
 
+  /* Careful here, eleventyConfig is a global */
   eleventyConfig.addCollection("customPostsAsc", function(collection) {
     return collection.getFilteredByTag("post").sort(function(a, b) {
       return a.date - b.date;
@@ -178,6 +127,7 @@ test("_getCollectionsData with custom collection (descending)", async t => {
     ["md"]
   );
 
+  /* Careful here, eleventyConfig is a global */
   eleventyConfig.addCollection("customPosts", function(collection) {
     return collection.getFilteredByTag("post").sort(function(a, b) {
       return b.date - a.date;
@@ -199,6 +149,7 @@ test("_getCollectionsData with custom collection (filter only to markdown input)
     ["md"]
   );
 
+  /* Careful here, eleventyConfig is a global */
   eleventyConfig.addCollection("onlyMarkdown", function(collection) {
     return collection.getAllSorted().filter(function(item) {
       let extension = item.inputPath.split(".").pop();
@@ -344,158 +295,100 @@ Layout 1 dog`
   );
 });
 
-/* .eleventyignore and .gitignore combos */
-test("Get ignores (no .eleventyignore no .gitignore)", t => {
-  let tw = new TemplateWriter(
-    "test/stubs/ignore1",
-    "test/stubs/ignore1/_site",
-    []
-  );
-
-  t.deepEqual(tw.getIgnores(), [
-    "!./test/stubs/ignore1/node_modules",
-    "!./test/stubs/ignore1/_site/**"
-  ]);
-});
-
-test("Get ignores (no .eleventyignore)", t => {
-  let tw = new TemplateWriter(
-    "test/stubs/ignore2",
-    "test/stubs/ignore2/_site",
-    []
-  );
-
-  t.deepEqual(tw.getIgnores(), [
-    "!./test/stubs/ignore2/thisshouldnotexist12345",
-    "!./test/stubs/ignore2/_site/**"
-  ]);
-});
-
-test("Get ignores (no .eleventyignore, using setUseGitIgnore(false))", t => {
-  let tw = new TemplateWriter(
-    "test/stubs/ignore2",
-    "test/stubs/ignore2/_site",
-    []
-  );
-
-  tw.overrideConfig({
-    useGitIgnore: false
-  });
-
-  t.deepEqual(tw.getIgnores(), ["!./test/stubs/ignore2/_site/**"]);
-});
-
-test("Get ignores (no .gitignore)", t => {
-  let tw = new TemplateWriter(
-    "test/stubs/ignore3",
-    "test/stubs/ignore3/_site",
-    []
-  );
-
-  t.deepEqual(tw.getIgnores(), [
-    "!./test/stubs/ignore3/node_modules",
-    "!./test/stubs/ignore3/ignoredFolder/**",
-    "!./test/stubs/ignore3/ignoredFolder/ignored.md",
-    "!./test/stubs/ignore3/_site/**"
-  ]);
-});
-
-test("Get ignores (both .eleventyignore and .gitignore)", t => {
-  let tw = new TemplateWriter(
-    "test/stubs/ignore4",
-    "test/stubs/ignore4/_site",
-    []
-  );
-
-  t.deepEqual(tw.getIgnores(), [
-    "!./test/stubs/ignore4/thisshouldnotexist12345",
-    "!./test/stubs/ignore4/ignoredFolder/**",
-    "!./test/stubs/ignore4/ignoredFolder/ignored.md",
-    "!./test/stubs/ignore4/_site/**"
-  ]);
-});
-
-test("Get ignores (both .eleventyignore and .gitignore, using setUseGitIgnore(false))", t => {
-  let tw = new TemplateWriter(
-    "test/stubs/ignore4",
-    "test/stubs/ignore4/_site",
-    []
-  );
-
-  tw.overrideConfig({
-    useGitIgnore: false
-  });
-
-  t.deepEqual(tw.getIgnores(), [
-    "!./test/stubs/ignore4/ignoredFolder/**",
-    "!./test/stubs/ignore4/ignoredFolder/ignored.md",
-    "!./test/stubs/ignore4/_site/**"
-  ]);
-});
-/* End .eleventyignore and .gitignore combos */
-
-test("Include and Data Dirs", t => {
-  let tw = new TemplateWriter("test/stubs", "test/stubs/_site", []);
-
-  t.deepEqual(tw.getIncludesAndDataDirs(), [
-    "./test/stubs/_includes/**",
-    "./test/stubs/_data/**"
-  ]);
-});
-
-test("Ignore Include and Data Dirs", t => {
-  let tw = new TemplateWriter("test/stubs", "test/stubs/_site", []);
-
-  t.deepEqual(tw.getTemplateIgnores(), [
-    "!./test/stubs/_includes/**",
-    "!./test/stubs/_data/**"
-  ]);
-});
-
-test("Glob Watcher Files", async t => {
-  let tw = new TemplateWriter("test/stubs", "test/stubs/_site", ["njk"]);
-
-  t.deepEqual(tw.getGlobWatcherFiles(), [
-    "./test/stubs/**/*.njk",
-    "./test/stubs/_includes/**",
-    "./test/stubs/_data/**"
-  ]);
-});
-
 test("Glob Watcher Files with Passthroughs", t => {
   let tw = new TemplateWriter("test/stubs", "test/stubs/_site", ["njk", "png"]);
-  t.deepEqual(tw.getPassthroughPaths(), []);
+  t.deepEqual(tw.getFileManager().getPassthroughPaths(), []);
 });
 
-test("Glob Watcher Files with File Extension Passthroughs", async t => {
-  let tw = new TemplateWriter("test/stubs", "test/stubs/_site", ["njk", "png"]);
+test("Pagination and TemplateContent", async t => {
+  let tw = new TemplateWriter(
+    "./test/stubs/pagination-templatecontent",
+    "./test/stubs/pagination-templatecontent/_site",
+    ["njk", "md"]
+  );
 
-  t.deepEqual(tw.getGlobWatcherFiles(), [
-    "./test/stubs/**/*.njk",
-    "./test/stubs/**/*.png",
-    "./test/stubs/_includes/**",
-    "./test/stubs/_data/**"
-  ]);
+  tw.setVerboseOutput(false);
+  await tw.write();
+
+  let content = fs.readFileSync(
+    "./test/stubs/pagination-templatecontent/_site/index.html",
+    "utf-8"
+  );
+  t.is(
+    content.trim(),
+    `<h1>Post 1</h1>
+<h1>Post 2</h1>`
+  );
+
+  fs.unlinkSync("./test/stubs/pagination-templatecontent/_site/index.html");
+  fs.unlinkSync(
+    "./test/stubs/pagination-templatecontent/_site/post-1/index.html"
+  );
+  fs.unlinkSync(
+    "./test/stubs/pagination-templatecontent/_site/post-2/index.html"
+  );
 });
 
-test("Glob Watcher Files with Config Passthroughs", async t => {
-  let tw = new TemplateWriter("test/stubs", "test/stubs/_site", ["njk"]);
+test("Custom collection returns array", async t => {
+  let tw = new TemplateWriter(
+    "./test/stubs/collection2",
+    "./test/stubs/_site",
+    ["md"]
+  );
 
-  let mgr = new TemplatePassthroughManager();
-  mgr.setInputDir("test/stubs");
-  mgr.setOutputDir("test/stubs/_site");
-  mgr.setConfig({
-    passthroughFileCopy: true,
-    passthroughCopies: {
-      "test/stubs/img/": true
-    }
+  /* Careful here, eleventyConfig is a global */
+  eleventyConfig.addCollection("returnAllInputPaths", function(collection) {
+    return collection.getAllSorted().map(function(item) {
+      return item.inputPath;
+    });
   });
-  tw.setPassthroughManager(mgr);
 
-  t.deepEqual(tw.getGlobWatcherFiles(), [
-    "./test/stubs/**/*.njk",
-    "./test/stubs/_includes/**",
-    "./test/stubs/_data/**",
-    "./test/stubs/img/**"
-  ]);
+  let paths = await tw._getAllPaths();
+  let templateMap = await tw._createTemplateMap(paths);
+  let collectionsData = await templateMap.getCollectionsData();
+  t.is(collectionsData.returnAllInputPaths.length, 2);
+  t.is(parsePath(collectionsData.returnAllInputPaths[0]).base, "test1.md");
+  t.is(parsePath(collectionsData.returnAllInputPaths[1]).base, "test2.md");
+});
+
+test("Custom collection returns a string", async t => {
+  let tw = new TemplateWriter(
+    "./test/stubs/collection2",
+    "./test/stubs/_site",
+    ["md"]
+  );
+
+  /* Careful here, eleventyConfig is a global */
+  eleventyConfig.addCollection("returnATestString", function(collection) {
+    return "test";
+  });
+
+  let paths = await tw._getAllPaths();
+  let templateMap = await tw._createTemplateMap(paths);
+  let collectionsData = await templateMap.getCollectionsData();
+  t.is(collectionsData.returnATestString, "test");
+});
+
+test("fileSlug should exist in a collection", async t => {
+  let tw = new TemplateWriter(
+    "./test/stubs/collection-slug",
+    "./test/stubs/collection-slug/_site",
+    ["njk"]
+  );
+
+  let paths = await tw._getAllPaths();
+  let templateMap = await tw._createTemplateMap(paths);
+  await templateMap.cache();
+
+  let collectionsData = await templateMap.getCollectionsData();
+  t.is(collectionsData.dog.length, 1);
+
+  let mapEntry = templateMap.getMapEntryForPath(
+    "./test/stubs/collection-slug/template.njk"
+  );
+  t.truthy(mapEntry);
+  t.is(mapEntry.inputPath, "./test/stubs/collection-slug/template.njk");
+
+  let templates = await mapEntry.template.getRenderedTemplates(mapEntry.data);
+  t.is(templates[0].templateContent.trim(), "fileSlug:/dog1/:dog1");
 });

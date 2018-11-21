@@ -2,8 +2,12 @@ const EventEmitter = require("events");
 const chalk = require("chalk");
 const semver = require("semver");
 const { DateTime } = require("luxon");
+const EleventyBaseError = require("./EleventyBaseError");
+const bench = require("./BenchmarkManager").get("Configuration");
 const debug = require("debug")("Eleventy:UserConfig");
 const pkg = require("../package.json");
+
+class UserConfigError extends EleventyBaseError {}
 
 // API to expose configuration options in config file
 class UserConfig {
@@ -19,9 +23,16 @@ class UserConfig {
     this.liquidOptions = {};
     this.liquidTags = {};
     this.liquidFilters = {};
+    this.liquidShortcodes = {};
+    this.liquidPairedShortcodes = {};
     this.nunjucksFilters = {};
     this.nunjucksAsyncFilters = {};
+    this.nunjucksTags = {};
+    this.nunjucksShortcodes = {};
+    this.nunjucksPairedShortcodes = {};
     this.handlebarsHelpers = {};
+    this.handlebarsShortcodes = {};
+    this.handlebarsPairedShortcodes = {};
     this.passthroughCopies = {};
     this.pugOptions = {};
     this.ejsOptions = {};
@@ -29,18 +40,21 @@ class UserConfig {
     this.libraryOverrides = {};
 
     this.layoutAliases = {};
+    this.linters = {};
     // now named `transforms` in API
     this.filters = {};
     this.activeNamespace = "";
     this.DateTime = DateTime;
     this.dynamicPermalinks = true;
     this.useGitIgnore = true;
+    this.dataDeepMerge = false;
+    this.experiments = new Set();
     // this.userExtensionMap = {};
   }
 
   versionCheck(expected) {
     if (!semver.satisfies(pkg.version, expected)) {
-      throw new Error(
+      throw new UserConfigError(
         `This project requires the eleventy version to match '${expected}' but found ${
           pkg.version
         }. Use \`npm update @11ty/eleventy -g\` to upgrade the eleventy global or \`npm update @11ty/eleventy --save\` to upgrade your local project version.`
@@ -68,7 +82,7 @@ class UserConfig {
     name = this.getNamespacedName(name);
 
     if (typeof tagFn !== "function") {
-      throw new Error(
+      throw new UserConfigError(
         `EleventyConfig.addLiquidTag expects a callback function to be passed in for ${name}: addLiquidTag(name, function(liquidEngine) { return { parse: …, render: … } })`
       );
     }
@@ -81,7 +95,7 @@ class UserConfig {
         name
       );
     }
-    this.liquidTags[name] = tagFn;
+    this.liquidTags[name] = bench.add(`"${name}" Liquid Custom Tag`, tagFn);
   }
 
   addLiquidFilter(name, callback) {
@@ -96,7 +110,7 @@ class UserConfig {
       );
     }
 
-    this.liquidFilters[name] = callback;
+    this.liquidFilters[name] = bench.add(`"${name}" Liquid Filter`, callback);
   }
 
   addNunjucksAsyncFilter(name, callback) {
@@ -111,12 +125,16 @@ class UserConfig {
       );
     }
 
-    this.nunjucksAsyncFilters[name] = callback;
+    this.nunjucksAsyncFilters[name] = bench.add(
+      `"${name}" Liquid Async Filter`,
+      callback
+    );
   }
 
   // Support the nunjucks style syntax for asynchronous filter add
   addNunjucksFilter(name, callback, isAsync) {
     if (isAsync) {
+      // namespacing happens downstream
       this.addNunjucksAsyncFilter(name, callback);
     } else {
       name = this.getNamespacedName(name);
@@ -130,7 +148,10 @@ class UserConfig {
         );
       }
 
-      this.nunjucksFilters[name] = callback;
+      this.nunjucksFilters[name] = bench.add(
+        `"${name}" Nunjucks Filter`,
+        callback
+      );
     }
   }
 
@@ -140,28 +161,60 @@ class UserConfig {
     if (this.handlebarsHelpers[name]) {
       debug(
         chalk.yellow(
-          "Warning, overwriting a Handlebars helper with `addHandlebarsHelper(%o)`"
+          "Warning, overwriting a Handlebars helper with `addHandlebarsHelper(%o)`."
         ),
         name
       );
     }
 
-    this.handlebarsHelpers[name] = callback;
+    this.handlebarsHelpers[name] = bench.add(
+      `"${name}" Handlebars Helper`,
+      callback
+    );
   }
 
   addFilter(name, callback) {
     debug("Adding universal filter %o", this.getNamespacedName(name));
+
+    // namespacing happens downstream
     this.addLiquidFilter(name, callback);
     this.addNunjucksFilter(name, callback);
 
-    // these seem more akin to tags but they’re all handlebars has, so
+    // TODO remove Handlebars helpers in Universal Filters. Use shortcodes instead (the Handlebars template syntax is the same).
     this.addHandlebarsHelper(name, callback);
+  }
+
+  addNunjucksTag(name, tagFn) {
+    name = this.getNamespacedName(name);
+
+    if (typeof tagFn !== "function") {
+      throw new UserConfigError(
+        `EleventyConfig.addNunjucksTag expects a callback function to be passed in for ${name}: addNunjucksTag(name, function(nunjucksEngine) {})`
+      );
+    }
+
+    if (this.nunjucksTags[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Nunjucks tag with `addNunjucksTag(%o)`"
+        ),
+        name
+      );
+    }
+
+    this.nunjucksTags[name] = bench.add(`"${name}" Nunjucks Custom Tag`, tagFn);
   }
 
   addTransform(name, callback) {
     name = this.getNamespacedName(name);
 
     this.filters[name] = callback;
+  }
+
+  addLinter(name, callback) {
+    name = this.getNamespacedName(name);
+
+    this.linters[name] = callback;
   }
 
   addLayoutAlias(from, to) {
@@ -177,7 +230,7 @@ class UserConfig {
     name = this.getNamespacedName(name);
 
     if (this.collections[name]) {
-      throw new Error(
+      throw new UserConfigError(
         `config.addCollection(${name}) already exists. Try a different name for your collection.`
       );
     }
@@ -185,14 +238,21 @@ class UserConfig {
     this.collections[name] = callback;
   }
 
-  addPlugin(pluginCallback) {
-    if (typeof pluginCallback !== "function") {
-      throw new Error(
-        "EleventyConfig.addPlugin expects the first argument to be a function."
+  addPlugin(plugin, options) {
+    debug("Adding plugin (unknown name: check your config file).");
+    if (typeof plugin === "function") {
+      plugin(this);
+    } else if (plugin && plugin.configFunction) {
+      if (options && typeof options.init === "function") {
+        options.init.call(this, plugin.initArguments || {});
+      }
+
+      plugin.configFunction(this, options);
+    } else {
+      throw new UserConfigError(
+        "Invalid EleventyConfig.addPlugin signature. Should be a function or a valid Eleventy plugin object."
       );
     }
-
-    pluginCallback(this);
   }
 
   getNamespacedName(name) {
@@ -200,9 +260,16 @@ class UserConfig {
   }
 
   namespace(pluginNamespace, callback) {
-    this.activeNamespace = pluginNamespace || "";
+    let validNamespace = pluginNamespace && typeof pluginNamespace === "string";
+    if (validNamespace) {
+      this.activeNamespace = pluginNamespace || "";
+    }
+
     callback();
-    this.activeNamespace = "";
+
+    if (validNamespace) {
+      this.activeNamespace = "";
+    }
   }
 
   /**
@@ -259,24 +326,152 @@ class UserConfig {
     this.useGitIgnore = !!enabled;
   }
 
+  addShortcode(name, callback) {
+    debug("Adding universal shortcode %o", this.getNamespacedName(name));
+    this.addNunjucksShortcode(name, callback);
+    this.addLiquidShortcode(name, callback);
+    this.addHandlebarsShortcode(name, callback);
+  }
+
+  addNunjucksShortcode(name, callback) {
+    if (this.nunjucksShortcodes[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Nunjucks Shortcode with `addNunjucksShortcode(%o)`"
+        ),
+        name
+      );
+    }
+
+    this.nunjucksShortcodes[name] = bench.add(
+      `"${name}" Nunjucks Shortcode`,
+      callback
+    );
+  }
+
+  addLiquidShortcode(name, callback) {
+    if (this.liquidShortcodes[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Liquid Shortcode with `addLiquidShortcode(%o)`"
+        ),
+        name
+      );
+    }
+
+    this.liquidShortcodes[name] = bench.add(
+      `"${name}" Liquid Shortcode`,
+      callback
+    );
+  }
+
+  addHandlebarsShortcode(name, callback) {
+    if (this.handlebarsShortcodes[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Handlebars Shortcode with `addHandlebarsShortcode(%o)`"
+        ),
+        name
+      );
+    }
+
+    this.handlebarsShortcodes[name] = bench.add(
+      `"${name}" Handlebars Shortcode`,
+      callback
+    );
+  }
+
+  addPairedShortcode(name, callback) {
+    this.addPairedNunjucksShortcode(name, callback);
+    this.addPairedLiquidShortcode(name, callback);
+    this.addPairedHandlebarsShortcode(name, callback);
+  }
+
+  addPairedNunjucksShortcode(name, callback) {
+    if (this.nunjucksPairedShortcodes[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Nunjucks Paired Shortcode with `addPairedNunjucksShortcode(%o)`"
+        ),
+        name
+      );
+    }
+
+    this.nunjucksPairedShortcodes[name] = bench.add(
+      `"${name}" Nunjucks Paired Shortcode`,
+      callback
+    );
+  }
+
+  addPairedLiquidShortcode(name, callback) {
+    if (this.liquidPairedShortcodes[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Liquid Paired Shortcode with `addPairedLiquidShortcode(%o)`"
+        ),
+        name
+      );
+    }
+
+    this.liquidPairedShortcodes[name] = bench.add(
+      `"${name}" Liquid Paired Shortcode`,
+      callback
+    );
+  }
+
+  addPairedHandlebarsShortcode(name, callback) {
+    if (this.handlebarsPairedShortcodes[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Handlebars Paired Shortcode with `addPairedHandlebarsShortcode(%o)`"
+        ),
+        name
+      );
+    }
+
+    this.handlebarsPairedShortcodes[name] = bench.add(
+      `"${name}" Handlebars Paired Shortcode`,
+      callback
+    );
+  }
+
+  addExperiment(key) {
+    this.experiments.add(key);
+  }
+
+  setDataDeepMerge(deepMerge) {
+    this.dataDeepMerge = !!deepMerge;
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
+      // now called transforms
       filters: this.filters,
+      linters: this.linters,
       layoutAliases: this.layoutAliases,
       passthroughCopies: this.passthroughCopies,
       liquidOptions: this.liquidOptions,
       liquidTags: this.liquidTags,
       liquidFilters: this.liquidFilters,
+      liquidShortcodes: this.liquidShortcodes,
+      liquidPairedShortcodes: this.liquidPairedShortcodes,
       nunjucksFilters: this.nunjucksFilters,
       nunjucksAsyncFilters: this.nunjucksAsyncFilters,
+      nunjucksTags: this.nunjucksTags,
+      nunjucksShortcodes: this.nunjucksShortcodes,
+      nunjucksPairedShortcodes: this.nunjucksPairedShortcodes,
       handlebarsHelpers: this.handlebarsHelpers,
+      handlebarsShortcodes: this.handlebarsShortcodes,
+      handlebarsPairedShortcodes: this.handlebarsPairedShortcodes,
       pugOptions: this.pugOptions,
       ejsOptions: this.ejsOptions,
       markdownHighlighter: this.markdownHighlighter,
       libraryOverrides: this.libraryOverrides,
       dynamicPermalinks: this.dynamicPermalinks,
-      useGitIgnore: this.useGitIgnore
+      useGitIgnore: this.useGitIgnore,
+      dataDeepMerge: this.dataDeepMerge,
+      experiments: this.experiments
     };
   }
 

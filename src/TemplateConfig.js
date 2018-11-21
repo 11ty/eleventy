@@ -1,9 +1,12 @@
-const chalk = require("chalk");
 const fs = require("fs-extra");
+const chalk = require("chalk");
 const lodashMerge = require("lodash.merge");
 const TemplatePath = require("./TemplatePath");
+const EleventyBaseError = require("./EleventyBaseError");
 const eleventyConfig = require("./EleventyConfig");
 const debug = require("debug")("Eleventy:TemplateConfig");
+
+class EleventyConfigError extends EleventyBaseError {}
 
 class TemplateConfig {
   constructor(customRootConfig, localProjectConfigPath) {
@@ -28,6 +31,10 @@ class TemplateConfig {
     eleventyConfig.reset();
     this.initializeRootConfig();
     this.config = this.mergeConfig(this.localProjectConfigPath);
+  }
+
+  resetOnWatch() {
+    // nothing yet
   }
 
   getConfig() {
@@ -74,11 +81,13 @@ class TemplateConfig {
         localConfig = require(path);
         // debug( "localConfig require return value: %o", localConfig );
       } catch (err) {
-        // TODO if file does exist, rethrow the error or console.log the error (file has syntax problem)
-
-        // if file does not exist, return empty obj
-        localConfig = {};
-        debug(chalk.red("Problem getting localConfig file, %o"), err);
+        throw new EleventyConfigError(
+          `Error in your Eleventy config file '${path}'.` +
+            (err.message.includes("Cannot find module")
+              ? chalk.blueBright(" You may need to run `npm install`.")
+              : ""),
+          err
+        );
       }
     } else {
       debug("Eleventy local project config file not found, skipping.");

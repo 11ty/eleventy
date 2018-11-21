@@ -1,7 +1,8 @@
 import test from "ava";
+import fs from "fs-extra";
+import pretty from "pretty";
 import TemplateData from "../src/TemplateData";
 import Template from "../src/Template";
-import pretty from "pretty";
 import templateConfig from "../src/Config";
 
 const config = templateConfig.getConfig();
@@ -158,37 +159,6 @@ test("Test that getData() works", async t => {
 
   t.is(data.key1, "value1");
   t.is(data.key3, "value3");
-
-  let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
-    tmpl,
-    await tmpl.getFrontMatterData()
-  );
-
-  t.is(mergedFrontMatter.key1, "value1");
-  t.is(mergedFrontMatter.key3, "value3");
-});
-
-test("More advanced getData()", async t => {
-  let dataObj = new TemplateData("./test/stubs/");
-  let tmpl = new Template(
-    "./test/stubs/templateFrontMatter.ejs",
-    "./test/stubs/",
-    "dist",
-    dataObj
-  );
-  let data = await tmpl.getData({
-    key1: "value1override",
-    key2: "value2"
-  });
-
-  t.is(data[config.keys.package].name, "@11ty/eleventy");
-  t.is(
-    data.key1,
-    "value1override",
-    "local data argument overrides front matter"
-  );
-  t.is(data.key2, "value2", "local data argument, no front matter");
-  t.is(data.key3, "value3", "front matter only");
 });
 
 test("One Layout (using new content var)", async t => {
@@ -212,13 +182,8 @@ test("One Layout (using new content var)", async t => {
 </div>`
   );
 
-  let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
-    tmpl,
-    await tmpl.getFrontMatterData()
-  );
-
-  t.is(mergedFrontMatter.keymain, "valuemain");
-  t.is(mergedFrontMatter.keylayout, "valuelayout");
+  t.is(data.keymain, "valuemain");
+  t.is(data.keylayout, "valuelayout");
 });
 
 test("One Layout (using layoutContent)", async t => {
@@ -245,13 +210,8 @@ test("One Layout (using layoutContent)", async t => {
 </div>`
   );
 
-  let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
-    tmpl,
-    await tmpl.getFrontMatterData()
-  );
-
-  t.is(mergedFrontMatter.keymain, "valuemain");
-  t.is(mergedFrontMatter.keylayout, "valuelayout");
+  t.is(data.keymain, "valuemain");
+  t.is(data.keylayout, "valuelayout");
 });
 
 test("One Layout (layouts disabled)", async t => {
@@ -273,15 +233,10 @@ test("One Layout (layouts disabled)", async t => {
   let data = await tmpl.getData();
   t.is(data[config.keys.layout], "defaultLayoutLayoutContent");
 
-  t.is(cleanHtml(await tmpl.render(data)), `<p>Hello.</p>`);
+  t.is(cleanHtml(await tmpl.render(data)), "<p>Hello.</p>");
 
-  let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
-    tmpl,
-    await tmpl.getFrontMatterData()
-  );
-
-  t.is(mergedFrontMatter.keymain, "valuemain");
-  t.is(mergedFrontMatter.keylayout, "valuelayout");
+  t.is(data.keymain, "valuemain");
+  t.is(data.keylayout, "valuelayout");
 });
 
 test("One Layout (_layoutContent deprecated but supported)", async t => {
@@ -308,13 +263,8 @@ test("One Layout (_layoutContent deprecated but supported)", async t => {
 </div>`
   );
 
-  let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
-    tmpl,
-    await tmpl.getFrontMatterData()
-  );
-
-  t.is(mergedFrontMatter.keymain, "valuemain");
-  t.is(mergedFrontMatter.keylayout, "valuelayout");
+  t.is(data.keymain, "valuemain");
+  t.is(data.keylayout, "valuelayout");
 });
 
 test("One Layout (liquid test)", async t => {
@@ -341,13 +291,8 @@ test("One Layout (liquid test)", async t => {
 </div>`
   );
 
-  let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
-    tmpl,
-    await tmpl.getFrontMatterData()
-  );
-
-  t.is(mergedFrontMatter.keymain, "valuemain");
-  t.is(mergedFrontMatter.keylayout, "valuelayout");
+  t.is(data.keymain, "valuemain");
+  t.is(data.keylayout, "valuelayout");
 });
 
 test("Two Layouts", async t => {
@@ -374,12 +319,7 @@ test("Two Layouts", async t => {
 </div>`
   );
 
-  let mergedFrontMatter = await tmpl.getAllLayoutFrontMatterData(
-    tmpl,
-    await tmpl.getFrontMatterData()
-  );
-
-  t.is(mergedFrontMatter.daysPosted, 152);
+  t.is(data.daysPosted, 152);
 });
 
 test("Liquid template", async t => {
@@ -401,7 +341,7 @@ test("Liquid template with include", async t => {
     "dist"
   );
 
-  t.is((await tmpl.render()).trim(), `<p>This is an include.</p>`);
+  t.is((await tmpl.render()).trim(), "<p>This is an include.</p>");
 });
 
 test("ES6 Template Literal (No Backticks)", async t => {
@@ -458,6 +398,21 @@ test("Permalink output directory from layout (fileslug)", async t => {
   );
 });
 
+test("Layout from template-data-file that has a permalink (fileslug) Issue #121", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+  let tmpl = new Template(
+    "./test/stubs/permalink-data-layout/test.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj
+  );
+
+  let data = await tmpl.getData();
+  let renderedTmpl = (await tmpl.getRenderedTemplates(data))[0];
+  t.is(renderedTmpl.templateContent, "Wrapper:Test 1:test");
+  t.is(await tmpl.getOutputPath(), "./dist/test/index.html");
+});
+
 test("Local template data file import (without a global data json)", async t => {
   let dataObj = new TemplateData();
   await dataObj.cacheData();
@@ -470,8 +425,10 @@ test("Local template data file import (without a global data json)", async t => 
   );
 
   let data = await tmpl.getData();
-  t.deepEqual(dataObj.getLocalDataPaths(tmpl.getInputPath()), [
-    "./test/stubs/component/component.json"
+  t.deepEqual(await dataObj.getLocalDataPaths(tmpl.getInputPath()), [
+    "./test/stubs/component/component.json",
+    "./test/stubs/component/component.11tydata.json",
+    "./test/stubs/component/component.11tydata.js"
   ]);
   t.is(data.localdatakey1, "localdatavalue1");
   t.is(await tmpl.render(), "localdatavalue1");
@@ -488,10 +445,16 @@ test("Local template data file import (two subdirectories deep)", async t => {
     dataObj
   );
 
-  t.deepEqual(dataObj.getLocalDataPaths(tmpl.getInputPath()), [
+  t.deepEqual(await dataObj.getLocalDataPaths(tmpl.getInputPath()), [
     "./test/stubs/firstdir/firstdir.json",
+    "./test/stubs/firstdir/firstdir.11tydata.json",
+    "./test/stubs/firstdir/firstdir.11tydata.js",
     "./test/stubs/firstdir/seconddir/seconddir.json",
-    "./test/stubs/firstdir/seconddir/component.json"
+    "./test/stubs/firstdir/seconddir/seconddir.11tydata.json",
+    "./test/stubs/firstdir/seconddir/seconddir.11tydata.js",
+    "./test/stubs/firstdir/seconddir/component.json",
+    "./test/stubs/firstdir/seconddir/component.11tydata.json",
+    "./test/stubs/firstdir/seconddir/component.11tydata.js"
   ]);
 });
 
@@ -506,10 +469,14 @@ test("Posts inherits local JSON, layouts", async t => {
     dataObj
   );
 
-  let localDataPaths = dataObj.getLocalDataPaths(tmpl.getInputPath());
+  let localDataPaths = await dataObj.getLocalDataPaths(tmpl.getInputPath());
   t.deepEqual(localDataPaths, [
     "./test/stubs/posts/posts.json",
-    "./test/stubs/posts/post1.json"
+    "./test/stubs/posts/posts.11tydata.json",
+    "./test/stubs/posts/posts.11tydata.js",
+    "./test/stubs/posts/post1.json",
+    "./test/stubs/posts/post1.11tydata.json",
+    "./test/stubs/posts/post1.11tydata.js"
   ]);
 
   let localData = await dataObj.getLocalData(tmpl.getInputPath());
@@ -537,8 +504,12 @@ test("Template and folder name are the same, make sure data imports work ok", as
     dataObj
   );
 
-  let localDataPaths = dataObj.getLocalDataPaths(tmpl.getInputPath());
-  t.deepEqual(localDataPaths, ["./test/stubs/posts/posts.json"]);
+  let localDataPaths = await dataObj.getLocalDataPaths(tmpl.getInputPath());
+  t.deepEqual(localDataPaths, [
+    "./test/stubs/posts/posts.json",
+    "./test/stubs/posts/posts.11tydata.json",
+    "./test/stubs/posts/posts.11tydata.js"
+  ]);
 
   let localData = await dataObj.getLocalData(tmpl.getInputPath());
   t.is(localData.layout, "mylocallayout.njk");
@@ -668,7 +639,7 @@ test("renderData", async t => {
     "./dist"
   );
 
-  t.is((await tmpl.render()).trim(), `hi:value2-value1.css`);
+  t.is((await tmpl.render()).trim(), "hi:value2-value1.css");
 });
 
 test("renderData markdown (issue #40)", async t => {
@@ -678,7 +649,7 @@ test("renderData markdown (issue #40)", async t => {
     "./dist"
   );
 
-  t.is((await tmpl.render()).trim(), `<title>value2-value1.css</title>`);
+  t.is((await tmpl.render()).trim(), "<title>value2-value1.css</title>");
 });
 
 test("getMappedDate (empty, assume created)", async t => {
@@ -781,7 +752,7 @@ test("getMappedDate (falls back to filename date)", async t => {
   t.truthy(date.getTime());
 });
 
-test("getRenderedData() has page.url", async t => {
+test("getRenderedData() has all the page variables", async t => {
   let tmpl = new Template(
     "./test/stubs/template.ejs",
     "./test/stubs/",
@@ -790,9 +761,30 @@ test("getRenderedData() has page.url", async t => {
   let data = await tmpl.getRenderedData();
 
   t.truthy(data.page.url);
+  t.is(data.page.url, "/template/");
+  t.is(data.page.fileSlug, "template");
+  t.truthy(data.page.date.getTime());
+  t.is(data.page.inputPath, "./test/stubs/template.ejs");
+  t.is(data.page.outputPath, "./dist/template/index.html");
 });
 
-test("getTemplates() data has page.url", async t => {
+test("getTemplates() data has all the root variables", async t => {
+  let tmpl = new Template(
+    "./test/stubs/template.ejs",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getData();
+  let templates = await tmpl.getTemplates(data);
+
+  t.is(templates[0].url, "/template/");
+  t.is(templates[0].fileSlug, "template");
+  t.truthy(templates[0].date.getTime());
+  t.is(templates[0].inputPath, "./test/stubs/template.ejs");
+  t.is(templates[0].outputPath, "./dist/template/index.html");
+});
+
+test("getTemplates() data has all the page variables", async t => {
   let tmpl = new Template(
     "./test/stubs/template.ejs",
     "./test/stubs/",
@@ -802,10 +794,13 @@ test("getTemplates() data has page.url", async t => {
   let templates = await tmpl.getTemplates(data);
 
   t.is(templates[0].data.page.url, "/template/");
+  t.is(templates[0].data.page.fileSlug, "template");
+  t.truthy(templates[0].data.page.date.getTime());
+  t.is(templates[0].data.page.inputPath, "./test/stubs/template.ejs");
   t.is(templates[0].data.page.outputPath, "./dist/template/index.html");
 });
 
-test("getRenderedTemplates() data has page.url", async t => {
+test("getRenderedTemplates() data has all the page variables", async t => {
   let tmpl = new Template(
     "./test/stubs/template.ejs",
     "./test/stubs/",
@@ -815,22 +810,10 @@ test("getRenderedTemplates() data has page.url", async t => {
 
   let templates = await tmpl.getRenderedTemplates(data);
   t.is(templates[0].data.page.url, "/template/");
+  t.is(templates[0].data.page.fileSlug, "template");
+  t.truthy(templates[0].data.page.date.getTime());
+  t.is(templates[0].data.page.inputPath, "./test/stubs/template.ejs");
   t.is(templates[0].data.page.outputPath, "./dist/template/index.html");
-});
-
-test("getRenderedData() has page.url", async t => {
-  let tmpl = new Template(
-    "./test/stubs/template.ejs",
-    "./test/stubs/",
-    "./dist"
-  );
-  let data = await tmpl.getRenderedData();
-
-  t.truthy(data.page.url);
-  t.truthy(data.page.date);
-  t.is(data.page.inputPath, "./test/stubs/template.ejs");
-  t.is(data.page.fileSlug, "template");
-  t.truthy(data.page.outputPath);
 });
 
 test("getRenderedData() has good slug (empty, index)", async t => {
@@ -1055,4 +1038,227 @@ test("renderContent on a markdown file, permalink should not render markdown (ha
   );
 
   t.is(await tmpl.getOutputLink(), "/news/my-test-file/index.html");
+});
+
+/* Transforms */
+test("Test a transform", async t => {
+  let tmpl = new Template(
+    "./test/stubs/template.ejs",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  tmpl.addTransform(function() {
+    return "OVERRIDE BY A TRANSFORM";
+  });
+
+  let data = await tmpl.getData();
+  let rendered = await tmpl.getRenderedTemplates(data);
+  t.is(rendered[0].templateContent, "OVERRIDE BY A TRANSFORM");
+});
+
+test("Test a transform with pages", async t => {
+  let tmpl = new Template(
+    "./test/stubs/transform-pages/template.njk",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  tmpl.addTransform(function() {
+    return "OVERRIDE BY A TRANSFORM";
+  });
+
+  let data = await tmpl.getData();
+  let rendered = await tmpl.getRenderedTemplates(data);
+  t.is(rendered[0].templateContent, "OVERRIDE BY A TRANSFORM");
+});
+
+test("Test a linter", async t => {
+  let tmpl = new Template(
+    "./test/stubs/transform-pages/template.njk",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  tmpl.addLinter(function(str) {
+    throw new Error("this is a lint rule");
+  });
+
+  let data = await tmpl.getData();
+  try {
+    await tmpl.getRenderedTemplates(data);
+    t.fail("Should have errored");
+  } catch (e) {
+    t.pass("Threw an error:" + e);
+  }
+});
+
+test("permalink: false", async t => {
+  let tmpl = new Template(
+    "./test/stubs/permalink-false/test.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  t.is(await tmpl.getOutputLink(), false);
+  t.is(await tmpl.getOutputHref(), false);
+
+  let data = await tmpl.getData();
+  await tmpl.write(false, data);
+
+  // Input file exists (sanity check for paths)
+  t.is(fs.existsSync("./test/stubs/permalink-false/"), true);
+  t.is(fs.existsSync("./test/stubs/permalink-false/test.md"), true);
+
+  // Output does not exist
+  t.is(fs.existsSync("./test/stubs/_site/permalink-false/"), false);
+  t.is(fs.existsSync("./test/stubs/_site/permalink-false/test/"), false);
+  t.is(
+    fs.existsSync("./test/stubs/_site/permalink-false/test/index.html"),
+    false
+  );
+});
+
+test("Front Matter Tags (Single)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/templatetest-frontmatter/single.njk",
+    "./test/stubs/",
+    "dist"
+  );
+  let frontmatter = await tmpl.getFrontMatterData();
+  t.deepEqual(frontmatter.tags, ["single-tag"]);
+});
+
+test("Front Matter Tags (Multiple)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/templatetest-frontmatter/multiple.njk",
+    "./test/stubs/",
+    "dist"
+  );
+  let frontmatter = await tmpl.getFrontMatterData();
+  t.deepEqual(frontmatter.tags, ["multi-tag", "multi-tag-2"]);
+});
+
+test.skip("Front matter date with quotes (liquid), issue #258", async t => {
+  let tmpl = new Template(
+    "./test/stubs/frontmatter-date/test.liquid",
+    "./test/stubs/",
+    "dist"
+  );
+
+  let data = await tmpl.getData();
+  t.is(data.mydate.toISOString(), "2009-04-15T00:34:34.000Z");
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), `2009-04-15T00:34:34.000Z`);
+});
+
+test("Front matter date with quotes (njk), issue #258", async t => {
+  let tmpl = new Template(
+    "./test/stubs/frontmatter-date/test.njk",
+    "./test/stubs/",
+    "dist"
+  );
+
+  let data = await tmpl.getData();
+  t.is(data.mydate.toISOString(), "2009-04-15T00:34:34.000Z");
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), `2009-04-15T00:34:34.000Z`);
+});
+
+test("Data Cascade (Deep merge)", async t => {
+  let newConfig = Object.assign({}, config);
+  newConfig.dataDeepMerge = true;
+
+  let dataObj = new TemplateData();
+  dataObj._setConfig(newConfig);
+  await dataObj.cacheData();
+
+  let tmpl = new Template(
+    "./test/stubs/data-cascade/template.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj
+  );
+  tmpl._setConfig(newConfig);
+
+  let data = await tmpl.getData();
+  t.deepEqual(Object.keys(data).sort(), [
+    "datafile",
+    "frontmatter",
+    "page",
+    "parent",
+    "pkg",
+    "tags"
+  ]);
+
+  t.deepEqual(Object.keys(data.parent).sort(), [
+    "child",
+    "datafile",
+    "frontmatter"
+  ]);
+
+  t.is(data.parent.child, -2);
+});
+
+test("Data Cascade (Shallow merge)", async t => {
+  let dataObj = new TemplateData();
+  await dataObj.cacheData();
+
+  let tmpl = new Template(
+    "./test/stubs/data-cascade/template.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj
+  );
+
+  let data = await tmpl.getData();
+  t.deepEqual(Object.keys(data).sort(), [
+    "datafile",
+    "frontmatter",
+    "page",
+    "parent",
+    "pkg",
+    "tags"
+  ]);
+
+  t.deepEqual(Object.keys(data.parent).sort(), ["child", "frontmatter"]);
+
+  t.is(data.parent.child, -2);
+});
+
+test("Data Cascade Tag Merge (Deep merge)", async t => {
+  let newConfig = Object.assign({}, config);
+  newConfig.dataDeepMerge = true;
+
+  let dataObj = new TemplateData();
+  dataObj._setConfig(newConfig);
+  await dataObj.cacheData();
+
+  let tmpl = new Template(
+    "./test/stubs/data-cascade/template.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj
+  );
+  tmpl._setConfig(newConfig);
+
+  let data = await tmpl.getData();
+  t.deepEqual(data.tags.sort(), ["tagA", "tagB", "tagC", "tagD"]);
+});
+
+test("Data Cascade Tag Merge (Shallow merge)", async t => {
+  let dataObj = new TemplateData();
+  await dataObj.cacheData();
+
+  let tmpl = new Template(
+    "./test/stubs/data-cascade/template.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj
+  );
+
+  let data = await tmpl.getData();
+  t.deepEqual(data.tags.sort(), ["tagA", "tagB"]);
 });

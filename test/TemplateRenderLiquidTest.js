@@ -113,7 +113,7 @@ test("Liquid addTag errors", async t => {
 
 test("Liquid addTags", async t => {
   let tr = new TemplateRender("liquid", "./test/stubs/");
-  tr.engine.addTags({
+  tr.engine.addCustomTags({
     postfixWithZach: function(liquidEngine) {
       return {
         parse: function(tagToken, remainTokens) {
@@ -130,6 +130,45 @@ test("Liquid addTags", async t => {
   t.is(
     await tr.render("{% postfixWithZach name %}", { name: "test" }),
     "testZach"
+  );
+});
+
+test("Liquid Shortcode", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", function(str) {
+    return str + "Zach";
+  });
+
+  t.is(
+    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    "testZach"
+  );
+});
+
+test("Liquid Shortcode Safe Output", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", function(str) {
+    return `<span>${str}</span>`;
+  });
+
+  t.is(
+    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    "<span>test</span>"
+  );
+});
+
+test("Liquid Paired Shortcode", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
+    return str + content + "Zach";
+  });
+
+  t.is(
+    await tr.render(
+      "{% postfixWithZach name %}Content{% endpostfixWithZach %}",
+      { name: "test" }
+    ),
+    "testContentZach"
   );
 });
 
@@ -305,4 +344,93 @@ test("Liquid Render: with Library Override", async t => {
 
   let fn = await tr.getCompiledTemplate("<p>{{name | capitalize}}</p>");
   t.is(await fn({ name: "tim" }), "<p>Tim</p>");
+});
+
+test("Liquid Paired Shortcode with Tag Inside", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
+    return str + content + "Zach";
+  });
+
+  t.is(
+    await tr.render(
+      "{% postfixWithZach name %}Content{% if tester %}If{% endif %}{% endpostfixWithZach %}",
+      { name: "test", tester: true }
+    ),
+    "testContentIfZach"
+  );
+});
+
+test("Liquid Nested Paired Shortcode", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
+    return str + content + "Zach";
+  });
+
+  t.is(
+    await tr.render(
+      "{% postfixWithZach name %}Content{% postfixWithZach name2 %}Content{% endpostfixWithZach %}{% endpostfixWithZach %}",
+      { name: "test", name2: "test2" }
+    ),
+    "testContenttest2ContentZachZach"
+  );
+});
+
+test("Liquid Shortcode Multiple Args", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", function(str, str2) {
+    return str + str2 + "Zach";
+  });
+
+  t.is(
+    await tr.render("{% postfixWithZach name other %}", {
+      name: "test",
+      other: "howdy"
+    }),
+    "testhowdyZach"
+  );
+});
+
+test.skip("Liquid Include Scope Leak", async t => {
+  t.is(new TemplateRender("liquid", "./test/stubs/").getEngineName(), "liquid");
+
+  let fn = await new TemplateRender(
+    "liquid",
+    "./test/stubs/"
+  ).getCompiledTemplate("<p>{% include scopeleak %}{{ test }}</p>");
+  t.is(await fn({ test: 1 }), "<p>21</p>");
+});
+
+// TODO this will change in 1.0
+test("Liquid Missing Filter Issue #183 (no strict_filters)", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+
+  try {
+    await tr.render("{{ 'test' | prefixWithZach }}", {});
+    t.pass("Did not error.");
+  } catch (e) {
+    t.fail("Threw an error.");
+  }
+});
+
+test("Liquid Missing Filter Issue #183", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.setLiquidOptions({ strict_filters: true });
+
+  try {
+    await tr.render("{{ 'test' | prefixWithZach }}", {});
+    t.fail("Did not error.");
+  } catch (e) {
+    t.pass("Threw an error.");
+  }
+});
+
+test("Liquid Render Date, Issue #258", async t => {
+  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+    "<p>{{ myDate }}</p>"
+  );
+  let dateStr = await fn({ myDate: new Date(Date.UTC(2016, 0, 1, 0, 0, 0)) });
+  t.is(dateStr.substr(0, 3), "<p>");
+  t.is(dateStr.substr(-4), "</p>");
+  t.not(dateStr.substr(2, 1), '"');
 });

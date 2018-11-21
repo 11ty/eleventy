@@ -18,7 +18,7 @@ class EleventyServe {
   }
 
   getPathPrefix() {
-    return this.config.pathPrefix;
+    return this.config.pathPrefix || "/";
   }
 
   getRedirectDir(dirName) {
@@ -122,6 +122,7 @@ class EleventyServe {
       ignore: ["node_modules"],
       watch: false,
       open: false,
+      notify: false,
       index: "index.html"
     });
 

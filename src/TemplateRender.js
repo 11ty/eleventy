@@ -1,8 +1,8 @@
-const parsePath = require("parse-filepath");
 const TemplatePath = require("./TemplatePath");
 const TemplateEngine = require("./Engines/TemplateEngine");
+const EleventyExtensionMap = require("./EleventyExtensionMap");
 const config = require("./Config");
-const debug = require("debug")("Eleventy:TemplateRender");
+// const debug = require("debug")("Eleventy:TemplateRender");
 
 // works with full path names or short engine name
 function TemplateRender(tmplPath, inputDir) {
@@ -32,10 +32,7 @@ TemplateRender.prototype.init = function(engineNameOrPath) {
 };
 
 TemplateRender.cleanupEngineName = function(tmplPath) {
-  tmplPath = tmplPath.toLowerCase();
-
-  let parsed = tmplPath ? parsePath(tmplPath) : undefined;
-  return parsed && parsed.ext ? parsed.ext.substr(1) : tmplPath;
+  return EleventyExtensionMap.getKey(tmplPath);
 };
 
 TemplateRender.hasEngine = function(tmplPath) {
@@ -86,6 +83,14 @@ TemplateRender.parseEngineOverrides = function(engineName) {
   }
 
   return engines;
+};
+
+// used for error logging.
+TemplateRender.prototype.getEnginesStr = function() {
+  if (this.engineName === "md" && this.useMarkdown) {
+    return this.parseMarkdownWith + " (and markdown)";
+  }
+  return this.engineName;
 };
 
 TemplateRender.prototype.setEngineOverride = function(

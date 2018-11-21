@@ -1,5 +1,6 @@
 const path = require("path");
 const normalize = require("normalize-path");
+const parsePath = require("parse-filepath");
 const fs = require("fs-extra");
 
 function TemplatePath() {}
@@ -10,6 +11,20 @@ TemplatePath.getModuleDir = function() {
 
 TemplatePath.getWorkingDir = function() {
   return path.resolve("./");
+};
+
+// input is ambiguous—maybe a folder, maybe a file
+TemplatePath.getDir = function(path) {
+  if (TemplatePath.isDirectorySync(path)) {
+    return path;
+  }
+
+  return TemplatePath.getDirFromFilePath(path);
+};
+
+// Input points to a file
+TemplatePath.getDirFromFilePath = function(filepath) {
+  return parsePath(filepath).dir || ".";
 };
 
 // can assume a parse-filepath .dir is passed in here
@@ -76,6 +91,12 @@ TemplatePath.localPath = function(...paths) {
   return normalize(path.join(TemplatePath.getWorkingDir(), ...paths));
 };
 
+TemplatePath.addLeadingDotSlashArray = function(paths) {
+  return paths.map(function(path) {
+    return TemplatePath.addLeadingDotSlash(path);
+  });
+};
+
 TemplatePath.addLeadingDotSlash = function(path) {
   if (path === "." || path === "..") {
     return path + "/";
@@ -112,7 +133,7 @@ TemplatePath.stripPathFromDir = function(targetDir, prunedPath) {
 };
 
 TemplatePath.isDirectorySync = function(path) {
-  return fs.statSync(path).isDirectory();
+  return fs.existsSync(path) && fs.statSync(path).isDirectory();
 };
 
 TemplatePath.convertToGlob = function(path) {
@@ -124,6 +145,29 @@ TemplatePath.convertToGlob = function(path) {
 
   if (TemplatePath.isDirectorySync(path)) {
     return path + (!TemplatePath.hasTrailingSlash(path) ? "/" : "") + "**";
+  }
+
+  return path;
+};
+
+TemplatePath.getExtension = function(path) {
+  let split = path.split(".");
+  if (split.length > 1) {
+    return split.pop();
+  }
+  return "";
+};
+
+TemplatePath.removeExtension = function(path, extension) {
+  let split = path.split(".");
+
+  // only remove extension if extension is passed in and an extension is found
+  if (extension && split.length > 1) {
+    let ext = split.pop();
+    if (extension.charAt(0) === ".") {
+      extension = extension.substr(1);
+    }
+    return split.join(".") + (!extension || ext === extension ? "" : "." + ext);
   }
 
   return path;

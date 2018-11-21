@@ -1,14 +1,14 @@
-const globby = require("globby");
+const fastglob = require("fast-glob");
 const fs = require("fs-extra");
-const parsePath = require("parse-filepath");
+const TemplatePath = require("../TemplatePath");
+const EleventyExtensionMap = require("../EleventyExtensionMap");
 const debug = require("debug")("Eleventy:TemplateEngine");
 
 class TemplateEngine {
   constructor(name, inputDir) {
     this.name = name;
 
-    // TODO use EleventyExtensionMap
-    this.extension = "." + name;
+    this.extension = "." + EleventyExtensionMap.getExtensionFromKey(name);
     this.inputDir = inputDir;
     this.partialsHaveBeenCached = false;
     this.partials = [];
@@ -35,20 +35,30 @@ class TemplateEngine {
   // TODO make async
   cachePartialFiles() {
     this.partialsHaveBeenCached = true;
-
     let partials = {};
     // TODO: reuse mustache partials in handlebars?
     let partialFiles = this.inputDir
-      ? globby.sync(this.inputDir + "/*" + this.extension)
+      ? TemplatePath.addLeadingDotSlashArray(
+          fastglob.sync(this.inputDir + "/**/*" + this.extension)
+        )
       : [];
+
     for (let j = 0, k = partialFiles.length; j < k; j++) {
-      let key = parsePath(partialFiles[j]).name;
-      partials[key] = fs.readFileSync(partialFiles[j], "utf-8");
+      let partialPath = TemplatePath.stripPathFromDir(
+        partialFiles[j],
+        this.inputDir
+      );
+      let partialPathNoExt = TemplatePath.removeExtension(
+        partialPath,
+        this.extension
+      );
+
+      partials[partialPathNoExt] = fs.readFileSync(partialFiles[j], "utf-8");
     }
 
     debug(
       `${this.inputDir}/*${this.extension} found partials for: %o`,
-      Object.keys(this.partials)
+      Object.keys(partials)
     );
 
     return partials;

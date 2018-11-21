@@ -34,6 +34,7 @@ test("Template Config local config overrides base config", async t => {
 });
 
 test("Add liquid tag", t => {
+  eleventyConfig.reset();
   eleventyConfig.addLiquidTag("myTagName", function() {});
 
   let templateCfg = new TemplateConfig(
@@ -44,7 +45,20 @@ test("Add liquid tag", t => {
   t.not(Object.keys(cfg.liquidTags).indexOf("myTagName"), -1);
 });
 
+test("Add nunjucks tag", t => {
+  eleventyConfig.reset();
+  eleventyConfig.addNunjucksTag("myNunjucksTag", function() {});
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.not(Object.keys(cfg.nunjucksTags).indexOf("myNunjucksTag"), -1);
+});
+
 test("Add liquid filter", t => {
+  eleventyConfig.reset();
   eleventyConfig.addLiquidFilter("myFilterName", function(liquidEngine) {
     return {};
   });
@@ -58,6 +72,7 @@ test("Add liquid filter", t => {
 });
 
 test("Add handlebars helper", t => {
+  eleventyConfig.reset();
   eleventyConfig.addHandlebarsHelper("myHelperName", function() {});
 
   let templateCfg = new TemplateConfig(
@@ -69,6 +84,7 @@ test("Add handlebars helper", t => {
 });
 
 test("Add nunjucks filter", t => {
+  eleventyConfig.reset();
   eleventyConfig.addNunjucksFilter("myFilterName", function() {});
 
   let templateCfg = new TemplateConfig(
@@ -80,6 +96,7 @@ test("Add nunjucks filter", t => {
 });
 
 test("Add universal filter", t => {
+  eleventyConfig.reset();
   eleventyConfig.addFilter("myFilterName", function() {});
 
   let templateCfg = new TemplateConfig(
@@ -93,6 +110,7 @@ test("Add universal filter", t => {
 });
 
 test("Add namespaced universal filter", t => {
+  eleventyConfig.reset();
   eleventyConfig.namespace("testNamespace", function() {
     eleventyConfig.addFilter("MyFilterName", function() {});
   });
@@ -117,6 +135,7 @@ test("Add namespaced universal filter", t => {
 });
 
 test("Add namespaced universal filter using underscore", t => {
+  eleventyConfig.reset();
   eleventyConfig.namespace("testNamespace_", function() {
     eleventyConfig.addFilter("myFilterName", function() {});
   });
@@ -140,6 +159,110 @@ test("Add namespaced universal filter using underscore", t => {
   );
 });
 
+test("Empty namespace", t => {
+  eleventyConfig.reset();
+  eleventyConfig.namespace("", function() {
+    eleventyConfig.addNunjucksFilter("myFilterName", function() {});
+  });
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
+});
+
+test("Nested Empty Inner namespace", t => {
+  eleventyConfig.reset();
+  eleventyConfig.namespace("testNs", function() {
+    eleventyConfig.namespace("", function() {
+      eleventyConfig.addNunjucksFilter("myFilterName", function() {});
+    });
+  });
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("testNsmyFilterName"), -1);
+});
+
+test("Nested Empty Outer namespace", t => {
+  eleventyConfig.reset();
+  eleventyConfig.namespace("", function() {
+    eleventyConfig.namespace("testNs", function() {
+      eleventyConfig.addNunjucksFilter("myFilterName", function() {});
+    });
+  });
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("testNsmyFilterName"), -1);
+});
+
+// important for backwards compatibility with old
+// `module.exports = function (eleventyConfig, pluginNamespace) {`
+// plugin code
+test("Non-string namespaces are ignored", t => {
+  eleventyConfig.reset();
+  eleventyConfig.namespace(["lkdsjflksd"], function() {
+    eleventyConfig.addNunjucksFilter("myFilterName", function() {});
+  });
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
+});
+
+test("Add namespaced universal filter using underscore", t => {
+  eleventyConfig.reset();
+  eleventyConfig.namespace("testNamespace_", function() {
+    eleventyConfig.addFilter("myFilterName", function() {});
+  });
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.not(
+    Object.keys(cfg.liquidFilters).indexOf("testNamespace_myFilterName"),
+    -1
+  );
+  t.not(
+    Object.keys(cfg.handlebarsHelpers).indexOf("testNamespace_myFilterName"),
+    -1
+  );
+  t.not(
+    Object.keys(cfg.nunjucksFilters).indexOf("testNamespace_myFilterName"),
+    -1
+  );
+});
+
+test(".addPlugin oddity: I don’t think pluginNamespace was ever passed in here, but we don’t want this to break", t => {
+  eleventyConfig.reset();
+  eleventyConfig.addPlugin(function(eleventyConfig, pluginNamespace) {
+    eleventyConfig.namespace(pluginNamespace, () => {
+      eleventyConfig.addNunjucksFilter("myFilterName", function() {});
+    });
+  });
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
+});
+
 test("Test url universal filter with custom pathPrefix (no slash)", t => {
   let templateCfg = new TemplateConfig(
     require("../config.js"),
@@ -151,6 +274,7 @@ test("Test url universal filter with custom pathPrefix (no slash)", t => {
 });
 
 test("setTemplateFormats(string)", t => {
+  eleventyConfig.reset();
   eleventyConfig.setTemplateFormats("ejs,njk, liquid");
 
   let templateCfg = new TemplateConfig(
@@ -162,6 +286,7 @@ test("setTemplateFormats(string)", t => {
 });
 
 test("setTemplateFormats(array)", t => {
+  eleventyConfig.reset();
   eleventyConfig.setTemplateFormats(["ejs", "njk", "liquid"]);
 
   let templateCfg = new TemplateConfig(
@@ -173,6 +298,7 @@ test("setTemplateFormats(array)", t => {
 });
 
 test("setTemplateFormats(array, size 1)", t => {
+  eleventyConfig.reset();
   eleventyConfig.setTemplateFormats(["liquid"]);
 
   let templateCfg = new TemplateConfig(
@@ -184,6 +310,7 @@ test("setTemplateFormats(array, size 1)", t => {
 });
 
 test("setTemplateFormats(empty array)", t => {
+  eleventyConfig.reset();
   eleventyConfig.setTemplateFormats([]);
 
   let templateCfg = new TemplateConfig(
@@ -207,4 +334,13 @@ test("libraryOverrides", t => {
   t.falsy(cfg.libraryOverrides.njk);
   t.truthy(cfg.libraryOverrides.md);
   t.deepEqual(mdLib, cfg.libraryOverrides.md);
+});
+
+test("Properly throws error on missing module #182", t => {
+  t.throws(function() {
+    new TemplateConfig(
+      require("../config.js"),
+      "./test/stubs/broken-config.js"
+    );
+  });
 });

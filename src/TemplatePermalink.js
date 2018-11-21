@@ -1,5 +1,4 @@
 const parsePath = require("parse-filepath");
-const normalize = require("normalize-path");
 const TemplatePath = require("./TemplatePath");
 
 function TemplatePermalink(link, extraSubdir) {
