@@ -1,3 +1,4 @@
+// TODO: switch to lodash/isPlainObject
 const isPlainObject = require("is-plain-object");
 const OVERRIDE_PREFIX = "override:";
 

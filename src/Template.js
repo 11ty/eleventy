@@ -1,7 +1,7 @@
 const fs = require("fs-extra");
 const parsePath = require("parse-filepath");
 const normalize = require("normalize-path");
-const lodashIsObject = require("lodash/isobject");
+const lodashIsObject = require("lodash/isObject");
 const { DateTime } = require("luxon");
 const TemplateData = require("./TemplateData");
 const TemplateContent = require("./TemplateContent");
