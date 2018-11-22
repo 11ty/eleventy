@@ -226,10 +226,9 @@ class Template extends TemplateContent {
       this.dataCache = mergedData;
     }
 
-    return TemplateData.mergeDeep(
-      this.config,
-      {},
-      this.dataCache,
+    // Don’t deep merge pagination data! See https://github.com/11ty/eleventy/issues/147#issuecomment-440802454
+    return Object.assign(
+      TemplateData.mergeDeep(this.config, {}, this.dataCache),
       this.paginationData
     );
   }
@@ -499,6 +498,7 @@ class Template extends TemplateContent {
       this.outputDir,
       this.templateData
     );
+    tmpl._setConfig(this.config);
 
     for (let transform of this.transforms) {
       tmpl.addTransform(transform);

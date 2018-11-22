@@ -521,3 +521,41 @@ test("Page over an object (filtered, string)", async t => {
     "<ol><li>item6</li><li>item7</li><li>item8</li><li>item9</li></ol>"
   );
 });
+
+test("Pagination with deep data merge #147", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/pagedinlinedata.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  tmpl._setConfig({
+    keys: {
+      layout: "layout"
+    },
+    dataDeepMerge: true
+  });
+
+  let data = await tmpl.getData();
+  let paging = new Pagination(data);
+  paging.setTemplate(tmpl);
+  let pages = await paging.getPageTemplates();
+  t.is(pages.length, 2);
+
+  t.is(
+    await pages[0].getOutputPath(),
+    "./dist/paged/pagedinlinedata/index.html"
+  );
+  t.is(
+    (await pages[0].render()).trim(),
+    "<ol><li>item1</li><li>item2</li><li>item3</li><li>item4</li></ol>"
+  );
+
+  t.is(
+    await pages[1].getOutputPath(),
+    "./dist/paged/pagedinlinedata/1/index.html"
+  );
+  t.is(
+    (await pages[1].render()).trim(),
+    "<ol><li>item5</li><li>item6</li><li>item7</li><li>item8</li></ol>"
+  );
+});

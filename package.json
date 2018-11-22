@@ -84,7 +84,6 @@
     "gray-matter": "^4.0.1",
     "hamljs": "^0.6.2",
     "handlebars": "^4.0.12",
-    "is-plain-object": "^2.0.4",
     "javascript-stringify": "^1.6.0",
     "liquidjs": "^6.0.1",
     "lodash": "^4.17.11",
