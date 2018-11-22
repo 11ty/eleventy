@@ -1,3 +1,4 @@
+const isPlainObject = require("lodash/isPlainObject");
 const TemplateCollection = require("./TemplateCollection");
 const eleventyConfig = require("./EleventyConfig");
 const debug = require("debug")("Eleventy:TemplateMap");
@@ -202,7 +203,15 @@ class TemplateMap {
 
   populateCollectionsWithOutputPaths(collections) {
     for (let collectionName in collections) {
+      if (!Array.isArray(this.collectionsData[collectionName])) {
+        continue;
+      }
+
       for (let item of collections[collectionName]) {
+        if (!isPlainObject(item) || !("inputPath" in item)) {
+          continue;
+        }
+
         let index = this.getMapTemplateIndex(item);
         if (index !== -1) {
           item.outputPath = this.map[index].outputPath;
@@ -214,7 +223,15 @@ class TemplateMap {
 
   populateCollectionsWithContent() {
     for (let collectionName in this.collectionsData) {
+      if (!Array.isArray(this.collectionsData[collectionName])) {
+        continue;
+      }
+
       for (let item of this.collectionsData[collectionName]) {
+        if (!isPlainObject(item) || !("inputPath" in item)) {
+          continue;
+        }
+
         let index = this.getMapTemplateIndex(item);
         if (index !== -1) {
           item.templateContent = this.map[index].templateContent;

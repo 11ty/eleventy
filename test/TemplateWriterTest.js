@@ -369,6 +369,24 @@ test("Custom collection returns a string", async t => {
   t.is(collectionsData.returnATestString, "test");
 });
 
+test("Custom collection returns an object", async t => {
+  let tw = new TemplateWriter(
+    "./test/stubs/collection2",
+    "./test/stubs/_site",
+    ["md"]
+  );
+
+  /* Careful here, eleventyConfig is a global */
+  eleventyConfig.addCollection("returnATestObject", function() {
+    return { test: "value" };
+  });
+
+  let paths = await tw._getAllPaths();
+  let templateMap = await tw._createTemplateMap(paths);
+  let collectionsData = await templateMap.getCollectionsData();
+  t.deepEqual(collectionsData.returnATestObject, { test: "value" });
+});
+
 test("fileSlug should exist in a collection", async t => {
   let tw = new TemplateWriter(
     "./test/stubs/collection-slug",
