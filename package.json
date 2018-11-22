@@ -66,6 +66,7 @@
     ]
   },
   "devDependencies": {
+    "@11ty/eleventy-plugin-syntaxhighlight": "^2.0.0",
     "ava": "^0.25.0",
     "husky": "^1.0.1",
     "lint-staged": "^7.3.0",
@@ -74,8 +75,7 @@
     "prettier": "1.14.3",
     "viperhtml": "^2.12.0",
     "vue": "^2.5.16",
-    "vue-server-renderer": "^2.5.16",
-    "@11ty/eleventy-plugin-syntaxhighlight": "^2.0.0"
+    "vue-server-renderer": "^2.5.16"
   },
   "dependencies": {
     "browser-sync": "^2.24.7",
