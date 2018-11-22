@@ -1,7 +1,7 @@
 const fs = require("fs-extra");
 const parsePath = require("parse-filepath");
 const normalize = require("normalize-path");
-const lodashIsObject = require("lodash.isobject");
+const lodashIsObject = require("lodash/isObject");
 const { DateTime } = require("luxon");
 const TemplateData = require("./TemplateData");
 const TemplateContent = require("./TemplateContent");
@@ -227,10 +227,9 @@ class Template extends TemplateContent {
       this.dataCache = mergedData;
     }
 
-    return TemplateData.mergeDeep(
-      this.config,
-      {},
-      this.dataCache,
+    // Don’t deep merge pagination data! See https://github.com/11ty/eleventy/issues/147#issuecomment-440802454
+    return Object.assign(
+      TemplateData.mergeDeep(this.config, {}, this.dataCache),
       this.paginationData
     );
   }
@@ -500,6 +499,7 @@ class Template extends TemplateContent {
       this.outputDir,
       this.templateData
     );
+    tmpl._setConfig(this.config);
 
     for (let transform of this.transforms) {
       tmpl.addTransform(transform);

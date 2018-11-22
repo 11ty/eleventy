@@ -1,6 +1,6 @@
-const lodashChunk = require("lodash.chunk");
-const lodashGet = require("lodash.get");
-const lodashSet = require("lodash.set");
+const lodashChunk = require("lodash/chunk");
+const lodashGet = require("lodash/get");
+const lodashSet = require("lodash/set");
 const config = require("../Config");
 
 function Pagination(data) {

@@ -43,9 +43,11 @@ class TemplatePassthroughManager {
 
     let paths = [];
     let target = this.config.passthroughCopies || {};
+    debug("`passthroughFileCopy` config paths: %o", target);
     for (let path in target) {
       paths.push(TemplatePath.addLeadingDotSlash(path));
     }
+    debug("`passthroughFileCopy` config normalized paths: %o", paths);
     return paths;
   }
 
