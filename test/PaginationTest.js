@@ -559,3 +559,29 @@ test("Pagination with deep data merge #147", async t => {
     "<ol><li>item5</li><li>item6</li><li>item7</li><li>item8</li></ol>"
   );
 });
+
+test("Pagination with deep data merge with alias #147", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/pagedalias.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  tmpl._setConfig({
+    keys: {
+      layout: "layout",
+      permalink: "permalink"
+    },
+    dynamicPermalinks: true,
+    dataDeepMerge: true
+  });
+
+  let data = await tmpl.getData();
+  let paging = new Pagination(data);
+  paging.setTemplate(tmpl);
+  let pages = await paging.getPageTemplates();
+  t.is(await pages[0].getOutputPath(), "./dist/pagedalias/item1/index.html");
+  t.is(await pages[1].getOutputPath(), "./dist/pagedalias/item2/index.html");
+
+  t.is((await pages[0].render()).trim(), "item1");
+  t.is((await pages[1].render()).trim(), "item2");
+});
