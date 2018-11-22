@@ -1,6 +1,6 @@
 const copy = require("recursive-copy");
 const TemplatePath = require("./TemplatePath");
-// const debug = require("debug")("Eleventy:TemplatePassthrough");
+const debug = require("debug")("Eleventy:TemplatePassthrough");
 
 class TemplatePassthrough {
   constructor(inputPath, outputDir, inputDir) {
@@ -29,6 +29,8 @@ class TemplatePassthrough {
     // );
 
     if (!this.isDryRun) {
+      debug("Copying %o", this.path);
+
       return copy(this.path, this.getOutputPath(), {
         overwrite: true,
         dot: true,
