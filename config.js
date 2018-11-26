@@ -16,7 +16,8 @@ module.exports = function(config) {
       "pug",
       "njk",
       "html",
-      "jstl"
+      "jstl",
+      "11ty.js"
     ],
     // if your site lives in a subdirectory, change this
     pathPrefix: "/",
@@ -25,6 +26,7 @@ module.exports = function(config) {
     dataTemplateEngine: "liquid",
     passthroughFileCopy: true,
     htmlOutputSuffix: "-o",
+    jsTemplateFileSuffix: ".11ty",
     jsDataFileSuffix: ".11tydata",
     keys: {
       package: "pkg",

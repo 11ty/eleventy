@@ -96,9 +96,12 @@ test("removeTemplateExtension", t => {
 
 test("getKey", t => {
   t.is(EleventyExtensionMap.getKey("component.njk"), "njk");
-  t.is(EleventyExtensionMap.getKey("component.11ty.js"), "js");
+  t.is(EleventyExtensionMap.getKey("component.11ty.js"), "11ty.js");
+  t.is(EleventyExtensionMap.getKey("11ty.js"), "11ty.js");
+  t.is(EleventyExtensionMap.getKey(".11ty.js"), "11ty.js");
 
   t.is(EleventyExtensionMap.getKey(""), undefined);
+  t.is(EleventyExtensionMap.getKey("js"), undefined);
   t.is(EleventyExtensionMap.getKey("component"), undefined);
   t.is(EleventyExtensionMap.getKey("component.js"), undefined);
 });

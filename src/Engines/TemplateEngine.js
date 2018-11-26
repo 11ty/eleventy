@@ -90,7 +90,7 @@ class TemplateEngine {
       pug: "Pug",
       njk: "Nunjucks",
       liquid: "Liquid",
-      js: "JavaScript"
+      "11ty.js": "JavaScript"
     };
   }
 

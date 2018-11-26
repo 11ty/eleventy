@@ -53,3 +53,18 @@ test("Set Template Formats (array)", t => {
   eleventyConfig.setTemplateFormats(["ejs", "njk", "liquid"]);
   t.deepEqual(eleventyConfig.templateFormats, ["ejs", "njk", "liquid"]);
 });
+
+test("Set Template Formats (js passthrough copy)", t => {
+  eleventyConfig.setTemplateFormats("ejs, njk, liquid, js");
+  t.deepEqual(eleventyConfig.templateFormats, ["ejs", "njk", "liquid", "js"]);
+});
+
+test("Set Template Formats (11ty.js)", t => {
+  eleventyConfig.setTemplateFormats("ejs, njk, liquid, 11ty.js");
+  t.deepEqual(eleventyConfig.templateFormats, [
+    "ejs",
+    "njk",
+    "liquid",
+    "11ty.js"
+  ]);
+});

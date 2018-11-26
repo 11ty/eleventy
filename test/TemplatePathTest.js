@@ -198,3 +198,12 @@ test("Remove extension", t => {
     "./test/stubs"
   );
 });
+
+test("stripLeadingDots", t => {
+  t.is(TemplatePath.stripLeadingDots(".11ty.js"), "11ty.js");
+  t.is(TemplatePath.stripLeadingDots(".htaccess"), "htaccess");
+
+  t.is(TemplatePath.stripLeadingDots("./dist"), "/dist");
+  t.is(TemplatePath.stripLeadingDots("../dist"), "/dist");
+  t.is(TemplatePath.stripLeadingDots("dist"), "dist");
+});

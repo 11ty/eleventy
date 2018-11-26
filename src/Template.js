@@ -3,6 +3,8 @@ const parsePath = require("parse-filepath");
 const normalize = require("normalize-path");
 const lodashIsObject = require("lodash/isObject");
 const { DateTime } = require("luxon");
+
+const EleventyExtensionMap = require("./EleventyExtensionMap");
 const TemplateData = require("./TemplateData");
 const TemplateContent = require("./TemplateContent");
 const TemplatePath = require("./TemplatePath");
@@ -20,6 +22,9 @@ class Template extends TemplateContent {
     super(path, inputDir);
 
     this.parsed = parsePath(path);
+    this.baseFile = EleventyExtensionMap.removeTemplateExtension(
+      this.parsed.base
+    );
 
     // for pagination
     this.extraOutputSubdirectory = "";
@@ -43,7 +48,7 @@ class Template extends TemplateContent {
     this.isHtmlIOException =
       this.inputDir === this.outputDir &&
       this.templateRender.isEngine("html") &&
-      this.parsed.name === "index";
+      this.baseFile === "index";
 
     this.isVerbose = true;
     this.isDryRun = false;
@@ -108,7 +113,7 @@ class Template extends TemplateContent {
 
     return TemplatePermalink.generate(
       this.getTemplateSubfolder(),
-      this.parsed.name,
+      this.baseFile,
       this.extraOutputSubdirectory,
       this.isHtmlIOException ? this.config.htmlOutputSuffix : ""
     );

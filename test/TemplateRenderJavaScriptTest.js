@@ -2,10 +2,10 @@ import test from "ava";
 import TemplateRender from "../src/TemplateRender";
 
 test("JS", t => {
-  t.is(new TemplateRender("js").getEngineName(), "js");
+  t.is(new TemplateRender("11ty.js").getEngineName(), "11ty.js");
   t.is(
     new TemplateRender("./test/stubs/filename.11ty.js").getEngineName(),
-    "js"
+    "11ty.js"
   );
 });
 

@@ -435,3 +435,25 @@ test.skip("renderData should exist and be resolved in a collection (Issue #289)"
   let templates = await mapEntry.template.getRenderedTemplates(mapEntry.data);
   t.is(templates[0].templateContent.trim(), "Test Title");
 });
+
+test("Write Test 11ty.js", async t => {
+  let tw = new TemplateWriter(
+    "./test/stubs/writeTestJS",
+    "./test/stubs/_writeTestJSSite"
+  );
+  let evf = new EleventyFiles(
+    "./test/stubs/writeTestJS",
+    "./test/stubs/_writeTestJSSite",
+    ["11ty.js"]
+  );
+
+  let files = await fastglob.async(evf.getFileGlobs());
+  t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTestJS/**/*.11ty.js"]);
+  t.deepEqual(files, ["./test/stubs/writeTestJS/test.11ty.js"]);
+
+  let tmpl = tw._createTemplate(files[0]);
+  t.is(
+    await tmpl.getOutputPath(),
+    "./test/stubs/_writeTestJSSite/test/index.html"
+  );
+});

@@ -1,6 +1,7 @@
 import test from "ava";
 import fastglob from "fast-glob";
 import EleventyFiles from "../src/EleventyFiles";
+import TemplateRender from "../src/TemplateRender";
 import TemplatePassthroughManager from "../src/TemplatePassthroughManager";
 
 test("getFiles", async t => {
@@ -11,6 +12,41 @@ test("getFiles", async t => {
   );
 
   t.deepEqual(await evf.getFiles(), ["./test/stubs/writeTest/test.md"]);
+});
+
+test("getFiles (without 11ty.js)", async t => {
+  let evf = new EleventyFiles(
+    "./test/stubs/writeTestJS",
+    "./test/stubs/_writeTestJSSite",
+    ["ejs", "md"]
+  );
+
+  t.deepEqual(await evf.getFiles(), []);
+});
+
+test("getFiles (with 11ty.js)", async t => {
+  let evf = new EleventyFiles(
+    "./test/stubs/writeTestJS",
+    "./test/stubs/_writeTestJSSite",
+    ["ejs", "md", "11ty.js"]
+  );
+
+  t.deepEqual(await evf.getFiles(), ["./test/stubs/writeTestJS/test.11ty.js"]);
+});
+
+test("getFiles (with js, treated as passthrough copy)", async t => {
+  let evf = new EleventyFiles(
+    "./test/stubs/writeTestJS",
+    "./test/stubs/_writeTestJSSite",
+    ["ejs", "md", "js"]
+  );
+
+  t.deepEqual(await evf.getFiles(), [
+    "./test/stubs/writeTestJS/sample.js",
+    "./test/stubs/writeTestJS/test.11ty.js"
+  ]);
+  t.false(TemplateRender.hasEngine("./test/stubs/writeTestJS/sample.js"));
+  t.true(TemplateRender.hasEngine("./test/stubs/writeTestJS/test.11ty.js"));
 });
 
 test("Mutually exclusive Input and Output dirs", async t => {

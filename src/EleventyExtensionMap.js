@@ -42,33 +42,45 @@ class EleventyExtensionMap {
   }
 
   _getGlobs(formats, inputDir) {
+    let dir = TemplatePath.convertToGlob(inputDir);
     return formats.map(
       function(key) {
         return (
-          TemplatePath.convertToGlob(inputDir) +
-          "/*." +
-          (this.hasExtension(key) ? this.getExtension(key) : key)
+          dir + "/*." + (this.hasExtension(key) ? this.getExtension(key) : key)
         );
       }.bind(this)
     );
   }
 
   hasExtension(key) {
-    return key in this.keyMapToExtension;
+    for (var extension in EleventyExtensionMap.keyMap) {
+      if (EleventyExtensionMap.keyMap[extension] === key) {
+        return true;
+      }
+    }
+    return false;
   }
 
   getExtension(key) {
-    return this.keyMapToExtension[key];
+    for (var extension in EleventyExtensionMap.keyMap) {
+      if (EleventyExtensionMap.keyMap[extension] === key) {
+        return extension;
+      }
+    }
   }
 
   static getExtensionFromKey(key) {
-    return EleventyExtensionMap.keyMap[key];
+    for (var extension in EleventyExtensionMap.keyMap) {
+      if (EleventyExtensionMap.keyMap[extension] === key) {
+        return extension;
+      }
+    }
   }
 
   static getExtensionFromPath(path) {
-    for (var key in EleventyExtensionMap.keyMap) {
-      if (path.endsWith("." + EleventyExtensionMap.keyMap[key])) {
-        return EleventyExtensionMap.keyMap[key];
+    for (var extension in EleventyExtensionMap.keyMap) {
+      if (path.endsWith("." + extension)) {
+        return extension;
       }
     }
   }
@@ -76,33 +88,31 @@ class EleventyExtensionMap {
   static getKey(pathOrKey) {
     pathOrKey = pathOrKey.toLowerCase();
 
-    let hasDot = pathOrKey.indexOf(".") > -1;
-    for (var key in EleventyExtensionMap.keyMap) {
-      if (!hasDot && pathOrKey === key) {
+    for (var extension in EleventyExtensionMap.keyMap) {
+      let key = EleventyExtensionMap.keyMap[extension];
+      if (pathOrKey === extension) {
         return key;
-      } else if (pathOrKey.endsWith("." + EleventyExtensionMap.keyMap[key])) {
+      } else if (pathOrKey.endsWith("." + extension)) {
         return key;
       }
     }
   }
 
   static removeTemplateExtension(path) {
-    for (var key in EleventyExtensionMap.keyMap) {
-      if (path.endsWith(EleventyExtensionMap.keyMap[key])) {
-        return path.substr(
-          0,
-          path.length - 1 - EleventyExtensionMap.keyMap[key].length
-        );
+    for (var extension in EleventyExtensionMap.keyMap) {
+      if (path === extension || path.endsWith("." + extension)) {
+        return path.substr(0, path.length - 1 - extension.length);
       }
     }
     return path;
   }
 
-  // key => file extension
+  // file extension => key
   static get keyMap() {
-    return {
+    let fileExtensionToKeyMap = {
       ejs: "ejs",
       md: "md",
+      markdown: "md",
       jstl: "jstl",
       html: "html",
       hbs: "hbs",
@@ -110,13 +120,15 @@ class EleventyExtensionMap {
       haml: "haml",
       pug: "pug",
       njk: "njk",
-      liquid: "liquid",
-      js: "11ty.js"
+      liquid: "liquid"
     };
-  }
 
-  get keyMapToExtension() {
-    return EleventyExtensionMap.keyMap;
+    let jsSuffix = TemplatePath.stripLeadingDots(
+      config.getConfig().jsTemplateFileSuffix + ".js"
+    );
+    fileExtensionToKeyMap[jsSuffix] = "11ty.js";
+
+    return fileExtensionToKeyMap;
   }
 }
 

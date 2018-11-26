@@ -110,6 +110,10 @@ TemplatePath.addLeadingDotSlash = function(path) {
   return "./" + path;
 };
 
+TemplatePath.stripLeadingDots = function(str) {
+  return str.replace(/^\.*/, "");
+};
+
 TemplatePath.stripLeadingDotSlash = function(dir) {
   return dir.replace(/^\.\//, "");
 };
