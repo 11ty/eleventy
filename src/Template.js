@@ -22,9 +22,6 @@ class Template extends TemplateContent {
     super(path, inputDir);
 
     this.parsed = parsePath(path);
-    this.baseFile = EleventyExtensionMap.removeTemplateExtension(
-      this.parsed.base
-    );
 
     // for pagination
     this.extraOutputSubdirectory = "";
@@ -43,12 +40,6 @@ class Template extends TemplateContent {
       this.templateData.setInputDir(this.inputDir);
     }
     this.paginationData = {};
-
-    // HTML output can’t overwrite the HTML input file.
-    this.isHtmlIOException =
-      this.inputDir === this.outputDir &&
-      this.templateRender.isEngine("html") &&
-      this.baseFile === "index";
 
     this.isVerbose = true;
     this.isDryRun = false;
@@ -76,6 +67,21 @@ class Template extends TemplateContent {
 
   getTemplateSubfolder() {
     return TemplatePath.stripPathFromDir(this.parsed.dir, this.inputDir);
+  }
+
+  get baseFile() {
+    return (this._extensionMap || EleventyExtensionMap).removeTemplateExtension(
+      this.parsed.base
+    );
+  }
+
+  get htmlIOException() {
+    // HTML output can’t overwrite the HTML input file.
+    return (
+      this.inputDir === this.outputDir &&
+      this.templateRender.isEngine("html") &&
+      this.baseFile === "index"
+    );
   }
 
   async _getLink(data) {
@@ -115,11 +121,11 @@ class Template extends TemplateContent {
       this.getTemplateSubfolder(),
       this.baseFile,
       this.extraOutputSubdirectory,
-      this.isHtmlIOException ? this.config.htmlOutputSuffix : ""
+      this.htmlIOException ? this.config.htmlOutputSuffix : ""
     );
   }
 
-  // TODO instead of isHTMLIOException, do a global search to check if output path = input path and then add extra suffix
+  // TODO instead of htmlIOException, do a global search to check if output path = input path and then add extra suffix
   async getOutputLink(data) {
     let link = await this._getLink(data);
     return link.toString();
@@ -504,7 +510,7 @@ class Template extends TemplateContent {
       this.outputDir,
       this.templateData
     );
-    tmpl._setConfig(this.config);
+    tmpl.config = this.config;
 
     for (let transform of this.transforms) {
       tmpl.addTransform(transform);

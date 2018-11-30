@@ -21,7 +21,12 @@ class EleventyFiles {
     this.includesDir = this.inputDir + "/" + this.config.dir.includes;
     this.passthroughAll = !!passthroughAll;
 
-    this.setFormats(formats);
+    this.formats = formats;
+    this.extensionMap = new EleventyExtensionMap(formats);
+  }
+
+  init() {
+    this.initFormatsGlobs();
     this.setPassthroughManager();
     this.setupGlobs();
   }
@@ -32,18 +37,19 @@ class EleventyFiles {
   }
 
   /* For testing */
-  overrideConfig(config) {
+  _setConfig(config) {
     this.config = config;
+  }
+  /* For testing */
+  _setExtensionMap(map) {
+    this.extensionMap = map;
   }
 
   setPassthroughAll(passthroughAll) {
     this.passthroughAll = !!passthroughAll;
   }
 
-  setFormats(formats) {
-    this.formats = formats;
-    this.extensionMap = new EleventyExtensionMap(formats);
-
+  initFormatsGlobs() {
     // Input was a directory
     if (this.input === this.inputDir) {
       this.templateGlobs = TemplateGlob.map(

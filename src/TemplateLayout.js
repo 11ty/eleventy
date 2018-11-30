@@ -36,7 +36,7 @@ class TemplateLayout extends TemplateContent {
     }
 
     let tmpl = new TemplateLayout(key, inputDir);
-    tmpl._setConfig(config);
+    tmpl.config = config;
     templateCache.add(fullKey, tmpl);
 
     return tmpl;

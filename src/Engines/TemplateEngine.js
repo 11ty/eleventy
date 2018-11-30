@@ -8,7 +8,8 @@ class TemplateEngine {
   constructor(name, inputDir) {
     this.name = name;
 
-    this.extension = "." + EleventyExtensionMap.getExtensionFromKey(name);
+    this.extensionMap = new EleventyExtensionMap();
+    this.extensions = this.extensionMap.getExtensionsFromKey(name);
     this.inputDir = inputDir;
     this.partialsHaveBeenCached = false;
     this.partials = [];
@@ -36,28 +37,34 @@ class TemplateEngine {
   cachePartialFiles() {
     this.partialsHaveBeenCached = true;
     let partials = {};
+    let prefix = this.inputDir + "/**/*.";
     // TODO: reuse mustache partials in handlebars?
-    let partialFiles = this.inputDir
-      ? TemplatePath.addLeadingDotSlashArray(
-          fastglob.sync(this.inputDir + "/**/*" + this.extension)
-        )
-      : [];
+    let partialFiles = [];
+    if (this.inputDir) {
+      this.extensions.forEach(function(extension) {
+        partialFiles = partialFiles.concat(fastglob.sync(prefix + extension));
+      });
+    }
+
+    partialFiles = TemplatePath.addLeadingDotSlashArray(partialFiles);
 
     for (let j = 0, k = partialFiles.length; j < k; j++) {
       let partialPath = TemplatePath.stripPathFromDir(
         partialFiles[j],
         this.inputDir
       );
-      let partialPathNoExt = TemplatePath.removeExtension(
-        partialPath,
-        this.extension
-      );
-
+      let partialPathNoExt = partialPath;
+      this.extensions.forEach(function(extension) {
+        partialPathNoExt = TemplatePath.removeExtension(
+          partialPathNoExt,
+          "." + extension
+        );
+      });
       partials[partialPathNoExt] = fs.readFileSync(partialFiles[j], "utf-8");
     }
 
     debug(
-      `${this.inputDir}/*${this.extension} found partials for: %o`,
+      `${this.inputDir}/*.{${this.extensions}} found partials for: %o`,
       Object.keys(partials)
     );
 
@@ -101,7 +108,7 @@ class TemplateEngine {
   static getEngine(name, inputDir) {
     if (!this.hasEngine(name)) {
       throw new Error(
-        "Template Engine " + name + " does not exist in getEngine"
+        `Template Engine ${name} does not exist in getEngine (input dir: ${inputDir})`
       );
     }
 

@@ -130,6 +130,7 @@ Eleventy.prototype.init = async function() {
     formats,
     this.isPassthroughAll
   );
+  this.eleventyFiles.init();
 
   this.templateData = new TemplateData(this.inputDir);
   this.eleventyFiles.setTemplateData(this.templateData);

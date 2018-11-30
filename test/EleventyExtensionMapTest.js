@@ -100,20 +100,44 @@ test("getKey", t => {
   t.is(EleventyExtensionMap.getKey("11ty.js"), "11ty.js");
   t.is(EleventyExtensionMap.getKey(".11ty.js"), "11ty.js");
 
+  t.is(EleventyExtensionMap.getKey("sample.md"), "md");
+
   t.is(EleventyExtensionMap.getKey(""), undefined);
   t.is(EleventyExtensionMap.getKey("js"), undefined);
   t.is(EleventyExtensionMap.getKey("component"), undefined);
   t.is(EleventyExtensionMap.getKey("component.js"), undefined);
 });
 
-test("getExtensionFromPath", t => {
-  t.is(EleventyExtensionMap.getExtensionFromPath("component.njk"), "njk");
-  t.is(
-    EleventyExtensionMap.getExtensionFromPath("component.11ty.js"),
-    "11ty.js"
-  );
+test("Extension aliasing (one format key)", t => {
+  let map = new EleventyExtensionMap(["md"]);
+  map.setConfig({
+    templateExtensionAliases: {
+      markdown: "md",
+      nunjucks: "njk" // N/A to current format list
+    }
+  });
+  t.deepEqual(map.getExtensionsFromKey("md"), ["md", "markdown"]);
+  t.deepEqual(map.getExtensionsFromKey("njk"), ["njk", "nunjucks"]);
 
-  t.is(EleventyExtensionMap.getExtensionFromPath(""), undefined);
-  t.is(EleventyExtensionMap.getExtensionFromPath("component"), undefined);
-  t.is(EleventyExtensionMap.getExtensionFromPath("component.js"), undefined);
+  // should filter out N/A aliases
+  t.deepEqual(map.getGlobs(), ["./**/*.md", "./**/*.markdown"]);
+});
+
+test("Extension aliasing (two format keys)", t => {
+  let map = new EleventyExtensionMap(["md", "njk"]);
+  map.setConfig({
+    templateExtensionAliases: {
+      markdown: "md",
+      nunjucks: "njk"
+    }
+  });
+  t.deepEqual(map.getExtensionsFromKey("md"), ["md", "markdown"]);
+  t.deepEqual(map.getExtensionsFromKey("njk"), ["njk", "nunjucks"]);
+
+  t.deepEqual(map.getGlobs(), [
+    "./**/*.md",
+    "./**/*.markdown",
+    "./**/*.njk",
+    "./**/*.nunjucks"
+  ]);
 });

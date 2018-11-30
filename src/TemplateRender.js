@@ -1,11 +1,14 @@
 const TemplatePath = require("./TemplatePath");
 const TemplateEngine = require("./Engines/TemplateEngine");
+const EleventyBaseError = require("./EleventyBaseError");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const config = require("./Config");
 // const debug = require("debug")("Eleventy:TemplateRender");
 
+class TemplateRenderUnknownEngineError extends EleventyBaseError {}
+
 // works with full path names or short engine name
-function TemplateRender(tmplPath, inputDir) {
+function TemplateRender(tmplPath, inputDir, extensionMap) {
   if (!tmplPath) {
     throw new Error(
       `TemplateRender requires a tmplPath argument, instead of ${tmplPath}`
@@ -14,6 +17,7 @@ function TemplateRender(tmplPath, inputDir) {
 
   this.config = config.getConfig();
   this.path = tmplPath;
+  this.extensionMap = extensionMap;
 
   // optional
   this.inputDir = this._normalizeInputDir(inputDir);
@@ -27,12 +31,26 @@ function TemplateRender(tmplPath, inputDir) {
 }
 
 TemplateRender.prototype.init = function(engineNameOrPath) {
-  this.engineName = TemplateRender.cleanupEngineName(engineNameOrPath);
+  this.engineName = this.cleanupEngineName(engineNameOrPath);
+  if (!this.engineName) {
+    throw new TemplateRenderUnknownEngineError(
+      `Unknown engine for ${engineNameOrPath}`
+    );
+  }
   this.engine = TemplateEngine.getEngine(this.engineName, this.inputDir);
 };
 
+TemplateRender.prototype.cleanupEngineName = function(tmplPath) {
+  return TemplateRender._cleanupEngineName(
+    tmplPath,
+    this.extensionMap || EleventyExtensionMap
+  );
+};
 TemplateRender.cleanupEngineName = function(tmplPath) {
-  return EleventyExtensionMap.getKey(tmplPath);
+  return TemplateRender._cleanupEngineName(tmplPath, EleventyExtensionMap);
+};
+TemplateRender._cleanupEngineName = function(tmplPath, extensionMapRef) {
+  return extensionMapRef.getKey(tmplPath);
 };
 
 TemplateRender.hasEngine = function(tmplPath) {

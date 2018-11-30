@@ -13,7 +13,6 @@ class TemplateContentRenderError extends EleventyBaseError {}
 
 class TemplateContent {
   constructor(inputPath, inputDir) {
-    this.config = config.getConfig();
     this.inputPath = inputPath;
 
     if (inputDir) {
@@ -21,13 +20,35 @@ class TemplateContent {
     } else {
       this.inputDir = false;
     }
-
-    this.templateRender = new TemplateRender(this.inputPath, this.inputDir);
   }
 
   /* Used by tests */
-  _setConfig(config) {
-    this.config = config;
+  _setExtensionMap(map) {
+    this._extensionMap = map;
+  }
+
+  set config(config) {
+    this._config = config;
+  }
+
+  get config() {
+    if (!this._config) {
+      this._config = config.getConfig();
+    }
+
+    return this._config;
+  }
+
+  get templateRender() {
+    if (!this._templateRender) {
+      this._templateRender = new TemplateRender(
+        this.inputPath,
+        this.inputDir,
+        this._extensionMap
+      );
+    }
+
+    return this._templateRender;
   }
 
   getInputPath() {

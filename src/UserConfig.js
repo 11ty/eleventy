@@ -50,6 +50,7 @@ class UserConfig {
     this.dataDeepMerge = false;
     this.experiments = new Set();
     // this.userExtensionMap = {};
+    this.templateExtensionAliases = {};
   }
 
   versionCheck(expected) {
@@ -443,6 +444,10 @@ class UserConfig {
     this.dataDeepMerge = !!deepMerge;
   }
 
+  addTemplateExtensionAlias(targetKey, extension) {
+    this.templateExtensionAliases[extension] = targetKey;
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
@@ -471,7 +476,8 @@ class UserConfig {
       dynamicPermalinks: this.dynamicPermalinks,
       useGitIgnore: this.useGitIgnore,
       dataDeepMerge: this.dataDeepMerge,
-      experiments: this.experiments
+      experiments: this.experiments,
+      templateExtensionAliases: this.templateExtensionAliases
     };
   }
 

@@ -1181,7 +1181,7 @@ test("Data Cascade (Deep merge)", async t => {
     "./dist",
     dataObj
   );
-  tmpl._setConfig(newConfig);
+  tmpl.config = newConfig;
 
   let data = await tmpl.getData();
   t.deepEqual(Object.keys(data).sort(), [
@@ -1242,7 +1242,7 @@ test("Data Cascade Tag Merge (Deep merge)", async t => {
     "./dist",
     dataObj
   );
-  tmpl._setConfig(newConfig);
+  tmpl.config = newConfig;
 
   let data = await tmpl.getData();
   t.deepEqual(data.tags.sort(), ["tagA", "tagB", "tagC", "tagD"]);
