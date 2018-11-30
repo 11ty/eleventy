@@ -33,12 +33,12 @@ class UserConfig {
     this.handlebarsHelpers = {};
     this.handlebarsShortcodes = {};
     this.handlebarsPairedShortcodes = {};
-    this.passthroughCopies = {};
     this.pugOptions = {};
     this.ejsOptions = {};
     this.markdownHighlighter = null;
     this.libraryOverrides = {};
 
+    this.passthroughCopies = {};
     this.layoutAliases = {};
     this.linters = {};
     // now named `transforms` in API
@@ -335,6 +335,8 @@ class UserConfig {
   }
 
   addNunjucksShortcode(name, callback) {
+    name = this.getNamespacedName(name);
+
     if (this.nunjucksShortcodes[name]) {
       debug(
         chalk.yellow(
@@ -351,6 +353,8 @@ class UserConfig {
   }
 
   addLiquidShortcode(name, callback) {
+    name = this.getNamespacedName(name);
+
     if (this.liquidShortcodes[name]) {
       debug(
         chalk.yellow(
@@ -367,6 +371,8 @@ class UserConfig {
   }
 
   addHandlebarsShortcode(name, callback) {
+    name = this.getNamespacedName(name);
+
     if (this.handlebarsShortcodes[name]) {
       debug(
         chalk.yellow(
@@ -389,6 +395,8 @@ class UserConfig {
   }
 
   addPairedNunjucksShortcode(name, callback) {
+    name = this.getNamespacedName(name);
+
     if (this.nunjucksPairedShortcodes[name]) {
       debug(
         chalk.yellow(
@@ -405,6 +413,8 @@ class UserConfig {
   }
 
   addPairedLiquidShortcode(name, callback) {
+    name = this.getNamespacedName(name);
+
     if (this.liquidPairedShortcodes[name]) {
       debug(
         chalk.yellow(
@@ -421,6 +431,8 @@ class UserConfig {
   }
 
   addPairedHandlebarsShortcode(name, callback) {
+    name = this.getNamespacedName(name);
+
     if (this.handlebarsPairedShortcodes[name]) {
       debug(
         chalk.yellow(
