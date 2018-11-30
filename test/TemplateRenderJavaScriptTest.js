@@ -94,3 +94,20 @@ test("JS Render using ViperHTML", async t => {
 </div>`
   );
 });
+
+test("JS Render a function", async t => {
+  let tr = new TemplateRender(
+    "../../test/stubs/template-literal-filter.11ty.js"
+  );
+  tr.config = {
+    javascriptFunctions: {
+      upper: function(val) {
+        return new String(val).toUpperCase();
+      }
+    }
+  };
+
+  let fn = await tr.getCompiledTemplate();
+  t.is(await fn({ name: "Zach" }), "<p>ZACH</p>");
+  t.is(await fn({ name: "Bill" }), "<p>BILL</p>");
+});

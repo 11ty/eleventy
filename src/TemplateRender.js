@@ -16,7 +16,6 @@ class TemplateRender {
       );
     }
 
-    this.config = config.getConfig();
     this.path = tmplPath;
     this.extensionMap = extensionMap;
 
@@ -29,6 +28,21 @@ class TemplateRender {
     this.init(tmplPath);
 
     this.useMarkdown = this.engineName === "md";
+  }
+
+  get config() {
+    if (!this._config) {
+      this._config = config.getConfig();
+    }
+    return this._config;
+  }
+
+  set config(config) {
+    this._config = config;
+
+    if (this.engine) {
+      this.engine.config = config;
+    }
   }
 
   init(engineNameOrPath) {

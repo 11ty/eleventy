@@ -33,6 +33,7 @@ class UserConfig {
     this.handlebarsHelpers = {};
     this.handlebarsShortcodes = {};
     this.handlebarsPairedShortcodes = {};
+    this.javascriptFunctions = {};
     this.pugOptions = {};
     this.ejsOptions = {};
     this.markdownHighlighter = null;
@@ -180,6 +181,7 @@ class UserConfig {
     // namespacing happens downstream
     this.addLiquidFilter(name, callback);
     this.addNunjucksFilter(name, callback);
+    this.addJavaScriptFunction(name, callback);
 
     // TODO remove Handlebars helpers in Universal Filters. Use shortcodes instead (the Handlebars template syntax is the same).
     this.addHandlebarsHelper(name, callback);
@@ -332,6 +334,7 @@ class UserConfig {
     this.addNunjucksShortcode(name, callback);
     this.addLiquidShortcode(name, callback);
     this.addHandlebarsShortcode(name, callback);
+    this.addJavaScriptFunction(name, callback);
   }
 
   addNunjucksShortcode(name, callback) {
@@ -392,6 +395,7 @@ class UserConfig {
     this.addPairedNunjucksShortcode(name, callback);
     this.addPairedLiquidShortcode(name, callback);
     this.addPairedHandlebarsShortcode(name, callback);
+    this.addJavaScriptFunction(name, callback);
   }
 
   addPairedNunjucksShortcode(name, callback) {
@@ -448,6 +452,24 @@ class UserConfig {
     );
   }
 
+  addJavaScriptFunction(name, callback) {
+    name = this.getNamespacedName(name);
+
+    if (this.javascriptFunctions[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a JavaScript template function with `addJavaScriptFunction(%o)`"
+        ),
+        name
+      );
+    }
+
+    this.javascriptFunctions[name] = bench.add(
+      `"${name}" JavaScript Function`,
+      callback
+    );
+  }
+
   addExperiment(key) {
     this.experiments.add(key);
   }
@@ -481,6 +503,7 @@ class UserConfig {
       handlebarsHelpers: this.handlebarsHelpers,
       handlebarsShortcodes: this.handlebarsShortcodes,
       handlebarsPairedShortcodes: this.handlebarsPairedShortcodes,
+      javascriptFunctions: this.javascriptFunctions,
       pugOptions: this.pugOptions,
       ejsOptions: this.ejsOptions,
       markdownHighlighter: this.markdownHighlighter,

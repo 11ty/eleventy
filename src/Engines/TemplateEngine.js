@@ -24,6 +24,10 @@ class TemplateEngine {
     return this._config;
   }
 
+  set config(config) {
+    this._config = config;
+  }
+
   getName() {
     return this.name;
   }
