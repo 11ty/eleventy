@@ -7,7 +7,6 @@ class Liquid extends TemplateEngine {
   constructor(name, inputDir) {
     super(name, inputDir);
 
-    this.config = config.getConfig();
     this.liquidOptions = {};
 
     this.setLibrary(this.config.libraryOverrides.liquid);

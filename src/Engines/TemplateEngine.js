@@ -2,6 +2,7 @@ const fastglob = require("fast-glob");
 const fs = require("fs-extra");
 const TemplatePath = require("../TemplatePath");
 const EleventyExtensionMap = require("../EleventyExtensionMap");
+const config = require("../Config");
 const debug = require("debug")("Eleventy:TemplateEngine");
 
 class TemplateEngine {
@@ -14,6 +15,13 @@ class TemplateEngine {
     this.partialsHaveBeenCached = false;
     this.partials = [];
     this.engineLib = null;
+  }
+
+  get config() {
+    if (!this._config) {
+      this._config = config.getConfig();
+    }
+    return this._config;
   }
 
   getName() {
