@@ -27,7 +27,6 @@ class JavaScript extends TemplateEngine {
 
         return function(data) {
           if (dataOverrides) {
-            console.log(lodashMerge({}, data, dataOverrides));
             return inst.render(lodashMerge({}, data, dataOverrides));
           }
 
@@ -37,7 +36,6 @@ class JavaScript extends TemplateEngine {
 
       Object.assign(dataOverrides, this.javascriptFunctions);
       return function(data) {
-        console.log(lodashMerge({}, data, dataOverrides));
         let result = cls(lodashMerge({}, data, dataOverrides));
         if (Buffer.isBuffer(result)) {
           return result.toString();
