@@ -95,7 +95,7 @@ test("JS Render using ViperHTML", async t => {
   );
 });
 
-test("JS Render a function", async t => {
+test("JS Render with a function", async t => {
   let tr = new TemplateRender(
     "../../test/stubs/template-literal-filter.11ty.js"
   );
@@ -108,6 +108,77 @@ test("JS Render a function", async t => {
   };
 
   let fn = await tr.getCompiledTemplate();
+  t.is(await fn({ name: "Zach" }), "<p>ZACH</p>");
+  t.is(await fn({ name: "Bill" }), "<p>BILL</p>");
+});
+
+test("JS Class Render with a function", async t => {
+  let tr = new TemplateRender(
+    "../../test/stubs/class-template-literal-filter.11ty.js"
+  );
+  tr.config = {
+    javascriptFunctions: {
+      upper: function(val) {
+        return new String(val).toUpperCase();
+      }
+    }
+  };
+
+  let fn = await tr.getCompiledTemplate();
+  t.is(await fn({ name: "Zach" }), "<p>ZACH</p>");
+  t.is(await fn({ name: "Bill" }), "<p>BILL</p>");
+});
+
+test("JS Class Data Object + Render with a function", async t => {
+  let tr = new TemplateRender(
+    "../../test/stubs/class-template-literal-data-filter.11ty.js"
+  );
+  tr.config = {
+    javascriptFunctions: {
+      upper: function(val) {
+        return new String(val).toUpperCase();
+      }
+    }
+  };
+
+  let fn = await tr.getCompiledTemplate();
+  // Overrides all names to Ted
+  t.is(await fn({ name: "Zach" }), "<p>TED</p>");
+  t.is(await fn({ name: "Bill" }), "<p>TED</p>");
+});
+
+test("JS Class Data Function + Render with a function", async t => {
+  let tr = new TemplateRender(
+    "../../test/stubs/class-template-literal-data-fn-filter.11ty.js"
+  );
+  tr.config = {
+    javascriptFunctions: {
+      upper: function(val) {
+        return new String(val).toUpperCase();
+      }
+    }
+  };
+
+  let fn = await tr.getCompiledTemplate();
+  // Overrides all names to Ted
+  t.is(await fn({ name: "Zach" }), "<p>TED</p>");
+  t.is(await fn({ name: "Bill" }), "<p>TED</p>");
+});
+
+test("JS Class Async Render with a function", async t => {
+  let tr = new TemplateRender(
+    "../../test/stubs/class-template-literal-async-filter.11ty.js"
+  );
+  tr.config = {
+    javascriptFunctions: {
+      upper: function(val) {
+        return new String(val).toUpperCase();
+      }
+    }
+  };
+
+  let fn = await tr.getCompiledTemplate();
+  // Overrides all names to Ted
   t.is(await fn({ name: "Zach" }), "<p>ZACH</p>");
   t.is(await fn({ name: "Bill" }), "<p>BILL</p>");
 });

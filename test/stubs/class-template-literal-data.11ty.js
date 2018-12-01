@@ -5,8 +5,8 @@ class Test {
     };
   }
 
-  render(data) {
-    return `<p>${data.name}</p>`;
+  render({ name }) {
+    return `<p>${name}</p>`;
   }
 }
 

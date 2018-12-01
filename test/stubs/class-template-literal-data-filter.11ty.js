@@ -1,12 +1,12 @@
 class Test {
-  data() {
+  get data() {
     return {
       name: "Ted"
     };
   }
 
   render({ name }) {
-    return `<p>${name}</p>`;
+    return `<p>${this.upper(name)}</p>`;
   }
 }
 

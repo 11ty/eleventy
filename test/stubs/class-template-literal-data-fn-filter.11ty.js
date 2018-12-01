@@ -6,7 +6,7 @@ class Test {
   }
 
   render({ name }) {
-    return `<p>${name}</p>`;
+    return `<p>${this.upper(name)}</p>`;
   }
 }
 

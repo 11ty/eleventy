@@ -1,3 +1,3 @@
-module.exports = function({ name, upper }) {
-  return `<p>${upper(name)}</p>`;
+module.exports = function({ name }) {
+  return `<p>${this.upper(name)}</p>`;
 };

@@ -1,6 +1,6 @@
 class Test {
   async render({ name }) {
-    return Promise.resolve(`<p>${name}</p>`);
+    return Promise.resolve(`<p>${this.upper(name)}</p>`);
   }
 }
 
