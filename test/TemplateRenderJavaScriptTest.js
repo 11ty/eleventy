@@ -11,21 +11,21 @@ test("JS", t => {
 
 test("JS Render a string (no data)", async t => {
   let fn = await new TemplateRender(
-    "../../test/stubs/string.11ty.js"
+    "./test/stubs/string.11ty.js"
   ).getCompiledTemplate();
   t.is(await fn({ name: "Bill" }), "<p>Zach</p>");
 });
 
 test("JS Render a buffer (no data)", async t => {
   let fn = await new TemplateRender(
-    "../../test/stubs/buffer.11ty.js"
+    "./test/stubs/buffer.11ty.js"
   ).getCompiledTemplate();
   t.is(await fn({ name: "Bill" }), "<p>tést</p>");
 });
 
 test("JS Render a function", async t => {
   let fn = await new TemplateRender(
-    "../../test/stubs/function.11ty.js"
+    "./test/stubs/function.11ty.js"
   ).getCompiledTemplate();
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
   t.is(await fn({ name: "Bill" }), "<p>Bill</p>");
@@ -33,7 +33,7 @@ test("JS Render a function", async t => {
 
 test("JS Render an async function", async t => {
   let fn = await new TemplateRender(
-    "../../test/stubs/function-async.11ty.js"
+    "./test/stubs/function-async.11ty.js"
   ).getCompiledTemplate();
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
   t.is(await fn({ name: "Bill" }), "<p>Bill</p>");
@@ -41,7 +41,7 @@ test("JS Render an async function", async t => {
 
 test("JS Render with a Class", async t => {
   let fn = await new TemplateRender(
-    "../../test/stubs/class.11ty.js"
+    "./test/stubs/class.11ty.js"
   ).getCompiledTemplate();
   t.is(await fn({ name: "Zach" }), "<p>ZachBillTed</p>");
   t.is(await fn({ name: "Bill" }), "<p>BillBillTed</p>");
@@ -49,7 +49,7 @@ test("JS Render with a Class", async t => {
 
 test("JS Render with a Class, async render", async t => {
   let fn = await new TemplateRender(
-    "../../test/stubs/class-async.11ty.js"
+    "./test/stubs/class-async.11ty.js"
   ).getCompiledTemplate();
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
   t.is(await fn({ name: "Bill" }), "<p>Bill</p>");
@@ -57,7 +57,7 @@ test("JS Render with a Class, async render", async t => {
 
 test("JS Render with a Class and Data getter", async t => {
   let fn = await new TemplateRender(
-    "../../test/stubs/class-data.11ty.js"
+    "./test/stubs/class-data.11ty.js"
   ).getCompiledTemplate();
   t.is(await fn(), "<p>Ted</p>");
   t.is(await fn({ name: "Bill" }), "<p>Ted</p>");
@@ -65,7 +65,7 @@ test("JS Render with a Class and Data getter", async t => {
 
 test("JS Render with a Class and Data function", async t => {
   let fn = await new TemplateRender(
-    "../../test/stubs/class-data-fn.11ty.js"
+    "./test/stubs/class-data-fn.11ty.js"
   ).getCompiledTemplate();
   t.is(await fn(), "<p>Ted</p>");
   t.is(await fn({ name: "Bill" }), "<p>Ted</p>");
@@ -73,7 +73,7 @@ test("JS Render with a Class and Data function", async t => {
 
 test("JS Render with a Class and Async Data function", async t => {
   let fn = await new TemplateRender(
-    "../../test/stubs/class-async-data-fn.11ty.js"
+    "./test/stubs/class-async-data-fn.11ty.js"
   ).getCompiledTemplate();
   t.is(await fn(), "<p>Ted</p>");
   t.is(await fn({ name: "Bill" }), "<p>Ted</p>");
@@ -81,7 +81,7 @@ test("JS Render with a Class and Async Data function", async t => {
 
 test("JS Render using Vue", async t => {
   let fn = await new TemplateRender(
-    "../../test/stubs/vue.11ty.js"
+    "./test/stubs/vue.11ty.js"
   ).getCompiledTemplate();
   t.is(
     await fn({ name: "Zach" }),
@@ -95,7 +95,7 @@ test("JS Render using Vue", async t => {
 
 test("JS Render using Vue (with a layout)", async t => {
   let fn = await new TemplateRender(
-    "../../test/stubs/vue-layout.11ty.js"
+    "./test/stubs/vue-layout.11ty.js"
   ).getCompiledTemplate();
   t.is(
     await fn({ name: "Zach" }),
@@ -107,7 +107,7 @@ test("JS Render using Vue (with a layout)", async t => {
 
 test("JS Render using ViperHTML", async t => {
   let fn = await new TemplateRender(
-    "../../test/stubs/viperhtml.11ty.js"
+    "./test/stubs/viperhtml.11ty.js"
   ).getCompiledTemplate();
   t.is(
     await fn({ name: "Zach", html: "<strong>Hi</strong>" }),
@@ -119,7 +119,7 @@ test("JS Render using ViperHTML", async t => {
 });
 
 test("JS Render with a function", async t => {
-  let tr = new TemplateRender("../../test/stubs/function-filter.11ty.js");
+  let tr = new TemplateRender("./test/stubs/function-filter.11ty.js");
   tr.config = {
     javascriptFunctions: {
       upper: function(val) {
@@ -134,7 +134,7 @@ test("JS Render with a function", async t => {
 });
 
 test("JS Render with a function prototype", async t => {
-  let tr = new TemplateRender("../../test/stubs/function-prototype.11ty.js");
+  let tr = new TemplateRender("./test/stubs/function-prototype.11ty.js");
   tr.config = {
     javascriptFunctions: {
       upper: function(val) {
@@ -149,7 +149,7 @@ test("JS Render with a function prototype", async t => {
 });
 
 test("JS Class Render with a function", async t => {
-  let tr = new TemplateRender("../../test/stubs/class-filter.11ty.js");
+  let tr = new TemplateRender("./test/stubs/class-filter.11ty.js");
   tr.config = {
     javascriptFunctions: {
       upper: function(val) {
@@ -164,7 +164,7 @@ test("JS Class Render with a function", async t => {
 });
 
 test("JS Class Data Object + Render with a function", async t => {
-  let tr = new TemplateRender("../../test/stubs/class-data-filter.11ty.js");
+  let tr = new TemplateRender("./test/stubs/class-data-filter.11ty.js");
   tr.config = {
     javascriptFunctions: {
       upper: function(val) {
@@ -180,7 +180,7 @@ test("JS Class Data Object + Render with a function", async t => {
 });
 
 test("JS Class Data Function + Render with a function", async t => {
-  let tr = new TemplateRender("../../test/stubs/class-data-fn-filter.11ty.js");
+  let tr = new TemplateRender("./test/stubs/class-data-fn-filter.11ty.js");
   tr.config = {
     javascriptFunctions: {
       upper: function(val) {
@@ -196,7 +196,7 @@ test("JS Class Data Function + Render with a function", async t => {
 });
 
 test("JS Class Async Render with a function", async t => {
-  let tr = new TemplateRender("../../test/stubs/class-async-filter.11ty.js");
+  let tr = new TemplateRender("./test/stubs/class-async-filter.11ty.js");
   tr.config = {
     javascriptFunctions: {
       upper: function(val) {
