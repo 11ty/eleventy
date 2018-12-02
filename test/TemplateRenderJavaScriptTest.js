@@ -43,8 +43,8 @@ test("JS Render with a Class", async t => {
   let fn = await new TemplateRender(
     "../../test/stubs/class.11ty.js"
   ).getCompiledTemplate();
-  t.is(await fn({ name: "Zach" }), "<p>ZachBill</p>");
-  t.is(await fn({ name: "Bill" }), "<p>BillBill</p>");
+  t.is(await fn({ name: "Zach" }), "<p>ZachBillTed</p>");
+  t.is(await fn({ name: "Bill" }), "<p>BillBillTed</p>");
 });
 
 test("JS Render with a Class, async render", async t => {
@@ -133,6 +133,21 @@ test("JS Render with a function", async t => {
   t.is(await fn({ name: "Bill" }), "<p>BILLT9000</p>");
 });
 
+test("JS Render with a function prototype", async t => {
+  let tr = new TemplateRender("../../test/stubs/function-prototype.11ty.js");
+  tr.config = {
+    javascriptFunctions: {
+      upper: function(val) {
+        return new String(val).toUpperCase();
+      }
+    }
+  };
+
+  let fn = await tr.getCompiledTemplate();
+  t.is(await fn({ name: "Zach" }), "<p>ZACHBillT9001</p>");
+  t.is(await fn({ name: "Bill" }), "<p>BILLBillT9001</p>");
+});
+
 test("JS Class Render with a function", async t => {
   let tr = new TemplateRender("../../test/stubs/class-filter.11ty.js");
   tr.config = {
@@ -144,8 +159,8 @@ test("JS Class Render with a function", async t => {
   };
 
   let fn = await tr.getCompiledTemplate();
-  t.is(await fn({ name: "Zach" }), "<p>ZACHBill</p>");
-  t.is(await fn({ name: "Bill" }), "<p>BILLBill</p>");
+  t.is(await fn({ name: "Zach" }), "<p>ZACHBillTed</p>");
+  t.is(await fn({ name: "Bill" }), "<p>BILLBillTed</p>");
 });
 
 test("JS Class Data Object + Render with a function", async t => {
@@ -192,6 +207,6 @@ test("JS Class Async Render with a function", async t => {
 
   let fn = await tr.getCompiledTemplate();
   // Overrides all names to Ted
-  t.is(await fn({ name: "Zach" }), "<p>ZACHBill</p>");
-  t.is(await fn({ name: "Bill" }), "<p>BILLBill</p>");
+  t.is(await fn({ name: "Zach" }), "<p>ZACHBillTed</p>");
+  t.is(await fn({ name: "Bill" }), "<p>BILLBillTed</p>");
 });

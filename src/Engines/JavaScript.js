@@ -1,21 +1,28 @@
 const TemplateEngine = require("./TemplateEngine");
+const TemplatePath = require("../TemplatePath");
 const lodashMerge = require("lodash.merge");
 
-function cleanup(result) {
-  if (Buffer.isBuffer(result)) {
-    return result.toString();
+class JavaScript extends TemplateEngine {
+  cleanup(result) {
+    if (Buffer.isBuffer(result)) {
+      return result.toString();
+    }
+
+    return result;
   }
 
-  return result;
-}
+  removeJSExtension(path) {
+    return path.endsWith(".js") ? path.substring(0, path.length - 3) : path;
+  }
 
-class JavaScript extends TemplateEngine {
   async compile(str, inputPath) {
-    const cls = require(inputPath);
+    let requirePath = TemplatePath.localPath(inputPath);
+    delete require.cache[requirePath];
+    const cls = require(this.removeJSExtension(requirePath));
     if (typeof cls === "function") {
       // class with a `render` method
       if (cls.prototype && "render" in cls.prototype) {
-        let inst = new cls(inputPath);
+        let inst = new cls();
         let dataOverrides = {};
         // get extra data from `data` method,
         // either as a function or getter or object literal
@@ -28,23 +35,23 @@ class JavaScript extends TemplateEngine {
         return function(data) {
           if (dataOverrides) {
             // TODO fork on deepDataMerge
-            return cleanup(
+            return this.cleanup(
               inst.render.call(inst, lodashMerge({}, data, dataOverrides))
             );
           }
-          return cleanup(inst.render.call(inst, data));
-        };
+          return this.cleanup(inst.render.call(inst, data));
+        }.bind(this);
       }
 
       // raw function
       return function(data) {
-        return cleanup(cls.call(this.config.javascriptFunctions, data));
+        return this.cleanup(cls.call(this.config.javascriptFunctions, data));
       }.bind(this);
     } else {
       // string type does not work with javascriptFunctions
       return function() {
-        return cleanup(cls);
-      };
+        return this.cleanup(cls);
+      }.bind(this);
     }
   }
 }
