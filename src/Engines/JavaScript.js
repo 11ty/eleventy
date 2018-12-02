@@ -18,7 +18,7 @@ class JavaScript extends TemplateEngine {
         // either as a function or getter or object literal
         if (cls.prototype && "data" in cls.prototype) {
           dataOverrides =
-            typeof inst.data === "function" ? inst.data() : inst.data;
+            typeof inst.data === "function" ? await inst.data() : inst.data;
         }
 
         Object.assign(inst, this.config.javascriptFunctions);

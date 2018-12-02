@@ -64,6 +64,14 @@ test("JS Render with a Class and Data function", async t => {
   t.is(await fn({ name: "Bill" }), "<p>Ted</p>");
 });
 
+test("JS Render with a Class and Async Data function", async t => {
+  let fn = await new TemplateRender(
+    "../../test/stubs/class-async-data-fn.11ty.js"
+  ).getCompiledTemplate();
+  t.is(await fn(), "<p>Ted</p>");
+  t.is(await fn({ name: "Bill" }), "<p>Ted</p>");
+});
+
 test("JS Render using Vue", async t => {
   let fn = await new TemplateRender(
     "../../test/stubs/vue.11ty.js"
