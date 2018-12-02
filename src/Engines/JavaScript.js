@@ -1,15 +1,18 @@
 const TemplateEngine = require("./TemplateEngine");
 const lodashMerge = require("lodash.merge");
 
+function cleanup(result) {
+  if (Buffer.isBuffer(result)) {
+    return result.toString();
+  }
+
+  return result;
+}
+
 class JavaScript extends TemplateEngine {
   async compile(str, inputPath) {
     const cls = require(inputPath);
-    if (typeof cls === "string") {
-      // string type does not work with javascriptFunctions
-      return function() {
-        return cls;
-      };
-    } else if (typeof cls === "function") {
+    if (typeof cls === "function") {
       // class with a `render` method
       if (cls.prototype && "render" in cls.prototype) {
         let inst = new cls(inputPath);
@@ -25,22 +28,23 @@ class JavaScript extends TemplateEngine {
         return function(data) {
           if (dataOverrides) {
             // TODO fork on deepDataMerge
-            return inst.render.call(inst, lodashMerge({}, data, dataOverrides));
+            return cleanup(
+              inst.render.call(inst, lodashMerge({}, data, dataOverrides))
+            );
           }
-
-          return inst.render.call(inst, data);
+          return cleanup(inst.render.call(inst, data));
         };
       }
 
       // raw function
       return function(data) {
-        let result = cls.call(this.config.javascriptFunctions, data);
-        if (Buffer.isBuffer(result)) {
-          return result.toString();
-        }
-
-        return result;
+        return cleanup(cls.call(this.config.javascriptFunctions, data));
       }.bind(this);
+    } else {
+      // string type does not work with javascriptFunctions
+      return function() {
+        return cleanup(cls);
+      };
     }
   }
 }

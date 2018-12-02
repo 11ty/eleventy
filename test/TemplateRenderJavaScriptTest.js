@@ -16,6 +16,13 @@ test("JS Render a string (no data)", async t => {
   t.is(await fn({ name: "Bill" }), "<p>Zach</p>");
 });
 
+test("JS Render a buffer (no data)", async t => {
+  let fn = await new TemplateRender(
+    "../../test/stubs/buffer.11ty.js"
+  ).getCompiledTemplate();
+  t.is(await fn({ name: "Bill" }), "<p>tést</p>");
+});
+
 test("JS Render a function", async t => {
   let fn = await new TemplateRender(
     "../../test/stubs/function.11ty.js"
