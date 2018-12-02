@@ -1,6 +1,10 @@
 class Test {
+  returnsBill() {
+    return "Bill";
+  }
+
   render({ name }) {
-    return `<p>${name}</p>`;
+    return `<p>${name}${this.returnsBill()}</p>`;
   }
 }
 
