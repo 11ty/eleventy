@@ -11,34 +11,38 @@ class JavaScript extends TemplateEngine {
     return result;
   }
 
-  removeJSExtension(path) {
-    return path.endsWith(".js") ? path.substring(0, path.length - 3) : path;
+  getRequire(inputPath) {
+    let requirePath = TemplatePath.localPath(inputPath);
+    delete require.cache[requirePath];
+    return require(requirePath);
+  }
+
+  needsToReadFileContents() {
+    return false;
+  }
+
+  async getExtraDataFromFile(inputPath) {
+    const cls = this.getRequire(inputPath);
+    if (typeof cls === "function") {
+      if (cls.prototype && "data" in cls.prototype) {
+        let inst = new cls();
+        // get extra data from `data` method,
+        // either as a function or getter or object literal
+        return typeof inst.data === "function" ? await inst.data() : inst.data;
+      }
+    }
+
+    return {};
   }
 
   async compile(str, inputPath) {
-    let requirePath = TemplatePath.localPath(inputPath);
-    delete require.cache[requirePath];
-    const cls = require(this.removeJSExtension(requirePath));
+    const cls = this.getRequire(inputPath);
     if (typeof cls === "function") {
       // class with a `render` method
       if (cls.prototype && "render" in cls.prototype) {
         let inst = new cls();
-        let dataOverrides = {};
-        // get extra data from `data` method,
-        // either as a function or getter or object literal
-        if (cls.prototype && "data" in cls.prototype) {
-          dataOverrides =
-            typeof inst.data === "function" ? await inst.data() : inst.data;
-        }
-
         Object.assign(inst, this.config.javascriptFunctions);
         return function(data) {
-          if (dataOverrides) {
-            // TODO fork on deepDataMerge
-            return this.cleanup(
-              inst.render.call(inst, lodashMerge({}, data, dataOverrides))
-            );
-          }
           return this.cleanup(inst.render.call(inst, data));
         }.bind(this);
       }

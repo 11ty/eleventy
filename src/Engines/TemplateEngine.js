@@ -97,6 +97,15 @@ class TemplateEngine {
     return fn(data);
   }
 
+  // JavaScript files defer to the module loader rather than read the files to strings
+  needsToReadFileContents() {
+    return true;
+  }
+
+  getExtraDataFromFile(inputPath) {
+    return {};
+  }
+
   static get templateKeyMapToClassName() {
     return {
       ejs: "Ejs",
