@@ -68,6 +68,7 @@ Eleventy.prototype.restart = async function() {
   this.eleventyFiles.restart();
 
   // reload package.json values (if applicable)
+  // TODO only reset this if it changed
   delete require.cache[TemplatePath.localPath("package.json")];
 
   this.initDirs();
@@ -226,8 +227,9 @@ Eleventy.prototype._watch = async function(path) {
 
   this.active = true;
 
+  let localProjectConfigPath = config.getLocalProjectConfigFile();
   // reset and reload global configuration :O
-  if (path === config.getLocalProjectConfigFile()) {
+  if (path === localProjectConfigPath) {
     this.resetConfig();
   }
   config.resetOnWatch();
@@ -271,14 +273,23 @@ Eleventy.prototype.watch = async function() {
     ignored: this.eleventyFiles.getGlobWatcherIgnores()
   });
 
+  async function watchRun(path) {
+    try {
+      await this._watch(path);
+    } catch (e) {
+      EleventyErrorHandler.fatal(e, "Eleventy fatal watch error");
+      watcher.close();
+    }
+  }
+
   watcher.on("change", async path => {
     console.log("File changed:", path);
-    this._watch(path);
+    await watchRun.call(this, path);
   });
 
   watcher.on("add", async path => {
     console.log("File added:", path);
-    this._watch(path);
+    await watchRun.call(this, path);
   });
 };
 

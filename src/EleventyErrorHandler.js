@@ -20,22 +20,29 @@ class EleventyErrorHandler {
   static log(e, type = "log", prefix = ">") {
     let ref = e;
     while (ref) {
+      let nextRef = ref.originalError;
       EleventyErrorHandler.message(
         (process.env.DEBUG ? "" : `${prefix} `) +
-          `${ref.message} (${ref.name})`,
+          `${ref.message} (${ref.name})${!nextRef ? ":" : ""}`,
         type
       );
-      debug(`(${type} stack): ${ref.stack}`);
-      ref = ref.originalError;
+      if (process.env.DEBUG) {
+        debug(`(${type} stack): ${ref.stack}`);
+      } else if (!nextRef) {
+        // last error in the loop
+        let prefix = "    ";
+        console.error(
+          prefix + (ref.stack || "").split("\n").join("\n" + prefix)
+        );
+      }
+      ref = nextRef;
     }
   }
 
   static initialMessage(message, type = "log", chalkColor = "blue") {
     if (message) {
       EleventyErrorHandler.message(
-        message +
-          ":" +
-          (process.env.DEBUG ? "" : " (full stack in DEBUG output)"),
+        message + ":" + (process.env.DEBUG ? "" : " (more in DEBUG output)"),
         type,
         chalkColor
       );
