@@ -67,7 +67,7 @@ test("Eleventy set input/output, one file input root dir without leading dot/sla
   t.is(elev.outputDir, "./test/stubs/_site");
 });
 
-test("Eleventy set input/output, one file input root dir without leading dot/slash", async t => {
+test("Eleventy set input/output, one file input exitCode", async t => {
   let elev = new Eleventy(
     "./test/stubs/exitCode/failure.njk",
     "./test/stubs/exitCode/_site"
