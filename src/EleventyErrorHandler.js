@@ -31,7 +31,7 @@ class EleventyErrorHandler {
       } else if (!nextRef) {
         // last error in the loop
         let prefix = "    ";
-        console.error(
+        EleventyErrorHandler.message(
           prefix + (ref.stack || "").split("\n").join("\n" + prefix)
         );
       }
