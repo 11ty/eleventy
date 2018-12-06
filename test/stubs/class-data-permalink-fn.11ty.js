@@ -1,7 +1,8 @@
 class Test {
   get data() {
     return {
-      permalink: "/my-permalink/"
+      key: "value1",
+      permalink: data => `/my-permalink/${data.key}/`
     };
   }
 

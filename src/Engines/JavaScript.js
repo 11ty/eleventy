@@ -3,7 +3,7 @@ const TemplatePath = require("../TemplatePath");
 const lodashMerge = require("lodash.merge");
 
 class JavaScript extends TemplateEngine {
-  cleanup(result) {
+  normalize(result) {
     if (Buffer.isBuffer(result)) {
       return result.toString();
     }
@@ -11,7 +11,7 @@ class JavaScript extends TemplateEngine {
     return result;
   }
 
-  getRequire(inputPath) {
+  _getRequire(inputPath) {
     let requirePath = TemplatePath.localPath(inputPath);
     delete require.cache[requirePath];
     return require(requirePath);
@@ -22,7 +22,7 @@ class JavaScript extends TemplateEngine {
   }
 
   async getExtraDataFromFile(inputPath) {
-    const cls = this.getRequire(inputPath);
+    const cls = this._getRequire(inputPath);
     if (typeof cls === "function") {
       if (cls.prototype && "data" in cls.prototype) {
         let inst = new cls();
@@ -36,25 +36,38 @@ class JavaScript extends TemplateEngine {
   }
 
   async compile(str, inputPath) {
-    const cls = this.getRequire(inputPath);
+    // for permalinks
+    if (str) {
+      // works with String, Buffer, Function!
+      return function(data) {
+        let target = str;
+        if (typeof str === "function") {
+          target = str.call(this.config.javascriptFunctions, data);
+        }
+        return this.normalize(target);
+      }.bind(this);
+    }
+
+    // for all other requires, str will be falsy
+    const cls = this._getRequire(inputPath);
     if (typeof cls === "function") {
       // class with a `render` method
       if (cls.prototype && "render" in cls.prototype) {
         let inst = new cls();
         Object.assign(inst, this.config.javascriptFunctions);
         return function(data) {
-          return this.cleanup(inst.render.call(inst, data));
+          return this.normalize(inst.render.call(inst, data));
         }.bind(this);
       }
 
       // raw function
       return function(data) {
-        return this.cleanup(cls.call(this.config.javascriptFunctions, data));
+        return this.normalize(cls.call(this.config.javascriptFunctions, data));
       }.bind(this);
     } else {
       // string type does not work with javascriptFunctions
       return function() {
-        return this.cleanup(cls);
+        return this.normalize(cls);
       }.bind(this);
     }
   }

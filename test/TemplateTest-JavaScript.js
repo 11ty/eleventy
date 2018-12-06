@@ -44,6 +44,20 @@ test("JavaScript template type (class with data method)", async t => {
   t.is(pages[0].templateContent.trim(), "<p>Ted</p>");
 });
 
+test("JavaScript template type (class with shorthand data method)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/class-data-fn-shorthand.11ty.js",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is(await tmpl.getOutputPath(), "./dist/class-data-fn-shorthand/index.html");
+  let data = await tmpl.getData();
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), "<p>Ted</p>");
+});
+
 test("JavaScript template type (class with async data method)", async t => {
   let tmpl = new Template(
     "./test/stubs/class-async-data-fn.11ty.js",
@@ -106,4 +120,27 @@ test("JavaScript template type (class with data permalink)", async t => {
   );
 
   t.is(await tmpl.getOutputPath(), "./dist/my-permalink/index.html");
+});
+
+test("JavaScript template type (class with data permalink function)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/class-data-permalink-fn.11ty.js",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is(await tmpl.getOutputPath(), "./dist/my-permalink/value1/index.html");
+});
+
+test("JavaScript template type (class with data permalink function using a filter)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/class-data-permalink-fn-filter.11ty.js",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is(
+    await tmpl.getOutputPath(),
+    "./dist/my-permalink/my-super-cool-title/index.html"
+  );
 });
