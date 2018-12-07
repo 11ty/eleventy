@@ -144,3 +144,18 @@ test("JavaScript template type (class with data permalink function using a filte
     "./dist/my-permalink/my-super-cool-title/index.html"
   );
 });
+
+test("JavaScript template type (class with renderData)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/class-data-renderdata.11ty.js",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getRenderedData();
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(
+    pages[0].templateContent.trim(),
+    "<p>StringTesthowdy Zach, meet Thanos</p>"
+  );
+});

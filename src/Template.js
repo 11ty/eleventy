@@ -157,7 +157,13 @@ class Template extends TemplateContent {
   }
 
   async mapDataAsRenderedTemplates(data, templateData) {
-    if (Array.isArray(data)) {
+    // function supported in JavaScript type
+    if (typeof data === "string" || typeof data === "function") {
+      debug("rendering data.renderData for %o", this.inputPath);
+      // bypassMarkdown
+      let str = await super.render(data, templateData, true);
+      return str;
+    } else if (Array.isArray(data)) {
       let arr = [];
       for (let j = 0, k = data.length; j < k; j++) {
         arr.push(await this.mapDataAsRenderedTemplates(data[j], templateData));
@@ -172,11 +178,6 @@ class Template extends TemplateContent {
         );
       }
       return obj;
-    } else if (typeof data === "string") {
-      debug("rendering data.renderData for %o", this.inputPath);
-      // bypassMarkdown
-      let str = await super.render(data, templateData, true);
-      return str;
     }
 
     return data;
