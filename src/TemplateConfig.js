@@ -3,6 +3,7 @@ const chalk = require("chalk");
 const lodashMerge = require("lodash/merge");
 const TemplatePath = require("./TemplatePath");
 const EleventyBaseError = require("./EleventyBaseError");
+const dependencyTree = require("dependency-tree");
 const eleventyConfig = require("./EleventyConfig");
 const debug = require("debug")("Eleventy:TemplateConfig");
 
@@ -25,6 +26,22 @@ class TemplateConfig {
 
   getLocalProjectConfigFile() {
     return this.localProjectConfigPath;
+  }
+
+  getLocalProjectConfigFileDependencies() {
+    let fullConfigPath = TemplatePath.localPath(this.localProjectConfigPath);
+    return dependencyTree
+      .toList({
+        filename: fullConfigPath,
+        directory: TemplatePath.localPath()
+      })
+      .filter(function(dependency) {
+        // prune out the config file and any node modules
+        return (
+          dependency !== fullConfigPath &&
+          dependency.indexOf("node_modules") === -1
+        );
+      });
   }
 
   reset() {

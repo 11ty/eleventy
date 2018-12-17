@@ -49,7 +49,7 @@ Eleventy.prototype.setPathPrefix = function(pathPrefix) {
   }
 };
 
-Eleventy.prototype.setConfigPath = function(configPath) {
+Eleventy.prototype.setConfigPathOverride = function(configPath) {
   if (configPath) {
     this.configPath = configPath;
 
@@ -265,6 +265,7 @@ Eleventy.prototype.watch = async function() {
   // Watch the local project config file
   rawFiles.push(config.getLocalProjectConfigFile());
   rawFiles = rawFiles.concat(
+    config.getLocalProjectConfigFileDependencies(),
     await this.eleventyFiles.getGlobWatcherTemplateDataFiles()
   );
   debug("Watching for changes to: %o", rawFiles);

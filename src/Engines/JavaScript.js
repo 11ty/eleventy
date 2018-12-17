@@ -1,5 +1,6 @@
 const TemplateEngine = require("./TemplateEngine");
 const TemplatePath = require("../TemplatePath");
+const dependencyTree = require("dependency-tree");
 const lodashMerge = require("lodash.merge");
 
 class JavaScript extends TemplateEngine {
@@ -9,6 +10,13 @@ class JavaScript extends TemplateEngine {
     }
 
     return result;
+  }
+
+  getDependencies(inputPath) {
+    return dependencyTree.toList({
+      filename: inputPath,
+      directory: TemplatePath.localPath()
+    });
   }
 
   _getRequire(inputPath) {

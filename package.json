@@ -81,6 +81,7 @@
     "browser-sync": "^2.24.7",
     "chalk": "^2.4.1",
     "debug": "^4.0.1",
+    "dependency-tree": "^6.3.0",
     "ejs": "^2.6.1",
     "fast-glob": "^2.2.2",
     "fs-extra": "^7.0.0",

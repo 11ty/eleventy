@@ -37,7 +37,7 @@ try {
   cmdCheck.hasUnknownArguments();
 
   let elev = new Eleventy(argv.input, argv.output);
-  elev.setConfigPath(argv.config);
+  elev.setConfigPathOverride(argv.config);
   elev.setPathPrefix(argv.pathprefix);
   elev.setDryRun(argv.dryrun);
   elev.setPassthroughAll(argv.passthroughall);

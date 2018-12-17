@@ -159,3 +159,19 @@ test("JavaScript template type (class with renderData)", async t => {
     "<p>StringTesthowdy Zach, meet Thanos</p>"
   );
 });
+
+test("JavaScript template type (dependency tree)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/class-with-dep.11ty.js",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let deps = (await tmpl.engine.getDependencies(tmpl.inputPath)).map(function(
+    file
+  ) {
+    return file.split("/").pop();
+  });
+
+  t.deepEqual(deps, ["class-with-dep-upstream.js", "class-with-dep.11ty.js"]);
+});

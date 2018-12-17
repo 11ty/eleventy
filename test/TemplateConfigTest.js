@@ -344,3 +344,16 @@ test("Properly throws error on missing module #182", t => {
     );
   });
 });
+
+test("Config file with dependencies (for watching)", t => {
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config-deps.js"
+  );
+  t.deepEqual(
+    templateCfg.getLocalProjectConfigFileDependencies().map(function(filename) {
+      return filename.split("/").pop();
+    }),
+    ["config-deps-upstream.js"]
+  );
+});
