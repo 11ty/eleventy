@@ -94,16 +94,20 @@ class Liquid extends TemplateEngine {
         parse: function(tagToken, remainTokens) {
           this.name = tagToken.name;
           this.args = tagToken.args;
+          // console.log( shortcodeName );
+          // console.log( "this.name: ", this.name );
+          // console.log( "this.args: ", this.args );
+          // console.log( "this.args: ", JSON.stringify(this.parse(this.args)) );
+          // console.log( "tagToken: ", tagToken );
+          // console.log( "remainTokens: ", JSON.stringify(remainTokens) );
         },
         render: function(scope, hash) {
           let argArray = [];
           if (typeof this.args === "string") {
             // TODO key=value key2=value
             // TODO JSON?
-            let args = this.args.split(" ");
-            for (let arg of args) {
-              argArray.push(LiquidLib.evalExp(arg, scope)); // or evalValue
-            }
+            argArray = (LiquidLib.evalExp(this.args, scope) || "").split(" "); // or evalValue
+            console.log(`${shortcodeName} evalExp of string: `, argArray);
           }
 
           return Promise.resolve(shortcodeFn(...argArray));
