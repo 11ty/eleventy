@@ -68,6 +68,7 @@ test("Eleventy set input/output, one file input root dir without leading dot/sla
 });
 
 test("Eleventy set input/output, one file input exitCode", async t => {
+  let previousExitCode = process.exitCode;
   let elev = new Eleventy(
     "./test/stubs/exitCode/failure.njk",
     "./test/stubs/exitCode/_site"
@@ -84,4 +85,6 @@ test("Eleventy set input/output, one file input exitCode", async t => {
   await elev.write();
 
   t.is(process.exitCode, 1);
+
+  process.exitCode = previousExitCode;
 });
