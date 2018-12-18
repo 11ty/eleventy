@@ -1,6 +1,6 @@
+const moo = require("moo");
 const LiquidLib = require("liquidjs");
 const TemplateEngine = require("./TemplateEngine");
-const config = require("../Config");
 // const debug = require("debug")("Eleventy:Liquid");
 
 class Liquid extends TemplateEngine {
@@ -11,6 +11,14 @@ class Liquid extends TemplateEngine {
 
     this.setLibrary(this.config.libraryOverrides.liquid);
     this.setLiquidOptions(this.config.liquidOptions);
+
+    this.argLexer = moo.compile({
+      number: /[0-9]+\.*[0-9]*/,
+      doubleQuoteString: /"(?:\\["\\]|[^\n"\\])*"/,
+      singleQuoteString: /'(?:\\['\\]|[^\n'\\])*'/,
+      keyword: /[a-zA-Z0-9]+/,
+      whitespace: /[, \t]+/ // includes comma separator
+    });
   }
 
   setLibrary(lib) {
@@ -88,27 +96,44 @@ class Liquid extends TemplateEngine {
     }
   }
 
+  static parseArguments(lexer, str, scope) {
+    let argArray = [];
+
+    if (typeof str === "string") {
+      // TODO key=value key2=value
+      // TODO JSON?
+      lexer.reset(str);
+      let arg = lexer.next();
+      while (arg) {
+        /*{
+          type: 'doubleQuoteString',
+          value: '"test 2"',
+          text: '"test 2"',
+          toString: [Function: tokenToString],
+          offset: 0,
+          lineBreaks: 0,
+          line: 1,
+          col: 1 }*/
+        if (arg.type !== "whitespace") {
+          argArray.push(LiquidLib.evalExp(arg.value, scope)); // or evalValue
+        }
+        arg = lexer.next();
+      }
+    }
+
+    return argArray;
+  }
+
   addShortcode(shortcodeName, shortcodeFn) {
+    let _t = this;
     this.addTag(shortcodeName, function(liquidEngine) {
       return {
         parse: function(tagToken, remainTokens) {
           this.name = tagToken.name;
           this.args = tagToken.args;
-          // console.log( shortcodeName );
-          // console.log( "this.name: ", this.name );
-          // console.log( "this.args: ", this.args );
-          // console.log( "this.args: ", JSON.stringify(this.parse(this.args)) );
-          // console.log( "tagToken: ", tagToken );
-          // console.log( "remainTokens: ", JSON.stringify(remainTokens) );
         },
         render: function(scope, hash) {
-          let argArray = [];
-          if (typeof this.args === "string") {
-            // TODO key=value key2=value
-            // TODO JSON?
-            argArray = (LiquidLib.evalExp(this.args, scope) || "").split(" "); // or evalValue
-            console.log(`${shortcodeName} evalExp of string: `, argArray);
-          }
+          let argArray = Liquid.parseArguments(_t.argLexer, this.args, scope);
 
           return Promise.resolve(shortcodeFn(...argArray));
         }
@@ -117,6 +142,7 @@ class Liquid extends TemplateEngine {
   }
 
   addPairedShortcode(shortcodeName, shortcodeFn) {
+    let _t = this;
     this.addTag(shortcodeName, function(liquidEngine) {
       return {
         parse: function(tagToken, remainTokens) {
@@ -135,11 +161,7 @@ class Liquid extends TemplateEngine {
           stream.start();
         },
         render: function(scope, hash) {
-          let argArray = [];
-          let args = this.args.split(" ");
-          for (let arg of args) {
-            argArray.push(LiquidLib.evalExp(arg, scope)); // or evalValue
-          }
+          let argArray = Liquid.parseArguments(_t.argLexer, this.args, scope);
 
           return new Promise((resolve, reject) => {
             liquidEngine.renderer

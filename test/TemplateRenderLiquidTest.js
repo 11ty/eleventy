@@ -485,7 +485,7 @@ test("Issue 347: Liquid Shortcode string argument with space, double quotes", as
   );
 });
 
-test.skip("Issue 347: Liquid Shortcode string argument with space, single quotes", async t => {
+test("Issue 347: Liquid Shortcode string argument with space, single quotes", async t => {
   let tr = new TemplateRender("liquid", "./test/stubs/");
   tr.engine.addShortcode("issue347", function(str) {
     return str + "Zach";
@@ -494,5 +494,93 @@ test.skip("Issue 347: Liquid Shortcode string argument with space, single quotes
   t.is(
     await tr.render("{% issue347 'test 2' %}", { name: "alkdsjfkslja" }),
     "test 2Zach"
+  );
+});
+
+test("Issue 347: Liquid Shortcode string argument with space, combination of quotes", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addShortcode("issue347", function(str, str2) {
+    return str + str2 + "Zach";
+  });
+
+  t.is(
+    await tr.render("{% issue347 'test 2' \"test 3\" %}", {
+      name: "alkdsjfkslja"
+    }),
+    "test 2test 3Zach"
+  );
+});
+
+test("Issue 347: Liquid Shortcode multiple arguments, comma separated", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addShortcode("issue347", function(str, str2) {
+    return str + str2 + "Zach";
+  });
+
+  t.is(
+    await tr.render("{% issue347 'test 2', \"test 3\" %}", {
+      name: "alkdsjfkslja"
+    }),
+    "test 2test 3Zach"
+  );
+});
+
+test("Issue 347: Liquid Shortcode multiple arguments, comma separated, one is an integer", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addShortcode("issue347", function(str, str2) {
+    return str + str2 + "Zach";
+  });
+
+  t.is(
+    await tr.render("{% issue347 'test 2', 3 %}", { name: "alkdsjfkslja" }),
+    "test 23Zach"
+  );
+});
+
+test("Issue 347: Liquid Shortcode multiple arguments, comma separated, one is a float", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addShortcode("issue347", function(str, str2) {
+    return str + str2 + "Zach";
+  });
+
+  t.is(
+    await tr.render("{% issue347 'test 2', 3.23 %}", { name: "alkdsjfkslja" }),
+    "test 23.23Zach"
+  );
+});
+
+test("Issue 347: Liquid Shortcode boolean argument", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addShortcode("issue347", function(bool) {
+    return bool ? "Zach" : "Not Zach";
+  });
+
+  t.is(
+    await tr.render("{% issue347 true %}", { name: "alkdsjfkslja" }),
+    "Zach"
+  );
+  t.is(
+    await tr.render("{% issue347 false %}", { name: "alkdsjfkslja" }),
+    "Not Zach"
+  );
+});
+
+test("Issue 347: Liquid Paired Shortcode with Spaces", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addPairedShortcode("postfixWithZach", function(
+    content,
+    str1,
+    num,
+    str2
+  ) {
+    return str1 + num + str2 + content + "Zach";
+  });
+
+  t.is(
+    await tr.render(
+      "{% postfixWithZach 'My Name', 1234, \"Other\" %}Content{% endpostfixWithZach %}",
+      { name: "test" }
+    ),
+    "My Name1234OtherContentZach"
   );
 });
