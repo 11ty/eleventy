@@ -2,7 +2,7 @@ import test from "ava";
 import TemplateRender from "../src/TemplateRender";
 import path from "path";
 
-test(t => {
+test("Basic", t => {
   // Path is unnecessary but supported
   t.is(TemplateRender.cleanupEngineName("default.ejs"), "ejs");
   t.true(TemplateRender.hasEngine("default.ejs"));

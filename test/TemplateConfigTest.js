@@ -222,31 +222,6 @@ test("Non-string namespaces are ignored", t => {
   t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
 });
 
-test("Add namespaced universal filter using underscore", t => {
-  eleventyConfig.reset();
-  eleventyConfig.namespace("testNamespace_", function() {
-    eleventyConfig.addFilter("myFilterName", function() {});
-  });
-
-  let templateCfg = new TemplateConfig(
-    require("../config.js"),
-    "./test/stubs/config.js"
-  );
-  let cfg = templateCfg.getConfig();
-  t.not(
-    Object.keys(cfg.liquidFilters).indexOf("testNamespace_myFilterName"),
-    -1
-  );
-  t.not(
-    Object.keys(cfg.handlebarsHelpers).indexOf("testNamespace_myFilterName"),
-    -1
-  );
-  t.not(
-    Object.keys(cfg.nunjucksFilters).indexOf("testNamespace_myFilterName"),
-    -1
-  );
-});
-
 test(".addPlugin oddity: I don’t think pluginNamespace was ever passed in here, but we don’t want this to break", t => {
   eleventyConfig.reset();
   eleventyConfig.addPlugin(function(eleventyConfig, pluginNamespace) {

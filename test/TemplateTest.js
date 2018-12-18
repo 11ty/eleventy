@@ -82,7 +82,7 @@ test("HTML files output to the same as the input directory have a file suffix ad
   t.is(await tmpl.getOutputPath(), "./test/stubs/index-o.html");
 });
 
-test("HTML files output to the same as the input directory have a file suffix added (only if index, this _is_ index).", async t => {
+test("HTML files output to the same as the input directory have a file suffix added (only if index, this _is_ index, subfolder).", async t => {
   let tmpl = new Template(
     "./test/stubs/subfolder/index.html",
     "./test/stubs",
@@ -899,7 +899,9 @@ test("Override base templating engine should error with bad string", async t => 
     "./dist"
   );
 
-  await t.throws(tmpl.render());
+  await t.throwsAsync(async () => {
+    await tmpl.render();
+  });
 });
 
 test("Override base templating engine (bypasses markdown)", async t => {
