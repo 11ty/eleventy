@@ -291,7 +291,7 @@ test("Glob Watcher Files with File Extension Passthroughs", async t => {
   ]);
 });
 
-test("Glob Watcher Files with Config Passthroughs", async t => {
+test("Glob Watcher Files with Config Passthroughs (one template format)", async t => {
   let evf = new EleventyFiles("test/stubs", "test/stubs/_site", ["njk"]);
   evf.init();
 
@@ -314,7 +314,7 @@ test("Glob Watcher Files with Config Passthroughs", async t => {
   ]);
 });
 
-test("Glob Watcher Files with Config Passthroughs", async t => {
+test("Glob Watcher Files with Config Passthroughs (no template formats)", async t => {
   let evf = new EleventyFiles("test/stubs", "test/stubs/_site", []);
   evf.init();
 

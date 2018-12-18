@@ -53,7 +53,7 @@
     "files": [
       "test/*.js"
     ],
-    "source": [
+    "sources": [
       "**/.eleventyignore",
       "src/**/*.js",
       "test/stubs/**"
@@ -67,7 +67,7 @@
   },
   "devDependencies": {
     "@11ty/eleventy-plugin-syntaxhighlight": "^2.0.0",
-    "ava": "^0.25.0",
+    "ava": "^1.0.1",
     "husky": "^1.0.1",
     "lint-staged": "^7.3.0",
     "markdown-it-emoji": "^1.4.0",
@@ -94,6 +94,7 @@
     "luxon": "^1.4.1",
     "markdown-it": "^8.4.2",
     "minimist": "^1.2.0",
+    "moo": "^0.5.0",
     "multimatch": "^2.1.0",
     "mustache": "^2.3.0",
     "normalize-path": "^3.0.0",

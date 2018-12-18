@@ -13,7 +13,7 @@ test("Mustache Render", async t => {
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });
 
-test("Mustache Render Partial", async t => {
+test("Mustache Render Partial (raw text content)", async t => {
   let fn = await new TemplateRender(
     "mustache",
     "./test/stubs/"
@@ -21,7 +21,7 @@ test("Mustache Render Partial", async t => {
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-test("Mustache Render Partial", async t => {
+test("Mustache Render Partial (uses a variable in content)", async t => {
   let fn = await new TemplateRender(
     "mustache",
     "./test/stubs/"

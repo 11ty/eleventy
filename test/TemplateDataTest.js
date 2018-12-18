@@ -38,9 +38,10 @@ test("getData()", async t => {
 });
 
 test("Data dir does not exist", async t => {
-  let dataObj = new TemplateData("./test/thisdirectorydoesnotexist");
-
-  await t.throws(dataObj.getData());
+  await t.throwsAsync(async () => {
+    let dataObj = new TemplateData("./test/thisdirectorydoesnotexist");
+    await dataObj.getData();
+  });
 });
 
 test("Add local data", async t => {

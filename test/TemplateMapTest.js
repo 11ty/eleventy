@@ -266,7 +266,7 @@ This page is bars
   );
 });
 
-test("TemplateMap adds collections data and has page data values", async t => {
+test("TemplateMap adds collections data and has page data values using .cache()", async t => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   await tm.add(tmpl2);
@@ -286,7 +286,7 @@ test("TemplateMap adds collections data and has page data values", async t => {
   t.truthy(map[0].data.page.date);
 });
 
-test("TemplateMap adds collections data and has page data values", async t => {
+test("TemplateMap adds collections data and has page data values using .getCollectionsData()", async t => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   await tm.add(tmpl2);

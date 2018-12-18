@@ -16,7 +16,7 @@ test("Multiple formats", t => {
   t.deepEqual(map.getGlobs("src"), ["./src/**/*.njk", "./src/**/*.pug"]);
 });
 
-test("Invalid keys are filtered", t => {
+test("Invalid keys are filtered (no passthrough copy)", t => {
   let map = new EleventyExtensionMap(["lksdjfjlsk"]);
   map.setConfig({
     passthroughFileCopy: false
@@ -24,7 +24,7 @@ test("Invalid keys are filtered", t => {
   t.deepEqual(map.getGlobs(), []);
 });
 
-test("Invalid keys are filtered", t => {
+test("Invalid keys are filtered (using passthrough copy)", t => {
   let map = new EleventyExtensionMap(["lksdjfjlsk"]);
   map.setConfig({
     passthroughFileCopy: true
