@@ -17,7 +17,7 @@ class Liquid extends TemplateEngine {
       doubleQuoteString: /"(?:\\["\\]|[^\n"\\])*"/,
       singleQuoteString: /'(?:\\['\\]|[^\n'\\])*'/,
       keyword: /[a-zA-Z0-9]+/,
-      whitespace: /[, \t]+/ // includes comma separator
+      "ignore:whitespace": /[, \t]+/ // includes comma separator
     });
   }
 
@@ -114,7 +114,7 @@ class Liquid extends TemplateEngine {
           lineBreaks: 0,
           line: 1,
           col: 1 }*/
-        if (arg.type !== "whitespace") {
+        if (arg.type.indexOf("ignore:") === -1) {
           argArray.push(LiquidLib.evalExp(arg.value, scope)); // or evalValue
         }
         arg = lexer.next();
