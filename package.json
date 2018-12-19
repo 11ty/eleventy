@@ -78,12 +78,12 @@
   "dependencies": {
     "browser-sync": "^2.24.7",
     "chalk": "^2.4.1",
+    "chokidar": "^2.0.4",
     "debug": "^4.0.1",
     "dependency-tree": "^6.3.0",
     "ejs": "^2.6.1",
     "fast-glob": "^2.2.2",
     "fs-extra": "^7.0.0",
-    "glob-watcher": "^5.0.1",
     "gray-matter": "^4.0.1",
     "hamljs": "^0.6.2",
     "handlebars": "^4.0.12",

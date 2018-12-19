@@ -253,13 +253,17 @@ Eleventy.prototype._watch = async function(path) {
   }
 };
 
+Eleventy.prototype.getWatcher = function() {
+  return this.watcher;
+};
+
 Eleventy.prototype.watch = async function() {
   this.active = false;
   this.queuedToRun = false;
 
   await this.write();
 
-  const watch = require("glob-watcher");
+  const chokidar = require("chokidar");
 
   let rawFiles = this.eleventyFiles.getGlobWatcherFiles();
   // Watch the local project config file
@@ -270,10 +274,16 @@ Eleventy.prototype.watch = async function() {
   );
   debug("Watching for changes to: %o", rawFiles);
 
+  let ignores = this.eleventyFiles.getGlobWatcherIgnores();
+  debug("Watching but ignoring changes to: %o", ignores);
+
   console.log("Watching…");
-  let watcher = watch(rawFiles, {
-    ignored: this.eleventyFiles.getGlobWatcherIgnores()
+  let watcher = chokidar.watch(rawFiles, {
+    ignored: ignores,
+    ignoreInitial: true
   });
+
+  this.watcher = watcher;
 
   async function watchRun(path) {
     try {
