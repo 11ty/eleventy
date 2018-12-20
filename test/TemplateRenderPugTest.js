@@ -88,3 +88,15 @@ test("Pug Filter", async t => {
 `);
   t.is(await fn({ name: "Test" }), "<p>ZACH</p>");
 });
+
+test("Pug Render with Function", async t => {
+  let fn = await new TemplateRender("pug").getCompiledTemplate("p= name()");
+  t.is(
+    await fn({
+      name: function() {
+        return "Zach2";
+      }
+    }),
+    "<p>Zach2</p>"
+  );
+});
