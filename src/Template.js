@@ -3,6 +3,8 @@ const parsePath = require("parse-filepath");
 const normalize = require("normalize-path");
 const lodashIsObject = require("lodash/isObject");
 const { DateTime } = require("luxon");
+
+const EleventyExtensionMap = require("./EleventyExtensionMap");
 const TemplateData = require("./TemplateData");
 const TemplateContent = require("./TemplateContent");
 const TemplatePath = require("./TemplatePath");
@@ -39,12 +41,6 @@ class Template extends TemplateContent {
     }
     this.paginationData = {};
 
-    // HTML output can’t overwrite the HTML input file.
-    this.isHtmlIOException =
-      this.inputDir === this.outputDir &&
-      this.templateRender.isEngine("html") &&
-      this.parsed.name === "index";
-
     this.isVerbose = true;
     this.isDryRun = false;
     this.writeCount = 0;
@@ -71,6 +67,21 @@ class Template extends TemplateContent {
 
   getTemplateSubfolder() {
     return TemplatePath.stripPathFromDir(this.parsed.dir, this.inputDir);
+  }
+
+  get baseFile() {
+    return (this._extensionMap || EleventyExtensionMap).removeTemplateExtension(
+      this.parsed.base
+    );
+  }
+
+  get htmlIOException() {
+    // HTML output can’t overwrite the HTML input file.
+    return (
+      this.inputDir === this.outputDir &&
+      this.templateRender.isEngine("html") &&
+      this.baseFile === "index"
+    );
   }
 
   async _getLink(data) {
@@ -108,13 +119,13 @@ class Template extends TemplateContent {
 
     return TemplatePermalink.generate(
       this.getTemplateSubfolder(),
-      this.parsed.name,
+      this.baseFile,
       this.extraOutputSubdirectory,
-      this.isHtmlIOException ? this.config.htmlOutputSuffix : ""
+      this.htmlIOException ? this.config.htmlOutputSuffix : ""
     );
   }
 
-  // TODO instead of isHTMLIOException, do a global search to check if output path = input path and then add extra suffix
+  // TODO instead of htmlIOException, do a global search to check if output path = input path and then add extra suffix
   async getOutputLink(data) {
     let link = await this._getLink(data);
     return link.toString();
@@ -128,6 +139,7 @@ class Template extends TemplateContent {
   // TODO check for conflicts, see if file already exists?
   async getOutputPath(data) {
     let uri = await this.getOutputLink(data);
+
     if (uri === false) {
       return false;
     } else if (
@@ -145,7 +157,13 @@ class Template extends TemplateContent {
   }
 
   async mapDataAsRenderedTemplates(data, templateData) {
-    if (Array.isArray(data)) {
+    // function supported in JavaScript type
+    if (typeof data === "string" || typeof data === "function") {
+      debug("rendering data.renderData for %o", this.inputPath);
+      // bypassMarkdown
+      let str = await super.render(data, templateData, true);
+      return str;
+    } else if (Array.isArray(data)) {
       let arr = [];
       for (let j = 0, k = data.length; j < k; j++) {
         arr.push(await this.mapDataAsRenderedTemplates(data[j], templateData));
@@ -160,11 +178,6 @@ class Template extends TemplateContent {
         );
       }
       return obj;
-    } else if (typeof data === "string") {
-      debug("rendering data.renderData for %o", this.inputPath);
-      // bypassMarkdown
-      let str = await super.render(data, templateData, true);
-      return str;
     }
 
     return data;
@@ -498,7 +511,7 @@ class Template extends TemplateContent {
       this.outputDir,
       this.templateData
     );
-    tmpl._setConfig(this.config);
+    tmpl.config = this.config;
 
     for (let transform of this.transforms) {
       tmpl.addTransform(transform);

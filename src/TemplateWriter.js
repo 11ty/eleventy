@@ -57,6 +57,7 @@ TemplateWriter.prototype.getFileManager = function() {
       this.templateFormats,
       this.passthroughAll
     );
+    this.eleventyFiles.init();
   }
 
   return this.eleventyFiles;

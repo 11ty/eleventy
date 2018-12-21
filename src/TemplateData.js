@@ -113,13 +113,26 @@ class TemplateData {
     ]);
   }
 
+  async getTemplateJavaScriptDataFileGlob() {
+    let dir = await this.getInputDir();
+    return TemplatePath.addLeadingDotSlashArray([
+      `${dir}/**/*${this.config.jsDataFileSuffix}.js`
+    ]);
+  }
+
   async getGlobalDataGlob() {
     let dir = await this.getInputDir();
     return [this._getGlobalDataGlobByExtension(dir, "(json|js)")];
   }
 
+  getWatchPathCache() {
+    return this.pathCache;
+  }
+
   async getGlobalDataFiles() {
-    return fastglob.async(await this.getGlobalDataGlob());
+    let paths = await fastglob.async(await this.getGlobalDataGlob());
+    this.pathCache = paths;
+    return paths;
   }
 
   getObjectPathForDataFile(path) {

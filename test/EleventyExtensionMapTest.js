@@ -16,7 +16,7 @@ test("Multiple formats", t => {
   t.deepEqual(map.getGlobs("src"), ["./src/**/*.njk", "./src/**/*.pug"]);
 });
 
-test("Invalid keys are filtered", t => {
+test("Invalid keys are filtered (no passthrough copy)", t => {
   let map = new EleventyExtensionMap(["lksdjfjlsk"]);
   map.setConfig({
     passthroughFileCopy: false
@@ -24,7 +24,7 @@ test("Invalid keys are filtered", t => {
   t.deepEqual(map.getGlobs(), []);
 });
 
-test("Invalid keys are filtered", t => {
+test("Invalid keys are filtered (using passthrough copy)", t => {
   let map = new EleventyExtensionMap(["lksdjfjlsk"]);
   map.setConfig({
     passthroughFileCopy: true
@@ -92,4 +92,52 @@ test("removeTemplateExtension", t => {
     EleventyExtensionMap.removeTemplateExtension("component.js"),
     "component.js"
   );
+});
+
+test("getKey", t => {
+  t.is(EleventyExtensionMap.getKey("component.njk"), "njk");
+  t.is(EleventyExtensionMap.getKey("component.11ty.js"), "11ty.js");
+  t.is(EleventyExtensionMap.getKey("11ty.js"), "11ty.js");
+  t.is(EleventyExtensionMap.getKey(".11ty.js"), "11ty.js");
+
+  t.is(EleventyExtensionMap.getKey("sample.md"), "md");
+
+  t.is(EleventyExtensionMap.getKey(""), undefined);
+  t.is(EleventyExtensionMap.getKey("js"), undefined);
+  t.is(EleventyExtensionMap.getKey("component"), undefined);
+  t.is(EleventyExtensionMap.getKey("component.js"), undefined);
+});
+
+test("Extension aliasing (one format key)", t => {
+  let map = new EleventyExtensionMap(["md"]);
+  map.setConfig({
+    templateExtensionAliases: {
+      markdown: "md",
+      nunjucks: "njk" // N/A to current format list
+    }
+  });
+  t.deepEqual(map.getExtensionsFromKey("md"), ["md", "markdown"]);
+  t.deepEqual(map.getExtensionsFromKey("njk"), ["njk", "nunjucks"]);
+
+  // should filter out N/A aliases
+  t.deepEqual(map.getGlobs(), ["./**/*.md", "./**/*.markdown"]);
+});
+
+test("Extension aliasing (two format keys)", t => {
+  let map = new EleventyExtensionMap(["md", "njk"]);
+  map.setConfig({
+    templateExtensionAliases: {
+      markdown: "md",
+      nunjucks: "njk"
+    }
+  });
+  t.deepEqual(map.getExtensionsFromKey("md"), ["md", "markdown"]);
+  t.deepEqual(map.getExtensionsFromKey("njk"), ["njk", "nunjucks"]);
+
+  t.deepEqual(map.getGlobs(), [
+    "./**/*.md",
+    "./**/*.markdown",
+    "./**/*.njk",
+    "./**/*.nunjucks"
+  ]);
 });

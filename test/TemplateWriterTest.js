@@ -2,7 +2,9 @@ import test from "ava";
 import fs from "fs-extra";
 import fastglob from "fast-glob";
 import parsePath from "parse-filepath";
+import TemplateRender from "../src/TemplateRender";
 import EleventyFiles from "../src/EleventyFiles";
+import EleventyExtensionMap from "../src/EleventyExtensionMap";
 import TemplateWriter from "../src/TemplateWriter";
 // Not sure why but this import up `ava` and _createTemplate 👀
 // import Template from "../src/Template";
@@ -19,6 +21,7 @@ test("Output is a subdir of input", async t => {
     "./test/stubs/writeTest/_writeTestSite",
     ["ejs", "md"]
   );
+  evf.init();
 
   let files = await fastglob.async(evf.getFileGlobs());
   t.is(evf.getRawFiles().length, 2);
@@ -434,4 +437,121 @@ test.skip("renderData should exist and be resolved in a collection (Issue #289)"
 
   let templates = await mapEntry.template.getRenderedTemplates(mapEntry.data);
   t.is(templates[0].templateContent.trim(), "Test Title");
+});
+
+test("Write Test 11ty.js", async t => {
+  let tw = new TemplateWriter(
+    "./test/stubs/writeTestJS",
+    "./test/stubs/_writeTestJSSite"
+  );
+  let evf = new EleventyFiles(
+    "./test/stubs/writeTestJS",
+    "./test/stubs/_writeTestJSSite",
+    ["11ty.js"]
+  );
+  evf.init();
+
+  let files = await fastglob.async(evf.getFileGlobs());
+  t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTestJS/**/*.11ty.js"]);
+  t.deepEqual(files, ["./test/stubs/writeTestJS/test.11ty.js"]);
+
+  let tmpl = tw._createTemplate(files[0]);
+  t.is(
+    await tmpl.getOutputPath(),
+    "./test/stubs/_writeTestJSSite/test/index.html"
+  );
+});
+
+test("Markdown with alias", async t => {
+  let map = new EleventyExtensionMap(["md"]);
+  map.setConfig({
+    templateExtensionAliases: {
+      markdown: "md"
+    }
+  });
+
+  let evf = new EleventyFiles(
+    "./test/stubs/writeTestMarkdown",
+    "./test/stubs/_writeTestMarkdownSite",
+    ["md"]
+  );
+  evf._setExtensionMap(map);
+  evf.init();
+
+  let files = await fastglob.async(evf.getFileGlobs());
+  t.deepEqual(evf.getRawFiles(), [
+    "./test/stubs/writeTestMarkdown/**/*.md",
+    "./test/stubs/writeTestMarkdown/**/*.markdown"
+  ]);
+  t.deepEqual(files, [
+    "./test/stubs/writeTestMarkdown/sample.md",
+    "./test/stubs/writeTestMarkdown/sample2.markdown"
+  ]);
+
+  let tw = new TemplateWriter(
+    "./test/stubs/writeTestMarkdown",
+    "./test/stubs/_writeTestMarkdownSite"
+  );
+  tw.setEleventyFiles(evf);
+
+  let tmpl = tw._createTemplate(files[0]);
+  tmpl._setExtensionMap(map);
+  t.is(
+    await tmpl.getOutputPath(),
+    "./test/stubs/_writeTestMarkdownSite/sample/index.html"
+  );
+
+  let tmpl2 = tw._createTemplate(files[1]);
+  tmpl2._setExtensionMap(map);
+  t.is(
+    await tmpl2.getOutputPath(),
+    "./test/stubs/_writeTestMarkdownSite/sample2/index.html"
+  );
+});
+
+test("JavaScript with alias", async t => {
+  let map = new EleventyExtensionMap(["11ty.js"]);
+  map.setConfig({
+    templateExtensionAliases: {
+      js: "11ty.js"
+    }
+  });
+
+  let evf = new EleventyFiles(
+    "./test/stubs/writeTestJS",
+    "./test/stubs/_writeTestJSSite",
+    ["11ty.js"]
+  );
+  evf._setExtensionMap(map);
+  evf.init();
+
+  let files = await fastglob.async(evf.getFileGlobs());
+  t.deepEqual(evf.getRawFiles(), [
+    "./test/stubs/writeTestJS/**/*.11ty.js",
+    "./test/stubs/writeTestJS/**/*.js"
+  ]);
+  t.deepEqual(files, [
+    "./test/stubs/writeTestJS/sample.js",
+    "./test/stubs/writeTestJS/test.11ty.js"
+  ]);
+
+  let tw = new TemplateWriter(
+    "./test/stubs/writeTestJS",
+    "./test/stubs/_writeTestJSSite"
+  );
+  tw.setEleventyFiles(evf);
+
+  let tmpl = tw._createTemplate(files[0]);
+  tmpl._setExtensionMap(map);
+  t.is(
+    await tmpl.getOutputPath(),
+    "./test/stubs/_writeTestJSSite/sample/index.html"
+  );
+
+  let tmpl2 = tw._createTemplate(files[1]);
+  tmpl2._setExtensionMap(map);
+  t.is(
+    await tmpl2.getOutputPath(),
+    "./test/stubs/_writeTestJSSite/test/index.html"
+  );
 });

@@ -36,9 +36,7 @@
   "scripts": {
     "default": "cd playground && npx eleventy --input=. --output=_site",
     "test": "npx nyc ava",
-    "coverage": "npm run test && npx nyc report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && node cmd.js --config=docs-src/.eleventy.docs.js",
-    "precommit": "lint-staged",
-    "prepush": "npx ava"
+    "coverage": "npm run test && npx nyc report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && node cmd.js --config=docs-src/.eleventy.docs.js"
   },
   "author": {
     "name": "Zach Leatherman",
@@ -53,9 +51,10 @@
     "files": [
       "test/*.js"
     ],
-    "source": [
+    "sources": [
       "**/.eleventyignore",
-      "src/**/*.js"
+      "src/**/*.js",
+      "test/stubs/**"
     ]
   },
   "lint-staged": {
@@ -65,22 +64,26 @@
     ]
   },
   "devDependencies": {
-    "ava": "^0.25.0",
+    "@11ty/eleventy-plugin-syntaxhighlight": "^2.0.0",
+    "ava": "^1.0.1",
     "husky": "^1.0.1",
-    "lint-staged": "^7.3.0",
+    "lint-staged": "^8.1.0",
     "markdown-it-emoji": "^1.4.0",
     "nyc": "^13.0.1",
-    "prettier": "1.14.3",
-    "@11ty/eleventy-plugin-syntaxhighlight": "^2.0.0"
+    "prettier": "^1.15.3",
+    "viperhtml": "^2.12.0",
+    "vue": "^2.5.16",
+    "vue-server-renderer": "^2.5.16"
   },
   "dependencies": {
     "browser-sync": "^2.24.7",
     "chalk": "^2.4.1",
+    "chokidar": "^2.0.4",
     "debug": "^4.0.1",
+    "dependency-tree": "^6.3.0",
     "ejs": "^2.6.1",
     "fast-glob": "^2.2.2",
     "fs-extra": "^7.0.0",
-    "glob-watcher": "^5.0.1",
     "gray-matter": "^4.0.1",
     "hamljs": "^0.6.2",
     "handlebars": "^4.0.12",
@@ -90,6 +93,7 @@
     "luxon": "^1.4.1",
     "markdown-it": "^8.4.2",
     "minimist": "^1.2.0",
+    "moo": "^0.5.0",
     "multimatch": "^2.1.0",
     "mustache": "^2.3.0",
     "normalize-path": "^3.0.0",
@@ -103,5 +107,11 @@
     "slugify": "^1.3.1",
     "time-require": "^0.1.2",
     "valid-url": "^1.0.9"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "pre-push": "npx ava"
+    }
   }
 }

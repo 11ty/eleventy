@@ -16,7 +16,8 @@ module.exports = function(config) {
       "pug",
       "njk",
       "html",
-      "jstl"
+      "jstl",
+      "11ty.js"
     ],
     // if your site lives in a subdirectory, change this
     pathPrefix: "/",

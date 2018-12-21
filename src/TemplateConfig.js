@@ -3,6 +3,7 @@ const chalk = require("chalk");
 const lodashMerge = require("lodash/merge");
 const TemplatePath = require("./TemplatePath");
 const EleventyBaseError = require("./EleventyBaseError");
+const dependencyTree = require("dependency-tree");
 const eleventyConfig = require("./EleventyConfig");
 const debug = require("debug")("Eleventy:TemplateConfig");
 
@@ -24,7 +25,7 @@ class TemplateConfig {
   }
 
   getLocalProjectConfigFile() {
-    return this.localProjectConfigPath;
+    return TemplatePath.addLeadingDotSlash(this.localProjectConfigPath);
   }
 
   reset() {

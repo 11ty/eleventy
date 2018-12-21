@@ -79,7 +79,7 @@ test("Handlebars Render Helper", async t => {
   t.is(await fn({ name: "Zach" }), "<p>This is a Zach Zach.</p>");
 });
 
-test("Handlebars Render Helper", async t => {
+test("Handlebars Render Helper (uses argument)", async t => {
   let tr = new TemplateRender("hbs");
   tr.engine.addHelpers({
     helpername2: function(name) {

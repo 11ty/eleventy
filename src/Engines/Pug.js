@@ -6,7 +6,6 @@ class Pug extends TemplateEngine {
   constructor(name, inputDir) {
     super(name, inputDir);
 
-    this.config = config.getConfig();
     this.pugOptions = {};
 
     this.setLibrary(this.config.libraryOverrides.pug);

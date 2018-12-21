@@ -528,12 +528,12 @@ test("Pagination with deep data merge #147", async t => {
     "./test/stubs/",
     "./dist"
   );
-  tmpl._setConfig({
+  tmpl.config = {
     keys: {
       layout: "layout"
     },
     dataDeepMerge: true
-  });
+  };
 
   let data = await tmpl.getData();
   let paging = new Pagination(data);
@@ -566,14 +566,14 @@ test("Pagination with deep data merge with alias #147", async t => {
     "./test/stubs/",
     "./dist"
   );
-  tmpl._setConfig({
+  tmpl.config = {
     keys: {
       layout: "layout",
       permalink: "permalink"
     },
     dynamicPermalinks: true,
     dataDeepMerge: true
-  });
+  };
 
   let data = await tmpl.getData();
   let paging = new Pagination(data);

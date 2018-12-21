@@ -125,14 +125,12 @@ class EleventyServe {
       notify: false,
       index: "index.html"
     });
+  }
 
-    process.on(
-      "SIGINT",
-      function() {
-        this.server.exit();
-        process.exit();
-      }.bind(this)
-    );
+  close() {
+    if (this.server) {
+      this.server.exit();
+    }
   }
 
   reload(path, isInclude) {

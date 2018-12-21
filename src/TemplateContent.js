@@ -2,6 +2,7 @@ const fs = require("fs-extra");
 const normalize = require("normalize-path");
 const matter = require("gray-matter");
 
+const TemplateData = require("./TemplateData");
 const TemplateRender = require("./TemplateRender");
 const EleventyBaseError = require("./EleventyBaseError");
 const config = require("./Config");
@@ -13,7 +14,6 @@ class TemplateContentRenderError extends EleventyBaseError {}
 
 class TemplateContent {
   constructor(inputPath, inputDir) {
-    this.config = config.getConfig();
     this.inputPath = inputPath;
 
     if (inputDir) {
@@ -21,13 +21,39 @@ class TemplateContent {
     } else {
       this.inputDir = false;
     }
-
-    this.templateRender = new TemplateRender(this.inputPath, this.inputDir);
   }
 
   /* Used by tests */
-  _setConfig(config) {
-    this.config = config;
+  _setExtensionMap(map) {
+    this._extensionMap = map;
+  }
+
+  set config(config) {
+    this._config = config;
+  }
+
+  get config() {
+    if (!this._config) {
+      this._config = config.getConfig();
+    }
+
+    return this._config;
+  }
+
+  get engine() {
+    return this.templateRender.engine;
+  }
+
+  get templateRender() {
+    if (!this._templateRender) {
+      this._templateRender = new TemplateRender(
+        this.inputPath,
+        this.inputDir,
+        this._extensionMap
+      );
+    }
+
+    return this._templateRender;
   }
 
   getInputPath() {
@@ -40,11 +66,23 @@ class TemplateContent {
 
   async read() {
     this.inputContent = await this.getInputContent();
-    this.frontMatter = matter(this.inputContent);
+
+    if (this.inputContent) {
+      this.frontMatter = matter(this.inputContent);
+    } else {
+      this.frontMatter = {
+        data: {},
+        content: ""
+      };
+    }
   }
 
   async getInputContent() {
-    return fs.readFile(this.inputPath, "utf-8");
+    if (this.engine.needsToReadFileContents()) {
+      return fs.readFile(this.inputPath, "utf-8");
+    }
+
+    return "";
   }
 
   async getFrontMatter() {
@@ -67,6 +105,7 @@ class TemplateContent {
     if ("tags" in data && typeof data.tags === "string") {
       data.tags = [data.tags];
     }
+
     return data;
   }
 
@@ -75,7 +114,9 @@ class TemplateContent {
       await this.read();
     }
 
-    return this.cleanupFrontMatterData(this.frontMatter.data || {});
+    let extraData = await this.engine.getExtraDataFromFile(this.inputPath);
+    let data = TemplateData.mergeDeep({}, this.frontMatter.data, extraData);
+    return this.cleanupFrontMatterData(data);
   }
 
   async getEngineOverride() {

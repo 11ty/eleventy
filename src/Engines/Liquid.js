@@ -1,17 +1,24 @@
+const moo = require("moo");
 const LiquidLib = require("liquidjs");
 const TemplateEngine = require("./TemplateEngine");
-const config = require("../Config");
 // const debug = require("debug")("Eleventy:Liquid");
 
 class Liquid extends TemplateEngine {
   constructor(name, inputDir) {
     super(name, inputDir);
 
-    this.config = config.getConfig();
     this.liquidOptions = {};
 
     this.setLibrary(this.config.libraryOverrides.liquid);
     this.setLiquidOptions(this.config.liquidOptions);
+
+    this.argLexer = moo.compile({
+      number: /[0-9]+\.*[0-9]*/,
+      doubleQuoteString: /"(?:\\["\\]|[^\n"\\])*"/,
+      singleQuoteString: /'(?:\\['\\]|[^\n'\\])*'/,
+      keyword: /[a-zA-Z0-9]+/,
+      "ignore:whitespace": /[, \t]+/ // includes comma separator
+    });
   }
 
   setLibrary(lib) {
@@ -89,7 +96,36 @@ class Liquid extends TemplateEngine {
     }
   }
 
+  static parseArguments(lexer, str, scope) {
+    let argArray = [];
+
+    if (typeof str === "string") {
+      // TODO key=value key2=value
+      // TODO JSON?
+      lexer.reset(str);
+      let arg = lexer.next();
+      while (arg) {
+        /*{
+          type: 'doubleQuoteString',
+          value: '"test 2"',
+          text: '"test 2"',
+          toString: [Function: tokenToString],
+          offset: 0,
+          lineBreaks: 0,
+          line: 1,
+          col: 1 }*/
+        if (arg.type.indexOf("ignore:") === -1) {
+          argArray.push(LiquidLib.evalExp(arg.value, scope)); // or evalValue
+        }
+        arg = lexer.next();
+      }
+    }
+
+    return argArray;
+  }
+
   addShortcode(shortcodeName, shortcodeFn) {
+    let _t = this;
     this.addTag(shortcodeName, function(liquidEngine) {
       return {
         parse: function(tagToken, remainTokens) {
@@ -97,15 +133,7 @@ class Liquid extends TemplateEngine {
           this.args = tagToken.args;
         },
         render: function(scope, hash) {
-          let argArray = [];
-          if (typeof this.args === "string") {
-            // TODO key=value key2=value
-            // TODO JSON?
-            let args = this.args.split(" ");
-            for (let arg of args) {
-              argArray.push(LiquidLib.evalExp(arg, scope)); // or evalValue
-            }
-          }
+          let argArray = Liquid.parseArguments(_t.argLexer, this.args, scope);
 
           return Promise.resolve(shortcodeFn(...argArray));
         }
@@ -114,6 +142,7 @@ class Liquid extends TemplateEngine {
   }
 
   addPairedShortcode(shortcodeName, shortcodeFn) {
+    let _t = this;
     this.addTag(shortcodeName, function(liquidEngine) {
       return {
         parse: function(tagToken, remainTokens) {
@@ -132,11 +161,7 @@ class Liquid extends TemplateEngine {
           stream.start();
         },
         render: function(scope, hash) {
-          let argArray = [];
-          let args = this.args.split(" ");
-          for (let arg of args) {
-            argArray.push(LiquidLib.evalExp(arg, scope)); // or evalValue
-          }
+          let argArray = Liquid.parseArguments(_t.argLexer, this.args, scope);
 
           return new Promise((resolve, reject) => {
             liquidEngine.renderer

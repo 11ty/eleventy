@@ -6,7 +6,6 @@ class Haml extends TemplateEngine {
   constructor(name, inputDir) {
     super(name, inputDir);
 
-    this.config = config.getConfig();
     this.setLibrary(this.config.libraryOverrides.haml);
   }
 

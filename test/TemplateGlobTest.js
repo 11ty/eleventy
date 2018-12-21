@@ -49,7 +49,7 @@ test("NormalizePath with globstar and star and file extension", t => {
   );
 });
 
-test("NormalizePath with globstar and star and file extension", t => {
+test("NormalizePath with globstar and star and file extension (errors)", t => {
   t.throws(() => {
     TemplateGlob.normalizePath("!views/**/*.json");
   });

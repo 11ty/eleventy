@@ -21,7 +21,12 @@ class EleventyFiles {
     this.includesDir = this.inputDir + "/" + this.config.dir.includes;
     this.passthroughAll = !!passthroughAll;
 
-    this.setFormats(formats);
+    this.formats = formats;
+    this.extensionMap = new EleventyExtensionMap(formats);
+  }
+
+  init() {
+    this.initFormatsGlobs();
     this.setPassthroughManager();
     this.setupGlobs();
   }
@@ -32,18 +37,19 @@ class EleventyFiles {
   }
 
   /* For testing */
-  overrideConfig(config) {
+  _setConfig(config) {
     this.config = config;
+  }
+  /* For testing */
+  _setExtensionMap(map) {
+    this.extensionMap = map;
   }
 
   setPassthroughAll(passthroughAll) {
     this.passthroughAll = !!passthroughAll;
   }
 
-  setFormats(formats) {
-    this.formats = formats;
-    this.extensionMap = new EleventyExtensionMap(formats);
-
+  initFormatsGlobs() {
     // Input was a directory
     if (this.input === this.inputDir) {
       this.templateGlobs = TemplateGlob.map(
@@ -72,6 +78,7 @@ class EleventyFiles {
     this.templateData = templateData;
   }
 
+  // TODO make this a getter
   getTemplateData() {
     if (!this.templateData) {
       this.templateData = new TemplateData(this.inputDir);
@@ -174,11 +181,19 @@ class EleventyFiles {
     return this.templateGlobs;
   }
 
+  getWatchPathCache() {
+    return this.pathCache;
+  }
+
   async getFiles() {
     let globs = this.getFileGlobs();
 
     debug("Searching for: %o", globs);
-    return TemplatePath.addLeadingDotSlashArray(await fastglob.async(globs));
+    let paths = TemplatePath.addLeadingDotSlashArray(
+      await fastglob.async(globs)
+    );
+    this.pathCache = paths;
+    return paths;
   }
 
   getGlobWatcherFiles() {
@@ -191,6 +206,14 @@ class EleventyFiles {
   async getGlobWatcherTemplateDataFiles() {
     let templateData = this.getTemplateData();
     return await templateData.getTemplateDataFileGlob();
+  }
+
+  // TODO this isn’t great but reduces complexity avoiding using TemplateData:getLocalDataPaths for each template in the cache
+  async getWatcherTemplateJavaScriptDataFiles() {
+    let globs = await this.getTemplateData().getTemplateJavaScriptDataFileGlob();
+    return TemplatePath.addLeadingDotSlashArray(
+      await fastglob.async(globs, { ignore: ["**/node_modules/**"] })
+    );
   }
 
   getGlobWatcherIgnores() {
