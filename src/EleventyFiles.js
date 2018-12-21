@@ -78,6 +78,7 @@ class EleventyFiles {
     this.templateData = templateData;
   }
 
+  // TODO make this a getter
   getTemplateData() {
     if (!this.templateData) {
       this.templateData = new TemplateData(this.inputDir);
@@ -180,11 +181,19 @@ class EleventyFiles {
     return this.templateGlobs;
   }
 
+  getWatchPathCache() {
+    return this.pathCache;
+  }
+
   async getFiles() {
     let globs = this.getFileGlobs();
 
     debug("Searching for: %o", globs);
-    return TemplatePath.addLeadingDotSlashArray(await fastglob.async(globs));
+    let paths = TemplatePath.addLeadingDotSlashArray(
+      await fastglob.async(globs)
+    );
+    this.pathCache = paths;
+    return paths;
   }
 
   getGlobWatcherFiles() {
@@ -197,6 +206,14 @@ class EleventyFiles {
   async getGlobWatcherTemplateDataFiles() {
     let templateData = this.getTemplateData();
     return await templateData.getTemplateDataFileGlob();
+  }
+
+  // TODO this isn’t great but reduces complexity avoiding using TemplateData:getLocalDataPaths for each template in the cache
+  async getWatcherTemplateJavaScriptDataFiles() {
+    let globs = await this.getTemplateData().getTemplateJavaScriptDataFileGlob();
+    return TemplatePath.addLeadingDotSlashArray(
+      await fastglob.async(globs, { ignore: ["**/node_modules/**"] })
+    );
   }
 
   getGlobWatcherIgnores() {

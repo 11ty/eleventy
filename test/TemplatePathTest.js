@@ -207,3 +207,10 @@ test("stripLeadingDots", t => {
   t.is(TemplatePath.stripLeadingDots("../dist"), "/dist");
   t.is(TemplatePath.stripLeadingDots("dist"), "dist");
 });
+
+test("localPath and delocalPath", t => {
+  t.is(
+    TemplatePath.delocalPath(TemplatePath.localPath(".eleventy.js")),
+    ".eleventy.js"
+  );
+});

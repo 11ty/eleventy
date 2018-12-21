@@ -47,6 +47,7 @@ class TemplateEngine {
 
   // TODO make async
   cachePartialFiles() {
+    // This only runs if getPartials() is called, which is only for Mustache/Handlebars
     this.partialsHaveBeenCached = true;
     let partials = {};
     let prefix = this.inputDir + "/**/*.";

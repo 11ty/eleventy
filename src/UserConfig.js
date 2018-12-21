@@ -52,6 +52,7 @@ class UserConfig {
     this.experiments = new Set();
     // this.userExtensionMap = {};
     this.templateExtensionAliases = {};
+    this.watchJavaScriptDependencies = true;
   }
 
   versionCheck(expected) {
@@ -482,6 +483,10 @@ class UserConfig {
     this.templateExtensionAliases[extension] = targetKey;
   }
 
+  setWatchJavaScriptDependencies(watchEnabled) {
+    this.watchJavaScriptDependencies = !!watchEnabled;
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
@@ -512,7 +517,8 @@ class UserConfig {
       useGitIgnore: this.useGitIgnore,
       dataDeepMerge: this.dataDeepMerge,
       experiments: this.experiments,
-      templateExtensionAliases: this.templateExtensionAliases
+      templateExtensionAliases: this.templateExtensionAliases,
+      watchJavaScriptDependencies: this.watchJavaScriptDependencies
     };
   }
 

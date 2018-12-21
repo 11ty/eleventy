@@ -1,5 +1,6 @@
 import test from "ava";
 import Eleventy from "../src/Eleventy";
+import EleventyWatchTargets from "../src/EleventyWatchTargets";
 import templateConfig from "../src/Config";
 
 const config = templateConfig.getConfig();
@@ -41,6 +42,44 @@ test("Eleventy set input/output", async t => {
   await elev.init();
   t.truthy(elev.templateData);
   t.truthy(elev.writer);
+});
+
+test("Eleventy file watching", async t => {
+  let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
+  elev.setFormats("njk");
+
+  await elev.init();
+  await elev.initWatch();
+  t.deepEqual(await elev.getWatchedFiles(), [
+    "./test/stubs/**/*.njk",
+    "./test/stubs/_includes/**",
+    "./test/stubs/_data/**",
+    "./.eleventy.js",
+    "./test/stubs/**/*.json",
+    "./test/stubs/**/*.11tydata.js",
+    "./test/stubs/deps/dep1.js",
+    "./test/stubs/deps/dep2.js"
+  ]);
+});
+
+test("Eleventy file watching (no JS dependencies)", async t => {
+  let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
+  elev.setFormats("njk");
+
+  let wt = new EleventyWatchTargets();
+  wt.watchJavaScriptDependencies = false;
+  elev.setWatchTargets(wt);
+
+  await elev.init();
+  await elev.initWatch();
+  t.deepEqual(await elev.getWatchedFiles(), [
+    "./test/stubs/**/*.njk",
+    "./test/stubs/_includes/**",
+    "./test/stubs/_data/**",
+    "./.eleventy.js",
+    "./test/stubs/**/*.json",
+    "./test/stubs/**/*.11tydata.js"
+  ]);
 });
 
 test("Eleventy set input/output, one file input", async t => {

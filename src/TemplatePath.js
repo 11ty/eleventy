@@ -91,6 +91,10 @@ TemplatePath.localPath = function(...paths) {
   return normalize(path.join(TemplatePath.getWorkingDir(), ...paths));
 };
 
+TemplatePath.delocalPath = function(path) {
+  return TemplatePath.stripPathFromDir(path, TemplatePath.getWorkingDir());
+};
+
 TemplatePath.addLeadingDotSlashArray = function(paths) {
   return paths.map(function(path) {
     return TemplatePath.addLeadingDotSlash(path);

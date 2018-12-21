@@ -12,13 +12,6 @@ class JavaScript extends TemplateEngine {
     return result;
   }
 
-  getDependencies(inputPath) {
-    return dependencyTree.toList({
-      filename: inputPath,
-      directory: TemplatePath.localPath()
-    });
-  }
-
   _getRequire(inputPath) {
     let requirePath = TemplatePath.localPath(inputPath);
     delete require.cache[requirePath];

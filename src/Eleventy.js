@@ -3,6 +3,7 @@ const TemplateData = require("./TemplateData");
 const TemplateWriter = require("./TemplateWriter");
 const EleventyErrorHandler = require("./EleventyErrorHandler");
 const EleventyServe = require("./EleventyServe");
+const EleventyWatchTargets = require("./EleventyWatchTargets");
 const EleventyFiles = require("./EleventyFiles");
 const templateCache = require("./TemplateCache");
 const simplePlural = require("./Util/Pluralize");
@@ -23,6 +24,10 @@ function Eleventy(input, output) {
 
   this.rawInput = input;
   this.rawOutput = output;
+
+  this.watchTargets = new EleventyWatchTargets();
+  this.watchTargets.watchJavaScriptDependencies = this.config.watchJavaScriptDependencies;
+
   this.initDirs();
 }
 
@@ -47,6 +52,10 @@ Eleventy.prototype.setPathPrefix = function(pathPrefix) {
     config.setPathPrefix(pathPrefix);
     this.config = config.getConfig();
   }
+};
+
+Eleventy.prototype.setWatchTargets = function(watchTargets) {
+  this.watchTargets = watchTargets;
 };
 
 Eleventy.prototype.setConfigPathOverride = function(configPath) {
@@ -236,7 +245,15 @@ Eleventy.prototype._watch = async function(path) {
   config.resetOnWatch();
 
   await this.restart();
+  this.watchTargets.clearDependencyRequireCache();
+
   await this.write();
+
+  this.watchTargets.reset();
+  await this._initWatchDependencies();
+
+  // Add new deps to chokidar
+  this.watcher.add(this.watchTargets.getNewTargetsSinceLastReset());
 
   let isInclude =
     path && TemplatePath.contains(path, this.eleventyFiles.getIncludesDir());
@@ -257,31 +274,80 @@ Eleventy.prototype.getWatcher = function() {
   return this.watcher;
 };
 
+Eleventy.prototype.initWatch = async function() {
+  this.watchTargets.add(this.eleventyFiles.getGlobWatcherFiles());
+
+  // Watch the local project config file
+  this.watchTargets.add(config.getLocalProjectConfigFile());
+
+  // Template and Directory Data Files
+  this.watchTargets.add(
+    await this.eleventyFiles.getGlobWatcherTemplateDataFiles()
+  );
+
+  await this._initWatchDependencies();
+};
+
+Eleventy.prototype._initWatchDependencies = async function() {
+  if (!this.watchTargets.watchJavaScriptDependencies) {
+    return;
+  }
+
+  let dataDir = this.templateData.getDataDir();
+  function filterOutGlobalDataFiles(path) {
+    return !dataDir || path.indexOf(dataDir) === -1;
+  }
+
+  // Template files .11ty.js
+  this.watchTargets.addDependencies(this.eleventyFiles.getWatchPathCache());
+
+  // Config file dependencies
+  this.watchTargets.addDependencies(
+    config.getLocalProjectConfigFile(),
+    filterOutGlobalDataFiles.bind(this)
+  );
+
+  // Deps from Global Data (that aren’t in the global data directory, everything is watched there)
+  this.watchTargets.addDependencies(
+    this.templateData.getWatchPathCache(),
+    filterOutGlobalDataFiles.bind(this)
+  );
+
+  this.watchTargets.addDependencies(
+    await this.eleventyFiles.getWatcherTemplateJavaScriptDataFiles()
+  );
+};
+
+Eleventy.prototype.getWatchedFiles = async function() {
+  return this.watchTargets.getTargets();
+};
+
 Eleventy.prototype.watch = async function() {
+  const chokidar = require("chokidar");
+  const EleventyWatchTargets = require("./EleventyWatchTargets");
+
   this.active = false;
   this.queuedToRun = false;
 
+  // Note that watching indirectly depends on this for fetching dependencies from JS files
+  // See: TemplateWriter:pathCache and EleventyWatchTargets
   await this.write();
 
-  const chokidar = require("chokidar");
+  await this.initWatch();
 
-  let rawFiles = this.eleventyFiles.getGlobWatcherFiles();
-  // Watch the local project config file
-  rawFiles.push(config.getLocalProjectConfigFile());
-  rawFiles = rawFiles.concat(
-    config.getLocalProjectConfigFileDependencies(),
-    await this.eleventyFiles.getGlobWatcherTemplateDataFiles()
-  );
+  // TODO improve unwatching if JS dependencies are removed (or files are deleted)
+  let rawFiles = await this.getWatchedFiles();
   debug("Watching for changes to: %o", rawFiles);
 
   let ignores = this.eleventyFiles.getGlobWatcherIgnores();
   debug("Watching but ignoring changes to: %o", ignores);
 
-  console.log("Watching…");
   let watcher = chokidar.watch(rawFiles, {
     ignored: ignores,
     ignoreInitial: true
   });
+
+  console.log("Watching…");
 
   this.watcher = watcher;
 
@@ -303,6 +369,16 @@ Eleventy.prototype.watch = async function() {
     console.log("File added:", path);
     await watchRun.call(this, path);
   });
+
+  process.on(
+    "SIGINT",
+    function() {
+      debug("Cleaning up chokidar and browsersync (if exists) instances.");
+      this.eleventyServe.close();
+      this.watcher.close();
+      process.exit();
+    }.bind(this)
+  );
 };
 
 Eleventy.prototype.serve = function(port) {
