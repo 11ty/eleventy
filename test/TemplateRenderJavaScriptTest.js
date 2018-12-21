@@ -31,6 +31,14 @@ test("JS Render a function", async t => {
   t.is(await fn({ name: "Bill" }), "<p>Bill</p>");
 });
 
+test("JS Render a function (Markdown)", async t => {
+  let tr = new TemplateRender("./test/stubs/function-markdown.11ty.js");
+  tr.setEngineOverride("11ty.js,md");
+  let fn = await tr.getCompiledTemplate();
+  t.is((await fn({ name: "Zach" })).trim(), "<h1>Zach</h1>");
+  t.is((await fn({ name: "Bill" })).trim(), "<h1>Bill</h1>");
+});
+
 test("JS Render an async function", async t => {
   let fn = await new TemplateRender(
     "./test/stubs/function-async.11ty.js"
