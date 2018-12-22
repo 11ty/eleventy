@@ -53,6 +53,7 @@ class TemplateRender {
       );
     }
     this.engine = TemplateEngine.getEngine(this.engineName, this.inputDir);
+    this.engine.initRequireCache(this.path);
   }
 
   cleanupEngineName(tmplPath) {

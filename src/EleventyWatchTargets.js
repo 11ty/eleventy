@@ -79,7 +79,7 @@ class EleventyWatchTargets {
   getJavaScriptDependenciesFromList(files = []) {
     let depSet = new Set();
     files
-      .filter(file => file.endsWith(".js"))
+      .filter(file => file.endsWith(".js")) // TODO does this need to work with aliasing? what other JS extensions will have deps?
       .forEach(file => {
         dependencyTree
           .toList({

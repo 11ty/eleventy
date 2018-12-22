@@ -107,6 +107,10 @@ class TemplateEngine {
     return {};
   }
 
+  initRequireCache(inputPath) {
+    // do nothing
+  }
+
   static get templateKeyMapToClassName() {
     return {
       ejs: "Ejs",

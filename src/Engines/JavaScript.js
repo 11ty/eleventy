@@ -14,7 +14,6 @@ class JavaScript extends TemplateEngine {
 
   _getRequire(inputPath) {
     let requirePath = TemplatePath.localPath(inputPath);
-    delete require.cache[requirePath];
     return require(requirePath);
   }
 
@@ -22,10 +21,19 @@ class JavaScript extends TemplateEngine {
     return false;
   }
 
+  // only remove from cache once on startup (if it already exists)
+  initRequireCache(inputPath) {
+    let requirePath = TemplatePath.localPath(inputPath);
+    if (requirePath in require.cache) {
+      delete require.cache[requirePath];
+    }
+  }
+
   async getExtraDataFromFile(inputPath) {
     const cls = this._getRequire(inputPath);
     if (typeof cls === "function") {
       if (cls.prototype && "data" in cls.prototype) {
+        // TODO this is instantiating multiple separate instances every time it is called (see also one in compile)
         let inst = new cls();
         // get extra data from `data` method,
         // either as a function or getter or object literal
