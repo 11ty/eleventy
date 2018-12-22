@@ -842,6 +842,16 @@ test("Override base templating engine from .liquid to ejs", async t => {
   t.is((await tmpl.render()).trim(), "My Title");
 });
 
+test("Override base templating engine from markdown to 11ty.js, then markdown", async t => {
+  let tmpl = new Template(
+    "./test/stubs/test-override-js-markdown.11ty.js",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is((await tmpl.render()).trim(), "<h1>This is markdown</h1>");
+});
+
 test("Override base templating engine from .liquid to md", async t => {
   let tmpl = new Template(
     "./test/stubs/overrides/test-md.liquid",
