@@ -22,6 +22,7 @@ npm run test
 ```
 
 - [Code Coverage Statistics](https://github.com/11ty/eleventy/blob/master/docs/coverage.md)
+- [Benchmark for Performance Regressions](https://github.com/11ty/eleventy-benchmark)
 
 ## Major Roadmapped Features
 
