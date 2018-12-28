@@ -152,6 +152,16 @@ test("JavaScript template type (class with data permalink function using a buffe
   t.is(await tmpl.getOutputPath(), "./dist/my-permalink/value1/index.html");
 });
 
+test("JavaScript template type (class with data permalink async function)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/class-data-permalink-async-fn.11ty.js",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is(await tmpl.getOutputPath(), "./dist/my-permalink/value1/index.html");
+});
+
 test("JavaScript template type (class with data permalink function using a filter)", async t => {
   let tmpl = new Template(
     "./test/stubs/class-data-permalink-fn-filter.11ty.js",
