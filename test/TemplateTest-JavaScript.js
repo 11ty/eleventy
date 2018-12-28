@@ -122,9 +122,29 @@ test("JavaScript template type (class with data permalink)", async t => {
   t.is(await tmpl.getOutputPath(), "./dist/my-permalink/index.html");
 });
 
+test("JavaScript template type (class with data permalink using a buffer)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/class-data-permalink-buffer.11ty.js",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is(await tmpl.getOutputPath(), "./dist/my-permalink/index.html");
+});
+
 test("JavaScript template type (class with data permalink function)", async t => {
   let tmpl = new Template(
     "./test/stubs/class-data-permalink-fn.11ty.js",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is(await tmpl.getOutputPath(), "./dist/my-permalink/value1/index.html");
+});
+
+test("JavaScript template type (class with data permalink function using a buffer)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/class-data-permalink-fn-buffer.11ty.js",
     "./test/stubs/",
     "./dist"
   );
