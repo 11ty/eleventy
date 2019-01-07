@@ -93,7 +93,7 @@ class Template extends TemplateContent {
     if (permalink) {
       // render variables inside permalink front matter, bypass markdown
       let permalinkValue;
-      if (!this.config.dynamicPermalinks || data.dynamicPermalink === true) {
+      if (!this.config.dynamicPermalinks || data.dynamicPermalink === false) {
         debugDev("Not using dynamicPermalinks, using %o", permalink);
         permalinkValue = permalink;
       } else {

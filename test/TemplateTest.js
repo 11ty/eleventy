@@ -1131,6 +1131,17 @@ test("permalink: false", async t => {
   );
 });
 
+test("Disable dynamic permalinks", async t => {
+  let tmpl = new Template(
+    "./test/stubs/dynamic-permalink/test.njk",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  t.is(await tmpl.getOutputLink(), "/{{justastring}}/index.html");
+  t.is(await tmpl.getOutputHref(), "/{{justastring}}/");
+});
+
 test("Front Matter Tags (Single)", async t => {
   let tmpl = new Template(
     "./test/stubs/templatetest-frontmatter/single.njk",
