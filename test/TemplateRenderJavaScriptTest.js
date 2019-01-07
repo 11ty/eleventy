@@ -38,6 +38,14 @@ test("JS Render a function", async t => {
   t.is(await fn({ name: "Bill" }), "<p>Bill</p>");
 });
 
+test("JS Render a function (arrow syntax)", async t => {
+  let fn = await new TemplateRender(
+    "./test/stubs/function-arrow.11ty.js"
+  ).getCompiledTemplate();
+  t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
+  t.is(await fn({ name: "Bill" }), "<p>Bill</p>");
+});
+
 test("JS Render a function, returns a Buffer", async t => {
   let fn = await new TemplateRender(
     "./test/stubs/function-buffer.11ty.js"
