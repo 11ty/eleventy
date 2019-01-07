@@ -180,3 +180,28 @@ test("multimatch assumptions, issue #127", async t => {
     ["./src/_content/bookmarks/2018-03-27-git-message.md"]
   );
 });
+
+test("Sort in place (issue #352)", async t => {
+  let c = new Collection();
+  await c._testAddTemplate(tmpl1);
+  await c._testAddTemplate(tmpl4);
+  await c._testAddTemplate(tmpl5);
+
+  let posts = c.getAllSorted();
+  t.is(posts.length, 3);
+  t.deepEqual(posts[0].template, tmpl4);
+  t.deepEqual(posts[1].template, tmpl1);
+  t.deepEqual(posts[2].template, tmpl5);
+
+  let posts2 = c.getAllSorted().reverse();
+  t.is(posts2.length, 3);
+  t.deepEqual(posts2[0].template, tmpl5);
+  t.deepEqual(posts2[1].template, tmpl1);
+  t.deepEqual(posts2[2].template, tmpl4);
+
+  let posts3 = c.getAllSorted().reverse();
+  t.is(posts3.length, 3);
+  t.deepEqual(posts3[0].template, tmpl5);
+  t.deepEqual(posts3[1].template, tmpl1);
+  t.deepEqual(posts3[2].template, tmpl4);
+});
