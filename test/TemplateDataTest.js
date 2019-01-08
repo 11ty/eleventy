@@ -102,7 +102,7 @@ test("addLocalData() doesn’t exist but doesn’t fail (template file does not 
 });
 
 test("Global Dir Directory", async t => {
-  let dataObj = new TemplateData();
+  let dataObj = new TemplateData("./");
 
   t.deepEqual(await dataObj.getGlobalDataGlob(), ["./_data/**/*.(json|js)"]);
 });
