@@ -414,7 +414,7 @@ test("Layout from template-data-file that has a permalink (fileslug) Issue #121"
 });
 
 test("Local template data file import (without a global data json)", async t => {
-  let dataObj = new TemplateData();
+  let dataObj = new TemplateData("./test/stubs/");
   await dataObj.cacheData();
 
   let tmpl = new Template(
@@ -435,7 +435,7 @@ test("Local template data file import (without a global data json)", async t => 
 });
 
 test("Local template data file import (two subdirectories deep)", async t => {
-  let dataObj = new TemplateData();
+  let dataObj = new TemplateData("./test/stubs/");
   await dataObj.cacheData();
 
   let tmpl = new Template(
@@ -459,7 +459,7 @@ test("Local template data file import (two subdirectories deep)", async t => {
 });
 
 test("Posts inherits local JSON, layouts", async t => {
-  let dataObj = new TemplateData();
+  let dataObj = new TemplateData("./test/stubs/");
   await dataObj.cacheData();
 
   let tmpl = new Template(
@@ -494,7 +494,7 @@ test("Posts inherits local JSON, layouts", async t => {
 });
 
 test("Template and folder name are the same, make sure data imports work ok", async t => {
-  let dataObj = new TemplateData();
+  let dataObj = new TemplateData("./test/stubs/");
   await dataObj.cacheData();
 
   let tmpl = new Template(
@@ -1194,7 +1194,7 @@ test("Data Cascade (Deep merge)", async t => {
   let newConfig = Object.assign({}, config);
   newConfig.dataDeepMerge = true;
 
-  let dataObj = new TemplateData();
+  let dataObj = new TemplateData("./test/");
   dataObj._setConfig(newConfig);
   await dataObj.cacheData();
 
@@ -1226,7 +1226,7 @@ test("Data Cascade (Deep merge)", async t => {
 });
 
 test("Data Cascade (Shallow merge)", async t => {
-  let dataObj = new TemplateData();
+  let dataObj = new TemplateData("./test/");
   await dataObj.cacheData();
 
   let tmpl = new Template(
@@ -1255,7 +1255,7 @@ test("Data Cascade Tag Merge (Deep merge)", async t => {
   let newConfig = Object.assign({}, config);
   newConfig.dataDeepMerge = true;
 
-  let dataObj = new TemplateData();
+  let dataObj = new TemplateData("./test/stubs/");
   dataObj._setConfig(newConfig);
   await dataObj.cacheData();
 
@@ -1272,7 +1272,7 @@ test("Data Cascade Tag Merge (Deep merge)", async t => {
 });
 
 test("Data Cascade Tag Merge (Shallow merge)", async t => {
-  let dataObj = new TemplateData();
+  let dataObj = new TemplateData("./test/stubs/");
   await dataObj.cacheData();
 
   let tmpl = new Template(
