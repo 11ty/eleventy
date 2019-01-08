@@ -44,6 +44,10 @@ class EleventyFiles {
   _setExtensionMap(map) {
     this.extensionMap = map;
   }
+  /* Set command root for local project paths */
+  _setLocalPathRoot(dir) {
+    this.localPathRoot = dir;
+  }
 
   setPassthroughAll(passthroughAll) {
     this.passthroughAll = !!passthroughAll;
@@ -108,16 +112,45 @@ class EleventyFiles {
     );
   }
 
-  static getFileIgnores(ignoreFile, defaultIfFileDoesNotExist) {
-    let dir = TemplatePath.getDirFromFilePath(ignoreFile);
-    let ignorePath = TemplatePath.normalize(ignoreFile);
-    let ignoreContent;
-    try {
-      ignoreContent = fs.readFileSync(ignorePath, "utf-8");
-    } catch (e) {
-      ignoreContent = defaultIfFileDoesNotExist || "";
+  static getFileIgnores(ignoreFiles, defaultIfFileDoesNotExist) {
+    if (!Array.isArray(ignoreFiles)) {
+      ignoreFiles = [ignoreFiles];
     }
 
+    let ignores = [];
+    let fileFound = false;
+    let dirs = [];
+    for (let ignorePath of ignoreFiles) {
+      ignorePath = TemplatePath.normalize(ignorePath);
+
+      let dir = TemplatePath.getDirFromFilePath(ignorePath);
+      dirs.push(dir);
+
+      if (fs.existsSync(ignorePath)) {
+        fileFound = true;
+        let ignoreContent = fs.readFileSync(ignorePath, "utf-8");
+        ignores = ignores.concat(
+          EleventyFiles.normalizeIgnoreContent(dir, ignoreContent)
+        );
+      }
+    }
+
+    if (!fileFound && defaultIfFileDoesNotExist) {
+      ignores.push("!" + TemplateGlob.normalizePath(defaultIfFileDoesNotExist));
+      for (let dir of dirs) {
+        ignores.push(
+          "!" + TemplateGlob.normalizePath(dir, defaultIfFileDoesNotExist)
+        );
+      }
+    }
+
+    ignores.forEach(function(path) {
+      debug(`${ignoreFiles} ignoring: ${path}`);
+    });
+    return ignores;
+  }
+
+  static normalizeIgnoreContent(dir, ignoreContent) {
     let ignores = [];
 
     if (ignoreContent) {
@@ -132,8 +165,8 @@ class EleventyFiles {
         })
         .map(line => {
           let path = TemplateGlob.normalizePath(dir, "/", line);
-          debug(`${ignoreFile} ignoring: ${path}`);
           try {
+            // Note these folders must exist to get /** suffix
             let stat = fs.statSync(path);
             if (stat.isDirectory()) {
               return "!" + path + "/**";
@@ -150,18 +183,29 @@ class EleventyFiles {
 
   getIgnores() {
     let files = [];
-
     if (this.config.useGitIgnore) {
       files = files.concat(
         EleventyFiles.getFileIgnores(
-          this.inputDir + "/.gitignore",
-          "node_modules/"
+          [
+            TemplatePath.normalize(
+              this.localPathRoot || TemplatePath.localPath(),
+              ".gitignore"
+            ),
+            TemplatePath.normalize(this.inputDir, ".gitignore")
+          ],
+          "node_modules/**"
         )
       );
     }
 
     files = files.concat(
-      EleventyFiles.getFileIgnores(this.inputDir + "/.eleventyignore")
+      EleventyFiles.getFileIgnores([
+        TemplatePath.normalize(
+          this.localPathRoot || TemplatePath.localPath(),
+          ".eleventyignore"
+        ),
+        TemplatePath.normalize(this.inputDir, ".eleventyignore")
+      ])
     );
 
     files = files.concat(TemplateGlob.map("!" + this.outputDir + "/**"));
