@@ -12,7 +12,7 @@ class TemplateLayout extends TemplateContent {
   constructor(key, inputDir) {
     // TODO getConfig() is duplicated in TemplateContent (super)
     let cfg = config.getConfig();
-    let layoutsDir = TemplatePath.normalize(inputDir, cfg.dir.includes);
+    let layoutsDir = TemplatePath.join(inputDir, cfg.dir.includes);
     let resolvedPath = new TemplateLayoutPathResolver(
       key,
       layoutsDir
@@ -26,7 +26,7 @@ class TemplateLayout extends TemplateContent {
   }
 
   static resolveFullKey(key, inputDir) {
-    return TemplatePath.normalize(inputDir, key);
+    return TemplatePath.join(inputDir, key);
   }
 
   static getTemplate(key, inputDir, config) {

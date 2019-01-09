@@ -22,11 +22,11 @@ class EleventyServe {
   }
 
   getRedirectDir(dirName) {
-    return TemplatePath.normalize(this.outputDir, dirName);
+    return TemplatePath.join(this.outputDir, dirName);
   }
 
   getRedirectFilename(dirName) {
-    return TemplatePath.normalize(this.getRedirectDir(dirName), "index.html");
+    return TemplatePath.join(this.getRedirectDir(dirName), "index.html");
   }
 
   cleanupRedirect(dirName) {
@@ -106,7 +106,7 @@ class EleventyServe {
 
       // if has a savedPathPrefix, use the /savedPathPrefix/index.html template to redirect to /pathPrefix/
       if (this.savedPathPrefix) {
-        serverConfig.routes[this.savedPathPrefix] = TemplatePath.normalize(
+        serverConfig.routes[this.savedPathPrefix] = TemplatePath.join(
           this.outputDir,
           this.savedPathPrefix
         );

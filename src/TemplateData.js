@@ -35,7 +35,7 @@ class TemplateData {
     this.inputDirNeedsCheck = true;
     this.inputDir = inputDir;
     this.dataDir = this.config.dir.data
-      ? TemplatePath.normalize(inputDir, this.config.dir.data)
+      ? TemplatePath.join(inputDir, this.config.dir.data)
       : inputDir;
   }
 

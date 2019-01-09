@@ -67,7 +67,7 @@ class TemplateConfig {
   mergeConfig(localProjectConfigPath) {
     let overrides = ["templateFormats"];
     let localConfig = {};
-    let path = TemplatePath.normalize(
+    let path = TemplatePath.join(
       TemplatePath.getWorkingDir(),
       "/",
       localProjectConfigPath

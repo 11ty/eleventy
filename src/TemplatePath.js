@@ -59,6 +59,20 @@ TemplatePath.getAllDirs = function(path) {
 };
 
 /**
+ * Normalizes a path, resolving single-dot and double-dot segments.
+ *
+ * Node.js’ [`path.normalize`][1] is called to strip a possible leading `"./"` segment.
+ *
+ * [1]: https://nodejs.org/api/path.html#path_path_normalize_path
+ *
+ * @param {String} thePath The path that should be normalized.
+ * @returns {String} the normalized path.
+ */
+TemplatePath.normalize = function(thePath) {
+  return normalize(path.normalize(thePath));
+};
+
+/**
  * Joins all given path segments together.
  *
  * It uses Node.js’ [`path.join`][1] method and the [normalize-path][2] package.
@@ -69,7 +83,7 @@ TemplatePath.getAllDirs = function(path) {
  * @param {String[]} paths An arbitrary amount of path segments.
  * @returns {String} the normalized and joined path.
  */
-TemplatePath.normalize = function(...paths) {
+TemplatePath.join = function(...paths) {
   return normalize(path.join(...paths));
 };
 

@@ -13,7 +13,7 @@ TemplatePermalink.prototype._cleanLink = function(link) {
 TemplatePermalink.prototype.resolve = function() {
   let parsed = parsePath(this.link);
 
-  return TemplatePath.normalize(parsed.dir, "/", this.extraSubdir, parsed.base);
+  return TemplatePath.join(parsed.dir, "/", this.extraSubdir, parsed.base);
 };
 
 TemplatePermalink.prototype.toString = function() {
