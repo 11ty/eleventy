@@ -1085,6 +1085,55 @@ test("Test a transform with pages", async t => {
   t.is(rendered[0].templateContent, "OVERRIDE BY A TRANSFORM");
 });
 
+test("Test a single asynchronous transform", async t => {
+  let tmpl = new Template(
+    "./test/stubs/template.ejs",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  tmpl.addTransform(async function() {
+    return new Promise((resolve, reject) => {
+      setTimeout(function(str, outputPath, inputPath) {
+        resolve("OVERRIDE BY A TRANSFORM");
+      }, 50);
+    });
+  });
+
+  let data = await tmpl.getData();
+  let rendered = await tmpl.getRenderedTemplates(data);
+  t.is(rendered[0].templateContent, "OVERRIDE BY A TRANSFORM");
+});
+
+test("Test multiple asynchronous transforms", async t => {
+  let tmpl = new Template(
+    "./test/stubs/template.ejs",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  tmpl.addTransform(async function() {
+    return new Promise((resolve, reject) => {
+      setTimeout(function(str, outputPath, inputPath) {
+        resolve("lowercase transform");
+      }, 50);
+    });
+  });
+
+  // uppercase
+  tmpl.addTransform(async function(str, outputPath, inputPath) {
+    return new Promise((resolve, reject) => {
+      setTimeout(function() {
+        resolve(str.toUpperCase());
+      }, 50);
+    });
+  });
+
+  let data = await tmpl.getData();
+  let rendered = await tmpl.getRenderedTemplates(data);
+  t.is(rendered[0].templateContent, "LOWERCASE TRANSFORM");
+});
+
 test("Test a linter", async t => {
   let tmpl = new Template(
     "./test/stubs/transform-pages/template.njk",

@@ -378,9 +378,9 @@ class Template extends TemplateContent {
   }
 
   async runTransforms(str, outputPath, inputPath) {
-    this.transforms.forEach(function(transform) {
-      str = transform.call(this, str, outputPath, inputPath);
-    });
+    for (let transform of this.transforms) {
+      str = await transform.call(this, str, outputPath, inputPath);
+    }
 
     return str;
   }
