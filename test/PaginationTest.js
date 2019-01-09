@@ -585,3 +585,35 @@ test("Pagination with deep data merge with alias #147", async t => {
   t.is((await pages[0].render()).trim(), "item1");
   t.is((await pages[1].render()).trim(), "item2");
 });
+
+test("Paginate data in frontmatter (reversed)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/pagedinlinedata-reverse.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let paging = new Pagination(data);
+  paging.setTemplate(tmpl);
+  let pages = await paging.getPageTemplates();
+  t.is(pages.length, 2);
+
+  t.is(
+    await pages[0].getOutputPath(),
+    "./dist/paged/pagedinlinedata-reverse/index.html"
+  );
+  t.is(
+    (await pages[0].render()).trim(),
+    "<ol><li>item8</li><li>item7</li><li>item6</li><li>item5</li></ol>"
+  );
+
+  t.is(
+    await pages[1].getOutputPath(),
+    "./dist/paged/pagedinlinedata-reverse/1/index.html"
+  );
+  t.is(
+    (await pages[1].render()).trim(),
+    "<ol><li>item4</li><li>item3</li><li>item2</li><li>item1</li></ol>"
+  );
+});

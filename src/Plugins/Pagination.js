@@ -39,7 +39,7 @@ Pagination.prototype.setData = function(data) {
   this.size = data.pagination.size;
   this.alias = data.pagination.alias;
 
-  this.target = this._resolveItems(data);
+  this.target = this._resolveItems();
   this.items = this.getPagedItems();
 };
 
@@ -89,11 +89,15 @@ Pagination.prototype._resolveItems = function() {
     }
   }
 
-  return ret.filter(
+  let result = ret.filter(
     function(value) {
       return !this.isFiltered(value);
     }.bind(this)
   );
+  if (this.data.pagination.reverse === true) {
+    return result.reverse();
+  }
+  return result;
 };
 
 Pagination.prototype.getPagedItems = function() {
