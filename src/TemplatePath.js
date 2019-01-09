@@ -58,7 +58,17 @@ TemplatePath.getAllDirs = function(path) {
   return results;
 };
 
-/* Outputs ./SAFE/LOCAL/PATHS/WITHOUT/TRAILING/SLASHES */
+/**
+ * Joins all given path segments together.
+ *
+ * It uses Node.js’ [`path.join`][1] method and the [normalize-path][2] package.
+ *
+ * [1]: https://nodejs.org/api/path.html#path_path_join_paths
+ * [2]: https://www.npmjs.com/package/normalize-path
+ *
+ * @param {String[]} paths An arbitrary amount of path segments.
+ * @returns {String} the normalized and joined path.
+ */
 TemplatePath.normalize = function(...paths) {
   return normalize(path.join(...paths));
 };

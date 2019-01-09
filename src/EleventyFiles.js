@@ -18,7 +18,10 @@ class EleventyFiles {
     this.inputDir = TemplatePath.getDir(this.input);
     this.outputDir = outputDir;
 
-    this.includesDir = this.inputDir + "/" + this.config.dir.includes;
+    this.includesDir = TemplatePath.normalize(
+      this.inputDir,
+      this.config.dir.includes
+    );
     this.passthroughAll = !!passthroughAll;
 
     this.formats = formats;

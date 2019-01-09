@@ -1,6 +1,7 @@
 const TemplateLayoutPathResolver = require("./TemplateLayoutPathResolver");
 const TemplateContent = require("./TemplateContent");
 const TemplateData = require("./TemplateData");
+const TemplatePath = require("./TemplatePath");
 
 const templateCache = require("./TemplateCache");
 const config = require("./Config");
@@ -11,7 +12,7 @@ class TemplateLayout extends TemplateContent {
   constructor(key, inputDir) {
     // TODO getConfig() is duplicated in TemplateContent (super)
     let cfg = config.getConfig();
-    let layoutsDir = inputDir + "/" + cfg.dir.includes;
+    let layoutsDir = TemplatePath.normalize(inputDir, cfg.dir.includes);
     let resolvedPath = new TemplateLayoutPathResolver(
       key,
       layoutsDir
@@ -25,7 +26,7 @@ class TemplateLayout extends TemplateContent {
   }
 
   static resolveFullKey(key, inputDir) {
-    return inputDir + key;
+    return TemplatePath.normalize(inputDir, key);
   }
 
   static getTemplate(key, inputDir, config) {
