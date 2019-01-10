@@ -369,6 +369,7 @@ class Template extends TemplateContent {
 
   async runLinters(str, inputPath, outputPath) {
     this.linters.forEach(function(linter) {
+      // these can be asynchronous but no guarantee of order when they run
       linter.call(this, str, inputPath, outputPath);
     });
   }

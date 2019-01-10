@@ -53,6 +53,7 @@ class UserConfig {
     // this.userExtensionMap = {};
     this.templateExtensionAliases = {};
     this.watchJavaScriptDependencies = true;
+    this.browserSyncConfig = {};
   }
 
   versionCheck(expected) {
@@ -212,6 +213,9 @@ class UserConfig {
   addTransform(name, callback) {
     name = this.getNamespacedName(name);
 
+    // these are now called transforms
+    // this naming is kept here for backwards compatibility
+    // TODO major version change
     this.filters[name] = callback;
   }
 
@@ -487,11 +491,14 @@ class UserConfig {
     this.watchJavaScriptDependencies = !!watchEnabled;
   }
 
+  setBrowserSyncConfig(options = {}) {
+    this.browserSyncConfig = options;
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
-      // now called transforms
-      filters: this.filters,
+      filters: this.filters, // now called transforms
       linters: this.linters,
       layoutAliases: this.layoutAliases,
       passthroughCopies: this.passthroughCopies,
@@ -518,7 +525,8 @@ class UserConfig {
       dataDeepMerge: this.dataDeepMerge,
       experiments: this.experiments,
       templateExtensionAliases: this.templateExtensionAliases,
-      watchJavaScriptDependencies: this.watchJavaScriptDependencies
+      watchJavaScriptDependencies: this.watchJavaScriptDependencies,
+      browserSyncConfig: this.browserSyncConfig
     };
   }
 
