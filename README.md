@@ -1,6 +1,6 @@
 <p align="center"><img src="https://www.11ty.io/img/logo-github.png" alt="eleventy Logo"></p>
 
-# eleventy 🕚
+# eleventy 🕚⚡️
 
 A simpler static site generator. An alternative to Jekyll. Written in JavaScript. Transforms a directory of templates (of varying types) into HTML.
 
