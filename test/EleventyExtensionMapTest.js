@@ -18,17 +18,17 @@ test("Multiple formats", t => {
 
 test("Invalid keys are filtered (no passthrough copy)", t => {
   let map = new EleventyExtensionMap(["lksdjfjlsk"]);
-  map.setConfig({
+  map.config = {
     passthroughFileCopy: false
-  });
+  };
   t.deepEqual(map.getGlobs(), []);
 });
 
 test("Invalid keys are filtered (using passthrough copy)", t => {
   let map = new EleventyExtensionMap(["lksdjfjlsk"]);
-  map.setConfig({
+  map.config = {
     passthroughFileCopy: true
-  });
+  };
   t.deepEqual(map.getGlobs(), ["./**/*.lksdjfjlsk"]);
 });
 
@@ -110,12 +110,12 @@ test("getKey", t => {
 
 test("Extension aliasing (one format key)", t => {
   let map = new EleventyExtensionMap(["md"]);
-  map.setConfig({
+  map.config = {
     templateExtensionAliases: {
       markdown: "md",
       nunjucks: "njk" // N/A to current format list
     }
-  });
+  };
   t.deepEqual(map.getExtensionsFromKey("md"), ["md", "markdown"]);
   t.deepEqual(map.getExtensionsFromKey("njk"), ["njk", "nunjucks"]);
 
@@ -125,12 +125,12 @@ test("Extension aliasing (one format key)", t => {
 
 test("Extension aliasing (two format keys)", t => {
   let map = new EleventyExtensionMap(["md", "njk"]);
-  map.setConfig({
+  map.config = {
     templateExtensionAliases: {
       markdown: "md",
       nunjucks: "njk"
     }
-  });
+  };
   t.deepEqual(map.getExtensionsFromKey("md"), ["md", "markdown"]);
   t.deepEqual(map.getExtensionsFromKey("njk"), ["njk", "nunjucks"]);
 

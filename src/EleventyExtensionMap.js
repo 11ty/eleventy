@@ -2,22 +2,25 @@ const TemplatePath = require("./TemplatePath");
 const config = require("./Config");
 
 class EleventyExtensionMap {
-  constructor(formats = []) {
-    this.config = config.getConfig();
-
-    this.unfilteredFormats = formats.map(function(key) {
+  constructor(formatKeys = []) {
+    this.unfilteredFormatKeys = formatKeys.map(function(key) {
       return key.trim().toLowerCase();
     });
 
-    this.formats = this.unfilteredFormats.filter(key => this.hasExtension(key));
+    this.formatKeys = this.unfilteredFormatKeys.filter(key =>
+      this.hasExtension(key)
+    );
 
-    this.prunedFormats = this.unfilteredFormats.filter(
+    this.prunedFormatKeys = this.unfilteredFormatKeys.filter(
       key => !this.hasExtension(key)
     );
   }
 
-  setConfig(configOverride) {
-    this.config = configOverride || {};
+  get config() {
+    return this.configOverride || config.getConfig();
+  }
+  set config(cfg) {
+    this.configOverride = cfg;
   }
 
   /* Used for layout path resolution */
@@ -27,9 +30,9 @@ class EleventyExtensionMap {
     }
 
     let files = [];
-    this.formats.forEach(
+    this.formatKeys.forEach(
       function(key) {
-        this.getExtensions(key).forEach(function(extension) {
+        this.getExtensionsFromKey(key).forEach(function(extension) {
           files.push((dir ? dir + "/" : "") + path + "." + extension);
         });
       }.bind(this)
@@ -39,24 +42,24 @@ class EleventyExtensionMap {
   }
 
   getPrunedGlobs(inputDir) {
-    return this._getGlobs(this.prunedFormats, inputDir);
+    return this._getGlobs(this.prunedFormatKeys, inputDir);
   }
 
   getGlobs(inputDir) {
     if (this.config.passthroughFileCopy) {
-      return this._getGlobs(this.unfilteredFormats, inputDir);
+      return this._getGlobs(this.unfilteredFormatKeys, inputDir);
     }
 
-    return this._getGlobs(this.formats, inputDir);
+    return this._getGlobs(this.formatKeys, inputDir);
   }
 
-  _getGlobs(formats, inputDir) {
+  _getGlobs(formatKeys, inputDir) {
     let dir = TemplatePath.convertToGlob(inputDir);
     let globs = [];
-    formats.forEach(
+    formatKeys.forEach(
       function(key) {
         if (this.hasExtension(key)) {
-          this.getExtensions(key).forEach(function(extension) {
+          this.getExtensionsFromKey(key).forEach(function(extension) {
             globs.push(dir + "/*." + extension);
           });
         } else {
@@ -74,10 +77,6 @@ class EleventyExtensionMap {
       }
     }
     return false;
-  }
-
-  getExtensions(key) {
-    return this.getExtensionsFromKey(key);
   }
 
   getExtensionsFromKey(key) {
@@ -129,13 +128,12 @@ class EleventyExtensionMap {
 
   get keyMap() {
     return EleventyExtensionMap._getKeyMap(
-      this.config.templateExtensionAliases
+      this.config.templateExtensionAliases || {}
     );
   }
-
   static get keyMap() {
     return EleventyExtensionMap._getKeyMap(
-      config.getConfig().templateExtensionAliases
+      config.getConfig().templateExtensionAliases || {}
     );
   }
 

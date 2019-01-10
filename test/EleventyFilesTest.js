@@ -371,11 +371,11 @@ test("Glob Watcher Files with passthroughAll", async t => {
 
 test("File extension aliasing", async t => {
   let map = new EleventyExtensionMap(["md"]);
-  map.setConfig({
+  map.config = {
     templateExtensionAliases: {
       markdown: "md"
     }
-  });
+  };
 
   let evf = new EleventyFiles(
     "./test/stubs/writeTestMarkdown",
