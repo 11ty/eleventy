@@ -445,6 +445,7 @@ test("Should be able to paginate a user config collection (paged template is als
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   await tm.add(tmpl2);
+  await tm.add(tmpl4);
 
   let pagedTmpl = new Template(
     "./test/stubs/templateMapCollection/paged-cfg-tagged.md",
@@ -461,8 +462,10 @@ test("Should be able to paginate a user config collection (paged template is als
   });
 
   let collections = await tm.getCollectionsData();
+  t.is(collections.dog.length, 2);
+
   t.truthy(collections.haha);
-  t.truthy(collections.haha.length);
+  t.is(collections.haha.length, 1);
   t.is(collections.haha[0].url, "/templateMapCollection/paged-cfg-tagged/");
 });
 
@@ -565,4 +568,33 @@ test("Should be able to paginate a tag generated collection when aliased (and it
 <h1>Test 1</h1>
 <p>After</p>`
   );
+});
+
+test.skip("Issue #253: Paginated template with a tag should put multiple pages into a collection", async t => {
+  let tm = new TemplateMap();
+  await tm.add(tmpl1);
+  await tm.add(tmpl2);
+  await tm.add(tmpl4);
+
+  let pagedTmpl = new Template(
+    "./test/stubs/tagged-pagination-multiples/test.njk",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  await tm.add(pagedTmpl);
+
+  tm.setUserConfigCollections({
+    userCollection: function(collection) {
+      let all = collection.getFilteredByTag("dog");
+      return all;
+    }
+  });
+
+  let collections = await tm.getCollectionsData();
+  t.is(collections.dog.length, 2);
+
+  t.truthy(collections.haha);
+  t.is(collections.haha.length, 2);
+  t.is(collections.haha[0].url, "/tagged-pagination-multiples/test/");
+  t.is(collections.haha[1].url, "/tagged-pagination-multiples/test/1/");
 });
