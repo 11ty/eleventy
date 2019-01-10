@@ -69,7 +69,6 @@ class TemplateConfig {
     let localConfig = {};
     let path = TemplatePath.join(
       TemplatePath.getWorkingDir(),
-      "/",
       localProjectConfigPath
     );
     debug(`Merging config with ${path}`);
