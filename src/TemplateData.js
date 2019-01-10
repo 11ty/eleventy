@@ -34,10 +34,9 @@ class TemplateData {
   setInputDir(inputDir) {
     this.inputDirNeedsCheck = true;
     this.inputDir = inputDir;
-    this.dataDir =
-      inputDir +
-      "/" +
-      (this.config.dir.data !== "." ? this.config.dir.data : "");
+    this.dataDir = this.config.dir.data
+      ? TemplatePath.join(inputDir, this.config.dir.data)
+      : inputDir;
   }
 
   setDataTemplateEngine(engineName) {

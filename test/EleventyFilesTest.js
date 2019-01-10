@@ -277,7 +277,7 @@ test("Get ignores (both .eleventyignore and .gitignore, using setUseGitIgnore(fa
 test("getDataDir", t => {
   let evf = new EleventyFiles(".", "_site", []);
   evf.init();
-  t.is(evf.getDataDir(), "./_data");
+  t.is(evf.getDataDir(), "_data");
 });
 
 test("getDataDir subdir", t => {
