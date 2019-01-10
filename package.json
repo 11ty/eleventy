@@ -94,7 +94,7 @@
     "markdown-it": "^8.4.2",
     "minimist": "^1.2.0",
     "moo": "^0.5.0",
-    "multimatch": "^2.1.0",
+    "multimatch": "^3.0.0",
     "mustache": "^2.3.0",
     "normalize-path": "^3.0.0",
     "nunjucks": "^3.1.6",
