@@ -18,7 +18,10 @@ class EleventyFiles {
     this.inputDir = TemplatePath.getDir(this.input);
     this.outputDir = outputDir;
 
-    this.includesDir = this.inputDir + "/" + this.config.dir.includes;
+    this.includesDir = TemplatePath.join(
+      this.inputDir,
+      this.config.dir.includes
+    );
     this.passthroughAll = !!passthroughAll;
 
     this.formats = formats;
@@ -187,11 +190,11 @@ class EleventyFiles {
       files = files.concat(
         EleventyFiles.getFileIgnores(
           [
-            TemplatePath.normalize(
+            TemplatePath.join(
               this.localPathRoot || TemplatePath.localPath(),
               ".gitignore"
             ),
-            TemplatePath.normalize(this.inputDir, ".gitignore")
+            TemplatePath.join(this.inputDir, ".gitignore")
           ],
           "node_modules/**"
         )
@@ -200,11 +203,11 @@ class EleventyFiles {
 
     files = files.concat(
       EleventyFiles.getFileIgnores([
-        TemplatePath.normalize(
+        TemplatePath.join(
           this.localPathRoot || TemplatePath.localPath(),
           ".eleventyignore"
         ),
-        TemplatePath.normalize(this.inputDir, ".eleventyignore")
+        TemplatePath.join(this.inputDir, ".eleventyignore")
       ])
     );
 

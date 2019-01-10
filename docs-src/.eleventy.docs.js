@@ -11,7 +11,7 @@ module.exports = {
     removeDir: function(str) {
       return TemplatePath.stripPathFromDir(
         str,
-        TemplatePath.normalize(__dirname, "..")
+        TemplatePath.join(__dirname, "..")
       );
     }
   }

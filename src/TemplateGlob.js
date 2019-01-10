@@ -9,7 +9,7 @@ class TemplateGlob {
         )}`
       );
     }
-    return TemplatePath.addLeadingDotSlash(TemplatePath.normalize(...paths));
+    return TemplatePath.addLeadingDotSlash(TemplatePath.join(...paths));
   }
 
   static normalize(path) {

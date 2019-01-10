@@ -156,9 +156,10 @@ class TemplateRender {
   }
 
   _normalizeInputDir(dir) {
-    return dir
-      ? TemplatePath.normalize(dir, this.config.dir.includes)
-      : TemplatePath.normalize(this.config.dir.input, this.config.dir.includes);
+    return TemplatePath.join(
+      dir ? dir : this.config.dir.input,
+      this.config.dir.includes
+    );
   }
 
   getInputDir() {

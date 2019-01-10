@@ -8,7 +8,7 @@ test("Working dir", t => {
   t.is(TemplatePath.getModuleDir(), path.resolve(__dirname, ".."));
 });
 
-test("Normalizer", async t => {
+test("normalize", async t => {
   t.is(TemplatePath.normalize(""), ".");
   t.is(TemplatePath.normalize("."), ".");
   t.is(TemplatePath.normalize("/"), "/");
@@ -23,15 +23,27 @@ test("Normalizer", async t => {
   t.is(TemplatePath.normalize("../"), "..");
   t.is(TemplatePath.normalize("../testing"), "../testing");
 
-  t.is(TemplatePath.normalize("testing", "hello"), "testing/hello");
-  t.is(TemplatePath.normalize("testing", "hello/"), "testing/hello");
-  t.is(TemplatePath.normalize("./testing", "hello"), "testing/hello");
-  t.is(TemplatePath.normalize("./testing", "hello/"), "testing/hello");
   t.is(TemplatePath.normalize("./testing/hello"), "testing/hello");
   t.is(TemplatePath.normalize("./testing/hello/"), "testing/hello");
 
   t.is(normalize(".htaccess"), ".htaccess");
   t.is(TemplatePath.normalize(".htaccess"), ".htaccess");
+});
+
+test("join", async t => {
+  t.is(TemplatePath.join("src", "_includes"), "src/_includes");
+  t.is(TemplatePath.join("src", "_includes/"), "src/_includes");
+  t.is(TemplatePath.join("src", "/_includes"), "src/_includes");
+  t.is(TemplatePath.join("src", "./_includes"), "src/_includes");
+  t.is(TemplatePath.join("src", "//_includes"), "src/_includes");
+
+  t.is(TemplatePath.join("./src", "_includes"), "src/_includes");
+  t.is(TemplatePath.join("./src", "_includes/"), "src/_includes");
+  t.is(TemplatePath.join("./src", "/_includes"), "src/_includes");
+  t.is(TemplatePath.join("./src", "./_includes"), "src/_includes");
+  t.is(TemplatePath.join("./src", "//_includes"), "src/_includes");
+
+  t.is(TemplatePath.join("src", "test", "..", "_includes"), "src/_includes");
 });
 
 test("stripLeadingDotSlash", t => {
