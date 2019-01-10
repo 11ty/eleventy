@@ -5,12 +5,13 @@ const config = require("./Config");
 const debug = require("debug")("EleventyServe");
 
 class EleventyServe {
-  constructor() {
-    this.updateConfig();
-  }
+  constructor() {}
 
-  updateConfig() {
-    this.config = config.getConfig();
+  get config() {
+    return this.configOverride || config.getConfig();
+  }
+  set config(config) {
+    this.configOverride = config;
   }
 
   setOutputDir(outputDir) {
@@ -24,9 +25,53 @@ class EleventyServe {
   getRedirectDir(dirName) {
     return TemplatePath.normalize(this.outputDir, dirName);
   }
+  getRedirectDirOverride() {
+    // has a pathPrefix, add a /index.html template to redirect to /pathPrefix/
+    if (this.getPathPrefix() !== "/") {
+      return "_eleventy_redirect";
+    }
+  }
 
   getRedirectFilename(dirName) {
     return TemplatePath.normalize(this.getRedirectDir(dirName), "index.html");
+  }
+
+  getOptions(port) {
+    let pathPrefix = this.getPathPrefix();
+
+    // TODO customize this in Configuration API?
+    let serverConfig = {
+      baseDir: this.outputDir
+    };
+
+    let redirectDirName = this.getRedirectDirOverride();
+    // has a pathPrefix, add a /index.html template to redirect to /pathPrefix/
+    if (redirectDirName) {
+      serverConfig.baseDir = this.getRedirectDir(redirectDirName);
+      serverConfig.routes = {};
+      serverConfig.routes[pathPrefix] = this.outputDir;
+
+      // if has a savedPathPrefix, use the /savedPathPrefix/index.html template to redirect to /pathPrefix/
+      if (this.savedPathPrefix) {
+        serverConfig.routes[this.savedPathPrefix] = TemplatePath.normalize(
+          this.outputDir,
+          this.savedPathPrefix
+        );
+      }
+    }
+
+    return Object.assign(
+      {
+        server: serverConfig,
+        port: port || 8080,
+        ignore: ["node_modules"],
+        watch: false,
+        open: false,
+        notify: false,
+        index: "index.html"
+      },
+      this.config.browserSyncConfig
+    );
   }
 
   cleanupRedirect(dirName) {
@@ -91,40 +136,16 @@ class EleventyServe {
       }
     }
 
-    // TODO customize this in Configuration API?
-    let serverConfig = {
-      baseDir: this.outputDir
-    };
-
+    let redirectDirName = this.getRedirectDirOverride();
     // has a pathPrefix, add a /index.html template to redirect to /pathPrefix/
-    if (pathPrefix !== "/") {
-      let redirectDirName = "_eleventy_redirect";
+    if (redirectDirName) {
       this.serveRedirect(redirectDirName);
-      serverConfig.baseDir = this.getRedirectDir(redirectDirName);
-      serverConfig.routes = {};
-      serverConfig.routes[pathPrefix] = this.outputDir;
-
-      // if has a savedPathPrefix, use the /savedPathPrefix/index.html template to redirect to /pathPrefix/
-      if (this.savedPathPrefix) {
-        serverConfig.routes[this.savedPathPrefix] = TemplatePath.normalize(
-          this.outputDir,
-          this.savedPathPrefix
-        );
-      }
     }
 
     this.cleanupRedirect(this.savedPathPrefix);
     this.savedPathPrefix = pathPrefix;
 
-    this.server.init({
-      server: serverConfig,
-      port: port || 8080,
-      ignore: ["node_modules"],
-      watch: false,
-      open: false,
-      notify: false,
-      index: "index.html"
-    });
+    this.server.init(this.getOptions(port));
   }
 
   close() {
