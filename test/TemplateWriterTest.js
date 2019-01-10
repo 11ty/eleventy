@@ -464,11 +464,11 @@ test("Write Test 11ty.js", async t => {
 
 test("Markdown with alias", async t => {
   let map = new EleventyExtensionMap(["md"]);
-  map.setConfig({
+  map.config = {
     templateExtensionAliases: {
       markdown: "md"
     }
-  });
+  };
 
   let evf = new EleventyFiles(
     "./test/stubs/writeTestMarkdown",
@@ -511,11 +511,11 @@ test("Markdown with alias", async t => {
 
 test("JavaScript with alias", async t => {
   let map = new EleventyExtensionMap(["11ty.js"]);
-  map.setConfig({
+  map.config = {
     templateExtensionAliases: {
       js: "11ty.js"
     }
-  });
+  };
 
   let evf = new EleventyFiles(
     "./test/stubs/writeTestJS",
