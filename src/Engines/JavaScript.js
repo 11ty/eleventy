@@ -11,7 +11,7 @@ class JavaScript extends TemplateEngine {
   }
 
   _getRequire(inputPath) {
-    let requirePath = TemplatePath.localPath(inputPath);
+    let requirePath = TemplatePath.absolutePath(inputPath);
     return require(requirePath);
   }
 
@@ -21,7 +21,7 @@ class JavaScript extends TemplateEngine {
 
   // only remove from cache once on startup (if it already exists)
   initRequireCache(inputPath) {
-    let requirePath = TemplatePath.localPath(inputPath);
+    let requirePath = TemplatePath.absolutePath(inputPath);
     if (requirePath in require.cache) {
       delete require.cache[requirePath];
     }

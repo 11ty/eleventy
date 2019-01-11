@@ -85,7 +85,7 @@ class Eleventy {
 
     // reload package.json values (if applicable)
     // TODO only reset this if it changed
-    delete require.cache[TemplatePath.localPath("package.json")];
+    delete require.cache[TemplatePath.absolutePath("package.json")];
 
     await this.init();
   }

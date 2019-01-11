@@ -84,14 +84,14 @@ class EleventyWatchTargets {
         dependencyTree
           .toList({
             filename: file,
-            directory: TemplatePath.localPath(),
+            directory: TemplatePath.absolutePath(),
             filter: function(path) {
               return path.indexOf("node_modules") === -1;
             }
           })
           .map(dependency => {
             return TemplatePath.addLeadingDotSlash(
-              TemplatePath.delocalPath(dependency)
+              TemplatePath.relativePath(dependency)
             );
           })
           .filter(dependency => {
@@ -109,7 +109,7 @@ class EleventyWatchTargets {
 
   clearDependencyRequireCache() {
     for (let path of this.dependencies) {
-      delete require.cache[TemplatePath.localPath(path)];
+      delete require.cache[TemplatePath.absolutePath(path)];
     }
   }
 

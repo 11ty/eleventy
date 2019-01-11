@@ -153,12 +153,28 @@ TemplatePath.normalizeUrlPath = function(...urlPaths) {
   );
 };
 
-TemplatePath.localPath = function(...paths) {
-  return normalize(path.join(TemplatePath.getWorkingDir(), ...paths));
+/**
+ * Joins the given path segments. Since the first path is absolute,
+ * the resulting path will be absolute as well.
+ *
+ * @param {String[]} paths
+ * @returns {String} the absolute path described by the given path segments.
+ */
+TemplatePath.absolutePath = function(...paths) {
+  return TemplatePath.join(TemplatePath.getWorkingDir(), ...paths);
 };
 
-TemplatePath.delocalPath = function(path) {
-  return TemplatePath.stripPathFromDir(path, TemplatePath.getWorkingDir());
+/**
+ * Turns an absolute path into a path relative Eleventy’s project directory.
+ *
+ * @param {String} absolutePath
+ * @returns {String} the relative path.
+ */
+TemplatePath.relativePath = function(absolutePath) {
+  return TemplatePath.stripPathFromDir(
+    absolutePath,
+    TemplatePath.getWorkingDir()
+  );
 };
 
 TemplatePath.addLeadingDotSlashArray = function(paths) {

@@ -44,7 +44,7 @@ class TemplateData {
   }
 
   getRawImports() {
-    let pkgPath = TemplatePath.localPath("package.json");
+    let pkgPath = TemplatePath.absolutePath("package.json");
 
     try {
       this.rawImports[this.config.keys.package] = require(pkgPath);
@@ -224,7 +224,7 @@ class TemplateData {
 
   async getDataValue(path, rawImports, ignoreProcessing) {
     if (ignoreProcessing || TemplatePath.getExtension(path) === "js") {
-      let localPath = TemplatePath.localPath(path);
+      let localPath = TemplatePath.absolutePath(path);
       if (await fs.pathExists(localPath)) {
         let dataBench = bench.get(`\`${path}\``);
         dataBench.before();

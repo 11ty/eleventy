@@ -96,6 +96,22 @@ test("hasTrailingSlash", t => {
   t.is(TemplatePath.hasTrailingSlash("./test/stubs/"), true);
 });
 
+test("absolutePath", t => {
+  t.is(
+    TemplatePath.absolutePath(".eleventy.js")
+      .split("/")
+      .pop(),
+    ".eleventy.js"
+  );
+});
+
+test("absolutePath and relativePath", t => {
+  t.is(
+    TemplatePath.relativePath(TemplatePath.absolutePath(".eleventy.js")),
+    ".eleventy.js"
+  );
+});
+
 test("stripLeadingDotSlash", t => {
   t.is(TemplatePath.stripLeadingDotSlash("./test/stubs"), "test/stubs");
   t.is(TemplatePath.stripLeadingDotSlash("./dist"), "dist");
@@ -227,20 +243,4 @@ test("stripLeadingDots", t => {
   t.is(TemplatePath.stripLeadingDots("./dist"), "/dist");
   t.is(TemplatePath.stripLeadingDots("../dist"), "/dist");
   t.is(TemplatePath.stripLeadingDots("dist"), "dist");
-});
-
-test("localPath", t => {
-  t.is(
-    TemplatePath.localPath(".eleventy.js")
-      .split("/")
-      .pop(),
-    ".eleventy.js"
-  );
-});
-
-test("localPath and delocalPath", t => {
-  t.is(
-    TemplatePath.delocalPath(TemplatePath.localPath(".eleventy.js")),
-    ".eleventy.js"
-  );
 });

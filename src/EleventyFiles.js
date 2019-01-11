@@ -191,7 +191,7 @@ class EleventyFiles {
         EleventyFiles.getFileIgnores(
           [
             TemplatePath.join(
-              this.localPathRoot || TemplatePath.localPath(),
+              this.localPathRoot || TemplatePath.getWorkingDir(),
               ".gitignore"
             ),
             TemplatePath.join(this.inputDir, ".gitignore")
@@ -204,7 +204,7 @@ class EleventyFiles {
     files = files.concat(
       EleventyFiles.getFileIgnores([
         TemplatePath.join(
-          this.localPathRoot || TemplatePath.localPath(),
+          this.localPathRoot || TemplatePath.getWorkingDir(),
           ".eleventyignore"
         ),
         TemplatePath.join(this.inputDir, ".eleventyignore")
