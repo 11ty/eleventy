@@ -1,7 +1,5 @@
 const TemplateEngine = require("./TemplateEngine");
 const TemplatePath = require("../TemplatePath");
-const dependencyTree = require("dependency-tree");
-const lodashMerge = require("lodash.merge");
 
 class JavaScript extends TemplateEngine {
   normalize(result) {
