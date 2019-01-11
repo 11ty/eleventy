@@ -177,22 +177,31 @@ TemplatePath.relativePath = function(absolutePath) {
   );
 };
 
+/**
+ * Adds a leading dot-slash segment to each path in the `paths` array.
+ *
+ * @param {String[]} paths
+ * @returns {String[]}
+ */
 TemplatePath.addLeadingDotSlashArray = function(paths) {
-  return paths.map(function(path) {
-    return TemplatePath.addLeadingDotSlash(path);
-  });
+  return paths.map(path => TemplatePath.addLeadingDotSlash(path));
 };
 
+/**
+ * Adds a leading dot-slash segment to `path`.
+ *
+ * @param {String} path
+ * @returns {String}
+ */
 TemplatePath.addLeadingDotSlash = function(path) {
   if (path === "." || path === "..") {
     return path + "/";
-  } else if (
-    path.indexOf("/") === 0 ||
-    path.indexOf("./") === 0 ||
-    path.indexOf("../") === 0
-  ) {
+  }
+
+  if (path.startsWith("/") || path.startsWith("./") || path.startsWith("../")) {
     return path;
   }
+
   return "./" + path;
 };
 

@@ -112,15 +112,6 @@ test("absolutePath and relativePath", t => {
   );
 });
 
-test("stripLeadingDotSlash", t => {
-  t.is(TemplatePath.stripLeadingDotSlash("./test/stubs"), "test/stubs");
-  t.is(TemplatePath.stripLeadingDotSlash("./dist"), "dist");
-  t.is(TemplatePath.stripLeadingDotSlash("../dist"), "../dist");
-  t.is(TemplatePath.stripLeadingDotSlash("dist"), "dist");
-
-  t.is(TemplatePath.stripLeadingDotSlash(".htaccess"), ".htaccess");
-});
-
 test("addLeadingDotSlash", t => {
   t.is(TemplatePath.addLeadingDotSlash("."), "./");
   t.is(TemplatePath.addLeadingDotSlash(".."), "../");
@@ -145,6 +136,15 @@ test("addLeadingDotSlashArray", t => {
   t.deepEqual(TemplatePath.addLeadingDotSlashArray([".nyc_output"]), [
     "./.nyc_output"
   ]);
+});
+
+test("stripLeadingDotSlash", t => {
+  t.is(TemplatePath.stripLeadingDotSlash("./test/stubs"), "test/stubs");
+  t.is(TemplatePath.stripLeadingDotSlash("./dist"), "dist");
+  t.is(TemplatePath.stripLeadingDotSlash("../dist"), "../dist");
+  t.is(TemplatePath.stripLeadingDotSlash("dist"), "dist");
+
+  t.is(TemplatePath.stripLeadingDotSlash(".htaccess"), ".htaccess");
 });
 
 test("contains", t => {
