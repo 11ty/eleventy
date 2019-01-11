@@ -147,25 +147,32 @@ test("stripLeadingDotSlash", t => {
   t.is(TemplatePath.stripLeadingDotSlash(".htaccess"), ".htaccess");
 });
 
-test("contains", t => {
-  t.false(TemplatePath.contains("./testing/hello", "./lskdjklfjz"));
-  t.false(TemplatePath.contains("./testing/hello", "lskdjklfjz"));
-  t.false(TemplatePath.contains("testing/hello", "./lskdjklfjz"));
-  t.false(TemplatePath.contains("testing/hello", "lskdjklfjz"));
+test("startsWithSubPath", t => {
+  t.false(TemplatePath.startsWithSubPath("./testing/hello", "./lskdjklfjz"));
+  t.false(TemplatePath.startsWithSubPath("./testing/hello", "lskdjklfjz"));
+  t.false(TemplatePath.startsWithSubPath("testing/hello", "./lskdjklfjz"));
+  t.false(TemplatePath.startsWithSubPath("testing/hello", "lskdjklfjz"));
 
-  t.true(TemplatePath.contains("./testing/hello", "./testing"));
-  t.true(TemplatePath.contains("./testing/hello", "testing"));
-  t.true(TemplatePath.contains("testing/hello", "./testing"));
-  t.true(TemplatePath.contains("testing/hello", "testing"));
+  t.true(TemplatePath.startsWithSubPath("./testing/hello", "./testing"));
+  t.true(TemplatePath.startsWithSubPath("./testing/hello", "testing"));
+  t.true(TemplatePath.startsWithSubPath("testing/hello", "./testing"));
+  t.true(TemplatePath.startsWithSubPath("testing/hello", "testing"));
 
-  t.true(TemplatePath.contains("testing/hello/subdir/test", "testing"));
-  t.false(TemplatePath.contains("testing/hello/subdir/test", "hello"));
-  t.false(TemplatePath.contains("testing/hello/subdir/test", "hello/subdir"));
   t.true(
-    TemplatePath.contains("testing/hello/subdir/test", "testing/hello/subdir")
+    TemplatePath.startsWithSubPath("testing/hello/subdir/test", "testing")
+  );
+  t.false(TemplatePath.startsWithSubPath("testing/hello/subdir/test", "hello"));
+  t.false(
+    TemplatePath.startsWithSubPath("testing/hello/subdir/test", "hello/subdir")
   );
   t.true(
-    TemplatePath.contains(
+    TemplatePath.startsWithSubPath(
+      "testing/hello/subdir/test",
+      "testing/hello/subdir"
+    )
+  );
+  t.true(
+    TemplatePath.startsWithSubPath(
       "testing/hello/subdir/test",
       "testing/hello/subdir/test"
     )

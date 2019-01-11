@@ -215,15 +215,22 @@ TemplatePath.stripLeadingDotSlash = function(path) {
   return path.replace(/^\.\//, "");
 };
 
-TemplatePath.stripLeadingDots = function(str) {
-  return str.replace(/^\.*/, "");
+/**
+ * Determines whether a path starts with a given sub path.
+ *
+ * @param {String} path A path
+ * @param {String} subPath A path
+ * @returns {Boolean} whether `path` starts with `subPath`.
+ */
+TemplatePath.startsWithSubPath = function(path, subPath) {
+  path = TemplatePath.normalize(path);
+  subPath = TemplatePath.normalize(subPath);
+
+  return path.startsWith(subPath);
 };
 
-TemplatePath.contains = function(haystack, needle) {
-  haystack = TemplatePath.stripLeadingDotSlash(normalize(haystack));
-  needle = TemplatePath.stripLeadingDotSlash(normalize(needle));
-
-  return haystack.indexOf(needle) === 0;
+TemplatePath.stripLeadingDots = function(str) {
+  return str.replace(/^\.*/, "");
 };
 
 TemplatePath.stripPathFromDir = function(targetDir, prunedPath) {
