@@ -27,9 +27,19 @@ TemplatePath.getDir = function(path) {
   return TemplatePath.getDirFromFilePath(path);
 };
 
-// Input points to a file
-TemplatePath.getDirFromFilePath = function(filepath) {
-  return parsePath(filepath).dir || ".";
+/**
+ * Returns the directory portion of a path that either points to a file
+ * or ends in a glob pattern. If `path` points to a directory,
+ * the returned value will have its last path segment stripped
+ * due to how [`parsePath`][1] works.
+ *
+ * [1]: https://www.npmjs.com/package/parse-filepath
+ *
+ * @param {String} path A path
+ * @returns {String} the directory portion of a path.
+ */
+TemplatePath.getDirFromFilePath = function(path) {
+  return parsePath(path).dir || ".";
 };
 
 // can assume a parse-filepath .dir is passed in here

@@ -17,6 +17,11 @@ test("getDir", t => {
   t.is(TemplatePath.getDir("test/stubs/!(multiple.md)"), "test/stubs");
 });
 
+test("getDirFromFilePath", t => {
+  t.is(TemplatePath.getDirFromFilePath("test/stubs/*.md"), "test/stubs");
+  t.is(TemplatePath.getDirFromFilePath("test/stubs/!(x.md)"), "test/stubs");
+});
+
 test("normalize", async t => {
   t.is(TemplatePath.normalize(""), ".");
   t.is(TemplatePath.normalize("."), ".");
