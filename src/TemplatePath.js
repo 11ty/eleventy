@@ -171,7 +171,7 @@ TemplatePath.absolutePath = function(...paths) {
  * @returns {String} the relative path.
  */
 TemplatePath.relativePath = function(absolutePath) {
-  return TemplatePath.stripPathFromDir(
+  return TemplatePath.stripLeadingSubPath(
     absolutePath,
     TemplatePath.getWorkingDir()
   );
@@ -229,19 +229,23 @@ TemplatePath.startsWithSubPath = function(path, subPath) {
   return path.startsWith(subPath);
 };
 
-TemplatePath.stripLeadingDots = function(str) {
-  return str.replace(/^\.*/, "");
-};
+/**
+ * Removes the `subPath` at the start of `path` if present
+ * and returns the remainding path.
+ *
+ * @param {String} path A path
+ * @param {String} subPath A path
+ * @returns {String} the `path` without `subPath` at the start of it.
+ */
+TemplatePath.stripLeadingSubPath = function(path, subPath) {
+  path = TemplatePath.normalize(path);
+  subPath = TemplatePath.normalize(subPath);
 
-TemplatePath.stripPathFromDir = function(targetDir, prunedPath) {
-  targetDir = TemplatePath.stripLeadingDotSlash(normalize(targetDir));
-  prunedPath = TemplatePath.stripLeadingDotSlash(normalize(prunedPath));
-
-  if (prunedPath && prunedPath !== "." && targetDir.indexOf(prunedPath) === 0) {
-    return targetDir.substr(prunedPath.length + 1);
+  if (subPath !== "." && path.startsWith(subPath)) {
+    return path.substr(subPath.length + 1);
   }
 
-  return targetDir;
+  return path;
 };
 
 TemplatePath.isDirectorySync = function(path) {

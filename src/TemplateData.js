@@ -135,7 +135,7 @@ class TemplateData {
   }
 
   getObjectPathForDataFile(path) {
-    let reducedPath = TemplatePath.stripPathFromDir(path, this.dataDir);
+    let reducedPath = TemplatePath.stripLeadingSubPath(path, this.dataDir);
     let parsed = parsePath(reducedPath);
     let folders = parsed.dir ? parsed.dir.split("/") : [];
     folders.push(parsed.name);

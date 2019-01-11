@@ -3,7 +3,7 @@ const TemplatePath = require("./TemplatePath");
 class TemplateFileSlug {
   constructor(inputPath, inputDir) {
     if (inputDir) {
-      inputPath = TemplatePath.stripPathFromDir(inputPath, inputDir);
+      inputPath = TemplatePath.stripLeadingSubPath(inputPath, inputDir);
     }
 
     this.inputPath = inputPath;

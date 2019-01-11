@@ -179,22 +179,23 @@ test("startsWithSubPath", t => {
   );
 });
 
-test("stripPathFromDir", t => {
+test("stripLeadingSubPath", t => {
   t.is(
-    TemplatePath.stripPathFromDir("./testing/hello", "./lskdjklfjz"),
+    TemplatePath.stripLeadingSubPath("./testing/hello", "./lskdjklfjz"),
     "testing/hello"
   );
-  t.is(TemplatePath.stripPathFromDir("./test/stubs", "./test"), "stubs");
-  t.is(TemplatePath.stripPathFromDir("./testing/hello", "testing"), "hello");
-  t.is(TemplatePath.stripPathFromDir("testing/hello", "testing"), "hello");
-  t.is(TemplatePath.stripPathFromDir("testing/hello", "./testing"), "hello");
+  t.is(TemplatePath.stripLeadingSubPath("./test/stubs", "stubs"), "test/stubs");
+  t.is(TemplatePath.stripLeadingSubPath("./test/stubs", "./test"), "stubs");
+  t.is(TemplatePath.stripLeadingSubPath("./testing/hello", "testing"), "hello");
+  t.is(TemplatePath.stripLeadingSubPath("testing/hello", "testing"), "hello");
+  t.is(TemplatePath.stripLeadingSubPath("testing/hello", "./testing"), "hello");
   t.is(
-    TemplatePath.stripPathFromDir("testing/hello/subdir/test", "testing"),
+    TemplatePath.stripLeadingSubPath("testing/hello/subdir/test", "testing"),
     "hello/subdir/test"
   );
 
-  t.is(TemplatePath.stripPathFromDir(".htaccess", "./"), ".htaccess");
-  t.is(TemplatePath.stripPathFromDir(".htaccess", "."), ".htaccess");
+  t.is(TemplatePath.stripLeadingSubPath(".htaccess", "./"), ".htaccess");
+  t.is(TemplatePath.stripLeadingSubPath(".htaccess", "."), ".htaccess");
 });
 
 test("Convert to glob", t => {
@@ -241,13 +242,4 @@ test("Remove extension", t => {
     TemplatePath.removeExtension("./test/stubs.hbs", ".hbs"),
     "./test/stubs"
   );
-});
-
-test("stripLeadingDots", t => {
-  t.is(TemplatePath.stripLeadingDots(".11ty.js"), "11ty.js");
-  t.is(TemplatePath.stripLeadingDots(".htaccess"), "htaccess");
-
-  t.is(TemplatePath.stripLeadingDots("./dist"), "/dist");
-  t.is(TemplatePath.stripLeadingDots("../dist"), "/dist");
-  t.is(TemplatePath.stripLeadingDots("dist"), "dist");
 });

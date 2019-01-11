@@ -13,7 +13,7 @@ class TemplatePassthrough {
   getOutputPath() {
     return TemplatePath.join(
       this.outputDir,
-      TemplatePath.stripPathFromDir(this.path, this.inputDir)
+      TemplatePath.stripLeadingSubPath(this.path, this.inputDir)
     );
   }
 

@@ -9,7 +9,7 @@ module.exports = {
   },
   nunjucksFilters: {
     removeDir: function(str) {
-      return TemplatePath.stripPathFromDir(
+      return TemplatePath.stripLeadingSubPath(
         str,
         TemplatePath.join(__dirname, "..")
       );
