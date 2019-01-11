@@ -12,7 +12,13 @@ TemplatePath.getWorkingDir = function() {
   return TemplatePath.normalize(path.resolve("."));
 };
 
-// input is ambiguous—maybe a folder, maybe a file
+/**
+ * Returns the directory portion of a path.
+ * Works for directory and file paths and paths ending in a glob pattern.
+ *
+ * @param {String} path A path
+ * @returns {String} the directory portion of a path.
+ */
 TemplatePath.getDir = function(path) {
   if (TemplatePath.isDirectorySync(path)) {
     return path;

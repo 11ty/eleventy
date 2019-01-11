@@ -8,6 +8,15 @@ test("getWorkingDir", t => {
   t.is(TemplatePath._getModuleDir(), path.resolve(__dirname, ".."));
 });
 
+test("getDir", t => {
+  t.is(TemplatePath.getDir("README.md"), ".");
+  t.is(TemplatePath.getDir("test/stubs/config.js"), "test/stubs");
+  t.is(TemplatePath.getDir("./test/stubs/config.js"), "./test/stubs");
+  t.is(TemplatePath.getDir("test/stubs/*.md"), "test/stubs");
+  t.is(TemplatePath.getDir("test/stubs/**"), "test/stubs");
+  t.is(TemplatePath.getDir("test/stubs/!(multiple.md)"), "test/stubs");
+});
+
 test("normalize", async t => {
   t.is(TemplatePath.normalize(""), ".");
   t.is(TemplatePath.normalize("."), ".");
@@ -132,12 +141,6 @@ test("stripPathFromDir", t => {
 
   t.is(TemplatePath.stripPathFromDir(".htaccess", "./"), ".htaccess");
   t.is(TemplatePath.stripPathFromDir(".htaccess", "."), ".htaccess");
-});
-
-test("getDir", t => {
-  t.is(TemplatePath.getDir("README.md"), ".");
-  t.is(TemplatePath.getDir("test/stubs/config.js"), "test/stubs");
-  t.is(TemplatePath.getDir("./test/stubs/config.js"), "./test/stubs");
 });
 
 test("getLastDir", t => {
