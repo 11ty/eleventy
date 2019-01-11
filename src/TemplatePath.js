@@ -248,6 +248,10 @@ TemplatePath.stripLeadingSubPath = function(path, subPath) {
   return path;
 };
 
+/**
+ * @param {String} path A path
+ * @returns {Boolean} whether `path` points to an existing directory.
+ */
 TemplatePath.isDirectorySync = function(path) {
   return fs.existsSync(path) && fs.statSync(path).isDirectory();
 };
