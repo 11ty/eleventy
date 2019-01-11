@@ -447,12 +447,12 @@ test("Local template data file import (two subdirectories deep)", async t => {
   );
 
   t.deepEqual(await dataObj.getLocalDataPaths(tmpl.getInputPath()), [
-    "./test/stubs/firstdir/firstdir.json",
-    "./test/stubs/firstdir/firstdir.11tydata.json",
-    "./test/stubs/firstdir/firstdir.11tydata.js",
     "./test/stubs/firstdir/seconddir/seconddir.json",
     "./test/stubs/firstdir/seconddir/seconddir.11tydata.json",
     "./test/stubs/firstdir/seconddir/seconddir.11tydata.js",
+    "./test/stubs/firstdir/firstdir.json",
+    "./test/stubs/firstdir/firstdir.11tydata.json",
+    "./test/stubs/firstdir/firstdir.11tydata.js",
     "./test/stubs/firstdir/seconddir/component.json",
     "./test/stubs/firstdir/seconddir/component.11tydata.json",
     "./test/stubs/firstdir/seconddir/component.11tydata.js"

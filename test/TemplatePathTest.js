@@ -30,6 +30,24 @@ test("getLastPathSegment", t => {
   t.is(TemplatePath.getLastPathSegment("testing"), "testing");
 });
 
+test("getAllDirs", t => {
+  t.deepEqual(TemplatePath.getAllDirs("."), ["."]);
+  t.deepEqual(TemplatePath.getAllDirs("./"), ["."]);
+  t.deepEqual(TemplatePath.getAllDirs("./testing"), ["./testing"]);
+  t.deepEqual(TemplatePath.getAllDirs("./testing/"), ["./testing"]);
+  t.deepEqual(TemplatePath.getAllDirs("testing/"), ["testing"]);
+  t.deepEqual(TemplatePath.getAllDirs("testing"), ["testing"]);
+  t.deepEqual(TemplatePath.getAllDirs("./testing/hello"), [
+    "./testing",
+    "./testing/hello"
+  ]);
+  t.deepEqual(TemplatePath.getAllDirs("./src/collections/posts"), [
+    "./src",
+    "./src/collections",
+    "./src/collections/posts"
+  ]);
+});
+
 test("normalize", async t => {
   t.is(TemplatePath.normalize(""), ".");
   t.is(TemplatePath.normalize("."), ".");
@@ -154,23 +172,6 @@ test("stripPathFromDir", t => {
 
   t.is(TemplatePath.stripPathFromDir(".htaccess", "./"), ".htaccess");
   t.is(TemplatePath.stripPathFromDir(".htaccess", "."), ".htaccess");
-});
-
-test("getAllDirs", t => {
-  t.deepEqual(TemplatePath.getAllDirs("."), ["."]);
-  t.deepEqual(TemplatePath.getAllDirs("./testing/hello"), [
-    "./testing/hello",
-    "./testing"
-  ]);
-  t.deepEqual(TemplatePath.getAllDirs("./testing"), ["./testing"]);
-  t.deepEqual(TemplatePath.getAllDirs("./testing/"), ["./testing"]);
-  t.deepEqual(TemplatePath.getAllDirs("testing/"), ["testing"]);
-  t.deepEqual(TemplatePath.getAllDirs("testing"), ["testing"]);
-  t.deepEqual(TemplatePath.getAllDirs("./src/collections/posts"), [
-    "./src/collections/posts",
-    "./src/collections",
-    "./src"
-  ]);
 });
 
 test("Convert to glob", t => {
