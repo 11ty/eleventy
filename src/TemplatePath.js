@@ -256,8 +256,16 @@ TemplatePath.isDirectorySync = function(path) {
   return fs.existsSync(path) && fs.statSync(path).isDirectory();
 };
 
-TemplatePath.convertToGlob = function(path) {
-  if (!path) {
+/**
+ * Appends a recursive wildcard glob pattern to `path`
+ * unless `path` is not a directory; then, `path` is assumed to be a file path
+ * and is left unchaged.
+ *
+ * @param {String} path
+ * @returns {String}
+ */
+TemplatePath.convertToRecursiveGlob = function(path) {
+  if (path === "") {
     return "./**";
   }
 

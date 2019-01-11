@@ -198,11 +198,17 @@ test("stripLeadingSubPath", t => {
   t.is(TemplatePath.stripLeadingSubPath(".htaccess", "."), ".htaccess");
 });
 
-test("Convert to glob", t => {
-  t.is(TemplatePath.convertToGlob(""), "./**");
-  t.is(TemplatePath.convertToGlob("test/stubs"), "./test/stubs/**");
-  t.is(TemplatePath.convertToGlob("test/stubs/"), "./test/stubs/**");
-  t.is(TemplatePath.convertToGlob("./test/stubs/"), "./test/stubs/**");
+test("convertToRecursiveGlob", t => {
+  t.is(TemplatePath.convertToRecursiveGlob(""), "./**");
+  t.is(TemplatePath.convertToRecursiveGlob("."), "./**");
+  t.is(TemplatePath.convertToRecursiveGlob("./"), "./**");
+  t.is(TemplatePath.convertToRecursiveGlob("test/stubs"), "./test/stubs/**");
+  t.is(TemplatePath.convertToRecursiveGlob("test/stubs/"), "./test/stubs/**");
+  t.is(TemplatePath.convertToRecursiveGlob("./test/stubs/"), "./test/stubs/**");
+  t.is(
+    TemplatePath.convertToRecursiveGlob("./test/stubs/config.js"),
+    "./test/stubs/config.js"
+  );
 });
 
 test("Get extension", t => {

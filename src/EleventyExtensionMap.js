@@ -54,7 +54,7 @@ class EleventyExtensionMap {
   }
 
   _getGlobs(formatKeys, inputDir) {
-    let dir = TemplatePath.convertToGlob(inputDir);
+    let dir = TemplatePath.convertToRecursiveGlob(inputDir);
     let globs = [];
     formatKeys.forEach(
       function(key) {

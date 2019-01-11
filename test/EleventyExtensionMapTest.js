@@ -3,16 +3,16 @@ import EleventyExtensionMap from "../src/EleventyExtensionMap";
 
 test("Empty formats", t => {
   let map = new EleventyExtensionMap([]);
-  t.deepEqual(map.getGlobs(), []);
+  t.deepEqual(map.getGlobs("."), []);
 });
 test("Single format", t => {
   let map = new EleventyExtensionMap(["pug"]);
-  t.deepEqual(map.getGlobs(), ["./**/*.pug"]);
+  t.deepEqual(map.getGlobs("."), ["./**/*.pug"]);
   t.deepEqual(map.getGlobs("src"), ["./src/**/*.pug"]);
 });
 test("Multiple formats", t => {
   let map = new EleventyExtensionMap(["njk", "pug"]);
-  t.deepEqual(map.getGlobs(), ["./**/*.njk", "./**/*.pug"]);
+  t.deepEqual(map.getGlobs("."), ["./**/*.njk", "./**/*.pug"]);
   t.deepEqual(map.getGlobs("src"), ["./src/**/*.njk", "./src/**/*.pug"]);
 });
 
@@ -21,7 +21,7 @@ test("Invalid keys are filtered (no passthrough copy)", t => {
   map.config = {
     passthroughFileCopy: false
   };
-  t.deepEqual(map.getGlobs(), []);
+  t.deepEqual(map.getGlobs("."), []);
 });
 
 test("Invalid keys are filtered (using passthrough copy)", t => {
@@ -29,17 +29,17 @@ test("Invalid keys are filtered (using passthrough copy)", t => {
   map.config = {
     passthroughFileCopy: true
   };
-  t.deepEqual(map.getGlobs(), ["./**/*.lksdjfjlsk"]);
+  t.deepEqual(map.getGlobs("."), ["./**/*.lksdjfjlsk"]);
 });
 
 test("Keys are mapped to lower case", t => {
   let map = new EleventyExtensionMap(["PUG", "NJK"]);
-  t.deepEqual(map.getGlobs(), ["./**/*.pug", "./**/*.njk"]);
+  t.deepEqual(map.getGlobs("."), ["./**/*.pug", "./**/*.njk"]);
 });
 
 test("Pruned globs", t => {
   let map = new EleventyExtensionMap(["pug", "njk", "png"]);
-  t.deepEqual(map.getPrunedGlobs(), ["./**/*.png"]);
+  t.deepEqual(map.getPrunedGlobs("."), ["./**/*.png"]);
 });
 
 test("Empty path for fileList", t => {
@@ -120,7 +120,7 @@ test("Extension aliasing (one format key)", t => {
   t.deepEqual(map.getExtensionsFromKey("njk"), ["njk", "nunjucks"]);
 
   // should filter out N/A aliases
-  t.deepEqual(map.getGlobs(), ["./**/*.md", "./**/*.markdown"]);
+  t.deepEqual(map.getGlobs("."), ["./**/*.md", "./**/*.markdown"]);
 });
 
 test("Extension aliasing (two format keys)", t => {
@@ -134,7 +134,7 @@ test("Extension aliasing (two format keys)", t => {
   t.deepEqual(map.getExtensionsFromKey("md"), ["md", "markdown"]);
   t.deepEqual(map.getExtensionsFromKey("njk"), ["njk", "nunjucks"]);
 
-  t.deepEqual(map.getGlobs(), [
+  t.deepEqual(map.getGlobs("."), [
     "./**/*.md",
     "./**/*.markdown",
     "./**/*.njk",

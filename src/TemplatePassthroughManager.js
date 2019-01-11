@@ -53,7 +53,7 @@ class TemplatePassthroughManager {
 
   getConfigPathGlobs() {
     return this.getConfigPaths().map(path => {
-      return TemplatePath.convertToGlob(path);
+      return TemplatePath.convertToRecursiveGlob(path);
     });
   }
 
