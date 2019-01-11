@@ -5,10 +5,6 @@ const fs = require("fs-extra");
 
 function TemplatePath() {}
 
-TemplatePath.getModuleDir = function() {
-  return path.resolve(__dirname, "..");
-};
-
 TemplatePath.getWorkingDir = function() {
   return path.resolve("./");
 };
@@ -203,6 +199,15 @@ TemplatePath.removeExtension = function(path, extension) {
   }
 
   return path;
+};
+
+/**
+ * USE ONLY IN TESTS.
+ *
+ * @returns {String} the absolute path to this module.
+ */
+TemplatePath._getModuleDir = function() {
+  return path.resolve(__dirname, "..");
 };
 
 module.exports = TemplatePath;

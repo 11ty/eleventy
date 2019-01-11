@@ -5,7 +5,7 @@ import TemplatePath from "../src/TemplatePath";
 
 test("Working dir", t => {
   t.is(TemplatePath.getWorkingDir(), path.resolve("./"));
-  t.is(TemplatePath.getModuleDir(), path.resolve(__dirname, ".."));
+  t.is(TemplatePath._getModuleDir(), path.resolve(__dirname, ".."));
 });
 
 test("normalize", async t => {
