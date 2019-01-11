@@ -42,16 +42,23 @@ TemplatePath.getDirFromFilePath = function(path) {
   return parsePath(path).dir || ".";
 };
 
-// can assume a parse-filepath .dir is passed in here
-TemplatePath.getLastDir = function(path) {
-  let slashIndex = path.lastIndexOf("/");
-
-  if (slashIndex === -1) {
+/**
+ * Returns the last path segment in a path (no leading/trailing slashes).
+ *
+ * Assumes [`parsePath`][1] was called on `path` before.
+ *
+ * [1]: https://www.npmjs.com/package/parse-filepath
+ *
+ * @param {String} path A path
+ * @returns {String} the last path segment in a path
+ */
+TemplatePath.getLastPathSegment = function(path) {
+  if (!path.includes("/")) {
     return path;
-  } else if (slashIndex === path.length - 1) {
-    // last character is a slash
-    path = path.substring(0, path.length - 1);
   }
+
+  // Trim a trailing slash if there is one
+  path = path.replace(/\/$/, "");
 
   return path.substr(path.lastIndexOf("/") + 1);
 };

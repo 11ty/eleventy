@@ -22,6 +22,14 @@ test("getDirFromFilePath", t => {
   t.is(TemplatePath.getDirFromFilePath("test/stubs/!(x.md)"), "test/stubs");
 });
 
+test("getLastPathSegment", t => {
+  t.is(TemplatePath.getLastPathSegment("./testing/hello"), "hello");
+  t.is(TemplatePath.getLastPathSegment("./testing"), "testing");
+  t.is(TemplatePath.getLastPathSegment("./testing/"), "testing");
+  t.is(TemplatePath.getLastPathSegment("testing/"), "testing");
+  t.is(TemplatePath.getLastPathSegment("testing"), "testing");
+});
+
 test("normalize", async t => {
   t.is(TemplatePath.normalize(""), ".");
   t.is(TemplatePath.normalize("."), ".");
@@ -146,14 +154,6 @@ test("stripPathFromDir", t => {
 
   t.is(TemplatePath.stripPathFromDir(".htaccess", "./"), ".htaccess");
   t.is(TemplatePath.stripPathFromDir(".htaccess", "."), ".htaccess");
-});
-
-test("getLastDir", t => {
-  t.is(TemplatePath.getLastDir("./testing/hello"), "hello");
-  t.is(TemplatePath.getLastDir("./testing"), "testing");
-  t.is(TemplatePath.getLastDir("./testing/"), "testing");
-  t.is(TemplatePath.getLastDir("testing/"), "testing");
-  t.is(TemplatePath.getLastDir("testing"), "testing");
 });
 
 test("getAllDirs", t => {

@@ -283,7 +283,7 @@ class TemplateData {
       let allDirs = TemplatePath.getAllDirs(parsed.dir);
       debugDev("allDirs: %o", allDirs);
       for (let dir of allDirs) {
-        let lastDir = TemplatePath.getLastDir(dir);
+        let lastDir = TemplatePath.getLastPathSegment(dir);
         let dirPathNoExt = dir + "/" + lastDir;
 
         if (!inputDir) {
