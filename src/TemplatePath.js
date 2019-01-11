@@ -132,13 +132,23 @@ TemplatePath.hasTrailingSlash = function(path, pathIsNormalized = false) {
   return path.endsWith(pathSeparator);
 };
 
-TemplatePath.normalizeUrlPath = function(...paths) {
-  let thePath = path.join(...paths);
-  let hasTrailingSlashBefore = TemplatePath.hasTrailingSlash(thePath, true);
-  let normalizedPath = normalize(thePath);
-  let hasTrailingSlashAfter = TemplatePath.hasTrailingSlash(normalizedPath);
+/**
+ * Joins the given URL path segments and normalizes the resulting path.
+ * Maintains traling path separators.
+ *
+ * @param {String[]} urlPaths
+ * @returns {String} a normalized URL path described by the given URL path segments.
+ */
+TemplatePath.normalizeUrlPath = function(...urlPaths) {
+  const urlPath = path.join(...urlPaths);
+  const hasTrailingSlashBefore = TemplatePath.hasTrailingSlash(urlPath, true);
+  const normalizedUrlPath = normalize(urlPath);
+  const hasTrailingSlashAfter = TemplatePath.hasTrailingSlash(
+    normalizedUrlPath
+  );
+
   return (
-    normalizedPath +
+    normalizedUrlPath +
     (hasTrailingSlashBefore && !hasTrailingSlashAfter ? "/" : "")
   );
 };
