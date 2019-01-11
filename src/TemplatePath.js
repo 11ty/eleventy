@@ -111,17 +111,25 @@ TemplatePath.join = function(...paths) {
   return normalize(path.join(...paths));
 };
 
-TemplatePath.hasTrailingSlash = function(thePath, isPreNormalized) {
-  if (!thePath) {
+/**
+ * Determines whether a path ends in a path separating character.
+ *
+ * @param {String|undefined} path
+ * @param {Boolean} pathIsNormalized
+ * @returns {Boolean} whether `path` ends with a path separating character.
+ */
+TemplatePath.hasTrailingSlash = function(path, pathIsNormalized = false) {
+  if (path === undefined || path.length === 0) {
     return false;
   }
 
-  let slash = "/";
-  // handle windows slashes too
-  if (isPreNormalized && process.platform === "win32") {
-    slash = "\\";
+  let pathSeparator = "/";
+  // Handle Windows path separators
+  if (pathIsNormalized && process.platform === "win32") {
+    pathSeparator = "\\";
   }
-  return thePath.length && thePath.charAt(thePath.length - 1) === slash;
+
+  return path.endsWith(pathSeparator);
 };
 
 TemplatePath.normalizeUrlPath = function(...paths) {

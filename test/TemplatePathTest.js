@@ -86,6 +86,16 @@ test("join", async t => {
   t.is(TemplatePath.join("src", "test", "..", "_includes"), "src/_includes");
 });
 
+test("hasTrailingSlash", t => {
+  t.is(TemplatePath.hasTrailingSlash(undefined), false);
+  t.is(TemplatePath.hasTrailingSlash(""), false);
+  t.is(TemplatePath.hasTrailingSlash("dist"), false);
+  t.is(TemplatePath.hasTrailingSlash("./test/stubs"), false);
+  t.is(TemplatePath.hasTrailingSlash("/"), true);
+  t.is(TemplatePath.hasTrailingSlash("dist/"), true);
+  t.is(TemplatePath.hasTrailingSlash("./test/stubs/"), true);
+});
+
 test("stripLeadingDotSlash", t => {
   t.is(TemplatePath.stripLeadingDotSlash("./test/stubs"), "test/stubs");
   t.is(TemplatePath.stripLeadingDotSlash("./dist"), "dist");
@@ -93,16 +103,6 @@ test("stripLeadingDotSlash", t => {
   t.is(TemplatePath.stripLeadingDotSlash("dist"), "dist");
 
   t.is(TemplatePath.stripLeadingDotSlash(".htaccess"), ".htaccess");
-});
-
-test("hasTrailingSlash", t => {
-  t.is(TemplatePath.hasTrailingSlash(), false);
-  t.is(TemplatePath.hasTrailingSlash(""), false);
-  t.is(TemplatePath.hasTrailingSlash("dist"), false);
-  t.is(TemplatePath.hasTrailingSlash("./test/stubs"), false);
-  t.is(TemplatePath.hasTrailingSlash("/"), true);
-  t.is(TemplatePath.hasTrailingSlash("dist/"), true);
-  t.is(TemplatePath.hasTrailingSlash("./test/stubs/"), true);
 });
 
 test("addLeadingDotSlash", t => {
