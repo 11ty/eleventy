@@ -1,6 +1,5 @@
 const NunjucksLib = require("nunjucks");
 const TemplateEngine = require("./TemplateEngine");
-const config = require("../Config");
 
 class Nunjucks extends TemplateEngine {
   constructor(name, inputDir) {
@@ -69,18 +68,25 @@ class Nunjucks extends TemplateEngine {
         this.tags = [shortcodeName];
 
         this.parse = function(parser, nodes, lexer) {
-          var tok = parser.nextToken();
+          let args;
+          let tok = parser.nextToken();
 
-          var args = parser.parseSignature(null, true);
+          args = parser.parseSignature(true, true);
+
+          // Nunjucks bug with non-paired custom tags bug still exists even
+          // though this issue is closed. Works fine for paired.
+          // https://github.com/mozilla/nunjucks/issues/158
+          if (args.children.length === 0) {
+            args.addChild(new nodes.Literal(0, 0, ""));
+          }
+
           parser.advanceAfterBlockEnd(tok.value);
-
           return new nodes.CallExtensionAsync(this, "run", args);
         };
 
         this.run = function(...args) {
           let callback = args.pop();
           let [context, ...argArray] = args;
-
           let ret = new nunjucksEngine.runtime.SafeString(
             shortcodeFn(...argArray)
           );
@@ -98,7 +104,7 @@ class Nunjucks extends TemplateEngine {
         this.parse = function(parser, nodes, lexer) {
           var tok = parser.nextToken();
 
-          var args = parser.parseSignature(null, true);
+          var args = parser.parseSignature(true, true);
           parser.advanceAfterBlockEnd(tok.value);
 
           var body = parser.parseUntilBlocks("end" + shortcodeName);
@@ -111,7 +117,6 @@ class Nunjucks extends TemplateEngine {
           let callback = args.pop();
           let body = args.pop();
           let [context, ...argArray] = args;
-
           let ret = new nunjucksEngine.runtime.SafeString(
             shortcodeFn(body(), ...argArray)
           );
