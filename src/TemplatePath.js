@@ -5,8 +5,11 @@ const fs = require("fs-extra");
 
 function TemplatePath() {}
 
+/**
+ * @returns {String} the absolute path to Eleventy’s project directory.
+ */
 TemplatePath.getWorkingDir = function() {
-  return path.resolve("./");
+  return TemplatePath.normalize(path.resolve("."));
 };
 
 // input is ambiguous—maybe a folder, maybe a file

@@ -3,7 +3,7 @@ import path from "path";
 import normalize from "normalize-path";
 import TemplatePath from "../src/TemplatePath";
 
-test("Working dir", t => {
+test("getWorkingDir", t => {
   t.is(TemplatePath.getWorkingDir(), path.resolve("./"));
   t.is(TemplatePath._getModuleDir(), path.resolve(__dirname, ".."));
 });
