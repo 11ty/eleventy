@@ -205,12 +205,18 @@ TemplatePath.addLeadingDotSlash = function(path) {
   return "./" + path;
 };
 
-TemplatePath.stripLeadingDots = function(str) {
-  return str.replace(/^\.*/, "");
+/**
+ * Removes a leading dot-slash segment.
+ *
+ * @param {String} path
+ * @returns {String} the `path` without a leading dot-slash segment.
+ */
+TemplatePath.stripLeadingDotSlash = function(path) {
+  return path.replace(/^\.\//, "");
 };
 
-TemplatePath.stripLeadingDotSlash = function(dir) {
-  return dir.replace(/^\.\//, "");
+TemplatePath.stripLeadingDots = function(str) {
+  return str.replace(/^\.*/, "");
 };
 
 TemplatePath.contains = function(haystack, needle) {
