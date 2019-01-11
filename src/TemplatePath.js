@@ -278,12 +278,16 @@ TemplatePath.convertToRecursiveGlob = function(path) {
   return path;
 };
 
-TemplatePath.getExtension = function(path) {
-  let split = path.split(".");
-  if (split.length > 1) {
-    return split.pop();
-  }
-  return "";
+/**
+ * Returns the extension of the path without the leading dot.
+ * If the path has no extensions, the empty string is returned.
+ *
+ * @param {String} thePath
+ * @returns {String} the path’s extension if it exists;
+ * otherwise, the empty string.
+ */
+TemplatePath.getExtension = function(thePath) {
+  return path.extname(thePath).replace(/^\./, "");
 };
 
 TemplatePath.removeExtension = function(path, extension) {

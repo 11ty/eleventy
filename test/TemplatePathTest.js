@@ -211,7 +211,7 @@ test("convertToRecursiveGlob", t => {
   );
 });
 
-test("Get extension", t => {
+test("getExtension", t => {
   t.is(TemplatePath.getExtension(""), "");
   t.is(TemplatePath.getExtension("test/stubs"), "");
   t.is(TemplatePath.getExtension("test/stubs.njk"), "njk");
