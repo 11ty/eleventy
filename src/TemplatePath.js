@@ -290,16 +290,21 @@ TemplatePath.getExtension = function(thePath) {
   return path.extname(thePath).replace(/^\./, "");
 };
 
-TemplatePath.removeExtension = function(path, extension) {
-  let split = path.split(".");
+/**
+ * Removes the extension from a path.
+ *
+ * @param {String} path
+ * @param {String} extension
+ * @returns {String}
+ */
+TemplatePath.removeExtension = function(path, extension = undefined) {
+  if (extension === undefined) {
+    return path;
+  }
 
-  // only remove extension if extension is passed in and an extension is found
-  if (extension && split.length > 1) {
-    let ext = split.pop();
-    if (extension.charAt(0) === ".") {
-      extension = extension.substr(1);
-    }
-    return split.join(".") + (!extension || ext === extension ? "" : "." + ext);
+  const pathExtension = TemplatePath.getExtension(path);
+  if (pathExtension !== "" && extension.endsWith(pathExtension)) {
+    return path.substring(0, path.lastIndexOf(pathExtension) - 1);
   }
 
   return path;

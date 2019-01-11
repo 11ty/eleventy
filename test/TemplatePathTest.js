@@ -218,7 +218,7 @@ test("getExtension", t => {
   t.is(TemplatePath.getExtension("test/stubs.hbs"), "hbs");
 });
 
-test("Remove extension", t => {
+test("removeExtension", t => {
   t.is(TemplatePath.removeExtension(""), "");
   t.is(TemplatePath.removeExtension("", "hbs"), "");
 
