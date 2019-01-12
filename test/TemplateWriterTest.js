@@ -2,13 +2,13 @@ import test from "ava";
 import fs from "fs-extra";
 import fastglob from "fast-glob";
 import parsePath from "parse-filepath";
-import TemplateRender from "../src/TemplateRender";
 import EleventyFiles from "../src/EleventyFiles";
 import EleventyExtensionMap from "../src/EleventyExtensionMap";
 import TemplateWriter from "../src/TemplateWriter";
 // Not sure why but this import up `ava` and _createTemplate 👀
 // import Template from "../src/Template";
 import eleventyConfig from "../src/EleventyConfig";
+import normalizeNewLines from "./Util/normalizeNewLines";
 
 // TODO make sure if output is a subdir of input dir that they don’t conflict.
 test("Output is a subdir of input", async t => {
@@ -248,7 +248,7 @@ test("Use a collection inside of a template", async t => {
 
   // test content
   t.is(
-    templates[0].templateContent.trim(),
+    normalizeNewLines(templates[0].templateContent.trim()),
     `Layout
 
 Template
@@ -288,7 +288,7 @@ test("Use a collection inside of a layout", async t => {
 
   // test content
   t.is(
-    templates[0].templateContent.trim(),
+    normalizeNewLines(templates[0].templateContent.trim()),
     `Layout
 
 Template

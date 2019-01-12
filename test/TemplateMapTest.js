@@ -2,6 +2,7 @@ import test from "ava";
 import Template from "../src/Template";
 import TemplateMap from "../src/TemplateMap";
 import TemplateCollection from "../src/TemplateCollection";
+import normalizeNewLines from "./Util/normalizeNewLines";
 
 let tmpl1 = new Template(
   "./test/stubs/templateMapCollection/test1.md",
@@ -199,7 +200,7 @@ test("Issue #115, mixing pagination and collections", async t => {
   t.is(Object.keys(map[2].data.collections.bars).length, 1);
 
   t.deepEqual(
-    map[2].templateContent,
+    normalizeNewLines(map[2].templateContent),
     `This page is foos
 This page is bars
 `
@@ -259,7 +260,7 @@ test("Issue #115 with layout, mixing pagination and collections", async t => {
   t.is(Object.keys(map[2].data.collections.bars).length, 1);
 
   t.deepEqual(
-    map[2].templateContent,
+    normalizeNewLines(map[2].templateContent),
     `This page is foos
 This page is bars
 `
