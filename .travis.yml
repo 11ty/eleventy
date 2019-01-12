@@ -1,6 +1,7 @@
 language: node_js
 node_js:
   - 8
+  - 10
 before_script:
   - npm install
 script: npm run test
@@ -8,3 +9,7 @@ branches:
   except:
     - gh-pages
 sudo: false
+os:
+  - windows
+  - linux
+  - osx
