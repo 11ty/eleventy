@@ -10,6 +10,6 @@ branches:
     - gh-pages
 sudo: false
 os:
-  - windows
   - linux
   - osx
+#  - windows
