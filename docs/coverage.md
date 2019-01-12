@@ -1,14 +1,14 @@
-# Code Coverage for Eleventy v0.7.0
+# Code Coverage for Eleventy v0.7.1
 
 | Filename                                   | % Lines | % Statements | % Functions | % Branches |
 | ------------------------------------------ | ------- | ------------ | ----------- | ---------- |
-| `total`                                    | 88.09%  | 88.11%       | 86.95%      | 79.63%     |
+| `total`                                    | 87.9%   | 87.92%       | 87.03%      | 79.43%     |
 | `config.js`                                | 100%    | 100%         | 100%        | 100%       |
 | `src/Benchmark.js`                         | 91.67%  | 91.67%       | 83.33%      | 66.67%     |
-| `src/BenchmarkGroup.js`                    | 75.86%  | 75.86%       | 83.33%      | 50%        |
-| `src/BenchmarkManager.js`                  | 76.47%  | 76.47%       | 71.43%      | 50%        |
+| `src/BenchmarkGroup.js`                    | 67.65%  | 67.65%       | 71.43%      | 30%        |
+| `src/BenchmarkManager.js`                  | 76.47%  | 76.47%       | 71.43%      | 75%        |
 | `src/Config.js`                            | 100%    | 100%         | 100%        | 100%       |
-| `src/Eleventy.js`                          | 59.07%  | 59.07%       | 51.61%      | 45.83%     |
+| `src/Eleventy.js`                          | 54.91%  | 54.91%       | 57.58%      | 48%        |
 | `src/EleventyBaseError.js`                 | 100%    | 100%         | 100%        | 100%       |
 | `src/EleventyCommandCheck.js`              | 100%    | 100%         | 100%        | 87.5%      |
 | `src/EleventyConfig.js`                    | 100%    | 100%         | 100%        | 100%       |
@@ -16,7 +16,7 @@
 | `src/EleventyExtensionMap.js`              | 100%    | 100%         | 100%        | 100%       |
 | `src/EleventyFiles.js`                     | 95.61%  | 95.61%       | 88.57%      | 91.18%     |
 | `src/EleventyServe.js`                     | 36.07%  | 36.07%       | 56.25%      | 24.39%     |
-| `src/EleventyWatchTargets.js`              | 93.33%  | 93.33%       | 89.47%      | 93.33%     |
+| `src/EleventyWatchTargets.js`              | 93.48%  | 93.48%       | 90%         | 93.33%     |
 | `src/Template.js`                          | 93.52%  | 93.52%       | 95.35%      | 84.21%     |
 | `src/TemplateCache.js`                     | 100%    | 100%         | 100%        | 100%       |
 | `src/TemplateCollection.js`                | 90%     | 90.63%       | 92.31%      | 75%        |
