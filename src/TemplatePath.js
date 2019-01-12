@@ -310,13 +310,4 @@ TemplatePath.removeExtension = function(path, extension = undefined) {
   return path;
 };
 
-/**
- * USE ONLY IN TESTS.
- *
- * @returns {String} the absolute path to this module.
- */
-TemplatePath._getModuleDir = function() {
-  return path.resolve(__dirname, "..");
-};
-
 module.exports = TemplatePath;

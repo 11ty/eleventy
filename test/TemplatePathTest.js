@@ -1,12 +1,5 @@
 import test from "ava";
-import path from "path";
-import normalize from "normalize-path";
 import TemplatePath from "../src/TemplatePath";
-
-test("getWorkingDir", t => {
-  t.is(TemplatePath.getWorkingDir(), path.resolve("./"));
-  t.is(TemplatePath._getModuleDir(), path.resolve(__dirname, ".."));
-});
 
 test("getDir", t => {
   t.is(TemplatePath.getDir("README.md"), ".");
@@ -66,7 +59,6 @@ test("normalize", async t => {
   t.is(TemplatePath.normalize("./testing/hello"), "testing/hello");
   t.is(TemplatePath.normalize("./testing/hello/"), "testing/hello");
 
-  t.is(normalize(".htaccess"), ".htaccess");
   t.is(TemplatePath.normalize(".htaccess"), ".htaccess");
 });
 
