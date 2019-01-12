@@ -63,6 +63,30 @@ test("JS Render a function (Markdown)", async t => {
   t.is((await fn({ name: "Bill" })).trim(), "<h1>Bill</h1>");
 });
 
+test("JS Render a function (Collections)", async t => {
+  let tr = new TemplateRender("./test/stubs/use-collection.11ty.js");
+  let fn = await tr.getCompiledTemplate();
+  t.is(
+    (await fn({
+      collections: {
+        post: [
+          {
+            data: {
+              title: "Testing"
+            }
+          },
+          {
+            data: {
+              title: "Testing2"
+            }
+          }
+        ]
+      }
+    })).trim(),
+    `<ul><li>Testing</li><li>Testing2</li></ul>`
+  );
+});
+
 test("JS Render an async function", async t => {
   let fn = await new TemplateRender(
     "./test/stubs/function-async.11ty.js"
