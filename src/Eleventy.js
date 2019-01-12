@@ -285,7 +285,15 @@ Eleventy.prototype.initWatch = async function() {
     await this.eleventyFiles.getGlobWatcherTemplateDataFiles()
   );
 
+  if (!this.watcherBench) {
+    this.watcherBench = bench.get("Watcher");
+  }
+  let benchmark = this.watcherBench.get(
+    "Watching JavaScript Dependencies (disable with `eleventyConfig.setWatchJavaScriptDependencies(false)`)"
+  );
+  benchmark.before();
   await this._initWatchDependencies();
+  benchmark.after();
 };
 
 Eleventy.prototype._initWatchDependencies = async function() {
@@ -323,8 +331,11 @@ Eleventy.prototype.getWatchedFiles = async function() {
 };
 
 Eleventy.prototype.watch = async function() {
+  this.watcherBench = bench.get("Watcher");
+  this.watcherBench.setMinimumThresholdMs(500);
+  this.watcherBench.reset();
+
   const chokidar = require("chokidar");
-  const EleventyWatchTargets = require("./EleventyWatchTargets");
 
   this.active = false;
   this.queuedToRun = false;
@@ -346,6 +357,8 @@ Eleventy.prototype.watch = async function() {
     ignored: ignores,
     ignoreInitial: true
   });
+
+  this.watcherBench.finish("Initialize --watch", 10, this.isVerbose);
 
   console.log("Watching…");
 

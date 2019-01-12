@@ -8,6 +8,7 @@ class BenchmarkGroup {
     this.benchmarks = {};
     this.start = new Date();
     this.isVerbose = true;
+    this.minimumThresholdMs = 0;
   }
 
   reset() {
@@ -30,21 +31,32 @@ class BenchmarkGroup {
     };
   }
 
+  setMinimumThresholdMs(minimumThresholdMs) {
+    let val = parseInt(minimumThresholdMs, 10);
+    if (isNaN(val)) {
+      throw new Error("`setMinimumThresholdMs` expects a number argument.");
+    }
+    this.minimumThresholdMs = val;
+  }
+
   get(type) {
     this.benchmarks[type] = new Benchmark();
     return this.benchmarks[type];
   }
 
-  finish(location, thresholdPercent, isVerbose) {
+  finish(label, thresholdPercent, isVerbose) {
     let totalTimeSpent = new Date().getTime() - this.start.getTime();
-    thresholdPercent = thresholdPercent || 10;
+    thresholdPercent = thresholdPercent !== undefined ? thresholdPercent : 10;
     for (var type in this.benchmarks) {
       let bench = this.benchmarks[type];
       let totalForBenchmark = bench.getTotal();
       let percent = (totalForBenchmark * 100) / totalTimeSpent;
-      if (percent > thresholdPercent) {
+      if (
+        percent > thresholdPercent &&
+        totalForBenchmark >= this.minimumThresholdMs
+      ) {
         let str = chalk.yellow(
-          `Benchmark (${location}): ${type} took ${bench.getTotal()}ms (${percent.toFixed(
+          `Benchmark (${label}): ${type} took ${bench.getTotal()}ms (${percent.toFixed(
             1
           )}%)`
         );

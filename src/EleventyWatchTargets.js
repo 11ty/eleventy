@@ -84,7 +84,10 @@ class EleventyWatchTargets {
         dependencyTree
           .toList({
             filename: file,
-            directory: TemplatePath.localPath()
+            directory: TemplatePath.localPath(),
+            filter: function(path) {
+              return path.indexOf("node_modules") === -1;
+            }
           })
           .map(dependency => {
             return TemplatePath.addLeadingDotSlash(
