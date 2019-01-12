@@ -4,6 +4,7 @@ import pretty from "pretty";
 import TemplateData from "../src/TemplateData";
 import Template from "../src/Template";
 import templateConfig from "../src/Config";
+import normalizeNewLines from "./Util/normalizeNewLines";
 
 const config = templateConfig.getConfig();
 
@@ -176,7 +177,7 @@ test("One Layout (using new content var)", async t => {
   t.is(data[config.keys.layout], "defaultLayout");
 
   t.is(
-    cleanHtml(await tmpl.renderLayout(tmpl, data)),
+    normalizeNewLines(cleanHtml(await tmpl.renderLayout(tmpl, data))),
     `<div id="layout">
   <p>Hello.</p>
 </div>`
@@ -204,7 +205,7 @@ test("One Layout (using layoutContent)", async t => {
   t.is(data[config.keys.layout], "defaultLayoutLayoutContent");
 
   t.is(
-    cleanHtml(await tmpl.renderLayout(tmpl, data)),
+    normalizeNewLines(cleanHtml(await tmpl.renderLayout(tmpl, data))),
     `<div id="layout">
   <p>Hello.</p>
 </div>`
@@ -257,7 +258,7 @@ test("One Layout (_layoutContent deprecated but supported)", async t => {
   t.is(data[config.keys.layout], "defaultLayout_layoutContent");
 
   t.is(
-    cleanHtml(await tmpl.renderLayout(tmpl, data)),
+    normalizeNewLines(cleanHtml(await tmpl.renderLayout(tmpl, data))),
     `<div id="layout">
   <p>Hello.</p>
 </div>`
@@ -285,7 +286,7 @@ test("One Layout (liquid test)", async t => {
   t.is(data[config.keys.layout], "layoutLiquid.liquid");
 
   t.is(
-    cleanHtml(await tmpl.renderLayout(tmpl, data)),
+    normalizeNewLines(cleanHtml(await tmpl.renderLayout(tmpl, data))),
     `<div id="layout">
   <p>Hello.</p>
 </div>`
@@ -311,7 +312,7 @@ test("Two Layouts", async t => {
   t.is(data.key1, "value1");
 
   t.is(
-    cleanHtml(await tmpl.renderLayout(tmpl, data)),
+    normalizeNewLines(cleanHtml(await tmpl.renderLayout(tmpl, data))),
     `<div id="layout-b">
   <div id="layout-a">
     <p>value2-a</p>
@@ -487,7 +488,7 @@ test("Posts inherits local JSON, layouts", async t => {
   t.is(localData.layout, "mylocallayout.njk");
 
   t.is(
-    (await tmpl.render(data)).trim(),
+    normalizeNewLines((await tmpl.render(data)).trim()),
     `<div id="locallayout">Post1
 </div>`
   );
@@ -519,7 +520,7 @@ test("Template and folder name are the same, make sure data imports work ok", as
   t.is(localData.layout, "mylocallayout.njk");
 
   t.is(
-    (await tmpl.render(data)).trim(),
+    normalizeNewLines((await tmpl.render(data)).trim()),
     `<div id="locallayout">Posts
 </div>`
   );
@@ -979,7 +980,7 @@ test("Using a markdown source file (with a layout that uses njk), markdown shoul
   );
 
   t.is(
-    (await tmpl.render()).trim(),
+    normalizeNewLines((await tmpl.render()).trim()),
     `# Layout header
 
 <div id="layoutvalue"><h1>My Title</h1>
@@ -995,7 +996,7 @@ test("Override base templating engine from .md to ejs,md (with a layout that use
   );
 
   t.is(
-    (await tmpl.render()).trim(),
+    normalizeNewLines((await tmpl.render()).trim()),
     `# Layout header
 
 <div id="layoutvalue"><h1>My Title</h1>
