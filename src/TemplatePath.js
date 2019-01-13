@@ -112,45 +112,16 @@ TemplatePath.join = function(...paths) {
 };
 
 /**
- * Determines whether a path ends in a path separating character.
- *
- * @param {String|undefined} path
- * @param {Boolean} pathIsNormalized
- * @returns {Boolean} whether `path` ends with a path separating character.
- */
-TemplatePath.hasTrailingSlash = function(path, pathIsNormalized = false) {
-  if (path === undefined || path.length === 0) {
-    return false;
-  }
-
-  let pathSeparator = "/";
-  // Handle Windows path separators
-  if (pathIsNormalized && process.platform === "win32") {
-    pathSeparator = "\\";
-  }
-
-  return path.endsWith(pathSeparator);
-};
-
-/**
  * Joins the given URL path segments and normalizes the resulting path.
- * Maintains traling path separators.
+ * Maintains traling a single trailing slash if the last URL path argument
+ * had atleast one.
  *
  * @param {String[]} urlPaths
  * @returns {String} a normalized URL path described by the given URL path segments.
  */
 TemplatePath.normalizeUrlPath = function(...urlPaths) {
   const urlPath = path.join(...urlPaths);
-  const hasTrailingSlashBefore = TemplatePath.hasTrailingSlash(urlPath, true);
-  const normalizedUrlPath = normalize(urlPath);
-  const hasTrailingSlashAfter = TemplatePath.hasTrailingSlash(
-    normalizedUrlPath
-  );
-
-  return (
-    normalizedUrlPath +
-    (hasTrailingSlashBefore && !hasTrailingSlashAfter ? "/" : "")
-  );
+  return urlPath.replace(/\/+$/, "/");
 };
 
 /**
@@ -272,7 +243,7 @@ TemplatePath.convertToRecursiveGlob = function(path) {
   path = TemplatePath.addLeadingDotSlash(path);
 
   if (TemplatePath.isDirectorySync(path)) {
-    return path + (!TemplatePath.hasTrailingSlash(path) ? "/" : "") + "**";
+    return path + (!path.endsWith("/") ? "/" : "") + "**";
   }
 
   return path;

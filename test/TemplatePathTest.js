@@ -78,14 +78,21 @@ test("join", async t => {
   t.is(TemplatePath.join("src", "test", "..", "_includes"), "src/_includes");
 });
 
-test("hasTrailingSlash", t => {
-  t.is(TemplatePath.hasTrailingSlash(undefined), false);
-  t.is(TemplatePath.hasTrailingSlash(""), false);
-  t.is(TemplatePath.hasTrailingSlash("dist"), false);
-  t.is(TemplatePath.hasTrailingSlash("./test/stubs"), false);
-  t.is(TemplatePath.hasTrailingSlash("/"), true);
-  t.is(TemplatePath.hasTrailingSlash("dist/"), true);
-  t.is(TemplatePath.hasTrailingSlash("./test/stubs/"), true);
+test("normalizeUrlPath", t => {
+  t.is(TemplatePath.normalizeUrlPath(""), ".");
+  t.is(TemplatePath.normalizeUrlPath("."), ".");
+  t.is(TemplatePath.normalizeUrlPath("./"), "./");
+  t.is(TemplatePath.normalizeUrlPath(".."), "..");
+  t.is(TemplatePath.normalizeUrlPath("../"), "../");
+
+  t.is(TemplatePath.normalizeUrlPath("/"), "/");
+  t.is(TemplatePath.normalizeUrlPath("//"), "/");
+  t.is(TemplatePath.normalizeUrlPath("/../"), "/");
+  t.is(TemplatePath.normalizeUrlPath("/test"), "/test");
+  t.is(TemplatePath.normalizeUrlPath("/test/"), "/test/");
+  t.is(TemplatePath.normalizeUrlPath("/test//"), "/test/");
+  t.is(TemplatePath.normalizeUrlPath("/test/../"), "/");
+  t.is(TemplatePath.normalizeUrlPath("/test/../../"), "/");
 });
 
 test("absolutePath", t => {
