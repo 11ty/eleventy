@@ -65,15 +65,15 @@
   },
   "devDependencies": {
     "@11ty/eleventy-plugin-syntaxhighlight": "^2.0.1",
-    "ava": "^1.0.1",
+    "ava": "^1.1.0",
     "husky": "^1.3.1",
     "lint-staged": "^8.1.0",
     "markdown-it-emoji": "^1.4.0",
     "nyc": "^13.1.0",
     "prettier": "^1.15.3",
     "viperhtml": "^2.17.0",
-    "vue": "^2.5.21",
-    "vue-server-renderer": "^2.5.21"
+    "vue": "^2.5.22",
+    "vue-server-renderer": "^2.5.22"
   },
   "dependencies": {
     "browser-sync": "^2.26.3",
@@ -97,7 +97,7 @@
     "multimatch": "^3.0.0",
     "mustache": "^2.3.0",
     "normalize-path": "^3.0.0",
-    "nunjucks": "^3.1.6",
+    "nunjucks": "^3.1.7",
     "parse-filepath": "^1.0.2",
     "please-upgrade-node": "^3.1.1",
     "pretty": "^2.0.0",
