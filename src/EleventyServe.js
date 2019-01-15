@@ -3,6 +3,7 @@ const fs = require("fs-extra");
 const TemplatePath = require("./TemplatePath");
 const config = require("./Config");
 const debug = require("debug")("EleventyServe");
+const path = require("path");
 
 class EleventyServe {
   constructor() {}
@@ -145,7 +146,17 @@ class EleventyServe {
     this.cleanupRedirect(this.savedPathPrefix);
     this.savedPathPrefix = pathPrefix;
 
-    this.server.init(this.getOptions(port));
+    const options = this.getOptions(port);
+    this.server.init(options, (err, bs) => {
+      const content_404 = fs.readFileSync(
+        path.join(options.server.baseDir, "404/index.html")
+      );
+      bs.addMiddleware("*", (req, res) => {
+        // Provides the 404 content without redirect.
+        res.write(content_404);
+        res.end();
+      });
+    });
   }
 
   close() {
