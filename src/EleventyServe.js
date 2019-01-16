@@ -145,6 +145,7 @@ class EleventyServe {
     this.cleanupRedirect(this.savedPathPrefix);
     this.server.init(this.getOptions(port));
 
+    // this needs to happen after `.getOptions`
     this.savedPathPrefix = pathPrefix;
   }
 
