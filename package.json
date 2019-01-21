@@ -113,5 +113,8 @@
       "pre-commit": "lint-staged",
       "pre-push": "npx ava"
     }
+  },
+  "pkg": {
+    "scripts": "src/**/*"
   }
 }
