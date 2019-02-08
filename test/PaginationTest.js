@@ -29,6 +29,7 @@ test("No pagination", async t => {
   paging.setTemplate(tmpl);
 
   t.falsy(data.pagination);
+  t.is(paging.getPageCount(), 0);
   t.is(paging.getPagedItems().length, 0);
   t.is((await paging.getPageTemplates()).length, 0);
 });
@@ -49,6 +50,7 @@ test("Pagination enabled in frontmatter", async t => {
 
   t.truthy(data.pagination);
   t.is(data.pagination.data, "testdata.sub");
+  t.is(paging.getPageCount(), 2);
   t.is(data.pagination.size, 4);
 });
 
@@ -63,6 +65,7 @@ test("Resolve paged data in frontmatter", async t => {
   let paging = new Pagination(data);
   paging.setTemplate(tmpl);
   t.is(paging._resolveItems().length, 8);
+  t.is(paging.getPageCount(), 2);
   t.is(paging.getPagedItems().length, 2);
 });
 
@@ -76,6 +79,7 @@ test("Paginate data in frontmatter", async t => {
   let data = await tmpl.getData();
   let paging = new Pagination(data);
   paging.setTemplate(tmpl);
+  t.is(paging.getPageCount(), 2);
   let pages = await paging.getPageTemplates();
   t.is(pages.length, 2);
 
@@ -116,6 +120,7 @@ test("Paginate external data file", async t => {
 
   let paging = new Pagination(data);
   paging.setTemplate(tmpl);
+  t.is(paging.getPageCount(), 2);
   let pages = await paging.getPageTemplates();
   t.is(pages.length, 2);
 
@@ -149,6 +154,7 @@ test("Permalink with pagination variables", async t => {
   let data = await tmpl.getData();
   let paging = new Pagination(data);
   paging.setTemplate(tmpl);
+  t.is(paging.getPageCount(), 2);
   let pages = await paging.getPageTemplates();
 
   t.is(
@@ -171,6 +177,7 @@ test("Permalink with pagination variables (numeric)", async t => {
   let data = await tmpl.getData();
   let paging = new Pagination(data);
   paging.setTemplate(tmpl);
+  t.is(paging.getPageCount(), 2);
   let pages = await paging.getPageTemplates();
 
   let page0Data = await pages[0].getData();

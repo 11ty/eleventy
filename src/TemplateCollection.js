@@ -9,8 +9,9 @@ class TemplateCollection extends Sortable {
 
   // right now this is only used by the tests
   async _testAddTemplate(template) {
-    let templateMap = await template.getMapped();
-    this.add(templateMap);
+    for (let map of await template.getMappedTemplates()) {
+      this.add(map);
+    }
   }
 
   getAll() {

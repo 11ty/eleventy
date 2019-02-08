@@ -596,17 +596,19 @@ class Template extends TemplateContent {
     }
   }
 
-  async getInitialMapEntry() {
+  async getInitialMapEntries() {
     let data = await this.getData();
-
+    let entries = [];
     // does not return outputPath or url, we don’t want to render permalinks yet
-    return {
+    entries.push({
       template: this,
+      pageIndex: 0,
       inputPath: this.inputPath,
       fileSlug: this.fileSlugStr,
       data: data,
       date: data.page.date
-    };
+    });
+    return entries;
   }
 
   async getSecondaryMapEntry(page) {
@@ -629,9 +631,9 @@ class Template extends TemplateContent {
     return mapEntry;
   }
 
-  async getMapped() {
+  async getMappedTemplates() {
     debugDev("%o getMapped()", this.inputPath);
-    return await this.getInitialMapEntry();
+    return await this.getInitialMapEntries();
   }
 }
 

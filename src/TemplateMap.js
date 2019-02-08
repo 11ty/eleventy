@@ -14,9 +14,10 @@ class TemplateMap {
   }
 
   async add(template) {
-    let map = await template.getMapped();
-    this.map.push(map);
-    this.collection.add(map);
+    for (let map of await template.getMappedTemplates()) {
+      this.map.push(map);
+      this.collection.add(map);
+    }
   }
 
   getMap() {
@@ -31,18 +32,25 @@ class TemplateMap {
     debug("Caching collections objects.");
     this.collectionsData = {};
 
-    await this.populateCollectionsDataInMap(this.collectionsData);
+    for (let entry of this.map) {
+      entry.data.collections = this.collectionsData;
+    }
 
     this.taggedCollectionsData = await this.getTaggedCollectionsData();
     Object.assign(this.collectionsData, this.taggedCollectionsData);
-    await this.populateUrlDataInMap(true);
+
+    // see .isSafe for definition of safe versus unsafe
+    await this.getSafeTemplatePages();
+    await this.populateUrlDataInMapSafe();
+    // TODO all tests pass when this is commented out (repeated below)
+    // Is this missing a test? Making a user config collection using `outputPath` or `url`?
     await this.populateCollectionsWithOutputPaths(this.collectionsData);
 
     this.userConfigCollectionsData = await this.getUserConfigCollectionsData();
     Object.assign(this.collectionsData, this.userConfigCollectionsData);
 
-    await this.populateUrlDataInMap();
-    // TODO this is repeated, unnecessary?
+    await this.getUnsafeTemplatePages();
+    await this.populateUrlDataInMapUnsafe();
     await this.populateCollectionsWithOutputPaths(this.collectionsData);
 
     await this.populateContentDataInMap();
@@ -50,10 +58,13 @@ class TemplateMap {
     this.cached = true;
   }
 
-  getMapEntryForPath(inputPath) {
+  _testGetMapEntryForPath(inputPath, pageIndex = 0) {
     for (let j = 0, k = this.map.length; j < k; j++) {
       // inputPath should be unique (even with pagination?)
-      if (this.map[j].inputPath === inputPath) {
+      if (
+        this.map[j].inputPath === inputPath &&
+        this.map[j].pageIndex === pageIndex
+      ) {
         return this.map[j];
       }
     }
@@ -61,9 +72,13 @@ class TemplateMap {
 
   getMapTemplateIndex(item) {
     let inputPath = item.inputPath;
+    let pageIndex = item.pageIndex || 0;
     for (let j = 0, k = this.map.length; j < k; j++) {
       // inputPath should be unique (even with pagination?)
-      if (this.map[j].inputPath === inputPath) {
+      if (
+        this.map[j].inputPath === inputPath &&
+        this.map[j].pageIndex === pageIndex
+      ) {
         return j;
       }
     }
@@ -71,26 +86,55 @@ class TemplateMap {
     return -1;
   }
 
-  async populateCollectionsDataInMap(collectionsData) {
+  isPaginationUsingUserConfigCollection(entry) {
+    if (!("pagination" in entry.data) || !("data" in entry.data.pagination)) {
+      return false;
+    }
+
+    let target = entry.data.pagination.data;
+    let collectionNames = this.getUserConfigCollectionNames();
+    for (let name of collectionNames) {
+      if (`collections.${name}` === target.trim()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // safe templates are paginated templates targeting a user configured collection
+  isSafe(entry) {
+    if (!("pagination" in entry.data)) {
+      return true;
+    }
+    if (!this.isPaginationUsingUserConfigCollection(entry)) {
+      return true;
+    }
+    return false;
+  }
+
+  async getSafeTemplatePages() {
+    return this._getTemplatePages(true);
+  }
+  async getUnsafeTemplatePages() {
+    return this._getTemplatePages(false);
+  }
+  async _getTemplatePages(safeTemplatesOnly) {
     for (let map of this.map) {
-      // TODO these collections shouldn’t be passed around in a cached data object like this
-      map.data.collections = collectionsData;
+      if (!safeTemplatesOnly || this.isSafe(map)) {
+        map._pages = await map.template.getTemplates(map.data);
+      }
     }
   }
 
-  async populateUrlDataInMap(skipPagination) {
+  async populateUrlDataInMapSafe() {
+    return this._populateUrlDataInMap(true);
+  }
+  async populateUrlDataInMapUnsafe() {
+    return this._populateUrlDataInMap(false);
+  }
+  async _populateUrlDataInMap(safeTemplatesOnly) {
     for (let map of this.map) {
-      if (map._pages) {
-        continue;
-      }
-      if (skipPagination && "pagination" in map.data) {
-        continue;
-      }
-
-      let pages = await map.template.getTemplates(map.data);
-      if (pages.length) {
-        map._pages = pages;
-
+      if ((!safeTemplatesOnly || this.isSafe(map)) && map._pages) {
         Object.assign(
           map,
           await map.template.getSecondaryMapEntry(map._pages[0])
@@ -113,20 +157,6 @@ class TemplateMap {
     }
   }
 
-  createTemplateMapCopy(filteredMap) {
-    let copy = [];
-    for (let map of filteredMap) {
-      // let mapCopy = lodashClone(map);
-
-      // TODO try this instead of lodash.clone
-      let mapCopy = Object.assign({}, map);
-
-      copy.push(mapCopy);
-    }
-
-    return copy;
-  }
-
   getAllTags() {
     let allTags = {};
     for (let map of this.map) {
@@ -145,16 +175,12 @@ class TemplateMap {
 
   async getTaggedCollectionsData() {
     let collections = {};
-    collections.all = this.createTemplateMapCopy(
-      this.collection.getAllSorted()
-    );
+    collections.all = this.collection.getAllSorted();
     debug(`Collection: collections.all size: ${collections.all.length}`);
 
     let tags = this.getAllTags();
     for (let tag of tags) {
-      collections[tag] = this.createTemplateMapCopy(
-        this.collection.getFilteredByTag(tag)
-      );
+      collections[tag] = this.collection.getFilteredByTag(tag);
       debug(`Collection: collections.${tag} size: ${collections[tag].length}`);
     }
     return collections;
@@ -164,29 +190,25 @@ class TemplateMap {
     return (this.configCollections = configCollections);
   }
 
+  getUserConfigCollectionNames() {
+    return Object.keys(
+      this.configCollections || eleventyConfig.getCollections()
+    );
+  }
+
   async getUserConfigCollectionsData() {
     let collections = {};
     let configCollections =
       this.configCollections || eleventyConfig.getCollections();
-    for (let name in configCollections) {
-      let ret = configCollections[name](this.collection);
 
-      // work with arrays and strings returned from UserConfig.addCollection
-      if (
-        Array.isArray(ret) &&
-        ret.length &&
-        ret[0].inputPath &&
-        ret[0].outputPath
-      ) {
-        collections[name] = this.createTemplateMapCopy(ret);
-      } else {
-        collections[name] = ret;
-      }
+    for (let name in configCollections) {
+      collections[name] = configCollections[name](this.collection);
 
       debug(
         `Collection: collections.${name} size: ${collections[name].length}`
       );
     }
+
     return collections;
   }
 

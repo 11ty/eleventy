@@ -584,6 +584,7 @@ test.skip("Issue #253: Paginated template with a tag should put multiple pages i
   );
   await tm.add(pagedTmpl);
 
+  // TODO test user config collections (no actual tests against this collection yet)
   tm.setUserConfigCollections({
     userCollection: function(collection) {
       let all = collection.getFilteredByTag("dog");
@@ -598,4 +599,73 @@ test.skip("Issue #253: Paginated template with a tag should put multiple pages i
   t.is(collections.haha.length, 2);
   t.is(collections.haha[0].url, "/tagged-pagination-multiples/test/");
   t.is(collections.haha[1].url, "/tagged-pagination-multiples/test/1/");
+});
+
+test("getUserConfigCollectionNames", async t => {
+  let tm = new TemplateMap();
+
+  tm.setUserConfigCollections({
+    userCollection: function(collection) {
+      return collection.getAll();
+    },
+    otherUserCollection: function(collection) {
+      return collection.getAll();
+    }
+  });
+
+  t.deepEqual(tm.getUserConfigCollectionNames(), [
+    "userCollection",
+    "otherUserCollection"
+  ]);
+});
+
+test("isPaginationUsingUserConfigCollection", async t => {
+  let tm = new TemplateMap();
+  tm.setUserConfigCollections({
+    userCollection: function(collection) {
+      return collection.getAll();
+    }
+  });
+
+  t.is(
+    tm.isPaginationUsingUserConfigCollection({
+      data: {
+        pagination: {
+          data: "collections.dog"
+        }
+      }
+    }),
+    false
+  );
+
+  t.is(
+    tm.isPaginationUsingUserConfigCollection({
+      data: {
+        pagination: {
+          data: "collections.userCollection"
+        }
+      }
+    }),
+    true
+  );
+});
+
+test("isSafe", async t => {
+  let tm = new TemplateMap();
+  tm.setUserConfigCollections({
+    userCollection: function(collection) {
+      return collection.getAll();
+    }
+  });
+
+  t.is(tm.isSafe({ data: { pagination: {} } }), true);
+  t.is(
+    tm.isSafe({ data: { pagination: { data: "collections.unlisted" } } }),
+    true
+  );
+  t.is(
+    tm.isSafe({ data: { pagination: { data: "collections.userCollection" } } }),
+    false
+  );
+  t.is(tm.isSafe({ data: {} }), true);
 });
