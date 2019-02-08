@@ -8,11 +8,14 @@ const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
 const TemplateGlob = require("./TemplateGlob");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
+const EleventyBaseError = require("./EleventyBaseError");
 const bench = require("./BenchmarkManager").get("Data");
 const config = require("./Config");
 const debugWarn = require("debug")("Eleventy:Warnings");
 const debug = require("debug")("Eleventy:TemplateData");
 const debugDev = require("debug")("Dev:Eleventy:TemplateData");
+
+class TemplateDataParseError extends EleventyBaseError {}
 
 class TemplateData {
   constructor(inputDir) {
@@ -245,14 +248,28 @@ class TemplateData {
 
       if (rawInput) {
         if (ignoreProcessing || engineName === false) {
-          return JSON.parse(rawInput);
+          try {
+            return JSON.parse(rawInput);
+          } catch (e) {
+            throw new TemplateDataParseError(
+              `Having trouble parsing data file ${path}`,
+              e
+            );
+          }
         } else {
           let fn = await new TemplateRender(engineName).getCompiledTemplate(
             rawInput
           );
 
-          // pass in rawImports, don’t pass in global data, that’s what we’re parsing
-          return JSON.parse(await fn(rawImports));
+          try {
+            // pass in rawImports, don’t pass in global data, that’s what we’re parsing
+            return JSON.parse(await fn(rawImports));
+          } catch (e) {
+            throw new TemplateDataParseError(
+              `Having trouble parsing data file ${path}`,
+              e
+            );
+          }
         }
       }
     }
