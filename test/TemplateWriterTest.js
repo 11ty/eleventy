@@ -177,7 +177,6 @@ test("Pagination with a Collection", async t => {
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
-  await templateMap.cache();
 
   let collectionsData = await templateMap.getCollectionsData();
   t.is(collectionsData.tag1.length, 3);
@@ -224,7 +223,6 @@ test("Use a collection inside of a template", async t => {
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
-  await templateMap.cache();
 
   let collectionsData = await templateMap.getCollectionsData();
   t.is(collectionsData.dog.length, 1);
@@ -267,7 +265,6 @@ test("Use a collection inside of a layout", async t => {
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
-  await templateMap.cache();
 
   let collectionsData = await templateMap.getCollectionsData();
   t.is(collectionsData.dog.length, 1);
@@ -399,7 +396,6 @@ test("fileSlug should exist in a collection", async t => {
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
-  await templateMap.cache();
 
   let collectionsData = await templateMap.getCollectionsData();
   t.is(collectionsData.dog.length, 1);
@@ -424,7 +420,6 @@ test.skip("renderData should exist and be resolved in a collection (Issue #289)"
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
-  await templateMap.cache();
 
   let collectionsData = await templateMap.getCollectionsData();
   t.is(collectionsData.dog.length, 1);

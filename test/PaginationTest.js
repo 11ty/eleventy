@@ -624,3 +624,34 @@ test("Paginate data in frontmatter (reversed)", async t => {
     "<ol><li>item4</li><li>item3</li><li>item2</li><li>item1</li></ol>"
   );
 });
+
+test("No circular dependency (does not throw)", t => {
+  new Pagination({
+    collections: {
+      tag1: []
+    },
+    pagination: {
+      data: "collections.tag1",
+      size: 1
+    },
+    tags: ["tag2"]
+  });
+
+  t.true(true);
+});
+
+test("Circular dependency (pagination iterates over tag1 but also supplies pages to tag1)", t => {
+  t.throws(() => {
+    new Pagination({
+      collections: {
+        tag1: [],
+        tag2: []
+      },
+      pagination: {
+        data: "collections.tag1",
+        size: 1
+      },
+      tags: ["tag1"]
+    });
+  });
+});

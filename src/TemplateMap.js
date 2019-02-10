@@ -1,4 +1,5 @@
 const isPlainObject = require("lodash/isPlainObject");
+const DependencyGraph = require("dependency-graph").DepGraph;
 const TemplateCollection = require("./TemplateCollection");
 const eleventyConfig = require("./EleventyConfig");
 const debug = require("debug")("Eleventy:TemplateMap");
@@ -7,7 +8,7 @@ const debugDev = require("debug")("Dev:Eleventy:TemplateMap");
 class TemplateMap {
   constructor() {
     this.map = [];
-    this.collection = new TemplateCollection();
+    this.graph = new DependencyGraph();
     this.collectionsData = null;
     this.cached = false;
     this.configCollections = null;
@@ -16,7 +17,6 @@ class TemplateMap {
   async add(template) {
     for (let map of await template.getMappedTemplates()) {
       this.map.push(map);
-      this.collection.add(map);
     }
   }
 
@@ -24,8 +24,56 @@ class TemplateMap {
     return this.map;
   }
 
-  getCollection() {
-    return this.collection;
+  get collection() {
+    if (!this._collection) {
+      this._collection = new TemplateCollection();
+    }
+    return this._collection;
+  }
+
+  getMappedDependencies() {
+    let graph = new DependencyGraph();
+    let tagPrefix = "___TAG___";
+
+    graph.addNode(tagPrefix + "all");
+
+    // Add tags in data
+    for (let entry of this.map) {
+      graph.addNode(entry.inputPath);
+      if (entry.data.tags) {
+        for (let tag of entry.data.tags) {
+          graph.addNode(tagPrefix + tag);
+        }
+      }
+    }
+
+    // Add tags from named user config collections
+    for (let tag of this.getUserConfigCollectionNames()) {
+      graph.addNode(tagPrefix + tag);
+    }
+
+    for (let entry of this.map) {
+      // collections.all
+      graph.addDependency(tagPrefix + "all", entry.inputPath);
+
+      // collections.tagName
+      if (entry.data.tags) {
+        for (let tag of entry.data.tags) {
+          graph.addDependency(tagPrefix + tag, entry.inputPath);
+        }
+      }
+
+      // Pagination data
+      // TODO add support for declarative dependencies in front matter (similar to pagination above)
+      if (entry.data.pagination && entry.data.pagination.data) {
+        if (entry.data.pagination.data.startsWith("collections.")) {
+          let tag = entry.data.pagination.data.substr("collections.".length);
+          graph.addDependency(entry.inputPath, tagPrefix + tag);
+        }
+      }
+    }
+
+    return graph.overallOrder();
   }
 
   async cache() {
@@ -36,35 +84,44 @@ class TemplateMap {
       entry.data.collections = this.collectionsData;
     }
 
-    this.taggedCollectionsData = await this.getTaggedCollectionsData();
-    Object.assign(this.collectionsData, this.taggedCollectionsData);
+    // console.log( ">>> START" );
+    let dependencyMap = this.getMappedDependencies();
+    let tagPrefix = "___TAG___";
+    for (let depEntry of dependencyMap) {
+      if (depEntry.startsWith(tagPrefix)) {
+        let tagName = depEntry.substr(tagPrefix.length);
+        if (this.isUserConfigCollectionName(tagName)) {
+          // async
+          // console.log( "user config collection for", tagName );
+          this.collectionsData[tagName] = await this.getUserConfigCollection(
+            tagName
+          );
+        } else {
+          // console.log( "tagged collection for ", tagName );
+          this.collectionsData[tagName] = this.getTaggedCollection(tagName);
+        }
+      } else {
+        // console.log( depEntry, "Input file" );
+        this.collection.add(this._getMapEntryForInputPath(depEntry));
+        await this._getTemplatePagesForInputPath(depEntry);
+        await this._populateUrlDataInMapForInputPath(depEntry);
+      }
+    }
 
-    // see .isSafe for definition of safe versus unsafe
-    await this.getSafeTemplatePages();
-    await this.populateUrlDataInMapSafe();
-    // TODO all tests pass when this is commented out (repeated below)
-    // Is this missing a test? Making a user config collection using `outputPath` or `url`?
+    // TODO running this once at the end might be a problem
+    // if user config collections needs outputPaths
     await this.populateCollectionsWithOutputPaths(this.collectionsData);
-
-    this.userConfigCollectionsData = await this.getUserConfigCollectionsData();
-    Object.assign(this.collectionsData, this.userConfigCollectionsData);
-
-    await this.getUnsafeTemplatePages();
-    await this.populateUrlDataInMapUnsafe();
-    await this.populateCollectionsWithOutputPaths(this.collectionsData);
+    // console.log( ">>> END" );
 
     await this.populateContentDataInMap();
     this.populateCollectionsWithContent();
     this.cached = true;
   }
 
-  _testGetMapEntryForPath(inputPath, pageIndex = 0) {
+  _testGetMapEntryForPath(inputPath) {
     for (let j = 0, k = this.map.length; j < k; j++) {
       // inputPath should be unique (even with pagination?)
-      if (
-        this.map[j].inputPath === inputPath &&
-        this.map[j].pageIndex === pageIndex
-      ) {
+      if (this.map[j].inputPath === inputPath) {
         return this.map[j];
       }
     }
@@ -72,13 +129,9 @@ class TemplateMap {
 
   getMapTemplateIndex(item) {
     let inputPath = item.inputPath;
-    let pageIndex = item.pageIndex || 0;
     for (let j = 0, k = this.map.length; j < k; j++) {
       // inputPath should be unique (even with pagination?)
-      if (
-        this.map[j].inputPath === inputPath &&
-        this.map[j].pageIndex === pageIndex
-      ) {
+      if (this.map[j].inputPath === inputPath) {
         return j;
       }
     }
@@ -86,55 +139,25 @@ class TemplateMap {
     return -1;
   }
 
-  isPaginationUsingUserConfigCollection(entry) {
-    if (!("pagination" in entry.data) || !("data" in entry.data.pagination)) {
-      return false;
-    }
-
-    let target = entry.data.pagination.data;
-    let collectionNames = this.getUserConfigCollectionNames();
-    for (let name of collectionNames) {
-      if (`collections.${name}` === target.trim()) {
-        return true;
+  _getMapEntryForInputPath(inputPath) {
+    for (let map of this.map) {
+      if (map.inputPath === inputPath) {
+        return map;
       }
     }
-    return false;
   }
 
-  // safe templates are paginated templates targeting a user configured collection
-  isSafe(entry) {
-    if (!("pagination" in entry.data)) {
-      return true;
-    }
-    if (!this.isPaginationUsingUserConfigCollection(entry)) {
-      return true;
-    }
-    return false;
-  }
-
-  async getSafeTemplatePages() {
-    return this._getTemplatePages(true);
-  }
-  async getUnsafeTemplatePages() {
-    return this._getTemplatePages(false);
-  }
-  async _getTemplatePages(safeTemplatesOnly) {
+  async _getTemplatePagesForInputPath(inputPath) {
     for (let map of this.map) {
-      if (!safeTemplatesOnly || this.isSafe(map)) {
+      if (map.inputPath === inputPath) {
         map._pages = await map.template.getTemplates(map.data);
       }
     }
   }
 
-  async populateUrlDataInMapSafe() {
-    return this._populateUrlDataInMap(true);
-  }
-  async populateUrlDataInMapUnsafe() {
-    return this._populateUrlDataInMap(false);
-  }
-  async _populateUrlDataInMap(safeTemplatesOnly) {
+  async _populateUrlDataInMapForInputPath(inputPath) {
     for (let map of this.map) {
-      if ((!safeTemplatesOnly || this.isSafe(map)) && map._pages) {
+      if (map.inputPath === inputPath && map._pages) {
         Object.assign(
           map,
           await map.template.getSecondaryMapEntry(map._pages[0])
@@ -173,7 +196,19 @@ class TemplateMap {
     return Object.keys(allTags);
   }
 
-  async getTaggedCollectionsData() {
+  getTaggedCollection(tag) {
+    let result;
+    if (!tag || tag === "all") {
+      result = this.collection.getAllSorted();
+    } else {
+      result = this.collection.getFilteredByTag(tag);
+    }
+    debug(`Collection: collections.${tag || "all"} size: ${result.length}`);
+
+    return result;
+  }
+
+  async _testGetTaggedCollectionsData() {
     let collections = {};
     collections.all = this.collection.getAllSorted();
     debug(`Collection: collections.all size: ${collections.all.length}`);
@@ -190,13 +225,28 @@ class TemplateMap {
     return (this.configCollections = configCollections);
   }
 
+  isUserConfigCollectionName(name) {
+    let collections = this.configCollections || eleventyConfig.getCollections();
+    return !!collections[name];
+  }
+
   getUserConfigCollectionNames() {
     return Object.keys(
       this.configCollections || eleventyConfig.getCollections()
     );
   }
 
-  async getUserConfigCollectionsData() {
+  async getUserConfigCollection(name) {
+    let configCollections =
+      this.configCollections || eleventyConfig.getCollections();
+    // CHANGE this works with async now
+    let result = await configCollections[name](this.collection);
+
+    debug(`Collection: collections.${name} size: ${result.length}`);
+    return result;
+  }
+
+  async _testGetUserConfigCollectionsData() {
     let collections = {};
     let configCollections =
       this.configCollections || eleventyConfig.getCollections();
@@ -214,10 +264,10 @@ class TemplateMap {
 
   async _testGetAllCollectionsData() {
     let collections = {};
-    let taggedCollections = await this.getTaggedCollectionsData();
+    let taggedCollections = await this._testGetTaggedCollectionsData();
     Object.assign(collections, taggedCollections);
 
-    let userConfigCollections = await this.getUserConfigCollectionsData();
+    let userConfigCollections = await this._testGetUserConfigCollectionsData();
     Object.assign(collections, userConfigCollections);
 
     return collections;

@@ -24,9 +24,10 @@ test("TemplateMap has collections added", async t => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   await tm.add(tmpl2);
+  await tm.cache();
 
   t.is(tm.getMap().length, 2);
-  t.is(tm.getCollection().getAll().length, 2);
+  t.is(tm.collection.getAll().length, 2);
 });
 
 test("TemplateMap compared to Collection API", async t => {
@@ -619,7 +620,7 @@ test("getUserConfigCollectionNames", async t => {
   ]);
 });
 
-test("isPaginationUsingUserConfigCollection", async t => {
+test("isUserConfigCollectionName", t => {
   let tm = new TemplateMap();
   tm.setUserConfigCollections({
     userCollection: function(collection) {
@@ -627,45 +628,6 @@ test("isPaginationUsingUserConfigCollection", async t => {
     }
   });
 
-  t.is(
-    tm.isPaginationUsingUserConfigCollection({
-      data: {
-        pagination: {
-          data: "collections.dog"
-        }
-      }
-    }),
-    false
-  );
-
-  t.is(
-    tm.isPaginationUsingUserConfigCollection({
-      data: {
-        pagination: {
-          data: "collections.userCollection"
-        }
-      }
-    }),
-    true
-  );
-});
-
-test("isSafe", async t => {
-  let tm = new TemplateMap();
-  tm.setUserConfigCollections({
-    userCollection: function(collection) {
-      return collection.getAll();
-    }
-  });
-
-  t.is(tm.isSafe({ data: { pagination: {} } }), true);
-  t.is(
-    tm.isSafe({ data: { pagination: { data: "collections.unlisted" } } }),
-    true
-  );
-  t.is(
-    tm.isSafe({ data: { pagination: { data: "collections.userCollection" } } }),
-    false
-  );
-  t.is(tm.isSafe({ data: {} }), true);
+  t.is(tm.isUserConfigCollectionName("userCollection"), true);
+  t.is(tm.isUserConfigCollectionName("userCollection2"), false);
 });

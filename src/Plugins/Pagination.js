@@ -1,7 +1,10 @@
 const lodashChunk = require("lodash/chunk");
 const lodashGet = require("lodash/get");
 const lodashSet = require("lodash/set");
+const EleventyBaseError = require("../EleventyBaseError");
 const config = require("../Config");
+
+class PaginationError extends EleventyBaseError {}
 
 class Pagination {
   constructor(data) {
@@ -21,6 +24,20 @@ class Pagination {
     return Pagination.hasPagination(this.data);
   }
 
+  circularReferenceCheck(data) {
+    let key = data.pagination.data;
+    let tags = data.tags || [];
+    for (let tag of tags) {
+      if (`collections.${tag}` === key) {
+        throw new PaginationError(
+          `Pagination circular reference${
+            this.template ? ` on ${this.template.inputPath}` : ""
+          }, data:\`${key}\` iterates over both the \`${tag}\` tag and also supplies pages to that tag.`
+        );
+      }
+    }
+  }
+
   setData(data) {
     this.data = data || {};
     this.target = [];
@@ -36,6 +53,7 @@ class Pagination {
     } else if (!("size" in data.pagination)) {
       throw new Error("Missing pagination size in front matter data.");
     }
+    this.circularReferenceCheck(data);
 
     this.size = data.pagination.size;
     this.alias = data.pagination.alias;

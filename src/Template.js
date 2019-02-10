@@ -602,7 +602,6 @@ class Template extends TemplateContent {
     // does not return outputPath or url, we don’t want to render permalinks yet
     entries.push({
       template: this,
-      pageIndex: 0,
       inputPath: this.inputPath,
       fileSlug: this.fileSlugStr,
       data: data,
