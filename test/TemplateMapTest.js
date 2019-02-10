@@ -445,9 +445,9 @@ test("Should be able to paginate a user config collection (uses rendered permali
 
 test("Should be able to paginate a user config collection (paged template is also tagged)", async t => {
   let tm = new TemplateMap();
-  await tm.add(tmpl1);
-  await tm.add(tmpl2);
-  await tm.add(tmpl4);
+  await tm.add(tmpl1); // has dog tag
+  await tm.add(tmpl2); // does not have dog tag
+  await tm.add(tmpl4); // has dog tag
 
   let pagedTmpl = new Template(
     "./test/stubs/templateMapCollection/paged-cfg-tagged.md",
@@ -467,14 +467,16 @@ test("Should be able to paginate a user config collection (paged template is als
   t.is(collections.dog.length, 2);
 
   t.truthy(collections.haha);
-  t.is(collections.haha.length, 1);
+  t.is(collections.haha.length, 2);
   t.is(collections.haha[0].url, "/templateMapCollection/paged-cfg-tagged/");
+  t.is(collections.haha[1].url, "/templateMapCollection/paged-cfg-tagged/1/");
 });
 
 test("Should be able to paginate a user config collection (paged template is also tagged, uses custom rendered permalink)", async t => {
   let tm = new TemplateMap();
-  await tm.add(tmpl1);
-  await tm.add(tmpl2);
+  await tm.add(tmpl1); // has dog tag
+  await tm.add(tmpl2); // does not have dog tag
+  await tm.add(tmpl4); // has dog tag
 
   let pagedTmpl = new Template(
     "./test/stubs/templateMapCollection/paged-cfg-tagged-permalink.md",
@@ -492,8 +494,9 @@ test("Should be able to paginate a user config collection (paged template is als
 
   let collections = await tm.getCollectionsData();
   t.truthy(collections.haha);
-  t.truthy(collections.haha.length);
+  t.is(collections.haha.length, 2);
   t.is(collections.haha[0].url, "/test-title/goodbye/");
+  t.is(collections.haha[1].url, "/test-title-4/goodbye/");
 });
 
 test("TemplateMap render and templateContent are the same (templateContent doesn’t have layout but makes proper use of layout front matter data)", async t => {
@@ -514,8 +517,9 @@ test("TemplateMap render and templateContent are the same (templateContent doesn
 
 test("Should be able to paginate a tag generated collection (and it has templateContent)", async t => {
   let tm = new TemplateMap();
-  await tm.add(tmpl1);
-  await tm.add(tmpl2);
+  await tm.add(tmpl1); // has dog tag
+  await tm.add(tmpl2); // does not have dog tag
+  await tm.add(tmpl4); // has dog tag
 
   let pagedTmpl = new Template(
     "./test/stubs/templateMapCollection/paged-tag-dogs-templateContent.md",
@@ -524,27 +528,38 @@ test("Should be able to paginate a tag generated collection (and it has template
   );
   await tm.add(pagedTmpl);
 
-  let collections = await tm.getCollectionsData();
-  let pagedMapEntry = collections.all.filter(
-    item => item.inputPath.indexOf("paged-tag-dogs-templateContent.md") > -1
-  )[0];
+  await tm.cache();
+
+  let pagedMapEntry = tm._testGetMapEntryForPath(
+    "./test/stubs/templateMapCollection/paged-tag-dogs-templateContent.md"
+  );
+
   let templates = await pagedMapEntry.template.getRenderedTemplates(
     pagedMapEntry.data
   );
-  t.is(templates.length, 1);
+  t.is(templates.length, 2);
   t.is(templates[0].data.pagination.pageNumber, 0);
+  t.is(templates[1].data.pagination.pageNumber, 1);
+
   t.is(
     templates[0].templateContent.trim(),
     `<p>Before</p>
 <h1>Test 1</h1>
 <p>After</p>`
   );
+  t.is(
+    templates[1].templateContent.trim(),
+    `<p>Before</p>
+<h1>Test 4</h1>
+<p>After</p>`
+  );
 });
 
 test("Should be able to paginate a tag generated collection when aliased (and it has templateContent)", async t => {
   let tm = new TemplateMap();
-  await tm.add(tmpl1);
-  await tm.add(tmpl2);
+  await tm.add(tmpl1); // has dog tag
+  await tm.add(tmpl2); // does not have dog tag
+  await tm.add(tmpl4); // has dog tag
 
   let pagedTmpl = new Template(
     "./test/stubs/templateMapCollection/paged-tag-dogs-templateContent-alias.md",
@@ -553,11 +568,12 @@ test("Should be able to paginate a tag generated collection when aliased (and it
   );
   await tm.add(pagedTmpl);
 
-  let collections = await tm.getCollectionsData();
-  let pagedMapEntry = collections.all.filter(
-    item =>
-      item.inputPath.indexOf("paged-tag-dogs-templateContent-alias.md") > -1
-  )[0];
+  await tm.cache();
+
+  let pagedMapEntry = tm._testGetMapEntryForPath(
+    "./test/stubs/templateMapCollection/paged-tag-dogs-templateContent-alias.md"
+  );
+
   let templates = await pagedMapEntry.template.getRenderedTemplates(
     pagedMapEntry.data
   );
@@ -568,6 +584,7 @@ test("Should be able to paginate a tag generated collection when aliased (and it
     templates[0].templateContent.trim(),
     `<p>Before</p>
 <h1>Test 1</h1>
+<h1>Test 4</h1>
 <p>After</p>`
   );
 });

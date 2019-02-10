@@ -6,7 +6,7 @@ pagination:
 ---
 
 Before
-{% for dog in collections.dog %}
+{% for dog in pagination.items %}
 {{ dog.templateContent }}
 {% endfor %}
 After

@@ -102,15 +102,26 @@ class TemplateMap {
         }
       } else {
         // console.log( depEntry, "Input file" );
-        this.collection.add(this._getMapEntryForInputPath(depEntry));
-        await this._getTemplatePagesForInputPath(depEntry);
-        await this._populateUrlDataInMapForInputPath(depEntry);
+        let map = this._getMapEntryForInputPath(depEntry);
+        map._pages = await map.template.getTemplates(map.data);
+
+        for (let page of map._pages) {
+          // do we need these in map entries?
+          if (!map.outputPath) {
+            map.outputPath = page.outputPath;
+          }
+          if (!map.url) {
+            map.url = page.url;
+          }
+
+          this.collection.add(page);
+        }
       }
     }
 
     // TODO running this once at the end might be a problem
     // if user config collections needs outputPaths
-    await this.populateCollectionsWithOutputPaths(this.collectionsData);
+    // await this.populateCollectionsWithOutputPaths(this.collectionsData);
     // console.log( ">>> END" );
 
     await this.populateContentDataInMap();
@@ -128,10 +139,10 @@ class TemplateMap {
   }
 
   getMapTemplateIndex(item) {
-    let inputPath = item.inputPath;
     for (let j = 0, k = this.map.length; j < k; j++) {
       // inputPath should be unique (even with pagination?)
-      if (this.map[j].inputPath === inputPath) {
+      //&& (item.pageNumber === undefined || this.map[j].pageNumber === item.pageNumber)
+      if (this.map[j].inputPath === item.inputPath) {
         return j;
       }
     }
@@ -143,25 +154,6 @@ class TemplateMap {
     for (let map of this.map) {
       if (map.inputPath === inputPath) {
         return map;
-      }
-    }
-  }
-
-  async _getTemplatePagesForInputPath(inputPath) {
-    for (let map of this.map) {
-      if (map.inputPath === inputPath) {
-        map._pages = await map.template.getTemplates(map.data);
-      }
-    }
-  }
-
-  async _populateUrlDataInMapForInputPath(inputPath) {
-    for (let map of this.map) {
-      if (map.inputPath === inputPath && map._pages) {
-        Object.assign(
-          map,
-          await map.template.getSecondaryMapEntry(map._pages[0])
-        );
       }
     }
   }
@@ -273,25 +265,25 @@ class TemplateMap {
     return collections;
   }
 
-  populateCollectionsWithOutputPaths(collections) {
-    for (let collectionName in collections) {
-      if (!Array.isArray(this.collectionsData[collectionName])) {
-        continue;
-      }
+  // populateCollectionsWithOutputPaths(collections) {
+  //   for (let collectionName in collections) {
+  //     if (!Array.isArray(this.collectionsData[collectionName])) {
+  //       continue;
+  //     }
 
-      for (let item of collections[collectionName]) {
-        if (!isPlainObject(item) || !("inputPath" in item)) {
-          continue;
-        }
+  //     for (let item of collections[collectionName]) {
+  //       if (!isPlainObject(item) || !("inputPath" in item)) {
+  //         continue;
+  //       }
 
-        let index = this.getMapTemplateIndex(item);
-        if (index !== -1) {
-          item.outputPath = this.map[index].outputPath;
-          item.url = this.map[index].url;
-        }
-      }
-    }
-  }
+  //       let index = this.getMapTemplateIndex(item);
+  //       if (index !== -1) {
+  //         item.outputPath = this.map[index].outputPath;
+  //         item.url = this.map[index].url;
+  //       }
+  //     }
+  //   }
+  // }
 
   populateCollectionsWithContent() {
     for (let collectionName in this.collectionsData) {

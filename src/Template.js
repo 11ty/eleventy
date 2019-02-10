@@ -596,6 +596,7 @@ class Template extends TemplateContent {
     }
   }
 
+  // TODO get rid of this or simplify it, this is a placeholder for getTemplates() entries
   async getInitialMapEntries() {
     let data = await this.getData();
     let entries = [];
@@ -610,12 +611,12 @@ class Template extends TemplateContent {
     return entries;
   }
 
-  async getSecondaryMapEntry(page) {
-    return {
-      url: page.url,
-      outputPath: page.outputPath
-    };
-  }
+  // async getSecondaryMapEntry(page) {
+  //   return {
+  //     url: page.url,
+  //     outputPath: page.outputPath
+  //   };
+  // }
 
   async getTertiaryMapEntry(page) {
     this.setWrapWithLayouts(false);
@@ -630,6 +631,7 @@ class Template extends TemplateContent {
     return mapEntry;
   }
 
+  // TODO get rid of this
   async getMappedTemplates() {
     debugDev("%o getMapped()", this.inputPath);
     return await this.getInitialMapEntries();

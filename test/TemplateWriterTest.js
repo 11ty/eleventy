@@ -180,7 +180,7 @@ test("Pagination with a Collection", async t => {
 
   let collectionsData = await templateMap.getCollectionsData();
   t.is(collectionsData.tag1.length, 3);
-  t.is(collectionsData.pagingtag.length, 1);
+  t.is(collectionsData.pagingtag.length, 2);
 
   let mapEntry = templateMap._testGetMapEntryForPath(
     "./test/stubs/paged/collection/main.njk"
