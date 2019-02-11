@@ -19,6 +19,11 @@ let tmpl4 = new Template(
   "./test/stubs/",
   "./test/stubs/_site"
 );
+let tmpl5 = new Template(
+  "./test/stubs/templateMapCollection/test5.md",
+  "./test/stubs/",
+  "./test/stubs/_site"
+);
 
 test("TemplateMap has collections added", async t => {
   let tm = new TemplateMap();
@@ -649,7 +654,7 @@ test("Should be able to paginate a tag generated collection when aliased (and it
   );
 });
 
-test.skip("Issue #253: Paginated template with a tag should put multiple pages into a collection", async t => {
+test("Issue #253: Paginated template with a tag should put multiple pages into a collection", async t => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   await tm.add(tmpl2);
@@ -707,4 +712,15 @@ test("isUserConfigCollectionName", t => {
 
   t.is(tm.isUserConfigCollectionName("userCollection"), true);
   t.is(tm.isUserConfigCollectionName("userCollection2"), false);
+});
+
+test("Mapped Dependencies should have nodes that have no dependencies and no dependents", async t => {
+  let tm = new TemplateMap();
+  await tm.add(tmpl1);
+  await tm.add(tmpl5);
+
+  await tm.cache();
+
+  let deps = await tm.getMappedDependencies();
+  t.true(deps.filter(dep => dep.indexOf("test5.md") > -1).length > 0);
 });
