@@ -41,7 +41,11 @@ class TemplateMap {
     for (let entry of this.map) {
       graph.addNode(entry.inputPath);
       if (entry.data.tags) {
-        for (let tag of entry.data.tags) {
+        let tags = entry.data.tags;
+        if (typeof entry.data.tags === "string") {
+          tags = [entry.data.tags];
+        }
+        for (let tag of tags) {
           graph.addNode(tagPrefix + tag);
         }
       }
@@ -58,7 +62,11 @@ class TemplateMap {
 
       // collections.tagName
       if (entry.data.tags) {
-        for (let tag of entry.data.tags) {
+        let tags = entry.data.tags;
+        if (typeof entry.data.tags === "string") {
+          tags = [entry.data.tags];
+        }
+        for (let tag of tags) {
           graph.addDependency(tagPrefix + tag, entry.inputPath);
         }
       }
