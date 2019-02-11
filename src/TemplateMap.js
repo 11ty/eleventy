@@ -104,7 +104,7 @@ class TemplateMap {
         // console.log( depEntry, "Input file" );
         let map = this._getMapEntryForInputPath(depEntry);
         map._pages = await map.template.getTemplates(map.data);
-
+        let counter = 0;
         for (let page of map._pages) {
           // do we need these in map entries?
           if (!map.outputPath) {
@@ -113,8 +113,14 @@ class TemplateMap {
           if (!map.url) {
             map.url = page.url;
           }
-
-          this.collection.add(page);
+          if (
+            counter === 0 ||
+            (map.data.pagination &&
+              map.data.pagination.addAllPagesToCollections)
+          ) {
+            this.collection.add(page);
+          }
+          counter++;
         }
       }
     }

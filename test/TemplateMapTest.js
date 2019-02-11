@@ -467,9 +467,43 @@ test("Should be able to paginate a user config collection (paged template is als
   t.is(collections.dog.length, 2);
 
   t.truthy(collections.haha);
-  t.is(collections.haha.length, 2);
+  t.is(collections.haha.length, 1);
   t.is(collections.haha[0].url, "/templateMapCollection/paged-cfg-tagged/");
-  t.is(collections.haha[1].url, "/templateMapCollection/paged-cfg-tagged/1/");
+});
+
+test("Should be able to paginate a user config collection (paged template is also tagged, add all pages to collections)", async t => {
+  let tm = new TemplateMap();
+  await tm.add(tmpl1); // has dog tag
+  await tm.add(tmpl2); // does not have dog tag
+  await tm.add(tmpl4); // has dog tag
+
+  let pagedTmpl = new Template(
+    "./test/stubs/templateMapCollection/paged-cfg-tagged-apply-to-all.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  await tm.add(pagedTmpl);
+
+  tm.setUserConfigCollections({
+    userCollection: function(collection) {
+      let all = collection.getFilteredByTag("dog");
+      return all;
+    }
+  });
+
+  let collections = await tm.getCollectionsData();
+  t.is(collections.dog.length, 2);
+
+  t.truthy(collections.haha);
+  t.is(collections.haha.length, 2);
+  t.is(
+    collections.haha[0].url,
+    "/templateMapCollection/paged-cfg-tagged-apply-to-all/"
+  );
+  t.is(
+    collections.haha[1].url,
+    "/templateMapCollection/paged-cfg-tagged-apply-to-all/1/"
+  );
 });
 
 test("Should be able to paginate a user config collection (paged template is also tagged, uses custom rendered permalink)", async t => {
@@ -480,6 +514,32 @@ test("Should be able to paginate a user config collection (paged template is als
 
   let pagedTmpl = new Template(
     "./test/stubs/templateMapCollection/paged-cfg-tagged-permalink.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  await tm.add(pagedTmpl);
+
+  tm.setUserConfigCollections({
+    userCollection: function(collection) {
+      let all = collection.getFilteredByTag("dog");
+      return all;
+    }
+  });
+
+  let collections = await tm.getCollectionsData();
+  t.truthy(collections.haha);
+  t.is(collections.haha.length, 1);
+  t.is(collections.haha[0].url, "/test-title/goodbye/");
+});
+
+test("Should be able to paginate a user config collection (paged template is also tagged, uses custom rendered permalink, add all pages to collections)", async t => {
+  let tm = new TemplateMap();
+  await tm.add(tmpl1); // has dog tag
+  await tm.add(tmpl2); // does not have dog tag
+  await tm.add(tmpl4); // has dog tag
+
+  let pagedTmpl = new Template(
+    "./test/stubs/templateMapCollection/paged-cfg-tagged-permalink-apply-to-all.md",
     "./test/stubs/",
     "./test/stubs/_site"
   );
