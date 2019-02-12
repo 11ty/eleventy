@@ -59,7 +59,7 @@ class TemplateCollection extends Sortable {
             match = true;
           }
         });
-        // This branch should no longer be necessary per TemplateContent.cleanupFrontMatterData
+        // This branch should no longer be necessary per TemplateData.cleanupData
       } else if (typeof item.data.tags === "string") {
         match = item.data.tags === tagName;
       }

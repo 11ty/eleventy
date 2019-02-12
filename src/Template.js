@@ -409,6 +409,7 @@ class Template extends TemplateContent {
       this.paging = new Pagination(data);
       this.paging.setTemplate(this);
       let templates = await this.paging.getPageTemplates();
+      let pageNumber = 0;
       for (let page of templates) {
         let pageData = await page.getRenderedData();
 
@@ -425,6 +426,7 @@ class Template extends TemplateContent {
           fileSlug: this.fileSlugStr,
           data: pageData,
           date: data.page.date,
+          pageNumber: pageNumber++,
           outputPath: await page.getOutputPath(pageData),
           url: await page.getOutputHref(pageData)
         });
@@ -611,24 +613,12 @@ class Template extends TemplateContent {
     return entries;
   }
 
-  // async getSecondaryMapEntry(page) {
-  //   return {
-  //     url: page.url,
-  //     outputPath: page.outputPath
-  //   };
-  // }
-
-  async getTertiaryMapEntry(page) {
+  async getTemplateMapContent(page) {
     this.setWrapWithLayouts(false);
-    let mapEntry = {
-      templateContent: await page.template._getContent(
-        page.outputPath,
-        page.data
-      )
-    };
+    let content = await page.template._getContent(page.outputPath, page.data);
     this.setWrapWithLayouts(true);
 
-    return mapEntry;
+    return content;
   }
 
   // TODO get rid of this

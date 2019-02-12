@@ -42,9 +42,6 @@ class TemplateMap {
       graph.addNode(entry.inputPath);
       if (entry.data.tags) {
         let tags = entry.data.tags;
-        if (typeof entry.data.tags === "string") {
-          tags = [entry.data.tags];
-        }
         for (let tag of tags) {
           graph.addNode(tagPrefix + tag);
         }
@@ -63,9 +60,6 @@ class TemplateMap {
       // collections.tagName
       if (entry.data.tags) {
         let tags = entry.data.tags;
-        if (typeof entry.data.tags === "string") {
-          tags = [entry.data.tags];
-        }
         for (let tag of tags) {
           graph.addDependency(tagPrefix + tag, entry.inputPath);
         }
@@ -114,7 +108,7 @@ class TemplateMap {
         map._pages = await map.template.getTemplates(map.data);
         let counter = 0;
         for (let page of map._pages) {
-          // do we need these in map entries?
+          // TODO do we need these in map entries?
           if (!map.outputPath) {
             map.outputPath = page.outputPath;
           }
@@ -152,18 +146,6 @@ class TemplateMap {
     }
   }
 
-  getMapTemplateIndex(item) {
-    for (let j = 0, k = this.map.length; j < k; j++) {
-      // inputPath should be unique (even with pagination?)
-      //&& (item.pageNumber === undefined || this.map[j].pageNumber === item.pageNumber)
-      if (this.map[j].inputPath === item.inputPath) {
-        return j;
-      }
-    }
-
-    return -1;
-  }
-
   _getMapEntryForInputPath(inputPath) {
     for (let map of this.map) {
       if (map.inputPath === inputPath) {
@@ -174,19 +156,22 @@ class TemplateMap {
 
   async populateContentDataInMap() {
     for (let map of this.map) {
-      if (map._pages) {
-        Object.assign(
-          map,
-          await map.template.getTertiaryMapEntry(map._pages[0])
-        );
-        debugDev(
-          "Added this.map[...].templateContent, outputPath, et al for one map entry"
-        );
+      for (let page of map._pages) {
+        let content = await map.template.getTemplateMapContent(page);
+        page.templateContent = content;
+
+        // TODO Do we need this?
+        if (!map.templateContent) {
+          map.templateContent = content;
+        }
       }
+      debugDev(
+        "Added this.map[...].templateContent, outputPath, et al for one map entry"
+      );
     }
   }
 
-  getAllTags() {
+  _testGetAllTags() {
     let allTags = {};
     for (let map of this.map) {
       let tags = map.data.tags;
@@ -194,7 +179,7 @@ class TemplateMap {
         for (let tag of tags) {
           allTags[tag] = true;
         }
-        // This branch should no longer be necessary per TemplateContent.cleanupFrontMatterData
+        // This branch should no longer be necessary per TemplateData.cleanupData
       } else if (tags) {
         allTags[tags] = true;
       }
@@ -219,7 +204,7 @@ class TemplateMap {
     collections.all = this.collection.getAllSorted();
     debug(`Collection: collections.all size: ${collections.all.length}`);
 
-    let tags = this.getAllTags();
+    let tags = this._testGetAllTags();
     for (let tag of tags) {
       collections[tag] = this.collection.getFilteredByTag(tag);
       debug(`Collection: collections.${tag} size: ${collections[tag].length}`);
@@ -279,25 +264,13 @@ class TemplateMap {
     return collections;
   }
 
-  // populateCollectionsWithOutputPaths(collections) {
-  //   for (let collectionName in collections) {
-  //     if (!Array.isArray(this.collectionsData[collectionName])) {
-  //       continue;
-  //     }
-
-  //     for (let item of collections[collectionName]) {
-  //       if (!isPlainObject(item) || !("inputPath" in item)) {
-  //         continue;
-  //       }
-
-  //       let index = this.getMapTemplateIndex(item);
-  //       if (index !== -1) {
-  //         item.outputPath = this.map[index].outputPath;
-  //         item.url = this.map[index].url;
-  //       }
-  //     }
-  //   }
-  // }
+  getMapEntryFromInputPath(inputPath) {
+    for (let entry of this.map) {
+      if (entry.inputPath === inputPath) {
+        return entry;
+      }
+    }
+  }
 
   populateCollectionsWithContent() {
     for (let collectionName in this.collectionsData) {
@@ -310,10 +283,9 @@ class TemplateMap {
           continue;
         }
 
-        let index = this.getMapTemplateIndex(item);
-        if (index !== -1) {
-          item.templateContent = this.map[index].templateContent;
-        }
+        let entry = this.getMapEntryFromInputPath(item.inputPath);
+        let index = entry.pageNumber || 0;
+        item.templateContent = entry._pages[index].templateContent;
       }
     }
   }

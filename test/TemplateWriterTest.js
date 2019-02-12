@@ -78,14 +78,15 @@ test("getCollectionsData", async t => {
   t.is(collectionsData.dog.length, 1);
 });
 
-test("_getAllTags", async t => {
+// TODO remove this (used by other test things)
+test("_testGetAllTags", async t => {
   let tw = new TemplateWriter("./test/stubs/collection", "./test/stubs/_site", [
     "md"
   ]);
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
-  let tags = templateMap.getAllTags();
+  let tags = templateMap._testGetAllTags();
 
   t.deepEqual(tags.sort(), ["cat", "dog", "post"].sort());
 });

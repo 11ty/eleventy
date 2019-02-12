@@ -1335,3 +1335,38 @@ test("Data Cascade Tag Merge (Shallow merge)", async t => {
   let data = await tmpl.getData();
   t.deepEqual(data.tags.sort(), ["tagA", "tagB"]);
 });
+
+test('Local data inherits tags string ([tags] vs "tags") Shallow Merge', async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+  await dataObj.cacheData();
+
+  let tmpl = new Template(
+    "./test/stubs/local-data-tags/component.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj
+  );
+
+  let data = await tmpl.getData();
+  t.deepEqual(data.tags.sort(), ["tag1", "tag2"]);
+});
+
+test('Local data inherits tags string ([tags] vs "tags") Deep Merge', async t => {
+  let newConfig = Object.assign({}, config);
+  newConfig.dataDeepMerge = true;
+
+  let dataObj = new TemplateData("./test/stubs/");
+  dataObj._setConfig(newConfig);
+  await dataObj.cacheData();
+
+  let tmpl = new Template(
+    "./test/stubs/local-data-tags/component.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj
+  );
+  tmpl.config = newConfig;
+
+  let data = await tmpl.getData();
+  t.deepEqual(data.tags.sort(), ["tag1", "tag2", "tag3"]);
+});

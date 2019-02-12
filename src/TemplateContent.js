@@ -101,14 +101,6 @@ class TemplateContent {
     return this.frontMatter.content;
   }
 
-  cleanupFrontMatterData(data) {
-    if ("tags" in data && typeof data.tags === "string") {
-      data.tags = [data.tags];
-    }
-
-    return data;
-  }
-
   async getFrontMatterData() {
     if (!this.frontMatter) {
       await this.read();
@@ -116,7 +108,7 @@ class TemplateContent {
 
     let extraData = await this.engine.getExtraDataFromFile(this.inputPath);
     let data = TemplateData.mergeDeep({}, this.frontMatter.data, extraData);
-    return this.cleanupFrontMatterData(data);
+    return TemplateData.cleanupData(data);
   }
 
   async getEngineOverride() {

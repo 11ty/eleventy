@@ -32,6 +32,7 @@ class TemplateData {
   /* Used by tests */
   _setConfig(config) {
     this.config = config;
+    this.dataTemplateEngine = this.config.dataTemplateEngine;
   }
 
   setInputDir(inputDir) {
@@ -197,8 +198,10 @@ class TemplateData {
       localDataPaths = [localDataPaths];
     }
     for (let path of localDataPaths) {
+      // clean up data for template/directory data files only.
       let dataForPath = await this.getDataValue(path, null, true);
-      TemplateData.mergeDeep(this.config, localData, dataForPath);
+      let cleanedDataForPath = TemplateData.cleanupData(dataForPath);
+      TemplateData.mergeDeep(this.config, localData, cleanedDataForPath);
       // debug("`combineLocalData` (iterating) for %o: %O", path, localData);
     }
     return localData;
@@ -332,6 +335,14 @@ class TemplateData {
 
   static merge(target, ...source) {
     return merge(target, ...source);
+  }
+
+  static cleanupData(data) {
+    if ("tags" in data && typeof data.tags === "string") {
+      data.tags = [data.tags];
+    }
+
+    return data;
   }
 }
 
