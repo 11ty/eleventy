@@ -291,3 +291,13 @@ test("TemplateData.merge", t => {
     { tags: [1, 2, 3, 4, 5, 6] }
   );
 });
+
+test("TemplateData.cleanupData", t => {
+  t.deepEqual(TemplateData.cleanupData({}), {});
+  t.deepEqual(TemplateData.cleanupData({ tags: "" }), { tags: [] });
+  t.deepEqual(TemplateData.cleanupData({ tags: [] }), { tags: [] });
+  t.deepEqual(TemplateData.cleanupData({ tags: "test" }), { tags: ["test"] });
+  t.deepEqual(TemplateData.cleanupData({ tags: ["test1", "test2"] }), {
+    tags: ["test1", "test2"]
+  });
+});

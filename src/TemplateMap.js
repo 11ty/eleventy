@@ -31,51 +31,141 @@ class TemplateMap {
     return this._collection;
   }
 
+  _getPaginationTagTarget(entry) {
+    if (
+      entry.data.pagination &&
+      entry.data.pagination.data &&
+      entry.data.pagination.data.startsWith("collections.")
+    ) {
+      return entry.data.pagination.data.substr("collections.".length);
+    }
+  }
+
   getMappedDependencies() {
     let graph = new DependencyGraph();
     let tagPrefix = "___TAG___";
 
     graph.addNode(tagPrefix + "all");
 
-    // Add tags in data
     for (let entry of this.map) {
-      graph.addNode(entry.inputPath);
-      if (entry.data.tags) {
-        let tags = entry.data.tags;
-        for (let tag of tags) {
-          graph.addNode(tagPrefix + tag);
+      let paginationTagTarget = this._getPaginationTagTarget(entry);
+      if (paginationTagTarget) {
+        if (this.isUserConfigCollectionName(paginationTagTarget)) {
+          continue;
+        } else {
+          // using pagination but over a tagged collection
+          graph.addNode(entry.inputPath);
+          if (!graph.hasNode(tagPrefix + paginationTagTarget)) {
+            graph.addNode(tagPrefix + paginationTagTarget);
+          }
+          graph.addDependency(entry.inputPath, tagPrefix + paginationTagTarget);
         }
+      } else {
+        // not using pagination
+        graph.addNode(entry.inputPath);
       }
-    }
 
-    // Add tags from named user config collections
-    for (let tag of this.getUserConfigCollectionNames()) {
-      graph.addNode(tagPrefix + tag);
-    }
-
-    for (let entry of this.map) {
       // collections.all
       graph.addDependency(tagPrefix + "all", entry.inputPath);
 
-      // collections.tagName
       if (entry.data.tags) {
-        let tags = entry.data.tags;
-        for (let tag of tags) {
+        for (let tag of entry.data.tags) {
+          if (!graph.hasNode(tagPrefix + tag)) {
+            graph.addNode(tagPrefix + tag);
+          }
+          // collections.tagName
+          // console.log( "Dependency from", tagPrefix + tag, "to", entry.inputPath );
           graph.addDependency(tagPrefix + tag, entry.inputPath);
-        }
-      }
-
-      // Pagination data
-      // TODO add support for declarative dependencies in front matter (similar to pagination above)
-      if (entry.data.pagination && entry.data.pagination.data) {
-        if (entry.data.pagination.data.startsWith("collections.")) {
-          let tag = entry.data.pagination.data.substr("collections.".length);
-          graph.addDependency(entry.inputPath, tagPrefix + tag);
         }
       }
     }
 
     return graph.overallOrder();
+  }
+
+  getDelayedMappedDependencies() {
+    let graph = new DependencyGraph();
+    let tagPrefix = "___TAG___";
+
+    graph.addNode(tagPrefix + "all");
+
+    let userConfigCollections = this.getUserConfigCollectionNames();
+    // Add tags from named user config collections
+    for (let tag of userConfigCollections) {
+      graph.addNode(tagPrefix + tag);
+      // graph.addDependency( tagPrefix + tag, tagPrefix + "all" );
+    }
+
+    for (let entry of this.map) {
+      let paginationTagTarget = this._getPaginationTagTarget(entry);
+      if (
+        paginationTagTarget &&
+        this.isUserConfigCollectionName(paginationTagTarget)
+      ) {
+        graph.addNode(entry.inputPath);
+        graph.addDependency(entry.inputPath, tagPrefix + paginationTagTarget);
+
+        // collections.all
+        graph.addDependency(tagPrefix + "all", entry.inputPath);
+
+        if (entry.data.tags) {
+          for (let tag of entry.data.tags) {
+            if (!graph.hasNode(tagPrefix + tag)) {
+              graph.addNode(tagPrefix + tag);
+            }
+            // collections.tagName
+            // console.log( "Dependency from", tagPrefix + tag, "to", entry.inputPath );
+            graph.addDependency(tagPrefix + tag, entry.inputPath);
+          }
+        }
+      }
+    }
+    return graph.overallOrder();
+  }
+
+  async initDependencyMap(dependencyMap) {
+    // console.log( "initializing", dependencyMap );
+    let tagPrefix = "___TAG___";
+    for (let depEntry of dependencyMap) {
+      if (depEntry.startsWith(tagPrefix)) {
+        let tagName = depEntry.substr(tagPrefix.length);
+        if (this.isUserConfigCollectionName(tagName)) {
+          // async
+          // console.log( "user config collection for", tagName );
+          this.collectionsData[tagName] = await this.getUserConfigCollection(
+            tagName
+          );
+        } else {
+          // console.log( "data tagged collection for ", tagName );
+          this.collectionsData[tagName] = this.getTaggedCollection(tagName);
+        }
+      } else {
+        // console.log( depEntry, "Input file" );
+        let map = this._getMapEntryForInputPath(depEntry);
+        map._pages = await map.template.getTemplates(map.data);
+        // console.log( ">>> PAGES LENGTH", map._pages.length );
+        let counter = 0;
+        for (let page of map._pages) {
+          // TODO do we need this in map entries?
+          if (!map.outputPath) {
+            map.outputPath = page.outputPath;
+          }
+          // TODO do we need this in map entries?
+          if (!map.url) {
+            map.url = page.url;
+          }
+          if (
+            counter === 0 ||
+            (map.data.pagination &&
+              map.data.pagination.addAllPagesToCollections)
+          ) {
+            // console.log( "Adding page to collection." );
+            this.collection.add(page);
+          }
+          counter++;
+        }
+      }
+    }
   }
 
   async cache() {
@@ -88,49 +178,13 @@ class TemplateMap {
 
     // console.log( ">>> START" );
     let dependencyMap = this.getMappedDependencies();
-    let tagPrefix = "___TAG___";
-    for (let depEntry of dependencyMap) {
-      if (depEntry.startsWith(tagPrefix)) {
-        let tagName = depEntry.substr(tagPrefix.length);
-        if (this.isUserConfigCollectionName(tagName)) {
-          // async
-          // console.log( "user config collection for", tagName );
-          this.collectionsData[tagName] = await this.getUserConfigCollection(
-            tagName
-          );
-        } else {
-          // console.log( "tagged collection for ", tagName );
-          this.collectionsData[tagName] = this.getTaggedCollection(tagName);
-        }
-      } else {
-        // console.log( depEntry, "Input file" );
-        let map = this._getMapEntryForInputPath(depEntry);
-        map._pages = await map.template.getTemplates(map.data);
-        let counter = 0;
-        for (let page of map._pages) {
-          // TODO do we need these in map entries?
-          if (!map.outputPath) {
-            map.outputPath = page.outputPath;
-          }
-          if (!map.url) {
-            map.url = page.url;
-          }
-          if (
-            counter === 0 ||
-            (map.data.pagination &&
-              map.data.pagination.addAllPagesToCollections)
-          ) {
-            this.collection.add(page);
-          }
-          counter++;
-        }
-      }
-    }
+    // console.log( "dependency map:", dependencyMap );
+    await this.initDependencyMap(dependencyMap);
 
-    // TODO running this once at the end might be a problem
-    // if user config collections needs outputPaths
-    // await this.populateCollectionsWithOutputPaths(this.collectionsData);
-    // console.log( ">>> END" );
+    // TODO we can make this better (delta additions to collections that have updated)
+    let delayedDependencyMap = this.getDelayedMappedDependencies();
+    // console.log( "delayed dependency map:", delayedDependencyMap );
+    await this.initDependencyMap(delayedDependencyMap);
 
     await this.populateContentDataInMap();
     this.populateCollectionsWithContent();
@@ -156,6 +210,9 @@ class TemplateMap {
 
   async populateContentDataInMap() {
     for (let map of this.map) {
+      if (!map._pages) {
+        throw new Error(`Content pages not found for ${map.inputPath}`);
+      }
       for (let page of map._pages) {
         let content = await map.template.getTemplateMapContent(page);
         page.templateContent = content;
@@ -218,7 +275,7 @@ class TemplateMap {
 
   isUserConfigCollectionName(name) {
     let collections = this.configCollections || eleventyConfig.getCollections();
-    return !!collections[name];
+    return name && !!collections[name];
   }
 
   getUserConfigCollectionNames() {
@@ -230,7 +287,8 @@ class TemplateMap {
   async getUserConfigCollection(name) {
     let configCollections =
       this.configCollections || eleventyConfig.getCollections();
-    // CHANGE this works with async now
+
+    // This works with async now
     let result = await configCollections[name](this.collection);
 
     debug(`Collection: collections.${name} size: ${result.length}`);
@@ -284,7 +342,7 @@ class TemplateMap {
         }
 
         let entry = this.getMapEntryFromInputPath(item.inputPath);
-        let index = entry.pageNumber || 0;
+        let index = item.pageNumber || 0;
         item.templateContent = entry._pages[index].templateContent;
       }
     }

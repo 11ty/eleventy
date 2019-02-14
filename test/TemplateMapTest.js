@@ -714,7 +714,7 @@ test("isUserConfigCollectionName", t => {
   t.is(tm.isUserConfigCollectionName("userCollection2"), false);
 });
 
-test("Mapped Dependencies should have nodes that have no dependencies and no dependents", async t => {
+test("Dependency Map should have nodes that have no dependencies and no dependents", async t => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   await tm.add(tmpl5);
@@ -723,4 +723,55 @@ test("Mapped Dependencies should have nodes that have no dependencies and no dep
 
   let deps = await tm.getMappedDependencies();
   t.true(deps.filter(dep => dep.indexOf("test5.md") > -1).length > 0);
+
+  let collections = await tm.getCollectionsData();
+  t.is(collections.all.length, 2);
+});
+
+test("Dependency Map should have include orphan user config collections (in the correct order)", async t => {
+  let tm = new TemplateMap();
+  await tm.add(tmpl1);
+  await tm.add(tmpl5);
+
+  tm.setUserConfigCollections({
+    userCollection: function(collection) {
+      return collection.getAll();
+    }
+  });
+
+  await tm.cache();
+
+  let deps = await tm.getMappedDependencies();
+  t.true(deps.filter(dep => dep.indexOf("userCollection") > -1).length === 0);
+
+  let delayedDeps = await tm.getDelayedMappedDependencies();
+  t.true(
+    delayedDeps.filter(dep => dep.indexOf("userCollection") > -1).length > 0
+  );
+
+  let collections = await tm.getCollectionsData();
+  t.is(collections.all.length, 2);
+  t.is(collections.userCollection.length, 2);
+});
+
+test("Dependency graph assumptions", async t => {
+  const DependencyGraph = require("dependency-graph").DepGraph;
+  let graph = new DependencyGraph();
+
+  graph.addNode("all");
+  graph.addNode("template-a");
+  graph.addNode("template-b");
+  graph.addNode("template-c");
+  graph.addNode("userCollection");
+  graph.addDependency("all", "template-a");
+  graph.addDependency("all", "template-b");
+  graph.addDependency("all", "template-c");
+  graph.addDependency("userCollection", "all");
+  t.deepEqual(graph.overallOrder(), [
+    "template-a",
+    "template-b",
+    "template-c",
+    "all",
+    "userCollection"
+  ]);
 });

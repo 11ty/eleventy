@@ -215,6 +215,39 @@ test("Pagination with a Collection", async t => {
   t.is(templates[1].templateContent.trim(), "<ol><li>/test3/</li></ol>");
 });
 
+test("Pagination with a Collection from another Paged Template", async t => {
+  let tw = new TemplateWriter(
+    "./test/stubs/paged/cfg-collection-tag-cfg-collection",
+    "./test/stubs/_site",
+    ["njk"]
+  );
+
+  let paths = await tw._getAllPaths();
+  let templateMap = await tw._createTemplateMap(paths);
+
+  let collectionsData = await templateMap.getCollectionsData();
+  t.is(collectionsData.tag1.length, 3);
+  t.is(collectionsData.pagingtag.length, 2);
+
+  let map1 = templateMap._testGetMapEntryForPath(
+    "./test/stubs/paged/cfg-collection-tag-cfg-collection/paged-main.njk"
+  );
+  t.is(
+    map1._pages[0].templateContent.trim(),
+    "<ol><li>/test1/</li><li>/test2/</li></ol>"
+  );
+  t.is(map1._pages[1].templateContent.trim(), "<ol><li>/test3/</li></ol>");
+
+  let map2 = templateMap._testGetMapEntryForPath(
+    "./test/stubs/paged/cfg-collection-tag-cfg-collection/paged-downstream.njk"
+  );
+  t.is(map2._pages[0].templateContent.trim(), "<ol><li>/paged-main/</li></ol>");
+  t.is(
+    map2._pages[1].templateContent.trim(),
+    "<ol><li>/paged-main/1/</li></ol>"
+  );
+});
+
 test("Pagination with a Collection (apply all pages to collections)", async t => {
   let tw = new TemplateWriter(
     "./test/stubs/paged/collection-apply-to-all",
