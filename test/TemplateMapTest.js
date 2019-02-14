@@ -595,7 +595,7 @@ test("Should be able to paginate a tag generated collection (and it has template
 
   await tm.cache();
 
-  let pagedMapEntry = tm._testGetMapEntryForPath(
+  let pagedMapEntry = tm.getMapEntryForInputPath(
     "./test/stubs/templateMapCollection/paged-tag-dogs-templateContent.md"
   );
 
@@ -635,7 +635,7 @@ test("Should be able to paginate a tag generated collection when aliased (and it
 
   await tm.cache();
 
-  let pagedMapEntry = tm._testGetMapEntryForPath(
+  let pagedMapEntry = tm.getMapEntryForInputPath(
     "./test/stubs/templateMapCollection/paged-tag-dogs-templateContent-alias.md"
   );
 

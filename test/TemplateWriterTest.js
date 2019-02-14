@@ -183,7 +183,7 @@ test("Pagination with a Collection", async t => {
   t.is(collectionsData.tag1.length, 3);
   t.is(collectionsData.pagingtag.length, 1);
 
-  let mapEntry = templateMap._testGetMapEntryForPath(
+  let mapEntry = templateMap.getMapEntryForInputPath(
     "./test/stubs/paged/collection/main.njk"
   );
   t.truthy(mapEntry);
@@ -229,7 +229,7 @@ test("Pagination with a Collection from another Paged Template", async t => {
   t.is(collectionsData.tag1.length, 3);
   t.is(collectionsData.pagingtag.length, 2);
 
-  let map1 = templateMap._testGetMapEntryForPath(
+  let map1 = templateMap.getMapEntryForInputPath(
     "./test/stubs/paged/cfg-collection-tag-cfg-collection/paged-main.njk"
   );
   t.is(
@@ -238,7 +238,7 @@ test("Pagination with a Collection from another Paged Template", async t => {
   );
   t.is(map1._pages[1].templateContent.trim(), "<ol><li>/test3/</li></ol>");
 
-  let map2 = templateMap._testGetMapEntryForPath(
+  let map2 = templateMap.getMapEntryForInputPath(
     "./test/stubs/paged/cfg-collection-tag-cfg-collection/paged-downstream.njk"
   );
   t.is(map2._pages[0].templateContent.trim(), "<ol><li>/paged-main/</li></ol>");
@@ -262,7 +262,7 @@ test("Pagination with a Collection (apply all pages to collections)", async t =>
   t.is(collectionsData.tag1.length, 3);
   t.is(collectionsData.pagingtag.length, 2);
 
-  let mapEntry = templateMap._testGetMapEntryForPath(
+  let mapEntry = templateMap.getMapEntryForInputPath(
     "./test/stubs/paged/collection-apply-to-all/main.njk"
   );
   t.truthy(mapEntry);
@@ -312,7 +312,7 @@ test("Use a collection inside of a template", async t => {
   let collectionsData = await templateMap.getCollectionsData();
   t.is(collectionsData.dog.length, 1);
 
-  let mapEntry = templateMap._testGetMapEntryForPath(
+  let mapEntry = templateMap.getMapEntryForInputPath(
     "./test/stubs/collection-template/template.ejs"
   );
   t.truthy(mapEntry);
@@ -354,7 +354,7 @@ test("Use a collection inside of a layout", async t => {
   let collectionsData = await templateMap.getCollectionsData();
   t.is(collectionsData.dog.length, 1);
 
-  let mapEntry = templateMap._testGetMapEntryForPath(
+  let mapEntry = templateMap.getMapEntryForInputPath(
     "./test/stubs/collection-layout/template.ejs"
   );
   t.truthy(mapEntry);
@@ -485,7 +485,7 @@ test("fileSlug should exist in a collection", async t => {
   let collectionsData = await templateMap.getCollectionsData();
   t.is(collectionsData.dog.length, 1);
 
-  let mapEntry = templateMap._testGetMapEntryForPath(
+  let mapEntry = templateMap.getMapEntryForInputPath(
     "./test/stubs/collection-slug/template.njk"
   );
   t.truthy(mapEntry);
@@ -509,7 +509,7 @@ test.skip("renderData should exist and be resolved in a collection (Issue #289)"
   let collectionsData = await templateMap.getCollectionsData();
   t.is(collectionsData.dog.length, 1);
 
-  let mapEntry = templateMap._testGetMapEntryForPath(
+  let mapEntry = templateMap.getMapEntryForInputPath(
     "./test/stubs/collection-renderdata/template.njk"
   );
   t.truthy(mapEntry);

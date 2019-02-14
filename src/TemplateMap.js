@@ -124,7 +124,6 @@ class TemplateMap {
   }
 
   async initDependencyMap(dependencyMap) {
-    // console.log( "initializing", dependencyMap );
     let tagPrefix = "___TAG___";
     for (let depEntry of dependencyMap) {
       if (depEntry.startsWith(tagPrefix)) {
@@ -141,9 +140,9 @@ class TemplateMap {
         }
       } else {
         // console.log( depEntry, "Input file" );
-        let map = this._getMapEntryForInputPath(depEntry);
+        let map = this.getMapEntryForInputPath(depEntry);
         map._pages = await map.template.getTemplates(map.data);
-        // console.log( ">>> PAGES LENGTH", map._pages.length );
+
         let counter = 0;
         for (let page of map._pages) {
           // TODO do we need this in map entries?
@@ -176,12 +175,10 @@ class TemplateMap {
       entry.data.collections = this.collectionsData;
     }
 
-    // console.log( ">>> START" );
     let dependencyMap = this.getMappedDependencies();
     // console.log( "dependency map:", dependencyMap );
     await this.initDependencyMap(dependencyMap);
 
-    // TODO we can make this better (delta additions to collections that have updated)
     let delayedDependencyMap = this.getDelayedMappedDependencies();
     // console.log( "delayed dependency map:", delayedDependencyMap );
     await this.initDependencyMap(delayedDependencyMap);
@@ -191,16 +188,7 @@ class TemplateMap {
     this.cached = true;
   }
 
-  _testGetMapEntryForPath(inputPath) {
-    for (let j = 0, k = this.map.length; j < k; j++) {
-      // inputPath should be unique (even with pagination?)
-      if (this.map[j].inputPath === inputPath) {
-        return this.map[j];
-      }
-    }
-  }
-
-  _getMapEntryForInputPath(inputPath) {
+  getMapEntryForInputPath(inputPath) {
     for (let map of this.map) {
       if (map.inputPath === inputPath) {
         return map;
@@ -322,14 +310,6 @@ class TemplateMap {
     return collections;
   }
 
-  getMapEntryFromInputPath(inputPath) {
-    for (let entry of this.map) {
-      if (entry.inputPath === inputPath) {
-        return entry;
-      }
-    }
-  }
-
   populateCollectionsWithContent() {
     for (let collectionName in this.collectionsData) {
       if (!Array.isArray(this.collectionsData[collectionName])) {
@@ -341,7 +321,7 @@ class TemplateMap {
           continue;
         }
 
-        let entry = this.getMapEntryFromInputPath(item.inputPath);
+        let entry = this.getMapEntryForInputPath(item.inputPath);
         let index = item.pageNumber || 0;
         item.templateContent = entry._pages[index].templateContent;
       }
