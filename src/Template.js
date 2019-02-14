@@ -411,6 +411,7 @@ class Template extends TemplateContent {
       let templates = await this.paging.getPageTemplates();
       let pageNumber = 0;
       for (let page of templates) {
+        // TODO try to reuse data instead of a new copy
         let pageData = await page.getRenderedData();
 
         // Issue #115
@@ -418,8 +419,6 @@ class Template extends TemplateContent {
           pageData.collections = data.collections;
         }
 
-        // TODO try to reuse data instead of a new copy
-        // let pageData = this.augmentDataWithRenderedContent(data);
         results.push({
           template: page,
           inputPath: this.inputPath,
@@ -598,21 +597,6 @@ class Template extends TemplateContent {
     }
   }
 
-  // TODO get rid of this or simplify it, this is a placeholder for getTemplates() entries
-  async getInitialMapEntries() {
-    let data = await this.getData();
-    let entries = [];
-    // does not return outputPath or url, we don’t want to render permalinks yet
-    entries.push({
-      template: this,
-      inputPath: this.inputPath,
-      fileSlug: this.fileSlugStr,
-      data: data,
-      date: data.page.date
-    });
-    return entries;
-  }
-
   async getTemplateMapContent(page) {
     this.setWrapWithLayouts(false);
     let content = await page.template._getContent(page.outputPath, page.data);
@@ -621,10 +605,18 @@ class Template extends TemplateContent {
     return content;
   }
 
-  // TODO get rid of this
-  async getMappedTemplates() {
+  async getTemplateMapEntries() {
     debugDev("%o getMapped()", this.inputPath);
-    return await this.getInitialMapEntries();
+
+    let data = await this.getData();
+    let entries = [];
+    // does not return outputPath or url, we don’t want to render permalinks yet
+    entries.push({
+      template: this,
+      inputPath: this.inputPath,
+      data: data
+    });
+    return entries;
   }
 }
 

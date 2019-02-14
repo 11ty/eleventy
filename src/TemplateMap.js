@@ -15,7 +15,7 @@ class TemplateMap {
   }
 
   async add(template) {
-    for (let map of await template.getMappedTemplates()) {
+    for (let map of await template.getTemplateMapEntries()) {
       this.map.push(map);
     }
   }
@@ -31,7 +31,7 @@ class TemplateMap {
     return this._collection;
   }
 
-  _getPaginationTagTarget(entry) {
+  getPaginationTagTarget(entry) {
     if (
       entry.data.pagination &&
       entry.data.pagination.data &&
@@ -48,7 +48,7 @@ class TemplateMap {
     graph.addNode(tagPrefix + "all");
 
     for (let entry of this.map) {
-      let paginationTagTarget = this._getPaginationTagTarget(entry);
+      let paginationTagTarget = this.getPaginationTagTarget(entry);
       if (paginationTagTarget) {
         if (this.isUserConfigCollectionName(paginationTagTarget)) {
           continue;
@@ -97,7 +97,7 @@ class TemplateMap {
     }
 
     for (let entry of this.map) {
-      let paginationTagTarget = this._getPaginationTagTarget(entry);
+      let paginationTagTarget = this.getPaginationTagTarget(entry);
       if (
         paginationTagTarget &&
         this.isUserConfigCollectionName(paginationTagTarget)
@@ -139,7 +139,6 @@ class TemplateMap {
           this.collectionsData[tagName] = this.getTaggedCollection(tagName);
         }
       } else {
-        // console.log( depEntry, "Input file" );
         let map = this.getMapEntryForInputPath(depEntry);
         map._pages = await map.template.getTemplates(map.data);
 
@@ -149,16 +148,11 @@ class TemplateMap {
           if (!map.outputPath) {
             map.outputPath = page.outputPath;
           }
-          // TODO do we need this in map entries?
-          if (!map.url) {
-            map.url = page.url;
-          }
           if (
             counter === 0 ||
             (map.data.pagination &&
               map.data.pagination.addAllPagesToCollections)
           ) {
-            // console.log( "Adding page to collection." );
             this.collection.add(page);
           }
           counter++;
@@ -205,7 +199,7 @@ class TemplateMap {
         let content = await map.template.getTemplateMapContent(page);
         page.templateContent = content;
 
-        // TODO Do we need this?
+        // TODO is this necessary in map entries
         if (!map.templateContent) {
           map.templateContent = content;
         }
@@ -224,9 +218,6 @@ class TemplateMap {
         for (let tag of tags) {
           allTags[tag] = true;
         }
-        // This branch should no longer be necessary per TemplateData.cleanupData
-      } else if (tags) {
-        allTags[tags] = true;
       }
     }
     return Object.keys(allTags);

@@ -9,7 +9,8 @@ class TemplateCollection extends Sortable {
 
   // right now this is only used by the tests
   async _testAddTemplate(template) {
-    for (let map of await template.getMappedTemplates()) {
+    let data = await template.getData();
+    for (let map of await template.getTemplates(data)) {
       this.add(map);
     }
   }
@@ -59,9 +60,6 @@ class TemplateCollection extends Sortable {
             match = true;
           }
         });
-        // This branch should no longer be necessary per TemplateData.cleanupData
-      } else if (typeof item.data.tags === "string") {
-        match = item.data.tags === tagName;
       }
       return match;
     });
