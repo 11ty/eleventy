@@ -48,7 +48,7 @@ class TemplateData {
   }
 
   getRawImports() {
-    let pkgPath = TemplatePath.localPath("package.json");
+    let pkgPath = TemplatePath.absolutePath("package.json");
 
     try {
       this.rawImports[this.config.keys.package] = require(pkgPath);
@@ -139,7 +139,7 @@ class TemplateData {
   }
 
   getObjectPathForDataFile(path) {
-    let reducedPath = TemplatePath.stripPathFromDir(path, this.dataDir);
+    let reducedPath = TemplatePath.stripLeadingSubPath(path, this.dataDir);
     let parsed = parsePath(reducedPath);
     let folders = parsed.dir ? parsed.dir.split("/") : [];
     folders.push(parsed.name);
@@ -230,7 +230,7 @@ class TemplateData {
 
   async getDataValue(path, rawImports, ignoreProcessing) {
     if (ignoreProcessing || TemplatePath.getExtension(path) === "js") {
-      let localPath = TemplatePath.localPath(path);
+      let localPath = TemplatePath.absolutePath(path);
       if (await fs.pathExists(localPath)) {
         let dataBench = bench.get(`\`${path}\``);
         dataBench.before();
@@ -303,7 +303,7 @@ class TemplateData {
       let allDirs = TemplatePath.getAllDirs(parsed.dir);
       debugDev("allDirs: %o", allDirs);
       for (let dir of allDirs) {
-        let lastDir = TemplatePath.getLastDir(dir);
+        let lastDir = TemplatePath.getLastPathSegment(dir);
         let dirPathNoExt = dir + "/" + lastDir;
 
         if (!inputDir) {

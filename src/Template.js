@@ -66,7 +66,7 @@ class Template extends TemplateContent {
   }
 
   getTemplateSubfolder() {
-    return TemplatePath.stripPathFromDir(this.parsed.dir, this.inputDir);
+    return TemplatePath.stripLeadingSubPath(this.parsed.dir, this.inputDir);
   }
 
   get baseFile() {

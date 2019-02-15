@@ -5,15 +5,20 @@ const fs = require("fs-extra");
 
 function TemplatePath() {}
 
-TemplatePath.getModuleDir = function() {
-  return path.resolve(__dirname, "..");
-};
-
+/**
+ * @returns {String} the absolute path to Eleventy’s project directory.
+ */
 TemplatePath.getWorkingDir = function() {
-  return path.resolve("./");
+  return TemplatePath.normalize(path.resolve("."));
 };
 
-// input is ambiguous—maybe a folder, maybe a file
+/**
+ * Returns the directory portion of a path.
+ * Works for directory and file paths and paths ending in a glob pattern.
+ *
+ * @param {String} path A path
+ * @returns {String} the directory portion of a path.
+ */
 TemplatePath.getDir = function(path) {
   if (TemplatePath.isDirectorySync(path)) {
     return path;
@@ -22,40 +27,60 @@ TemplatePath.getDir = function(path) {
   return TemplatePath.getDirFromFilePath(path);
 };
 
-// Input points to a file
-TemplatePath.getDirFromFilePath = function(filepath) {
-  return parsePath(filepath).dir || ".";
+/**
+ * Returns the directory portion of a path that either points to a file
+ * or ends in a glob pattern. If `path` points to a directory,
+ * the returned value will have its last path segment stripped
+ * due to how [`parsePath`][1] works.
+ *
+ * [1]: https://www.npmjs.com/package/parse-filepath
+ *
+ * @param {String} path A path
+ * @returns {String} the directory portion of a path.
+ */
+TemplatePath.getDirFromFilePath = function(path) {
+  return parsePath(path).dir || ".";
 };
 
-// can assume a parse-filepath .dir is passed in here
-TemplatePath.getLastDir = function(path) {
-  let slashIndex = path.lastIndexOf("/");
-
-  if (slashIndex === -1) {
+/**
+ * Returns the last path segment in a path (no leading/trailing slashes).
+ *
+ * Assumes [`parsePath`][1] was called on `path` before.
+ *
+ * [1]: https://www.npmjs.com/package/parse-filepath
+ *
+ * @param {String} path A path
+ * @returns {String} the last path segment in a path
+ */
+TemplatePath.getLastPathSegment = function(path) {
+  if (!path.includes("/")) {
     return path;
-  } else if (slashIndex === path.length - 1) {
-    // last character is a slash
-    path = path.substring(0, path.length - 1);
   }
+
+  // Trim a trailing slash if there is one
+  path = path.replace(/\/$/, "");
 
   return path.substr(path.lastIndexOf("/") + 1);
 };
 
+/**
+ * @param {String} path A path
+ * @returns {String[]} an array of paths pointing to each path segment of the
+ * provided `path`.
+ */
 TemplatePath.getAllDirs = function(path) {
-  if (path.indexOf("/") === -1) {
+  // Trim a trailing slash if there is one
+  path = path.replace(/\/$/, "");
+
+  if (!path.includes("/")) {
     return [path];
   }
 
-  let split = path.split("/");
-  let results = [];
-  while (split.length) {
-    let folder = split.pop();
-    let parent = split.join("/");
-    if (folder && folder !== ".") {
-      results.push((parent ? parent + "/" : "") + folder);
-    }
-  }
-  return results;
+  return path
+    .split("/")
+    .map(segment => path.substring(0, path.indexOf(segment) + segment.length))
+    .filter(path => path !== ".")
+    .reverse();
 };
 
 /**
@@ -87,119 +112,171 @@ TemplatePath.join = function(...paths) {
   return normalize(path.join(...paths));
 };
 
-TemplatePath.hasTrailingSlash = function(thePath, isPreNormalized) {
-  if (!thePath) {
-    return false;
-  }
-
-  let slash = "/";
-  // handle windows slashes too
-  if (isPreNormalized && process.platform === "win32") {
-    slash = "\\";
-  }
-  return thePath.length && thePath.charAt(thePath.length - 1) === slash;
+/**
+ * Joins the given URL path segments and normalizes the resulting path.
+ * Maintains traling a single trailing slash if the last URL path argument
+ * had atleast one.
+ *
+ * @param {String[]} urlPaths
+ * @returns {String} a normalized URL path described by the given URL path segments.
+ */
+TemplatePath.normalizeUrlPath = function(...urlPaths) {
+  const urlPath = path.join(...urlPaths);
+  return urlPath.replace(/\/+$/, "/");
 };
 
-TemplatePath.normalizeUrlPath = function(...paths) {
-  let thePath = path.join(...paths);
-  let hasTrailingSlashBefore = TemplatePath.hasTrailingSlash(thePath, true);
-  let normalizedPath = normalize(thePath);
-  let hasTrailingSlashAfter = TemplatePath.hasTrailingSlash(normalizedPath);
-  return (
-    normalizedPath +
-    (hasTrailingSlashBefore && !hasTrailingSlashAfter ? "/" : "")
+/**
+ * Joins the given path segments. Since the first path is absolute,
+ * the resulting path will be absolute as well.
+ *
+ * @param {String[]} paths
+ * @returns {String} the absolute path described by the given path segments.
+ */
+TemplatePath.absolutePath = function(...paths) {
+  return TemplatePath.join(TemplatePath.getWorkingDir(), ...paths);
+};
+
+/**
+ * Turns an absolute path into a path relative Eleventy’s project directory.
+ *
+ * @param {String} absolutePath
+ * @returns {String} the relative path.
+ */
+TemplatePath.relativePath = function(absolutePath) {
+  return TemplatePath.stripLeadingSubPath(
+    absolutePath,
+    TemplatePath.getWorkingDir()
   );
 };
 
-TemplatePath.localPath = function(...paths) {
-  return normalize(path.join(TemplatePath.getWorkingDir(), ...paths));
-};
-
-TemplatePath.delocalPath = function(path) {
-  return TemplatePath.stripPathFromDir(path, TemplatePath.getWorkingDir());
-};
-
+/**
+ * Adds a leading dot-slash segment to each path in the `paths` array.
+ *
+ * @param {String[]} paths
+ * @returns {String[]}
+ */
 TemplatePath.addLeadingDotSlashArray = function(paths) {
-  return paths.map(function(path) {
-    return TemplatePath.addLeadingDotSlash(path);
-  });
+  return paths.map(path => TemplatePath.addLeadingDotSlash(path));
 };
 
+/**
+ * Adds a leading dot-slash segment to `path`.
+ *
+ * @param {String} path
+ * @returns {String}
+ */
 TemplatePath.addLeadingDotSlash = function(path) {
   if (path === "." || path === "..") {
     return path + "/";
-  } else if (
-    path.indexOf("/") === 0 ||
-    path.indexOf("./") === 0 ||
-    path.indexOf("../") === 0
-  ) {
+  }
+
+  if (path.startsWith("/") || path.startsWith("./") || path.startsWith("../")) {
     return path;
   }
+
   return "./" + path;
 };
 
-TemplatePath.stripLeadingDots = function(str) {
-  return str.replace(/^\.*/, "");
+/**
+ * Removes a leading dot-slash segment.
+ *
+ * @param {String} path
+ * @returns {String} the `path` without a leading dot-slash segment.
+ */
+TemplatePath.stripLeadingDotSlash = function(path) {
+  return path.replace(/^\.\//, "");
 };
 
-TemplatePath.stripLeadingDotSlash = function(dir) {
-  return dir.replace(/^\.\//, "");
+/**
+ * Determines whether a path starts with a given sub path.
+ *
+ * @param {String} path A path
+ * @param {String} subPath A path
+ * @returns {Boolean} whether `path` starts with `subPath`.
+ */
+TemplatePath.startsWithSubPath = function(path, subPath) {
+  path = TemplatePath.normalize(path);
+  subPath = TemplatePath.normalize(subPath);
+
+  return path.startsWith(subPath);
 };
 
-TemplatePath.contains = function(haystack, needle) {
-  haystack = TemplatePath.stripLeadingDotSlash(normalize(haystack));
-  needle = TemplatePath.stripLeadingDotSlash(normalize(needle));
+/**
+ * Removes the `subPath` at the start of `path` if present
+ * and returns the remainding path.
+ *
+ * @param {String} path A path
+ * @param {String} subPath A path
+ * @returns {String} the `path` without `subPath` at the start of it.
+ */
+TemplatePath.stripLeadingSubPath = function(path, subPath) {
+  path = TemplatePath.normalize(path);
+  subPath = TemplatePath.normalize(subPath);
 
-  return haystack.indexOf(needle) === 0;
-};
-
-TemplatePath.stripPathFromDir = function(targetDir, prunedPath) {
-  targetDir = TemplatePath.stripLeadingDotSlash(normalize(targetDir));
-  prunedPath = TemplatePath.stripLeadingDotSlash(normalize(prunedPath));
-
-  if (prunedPath && prunedPath !== "." && targetDir.indexOf(prunedPath) === 0) {
-    return targetDir.substr(prunedPath.length + 1);
+  if (subPath !== "." && path.startsWith(subPath)) {
+    return path.substr(subPath.length + 1);
   }
 
-  return targetDir;
+  return path;
 };
 
+/**
+ * @param {String} path A path
+ * @returns {Boolean} whether `path` points to an existing directory.
+ */
 TemplatePath.isDirectorySync = function(path) {
   return fs.existsSync(path) && fs.statSync(path).isDirectory();
 };
 
-TemplatePath.convertToGlob = function(path) {
-  if (!path) {
+/**
+ * Appends a recursive wildcard glob pattern to `path`
+ * unless `path` is not a directory; then, `path` is assumed to be a file path
+ * and is left unchaged.
+ *
+ * @param {String} path
+ * @returns {String}
+ */
+TemplatePath.convertToRecursiveGlob = function(path) {
+  if (path === "") {
     return "./**";
   }
 
   path = TemplatePath.addLeadingDotSlash(path);
 
   if (TemplatePath.isDirectorySync(path)) {
-    return path + (!TemplatePath.hasTrailingSlash(path) ? "/" : "") + "**";
+    return path + (!path.endsWith("/") ? "/" : "") + "**";
   }
 
   return path;
 };
 
-TemplatePath.getExtension = function(path) {
-  let split = path.split(".");
-  if (split.length > 1) {
-    return split.pop();
-  }
-  return "";
+/**
+ * Returns the extension of the path without the leading dot.
+ * If the path has no extensions, the empty string is returned.
+ *
+ * @param {String} thePath
+ * @returns {String} the path’s extension if it exists;
+ * otherwise, the empty string.
+ */
+TemplatePath.getExtension = function(thePath) {
+  return path.extname(thePath).replace(/^\./, "");
 };
 
-TemplatePath.removeExtension = function(path, extension) {
-  let split = path.split(".");
+/**
+ * Removes the extension from a path.
+ *
+ * @param {String} path
+ * @param {String} extension
+ * @returns {String}
+ */
+TemplatePath.removeExtension = function(path, extension = undefined) {
+  if (extension === undefined) {
+    return path;
+  }
 
-  // only remove extension if extension is passed in and an extension is found
-  if (extension && split.length > 1) {
-    let ext = split.pop();
-    if (extension.charAt(0) === ".") {
-      extension = extension.substr(1);
-    }
-    return split.join(".") + (!extension || ext === extension ? "" : "." + ext);
+  const pathExtension = TemplatePath.getExtension(path);
+  if (pathExtension !== "" && extension.endsWith(pathExtension)) {
+    return path.substring(0, path.lastIndexOf(pathExtension) - 1);
   }
 
   return path;

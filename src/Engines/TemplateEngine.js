@@ -62,7 +62,7 @@ class TemplateEngine {
     partialFiles = TemplatePath.addLeadingDotSlashArray(partialFiles);
 
     for (let j = 0, k = partialFiles.length; j < k; j++) {
-      let partialPath = TemplatePath.stripPathFromDir(
+      let partialPath = TemplatePath.stripLeadingSubPath(
         partialFiles[j],
         this.inputDir
       );
