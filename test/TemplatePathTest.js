@@ -31,13 +31,13 @@ test("getAllDirs", t => {
   t.deepEqual(TemplatePath.getAllDirs("testing/"), ["testing"]);
   t.deepEqual(TemplatePath.getAllDirs("testing"), ["testing"]);
   t.deepEqual(TemplatePath.getAllDirs("./testing/hello"), [
-    "./testing",
-    "./testing/hello"
+    "./testing/hello",
+    "./testing"
   ]);
   t.deepEqual(TemplatePath.getAllDirs("./src/collections/posts"), [
-    "./src",
+    "./src/collections/posts",
     "./src/collections",
-    "./src/collections/posts"
+    "./src"
   ]);
 });
 
