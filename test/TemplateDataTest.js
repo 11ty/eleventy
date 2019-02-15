@@ -210,6 +210,25 @@ test("getLocalDataPaths", async t => {
   ]);
 });
 
+test("Deeper getLocalDataPaths", async t => {
+  let dataObj = new TemplateData("./");
+  let paths = await dataObj.getLocalDataPaths(
+    "./test/stubs/component/component.liquid"
+  );
+
+  t.deepEqual(paths, [
+    "./test/test.json",
+    "./test/test.11tydata.json",
+    "./test/test.11tydata.js",
+    "./test/stubs/stubs.json",
+    "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.js",
+    "./test/stubs/component/component.json",
+    "./test/stubs/component/component.11tydata.json",
+    "./test/stubs/component/component.11tydata.js"
+  ]);
+});
+
 test("getLocalDataPaths with an 11ty js template", async t => {
   let dataObj = new TemplateData("./test/stubs/");
   let paths = await dataObj.getLocalDataPaths(
