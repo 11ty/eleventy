@@ -129,12 +129,18 @@ class EleventyFiles {
       let dir = TemplatePath.getDirFromFilePath(ignorePath);
       dirs.push(dir);
 
-      if (fs.existsSync(ignorePath)) {
+      if (fs.existsSync(ignorePath) && fs.statSync(ignorePath).size > 0) {
         fileFound = true;
         let ignoreContent = fs.readFileSync(ignorePath, "utf-8");
-        ignores = ignores.concat(
-          EleventyFiles.normalizeIgnoreContent(dir, ignoreContent)
-        );
+
+        // make sure that empty .gitignore with spaces takes default ignore.
+        if (ignoreContent.trim().length === 0) {
+          fileFound = false;
+        } else {
+          ignores = ignores.concat(
+            EleventyFiles.normalizeIgnoreContent(dir, ignoreContent)
+          );
+        }
       }
     }
 
