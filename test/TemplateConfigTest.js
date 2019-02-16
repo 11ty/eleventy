@@ -328,3 +328,21 @@ test("Properly throws error when config returns a Promise", t => {
     );
   });
 });
+
+test("Properly throws error on illegal includes directory", t => {
+  t.throws(function() {
+    new TemplateConfig(
+      require("../config.js"),
+      "./test/stubs/config-illegal-includes-dir.js"
+    );
+  });
+});
+
+test("Properly throws error on illegal data directory", t => {
+  t.throws(function() {
+    new TemplateConfig(
+      require("../config.js"),
+      "./test/stubs/config-illegal-data-dir.js"
+    );
+  });
+});

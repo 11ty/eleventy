@@ -10,6 +10,13 @@ test("getDir", t => {
   t.is(TemplatePath.getDir("test/stubs/!(multiple.md)"), "test/stubs");
 });
 
+test("isInsideWorkingDir", t => {
+  t.true(TemplatePath.isInsideWorkingDir("_includes"));
+  t.true(TemplatePath.isInsideWorkingDir("doesnt-exist-but-is-valid-anyway"));
+  t.true(TemplatePath.isInsideWorkingDir("."));
+  t.false(TemplatePath.isInsideWorkingDir(".."));
+});
+
 test("getDirFromFilePath", t => {
   t.is(TemplatePath.getDirFromFilePath("test/stubs/*.md"), "test/stubs");
   t.is(TemplatePath.getDirFromFilePath("test/stubs/!(x.md)"), "test/stubs");

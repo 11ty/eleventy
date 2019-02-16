@@ -13,6 +13,17 @@ TemplatePath.getWorkingDir = function() {
 };
 
 /**
+ * @param {String} path
+ * @returns {Boolean} whether the path is inside Eleventy’s working directory.
+ */
+TemplatePath.isInsideWorkingDir = function(path) {
+  return TemplatePath.startsWithSubPath(
+    TemplatePath.absolutePath(path),
+    TemplatePath.getWorkingDir()
+  );
+};
+
+/**
  * Returns the directory portion of a path.
  * Works for directory and file paths and paths ending in a glob pattern.
  *
