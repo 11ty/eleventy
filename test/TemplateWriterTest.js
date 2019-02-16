@@ -11,18 +11,35 @@ import TemplateWriter from "../src/TemplateWriter";
 import eleventyConfig from "../src/EleventyConfig";
 import normalizeNewLines from "./Util/normalizeNewLines";
 
+function setEleventyFiles(templateWriter) {
+  if (templateWriter.eleventyFiles === undefined) {
+    const eleventyFiles = new EleventyFiles(
+      templateWriter.input,
+      templateWriter.outputDir,
+      templateWriter.templateFormats,
+      false
+    );
+
+    eleventyFiles.init();
+    templateWriter.setEleventyFiles(eleventyFiles);
+  }
+}
+
 // TODO make sure if output is a subdir of input dir that they don’t conflict.
 test("Output is a subdir of input", async t => {
   let tw = new TemplateWriter(
     "./test/stubs/writeTest",
     "./test/stubs/writeTest/_writeTestSite"
   );
+
   let evf = new EleventyFiles(
     "./test/stubs/writeTest",
     "./test/stubs/writeTest/_writeTestSite",
     ["ejs", "md"]
   );
   evf.init();
+
+  tw.setEleventyFiles(evf);
 
   let files = await fastglob(evf.getFileGlobs());
   t.is(evf.getRawFiles().length, 2);
@@ -43,6 +60,8 @@ test("_createTemplateMap", async t => {
     ["ejs", "md"]
   );
 
+  setEleventyFiles(tw);
+
   let paths = await tw._getAllPaths();
   t.true(paths.length > 0);
   t.is(paths[0], "./test/stubs/writeTest/test.md");
@@ -61,6 +80,8 @@ test("_createTemplateMap (no leading dot slash)", async t => {
     ["ejs", "md"]
   );
 
+  setEleventyFiles(tw);
+
   let paths = await tw._getAllPaths();
   t.true(paths.length > 0);
   t.is(paths[0], "./test/stubs/writeTest/test.md");
@@ -70,6 +91,8 @@ test("getCollectionsData", async t => {
   let tw = new TemplateWriter("./test/stubs/collection", "./test/stubs/_site", [
     "md"
   ]);
+
+  setEleventyFiles(tw);
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
@@ -85,6 +108,8 @@ test("_testGetAllTags", async t => {
     "md"
   ]);
 
+  setEleventyFiles(tw);
+
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
   let tags = templateMap._testGetAllTags();
@@ -96,6 +121,8 @@ test("Collection of files sorted by date", async t => {
   let tw = new TemplateWriter("./test/stubs/dates", "./test/stubs/_site", [
     "md"
   ]);
+
+  setEleventyFiles(tw);
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
@@ -109,6 +136,8 @@ test("_getCollectionsData with custom collection (ascending)", async t => {
     "./test/stubs/_site",
     ["md"]
   );
+
+  setEleventyFiles(tw);
 
   /* Careful here, eleventyConfig is a global */
   eleventyConfig.addCollection("customPostsAsc", function(collection) {
@@ -132,6 +161,8 @@ test("_getCollectionsData with custom collection (descending)", async t => {
     ["md"]
   );
 
+  setEleventyFiles(tw);
+
   /* Careful here, eleventyConfig is a global */
   eleventyConfig.addCollection("customPosts", function(collection) {
     return collection.getFilteredByTag("post").sort(function(a, b) {
@@ -153,6 +184,8 @@ test("_getCollectionsData with custom collection (filter only to markdown input)
     "./test/stubs/_site",
     ["md"]
   );
+
+  setEleventyFiles(tw);
 
   /* Careful here, eleventyConfig is a global */
   eleventyConfig.addCollection("onlyMarkdown", function(collection) {
@@ -176,6 +209,8 @@ test("Pagination with a Collection", async t => {
     "./test/stubs/_site",
     ["njk"]
   );
+
+  setEleventyFiles(tw);
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
@@ -206,6 +241,8 @@ test("Pagination with a Collection from another Paged Template", async t => {
     "./test/stubs/_site",
     ["njk"]
   );
+
+  setEleventyFiles(tw);
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
@@ -239,6 +276,8 @@ test("Pagination with a Collection (apply all pages to collections)", async t =>
     "./test/stubs/_site",
     ["njk"]
   );
+
+  setEleventyFiles(tw);
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
@@ -291,6 +330,8 @@ test("Use a collection inside of a template", async t => {
     ["ejs"]
   );
 
+  setEleventyFiles(tw);
+
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
 
@@ -333,6 +374,8 @@ test("Use a collection inside of a layout", async t => {
     ["ejs"]
   );
 
+  setEleventyFiles(tw);
+
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
 
@@ -367,6 +410,9 @@ Layout 1 dog`
 
 test("Glob Watcher Files with Passthroughs", t => {
   let tw = new TemplateWriter("test/stubs", "test/stubs/_site", ["njk", "png"]);
+
+  setEleventyFiles(tw);
+
   t.deepEqual(tw.getFileManager().getPassthroughPaths(), []);
 });
 
@@ -376,6 +422,8 @@ test("Pagination and TemplateContent", async t => {
     "./test/stubs/pagination-templatecontent/_site",
     ["njk", "md"]
   );
+
+  setEleventyFiles(tw);
 
   tw.setVerboseOutput(false);
   await tw.write();
@@ -400,6 +448,8 @@ test("Custom collection returns array", async t => {
     ["md"]
   );
 
+  setEleventyFiles(tw);
+
   /* Careful here, eleventyConfig is a global */
   eleventyConfig.addCollection("returnAllInputPaths", function(collection) {
     return collection.getAllSorted().map(function(item) {
@@ -422,8 +472,10 @@ test("Custom collection returns a string", async t => {
     ["md"]
   );
 
+  setEleventyFiles(tw);
+
   /* Careful here, eleventyConfig is a global */
-  eleventyConfig.addCollection("returnATestString", function(collection) {
+  eleventyConfig.addCollection("returnATestString", function() {
     return "test";
   });
 
@@ -439,6 +491,8 @@ test("Custom collection returns an object", async t => {
     "./test/stubs/_site",
     ["md"]
   );
+
+  setEleventyFiles(tw);
 
   /* Careful here, eleventyConfig is a global */
   eleventyConfig.addCollection("returnATestObject", function() {
@@ -457,6 +511,8 @@ test("fileSlug should exist in a collection", async t => {
     "./test/stubs/collection-slug/_site",
     ["njk"]
   );
+
+  setEleventyFiles(tw);
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
@@ -482,6 +538,8 @@ test.skip("renderData should exist and be resolved in a collection (Issue #289)"
     ["njk"]
   );
 
+  setEleventyFiles(tw);
+
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
 
@@ -503,12 +561,15 @@ test("Write Test 11ty.js", async t => {
     "./test/stubs/writeTestJS",
     "./test/stubs/_writeTestJSSite"
   );
+
   let evf = new EleventyFiles(
     "./test/stubs/writeTestJS",
     "./test/stubs/_writeTestJSSite",
     ["11ty.js"]
   );
   evf.init();
+
+  tw.setEleventyFiles(evf);
 
   let files = await fastglob(evf.getFileGlobs());
   t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTestJS/**/*.11ty.js"]);
@@ -626,6 +687,8 @@ test("Passthrough file output", async t => {
     ["njk", "md"]
   );
 
+  setEleventyFiles(tw);
+
   const mgr = tw.getFileManager().getPassthroughManager();
   mgr.setConfig({
     passthroughFileCopy: true,
@@ -653,8 +716,11 @@ test("Passthrough file output", async t => {
   ];
 
   let results = await Promise.all(
-    output.map(function(path) {
-      return fs.exists(path);
+    output.map(path => {
+      return fs
+        .access(path, fs.constants.F_OK)
+        .then(() => Promise.resolve(true))
+        .catch(() => Promise.resolve(false));
     })
   );
 

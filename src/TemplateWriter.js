@@ -2,7 +2,6 @@ const Template = require("./Template");
 const TemplatePath = require("./TemplatePath");
 const TemplateMap = require("./TemplateMap");
 const TemplateRender = require("./TemplateRender");
-const EleventyFiles = require("./EleventyFiles");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyErrorHandler = require("./EleventyErrorHandler");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
@@ -18,8 +17,7 @@ class TemplateWriter {
     inputPath,
     outputDir,
     templateFormats, // TODO remove this, see `.getFileManager()` first
-    templateData,
-    isPassthroughAll
+    templateData
   ) {
     this.config = config.getConfig();
     this.input = inputPath;
@@ -31,9 +29,6 @@ class TemplateWriter {
     this.isDryRun = false;
     this.writeCount = 0;
     this.pretendWriteCount = 0;
-
-    // TODO can we get rid of this? It’s only used for tests in getFileManager()
-    this.passthroughAll = isPassthroughAll;
   }
 
   /* For testing */
@@ -52,18 +47,6 @@ class TemplateWriter {
   }
 
   getFileManager() {
-    // usually Eleventy.js will setEleventyFiles with the EleventyFiles manager
-    if (!this.eleventyFiles) {
-      // if not, we can create one (used only by tests)
-      this.eleventyFiles = new EleventyFiles(
-        this.input,
-        this.outputDir,
-        this.templateFormats,
-        this.passthroughAll
-      );
-      this.eleventyFiles.init();
-    }
-
     return this.eleventyFiles;
   }
 

@@ -12,7 +12,7 @@ const debug = require("debug")("Eleventy:EleventyFiles");
 // const debugDev = require("debug")("Dev:Eleventy:EleventyFiles");
 
 class EleventyFiles {
-  constructor(input, outputDir, formats, passthroughAll) {
+  constructor(input, outputDir, formats, isPassthroughAll) {
     this.config = config.getConfig();
     this.input = input;
     this.inputDir = TemplatePath.getDir(this.input);
@@ -20,7 +20,7 @@ class EleventyFiles {
 
     this.initConfig();
 
-    this.passthroughAll = !!passthroughAll;
+    this.isPassthroughAll = !!isPassthroughAll;
 
     this.formats = formats;
     this.extensionMap = new EleventyExtensionMap(formats);
@@ -63,10 +63,6 @@ class EleventyFiles {
   /* Set command root for local project paths */
   _setLocalPathRoot(dir) {
     this.localPathRoot = dir;
-  }
-
-  setPassthroughAll(passthroughAll) {
-    this.passthroughAll = !!passthroughAll;
   }
 
   initFormatsGlobs() {
@@ -115,7 +111,7 @@ class EleventyFiles {
   setupGlobs() {
     this.ignores = this.getIgnores();
 
-    if (this.passthroughAll) {
+    if (this.isPassthroughAll) {
       this.watchedGlobs = TemplateGlob.map([
         TemplateGlob.normalizePath(this.input, "/**")
       ]).concat(this.ignores);

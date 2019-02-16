@@ -562,8 +562,14 @@ test("Glob Watcher Files with Config Passthroughs (no template formats)", async 
   ]);
 });
 
-test("Glob Watcher Files with passthroughAll", async t => {
-  let evf = new EleventyFiles("test/stubs", "test/stubs/_site", [], true);
+test("Glob Watcher Files with isPassthroughAll", async t => {
+  const isPassthroughAll = true;
+  let evf = new EleventyFiles(
+    "test/stubs",
+    "test/stubs/_site",
+    [],
+    isPassthroughAll
+  );
   evf.init();
 
   t.is((await evf.getFileGlobs())[0], "./test/stubs/**");
