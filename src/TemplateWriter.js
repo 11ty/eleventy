@@ -128,6 +128,7 @@ TemplateWriter.prototype._createTemplateMap = async function(paths) {
 
 TemplateWriter.prototype._writeTemplate = async function(mapEntry) {
   let tmpl = mapEntry.template;
+  // we don’t re-use the map templateContent because it doesn’t include layouts
   return tmpl
     .write(mapEntry.outputPath, mapEntry.data)
     .then(() => {

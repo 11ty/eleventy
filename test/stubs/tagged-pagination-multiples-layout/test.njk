@@ -1,0 +1,14 @@
+---
+title: Paged Test
+layout: layouts/div-wrapper-layout.njk
+testdata:
+  - one
+  - two
+  - three
+pagination:
+  data: testdata
+  size: 1
+  alias: item
+  addAllPagesToCollections: true
+---
+{{ item }}

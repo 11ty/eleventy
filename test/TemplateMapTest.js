@@ -205,8 +205,9 @@ test("Issue #115, mixing pagination and collections", async t => {
   t.is(Object.keys(map[2].data.collections.foos).length, 1);
   t.is(Object.keys(map[2].data.collections.bars).length, 1);
 
+  let entry = await map[2].template.getRenderedTemplates(map[2].data);
   t.deepEqual(
-    normalizeNewLines(map[2].templateContent),
+    normalizeNewLines(entry[0].templateContent),
     `This page is foos
 This page is bars
 `
@@ -265,8 +266,9 @@ test("Issue #115 with layout, mixing pagination and collections", async t => {
   t.is(Object.keys(map[2].data.collections.foos).length, 1);
   t.is(Object.keys(map[2].data.collections.bars).length, 1);
 
+  let entry = await map[2].template.getRenderedTemplates(map[2].data);
   t.deepEqual(
-    normalizeNewLines(map[2].templateContent),
+    normalizeNewLines(entry[0].templateContent),
     `This page is foos
 This page is bars
 `
@@ -774,4 +776,37 @@ test("Dependency graph assumptions", async t => {
     "all",
     "userCollection"
   ]);
+});
+
+test("Template pages should not have layouts when added to collections", async t => {
+  let tm = new TemplateMap();
+  let tmpl = new Template(
+    "./test/stubs/collection-layout-wrap.njk",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  await tm.add(tmpl);
+  t.is(await tmpl.render(), "<div>Layout Test</div>");
+
+  let collections = await tm.getCollectionsData();
+  t.is(collections.all.length, 1);
+  t.is(collections.all[0].templateContent, "Layout Test");
+});
+
+test("Paginated template pages should not have layouts when added to collections", async t => {
+  let tm = new TemplateMap();
+
+  let pagedTmpl = new Template(
+    "./test/stubs/tagged-pagination-multiples-layout/test.njk",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  await tm.add(pagedTmpl);
+
+  let collections = await tm.getCollectionsData();
+
+  t.is(collections.all.length, 3);
+  t.is(collections.all[0].templateContent, "one");
+  t.is(collections.all[1].templateContent, "two");
+  t.is(collections.all[2].templateContent, "three");
 });

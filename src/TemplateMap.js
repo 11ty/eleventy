@@ -31,13 +31,15 @@ class TemplateMap {
     return this._collection;
   }
 
+  getTagTarget(str) {
+    if (str.startsWith("collections.")) {
+      return str.substr("collections.".length);
+    }
+  }
+
   getPaginationTagTarget(entry) {
-    if (
-      entry.data.pagination &&
-      entry.data.pagination.data &&
-      entry.data.pagination.data.startsWith("collections.")
-    ) {
-      return entry.data.pagination.data.substr("collections.".length);
+    if (entry.data.pagination && entry.data.pagination.data) {
+      return this.getTagTarget(entry.data.pagination.data);
     }
   }
 
@@ -102,7 +104,9 @@ class TemplateMap {
         paginationTagTarget &&
         this.isUserConfigCollectionName(paginationTagTarget)
       ) {
-        graph.addNode(entry.inputPath);
+        if (!graph.hasNode(entry.inputPath)) {
+          graph.addNode(entry.inputPath);
+        }
         graph.addDependency(entry.inputPath, tagPrefix + paginationTagTarget);
 
         // collections.all

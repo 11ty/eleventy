@@ -598,9 +598,9 @@ class Template extends TemplateContent {
   }
 
   async getTemplateMapContent(page) {
-    this.setWrapWithLayouts(false);
+    page.template.setWrapWithLayouts(false);
     let content = await page.template._getContent(page.outputPath, page.data);
-    this.setWrapWithLayouts(true);
+    page.template.setWrapWithLayouts(true);
 
     return content;
   }
