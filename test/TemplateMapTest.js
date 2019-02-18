@@ -810,3 +810,24 @@ test("Paginated template pages should not have layouts when added to collections
   t.is(collections.all[1].templateContent, "two");
   t.is(collections.all[2].templateContent, "three");
 });
+
+test("eleventyExcludeFromCollections", async t => {
+  let tm = new TemplateMap();
+  await tm.add(tmpl1);
+
+  let excludedTmpl = new Template(
+    "./test/stubs/eleventyExcludeFromCollections.njk",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  await tm.add(excludedTmpl);
+
+  await tm.cache();
+
+  t.is(tm.getMap().length, 2);
+
+  let collections = await tm.getCollectionsData();
+  t.is(collections.all.length, 1);
+  t.is(collections.post.length, 1);
+  t.is(collections.dog.length, 1);
+});

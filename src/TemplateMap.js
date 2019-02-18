@@ -157,7 +157,9 @@ class TemplateMap {
             (map.data.pagination &&
               map.data.pagination.addAllPagesToCollections)
           ) {
-            this.collection.add(page);
+            if (!map.data.eleventyExcludeFromCollections) {
+              this.collection.add(page);
+            }
           }
           counter++;
         }
