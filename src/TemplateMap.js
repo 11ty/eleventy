@@ -1,6 +1,8 @@
 const isPlainObject = require("lodash/isPlainObject");
 const DependencyGraph = require("dependency-graph").DepGraph;
 const TemplateCollection = require("./TemplateCollection");
+const EleventyErrorUtil = require("./EleventyErrorUtil");
+const UsingCircularTemplateContentReferenceError = require("./Errors/UsingCircularTemplateContentReferenceError");
 const eleventyConfig = require("./EleventyConfig");
 const debug = require("debug")("Eleventy:TemplateMap");
 const debugDev = require("debug")("Dev:Eleventy:TemplateMap");
@@ -12,6 +14,10 @@ class TemplateMap {
     this.collectionsData = null;
     this.cached = false;
     this.configCollections = null;
+  }
+
+  get tagPrefix() {
+    return "___TAG___";
   }
 
   async add(template) {
@@ -45,7 +51,7 @@ class TemplateMap {
 
   getMappedDependencies() {
     let graph = new DependencyGraph();
-    let tagPrefix = "___TAG___";
+    let tagPrefix = this.tagPrefix;
 
     graph.addNode(tagPrefix + "all");
 
@@ -53,6 +59,7 @@ class TemplateMap {
       let paginationTagTarget = this.getPaginationTagTarget(entry);
       if (paginationTagTarget) {
         if (this.isUserConfigCollectionName(paginationTagTarget)) {
+          // delay this one to the second stage
           continue;
         } else {
           // using pagination but over a tagged collection
@@ -75,8 +82,9 @@ class TemplateMap {
           if (!graph.hasNode(tagPrefix + tag)) {
             graph.addNode(tagPrefix + tag);
           }
+
           // collections.tagName
-          // console.log( "Dependency from", tagPrefix + tag, "to", entry.inputPath );
+          // Dependency from tag to inputPath
           graph.addDependency(tagPrefix + tag, entry.inputPath);
         }
       }
@@ -87,7 +95,7 @@ class TemplateMap {
 
   getDelayedMappedDependencies() {
     let graph = new DependencyGraph();
-    let tagPrefix = "___TAG___";
+    let tagPrefix = this.tagPrefix;
 
     graph.addNode(tagPrefix + "all");
 
@@ -118,7 +126,7 @@ class TemplateMap {
               graph.addNode(tagPrefix + tag);
             }
             // collections.tagName
-            // console.log( "Dependency from", tagPrefix + tag, "to", entry.inputPath );
+            // Dependency from tag to inputPath
             graph.addDependency(tagPrefix + tag, entry.inputPath);
           }
         }
@@ -128,18 +136,16 @@ class TemplateMap {
   }
 
   async initDependencyMap(dependencyMap) {
-    let tagPrefix = "___TAG___";
+    let tagPrefix = this.tagPrefix;
     for (let depEntry of dependencyMap) {
       if (depEntry.startsWith(tagPrefix)) {
         let tagName = depEntry.substr(tagPrefix.length);
         if (this.isUserConfigCollectionName(tagName)) {
           // async
-          // console.log( "user config collection for", tagName );
           this.collectionsData[tagName] = await this.getUserConfigCollection(
             tagName
           );
         } else {
-          // console.log( "data tagged collection for ", tagName );
           this.collectionsData[tagName] = this.getTaggedCollection(tagName);
         }
       } else {
@@ -158,6 +164,7 @@ class TemplateMap {
               map.data.pagination.addAllPagesToCollections)
           ) {
             if (!map.data.eleventyExcludeFromCollections) {
+              // TODO do we need .template in collection entries?
               this.collection.add(page);
             }
           }
@@ -176,14 +183,23 @@ class TemplateMap {
     }
 
     let dependencyMap = this.getMappedDependencies();
-    // console.log( "dependency map:", dependencyMap );
     await this.initDependencyMap(dependencyMap);
 
     let delayedDependencyMap = this.getDelayedMappedDependencies();
-    // console.log( "delayed dependency map:", delayedDependencyMap );
     await this.initDependencyMap(delayedDependencyMap);
 
-    await this.populateContentDataInMap();
+    let orderedPaths = this.getOrderedInputPaths(
+      dependencyMap,
+      delayedDependencyMap
+    );
+    let orderedMap = orderedPaths.map(
+      function(inputPath) {
+        return this.getMapEntryForInputPath(inputPath);
+      }.bind(this)
+    );
+
+    await this.populateContentDataInMap(orderedMap);
+
     this.populateCollectionsWithContent();
     this.cached = true;
   }
@@ -196,23 +212,66 @@ class TemplateMap {
     }
   }
 
-  async populateContentDataInMap() {
-    for (let map of this.map) {
+  getOrderedInputPaths(dependencyMap, delayedDependencyMap) {
+    let orderedMap = [];
+    let tagPrefix = this.tagPrefix;
+
+    for (let dep of dependencyMap) {
+      if (!dep.startsWith(tagPrefix)) {
+        orderedMap.push(dep);
+      }
+    }
+    for (let dep of delayedDependencyMap) {
+      if (!dep.startsWith(tagPrefix)) {
+        orderedMap.push(dep);
+      }
+    }
+    return orderedMap;
+  }
+
+  async populateContentDataInMap(orderedMap) {
+    let usedTemplateContentTooEarlyMap = [];
+    for (let map of orderedMap) {
       if (!map._pages) {
         throw new Error(`Content pages not found for ${map.inputPath}`);
       }
-      for (let page of map._pages) {
-        let content = await map.template.getTemplateMapContent(page);
-        page.templateContent = content;
-
-        // TODO is this necessary in map entries
-        if (!map.templateContent) {
-          map.templateContent = content;
+      try {
+        for (let pageEntry of map._pages) {
+          pageEntry.templateContent = await map.template.getTemplateMapContent(
+            pageEntry
+          );
+        }
+      } catch (e) {
+        if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
+          usedTemplateContentTooEarlyMap.push(map);
+        } else {
+          throw e;
         }
       }
       debugDev(
         "Added this.map[...].templateContent, outputPath, et al for one map entry"
       );
+    }
+
+    for (let map of usedTemplateContentTooEarlyMap) {
+      try {
+        for (let pageEntry of map._pages) {
+          pageEntry.templateContent = await map.template.getTemplateMapContent(
+            pageEntry
+          );
+        }
+      } catch (e) {
+        if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
+          throw new UsingCircularTemplateContentReferenceError(
+            `${
+              map.inputPath
+            } contains a circular reference (using collections) to its own templateContent.`
+          );
+        } else {
+          // rethrow?
+          throw e;
+        }
+      }
     }
   }
 
@@ -320,7 +379,7 @@ class TemplateMap {
 
         let entry = this.getMapEntryForInputPath(item.inputPath);
         let index = item.pageNumber || 0;
-        item.templateContent = entry._pages[index].templateContent;
+        item.templateContent = entry._pages[index]._templateContent;
       }
     }
   }

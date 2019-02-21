@@ -5,6 +5,7 @@ const matter = require("gray-matter");
 const TemplateData = require("./TemplateData");
 const TemplateRender = require("./TemplateRender");
 const EleventyBaseError = require("./EleventyBaseError");
+const EleventyErrorUtil = require("./EleventyErrorUtil");
 const config = require("./Config");
 const debug = require("debug")("Eleventy:TemplateContent");
 const debugDev = require("debug")("Dev:Eleventy:TemplateContent");
@@ -163,15 +164,19 @@ class TemplateContent {
       );
       return rendered;
     } catch (e) {
-      let engine = this.templateRender.getEnginesStr();
-      debug(
-        `Having trouble rendering ${engine} template ${this.inputPath}: %O`,
-        str
-      );
-      throw new TemplateContentRenderError(
-        `Having trouble rendering ${engine} template ${this.inputPath}`,
-        e
-      );
+      if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
+        throw e;
+      } else {
+        let engine = this.templateRender.getEnginesStr();
+        debug(
+          `Having trouble rendering ${engine} template ${this.inputPath}: %O`,
+          str
+        );
+        throw new TemplateContentRenderError(
+          `Having trouble rendering ${engine} template ${this.inputPath}`,
+          e
+        );
+      }
     }
   }
 }

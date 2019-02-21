@@ -13,6 +13,7 @@ const TemplatePermalinkNoWrite = require("./TemplatePermalinkNoWrite");
 const TemplateLayout = require("./TemplateLayout");
 const TemplateFileSlug = require("./TemplateFileSlug");
 const Pagination = require("./Plugins/Pagination");
+const TemplateContentPrematureUseError = require("./Errors/TemplateContentPrematureUseError");
 const debug = require("debug")("Eleventy:Template");
 const debugDev = require("debug")("Dev:Eleventy:Template");
 
@@ -397,11 +398,23 @@ class Template extends TemplateContent {
       results.push({
         template: this,
         inputPath: this.inputPath,
+        fileSlug: this.fileSlugStr,
         data: data,
         date: data.page.date,
         outputPath: data.page.outputPath,
         url: data.page.url,
-        fileSlug: this.fileSlugStr
+        set templateContent(content) {
+          this._templateContent = content;
+        },
+        get templateContent() {
+          if (this._templateContent === undefined) {
+            // should at least warn here
+            throw new TemplateContentPrematureUseError(
+              `Tried to use templateContent too early (${this.inputPath})`
+            );
+          }
+          return this._templateContent;
+        }
       });
     } else {
       // needs collections for pagination items
@@ -419,15 +432,31 @@ class Template extends TemplateContent {
           pageData.collections = data.collections;
         }
 
+        pageData.page.url = await page.getOutputHref(pageData);
+        pageData.page.outputPath = await page.getOutputPath(pageData);
+
         results.push({
           template: page,
           inputPath: this.inputPath,
           fileSlug: this.fileSlugStr,
           data: pageData,
-          date: data.page.date,
+          date: pageData.page.date,
           pageNumber: pageNumber++,
-          outputPath: await page.getOutputPath(pageData),
-          url: await page.getOutputHref(pageData)
+          outputPath: pageData.page.outputPath,
+          url: pageData.page.url,
+          set templateContent(content) {
+            this._templateContent = content;
+          },
+          get templateContent() {
+            if (!this._templateContent) {
+              throw new TemplateContentPrematureUseError(
+                `Tried to use templateContent too early (${
+                  this.inputPath
+                } page ${this.pageNumber})`
+              );
+            }
+            return this._templateContent;
+          }
         });
       }
     }
@@ -483,7 +512,6 @@ class Template extends TemplateContent {
     } else {
       debug(`${lang.start} %o from %o.`, outputPath, this.inputPath);
     }
-
     if (!this.isDryRun) {
       return fs.outputFile(outputPath, finalContent).then(() => {
         debug(`${outputPath} ${lang.finished}.`);
@@ -491,8 +519,30 @@ class Template extends TemplateContent {
     }
   }
 
-  async writeContent(outputPath, templateContent) {
-    return this._write(outputPath, templateContent);
+  async writeMapEntry(mapEntry) {
+    let promises = [];
+    for (let page of mapEntry._pages) {
+      let layoutKey = mapEntry.data[this.config.keys.layout];
+      if (layoutKey) {
+        let layout = TemplateLayout.getTemplate(
+          layoutKey,
+          this.getInputDir(),
+          this.config
+        );
+        let content = await layout.render(page.data, page.templateContent);
+        await this.runLinters(content, page.inputPath, page.outputPath);
+        promises.push(this._write(page.outputPath, content));
+      } else {
+        await this.runLinters(
+          page.templateContent,
+          page.inputPath,
+          page.outputPath
+        );
+        promises.push(this._write(page.outputPath, page.templateContent));
+      }
+    }
+
+    return Promise.all(promises);
   }
 
   async write(outputPath, data) {
@@ -597,10 +647,13 @@ class Template extends TemplateContent {
     }
   }
 
-  async getTemplateMapContent(page) {
-    page.template.setWrapWithLayouts(false);
-    let content = await page.template._getContent(page.outputPath, page.data);
-    page.template.setWrapWithLayouts(true);
+  async getTemplateMapContent(pageMapEntry) {
+    pageMapEntry.template.setWrapWithLayouts(false);
+    let content = await pageMapEntry.template._getContent(
+      pageMapEntry.outputPath,
+      pageMapEntry.data
+    );
+    pageMapEntry.template.setWrapWithLayouts(true);
 
     return content;
   }

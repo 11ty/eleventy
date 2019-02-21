@@ -130,7 +130,7 @@ TemplateWriter.prototype._writeTemplate = async function(mapEntry) {
   let tmpl = mapEntry.template;
   // we don’t re-use the map templateContent because it doesn’t include layouts
   return tmpl
-    .write(mapEntry.outputPath, mapEntry.data)
+    .writeMapEntry(mapEntry)
     .then(() => {
       this.writeCount += tmpl.getWriteCount();
     })
@@ -163,6 +163,7 @@ TemplateWriter.prototype.write = async function() {
   for (let mapEntry of this.templateMap.getMap()) {
     promises.push(this._writeTemplate(mapEntry));
   }
+
   return Promise.all(promises).catch(e => {
     EleventyErrorHandler.error(e, "Error writing templates");
   });

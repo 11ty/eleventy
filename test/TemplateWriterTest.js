@@ -188,31 +188,15 @@ test("Pagination with a Collection", async t => {
   );
   t.truthy(mapEntry);
   t.is(mapEntry.inputPath, "./test/stubs/paged/collection/main.njk");
+  t.is(mapEntry._pages.length, 2);
+  t.is(mapEntry._pages[0].outputPath, "./test/stubs/_site/main/index.html");
+  t.is(mapEntry._pages[1].outputPath, "./test/stubs/_site/main/1/index.html");
 
-  let mainTmpl = tw._createTemplate("./test/stubs/paged/collection/main.njk");
-  let outputPath = await mainTmpl.getOutputPath();
-  t.is(outputPath, "./test/stubs/_site/main/index.html");
-  t.is(mapEntry.outputPath, "./test/stubs/_site/main/index.html");
-
-  let templates = await mapEntry.template.getRenderedTemplates(mapEntry.data);
-  t.is(templates.length, 2);
   t.is(
-    await templates[0].template.getOutputPath(),
-    "./test/stubs/_site/main/index.html"
-  );
-  t.is(templates[0].outputPath, "./test/stubs/_site/main/index.html");
-  t.is(
-    await templates[1].template.getOutputPath(),
-    "./test/stubs/_site/main/1/index.html"
-  );
-  t.is(templates[1].outputPath, "./test/stubs/_site/main/1/index.html");
-
-  // test content
-  t.is(
-    templates[0].templateContent.trim(),
+    mapEntry._pages[0].templateContent.trim(),
     "<ol><li>/test1/</li><li>/test2/</li></ol>"
   );
-  t.is(templates[1].templateContent.trim(), "<ol><li>/test3/</li></ol>");
+  t.is(mapEntry._pages[1].templateContent.trim(), "<ol><li>/test3/</li></ol>");
 });
 
 test("Pagination with a Collection from another Paged Template", async t => {

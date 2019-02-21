@@ -2,6 +2,7 @@ import test from "ava";
 import Template from "../src/Template";
 import TemplateMap from "../src/TemplateMap";
 import TemplateCollection from "../src/TemplateCollection";
+import UsingCircularTemplateContentReferenceError from "../src/Errors/UsingCircularTemplateContentReferenceError";
 import normalizeNewLines from "./Util/normalizeNewLines";
 
 let tmpl1 = new Template(
@@ -74,14 +75,13 @@ test("TemplateMap adds collections data and has templateContent values", async t
   await tm.add(tmpl2);
 
   let map = tm.getMap();
-  t.falsy(map[0].templateContent);
-  t.falsy(map[1].templateContent);
   t.falsy(map[0].data.collections);
   t.falsy(map[1].data.collections);
 
   await tm.cache();
-  t.truthy(map[0].templateContent);
-  t.truthy(map[1].templateContent);
+
+  t.truthy(map[0]._pages[0].templateContent);
+  t.truthy(map[1]._pages[0].templateContent);
   t.truthy(map[0].data.collections);
   t.truthy(map[1].data.collections);
   t.is(map[0].data.collections.post.length, 1);
@@ -91,11 +91,11 @@ test("TemplateMap adds collections data and has templateContent values", async t
 
   t.is(
     await map[0].template._testRenderWithoutLayouts(map[0].data),
-    map[0].templateContent
+    map[0]._pages[0].templateContent
   );
   t.is(
     await map[1].template._testRenderWithoutLayouts(map[1].data),
-    map[1].templateContent
+    map[1]._pages[0].templateContent
   );
 });
 
@@ -110,17 +110,16 @@ test("TemplateMap circular references (map without templateContent)", async t =>
   );
 
   let map = tm.getMap();
-  t.falsy(map[0].templateContent);
   t.falsy(map[0].data.collections);
 
   await tm.cache();
-  t.truthy(map[0].templateContent);
+  t.truthy(map[0]._pages[0].templateContent);
   t.truthy(map[0].data.collections);
   t.is(map[0].data.collections.all.length, 1);
 
   t.is(
     await map[0].template._testRenderWithoutLayouts(map[0].data),
-    map[0].templateContent
+    map[0]._pages[0].templateContent
   );
 });
 
@@ -135,21 +134,15 @@ test("TemplateMap circular references (map.templateContent)", async t => {
   );
 
   let map = tm.getMap();
-  t.falsy(map[0].templateContent);
   t.falsy(map[0].data.collections);
 
-  await tm.cache();
-  t.truthy(map[0].templateContent);
-  t.truthy(map[0].data.collections);
-  t.is(map[0].data.collections.all.length, 1);
-
-  // templateContent references are not available inside of templateContent strings
-  t.is(map[0].templateContent.trim(), "<h1>Test</h1>");
-
-  // first cached templateContent is available to future render calls (but will not loop in any way).
-  t.is(
-    (await map[0].template._testRenderWithoutLayouts(map[0].data)).trim(),
-    "<h1>Test</h1>\n<h1>Test</h1>"
+  await t.throwsAsync(
+    async () => {
+      await tm.cache();
+    },
+    {
+      instanceOf: UsingCircularTemplateContentReferenceError
+    }
   );
 });
 
@@ -578,7 +571,7 @@ test("TemplateMap render and templateContent are the same (templateContent doesn
 
   let map = tm.getMap();
   await tm.cache();
-  t.is(map[0].templateContent.trim(), "<p>Inherited</p>");
+  t.is(map[0]._pages[0].templateContent.trim(), "<p>Inherited</p>");
   t.is((await map[0].template.render(map[0].data)).trim(), "<p>Inherited</p>");
 });
 
