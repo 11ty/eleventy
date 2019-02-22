@@ -519,27 +519,32 @@ class Template extends TemplateContent {
     }
   }
 
+  async renderPageEntry(mapEntry, page) {
+    let layoutKey = mapEntry.data[this.config.keys.layout];
+    if (layoutKey) {
+      let layout = TemplateLayout.getTemplate(
+        layoutKey,
+        this.getInputDir(),
+        this.config
+      );
+      let content = await layout.render(page.data, page.templateContent);
+      await this.runLinters(content, page.inputPath, page.outputPath);
+      return content;
+    } else {
+      await this.runLinters(
+        page.templateContent,
+        page.inputPath,
+        page.outputPath
+      );
+      return page.templateContent;
+    }
+  }
+
   async writeMapEntry(mapEntry) {
     let promises = [];
     for (let page of mapEntry._pages) {
-      let layoutKey = mapEntry.data[this.config.keys.layout];
-      if (layoutKey) {
-        let layout = TemplateLayout.getTemplate(
-          layoutKey,
-          this.getInputDir(),
-          this.config
-        );
-        let content = await layout.render(page.data, page.templateContent);
-        await this.runLinters(content, page.inputPath, page.outputPath);
-        promises.push(this._write(page.outputPath, content));
-      } else {
-        await this.runLinters(
-          page.templateContent,
-          page.inputPath,
-          page.outputPath
-        );
-        promises.push(this._write(page.outputPath, page.templateContent));
-      }
+      let content = await this.renderPageEntry(mapEntry, page);
+      promises.push(this._write(page.outputPath, content));
     }
 
     return Promise.all(promises);

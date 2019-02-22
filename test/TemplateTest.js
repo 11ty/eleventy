@@ -3,6 +3,8 @@ import fs from "fs-extra";
 import pretty from "pretty";
 import TemplateData from "../src/TemplateData";
 import Template from "../src/Template";
+import EleventyErrorUtil from "../src/EleventyErrorUtil";
+import TemplateContentPrematureUseError from "../src/Errors/TemplateContentPrematureUseError";
 import templateConfig from "../src/Config";
 import normalizeNewLines from "./Util/normalizeNewLines";
 
@@ -1237,7 +1239,7 @@ test("Front matter date with quotes (njk), issue #258", async t => {
   t.is(data.mydate.toISOString(), "2009-04-15T00:34:34.000Z");
 
   let pages = await tmpl.getRenderedTemplates(data);
-  t.is(pages[0].templateContent.trim(), `2009-04-15T00:34:34.000Z`);
+  t.is(pages[0].templateContent.trim(), "2009-04-15T00:34:34.000Z");
 });
 
 test("Data Cascade (Deep merge)", async t => {
@@ -1369,4 +1371,236 @@ test('Local data inherits tags string ([tags] vs "tags") Deep Merge', async t =>
 
   let data = await tmpl.getData();
   t.deepEqual(data.tags.sort(), ["tag1", "tag2", "tag3"]);
+});
+
+test("Throws a Premature Template Content Error (njk)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/prematureTemplateContent/test.njk",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let data = await tmpl.getData();
+  let mapEntries = await tmpl.getTemplates(data);
+  let error = t.throws(() => {
+    mapEntries[0].templateContent;
+  });
+  t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
+});
+
+test("Throws a Premature Template Content Error from rendering (njk)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/prematureTemplateContent/test.njk",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let mapEntries = await tmpl.getTemplateMapEntries();
+  let pageEntries = await tmpl.getTemplates({
+    page: {},
+    sample: {
+      get templateContent() {
+        throw new TemplateContentPrematureUseError(
+          "Tried to use templateContent too early (test.njk)"
+        );
+      }
+    }
+  });
+  let error = await t.throwsAsync(async () => {
+    await tmpl.renderPageEntry(mapEntries[0], pageEntries[0]);
+  });
+  console.log(error);
+  t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
+});
+
+test("Throws a Premature Template Content Error (liquid)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/prematureTemplateContent/test.liquid",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let data = await tmpl.getData();
+  let mapEntries = await tmpl.getTemplates(data);
+  let error = t.throws(() => {
+    mapEntries[0].templateContent;
+  });
+  t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
+});
+
+test("Throws a Premature Template Content Error (11ty.js)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/prematureTemplateContent/test.11ty.js",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let data = await tmpl.getData();
+  let mapEntries = await tmpl.getTemplates(data);
+  let error = t.throws(() => {
+    mapEntries[0].templateContent;
+  });
+  t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
+});
+
+test("Throws a Premature Template Content Error (pug)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/prematureTemplateContent/test.pug",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let data = await tmpl.getData();
+  let mapEntries = await tmpl.getTemplates(data);
+  let error = t.throws(() => {
+    mapEntries[0].templateContent;
+  });
+  t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
+});
+
+test("Throws a Premature Template Content Error from rendering (pug)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/prematureTemplateContent/test.pug",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let mapEntries = await tmpl.getTemplateMapEntries();
+  let pageEntries = await tmpl.getTemplates({
+    page: {},
+    sample: {
+      get templateContent() {
+        throw new TemplateContentPrematureUseError(
+          "Tried to use templateContent too early (test.pug)"
+        );
+      }
+    }
+  });
+  let error = await t.throwsAsync(async () => {
+    await tmpl.renderPageEntry(mapEntries[0], pageEntries[0]);
+  });
+  t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
+});
+
+test("Throws a Premature Template Content Error (md)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/prematureTemplateContent/test.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let data = await tmpl.getData();
+  let mapEntries = await tmpl.getTemplates(data);
+  let error = t.throws(() => {
+    mapEntries[0].templateContent;
+  });
+  t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
+});
+
+test("Throws a Premature Template Content Error from rendering (md)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/prematureTemplateContent/test.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let mapEntries = await tmpl.getTemplateMapEntries();
+  let pageEntries = await tmpl.getTemplates({
+    page: {},
+    sample: {
+      get templateContent() {
+        throw new TemplateContentPrematureUseError(
+          "Tried to use templateContent too early (test.md)"
+        );
+      }
+    }
+  });
+  let error = await t.throwsAsync(async () => {
+    await tmpl.renderPageEntry(mapEntries[0], pageEntries[0]);
+  });
+  t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
+});
+
+test("Throws a Premature Template Content Error (hbs)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/prematureTemplateContent/test.hbs",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let data = await tmpl.getData();
+  let mapEntries = await tmpl.getTemplates(data);
+  let error = t.throws(() => {
+    mapEntries[0].templateContent;
+  });
+  t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
+});
+
+test("Throws a Premature Template Content Error from rendering (hbs)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/prematureTemplateContent/test.hbs",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let mapEntries = await tmpl.getTemplateMapEntries();
+  let pageEntries = await tmpl.getTemplates({
+    page: {},
+    sample: {
+      get templateContent() {
+        throw new TemplateContentPrematureUseError(
+          "Tried to use templateContent too early (test.hbs)"
+        );
+      }
+    }
+  });
+  let error = await t.throwsAsync(async () => {
+    await tmpl.renderPageEntry(mapEntries[0], pageEntries[0]);
+  });
+  t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
+});
+
+test("Throws a Premature Template Content Error (mustache)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/prematureTemplateContent/test.mustache",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let data = await tmpl.getData();
+  let mapEntries = await tmpl.getTemplates(data);
+  let error = t.throws(() => {
+    mapEntries[0].templateContent;
+  });
+  t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
+});
+
+test("Throws a Premature Template Content Error (ejs)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/prematureTemplateContent/test.ejs",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let data = await tmpl.getData();
+  let mapEntries = await tmpl.getTemplates(data);
+  let error = t.throws(() => {
+    mapEntries[0].templateContent;
+  });
+  t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
+});
+
+test("Throws a Premature Template Content Error (haml)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/prematureTemplateContent/test.haml",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let data = await tmpl.getData();
+  let mapEntries = await tmpl.getTemplates(data);
+  let error = t.throws(() => {
+    mapEntries[0].templateContent;
+  });
+  t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
 });
