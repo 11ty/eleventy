@@ -1,6 +1,7 @@
 import test from "ava";
 import fastglob from "fast-glob";
 import EleventyFiles from "../src/EleventyFiles";
+import TemplatePath from "../src/TemplatePath";
 import EleventyExtensionMap from "../src/EleventyExtensionMap";
 import TemplateRender from "../src/TemplateRender";
 import TemplatePassthroughManager from "../src/TemplatePassthroughManager";
@@ -204,7 +205,10 @@ test("Get ignores (no .eleventyignore, using setUseGitIgnore(false))", t => {
   evf.init();
 
   evf._setConfig({
-    useGitIgnore: false
+    useGitIgnore: false,
+    dir: {
+      includes: "_includes"
+    }
   });
   evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
 
@@ -261,7 +265,10 @@ test("Get ignores (both .eleventyignore and .gitignore, using setUseGitIgnore(fa
   evf.init();
 
   evf._setConfig({
-    useGitIgnore: false
+    useGitIgnore: false,
+    dir: {
+      includes: "_includes"
+    }
   });
   evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
 
@@ -304,6 +311,97 @@ test("Ignore Include and Data Dirs", t => {
     "!./test/stubs/_includes/**",
     "!./test/stubs/_data/**"
   ]);
+});
+
+test("Input to 'src' and empty includes dir (issue #403)", t => {
+  let evf = new EleventyFiles("src", "src/_site", ["md", "liquid", "html"]);
+  evf._setConfig({
+    useGitIgnore: false,
+    eleventyignoreOverride: "!./src/_includes/**",
+    dir: {
+      input: ".",
+      output: "_site",
+      includes: "",
+      data: "_data"
+    }
+  });
+  evf.init();
+
+  t.deepEqual(evf.getFileGlobs(), [
+    "./src/**/*.md",
+    "./src/**/*.liquid",
+    "./src/**/*.html",
+    "!./src/_includes/**",
+    "!./src/_site/**",
+    "!./src/_data/**"
+  ]);
+});
+
+test("Bad expected output, this indicates a bug upstream in a dependency.  Input to 'src' and empty includes dir (issue #403, full paths in eleventyignore)", async t => {
+  let evf = new EleventyFiles("test/stubs-403", "test/stubs-403/_site", [
+    "liquid"
+  ]);
+  evf._setConfig({
+    useGitIgnore: false,
+    eleventyignoreOverride:
+      "!" + TemplatePath.absolutePath("test/stubs-403/_includes") + "/**",
+    dir: {
+      input: "test/stubs-403",
+      output: "_site",
+      includes: "",
+      data: false
+    }
+  });
+  evf.init();
+
+  t.deepEqual(await evf.getFiles(), [
+    "./test/stubs-403/template.liquid",
+    // This is bad, because it uses an absolutePath above. it should be excluded
+    "./test/stubs-403/_includes/include.liquid"
+  ]);
+});
+
+test("Workaround for Bad expected output, this indicates a bug upstream in a dependency.  Input to 'src' and empty includes dir (issue #403, full paths in eleventyignore)", async t => {
+  let evf = new EleventyFiles("test/stubs-403", "test/stubs-403/_site", [
+    "liquid"
+  ]);
+  evf._setConfig({
+    useGitIgnore: false,
+    eleventyignoreOverride: "!./test/stubs-403/_includes/**",
+    dir: {
+      input: "test/stubs-403",
+      output: "_site",
+      includes: "",
+      data: false
+    }
+  });
+  evf.init();
+
+  t.deepEqual(await evf.getFiles(), ["./test/stubs-403/template.liquid"]);
+});
+
+test("Issue #403: all .eleventyignores should be relative paths not absolute paths", async t => {
+  let evf = new EleventyFiles("test/stubs-403", "test/stubs-403/_site", [
+    "liquid"
+  ]);
+  evf._setConfig({
+    useGitIgnore: false,
+    dir: {
+      input: "test/stubs-403",
+      output: "_site",
+      includes: "",
+      data: false
+    }
+  });
+  evf.init();
+
+  let globs = await evf.getFileGlobs();
+  t.is(
+    globs.filter(glob => {
+      return glob.indexOf(TemplatePath.absolutePath()) > -1;
+    }).length,
+    0
+  );
 });
 
 test("Glob Watcher Files", async t => {

@@ -34,7 +34,7 @@
     "eleventy": "./cmd.js"
   },
   "scripts": {
-    "default": "cd playground && npx eleventy --input=. --output=_site",
+    "default": "npm run test",
     "test": "npx nyc ava",
     "coverage": "npm run test && npx nyc report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && node cmd.js --config=docs-src/.eleventy.docs.js"
   },

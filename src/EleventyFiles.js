@@ -18,14 +18,19 @@ class EleventyFiles {
     this.inputDir = TemplatePath.getDir(this.input);
     this.outputDir = outputDir;
 
-    this.includesDir = TemplatePath.join(
-      this.inputDir,
-      this.config.dir.includes
-    );
+    this.initConfig();
+
     this.passthroughAll = !!passthroughAll;
 
     this.formats = formats;
     this.extensionMap = new EleventyExtensionMap(formats);
+  }
+
+  initConfig() {
+    this.includesDir = TemplatePath.join(
+      this.inputDir,
+      this.config.dir.includes
+    );
   }
 
   init() {
@@ -42,6 +47,7 @@ class EleventyFiles {
   /* For testing */
   _setConfig(config) {
     this.config = config;
+    this.initConfig();
   }
   /* For testing */
   _setExtensionMap(map) {
@@ -168,6 +174,10 @@ class EleventyFiles {
         })
         .map(line => {
           let path = TemplateGlob.normalizePath(dir, "/", line);
+          path = TemplatePath.addLeadingDotSlash(
+            TemplatePath.relativePath(path)
+          );
+
           try {
             // Note these folders must exist to get /** suffix
             let stat = fs.statSync(path);
@@ -201,15 +211,20 @@ class EleventyFiles {
       );
     }
 
-    files = files.concat(
-      EleventyFiles.getFileIgnores([
+    if (this.config.eleventyignoreOverride !== false) {
+      let eleventyIgnores = [
         TemplatePath.join(
           this.localPathRoot || TemplatePath.getWorkingDir(),
           ".eleventyignore"
         ),
         TemplatePath.join(this.inputDir, ".eleventyignore")
-      ])
-    );
+      ];
+
+      files = files.concat(
+        this.config.eleventyignoreOverride ||
+          EleventyFiles.getFileIgnores(eleventyIgnores)
+      );
+    }
 
     files = files.concat(TemplateGlob.map("!" + this.outputDir + "/**"));
 
