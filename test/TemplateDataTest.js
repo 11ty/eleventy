@@ -320,3 +320,23 @@ test("TemplateData.cleanupData", t => {
     tags: ["test1", "test2"]
   });
 });
+
+test("Parent directory for data", async t => {
+  let dataObj = new TemplateData("./test/stubs-337/src/");
+  dataObj._setConfig({
+    dataTemplateEngine: false,
+    dir: {
+      input: "./test/stubs-337/src/",
+      data: "../data/"
+    }
+  });
+  dataObj.setInputDir("./test/stubs-337/src/");
+
+  let data = await dataObj.getData();
+
+  t.deepEqual(data, {
+    xyz: {
+      hi: "bye"
+    }
+  });
+});
