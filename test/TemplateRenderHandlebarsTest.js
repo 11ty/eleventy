@@ -174,3 +174,38 @@ test("Handlebars Render Paired Shortcode with a Nested Single Shortcode", async 
     "<p>This is a CHILD CONTENTHOWDYZACH.</p>"
   );
 });
+
+test("Handlebars Render Raw Output (Issue #436)", async t => {
+  let tr = new TemplateRender("hbs");
+  tr.engine.addHelpers({
+    "raw-helper": function(options) {
+      return options.fn();
+    }
+  });
+
+  let fn = await tr.getCompiledTemplate(
+    "{{{{raw-helper}}}}{{bar}}{{{{/raw-helper}}}}"
+  );
+  t.is(await fn({ name: "Zach" }), "{{bar}}");
+});
+
+test("Handlebars Render Raw Output (Issue #436 with if statement)", async t => {
+  let tr = new TemplateRender("hbs");
+  tr.engine.addHelpers({
+    "raw-helper": function(options) {
+      return options.fn();
+    }
+  });
+
+  let fn = await tr.getCompiledTemplate(
+    `{{{{raw-helper}}}}{{#if ready}}
+<p>Ready</p>
+{{/if}}{{{{/raw-helper}}}}`
+  );
+  t.is(
+    await fn({ name: "Zach" }),
+    `{{#if ready}}
+<p>Ready</p>
+{{/if}}`
+  );
+});
