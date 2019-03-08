@@ -321,7 +321,7 @@ test("TemplateData.cleanupData", t => {
   });
 });
 
-test("Parent directory for data", async t => {
+test("Parent directory for data (Issue #337)", async t => {
   let dataObj = new TemplateData("./test/stubs-337/src/");
   dataObj._setConfig({
     dataTemplateEngine: false,
