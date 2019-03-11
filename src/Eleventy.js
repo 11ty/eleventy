@@ -232,10 +232,14 @@ Arguments:
     config.reset();
 
     this.config = config.getConfig();
-    this.eleventyServe.updateConfig(this.config);
+    this.eleventyServe.config = this.config;
   }
 
   async _watch(path) {
+    if (path) {
+      path = TemplatePath.addLeadingDotSlash(path);
+    }
+
     if (this.active) {
       this.queuedToRun = path;
       return;
@@ -262,7 +266,8 @@ Arguments:
     this.watcher.add(this.watchTargets.getNewTargetsSinceLastReset());
 
     let isInclude =
-      path && TemplatePath.startsWithSubPath(path, this.eleventyFiles.getIncludesDir());
+      path &&
+      TemplatePath.startsWithSubPath(path, this.eleventyFiles.getIncludesDir());
     this.eleventyServe.reload(path, isInclude);
 
     this.active = false;
