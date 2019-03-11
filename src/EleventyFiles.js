@@ -31,6 +31,13 @@ class EleventyFiles {
       this.inputDir,
       this.config.dir.includes
     );
+
+    if (this.config.dir.layouts) {
+      this.layoutsDir = TemplatePath.join(
+        this.inputDir,
+        this.config.dir.layouts
+      );
+    }
   }
 
   init() {
@@ -297,6 +304,10 @@ class EleventyFiles {
     let files = [];
     if (this.config.dir.includes) {
       files = files.concat(TemplateGlob.map(this.includesDir + "/**"));
+    }
+
+    if (this.config.dir.layouts) {
+      files = files.concat(TemplateGlob.map(this.layoutsDir + "/**"));
     }
 
     if (this.config.dir.data && this.config.dir.data !== ".") {
