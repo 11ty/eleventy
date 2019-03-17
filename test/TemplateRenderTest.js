@@ -19,9 +19,9 @@ test("Basic", t => {
   t.false(TemplateRender.hasEngine("sldkjfkldsj"));
 });
 
-test("Input Dir", async t => {
+test("Includes Dir", async t => {
   t.is(
-    new TemplateRender("ejs", "./test/stubs").getInputDir(),
+    new TemplateRender("ejs", "./test/stubs").getIncludesDir(),
     "test/stubs/_includes"
   );
 });

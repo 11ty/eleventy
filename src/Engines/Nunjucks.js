@@ -2,8 +2,8 @@ const NunjucksLib = require("nunjucks");
 const TemplateEngine = require("./TemplateEngine");
 
 class Nunjucks extends TemplateEngine {
-  constructor(name, inputDir) {
-    super(name, inputDir);
+  constructor(name, includesDir) {
+    super(name, includesDir);
 
     this.setLibrary(this.config.libraryOverrides.njk);
   }
@@ -12,7 +12,7 @@ class Nunjucks extends TemplateEngine {
     this.njkEnv =
       env ||
       new NunjucksLib.Environment(
-        new NunjucksLib.FileSystemLoader(super.getInputDir())
+        new NunjucksLib.FileSystemLoader(super.getIncludesDir())
       );
     this.setEngineLib(this.njkEnv);
 

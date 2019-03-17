@@ -6,12 +6,12 @@ const config = require("../Config");
 const debug = require("debug")("Eleventy:TemplateEngine");
 
 class TemplateEngine {
-  constructor(name, inputDir) {
+  constructor(name, includesDir) {
     this.name = name;
 
     this.extensionMap = new EleventyExtensionMap();
     this.extensions = this.extensionMap.getExtensionsFromKey(name);
-    this.inputDir = inputDir;
+    this.includesDir = includesDir;
     this.partialsHaveBeenCached = false;
     this.partials = [];
     this.engineLib = null;
@@ -32,8 +32,8 @@ class TemplateEngine {
     return this.name;
   }
 
-  getInputDir() {
-    return this.inputDir;
+  getIncludesDir() {
+    return this.includesDir;
   }
 
   // TODO make async
@@ -50,10 +50,10 @@ class TemplateEngine {
     // This only runs if getPartials() is called, which is only for Mustache/Handlebars
     this.partialsHaveBeenCached = true;
     let partials = {};
-    let prefix = this.inputDir + "/**/*.";
+    let prefix = this.includesDir + "/**/*.";
     // TODO: reuse mustache partials in handlebars?
     let partialFiles = [];
-    if (this.inputDir) {
+    if (this.includesDir) {
       this.extensions.forEach(function(extension) {
         partialFiles = partialFiles.concat(fastglob.sync(prefix + extension));
       });
@@ -64,7 +64,7 @@ class TemplateEngine {
     for (let j = 0, k = partialFiles.length; j < k; j++) {
       let partialPath = TemplatePath.stripLeadingSubPath(
         partialFiles[j],
-        this.inputDir
+        this.includesDir
       );
       let partialPathNoExt = partialPath;
       this.extensions.forEach(function(extension) {
@@ -77,7 +77,7 @@ class TemplateEngine {
     }
 
     debug(
-      `${this.inputDir}/*.{${this.extensions}} found partials for: %o`,
+      `${this.includesDir}/*.{${this.extensions}} found partials for: %o`,
       Object.keys(partials)
     );
 
@@ -131,15 +131,15 @@ class TemplateEngine {
     return name in TemplateEngine.templateKeyMapToClassName;
   }
 
-  static getEngine(name, inputDir) {
+  static getEngine(name, includesDir) {
     if (!this.hasEngine(name)) {
       throw new Error(
-        `Template Engine ${name} does not exist in getEngine (input dir: ${inputDir})`
+        `Template Engine ${name} does not exist in getEngine (includes dir: ${includesDir})`
       );
     }
 
     const cls = require("./" + TemplateEngine.templateKeyMapToClassName[name]);
-    return new cls(name, inputDir);
+    return new cls(name, includesDir);
   }
 }
 

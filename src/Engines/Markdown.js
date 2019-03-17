@@ -4,8 +4,8 @@ const config = require("../Config");
 // const debug = require("debug")("Eleventy:Markdown");
 
 class Markdown extends TemplateEngine {
-  constructor(name, inputDir) {
-    super(name, inputDir);
+  constructor(name, includesDir) {
+    super(name, includesDir);
 
     this.markdownOptions = {};
 
@@ -51,7 +51,7 @@ class Markdown extends TemplateEngine {
       let fn;
       let engine = TemplateEngine.getEngine(
         preTemplateEngine,
-        super.getInputDir()
+        super.getIncludesDir()
       );
 
       fn = await engine.compile(str, inputPath);

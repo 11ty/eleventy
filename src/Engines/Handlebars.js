@@ -3,8 +3,8 @@ const TemplateEngine = require("./TemplateEngine");
 const config = require("../Config");
 
 class Handlebars extends TemplateEngine {
-  constructor(name, inputDir) {
-    super(name, inputDir);
+  constructor(name, includesDir) {
+    super(name, includesDir);
 
     this.setLibrary(this.config.libraryOverrides.hbs);
   }

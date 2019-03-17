@@ -3,8 +3,8 @@ const TemplateEngine = require("./TemplateEngine");
 const config = require("../Config");
 
 class Pug extends TemplateEngine {
-  constructor(name, inputDir) {
-    super(name, inputDir);
+  constructor(name, includesDir) {
+    super(name, includesDir);
 
     this.pugOptions = {};
 
@@ -22,12 +22,12 @@ class Pug extends TemplateEngine {
   }
 
   getPugOptions() {
-    let inputDir = super.getInputDir();
+    let includesDir = super.getIncludesDir();
 
     return Object.assign(
       {
-        basedir: inputDir,
-        filename: inputDir
+        basedir: includesDir,
+        filename: includesDir
       },
       this.pugOptions || {}
     );

@@ -4,8 +4,8 @@ const TemplateEngine = require("./TemplateEngine");
 // const debug = require("debug")("Eleventy:Liquid");
 
 class Liquid extends TemplateEngine {
-  constructor(name, inputDir) {
-    super(name, inputDir);
+  constructor(name, includesDir) {
+    super(name, includesDir);
 
     this.liquidOptions = {};
 
@@ -44,7 +44,7 @@ class Liquid extends TemplateEngine {
 
   getLiquidOptions() {
     let defaults = {
-      root: [super.getInputDir()],
+      root: [super.getIncludesDir()],
       extname: ".liquid",
       dynamicPartials: false,
       strict_filters: false

@@ -20,7 +20,7 @@ class TemplateRender {
     this.extensionMap = extensionMap;
 
     // optional
-    this.inputDir = this._normalizeInputDir(inputDir);
+    this.includesDir = this._normalizeIncludesDir(inputDir);
 
     this.parseMarkdownWith = this.config.markdownTemplateEngine;
     this.parseHtmlWith = this.config.htmlTemplateEngine;
@@ -52,7 +52,7 @@ class TemplateRender {
         `Unknown engine for ${engineNameOrPath}`
       );
     }
-    this.engine = TemplateEngine.getEngine(this.engineName, this.inputDir);
+    this.engine = TemplateEngine.getEngine(this.engineName, this.includesDir);
     this.engine.initRequireCache(this.path);
   }
 
@@ -155,15 +155,15 @@ class TemplateRender {
     return this.engineName;
   }
 
-  _normalizeInputDir(dir) {
+  getIncludesDir() {
+    return this.includesDir;
+  }
+
+  _normalizeIncludesDir(dir) {
     return TemplatePath.join(
       dir ? dir : this.config.dir.input,
       this.config.dir.includes
     );
-  }
-
-  getInputDir() {
-    return this.inputDir;
   }
 
   isEngine(engine) {

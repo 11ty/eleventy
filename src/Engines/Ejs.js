@@ -1,11 +1,10 @@
 const ejsLib = require("ejs");
 const TemplateEngine = require("./TemplateEngine");
 const config = require("../Config");
-const path = require("path");
 
 class Ejs extends TemplateEngine {
-  constructor(name, inputDir) {
-    super(name, inputDir);
+  constructor(name, includesDir) {
+    super(name, includesDir);
 
     this.ejsOptions = {};
 
@@ -27,13 +26,13 @@ class Ejs extends TemplateEngine {
   }
 
   getEjsOptions() {
-    let inputDir = super.getInputDir();
+    let includesDir = super.getIncludesDir();
 
     return Object.assign(
       {
-        root: "./" + inputDir,
+        root: "./" + includesDir,
         compileDebug: true,
-        filename: "./" + inputDir
+        filename: "./" + includesDir
       },
       this.ejsOptions || {}
     );

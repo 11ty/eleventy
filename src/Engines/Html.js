@@ -5,7 +5,7 @@ class Html extends TemplateEngine {
     if (preTemplateEngine) {
       let engine = TemplateEngine.getEngine(
         preTemplateEngine,
-        super.getInputDir()
+        super.getIncludesDir()
       );
       let fn = await engine.compile(str, inputPath);
 
