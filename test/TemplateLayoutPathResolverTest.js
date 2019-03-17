@@ -19,7 +19,7 @@ test("Layout subdir", t => {
   t.is(
     new TemplateLayoutPathResolver(
       "layouts/inasubdir",
-      "./test/stubs/_includes"
+      "./test/stubs"
     ).getFileName(),
     "layouts/inasubdir.njk"
   );
@@ -29,7 +29,7 @@ test("Layout subdir already has extension", t => {
   t.is(
     new TemplateLayoutPathResolver(
       "layouts/inasubdir.njk",
-      "./test/stubs/_includes"
+      "./test/stubs"
     ).getFileName(),
     "layouts/inasubdir.njk"
   );
@@ -58,7 +58,7 @@ test("Multiple layouts exist but we are being explicit—layout already has exte
 });
 
 test("Layout is aliased to a new location", t => {
-  let tl = new TemplateLayoutPathResolver("post", "./test/stubs/_includes");
+  let tl = new TemplateLayoutPathResolver("post", "./test/stubs");
   tl.addLayoutAlias("post", "layouts/post.ejs");
   tl.init();
 
@@ -66,7 +66,7 @@ test("Layout is aliased to a new location", t => {
 });
 
 test("Global default with empty string alias", t => {
-  let tl = new TemplateLayoutPathResolver("", "./test/stubs/_includes");
+  let tl = new TemplateLayoutPathResolver("", "./test/stubs");
   tl.addLayoutAlias("", "layouts/post.ejs");
   tl.init();
 
@@ -74,10 +74,7 @@ test("Global default with empty string alias", t => {
 });
 
 test("Global default with empty string alias (but no alias exists for this instance)", t => {
-  let tl = new TemplateLayoutPathResolver(
-    "layout.ejs",
-    "./test/stubs/_includes"
-  );
+  let tl = new TemplateLayoutPathResolver("layout.ejs", "./test/stubs");
   tl.addLayoutAlias("", "layouts/post.ejs");
   tl.init();
 
@@ -87,7 +84,7 @@ test("Global default with empty string alias (but no alias exists for this insta
 });
 
 test("Layout has no alias and does not exist", async t => {
-  let tl = new TemplateLayoutPathResolver("default", "./test/stubs/_includes");
+  let tl = new TemplateLayoutPathResolver("shouldnotexist", "./test/stubs");
   tl.addLayoutAlias("post", "layouts/post.ejs");
   tl.init();
 

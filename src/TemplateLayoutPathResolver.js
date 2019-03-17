@@ -1,17 +1,35 @@
 const fs = require("fs-extra");
 const config = require("./Config");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
+const TemplatePath = require("./TemplatePath");
 const debug = require("debug")("Eleventy:TemplateLayoutPathResolver");
 
 class TemplateLayoutPathResolver {
-  constructor(path, dir) {
+  constructor(path, inputDir) {
     this.config = config.getConfig();
-    this.dir = dir;
+    this.inputDir = inputDir;
     this.originalPath = path;
     this.path = path;
     this.aliases = {};
 
     this.init();
+  }
+
+  set config(cfg) {
+    this._config = cfg;
+  }
+
+  get config() {
+    return this._config;
+  }
+
+  set inputDir(dir) {
+    this._inputDir = dir;
+    this.dir = this.getLayoutsDir();
+  }
+
+  get inputDir() {
+    return this._inputDir;
   }
 
   init() {
@@ -87,6 +105,20 @@ class TemplateLayoutPathResolver {
         return filename;
       }
     }
+  }
+
+  getLayoutsDir() {
+    let layoutsDir;
+    if ("layouts" in this.config.dir) {
+      layoutsDir = this.config.dir.layouts;
+    } else if ("includes" in this.config.dir) {
+      layoutsDir = this.config.dir.includes;
+    } else {
+      // Should this have a default?
+      layoutsDir = "_includes";
+    }
+
+    return TemplatePath.join(this.inputDir, layoutsDir);
   }
 }
 
