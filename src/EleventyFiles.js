@@ -32,7 +32,7 @@ class EleventyFiles {
       this.config.dir.includes
     );
 
-    if (this.config.dir.layouts) {
+    if ("layouts" in this.config.dir) {
       this.layoutsDir = TemplatePath.join(
         this.inputDir,
         this.config.dir.layouts
@@ -302,10 +302,14 @@ class EleventyFiles {
 
   getIncludesAndDataDirs() {
     let files = [];
+    // we want this to fail on "" because we don’t want to ignore the
+    // entire input directory when using ""
     if (this.config.dir.includes) {
       files = files.concat(TemplateGlob.map(this.includesDir + "/**"));
     }
 
+    // we want this to fail on "" because we don’t want to ignore the
+    // entire input directory when using ""
     if (this.config.dir.layouts) {
       files = files.concat(TemplateGlob.map(this.layoutsDir + "/**"));
     }

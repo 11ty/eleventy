@@ -15,6 +15,35 @@ test("Layout already has extension", t => {
   );
 });
 
+test("Layout (uses layouts folder)", t => {
+  let res = new TemplateLayoutPathResolver("layoutsdefault", "./test/stubs");
+  res.config = {
+    templateFormats: ["ejs"],
+    dir: {
+      layouts: "_layouts",
+      includes: "_includes"
+    }
+  };
+
+  t.is(res.getFileName(), "layoutsdefault.ejs");
+});
+
+test("Layout (uses layouts folder) already has extension", t => {
+  let res = new TemplateLayoutPathResolver(
+    "layoutsdefault.ejs",
+    "./test/stubs"
+  );
+  res.config = {
+    templateFormats: ["ejs"],
+    dir: {
+      layouts: "_layouts",
+      includes: "_includes"
+    }
+  };
+
+  t.is(res.getFileName(), "layoutsdefault.ejs");
+});
+
 test("Layout subdir", t => {
   t.is(
     new TemplateLayoutPathResolver(

@@ -6,21 +6,13 @@ const debug = require("debug")("Eleventy:TemplateLayoutPathResolver");
 
 class TemplateLayoutPathResolver {
   constructor(path, inputDir) {
-    this.config = config.getConfig();
+    this._config = config.getConfig();
     this.inputDir = inputDir;
     this.originalPath = path;
     this.path = path;
     this.aliases = {};
 
     this.init();
-  }
-
-  set config(cfg) {
-    this._config = cfg;
-  }
-
-  get config() {
-    return this._config;
   }
 
   set inputDir(dir) {
@@ -30,6 +22,17 @@ class TemplateLayoutPathResolver {
 
   get inputDir() {
     return this._inputDir;
+  }
+
+  // for testing
+  set config(cfg) {
+    this._config = cfg;
+    this.dir = this.getLayoutsDir();
+    this.init();
+  }
+
+  get config() {
+    return this._config;
   }
 
   init() {
