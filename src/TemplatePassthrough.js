@@ -3,18 +3,22 @@ const TemplatePath = require("./TemplatePath");
 const debug = require("debug")("Eleventy:TemplatePassthrough");
 
 class TemplatePassthrough {
-  constructor(inputPath, outputDir, inputDir) {
-    this.path = inputPath;
+  constructor(path, outputDir, inputDir) {
+    this.inputPath = path.inputPath;
+    this.outputPath = path.outputPath;
     this.outputDir = outputDir;
     this.inputDir = inputDir;
     this.isDryRun = false;
   }
 
   getOutputPath() {
-    return TemplatePath.join(
-      this.outputDir,
-      TemplatePath.stripLeadingSubPath(this.path, this.inputDir)
-    );
+    const { inputDir, outputDir, inputPath, outputPath } = this;
+    // assuming if paths are the same an outputPath was not set and we will resolve manually?
+    const path =
+      outputPath === inputPath
+        ? TemplatePath.stripLeadingSubPath(outputPath, inputDir)
+        : outputPath;
+    return TemplatePath.join(outputDir, path);
   }
 
   setDryRun(isDryRun) {
@@ -23,9 +27,9 @@ class TemplatePassthrough {
 
   async write() {
     if (!this.isDryRun) {
-      debug("Copying %o", this.path);
+      debug("Copying %o", this.inputPath);
 
-      return copy(this.path, this.getOutputPath(), {
+      return copy(this.inputPath, this.getOutputPath(), {
         overwrite: true,
         dot: true,
         junk: false,

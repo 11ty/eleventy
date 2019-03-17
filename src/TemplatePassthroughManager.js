@@ -83,11 +83,7 @@ class TemplatePassthroughManager {
   }
 
   async copyPath(path) {
-    let pass = new TemplatePassthrough(
-      path.inputPath,
-      TemplatePath.join(this.outputDir, path.outputPath),
-      this.inputDir
-    );
+    let pass = new TemplatePassthrough(path, this.outputDir, this.inputDir);
     pass.setDryRun(this.isDryRun);
 
     return pass
