@@ -15,6 +15,36 @@ test("Layout already has extension", t => {
   );
 });
 
+test("Layout (uses empty string includes folder)", t => {
+  let res = new TemplateLayoutPathResolver(
+    "includesemptystring",
+    "./test/stubs"
+  );
+  res.config = {
+    templateFormats: ["ejs"],
+    dir: {
+      includes: ""
+    }
+  };
+
+  t.is(res.getFileName(), "includesemptystring.ejs");
+});
+
+test("Layout (uses empty string includes folder) already has extension", t => {
+  let res = new TemplateLayoutPathResolver(
+    "includesemptystring.ejs",
+    "./test/stubs"
+  );
+  res.config = {
+    templateFormats: ["ejs"],
+    dir: {
+      includes: ""
+    }
+  };
+
+  t.is(res.getFileName(), "includesemptystring.ejs");
+});
+
 test("Layout (uses layouts folder)", t => {
   let res = new TemplateLayoutPathResolver("layoutsdefault", "./test/stubs");
   res.config = {
@@ -42,6 +72,38 @@ test("Layout (uses layouts folder) already has extension", t => {
   };
 
   t.is(res.getFileName(), "layoutsdefault.ejs");
+});
+
+test("Layout (uses empty string layouts folder)", t => {
+  let res = new TemplateLayoutPathResolver(
+    "layoutsemptystring",
+    "./test/stubs"
+  );
+  res.config = {
+    templateFormats: ["ejs"],
+    dir: {
+      layouts: "",
+      includes: "_includes"
+    }
+  };
+
+  t.is(res.getFileName(), "layoutsemptystring.ejs");
+});
+
+test("Layout (uses empty string layouts folder) already has extension", t => {
+  let res = new TemplateLayoutPathResolver(
+    "layoutsemptystring.ejs",
+    "./test/stubs"
+  );
+  res.config = {
+    templateFormats: ["ejs"],
+    dir: {
+      layouts: "",
+      includes: "_includes"
+    }
+  };
+
+  t.is(res.getFileName(), "layoutsemptystring.ejs");
 });
 
 test("Layout subdir", t => {
