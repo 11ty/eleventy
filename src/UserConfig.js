@@ -286,11 +286,13 @@ class UserConfig {
    *
    * @param {String} fileOrDir The path to the file or directory that should
    * be copied.
+   * @param {String} outputPath The path to the file or directory that should
+   * be written.
    * @returns {any} a reference to the `EleventyConfig` object.
    * @memberof EleventyConfig
    */
-  addPassthroughCopy(fileOrDir) {
-    this.passthroughCopies[fileOrDir] = true;
+  addPassthroughCopy(fileOrDir, outputPath) {
+    this.passthroughCopies[fileOrDir] = outputPath || fileOrDir;
 
     return this;
   }

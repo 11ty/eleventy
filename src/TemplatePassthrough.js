@@ -22,12 +22,6 @@ class TemplatePassthrough {
   }
 
   async write() {
-    // debug(
-    //   `${this.path} has no TemplateEngine engine and will copy to ${
-    //     this.outputDir
-    //   }`
-    // );
-
     if (!this.isDryRun) {
       debug("Copying %o", this.path);
 

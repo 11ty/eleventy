@@ -10,7 +10,9 @@ test("Get paths from Config", async t => {
     }
   });
 
-  t.deepEqual(mgr.getConfigPaths(), ["./img"]);
+  t.deepEqual(mgr.getConfigPaths(), [
+    { inputPath: "./img", outputPath: "./img" }
+  ]);
 });
 
 test("Empty config paths when disabled in config", async t => {

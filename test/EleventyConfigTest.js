@@ -34,14 +34,18 @@ test("Add Collections throws error on key collision", t => {
 test("Set manual Pass-through File Copy (single call)", t => {
   eleventyConfig.addPassthroughCopy("img");
 
-  t.is(eleventyConfig.passthroughCopies["img"], true);
+  t.is(eleventyConfig.passthroughCopies["img"], "img");
 });
 
 test("Set manual Pass-through File Copy (chained calls)", t => {
-  eleventyConfig.addPassthroughCopy("css").addPassthroughCopy("js");
+  eleventyConfig
+    .addPassthroughCopy("css")
+    .addPassthroughCopy("js")
+    .addPassthroughCopy("./src/static", "static");
 
-  t.is(eleventyConfig.passthroughCopies["css"], true);
-  t.is(eleventyConfig.passthroughCopies["js"], true);
+  t.is(eleventyConfig.passthroughCopies["css"], "css");
+  t.is(eleventyConfig.passthroughCopies["js"], "js");
+  t.is(eleventyConfig.passthroughCopies["./src/static"], "static");
 });
 
 test("Set Template Formats (string)", t => {
