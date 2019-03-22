@@ -1,6 +1,5 @@
 const MustacheLib = require("mustache");
 const TemplateEngine = require("./TemplateEngine");
-const config = require("../Config");
 
 class Mustache extends TemplateEngine {
   constructor(name, includesDir) {

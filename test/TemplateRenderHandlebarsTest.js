@@ -107,6 +107,20 @@ test("Handlebars Render Shortcode", async t => {
   t.is(await fn({ name: "Howdy" }), "<p>This is a HOWDY.</p>");
 });
 
+test("Handlebars Render HTML in Shortcode (Issue #460)", async t => {
+  let tr = new TemplateRender("hbs");
+  tr.engine.addShortcodes({
+    shortcodenamehtml: function(name) {
+      return `<span>${name.toUpperCase()}</span>`;
+    }
+  });
+
+  let fn = await tr.getCompiledTemplate(
+    "<p>This is a {{{shortcodenamehtml name}}}.</p>"
+  );
+  t.is(await fn({ name: "Howdy" }), "<p>This is a <span>HOWDY</span>.</p>");
+});
+
 test("Handlebars Render Shortcode (Multiple args)", async t => {
   let tr = new TemplateRender("hbs");
   tr.engine.addShortcodes({
