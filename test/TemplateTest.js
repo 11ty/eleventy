@@ -1604,3 +1604,14 @@ test("Throws a Premature Template Content Error (haml)", async t => {
   });
   t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
 });
+
+test.skip("Issue 413 weird date format", async t => {
+  let tmpl = new Template(
+    "./test/stubs-413/date-frontmatter.md",
+    "./test/stubs-413/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  t.is(data.page.date, "");
+});
