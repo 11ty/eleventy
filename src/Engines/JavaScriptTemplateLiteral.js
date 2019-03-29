@@ -1,4 +1,4 @@
-const stringify = require("javascript-stringify");
+const javascriptStringify = require("javascript-stringify");
 const TemplateEngine = require("./TemplateEngine");
 const EleventyBaseError = require("../EleventyBaseError");
 
@@ -33,9 +33,14 @@ class JavaScriptTemplateLiteral extends TemplateEngine {
       // avoid `with`
       let dataStr = "";
       for (let j in data) {
-        dataStr += `let ${j} = ${stringify(data[j], null, null, {
-          references: true
-        })};\n`;
+        dataStr += `let ${j} = ${javascriptStringify.stringify(
+          data[j],
+          null,
+          null,
+          {
+            references: true
+          }
+        )};\n`;
       }
 
       let evalStr = `${dataStr}\n${JavaScriptTemplateLiteral.normalizeTicks(
