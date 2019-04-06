@@ -804,6 +804,63 @@ test("Paginated template pages should not have layouts when added to collections
   t.is(collections.all[2].templateContent, "three");
 });
 
+test("Tag pages. Allow pagination over all collections a la `data: collections`", async t => {
+  let tm = new TemplateMap();
+
+  let pagedTmpl = new Template(
+    "./test/stubs/page-target-collections/tagpages.njk",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  await tm.add(pagedTmpl);
+  await tm.add(tmpl1);
+  await tm.add(tmpl2);
+
+  let collections = await tm.getCollectionsData();
+  t.is(collections.all.length, 3);
+
+  let collectionTagPagesTemplateContents = new Set(
+    collections.all
+      .filter(function(entry) {
+        return entry.inputPath.endsWith("tagpages.njk");
+      })
+      .map(function(entry) {
+        return entry.templateContent.trim();
+      })
+  );
+  t.deepEqual(collectionTagPagesTemplateContents, new Set(["post"]));
+});
+
+test("Tag pages (all pages added to collections). Allow pagination over all collections a la `data: collections`", async t => {
+  let tm = new TemplateMap();
+
+  let pagedTmpl = new Template(
+    "./test/stubs/page-target-collections/tagpagesall.njk",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  await tm.add(pagedTmpl);
+  await tm.add(tmpl1);
+  await tm.add(tmpl2);
+
+  let collections = await tm.getCollectionsData();
+  t.is(collections.all.length, 5);
+
+  let collectionTagPagesTemplateContents = new Set(
+    collections.all
+      .filter(function(entry) {
+        return entry.inputPath.endsWith("tagpagesall.njk");
+      })
+      .map(function(entry) {
+        return entry.templateContent.trim();
+      })
+  );
+  t.deepEqual(
+    collectionTagPagesTemplateContents,
+    new Set(["post", "dog", "cat"])
+  );
+});
+
 test("eleventyExcludeFromCollections", async t => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
@@ -823,4 +880,78 @@ test("eleventyExcludeFromCollections", async t => {
   t.is(collections.all.length, 1);
   t.is(collections.post.length, 1);
   t.is(collections.dog.length, 1);
+});
+
+test("Paginate over collections.all", async t => {
+  let tm = new TemplateMap();
+
+  let pagedTmpl = new Template(
+    "./test/stubs/page-target-collections/paginateall.njk",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  await tm.add(pagedTmpl);
+  await tm.add(tmpl1);
+  await tm.add(tmpl2);
+
+  let collections = await tm.getCollectionsData();
+  t.is(collections.all.length, 4);
+  t.is(
+    collections.all[0].inputPath,
+    "./test/stubs/templateMapCollection/test1.md"
+  );
+  t.is(
+    collections.all[1].inputPath,
+    "./test/stubs/templateMapCollection/test2.md"
+  );
+  t.is(
+    collections.all[2].inputPath,
+    "./test/stubs/page-target-collections/paginateall.njk"
+  );
+  t.is(
+    collections.all[3].inputPath,
+    "./test/stubs/page-target-collections/paginateall.njk"
+  );
+
+  let map = tm.getMap();
+  t.is(
+    map[0].inputPath,
+    "./test/stubs/page-target-collections/paginateall.njk"
+  );
+  t.is(map[0]._pages.length, 2);
+  t.is(
+    map[0]._pages[0].templateContent,
+    "INPUT PATH:./test/stubs/templateMapCollection/test1.md"
+  );
+  t.is(
+    map[0]._pages[1].templateContent,
+    "INPUT PATH:./test/stubs/templateMapCollection/test2.md"
+  );
+  t.is(map[1].inputPath, "./test/stubs/templateMapCollection/test1.md");
+  t.is(map[1]._pages[0].templateContent.trim(), "<h1>Test 1</h1>");
+  t.is(map[2].inputPath, "./test/stubs/templateMapCollection/test2.md");
+  t.is(map[2]._pages[0].templateContent.trim(), "<h1>Test 2</h1>");
+});
+
+test("Paginate over collections.all WITH a paginate over collections (tag pages)", async t => {
+  let tm = new TemplateMap();
+
+  let pagedTmpl = new Template(
+    "./test/stubs/page-target-collections/paginateall.njk",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  let tagPagesTmpl = new Template(
+    "./test/stubs/page-target-collections/tagpagesall.njk",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  await tm.add(pagedTmpl);
+  await tm.add(tagPagesTmpl);
+  await tm.add(tmpl1);
+  await tm.add(tmpl2);
+
+  let collections = await tm.getCollectionsData();
+  // 2 individual templates, 3 pages for tagpagesall, 5 pages from paginateall to paginate the 2+3
+  t.is(collections.all.length, 10);
 });

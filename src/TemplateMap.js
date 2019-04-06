@@ -20,6 +20,10 @@ class TemplateMap {
     return "___TAG___";
   }
 
+  get specialPrefix() {
+    return "___SPECIAL___";
+  }
+
   async add(template) {
     for (let map of await template.getTemplateMapEntries()) {
       this.map.push(map);
@@ -43,6 +47,20 @@ class TemplateMap {
     }
   }
 
+  /* ---
+   * pagination:
+   *   data: collections
+   * ---
+   */
+  isPaginationOverAllCollections(entry) {
+    if (entry.data.pagination && entry.data.pagination.data) {
+      return (
+        entry.data.pagination.data === "collections" ||
+        entry.data.pagination.data === "collections.all"
+      );
+    }
+  }
+
   getPaginationTagTarget(entry) {
     if (entry.data.pagination && entry.data.pagination.data) {
       return this.getTagTarget(entry.data.pagination.data);
@@ -56,6 +74,10 @@ class TemplateMap {
     graph.addNode(tagPrefix + "all");
 
     for (let entry of this.map) {
+      if (this.isPaginationOverAllCollections(entry)) {
+        continue;
+      }
+
       let paginationTagTarget = this.getPaginationTagTarget(entry);
       if (paginationTagTarget) {
         if (this.isUserConfigCollectionName(paginationTagTarget)) {
@@ -107,6 +129,10 @@ class TemplateMap {
     }
 
     for (let entry of this.map) {
+      if (this.isPaginationOverAllCollections(entry)) {
+        continue;
+      }
+
       let paginationTagTarget = this.getPaginationTagTarget(entry);
       if (
         paginationTagTarget &&
@@ -132,6 +158,60 @@ class TemplateMap {
         }
       }
     }
+    return graph.overallOrder();
+  }
+
+  getPaginatedOverCollectionsMappedDependencies() {
+    let graph = new DependencyGraph();
+    let tagPrefix = this.tagPrefix;
+    let allNodeAdded = false;
+
+    for (let entry of this.map) {
+      if (
+        this.isPaginationOverAllCollections(entry) &&
+        !this.getPaginationTagTarget(entry)
+      ) {
+        if (!allNodeAdded) {
+          graph.addNode(tagPrefix + "all");
+          allNodeAdded = true;
+        }
+
+        if (!graph.hasNode(entry.inputPath)) {
+          graph.addNode(entry.inputPath);
+        }
+
+        // collections.all
+        graph.addDependency(tagPrefix + "all", entry.inputPath);
+      }
+    }
+
+    return graph.overallOrder();
+  }
+
+  getPaginatedOverAllCollectionMappedDependencies() {
+    let graph = new DependencyGraph();
+    let tagPrefix = this.tagPrefix;
+    let allNodeAdded = false;
+
+    for (let entry of this.map) {
+      if (
+        this.isPaginationOverAllCollections(entry) &&
+        this.getPaginationTagTarget(entry) === "all"
+      ) {
+        if (!allNodeAdded) {
+          graph.addNode(tagPrefix + "all");
+          allNodeAdded = true;
+        }
+
+        if (!graph.hasNode(entry.inputPath)) {
+          graph.addNode(entry.inputPath);
+        }
+
+        // collections.all
+        graph.addDependency(tagPrefix + "all", entry.inputPath);
+      }
+    }
+
     return graph.overallOrder();
   }
 
@@ -188,16 +268,23 @@ class TemplateMap {
     let delayedDependencyMap = this.getDelayedMappedDependencies();
     await this.initDependencyMap(delayedDependencyMap);
 
+    let firstPaginatedDepMap = this.getPaginatedOverCollectionsMappedDependencies();
+    await this.initDependencyMap(firstPaginatedDepMap);
+
+    let secondPaginatedDepMap = this.getPaginatedOverAllCollectionMappedDependencies();
+    await this.initDependencyMap(secondPaginatedDepMap);
+
     let orderedPaths = this.getOrderedInputPaths(
       dependencyMap,
-      delayedDependencyMap
+      delayedDependencyMap,
+      firstPaginatedDepMap,
+      secondPaginatedDepMap
     );
     let orderedMap = orderedPaths.map(
       function(inputPath) {
         return this.getMapEntryForInputPath(inputPath);
       }.bind(this)
     );
-
     await this.populateContentDataInMap(orderedMap);
 
     this.populateCollectionsWithContent();
@@ -212,7 +299,12 @@ class TemplateMap {
     }
   }
 
-  getOrderedInputPaths(dependencyMap, delayedDependencyMap) {
+  getOrderedInputPaths(
+    dependencyMap,
+    delayedDependencyMap,
+    firstPaginatedDepMap,
+    secondPaginatedDepMap
+  ) {
     let orderedMap = [];
     let tagPrefix = this.tagPrefix;
 
@@ -222,6 +314,16 @@ class TemplateMap {
       }
     }
     for (let dep of delayedDependencyMap) {
+      if (!dep.startsWith(tagPrefix)) {
+        orderedMap.push(dep);
+      }
+    }
+    for (let dep of firstPaginatedDepMap) {
+      if (!dep.startsWith(tagPrefix)) {
+        orderedMap.push(dep);
+      }
+    }
+    for (let dep of secondPaginatedDepMap) {
       if (!dep.startsWith(tagPrefix)) {
         orderedMap.push(dep);
       }
