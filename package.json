@@ -1,6 +1,6 @@
 {
   "name": "@11ty/eleventy",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Transform a directory of templates into HTML.",
   "main": "src/Eleventy.js",
   "license": "MIT",
