@@ -897,20 +897,22 @@ test("Paginate over collections.all", async t => {
   let collections = await tm.getCollectionsData();
   t.is(collections.all.length, 4);
   t.is(
-    collections.all[0].inputPath,
-    "./test/stubs/templateMapCollection/test1.md"
+    collections.all.filter(function(entry) {
+      return entry.inputPath.endsWith("test1.md");
+    }).length,
+    1
   );
   t.is(
-    collections.all[1].inputPath,
-    "./test/stubs/templateMapCollection/test2.md"
+    collections.all.filter(function(entry) {
+      return entry.inputPath.endsWith("test2.md");
+    }).length,
+    1
   );
   t.is(
-    collections.all[2].inputPath,
-    "./test/stubs/page-target-collections/paginateall.njk"
-  );
-  t.is(
-    collections.all[3].inputPath,
-    "./test/stubs/page-target-collections/paginateall.njk"
+    collections.all.filter(function(entry) {
+      return entry.inputPath.endsWith("paginateall.njk");
+    }).length,
+    2
   );
 
   let map = tm.getMap();
