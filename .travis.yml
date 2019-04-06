@@ -12,4 +12,4 @@ sudo: false
 os:
   - linux
   - osx
-  - windows
+#  - windows
