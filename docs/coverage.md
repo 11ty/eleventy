@@ -1,8 +1,8 @@
-# Code Coverage for Eleventy v0.8.1
+# Code Coverage for Eleventy v0.8.2
 
 | Filename                                                   | % Lines | % Statements | % Functions | % Branches |
 | ---------------------------------------------------------- | ------- | ------------ | ----------- | ---------- |
-| `total`                                                    | 88.24%  | 88.3%        | 87.48%      | 80.5%      |
+| `total`                                                    | 88.43%  | 88.49%       | 87.5%       | 80.6%      |
 | `config.js`                                                | 100%    | 100%         | 100%        | 100%       |
 | `src/Benchmark.js`                                         | 91.67%  | 91.67%       | 83.33%      | 66.67%     |
 | `src/BenchmarkGroup.js`                                    | 67.65%  | 67.65%       | 71.43%      | 30%        |
@@ -18,7 +18,7 @@
 | `src/EleventyFiles.js`                                     | 94.31%  | 94.31%       | 88.89%      | 90.48%     |
 | `src/EleventyServe.js`                                     | 36.07%  | 36.07%       | 56.25%      | 24.39%     |
 | `src/EleventyWatchTargets.js`                              | 93.48%  | 93.48%       | 90%         | 93.33%     |
-| `src/Template.js`                                          | 92.99%  | 93.04%       | 97.83%      | 84.16%     |
+| `src/Template.js`                                          | 94.64%  | 94.68%       | 97.87%      | 85.15%     |
 | `src/TemplateCache.js`                                     | 100%    | 100%         | 100%        | 100%       |
 | `src/TemplateCollection.js`                                | 93.1%   | 93.55%       | 92.31%      | 80%        |
 | `src/TemplateConfig.js`                                    | 90.91%  | 90.91%       | 66.67%      | 90%        |
