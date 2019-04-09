@@ -1067,9 +1067,8 @@ test("Test a transform", async t => {
     return "OVERRIDE BY A TRANSFORM";
   });
 
-  let data = await tmpl.getData();
-  let rendered = await tmpl.getRenderedTemplates(data);
-  t.is(rendered[0].templateContent, "OVERRIDE BY A TRANSFORM");
+  let renders = await tmpl._testCompleteRender();
+  t.is(renders[0], "OVERRIDE BY A TRANSFORM");
 });
 
 test("Test a transform with pages", async t => {
@@ -1083,9 +1082,26 @@ test("Test a transform with pages", async t => {
     return "OVERRIDE BY A TRANSFORM";
   });
 
-  let data = await tmpl.getData();
-  let rendered = await tmpl.getRenderedTemplates(data);
-  t.is(rendered[0].templateContent, "OVERRIDE BY A TRANSFORM");
+  let renders = await tmpl._testCompleteRender();
+  t.is(renders[0], "OVERRIDE BY A TRANSFORM");
+});
+
+test("Test a transform with a layout", async t => {
+  t.plan(2);
+
+  let tmpl = new Template(
+    "./test/stubs-475/transform-layout/transform-layout.njk",
+    "./test/stubs-475/",
+    "./test/stubs-475/_site"
+  );
+
+  tmpl.addTransform(function(content) {
+    t.is(content, `<html><body>This is content.</body></html>`);
+    return "OVERRIDE BY A TRANSFORM";
+  });
+
+  let renders = await tmpl._testCompleteRender();
+  t.is(renders[0], "OVERRIDE BY A TRANSFORM");
 });
 
 test("Test a single asynchronous transform", async t => {
@@ -1103,9 +1119,8 @@ test("Test a single asynchronous transform", async t => {
     });
   });
 
-  let data = await tmpl.getData();
-  let rendered = await tmpl.getRenderedTemplates(data);
-  t.is(rendered[0].templateContent, "OVERRIDE BY A TRANSFORM");
+  let renders = await tmpl._testCompleteRender();
+  t.is(renders[0], "OVERRIDE BY A TRANSFORM");
 });
 
 test("Test multiple asynchronous transforms", async t => {
@@ -1132,9 +1147,8 @@ test("Test multiple asynchronous transforms", async t => {
     });
   });
 
-  let data = await tmpl.getData();
-  let rendered = await tmpl.getRenderedTemplates(data);
-  t.is(rendered[0].templateContent, "LOWERCASE TRANSFORM");
+  let renders = await tmpl._testCompleteRender();
+  t.is(renders[0], "LOWERCASE TRANSFORM");
 });
 
 test("Test a linter", async t => {
@@ -1148,9 +1162,8 @@ test("Test a linter", async t => {
     throw new Error("this is a lint rule");
   });
 
-  let data = await tmpl.getData();
   try {
-    await tmpl.getRenderedTemplates(data);
+    await tmpl._testCompleteRender();
     t.fail("Should have errored");
   } catch (e) {
     t.pass("Threw an error:" + e);

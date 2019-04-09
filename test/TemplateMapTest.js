@@ -957,3 +957,31 @@ test("Paginate over collections.all WITH a paginate over collections (tag pages)
   // 2 individual templates, 3 pages for tagpagesall, 5 pages from paginateall to paginate the 2+3
   t.is(collections.all.length, 10);
 });
+
+test("Test a transform with a layout (via templateMap)", async t => {
+  t.plan(3);
+  let tm = new TemplateMap();
+  let tmpl = new Template(
+    "./test/stubs-475/transform-layout/transform-layout.njk",
+    "./test/stubs-475/",
+    "./test/stubs-475/_site"
+  );
+  tmpl.addTransform(function(content) {
+    t.is(content, `<html><body>This is content.</body></html>`);
+    return "OVERRIDE BY A TRANSFORM";
+  });
+
+  await tm.add(tmpl);
+
+  await tm.cache();
+  t.is(tm.getMap().length, 1);
+
+  for (let entry of tm.getMap()) {
+    for (let page of entry._pages) {
+      t.is(
+        await entry.template.renderPageEntry(entry, page),
+        "OVERRIDE BY A TRANSFORM"
+      );
+    }
+  }
+});

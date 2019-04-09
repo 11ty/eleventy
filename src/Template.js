@@ -469,18 +469,13 @@ class Template extends TemplateContent {
     for (let page of pages) {
       let content = await page.template._getContent(page.outputPath, page.data);
 
-      await this.runLinters(content, page.inputPath, page.outputPath);
-
       page.templateContent = content;
     }
     return pages;
   }
 
   async _getContent(outputPath, data) {
-    let str = await this.render(data);
-    let transformed = await this.runTransforms(str, outputPath);
-
-    return transformed;
+    return await this.render(data);
   }
 
   async _write(outputPath, finalContent) {
@@ -520,6 +515,7 @@ class Template extends TemplateContent {
   }
 
   async renderPageEntry(mapEntry, page) {
+    let content;
     let layoutKey = mapEntry.data[this.config.keys.layout];
     if (layoutKey) {
       let layout = TemplateLayout.getTemplate(
@@ -527,17 +523,20 @@ class Template extends TemplateContent {
         this.getInputDir(),
         this.config
       );
-      let content = await layout.render(page.data, page.templateContent);
+      content = await layout.render(page.data, page.templateContent);
       await this.runLinters(content, page.inputPath, page.outputPath);
+      content = await this.runTransforms(content, page.outputPath);
       return content;
     } else {
+      content = page.templateContent;
       await this.runLinters(
         page.templateContent,
         page.inputPath,
         page.outputPath
       );
-      return page.templateContent;
+      content = await this.runTransforms(content, page.outputPath);
     }
+    return content;
   }
 
   async writeMapEntry(mapEntry) {
@@ -675,6 +674,24 @@ class Template extends TemplateContent {
       data: data
     });
     return entries;
+  }
+
+  async _testCompleteRender() {
+    let entries = await this.getTemplateMapEntries();
+    let contents = [];
+
+    for (let entry of entries) {
+      entry._pages = await entry.template.getTemplates(entry.data);
+
+      let page;
+      for (page of entry._pages) {
+        page.templateContent = await entry.template.getTemplateMapContent(page);
+      }
+      for (page of entry._pages) {
+        contents.push(await this.renderPageEntry(entry, page));
+      }
+    }
+    return contents;
   }
 }
 
