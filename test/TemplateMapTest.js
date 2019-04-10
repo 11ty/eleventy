@@ -959,15 +959,24 @@ test("Paginate over collections.all WITH a paginate over collections (tag pages)
 });
 
 test("Test a transform with a layout (via templateMap)", async t => {
-  t.plan(3);
+  t.plan(7);
   let tm = new TemplateMap();
   let tmpl = new Template(
     "./test/stubs-475/transform-layout/transform-layout.njk",
     "./test/stubs-475/",
     "./test/stubs-475/_site"
   );
-  tmpl.addTransform(function(content) {
-    t.is(content, `<html><body>This is content.</body></html>`);
+
+  tmpl.addLinter(function(content, inputPath, outputPath) {
+    // should be pre-transform content
+    t.is(content, "<html><body>This is content.</body></html>");
+    t.true(inputPath.endsWith("transform-layout.njk"));
+    t.true(outputPath.endsWith("transform-layout/index.html"));
+  });
+
+  tmpl.addTransform(function(content, outputPath) {
+    t.is(content, "<html><body>This is content.</body></html>");
+    t.true(outputPath.endsWith("transform-layout/index.html"));
     return "OVERRIDE BY A TRANSFORM";
   });
 

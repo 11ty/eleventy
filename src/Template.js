@@ -525,7 +525,7 @@ class Template extends TemplateContent {
       );
       content = await layout.render(page.data, page.templateContent);
       await this.runLinters(content, page.inputPath, page.outputPath);
-      content = await this.runTransforms(content, page.outputPath);
+      content = await this.runTransforms(content, page.outputPath); // pass in page.inputPath?
       return content;
     } else {
       content = page.templateContent;
@@ -534,7 +534,7 @@ class Template extends TemplateContent {
         page.inputPath,
         page.outputPath
       );
-      content = await this.runTransforms(content, page.outputPath);
+      content = await this.runTransforms(content, page.outputPath); // pass in page.inputPath?
     }
     return content;
   }

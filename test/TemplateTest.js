@@ -1057,13 +1057,16 @@ test("renderContent on a markdown file, permalink should not render markdown (ha
 
 /* Transforms */
 test("Test a transform", async t => {
+  t.plan(2);
+
   let tmpl = new Template(
     "./test/stubs/template.ejs",
     "./test/stubs/",
     "./test/stubs/_site"
   );
 
-  tmpl.addTransform(function() {
+  tmpl.addTransform(function(content, outputPath) {
+    t.true(outputPath.endsWith(".html"));
     return "OVERRIDE BY A TRANSFORM";
   });
 
@@ -1072,13 +1075,18 @@ test("Test a transform", async t => {
 });
 
 test("Test a transform with pages", async t => {
+  t.plan(5);
+
   let tmpl = new Template(
     "./test/stubs/transform-pages/template.njk",
     "./test/stubs/",
     "./test/stubs/_site"
   );
 
-  tmpl.addTransform(function() {
+  tmpl.addTransform(function(content, outputPath) {
+    // should run twice, one for each page
+    t.true(content.length > 0);
+    t.true(outputPath.endsWith(".html"));
     return "OVERRIDE BY A TRANSFORM";
   });
 
@@ -1087,7 +1095,7 @@ test("Test a transform with pages", async t => {
 });
 
 test("Test a transform with a layout", async t => {
-  t.plan(2);
+  t.plan(3);
 
   let tmpl = new Template(
     "./test/stubs-475/transform-layout/transform-layout.njk",
@@ -1095,8 +1103,9 @@ test("Test a transform with a layout", async t => {
     "./test/stubs-475/_site"
   );
 
-  tmpl.addTransform(function(content) {
-    t.is(content, `<html><body>This is content.</body></html>`);
+  tmpl.addTransform(function(content, outputPath) {
+    t.is(content, "<html><body>This is content.</body></html>");
+    t.true(outputPath.endsWith(".html"));
     return "OVERRIDE BY A TRANSFORM";
   });
 
@@ -1105,15 +1114,19 @@ test("Test a transform with a layout", async t => {
 });
 
 test("Test a single asynchronous transform", async t => {
+  t.plan(2);
+
   let tmpl = new Template(
     "./test/stubs/template.ejs",
     "./test/stubs/",
     "./test/stubs/_site"
   );
 
-  tmpl.addTransform(async function() {
+  tmpl.addTransform(async function(content, outputPath) {
+    t.true(outputPath.endsWith("template/index.html"));
+
     return new Promise((resolve, reject) => {
-      setTimeout(function(str, outputPath, inputPath) {
+      setTimeout(function(str, outputPath) {
         resolve("OVERRIDE BY A TRANSFORM");
       }, 50);
     });
@@ -1124,22 +1137,28 @@ test("Test a single asynchronous transform", async t => {
 });
 
 test("Test multiple asynchronous transforms", async t => {
+  t.plan(3);
+
   let tmpl = new Template(
     "./test/stubs/template.ejs",
     "./test/stubs/",
     "./test/stubs/_site"
   );
 
-  tmpl.addTransform(async function() {
+  tmpl.addTransform(async function(content, outputPath) {
+    t.true(outputPath.endsWith("template/index.html"));
+
     return new Promise((resolve, reject) => {
-      setTimeout(function(str, outputPath, inputPath) {
+      setTimeout(function(str, outputPath) {
         resolve("lowercase transform");
       }, 50);
     });
   });
 
   // uppercase
-  tmpl.addTransform(async function(str, outputPath, inputPath) {
+  tmpl.addTransform(async function(str, outputPath) {
+    t.true(outputPath.endsWith("template/index.html"));
+
     return new Promise((resolve, reject) => {
       setTimeout(function() {
         resolve(str.toUpperCase());
@@ -1152,22 +1171,20 @@ test("Test multiple asynchronous transforms", async t => {
 });
 
 test("Test a linter", async t => {
+  t.plan(4);
+
   let tmpl = new Template(
     "./test/stubs/transform-pages/template.njk",
     "./test/stubs/",
     "./test/stubs/_site"
   );
 
-  tmpl.addLinter(function(str) {
-    throw new Error("this is a lint rule");
+  tmpl.addLinter(function(str, inputPath, outputPath) {
+    t.true(inputPath.endsWith("template.njk"));
+    t.true(outputPath.endsWith("index.html"));
   });
 
-  try {
-    await tmpl._testCompleteRender();
-    t.fail("Should have errored");
-  } catch (e) {
-    t.pass("Threw an error:" + e);
-  }
+  await tmpl._testCompleteRender();
 });
 
 test("permalink: false", async t => {
