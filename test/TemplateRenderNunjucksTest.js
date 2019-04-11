@@ -38,12 +38,7 @@ test("Nunjucks Render Include a JS file (Issue 398)", async t => {
   let fn = await tr.getCompiledTemplate(
     "{% set ga %}{% include 'test.js' %}{% endset %}{{ ga | safe | jsmin }}"
   );
-  t.is(
-    (await fn()).trim(),
-    `/**
- * THIS IS A COMMENT
- */ alert("Issue #398");`
-  );
+  t.is((await fn()).trim(), `/* THIS IS A COMMENT */ alert("Issue #398");`);
 });
 
 test("Nunjucks Render Include Subfolder", async t => {
