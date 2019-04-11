@@ -1,4 +1,3 @@
 /**
  * THIS IS A COMMENT
- */
-alert("Issue #398");
+ */ alert("Issue #398");

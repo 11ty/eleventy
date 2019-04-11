@@ -39,12 +39,10 @@ test("Nunjucks Render Include a JS file (Issue 398)", async t => {
     "{% set ga %}{% include 'test.js' %}{% endset %}{{ ga | safe | jsmin }}"
   );
   t.is(
-    await fn(),
+    (await fn()).trim(),
     `/**
  * THIS IS A COMMENT
- */
-alert("Issue #398");
-`
+ */ alert("Issue #398");`
   );
 });
 
