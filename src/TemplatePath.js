@@ -121,7 +121,7 @@ TemplatePath.join = function(...paths) {
  * @returns {String} a normalized URL path described by the given URL path segments.
  */
 TemplatePath.normalizeUrlPath = function(...urlPaths) {
-  const urlPath = path.join(...urlPaths);
+  const urlPath = path.posix.join(...urlPaths);
   return urlPath.replace(/\/+$/, "/");
 };
 
