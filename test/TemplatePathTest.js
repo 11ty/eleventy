@@ -30,10 +30,12 @@ test("getAllDirs", t => {
   t.deepEqual(TemplatePath.getAllDirs("./testing/"), ["./testing"]);
   t.deepEqual(TemplatePath.getAllDirs("testing/"), ["testing"]);
   t.deepEqual(TemplatePath.getAllDirs("testing"), ["testing"]);
+
   t.deepEqual(TemplatePath.getAllDirs("./testing/hello"), [
     "./testing/hello",
     "./testing"
   ]);
+
   t.deepEqual(TemplatePath.getAllDirs("./src/collections/posts"), [
     "./src/collections/posts",
     "./src/collections",
@@ -51,6 +53,12 @@ test("getAllDirs", t => {
       "./src"
     ]
   );
+
+  t.deepEqual(TemplatePath.getAllDirs("./src/_site/src"), [
+    "./src/_site/src",
+    "./src/_site",
+    "./src"
+  ]);
 });
 
 test("normalize", async t => {
