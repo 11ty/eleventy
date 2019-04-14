@@ -78,9 +78,7 @@ TemplatePath.getAllDirs = function(path) {
 
   return path
     .split("/")
-    .map(segment =>
-      path.substring(0, path.lastIndexOf(segment) + segment.length)
-    )
+    .map((segment, index, array) => array.slice(0, index + 1).join("/"))
     .filter(path => path !== ".")
     .reverse();
 };
