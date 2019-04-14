@@ -5,6 +5,7 @@ const TemplateRender = require("./TemplateRender");
 const EleventyFiles = require("./EleventyFiles");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyErrorHandler = require("./EleventyErrorHandler");
+const EleventyErrorUtil = require("./EleventyErrorUtil");
 
 const config = require("./Config");
 const debug = require("debug")("Eleventy:TemplateWriter");
@@ -129,17 +130,9 @@ TemplateWriter.prototype._createTemplateMap = async function(paths) {
 TemplateWriter.prototype._writeTemplate = async function(mapEntry) {
   let tmpl = mapEntry.template;
   // we don’t re-use the map templateContent because it doesn’t include layouts
-  return tmpl
-    .writeMapEntry(mapEntry)
-    .then(() => {
-      this.writeCount += tmpl.getWriteCount();
-    })
-    .catch(function(e) {
-      throw new TemplateWriterWriteError(
-        `Having trouble writing template: ${mapEntry.outputPath}`,
-        e
-      );
-    });
+  return tmpl.writeMapEntry(mapEntry).then(() => {
+    this.writeCount += tmpl.getWriteCount();
+  });
 };
 
 TemplateWriter.prototype.write = async function() {
@@ -160,8 +153,36 @@ TemplateWriter.prototype.write = async function() {
   await this._createTemplateMap(paths);
   debug("Template map created.");
 
-  for (let mapEntry of this.templateMap.getMap()) {
-    promises.push(this._writeTemplate(mapEntry));
+  let mapEntry;
+  let usedTemplateContentTooEarlyMap = [];
+  for (mapEntry of this.templateMap.getMap()) {
+    promises.push(
+      this._writeTemplate(mapEntry).catch(function(e) {
+        // Premature templateContent in layout render, this also happens in
+        // TemplateMap.populateContentDataInMap for non-layout content
+        if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
+          usedTemplateContentTooEarlyMap.push(mapEntry);
+        } else {
+          throw new TemplateWriterWriteError(
+            `Having trouble writing template: ${mapEntry.outputPath}`,
+            e
+          );
+        }
+      })
+    );
+  }
+
+  for (mapEntry of usedTemplateContentTooEarlyMap) {
+    promises.push(
+      this._writeTemplate(mapEntry).catch(function(e) {
+        throw new TemplateWriterWriteError(
+          `Having trouble writing template (second pass): ${
+            mapEntry.outputPath
+          }`,
+          e
+        );
+      })
+    );
   }
 
   return Promise.all(promises).catch(e => {
