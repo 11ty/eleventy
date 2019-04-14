@@ -39,6 +39,18 @@ test("getAllDirs", t => {
     "./src/collections",
     "./src"
   ]);
+
+  t.deepEqual(
+    TemplatePath.getAllDirs("./src/site/content/en/paths/performanceAudits"),
+    [
+      "./src/site/content/en/paths/performanceAudits",
+      "./src/site/content/en/paths",
+      "./src/site/content/en",
+      "./src/site/content",
+      "./src/site",
+      "./src"
+    ]
+  );
 });
 
 test("normalize", async t => {
