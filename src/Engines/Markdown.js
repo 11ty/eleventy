@@ -68,10 +68,16 @@ class Markdown extends TemplateEngine {
         };
       }
     } else {
-      return function() {
-        // throw away data if preTemplateEngine is falsy
-        return mdlib.render(str);
-      };
+      if (bypassMarkdown) {
+        return function() {
+          return str;
+        };
+      } else {
+        return function() {
+          // throw away data if preTemplateEngine is falsy
+          return mdlib.render(str);
+        };
+      }
     }
   }
 }

@@ -41,6 +41,14 @@ test("Markdown Render: Ignore markdown, use only preprocess engine (useful for v
   t.is((await fn({ title: "My Title" })).trim(), "My Title");
 });
 
+test("Markdown Render: Skip markdown and preprocess engine (issue #466)", async t => {
+  let tr = new TemplateRender("md");
+  tr.setMarkdownEngine(false);
+  tr.setUseMarkdown(false);
+  let fn = await tr.getCompiledTemplate("404.html");
+  t.is((await fn({ title: "My Title" })).trim(), "404.html");
+});
+
 test("Markdown Render: Set markdown engine to false, don’t parse", async t => {
   let tr = new TemplateRender("md");
   tr.setMarkdownEngine(false);
