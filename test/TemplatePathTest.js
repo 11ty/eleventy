@@ -59,6 +59,14 @@ test("getAllDirs", t => {
     "./src/_site",
     "./src"
   ]);
+
+  t.deepEqual(TemplatePath.getAllDirs("./src/_site/src/src/src"), [
+    "./src/_site/src/src/src",
+    "./src/_site/src/src",
+    "./src/_site/src",
+    "./src/_site",
+    "./src"
+  ]);
 });
 
 test("normalize", async t => {
