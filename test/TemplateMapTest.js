@@ -994,3 +994,22 @@ test("Test a transform with a layout (via templateMap)", async t => {
     }
   }
 });
+
+test("Async user collection addCollection method", async t => {
+  let tm = new TemplateMap();
+  await tm.add(tmpl1);
+  tm.setUserConfigCollections({
+    userCollection: async function(collection) {
+      return new Promise((resolve, reject) => {
+        setTimeout(function() {
+          resolve(collection.getAll());
+        }, 50);
+      });
+    }
+  });
+
+  let collections = await tm.getCollectionsData();
+  t.is(collections.userCollection[0].url, "/templateMapCollection/test1/");
+
+  t.is(collections.userCollection[0].data.collections.userCollection.length, 1);
+});
