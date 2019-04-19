@@ -63,67 +63,70 @@ class Nunjucks extends TemplateEngine {
   }
 
   addShortcode(shortcodeName, shortcodeFn) {
-    this.addTag(shortcodeName, function(nunjucksEngine) {
-      return new function() {
-        this.tags = [shortcodeName];
+    function ShortcodeFunction() {
+      this.tags = [shortcodeName];
 
-        this.parse = function(parser, nodes, lexer) {
-          let args;
-          let tok = parser.nextToken();
+      this.parse = function(parser, nodes, lexer) {
+        let args;
+        let tok = parser.nextToken();
 
-          args = parser.parseSignature(true, true);
+        args = parser.parseSignature(true, true);
 
-          // Nunjucks bug with non-paired custom tags bug still exists even
-          // though this issue is closed. Works fine for paired.
-          // https://github.com/mozilla/nunjucks/issues/158
-          if (args.children.length === 0) {
-            args.addChild(new nodes.Literal(0, 0, ""));
-          }
+        // Nunjucks bug with non-paired custom tags bug still exists even
+        // though this issue is closed. Works fine for paired.
+        // https://github.com/mozilla/nunjucks/issues/158
+        if (args.children.length === 0) {
+          args.addChild(new nodes.Literal(0, 0, ""));
+        }
 
-          parser.advanceAfterBlockEnd(tok.value);
-          return new nodes.CallExtensionAsync(this, "run", args);
-        };
+        parser.advanceAfterBlockEnd(tok.value);
 
-        this.run = function(...args) {
-          let callback = args.pop();
-          let [context, ...argArray] = args;
-          let ret = new nunjucksEngine.runtime.SafeString(
-            shortcodeFn(...argArray)
-          );
-          callback(null, ret);
-        };
-      }();
-    });
+        // return new nodes.CallExtensionAsync(this, "run", args);
+        return new nodes.CallExtension(this, "run", args);
+      };
+
+      this.run = function(...args) {
+        // let callback = args.pop();
+        let [context, ...argArray] = args;
+        let ret = new NunjucksLib.runtime.SafeString(shortcodeFn(...argArray));
+        // callback(null, ret);
+        return ret;
+      };
+    }
+
+    this.njkEnv.addExtension(shortcodeName, new ShortcodeFunction());
   }
 
   addPairedShortcode(shortcodeName, shortcodeFn) {
-    this.addTag(shortcodeName, function(nunjucksEngine, nunjucksEnv) {
-      return new function() {
-        this.tags = [shortcodeName];
+    function PairedShortcodeFunction() {
+      this.tags = [shortcodeName];
 
-        this.parse = function(parser, nodes, lexer) {
-          var tok = parser.nextToken();
+      this.parse = function(parser, nodes, lexer) {
+        var tok = parser.nextToken();
 
-          var args = parser.parseSignature(true, true);
-          parser.advanceAfterBlockEnd(tok.value);
+        var args = parser.parseSignature(true, true);
+        parser.advanceAfterBlockEnd(tok.value);
 
-          var body = parser.parseUntilBlocks("end" + shortcodeName);
-          parser.advanceAfterBlockEnd();
+        var body = parser.parseUntilBlocks("end" + shortcodeName);
+        parser.advanceAfterBlockEnd();
 
-          return new nodes.CallExtensionAsync(this, "run", args, [body]);
-        };
+        // return new nodes.CallExtensionAsync(this, "run", args, [body]);
+        return new nodes.CallExtension(this, "run", args, [body]);
+      };
 
-        this.run = function(...args) {
-          let callback = args.pop();
-          let body = args.pop();
-          let [context, ...argArray] = args;
-          let ret = new nunjucksEngine.runtime.SafeString(
-            shortcodeFn(body(), ...argArray)
-          );
-          callback(null, ret);
-        };
-      }();
-    });
+      this.run = function(...args) {
+        // let callback = args.pop();
+        let body = args.pop();
+        let [context, ...argArray] = args;
+        let ret = new NunjucksLib.runtime.SafeString(
+          shortcodeFn(body(), ...argArray)
+        );
+        // callback(null, ret);
+        return ret;
+      };
+    }
+
+    this.njkEnv.addExtension(shortcodeName, new PairedShortcodeFunction());
   }
 
   async compile(str, inputPath) {
