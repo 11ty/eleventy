@@ -259,7 +259,7 @@ class EleventyFiles {
 
     debug("Searching for: %o", globs);
     let paths = TemplatePath.addLeadingDotSlashArray(
-      await fastglob.async(globs)
+      await fastglob.async(globs, { nocase: true, onlyFiles: true })
     );
     this.pathCache = paths;
     return paths;
