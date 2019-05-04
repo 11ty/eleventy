@@ -142,11 +142,14 @@ test("getFiles with glob", async t => {
   );
   t.truthy(pass);
   const files = await pass.getFiles(inputPath);
-  t.deepEqual(files, [
-    "./test/stubs/template-passthrough/static/test.css",
-    "./test/stubs/template-passthrough/static/test.js",
-    "./test/stubs/template-passthrough/static/nested/test-nested.css"
-  ]);
+  t.deepEqual(
+    files.sort(),
+    [
+      "./test/stubs/template-passthrough/static/test.css",
+      "./test/stubs/template-passthrough/static/test.js",
+      "./test/stubs/template-passthrough/static/nested/test-nested.css"
+    ].sort()
+  );
 });
 test("getFiles with glob 2", async t => {
   const inputPath = "./test/stubs/template-passthrough/static/**/*.js";

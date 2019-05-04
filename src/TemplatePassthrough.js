@@ -38,7 +38,10 @@ class TemplatePassthrough {
 
   async getFiles(glob) {
     debug("Searching for: %o", glob);
-    return TemplatePath.addLeadingDotSlashArray(await fastglob.async(glob));
+    const files = await TemplatePath.addLeadingDotSlashArray(
+      await fastglob.async(glob)
+    );
+    return files;
   }
 
   async write() {
@@ -51,7 +54,6 @@ class TemplatePassthrough {
 
     if (!this.isDryRun) {
       debug("Copying %o", this.inputPath);
-
       const isDirectory = TemplatePath.isDirectorySync(this.inputPath);
       const isFile = fs.existsSync(this.inputPath);
       // If directory or file, recursive copy
@@ -60,10 +62,14 @@ class TemplatePassthrough {
       }
 
       // If not directory or file, attempt to get globs
+
       const files = await this.getFiles(this.inputPath);
-      return files.forEach(inputFile => {
-        return copy(inputFile, this.getGlobOutputPath(inputFile), copyOptions);
-      });
+
+      const promises = files.map(inputFile =>
+        copy(inputFile, this.getGlobOutputPath(inputFile), copyOptions)
+      );
+
+      return Promise.all(promises);
     }
   }
 }

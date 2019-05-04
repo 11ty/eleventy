@@ -625,9 +625,9 @@ test("Passthrough file output", async t => {
     passthroughFileCopy: true,
     passthroughCopies: {
       "./test/stubs/template-passthrough/static": true,
-      "./test/stubs/template-passthrough/static/**/*": "./all/",
       "./test/stubs/template-passthrough/static": "./",
-      "./test/stubs/template-passthrough/**/*.js": "./js/"
+      "./test/stubs/template-passthrough/static/**/*": "./all/",
+      "./test/stubs/template-passthrough/static/**/*.js": "./js/"
     }
   });
 
@@ -646,8 +646,11 @@ test("Passthrough file output", async t => {
     "./test/stubs/template-passthrough/_site/test.js"
   ];
   output.forEach(path => {
+    if (!fs.existsSync(path)) {
+      console.log({ path });
+    }
     t.true(fs.existsSync(path));
   });
 
-  // rimraf.sync("./test/stubs/template-passthrough/_site/");
+  rimraf.sync("./test/stubs/template-passthrough/_site/");
 });
