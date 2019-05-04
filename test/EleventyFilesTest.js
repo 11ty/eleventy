@@ -577,7 +577,9 @@ test("File extension aliasing", async t => {
   evf._setExtensionMap(map);
   evf.init();
 
-  t.deepEqual(await evf.getFiles(), [
+  const files = await evf.getFiles();
+
+  t.deepEqual(files, [
     "./test/stubs/writeTestMarkdown/sample.md",
     "./test/stubs/writeTestMarkdown/sample2.markdown"
   ]);

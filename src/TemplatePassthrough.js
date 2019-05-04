@@ -1,6 +1,8 @@
 const copy = require("recursive-copy");
+const fs = require("fs");
 const TemplatePath = require("./TemplatePath");
 const debug = require("debug")("Eleventy:TemplatePassthrough");
+const fastglob = require("fast-glob");
 
 class TemplatePassthrough {
   constructor(path, outputDir, inputDir) {
@@ -12,28 +14,55 @@ class TemplatePassthrough {
   }
 
   getOutputPath() {
-    const { inputDir, outputDir, inputPath, outputPath } = this;
-    // assuming if paths are the same an outputPath was not set and we will resolve manually?
-    const path =
-      outputPath === inputPath
-        ? TemplatePath.stripLeadingSubPath(outputPath, inputDir)
-        : outputPath;
-    return TemplatePath.join(outputDir, path);
+    const { inputDir, outputDir, outputPath, inputPath } = this;
+
+    if (outputPath === true) {
+      return TemplatePath.join(
+        outputDir,
+        TemplatePath.stripLeadingSubPath(inputPath, inputDir)
+      );
+    }
+    return TemplatePath.join(outputDir, outputPath);
+  }
+
+  getGlobOutputPath(globFile) {
+    return TemplatePath.join(
+      this.getOutputPath(),
+      TemplatePath.getLastPathSegment(globFile)
+    );
   }
 
   setDryRun(isDryRun) {
     this.isDryRun = !!isDryRun;
   }
 
+  async getFiles(glob) {
+    debug("Searching for: %o", glob);
+    return TemplatePath.addLeadingDotSlashArray(await fastglob.async(glob));
+  }
+
   async write() {
+    const copyOptions = {
+      overwrite: true,
+      dot: true,
+      junk: false,
+      results: false
+    };
+
     if (!this.isDryRun) {
       debug("Copying %o", this.inputPath);
 
-      return copy(this.inputPath, this.getOutputPath(), {
-        overwrite: true,
-        dot: true,
-        junk: false,
-        results: false
+      const isDirectory = TemplatePath.isDirectorySync(this.inputPath);
+      const isFile = fs.existsSync(this.inputPath);
+      // If directory or file, recursive copy
+      if (isDirectory || isFile) {
+        return copy(this.inputPath, this.getOutputPath(), copyOptions);
+      }
+
+      // If not directory or file, attempt to get globs
+      const files = await this.getFiles(this.inputPath);
+      return files.forEach(inputFile => {
+        return copy(inputFile, this.getGlobOutputPath(inputFile), copyOptions);
       });
     }
   }

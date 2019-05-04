@@ -139,7 +139,6 @@ TemplateWriter.prototype.write = async function() {
   let promises = [];
   let paths = await this._getAllPaths();
   debug("Found: %o", paths);
-
   promises.push(
     this.getFileManager()
       .getPassthroughManager()

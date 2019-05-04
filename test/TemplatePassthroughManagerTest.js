@@ -10,9 +10,7 @@ test("Get paths from Config", async t => {
     }
   });
 
-  t.deepEqual(mgr.getConfigPaths(), [
-    { inputPath: "./img", outputPath: "./img" }
-  ]);
+  t.deepEqual(mgr.getConfigPaths(), ["./img"]);
 });
 
 test("Empty config paths when disabled in config", async t => {
@@ -27,16 +25,22 @@ test("Empty config paths when disabled in config", async t => {
   t.deepEqual(mgr.getConfigPaths(), []);
 });
 
-test("Get glob paths from Config", async t => {
+test("Get glob paths from config", async t => {
   let mgr = new TemplatePassthroughManager();
   mgr.setConfig({
     passthroughFileCopy: true,
     passthroughCopies: {
-      "test/stubs/img": true
+      "test/stubs/img": true,
+      "test/stubs/img/**": "./",
+      "test/stubs/img/*.js": "./"
     }
   });
 
-  t.deepEqual(mgr.getConfigPathGlobs(), ["./test/stubs/img/**"]);
+  t.deepEqual(mgr.getConfigPathGlobs(), [
+    "./test/stubs/img/**",
+    "./test/stubs/img/**",
+    "./test/stubs/img/*.js"
+  ]);
 });
 
 test("Get file paths", async t => {

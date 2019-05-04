@@ -45,11 +45,7 @@ class TemplatePassthroughManager {
     debug("`passthroughFileCopy` config paths: %o", target);
     for (let path in target) {
       const inputPath = TemplatePath.addLeadingDotSlash(path);
-      const outputPath =
-        typeof target[path] === "string"
-          ? TemplatePath.addLeadingDotSlash(target[path])
-          : inputPath;
-      paths.push({ inputPath, outputPath });
+      paths.push(inputPath);
     }
     debug("`passthroughFileCopy` config normalized paths: %o", paths);
     return paths;
@@ -57,8 +53,7 @@ class TemplatePassthroughManager {
 
   getConfigPathGlobs() {
     return this.getConfigPaths().map(path => {
-      const inputPath = TemplatePath.convertToRecursiveGlob(path.inputPath);
-      return inputPath;
+      return TemplatePath.convertToRecursiveGlob(path);
     });
   }
 
