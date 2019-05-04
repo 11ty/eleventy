@@ -547,10 +547,8 @@ test("Markdown with alias", async t => {
     "./test/stubs/writeTestMarkdown/**/*.md",
     "./test/stubs/writeTestMarkdown/**/*.markdown"
   ]);
-  t.deepEqual(files, [
-    "./test/stubs/writeTestMarkdown/sample.md",
-    "./test/stubs/writeTestMarkdown/sample2.markdown"
-  ]);
+  t.true(files.indexOf("./test/stubs/writeTestMarkdown/sample.md") > -1);
+  t.true(files.indexOf("./test/stubs/writeTestMarkdown/sample2.markdown") > -1);
 
   let tw = new TemplateWriter(
     "./test/stubs/writeTestMarkdown",
