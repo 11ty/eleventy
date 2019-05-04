@@ -583,14 +583,20 @@ test.skip("JavaScript with alias", async t => {
   evf.init();
 
   let files = await fastglob.async(evf.getFileGlobs());
-  t.deepEqual(evf.getRawFiles(), [
-    "./test/stubs/writeTestJS/**/*.11ty.js",
-    "./test/stubs/writeTestJS/**/*.js"
-  ]);
-  t.deepEqual(files, [
-    "./test/stubs/writeTestJS/sample.js",
-    "./test/stubs/writeTestJS/test.11ty.js"
-  ]);
+  t.deepEqual(
+    evf.getRawFiles().sort(),
+    [
+      "./test/stubs/writeTestJS/**/*.11ty.js",
+      "./test/stubs/writeTestJS/**/*.js"
+    ].sort()
+  );
+  t.deepEqual(
+    files.sort(),
+    [
+      "./test/stubs/writeTestJS/sample.js",
+      "./test/stubs/writeTestJS/test.11ty.js"
+    ].sort()
+  );
 
   let tw = new TemplateWriter(
     "./test/stubs/writeTestJS",
