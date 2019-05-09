@@ -130,7 +130,7 @@ class UserConfig {
     }
 
     this.nunjucksAsyncFilters[name] = bench.add(
-      `"${name}" Liquid Async Filter`,
+      `"${name}" Nunjucks Async Filter`,
       callback
     );
   }
