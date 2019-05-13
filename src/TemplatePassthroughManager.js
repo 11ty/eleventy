@@ -86,13 +86,15 @@ class TemplatePassthroughManager {
       .then(
         function() {
           this.count++;
-          debug("Copied %o", path);
+          debug("Copied %o", path.inputPath);
         }.bind(this)
       )
       .catch(function(e) {
-        throw new TemplatePassthroughManagerCopyError(
-          `Having trouble copying '${path}'`,
-          e
+        return Promise.reject(
+          new TemplatePassthroughManagerCopyError(
+            `Having trouble copying '${path.inputPath}'`,
+            e
+          )
         );
       });
   }
