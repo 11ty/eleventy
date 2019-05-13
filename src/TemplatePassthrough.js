@@ -26,7 +26,9 @@ class TemplatePassthrough {
         TemplatePath.stripLeadingSubPath(inputPath, inputDir)
       );
     }
-    return path.normalize(TemplatePath.join(outputDir, outputPath));
+    return path
+      .normalize(TemplatePath.join(outputDir, outputPath))
+      .replace(/\\/g, "/"); // Fix for windows paths
   }
 
   getGlobOutputPath(globFile) {
