@@ -138,7 +138,6 @@ TemplateWriter.prototype._writeTemplate = async function(mapEntry) {
 TemplateWriter.prototype.write = async function() {
   let promises = [];
   let paths = await this._getAllPaths();
-
   debug("Found: %o", paths);
   promises.push(
     this.getFileManager()
@@ -146,6 +145,9 @@ TemplateWriter.prototype.write = async function() {
       .copyAll(paths)
       .catch(e => {
         EleventyErrorHandler.warn(e, "Error with passthrough copy");
+        return Promise.reject(
+          new TemplateWriterWriteError(`Having trouble copying`, e)
+        );
       })
   );
 
@@ -163,9 +165,11 @@ TemplateWriter.prototype.write = async function() {
         if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
           usedTemplateContentTooEarlyMap.push(mapEntry);
         } else {
-          throw new TemplateWriterWriteError(
-            `Having trouble writing template: ${mapEntry.outputPath}`,
-            e
+          return Promise.reject(
+            TemplateWriterWriteError(
+              `Having trouble writing template: ${mapEntry.outputPath}`,
+              e
+            )
           );
         }
       })
@@ -175,11 +179,13 @@ TemplateWriter.prototype.write = async function() {
   for (mapEntry of usedTemplateContentTooEarlyMap) {
     promises.push(
       this._writeTemplate(mapEntry).catch(function(e) {
-        throw new TemplateWriterWriteError(
-          `Having trouble writing template (second pass): ${
-            mapEntry.outputPath
-          }`,
-          e
+        return Promise.reject(
+          TemplateWriterWriteError(
+            `Having trouble writing template (second pass): ${
+              mapEntry.outputPath
+            }`,
+            e
+          )
         );
       })
     );
@@ -187,6 +193,7 @@ TemplateWriter.prototype.write = async function() {
 
   return Promise.all(promises).catch(e => {
     EleventyErrorHandler.error(e, "Error writing templates");
+    throw e;
   });
 };
 
