@@ -652,11 +652,45 @@ test("Passthrough file output", async t => {
     "./test/stubs/template-passthrough/_site/test.js"
   ];
   output.forEach(path => {
-    if (!fs.existsSync(path)) {
-      console.log({ path });
-    }
     t.true(fs.existsSync(path));
   });
 
   rimraf.sync("./test/stubs/template-passthrough/_site/");
+});
+
+test("Naughty Passthrough paths", async t => {
+  let tw = new TemplateWriter(
+    "./test/stubs/template-passthrough/",
+    "./test/stubs/template-passthrough/_site",
+    ["njk", "md"]
+  );
+
+  const mgr = tw.getFileManager().getPassthroughManager();
+  mgr.setConfig({
+    passthroughFileCopy: true,
+    passthroughCopies: {
+      "../": true,
+      "../": "./",
+      "../*": "./",
+      "./test/stubs/template-passthrough/static/*.css": "./",
+      "./test/stubs/template-passthrough/static/*.js": "../../",
+      "./test/stubs/template-passthrough/img.jpg": "../../"
+    }
+  });
+
+  tw.setVerboseOutput(false);
+
+  await t.throwsAsync(async () => {
+    await tw.write();
+  });
+
+  const output = [
+    "./test/stubs/template-passthrough/_site/nope.txt",
+    "./test/stubs/template-passthrough/_site/nope/",
+    "./test/stubs/test.js",
+    "./test/stubs/img.jpg"
+  ];
+  output.forEach(path => {
+    t.false(fs.existsSync(path));
+  });
 });
