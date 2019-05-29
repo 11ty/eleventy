@@ -104,6 +104,28 @@ test("Liquid Custom Tag postfixWithZach", async t => {
   );
 });
 
+test("Liquid Custom Tag Unquoted String", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addTag("testUnquotedStringTag", function(liquidEngine) {
+    return {
+      parse: function(tagToken, remainTokens) {
+        this.str = tagToken.args;
+      },
+      render: function(scope, hash) {
+        return Promise.resolve(this.str + "Zach");
+      }
+    };
+  });
+
+  t.is(
+    await tr.render(
+      "{% testUnquotedStringTag _posts/2016-07-26-name-of-post.md %}",
+      { name: "test" }
+    ),
+    "_posts/2016-07-26-name-of-post.mdZach"
+  );
+});
+
 test("Liquid addTag errors", async t => {
   let tr = new TemplateRender("liquid", "./test/stubs/");
   t.throws(() => {
