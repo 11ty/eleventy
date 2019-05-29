@@ -55,6 +55,22 @@ test("getFiles (with js, treated as passthrough copy)", async t => {
   t.true(TemplateRender.hasEngine("./test/stubs/writeTestJS/test.11ty.js"));
 });
 
+test("getFiles (with case insensitivity)", async t => {
+  let evf = new EleventyFiles(
+    "./test/stubs/writeTestJS",
+    "./test/stubs/_writeTestJSSite",
+    ["JS"]
+  );
+  evf.init();
+
+  t.deepEqual(await evf.getFiles(), [
+    "./test/stubs/writeTestJS/sample.js",
+    "./test/stubs/writeTestJS/test.11ty.js"
+  ]);
+  t.false(TemplateRender.hasEngine("./test/stubs/writeTestJS/sample.js"));
+  t.true(TemplateRender.hasEngine("./test/stubs/writeTestJS/test.11ty.js"));
+});
+
 test("Mutually exclusive Input and Output dirs", async t => {
   let evf = new EleventyFiles(
     "./test/stubs/writeTest",
