@@ -2,8 +2,21 @@ const chalk = require("chalk");
 const debug = require("debug")("Eleventy:EleventyErrorHandler");
 
 class EleventyErrorHandler {
+  static get isChalkEnabled() {
+    if (this._isChalkEnabled !== undefined) {
+      return this._isChalkEnabled;
+    }
+    return true;
+  }
+
+  static set isChalkEnabled(enabled) {
+    this._isChalkEnabled = !!enabled;
+  }
+
   static warn(e, msg) {
-    EleventyErrorHandler.initialMessage(msg, "warn", "yellow");
+    if (msg) {
+      EleventyErrorHandler.initialMessage(msg, "warn", "yellow");
+    }
     EleventyErrorHandler.log(e, "warn");
   }
 
@@ -13,7 +26,9 @@ class EleventyErrorHandler {
   }
 
   static error(e, msg) {
-    EleventyErrorHandler.initialMessage(msg, "error", "red");
+    if (msg) {
+      EleventyErrorHandler.initialMessage(msg, "error", "red");
+    }
     EleventyErrorHandler.log(e, "error");
   }
 
@@ -23,16 +38,28 @@ class EleventyErrorHandler {
       let nextRef = ref.originalError;
       EleventyErrorHandler.message(
         (process.env.DEBUG ? "" : `${prefix} `) +
-          `${ref.message} (${ref.name})${!nextRef ? ":" : ""}`,
+          `${ref.message.trim()}
+
+\`${ref.name}\` was thrown${!nextRef && ref.stack ? ":" : ""}`,
         type
       );
+
       if (process.env.DEBUG) {
         debug(`(${type} stack): ${ref.stack}`);
       } else if (!nextRef) {
         // last error in the loop
         let prefix = "    ";
+        // remove duplicate error messages if the stack contains the original message output above
+        //
+        let stackStr = ref.stack || "";
+        if (e.removeDuplicateErrorStringFromOutput) {
+          stackStr = stackStr.replace(
+            `${ref.name}: ${ref.message}`,
+            "(Repeated output has been truncated…)"
+          );
+        }
         EleventyErrorHandler.message(
-          prefix + (ref.stack || "").split("\n").join("\n" + prefix)
+          prefix + stackStr.split("\n").join("\n" + prefix)
         );
       }
       ref = nextRef;
@@ -54,7 +81,7 @@ class EleventyErrorHandler {
       debug(message);
     } else {
       let logger = EleventyErrorHandler.logger || console;
-      if (chalkColor) {
+      if (chalkColor && EleventyErrorHandler.isChalkEnabled) {
         logger[type](chalk[chalkColor](message));
       } else {
         logger[type](message);

@@ -1,4 +1,3 @@
-const chalk = require("chalk");
 const isPlainObject = require("lodash/isPlainObject");
 const DependencyGraph = require("dependency-graph").DepGraph;
 const TemplateCollection = require("./TemplateCollection");
@@ -9,7 +8,11 @@ const debug = require("debug")("Eleventy:TemplateMap");
 const debugDev = require("debug")("Dev:Eleventy:TemplateMap");
 
 const EleventyBaseError = require("./EleventyBaseError");
-class DuplicatePermalinkOutputError extends EleventyBaseError {}
+class DuplicatePermalinkOutputError extends EleventyBaseError {
+  get removeDuplicateErrorStringFromOutput() {
+    return true;
+  }
+}
 
 class TemplateMap {
   constructor() {
@@ -503,7 +506,7 @@ class TemplateMap {
         } else {
           warnings[
             page.outputPath
-          ] = `Output conflict: multiple files are writing to \`${
+          ] = `Output conflict: multiple input files are writing to \`${
             page.outputPath
           }\`. Use distinct \`permalink\` values to resolve this conflict.
   1. ${entry.inputPath}
@@ -521,7 +524,8 @@ ${permalinks[page.url]
 
     let warningList = Object.values(warnings);
     if (warningList.length) {
-      throw new DuplicatePermalinkOutputError(warningList.join("\n"));
+      // throw one at a time
+      throw new DuplicatePermalinkOutputError(warningList[0]);
     }
   }
 
