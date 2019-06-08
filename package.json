@@ -35,9 +35,9 @@
   },
   "scripts": {
     "default": "npm run test",
-    "test": "npx nyc ava",
+    "test": "npx ava --verbose",
     "lint-staged": "lint-staged",
-    "coverage": "npm run test && npx nyc report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && node cmd.js --config=docs-src/.eleventy.docs.js"
+    "coverage": "npx nyc ava && npx nyc report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && node cmd.js --config=docs-src/.eleventy.docs.js"
   },
   "author": {
     "name": "Zach Leatherman",
