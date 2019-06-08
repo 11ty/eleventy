@@ -1,3 +1,4 @@
+const chalk = require("chalk");
 const isPlainObject = require("lodash/isPlainObject");
 const DependencyGraph = require("dependency-graph").DepGraph;
 const TemplateCollection = require("./TemplateCollection");
@@ -14,6 +15,11 @@ class TemplateMap {
     this.collectionsData = null;
     this.cached = false;
     this.configCollections = null;
+    this.verboseOutput = true;
+  }
+
+  _testSetVerboseOutput(verboseOutput) {
+    this.verboseOutput = !!verboseOutput;
   }
 
   get tagPrefix() {
@@ -289,6 +295,8 @@ class TemplateMap {
 
     this.populateCollectionsWithContent();
     this.cached = true;
+
+    this.logDuplicatePermalinks();
   }
 
   getMapEntryForInputPath(inputPath) {
@@ -484,6 +492,43 @@ class TemplateMap {
         item.templateContent = entry._pages[index]._templateContent;
       }
     }
+  }
+
+  logDuplicatePermalinks() {
+    if (this.verboseOutput) {
+      let warnings = this.getDuplicatePermalinkWarnings();
+      for (let warning of warnings) {
+        console.log(chalk.yellow(warning));
+      }
+    }
+  }
+
+  getDuplicatePermalinkWarnings() {
+    let permalinks = {};
+    let warnings = {};
+    for (let entry of this.map) {
+      for (let page of entry._pages) {
+        if (!permalinks[page.url]) {
+          permalinks[page.url] = [entry.inputPath];
+        } else {
+          warnings[
+            page.outputPath
+          ] = `Output conflict: multiple files are writing to \`${
+            page.outputPath
+          }\`. Use distinct \`permalink\` values to resolve this conflict.
+
+  1. ${entry.inputPath}
+${permalinks[page.url]
+  .map(function(inputPath, index) {
+    return `  ${index + 2}. ${inputPath}\n`;
+  })
+  .join("")}`;
+
+          permalinks[page.url].push(entry.inputPath);
+        }
+      }
+    }
+    return Object.values(warnings);
   }
 
   async getCollectionsData() {

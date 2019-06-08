@@ -36,6 +36,7 @@
   "scripts": {
     "default": "npm run test",
     "test": "npx nyc ava",
+    "lint-staged": "lint-staged",
     "coverage": "npm run test && npx nyc report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && node cmd.js --config=docs-src/.eleventy.docs.js"
   },
   "author": {
@@ -66,10 +67,11 @@
   "devDependencies": {
     "@11ty/eleventy-plugin-syntaxhighlight": "^2.0.1",
     "ava": "^1.4.1",
-    "husky": "^1.3.1",
     "lint-staged": "^8.1.5",
     "markdown-it-emoji": "^1.4.0",
     "nyc": "^13.3.0",
+    "pre-commit": "^1.2.2",
+    "pre-push": "^0.1.1",
     "prettier": "^1.16.4",
     "viperhtml": "^2.17.0",
     "vue": "^2.6.10",
@@ -109,10 +111,6 @@
     "time-require": "^0.1.2",
     "valid-url": "^1.0.9"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged",
-      "pre-push": "npx ava"
-    }
-  }
+  "pre-commit": "lint-staged",
+  "pre-push": "test"
 }

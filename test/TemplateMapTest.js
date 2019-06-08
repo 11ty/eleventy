@@ -1013,3 +1013,42 @@ test("Async user collection addCollection method", async t => {
 
   t.is(collections.userCollection[0].data.collections.userCollection.length, 1);
 });
+
+test("Duplicate permalinks in template map", async t => {
+  let tmpl1 = new Template(
+    "./test/stubs/permalink-conflicts/test1.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  let tmpl2 = new Template(
+    "./test/stubs/permalink-conflicts/test2.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  let tmpl3 = new Template(
+    "./test/stubs/permalink-conflicts/test3.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  let tmpl4 = new Template(
+    "./test/stubs/permalink-conflicts/test4.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  let tm = new TemplateMap();
+  tm._testSetVerboseOutput(false);
+
+  t.is(tm.getDuplicatePermalinkWarnings().length, 0);
+
+  await tm.add(tmpl1);
+  await tm.add(tmpl2);
+  await tm.add(tmpl3);
+  await tm.add(tmpl4);
+  await tm.cache();
+  let warnings = tm.getDuplicatePermalinkWarnings();
+  t.is(warnings.length, 1);
+  t.true(warnings[0].indexOf("test1.md") > -1); // writing to permalink-conflicts/index.html
+  t.true(warnings[0].indexOf("test2.md") > -1); // writing to permalink-conflicts/index.html
+  t.true(warnings[0].indexOf("test3.md") > -1); // writing to permalink-conflicts/index.html
+  t.true(warnings[0].indexOf("test4.md") === -1); // writing to permalink-conflicts
+});
