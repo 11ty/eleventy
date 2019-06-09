@@ -12,6 +12,7 @@ const config = require("./Config");
 const bench = require("./BenchmarkManager");
 const debug = require("debug")("Eleventy");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
+const sleep = require("es7-sleep");
 
 /**
  * @module @11ty/eleventy/Eleventy
@@ -391,25 +392,42 @@ Arguments:
    * @method
    * @param {String} path - Watch this file.
    */
-  async _watch(path) {
+  async _watch(path, immediate = false) {
     if (path) {
       path = TemplatePath.addLeadingDotSlash(path);
+      this.queuedPaths.push(path);
+      this.lastTriggerTime = new Date();
     }
 
-    if (this.active) {
-      this.queuedToRun = path;
+    if (this.active || this.queuedPaths.length == 0) {
       return;
     }
 
     this.active = true;
 
-    let isInclude =
-      path &&
-      TemplatePath.startsWithSubPath(path, this.eleventyFiles.getIncludesDir());
+    if (this.config.watchTriggerDelay && !immediate) {
+      let timeSinceLastTrigger = new Date() - this.lastTriggerTime;
+
+      while (timeSinceLastTrigger < this.config.watchTriggerDelay) {
+        let triggerDelaySleep =
+          this.config.watchTriggerDelay - timeSinceLastTrigger;
+        console.log(`Waiting ${triggerDelaySleep} ms before processing.`);
+        await sleep(triggerDelaySleep);
+
+        // If the watch was triggered again, we need to wait for another period.
+        timeSinceLastTrigger = new Date() - this.lastTriggerTime;
+      }
+    }
+
+    // Grab all the files that have changed to process as part of this loop
+    let processingPaths = this.queuedPaths;
+    this.queuedPaths = [];
+
+    console.log(`Processing changed files '${processingPaths}'.`);
 
     let localProjectConfigPath = config.getLocalProjectConfigFile();
     // reset and reload global configuration :O
-    if (path === localProjectConfigPath) {
+    if (processingPaths.includes(localProjectConfigPath)) {
       this.resetConfig();
     }
     config.resetOnWatch();
@@ -417,14 +435,24 @@ Arguments:
     await this.restart();
     this.watchTargets.clearDependencyRequireCache();
 
-    if (path && !isInclude && this.isIncremental) {
-      this.writer.setIncrementalFile(path);
-    }
+    for(let processingPath of processingPaths)
+    {
+      let isInclude = TemplatePath.startsWithSubPath(
+        processingPath,
+        this.eleventyFiles.getIncludesDir()
+      );
 
-    await this.write();
+      if (processingPath && !isInclude && this.isIncremental) {
+        this.writer.setIncrementalFile(processingPath);
+      }
 
-    if (path && !isInclude && this.isIncremental) {
-      this.writer.resetIncrementalFile();
+      await this.write();
+
+      if (processingPath && !isInclude && this.isIncremental) {
+        this.writer.resetIncrementalFile();
+      }
+
+      this.eleventyServe.reload(processingPath, isInclude);
     }
 
     this.watchTargets.reset();
@@ -433,14 +461,15 @@ Arguments:
     // Add new deps to chokidar
     this.watcher.add(this.watchTargets.getNewTargetsSinceLastReset());
 
-    this.eleventyServe.reload(path, isInclude);
-
     this.active = false;
 
-    if (this.queuedToRun) {
-      console.log("You saved while Eleventy was running, let’s run again.");
-      this.queuedToRun = false;
-      await this._watch(this.queuedToRun);
+    if (this.queuedPaths.length > 0) {
+      console.log(
+        "A file was modified while Eleventy was running, let's run again."
+      );
+
+      // When triggering a re-process due like this, ignore the trigger delay.
+      await this._watch(null, true);
     } else {
       console.log("Watching…");
     }
@@ -541,7 +570,7 @@ Arguments:
     const chokidar = require("chokidar");
 
     this.active = false;
-    this.queuedToRun = false;
+    this.queuedPaths = [];
 
     // Note that watching indirectly depends on this for fetching dependencies from JS files
     // See: TemplateWriter:pathCache and EleventyWatchTargets

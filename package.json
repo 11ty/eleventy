@@ -91,6 +91,7 @@
     "dependency-graph": "^0.8.0",
     "dependency-tree": "^7.0.2",
     "ejs": "^2.6.2",
+    "es7-sleep": "^1.0.0",
     "fast-glob": "^3.0.4",
     "fs-extra": "^8.1.0",
     "gray-matter": "^4.0.2",
