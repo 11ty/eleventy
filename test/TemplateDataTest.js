@@ -313,6 +313,7 @@ test("TemplateData.merge", t => {
 
 test("TemplateData.cleanupData", t => {
   t.deepEqual(TemplateData.cleanupData({}), {});
+  t.deepEqual(TemplateData.cleanupData({ tags: null }), { tags: [] });
   t.deepEqual(TemplateData.cleanupData({ tags: "" }), { tags: [] });
   t.deepEqual(TemplateData.cleanupData({ tags: [] }), { tags: [] });
   t.deepEqual(TemplateData.cleanupData({ tags: "test" }), { tags: ["test"] });
