@@ -526,7 +526,7 @@ test("Write Test 11ty.js", async t => {
   );
 });
 
-test("Markdown with alias", async t => {
+test.skip("Markdown with alias", async t => {
   let map = new EleventyExtensionMap(["md"]);
   map.config = {
     templateExtensionAliases: {
@@ -571,7 +571,7 @@ test("Markdown with alias", async t => {
   );
 });
 
-test("JavaScript with alias", async t => {
+test.skip("JavaScript with alias", async t => {
   let map = new EleventyExtensionMap(["11ty.js"]);
   map.config = {
     templateExtensionAliases: {
