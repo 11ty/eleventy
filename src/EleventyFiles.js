@@ -248,6 +248,10 @@ class EleventyFiles {
     return this.includesDir;
   }
 
+  getLayoutsDir() {
+    return this.layoutsDir;
+  }
+
   getFileGlobs() {
     return this.templateGlobsWithIgnores;
   }

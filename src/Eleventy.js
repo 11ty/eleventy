@@ -166,6 +166,7 @@ class Eleventy {
 Input: ${this.inputDir}
 Data: ${this.templateData.getDataDir()}
 Includes: ${this.eleventyFiles.getIncludesDir()}
+Layouts: ${this.eleventyFiles.getLayoutsDir()}
 Output: ${this.outputDir}
 Template Formats: ${formats.join(",")}`);
 
