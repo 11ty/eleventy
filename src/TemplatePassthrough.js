@@ -1,6 +1,5 @@
 const copy = require("recursive-copy");
 const fs = require("fs");
-const path = require("path");
 const TemplatePath = require("./TemplatePath");
 const debug = require("debug")("Eleventy:TemplatePassthrough");
 const fastglob = require("fast-glob");
@@ -20,12 +19,14 @@ class TemplatePassthrough {
   getOutputPath() {
     const { inputDir, outputDir, outputPath, inputPath } = this;
     if (outputPath === true) {
-      return TemplatePath.join(
-        outputDir,
-        TemplatePath.stripLeadingSubPath(inputPath, inputDir)
+      return TemplatePath.normalize(
+        TemplatePath.join(
+          outputDir,
+          TemplatePath.stripLeadingSubPath(inputPath, inputDir)
+        )
       );
     }
-    return path.normalize(TemplatePath.join(outputDir, outputPath));
+    return TemplatePath.normalize(TemplatePath.join(outputDir, outputPath));
   }
 
   getOutputPathForGlobFile(globFile) {

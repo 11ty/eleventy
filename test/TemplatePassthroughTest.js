@@ -1,6 +1,4 @@
 import test from "ava";
-import path from "path";
-const normalize = require("normalize-path");
 import TemplatePassthrough from "../src/TemplatePassthrough";
 
 const getTemplatePassthrough = (path, outputDir, inputDir) => {
@@ -17,7 +15,7 @@ const getTemplatePassthrough = (path, outputDir, inputDir) => {
 test("Constructor", t => {
   let pass = getTemplatePassthrough("avatar.png", "_site", ".");
   t.truthy(pass);
-  t.is(pass.getOutputPath(), normalize(path.join("_site/avatar.png")));
+  t.is(pass.getOutputPath(), "_site/avatar.png");
 });
 
 test("Constructor Dry Run", t => {
@@ -29,19 +27,19 @@ test("Constructor Dry Run", t => {
 test("Origin path isn’t included in output when targeting a directory", t => {
   let pass = getTemplatePassthrough("img", "_site", "_src");
   t.truthy(pass);
-  t.is(pass.getOutputPath(), normalize(path.join("_site/img")));
+  t.is(pass.getOutputPath(), "_site/img");
 });
 
 test("Origin path isn’t included in output when targeting a directory several levels deep", t => {
   let pass = getTemplatePassthrough("img", "_site", "_src/subdir");
   t.truthy(pass);
-  t.is(pass.getOutputPath(), normalize(path.join("_site/img")));
+  t.is(pass.getOutputPath(), "_site/img");
 });
 
 test("Target directory’s subdirectory structure is retained", t => {
   let pass = getTemplatePassthrough("subdir/img", "_site", "_src");
   t.truthy(pass);
-  t.is(pass.getOutputPath(), normalize(path.join("_site/subdir/img")));
+  t.is(pass.getOutputPath(), "_site/subdir/img");
 });
 
 test("Origin path isn’t included in output when targeting a file", t => {
@@ -53,7 +51,7 @@ test("Origin path isn’t included in output when targeting a file", t => {
 test("Origin path isn’t included in output when targeting a file several levels deep", t => {
   let pass = getTemplatePassthrough("avatar.png", "_site", "_src/subdir/img");
   t.truthy(pass);
-  t.is(pass.getOutputPath(), normalize(path.join("_site/avatar.png")));
+  t.is(pass.getOutputPath(), "_site/avatar.png");
 });
 
 test("Full input file path and deep input path", t => {
@@ -63,7 +61,7 @@ test("Full input file path and deep input path", t => {
       "_site",
       "src/views/"
     ).getOutputPath(),
-    normalize(path.join("_site/avatar.png"))
+    "_site/avatar.png"
   );
   t.is(
     getTemplatePassthrough(
@@ -71,7 +69,7 @@ test("Full input file path and deep input path", t => {
       "_site",
       "src/views"
     ).getOutputPath(),
-    normalize(path.join("_site/avatar.png"))
+    "_site/avatar.png"
   );
   t.is(
     getTemplatePassthrough(
@@ -172,7 +170,7 @@ test("Directory where outputPath is true", async t => {
     "_src"
   );
   t.truthy(pass);
-  t.is(pass.getOutputPath(), normalize(path.join("_site/static")));
+  t.is(pass.getOutputPath(), "_site/static");
 });
 
 test("Nested directory where outputPath is remapped", async t => {
@@ -182,7 +180,7 @@ test("Nested directory where outputPath is remapped", async t => {
     "_src"
   );
   t.truthy(pass);
-  t.is(pass.getOutputPath(), normalize(path.join("_site/test")));
+  t.is(pass.getOutputPath(), "_site/test");
 });
 
 test("Glob pattern", async t => {
@@ -200,6 +198,16 @@ test("Glob pattern", async t => {
     pass.getOutputPathForGlobFile(globResolvedPath),
     "_site/directory/test.js"
   );
+});
+
+test("Output paths match with different templatePassthrough methods", async t => {
+  let pass1 = getTemplatePassthrough(
+    { inputPath: "./static/nested", outputPath: "./test" },
+    "_site",
+    "_src"
+  );
+  let pass2 = getTemplatePassthrough("avatar.png", "_site/test", ".");
+  t.is(pass1.getOutputPathForGlobFile("avatar.png"), pass2.getOutputPath());
 });
 
 // ToDo: Currently can't do :(
