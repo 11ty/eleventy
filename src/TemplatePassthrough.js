@@ -19,7 +19,6 @@ class TemplatePassthrough {
 
   getOutputPath() {
     const { inputDir, outputDir, outputPath, inputPath } = this;
-
     if (outputPath === true) {
       return TemplatePath.join(
         outputDir,
