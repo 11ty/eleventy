@@ -89,7 +89,7 @@ class TemplatePassthrough {
       );
 
       return Promise.all(promises).catch(err => {
-        throw new EleventyBaseError(
+        throw new TemplatePassthroughError(
           `Error copying passthrough files: ${err.message}`,
           err
         );
