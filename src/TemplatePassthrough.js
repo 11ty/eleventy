@@ -28,7 +28,7 @@ class TemplatePassthrough {
     return path.normalize(TemplatePath.join(outputDir, outputPath));
   }
 
-  getGlobOutputPath(globFile) {
+  getOutputPathForGlobFile(globFile) {
     return TemplatePath.join(
       this.getOutputPath(),
       TemplatePath.getLastPathSegment(globFile)
@@ -82,7 +82,11 @@ class TemplatePassthrough {
       const files = await this.getFiles(this.inputPath);
 
       const promises = files.map(inputFile =>
-        this.copy(inputFile, this.getGlobOutputPath(inputFile), copyOptions)
+        this.copy(
+          inputFile,
+          this.getOutputPathForGlobFile(inputFile),
+          copyOptions
+        )
       );
 
       return Promise.all(promises).catch(err => {
