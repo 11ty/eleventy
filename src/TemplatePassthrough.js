@@ -26,7 +26,6 @@ class TemplatePassthrough {
       );
     }
     return path.normalize(TemplatePath.join(outputDir, outputPath));
-    // .replace(/\\/g, "/"); // Fix for windows paths
   }
 
   getGlobOutputPath(globFile) {
