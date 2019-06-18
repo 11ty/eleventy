@@ -243,3 +243,58 @@ test("Nunjucks Shortcode Named Args (JS notation)", async t => {
     "testhowdyZach"
   );
 });
+
+test("Nunjucks Test if statements on arrays (Issue #524)", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+
+  t.is(
+    await tr.render("{% if 'first' in tags %}Success.{% endif %}", {
+      tags: ["first", "second"]
+    }),
+    "Success."
+  );
+
+  t.is(
+    await tr.render("{% if 'sdfsdfs' in tags %}{% else %}Success.{% endif %}", {
+      tags: ["first", "second"]
+    }),
+    "Success."
+  );
+
+  t.is(
+    await tr.render(
+      "{% if false %}{% elseif 'first' in tags %}Success.{% endif %}",
+      {
+        tags: ["first", "second"]
+      }
+    ),
+    "Success."
+  );
+
+  t.is(
+    await tr.render("{% if tags.includes('first') %}Success.{% endif %}", {
+      tags: ["first", "second"]
+    }),
+    "Success."
+  );
+
+  t.is(
+    await tr.render(
+      "{% if tags.includes('dsds') %}{% else %}Success.{% endif %}",
+      {
+        tags: ["first", "second"]
+      }
+    ),
+    "Success."
+  );
+
+  t.is(
+    await tr.render(
+      "{% if false %}{% elseif tags.includes('first') %}Success.{% endif %}",
+      {
+        tags: ["first", "second"]
+      }
+    ),
+    "Success."
+  );
+});

@@ -1232,6 +1232,12 @@ test("Front Matter Tags (Single)", async t => {
   );
   let frontmatter = await tmpl.getFrontMatterData();
   t.deepEqual(frontmatter.tags, ["single-tag"]);
+
+  let fulldata = await tmpl.getData();
+  t.deepEqual(fulldata.tags, ["single-tag"]);
+
+  let pages = await tmpl.getRenderedTemplates(fulldata);
+  t.is(pages[0].templateContent.trim(), "Has single-tag");
 });
 
 test("Front Matter Tags (Multiple)", async t => {
@@ -1242,6 +1248,12 @@ test("Front Matter Tags (Multiple)", async t => {
   );
   let frontmatter = await tmpl.getFrontMatterData();
   t.deepEqual(frontmatter.tags, ["multi-tag", "multi-tag-2"]);
+
+  let fulldata = await tmpl.getData();
+  t.deepEqual(fulldata.tags, ["multi-tag", "multi-tag-2"]);
+
+  let pages = await tmpl.getRenderedTemplates(fulldata);
+  t.is(pages[0].templateContent.trim(), "Has multi-tag-2");
 });
 
 test("Front matter date with quotes (liquid), issue #258", async t => {
