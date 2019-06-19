@@ -27,6 +27,7 @@ module.exports = function(config) {
     passthroughFileCopy: true,
     htmlOutputSuffix: "-o",
     jsDataFileSuffix: ".11tydata",
+    openBrowser: false,
     keys: {
       package: "pkg",
       layout: "layout",

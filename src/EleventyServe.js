@@ -66,7 +66,7 @@ class EleventyServe {
         port: port || 8080,
         ignore: ["node_modules"],
         watch: false,
-        open: false,
+        open: this.config.openBrowser || false,
         notify: false,
         index: "index.html"
       },
