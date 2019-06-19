@@ -49,10 +49,16 @@ class Markdown extends TemplateEngine {
 
     if (preTemplateEngine) {
       let fn;
-      let engine = TemplateEngine.getEngine(
-        preTemplateEngine,
-        super.getIncludesDir()
-      );
+
+      let engine;
+      if (typeof preTemplateEngine === "string") {
+        engine = TemplateEngine.getEngine(
+          preTemplateEngine,
+          super.getIncludesDir()
+        );
+      } else {
+        engine = preTemplateEngine;
+      }
 
       fn = await engine.compile(str, inputPath);
 
