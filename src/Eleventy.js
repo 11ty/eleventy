@@ -11,22 +11,68 @@ const config = require("./Config");
 const bench = require("./BenchmarkManager");
 const debug = require("debug")("Eleventy");
 
+/**
+ * @module @11ty/eleventy/Eleventy
+ */
+
+/**
+ * Runtime of eleventy.
+ *
+ * @param {String} input - Where to read files from.
+ * @param {Output} output - Where to write rendered files to.
+ * @returns {undefined}
+ */
 class Eleventy {
   constructor(input, output) {
+    /** @member {Object} - tbd. */
     this.config = config.getConfig();
+
+    /**
+     * @member {String} - The path to Eleventy's config file.
+     * @default null
+     */
     this.configPath = null;
+
+    /**
+     * @member {Boolean} - Is Eleventy running in verbose mode?
+     * @default true
+     */
     this.isVerbose = true;
+
+    /**
+     * @member {Boolean} - Is Eleventy running in debug mode?
+     * @default false
+     */
     this.isDebug = false;
+
+    /**
+     * @member {Boolean} - Is Eleventy running in dry mode?
+     * @default false
+     */
     this.isDryRun = false;
 
+    /** @member {Date} - The time of instantiation. */
     this.start = new Date();
+
+    /**
+     * @member {Array<String>} - Subset of template types.
+     * @default null
+     */
     this.formatsOverride = null;
+
+    /** @member {Object} - tbd. */
     this.eleventyServe = new EleventyServe();
 
+    /** @member {String} - Holds the path to the input directory. */
     this.rawInput = input;
+
+    /** @member {String} - Holds the path to the output directory. */
     this.rawOutput = output;
 
+    /** @member {Object} - tbd. */
     this.watchTargets = new EleventyWatchTargets();
+
+    /** @member {Object} - tbd. */
     this.watchTargets.watchJavaScriptDependencies = this.config.watchJavaScriptDependencies;
   }
 
