@@ -59,9 +59,7 @@ class UserConfig {
   versionCheck(expected) {
     if (!semver.satisfies(pkg.version, expected)) {
       throw new UserConfigError(
-        `This project requires the eleventy version to match '${expected}' but found ${
-          pkg.version
-        }. Use \`npm update @11ty/eleventy -g\` to upgrade the eleventy global or \`npm update @11ty/eleventy --save\` to upgrade your local project version.`
+        `This project requires the eleventy version to match '${expected}' but found ${pkg.version}. Use \`npm update @11ty/eleventy -g\` to upgrade the eleventy global or \`npm update @11ty/eleventy --save\` to upgrade your local project version.`
       );
     }
   }
@@ -495,6 +493,10 @@ class UserConfig {
     this.browserSyncConfig = options;
   }
 
+  setFrontMatterParsingOptions(options = {}) {
+    this.frontMatterParsingOptions = options;
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
@@ -526,7 +528,8 @@ class UserConfig {
       experiments: this.experiments,
       // templateExtensionAliases: this.templateExtensionAliases,
       watchJavaScriptDependencies: this.watchJavaScriptDependencies,
-      browserSyncConfig: this.browserSyncConfig
+      browserSyncConfig: this.browserSyncConfig,
+      frontMatterParsingOptions: this.frontMatterParsingOptions
     };
   }
 

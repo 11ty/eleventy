@@ -69,11 +69,31 @@ class TemplateContent {
     this.inputContent = await this.getInputContent();
 
     if (this.inputContent) {
-      this.frontMatter = matter(this.inputContent);
+      let options = this.config.frontMatterParsingOptions || {};
+      let fm = matter(this.inputContent, options);
+      if (options.excerpt && fm.excerpt) {
+        if (
+          fm.content.startsWith(
+            fm.excerpt + (fm.excerpt_separator || "---") + "\n"
+          )
+        ) {
+          fm.content = fm.content.substr(
+            (fm.excerpt + (fm.excerpt_separator || "---") + "\n").length
+          );
+        }
+
+        // add to page.excerpt
+        if (!fm.data.page) {
+          fm.data.page = {};
+        }
+        fm.data.page.excerpt = fm.excerpt;
+      }
+      this.frontMatter = fm;
     } else {
       this.frontMatter = {
         data: {},
-        content: ""
+        content: "",
+        excerpt: ""
       };
     }
   }

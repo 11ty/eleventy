@@ -1657,3 +1657,32 @@ test.skip("Issue 413 weird date format", async t => {
   let data = await tmpl.getData();
   t.is(data.page.date, "");
 });
+
+test("Custom Front Matter Parsing Options", async t => {
+  let newConfig = Object.assign({}, config);
+  newConfig.frontMatterParsingOptions = {
+    excerpt: true
+  };
+
+  let tmpl = new Template(
+    "./test/stubs/custom-frontmatter/template.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  tmpl.config = newConfig;
+
+  let frontmatter = await tmpl.getFrontMatter();
+  t.deepEqual(frontmatter.data, {
+    front: "hello",
+    page: {
+      excerpt: `This is an excerpt.
+`
+    }
+  });
+  t.is(
+    frontmatter.excerpt,
+    `This is an excerpt.
+`
+  );
+  t.is(frontmatter.content, "This is content.");
+});
