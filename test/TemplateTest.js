@@ -1672,26 +1672,14 @@ test("Custom Front Matter Parsing Options", async t => {
   tmpl.config = newConfig;
 
   let frontmatter = await tmpl.getFrontMatter();
-  t.deepEqual(frontmatter.data, {
-    front: "hello",
-    page: {
-      excerpt: `This is an excerpt.
-`
-    }
-  });
-  t.is(
-    frontmatter.excerpt,
-    `This is an excerpt.
-`
-  );
+  t.is(frontmatter.data.front, "hello");
+  t.is(frontmatter.data.page.excerpt.trim(), "This is an excerpt.");
+
+  t.is(frontmatter.excerpt.trim(), "This is an excerpt.");
   t.is(frontmatter.content, "This is content.");
 
   let fulldata = await tmpl.getData();
-  t.is(
-    fulldata.page.excerpt,
-    `This is an excerpt.
-`
-  );
+  t.is(fulldata.page.excerpt.trim(), "This is an excerpt.");
 });
 
 test("Custom Front Matter Parsing Options (using alias)", async t => {
@@ -1709,19 +1697,12 @@ test("Custom Front Matter Parsing Options (using alias)", async t => {
   tmpl.config = newConfig;
 
   let frontmatter = await tmpl.getFrontMatter();
-  t.deepEqual(frontmatter.data, {
-    front: "hello",
-    my_excerpt: `This is an excerpt.
-`
-  });
+  t.is(frontmatter.data.front, "hello");
+  t.is(frontmatter.data.my_excerpt.trim(), "This is an excerpt.");
   t.is(frontmatter.content, "This is content.");
 
   let fulldata = await tmpl.getData();
-  t.is(
-    fulldata.my_excerpt,
-    `This is an excerpt.
-`
-  );
+  t.is(fulldata.my_excerpt.trim(), "This is an excerpt.");
 });
 
 test("Custom Front Matter Parsing Options (no newline after excerpt separator)", async t => {
@@ -1738,26 +1719,14 @@ test("Custom Front Matter Parsing Options (no newline after excerpt separator)",
   tmpl.config = newConfig;
 
   let frontmatter = await tmpl.getFrontMatter();
-  t.deepEqual(frontmatter.data, {
-    front: "hello",
-    page: {
-      excerpt: `This is an excerpt.
-`
-    }
-  });
-  t.is(
-    frontmatter.excerpt,
-    `This is an excerpt.
-`
-  );
+  t.is(frontmatter.data.front, "hello");
+  t.is(frontmatter.data.page.excerpt.trim(), "This is an excerpt.");
+
+  t.is(frontmatter.excerpt.trim(), "This is an excerpt.");
   t.is(frontmatter.content, "This is content.");
 
   let fulldata = await tmpl.getData();
-  t.is(
-    fulldata.page.excerpt,
-    `This is an excerpt.
-`
-  );
+  t.is(fulldata.page.excerpt.trim(), "This is an excerpt.");
 });
 
 test("Custom Front Matter Parsing Options (using TOML)", async t => {
