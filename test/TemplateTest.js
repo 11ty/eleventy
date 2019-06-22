@@ -1685,6 +1685,43 @@ test("Custom Front Matter Parsing Options", async t => {
 `
   );
   t.is(frontmatter.content, "This is content.");
+
+  let fulldata = await tmpl.getData();
+  t.is(
+    fulldata.page.excerpt,
+    `This is an excerpt.
+`
+  );
+});
+
+test("Custom Front Matter Parsing Options (using alias)", async t => {
+  let newConfig = Object.assign({}, config);
+  newConfig.frontMatterParsingOptions = {
+    excerpt: true,
+    excerpt_alias: "my_excerpt"
+  };
+
+  let tmpl = new Template(
+    "./test/stubs/custom-frontmatter/template.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  tmpl.config = newConfig;
+
+  let frontmatter = await tmpl.getFrontMatter();
+  t.deepEqual(frontmatter.data, {
+    front: "hello",
+    my_excerpt: `This is an excerpt.
+`
+  });
+  t.is(frontmatter.content, "This is content.");
+
+  let fulldata = await tmpl.getData();
+  t.is(
+    fulldata.my_excerpt,
+    `This is an excerpt.
+`
+  );
 });
 
 test("Custom Front Matter Parsing Options (no newline after excerpt separator)", async t => {
@@ -1714,4 +1751,11 @@ test("Custom Front Matter Parsing Options (no newline after excerpt separator)",
 `
   );
   t.is(frontmatter.content, "This is content.");
+
+  let fulldata = await tmpl.getData();
+  t.is(
+    fulldata.page.excerpt,
+    `This is an excerpt.
+`
+  );
 });

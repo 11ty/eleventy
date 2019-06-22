@@ -1,6 +1,7 @@
 const fs = require("fs-extra");
 const normalize = require("normalize-path");
 const matter = require("gray-matter");
+const lodashSet = require("lodash/set");
 
 const TemplateData = require("./TemplateData");
 const TemplateRender = require("./TemplateRender");
@@ -81,11 +82,9 @@ class TemplateContent {
           fm.content = fm.content.substr(excerptString.length);
         }
 
-        // add to page.excerpt
-        if (!fm.data.page) {
-          fm.data.page = {};
-        }
-        fm.data.page.excerpt = fm.excerpt;
+        // alias, defaults to page.excerpt
+        let alias = options.excerpt_alias || "page.excerpt";
+        lodashSet(fm.data, alias, fm.excerpt);
       }
       this.frontMatter = fm;
     } else {
