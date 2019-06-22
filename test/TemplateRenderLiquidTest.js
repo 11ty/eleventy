@@ -606,3 +606,10 @@ test("Issue 347: Liquid Paired Shortcode with Spaces", async t => {
     "My Name1234OtherContentZach"
   );
 });
+
+test("Liquid Render with dash variable Issue #567", async t => {
+  let tr = new TemplateRender("liquid");
+
+  let fn = await tr.getCompiledTemplate("<p>{{ my-global-name }}</p>");
+  t.is(await fn({ "my-global-name": "Zach" }), "<p>Zach</p>");
+});

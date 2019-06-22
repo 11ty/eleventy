@@ -94,6 +94,32 @@ test("Nunjucks Render: with Library Override", async t => {
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });
 
+test("Nunjucks Render with getGlobals Issue #567", async t => {
+  let tr = new TemplateRender("njk");
+  let env = tr.engine.getEngineLib();
+  env.addGlobal("getGlobals", function() {
+    return this.getVariables();
+  });
+
+  let fn = await tr.getCompiledTemplate(
+    "<p>{{ getGlobals()['my-global-name'] }}</p>"
+  );
+  t.is(await fn({ "my-global-name": "Zach" }), "<p>Zach</p>");
+});
+
+test("Nunjucks Render with getVarByName Filter Issue #567", async t => {
+  let tr = new TemplateRender("njk");
+  let env = tr.engine.getEngineLib();
+  env.addFilter("getVarByName", function(varName) {
+    return this.getVariables()[varName];
+  });
+
+  let fn = await tr.getCompiledTemplate(
+    "<p>{{ 'my-global-name' | getVarByName }}</p>"
+  );
+  t.is(await fn({ "my-global-name": "Zach" }), "<p>Zach</p>");
+});
+
 test("Nunjucks Shortcode without args", async t => {
   let tr = new TemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function() {

@@ -1755,3 +1755,17 @@ test("Custom Front Matter Parsing Options (using TOML)", async t => {
   let fulldata = await tmpl.getData();
   t.is(fulldata.front, "hello");
 });
+
+test("global variable with dashes Issue #567 (liquid)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/global-dash-variable.liquid",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  t.is(data["is-it-tasty"], "Yes");
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), "Yes");
+});
