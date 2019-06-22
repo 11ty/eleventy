@@ -1686,3 +1686,32 @@ test("Custom Front Matter Parsing Options", async t => {
   );
   t.is(frontmatter.content, "This is content.");
 });
+
+test("Custom Front Matter Parsing Options (no newline after excerpt separator)", async t => {
+  let newConfig = Object.assign({}, config);
+  newConfig.frontMatterParsingOptions = {
+    excerpt: true
+  };
+
+  let tmpl = new Template(
+    "./test/stubs/custom-frontmatter/template-nonewline.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  tmpl.config = newConfig;
+
+  let frontmatter = await tmpl.getFrontMatter();
+  t.deepEqual(frontmatter.data, {
+    front: "hello",
+    page: {
+      excerpt: `This is an excerpt.
+`
+    }
+  });
+  t.is(
+    frontmatter.excerpt,
+    `This is an excerpt.
+`
+  );
+  t.is(frontmatter.content, "This is content.");
+});
