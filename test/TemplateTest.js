@@ -1759,3 +1759,30 @@ test("Custom Front Matter Parsing Options (no newline after excerpt separator)",
 `
   );
 });
+
+test("Custom Front Matter Parsing Options (using TOML)", async t => {
+  let newConfig = Object.assign({}, config);
+  let toml = require("toml");
+
+  newConfig.frontMatterParsingOptions = {
+    engines: {
+      toml: toml.parse.bind(toml)
+    }
+  };
+
+  let tmpl = new Template(
+    "./test/stubs/custom-frontmatter/template-toml.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  tmpl.config = newConfig;
+
+  let frontmatter = await tmpl.getFrontMatter();
+  t.deepEqual(frontmatter.data, {
+    front: "hello"
+  });
+  t.is(frontmatter.content, "This is content.");
+
+  let fulldata = await tmpl.getData();
+  t.is(fulldata.front, "hello");
+});
