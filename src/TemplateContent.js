@@ -72,14 +72,9 @@ class TemplateContent {
       let options = this.config.frontMatterParsingOptions || {};
       let fm = matter(this.inputContent, options);
       if (options.excerpt && fm.excerpt) {
-        if (
-          fm.content.startsWith(
-            fm.excerpt + (fm.excerpt_separator || "---") + "\n"
-          )
-        ) {
-          fm.content = fm.content.substr(
-            (fm.excerpt + (fm.excerpt_separator || "---") + "\n").length
-          );
+        let excerptString = fm.excerpt + (fm.excerpt_separator || "---") + "\n";
+        if (fm.content.startsWith(excerptString)) {
+          fm.content = fm.content.substr(excerptString.length);
         }
 
         // add to page.excerpt
