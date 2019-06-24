@@ -20,6 +20,16 @@ test("Nunjucks Render Extends", async t => {
   t.is(await fn(), "<p>This is a child.</p>");
 });
 
+test("Nunjucks Render Relative Extends", async t => {
+  let fn = await new TemplateRender(
+    "./test/stubs/njk-relative/dir/does_not_exist_and_thats_ok.njk",
+    "test/stubs"
+  ).getCompiledTemplate(
+    "{% extends '../dir/base.njk' %}{% block content %}This is a child.{% endblock %}"
+  );
+  t.is(await fn(), "<p>This is a child.</p>");
+});
+
 test("Nunjucks Render Include", async t => {
   let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
     "<p>{% include 'included.njk' %}</p>"
@@ -58,6 +68,12 @@ test("Nunjucks Render Relative Include (using current dir) Issue #190", async t 
     "<p>{% include './included.njk' %}</p>"
   );
   t.is(await fn(), "<p>HELLO FROM THE OTHER SIDE.</p>");
+
+  // This fails because ./ doesn’t look in _includes (this is good)
+  // let fn = await tr.getCompiledTemplate(
+  //   "<p>{% include './included-relative.njk' %}</p>"
+  // );
+  // t.is(await fn(), "<p>akdlsjafkljdskl</p>");
 });
 
 test("Nunjucks Render Relative Include (ambiguous path, file exists in _includes and in current dir) Issue #190", async t => {
@@ -118,6 +134,16 @@ test("Nunjucks Render Include Subfolder Double Quotes", async t => {
 test("Nunjucks Render Imports", async t => {
   let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
     "{% import 'imports.njk' as forms %}<div>{{ forms.label('Name') }}</div>"
+  );
+  t.is(await fn(), "<div><label>Name</label></div>");
+});
+
+test("Nunjucks Render Relative Imports", async t => {
+  let fn = await new TemplateRender(
+    "./test/stubs/njk-relative/dir/does_not_exist_and_thats_ok.njk",
+    "test/stubs"
+  ).getCompiledTemplate(
+    "{% import '../dir/imports.njk' as forms %}<div>{{ forms.label('Name') }}</div>"
   );
   t.is(await fn(), "<div><label>Name</label></div>");
 });
