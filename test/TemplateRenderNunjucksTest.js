@@ -27,6 +27,59 @@ test("Nunjucks Render Include", async t => {
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
+test("Nunjucks Render Relative Include Issue #190", async t => {
+  let tr = new TemplateRender(
+    "./test/stubs/njk-relative/does_not_exist_and_thats_ok.njk",
+    "./test/stubs"
+  );
+  let fn = await tr.getCompiledTemplate(
+    "<p>{% include './dir/included.njk' %}</p>"
+  );
+  t.is(await fn(), "<p>HELLO FROM THE OTHER SIDE.</p>");
+});
+
+test("Nunjucks Render Relative Include (using ..) Issue #190", async t => {
+  let tr = new TemplateRender(
+    "./test/stubs/njk-relative/dir/does_not_exist_and_thats_ok.njk",
+    "./test/stubs"
+  );
+  let fn = await tr.getCompiledTemplate(
+    "<p>{% include '../dir/included.njk' %}</p>"
+  );
+  t.is(await fn(), "<p>HELLO FROM THE OTHER SIDE.</p>");
+});
+
+test("Nunjucks Render Relative Include (using current dir) Issue #190", async t => {
+  let tr = new TemplateRender(
+    "./test/stubs/njk-relative/dir/does_not_exist_and_thats_ok.njk",
+    "./test/stubs"
+  );
+  let fn = await tr.getCompiledTemplate(
+    "<p>{% include './included.njk' %}</p>"
+  );
+  t.is(await fn(), "<p>HELLO FROM THE OTHER SIDE.</p>");
+});
+
+test("Nunjucks Render Relative Include (ambiguous path, file exists in _includes and in current dir) Issue #190", async t => {
+  let tr = new TemplateRender(
+    "./test/stubs/njk-relative/dir/does_not_exist_and_thats_ok.njk",
+    "./test/stubs"
+  );
+  let fn = await tr.getCompiledTemplate(
+    // should prefer to use _includes first
+    // more specifically, this will not use the current dir at all.
+    "<p>{% include 'included.njk' %}</p>"
+  );
+  t.is(await fn(), "<p>This is an include.</p>");
+
+  // This fails, a leading dot is required for a relative include
+  // let tr2 = new TemplateRender("./test/stubs/njk-relative/dir/does_not_exist_and_thats_ok.njk", "./test/stubs");
+  // let fn2 = await tr.getCompiledTemplate(
+  //   "<p>{% include 'unique-include-123.njk' %}</p>"
+  // );
+  // t.is(await fn2(), "<p>HELLO FROM THE OTHER SIDE.</p>");
+});
+
 test("Nunjucks Render Include a JS file (Issue 398)", async t => {
   let tr = new TemplateRender("njk", "test/stubs");
   let engine = tr.engine;
