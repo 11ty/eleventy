@@ -10,3 +10,6 @@ charset = utf-8
 
 [*.js]
 insert_final_newline = true
+
+[*.njk]
+insert_final_newline = true
