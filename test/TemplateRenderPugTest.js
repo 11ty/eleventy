@@ -42,11 +42,57 @@ block content
   t.is(await fn({ name: "Zach" }), "<html><body><h1>Zach</h1></body></html>");
 });
 
+test("Pug Render Extends (Relative, Layouts)", async t => {
+  let fn = await new TemplateRender(
+    "./test/stubs/does_not_exist_and_thats_ok.pug",
+    "./test/stubs/"
+  ).getCompiledTemplate(`extends ./layout-relative.pug
+block content
+  h1= name`);
+  t.is(await fn({ name: "Zach" }), "<html><body><h1>Zach</h1></body></html>");
+});
+
 test("Pug Render Include (Relative)", async t => {
   let fn = await new TemplateRender("pug", "./test/stubs/")
     .getCompiledTemplate(`p
   include _includes/included.pug`);
   t.is(await fn({ name: "Zach" }), "<p><span>This is an include.</span></p>");
+});
+
+test("Pug Render Include (Relative, again)", async t => {
+  let fn = await new TemplateRender(
+    "./test/stubs/does_not_exist_and_thats_ok.pug",
+    "./test/stubs/"
+  ).getCompiledTemplate(`p
+  include included.pug`);
+  t.is(
+    await fn({ name: "Zach" }),
+    "<p><span>This is a relative include.</span></p>"
+  );
+});
+
+test("Pug Render Include (Relative, dot slash)", async t => {
+  let fn = await new TemplateRender(
+    "./test/stubs/does_not_exist_and_thats_ok.pug",
+    "./test/stubs/"
+  ).getCompiledTemplate(`p
+  include ./included.pug`);
+  t.is(
+    await fn({ name: "Zach" }),
+    "<p><span>This is a relative include.</span></p>"
+  );
+});
+
+test("Pug Render Include (Relative, dot dot slash)", async t => {
+  let fn = await new TemplateRender(
+    "./test/stubs/dir/does_not_exist_and_thats_ok.pug",
+    "./test/stubs/"
+  ).getCompiledTemplate(`p
+  include ../included.pug`);
+  t.is(
+    await fn({ name: "Zach" }),
+    "<p><span>This is a relative include.</span></p>"
+  );
 });
 
 test("Pug Options Overrides", async t => {

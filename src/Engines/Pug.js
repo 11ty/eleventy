@@ -1,6 +1,6 @@
 const PugLib = require("pug");
 const TemplateEngine = require("./TemplateEngine");
-const config = require("../Config");
+const TemplatePath = require("../TemplatePath");
 
 class Pug extends TemplateEngine {
   constructor(name, includesDir) {
@@ -33,8 +33,13 @@ class Pug extends TemplateEngine {
     );
   }
 
-  async compile(str) {
+  async compile(str, inputPath) {
     let options = this.getPugOptions();
+    if (!inputPath || inputPath === "pug" || inputPath === "md") {
+      // do nothing
+    } else {
+      options.filename = inputPath;
+    }
 
     return this.pugLib.compile(str, options);
   }

@@ -1,6 +1,7 @@
 const moo = require("moo");
 const LiquidLib = require("liquidjs");
 const TemplateEngine = require("./TemplateEngine");
+const TemplatePath = require("../TemplatePath");
 // const debug = require("debug")("Eleventy:Liquid");
 
 class Liquid extends TemplateEngine {
@@ -44,7 +45,7 @@ class Liquid extends TemplateEngine {
 
   getLiquidOptions() {
     let defaults = {
-      root: [super.getIncludesDir()],
+      root: [super.getIncludesDir()], // overrides in compile with inputPath below
       extname: ".liquid",
       dynamicPartials: false,
       strict_filters: false
@@ -177,9 +178,20 @@ class Liquid extends TemplateEngine {
 
   async compile(str, inputPath) {
     let engine = this.liquidLib;
-    let tmpl = await engine.parse(str);
+    let tmpl = await engine.parse(str, inputPath);
+
+    // Required for relative includes
+    let options = {};
+    if (!inputPath || inputPath === "njk" || inputPath === "md") {
+      // do nothing
+    } else {
+      options.root = [
+        super.getIncludesDir(),
+        TemplatePath.getDirFromFilePath(inputPath)
+      ];
+    }
     return async function(data) {
-      return engine.render(tmpl, data);
+      return engine.render(tmpl, data, options);
     };
   }
 }

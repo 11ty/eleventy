@@ -37,6 +37,20 @@ test("Nunjucks Render Include", async t => {
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
+test("Nunjucks Render Include (different extension)", async t => {
+  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
+    "<p>{% include 'included.nunj' %}</p>"
+  );
+  t.is(await fn(), "<p>Nunjabusiness</p>");
+});
+
+test("Nunjucks Render Include (different extension, subdir)", async t => {
+  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
+    "<p>{% include 'subfolder/included.nunj' %}</p>"
+  );
+  t.is(await fn(), "<p>Nunjabusiness2</p>");
+});
+
 test("Nunjucks Render Relative Include Issue #190", async t => {
   let tr = new TemplateRender(
     "./test/stubs/njk-relative/does_not_exist_and_thats_ok.njk",

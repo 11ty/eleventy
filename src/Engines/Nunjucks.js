@@ -134,7 +134,12 @@ class Nunjucks extends TemplateEngine {
   }
 
   async compile(str, inputPath) {
-    let tmpl = NunjucksLib.compile(str, this.njkEnv, inputPath);
+    let tmpl;
+    if (!inputPath || inputPath === "njk" || inputPath === "md") {
+      tmpl = NunjucksLib.compile(str, this.njkEnv);
+    } else {
+      tmpl = NunjucksLib.compile(str, this.njkEnv, inputPath);
+    }
     return async function(data) {
       return new Promise(function(resolve, reject) {
         tmpl.render(data, function(err, res) {

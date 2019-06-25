@@ -47,10 +47,13 @@ test("getFiles (with js, treated as passthrough copy)", async t => {
   );
   evf.init();
 
-  t.deepEqual(await evf.getFiles(), [
-    "./test/stubs/writeTestJS/sample.js",
-    "./test/stubs/writeTestJS/test.11ty.js"
-  ]);
+  t.deepEqual(
+    (await evf.getFiles()).sort(),
+    [
+      "./test/stubs/writeTestJS/sample.js",
+      "./test/stubs/writeTestJS/test.11ty.js"
+    ].sort()
+  );
   t.false(TemplateRender.hasEngine("./test/stubs/writeTestJS/sample.js"));
   t.true(TemplateRender.hasEngine("./test/stubs/writeTestJS/test.11ty.js"));
 });
@@ -63,10 +66,13 @@ test("getFiles (with case insensitivity)", async t => {
   );
   evf.init();
 
-  t.deepEqual(await evf.getFiles(), [
-    "./test/stubs/writeTestJS/sample.js",
-    "./test/stubs/writeTestJS/test.11ty.js"
-  ]);
+  t.deepEqual(
+    (await evf.getFiles()).sort(),
+    [
+      "./test/stubs/writeTestJS/sample.js",
+      "./test/stubs/writeTestJS/test.11ty.js"
+    ].sort()
+  );
   t.false(TemplateRender.hasEngine("./test/stubs/writeTestJS/sample.js"));
   t.true(TemplateRender.hasEngine("./test/stubs/writeTestJS/test.11ty.js"));
 });

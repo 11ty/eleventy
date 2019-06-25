@@ -23,6 +23,45 @@ test("Liquid Render Include", async t => {
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
+test("Liquid Render Relative Include", async t => {
+  t.is(new TemplateRender("liquid", "./test/stubs/").getEngineName(), "liquid");
+
+  let fn = await new TemplateRender(
+    "liquid",
+    "./test/stubs/"
+  ).getCompiledTemplate("<p>{% include ./included %}</p>");
+  t.is(await fn(), "<p>This is an include.</p>");
+});
+
+test("Liquid Render Relative (current dir) Include", async t => {
+  let fn = await new TemplateRender(
+    "./test/stubs/relative-liquid/does_not_exist_and_thats_ok.liquid",
+    "./test/stubs/"
+  ).getCompiledTemplate("<p>{% include ./dir/included %}</p>");
+  t.is(await fn(), "<p>TIME IS RELATIVE.</p>");
+});
+
+test("Liquid Render Relative (parent dir) Include", async t => {
+  let fn = await new TemplateRender(
+    "./test/stubs/relative-liquid/dir/does_not_exist_and_thats_ok.liquid",
+    "./test/stubs/"
+  ).getCompiledTemplate("<p>{% include ../dir/included %}</p>");
+  t.is(await fn(), "<p>TIME IS RELATIVE.</p>");
+});
+
+test.skip("Liquid Render Relative (relative include should ignore _includes dir) Include", async t => {
+  let tr = new TemplateRender(
+    "./test/stubs/does_not_exist_and_thats_ok.liquid",
+    "./test/stubs/"
+  );
+
+  let fn = await tr.getCompiledTemplate(`<p>{% include ./included %}</p>`);
+
+  // This is currently wrong, it uses _includes/included.liquid instead of ./included.liquid
+  // Not changing the above to ../stubs/included works fine because that’s not an ambiguous reference.
+  t.is(await fn(), "<p>This is not in the includes dir.</p>");
+});
+
 test("Liquid Render Include with Liquid Suffix", async t => {
   t.is(new TemplateRender("liquid", "./test/stubs/").getEngineName(), "liquid");
 
@@ -286,6 +325,32 @@ test("Liquid Render Include Subfolder Single quotes no extension dynamicPartials
     `<p>{% include 'subfolder/included' %}</p>`
   );
   t.is(await fn(), "<p>This is an include.</p>");
+});
+
+test("Liquid Render Include Subfolder Single quotes (relative include current dir) dynamicPartials true", async t => {
+  let tr = new TemplateRender(
+    "./test/stubs/does_not_exist_and_thats_ok.liquid",
+    "./test/stubs/"
+  );
+  tr.engine.setLiquidOptions({ dynamicPartials: true });
+
+  let fn = await tr.getCompiledTemplate(
+    `<p>{% include './relative-liquid/dir/included' %}</p>`
+  );
+  t.is(await fn(), "<p>TIME IS RELATIVE.</p>");
+});
+
+test("Liquid Render Include Subfolder Single quotes (relative include parent dir) dynamicPartials true", async t => {
+  let tr = new TemplateRender(
+    "./test/stubs/subfolder/does_not_exist_and_thats_ok.liquid",
+    "./test/stubs/"
+  );
+  tr.engine.setLiquidOptions({ dynamicPartials: true });
+
+  let fn = await tr.getCompiledTemplate(
+    `<p>{% include '../relative-liquid/dir/included' %}</p>`
+  );
+  t.is(await fn(), "<p>TIME IS RELATIVE.</p>");
 });
 
 test("Liquid Render Include Subfolder Double quotes no extension dynamicPartials true", async t => {
