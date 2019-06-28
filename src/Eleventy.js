@@ -48,6 +48,10 @@ class Eleventy {
     return dir;
   }
 
+  get watcherBench() {
+    return bench.get("Watcher");
+  }
+
   setDryRun(isDryRun) {
     this.isDryRun = !!isDryRun;
   }
@@ -76,18 +80,73 @@ class Eleventy {
     }
   }
 
-  async restart() {
-    debug("Restarting");
-    this.start = new Date();
-    templateCache.clear();
-    bench.reset();
-    this.eleventyFiles.restart();
+  setIsDebug(isDebug) {
+    this.isDebug = !!isDebug;
+  }
 
-    // reload package.json values (if applicable)
-    // TODO only reset this if it changed
-    delete require.cache[TemplatePath.absolutePath("package.json")];
+  setIsVerbose(isVerbose) {
+    this.isVerbose = !!isVerbose;
 
-    await this.init();
+    if (this.writer) {
+      this.writer.setVerboseOutput(this.isVerbose);
+    }
+    if (bench) {
+      bench.setVerboseOutput(this.isVerbose);
+    }
+  }
+
+  setFormats(formats) {
+    if (formats && formats !== "*") {
+      this.formatsOverride = formats.split(",").map(part => part.trim());
+    }
+  }
+
+  /* For testing */
+  setLogger(logger) {
+    this.logger = logger;
+  }
+
+  getVersion() {
+    return require("../package.json").version;
+  }
+
+  getHelp() {
+    return `usage: eleventy
+       eleventy --input=. --output=./_site
+       eleventy --serve
+
+Arguments:
+     --version
+     --input=.
+       Input template files (default: \`.\`)
+     --output=_site
+       Write HTML output to this folder (default: \`_site\`)
+     --serve
+       Run web server on --port (default 8080) and watch them too
+     --watch
+       Wait for files to change and automatically rewrite (no web server)
+     --formats=liquid,md
+       Whitelist only certain template types (default: \`*\`)
+     --quiet
+       Don’t print all written files (off by default)
+     --config=filename.js
+       Override the eleventy config file path (default: \`.eleventy.js\`)
+     --pathprefix='/'
+       Change all url template filters to use this subdirectory.
+     --dryrun
+       Don’t write any files. Useful with \`DEBUG=Eleventy* npx eleventy\`
+     --help`;
+  }
+
+  resetConfig() {
+    config.reset();
+
+    this.config = config.getConfig();
+    this.eleventyServe.config = this.config;
+  }
+
+  serve(port) {
+    this.eleventyServe.serve(port);
   }
 
   finish() {
@@ -138,6 +197,20 @@ class Eleventy {
     return ret.join(" ");
   }
 
+  async restart() {
+    debug("Restarting");
+    this.start = new Date();
+    templateCache.clear();
+    bench.reset();
+    this.eleventyFiles.restart();
+
+    // reload package.json values (if applicable)
+    // TODO only reset this if it changed
+    delete require.cache[TemplatePath.absolutePath("package.json")];
+
+    await this.init();
+  }
+
   async init() {
     let formats = this.formatsOverride || this.config.templateFormats;
     this.eleventyFiles = new EleventyFiles(
@@ -176,116 +249,6 @@ Template Formats: ${formats.join(",")}`);
     return this.templateData.cacheData();
   }
 
-  setIsDebug(isDebug) {
-    this.isDebug = !!isDebug;
-  }
-
-  setIsVerbose(isVerbose) {
-    this.isVerbose = !!isVerbose;
-
-    if (this.writer) {
-      this.writer.setVerboseOutput(this.isVerbose);
-    }
-    if (bench) {
-      bench.setVerboseOutput(this.isVerbose);
-    }
-  }
-
-  setFormats(formats) {
-    if (formats && formats !== "*") {
-      this.formatsOverride = formats.split(",");
-    }
-  }
-
-  getVersion() {
-    return require("../package.json").version;
-  }
-
-  getHelp() {
-    return `usage: eleventy
-       eleventy --input=. --output=./_site
-       eleventy --serve
-
-Arguments:
-     --version
-     --input=.
-       Input template files (default: \`.\`)
-     --output=_site
-       Write HTML output to this folder (default: \`_site\`)
-     --serve
-       Run web server on --port (default 8080) and watch them too
-     --watch
-       Wait for files to change and automatically rewrite (no web server)
-     --formats=liquid,md
-       Whitelist only certain template types (default: \`*\`)
-     --quiet
-       Don’t print all written files (off by default)
-     --config=filename.js
-       Override the eleventy config file path (default: \`.eleventy.js\`)
-     --pathprefix='/'
-       Change all url template filters to use this subdirectory.
-     --dryrun
-       Don’t write any files. Useful with \`DEBUG=Eleventy* npx eleventy\`
-     --help`;
-  }
-
-  resetConfig() {
-    config.reset();
-
-    this.config = config.getConfig();
-    this.eleventyServe.config = this.config;
-  }
-
-  async _watch(path) {
-    if (path) {
-      path = TemplatePath.addLeadingDotSlash(path);
-    }
-
-    if (this.active) {
-      this.queuedToRun = path;
-      return;
-    }
-
-    this.active = true;
-
-    let localProjectConfigPath = config.getLocalProjectConfigFile();
-    // reset and reload global configuration :O
-    if (path === localProjectConfigPath) {
-      this.resetConfig();
-    }
-    config.resetOnWatch();
-
-    await this.restart();
-    this.watchTargets.clearDependencyRequireCache();
-
-    await this.write();
-
-    this.watchTargets.reset();
-    await this._initWatchDependencies();
-
-    // Add new deps to chokidar
-    this.watcher.add(this.watchTargets.getNewTargetsSinceLastReset());
-
-    let isInclude =
-      path &&
-      TemplatePath.startsWithSubPath(path, this.eleventyFiles.getIncludesDir());
-    this.eleventyServe.reload(path, isInclude);
-
-    this.active = false;
-
-    if (this.queuedToRun) {
-      console.log("You saved while Eleventy was running, let’s run again.");
-      this.queuedToRun = false;
-      await this._watch(this.queuedToRun);
-    } else {
-      console.log("Watching…");
-    }
-  }
-
-  get watcherBench() {
-    return bench.get("Watcher");
-  }
-
   async initWatch() {
     this.watchTargets.add(this.eleventyFiles.getGlobWatcherFiles());
 
@@ -303,36 +266,6 @@ Arguments:
     benchmark.before();
     await this._initWatchDependencies();
     benchmark.after();
-  }
-
-  async _initWatchDependencies() {
-    if (!this.watchTargets.watchJavaScriptDependencies) {
-      return;
-    }
-
-    let dataDir = this.templateData.getDataDir();
-    function filterOutGlobalDataFiles(path) {
-      return !dataDir || path.indexOf(dataDir) === -1;
-    }
-
-    // Template files .11ty.js
-    this.watchTargets.addDependencies(this.eleventyFiles.getWatchPathCache());
-
-    // Config file dependencies
-    this.watchTargets.addDependencies(
-      config.getLocalProjectConfigFile(),
-      filterOutGlobalDataFiles.bind(this)
-    );
-
-    // Deps from Global Data (that aren’t in the global data directory, everything is watched there)
-    this.watchTargets.addDependencies(
-      this.templateData.getWatchPathCache(),
-      filterOutGlobalDataFiles.bind(this)
-    );
-
-    this.watchTargets.addDependencies(
-      await this.eleventyFiles.getWatcherTemplateJavaScriptDataFiles()
-    );
   }
 
   async getWatchedFiles() {
@@ -402,15 +335,6 @@ Arguments:
     );
   }
 
-  serve(port) {
-    this.eleventyServe.serve(port);
-  }
-
-  /* For testing */
-  setLogger(logger) {
-    this.logger = logger;
-  }
-
   async write() {
     let ret;
     if (this.logger) {
@@ -440,6 +364,82 @@ I want to hear it! Open an issue: https://github.com/11ty/eleventy/issues/new`);
     EleventyErrorHandler.logger = undefined;
 
     return ret;
+  }
+
+  async _watch(path) {
+    if (path) {
+      path = TemplatePath.addLeadingDotSlash(path);
+    }
+
+    if (this.active) {
+      this.queuedToRun = path;
+      return;
+    }
+
+    this.active = true;
+
+    let localProjectConfigPath = config.getLocalProjectConfigFile();
+    // reset and reload global configuration :O
+    if (path === localProjectConfigPath) {
+      this.resetConfig();
+    }
+    config.resetOnWatch();
+
+    await this.restart();
+    this.watchTargets.clearDependencyRequireCache();
+
+    await this.write();
+
+    this.watchTargets.reset();
+    await this._initWatchDependencies();
+
+    // Add new deps to chokidar
+    this.watcher.add(this.watchTargets.getNewTargetsSinceLastReset());
+
+    let isInclude =
+      path &&
+      TemplatePath.startsWithSubPath(path, this.eleventyFiles.getIncludesDir());
+    this.eleventyServe.reload(path, isInclude);
+
+    this.active = false;
+
+    if (this.queuedToRun) {
+      console.log("You saved while Eleventy was running, let’s run again.");
+      this.queuedToRun = false;
+      await this._watch(this.queuedToRun);
+    } else {
+      console.log("Watching…");
+    }
+  }
+
+  async _initWatchDependencies() {
+    if (!this.watchTargets.watchJavaScriptDependencies) {
+      return;
+    }
+
+    let dataDir = this.templateData.getDataDir();
+    function filterOutGlobalDataFiles(path) {
+      return !dataDir || path.indexOf(dataDir) === -1;
+    }
+
+    // Template files .11ty.js
+    this.watchTargets.addDependencies(this.eleventyFiles.getWatchPathCache());
+
+    // Config file dependencies
+    this.watchTargets.addDependencies(
+      config.getLocalProjectConfigFile(),
+      filterOutGlobalDataFiles.bind(this)
+    );
+
+    // Deps from Global Data (that aren’t in the global data directory, everything is watched there)
+    this.watchTargets.addDependencies(
+      this.templateData.getWatchPathCache(),
+      filterOutGlobalDataFiles.bind(this)
+    );
+
+    this.watchTargets.addDependencies(
+      await this.eleventyFiles.getWatcherTemplateJavaScriptDataFiles()
+    );
   }
 }
 
