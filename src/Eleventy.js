@@ -451,8 +451,6 @@ Arguments:
       if (processingPath && !isInclude && this.isIncremental) {
         this.writer.resetIncrementalFile();
       }
-
-      this.eleventyServe.reload(processingPath, isInclude);
     }
 
     this.watchTargets.reset();
@@ -461,11 +459,17 @@ Arguments:
     // Add new deps to chokidar
     this.watcher.add(this.watchTargets.getNewTargetsSinceLastReset());
 
+    this.eleventyServe.reload(
+      processingPaths,
+      this.eleventyFiles.getIncludesDir()
+    );
+
     this.active = false;
 
     if (this.queuedPaths.length > 0) {
       console.log(
-        "A file was modified while Eleventy was running, let's run again."
+        "A file was modified while Eleventy was running, let's run again. %o",
+        this.queuedPaths
       );
 
       // When triggering a re-process due like this, ignore the trigger delay.

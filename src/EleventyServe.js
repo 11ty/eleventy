@@ -25,6 +25,7 @@ class EleventyServe {
   getRedirectDir(dirName) {
     return TemplatePath.join(this.outputDir, dirName);
   }
+
   getRedirectDirOverride() {
     // has a pathPrefix, add a /index.html template to redirect to /pathPrefix/
     if (this.getPathPrefix() !== "/") {
@@ -155,15 +156,31 @@ class EleventyServe {
     }
   }
 
-  reload(path, isInclude) {
+  reload(paths, includesDir) {
     if (this.server) {
       if (this.getPathPrefix() !== this.savedPathPrefix) {
         this.server.exit();
         this.serve();
       } else {
-        // Is a CSS input file and is not in the includes folder
-        // TODO check output path file extension of this template (not input path)
-        if (path && path.split(".").pop() === "css" && !isInclude) {
+        var reloadCssOnly = false;
+        if (paths) {
+          reloadCssOnly = true;
+          for (let i = 0; i < paths.length; i++) {
+            const path = paths[i];
+            // If this is not a CSS input file or is the includes folder then
+            // we need to reload everything.
+            if (
+              path &&
+              (!path.endsWith(".css") ||
+                TemplatePath.startsWithSubPath(path, includesDir))
+            ) {
+              reloadCssOnly = false;
+              break;
+            }
+          }
+        }
+
+        if (reloadCssOnly) {
           this.server.reload("*.css");
         } else {
           this.server.reload();
