@@ -2,7 +2,7 @@
 name: I’m having a problem with Eleventy
 about: Create a report to help us improve
 title: ''
-labels: ''
+labels: needs-triage
 assignees: ''
 
 ---
