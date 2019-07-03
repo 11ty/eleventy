@@ -13,203 +13,203 @@ const debugDev = require("debug")("Dev:Eleventy:TemplateWriter");
 
 class TemplateWriterWriteError extends EleventyBaseError {}
 
-function TemplateWriter(
-  inputPath,
-  outputDir,
-  templateFormats, // TODO remove this, see `.getFileManager()` first
-  templateData,
-  isPassthroughAll
-) {
-  this.config = config.getConfig();
-  this.input = inputPath;
-  this.inputDir = TemplatePath.getDir(inputPath);
-  this.outputDir = outputDir;
-  this.templateFormats = templateFormats;
-  this.templateData = templateData;
-  this.isVerbose = true;
-  this.isDryRun = false;
-  this.writeCount = 0;
+class TemplateWriter {
+  constructor(
+    inputPath,
+    outputDir,
+    templateFormats, // TODO remove this, see `.getFileManager()` first
+    templateData,
+    isPassthroughAll
+  ) {
+    this.config = config.getConfig();
+    this.input = inputPath;
+    this.inputDir = TemplatePath.getDir(inputPath);
+    this.outputDir = outputDir;
+    this.templateFormats = templateFormats;
+    this.templateData = templateData;
+    this.isVerbose = true;
+    this.isDryRun = false;
+    this.writeCount = 0;
 
-  // TODO can we get rid of this? It’s only used for tests in getFileManager()
-  this.passthroughAll = isPassthroughAll;
-}
+    // TODO can we get rid of this? It’s only used for tests in getFileManager()
+    this.passthroughAll = isPassthroughAll;
+  }
 
-/* For testing */
-TemplateWriter.prototype.overrideConfig = function(config) {
-  this.config = config;
-};
+  /* For testing */
+  overrideConfig(config) {
+    this.config = config;
+  }
 
-TemplateWriter.prototype.restart = function() {
-  this.writeCount = 0;
-  debugDev("Resetting counts to 0");
-};
+  restart() {
+    this.writeCount = 0;
+    debugDev("Resetting counts to 0");
+  }
 
-TemplateWriter.prototype.setEleventyFiles = function(eleventyFiles) {
-  this.eleventyFiles = eleventyFiles;
-};
+  setEleventyFiles(eleventyFiles) {
+    this.eleventyFiles = eleventyFiles;
+  }
 
-TemplateWriter.prototype.getFileManager = function() {
-  // usually Eleventy.js will setEleventyFiles with the EleventyFiles manager
-  if (!this.eleventyFiles) {
-    // if not, we can create one (used only by tests)
-    this.eleventyFiles = new EleventyFiles(
-      this.input,
+  getFileManager() {
+    // usually Eleventy.js will setEleventyFiles with the EleventyFiles manager
+    if (!this.eleventyFiles) {
+      // if not, we can create one (used only by tests)
+      this.eleventyFiles = new EleventyFiles(
+        this.input,
+        this.outputDir,
+        this.templateFormats,
+        this.passthroughAll
+      );
+      this.eleventyFiles.init();
+    }
+
+    return this.eleventyFiles;
+  }
+
+  async _getAllPaths() {
+    return await this.getFileManager().getFiles();
+  }
+
+  _createTemplate(path) {
+    let tmpl = new Template(
+      path,
+      this.inputDir,
       this.outputDir,
-      this.templateFormats,
-      this.passthroughAll
+      this.templateData
     );
-    this.eleventyFiles.init();
-  }
 
-  return this.eleventyFiles;
-};
+    tmpl.setIsVerbose(this.isVerbose);
+    tmpl.setDryRun(this.isDryRun);
 
-TemplateWriter.prototype._getAllPaths = async function() {
-  return await this.getFileManager().getFiles();
-};
-
-TemplateWriter.prototype._createTemplate = function(path) {
-  let tmpl = new Template(
-    path,
-    this.inputDir,
-    this.outputDir,
-    this.templateData
-  );
-
-  tmpl.setIsVerbose(this.isVerbose);
-  tmpl.setDryRun(this.isDryRun);
-
-  /*
-   * Sample filter: arg str, return pretty HTML string
-   * function(str) {
-   *   return pretty(str, { ocd: true });
-   * }
-   */
-  for (let transformName in this.config.filters) {
-    let transform = this.config.filters[transformName];
-    if (typeof transform === "function") {
-      tmpl.addTransform(transform);
+    /*
+     * Sample filter: arg str, return pretty HTML string
+     * function(str) {
+     *   return pretty(str, { ocd: true });
+     * }
+     */
+    for (let transformName in this.config.filters) {
+      let transform = this.config.filters[transformName];
+      if (typeof transform === "function") {
+        tmpl.addTransform(transform);
+      }
     }
-  }
 
-  for (let linterName in this.config.linters) {
-    let linter = this.config.linters[linterName];
-    if (typeof linter === "function") {
-      tmpl.addLinter(linter);
+    for (let linterName in this.config.linters) {
+      let linter = this.config.linters[linterName];
+      if (typeof linter === "function") {
+        tmpl.addLinter(linter);
+      }
     }
+
+    return tmpl;
   }
 
-  return tmpl;
-};
+  async _addToTemplateMap(paths) {
+    let promises = [];
+    for (let path of paths) {
+      if (TemplateRender.hasEngine(path)) {
+        promises.push(
+          this.templateMap.add(this._createTemplate(path)).then(() => {
+            debug(`${path} added to map.`);
+          })
+        );
+      }
+    }
 
-TemplateWriter.prototype._addToTemplateMap = async function(paths) {
-  let promises = [];
-  for (let path of paths) {
-    if (TemplateRender.hasEngine(path)) {
+    return Promise.all(promises);
+  }
+
+  async _createTemplateMap(paths) {
+    this.templateMap = new TemplateMap();
+
+    await this._addToTemplateMap(paths);
+    await this.templateMap.cache();
+
+    debugDev("TemplateMap cache complete.");
+    return this.templateMap;
+  }
+
+  async _writeTemplate(mapEntry) {
+    let tmpl = mapEntry.template;
+    // we don’t re-use the map templateContent because it doesn’t include layouts
+    return tmpl.writeMapEntry(mapEntry).then(() => {
+      this.writeCount += tmpl.getWriteCount();
+    });
+  }
+
+  async write() {
+    let promises = [];
+    let paths = await this._getAllPaths();
+    debug("Found: %o", paths);
+
+    promises.push(
+      this.getFileManager()
+        .getPassthroughManager()
+        .copyAll(paths)
+        .catch(e => {
+          EleventyErrorHandler.warn(e, "Error with passthrough copy");
+        })
+    );
+
+    // TODO optimize await here
+    await this._createTemplateMap(paths);
+    debug("Template map created.");
+
+    let mapEntry;
+    let usedTemplateContentTooEarlyMap = [];
+    for (mapEntry of this.templateMap.getMap()) {
       promises.push(
-        this.templateMap.add(this._createTemplate(path)).then(() => {
-          debug(`${path} added to map.`);
+        this._writeTemplate(mapEntry).catch(function(e) {
+          // Premature templateContent in layout render, this also happens in
+          // TemplateMap.populateContentDataInMap for non-layout content
+          if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
+            usedTemplateContentTooEarlyMap.push(mapEntry);
+          } else {
+            throw new TemplateWriterWriteError(
+              `Having trouble writing template: ${mapEntry.outputPath}`,
+              e
+            );
+          }
         })
       );
     }
-  }
 
-  return Promise.all(promises);
-};
-
-TemplateWriter.prototype._createTemplateMap = async function(paths) {
-  this.templateMap = new TemplateMap();
-
-  await this._addToTemplateMap(paths);
-  await this.templateMap.cache();
-
-  debugDev("TemplateMap cache complete.");
-  return this.templateMap;
-};
-
-TemplateWriter.prototype._writeTemplate = async function(mapEntry) {
-  let tmpl = mapEntry.template;
-  // we don’t re-use the map templateContent because it doesn’t include layouts
-  return tmpl.writeMapEntry(mapEntry).then(() => {
-    this.writeCount += tmpl.getWriteCount();
-  });
-};
-
-TemplateWriter.prototype.write = async function() {
-  let promises = [];
-  let paths = await this._getAllPaths();
-  debug("Found: %o", paths);
-
-  promises.push(
-    this.getFileManager()
-      .getPassthroughManager()
-      .copyAll(paths)
-      .catch(e => {
-        EleventyErrorHandler.warn(e, "Error with passthrough copy");
-      })
-  );
-
-  // TODO optimize await here
-  await this._createTemplateMap(paths);
-  debug("Template map created.");
-
-  let mapEntry;
-  let usedTemplateContentTooEarlyMap = [];
-  for (mapEntry of this.templateMap.getMap()) {
-    promises.push(
-      this._writeTemplate(mapEntry).catch(function(e) {
-        // Premature templateContent in layout render, this also happens in
-        // TemplateMap.populateContentDataInMap for non-layout content
-        if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
-          usedTemplateContentTooEarlyMap.push(mapEntry);
-        } else {
+    for (mapEntry of usedTemplateContentTooEarlyMap) {
+      promises.push(
+        this._writeTemplate(mapEntry).catch(function(e) {
           throw new TemplateWriterWriteError(
-            `Having trouble writing template: ${mapEntry.outputPath}`,
+            `Having trouble writing template (second pass): ${mapEntry.outputPath}`,
             e
           );
-        }
-      })
-    );
+        })
+      );
+    }
+
+    return Promise.all(promises).catch(e => {
+      EleventyErrorHandler.error(e, "Error writing templates");
+    });
   }
 
-  for (mapEntry of usedTemplateContentTooEarlyMap) {
-    promises.push(
-      this._writeTemplate(mapEntry).catch(function(e) {
-        throw new TemplateWriterWriteError(
-          `Having trouble writing template (second pass): ${
-            mapEntry.outputPath
-          }`,
-          e
-        );
-      })
-    );
+  setVerboseOutput(isVerbose) {
+    this.isVerbose = isVerbose;
   }
 
-  return Promise.all(promises).catch(e => {
-    EleventyErrorHandler.error(e, "Error writing templates");
-  });
-};
+  setDryRun(isDryRun) {
+    this.isDryRun = !!isDryRun;
 
-TemplateWriter.prototype.setVerboseOutput = function(isVerbose) {
-  this.isVerbose = isVerbose;
-};
+    this.getFileManager()
+      .getPassthroughManager()
+      .setDryRun(this.isDryRun);
+  }
 
-TemplateWriter.prototype.setDryRun = function(isDryRun) {
-  this.isDryRun = !!isDryRun;
+  getCopyCount() {
+    return this.getFileManager()
+      .getPassthroughManager()
+      .getCopyCount();
+  }
 
-  this.getFileManager()
-    .getPassthroughManager()
-    .setDryRun(this.isDryRun);
-};
-
-TemplateWriter.prototype.getCopyCount = function() {
-  return this.getFileManager()
-    .getPassthroughManager()
-    .getCopyCount();
-};
-
-TemplateWriter.prototype.getWriteCount = function() {
-  return this.writeCount;
-};
+  getWriteCount() {
+    return this.writeCount;
+  }
+}
 
 module.exports = TemplateWriter;
