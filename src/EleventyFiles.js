@@ -40,9 +40,30 @@ class EleventyFiles {
   }
 
   init() {
-    this.initFormatsGlobs();
+    // Input was a directory
+    if (this.input === this.inputDir) {
+      this.templateGlobs = this.extensionMap.getGlobs(this.inputDir);
+    } else {
+      this.templateGlobs = TemplateGlob.map([this.input]);
+    }
+
     this.initPassthroughManager();
     this.setupGlobs();
+  }
+
+  get validTemplateAndPassthroughCopyGlobs() {
+    if (!this._validTemplateAndPassthroughCopyGlobs) {
+      let globs;
+      if (this.input === this.inputDir) {
+        globs = this.extensionMap.getValidGlobs(this.inputDir);
+      } else {
+        globs = this.templateGlobs;
+      }
+      this._validTemplateAndPassthroughCopyGlobs = globs.concat(
+        this._getPassthroughPaths()
+      );
+    }
+    return this._validTemplateAndPassthroughCopyGlobs;
   }
 
   restart() {
@@ -65,6 +86,7 @@ class EleventyFiles {
   }
 
   get extensionMap() {
+    // for tests
     if (!this._extensionMap) {
       this._extensionMap = new EleventyExtensionMap(this.formats);
     }
@@ -73,17 +95,6 @@ class EleventyFiles {
 
   setPassthroughAll(passthroughAll) {
     this.passthroughAll = !!passthroughAll;
-  }
-
-  initFormatsGlobs() {
-    // Input was a directory
-    if (this.input === this.inputDir) {
-      this.templateGlobs = TemplateGlob.map(
-        this.extensionMap.getGlobs(this.inputDir)
-      );
-    } else {
-      this.templateGlobs = TemplateGlob.map([this.input]);
-    }
   }
 
   initPassthroughManager() {
@@ -122,18 +133,20 @@ class EleventyFiles {
   }
 
   setupGlobs() {
-    this.ignores = this.getIgnores();
+    this.fileIgnores = this.getIgnores();
 
     if (this.passthroughAll) {
-      this.watchedGlobs = TemplateGlob.map([
+      this.templateGlobsWithIgnoresFromFiles = TemplateGlob.map([
         TemplateGlob.normalizePath(this.input, "/**")
-      ]).concat(this.ignores);
+      ]).concat(this.fileIgnores);
     } else {
-      this.watchedGlobs = this.templateGlobs.concat(this.ignores);
+      this.templateGlobsWithIgnoresFromFiles = this.templateGlobs.concat(
+        this.fileIgnores
+      );
     }
 
-    this.templateGlobsWithIgnores = this.watchedGlobs.concat(
-      this.getTemplateIgnores()
+    this.templateGlobsWithAllIgnores = this.templateGlobsWithIgnoresFromFiles.concat(
+      this._getIncludesAndDataDirIgnores()
     );
   }
 
@@ -261,11 +274,11 @@ class EleventyFiles {
     return this.layoutsDir;
   }
 
-  getFileGlobs() {
-    return this.templateGlobsWithIgnores;
+  _testGetFileGlobs() {
+    return this.templateGlobsWithAllIgnores;
   }
 
-  getRawFiles() {
+  _testGetRawFiles() {
     return this.templateGlobs;
   }
 
@@ -274,13 +287,12 @@ class EleventyFiles {
   }
 
   async getFiles() {
-    let globs = this.getFileGlobs();
-
-    debug("Searching for: %o", globs);
+    debug("Searching for: %o", this.templateGlobsWithAllIgnores);
     let paths = TemplatePath.addLeadingDotSlashArray(
-      await fastglob.async(globs, {
-        // nocase: true (case insensitive match) was the old property but was from node-glob, not fastglob
-        caseSensitiveMatch: false,
+      await fastglob.async(this.templateGlobsWithAllIgnores, {
+        // even though the fast-glob docs say to use `caseSensitiveMatch: false`
+        // it doesn’t work and `nocase: true` from node-glob does so ¯\_(ツ)_/¯
+        nocase: true,
         onlyFiles: true,
         dot: true
       })
@@ -289,18 +301,21 @@ class EleventyFiles {
     return paths;
   }
 
+  /* For `eleventy --watch` */
   getGlobWatcherFiles() {
     // TODO is it better to tie the includes and data to specific file extensions or keep the **?
-    return this.templateGlobs
-      .concat(this.getIncludesAndDataDirs())
-      .concat(this.getPassthroughPaths());
+    return this.validTemplateAndPassthroughCopyGlobs.concat(
+      this._getIncludesAndDataDirs()
+    );
   }
 
+  /* For `eleventy --watch` */
   async getGlobWatcherTemplateDataFiles() {
     let templateData = this.getTemplateData();
     return await templateData.getTemplateDataFileGlob();
   }
 
+  /* For `eleventy --watch` */
   // TODO this isn’t great but reduces complexity avoiding using TemplateData:getLocalDataPaths for each template in the cache
   async getWatcherTemplateJavaScriptDataFiles() {
     let globs = await this.getTemplateData().getTemplateJavaScriptDataFileGlob();
@@ -309,22 +324,28 @@ class EleventyFiles {
     );
   }
 
+  /* Ignored by `eleventy --watch` */
   getGlobWatcherIgnores() {
     // convert to format without ! since they are passed in as a separate argument to glob watcher
-    return this.ignores.map(ignore =>
+    return this.fileIgnores.map(ignore =>
       TemplatePath.stripLeadingDotSlash(ignore.substr(1))
     );
   }
 
-  getPassthroughPaths() {
-    let paths = [];
-    paths = paths.concat(this.passthroughManager.getConfigPathGlobs());
-    // These are already added in the root templateGlobs
-    // paths = paths.concat(this.extensionMap.getPrunedGlobs(this.inputDir));
-    return paths;
+  _getPassthroughPaths() {
+    let paths = new Set();
+    // stuff added in addPassthroughCopy()
+    for (let path of this.passthroughManager.getConfigPathGlobs()) {
+      paths.add(path);
+    }
+    // non-template language extensions
+    for (let path of this.extensionMap.getPassthroughCopyGlobs(this.inputDir)) {
+      paths.add(path);
+    }
+    return Array.from(paths);
   }
 
-  getIncludesAndDataDirs() {
+  _getIncludesAndDataDirs() {
     let files = [];
     // we want this to fail on "" because we don’t want to ignore the
     // entire input directory when using ""
@@ -346,8 +367,8 @@ class EleventyFiles {
     return files;
   }
 
-  getTemplateIgnores() {
-    return this.getIncludesAndDataDirs().map(function(dir) {
+  _getIncludesAndDataDirIgnores() {
+    return this._getIncludesAndDataDirs().map(function(dir) {
       return "!" + dir;
     });
   }

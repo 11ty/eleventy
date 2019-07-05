@@ -1,7 +1,6 @@
 const Template = require("./Template");
 const TemplatePath = require("./TemplatePath");
 const TemplateMap = require("./TemplateMap");
-const TemplateRender = require("./TemplateRender");
 const EleventyFiles = require("./EleventyFiles");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");
@@ -18,7 +17,7 @@ class TemplateWriter {
   constructor(
     inputPath,
     outputDir,
-    templateFormats, // TODO remove this, see `.getFileManager()` first
+    templateFormats, // TODO remove this, see `get eleventyFiles` first
     templateData,
     isPassthroughAll
   ) {
@@ -32,7 +31,7 @@ class TemplateWriter {
     this.isDryRun = false;
     this.writeCount = 0;
 
-    // TODO can we get rid of this? It’s only used for tests in getFileManager()
+    // TODO can we get rid of this? It’s only used for tests in `get eleventyFiles``
     this.passthroughAll = isPassthroughAll;
   }
 
@@ -44,10 +43,6 @@ class TemplateWriter {
   restart() {
     this.writeCount = 0;
     debugDev("Resetting counts to 0");
-  }
-
-  setEleventyFiles(eleventyFiles) {
-    this.eleventyFiles = eleventyFiles;
   }
 
   set extensionMap(extensionMap) {
@@ -63,24 +58,32 @@ class TemplateWriter {
     return this._extensionMap;
   }
 
-  getFileManager() {
+  setEleventyFiles(eleventyFiles) {
+    this.eleventyFiles = eleventyFiles;
+  }
+
+  set eleventyFiles(eleventyFiles) {
+    this._eleventyFiles = eleventyFiles;
+  }
+
+  get eleventyFiles() {
     // usually Eleventy.js will setEleventyFiles with the EleventyFiles manager
-    if (!this.eleventyFiles) {
+    if (!this._eleventyFiles) {
       // if not, we can create one (used only by tests)
-      this.eleventyFiles = new EleventyFiles(
+      this._eleventyFiles = new EleventyFiles(
         this.input,
         this.outputDir,
         this.templateFormats,
         this.passthroughAll
       );
-      this.eleventyFiles.init();
+      this._eleventyFiles.init();
     }
 
-    return this.eleventyFiles;
+    return this._eleventyFiles;
   }
 
   async _getAllPaths() {
-    return await this.getFileManager().getFiles();
+    return await this.eleventyFiles.getFiles();
   }
 
   _createTemplate(path) {
@@ -158,7 +161,7 @@ class TemplateWriter {
     debug("Found: %o", paths);
 
     promises.push(
-      this.getFileManager()
+      this.eleventyFiles
         .getPassthroughManager()
         .copyAll(paths)
         .catch(e => {
@@ -212,15 +215,11 @@ class TemplateWriter {
   setDryRun(isDryRun) {
     this.isDryRun = !!isDryRun;
 
-    this.getFileManager()
-      .getPassthroughManager()
-      .setDryRun(this.isDryRun);
+    this.eleventyFiles.getPassthroughManager().setDryRun(this.isDryRun);
   }
 
   getCopyCount() {
-    return this.getFileManager()
-      .getPassthroughManager()
-      .getCopyCount();
+    return this.eleventyFiles.getPassthroughManager().getCopyCount();
   }
 
   getWriteCount() {

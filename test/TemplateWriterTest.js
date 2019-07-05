@@ -23,8 +23,8 @@ test("Output is a subdir of input", async t => {
   );
   evf.init();
 
-  let files = await fastglob.async(evf.getFileGlobs());
-  t.is(evf.getRawFiles().length, 2);
+  let files = await fastglob.async(evf._testGetFileGlobs());
+  t.is(evf._testGetRawFiles().length, 2);
   t.true(files.length > 0);
 
   let tmpl = tw._createTemplate(files[0]);
@@ -366,7 +366,9 @@ Layout 1 dog`
 
 test("Glob Watcher Files with Passthroughs", t => {
   let tw = new TemplateWriter("test/stubs", "test/stubs/_site", ["njk", "png"]);
-  t.deepEqual(tw.getFileManager().getPassthroughPaths(), []);
+  t.deepEqual(tw.eleventyFiles._getPassthroughPaths(), [
+    "./test/stubs/**/*.png"
+  ]);
 });
 
 test("Pagination and TemplateContent", async t => {
@@ -515,8 +517,10 @@ test("Write Test 11ty.js", async t => {
   );
   evf.init();
 
-  let files = await fastglob.async(evf.getFileGlobs());
-  t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTestJS/**/*.11ty.js"]);
+  let files = await fastglob.async(evf._testGetFileGlobs());
+  t.deepEqual(evf._testGetRawFiles(), [
+    "./test/stubs/writeTestJS/**/*.11ty.js"
+  ]);
   t.deepEqual(files, ["./test/stubs/writeTestJS/test.11ty.js"]);
 
   let tmpl = tw._createTemplate(files[0]);

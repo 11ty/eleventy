@@ -39,7 +39,7 @@ test("Keys are mapped to lower case", t => {
 
 test("Pruned globs", t => {
   let map = new EleventyExtensionMap(["pug", "njk", "png"]);
-  t.deepEqual(map.getPrunedGlobs("."), ["./**/*.png"]);
+  t.deepEqual(map.getPassthroughCopyGlobs("."), ["./**/*.png"]);
 });
 
 test("Empty path for fileList", t => {

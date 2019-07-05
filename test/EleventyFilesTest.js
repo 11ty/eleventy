@@ -2,8 +2,6 @@ import test from "ava";
 import fastglob from "fast-glob";
 import EleventyFiles from "../src/EleventyFiles";
 import TemplatePath from "../src/TemplatePath";
-import EleventyExtensionMap from "../src/EleventyExtensionMap";
-import TemplateRender from "../src/TemplateRender";
 import TemplatePassthroughManager from "../src/TemplatePassthroughManager";
 
 test("getFiles", async t => {
@@ -93,8 +91,8 @@ test("Mutually exclusive Input and Output dirs", async t => {
   );
   evf.init();
 
-  let files = await fastglob.async(evf.getFileGlobs());
-  t.is(evf.getRawFiles().length, 2);
+  let files = await fastglob.async(evf._testGetFileGlobs());
+  t.is(evf._testGetRawFiles().length, 2);
   t.true(files.length > 0);
   t.is(files[0], "./test/stubs/writeTest/test.md");
 });
@@ -106,8 +104,8 @@ test("Single File Input (deep path)", async t => {
   ]);
   evf.init();
 
-  let files = await fastglob.async(evf.getFileGlobs());
-  t.is(evf.getRawFiles().length, 1);
+  let files = await fastglob.async(evf._testGetFileGlobs());
+  t.is(evf._testGetRawFiles().length, 1);
   t.is(files.length, 1);
   t.is(files[0], "./test/stubs/index.html");
 });
@@ -116,9 +114,9 @@ test("Single File Input (shallow path)", async t => {
   let evf = new EleventyFiles("README.md", "./test/stubs/_site", ["md"]);
   evf.init();
 
-  let globs = evf.getFileGlobs().filter(path => path !== "!./README.md");
+  let globs = evf._testGetFileGlobs().filter(path => path !== "!./README.md");
   let files = await fastglob.async(globs);
-  t.is(evf.getRawFiles().length, 1);
+  t.is(evf._testGetRawFiles().length, 1);
   t.is(files.length, 1);
   t.is(files[0], "./README.md");
 });
@@ -131,7 +129,7 @@ test("Glob Input", async t => {
   );
   evf.init();
 
-  let globs = evf.getFileGlobs();
+  let globs = evf._testGetFileGlobs();
   let files = await fastglob.async(globs);
   t.is(files.length, 2);
   t.is(files[0], "./test/stubs/glob-pages/about.md");
@@ -179,7 +177,7 @@ test(".eleventyignore files", async t => {
   let ignoredFiles = await fastglob.async("test/stubs/ignoredFolder/*.md");
   t.is(ignoredFiles.length, 1);
 
-  let files = await fastglob.async(evf.getFileGlobs());
+  let files = await fastglob.async(evf._testGetFileGlobs());
   t.true(files.length > 0);
 
   t.is(
@@ -405,7 +403,7 @@ test("Include and Data Dirs", t => {
   let evf = new EleventyFiles("test/stubs", "test/stubs/_site", []);
   evf.init();
 
-  t.deepEqual(evf.getIncludesAndDataDirs(), [
+  t.deepEqual(evf._getIncludesAndDataDirs(), [
     "./test/stubs/_includes/**",
     "./test/stubs/_data/**"
   ]);
@@ -415,7 +413,7 @@ test("Ignore Include and Data Dirs", t => {
   let evf = new EleventyFiles("test/stubs", "test/stubs/_site", []);
   evf.init();
 
-  t.deepEqual(evf.getTemplateIgnores(), [
+  t.deepEqual(evf._getIncludesAndDataDirIgnores(), [
     "!./test/stubs/_includes/**",
     "!./test/stubs/_data/**"
   ]);
@@ -435,7 +433,7 @@ test("Input to 'src' and empty includes dir (issue #403)", t => {
   });
   evf.init();
 
-  t.deepEqual(evf.getFileGlobs(), [
+  t.deepEqual(evf._testGetFileGlobs(), [
     "./src/**/*.md",
     "./src/**/*.liquid",
     "./src/**/*.html",
@@ -503,7 +501,7 @@ test("Issue #403: all .eleventyignores should be relative paths not absolute pat
   });
   evf.init();
 
-  let globs = await evf.getFileGlobs();
+  let globs = await evf._testGetFileGlobs();
   t.is(
     globs.filter(glob => {
       return glob.indexOf(TemplatePath.absolutePath()) > -1;
@@ -552,9 +550,9 @@ test("Glob Watcher Files with Config Passthroughs (one template format)", async 
 
   t.deepEqual(evf.getGlobWatcherFiles(), [
     "./test/stubs/**/*.njk",
+    "./test/stubs/img/**",
     "./test/stubs/_includes/**",
-    "./test/stubs/_data/**",
-    "./test/stubs/img/**"
+    "./test/stubs/_data/**"
   ]);
 });
 
@@ -572,5 +570,5 @@ test("Glob Watcher Files with passthroughAll", async t => {
   let evf = new EleventyFiles("test/stubs", "test/stubs/_site", [], true);
   evf.init();
 
-  t.is((await evf.getFileGlobs())[0], "./test/stubs/**");
+  t.is((await evf._testGetFileGlobs())[0], "./test/stubs/**");
 });
