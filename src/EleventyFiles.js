@@ -278,7 +278,12 @@ class EleventyFiles {
 
     debug("Searching for: %o", globs);
     let paths = TemplatePath.addLeadingDotSlashArray(
-      await fastglob.async(globs, { nocase: true, onlyFiles: true })
+      await fastglob.async(globs, {
+        // nocase: true (case insensitive match) was the old property but was from node-glob, not fastglob
+        caseSensitiveMatch: false,
+        onlyFiles: true,
+        dot: true
+      })
     );
     this.pathCache = paths;
     return paths;

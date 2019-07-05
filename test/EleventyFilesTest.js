@@ -60,8 +60,8 @@ test("getFiles (with js, treated as passthrough copy)", async t => {
 
 test("getFiles (with case insensitivity)", async t => {
   let evf = new EleventyFiles(
-    "./test/stubs/writeTestJS",
-    "./test/stubs/_writeTestJSSite",
+    "./test/stubs/writeTestJS-casesensitive",
+    "./test/stubs/_writeTestJSCaseSensitiveSite",
     ["JS"]
   );
   evf.init();
@@ -69,12 +69,20 @@ test("getFiles (with case insensitivity)", async t => {
   t.deepEqual(
     (await evf.getFiles()).sort(),
     [
-      "./test/stubs/writeTestJS/sample.js",
-      "./test/stubs/writeTestJS/test.11ty.js"
+      "./test/stubs/writeTestJS-casesensitive/sample.Js",
+      "./test/stubs/writeTestJS-casesensitive/test.11Ty.js"
     ].sort()
   );
-  t.false(evf.extensionMap.hasEngine("./test/stubs/writeTestJS/sample.js"));
-  t.true(evf.extensionMap.hasEngine("./test/stubs/writeTestJS/test.11ty.js"));
+  t.false(
+    evf.extensionMap.hasEngine(
+      "./test/stubs/writeTestJS-casesensitive/sample.Js"
+    )
+  );
+  t.true(
+    evf.extensionMap.hasEngine(
+      "./test/stubs/writeTestJS-casesensitive/test.11Ty.js"
+    )
+  );
 });
 
 test("Mutually exclusive Input and Output dirs", async t => {
