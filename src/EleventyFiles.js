@@ -23,7 +23,6 @@ class EleventyFiles {
     this.passthroughAll = !!passthroughAll;
 
     this.formats = formats;
-    this.extensionMap = new EleventyExtensionMap(formats);
   }
 
   initConfig() {
@@ -42,7 +41,7 @@ class EleventyFiles {
 
   init() {
     this.initFormatsGlobs();
-    this.setPassthroughManager();
+    this.initPassthroughManager();
     this.setupGlobs();
   }
 
@@ -56,13 +55,20 @@ class EleventyFiles {
     this.config = config;
     this.initConfig();
   }
-  /* For testing */
-  _setExtensionMap(map) {
-    this.extensionMap = map;
-  }
   /* Set command root for local project paths */
   _setLocalPathRoot(dir) {
     this.localPathRoot = dir;
+  }
+
+  set extensionMap(extensionMap) {
+    this._extensionMap = extensionMap;
+  }
+
+  get extensionMap() {
+    if (!this._extensionMap) {
+      this._extensionMap = new EleventyExtensionMap(this.formats);
+    }
+    return this._extensionMap;
   }
 
   setPassthroughAll(passthroughAll) {
@@ -80,17 +86,20 @@ class EleventyFiles {
     }
   }
 
+  initPassthroughManager() {
+    let mgr = new TemplatePassthroughManager();
+    mgr.setInputDir(this.inputDir);
+    mgr.setOutputDir(this.outputDir);
+    mgr.extensionMap = this.extensionMap;
+    this.passthroughManager = mgr;
+  }
+
   getPassthroughManager() {
     return this.passthroughManager;
   }
 
   setPassthroughManager(mgr) {
-    if (!mgr) {
-      mgr = new TemplatePassthroughManager();
-      mgr.setInputDir(this.inputDir);
-      mgr.setOutputDir(this.outputDir);
-    }
-
+    mgr.extensionMap = this.extensionMap;
     this.passthroughManager = mgr;
   }
 

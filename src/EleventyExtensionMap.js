@@ -2,7 +2,11 @@ const TemplatePath = require("./TemplatePath");
 const config = require("./Config");
 
 class EleventyExtensionMap {
-  constructor(formatKeys = []) {
+  constructor(formatKeys) {
+    this.setFormats(formatKeys);
+  }
+
+  setFormats(formatKeys = []) {
     this.unfilteredFormatKeys = formatKeys.map(function(key) {
       return key.trim().toLowerCase();
     });
@@ -71,8 +75,8 @@ class EleventyExtensionMap {
   }
 
   hasExtension(key) {
-    for (var extension in EleventyExtensionMap.keyMap) {
-      if (EleventyExtensionMap.keyMap[extension] === key) {
+    for (var extension in this.keyMap) {
+      if (this.keyMap[extension] === key) {
         return true;
       }
     }
@@ -89,17 +93,15 @@ class EleventyExtensionMap {
     return extensions;
   }
 
-  getKey(pathOrKey) {
-    return EleventyExtensionMap._getKey(pathOrKey, this.keyMap);
+  hasEngine(pathOrKey) {
+    return !!this.getKey(pathOrKey);
   }
-  static getKey(pathOrKey) {
-    return EleventyExtensionMap._getKey(pathOrKey, EleventyExtensionMap.keyMap);
-  }
-  static _getKey(pathOrKey, map) {
-    pathOrKey = pathOrKey.toLowerCase();
 
-    for (var extension in map) {
-      let key = map[extension];
+  getKey(pathOrKey) {
+    pathOrKey = (pathOrKey || "").toLowerCase();
+
+    for (var extension in this.keyMap) {
+      let key = this.keyMap[extension];
       if (pathOrKey === extension) {
         return key;
       } else if (pathOrKey.endsWith("." + extension)) {
@@ -109,16 +111,7 @@ class EleventyExtensionMap {
   }
 
   removeTemplateExtension(path) {
-    return EleventyExtensionMap._removeTemplateExtension(path, this.keyMap);
-  }
-  static removeTemplateExtension(path) {
-    return EleventyExtensionMap._removeTemplateExtension(
-      path,
-      EleventyExtensionMap.keyMap
-    );
-  }
-  static _removeTemplateExtension(path, map) {
-    for (var extension in map) {
+    for (var extension in this.keyMap) {
       if (path === extension || path.endsWith("." + extension)) {
         return path.substr(0, path.length - 1 - extension.length);
       }
@@ -127,19 +120,7 @@ class EleventyExtensionMap {
   }
 
   get keyMap() {
-    return EleventyExtensionMap._getKeyMap(
-      this.config.templateExtensionAliases || {}
-    );
-  }
-  static get keyMap() {
-    return EleventyExtensionMap._getKeyMap(
-      config.getConfig().templateExtensionAliases || {}
-    );
-  }
-
-  // file extension => key
-  static _getKeyMap(aliases) {
-    let fileExtensionToKeyMap = {
+    return {
       ejs: "ejs",
       md: "md",
       jstl: "jstl",
@@ -152,12 +133,6 @@ class EleventyExtensionMap {
       liquid: "liquid",
       "11ty.js": "11ty.js"
     };
-
-    for (let extension in aliases) {
-      fileExtensionToKeyMap[extension] = aliases[extension];
-    }
-
-    return fileExtensionToKeyMap;
   }
 }
 

@@ -51,7 +51,6 @@ class UserConfig {
     this.dataDeepMerge = false;
     this.experiments = new Set();
     // this.userExtensionMap = {};
-    // this.templateExtensionAliases = {};
     this.watchJavaScriptDependencies = true;
     this.browserSyncConfig = {};
   }
@@ -481,10 +480,6 @@ class UserConfig {
     this.dataDeepMerge = !!deepMerge;
   }
 
-  // addTemplateExtensionAlias(targetKey, extension) {
-  //   this.templateExtensionAliases[extension] = targetKey;
-  // }
-
   setWatchJavaScriptDependencies(watchEnabled) {
     this.watchJavaScriptDependencies = !!watchEnabled;
   }
@@ -526,7 +521,6 @@ class UserConfig {
       useGitIgnore: this.useGitIgnore,
       dataDeepMerge: this.dataDeepMerge,
       experiments: this.experiments,
-      // templateExtensionAliases: this.templateExtensionAliases,
       watchJavaScriptDependencies: this.watchJavaScriptDependencies,
       browserSyncConfig: this.browserSyncConfig,
       frontMatterParsingOptions: this.frontMatterParsingOptions

@@ -3,6 +3,7 @@ const TemplatePath = require("./TemplatePath");
 const TemplateMap = require("./TemplateMap");
 const TemplateRender = require("./TemplateRender");
 const EleventyFiles = require("./EleventyFiles");
+const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyErrorHandler = require("./EleventyErrorHandler");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
@@ -49,6 +50,19 @@ class TemplateWriter {
     this.eleventyFiles = eleventyFiles;
   }
 
+  set extensionMap(extensionMap) {
+    this._extensionMap = extensionMap;
+  }
+
+  get extensionMap() {
+    if (!this._extensionMap) {
+      this._extensionMap = new EleventyExtensionMap(
+        this.config.templateFormats
+      );
+    }
+    return this._extensionMap;
+  }
+
   getFileManager() {
     // usually Eleventy.js will setEleventyFiles with the EleventyFiles manager
     if (!this.eleventyFiles) {
@@ -76,6 +90,8 @@ class TemplateWriter {
       this.outputDir,
       this.templateData
     );
+
+    tmpl.extensionMap = this.extensionMap;
 
     tmpl.setIsVerbose(this.isVerbose);
     tmpl.setDryRun(this.isDryRun);
@@ -106,7 +122,7 @@ class TemplateWriter {
   async _addToTemplateMap(paths) {
     let promises = [];
     for (let path of paths) {
-      if (TemplateRender.hasEngine(path)) {
+      if (this.extensionMap.hasEngine(path)) {
         promises.push(
           this.templateMap.add(this._createTemplate(path)).then(() => {
             debug(`${path} added to map.`);

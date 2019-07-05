@@ -54,8 +54,8 @@ test("getFiles (with js, treated as passthrough copy)", async t => {
       "./test/stubs/writeTestJS/test.11ty.js"
     ].sort()
   );
-  t.false(TemplateRender.hasEngine("./test/stubs/writeTestJS/sample.js"));
-  t.true(TemplateRender.hasEngine("./test/stubs/writeTestJS/test.11ty.js"));
+  t.false(evf.extensionMap.hasEngine("./test/stubs/writeTestJS/sample.js"));
+  t.true(evf.extensionMap.hasEngine("./test/stubs/writeTestJS/test.11ty.js"));
 });
 
 test("getFiles (with case insensitivity)", async t => {
@@ -73,8 +73,8 @@ test("getFiles (with case insensitivity)", async t => {
       "./test/stubs/writeTestJS/test.11ty.js"
     ].sort()
   );
-  t.false(TemplateRender.hasEngine("./test/stubs/writeTestJS/sample.js"));
-  t.true(TemplateRender.hasEngine("./test/stubs/writeTestJS/test.11ty.js"));
+  t.false(evf.extensionMap.hasEngine("./test/stubs/writeTestJS/sample.js"));
+  t.true(evf.extensionMap.hasEngine("./test/stubs/writeTestJS/test.11ty.js"));
 });
 
 test("Mutually exclusive Input and Output dirs", async t => {
@@ -565,26 +565,4 @@ test("Glob Watcher Files with passthroughAll", async t => {
   evf.init();
 
   t.is((await evf.getFileGlobs())[0], "./test/stubs/**");
-});
-
-test("File extension aliasing", async t => {
-  let map = new EleventyExtensionMap(["md"]);
-  map.config = {
-    templateExtensionAliases: {
-      markdown: "md"
-    }
-  };
-
-  let evf = new EleventyFiles(
-    "./test/stubs/writeTestMarkdown",
-    "./test/stubs/_writeTestMarkdownSite",
-    ["md"]
-  );
-  evf._setExtensionMap(map);
-  evf.init();
-
-  t.deepEqual(await evf.getFiles(), [
-    "./test/stubs/writeTestMarkdown/sample.md",
-    "./test/stubs/writeTestMarkdown/sample2.markdown"
-  ]);
 });

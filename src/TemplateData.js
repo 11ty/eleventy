@@ -29,6 +29,18 @@ class TemplateData {
     this.globalData = null;
   }
 
+  // for tests
+  get extensionMap() {
+    if (!this._extensionMap) {
+      this._extensionMap = new EleventyExtensionMap();
+    }
+    return this._extensionMap;
+  }
+
+  set extensionMap(map) {
+    this._extensionMap = map;
+  }
+
   /* Used by tests */
   _setConfig(config) {
     this.config = config;
@@ -161,11 +173,7 @@ class TemplateData {
       // TODO maybe merge these two? (if both valid objects)
       if (dataFileConflicts[folders]) {
         debugWarn(
-          `Warning: the key for a global data file (${
-            files[j]
-          }) will overwrite data from an already existing global data file (${
-            dataFileConflicts[folders]
-          })`
+          `Warning: the key for a global data file (${files[j]}) will overwrite data from an already existing global data file (${dataFileConflicts[folders]})`
         );
       }
       dataFileConflicts[folders] = files[j];
@@ -290,7 +298,7 @@ class TemplateData {
     debugDev("parsed.dir: %o", parsed.dir);
 
     if (parsed.dir) {
-      let fileNameNoExt = EleventyExtensionMap.removeTemplateExtension(
+      let fileNameNoExt = this.extensionMap.removeTemplateExtension(
         parsed.base
       );
       let filePathNoExt = parsed.dir + "/" + fileNameNoExt;
@@ -338,12 +346,11 @@ class TemplateData {
   }
 
   static cleanupData(data) {
-    if ("tags" in data){
-      if (typeof data.tags === "string"){
+    if ("tags" in data) {
+      if (typeof data.tags === "string") {
         data.tags = data.tags ? [data.tags] : [];
-      }
-      else if (data.tags === null){
-        data.tags = []
+      } else if (data.tags === null) {
+        data.tags = [];
       }
     }
 

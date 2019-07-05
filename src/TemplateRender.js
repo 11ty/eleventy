@@ -45,8 +45,19 @@ class TemplateRender {
     }
   }
 
+  set extensionMap(extensionMap) {
+    this._extensionMap = extensionMap;
+  }
+
+  get extensionMap() {
+    if (!this._extensionMap) {
+      this._extensionMap = new EleventyExtensionMap();
+    }
+    return this._extensionMap;
+  }
+
   init(engineNameOrPath) {
-    this.engineName = this.cleanupEngineName(engineNameOrPath);
+    this.engineName = this.extensionMap.getKey(engineNameOrPath);
     if (!this.engineName) {
       throw new TemplateRenderUnknownEngineError(
         `Unknown engine for ${engineNameOrPath}`
@@ -54,24 +65,6 @@ class TemplateRender {
     }
     this.engine = TemplateEngine.getEngine(this.engineName, this.includesDir);
     this.engine.initRequireCache(this.path);
-  }
-
-  cleanupEngineName(tmplPath) {
-    return TemplateRender._cleanupEngineName(
-      tmplPath,
-      this.extensionMap || EleventyExtensionMap
-    );
-  }
-  static cleanupEngineName(tmplPath) {
-    return TemplateRender._cleanupEngineName(tmplPath, EleventyExtensionMap);
-  }
-  static _cleanupEngineName(tmplPath, extensionMapRef) {
-    return extensionMapRef.getKey(tmplPath);
-  }
-
-  static hasEngine(tmplPath) {
-    let name = TemplateRender.cleanupEngineName(tmplPath);
-    return TemplateEngine.hasEngine(name);
   }
 
   static parseEngineOverrides(engineName) {
