@@ -52,7 +52,7 @@ class Markdown extends TemplateEngine {
 
       let engine;
       if (typeof preTemplateEngine === "string") {
-        engine = TemplateEngine.getEngine(
+        engine = this.engineManager.getEngine(
           preTemplateEngine,
           super.getIncludesDir()
         );

@@ -1,5 +1,6 @@
 const TemplatePath = require("./TemplatePath");
 const TemplateEngine = require("./Engines/TemplateEngine");
+const TemplateEngineManager = require("./TemplateEngineManager");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const config = require("./Config");
@@ -63,7 +64,11 @@ class TemplateRender {
         `Unknown engine for ${engineNameOrPath}`
       );
     }
-    this.engine = TemplateEngine.getEngine(this.engineName, this.includesDir);
+    this.engineManager = new TemplateEngineManager();
+    this.engine = this.engineManager.getEngine(
+      this.engineName,
+      this.includesDir
+    );
     this.engine.initRequireCache(this.path);
   }
 
