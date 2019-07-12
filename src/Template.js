@@ -119,7 +119,8 @@ class Template extends TemplateContent {
       this.getTemplateSubfolder(),
       this.baseFile,
       this.extraOutputSubdirectory,
-      this.htmlIOException ? this.config.htmlOutputSuffix : ""
+      this.htmlIOException ? this.config.htmlOutputSuffix : "",
+      this.engine.defaultTemplateFileExtension
     );
   }
 

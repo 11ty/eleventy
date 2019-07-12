@@ -1,7 +1,6 @@
 const TemplatePath = require("./TemplatePath");
 const TemplateEngineManager = require("./TemplateEngineManager");
 const EleventyBaseError = require("./EleventyBaseError");
-const EleventyExtensionMap = require("./EleventyExtensionMap");
 const config = require("./Config");
 // const debug = require("debug")("Eleventy:TemplateRender");
 

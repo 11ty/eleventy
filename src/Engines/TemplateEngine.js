@@ -118,6 +118,10 @@ class TemplateEngine {
   initRequireCache(inputPath) {
     // do nothing
   }
+
+  get defaultTemplateFileExtension() {
+    return "html";
+  }
 }
 
 module.exports = TemplateEngine;

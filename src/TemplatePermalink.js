@@ -43,14 +43,30 @@ TemplatePermalink._hasDuplicateFolder = function(dir, base) {
   return folders[folders.length - 1] === base;
 };
 
-TemplatePermalink.generate = function(dir, filenameNoExt, extraSubdir, suffix) {
+TemplatePermalink.generate = function(
+  dir,
+  filenameNoExt,
+  extraSubdir,
+  suffix,
+  fileExtension = "html"
+) {
   let hasDupeFolder = TemplatePermalink._hasDuplicateFolder(dir, filenameNoExt);
-  let path =
-    (dir ? dir + "/" : "") +
-    (filenameNoExt !== "index" && !hasDupeFolder ? filenameNoExt + "/" : "") +
-    "index" +
-    (suffix || "") +
-    ".html";
+  let path;
+  if (fileExtension === "html") {
+    path =
+      (dir ? dir + "/" : "") +
+      (filenameNoExt !== "index" && !hasDupeFolder ? filenameNoExt + "/" : "") +
+      "index" +
+      (suffix || "") +
+      ".html";
+  } else {
+    path =
+      (dir ? dir + "/" : "") +
+      filenameNoExt +
+      (suffix || "") +
+      "." +
+      fileExtension;
+  }
 
   return new TemplatePermalink(path, extraSubdir);
 };
