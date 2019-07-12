@@ -492,12 +492,16 @@ class UserConfig {
     this.frontMatterParsingOptions = options;
   }
 
-  addExtension(fileExtension, userClass) {
-    this.extensionMap.add({
-      key: fileExtension,
-      extension: fileExtension,
-      compile: userClass
-    });
+  addExtension(fileExtension, options = {}) {
+    this.extensionMap.add(
+      Object.assign(
+        {
+          key: fileExtension,
+          extension: fileExtension
+        },
+        options
+      )
+    );
   }
 
   getMergingConfigObject() {

@@ -298,6 +298,17 @@ class EleventyFiles {
         dot: true
       })
     );
+
+    let extensions = this.config.extensionMap;
+    paths = paths.filter(function(path) {
+      for (let entry of extensions) {
+        if (path.endsWith(entry.extension) && entry.filter) {
+          return entry.filter(path);
+        }
+      }
+      return true;
+    });
+
     this.pathCache = paths;
     return paths;
   }

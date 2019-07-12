@@ -21,6 +21,18 @@ class CustomEngine extends TemplateEngine {
     // TODO generalize this (look at JavaScript.js)
     return this.compileFunction(str, inputPath);
   }
+
+  get defaultTemplateFileExtension() {
+    for (let entry of this.config.extensionMap) {
+      if (entry.key.toLowerCase() === this.name.toLowerCase()) {
+        return entry.outputFileExtension;
+      }
+    }
+
+    throw Error(
+      `Could not find a custom extension for ${this.name}. Did you add it to your config file?`
+    );
+  }
 }
 
 module.exports = CustomEngine;
