@@ -1,6 +1,5 @@
 const ejsLib = require("ejs");
 const TemplateEngine = require("./TemplateEngine");
-const config = require("../Config");
 
 class Ejs extends TemplateEngine {
   constructor(name, includesDir) {

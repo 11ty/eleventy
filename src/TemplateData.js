@@ -33,6 +33,7 @@ class TemplateData {
   get extensionMap() {
     if (!this._extensionMap) {
       this._extensionMap = new EleventyExtensionMap();
+      this._extensionMap.config = this.config;
     }
     return this._extensionMap;
   }
@@ -268,9 +269,10 @@ class TemplateData {
             );
           }
         } else {
-          let fn = await new TemplateRender(engineName).getCompiledTemplate(
-            rawInput
-          );
+          let tr = new TemplateRender(engineName, this.inputDir);
+          tr.extensionMap = this.extensionMap;
+
+          let fn = await tr.getCompiledTemplate(rawInput);
 
           try {
             // pass in rawImports, don’t pass in global data, that’s what we’re parsing

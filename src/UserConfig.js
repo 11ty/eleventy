@@ -50,7 +50,7 @@ class UserConfig {
     this.useGitIgnore = true;
     this.dataDeepMerge = false;
     this.experiments = new Set();
-    // this.userExtensionMap = {};
+    this.extensionMap = new Set();
     this.watchJavaScriptDependencies = true;
     this.browserSyncConfig = {};
   }
@@ -492,6 +492,14 @@ class UserConfig {
     this.frontMatterParsingOptions = options;
   }
 
+  addExtension(fileExtension, userClass) {
+    this.extensionMap.add({
+      key: fileExtension,
+      extension: fileExtension,
+      compile: userClass
+    });
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
@@ -523,13 +531,10 @@ class UserConfig {
       experiments: this.experiments,
       watchJavaScriptDependencies: this.watchJavaScriptDependencies,
       browserSyncConfig: this.browserSyncConfig,
-      frontMatterParsingOptions: this.frontMatterParsingOptions
+      frontMatterParsingOptions: this.frontMatterParsingOptions,
+      extensionMap: this.extensionMap
     };
   }
-
-  // addExtension(fileExtension, userClass) {
-  //   this.userExtensionMap[ fileExtension ] = userClass;
-  // }
 }
 
 module.exports = UserConfig;

@@ -30,6 +30,7 @@ class TemplateContent {
   get extensionMap() {
     if (!this._extensionMap) {
       this._extensionMap = new EleventyExtensionMap();
+      this._extensionMap.config = this.config;
     }
     return this._extensionMap;
   }
@@ -56,11 +57,8 @@ class TemplateContent {
 
   get templateRender() {
     if (!this._templateRender) {
-      this._templateRender = new TemplateRender(
-        this.inputPath,
-        this.inputDir,
-        this.extensionMap
-      );
+      this._templateRender = new TemplateRender(this.inputPath, this.inputDir);
+      this._templateRender.extensionMap = this.extensionMap;
     }
 
     return this._templateRender;

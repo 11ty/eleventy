@@ -3,7 +3,8 @@ const config = require("./Config");
 
 class EleventyExtensionMap {
   constructor(formatKeys) {
-    this.config = config.getConfig();
+    this.formatKeys = formatKeys;
+
     this.setFormats(formatKeys);
   }
 
@@ -22,10 +23,13 @@ class EleventyExtensionMap {
   }
 
   get config() {
-    return this.configOverride || this.config.getConfig();
+    if (!this._config) {
+      this._config = config.getConfig();
+    }
+    return this._config;
   }
   set config(cfg) {
-    this.configOverride = cfg;
+    this._config = cfg;
   }
 
   /* Used for layout path resolution */
@@ -127,19 +131,29 @@ class EleventyExtensionMap {
   // keys are file extensions
   // values are template language keys
   get extensionToKeyMap() {
-    return {
-      ejs: "ejs",
-      md: "md",
-      jstl: "jstl",
-      html: "html",
-      hbs: "hbs",
-      mustache: "mustache",
-      haml: "haml",
-      pug: "pug",
-      njk: "njk",
-      liquid: "liquid",
-      "11ty.js": "11ty.js"
-    };
+    if (!this._extensionToKeyMap) {
+      this._extensionToKeyMap = {
+        ejs: "ejs",
+        md: "md",
+        jstl: "jstl",
+        html: "html",
+        hbs: "hbs",
+        mustache: "mustache",
+        haml: "haml",
+        pug: "pug",
+        njk: "njk",
+        liquid: "liquid",
+        "11ty.js": "11ty.js"
+      };
+
+      if ("extensionMap" in this.config) {
+        for (let entry of this.config.extensionMap) {
+          this._extensionToKeyMap[entry.extension] = entry.key;
+        }
+      }
+    }
+
+    return this._extensionToKeyMap;
   }
 }
 

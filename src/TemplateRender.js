@@ -1,5 +1,4 @@
 const TemplatePath = require("./TemplatePath");
-const TemplateEngine = require("./Engines/TemplateEngine");
 const TemplateEngineManager = require("./TemplateEngineManager");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
@@ -10,25 +9,21 @@ class TemplateRenderUnknownEngineError extends EleventyBaseError {}
 
 // works with full path names or short engine name
 class TemplateRender {
-  constructor(tmplPath, inputDir, extensionMap) {
+  constructor(tmplPath, inputDir) {
     if (!tmplPath) {
       throw new Error(
         `TemplateRender requires a tmplPath argument, instead of ${tmplPath}`
       );
     }
 
-    this.path = tmplPath;
-    this.extensionMap = extensionMap;
+    this.engineNameOrPath = tmplPath;
+    this.inputDir = inputDir;
 
     // optional
     this.includesDir = this._normalizeIncludesDir(inputDir);
 
     this.parseMarkdownWith = this.config.markdownTemplateEngine;
     this.parseHtmlWith = this.config.htmlTemplateEngine;
-
-    this.init(tmplPath);
-
-    this.useMarkdown = this.engineName === "md";
   }
 
   get config() {
@@ -40,10 +35,6 @@ class TemplateRender {
 
   set config(config) {
     this._config = config;
-
-    if (this.engine) {
-      this.engine.config = config;
-    }
   }
 
   set extensionMap(extensionMap) {
@@ -51,25 +42,52 @@ class TemplateRender {
   }
 
   get extensionMap() {
-    if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap();
-    }
     return this._extensionMap;
   }
 
   init(engineNameOrPath) {
-    this.engineName = this.extensionMap.getKey(engineNameOrPath);
-    if (!this.engineName) {
+    this.extensionMap.config = this.config;
+    this._engineName = this.extensionMap.getKey(engineNameOrPath);
+    if (!this._engineName) {
       throw new TemplateRenderUnknownEngineError(
         `Unknown engine for ${engineNameOrPath}`
       );
     }
-    this.engineManager = new TemplateEngineManager();
-    this.engine = this.engineManager.getEngine(
-      this.engineName,
+
+    this._engineManager = new TemplateEngineManager();
+    this._engineManager.config = this.config;
+
+    this._engine = this._engineManager.getEngine(
+      this._engineName,
       this.includesDir
     );
-    this.engine.initRequireCache(this.path);
+    this._engine.config = this.config;
+    this._engine.initRequireCache(engineNameOrPath);
+
+    if (this.useMarkdown === undefined) {
+      this.setUseMarkdown(this._engineName === "md");
+    }
+  }
+
+  get engineName() {
+    if (!this._engineName) {
+      this.init(this.engineNameOrPath);
+    }
+    return this._engineName;
+  }
+
+  get engine() {
+    if (!this._engine) {
+      this.init(this.engineNameOrPath);
+    }
+    return this._engine;
+  }
+
+  get engineManager() {
+    if (!this._engineManager) {
+      this.init(this.engineNameOrPath);
+    }
+    return this._engineManager;
   }
 
   static parseEngineOverrides(engineName) {
@@ -189,14 +207,18 @@ class TemplateRender {
     if (this.engineName === "md") {
       return this.engine.compile(
         str,
-        this.path,
+        this.engineNameOrPath,
         this.parseMarkdownWith,
         !this.useMarkdown
       );
     } else if (this.engineName === "html") {
-      return this.engine.compile(str, this.path, this.parseHtmlWith);
+      return this.engine.compile(
+        str,
+        this.engineNameOrPath,
+        this.parseHtmlWith
+      );
     } else {
-      return this.engine.compile(str, this.path);
+      return this.engine.compile(str, this.engineNameOrPath);
     }
   }
 }

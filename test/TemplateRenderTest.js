@@ -1,28 +1,36 @@
 import test from "ava";
 import TemplateRender from "../src/TemplateRender";
+import EleventyExtensionMap from "../src/EleventyExtensionMap";
+
+function getNewTemplateRender(name, inputDir) {
+  let tr = new TemplateRender(name, inputDir);
+  tr.extensionMap = new EleventyExtensionMap();
+  return tr;
+}
 
 test("Basic", t => {
   t.throws(() => {
-    new TemplateRender("sldkjfkldsj");
+    let tr = getNewTemplateRender("sldkjfkldsj");
+    tr.init("sldkjfkldsj");
   });
 });
 
 test("Includes Dir", async t => {
   t.is(
-    new TemplateRender("ejs", "./test/stubs").getIncludesDir(),
+    getNewTemplateRender("ejs", "./test/stubs").getIncludesDir(),
     "test/stubs/_includes"
   );
 });
 
 test("Invalid override", async t => {
-  let tr = new TemplateRender("ejs", "./test/stubs");
+  let tr = getNewTemplateRender("ejs", "./test/stubs");
   t.throws(() => {
     tr.setEngineOverride("lslkdjf");
   });
 });
 
 test("Valid Override", async t => {
-  let tr = new TemplateRender("ejs", "./test/stubs");
+  let tr = getNewTemplateRender("ejs", "./test/stubs");
   tr.setEngineOverride("njk");
   t.is(tr.getEngineName(), "njk");
   t.truthy(tr.isEngine("njk"));
