@@ -98,6 +98,15 @@ class TemplateConfig {
     if (typeof localConfig === "function") {
       localConfig = localConfig(eleventyConfig);
       // debug( "localConfig is a function, after calling, eleventyConfig is %o", eleventyConfig );
+
+      if (
+        typeof localConfig === "object" &&
+        typeof localConfig.then === "function"
+      ) {
+        throw new EleventyConfigError(
+          `Error in your Eleventy config file '${path}': Returning a promise is not supported`
+        );
+      }
     }
 
     let eleventyConfigApiMergingObject = eleventyConfig.getMergingConfigObject();

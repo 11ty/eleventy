@@ -319,3 +319,12 @@ test("Properly throws error on missing module #182", t => {
     );
   });
 });
+
+test("Properly throws error when config returns a Promise", t => {
+  t.throws(function() {
+    new TemplateConfig(
+      require("../config.js"),
+      "./test/stubs/config-promise.js"
+    );
+  });
+});
