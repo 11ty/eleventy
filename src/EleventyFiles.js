@@ -279,7 +279,7 @@ class EleventyFiles {
     // TODO is it better to tie the includes and data to specific file extensions or keep the **?
     return this.templateGlobs
       .concat(this.getIncludesAndDataDirs())
-      .concat(this.getPassthroughPaths());
+      .concat(this.getPassthroughManager().getConfigPathGlobs());
   }
 
   async getGlobWatcherTemplateDataFiles() {
@@ -304,7 +304,7 @@ class EleventyFiles {
 
   getPassthroughPaths() {
     let paths = [];
-    paths = paths.concat(this.passthroughManager.getConfigPathGlobs());
+    paths = paths.concat(this.passthroughManager.getConfigPaths());
     // These are already added in the root templateGlobs
     // paths = paths.concat(this.extensionMap.getPrunedGlobs(this.inputDir));
     return paths;

@@ -282,13 +282,21 @@ class UserConfig {
    * Adds a path to a file or directory to the list of pass-through copies
    * which are copied as-is to the output.
    *
-   * @param {String} fileOrDir The path to the file or directory that should
-   * be copied.
+   * @param {string|object} fileOrDir The path to the file or directory that should
+   * be copied. OR an object where the key is the input glob and the property is the output directory
    * @returns {any} a reference to the `EleventyConfig` object.
    * @memberof EleventyConfig
    */
   addPassthroughCopy(fileOrDir) {
-    this.passthroughCopies[fileOrDir] = true;
+    if (fileOrDir instanceof Object) {
+      this.passthroughCopies = {
+        ...this.passthroughCopies,
+        ...fileOrDir
+      };
+    } else {
+      // Glob patterns will not work string method
+      this.passthroughCopies[fileOrDir] = fileOrDir;
+    }
 
     return this;
   }

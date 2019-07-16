@@ -1,5 +1,6 @@
 import test from "ava";
 import fs from "fs-extra";
+import rimraf from "rimraf";
 import fastglob from "fast-glob";
 import parsePath from "parse-filepath";
 import EleventyFiles from "../src/EleventyFiles";
@@ -389,13 +390,7 @@ test("Pagination and TemplateContent", async t => {
 <h1>Post 2</h1>`
   );
 
-  fs.unlinkSync("./test/stubs/pagination-templatecontent/_site/index.html");
-  fs.unlinkSync(
-    "./test/stubs/pagination-templatecontent/_site/post-1/index.html"
-  );
-  fs.unlinkSync(
-    "./test/stubs/pagination-templatecontent/_site/post-2/index.html"
-  );
+  rimraf.sync("./test/stubs/pagination-templatecontent/_site/");
 });
 
 test("Custom collection returns array", async t => {
@@ -588,14 +583,20 @@ test.skip("JavaScript with alias", async t => {
   evf.init();
 
   let files = await fastglob.async(evf.getFileGlobs());
-  t.deepEqual(evf.getRawFiles(), [
-    "./test/stubs/writeTestJS/**/*.11ty.js",
-    "./test/stubs/writeTestJS/**/*.js"
-  ]);
-  t.deepEqual(files, [
-    "./test/stubs/writeTestJS/sample.js",
-    "./test/stubs/writeTestJS/test.11ty.js"
-  ]);
+  t.deepEqual(
+    evf.getRawFiles().sort(),
+    [
+      "./test/stubs/writeTestJS/**/*.11ty.js",
+      "./test/stubs/writeTestJS/**/*.js"
+    ].sort()
+  );
+  t.deepEqual(
+    files.sort(),
+    [
+      "./test/stubs/writeTestJS/sample.js",
+      "./test/stubs/writeTestJS/test.11ty.js"
+    ].sort()
+  );
 
   let tw = new TemplateWriter(
     "./test/stubs/writeTestJS",
@@ -616,4 +617,80 @@ test.skip("JavaScript with alias", async t => {
     await tmpl2.getOutputPath(),
     "./test/stubs/_writeTestJSSite/test/index.html"
   );
+});
+
+test("Passthrough file output", async t => {
+  let tw = new TemplateWriter(
+    "./test/stubs/template-passthrough/",
+    "./test/stubs/template-passthrough/_site",
+    ["njk", "md"]
+  );
+
+  const mgr = tw.getFileManager().getPassthroughManager();
+  mgr.setConfig({
+    passthroughFileCopy: true,
+    passthroughCopies: {
+      "./test/stubs/template-passthrough/static": true,
+      "./test/stubs/template-passthrough/static": "./",
+      "./test/stubs/template-passthrough/static/**/*": "./all/",
+      "./test/stubs/template-passthrough/static/**/*.js": "./js/"
+    }
+  });
+
+  tw.setVerboseOutput(false);
+  await tw.write();
+
+  const output = [
+    "./test/stubs/template-passthrough/_site/all/test.js",
+    "./test/stubs/template-passthrough/_site/all/test.css",
+    "./test/stubs/template-passthrough/_site/all/test-nested.css",
+    "./test/stubs/template-passthrough/_site/js/",
+    "./test/stubs/template-passthrough/_site/js/test.js",
+    "./test/stubs/template-passthrough/_site/nested/",
+    "./test/stubs/template-passthrough/_site/nested/test-nested.css",
+    "./test/stubs/template-passthrough/_site/test.css",
+    "./test/stubs/template-passthrough/_site/test.js"
+  ];
+  output.forEach(path => {
+    t.true(fs.existsSync(path));
+  });
+
+  rimraf.sync("./test/stubs/template-passthrough/_site/");
+});
+
+test("Naughty Passthrough paths", async t => {
+  let tw = new TemplateWriter(
+    "./test/stubs/template-passthrough/",
+    "./test/stubs/template-passthrough/_site",
+    ["njk", "md"]
+  );
+
+  const mgr = tw.getFileManager().getPassthroughManager();
+  mgr.setConfig({
+    passthroughFileCopy: true,
+    passthroughCopies: {
+      "../": true,
+      "../": "./",
+      "../*": "./",
+      "./test/stubs/template-passthrough/static/*.css": "./",
+      "./test/stubs/template-passthrough/static/*.js": "../../",
+      "./test/stubs/template-passthrough/img.jpg": "../../"
+    }
+  });
+
+  tw.setVerboseOutput(false);
+
+  await t.throwsAsync(async () => {
+    await tw.write();
+  });
+
+  const output = [
+    "./test/stubs/template-passthrough/_site/nope.txt",
+    "./test/stubs/template-passthrough/_site/nope/",
+    "./test/stubs/test.js",
+    "./test/stubs/img.jpg"
+  ];
+  output.forEach(path => {
+    t.false(fs.existsSync(path));
+  });
 });

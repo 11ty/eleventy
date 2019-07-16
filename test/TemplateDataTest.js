@@ -11,13 +11,6 @@ test("Create", async t => {
   t.true(Object.keys(data[config.keys.package]).length > 0);
 });
 
-// test("Create (old method, file name not dir)", async t => {
-//   let dataObj = new TemplateData("./test/stubs/globalData.json");
-//   let data = await dataObj.getData();
-
-//   t.true(Object.keys(data[config.keys.package]).length > 0);
-// });
-
 test("getData()", async t => {
   let dataObj = new TemplateData("./test/stubs/");
 

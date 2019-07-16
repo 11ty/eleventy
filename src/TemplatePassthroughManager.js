@@ -8,9 +8,8 @@ const debug = require("debug")("Eleventy:TemplatePassthroughManager");
 class TemplatePassthroughManagerCopyError extends EleventyBaseError {}
 
 class TemplatePassthroughManager {
-  constructor(inputDir, outputDir, isDryRun) {
+  constructor() {
     this.config = config.getConfig();
-
     this.reset();
   }
 
@@ -45,7 +44,9 @@ class TemplatePassthroughManager {
     let target = this.config.passthroughCopies || {};
     debug("`passthroughFileCopy` config paths: %o", target);
     for (let path in target) {
-      paths.push(TemplatePath.addLeadingDotSlash(path));
+      const inputPath = TemplatePath.addLeadingDotSlash(path);
+      const outputPath = target[path];
+      paths.push({ inputPath, outputPath });
     }
     debug("`passthroughFileCopy` config normalized paths: %o", paths);
     return paths;
@@ -53,7 +54,7 @@ class TemplatePassthroughManager {
 
   getConfigPathGlobs() {
     return this.getConfigPaths().map(path => {
-      return TemplatePath.convertToRecursiveGlob(path);
+      return TemplatePath.convertToRecursiveGlob(path.inputPath);
     });
   }
 
@@ -80,19 +81,20 @@ class TemplatePassthroughManager {
   async copyPath(path) {
     let pass = new TemplatePassthrough(path, this.outputDir, this.inputDir);
     pass.setDryRun(this.isDryRun);
-
     return pass
       .write()
       .then(
         function() {
           this.count++;
-          debug("Copied %o", path);
+          debug("Copied %o", path.inputPath);
         }.bind(this)
       )
       .catch(function(e) {
-        throw new TemplatePassthroughManagerCopyError(
-          `Having trouble copying '${path}'`,
-          e
+        return Promise.reject(
+          new TemplatePassthroughManagerCopyError(
+            `Having trouble copying '${path.inputPath}'`,
+            e
+          )
         );
       });
   }

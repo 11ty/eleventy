@@ -47,13 +47,15 @@ test("getFiles (with js, treated as passthrough copy)", async t => {
   );
   evf.init();
 
+  const files = await evf.getFiles();
   t.deepEqual(
-    (await evf.getFiles()).sort(),
+    files.sort(),
     [
       "./test/stubs/writeTestJS/sample.js",
       "./test/stubs/writeTestJS/test.11ty.js"
     ].sort()
   );
+
   t.false(TemplateRender.hasEngine("./test/stubs/writeTestJS/sample.js"));
   t.true(TemplateRender.hasEngine("./test/stubs/writeTestJS/test.11ty.js"));
 });
@@ -583,8 +585,13 @@ test("File extension aliasing", async t => {
   evf._setExtensionMap(map);
   evf.init();
 
-  t.deepEqual(await evf.getFiles(), [
-    "./test/stubs/writeTestMarkdown/sample.md",
-    "./test/stubs/writeTestMarkdown/sample2.markdown"
-  ]);
+  const files = await evf.getFiles();
+
+  t.deepEqual(
+    files.sort(),
+    [
+      "./test/stubs/writeTestMarkdown/sample.md",
+      "./test/stubs/writeTestMarkdown/sample2.markdown"
+    ].sort()
+  );
 });
