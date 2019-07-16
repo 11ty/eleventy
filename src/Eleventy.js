@@ -19,7 +19,7 @@ const debug = require("debug")("Eleventy");
  * Runtime of eleventy.
  *
  * @param {String} input - Where to read files from.
- * @param {Output} output - Where to write rendered files to.
+ * @param {String} output - Where to write rendered files to.
  * @returns {undefined}
  */
 class Eleventy {
