@@ -1054,3 +1054,37 @@ test("Duplicate permalinks in template map, no leading slash", async t => {
     await tm.cache();
   });
 });
+
+test("TemplateMap circular references (map.templateContent) using eleventyExcludeFromCollections and collections.all", async t => {
+  let tm = new TemplateMap();
+  await tm.add(
+    new Template(
+      "./test/stubs/issue-522/excluded.md",
+      "./test/stubs/",
+      "./test/stubs/_site"
+    )
+  );
+
+  await tm.add(
+    new Template(
+      "./test/stubs/issue-522/template.md",
+      "./test/stubs/",
+      "./test/stubs/_site"
+    )
+  );
+
+  let map = tm.getMap();
+  t.falsy(map[0].data.collections);
+
+  t.deepEqual(tm.getMappedDependencies(), [
+    "./test/stubs/issue-522/template.md",
+    "___TAG___all",
+    "./test/stubs/issue-522/excluded.md"
+  ]);
+
+  await tm.cache();
+  t.is(tm.getMap().length, 2);
+
+  let collections = await tm.getCollectionsData();
+  t.is(collections.all.length, 1);
+});
