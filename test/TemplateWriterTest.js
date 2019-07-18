@@ -5,11 +5,24 @@ import fastglob from "fast-glob";
 import parsePath from "parse-filepath";
 import EleventyFiles from "../src/EleventyFiles";
 import EleventyExtensionMap from "../src/EleventyExtensionMap";
+import EleventyErrorHandler from "../src/EleventyErrorHandler";
 import TemplateWriter from "../src/TemplateWriter";
 // Not sure why but this import up `ava` and _createTemplate 👀
 // import Template from "../src/Template";
 import eleventyConfig from "../src/EleventyConfig";
 import normalizeNewLines from "./Util/normalizeNewLines";
+
+test.beforeEach(t => {
+  EleventyErrorHandler.logger = {
+    log: function(str) {},
+    warn: function(str) {},
+    error: function(str) {}
+  };
+});
+
+test.afterEach(t => {
+  EleventyErrorHandler.logger = null;
+});
 
 // TODO make sure if output is a subdir of input dir that they don’t conflict.
 test("Output is a subdir of input", async t => {

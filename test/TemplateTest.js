@@ -1451,7 +1451,6 @@ test("Throws a Premature Template Content Error from rendering (njk)", async t =
   let error = await t.throwsAsync(async () => {
     await tmpl.renderPageEntry(mapEntries[0], pageEntries[0]);
   });
-  console.log(error);
   t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
 });
 

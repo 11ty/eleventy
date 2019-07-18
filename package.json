@@ -66,7 +66,7 @@
   },
   "devDependencies": {
     "@11ty/eleventy-plugin-syntaxhighlight": "^2.0.3",
-    "ava": "^2.1.0",
+    "ava": "^2.2.0",
     "lint-staged": "^8.2.1",
     "markdown-it-emoji": "^1.4.0",
     "nyc": "^14.1.1",
