@@ -12,18 +12,6 @@ import TemplateWriter from "../src/TemplateWriter";
 import eleventyConfig from "../src/EleventyConfig";
 import normalizeNewLines from "./Util/normalizeNewLines";
 
-test.beforeEach(t => {
-  EleventyErrorHandler.logger = {
-    log: function(str) {},
-    warn: function(str) {},
-    error: function(str) {}
-  };
-});
-
-test.afterEach(t => {
-  EleventyErrorHandler.logger = null;
-});
-
 // TODO make sure if output is a subdir of input dir that they don’t conflict.
 test("Output is a subdir of input", async t => {
   let tw = new TemplateWriter(
@@ -672,6 +660,12 @@ test("Passthrough file output", async t => {
 });
 
 test("Naughty Passthrough paths", async t => {
+  EleventyErrorHandler.logger = {
+    log: function(str) {},
+    warn: function(str) {},
+    error: function(str) {}
+  };
+
   let tw = new TemplateWriter(
     "./test/stubs/template-passthrough/",
     "./test/stubs/template-passthrough/_site",
@@ -706,4 +700,6 @@ test("Naughty Passthrough paths", async t => {
   output.forEach(path => {
     t.false(fs.existsSync(path));
   });
+
+  EleventyErrorHandler.logger = null;
 });
