@@ -6,9 +6,11 @@ class CustomEngine extends TemplateEngine {
   }
 
   get compileFunction() {
-    for (let entry of this.config.extensionMap) {
-      if (entry.key.toLowerCase() === this.name.toLowerCase()) {
-        return entry.compile;
+    if ("extensionMap" in this.config) {
+      for (let entry of this.config.extensionMap) {
+        if (entry.key.toLowerCase() === this.name.toLowerCase()) {
+          return entry.compile;
+        }
       }
     }
 
@@ -23,9 +25,11 @@ class CustomEngine extends TemplateEngine {
   }
 
   get defaultTemplateFileExtension() {
-    for (let entry of this.config.extensionMap) {
-      if (entry.key.toLowerCase() === this.name.toLowerCase()) {
-        return entry.outputFileExtension;
+    if ("extensionMap" in this.config) {
+      for (let entry of this.config.extensionMap) {
+        if (entry.key.toLowerCase() === this.name.toLowerCase()) {
+          return entry.outputFileExtension;
+        }
       }
     }
 

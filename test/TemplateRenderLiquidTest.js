@@ -704,7 +704,8 @@ test("Liquid Render with dash variable Issue #567", async t => {
   t.is(await fn({ "my-global-name": "Zach" }), "<p>Zach</p>");
 });
 
-test("Issue 600: Liquid Shortcode, Variable with key argument", async t => {
+// Work is Ongoing
+test.skip("Issue 600: Liquid Shortcode, Variable with key argument", async t => {
   let tr = getNewTemplateRender("liquid", "./test/stubs/");
   tr.engine.addShortcode("issue600", function(url) {
     return url;
