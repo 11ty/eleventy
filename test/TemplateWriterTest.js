@@ -632,7 +632,7 @@ test("Passthrough file output", async t => {
     passthroughFileCopy: true,
     passthroughCopies: {
       "./test/stubs/template-passthrough/static": true,
-      "./test/stubs/template-passthrough/static": "./",
+      "./test/stubs/template-passthrough/static/": "./",
       "./test/stubs/template-passthrough/static/**/*": "./all/",
       "./test/stubs/template-passthrough/static/**/*.js": "./js/"
     }
@@ -642,6 +642,7 @@ test("Passthrough file output", async t => {
   await tw.write();
 
   const output = [
+    "./test/stubs/template-passthrough/_site/static/nested/test-nested.css",
     "./test/stubs/template-passthrough/_site/all/test.js",
     "./test/stubs/template-passthrough/_site/all/test.css",
     "./test/stubs/template-passthrough/_site/all/test-nested.css",
@@ -653,6 +654,9 @@ test("Passthrough file output", async t => {
     "./test/stubs/template-passthrough/_site/test.js"
   ];
   output.forEach(path => {
+    if (!fs.existsSync(path)) {
+      t.log(path);
+    }
     t.true(fs.existsSync(path));
   });
 
@@ -676,8 +680,7 @@ test("Naughty Passthrough paths", async t => {
   mgr.setConfig({
     passthroughFileCopy: true,
     passthroughCopies: {
-      "../": true,
-      "../": "./",
+      "../static": true,
       "../*": "./",
       "./test/stubs/template-passthrough/static/*.css": "./",
       "./test/stubs/template-passthrough/static/*.js": "../../",
@@ -692,6 +695,7 @@ test("Naughty Passthrough paths", async t => {
   });
 
   const output = [
+    "./test/stubs/template-passthrough/_site/static",
     "./test/stubs/template-passthrough/_site/nope.txt",
     "./test/stubs/template-passthrough/_site/nope/",
     "./test/stubs/test.js",
