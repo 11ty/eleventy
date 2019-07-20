@@ -42,8 +42,11 @@ class TemplatePassthrough {
 
   async getFiles(glob) {
     debug("Searching for: %o", glob);
-    const files = await TemplatePath.addLeadingDotSlashArray(
-      await fastglob.async(glob)
+    const files = TemplatePath.addLeadingDotSlashArray(
+      await fastglob(glob, {
+        caseSensitiveMatch: false,
+        dot: true
+      })
     );
     return files;
   }

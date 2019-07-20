@@ -87,7 +87,7 @@
     "dependency-graph": "^0.8.0",
     "dependency-tree": "^6.3.0",
     "ejs": "^2.6.2",
-    "fast-glob": "^2.2.7",
+    "fast-glob": "^3.0.4",
     "fs-extra": "^7.0.1",
     "gray-matter": "^4.0.2",
     "hamljs": "^0.6.2",

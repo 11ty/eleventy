@@ -25,7 +25,7 @@ test("Output is a subdir of input", async t => {
   );
   evf.init();
 
-  let files = await fastglob.async(evf.getFileGlobs());
+  let files = await fastglob(evf.getFileGlobs());
   t.is(evf.getRawFiles().length, 2);
   t.true(files.length > 0);
 
@@ -511,7 +511,7 @@ test("Write Test 11ty.js", async t => {
   );
   evf.init();
 
-  let files = await fastglob.async(evf.getFileGlobs());
+  let files = await fastglob(evf.getFileGlobs());
   t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTestJS/**/*.11ty.js"]);
   t.deepEqual(files, ["./test/stubs/writeTestJS/test.11ty.js"]);
 
@@ -538,7 +538,7 @@ test.skip("Markdown with alias", async t => {
   evf._setExtensionMap(map);
   evf.init();
 
-  let files = await fastglob.async(evf.getFileGlobs());
+  let files = await fastglob(evf.getFileGlobs());
   t.deepEqual(evf.getRawFiles(), [
     "./test/stubs/writeTestMarkdown/**/*.md",
     "./test/stubs/writeTestMarkdown/**/*.markdown"
@@ -583,7 +583,7 @@ test.skip("JavaScript with alias", async t => {
   evf._setExtensionMap(map);
   evf.init();
 
-  let files = await fastglob.async(evf.getFileGlobs());
+  let files = await fastglob(evf.getFileGlobs());
   t.deepEqual(
     evf.getRawFiles().sort(),
     [
