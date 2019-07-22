@@ -631,16 +631,16 @@ test("Passthrough file output", async t => {
     passthroughFileCopy: true,
     passthroughCopies: {
       "./test/stubs/template-passthrough/static": true,
-      "./test/stubs/template-passthrough/static": "./",
+      "./test/stubs/template-passthrough/static/": "./",
       "./test/stubs/template-passthrough/static/**/*": "./all/",
       "./test/stubs/template-passthrough/static/**/*.js": "./js/"
     }
   });
 
-  tw.setVerboseOutput(false);
   await tw.write();
 
   const output = [
+    "./test/stubs/template-passthrough/_site/static/nested/test-nested.css",
     "./test/stubs/template-passthrough/_site/all/test.js",
     "./test/stubs/template-passthrough/_site/all/test.css",
     "./test/stubs/template-passthrough/_site/all/test-nested.css",
@@ -651,6 +651,7 @@ test("Passthrough file output", async t => {
     "./test/stubs/template-passthrough/_site/test.css",
     "./test/stubs/template-passthrough/_site/test.js"
   ];
+
   let results = await Promise.all(
     output.map(function(path) {
       return fs.exists(path);
