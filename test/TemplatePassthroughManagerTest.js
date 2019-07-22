@@ -96,17 +96,21 @@ test("Naughty paths outside of project dir", async t => {
     passthroughCopies: {
       "../": "./",
       "../*": "./",
-      "./test/stubs/template-passthrough/static/*.css": "./",
-      "./test/stubs/template-passthrough/static/*.js": "../../",
-      "./test/stubs/template-passthrough/img.jpg": "../../"
+      "./test/stubs/template-passthrough2/static/*.css": "./",
+      "./test/stubs/template-passthrough2/static/*.js": "../../",
+      "./test/stubs/template-passthrough2/img.jpg": "../../"
     }
   });
 
-  await t.throwsAsync(await mgr.copyAll());
+  await t.throwsAsync(async function() {
+    for (let path of mgr.getConfigPaths()) {
+      await mgr.copyPath(path);
+    }
+  });
 
   const output = [
-    "./test/stubs/template-passthrough/_site/nope.txt",
-    "./test/stubs/template-passthrough/_site/nope/",
+    "./test/stubs/template-passthrough2/_site/nope.txt",
+    "./test/stubs/template-passthrough2/_site/nope/",
     "./test/stubs/test.js",
     "./test/stubs/img.jpg"
   ];

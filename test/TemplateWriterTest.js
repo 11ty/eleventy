@@ -663,33 +663,3 @@ test("Passthrough file output", async t => {
 
   rimraf.sync("./test/stubs/template-passthrough/_site/");
 });
-
-// test("Naughty Passthrough paths", async t => {
-//   EleventyErrorHandler.logger = {
-//     log: function(str) {},
-//     warn: function(str) {},
-//     error: function(str) {}
-//   };
-
-//   let tw = new TemplateWriter(
-//     "./test/stubs/template-passthrough/",
-//     "./test/stubs/template-passthrough/_site",
-//     ["njk", "md"]
-//   );
-
-//   const mgr = tw.getFileManager().getPassthroughManager();
-//   mgr.setConfig({
-//     passthroughFileCopy: true,
-//     passthroughCopies: {
-
-//     }
-//   });
-
-//   tw.setVerboseOutput(false);
-
-//   await t.throwsAsync(async () => {
-//     await tw.write();
-//   });
-
-//   EleventyErrorHandler.logger = null;
-// });
