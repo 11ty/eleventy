@@ -1,4 +1,5 @@
 import test from "ava";
+import fs from "fs-extra";
 import TemplatePassthroughManager from "../src/TemplatePassthroughManager";
 
 test("Get paths from Config", async t => {
@@ -86,4 +87,37 @@ test("Get file paths when disabled in config", async t => {
   });
 
   t.deepEqual(mgr.getFilePaths(["test.png"]), []);
+});
+
+test("Naughty paths outside of project dir", async t => {
+  let mgr = new TemplatePassthroughManager();
+  mgr.setConfig({
+    passthroughFileCopy: true,
+    passthroughCopies: {
+      "../": "./",
+      "../*": "./",
+      "./test/stubs/template-passthrough/static/*.css": "./",
+      "./test/stubs/template-passthrough/static/*.js": "../../",
+      "./test/stubs/template-passthrough/img.jpg": "../../"
+    }
+  });
+
+  await t.throwsAsync(await mgr.copyAll());
+
+  const output = [
+    "./test/stubs/template-passthrough/_site/nope.txt",
+    "./test/stubs/template-passthrough/_site/nope/",
+    "./test/stubs/test.js",
+    "./test/stubs/img.jpg"
+  ];
+
+  let results = await Promise.all(
+    output.map(function(path) {
+      return fs.exists(path);
+    })
+  );
+
+  for (let result of results) {
+    t.false(result);
+  }
 });
