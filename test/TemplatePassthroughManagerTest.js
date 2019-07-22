@@ -94,7 +94,7 @@ test("Naughty paths outside of project dir", async t => {
   mgr.setConfig({
     passthroughFileCopy: true,
     passthroughCopies: {
-      "../": "./",
+      "../static": true,
       "../*": "./",
       "./test/stubs/template-passthrough2/static/*.css": "./",
       "./test/stubs/template-passthrough2/static/*.js": "../../",
@@ -109,6 +109,7 @@ test("Naughty paths outside of project dir", async t => {
   });
 
   const output = [
+    "./test/stubs/template-passthrough2/_site/static",
     "./test/stubs/template-passthrough2/_site/nope.txt",
     "./test/stubs/template-passthrough2/_site/nope/",
     "./test/stubs/test.js",
