@@ -5,7 +5,6 @@ import fastglob from "fast-glob";
 import parsePath from "parse-filepath";
 import EleventyFiles from "../src/EleventyFiles";
 import EleventyExtensionMap from "../src/EleventyExtensionMap";
-import EleventyErrorHandler from "../src/EleventyErrorHandler";
 import TemplateWriter from "../src/TemplateWriter";
 // Not sure why but this import up `ava` and _createTemplate 👀
 // import Template from "../src/Template";
@@ -652,54 +651,15 @@ test("Passthrough file output", async t => {
     "./test/stubs/template-passthrough/_site/test.css",
     "./test/stubs/template-passthrough/_site/test.js"
   ];
-  output.forEach(path => {
-    t.true(fs.existsSync(path));
-  });
-
-  rimraf.sync("./test/stubs/template-passthrough/_site/");
-});
-
-test("Naughty Passthrough paths", async t => {
-  EleventyErrorHandler.logger = {
-    log: function(str) {},
-    warn: function(str) {},
-    error: function(str) {}
-  };
-
-  let tw = new TemplateWriter(
-    "./test/stubs/template-passthrough/",
-    "./test/stubs/template-passthrough/_site",
-    ["njk", "md"]
+  let results = await Promise.all(
+    output.map(function(path) {
+      return fs.exists(path);
+    })
   );
 
-  const mgr = tw.getFileManager().getPassthroughManager();
-  mgr.setConfig({
-    passthroughFileCopy: true,
-    passthroughCopies: {
-      "../": true,
-      "../": "./",
-      "../*": "./",
-      "./test/stubs/template-passthrough/static/*.css": "./",
-      "./test/stubs/template-passthrough/static/*.js": "../../",
-      "./test/stubs/template-passthrough/img.jpg": "../../"
-    }
-  });
+  for (let result of results) {
+    t.true(result);
+  }
 
-  tw.setVerboseOutput(false);
-
-  await t.throwsAsync(async () => {
-    await tw.write();
-  });
-
-  const output = [
-    "./test/stubs/template-passthrough/_site/nope.txt",
-    "./test/stubs/template-passthrough/_site/nope/",
-    "./test/stubs/test.js",
-    "./test/stubs/img.jpg"
-  ];
-  output.forEach(path => {
-    t.false(fs.existsSync(path));
-  });
-
-  EleventyErrorHandler.logger = null;
+  rimraf.sync("./test/stubs/template-passthrough/_site/");
 });

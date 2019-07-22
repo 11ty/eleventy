@@ -65,6 +65,7 @@ class TemplatePassthrough {
       )
     );
   }
+
   async write() {
     const copyOptions = {
       overwrite: true,
@@ -77,8 +78,10 @@ class TemplatePassthrough {
       debug("Copying %o", this.inputPath);
       const isDirectory = TemplatePath.isDirectorySync(this.inputPath);
       const isFile = fs.existsSync(this.inputPath);
+
       // If directory or file, recursive copy
       if (isDirectory || isFile) {
+        // IMPORTANT: this returns a promise, does not await for promise to finish
         return this.copy(this.inputPath, this.getOutputPath(), copyOptions);
       }
 
@@ -93,6 +96,7 @@ class TemplatePassthrough {
         )
       );
 
+      // TODO this should return promises, not await for them to finish
       return Promise.all(promises).catch(err => {
         throw new TemplatePassthroughError(
           `Error copying passthrough files: ${err.message}`,
