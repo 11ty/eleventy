@@ -23,6 +23,8 @@ Works with HTML, Markdown, Liquid, Nunjucks, Handlebars, Mustache, EJS, Haml, Pu
 npm run test
 ```
 
+- We use the [ava JavaScript test runner](https://github.com/avajs/ava) ([Assertions documentation](https://github.com/avajs/ava/blob/master/docs/03-assertions.md))
+- ℹ️ To keep tests fast, thou shalt try to avoid writing files in tests.
 - [Code Coverage Statistics](https://github.com/11ty/eleventy/blob/master/docs/coverage.md)
 - [Benchmark for Performance Regressions](https://github.com/11ty/eleventy-benchmark)
 

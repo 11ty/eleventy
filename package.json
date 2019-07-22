@@ -50,12 +50,13 @@
   },
   "ava": {
     "files": [
-      "test/*.js"
+      "test/*"
     ],
     "sources": [
       "**/.eleventyignore",
       "src/**/*.js",
-      "test/stubs/**"
+      "test/stubs/**",
+      "!test/stubs/**/_site/**/*"
     ]
   },
   "lint-staged": {
