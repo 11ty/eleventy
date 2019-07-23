@@ -678,3 +678,17 @@ test("Liquid Render with dash variable Issue #567", async t => {
   let fn = await tr.getCompiledTemplate("<p>{{ my-global-name }}</p>");
   t.is(await fn({ "my-global-name": "Zach" }), "<p>Zach</p>");
 });
+
+test("Issue 600: Liquid Shortcode page.url", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addShortcode("issue600", function(str) {
+    return str + "Zach";
+  });
+
+  t.is(
+    await tr.render("{% issue600 page.url %}", {
+      page: { url: "alkdsjfkslja" }
+    }),
+    "alkdsjfksljaZach"
+  );
+});
