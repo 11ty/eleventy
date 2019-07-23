@@ -134,12 +134,8 @@ test("getFiles where not glob and directory does not exist", async t => {
 });
 
 test("getFiles with glob", async t => {
-  const inputPath = "./test/stubs/template-passthrough/static/**/";
-  let pass = getTemplatePassthrough(
-    "./test/stubs/template-passthrough/static/**/*",
-    "_site",
-    "_src"
-  );
+  const inputPath = "./test/stubs/template-passthrough/static/**";
+  let pass = getTemplatePassthrough(inputPath, "_site", "_src");
   t.truthy(pass);
   const files = await pass.getFiles(inputPath);
   t.deepEqual(
