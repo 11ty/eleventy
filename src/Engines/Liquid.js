@@ -17,7 +17,7 @@ class Liquid extends TemplateEngine {
       number: /[0-9]+\.*[0-9]*/,
       doubleQuoteString: /"(?:\\["\\]|[^\n"\\])*"/,
       singleQuoteString: /'(?:\\['\\]|[^\n'\\])*'/,
-      keyword: /[a-zA-Z0-9\.]+/,
+      keyword: /[a-zA-Z0-9\.\-\_]+/,
       "ignore:whitespace": /[, \t]+/ // includes comma separator
     });
   }

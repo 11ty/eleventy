@@ -679,7 +679,7 @@ test("Liquid Render with dash variable Issue #567", async t => {
   t.is(await fn({ "my-global-name": "Zach" }), "<p>Zach</p>");
 });
 
-test("Issue 600: Liquid Shortcode page.url", async t => {
+test("Issue 600: Liquid Shortcode argument page.url", async t => {
   let tr = new TemplateRender("liquid", "./test/stubs/");
   tr.engine.addShortcode("issue600", function(str) {
     return str + "Zach";
@@ -688,6 +688,34 @@ test("Issue 600: Liquid Shortcode page.url", async t => {
   t.is(
     await tr.render("{% issue600 page.url %}", {
       page: { url: "alkdsjfkslja" }
+    }),
+    "alkdsjfksljaZach"
+  );
+});
+
+test("Issue 600: Liquid Shortcode argument with dashes", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addShortcode("issue600b", function(str) {
+    return str + "Zach";
+  });
+
+  t.is(
+    await tr.render("{% issue600b page-url %}", {
+      "page-url": "alkdsjfkslja"
+    }),
+    "alkdsjfksljaZach"
+  );
+});
+
+test("Issue 600: Liquid Shortcode argument with underscores", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addShortcode("issue600c", function(str) {
+    return str + "Zach";
+  });
+
+  t.is(
+    await tr.render("{% issue600c page_url %}", {
+      page_url: "alkdsjfkslja"
     }),
     "alkdsjfksljaZach"
   );
