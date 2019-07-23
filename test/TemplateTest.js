@@ -416,6 +416,18 @@ test("Layout from template-data-file that has a permalink (fileslug) Issue #121"
   t.is(await tmpl.getOutputPath(), "./dist/test/index.html");
 });
 
+test("Fileslug in an 11ty.js template Issue #588", async t => {
+  let tmpl = new Template(
+    "./test/stubs/fileslug.11ty.js",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let renderedTmpl = (await tmpl.getRenderedTemplates(data))[0];
+  t.is(renderedTmpl.templateContent, "<p>fileslug</p>");
+});
+
 test("Local template data file import (without a global data json)", async t => {
   let dataObj = new TemplateData("./test/stubs/");
   await dataObj.cacheData();

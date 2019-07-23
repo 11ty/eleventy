@@ -11,6 +11,11 @@ test("Easy slug with dot", t => {
   t.is(fs.getSlug(), "file.test");
 });
 
+test("Easy slug with dot 11ty.js", t => {
+  let fs = new TemplateFileSlug("./file.test.11ty.js");
+  t.is(fs.getSlug(), "file.test");
+});
+
 test("Easy slug with date", t => {
   let fs = new TemplateFileSlug("./2018-01-01-file.html");
   t.is(fs.getSlug(), "file");
