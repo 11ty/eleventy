@@ -1,0 +1,2 @@
+datakey1: yaml-datavalue
+datakey2: "{{pkg.name}}"

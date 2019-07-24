@@ -557,6 +557,7 @@ test("Glob Watcher Files with Config Passthroughs (no template formats)", async 
   evf.init();
 
   t.deepEqual(await evf.getGlobWatcherTemplateDataFiles(), [
+    "./test/stubs/**/*.yml",
     "./test/stubs/**/*.json",
     "./test/stubs/**/*.11tydata.js"
   ]);

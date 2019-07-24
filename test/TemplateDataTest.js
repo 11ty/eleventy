@@ -97,14 +97,16 @@ test("addLocalData() doesn’t exist but doesn’t fail (template file does not 
 test("Global Dir Directory", async t => {
   let dataObj = new TemplateData("./");
 
-  t.deepEqual(await dataObj.getGlobalDataGlob(), ["./_data/**/*.(json|js)"]);
+  t.deepEqual(await dataObj.getGlobalDataGlob(), [
+    "./_data/**/*.(yml|json|js)"
+  ]);
 });
 
 test("Global Dir Directory with Constructor Path Arg", async t => {
   let dataObj = new TemplateData("./test/stubs/");
 
   t.deepEqual(await dataObj.getGlobalDataGlob(), [
-    "./test/stubs/_data/**/*.(json|js)"
+    "./test/stubs/_data/**/*.(yml|json|js)"
   ]);
 });
 
@@ -197,7 +199,9 @@ test("getLocalDataPaths", async t => {
   );
 
   t.deepEqual(paths, [
+    "./test/stubs/component/component.yml",
     "./test/stubs/component/component.json",
+    "./test/stubs/component/component.11tydata.yml",
     "./test/stubs/component/component.11tydata.json",
     "./test/stubs/component/component.11tydata.js"
   ]);
@@ -210,13 +214,19 @@ test("Deeper getLocalDataPaths", async t => {
   );
 
   t.deepEqual(paths, [
+    "./test/test.yml",
     "./test/test.json",
+    "./test/test.11tydata.yml",
     "./test/test.11tydata.json",
     "./test/test.11tydata.js",
+    "./test/stubs/stubs.yml",
     "./test/stubs/stubs.json",
+    "./test/stubs/stubs.11tydata.yml",
     "./test/stubs/stubs.11tydata.json",
     "./test/stubs/stubs.11tydata.js",
+    "./test/stubs/component/component.yml",
     "./test/stubs/component/component.json",
+    "./test/stubs/component/component.11tydata.yml",
     "./test/stubs/component/component.11tydata.json",
     "./test/stubs/component/component.11tydata.js"
   ]);
@@ -229,7 +239,9 @@ test("getLocalDataPaths with an 11ty js template", async t => {
   );
 
   t.deepEqual(paths, [
+    "./test/stubs/component/component.yml",
     "./test/stubs/component/component.json",
+    "./test/stubs/component/component.11tydata.yml",
     "./test/stubs/component/component.11tydata.json",
     "./test/stubs/component/component.11tydata.js"
   ]);
@@ -242,7 +254,9 @@ test("getLocalDataPaths with inputDir passed in (trailing slash)", async t => {
   );
 
   t.deepEqual(paths, [
+    "./test/stubs/component/component.yml",
     "./test/stubs/component/component.json",
+    "./test/stubs/component/component.11tydata.yml",
     "./test/stubs/component/component.11tydata.json",
     "./test/stubs/component/component.11tydata.js"
   ]);
@@ -255,7 +269,9 @@ test("getLocalDataPaths with inputDir passed in (no trailing slash)", async t =>
   );
 
   t.deepEqual(paths, [
+    "./test/stubs/component/component.yml",
     "./test/stubs/component/component.json",
+    "./test/stubs/component/component.11tydata.yml",
     "./test/stubs/component/component.11tydata.json",
     "./test/stubs/component/component.11tydata.js"
   ]);
@@ -268,7 +284,9 @@ test("getLocalDataPaths with inputDir passed in (no leading slash)", async t => 
   );
 
   t.deepEqual(paths, [
+    "./test/stubs/component/component.yml",
     "./test/stubs/component/component.json",
+    "./test/stubs/component/component.11tydata.yml",
     "./test/stubs/component/component.11tydata.json",
     "./test/stubs/component/component.11tydata.js"
   ]);
@@ -285,6 +303,7 @@ test("getTemplateDataFileGlob", async t => {
   let tw = new TemplateData("test/stubs");
 
   t.deepEqual(await tw.getTemplateDataFileGlob(), [
+    "./test/stubs/**/*.yml",
     "./test/stubs/**/*.json",
     "./test/stubs/**/*.11tydata.js"
   ]);
@@ -333,4 +352,26 @@ test("Parent directory for data (Issue #337)", async t => {
       hi: "bye"
     }
   });
+});
+
+test("getYamlData()", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+  let data = await dataObj.getData();
+
+  t.is(data.globalData3.datakey1, "yaml-datavalue", "simple data value");
+  t.is(
+    data.globalData3.datakey2,
+    "@11ty/eleventy",
+    `variables, resolve ${config.keys.package} to its value.`
+  );
+
+  let withLocalData = await dataObj.getLocalData(
+    "./test/stubs/component-yaml/component.njk"
+  );
+
+  t.is(withLocalData.yamlKey1, "yaml1");
+  t.is(withLocalData.yamlKey2, "yaml2");
+  t.is(withLocalData.jsonKey1, "json1");
+  t.is(withLocalData.jsonKey2, "json2");
+  t.is(withLocalData.jsKey1, "js1");
 });

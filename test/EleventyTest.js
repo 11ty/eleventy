@@ -55,6 +55,7 @@ test("Eleventy file watching", async t => {
     "./test/stubs/_includes/**",
     "./test/stubs/_data/**",
     "./.eleventy.js",
+    "./test/stubs/**/*.yml",
     "./test/stubs/**/*.json",
     "./test/stubs/**/*.11tydata.js",
     "./test/stubs/deps/dep1.js",
@@ -77,6 +78,7 @@ test("Eleventy file watching (no JS dependencies)", async t => {
     "./test/stubs/_includes/**",
     "./test/stubs/_data/**",
     "./.eleventy.js",
+    "./test/stubs/**/*.yml",
     "./test/stubs/**/*.json",
     "./test/stubs/**/*.11tydata.js"
   ]);
