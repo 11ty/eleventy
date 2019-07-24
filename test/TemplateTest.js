@@ -783,10 +783,40 @@ test("getRenderedData() has all the page variables", async t => {
   t.is(data.page.outputPath, "./dist/template/index.html");
 });
 
+test("Issue #603: page.date Liquid", async t => {
+  let tmpl = new Template(
+    "./test/stubs/pagedate.liquid",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getData();
+
+  t.truthy(data.page.date);
+  t.truthy(data.page.date.toUTCString());
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), data.page.date.toString());
+});
+
+test("Issue #603: page.date Nunjucks", async t => {
+  let tmpl = new Template(
+    "./test/stubs/pagedate.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getData();
+
+  t.truthy(data.page.date);
+  t.truthy(data.page.date.toUTCString());
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), data.page.date.toString());
+});
+
 test("Issue #603: page.date.toUTCString() Nunjucks", async t => {
   // Note this is not supported in Liquid
   let tmpl = new Template(
-    "./test/stubs/pagedate.njk",
+    "./test/stubs/pagedateutc.njk",
     "./test/stubs/",
     "./dist"
   );
