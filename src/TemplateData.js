@@ -219,7 +219,7 @@ class TemplateData {
     return localData;
   }
 
-  async _getLocalJsonString(path) {
+  async _loadFileContents(path) {
     let rawInput;
     try {
       rawInput = await fs.readFile(path, "utf-8");
@@ -229,38 +229,50 @@ class TemplateData {
     return rawInput;
   }
 
-  async getDataValue(path, rawImports, ignoreProcessing) {
-    if (TemplatePath.getExtension(path) === "yml") {
-      let rawInput = await this._getLocalJsonString(path);
-      let engineName = this.dataTemplateEngine;
+  async _parseDataFile(path, rawImports, ignoreProcessing, parser) {
+    let rawInput = await this._loadFileContents(path);
+    let engineName = this.dataTemplateEngine;
 
-      if (rawInput) {
-        if (ignoreProcessing || engineName === false) {
-          try {
-            return yaml.safeLoad(rawInput);
-          } catch (e) {
-            throw new TemplateDataParseError(
-              `Having trouble parsing data file ${path}`,
-              e
-            );
-          }
-        } else {
-          let fn = await new TemplateRender(engineName).getCompiledTemplate(
-            rawInput
-          );
+    if (!rawInput) {
+      return {};
+    }
 
-          try {
-            // pass in rawImports, don’t pass in global data, that’s what we’re parsing
-            return yaml.safeLoad(await fn(rawImports));
-          } catch (e) {
-            throw new TemplateDataParseError(
-              `Having trouble parsing data file ${path}`,
-              e
-            );
-          }
-        }
+    if (ignoreProcessing || engineName === false) {
+      try {
+        return parser(rawInput);
+      } catch (e) {
+        throw new TemplateDataParseError(
+          `Having trouble parsing data file ${path}`,
+          e
+        );
       }
-    } else if (ignoreProcessing || TemplatePath.getExtension(path) === "js") {
+    } else {
+      let fn = await new TemplateRender(engineName).getCompiledTemplate(
+        rawInput
+      );
+
+      try {
+        // pass in rawImports, don’t pass in global data, that’s what we’re parsing
+        return parser(await fn(rawImports));
+      } catch (e) {
+        throw new TemplateDataParseError(
+          `Having trouble parsing data file ${path}`,
+          e
+        );
+      }
+    }
+  }
+
+  async getDataValue(path, rawImports, ignoreProcessing) {
+    let extension = TemplatePath.getExtension(path);
+    if (extension === "yml") {
+      return this._parseDataFile(
+        path,
+        rawImports,
+        ignoreProcessing,
+        yaml.safeLoad
+      );
+    } else if (ignoreProcessing || extension === "js") {
       let localPath = TemplatePath.absolutePath(path);
       if (await fs.pathExists(localPath)) {
         let dataBench = bench.get(`\`${path}\``);
@@ -277,35 +289,12 @@ class TemplateData {
         return {};
       }
     } else {
-      let rawInput = await this._getLocalJsonString(path);
-      let engineName = this.dataTemplateEngine;
-
-      if (rawInput) {
-        if (ignoreProcessing || engineName === false) {
-          try {
-            return JSON.parse(rawInput);
-          } catch (e) {
-            throw new TemplateDataParseError(
-              `Having trouble parsing data file ${path}`,
-              e
-            );
-          }
-        } else {
-          let fn = await new TemplateRender(engineName).getCompiledTemplate(
-            rawInput
-          );
-
-          try {
-            // pass in rawImports, don’t pass in global data, that’s what we’re parsing
-            return JSON.parse(await fn(rawImports));
-          } catch (e) {
-            throw new TemplateDataParseError(
-              `Having trouble parsing data file ${path}`,
-              e
-            );
-          }
-        }
-      }
+      return this._parseDataFile(
+        path,
+        rawImports,
+        ignoreProcessing,
+        JSON.parse
+      );
     }
 
     return {};
