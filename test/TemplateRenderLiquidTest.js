@@ -720,3 +720,16 @@ test("Issue 600: Liquid Shortcode argument with underscores", async t => {
     "alkdsjfksljaZach"
   );
 });
+
+test.skip("Issue 611: Run a function", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+
+  t.is(
+    await tr.render("{{ test() }}", {
+      test: function() {
+        return "alkdsjfksljaZach";
+      }
+    }),
+    "alkdsjfksljaZach"
+  );
+});

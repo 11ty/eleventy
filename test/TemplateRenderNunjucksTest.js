@@ -417,3 +417,16 @@ test("Nunjucks Test if statements on arrays (Issue #524)", async t => {
     "Success."
   );
 });
+
+test.skip("Issue 611: Run a function", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+
+  t.is(
+    await tr.render("{{ test() }}", {
+      test: function() {
+        return "alkdsjfksljaZach";
+      }
+    }),
+    "alkdsjfksljaZach"
+  );
+});
