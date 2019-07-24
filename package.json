@@ -112,7 +112,8 @@
     "semver": "^6.1.1",
     "slugify": "^1.3.4",
     "time-require": "^0.1.2",
-    "valid-url": "^1.0.9"
+    "valid-url": "^1.0.9",
+    "js-yaml": "^3.13.1"
   },
   "pre-commit": "lint-staged",
   "pre-push": "test"
