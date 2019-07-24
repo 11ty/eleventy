@@ -418,7 +418,7 @@ test("Nunjucks Test if statements on arrays (Issue #524)", async t => {
   );
 });
 
-test.skip("Issue 611: Run a function", async t => {
+test("Issue 611: Run a function", async t => {
   let tr = new TemplateRender("njk", "./test/stubs/");
 
   t.is(
