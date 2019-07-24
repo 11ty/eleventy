@@ -1,3 +1,4 @@
+const yaml = require("js-yaml");
 const fs = require("fs-extra");
 const fastglob = require("fast-glob");
 const parsePath = require("parse-filepath");
@@ -111,6 +112,7 @@ class TemplateData {
   async getTemplateDataFileGlob() {
     let dir = await this.getInputDir();
     return TemplatePath.addLeadingDotSlashArray([
+      `${dir}/**/*.yml`,
       `${dir}/**/*.json`, // covers .11tydata.json too
       `${dir}/**/*${this.config.jsDataFileSuffix}.js`
     ]);
@@ -125,7 +127,7 @@ class TemplateData {
 
   async getGlobalDataGlob() {
     let dir = await this.getInputDir();
-    return [this._getGlobalDataGlobByExtension(dir, "(json|js)")];
+    return [this._getGlobalDataGlobByExtension(dir, "(yml|json|js)")];
   }
 
   getWatchPathCache() {
@@ -228,7 +230,37 @@ class TemplateData {
   }
 
   async getDataValue(path, rawImports, ignoreProcessing) {
-    if (ignoreProcessing || TemplatePath.getExtension(path) === "js") {
+    if (TemplatePath.getExtension(path) === "yml") {
+      let rawInput = await this._getLocalJsonString(path);
+      let engineName = this.dataTemplateEngine;
+
+      if (rawInput) {
+        if (ignoreProcessing || engineName === false) {
+          try {
+            return yaml.safeLoad(rawInput);
+          } catch (e) {
+            throw new TemplateDataParseError(
+              `Having trouble parsing data file ${path}`,
+              e
+            );
+          }
+        } else {
+          let fn = await new TemplateRender(engineName).getCompiledTemplate(
+            rawInput
+          );
+
+          try {
+            // pass in rawImports, don’t pass in global data, that’s what we’re parsing
+            return yaml.safeLoad(await fn(rawImports));
+          } catch (e) {
+            throw new TemplateDataParseError(
+              `Having trouble parsing data file ${path}`,
+              e
+            );
+          }
+        }
+      }
+    } else if (ignoreProcessing || TemplatePath.getExtension(path) === "js") {
       let localPath = TemplatePath.absolutePath(path);
       if (await fs.pathExists(localPath)) {
         let dataBench = bench.get(`\`${path}\``);
@@ -297,7 +329,9 @@ class TemplateData {
       debug("Using %o to find data files.", dataSuffix);
       paths.push(filePathNoExt + dataSuffix + ".js");
       paths.push(filePathNoExt + dataSuffix + ".json");
+      paths.push(filePathNoExt + dataSuffix + ".yml");
       paths.push(filePathNoExt + ".json");
+      paths.push(filePathNoExt + ".yml");
 
       let allDirs = TemplatePath.getAllDirs(parsed.dir);
       debugDev("allDirs: %o", allDirs);
@@ -308,13 +342,17 @@ class TemplateData {
         if (!inputDir) {
           paths.push(dirPathNoExt + dataSuffix + ".js");
           paths.push(dirPathNoExt + dataSuffix + ".json");
+          paths.push(dirPathNoExt + dataSuffix + ".yml");
           paths.push(dirPathNoExt + ".json");
+          paths.push(dirPathNoExt + ".yml");
         } else {
           debugDev("dirStr: %o; inputDir: %o", dir, inputDir);
           if (dir.indexOf(inputDir) === 0 && dir !== inputDir) {
             paths.push(dirPathNoExt + dataSuffix + ".js");
             paths.push(dirPathNoExt + dataSuffix + ".json");
+            paths.push(dirPathNoExt + dataSuffix + ".yml");
             paths.push(dirPathNoExt + ".json");
+            paths.push(dirPathNoExt + ".yml");
           }
         }
       }
