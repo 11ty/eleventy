@@ -70,7 +70,10 @@ class JavaScript extends TemplateEngine {
     if (inst && "data" in inst) {
       // get extra data from `data` method,
       // either as a function or getter or object literal
-      return typeof inst.data === "function" ? await inst.data() : inst.data;
+      let result = await (typeof inst.data === "function"
+        ? inst.data()
+        : inst.data);
+      return result;
     }
   }
 
