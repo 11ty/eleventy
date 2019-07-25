@@ -2,12 +2,35 @@ const TemplateEngine = require("./TemplateEngine");
 const TemplatePath = require("../TemplatePath");
 
 class JavaScript extends TemplateEngine {
+  constructor(name, includesDir) {
+    super(name, includesDir);
+    this.instances = {};
+  }
+
   normalize(result) {
     if (Buffer.isBuffer(result)) {
       return result.toString();
     }
 
     return result;
+  }
+
+  getInstanceFromInputPath(inputPath) {
+    if (this.instances[inputPath]) {
+      return this.instances[inputPath];
+    }
+
+    const cls = this._getRequire(inputPath);
+    if (typeof cls === "function") {
+      if (
+        cls.prototype &&
+        ("data" in cls.prototype || "render" in cls.prototype)
+      ) {
+        let inst = new cls();
+        this.instances[inputPath] = inst;
+        return inst;
+      }
+    }
   }
 
   _getRequire(inputPath) {
@@ -25,21 +48,24 @@ class JavaScript extends TemplateEngine {
     if (requirePath in require.cache) {
       delete require.cache[requirePath];
     }
+
+    if (inputPath in this.instances) {
+      delete this.instances[inputPath];
+    }
   }
 
   async getExtraDataFromFile(inputPath) {
-    const cls = this._getRequire(inputPath);
-    if (typeof cls === "function") {
-      if (cls.prototype && "data" in cls.prototype) {
-        // TODO this is instantiating multiple separate instances every time it is called (see also one in compile)
-        let inst = new cls();
-        // get extra data from `data` method,
-        // either as a function or getter or object literal
-        return typeof inst.data === "function" ? await inst.data() : inst.data;
-      }
+    let inst = this.getInstanceFromInputPath(inputPath);
+    if (inst) {
+      // get extra data from `data` method,
+      // either as a function or getter or object literal
+      return typeof inst.data === "function" ? await inst.data() : inst.data;
     }
 
-    return {};
+    const cls = this._getRequire(inputPath);
+    if (typeof cls === "object") {
+      return typeof cls.data === "function" ? await cls.data() : cls.data;
+    }
   }
 
   async compile(str, inputPath) {
@@ -60,7 +86,7 @@ class JavaScript extends TemplateEngine {
     if (typeof cls === "function") {
       // class with a `render` method
       if (cls.prototype && "render" in cls.prototype) {
-        let inst = new cls();
+        let inst = this.getInstanceFromInputPath(inputPath);
         Object.assign(inst, this.config.javascriptFunctions);
         return function(data) {
           return this.normalize(inst.render.call(inst, data));
@@ -70,6 +96,12 @@ class JavaScript extends TemplateEngine {
       // raw function
       return function(data) {
         return this.normalize(cls.call(this.config.javascriptFunctions, data));
+      }.bind(this);
+    } else if (typeof cls === "object" && "render" in cls) {
+      return function(data) {
+        return this.normalize(
+          cls.render.call(this.config.javascriptFunctions, data)
+        );
       }.bind(this);
     } else {
       // string type does not work with javascriptFunctions

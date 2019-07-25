@@ -419,6 +419,7 @@ test("Nunjucks Test if statements on arrays (Issue #524)", async t => {
 });
 
 test("Issue 611: Run a function", async t => {
+  // This does not work in Liquid
   let tr = new TemplateRender("njk", "./test/stubs/");
 
   t.is(
