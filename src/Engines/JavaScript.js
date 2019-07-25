@@ -15,7 +15,14 @@ class JavaScript extends TemplateEngine {
     return result;
   }
 
+  // String, Buffer, Promise
+  // Function, Class
+  // Object
   _getInstance(mod) {
+    let noop = function() {
+      return "";
+    };
+
     if (typeof mod === "string" || mod instanceof Buffer || mod.then) {
       return { render: () => mod };
     } else if (typeof mod === "function") {
@@ -23,11 +30,17 @@ class JavaScript extends TemplateEngine {
         mod.prototype &&
         ("data" in mod.prototype || "render" in mod.prototype)
       ) {
+        if (!("render" in mod.prototype)) {
+          mod.prototype.render = noop;
+        }
         return new mod();
       } else {
         return { render: mod };
       }
     } else if ("data" in mod || "render" in mod) {
+      if (!("render" in mod)) {
+        mod.render = noop;
+      }
       return mod;
     }
   }

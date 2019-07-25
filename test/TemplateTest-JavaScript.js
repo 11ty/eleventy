@@ -222,7 +222,6 @@ test("JavaScript template type (should use the same class instance for data and 
   t.is(pages[0].templateContent.trim(), `<p>Ted${data.rand}</p>`);
 });
 
-// TODO needs way more tests
 test("JavaScript template type (multiple exports)", async t => {
   let tmpl = new Template(
     "./test/stubs/multipleexports.11ty.js",
@@ -233,4 +232,60 @@ test("JavaScript template type (multiple exports)", async t => {
   let data = await tmpl.getData();
   let pages = await tmpl.getRenderedTemplates(data);
   t.is(pages[0].templateContent.trim(), "<p>Ted</p>");
+});
+
+test("JavaScript template type (multiple exports, promises)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/multipleexports-promises.11ty.js",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  t.is(data.name, "Ted");
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), "<p>Ted</p>");
+});
+
+test("JavaScript template type (object)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/object.11ty.js",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  t.is(data.name, "Ted");
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), "<p>Ted</p>");
+});
+
+test("JavaScript template type (object, no render method)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/object-norender.11ty.js",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  t.is(data.name, "Ted");
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), "");
+});
+
+test("JavaScript template type (class, no render method)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/class-norender.11ty.js",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  t.is(data.name, "Ted");
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), "");
 });
