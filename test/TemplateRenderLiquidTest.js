@@ -722,6 +722,7 @@ test("Issue 600: Liquid Shortcode argument with underscores", async t => {
 });
 
 test.skip("Issue 611: Run a function", async t => {
+  // This works in Nunjucks
   let tr = new TemplateRender("liquid", "./test/stubs/");
 
   t.is(
