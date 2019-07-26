@@ -73,13 +73,16 @@ class TemplateContent {
       let options = this.config.frontMatterParsingOptions || {};
       let fm = matter(this.inputContent, options);
       if (options.excerpt && fm.excerpt) {
-        let excerptString = fm.excerpt + (fm.excerpt_separator || "---");
+        let excerptString = fm.excerpt + (options.excerpt_separator || "---");
         if (fm.content.startsWith(excerptString + "\n")) {
           // with a newline after excerpt separator
-          fm.content = fm.content.substr((excerptString + "\n").length);
+          fm.content =
+            fm.excerpt.trim() +
+            "\n" +
+            fm.content.substr((excerptString + "\n").length);
         } else if (fm.content.startsWith(excerptString)) {
           // no newline after excerpt separator
-          fm.content = fm.content.substr(excerptString.length);
+          fm.content = fm.excerpt + fm.content.substr(excerptString.length);
         }
 
         // alias, defaults to page.excerpt

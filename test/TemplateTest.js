@@ -1733,7 +1733,11 @@ test("Custom Front Matter Parsing Options", async t => {
   t.is(frontmatter.data.page.excerpt.trim(), "This is an excerpt.");
 
   t.is(frontmatter.excerpt.trim(), "This is an excerpt.");
-  t.is(frontmatter.content.trim(), "This is content.");
+  t.is(
+    frontmatter.content.trim(),
+    `This is an excerpt.
+This is content.`
+  );
 
   let fulldata = await tmpl.getData();
   t.is(fulldata.page.excerpt.trim(), "This is an excerpt.");
@@ -1756,20 +1760,24 @@ test("Custom Front Matter Parsing Options (using alias)", async t => {
   let frontmatter = await tmpl.getFrontMatter();
   t.is(frontmatter.data.front, "hello");
   t.is(frontmatter.data.my_excerpt.trim(), "This is an excerpt.");
-  t.is(frontmatter.content.trim(), "This is content.");
+  t.is(
+    frontmatter.content.trim(),
+    `This is an excerpt.
+This is content.`
+  );
 
   let fulldata = await tmpl.getData();
   t.is(fulldata.my_excerpt.trim(), "This is an excerpt.");
 });
 
-test("Custom Front Matter Parsing Options (no newline after excerpt separator)", async t => {
+test("Custom Front Matter Parsing Options (no newline before excerpt separator)", async t => {
   let newConfig = Object.assign({}, config);
   newConfig.frontMatterParsingOptions = {
     excerpt: true
   };
 
   let tmpl = new Template(
-    "./test/stubs/custom-frontmatter/template-nonewline.njk",
+    "./test/stubs/custom-frontmatter/template-newline1.njk",
     "./test/stubs/",
     "./dist"
   );
@@ -1780,10 +1788,78 @@ test("Custom Front Matter Parsing Options (no newline after excerpt separator)",
   t.is(frontmatter.data.page.excerpt.trim(), "This is an excerpt.");
 
   t.is(frontmatter.excerpt.trim(), "This is an excerpt.");
-  t.is(frontmatter.content.trim(), "This is content.");
+  t.is(
+    frontmatter.content.trim(),
+    `This is an excerpt.
+This is content.`
+  );
 
   let fulldata = await tmpl.getData();
   t.is(fulldata.page.excerpt.trim(), "This is an excerpt.");
+});
+
+test("Custom Front Matter Parsing Options (no newline after excerpt separator)", async t => {
+  let newConfig = Object.assign({}, config);
+  newConfig.frontMatterParsingOptions = {
+    excerpt: true
+  };
+
+  let tmpl = new Template(
+    "./test/stubs/custom-frontmatter/template-newline3.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  tmpl.config = newConfig;
+
+  let frontmatter = await tmpl.getFrontMatter();
+  t.is(
+    frontmatter.content.trim(),
+    `This is an excerpt.
+This is content.`
+  );
+});
+
+test("Custom Front Matter Parsing Options (no newlines before or after excerpt separator)", async t => {
+  let newConfig = Object.assign({}, config);
+  newConfig.frontMatterParsingOptions = {
+    excerpt: true
+  };
+
+  let tmpl = new Template(
+    "./test/stubs/custom-frontmatter/template-newline2.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  tmpl.config = newConfig;
+
+  let frontmatter = await tmpl.getFrontMatter();
+  t.is(frontmatter.content.trim(), "This is an excerpt.This is content.");
+});
+
+test("Custom Front Matter Parsing Options (html comment separator)", async t => {
+  let newConfig = Object.assign({}, config);
+  newConfig.frontMatterParsingOptions = {
+    excerpt: true,
+    excerpt_separator: "<!-- excerpt -->"
+  };
+
+  let tmpl = new Template(
+    "./test/stubs/custom-frontmatter/template-excerpt-comment.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  tmpl.config = newConfig;
+
+  let frontmatter = await tmpl.getFrontMatter();
+  t.is(frontmatter.data.front, "hello");
+  t.is(frontmatter.data.page.excerpt.trim(), "This is an excerpt.");
+
+  t.is(frontmatter.excerpt.trim(), "This is an excerpt.");
+  t.is(
+    frontmatter.content.trim(),
+    `This is an excerpt.
+This is content.`
+  );
 });
 
 test.skip("Custom Front Matter Parsing Options (using TOML)", async t => {
