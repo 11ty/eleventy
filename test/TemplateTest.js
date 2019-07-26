@@ -778,6 +778,7 @@ test("getRenderedData() has all the page variables", async t => {
   t.truthy(data.page.url);
   t.is(data.page.url, "/template/");
   t.is(data.page.fileSlug, "template");
+  t.is(data.page.filePathStem, "/template");
   t.truthy(data.page.date.getTime());
   t.is(data.page.inputPath, "./test/stubs/template.ejs");
   t.is(data.page.outputPath, "./dist/template/index.html");
@@ -840,6 +841,7 @@ test("getTemplates() data has all the root variables", async t => {
 
   t.is(templates[0].url, "/template/");
   t.is(templates[0].fileSlug, "template");
+  t.is(templates[0].filePathStem, "/template");
   t.truthy(templates[0].date.getTime());
   t.is(templates[0].inputPath, "./test/stubs/template.ejs");
   t.is(templates[0].outputPath, "./dist/template/index.html");
@@ -856,6 +858,7 @@ test("getTemplates() data has all the page variables", async t => {
 
   t.is(templates[0].data.page.url, "/template/");
   t.is(templates[0].data.page.fileSlug, "template");
+  t.is(templates[0].filePathStem, "/template");
   t.truthy(templates[0].data.page.date.getTime());
   t.is(templates[0].data.page.inputPath, "./test/stubs/template.ejs");
   t.is(templates[0].data.page.outputPath, "./dist/template/index.html");
@@ -872,6 +875,7 @@ test("getRenderedTemplates() data has all the page variables", async t => {
   let templates = await tmpl.getRenderedTemplates(data);
   t.is(templates[0].data.page.url, "/template/");
   t.is(templates[0].data.page.fileSlug, "template");
+  t.is(templates[0].filePathStem, "/template");
   t.truthy(templates[0].data.page.date.getTime());
   t.is(templates[0].data.page.inputPath, "./test/stubs/template.ejs");
   t.is(templates[0].data.page.outputPath, "./dist/template/index.html");
@@ -881,6 +885,7 @@ test("getRenderedData() has good slug (empty, index)", async t => {
   let tmpl = new Template("./test/stubs/index.ejs", "./test/stubs/", "./dist");
   let data = await tmpl.getRenderedData();
   t.is(data.page.fileSlug, "");
+  t.is(data.page.filePathStem, "/index");
 });
 
 test("getRenderedData() has good slug", async t => {
@@ -891,6 +896,7 @@ test("getRenderedData() has good slug", async t => {
   );
   let data = await tmpl.getRenderedData();
   t.is(data.page.fileSlug, "includer");
+  t.is(data.page.filePathStem, "/includer");
 });
 
 test("Override base templating engine from .liquid to ejs", async t => {
