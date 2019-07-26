@@ -1734,7 +1734,7 @@ test("Custom Front Matter Parsing Options", async t => {
 
   t.is(frontmatter.excerpt.trim(), "This is an excerpt.");
   t.is(
-    frontmatter.content.trim(),
+    normalizeNewLines(frontmatter.content.trim()),
     `This is an excerpt.
 This is content.`
   );
@@ -1761,7 +1761,7 @@ test("Custom Front Matter Parsing Options (using alias)", async t => {
   t.is(frontmatter.data.front, "hello");
   t.is(frontmatter.data.my_excerpt.trim(), "This is an excerpt.");
   t.is(
-    frontmatter.content.trim(),
+    normalizeNewLines(frontmatter.content.trim()),
     `This is an excerpt.
 This is content.`
   );
@@ -1789,7 +1789,7 @@ test("Custom Front Matter Parsing Options (no newline before excerpt separator)"
 
   t.is(frontmatter.excerpt.trim(), "This is an excerpt.");
   t.is(
-    frontmatter.content.trim(),
+    normalizeNewLines(frontmatter.content.trim()),
     `This is an excerpt.
 This is content.`
   );
@@ -1813,7 +1813,7 @@ test("Custom Front Matter Parsing Options (no newline after excerpt separator)",
 
   let frontmatter = await tmpl.getFrontMatter();
   t.is(
-    frontmatter.content.trim(),
+    normalizeNewLines(frontmatter.content.trim()),
     `This is an excerpt.
 This is content.`
   );
@@ -1856,7 +1856,7 @@ test("Custom Front Matter Parsing Options (html comment separator)", async t => 
 
   t.is(frontmatter.excerpt.trim(), "This is an excerpt.");
   t.is(
-    frontmatter.content.trim(),
+    normalizeNewLines(frontmatter.content.trim()),
     `This is an excerpt.
 This is content.`
   );
