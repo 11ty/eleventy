@@ -289,3 +289,14 @@ test("JavaScript template type (class, no render method)", async t => {
   let pages = await tmpl.getRenderedTemplates(data);
   t.is(pages[0].templateContent.trim(), "");
 });
+test("JavaScript template type (data returns a string)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/exports-flatdata.11ty.js",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  await t.throwsAsync(async () => {
+    await tmpl.getData();
+  });
+});

@@ -1,5 +1,8 @@
 const TemplateEngine = require("./TemplateEngine");
 const TemplatePath = require("../TemplatePath");
+const EleventyBaseError = require("../EleventyBaseError");
+
+class JavaScriptTemplateInvalidDataFormatError extends EleventyBaseError {}
 
 class JavaScript extends TemplateEngine {
   constructor(name, includesDir) {
@@ -86,6 +89,11 @@ class JavaScript extends TemplateEngine {
       let result = await (typeof inst.data === "function"
         ? inst.data()
         : inst.data);
+      if (typeof result !== "object") {
+        throw new JavaScriptTemplateInvalidDataFormatError(
+          `Invalid data format returned from ${inputPath}: typeof ${typeof result}`
+        );
+      }
       return result;
     }
   }
