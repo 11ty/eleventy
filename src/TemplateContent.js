@@ -1,3 +1,4 @@
+const os = require("os");
 const fs = require("fs-extra");
 const normalize = require("normalize-path");
 const matter = require("gray-matter");
@@ -74,12 +75,12 @@ class TemplateContent {
       let fm = matter(this.inputContent, options);
       if (options.excerpt && fm.excerpt) {
         let excerptString = fm.excerpt + (options.excerpt_separator || "---");
-        if (fm.content.startsWith(excerptString + "\n")) {
+        if (fm.content.startsWith(excerptString + os.EOL)) {
           // with a newline after excerpt separator
           fm.content =
             fm.excerpt.trim() +
             "\n" +
-            fm.content.substr((excerptString + "\n").length);
+            fm.content.substr((excerptString + os.EOL).length);
         } else if (fm.content.startsWith(excerptString)) {
           // no newline after excerpt separator
           fm.content = fm.excerpt + fm.content.substr(excerptString.length);
