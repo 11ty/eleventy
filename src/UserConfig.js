@@ -54,6 +54,9 @@ class UserConfig {
     // this.templateExtensionAliases = {};
     this.watchJavaScriptDependencies = true;
     this.browserSyncConfig = {};
+
+    // using Map to preserve insertion order
+    this.dataExtensions = new Map();
   }
 
   versionCheck(expected) {
@@ -537,13 +540,18 @@ class UserConfig {
       // templateExtensionAliases: this.templateExtensionAliases,
       watchJavaScriptDependencies: this.watchJavaScriptDependencies,
       browserSyncConfig: this.browserSyncConfig,
-      frontMatterParsingOptions: this.frontMatterParsingOptions
+      frontMatterParsingOptions: this.frontMatterParsingOptions,
+      dataExtensions: this.dataExtensions
     };
   }
 
   // addExtension(fileExtension, userClass) {
   //   this.userExtensionMap[ fileExtension ] = userClass;
   // }
+
+  addDataExtension(formatExtension, formatParser) {
+    this.dataExtensions.set(formatExtension, formatParser);
+  }
 }
 
 module.exports = UserConfig;

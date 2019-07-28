@@ -110,10 +110,19 @@ class TemplateData {
 
   async getTemplateDataFileGlob() {
     let dir = await this.getInputDir();
-    return TemplatePath.addLeadingDotSlashArray([
+    let paths = [
       `${dir}/**/*.json`, // covers .11tydata.json too
       `${dir}/**/*${this.config.jsDataFileSuffix}.js`
-    ]);
+    ];
+
+    if (this.hasUserDataExtensions()) {
+      let userPaths = this.getUserDataExtensions().map(
+        extension => `${dir}/**/*.${extension}` // covers .11tydata.{extension} too
+      );
+      paths = userPaths.concat(paths);
+    }
+
+    return TemplatePath.addLeadingDotSlashArray(paths);
   }
 
   async getTemplateJavaScriptDataFileGlob() {
@@ -125,7 +134,15 @@ class TemplateData {
 
   async getGlobalDataGlob() {
     let dir = await this.getInputDir();
-    return [this._getGlobalDataGlobByExtension(dir, "(json|js)")];
+    let userExtensions = "";
+    // creating glob string for user extensions
+    if (this.hasUserDataExtensions()) {
+      userExtensions = this.getUserDataExtensions().join("|") + "|";
+    }
+
+    return [
+      this._getGlobalDataGlobByExtension(dir, "(" + userExtensions + "json|js)")
+    ];
   }
 
   getWatchPathCache() {
@@ -156,6 +173,7 @@ class TemplateData {
     let files = TemplatePath.addLeadingDotSlashArray(
       await this.getGlobalDataFiles()
     );
+
     let dataFileConflicts = {};
 
     for (let j = 0, k = files.length; j < k; j++) {
@@ -217,7 +235,31 @@ class TemplateData {
     return localData;
   }
 
-  async _getLocalJsonString(path) {
+  getUserDataExtensions() {
+    if (!this.config.dataExtensions) {
+      return [];
+    }
+
+    // returning extensions in reverse order to create proper extension order
+    // later added formats will override first ones
+    return Array.from(this.config.dataExtensions.keys()).reverse();
+  }
+
+  getUserDataParser(extension) {
+    return this.config.dataExtensions.get(extension);
+  }
+
+  isUserDataExtension(extension) {
+    return (
+      this.config.dataExtensions && this.config.dataExtensions.has(extension)
+    );
+  }
+
+  hasUserDataExtensions() {
+    return this.config.dataExtensions && this.config.dataExtensions.size > 0;
+  }
+
+  async _loadFileContents(path) {
     let rawInput;
     try {
       rawInput = await fs.readFile(path, "utf-8");
@@ -227,56 +269,78 @@ class TemplateData {
     return rawInput;
   }
 
-  async getDataValue(path, rawImports, ignoreProcessing) {
-    if (ignoreProcessing || TemplatePath.getExtension(path) === "js") {
-      let localPath = TemplatePath.absolutePath(path);
-      if (await fs.pathExists(localPath)) {
-        let dataBench = bench.get(`\`${path}\``);
-        dataBench.before();
-        delete require.cache[localPath];
-        let returnValue = require(localPath);
-        if (typeof returnValue === "function") {
-          returnValue = await returnValue();
-        }
+  async _parseDataFile(path, rawImports, ignoreProcessing, parser) {
+    let rawInput = await this._loadFileContents(path);
+    let engineName = this.dataTemplateEngine;
 
-        dataBench.after();
-        return returnValue;
-      } else {
-        return {};
-      }
-    } else {
-      let rawInput = await this._getLocalJsonString(path);
-      let engineName = this.dataTemplateEngine;
-
-      if (rawInput) {
-        if (ignoreProcessing || engineName === false) {
-          try {
-            return JSON.parse(rawInput);
-          } catch (e) {
-            throw new TemplateDataParseError(
-              `Having trouble parsing data file ${path}`,
-              e
-            );
-          }
-        } else {
-          let fn = await new TemplateRender(engineName).getCompiledTemplate(
-            rawInput
-          );
-
-          try {
-            // pass in rawImports, don’t pass in global data, that’s what we’re parsing
-            return JSON.parse(await fn(rawImports));
-          } catch (e) {
-            throw new TemplateDataParseError(
-              `Having trouble parsing data file ${path}`,
-              e
-            );
-          }
-        }
-      }
+    if (!rawInput) {
+      return {};
     }
 
-    return {};
+    if (ignoreProcessing || engineName === false) {
+      try {
+        return parser(rawInput);
+      } catch (e) {
+        throw new TemplateDataParseError(
+          `Having trouble parsing data file ${path}`,
+          e
+        );
+      }
+    } else {
+      let fn = await new TemplateRender(engineName).getCompiledTemplate(
+        rawInput
+      );
+
+      try {
+        // pass in rawImports, don’t pass in global data, that’s what we’re parsing
+        let raw = await fn(rawImports);
+        return parser(raw);
+      } catch (e) {
+        throw new TemplateDataParseError(
+          `Having trouble parsing data file ${path}`,
+          e
+        );
+      }
+    }
+  }
+
+  async getDataValue(path, rawImports, ignoreProcessing) {
+    let extension = TemplatePath.getExtension(path);
+
+    if ((ignoreProcessing && extension === "json") || extension === "js") {
+      let localPath = TemplatePath.absolutePath(path);
+      if (!(await fs.pathExists(localPath))) {
+        return {};
+      }
+
+      let dataBench = bench.get(`\`${path}\``);
+      dataBench.before();
+      delete require.cache[localPath];
+
+      let returnValue = require(localPath);
+      if (typeof returnValue === "function") {
+        returnValue = await returnValue();
+      }
+
+      dataBench.after();
+      return returnValue;
+    } else if (this.isUserDataExtension(extension)) {
+      var parser = this.getUserDataParser(extension);
+      return this._parseDataFile(path, rawImports, ignoreProcessing, parser);
+    } else {
+      return this._parseDataFile(
+        path,
+        rawImports,
+        ignoreProcessing,
+        JSON.parse
+      );
+    }
+  }
+
+  _pushExtensionsToPaths(paths, curpath, extensions) {
+    for (let extension of extensions) {
+      paths.push(curpath + "." + extension);
+    }
   }
 
   async getLocalDataPaths(templatePath) {
@@ -285,19 +349,34 @@ class TemplateData {
     let inputDir = TemplatePath.addLeadingDotSlash(
       TemplatePath.normalize(this.inputDir)
     );
+
     debugDev("getLocalDataPaths(%o)", templatePath);
     debugDev("parsed.dir: %o", parsed.dir);
+
+    let userExtensions = this.getUserDataExtensions();
 
     if (parsed.dir) {
       let fileNameNoExt = EleventyExtensionMap.removeTemplateExtension(
         parsed.base
       );
+
       let filePathNoExt = parsed.dir + "/" + fileNameNoExt;
       let dataSuffix = this.config.jsDataFileSuffix;
       debug("Using %o to find data files.", dataSuffix);
+
+      // data suffix
       paths.push(filePathNoExt + dataSuffix + ".js");
       paths.push(filePathNoExt + dataSuffix + ".json");
+      // inject user extensions
+      this._pushExtensionsToPaths(
+        paths,
+        filePathNoExt + dataSuffix,
+        userExtensions
+      );
+
+      // top level
       paths.push(filePathNoExt + ".json");
+      this._pushExtensionsToPaths(paths, filePathNoExt, userExtensions);
 
       let allDirs = TemplatePath.getAllDirs(parsed.dir);
       debugDev("allDirs: %o", allDirs);
@@ -306,15 +385,33 @@ class TemplateData {
         let dirPathNoExt = dir + "/" + lastDir;
 
         if (!inputDir) {
+          // data suffix
           paths.push(dirPathNoExt + dataSuffix + ".js");
           paths.push(dirPathNoExt + dataSuffix + ".json");
+          this._pushExtensionsToPaths(
+            paths,
+            dirPathNoExt + dataSuffix,
+            userExtensions
+          );
+
+          // top level
           paths.push(dirPathNoExt + ".json");
+          this._pushExtensionsToPaths(paths, dirPathNoExt, userExtensions);
         } else {
           debugDev("dirStr: %o; inputDir: %o", dir, inputDir);
           if (dir.indexOf(inputDir) === 0 && dir !== inputDir) {
+            // data suffix
             paths.push(dirPathNoExt + dataSuffix + ".js");
             paths.push(dirPathNoExt + dataSuffix + ".json");
+            this._pushExtensionsToPaths(
+              paths,
+              dirPathNoExt + dataSuffix,
+              userExtensions
+            );
+
+            // top level
             paths.push(dirPathNoExt + ".json");
+            this._pushExtensionsToPaths(paths, dirPathNoExt, userExtensions);
           }
         }
       }
