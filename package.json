@@ -78,7 +78,8 @@
     "toml": "^3.0.0",
     "viperhtml": "^2.17.0",
     "vue": "^2.6.10",
-    "vue-server-renderer": "^2.6.10"
+    "vue-server-renderer": "^2.6.10",
+    "js-yaml": "^3.13.1"
   },
   "dependencies": {
     "browser-sync": "^2.26.7",
