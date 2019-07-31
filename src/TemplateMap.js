@@ -508,7 +508,9 @@ class TemplateMap {
     let warnings = {};
     for (let entry of this.map) {
       for (let page of entry._pages) {
-        if (!permalinks[page.url]) {
+        if (page.url === false) {
+          // do nothing
+        } else if (!permalinks[page.url]) {
           permalinks[page.url] = [entry.inputPath];
         } else {
           warnings[

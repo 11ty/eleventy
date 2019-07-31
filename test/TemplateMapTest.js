@@ -1034,6 +1034,25 @@ test("Duplicate permalinks in template map", async t => {
   });
 });
 
+test("No duplicate permalinks in template map, using false", async t => {
+  let tmpl1 = new Template(
+    "./test/stubs/permalink-conflicts-false/test1.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  let tmpl2 = new Template(
+    "./test/stubs/permalink-conflicts-false/test2.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let tm = new TemplateMap();
+  await tm.add(tmpl1);
+  await tm.add(tmpl2);
+  await tm.cache();
+  t.true(true);
+});
+
 test("Duplicate permalinks in template map, no leading slash", async t => {
   let tmpl1 = new Template(
     "./test/stubs/permalink-conflicts/test1.md",
