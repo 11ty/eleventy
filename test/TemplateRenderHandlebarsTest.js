@@ -41,6 +41,16 @@ test("Handlebars Render Partial", async t => {
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
+test.skip("Handlebars Render Partial (Relative)", async t => {
+  let fn = await new TemplateRender(
+    "./test/stubs/does_not_exist_and_thats_ok.hbs",
+    "./test/stubs/"
+  ).getCompiledTemplate("<p>{{> ./included}}</p>");
+
+  // not supported yet.
+  t.is(await fn(), "<p>This is an includdde.</p>");
+});
+
 test("Handlebars Render Partial (Subdirectory)", async t => {
   let fn = await new TemplateRender("hbs", "./test/stubs/").getCompiledTemplate(
     "<p>{{> subfolder/included}}</p>"

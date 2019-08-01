@@ -1,5 +1,4 @@
 import test from "ava";
-import parsePath from "parse-filepath";
 import TemplatePermalink from "../src/TemplatePermalink";
 
 test("Simple straight permalink", t => {

@@ -416,6 +416,18 @@ test("Layout from template-data-file that has a permalink (fileslug) Issue #121"
   t.is(await tmpl.getOutputPath(), "./dist/test/index.html");
 });
 
+test("Fileslug in an 11ty.js template Issue #588", async t => {
+  let tmpl = new Template(
+    "./test/stubs/fileslug.11ty.js",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let renderedTmpl = (await tmpl.getRenderedTemplates(data))[0];
+  t.is(renderedTmpl.templateContent, "<p>fileslug</p>");
+});
+
 test("Local template data file import (without a global data json)", async t => {
   let dataObj = new TemplateData("./test/stubs/");
   await dataObj.cacheData();
@@ -766,9 +778,56 @@ test("getRenderedData() has all the page variables", async t => {
   t.truthy(data.page.url);
   t.is(data.page.url, "/template/");
   t.is(data.page.fileSlug, "template");
+  t.is(data.page.filePathStem, "/template");
   t.truthy(data.page.date.getTime());
   t.is(data.page.inputPath, "./test/stubs/template.ejs");
   t.is(data.page.outputPath, "./dist/template/index.html");
+});
+
+test("Issue #603: page.date Liquid", async t => {
+  let tmpl = new Template(
+    "./test/stubs/pagedate.liquid",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getData();
+
+  t.truthy(data.page.date);
+  t.truthy(data.page.date.toUTCString());
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), data.page.date.toString());
+});
+
+test("Issue #603: page.date Nunjucks", async t => {
+  let tmpl = new Template(
+    "./test/stubs/pagedate.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getData();
+
+  t.truthy(data.page.date);
+  t.truthy(data.page.date.toUTCString());
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), data.page.date.toString());
+});
+
+test("Issue #603: page.date.toUTCString() Nunjucks", async t => {
+  // Note this is not supported in Liquid
+  let tmpl = new Template(
+    "./test/stubs/pagedateutc.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await tmpl.getData();
+
+  t.truthy(data.page.date);
+  t.truthy(data.page.date.toUTCString());
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), data.page.date.toUTCString());
 });
 
 test("getTemplates() data has all the root variables", async t => {
@@ -782,6 +841,7 @@ test("getTemplates() data has all the root variables", async t => {
 
   t.is(templates[0].url, "/template/");
   t.is(templates[0].fileSlug, "template");
+  t.is(templates[0].filePathStem, "/template");
   t.truthy(templates[0].date.getTime());
   t.is(templates[0].inputPath, "./test/stubs/template.ejs");
   t.is(templates[0].outputPath, "./dist/template/index.html");
@@ -798,6 +858,7 @@ test("getTemplates() data has all the page variables", async t => {
 
   t.is(templates[0].data.page.url, "/template/");
   t.is(templates[0].data.page.fileSlug, "template");
+  t.is(templates[0].filePathStem, "/template");
   t.truthy(templates[0].data.page.date.getTime());
   t.is(templates[0].data.page.inputPath, "./test/stubs/template.ejs");
   t.is(templates[0].data.page.outputPath, "./dist/template/index.html");
@@ -814,6 +875,7 @@ test("getRenderedTemplates() data has all the page variables", async t => {
   let templates = await tmpl.getRenderedTemplates(data);
   t.is(templates[0].data.page.url, "/template/");
   t.is(templates[0].data.page.fileSlug, "template");
+  t.is(templates[0].filePathStem, "/template");
   t.truthy(templates[0].data.page.date.getTime());
   t.is(templates[0].data.page.inputPath, "./test/stubs/template.ejs");
   t.is(templates[0].data.page.outputPath, "./dist/template/index.html");
@@ -823,6 +885,7 @@ test("getRenderedData() has good slug (empty, index)", async t => {
   let tmpl = new Template("./test/stubs/index.ejs", "./test/stubs/", "./dist");
   let data = await tmpl.getRenderedData();
   t.is(data.page.fileSlug, "");
+  t.is(data.page.filePathStem, "/index");
 });
 
 test("getRenderedData() has good slug", async t => {
@@ -833,6 +896,7 @@ test("getRenderedData() has good slug", async t => {
   );
   let data = await tmpl.getRenderedData();
   t.is(data.page.fileSlug, "includer");
+  t.is(data.page.filePathStem, "/includer");
 });
 
 test("Override base templating engine from .liquid to ejs", async t => {
@@ -1232,6 +1296,12 @@ test("Front Matter Tags (Single)", async t => {
   );
   let frontmatter = await tmpl.getFrontMatterData();
   t.deepEqual(frontmatter.tags, ["single-tag"]);
+
+  let fulldata = await tmpl.getData();
+  t.deepEqual(fulldata.tags, ["single-tag"]);
+
+  let pages = await tmpl.getRenderedTemplates(fulldata);
+  t.is(pages[0].templateContent.trim(), "Has single-tag");
 });
 
 test("Front Matter Tags (Multiple)", async t => {
@@ -1242,6 +1312,12 @@ test("Front Matter Tags (Multiple)", async t => {
   );
   let frontmatter = await tmpl.getFrontMatterData();
   t.deepEqual(frontmatter.tags, ["multi-tag", "multi-tag-2"]);
+
+  let fulldata = await tmpl.getData();
+  t.deepEqual(fulldata.tags, ["multi-tag", "multi-tag-2"]);
+
+  let pages = await tmpl.getRenderedTemplates(fulldata);
+  t.is(pages[0].templateContent.trim(), "Has multi-tag-2");
 });
 
 test("Front matter date with quotes (liquid), issue #258", async t => {
@@ -1439,7 +1515,6 @@ test("Throws a Premature Template Content Error from rendering (njk)", async t =
   let error = await t.throwsAsync(async () => {
     await tmpl.renderPageEntry(mapEntries[0], pageEntries[0]);
   });
-  console.log(error);
   t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
 });
 
@@ -1645,3 +1720,206 @@ test.skip("Issue 413 weird date format", async t => {
   let data = await tmpl.getData();
   t.is(data.page.date, "");
 });
+
+test("Custom Front Matter Parsing Options", async t => {
+  let newConfig = Object.assign({}, config);
+  newConfig.frontMatterParsingOptions = {
+    excerpt: true
+  };
+
+  let tmpl = new Template(
+    "./test/stubs/custom-frontmatter/template.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  tmpl.config = newConfig;
+
+  let frontmatter = await tmpl.getFrontMatter();
+  t.is(frontmatter.data.front, "hello");
+  t.is(frontmatter.data.page.excerpt.trim(), "This is an excerpt.");
+
+  t.is(frontmatter.excerpt.trim(), "This is an excerpt.");
+  t.is(
+    normalizeNewLines(frontmatter.content.trim()),
+    `This is an excerpt.
+This is content.`
+  );
+
+  let fulldata = await tmpl.getData();
+  t.is(fulldata.page.excerpt.trim(), "This is an excerpt.");
+});
+
+test("Custom Front Matter Parsing Options (using alias)", async t => {
+  let newConfig = Object.assign({}, config);
+  newConfig.frontMatterParsingOptions = {
+    excerpt: true,
+    excerpt_alias: "my_excerpt"
+  };
+
+  let tmpl = new Template(
+    "./test/stubs/custom-frontmatter/template.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  tmpl.config = newConfig;
+
+  let frontmatter = await tmpl.getFrontMatter();
+  t.is(frontmatter.data.front, "hello");
+  t.is(frontmatter.data.my_excerpt.trim(), "This is an excerpt.");
+  t.is(
+    normalizeNewLines(frontmatter.content.trim()),
+    `This is an excerpt.
+This is content.`
+  );
+
+  let fulldata = await tmpl.getData();
+  t.is(fulldata.my_excerpt.trim(), "This is an excerpt.");
+});
+
+test("Custom Front Matter Parsing Options (no newline before excerpt separator)", async t => {
+  let newConfig = Object.assign({}, config);
+  newConfig.frontMatterParsingOptions = {
+    excerpt: true
+  };
+
+  let tmpl = new Template(
+    "./test/stubs/custom-frontmatter/template-newline1.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  tmpl.config = newConfig;
+
+  let frontmatter = await tmpl.getFrontMatter();
+  t.is(frontmatter.data.front, "hello");
+  t.is(frontmatter.data.page.excerpt.trim(), "This is an excerpt.");
+
+  t.is(frontmatter.excerpt.trim(), "This is an excerpt.");
+  t.is(
+    normalizeNewLines(frontmatter.content.trim()),
+    `This is an excerpt.
+This is content.`
+  );
+
+  let fulldata = await tmpl.getData();
+  t.is(fulldata.page.excerpt.trim(), "This is an excerpt.");
+});
+
+test("Custom Front Matter Parsing Options (no newline after excerpt separator)", async t => {
+  let newConfig = Object.assign({}, config);
+  newConfig.frontMatterParsingOptions = {
+    excerpt: true
+  };
+
+  let tmpl = new Template(
+    "./test/stubs/custom-frontmatter/template-newline3.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  tmpl.config = newConfig;
+
+  let frontmatter = await tmpl.getFrontMatter();
+  t.is(
+    normalizeNewLines(frontmatter.content.trim()),
+    `This is an excerpt.
+This is content.`
+  );
+});
+
+test("Custom Front Matter Parsing Options (no newlines before or after excerpt separator)", async t => {
+  let newConfig = Object.assign({}, config);
+  newConfig.frontMatterParsingOptions = {
+    excerpt: true
+  };
+
+  let tmpl = new Template(
+    "./test/stubs/custom-frontmatter/template-newline2.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  tmpl.config = newConfig;
+
+  let frontmatter = await tmpl.getFrontMatter();
+  t.is(frontmatter.content.trim(), "This is an excerpt.This is content.");
+});
+
+test("Custom Front Matter Parsing Options (html comment separator)", async t => {
+  let newConfig = Object.assign({}, config);
+  newConfig.frontMatterParsingOptions = {
+    excerpt: true,
+    excerpt_separator: "<!-- excerpt -->"
+  };
+
+  let tmpl = new Template(
+    "./test/stubs/custom-frontmatter/template-excerpt-comment.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  tmpl.config = newConfig;
+
+  let frontmatter = await tmpl.getFrontMatter();
+  t.is(frontmatter.data.front, "hello");
+  t.is(frontmatter.data.page.excerpt.trim(), "This is an excerpt.");
+
+  t.is(frontmatter.excerpt.trim(), "This is an excerpt.");
+  t.is(
+    normalizeNewLines(frontmatter.content.trim()),
+    `This is an excerpt.
+This is content.`
+  );
+});
+
+test.skip("Custom Front Matter Parsing Options (using TOML)", async t => {
+  // Depends on https://github.com/jonschlinkert/gray-matter/issues/92 for Windows
+  let newConfig = Object.assign({}, config);
+  let toml = require("toml");
+
+  newConfig.frontMatterParsingOptions = {
+    engines: {
+      toml: toml.parse.bind(toml)
+    }
+  };
+
+  let tmpl = new Template(
+    "./test/stubs/custom-frontmatter/template-toml.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  tmpl.config = newConfig;
+
+  let frontmatter = await tmpl.getFrontMatter();
+  t.deepEqual(frontmatter.data, {
+    front: "hello"
+  });
+  t.is(frontmatter.content.trim(), "This is content.");
+
+  let fulldata = await tmpl.getData();
+  t.is(fulldata.front, "hello");
+});
+
+test("global variable with dashes Issue #567 (liquid)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/global-dash-variable.liquid",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  t.is(data["is-it-tasty"], "Yes");
+
+  let pages = await tmpl.getRenderedTemplates(data);
+  t.is(pages[0].templateContent.trim(), "Yes");
+});
+
+// test("Issue #446: Layout has a permalink with a different template language than content", async t => {
+//   let tmpl = new Template(
+//     "./test/stubs/layout-permalink-difflang/test.md",
+//     "./test/stubs/layout-permalink-difflang/",
+//     "dist"
+//   );
+
+//   let data = await tmpl.getData();
+//   let pages = await tmpl.getRenderedTemplates(data);
+
+//   t.is(data.permalink, "/{{ page.fileSlug }}/");
+//   t.is(data.page.url, "/test/");
+// });

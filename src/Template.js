@@ -48,6 +48,7 @@ class Template extends TemplateContent {
     this.wrapWithLayouts = true;
     this.fileSlug = new TemplateFileSlug(this.inputPath, this.inputDir);
     this.fileSlugStr = this.fileSlug.getSlug();
+    this.filePathStem = this.fileSlug.getFullPathWithoutExtension();
   }
 
   setIsVerbose(isVerbose) {
@@ -274,6 +275,7 @@ class Template extends TemplateContent {
 
     data.page.inputPath = this.inputPath;
     data.page.fileSlug = this.fileSlugStr;
+    data.page.filePathStem = this.filePathStem;
 
     return data;
   }
@@ -399,6 +401,7 @@ class Template extends TemplateContent {
         template: this,
         inputPath: this.inputPath,
         fileSlug: this.fileSlugStr,
+        filePathStem: this.filePathStem,
         data: data,
         date: data.page.date,
         outputPath: data.page.outputPath,
@@ -439,6 +442,7 @@ class Template extends TemplateContent {
           template: page,
           inputPath: this.inputPath,
           fileSlug: this.fileSlugStr,
+          filePathStem: this.filePathStem,
           data: pageData,
           date: pageData.page.date,
           pageNumber: pageNumber++,
@@ -450,9 +454,7 @@ class Template extends TemplateContent {
           get templateContent() {
             if (!this._templateContent) {
               throw new TemplateContentPrematureUseError(
-                `Tried to use templateContent too early (${
-                  this.inputPath
-                } page ${this.pageNumber})`
+                `Tried to use templateContent too early (${this.inputPath} page ${this.pageNumber})`
               );
             }
             return this._templateContent;
@@ -609,9 +611,7 @@ class Template extends TemplateContent {
           let date = DateTime.fromISO(data.date, { zone: "utc" });
           if (!date.isValid) {
             throw new Error(
-              `date front matter value (${data.date}) is invalid for ${
-                this.inputPath
-              }`
+              `date front matter value (${data.date}) is invalid for ${this.inputPath}`
             );
           }
           debug(

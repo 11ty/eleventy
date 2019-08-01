@@ -24,7 +24,7 @@ test("Output is a subdir of input", async t => {
   );
   evf.init();
 
-  let files = await fastglob.async(evf.getFileGlobs());
+  let files = await fastglob(evf.getFileGlobs());
   t.is(evf.getRawFiles().length, 2);
   t.true(files.length > 0);
 
@@ -510,7 +510,7 @@ test("Write Test 11ty.js", async t => {
   );
   evf.init();
 
-  let files = await fastglob.async(evf.getFileGlobs());
+  let files = await fastglob(evf.getFileGlobs());
   t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTestJS/**/*.11ty.js"]);
   t.deepEqual(files, ["./test/stubs/writeTestJS/test.11ty.js"]);
 
@@ -537,7 +537,7 @@ test.skip("Markdown with alias", async t => {
   evf._setExtensionMap(map);
   evf.init();
 
-  let files = await fastglob.async(evf.getFileGlobs());
+  let files = await fastglob(evf.getFileGlobs());
   t.deepEqual(evf.getRawFiles(), [
     "./test/stubs/writeTestMarkdown/**/*.md",
     "./test/stubs/writeTestMarkdown/**/*.markdown"
@@ -582,7 +582,7 @@ test.skip("JavaScript with alias", async t => {
   evf._setExtensionMap(map);
   evf.init();
 
-  let files = await fastglob.async(evf.getFileGlobs());
+  let files = await fastglob(evf.getFileGlobs());
   t.deepEqual(
     evf.getRawFiles().sort(),
     [
@@ -631,16 +631,16 @@ test("Passthrough file output", async t => {
     passthroughFileCopy: true,
     passthroughCopies: {
       "./test/stubs/template-passthrough/static": true,
-      "./test/stubs/template-passthrough/static": "./",
+      "./test/stubs/template-passthrough/static/": "./",
       "./test/stubs/template-passthrough/static/**/*": "./all/",
       "./test/stubs/template-passthrough/static/**/*.js": "./js/"
     }
   });
 
-  tw.setVerboseOutput(false);
   await tw.write();
 
   const output = [
+    "./test/stubs/template-passthrough/_site/static/nested/test-nested.css",
     "./test/stubs/template-passthrough/_site/all/test.js",
     "./test/stubs/template-passthrough/_site/all/test.css",
     "./test/stubs/template-passthrough/_site/all/test-nested.css",
@@ -651,46 +651,16 @@ test("Passthrough file output", async t => {
     "./test/stubs/template-passthrough/_site/test.css",
     "./test/stubs/template-passthrough/_site/test.js"
   ];
-  output.forEach(path => {
-    t.true(fs.existsSync(path));
-  });
 
-  rimraf.sync("./test/stubs/template-passthrough/_site/");
-});
-
-test("Naughty Passthrough paths", async t => {
-  let tw = new TemplateWriter(
-    "./test/stubs/template-passthrough/",
-    "./test/stubs/template-passthrough/_site",
-    ["njk", "md"]
+  let results = await Promise.all(
+    output.map(function(path) {
+      return fs.exists(path);
+    })
   );
 
-  const mgr = tw.getFileManager().getPassthroughManager();
-  mgr.setConfig({
-    passthroughFileCopy: true,
-    passthroughCopies: {
-      "../": true,
-      "../": "./",
-      "../*": "./",
-      "./test/stubs/template-passthrough/static/*.css": "./",
-      "./test/stubs/template-passthrough/static/*.js": "../../",
-      "./test/stubs/template-passthrough/img.jpg": "../../"
-    }
-  });
+  for (let result of results) {
+    t.true(result);
+  }
 
-  tw.setVerboseOutput(false);
-
-  await t.throwsAsync(async () => {
-    await tw.write();
-  });
-
-  const output = [
-    "./test/stubs/template-passthrough/_site/nope.txt",
-    "./test/stubs/template-passthrough/_site/nope/",
-    "./test/stubs/test.js",
-    "./test/stubs/img.jpg"
-  ];
-  output.forEach(path => {
-    t.false(fs.existsSync(path));
-  });
+  rimraf.sync("./test/stubs/template-passthrough/_site/");
 });

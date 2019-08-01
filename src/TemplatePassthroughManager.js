@@ -34,6 +34,15 @@ class TemplatePassthroughManager {
     this.isDryRun = !!isDryRun;
   }
 
+  _normalizePaths(path, outputPath) {
+    return {
+      inputPath: TemplatePath.addLeadingDotSlash(path),
+      outputPath: TemplatePath.stripLeadingDotSlash(
+        outputPath !== undefined ? outputPath : path
+      )
+    };
+  }
+
   getConfigPaths() {
     if (!this.config.passthroughFileCopy) {
       debug("`passthroughFileCopy` is disabled in config, bypassing.");
@@ -44,9 +53,7 @@ class TemplatePassthroughManager {
     let target = this.config.passthroughCopies || {};
     debug("`passthroughFileCopy` config paths: %o", target);
     for (let path in target) {
-      const inputPath = TemplatePath.addLeadingDotSlash(path);
-      const outputPath = target[path];
-      paths.push({ inputPath, outputPath });
+      paths.push(this._normalizePaths(path, target[path]));
     }
     debug("`passthroughFileCopy` config normalized paths: %o", paths);
     return paths;
@@ -111,12 +118,17 @@ class TemplatePassthroughManager {
     let promises = [];
     debug("TemplatePassthrough copy started.");
     for (let path of this.getConfigPaths()) {
+      debug(`TemplatePassthrough copying from config: ${path}`);
       promises.push(this.copyPath(path));
     }
 
     let passthroughPaths = this.getFilePaths(paths);
     for (let path of passthroughPaths) {
-      promises.push(this.copyPath(path));
+      let normalizedPath = this._normalizePaths(path);
+      debug(
+        `TemplatePassthrough copying from non-matching file extension: ${normalizedPath}`
+      );
+      promises.push(this.copyPath(normalizedPath));
     }
 
     return Promise.all(promises).then(() => {

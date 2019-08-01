@@ -75,7 +75,7 @@ test("Normalize array argument", t => {
 });
 
 test("matuzo project issue with fastglob assumptions", async t => {
-  let dotslashincludes = await fastglob.async(
+  let dotslashincludes = await fastglob(
     TemplateGlob.map([
       "./test/stubs/globby/**/*.html",
       "!./test/stubs/globby/_includes/**/*",
@@ -90,7 +90,7 @@ test("matuzo project issue with fastglob assumptions", async t => {
     0
   );
 
-  let globincludes = await fastglob.async(
+  let globincludes = await fastglob(
     TemplateGlob.map([
       "test/stubs/globby/**/*.html",
       "!./test/stubs/globby/_includes/**/*",
@@ -106,25 +106,25 @@ test("matuzo project issue with fastglob assumptions", async t => {
 });
 
 test("fastglob assumptions", async t => {
-  let glob = await fastglob.async("test/stubs/ignoredFolder/**");
+  let glob = await fastglob("test/stubs/ignoredFolder/**");
   t.is(glob.length, 1);
 
-  let glob2 = await fastglob.async("test/stubs/ignoredFolder/**/*");
+  let glob2 = await fastglob("test/stubs/ignoredFolder/**/*");
   t.is(glob2.length, 1);
 
-  let glob3 = await fastglob.async([
+  let glob3 = await fastglob([
     "./test/stubs/ignoredFolder/**/*.md",
     "!./test/stubs/ignoredFolder/**"
   ]);
   t.is(glob3.length, 0);
 
-  let glob4 = await fastglob.async([
+  let glob4 = await fastglob([
     "./test/stubs/ignoredFolder/*.md",
     "!./test/stubs/ignoredFolder/**"
   ]);
   t.is(glob4.length, 0);
 
-  let glob5 = await fastglob.async([
+  let glob5 = await fastglob([
     "./test/stubs/ignoredFolder/ignored.md",
     "!./test/stubs/ignoredFolder/**"
   ]);

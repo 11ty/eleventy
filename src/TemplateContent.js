@@ -1,6 +1,8 @@
+const os = require("os");
 const fs = require("fs-extra");
 const normalize = require("normalize-path");
 const matter = require("gray-matter");
+const lodashSet = require("lodash/set");
 
 const TemplateData = require("./TemplateData");
 const TemplateRender = require("./TemplateRender");
@@ -69,11 +71,31 @@ class TemplateContent {
     this.inputContent = await this.getInputContent();
 
     if (this.inputContent) {
-      this.frontMatter = matter(this.inputContent);
+      let options = this.config.frontMatterParsingOptions || {};
+      let fm = matter(this.inputContent, options);
+      if (options.excerpt && fm.excerpt) {
+        let excerptString = fm.excerpt + (options.excerpt_separator || "---");
+        if (fm.content.startsWith(excerptString + os.EOL)) {
+          // with a newline after excerpt separator
+          fm.content =
+            fm.excerpt.trim() +
+            "\n" +
+            fm.content.substr((excerptString + os.EOL).length);
+        } else if (fm.content.startsWith(excerptString)) {
+          // no newline after excerpt separator
+          fm.content = fm.excerpt + fm.content.substr(excerptString.length);
+        }
+
+        // alias, defaults to page.excerpt
+        let alias = options.excerpt_alias || "page.excerpt";
+        lodashSet(fm.data, alias, fm.excerpt);
+      }
+      this.frontMatter = fm;
     } else {
       this.frontMatter = {
         data: {},
-        content: ""
+        content: "",
+        excerpt: ""
       };
     }
   }

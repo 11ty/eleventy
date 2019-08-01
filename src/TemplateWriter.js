@@ -181,9 +181,7 @@ TemplateWriter.prototype.write = async function() {
       this._writeTemplate(mapEntry).catch(function(e) {
         return Promise.reject(
           TemplateWriterWriteError(
-            `Having trouble writing template (second pass): ${
-              mapEntry.outputPath
-            }`,
+            `Having trouble writing template (second pass): ${mapEntry.outputPath}`,
             e
           )
         );

@@ -1,5 +1,6 @@
 const NunjucksLib = require("nunjucks");
 const TemplateEngine = require("./TemplateEngine");
+const TemplatePath = require("../TemplatePath");
 
 class Nunjucks extends TemplateEngine {
   constructor(name, includesDir) {
@@ -12,7 +13,10 @@ class Nunjucks extends TemplateEngine {
     this.njkEnv =
       env ||
       new NunjucksLib.Environment(
-        new NunjucksLib.FileSystemLoader(super.getIncludesDir())
+        new NunjucksLib.FileSystemLoader([
+          super.getIncludesDir(),
+          TemplatePath.getWorkingDir()
+        ])
       );
     this.setEngineLib(this.njkEnv);
 
@@ -130,7 +134,12 @@ class Nunjucks extends TemplateEngine {
   }
 
   async compile(str, inputPath) {
-    let tmpl = NunjucksLib.compile(str, this.njkEnv);
+    let tmpl;
+    if (!inputPath || inputPath === "njk" || inputPath === "md") {
+      tmpl = NunjucksLib.compile(str, this.njkEnv);
+    } else {
+      tmpl = NunjucksLib.compile(str, this.njkEnv, inputPath);
+    }
     return async function(data) {
       return new Promise(function(resolve, reject) {
         tmpl.render(data, function(err, res) {

@@ -269,7 +269,10 @@ class EleventyFiles {
 
     debug("Searching for: %o", globs);
     let paths = TemplatePath.addLeadingDotSlashArray(
-      await fastglob.async(globs, { nocase: true, onlyFiles: true })
+      await fastglob(globs, {
+        caseSensitiveMatch: false,
+        dot: true
+      })
     );
     this.pathCache = paths;
     return paths;
@@ -291,7 +294,11 @@ class EleventyFiles {
   async getWatcherTemplateJavaScriptDataFiles() {
     let globs = await this.getTemplateData().getTemplateJavaScriptDataFileGlob();
     return TemplatePath.addLeadingDotSlashArray(
-      await fastglob.async(globs, { ignore: ["**/node_modules/**"] })
+      await fastglob(globs, {
+        ignore: ["**/node_modules/**"],
+        caseSensitiveMatch: false,
+        dot: true
+      })
     );
   }
 

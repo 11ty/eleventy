@@ -329,3 +329,12 @@ test(".addWatchTarget adds a watch target", t => {
   let cfg = templateCfg.getConfig();
   t.deepEqual(cfg.additionalWatchTargets, ["/testdirectory/"]);
 });
+
+test("Properly throws error when config returns a Promise", t => {
+  t.throws(function() {
+    new TemplateConfig(
+      require("../config.js"),
+      "./test/stubs/config-promise.js"
+    );
+  });
+});

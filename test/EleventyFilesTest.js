@@ -46,6 +46,7 @@ test("getFiles (with js, treated as passthrough copy)", async t => {
     ["ejs", "md", "js"]
   );
   evf.init();
+
   const files = await evf.getFiles();
   t.deepEqual(
     files.sort(),
@@ -54,6 +55,7 @@ test("getFiles (with js, treated as passthrough copy)", async t => {
       "./test/stubs/writeTestJS/test.11ty.js"
     ].sort()
   );
+
   t.false(TemplateRender.hasEngine("./test/stubs/writeTestJS/sample.js"));
   t.true(TemplateRender.hasEngine("./test/stubs/writeTestJS/test.11ty.js"));
 });
@@ -66,10 +68,13 @@ test("getFiles (with case insensitivity)", async t => {
   );
   evf.init();
 
-  t.deepEqual(await evf.getFiles(), [
-    "./test/stubs/writeTestJS/sample.js",
-    "./test/stubs/writeTestJS/test.11ty.js"
-  ]);
+  t.deepEqual(
+    (await evf.getFiles()).sort(),
+    [
+      "./test/stubs/writeTestJS/sample.js",
+      "./test/stubs/writeTestJS/test.11ty.js"
+    ].sort()
+  );
   t.false(TemplateRender.hasEngine("./test/stubs/writeTestJS/sample.js"));
   t.true(TemplateRender.hasEngine("./test/stubs/writeTestJS/test.11ty.js"));
 });
@@ -82,7 +87,7 @@ test("Mutually exclusive Input and Output dirs", async t => {
   );
   evf.init();
 
-  let files = await fastglob.async(evf.getFileGlobs());
+  let files = await fastglob(evf.getFileGlobs());
   t.is(evf.getRawFiles().length, 2);
   t.true(files.length > 0);
   t.is(files[0], "./test/stubs/writeTest/test.md");
@@ -95,7 +100,7 @@ test("Single File Input (deep path)", async t => {
   ]);
   evf.init();
 
-  let files = await fastglob.async(evf.getFileGlobs());
+  let files = await fastglob(evf.getFileGlobs());
   t.is(evf.getRawFiles().length, 1);
   t.is(files.length, 1);
   t.is(files[0], "./test/stubs/index.html");
@@ -106,7 +111,7 @@ test("Single File Input (shallow path)", async t => {
   evf.init();
 
   let globs = evf.getFileGlobs().filter(path => path !== "!./README.md");
-  let files = await fastglob.async(globs);
+  let files = await fastglob(globs);
   t.is(evf.getRawFiles().length, 1);
   t.is(files.length, 1);
   t.is(files[0], "./README.md");
@@ -121,7 +126,7 @@ test("Glob Input", async t => {
   evf.init();
 
   let globs = evf.getFileGlobs();
-  let files = await fastglob.async(globs);
+  let files = await fastglob(globs);
   t.is(files.length, 2);
   t.is(files[0], "./test/stubs/glob-pages/about.md");
   t.is(files[1], "./test/stubs/glob-pages/home.md");
@@ -165,10 +170,10 @@ test("defaults if passed file name does not exist", t => {
 test(".eleventyignore files", async t => {
   let evf = new EleventyFiles("test/stubs", "test/stubs/_site", ["ejs", "md"]);
   evf.init();
-  let ignoredFiles = await fastglob.async("test/stubs/ignoredFolder/*.md");
+  let ignoredFiles = await fastglob("test/stubs/ignoredFolder/*.md");
   t.is(ignoredFiles.length, 1);
 
-  let files = await fastglob.async(evf.getFileGlobs());
+  let files = await fastglob(evf.getFileGlobs());
   t.true(files.length > 0);
 
   t.is(

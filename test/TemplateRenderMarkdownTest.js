@@ -243,3 +243,91 @@ var key = "value";
     `<pre class="language-text"><code class="language-text"><mark class="highlight-line highlight-line-active">var key = "value";</mark></code></pre>`
   );
 });
+
+test("Markdown Render: use Markdown inside of a Liquid shortcode (Issue #536)", async t => {
+  let tr = new TemplateRender("md");
+
+  let cls = require("../src/Engines/Liquid");
+  let liquidEngine = new cls("liquid", tr.getIncludesDir());
+  liquidEngine.addShortcode("testShortcode", function() {
+    return "## My Other Title";
+  });
+  tr.setMarkdownEngine(liquidEngine);
+
+  let fn = await tr.getCompiledTemplate(`# {{title}}
+{% testShortcode %}`);
+  t.is(
+    (await fn({
+      title: "My Title",
+      otherTitle: "My Other Title"
+    })).trim(),
+    `<h1>My Title</h1>
+<h2>My Other Title</h2>`
+  );
+});
+
+test("Markdown Render: use Markdown inside of a Nunjucks shortcode (Issue #536)", async t => {
+  let tr = new TemplateRender("md");
+
+  let cls = require("../src/Engines/Nunjucks");
+  let nunjucksEngine = new cls("njk", tr.getIncludesDir());
+  nunjucksEngine.addShortcode("testShortcode", function() {
+    return "## My Other Title";
+  });
+  tr.setMarkdownEngine(nunjucksEngine);
+
+  let fn = await tr.getCompiledTemplate(`# {{title}}
+{% testShortcode %}`);
+  t.is(
+    (await fn({
+      title: "My Title",
+      otherTitle: "My Other Title"
+    })).trim(),
+    `<h1>My Title</h1>
+<h2>My Other Title</h2>`
+  );
+});
+
+test("Markdown Render: use Markdown inside of a Liquid paired shortcode (Issue #536)", async t => {
+  let tr = new TemplateRender("md");
+
+  let cls = require("../src/Engines/Liquid");
+  let liquidEngine = new cls("liquid", tr.getIncludesDir());
+  liquidEngine.addPairedShortcode("testShortcode", function(content) {
+    return content;
+  });
+  tr.setMarkdownEngine(liquidEngine);
+
+  let fn = await tr.getCompiledTemplate(`# {{title}}
+{% testShortcode %}## My Other Title{% endtestShortcode %}`);
+  t.is(
+    (await fn({
+      title: "My Title",
+      otherTitle: "My Other Title"
+    })).trim(),
+    `<h1>My Title</h1>
+<h2>My Other Title</h2>`
+  );
+});
+
+test("Markdown Render: use Markdown inside of a Nunjucks paired shortcode (Issue #536)", async t => {
+  let tr = new TemplateRender("md");
+
+  let cls = require("../src/Engines/Nunjucks");
+  let nunjucksEngine = new cls("njk", tr.getIncludesDir());
+  nunjucksEngine.addPairedShortcode("testShortcode", function(content) {
+    return content;
+  });
+  tr.setMarkdownEngine(nunjucksEngine);
+
+  let fn = await tr.getCompiledTemplate(`# {{title}}
+{% testShortcode %}## My Other Title{% endtestShortcode %}`);
+  t.is(
+    (await fn({
+      title: "My Title",
+      otherTitle: "My Other Title"
+    })).trim(),
+    `<h1>My Title</h1>
+<h2>My Other Title</h2>`
+  );
+});

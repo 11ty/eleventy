@@ -184,7 +184,7 @@ TemplatePath.addLeadingDotSlash = function(path) {
  * @returns {String} the `path` without a leading dot-slash segment.
  */
 TemplatePath.stripLeadingDotSlash = function(path) {
-  return path.replace(/^\.\//, "");
+  return typeof path === "string" ? path.replace(/^\.\//, "") : path;
 };
 
 /**

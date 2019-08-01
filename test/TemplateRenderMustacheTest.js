@@ -21,6 +21,14 @@ test("Mustache Render Partial (raw text content)", async t => {
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
+test.skip("Mustache Render Partial (relative path, raw text content)", async t => {
+  let fn = await new TemplateRender(
+    "./test/stubs/does_not_exist_and_thats_ok.mustache",
+    "./test/stubs/"
+  ).getCompiledTemplate("<p>{{> ./includedrelative}}</p>");
+  t.is(await fn(), "<p>This is an includdde.</p>");
+});
+
 test("Mustache Render Partial (uses a variable in content)", async t => {
   let fn = await new TemplateRender(
     "mustache",

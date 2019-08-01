@@ -506,6 +506,10 @@ class UserConfig {
     this.browserSyncConfig = options;
   }
 
+  setFrontMatterParsingOptions(options = {}) {
+    this.frontMatterParsingOptions = options;
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
@@ -538,7 +542,8 @@ class UserConfig {
       // templateExtensionAliases: this.templateExtensionAliases,
       watchJavaScriptDependencies: this.watchJavaScriptDependencies,
       additionalWatchTargets: this.additionalWatchTargets,
-      browserSyncConfig: this.browserSyncConfig
+      browserSyncConfig: this.browserSyncConfig,
+      frontMatterParsingOptions: this.frontMatterParsingOptions
     };
   }
 

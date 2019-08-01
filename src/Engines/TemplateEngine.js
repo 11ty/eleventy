@@ -55,7 +55,12 @@ class TemplateEngine {
     let partialFiles = [];
     if (this.includesDir) {
       this.extensions.forEach(function(extension) {
-        partialFiles = partialFiles.concat(fastglob.sync(prefix + extension));
+        partialFiles = partialFiles.concat(
+          fastglob.sync(prefix + extension, {
+            caseSensitiveMatch: false,
+            dot: true
+          })
+        );
       });
     }
 
