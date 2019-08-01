@@ -312,10 +312,21 @@ test("libraryOverrides", t => {
 });
 
 test("Properly throws error on missing module #182", t => {
-  let templateCfg = new TemplateConfig(
-    require("../config.js"),
-    "./test/stubs/config.js"
-  );
+  t.throws(function() {
+    new TemplateConfig(
+      require("../config.js"),
+      "./test/stubs/broken-config.js"
+    );
+  });
+});
+
+test("Properly throws error when config returns a Promise", t => {
+  t.throws(function() {
+    new TemplateConfig(
+      require("../config.js"),
+      "./test/stubs/config-promise.js"
+    );
+  });
 });
 
 test(".addWatchTarget adds a watch target", t => {
@@ -328,13 +339,4 @@ test(".addWatchTarget adds a watch target", t => {
   );
   let cfg = templateCfg.getConfig();
   t.deepEqual(cfg.additionalWatchTargets, ["/testdirectory/"]);
-});
-
-test("Properly throws error when config returns a Promise", t => {
-  t.throws(function() {
-    new TemplateConfig(
-      require("../config.js"),
-      "./test/stubs/config-promise.js"
-    );
-  });
 });
