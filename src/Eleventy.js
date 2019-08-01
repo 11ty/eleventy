@@ -27,6 +27,7 @@ class Eleventy {
     this.rawOutput = output;
 
     this.watchTargets = new EleventyWatchTargets();
+    this.watchTargets.add(this.config.additionalWatchTargets);
     this.watchTargets.watchJavaScriptDependencies = this.config.watchJavaScriptDependencies;
   }
 

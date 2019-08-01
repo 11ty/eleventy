@@ -312,10 +312,20 @@ test("libraryOverrides", t => {
 });
 
 test("Properly throws error on missing module #182", t => {
-  t.throws(function() {
-    new TemplateConfig(
-      require("../config.js"),
-      "./test/stubs/broken-config.js"
-    );
-  });
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+});
+
+test(".addWatchTarget adds a watch target", t => {
+  eleventyConfig.reset();
+  eleventyConfig.addWatchTarget("/testdirectory/");
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.deepEqual(cfg.additionalWatchTargets, ["/testdirectory/"]);
 });
