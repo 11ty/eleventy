@@ -1,128 +1,352 @@
 const fs = require("fs-extra");
-const pify = require("pify");
-const globby = require("globby");
+const fastglob = require("fast-glob");
 const parsePath = require("parse-filepath");
-const lodashset = require("lodash.set");
+const lodashset = require("lodash/set");
+const lodashUniq = require("lodash/uniq");
+const merge = require("./Util/Merge");
 const TemplateRender = require("./TemplateRender");
-const TemplateConfig = require("./TemplateConfig");
 const TemplatePath = require("./TemplatePath");
+const TemplateGlob = require("./TemplateGlob");
+const EleventyExtensionMap = require("./EleventyExtensionMap");
+const EleventyBaseError = require("./EleventyBaseError");
+const bench = require("./BenchmarkManager").get("Data");
+const config = require("./Config");
+const debugWarn = require("debug")("Eleventy:Warnings");
+const debug = require("debug")("Eleventy:TemplateData");
+const debugDev = require("debug")("Dev:Eleventy:TemplateData");
 
-let cfg = TemplateConfig.getDefaultConfig();
+class TemplateDataParseError extends EleventyBaseError {}
 
-function TemplateData(globalDataPath) {
-  this.globalDataPath = globalDataPath;
+class TemplateData {
+  constructor(inputDir) {
+    this.config = config.getConfig();
+    this.dataTemplateEngine = this.config.dataTemplateEngine;
 
-  this.rawImports = {};
-  this.rawImports[cfg.keys.package] = this.getJsonRaw(
-    TemplatePath.localPath("package.json")
-  );
+    this.inputDirNeedsCheck = false;
+    this.setInputDir(inputDir);
 
-  this.globalData = null;
-}
+    this.rawImports = {};
+    this.globalData = null;
+  }
 
-TemplateData.prototype.clearData = function() {
-  this.globalData = null;
-};
+  /* Used by tests */
+  _setConfig(config) {
+    this.config = config;
+    this.dataTemplateEngine = this.config.dataTemplateEngine;
+  }
 
-TemplateData.prototype.cacheData = async function() {
-  this.clearData();
+  setInputDir(inputDir) {
+    this.inputDirNeedsCheck = true;
+    this.inputDir = inputDir;
+    this.dataDir = this.config.dir.data
+      ? TemplatePath.join(inputDir, this.config.dir.data)
+      : inputDir;
+  }
 
-  return this.getData();
-};
+  setDataTemplateEngine(engineName) {
+    this.dataTemplateEngine = engineName;
+  }
 
-TemplateData.prototype.getGlobalDataGlob = async function() {
-  let dir = ".";
+  getRawImports() {
+    let pkgPath = TemplatePath.absolutePath("package.json");
 
-  if (this.globalDataPath) {
-    let globalPathStat = await pify(fs.stat)(this.globalDataPath);
-
-    if (!globalPathStat.isDirectory()) {
-      throw new Error(
-        "Could not find data path directory: " + this.globalDataPath
+    try {
+      this.rawImports[this.config.keys.package] = require(pkgPath);
+    } catch (e) {
+      debug(
+        "Could not find and/or require package.json for data preprocessing at %o",
+        pkgPath
       );
     }
 
-    dir = this.globalDataPath;
+    return this.rawImports;
   }
 
-  return (
-    TemplatePath.normalize(dir, "/", cfg.dir.data !== "." ? cfg.dir.data : "") +
-    "/**/*.json"
-  );
-};
-
-TemplateData.prototype.getGlobalDataFiles = async function() {
-  return globby(await this.getGlobalDataGlob(), { gitignore: true });
-};
-
-TemplateData.prototype.getObjectPathForDataFile = function(path) {
-  let reducedPath = TemplatePath.stripPathFromDir(
-    path,
-    this.globalDataPath + "/" + (cfg.dir.data !== "." ? cfg.dir.data : "")
-  );
-  let parsed = parsePath(reducedPath);
-  let folders = parsed.dir ? parsed.dir.split("/") : [];
-  folders.push(parsed.name);
-
-  return folders.join(".");
-};
-
-TemplateData.prototype.getAllGlobalData = async function() {
-  let globalData = {};
-  let files = await this.getGlobalDataFiles();
-
-  for (var j = 0, k = files.length; j < k; j++) {
-    let folders = await this.getObjectPathForDataFile(files[j]);
-    let data = await this.getJson(files[j], this.rawImports);
-    lodashset(globalData, folders, data);
+  getDataDir() {
+    return this.dataDir;
   }
 
-  return globalData;
-};
-
-TemplateData.prototype.getData = async function() {
-  if (!this.globalData) {
-    let globalJson = await this.getAllGlobalData();
-
-    this.globalData = Object.assign({}, globalJson, this.rawImports);
+  clearData() {
+    this.globalData = null;
   }
 
-  return this.globalData;
-};
+  async cacheData() {
+    this.clearData();
 
-TemplateData.prototype.getLocalData = async function(localDataPath) {
-  let importedData = await this.getJson(localDataPath, this.rawImports);
-  let globalData = await this.getData();
-
-  return Object.assign({}, globalData, importedData);
-};
-
-TemplateData.prototype._getLocalJson = function(path) {
-  // TODO convert to pify and async
-  let rawInput;
-  try {
-    rawInput = fs.readFileSync(path, "utf-8");
-  } catch (e) {
-    // if file does not exist, return empty obj
-    return "{}";
+    return this.getData();
   }
 
-  return rawInput;
-};
+  _getGlobalDataGlobByExtension(dir, extension) {
+    return TemplateGlob.normalizePath(
+      dir,
+      "/",
+      this.config.dir.data !== "." ? this.config.dir.data : "",
+      `/**/*.${extension}`
+    );
+  }
 
-TemplateData.prototype.getJsonRaw = function(path) {
-  return JSON.parse(this._getLocalJson(path));
-};
+  async _checkInputDir() {
+    if (this.inputDirNeedsCheck) {
+      let globalPathStat = await fs.stat(this.inputDir);
 
-TemplateData.prototype.getJson = async function(path, rawImports) {
-  let rawInput = this._getLocalJson(path);
-  let fn = await new TemplateRender(cfg.dataTemplateEngine).getCompiledTemplate(
-    rawInput
-  );
+      if (!globalPathStat.isDirectory()) {
+        throw new Error("Could not find data path directory: " + this.inputDir);
+      }
 
-  // pass in rawImports, don’t pass in global data, that’s what we’re parsing
-  let str = await fn(rawImports);
-  return JSON.parse(str);
-};
+      this.inputDirNeedsCheck = false;
+    }
+  }
+
+  async getInputDir() {
+    let dir = ".";
+
+    if (this.inputDir) {
+      await this._checkInputDir();
+      dir = this.inputDir;
+    }
+
+    return dir;
+  }
+
+  async getTemplateDataFileGlob() {
+    let dir = await this.getInputDir();
+    return TemplatePath.addLeadingDotSlashArray([
+      `${dir}/**/*.json`, // covers .11tydata.json too
+      `${dir}/**/*${this.config.jsDataFileSuffix}.js`
+    ]);
+  }
+
+  async getTemplateJavaScriptDataFileGlob() {
+    let dir = await this.getInputDir();
+    return TemplatePath.addLeadingDotSlashArray([
+      `${dir}/**/*${this.config.jsDataFileSuffix}.js`
+    ]);
+  }
+
+  async getGlobalDataGlob() {
+    let dir = await this.getInputDir();
+    return [this._getGlobalDataGlobByExtension(dir, "(json|js)")];
+  }
+
+  getWatchPathCache() {
+    return this.pathCache;
+  }
+
+  async getGlobalDataFiles() {
+    let paths = await fastglob(await this.getGlobalDataGlob(), {
+      caseSensitiveMatch: false,
+      dot: true
+    });
+    this.pathCache = paths;
+    return paths;
+  }
+
+  getObjectPathForDataFile(path) {
+    let reducedPath = TemplatePath.stripLeadingSubPath(path, this.dataDir);
+    let parsed = parsePath(reducedPath);
+    let folders = parsed.dir ? parsed.dir.split("/") : [];
+    folders.push(parsed.name);
+
+    return folders.join(".");
+  }
+
+  async getAllGlobalData() {
+    let rawImports = this.getRawImports();
+    let globalData = {};
+    let files = TemplatePath.addLeadingDotSlashArray(
+      await this.getGlobalDataFiles()
+    );
+    let dataFileConflicts = {};
+
+    for (let j = 0, k = files.length; j < k; j++) {
+      let folders = await this.getObjectPathForDataFile(files[j]);
+
+      // TODO maybe merge these two? (if both valid objects)
+      if (dataFileConflicts[folders]) {
+        debugWarn(
+          `Warning: the key for a global data file (${files[j]}) will overwrite data from an already existing global data file (${dataFileConflicts[folders]})`
+        );
+      }
+      dataFileConflicts[folders] = files[j];
+
+      debug(`Found global data file ${files[j]} and adding as: ${folders}`);
+      let data = await this.getDataValue(files[j], rawImports);
+      lodashset(globalData, folders, data);
+    }
+
+    return globalData;
+  }
+
+  async getData() {
+    let rawImports = this.getRawImports();
+
+    if (!this.globalData) {
+      let globalJson = await this.getAllGlobalData();
+
+      // OK: Shallow merge when combining rawImports (pkg) with global data files
+      this.globalData = Object.assign({}, globalJson, rawImports);
+    }
+
+    return this.globalData;
+  }
+
+  /* Template and Directory data files */
+  async combineLocalData(localDataPaths) {
+    let localData = {};
+    if (!Array.isArray(localDataPaths)) {
+      localDataPaths = [localDataPaths];
+    }
+    for (let path of localDataPaths) {
+      // clean up data for template/directory data files only.
+      let dataForPath = await this.getDataValue(path, null, true);
+      let cleanedDataForPath = TemplateData.cleanupData(dataForPath);
+      TemplateData.mergeDeep(this.config, localData, cleanedDataForPath);
+      // debug("`combineLocalData` (iterating) for %o: %O", path, localData);
+    }
+    return localData;
+  }
+
+  async getLocalData(templatePath) {
+    let localDataPaths = await this.getLocalDataPaths(templatePath);
+    let importedData = await this.combineLocalData(localDataPaths);
+    let globalData = await this.getData();
+
+    // OK-ish: shallow merge when combining template/data dir files with global data files
+    let localData = Object.assign({}, globalData, importedData);
+    // debug("`getLocalData` for %o: %O", templatePath, localData);
+    return localData;
+  }
+
+  async _getLocalJsonString(path) {
+    let rawInput;
+    try {
+      rawInput = await fs.readFile(path, "utf-8");
+    } catch (e) {
+      // if file does not exist, return nothing
+    }
+    return rawInput;
+  }
+
+  async getDataValue(path, rawImports, ignoreProcessing) {
+    if (ignoreProcessing || TemplatePath.getExtension(path) === "js") {
+      let localPath = TemplatePath.absolutePath(path);
+      if (await fs.pathExists(localPath)) {
+        let dataBench = bench.get(`\`${path}\``);
+        dataBench.before();
+        delete require.cache[localPath];
+        let returnValue = require(localPath);
+        if (typeof returnValue === "function") {
+          returnValue = await returnValue();
+        }
+
+        dataBench.after();
+        return returnValue;
+      } else {
+        return {};
+      }
+    } else {
+      let rawInput = await this._getLocalJsonString(path);
+      let engineName = this.dataTemplateEngine;
+
+      if (rawInput) {
+        if (ignoreProcessing || engineName === false) {
+          try {
+            return JSON.parse(rawInput);
+          } catch (e) {
+            throw new TemplateDataParseError(
+              `Having trouble parsing data file ${path}`,
+              e
+            );
+          }
+        } else {
+          let fn = await new TemplateRender(engineName).getCompiledTemplate(
+            rawInput
+          );
+
+          try {
+            // pass in rawImports, don’t pass in global data, that’s what we’re parsing
+            return JSON.parse(await fn(rawImports));
+          } catch (e) {
+            throw new TemplateDataParseError(
+              `Having trouble parsing data file ${path}`,
+              e
+            );
+          }
+        }
+      }
+    }
+
+    return {};
+  }
+
+  async getLocalDataPaths(templatePath) {
+    let paths = [];
+    let parsed = parsePath(templatePath);
+    let inputDir = TemplatePath.addLeadingDotSlash(
+      TemplatePath.normalize(this.inputDir)
+    );
+    debugDev("getLocalDataPaths(%o)", templatePath);
+    debugDev("parsed.dir: %o", parsed.dir);
+
+    if (parsed.dir) {
+      let fileNameNoExt = EleventyExtensionMap.removeTemplateExtension(
+        parsed.base
+      );
+      let filePathNoExt = parsed.dir + "/" + fileNameNoExt;
+      let dataSuffix = this.config.jsDataFileSuffix;
+      debug("Using %o to find data files.", dataSuffix);
+      paths.push(filePathNoExt + dataSuffix + ".js");
+      paths.push(filePathNoExt + dataSuffix + ".json");
+      paths.push(filePathNoExt + ".json");
+
+      let allDirs = TemplatePath.getAllDirs(parsed.dir);
+      debugDev("allDirs: %o", allDirs);
+      for (let dir of allDirs) {
+        let lastDir = TemplatePath.getLastPathSegment(dir);
+        let dirPathNoExt = dir + "/" + lastDir;
+
+        if (!inputDir) {
+          paths.push(dirPathNoExt + dataSuffix + ".js");
+          paths.push(dirPathNoExt + dataSuffix + ".json");
+          paths.push(dirPathNoExt + ".json");
+        } else {
+          debugDev("dirStr: %o; inputDir: %o", dir, inputDir);
+          if (dir.indexOf(inputDir) === 0 && dir !== inputDir) {
+            paths.push(dirPathNoExt + dataSuffix + ".js");
+            paths.push(dirPathNoExt + dataSuffix + ".json");
+            paths.push(dirPathNoExt + ".json");
+          }
+        }
+      }
+    }
+
+    debug("getLocalDataPaths(%o): %o", templatePath, paths);
+    return lodashUniq(paths).reverse();
+  }
+
+  static mergeDeep(config, target, ...source) {
+    if (config.dataDeepMerge) {
+      return TemplateData.merge(target, ...source);
+    } else {
+      return Object.assign(target, ...source);
+    }
+  }
+
+  static merge(target, ...source) {
+    return merge(target, ...source);
+  }
+
+  static cleanupData(data) {
+    if ("tags" in data) {
+      if (typeof data.tags === "string") {
+        data.tags = data.tags ? [data.tags] : [];
+      } else if (data.tags === null) {
+        data.tags = [];
+      }
+    }
+
+    return data;
+  }
+}
 
 module.exports = TemplateData;

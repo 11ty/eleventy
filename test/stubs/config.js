@@ -1,20 +1,37 @@
 const pretty = require("pretty");
 
-module.exports = {
-  markdownTemplateEngine: "ejs",
-  templateFormats: ["md", "njk"],
-  keys: {
-    package: "pkg2"
-  },
-  filters: {
-    prettyHtml: function(str, outputPath) {
-      // todo check if HTML output before transforming
-      return pretty(str, { ocd: true });
+module.exports = function(config) {
+  /* {
+    template,
+    inputPath,
+    outputPath,
+    url,
+    data,
+    date
+  } */
+
+  return {
+    markdownTemplateEngine: "ejs",
+    templateFormats: ["md", "njk"],
+
+    pathPrefix: "/testdir",
+
+    keys: {
+      package: "pkg2"
+    },
+    filters: {
+      prettyHtml: function(str, outputPath) {
+        if (outputPath.split(".").pop() === "html") {
+          return pretty(str, { ocd: true });
+        } else {
+          return str;
+        }
+      }
+    },
+    nunjucksFilters: {
+      testing: str => {
+        return str;
+      }
     }
-  },
-  nunjucksFilters: {
-    testing: str => {
-      return str;
-    }
-  }
+  };
 };

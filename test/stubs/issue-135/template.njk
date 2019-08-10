@@ -1,0 +1,8 @@
+---
+pagination:
+  data: articles
+  size: 1
+  alias: article
+permalink: blog/{{ article.title | slug }}/index.html
+---
+{{ article.body | safe }}

@@ -2,410 +2,66 @@ import test from "ava";
 import TemplateRender from "../src/TemplateRender";
 import path from "path";
 
-test(t => {
+test("Basic", t => {
   // Path is unnecessary but supported
-  t.truthy(new TemplateRender("default.ejs").parsed);
+  t.is(TemplateRender.cleanupEngineName("default.ejs"), "ejs");
+  t.true(TemplateRender.hasEngine("default.ejs"));
   t.is(new TemplateRender("default.ejs").getEngineName(), "ejs");
 
   // Better
-  t.truthy(new TemplateRender("ejs").parsed);
+  t.is(TemplateRender.cleanupEngineName("ejs"), "ejs");
+  t.is(TemplateRender.cleanupEngineName("EjS"), "ejs");
+  t.true(TemplateRender.hasEngine("EjS"));
+  t.true(TemplateRender.hasEngine("ejs"));
   t.is(new TemplateRender("ejs").getEngineName(), "ejs");
+
+  t.falsy(TemplateRender.cleanupEngineName("sldkjfkldsj"));
+  t.false(TemplateRender.hasEngine("sldkjfkldsj"));
 });
 
-test("Input Dir", async t => {
+test("Includes Dir", async t => {
   t.is(
-    new TemplateRender("ejs", "./test/stubs").getInputDir(),
+    new TemplateRender("ejs", "./test/stubs").getIncludesDir(),
     "test/stubs/_includes"
   );
 });
 
-// HTML
-test("HTML", t => {
-  t.is(new TemplateRender("html").getEngineName(), "html");
-});
-
-test("HTML Render", async t => {
-  let fn = await new TemplateRender("html").getCompiledTemplate(
-    "<p>Paragraph</p>"
-  );
-  t.is(await fn(), "<p>Paragraph</p>");
-  t.is(await fn({}), "<p>Paragraph</p>");
-});
-
-test("HTML Render: Parses markdown using liquid engine (default, with data)", async t => {
-  let fn = await new TemplateRender("html").getCompiledTemplate(
-    "<h1>{{title}}</h1>"
-  );
-  t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
-});
-
-test("HTML Render: Parses markdown using ejs engine", async t => {
-  let fn = await new TemplateRender("html").getCompiledTemplate(
-    "<h1><%=title %></h1>",
-    {
-      parseHtmlWith: "ejs"
-    }
-  );
-  t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
-});
-
-test("HTML Render: Set markdown engine to false, don’t parse", async t => {
-  let fn = await new TemplateRender("html").getCompiledTemplate(
-    "<h1>{{title}}</h1>",
-    {
-      parseHtmlWith: false
-    }
-  );
-  t.is((await fn()).trim(), "<h1>{{title}}</h1>");
-});
-
-test("HTML Render: Change the default engine", async t => {
-  let tr = new TemplateRender("html");
-  tr.setDefaultHtmlEngine("ejs");
-
-  let fn = await tr.getCompiledTemplate("<h1><%= title %></h1>");
-  t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
-});
-
-test("HTML Render: Change the default engine and pass in an override", async t => {
-  let tr = new TemplateRender("html");
-  tr.setDefaultHtmlEngine("njk");
-
-  let fn = await tr.getCompiledTemplate("<h1>{{title}}</h1>", {
-    parseHtmlWith: "liquid"
+test("Invalid override", async t => {
+  let tr = new TemplateRender("ejs", "./test/stubs");
+  t.throws(() => {
+    tr.setEngineOverride("lslkdjf");
   });
-
-  t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
 });
 
-// EJS
-test("EJS", t => {
-  t.is(new TemplateRender("ejs").getEngineName(), "ejs");
+test("Valid Override", async t => {
+  let tr = new TemplateRender("ejs", "./test/stubs");
+  tr.setEngineOverride("njk");
+  t.is(tr.getEngineName(), "njk");
+  t.truthy(tr.isEngine("njk"));
 });
 
-test("EJS Render", async t => {
-  let fn = await new TemplateRender("ejs").getCompiledTemplate(
-    "<p><%= name %></p>"
-  );
-  t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
-});
+test("Parse Overrides to get Prioritized Engine List", async t => {
+  t.deepEqual(TemplateRender.parseEngineOverrides(""), []);
+  t.deepEqual(TemplateRender.parseEngineOverrides(null), []);
+  t.deepEqual(TemplateRender.parseEngineOverrides(undefined), []);
+  t.deepEqual(TemplateRender.parseEngineOverrides(false), []);
+  t.deepEqual(TemplateRender.parseEngineOverrides("html"), []);
+  t.deepEqual(TemplateRender.parseEngineOverrides("html,html"), []);
+  t.deepEqual(TemplateRender.parseEngineOverrides("html,md,md"), ["md"]);
+  t.deepEqual(TemplateRender.parseEngineOverrides("ejs,md"), ["md", "ejs"]);
+  t.deepEqual(TemplateRender.parseEngineOverrides("ejs"), ["ejs"]);
+  t.deepEqual(TemplateRender.parseEngineOverrides("njk"), ["njk"]);
+  t.deepEqual(TemplateRender.parseEngineOverrides("ejs,html"), ["ejs"]);
+  t.deepEqual(TemplateRender.parseEngineOverrides("ejs,md,html"), [
+    "md",
+    "ejs"
+  ]);
+  t.deepEqual(TemplateRender.parseEngineOverrides("njk,njk"), ["njk"]);
 
-test("EJS Render Include Preprocessor Directive", async t => {
-  t.is(path.resolve(undefined, "/included"), "/included");
-
-  let fn = await new TemplateRender("ejs", "./test/stubs/").getCompiledTemplate(
-    "<p><% include /included %></p>"
-  );
-  t.is(await fn(), "<p>This is an include.</p>");
-});
-
-test("EJS Render Include, New Style no Data", async t => {
-  let fn = await new TemplateRender("ejs", "./test/stubs/").getCompiledTemplate(
-    "<p><%- include('/included') %></p>"
-  );
-  t.is(await fn(), "<p>This is an include.</p>");
-});
-
-test("EJS Render Include, New Style", async t => {
-  let fn = await new TemplateRender("ejs", "./test/stubs/").getCompiledTemplate(
-    "<p><%- include('/included', {}) %></p>"
-  );
-  t.is(await fn(), "<p>This is an include.</p>");
-});
-
-test("EJS Render Include, New Style with Data", async t => {
-  let fn = await new TemplateRender("ejs", "./test/stubs/").getCompiledTemplate(
-    "<p><%- include('/includedvar', { name: 'Bill' }) %></p>"
-  );
-  t.is(await fn(), "<p>This is an Bill.</p>");
-});
-
-// test("EJS Render Include Preprocessor Directive Relative", async t => {
-
-//   let fn = await new TemplateRender("ejs", "./test/stubs/").getCompiledTemplate(
-//     "<p><% include included %></p>"
-//   );
-//   t.is(await fn(), "<p>This is an include.</p>");
-// });
-
-// test("EJS Render Include, Relative Path New Style", async t => {
-//   let fn = await new TemplateRender("ejs", "./test/stubs/").getCompiledTemplate(
-//     "<p><%- include('stubs/includedrelative', {}) %></p>"
-//   );
-
-//   t.is(await fn(), "<p>This is a relative include.</p>");
-// });
-
-// Markdown
-test("Markdown", t => {
-  t.is(new TemplateRender("md").getEngineName(), "md");
-});
-
-test("Markdown Render: Parses base markdown, no data", async t => {
-  let fn = await new TemplateRender("md").getCompiledTemplate("# My Title");
-  t.is((await fn()).trim(), "<h1>My Title</h1>");
-});
-
-test("Markdown Render: Parses markdown using liquid engine (default, with data)", async t => {
-  let fn = await new TemplateRender("md").getCompiledTemplate("# {{title}}");
-  t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
-});
-
-test("Markdown Render: Parses markdown using ejs engine", async t => {
-  let fn = await new TemplateRender("md").getCompiledTemplate("<%=title %>", {
-    parseMarkdownWith: "ejs"
+  t.throws(function() {
+    TemplateRender.parseEngineOverrides("njk,ejs");
   });
-  t.is((await fn({ title: "My Title" })).trim(), "<p>My Title</p>");
-});
-
-test("Markdown Render: Ignore markdown, use only preprocess engine (useful for variable resolution in permalinks)", async t => {
-  let fn = await new TemplateRender("md").getCompiledTemplate("{{title}}", {
-    bypassMarkdown: true
+  t.throws(function() {
+    TemplateRender.parseEngineOverrides("ejs,njk,html");
   });
-  t.is((await fn({ title: "My Title" })).trim(), "My Title");
-});
-
-test("Markdown Render: Set markdown engine to false, don’t parse", async t => {
-  let fn = await new TemplateRender("md").getCompiledTemplate("# {{title}}", {
-    parseMarkdownWith: false
-  });
-  t.is((await fn()).trim(), "<h1>{{title}}</h1>");
-});
-
-test("Markdown Render: Change the default engine", async t => {
-  let tr = new TemplateRender("md");
-  tr.setDefaultMarkdownEngine("ejs");
-
-  let fn = await tr.getCompiledTemplate("# <%= title %>");
-  t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
-});
-
-test("Markdown Render: Change the default engine and pass in an override", async t => {
-  let tr = new TemplateRender("md");
-  tr.setDefaultMarkdownEngine("njk");
-
-  let fn = await tr.getCompiledTemplate("# {{title}}", {
-    parseMarkdownWith: "liquid"
-  });
-
-  t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
-});
-
-// Handlebars
-test("Handlebars", t => {
-  t.is(new TemplateRender("hbs").getEngineName(), "hbs");
-});
-
-test("Handlebars Render", async t => {
-  let fn = await new TemplateRender("hbs").getCompiledTemplate(
-    "<p>{{name}}</p>"
-  );
-  t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
-});
-
-test("Handlebars Render Partial", async t => {
-  let fn = await new TemplateRender("hbs", "./test/stubs/").getCompiledTemplate(
-    "<p>{{> included}}</p>"
-  );
-  t.is(await fn(), "<p>This is an include.</p>");
-});
-
-test("Handlebars Render Partial", async t => {
-  let fn = await new TemplateRender("hbs", "./test/stubs/").getCompiledTemplate(
-    "<p>{{> includedvar}}</p>"
-  );
-  t.is(await fn({ name: "Zach" }), "<p>This is a Zach.</p>");
-});
-
-// Mustache
-test("Mustache", async t => {
-  t.is(new TemplateRender("mustache").getEngineName(), "mustache");
-});
-
-test("Mustache Render", async t => {
-  let fn = await new TemplateRender("mustache").getCompiledTemplate(
-    "<p>{{name}}</p>"
-  );
-  t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
-});
-
-test("Mustache Render Partial", async t => {
-  let fn = await new TemplateRender(
-    "mustache",
-    "./test/stubs/"
-  ).getCompiledTemplate("<p>{{> included}}</p>");
-  t.is(await fn(), "<p>This is an include.</p>");
-});
-
-test("Mustache Render Partial", async t => {
-  let fn = await new TemplateRender(
-    "mustache",
-    "./test/stubs/"
-  ).getCompiledTemplate("<p>{{> includedvar}}</p>");
-  t.is(await fn({ name: "Zach" }), "<p>This is a Zach.</p>");
-});
-
-// Haml
-test("Haml", t => {
-  t.is(new TemplateRender("haml").getEngineName(), "haml");
-});
-
-test("Haml Render", async t => {
-  let fn = await new TemplateRender("haml").getCompiledTemplate("%p= name");
-  t.is((await fn({ name: "Zach" })).trim(), "<p>Zach</p>");
-});
-
-// Pug
-test("Pug", t => {
-  t.is(new TemplateRender("pug").getEngineName(), "pug");
-});
-
-test("Pug Render", async t => {
-  let fn = await new TemplateRender("pug").getCompiledTemplate("p= name");
-  t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
-});
-
-test("Pug Render Include", async t => {
-  let fn = await new TemplateRender("pug", "./test/stubs/")
-    .getCompiledTemplate(`p
-	include /included.pug`);
-  t.is(await fn({ name: "Zach" }), "<p><span>This is an include.</span></p>");
-});
-
-test("Pug Render Include with Data", async t => {
-  let fn = await new TemplateRender("pug", "./test/stubs/")
-    .getCompiledTemplate(`p
-	include /includedvar.pug`);
-  t.is(await fn({ name: "Zach" }), "<p><span>This is Zach.</span></p>");
-});
-
-test("Pug Render Include with Data, inline var overrides data", async t => {
-  let fn = await new TemplateRender("pug", "./test/stubs/")
-    .getCompiledTemplate(`
-- var name = "Bill";
-p
-	include /includedvar.pug`);
-  t.is(await fn({ name: "Zach" }), "<p><span>This is Bill.</span></p>");
-});
-
-test("Pug Render Extends (Layouts)", async t => {
-  let fn = await new TemplateRender("pug", "./test/stubs/")
-    .getCompiledTemplate(`extends /layout.pug
-block content
-  h1= name`);
-  t.is(await fn({ name: "Zach" }), "<html><body><h1>Zach</h1></body></html>");
-});
-
-// Nunjucks
-test("Nunjucks", t => {
-  t.is(new TemplateRender("njk").getEngineName(), "njk");
-});
-
-test("Nunjucks Render", async t => {
-  let fn = await new TemplateRender("njk").getCompiledTemplate(
-    "<p>{{ name }}</p>"
-  );
-  t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
-});
-
-test("Nunjucks Render Extends", async t => {
-  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
-    "{% extends 'base.njk' %}{% block content %}This is a child.{% endblock %}"
-  );
-  t.is(await fn(), "<p>This is a child.</p>");
-});
-
-test("Nunjucks Render Include", async t => {
-  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
-    "<p>{% include 'included.njk' %}</p>"
-  );
-  t.is(await fn(), "<p>This is an include.</p>");
-});
-
-test("Nunjucks Render Imports", async t => {
-  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
-    "{% import 'imports.njk' as forms %}<div>{{ forms.label('Name') }}</div>"
-  );
-  t.is(await fn(), "<div><label>Name</label></div>");
-});
-
-test("Nunjucks Render Imports From", async t => {
-  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
-    "{% from 'imports.njk' import label %}<div>{{ label('Name') }}</div>"
-  );
-  t.is(await fn(), "<div><label>Name</label></div>");
-});
-
-// Liquid
-test("Liquid", t => {
-  t.is(new TemplateRender("liquid").getEngineName(), "liquid");
-});
-
-test("Liquid Render (with Helper)", async t => {
-  let fn = await new TemplateRender("liquid").getCompiledTemplate(
-    "<p>{{name | capitalize}}</p>"
-  );
-  t.is(await fn({ name: "tim" }), "<p>Tim</p>");
-});
-
-test("Liquid Render Include", async t => {
-  t.is(new TemplateRender("liquid", "./test/stubs/").getEngineName(), "liquid");
-
-  let fn = await new TemplateRender(
-    "liquid",
-    "./test/stubs/"
-  ).getCompiledTemplate("<p>{% include included %}</p>");
-  t.is(await fn(), "<p>This is an include.</p>");
-});
-
-test("Liquid Render Include with Liquid Suffix", async t => {
-  t.is(new TemplateRender("liquid", "./test/stubs/").getEngineName(), "liquid");
-
-  let fn = await new TemplateRender(
-    "liquid",
-    "./test/stubs/"
-  ).getCompiledTemplate("<p>{% include included.liquid %}</p>");
-  t.is(await fn(), "<p>This is an include.</p>");
-});
-
-test("Liquid Render Include with HTML Suffix", async t => {
-  t.is(new TemplateRender("liquid", "./test/stubs/").getEngineName(), "liquid");
-
-  let fn = await new TemplateRender(
-    "liquid",
-    "./test/stubs/"
-  ).getCompiledTemplate("<p>{% include included.html %}</p>");
-  t.is(await fn(), "<p>This is an include.</p>");
-});
-
-// This is an upstream limitation of the Liquid implementation
-// test("Liquid Render Include No Quotes", async t => {
-//   t.is(new TemplateRender("liquid", "./test/stubs/").getEngineName(), "liquid");
-
-//   let fn = await new TemplateRender(
-//     "liquid",
-//     "./test/stubs/"
-//   ).getCompiledTemplate("<p>{% include included.liquid %}</p>");
-//   t.is(await fn(), "<p>This is an include.</p>");
-// });
-
-// ES6
-test("ES6 Template Literal", t => {
-  t.is(new TemplateRender("jstl").getEngineName(), "jstl");
-});
-
-test("ES6 Template Literal Render", async t => {
-  // pass in a string here, we don’t want to compile the template in the test :O
-  let fn = await new TemplateRender("jstl").getCompiledTemplate(
-    "`<p>${name.toUpperCase()}</p>`"
-  );
-  t.is(await fn({ name: "Tim" }), "<p>TIM</p>");
-});
-
-test("ES6 Template Literal Render", async t => {
-  // pass in a string here, we don’t want to compile the template in the test :O
-  let fn = await new TemplateRender("jstl").getCompiledTemplate(
-    "<p>${name.toUpperCase()}</p>"
-  );
-  t.is(await fn({ name: "Tim" }), "<p>TIM</p>");
 });

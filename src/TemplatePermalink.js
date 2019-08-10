@@ -1,5 +1,4 @@
 const parsePath = require("parse-filepath");
-const normalize = require("normalize-path");
 const TemplatePath = require("./TemplatePath");
 
 function TemplatePermalink(link, extraSubdir) {
@@ -14,13 +13,26 @@ TemplatePermalink.prototype._cleanLink = function(link) {
 TemplatePermalink.prototype.resolve = function() {
   let parsed = parsePath(this.link);
 
-  return TemplatePath.normalize(
-    parsed.dir + "/" + this.extraSubdir + parsed.base // name with extension
-  );
+  return TemplatePath.join(parsed.dir, this.extraSubdir, parsed.base);
 };
 
 TemplatePermalink.prototype.toString = function() {
   return this.resolve();
+};
+
+// remove all index.html’s from links
+// index.html becomes /
+// test/index.html becomes test/
+TemplatePermalink.prototype.toHref = function() {
+  let str = this.toString();
+  let original = (str.charAt(0) !== "/" ? "/" : "") + this.toString();
+  let needle = "/index.html";
+  if (original === needle) {
+    return "/";
+  } else if (original.substr(-1 * needle.length) === needle) {
+    return original.substr(0, original.length - needle.length) + "/";
+  }
+  return original;
 };
 
 TemplatePermalink._hasDuplicateFolder = function(dir, base) {

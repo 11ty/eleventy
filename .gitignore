@@ -1,5 +1,5 @@
-dist/
 _site/
 node_modules/
-playground/
+.nyc_output/
+coverage/
 package-lock.json

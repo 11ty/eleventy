@@ -9,6 +9,11 @@ test("Unsupported engine", async t => {
   });
 });
 
+test("Supported engine", async t => {
+  t.is(new TemplateEngine("ejs").getName(), "ejs");
+  t.truthy(TemplateEngine.hasEngine("ejs"));
+});
+
 test("Handlebars Helpers", async t => {
   let engine = TemplateEngine.getEngine("hbs");
   engine.addHelpers({
@@ -19,4 +24,8 @@ test("Handlebars Helpers", async t => {
 
   let fn = await engine.compile("<p>{{uppercase author}}</p>");
   t.is(await fn({ author: "zach" }), "<p>ZACH</p>");
+});
+
+test("getEngineLib", async t => {
+  t.truthy(TemplateEngine.getEngine("md").getEngineLib());
 });

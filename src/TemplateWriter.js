@@ -1,112 +1,83 @@
-const globby = require("globby");
-const normalize = require("normalize-path");
-const fs = require("fs-extra");
 const Template = require("./Template");
 const TemplatePath = require("./TemplatePath");
+const TemplateMap = require("./TemplateMap");
 const TemplateRender = require("./TemplateRender");
-const TemplateConfig = require("./TemplateConfig");
-const EleventyError = require("./EleventyError");
-const Pagination = require("./Plugins/Pagination");
-const pkg = require("../package.json");
+const EleventyFiles = require("./EleventyFiles");
+const EleventyBaseError = require("./EleventyBaseError");
+const EleventyErrorHandler = require("./EleventyErrorHandler");
+const EleventyErrorUtil = require("./EleventyErrorUtil");
 
-let cfg = TemplateConfig.getDefaultConfig();
+const config = require("./Config");
+const debug = require("debug")("Eleventy:TemplateWriter");
+const debugDev = require("debug")("Dev:Eleventy:TemplateWriter");
 
-function TemplateWriter(baseDir, outputDir, extensions, templateData) {
-  this.baseDir = baseDir;
-  this.templateExtensions = extensions;
+class TemplateWriterWriteError extends EleventyBaseError {}
+
+function TemplateWriter(
+  inputPath,
+  outputDir,
+  templateFormats, // TODO remove this, see `.getFileManager()` first
+  templateData,
+  isPassthroughAll
+) {
+  this.config = config.getConfig();
+  this.input = inputPath;
+  this.inputDir = TemplatePath.getDir(inputPath);
   this.outputDir = outputDir;
+  this.templateFormats = templateFormats;
   this.templateData = templateData;
   this.isVerbose = true;
+  this.isDryRun = false;
   this.writeCount = 0;
 
-  this.rawFiles = this.templateExtensions.map(
-    function(extension) {
-      return normalize(this.baseDir + "/**/*." + extension);
-    }.bind(this)
-  );
-
-  this.watchedFiles = this.addIgnores(baseDir, this.rawFiles);
-  this.files = this.addWritingIgnores(baseDir, this.watchedFiles);
+  // TODO can we get rid of this? It’s only used for tests in getFileManager()
+  this.passthroughAll = isPassthroughAll;
 }
 
-TemplateWriter.prototype.getRawFiles = function() {
-  return this.rawFiles;
+/* For testing */
+TemplateWriter.prototype.overrideConfig = function(config) {
+  this.config = config;
 };
 
-TemplateWriter.prototype.getWatchedIgnores = function() {
-  return this.addIgnores(this.baseDir, []).map(ignore =>
-    TemplatePath.stripLeadingDotSlash(ignore.substr(1))
-  );
+TemplateWriter.prototype.restart = function() {
+  this.writeCount = 0;
+  debugDev("Resetting counts to 0");
 };
 
-TemplateWriter.prototype.getFiles = function() {
-  return this.files;
+TemplateWriter.prototype.setEleventyFiles = function(eleventyFiles) {
+  this.eleventyFiles = eleventyFiles;
 };
 
-TemplateWriter.getFileIgnores = function(baseDir) {
-  let ignorePath = TemplatePath.normalize(baseDir + "/.eleventyignore");
-  let ignoreContent;
-  try {
-    ignoreContent = fs.readFileSync(ignorePath, "utf-8");
-  } catch (e) {
-    ignoreContent = "";
-  }
-  let ignores = [];
-
-  if (ignoreContent) {
-    ignores = ignoreContent
-      .split("\n")
-      .filter(line => {
-        return line.trim().length > 0;
-      })
-      .map(line => {
-        line = line.trim();
-        path = TemplatePath.addLeadingDotSlash(
-          TemplatePath.normalize(baseDir, "/", line)
-        );
-        if (fs.statSync(path).isDirectory()) {
-          return "!" + path + "/**";
-        }
-        return "!" + path;
-      });
-  }
-
-  return ignores;
-};
-
-TemplateWriter.prototype.addIgnores = function(baseDir, files) {
-  files = files.concat(TemplateWriter.getFileIgnores(baseDir));
-  if (cfg.dir.output) {
-    files = files.concat(
-      "!" + normalize(baseDir + "/" + cfg.dir.output + "/**")
+TemplateWriter.prototype.getFileManager = function() {
+  // usually Eleventy.js will setEleventyFiles with the EleventyFiles manager
+  if (!this.eleventyFiles) {
+    // if not, we can create one (used only by tests)
+    this.eleventyFiles = new EleventyFiles(
+      this.input,
+      this.outputDir,
+      this.templateFormats,
+      this.passthroughAll
     );
+    this.eleventyFiles.init();
   }
 
-  return files;
+  return this.eleventyFiles;
 };
 
-TemplateWriter.prototype.addWritingIgnores = function(baseDir, files) {
-  if (cfg.dir.includes) {
-    files = files.concat(
-      "!" + normalize(baseDir + "/" + cfg.dir.includes + "/**")
-    );
-  }
-  if (cfg.dir.data && cfg.dir.data !== ".") {
-    files = files.concat("!" + normalize(baseDir + "/" + cfg.dir.data + "/**"));
-  }
-
-  return files;
+TemplateWriter.prototype._getAllPaths = async function() {
+  return await this.getFileManager().getFiles();
 };
 
-TemplateWriter.prototype._getTemplate = function(path) {
+TemplateWriter.prototype._createTemplate = function(path) {
   let tmpl = new Template(
     path,
-    this.baseDir,
+    this.inputDir,
     this.outputDir,
     this.templateData
   );
 
   tmpl.setIsVerbose(this.isVerbose);
+  tmpl.setDryRun(this.isDryRun);
 
   /*
    * Sample filter: arg str, return pretty HTML string
@@ -114,51 +85,132 @@ TemplateWriter.prototype._getTemplate = function(path) {
    *   return pretty(str, { ocd: true });
    * }
    */
-  for (let filterName in cfg.filters) {
-    let filter = cfg.filters[filterName];
-    if (typeof filter === "function") {
-      tmpl.addFilter(filter);
+  for (let transformName in this.config.filters) {
+    let transform = this.config.filters[transformName];
+    if (typeof transform === "function") {
+      tmpl.addTransform(transform);
     }
   }
 
-  let writer = this;
-  tmpl.addPlugin("pagination", async function(data) {
-    let paging = new Pagination(data);
-    paging.setTemplate(this);
-    await paging.write();
-    writer.writeCount += paging.getWriteCount();
-
-    if (paging.cancel()) {
-      return false;
+  for (let linterName in this.config.linters) {
+    let linter = this.config.linters[linterName];
+    if (typeof linter === "function") {
+      tmpl.addLinter(linter);
     }
-  });
+  }
 
   return tmpl;
 };
 
-TemplateWriter.prototype._writeTemplate = async function(path) {
-  let tmpl = this._getTemplate(path);
-  try {
-    await tmpl.write();
-  } catch (e) {
-    throw EleventyError.make(
-      new Error(`Having trouble writing template: ${path}`),
-      e
-    );
+TemplateWriter.prototype._addToTemplateMap = async function(paths) {
+  let promises = [];
+  for (let path of paths) {
+    if (TemplateRender.hasEngine(path)) {
+      promises.push(
+        this.templateMap.add(this._createTemplate(path)).then(() => {
+          debug(`${path} added to map.`);
+        })
+      );
+    }
   }
-  this.writeCount += tmpl.getWriteCount();
-  return tmpl;
+
+  return Promise.all(promises);
+};
+
+TemplateWriter.prototype._createTemplateMap = async function(paths) {
+  this.templateMap = new TemplateMap();
+
+  await this._addToTemplateMap(paths);
+  await this.templateMap.cache();
+
+  debugDev("TemplateMap cache complete.");
+  return this.templateMap;
+};
+
+TemplateWriter.prototype._writeTemplate = async function(mapEntry) {
+  let tmpl = mapEntry.template;
+  // we don’t re-use the map templateContent because it doesn’t include layouts
+  return tmpl.writeMapEntry(mapEntry).then(() => {
+    this.writeCount += tmpl.getWriteCount();
+  });
 };
 
 TemplateWriter.prototype.write = async function() {
-  var paths = await globby(this.files, { gitignore: true });
-  for (var j = 0, k = paths.length; j < k; j++) {
-    await this._writeTemplate(paths[j]);
+  let promises = [];
+  let paths = await this._getAllPaths();
+  debug("Found: %o", paths);
+  promises.push(
+    this.getFileManager()
+      .getPassthroughManager()
+      .copyAll(paths)
+      .catch(e => {
+        EleventyErrorHandler.warn(e, "Error with passthrough copy");
+        return Promise.reject(
+          new TemplateWriterWriteError(`Having trouble copying`, e)
+        );
+      })
+  );
+
+  // TODO optimize await here
+  await this._createTemplateMap(paths);
+  debug("Template map created.");
+
+  let mapEntry;
+  let usedTemplateContentTooEarlyMap = [];
+  for (mapEntry of this.templateMap.getMap()) {
+    promises.push(
+      this._writeTemplate(mapEntry).catch(function(e) {
+        // Premature templateContent in layout render, this also happens in
+        // TemplateMap.populateContentDataInMap for non-layout content
+        if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
+          usedTemplateContentTooEarlyMap.push(mapEntry);
+        } else {
+          return Promise.reject(
+            TemplateWriterWriteError(
+              `Having trouble writing template: ${mapEntry.outputPath}`,
+              e
+            )
+          );
+        }
+      })
+    );
   }
+
+  for (mapEntry of usedTemplateContentTooEarlyMap) {
+    promises.push(
+      this._writeTemplate(mapEntry).catch(function(e) {
+        return Promise.reject(
+          TemplateWriterWriteError(
+            `Having trouble writing template (second pass): ${mapEntry.outputPath}`,
+            e
+          )
+        );
+      })
+    );
+  }
+
+  return Promise.all(promises).catch(e => {
+    EleventyErrorHandler.error(e, "Error writing templates");
+    throw e;
+  });
 };
 
 TemplateWriter.prototype.setVerboseOutput = function(isVerbose) {
   this.isVerbose = isVerbose;
+};
+
+TemplateWriter.prototype.setDryRun = function(isDryRun) {
+  this.isDryRun = !!isDryRun;
+
+  this.getFileManager()
+    .getPassthroughManager()
+    .setDryRun(this.isDryRun);
+};
+
+TemplateWriter.prototype.getCopyCount = function() {
+  return this.getFileManager()
+    .getPassthroughManager()
+    .getCopyCount();
 };
 
 TemplateWriter.prototype.getWriteCount = function() {

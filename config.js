@@ -1,42 +1,50 @@
-const slugify = require("slugify");
+const urlFilter = require("./src/Filters/Url");
+const slugFilter = require("./src/Filters/Slug");
 
-module.exports = {
-  templateFormats: [
-    "liquid",
-    "ejs",
-    "md",
-    "hbs",
-    "mustache",
-    "haml",
-    "pug",
-    "njk",
-    "html",
-    "jstl"
-  ],
-  markdownTemplateEngine: "liquid",
-  htmlTemplateEngine: "liquid",
-  dataTemplateEngine: "liquid",
-  htmlOutputSuffix: "-o",
-  keys: {
-    package: "pkg",
-    layout: "layout",
-    permalink: "permalink",
-    permalinkRoot: "permalinkBypassOutputDir"
-  },
-  dir: {
-    input: ".",
-    includes: "_includes",
-    data: "_data",
-    output: "_site"
-  },
-  filters: {},
-  handlebarsHelpers: {},
-  nunjucksFilters: {
-    slug: str => {
-      return slugify(str, {
-        replacement: "-",
-        lower: true
-      });
-    }
-  }
+module.exports = function(config) {
+  config.addFilter("slug", slugFilter);
+  config.addFilter("url", urlFilter);
+
+  return {
+    templateFormats: [
+      "liquid",
+      "ejs",
+      "md",
+      "hbs",
+      "mustache",
+      "haml",
+      "pug",
+      "njk",
+      "html",
+      "jstl",
+      "11ty.js"
+    ],
+    // if your site lives in a subdirectory, change this
+    pathPrefix: "/",
+    markdownTemplateEngine: "liquid",
+    htmlTemplateEngine: "liquid",
+    dataTemplateEngine: "liquid",
+    passthroughFileCopy: true,
+    htmlOutputSuffix: "-o",
+    jsDataFileSuffix: ".11tydata",
+    keys: {
+      package: "pkg",
+      layout: "layout",
+      permalink: "permalink",
+      permalinkRoot: "permalinkBypassOutputDir",
+      engineOverride: "templateEngineOverride"
+    },
+    dir: {
+      input: ".",
+      includes: "_includes",
+      data: "_data",
+      output: "_site"
+    },
+    // deprecated, use config.addTransform
+    filters: {},
+    // deprecated, use config.addHandlebarsHelper
+    handlebarsHelpers: {},
+    // deprecated, use config.addNunjucksFilter
+    nunjucksFilters: {}
+  };
 };

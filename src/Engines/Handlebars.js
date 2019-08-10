@@ -1,29 +1,62 @@
 const HandlebarsLib = require("handlebars");
 const TemplateEngine = require("./TemplateEngine");
-const TemplateConfig = require("../TemplateConfig");
-
-let cfg = TemplateConfig.getDefaultConfig();
+const config = require("../Config");
 
 class Handlebars extends TemplateEngine {
-  constructor(name, inputDir) {
-    super(name, inputDir);
+  constructor(name, includesDir) {
+    super(name, includesDir);
+
+    this.setLibrary(this.config.libraryOverrides.hbs);
+  }
+
+  setLibrary(lib) {
+    this.handlebarsLib = lib || HandlebarsLib;
+    this.setEngineLib(this.handlebarsLib);
 
     let partials = super.getPartials();
     for (let name in partials) {
-      HandlebarsLib.registerPartial(name, partials[name]);
+      this.handlebarsLib.registerPartial(name, partials[name]);
     }
 
-    this.addHelpers(cfg.handlebarsHelpers);
+    // TODO these all go to the same place (addHelper), add warnings for overwrites
+    this.addHelpers(this.config.handlebarsHelpers);
+    this.addShortcodes(this.config.handlebarsShortcodes);
+    this.addPairedShortcodes(this.config.handlebarsPairedShortcodes);
+  }
+
+  addHelper(name, callback) {
+    this.handlebarsLib.registerHelper(name, callback);
   }
 
   addHelpers(helpers) {
     for (let name in helpers) {
-      HandlebarsLib.registerHelper(name, helpers[name]);
+      this.addHelper(name, helpers[name]);
     }
   }
 
-  async compile(str) {
-    let fn = HandlebarsLib.compile(str);
+  addShortcodes(shortcodes) {
+    for (let name in shortcodes) {
+      this.addHelper(name, shortcodes[name]);
+    }
+  }
+
+  addPairedShortcodes(shortcodes) {
+    for (let name in shortcodes) {
+      let callback = shortcodes[name];
+      this.addHelper(name, function(...args) {
+        let options = args[args.length - 1];
+        let content = "";
+        if (options && options.fn) {
+          content = options.fn(this);
+        }
+
+        return callback.apply(this, [content, ...args]);
+      });
+    }
+  }
+
+  async compile(str, inputPath) {
+    let fn = this.handlebarsLib.compile(str);
     return function(data) {
       return fn(data);
     };
