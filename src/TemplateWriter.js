@@ -166,7 +166,7 @@ TemplateWriter.prototype.write = async function() {
           usedTemplateContentTooEarlyMap.push(mapEntry);
         } else {
           return Promise.reject(
-            TemplateWriterWriteError(
+            new TemplateWriterWriteError(
               `Having trouble writing template: ${mapEntry.outputPath}`,
               e
             )
@@ -180,7 +180,7 @@ TemplateWriter.prototype.write = async function() {
     promises.push(
       this._writeTemplate(mapEntry).catch(function(e) {
         return Promise.reject(
-          TemplateWriterWriteError(
+          new TemplateWriterWriteError(
             `Having trouble writing template (second pass): ${mapEntry.outputPath}`,
             e
           )
