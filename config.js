@@ -17,7 +17,8 @@ module.exports = function(config) {
       "njk",
       "html",
       "jstl",
-      "11ty.js"
+      "11ty.js",
+      "twig"
     ],
     // if your site lives in a subdirectory, change this
     pathPrefix: "/",
