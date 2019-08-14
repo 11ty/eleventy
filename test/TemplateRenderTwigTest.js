@@ -409,16 +409,16 @@ test("Twig Test if statements on arrays (Issue #524)", async t => {
   );
 });
 
-// test("Issue 611: Run a function", async t => {
-//   // This does not work in Liquid
-//   let tr = new TemplateRender("twig", "./test/stubs/");
+test("Issue 611: Run a function", async t => {
+  // This does not work in Liquid
+  let tr = new TemplateRender("twig", "./test/stubs/");
 
-//   t.is(
-//     await tr.render("{{ test() }}", {
-//       test: function() {
-//         return "alkdsjfksljaZach";
-//       }
-//     }),
-//     "alkdsjfksljaZach"
-//   );
-// });
+  t.is(
+    await tr.render("{{ test() }}", {
+      test: function() {
+        return "alkdsjfksljaZach";
+      }
+    }),
+    "alkdsjfksljaZach"
+  );
+});

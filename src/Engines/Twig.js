@@ -150,11 +150,30 @@ class Twig extends TemplateEngine {
     }
 
     return async data => {
+      const fns = [];
+
+      if (data) {
+        for (let key in data) {
+          if (typeof data[key] === "function") {
+            fns.push(key);
+            this.getEngineLib().addFunction(
+              new Twing.TwingFunction(key, data[key])
+            );
+          }
+        }
+      }
+
       return new Promise((resolve, reject) => {
         try {
           resolve(this.getEngineLib().render(key, data));
         } catch (e) {
           reject(e);
+        } finally {
+          for (let key in fns) {
+            this.getEngineLib().addFunction(
+              new Twing.TwingFunction(key, () => {})
+            );
+          }
         }
       });
     };
