@@ -220,6 +220,15 @@ test.skip("Twig Render: with Library Override", async t => {
 //   t.is(await fn({ "my-global-name": "Zach" }), "<p>Zach</p>");
 // });
 
+test("Twig Filter", async t => {
+  let tr = new TemplateRender("twig", "./test/stubs/");
+  tr.engine.addFilter("uppercase", function(str) {
+    return str.toUpperCase();
+  });
+
+  t.is(await tr.render("{{ test|uppercase }}", { test: "up!" }), "UP!");
+});
+
 // test("Twig Shortcode without args", async t => {
 //   let tr = new TemplateRender("twig", "./test/stubs/");
 //   tr.engine.addShortcode("postfixWithZach", function() {

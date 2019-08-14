@@ -36,8 +36,7 @@ class Twig extends TemplateEngine {
       );
     this.setEngineLib(this.twigEnv);
 
-    // this.addFilters(this.config.nunjucksFilters);
-    // this.addFilters(this.config.nunjucksAsyncFilters, true);
+    this.addFilters(this.config.twigFilters);
 
     // TODO these all go to the same place (addTag), add warnings for overwrites
     // this.addCustomTags(this.config.nunjucksTags);
@@ -45,10 +44,14 @@ class Twig extends TemplateEngine {
     // this.addAllPairedShortcodes(this.config.nunjucksPairedShortcodes);
   }
 
-  addFilters(helpers, isAsync) {
-    // for (let name in helpers) {
-    //   this.njkEnv.addFilter(name, helpers[name], isAsync);
-    // }
+  addFilters(filters) {
+    for (let name in filters) {
+      this.addFilter(name, filters[name]);
+    }
+  }
+
+  addFilter(name, filterFn) {
+    this.getEngineLib().addFilter(new Twing.TwingFilter(name, filterFn));
   }
 
   addCustomTags(tags) {
