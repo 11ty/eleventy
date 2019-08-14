@@ -40,8 +40,8 @@ class Twig extends TemplateEngine {
 
     // TODO these all go to the same place (addTag), add warnings for overwrites
     // this.addCustomTags(this.config.nunjucksTags);
-    // this.addAllShortcodes(this.config.nunjucksShortcodes);
-    // this.addAllPairedShortcodes(this.config.nunjucksPairedShortcodes);
+    this.addAllShortcodes(this.config.twigShortcodes);
+    this.addAllPairedShortcodes(this.config.twigPairedShortcodes);
   }
 
   addFilters(filters) {
@@ -73,43 +73,42 @@ class Twig extends TemplateEngine {
   }
 
   addAllShortcodes(shortcodes) {
-    // for (let name in shortcodes) {
-    //   this.addShortcode(name, shortcodes[name]);
-    // }
+    for (let name in shortcodes) {
+      this.addShortcode(name, shortcodes[name]);
+    }
   }
 
   addAllPairedShortcodes(shortcodes) {
-    // for (let name in shortcodes) {
-    //   this.addPairedShortcode(name, shortcodes[name]);
-    // }
+    for (let name in shortcodes) {
+      this.addPairedShortcode(name, shortcodes[name]);
+    }
   }
 
   addShortcode(shortcodeName, shortcodeFn) {
-    // function ShortcodeFunction() {
-    //   this.tags = [shortcodeName];
-    //   this.parse = function(parser, nodes, lexer) {
-    //     let args;
-    //     let tok = parser.nextToken();
-    //     args = parser.parseSignature(true, true);
-    //     // Nunjucks bug with non-paired custom tags bug still exists even
-    //     // though this issue is closed. Works fine for paired.
-    //     // https://github.com/mozilla/nunjucks/issues/158
-    //     if (args.children.length === 0) {
-    //       args.addChild(new nodes.Literal(0, 0, ""));
-    //     }
-    //     parser.advanceAfterBlockEnd(tok.value);
-    //     // return new nodes.CallExtensionAsync(this, "run", args);
-    //     return new nodes.CallExtension(this, "run", args);
-    //   };
-    //   this.run = function(...args) {
-    //     // let callback = args.pop();
-    //     let [context, ...argArray] = args;
-    //     let ret = new NunjucksLib.runtime.SafeString(shortcodeFn(...argArray));
-    //     // callback(null, ret);
-    //     return ret;
-    //   };
-    // }
-    // this.njkEnv.addExtension(shortcodeName, new ShortcodeFunction());
+    class ShortcodeTokenParser extends Twing.TwingTokenParser {
+      parse(token) {
+        const parser = this.parser;
+        const stream = parser.getStream();
+
+        let args = [];
+
+        for (let i = 0; i < shortcodeFn.length; i++) {
+          const next = parser.getExpressionParser().parseExpression();
+          args.push(next);
+        }
+
+        stream.expect(Twing.TwingToken.BLOCK_END_TYPE);
+
+        const value = shortcodeFn(...args);
+        return new Twing.TwingNodeText(value, token.getLine(), this.getTag());
+      }
+
+      getTag() {
+        return shortcodeName;
+      }
+    }
+
+    this.getEngineLib().addTokenParser(new ShortcodeTokenParser());
   }
 
   addPairedShortcode(shortcodeName, shortcodeFn) {

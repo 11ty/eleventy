@@ -229,26 +229,28 @@ test("Twig Filter", async t => {
   t.is(await tr.render("{{ test|uppercase }}", { test: "up!" }), "UP!");
 });
 
-// test("Twig Shortcode without args", async t => {
-//   let tr = new TemplateRender("twig", "./test/stubs/");
-//   tr.engine.addShortcode("postfixWithZach", function() {
-//     return "Zach";
-//   });
+test("Twig Shortcode without args", async t => {
+  let tr = new TemplateRender("twig", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", function() {
+    return "Zach";
+  });
 
-//   t.is(await tr.render("{% postfixWithZach %}", {}), "Zach");
-// });
+  t.is(await tr.render("{% postfixWithZach %}", {}), "Zach");
+});
 
-// test("Twig Shortcode", async t => {
-//   let tr = new TemplateRender("twig", "./test/stubs/");
-//   tr.engine.addShortcode("postfixWithZach", function(str) {
-//     return str + "Zach";
-//   });
+// @todo - This one is still to do, we have to figure out how to compile the variables (if at all possible)
+// before passing them on to the shortcode function
+test.skip("Twig Shortcode", async t => {
+  let tr = new TemplateRender("twig", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", function(str) {
+    return str + "Zach";
+  });
 
-//   t.is(
-//     await tr.render("{% postfixWithZach name %}", { name: "test" }),
-//     "testZach"
-//   );
-// });
+  t.is(
+    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    "testZach"
+  );
+});
 
 // test("Twig Shortcode Safe Output", async t => {
 //   let tr = new TemplateRender("twig", "./test/stubs/");
