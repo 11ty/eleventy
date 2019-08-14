@@ -381,60 +381,33 @@ test.skip("Twig Shortcode", async t => {
 //   );
 // });
 
-// test("Twig Test if statements on arrays (Issue #524)", async t => {
-//   let tr = new TemplateRender("twig", "./test/stubs/");
+test("Twig Test if statements on arrays (Issue #524)", async t => {
+  let tr = new TemplateRender("twig", "./test/stubs/");
 
-//   t.is(
-//     await tr.render("{% if 'first' in tags %}Success.{% endif %}", {
-//       tags: ["first", "second"]
-//     }),
-//     "Success."
-//   );
+  t.is(
+    await tr.render("{% if 'first' in tags %}Success.{% endif %}", {
+      tags: ["first", "second"]
+    }),
+    "Success."
+  );
 
-//   t.is(
-//     await tr.render("{% if 'sdfsdfs' in tags %}{% else %}Success.{% endif %}", {
-//       tags: ["first", "second"]
-//     }),
-//     "Success."
-//   );
+  t.is(
+    await tr.render("{% if 'sdfsdfs' in tags %}{% else %}Success.{% endif %}", {
+      tags: ["first", "second"]
+    }),
+    "Success."
+  );
 
-//   t.is(
-//     await tr.render(
-//       "{% if false %}{% elseif 'first' in tags %}Success.{% endif %}",
-//       {
-//         tags: ["first", "second"]
-//       }
-//     ),
-//     "Success."
-//   );
-
-//   t.is(
-//     await tr.render("{% if tags.includes('first') %}Success.{% endif %}", {
-//       tags: ["first", "second"]
-//     }),
-//     "Success."
-//   );
-
-//   t.is(
-//     await tr.render(
-//       "{% if tags.includes('dsds') %}{% else %}Success.{% endif %}",
-//       {
-//         tags: ["first", "second"]
-//       }
-//     ),
-//     "Success."
-//   );
-
-//   t.is(
-//     await tr.render(
-//       "{% if false %}{% elseif tags.includes('first') %}Success.{% endif %}",
-//       {
-//         tags: ["first", "second"]
-//       }
-//     ),
-//     "Success."
-//   );
-// });
+  t.is(
+    await tr.render(
+      "{% if false %}{% elseif 'first' in tags %}Success.{% endif %}",
+      {
+        tags: ["first", "second"]
+      }
+    ),
+    "Success."
+  );
+});
 
 // test("Issue 611: Run a function", async t => {
 //   // This does not work in Liquid
