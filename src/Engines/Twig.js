@@ -37,6 +37,7 @@ class Twig extends TemplateEngine {
     this.setEngineLib(this.twigEnv);
 
     this.addFilters(this.config.twigFilters);
+    this.addFunctions(this.config.twigFunctions);
 
     // TODO these all go to the same place (addTag), add warnings for overwrites
     // this.addCustomTags(this.config.nunjucksTags);
@@ -52,6 +53,16 @@ class Twig extends TemplateEngine {
 
   addFilter(name, filterFn) {
     this.getEngineLib().addFilter(new Twing.TwingFilter(name, filterFn));
+  }
+
+  addFunctions(functions) {
+    for (let name in functions) {
+      this.addFunction(name, functions[name]);
+    }
+  }
+
+  addFunction(name, functionFn) {
+    this.getEngineLib().addFunction(new Twing.TwingFunction(name, functionFn));
   }
 
   addCustomTags(tags) {
@@ -156,9 +167,7 @@ class Twig extends TemplateEngine {
         for (let key in data) {
           if (typeof data[key] === "function") {
             fns.push(key);
-            this.getEngineLib().addFunction(
-              new Twing.TwingFunction(key, data[key])
-            );
+            this.addFunction(key, data[key]);
           }
         }
       }

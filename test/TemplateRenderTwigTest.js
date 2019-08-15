@@ -409,6 +409,15 @@ test("Twig Test if statements on arrays (Issue #524)", async t => {
   );
 });
 
+test("Twig Function", async t => {
+  let tr = new TemplateRender("twig", "./test/stubs/");
+  tr.engine.addFunction("uppercase", function(str) {
+    return str.toUpperCase();
+  });
+
+  t.is(await tr.render("{{ uppercase(test) }}", { test: "up!" }), "UP!");
+});
+
 test("Issue 611: Run a function", async t => {
   // This does not work in Liquid
   let tr = new TemplateRender("twig", "./test/stubs/");
