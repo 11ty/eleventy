@@ -29,9 +29,9 @@ class Twig extends TemplateEngine {
       env ||
       new Twing.TwingEnvironment(
         new Twing.TwingLoaderChain([
-          fileSystem,
+          this.stringCache,
           new Twing.TwingLoaderRelativeFilesystem(),
-          this.stringCache
+          fileSystem
         ])
       );
     this.setEngineLib(this.twigEnv);
@@ -151,14 +151,10 @@ class Twig extends TemplateEngine {
   async compile(str, inputPath) {
     const key = inputPath || str;
 
-    if (
-      !inputPath ||
-      inputPath === "twig" ||
-      inputPath === "njk" ||
-      inputPath === "md"
-    ) {
-      this.stringCache.setTemplate(key, str);
-    }
+    // Every template should move into the string template cache,
+    // otherwise it'll use the raw file from disk instead of the Eleventy-processed version
+    // This causes issues, e.g. FrontMatter being rendered.
+    this.stringCache.setTemplate(key, str);
 
     return async data => {
       const fns = [];

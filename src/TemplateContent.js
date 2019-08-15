@@ -131,6 +131,7 @@ class TemplateContent {
 
     let extraData = await this.engine.getExtraDataFromFile(this.inputPath);
     let data = TemplateData.mergeDeep({}, this.frontMatter.data, extraData);
+
     return TemplateData.cleanupData(data);
   }
 
