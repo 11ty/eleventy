@@ -1,3 +1,4 @@
+const pkg = require("../package.json");
 const TemplatePath = require("./TemplatePath");
 const TemplateData = require("./TemplateData");
 const TemplateWriter = require("./TemplateWriter");
@@ -132,7 +133,11 @@ class Eleventy {
     ret.push(`in ${time} ${simplePlural(time, "second", "seconds")}`);
 
     if (writeCount >= 10) {
-      ret.push(`(${((time * 1000) / writeCount).toFixed(1)}ms each)`);
+      ret.push(
+        `(${((time * 1000) / writeCount).toFixed(1)}ms each, v${pkg.version})`
+      );
+    } else {
+      ret.push(`(v${pkg.version})`);
     }
 
     return ret.join(" ");
