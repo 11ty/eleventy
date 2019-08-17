@@ -1,6 +1,6 @@
 {
   "name": "@11ty/eleventy",
-  "version": "0.9.0-beta.1",
+  "version": "0.9.0-beta.2",
   "description": "Transform a directory of templates into HTML.",
   "main": "src/Eleventy.js",
   "license": "MIT",
@@ -105,7 +105,7 @@
     "normalize-path": "^3.0.0",
     "nunjucks": "^3.2.0",
     "parse-filepath": "^1.0.2",
-    "please-upgrade-node": "^3.1.1",
+    "please-upgrade-node": "^3.2.0",
     "pretty": "^2.0.0",
     "pug": "^2.0.4",
     "recursive-copy": "^2.0.10",
