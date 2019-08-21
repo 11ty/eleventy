@@ -9,10 +9,14 @@ class TemplatePassthroughError extends EleventyBaseError {}
 
 class TemplatePassthrough {
   constructor(path, outputDir, inputDir) {
+    // inputPath is relative to the root of your project and not your Eleventy input directory.
     this.inputPath = path.inputPath;
+    // inputDir is only used when stripping from output path in `getOutputPath`
+    this.inputDir = inputDir;
+
     this.outputPath = path.outputPath;
     this.outputDir = outputDir;
-    this.inputDir = inputDir;
+
     this.isDryRun = false;
   }
 
@@ -96,7 +100,6 @@ class TemplatePassthrough {
         )
       );
 
-      // TODO this should return promises, not await for them to finish
       return Promise.all(promises).catch(err => {
         throw new TemplatePassthroughError(
           `Error copying passthrough files: ${err.message}`,
