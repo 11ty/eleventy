@@ -670,5 +670,5 @@ test("Circular dependency but should not error because it uses eleventyExcludeFr
     tags: ["tag1"]
   });
 
-  t.ok(true);
+  t.true(true);
 });
