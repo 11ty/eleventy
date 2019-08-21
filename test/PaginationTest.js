@@ -655,3 +655,20 @@ test("Circular dependency (pagination iterates over tag1 but also supplies pages
     });
   });
 });
+
+test("Circular dependency but should not error because it uses eleventyExcludeFromCollections", t => {
+  new Pagination({
+    eleventyExcludeFromCollections: true,
+    collections: {
+      tag1: [],
+      tag2: []
+    },
+    pagination: {
+      data: "collections.tag1",
+      size: 1
+    },
+    tags: ["tag1"]
+  });
+
+  t.ok(true);
+});
