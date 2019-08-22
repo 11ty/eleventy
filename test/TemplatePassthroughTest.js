@@ -198,6 +198,7 @@ test("getFiles with glob", async t => {
   const inputPath = "./test/stubs/template-passthrough/static/**";
   let pass = getTemplatePassthrough(inputPath, "_site", "_src");
   t.is(pass.outputPath, true);
+
   const files = await pass.getFiles(inputPath);
   t.deepEqual(
     files.sort(),
@@ -207,17 +208,32 @@ test("getFiles with glob", async t => {
       "./test/stubs/template-passthrough/static/nested/test-nested.css"
     ].sort()
   );
+
+  t.is(
+    pass.getOutputPath(files.filter(entry => entry.endsWith("test.css"))[0]),
+    "_site/test/stubs/template-passthrough/static/test.css"
+  );
+  t.is(
+    pass.getOutputPath(files.filter(entry => entry.endsWith("test.js"))[0]),
+    "_site/test/stubs/template-passthrough/static/test.js"
+  );
+  t.is(
+    pass.getOutputPath(
+      files.filter(entry => entry.endsWith("test-nested.css"))[0]
+    ),
+    "_site/test/stubs/template-passthrough/static/nested/test-nested.css"
+  );
 });
 test("getFiles with glob 2", async t => {
   const inputPath = "./test/stubs/template-passthrough/static/**/*.js";
-  let pass = getTemplatePassthrough(
-    "./test/stubs/template-passthrough/static/**/*",
-    "_site",
-    "_src"
-  );
+  let pass = getTemplatePassthrough(inputPath, "_site", "_src");
   t.is(pass.outputPath, true);
   const files = await pass.getFiles(inputPath);
   t.deepEqual(files, ["./test/stubs/template-passthrough/static/test.js"]);
+  t.is(
+    pass.getOutputPath(files[0]),
+    "_site/test/stubs/template-passthrough/static/test.js"
+  );
 });
 
 test("Directory where outputPath is true", async t => {
@@ -251,10 +267,7 @@ test("Glob pattern", async t => {
     "_src"
   );
   t.is(pass.outputPath, "./directory/");
-  t.is(
-    pass.getOutputPathForGlobFile(globResolvedPath),
-    "_site/directory/test.js"
-  );
+  t.is(pass.getOutputPath(globResolvedPath), "_site/directory/test.js");
 });
 
 test("Output paths match with different templatePassthrough methods", async t => {

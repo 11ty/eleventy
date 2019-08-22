@@ -20,23 +20,32 @@ class TemplatePassthrough {
     this.isDryRun = false;
   }
 
-  getOutputPath() {
+  getOutputPath(inputFileFromGlob) {
     const { inputDir, outputDir, outputPath, inputPath } = this;
+
     if (outputPath === true) {
       return TemplatePath.normalize(
         TemplatePath.join(
           outputDir,
-          TemplatePath.stripLeadingSubPath(inputPath, inputDir)
+          TemplatePath.stripLeadingSubPath(
+            inputFileFromGlob || inputPath,
+            inputDir
+          )
         )
       );
     }
+
+    if (inputFileFromGlob) {
+      return this.getOutputPathForGlobFile(inputFileFromGlob);
+    }
+
     return TemplatePath.normalize(TemplatePath.join(outputDir, outputPath));
   }
 
-  getOutputPathForGlobFile(globFile) {
+  getOutputPathForGlobFile(inputFileFromGlob) {
     return TemplatePath.join(
       this.getOutputPath(),
-      TemplatePath.getLastPathSegment(globFile)
+      TemplatePath.getLastPathSegment(inputFileFromGlob)
     );
   }
 
@@ -93,11 +102,7 @@ class TemplatePassthrough {
       const files = await this.getFiles(this.inputPath);
 
       const promises = files.map(inputFile =>
-        this.copy(
-          inputFile,
-          this.getOutputPathForGlobFile(inputFile),
-          copyOptions
-        )
+        this.copy(inputFile, this.getOutputPath(inputFile), copyOptions)
       );
 
       return Promise.all(promises).catch(err => {
