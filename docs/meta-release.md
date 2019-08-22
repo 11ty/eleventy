@@ -1,6 +1,8 @@
 # Beta Release Procedure
 
-0. npmclean
+1. update minor dependencies in package.json?
+1. npmclean
+1. npm audit
 1. Update version in `package.json`, include `-beta.1` suffix
 1. Run `npm run coverage`
 1. Check it all in and commit
@@ -9,7 +11,9 @@
 
 # Release Procedure
 
-0. npmclean first
+1. update minor dependencies in package.json?
+1. npmclean first
+1. npm audit
 1. Update version in `package.json`
 1. Run `npm run coverage`
 1. Check it all in and commit
