@@ -11,7 +11,7 @@
 
 # Release Procedure
 
-1. update minor dependencies in package.json?
+1. update minor dependencies in package.json? `npm outdated` `npm update --save`
 1. npmclean first
 1. npm audit
 1. Update version in `package.json`
