@@ -12,33 +12,82 @@ const config = require("./Config");
 const bench = require("./BenchmarkManager");
 const debug = require("debug")("Eleventy");
 
+/**
+ * @module @11ty/eleventy/Eleventy
+ */
+
+/**
+ * Runtime of eleventy.
+ *
+ * @param {String} input - Where to read files from.
+ * @param {String} output - Where to write rendered files to.
+ * @returns {undefined}
+ */
 class Eleventy {
   constructor(input, output) {
+    /** @member {Object} - tbd. */
     this.config = config.getConfig();
+
+    /**
+     * @member {String} - The path to Eleventy's config file.
+     * @default null
+     */
     this.configPath = null;
+
+    /**
+     * @member {Boolean} - Is Eleventy running in verbose mode?
+     * @default true
+     */
     this.isVerbose = true;
+
+    /**
+     * @member {Boolean} - Is Eleventy running in debug mode?
+     * @default false
+     */
     this.isDebug = false;
+
+    /**
+     * @member {Boolean} - Is Eleventy running in dry mode?
+     * @default false
+     */
     this.isDryRun = false;
 
+    /** @member {Date} - The time of instantiation. */
     this.start = new Date();
+
+    /**
+     * @member {Array<String>} - Subset of template types.
+     * @default null
+     */
     this.formatsOverride = null;
+
+    /** @member {Object} - tbd. */
     this.eleventyServe = new EleventyServe();
 
+    /** @member {String} - Holds the path to the input directory. */
     this.rawInput = input;
+
+    /** @member {String} - Holds the path to the output directory. */
     this.rawOutput = output;
 
+    /** @member {Object} - tbd. */
     this.watchTargets = new EleventyWatchTargets();
+
+    /** @member {Object} - tbd. */
     this.watchTargets.watchJavaScriptDependencies = this.config.watchJavaScriptDependencies;
   }
 
+  /** @type {String} */
   get input() {
     return this.rawInput || this.config.dir.input;
   }
 
+  /** @type {String} */
   get inputDir() {
     return TemplatePath.getDir(this.input);
   }
 
+  /** @type {String} */
   get outputDir() {
     let dir = this.rawOutput || this.config.dir.output;
     if (dir !== this._savedOutputDir) {
@@ -49,14 +98,32 @@ class Eleventy {
     return dir;
   }
 
+  /**
+   * Updates the dry-run mode of Eleventy.
+   *
+   * @method
+   * @param {Boolean} isDryRun - Shall Eleventy run in dry mode?
+   */
   setDryRun(isDryRun) {
     this.isDryRun = !!isDryRun;
   }
 
+  /**
+   * Updates the passthrough mode of Eleventy.
+   *
+   * @method
+   * @param {Boolean} isPassthroughAll - Shall Eleventy passthrough everything?
+   */
   setPassthroughAll(isPassthroughAll) {
     this.isPassthroughAll = !!isPassthroughAll;
   }
 
+  /**
+   * Updates the path prefix used in the config.
+   *
+   * @method
+   * @param {String} pathPrefix - The new path prefix.
+   */
   setPathPrefix(pathPrefix) {
     if (pathPrefix || pathPrefix === "") {
       config.setPathPrefix(pathPrefix);
@@ -64,10 +131,22 @@ class Eleventy {
     }
   }
 
+  /**
+   * Updates the watch targets.
+   *
+   * @method
+   * @param {} watchTargets - The new watch targets.
+   */
   setWatchTargets(watchTargets) {
     this.watchTargets = watchTargets;
   }
 
+  /**
+   * Updates the config path.
+   *
+   * @method
+   * @param {String} configPath - The new config path.
+   */
   setConfigPathOverride(configPath) {
     if (configPath) {
       this.configPath = configPath;
@@ -77,6 +156,12 @@ class Eleventy {
     }
   }
 
+  /**
+   * Restarts Eleventy.
+   *
+   * @async
+   * @method
+   */
   async restart() {
     debug("Restarting");
     this.start = new Date();
@@ -91,6 +176,11 @@ class Eleventy {
     await this.init();
   }
 
+  /**
+   * Marks the finish of a run of Eleventy.
+   *
+   * @method
+   */
   finish() {
     bench.finish();
 
@@ -98,6 +188,12 @@ class Eleventy {
     debug("Finished writing templates.");
   }
 
+  /**
+   * Logs some statistics after a complete run of Eleventy.
+   *
+   * @method
+   * @returns {String} ret - The log message.
+   */
   logFinished() {
     if (!this.writer) {
       throw new Error(
@@ -143,6 +239,13 @@ class Eleventy {
     return ret.join(" ");
   }
 
+  /**
+   * Starts Eleventy.
+   *
+   * @async
+   * @method
+   * @returns {} - tbd.
+   */
   async init() {
     let formats = this.formatsOverride || this.config.templateFormats;
     this.eleventyFiles = new EleventyFiles(
@@ -181,10 +284,22 @@ Template Formats: ${formats.join(",")}`);
     return this.templateData.cacheData();
   }
 
+  /**
+   * Updates the debug mode of Eleventy.
+   *
+   * @method
+   * @param {Boolean} isDebug - Shall Eleventy run in debug mode?
+   */
   setIsDebug(isDebug) {
     this.isDebug = !!isDebug;
   }
 
+  /**
+   * Updates the verbose mode of Eleventy.
+   *
+   * @method
+   * @param {Boolean} isVerbose - Shall Eleventy run in verbose mode?
+   */
   setIsVerbose(isVerbose) {
     this.isVerbose = !!isVerbose;
 
@@ -196,16 +311,34 @@ Template Formats: ${formats.join(",")}`);
     }
   }
 
+  /**
+   * Updates the template formats of Eleventy.
+   *
+   * @method
+   * @param {String} formats - The new template formats.
+   */
   setFormats(formats) {
     if (formats && formats !== "*") {
       this.formatsOverride = formats.split(",");
     }
   }
 
+  /**
+   * Reads the version of Eleventy.
+   *
+   * @method
+   * @returns {String} - The version of Eleventy.
+   */
   getVersion() {
     return require("../package.json").version;
   }
 
+  /**
+   * Shows a help message including usage.
+   *
+   * @method
+   * @returns {String} - The help mesage.
+   */
   getHelp() {
     return `usage: eleventy
        eleventy --input=. --output=./_site
@@ -234,6 +367,11 @@ Arguments:
      --help`;
   }
 
+  /**
+   * Resets the config of Eleventy.
+   *
+   * @method
+   */
   resetConfig() {
     config.reset();
 
@@ -241,6 +379,13 @@ Arguments:
     this.eleventyServe.config = this.config;
   }
 
+  /**
+   * tbd.
+   *
+   * @private
+   * @method
+   * @param {String} path - Watch this file.
+   */
   async _watch(path) {
     if (path) {
       path = TemplatePath.addLeadingDotSlash(path);
@@ -287,10 +432,21 @@ Arguments:
     }
   }
 
+  /**
+   * tbd.
+   *
+   * @returns {} - tbd.
+   */
   get watcherBench() {
     return bench.get("Watcher");
   }
 
+  /**
+   * Set up watchers and benchmarks.
+   *
+   * @async
+   * @method
+   */
   async initWatch() {
     this.watchTargets.add(this.eleventyFiles.getGlobWatcherFiles());
 
@@ -310,6 +466,13 @@ Arguments:
     benchmark.after();
   }
 
+  /**
+   * Starts watching dependencies.
+   *
+   * @private
+   * @async
+   * @method
+   */
   async _initWatchDependencies() {
     if (!this.watchTargets.watchJavaScriptDependencies) {
       return;
@@ -340,10 +503,23 @@ Arguments:
     );
   }
 
+  /**
+   * Returns all watched files.
+   *
+   * @async
+   * @method
+   * @returns {} targets - The watched files.
+   */
   async getWatchedFiles() {
     return this.watchTargets.getTargets();
   }
 
+  /**
+   * Start the watching of files.
+   *
+   * @async
+   * @method
+   */
   async watch() {
     this.watcherBench.setMinimumThresholdMs(500);
     this.watcherBench.reset();
@@ -407,15 +583,32 @@ Arguments:
     );
   }
 
+  /**
+   * Serve Eleventy on this port.
+   *
+   * @param {Number} port - The HTTP port to serve Eleventy from.
+   */
   serve(port) {
     this.eleventyServe.serve(port);
   }
 
   /* For testing */
+  /**
+   * Updates the logger.
+   *
+   * @param {} logger - The new logger.
+   */
   setLogger(logger) {
     this.logger = logger;
   }
 
+  /**
+   * tbd.
+   *
+   * @async
+   * @method
+   * @returns {Promise<{}>} ret - tbd.
+   */
   async write() {
     let ret;
     if (this.logger) {
