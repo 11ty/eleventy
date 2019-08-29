@@ -71,6 +71,18 @@ test("Nunjucks Render Relative Include (using ..) Issue #190", async t => {
     "<p>{% include '../dir/included.njk' %}</p>"
   );
   t.is(await fn(), "<p>HELLO FROM THE OTHER SIDE.</p>");
+
+  // should look in _includes too, related to Issue #633
+  let fn2a = await tr.getCompiledTemplate(
+    "<p>{% include 'included-relative.njk' %}</p>"
+  );
+  t.is(await fn2a(), "<p>akdlsjafkljdskl</p>");
+
+  // should look in _includes too Issue #633
+  // let fn3 = await tr.getCompiledTemplate(
+  //   "<p>{% include '../_includes/included-relative.njk' %}</p>"
+  // );
+  // t.is(await fn3(), "<p>akdlsjafkljdskl</p>");
 });
 
 test("Nunjucks Render Relative Include (using current dir) Issue #190", async t => {

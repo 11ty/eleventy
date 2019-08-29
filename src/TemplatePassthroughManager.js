@@ -37,9 +37,9 @@ class TemplatePassthroughManager {
   _normalizePaths(path, outputPath) {
     return {
       inputPath: TemplatePath.addLeadingDotSlash(path),
-      outputPath: TemplatePath.stripLeadingDotSlash(
-        outputPath !== undefined ? outputPath : path
-      )
+      outputPath: outputPath
+        ? TemplatePath.stripLeadingDotSlash(outputPath)
+        : true
     };
   }
 
@@ -88,6 +88,7 @@ class TemplatePassthroughManager {
   async copyPath(path) {
     let pass = new TemplatePassthrough(path, this.outputDir, this.inputDir);
     pass.setDryRun(this.isDryRun);
+
     return pass
       .write()
       .then(

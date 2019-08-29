@@ -25,6 +25,10 @@ class Pagination {
   }
 
   circularReferenceCheck(data) {
+    if (data.eleventyExcludeFromCollections) {
+      return;
+    }
+
     let key = data.pagination.data;
     let tags = data.tags || [];
     for (let tag of tags) {

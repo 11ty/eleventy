@@ -288,14 +288,10 @@ class UserConfig {
    * @memberof EleventyConfig
    */
   addPassthroughCopy(fileOrDir) {
-    if (fileOrDir instanceof Object) {
-      this.passthroughCopies = {
-        ...this.passthroughCopies,
-        ...fileOrDir
-      };
+    if (typeof fileOrDir === "string") {
+      this.passthroughCopies[fileOrDir] = true;
     } else {
-      // Glob patterns will not work string method
-      this.passthroughCopies[fileOrDir] = fileOrDir;
+      Object.assign(this.passthroughCopies, fileOrDir);
     }
 
     return this;

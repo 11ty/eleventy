@@ -1,14 +1,14 @@
-# Code Coverage for Eleventy v0.9.0-beta.1
+# Code Coverage for Eleventy v0.9.0
 
 | Filename                                                   | % Lines | % Statements | % Functions | % Branches |
 | ---------------------------------------------------------- | ------- | ------------ | ----------- | ---------- |
-| `total`                                                    | 88.61%  | 88.67%       | 87.37%      | 81.13%     |
+| `total`                                                    | 88.67%  | 88.73%       | 87.5%       | 81.26%     |
 | `config.js`                                                | 100%    | 100%         | 100%        | 100%       |
 | `src/Benchmark.js`                                         | 91.67%  | 91.67%       | 83.33%      | 66.67%     |
 | `src/BenchmarkGroup.js`                                    | 67.65%  | 67.65%       | 71.43%      | 30%        |
 | `src/BenchmarkManager.js`                                  | 76.47%  | 76.47%       | 71.43%      | 75%        |
 | `src/Config.js`                                            | 100%    | 100%         | 100%        | 100%       |
-| `src/Eleventy.js`                                          | 54.29%  | 54.29%       | 57.58%      | 46.15%     |
+| `src/Eleventy.js`                                          | 54.8%   | 54.8%        | 57.58%      | 46.15%     |
 | `src/EleventyBaseError.js`                                 | 100%    | 100%         | 100%        | 100%       |
 | `src/EleventyCommandCheck.js`                              | 100%    | 100%         | 100%        | 87.5%      |
 | `src/EleventyConfig.js`                                    | 100%    | 100%         | 100%        | 100%       |
@@ -28,8 +28,8 @@
 | `src/TemplateGlob.js`                                      | 93.33%  | 93.33%       | 100%        | 87.5%      |
 | `src/TemplateLayout.js`                                    | 100%    | 100%         | 100%        | 100%       |
 | `src/TemplateLayoutPathResolver.js`                        | 95.74%  | 95.74%       | 100%        | 88.89%     |
-| `src/TemplateMap.js`                                       | 97.48%  | 97.48%       | 93.94%      | 90.24%     |
-| `src/TemplatePassthrough.js`                               | 94.44%  | 94.44%       | 88.89%      | 80%        |
+| `src/TemplateMap.js`                                       | 97.9%   | 97.9%        | 96.88%      | 90.4%      |
+| `src/TemplatePassthrough.js`                               | 94.74%  | 94.74%       | 88.89%      | 85.71%     |
 | `src/TemplatePassthroughManager.js`                        | 91.38%  | 91.38%       | 100%        | 71.43%     |
 | `src/TemplatePath.js`                                      | 100%    | 100%         | 95.65%      | 100%       |
 | `src/TemplatePermalink.js`                                 | 100%    | 100%         | 100%        | 100%       |
@@ -53,7 +53,7 @@
 | `src/Errors/UsingCircularTemplateContentReferenceError.js` | 100%    | 100%         | 100%        | 100%       |
 | `src/Filters/Slug.js`                                      | 100%    | 100%         | 100%        | 100%       |
 | `src/Filters/Url.js`                                       | 100%    | 100%         | 100%        | 100%       |
-| `src/Plugins/Pagination.js`                                | 92.38%  | 92.52%       | 93.75%      | 81.25%     |
+| `src/Plugins/Pagination.js`                                | 92.52%  | 92.66%       | 93.75%      | 81.82%     |
 | `src/Util/Capitalize.js`                                   | 100%    | 100%         | 100%        | 100%       |
 | `src/Util/Merge.js`                                        | 92.86%  | 92.86%       | 100%        | 86.36%     |
 | `src/Util/Pluralize.js`                                    | 100%    | 100%         | 100%        | 100%       |
