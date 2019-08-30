@@ -1,6 +1,14 @@
 import test from "ava";
 import TemplateRender from "../src/TemplateRender";
 
+async function getPromise(resolveTo) {
+  return new Promise(function(resolve) {
+    setTimeout(function() {
+      resolve(resolveTo);
+    });
+  });
+}
+
 // Nunjucks
 test("Nunjucks", t => {
   t.is(new TemplateRender("njk").getEngineName(), "njk");
@@ -266,6 +274,22 @@ test("Nunjucks Async Shortcode", async t => {
   );
 });
 
+test("Nunjucks Async function Shortcode", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addShortcode(
+    "postfixWithZach",
+    async function(str) {
+      return await getPromise(str + "Zach");
+    },
+    true
+  );
+
+  t.is(
+    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    "testZach"
+  );
+});
+
 test("Nunjucks Shortcode Safe Output", async t => {
   let tr = new TemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(str) {
@@ -371,6 +395,20 @@ test("Nunjucks Shortcode Multiple Args", async t => {
     }),
     "testhowdyZach"
   );
+});
+
+test("Nunjucks Shortcode Multiple Args (Comma is not optional)", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", function(str, str2) {
+    return str + str2 + "Zach";
+  });
+
+  await t.throwsAsync(async () => {
+    await tr.render("{% postfixWithZach name other %}", {
+      name: "test",
+      other: "howdy"
+    });
+  });
 });
 
 test("Nunjucks Shortcode Named Args", async t => {

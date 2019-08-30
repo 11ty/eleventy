@@ -1,6 +1,14 @@
 import test from "ava";
 import TemplateRender from "../src/TemplateRender";
 
+async function getPromise(resolveTo) {
+  return new Promise(function(resolve) {
+    setTimeout(function() {
+      resolve(resolveTo);
+    });
+  });
+}
+
 // Liquid
 test("Liquid", t => {
   t.is(new TemplateRender("liquid").getEngineName(), "liquid");
@@ -206,7 +214,7 @@ test("Liquid Shortcode", async t => {
   );
 });
 
-test("Liquid Async Shortcode", async t => {
+test("Liquid Shortcode returns promise", async t => {
   let tr = new TemplateRender("liquid", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(str) {
     return new Promise(function(resolve) {
@@ -214,6 +222,30 @@ test("Liquid Async Shortcode", async t => {
         resolve(str + "Zach");
       });
     });
+  });
+
+  t.is(
+    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    "testZach"
+  );
+});
+
+test("Liquid Shortcode returns promise (await inside)", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", async function(str) {
+    return await getPromise(str + "Zach");
+  });
+
+  t.is(
+    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    "testZach"
+  );
+});
+
+test("Liquid Shortcode returns promise (no await inside)", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", async function(str) {
+    return getPromise(str + "Zach");
   });
 
   t.is(
