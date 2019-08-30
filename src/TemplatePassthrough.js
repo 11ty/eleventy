@@ -9,30 +9,43 @@ class TemplatePassthroughError extends EleventyBaseError {}
 
 class TemplatePassthrough {
   constructor(path, outputDir, inputDir) {
+    // inputPath is relative to the root of your project and not your Eleventy input directory.
     this.inputPath = path.inputPath;
+    // inputDir is only used when stripping from output path in `getOutputPath`
+    this.inputDir = inputDir;
+
     this.outputPath = path.outputPath;
     this.outputDir = outputDir;
-    this.inputDir = inputDir;
+
     this.isDryRun = false;
   }
 
-  getOutputPath() {
+  getOutputPath(inputFileFromGlob) {
     const { inputDir, outputDir, outputPath, inputPath } = this;
+
     if (outputPath === true) {
       return TemplatePath.normalize(
         TemplatePath.join(
           outputDir,
-          TemplatePath.stripLeadingSubPath(inputPath, inputDir)
+          TemplatePath.stripLeadingSubPath(
+            inputFileFromGlob || inputPath,
+            inputDir
+          )
         )
       );
     }
+
+    if (inputFileFromGlob) {
+      return this.getOutputPathForGlobFile(inputFileFromGlob);
+    }
+
     return TemplatePath.normalize(TemplatePath.join(outputDir, outputPath));
   }
 
-  getOutputPathForGlobFile(globFile) {
+  getOutputPathForGlobFile(inputFileFromGlob) {
     return TemplatePath.join(
       this.getOutputPath(),
-      TemplatePath.getLastPathSegment(globFile)
+      TemplatePath.getLastPathSegment(inputFileFromGlob)
     );
   }
 
@@ -89,14 +102,9 @@ class TemplatePassthrough {
       const files = await this.getFiles(this.inputPath);
 
       const promises = files.map(inputFile =>
-        this.copy(
-          inputFile,
-          this.getOutputPathForGlobFile(inputFile),
-          copyOptions
-        )
+        this.copy(inputFile, this.getOutputPath(inputFile), copyOptions)
       );
 
-      // TODO this should return promises, not await for them to finish
       return Promise.all(promises).catch(err => {
         throw new TemplatePassthroughError(
           `Error copying passthrough files: ${err.message}`,
