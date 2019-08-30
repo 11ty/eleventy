@@ -346,6 +346,14 @@ class UserConfig {
     this.addJavaScriptFunction(name, callback);
   }
 
+  addAsyncShortcode(name, callback) {
+    debug("Adding universal async shortcode %o", this.getNamespacedName(name));
+    this.addNunjucksAsyncShortcode(name, callback);
+    this.addLiquidShortcode(name, callback);
+    // this.addHandlebarsShortcode(name, callback); // not supported in Handlebars
+    this.addJavaScriptFunction(name, callback);
+  }
+
   addNunjucksAsyncShortcode(name, callback) {
     name = this.getNamespacedName(name);
 
@@ -426,6 +434,14 @@ class UserConfig {
     this.addPairedNunjucksShortcode(name, callback);
     this.addPairedLiquidShortcode(name, callback);
     this.addPairedHandlebarsShortcode(name, callback);
+    this.addJavaScriptFunction(name, callback);
+  }
+
+  addPairedAsyncShortcode(name, callback) {
+    debug("Adding universal async shortcode %o", this.getNamespacedName(name));
+    this.addPairedNunjucksAsyncShortcode(name, callback);
+    this.addPairedLiquidShortcode(name, callback);
+    // this.addPairedHandlebarsShortcode(name, callback); // not supported in Handlebars
     this.addJavaScriptFunction(name, callback);
   }
 

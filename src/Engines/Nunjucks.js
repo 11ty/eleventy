@@ -108,7 +108,7 @@ class Nunjucks extends TemplateEngine {
 
         if (isAsync && fnReturnValue.then) {
           fnReturnValue.then(function(returnValue) {
-            callback(null, returnValue);
+            callback(null, new NunjucksLib.runtime.SafeString(returnValue));
           });
         } else {
           return new NunjucksLib.runtime.SafeString(fnReturnValue);
@@ -149,7 +149,7 @@ class Nunjucks extends TemplateEngine {
 
         if (isAsync && fnReturnValue.then) {
           fnReturnValue.then(function(returnValue) {
-            callback(null, returnValue);
+            callback(null, new NunjucksLib.runtime.SafeString(returnValue));
           });
         } else {
           return new NunjucksLib.runtime.SafeString(fnReturnValue);
