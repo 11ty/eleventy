@@ -174,6 +174,23 @@ test("JS Render with a function", async t => {
   t.is(await fn({ name: "Bill" }), "<p>BILLT9000</p>");
 });
 
+test("JS Render with a function and async filter", async t => {
+  let tr = new TemplateRender("./test/stubs/function-async-filter.11ty.js");
+  tr.config = {
+    javascriptFunctions: {
+      upper: function(val) {
+        return new Promise(function(resolve) {
+          resolve(new String(val).toUpperCase());
+        });
+      }
+    }
+  };
+
+  let fn = await tr.getCompiledTemplate();
+  t.is(await fn({ name: "Zach" }), "<p>ZACH</p>");
+  t.is(await fn({ name: "Bill" }), "<p>BILL</p>");
+});
+
 test("JS Render with a function prototype", async t => {
   let tr = new TemplateRender("./test/stubs/function-prototype.11ty.js");
   tr.config = {
