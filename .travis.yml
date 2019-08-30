@@ -14,3 +14,4 @@ os:
   - linux
   - osx
   - windows
+YARN_GPG: no
