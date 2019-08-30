@@ -14,4 +14,5 @@ os:
   - linux
   - osx
   - windows
-YARN_GPG: no
+env:
+  - YARN_GPG=no
