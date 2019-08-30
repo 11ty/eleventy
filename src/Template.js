@@ -452,7 +452,7 @@ class Template extends TemplateContent {
             this._templateContent = content;
           },
           get templateContent() {
-            if (!this._templateContent) {
+            if (this._templateContent === undefined) {
               throw new TemplateContentPrematureUseError(
                 `Tried to use templateContent too early (${this.inputPath} page ${this.pageNumber})`
               );

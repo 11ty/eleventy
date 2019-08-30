@@ -29,7 +29,9 @@ class UserConfig {
     this.nunjucksAsyncFilters = {};
     this.nunjucksTags = {};
     this.nunjucksShortcodes = {};
+    this.nunjucksAsyncShortcodes = {};
     this.nunjucksPairedShortcodes = {};
+    this.nunjucksAsyncPairedShortcodes = {};
     this.handlebarsHelpers = {};
     this.handlebarsShortcodes = {};
     this.handlebarsPairedShortcodes = {};
@@ -135,7 +137,7 @@ class UserConfig {
   }
 
   // Support the nunjucks style syntax for asynchronous filter add
-  addNunjucksFilter(name, callback, isAsync) {
+  addNunjucksFilter(name, callback, isAsync = false) {
     if (isAsync) {
       // namespacing happens downstream
       this.addNunjucksAsyncFilter(name, callback);
@@ -289,14 +291,10 @@ class UserConfig {
    * @memberof EleventyConfig
    */
   addPassthroughCopy(fileOrDir) {
-    if (fileOrDir instanceof Object) {
-      this.passthroughCopies = {
-        ...this.passthroughCopies,
-        ...fileOrDir
-      };
+    if (typeof fileOrDir === "string") {
+      this.passthroughCopies[fileOrDir] = true;
     } else {
-      // Glob patterns will not work string method
-      this.passthroughCopies[fileOrDir] = fileOrDir;
+      Object.assign(this.passthroughCopies, fileOrDir);
     }
 
     return this;
@@ -349,22 +347,52 @@ class UserConfig {
     this.addJavaScriptFunction(name, callback);
   }
 
-  addNunjucksShortcode(name, callback) {
+  addAsyncShortcode(name, callback) {
+    debug("Adding universal async shortcode %o", this.getNamespacedName(name));
+    this.addNunjucksAsyncShortcode(name, callback);
+    this.addLiquidShortcode(name, callback);
+    // this.addHandlebarsShortcode(name, callback); // not supported in Handlebars
+    this.addJavaScriptFunction(name, callback);
+  }
+
+  addNunjucksAsyncShortcode(name, callback) {
     name = this.getNamespacedName(name);
 
-    if (this.nunjucksShortcodes[name]) {
+    if (this.nunjucksAsyncShortcodes[name]) {
       debug(
         chalk.yellow(
-          "Warning, overwriting a Nunjucks Shortcode with `addNunjucksShortcode(%o)`"
+          "Warning, overwriting a Nunjucks Async Shortcode with `addNunjucksAsyncShortcode(%o)`"
         ),
         name
       );
     }
 
-    this.nunjucksShortcodes[name] = bench.add(
-      `"${name}" Nunjucks Shortcode`,
+    this.nunjucksAsyncShortcodes[name] = bench.add(
+      `"${name}" Nunjucks Async Shortcode`,
       callback
     );
+  }
+
+  addNunjucksShortcode(name, callback, isAsync = false) {
+    if (isAsync) {
+      this.addNunjucksAsyncShortcode(name, callback);
+    } else {
+      name = this.getNamespacedName(name);
+
+      if (this.nunjucksShortcodes[name]) {
+        debug(
+          chalk.yellow(
+            "Warning, overwriting a Nunjucks Shortcode with `addNunjucksShortcode(%o)`"
+          ),
+          name
+        );
+      }
+
+      this.nunjucksShortcodes[name] = bench.add(
+        `"${name}" Nunjucks Shortcode`,
+        callback
+      );
+    }
   }
 
   addLiquidShortcode(name, callback) {
@@ -410,22 +438,52 @@ class UserConfig {
     this.addJavaScriptFunction(name, callback);
   }
 
-  addPairedNunjucksShortcode(name, callback) {
+  addPairedAsyncShortcode(name, callback) {
+    debug("Adding universal async shortcode %o", this.getNamespacedName(name));
+    this.addPairedNunjucksAsyncShortcode(name, callback);
+    this.addPairedLiquidShortcode(name, callback);
+    // this.addPairedHandlebarsShortcode(name, callback); // not supported in Handlebars
+    this.addJavaScriptFunction(name, callback);
+  }
+
+  addPairedNunjucksAsyncShortcode(name, callback) {
     name = this.getNamespacedName(name);
 
-    if (this.nunjucksPairedShortcodes[name]) {
+    if (this.nunjucksAsyncPairedShortcodes[name]) {
       debug(
         chalk.yellow(
-          "Warning, overwriting a Nunjucks Paired Shortcode with `addPairedNunjucksShortcode(%o)`"
+          "Warning, overwriting a Nunjucks Async Paired Shortcode with `addPairedNunjucksAsyncShortcode(%o)`"
         ),
         name
       );
     }
 
-    this.nunjucksPairedShortcodes[name] = bench.add(
-      `"${name}" Nunjucks Paired Shortcode`,
+    this.nunjucksAsyncPairedShortcodes[name] = bench.add(
+      `"${name}" Nunjucks Async Paired Shortcode`,
       callback
     );
+  }
+
+  addPairedNunjucksShortcode(name, callback, isAsync = false) {
+    if (isAsync) {
+      this.addPairedNunjucksAsyncShortcode(name, callback);
+    } else {
+      name = this.getNamespacedName(name);
+
+      if (this.nunjucksPairedShortcodes[name]) {
+        debug(
+          chalk.yellow(
+            "Warning, overwriting a Nunjucks Paired Shortcode with `addPairedNunjucksShortcode(%o)`"
+          ),
+          name
+        );
+      }
+
+      this.nunjucksPairedShortcodes[name] = bench.add(
+        `"${name}" Nunjucks Paired Shortcode`,
+        callback
+      );
+    }
   }
 
   addPairedLiquidShortcode(name, callback) {
@@ -525,7 +583,9 @@ class UserConfig {
       nunjucksFilters: this.nunjucksFilters,
       nunjucksAsyncFilters: this.nunjucksAsyncFilters,
       nunjucksTags: this.nunjucksTags,
+      nunjucksAsyncShortcodes: this.nunjucksAsyncShortcodes,
       nunjucksShortcodes: this.nunjucksShortcodes,
+      nunjucksAsyncPairedShortcodes: this.nunjucksAsyncPairedShortcodes,
       nunjucksPairedShortcodes: this.nunjucksPairedShortcodes,
       handlebarsHelpers: this.handlebarsHelpers,
       handlebarsShortcodes: this.handlebarsShortcodes,
