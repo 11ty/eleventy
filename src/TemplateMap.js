@@ -28,10 +28,6 @@ class TemplateMap {
     return "___TAG___";
   }
 
-  get specialPrefix() {
-    return "___SPECIAL___";
-  }
-
   async add(template) {
     for (let map of await template.getTemplateMapEntries()) {
       this.map.push(map);

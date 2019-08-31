@@ -1,6 +1,14 @@
 import test from "ava";
 import TemplateRender from "../src/TemplateRender";
 
+async function getPromise(resolveTo) {
+  return new Promise(function(resolve) {
+    setTimeout(function() {
+      resolve(resolveTo);
+    });
+  });
+}
+
 // Nunjucks
 test("Nunjucks", t => {
   t.is(new TemplateRender("njk").getEngineName(), "njk");
@@ -71,6 +79,18 @@ test("Nunjucks Render Relative Include (using ..) Issue #190", async t => {
     "<p>{% include '../dir/included.njk' %}</p>"
   );
   t.is(await fn(), "<p>HELLO FROM THE OTHER SIDE.</p>");
+
+  // should look in _includes too, related to Issue #633
+  let fn2a = await tr.getCompiledTemplate(
+    "<p>{% include 'included-relative.njk' %}</p>"
+  );
+  t.is(await fn2a(), "<p>akdlsjafkljdskl</p>");
+
+  // should look in _includes too Issue #633
+  // let fn3 = await tr.getCompiledTemplate(
+  //   "<p>{% include '../_includes/included-relative.njk' %}</p>"
+  // );
+  // t.is(await fn3(), "<p>akdlsjafkljdskl</p>");
 });
 
 test("Nunjucks Render Relative Include (using current dir) Issue #190", async t => {
@@ -234,6 +254,42 @@ test("Nunjucks Shortcode", async t => {
   );
 });
 
+test("Nunjucks Async Shortcode", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addShortcode(
+    "postfixWithZach",
+    function(str) {
+      return new Promise(function(resolve) {
+        setTimeout(function() {
+          resolve(str + "Zach");
+        });
+      });
+    },
+    true
+  );
+
+  t.is(
+    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    "testZach"
+  );
+});
+
+test("Nunjucks Async function Shortcode", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addShortcode(
+    "postfixWithZach",
+    async function(str) {
+      return await getPromise(str + "Zach");
+    },
+    true
+  );
+
+  t.is(
+    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    "testZach"
+  );
+});
+
 test("Nunjucks Shortcode Safe Output", async t => {
   let tr = new TemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(str) {
@@ -251,6 +307,29 @@ test("Nunjucks Paired Shortcode", async t => {
   tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
     return str + content + "Zach";
   });
+
+  t.is(
+    await tr.render(
+      "{% postfixWithZach name %}Content{% endpostfixWithZach %}",
+      { name: "test" }
+    ),
+    "testContentZach"
+  );
+});
+
+test("Nunjucks Async Paired Shortcode", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addPairedShortcode(
+    "postfixWithZach",
+    function(content, str) {
+      return new Promise(function(resolve) {
+        setTimeout(function() {
+          resolve(str + content + "Zach");
+        });
+      });
+    },
+    true
+  );
 
   t.is(
     await tr.render(
@@ -316,6 +395,20 @@ test("Nunjucks Shortcode Multiple Args", async t => {
     }),
     "testhowdyZach"
   );
+});
+
+test("Nunjucks Shortcode Multiple Args (Comma is not optional)", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", function(str, str2) {
+    return str + str2 + "Zach";
+  });
+
+  await t.throwsAsync(async () => {
+    await tr.render("{% postfixWithZach name other %}", {
+      name: "test",
+      other: "howdy"
+    });
+  });
 });
 
 test("Nunjucks Shortcode Named Args", async t => {

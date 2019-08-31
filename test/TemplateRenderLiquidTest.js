@@ -1,6 +1,14 @@
 import test from "ava";
 import TemplateRender from "../src/TemplateRender";
 
+async function getPromise(resolveTo) {
+  return new Promise(function(resolve) {
+    setTimeout(function() {
+      resolve(resolveTo);
+    });
+  });
+}
+
 // Liquid
 test("Liquid", t => {
   t.is(new TemplateRender("liquid").getEngineName(), "liquid");
@@ -206,6 +214,46 @@ test("Liquid Shortcode", async t => {
   );
 });
 
+test("Liquid Shortcode returns promise", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", function(str) {
+    return new Promise(function(resolve) {
+      setTimeout(function() {
+        resolve(str + "Zach");
+      });
+    });
+  });
+
+  t.is(
+    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    "testZach"
+  );
+});
+
+test("Liquid Shortcode returns promise (await inside)", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", async function(str) {
+    return await getPromise(str + "Zach");
+  });
+
+  t.is(
+    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    "testZach"
+  );
+});
+
+test("Liquid Shortcode returns promise (no await inside)", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", async function(str) {
+    return getPromise(str + "Zach");
+  });
+
+  t.is(
+    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    "testZach"
+  );
+});
+
 test("Liquid Shortcode Safe Output", async t => {
   let tr = new TemplateRender("liquid", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(str) {
@@ -222,6 +270,25 @@ test("Liquid Paired Shortcode", async t => {
   let tr = new TemplateRender("liquid", "./test/stubs/");
   tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
     return str + content + "Zach";
+  });
+
+  t.is(
+    await tr.render(
+      "{% postfixWithZach name %}Content{% endpostfixWithZach %}",
+      { name: "test" }
+    ),
+    "testContentZach"
+  );
+});
+
+test("Liquid Async Paired Shortcode", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
+    return new Promise(function(resolve) {
+      setTimeout(function() {
+        resolve(str + content + "Zach");
+      });
+    });
   });
 
   t.is(
