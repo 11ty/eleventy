@@ -236,3 +236,49 @@ test("JS Class Async Render with a function", async t => {
   t.is(await fn({ name: "Zach" }), "<p>ZACHBillTed</p>");
   t.is(await fn({ name: "Bill" }), "<p>BILLBillTed</p>");
 });
+
+test("JS Class Async Render with a function (sync function, throws error)", async t => {
+  let tr = new TemplateRender("./test/stubs/function-throws.11ty.js");
+  tr.config = {
+    javascriptFunctions: {
+      upper: function(val) {
+        throw new Error(
+          "JS Class Async Render with a function (sync function, throws error)"
+        );
+      }
+    }
+  };
+
+  let error = await t.throwsAsync(async () => {
+    let fn = await tr.getCompiledTemplate();
+    await fn({ name: "Zach" });
+  });
+  t.true(
+    error.message.indexOf(
+      "JS Class Async Render with a function (sync function, throws error)"
+    ) > -1
+  );
+});
+
+test("JS Class Async Render with a function (async function, throws error)", async t => {
+  let tr = new TemplateRender("./test/stubs/function-throws-async.11ty.js");
+  tr.config = {
+    javascriptFunctions: {
+      upper: async function(val) {
+        throw new Error(
+          "JS Class Async Render with a function (async function, throws error)"
+        );
+      }
+    }
+  };
+
+  let error = await t.throwsAsync(async () => {
+    let fn = await tr.getCompiledTemplate();
+    await fn({ name: "Zach" });
+  });
+  t.true(
+    error.message.indexOf(
+      "JS Class Async Render with a function (async function, throws error)"
+    ) > -1
+  );
+});

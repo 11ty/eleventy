@@ -1,6 +1,10 @@
 const NunjucksLib = require("nunjucks");
 const TemplateEngine = require("./TemplateEngine");
 const TemplatePath = require("../TemplatePath");
+const EleventyErrorUtil = require("../EleventyErrorUtil");
+const EleventyBaseError = require("../EleventyBaseError");
+
+class EleventyShortcodeError extends EleventyBaseError {}
 
 class Nunjucks extends TemplateEngine {
   constructor(name, includesDir) {
@@ -92,9 +96,8 @@ class Nunjucks extends TemplateEngine {
 
         if (isAsync) {
           return new nodes.CallExtensionAsync(this, "run", args);
-        } else {
-          return new nodes.CallExtension(this, "run", args);
         }
+        return new nodes.CallExtension(this, "run", args);
       };
 
       this.run = function(...args) {
@@ -104,14 +107,32 @@ class Nunjucks extends TemplateEngine {
         }
 
         let [context, ...argArray] = args;
-        let fnReturnValue = shortcodeFn(...argArray);
 
-        if (isAsync && fnReturnValue.then) {
-          fnReturnValue.then(function(returnValue) {
-            callback(null, new NunjucksLib.runtime.SafeString(returnValue));
-          });
+        if (isAsync) {
+          shortcodeFn(...argArray)
+            .then(function(returnValue) {
+              callback(null, new NunjucksLib.runtime.SafeString(returnValue));
+            })
+            .catch(function(e) {
+              callback(
+                new EleventyShortcodeError(
+                  `Error with Nunjucks shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+                    e
+                  )}`
+                ),
+                null
+              );
+            });
         } else {
-          return new NunjucksLib.runtime.SafeString(fnReturnValue);
+          try {
+            return new NunjucksLib.runtime.SafeString(shortcodeFn(...argArray));
+          } catch (e) {
+            throw new EleventyShortcodeError(
+              `Error with Nunjucks shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+                e
+              )}`
+            );
+          }
         }
       };
     }
@@ -145,14 +166,34 @@ class Nunjucks extends TemplateEngine {
         }
         let body = args.pop();
         let [context, ...argArray] = args;
-        let fnReturnValue = shortcodeFn(body(), ...argArray);
 
-        if (isAsync && fnReturnValue.then) {
-          fnReturnValue.then(function(returnValue) {
-            callback(null, new NunjucksLib.runtime.SafeString(returnValue));
-          });
+        if (isAsync) {
+          shortcodeFn(body(), ...argArray)
+            .then(function(returnValue) {
+              callback(null, new NunjucksLib.runtime.SafeString(returnValue));
+            })
+            .catch(function(e) {
+              callback(
+                new EleventyShortcodeError(
+                  `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+                    e
+                  )}`
+                ),
+                null
+              );
+            });
         } else {
-          return new NunjucksLib.runtime.SafeString(fnReturnValue);
+          try {
+            return new NunjucksLib.runtime.SafeString(
+              shortcodeFn(body(), ...argArray)
+            );
+          } catch (e) {
+            throw new EleventyShortcodeError(
+              `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+                e
+              )}`
+            );
+          }
         }
       };
     }

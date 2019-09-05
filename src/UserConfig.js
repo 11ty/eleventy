@@ -346,6 +346,15 @@ class UserConfig {
     this.addJavaScriptFunction(name, callback);
   }
 
+  // Undocumented method as a mitigation to reduce risk of #498
+  addAsyncShortcode(name, callback) {
+    debug("Adding universal async shortcode %o", this.getNamespacedName(name));
+    this.addNunjucksAsyncShortcode(name, callback);
+    this.addLiquidShortcode(name, callback);
+    this.addJavaScriptFunction(name, callback);
+    // not supported in Handlebars
+  }
+
   addNunjucksAsyncShortcode(name, callback) {
     name = this.getNamespacedName(name);
 
@@ -423,10 +432,23 @@ class UserConfig {
   }
 
   addPairedShortcode(name, callback) {
+    debug("Adding universal paired shortcode %o", this.getNamespacedName(name));
     this.addPairedNunjucksShortcode(name, callback);
     this.addPairedLiquidShortcode(name, callback);
     this.addPairedHandlebarsShortcode(name, callback);
     this.addJavaScriptFunction(name, callback);
+  }
+
+  // Undocumented method as a mitigation to reduce risk of #498
+  addPairedAsyncShortcode(name, callback) {
+    debug(
+      "Adding universal async paired shortcode %o",
+      this.getNamespacedName(name)
+    );
+    this.addPairedNunjucksAsyncShortcode(name, callback);
+    this.addPairedLiquidShortcode(name, callback);
+    this.addJavaScriptFunction(name, callback);
+    // not supported in Handlebars
   }
 
   addPairedNunjucksAsyncShortcode(name, callback) {

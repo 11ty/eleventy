@@ -21,10 +21,13 @@ try {
   const EleventyCommandCheck = require("./src/EleventyCommandCheck");
 
   process.on("unhandledRejection", (error, promise) => {
-    EleventyErrorHandler.error(promise, "Unhandled rejection in promise");
+    EleventyErrorHandler.error(
+      error,
+      `Unhandled rejection in promise (${promise})`
+    );
   });
-  process.on("uncaughtException", e => {
-    EleventyErrorHandler.fatal(e, "Uncaught exception");
+  process.on("uncaughtException", error => {
+    EleventyErrorHandler.fatal(error, "Uncaught exception");
   });
   process.on("rejectionHandled", promise => {
     EleventyErrorHandler.warn(

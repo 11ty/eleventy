@@ -108,7 +108,7 @@ test("Liquid Custom Filter", async t => {
     return "Zach" + val;
   });
 
-  t.is(await tr.render("{{ 'test' | prefixWithZach }}", {}), "Zachtest");
+  t.is(await tr._testRender("{{ 'test' | prefixWithZach }}", {}), "Zachtest");
 });
 
 test("Liquid Custom Tag prefixWithZach", async t => {
@@ -126,7 +126,7 @@ test("Liquid Custom Tag prefixWithZach", async t => {
   });
 
   t.is(
-    await tr.render("{% prefixWithZach name %}", { name: "test" }),
+    await tr._testRender("{% prefixWithZach name %}", { name: "test" }),
     "Zachtest"
   );
 });
@@ -146,7 +146,7 @@ test("Liquid Custom Tag postfixWithZach", async t => {
   });
 
   t.is(
-    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    await tr._testRender("{% postfixWithZach name %}", { name: "test" }),
     "testZach"
   );
 });
@@ -165,7 +165,7 @@ test("Liquid Custom Tag Unquoted String", async t => {
   });
 
   t.is(
-    await tr.render(
+    await tr._testRender(
       "{% testUnquotedStringTag _posts/2016-07-26-name-of-post.md %}",
       { name: "test" }
     ),
@@ -197,7 +197,7 @@ test("Liquid addTags", async t => {
   });
 
   t.is(
-    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    await tr._testRender("{% postfixWithZach name %}", { name: "test" }),
     "testZach"
   );
 });
@@ -209,7 +209,7 @@ test("Liquid Shortcode", async t => {
   });
 
   t.is(
-    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    await tr._testRender("{% postfixWithZach name %}", { name: "test" }),
     "testZach"
   );
 });
@@ -225,7 +225,7 @@ test("Liquid Shortcode returns promise", async t => {
   });
 
   t.is(
-    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    await tr._testRender("{% postfixWithZach name %}", { name: "test" }),
     "testZach"
   );
 });
@@ -237,7 +237,7 @@ test("Liquid Shortcode returns promise (await inside)", async t => {
   });
 
   t.is(
-    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    await tr._testRender("{% postfixWithZach name %}", { name: "test" }),
     "testZach"
   );
 });
@@ -249,7 +249,7 @@ test("Liquid Shortcode returns promise (no await inside)", async t => {
   });
 
   t.is(
-    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    await tr._testRender("{% postfixWithZach name %}", { name: "test" }),
     "testZach"
   );
 });
@@ -261,7 +261,7 @@ test("Liquid Shortcode Safe Output", async t => {
   });
 
   t.is(
-    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    await tr._testRender("{% postfixWithZach name %}", { name: "test" }),
     "<span>test</span>"
   );
 });
@@ -273,7 +273,7 @@ test("Liquid Paired Shortcode", async t => {
   });
 
   t.is(
-    await tr.render(
+    await tr._testRender(
       "{% postfixWithZach name %}Content{% endpostfixWithZach %}",
       { name: "test" }
     ),
@@ -292,7 +292,7 @@ test("Liquid Async Paired Shortcode", async t => {
   });
 
   t.is(
-    await tr.render(
+    await tr._testRender(
       "{% postfixWithZach name %}Content{% endpostfixWithZach %}",
       { name: "test" }
     ),
@@ -507,7 +507,7 @@ test("Liquid Paired Shortcode with Tag Inside", async t => {
   });
 
   t.is(
-    await tr.render(
+    await tr._testRender(
       "{% postfixWithZach name %}Content{% if tester %}If{% endif %}{% endpostfixWithZach %}",
       { name: "test", tester: true }
     ),
@@ -522,7 +522,7 @@ test("Liquid Nested Paired Shortcode", async t => {
   });
 
   t.is(
-    await tr.render(
+    await tr._testRender(
       "{% postfixWithZach name %}Content{% postfixWithZach name2 %}Content{% endpostfixWithZach %}{% endpostfixWithZach %}",
       { name: "test", name2: "test2" }
     ),
@@ -537,7 +537,7 @@ test("Liquid Shortcode Multiple Args", async t => {
   });
 
   t.is(
-    await tr.render("{% postfixWithZach name other %}", {
+    await tr._testRender("{% postfixWithZach name other %}", {
       name: "test",
       other: "howdy"
     }),
@@ -560,7 +560,7 @@ test("Liquid Missing Filter Issue #183 (no strict_filters)", async t => {
   let tr = new TemplateRender("liquid", "./test/stubs/");
 
   try {
-    await tr.render("{{ 'test' | prefixWithZach }}", {});
+    await tr._testRender("{{ 'test' | prefixWithZach }}", {});
     t.pass("Did not error.");
   } catch (e) {
     t.fail("Threw an error.");
@@ -572,7 +572,7 @@ test("Liquid Missing Filter Issue #183", async t => {
   tr.engine.setLiquidOptions({ strict_filters: true });
 
   try {
-    await tr.render("{{ 'test' | prefixWithZach }}", {});
+    await tr._testRender("{{ 'test' | prefixWithZach }}", {});
     t.fail("Did not error.");
   } catch (e) {
     t.pass("Threw an error.");
@@ -606,7 +606,7 @@ test("Issue 347: Liquid addTags with space in argument", async t => {
   });
 
   t.is(
-    await tr.render("{% issue347CustomTag 'te st' %}", {
+    await tr._testRender("{% issue347CustomTag 'te st' %}", {
       name: "slkdjflksdjf"
     }),
     "te stZach"
@@ -620,7 +620,7 @@ test("Issue 347: Liquid Shortcode, string argument", async t => {
   });
 
   t.is(
-    await tr.render("{% issue347 'test' %}", { name: "alkdsjfkslja" }),
+    await tr._testRender("{% issue347 'test' %}", { name: "alkdsjfkslja" }),
     "testZach"
   );
 });
@@ -632,7 +632,7 @@ test("Issue 347: Liquid Shortcode string argument with space, double quotes", as
   });
 
   t.is(
-    await tr.render('{% issue347b "test 2" "test 3" %}', {
+    await tr._testRender('{% issue347b "test 2" "test 3" %}', {
       name: "alkdsjfkslja"
     }),
     "test 2Zach"
@@ -646,7 +646,7 @@ test("Issue 347: Liquid Shortcode string argument with space, single quotes", as
   });
 
   t.is(
-    await tr.render("{% issue347 'test 2' %}", { name: "alkdsjfkslja" }),
+    await tr._testRender("{% issue347 'test 2' %}", { name: "alkdsjfkslja" }),
     "test 2Zach"
   );
 });
@@ -658,7 +658,7 @@ test("Issue 347: Liquid Shortcode string argument with space, combination of quo
   });
 
   t.is(
-    await tr.render("{% issue347 'test 2' \"test 3\" %}", {
+    await tr._testRender("{% issue347 'test 2' \"test 3\" %}", {
       name: "alkdsjfkslja"
     }),
     "test 2test 3Zach"
@@ -672,7 +672,7 @@ test("Issue 347: Liquid Shortcode multiple arguments, comma separated", async t 
   });
 
   t.is(
-    await tr.render("{% issue347 'test 2', \"test 3\" %}", {
+    await tr._testRender("{% issue347 'test 2', \"test 3\" %}", {
       name: "alkdsjfkslja"
     }),
     "test 2test 3Zach"
@@ -686,7 +686,9 @@ test("Issue 347: Liquid Shortcode multiple arguments, comma separated, one is an
   });
 
   t.is(
-    await tr.render("{% issue347 'test 2', 3 %}", { name: "alkdsjfkslja" }),
+    await tr._testRender("{% issue347 'test 2', 3 %}", {
+      name: "alkdsjfkslja"
+    }),
     "test 23Zach"
   );
 });
@@ -698,7 +700,9 @@ test("Issue 347: Liquid Shortcode multiple arguments, comma separated, one is a 
   });
 
   t.is(
-    await tr.render("{% issue347 'test 2', 3.23 %}", { name: "alkdsjfkslja" }),
+    await tr._testRender("{% issue347 'test 2', 3.23 %}", {
+      name: "alkdsjfkslja"
+    }),
     "test 23.23Zach"
   );
 });
@@ -710,11 +714,11 @@ test("Issue 347: Liquid Shortcode boolean argument", async t => {
   });
 
   t.is(
-    await tr.render("{% issue347 true %}", { name: "alkdsjfkslja" }),
+    await tr._testRender("{% issue347 true %}", { name: "alkdsjfkslja" }),
     "Zach"
   );
   t.is(
-    await tr.render("{% issue347 false %}", { name: "alkdsjfkslja" }),
+    await tr._testRender("{% issue347 false %}", { name: "alkdsjfkslja" }),
     "Not Zach"
   );
 });
@@ -731,7 +735,7 @@ test("Issue 347: Liquid Paired Shortcode with Spaces", async t => {
   });
 
   t.is(
-    await tr.render(
+    await tr._testRender(
       "{% postfixWithZach 'My Name', 1234, \"Other\" %}Content{% endpostfixWithZach %}",
       { name: "test" }
     ),
@@ -753,7 +757,7 @@ test("Issue 600: Liquid Shortcode argument page.url", async t => {
   });
 
   t.is(
-    await tr.render("{% issue600 page.url %}", {
+    await tr._testRender("{% issue600 page.url %}", {
       page: { url: "alkdsjfkslja" }
     }),
     "alkdsjfksljaZach"
@@ -767,7 +771,7 @@ test("Issue 600: Liquid Shortcode argument with dashes", async t => {
   });
 
   t.is(
-    await tr.render("{% issue600b page-url %}", {
+    await tr._testRender("{% issue600b page-url %}", {
       "page-url": "alkdsjfkslja"
     }),
     "alkdsjfksljaZach"
@@ -781,7 +785,7 @@ test("Issue 600: Liquid Shortcode argument with underscores", async t => {
   });
 
   t.is(
-    await tr.render("{% issue600c page_url %}", {
+    await tr._testRender("{% issue600c page_url %}", {
       page_url: "alkdsjfkslja"
     }),
     "alkdsjfksljaZach"
@@ -793,11 +797,43 @@ test.skip("Issue 611: Run a function", async t => {
   let tr = new TemplateRender("liquid", "./test/stubs/");
 
   t.is(
-    await tr.render("{{ test() }}", {
+    await tr._testRender("{{ test() }}", {
       test: function() {
         return "alkdsjfksljaZach";
       }
     }),
     "alkdsjfksljaZach"
+  );
+});
+
+test("Liquid Shortcode (with sync function, error throwing)", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", function(str) {
+    throw new Error("Liquid Shortcode (with sync function, error throwing)");
+  });
+
+  let error = await t.throwsAsync(async () => {
+    await tr._testRender("{% postfixWithZach name %}", { name: "test" });
+  });
+  t.true(
+    error.message.indexOf(
+      "Liquid Shortcode (with sync function, error throwing)"
+    ) > -1
+  );
+});
+
+test("Liquid Shortcode (with async function, error throwing)", async t => {
+  let tr = new TemplateRender("liquid", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", async function(str) {
+    throw new Error("Liquid Shortcode (with async function, error throwing)");
+  });
+
+  let error = await t.throwsAsync(async () => {
+    await tr._testRender("{% postfixWithZach name %}", { name: "test" });
+  });
+  t.true(
+    error.message.indexOf(
+      "Liquid Shortcode (with async function, error throwing)"
+    ) > -1
   );
 });
