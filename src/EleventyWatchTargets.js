@@ -1,5 +1,6 @@
 const dependencyTree = require("dependency-tree");
 const TemplatePath = require("./TemplatePath");
+const deleteRequireCache = require("./Util/DeleteRequireCache");
 
 class EleventyWatchTargets {
   constructor() {
@@ -109,7 +110,7 @@ class EleventyWatchTargets {
 
   clearDependencyRequireCache() {
     for (let path of this.dependencies) {
-      delete require.cache[TemplatePath.absolutePath(path)];
+      deleteRequireCache(TemplatePath.absolutePath(path));
     }
   }
 
