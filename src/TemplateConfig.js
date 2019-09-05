@@ -5,6 +5,7 @@ const TemplatePath = require("./TemplatePath");
 const EleventyBaseError = require("./EleventyBaseError");
 const eleventyConfig = require("./EleventyConfig");
 const debug = require("debug")("Eleventy:TemplateConfig");
+const deleteRequireCache = require("./Util/DeleteRequireCache");
 
 class EleventyConfigError extends EleventyBaseError {}
 
@@ -76,7 +77,7 @@ class TemplateConfig {
       try {
         // remove from require cache so it will grab a fresh copy
         if (path in require.cache) {
-          delete require.cache[path];
+          deleteRequireCache(path);
         }
 
         localConfig = require(path);
