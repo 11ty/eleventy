@@ -1,6 +1,7 @@
 const TemplateEngine = require("./TemplateEngine");
 const TemplatePath = require("../TemplatePath");
 const EleventyBaseError = require("../EleventyBaseError");
+const deleteRequireCache = require("../Util/DeleteRequireCache");
 
 class JavaScriptTemplateInvalidDataFormatError extends EleventyBaseError {}
 
@@ -72,8 +73,8 @@ class JavaScript extends TemplateEngine {
   // only remove from cache once on startup (if it already exists)
   initRequireCache(inputPath) {
     let requirePath = TemplatePath.absolutePath(inputPath);
-    if (requirePath in require.cache) {
-      delete require.cache[requirePath];
+    if (requirePath) {
+      deleteRequireCache(requirePath);
     }
 
     if (inputPath in this.instances) {
