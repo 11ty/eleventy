@@ -11,6 +11,7 @@ const simplePlural = require("./Util/Pluralize");
 const config = require("./Config");
 const bench = require("./BenchmarkManager");
 const debug = require("debug")("Eleventy");
+const deleteRequireCache = require("./Util/DeleteRequireCache");
 
 /**
  * @module @11ty/eleventy/Eleventy
@@ -109,6 +110,16 @@ class Eleventy {
   }
 
   /**
+   * Sets the incremental build mode.
+   *
+   * @method
+   * @param {Boolean} isIncremental - Shall Eleventy run in incremental build mode and only write the files that trigger watch updates
+   */
+  setIncrementalBuild(isIncremental) {
+    this.isIncremental = !!isIncremental;
+  }
+
+  /**
    * Updates the passthrough mode of Eleventy.
    *
    * @method
@@ -171,7 +182,7 @@ class Eleventy {
 
     // reload package.json values (if applicable)
     // TODO only reset this if it changed
-    delete require.cache[TemplatePath.absolutePath("package.json")];
+    deleteRequireCache(TemplatePath.absolutePath("package.json"));
 
     await this.init();
   }
@@ -204,25 +215,19 @@ class Eleventy {
     let ret = [];
 
     let writeCount = this.writer.getWriteCount();
+    let pretendWriteCount = this.writer.getPretendWriteCount();
     let copyCount = this.writer.getCopyCount();
-    if (this.isDryRun) {
-      ret.push("Pretended to");
-    }
-    if (copyCount) {
+    if (!this.isDryRun && copyCount) {
       ret.push(
-        `${this.isDryRun ? "Copy" : "Copied"} ${copyCount} ${simplePlural(
-          copyCount,
-          "item",
-          "items"
-        )} and`
+        `Copied ${copyCount} ${simplePlural(copyCount, "item", "items")} /`
       );
     }
+    if (pretendWriteCount) {
+      ret.push(`Processed ${writeCount + pretendWriteCount},`);
+    }
+
     ret.push(
-      `${this.isDryRun ? "Process" : "Processed"} ${writeCount} ${simplePlural(
-        writeCount,
-        "file",
-        "files"
-      )}`
+      `Wrote ${writeCount} ${simplePlural(writeCount, "file", "files")}`
     );
 
     let time = ((new Date() - this.start) / 1000).toFixed(2);
@@ -398,6 +403,10 @@ Arguments:
 
     this.active = true;
 
+    let isInclude =
+      path &&
+      TemplatePath.startsWithSubPath(path, this.eleventyFiles.getIncludesDir());
+
     let localProjectConfigPath = config.getLocalProjectConfigFile();
     // reset and reload global configuration :O
     if (path === localProjectConfigPath) {
@@ -408,7 +417,15 @@ Arguments:
     await this.restart();
     this.watchTargets.clearDependencyRequireCache();
 
+    if (path && !isInclude && this.isIncremental) {
+      this.writer.setIncrementalFile(path);
+    }
+
     await this.write();
+
+    if (path && !isInclude && this.isIncremental) {
+      this.writer.resetIncrementalFile();
+    }
 
     this.watchTargets.reset();
     await this._initWatchDependencies();
@@ -416,9 +433,6 @@ Arguments:
     // Add new deps to chokidar
     this.watcher.add(this.watchTargets.getNewTargetsSinceLastReset());
 
-    let isInclude =
-      path &&
-      TemplatePath.startsWithSubPath(path, this.eleventyFiles.getIncludesDir());
     this.eleventyServe.reload(path, isInclude);
 
     this.active = false;

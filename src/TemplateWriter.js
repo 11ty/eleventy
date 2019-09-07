@@ -29,6 +29,7 @@ function TemplateWriter(
   this.isVerbose = true;
   this.isDryRun = false;
   this.writeCount = 0;
+  this.pretendWriteCount = 0;
 
   // TODO can we get rid of this? It’s only used for tests in getFileManager()
   this.passthroughAll = isPassthroughAll;
@@ -41,6 +42,7 @@ TemplateWriter.prototype.overrideConfig = function(config) {
 
 TemplateWriter.prototype.restart = function() {
   this.writeCount = 0;
+  this.pretendWriteCount = 0;
   debugDev("Resetting counts to 0");
 };
 
@@ -77,7 +79,13 @@ TemplateWriter.prototype._createTemplate = function(path) {
   );
 
   tmpl.setIsVerbose(this.isVerbose);
-  tmpl.setDryRun(this.isDryRun);
+
+  // --incremental only writes files that trigger a build during --watch
+  if (this.incrementalFile && path !== this.incrementalFile) {
+    tmpl.setDryRun(true);
+  } else {
+    tmpl.setDryRun(this.isDryRun);
+  }
 
   /*
    * Sample filter: arg str, return pretty HTML string
@@ -131,7 +139,11 @@ TemplateWriter.prototype._writeTemplate = async function(mapEntry) {
   let tmpl = mapEntry.template;
   // we don’t re-use the map templateContent because it doesn’t include layouts
   return tmpl.writeMapEntry(mapEntry).then(() => {
-    this.writeCount += tmpl.getWriteCount();
+    if (tmpl.isDryRun) {
+      this.pretendWriteCount += tmpl.getWriteCount();
+    } else {
+      this.writeCount += tmpl.getWriteCount();
+    }
   });
 };
 
@@ -207,6 +219,13 @@ TemplateWriter.prototype.setDryRun = function(isDryRun) {
     .setDryRun(this.isDryRun);
 };
 
+TemplateWriter.prototype.setIncrementalFile = function(incrementalFile) {
+  this.incrementalFile = incrementalFile;
+};
+TemplateWriter.prototype.resetIncrementalFile = function() {
+  this.incrementalFile = null;
+};
+
 TemplateWriter.prototype.getCopyCount = function() {
   return this.getFileManager()
     .getPassthroughManager()
@@ -215,6 +234,10 @@ TemplateWriter.prototype.getCopyCount = function() {
 
 TemplateWriter.prototype.getWriteCount = function() {
   return this.writeCount;
+};
+
+TemplateWriter.prototype.getPretendWriteCount = function() {
+  return this.pretendWriteCount;
 };
 
 module.exports = TemplateWriter;
