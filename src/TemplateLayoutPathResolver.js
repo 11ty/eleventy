@@ -2,7 +2,6 @@ const fs = require("fs-extra");
 const config = require("./Config");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const TemplatePath = require("./TemplatePath");
-const debug = require("debug")("Eleventy:TemplateLayoutPathResolver");
 
 class TemplateLayoutPathResolver {
   constructor(path, inputDir) {
@@ -70,9 +69,7 @@ class TemplateLayoutPathResolver {
   getFileName() {
     if (!this.filename) {
       throw new Error(
-        `You’re trying to use a layout that does not exist: ${
-          this.originalPath
-        } (${this.filename})`
+        `You’re trying to use a layout that does not exist: ${this.originalPath} (${this.filename})`
       );
     }
 
@@ -82,9 +79,7 @@ class TemplateLayoutPathResolver {
   getFullPath() {
     if (!this.filename) {
       throw new Error(
-        `You’re trying to use a layout that does not exist: ${
-          this.originalPath
-        } (${this.filename})`
+        `You’re trying to use a layout that does not exist: ${this.originalPath} (${this.filename})`
       );
     }
 

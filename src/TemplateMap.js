@@ -509,18 +509,13 @@ class TemplateMap {
         } else if (!permalinks[page.url]) {
           permalinks[page.url] = [entry.inputPath];
         } else {
-          warnings[
-            page.outputPath
-          ] = `Output conflict: multiple input files are writing to \`${
-            page.outputPath
-          }\`. Use distinct \`permalink\` values to resolve this conflict.
-  1. ${entry.inputPath}
-${permalinks[page.url]
-  .map(function(inputPath, index) {
-    return `  ${index + 2}. ${inputPath}\n`;
-  })
-  .join("")}
-`;
+          warnings[page.outputPath] = [
+            `Output conflict: multiple input files are writing to \`${page.outputPath}\`.`,
+            "Use distinct `permalink` values to resolve this conflict.",
+            ...[entry.inputPath, ...permalinks[page.url]].map(
+              (path, index) => `  ${index + 1}. ${path}`
+            )
+          ].join("\n");
 
           permalinks[page.url].push(entry.inputPath);
         }

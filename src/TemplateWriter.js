@@ -158,7 +158,7 @@ TemplateWriter.prototype.write = async function() {
       .catch(e => {
         EleventyErrorHandler.warn(e, "Error with passthrough copy");
         return Promise.reject(
-          new TemplateWriterWriteError(`Having trouble copying`, e)
+          new TemplateWriterWriteError("Having trouble copying", e)
         );
       })
   );

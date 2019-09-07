@@ -5,7 +5,6 @@ const TemplatePath = require("./TemplatePath");
 
 const templateCache = require("./TemplateCache");
 const config = require("./Config");
-const debug = require("debug")("Eleventy:TemplateLayout");
 const debugDev = require("debug")("Dev:Eleventy:TemplateLayout");
 
 class TemplateLayout extends TemplateContent {
