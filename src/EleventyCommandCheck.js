@@ -21,7 +21,8 @@ class EleventyCommandCheck {
       "dryrun",
       "help",
       "serve",
-      "passthroughall"
+      "passthroughall",
+      "incremental"
     ];
 
     this.args = argv;

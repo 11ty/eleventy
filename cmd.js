@@ -43,6 +43,7 @@ try {
   elev.setConfigPathOverride(argv.config);
   elev.setPathPrefix(argv.pathprefix);
   elev.setDryRun(argv.dryrun);
+  elev.setIncrementalBuild(argv.incremental);
   elev.setPassthroughAll(argv.passthroughall);
   elev.setFormats(argv.formats);
 
