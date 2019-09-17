@@ -136,6 +136,7 @@ class EleventyFiles {
     let ignores = [];
     let fileFound = false;
     let dirs = [];
+    debug(`Ignore files: ${ignoreFiles}`);
     for (let ignorePath of ignoreFiles) {
       ignorePath = TemplatePath.normalize(ignorePath);
 
@@ -167,7 +168,7 @@ class EleventyFiles {
     }
 
     ignores.forEach(function(path) {
-      debug(`${ignoreFiles} ignoring: ${path}`);
+      debug(`ignoring: ${path}`);
     });
     return ignores;
   }

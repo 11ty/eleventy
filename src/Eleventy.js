@@ -396,6 +396,7 @@ Arguments:
     if (path) {
       path = TemplatePath.addLeadingDotSlash(path);
       this.queuedPaths.push(path);
+      console.log(`Watching ${path}...`);
       this.lastTriggerTime = new Date();
     }
 
@@ -435,22 +436,25 @@ Arguments:
     await this.restart();
     this.watchTargets.clearDependencyRequireCache();
 
-    for(let processingPath of processingPaths)
-    {
-      let isInclude = TemplatePath.startsWithSubPath(
-        processingPath,
-        this.eleventyFiles.getIncludesDir()
-      );
+    if (this.isIncremental) {
+      for (let processingPath of processingPaths) {
+        if (processingPath) {
+          let isInclude = TemplatePath.startsWithSubPath(
+            processingPath,
+            this.eleventyFiles.getIncludesDir()
+          );
 
-      if (processingPath && !isInclude && this.isIncremental) {
-        this.writer.setIncrementalFile(processingPath);
+          if (!isInclude) {
+            this.writer.setIncrementalFile(processingPath);
+          }
+        }
       }
+    }
 
-      await this.write();
+    await this.write();
 
-      if (processingPath && !isInclude && this.isIncremental) {
-        this.writer.resetIncrementalFile();
-      }
+    if (this.isIncremental) {
+      this.writer.resetIncrementalFile();
     }
 
     this.watchTargets.reset();
