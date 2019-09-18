@@ -18,6 +18,10 @@ class EleventyWatchTargets {
     return this._watchJavaScriptDependencies;
   }
 
+  isJavaScriptDependency(path) {
+    return this.dependencies.has(path);
+  }
+
   _normalizeTargets(targets) {
     if (!targets) {
       return [];

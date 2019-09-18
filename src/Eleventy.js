@@ -406,6 +406,8 @@ Arguments:
     let isInclude =
       path &&
       TemplatePath.startsWithSubPath(path, this.eleventyFiles.getIncludesDir());
+    let isJavaScriptDependency =
+      path && this.watchTargets.isJavaScriptDependency(path);
 
     let localProjectConfigPath = config.getLocalProjectConfigFile();
     // reset and reload global configuration :O
@@ -417,7 +419,7 @@ Arguments:
     await this.restart();
     this.watchTargets.clearDependencyRequireCache();
 
-    if (path && !isInclude && this.isIncremental) {
+    if (path && !isInclude && !isJavaScriptDependency && this.isIncremental) {
       this.writer.setIncrementalFile(path);
     }
 

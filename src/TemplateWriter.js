@@ -151,16 +151,19 @@ TemplateWriter.prototype.write = async function() {
   let promises = [];
   let paths = await this._getAllPaths();
   debug("Found: %o", paths);
+
+  let passthroughManager = this.getFileManager().getPassthroughManager();
+  passthroughManager.setIncrementalFile(
+    this.incrementalFile ? this.incrementalFile : false
+  );
+
   promises.push(
-    this.getFileManager()
-      .getPassthroughManager()
-      .copyAll(paths)
-      .catch(e => {
-        EleventyErrorHandler.warn(e, "Error with passthrough copy");
-        return Promise.reject(
-          new TemplateWriterWriteError(`Having trouble copying`, e)
-        );
-      })
+    passthroughManager.copyAll(paths).catch(e => {
+      EleventyErrorHandler.warn(e, "Error with passthrough copy");
+      return Promise.reject(
+        new TemplateWriterWriteError("Having trouble copying", e)
+      );
+    })
   );
 
   // TODO optimize await here
