@@ -1,4 +1,4 @@
-const dependencyTree = require("dependency-tree");
+const dependencyTree = require("@11ty/dependency-tree");
 const TemplatePath = require("./TemplatePath");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
 
@@ -68,7 +68,6 @@ class EleventyWatchTargets {
     }
 
     targets = this._normalizeTargets(targets);
-
     let deps = this.getJavaScriptDependenciesFromList(targets);
     if (filterCallback) {
       deps = deps.filter(filterCallback);
@@ -86,22 +85,10 @@ class EleventyWatchTargets {
     files
       .filter(file => file.endsWith(".js")) // TODO does this need to work with aliasing? what other JS extensions will have deps?
       .forEach(file => {
-        dependencyTree
-          .toList({
-            filename: file,
-            directory: TemplatePath.absolutePath(),
-            filter: function(path) {
-              return path.indexOf("node_modules") === -1;
-            }
-          })
+        dependencyTree(file, { allowNotFound: true })
           .map(dependency => {
             return TemplatePath.addLeadingDotSlash(
               TemplatePath.relativePath(dependency)
-            );
-          })
-          .filter(dependency => {
-            return (
-              dependency !== file && dependency.indexOf("node_modules") === -1
             );
           })
           .forEach(dependency => {

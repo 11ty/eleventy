@@ -84,12 +84,12 @@
     "vue-server-renderer": "^2.6.10"
   },
   "dependencies": {
+    "@11ty/dependency-tree": "^1.0.0",
     "browser-sync": "^2.26.7",
     "chalk": "^2.4.2",
     "chokidar": "^3.0.2",
     "debug": "^4.1.1",
     "dependency-graph": "^0.8.0",
-    "dependency-tree": "^7.0.2",
     "ejs": "^2.6.2",
     "fast-glob": "^3.0.4",
     "fs-extra": "^8.1.0",
