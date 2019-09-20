@@ -17,6 +17,14 @@ Works with HTML, Markdown, Liquid, Nunjucks, Handlebars, Mustache, EJS, Haml, Pu
 
 [![npm Version](https://img.shields.io/npm/v/@11ty/eleventy.svg?style=for-the-badge)](https://www.npmjs.com/package/@11ty/eleventy) [![GitHub issues](https://img.shields.io/github/issues/11ty/eleventy.svg?style=for-the-badge)](https://github.com/11ty/eleventy/issues) [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=for-the-badge)](https://github.com/prettier/prettier) [![npm Downloads](https://img.shields.io/npm/dt/@11ty/eleventy.svg?style=for-the-badge)](https://www.npmjs.com/package/@11ty/eleventy)
 
+## Installation
+
+```
+npm install @11ty/eleventy --save-dev
+```
+
+Read our [Getting Started guide](https://www.11ty.io/docs/getting-started/).
+
 ## Tests
 
 ```
