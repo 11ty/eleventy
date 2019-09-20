@@ -289,6 +289,7 @@ Template Formats: ${formats.join(",")}`);
 
     this.writer.setVerboseOutput(this.isVerbose);
     this.writer.setDryRun(this.isDryRun);
+    this.writer.setIsIncremental(this.isIncremental);
 
     return this.templateData.cacheData();
   }

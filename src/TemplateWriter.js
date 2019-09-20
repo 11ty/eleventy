@@ -1,5 +1,6 @@
 const Template = require("./Template");
 const TemplatePath = require("./TemplatePath");
+const IncrementalManager = require("./IncrementalManager");
 const TemplateMap = require("./TemplateMap");
 const TemplateRender = require("./TemplateRender");
 const EleventyFiles = require("./EleventyFiles");
@@ -31,6 +32,7 @@ class TemplateWriter {
     this.isDryRun = false;
     this.writeCount = 0;
     this.skippedCount = 0;
+    this.isIncremental = false;
 
     // TODO can we get rid of this? It’s only used for tests in getFileManager()
     this.passthroughAll = isPassthroughAll;
@@ -138,6 +140,10 @@ class TemplateWriter {
 
   async _writeTemplate(mapEntry) {
     let tmpl = mapEntry.template;
+    if (this.isIncremental) {
+      tmpl.incrementalManager = this.incrementalManager;
+    }
+
     // we don’t re-use the map templateContent because it doesn’t include layouts
     return tmpl.writeMapEntry(mapEntry).then(() => {
       this.skippedCount += tmpl.getSkippedCount();
@@ -150,10 +156,17 @@ class TemplateWriter {
     let paths = await this._getAllPaths();
     debug("Found: %o", paths);
 
+    // TODO move this into Eleventy.js so we can keep it in memory and write to disk on every build
+    // we need this later to delete the buildinfo file if the build runs without incremental
+    this.incrementalManager = new IncrementalManager();
+    this.incrementalManager.init(this.isIncremental);
+
     let passthroughManager = this.getFileManager().getPassthroughManager();
-    passthroughManager.setIncrementalFile(
-      this.incrementalFile ? this.incrementalFile : false
-    );
+    if (this.isIncremental) {
+      passthroughManager.setIncrementalFile(
+        this.incrementalFile ? this.incrementalFile : false
+      );
+    }
 
     promises.push(
       passthroughManager.copyAll(paths).catch(e => {
@@ -202,10 +215,14 @@ class TemplateWriter {
       );
     }
 
-    return Promise.all(promises).catch(e => {
-      EleventyErrorHandler.error(e, "Error writing templates");
-      throw e;
-    });
+    return Promise.all(promises)
+      .then(async () => {
+        await this.incrementalManager.writeBuildFile();
+      })
+      .catch(e => {
+        EleventyErrorHandler.error(e, "Error writing templates");
+        throw e;
+      });
   }
 
   setVerboseOutput(isVerbose) {
@@ -220,6 +237,9 @@ class TemplateWriter {
       .setDryRun(this.isDryRun);
   }
 
+  setIsIncremental(isIncremental) {
+    this.isIncremental = isIncremental;
+  }
   setIncrementalFile(incrementalFile) {
     this.incrementalFile = incrementalFile;
   }

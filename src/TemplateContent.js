@@ -59,6 +59,14 @@ class TemplateContent {
     return this._templateRender;
   }
 
+  set incrementalManager(mgr) {
+    this._incrementalManager = mgr;
+  }
+
+  get incrementalManager() {
+    return this._incrementalManager;
+  }
+
   getInputPath() {
     return this.inputPath;
   }

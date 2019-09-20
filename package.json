@@ -91,6 +91,7 @@
     "debug": "^4.1.1",
     "dependency-graph": "^0.8.0",
     "ejs": "^2.6.2",
+    "farmhash": "^3.0.0",
     "fast-glob": "^3.0.4",
     "fs-extra": "^8.1.0",
     "gray-matter": "^4.0.2",

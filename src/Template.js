@@ -484,7 +484,16 @@ class Template extends TemplateContent {
   async _write(outputPath, finalContent) {
     let shouldWriteFile = true;
 
-    if (this.isDryRun) {
+    if (
+      this.incrementalManager &&
+      !this.incrementalManager.shouldWriteFile(
+        this.inputPath,
+        outputPath,
+        finalContent
+      )
+    ) {
+      shouldWriteFile = false;
+    } else if (this.isDryRun) {
       shouldWriteFile = false;
     }
 
@@ -518,6 +527,11 @@ class Template extends TemplateContent {
     if (!shouldWriteFile) {
       this.skippedCount++;
     } else {
+      if (this.incrementalManager) {
+        // TODO this hashes the content twice, see shouldWriteFile above
+        this.incrementalManager.add(this.inputPath, outputPath, finalContent);
+      }
+
       return fs.outputFile(outputPath, finalContent).then(() => {
         this.writeCount++;
         debug(`${outputPath} ${lang.finished}.`);
