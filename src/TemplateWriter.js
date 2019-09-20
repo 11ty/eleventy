@@ -30,7 +30,7 @@ class TemplateWriter {
     this.isVerbose = true;
     this.isDryRun = false;
     this.writeCount = 0;
-    this.pretendWriteCount = 0;
+    this.skippedCount = 0;
 
     // TODO can we get rid of this? It’s only used for tests in getFileManager()
     this.passthroughAll = isPassthroughAll;
@@ -43,7 +43,7 @@ class TemplateWriter {
 
   restart() {
     this.writeCount = 0;
-    this.pretendWriteCount = 0;
+    this.skippedCount = 0;
     debugDev("Resetting counts to 0");
   }
 
@@ -140,11 +140,8 @@ class TemplateWriter {
     let tmpl = mapEntry.template;
     // we don’t re-use the map templateContent because it doesn’t include layouts
     return tmpl.writeMapEntry(mapEntry).then(() => {
-      if (tmpl.isDryRun) {
-        this.pretendWriteCount += tmpl.getWriteCount();
-      } else {
-        this.writeCount += tmpl.getWriteCount();
-      }
+      this.skippedCount += tmpl.getSkippedCount();
+      this.writeCount += tmpl.getWriteCount();
     });
   }
 
@@ -236,12 +233,18 @@ class TemplateWriter {
       .getCopyCount();
   }
 
+  getSkippedCopyCount() {
+    return this.getFileManager()
+      .getPassthroughManager()
+      .getSkippedCount();
+  }
+
   getWriteCount() {
     return this.writeCount;
   }
 
-  getPretendWriteCount() {
-    return this.pretendWriteCount;
+  getSkippedCount() {
+    return this.skippedCount;
   }
 }
 

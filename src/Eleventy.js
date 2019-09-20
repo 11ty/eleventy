@@ -215,19 +215,23 @@ class Eleventy {
     let ret = [];
 
     let writeCount = this.writer.getWriteCount();
-    let pretendWriteCount = this.writer.getPretendWriteCount();
+    let skippedCount = this.writer.getSkippedCount();
+
     let copyCount = this.writer.getCopyCount();
-    if (!this.isDryRun && copyCount) {
+    let skippedCopyCount = this.writer.getSkippedCopyCount();
+
+    if (copyCount) {
       ret.push(
-        `Copied ${copyCount} ${simplePlural(copyCount, "item", "items")} /`
+        `Copied ${copyCount} ${simplePlural(copyCount, "item", "items")}${
+          skippedCopyCount ? ` (skipped ${skippedCopyCount})` : ""
+        } /`
       );
-    }
-    if (pretendWriteCount) {
-      ret.push(`Processed ${writeCount + pretendWriteCount},`);
     }
 
     ret.push(
-      `Wrote ${writeCount} ${simplePlural(writeCount, "file", "files")}`
+      `Wrote ${writeCount} ${simplePlural(writeCount, "file", "files")}${
+        skippedCount ? ` (skipped ${skippedCount})` : ""
+      }`
     );
 
     let time = ((new Date() - this.start) / 1000).toFixed(2);

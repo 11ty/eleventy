@@ -15,6 +15,7 @@ class TemplatePassthroughManager {
 
   reset() {
     this.count = 0;
+    this.skippedCount = 0;
     this.incrementalFile = null;
     debug("Resetting counts to 0");
   }
@@ -90,6 +91,10 @@ class TemplatePassthroughManager {
     return this.count;
   }
 
+  getSkippedCount() {
+    return this.skippedCount;
+  }
+
   async copyPath(path) {
     let pass = new TemplatePassthrough(path, this.outputDir, this.inputDir);
 
@@ -102,7 +107,13 @@ class TemplatePassthroughManager {
     return pass
       .write()
       .then(() => {
-        if (!pass.isDryRun) {
+        if (pass.isDryRun) {
+          this.skippedCount++;
+          debug(
+            "Skipped %o (either from --dryrun or --incremental)",
+            path.inputPath
+          );
+        } else {
           this.count++;
           debug("Copied %o", path.inputPath);
         }
