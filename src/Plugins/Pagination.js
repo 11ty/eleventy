@@ -117,9 +117,18 @@ class Pagination {
         return !this.isFiltered(value);
       }.bind(this)
     );
-    if (this.data.pagination.reverse === true) {
-      return result.reverse();
+
+    if (
+      this.data.pagination.before &&
+      typeof this.data.pagination.before === "function"
+    ) {
+      result = this.data.pagination.before(result.filter(() => true));
     }
+
+    if (this.data.pagination.reverse === true) {
+      return result.filter(() => true).reverse();
+    }
+
     return result;
   }
 
