@@ -60,10 +60,7 @@ class TemplateCollection extends Sortable {
     });
   }
 
-  getFilteredByTags(tags) {
-    if (!Array.isArray(tags)) {
-      return this.getFilteredByTag(tags);
-    }
+  getFilteredByTags(...tags) {
     return this.getAllSorted().filter(item =>
       tags.every(requiredTag => {
         const itemTags = item.data.tags;

@@ -111,11 +111,11 @@ test("getFilteredByTags", async t => {
   await c._testAddTemplate(tmpl2);
   await c._testAddTemplate(tmpl3);
 
-  let postsAndCats = c.getFilteredByTags(["post", "cat"]);
+  let postsAndCats = c.getFilteredByTags("post", "cat");
   t.is(postsAndCats.length, 1);
   t.deepEqual(postsAndCats[0].template, tmpl3);
 
-  let cats = c.getFilteredByTags(["cat"]);
+  let cats = c.getFilteredByTags("cat");
   t.is(cats.length, 2);
   t.deepEqual(cats[0].template, tmpl2);
   t.deepEqual(cats[1].template, tmpl3);
@@ -131,12 +131,12 @@ test("getFilteredByTags (added out of order, sorted)", async t => {
   await c._testAddTemplate(tmpl2);
   await c._testAddTemplate(tmpl1);
 
-  let postsAndCats = c.getFilteredByTags(["post", "cat"]);
+  let postsAndCats = c.getFilteredByTags("post", "cat");
   t.truthy(postsAndCats.length);
   t.is(postsAndCats.length, 1);
   t.deepEqual(postsAndCats[0].template, tmpl3);
 
-  let cats = c.getFilteredByTags(["cat"]);
+  let cats = c.getFilteredByTags("cat");
   t.truthy(cats.length);
   t.is(cats.length, 2);
   t.deepEqual(cats[0].template, tmpl2);
