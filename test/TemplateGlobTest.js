@@ -10,32 +10,35 @@ test("TemplatePath assumptions", t => {
 });
 
 test("Normalize string argument", t => {
-  t.deepEqual(TemplateGlob.map("views"), "./views");
-  t.deepEqual(TemplateGlob.map("views/"), "./views");
-  t.deepEqual(TemplateGlob.map("./views"), "./views");
-  t.deepEqual(TemplateGlob.map("./views/"), "./views");
+  t.deepEqual(TemplateGlob.normalize("views"), "./views");
+  t.deepEqual(TemplateGlob.normalize("views/"), "./views");
+  t.deepEqual(TemplateGlob.normalize("./views"), "./views");
+  t.deepEqual(TemplateGlob.normalize("./views/"), "./views");
 });
 
 test("Normalize with nots", t => {
-  t.deepEqual(TemplateGlob.map("!views"), "!./views");
-  t.deepEqual(TemplateGlob.map("!views/"), "!./views");
-  t.deepEqual(TemplateGlob.map("!./views"), "!./views");
-  t.deepEqual(TemplateGlob.map("!./views/"), "!./views");
+  t.deepEqual(TemplateGlob.normalize("!views"), "!./views");
+  t.deepEqual(TemplateGlob.normalize("!views/"), "!./views");
+  t.deepEqual(TemplateGlob.normalize("!./views"), "!./views");
+  t.deepEqual(TemplateGlob.normalize("!./views/"), "!./views");
 });
 
 test("Normalize with globstar", t => {
-  t.deepEqual(TemplateGlob.map("!views/**"), "!./views/**");
-  t.deepEqual(TemplateGlob.map("!./views/**"), "!./views/**");
+  t.deepEqual(TemplateGlob.normalize("!views/**"), "!./views/**");
+  t.deepEqual(TemplateGlob.normalize("!./views/**"), "!./views/**");
 });
 
 test("Normalize with globstar and star", t => {
-  t.deepEqual(TemplateGlob.map("!views/**/*"), "!./views/**/*");
-  t.deepEqual(TemplateGlob.map("!./views/**/*"), "!./views/**/*");
+  t.deepEqual(TemplateGlob.normalize("!views/**/*"), "!./views/**/*");
+  t.deepEqual(TemplateGlob.normalize("!./views/**/*"), "!./views/**/*");
 });
 
 test("Normalize with globstar and star and file extension", t => {
-  t.deepEqual(TemplateGlob.map("!views/**/*.json"), "!./views/**/*.json");
-  t.deepEqual(TemplateGlob.map("!./views/**/*.json"), "!./views/**/*.json");
+  t.deepEqual(TemplateGlob.normalize("!views/**/*.json"), "!./views/**/*.json");
+  t.deepEqual(
+    TemplateGlob.normalize("!./views/**/*.json"),
+    "!./views/**/*.json"
+  );
 });
 
 test("NormalizePath with globstar and star and file extension", t => {
@@ -67,20 +70,13 @@ test("NormalizePath with globstar and star and file extension (errors)", t => {
   });
 });
 
-test("Normalize array argument", t => {
-  t.deepEqual(TemplateGlob.map(["views", "content"]), ["./views", "./content"]);
-  t.deepEqual(TemplateGlob.map("views/"), "./views");
-  t.deepEqual(TemplateGlob.map("./views"), "./views");
-  t.deepEqual(TemplateGlob.map("./views/"), "./views");
-});
-
 test("matuzo project issue with fastglob assumptions", async t => {
   let dotslashincludes = await fastglob(
-    TemplateGlob.map([
+    [
       "./test/stubs/globby/**/*.html",
       "!./test/stubs/globby/_includes/**/*",
       "!./test/stubs/globby/_data/**/*"
-    ])
+    ].map(globPath => TemplateGlob.normalize(globPath))
   );
 
   t.is(
@@ -91,11 +87,11 @@ test("matuzo project issue with fastglob assumptions", async t => {
   );
 
   let globincludes = await fastglob(
-    TemplateGlob.map([
+    [
       "test/stubs/globby/**/*.html",
       "!./test/stubs/globby/_includes/**/*",
       "!./test/stubs/globby/_data/**/*"
-    ])
+    ].map(globPath => TemplateGlob.normalize(globPath))
   );
   t.is(
     globincludes.filter(function(file) {

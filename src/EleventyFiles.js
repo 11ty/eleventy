@@ -72,11 +72,11 @@ class EleventyFiles {
   initFormatsGlobs() {
     // Input was a directory
     if (this.input === this.inputDir) {
-      this.templateGlobs = TemplateGlob.map(
-        this.extensionMap.getGlobs(this.inputDir)
-      );
+      this.templateGlobs = this.extensionMap
+        .getGlobs(this.inputDir)
+        .map(globPath => TemplateGlob.normalize(globPath));
     } else {
-      this.templateGlobs = TemplateGlob.map([this.input]);
+      this.templateGlobs = [TemplateGlob.normalize(this.input)];
     }
   }
 
@@ -116,9 +116,9 @@ class EleventyFiles {
     this.ignores = this.getIgnores();
 
     if (this.passthroughAll) {
-      this.watchedGlobs = TemplateGlob.map([
+      this.watchedGlobs = [
         TemplateGlob.normalizePath(this.input, "/**")
-      ]).concat(this.ignores);
+      ].concat(this.ignores);
     } else {
       this.watchedGlobs = this.templateGlobs.concat(this.ignores);
     }
@@ -250,7 +250,7 @@ class EleventyFiles {
       );
     }
 
-    files = files.concat(TemplateGlob.map("!" + this.outputDir + "/**"));
+    files = files.concat(TemplateGlob.normalize("!" + this.outputDir + "/**"));
 
     return files;
   }
@@ -333,18 +333,18 @@ class EleventyFiles {
     // we want this to fail on "" because we don’t want to ignore the
     // entire input directory when using ""
     if (this.config.dir.includes) {
-      files = files.concat(TemplateGlob.map(this.includesDir + "/**"));
+      files = files.concat(TemplateGlob.normalize(this.includesDir + "/**"));
     }
 
     // we want this to fail on "" because we don’t want to ignore the
     // entire input directory when using ""
     if (this.config.dir.layouts) {
-      files = files.concat(TemplateGlob.map(this.layoutsDir + "/**"));
+      files = files.concat(TemplateGlob.normalize(this.layoutsDir + "/**"));
     }
 
     if (this.config.dir.data && this.config.dir.data !== ".") {
       let dataDir = this.getDataDir();
-      files = files.concat(TemplateGlob.map(dataDir + "/**"));
+      files = files.concat(TemplateGlob.normalize(dataDir + "/**"));
     }
 
     return files;
