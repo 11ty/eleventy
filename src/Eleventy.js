@@ -151,7 +151,7 @@ class Eleventy {
    * Updates the watch targets.
    *
    * @method
-   * @param {} watchTargets - The new watch targets.
+   * @param {EleventyWatchTargets} watchTargets - The new watch targets.
    */
   setWatchTargets(watchTargets) {
     this.watchTargets = watchTargets;
