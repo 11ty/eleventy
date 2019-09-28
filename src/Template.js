@@ -684,7 +684,8 @@ class Template extends TemplateContent {
     entries.push({
       template: this,
       inputPath: this.inputPath,
-      data: data
+      data: data,
+      _pages: null
     });
     return entries;
   }
