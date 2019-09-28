@@ -502,6 +502,13 @@ class TemplateMap {
   checkForDuplicatePermalinks() {
     let permalinks = {};
     let warnings = {};
+
+    function getPermalinkOutput(permalinks, page) {
+      return permalinks[page.url]
+        .map((inputPath, index) => `  ${index + 2}. ${inputPath}\n`)
+        .join("");
+    }
+
     for (let entry of this.map) {
       for (let page of entry._pages) {
         if (page.url === false) {
@@ -509,18 +516,14 @@ class TemplateMap {
         } else if (!permalinks[page.url]) {
           permalinks[page.url] = [entry.inputPath];
         } else {
-          warnings[
+          warnings[page.outputPath] = `
+          Output conflict: multiple input files are writing to \`${
             page.outputPath
-          ] = `Output conflict: multiple input files are writing to \`${
-            page.outputPath
-          }\`. Use distinct \`permalink\` values to resolve this conflict.
+          }\`.
+          Use distinct \`permalink\` values to resolve this conflict.
   1. ${entry.inputPath}
-${permalinks[page.url]
-  .map(function(inputPath, index) {
-    return `  ${index + 2}. ${inputPath}\n`;
-  })
-  .join("")}
-`;
+${getPermalinkOutput(permalinks, page)}
+          `.trim();
 
           permalinks[page.url].push(entry.inputPath);
         }
