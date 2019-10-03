@@ -14,7 +14,7 @@ const debug = require("debug")("Eleventy");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
 
 /**
- * @module @11ty/eleventy/Eleventy
+ * @module 11ty/eleventy/Eleventy
  */
 
 /**
@@ -22,11 +22,11 @@ const deleteRequireCache = require("./Util/DeleteRequireCache");
  *
  * @param {String} input - Where to read files from.
  * @param {String} output - Where to write rendered files to.
- * @returns {undefined}
+ * @returns {module:11ty/eleventy/Eleventy~Eleventy}
  */
 class Eleventy {
   constructor(input, output) {
-    /** @member {Object} - tbd. */
+    /** @member {module:11ty/eleventy/TemplateConfig~TemplateConfig~config} - TemplateConfig instance */
     this.config = config.getConfig();
 
     /**
