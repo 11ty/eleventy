@@ -672,3 +672,110 @@ test("Circular dependency but should not error because it uses eleventyExcludeFr
 
   t.true(true);
 });
+
+test("Pagination `before` Callback", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/paged-before.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let templates = await tmpl.getTemplates(data);
+  t.deepEqual(templates[0].data.pagination.items, ["item6"]);
+});
+
+test("Pagination `before` Callback with a Filter", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/paged-before-filter.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let templates = await tmpl.getTemplates(data);
+  t.deepEqual(templates[0].data.pagination.items, ["item2"]);
+});
+
+test("Pagination `before` Callback with `reverse: true` (test order of operations)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/paged-before-and-reverse.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let templates = await tmpl.getTemplates(data);
+  t.deepEqual(templates[0].data.pagination.items, ["item2"]);
+});
+
+test("Pagination new v0.10.0 href/hrefs", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+  await dataObj.cacheData();
+
+  let tmpl = new Template(
+    "./test/stubs/paged/paged.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj
+  );
+
+  let data = await tmpl.getData();
+  let templates = await tmpl.getTemplates(data);
+  t.is(templates[0].data.pagination.hrefs.length, 2);
+  t.truthy(templates[0].data.pagination.href.first);
+  t.truthy(templates[0].data.pagination.href.last);
+  t.falsy(templates[0].data.pagination.href.previous);
+  t.truthy(templates[0].data.pagination.href.next);
+
+  t.is(templates[1].data.pagination.hrefs.length, 2);
+  t.truthy(templates[1].data.pagination.href.first);
+  t.truthy(templates[1].data.pagination.href.last);
+  t.truthy(templates[1].data.pagination.href.previous);
+  t.falsy(templates[1].data.pagination.href.next);
+});
+
+test("Pagination new v0.10.0 page/pages", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+  await dataObj.cacheData();
+
+  let tmpl = new Template(
+    "./test/stubs/paged/paged.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj
+  );
+
+  let data = await tmpl.getData();
+  let templates = await tmpl.getTemplates(data);
+
+  t.is(templates[0].data.pagination.pages.length, 2);
+  t.is(templates[0].data.pagination.pages[0].length, 5);
+  t.is(templates[0].data.pagination.pages[1].length, 3);
+  t.truthy(templates[0].data.pagination.page.first);
+  t.truthy(templates[0].data.pagination.page.last);
+  t.falsy(templates[0].data.pagination.page.previous);
+  t.truthy(templates[0].data.pagination.page.next);
+
+  t.is(templates[1].data.pagination.pages.length, 2);
+  t.is(templates[1].data.pagination.pages[0].length, 5);
+  t.is(templates[1].data.pagination.pages[1].length, 3);
+  t.truthy(templates[1].data.pagination.page.first);
+  t.truthy(templates[1].data.pagination.page.last);
+  t.truthy(templates[1].data.pagination.page.previous);
+  t.falsy(templates[1].data.pagination.page.next);
+});
+
+test("Pagination new v0.10.0 alias", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/pagedalias.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let templates = await tmpl.getTemplates(data);
+
+  t.is(templates[0].data.pagination.alias, "font.test");
+  t.is(templates[1].data.pagination.alias, "font.test");
+});
