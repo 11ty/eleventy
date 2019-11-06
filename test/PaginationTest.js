@@ -683,6 +683,7 @@ test("Pagination `before` Callback", async t => {
   let data = await tmpl.getData();
   let templates = await tmpl.getTemplates(data);
   t.deepEqual(templates[0].data.pagination.items, ["item6"]);
+  t.deepEqual(templates[0].data.myalias, "item6");
 });
 
 test("Pagination `before` Callback with a Filter", async t => {
@@ -695,6 +696,7 @@ test("Pagination `before` Callback with a Filter", async t => {
   let data = await tmpl.getData();
   let templates = await tmpl.getTemplates(data);
   t.deepEqual(templates[0].data.pagination.items, ["item2"]);
+  t.deepEqual(templates[0].data.myalias, "item2");
 });
 
 test("Pagination `before` Callback with `reverse: true` (test order of operations)", async t => {
