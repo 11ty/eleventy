@@ -168,9 +168,8 @@ class TemplateWriter {
     await this._createTemplateMap(paths);
     debug("Template map created.");
 
-    let mapEntry;
     let usedTemplateContentTooEarlyMap = [];
-    for (mapEntry of this.templateMap.getMap()) {
+    for (let mapEntry of this.templateMap.getMap()) {
       promises.push(
         this._writeTemplate(mapEntry).catch(function(e) {
           // Premature templateContent in layout render, this also happens in
@@ -189,7 +188,7 @@ class TemplateWriter {
       );
     }
 
-    for (mapEntry of usedTemplateContentTooEarlyMap) {
+    for (let mapEntry of usedTemplateContentTooEarlyMap) {
       promises.push(
         this._writeTemplate(mapEntry).catch(function(e) {
           return Promise.reject(
