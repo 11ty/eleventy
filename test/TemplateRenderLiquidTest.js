@@ -14,6 +14,14 @@ test("Liquid", t => {
   t.is(new TemplateRender("liquid").getEngineName(), "liquid");
 });
 
+test("Liquid Render Addition", async t => {
+  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+    "<p>{{ number | plus: 1 }}</p>"
+  );
+  // Important for pagination. This currently outputs 1.
+  t.is(await fn({ number: 1 }), "<p>2</p>");
+});
+
 test("Liquid Render (with Helper)", async t => {
   let fn = await new TemplateRender("liquid").getCompiledTemplate(
     "<p>{{name | capitalize}}</p>"

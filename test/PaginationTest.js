@@ -781,3 +781,16 @@ test("Pagination new v0.10.0 alias", async t => {
   t.is(templates[0].data.pagination.alias, "font.test");
   t.is(templates[1].data.pagination.alias, "font.test");
 });
+
+test("Pagination make sure pageNumber is numeric for {{ pageNumber + 1 }} Issue #760", async t => {
+  let tmpl = new Template(
+    "./test/stubs/paged/pagedinlinedata.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let templates = await tmpl.getTemplates(data);
+  t.is(templates[0].data.pagination.pageNumber, 0);
+  t.not(templates[0].data.pagination.pageNumber, "0");
+});
