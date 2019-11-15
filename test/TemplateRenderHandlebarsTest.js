@@ -250,3 +250,16 @@ test("Handlebars Render Raw Output (Issue #436 with if statement)", async t => {
 {{/if}}`
   );
 });
+
+test("Handlebars Render #each with Global Variable (Issue #759)", async t => {
+  let fn = await new TemplateRender("hbs", "./test/stubs/").getCompiledTemplate(
+    `<ul>{{#each navigation as |navItem|}}<li><a href={{navItem.link}}>{{../name}}{{navItem.text}}</a></li>{{/each}}</ul>`
+  );
+  t.is(
+    (await fn({
+      name: "Zach",
+      navigation: [{ link: "a", text: "text" }]
+    })).trim(),
+    `<ul><li><a href=a>Zachtext</a></li></ul>`
+  );
+});
