@@ -182,8 +182,8 @@ class TemplateRender {
     this.parseHtmlWith = htmlEngineName;
   }
 
-  async render(str, data) {
-    return this.engine.render(str, data);
+  async _testRender(str, data) {
+    return this.engine._testRender(str, data);
   }
 
   async getCompiledTemplate(str) {

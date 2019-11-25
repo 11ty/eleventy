@@ -1,6 +1,16 @@
 import test from "ava";
 import TemplateRender from "../src/TemplateRender";
 
+class TestEleventyError extends Error {}
+
+async function getPromise(resolveTo) {
+  return new Promise(function(resolve) {
+    setTimeout(function() {
+      resolve(resolveTo);
+    });
+  });
+}
+
 // Nunjucks
 test("Nunjucks", t => {
   t.is(new TemplateRender("njk").getEngineName(), "njk");
@@ -11,6 +21,13 @@ test("Nunjucks Render", async t => {
     "<p>{{ name }}</p>"
   );
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
+});
+
+test("Nunjucks Render Addition", async t => {
+  let fn = await new TemplateRender("njk").getCompiledTemplate(
+    "<p>{{ number + 1 }}</p>"
+  );
+  t.is(await fn({ number: 1 }), "<p>2</p>");
 });
 
 test("Nunjucks Render Extends", async t => {
@@ -71,6 +88,18 @@ test("Nunjucks Render Relative Include (using ..) Issue #190", async t => {
     "<p>{% include '../dir/included.njk' %}</p>"
   );
   t.is(await fn(), "<p>HELLO FROM THE OTHER SIDE.</p>");
+
+  // should look in _includes too, related to Issue #633
+  let fn2a = await tr.getCompiledTemplate(
+    "<p>{% include 'included-relative.njk' %}</p>"
+  );
+  t.is(await fn2a(), "<p>akdlsjafkljdskl</p>");
+
+  // should look in _includes too Issue #633
+  // let fn3 = await tr.getCompiledTemplate(
+  //   "<p>{% include '../_includes/included-relative.njk' %}</p>"
+  // );
+  // t.is(await fn3(), "<p>akdlsjafkljdskl</p>");
 });
 
 test("Nunjucks Render Relative Include (using current dir) Issue #190", async t => {
@@ -219,7 +248,7 @@ test("Nunjucks Shortcode without args", async t => {
     return "Zach";
   });
 
-  t.is(await tr.render("{% postfixWithZach %}", {}), "Zach");
+  t.is(await tr._testRender("{% postfixWithZach %}", {}), "Zach");
 });
 
 test("Nunjucks Shortcode", async t => {
@@ -229,8 +258,138 @@ test("Nunjucks Shortcode", async t => {
   });
 
   t.is(
-    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    await tr._testRender("{% postfixWithZach name %}", { name: "test" }),
     "testZach"
+  );
+});
+
+test("Nunjucks Async Shortcode", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addShortcode(
+    "postfixWithZach",
+    function(str) {
+      return new Promise(function(resolve) {
+        setTimeout(function() {
+          resolve(str + "Zach");
+        });
+      });
+    },
+    true
+  );
+
+  t.is(
+    await tr._testRender("{% postfixWithZach name %}", { name: "test" }),
+    "testZach"
+  );
+});
+
+test("Nunjucks Async function Shortcode", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addShortcode(
+    "postfixWithZach",
+    async function(str) {
+      return await getPromise(str + "Zach");
+    },
+    true
+  );
+
+  t.is(
+    await tr._testRender("{% postfixWithZach name %}", { name: "test" }),
+    "testZach"
+  );
+});
+
+test("Nunjucks Async function Shortcode (with sync function, error throwing)", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addShortcode(
+    "postfixWithZach",
+    function(str) {
+      throw new Error(
+        "Nunjucks Async function Shortcode (with sync function, error throwing)"
+      );
+    },
+    true
+  );
+
+  let error = await t.throwsAsync(async () => {
+    await tr._testRender("{% postfixWithZach name %}", { name: "test" });
+  });
+  t.true(
+    error.message.indexOf(
+      "Nunjucks Async function Shortcode (with sync function, error throwing)"
+    ) > -1
+  );
+});
+
+test("Nunjucks Async function Shortcode (with async function, error throwing)", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addShortcode(
+    "postfixWithZachError",
+    async function(str) {
+      throw new Error(
+        "Nunjucks Async function Shortcode (with async function, error throwing)"
+      );
+    },
+    true
+  );
+
+  let error = await t.throwsAsync(async () => {
+    await tr._testRender("{% postfixWithZachError name %}", { name: "test" });
+  });
+  t.true(
+    error.message.indexOf(
+      "Nunjucks Async function Shortcode (with async function, error throwing)"
+    ) > -1
+  );
+});
+
+test("Nunjucks Async function paired Shortcode (with sync function, error throwing)", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addPairedShortcode(
+    "postfixWithZachError",
+    function(str) {
+      throw new Error(
+        "Nunjucks Async function paired Shortcode (with sync function, error throwing)"
+      );
+    },
+    true
+  );
+
+  let error = await t.throwsAsync(async () => {
+    await tr._testRender(
+      "{% postfixWithZachError name %}hi{% endpostfixWithZachError %}",
+      { name: "test" }
+    );
+  });
+  t.true(
+    error.message.indexOf(
+      "Nunjucks Async function paired Shortcode (with sync function, error throwing)"
+    ) > -1
+  );
+});
+
+test("Nunjucks Async function paired Shortcode (with async function, error throwing)", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addPairedShortcode(
+    "postfixWithZachError",
+    async function(str) {
+      throw new Error(
+        "Nunjucks Async function paired Shortcode (with async function, error throwing)"
+      );
+    },
+    true
+  );
+
+  let error = await t.throwsAsync(async () => {
+    await tr._testRender(
+      "{% postfixWithZachError name %}hi{% endpostfixWithZachError %}",
+      { name: "test" }
+    );
+  });
+  t.true(
+    error.message.indexOf(
+      "Nunjucks Async function paired Shortcode (with async function, error throwing)"
+    ) > -1
   );
 });
 
@@ -241,7 +400,7 @@ test("Nunjucks Shortcode Safe Output", async t => {
   });
 
   t.is(
-    await tr.render("{% postfixWithZach name %}", { name: "test" }),
+    await tr._testRender("{% postfixWithZach name %}", { name: "test" }),
     "<span>test</span>"
   );
 });
@@ -253,7 +412,30 @@ test("Nunjucks Paired Shortcode", async t => {
   });
 
   t.is(
-    await tr.render(
+    await tr._testRender(
+      "{% postfixWithZach name %}Content{% endpostfixWithZach %}",
+      { name: "test" }
+    ),
+    "testContentZach"
+  );
+});
+
+test("Nunjucks Async Paired Shortcode", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addPairedShortcode(
+    "postfixWithZach",
+    function(content, str) {
+      return new Promise(function(resolve) {
+        setTimeout(function() {
+          resolve(str + content + "Zach");
+        });
+      });
+    },
+    true
+  );
+
+  t.is(
+    await tr._testRender(
       "{% postfixWithZach name %}Content{% endpostfixWithZach %}",
       { name: "test" }
     ),
@@ -268,7 +450,10 @@ test("Nunjucks Paired Shortcode without args", async t => {
   });
 
   t.is(
-    await tr.render("{% postfixWithZach %}Content{% endpostfixWithZach %}", {}),
+    await tr._testRender(
+      "{% postfixWithZach %}Content{% endpostfixWithZach %}",
+      {}
+    ),
     "ContentZach"
   );
 });
@@ -280,7 +465,7 @@ test("Nunjucks Paired Shortcode with Tag Inside", async t => {
   });
 
   t.is(
-    await tr.render(
+    await tr._testRender(
       "{% postfixWithZach name %}Content{% if tester %}If{% endif %}{% endpostfixWithZach %}",
       { name: "test", tester: true }
     ),
@@ -295,7 +480,7 @@ test("Nunjucks Nested Paired Shortcode", async t => {
   });
 
   t.is(
-    await tr.render(
+    await tr._testRender(
       "{% postfixWithZach name %}Content{% postfixWithZach name2 %}Content{% endpostfixWithZach %}{% endpostfixWithZach %}",
       { name: "test", name2: "test2" }
     ),
@@ -310,12 +495,26 @@ test("Nunjucks Shortcode Multiple Args", async t => {
   });
 
   t.is(
-    await tr.render("{% postfixWithZach name, other %}", {
+    await tr._testRender("{% postfixWithZach name, other %}", {
       name: "test",
       other: "howdy"
     }),
     "testhowdyZach"
   );
+});
+
+test("Nunjucks Shortcode Multiple Args (Comma is required)", async t => {
+  let tr = new TemplateRender("njk", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", function(str, str2) {
+    return str + str2 + "Zach";
+  });
+
+  await t.throwsAsync(async () => {
+    await tr._testRender("{% postfixWithZach name other %}", {
+      name: "test",
+      other: "howdy"
+    });
+  });
 });
 
 test("Nunjucks Shortcode Named Args", async t => {
@@ -325,7 +524,7 @@ test("Nunjucks Shortcode Named Args", async t => {
   });
 
   t.is(
-    await tr.render("{% postfixWithZach arg1=name, arg2=other %}", {
+    await tr._testRender("{% postfixWithZach arg1=name, arg2=other %}", {
       name: "test",
       other: "howdy"
     }),
@@ -340,7 +539,7 @@ test("Nunjucks Shortcode Named Args (Reverse Order)", async t => {
   });
 
   t.is(
-    await tr.render("{% postfixWithZach arg2=other, arg1=name %}", {
+    await tr._testRender("{% postfixWithZach arg2=other, arg1=name %}", {
       name: "test",
       other: "howdy"
     }),
@@ -355,7 +554,7 @@ test("Nunjucks Shortcode Named Args (JS notation)", async t => {
   });
 
   t.is(
-    await tr.render("{% postfixWithZach { arg1: name, arg2: other } %}", {
+    await tr._testRender("{% postfixWithZach { arg1: name, arg2: other } %}", {
       name: "test",
       other: "howdy"
     }),
@@ -367,21 +566,24 @@ test("Nunjucks Test if statements on arrays (Issue #524)", async t => {
   let tr = new TemplateRender("njk", "./test/stubs/");
 
   t.is(
-    await tr.render("{% if 'first' in tags %}Success.{% endif %}", {
+    await tr._testRender("{% if 'first' in tags %}Success.{% endif %}", {
       tags: ["first", "second"]
     }),
     "Success."
   );
 
   t.is(
-    await tr.render("{% if 'sdfsdfs' in tags %}{% else %}Success.{% endif %}", {
-      tags: ["first", "second"]
-    }),
+    await tr._testRender(
+      "{% if 'sdfsdfs' in tags %}{% else %}Success.{% endif %}",
+      {
+        tags: ["first", "second"]
+      }
+    ),
     "Success."
   );
 
   t.is(
-    await tr.render(
+    await tr._testRender(
       "{% if false %}{% elseif 'first' in tags %}Success.{% endif %}",
       {
         tags: ["first", "second"]
@@ -391,14 +593,14 @@ test("Nunjucks Test if statements on arrays (Issue #524)", async t => {
   );
 
   t.is(
-    await tr.render("{% if tags.includes('first') %}Success.{% endif %}", {
+    await tr._testRender("{% if tags.includes('first') %}Success.{% endif %}", {
       tags: ["first", "second"]
     }),
     "Success."
   );
 
   t.is(
-    await tr.render(
+    await tr._testRender(
       "{% if tags.includes('dsds') %}{% else %}Success.{% endif %}",
       {
         tags: ["first", "second"]
@@ -408,7 +610,7 @@ test("Nunjucks Test if statements on arrays (Issue #524)", async t => {
   );
 
   t.is(
-    await tr.render(
+    await tr._testRender(
       "{% if false %}{% elseif tags.includes('first') %}Success.{% endif %}",
       {
         tags: ["first", "second"]
@@ -423,7 +625,7 @@ test("Issue 611: Run a function", async t => {
   let tr = new TemplateRender("njk", "./test/stubs/");
 
   t.is(
-    await tr.render("{{ test() }}", {
+    await tr._testRender("{{ test() }}", {
       test: function() {
         return "alkdsjfksljaZach";
       }

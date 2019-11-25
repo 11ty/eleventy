@@ -14,6 +14,7 @@ const config = require("./Config");
 const debugWarn = require("debug")("Eleventy:Warnings");
 const debug = require("debug")("Eleventy:TemplateData");
 const debugDev = require("debug")("Dev:Eleventy:TemplateData");
+const deleteRequireCache = require("./Util/DeleteRequireCache");
 
 class TemplateDataParseError extends EleventyBaseError {}
 
@@ -233,7 +234,7 @@ class TemplateData {
       if (await fs.pathExists(localPath)) {
         let dataBench = bench.get(`\`${path}\``);
         dataBench.before();
-        delete require.cache[localPath];
+        deleteRequireCache(localPath);
         let returnValue = require(localPath);
         if (typeof returnValue === "function") {
           returnValue = await returnValue();

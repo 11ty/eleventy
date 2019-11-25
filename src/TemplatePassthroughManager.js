@@ -15,6 +15,8 @@ class TemplatePassthroughManager {
 
   reset() {
     this.count = 0;
+    this.skippedCount = 0;
+    this.incrementalFile = null;
     debug("Resetting counts to 0");
   }
 
@@ -34,12 +36,16 @@ class TemplatePassthroughManager {
     this.isDryRun = !!isDryRun;
   }
 
+  setIncrementalFile(path) {
+    this.incrementalFile = path;
+  }
+
   _normalizePaths(path, outputPath) {
     return {
       inputPath: TemplatePath.addLeadingDotSlash(path),
-      outputPath: TemplatePath.stripLeadingDotSlash(
-        outputPath !== undefined ? outputPath : path
-      )
+      outputPath: outputPath
+        ? TemplatePath.stripLeadingDotSlash(outputPath)
+        : true
     };
   }
 
@@ -85,17 +91,33 @@ class TemplatePassthroughManager {
     return this.count;
   }
 
+  getSkippedCount() {
+    return this.skippedCount;
+  }
+
   async copyPath(path) {
     let pass = new TemplatePassthrough(path, this.outputDir, this.inputDir);
-    pass.setDryRun(this.isDryRun);
+
+    if (this.incrementalFile && path.inputPath !== this.incrementalFile) {
+      pass.setDryRun(true);
+    } else {
+      pass.setDryRun(this.isDryRun);
+    }
+
     return pass
       .write()
-      .then(
-        function() {
+      .then(() => {
+        if (pass.isDryRun) {
+          this.skippedCount++;
+          debug(
+            "Skipped %o (either from --dryrun or --incremental)",
+            path.inputPath
+          );
+        } else {
           this.count++;
           debug("Copied %o", path.inputPath);
-        }.bind(this)
-      )
+        }
+      })
       .catch(function(e) {
         return Promise.reject(
           new TemplatePassthroughManagerCopyError(

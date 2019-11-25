@@ -97,10 +97,14 @@ class TemplateEngine {
     return this.engineLib;
   }
 
-  async render(str, data) {
+  async _testRender(str, data) {
     /* TODO compile needs to pass in inputPath? */
-    let fn = await this.compile(str);
-    return fn(data);
+    try {
+      let fn = await this.compile(str);
+      return fn(data);
+    } catch (e) {
+      return Promise.reject(e);
+    }
   }
 
   // JavaScript files defer to the module loader rather than read the files to strings

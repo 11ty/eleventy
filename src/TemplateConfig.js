@@ -3,9 +3,9 @@ const chalk = require("chalk");
 const lodashMerge = require("lodash/merge");
 const TemplatePath = require("./TemplatePath");
 const EleventyBaseError = require("./EleventyBaseError");
-const dependencyTree = require("dependency-tree");
 const eleventyConfig = require("./EleventyConfig");
 const debug = require("debug")("Eleventy:TemplateConfig");
+const deleteRequireCache = require("./Util/DeleteRequireCache");
 
 class EleventyConfigError extends EleventyBaseError {}
 
@@ -77,11 +77,25 @@ class TemplateConfig {
       try {
         // remove from require cache so it will grab a fresh copy
         if (path in require.cache) {
-          delete require.cache[path];
+          deleteRequireCache(path);
         }
 
         localConfig = require(path);
         // debug( "localConfig require return value: %o", localConfig );
+
+        if (typeof localConfig === "function") {
+          localConfig = localConfig(eleventyConfig);
+          // debug( "localConfig is a function, after calling, eleventyConfig is %o", eleventyConfig );
+
+          if (
+            typeof localConfig === "object" &&
+            typeof localConfig.then === "function"
+          ) {
+            throw new EleventyConfigError(
+              `Error in your Eleventy config file '${path}': Returning a promise is not supported`
+            );
+          }
+        }
       } catch (err) {
         throw new EleventyConfigError(
           `Error in your Eleventy config file '${path}'.` +
@@ -93,20 +107,6 @@ class TemplateConfig {
       }
     } else {
       debug("Eleventy local project config file not found, skipping.");
-    }
-
-    if (typeof localConfig === "function") {
-      localConfig = localConfig(eleventyConfig);
-      // debug( "localConfig is a function, after calling, eleventyConfig is %o", eleventyConfig );
-
-      if (
-        typeof localConfig === "object" &&
-        typeof localConfig.then === "function"
-      ) {
-        throw new EleventyConfigError(
-          `Error in your Eleventy config file '${path}': Returning a promise is not supported`
-        );
-      }
     }
 
     let eleventyConfigApiMergingObject = eleventyConfig.getMergingConfigObject();

@@ -145,3 +145,10 @@ test("Deep, override: prefix at other placements", t => {
     }
   );
 });
+
+test("Deep, override: empty", t => {
+  t.deepEqual(Merge({}, { a: { b: [3, 4] } }), { a: { b: [3, 4] } });
+  t.deepEqual(Merge({}, { a: [2] }), { a: [2] });
+  t.deepEqual(Merge({}, { "override:a": [2] }), { a: [2] });
+  t.deepEqual(Merge({}, { a: { "override:b": [3, 4] } }), { a: { b: [3, 4] } });
+});
