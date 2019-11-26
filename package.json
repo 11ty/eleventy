@@ -81,7 +81,8 @@
     "toml": "^3.0.0",
     "viperhtml": "^2.17.0",
     "vue": "^2.6.10",
-    "vue-server-renderer": "^2.6.10"
+    "vue-server-renderer": "^2.6.10",
+    "js-yaml": "^3.13.1"
   },
   "dependencies": {
     "@11ty/dependency-tree": "^1.0.0",
