@@ -68,7 +68,7 @@
   },
   "devDependencies": {
     "@11ty/eleventy-plugin-syntaxhighlight": "^2.0.3",
-    "ava": "^2.2.0",
+    "ava": "^2.4.0",
     "ink-docstrap": "1.3.2",
     "jsdoc": "3.6.2",
     "lint-staged": "^9.2.5",
