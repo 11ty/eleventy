@@ -18,8 +18,28 @@ test("Liquid Render Addition", async t => {
   let fn = await new TemplateRender("liquid").getCompiledTemplate(
     "<p>{{ number | plus: 1 }}</p>"
   );
-  // Important for pagination. This currently outputs 1.
   t.is(await fn({ number: 1 }), "<p>2</p>");
+});
+
+test("Liquid Render Raw", async t => {
+  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+    "<p>{% raw %}{{name}}{% endraw %}</p>"
+  );
+  t.is(await fn({ name: "tim" }), "<p>{{name}}</p>");
+});
+
+test("Liquid Render Raw Multiline", async t => {
+  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+    `<p>{% raw %}
+{{name}}
+{% endraw %}</p>`
+  );
+  t.is(
+    await fn({ name: "tim" }),
+    `<p>
+{{name}}
+</p>`
+  );
 });
 
 test("Liquid Render (with Helper)", async t => {
