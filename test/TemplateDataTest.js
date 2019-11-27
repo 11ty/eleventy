@@ -52,6 +52,7 @@ test("Add local data", async t => {
   t.is(withLocalData.localdatakey1, "localdatavalue1");
 
   // from the js file
+  // this checks priority/overrides
   t.is(withLocalData.localdatakeyfromjs, "howdydoody");
   t.is(withLocalData.localdatakeyfromjs2, "howdy2");
 });
