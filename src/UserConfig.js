@@ -55,6 +55,7 @@ class UserConfig {
     // this.userExtensionMap = {};
     // this.templateExtensionAliases = {};
     this.watchJavaScriptDependencies = true;
+    this.additionalWatchTargets = [];
     this.browserSyncConfig = {};
 
     // using Map to preserve insertion order
@@ -560,6 +561,10 @@ class UserConfig {
   //   this.templateExtensionAliases[extension] = targetKey;
   // }
 
+  addWatchTarget(additionalWatchTargets) {
+    this.additionalWatchTargets.push(additionalWatchTargets);
+  }
+
   setWatchJavaScriptDependencies(watchEnabled) {
     this.watchJavaScriptDependencies = !!watchEnabled;
   }
@@ -605,6 +610,7 @@ class UserConfig {
       experiments: this.experiments,
       // templateExtensionAliases: this.templateExtensionAliases,
       watchJavaScriptDependencies: this.watchJavaScriptDependencies,
+      additionalWatchTargets: this.additionalWatchTargets,
       browserSyncConfig: this.browserSyncConfig,
       frontMatterParsingOptions: this.frontMatterParsingOptions,
       dataExtensions: this.dataExtensions

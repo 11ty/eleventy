@@ -73,8 +73,7 @@ class Eleventy {
 
     /** @member {Object} - tbd. */
     this.watchTargets = new EleventyWatchTargets();
-
-    /** @member {Object} - tbd. */
+    this.watchTargets.add(this.config.additionalWatchTargets);
     this.watchTargets.watchJavaScriptDependencies = this.config.watchJavaScriptDependencies;
   }
 
