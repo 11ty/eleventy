@@ -73,7 +73,7 @@ class Eleventy {
 
     /** @member {Object} - tbd. */
     this.watchTargets = new EleventyWatchTargets();
-    this.watchTargets.add(this.config.additionalWatchTargets);
+    this.watchTargets.addAndMakeGlob(this.config.additionalWatchTargets);
     this.watchTargets.watchJavaScriptDependencies = this.config.watchJavaScriptDependencies;
   }
 
@@ -559,8 +559,7 @@ Arguments:
     debug("Watching for changes to: %o", rawFiles);
 
     let ignores = this.eleventyFiles.getGlobWatcherIgnores();
-    debug("Watching but ignoring changes to: %o", ignores);
-
+    debug("Ignoring watcher changes to: %o", ignores);
     let watcher = chokidar.watch(rawFiles, {
       ignored: ignores,
       ignoreInitial: true

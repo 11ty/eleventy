@@ -61,6 +61,13 @@ class EleventyWatchTargets {
     this.addRaw(targets);
   }
 
+  addAndMakeGlob(targets) {
+    targets = this._normalizeTargets(targets).map(entry =>
+      TemplatePath.convertToRecursiveGlob(entry)
+    );
+    this.addRaw(targets);
+  }
+
   // add only a target’s dependencies
   addDependencies(targets, filterCallback) {
     if (!this.watchJavaScriptDependencies) {
