@@ -183,7 +183,9 @@ class EleventyFiles {
         })
         .filter(line => {
           // empty lines or comments get filtered out
-          return line.length > 0 && line.charAt(0) !== "#";
+          return (
+            line.length > 0 && line.charAt(0) !== "#" && line.charAt(0) !== "!"
+          );
         })
         .map(line => {
           let path = TemplateGlob.normalizePath(dir, "/", line);
