@@ -182,6 +182,16 @@ class EleventyFiles {
           return line.trim();
         })
         .filter(line => {
+          if (line.charAt(0) === "!") {
+            debug(
+              ">>> When processing .gitignore/.eleventyignore, Eleventy does not currently support negative patterns but encountered one:"
+            );
+            debug(">>>", line);
+            debug(
+              "Follow along at https://github.com/11ty/eleventy/issues/693 to track support."
+            );
+          }
+
           // empty lines or comments get filtered out
           return (
             line.length > 0 && line.charAt(0) !== "#" && line.charAt(0) !== "!"
