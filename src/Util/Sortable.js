@@ -37,11 +37,11 @@ class Sortable {
   }
 
   sortAscending() {
-    return this.sort(this.getSortFunctionAscending);
+    return this.sort(this.getSortFunctionAscending());
   }
 
   sortDescending() {
-    return this.sort(this.getSortFunctionDescending);
+    return this.sort(this.getSortFunctionDescending());
   }
 
   isSortAscending() {
