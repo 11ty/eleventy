@@ -39,7 +39,7 @@ class Eleventy {
      * @member {Boolean} - Is Eleventy running in verbose mode?
      * @default true
      */
-    this.isVerbose = true;
+    this.isVerbose = process.env.DEBUG ? false : !this.config.quietMode;
 
     /**
      * @member {Boolean} - Is Eleventy running in debug mode?
@@ -290,7 +290,8 @@ Data: ${this.templateData.getDataDir()}
 Includes: ${this.eleventyFiles.getIncludesDir()}
 Layouts: ${this.eleventyFiles.getLayoutsDir()}
 Output: ${this.outputDir}
-Template Formats: ${formats.join(",")}`);
+Template Formats: ${formats.join(",")}
+Verbose Output: ${this.isVerbose}`);
 
     this.writer.setVerboseOutput(this.isVerbose);
     this.writer.setDryRun(this.isDryRun);

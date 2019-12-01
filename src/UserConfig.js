@@ -60,6 +60,8 @@ class UserConfig {
 
     // using Map to preserve insertion order
     this.dataExtensions = new Map();
+
+    this.quietMode = false;
   }
 
   versionCheck(expected) {
@@ -577,6 +579,10 @@ class UserConfig {
     this.frontMatterParsingOptions = options;
   }
 
+  setQuietMode(quietMode) {
+    this.quietMode = !!quietMode;
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
@@ -613,7 +619,8 @@ class UserConfig {
       additionalWatchTargets: this.additionalWatchTargets,
       browserSyncConfig: this.browserSyncConfig,
       frontMatterParsingOptions: this.frontMatterParsingOptions,
-      dataExtensions: this.dataExtensions
+      dataExtensions: this.dataExtensions,
+      quietMode: this.quietMode
     };
   }
 
