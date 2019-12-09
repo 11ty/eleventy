@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const pkg = require("./package.json");
-const chalk = require("chalk"); // node 4+
+const chalk = require("chalk"); // node 8+
 require("please-upgrade-node")(pkg, {
   message: function(requiredVersion) {
     return chalk.red(
