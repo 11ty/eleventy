@@ -182,8 +182,20 @@ class EleventyFiles {
           return line.trim();
         })
         .filter(line => {
+          if (line.charAt(0) === "!") {
+            debug(
+              ">>> When processing .gitignore/.eleventyignore, Eleventy does not currently support negative patterns but encountered one:"
+            );
+            debug(">>>", line);
+            debug(
+              "Follow along at https://github.com/11ty/eleventy/issues/693 to track support."
+            );
+          }
+
           // empty lines or comments get filtered out
-          return line.length > 0 && line.charAt(0) !== "#";
+          return (
+            line.length > 0 && line.charAt(0) !== "#" && line.charAt(0) !== "!"
+          );
         })
         .map(line => {
           let path = TemplateGlob.normalizePath(dir, "/", line);
@@ -209,29 +221,28 @@ class EleventyFiles {
 
   getIgnores() {
     let files = [];
+    let rootDirectory = this.localPathRoot || TemplatePath.getWorkingDir();
+    let absoluteInputDir = TemplatePath.absolutePath(this.inputDir);
     if (this.config.useGitIgnore) {
+      let gitIgnores = [TemplatePath.join(rootDirectory, ".gitignore")];
+      if (rootDirectory !== absoluteInputDir) {
+        gitIgnores.push(TemplatePath.join(this.inputDir, ".gitignore"));
+      }
+
       files = files.concat(
-        EleventyFiles.getFileIgnores(
-          [
-            TemplatePath.join(
-              this.localPathRoot || TemplatePath.getWorkingDir(),
-              ".gitignore"
-            ),
-            TemplatePath.join(this.inputDir, ".gitignore")
-          ],
-          "node_modules/**"
-        )
+        EleventyFiles.getFileIgnores(gitIgnores, "node_modules/**")
       );
     }
 
     if (this.config.eleventyignoreOverride !== false) {
       let eleventyIgnores = [
-        TemplatePath.join(
-          this.localPathRoot || TemplatePath.getWorkingDir(),
-          ".eleventyignore"
-        ),
-        TemplatePath.join(this.inputDir, ".eleventyignore")
+        TemplatePath.join(rootDirectory, ".eleventyignore")
       ];
+      if (rootDirectory !== absoluteInputDir) {
+        eleventyIgnores.push(
+          TemplatePath.join(this.inputDir, ".eleventyignore")
+        );
+      }
 
       files = files.concat(
         this.config.eleventyignoreOverride ||

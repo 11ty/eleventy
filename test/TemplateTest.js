@@ -1138,6 +1138,26 @@ test("Test a transform", async t => {
   t.is(renders[0], "OVERRIDE BY A TRANSFORM");
 });
 
+// #789: https://github.com/11ty/eleventy/issues/789
+test.skip("Test a transform (does it have inputPath?)", async t => {
+  t.plan(3);
+
+  let tmpl = new Template(
+    "./test/stubs/template.ejs",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  tmpl.addTransform(function(content, outputPath, inputPath) {
+    t.true(outputPath.endsWith(".html"));
+    t.true(!!inputPath);
+    return "OVERRIDE BY A TRANSFORM";
+  });
+
+  let renders = await tmpl._testCompleteRender();
+  t.is(renders[0], "OVERRIDE BY A TRANSFORM");
+});
+
 test("Test a transform with pages", async t => {
   t.plan(5);
 

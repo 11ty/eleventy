@@ -1,0 +1,2 @@
+datakey1: datavalue2
+datakey2: "{{pkg.name}}--yaml"

@@ -2,8 +2,8 @@ const capitalize = require("./Capitalize");
 
 class Sortable {
   constructor() {
-    this.sortAscending = true;
-    this.sortNumeric = false;
+    this.isSortAscending = true;
+    this.isSortNumeric = false;
     this.items = [];
 
     this.sortFunctionStringMap = {
@@ -37,31 +37,23 @@ class Sortable {
   }
 
   sortAscending() {
-    return this.sort(this.getSortFunctionAscending);
+    return this.sort(this.getSortFunctionAscending());
   }
 
   sortDescending() {
-    return this.sort(this.getSortFunctionDescending);
-  }
-
-  isSortAscending() {
-    return this.sortAscending;
-  }
-
-  isSortNumeric() {
-    return this.sortNumeric;
+    return this.sort(this.getSortFunctionDescending());
   }
 
   setSortDescending() {
-    this.sortAscending = false;
+    this.isSortAscending = false;
   }
 
   setSortAscending(isAscending) {
-    this.sortAscending = isAscending;
+    this.isSortAscending = isAscending;
   }
 
   setSortNumeric(isNumeric) {
-    this.sortNumeric = isNumeric;
+    this.isSortNumeric = isNumeric;
   }
 
   /* Sort functions */
@@ -117,7 +109,7 @@ class Sortable {
   /* End sort functions */
 
   getSortFunction() {
-    if (this.sortAscending) {
+    if (this.isSortAscending) {
       return this.getSortFunctionAscending();
     } else {
       return this.getSortFunctionDescending();
@@ -125,7 +117,7 @@ class Sortable {
   }
 
   getSortFunctionAscending() {
-    if (this.sortNumeric) {
+    if (this.isSortNumeric) {
       return Sortable.sortFunctionNumericAscending;
     } else {
       return Sortable.sortFunctionAlphabeticAscending;
@@ -133,7 +125,7 @@ class Sortable {
   }
 
   getSortFunctionDescending() {
-    if (this.sortNumeric) {
+    if (this.isSortNumeric) {
       return Sortable.sortFunctionNumericDescending;
     } else {
       return Sortable.sortFunctionAlphabeticDescending;

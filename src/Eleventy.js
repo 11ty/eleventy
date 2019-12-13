@@ -39,7 +39,7 @@ class Eleventy {
      * @member {Boolean} - Is Eleventy running in verbose mode?
      * @default true
      */
-    this.isVerbose = true;
+    this.isVerbose = process.env.DEBUG ? false : !this.config.quietMode;
 
     /**
      * @member {Boolean} - Is Eleventy running in debug mode?
@@ -73,8 +73,7 @@ class Eleventy {
 
     /** @member {Object} - tbd. */
     this.watchTargets = new EleventyWatchTargets();
-
-    /** @member {Object} - tbd. */
+    this.watchTargets.addAndMakeGlob(this.config.additionalWatchTargets);
     this.watchTargets.watchJavaScriptDependencies = this.config.watchJavaScriptDependencies;
   }
 
@@ -234,15 +233,21 @@ class Eleventy {
       }`
     );
 
+    let versionStr = `v${pkg.version}`;
     let time = ((new Date() - this.start) / 1000).toFixed(2);
     ret.push(`in ${time} ${simplePlural(time, "second", "seconds")}`);
 
     if (writeCount >= 10) {
       ret.push(
-        `(${((time * 1000) / writeCount).toFixed(1)}ms each, v${pkg.version})`
+        `(${((time * 1000) / writeCount).toFixed(1)}ms each, ${versionStr})`
       );
     } else {
-      ret.push(`(v${pkg.version})`);
+      ret.push(`(${versionStr})`);
+    }
+
+    let pathPrefix = this.config.pathPrefix;
+    if (pathPrefix && pathPrefix !== "/") {
+      return `Using pathPrefix: ${pathPrefix}\n${ret.join(" ")}`;
     }
 
     return ret.join(" ");
@@ -285,7 +290,8 @@ Data: ${this.templateData.getDataDir()}
 Includes: ${this.eleventyFiles.getIncludesDir()}
 Layouts: ${this.eleventyFiles.getLayoutsDir()}
 Output: ${this.outputDir}
-Template Formats: ${formats.join(",")}`);
+Template Formats: ${formats.join(",")}
+Verbose Output: ${this.isVerbose}`);
 
     this.writer.setVerboseOutput(this.isVerbose);
     this.writer.setDryRun(this.isDryRun);
@@ -560,8 +566,7 @@ Arguments:
     debug("Watching for changes to: %o", rawFiles);
 
     let ignores = this.eleventyFiles.getGlobWatcherIgnores();
-    debug("Watching but ignoring changes to: %o", ignores);
-
+    debug("Ignoring watcher changes to: %o", ignores);
     let watcher = chokidar.watch(rawFiles, {
       ignored: ignores,
       ignoreInitial: true

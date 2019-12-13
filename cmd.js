@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const pkg = require("./package.json");
-const chalk = require("chalk"); // node 4+
+const chalk = require("chalk"); // node 8+
 require("please-upgrade-node")(pkg, {
   message: function(requiredVersion) {
     return chalk.red(
@@ -46,9 +46,9 @@ try {
   elev.setIncrementalBuild(argv.incremental);
   elev.setPassthroughAll(argv.passthroughall);
   elev.setFormats(argv.formats);
-
-  let isVerbose = process.env.DEBUG ? false : !argv.quiet;
-  elev.setIsVerbose(isVerbose);
+  if (argv.quiet) {
+    elev.setIsVerbose(false);
+  }
 
   // careful, we can’t use async/await here to error properly
   // with old node versions in `please-upgrade-node` above.

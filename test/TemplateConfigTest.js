@@ -328,3 +328,15 @@ test("Properly throws error when config returns a Promise", t => {
     );
   });
 });
+
+test(".addWatchTarget adds a watch target", t => {
+  eleventyConfig.reset();
+  eleventyConfig.addWatchTarget("/testdirectory/");
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.deepEqual(cfg.additionalWatchTargets, ["/testdirectory/"]);
+});
