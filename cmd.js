@@ -16,7 +16,12 @@ if (process.env.DEBUG) {
 const EleventyErrorHandler = require("./src/EleventyErrorHandler");
 
 try {
-  const argv = require("minimist")(process.argv.slice(2));
+  const argv = require("minimist")(process.argv.slice(2), {
+    boolean: ["quiet"],
+    default: {
+      quiet: null
+    }
+  });
   const Eleventy = require("./src/Eleventy");
   const EleventyCommandCheck = require("./src/EleventyCommandCheck");
 
@@ -36,6 +41,7 @@ try {
     );
   });
 
+  // TODO refactor to use minimist options.unknown callback?
   let cmdCheck = new EleventyCommandCheck(argv);
   cmdCheck.hasUnknownArguments();
 
@@ -46,8 +52,10 @@ try {
   elev.setIncrementalBuild(argv.incremental);
   elev.setPassthroughAll(argv.passthroughall);
   elev.setFormats(argv.formats);
-  if (argv.quiet) {
-    elev.setIsVerbose(false);
+
+  // --quiet and --quiet=true resolves to true
+  if (argv.quiet === true || argv.quiet === false) {
+    elev.setIsVerbose(!argv.quiet);
   }
 
   // careful, we can’t use async/await here to error properly

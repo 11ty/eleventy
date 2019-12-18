@@ -42,6 +42,12 @@ class Eleventy {
     this.isVerbose = process.env.DEBUG ? false : !this.config.quietMode;
 
     /**
+     * @member {Boolean} - Was verbose mode overrode manually?
+     * @default false
+     */
+    this.isVerboseOverride = false;
+
+    /**
      * @member {Boolean} - Is Eleventy running in debug mode?
      * @default false
      */
@@ -283,7 +289,6 @@ class Eleventy {
 
     this.writer.setEleventyFiles(this.eleventyFiles);
 
-    // TODO maybe isVerbose -> console.log?
     debug(`Directories:
 Input: ${this.inputDir}
 Data: ${this.templateData.getDataDir()}
@@ -317,6 +322,10 @@ Verbose Output: ${this.isVerbose}`);
    */
   setIsVerbose(isVerbose) {
     this.isVerbose = !!isVerbose;
+
+    // mark that this was changed from the default (probably from --quiet)
+    // this is used when we reset the config (only applies if not overridden)
+    this.isVerboseOverride = true;
 
     if (this.writer) {
       this.writer.setVerboseOutput(this.isVerbose);
@@ -392,6 +401,10 @@ Arguments:
 
     this.config = config.getConfig();
     this.eleventyServe.config = this.config;
+
+    if (!this.isVerboseOverride && !process.env.DEBUG) {
+      this.isVerbose = !this.config.quietMode;
+    }
   }
 
   /**
