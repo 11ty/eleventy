@@ -195,6 +195,15 @@ class UserConfig {
     this.addHandlebarsHelper(name, callback);
   }
 
+  getFilter(name) {
+    return (
+      this.javascriptFunctions[name] ||
+      this.nunjucksFilters[name] ||
+      this.liquidFilters[name] ||
+      this.handlebarsHelpers[name]
+    );
+  }
+
   addNunjucksTag(name, tagFn) {
     name = this.getNamespacedName(name);
 
@@ -255,7 +264,8 @@ class UserConfig {
   addPlugin(plugin, options) {
     debug("Adding plugin (unknown name: check your config file).");
     if (typeof plugin === "function") {
-      plugin(this);
+      let configFunction = plugin;
+      configFunction(this, options);
     } else if (plugin && plugin.configFunction) {
       if (options && typeof options.init === "function") {
         options.init.call(this, plugin.initArguments || {});
