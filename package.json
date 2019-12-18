@@ -2,10 +2,17 @@
   "name": "@11ty/eleventy",
   "version": "0.10.0-beta.1",
   "description": "Transform a directory of templates into HTML.",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "src/Eleventy.js",
   "license": "MIT",
   "engines": {
     "node": ">=8"
+  },
+  "funding": {
+    "type": "opencollective",
+    "url": "https://opencollective.com/11ty"
   },
   "keywords": [
     "static-site-generator",
