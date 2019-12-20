@@ -76,6 +76,7 @@ test("getFilteredByTag", async t => {
   let cats = c.getFilteredByTag("cat");
   t.is(cats.length, 2);
   t.deepEqual(cats[0].template, tmpl2);
+  t.deepEqual(cats[1].template, tmpl3);
 
   let dogs = c.getFilteredByTag("dog");
   t.is(dogs.length, 1);
@@ -97,9 +98,53 @@ test("getFilteredByTag (added out of order, sorted)", async t => {
   t.truthy(cats.length);
   t.is(cats.length, 2);
   t.deepEqual(cats[0].template, tmpl2);
+  t.deepEqual(cats[1].template, tmpl3);
 
   let dogs = c.getFilteredByTag("dog");
   t.truthy(dogs.length);
+  t.deepEqual(dogs[0].template, tmpl1);
+});
+
+test("getFilteredByTags", async t => {
+  let c = new Collection();
+  await c._testAddTemplate(tmpl1);
+  await c._testAddTemplate(tmpl2);
+  await c._testAddTemplate(tmpl3);
+
+  let postsAndCats = c.getFilteredByTags("post", "cat");
+  t.is(postsAndCats.length, 1);
+  t.deepEqual(postsAndCats[0].template, tmpl3);
+
+  let cats = c.getFilteredByTags("cat");
+  t.is(cats.length, 2);
+  t.deepEqual(cats[0].template, tmpl2);
+  t.deepEqual(cats[1].template, tmpl3);
+
+  let dogs = c.getFilteredByTags("dog");
+  t.is(dogs.length, 1);
+  t.deepEqual(dogs[0].template, tmpl1);
+});
+
+test("getFilteredByTags (added out of order, sorted)", async t => {
+  let c = new Collection();
+  await c._testAddTemplate(tmpl3);
+  await c._testAddTemplate(tmpl2);
+  await c._testAddTemplate(tmpl1);
+
+  let postsAndCats = c.getFilteredByTags("post", "cat");
+  t.truthy(postsAndCats.length);
+  t.is(postsAndCats.length, 1);
+  t.deepEqual(postsAndCats[0].template, tmpl3);
+
+  let cats = c.getFilteredByTags("cat");
+  t.truthy(cats.length);
+  t.is(cats.length, 2);
+  t.deepEqual(cats[0].template, tmpl2);
+  t.deepEqual(cats[1].template, tmpl3);
+
+  let dogs = c.getFilteredByTags("dog");
+  t.truthy(dogs.length);
+  t.is(dogs.length, 1);
   t.deepEqual(dogs[0].template, tmpl1);
 });
 
