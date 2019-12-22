@@ -12,7 +12,6 @@ const config = require("./Config");
 const bench = require("./BenchmarkManager");
 const debug = require("debug")("Eleventy");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
-const sleep = require("es7-sleep");
 
 /**
  * @module @11ty/eleventy/Eleventy
@@ -413,7 +412,8 @@ Arguments:
         let triggerDelaySleep =
           this.config.watchTriggerDelay - timeSinceLastTrigger;
         console.log(`Waiting ${triggerDelaySleep} ms before processing.`);
-        await sleep(triggerDelaySleep);
+
+        await new Promise(resolve => setTimeout(resolve, triggerDelaySleep));
 
         // If the watch was triggered again, we need to wait for another period.
         timeSinceLastTrigger = new Date() - this.lastTriggerTime;
