@@ -1,10 +1,9 @@
 ---
 name: I want Eleventy do to this new thing
 about: Suggest an idea for this project
-title: ''
+title: ""
 labels: enhancement
-assignees: ''
-
+assignees: ""
 ---
 
 **Is your feature request related to a problem? Please describe.**

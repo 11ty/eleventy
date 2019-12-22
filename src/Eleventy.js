@@ -39,7 +39,13 @@ class Eleventy {
      * @member {Boolean} - Is Eleventy running in verbose mode?
      * @default true
      */
-    this.isVerbose = true;
+    this.isVerbose = process.env.DEBUG ? false : !this.config.quietMode;
+
+    /**
+     * @member {Boolean} - Was verbose mode overrode manually?
+     * @default false
+     */
+    this.isVerboseOverride = false;
 
     /**
      * @member {Boolean} - Is Eleventy running in debug mode?
@@ -73,8 +79,7 @@ class Eleventy {
 
     /** @member {Object} - tbd. */
     this.watchTargets = new EleventyWatchTargets();
-
-    /** @member {Object} - tbd. */
+    this.watchTargets.addAndMakeGlob(this.config.additionalWatchTargets);
     this.watchTargets.watchJavaScriptDependencies = this.config.watchJavaScriptDependencies;
   }
 
@@ -215,30 +220,40 @@ class Eleventy {
     let ret = [];
 
     let writeCount = this.writer.getWriteCount();
-    let pretendWriteCount = this.writer.getPretendWriteCount();
+    let skippedCount = this.writer.getSkippedCount();
+
     let copyCount = this.writer.getCopyCount();
-    if (!this.isDryRun && copyCount) {
+    let skippedCopyCount = this.writer.getSkippedCopyCount();
+
+    if (copyCount) {
       ret.push(
-        `Copied ${copyCount} ${simplePlural(copyCount, "item", "items")} /`
+        `Copied ${copyCount} ${simplePlural(copyCount, "item", "items")}${
+          skippedCopyCount ? ` (skipped ${skippedCopyCount})` : ""
+        } /`
       );
-    }
-    if (pretendWriteCount) {
-      ret.push(`Processed ${writeCount + pretendWriteCount},`);
     }
 
     ret.push(
-      `Wrote ${writeCount} ${simplePlural(writeCount, "file", "files")}`
+      `Wrote ${writeCount} ${simplePlural(writeCount, "file", "files")}${
+        skippedCount ? ` (skipped ${skippedCount})` : ""
+      }`
     );
 
+    let versionStr = `v${pkg.version}`;
     let time = ((new Date() - this.start) / 1000).toFixed(2);
     ret.push(`in ${time} ${simplePlural(time, "second", "seconds")}`);
 
     if (writeCount >= 10) {
       ret.push(
-        `(${((time * 1000) / writeCount).toFixed(1)}ms each, v${pkg.version})`
+        `(${((time * 1000) / writeCount).toFixed(1)}ms each, ${versionStr})`
       );
     } else {
-      ret.push(`(v${pkg.version})`);
+      ret.push(`(${versionStr})`);
+    }
+
+    let pathPrefix = this.config.pathPrefix;
+    if (pathPrefix && pathPrefix !== "/") {
+      return `Using pathPrefix: ${pathPrefix}\n${ret.join(" ")}`;
     }
 
     return ret.join(" ");
@@ -274,14 +289,14 @@ class Eleventy {
 
     this.writer.setEleventyFiles(this.eleventyFiles);
 
-    // TODO maybe isVerbose -> console.log?
     debug(`Directories:
 Input: ${this.inputDir}
 Data: ${this.templateData.getDataDir()}
 Includes: ${this.eleventyFiles.getIncludesDir()}
 Layouts: ${this.eleventyFiles.getLayoutsDir()}
 Output: ${this.outputDir}
-Template Formats: ${formats.join(",")}`);
+Template Formats: ${formats.join(",")}
+Verbose Output: ${this.isVerbose}`);
 
     this.writer.setVerboseOutput(this.isVerbose);
     this.writer.setDryRun(this.isDryRun);
@@ -307,6 +322,10 @@ Template Formats: ${formats.join(",")}`);
    */
   setIsVerbose(isVerbose) {
     this.isVerbose = !!isVerbose;
+
+    // mark that this was changed from the default (probably from --quiet)
+    // this is used when we reset the config (only applies if not overridden)
+    this.isVerboseOverride = true;
 
     if (this.writer) {
       this.writer.setVerboseOutput(this.isVerbose);
@@ -382,6 +401,10 @@ Arguments:
 
     this.config = config.getConfig();
     this.eleventyServe.config = this.config;
+
+    if (!this.isVerboseOverride && !process.env.DEBUG) {
+      this.isVerbose = !this.config.quietMode;
+    }
   }
 
   /**
@@ -443,8 +466,10 @@ Arguments:
             processingPath,
             this.eleventyFiles.getIncludesDir()
           );
+          let isJavaScriptDependency =
+              this.watchTargets.isJavaScriptDependency(path);
 
-          if (!isInclude) {
+          if (!isInclude && !isJavaScriptDependency) {
             this.writer.setIncrementalFile(processingPath);
           }
         }
@@ -591,8 +616,7 @@ Arguments:
     debug("Watching for changes to: %o", rawFiles);
 
     let ignores = this.eleventyFiles.getGlobWatcherIgnores();
-    debug("Watching but ignoring changes to: %o", ignores);
-
+    debug("Ignoring watcher changes to: %o", ignores);
     let watcher = chokidar.watch(rawFiles, {
       ignored: ignores,
       ignoreInitial: true

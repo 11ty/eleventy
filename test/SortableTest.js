@@ -9,24 +9,49 @@ test("get Sort Function", t => {
 
 test("Alphabetic Ascending", t => {
   let s = new Sortable();
+  t.false(s.isSortNumeric);
+  t.true(s.isSortAscending);
+
   s.add("a");
   s.add("z");
   s.add("m");
   t.deepEqual(s.sort(), ["a", "m", "z"]);
 });
 
+test("Alphabetic Ascending (shortcut)", t => {
+  let s = new Sortable();
+  s.add("a");
+  s.add("z");
+  s.add("m");
+  t.deepEqual(s.sortAscending(), ["a", "m", "z"]);
+});
+
 test("Alphabetic Descending", t => {
   let s = new Sortable();
   s.setSortDescending();
+  t.false(s.isSortNumeric);
+  t.false(s.isSortAscending);
+
   s.add("a");
   s.add("z");
   s.add("m");
   t.deepEqual(s.sort(), ["z", "m", "a"]);
 });
 
+test("Alphabetic Descending (shortcut)", t => {
+  let s = new Sortable();
+  s.add("a");
+  s.add("z");
+  s.add("m");
+  t.deepEqual(s.sortDescending(), ["z", "m", "a"]);
+});
+
 test("Numeric Ascending", t => {
   let s = new Sortable();
   s.setSortNumeric(true);
+  t.true(s.isSortNumeric);
+  t.true(s.isSortAscending);
+
   s.add(1);
   s.add(4);
   s.add(2);
@@ -37,6 +62,9 @@ test("Numeric Descending", t => {
   let s = new Sortable();
   s.setSortNumeric(true);
   s.setSortDescending();
+  t.true(s.isSortNumeric);
+  t.false(s.isSortAscending);
+
   s.add(1);
   s.add(4);
   s.add(2);
@@ -148,4 +176,20 @@ test("Alphabetic Descending (str sort arg)", t => {
   s.add("z");
   s.add("m");
   t.deepEqual(s.sort("descending"), ["z", "m", "a"]);
+});
+
+test("Alphabetic Ascending (short str sort arg)", t => {
+  let s = new Sortable();
+  s.add("a");
+  s.add("z");
+  s.add("m");
+  t.deepEqual(s.sort("A-Z"), ["a", "m", "z"]);
+});
+
+test("Alphabetic Descending (short str sort arg)", t => {
+  let s = new Sortable();
+  s.add("a");
+  s.add("z");
+  s.add("m");
+  t.deepEqual(s.sort("Z-A"), ["z", "m", "a"]);
 });

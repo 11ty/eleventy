@@ -23,6 +23,13 @@ test("Nunjucks Render", async t => {
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });
 
+test("Nunjucks Render Addition", async t => {
+  let fn = await new TemplateRender("njk").getCompiledTemplate(
+    "<p>{{ number + 1 }}</p>"
+  );
+  t.is(await fn({ number: 1 }), "<p>2</p>");
+});
+
 test("Nunjucks Render Extends", async t => {
   let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
     "{% extends 'base.njk' %}{% block content %}This is a child.{% endblock %}"

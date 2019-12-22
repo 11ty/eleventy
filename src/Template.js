@@ -45,6 +45,7 @@ class Template extends TemplateContent {
     this.isVerbose = true;
     this.isDryRun = false;
     this.writeCount = 0;
+    this.skippedCount = 0;
     this.wrapWithLayouts = true;
     this.fileSlug = new TemplateFileSlug(this.inputPath, this.inputDir);
     this.fileSlugStr = this.fileSlug.getSlug();
@@ -481,6 +482,12 @@ class Template extends TemplateContent {
   }
 
   async _write(outputPath, finalContent) {
+    let shouldWriteFile = true;
+
+    if (this.isDryRun) {
+      shouldWriteFile = false;
+    }
+
     if (outputPath === false) {
       debug(
         "Ignored %o from %o (permalink: false).",
@@ -490,17 +497,15 @@ class Template extends TemplateContent {
       return;
     }
 
-    this.writeCount++;
-
     let lang = {
       start: "Writing",
       finished: "written."
     };
 
-    if (this.isDryRun) {
+    if (!shouldWriteFile) {
       lang = {
-        start: "Pretending to write",
-        finished: "" // not used
+        start: "Skipping",
+        finished: "" // not used, promise doesn’t resolve
       };
     }
 
@@ -509,8 +514,12 @@ class Template extends TemplateContent {
     } else {
       debug(`${lang.start} %o from %o.`, outputPath, this.inputPath);
     }
-    if (!this.isDryRun) {
+
+    if (!shouldWriteFile) {
+      this.skippedCount++;
+    } else {
       return fs.outputFile(outputPath, finalContent).then(() => {
+        this.writeCount++;
         debug(`${outputPath} ${lang.finished}.`);
       });
     }
@@ -585,6 +594,10 @@ class Template extends TemplateContent {
 
   getWriteCount() {
     return this.writeCount;
+  }
+
+  getSkippedCount() {
+    return this.skippedCount;
   }
 
   async getMappedDate(data) {

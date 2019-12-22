@@ -595,3 +595,14 @@ test("File extension aliasing", async t => {
     ].sort()
   );
 });
+
+test("Test that negations are ignored (for now) PR#709, will change when #693 is implemented", async t => {
+  t.deepEqual(
+    EleventyFiles.normalizeIgnoreContent(
+      "./",
+      `hello
+!testing`
+    ),
+    ["!./hello"]
+  );
+});

@@ -55,7 +55,13 @@ class UserConfig {
     // this.userExtensionMap = {};
     // this.templateExtensionAliases = {};
     this.watchJavaScriptDependencies = true;
+    this.additionalWatchTargets = [];
     this.browserSyncConfig = {};
+
+    // using Map to preserve insertion order
+    this.dataExtensions = new Map();
+
+    this.quietMode = false;
   }
 
   versionCheck(expected) {
@@ -189,6 +195,15 @@ class UserConfig {
     this.addHandlebarsHelper(name, callback);
   }
 
+  getFilter(name) {
+    return (
+      this.javascriptFunctions[name] ||
+      this.nunjucksFilters[name] ||
+      this.liquidFilters[name] ||
+      this.handlebarsHelpers[name]
+    );
+  }
+
   addNunjucksTag(name, tagFn) {
     name = this.getNamespacedName(name);
 
@@ -249,7 +264,8 @@ class UserConfig {
   addPlugin(plugin, options) {
     debug("Adding plugin (unknown name: check your config file).");
     if (typeof plugin === "function") {
-      plugin(this);
+      let configFunction = plugin;
+      configFunction(this, options);
     } else if (plugin && plugin.configFunction) {
       if (options && typeof options.init === "function") {
         options.init.call(this, plugin.initArguments || {});
@@ -557,6 +573,10 @@ class UserConfig {
   //   this.templateExtensionAliases[extension] = targetKey;
   // }
 
+  addWatchTarget(additionalWatchTargets) {
+    this.additionalWatchTargets.push(additionalWatchTargets);
+  }
+
   setWatchJavaScriptDependencies(watchEnabled) {
     this.watchJavaScriptDependencies = !!watchEnabled;
   }
@@ -567,6 +587,10 @@ class UserConfig {
 
   setFrontMatterParsingOptions(options = {}) {
     this.frontMatterParsingOptions = options;
+  }
+
+  setQuietMode(quietMode) {
+    this.quietMode = !!quietMode;
   }
 
   getMergingConfigObject() {
@@ -602,14 +626,21 @@ class UserConfig {
       experiments: this.experiments,
       // templateExtensionAliases: this.templateExtensionAliases,
       watchJavaScriptDependencies: this.watchJavaScriptDependencies,
+      additionalWatchTargets: this.additionalWatchTargets,
       browserSyncConfig: this.browserSyncConfig,
-      frontMatterParsingOptions: this.frontMatterParsingOptions
+      frontMatterParsingOptions: this.frontMatterParsingOptions,
+      dataExtensions: this.dataExtensions,
+      quietMode: this.quietMode
     };
   }
 
   // addExtension(fileExtension, userClass) {
   //   this.userExtensionMap[ fileExtension ] = userClass;
   // }
+
+  addDataExtension(formatExtension, formatParser) {
+    this.dataExtensions.set(formatExtension, formatParser);
+  }
 }
 
 module.exports = UserConfig;

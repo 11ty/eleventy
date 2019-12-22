@@ -1,0 +1,4 @@
+{
+  "datakey1": "datavalue1",
+  "datakey2": "{{pkg.name}}--json"
+}
