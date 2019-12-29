@@ -139,6 +139,23 @@ test("Nunjucks Render Relative Include (ambiguous path, file exists in _includes
   // t.is(await fn2(), "<p>HELLO FROM THE OTHER SIDE.</p>");
 });
 
+test("Nunjucks Async Filter", async t => {
+  let tr = new TemplateRender("njk", "test/stubs");
+  let engine = tr.engine;
+  engine.addFilters(
+    {
+      myAsyncFilter: function(value, callback) {
+        setTimeout(function() {
+          callback(null, `HI${value}`);
+        }, 100);
+      }
+    },
+    true
+  );
+  let fn = await tr.getCompiledTemplate("{{ 'test' | myAsyncFilter }}");
+  t.is((await fn()).trim(), "HItest");
+});
+
 test("Nunjucks Render Include a JS file (Issue 398)", async t => {
   let tr = new TemplateRender("njk", "test/stubs");
   let engine = tr.engine;
