@@ -7,6 +7,11 @@ test("JS", t => {
     new TemplateRender("./test/stubs/filename.11ty.js").getEngineName(),
     "11ty.js"
   );
+  t.is(new TemplateRender("11ty.cjs").getEngineName(), "11ty.js");
+  t.is(
+    new TemplateRender("./test/stubs/filename.11ty.cjs").getEngineName(),
+    "11ty.js"
+  );
 });
 
 test("JS Render a string (no data)", async t => {
@@ -67,22 +72,24 @@ test("JS Render a function (Collections)", async t => {
   let tr = new TemplateRender("./test/stubs/use-collection.11ty.js");
   let fn = await tr.getCompiledTemplate();
   t.is(
-    (await fn({
-      collections: {
-        post: [
-          {
-            data: {
-              title: "Testing"
+    (
+      await fn({
+        collections: {
+          post: [
+            {
+              data: {
+                title: "Testing"
+              }
+            },
+            {
+              data: {
+                title: "Testing2"
+              }
             }
-          },
-          {
-            data: {
-              title: "Testing2"
-            }
-          }
-        ]
-      }
-    })).trim(),
+          ]
+        }
+      })
+    ).trim(),
     `<ul><li>Testing</li><li>Testing2</li></ul>`
   );
 });

@@ -511,7 +511,10 @@ test("Write Test 11ty.js", async t => {
   evf.init();
 
   let files = await fastglob(evf.getFileGlobs());
-  t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTestJS/**/*.11ty.js"]);
+  t.deepEqual(evf.getRawFiles(), [
+    "./test/stubs/writeTestJS/**/*.11ty.js",
+    "./test/stubs/writeTestJS/**/*.11ty.cjs"
+  ]);
   t.deepEqual(files, ["./test/stubs/writeTestJS/test.11ty.js"]);
 
   let tmpl = tw._createTemplate(files[0]);
