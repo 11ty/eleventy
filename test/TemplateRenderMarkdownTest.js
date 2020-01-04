@@ -171,7 +171,7 @@ var key = "value";
 \`\`\``);
   t.is(
     (await fn()).trim(),
-    `<pre class="language-js"><code class="language-js"><span class="highlight-line"><span class="token keyword">var</span> key <span class="token operator">=</span> <span class="token string">"value"</span><span class="token punctuation">;</span></span></code></pre>`
+    `<pre class="language-js"><code class="language-js"><span class="token keyword">var</span> key <span class="token operator">=</span> <span class="token string">"value"</span><span class="token punctuation">;</span></code></pre>`
   );
 });
 
@@ -194,7 +194,7 @@ var key = "value";
 \`\`\``);
   t.is(
     (await fn()).trim(),
-    `<pre class="language-js"><code class="language-js"><span class="highlight-line"><span class="token keyword">var</span> key <span class="token operator">=</span> <span class="token string">"value"</span><span class="token punctuation">;</span></span></code></pre>`
+    `<pre class="language-js"><code class="language-js"><span class="token keyword">var</span> key <span class="token operator">=</span> <span class="token string">"value"</span><span class="token punctuation">;</span></code></pre>`
   );
 });
 
@@ -257,10 +257,12 @@ test("Markdown Render: use Markdown inside of a Liquid shortcode (Issue #536)", 
   let fn = await tr.getCompiledTemplate(`# {{title}}
 {% testShortcode %}`);
   t.is(
-    (await fn({
-      title: "My Title",
-      otherTitle: "My Other Title"
-    })).trim(),
+    (
+      await fn({
+        title: "My Title",
+        otherTitle: "My Other Title"
+      })
+    ).trim(),
     `<h1>My Title</h1>
 <h2>My Other Title</h2>`
   );
@@ -279,10 +281,12 @@ test("Markdown Render: use Markdown inside of a Nunjucks shortcode (Issue #536)"
   let fn = await tr.getCompiledTemplate(`# {{title}}
 {% testShortcode %}`);
   t.is(
-    (await fn({
-      title: "My Title",
-      otherTitle: "My Other Title"
-    })).trim(),
+    (
+      await fn({
+        title: "My Title",
+        otherTitle: "My Other Title"
+      })
+    ).trim(),
     `<h1>My Title</h1>
 <h2>My Other Title</h2>`
   );
@@ -301,10 +305,12 @@ test("Markdown Render: use Markdown inside of a Liquid paired shortcode (Issue #
   let fn = await tr.getCompiledTemplate(`# {{title}}
 {% testShortcode %}## My Other Title{% endtestShortcode %}`);
   t.is(
-    (await fn({
-      title: "My Title",
-      otherTitle: "My Other Title"
-    })).trim(),
+    (
+      await fn({
+        title: "My Title",
+        otherTitle: "My Other Title"
+      })
+    ).trim(),
     `<h1>My Title</h1>
 <h2>My Other Title</h2>`
   );
@@ -323,10 +329,12 @@ test("Markdown Render: use Markdown inside of a Nunjucks paired shortcode (Issue
   let fn = await tr.getCompiledTemplate(`# {{title}}
 {% testShortcode %}## My Other Title{% endtestShortcode %}`);
   t.is(
-    (await fn({
-      title: "My Title",
-      otherTitle: "My Other Title"
-    })).trim(),
+    (
+      await fn({
+        title: "My Title",
+        otherTitle: "My Other Title"
+      })
+    ).trim(),
     `<h1>My Title</h1>
 <h2>My Other Title</h2>`
   );
