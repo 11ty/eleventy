@@ -1,6 +1,6 @@
 {
   "name": "@11ty/eleventy",
-  "version": "0.10.0-beta.1",
+  "version": "0.10.0-beta.2",
   "description": "Transform a directory of templates into HTML.",
   "publishConfig": {
     "access": "public"
@@ -76,28 +76,28 @@
     ]
   },
   "devDependencies": {
-    "@11ty/eleventy-plugin-syntaxhighlight": "^2.0.3",
+    "@11ty/eleventy-plugin-syntaxhighlight": "^3.0.1",
     "ava": "^2.4.0",
     "ink-docstrap": "1.3.2",
     "jsdoc": "3.6.3",
     "lint-staged": "^9.5.0",
     "markdown-it-emoji": "^1.4.0",
-    "nyc": "^14.1.1",
+    "nyc": "^15.0.0",
     "pre-commit": "^1.2.2",
     "pre-push": "^0.1.1",
     "prettier": "^1.19.1",
     "rimraf": "^3.0.0",
     "toml": "^3.0.0",
     "viperhtml": "^2.17.1",
-    "vue": "^2.6.10",
-    "vue-server-renderer": "^2.6.10",
+    "vue": "^2.6.11",
+    "vue-server-renderer": "^2.6.11",
     "js-yaml": "^3.13.1"
   },
   "dependencies": {
     "@11ty/dependency-tree": "^1.0.0",
     "browser-sync": "^2.26.7",
     "chalk": "^3.0.0",
-    "chokidar": "^3.3.0",
+    "chokidar": "^3.3.1",
     "debug": "^4.1.1",
     "dependency-graph": "^0.8.1",
     "ejs": "^2.6.2",
@@ -122,7 +122,7 @@
     "pretty": "^2.0.0",
     "pug": "^2.0.4",
     "recursive-copy": "^2.0.10",
-    "semver": "^6.3.0",
+    "semver": "^7.1.0",
     "slugify": "^1.3.6",
     "time-require": "^0.1.2",
     "valid-url": "^1.0.9"
