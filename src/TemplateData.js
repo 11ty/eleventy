@@ -113,6 +113,7 @@ class TemplateData {
     let dir = await this.getInputDir();
     let paths = [
       `${dir}/**/*.json`, // covers .11tydata.json too
+      `${dir}/**/*${this.config.jsDataFileSuffix}.cjs`,
       `${dir}/**/*${this.config.jsDataFileSuffix}.js`
     ];
 
@@ -142,7 +143,10 @@ class TemplateData {
     }
 
     return [
-      this._getGlobalDataGlobByExtension(dir, "(" + userExtensions + "json|js)")
+      this._getGlobalDataGlobByExtension(
+        dir,
+        "(" + userExtensions + "json|cjs|js)"
+      )
     ];
   }
 
@@ -312,6 +316,7 @@ class TemplateData {
     // ignoreProcessing = true for local data files
     if (
       extension === "js" ||
+      extension === "cjs" ||
       (extension === "json" && (ignoreProcessing || !this.dataTemplateEngine))
     ) {
       // JS data file or require’d JSON (no preprocessing needed)
@@ -379,6 +384,7 @@ class TemplateData {
 
       // data suffix
       paths.push(filePathNoExt + dataSuffix + ".js");
+      paths.push(filePathNoExt + dataSuffix + ".cjs");
       paths.push(filePathNoExt + dataSuffix + ".json");
       // inject user extensions
       this._pushExtensionsToPaths(
@@ -400,6 +406,7 @@ class TemplateData {
         if (!inputDir) {
           // data suffix
           paths.push(dirPathNoExt + dataSuffix + ".js");
+          paths.push(dirPathNoExt + dataSuffix + ".cjs");
           paths.push(dirPathNoExt + dataSuffix + ".json");
           this._pushExtensionsToPaths(
             paths,
@@ -415,6 +422,7 @@ class TemplateData {
           if (dir.indexOf(inputDir) === 0 && dir !== inputDir) {
             // data suffix
             paths.push(dirPathNoExt + dataSuffix + ".js");
+            paths.push(dirPathNoExt + dataSuffix + ".cjs");
             paths.push(dirPathNoExt + dataSuffix + ".json");
             this._pushExtensionsToPaths(
               paths,
