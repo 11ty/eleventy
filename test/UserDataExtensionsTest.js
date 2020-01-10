@@ -50,6 +50,7 @@ test("Local files", async t => {
     "./test/stubs-630/component-yaml/component-yaml.11tydata.yaml",
     "./test/stubs-630/component-yaml/component-yaml.11tydata.nosj",
     "./test/stubs-630/component-yaml/component-yaml.11tydata.json",
+    "./test/stubs-630/component-yaml/component-yaml.11tydata.cjs",
     "./test/stubs-630/component-yaml/component-yaml.11tydata.js",
     "./test/stubs-630/component-yaml/component.yaml",
     "./test/stubs-630/component-yaml/component.nosj",
@@ -57,6 +58,7 @@ test("Local files", async t => {
     "./test/stubs-630/component-yaml/component.11tydata.yaml",
     "./test/stubs-630/component-yaml/component.11tydata.nosj",
     "./test/stubs-630/component-yaml/component.11tydata.json",
+    "./test/stubs-630/component-yaml/component.11tydata.cjs",
     "./test/stubs-630/component-yaml/component.11tydata.js"
   ]);
 });
@@ -67,7 +69,7 @@ test("Global data", async t => {
   injectDataExtensions(dataObj);
 
   t.deepEqual(await dataObj.getGlobalDataGlob(), [
-    "./test/stubs-630/_data/**/*.(nosj|yaml|json|js)"
+    "./test/stubs-630/_data/**/*.(nosj|yaml|json|cjs|js)"
   ]);
 
   let dataFilePaths = await dataObj.getGlobalDataFiles();
