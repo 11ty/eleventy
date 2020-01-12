@@ -602,7 +602,7 @@ class Template extends TemplateContent {
 
   async getMappedDate(data) {
     // should we use Luxon dates everywhere? Right now using built-in `Date`
-    if ("date" in data) {
+    if ("date" in data && data.date) {
       debug(
         "getMappedDate: using a date in the data for %o of %o",
         this.inputPath,
