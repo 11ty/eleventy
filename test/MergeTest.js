@@ -12,6 +12,12 @@ test("Shallow Merge", t => {
   t.deepEqual(Merge({ a: [1] }, { a: [2] }), { a: [1, 2] });
 });
 
+test("Doesn’t need to return", t => {
+  var b = { a: 2 };
+  Merge(b, { a: 1 });
+  t.deepEqual(b, { a: 1 });
+});
+
 test("Invalid", t => {
   t.deepEqual(Merge({}, 1), {});
   t.deepEqual(Merge({}, [1]), {});
