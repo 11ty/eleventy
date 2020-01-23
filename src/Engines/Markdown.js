@@ -69,7 +69,7 @@ class Markdown extends TemplateEngine {
       } else {
         return async function(data) {
           let preTemplateEngineRender = await fn(data);
-          let finishedRender = mdlib.render(preTemplateEngineRender);
+          let finishedRender = mdlib.render(preTemplateEngineRender, data);
           return finishedRender;
         };
       }
@@ -79,9 +79,8 @@ class Markdown extends TemplateEngine {
           return str;
         };
       } else {
-        return function() {
-          // throw away data if preTemplateEngine is falsy
-          return mdlib.render(str);
+        return function(data) {
+          return mdlib.render(str, data);
         };
       }
     }
