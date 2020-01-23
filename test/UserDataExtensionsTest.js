@@ -70,7 +70,6 @@ test("Global data", async t => {
     "./test/stubs-630/_data/**/*.(nosj|yaml|json|js)"
   ]);
 
-  let dataFilePaths = await dataObj.getGlobalDataFiles();
   let data = await dataObj.getData();
 
   // JS GLOBAL DATA
@@ -89,4 +88,22 @@ test("Global data", async t => {
   t.is(data.globalData3.datakey2, "@11ty/eleventy--nosj");
 
   t.is(data.subdir.globalDataSubdir.keyyaml, "yaml");
+});
+
+test("Global data merging and priority", async t => {
+  let dataObj = new TemplateData("./test/stubs-630/");
+  injectDataExtensions(dataObj);
+
+  let data = await dataObj.getData();
+
+  // TESTING GLOBAL DATA PRIORITY AND MERGING
+  t.is(data.mergingGlobalData.datakey1, "js-value1");
+  t.is(data.mergingGlobalData.datakey2, "json-value2");
+  t.is(data.mergingGlobalData.datakey3, "yaml-value3");
+  t.is(data.mergingGlobalData.datakey4, "nosj-value4");
+
+  t.is(data.mergingGlobalData.jskey, "js");
+  t.is(data.mergingGlobalData.jsonkey, "json");
+  t.is(data.mergingGlobalData.yamlkey, "yaml");
+  t.is(data.mergingGlobalData.nosjkey, "nosj");
 });
