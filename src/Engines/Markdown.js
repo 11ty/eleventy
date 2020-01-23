@@ -1,6 +1,5 @@
 const markdownIt = require("markdown-it");
 const TemplateEngine = require("./TemplateEngine");
-const config = require("../Config");
 // const debug = require("debug")("Eleventy:Markdown");
 
 class Markdown extends TemplateEngine {
