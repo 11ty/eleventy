@@ -63,7 +63,7 @@ class EleventyWatchTargets {
 
   addAndMakeGlob(targets) {
     targets = this._normalizeTargets(targets).map(entry =>
-      TemplatePath.convertToRecursiveGlob(entry)
+      TemplatePath.convertToRecursiveGlobSync(entry)
     );
     this.addRaw(targets);
   }
