@@ -59,14 +59,13 @@
   "bugs": "https://github.com/11ty/eleventy/issues",
   "homepage": "https://www.11ty.dev/",
   "ava": {
+    "babel": true,
+    "failFast": true,
     "files": [
       "./test/*.js"
     ],
-    "sources": [
-      "./**/.eleventyignore",
-      "./src/**/*.js",
-      "./test/stubs/**",
-      "!./test/stubs/**/_site/**"
+    "ignoredByWatcher": [
+      "./test/stubs/**/*"
     ]
   },
   "lint-staged": {
@@ -77,8 +76,10 @@
   },
   "devDependencies": {
     "@11ty/eleventy-plugin-syntaxhighlight": "^3.0.1",
-    "ava": "^2.4.0",
+    "@ava/babel": "^1.0.0",
+    "ava": "^3.0.0",
     "ink-docstrap": "1.3.2",
+    "js-yaml": "^3.13.1",
     "jsdoc": "3.6.3",
     "lint-staged": "^9.5.0",
     "markdown-it-emoji": "^1.4.0",
@@ -90,8 +91,7 @@
     "toml": "^3.0.0",
     "viperhtml": "^2.17.1",
     "vue": "^2.6.11",
-    "vue-server-renderer": "^2.6.11",
-    "js-yaml": "^3.13.1"
+    "vue-server-renderer": "^2.6.11"
   },
   "dependencies": {
     "@11ty/dependency-tree": "^1.0.0",

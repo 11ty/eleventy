@@ -246,15 +246,15 @@ test("Nunjucks Render with getGlobals Issue #567", async t => {
   t.is(await fn({ "my-global-name": "Zach" }), "<p>Zach</p>");
 });
 
-test("Nunjucks Render with getVarByName Filter Issue #567", async t => {
+test("Nunjucks Render with getVarFromString Filter Issue #567", async t => {
   let tr = new TemplateRender("njk");
   let env = tr.engine.getEngineLib();
-  env.addFilter("getVarByName", function(varName) {
+  env.addFilter("getVarFromString", function(varName) {
     return this.getVariables()[varName];
   });
 
   let fn = await tr.getCompiledTemplate(
-    "<p>{{ 'my-global-name' | getVarByName }}</p>"
+    "<p>{{ 'my-global-name' | getVarFromString }}</p>"
   );
   t.is(await fn({ "my-global-name": "Zach" }), "<p>Zach</p>");
 });

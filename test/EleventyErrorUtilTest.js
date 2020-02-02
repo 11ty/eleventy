@@ -22,18 +22,15 @@ test("cleanMessage()", t => {
 });
 
 test("deconvertErrorToObject() should throw on invalid inputs", t => {
-  t.throws(
-    () => deconvertErrorToObject(undefined),
-    "Could not convert error object from: undefined"
-  );
-  t.throws(
-    () => deconvertErrorToObject(""),
-    "Could not convert error object from: "
-  );
-  t.throws(
-    () => deconvertErrorToObject("Not an error"),
-    "Could not convert error object from: Not an error"
-  );
+  t.throws(() => deconvertErrorToObject(undefined), {
+    message: "Could not convert error object from: undefined"
+  });
+  t.throws(() => deconvertErrorToObject(""), {
+    message: "Could not convert error object from: "
+  });
+  t.throws(() => deconvertErrorToObject("Not an error"), {
+    message: "Could not convert error object from: Not an error"
+  });
 });
 
 test("deconvertErrorToObject() should return its argument if it does not contain another error", t => {

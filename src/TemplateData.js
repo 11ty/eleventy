@@ -2,6 +2,7 @@ const fs = require("fs-extra");
 const fastglob = require("fast-glob");
 const parsePath = require("parse-filepath");
 const lodashset = require("lodash/set");
+const lodashget = require("lodash/get");
 const lodashUniq = require("lodash/uniq");
 const merge = require("./Util/Merge");
 const TemplateRender = require("./TemplateRender");
@@ -136,29 +137,52 @@ class TemplateData {
 
   async getGlobalDataGlob() {
     let dir = await this.getInputDir();
-    let userExtensions = "";
-    // creating glob string for user extensions
-    if (this.hasUserDataExtensions()) {
-      userExtensions = this.getUserDataExtensions().join("|") + "|";
-    }
 
-    return [
-      this._getGlobalDataGlobByExtension(
-        dir,
-        "(" + userExtensions + "json|cjs|js)"
-      )
-    ];
+    let extGlob = this.getGlobalDataExtensionPriorities().join("|");
+    return [this._getGlobalDataGlobByExtension(dir, "(" + extGlob + ")")];
   }
 
   getWatchPathCache() {
     return this.pathCache;
   }
 
+  getGlobalDataExtensionPriorities() {
+    return this.getUserDataExtensions().concat(["json", "cjs", "js"]);
+  }
+
+  static calculateExtensionPriority(path, priorities) {
+    for (let i = 0; i < priorities.length; i++) {
+      let ext = priorities[i];
+      if (path.endsWith(ext)) {
+        return i;
+      }
+    }
+    return priorities.length;
+  }
+
   async getGlobalDataFiles() {
+    let priorities = this.getGlobalDataExtensionPriorities();
+
     let paths = await fastglob(await this.getGlobalDataGlob(), {
       caseSensitiveMatch: false,
       dot: true
     });
+
+    // sort paths according to extension priorities
+    // here we use reverse ordering, because paths with bigger index in array will override the first ones
+    // example [path/file.json, path/file.js] here js will override json
+    paths = paths.sort((first, second) => {
+      let p1 = TemplateData.calculateExtensionPriority(first, priorities);
+      let p2 = TemplateData.calculateExtensionPriority(second, priorities);
+      if (p1 < p2) {
+        return -1;
+      }
+      if (p1 > p2) {
+        return 1;
+      }
+      return 0;
+    });
+
     this.pathCache = paths;
     return paths;
   }
@@ -183,17 +207,19 @@ class TemplateData {
 
     for (let j = 0, k = files.length; j < k; j++) {
       let folders = await this.getObjectPathForDataFile(files[j]);
+      let data = await this.getDataValue(files[j], rawImports);
 
-      // TODO maybe merge these two? (if both valid objects)
       if (dataFileConflicts[folders]) {
         debugWarn(
-          `Warning: the key for a global data file (${files[j]}) will overwrite data from an already existing global data file (${dataFileConflicts[folders]})`
+          `merging global data from ${files[j]} with an already existing global data file (${dataFileConflicts[folders]}). Overriding existing keys`
         );
-      }
-      dataFileConflicts[folders] = files[j];
 
+        let oldData = lodashget(globalData, folders);
+        data = TemplateData.mergeDeep(this.config, oldData, data);
+      }
+
+      dataFileConflicts[folders] = files[j];
       debug(`Found global data file ${files[j]} and adding as: ${folders}`);
-      let data = await this.getDataValue(files[j], rawImports);
       lodashset(globalData, folders, data);
     }
 
