@@ -76,7 +76,7 @@
   },
   "devDependencies": {
     "@11ty/eleventy-plugin-syntaxhighlight": "^3.0.1",
-    "@ava/babel": "^1.0.0",
+    "@ava/babel": "^1.0.1",
     "ava": "^3.0.0",
     "ink-docstrap": "1.3.2",
     "js-yaml": "^3.13.1",
