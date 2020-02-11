@@ -179,7 +179,7 @@ test("getAllGlobalData() with common js function data file", async t => {
   );
 
   t.truthy(data.globalDataFnCJS);
-  t.is(data.globalDataFnCJS.datakeyfromcjsfn, "common-js-howdy");
+  t.is(data.globalDataFnCJS.datakeyfromcjsfn, "common-cjs-howdy");
 });
 
 test("getDataValue() without a dataTemplateEngine", async t => {

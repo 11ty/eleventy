@@ -16,12 +16,12 @@ test("Local data", async t => {
   let data = await dataObj.getData();
 
   // YAML GLOBAL DATA
-  t.is(data.globalData2.datakey1, "datavalue2");
-  t.is(data.globalData2.datakey2, "@11ty/eleventy--yaml");
+  t.is(data.globalData3.datakey1, "datavalue3");
+  t.is(data.globalData3.datakey2, "@11ty/eleventy--yaml");
 
   // NOSJ (JSON) GLOBAL DATA
-  t.is(data.globalData3.datakey1, "datavalue3");
-  t.is(data.globalData3.datakey2, "@11ty/eleventy--nosj");
+  t.is(data.globalData4.datakey1, "datavalue4");
+  t.is(data.globalData4.datakey2, "@11ty/eleventy--nosj");
 
   let withLocalData = await dataObj.getLocalData(
     "./test/stubs-630/component-yaml/component.njk"
@@ -77,17 +77,20 @@ test("Global data", async t => {
   // JS GLOBAL DATA
   t.is(data.globalData0.datakey1, "datavalue0");
 
-  // JSON GLOBAL DATA
+  // CJS GLOBAL DATA
   t.is(data.globalData1.datakey1, "datavalue1");
-  t.is(data.globalData1.datakey2, "@11ty/eleventy--json");
+
+  // JSON GLOBAL DATA
+  t.is(data.globalData2.datakey1, "datavalue2");
+  t.is(data.globalData2.datakey2, "@11ty/eleventy--json");
 
   // YAML GLOBAL DATA
-  t.is(data.globalData2.datakey1, "datavalue2");
-  t.is(data.globalData2.datakey2, "@11ty/eleventy--yaml");
+  t.is(data.globalData3.datakey1, "datavalue3");
+  t.is(data.globalData3.datakey2, "@11ty/eleventy--yaml");
 
   // NOSJ (JSON) GLOBAL DATA
-  t.is(data.globalData3.datakey1, "datavalue3");
-  t.is(data.globalData3.datakey2, "@11ty/eleventy--nosj");
+  t.is(data.globalData4.datakey1, "datavalue4");
+  t.is(data.globalData4.datakey2, "@11ty/eleventy--nosj");
 
   t.is(data.subdir.globalDataSubdir.keyyaml, "yaml");
 });
@@ -99,12 +102,14 @@ test("Global data merging and priority", async t => {
   let data = await dataObj.getData();
 
   // TESTING GLOBAL DATA PRIORITY AND MERGING
-  t.is(data.mergingGlobalData.datakey1, "js-value1");
+  t.is(data.mergingGlobalData.datakey0, "js-value0");
+  t.is(data.mergingGlobalData.datakey1, "cjs-value1");
   t.is(data.mergingGlobalData.datakey2, "json-value2");
   t.is(data.mergingGlobalData.datakey3, "yaml-value3");
   t.is(data.mergingGlobalData.datakey4, "nosj-value4");
 
   t.is(data.mergingGlobalData.jskey, "js");
+  t.is(data.mergingGlobalData.cjskey, "cjs");
   t.is(data.mergingGlobalData.jsonkey, "json");
   t.is(data.mergingGlobalData.yamlkey, "yaml");
   t.is(data.mergingGlobalData.nosjkey, "nosj");
