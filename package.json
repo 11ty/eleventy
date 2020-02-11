@@ -109,7 +109,7 @@
     "javascript-stringify": "^2.0.1",
     "liquidjs": "^6.4.3",
     "lodash": "^4.17.15",
-    "luxon": "^1.21.3",
+    "luxon": "^1.22.0",
     "markdown-it": "^8.4.2",
     "minimist": "^1.2.0",
     "moo": "^0.5.1",
