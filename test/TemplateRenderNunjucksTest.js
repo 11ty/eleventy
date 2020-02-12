@@ -156,6 +156,20 @@ test("Nunjucks Async Filter", async t => {
   t.is((await fn()).trim(), "HItest");
 });
 
+test("Nunjucks Render set with a filter", async t => {
+  let tr = new TemplateRender("njk", "test/stubs");
+  let engine = tr.engine;
+  engine.addFilters({
+    uppercase: function(str) {
+      return str.toUpperCase();
+    }
+  });
+  let fn = await tr.getCompiledTemplate(
+    `{% set test = "hi" | uppercase %}{{ test }}`
+  );
+  t.is((await fn()).trim(), `HI`);
+});
+
 test("Nunjucks Render Include a JS file (Issue 398)", async t => {
   let tr = new TemplateRender("njk", "test/stubs");
   let engine = tr.engine;
