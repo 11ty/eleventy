@@ -1,6 +1,6 @@
 ---
-name: I’m having a problem with Eleventy
-about: Create a report to help us improve
+name: I’m having trouble with Eleventy
+about: Have a problem? It might be a bug! Create a report to help us improve.
 title: ""
 labels: needs-triage
 assignees: ""

@@ -1,6 +1,6 @@
 ---
-name: I want Eleventy do to this new thing
-about: Suggest an idea for this project
+name: Feature request!
+about: Enhancements. e.g. “I wish Eleventy did this.” Suggest an idea!
 title: ""
 labels: enhancement
 assignees: ""
