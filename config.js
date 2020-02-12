@@ -7,10 +7,12 @@ module.exports = function(config) {
   config.addFilter("url", urlFilter);
   config.addFilter("log", console.log);
 
+  config.addLiquidFilter("getCollectionItem", (collection, page) =>
+    getCollectionItem(collection, page)
+  );
   config.addLiquidFilter("getPreviousCollectionItem", (collection, page) =>
     getCollectionItem(collection, page, -1)
   );
-
   config.addLiquidFilter("getNextCollectionItem", (collection, page) =>
     getCollectionItem(collection, page, 1)
   );
