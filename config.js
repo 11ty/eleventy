@@ -6,8 +6,12 @@ module.exports = function(config) {
   config.addFilter("slug", slugFilter);
   config.addFilter("url", urlFilter);
   config.addFilter("log", console.log);
-  config.addLiquidFilter("getPreviousCollectionItem", (collection, page) => getCollectionItem(collection, page, -1));
-  config.addLiquidFilter("getNextCollectionItem", (collection, page) => getCollectionItem(collection, page, 1));
+  config.addLiquidFilter("getPreviousCollectionItem", (collection, page) =>
+    getCollectionItem(collection, page, -1)
+  );
+  config.addLiquidFilter("getNextCollectionItem", (collection, page) =>
+    getCollectionItem(collection, page, 1)
+  );
 
   return {
     templateFormats: [
