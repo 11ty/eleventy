@@ -10,7 +10,6 @@ module.exports = function(config) {
   config.addLiquidFilter("getPreviousCollectionItem", (collection, page) =>
     getCollectionItem(collection, page, -1)
   );
-
   config.addLiquidFilter("getNextCollectionItem", (collection, page) =>
     getCollectionItem(collection, page, 1)
   );
