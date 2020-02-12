@@ -77,14 +77,13 @@
     "@11ty/eleventy-plugin-syntaxhighlight": "^3.0.1",
     "@ava/babel": "^1.0.0",
     "ava": "^3.0.0",
+    "husky": "^4.2.2",
     "ink-docstrap": "1.3.2",
     "js-yaml": "^3.13.1",
     "jsdoc": "3.6.3",
     "lint-staged": "^10.0.7",
     "markdown-it-emoji": "^1.4.0",
     "nyc": "^15.0.0",
-    "pre-commit": "^1.2.2",
-    "pre-push": "^0.1.1",
     "prettier": "^1.19.1",
     "rimraf": "^3.0.0",
     "toml": "^3.0.0",
@@ -126,6 +125,10 @@
     "time-require": "^0.1.2",
     "valid-url": "^1.0.9"
   },
-  "pre-commit": "lint-staged",
-  "pre-push": "test"
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "pre-push": "test"
+    }
+  }
 }
