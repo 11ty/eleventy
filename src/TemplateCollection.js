@@ -3,10 +3,6 @@ const Sortable = require("./Util/Sortable");
 const TemplatePath = require("./TemplatePath");
 
 class TemplateCollection extends Sortable {
-  constructor() {
-    super();
-  }
-
   // right now this is only used by the tests
   async _testAddTemplate(template) {
     let data = await template.getData();
