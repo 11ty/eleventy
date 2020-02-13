@@ -535,18 +535,12 @@ class Template extends TemplateContent {
         this.config
       );
       content = await layout.render(page.data, page.templateContent);
-      await this.runLinters(content, page.inputPath, page.outputPath);
-      content = await this.runTransforms(content, page.outputPath); // pass in page.inputPath?
-      return content;
     } else {
       content = page.templateContent;
-      await this.runLinters(
-        page.templateContent,
-        page.inputPath,
-        page.outputPath
-      );
-      content = await this.runTransforms(content, page.outputPath); // pass in page.inputPath?
     }
+
+    await this.runLinters(content, page.inputPath, page.outputPath);
+    content = await this.runTransforms(content, page.outputPath); // pass in page.inputPath?
     return content;
   }
 

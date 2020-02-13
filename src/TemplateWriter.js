@@ -138,7 +138,7 @@ class TemplateWriter {
 
   async _writeTemplate(mapEntry) {
     let tmpl = mapEntry.template;
-    // we don’t re-use the map templateContent because it doesn’t include layouts
+
     return tmpl.writeMapEntry(mapEntry).then(() => {
       this.skippedCount += tmpl.getSkippedCount();
       this.writeCount += tmpl.getWriteCount();
