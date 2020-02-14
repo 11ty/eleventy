@@ -436,6 +436,17 @@ class TemplateData {
           this._addBaseToPaths(paths, dirPathNoExt, userExtensions);
         }
       }
+
+      // 0.11.0+ include root input dir files
+      // if using `docs/` as input dir, looks for docs/docs.json et al
+      if (inputDir) {
+        let lastInputDir = TemplatePath.addLeadingDotSlash(
+          TemplatePath.join(inputDir, TemplatePath.getLastPathSegment(inputDir))
+        );
+        if (lastInputDir !== "./") {
+          this._addBaseToPaths(paths, lastInputDir, userExtensions);
+        }
+      }
     }
 
     debug("getLocalDataPaths(%o): %o", templatePath, paths);
