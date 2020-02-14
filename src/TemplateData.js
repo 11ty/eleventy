@@ -384,6 +384,20 @@ class TemplateData {
       paths.push(curpath + "." + extension);
     }
   }
+  _addBaseToPaths(paths, base, extensions) {
+    let dataSuffix = this.config.jsDataFileSuffix;
+
+    // data suffix
+    paths.push(base + dataSuffix + ".js");
+    paths.push(base + dataSuffix + ".json");
+
+    // inject user extensions
+    this._pushExtensionsToPaths(paths, base + dataSuffix, extensions);
+
+    // top level
+    paths.push(base + ".json");
+    this._pushExtensionsToPaths(paths, base, extensions);
+  }
 
   async getLocalDataPaths(templatePath) {
     let paths = [];
@@ -406,55 +420,20 @@ class TemplateData {
       let dataSuffix = this.config.jsDataFileSuffix;
       debug("Using %o to find data files.", dataSuffix);
 
-      // data suffix
-      paths.push(filePathNoExt + dataSuffix + ".js");
-      paths.push(filePathNoExt + dataSuffix + ".json");
-      // inject user extensions
-      this._pushExtensionsToPaths(
-        paths,
-        filePathNoExt + dataSuffix,
-        userExtensions
-      );
-
-      // top level
-      paths.push(filePathNoExt + ".json");
-      this._pushExtensionsToPaths(paths, filePathNoExt, userExtensions);
+      this._addBaseToPaths(paths, filePathNoExt, userExtensions);
 
       let allDirs = TemplatePath.getAllDirs(parsed.dir);
+
       debugDev("allDirs: %o", allDirs);
       for (let dir of allDirs) {
         let lastDir = TemplatePath.getLastPathSegment(dir);
         let dirPathNoExt = dir + "/" + lastDir;
 
-        if (!inputDir) {
-          // data suffix
-          paths.push(dirPathNoExt + dataSuffix + ".js");
-          paths.push(dirPathNoExt + dataSuffix + ".json");
-          this._pushExtensionsToPaths(
-            paths,
-            dirPathNoExt + dataSuffix,
-            userExtensions
-          );
-
-          // top level
-          paths.push(dirPathNoExt + ".json");
-          this._pushExtensionsToPaths(paths, dirPathNoExt, userExtensions);
-        } else {
+        if (inputDir) {
           debugDev("dirStr: %o; inputDir: %o", dir, inputDir);
-          if (dir.indexOf(inputDir) === 0 && dir !== inputDir) {
-            // data suffix
-            paths.push(dirPathNoExt + dataSuffix + ".js");
-            paths.push(dirPathNoExt + dataSuffix + ".json");
-            this._pushExtensionsToPaths(
-              paths,
-              dirPathNoExt + dataSuffix,
-              userExtensions
-            );
-
-            // top level
-            paths.push(dirPathNoExt + ".json");
-            this._pushExtensionsToPaths(paths, dirPathNoExt, userExtensions);
-          }
+        }
+        if (!inputDir || (dir.indexOf(inputDir) === 0 && dir !== inputDir)) {
+          this._addBaseToPaths(paths, dirPathNoExt, userExtensions);
         }
       }
     }
