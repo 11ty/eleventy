@@ -70,22 +70,20 @@
   },
   "lint-staged": {
     "*.{js,css,md}": [
-      "prettier --write",
-      "git add"
+      "prettier --write"
     ]
   },
   "devDependencies": {
     "@11ty/eleventy-plugin-syntaxhighlight": "^3.0.1",
     "@ava/babel": "^1.0.0",
     "ava": "^3.0.0",
+    "husky": "^4.2.2",
     "ink-docstrap": "1.3.2",
     "js-yaml": "^3.13.1",
     "jsdoc": "3.6.3",
-    "lint-staged": "^9.5.0",
+    "lint-staged": "^10.0.7",
     "markdown-it-emoji": "^1.4.0",
     "nyc": "^15.0.0",
-    "pre-commit": "^1.2.2",
-    "pre-push": "^0.1.1",
     "prettier": "^1.19.1",
     "rimraf": "^3.0.0",
     "toml": "^3.0.0",
@@ -109,7 +107,7 @@
     "javascript-stringify": "^2.0.1",
     "liquidjs": "^6.4.3",
     "lodash": "^4.17.15",
-    "luxon": "^1.21.3",
+    "luxon": "^1.22.0",
     "markdown-it": "^8.4.2",
     "minimist": "^1.2.0",
     "moo": "^0.5.1",
@@ -127,6 +125,10 @@
     "time-require": "^0.1.2",
     "valid-url": "^1.0.9"
   },
-  "pre-commit": "lint-staged",
-  "pre-push": "test"
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint-staged",
+      "pre-push": "npm run test"
+    }
+  }
 }

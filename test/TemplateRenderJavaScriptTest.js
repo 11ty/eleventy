@@ -181,6 +181,22 @@ test("JS Render with a function", async t => {
   t.is(await fn({ name: "Bill" }), "<p>BILLT9000</p>");
 });
 
+// This doesn’t work
+test.skip("JS Render with an arrow function and javascript function", async t => {
+  let tr = new TemplateRender("./test/stubs/function-filter-arrow.11ty.js");
+  tr.config = {
+    javascriptFunctions: {
+      upper: function(val) {
+        return new String(val).toUpperCase();
+      }
+    }
+  };
+
+  let fn = await tr.getCompiledTemplate();
+  t.is(await fn({ name: "Zach" }), "<p>ZACH</p>");
+  t.is(await fn({ name: "Bill" }), "<p>BILL</p>");
+});
+
 test("JS Render with a function and async filter", async t => {
   let tr = new TemplateRender("./test/stubs/function-async-filter.11ty.js");
   tr.config = {
