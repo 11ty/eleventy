@@ -534,7 +534,7 @@ ${permalinks[page.url]
     }
   }
 
-  async getCollectionsData() {
+  async _testGetCollectionsData() {
     if (!this.cached) {
       await this.cache();
     }

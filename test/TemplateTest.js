@@ -1955,3 +1955,28 @@ test("global variable with dashes Issue #567 (liquid)", async t => {
 //   t.is(data.permalink, "/{{ page.fileSlug }}/");
 //   t.is(data.page.url, "/test/");
 // });
+
+// Prior to and including 0.10.0 this mismatched the documentation)!
+test("Layout front matter should override template files", async t => {
+  let dataObj = new TemplateData("./test/stubs-data-cascade/layout-data-files/");
+  let tmpl = new Template(
+    "./test/stubs-data-cascade/layout-data-files/test.njk",
+    "./test/stubs-data-cascade/layout-data-files/",
+    "./dist",
+    dataObj
+  );
+
+  let data = await tmpl.getData();
+  t.is(data.shared, "layout");
+});
+
+test("Get Layout Chain", async t => {
+  let tmpl = new Template(
+    "./test/stubs-incremental/layout-chain/test.njk",
+    "./test/stubs-incremental/layout-chain/",
+    "./dist"
+  );
+
+  let layoutChain = await tmpl.getLayoutChain();
+  t.deepEqual(layoutChain, ["./test/stubs-incremental/layout-chain/_includes/base.njk", "./test/stubs-incremental/layout-chain/_includes/parent.njk"]);
+});

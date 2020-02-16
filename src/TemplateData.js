@@ -205,21 +205,23 @@ class TemplateData {
     let dataFileConflicts = {};
 
     for (let j = 0, k = files.length; j < k; j++) {
-      let folders = await this.getObjectPathForDataFile(files[j]);
+      let objectPathTarget = await this.getObjectPathForDataFile(files[j]);
       let data = await this.getDataValue(files[j], rawImports);
 
-      if (dataFileConflicts[folders]) {
+      // if two global files have the same path (but different extensions)
+      // and conflict, let’s merge them.
+      if (dataFileConflicts[objectPathTarget]) {
         debugWarn(
-          `merging global data from ${files[j]} with an already existing global data file (${dataFileConflicts[folders]}). Overriding existing keys`
+          `merging global data from ${files[j]} with an already existing global data file (${dataFileConflicts[objectPathTarget]}). Overriding existing keys.`
         );
 
-        let oldData = lodashget(globalData, folders);
+        let oldData = lodashget(globalData, objectPathTarget);
         data = TemplateData.mergeDeep(this.config, oldData, data);
       }
 
-      dataFileConflicts[folders] = files[j];
-      debug(`Found global data file ${files[j]} and adding as: ${folders}`);
-      lodashset(globalData, folders, data);
+      dataFileConflicts[objectPathTarget] = files[j];
+      debug(`Found global data file ${files[j]} and adding as: ${objectPathTarget}`);
+      lodashset(globalData, objectPathTarget, data);
     }
 
     return globalData;

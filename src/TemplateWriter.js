@@ -151,9 +151,9 @@ class TemplateWriter {
     debug("Found: %o", paths);
 
     let passthroughManager = this.getFileManager().getPassthroughManager();
-    passthroughManager.setIncrementalFile(
-      this.incrementalFile ? this.incrementalFile : false
-    );
+    if(this.incrementalFile) {
+      passthroughManager.setIncrementalFile(this.incrementalFile);
+    }
 
     promises.push(
       passthroughManager.copyAll(paths).catch(e => {
