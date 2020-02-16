@@ -1942,19 +1942,20 @@ test("global variable with dashes Issue #567 (liquid)", async t => {
   t.is(pages[0].templateContent.trim(), "Yes");
 });
 
-// test("Issue #446: Layout has a permalink with a different template language than content", async t => {
-//   let tmpl = new Template(
-//     "./test/stubs/layout-permalink-difflang/test.md",
-//     "./test/stubs/layout-permalink-difflang/",
-//     "dist"
-//   );
+test("Issue #446: Layout has a permalink with a different template language than content", async t => {
+  let tmpl = new Template(
+    "./test/stubs/layout-permalink-difflang/test.md",
+    "./test/stubs/layout-permalink-difflang/",
+    "dist"
+  );
 
-//   let data = await tmpl.getData();
-//   let pages = await tmpl.getRenderedTemplates(data);
+  let data = await tmpl.getData();
+  // this call is needed for page data to be added
+  let pages = await tmpl.getRenderedTemplates(data);
 
-//   t.is(data.permalink, "/{{ page.fileSlug }}/");
-//   t.is(data.page.url, "/test/");
-// });
+  t.is(data.permalink, "/{{ page.fileSlug }}/");
+  t.is(data.page.url, "/test/");
+});
 
 // Prior to and including 0.10.0 this mismatched the documentation)!
 test("Layout front matter should override template files", async t => {
