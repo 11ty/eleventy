@@ -181,8 +181,8 @@ test("JS Render with a function", async t => {
   t.is(await fn({ name: "Bill" }), "<p>BILLT9000</p>");
 });
 
-// This doesn’t work
-test.skip("JS Render with an arrow function and javascript function", async t => {
+// This doesn’t work, per arrow functions
+test.skip("Issue #934: JS Render with an arrow function and javascript function", async t => {
   let tr = new TemplateRender("./test/stubs/function-filter-arrow.11ty.js");
   tr.config = {
     javascriptFunctions: {
