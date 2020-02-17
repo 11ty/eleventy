@@ -60,7 +60,7 @@
   "homepage": "https://www.11ty.dev/",
   "ava": {
     "babel": true,
-    "failFast": true,
+    "failFast": false,
     "files": [
       "./test/*.js"
     ],
