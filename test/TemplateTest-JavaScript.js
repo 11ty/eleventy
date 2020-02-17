@@ -199,7 +199,7 @@ test("JavaScript template type (class with renderData)", async t => {
     "./dist"
   );
 
-  let data = await tmpl.getRenderedData();
+  let data = await tmpl.getData();
   let pages = await tmpl.getRenderedTemplates(data);
   t.is(
     pages[0].templateContent.trim(),

@@ -483,11 +483,13 @@ class TemplateMap {
 
   populateCollectionsWithContent() {
     for (let collectionName in this.collectionsData) {
+      // skip custom collections set in configuration files that have arbitrary types
       if (!Array.isArray(this.collectionsData[collectionName])) {
         continue;
       }
 
       for (let item of this.collectionsData[collectionName]) {
+        // skip custom collections set in configuration files that have arbitrary types
         if (!isPlainObject(item) || !("inputPath" in item)) {
           continue;
         }

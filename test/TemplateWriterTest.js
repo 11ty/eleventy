@@ -474,8 +474,7 @@ test("fileSlug should exist in a collection", async t => {
   t.is(templates[0].templateContent.trim(), "fileSlug:/dog1/:dog1");
 });
 
-// TODO
-test.skip("renderData should exist and be resolved in a collection (Issue #289)", async t => {
+test("renderData should exist and be resolved in a collection (Issue #289)", async t => {
   let tw = new TemplateWriter(
     "./test/stubs/collection-renderdata",
     "./test/stubs/collection-renderdata/_site",
@@ -495,7 +494,7 @@ test.skip("renderData should exist and be resolved in a collection (Issue #289)"
   t.is(mapEntry.inputPath, "./test/stubs/collection-renderdata/template.njk");
 
   let templates = await mapEntry.template.getRenderedTemplates(mapEntry.data);
-  t.is(templates[0].templateContent.trim(), "Test Title");
+  t.is(templates[0].templateContent.trim(), "value2-value1.css");
 });
 
 test("Write Test 11ty.js", async t => {

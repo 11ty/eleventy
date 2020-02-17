@@ -779,7 +779,7 @@ test("Template pages should not have layouts when added to collections", async t
     "./test/stubs/_site"
   );
   await tm.add(tmpl);
-  t.is(await tmpl.render(), "<div>Layout Test</div>");
+  t.is(await tmpl.render(await tmpl.getData()), "<div>Layout Test</div>");
 
   let collections = await tm._testGetCollectionsData();
   t.is(collections.all.length, 1);

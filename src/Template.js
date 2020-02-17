@@ -73,7 +73,7 @@ class Template extends TemplateContent {
   }
 
   getLayout(layoutKey) {
-    if(!this._layout || layoutKey !== this._layoutKey) {
+    if (!this._layout || layoutKey !== this._layoutKey) {
       this._layoutKey = layoutKey;
       this._layout = TemplateLayout.getTemplate(
         layoutKey,
@@ -85,7 +85,7 @@ class Template extends TemplateContent {
   }
 
   async getLayoutChain() {
-    if(!this._layout) {
+    if (!this._layout) {
       await this.getData();
     }
 
@@ -159,7 +159,6 @@ class Template extends TemplateContent {
     return link.toHref();
   }
 
-  // TODO check for conflicts, see if file already exists?
   async getOutputPath(data) {
     let uri = await this.getOutputLink(data);
 
@@ -294,42 +293,6 @@ class Template extends TemplateContent {
     return data;
   }
 
-  async addPageRenderedData(data) {
-    if (!("page" in data)) {
-      data.page = {};
-    }
-
-    let newUrl = await this.getOutputHref(data);
-    if ("page" in data && "url" in data.page) {
-      if (data.page.url !== newUrl) {
-        debug(
-          "Warning: data.page.url is in use (%o) will be overwritten with: %o",
-          data.page.url,
-          newUrl
-        );
-      }
-    }
-
-    data.page.url = newUrl;
-    data.page.outputPath = await this.getOutputPath(data);
-
-    return data;
-  }
-
-  // getData (with renderData and page.url added)
-  async getRenderedData() {
-    let data = await this.getData();
-    data = await this.addPageRenderedData(data);
-
-    if (data.renderData) {
-      data.renderData = await this.mapDataAsRenderedTemplates(
-        data.renderData,
-        data
-      );
-    }
-    return data;
-  }
-
   async renderLayout(tmpl, tmplData) {
     let layoutKey = tmplData[tmpl.config.keys.layout];
     let layout = this.getLayout(layoutKey);
@@ -354,10 +317,12 @@ class Template extends TemplateContent {
     return super.render(str, data, bypassMarkdown);
   }
 
+  // TODO at least some of this isn’t being used in the normal build
+  // Render is used for `renderData` and `permalink` but otherwise `renderPageEntry` is being used
   async render(data) {
     debugDev("%o render()", this.inputPath);
     if (!data) {
-      data = await this.getRenderedData();
+      throw new Error("`data` needs to be passed into render()");
     }
 
     if (!this.wrapWithLayouts && data[this.config.keys.layout]) {
@@ -407,6 +372,13 @@ class Template extends TemplateContent {
       data.page.url = await this.getOutputHref(data);
       data.page.outputPath = await this.getOutputPath(data);
 
+      if ("renderData" in data) {
+        data.renderData = await this.mapDataAsRenderedTemplates(
+          data.renderData,
+          data
+        );
+      }
+
       results.push({
         template: this,
         inputPath: this.inputPath,
@@ -438,7 +410,7 @@ class Template extends TemplateContent {
       let pageNumber = 0;
       for (let page of templates) {
         // TODO try to reuse data instead of a new copy
-        let pageData = await page.getRenderedData();
+        let pageData = Object.assign({}, await page.getData());
 
         // Issue #115
         if (data.collections) {
@@ -447,6 +419,13 @@ class Template extends TemplateContent {
 
         pageData.page.url = await page.getOutputHref(pageData);
         pageData.page.outputPath = await page.getOutputPath(pageData);
+
+        if ("renderData" in pageData) {
+          pageData.renderData = await page.mapDataAsRenderedTemplates(
+            pageData.renderData,
+            pageData
+          );
+        }
 
         results.push({
           template: page,
@@ -560,6 +539,7 @@ class Template extends TemplateContent {
     return Promise.all(promises);
   }
 
+  // TODO is this still used by anything but tests?
   async write(outputPath, data) {
     let templates = await this.getRenderedTemplates(data);
     let promises = [];
