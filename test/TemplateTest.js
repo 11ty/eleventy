@@ -584,6 +584,27 @@ test("Permalink with variables!", async t => {
   t.is(await tmpl.getOutputPath(), "./dist/subdir/slug-candidate/index.html");
 });
 
+test("Permalink with variables and JS front matter!", async t => {
+  let tmpl = new Template(
+    "./test/stubs/permalinkdata-jsfn.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is(await tmpl.getOutputPath(), "./dist/subdir/slug/index.html");
+});
+
+// This is broken right now, permalink must use the same template language as the template
+test.skip("Use a JavaScript function for permalink in any template language", async t => {
+  let tmpl = new Template(
+    "./test/stubs/permalinkdata-jspermalinkfn.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is(await tmpl.getOutputPath(), "./dist/subdir/slug/index.html");
+});
+
 test("Permalink with dates!", async t => {
   let tmpl = new Template(
     "./test/stubs/permalinkdate.liquid",
