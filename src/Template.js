@@ -12,6 +12,7 @@ const TemplatePermalink = require("./TemplatePermalink");
 const TemplatePermalinkNoWrite = require("./TemplatePermalinkNoWrite");
 const TemplateLayout = require("./TemplateLayout");
 const TemplateFileSlug = require("./TemplateFileSlug");
+const ComputedData = require("./ComputedData");
 const Pagination = require("./Plugins/Pagination");
 const TemplateContentPrematureUseError = require("./Errors/TemplateContentPrematureUseError");
 const debug = require("debug")("Eleventy:Template");
@@ -364,20 +365,71 @@ class Template extends TemplateContent {
     return str;
   }
 
+  _addComputedEntry(computedData, obj, parentKey, declaredDependencies) {
+    // this check must come before lodashIsObject
+    if (typeof obj === "function") {
+      computedData.add(parentKey, obj, declaredDependencies);
+    } else if (lodashIsObject(obj)) {
+      for (let key in obj) {
+        let keys = [];
+        if (parentKey) {
+          keys.push(parentKey);
+        }
+        keys.push(key);
+        this._addComputedEntry(
+          computedData,
+          obj[key],
+          keys.join("."),
+          declaredDependencies
+        );
+      }
+    } else if (typeof obj === "string") {
+      computedData.add(
+        parentKey,
+        async innerData => {
+          return await super.render(obj, innerData, true);
+        },
+        declaredDependencies
+      );
+    }
+  }
+
+  async augmentFinalData(data) {
+    // will _not_ consume renderData
+    let computedData = new ComputedData();
+    // this allows computed entries to use page.url or page.outputPath and they’ll be resolved properly
+    this._addComputedEntry(
+      computedData,
+      {
+        page: {
+          url: async data => await this.getOutputHref(data),
+          outputPath: async data => await this.getOutputPath(data)
+        }
+      },
+      null,
+      ["permalink"]
+    ); // declared dependency
+
+    if (this.config.keys.computed in data) {
+      this._addComputedEntry(computedData, data[this.config.keys.computed]);
+    }
+    await computedData.setupData(data);
+
+    // deprecated, use eleventyComputed instead.
+    if ("renderData" in data) {
+      data.renderData = await this.mapDataAsRenderedTemplates(
+        data.renderData,
+        data
+      );
+    }
+  }
+
   async getTemplates(data) {
     // TODO cache this
     let results = [];
 
     if (!Pagination.hasPagination(data)) {
-      data.page.url = await this.getOutputHref(data);
-      data.page.outputPath = await this.getOutputPath(data);
-
-      if ("renderData" in data) {
-        data.renderData = await this.mapDataAsRenderedTemplates(
-          data.renderData,
-          data
-        );
-      }
+      await this.augmentFinalData(data);
 
       results.push({
         template: this,
@@ -409,7 +461,6 @@ class Template extends TemplateContent {
       let templates = await this.paging.getPageTemplates();
       let pageNumber = 0;
       for (let page of templates) {
-        // TODO try to reuse data instead of a new copy
         let pageData = Object.assign({}, await page.getData());
 
         // Issue #115
@@ -417,15 +468,7 @@ class Template extends TemplateContent {
           pageData.collections = data.collections;
         }
 
-        pageData.page.url = await page.getOutputHref(pageData);
-        pageData.page.outputPath = await page.getOutputPath(pageData);
-
-        if ("renderData" in pageData) {
-          pageData.renderData = await page.mapDataAsRenderedTemplates(
-            pageData.renderData,
-            pageData
-          );
-        }
+        await page.augmentFinalData(pageData);
 
         results.push({
           template: page,

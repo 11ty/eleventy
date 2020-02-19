@@ -44,7 +44,8 @@ module.exports = function(config) {
       layout: "layout",
       permalink: "permalink",
       permalinkRoot: "permalinkBypassOutputDir",
-      engineOverride: "templateEngineOverride"
+      engineOverride: "templateEngineOverride",
+      computed: "eleventyComputed"
     },
     dir: {
       input: ".",

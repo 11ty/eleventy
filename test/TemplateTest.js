@@ -2022,3 +2022,40 @@ test("Get Layout Chain", async t => {
     "./test/stubs-incremental/layout-chain/_includes/parent.njk"
   ]);
 });
+
+test("eleventyComputed", async t => {
+  let tmpl = new Template(
+    "./test/stubs/eleventyComputed/first.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await getRenderedData(tmpl);
+  t.is((await tmpl.render(data)).trim(), "hi:value2-value1.css");
+});
+
+test("eleventyComputed permalink", async t => {
+  let tmpl = new Template(
+    "./test/stubs/eleventyComputed/permalink.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  let templates = await tmpl.getTemplates(await tmpl.getData());
+  let data = templates[0].data;
+  t.is(data.page.url, "/haha-value1.html");
+  t.is(data.page.outputPath, "./dist/haha-value1.html");
+  t.is(data.permalink, "haha-value1.html");
+  t.is(data.nested.key3, "value1");
+  t.is(data.nested.key4, "depends on computed value1");
+  t.is(data.dependsOnPage, "depends:/haha-value1.html");
+});
+
+test("eleventyComputed js front matter (function)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/eleventyComputed/second.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await getRenderedData(tmpl);
+  t.is(data.key3, "value3-value2-value1.css");
+  t.is((await tmpl.render(data)).trim(), "hi:value2-value1.css");
+});

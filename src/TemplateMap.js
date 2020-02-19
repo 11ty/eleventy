@@ -17,7 +17,6 @@ class DuplicatePermalinkOutputError extends EleventyBaseError {
 class TemplateMap {
   constructor() {
     this.map = [];
-    this.graph = new DependencyGraph();
     this.collectionsData = null;
     this.cached = false;
     this.configCollections = null;
