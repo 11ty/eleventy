@@ -16,6 +16,11 @@ test("hasEmbeddedError()", t => {
 });
 
 test("cleanMessage()", t => {
+  t.is(cleanMessage(null), "");
+  t.is(cleanMessage(undefined), "");
+  t.is(cleanMessage(false), "");
+  t.is(cleanMessage(""), "");
+
   const text = "I am the very model of a sample text input";
   t.is(cleanMessage(text), text);
   t.is(cleanMessage(text + convertErrorToString(SAMPLE_ERROR)), text);
