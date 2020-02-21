@@ -2033,6 +2033,28 @@ test("eleventyComputed", async t => {
   t.is((await tmpl.render(data)).trim(), "hi:value2-value1.css");
 });
 
+test("eleventyComputed overrides existing value.", async t => {
+  let tmpl = new Template(
+    "./test/stubs/eleventyComputed/override.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await getRenderedData(tmpl);
+  t.is(data.key1, "override");
+  t.is((await tmpl.render(data)).trim(), "hi:override");
+});
+
+test("eleventyComputed overrides existing value and reuses that upstream value", async t => {
+  let tmpl = new Template(
+    "./test/stubs/eleventyComputed/override-reuse.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await getRenderedData(tmpl);
+  t.is(data.key1, "over(value1)ride");
+  t.is((await tmpl.render(data)).trim(), "hi:over(value1)ride");
+});
+
 test("eleventyComputed permalink", async t => {
   let tmpl = new Template(
     "./test/stubs/eleventyComputed/permalink.njk",
@@ -2058,4 +2080,15 @@ test("eleventyComputed js front matter (function)", async t => {
   let data = await getRenderedData(tmpl);
   t.is(data.key3, "value3-value2-value1.css");
   t.is((await tmpl.render(data)).trim(), "hi:value2-value1.css");
+});
+
+test("eleventyComputed js front matter key reuses and overrides", async t => {
+  let tmpl = new Template(
+    "./test/stubs/eleventyComputed/third.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await getRenderedData(tmpl);
+  t.is(data.key1, "value2-value1");
+  t.is((await tmpl.render(data)).trim(), "hi:value2-value1");
 });
