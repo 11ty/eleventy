@@ -4,7 +4,7 @@ import TemplateLayout from "../src/TemplateLayout";
 test("Creation", t => {
   t.is(
     new TemplateLayout("base", "./test/stubs").getInputPath(),
-    "test/stubs/_includes/base.njk"
+    "./test/stubs/_includes/base.njk"
   );
 
   t.throws(() => {
@@ -12,20 +12,39 @@ test("Creation", t => {
   });
 });
 
+test("Get Layout Chain", async t => {
+  let tl = new TemplateLayout("layouts/layout-inherit-a.njk", "./test/stubs");
+
+  t.deepEqual(await tl.getLayoutChain(), [
+    "./test/stubs/_includes/layouts/layout-inherit-a.njk",
+    "./test/stubs/_includes/layouts/layout-inherit-b.njk",
+    "./test/stubs/_includes/layouts/layout-inherit-c.njk"
+  ]);
+});
+
 test("Get Front Matter Data", async t => {
   let tl = new TemplateLayout("layouts/layout-inherit-a.njk", "./test/stubs");
-  t.is(tl.getInputPath(), "test/stubs/_includes/layouts/layout-inherit-a.njk");
+  t.is(tl.getInputPath(), "./test/stubs/_includes/layouts/layout-inherit-a.njk");
+
+  let data = await tl.getData();
+
+  t.deepEqual(data, {
+    inherits: "a",
+    secondinherits: "b",
+    thirdinherits: "c"
+  });
+  t.deepEqual(await tl.getLayoutChain(), [
+    "./test/stubs/_includes/layouts/layout-inherit-a.njk",
+    "./test/stubs/_includes/layouts/layout-inherit-b.njk",
+    "./test/stubs/_includes/layouts/layout-inherit-c.njk"
+  ]);
 
   t.deepEqual(await tl.getData(), {
     inherits: "a",
     secondinherits: "b",
     thirdinherits: "c"
   });
-  t.deepEqual(await tl.getData(), {
-    inherits: "a",
-    secondinherits: "b",
-    thirdinherits: "c"
-  });
+
 });
 
 test("Augment data with layoutContent", async t => {

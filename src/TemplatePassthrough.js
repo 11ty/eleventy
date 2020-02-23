@@ -1,10 +1,9 @@
 const copy = require("recursive-copy");
-const fs = require("fs");
 const TemplatePath = require("./TemplatePath");
 const debug = require("debug")("Eleventy:TemplatePassthrough");
 const fastglob = require("fast-glob");
 const EleventyBaseError = require("./EleventyBaseError");
-const bench = require("./BenchmarkManager").get("PassthroughCopy");
+//const bench = require("./BenchmarkManager").get("PassthroughCopy");
 
 class TemplatePassthroughError extends EleventyBaseError {}
 
@@ -98,11 +97,9 @@ class TemplatePassthrough {
 
     if (!this.isDryRun) {
       debug("Copying %o", this.inputPath);
-      const isDirectory = TemplatePath.isDirectorySync(this.inputPath);
-      const isFile = fs.existsSync(this.inputPath);
 
       // If directory or file, recursive copy
-      if (isDirectory || isFile) {
+      if (await TemplatePath.exists(this.inputPath)) {
         // IMPORTANT: this returns a promise, does not await for promise to finish
         return this.copy(this.inputPath, this.getOutputPath(), copyOptions);
       }

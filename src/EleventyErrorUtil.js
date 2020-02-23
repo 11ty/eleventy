@@ -21,8 +21,11 @@ class EleventyErrorUtil {
   }
 
   static cleanMessage(msg) {
-    if (!msg || !EleventyErrorUtil.hasEmbeddedError(msg)) {
-      return msg;
+    if (!msg) {
+      return "";
+    }
+    if (!EleventyErrorUtil.hasEmbeddedError(msg)) {
+      return "" + msg;
     }
 
     return msg.substr(0, msg.indexOf(EleventyErrorUtil.prefix));

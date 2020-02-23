@@ -412,7 +412,7 @@ Arguments:
    *
    * @private
    * @method
-   * @param {String} path - Watch this file.
+   * @param {String} path - File that triggered a re-run (added or modified)
    */
   async _watch(path) {
     if (path) {

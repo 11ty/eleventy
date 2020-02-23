@@ -12,6 +12,7 @@ const TemplatePermalink = require("./TemplatePermalink");
 const TemplatePermalinkNoWrite = require("./TemplatePermalinkNoWrite");
 const TemplateLayout = require("./TemplateLayout");
 const TemplateFileSlug = require("./TemplateFileSlug");
+const ComputedData = require("./ComputedData");
 const Pagination = require("./Plugins/Pagination");
 const TemplateContentPrematureUseError = require("./Errors/TemplateContentPrematureUseError");
 const debug = require("debug")("Eleventy:Template");
@@ -70,6 +71,26 @@ class Template extends TemplateContent {
 
   getTemplateSubfolder() {
     return TemplatePath.stripLeadingSubPath(this.parsed.dir, this.inputDir);
+  }
+
+  getLayout(layoutKey) {
+    if (!this._layout || layoutKey !== this._layoutKey) {
+      this._layoutKey = layoutKey;
+      this._layout = TemplateLayout.getTemplate(
+        layoutKey,
+        this.getInputDir(),
+        this.config
+      );
+    }
+    return this._layout;
+  }
+
+  async getLayoutChain() {
+    if (!this._layout) {
+      await this.getData();
+    }
+
+    return this._layout.getLayoutChain();
   }
 
   get baseFile() {
@@ -139,7 +160,6 @@ class Template extends TemplateContent {
     return link.toHref();
   }
 
-  // TODO check for conflicts, see if file already exists?
   async getOutputPath(data) {
     let uri = await this.getOutputLink(data);
 
@@ -189,11 +209,7 @@ class Template extends TemplateContent {
   async _testGetAllLayoutFrontMatterData() {
     let frontMatterData = await this.getFrontMatterData();
     if (frontMatterData[this.config.keys.layout]) {
-      let layout = TemplateLayout.getTemplate(
-        frontMatterData[this.config.keys.layout],
-        this.getInputDir(),
-        this.config
-      );
+      let layout = this.getLayout(frontMatterData[this.config.keys.layout]);
       return await layout.getData();
     }
     return {};
@@ -210,17 +226,14 @@ class Template extends TemplateContent {
       }
 
       let frontMatterData = await this.getFrontMatterData();
-      let foundLayout =
+      let layoutKey =
         frontMatterData[this.config.keys.layout] ||
         localData[this.config.keys.layout];
 
       let mergedLayoutData = {};
-      if (foundLayout) {
-        let layout = TemplateLayout.getTemplate(
-          foundLayout,
-          this.getInputDir(),
-          this.config
-        );
+      if (layoutKey) {
+        let layout = this.getLayout(layoutKey);
+
         mergedLayoutData = await layout.getData();
         debugDev(
           "%o getData() get merged layout chain front matter",
@@ -231,8 +244,8 @@ class Template extends TemplateContent {
       let mergedData = TemplateData.mergeDeep(
         this.config,
         {},
-        mergedLayoutData,
         localData,
+        mergedLayoutData,
         frontMatterData
       );
       mergedData = await this.addPageDate(mergedData);
@@ -281,49 +294,9 @@ class Template extends TemplateContent {
     return data;
   }
 
-  async addPageRenderedData(data) {
-    if (!("page" in data)) {
-      data.page = {};
-    }
-
-    let newUrl = await this.getOutputHref(data);
-    if ("page" in data && "url" in data.page) {
-      if (data.page.url !== newUrl) {
-        debug(
-          "Warning: data.page.url is in use (%o) will be overwritten with: %o",
-          data.page.url,
-          newUrl
-        );
-      }
-    }
-
-    data.page.url = newUrl;
-    data.page.outputPath = await this.getOutputPath(data);
-
-    return data;
-  }
-
-  // getData (with renderData and page.url added)
-  async getRenderedData() {
-    let data = await this.getData();
-    data = await this.addPageRenderedData(data);
-
-    if (data.renderData) {
-      data.renderData = await this.mapDataAsRenderedTemplates(
-        data.renderData,
-        data
-      );
-    }
-    return data;
-  }
-
   async renderLayout(tmpl, tmplData) {
     let layoutKey = tmplData[tmpl.config.keys.layout];
-    let layout = TemplateLayout.getTemplate(
-      layoutKey,
-      this.getInputDir(),
-      this.config
-    );
+    let layout = this.getLayout(layoutKey);
     debug("%o is using layout %o", this.inputPath, layoutKey);
 
     // TODO reuse templateContent from templateMap
@@ -345,10 +318,12 @@ class Template extends TemplateContent {
     return super.render(str, data, bypassMarkdown);
   }
 
+  // TODO at least some of this isn’t being used in the normal build
+  // Render is used for `renderData` and `permalink` but otherwise `renderPageEntry` is being used
   async render(data) {
     debugDev("%o render()", this.inputPath);
     if (!data) {
-      data = await this.getRenderedData();
+      throw new Error("`data` needs to be passed into render()");
     }
 
     if (!this.wrapWithLayouts && data[this.config.keys.layout]) {
@@ -390,13 +365,71 @@ class Template extends TemplateContent {
     return str;
   }
 
+  _addComputedEntry(computedData, obj, parentKey, declaredDependencies) {
+    // this check must come before lodashIsObject
+    if (typeof obj === "function") {
+      computedData.add(parentKey, obj, declaredDependencies);
+    } else if (lodashIsObject(obj)) {
+      for (let key in obj) {
+        let keys = [];
+        if (parentKey) {
+          keys.push(parentKey);
+        }
+        keys.push(key);
+        this._addComputedEntry(
+          computedData,
+          obj[key],
+          keys.join("."),
+          declaredDependencies
+        );
+      }
+    } else if (typeof obj === "string") {
+      computedData.add(
+        parentKey,
+        async innerData => {
+          return await super.render(obj, innerData, true);
+        },
+        declaredDependencies
+      );
+    }
+  }
+
+  async augmentFinalData(data) {
+    // will _not_ consume renderData
+    let computedData = new ComputedData();
+    // this allows computed entries to use page.url or page.outputPath and they’ll be resolved properly
+    this._addComputedEntry(
+      computedData,
+      {
+        page: {
+          url: async data => await this.getOutputHref(data),
+          outputPath: async data => await this.getOutputPath(data)
+        }
+      },
+      null,
+      ["permalink"]
+    ); // declared dependency
+
+    if (this.config.keys.computed in data) {
+      this._addComputedEntry(computedData, data[this.config.keys.computed]);
+    }
+    await computedData.setupData(data);
+
+    // deprecated, use eleventyComputed instead.
+    if ("renderData" in data) {
+      data.renderData = await this.mapDataAsRenderedTemplates(
+        data.renderData,
+        data
+      );
+    }
+  }
+
   async getTemplates(data) {
     // TODO cache this
     let results = [];
 
     if (!Pagination.hasPagination(data)) {
-      data.page.url = await this.getOutputHref(data);
-      data.page.outputPath = await this.getOutputPath(data);
+      await this.augmentFinalData(data);
 
       results.push({
         template: this,
@@ -428,16 +461,14 @@ class Template extends TemplateContent {
       let templates = await this.paging.getPageTemplates();
       let pageNumber = 0;
       for (let page of templates) {
-        // TODO try to reuse data instead of a new copy
-        let pageData = await page.getRenderedData();
+        let pageData = Object.assign({}, await page.getData());
 
         // Issue #115
         if (data.collections) {
           pageData.collections = data.collections;
         }
 
-        pageData.page.url = await page.getOutputHref(pageData);
-        pageData.page.outputPath = await page.getOutputPath(pageData);
+        await page.augmentFinalData(pageData);
 
         results.push({
           template: page,
@@ -529,24 +560,15 @@ class Template extends TemplateContent {
     let content;
     let layoutKey = mapEntry.data[this.config.keys.layout];
     if (layoutKey) {
-      let layout = TemplateLayout.getTemplate(
-        layoutKey,
-        this.getInputDir(),
-        this.config
-      );
+      let layout = this.getLayout(layoutKey);
+
       content = await layout.render(page.data, page.templateContent);
-      await this.runLinters(content, page.inputPath, page.outputPath);
-      content = await this.runTransforms(content, page.outputPath); // pass in page.inputPath?
-      return content;
     } else {
       content = page.templateContent;
-      await this.runLinters(
-        page.templateContent,
-        page.inputPath,
-        page.outputPath
-      );
-      content = await this.runTransforms(content, page.outputPath); // pass in page.inputPath?
     }
+
+    await this.runLinters(content, page.inputPath, page.outputPath);
+    content = await this.runTransforms(content, page.outputPath); // pass in page.inputPath?
     return content;
   }
 
@@ -560,6 +582,7 @@ class Template extends TemplateContent {
     return Promise.all(promises);
   }
 
+  // TODO is this still used by anything but tests?
   async write(outputPath, data) {
     let templates = await this.getRenderedTemplates(data);
     let promises = [];

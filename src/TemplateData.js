@@ -206,21 +206,23 @@ class TemplateData {
     let dataFileConflicts = {};
 
     for (let j = 0, k = files.length; j < k; j++) {
-      let folders = await this.getObjectPathForDataFile(files[j]);
+      let objectPathTarget = await this.getObjectPathForDataFile(files[j]);
       let data = await this.getDataValue(files[j], rawImports);
 
-      if (dataFileConflicts[folders]) {
+      // if two global files have the same path (but different extensions)
+      // and conflict, let’s merge them.
+      if (dataFileConflicts[objectPathTarget]) {
         debugWarn(
-          `merging global data from ${files[j]} with an already existing global data file (${dataFileConflicts[folders]}). Overriding existing keys`
+          `merging global data from ${files[j]} with an already existing global data file (${dataFileConflicts[objectPathTarget]}). Overriding existing keys.`
         );
 
-        let oldData = lodashget(globalData, folders);
+        let oldData = lodashget(globalData, objectPathTarget);
         data = TemplateData.mergeDeep(this.config, oldData, data);
       }
 
-      dataFileConflicts[folders] = files[j];
-      debug(`Found global data file ${files[j]} and adding as: ${folders}`);
-      lodashset(globalData, folders, data);
+      dataFileConflicts[objectPathTarget] = files[j];
+      debug(`Found global data file ${files[j]} and adding as: ${objectPathTarget}`);
+      lodashset(globalData, objectPathTarget, data);
     }
 
     return globalData;
@@ -387,6 +389,22 @@ class TemplateData {
     }
   }
 
+  _addBaseToPaths(paths, base, extensions) {
+    let dataSuffix = this.config.jsDataFileSuffix;
+
+    // data suffix
+    paths.push(base + dataSuffix + ".js");
+    paths.push(base + dataSuffix + ".cjs");
+    paths.push(base + dataSuffix + ".json");
+
+    // inject user extensions
+    this._pushExtensionsToPaths(paths, base + dataSuffix, extensions);
+
+    // top level
+    paths.push(base + ".json");
+    this._pushExtensionsToPaths(paths, base, extensions);
+  }
+
   async getLocalDataPaths(templatePath) {
     let paths = [];
     let parsed = parsePath(templatePath);
@@ -408,58 +426,31 @@ class TemplateData {
       let dataSuffix = this.config.jsDataFileSuffix;
       debug("Using %o to find data files.", dataSuffix);
 
-      // data suffix
-      paths.push(filePathNoExt + dataSuffix + ".js");
-      paths.push(filePathNoExt + dataSuffix + ".cjs");
-      paths.push(filePathNoExt + dataSuffix + ".json");
-      // inject user extensions
-      this._pushExtensionsToPaths(
-        paths,
-        filePathNoExt + dataSuffix,
-        userExtensions
-      );
-
-      // top level
-      paths.push(filePathNoExt + ".json");
-      this._pushExtensionsToPaths(paths, filePathNoExt, userExtensions);
+      this._addBaseToPaths(paths, filePathNoExt, userExtensions);
 
       let allDirs = TemplatePath.getAllDirs(parsed.dir);
+
       debugDev("allDirs: %o", allDirs);
       for (let dir of allDirs) {
         let lastDir = TemplatePath.getLastPathSegment(dir);
         let dirPathNoExt = dir + "/" + lastDir;
 
-        if (!inputDir) {
-          // data suffix
-          paths.push(dirPathNoExt + dataSuffix + ".js");
-          paths.push(dirPathNoExt + dataSuffix + ".cjs");
-          paths.push(dirPathNoExt + dataSuffix + ".json");
-          this._pushExtensionsToPaths(
-            paths,
-            dirPathNoExt + dataSuffix,
-            userExtensions
-          );
-
-          // top level
-          paths.push(dirPathNoExt + ".json");
-          this._pushExtensionsToPaths(paths, dirPathNoExt, userExtensions);
-        } else {
+        if (inputDir) {
           debugDev("dirStr: %o; inputDir: %o", dir, inputDir);
-          if (dir.indexOf(inputDir) === 0 && dir !== inputDir) {
-            // data suffix
-            paths.push(dirPathNoExt + dataSuffix + ".js");
-            paths.push(dirPathNoExt + dataSuffix + ".cjs");
-            paths.push(dirPathNoExt + dataSuffix + ".json");
-            this._pushExtensionsToPaths(
-              paths,
-              dirPathNoExt + dataSuffix,
-              userExtensions
-            );
+        }
+        if (!inputDir || (dir.indexOf(inputDir) === 0 && dir !== inputDir)) {
+          this._addBaseToPaths(paths, dirPathNoExt, userExtensions);
+        }
+      }
 
-            // top level
-            paths.push(dirPathNoExt + ".json");
-            this._pushExtensionsToPaths(paths, dirPathNoExt, userExtensions);
-          }
+      // 0.11.0+ include root input dir files
+      // if using `docs/` as input dir, looks for docs/docs.json et al
+      if (inputDir) {
+        let lastInputDir = TemplatePath.addLeadingDotSlash(
+          TemplatePath.join(inputDir, TemplatePath.getLastPathSegment(inputDir))
+        );
+        if (lastInputDir !== "./") {
+          this._addBaseToPaths(paths, lastInputDir, userExtensions);
         }
       }
     }

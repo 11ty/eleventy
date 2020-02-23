@@ -44,6 +44,14 @@ test("Local files", async t => {
     "./test/stubs-630/component-yaml/component.njk"
   );
   t.deepEqual(files, [
+    "./test/stubs-630/stubs-630.yaml",
+    "./test/stubs-630/stubs-630.nosj",
+    "./test/stubs-630/stubs-630.json",
+    "./test/stubs-630/stubs-630.11tydata.yaml",
+    "./test/stubs-630/stubs-630.11tydata.nosj",
+    "./test/stubs-630/stubs-630.11tydata.json",
+    "./test/stubs-630/stubs-630.11tydata.cjs",
+    "./test/stubs-630/stubs-630.11tydata.js",
     "./test/stubs-630/component-yaml/component-yaml.yaml",
     "./test/stubs-630/component-yaml/component-yaml.nosj",
     "./test/stubs-630/component-yaml/component-yaml.json",

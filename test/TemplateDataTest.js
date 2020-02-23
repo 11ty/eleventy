@@ -217,6 +217,10 @@ test("getLocalDataPaths", async t => {
   );
 
   t.deepEqual(paths, [
+    "./test/stubs/stubs.json",
+    "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.cjs",
+    "./test/stubs/stubs.11tydata.js",
     "./test/stubs/component/component.json",
     "./test/stubs/component/component.11tydata.json",
     "./test/stubs/component/component.11tydata.cjs",
@@ -253,6 +257,10 @@ test("getLocalDataPaths with an 11ty js template", async t => {
   );
 
   t.deepEqual(paths, [
+    "./test/stubs/stubs.json",
+    "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.cjs",
+    "./test/stubs/stubs.11tydata.js",
     "./test/stubs/component/component.json",
     "./test/stubs/component/component.11tydata.json",
     "./test/stubs/component/component.11tydata.cjs",
@@ -267,6 +275,10 @@ test("getLocalDataPaths with inputDir passed in (trailing slash)", async t => {
   );
 
   t.deepEqual(paths, [
+    "./test/stubs/stubs.json",
+    "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.cjs",
+    "./test/stubs/stubs.11tydata.js",
     "./test/stubs/component/component.json",
     "./test/stubs/component/component.11tydata.json",
     "./test/stubs/component/component.11tydata.cjs",
@@ -281,6 +293,10 @@ test("getLocalDataPaths with inputDir passed in (no trailing slash)", async t =>
   );
 
   t.deepEqual(paths, [
+    "./test/stubs/stubs.json",
+    "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.cjs",
+    "./test/stubs/stubs.11tydata.js",
     "./test/stubs/component/component.json",
     "./test/stubs/component/component.11tydata.json",
     "./test/stubs/component/component.11tydata.cjs",
@@ -295,6 +311,10 @@ test("getLocalDataPaths with inputDir passed in (no leading slash)", async t => 
   );
 
   t.deepEqual(paths, [
+    "./test/stubs/stubs.json",
+    "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.cjs",
+    "./test/stubs/stubs.11tydata.js",
     "./test/stubs/component/component.json",
     "./test/stubs/component/component.11tydata.json",
     "./test/stubs/component/component.11tydata.cjs",
