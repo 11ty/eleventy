@@ -42,7 +42,7 @@ class Eleventy {
     this.isVerbose = process.env.DEBUG ? false : !this.config.quietMode;
 
     /**
-     * @member {Boolean} - Was verbose mode overrode manually?
+     * @member {Boolean} - Was verbose mode overridden manually?
      * @default false
      */
     this.isVerboseOverride = false;
