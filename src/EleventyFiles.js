@@ -100,10 +100,7 @@ class EleventyFiles {
 
   // TODO make this a getter
   getTemplateData() {
-    if (!this.templateData) {
-      this.templateData = new TemplateData(this.inputDir);
-    }
-    return this.templateData;
+    return this.templateData ? this.templateData : new TemplateData(this.inputDir);
   }
 
   getDataDir() {
