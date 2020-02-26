@@ -40,9 +40,8 @@ class Ejs extends TemplateEngine {
 
   async compile(str, inputPath) {
     let options = this.getEjsOptions();
-    if (!inputPath || inputPath === "ejs" || inputPath === "md") {
-      // do nothing
-    } else {
+    
+    if (inputPath && inputPath ==! "ejs" && inputPath ==! "md") {
       options.filename = inputPath;
     }
 
