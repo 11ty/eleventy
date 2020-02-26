@@ -55,7 +55,7 @@ class Handlebars extends TemplateEngine {
     }
   }
 
-  async compile(str, inputPath) {
+  async compile(str) {
     let fn = this.handlebarsLib.compile(str);
     return function(data) {
       return fn(data);
