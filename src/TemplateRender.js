@@ -112,8 +112,7 @@ class TemplateRender {
 
     // markdown should always be first
     if (usingMarkdown) {
-      // todo use unshift or something (no wifi here to look up docs :D)
-      engines = ["md"].concat(engines);
+      engines.unshift("md");
     }
 
     return engines;
