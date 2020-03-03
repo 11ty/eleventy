@@ -19,4 +19,4 @@ jobs:
       - run: npm install
       - run: npm test
 env:
-  - YARN_GPG=no
+  YARN_GPG: no
