@@ -94,20 +94,19 @@ class EleventyFiles {
     this.passthroughManager = mgr;
   }
 
-  setTemplateData(templateData) {
-    this.templateData = templateData;
+  set templateData(templateData) {
+    this._templateData = templateData;
   }
 
-  // TODO make this a getter
-  getTemplateData() {
-    if (!this.templateData) {
-      this.templateData = new TemplateData(this.inputDir);
+  get templateData() {
+    if (!this._templateData) {
+      this._templateData = new TemplateData(this.inputDir);
     }
-    return this.templateData;
+    return this._templateData;
   }
 
   getDataDir() {
-    let data = this.getTemplateData();
+    let data = this.templateData;
 
     return data.getDataDir();
   }
@@ -297,13 +296,13 @@ class EleventyFiles {
   }
 
   async getGlobWatcherTemplateDataFiles() {
-    let templateData = this.getTemplateData();
+    let templateData = this.templateData;
     return await templateData.getTemplateDataFileGlob();
   }
 
   // TODO this isn’t great but reduces complexity avoiding using TemplateData:getLocalDataPaths for each template in the cache
   async getWatcherTemplateJavaScriptDataFiles() {
-    let globs = await this.getTemplateData().getTemplateJavaScriptDataFileGlob();
+    let globs = await this.templateData.getTemplateJavaScriptDataFileGlob();
     return TemplatePath.addLeadingDotSlashArray(
       await fastglob(globs, {
         ignore: ["**/node_modules/**"],
