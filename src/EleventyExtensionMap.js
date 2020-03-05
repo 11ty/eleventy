@@ -1,5 +1,4 @@
 const TemplatePath = require("./TemplatePath");
-const config = require("./Config");
 
 class EleventyExtensionMap {
   constructor(formatKeys = []) {
@@ -17,7 +16,7 @@ class EleventyExtensionMap {
   }
 
   get config() {
-    return this.configOverride || config.getConfig();
+    return this.configOverride || require("./Config").getConfig();
   }
   set config(cfg) {
     this.configOverride = cfg;
@@ -133,7 +132,7 @@ class EleventyExtensionMap {
   }
   static get keyMap() {
     return EleventyExtensionMap._getKeyMap(
-      config.getConfig().templateExtensionAliases || {}
+      require("./Config").getConfig().templateExtensionAliases || {}
     );
   }
 
