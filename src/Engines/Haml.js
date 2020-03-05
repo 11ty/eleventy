@@ -14,7 +14,7 @@ class Haml extends TemplateEngine {
     this.setEngineLib(lib);
   }
 
-  async compile(str) {
+  async compile(str, inputPath) {
     return this.hamlLib.compile(str);
   }
 }
