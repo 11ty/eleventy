@@ -425,14 +425,18 @@ class Template extends TemplateContent {
       );
     }
   }
-  
-  setTemplates(templates) {
-    this.templates = templates;
+
+  cacheTemplates(templates) {
+    if (!this.templates) {
+      this.templates = {};
+    }
+    this.templates[data.page.url] = templates;
   }
 
   async getTemplates(data) {
-    if (this.templates) {
-      return this.templates;
+    // for caching, we can safely assume that data.page.url is unique for each data input
+    if (this.templates && (data.page.url in this.templates)) {
+      return this.templates[data.page.url];
     }
     
     let results = [];
@@ -504,7 +508,8 @@ class Template extends TemplateContent {
       }
     }
 
-    this.setTemplates(results);
+    this.cacheTemplates(results);
+
     return results;
   }
 
