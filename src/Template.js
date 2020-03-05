@@ -426,11 +426,11 @@ class Template extends TemplateContent {
     }
   }
 
-  cacheTemplates(templates) {
+  cacheTemplates(pageUrl, templates) {
     if (!this.templates) {
       this.templates = {};
     }
-    this.templates[data.page.url] = templates;
+    this.templates[pageUrl] = templates;
   }
 
   async getTemplates(data) {
@@ -508,7 +508,7 @@ class Template extends TemplateContent {
       }
     }
 
-    this.cacheTemplates(results);
+    this.cacheTemplates(data.page.url, results);
 
     return results;
   }
