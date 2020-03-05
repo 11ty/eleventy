@@ -277,7 +277,7 @@ class Eleventy {
     this.eleventyFiles.init();
 
     this.templateData = new TemplateData(this.inputDir);
-    this.eleventyFiles.setTemplateData(this.templateData);
+    this.eleventyFiles.templateData = this.templateData;
 
     this.writer = new TemplateWriter(
       this.input,
