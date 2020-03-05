@@ -425,9 +425,16 @@ class Template extends TemplateContent {
       );
     }
   }
+  
+  setTemplates(templates) {
+    this.templates = templates;
+  }
 
   async getTemplates(data) {
-    // TODO cache this
+    if (this.templates) {
+      return this.templates;
+    }
+    
     let results = [];
 
     if (!Pagination.hasPagination(data)) {
@@ -497,6 +504,7 @@ class Template extends TemplateContent {
       }
     }
 
+    this.setTemplates(results);
     return results;
   }
 
