@@ -71,7 +71,7 @@ class TemplatePassthroughManager {
     });
   }
 
-  getFilePaths(paths) {
+  getNonTemplatePaths(paths) {
     if (!this.config.passthroughFileCopy) {
       debug("`passthroughFileCopy` is disabled in config, bypassing.");
       return [];
@@ -128,6 +128,22 @@ class TemplatePassthroughManager {
       });
   }
 
+  isPassthroughCopyFile(paths, changedFile) {
+    for (let path of paths) {
+      if (path === changedFile && !TemplateRender.hasEngine(path)) {
+        return true;
+      }
+    }
+
+    for (let path of this.getConfigPaths()) {
+      if (TemplatePath.startsWithSubPath(changedFile, path.inputPath)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   // Performance note: these can actually take a fair bit of time, but aren’t a
   // bottleneck to eleventy. The copies are performed asynchronously and don’t affect eleventy
   // write times in a significant way.
@@ -137,6 +153,19 @@ class TemplatePassthroughManager {
       return;
     }
 
+    if (
+      this.incrementalFile &&
+      this.isPassthroughCopyFile(paths, this.incrementalFile)
+    ) {
+      return this.copyPath(this._normalizePaths(this.incrementalFile)).then(
+        () => {
+          debug(
+            `TemplatePassthrough --incremental copy finished. Current count: ${this.count}`
+          );
+        }
+      );
+    }
+
     let promises = [];
     debug("TemplatePassthrough copy started.");
     for (let path of this.getConfigPaths()) {
@@ -144,7 +173,7 @@ class TemplatePassthroughManager {
       promises.push(this.copyPath(path));
     }
 
-    let passthroughPaths = this.getFilePaths(paths);
+    let passthroughPaths = this.getNonTemplatePaths(paths);
     for (let path of passthroughPaths) {
       let normalizedPath = this._normalizePaths(path);
       debug(

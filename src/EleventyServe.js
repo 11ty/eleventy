@@ -124,9 +124,7 @@ class EleventyServe {
       let redirectFilename = this.getRedirectFilename(this.savedPathPrefix);
       if (!fs.existsSync(redirectFilename)) {
         debug(
-          `Redirecting BrowserSync from ${
-            this.savedPathPrefix
-          } to ${pathPrefix}`
+          `Redirecting BrowserSync from ${this.savedPathPrefix} to ${pathPrefix}`
         );
         this.serveRedirect(this.savedPathPrefix);
       } else {
@@ -155,19 +153,14 @@ class EleventyServe {
     }
   }
 
-  reload(path, isInclude) {
+  /* filesToReload is optional */
+  reload(filesToReload) {
     if (this.server) {
       if (this.getPathPrefix() !== this.savedPathPrefix) {
         this.server.exit();
         this.serve();
       } else {
-        // Is a CSS input file and is not in the includes folder
-        // TODO check output path file extension of this template (not input path)
-        if (path && path.split(".").pop() === "css" && !isInclude) {
-          this.server.reload("*.css");
-        } else {
-          this.server.reload();
-        }
+        this.server.reload(filesToReload);
       }
     }
   }
