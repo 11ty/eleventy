@@ -584,17 +584,6 @@ class Template extends TemplateContent {
     return Promise.all(promises);
   }
 
-  // TODO is this still used by anything but tests?
-  async write(outputPath, data) {
-    let templates = await this.getRenderedTemplates(data);
-    let promises = [];
-    for (let tmpl of templates) {
-      promises.push(this._write(tmpl.outputPath, tmpl.templateContent));
-    }
-
-    return Promise.all(promises);
-  }
-
   // TODO this but better
   clone() {
     let tmpl = new Template(
