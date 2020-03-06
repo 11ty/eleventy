@@ -8,6 +8,7 @@ require("please-upgrade-node")(pkg, {
     );
   }
 });
+const debug = require("debug")("Eleventy:cmd");
 
 if (process.env.DEBUG) {
   require("time-require");
@@ -16,14 +17,30 @@ if (process.env.DEBUG) {
 const EleventyErrorHandler = require("./src/EleventyErrorHandler");
 
 try {
+  const EleventyCommandCheckError = require("./src/EleventyCommandCheckError");
   const argv = require("minimist")(process.argv.slice(2), {
-    boolean: ["quiet"],
+    string: ["input", "output", "formats", "config", "pathprefix", "port"],
+    boolean: [
+      "quiet",
+      "version",
+      "watch",
+      "dryrun",
+      "help",
+      "serve",
+      "passthroughall",
+      "incremental"
+    ],
     default: {
       quiet: null
+    },
+    unknown: function(unknownArgument) {
+      throw new EleventyCommandCheckError(
+        `We don’t know what '${unknownArgument}' is. Use --help to see the list of supported commands.`
+      );
     }
   });
+  debug("command: eleventy ", argv.toString());
   const Eleventy = require("./src/Eleventy");
-  const EleventyCommandCheck = require("./src/EleventyCommandCheck");
 
   process.on("unhandledRejection", (error, promise) => {
     EleventyErrorHandler.error(
@@ -40,10 +57,6 @@ try {
       "A promise rejection was handled asynchronously"
     );
   });
-
-  // TODO refactor to use minimist options.unknown callback?
-  let cmdCheck = new EleventyCommandCheck(argv);
-  cmdCheck.hasUnknownArguments();
 
   let elev = new Eleventy(argv.input, argv.output);
   elev.setConfigPathOverride(argv.config);
