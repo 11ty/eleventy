@@ -10,8 +10,8 @@ class ComputedData {
 
     // is this ¯\_(lisp)_/¯
     // must be strings that won’t be escaped by template languages
-    this.prefix = "(((((hi(((((";
-    this.suffix = ")))))hi)))))";
+    this.prefix = "(((((11ty(((((";
+    this.suffix = ")))))11ty)))))";
   }
 
   add(key, fn, declaredDependencies = []) {
@@ -20,7 +20,7 @@ class ComputedData {
     lodashSet(this.computed, key, fn);
   }
 
-  getProxyData(data) {
+  getProxyData() {
     let proxyData = {};
 
     // use these special strings as a workaround to check the rendered output
@@ -46,16 +46,17 @@ class ComputedData {
     return Array.from(vars);
   }
 
-  async getVarOrder(data) {
+  async getVarOrder() {
     if (this.computedKeys.size > 0) {
       let graph = new DependencyGraph();
 
-      let proxyData = this.getProxyData(data);
+      let proxyData = this.getProxyData();
 
       for (let key of this.computedKeys) {
         let computed = lodashGet(this.computed, key);
+        graph.addNode(key);
+
         if (typeof computed === "function") {
-          graph.addNode(key);
           if (this.declaredDependencies[key].length) {
             for (let dep of this.declaredDependencies[key]) {
               graph.addNode(dep);
@@ -63,7 +64,11 @@ class ComputedData {
             }
           }
 
+          // squelch console logs for this fake proxy data pass 😅
+          let savedLog = console.log;
+          console.log = () => {};
           let output = await computed(proxyData);
+          console.log = savedLog;
 
           let vars = this.findVarsInOutput(output);
           for (let usesVar of vars) {
@@ -82,13 +87,13 @@ class ComputedData {
   }
 
   async setupData(data) {
-    let order = await this.getVarOrder(data);
+    let order = await this.getVarOrder();
     for (let key of order) {
       let computed = lodashGet(this.computed, key);
 
       if (typeof computed === "function") {
         lodashSet(data, key, await computed(data));
-      } else if (computed) {
+      } else if (computed !== undefined) {
         lodashSet(data, key, computed);
       }
     }

@@ -121,3 +121,61 @@ test("use a computed value in another computed (out of order), async callbacks",
 
   t.is(data.keyComputed2nd, "using computed this is a test inject me");
 });
+
+test("Basic get/set nested", async t => {
+  let cd = new ComputedData();
+
+  cd.add("key1.nested", data => {
+    return `${data.key2}`;
+  });
+  cd.add("key2", data => "hi");
+
+  let data = {
+    key2: "inject me"
+  };
+  await cd.setupData(data);
+
+  t.deepEqual(data.key1, { nested: "hi" });
+  t.is(data.key1.nested, "hi");
+  t.is(data.key2, "hi");
+});
+
+test("Basic get/set nested deeper", async t => {
+  let cd = new ComputedData();
+
+  cd.add("key1.nested.deeperA", data => {
+    return `${data.key2}`;
+  });
+  cd.add("key1.nested.deeperB", data => {
+    return `${data.key2}`;
+  });
+  cd.add("key1.nested.deeperC.wow", data => {
+    return `${data.key2}`;
+  });
+  cd.add("key2", data => "hi");
+
+  let data = {
+    key1: {
+      nonComputed: "hi"
+    },
+    key2: "inject me"
+  };
+  await cd.setupData(data);
+
+  t.deepEqual(data.key1, {
+    nonComputed: "hi",
+    nested: {
+      deeperA: "hi",
+      deeperB: "hi",
+      deeperC: {
+        wow: "hi"
+      }
+    }
+  });
+
+  t.is(data.key1.nested.deeperA, "hi");
+  t.is(data.key1.nested.deeperB, "hi");
+  t.is(data.key1.nested.deeperC.wow, "hi");
+  t.is(data.key1.nonComputed, "hi");
+  t.is(data.key2, "hi");
+});

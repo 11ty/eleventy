@@ -34,10 +34,6 @@ class TemplateConfig {
     this.config = this.mergeConfig(this.localProjectConfigPath);
   }
 
-  resetOnWatch() {
-    // nothing yet
-  }
-
   getConfig() {
     return this.config;
   }

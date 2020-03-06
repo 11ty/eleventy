@@ -25,7 +25,10 @@ class TemplateWriter {
     this.input = inputPath;
     this.inputDir = TemplatePath.getDir(inputPath);
     this.outputDir = outputDir;
+
+    this.needToSearchForFiles = null;
     this.templateFormats = templateFormats;
+
     this.templateData = templateData;
     this.isVerbose = true;
     this.isDryRun = false;
@@ -34,6 +37,18 @@ class TemplateWriter {
 
     // TODO can we get rid of this? It’s only used for tests in getFileManager()
     this.passthroughAll = isPassthroughAll;
+  }
+
+  get templateFormats() {
+    return this._templateFormats;
+  }
+
+  set templateFormats(value) {
+    if (value !== this._templateFormats) {
+      this.needToSearchForFiles = true;
+    }
+
+    this._templateFormats = value;
   }
 
   /* For testing */
@@ -68,7 +83,11 @@ class TemplateWriter {
   }
 
   async _getAllPaths() {
-    return await this.getFileManager().getFiles();
+    if (!this.allPaths || this.needToSearchForFiles) {
+      this.allPaths = await this.getFileManager().getFiles();
+      debug("Found: %o", this.allPaths);
+    }
+    return this.allPaths;
   }
 
   _createTemplate(path) {
@@ -145,24 +164,22 @@ class TemplateWriter {
     });
   }
 
-  async write() {
-    let promises = [];
-    let paths = await this._getAllPaths();
-    debug("Found: %o", paths);
-
+  async writePassthroughCopy(paths) {
     let passthroughManager = this.getFileManager().getPassthroughManager();
-    if(this.incrementalFile) {
+    if (this.incrementalFile) {
       passthroughManager.setIncrementalFile(this.incrementalFile);
     }
 
-    promises.push(
-      passthroughManager.copyAll(paths).catch(e => {
-        EleventyErrorHandler.warn(e, "Error with passthrough copy");
-        return Promise.reject(
-          new TemplateWriterWriteError("Having trouble copying", e)
-        );
-      })
-    );
+    return passthroughManager.copyAll(paths).catch(e => {
+      EleventyErrorHandler.warn(e, "Error with passthrough copy");
+      return Promise.reject(
+        new TemplateWriterWriteError("Having trouble copying", e)
+      );
+    });
+  }
+
+  async writeTemplates(paths) {
+    let promises = [];
 
     // TODO optimize await here
     await this._createTemplateMap(paths);
@@ -199,6 +216,24 @@ class TemplateWriter {
           );
         })
       );
+    }
+
+    return promises;
+  }
+
+  async write() {
+    let paths = await this._getAllPaths();
+    let promises = [];
+    promises.push(this.writePassthroughCopy(paths));
+
+    // Only write templates if not using incremental OR if incremental file was *not* a passthrough copy
+    if (
+      !this.incrementalFile ||
+      !this.getFileManager()
+        .getPassthroughManager()
+        .isPassthroughCopyFile(paths, this.incrementalFile)
+    ) {
+      promises.push(...(await this.writeTemplates(paths)));
     }
 
     return Promise.all(promises).catch(e => {

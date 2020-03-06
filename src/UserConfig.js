@@ -57,6 +57,8 @@ class UserConfig {
     this.watchJavaScriptDependencies = true;
     this.additionalWatchTargets = [];
     this.browserSyncConfig = {};
+    this.chokidarConfig = {};
+    this.watchThrottleWaitTime = 0; //ms
 
     // using Map to preserve insertion order
     this.dataExtensions = new Map();
@@ -585,6 +587,14 @@ class UserConfig {
     this.browserSyncConfig = options;
   }
 
+  setChokidarConfig(options = {}) {
+    this.chokidarConfig = options;
+  }
+
+  setWatchThrottleWaitTime(time = 0) {
+    this.watchThrottleWaitTime = time;
+  }
+
   setFrontMatterParsingOptions(options = {}) {
     this.frontMatterParsingOptions = options;
   }
@@ -628,6 +638,8 @@ class UserConfig {
       watchJavaScriptDependencies: this.watchJavaScriptDependencies,
       additionalWatchTargets: this.additionalWatchTargets,
       browserSyncConfig: this.browserSyncConfig,
+      chokidarConfig: this.chokidarConfig,
+      watchThrottleWaitTime: this.watchThrottleWaitTime,
       frontMatterParsingOptions: this.frontMatterParsingOptions,
       dataExtensions: this.dataExtensions,
       quietMode: this.quietMode

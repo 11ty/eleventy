@@ -391,6 +391,8 @@ class Template extends TemplateContent {
         },
         declaredDependencies
       );
+    } else {
+      computedData.add(parentKey, obj, declaredDependencies);
     }
   }
 

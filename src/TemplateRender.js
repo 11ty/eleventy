@@ -2,7 +2,6 @@ const TemplatePath = require("./TemplatePath");
 const TemplateEngine = require("./Engines/TemplateEngine");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
-const config = require("./Config");
 // const debug = require("debug")("Eleventy:TemplateRender");
 
 class TemplateRenderUnknownEngineError extends EleventyBaseError {}
@@ -32,7 +31,7 @@ class TemplateRender {
 
   get config() {
     if (!this._config) {
-      this._config = config.getConfig();
+      this._config = require("./Config").getConfig();
     }
     return this._config;
   }
@@ -112,8 +111,7 @@ class TemplateRender {
 
     // markdown should always be first
     if (usingMarkdown) {
-      // todo use unshift or something (no wifi here to look up docs :D)
-      engines = ["md"].concat(engines);
+      engines.unshift("md");
     }
 
     return engines;

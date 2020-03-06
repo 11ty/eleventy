@@ -2092,3 +2092,16 @@ test("eleventyComputed js front matter key reuses and overrides", async t => {
   t.is(data.key1, "value2-value1");
   t.is((await tmpl.render(data)).trim(), "hi:value2-value1");
 });
+
+test("eleventyComputed true primitive", async t => {
+  let tmpl = new Template(
+    "./test/stubs/eleventyComputed/true.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await getRenderedData(tmpl);
+  t.is(data.key1, "value1");
+  t.is(data.key2, true);
+  t.is(data.key3, false);
+  t.is(data.key4, 324);
+});
