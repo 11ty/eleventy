@@ -47,7 +47,11 @@ class Template extends TemplateContent {
     this.writeCount = 0;
     this.skippedCount = 0;
     this.wrapWithLayouts = true;
-    this.fileSlug = new TemplateFileSlug(this.inputPath, this.inputDir);
+    this.fileSlug = new TemplateFileSlug(
+      this.inputPath,
+      this.inputDir,
+      this.extensionMap
+    );
     this.fileSlugStr = this.fileSlug.getSlug();
     this.filePathStem = this.fileSlug.getFullPathWithoutExtension();
   }

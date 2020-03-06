@@ -1,19 +1,21 @@
 const TemplatePath = require("./TemplatePath");
 const TemplateEngineManager = require("./TemplateEngineManager");
 const EleventyBaseError = require("./EleventyBaseError");
+const EleventyExtensionMap = require("./EleventyExtensionMap");
 // const debug = require("debug")("Eleventy:TemplateRender");
 
 class TemplateRenderUnknownEngineError extends EleventyBaseError {}
 
 // works with full path names or short engine name
 class TemplateRender {
-  constructor(tmplPath, inputDir) {
+  constructor(tmplPath, inputDir, extensionMap) {
     if (!tmplPath) {
       throw new Error(
         `TemplateRender requires a tmplPath argument, instead of ${tmplPath}`
       );
     }
 
+    this.extensionMap = extensionMap;
     this.engineNameOrPath = tmplPath;
     this.inputDir = inputDir;
 
@@ -40,6 +42,9 @@ class TemplateRender {
   }
 
   get extensionMap() {
+    if (!this._extensionMap) {
+      this._extensionMap = new EleventyExtensionMap();
+    }
     return this._extensionMap;
   }
 

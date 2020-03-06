@@ -367,9 +367,7 @@ Layout 1 dog`
 
 test("Glob Watcher Files with Passthroughs", t => {
   let tw = new TemplateWriter("test/stubs", "test/stubs/_site", ["njk", "png"]);
-  t.deepEqual(tw.eleventyFiles._getPassthroughPaths(), [
-    "./test/stubs/**/*.png"
-  ]);
+  t.deepEqual(tw.eleventyFiles.passthroughGlobs, ["./test/stubs/**/*.png"]);
 });
 
 test("Pagination and TemplateContent", async t => {
@@ -622,7 +620,7 @@ test("Passthrough file output", async t => {
     ["njk", "md"]
   );
 
-  const mgr = tw.getFileManager().getPassthroughManager();
+  const mgr = tw.eleventyFiles.getPassthroughManager();
   mgr.setConfig({
     passthroughFileCopy: true,
     passthroughCopies: {

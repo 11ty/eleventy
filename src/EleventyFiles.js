@@ -51,19 +51,30 @@ class EleventyFiles {
     this.setupGlobs();
   }
 
-  get validTemplateAndPassthroughCopyGlobs() {
-    if (!this._validTemplateAndPassthroughCopyGlobs) {
+  get validTemplateGlobs() {
+    if (!this._validTemplateGlobs) {
       let globs;
       if (this.input === this.inputDir) {
         globs = this.extensionMap.getValidGlobs(this.inputDir);
       } else {
         globs = this.templateGlobs;
       }
-      this._validTemplateAndPassthroughCopyGlobs = globs.concat(
-        this._getPassthroughPaths()
-      );
+      this._validTemplateGlobs = globs;
     }
-    return this._validTemplateAndPassthroughCopyGlobs;
+    return this._validTemplateGlobs;
+  }
+
+  get passthroughGlobs() {
+    let paths = new Set();
+    // stuff added in addPassthroughCopy()
+    for (let path of this.passthroughManager.getConfigPathGlobs()) {
+      paths.add(path);
+    }
+    // non-template language extensions
+    for (let path of this.extensionMap.getPassthroughCopyGlobs(this.inputDir)) {
+      paths.add(path);
+    }
+    return Array.from(paths);
   }
 
   restart() {
@@ -329,9 +340,9 @@ class EleventyFiles {
   /* For `eleventy --watch` */
   getGlobWatcherFiles() {
     // TODO is it better to tie the includes and data to specific file extensions or keep the **?
-    return this.validTemplateAndPassthroughCopyGlobs
-      .concat(this._getIncludesAndDataDirs())
-      .concat(this.getPassthroughManager().getConfigPathGlobs());
+    return this.validTemplateGlobs
+      .concat(this.passthroughGlobs)
+      .concat(this._getIncludesAndDataDirs());
   }
 
   /* For `eleventy --watch` */
@@ -359,19 +370,6 @@ class EleventyFiles {
     return this.fileIgnores.map(ignore =>
       TemplatePath.stripLeadingDotSlash(ignore.substr(1))
     );
-  }
-
-  _getPassthroughPaths() {
-    let paths = new Set();
-    // stuff added in addPassthroughCopy()
-    for (let path of this.passthroughManager.getConfigPathGlobs()) {
-      paths.add(path);
-    }
-    // non-template language extensions
-    for (let path of this.extensionMap.getPassthroughCopyGlobs(this.inputDir)) {
-      paths.add(path);
-    }
-    return Array.from(paths);
   }
 
   _getIncludesAndDataDirs() {

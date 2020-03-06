@@ -142,7 +142,7 @@ class TemplatePassthroughManager {
 
   isPassthroughCopyFile(paths, changedFile) {
     for (let path of paths) {
-      if (path === changedFile && !TemplateRender.hasEngine(path)) {
+      if (path === changedFile && !this.extensionMap.hasEngine(path)) {
         return true;
       }
     }

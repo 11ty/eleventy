@@ -1,9 +1,8 @@
 const parsePath = require("parse-filepath");
 const TemplatePath = require("./TemplatePath");
-const EleventyExtensionMap = require("./EleventyExtensionMap");
 
 class TemplateFileSlug {
-  constructor(inputPath, inputDir) {
+  constructor(inputPath, inputDir, extensionMap) {
     if (inputDir) {
       inputPath = TemplatePath.stripLeadingSubPath(inputPath, inputDir);
     }
@@ -17,9 +16,7 @@ class TemplateFileSlug {
 
     this.parsed = parsePath(inputPath);
     // TODO update this after the fix for issue #117 merges
-    this.filenameNoExt = EleventyExtensionMap.removeTemplateExtension(
-      this.parsed.base
-    );
+    this.filenameNoExt = extensionMap.removeTemplateExtension(this.parsed.base);
   }
 
   getFullPathWithoutExtension() {

@@ -101,7 +101,7 @@ class TemplateWriter {
 
   async _getAllPaths() {
     if (!this.allPaths || this.needToSearchForFiles) {
-      this.allPaths = await this.getFileManager().getFiles();
+      this.allPaths = await this.eleventyFiles.getFiles();
       debug("Found: %o", this.allPaths);
     }
     return this.allPaths;

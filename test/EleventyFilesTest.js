@@ -445,7 +445,7 @@ test("Input to 'src' and empty includes dir (issue #403)", t => {
   });
   evf.init();
 
-  t.deepEqual(evf._testGetFileGlobs(), [
+  t.deepEqual(evf.getFileGlobs(), [
     "./src/**/*.md",
     "./src/**/*.liquid",
     "./src/**/*.html",
@@ -513,7 +513,7 @@ test("Issue #403: all .eleventyignores should be relative paths not absolute pat
   });
   evf.init();
 
-  let globs = await evf._testGetFileGlobs();
+  let globs = await evf.getFileGlobs();
   t.is(
     globs.filter(glob => {
       return glob.indexOf(TemplatePath.absolutePath()) > -1;
