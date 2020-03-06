@@ -19,7 +19,14 @@ const EleventyErrorHandler = require("./src/EleventyErrorHandler");
 try {
   const EleventyCommandCheckError = require("./src/EleventyCommandCheckError");
   const argv = require("minimist")(process.argv.slice(2), {
-    string: ["input", "output", "formats", "config", "pathprefix", "port"],
+    string: [
+      "input",
+      "output",
+      "formats",
+      "config",
+      "pathprefix",
+      "port"
+    ],
     boolean: [
       "quiet",
       "version",
