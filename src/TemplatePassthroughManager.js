@@ -1,7 +1,7 @@
 const config = require("./Config");
+const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");
 const TemplatePassthrough = require("./TemplatePassthrough");
-const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
 const debug = require("debug")("Eleventy:TemplatePassthroughManager");
 
@@ -22,6 +22,18 @@ class TemplatePassthroughManager {
 
   setConfig(configOverride) {
     this.config = configOverride || {};
+  }
+
+  set extensionMap(extensionMap) {
+    this._extensionMap = extensionMap;
+  }
+
+  get extensionMap() {
+    if (!this._extensionMap) {
+      this._extensionMap = new EleventyExtensionMap();
+      this._extensionMap.config = this.config;
+    }
+    return this._extensionMap;
   }
 
   setOutputDir(outputDir) {
@@ -79,7 +91,7 @@ class TemplatePassthroughManager {
 
     let matches = [];
     for (let path of paths) {
-      if (!TemplateRender.hasEngine(path)) {
+      if (!this.extensionMap.hasEngine(path)) {
         matches.push(path);
       }
     }

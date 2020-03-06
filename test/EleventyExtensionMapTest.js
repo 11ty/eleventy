@@ -39,7 +39,7 @@ test("Keys are mapped to lower case", t => {
 
 test("Pruned globs", t => {
   let map = new EleventyExtensionMap(["pug", "njk", "png"]);
-  t.deepEqual(map.getPrunedGlobs("."), ["./**/*.png"]);
+  t.deepEqual(map.getPassthroughCopyGlobs("."), ["./**/*.png"]);
 });
 
 test("Empty path for fileList", t => {
@@ -77,67 +77,69 @@ test("fileList with dir in path and dir", t => {
 });
 
 test("removeTemplateExtension", t => {
-  t.is(
-    EleventyExtensionMap.removeTemplateExtension("component.njk"),
-    "component"
-  );
-  t.is(
-    EleventyExtensionMap.removeTemplateExtension("component.11ty.js"),
-    "component"
-  );
+  let map = new EleventyExtensionMap(["njk", "11ty.js"]);
+  t.is(map.removeTemplateExtension("component.njk"), "component");
+  t.is(map.removeTemplateExtension("component.11ty.js"), "component");
 
-  t.is(EleventyExtensionMap.removeTemplateExtension(""), "");
-  t.is(EleventyExtensionMap.removeTemplateExtension("component"), "component");
-  t.is(
-    EleventyExtensionMap.removeTemplateExtension("component.js"),
-    "component.js"
-  );
+  t.is(map.removeTemplateExtension(""), "");
+  t.is(map.removeTemplateExtension("component"), "component");
+  t.is(map.removeTemplateExtension("component.js"), "component.js");
+});
+
+test("hasEngine", t => {
+  let map = new EleventyExtensionMap([
+    "liquid",
+    "njk",
+    "11ty.js",
+    "ejs",
+    "pug"
+  ]);
+  t.true(map.hasEngine("default.ejs"));
+  t.is(map.getKey("default.ejs"), "ejs");
+  t.falsy(map.getKey());
+  t.is(map.getKey("EjS"), "ejs");
+  t.true(map.hasEngine("EjS"));
+  t.true(map.hasEngine("ejs"));
+  t.falsy(map.getKey("sldkjfkldsj"));
+  t.false(map.hasEngine("sldkjfkldsj"));
+
+  t.is(map.getKey("11ty.js"), "11ty.js");
+  t.true(map.hasEngine("11ty.js"));
+
+  t.is(map.getKey("md"), "md");
+  t.true(map.hasEngine("md"));
+});
+
+test("hasEngine no formats passed in", t => {
+  let map = new EleventyExtensionMap([]);
+  t.true(map.hasEngine("default.ejs"));
+  t.is(map.getKey("default.ejs"), "ejs");
+  t.falsy(map.getKey());
+  t.is(map.getKey("EjS"), "ejs");
+  t.true(map.hasEngine("EjS"));
+  t.true(map.hasEngine("ejs"));
+  t.falsy(map.getKey("sldkjfkldsj"));
+  t.false(map.hasEngine("sldkjfkldsj"));
+
+  // should return keys for engines that exist but are not filtered
+  t.is(map.getKey("11ty.js"), "11ty.js");
+  t.true(map.hasEngine("11ty.js"));
+
+  t.is(map.getKey("md"), "md");
+  t.true(map.hasEngine("md"));
 });
 
 test("getKey", t => {
-  t.is(EleventyExtensionMap.getKey("component.njk"), "njk");
-  t.is(EleventyExtensionMap.getKey("component.11ty.js"), "11ty.js");
-  t.is(EleventyExtensionMap.getKey("11ty.js"), "11ty.js");
-  t.is(EleventyExtensionMap.getKey(".11ty.js"), "11ty.js");
+  let map = new EleventyExtensionMap(["njk", "11ty.js", "md"]);
+  t.is(map.getKey("component.njk"), "njk");
+  t.is(map.getKey("component.11ty.js"), "11ty.js");
+  t.is(map.getKey("11ty.js"), "11ty.js");
+  t.is(map.getKey(".11ty.js"), "11ty.js");
 
-  t.is(EleventyExtensionMap.getKey("sample.md"), "md");
+  t.is(map.getKey("sample.md"), "md");
 
-  t.is(EleventyExtensionMap.getKey(""), undefined);
-  t.is(EleventyExtensionMap.getKey("js"), undefined);
-  t.is(EleventyExtensionMap.getKey("component"), undefined);
-  t.is(EleventyExtensionMap.getKey("component.js"), undefined);
-});
-
-test("Extension aliasing (one format key)", t => {
-  let map = new EleventyExtensionMap(["md"]);
-  map.config = {
-    templateExtensionAliases: {
-      markdown: "md",
-      nunjucks: "njk" // N/A to current format list
-    }
-  };
-  t.deepEqual(map.getExtensionsFromKey("md"), ["md", "markdown"]);
-  t.deepEqual(map.getExtensionsFromKey("njk"), ["njk", "nunjucks"]);
-
-  // should filter out N/A aliases
-  t.deepEqual(map.getGlobs("."), ["./**/*.md", "./**/*.markdown"]);
-});
-
-test("Extension aliasing (two format keys)", t => {
-  let map = new EleventyExtensionMap(["md", "njk"]);
-  map.config = {
-    templateExtensionAliases: {
-      markdown: "md",
-      nunjucks: "njk"
-    }
-  };
-  t.deepEqual(map.getExtensionsFromKey("md"), ["md", "markdown"]);
-  t.deepEqual(map.getExtensionsFromKey("njk"), ["njk", "nunjucks"]);
-
-  t.deepEqual(map.getGlobs("."), [
-    "./**/*.md",
-    "./**/*.markdown",
-    "./**/*.njk",
-    "./**/*.nunjucks"
-  ]);
+  t.is(map.getKey(""), undefined);
+  t.is(map.getKey("js"), undefined);
+  t.is(map.getKey("component"), undefined);
+  t.is(map.getKey("component.js"), undefined);
 });

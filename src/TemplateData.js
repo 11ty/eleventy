@@ -31,6 +31,18 @@ class TemplateData {
     this.globalData = null;
   }
 
+  get extensionMap() {
+    if (!this._extensionMap) {
+      this._extensionMap = new EleventyExtensionMap();
+      this._extensionMap.config = this.config;
+    }
+    return this._extensionMap;
+  }
+
+  set extensionMap(map) {
+    this._extensionMap = map;
+  }
+
   /* Used by tests */
   _setConfig(config) {
     this.config = config;
@@ -220,7 +232,9 @@ class TemplateData {
       }
 
       dataFileConflicts[objectPathTarget] = files[j];
-      debug(`Found global data file ${files[j]} and adding as: ${objectPathTarget}`);
+      debug(
+        `Found global data file ${files[j]} and adding as: ${objectPathTarget}`
+      );
       lodashset(globalData, objectPathTarget, data);
     }
 
@@ -319,9 +333,10 @@ class TemplateData {
         );
       }
     } else {
-      let fn = await new TemplateRender(engineName).getCompiledTemplate(
-        rawInput
-      );
+      let tr = new TemplateRender(engineName, this.inputDir);
+      tr.extensionMap = this.extensionMap;
+
+      let fn = await tr.getCompiledTemplate(rawInput);
 
       try {
         // pass in rawImports, don’t pass in global data, that’s what we’re parsing
@@ -414,7 +429,7 @@ class TemplateData {
     let userExtensions = this.getUserDataExtensions();
 
     if (parsed.dir) {
-      let fileNameNoExt = EleventyExtensionMap.removeTemplateExtension(
+      let fileNameNoExt = this.extensionMap.removeTemplateExtension(
         parsed.base
       );
 

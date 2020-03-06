@@ -4,7 +4,6 @@ const normalize = require("normalize-path");
 const lodashIsObject = require("lodash/isObject");
 const { DateTime } = require("luxon");
 
-const EleventyExtensionMap = require("./EleventyExtensionMap");
 const TemplateData = require("./TemplateData");
 const TemplateContent = require("./TemplateContent");
 const TemplatePath = require("./TemplatePath");
@@ -94,9 +93,7 @@ class Template extends TemplateContent {
   }
 
   get baseFile() {
-    return (this._extensionMap || EleventyExtensionMap).removeTemplateExtension(
-      this.parsed.base
-    );
+    return this.extensionMap.removeTemplateExtension(this.parsed.base);
   }
 
   get htmlIOException() {
@@ -145,7 +142,8 @@ class Template extends TemplateContent {
       this.getTemplateSubfolder(),
       this.baseFile,
       this.extraOutputSubdirectory,
-      this.htmlIOException ? this.config.htmlOutputSuffix : ""
+      this.htmlIOException ? this.config.htmlOutputSuffix : "",
+      this.engine.defaultTemplateFileExtension
     );
   }
 

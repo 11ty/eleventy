@@ -2,6 +2,7 @@ const pkg = require("../package.json");
 const TemplatePath = require("./TemplatePath");
 const TemplateData = require("./TemplateData");
 const TemplateWriter = require("./TemplateWriter");
+const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyErrorHandler = require("./EleventyErrorHandler");
 const EleventyServe = require("./EleventyServe");
 const EleventyWatch = require("./EleventyWatch");
@@ -273,15 +274,19 @@ class Eleventy {
    */
   async init() {
     let formats = this.formatsOverride || this.config.templateFormats;
+    this.extensionMap = new EleventyExtensionMap(formats);
+
     this.eleventyFiles = new EleventyFiles(
       this.input,
       this.outputDir,
       formats,
       this.isPassthroughAll
     );
+    this.eleventyFiles.extensionMap = this.extensionMap;
     this.eleventyFiles.init();
 
     this.templateData = new TemplateData(this.inputDir);
+    this.templateData.extensionMap = this.extensionMap;
     this.eleventyFiles.setTemplateData(this.templateData);
 
     this.writer = new TemplateWriter(
@@ -292,6 +297,7 @@ class Eleventy {
       this.isPassthroughAll
     );
 
+    this.writer.extensionMap = this.extensionMap;
     this.writer.setEleventyFiles(this.eleventyFiles);
 
     debug(`Directories:

@@ -5,9 +5,9 @@ import TemplateData from "../src/TemplateData";
 import Template from "../src/Template";
 import EleventyErrorUtil from "../src/EleventyErrorUtil";
 import TemplateContentPrematureUseError from "../src/Errors/TemplateContentPrematureUseError";
-import templateConfig from "../src/Config";
 import normalizeNewLines from "./Util/normalizeNewLines";
 
+import templateConfig from "../src/Config";
 const config = templateConfig.getConfig();
 
 async function getRenderedData(tmpl, pageNumber = 0) {

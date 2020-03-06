@@ -27,6 +27,14 @@ class TemplateEngine {
     this._config = config;
   }
 
+  get engineManager() {
+    return this._engineManager;
+  }
+
+  set engineManager(manager) {
+    this._engineManager = manager;
+  }
+
   getName() {
     return this.name;
   }
@@ -119,35 +127,8 @@ class TemplateEngine {
     // do nothing
   }
 
-  static get templateKeyMapToClassName() {
-    return {
-      ejs: "Ejs",
-      md: "Markdown",
-      jstl: "JavaScriptTemplateLiteral",
-      html: "Html",
-      hbs: "Handlebars",
-      mustache: "Mustache",
-      haml: "Haml",
-      pug: "Pug",
-      njk: "Nunjucks",
-      liquid: "Liquid",
-      "11ty.js": "JavaScript"
-    };
-  }
-
-  static hasEngine(name) {
-    return name in TemplateEngine.templateKeyMapToClassName;
-  }
-
-  static getEngine(name, includesDir) {
-    if (!this.hasEngine(name)) {
-      throw new Error(
-        `Template Engine ${name} does not exist in getEngine (includes dir: ${includesDir})`
-      );
-    }
-
-    const cls = require("./" + TemplateEngine.templateKeyMapToClassName[name]);
-    return new cls(name, includesDir);
+  get defaultTemplateFileExtension() {
+    return "html";
   }
 }
 

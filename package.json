@@ -83,6 +83,7 @@
     "jsdoc": "3.6.3",
     "lint-staged": "^10.0.7",
     "markdown-it-emoji": "^1.4.0",
+    "node-sass": "^4.12.0",
     "nyc": "^15.0.0",
     "prettier": "^1.19.1",
     "rimraf": "^3.0.2",

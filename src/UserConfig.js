@@ -52,8 +52,7 @@ class UserConfig {
     this.useGitIgnore = true;
     this.dataDeepMerge = false;
     this.experiments = new Set();
-    // this.userExtensionMap = {};
-    // this.templateExtensionAliases = {};
+    this.extensionMap = new Set();
     this.watchJavaScriptDependencies = true;
     this.additionalWatchTargets = [];
     this.browserSyncConfig = {};
@@ -571,10 +570,6 @@ class UserConfig {
     this.dataDeepMerge = !!deepMerge;
   }
 
-  // addTemplateExtensionAlias(targetKey, extension) {
-  //   this.templateExtensionAliases[extension] = targetKey;
-  // }
-
   addWatchTarget(additionalWatchTargets) {
     this.additionalWatchTargets.push(additionalWatchTargets);
   }
@@ -601,6 +596,22 @@ class UserConfig {
 
   setQuietMode(quietMode) {
     this.quietMode = !!quietMode;
+  }
+
+  addExtension(fileExtension, options = {}) {
+    this.extensionMap.add(
+      Object.assign(
+        {
+          key: fileExtension,
+          extension: fileExtension
+        },
+        options
+      )
+    );
+  }
+
+  addDataExtension(formatExtension, formatParser) {
+    this.dataExtensions.set(formatExtension, formatParser);
   }
 
   getMergingConfigObject() {
@@ -634,7 +645,6 @@ class UserConfig {
       useGitIgnore: this.useGitIgnore,
       dataDeepMerge: this.dataDeepMerge,
       experiments: this.experiments,
-      // templateExtensionAliases: this.templateExtensionAliases,
       watchJavaScriptDependencies: this.watchJavaScriptDependencies,
       additionalWatchTargets: this.additionalWatchTargets,
       browserSyncConfig: this.browserSyncConfig,
@@ -642,16 +652,9 @@ class UserConfig {
       watchThrottleWaitTime: this.watchThrottleWaitTime,
       frontMatterParsingOptions: this.frontMatterParsingOptions,
       dataExtensions: this.dataExtensions,
+      extensionMap: this.extensionMap,
       quietMode: this.quietMode
     };
-  }
-
-  // addExtension(fileExtension, userClass) {
-  //   this.userExtensionMap[ fileExtension ] = userClass;
-  // }
-
-  addDataExtension(formatExtension, formatParser) {
-    this.dataExtensions.set(formatExtension, formatParser);
   }
 }
 

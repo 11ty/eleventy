@@ -1,32 +1,39 @@
 import test from "ava";
 import TemplateRender from "../src/TemplateRender";
+import EleventyExtensionMap from "../src/EleventyExtensionMap";
+
+function getNewTemplateRender(name, inputDir) {
+  let tr = new TemplateRender(name, inputDir);
+  tr.extensionMap = new EleventyExtensionMap();
+  return tr;
+}
 
 // Pug
 test("Pug", t => {
-  t.is(new TemplateRender("pug").getEngineName(), "pug");
+  t.is(getNewTemplateRender("pug").getEngineName(), "pug");
 });
 
 test("Pug Render", async t => {
-  let fn = await new TemplateRender("pug").getCompiledTemplate("p= name");
+  let fn = await getNewTemplateRender("pug").getCompiledTemplate("p= name");
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });
 
 test("Pug Render Include (Absolute)", async t => {
-  let fn = await new TemplateRender("pug", "./test/stubs/")
+  let fn = await getNewTemplateRender("pug", "./test/stubs/")
     .getCompiledTemplate(`p
 	include /included.pug`);
   t.is(await fn({ name: "Zach" }), "<p><span>This is an include.</span></p>");
 });
 
 test("Pug Render Include with Data", async t => {
-  let fn = await new TemplateRender("pug", "./test/stubs/")
+  let fn = await getNewTemplateRender("pug", "./test/stubs/")
     .getCompiledTemplate(`p
 	include /includedvar.pug`);
   t.is(await fn({ name: "Zach" }), "<p><span>This is Zach.</span></p>");
 });
 
 test("Pug Render Include with Data, inline var overrides data", async t => {
-  let fn = await new TemplateRender("pug", "./test/stubs/")
+  let fn = await getNewTemplateRender("pug", "./test/stubs/")
     .getCompiledTemplate(`
 - var name = "Bill";
 p
@@ -35,7 +42,7 @@ p
 });
 
 test("Pug Render Extends (Layouts)", async t => {
-  let fn = await new TemplateRender("pug", "./test/stubs/")
+  let fn = await getNewTemplateRender("pug", "./test/stubs/")
     .getCompiledTemplate(`extends /layout.pug
 block content
   h1= name`);
@@ -43,7 +50,7 @@ block content
 });
 
 test("Pug Render Extends (Relative, Layouts)", async t => {
-  let fn = await new TemplateRender(
+  let fn = await getNewTemplateRender(
     "./test/stubs/does_not_exist_and_thats_ok.pug",
     "./test/stubs/"
   ).getCompiledTemplate(`extends ./layout-relative.pug
@@ -53,14 +60,14 @@ block content
 });
 
 test("Pug Render Include (Relative)", async t => {
-  let fn = await new TemplateRender("pug", "./test/stubs/")
+  let fn = await getNewTemplateRender("pug", "./test/stubs/")
     .getCompiledTemplate(`p
   include _includes/included.pug`);
   t.is(await fn({ name: "Zach" }), "<p><span>This is an include.</span></p>");
 });
 
 test("Pug Render Include (Relative, again)", async t => {
-  let fn = await new TemplateRender(
+  let fn = await getNewTemplateRender(
     "./test/stubs/does_not_exist_and_thats_ok.pug",
     "./test/stubs/"
   ).getCompiledTemplate(`p
@@ -72,7 +79,7 @@ test("Pug Render Include (Relative, again)", async t => {
 });
 
 test("Pug Render Include (Relative, dot slash)", async t => {
-  let fn = await new TemplateRender(
+  let fn = await getNewTemplateRender(
     "./test/stubs/does_not_exist_and_thats_ok.pug",
     "./test/stubs/"
   ).getCompiledTemplate(`p
@@ -84,7 +91,7 @@ test("Pug Render Include (Relative, dot slash)", async t => {
 });
 
 test("Pug Render Include (Relative, dot dot slash)", async t => {
-  let fn = await new TemplateRender(
+  let fn = await getNewTemplateRender(
     "./test/stubs/dir/does_not_exist_and_thats_ok.pug",
     "./test/stubs/"
   ).getCompiledTemplate(`p
@@ -96,7 +103,7 @@ test("Pug Render Include (Relative, dot dot slash)", async t => {
 });
 
 test("Pug Options Overrides", async t => {
-  let tr = new TemplateRender("pug", "./test/stubs/");
+  let tr = getNewTemplateRender("pug", "./test/stubs/");
   tr.engine.setPugOptions({ testoption: "testoverride" });
 
   let options = tr.engine.getPugOptions();
@@ -104,12 +111,12 @@ test("Pug Options Overrides", async t => {
 });
 
 test("Pug getEngineLib", async t => {
-  let tr = new TemplateRender("pug", "./test/stubs/");
+  let tr = getNewTemplateRender("pug", "./test/stubs/");
   t.truthy(tr.engine.getEngineLib());
 });
 
 test("Pug Render: with Library Override", async t => {
-  let tr = new TemplateRender("pug");
+  let tr = getNewTemplateRender("pug");
 
   let lib = require("pug");
   tr.engine.setLibrary(lib);
@@ -119,7 +126,7 @@ test("Pug Render: with Library Override", async t => {
 });
 
 test("Pug Filter", async t => {
-  let tr = new TemplateRender("pug", "./test/stubs/");
+  let tr = getNewTemplateRender("pug", "./test/stubs/");
   tr.engine.setPugOptions({
     filters: {
       makeUppercase: function(text, options) {
@@ -136,7 +143,7 @@ test("Pug Filter", async t => {
 });
 
 test("Pug Render with Function", async t => {
-  let fn = await new TemplateRender("pug").getCompiledTemplate("p= name()");
+  let fn = await getNewTemplateRender("pug").getCompiledTemplate("p= name()");
   t.is(
     await fn({
       name: function() {

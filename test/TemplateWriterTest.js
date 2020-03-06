@@ -367,7 +367,9 @@ Layout 1 dog`
 
 test("Glob Watcher Files with Passthroughs", t => {
   let tw = new TemplateWriter("test/stubs", "test/stubs/_site", ["njk", "png"]);
-  t.deepEqual(tw.getFileManager().getPassthroughPaths(), []);
+  t.deepEqual(tw.eleventyFiles._getPassthroughPaths(), [
+    "./test/stubs/**/*.png"
+  ]);
 });
 
 test("Pagination and TemplateContent", async t => {
@@ -607,16 +609,8 @@ test.skip("JavaScript with alias", async t => {
   tw.setEleventyFiles(evf);
 
   let tmpl = tw._createTemplate(files[0]);
-  tmpl._setExtensionMap(map);
   t.is(
     await tmpl.getOutputPath(),
-    "./test/stubs/_writeTestJSSite/sample/index.html"
-  );
-
-  let tmpl2 = tw._createTemplate(files[1]);
-  tmpl2._setExtensionMap(map);
-  t.is(
-    await tmpl2.getOutputPath(),
     "./test/stubs/_writeTestJSSite/test/index.html"
   );
 });

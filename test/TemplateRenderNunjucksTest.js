@@ -1,5 +1,12 @@
 import test from "ava";
 import TemplateRender from "../src/TemplateRender";
+import EleventyExtensionMap from "../src/EleventyExtensionMap";
+
+function getNewTemplateRender(name, inputDir) {
+  let tr = new TemplateRender(name, inputDir);
+  tr.extensionMap = new EleventyExtensionMap();
+  return tr;
+}
 
 class TestEleventyError extends Error {}
 
@@ -13,11 +20,11 @@ async function getPromise(resolveTo) {
 
 // Nunjucks
 test("Nunjucks", t => {
-  t.is(new TemplateRender("njk").getEngineName(), "njk");
+  t.is(getNewTemplateRender("njk").getEngineName(), "njk");
 });
 
 test("Nunjucks Render", async t => {
-  let fn = await new TemplateRender("njk").getCompiledTemplate(
+  let fn = await getNewTemplateRender("njk").getCompiledTemplate(
     "<p>{{ name }}</p>"
   );
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
@@ -31,14 +38,14 @@ test("Nunjucks Render Addition", async t => {
 });
 
 test("Nunjucks Render Extends", async t => {
-  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
+  let fn = await getNewTemplateRender("njk", "test/stubs").getCompiledTemplate(
     "{% extends 'base.njk' %}{% block content %}This is a child.{% endblock %}"
   );
   t.is(await fn(), "<p>This is a child.</p>");
 });
 
 test("Nunjucks Render Relative Extends", async t => {
-  let fn = await new TemplateRender(
+  let fn = await getNewTemplateRender(
     "./test/stubs/njk-relative/dir/does_not_exist_and_thats_ok.njk",
     "test/stubs"
   ).getCompiledTemplate(
@@ -48,28 +55,28 @@ test("Nunjucks Render Relative Extends", async t => {
 });
 
 test("Nunjucks Render Include", async t => {
-  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
+  let fn = await getNewTemplateRender("njk", "test/stubs").getCompiledTemplate(
     "<p>{% include 'included.njk' %}</p>"
   );
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
 test("Nunjucks Render Include (different extension)", async t => {
-  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
+  let fn = await getNewTemplateRender("njk", "test/stubs").getCompiledTemplate(
     "<p>{% include 'included.nunj' %}</p>"
   );
   t.is(await fn(), "<p>Nunjabusiness</p>");
 });
 
 test("Nunjucks Render Include (different extension, subdir)", async t => {
-  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
+  let fn = await getNewTemplateRender("njk", "test/stubs").getCompiledTemplate(
     "<p>{% include 'subfolder/included.nunj' %}</p>"
   );
   t.is(await fn(), "<p>Nunjabusiness2</p>");
 });
 
 test("Nunjucks Render Relative Include Issue #190", async t => {
-  let tr = new TemplateRender(
+  let tr = getNewTemplateRender(
     "./test/stubs/njk-relative/does_not_exist_and_thats_ok.njk",
     "./test/stubs"
   );
@@ -80,7 +87,7 @@ test("Nunjucks Render Relative Include Issue #190", async t => {
 });
 
 test("Nunjucks Render Relative Include (using ..) Issue #190", async t => {
-  let tr = new TemplateRender(
+  let tr = getNewTemplateRender(
     "./test/stubs/njk-relative/dir/does_not_exist_and_thats_ok.njk",
     "./test/stubs"
   );
@@ -103,7 +110,7 @@ test("Nunjucks Render Relative Include (using ..) Issue #190", async t => {
 });
 
 test("Nunjucks Render Relative Include (using current dir) Issue #190", async t => {
-  let tr = new TemplateRender(
+  let tr = getNewTemplateRender(
     "./test/stubs/njk-relative/dir/does_not_exist_and_thats_ok.njk",
     "./test/stubs"
   );
@@ -120,7 +127,7 @@ test("Nunjucks Render Relative Include (using current dir) Issue #190", async t 
 });
 
 test("Nunjucks Render Relative Include (ambiguous path, file exists in _includes and in current dir) Issue #190", async t => {
-  let tr = new TemplateRender(
+  let tr = getNewTemplateRender(
     "./test/stubs/njk-relative/dir/does_not_exist_and_thats_ok.njk",
     "./test/stubs"
   );
@@ -132,7 +139,7 @@ test("Nunjucks Render Relative Include (ambiguous path, file exists in _includes
   t.is(await fn(), "<p>This is an include.</p>");
 
   // This fails, a leading dot is required for a relative include
-  // let tr2 = new TemplateRender("./test/stubs/njk-relative/dir/does_not_exist_and_thats_ok.njk", "./test/stubs");
+  // let tr2 = getNewTemplateRender("./test/stubs/njk-relative/dir/does_not_exist_and_thats_ok.njk", "./test/stubs");
   // let fn2 = await tr.getCompiledTemplate(
   //   "<p>{% include 'unique-include-123.njk' %}</p>"
   // );
@@ -171,7 +178,7 @@ test("Nunjucks Render set with a filter", async t => {
 });
 
 test("Nunjucks Render Include a JS file (Issue 398)", async t => {
-  let tr = new TemplateRender("njk", "test/stubs");
+  let tr = getNewTemplateRender("njk", "test/stubs");
   let engine = tr.engine;
   engine.addFilters({
     jsmin: function(str) {
@@ -185,35 +192,35 @@ test("Nunjucks Render Include a JS file (Issue 398)", async t => {
 });
 
 test("Nunjucks Render Include Subfolder", async t => {
-  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
+  let fn = await getNewTemplateRender("njk", "test/stubs").getCompiledTemplate(
     "<p>{% include 'subfolder/included.html' %}</p>"
   );
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
 test("Nunjucks Render Include Double Quotes", async t => {
-  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
+  let fn = await getNewTemplateRender("njk", "test/stubs").getCompiledTemplate(
     `<p>{% include "included.njk" %}</p>`
   );
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
 test("Nunjucks Render Include Subfolder Double Quotes", async t => {
-  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
+  let fn = await getNewTemplateRender("njk", "test/stubs").getCompiledTemplate(
     `<p>{% include "subfolder/included.html" %}</p>`
   );
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
 test("Nunjucks Render Imports", async t => {
-  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
+  let fn = await getNewTemplateRender("njk", "test/stubs").getCompiledTemplate(
     "{% import 'imports.njk' as forms %}<div>{{ forms.label('Name') }}</div>"
   );
   t.is(await fn(), "<div><label>Name</label></div>");
 });
 
 test("Nunjucks Render Relative Imports", async t => {
-  let fn = await new TemplateRender(
+  let fn = await getNewTemplateRender(
     "./test/stubs/njk-relative/dir/does_not_exist_and_thats_ok.njk",
     "test/stubs"
   ).getCompiledTemplate(
@@ -223,19 +230,19 @@ test("Nunjucks Render Relative Imports", async t => {
 });
 
 test("Nunjucks Render Imports From", async t => {
-  let fn = await new TemplateRender("njk", "test/stubs").getCompiledTemplate(
+  let fn = await getNewTemplateRender("njk", "test/stubs").getCompiledTemplate(
     "{% from 'imports.njk' import label %}<div>{{ label('Name') }}</div>"
   );
   t.is(await fn(), "<div><label>Name</label></div>");
 });
 
 test("Nunjucks getEngineLib", async t => {
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
   t.truthy(tr.engine.getEngineLib());
 });
 
 test("Nunjucks Render: with Library Override", async t => {
-  let tr = new TemplateRender("njk");
+  let tr = getNewTemplateRender("njk");
 
   let lib = require("nunjucks");
   let env = new lib.Environment(
@@ -248,7 +255,7 @@ test("Nunjucks Render: with Library Override", async t => {
 });
 
 test("Nunjucks Render with getGlobals Issue #567", async t => {
-  let tr = new TemplateRender("njk");
+  let tr = getNewTemplateRender("njk");
   let env = tr.engine.getEngineLib();
   env.addGlobal("getGlobals", function() {
     return this.getVariables();
@@ -261,7 +268,7 @@ test("Nunjucks Render with getGlobals Issue #567", async t => {
 });
 
 test("Nunjucks Render with getVarFromString Filter Issue #567", async t => {
-  let tr = new TemplateRender("njk");
+  let tr = getNewTemplateRender("njk");
   let env = tr.engine.getEngineLib();
   env.addFilter("getVarFromString", function(varName) {
     return this.getVariables()[varName];
@@ -274,7 +281,7 @@ test("Nunjucks Render with getVarFromString Filter Issue #567", async t => {
 });
 
 test("Nunjucks Shortcode without args", async t => {
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function() {
     return "Zach";
   });
@@ -283,7 +290,7 @@ test("Nunjucks Shortcode without args", async t => {
 });
 
 test("Nunjucks Shortcode", async t => {
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(str) {
     return str + "Zach";
   });
@@ -425,7 +432,7 @@ test("Nunjucks Async function paired Shortcode (with async function, error throw
 });
 
 test("Nunjucks Shortcode Safe Output", async t => {
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(str) {
     return `<span>${str}</span>`;
   });
@@ -437,7 +444,7 @@ test("Nunjucks Shortcode Safe Output", async t => {
 });
 
 test("Nunjucks Paired Shortcode", async t => {
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
     return str + content + "Zach";
   });
@@ -475,7 +482,7 @@ test("Nunjucks Async Paired Shortcode", async t => {
 });
 
 test("Nunjucks Paired Shortcode without args", async t => {
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode("postfixWithZach", function(content) {
     return content + "Zach";
   });
@@ -490,7 +497,7 @@ test("Nunjucks Paired Shortcode without args", async t => {
 });
 
 test("Nunjucks Paired Shortcode with Tag Inside", async t => {
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
     return str + content + "Zach";
   });
@@ -505,7 +512,7 @@ test("Nunjucks Paired Shortcode with Tag Inside", async t => {
 });
 
 test("Nunjucks Nested Paired Shortcode", async t => {
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
     return str + content + "Zach";
   });
@@ -520,7 +527,7 @@ test("Nunjucks Nested Paired Shortcode", async t => {
 });
 
 test("Nunjucks Shortcode Multiple Args", async t => {
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(str, str2) {
     return str + str2 + "Zach";
   });
@@ -549,7 +556,7 @@ test("Nunjucks Shortcode Multiple Args (Comma is required)", async t => {
 });
 
 test("Nunjucks Shortcode Named Args", async t => {
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(arg) {
     return arg.arg1 + arg.arg2 + "Zach";
   });
@@ -564,7 +571,7 @@ test("Nunjucks Shortcode Named Args", async t => {
 });
 
 test("Nunjucks Shortcode Named Args (Reverse Order)", async t => {
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(arg) {
     return arg.arg1 + arg.arg2 + "Zach";
   });
@@ -579,7 +586,7 @@ test("Nunjucks Shortcode Named Args (Reverse Order)", async t => {
 });
 
 test("Nunjucks Shortcode Named Args (JS notation)", async t => {
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(arg) {
     return arg.arg1 + arg.arg2 + "Zach";
   });
@@ -594,7 +601,7 @@ test("Nunjucks Shortcode Named Args (JS notation)", async t => {
 });
 
 test("Nunjucks Test if statements on arrays (Issue #524)", async t => {
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
 
   t.is(
     await tr._testRender("{% if 'first' in tags %}Success.{% endif %}", {

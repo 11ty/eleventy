@@ -1,8 +1,8 @@
 const Template = require("./Template");
 const TemplatePath = require("./TemplatePath");
 const TemplateMap = require("./TemplateMap");
-const TemplateRender = require("./TemplateRender");
 const EleventyFiles = require("./EleventyFiles");
+const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyErrorHandler = require("./EleventyErrorHandler");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
@@ -17,7 +17,7 @@ class TemplateWriter {
   constructor(
     inputPath,
     outputDir,
-    templateFormats, // TODO remove this, see `.getFileManager()` first
+    templateFormats, // TODO remove this, see `get eleventyFiles` first
     templateData,
     isPassthroughAll
   ) {
@@ -35,7 +35,7 @@ class TemplateWriter {
     this.writeCount = 0;
     this.skippedCount = 0;
 
-    // TODO can we get rid of this? It’s only used for tests in getFileManager()
+    // TODO can we get rid of this? It’s only used for tests in `get eleventyFiles``
     this.passthroughAll = isPassthroughAll;
   }
 
@@ -62,24 +62,41 @@ class TemplateWriter {
     debugDev("Resetting counts to 0");
   }
 
+  set extensionMap(extensionMap) {
+    this._extensionMap = extensionMap;
+  }
+
+  get extensionMap() {
+    if (!this._extensionMap) {
+      this._extensionMap = new EleventyExtensionMap(this.templateFormats);
+      this._extensionMap.config = this.config;
+    }
+    return this._extensionMap;
+  }
+
   setEleventyFiles(eleventyFiles) {
     this.eleventyFiles = eleventyFiles;
   }
 
-  getFileManager() {
+  set eleventyFiles(eleventyFiles) {
+    this._eleventyFiles = eleventyFiles;
+  }
+
+  get eleventyFiles() {
     // usually Eleventy.js will setEleventyFiles with the EleventyFiles manager
-    if (!this.eleventyFiles) {
+    if (!this._eleventyFiles) {
       // if not, we can create one (used only by tests)
-      this.eleventyFiles = new EleventyFiles(
+      this._eleventyFiles = new EleventyFiles(
         this.input,
         this.outputDir,
         this.templateFormats,
         this.passthroughAll
       );
-      this.eleventyFiles.init();
+
+      this._eleventyFiles.init();
     }
 
-    return this.eleventyFiles;
+    return this._eleventyFiles;
   }
 
   async _getAllPaths() {
@@ -98,6 +115,7 @@ class TemplateWriter {
       this.templateData
     );
 
+    tmpl.extensionMap = this.extensionMap;
     tmpl.setIsVerbose(this.isVerbose);
 
     // --incremental only writes files that trigger a build during --watch
@@ -133,7 +151,7 @@ class TemplateWriter {
   async _addToTemplateMap(paths) {
     let promises = [];
     for (let path of paths) {
-      if (TemplateRender.hasEngine(path)) {
+      if (this.extensionMap.hasEngine(path)) {
         promises.push(
           this.templateMap.add(this._createTemplate(path)).then(() => {
             debug(`${path} added to map.`);
@@ -165,7 +183,7 @@ class TemplateWriter {
   }
 
   async writePassthroughCopy(paths) {
-    let passthroughManager = this.getFileManager().getPassthroughManager();
+    let passthroughManager = this.eleventyFiles.getPassthroughManager();
     if (this.incrementalFile) {
       passthroughManager.setIncrementalFile(this.incrementalFile);
     }
@@ -229,7 +247,7 @@ class TemplateWriter {
     // Only write templates if not using incremental OR if incremental file was *not* a passthrough copy
     if (
       !this.incrementalFile ||
-      !this.getFileManager()
+      !this.eleventyFiles
         .getPassthroughManager()
         .isPassthroughCopyFile(paths, this.incrementalFile)
     ) {
@@ -249,9 +267,7 @@ class TemplateWriter {
   setDryRun(isDryRun) {
     this.isDryRun = !!isDryRun;
 
-    this.getFileManager()
-      .getPassthroughManager()
-      .setDryRun(this.isDryRun);
+    this.eleventyFiles.getPassthroughManager().setDryRun(this.isDryRun);
   }
 
   setIncrementalFile(incrementalFile) {
@@ -262,15 +278,11 @@ class TemplateWriter {
   }
 
   getCopyCount() {
-    return this.getFileManager()
-      .getPassthroughManager()
-      .getCopyCount();
+    return this.eleventyFiles.getPassthroughManager().getCopyCount();
   }
 
   getSkippedCopyCount() {
-    return this.getFileManager()
-      .getPassthroughManager()
-      .getSkippedCount();
+    return this.eleventyFiles.getPassthroughManager().getSkippedCount();
   }
 
   getWriteCount() {

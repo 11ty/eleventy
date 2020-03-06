@@ -1,48 +1,56 @@
 import test from "ava";
 import TemplateRender from "../src/TemplateRender";
+import EleventyExtensionMap from "../src/EleventyExtensionMap";
+
+function getNewTemplateRender(name, inputDir) {
+  let tr = new TemplateRender(name, inputDir);
+  tr.extensionMap = new EleventyExtensionMap();
+  return tr;
+}
 
 // Handlebars
 test("Handlebars", t => {
-  t.is(new TemplateRender("hbs").getEngineName(), "hbs");
+  t.is(getNewTemplateRender("hbs").getEngineName(), "hbs");
 });
 
 test("Handlebars Render", async t => {
-  let fn = await new TemplateRender("hbs").getCompiledTemplate(
+  let fn = await getNewTemplateRender("hbs").getCompiledTemplate(
     "<p>{{name}}</p>"
   );
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });
 
 test("Handlebars Render Unescaped Output (no HTML)", async t => {
-  let fn = await new TemplateRender("hbs").getCompiledTemplate(
+  let fn = await getNewTemplateRender("hbs").getCompiledTemplate(
     "<p>{{{name}}}</p>"
   );
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });
 
 test("Handlebars Render Escaped Output", async t => {
-  let fn = await new TemplateRender("hbs").getCompiledTemplate(
+  let fn = await getNewTemplateRender("hbs").getCompiledTemplate(
     "<p>{{name}}</p>"
   );
   t.is(await fn({ name: "<b>Zach</b>" }), "<p>&lt;b&gt;Zach&lt;/b&gt;</p>");
 });
 
 test("Handlebars Render Unescaped Output (HTML)", async t => {
-  let fn = await new TemplateRender("hbs").getCompiledTemplate(
+  let fn = await getNewTemplateRender("hbs").getCompiledTemplate(
     "<p>{{{name}}}</p>"
   );
   t.is(await fn({ name: "<b>Zach</b>" }), "<p><b>Zach</b></p>");
 });
 
 test("Handlebars Render Partial", async t => {
-  let fn = await new TemplateRender("hbs", "./test/stubs/").getCompiledTemplate(
-    "<p>{{> included}}</p>"
-  );
+  let fn = await getNewTemplateRender(
+    "hbs",
+    "./test/stubs/"
+  ).getCompiledTemplate("<p>{{> included}}</p>");
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
 test.skip("Handlebars Render Partial (Relative)", async t => {
-  let fn = await new TemplateRender(
+  let fn = await getNewTemplateRender(
     "./test/stubs/does_not_exist_and_thats_ok.hbs",
     "./test/stubs/"
   ).getCompiledTemplate("<p>{{> ./included}}</p>");
@@ -52,21 +60,23 @@ test.skip("Handlebars Render Partial (Relative)", async t => {
 });
 
 test("Handlebars Render Partial (Subdirectory)", async t => {
-  let fn = await new TemplateRender("hbs", "./test/stubs/").getCompiledTemplate(
-    "<p>{{> subfolder/included}}</p>"
-  );
+  let fn = await getNewTemplateRender(
+    "hbs",
+    "./test/stubs/"
+  ).getCompiledTemplate("<p>{{> subfolder/included}}</p>");
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
 test("Handlebars Render Partial with variable", async t => {
-  let fn = await new TemplateRender("hbs", "./test/stubs/").getCompiledTemplate(
-    "<p>{{> includedvar}}</p>"
-  );
+  let fn = await getNewTemplateRender(
+    "hbs",
+    "./test/stubs/"
+  ).getCompiledTemplate("<p>{{> includedvar}}</p>");
   t.is(await fn({ name: "Zach" }), "<p>This is a Zach.</p>");
 });
 
 test("Handlebars Render: with Library Override", async t => {
-  let tr = new TemplateRender("hbs");
+  let tr = getNewTemplateRender("hbs");
 
   let lib = require("handlebars");
   tr.engine.setLibrary(lib);
@@ -76,7 +86,7 @@ test("Handlebars Render: with Library Override", async t => {
 });
 
 test("Handlebars Render Helper", async t => {
-  let tr = new TemplateRender("hbs");
+  let tr = getNewTemplateRender("hbs");
   tr.engine.addHelpers({
     helpername: function() {
       return "Zach";
@@ -90,7 +100,7 @@ test("Handlebars Render Helper", async t => {
 });
 
 test("Handlebars Render Helper (uses argument)", async t => {
-  let tr = new TemplateRender("hbs");
+  let tr = getNewTemplateRender("hbs");
   tr.engine.addHelpers({
     helpername2: function(name) {
       return "Zach";
@@ -104,7 +114,7 @@ test("Handlebars Render Helper (uses argument)", async t => {
 });
 
 test("Handlebars Render Shortcode", async t => {
-  let tr = new TemplateRender("hbs");
+  let tr = getNewTemplateRender("hbs");
   tr.engine.addShortcodes({
     shortcodename: function(name) {
       return name.toUpperCase();
@@ -118,7 +128,7 @@ test("Handlebars Render Shortcode", async t => {
 });
 
 test("Handlebars Render HTML in Shortcode (Issue #460)", async t => {
-  let tr = new TemplateRender("hbs");
+  let tr = getNewTemplateRender("hbs");
   tr.engine.addShortcodes({
     shortcodenamehtml: function(name) {
       return `<span>${name.toUpperCase()}</span>`;
@@ -132,7 +142,7 @@ test("Handlebars Render HTML in Shortcode (Issue #460)", async t => {
 });
 
 test("Handlebars Render Shortcode (Multiple args)", async t => {
-  let tr = new TemplateRender("hbs");
+  let tr = getNewTemplateRender("hbs");
   tr.engine.addShortcodes({
     shortcodename2: function(name, name2) {
       return name.toUpperCase() + name2.toUpperCase();
@@ -149,7 +159,7 @@ test("Handlebars Render Shortcode (Multiple args)", async t => {
 });
 
 test("Handlebars Render Paired Shortcode", async t => {
-  let tr = new TemplateRender("hbs");
+  let tr = getNewTemplateRender("hbs");
   tr.engine.addPairedShortcodes({
     shortcodename3: function(content, name, options) {
       return (content + name).toUpperCase();
@@ -163,7 +173,7 @@ test("Handlebars Render Paired Shortcode", async t => {
 });
 
 test("Handlebars Render Paired Shortcode (HTML)", async t => {
-  let tr = new TemplateRender("hbs");
+  let tr = getNewTemplateRender("hbs");
   tr.engine.addPairedShortcodes({
     shortcodename3html: function(content, name, options) {
       return `<span>${(content + name).toUpperCase()}</span>`;
@@ -180,7 +190,7 @@ test("Handlebars Render Paired Shortcode (HTML)", async t => {
 });
 
 test("Handlebars Render Paired Shortcode (Spaces)", async t => {
-  let tr = new TemplateRender("hbs");
+  let tr = getNewTemplateRender("hbs");
   tr.engine.addPairedShortcodes({
     shortcodename4: function(content, name, options) {
       return (content + name).toUpperCase();
@@ -194,7 +204,7 @@ test("Handlebars Render Paired Shortcode (Spaces)", async t => {
 });
 
 test("Handlebars Render Paired Shortcode with a Nested Single Shortcode", async t => {
-  let tr = new TemplateRender("hbs");
+  let tr = getNewTemplateRender("hbs");
   tr.engine.addShortcodes({
     shortcodechild: function(txt, options) {
       return txt;
@@ -217,7 +227,7 @@ test("Handlebars Render Paired Shortcode with a Nested Single Shortcode", async 
 });
 
 test("Handlebars Render Raw Output (Issue #436)", async t => {
-  let tr = new TemplateRender("hbs");
+  let tr = getNewTemplateRender("hbs");
   tr.engine.addHelpers({
     "raw-helper": function(options) {
       return options.fn();
@@ -231,7 +241,7 @@ test("Handlebars Render Raw Output (Issue #436)", async t => {
 });
 
 test("Handlebars Render Raw Output (Issue #436 with if statement)", async t => {
-  let tr = new TemplateRender("hbs");
+  let tr = getNewTemplateRender("hbs");
   tr.engine.addHelpers({
     "raw-helper": function(options) {
       return options.fn();
@@ -256,10 +266,12 @@ test("Handlebars Render #each with Global Variable (Issue #759)", async t => {
     `<ul>{{#each navigation as |navItem|}}<li><a href={{navItem.link}}>{{../name}}{{navItem.text}}</a></li>{{/each}}</ul>`
   );
   t.is(
-    (await fn({
-      name: "Zach",
-      navigation: [{ link: "a", text: "text" }]
-    })).trim(),
+    (
+      await fn({
+        name: "Zach",
+        navigation: [{ link: "a", text: "text" }]
+      })
+    ).trim(),
     `<ul><li><a href=a>Zachtext</a></li></ul>`
   );
 });
