@@ -19,7 +19,17 @@ const debug = require("debug")("Eleventy:Template");
 const debugDev = require("debug")("Dev:Eleventy:Template");
 
 class Template extends TemplateContent {
-  constructor(path, inputDir, outputDir, templateData) {
+  constructor(
+    path,
+    inputDir,
+    outputDir,
+    templateData,
+    config,
+    transforms = [],
+    linters = [],
+    isVerbose = true,
+    isDryRun = false
+  ) {
     debugDev("new Template(%o)", path);
     super(path, inputDir);
 
@@ -34,8 +44,8 @@ class Template extends TemplateContent {
       this.outputDir = false;
     }
 
-    this.linters = [];
-    this.transforms = [];
+    this.transforms = transforms;
+    this.linters = linters;
     this.plugins = {};
     this.templateData = templateData;
     if (this.templateData) {
@@ -43,14 +53,18 @@ class Template extends TemplateContent {
     }
     this.paginationData = {};
 
-    this.isVerbose = true;
-    this.isDryRun = false;
+    this.setIsVerbose(isVerbose);
+    this.setDryRun(isDryRun);
     this.writeCount = 0;
     this.skippedCount = 0;
     this.wrapWithLayouts = true;
     this.fileSlug = new TemplateFileSlug(this.inputPath, this.inputDir);
     this.fileSlugStr = this.fileSlug.getSlug();
     this.filePathStem = this.fileSlug.getFullPathWithoutExtension();
+
+    if (config) {
+      this.config = config;
+    }
   }
 
   setIsVerbose(isVerbose) {
@@ -595,26 +609,18 @@ class Template extends TemplateContent {
     return Promise.all(promises);
   }
 
-  // TODO this but better
   clone() {
-    let tmpl = new Template(
+    return new Template(
       this.inputPath,
       this.inputDir,
       this.outputDir,
-      this.templateData
+      this.templateData,
+      this.config,
+      this.transforms,
+      this.linters,
+      this.isVerbose,
+      this.isDryRun
     );
-    tmpl.config = this.config;
-
-    for (let transform of this.transforms) {
-      tmpl.addTransform(transform);
-    }
-    for (let linter of this.linters) {
-      tmpl.addLinter(linter);
-    }
-    tmpl.setIsVerbose(this.isVerbose);
-    tmpl.setDryRun(this.isDryRun);
-
-    return tmpl;
   }
 
   getWriteCount() {
