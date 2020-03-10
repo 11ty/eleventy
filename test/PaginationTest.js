@@ -13,7 +13,7 @@ test("No data passed to pagination", async t => {
   let paging = new Pagination();
   paging.setTemplate(tmpl);
 
-  t.is(paging.getPagedItems().length, 0);
+  t.is(paging.pagedItems.length, 0);
   t.is((await paging.getPageTemplates()).length, 0);
 });
 
@@ -30,7 +30,7 @@ test("No pagination", async t => {
 
   t.falsy(data.pagination);
   t.is(paging.getPageCount(), 0);
-  t.is(paging.getPagedItems().length, 0);
+  t.is(paging.pagedItems.length, 0);
   t.is((await paging.getPageTemplates()).length, 0);
 });
 
@@ -66,7 +66,7 @@ test("Resolve paged data in frontmatter", async t => {
   paging.setTemplate(tmpl);
   t.is(paging._resolveItems().length, 8);
   t.is(paging.getPageCount(), 2);
-  t.is(paging.getPagedItems().length, 2);
+  t.is(paging.pagedItems.length, 2);
 });
 
 test("Paginate data in frontmatter", async t => {
