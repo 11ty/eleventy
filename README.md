@@ -17,7 +17,7 @@ Works with HTML, Markdown, Liquid, Nunjucks, Handlebars, Mustache, EJS, Haml, Pu
   - [Travis CI](https://travis-ci.org/11ty/eleventy)
   - [GitHub Actions](https://github.com/11ty/eleventy/actions?query=workflow%3A.github%2Fworkflows%2Fci.yml)
 
-[![npm Version](https://img.shields.io/npm/v/@11ty/eleventy.svg?style=for-the-badge)](https://www.npmjs.com/package/@11ty/eleventy) [![GitHub issues](https://img.shields.io/github/issues/11ty/eleventy.svg?style=for-the-badge)](https://github.com/11ty/eleventy/issues) [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=for-the-badge)](https://github.com/prettier/prettier) [![npm Downloads](https://img.shields.io/npm/dt/@11ty/eleventy.svg?style=for-the-badge)](https://www.npmjs.com/package/@11ty/eleventy)
+[![npm Version](https://img.shields.io/npm/v/@11ty/eleventy.svg?style=for-the-badge)](https://www.npmjs.com/package/@11ty/eleventy) [![GitHub issues](https://img.shields.io/github/issues/11ty/eleventy.svg?style=for-the-badge)](https://github.com/11ty/eleventy/issues) [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=for-the-badge)](https://github.com/prettier/prettier) [![npm Downloads](https://img.shields.io/npm/dt/@11ty/eleventy.svg?style=for-the-badge)](https://www.npmjs.com/package/@11ty/eleventy) [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/11ty/eleventy)
 
 ## Installation
 
@@ -37,6 +37,19 @@ npm run test
 - ℹ️ To keep tests fast, thou shalt try to avoid writing files in tests.
 - [Code Coverage Statistics](https://github.com/11ty/eleventy/blob/master/docs/coverage.md)
 - [Benchmark for Performance Regressions](https://github.com/11ty/eleventy-benchmark)
+
+## Contributing
+
+### Contribute using one click online setup
+
+You can use Gitpod(a free online VS Code-like) for contributing. With a single click it will launch a workspace and automatically:
+
+- clone the eleventy repo.
+- install the dependencies.
+
+So that anyone interested in contributing can start straight away.
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/11ty/eleventy/)
 
 ## Major Roadmapped Features
 
