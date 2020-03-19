@@ -33,12 +33,12 @@ class CustomEngine extends TemplateEngine {
 
   async compile(str, inputPath) {
     if (this.needsInit && !this.initFinished) {
-      await this.entry.init();
+      await this.entry.init.bind({ config: this.config })();
       this.initFinished = true;
     }
 
     // TODO generalize this (look at JavaScript.js)
-    return this.entry.compile(str, inputPath);
+    return this.entry.compile.bind({ config: this.config })(str, inputPath);
   }
 
   get defaultTemplateFileExtension() {
