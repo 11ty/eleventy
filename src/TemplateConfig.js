@@ -29,6 +29,14 @@ class TemplateConfig {
     return TemplatePath.addLeadingDotSlash(this.localProjectConfigPath);
   }
 
+  get inputDir() {
+    return this._inputDir;
+  }
+
+  set inputDir(inputDir) {
+    this._inputDir = inputDir;
+  }
+
   reset() {
     eleventyConfig.reset();
     this.initializeRootConfig();

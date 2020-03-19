@@ -273,6 +273,8 @@ class Eleventy {
    * @returns {} - tbd.
    */
   async init() {
+    this.config.inputDir = this.inputDir;
+
     let formats = this.formatsOverride || this.config.templateFormats;
     this.extensionMap = new EleventyExtensionMap(formats);
 
