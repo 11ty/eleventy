@@ -19,6 +19,7 @@ class UserConfig {
     debug("Resetting EleventyConfig to initial values.");
     this.events = new EventEmitter();
     this.collections = {};
+    this.templateFormats = undefined;
 
     this.liquidOptions = {};
     this.liquidTags = {};
@@ -316,12 +317,25 @@ class UserConfig {
     return this;
   }
 
-  setTemplateFormats(templateFormats) {
+  _normalizeTemplateFormats(templateFormats) {
     if (typeof templateFormats === "string") {
       templateFormats = templateFormats.split(",").map(format => format.trim());
     }
+    return templateFormats;
+  }
 
-    this.templateFormats = templateFormats;
+  setTemplateFormats(templateFormats) {
+    this.templateFormats = this._normalizeTemplateFormats(templateFormats);
+  }
+
+  // additive, usually for plugins
+  addTemplateFormats(templateFormats) {
+    if (!this.templateFormatsAdded) {
+      this.templateFormatsAdded = [];
+    }
+    this.templateFormatsAdded = this.templateFormatsAdded.concat(
+      this._normalizeTemplateFormats(templateFormats)
+    );
   }
 
   setLibrary(engineName, libraryInstance) {
@@ -617,6 +631,7 @@ class UserConfig {
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
+      templateFormatsAdded: this.templateFormatsAdded,
       filters: this.filters, // now called transforms
       linters: this.linters,
       layoutAliases: this.layoutAliases,

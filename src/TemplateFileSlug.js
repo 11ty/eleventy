@@ -15,7 +15,6 @@ class TemplateFileSlug {
     this.dirs.pop();
 
     this.parsed = parsePath(inputPath);
-    // TODO update this after the fix for issue #117 merges
     this.filenameNoExt = extensionMap.removeTemplateExtension(this.parsed.base);
   }
 

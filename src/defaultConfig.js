@@ -1,6 +1,6 @@
-const urlFilter = require("./src/Filters/Url");
-const slugFilter = require("./src/Filters/Slug");
-const getCollectionItem = require("./src/Filters/GetCollectionItem");
+const urlFilter = require("./Filters/Url");
+const slugFilter = require("./Filters/Slug");
+const getCollectionItem = require("./Filters/GetCollectionItem");
 
 module.exports = function(config) {
   config.addFilter("slug", slugFilter);
