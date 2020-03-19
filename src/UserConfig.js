@@ -52,7 +52,6 @@ class UserConfig {
     this.dynamicPermalinks = true;
     this.useGitIgnore = true;
     this.dataDeepMerge = false;
-    this.experiments = new Set();
     this.extensionMap = new Set();
     this.watchJavaScriptDependencies = true;
     this.additionalWatchTargets = [];
@@ -576,10 +575,6 @@ class UserConfig {
     );
   }
 
-  addExperiment(key) {
-    this.experiments.add(key);
-  }
-
   setDataDeepMerge(deepMerge) {
     this.dataDeepMerge = !!deepMerge;
   }
@@ -659,7 +654,6 @@ class UserConfig {
       dynamicPermalinks: this.dynamicPermalinks,
       useGitIgnore: this.useGitIgnore,
       dataDeepMerge: this.dataDeepMerge,
-      experiments: this.experiments,
       watchJavaScriptDependencies: this.watchJavaScriptDependencies,
       additionalWatchTargets: this.additionalWatchTargets,
       browserSyncConfig: this.browserSyncConfig,
