@@ -574,6 +574,7 @@ test("Glob Watcher Files with Config Passthroughs (no template formats)", async 
 
   t.deepEqual(await evf.getGlobWatcherTemplateDataFiles(), [
     "./test/stubs/**/*.json",
+    "./test/stubs/**/*.11tydata.cjs",
     "./test/stubs/**/*.11tydata.js"
   ]);
 });

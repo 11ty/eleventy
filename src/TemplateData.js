@@ -126,6 +126,7 @@ class TemplateData {
     let dir = await this.getInputDir();
     let paths = [
       `${dir}/**/*.json`, // covers .11tydata.json too
+      `${dir}/**/*${this.config.jsDataFileSuffix}.cjs`,
       `${dir}/**/*${this.config.jsDataFileSuffix}.js`
     ];
 
@@ -158,7 +159,7 @@ class TemplateData {
   }
 
   getGlobalDataExtensionPriorities() {
-    return this.getUserDataExtensions().concat(["json", "js"]);
+    return this.getUserDataExtensions().concat(["json", "cjs", "js"]);
   }
 
   static calculateExtensionPriority(path, priorities) {
@@ -358,6 +359,7 @@ class TemplateData {
     // ignoreProcessing = true for local data files
     if (
       extension === "js" ||
+      extension === "cjs" ||
       (extension === "json" && (ignoreProcessing || !this.dataTemplateEngine))
     ) {
       // JS data file or require’d JSON (no preprocessing needed)
@@ -401,11 +403,13 @@ class TemplateData {
       paths.push(curpath + "." + extension);
     }
   }
+
   _addBaseToPaths(paths, base, extensions) {
     let dataSuffix = this.config.jsDataFileSuffix;
 
     // data suffix
     paths.push(base + dataSuffix + ".js");
+    paths.push(base + dataSuffix + ".cjs");
     paths.push(base + dataSuffix + ".json");
 
     // inject user extensions

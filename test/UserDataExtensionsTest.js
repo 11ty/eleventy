@@ -16,12 +16,12 @@ test("Local data", async t => {
   let data = await dataObj.getData();
 
   // YAML GLOBAL DATA
-  t.is(data.globalData2.datakey1, "datavalue2");
-  t.is(data.globalData2.datakey2, "@11ty/eleventy--yaml");
+  t.is(data.globalData3.datakey1, "datavalue3");
+  t.is(data.globalData3.datakey2, "@11ty/eleventy--yaml");
 
   // NOSJ (JSON) GLOBAL DATA
-  t.is(data.globalData3.datakey1, "datavalue3");
-  t.is(data.globalData3.datakey2, "@11ty/eleventy--nosj");
+  t.is(data.globalData4.datakey1, "datavalue4");
+  t.is(data.globalData4.datakey2, "@11ty/eleventy--nosj");
 
   let withLocalData = await dataObj.getLocalData(
     "./test/stubs-630/component-yaml/component.njk"
@@ -50,6 +50,7 @@ test("Local files", async t => {
     "./test/stubs-630/stubs-630.11tydata.yaml",
     "./test/stubs-630/stubs-630.11tydata.nosj",
     "./test/stubs-630/stubs-630.11tydata.json",
+    "./test/stubs-630/stubs-630.11tydata.cjs",
     "./test/stubs-630/stubs-630.11tydata.js",
     "./test/stubs-630/component-yaml/component-yaml.yaml",
     "./test/stubs-630/component-yaml/component-yaml.nosj",
@@ -57,6 +58,7 @@ test("Local files", async t => {
     "./test/stubs-630/component-yaml/component-yaml.11tydata.yaml",
     "./test/stubs-630/component-yaml/component-yaml.11tydata.nosj",
     "./test/stubs-630/component-yaml/component-yaml.11tydata.json",
+    "./test/stubs-630/component-yaml/component-yaml.11tydata.cjs",
     "./test/stubs-630/component-yaml/component-yaml.11tydata.js",
     "./test/stubs-630/component-yaml/component.yaml",
     "./test/stubs-630/component-yaml/component.nosj",
@@ -64,6 +66,7 @@ test("Local files", async t => {
     "./test/stubs-630/component-yaml/component.11tydata.yaml",
     "./test/stubs-630/component-yaml/component.11tydata.nosj",
     "./test/stubs-630/component-yaml/component.11tydata.json",
+    "./test/stubs-630/component-yaml/component.11tydata.cjs",
     "./test/stubs-630/component-yaml/component.11tydata.js"
   ]);
 });
@@ -74,7 +77,7 @@ test("Global data", async t => {
   injectDataExtensions(dataObj);
 
   t.deepEqual(await dataObj.getGlobalDataGlob(), [
-    "./test/stubs-630/_data/**/*.(nosj|yaml|json|js)"
+    "./test/stubs-630/_data/**/*.(nosj|yaml|json|cjs|js)"
   ]);
 
   let data = await dataObj.getData();
@@ -82,17 +85,20 @@ test("Global data", async t => {
   // JS GLOBAL DATA
   t.is(data.globalData0.datakey1, "datavalue0");
 
-  // JSON GLOBAL DATA
+  // CJS GLOBAL DATA
   t.is(data.globalData1.datakey1, "datavalue1");
-  t.is(data.globalData1.datakey2, "@11ty/eleventy--json");
+
+  // JSON GLOBAL DATA
+  t.is(data.globalData2.datakey1, "datavalue2");
+  t.is(data.globalData2.datakey2, "@11ty/eleventy--json");
 
   // YAML GLOBAL DATA
-  t.is(data.globalData2.datakey1, "datavalue2");
-  t.is(data.globalData2.datakey2, "@11ty/eleventy--yaml");
+  t.is(data.globalData3.datakey1, "datavalue3");
+  t.is(data.globalData3.datakey2, "@11ty/eleventy--yaml");
 
   // NOSJ (JSON) GLOBAL DATA
-  t.is(data.globalData3.datakey1, "datavalue3");
-  t.is(data.globalData3.datakey2, "@11ty/eleventy--nosj");
+  t.is(data.globalData4.datakey1, "datavalue4");
+  t.is(data.globalData4.datakey2, "@11ty/eleventy--nosj");
 
   t.is(data.subdir.globalDataSubdir.keyyaml, "yaml");
 });
@@ -104,12 +110,14 @@ test("Global data merging and priority", async t => {
   let data = await dataObj.getData();
 
   // TESTING GLOBAL DATA PRIORITY AND MERGING
-  t.is(data.mergingGlobalData.datakey1, "js-value1");
+  t.is(data.mergingGlobalData.datakey0, "js-value0");
+  t.is(data.mergingGlobalData.datakey1, "cjs-value1");
   t.is(data.mergingGlobalData.datakey2, "json-value2");
   t.is(data.mergingGlobalData.datakey3, "yaml-value3");
   t.is(data.mergingGlobalData.datakey4, "nosj-value4");
 
   t.is(data.mergingGlobalData.jskey, "js");
+  t.is(data.mergingGlobalData.cjskey, "cjs");
   t.is(data.mergingGlobalData.jsonkey, "json");
   t.is(data.mergingGlobalData.yamlkey, "yaml");
   t.is(data.mergingGlobalData.nosjkey, "nosj");

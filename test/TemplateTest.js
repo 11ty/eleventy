@@ -452,9 +452,11 @@ test("Local template data file import (without a global data json)", async t => 
   t.deepEqual(await dataObj.getLocalDataPaths(tmpl.getInputPath()), [
     "./test/stubs/stubs.json",
     "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.cjs",
     "./test/stubs/stubs.11tydata.js",
     "./test/stubs/component/component.json",
     "./test/stubs/component/component.11tydata.json",
+    "./test/stubs/component/component.11tydata.cjs",
     "./test/stubs/component/component.11tydata.js"
   ]);
   t.is(data.localdatakey1, "localdatavalue1");
@@ -475,15 +477,19 @@ test("Local template data file import (two subdirectories deep)", async t => {
   t.deepEqual(await dataObj.getLocalDataPaths(tmpl.getInputPath()), [
     "./test/stubs/stubs.json",
     "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.cjs",
     "./test/stubs/stubs.11tydata.js",
     "./test/stubs/firstdir/firstdir.json",
     "./test/stubs/firstdir/firstdir.11tydata.json",
+    "./test/stubs/firstdir/firstdir.11tydata.cjs",
     "./test/stubs/firstdir/firstdir.11tydata.js",
     "./test/stubs/firstdir/seconddir/seconddir.json",
     "./test/stubs/firstdir/seconddir/seconddir.11tydata.json",
+    "./test/stubs/firstdir/seconddir/seconddir.11tydata.cjs",
     "./test/stubs/firstdir/seconddir/seconddir.11tydata.js",
     "./test/stubs/firstdir/seconddir/component.json",
     "./test/stubs/firstdir/seconddir/component.11tydata.json",
+    "./test/stubs/firstdir/seconddir/component.11tydata.cjs",
     "./test/stubs/firstdir/seconddir/component.11tydata.js"
   ]);
 });
@@ -503,12 +509,15 @@ test("Posts inherits local JSON, layouts", async t => {
   t.deepEqual(localDataPaths, [
     "./test/stubs/stubs.json",
     "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.cjs",
     "./test/stubs/stubs.11tydata.js",
     "./test/stubs/posts/posts.json",
     "./test/stubs/posts/posts.11tydata.json",
+    "./test/stubs/posts/posts.11tydata.cjs",
     "./test/stubs/posts/posts.11tydata.js",
     "./test/stubs/posts/post1.json",
     "./test/stubs/posts/post1.11tydata.json",
+    "./test/stubs/posts/post1.11tydata.cjs",
     "./test/stubs/posts/post1.11tydata.js"
   ]);
 
@@ -541,9 +550,11 @@ test("Template and folder name are the same, make sure data imports work ok", as
   t.deepEqual(localDataPaths, [
     "./test/stubs/stubs.json",
     "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.cjs",
     "./test/stubs/stubs.11tydata.js",
     "./test/stubs/posts/posts.json",
     "./test/stubs/posts/posts.11tydata.json",
+    "./test/stubs/posts/posts.11tydata.cjs",
     "./test/stubs/posts/posts.11tydata.js"
   ]);
 

@@ -1,4 +1,4 @@
 module.exports = {
-  datakey1: "js-value1",
+  datakey0: "js-value0",
   jskey: "js"
 };
