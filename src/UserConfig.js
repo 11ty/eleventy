@@ -608,6 +608,11 @@ class UserConfig {
   }
 
   addExtension(fileExtension, options = {}) {
+    console.log(
+      chalk.yellow(
+        "Warning: Configuration API `addExtension` is an undocumented experimental feature of Eleventy with an unstable API. Be careful!"
+      )
+    );
     this.extensionMap.add(
       Object.assign(
         {
