@@ -607,22 +607,22 @@ class UserConfig {
     this.quietMode = !!quietMode;
   }
 
-  // addExtension(fileExtension, options = {}) {
-  //   console.log(
-  //     chalk.yellow(
-  //       "Warning: Configuration API `addExtension` is an experimental Eleventy feature with an unstable API. Be careful!"
-  //     )
-  //   );
-  //   this.extensionMap.add(
-  //     Object.assign(
-  //       {
-  //         key: fileExtension,
-  //         extension: fileExtension
-  //       },
-  //       options
-  //     )
-  //   );
-  // }
+  addExtension(fileExtension, options = {}) {
+    console.log(
+      chalk.yellow(
+        "Warning: Configuration API `addExtension` is an experimental Eleventy feature with an unstable API. Be careful!"
+      )
+    );
+    this.extensionMap.add(
+      Object.assign(
+        {
+          key: fileExtension,
+          extension: fileExtension
+        },
+        options
+      )
+    );
+  }
 
   addDataExtension(formatExtension, formatParser) {
     this.dataExtensions.set(formatExtension, formatParser);
