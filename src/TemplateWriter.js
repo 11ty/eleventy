@@ -1,8 +1,8 @@
 const Template = require("./Template");
 const TemplatePath = require("./TemplatePath");
 const TemplateMap = require("./TemplateMap");
-const TemplateRender = require("./TemplateRender");
 const EleventyFiles = require("./EleventyFiles");
+const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyErrorHandler = require("./EleventyErrorHandler");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
@@ -17,7 +17,7 @@ class TemplateWriter {
   constructor(
     inputPath,
     outputDir,
-    templateFormats, // TODO remove this, see `.getFileManager()` first
+    templateFormats, // TODO remove this, see `get eleventyFiles` first
     templateData,
     isPassthroughAll
   ) {
@@ -25,15 +25,30 @@ class TemplateWriter {
     this.input = inputPath;
     this.inputDir = TemplatePath.getDir(inputPath);
     this.outputDir = outputDir;
+
+    this.needToSearchForFiles = null;
     this.templateFormats = templateFormats;
+
     this.templateData = templateData;
     this.isVerbose = true;
     this.isDryRun = false;
     this.writeCount = 0;
-    this.pretendWriteCount = 0;
+    this.skippedCount = 0;
 
-    // TODO can we get rid of this? It’s only used for tests in getFileManager()
+    // TODO can we get rid of this? It’s only used for tests in `get eleventyFiles``
     this.passthroughAll = isPassthroughAll;
+  }
+
+  get templateFormats() {
+    return this._templateFormats;
+  }
+
+  set templateFormats(value) {
+    if (value !== this._templateFormats) {
+      this.needToSearchForFiles = true;
+    }
+
+    this._templateFormats = value;
   }
 
   /* For testing */
@@ -43,32 +58,53 @@ class TemplateWriter {
 
   restart() {
     this.writeCount = 0;
-    this.pretendWriteCount = 0;
+    this.skippedCount = 0;
     debugDev("Resetting counts to 0");
+  }
+
+  set extensionMap(extensionMap) {
+    this._extensionMap = extensionMap;
+  }
+
+  get extensionMap() {
+    if (!this._extensionMap) {
+      this._extensionMap = new EleventyExtensionMap(this.templateFormats);
+      this._extensionMap.config = this.config;
+    }
+    return this._extensionMap;
   }
 
   setEleventyFiles(eleventyFiles) {
     this.eleventyFiles = eleventyFiles;
   }
 
-  getFileManager() {
+  set eleventyFiles(eleventyFiles) {
+    this._eleventyFiles = eleventyFiles;
+  }
+
+  get eleventyFiles() {
     // usually Eleventy.js will setEleventyFiles with the EleventyFiles manager
-    if (!this.eleventyFiles) {
+    if (!this._eleventyFiles) {
       // if not, we can create one (used only by tests)
-      this.eleventyFiles = new EleventyFiles(
+      this._eleventyFiles = new EleventyFiles(
         this.input,
         this.outputDir,
         this.templateFormats,
         this.passthroughAll
       );
-      this.eleventyFiles.init();
+
+      this._eleventyFiles.init();
     }
 
-    return this.eleventyFiles;
+    return this._eleventyFiles;
   }
 
   async _getAllPaths() {
-    return await this.getFileManager().getFiles();
+    if (!this.allPaths || this.needToSearchForFiles) {
+      this.allPaths = await this.eleventyFiles.getFiles();
+      debug("Found: %o", this.allPaths);
+    }
+    return this.allPaths;
   }
 
   _createTemplate(path) {
@@ -79,6 +115,7 @@ class TemplateWriter {
       this.templateData
     );
 
+    tmpl.extensionMap = this.extensionMap;
     tmpl.setIsVerbose(this.isVerbose);
 
     // --incremental only writes files that trigger a build during --watch
@@ -114,7 +151,7 @@ class TemplateWriter {
   async _addToTemplateMap(paths) {
     let promises = [];
     for (let path of paths) {
-      if (TemplateRender.hasEngine(path)) {
+      if (this.extensionMap.hasEngine(path)) {
         promises.push(
           this.templateMap.add(this._createTemplate(path)).then(() => {
             debug(`${path} added to map.`);
@@ -138,42 +175,36 @@ class TemplateWriter {
 
   async _writeTemplate(mapEntry) {
     let tmpl = mapEntry.template;
-    // we don’t re-use the map templateContent because it doesn’t include layouts
+
     return tmpl.writeMapEntry(mapEntry).then(() => {
-      if (tmpl.isDryRun) {
-        this.pretendWriteCount += tmpl.getWriteCount();
-      } else {
-        this.writeCount += tmpl.getWriteCount();
-      }
+      this.skippedCount += tmpl.getSkippedCount();
+      this.writeCount += tmpl.getWriteCount();
     });
   }
 
-  async write() {
+  async writePassthroughCopy(paths) {
+    let passthroughManager = this.eleventyFiles.getPassthroughManager();
+    if (this.incrementalFile) {
+      passthroughManager.setIncrementalFile(this.incrementalFile);
+    }
+
+    return passthroughManager.copyAll(paths).catch(e => {
+      EleventyErrorHandler.warn(e, "Error with passthrough copy");
+      return Promise.reject(
+        new TemplateWriterWriteError("Having trouble copying", e)
+      );
+    });
+  }
+
+  async writeTemplates(paths) {
     let promises = [];
-    let paths = await this._getAllPaths();
-    debug("Found: %o", paths);
-
-    let passthroughManager = this.getFileManager().getPassthroughManager();
-    passthroughManager.setIncrementalFile(
-      this.incrementalFile ? this.incrementalFile : false
-    );
-
-    promises.push(
-      passthroughManager.copyAll(paths).catch(e => {
-        EleventyErrorHandler.warn(e, "Error with passthrough copy");
-        return Promise.reject(
-          new TemplateWriterWriteError("Having trouble copying", e)
-        );
-      })
-    );
 
     // TODO optimize await here
     await this._createTemplateMap(paths);
     debug("Template map created.");
 
-    let mapEntry;
     let usedTemplateContentTooEarlyMap = [];
-    for (mapEntry of this.templateMap.getMap()) {
+    for (let mapEntry of this.templateMap.getMap()) {
       promises.push(
         this._writeTemplate(mapEntry).catch(function(e) {
           // Premature templateContent in layout render, this also happens in
@@ -192,7 +223,7 @@ class TemplateWriter {
       );
     }
 
-    for (mapEntry of usedTemplateContentTooEarlyMap) {
+    for (let mapEntry of usedTemplateContentTooEarlyMap) {
       promises.push(
         this._writeTemplate(mapEntry).catch(function(e) {
           return Promise.reject(
@@ -203,6 +234,24 @@ class TemplateWriter {
           );
         })
       );
+    }
+
+    return promises;
+  }
+
+  async write() {
+    let paths = await this._getAllPaths();
+    let promises = [];
+    promises.push(this.writePassthroughCopy(paths));
+
+    // Only write templates if not using incremental OR if incremental file was *not* a passthrough copy
+    if (
+      !this.incrementalFile ||
+      !this.eleventyFiles
+        .getPassthroughManager()
+        .isPassthroughCopyFile(paths, this.incrementalFile)
+    ) {
+      promises.push(...(await this.writeTemplates(paths)));
     }
 
     return Promise.all(promises).catch(e => {
@@ -218,9 +267,7 @@ class TemplateWriter {
   setDryRun(isDryRun) {
     this.isDryRun = !!isDryRun;
 
-    this.getFileManager()
-      .getPassthroughManager()
-      .setDryRun(this.isDryRun);
+    this.eleventyFiles.getPassthroughManager().setDryRun(this.isDryRun);
   }
 
   setIncrementalFile(incrementalFile) {
@@ -231,17 +278,19 @@ class TemplateWriter {
   }
 
   getCopyCount() {
-    return this.getFileManager()
-      .getPassthroughManager()
-      .getCopyCount();
+    return this.eleventyFiles.getPassthroughManager().getCopyCount();
+  }
+
+  getSkippedCopyCount() {
+    return this.eleventyFiles.getPassthroughManager().getSkippedCount();
   }
 
   getWriteCount() {
     return this.writeCount;
   }
 
-  getPretendWriteCount() {
-    return this.pretendWriteCount;
+  getSkippedCount() {
+    return this.skippedCount;
   }
 }
 

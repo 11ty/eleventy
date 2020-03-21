@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const pkg = require("./package.json");
-const chalk = require("chalk"); // node 4+
+const chalk = require("chalk"); // node 8+
 require("please-upgrade-node")(pkg, {
   message: function(requiredVersion) {
     return chalk.red(
@@ -16,7 +16,12 @@ if (process.env.DEBUG) {
 const EleventyErrorHandler = require("./src/EleventyErrorHandler");
 
 try {
-  const argv = require("minimist")(process.argv.slice(2));
+  const argv = require("minimist")(process.argv.slice(2), {
+    boolean: ["quiet"],
+    default: {
+      quiet: null
+    }
+  });
   const Eleventy = require("./src/Eleventy");
   const EleventyCommandCheck = require("./src/EleventyCommandCheck");
 
@@ -36,6 +41,7 @@ try {
     );
   });
 
+  // TODO refactor to use minimist options.unknown callback?
   let cmdCheck = new EleventyCommandCheck(argv);
   cmdCheck.hasUnknownArguments();
 
@@ -47,8 +53,10 @@ try {
   elev.setPassthroughAll(argv.passthroughall);
   elev.setFormats(argv.formats);
 
-  let isVerbose = process.env.DEBUG ? false : !argv.quiet;
-  elev.setIsVerbose(isVerbose);
+  // --quiet and --quiet=true resolves to true
+  if (argv.quiet === true || argv.quiet === false) {
+    elev.setIsVerbose(!argv.quiet);
+  }
 
   // careful, we can’t use async/await here to error properly
   // with old node versions in `please-upgrade-node` above.

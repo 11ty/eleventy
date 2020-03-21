@@ -1,10 +1,9 @@
 ---
-name: I’m having a problem with Eleventy
-about: Create a report to help us improve
-title: ''
+name: I’m having trouble with Eleventy
+about: Have a problem? It might be a bug! Create a report to help us improve.
+title: ""
 labels: needs-triage
-assignees: ''
-
+assignees: ""
 ---
 
 **Describe the bug**
@@ -12,6 +11,7 @@ A clear and concise description of what the bug is.
 
 **To Reproduce**
 Steps to reproduce the behavior:
+
 1. Go to '...'
 2. Click on '....'
 3. Scroll down to '....'
@@ -24,8 +24,9 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Environment:**
- - OS and Version: [e.g. Windows/Mac/Linux]
- - Eleventy Version [via `eleventy --version` or `npx @11ty/eleventy --version`]
+
+- OS and Version: [e.g. Windows/Mac/Linux]
+- Eleventy Version [via `eleventy --version` or `npx @11ty/eleventy --version`]
 
 **Additional context**
 Add any other context about the problem here.

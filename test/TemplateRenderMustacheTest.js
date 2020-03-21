@@ -1,20 +1,27 @@
 import test from "ava";
 import TemplateRender from "../src/TemplateRender";
+import EleventyExtensionMap from "../src/EleventyExtensionMap";
+
+function getNewTemplateRender(name, inputDir) {
+  let tr = new TemplateRender(name, inputDir);
+  tr.extensionMap = new EleventyExtensionMap();
+  return tr;
+}
 
 // Mustache
 test("Mustache", async t => {
-  t.is(new TemplateRender("mustache").getEngineName(), "mustache");
+  t.is(getNewTemplateRender("mustache").getEngineName(), "mustache");
 });
 
 test("Mustache Render", async t => {
-  let fn = await new TemplateRender("mustache").getCompiledTemplate(
+  let fn = await getNewTemplateRender("mustache").getCompiledTemplate(
     "<p>{{name}}</p>"
   );
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });
 
 test("Mustache Render Partial (raw text content)", async t => {
-  let fn = await new TemplateRender(
+  let fn = await getNewTemplateRender(
     "mustache",
     "./test/stubs/"
   ).getCompiledTemplate("<p>{{> included}}</p>");
@@ -22,7 +29,7 @@ test("Mustache Render Partial (raw text content)", async t => {
 });
 
 test.skip("Mustache Render Partial (relative path, raw text content)", async t => {
-  let fn = await new TemplateRender(
+  let fn = await getNewTemplateRender(
     "./test/stubs/does_not_exist_and_thats_ok.mustache",
     "./test/stubs/"
   ).getCompiledTemplate("<p>{{> ./includedrelative}}</p>");
@@ -30,7 +37,7 @@ test.skip("Mustache Render Partial (relative path, raw text content)", async t =
 });
 
 test("Mustache Render Partial (uses a variable in content)", async t => {
-  let fn = await new TemplateRender(
+  let fn = await getNewTemplateRender(
     "mustache",
     "./test/stubs/"
   ).getCompiledTemplate("<p>{{> includedvar}}</p>");
@@ -38,7 +45,7 @@ test("Mustache Render Partial (uses a variable in content)", async t => {
 });
 
 test("Mustache Render Partial (Subdirectory)", async t => {
-  let fn = await new TemplateRender(
+  let fn = await getNewTemplateRender(
     "mustache",
     "./test/stubs/"
   ).getCompiledTemplate("<p>{{> subfolder/included}}</p>");
@@ -46,7 +53,7 @@ test("Mustache Render Partial (Subdirectory)", async t => {
 });
 
 test("Mustache Render: with Library Override", async t => {
-  let tr = new TemplateRender("mustache");
+  let tr = getNewTemplateRender("mustache");
 
   let lib = require("mustache");
   tr.engine.setLibrary(lib);
@@ -56,14 +63,14 @@ test("Mustache Render: with Library Override", async t => {
 });
 
 test("Mustache Render Unescaped Output (no HTML)", async t => {
-  let fn = await new TemplateRender("mustache").getCompiledTemplate(
+  let fn = await getNewTemplateRender("mustache").getCompiledTemplate(
     "<p>{{{name}}}</p>"
   );
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });
 
 test("Mustache Render Escaped Output", async t => {
-  let fn = await new TemplateRender("mustache").getCompiledTemplate(
+  let fn = await getNewTemplateRender("mustache").getCompiledTemplate(
     "<p>{{name}}</p>"
   );
   t.is(
@@ -73,7 +80,7 @@ test("Mustache Render Escaped Output", async t => {
 });
 
 test("Mustache Render Unescaped Output (HTML)", async t => {
-  let fn = await new TemplateRender("mustache").getCompiledTemplate(
+  let fn = await getNewTemplateRender("mustache").getCompiledTemplate(
     "<p>{{{name}}}</p>"
   );
   t.is(await fn({ name: "<b>Zach</b>" }), "<p><b>Zach</b></p>");

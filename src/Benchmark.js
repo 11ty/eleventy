@@ -5,10 +5,12 @@ class Benchmark {
 
   reset() {
     this.timeSpent = 0;
+    this.timesCalled = 0;
     this.beforeDates = [];
   }
 
   before() {
+    this.timesCalled++;
     this.beforeDates.push(new Date());
   }
 
@@ -21,6 +23,10 @@ class Benchmark {
     if (!this.beforeDates.length) {
       this.timeSpent += new Date().getTime() - before.getTime();
     }
+  }
+
+  getTimesCalled() {
+    return this.timesCalled;
   }
 
   getTotal() {

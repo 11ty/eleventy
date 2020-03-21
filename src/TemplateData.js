@@ -2,6 +2,7 @@ const fs = require("fs-extra");
 const fastglob = require("fast-glob");
 const parsePath = require("parse-filepath");
 const lodashset = require("lodash/set");
+const lodashget = require("lodash/get");
 const lodashUniq = require("lodash/uniq");
 const merge = require("./Util/Merge");
 const TemplateRender = require("./TemplateRender");
@@ -28,6 +29,18 @@ class TemplateData {
 
     this.rawImports = {};
     this.globalData = null;
+  }
+
+  get extensionMap() {
+    if (!this._extensionMap) {
+      this._extensionMap = new EleventyExtensionMap();
+      this._extensionMap.config = this.config;
+    }
+    return this._extensionMap;
+  }
+
+  set extensionMap(map) {
+    this._extensionMap = map;
   }
 
   /* Used by tests */
@@ -111,10 +124,20 @@ class TemplateData {
 
   async getTemplateDataFileGlob() {
     let dir = await this.getInputDir();
-    return TemplatePath.addLeadingDotSlashArray([
+    let paths = [
       `${dir}/**/*.json`, // covers .11tydata.json too
+      `${dir}/**/*${this.config.jsDataFileSuffix}.cjs`,
       `${dir}/**/*${this.config.jsDataFileSuffix}.js`
-    ]);
+    ];
+
+    if (this.hasUserDataExtensions()) {
+      let userPaths = this.getUserDataExtensions().map(
+        extension => `${dir}/**/*.${extension}` // covers .11tydata.{extension} too
+      );
+      paths = userPaths.concat(paths);
+    }
+
+    return TemplatePath.addLeadingDotSlashArray(paths);
   }
 
   async getTemplateJavaScriptDataFileGlob() {
@@ -126,18 +149,52 @@ class TemplateData {
 
   async getGlobalDataGlob() {
     let dir = await this.getInputDir();
-    return [this._getGlobalDataGlobByExtension(dir, "(json|js)")];
+
+    let extGlob = this.getGlobalDataExtensionPriorities().join("|");
+    return [this._getGlobalDataGlobByExtension(dir, "(" + extGlob + ")")];
   }
 
   getWatchPathCache() {
     return this.pathCache;
   }
 
+  getGlobalDataExtensionPriorities() {
+    return this.getUserDataExtensions().concat(["json", "cjs", "js"]);
+  }
+
+  static calculateExtensionPriority(path, priorities) {
+    for (let i = 0; i < priorities.length; i++) {
+      let ext = priorities[i];
+      if (path.endsWith(ext)) {
+        return i;
+      }
+    }
+    return priorities.length;
+  }
+
   async getGlobalDataFiles() {
+    let priorities = this.getGlobalDataExtensionPriorities();
+
     let paths = await fastglob(await this.getGlobalDataGlob(), {
       caseSensitiveMatch: false,
       dot: true
     });
+
+    // sort paths according to extension priorities
+    // here we use reverse ordering, because paths with bigger index in array will override the first ones
+    // example [path/file.json, path/file.js] here js will override json
+    paths = paths.sort((first, second) => {
+      let p1 = TemplateData.calculateExtensionPriority(first, priorities);
+      let p2 = TemplateData.calculateExtensionPriority(second, priorities);
+      if (p1 < p2) {
+        return -1;
+      }
+      if (p1 > p2) {
+        return 1;
+      }
+      return 0;
+    });
+
     this.pathCache = paths;
     return paths;
   }
@@ -157,22 +214,29 @@ class TemplateData {
     let files = TemplatePath.addLeadingDotSlashArray(
       await this.getGlobalDataFiles()
     );
+
     let dataFileConflicts = {};
 
     for (let j = 0, k = files.length; j < k; j++) {
-      let folders = await this.getObjectPathForDataFile(files[j]);
-
-      // TODO maybe merge these two? (if both valid objects)
-      if (dataFileConflicts[folders]) {
-        debugWarn(
-          `Warning: the key for a global data file (${files[j]}) will overwrite data from an already existing global data file (${dataFileConflicts[folders]})`
-        );
-      }
-      dataFileConflicts[folders] = files[j];
-
-      debug(`Found global data file ${files[j]} and adding as: ${folders}`);
+      let objectPathTarget = await this.getObjectPathForDataFile(files[j]);
       let data = await this.getDataValue(files[j], rawImports);
-      lodashset(globalData, folders, data);
+
+      // if two global files have the same path (but different extensions)
+      // and conflict, let’s merge them.
+      if (dataFileConflicts[objectPathTarget]) {
+        debugWarn(
+          `merging global data from ${files[j]} with an already existing global data file (${dataFileConflicts[objectPathTarget]}). Overriding existing keys.`
+        );
+
+        let oldData = lodashget(globalData, objectPathTarget);
+        data = TemplateData.mergeDeep(this.config, oldData, data);
+      }
+
+      dataFileConflicts[objectPathTarget] = files[j];
+      debug(
+        `Found global data file ${files[j]} and adding as: ${objectPathTarget}`
+      );
+      lodashset(globalData, objectPathTarget, data);
     }
 
     return globalData;
@@ -218,7 +282,31 @@ class TemplateData {
     return localData;
   }
 
-  async _getLocalJsonString(path) {
+  getUserDataExtensions() {
+    if (!this.config.dataExtensions) {
+      return [];
+    }
+
+    // returning extensions in reverse order to create proper extension order
+    // later added formats will override first ones
+    return Array.from(this.config.dataExtensions.keys()).reverse();
+  }
+
+  getUserDataParser(extension) {
+    return this.config.dataExtensions.get(extension);
+  }
+
+  isUserDataExtension(extension) {
+    return (
+      this.config.dataExtensions && this.config.dataExtensions.has(extension)
+    );
+  }
+
+  hasUserDataExtensions() {
+    return this.config.dataExtensions && this.config.dataExtensions.size > 0;
+  }
+
+  async _loadFileContents(path) {
     let rawInput;
     try {
       rawInput = await fs.readFile(path, "utf-8");
@@ -228,56 +316,108 @@ class TemplateData {
     return rawInput;
   }
 
-  async getDataValue(path, rawImports, ignoreProcessing) {
-    if (ignoreProcessing || TemplatePath.getExtension(path) === "js") {
-      let localPath = TemplatePath.absolutePath(path);
-      if (await fs.pathExists(localPath)) {
-        let dataBench = bench.get(`\`${path}\``);
-        dataBench.before();
-        deleteRequireCache(localPath);
-        let returnValue = require(localPath);
-        if (typeof returnValue === "function") {
-          returnValue = await returnValue();
-        }
+  async _parseDataFile(path, rawImports, ignoreProcessing, parser) {
+    let rawInput = await this._loadFileContents(path);
+    let engineName = this.dataTemplateEngine;
 
-        dataBench.after();
-        return returnValue;
-      } else {
-        return {};
-      }
-    } else {
-      let rawInput = await this._getLocalJsonString(path);
-      let engineName = this.dataTemplateEngine;
-
-      if (rawInput) {
-        if (ignoreProcessing || engineName === false) {
-          try {
-            return JSON.parse(rawInput);
-          } catch (e) {
-            throw new TemplateDataParseError(
-              `Having trouble parsing data file ${path}`,
-              e
-            );
-          }
-        } else {
-          let fn = await new TemplateRender(engineName).getCompiledTemplate(
-            rawInput
-          );
-
-          try {
-            // pass in rawImports, don’t pass in global data, that’s what we’re parsing
-            return JSON.parse(await fn(rawImports));
-          } catch (e) {
-            throw new TemplateDataParseError(
-              `Having trouble parsing data file ${path}`,
-              e
-            );
-          }
-        }
-      }
+    if (!rawInput) {
+      return {};
     }
 
-    return {};
+    if (ignoreProcessing || engineName === false) {
+      try {
+        return parser(rawInput);
+      } catch (e) {
+        throw new TemplateDataParseError(
+          `Having trouble parsing data file ${path}`,
+          e
+        );
+      }
+    } else {
+      let tr = new TemplateRender(engineName, this.inputDir);
+      tr.extensionMap = this.extensionMap;
+
+      let fn = await tr.getCompiledTemplate(rawInput);
+
+      try {
+        // pass in rawImports, don’t pass in global data, that’s what we’re parsing
+        let raw = await fn(rawImports);
+        return parser(raw);
+      } catch (e) {
+        throw new TemplateDataParseError(
+          `Having trouble parsing data file ${path}`,
+          e
+        );
+      }
+    }
+  }
+
+  async getDataValue(path, rawImports, ignoreProcessing) {
+    let extension = TemplatePath.getExtension(path);
+
+    // ignoreProcessing = false for global data files
+    // ignoreProcessing = true for local data files
+    if (
+      extension === "js" ||
+      extension === "cjs" ||
+      (extension === "json" && (ignoreProcessing || !this.dataTemplateEngine))
+    ) {
+      // JS data file or require’d JSON (no preprocessing needed)
+      let localPath = TemplatePath.absolutePath(path);
+      if (!(await fs.pathExists(localPath))) {
+        return {};
+      }
+
+      let dataBench = bench.get(`\`${path}\``);
+      dataBench.before();
+      deleteRequireCache(localPath);
+
+      let returnValue = require(localPath);
+      if (typeof returnValue === "function") {
+        returnValue = await returnValue();
+      }
+
+      dataBench.after();
+      return returnValue;
+    } else if (this.isUserDataExtension(extension)) {
+      // Other extensions
+      var parser = this.getUserDataParser(extension);
+      return this._parseDataFile(path, rawImports, ignoreProcessing, parser);
+    } else if (extension === "json") {
+      // File to string, parse with JSON (preprocess)
+      return this._parseDataFile(
+        path,
+        rawImports,
+        ignoreProcessing,
+        JSON.parse
+      );
+    } else {
+      throw new TemplateDataParseError(
+        `Could not find an appropriate data parser for ${path}. Do you need to add a plugin to your config file?`
+      );
+    }
+  }
+
+  _pushExtensionsToPaths(paths, curpath, extensions) {
+    for (let extension of extensions) {
+      paths.push(curpath + "." + extension);
+    }
+  }
+
+  _addBaseToPaths(paths, base, extensions) {
+    let dataSuffix = this.config.jsDataFileSuffix;
+
+    // data suffix
+    paths.push(base + dataSuffix + ".js");
+    paths.push(base + dataSuffix + ".cjs");
+    paths.push(base + dataSuffix + ".json");
+
+    // inject user extensions
+    this._pushExtensionsToPaths(paths, base + dataSuffix, extensions);
+
+    // top level
+    paths.push(base + ".json");
+    this._pushExtensionsToPaths(paths, base, extensions);
   }
 
   async getLocalDataPaths(templatePath) {
@@ -286,37 +426,46 @@ class TemplateData {
     let inputDir = TemplatePath.addLeadingDotSlash(
       TemplatePath.normalize(this.inputDir)
     );
+
     debugDev("getLocalDataPaths(%o)", templatePath);
     debugDev("parsed.dir: %o", parsed.dir);
 
+    let userExtensions = this.getUserDataExtensions();
+
     if (parsed.dir) {
-      let fileNameNoExt = EleventyExtensionMap.removeTemplateExtension(
+      let fileNameNoExt = this.extensionMap.removeTemplateExtension(
         parsed.base
       );
+
       let filePathNoExt = parsed.dir + "/" + fileNameNoExt;
       let dataSuffix = this.config.jsDataFileSuffix;
       debug("Using %o to find data files.", dataSuffix);
-      paths.push(filePathNoExt + dataSuffix + ".js");
-      paths.push(filePathNoExt + dataSuffix + ".json");
-      paths.push(filePathNoExt + ".json");
+
+      this._addBaseToPaths(paths, filePathNoExt, userExtensions);
 
       let allDirs = TemplatePath.getAllDirs(parsed.dir);
+
       debugDev("allDirs: %o", allDirs);
       for (let dir of allDirs) {
         let lastDir = TemplatePath.getLastPathSegment(dir);
         let dirPathNoExt = dir + "/" + lastDir;
 
-        if (!inputDir) {
-          paths.push(dirPathNoExt + dataSuffix + ".js");
-          paths.push(dirPathNoExt + dataSuffix + ".json");
-          paths.push(dirPathNoExt + ".json");
-        } else {
+        if (inputDir) {
           debugDev("dirStr: %o; inputDir: %o", dir, inputDir);
-          if (dir.indexOf(inputDir) === 0 && dir !== inputDir) {
-            paths.push(dirPathNoExt + dataSuffix + ".js");
-            paths.push(dirPathNoExt + dataSuffix + ".json");
-            paths.push(dirPathNoExt + ".json");
-          }
+        }
+        if (!inputDir || (dir.indexOf(inputDir) === 0 && dir !== inputDir)) {
+          this._addBaseToPaths(paths, dirPathNoExt, userExtensions);
+        }
+      }
+
+      // 0.11.0+ include root input dir files
+      // if using `docs/` as input dir, looks for docs/docs.json et al
+      if (inputDir) {
+        let lastInputDir = TemplatePath.addLeadingDotSlash(
+          TemplatePath.join(inputDir, TemplatePath.getLastPathSegment(inputDir))
+        );
+        if (lastInputDir !== "./") {
+          this._addBaseToPaths(paths, lastInputDir, userExtensions);
         }
       }
     }

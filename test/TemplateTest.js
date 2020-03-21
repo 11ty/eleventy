@@ -5,10 +5,16 @@ import TemplateData from "../src/TemplateData";
 import Template from "../src/Template";
 import EleventyErrorUtil from "../src/EleventyErrorUtil";
 import TemplateContentPrematureUseError from "../src/Errors/TemplateContentPrematureUseError";
-import templateConfig from "../src/Config";
 import normalizeNewLines from "./Util/normalizeNewLines";
 
+import templateConfig from "../src/Config";
 const config = templateConfig.getConfig();
+
+async function getRenderedData(tmpl, pageNumber = 0) {
+  let data = await tmpl.getData();
+  let templates = await tmpl.getTemplates(data);
+  return templates[pageNumber].data;
+}
 
 function cleanHtml(str) {
   return pretty(str, { ocd: true });
@@ -334,7 +340,7 @@ test("Liquid template", async t => {
     dataObj
   );
 
-  t.is(await tmpl.render(), `<p>Zach</p>`);
+  t.is(await tmpl.render(await tmpl.getData()), `<p>Zach</p>`);
 });
 
 test("Liquid template with include", async t => {
@@ -344,7 +350,10 @@ test("Liquid template with include", async t => {
     "dist"
   );
 
-  t.is((await tmpl.render()).trim(), "<p>This is an include.</p>");
+  t.is(
+    (await tmpl.render(await tmpl.getData())).trim(),
+    "<p>This is an include.</p>"
+  );
 });
 
 test("ES6 Template Literal (No Backticks)", async t => {
@@ -356,7 +365,7 @@ test("ES6 Template Literal (No Backticks)", async t => {
     dataObj
   );
 
-  t.is((await tmpl.render()).trim(), `<p>ZACH</p>`);
+  t.is((await tmpl.render(await tmpl.getData())).trim(), `<p>ZACH</p>`);
 });
 
 test("ES6 Template Literal (with Backticks)", async t => {
@@ -368,7 +377,7 @@ test("ES6 Template Literal (with Backticks)", async t => {
     dataObj
   );
 
-  t.is((await tmpl.render()).trim(), `<p>ZACH</p>`);
+  t.is((await tmpl.render(await tmpl.getData())).trim(), `<p>ZACH</p>`);
 });
 
 test("Permalink output directory", async t => {
@@ -441,12 +450,17 @@ test("Local template data file import (without a global data json)", async t => 
 
   let data = await tmpl.getData();
   t.deepEqual(await dataObj.getLocalDataPaths(tmpl.getInputPath()), [
+    "./test/stubs/stubs.json",
+    "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.cjs",
+    "./test/stubs/stubs.11tydata.js",
     "./test/stubs/component/component.json",
     "./test/stubs/component/component.11tydata.json",
+    "./test/stubs/component/component.11tydata.cjs",
     "./test/stubs/component/component.11tydata.js"
   ]);
   t.is(data.localdatakey1, "localdatavalue1");
-  t.is(await tmpl.render(), "localdatavalue1");
+  t.is(await tmpl.render(data), "localdatavalue1");
 });
 
 test("Local template data file import (two subdirectories deep)", async t => {
@@ -461,14 +475,21 @@ test("Local template data file import (two subdirectories deep)", async t => {
   );
 
   t.deepEqual(await dataObj.getLocalDataPaths(tmpl.getInputPath()), [
+    "./test/stubs/stubs.json",
+    "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.cjs",
+    "./test/stubs/stubs.11tydata.js",
     "./test/stubs/firstdir/firstdir.json",
     "./test/stubs/firstdir/firstdir.11tydata.json",
+    "./test/stubs/firstdir/firstdir.11tydata.cjs",
     "./test/stubs/firstdir/firstdir.11tydata.js",
     "./test/stubs/firstdir/seconddir/seconddir.json",
     "./test/stubs/firstdir/seconddir/seconddir.11tydata.json",
+    "./test/stubs/firstdir/seconddir/seconddir.11tydata.cjs",
     "./test/stubs/firstdir/seconddir/seconddir.11tydata.js",
     "./test/stubs/firstdir/seconddir/component.json",
     "./test/stubs/firstdir/seconddir/component.11tydata.json",
+    "./test/stubs/firstdir/seconddir/component.11tydata.cjs",
     "./test/stubs/firstdir/seconddir/component.11tydata.js"
   ]);
 });
@@ -486,11 +507,17 @@ test("Posts inherits local JSON, layouts", async t => {
 
   let localDataPaths = await dataObj.getLocalDataPaths(tmpl.getInputPath());
   t.deepEqual(localDataPaths, [
+    "./test/stubs/stubs.json",
+    "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.cjs",
+    "./test/stubs/stubs.11tydata.js",
     "./test/stubs/posts/posts.json",
     "./test/stubs/posts/posts.11tydata.json",
+    "./test/stubs/posts/posts.11tydata.cjs",
     "./test/stubs/posts/posts.11tydata.js",
     "./test/stubs/posts/post1.json",
     "./test/stubs/posts/post1.11tydata.json",
+    "./test/stubs/posts/post1.11tydata.cjs",
     "./test/stubs/posts/post1.11tydata.js"
   ]);
 
@@ -521,8 +548,13 @@ test("Template and folder name are the same, make sure data imports work ok", as
 
   let localDataPaths = await dataObj.getLocalDataPaths(tmpl.getInputPath());
   t.deepEqual(localDataPaths, [
+    "./test/stubs/stubs.json",
+    "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.cjs",
+    "./test/stubs/stubs.11tydata.js",
     "./test/stubs/posts/posts.json",
     "./test/stubs/posts/posts.11tydata.json",
+    "./test/stubs/posts/posts.11tydata.cjs",
     "./test/stubs/posts/posts.11tydata.js"
   ]);
 
@@ -561,6 +593,27 @@ test("Permalink with variables!", async t => {
   );
 
   t.is(await tmpl.getOutputPath(), "./dist/subdir/slug-candidate/index.html");
+});
+
+test("Permalink with variables and JS front matter!", async t => {
+  let tmpl = new Template(
+    "./test/stubs/permalinkdata-jsfn.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is(await tmpl.getOutputPath(), "./dist/subdir/slug/index.html");
+});
+
+// This is broken right now, permalink must use the same template language as the template
+test.skip("Use a JavaScript function for permalink in any template language", async t => {
+  let tmpl = new Template(
+    "./test/stubs/permalinkdata-jspermalinkfn.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is(await tmpl.getOutputPath(), "./dist/subdir/slug/index.html");
 });
 
 test("Permalink with dates!", async t => {
@@ -653,8 +706,8 @@ test("renderData", async t => {
     "./test/stubs/",
     "./dist"
   );
-
-  t.is((await tmpl.render()).trim(), "hi:value2-value1.css");
+  let data = await getRenderedData(tmpl);
+  t.is((await tmpl.render(data)).trim(), "hi:value2-value1.css");
 });
 
 test("renderData markdown (issue #40)", async t => {
@@ -663,8 +716,8 @@ test("renderData markdown (issue #40)", async t => {
     "./test/stubs/",
     "./dist"
   );
-
-  t.is((await tmpl.render()).trim(), "<title>value2-value1.css</title>");
+  let data = await getRenderedData(tmpl);
+  t.is((await tmpl.render(data)).trim(), "<title>value2-value1.css</title>");
 });
 
 test("getMappedDate (empty, assume created)", async t => {
@@ -673,7 +726,7 @@ test("getMappedDate (empty, assume created)", async t => {
     "./test/stubs/",
     "./dist"
   );
-  let data = await tmpl.getRenderedData();
+  let data = await getRenderedData(tmpl);
   let date = await tmpl.getMappedDate(data);
 
   t.true(date instanceof Date);
@@ -686,7 +739,7 @@ test("getMappedDate (explicit date, yaml String)", async t => {
     "./test/stubs/",
     "./dist"
   );
-  let data = await tmpl.getRenderedData();
+  let data = await getRenderedData(tmpl);
   let date = await tmpl.getMappedDate(data);
 
   t.true(date instanceof Date);
@@ -699,7 +752,7 @@ test("getMappedDate (explicit date, yaml Date)", async t => {
     "./test/stubs/",
     "./dist"
   );
-  let data = await tmpl.getRenderedData();
+  let data = await getRenderedData(tmpl);
   let date = await tmpl.getMappedDate(data);
 
   t.true(date instanceof Date);
@@ -712,7 +765,7 @@ test("getMappedDate (explicit date, yaml Date and string should be the same)", a
     "./test/stubs/",
     "./dist"
   );
-  let dataA = await tmplA.getRenderedData();
+  let dataA = await getRenderedData(tmplA);
   let stringDate = await tmplA.getMappedDate(dataA);
 
   let tmplB = new Template(
@@ -720,7 +773,7 @@ test("getMappedDate (explicit date, yaml Date and string should be the same)", a
     "./test/stubs/",
     "./dist"
   );
-  let dataB = await tmplB.getRenderedData();
+  let dataB = await getRenderedData(tmplB);
   let yamlDate = await tmplB.getMappedDate(dataB);
 
   t.truthy(stringDate);
@@ -734,7 +787,7 @@ test("getMappedDate (modified date)", async t => {
     "./test/stubs/",
     "./dist"
   );
-  let data = await tmpl.getRenderedData();
+  let data = await getRenderedData(tmpl);
   let date = await tmpl.getMappedDate(data);
 
   t.true(date instanceof Date);
@@ -747,7 +800,7 @@ test("getMappedDate (created date)", async t => {
     "./test/stubs/",
     "./dist"
   );
-  let data = await tmpl.getRenderedData();
+  let data = await getRenderedData(tmpl);
   let date = await tmpl.getMappedDate(data);
 
   t.true(date instanceof Date);
@@ -760,7 +813,7 @@ test("getMappedDate (falls back to filename date)", async t => {
     "./test/stubs/",
     "./dist"
   );
-  let data = await tmpl.getRenderedData();
+  let data = await getRenderedData(tmpl);
   let date = await tmpl.getMappedDate(data);
 
   t.true(date instanceof Date);
@@ -773,7 +826,7 @@ test("getRenderedData() has all the page variables", async t => {
     "./test/stubs/",
     "./dist"
   );
-  let data = await tmpl.getRenderedData();
+  let data = await getRenderedData(tmpl);
 
   t.truthy(data.page.url);
   t.is(data.page.url, "/template/");
@@ -883,7 +936,7 @@ test("getRenderedTemplates() data has all the page variables", async t => {
 
 test("getRenderedData() has good slug (empty, index)", async t => {
   let tmpl = new Template("./test/stubs/index.ejs", "./test/stubs/", "./dist");
-  let data = await tmpl.getRenderedData();
+  let data = await getRenderedData(tmpl);
   t.is(data.page.fileSlug, "");
   t.is(data.page.filePathStem, "/index");
 });
@@ -894,7 +947,7 @@ test("getRenderedData() has good slug", async t => {
     "./test/stubs/",
     "./dist"
   );
-  let data = await tmpl.getRenderedData();
+  let data = await getRenderedData(tmpl);
   t.is(data.page.fileSlug, "includer");
   t.is(data.page.filePathStem, "/includer");
 });
@@ -906,7 +959,7 @@ test("Override base templating engine from .liquid to ejs", async t => {
     "./dist"
   );
 
-  t.is((await tmpl.render()).trim(), "My Title");
+  t.is((await tmpl.render(await tmpl.getData())).trim(), "My Title");
 });
 
 test("Override base templating engine from markdown to 11ty.js, then markdown", async t => {
@@ -916,7 +969,10 @@ test("Override base templating engine from markdown to 11ty.js, then markdown", 
     "./dist"
   );
 
-  t.is((await tmpl.render()).trim(), "<h1>This is markdown</h1>");
+  t.is(
+    (await tmpl.render(await tmpl.getData())).trim(),
+    "<h1>This is markdown</h1>"
+  );
 });
 
 test("Override base templating engine from .liquid to md", async t => {
@@ -926,7 +982,7 @@ test("Override base templating engine from .liquid to md", async t => {
     "./dist"
   );
 
-  t.is((await tmpl.render()).trim(), "<h1>My Title</h1>");
+  t.is((await tmpl.render(await tmpl.getData())).trim(), "<h1>My Title</h1>");
 });
 
 test("Override base templating engine from .liquid to ejs,md", async t => {
@@ -936,7 +992,7 @@ test("Override base templating engine from .liquid to ejs,md", async t => {
     "./dist"
   );
 
-  t.is((await tmpl.render()).trim(), "<h1>My Title</h1>");
+  t.is((await tmpl.render(await tmpl.getData())).trim(), "<h1>My Title</h1>");
 });
 
 test("Override base templating engine from .njk to ejs,md", async t => {
@@ -946,7 +1002,7 @@ test("Override base templating engine from .njk to ejs,md", async t => {
     "./dist"
   );
 
-  t.is((await tmpl.render()).trim(), "<h1>My Title</h1>");
+  t.is((await tmpl.render(await tmpl.getData())).trim(), "<h1>My Title</h1>");
 });
 
 test("Override base templating engine from .html to ejs", async t => {
@@ -956,7 +1012,7 @@ test("Override base templating engine from .html to ejs", async t => {
     "./dist"
   );
 
-  t.is((await tmpl.render()).trim(), "<h2>My Title</h2>");
+  t.is((await tmpl.render(await tmpl.getData())).trim(), "<h2>My Title</h2>");
 });
 
 test("Override base templating engine from .html to (nothing)", async t => {
@@ -966,7 +1022,10 @@ test("Override base templating engine from .html to (nothing)", async t => {
     "./dist"
   );
 
-  t.is((await tmpl.render()).trim(), "<h2><%= title %></h2>");
+  t.is(
+    (await tmpl.render(await tmpl.getData())).trim(),
+    "<h2><%= title %></h2>"
+  );
 });
 
 test("Override base templating engine should error with bad string", async t => {
@@ -977,7 +1036,7 @@ test("Override base templating engine should error with bad string", async t => 
   );
 
   await t.throwsAsync(async () => {
-    await tmpl.render();
+    await tmpl.render(await tmpl.getData());
   });
 });
 
@@ -988,7 +1047,7 @@ test("Override base templating engine (bypasses markdown)", async t => {
     "./dist"
   );
 
-  t.is((await tmpl.render()).trim(), "# My Title");
+  t.is((await tmpl.render(await tmpl.getData())).trim(), "# My Title");
 });
 
 test("Override base templating engine to (nothing)", async t => {
@@ -999,7 +1058,7 @@ test("Override base templating engine to (nothing)", async t => {
   );
 
   // not parsed
-  t.is((await tmpl.render()).trim(), "# <%= title %>");
+  t.is((await tmpl.render(await tmpl.getData())).trim(), "# <%= title %>");
 });
 
 test("Override base templating engine from .ejs to njk", async t => {
@@ -1009,7 +1068,7 @@ test("Override base templating engine from .ejs to njk", async t => {
     "./dist"
   );
 
-  t.is((await tmpl.render()).trim(), "My Title");
+  t.is((await tmpl.render(await tmpl.getData())).trim(), "My Title");
 });
 
 test("Override base templating engine from .njk to ejs (with a layout that uses njk)", async t => {
@@ -1020,7 +1079,7 @@ test("Override base templating engine from .njk to ejs (with a layout that uses 
   );
 
   t.is(
-    (await tmpl.render()).trim(),
+    (await tmpl.render(await tmpl.getData())).trim(),
     '<div id="layoutvalue"><h2>My Title</h2></div>'
   );
 });
@@ -1033,7 +1092,7 @@ test("Override base templating engine from .njk to nothing (with a layout that u
   );
 
   t.is(
-    (await tmpl.render()).trim(),
+    (await tmpl.render(await tmpl.getData())).trim(),
     `<div id="layoutvalue"><h2><%= title %></h2></div>`
   );
 });
@@ -1046,7 +1105,7 @@ test("Using a markdown source file (with a layout that uses njk), markdown shoul
   );
 
   t.is(
-    normalizeNewLines((await tmpl.render()).trim()),
+    normalizeNewLines((await tmpl.render(await tmpl.getData())).trim()),
     `# Layout header
 
 <div id="layoutvalue"><h1>My Title</h1>
@@ -1062,7 +1121,7 @@ test("Override base templating engine from .md to ejs,md (with a layout that use
   );
 
   t.is(
-    normalizeNewLines((await tmpl.render()).trim()),
+    normalizeNewLines((await tmpl.render(await tmpl.getData())).trim()),
     `# Layout header
 
 <div id="layoutvalue"><h1>My Title</h1>
@@ -1131,6 +1190,26 @@ test("Test a transform", async t => {
 
   tmpl.addTransform(function(content, outputPath) {
     t.true(outputPath.endsWith(".html"));
+    return "OVERRIDE BY A TRANSFORM";
+  });
+
+  let renders = await tmpl._testCompleteRender();
+  t.is(renders[0], "OVERRIDE BY A TRANSFORM");
+});
+
+// #789: https://github.com/11ty/eleventy/issues/789
+test.skip("Test a transform (does it have inputPath?)", async t => {
+  t.plan(3);
+
+  let tmpl = new Template(
+    "./test/stubs/template.ejs",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  tmpl.addTransform(function(content, outputPath, inputPath) {
+    t.true(outputPath.endsWith(".html"));
+    t.true(!!inputPath);
     return "OVERRIDE BY A TRANSFORM";
   });
 
@@ -1910,16 +1989,130 @@ test("global variable with dashes Issue #567 (liquid)", async t => {
   t.is(pages[0].templateContent.trim(), "Yes");
 });
 
-// test("Issue #446: Layout has a permalink with a different template language than content", async t => {
-//   let tmpl = new Template(
-//     "./test/stubs/layout-permalink-difflang/test.md",
-//     "./test/stubs/layout-permalink-difflang/",
-//     "dist"
-//   );
+test("Issue #446: Layout has a permalink with a different template language than content", async t => {
+  let tmpl = new Template(
+    "./test/stubs/layout-permalink-difflang/test.md",
+    "./test/stubs/layout-permalink-difflang/",
+    "dist"
+  );
 
-//   let data = await tmpl.getData();
-//   let pages = await tmpl.getRenderedTemplates(data);
+  let data = await tmpl.getData();
+  // this call is needed for page data to be added
+  let pages = await tmpl.getRenderedTemplates(data);
 
-//   t.is(data.permalink, "/{{ page.fileSlug }}/");
-//   t.is(data.page.url, "/test/");
-// });
+  t.is(data.permalink, "/{{ page.fileSlug }}/");
+  t.is(data.page.url, "/test/");
+});
+
+// Prior to and including 0.10.0 this mismatched the documentation)!
+test("Layout front matter should override template files", async t => {
+  let dataObj = new TemplateData(
+    "./test/stubs-data-cascade/layout-data-files/"
+  );
+  let tmpl = new Template(
+    "./test/stubs-data-cascade/layout-data-files/test.njk",
+    "./test/stubs-data-cascade/layout-data-files/",
+    "./dist",
+    dataObj
+  );
+
+  let data = await tmpl.getData();
+  t.is(data.shared, "layout");
+});
+
+test("Get Layout Chain", async t => {
+  let tmpl = new Template(
+    "./test/stubs-incremental/layout-chain/test.njk",
+    "./test/stubs-incremental/layout-chain/",
+    "./dist"
+  );
+
+  let layoutChain = await tmpl.getLayoutChain();
+  t.deepEqual(layoutChain, [
+    "./test/stubs-incremental/layout-chain/_includes/base.njk",
+    "./test/stubs-incremental/layout-chain/_includes/parent.njk"
+  ]);
+});
+
+test("eleventyComputed", async t => {
+  let tmpl = new Template(
+    "./test/stubs/eleventyComputed/first.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await getRenderedData(tmpl);
+  t.is((await tmpl.render(data)).trim(), "hi:value2-value1.css");
+});
+
+test("eleventyComputed overrides existing value.", async t => {
+  let tmpl = new Template(
+    "./test/stubs/eleventyComputed/override.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await getRenderedData(tmpl);
+  t.is(data.key1, "override");
+  t.is((await tmpl.render(data)).trim(), "hi:override");
+});
+
+test("eleventyComputed overrides existing value and reuses that upstream value", async t => {
+  let tmpl = new Template(
+    "./test/stubs/eleventyComputed/override-reuse.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await getRenderedData(tmpl);
+  t.is(data.key1, "over(value1)ride");
+  t.is((await tmpl.render(data)).trim(), "hi:over(value1)ride");
+});
+
+test("eleventyComputed permalink", async t => {
+  let tmpl = new Template(
+    "./test/stubs/eleventyComputed/permalink.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  let templates = await tmpl.getTemplates(await tmpl.getData());
+  let data = templates[0].data;
+  t.is(data.page.url, "/haha-value1.html");
+  t.is(data.page.outputPath, "./dist/haha-value1.html");
+  t.is(data.permalink, "haha-value1.html");
+  t.is(data.nested.key3, "value1");
+  t.is(data.nested.key4, "depends on computed value1");
+  t.is(data.dependsOnPage, "depends:/haha-value1.html");
+});
+
+test("eleventyComputed js front matter (function)", async t => {
+  let tmpl = new Template(
+    "./test/stubs/eleventyComputed/second.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await getRenderedData(tmpl);
+  t.is(data.key3, "value3-value2-value1.css");
+  t.is((await tmpl.render(data)).trim(), "hi:value2-value1.css");
+});
+
+test("eleventyComputed js front matter key reuses and overrides", async t => {
+  let tmpl = new Template(
+    "./test/stubs/eleventyComputed/third.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await getRenderedData(tmpl);
+  t.is(data.key1, "value2-value1");
+  t.is((await tmpl.render(data)).trim(), "hi:value2-value1");
+});
+
+test("eleventyComputed true primitive", async t => {
+  let tmpl = new Template(
+    "./test/stubs/eleventyComputed/true.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  let data = await getRenderedData(tmpl);
+  t.is(data.key1, "value1");
+  t.is(data.key2, true);
+  t.is(data.key3, false);
+  t.is(data.key4, 324);
+});

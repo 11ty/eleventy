@@ -19,6 +19,7 @@ class UserConfig {
     debug("Resetting EleventyConfig to initial values.");
     this.events = new EventEmitter();
     this.collections = {};
+    this.templateFormats = undefined;
 
     this.liquidOptions = {};
     this.liquidTags = {};
@@ -51,11 +52,17 @@ class UserConfig {
     this.dynamicPermalinks = true;
     this.useGitIgnore = true;
     this.dataDeepMerge = false;
-    this.experiments = new Set();
-    // this.userExtensionMap = {};
-    // this.templateExtensionAliases = {};
+    this.extensionMap = new Set();
     this.watchJavaScriptDependencies = true;
+    this.additionalWatchTargets = [];
     this.browserSyncConfig = {};
+    this.chokidarConfig = {};
+    this.watchThrottleWaitTime = 0; //ms
+
+    // using Map to preserve insertion order
+    this.dataExtensions = new Map();
+
+    this.quietMode = false;
   }
 
   versionCheck(expected) {
@@ -189,6 +196,15 @@ class UserConfig {
     this.addHandlebarsHelper(name, callback);
   }
 
+  getFilter(name) {
+    return (
+      this.javascriptFunctions[name] ||
+      this.nunjucksFilters[name] ||
+      this.liquidFilters[name] ||
+      this.handlebarsHelpers[name]
+    );
+  }
+
   addNunjucksTag(name, tagFn) {
     name = this.getNamespacedName(name);
 
@@ -249,7 +265,8 @@ class UserConfig {
   addPlugin(plugin, options) {
     debug("Adding plugin (unknown name: check your config file).");
     if (typeof plugin === "function") {
-      plugin(this);
+      let configFunction = plugin;
+      configFunction(this, options);
     } else if (plugin && plugin.configFunction) {
       if (options && typeof options.init === "function") {
         options.init.call(this, plugin.initArguments || {});
@@ -299,12 +316,25 @@ class UserConfig {
     return this;
   }
 
-  setTemplateFormats(templateFormats) {
+  _normalizeTemplateFormats(templateFormats) {
     if (typeof templateFormats === "string") {
       templateFormats = templateFormats.split(",").map(format => format.trim());
     }
+    return templateFormats;
+  }
 
-    this.templateFormats = templateFormats;
+  setTemplateFormats(templateFormats) {
+    this.templateFormats = this._normalizeTemplateFormats(templateFormats);
+  }
+
+  // additive, usually for plugins
+  addTemplateFormats(templateFormats) {
+    if (!this.templateFormatsAdded) {
+      this.templateFormatsAdded = [];
+    }
+    this.templateFormatsAdded = this.templateFormatsAdded.concat(
+      this._normalizeTemplateFormats(templateFormats)
+    );
   }
 
   setLibrary(engineName, libraryInstance) {
@@ -545,17 +575,13 @@ class UserConfig {
     );
   }
 
-  addExperiment(key) {
-    this.experiments.add(key);
-  }
-
   setDataDeepMerge(deepMerge) {
     this.dataDeepMerge = !!deepMerge;
   }
 
-  // addTemplateExtensionAlias(targetKey, extension) {
-  //   this.templateExtensionAliases[extension] = targetKey;
-  // }
+  addWatchTarget(additionalWatchTargets) {
+    this.additionalWatchTargets.push(additionalWatchTargets);
+  }
 
   setWatchJavaScriptDependencies(watchEnabled) {
     this.watchJavaScriptDependencies = !!watchEnabled;
@@ -565,13 +591,52 @@ class UserConfig {
     this.browserSyncConfig = options;
   }
 
+  setChokidarConfig(options = {}) {
+    this.chokidarConfig = options;
+  }
+
+  setWatchThrottleWaitTime(time = 0) {
+    this.watchThrottleWaitTime = time;
+  }
+
   setFrontMatterParsingOptions(options = {}) {
     this.frontMatterParsingOptions = options;
+  }
+
+  setQuietMode(quietMode) {
+    this.quietMode = !!quietMode;
+  }
+
+  addExtension(fileExtension, options = {}) {
+    if (!process.env.ELEVENTY_EXPERIMENTAL) {
+      return;
+    }
+
+    console.log(
+      chalk.yellow(
+        "Warning: Configuration API `addExtension` is an experimental Eleventy feature with an unstable API. Be careful!"
+      )
+    );
+
+    this.extensionMap.add(
+      Object.assign(
+        {
+          key: fileExtension,
+          extension: fileExtension
+        },
+        options
+      )
+    );
+  }
+
+  addDataExtension(formatExtension, formatParser) {
+    this.dataExtensions.set(formatExtension, formatParser);
   }
 
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
+      templateFormatsAdded: this.templateFormatsAdded,
       filters: this.filters, // now called transforms
       linters: this.linters,
       layoutAliases: this.layoutAliases,
@@ -599,17 +664,17 @@ class UserConfig {
       dynamicPermalinks: this.dynamicPermalinks,
       useGitIgnore: this.useGitIgnore,
       dataDeepMerge: this.dataDeepMerge,
-      experiments: this.experiments,
-      // templateExtensionAliases: this.templateExtensionAliases,
       watchJavaScriptDependencies: this.watchJavaScriptDependencies,
+      additionalWatchTargets: this.additionalWatchTargets,
       browserSyncConfig: this.browserSyncConfig,
-      frontMatterParsingOptions: this.frontMatterParsingOptions
+      chokidarConfig: this.chokidarConfig,
+      watchThrottleWaitTime: this.watchThrottleWaitTime,
+      frontMatterParsingOptions: this.frontMatterParsingOptions,
+      dataExtensions: this.dataExtensions,
+      extensionMap: this.extensionMap,
+      quietMode: this.quietMode
     };
   }
-
-  // addExtension(fileExtension, userClass) {
-  //   this.userExtensionMap[ fileExtension ] = userClass;
-  // }
 }
 
 module.exports = UserConfig;

@@ -7,9 +7,12 @@ function getMergedItem(target, source, parentKey) {
     return source;
   }
 
-  if (!target) {
-    return source;
-  } else if (Array.isArray(target) && Array.isArray(source)) {
+  // deep copy objects to avoid sharing and to effect key renaming
+  if (!target && isPlainObject(source)) {
+    target = {};
+  }
+
+  if (Array.isArray(target) && Array.isArray(source)) {
     return target.concat(source);
   } else if (isPlainObject(target)) {
     if (isPlainObject(source)) {

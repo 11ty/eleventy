@@ -2,7 +2,6 @@ const fastglob = require("fast-glob");
 const fs = require("fs-extra");
 const TemplatePath = require("../TemplatePath");
 const EleventyExtensionMap = require("../EleventyExtensionMap");
-const config = require("../Config");
 const debug = require("debug")("Eleventy:TemplateEngine");
 
 class TemplateEngine {
@@ -19,13 +18,21 @@ class TemplateEngine {
 
   get config() {
     if (!this._config) {
-      this._config = config.getConfig();
+      this._config = require("../Config").getConfig();
     }
     return this._config;
   }
 
   set config(config) {
     this._config = config;
+  }
+
+  get engineManager() {
+    return this._engineManager;
+  }
+
+  set engineManager(manager) {
+    this._engineManager = manager;
   }
 
   getName() {
@@ -120,35 +127,8 @@ class TemplateEngine {
     // do nothing
   }
 
-  static get templateKeyMapToClassName() {
-    return {
-      ejs: "Ejs",
-      md: "Markdown",
-      jstl: "JavaScriptTemplateLiteral",
-      html: "Html",
-      hbs: "Handlebars",
-      mustache: "Mustache",
-      haml: "Haml",
-      pug: "Pug",
-      njk: "Nunjucks",
-      liquid: "Liquid",
-      "11ty.js": "JavaScript"
-    };
-  }
-
-  static hasEngine(name) {
-    return name in TemplateEngine.templateKeyMapToClassName;
-  }
-
-  static getEngine(name, includesDir) {
-    if (!this.hasEngine(name)) {
-      throw new Error(
-        `Template Engine ${name} does not exist in getEngine (includes dir: ${includesDir})`
-      );
-    }
-
-    const cls = require("./" + TemplateEngine.templateKeyMapToClassName[name]);
-    return new cls(name, includesDir);
+  get defaultTemplateFileExtension() {
+    return "html";
   }
 }
 

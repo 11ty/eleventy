@@ -3,6 +3,7 @@ const DependencyGraph = require("dependency-graph").DepGraph;
 const TemplateCollection = require("./TemplateCollection");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
 const UsingCircularTemplateContentReferenceError = require("./Errors/UsingCircularTemplateContentReferenceError");
+// TODO the config setup here is overly complex. Why aren’t we injecting config instance like everywhere else?
 const eleventyConfig = require("./EleventyConfig");
 const debug = require("debug")("Eleventy:TemplateMap");
 const debugDev = require("debug")("Dev:Eleventy:TemplateMap");
@@ -17,7 +18,6 @@ class DuplicatePermalinkOutputError extends EleventyBaseError {
 class TemplateMap {
   constructor() {
     this.map = [];
-    this.graph = new DependencyGraph();
     this.collectionsData = null;
     this.cached = false;
     this.configCollections = null;
@@ -483,11 +483,13 @@ class TemplateMap {
 
   populateCollectionsWithContent() {
     for (let collectionName in this.collectionsData) {
+      // skip custom collections set in configuration files that have arbitrary types
       if (!Array.isArray(this.collectionsData[collectionName])) {
         continue;
       }
 
       for (let item of this.collectionsData[collectionName]) {
+        // skip custom collections set in configuration files that have arbitrary types
         if (!isPlainObject(item) || !("inputPath" in item)) {
           continue;
         }
@@ -534,7 +536,7 @@ ${permalinks[page.url]
     }
   }
 
-  async getCollectionsData() {
+  async _testGetCollectionsData() {
     if (!this.cached) {
       await this.cache();
     }

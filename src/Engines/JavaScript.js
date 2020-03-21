@@ -34,12 +34,18 @@ class JavaScript extends TemplateEngine {
         mod.prototype &&
         ("data" in mod.prototype || "render" in mod.prototype)
       ) {
+        // render function is optional
         if (!("render" in mod.prototype)) {
           mod.prototype.render = noop;
         }
         return new mod();
       } else {
-        return { render: mod };
+        // let fn = function() {};
+        // fn.prototype.render = mod;
+        // return new fn();
+        return {
+          render: mod
+        };
       }
     } else if ("data" in mod || "render" in mod) {
       if (!("render" in mod)) {
@@ -103,6 +109,7 @@ class JavaScript extends TemplateEngine {
     let inst;
     if (str) {
       // When str has a value, it's being used for permalinks in data
+      // and maybe not be a str (could be any valid *.11ty.js)
       inst = this._getInstance(str);
     } else {
       // For normal templates, str will be falsy.

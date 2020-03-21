@@ -3,10 +3,6 @@ const Sortable = require("./Util/Sortable");
 const TemplatePath = require("./TemplatePath");
 
 class TemplateCollection extends Sortable {
-  constructor() {
-    super();
-  }
-
   // right now this is only used by the tests
   async _testAddTemplate(template) {
     let data = await template.getData();
@@ -50,19 +46,27 @@ class TemplateCollection extends Sortable {
   }
 
   getFilteredByTag(tagName) {
-    return this.getAllSorted().filter(function(item) {
-      let match = false;
+    return this.getAllSorted().filter(item => {
       if (!tagName) {
         return true;
       } else if (Array.isArray(item.data.tags)) {
-        item.data.tags.forEach(tag => {
-          if (tag === tagName) {
-            match = true;
-          }
-        });
+        return item.data.tags.some(tag => tag === tagName);
       }
-      return match;
+      return false;
     });
+  }
+
+  getFilteredByTags(...tags) {
+    return this.getAllSorted().filter(item =>
+      tags.every(requiredTag => {
+        const itemTags = item.data.tags;
+        if (Array.isArray(itemTags)) {
+          return itemTags.includes(requiredTag);
+        } else {
+          return itemTags === requiredTag;
+        }
+      })
+    );
   }
 }
 

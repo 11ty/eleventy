@@ -5,7 +5,7 @@ const TemplatePath = require("./TemplatePath");
 
 const templateCache = require("./TemplateCache");
 const config = require("./Config");
-const debug = require("debug")("Eleventy:TemplateLayout");
+// const debug = require("debug")("Eleventy:TemplateLayout");
 const debugDev = require("debug")("Dev:Eleventy:TemplateLayout");
 
 class TemplateLayout extends TemplateContent {
@@ -81,7 +81,9 @@ class TemplateLayout extends TemplateContent {
 
     let map = await this.getTemplateLayoutMap();
     let dataToMerge = [];
+    let layoutChain = [];
     for (let j = map.length - 1; j >= 0; j--) {
+      layoutChain.push(map[j].template.inputPath);
       dataToMerge.push(map[j].frontMatterData);
     }
 
@@ -89,8 +91,16 @@ class TemplateLayout extends TemplateContent {
     let data = TemplateData.mergeDeep(this.config, {}, ...dataToMerge);
     delete data[this.config.keys.layout];
 
+    this.layoutChain = layoutChain.reverse();
     this.dataCache = data;
     return data;
+  }
+
+  async getLayoutChain() {
+    if(!this.layoutChain) {
+      await this.getData();
+    }
+    return this.layoutChain;
   }
 
   async getCompiledLayoutFunctions() {

@@ -56,10 +56,10 @@ class TemplateLayoutPathResolver {
       fs.existsSync(this.pathAlreadyHasExtension)
     ) {
       this.filename = this.path;
-      this.fullPath = this.pathAlreadyHasExtension;
+      this.fullPath = TemplatePath.addLeadingDotSlash(this.pathAlreadyHasExtension);
     } else {
       this.filename = this.findFileName();
-      this.fullPath = this.dir + "/" + this.filename;
+      this.fullPath = TemplatePath.addLeadingDotSlash(this.dir + "/" + this.filename);
     }
   }
 

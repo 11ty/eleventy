@@ -4,6 +4,7 @@ const normalize = require("normalize-path");
 const matter = require("gray-matter");
 const lodashSet = require("lodash/set");
 
+const EleventyExtensionMap = require("./EleventyExtensionMap");
 const TemplateData = require("./TemplateData");
 const TemplateRender = require("./TemplateRender");
 const EleventyBaseError = require("./EleventyBaseError");
@@ -27,7 +28,15 @@ class TemplateContent {
   }
 
   /* Used by tests */
-  _setExtensionMap(map) {
+  get extensionMap() {
+    if (!this._extensionMap) {
+      this._extensionMap = new EleventyExtensionMap();
+      this._extensionMap.config = this.config;
+    }
+    return this._extensionMap;
+  }
+
+  set extensionMap(map) {
     this._extensionMap = map;
   }
 
@@ -49,11 +58,8 @@ class TemplateContent {
 
   get templateRender() {
     if (!this._templateRender) {
-      this._templateRender = new TemplateRender(
-        this.inputPath,
-        this.inputDir,
-        this._extensionMap
-      );
+      this._templateRender = new TemplateRender(this.inputPath, this.inputDir);
+      this._templateRender.extensionMap = this.extensionMap;
     }
 
     return this._templateRender;
