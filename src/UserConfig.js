@@ -672,7 +672,8 @@ class UserConfig {
       frontMatterParsingOptions: this.frontMatterParsingOptions,
       dataExtensions: this.dataExtensions,
       extensionMap: this.extensionMap,
-      quietMode: this.quietMode
+      quietMode: this.quietMode,
+      events: this.events
     };
   }
 }

@@ -442,6 +442,8 @@ Arguments:
       return;
     }
 
+    this.config.events.emit("beforeWatch");
+
     this.watchManager.setBuildRunning();
 
     // reset and reload global configuration :O
