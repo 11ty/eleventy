@@ -50,7 +50,6 @@ class Handlebars extends TemplateEngine {
           content = options.fn(this);
         }
 
-        // TODO breaking change, use { data: this } for consistency with Nunjucks, Liquid, 11ty.js
         return callback.call(this, content, ...args);
       });
     }
