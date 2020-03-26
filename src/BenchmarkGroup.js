@@ -32,17 +32,17 @@ class BenchmarkGroup {
   }
 
   // callback must return a promise
-  async addAsync(type, callback) {
-    let benchmark = (this.benchmarks[type] = new Benchmark());
+  // async addAsync(type, callback) {
+  //   let benchmark = (this.benchmarks[type] = new Benchmark());
 
-    benchmark.before();
-    // don’t await here.
-    let promise = callback();
-    promise.then(function() {
-      benchmark.after();
-    });
-    return promise;
-  }
+  //   benchmark.before();
+  //   // don’t await here.
+  //   let promise = callback.call(this);
+  //   promise.then(function() {
+  //     benchmark.after();
+  //   });
+  //   return promise;
+  // }
 
   setMinimumThresholdMs(minimumThresholdMs) {
     let val = parseInt(minimumThresholdMs, 10);

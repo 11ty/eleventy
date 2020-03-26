@@ -135,8 +135,9 @@ class Liquid extends TemplateEngine {
         },
         render: function(scope, hash) {
           let argArray = Liquid.parseArguments(_t.argLexer, this.args, scope);
-
-          return Promise.resolve(shortcodeFn(...argArray));
+          return Promise.resolve(
+            shortcodeFn.call({ templateData: scope.contexts[0] }, ...argArray)
+          );
         }
       };
     });
@@ -168,7 +169,13 @@ class Liquid extends TemplateEngine {
             liquidEngine.renderer
               .renderTemplates(this.templates, scope)
               .then(function(html) {
-                resolve(shortcodeFn(html, ...argArray));
+                resolve(
+                  shortcodeFn.call(
+                    { templateData: scope.contexts[0] },
+                    html,
+                    ...argArray
+                  )
+                );
               });
           });
         }

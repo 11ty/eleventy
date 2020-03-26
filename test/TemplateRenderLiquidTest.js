@@ -268,8 +268,13 @@ test("Liquid addTags", async t => {
 });
 
 test("Liquid Shortcode", async t => {
+  t.plan(2);
+
   let tr = getNewTemplateRender("liquid", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(str) {
+    // Data in context
+    t.is(this.templateData.name, "test");
+
     return str + "Zach";
   });
 
@@ -280,8 +285,13 @@ test("Liquid Shortcode", async t => {
 });
 
 test("Liquid Shortcode returns promise", async t => {
+  t.plan(2);
+
   let tr = new TemplateRender("liquid", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(str) {
+    // Data in context
+    t.is(this.templateData.name, "test");
+
     return new Promise(function(resolve) {
       setTimeout(function() {
         resolve(str + "Zach");
@@ -296,8 +306,13 @@ test("Liquid Shortcode returns promise", async t => {
 });
 
 test("Liquid Shortcode returns promise (await inside)", async t => {
+  t.plan(2);
+
   let tr = new TemplateRender("liquid", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", async function(str) {
+    // Data in context
+    t.is(this.templateData.name, "test");
+
     return await getPromise(str + "Zach");
   });
 
@@ -308,8 +323,12 @@ test("Liquid Shortcode returns promise (await inside)", async t => {
 });
 
 test("Liquid Shortcode returns promise (no await inside)", async t => {
+  t.plan(2);
+
   let tr = new TemplateRender("liquid", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", async function(str) {
+    // Data in context
+    t.is(this.templateData.name, "test");
     return getPromise(str + "Zach");
   });
 
@@ -320,8 +339,11 @@ test("Liquid Shortcode returns promise (no await inside)", async t => {
 });
 
 test("Liquid Shortcode Safe Output", async t => {
+  t.plan(2);
   let tr = getNewTemplateRender("liquid", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(str) {
+    // Data in context
+    t.is(this.templateData.name, "test");
     return `<span>${str}</span>`;
   });
 
@@ -332,8 +354,11 @@ test("Liquid Shortcode Safe Output", async t => {
 });
 
 test("Liquid Paired Shortcode", async t => {
+  t.plan(2);
   let tr = getNewTemplateRender("liquid", "./test/stubs/");
   tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
+    // Data in context
+    t.is(this.templateData.name, "test");
     return str + content + "Zach";
   });
 
@@ -347,8 +372,11 @@ test("Liquid Paired Shortcode", async t => {
 });
 
 test("Liquid Async Paired Shortcode", async t => {
+  t.plan(2);
   let tr = new TemplateRender("liquid", "./test/stubs/");
   tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
+    // Data in context
+    t.is(this.templateData.name, "test");
     return new Promise(function(resolve) {
       setTimeout(function() {
         resolve(str + content + "Zach");

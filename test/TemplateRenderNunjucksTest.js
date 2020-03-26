@@ -290,8 +290,13 @@ test("Nunjucks Shortcode without args", async t => {
 });
 
 test("Nunjucks Shortcode", async t => {
+  t.plan(2);
+
   let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(str) {
+    // Data in context
+    t.is(this.templateData.name, "test");
+
     return str + "Zach";
   });
 
@@ -302,10 +307,15 @@ test("Nunjucks Shortcode", async t => {
 });
 
 test("Nunjucks Async Shortcode", async t => {
+  t.plan(2);
+
   let tr = new TemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode(
     "postfixWithZach",
     function(str) {
+      // Data in context
+      t.is(this.templateData.name, "test");
+
       return new Promise(function(resolve) {
         setTimeout(function() {
           resolve(str + "Zach");
@@ -322,10 +332,14 @@ test("Nunjucks Async Shortcode", async t => {
 });
 
 test("Nunjucks Async function Shortcode", async t => {
+  t.plan(2);
+
   let tr = new TemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode(
     "postfixWithZach",
     async function(str) {
+      // Data in context
+      t.is(this.templateData.name, "test");
       return await getPromise(str + "Zach");
     },
     true
@@ -432,8 +446,13 @@ test("Nunjucks Async function paired Shortcode (with async function, error throw
 });
 
 test("Nunjucks Shortcode Safe Output", async t => {
+  t.plan(2);
+
   let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(str) {
+    // Data in context
+    t.is(this.templateData.name, "test");
+
     return `<span>${str}</span>`;
   });
 
@@ -444,8 +463,13 @@ test("Nunjucks Shortcode Safe Output", async t => {
 });
 
 test("Nunjucks Paired Shortcode", async t => {
+  t.plan(2);
+
   let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
+    // Data in context
+    t.is(this.templateData.name, "test");
+
     return str + content + "Zach";
   });
 
@@ -459,10 +483,15 @@ test("Nunjucks Paired Shortcode", async t => {
 });
 
 test("Nunjucks Async Paired Shortcode", async t => {
+  t.plan(2);
+
   let tr = new TemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode(
     "postfixWithZach",
     function(content, str) {
+      // Data in context
+      t.is(this.templateData.name, "test");
+
       return new Promise(function(resolve) {
         setTimeout(function() {
           resolve(str + content + "Zach");
@@ -484,21 +513,29 @@ test("Nunjucks Async Paired Shortcode", async t => {
 test("Nunjucks Paired Shortcode without args", async t => {
   let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode("postfixWithZach", function(content) {
+    // Data in context
+    t.is(this.templateData.name, "test");
+
     return content + "Zach";
   });
 
   t.is(
     await tr._testRender(
       "{% postfixWithZach %}Content{% endpostfixWithZach %}",
-      {}
+      { name: "test" }
     ),
     "ContentZach"
   );
 });
 
 test("Nunjucks Paired Shortcode with Tag Inside", async t => {
+  t.plan(2);
+
   let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
+    // Data in context
+    t.is(this.templateData.name, "test");
+
     return str + content + "Zach";
   });
 
@@ -512,8 +549,13 @@ test("Nunjucks Paired Shortcode with Tag Inside", async t => {
 });
 
 test("Nunjucks Nested Paired Shortcode", async t => {
+  t.plan(3);
+
   let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
+    // Data in context
+    t.is(this.templateData.name, "test");
+
     return str + content + "Zach";
   });
 
@@ -527,8 +569,13 @@ test("Nunjucks Nested Paired Shortcode", async t => {
 });
 
 test("Nunjucks Shortcode Multiple Args", async t => {
+  t.plan(2);
+
   let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(str, str2) {
+    // Data in context
+    t.is(this.templateData.name, "test");
+
     return str + str2 + "Zach";
   });
 
@@ -556,8 +603,13 @@ test("Nunjucks Shortcode Multiple Args (Comma is required)", async t => {
 });
 
 test("Nunjucks Shortcode Named Args", async t => {
+  t.plan(2);
+
   let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(arg) {
+    // Data in context
+    t.is(this.templateData.name, "test");
+
     return arg.arg1 + arg.arg2 + "Zach";
   });
 
@@ -571,8 +623,13 @@ test("Nunjucks Shortcode Named Args", async t => {
 });
 
 test("Nunjucks Shortcode Named Args (Reverse Order)", async t => {
+  t.plan(2);
+
   let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(arg) {
+    // Data in context
+    t.is(this.templateData.name, "test");
+
     return arg.arg1 + arg.arg2 + "Zach";
   });
 
@@ -586,8 +643,13 @@ test("Nunjucks Shortcode Named Args (Reverse Order)", async t => {
 });
 
 test("Nunjucks Shortcode Named Args (JS notation)", async t => {
+  t.plan(2);
+
   let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(arg) {
+    // Data in context
+    t.is(this.templateData.name, "test");
+
     return arg.arg1 + arg.arg2 + "Zach";
   });
 

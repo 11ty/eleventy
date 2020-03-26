@@ -93,7 +93,6 @@ class Nunjucks extends TemplateEngine {
         }
 
         parser.advanceAfterBlockEnd(tok.value);
-
         if (isAsync) {
           return new nodes.CallExtensionAsync(this, "run", args);
         }
@@ -101,20 +100,21 @@ class Nunjucks extends TemplateEngine {
       };
 
       this.run = function(...args) {
-        let callback;
+        let resolve;
         if (isAsync) {
-          callback = args.pop();
+          resolve = args.pop();
         }
 
         let [context, ...argArray] = args;
 
         if (isAsync) {
-          shortcodeFn(...argArray)
+          shortcodeFn
+            .call({ templateData: context.ctx }, ...argArray)
             .then(function(returnValue) {
-              callback(null, new NunjucksLib.runtime.SafeString(returnValue));
+              resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
             })
             .catch(function(e) {
-              callback(
+              resolve(
                 new EleventyShortcodeError(
                   `Error with Nunjucks shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
                     e
@@ -125,7 +125,10 @@ class Nunjucks extends TemplateEngine {
             });
         } else {
           try {
-            return new NunjucksLib.runtime.SafeString(shortcodeFn(...argArray));
+            // console.log( shortcodeFn.toString() );
+            return new NunjucksLib.runtime.SafeString(
+              shortcodeFn.call({ templateData: context.ctx }, ...argArray)
+            );
           } catch (e) {
             throw new EleventyShortcodeError(
               `Error with Nunjucks shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
@@ -160,20 +163,21 @@ class Nunjucks extends TemplateEngine {
       };
 
       this.run = function(...args) {
-        let callback;
+        let resolve;
         if (isAsync) {
-          callback = args.pop();
+          resolve = args.pop();
         }
         let body = args.pop();
         let [context, ...argArray] = args;
 
         if (isAsync) {
-          shortcodeFn(body(), ...argArray)
+          shortcodeFn
+            .call({ templateData: context.ctx }, body(), ...argArray)
             .then(function(returnValue) {
-              callback(null, new NunjucksLib.runtime.SafeString(returnValue));
+              resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
             })
             .catch(function(e) {
-              callback(
+              resolve(
                 new EleventyShortcodeError(
                   `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
                     e
@@ -185,7 +189,11 @@ class Nunjucks extends TemplateEngine {
         } else {
           try {
             return new NunjucksLib.runtime.SafeString(
-              shortcodeFn(body(), ...argArray)
+              shortcodeFn.call(
+                { templateData: context.ctx },
+                body(),
+                ...argArray
+              )
             );
           } catch (e) {
             throw new EleventyShortcodeError(

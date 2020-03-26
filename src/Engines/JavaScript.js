@@ -105,6 +105,17 @@ class JavaScript extends TemplateEngine {
     }
   }
 
+  getJavaScriptFunctions(inst, data) {
+    let fns = {};
+    let configFns = this.config.javascriptFunctions;
+    for (let key in configFns) {
+      fns[key] = configFns[key].bind(
+        Object.assign(inst, { templateData: data })
+      );
+    }
+    return fns;
+  }
+
   async compile(str, inputPath) {
     let inst;
     if (str) {
@@ -117,9 +128,9 @@ class JavaScript extends TemplateEngine {
     }
 
     if (inst && "render" in inst) {
-      Object.assign(inst, this.config.javascriptFunctions);
-
       return function(data) {
+        Object.assign(inst, this.getJavaScriptFunctions(inst, data));
+
         return this.normalize(inst.render.call(inst, data));
       }.bind(this);
     }

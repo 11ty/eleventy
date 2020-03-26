@@ -114,9 +114,13 @@ test("Handlebars Render Helper (uses argument)", async t => {
 });
 
 test("Handlebars Render Shortcode", async t => {
+  t.plan(2);
   let tr = getNewTemplateRender("hbs");
   tr.engine.addShortcodes({
     shortcodename: function(name) {
+      // Data in context
+      t.is(this.name, "Howdy");
+
       return name.toUpperCase();
     }
   });
@@ -128,9 +132,13 @@ test("Handlebars Render Shortcode", async t => {
 });
 
 test("Handlebars Render HTML in Shortcode (Issue #460)", async t => {
+  t.plan(2);
   let tr = getNewTemplateRender("hbs");
   tr.engine.addShortcodes({
     shortcodenamehtml: function(name) {
+      // Data in context
+      t.is(this.name, "Howdy");
+
       return `<span>${name.toUpperCase()}</span>`;
     }
   });
@@ -142,9 +150,15 @@ test("Handlebars Render HTML in Shortcode (Issue #460)", async t => {
 });
 
 test("Handlebars Render Shortcode (Multiple args)", async t => {
+  t.plan(3);
+
   let tr = getNewTemplateRender("hbs");
   tr.engine.addShortcodes({
     shortcodename2: function(name, name2) {
+      // Data in context
+      t.is(this.name, "Howdy");
+      t.is(this.name2, "Zach");
+
       return name.toUpperCase() + name2.toUpperCase();
     }
   });
@@ -159,9 +173,14 @@ test("Handlebars Render Shortcode (Multiple args)", async t => {
 });
 
 test("Handlebars Render Paired Shortcode", async t => {
+  t.plan(2);
+
   let tr = getNewTemplateRender("hbs");
   tr.engine.addPairedShortcodes({
     shortcodename3: function(content, name, options) {
+      // Data in context
+      t.is(this.name, "Howdy");
+
       return (content + name).toUpperCase();
     }
   });
@@ -173,9 +192,14 @@ test("Handlebars Render Paired Shortcode", async t => {
 });
 
 test("Handlebars Render Paired Shortcode (HTML)", async t => {
+  t.plan(2);
+
   let tr = getNewTemplateRender("hbs");
   tr.engine.addPairedShortcodes({
     shortcodename3html: function(content, name, options) {
+      // Data in context
+      t.is(this.name, "Howdy");
+
       return `<span>${(content + name).toUpperCase()}</span>`;
     }
   });
@@ -190,9 +214,14 @@ test("Handlebars Render Paired Shortcode (HTML)", async t => {
 });
 
 test("Handlebars Render Paired Shortcode (Spaces)", async t => {
+  t.plan(2);
+
   let tr = getNewTemplateRender("hbs");
   tr.engine.addPairedShortcodes({
     shortcodename4: function(content, name, options) {
+      // Data in context
+      t.is(this.name, "Howdy");
+
       return (content + name).toUpperCase();
     }
   });
@@ -204,15 +233,25 @@ test("Handlebars Render Paired Shortcode (Spaces)", async t => {
 });
 
 test("Handlebars Render Paired Shortcode with a Nested Single Shortcode", async t => {
+  t.plan(5);
+
   let tr = getNewTemplateRender("hbs");
   tr.engine.addShortcodes({
     shortcodechild: function(txt, options) {
+      // Data in context
+      t.is(this.name, "Howdy");
+      t.is(this.name2, "Zach");
+
       return txt;
     }
   });
 
   tr.engine.addPairedShortcodes({
     shortcodeparent: function(content, name, name2, options) {
+      // Data in context
+      t.is(this.name, "Howdy");
+      t.is(this.name2, "Zach");
+
       return (content + name + name2).toUpperCase();
     }
   });
