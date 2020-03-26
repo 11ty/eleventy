@@ -290,18 +290,25 @@ test("Nunjucks Shortcode without args", async t => {
 });
 
 test("Nunjucks Shortcode", async t => {
-  t.plan(2);
+  t.plan(3);
 
   let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(str) {
     // Data in context
-    t.is(this.templateData.name, "test");
+    t.is(this.page.url, "/hi/");
+    // sanity check that all data is not carried forward
+    t.not(this.name, "test");
 
     return str + "Zach";
   });
 
   t.is(
-    await tr._testRender("{% postfixWithZach name %}", { name: "test" }),
+    await tr._testRender("{% postfixWithZach name %}", {
+      name: "test",
+      page: {
+        url: "/hi/"
+      }
+    }),
     "testZach"
   );
 });
@@ -314,7 +321,7 @@ test("Nunjucks Async Shortcode", async t => {
     "postfixWithZach",
     function(str) {
       // Data in context
-      t.is(this.templateData.name, "test");
+      t.is(this.page.url, "/hi/");
 
       return new Promise(function(resolve) {
         setTimeout(function() {
@@ -326,7 +333,12 @@ test("Nunjucks Async Shortcode", async t => {
   );
 
   t.is(
-    await tr._testRender("{% postfixWithZach name %}", { name: "test" }),
+    await tr._testRender("{% postfixWithZach name %}", {
+      name: "test",
+      page: {
+        url: "/hi/"
+      }
+    }),
     "testZach"
   );
 });
@@ -339,14 +351,20 @@ test("Nunjucks Async function Shortcode", async t => {
     "postfixWithZach",
     async function(str) {
       // Data in context
-      t.is(this.templateData.name, "test");
+      t.is(this.page.url, "/hi/");
+
       return await getPromise(str + "Zach");
     },
     true
   );
 
   t.is(
-    await tr._testRender("{% postfixWithZach name %}", { name: "test" }),
+    await tr._testRender("{% postfixWithZach name %}", {
+      name: "test",
+      page: {
+        url: "/hi/"
+      }
+    }),
     "testZach"
   );
 });
@@ -451,13 +469,18 @@ test("Nunjucks Shortcode Safe Output", async t => {
   let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(str) {
     // Data in context
-    t.is(this.templateData.name, "test");
+    t.is(this.page.url, "/hi/");
 
     return `<span>${str}</span>`;
   });
 
   t.is(
-    await tr._testRender("{% postfixWithZach name %}", { name: "test" }),
+    await tr._testRender("{% postfixWithZach name %}", {
+      name: "test",
+      page: {
+        url: "/hi/"
+      }
+    }),
     "<span>test</span>"
   );
 });
@@ -468,7 +491,7 @@ test("Nunjucks Paired Shortcode", async t => {
   let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
     // Data in context
-    t.is(this.templateData.name, "test");
+    t.is(this.page.url, "/hi/");
 
     return str + content + "Zach";
   });
@@ -476,7 +499,12 @@ test("Nunjucks Paired Shortcode", async t => {
   t.is(
     await tr._testRender(
       "{% postfixWithZach name %}Content{% endpostfixWithZach %}",
-      { name: "test" }
+      {
+        name: "test",
+        page: {
+          url: "/hi/"
+        }
+      }
     ),
     "testContentZach"
   );
@@ -490,7 +518,7 @@ test("Nunjucks Async Paired Shortcode", async t => {
     "postfixWithZach",
     function(content, str) {
       // Data in context
-      t.is(this.templateData.name, "test");
+      t.is(this.page.url, "/hi/");
 
       return new Promise(function(resolve) {
         setTimeout(function() {
@@ -504,7 +532,12 @@ test("Nunjucks Async Paired Shortcode", async t => {
   t.is(
     await tr._testRender(
       "{% postfixWithZach name %}Content{% endpostfixWithZach %}",
-      { name: "test" }
+      {
+        name: "test",
+        page: {
+          url: "/hi/"
+        }
+      }
     ),
     "testContentZach"
   );
@@ -514,7 +547,7 @@ test("Nunjucks Paired Shortcode without args", async t => {
   let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode("postfixWithZach", function(content) {
     // Data in context
-    t.is(this.templateData.name, "test");
+    t.is(this.page.url, "/hi/");
 
     return content + "Zach";
   });
@@ -522,7 +555,12 @@ test("Nunjucks Paired Shortcode without args", async t => {
   t.is(
     await tr._testRender(
       "{% postfixWithZach %}Content{% endpostfixWithZach %}",
-      { name: "test" }
+      {
+        name: "test",
+        page: {
+          url: "/hi/"
+        }
+      }
     ),
     "ContentZach"
   );
@@ -534,7 +572,7 @@ test("Nunjucks Paired Shortcode with Tag Inside", async t => {
   let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
     // Data in context
-    t.is(this.templateData.name, "test");
+    t.is(this.page.url, "/hi/");
 
     return str + content + "Zach";
   });
@@ -542,7 +580,13 @@ test("Nunjucks Paired Shortcode with Tag Inside", async t => {
   t.is(
     await tr._testRender(
       "{% postfixWithZach name %}Content{% if tester %}If{% endif %}{% endpostfixWithZach %}",
-      { name: "test", tester: true }
+      {
+        name: "test",
+        tester: true,
+        page: {
+          url: "/hi/"
+        }
+      }
     ),
     "testContentIfZach"
   );
@@ -554,7 +598,7 @@ test("Nunjucks Nested Paired Shortcode", async t => {
   let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode("postfixWithZach", function(content, str) {
     // Data in context
-    t.is(this.templateData.name, "test");
+    t.is(this.page.url, "/hi/");
 
     return str + content + "Zach";
   });
@@ -562,7 +606,13 @@ test("Nunjucks Nested Paired Shortcode", async t => {
   t.is(
     await tr._testRender(
       "{% postfixWithZach name %}Content{% postfixWithZach name2 %}Content{% endpostfixWithZach %}{% endpostfixWithZach %}",
-      { name: "test", name2: "test2" }
+      {
+        name: "test",
+        name2: "test2",
+        page: {
+          url: "/hi/"
+        }
+      }
     ),
     "testContenttest2ContentZachZach"
   );
@@ -574,7 +624,7 @@ test("Nunjucks Shortcode Multiple Args", async t => {
   let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(str, str2) {
     // Data in context
-    t.is(this.templateData.name, "test");
+    t.is(this.page.url, "/hi/");
 
     return str + str2 + "Zach";
   });
@@ -582,7 +632,10 @@ test("Nunjucks Shortcode Multiple Args", async t => {
   t.is(
     await tr._testRender("{% postfixWithZach name, other %}", {
       name: "test",
-      other: "howdy"
+      other: "howdy",
+      page: {
+        url: "/hi/"
+      }
     }),
     "testhowdyZach"
   );
@@ -608,7 +661,7 @@ test("Nunjucks Shortcode Named Args", async t => {
   let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(arg) {
     // Data in context
-    t.is(this.templateData.name, "test");
+    t.is(this.page.url, "/hi/");
 
     return arg.arg1 + arg.arg2 + "Zach";
   });
@@ -616,7 +669,10 @@ test("Nunjucks Shortcode Named Args", async t => {
   t.is(
     await tr._testRender("{% postfixWithZach arg1=name, arg2=other %}", {
       name: "test",
-      other: "howdy"
+      other: "howdy",
+      page: {
+        url: "/hi/"
+      }
     }),
     "testhowdyZach"
   );
@@ -628,7 +684,7 @@ test("Nunjucks Shortcode Named Args (Reverse Order)", async t => {
   let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(arg) {
     // Data in context
-    t.is(this.templateData.name, "test");
+    t.is(this.page.url, "/hi/");
 
     return arg.arg1 + arg.arg2 + "Zach";
   });
@@ -636,7 +692,10 @@ test("Nunjucks Shortcode Named Args (Reverse Order)", async t => {
   t.is(
     await tr._testRender("{% postfixWithZach arg2=other, arg1=name %}", {
       name: "test",
-      other: "howdy"
+      other: "howdy",
+      page: {
+        url: "/hi/"
+      }
     }),
     "testhowdyZach"
   );
@@ -648,7 +707,7 @@ test("Nunjucks Shortcode Named Args (JS notation)", async t => {
   let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function(arg) {
     // Data in context
-    t.is(this.templateData.name, "test");
+    t.is(this.page.url, "/hi/");
 
     return arg.arg1 + arg.arg2 + "Zach";
   });
@@ -656,7 +715,10 @@ test("Nunjucks Shortcode Named Args (JS notation)", async t => {
   t.is(
     await tr._testRender("{% postfixWithZach { arg1: name, arg2: other } %}", {
       name: "test",
-      other: "howdy"
+      other: "howdy",
+      page: {
+        url: "/hi/"
+      }
     }),
     "testhowdyZach"
   );

@@ -75,6 +75,14 @@ class Nunjucks extends TemplateEngine {
     }
   }
 
+  static _normalizeShortcodeContext(context) {
+    let obj = {};
+    if (context.ctx && context.ctx.page) {
+      obj.page = context.ctx.page;
+    }
+    return obj;
+  }
+
   addShortcode(shortcodeName, shortcodeFn, isAsync = false) {
     function ShortcodeFunction() {
       this.tags = [shortcodeName];
@@ -109,7 +117,7 @@ class Nunjucks extends TemplateEngine {
 
         if (isAsync) {
           shortcodeFn
-            .call({ templateData: context.ctx }, ...argArray)
+            .call(Nunjucks._normalizeShortcodeContext(context), ...argArray)
             .then(function(returnValue) {
               resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
             })
@@ -127,7 +135,10 @@ class Nunjucks extends TemplateEngine {
           try {
             // console.log( shortcodeFn.toString() );
             return new NunjucksLib.runtime.SafeString(
-              shortcodeFn.call({ templateData: context.ctx }, ...argArray)
+              shortcodeFn.call(
+                Nunjucks._normalizeShortcodeContext(context),
+                ...argArray
+              )
             );
           } catch (e) {
             throw new EleventyShortcodeError(
@@ -172,7 +183,11 @@ class Nunjucks extends TemplateEngine {
 
         if (isAsync) {
           shortcodeFn
-            .call({ templateData: context.ctx }, body(), ...argArray)
+            .call(
+              Nunjucks._normalizeShortcodeContext(context),
+              body(),
+              ...argArray
+            )
             .then(function(returnValue) {
               resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
             })
@@ -190,7 +205,7 @@ class Nunjucks extends TemplateEngine {
           try {
             return new NunjucksLib.runtime.SafeString(
               shortcodeFn.call(
-                { templateData: context.ctx },
+                Nunjucks._normalizeShortcodeContext(context),
                 body(),
                 ...argArray
               )
