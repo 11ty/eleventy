@@ -109,7 +109,12 @@ class JavaScript extends TemplateEngine {
     let fns = {};
     let configFns = this.config.javascriptFunctions;
     for (let key in configFns) {
-      fns[key] = configFns[key].bind(Object.assign(inst, { page: data.page }));
+      // If collision on `page`, prefer user’s `page`
+      if (!inst || !inst.page) {
+        fns[key] = configFns[key].bind(
+          Object.assign(inst, { page: data.page })
+        );
+      }
     }
     return fns;
   }
