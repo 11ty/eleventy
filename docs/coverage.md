@@ -1,14 +1,14 @@
-# Code Coverage for Eleventy v0.11.0-beta.2
+# Code Coverage for Eleventy v0.11.0-beta.3
 
 | Filename                                                   | % Lines | % Statements | % Functions | % Branches |
 | ---------------------------------------------------------- | ------- | ------------ | ----------- | ---------- |
-| `total`                                                    | 87.93%  | 87.98%       | 86.23%      | 80.68%     |
+| `total`                                                    | 88.12%  | 88.17%       | 86.5%       | 80.78%     |
 | `src/Benchmark.js`                                         | 86.67%  | 86.67%       | 71.43%      | 66.67%     |
-| `src/BenchmarkGroup.js`                                    | 52.27%  | 52.27%       | 55.56%      | 25%        |
+| `src/BenchmarkGroup.js`                                    | 60.53%  | 60.53%       | 71.43%      | 25%        |
 | `src/BenchmarkManager.js`                                  | 76.47%  | 76.47%       | 71.43%      | 75%        |
 | `src/ComputedData.js`                                      | 98.08%  | 98.08%       | 85.71%      | 88.89%     |
 | `src/Config.js`                                            | 100%    | 100%         | 100%        | 100%       |
-| `src/Eleventy.js`                                          | 55.29%  | 55.02%       | 48.72%      | 40.91%     |
+| `src/Eleventy.js`                                          | 55.02%  | 54.76%       | 48.72%      | 40.91%     |
 | `src/EleventyBaseError.js`                                 | 100%    | 100%         | 100%        | 100%       |
 | `src/EleventyCommandCheck.js`                              | 100%    | 100%         | 100%        | 87.5%      |
 | `src/EleventyConfig.js`                                    | 100%    | 100%         | 100%        | 100%       |
@@ -45,12 +45,12 @@
 | `src/Engines/Haml.js`                                      | 100%    | 100%         | 100%        | 100%       |
 | `src/Engines/Handlebars.js`                                | 100%    | 100%         | 100%        | 83.33%     |
 | `src/Engines/Html.js`                                      | 100%    | 100%         | 100%        | 100%       |
-| `src/Engines/JavaScript.js`                                | 98.04%  | 98.08%       | 100%        | 88.1%      |
+| `src/Engines/JavaScript.js`                                | 98.25%  | 98.28%       | 100%        | 89.13%     |
 | `src/Engines/JavaScriptTemplateLiteral.js`                 | 94.44%  | 94.44%       | 100%        | 100%       |
-| `src/Engines/Liquid.js`                                    | 95.89%  | 95.89%       | 96.15%      | 86.67%     |
+| `src/Engines/Liquid.js`                                    | 96.1%   | 96.1%        | 96.3%       | 85%        |
 | `src/Engines/Markdown.js`                                  | 90.63%  | 90.63%       | 88.89%      | 81.25%     |
 | `src/Engines/Mustache.js`                                  | 100%    | 100%         | 100%        | 100%       |
-| `src/Engines/Nunjucks.js`                                  | 89.16%  | 89.16%       | 95.65%      | 93.1%      |
+| `src/Engines/Nunjucks.js`                                  | 89.66%  | 89.66%       | 95.83%      | 93.94%     |
 | `src/Engines/Pug.js`                                       | 100%    | 100%         | 100%        | 88.89%     |
 | `src/Engines/TemplateEngine.js`                            | 100%    | 100%         | 100%        | 100%       |
 | `src/Errors/TemplateContentPrematureUseError.js`           | 100%    | 100%         | 100%        | 100%       |

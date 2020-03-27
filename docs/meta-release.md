@@ -1,7 +1,7 @@
 # Beta Release Procedure
 
 1. update minor dependencies in package.json?
-1. npmclean
+1. npmclean aka `rm -rf node_modules && rm -f package-lock.json && npm install`
 1. npm audit
 1. Make sure `npx ava` runs okay
 1. Update version in `package.json`, include `-beta.1` suffix
@@ -13,7 +13,7 @@
 # Release Procedure
 
 1. update minor dependencies in package.json? `npm outdated` `npm update --save`
-1. npmclean first
+1. npmclean aka `rm -rf node_modules && rm -f package-lock.json && npm install`
 1. npm audit
 1. Make sure `npx ava` runs okay
 1. Update version in `package.json`

@@ -1,6 +1,6 @@
 {
   "name": "@11ty/eleventy",
-  "version": "0.11.0-beta.2",
+  "version": "0.11.0-beta.3",
   "description": "Transform a directory of templates into HTML.",
   "publishConfig": {
     "access": "public"
@@ -76,12 +76,12 @@
   "devDependencies": {
     "@11ty/eleventy-plugin-syntaxhighlight": "^3.0.1",
     "@ava/babel": "^1.0.1",
-    "ava": "^3.5.0",
+    "ava": "^3.5.1",
     "husky": "^4.2.3",
     "ink-docstrap": "1.3.2",
     "js-yaml": "^3.13.1",
     "jsdoc": "3.6.3",
-    "lint-staged": "^10.0.8",
+    "lint-staged": "^10.0.9",
     "markdown-it-emoji": "^1.4.0",
     "node-sass": "^4.13.1",
     "nyc": "^15.0.0",
@@ -108,7 +108,7 @@
     "javascript-stringify": "^2.0.1",
     "liquidjs": "^6.4.3",
     "lodash": "^4.17.15",
-    "luxon": "^1.22.0",
+    "luxon": "^1.22.2",
     "markdown-it": "^8.4.2",
     "minimist": "^1.2.5",
     "moo": "^0.5.1",
