@@ -47,8 +47,6 @@ class Markdown extends TemplateEngine {
     let mdlib = this.mdLib;
 
     if (preTemplateEngine) {
-      let fn;
-
       let engine;
       if (typeof preTemplateEngine === "string") {
         engine = this.engineManager.getEngine(
@@ -59,14 +57,16 @@ class Markdown extends TemplateEngine {
         engine = preTemplateEngine;
       }
 
-      fn = await engine.compile(str, inputPath);
+      let fnReady = engine.compile(str, inputPath);
 
       if (bypassMarkdown) {
         return async function(data) {
+          let fn = await fnReady;
           return fn(data);
         };
       } else {
         return async function(data) {
+          let fn = await fnReady;
           let preTemplateEngineRender = await fn(data);
           let finishedRender = mdlib.render(preTemplateEngineRender, data);
           return finishedRender;

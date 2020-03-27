@@ -7,9 +7,10 @@ class Html extends TemplateEngine {
         preTemplateEngine,
         super.getIncludesDir()
       );
-      let fn = await engine.compile(str, inputPath);
+      let fnReady = engine.compile(str, inputPath);
 
       return async function(data) {
+        let fn = await fnReady;
         return fn(data);
       };
     } else {

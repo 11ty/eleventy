@@ -196,7 +196,7 @@ class Liquid extends TemplateEngine {
 
   async compile(str, inputPath) {
     let engine = this.liquidLib;
-    let tmpl = await engine.parse(str, inputPath);
+    let tmplReady = engine.parse(str, inputPath);
 
     // Required for relative includes
     let options = {};
@@ -209,6 +209,7 @@ class Liquid extends TemplateEngine {
       ];
     }
     return async function(data) {
+      let tmpl = await tmplReady;
       return engine.render(tmpl, data, options);
     };
   }
