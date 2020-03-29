@@ -36,6 +36,7 @@ class Nunjucks extends TemplateEngine {
       this.config.nunjucksAsyncPairedShortcodes,
       true
     );
+    this.addGlobals(this.config.nunjucksGlobals);
   }
 
   addFilters(helpers, isAsync) {
@@ -61,6 +62,16 @@ class Nunjucks extends TemplateEngine {
     }
 
     this.njkEnv.addExtension(name, tagObj);
+  }
+
+  addGlobals(globals) {
+    for (let name in globals) {
+      this.addGlobal(name, globals[name]);
+    }
+  }
+
+  addGlobal(name, globalFn) {
+    this.njkEnv.addGlobal(name, globalFn);
   }
 
   addAllShortcodes(shortcodes, isAsync = false) {

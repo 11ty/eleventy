@@ -57,6 +57,20 @@ test("Add nunjucks tag", t => {
   t.not(Object.keys(cfg.nunjucksTags).indexOf("myNunjucksTag"), -1);
 });
 
+test("Add nunjucks global", t => {
+  eleventyConfig.reset();
+  eleventyConfig.addNunjucksGlobal("myNunjucksGlobal1", function() {});
+  eleventyConfig.addNunjucksGlobal("myNunjucksGlobal2", 42);
+
+  let templateCfg = new TemplateConfig(
+    require("../src/defaultConfig.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.not(Object.keys(cfg.nunjucksGlobals).indexOf("myNunjucksGlobal1"), -1);
+  t.not(Object.keys(cfg.nunjucksGlobals).indexOf("myNunjucksGlobal2"), -1);
+});
+
 test("Add liquid filter", t => {
   eleventyConfig.reset();
   eleventyConfig.addLiquidFilter("myFilterName", function(liquidEngine) {
