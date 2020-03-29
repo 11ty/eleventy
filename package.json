@@ -106,7 +106,7 @@
     "hamljs": "^0.6.2",
     "handlebars": "^4.7.3",
     "javascript-stringify": "^2.0.1",
-    "liquidjs": "^6.4.3",
+    "liquidjs": "^9.11.7",
     "lodash": "^4.17.15",
     "luxon": "^1.22.2",
     "markdown-it": "^8.4.2",

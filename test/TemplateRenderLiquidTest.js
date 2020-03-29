@@ -184,7 +184,7 @@ test("Liquid Custom Tag prefixWithZach", async t => {
         this.str = tagToken.args; // name
       },
       render: function(scope, hash) {
-        var str = liquidEngine.evalValue(this.str, scope); // 'alice'
+        var str = liquidEngine.evalValueSync(this.str, scope); // 'alice'
         return Promise.resolve("Zach" + str); // 'Alice'
       }
     };
@@ -203,8 +203,8 @@ test("Liquid Custom Tag postfixWithZach", async t => {
       parse: function(tagToken, remainTokens) {
         this.str = tagToken.args;
       },
-      render: function(scope, hash) {
-        var str = liquidEngine.evalValue(this.str, scope);
+      render: async function(scope, hash) {
+        var str = await liquidEngine.evalValue(this.str, scope);
         return Promise.resolve(str + "Zach");
       }
     };
@@ -253,8 +253,8 @@ test("Liquid addTags", async t => {
         parse: function(tagToken, remainTokens) {
           this.str = tagToken.args;
         },
-        render: function(scope, hash) {
-          var str = liquidEngine.evalValue(this.str, scope);
+        render: async function(scope, hash) {
+          var str = await liquidEngine.evalValue(this.str, scope);
           return Promise.resolve(str + "Zach");
         }
       };
@@ -620,12 +620,11 @@ test("Liquid Render Include Subfolder Double quotes HTML dynamicPartials true, d
 });
 
 test("Liquid Render: with Library Override", async t => {
-  let tr = getNewTemplateRender("liquid");
+  const tr = getNewTemplateRender("liquid");
+  const { Liquid } = require("liquidjs");
+  tr.engine.setLibrary(new Liquid());
 
-  let lib = require("liquidjs")();
-  tr.engine.setLibrary(lib);
-
-  let fn = await tr.getCompiledTemplate("<p>{{name | capitalize}}</p>");
+  const fn = await tr.getCompiledTemplate("<p>{{name | capitalize}}</p>");
   t.is(await fn({ name: "tim" }), "<p>Tim</p>");
 });
 
@@ -688,7 +687,7 @@ test.skip("Liquid Include Scope Leak", async t => {
 });
 
 // TODO this will change in 1.0
-test("Liquid Missing Filter Issue #183 (no strict_filters)", async t => {
+test("Liquid Missing Filter Issue #183 (no strictFilters)", async t => {
   let tr = getNewTemplateRender("liquid", "./test/stubs/");
 
   try {
@@ -701,7 +700,7 @@ test("Liquid Missing Filter Issue #183 (no strict_filters)", async t => {
 
 test("Liquid Missing Filter Issue #183", async t => {
   let tr = getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.setLiquidOptions({ strict_filters: true });
+  tr.engine.setLiquidOptions({ strictFilters: true });
 
   try {
     await tr._testRender("{{ 'test' | prefixWithZach }}", {});
@@ -729,8 +728,8 @@ test("Issue 347: Liquid addTags with space in argument", async t => {
         parse: function(tagToken, remainTokens) {
           this.str = tagToken.args;
         },
-        render: function(scope, hash) {
-          var str = liquidEngine.evalValue(this.str, scope);
+        render: async function(scope, hash) {
+          var str = await liquidEngine.evalValue(this.str, scope);
           return Promise.resolve(str + "Zach");
         }
       };
