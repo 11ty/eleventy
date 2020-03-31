@@ -105,15 +105,16 @@ class JavaScript extends TemplateEngine {
     }
   }
 
-  getJavaScriptFunctions(inst, data) {
+  getJavaScriptFunctions(inst) {
     let fns = {};
     let configFns = this.config.javascriptFunctions;
+
     for (let key in configFns) {
-      // If collision on `page`, prefer user’s `page`
-      if (!inst || !inst.page) {
-        fns[key] = configFns[key].bind(
-          Object.assign(inst, { page: data.page })
-        );
+      // prefer pre-existing `page` javascriptFunction, if one exists
+      if (key === "page") {
+        // do nothing
+      } else {
+        fns[key] = configFns[key].bind(inst);
       }
     }
     return fns;
@@ -129,10 +130,13 @@ class JavaScript extends TemplateEngine {
       // For normal templates, str will be falsy.
       inst = this.getInstanceFromInputPath(inputPath);
     }
-
     if (inst && "render" in inst) {
       return function(data) {
-        Object.assign(inst, this.getJavaScriptFunctions(inst, data));
+        // only blow away existing inst.page if it has a page.url
+        if (!inst.page || inst.page.url) {
+          inst.page = data.page;
+        }
+        Object.assign(inst, this.getJavaScriptFunctions(inst));
 
         return this.normalize(inst.render.call(inst, data));
       }.bind(this);
