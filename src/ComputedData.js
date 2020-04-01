@@ -1,5 +1,6 @@
 const lodashGet = require("lodash/get");
 const lodashSet = require("lodash/set");
+const debug = require("debug")("Eleventy:ComputedData");
 const DependencyGraph = require("dependency-graph").DepGraph;
 
 class ComputedData {
@@ -51,7 +52,6 @@ class ComputedData {
       let graph = new DependencyGraph();
 
       let proxyData = this.getProxyData();
-
       for (let key of this.computedKeys) {
         let computed = lodashGet(this.computed, key);
         graph.addNode(key);
@@ -65,9 +65,15 @@ class ComputedData {
           }
 
           // squelch console logs for this fake proxy data pass 😅
+          let output;
           let savedLog = console.log;
           console.log = () => {};
-          let output = await computed(proxyData);
+          try {
+            // Mitigation for #1061, errors on the first pass shouldn’t fail the whole thing.
+            output = await computed(proxyData);
+          } catch (e) {
+            debug("Computed Data first pass data resolution error: %o", e);
+          }
           console.log = savedLog;
 
           let vars = this.findVarsInOutput(output);

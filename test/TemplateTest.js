@@ -2082,6 +2082,32 @@ test("eleventyComputed permalink", async t => {
   t.is(data.dependsOnPage, "depends:/haha-value1.html");
 });
 
+test("eleventyComputed simple permalink", async t => {
+  let tmpl = new Template(
+    "./test/stubs/eleventyComputed/permalink-simple.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  let templates = await tmpl.getTemplates(await tmpl.getData());
+  let data = templates[0].data;
+  t.is(data.page.url, "/haha-value1.html");
+  t.is(data.page.outputPath, "./dist/haha-value1.html");
+  t.is(data.permalink, "haha-value1.html");
+});
+
+test("eleventyComputed permalink using slug", async t => {
+  let tmpl = new Template(
+    "./test/stubs/eleventyComputed/permalink-slug.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+  let templates = await tmpl.getTemplates(await tmpl.getData());
+  let data = templates[0].data;
+  t.is(data.page.url, "/haha-this-is-a-string.html");
+  t.is(data.page.outputPath, "./dist/haha-this-is-a-string.html");
+  t.is(data.permalink, "haha-this-is-a-string.html");
+});
+
 test("eleventyComputed js front matter (function)", async t => {
   let tmpl = new Template(
     "./test/stubs/eleventyComputed/second.njk",
