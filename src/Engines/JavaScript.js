@@ -4,6 +4,7 @@ const EleventyBaseError = require("../EleventyBaseError");
 const deleteRequireCache = require("../Util/DeleteRequireCache");
 
 class JavaScriptTemplateInvalidDataFormatError extends EleventyBaseError {}
+class JavaScriptTemplateNotDefined extends EleventyBaseError {}
 
 class JavaScript extends TemplateEngine {
   constructor(name, includesDir) {
@@ -34,18 +35,12 @@ class JavaScript extends TemplateEngine {
         mod.prototype &&
         ("data" in mod.prototype || "render" in mod.prototype)
       ) {
-        // render function is optional
         if (!("render" in mod.prototype)) {
           mod.prototype.render = noop;
         }
         return new mod();
       } else {
-        // let fn = function() {};
-        // fn.prototype.render = mod;
-        // return new fn();
-        return {
-          render: mod
-        };
+        return { render: mod };
       }
     } else if ("data" in mod || "render" in mod) {
       if (!("render" in mod)) {
@@ -63,7 +58,13 @@ class JavaScript extends TemplateEngine {
     const mod = this._getRequire(inputPath);
     let inst = this._getInstance(mod);
 
-    this.instances[inputPath] = inst;
+    if (inst) {
+      this.instances[inputPath] = inst;
+    } else {
+      throw new JavaScriptTemplateNotDefined(
+        `No JavaScript template returned from ${inputPath} (did you assign to module.exports?)`
+      );
+    }
     return inst;
   }
 
@@ -124,7 +125,6 @@ class JavaScript extends TemplateEngine {
     let inst;
     if (str) {
       // When str has a value, it's being used for permalinks in data
-      // and maybe not be a str (could be any valid *.11ty.js)
       inst = this._getInstance(str);
     } else {
       // For normal templates, str will be falsy.
