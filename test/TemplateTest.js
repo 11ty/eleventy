@@ -2142,3 +2142,18 @@ test("eleventyComputed true primitive", async t => {
   t.is(data.key3, false);
   t.is(data.key4, 324);
 });
+
+test("eleventyComputed relies on global data", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+  let tmpl = new Template(
+    "./test/stubs/eleventyComputed/use-global-data.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj
+  );
+
+  let fetchedData = await tmpl.getData();
+  let templates = await tmpl.getTemplates(fetchedData);
+  let data = templates[0].data;
+  t.is(data.image, "datavalue1");
+});

@@ -68,8 +68,8 @@ class ComputedData {
           let output;
           let savedLog = console.log;
           console.log = () => {};
+          // Mitigation for #1061, errors on the first pass shouldn’t fail the whole thing.
           try {
-            // Mitigation for #1061, errors on the first pass shouldn’t fail the whole thing.
             output = await computed(proxyData);
           } catch (e) {
             debug("Computed Data first pass data resolution error: %o", e);
