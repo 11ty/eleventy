@@ -38,10 +38,10 @@ npm run test
 
 ## Major Roadmapped Features
 
-- [Top Feature Requests](https://github.com/11ty/eleventy/issues?q=label%3Aneeds-votes+sort%3Areactions-%2B1-desc) (Add your own votes using the 👍 reaction)
-- [Documentation Requests](https://github.com/11ty/eleventy/issues?utf8=%E2%9C%93&q=is%3Aissue+sort%3Areactions-%2B1-desc+is%3Aclosed+label%3Adocumentation+label%3Aneeds-votes) (Add your own votes using the 👍 reaction)
-- [Top Bugs 😱](https://github.com/11ty/eleventy/issues?q=is%3Aissue+is%3Aopen+label%3Abug+sort%3Areactions-%2B1-desc) (Add your own votes using the 👍 reaction)
-- [Newest Bugs 🙀](https://github.com/11ty/eleventy/issues?q=is%3Aopen+is%3Aissue+label%3Abug)
+- [Top Feature Requests](https://github.com/11ty/eleventy/issues?q=label:"enhancement%3A+needs-votes"+sort:reactions-%2B1-desc) (Add your own votes using the 👍 reaction)
+- [Documentation Requests](https://github.com/11ty/eleventy/issues?q=label:"enhancement%3A+needs-votes"+label:documentation+sort:reactions-%2B1-desc) (Add your own votes using the 👍 reaction)
+- [Top Bugs 😱](https://github.com/11ty/eleventy/issues?q=is:issue+is:open+label:bug+sort:reactions-%2B1-desc) (Add your own votes using the 👍 reaction)
+- [Newest Bugs 🙀](https://github.com/11ty/eleventy/issues?q=is:open+is:issue+label:bug)
 
 ## Plugins
 
