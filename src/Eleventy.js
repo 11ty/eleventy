@@ -451,7 +451,13 @@ Arguments:
       this.resetConfig();
     }
 
-    await this.restart();
+    try {
+      await this.restart();
+    } catch (e) {
+      EleventyErrorHandler.error(e, "Eleventy watch error");
+      this.watchManager.setBuildFinished();
+      return;
+    }
 
     this.watchTargets.clearDependencyRequireCache();
 
