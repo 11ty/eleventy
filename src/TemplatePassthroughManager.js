@@ -181,7 +181,7 @@ class TemplatePassthroughManager {
     let promises = [];
     debug("TemplatePassthrough copy started.");
     for (let path of this.getConfigPaths()) {
-      debug(`TemplatePassthrough copying from config: ${path}`);
+      debug(`TemplatePassthrough copying from config: %o`, path);
       promises.push(this.copyPath(path));
     }
 
