@@ -189,7 +189,7 @@ class TemplatePassthroughManager {
     for (let path of passthroughPaths) {
       let normalizedPath = this._normalizePaths(path);
       debug(
-        `TemplatePassthrough copying from non-matching file extension: ${normalizedPath}`
+        `TemplatePassthrough copying from non-matching file extension: ${normalizedPath.inputPath}`
       );
       promises.push(this.copyPath(normalizedPath));
     }
