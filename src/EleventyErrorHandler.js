@@ -4,6 +4,8 @@ const EleventyErrorUtil = require("./EleventyErrorUtil");
 const debug = require("debug")("Eleventy:EleventyErrorHandler");
 
 class EleventyErrorHandler {
+  static events = new EventEmitter();
+
   static get isChalkEnabled() {
     if (this._isChalkEnabled !== undefined) {
       return this._isChalkEnabled;
@@ -101,7 +103,5 @@ class EleventyErrorHandler {
     }
   }
 }
-
-EleventyErrorHandler.events = new EventEmitter();
 
 module.exports = EleventyErrorHandler;
