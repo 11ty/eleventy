@@ -4,6 +4,7 @@ const TemplateData = require("./TemplateData");
 const TemplateWriter = require("./TemplateWriter");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyErrorHandler = require("./EleventyErrorHandler");
+const EleventyBaseError = require("./EleventyBaseError");
 const EleventyServe = require("./EleventyServe");
 const EleventyWatch = require("./EleventyWatch");
 const EleventyWatchTargets = require("./EleventyWatchTargets");
@@ -653,12 +654,20 @@ Arguments:
       try {
         this._addFileToWatchQueue(path);
         clearTimeout(watchDelay);
-        watchDelay = setTimeout(async () => {
-          await this._watch();
+
+        await new Promise((resolve, reject) => {
+          watchDelay = setTimeout(async () => {
+            this._watch().then(resolve, reject);
+          });
         }, this.config.watchThrottleWaitTime);
       } catch (e) {
-        EleventyErrorHandler.fatal(e, "Eleventy fatal watch error");
-        this.stopWatch();
+        if (e instanceof EleventyBaseError) {
+          EleventyErrorHandler.error(e, "Eleventy watch error");
+          this.watchManager.setBuildFinished();
+        } else {
+          EleventyErrorHandler.fatal(e, "Eleventy fatal watch error");
+          this.stopWatch();
+        }
       }
     }
 
