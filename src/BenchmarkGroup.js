@@ -1,19 +1,21 @@
 const chalk = require("chalk");
 
 const Benchmark = require("./Benchmark");
-const debugWarn = require("debug")("Eleventy:Warnings");
+const debugBenchmark = require("debug")("Eleventy:Benchmark");
 
 class BenchmarkGroup {
   constructor() {
     this.benchmarks = {};
-    this.start = new Date();
     this.isVerbose = true;
     this.minimumThresholdMs = 0;
+    this.minimumThresholdPercent = 8;
+  }
+
+  setIsVerbose(isVerbose) {
+    this.isVerbose = isVerbose;
   }
 
   reset() {
-    this.start = new Date();
-
     for (var type in this.benchmarks) {
       this.benchmarks[type].reset();
     }
@@ -52,37 +54,60 @@ class BenchmarkGroup {
     this.minimumThresholdMs = val;
   }
 
+  setMinimumThresholdPercent(minimumThresholdPercent) {
+    let val = parseInt(minimumThresholdPercent, 10);
+    if (isNaN(val)) {
+      throw new Error(
+        "`setMinimumThresholdPercent` expects a number argument."
+      );
+    }
+    this.minimumThresholdPercent = val;
+  }
+
   get(type) {
-    this.benchmarks[type] = new Benchmark();
+    if (!this.benchmarks[type]) {
+      this.benchmarks[type] = new Benchmark();
+    }
     return this.benchmarks[type];
   }
 
-  finish(label, thresholdPercent, isVerbose) {
-    let totalTimeSpent = new Date().getTime() - this.start.getTime();
-    thresholdPercent = thresholdPercent !== undefined ? thresholdPercent : 10;
+  finish(label, totalTimeSpent) {
     for (var type in this.benchmarks) {
       let bench = this.benchmarks[type];
+      let isAbsoluteMinimumComparison = this.minimumThresholdMs > 0;
       let totalForBenchmark = bench.getTotal();
       let percent = (totalForBenchmark * 100) / totalTimeSpent;
-      if (
-        percent > thresholdPercent &&
-        totalForBenchmark >= this.minimumThresholdMs
-      ) {
-        let timesCalledCount = bench.getTimesCalled();
-        let timesCalled = "";
-        if (timesCalledCount > 1) {
-          timesCalled = `, called ${timesCalledCount}×`;
-        }
-        let str = chalk.yellow(
-          `Benchmark (${label}): ${type} took ${bench.getTotal()}ms (${percent.toFixed(
-            1
-          )}%${timesCalled})`
+
+      let extraOutput = [];
+      if (!isAbsoluteMinimumComparison) {
+        extraOutput.push(`${percent.toFixed(1)}%`);
+      }
+      let timesCalledCount = bench.getTimesCalled();
+      if (timesCalledCount > 1) {
+        extraOutput.push(`called ${timesCalledCount}×`);
+        extraOutput.push(
+          `${(totalForBenchmark / timesCalledCount).toFixed(1)}ms each`
         );
-        if (isVerbose) {
+      }
+
+      let str = chalk.yellow(
+        `Benchmark (${label}): ${type} took ${totalForBenchmark.toFixed(0)}ms ${
+          extraOutput.length ? `(${extraOutput.join(", ")})` : ""
+        }`
+      );
+
+      if (
+        (isAbsoluteMinimumComparison &&
+          totalForBenchmark >= this.minimumThresholdMs) ||
+        percent > this.minimumThresholdPercent
+      ) {
+        if (this.isVerbose) {
           console.log(str);
         }
+      }
 
-        debugWarn(str);
+      if (totalForBenchmark.toFixed(0) > 0) {
+        debugBenchmark(str);
       }
     }
   }

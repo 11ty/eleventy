@@ -227,15 +227,11 @@ class Eleventy {
 
     let writeCount = this.writer.getWriteCount();
     let skippedCount = this.writer.getSkippedCount();
-
     let copyCount = this.writer.getCopyCount();
-    let skippedCopyCount = this.writer.getSkippedCopyCount();
 
     if (copyCount) {
       ret.push(
-        `Copied ${copyCount} ${simplePlural(copyCount, "item", "items")}${
-          skippedCopyCount ? ` (skipped ${skippedCopyCount})` : ""
-        } /`
+        `Copied ${copyCount} ${simplePlural(copyCount, "file", "files")} /`
       );
     }
 
@@ -634,6 +630,9 @@ Arguments:
     // See: TemplateWriter:pathCache and EleventyWatchTargets
     await this.write();
 
+    let initWatchBench = this.watcherBench.get("Start up --watch");
+    initWatchBench.before();
+
     await this.initWatch();
 
     // TODO improve unwatching if JS dependencies are removed (or files are deleted)
@@ -642,7 +641,10 @@ Arguments:
 
     let watcher = chokidar.watch(rawFiles, this.getChokidarConfig());
 
-    this.watcherBench.finish("Initialize --watch", 10, this.isVerbose);
+    initWatchBench.after();
+
+    this.watcherBench.setIsVerbose(true);
+    this.watcherBench.finish("Watch");
 
     console.log("Watching…");
 

@@ -12,6 +12,7 @@ const EleventyErrorUtil = require("./EleventyErrorUtil");
 const config = require("./Config");
 const debug = require("debug")("Eleventy:TemplateContent");
 const debugDev = require("debug")("Dev:Eleventy:TemplateContent");
+const bench = require("./BenchmarkManager").get("Aggregate");
 
 class TemplateContentCompileError extends EleventyBaseError {}
 class TemplateContentRenderError extends EleventyBaseError {}
@@ -107,11 +108,16 @@ class TemplateContent {
   }
 
   async getInputContent() {
-    if (this.engine.needsToReadFileContents()) {
-      return fs.readFile(this.inputPath, "utf-8");
+    if (!this.engine.needsToReadFileContents()) {
+      return "";
     }
 
-    return "";
+    let templateBenchmark = bench.get("Template Read");
+    templateBenchmark.before();
+    let content = await fs.readFile(this.inputPath, "utf-8");
+    templateBenchmark.after();
+
+    return content;
   }
 
   async getFrontMatter() {
@@ -170,7 +176,10 @@ class TemplateContent {
     );
 
     try {
+      let templateBenchmark = bench.get("Template Compile");
+      templateBenchmark.before();
       let fn = await this.templateRender.getCompiledTemplate(str);
+      templateBenchmark.after();
       debugDev("%o getCompiledTemplate function created", this.inputPath);
       return fn;
     } catch (e) {
@@ -185,7 +194,10 @@ class TemplateContent {
   async render(str, data, bypassMarkdown) {
     try {
       let fn = await this.compile(str, bypassMarkdown);
+      let templateBenchmark = bench.get("Template Render");
+      templateBenchmark.before();
       let rendered = await fn(data);
+      templateBenchmark.after();
       debugDev(
         "%o getCompiledTemplate called, rendered content created",
         this.inputPath

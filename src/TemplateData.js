@@ -10,12 +10,15 @@ const TemplatePath = require("./TemplatePath");
 const TemplateGlob = require("./TemplateGlob");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");
-const bench = require("./BenchmarkManager").get("Data");
+
 const config = require("./Config");
 const debugWarn = require("debug")("Eleventy:Warnings");
 const debug = require("debug")("Eleventy:TemplateData");
 const debugDev = require("debug")("Dev:Eleventy:TemplateData");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
+
+const bench = require("./BenchmarkManager").get("Data");
+const aggregateBench = require("./BenchmarkManager").get("Aggregate");
 
 class TemplateDataParseError extends EleventyBaseError {}
 
@@ -175,10 +178,13 @@ class TemplateData {
   async getGlobalDataFiles() {
     let priorities = this.getGlobalDataExtensionPriorities();
 
+    let fsBench = aggregateBench.get("Searching the file system");
+    fsBench.before();
     let paths = await fastglob(await this.getGlobalDataGlob(), {
       caseSensitiveMatch: false,
       dot: true
     });
+    fsBench.after();
 
     // sort paths according to extension priorities
     // here we use reverse ordering, because paths with bigger index in array will override the first ones
@@ -368,6 +374,8 @@ class TemplateData {
         return {};
       }
 
+      let aggregateDataBench = aggregateBench.get("Data File");
+      aggregateDataBench.before();
       let dataBench = bench.get(`\`${path}\``);
       dataBench.before();
       deleteRequireCache(localPath);
@@ -378,6 +386,7 @@ class TemplateData {
       }
 
       dataBench.after();
+      aggregateDataBench.after();
       return returnValue;
     } else if (this.isUserDataExtension(extension)) {
       // Other extensions

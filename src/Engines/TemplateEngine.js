@@ -3,6 +3,7 @@ const fs = require("fs-extra");
 const TemplatePath = require("../TemplatePath");
 const EleventyExtensionMap = require("../EleventyExtensionMap");
 const debug = require("debug")("Eleventy:TemplateEngine");
+const aggregateBench = require("../BenchmarkManager").get("Aggregate");
 
 class TemplateEngine {
   constructor(name, includesDir) {
@@ -61,6 +62,8 @@ class TemplateEngine {
     // TODO: reuse mustache partials in handlebars?
     let partialFiles = [];
     if (this.includesDir) {
+      let bench = aggregateBench.get("Searching the file system");
+      bench.before();
       this.extensions.forEach(function(extension) {
         partialFiles = partialFiles.concat(
           fastglob.sync(prefix + extension, {
@@ -69,6 +72,7 @@ class TemplateEngine {
           })
         );
       });
+      bench.after();
     }
 
     partialFiles = TemplatePath.addLeadingDotSlashArray(partialFiles);

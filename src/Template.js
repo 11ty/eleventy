@@ -14,8 +14,10 @@ const TemplateFileSlug = require("./TemplateFileSlug");
 const ComputedData = require("./ComputedData");
 const Pagination = require("./Plugins/Pagination");
 const TemplateContentPrematureUseError = require("./Errors/TemplateContentPrematureUseError");
+
 const debug = require("debug")("Eleventy:Template");
 const debugDev = require("debug")("Dev:Eleventy:Template");
+const bench = require("./BenchmarkManager").get("Aggregate");
 
 class Template extends TemplateContent {
   constructor(path, inputDir, outputDir, templateData) {
@@ -553,7 +555,10 @@ class Template extends TemplateContent {
     if (!shouldWriteFile) {
       this.skippedCount++;
     } else {
+      let templateBenchmark = bench.get("Template Write");
+      templateBenchmark.before();
       return fs.outputFile(outputPath, finalContent).then(() => {
+        templateBenchmark.after();
         this.writeCount++;
         debug(`${outputPath} ${lang.finished}.`);
       });
@@ -580,7 +585,8 @@ class Template extends TemplateContent {
     let promises = [];
     for (let page of mapEntry._pages) {
       let content = await this.renderPageEntry(mapEntry, page);
-      promises.push(this._write(page.outputPath, content));
+      let promise = this._write(page.outputPath, content);
+      promises.push(promise);
     }
 
     return Promise.all(promises);
