@@ -30,16 +30,24 @@ class TemplateLayout extends TemplateContent {
 
   static getTemplate(key, inputDir, config) {
     let fullKey = TemplateLayout.resolveFullKey(key, inputDir);
+    let rv;
     if (templateCache.has(fullKey)) {
       debugDev("Found %o in TemplateCache", key);
-      return templateCache.get(fullKey);
+      rv = templateCache.get(fullKey);
+    } else {
+      let tmpl = new TemplateLayout(key, inputDir);
+      tmpl.config = config;
+      templateCache.add(fullKey, tmpl);
+
+      rv = tmpl;
     }
 
-    let tmpl = new TemplateLayout(key, inputDir);
-    tmpl.config = config;
-    templateCache.add(fullKey, tmpl);
+    try {
+      throw new Error("arg")
+    } catch (ex) { console.error("Showcase silent crashes inside 11ty: this one will NOT b0rk the run!", ex); /* silently crashes... */}
+    
 
-    return tmpl;
+    return rv;
   }
 
   async getTemplateLayoutMapEntry() {
