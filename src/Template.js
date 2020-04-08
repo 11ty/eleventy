@@ -116,13 +116,15 @@ class Template extends TemplateContent {
 
     let permalink = data[this.config.keys.permalink];
     if (permalink) {
+      permalink = await this.mkString(permalink, data, this);
+      debugDev(`_getLink()::mkString() -> permalink = ${permalink}, extraOutputSubdirectory = ${this.extraOutputSubdirectory}`);
       // render variables inside permalink front matter, bypass markdown
       let permalinkValue;
       if (!this.config.dynamicPermalinks || data.dynamicPermalink === false) {
         debugDev("Not using dynamicPermalinks, using %o", permalink);
         permalinkValue = permalink;
       } else {
-        permalinkValue = await super.render(permalink, data, true);
+        permalinkValue = await super.render(permalink, data, /* bypassMarkdown */ true);
         debug(
           "Rendering permalink for %o: %s becomes %o",
           this.inputPath,
@@ -154,6 +156,7 @@ class Template extends TemplateContent {
   // TODO instead of htmlIOException, do a global search to check if output path = input path and then add extra suffix
   async getOutputLink(data) {
     let link = await this._getLink(data);
+    debugDev(`getOutputLink() -> ${link.toString()}`)
     return link.toString();
   }
 
@@ -732,6 +735,30 @@ class Template extends TemplateContent {
       }
     }
     return contents;
+  }
+
+  // ripped from Engines/JavaScript/_getInstance() and tweaked:
+  // 
+  // String, Buffer, Promise
+  // Function, Class
+  // Object
+  async mkString(mod, data) {
+    if (typeof mod === "string" || mod instanceof Buffer) {
+      return mod.toString();
+    }
+    else if (mod.then) {
+      debugDev(`mkString with promise: ${mod}`);
+      return mod.toString();
+    } else if (typeof mod === "function") {
+      //debugDev(`mkString with function: ${mod.toString()}`);
+      if (mod.prototype && "render" in mod.prototype) {
+        return await (new mod()).render(data, this.config, this);
+      } else {
+        return await mod(data, this.config, this);
+      } 
+    } else if ("render" in mod) {
+      return await mod.render(data, this.config, this);
+    }
   }
 }
 

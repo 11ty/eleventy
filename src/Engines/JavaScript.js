@@ -89,13 +89,13 @@ class JavaScript extends TemplateEngine {
     }
   }
 
-  async getExtraDataFromFile(inputPath) {
+  async getExtraDataFromFile(inputPath, template) {
     let inst = this.getInstanceFromInputPath(inputPath);
     if (inst && "data" in inst) {
       // get extra data from `data` method,
       // either as a function or getter or object literal
       let result = await (typeof inst.data === "function"
-        ? inst.data()
+        ? inst.data(inputPath, this, template)
         : inst.data);
       if (typeof result !== "object") {
         throw new JavaScriptTemplateInvalidDataFormatError(
