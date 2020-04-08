@@ -43,9 +43,15 @@ class TemplateLayout extends TemplateContent {
     }
 
     try {
-      throw new Error("arg")
-    } catch (ex) { console.error("Showcase silent crashes inside 11ty: this one will NOT b0rk the run!", ex); /* silently crashes... */}
-    
+      throw new Error("arg");
+    } catch (ex) {
+      console.error(
+        "Showcase silent crashes inside 11ty: this one will NOT b0rk the run!",
+        ex
+      );
+      /* silently crashes... */
+      throw ex; // rethrow should be caught by app-level registered handler...
+    }
 
     return rv;
   }
@@ -54,7 +60,7 @@ class TemplateLayout extends TemplateContent {
     return {
       key: this.dataKeyLayoutPath,
       template: this,
-      frontMatterData: await this.getFrontMatterData()
+      frontMatterData: await this.getFrontMatterData(),
     };
   }
 
@@ -105,7 +111,7 @@ class TemplateLayout extends TemplateContent {
   }
 
   async getLayoutChain() {
-    if(!this.layoutChain) {
+    if (!this.layoutChain) {
       await this.getData();
     }
     return this.layoutChain;
