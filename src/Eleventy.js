@@ -231,15 +231,17 @@ class Eleventy {
 
     if (copyCount) {
       ret.push(
-        `Copied ${copyCount} ${simplePlural(copyCount, "file", "files")} /`
+        `Copied ${copyCount} ${simplePlural(copyCount, "file", "files")}`
       );
     }
 
-    ret.push(
-      `Wrote ${writeCount} ${simplePlural(writeCount, "file", "files")}${
-        skippedCount ? ` (skipped ${skippedCount})` : ""
-      }`
-    );
+    if (writeCount || skippedCount) {
+      ret.push(
+        `Wrote ${writeCount} ${simplePlural(writeCount, "file", "files")}${
+          skippedCount ? ` (skipped ${skippedCount})` : ""
+        }`
+      );
+    }
 
     let versionStr = `v${pkg.version}`;
     let time = ((new Date() - this.start) / 1000).toFixed(2);
