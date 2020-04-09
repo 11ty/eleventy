@@ -8,6 +8,8 @@ const EleventyServe = require("./EleventyServe");
 const EleventyWatch = require("./EleventyWatch");
 const EleventyWatchTargets = require("./EleventyWatchTargets");
 const EleventyFiles = require("./EleventyFiles");
+const { performance } = require("perf_hooks");
+
 const templateCache = require("./TemplateCache");
 const simplePlural = require("./Util/Pluralize");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
@@ -61,8 +63,12 @@ class Eleventy {
      */
     this.isDryRun = false;
 
-    /** @member {Date} - The time of instantiation. */
-    this.start = new Date();
+    if (performance) {
+      debug("Eleventy warm up time (in ms) %o", performance.now());
+    }
+
+    /** @member {Number} - The timestamp of Eleventy start. */
+    this.start = this.getNewTimestamp();
 
     /**
      * @member {Array<String>} - Subset of template types.
@@ -86,6 +92,13 @@ class Eleventy {
     this.watchTargets = new EleventyWatchTargets();
     this.watchTargets.addAndMakeGlob(this.config.additionalWatchTargets);
     this.watchTargets.watchJavaScriptDependencies = this.config.watchJavaScriptDependencies;
+  }
+
+  getNewTimestamp() {
+    if (performance) {
+      return performance.now();
+    }
+    return new Date().getTime();
   }
 
   /** @type {String} */
@@ -186,7 +199,7 @@ class Eleventy {
    */
   async restart() {
     debug("Restarting");
-    this.start = new Date();
+    this.start = this.getNewTimestamp();
     templateCache.clear();
     bench.reset();
     this.eleventyFiles.restart();
@@ -229,22 +242,27 @@ class Eleventy {
     let skippedCount = this.writer.getSkippedCount();
     let copyCount = this.writer.getCopyCount();
 
+    let slashRet = [];
+
     if (copyCount) {
-      ret.push(
+      slashRet.push(
         `Copied ${copyCount} ${simplePlural(copyCount, "file", "files")}`
       );
     }
 
     if (writeCount || skippedCount) {
-      ret.push(
+      slashRet.push(
         `Wrote ${writeCount} ${simplePlural(writeCount, "file", "files")}${
           skippedCount ? ` (skipped ${skippedCount})` : ""
         }`
       );
     }
+    if (slashRet.length) {
+      ret.push(slashRet.join(" / "));
+    }
 
     let versionStr = `v${pkg.version}`;
-    let time = ((new Date() - this.start) / 1000).toFixed(2);
+    let time = ((this.getNewTimestamp() - this.start) / 1000).toFixed(2);
     ret.push(`in ${time} ${simplePlural(time, "second", "seconds")}`);
 
     if (writeCount >= 10) {
