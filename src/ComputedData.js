@@ -1,59 +1,39 @@
 const lodashGet = require("lodash/get");
 const lodashSet = require("lodash/set");
-const debug = require("debug")("Eleventy:ComputedData");
 const DependencyGraph = require("dependency-graph").DepGraph;
+
+const ComputedDataTemplateString = require("./ComputedDataTemplateString");
+const ComputedDataProxy = require("./ComputedDataProxy");
+
+// const debug = require("debug")("Eleventy:ComputedData");
 
 class ComputedData {
   constructor() {
     this.computed = {};
+    this.templateStringKeyLookup = {};
     this.computedKeys = new Set();
     this.declaredDependencies = {};
-
-    // is this ¯\_(lisp)_/¯
-    // must be strings that won’t be escaped by template languages
-    this.prefix = "(((((11ty(((((";
-    this.suffix = ")))))11ty)))))";
   }
 
   add(key, fn, declaredDependencies = []) {
     this.computedKeys.add(key);
     this.declaredDependencies[key] = declaredDependencies;
+
     lodashSet(this.computed, key, fn);
   }
 
-  getProxyData() {
-    let proxyData = {};
-
-    // use these special strings as a workaround to check the rendered output
-    // can’t use proxies here as some template languages trigger proxy for all
-    // keys in data
-    for (let key of this.computedKeys) {
-      // TODO don’t allow to set eleventyComputed.page? other disallowed computed things?
-      lodashSet(proxyData, key, this.prefix + key + this.suffix);
-    }
-
-    return proxyData;
-  }
-
-  findVarsInOutput(output = "") {
-    let vars = new Set();
-    let splits = output.split(this.prefix);
-    for (let split of splits) {
-      let varName = split.substr(0, split.indexOf(this.suffix));
-      if (varName) {
-        vars.add(varName);
-      }
-    }
-    return Array.from(vars);
+  addTemplateString(key, fn, declaredDependencies = []) {
+    this.add(key, fn, declaredDependencies);
+    this.templateStringKeyLookup[key] = true;
   }
 
   async getVarOrder() {
     if (this.computedKeys.size > 0) {
       let graph = new DependencyGraph();
 
-      let proxyData = this.getProxyData();
       for (let key of this.computedKeys) {
         let computed = lodashGet(this.computed, key);
+
         graph.addNode(key);
 
         if (typeof computed === "function") {
@@ -64,23 +44,20 @@ class ComputedData {
             }
           }
 
-          // squelch console logs for this fake proxy data pass 😅
-          let output;
-          let savedLog = console.log;
-          console.log = () => {};
-          // Mitigation for #1061, errors on the first pass shouldn’t fail the whole thing.
-          try {
-            output = await computed(proxyData);
-          } catch (e) {
-            debug("Computed Data first pass data resolution error: %o", e);
+          let varsUsed;
+          let proxy;
+          let isTemplateString = !!this.templateStringKeyLookup[key];
+          if (isTemplateString) {
+            proxy = new ComputedDataTemplateString(this.computedKeys);
+          } else {
+            proxy = new ComputedDataProxy();
           }
-          console.log = savedLog;
+          varsUsed = await proxy.findVarsUsed(computed);
 
-          let vars = this.findVarsInOutput(output);
-          for (let usesVar of vars) {
-            if (usesVar !== key && this.computedKeys.has(usesVar)) {
-              graph.addNode(usesVar);
-              graph.addDependency(key, usesVar);
+          for (let varUsed of varsUsed) {
+            if (varUsed !== key && this.computedKeys.has(varUsed)) {
+              graph.addNode(varUsed);
+              graph.addDependency(key, varUsed);
             }
           }
         }
@@ -94,6 +71,7 @@ class ComputedData {
 
   async setupData(data) {
     let order = await this.getVarOrder();
+
     for (let key of order) {
       let computed = lodashGet(this.computed, key);
 
