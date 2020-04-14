@@ -3,7 +3,11 @@ const debug = require("debug")("Eleventy:ComputedDataTemplateString");
 
 class ComputedDataTemplateString {
   constructor(computedKeys) {
-    this.computedKeys = computedKeys;
+    if (Array.isArray(computedKeys)) {
+      this.computedKeys = new Set(computedKeys);
+    } else {
+      this.computedKeys = computedKeys;
+    }
 
     // is this ¯\_(lisp)_/¯
     // must be strings that won’t be escaped by template languages

@@ -108,7 +108,7 @@ test("Basic get/set (reverse order of adds) nested two deep", async t => {
 });
 
 test("Get vars used by function", async t => {
-  let cd = new ComputedDataProxy();
+  let cd = new ComputedDataProxy(["key1"]);
   let key1Fn = () => {};
   let key2Fn = data => {
     return `${data.key1}`;
@@ -119,7 +119,7 @@ test("Get vars used by function", async t => {
 });
 
 test("Get vars used by function (not a computed key)", async t => {
-  let cd = new ComputedDataProxy();
+  let cd = new ComputedDataProxy(["page.url"]);
   let key1Fn = data => {
     return `${data.page.url}`;
   };
@@ -128,7 +128,12 @@ test("Get vars used by function (not a computed key)", async t => {
 });
 
 test("Get vars used by function (multiple functions—not computed keys)", async t => {
-  let cd = new ComputedDataProxy();
+  let cd = new ComputedDataProxy([
+    "page.url",
+    "key1",
+    "very.deep.reference",
+    "very.other.deep.reference"
+  ]);
   let key1Fn = data => {
     return `${data.page.url}`;
   };
@@ -295,4 +300,12 @@ test("Basic get/set with template string", async t => {
   t.is(data.key1, "this is a test inject methis is a str");
   t.is(data.key2, "inject me");
   t.is(data.keystr, "this is a str");
+});
+
+test("Proxy shouldn’t always return {}", async t => {
+  let cd = new ComputedDataProxy(["page.fileSlug"]);
+  let proxy = cd.getProxyData([]);
+
+  t.notDeepEqual(proxy.page.fileSlug, {});
+  t.is(proxy.page.fileSlug, "");
 });

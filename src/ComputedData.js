@@ -50,7 +50,7 @@ class ComputedData {
           if (isTemplateString) {
             proxy = new ComputedDataTemplateString(this.computedKeys);
           } else {
-            proxy = new ComputedDataProxy();
+            proxy = new ComputedDataProxy(this.computedKeys);
           }
           varsUsed = await proxy.findVarsUsed(computed);
 

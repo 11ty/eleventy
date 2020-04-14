@@ -1,4 +1,12 @@
 class ComputedDataProxy {
+  constructor(computedKeys) {
+    if (Array.isArray(computedKeys)) {
+      this.computedKeys = new Set(computedKeys);
+    } else {
+      this.computedKeys = computedKeys;
+    }
+  }
+
   _createDeepProxy(keyReference, path = []) {
     let self = this;
     return new Proxy(
@@ -15,7 +23,14 @@ class ComputedDataProxy {
             if (parentIndex > -1) {
               keyReference.splice(parentIndex, 1);
             }
-            keyReference.push(newPath.join("."));
+            let fullPath = newPath.join(".");
+            keyReference.push(fullPath);
+
+            // return string for computed key values
+            if (self.computedKeys.has(fullPath)) {
+              return "";
+            }
+
             return self._createDeepProxy(keyReference, newPath);
           }
         }
