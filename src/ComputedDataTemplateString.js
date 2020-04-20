@@ -41,7 +41,7 @@ class ComputedDataTemplateString {
     return Array.from(vars);
   }
 
-  async findVarsUsed(fn) {
+  async findVarsUsed(fn, data = {}) {
     let proxyData = this.getProxyData();
     let output;
     let savedLog = console.log;

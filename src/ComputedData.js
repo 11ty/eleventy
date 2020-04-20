@@ -27,7 +27,7 @@ class ComputedData {
     this.templateStringKeyLookup[key] = true;
   }
 
-  async getVarOrder() {
+  async getVarOrder(data) {
     if (this.computedKeys.size > 0) {
       let graph = new DependencyGraph();
 
@@ -44,16 +44,15 @@ class ComputedData {
             }
           }
 
-          let varsUsed;
           let proxy;
           let isTemplateString = !!this.templateStringKeyLookup[key];
+          // TODO move this out of the loop??
           if (isTemplateString) {
             proxy = new ComputedDataTemplateString(this.computedKeys);
           } else {
             proxy = new ComputedDataProxy(this.computedKeys);
           }
-          varsUsed = await proxy.findVarsUsed(computed);
-
+          let varsUsed = await proxy.findVarsUsed(computed, data);
           for (let varUsed of varsUsed) {
             if (varUsed !== key && this.computedKeys.has(varUsed)) {
               graph.addNode(varUsed);
@@ -70,7 +69,7 @@ class ComputedData {
   }
 
   async setupData(data) {
-    let order = await this.getVarOrder();
+    let order = await this.getVarOrder(data);
 
     for (let key of order) {
       let computed = lodashGet(this.computed, key);

@@ -1,3 +1,7 @@
+const lodashSet = require("lodash/set");
+const lodashGet = require("lodash/get");
+const lodashIsPlainObject = require("lodash/isPlainObject");
+
 class ComputedDataProxy {
   constructor(computedKeys) {
     if (Array.isArray(computedKeys)) {
@@ -7,45 +11,64 @@ class ComputedDataProxy {
     }
   }
 
-  _createDeepProxy(keyReference, path = []) {
-    let self = this;
-    return new Proxy(
-      {},
-      {
-        get(target, key) {
-          if (target[key]) {
-            return target[key];
-          }
-          let newPath = [...path, key];
-          if (typeof key === "string") {
-            // if `page.url`, remove `page` etc
-            let parentIndex = keyReference.indexOf(path.join("."));
-            if (parentIndex > -1) {
-              keyReference.splice(parentIndex, 1);
-            }
-            let fullPath = newPath.join(".");
-            keyReference.push(fullPath);
+  isArrayOrPlainObject(data) {
+    return Array.isArray(data) || lodashIsPlainObject(data);
+  }
 
-            // return string for computed key values
-            if (self.computedKeys.has(fullPath)) {
-              return "";
-            }
-
-            return self._createDeepProxy(keyReference, newPath);
-          }
+  getProxyData(data, keyRef) {
+    let undefinedValue = "__11TY_UNDEFINED__";
+    if (this.computedKeys) {
+      for (let key of this.computedKeys) {
+        if (lodashGet(data, key, undefinedValue) === undefinedValue) {
+          lodashSet(data, key, "");
         }
       }
-    );
+    }
+
+    return this._getProxyData(data, keyRef);
   }
 
-  getProxyData(keyReference) {
-    return this._createDeepProxy(keyReference);
+  _getProxyData(data, keyRef, parentKey = "") {
+    if (lodashIsPlainObject(data)) {
+      return new Proxy(
+        {},
+        {
+          get: (obj, key) => {
+            // console.log( obj, key, parentKey );
+            if (typeof key !== "string") {
+              return obj[key];
+            }
+            let newKey = `${parentKey ? `${parentKey}.` : ""}${key}`;
+            let newData = this._getProxyData(data[key], keyRef, newKey);
+            if (!this.isArrayOrPlainObject(newData)) {
+              keyRef.add(newKey);
+            }
+            return newData;
+          }
+        }
+      );
+    } else if (Array.isArray(data)) {
+      return new Proxy([], {
+        get: (obj, key) => {
+          let newKey = `${parentKey}[${key}]`;
+          let newData = this._getProxyData(data[key], keyRef, newKey);
+          if (!this.isArrayOrPlainObject(newData)) {
+            keyRef.add(newKey);
+          }
+          return newData;
+        }
+      });
+    }
+
+    // everything else!
+    return data;
   }
 
-  async findVarsUsed(fn) {
-    let keyReference = [];
+  async findVarsUsed(fn, data = {}) {
+    let keyRef = new Set();
+
     // careful, logging proxyData will mess with test results!
-    let proxyData = this.getProxyData(keyReference);
+    let proxyData = this.getProxyData(data, keyRef);
 
     // squelch console logs for this fake proxy data pass 😅
     let savedLog = console.log;
@@ -53,7 +76,7 @@ class ComputedDataProxy {
     await fn(proxyData);
     console.log = savedLog;
 
-    return keyReference;
+    return Array.from(keyRef);
   }
 }
 
