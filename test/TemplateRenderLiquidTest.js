@@ -969,3 +969,10 @@ test("Liquid Shortcode (with async function, error throwing)", async t => {
     ) > -1
   );
 });
+
+test("Liquid Render a false #1069", async t => {
+  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+    "{{ falseValue }}"
+  );
+  t.is(await fn({ falseValue: false }), "false");
+});
