@@ -121,7 +121,14 @@ class TemplatePassthroughManager {
             path.inputPath
           );
         } else {
-          this.count += fileCopyCount;
+          if (Array.isArray(fileCopyCount)) {
+            // globs
+            for (let count of fileCopyCount) {
+              this.count += count;
+            }
+          } else {
+            this.count += fileCopyCount;
+          }
           debug("Copied %o (%d files)", path.inputPath, fileCopyCount);
         }
       })

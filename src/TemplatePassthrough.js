@@ -78,6 +78,7 @@ class TemplatePassthrough {
       return copy(src, dest, copyOptions)
         .on(copy.events.COPY_FILE_START, function(copyOp) {
           // Access to individual files at `copyOp.src`
+          debug("Copying individual file %o", copyOp.src);
           aggregateBench.get("Passthrough Copy File").before();
         })
         .on(copy.events.COPY_FILE_COMPLETE, function() {
