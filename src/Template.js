@@ -20,7 +20,7 @@ const debugDev = require("debug")("Dev:Eleventy:Template");
 const bench = require("./BenchmarkManager").get("Aggregate");
 
 class Template extends TemplateContent {
-  constructor(path, inputDir, outputDir, templateData) {
+  constructor(path, inputDir, outputDir, templateData, extensionMap) {
     debugDev("new Template(%o)", path);
     super(path, inputDir);
 
@@ -34,6 +34,8 @@ class Template extends TemplateContent {
     } else {
       this.outputDir = false;
     }
+
+    this.extensionMap = extensionMap;
 
     this.linters = [];
     this.transforms = [];
@@ -84,7 +86,8 @@ class Template extends TemplateContent {
       this._layout = TemplateLayout.getTemplate(
         layoutKey,
         this.getInputDir(),
-        this.config
+        this.config,
+        this.extensionMap
       );
     }
     return this._layout;
@@ -609,7 +612,8 @@ class Template extends TemplateContent {
       this.inputPath,
       this.inputDir,
       this.outputDir,
-      this.templateData
+      this.templateData,
+      this.extensionMap
     );
     tmpl.config = this.config;
 

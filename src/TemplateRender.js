@@ -1,5 +1,4 @@
 const TemplatePath = require("./TemplatePath");
-const TemplateEngineManager = require("./TemplateEngineManager");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 // const debug = require("debug")("Eleventy:TemplateRender");
@@ -8,14 +7,13 @@ class TemplateRenderUnknownEngineError extends EleventyBaseError {}
 
 // works with full path names or short engine name
 class TemplateRender {
-  constructor(tmplPath, inputDir, extensionMap) {
+  constructor(tmplPath, inputDir) {
     if (!tmplPath) {
       throw new Error(
         `TemplateRender requires a tmplPath argument, instead of ${tmplPath}`
       );
     }
 
-    this.extensionMap = extensionMap;
     this.engineNameOrPath = tmplPath;
     this.inputDir = inputDir;
 
@@ -57,12 +55,10 @@ class TemplateRender {
       );
     }
 
-    this._engineManager = new TemplateEngineManager();
-    this._engineManager.config = this.config;
-
-    this._engine = this._engineManager.getEngine(
+    this._engine = this.extensionMap.engineManager.getEngine(
       this._engineName,
-      this.includesDir
+      this.includesDir,
+      this.extensionMap
     );
     this._engine.config = this.config;
     this._engine.initRequireCache(engineNameOrPath);
@@ -84,13 +80,6 @@ class TemplateRender {
       this.init(this.engineNameOrPath);
     }
     return this._engine;
-  }
-
-  get engineManager() {
-    if (!this._engineManager) {
-      this.init(this.engineNameOrPath);
-    }
-    return this._engineManager;
   }
 
   static parseEngineOverrides(engineName) {

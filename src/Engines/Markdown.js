@@ -53,7 +53,8 @@ class Markdown extends TemplateEngine {
       if (typeof preTemplateEngine === "string") {
         engine = this.engineManager.getEngine(
           preTemplateEngine,
-          super.getIncludesDir()
+          super.getIncludesDir(),
+          this.extensionMap
         );
       } else {
         engine = preTemplateEngine;

@@ -8,9 +8,6 @@ const aggregateBench = require("../BenchmarkManager").get("Aggregate");
 class TemplateEngine {
   constructor(name, includesDir) {
     this.name = name;
-
-    this.extensionMap = new EleventyExtensionMap();
-    this.extensions = this.extensionMap.getExtensionsFromKey(name);
     this.includesDir = includesDir;
     this.partialsHaveBeenCached = false;
     this.partials = [];
@@ -34,6 +31,25 @@ class TemplateEngine {
 
   set engineManager(manager) {
     this._engineManager = manager;
+  }
+
+  get extensionMap() {
+    if (!this._extensionMap) {
+      this._extensionMap = new EleventyExtensionMap();
+      // this._extensionMap.config = this.config;
+    }
+    return this._extensionMap;
+  }
+
+  set extensionMap(map) {
+    this._extensionMap = map;
+  }
+
+  get extensions() {
+    if (!this._extensions) {
+      this._extensions = this.extensionMap.getExtensionsFromKey(this.name);
+    }
+    return this._extensions;
   }
 
   getName() {

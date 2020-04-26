@@ -1,7 +1,9 @@
 const config = require("./Config");
 
 class TemplateEngineManager {
-  constructor() {}
+  constructor() {
+    this.engineCache = {};
+  }
 
   get config() {
     if (!this._config) {
@@ -49,17 +51,25 @@ class TemplateEngineManager {
     return !!this.getClassNameFromTemplateKey(name);
   }
 
-  getEngine(name, includesDir) {
+  getEngine(name, includesDir, extensionMap) {
     if (!this.hasEngine(name)) {
       throw new Error(
         `Template Engine ${name} does not exist in getEngine (includes dir: ${includesDir})`
       );
     }
 
-    const cls = require("./Engines/" + this.getClassNameFromTemplateKey(name));
+    if (this.engineCache[name]) {
+      return this.engineCache[name];
+    }
+
+    let path = "./Engines/" + this.getClassNameFromTemplateKey(name);
+    const cls = require(path);
     let instance = new cls(name, includesDir);
+    instance.extensionMap = extensionMap;
     instance.config = this.config;
     instance.engineManager = this;
+
+    this.engineCache[name] = instance;
     return instance;
   }
 }
