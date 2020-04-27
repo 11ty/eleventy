@@ -249,3 +249,29 @@ test("Basic get/set using array data", async t => {
   t.is(data.arr[0], "inject me");
   t.is(data.keystr, "this is a str");
 });
+
+test("Computed returns deep object", async t => {
+  let cd = new ComputedData();
+
+  cd.add("returnobj", data => {
+    return {
+      key1: "value1",
+      nest: {
+        key2: "value2"
+      }
+    };
+  });
+
+  let data = {
+    returnobj: {
+      key1: "bad1",
+      nest: {
+        key2: "bad2"
+      }
+    }
+  };
+  await cd.setupData(data);
+
+  t.is(data.returnobj.key1, "value1");
+  t.is(data.returnobj.nest.key2, "value2");
+});
