@@ -44,15 +44,15 @@ class ComputedDataTemplateString {
   async findVarsUsed(fn, data = {}) {
     let proxyData = this.getProxyData();
     let output;
-    let savedLog = console.log;
-    console.log = () => {};
+    // let savedLog = console.log;
+    // console.log = () => {};
     // Mitigation for #1061, errors with filters in the first pass shouldn’t fail the whole thing.
     try {
       output = await fn(proxyData);
     } catch (e) {
       debug("Computed Data first pass data resolution error: %o", e);
     }
-    console.log = savedLog;
+    // console.log = savedLog;
 
     return this.findVarsInOutput(output);
   }

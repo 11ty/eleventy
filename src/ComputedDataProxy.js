@@ -34,7 +34,6 @@ class ComputedDataProxy {
         {},
         {
           get: (obj, key) => {
-            // console.log( obj, key, parentKey );
             if (typeof key !== "string") {
               return obj[key];
             }
@@ -71,10 +70,10 @@ class ComputedDataProxy {
     let proxyData = this.getProxyData(data, keyRef);
 
     // squelch console logs for this fake proxy data pass 😅
-    let savedLog = console.log;
-    console.log = () => {};
+    // let savedLog = console.log;
+    // console.log = () => {};
     await fn(proxyData);
-    console.log = savedLog;
+    // console.log = savedLog;
 
     return Array.from(keyRef);
   }

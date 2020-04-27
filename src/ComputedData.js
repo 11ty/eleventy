@@ -5,7 +5,7 @@ const DependencyGraph = require("dependency-graph").DepGraph;
 const ComputedDataTemplateString = require("./ComputedDataTemplateString");
 const ComputedDataProxy = require("./ComputedDataProxy");
 
-// const debug = require("debug")("Eleventy:ComputedData");
+const debug = require("debug")("Eleventy:ComputedData");
 
 class ComputedData {
   constructor() {
@@ -53,6 +53,7 @@ class ComputedData {
             proxy = new ComputedDataProxy(this.computedKeys);
           }
           let varsUsed = await proxy.findVarsUsed(computed, data);
+          debug("%o accesses %o variables", key, varsUsed);
           for (let varUsed of varsUsed) {
             if (varUsed !== key && this.computedKeys.has(varUsed)) {
               graph.addNode(varUsed);
@@ -70,6 +71,7 @@ class ComputedData {
 
   async setupData(data) {
     let order = await this.getVarOrder(data);
+    debug("Computed data order of execution: %o", order);
 
     for (let key of order) {
       let computed = lodashGet(this.computed, key);
