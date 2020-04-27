@@ -19,6 +19,20 @@ test("Basic get/set", async t => {
   t.is(data.keystr, "this is a str");
 });
 
+test("Boolean computed value Issue #1114", async t => {
+  let cd = new ComputedData();
+
+  cd.add("bool1", true);
+
+  let data = {
+    key2: "inject me"
+  };
+  await cd.setupData(data);
+
+  t.is(data.bool1, true);
+  t.is(data.key2, "inject me");
+});
+
 test("Basic get/set (reverse order of adds)", async t => {
   let cd = new ComputedData();
 
