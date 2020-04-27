@@ -116,7 +116,7 @@ class EleventyServe {
   serve(port) {
     // only load on serve—this is pretty expensive
     const browserSync = require("browser-sync");
-    this.server = browserSync.create();
+    this.server = browserSync.create("eleventyServer");
 
     let pathPrefix = this.getPathPrefix();
 
