@@ -7,6 +7,7 @@ import EleventyExtensionMap from "../src/EleventyExtensionMap";
 import EleventyErrorUtil from "../src/EleventyErrorUtil";
 import TemplateContentPrematureUseError from "../src/Errors/TemplateContentPrematureUseError";
 import normalizeNewLines from "./Util/normalizeNewLines";
+import { cloneDeep } from "lodash";
 
 import templateConfig from "../src/Config";
 const config = templateConfig.getConfig();
@@ -2188,4 +2189,33 @@ test("eleventyComputed relies on global data", async t => {
   let templates = await tmpl.getTemplates(fetchedData);
   let data = templates[0].data;
   t.is(data.image, "datavalue1");
+});
+
+test("eleventyComputed intermixes with global data", async t => {
+  let dataObj = new TemplateData("./test/stubs-computed-global/");
+
+  let config = cloneDeep(dataObj.config);
+  config.dataDeepMerge = true;
+  dataObj._setConfig(config);
+
+  let tmpl = getNewTemplate(
+    "./test/stubs-computed-global/intermix.njk",
+    "./test/stubs-computed-global/",
+    "./dist",
+    dataObj
+  );
+  tmpl.config = config;
+
+  let fetchedData = await tmpl.getData();
+  t.truthy(fetchedData.eleventyComputed.image);
+  t.truthy(fetchedData.eleventyComputed.image2);
+  t.truthy(fetchedData.eleventyComputed.image3);
+  t.truthy(fetchedData.eleventyComputed.eleventyNavigation.key);
+
+  let templates = await tmpl.getTemplates(fetchedData);
+  let data = templates[0].data;
+  t.is(data.image, "first");
+  t.is(data.image2, "second");
+  t.is(data.image3, "third-global");
+  t.is(data.eleventyNavigation.key, "nested-first-global");
 });
