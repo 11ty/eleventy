@@ -1,7 +1,7 @@
 const lodashGet = require("lodash/get");
 const lodashSet = require("lodash/set");
-const DependencyGraph = require("dependency-graph").DepGraph;
 
+const ComputedDataQueue = require("./ComputedDataQueue");
 const ComputedDataTemplateString = require("./ComputedDataTemplateString");
 const ComputedDataProxy = require("./ComputedDataProxy");
 
@@ -13,6 +13,7 @@ class ComputedData {
     this.templateStringKeyLookup = {};
     this.computedKeys = new Set();
     this.declaredDependencies = {};
+    this.queue = new ComputedDataQueue();
   }
 
   add(key, fn, declaredDependencies = []) {
@@ -27,50 +28,39 @@ class ComputedData {
     this.templateStringKeyLookup[key] = true;
   }
 
-  async getVarOrder(data) {
-    if (this.computedKeys.size > 0) {
-      let graph = new DependencyGraph();
+  async resolveVarOrder(data) {
+    for (let key of this.computedKeys) {
+      let computed = lodashGet(this.computed, key);
 
-      for (let key of this.computedKeys) {
-        let computed = lodashGet(this.computed, key);
+      if (typeof computed !== "function") {
+        // add nodes for non functions (primitives like booleans, etc)
+        this.queue.addNode(key);
+      } else {
+        this.queue.uses(key, this.declaredDependencies[key]);
 
-        graph.addNode(key);
-
-        if (typeof computed === "function") {
-          if (this.declaredDependencies[key].length) {
-            for (let dep of this.declaredDependencies[key]) {
-              graph.addNode(dep);
-              graph.addDependency(key, dep);
-            }
-          }
-
-          let proxy;
-          let isTemplateString = !!this.templateStringKeyLookup[key];
-          // TODO move this out of the loop??
-          if (isTemplateString) {
-            proxy = new ComputedDataTemplateString(this.computedKeys);
-          } else {
-            proxy = new ComputedDataProxy(this.computedKeys);
-          }
-          let varsUsed = await proxy.findVarsUsed(computed, data);
-          debug("%o accesses %o variables", key, varsUsed);
-          for (let varUsed of varsUsed) {
-            if (varUsed !== key && this.computedKeys.has(varUsed)) {
-              graph.addNode(varUsed);
-              graph.addDependency(key, varUsed);
-            }
-          }
+        let proxy;
+        let isTemplateString = !!this.templateStringKeyLookup[key];
+        // TODO move this out of the loop??
+        if (isTemplateString) {
+          proxy = new ComputedDataTemplateString(this.computedKeys);
+        } else {
+          proxy = new ComputedDataProxy(this.computedKeys);
         }
+
+        let varsUsed = await proxy.findVarsUsed(computed, data);
+        debug("%o accesses %o variables", key, varsUsed);
+        let filteredVarsUsed = varsUsed.filter(varUsed => {
+          return (
+            (varUsed !== key && this.computedKeys.has(varUsed)) ||
+            varUsed.startsWith("collections.")
+          );
+        });
+        this.queue.uses(key, filteredVarsUsed);
       }
-
-      return graph.overallOrder();
     }
-
-    return [];
   }
 
-  async setupData(data) {
-    let order = await this.getVarOrder(data);
+  async _setupDataEntry(data, order) {
     debug("Computed data order of execution: %o", order);
 
     for (let key of order) {
@@ -82,6 +72,18 @@ class ComputedData {
         lodashSet(data, key, computed);
       }
     }
+  }
+
+  async setupData(data, orderFilter) {
+    await this.resolveVarOrder(data);
+
+    // process all variables
+    let order = this.queue.getOrder();
+    if (orderFilter && typeof orderFilter === "function") {
+      order = order.filter(orderFilter.bind(this.queue));
+    }
+    await this._setupDataEntry(data, order);
+    this.queue.markComputed(order);
   }
 }
 

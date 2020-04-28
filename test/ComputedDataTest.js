@@ -19,20 +19,6 @@ test("Basic get/set", async t => {
   t.is(data.keystr, "this is a str");
 });
 
-test("Boolean computed value Issue #1114", async t => {
-  let cd = new ComputedData();
-
-  cd.add("bool1", true);
-
-  let data = {
-    key2: "inject me"
-  };
-  await cd.setupData(data);
-
-  t.is(data.bool1, true);
-  t.is(data.key2, "inject me");
-});
-
 test("Basic get/set (reverse order of adds)", async t => {
   let cd = new ComputedData();
 
@@ -274,4 +260,114 @@ test("Computed returns deep object", async t => {
 
   t.is(data.returnobj.key1, "value1");
   t.is(data.returnobj.nest.key2, "value2");
+});
+
+test("Boolean computed value Issue #1114", async t => {
+  let cd = new ComputedData();
+
+  cd.add("bool1", true);
+
+  let data = {
+    key2: "inject me"
+  };
+  await cd.setupData(data);
+
+  t.is(data.bool1, true);
+  t.is(data.key2, "inject me");
+});
+
+test("Expect collections in data callback #1114", async t => {
+  t.plan(4);
+  let cd = new ComputedData();
+
+  cd.add("key1", data => {
+    t.is(data.collections.first[0], 1);
+    t.is(data.collections.second[0], 2);
+    return ``;
+  });
+
+  let data = {
+    collections: {
+      first: [1],
+      second: [2]
+    }
+  };
+  await cd.setupData(data);
+});
+
+test("Get var order", async t => {
+  let cd = new ComputedData();
+
+  cd.add("key1", data => data.collections.all);
+  cd.add("key2", data => data.collections.dog);
+  cd.add("key0", data => "");
+
+  let data = {
+    key2: "inject me",
+    collections: {
+      all: [1],
+      dog: [2]
+    }
+  };
+
+  await cd.resolveVarOrder(data);
+  t.deepEqual(cd.queue.getOrder(), [
+    "collections.all",
+    "key1",
+    "collections.dog",
+    "key2",
+    "key0"
+  ]);
+});
+
+test("Get var order and process it in two stages", async t => {
+  let cd = new ComputedData();
+
+  cd.add("page.url", data => data.key2);
+  cd.add("page.outputPath", data => `${data.key2}${data.collections.dog[0]}`);
+  cd.add("key0", data => "hi");
+  cd.add("collections.processed", data => "hi");
+
+  let data = {
+    key2: "/my-path/",
+    collections: {
+      dog: [2]
+    }
+  };
+
+  // set page.url, page.outputPath, key2, collections.dog[0]
+  await cd.setupData(data, function(entry) {
+    return !this.isDependsOnStartsWith(entry, "collections.");
+  });
+
+  t.deepEqual(data, {
+    collections: {
+      dog: [2],
+      processed: ""
+    },
+    key0: "hi",
+    key2: "/my-path/",
+    page: {
+      url: "/my-path/",
+      outputPath: "/my-path/2"
+    }
+  });
+
+  // set collections.processed
+  await cd.setupData(data);
+
+  t.deepEqual(data, {
+    collections: {
+      dog: [2],
+      processed: "hi"
+    },
+    key0: "hi",
+    key2: "/my-path/",
+    page: {
+      url: "/my-path/",
+      outputPath: "/my-path/2"
+    }
+  });
+
+  // t.deepEqual(cd.queue.getOrder(), ["collections.all", "key1", "collections.dog", "key2", "key0"]);
 });

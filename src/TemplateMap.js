@@ -287,6 +287,8 @@ class TemplateMap {
     let secondPaginatedDepMap = this.getPaginatedOverAllCollectionMappedDependencies();
     await this.initDependencyMap(secondPaginatedDepMap);
 
+    await this.resolveRemainingComputedData();
+
     let orderedPaths = this.getOrderedInputPaths(
       dependencyMap,
       delayedDependencyMap,
@@ -499,6 +501,16 @@ class TemplateMap {
         item.templateContent = entry._pages[index]._templateContent;
       }
     }
+  }
+
+  async resolveRemainingComputedData() {
+    let promises = [];
+    for (let entry of this.map) {
+      for (let page of entry._pages) {
+        promises.push(page.template.resolveRemainingComputedData(page.data));
+      }
+    }
+    return Promise.all(promises);
   }
 
   checkForDuplicatePermalinks() {

@@ -49,6 +49,11 @@ class ComputedDataProxy {
     } else if (Array.isArray(data)) {
       return new Proxy([], {
         get: (obj, key) => {
+          // why
+          if (key === "then") {
+            keyRef.add(parentKey);
+            return;
+          }
           let newKey = `${parentKey}[${key}]`;
           let newData = this._getProxyData(data[key], keyRef, newKey);
           if (!this.isArrayOrPlainObject(newData)) {
