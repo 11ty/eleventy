@@ -3,6 +3,7 @@ import fs from "fs-extra";
 import pretty from "pretty";
 import Template from "../src/Template";
 import TemplateData from "../src/TemplateData";
+import EleventyExtensionMap from "../src/EleventyExtensionMap";
 import EleventyErrorUtil from "../src/EleventyErrorUtil";
 import TemplateContentPrematureUseError from "../src/Errors/TemplateContentPrematureUseError";
 import normalizeNewLines from "./Util/normalizeNewLines";
@@ -10,7 +11,7 @@ import normalizeNewLines from "./Util/normalizeNewLines";
 import templateConfig from "../src/Config";
 const config = templateConfig.getConfig();
 
-import getNewTemplate from "./_getNewTemplate";
+import getNewTemplate from "./_getNewTemplateForTests";
 
 async function getRenderedData(tmpl, pageNumber = 0) {
   let data = await tmpl.getData();
@@ -2039,4 +2040,24 @@ test("Get Layout Chain", async t => {
     "./test/stubs-incremental/layout-chain/_includes/base.njk",
     "./test/stubs-incremental/layout-chain/_includes/parent.njk"
   ]);
+});
+
+test("Engine Singletons", async t => {
+  let map = new EleventyExtensionMap(["njk"]);
+  let tmpl1 = getNewTemplate(
+    "./test/stubs/engine-singletons/first.njk",
+    "./test/stubs/engine-singletons/",
+    "./dist",
+    null,
+    map
+  );
+  let tmpl2 = getNewTemplate(
+    "./test/stubs/engine-singletons/second.njk",
+    "./test/stubs/engine-singletons/",
+    "./dist",
+    null,
+    map
+  );
+
+  t.deepEqual(tmpl1.engine, tmpl2.engine);
 });

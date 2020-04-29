@@ -2,7 +2,7 @@ import test from "ava";
 import Template from "../src/Template";
 import TemplateData from "../src/TemplateData";
 import TemplateMap from "../src/TemplateMap";
-import getNewTemplate from "./_getNewTemplate";
+import getNewTemplate from "./_getNewTemplateForTests";
 
 test("Computed data can see tag generated collections", async t => {
   let tm = new TemplateMap();

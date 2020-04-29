@@ -2,7 +2,7 @@ import test from "ava";
 import Template from "../src/Template";
 import TemplateData from "../src/TemplateData";
 import { cloneDeep } from "lodash";
-import getNewTemplate from "./_getNewTemplate";
+import getNewTemplate from "./_getNewTemplateForTests";
 
 async function getRenderedData(tmpl, pageNumber = 0) {
   let data = await tmpl.getData();
