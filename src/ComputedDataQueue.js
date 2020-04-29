@@ -1,5 +1,8 @@
 const DependencyGraph = require("dependency-graph").DepGraph;
 
+/* Keeps track of the dependency graph between computed data variables
+ * Removes keys from the graph when they are computed.
+ */
 class ComputedDataQueue {
   constructor() {
     this.graph = new DependencyGraph();

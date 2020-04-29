@@ -2,6 +2,7 @@ const lodashSet = require("lodash/set");
 const lodashGet = require("lodash/get");
 const lodashIsPlainObject = require("lodash/isPlainObject");
 
+/* Calculates computed data using Proxies */
 class ComputedDataProxy {
   constructor(computedKeys) {
     if (Array.isArray(computedKeys)) {

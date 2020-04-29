@@ -1,6 +1,11 @@
 const lodashSet = require("lodash/set");
 const debug = require("debug")("Eleventy:ComputedDataTemplateString");
 
+/* Calculates computed data in Template Strings.
+ * Ideally we would use the Proxy approach but it doesn’t work
+ * in some template languages that visit all available data even if
+ * it isn’t used in the template (Nunjucks)
+ */
 class ComputedDataTemplateString {
   constructor(computedKeys) {
     if (Array.isArray(computedKeys)) {

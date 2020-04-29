@@ -29,6 +29,11 @@ class ComputedData {
   }
 
   async resolveVarOrder(data) {
+    let proxyByTemplateString = new ComputedDataTemplateString(
+      this.computedKeys
+    );
+    let proxyByProxy = new ComputedDataProxy(this.computedKeys);
+
     for (let key of this.computedKeys) {
       let computed = lodashGet(this.computed, key);
 
@@ -38,16 +43,10 @@ class ComputedData {
       } else {
         this.queue.uses(key, this.declaredDependencies[key]);
 
-        let proxy;
         let isTemplateString = !!this.templateStringKeyLookup[key];
-        // TODO move this out of the loop??
-        if (isTemplateString) {
-          proxy = new ComputedDataTemplateString(this.computedKeys);
-        } else {
-          proxy = new ComputedDataProxy(this.computedKeys);
-        }
-
+        let proxy = isTemplateString ? proxyByTemplateString : proxyByProxy;
         let varsUsed = await proxy.findVarsUsed(computed, data);
+
         debug("%o accesses %o variables", key, varsUsed);
         let filteredVarsUsed = varsUsed.filter(varUsed => {
           return (
