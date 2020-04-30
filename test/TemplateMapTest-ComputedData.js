@@ -97,3 +97,35 @@ test("Computed data can see paginated data, Issue #1138", async (t) => {
   t.truthy(map[1]._pages[0].data.venues);
   t.is(map[1]._pages[0].data.venues.length, 2);
 });
+
+test("Computed data in directory data file consumes data file data, Issue #1137", async (t) => {
+  let tm = new TemplateMap();
+
+  let dataObj = new TemplateData("./test/stubs-computed-dirdata/");
+  let tmpl = getNewTemplate(
+    "./test/stubs-computed-dirdata/dir/first.11ty.js",
+    "./test/stubs-computed-dirdata/",
+    "./dist",
+    dataObj
+  );
+
+  await tm.add(tmpl);
+
+  let dataObj2 = new TemplateData("./test/stubs-computed-dirdata/");
+  let tmpl2 = getNewTemplate(
+    "./test/stubs-computed-dirdata/dir/second.11ty.js",
+    "./test/stubs-computed-dirdata/",
+    "./dist",
+    dataObj2
+  );
+
+  await tm.add(tmpl2);
+
+  await tm.cache();
+
+  let map = tm.getMap();
+
+  t.is(map.length, 2);
+  t.is(map[0]._pages[0].data.webmentions, "first");
+  t.is(map[1]._pages[0].data.webmentions, "second");
+});
