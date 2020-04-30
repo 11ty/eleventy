@@ -354,7 +354,7 @@ class Template extends TemplateContent {
   }
 
   async runLinters(str, inputPath, outputPath) {
-    this.linters.forEach(function(linter) {
+    this.linters.forEach(function (linter) {
       // these can be asynchronous but no guarantee of order when they run
       linter.call(this, str, inputPath, outputPath);
     });
@@ -393,7 +393,7 @@ class Template extends TemplateContent {
     } else if (typeof obj === "string") {
       computedData.addTemplateString(
         parentKey,
-        async innerData => {
+        async (innerData) => {
           return await super.render(obj, innerData, true);
         },
         declaredDependencies
@@ -410,12 +410,12 @@ class Template extends TemplateContent {
     // this allows computed entries to use page.url or page.outputPath and they’ll be resolved properly
     this.computedData.addTemplateString(
       "page.url",
-      async data => await this.getOutputHref(data),
+      async (data) => await this.getOutputHref(data),
       ["permalink"]
     );
     this.computedData.addTemplateString(
       "page.outputPath",
-      async data => await this.getOutputPath(data),
+      async (data) => await this.getOutputPath(data),
       ["permalink"]
     );
 
@@ -427,12 +427,11 @@ class Template extends TemplateContent {
     }
 
     // limited run of computed data, do most of it later when collections are available.
-    // await this.computedData.setupData(data);
-    await this.computedData.setupData(data, function(entry) {
+    await this.computedData.setupData(data, function (entry) {
       return !this.isDependsOnStartsWith(entry, "collections.");
     });
 
-    // deprecated, use eleventyComputed instead.
+    // Deprecated, use eleventyComputed instead.
     if ("renderData" in data) {
       data.renderData = await this.mapDataAsRenderedTemplates(
         data.renderData,
@@ -472,7 +471,7 @@ class Template extends TemplateContent {
             );
           }
           return this._templateContent;
-        }
+        },
       });
     } else {
       // needs collections for pagination items
@@ -511,7 +510,7 @@ class Template extends TemplateContent {
               );
             }
             return this._templateContent;
-          }
+          },
         });
       }
     }
@@ -551,13 +550,13 @@ class Template extends TemplateContent {
 
     let lang = {
       start: "Writing",
-      finished: "written."
+      finished: "written.",
     };
 
     if (!shouldWriteFile) {
       lang = {
         start: "Skipping",
-        finished: "" // not used, promise doesn’t resolve
+        finished: "", // not used, promise doesn’t resolve
       };
     }
 
@@ -733,7 +732,7 @@ class Template extends TemplateContent {
     entries.push({
       template: this,
       inputPath: this.inputPath,
-      data: data
+      data: data,
     });
     return entries;
   }

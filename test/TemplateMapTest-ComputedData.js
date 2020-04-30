@@ -4,7 +4,7 @@ import TemplateData from "../src/TemplateData";
 import TemplateMap from "../src/TemplateMap";
 import getNewTemplate from "./_getNewTemplateForTests";
 
-test("Computed data can see tag generated collections", async t => {
+test("Computed data can see tag generated collections", async (t) => {
   let tm = new TemplateMap();
 
   let dataObj = new TemplateData("./test/stubs-computed-collections/");
@@ -43,4 +43,57 @@ test("Computed data can see tag generated collections", async t => {
 
   // THEY ARE THE SAME
   t.is(map[0].data.dogCollection, map[0].data.collections.dog);
+});
+
+test("Computed data can see paginated data, Issue #1138", async (t) => {
+  let tm = new TemplateMap();
+
+  let dataObj = new TemplateData("./test/stubs-computed-pagination/");
+  let tmpl = getNewTemplate(
+    "./test/stubs-computed-pagination/paginated.njk",
+    "./test/stubs-computed-pagination/",
+    "./dist",
+    dataObj
+  );
+
+  await tm.add(tmpl);
+
+  let dataObj2 = new TemplateData("./test/stubs-computed-pagination/");
+  let tmpl2 = getNewTemplate(
+    "./test/stubs-computed-pagination/child.11ty.js",
+    "./test/stubs-computed-pagination/",
+    "./dist",
+    dataObj2
+  );
+
+  await tm.add(tmpl2);
+
+  await tm.cache();
+
+  let map = tm.getMap();
+
+  t.is(map.length, 2);
+
+  // paginated template tests
+  t.is(map[0].inputPath.endsWith("paginated.njk"), true);
+  t.is(map[0]._pages.length, 2);
+
+  t.is(map[0]._pages[0].data.venue, "first");
+  t.is(map[0]._pages[0].data.title, "first");
+  t.is(map[0]._pages[0].url, "/venues/first/");
+  t.truthy(map[0]._pages[0].data.collections);
+  t.truthy(map[0]._pages[0].data.collections.venue);
+  t.is(map[0]._pages[0].data.collections.venue.length, 2);
+
+  t.is(map[0]._pages[1].data.venue, "second");
+  t.is(map[0]._pages[1].data.title, "second");
+  t.is(map[0]._pages[1].url, "/venues/second/");
+  t.truthy(map[0]._pages[1].data.collections.venue);
+  t.is(map[0]._pages[1].data.collections.venue.length, 2);
+
+  // consumer of paginated template tests
+  t.is(map[1]._pages.length, 1);
+  // computed prop from venues
+  t.truthy(map[1]._pages[0].data.venues);
+  t.is(map[1]._pages[0].data.venues.length, 2);
 });
