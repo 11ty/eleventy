@@ -139,7 +139,7 @@ class TemplateEngine {
     return true;
   }
 
-  getExtraDataFromFile(inputPath) {
+  getExtraDataFromFile(inputPath, template) {
     return {};
   }
 
