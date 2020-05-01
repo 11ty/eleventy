@@ -736,10 +736,13 @@ Arguments:
       EleventyErrorHandler.logger = this.logger;
     }
 
+    this.config.events.emit("beforeBuild");
+
     try {
       let promise = this.writer.write();
 
       ret = await promise;
+      this.config.events.emit("afterBuild");
     } catch (e) {
       EleventyErrorHandler.initialMessage(
         "Problem writing Eleventy templates",
