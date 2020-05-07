@@ -1,7 +1,7 @@
 import test from "ava";
 import ComputedDataQueue from "../src/ComputedDataQueue";
 
-test("Standard uses", t => {
+test("Standard uses", (t) => {
   let queue = new ComputedDataQueue();
   queue.uses("permalink", ["var1", "var2"]);
   queue.uses("collections.all", ["var2", "var3"]);
@@ -10,11 +10,11 @@ test("Standard uses", t => {
     "var2",
     "permalink",
     "var3",
-    "collections.all"
+    "collections.all",
   ]);
 });
 
-test("What does permalink use", t => {
+test("What does permalink use", (t) => {
   let queue = new ComputedDataQueue();
   queue.uses("permalink", ["var1", "var2"]);
   queue.uses("collections.all", ["var2", "var3"]);
@@ -27,7 +27,7 @@ test("What does permalink use", t => {
   t.deepEqual(queue.getOrder(), ["var3", "collections.all"]);
 });
 
-test("What does page.url and page.outputPath use", t => {
+test("What does page.url and page.outputPath use", (t) => {
   let queue = new ComputedDataQueue();
   queue.uses("page.url", ["permalink"]);
   queue.uses("page.url", ["var1", "var2"]);
@@ -47,7 +47,7 @@ test("What does page.url and page.outputPath use", t => {
   t.deepEqual(queue.getOrder(), []);
 });
 
-test("Permalink uses a collection (not yet supported in Eleventy)", t => {
+test("Permalink uses a collection (not yet supported in Eleventy)", (t) => {
   let queue = new ComputedDataQueue();
   queue.uses("permalink", ["collections.dog", "var2"]);
   queue.uses("collections.all", ["var2", "var3"]);
@@ -58,10 +58,9 @@ test("Permalink uses a collection (not yet supported in Eleventy)", t => {
   t.deepEqual(queue.getDependsOn("var2"), ["permalink", "collections.all"]);
   t.deepEqual(queue.getDependsOn("collections.all"), []);
   t.deepEqual(queue.getDependsOn("hi"), ["permalink", "collections.dog"]);
-  t.is(queue.isDependsOnStartsWith("hi", "collections."), true);
-  t.is(queue.isDependsOnStartsWith("collections.all", "collections."), true);
-  t.is(queue.isDependsOnStartsWith("var2", "collections."), true);
-  t.is(queue.isDependsOnStartsWith("unrelated", "collections."), false);
+  t.is(queue.isUsesStartsWith("collections.dog", "hi"), true);
+  t.is(queue.isUsesStartsWith("permalink", "collections."), true);
+  t.is(queue.isUsesStartsWith("unrelated", "collections."), false);
 
   t.deepEqual(queue.getOrderFor("unrelated"), ["test"]);
 
@@ -74,6 +73,6 @@ test("Permalink uses a collection (not yet supported in Eleventy)", t => {
     "var3",
     "collections.all",
     "test",
-    "unrelated"
+    "unrelated",
   ]);
 });

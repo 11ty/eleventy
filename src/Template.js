@@ -411,12 +411,13 @@ class Template extends TemplateContent {
     this.computedData.addTemplateString(
       "page.url",
       async (data) => await this.getOutputHref(data),
-      ["permalink"]
+      data.permalink ? ["permalink"] : undefined
     );
+
     this.computedData.addTemplateString(
       "page.outputPath",
       async (data) => await this.getOutputPath(data),
-      ["permalink"]
+      data.permalink ? ["permalink"] : undefined
     );
 
     if (this.config.keys.computed in data) {
@@ -426,9 +427,9 @@ class Template extends TemplateContent {
       );
     }
 
-    // limited run of computed data, do most of it later when collections are available.
+    // limited run of computed data—save the stuff that relies on collections for later.
     await this.computedData.setupData(data, function (entry) {
-      return !this.isDependsOnStartsWith(entry, "collections.");
+      return !this.isUsesStartsWith(entry, "collections.");
     });
 
     // Deprecated, use eleventyComputed instead.
@@ -441,7 +442,7 @@ class Template extends TemplateContent {
   }
 
   async resolveRemainingComputedData(data) {
-    await this.computedData.setupData(data);
+    await this.computedData.processRemainingData(data);
   }
 
   async getTemplates(data) {

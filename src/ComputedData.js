@@ -76,6 +76,10 @@ class ComputedData {
   async setupData(data, orderFilter) {
     await this.resolveVarOrder(data);
 
+    await this.processRemainingData(data, orderFilter);
+  }
+
+  async processRemainingData(data, orderFilter) {
     // process all variables
     let order = this.queue.getOrder();
     if (orderFilter && typeof orderFilter === "function") {

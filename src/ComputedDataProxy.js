@@ -17,6 +17,7 @@ class ComputedDataProxy {
   }
 
   getProxyData(data, keyRef) {
+    // Set defaults for keys not already set on parent data
     let undefinedValue = "__11TY_UNDEFINED__";
     if (this.computedKeys) {
       for (let key of this.computedKeys) {
@@ -44,24 +45,31 @@ class ComputedDataProxy {
               keyRef.add(newKey);
             }
             return newData;
-          }
+          },
         }
       );
     } else if (Array.isArray(data)) {
-      return new Proxy([], {
+      return new Proxy(new Array(data.length), {
         get: (obj, key) => {
-          // why
+          if (Array.prototype.hasOwnProperty(key)) {
+            // remove `filter`, `constructor`, `map`, etc
+            keyRef.add(parentKey);
+            return obj[key];
+          }
+
+          // Hm, this needs to be better
           if (key === "then") {
             keyRef.add(parentKey);
             return;
           }
+
           let newKey = `${parentKey}[${key}]`;
           let newData = this._getProxyData(data[key], keyRef, newKey);
           if (!this.isArrayOrPlainObject(newData)) {
             keyRef.add(newKey);
           }
           return newData;
-        }
+        },
       });
     }
 

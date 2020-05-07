@@ -20,13 +20,14 @@ class ComputedDataQueue {
     return this.graph.dependantsOf(name);
   }
 
-  isDependsOnStartsWith(name, prefix) {
+  isUsesStartsWith(name, prefix) {
     if (name.startsWith(prefix)) {
       return true;
     }
     return (
-      this.graph.dependantsOf(name).filter(entry => entry.startsWith(prefix))
-        .length > 0
+      this.graph.dependenciesOf(name).filter((entry) => {
+        return entry.startsWith(prefix);
+      }).length > 0
     );
   }
 
