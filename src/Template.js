@@ -407,6 +407,12 @@ class Template extends TemplateContent {
   async addComputedData(data) {
     // will _not_ consume renderData
     this.computedData = new ComputedData();
+
+    // Add permalink (outside of eleventyComputed) to computed graph
+    // if(data.permalink) {
+    //   this._addComputedEntry(this.computedData, data.permalink, "permalink");
+    // }
+
     // this allows computed entries to use page.url or page.outputPath and they’ll be resolved properly
     this.computedData.addTemplateString(
       "page.url",
@@ -430,6 +436,8 @@ class Template extends TemplateContent {
     // limited run of computed data—save the stuff that relies on collections for later.
     await this.computedData.setupData(data, function (entry) {
       return !this.isUsesStartsWith(entry, "collections.");
+      // TODO possible improvement here is to only process page.url, page.outputPath, permalink
+      // instead of only punting on things that rely on collections.
     });
 
     // Deprecated, use eleventyComputed instead.
