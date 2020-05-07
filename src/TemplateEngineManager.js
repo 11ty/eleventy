@@ -29,7 +29,7 @@ class TemplateEngineManager {
         pug: "Pug",
         njk: "Nunjucks",
         liquid: "Liquid",
-        "11ty.js": "JavaScript"
+        "11ty.js": "JavaScript",
       };
 
       if ("extensionMap" in this.config) {
@@ -69,6 +69,8 @@ class TemplateEngineManager {
     instance.config = this.config;
     instance.engineManager = this;
 
+    // Make sure cache key is based on name and not path
+    // Custom class is used for all plugins, cache once per plugin
     this.engineCache[name] = instance;
     return instance;
   }

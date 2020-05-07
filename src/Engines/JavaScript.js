@@ -2,8 +2,8 @@ const TemplateEngine = require("./TemplateEngine");
 const TemplatePath = require("../TemplatePath");
 const EleventyBaseError = require("../EleventyBaseError");
 const deleteRequireCache = require("../Util/DeleteRequireCache");
+const getJavaScriptData = require("../Util/GetJavaScriptData");
 
-class JavaScriptTemplateInvalidDataFormatError extends EleventyBaseError {}
 class JavaScriptTemplateNotDefined extends EleventyBaseError {}
 
 class JavaScript extends TemplateEngine {
@@ -24,7 +24,7 @@ class JavaScript extends TemplateEngine {
   // Function, Class
   // Object
   _getInstance(mod) {
-    let noop = function() {
+    let noop = function () {
       return "";
     };
 
@@ -91,19 +91,7 @@ class JavaScript extends TemplateEngine {
 
   async getExtraDataFromFile(inputPath) {
     let inst = this.getInstanceFromInputPath(inputPath);
-    if (inst && "data" in inst) {
-      // get extra data from `data` method,
-      // either as a function or getter or object literal
-      let result = await (typeof inst.data === "function"
-        ? inst.data()
-        : inst.data);
-      if (typeof result !== "object") {
-        throw new JavaScriptTemplateInvalidDataFormatError(
-          `Invalid data format returned from ${inputPath}: typeof ${typeof result}`
-        );
-      }
-      return result;
-    }
+    return await getJavaScriptData(inst, inputPath);
   }
 
   getJavaScriptFunctions(inst) {
@@ -131,7 +119,7 @@ class JavaScript extends TemplateEngine {
       inst = this.getInstanceFromInputPath(inputPath);
     }
     if (inst && "render" in inst) {
-      return function(data) {
+      return function (data) {
         // only blow away existing inst.page if it has a page.url
         if (!inst.page || inst.page.url) {
           inst.page = data.page;
