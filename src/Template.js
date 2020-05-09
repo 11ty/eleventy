@@ -2,6 +2,7 @@ const fs = require("fs-extra");
 const parsePath = require("parse-filepath");
 const normalize = require("normalize-path");
 const lodashIsObject = require("lodash/isObject");
+const lodashGet = require("lodash/get");
 const { DateTime } = require("luxon");
 
 const TemplateData = require("./TemplateData");
@@ -119,7 +120,7 @@ class Template extends TemplateContent {
       data = await this.getData();
     }
 
-    let permalink = data[this.config.keys.permalink];
+    let permalink = lodashGet(data, this.config.keys.permalink);
     if (permalink) {
       // render variables inside permalink front matter, bypass markdown
       let permalinkValue;
