@@ -2,16 +2,16 @@
 
 | Filename                                                   | % Lines | % Statements | % Functions | % Branches |
 | ---------------------------------------------------------- | ------- | ------------ | ----------- | ---------- |
-| `total`                                                    | 88.39%  | 88.44%       | 87.29%      | 80.71%     |
+| `total`                                                    | 88.48%  | 88.52%       | 87.29%      | 80.92%     |
 | `src/Benchmark.js`                                         | 94.44%  | 94.44%       | 100%        | 83.33%     |
-| `src/BenchmarkGroup.js`                                    | 73.91%  | 73.91%       | 66.67%      | 52.38%     |
+| `src/BenchmarkGroup.js`                                    | 76.09%  | 76.09%       | 66.67%      | 61.9%      |
 | `src/BenchmarkManager.js`                                  | 77.78%  | 77.78%       | 75%         | 75%        |
 | `src/ComputedData.js`                                      | 100%    | 100%         | 100%        | 100%       |
 | `src/ComputedDataProxy.js`                                 | 98.04%  | 98.04%       | 100%        | 90.63%     |
 | `src/ComputedDataQueue.js`                                 | 100%    | 100%         | 100%        | 72.73%     |
 | `src/ComputedDataTemplateString.js`                        | 100%    | 100%         | 100%        | 83.33%     |
 | `src/Config.js`                                            | 100%    | 100%         | 100%        | 100%       |
-| `src/Eleventy.js`                                          | 54.5%   | 54.26%       | 50%         | 43.24%     |
+| `src/Eleventy.js`                                          | 55.2%   | 54.95%       | 50%         | 42.86%     |
 | `src/EleventyBaseError.js`                                 | 100%    | 100%         | 100%        | 100%       |
 | `src/EleventyCommandCheck.js`                              | 100%    | 100%         | 100%        | 87.5%      |
 | `src/EleventyConfig.js`                                    | 100%    | 100%         | 100%        | 100%       |
