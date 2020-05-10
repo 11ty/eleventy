@@ -250,13 +250,12 @@ class Eleventy {
       );
     }
 
-    if (writeCount || skippedCount) {
-      slashRet.push(
-        `Wrote ${writeCount} ${simplePlural(writeCount, "file", "files")}${
-          skippedCount ? ` (skipped ${skippedCount})` : ""
-        }`
-      );
-    }
+    slashRet.push(
+      `Wrote ${writeCount} ${simplePlural(writeCount, "file", "files")}${
+        skippedCount ? ` (skipped ${skippedCount})` : ""
+      }`
+    );
+
     if (slashRet.length) {
       ret.push(slashRet.join(" / "));
     }
@@ -500,7 +499,7 @@ Arguments:
     // Is a CSS input file and is not in the includes folder
     // TODO check output path file extension of this template (not input path)
     // TODO add additional API for this, maybe a config callback?
-    let onlyCssChanges = this.watchManager.hasAllQueueFiles(path => {
+    let onlyCssChanges = this.watchManager.hasAllQueueFiles((path) => {
       return (
         path.endsWith(".css") &&
         // TODO how to make this work with relative includes?
@@ -627,7 +626,7 @@ Arguments:
     return Object.assign(
       {
         ignored: ignores,
-        ignoreInitial: true
+        ignoreInitial: true,
         // also interesting: awaitWriteFinish
       },
       configOptions
@@ -684,12 +683,12 @@ Arguments:
       }
     }
 
-    watcher.on("change", async path => {
+    watcher.on("change", async (path) => {
       console.log("File changed:", path);
       await watchRun.call(this, path);
     });
 
-    watcher.on("add", async path => {
+    watcher.on("add", async (path) => {
       console.log("File added:", path);
       await watchRun.call(this, path);
     });
