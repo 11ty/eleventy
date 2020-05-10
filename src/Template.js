@@ -413,6 +413,7 @@ class Template extends TemplateContent {
     //   this._addComputedEntry(this.computedData, data.permalink, "permalink");
     // }
 
+    // Note that `permalink` is only a thing that gets consumed—it does not go directly into generated data
     // this allows computed entries to use page.url or page.outputPath and they’ll be resolved properly
     this.computedData.addTemplateString(
       "page.url",
@@ -434,10 +435,14 @@ class Template extends TemplateContent {
     }
 
     // limited run of computed data—save the stuff that relies on collections for later.
+    debug("First round of computed data for %o", this.inputPath);
     await this.computedData.setupData(data, function (entry) {
       return !this.isUsesStartsWith(entry, "collections.");
+
       // TODO possible improvement here is to only process page.url, page.outputPath, permalink
       // instead of only punting on things that rely on collections.
+      // let firstPhaseComputedData = ["page.url", "page.outputPath", ...this.getOrderFor("page.url"), ...this.getOrderFor("page.outputPath")];
+      // return firstPhaseComputedData.indexOf(entry) > -1;
     });
 
     // Deprecated, use eleventyComputed instead.
@@ -450,6 +455,7 @@ class Template extends TemplateContent {
   }
 
   async resolveRemainingComputedData(data) {
+    debug("Second round of computed data for %o", this.inputPath);
     await this.computedData.processRemainingData(data);
   }
 
@@ -492,12 +498,12 @@ class Template extends TemplateContent {
       for (let page of pageTemplates) {
         let pageData = Object.assign({}, await page.getData());
 
+        await page.addComputedData(pageData);
+
         // Issue #115
         if (data.collections) {
           pageData.collections = data.collections;
         }
-
-        await page.addComputedData(pageData);
 
         results.push({
           template: page,

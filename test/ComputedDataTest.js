@@ -276,13 +276,31 @@ test("Boolean computed value Issue #1114", async (t) => {
   t.is(data.key2, "inject me");
 });
 
-test("Expect collections in data callback #1114", async (t) => {
-  t.plan(4);
+test("Expect even missing collections to be arrays in data callback #1114", async (t) => {
+  t.plan(2);
   let cd = new ComputedData();
 
   cd.add("key1", (data) => {
-    t.is(data.collections.first[0], 1);
-    t.is(data.collections.second[0], 2);
+    t.is(Array.isArray(data.collections.first), true);
+    t.is(Array.isArray(data.collections.second), true);
+    return ``;
+  });
+
+  let data = {
+    collections: {},
+  };
+  await cd.resolveVarOrder(data);
+});
+
+test("Expect collections to be arrays in data callback #1114", async (t) => {
+  t.plan(2);
+  let cd = new ComputedData();
+
+  cd.add("key1", (data) => {
+    if (data.collections.first.length) {
+      t.is(data.collections.first[0], 1);
+      t.is(data.collections.second[0], 2);
+    }
     return ``;
   });
 
@@ -338,6 +356,7 @@ test("Get var order and process it in two stages", async (t) => {
 
   // set page.url, page.outputPath, key2, collections.dog[0]
   await cd.setupData(data, function (entry) {
+    // TODO see note in Template.js about changing the two pass computed data
     return !this.isUsesStartsWith(entry, "collections.");
   });
 

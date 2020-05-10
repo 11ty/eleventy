@@ -27,50 +27,80 @@ class ComputedDataProxy {
       }
     }
 
-    return this._getProxyData(data, keyRef);
+    let proxyData = this._getProxyData(data, keyRef);
+    return proxyData;
   }
 
-  _getProxyData(data, keyRef, parentKey = "") {
-    if (lodashIsPlainObject(data)) {
-      return new Proxy(
-        {},
-        {
-          get: (obj, key) => {
-            if (typeof key !== "string") {
-              return obj[key];
-            }
-            let newKey = `${parentKey ? `${parentKey}.` : ""}${key}`;
-            let newData = this._getProxyData(data[key], keyRef, newKey);
-            if (!this.isArrayOrPlainObject(newData)) {
-              keyRef.add(newKey);
-            }
-            return newData;
-          },
-        }
-      );
-    } else if (Array.isArray(data)) {
-      return new Proxy(new Array(data.length), {
+  _getProxyForObject(dataObj, keyRef, parentKey = "") {
+    return new Proxy(
+      {},
+      {
         get: (obj, key) => {
-          if (Array.prototype.hasOwnProperty(key)) {
-            // remove `filter`, `constructor`, `map`, etc
-            keyRef.add(parentKey);
+          if (typeof key !== "string") {
             return obj[key];
           }
 
-          // Hm, this needs to be better
-          if (key === "then") {
-            keyRef.add(parentKey);
-            return;
+          let newKey = `${parentKey ? `${parentKey}.` : ""}${key}`;
+
+          // Issue #1137
+          // Special case for Collections, always return an Array for collection keys
+          // so they it works fine with Array methods like `filter`, `map`, etc
+          if (newKey === "collections") {
+            keyRef.add(newKey);
+            return new Proxy(
+              {},
+              {
+                get: (target, key) => {
+                  if (typeof key === "string") {
+                    keyRef.add(`collections.${key}`);
+                    return [];
+                  }
+                  return target[key];
+                },
+              }
+            );
           }
 
-          let newKey = `${parentKey}[${key}]`;
-          let newData = this._getProxyData(data[key], keyRef, newKey);
+          let newData = this._getProxyData(dataObj[key], keyRef, newKey);
           if (!this.isArrayOrPlainObject(newData)) {
             keyRef.add(newKey);
           }
           return newData;
         },
-      });
+      }
+    );
+  }
+
+  _getProxyForArray(dataArr, keyRef, parentKey = "") {
+    return new Proxy(new Array(dataArr.length), {
+      get: (obj, key) => {
+        if (Array.prototype.hasOwnProperty(key)) {
+          // remove `filter`, `constructor`, `map`, etc
+          keyRef.add(parentKey);
+          return obj[key];
+        }
+
+        // Hm, this needs to be better
+        if (key === "then") {
+          keyRef.add(parentKey);
+          return;
+        }
+
+        let newKey = `${parentKey}[${key}]`;
+        let newData = this._getProxyData(dataArr[key], keyRef, newKey);
+        if (!this.isArrayOrPlainObject(newData)) {
+          keyRef.add(newKey);
+        }
+        return newData;
+      },
+    });
+  }
+
+  _getProxyData(data, keyRef, parentKey = "") {
+    if (lodashIsPlainObject(data)) {
+      return this._getProxyForObject(data, keyRef, parentKey);
+    } else if (Array.isArray(data)) {
+      return this._getProxyForArray(data, keyRef, parentKey);
     }
 
     // everything else!
