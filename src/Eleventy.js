@@ -658,8 +658,8 @@ Arguments:
         await new Promise((resolve, reject) => {
           watchDelay = setTimeout(async () => {
             this._watch().then(resolve, reject);
-          });
-        }, this.config.watchThrottleWaitTime);
+          }, this.config.watchThrottleWaitTime);
+        });
       } catch (e) {
         if (e instanceof EleventyBaseError) {
           EleventyErrorHandler.error(e, "Eleventy watch error");
