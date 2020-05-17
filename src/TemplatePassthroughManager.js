@@ -56,7 +56,7 @@ class TemplatePassthroughManager {
       inputPath: TemplatePath.addLeadingDotSlash(path),
       outputPath: outputPath
         ? TemplatePath.stripLeadingDotSlash(outputPath)
-        : true
+        : true,
     };
   }
 
@@ -77,7 +77,7 @@ class TemplatePassthroughManager {
   }
 
   getConfigPathGlobs() {
-    return this.getConfigPaths().map(path => {
+    return this.getConfigPaths().map((path) => {
       return TemplatePath.convertToRecursiveGlobSync(path.inputPath);
     });
   }
@@ -113,7 +113,7 @@ class TemplatePassthroughManager {
 
     return pass
       .write()
-      .then(fileCopyCount => {
+      .then((fileCopyCount) => {
         if (pass.isDryRun) {
           // We don’t count the skipped files as we need to iterate over them
           debug(
@@ -129,10 +129,10 @@ class TemplatePassthroughManager {
           } else {
             this.count += fileCopyCount;
           }
-          debug("Copied %o (%d files)", path.inputPath, fileCopyCount);
+          debug("Copied %o (%d files)", path.inputPath, fileCopyCount || 0);
         }
       })
-      .catch(function(e) {
+      .catch(function (e) {
         return Promise.reject(
           new TemplatePassthroughManagerCopyError(
             `Having trouble copying '${path.inputPath}'`,
