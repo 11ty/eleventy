@@ -14,6 +14,7 @@ const debug = require("debug")("Eleventy:TemplateContent");
 const debugDev = require("debug")("Dev:Eleventy:TemplateContent");
 const bench = require("./BenchmarkManager").get("Aggregate");
 
+class TemplateContentFrontMatterError extends EleventyBaseError {}
 class TemplateContentCompileError extends EleventyBaseError {}
 class TemplateContentRenderError extends EleventyBaseError {}
 
@@ -79,7 +80,15 @@ class TemplateContent {
 
     if (this.inputContent) {
       let options = this.config.frontMatterParsingOptions || {};
-      let fm = matter(this.inputContent, options);
+      let fm;
+      try {
+        fm = matter(this.inputContent, options);
+      } catch (e) {
+        throw new TemplateContentFrontMatterError(
+          `Having trouble reading front matter from template ${this.inputPath}`,
+          e
+        );
+      }
       if (options.excerpt && fm.excerpt) {
         let excerptString = fm.excerpt + (options.excerpt_separator || "---");
         if (fm.content.startsWith(excerptString + os.EOL)) {
@@ -102,7 +111,7 @@ class TemplateContent {
       this.frontMatter = {
         data: {},
         content: "",
-        excerpt: ""
+        excerpt: "",
       };
     }
   }
