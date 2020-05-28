@@ -38,6 +38,7 @@ class UserConfig {
     this.handlebarsShortcodes = {};
     this.handlebarsPairedShortcodes = {};
     this.javascriptFunctions = {};
+    this.ejsFunctions = {};
     this.pugOptions = {};
     this.ejsOptions = {};
     this.markdownHighlighter = null;
@@ -192,6 +193,7 @@ class UserConfig {
     this.addLiquidFilter(name, callback);
     this.addNunjucksFilter(name, callback);
     this.addJavaScriptFunction(name, callback);
+    this.addEjsFunction(name, callback);
 
     // TODO remove Handlebars helpers in Universal Filters. Use shortcodes instead (the Handlebars template syntax is the same).
     this.addHandlebarsHelper(name, callback);
@@ -381,6 +383,7 @@ class UserConfig {
     this.addLiquidShortcode(name, callback);
     this.addHandlebarsShortcode(name, callback);
     this.addJavaScriptFunction(name, callback);
+    this.addEjsFunction(name, callback);
   }
 
   // Undocumented method as a mitigation to reduce risk of #498
@@ -389,6 +392,7 @@ class UserConfig {
     this.addNunjucksAsyncShortcode(name, callback);
     this.addLiquidShortcode(name, callback);
     this.addJavaScriptFunction(name, callback);
+    this.addEjsFunction(name, callback);
     // not supported in Handlebars
   }
 
@@ -474,6 +478,7 @@ class UserConfig {
     this.addPairedLiquidShortcode(name, callback);
     this.addPairedHandlebarsShortcode(name, callback);
     this.addJavaScriptFunction(name, callback);
+    this.addEjsFunction(name, callback);
   }
 
   // Undocumented method as a mitigation to reduce risk of #498
@@ -485,6 +490,7 @@ class UserConfig {
     this.addPairedNunjucksAsyncShortcode(name, callback);
     this.addPairedLiquidShortcode(name, callback);
     this.addJavaScriptFunction(name, callback);
+    this.addEjsFunction(name, callback);
     // not supported in Handlebars
   }
 
@@ -560,6 +566,23 @@ class UserConfig {
 
     this.handlebarsPairedShortcodes[name] = bench.add(
       `"${name}" Handlebars Paired Shortcode`,
+      callback
+    );
+  }
+
+  addEjsFunction(name, callback) {
+    name = this.getNamespacedName(name);
+
+    if (this.ejsFunctions[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Ejs template function with `addEjsFunction(%o)`"
+        ),
+        name
+      );
+    }
+    this.ejsFunctions[name] = bench.add(
+      `"${name}" Ejs Function`,
       callback
     );
   }
@@ -666,6 +689,7 @@ class UserConfig {
       javascriptFunctions: this.javascriptFunctions,
       pugOptions: this.pugOptions,
       ejsOptions: this.ejsOptions,
+      ejsFunctions: this.ejsFunctions,
       markdownHighlighter: this.markdownHighlighter,
       libraryOverrides: this.libraryOverrides,
       dynamicPermalinks: this.dynamicPermalinks,
