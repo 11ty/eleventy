@@ -11,6 +11,8 @@ class Nunjucks extends TemplateEngine {
     super(name, includesDir);
 
     this.setLibrary(this.config.libraryOverrides.njk);
+
+    this.cacheable = true;
   }
 
   setLibrary(env) {
@@ -225,6 +227,11 @@ class Nunjucks extends TemplateEngine {
   }
 
   async compile(str, inputPath) {
+    let needsCompile = (str.indexOf("{{") != -1) || (str.indexOf("{%") != -1);
+    if (!needsCompile) {
+      return async function() { return str; };
+    }
+
     let tmpl;
     if (!inputPath || inputPath === "njk" || inputPath === "md") {
       tmpl = NunjucksLib.compile(str, this.njkEnv);
@@ -232,6 +239,7 @@ class Nunjucks extends TemplateEngine {
       tmpl = NunjucksLib.compile(str, this.njkEnv, inputPath);
     }
     return async function(data) {
+
       return new Promise(function(resolve, reject) {
         tmpl.render(data, function(err, res) {
           if (err) {

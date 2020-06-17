@@ -18,6 +18,8 @@ class TemplateContentFrontMatterError extends EleventyBaseError {}
 class TemplateContentCompileError extends EleventyBaseError {}
 class TemplateContentRenderError extends EleventyBaseError {}
 
+let inputContentCache = new Map();
+
 class TemplateContent {
   constructor(inputPath, inputDir) {
     this.inputPath = inputPath;
@@ -120,10 +122,16 @@ class TemplateContent {
     if (!this.engine.needsToReadFileContents()) {
       return "";
     }
+    let content = "";
 
     let templateBenchmark = bench.get("Template Read");
     templateBenchmark.before();
-    let content = await fs.readFile(this.inputPath, "utf-8");
+    if(inputContentCache.has(this.inputPath)){
+      content = inputContentCache.get(this.inputPath);
+    } else {
+      content = await fs.readFile(this.inputPath, "utf-8");
+      inputContentCache.set(this.inputPath, content);
+    }
     templateBenchmark.after();
 
     return content;
@@ -175,6 +183,20 @@ class TemplateContent {
     }
   }
 
+  static _compileEngineCache = new Map();
+
+  _getCompileCache(str, bypassMarkdown) {
+    let engineName = this.engine.getName() + "::" + (!!bypassMarkdown);
+    let engineMap = TemplateContent._compileEngineCache.get(engineName);
+    if (!engineMap) {
+      engineMap = new Map();
+      TemplateContent._compileEngineCache.set(engineName, engineMap);
+    }
+
+    let cacheable = this.engine.cacheable;
+    return [ cacheable, str , engineMap ];
+  }
+
   async compile(str, bypassMarkdown) {
     await this.setupTemplateRender(bypassMarkdown);
 
@@ -185,11 +207,23 @@ class TemplateContent {
     );
 
     try {
+      let [ cacheable, key, cache ] = 
+          this._getCompileCache(str, bypassMarkdown);
+      if (cacheable && cache.has(key)) {
+        return cache.get(key);
+      }
+
+      // Compilation is async, so we eagerly cache a Promise that eventually
+      // resolves to the compiled function
+      let res;
+      cache.set(key, new Promise((resolve) => { res = resolve; }));
+
       let templateBenchmark = bench.get("Template Compile");
       templateBenchmark.before();
       let fn = await this.templateRender.getCompiledTemplate(str);
       templateBenchmark.after();
       debugDev("%o getCompiledTemplate function created", this.inputPath);
+      res(fn);
       return fn;
     } catch (e) {
       debug(`Having trouble compiling template ${this.inputPath}: %O`, str);

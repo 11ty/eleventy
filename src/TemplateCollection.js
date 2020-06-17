@@ -33,16 +33,32 @@ class TemplateCollection extends Sortable {
     return globs;
   }
 
+  _filteredByGlobsCache = new Map();
+
   getFilteredByGlob(globs) {
     globs = this.getGlobs(globs);
 
-    return this.getAllSorted().filter(item => {
+    let key = globs.join("::");
+    if (!this._dirty) {
+      // Try to find a pre-sorted list and clone it.
+      if (this._filteredByGlobsCache.has(key)) {
+        return [...(this._filteredByGlobsCache.get(key))];
+      }
+    } else if (this._filteredByGlobsCache.size) {
+      // Blow away cache
+      this._filteredByGlobsCache = new Map();
+    }
+
+    let filtered = this.getAllSorted().filter(item => {
       if (multimatch([item.inputPath], globs).length) {
         return true;
       }
 
       return false;
     });
+    this._dirty = false;
+    this._filteredByGlobsCache.set(key, [...filtered]);
+    return filtered;
   }
 
   getFilteredByTag(tagName) {

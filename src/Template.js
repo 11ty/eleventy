@@ -127,7 +127,11 @@ class Template extends TemplateContent {
         debugDev("Not using dynamicPermalinks, using %o", permalink);
         permalinkValue = permalink;
       } else {
-        permalinkValue = await super.render(permalink, data, true);
+        // if (this.engine.cacheable && permalink.indexOf("{") == -1) {
+        //   permalinkValue = permalink;
+        // } else {
+          permalinkValue = await super.render(permalink, data, true);
+        // }
         debug(
           "Rendering permalink for %o: %s becomes %o",
           this.inputPath,
@@ -459,6 +463,8 @@ class Template extends TemplateContent {
     await this.computedData.processRemainingData(data);
   }
 
+  _templatesResultsCache = new Map();
+
   async getTemplates(data) {
     // TODO cache this
     let results = [];
@@ -664,6 +670,8 @@ class Template extends TemplateContent {
   }
 
   async getMappedDate(data) {
+    // TODO(slightlyoff): lots of I/O!
+
     // should we use Luxon dates everywhere? Right now using built-in `Date`
     if ("date" in data && data.date) {
       debug(
@@ -676,7 +684,7 @@ class Template extends TemplateContent {
         debug("getMappedDate: YAML parsed it: %o", data.date);
         return data.date;
       } else {
-        let stat = await fs.stat(this.inputPath);
+        let stat = fs.statSync(this.inputPath);
         // string
         if (data.date.toLowerCase() === "last modified") {
           return new Date(stat.ctimeMs);
@@ -713,7 +721,7 @@ class Template extends TemplateContent {
         return dateObj;
       }
 
-      let stat = await fs.stat(this.inputPath);
+      let stat = fs.statSync(this.inputPath);
       let createdDate = new Date(stat.birthtimeMs);
       debug(
         "getMappedDate: using file created time for %o of %o (from %o)",

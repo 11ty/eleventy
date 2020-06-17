@@ -37,6 +37,8 @@ class TemplateWriter {
 
     // TODO can we get rid of this? It’s only used for tests in `get eleventyFiles``
     this.passthroughAll = isPassthroughAll;
+
+    this._templatePathCache = new Map();
   }
 
   get templateFormats() {
@@ -108,13 +110,17 @@ class TemplateWriter {
   }
 
   _createTemplate(path) {
-    let tmpl = new Template(
+    let tmpl = this._templatePathCache.get(path);
+    if (tmpl) { return tmpl; }
+
+    tmpl = new Template(
       path,
       this.inputDir,
       this.outputDir,
       this.templateData,
       this.extensionMap
     );
+    this._templatePathCache.set(path, tmpl);
 
     tmpl.setIsVerbose(this.isVerbose);
 
@@ -199,8 +205,10 @@ class TemplateWriter {
   async writeTemplates(paths) {
     let promises = [];
 
+    // console.time("writeTemplates:_createTemplateMap");
     // TODO optimize await here
     await this._createTemplateMap(paths);
+    // console.timeEnd("writeTemplates:_createTemplateMap");
     debug("Template map created.");
 
     let usedTemplateContentTooEarlyMap = [];
@@ -235,6 +243,7 @@ class TemplateWriter {
         })
       );
     }
+    promises.push()
 
     return promises;
   }
