@@ -1,4 +1,4 @@
-const moo = require("moo");
+const argParser = require("liquid-args");
 const LiquidLib = require("liquidjs");
 const TemplateEngine = require("./TemplateEngine");
 const TemplatePath = require("../TemplatePath");
@@ -13,13 +13,7 @@ class Liquid extends TemplateEngine {
     this.setLibrary(this.config.libraryOverrides.liquid);
     this.setLiquidOptions(this.config.liquidOptions);
 
-    this.argLexer = moo.compile({
-      number: /[0-9]+\.*[0-9]*/,
-      doubleQuoteString: /"(?:\\["\\]|[^\n"\\])*"/,
-      singleQuoteString: /'(?:\\['\\]|[^\n'\\])*'/,
-      keyword: /[a-zA-Z0-9\.\-\_]+/,
-      "ignore:whitespace": /[, \t]+/ // includes comma separator
-    });
+    this.argLexer = argParser;
   }
 
   setLibrary(lib) {
@@ -48,7 +42,7 @@ class Liquid extends TemplateEngine {
       root: [super.getIncludesDir()], // overrides in compile with inputPath below
       extname: ".liquid",
       dynamicPartials: false,
-      strict_filters: false
+      strict_filters: false,
     };
 
     let options = Object.assign(defaults, this.liquidOptions || {});
@@ -97,32 +91,9 @@ class Liquid extends TemplateEngine {
     }
   }
 
-  static parseArguments(lexer, str, scope) {
-    let argArray = [];
-
-    if (typeof str === "string") {
-      // TODO key=value key2=value
-      // TODO JSON?
-      lexer.reset(str);
-      let arg = lexer.next();
-      while (arg) {
-        /*{
-          type: 'doubleQuoteString',
-          value: '"test 2"',
-          text: '"test 2"',
-          toString: [Function: tokenToString],
-          offset: 0,
-          lineBreaks: 0,
-          line: 1,
-          col: 1 }*/
-        if (arg.type.indexOf("ignore:") === -1) {
-          argArray.push(LiquidLib.evalExp(arg.value, scope)); // or evalValue
-        }
-        arg = lexer.next();
-      }
-    }
-
-    return argArray;
+  static parseArguments(lexer, args, scope) {
+    const parse = (arg) => LiquidLib.evalExp(arg, scope);
+    return lexer(args, parse);
   }
 
   static _normalizeShortcodeScope(scope) {
@@ -135,13 +106,13 @@ class Liquid extends TemplateEngine {
 
   addShortcode(shortcodeName, shortcodeFn) {
     let _t = this;
-    this.addTag(shortcodeName, function(liquidEngine) {
+    this.addTag(shortcodeName, function (liquidEngine) {
       return {
-        parse: function(tagToken, remainTokens) {
+        parse: function (tagToken, remainTokens) {
           this.name = tagToken.name;
           this.args = tagToken.args;
         },
-        render: function(scope, hash) {
+        render: function (scope, hash) {
           let argArray = Liquid.parseArguments(_t.argLexer, this.args, scope);
           return Promise.resolve(
             shortcodeFn.call(
@@ -149,37 +120,37 @@ class Liquid extends TemplateEngine {
               ...argArray
             )
           );
-        }
+        },
       };
     });
   }
 
   addPairedShortcode(shortcodeName, shortcodeFn) {
     let _t = this;
-    this.addTag(shortcodeName, function(liquidEngine) {
+    this.addTag(shortcodeName, function (liquidEngine) {
       return {
-        parse: function(tagToken, remainTokens) {
+        parse: function (tagToken, remainTokens) {
           this.name = tagToken.name;
           this.args = tagToken.args;
           this.templates = [];
 
           var stream = liquidEngine.parser
             .parseStream(remainTokens)
-            .on("template", tpl => this.templates.push(tpl))
-            .on("tag:end" + shortcodeName, token => stream.stop())
-            .on("end", x => {
+            .on("template", (tpl) => this.templates.push(tpl))
+            .on("tag:end" + shortcodeName, (token) => stream.stop())
+            .on("end", (x) => {
               throw new Error(`tag ${tagToken.raw} not closed`);
             });
 
           stream.start();
         },
-        render: function(scope, hash) {
+        render: function (scope, hash) {
           let argArray = Liquid.parseArguments(_t.argLexer, this.args, scope);
 
           return new Promise((resolve, reject) => {
             liquidEngine.renderer
               .renderTemplates(this.templates, scope)
-              .then(function(html) {
+              .then(function (html) {
                 resolve(
                   shortcodeFn.call(
                     Liquid._normalizeShortcodeScope(scope),
@@ -189,7 +160,7 @@ class Liquid extends TemplateEngine {
                 );
               });
           });
-        }
+        },
       };
     });
   }
@@ -205,10 +176,10 @@ class Liquid extends TemplateEngine {
     } else {
       options.root = [
         super.getIncludesDir(),
-        TemplatePath.getDirFromFilePath(inputPath)
+        TemplatePath.getDirFromFilePath(inputPath),
       ];
     }
-    return async function(data) {
+    return async function (data) {
       return engine.render(tmpl, data, options);
     };
   }
