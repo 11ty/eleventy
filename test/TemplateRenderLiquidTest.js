@@ -659,6 +659,38 @@ test("Liquid Nested Paired Shortcode", async (t) => {
   );
 });
 
+test("Liquid Paired Kwargs Shortcode with Tag Inside", async (t) => {
+  let tr = getNewTemplateRender("liquid", "./test/stubs/");
+  tr.engine.addPairedShortcode("postfixWithZach", function (content, kwargs) {
+    var { str } = kwargs && kwargs.__keywords === true ? kwargs : {};
+    return str + content + "Zach";
+  });
+
+  t.is(
+    await tr._testRender(
+      "{% postfixWithZach str=name %}Content{% if tester %}If{% endif %}{% endpostfixWithZach %}",
+      { name: "test", tester: true }
+    ),
+    "testContentIfZach"
+  );
+});
+
+test("Liquid Nested Paired Kwargs Shortcode", async (t) => {
+  let tr = getNewTemplateRender("liquid", "./test/stubs/");
+  tr.engine.addPairedShortcode("postfixWithZach", function (content, kwargs) {
+    var { str } = kwargs && kwargs.__keywords === true ? kwargs : {};
+    return str + content + "Zach";
+  });
+
+  t.is(
+    await tr._testRender(
+      "{% postfixWithZach str=name %}Content{% postfixWithZach str=name2 %}Content{% endpostfixWithZach %}{% endpostfixWithZach %}",
+      { name: "test", name2: "test2" }
+    ),
+    "testContenttest2ContentZachZach"
+  );
+});
+
 test("Liquid Shortcode Multiple Args", async (t) => {
   let tr = getNewTemplateRender("liquid", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function (str, str2) {
