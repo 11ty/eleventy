@@ -7,6 +7,7 @@ const lodashSet = require("lodash/set");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const TemplateData = require("./TemplateData");
 const TemplateRender = require("./TemplateRender");
+const TemplatePath = require("./TemplatePath");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
 const config = require("./Config");
@@ -17,8 +18,6 @@ const bench = require("./BenchmarkManager").get("Aggregate");
 class TemplateContentFrontMatterError extends EleventyBaseError {}
 class TemplateContentCompileError extends EleventyBaseError {}
 class TemplateContentRenderError extends EleventyBaseError {}
-
-let inputContentCache = new Map();
 
 class TemplateContent {
   constructor(inputPath, inputDir) {
@@ -118,19 +117,31 @@ class TemplateContent {
     }
   }
 
+  static _inputCache = new Map();
+
+  static cache(path, content) {
+    this._inputCache.set(TemplatePath.absolutePath(path), content);
+  }
+
+  static getCached(path) {
+    return this._inputCache.get(TemplatePath.absolutePath(path));
+  }
+
+  static deleteCached(path) {
+    this._inputCache.delete(TemplatePath.absolutePath(path));
+  }
+
   async getInputContent() {
     if (!this.engine.needsToReadFileContents()) {
       return "";
     }
-    let content = "";
 
     let templateBenchmark = bench.get("Template Read");
     templateBenchmark.before();
-    if(inputContentCache.has(this.inputPath)){
-      content = inputContentCache.get(this.inputPath);
-    } else {
+    let content = TemplateContent.getCached(this.inputPath);
+    if(!content) {
       content = await fs.readFile(this.inputPath, "utf-8");
-      inputContentCache.set(this.inputPath, content);
+      TemplateContent.cache(this.inputPath, content);
     }
     templateBenchmark.after();
 

@@ -1,6 +1,7 @@
 const pkg = require("../package.json");
 const TemplatePath = require("./TemplatePath");
 const TemplateData = require("./TemplateData");
+const TemplateContent = require("./TemplateContent");
 const TemplateWriter = require("./TemplateWriter");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyErrorHandler = require("./EleventyErrorHandler");
@@ -443,6 +444,7 @@ Arguments:
    * @param {String} changedFilePath - File that triggered a re-run (added or modified)
    */
   async _addFileToWatchQueue(changedFilePath) {
+    TemplateContent.deleteCached(changedFilePath);
     this.watchManager.addToPendingQueue(changedFilePath);
   }
 
