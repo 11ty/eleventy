@@ -127,11 +127,7 @@ class Template extends TemplateContent {
         debugDev("Not using dynamicPermalinks, using %o", permalink);
         permalinkValue = permalink;
       } else {
-        // if (this.engine.cacheable && permalink.indexOf("{") == -1) {
-        //   permalinkValue = permalink;
-        // } else {
-          permalinkValue = await super.render(permalink, data, true);
-        // }
+        permalinkValue = await super.render(permalink, data, true);
         debug(
           "Rendering permalink for %o: %s becomes %o",
           this.inputPath,
