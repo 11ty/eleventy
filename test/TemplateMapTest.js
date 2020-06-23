@@ -177,9 +177,9 @@ test("Issue #115, mixing pagination and collections", async t => {
   t.is(Object.keys(collections.all).length, 3);
   t.is(Object.keys(collections.foos).length, 1);
   t.is(Object.keys(collections.bars).length, 1);
-  t.is(Object.keys((await tm.getCollectionsData()).all).length, 3);
-  t.is(Object.keys((await tm.getCollectionsData()).foos).length, 1);
-  t.is(Object.keys((await tm.getCollectionsData()).bars).length, 1);
+  t.is(Object.keys((await tm._testGetCollectionsData()).all).length, 3);
+  t.is(Object.keys((await tm._testGetCollectionsData()).foos).length, 1);
+  t.is(Object.keys((await tm._testGetCollectionsData()).bars).length, 1);
 
   t.truthy(map[0].data.collections);
   t.truthy(map[1].data.collections);
@@ -238,9 +238,9 @@ test("Issue #115 with layout, mixing pagination and collections", async t => {
   t.is(Object.keys(collections.all).length, 3);
   t.is(Object.keys(collections.foos).length, 1);
   t.is(Object.keys(collections.bars).length, 1);
-  t.is(Object.keys((await tm.getCollectionsData()).all).length, 3);
-  t.is(Object.keys((await tm.getCollectionsData()).foos).length, 1);
-  t.is(Object.keys((await tm.getCollectionsData()).bars).length, 1);
+  t.is(Object.keys((await tm._testGetCollectionsData()).all).length, 3);
+  t.is(Object.keys((await tm._testGetCollectionsData()).foos).length, 1);
+  t.is(Object.keys((await tm._testGetCollectionsData()).bars).length, 1);
 
   t.truthy(map[0].data.collections);
   t.truthy(map[1].data.collections);
@@ -288,12 +288,12 @@ test("TemplateMap adds collections data and has page data values using .cache()"
   t.truthy(map[0].data.page.date);
 });
 
-test("TemplateMap adds collections data and has page data values using .getCollectionsData()", async t => {
+test("TemplateMap adds collections data and has page data values using ._testGetCollectionsData()", async t => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   await tm.add(tmpl2);
 
-  let collections = await tm.getCollectionsData();
+  let collections = await tm._testGetCollectionsData();
   t.is(collections.all[0].url, "/templateMapCollection/test1/");
   t.is(
     collections.all[0].outputPath,
@@ -323,7 +323,7 @@ test("Url should be available in user config collections API calls", async t => 
     }
   });
 
-  let collections = await tm.getCollectionsData();
+  let collections = await tm._testGetCollectionsData();
   t.truthy(collections.userCollection);
   t.truthy(collections.userCollection.length);
   t.is(collections.userCollection[0].url, "/templateMapCollection/test1/");
@@ -379,7 +379,7 @@ test("Should be able to paginate a tag generated collection", async t => {
   );
   await tm.add(pagedTmpl);
 
-  let collections = await tm.getCollectionsData();
+  let collections = await tm._testGetCollectionsData();
   t.truthy(collections.dog);
   t.truthy(collections.dog.length);
 });
@@ -403,7 +403,7 @@ test("Should be able to paginate a user config collection", async t => {
     }
   });
 
-  let collections = await tm.getCollectionsData();
+  let collections = await tm._testGetCollectionsData();
   t.truthy(collections.userCollection);
   t.truthy(collections.userCollection.length);
 });
@@ -432,7 +432,7 @@ test("Should be able to paginate a user config collection (uses rendered permali
     }
   });
 
-  let collections = await tm.getCollectionsData();
+  let collections = await tm._testGetCollectionsData();
   t.truthy(collections.userCollection);
   t.truthy(collections.userCollection.length);
 
@@ -463,7 +463,7 @@ test("Should be able to paginate a user config collection (paged template is als
     }
   });
 
-  let collections = await tm.getCollectionsData();
+  let collections = await tm._testGetCollectionsData();
   t.is(collections.dog.length, 2);
 
   t.truthy(collections.haha);
@@ -491,7 +491,7 @@ test("Should be able to paginate a user config collection (paged template is als
     }
   });
 
-  let collections = await tm.getCollectionsData();
+  let collections = await tm._testGetCollectionsData();
   t.is(collections.dog.length, 2);
 
   t.truthy(collections.haha);
@@ -526,7 +526,7 @@ test("Should be able to paginate a user config collection (paged template is als
     }
   });
 
-  let collections = await tm.getCollectionsData();
+  let collections = await tm._testGetCollectionsData();
   t.truthy(collections.haha);
   t.is(collections.haha.length, 1);
   t.is(collections.haha[0].url, "/test-title/goodbye/");
@@ -552,7 +552,7 @@ test("Should be able to paginate a user config collection (paged template is als
     }
   });
 
-  let collections = await tm.getCollectionsData();
+  let collections = await tm._testGetCollectionsData();
   t.truthy(collections.haha);
   t.is(collections.haha.length, 2);
   t.is(collections.haha[0].url, "/test-title/goodbye/");
@@ -670,7 +670,7 @@ test("Issue #253: Paginated template with a tag should put multiple pages into a
     }
   });
 
-  let collections = await tm.getCollectionsData();
+  let collections = await tm._testGetCollectionsData();
   t.is(collections.dog.length, 2);
 
   t.truthy(collections.haha);
@@ -719,7 +719,7 @@ test("Dependency Map should have nodes that have no dependencies and no dependen
   let deps = await tm.getMappedDependencies();
   t.true(deps.filter(dep => dep.indexOf("test5.md") > -1).length > 0);
 
-  let collections = await tm.getCollectionsData();
+  let collections = await tm._testGetCollectionsData();
   t.is(collections.all.length, 2);
 });
 
@@ -744,31 +744,9 @@ test("Dependency Map should have include orphan user config collections (in the 
     delayedDeps.filter(dep => dep.indexOf("userCollection") > -1).length > 0
   );
 
-  let collections = await tm.getCollectionsData();
+  let collections = await tm._testGetCollectionsData();
   t.is(collections.all.length, 2);
   t.is(collections.userCollection.length, 2);
-});
-
-test("Dependency graph assumptions", async t => {
-  const DependencyGraph = require("dependency-graph").DepGraph;
-  let graph = new DependencyGraph();
-
-  graph.addNode("all");
-  graph.addNode("template-a");
-  graph.addNode("template-b");
-  graph.addNode("template-c");
-  graph.addNode("userCollection");
-  graph.addDependency("all", "template-a");
-  graph.addDependency("all", "template-b");
-  graph.addDependency("all", "template-c");
-  graph.addDependency("userCollection", "all");
-  t.deepEqual(graph.overallOrder(), [
-    "template-a",
-    "template-b",
-    "template-c",
-    "all",
-    "userCollection"
-  ]);
 });
 
 test("Template pages should not have layouts when added to collections", async t => {
@@ -779,9 +757,9 @@ test("Template pages should not have layouts when added to collections", async t
     "./test/stubs/_site"
   );
   await tm.add(tmpl);
-  t.is(await tmpl.render(), "<div>Layout Test</div>");
+  t.is(await tmpl.render(await tmpl.getData()), "<div>Layout Test</div>");
 
-  let collections = await tm.getCollectionsData();
+  let collections = await tm._testGetCollectionsData();
   t.is(collections.all.length, 1);
   t.is(collections.all[0].templateContent, "Layout Test");
 });
@@ -796,7 +774,7 @@ test("Paginated template pages should not have layouts when added to collections
   );
   await tm.add(pagedTmpl);
 
-  let collections = await tm.getCollectionsData();
+  let collections = await tm._testGetCollectionsData();
 
   t.is(collections.all.length, 3);
   t.is(collections.all[0].templateContent, "one");
@@ -816,7 +794,7 @@ test("Tag pages. Allow pagination over all collections a la `data: collections`"
   await tm.add(tmpl1);
   await tm.add(tmpl2);
 
-  let collections = await tm.getCollectionsData();
+  let collections = await tm._testGetCollectionsData();
   t.is(collections.all.length, 3);
 
   let collectionTagPagesTemplateContents = new Set(
@@ -843,7 +821,7 @@ test("Tag pages (all pages added to collections). Allow pagination over all coll
   await tm.add(tmpl1);
   await tm.add(tmpl2);
 
-  let collections = await tm.getCollectionsData();
+  let collections = await tm._testGetCollectionsData();
   t.is(collections.all.length, 5);
 
   let collectionTagPagesTemplateContents = new Set(
@@ -876,7 +854,7 @@ test("eleventyExcludeFromCollections", async t => {
 
   t.is(tm.getMap().length, 2);
 
-  let collections = await tm.getCollectionsData();
+  let collections = await tm._testGetCollectionsData();
   t.is(collections.all.length, 1);
   t.is(collections.post.length, 1);
   t.is(collections.dog.length, 1);
@@ -894,7 +872,7 @@ test("Paginate over collections.all", async t => {
   await tm.add(tmpl1);
   await tm.add(tmpl2);
 
-  let collections = await tm.getCollectionsData();
+  let collections = await tm._testGetCollectionsData();
   t.is(collections.all.length, 4);
   t.is(
     collections.all.filter(function(entry) {
@@ -953,7 +931,7 @@ test("Paginate over collections.all WITH a paginate over collections (tag pages)
   await tm.add(tmpl1);
   await tm.add(tmpl2);
 
-  let collections = await tm.getCollectionsData();
+  let collections = await tm._testGetCollectionsData();
   // 2 individual templates, 3 pages for tagpagesall, 5 pages from paginateall to paginate the 2+3
   t.is(collections.all.length, 10);
 });
@@ -1008,7 +986,7 @@ test("Async user collection addCollection method", async t => {
     }
   });
 
-  let collections = await tm.getCollectionsData();
+  let collections = await tm._testGetCollectionsData();
   t.is(collections.userCollection[0].url, "/templateMapCollection/test1/");
 
   t.is(collections.userCollection[0].data.collections.userCollection.length, 1);
@@ -1034,6 +1012,25 @@ test("Duplicate permalinks in template map", async t => {
   });
 });
 
+test("No duplicate permalinks in template map, using false", async t => {
+  let tmpl1 = new Template(
+    "./test/stubs/permalink-conflicts-false/test1.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  let tmpl2 = new Template(
+    "./test/stubs/permalink-conflicts-false/test2.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let tm = new TemplateMap();
+  await tm.add(tmpl1);
+  await tm.add(tmpl2);
+  await tm.cache();
+  t.true(true);
+});
+
 test("Duplicate permalinks in template map, no leading slash", async t => {
   let tmpl1 = new Template(
     "./test/stubs/permalink-conflicts/test1.md",
@@ -1053,4 +1050,38 @@ test("Duplicate permalinks in template map, no leading slash", async t => {
   await t.throwsAsync(async () => {
     await tm.cache();
   });
+});
+
+test("TemplateMap circular references (map.templateContent) using eleventyExcludeFromCollections and collections.all", async t => {
+  let tm = new TemplateMap();
+  await tm.add(
+    new Template(
+      "./test/stubs/issue-522/excluded.md",
+      "./test/stubs/",
+      "./test/stubs/_site"
+    )
+  );
+
+  await tm.add(
+    new Template(
+      "./test/stubs/issue-522/template.md",
+      "./test/stubs/",
+      "./test/stubs/_site"
+    )
+  );
+
+  let map = tm.getMap();
+  t.falsy(map[0].data.collections);
+
+  t.deepEqual(tm.getMappedDependencies(), [
+    "./test/stubs/issue-522/template.md",
+    "___TAG___all",
+    "./test/stubs/issue-522/excluded.md"
+  ]);
+
+  await tm.cache();
+  t.is(tm.getMap().length, 2);
+
+  let collections = await tm._testGetCollectionsData();
+  t.is(collections.all.length, 1);
 });

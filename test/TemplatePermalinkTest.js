@@ -1,5 +1,4 @@
 import test from "ava";
-import parsePath from "parse-filepath";
 import TemplatePermalink from "../src/TemplatePermalink";
 
 test("Simple straight permalink", t => {
@@ -97,6 +96,15 @@ test("Permalink generate with suffix", t => {
   t.is(gen(".", "test", null, "-o").toHref(), "/test/index-o.html");
   t.is(gen(".", "test", "1/", "-o").toString(), "test/1/index-o.html");
   t.is(gen(".", "test", "1/", "-o").toHref(), "/test/1/index-o.html");
+});
+
+test("Permalink generate with new extension", t => {
+  let gen = TemplatePermalink.generate;
+
+  t.is(gen(".", "test", null, null, "css").toString(), "test.css");
+  t.is(gen(".", "test", null, null, "css").toHref(), "/test.css");
+  t.is(gen(".", "test", "1/", null, "css").toString(), "1/test.css");
+  t.is(gen(".", "test", "1/", null, "css").toHref(), "/1/test.css");
 });
 
 test("Permalink generate with subfolders", t => {

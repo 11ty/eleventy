@@ -1,9 +1,21 @@
-const urlFilter = require("./src/Filters/Url");
-const slugFilter = require("./src/Filters/Slug");
+const urlFilter = require("./Filters/Url");
+const slugFilter = require("./Filters/Slug");
+const getCollectionItem = require("./Filters/GetCollectionItem");
 
 module.exports = function(config) {
   config.addFilter("slug", slugFilter);
   config.addFilter("url", urlFilter);
+  config.addFilter("log", console.log);
+
+  config.addFilter("getCollectionItem", (collection, page) =>
+    getCollectionItem(collection, page)
+  );
+  config.addFilter("getPreviousCollectionItem", (collection, page) =>
+    getCollectionItem(collection, page, -1)
+  );
+  config.addFilter("getNextCollectionItem", (collection, page) =>
+    getCollectionItem(collection, page, 1)
+  );
 
   return {
     templateFormats: [
@@ -32,7 +44,8 @@ module.exports = function(config) {
       layout: "layout",
       permalink: "permalink",
       permalinkRoot: "permalinkBypassOutputDir",
-      engineOverride: "templateEngineOverride"
+      engineOverride: "templateEngineOverride",
+      computed: "eleventyComputed"
     },
     dir: {
       input: ".",

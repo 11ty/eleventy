@@ -2,8 +2,6 @@ import test from "ava";
 import fastglob from "fast-glob";
 import EleventyFiles from "../src/EleventyFiles";
 import TemplatePath from "../src/TemplatePath";
-import EleventyExtensionMap from "../src/EleventyExtensionMap";
-import TemplateRender from "../src/TemplateRender";
 import TemplatePassthroughManager from "../src/TemplatePassthroughManager";
 
 test("getFiles", async t => {
@@ -46,6 +44,7 @@ test("getFiles (with js, treated as passthrough copy)", async t => {
     ["ejs", "md", "js"]
   );
   evf.init();
+
   const files = await evf.getFiles();
   t.deepEqual(
     files.sort(),
@@ -54,24 +53,36 @@ test("getFiles (with js, treated as passthrough copy)", async t => {
       "./test/stubs/writeTestJS/test.11ty.js"
     ].sort()
   );
-  t.false(TemplateRender.hasEngine("./test/stubs/writeTestJS/sample.js"));
-  t.true(TemplateRender.hasEngine("./test/stubs/writeTestJS/test.11ty.js"));
+
+  t.false(evf.extensionMap.hasEngine("./test/stubs/writeTestJS/sample.js"));
+  t.true(evf.extensionMap.hasEngine("./test/stubs/writeTestJS/test.11ty.js"));
 });
 
 test("getFiles (with case insensitivity)", async t => {
   let evf = new EleventyFiles(
-    "./test/stubs/writeTestJS",
-    "./test/stubs/_writeTestJSSite",
+    "./test/stubs/writeTestJS-casesensitive",
+    "./test/stubs/_writeTestJSCaseSensitiveSite",
     ["JS"]
   );
   evf.init();
 
-  t.deepEqual(await evf.getFiles(), [
-    "./test/stubs/writeTestJS/sample.js",
-    "./test/stubs/writeTestJS/test.11ty.js"
-  ]);
-  t.false(TemplateRender.hasEngine("./test/stubs/writeTestJS/sample.js"));
-  t.true(TemplateRender.hasEngine("./test/stubs/writeTestJS/test.11ty.js"));
+  t.deepEqual(
+    (await evf.getFiles()).sort(),
+    [
+      "./test/stubs/writeTestJS-casesensitive/sample.Js",
+      "./test/stubs/writeTestJS-casesensitive/test.11Ty.js"
+    ].sort()
+  );
+  t.false(
+    evf.extensionMap.hasEngine(
+      "./test/stubs/writeTestJS-casesensitive/sample.Js"
+    )
+  );
+  t.true(
+    evf.extensionMap.hasEngine(
+      "./test/stubs/writeTestJS-casesensitive/test.11Ty.js"
+    )
+  );
 });
 
 test("Mutually exclusive Input and Output dirs", async t => {
@@ -82,7 +93,7 @@ test("Mutually exclusive Input and Output dirs", async t => {
   );
   evf.init();
 
-  let files = await fastglob.async(evf.getFileGlobs());
+  let files = await fastglob(evf.getFileGlobs());
   t.is(evf.getRawFiles().length, 2);
   t.true(files.length > 0);
   t.is(files[0], "./test/stubs/writeTest/test.md");
@@ -95,7 +106,7 @@ test("Single File Input (deep path)", async t => {
   ]);
   evf.init();
 
-  let files = await fastglob.async(evf.getFileGlobs());
+  let files = await fastglob(evf.getFileGlobs());
   t.is(evf.getRawFiles().length, 1);
   t.is(files.length, 1);
   t.is(files[0], "./test/stubs/index.html");
@@ -106,7 +117,7 @@ test("Single File Input (shallow path)", async t => {
   evf.init();
 
   let globs = evf.getFileGlobs().filter(path => path !== "!./README.md");
-  let files = await fastglob.async(globs);
+  let files = await fastglob(globs);
   t.is(evf.getRawFiles().length, 1);
   t.is(files.length, 1);
   t.is(files[0], "./README.md");
@@ -121,7 +132,8 @@ test("Glob Input", async t => {
   evf.init();
 
   let globs = evf.getFileGlobs();
-  let files = await fastglob.async(globs);
+  let files = await fastglob(globs);
+
   t.is(files.length, 2);
   t.is(files[0], "./test/stubs/glob-pages/about.md");
   t.is(files[1], "./test/stubs/glob-pages/home.md");
@@ -165,10 +177,11 @@ test("defaults if passed file name does not exist", t => {
 test(".eleventyignore files", async t => {
   let evf = new EleventyFiles("test/stubs", "test/stubs/_site", ["ejs", "md"]);
   evf.init();
-  let ignoredFiles = await fastglob.async("test/stubs/ignoredFolder/*.md");
+  let ignoredFiles = await fastglob("test/stubs/ignoredFolder/*.md");
   t.is(ignoredFiles.length, 1);
 
-  let files = await fastglob.async(evf.getFileGlobs());
+  let files = await fastglob(evf.getFileGlobs());
+
   t.true(files.length > 0);
 
   t.is(
@@ -378,6 +391,14 @@ test("Get ignores (both .eleventyignore and .gitignore exists, but .gitignore ha
 });
 /* End .eleventyignore and .gitignore combos */
 
+test("getTemplateData caching", t => {
+  let evf = new EleventyFiles("test/stubs", "test/stubs/_site", []);
+  evf.init();
+  let templateDataFirstCall = evf.getTemplateData();
+  let templateDataSecondCall = evf.getTemplateData();
+  t.is(templateDataFirstCall, templateDataSecondCall);
+});
+
 test("getDataDir", t => {
   let evf = new EleventyFiles(".", "_site", []);
   evf.init();
@@ -394,7 +415,7 @@ test("Include and Data Dirs", t => {
   let evf = new EleventyFiles("test/stubs", "test/stubs/_site", []);
   evf.init();
 
-  t.deepEqual(evf.getIncludesAndDataDirs(), [
+  t.deepEqual(evf._getIncludesAndDataDirs(), [
     "./test/stubs/_includes/**",
     "./test/stubs/_data/**"
   ]);
@@ -404,7 +425,7 @@ test("Ignore Include and Data Dirs", t => {
   let evf = new EleventyFiles("test/stubs", "test/stubs/_site", []);
   evf.init();
 
-  t.deepEqual(evf.getTemplateIgnores(), [
+  t.deepEqual(evf._getIncludesAndDataDirIgnores(), [
     "!./test/stubs/_includes/**",
     "!./test/stubs/_data/**"
   ]);
@@ -541,9 +562,9 @@ test("Glob Watcher Files with Config Passthroughs (one template format)", async 
 
   t.deepEqual(evf.getGlobWatcherFiles(), [
     "./test/stubs/**/*.njk",
+    "./test/stubs/img/**",
     "./test/stubs/_includes/**",
-    "./test/stubs/_data/**",
-    "./test/stubs/img/**"
+    "./test/stubs/_data/**"
   ]);
 });
 
@@ -553,6 +574,7 @@ test("Glob Watcher Files with Config Passthroughs (no template formats)", async 
 
   t.deepEqual(await evf.getGlobWatcherTemplateDataFiles(), [
     "./test/stubs/**/*.json",
+    "./test/stubs/**/*.11tydata.cjs",
     "./test/stubs/**/*.11tydata.js"
   ]);
 });
@@ -564,29 +586,13 @@ test("Glob Watcher Files with passthroughAll", async t => {
   t.is((await evf.getFileGlobs())[0], "./test/stubs/**");
 });
 
-test("File extension aliasing", async t => {
-  let map = new EleventyExtensionMap(["md"]);
-  map.config = {
-    templateExtensionAliases: {
-      markdown: "md"
-    }
-  };
-
-  let evf = new EleventyFiles(
-    "./test/stubs/writeTestMarkdown",
-    "./test/stubs/_writeTestMarkdownSite",
-    ["md"]
-  );
-  evf._setExtensionMap(map);
-  evf.init();
-
-  const files = await evf.getFiles();
-
+test("Test that negations are ignored (for now) PR#709, will change when #693 is implemented", async t => {
   t.deepEqual(
-    files.sort(),
-    [
-      "./test/stubs/writeTestMarkdown/sample.md",
-      "./test/stubs/writeTestMarkdown/sample2.markdown"
-    ].sort()
+    EleventyFiles.normalizeIgnoreContent(
+      "./",
+      `hello
+!testing`
+    ),
+    ["!./hello"]
   );
 });

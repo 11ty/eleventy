@@ -1,6 +1,5 @@
 const markdownIt = require("markdown-it");
 const TemplateEngine = require("./TemplateEngine");
-const config = require("../Config");
 // const debug = require("debug")("Eleventy:Markdown");
 
 class Markdown extends TemplateEngine {
@@ -49,10 +48,17 @@ class Markdown extends TemplateEngine {
 
     if (preTemplateEngine) {
       let fn;
-      let engine = TemplateEngine.getEngine(
-        preTemplateEngine,
-        super.getIncludesDir()
-      );
+
+      let engine;
+      if (typeof preTemplateEngine === "string") {
+        engine = this.engineManager.getEngine(
+          preTemplateEngine,
+          super.getIncludesDir(),
+          this.extensionMap
+        );
+      } else {
+        engine = preTemplateEngine;
+      }
 
       fn = await engine.compile(str, inputPath);
 
@@ -63,7 +69,7 @@ class Markdown extends TemplateEngine {
       } else {
         return async function(data) {
           let preTemplateEngineRender = await fn(data);
-          let finishedRender = mdlib.render(preTemplateEngineRender);
+          let finishedRender = mdlib.render(preTemplateEngineRender, data);
           return finishedRender;
         };
       }
@@ -73,9 +79,8 @@ class Markdown extends TemplateEngine {
           return str;
         };
       } else {
-        return function() {
-          // throw away data if preTemplateEngine is falsy
-          return mdlib.render(str);
+        return function(data) {
+          return mdlib.render(str, data);
         };
       }
     }

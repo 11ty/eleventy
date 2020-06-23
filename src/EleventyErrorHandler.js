@@ -1,4 +1,5 @@
 const chalk = require("chalk");
+const EleventyErrorUtil = require("./EleventyErrorUtil");
 const debug = require("debug")("Eleventy:EleventyErrorHandler");
 
 class EleventyErrorHandler {
@@ -32,13 +33,21 @@ class EleventyErrorHandler {
     EleventyErrorHandler.log(e, "error");
   }
 
+  //https://nodejs.org/api/process.html
   static log(e, type = "log", prefix = ">") {
     let ref = e;
     while (ref) {
       let nextRef = ref.originalError;
+      if (!nextRef && EleventyErrorUtil.hasEmbeddedError(ref.message)) {
+        nextRef = EleventyErrorUtil.deconvertErrorToObject(ref);
+      }
+
       EleventyErrorHandler.message(
         (process.env.DEBUG ? "" : `${prefix} `) +
-          `${ref.message.trim()}
+          `${(
+            EleventyErrorUtil.cleanMessage(ref.message) ||
+            "(No error message provided)"
+          ).trim()}
 
 \`${ref.name}\` was thrown${!nextRef && ref.stack ? ":" : ""}`,
         type
@@ -49,8 +58,8 @@ class EleventyErrorHandler {
       } else if (!nextRef) {
         // last error in the loop
         let prefix = "    ";
+
         // remove duplicate error messages if the stack contains the original message output above
-        //
         let stackStr = ref.stack || "";
         if (e.removeDuplicateErrorStringFromOutput) {
           stackStr = stackStr.replace(

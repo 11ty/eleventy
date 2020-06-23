@@ -1,7 +1,8 @@
+const parsePath = require("parse-filepath");
 const TemplatePath = require("./TemplatePath");
 
 class TemplateFileSlug {
-  constructor(inputPath, inputDir) {
+  constructor(inputPath, inputDir, extensionMap) {
     if (inputDir) {
       inputPath = TemplatePath.stripLeadingSubPath(inputPath, inputDir);
     }
@@ -10,26 +11,34 @@ class TemplateFileSlug {
     this.cleanInputPath = inputPath.replace(/^.\//, "");
 
     let dirs = this.cleanInputPath.split("/");
-    this.filename = dirs.pop();
     this.dirs = dirs;
+    this.dirs.pop();
 
-    let split = this.filename.split(".");
-    split.pop();
-    this.filenameNoExt = split.join(".");
+    this.parsed = parsePath(inputPath);
+    this.filenameNoExt = extensionMap.removeTemplateExtension(this.parsed.base);
+  }
+
+  getFullPathWithoutExtension() {
+    return "/" + TemplatePath.join(...this.dirs, this._getRawSlug());
+  }
+
+  _getRawSlug() {
+    let slug = this.filenameNoExt;
+    let reg = slug.match(/\d{4}-\d{2}-\d{2}-(.*)/);
+    if (reg) {
+      return reg[1];
+    }
+    return slug;
   }
 
   getSlug() {
-    let reg = this.filenameNoExt.match(/\d{4}-\d{2}-\d{2}-(.*)/);
-    let slug = this.filenameNoExt;
-    if (reg) {
-      slug = reg[1];
-    }
+    let rawSlug = this._getRawSlug();
 
-    if (slug === "index") {
+    if (rawSlug === "index") {
       return this.dirs.length ? this.dirs[this.dirs.length - 1] : "";
     }
 
-    return slug;
+    return rawSlug;
   }
 }
 

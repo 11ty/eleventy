@@ -1,26 +1,74 @@
 import test from "ava";
 import TemplateLayout from "../src/TemplateLayout";
+import EleventyExtensionMap from "../src/EleventyExtensionMap";
+
+function getTemplateLayoutInstance(key, inputDir, map) {
+  if (!map) {
+    map = new EleventyExtensionMap([
+      "liquid",
+      "ejs",
+      "md",
+      "hbs",
+      "mustache",
+      "haml",
+      "pug",
+      "njk",
+      "html",
+      "jstl",
+      "11ty.js"
+    ]);
+  }
+  let layout = new TemplateLayout(key, inputDir, map);
+  return layout;
+}
 
 test("Creation", t => {
   t.is(
-    new TemplateLayout("base", "./test/stubs").getInputPath(),
-    "test/stubs/_includes/base.njk"
+    getTemplateLayoutInstance("base", "./test/stubs").getInputPath(),
+    "./test/stubs/_includes/base.njk"
   );
 
   t.throws(() => {
-    new TemplateLayout("doesnotexist", "./test/stubs").getInputPath();
+    getTemplateLayoutInstance("doesnotexist", "./test/stubs").getInputPath();
   });
 });
 
-test("Get Front Matter Data", async t => {
-  let tl = new TemplateLayout("layouts/layout-inherit-a.njk", "./test/stubs");
-  t.is(tl.getInputPath(), "test/stubs/_includes/layouts/layout-inherit-a.njk");
+test("Get Layout Chain", async t => {
+  let tl = getTemplateLayoutInstance(
+    "layouts/layout-inherit-a.njk",
+    "./test/stubs"
+  );
 
-  t.deepEqual(await tl.getData(), {
+  t.deepEqual(await tl.getLayoutChain(), [
+    "./test/stubs/_includes/layouts/layout-inherit-a.njk",
+    "./test/stubs/_includes/layouts/layout-inherit-b.njk",
+    "./test/stubs/_includes/layouts/layout-inherit-c.njk"
+  ]);
+});
+
+test("Get Front Matter Data", async t => {
+  let tl = getTemplateLayoutInstance(
+    "layouts/layout-inherit-a.njk",
+    "./test/stubs"
+  );
+  t.is(
+    tl.getInputPath(),
+    "./test/stubs/_includes/layouts/layout-inherit-a.njk"
+  );
+
+  let data = await tl.getData();
+
+  t.deepEqual(data, {
     inherits: "a",
     secondinherits: "b",
     thirdinherits: "c"
   });
+  t.deepEqual(await tl.getLayoutChain(), [
+    "./test/stubs/_includes/layouts/layout-inherit-a.njk",
+    "./test/stubs/_includes/layouts/layout-inherit-b.njk",
+    "./test/stubs/_includes/layouts/layout-inherit-c.njk"
+  ]);
+
   t.deepEqual(await tl.getData(), {
     inherits: "a",
     secondinherits: "b",
@@ -58,30 +106,43 @@ test("Augment data with layoutContent", async t => {
 });
 
 test("Render Layout", async t => {
-  let tl = new TemplateLayout("layouts/layout-inherit-a.njk", "./test/stubs");
+  let tl = getTemplateLayoutInstance(
+    "layouts/layout-inherit-a.njk",
+    "./test/stubs"
+  );
   t.is(
-    (await tl.render({
-      inherits: "a",
-      secondinherits: "b",
-      thirdinherits: "c"
-    })).trim(),
+    (
+      await tl.render({
+        inherits: "a",
+        secondinherits: "b",
+        thirdinherits: "c"
+      })
+    ).trim(),
     "a b a c"
   );
 });
 
 test("Render Layout (Pass in template content)", async t => {
-  let tl = new TemplateLayout("layouts/layout-inherit-a.njk", "./test/stubs");
+  let tl = getTemplateLayoutInstance(
+    "layouts/layout-inherit-a.njk",
+    "./test/stubs"
+  );
   t.is(
-    (await tl.render(
-      { inherits: "a", secondinherits: "b", thirdinherits: "c" },
-      "TEMPLATE_CONTENT"
-    )).trim(),
+    (
+      await tl.render(
+        { inherits: "a", secondinherits: "b", thirdinherits: "c" },
+        "TEMPLATE_CONTENT"
+      )
+    ).trim(),
     "TEMPLATE_CONTENT a b a c"
   );
 });
 
 test("Render Layout (Pass in undefined template content)", async t => {
-  let tl = new TemplateLayout("layouts/layout-contentdump.njk", "./test/stubs");
+  let tl = getTemplateLayoutInstance(
+    "layouts/layout-contentdump.njk",
+    "./test/stubs"
+  );
   t.is(
     await tl.render(
       { inherits: "a", secondinherits: "b", thirdinherits: "c" },
@@ -92,7 +153,10 @@ test("Render Layout (Pass in undefined template content)", async t => {
 });
 
 test("Render Layout (Pass in null template content)", async t => {
-  let tl = new TemplateLayout("layouts/layout-contentdump.njk", "./test/stubs");
+  let tl = getTemplateLayoutInstance(
+    "layouts/layout-contentdump.njk",
+    "./test/stubs"
+  );
   t.is(
     await tl.render(
       { inherits: "a", secondinherits: "b", thirdinherits: "c" },
@@ -103,7 +167,10 @@ test("Render Layout (Pass in null template content)", async t => {
 });
 
 test("Render Layout (Pass in empty template content)", async t => {
-  let tl = new TemplateLayout("layouts/layout-contentdump.njk", "./test/stubs");
+  let tl = getTemplateLayoutInstance(
+    "layouts/layout-contentdump.njk",
+    "./test/stubs"
+  );
   t.is(
     await tl.render(
       { inherits: "a", secondinherits: "b", thirdinherits: "c" },
@@ -115,13 +182,13 @@ test("Render Layout (Pass in empty template content)", async t => {
 
 test("Cache Duplicates (use full key for cache)", async t => {
   // if two different layouts used the same filename but had different inputdirs, make sure templatelayout cache is unique
-  let tla = new TemplateLayout(
+  let tla = getTemplateLayoutInstance(
     "layout.njk",
     "./test/stubs/templateLayoutCacheDuplicates"
   );
   t.is((await tla.render({})).trim(), "Hello A");
 
-  let tlb = new TemplateLayout(
+  let tlb = getTemplateLayoutInstance(
     "layout.njk",
     "./test/stubs/templateLayoutCacheDuplicates-b"
   );

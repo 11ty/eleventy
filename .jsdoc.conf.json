@@ -1,0 +1,11 @@
+{
+  "plugins": ["plugins/markdown"],
+  "templates": {
+    "systemName": "Eleventy",
+    "theme": "cosmo",
+    "navType": "vertical",
+    "inverseNav": true,
+    "syntaxTheme": "dark",
+    "search": false
+  }
+}

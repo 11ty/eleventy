@@ -1,48 +1,55 @@
 import test from "ava";
 import TemplateRender from "../src/TemplateRender";
+import EleventyExtensionMap from "../src/EleventyExtensionMap";
 import md from "markdown-it";
 import mdEmoji from "markdown-it-emoji";
 import UserConfig from "../src/UserConfig";
 import eleventySyntaxHighlightPlugin from "@11ty/eleventy-plugin-syntaxhighlight";
 
+function getNewTemplateRender(name, inputDir) {
+  let tr = new TemplateRender(name, inputDir);
+  tr.extensionMap = new EleventyExtensionMap();
+  return tr;
+}
+
 // Markdown
 test("Markdown", t => {
-  t.is(new TemplateRender("md").getEngineName(), "md");
+  t.is(getNewTemplateRender("md").getEngineName(), "md");
 });
 
 test("Markdown Render: Parses base markdown, no data", async t => {
-  let fn = await new TemplateRender("md").getCompiledTemplate("# My Title");
+  let fn = await getNewTemplateRender("md").getCompiledTemplate("# My Title");
   t.is((await fn()).trim(), "<h1>My Title</h1>");
 });
 
 test("Markdown Render: Markdown should work with HTML too", async t => {
-  let fn = await new TemplateRender("md").getCompiledTemplate(
+  let fn = await getNewTemplateRender("md").getCompiledTemplate(
     "<h1>My Title</h1>"
   );
   t.is((await fn()).trim(), "<h1>My Title</h1>");
 });
 
 test("Markdown Render: Parses markdown using liquid engine (default, with data)", async t => {
-  let fn = await new TemplateRender("md").getCompiledTemplate("# {{title}}");
+  let fn = await getNewTemplateRender("md").getCompiledTemplate("# {{title}}");
   t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
 });
 
 test("Markdown Render: Parses markdown using ejs engine", async t => {
-  let tr = new TemplateRender("md");
+  let tr = getNewTemplateRender("md");
   tr.setMarkdownEngine("ejs");
   let fn = await tr.getCompiledTemplate("<%=title %>");
   t.is((await fn({ title: "My Title" })).trim(), "<p>My Title</p>");
 });
 
 test("Markdown Render: Ignore markdown, use only preprocess engine (useful for variable resolution in permalinks)", async t => {
-  let tr = new TemplateRender("md");
+  let tr = getNewTemplateRender("md");
   tr.setUseMarkdown(false);
   let fn = await tr.getCompiledTemplate("{{title}}");
   t.is((await fn({ title: "My Title" })).trim(), "My Title");
 });
 
 test("Markdown Render: Skip markdown and preprocess engine (issue #466)", async t => {
-  let tr = new TemplateRender("md");
+  let tr = getNewTemplateRender("md");
   tr.setMarkdownEngine(false);
   tr.setUseMarkdown(false);
   let fn = await tr.getCompiledTemplate("404.html");
@@ -50,14 +57,14 @@ test("Markdown Render: Skip markdown and preprocess engine (issue #466)", async 
 });
 
 test("Markdown Render: Set markdown engine to false, don’t parse", async t => {
-  let tr = new TemplateRender("md");
+  let tr = getNewTemplateRender("md");
   tr.setMarkdownEngine(false);
   let fn = await tr.getCompiledTemplate("# {{title}}");
   t.is((await fn()).trim(), "<h1>{{title}}</h1>");
 });
 
 test("Markdown Render: Set markdown engine to false, don’t parse (test with HTML input)", async t => {
-  let tr = new TemplateRender("md");
+  let tr = getNewTemplateRender("md");
   tr.setMarkdownEngine(false);
   let fn = await tr.getCompiledTemplate("<h1>{{title}}</h1>");
 
@@ -65,14 +72,14 @@ test("Markdown Render: Set markdown engine to false, don’t parse (test with HT
 });
 
 test("Markdown Render: Pass in engine override (ejs)", async t => {
-  let tr = new TemplateRender("md");
+  let tr = getNewTemplateRender("md");
   tr.setMarkdownEngine("ejs");
   let fn = await tr.getCompiledTemplate("# <%= title %>");
   t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
 });
 
 test("Markdown Render: Pass in an override (liquid)", async t => {
-  let tr = new TemplateRender("md");
+  let tr = getNewTemplateRender("md");
   tr.setMarkdownEngine("liquid");
   let fn = await tr.getCompiledTemplate("# {{title}}");
 
@@ -80,17 +87,17 @@ test("Markdown Render: Pass in an override (liquid)", async t => {
 });
 
 test("Markdown Render: Strikethrough", async t => {
-  let fn = await new TemplateRender("md").getCompiledTemplate("~~No~~");
+  let fn = await getNewTemplateRender("md").getCompiledTemplate("~~No~~");
   t.is((await fn()).trim(), "<p><s>No</s></p>");
 });
 
 test("Markdown Render: Strikethrough in a Header", async t => {
-  let fn = await new TemplateRender("md").getCompiledTemplate("# ~~No~~");
+  let fn = await getNewTemplateRender("md").getCompiledTemplate("# ~~No~~");
   t.is((await fn()).trim(), "<h1><s>No</s></h1>");
 });
 
 test("Markdown Render: with Library Override", async t => {
-  let tr = new TemplateRender("md");
+  let tr = getNewTemplateRender("md");
 
   let mdLib = md();
   tr.engine.setLibrary(mdLib);
@@ -101,7 +108,7 @@ test("Markdown Render: with Library Override", async t => {
 });
 
 test("Markdown Render: with Library Override and a Plugin", async t => {
-  let tr = new TemplateRender("md");
+  let tr = getNewTemplateRender("md");
 
   let mdLib = md().use(mdEmoji);
   tr.engine.setLibrary(mdLib);
@@ -112,7 +119,7 @@ test("Markdown Render: with Library Override and a Plugin", async t => {
 });
 
 test("Markdown Render: use a custom highlighter", async t => {
-  let tr = new TemplateRender("md");
+  let tr = getNewTemplateRender("md");
 
   let mdLib = md();
   mdLib.set({
@@ -129,7 +136,7 @@ This is some code.
 });
 
 test("Markdown Render: use prism highlighter (no language)", async t => {
-  let tr = new TemplateRender("md");
+  let tr = getNewTemplateRender("md");
   let userConfig = new UserConfig();
   userConfig.addPlugin(eleventySyntaxHighlightPlugin);
 
@@ -153,7 +160,7 @@ This is some code.
 });
 
 test("Markdown Render: use prism highlighter", async t => {
-  let tr = new TemplateRender("md");
+  let tr = getNewTemplateRender("md");
   let userConfig = new UserConfig();
   userConfig.addPlugin(eleventySyntaxHighlightPlugin);
 
@@ -171,12 +178,12 @@ var key = "value";
 \`\`\``);
   t.is(
     (await fn()).trim(),
-    `<pre class="language-js"><code class="language-js"><span class="highlight-line"><span class="token keyword">var</span> key <span class="token operator">=</span> <span class="token string">"value"</span><span class="token punctuation">;</span></span></code></pre>`
+    `<pre class="language-js"><code class="language-js"><span class="token keyword">var</span> key <span class="token operator">=</span> <span class="token string">"value"</span><span class="token punctuation">;</span></code></pre>`
   );
 });
 
 test("Markdown Render: use prism highlighter (no space before language)", async t => {
-  let tr = new TemplateRender("md");
+  let tr = getNewTemplateRender("md");
   let userConfig = new UserConfig();
   userConfig.addPlugin(eleventySyntaxHighlightPlugin);
 
@@ -194,12 +201,12 @@ var key = "value";
 \`\`\``);
   t.is(
     (await fn()).trim(),
-    `<pre class="language-js"><code class="language-js"><span class="highlight-line"><span class="token keyword">var</span> key <span class="token operator">=</span> <span class="token string">"value"</span><span class="token punctuation">;</span></span></code></pre>`
+    `<pre class="language-js"><code class="language-js"><span class="token keyword">var</span> key <span class="token operator">=</span> <span class="token string">"value"</span><span class="token punctuation">;</span></code></pre>`
   );
 });
 
 test("Markdown Render: use prism highlighter, line highlighting", async t => {
-  let tr = new TemplateRender("md");
+  let tr = getNewTemplateRender("md");
   let userConfig = new UserConfig();
   userConfig.addPlugin(eleventySyntaxHighlightPlugin);
 
@@ -222,7 +229,7 @@ var key = "value";
 });
 
 test("Markdown Render: use prism highlighter, line highlighting with fallback `text` language.", async t => {
-  let tr = new TemplateRender("md");
+  let tr = getNewTemplateRender("md");
   let userConfig = new UserConfig();
   userConfig.addPlugin(eleventySyntaxHighlightPlugin);
 
@@ -241,5 +248,101 @@ var key = "value";
   t.is(
     (await fn()).trim(),
     `<pre class="language-text"><code class="language-text"><mark class="highlight-line highlight-line-active">var key = "value";</mark></code></pre>`
+  );
+});
+
+test("Markdown Render: use Markdown inside of a Liquid shortcode (Issue #536)", async t => {
+  let tr = getNewTemplateRender("md");
+
+  let cls = require("../src/Engines/Liquid");
+  let liquidEngine = new cls("liquid", tr.getIncludesDir());
+  liquidEngine.addShortcode("testShortcode", function() {
+    return "## My Other Title";
+  });
+  tr.setMarkdownEngine(liquidEngine);
+
+  let fn = await tr.getCompiledTemplate(`# {{title}}
+{% testShortcode %}`);
+  t.is(
+    (
+      await fn({
+        title: "My Title",
+        otherTitle: "My Other Title"
+      })
+    ).trim(),
+    `<h1>My Title</h1>
+<h2>My Other Title</h2>`
+  );
+});
+
+test("Markdown Render: use Markdown inside of a Nunjucks shortcode (Issue #536)", async t => {
+  let tr = getNewTemplateRender("md");
+
+  let cls = require("../src/Engines/Nunjucks");
+  let nunjucksEngine = new cls("njk", tr.getIncludesDir());
+  nunjucksEngine.addShortcode("testShortcode", function() {
+    return "## My Other Title";
+  });
+  tr.setMarkdownEngine(nunjucksEngine);
+
+  let fn = await tr.getCompiledTemplate(`# {{title}}
+{% testShortcode %}`);
+  t.is(
+    (
+      await fn({
+        title: "My Title",
+        otherTitle: "My Other Title"
+      })
+    ).trim(),
+    `<h1>My Title</h1>
+<h2>My Other Title</h2>`
+  );
+});
+
+test("Markdown Render: use Markdown inside of a Liquid paired shortcode (Issue #536)", async t => {
+  let tr = getNewTemplateRender("md");
+
+  let cls = require("../src/Engines/Liquid");
+  let liquidEngine = new cls("liquid", tr.getIncludesDir());
+  liquidEngine.addPairedShortcode("testShortcode", function(content) {
+    return content;
+  });
+  tr.setMarkdownEngine(liquidEngine);
+
+  let fn = await tr.getCompiledTemplate(`# {{title}}
+{% testShortcode %}## My Other Title{% endtestShortcode %}`);
+  t.is(
+    (
+      await fn({
+        title: "My Title",
+        otherTitle: "My Other Title"
+      })
+    ).trim(),
+    `<h1>My Title</h1>
+<h2>My Other Title</h2>`
+  );
+});
+
+test("Markdown Render: use Markdown inside of a Nunjucks paired shortcode (Issue #536)", async t => {
+  let tr = getNewTemplateRender("md");
+
+  let cls = require("../src/Engines/Nunjucks");
+  let nunjucksEngine = new cls("njk", tr.getIncludesDir());
+  nunjucksEngine.addPairedShortcode("testShortcode", function(content) {
+    return content;
+  });
+  tr.setMarkdownEngine(nunjucksEngine);
+
+  let fn = await tr.getCompiledTemplate(`# {{title}}
+{% testShortcode %}## My Other Title{% endtestShortcode %}`);
+  t.is(
+    (
+      await fn({
+        title: "My Title",
+        otherTitle: "My Other Title"
+      })
+    ).trim(),
+    `<h1>My Title</h1>
+<h2>My Other Title</h2>`
   );
 });

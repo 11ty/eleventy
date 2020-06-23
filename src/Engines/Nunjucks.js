@@ -1,5 +1,10 @@
 const NunjucksLib = require("nunjucks");
 const TemplateEngine = require("./TemplateEngine");
+const TemplatePath = require("../TemplatePath");
+const EleventyErrorUtil = require("../EleventyErrorUtil");
+const EleventyBaseError = require("../EleventyBaseError");
+
+class EleventyShortcodeError extends EleventyBaseError {}
 
 class Nunjucks extends TemplateEngine {
   constructor(name, includesDir) {
@@ -12,7 +17,10 @@ class Nunjucks extends TemplateEngine {
     this.njkEnv =
       env ||
       new NunjucksLib.Environment(
-        new NunjucksLib.FileSystemLoader(super.getIncludesDir())
+        new NunjucksLib.FileSystemLoader([
+          super.getIncludesDir(),
+          TemplatePath.getWorkingDir()
+        ])
       );
     this.setEngineLib(this.njkEnv);
 
@@ -22,7 +30,12 @@ class Nunjucks extends TemplateEngine {
     // TODO these all go to the same place (addTag), add warnings for overwrites
     this.addCustomTags(this.config.nunjucksTags);
     this.addAllShortcodes(this.config.nunjucksShortcodes);
+    this.addAllShortcodes(this.config.nunjucksAsyncShortcodes, true);
     this.addAllPairedShortcodes(this.config.nunjucksPairedShortcodes);
+    this.addAllPairedShortcodes(
+      this.config.nunjucksAsyncPairedShortcodes,
+      true
+    );
   }
 
   addFilters(helpers, isAsync) {
@@ -50,19 +63,27 @@ class Nunjucks extends TemplateEngine {
     this.njkEnv.addExtension(name, tagObj);
   }
 
-  addAllShortcodes(shortcodes) {
+  addAllShortcodes(shortcodes, isAsync = false) {
     for (let name in shortcodes) {
-      this.addShortcode(name, shortcodes[name]);
+      this.addShortcode(name, shortcodes[name], isAsync);
     }
   }
 
-  addAllPairedShortcodes(shortcodes) {
+  addAllPairedShortcodes(shortcodes, isAsync = false) {
     for (let name in shortcodes) {
-      this.addPairedShortcode(name, shortcodes[name]);
+      this.addPairedShortcode(name, shortcodes[name], isAsync);
     }
   }
 
-  addShortcode(shortcodeName, shortcodeFn) {
+  static _normalizeShortcodeContext(context) {
+    let obj = {};
+    if (context.ctx && context.ctx.page) {
+      obj.page = context.ctx.page;
+    }
+    return obj;
+  }
+
+  addShortcode(shortcodeName, shortcodeFn, isAsync = false) {
     function ShortcodeFunction() {
       this.tags = [shortcodeName];
 
@@ -80,24 +101,60 @@ class Nunjucks extends TemplateEngine {
         }
 
         parser.advanceAfterBlockEnd(tok.value);
-
-        // return new nodes.CallExtensionAsync(this, "run", args);
+        if (isAsync) {
+          return new nodes.CallExtensionAsync(this, "run", args);
+        }
         return new nodes.CallExtension(this, "run", args);
       };
 
       this.run = function(...args) {
-        // let callback = args.pop();
+        let resolve;
+        if (isAsync) {
+          resolve = args.pop();
+        }
+
         let [context, ...argArray] = args;
-        let ret = new NunjucksLib.runtime.SafeString(shortcodeFn(...argArray));
-        // callback(null, ret);
-        return ret;
+
+        if (isAsync) {
+          shortcodeFn
+            .call(Nunjucks._normalizeShortcodeContext(context), ...argArray)
+            .then(function(returnValue) {
+              resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
+            })
+            .catch(function(e) {
+              resolve(
+                new EleventyShortcodeError(
+                  `Error with Nunjucks shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+                    e
+                  )}`
+                ),
+                null
+              );
+            });
+        } else {
+          try {
+            // console.log( shortcodeFn.toString() );
+            return new NunjucksLib.runtime.SafeString(
+              shortcodeFn.call(
+                Nunjucks._normalizeShortcodeContext(context),
+                ...argArray
+              )
+            );
+          } catch (e) {
+            throw new EleventyShortcodeError(
+              `Error with Nunjucks shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+                e
+              )}`
+            );
+          }
+        }
       };
     }
 
     this.njkEnv.addExtension(shortcodeName, new ShortcodeFunction());
   }
 
-  addPairedShortcode(shortcodeName, shortcodeFn) {
+  addPairedShortcode(shortcodeName, shortcodeFn, isAsync = false) {
     function PairedShortcodeFunction() {
       this.tags = [shortcodeName];
 
@@ -110,19 +167,57 @@ class Nunjucks extends TemplateEngine {
         var body = parser.parseUntilBlocks("end" + shortcodeName);
         parser.advanceAfterBlockEnd();
 
-        // return new nodes.CallExtensionAsync(this, "run", args, [body]);
+        if (isAsync) {
+          return new nodes.CallExtensionAsync(this, "run", args, [body]);
+        }
         return new nodes.CallExtension(this, "run", args, [body]);
       };
 
       this.run = function(...args) {
-        // let callback = args.pop();
+        let resolve;
+        if (isAsync) {
+          resolve = args.pop();
+        }
         let body = args.pop();
         let [context, ...argArray] = args;
-        let ret = new NunjucksLib.runtime.SafeString(
-          shortcodeFn(body(), ...argArray)
-        );
-        // callback(null, ret);
-        return ret;
+
+        if (isAsync) {
+          shortcodeFn
+            .call(
+              Nunjucks._normalizeShortcodeContext(context),
+              body(),
+              ...argArray
+            )
+            .then(function(returnValue) {
+              resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
+            })
+            .catch(function(e) {
+              resolve(
+                new EleventyShortcodeError(
+                  `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+                    e
+                  )}`
+                ),
+                null
+              );
+            });
+        } else {
+          try {
+            return new NunjucksLib.runtime.SafeString(
+              shortcodeFn.call(
+                Nunjucks._normalizeShortcodeContext(context),
+                body(),
+                ...argArray
+              )
+            );
+          } catch (e) {
+            throw new EleventyShortcodeError(
+              `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+                e
+              )}`
+            );
+          }
+        }
       };
     }
 
@@ -130,7 +225,12 @@ class Nunjucks extends TemplateEngine {
   }
 
   async compile(str, inputPath) {
-    let tmpl = NunjucksLib.compile(str, this.njkEnv);
+    let tmpl;
+    if (!inputPath || inputPath === "njk" || inputPath === "md") {
+      tmpl = NunjucksLib.compile(str, this.njkEnv);
+    } else {
+      tmpl = NunjucksLib.compile(str, this.njkEnv, inputPath);
+    }
     return async function(data) {
       return new Promise(function(resolve, reject) {
         tmpl.render(data, function(err, res) {

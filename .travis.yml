@@ -2,6 +2,7 @@ language: node_js
 node_js:
   - 8
   - 10
+  - 12
 before_script:
   - npm install
 script: npm run test
@@ -13,3 +14,5 @@ os:
   - linux
   - osx
   - windows
+env:
+  - YARN_GPG=no

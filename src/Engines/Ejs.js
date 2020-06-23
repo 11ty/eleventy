@@ -1,6 +1,5 @@
 const ejsLib = require("ejs");
 const TemplateEngine = require("./TemplateEngine");
-const config = require("../Config");
 
 class Ejs extends TemplateEngine {
   constructor(name, includesDir) {
@@ -40,7 +39,10 @@ class Ejs extends TemplateEngine {
 
   async compile(str, inputPath) {
     let options = this.getEjsOptions();
-    options.filename = inputPath || options.filename;
+
+    if (inputPath && inputPath !== "ejs" && inputPath !== "md") {
+      options.filename = inputPath;
+    }
 
     let fn = this.ejsLib.compile(str, options);
 

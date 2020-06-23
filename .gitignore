@@ -1,5 +1,18 @@
-_site/
+# Ignore installed npm modules
 node_modules/
+
+# Ignore build tool output, e.g. code coverage
 .nyc_output/
 coverage/
+
+# Ignore API documentation
+api-docs/
+
+# Ignore folders from source code editors
+.vscode
+.idea
+
+# Ignore eleventy output when doing manuell tests
+_site/
+
 package-lock.json

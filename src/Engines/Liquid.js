@@ -1,6 +1,7 @@
 const moo = require("moo");
 const LiquidLib = require("liquidjs");
 const TemplateEngine = require("./TemplateEngine");
+const TemplatePath = require("../TemplatePath");
 // const debug = require("debug")("Eleventy:Liquid");
 
 class Liquid extends TemplateEngine {
@@ -16,7 +17,7 @@ class Liquid extends TemplateEngine {
       number: /[0-9]+\.*[0-9]*/,
       doubleQuoteString: /"(?:\\["\\]|[^\n"\\])*"/,
       singleQuoteString: /'(?:\\['\\]|[^\n'\\])*'/,
-      keyword: /[a-zA-Z0-9]+/,
+      keyword: /[a-zA-Z0-9\.\-\_]+/,
       "ignore:whitespace": /[, \t]+/ // includes comma separator
     });
   }
@@ -44,7 +45,7 @@ class Liquid extends TemplateEngine {
 
   getLiquidOptions() {
     let defaults = {
-      root: [super.getIncludesDir()],
+      root: [super.getIncludesDir()], // overrides in compile with inputPath below
       extname: ".liquid",
       dynamicPartials: false,
       strict_filters: false
@@ -124,6 +125,14 @@ class Liquid extends TemplateEngine {
     return argArray;
   }
 
+  static _normalizeShortcodeScope(scope) {
+    let obj = {};
+    if (scope && scope.contexts && scope.contexts[0]) {
+      obj.page = scope.contexts[0].page;
+    }
+    return obj;
+  }
+
   addShortcode(shortcodeName, shortcodeFn) {
     let _t = this;
     this.addTag(shortcodeName, function(liquidEngine) {
@@ -134,8 +143,12 @@ class Liquid extends TemplateEngine {
         },
         render: function(scope, hash) {
           let argArray = Liquid.parseArguments(_t.argLexer, this.args, scope);
-
-          return Promise.resolve(shortcodeFn(...argArray));
+          return Promise.resolve(
+            shortcodeFn.call(
+              Liquid._normalizeShortcodeScope(scope),
+              ...argArray
+            )
+          );
         }
       };
     });
@@ -167,7 +180,13 @@ class Liquid extends TemplateEngine {
             liquidEngine.renderer
               .renderTemplates(this.templates, scope)
               .then(function(html) {
-                resolve(shortcodeFn(html, ...argArray));
+                resolve(
+                  shortcodeFn.call(
+                    Liquid._normalizeShortcodeScope(scope),
+                    html,
+                    ...argArray
+                  )
+                );
               });
           });
         }
@@ -177,9 +196,20 @@ class Liquid extends TemplateEngine {
 
   async compile(str, inputPath) {
     let engine = this.liquidLib;
-    let tmpl = await engine.parse(str);
+    let tmpl = await engine.parse(str, inputPath);
+
+    // Required for relative includes
+    let options = {};
+    if (!inputPath || inputPath === "njk" || inputPath === "md") {
+      // do nothing
+    } else {
+      options.root = [
+        super.getIncludesDir(),
+        TemplatePath.getDirFromFilePath(inputPath)
+      ];
+    }
     return async function(data) {
-      return engine.render(tmpl, data);
+      return engine.render(tmpl, data, options);
     };
   }
 }

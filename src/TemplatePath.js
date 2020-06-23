@@ -1,7 +1,7 @@
 const path = require("path");
 const normalize = require("normalize-path");
 const parsePath = require("parse-filepath");
-const fs = require("fs-extra");
+const fs = require("fs");
 
 function TemplatePath() {}
 
@@ -184,7 +184,7 @@ TemplatePath.addLeadingDotSlash = function(path) {
  * @returns {String} the `path` without a leading dot-slash segment.
  */
 TemplatePath.stripLeadingDotSlash = function(path) {
-  return path.replace(/^\.\//, "");
+  return typeof path === "string" ? path.replace(/^\.\//, "") : path;
 };
 
 /**
@@ -229,6 +229,36 @@ TemplatePath.isDirectorySync = function(path) {
 };
 
 /**
+ * @param {String} path A path
+ * @returns {Boolean} whether `path` points to an existing directory.
+ */
+TemplatePath.isDirectory = async function(path) {
+  return new Promise(resolve => {
+    fs.stat(path, (err, stats) => {
+      if (stats) {
+        resolve(stats.isDirectory());
+      }
+      resolve(false);
+    });
+  });
+};
+
+/**
+ * @param {String} path A path
+ * @returns {Boolean} whether `path` points to a existing directory or file.
+ */
+TemplatePath.exists = async function(path) {
+  return new Promise(resolve => {
+    fs.stat(path, (err, stats) => {
+      if (stats) {
+        resolve(true);
+      }
+      resolve(false);
+    });
+  });
+};
+
+/**
  * Appends a recursive wildcard glob pattern to `path`
  * unless `path` is not a directory; then, `path` is assumed to be a file path
  * and is left unchaged.
@@ -236,7 +266,7 @@ TemplatePath.isDirectorySync = function(path) {
  * @param {String} path
  * @returns {String}
  */
-TemplatePath.convertToRecursiveGlob = function(path) {
+TemplatePath.convertToRecursiveGlobSync = function(path) {
   if (path === "") {
     return "./**";
   }
@@ -244,6 +274,28 @@ TemplatePath.convertToRecursiveGlob = function(path) {
   path = TemplatePath.addLeadingDotSlash(path);
 
   if (TemplatePath.isDirectorySync(path)) {
+    return path + (!path.endsWith("/") ? "/" : "") + "**";
+  }
+
+  return path;
+};
+
+/**
+ * Appends a recursive wildcard glob pattern to `path`
+ * unless `path` is not a directory; then, `path` is assumed to be a file path
+ * and is left unchaged.
+ *
+ * @param {String} path
+ * @returns {String}
+ */
+TemplatePath.convertToRecursiveGlob = async function(path) {
+  if (path === "") {
+    return "./**";
+  }
+
+  path = TemplatePath.addLeadingDotSlash(path);
+
+  if (await TemplatePath.isDirectory(path)) {
     return path + (!path.endsWith("/") ? "/" : "") + "**";
   }
 

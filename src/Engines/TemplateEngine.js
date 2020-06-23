@@ -2,15 +2,12 @@ const fastglob = require("fast-glob");
 const fs = require("fs-extra");
 const TemplatePath = require("../TemplatePath");
 const EleventyExtensionMap = require("../EleventyExtensionMap");
-const config = require("../Config");
 const debug = require("debug")("Eleventy:TemplateEngine");
+const aggregateBench = require("../BenchmarkManager").get("Aggregate");
 
 class TemplateEngine {
   constructor(name, includesDir) {
     this.name = name;
-
-    this.extensionMap = new EleventyExtensionMap();
-    this.extensions = this.extensionMap.getExtensionsFromKey(name);
     this.includesDir = includesDir;
     this.partialsHaveBeenCached = false;
     this.partials = [];
@@ -19,13 +16,40 @@ class TemplateEngine {
 
   get config() {
     if (!this._config) {
-      this._config = config.getConfig();
+      this._config = require("../Config").getConfig();
     }
     return this._config;
   }
 
   set config(config) {
     this._config = config;
+  }
+
+  get engineManager() {
+    return this._engineManager;
+  }
+
+  set engineManager(manager) {
+    this._engineManager = manager;
+  }
+
+  get extensionMap() {
+    if (!this._extensionMap) {
+      this._extensionMap = new EleventyExtensionMap();
+      // this._extensionMap.config = this.config;
+    }
+    return this._extensionMap;
+  }
+
+  set extensionMap(map) {
+    this._extensionMap = map;
+  }
+
+  get extensions() {
+    if (!this._extensions) {
+      this._extensions = this.extensionMap.getExtensionsFromKey(this.name);
+    }
+    return this._extensions;
   }
 
   getName() {
@@ -54,9 +78,17 @@ class TemplateEngine {
     // TODO: reuse mustache partials in handlebars?
     let partialFiles = [];
     if (this.includesDir) {
+      let bench = aggregateBench.get("Searching the file system");
+      bench.before();
       this.extensions.forEach(function(extension) {
-        partialFiles = partialFiles.concat(fastglob.sync(prefix + extension));
+        partialFiles = partialFiles.concat(
+          fastglob.sync(prefix + extension, {
+            caseSensitiveMatch: false,
+            dot: true
+          })
+        );
       });
+      bench.after();
     }
 
     partialFiles = TemplatePath.addLeadingDotSlashArray(partialFiles);
@@ -92,10 +124,14 @@ class TemplateEngine {
     return this.engineLib;
   }
 
-  async render(str, data) {
+  async _testRender(str, data) {
     /* TODO compile needs to pass in inputPath? */
-    let fn = await this.compile(str);
-    return fn(data);
+    try {
+      let fn = await this.compile(str);
+      return fn(data);
+    } catch (e) {
+      return Promise.reject(e);
+    }
   }
 
   // JavaScript files defer to the module loader rather than read the files to strings
@@ -111,35 +147,8 @@ class TemplateEngine {
     // do nothing
   }
 
-  static get templateKeyMapToClassName() {
-    return {
-      ejs: "Ejs",
-      md: "Markdown",
-      jstl: "JavaScriptTemplateLiteral",
-      html: "Html",
-      hbs: "Handlebars",
-      mustache: "Mustache",
-      haml: "Haml",
-      pug: "Pug",
-      njk: "Nunjucks",
-      liquid: "Liquid",
-      "11ty.js": "JavaScript"
-    };
-  }
-
-  static hasEngine(name) {
-    return name in TemplateEngine.templateKeyMapToClassName;
-  }
-
-  static getEngine(name, includesDir) {
-    if (!this.hasEngine(name)) {
-      throw new Error(
-        `Template Engine ${name} does not exist in getEngine (includes dir: ${includesDir})`
-      );
-    }
-
-    const cls = require("./" + TemplateEngine.templateKeyMapToClassName[name]);
-    return new cls(name, includesDir);
+  get defaultTemplateFileExtension() {
+    return "html";
   }
 }
 
