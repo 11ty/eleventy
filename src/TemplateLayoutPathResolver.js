@@ -5,12 +5,18 @@ const TemplatePath = require("./TemplatePath");
 const debug = require("debug")("Eleventy:TemplateLayoutPathResolver");
 
 class TemplateLayoutPathResolver {
-  constructor(path, inputDir) {
+  constructor(path, inputDir, extensionMap) {
     this._config = config.getConfig();
     this.inputDir = inputDir;
     this.originalPath = path;
     this.path = path;
     this.aliases = {};
+    this.extensionMap = extensionMap;
+    if (!extensionMap) {
+      throw new Error(
+        "Expected `extensionMap` in TemplateLayoutPathResolver constructor."
+      );
+    }
 
     this.init();
   }
@@ -50,16 +56,19 @@ class TemplateLayoutPathResolver {
     }
 
     this.pathAlreadyHasExtension = this.dir + "/" + this.path;
-
     if (
       this.path.split(".").length > 0 &&
       fs.existsSync(this.pathAlreadyHasExtension)
     ) {
       this.filename = this.path;
-      this.fullPath = this.pathAlreadyHasExtension;
+      this.fullPath = TemplatePath.addLeadingDotSlash(
+        this.pathAlreadyHasExtension
+      );
     } else {
       this.filename = this.findFileName();
-      this.fullPath = this.dir + "/" + this.filename;
+      this.fullPath = TemplatePath.addLeadingDotSlash(
+        this.dir + "/" + this.filename
+      );
     }
   }
 
@@ -70,9 +79,7 @@ class TemplateLayoutPathResolver {
   getFileName() {
     if (!this.filename) {
       throw new Error(
-        `You’re trying to use a layout that does not exist: ${
-          this.originalPath
-        } (${this.filename})`
+        `You’re trying to use a layout that does not exist: ${this.originalPath} (${this.filename})`
       );
     }
 
@@ -82,9 +89,7 @@ class TemplateLayoutPathResolver {
   getFullPath() {
     if (!this.filename) {
       throw new Error(
-        `You’re trying to use a layout that does not exist: ${
-          this.originalPath
-        } (${this.filename})`
+        `You’re trying to use a layout that does not exist: ${this.originalPath} (${this.filename})`
       );
     }
 
@@ -101,8 +106,7 @@ class TemplateLayoutPathResolver {
       );
     }
 
-    let extensionMap = new EleventyExtensionMap(this.config.templateFormats);
-    for (let filename of extensionMap.getFileList(this.path)) {
+    for (let filename of this.extensionMap.getFileList(this.path)) {
       // TODO async
       if (fs.existsSync(this.dir + "/" + filename)) {
         return filename;

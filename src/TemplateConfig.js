@@ -1,11 +1,12 @@
 const fs = require("fs-extra");
 const chalk = require("chalk");
+const lodashUniq = require("lodash/uniq");
 const lodashMerge = require("lodash/merge");
 const TemplatePath = require("./TemplatePath");
 const EleventyBaseError = require("./EleventyBaseError");
-const dependencyTree = require("dependency-tree");
 const eleventyConfig = require("./EleventyConfig");
 const debug = require("debug")("Eleventy:TemplateConfig");
+const deleteRequireCache = require("./Util/DeleteRequireCache");
 
 class EleventyConfigError extends EleventyBaseError {}
 
@@ -28,14 +29,18 @@ class TemplateConfig {
     return TemplatePath.addLeadingDotSlash(this.localProjectConfigPath);
   }
 
+  get inputDir() {
+    return this._inputDir;
+  }
+
+  set inputDir(inputDir) {
+    this._inputDir = inputDir;
+  }
+
   reset() {
     eleventyConfig.reset();
     this.initializeRootConfig();
     this.config = this.mergeConfig(this.localProjectConfigPath);
-  }
-
-  resetOnWatch() {
-    // nothing yet
   }
 
   getConfig() {
@@ -55,7 +60,7 @@ class TemplateConfig {
   }
 
   initializeRootConfig() {
-    this.rootConfig = this.customRootConfig || require("../config.js");
+    this.rootConfig = this.customRootConfig || require("./defaultConfig.js");
 
     if (typeof this.rootConfig === "function") {
       this.rootConfig = this.rootConfig(eleventyConfig);
@@ -65,7 +70,6 @@ class TemplateConfig {
   }
 
   mergeConfig(localProjectConfigPath) {
-    let overrides = ["templateFormats"];
     let localConfig = {};
     let path = TemplatePath.join(
       TemplatePath.getWorkingDir(),
@@ -77,11 +81,25 @@ class TemplateConfig {
       try {
         // remove from require cache so it will grab a fresh copy
         if (path in require.cache) {
-          delete require.cache[path];
+          deleteRequireCache(path);
         }
 
         localConfig = require(path);
         // debug( "localConfig require return value: %o", localConfig );
+
+        if (typeof localConfig === "function") {
+          localConfig = localConfig(eleventyConfig);
+          // debug( "localConfig is a function, after calling, eleventyConfig is %o", eleventyConfig );
+
+          if (
+            typeof localConfig === "object" &&
+            typeof localConfig.then === "function"
+          ) {
+            throw new EleventyConfigError(
+              `Error in your Eleventy config file '${path}': Returning a promise is not supported`
+            );
+          }
+        }
       } catch (err) {
         throw new EleventyConfigError(
           `Error in your Eleventy config file '${path}'.` +
@@ -95,29 +113,20 @@ class TemplateConfig {
       debug("Eleventy local project config file not found, skipping.");
     }
 
-    if (typeof localConfig === "function") {
-      localConfig = localConfig(eleventyConfig);
-      // debug( "localConfig is a function, after calling, eleventyConfig is %o", eleventyConfig );
-
-      if (
-        typeof localConfig === "object" &&
-        typeof localConfig.then === "function"
-      ) {
-        throw new EleventyConfigError(
-          `Error in your Eleventy config file '${path}': Returning a promise is not supported`
-        );
-      }
-    }
-
     let eleventyConfigApiMergingObject = eleventyConfig.getMergingConfigObject();
+
+    // remove special merge keys from object
+    let savedForSpecialMerge = {
+      templateFormatsAdded: eleventyConfigApiMergingObject.templateFormatsAdded
+    };
+    delete eleventyConfigApiMergingObject.templateFormatsAdded;
+
     localConfig = lodashMerge(localConfig, eleventyConfigApiMergingObject);
 
     // blow away any templateFormats set in config return object and prefer those set in config API.
-    for (let localConfigKey of overrides) {
-      localConfig[localConfigKey] =
-        eleventyConfigApiMergingObject[localConfigKey] ||
-        localConfig[localConfigKey];
-    }
+    localConfig.templateFormats =
+      eleventyConfigApiMergingObject.templateFormats ||
+      localConfig.templateFormats;
 
     // debug("eleventyConfig.getMergingConfigObject: %o", eleventyConfig.getMergingConfigObject());
     debug("localConfig: %o", localConfig);
@@ -125,11 +134,19 @@ class TemplateConfig {
 
     // Object assign overrides original values (good only for templateFormats) but not good for anything else
     let merged = lodashMerge({}, this.rootConfig, localConfig, this.overrides);
+    // blow away any templateFormats upstream (don’t deep merge)
+    merged.templateFormats =
+      localConfig.templateFormats || this.rootConfig.templateFormats;
 
-    // blow away any templateFormats upstream (don’t merge)
-    for (let key of overrides) {
-      merged[key] = localConfig[key] || this.rootConfig[key];
+    // Additive should preserve original templateFormats, wherever those come from (config API or config return object)
+    if (savedForSpecialMerge.templateFormatsAdded) {
+      merged.templateFormats = merged.templateFormats.concat(
+        savedForSpecialMerge.templateFormatsAdded
+      );
     }
+
+    // Unique
+    merged.templateFormats = lodashUniq(merged.templateFormats);
 
     debug("Current configuration: %o", merged);
 

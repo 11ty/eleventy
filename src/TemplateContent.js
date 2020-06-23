@@ -4,6 +4,7 @@ const normalize = require("normalize-path");
 const matter = require("gray-matter");
 const lodashSet = require("lodash/set");
 
+const EleventyExtensionMap = require("./EleventyExtensionMap");
 const TemplateData = require("./TemplateData");
 const TemplateRender = require("./TemplateRender");
 const EleventyBaseError = require("./EleventyBaseError");
@@ -11,7 +12,9 @@ const EleventyErrorUtil = require("./EleventyErrorUtil");
 const config = require("./Config");
 const debug = require("debug")("Eleventy:TemplateContent");
 const debugDev = require("debug")("Dev:Eleventy:TemplateContent");
+const bench = require("./BenchmarkManager").get("Aggregate");
 
+class TemplateContentFrontMatterError extends EleventyBaseError {}
 class TemplateContentCompileError extends EleventyBaseError {}
 class TemplateContentRenderError extends EleventyBaseError {}
 
@@ -27,7 +30,15 @@ class TemplateContent {
   }
 
   /* Used by tests */
-  _setExtensionMap(map) {
+  get extensionMap() {
+    if (!this._extensionMap) {
+      this._extensionMap = new EleventyExtensionMap();
+      this._extensionMap.config = this.config;
+    }
+    return this._extensionMap;
+  }
+
+  set extensionMap(map) {
     this._extensionMap = map;
   }
 
@@ -49,11 +60,8 @@ class TemplateContent {
 
   get templateRender() {
     if (!this._templateRender) {
-      this._templateRender = new TemplateRender(
-        this.inputPath,
-        this.inputDir,
-        this._extensionMap
-      );
+      this._templateRender = new TemplateRender(this.inputPath, this.inputDir);
+      this._templateRender.extensionMap = this.extensionMap;
     }
 
     return this._templateRender;
@@ -72,7 +80,15 @@ class TemplateContent {
 
     if (this.inputContent) {
       let options = this.config.frontMatterParsingOptions || {};
-      let fm = matter(this.inputContent, options);
+      let fm;
+      try {
+        fm = matter(this.inputContent, options);
+      } catch (e) {
+        throw new TemplateContentFrontMatterError(
+          `Having trouble reading front matter from template ${this.inputPath}`,
+          e
+        );
+      }
       if (options.excerpt && fm.excerpt) {
         let excerptString = fm.excerpt + (options.excerpt_separator || "---");
         if (fm.content.startsWith(excerptString + os.EOL)) {
@@ -95,17 +111,22 @@ class TemplateContent {
       this.frontMatter = {
         data: {},
         content: "",
-        excerpt: ""
+        excerpt: "",
       };
     }
   }
 
   async getInputContent() {
-    if (this.engine.needsToReadFileContents()) {
-      return fs.readFile(this.inputPath, "utf-8");
+    if (!this.engine.needsToReadFileContents()) {
+      return "";
     }
 
-    return "";
+    let templateBenchmark = bench.get("Template Read");
+    templateBenchmark.before();
+    let content = await fs.readFile(this.inputPath, "utf-8");
+    templateBenchmark.after();
+
+    return content;
   }
 
   async getFrontMatter() {
@@ -164,7 +185,10 @@ class TemplateContent {
     );
 
     try {
+      let templateBenchmark = bench.get("Template Compile");
+      templateBenchmark.before();
       let fn = await this.templateRender.getCompiledTemplate(str);
+      templateBenchmark.after();
       debugDev("%o getCompiledTemplate function created", this.inputPath);
       return fn;
     } catch (e) {
@@ -179,7 +203,10 @@ class TemplateContent {
   async render(str, data, bypassMarkdown) {
     try {
       let fn = await this.compile(str, bypassMarkdown);
+      let templateBenchmark = bench.get("Template Render");
+      templateBenchmark.before();
       let rendered = await fn(data);
+      templateBenchmark.after();
       debugDev(
         "%o getCompiledTemplate called, rendered content created",
         this.inputPath

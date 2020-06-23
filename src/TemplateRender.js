@@ -1,77 +1,85 @@
 const TemplatePath = require("./TemplatePath");
-const TemplateEngine = require("./Engines/TemplateEngine");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
-const config = require("./Config");
 // const debug = require("debug")("Eleventy:TemplateRender");
 
 class TemplateRenderUnknownEngineError extends EleventyBaseError {}
 
 // works with full path names or short engine name
 class TemplateRender {
-  constructor(tmplPath, inputDir, extensionMap) {
+  constructor(tmplPath, inputDir) {
     if (!tmplPath) {
       throw new Error(
         `TemplateRender requires a tmplPath argument, instead of ${tmplPath}`
       );
     }
 
-    this.path = tmplPath;
-    this.extensionMap = extensionMap;
+    this.engineNameOrPath = tmplPath;
+    this.inputDir = inputDir;
 
     // optional
     this.includesDir = this._normalizeIncludesDir(inputDir);
 
     this.parseMarkdownWith = this.config.markdownTemplateEngine;
     this.parseHtmlWith = this.config.htmlTemplateEngine;
-
-    this.init(tmplPath);
-
-    this.useMarkdown = this.engineName === "md";
   }
 
   get config() {
     if (!this._config) {
-      this._config = config.getConfig();
+      this._config = require("./Config").getConfig();
     }
     return this._config;
   }
 
   set config(config) {
     this._config = config;
+  }
 
-    if (this.engine) {
-      this.engine.config = config;
+  set extensionMap(extensionMap) {
+    this._extensionMap = extensionMap;
+  }
+
+  get extensionMap() {
+    if (!this._extensionMap) {
+      this._extensionMap = new EleventyExtensionMap();
     }
+    return this._extensionMap;
   }
 
   init(engineNameOrPath) {
-    this.engineName = this.cleanupEngineName(engineNameOrPath);
-    if (!this.engineName) {
+    this.extensionMap.config = this.config;
+    this._engineName = this.extensionMap.getKey(engineNameOrPath);
+    if (!this._engineName) {
       throw new TemplateRenderUnknownEngineError(
         `Unknown engine for ${engineNameOrPath}`
       );
     }
-    this.engine = TemplateEngine.getEngine(this.engineName, this.includesDir);
-    this.engine.initRequireCache(this.path);
-  }
 
-  cleanupEngineName(tmplPath) {
-    return TemplateRender._cleanupEngineName(
-      tmplPath,
-      this.extensionMap || EleventyExtensionMap
+    this._engine = this.extensionMap.engineManager.getEngine(
+      this._engineName,
+      this.includesDir,
+      this.extensionMap
     );
-  }
-  static cleanupEngineName(tmplPath) {
-    return TemplateRender._cleanupEngineName(tmplPath, EleventyExtensionMap);
-  }
-  static _cleanupEngineName(tmplPath, extensionMapRef) {
-    return extensionMapRef.getKey(tmplPath);
+    this._engine.config = this.config;
+    this._engine.initRequireCache(engineNameOrPath);
+
+    if (this.useMarkdown === undefined) {
+      this.setUseMarkdown(this._engineName === "md");
+    }
   }
 
-  static hasEngine(tmplPath) {
-    let name = TemplateRender.cleanupEngineName(tmplPath);
-    return TemplateEngine.hasEngine(name);
+  get engineName() {
+    if (!this._engineName) {
+      this.init(this.engineNameOrPath);
+    }
+    return this._engineName;
+  }
+
+  get engine() {
+    if (!this._engine) {
+      this.init(this.engineNameOrPath);
+    }
+    return this._engine;
   }
 
   static parseEngineOverrides(engineName) {
@@ -112,8 +120,7 @@ class TemplateRender {
 
     // markdown should always be first
     if (usingMarkdown) {
-      // todo use unshift or something (no wifi here to look up docs :D)
-      engines = ["md"].concat(engines);
+      engines.unshift("md");
     }
 
     return engines;
@@ -182,8 +189,8 @@ class TemplateRender {
     this.parseHtmlWith = htmlEngineName;
   }
 
-  async render(str, data) {
-    return this.engine.render(str, data);
+  async _testRender(str, data) {
+    return this.engine._testRender(str, data);
   }
 
   async getCompiledTemplate(str) {
@@ -191,14 +198,18 @@ class TemplateRender {
     if (this.engineName === "md") {
       return this.engine.compile(
         str,
-        this.path,
+        this.engineNameOrPath,
         this.parseMarkdownWith,
         !this.useMarkdown
       );
     } else if (this.engineName === "html") {
-      return this.engine.compile(str, this.path, this.parseHtmlWith);
+      return this.engine.compile(
+        str,
+        this.engineNameOrPath,
+        this.parseHtmlWith
+      );
     } else {
-      return this.engine.compile(str, this.path);
+      return this.engine.compile(str, this.engineNameOrPath);
     }
   }
 }

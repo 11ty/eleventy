@@ -25,6 +25,14 @@ test("Add array", t => {
   t.deepEqual(targets.getTargets(), ["./.eleventy.js", "./b.js", "./c.js"]);
 });
 
+test("Add and make glob", t => {
+  let targets = new EleventyWatchTargets();
+
+  // Note the `test` directory must exist here for this to pass.
+  targets.addAndMakeGlob(["test", "test/b.js"]);
+  t.deepEqual(targets.getTargets(), ["./test/**", "./test/b.js"]);
+});
+
 test("JavaScript get dependencies", t => {
   let targets = new EleventyWatchTargets();
   t.deepEqual(
