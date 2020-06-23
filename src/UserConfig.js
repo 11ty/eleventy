@@ -54,6 +54,7 @@ class UserConfig {
     // this.templateExtensionAliases = {};
     this.watchJavaScriptDependencies = true;
     this.browserSyncConfig = {};
+    this.globalData = {};
   }
 
   versionCheck(expected) {
@@ -206,6 +207,11 @@ class UserConfig {
     }
 
     this.nunjucksTags[name] = bench.add(`"${name}" Nunjucks Custom Tag`, tagFn);
+  }
+
+  addGlobalData(name, callback) {
+    name = this.getNamespacedName(name);
+    this.globalData[name] = callback;
   }
 
   addTransform(name, callback) {
@@ -510,6 +516,7 @@ class UserConfig {
       templateFormats: this.templateFormats,
       filters: this.filters, // now called transforms
       linters: this.linters,
+      globalData: this.globalData,
       layoutAliases: this.layoutAliases,
       passthroughCopies: this.passthroughCopies,
       liquidOptions: this.liquidOptions,

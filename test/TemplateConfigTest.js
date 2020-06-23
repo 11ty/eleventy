@@ -108,7 +108,6 @@ test("Add universal filter", t => {
   t.not(Object.keys(cfg.handlebarsHelpers).indexOf("myFilterName"), -1);
   t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
 });
-
 test("Add namespaced universal filter", t => {
   eleventyConfig.reset();
   eleventyConfig.namespace("testNamespace", function() {
@@ -309,6 +308,20 @@ test("libraryOverrides", t => {
   t.falsy(cfg.libraryOverrides.njk);
   t.truthy(cfg.libraryOverrides.md);
   t.deepEqual(mdLib, cfg.libraryOverrides.md);
+});
+
+test("addGlobalData", t => {
+  eleventyConfig.reset();
+  eleventyConfig.addGlobalData("buildTime", function() {
+    return new Date();
+  });
+
+  let templateCfg = new TemplateConfig(
+    require("../config.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.not(Object.keys(cfg.globalData).indexOf("buildTime"), -1);
 });
 
 test("Properly throws error on missing module #182", t => {

@@ -162,6 +162,29 @@ test("getAllGlobalData() with js function data file", async t => {
   t.is(data.globalDataFn.datakeyfromjsfn, "howdy");
 });
 
+test("getAllGlobalData() with config globalData", async t => {
+  let dataObj = new TemplateData("./test/stubs/");
+
+  dataObj._setConfig({
+    ...dataObj.config,
+    globalData: {
+      example: () => {
+        return "one";
+      },
+      example2: async () => {
+        return "two";
+      },
+      example3: "static"
+    }
+  });
+
+  let data = await dataObj.cacheData(true);
+
+  t.is(data.example, "one");
+  t.is(data.example2, "two");
+  t.is(data.example3, "static");
+});
+
 test("getDataValue() without a dataTemplateEngine", async t => {
   let dataObj = new TemplateData("./test/stubs/");
   dataObj.setDataTemplateEngine(false);
