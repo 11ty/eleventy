@@ -125,6 +125,14 @@ class Liquid extends TemplateEngine {
     return argArray;
   }
 
+  static _normalizeShortcodeScope(scope) {
+    let obj = {};
+    if (scope && scope.contexts && scope.contexts[0]) {
+      obj.page = scope.contexts[0].page;
+    }
+    return obj;
+  }
+
   addShortcode(shortcodeName, shortcodeFn) {
     let _t = this;
     this.addTag(shortcodeName, function(liquidEngine) {
@@ -135,8 +143,12 @@ class Liquid extends TemplateEngine {
         },
         render: function(scope, hash) {
           let argArray = Liquid.parseArguments(_t.argLexer, this.args, scope);
-
-          return Promise.resolve(shortcodeFn(...argArray));
+          return Promise.resolve(
+            shortcodeFn.call(
+              Liquid._normalizeShortcodeScope(scope),
+              ...argArray
+            )
+          );
         }
       };
     });
@@ -168,7 +180,13 @@ class Liquid extends TemplateEngine {
             liquidEngine.renderer
               .renderTemplates(this.templates, scope)
               .then(function(html) {
-                resolve(shortcodeFn(html, ...argArray));
+                resolve(
+                  shortcodeFn.call(
+                    Liquid._normalizeShortcodeScope(scope),
+                    html,
+                    ...argArray
+                  )
+                );
               });
           });
         }

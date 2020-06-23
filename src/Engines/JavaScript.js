@@ -1,8 +1,10 @@
 const TemplateEngine = require("./TemplateEngine");
 const TemplatePath = require("../TemplatePath");
 const EleventyBaseError = require("../EleventyBaseError");
+const deleteRequireCache = require("../Util/DeleteRequireCache");
+const getJavaScriptData = require("../Util/GetJavaScriptData");
 
-class JavaScriptTemplateInvalidDataFormatError extends EleventyBaseError {}
+class JavaScriptTemplateNotDefined extends EleventyBaseError {}
 
 class JavaScript extends TemplateEngine {
   constructor(name, includesDir) {
@@ -22,7 +24,7 @@ class JavaScript extends TemplateEngine {
   // Function, Class
   // Object
   _getInstance(mod) {
-    let noop = function() {
+    let noop = function () {
       return "";
     };
 
@@ -56,7 +58,13 @@ class JavaScript extends TemplateEngine {
     const mod = this._getRequire(inputPath);
     let inst = this._getInstance(mod);
 
-    this.instances[inputPath] = inst;
+    if (inst) {
+      this.instances[inputPath] = inst;
+    } else {
+      throw new JavaScriptTemplateNotDefined(
+        `No JavaScript template returned from ${inputPath} (did you assign to module.exports?)`
+      );
+    }
     return inst;
   }
 
@@ -72,8 +80,8 @@ class JavaScript extends TemplateEngine {
   // only remove from cache once on startup (if it already exists)
   initRequireCache(inputPath) {
     let requirePath = TemplatePath.absolutePath(inputPath);
-    if (requirePath in require.cache) {
-      delete require.cache[requirePath];
+    if (requirePath) {
+      deleteRequireCache(requirePath);
     }
 
     if (inputPath in this.instances) {
@@ -83,19 +91,22 @@ class JavaScript extends TemplateEngine {
 
   async getExtraDataFromFile(inputPath) {
     let inst = this.getInstanceFromInputPath(inputPath);
-    if (inst && "data" in inst) {
-      // get extra data from `data` method,
-      // either as a function or getter or object literal
-      let result = await (typeof inst.data === "function"
-        ? inst.data()
-        : inst.data);
-      if (typeof result !== "object") {
-        throw new JavaScriptTemplateInvalidDataFormatError(
-          `Invalid data format returned from ${inputPath}: typeof ${typeof result}`
-        );
+    return await getJavaScriptData(inst, inputPath);
+  }
+
+  getJavaScriptFunctions(inst) {
+    let fns = {};
+    let configFns = this.config.javascriptFunctions;
+
+    for (let key in configFns) {
+      // prefer pre-existing `page` javascriptFunction, if one exists
+      if (key === "page") {
+        // do nothing
+      } else {
+        fns[key] = configFns[key].bind(inst);
       }
-      return result;
     }
+    return fns;
   }
 
   async compile(str, inputPath) {
@@ -107,11 +118,14 @@ class JavaScript extends TemplateEngine {
       // For normal templates, str will be falsy.
       inst = this.getInstanceFromInputPath(inputPath);
     }
-
     if (inst && "render" in inst) {
-      Object.assign(inst, this.config.javascriptFunctions);
+      return function (data) {
+        // only blow away existing inst.page if it has a page.url
+        if (!inst.page || inst.page.url) {
+          inst.page = data.page;
+        }
+        Object.assign(inst, this.getJavaScriptFunctions(inst));
 
-      return function(data) {
         return this.normalize(inst.render.call(inst, data));
       }.bind(this);
     }

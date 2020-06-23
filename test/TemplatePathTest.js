@@ -225,15 +225,46 @@ test("stripLeadingSubPath", t => {
   t.is(TemplatePath.stripLeadingSubPath(".htaccess", "."), ".htaccess");
 });
 
-test("convertToRecursiveGlob", t => {
-  t.is(TemplatePath.convertToRecursiveGlob(""), "./**");
-  t.is(TemplatePath.convertToRecursiveGlob("."), "./**");
-  t.is(TemplatePath.convertToRecursiveGlob("./"), "./**");
-  t.is(TemplatePath.convertToRecursiveGlob("test/stubs"), "./test/stubs/**");
-  t.is(TemplatePath.convertToRecursiveGlob("test/stubs/"), "./test/stubs/**");
-  t.is(TemplatePath.convertToRecursiveGlob("./test/stubs/"), "./test/stubs/**");
+test("convertToRecursiveGlobSync", t => {
+  t.is(TemplatePath.convertToRecursiveGlobSync(""), "./**");
+  t.is(TemplatePath.convertToRecursiveGlobSync("."), "./**");
+  t.is(TemplatePath.convertToRecursiveGlobSync("./"), "./**");
   t.is(
-    TemplatePath.convertToRecursiveGlob("./test/stubs/config.js"),
+    TemplatePath.convertToRecursiveGlobSync("test/stubs"),
+    "./test/stubs/**"
+  );
+  t.is(
+    TemplatePath.convertToRecursiveGlobSync("test/stubs/"),
+    "./test/stubs/**"
+  );
+  t.is(
+    TemplatePath.convertToRecursiveGlobSync("./test/stubs/"),
+    "./test/stubs/**"
+  );
+  t.is(
+    TemplatePath.convertToRecursiveGlobSync("./test/stubs/config.js"),
+    "./test/stubs/config.js"
+  );
+});
+
+test("convertToRecursiveGlob", async t => {
+  t.is(await TemplatePath.convertToRecursiveGlob(""), "./**");
+  t.is(await TemplatePath.convertToRecursiveGlob("."), "./**");
+  t.is(await TemplatePath.convertToRecursiveGlob("./"), "./**");
+  t.is(
+    await TemplatePath.convertToRecursiveGlob("test/stubs"),
+    "./test/stubs/**"
+  );
+  t.is(
+    await TemplatePath.convertToRecursiveGlob("test/stubs/"),
+    "./test/stubs/**"
+  );
+  t.is(
+    await TemplatePath.convertToRecursiveGlob("./test/stubs/"),
+    "./test/stubs/**"
+  );
+  t.is(
+    await TemplatePath.convertToRecursiveGlob("./test/stubs/config.js"),
     "./test/stubs/config.js"
   );
 });
@@ -275,4 +306,25 @@ test("removeExtension", t => {
     TemplatePath.removeExtension("./test/stubs.hbs", ".hbs"),
     "./test/stubs"
   );
+});
+
+test("isDirectorySync", t => {
+  t.is(TemplatePath.isDirectorySync("asdlkfjklsadjflkja"), false);
+  t.is(TemplatePath.isDirectorySync("test"), true);
+  t.is(TemplatePath.isDirectorySync("test/stubs"), true);
+  t.is(TemplatePath.isDirectorySync("test/stubs/.eleventyignore"), false);
+});
+
+test("isDirectory", async t => {
+  t.is(await TemplatePath.isDirectory("asdlkfjklsadjflkja"), false);
+  t.is(await TemplatePath.isDirectory("test"), true);
+  t.is(await TemplatePath.isDirectory("test/stubs"), true);
+  t.is(await TemplatePath.isDirectory("test/stubs/.eleventyignore"), false);
+});
+
+test("exists", async t => {
+  t.is(await TemplatePath.exists("asdlkfjklsadjflkja"), false);
+  t.is(await TemplatePath.exists("test"), true);
+  t.is(await TemplatePath.exists("test/stubs"), true);
+  t.is(await TemplatePath.exists("test/stubs/.eleventyignore"), true);
 });

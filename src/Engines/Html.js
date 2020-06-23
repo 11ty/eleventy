@@ -3,9 +3,10 @@ const TemplateEngine = require("./TemplateEngine");
 class Html extends TemplateEngine {
   async compile(str, inputPath, preTemplateEngine) {
     if (preTemplateEngine) {
-      let engine = TemplateEngine.getEngine(
+      let engine = this.engineManager.getEngine(
         preTemplateEngine,
-        super.getIncludesDir()
+        super.getIncludesDir(),
+        this.extensionMap
       );
       let fn = await engine.compile(str, inputPath);
 

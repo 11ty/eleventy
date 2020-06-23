@@ -5,7 +5,7 @@ import eleventyConfig from "../src/EleventyConfig";
 
 test("Template Config local config overrides base config", async t => {
   let templateCfg = new TemplateConfig(
-    require("../config.js"),
+    require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   let cfg = templateCfg.getConfig();
@@ -38,7 +38,7 @@ test("Add liquid tag", t => {
   eleventyConfig.addLiquidTag("myTagName", function() {});
 
   let templateCfg = new TemplateConfig(
-    require("../config.js"),
+    require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   let cfg = templateCfg.getConfig();
@@ -50,7 +50,7 @@ test("Add nunjucks tag", t => {
   eleventyConfig.addNunjucksTag("myNunjucksTag", function() {});
 
   let templateCfg = new TemplateConfig(
-    require("../config.js"),
+    require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   let cfg = templateCfg.getConfig();
@@ -64,7 +64,7 @@ test("Add liquid filter", t => {
   });
 
   let templateCfg = new TemplateConfig(
-    require("../config.js"),
+    require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   let cfg = templateCfg.getConfig();
@@ -76,7 +76,7 @@ test("Add handlebars helper", t => {
   eleventyConfig.addHandlebarsHelper("myHelperName", function() {});
 
   let templateCfg = new TemplateConfig(
-    require("../config.js"),
+    require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   let cfg = templateCfg.getConfig();
@@ -88,7 +88,7 @@ test("Add nunjucks filter", t => {
   eleventyConfig.addNunjucksFilter("myFilterName", function() {});
 
   let templateCfg = new TemplateConfig(
-    require("../config.js"),
+    require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   let cfg = templateCfg.getConfig();
@@ -100,7 +100,7 @@ test("Add universal filter", t => {
   eleventyConfig.addFilter("myFilterName", function() {});
 
   let templateCfg = new TemplateConfig(
-    require("../config.js"),
+    require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   let cfg = templateCfg.getConfig();
@@ -115,7 +115,7 @@ test("Add namespaced universal filter", t => {
   });
 
   let templateCfg = new TemplateConfig(
-    require("../config.js"),
+    require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   let cfg = templateCfg.getConfig();
@@ -140,7 +140,7 @@ test("Add namespaced universal filter using underscore", t => {
   });
 
   let templateCfg = new TemplateConfig(
-    require("../config.js"),
+    require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   let cfg = templateCfg.getConfig();
@@ -165,7 +165,7 @@ test("Empty namespace", t => {
   });
 
   let templateCfg = new TemplateConfig(
-    require("../config.js"),
+    require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   let cfg = templateCfg.getConfig();
@@ -181,7 +181,7 @@ test("Nested Empty Inner namespace", t => {
   });
 
   let templateCfg = new TemplateConfig(
-    require("../config.js"),
+    require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   let cfg = templateCfg.getConfig();
@@ -197,7 +197,7 @@ test("Nested Empty Outer namespace", t => {
   });
 
   let templateCfg = new TemplateConfig(
-    require("../config.js"),
+    require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   let cfg = templateCfg.getConfig();
@@ -214,7 +214,7 @@ test("Non-string namespaces are ignored", t => {
   });
 
   let templateCfg = new TemplateConfig(
-    require("../config.js"),
+    require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   let cfg = templateCfg.getConfig();
@@ -230,7 +230,7 @@ test(".addPlugin oddity: I don’t think pluginNamespace was ever passed in here
   });
 
   let templateCfg = new TemplateConfig(
-    require("../config.js"),
+    require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   let cfg = templateCfg.getConfig();
@@ -239,7 +239,7 @@ test(".addPlugin oddity: I don’t think pluginNamespace was ever passed in here
 
 test("Test url universal filter with custom pathPrefix (no slash)", t => {
   let templateCfg = new TemplateConfig(
-    require("../config.js"),
+    require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.setPathPrefix("/testdirectory/");
@@ -249,10 +249,11 @@ test("Test url universal filter with custom pathPrefix (no slash)", t => {
 
 test("setTemplateFormats(string)", t => {
   eleventyConfig.reset();
-  eleventyConfig.setTemplateFormats("ejs,njk, liquid");
+  // 0.11.0 removes dupes
+  eleventyConfig.setTemplateFormats("ejs,njk, liquid, njk");
 
   let templateCfg = new TemplateConfig(
-    require("../config.js"),
+    require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   let cfg = templateCfg.getConfig();
@@ -264,7 +265,7 @@ test("setTemplateFormats(array)", t => {
   eleventyConfig.setTemplateFormats(["ejs", "njk", "liquid"]);
 
   let templateCfg = new TemplateConfig(
-    require("../config.js"),
+    require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   let cfg = templateCfg.getConfig();
@@ -276,7 +277,7 @@ test("setTemplateFormats(array, size 1)", t => {
   eleventyConfig.setTemplateFormats(["liquid"]);
 
   let templateCfg = new TemplateConfig(
-    require("../config.js"),
+    require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   let cfg = templateCfg.getConfig();
@@ -288,11 +289,68 @@ test("setTemplateFormats(empty array)", t => {
   eleventyConfig.setTemplateFormats([]);
 
   let templateCfg = new TemplateConfig(
-    require("../config.js"),
+    require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   let cfg = templateCfg.getConfig();
   t.deepEqual(cfg.templateFormats, []);
+});
+
+test("setTemplateFormats(null)", t => {
+  eleventyConfig.reset();
+  eleventyConfig.setTemplateFormats(null);
+
+  let templateCfg = new TemplateConfig(
+    require("../src/defaultConfig.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.true(cfg.templateFormats.length > 0);
+});
+
+test("multiple setTemplateFormats calls", t => {
+  eleventyConfig.reset();
+  eleventyConfig.setTemplateFormats("njk");
+  eleventyConfig.setTemplateFormats("pug");
+
+  let templateCfg = new TemplateConfig(
+    require("../src/defaultConfig.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.deepEqual(cfg.templateFormats, ["pug"]);
+});
+
+test("addTemplateFormats()", t => {
+  eleventyConfig.reset();
+  eleventyConfig.addTemplateFormats("vue");
+
+  let templateCfg = new TemplateConfig(
+    require("../src/defaultConfig.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  // should have ALL of the original defaults
+  t.deepEqual(cfg.templateFormats, ["md", "njk", "vue"]);
+});
+
+test("both setTemplateFormats and addTemplateFormats", t => {
+  // Template Formats can come from three places
+  // defaultConfig.js config API (not used yet)
+  // defaultConfig.js config return object
+  // project config file config API
+  // project config file config return object
+
+  eleventyConfig.reset();
+  eleventyConfig.addTemplateFormats("vue");
+  eleventyConfig.setTemplateFormats("pug");
+
+  let templateCfg = new TemplateConfig(
+    require("../src/defaultConfig.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.deepEqual(cfg.templateFormats, ["pug", "vue"]);
 });
 
 test("libraryOverrides", t => {
@@ -300,7 +358,7 @@ test("libraryOverrides", t => {
   eleventyConfig.setLibrary("md", mdLib);
 
   let templateCfg = new TemplateConfig(
-    require("../config.js"),
+    require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   let cfg = templateCfg.getConfig();
@@ -327,7 +385,7 @@ test("addGlobalData", t => {
 test("Properly throws error on missing module #182", t => {
   t.throws(function() {
     new TemplateConfig(
-      require("../config.js"),
+      require("../src/defaultConfig.js"),
       "./test/stubs/broken-config.js"
     );
   });
@@ -336,8 +394,20 @@ test("Properly throws error on missing module #182", t => {
 test("Properly throws error when config returns a Promise", t => {
   t.throws(function() {
     new TemplateConfig(
-      require("../config.js"),
+      require("../src/defaultConfig.js"),
       "./test/stubs/config-promise.js"
     );
   });
+});
+
+test(".addWatchTarget adds a watch target", t => {
+  eleventyConfig.reset();
+  eleventyConfig.addWatchTarget("/testdirectory/");
+
+  let templateCfg = new TemplateConfig(
+    require("../src/defaultConfig.js"),
+    "./test/stubs/config.js"
+  );
+  let cfg = templateCfg.getConfig();
+  t.deepEqual(cfg.additionalWatchTargets, ["/testdirectory/"]);
 });

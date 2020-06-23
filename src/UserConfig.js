@@ -4,6 +4,7 @@ const semver = require("semver");
 const { DateTime } = require("luxon");
 const EleventyBaseError = require("./EleventyBaseError");
 const bench = require("./BenchmarkManager").get("Configuration");
+const aggregateBench = require("./BenchmarkManager").get("Aggregate");
 const debug = require("debug")("Eleventy:UserConfig");
 const pkg = require("../package.json");
 
@@ -19,6 +20,7 @@ class UserConfig {
     debug("Resetting EleventyConfig to initial values.");
     this.events = new EventEmitter();
     this.collections = {};
+    this.templateFormats = undefined;
 
     this.liquidOptions = {};
     this.liquidTags = {};
@@ -29,7 +31,9 @@ class UserConfig {
     this.nunjucksAsyncFilters = {};
     this.nunjucksTags = {};
     this.nunjucksShortcodes = {};
+    this.nunjucksAsyncShortcodes = {};
     this.nunjucksPairedShortcodes = {};
+    this.nunjucksAsyncPairedShortcodes = {};
     this.handlebarsHelpers = {};
     this.handlebarsShortcodes = {};
     this.handlebarsPairedShortcodes = {};
@@ -49,12 +53,18 @@ class UserConfig {
     this.dynamicPermalinks = true;
     this.useGitIgnore = true;
     this.dataDeepMerge = false;
-    this.experiments = new Set();
-    // this.userExtensionMap = {};
-    // this.templateExtensionAliases = {};
+    this.extensionMap = new Set();
     this.watchJavaScriptDependencies = true;
+    this.additionalWatchTargets = [];
     this.browserSyncConfig = {};
     this.globalData = {};
+    this.chokidarConfig = {};
+    this.watchThrottleWaitTime = 0; //ms
+
+    // using Map to preserve insertion order
+    this.dataExtensions = new Map();
+
+    this.quietMode = false;
   }
 
   versionCheck(expected) {
@@ -135,7 +145,7 @@ class UserConfig {
   }
 
   // Support the nunjucks style syntax for asynchronous filter add
-  addNunjucksFilter(name, callback, isAsync) {
+  addNunjucksFilter(name, callback, isAsync = false) {
     if (isAsync) {
       // namespacing happens downstream
       this.addNunjucksAsyncFilter(name, callback);
@@ -186,6 +196,15 @@ class UserConfig {
 
     // TODO remove Handlebars helpers in Universal Filters. Use shortcodes instead (the Handlebars template syntax is the same).
     this.addHandlebarsHelper(name, callback);
+  }
+
+  getFilter(name) {
+    return (
+      this.javascriptFunctions[name] ||
+      this.nunjucksFilters[name] ||
+      this.liquidFilters[name] ||
+      this.handlebarsHelpers[name]
+    );
   }
 
   addNunjucksTag(name, tagFn) {
@@ -251,15 +270,22 @@ class UserConfig {
   }
 
   addPlugin(plugin, options) {
+    // TODO support function.name in plugin config functions
     debug("Adding plugin (unknown name: check your config file).");
+    let pluginBench = aggregateBench.get("Configuration addPlugin");
     if (typeof plugin === "function") {
-      plugin(this);
+      pluginBench.before();
+      let configFunction = plugin;
+      configFunction(this, options);
+      pluginBench.after();
     } else if (plugin && plugin.configFunction) {
+      pluginBench.before();
       if (options && typeof options.init === "function") {
         options.init.call(this, plugin.initArguments || {});
       }
 
       plugin.configFunction(this, options);
+      pluginBench.after();
     } else {
       throw new UserConfigError(
         "Invalid EleventyConfig.addPlugin signature. Should be a function or a valid Eleventy plugin object."
@@ -294,25 +320,34 @@ class UserConfig {
    * @memberof EleventyConfig
    */
   addPassthroughCopy(fileOrDir) {
-    if (fileOrDir instanceof Object) {
-      this.passthroughCopies = {
-        ...this.passthroughCopies,
-        ...fileOrDir
-      };
+    if (typeof fileOrDir === "string") {
+      this.passthroughCopies[fileOrDir] = true;
     } else {
-      // Glob patterns will not work string method
-      this.passthroughCopies[fileOrDir] = fileOrDir;
+      Object.assign(this.passthroughCopies, fileOrDir);
     }
 
     return this;
   }
 
-  setTemplateFormats(templateFormats) {
+  _normalizeTemplateFormats(templateFormats) {
     if (typeof templateFormats === "string") {
       templateFormats = templateFormats.split(",").map(format => format.trim());
     }
+    return templateFormats;
+  }
 
-    this.templateFormats = templateFormats;
+  setTemplateFormats(templateFormats) {
+    this.templateFormats = this._normalizeTemplateFormats(templateFormats);
+  }
+
+  // additive, usually for plugins
+  addTemplateFormats(templateFormats) {
+    if (!this.templateFormatsAdded) {
+      this.templateFormatsAdded = [];
+    }
+    this.templateFormatsAdded = this.templateFormatsAdded.concat(
+      this._normalizeTemplateFormats(templateFormats)
+    );
   }
 
   setLibrary(engineName, libraryInstance) {
@@ -354,22 +389,53 @@ class UserConfig {
     this.addJavaScriptFunction(name, callback);
   }
 
-  addNunjucksShortcode(name, callback) {
+  // Undocumented method as a mitigation to reduce risk of #498
+  addAsyncShortcode(name, callback) {
+    debug("Adding universal async shortcode %o", this.getNamespacedName(name));
+    this.addNunjucksAsyncShortcode(name, callback);
+    this.addLiquidShortcode(name, callback);
+    this.addJavaScriptFunction(name, callback);
+    // not supported in Handlebars
+  }
+
+  addNunjucksAsyncShortcode(name, callback) {
     name = this.getNamespacedName(name);
 
-    if (this.nunjucksShortcodes[name]) {
+    if (this.nunjucksAsyncShortcodes[name]) {
       debug(
         chalk.yellow(
-          "Warning, overwriting a Nunjucks Shortcode with `addNunjucksShortcode(%o)`"
+          "Warning, overwriting a Nunjucks Async Shortcode with `addNunjucksAsyncShortcode(%o)`"
         ),
         name
       );
     }
 
-    this.nunjucksShortcodes[name] = bench.add(
-      `"${name}" Nunjucks Shortcode`,
+    this.nunjucksAsyncShortcodes[name] = bench.add(
+      `"${name}" Nunjucks Async Shortcode`,
       callback
     );
+  }
+
+  addNunjucksShortcode(name, callback, isAsync = false) {
+    if (isAsync) {
+      this.addNunjucksAsyncShortcode(name, callback);
+    } else {
+      name = this.getNamespacedName(name);
+
+      if (this.nunjucksShortcodes[name]) {
+        debug(
+          chalk.yellow(
+            "Warning, overwriting a Nunjucks Shortcode with `addNunjucksShortcode(%o)`"
+          ),
+          name
+        );
+      }
+
+      this.nunjucksShortcodes[name] = bench.add(
+        `"${name}" Nunjucks Shortcode`,
+        callback
+      );
+    }
   }
 
   addLiquidShortcode(name, callback) {
@@ -409,28 +475,63 @@ class UserConfig {
   }
 
   addPairedShortcode(name, callback) {
+    debug("Adding universal paired shortcode %o", this.getNamespacedName(name));
     this.addPairedNunjucksShortcode(name, callback);
     this.addPairedLiquidShortcode(name, callback);
     this.addPairedHandlebarsShortcode(name, callback);
     this.addJavaScriptFunction(name, callback);
   }
 
-  addPairedNunjucksShortcode(name, callback) {
+  // Undocumented method as a mitigation to reduce risk of #498
+  addPairedAsyncShortcode(name, callback) {
+    debug(
+      "Adding universal async paired shortcode %o",
+      this.getNamespacedName(name)
+    );
+    this.addPairedNunjucksAsyncShortcode(name, callback);
+    this.addPairedLiquidShortcode(name, callback);
+    this.addJavaScriptFunction(name, callback);
+    // not supported in Handlebars
+  }
+
+  addPairedNunjucksAsyncShortcode(name, callback) {
     name = this.getNamespacedName(name);
 
-    if (this.nunjucksPairedShortcodes[name]) {
+    if (this.nunjucksAsyncPairedShortcodes[name]) {
       debug(
         chalk.yellow(
-          "Warning, overwriting a Nunjucks Paired Shortcode with `addPairedNunjucksShortcode(%o)`"
+          "Warning, overwriting a Nunjucks Async Paired Shortcode with `addPairedNunjucksAsyncShortcode(%o)`"
         ),
         name
       );
     }
 
-    this.nunjucksPairedShortcodes[name] = bench.add(
-      `"${name}" Nunjucks Paired Shortcode`,
+    this.nunjucksAsyncPairedShortcodes[name] = bench.add(
+      `"${name}" Nunjucks Async Paired Shortcode`,
       callback
     );
+  }
+
+  addPairedNunjucksShortcode(name, callback, isAsync = false) {
+    if (isAsync) {
+      this.addPairedNunjucksAsyncShortcode(name, callback);
+    } else {
+      name = this.getNamespacedName(name);
+
+      if (this.nunjucksPairedShortcodes[name]) {
+        debug(
+          chalk.yellow(
+            "Warning, overwriting a Nunjucks Paired Shortcode with `addPairedNunjucksShortcode(%o)`"
+          ),
+          name
+        );
+      }
+
+      this.nunjucksPairedShortcodes[name] = bench.add(
+        `"${name}" Nunjucks Paired Shortcode`,
+        callback
+      );
+    }
   }
 
   addPairedLiquidShortcode(name, callback) {
@@ -487,17 +588,13 @@ class UserConfig {
     );
   }
 
-  addExperiment(key) {
-    this.experiments.add(key);
-  }
-
   setDataDeepMerge(deepMerge) {
     this.dataDeepMerge = !!deepMerge;
   }
 
-  // addTemplateExtensionAlias(targetKey, extension) {
-  //   this.templateExtensionAliases[extension] = targetKey;
-  // }
+  addWatchTarget(additionalWatchTargets) {
+    this.additionalWatchTargets.push(additionalWatchTargets);
+  }
 
   setWatchJavaScriptDependencies(watchEnabled) {
     this.watchJavaScriptDependencies = !!watchEnabled;
@@ -507,13 +604,52 @@ class UserConfig {
     this.browserSyncConfig = options;
   }
 
+  setChokidarConfig(options = {}) {
+    this.chokidarConfig = options;
+  }
+
+  setWatchThrottleWaitTime(time = 0) {
+    this.watchThrottleWaitTime = time;
+  }
+
   setFrontMatterParsingOptions(options = {}) {
     this.frontMatterParsingOptions = options;
+  }
+
+  setQuietMode(quietMode) {
+    this.quietMode = !!quietMode;
+  }
+
+  addExtension(fileExtension, options = {}) {
+    if (!process.env.ELEVENTY_EXPERIMENTAL) {
+      return;
+    }
+
+    console.log(
+      chalk.yellow(
+        "Warning: Configuration API `addExtension` is an experimental Eleventy feature with an unstable API. Be careful!"
+      )
+    );
+
+    this.extensionMap.add(
+      Object.assign(
+        {
+          key: fileExtension,
+          extension: fileExtension
+        },
+        options
+      )
+    );
+  }
+
+  addDataExtension(formatExtension, formatParser) {
+    this.dataExtensions.set(formatExtension, formatParser);
   }
 
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
+      templateFormatsAdded: this.templateFormatsAdded,
       filters: this.filters, // now called transforms
       linters: this.linters,
       globalData: this.globalData,
@@ -527,7 +663,9 @@ class UserConfig {
       nunjucksFilters: this.nunjucksFilters,
       nunjucksAsyncFilters: this.nunjucksAsyncFilters,
       nunjucksTags: this.nunjucksTags,
+      nunjucksAsyncShortcodes: this.nunjucksAsyncShortcodes,
       nunjucksShortcodes: this.nunjucksShortcodes,
+      nunjucksAsyncPairedShortcodes: this.nunjucksAsyncPairedShortcodes,
       nunjucksPairedShortcodes: this.nunjucksPairedShortcodes,
       handlebarsHelpers: this.handlebarsHelpers,
       handlebarsShortcodes: this.handlebarsShortcodes,
@@ -540,17 +678,18 @@ class UserConfig {
       dynamicPermalinks: this.dynamicPermalinks,
       useGitIgnore: this.useGitIgnore,
       dataDeepMerge: this.dataDeepMerge,
-      experiments: this.experiments,
-      // templateExtensionAliases: this.templateExtensionAliases,
       watchJavaScriptDependencies: this.watchJavaScriptDependencies,
+      additionalWatchTargets: this.additionalWatchTargets,
       browserSyncConfig: this.browserSyncConfig,
-      frontMatterParsingOptions: this.frontMatterParsingOptions
+      chokidarConfig: this.chokidarConfig,
+      watchThrottleWaitTime: this.watchThrottleWaitTime,
+      frontMatterParsingOptions: this.frontMatterParsingOptions,
+      dataExtensions: this.dataExtensions,
+      extensionMap: this.extensionMap,
+      quietMode: this.quietMode,
+      events: this.events
     };
   }
-
-  // addExtension(fileExtension, userClass) {
-  //   this.userExtensionMap[ fileExtension ] = userClass;
-  // }
 }
 
 module.exports = UserConfig;

@@ -50,7 +50,7 @@ class Handlebars extends TemplateEngine {
           content = options.fn(this);
         }
 
-        return callback.apply(this, [content, ...args]);
+        return callback.call(this, content, ...args);
       });
     }
   }

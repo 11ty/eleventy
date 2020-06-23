@@ -25,6 +25,10 @@ class Pagination {
   }
 
   circularReferenceCheck(data) {
+    if (data.eleventyExcludeFromCollections) {
+      return;
+    }
+
     let key = data.pagination.data;
     let tags = data.tags || [];
     for (let tag of tags) {
@@ -70,7 +74,7 @@ class Pagination {
     return this.data.pagination.data;
   }
 
-  resolveObjectToValues() {
+  doResolveToObjectValues() {
     if ("resolve" in this.data.pagination) {
       return this.data.pagination.resolve === "values";
     }
@@ -93,29 +97,40 @@ class Pagination {
   _resolveItems() {
     let notFoundValue = "__NOT_FOUND_ERROR__";
     let key = this._getDataKey();
-    let ret = lodashGet(this.data, key, notFoundValue);
-    if (ret === notFoundValue) {
+    let fullDataSet = lodashGet(this.data, key, notFoundValue);
+    if (fullDataSet === notFoundValue) {
       throw new Error(
         `Could not resolve pagination key in template data: ${key}`
       );
     }
 
-    if (!Array.isArray(ret)) {
-      if (this.resolveObjectToValues()) {
-        ret = Object.values(ret);
-      } else {
-        ret = Object.keys(ret);
-      }
+    let keys;
+    if (Array.isArray(fullDataSet)) {
+      keys = fullDataSet;
+    } else if (this.doResolveToObjectValues()) {
+      keys = Object.values(fullDataSet);
+    } else {
+      keys = Object.keys(fullDataSet);
     }
 
-    let result = ret.filter(
-      function(value) {
-        return !this.isFiltered(value);
-      }.bind(this)
-    );
-    if (this.data.pagination.reverse === true) {
-      return result.reverse();
+    let result = keys.filter(() => true);
+
+    if (
+      this.data.pagination.before &&
+      typeof this.data.pagination.before === "function"
+    ) {
+      // we don’t need to make a copy of this because we already .filter() above
+      result = this.data.pagination.before(result);
     }
+
+    if (this.data.pagination.reverse === true) {
+      result = result.reverse();
+    }
+
+    if (this.data.pagination.filter) {
+      result = result.filter(value => !this.isFiltered(value));
+    }
+
     return result;
   }
 
@@ -177,6 +192,36 @@ class Pagination {
         pagination: {
           data: this.data.pagination.data,
           size: this.data.pagination.size,
+          alias: this.alias,
+
+          pages: this.size === 1 ? items.map(entry => entry[0]) : items,
+
+          // See Issue #345 for more examples
+          page: {
+            previous:
+              pageNumber > 0
+                ? this.size === 1
+                  ? items[pageNumber - 1][0]
+                  : items[pageNumber - 1]
+                : null,
+            next:
+              pageNumber < items.length - 1
+                ? this.size === 1
+                  ? items[pageNumber + 1][0]
+                  : items[pageNumber + 1]
+                : null,
+            first: items.length
+              ? this.size === 1
+                ? items[0][0]
+                : items[0]
+              : null,
+            last: items.length
+              ? this.size === 1
+                ? items[items.length - 1][0]
+                : items[items.length - 1]
+              : null
+          },
+
           items: items[pageNumber],
           pageNumber: pageNumber
         }
@@ -201,38 +246,46 @@ class Pagination {
     // we loop twice to pass in the appropriate prev/next links (already full generated now)
     templates.forEach(
       function(cloned, pageNumber) {
-        // links
-        overrides[pageNumber].pagination.previousPageLink =
+        let pageObj = {};
+
+        // links are okay but hrefs are better
+        pageObj.previousPageLink =
           pageNumber > 0 ? links[pageNumber - 1] : null;
-        overrides[pageNumber].pagination.previous =
-          overrides[pageNumber].pagination.previousPageLink;
+        pageObj.previous = pageObj.previousPageLink;
 
-        overrides[pageNumber].pagination.nextPageLink =
+        pageObj.nextPageLink =
           pageNumber < templates.length - 1 ? links[pageNumber + 1] : null;
-        overrides[pageNumber].pagination.next =
-          overrides[pageNumber].pagination.nextPageLink;
+        pageObj.next = pageObj.nextPageLink;
 
-        overrides[pageNumber].pagination.firstPageLink =
-          links.length > 0 ? links[0] : null;
-        overrides[pageNumber].pagination.lastPageLink =
+        pageObj.firstPageLink = links.length > 0 ? links[0] : null;
+        pageObj.lastPageLink =
           links.length > 0 ? links[links.length - 1] : null;
 
-        overrides[pageNumber].pagination.links = links;
+        pageObj.links = links;
         // todo deprecated, consistency with collections and use links instead
-        overrides[pageNumber].pagination.pageLinks = links;
+        pageObj.pageLinks = links;
 
-        // hrefs
-        overrides[pageNumber].pagination.previousPageHref =
+        // hrefs are better than links
+        pageObj.previousPageHref =
           pageNumber > 0 ? hrefs[pageNumber - 1] : null;
-        overrides[pageNumber].pagination.nextPageHref =
+        pageObj.nextPageHref =
           pageNumber < templates.length - 1 ? hrefs[pageNumber + 1] : null;
 
-        overrides[pageNumber].pagination.firstPageHref =
-          hrefs.length > 0 ? hrefs[0] : null;
-        overrides[pageNumber].pagination.lastPageHref =
+        pageObj.firstPageHref = hrefs.length > 0 ? hrefs[0] : null;
+        pageObj.lastPageHref =
           hrefs.length > 0 ? hrefs[hrefs.length - 1] : null;
 
-        overrides[pageNumber].pagination.hrefs = hrefs;
+        pageObj.hrefs = hrefs;
+
+        // better names
+        pageObj.href = {
+          previous: pageObj.previousPageHref,
+          next: pageObj.nextPageHref,
+          first: pageObj.firstPageHref,
+          last: pageObj.lastPageHref
+        };
+
+        Object.assign(overrides[pageNumber].pagination, pageObj);
 
         cloned.setPaginationData(overrides[pageNumber]);
 

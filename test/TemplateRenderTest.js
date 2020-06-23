@@ -1,40 +1,36 @@
 import test from "ava";
 import TemplateRender from "../src/TemplateRender";
-import path from "path";
+import EleventyExtensionMap from "../src/EleventyExtensionMap";
+
+function getNewTemplateRender(name, inputDir) {
+  let tr = new TemplateRender(name, inputDir);
+  tr.extensionMap = new EleventyExtensionMap();
+  return tr;
+}
 
 test("Basic", t => {
-  // Path is unnecessary but supported
-  t.is(TemplateRender.cleanupEngineName("default.ejs"), "ejs");
-  t.true(TemplateRender.hasEngine("default.ejs"));
-  t.is(new TemplateRender("default.ejs").getEngineName(), "ejs");
-
-  // Better
-  t.is(TemplateRender.cleanupEngineName("ejs"), "ejs");
-  t.is(TemplateRender.cleanupEngineName("EjS"), "ejs");
-  t.true(TemplateRender.hasEngine("EjS"));
-  t.true(TemplateRender.hasEngine("ejs"));
-  t.is(new TemplateRender("ejs").getEngineName(), "ejs");
-
-  t.falsy(TemplateRender.cleanupEngineName("sldkjfkldsj"));
-  t.false(TemplateRender.hasEngine("sldkjfkldsj"));
+  t.throws(() => {
+    let tr = getNewTemplateRender("sldkjfkldsj");
+    tr.init("sldkjfkldsj");
+  });
 });
 
 test("Includes Dir", async t => {
   t.is(
-    new TemplateRender("ejs", "./test/stubs").getIncludesDir(),
+    getNewTemplateRender("ejs", "./test/stubs").getIncludesDir(),
     "test/stubs/_includes"
   );
 });
 
 test("Invalid override", async t => {
-  let tr = new TemplateRender("ejs", "./test/stubs");
+  let tr = getNewTemplateRender("ejs", "./test/stubs");
   t.throws(() => {
     tr.setEngineOverride("lslkdjf");
   });
 });
 
 test("Valid Override", async t => {
-  let tr = new TemplateRender("ejs", "./test/stubs");
+  let tr = getNewTemplateRender("ejs", "./test/stubs");
   tr.setEngineOverride("njk");
   t.is(tr.getEngineName(), "njk");
   t.truthy(tr.isEngine("njk"));

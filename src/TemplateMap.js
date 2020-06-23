@@ -3,6 +3,7 @@ const DependencyGraph = require("dependency-graph").DepGraph;
 const TemplateCollection = require("./TemplateCollection");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
 const UsingCircularTemplateContentReferenceError = require("./Errors/UsingCircularTemplateContentReferenceError");
+// TODO the config setup here is overly complex. Why aren’t we injecting config instance like everywhere else?
 const eleventyConfig = require("./EleventyConfig");
 const debug = require("debug")("Eleventy:TemplateMap");
 const debugDev = require("debug")("Dev:Eleventy:TemplateMap");
@@ -17,7 +18,6 @@ class DuplicatePermalinkOutputError extends EleventyBaseError {
 class TemplateMap {
   constructor() {
     this.map = [];
-    this.graph = new DependencyGraph();
     this.collectionsData = null;
     this.cached = false;
     this.configCollections = null;
@@ -26,10 +26,6 @@ class TemplateMap {
 
   get tagPrefix() {
     return "___TAG___";
-  }
-
-  get specialPrefix() {
-    return "___SPECIAL___";
   }
 
   async add(template) {
@@ -291,6 +287,8 @@ class TemplateMap {
     let secondPaginatedDepMap = this.getPaginatedOverAllCollectionMappedDependencies();
     await this.initDependencyMap(secondPaginatedDepMap);
 
+    await this.resolveRemainingComputedData();
+
     let orderedPaths = this.getOrderedInputPaths(
       dependencyMap,
       delayedDependencyMap,
@@ -487,11 +485,13 @@ class TemplateMap {
 
   populateCollectionsWithContent() {
     for (let collectionName in this.collectionsData) {
+      // skip custom collections set in configuration files that have arbitrary types
       if (!Array.isArray(this.collectionsData[collectionName])) {
         continue;
       }
 
       for (let item of this.collectionsData[collectionName]) {
+        // skip custom collections set in configuration files that have arbitrary types
         if (!isPlainObject(item) || !("inputPath" in item)) {
           continue;
         }
@@ -501,6 +501,16 @@ class TemplateMap {
         item.templateContent = entry._pages[index]._templateContent;
       }
     }
+  }
+
+  async resolveRemainingComputedData() {
+    let promises = [];
+    for (let entry of this.map) {
+      for (let page of entry._pages) {
+        promises.push(page.template.resolveRemainingComputedData(page.data));
+      }
+    }
+    return Promise.all(promises);
   }
 
   checkForDuplicatePermalinks() {
@@ -538,7 +548,7 @@ ${permalinks[page.url]
     }
   }
 
-  async getCollectionsData() {
+  async _testGetCollectionsData() {
     if (!this.cached) {
       await this.cache();
     }

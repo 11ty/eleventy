@@ -12,6 +12,12 @@ test("Shallow Merge", t => {
   t.deepEqual(Merge({ a: [1] }, { a: [2] }), { a: [1, 2] });
 });
 
+test("Doesn’t need to return", t => {
+  var b = { a: 2 };
+  Merge(b, { a: 1 });
+  t.deepEqual(b, { a: 1 });
+});
+
 test("Invalid", t => {
   t.deepEqual(Merge({}, 1), {});
   t.deepEqual(Merge({}, [1]), {});
@@ -144,4 +150,11 @@ test("Deep, override: prefix at other placements", t => {
       }
     }
   );
+});
+
+test("Deep, override: empty", t => {
+  t.deepEqual(Merge({}, { a: { b: [3, 4] } }), { a: { b: [3, 4] } });
+  t.deepEqual(Merge({}, { a: [2] }), { a: [2] });
+  t.deepEqual(Merge({}, { "override:a": [2] }), { a: [2] });
+  t.deepEqual(Merge({}, { a: { "override:b": [3, 4] } }), { a: { b: [3, 4] } });
 });
