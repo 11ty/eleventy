@@ -80,11 +80,11 @@ class TemplateEngine {
     if (this.includesDir) {
       let bench = aggregateBench.get("Searching the file system");
       bench.before();
-      this.extensions.forEach(function(extension) {
+      this.extensions.forEach(function (extension) {
         partialFiles = partialFiles.concat(
           fastglob.sync(prefix + extension, {
             caseSensitiveMatch: false,
-            dot: true
+            dot: true,
           })
         );
       });
@@ -99,7 +99,7 @@ class TemplateEngine {
         this.includesDir
       );
       let partialPathNoExt = partialPath;
-      this.extensions.forEach(function(extension) {
+      this.extensions.forEach(function (extension) {
         partialPathNoExt = TemplatePath.removeExtension(
           partialPathNoExt,
           "." + extension
@@ -139,11 +139,11 @@ class TemplateEngine {
     return true;
   }
 
-  getExtraDataFromFile(inputPath) {
+  getExtraDataFromFile() {
     return {};
   }
 
-  initRequireCache(inputPath) {
+  initRequireCache() {
     // do nothing
   }
 

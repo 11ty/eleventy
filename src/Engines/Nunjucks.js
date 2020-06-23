@@ -19,7 +19,7 @@ class Nunjucks extends TemplateEngine {
       new NunjucksLib.Environment(
         new NunjucksLib.FileSystemLoader([
           super.getIncludesDir(),
-          TemplatePath.getWorkingDir()
+          TemplatePath.getWorkingDir(),
         ])
       );
     this.setEngineLib(this.njkEnv);
@@ -87,7 +87,7 @@ class Nunjucks extends TemplateEngine {
     function ShortcodeFunction() {
       this.tags = [shortcodeName];
 
-      this.parse = function(parser, nodes, lexer) {
+      this.parse = function (parser, nodes) {
         let args;
         let tok = parser.nextToken();
 
@@ -107,7 +107,7 @@ class Nunjucks extends TemplateEngine {
         return new nodes.CallExtension(this, "run", args);
       };
 
-      this.run = function(...args) {
+      this.run = function (...args) {
         let resolve;
         if (isAsync) {
           resolve = args.pop();
@@ -118,10 +118,10 @@ class Nunjucks extends TemplateEngine {
         if (isAsync) {
           shortcodeFn
             .call(Nunjucks._normalizeShortcodeContext(context), ...argArray)
-            .then(function(returnValue) {
+            .then(function (returnValue) {
               resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
             })
-            .catch(function(e) {
+            .catch(function (e) {
               resolve(
                 new EleventyShortcodeError(
                   `Error with Nunjucks shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
@@ -158,7 +158,7 @@ class Nunjucks extends TemplateEngine {
     function PairedShortcodeFunction() {
       this.tags = [shortcodeName];
 
-      this.parse = function(parser, nodes, lexer) {
+      this.parse = function (parser, nodes) {
         var tok = parser.nextToken();
 
         var args = parser.parseSignature(true, true);
@@ -173,7 +173,7 @@ class Nunjucks extends TemplateEngine {
         return new nodes.CallExtension(this, "run", args, [body]);
       };
 
-      this.run = function(...args) {
+      this.run = function (...args) {
         let resolve;
         if (isAsync) {
           resolve = args.pop();
@@ -188,10 +188,10 @@ class Nunjucks extends TemplateEngine {
               body(),
               ...argArray
             )
-            .then(function(returnValue) {
+            .then(function (returnValue) {
               resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
             })
-            .catch(function(e) {
+            .catch(function (e) {
               resolve(
                 new EleventyShortcodeError(
                   `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
@@ -231,9 +231,9 @@ class Nunjucks extends TemplateEngine {
     } else {
       tmpl = NunjucksLib.compile(str, this.njkEnv, inputPath);
     }
-    return async function(data) {
-      return new Promise(function(resolve, reject) {
-        tmpl.render(data, function(err, res) {
+    return async function (data) {
+      return new Promise(function (resolve, reject) {
+        tmpl.render(data, function (err, res) {
           if (err) {
             reject(err);
           } else {

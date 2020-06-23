@@ -28,8 +28,8 @@ class JavaScriptTemplateLiteral extends TemplateEngine {
     return str;
   }
 
-  async compile(str, inputPath) {
-    return function(data) {
+  async compile(str) {
+    return function (data) {
       // avoid `with`
       let dataStr = "";
       for (let j in data) {
@@ -38,7 +38,7 @@ class JavaScriptTemplateLiteral extends TemplateEngine {
           null,
           null,
           {
-            references: true
+            references: true,
           }
         )};\n`;
       }
