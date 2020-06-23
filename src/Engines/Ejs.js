@@ -31,7 +31,7 @@ class Ejs extends TemplateEngine {
       {
         root: "./" + includesDir,
         compileDebug: true,
-        filename: "./" + includesDir
+        filename: "./" + includesDir,
       },
       this.ejsOptions || {}
     );
@@ -42,9 +42,12 @@ class Ejs extends TemplateEngine {
     let configFns = this.config.ejsFunctions;
 
     for (let key in configFns) {
-        // Attaching the ejs lib and the ejs options to the data
-        Object.assign(data, {ejsEngine: this.ejsLib, ejsOptions: this.getEjsOptions()});
-        fns[key] = configFns[key].bind(data);
+      // Attaching the ejs lib and the ejs options to the data
+      Object.assign(data, {
+        ejsEngine: this.ejsLib,
+        ejsOptions: this.getEjsOptions(),
+      });
+      fns[key] = configFns[key].bind(data);
     }
     return fns;
   }
@@ -56,12 +59,12 @@ class Ejs extends TemplateEngine {
       options.filename = inputPath;
     }
 
-    options.async = true;
-
     let fn = await this.ejsLib.compile(str, options);
 
-    return data => {
-      Object.assign(data, this.getEjsFunctions(data));
+    return (data) => {
+      if (data) {
+        Object.assign(data, this.getEjsFunctions(data));
+      }
       return fn(data);
     };
   }
