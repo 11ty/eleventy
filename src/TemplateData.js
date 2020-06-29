@@ -22,7 +22,9 @@ const aggregateBench = require("./BenchmarkManager").get("Aggregate");
 
 class FSExistsCache {
   _cache = new Map();
-  has(path) { return this._cache.has(path); }
+  has(path) {
+    return this._cache.has(path);
+  }
   exists(path) {
     let exists = this._cache.get(path);
     if (!this.has(path)) {
@@ -31,7 +33,7 @@ class FSExistsCache {
     }
     return exists;
   }
-  markExists(path, value=true) {
+  markExists(path, value = true) {
     this._cache.set(path, !!value);
   }
 }
@@ -120,7 +122,7 @@ class TemplateData {
 
   async _checkInputDir() {
     if (this.inputDirNeedsCheck) {
-      let globalPathStat = fs.statSync(this.inputDir);
+      let globalPathStat = await fs.stat(this.inputDir);
 
       if (!globalPathStat.isDirectory()) {
         throw new Error("Could not find data path directory: " + this.inputDir);
@@ -146,12 +148,12 @@ class TemplateData {
     let paths = [
       `${dir}/**/*.json`, // covers .11tydata.json too
       `${dir}/**/*${this.config.jsDataFileSuffix}.cjs`,
-      `${dir}/**/*${this.config.jsDataFileSuffix}.js`
+      `${dir}/**/*${this.config.jsDataFileSuffix}.js`,
     ];
 
     if (this.hasUserDataExtensions()) {
       let userPaths = this.getUserDataExtensions().map(
-        extension => `${dir}/**/*.${extension}` // covers .11tydata.{extension} too
+        (extension) => `${dir}/**/*.${extension}` // covers .11tydata.{extension} too
       );
       paths = userPaths.concat(paths);
     }
@@ -162,7 +164,7 @@ class TemplateData {
   async getTemplateJavaScriptDataFileGlob() {
     let dir = await this.getInputDir();
     return TemplatePath.addLeadingDotSlashArray([
-      `${dir}/**/*${this.config.jsDataFileSuffix}.js`
+      `${dir}/**/*${this.config.jsDataFileSuffix}.js`,
     ]);
   }
 
@@ -198,7 +200,7 @@ class TemplateData {
     fsBench.before();
     let paths = fastglob.sync(await this.getGlobalDataGlob(), {
       caseSensitiveMatch: false,
-      dot: true
+      dot: true,
     });
     fsBench.after();
 
@@ -277,7 +279,6 @@ class TemplateData {
     return this.globalData;
   }
 
-
   /* Template and Directory data files */
   async combineLocalData(localDataPaths) {
     let localData = {};
@@ -290,7 +291,9 @@ class TemplateData {
       return this._fsExistsCache.exists(path);
     });
 
-    if (!localDataPaths.length) { return localData; }
+    if (!localDataPaths.length) {
+      return localData;
+    }
 
     for (let path of localDataPaths) {
       // clean up data for template/directory data files only.

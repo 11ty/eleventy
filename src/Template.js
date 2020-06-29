@@ -459,8 +459,6 @@ class Template extends TemplateContent {
     await this.computedData.processRemainingData(data);
   }
 
-  _templatesResultsCache = new Map();
-
   async getTemplates(data) {
     // TODO cache this
     let results = [];
