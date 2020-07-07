@@ -59,6 +59,7 @@ class UserConfig {
     this.browserSyncConfig = {};
     this.chokidarConfig = {};
     this.watchThrottleWaitTime = 0; //ms
+    this.middlewares = [];
 
     // using Map to preserve insertion order
     this.dataExtensions = new Map();
@@ -640,6 +641,14 @@ class UserConfig {
     this.dataExtensions.set(formatExtension, formatParser);
   }
 
+  addAsyncMiddleware(callback) {
+    this.middlewares.push({ callback, isAsync: true });
+  }
+
+  addMiddleware(callback, isAsync = false) {
+    this.middlewares.push({ callback, isAsync });
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
@@ -680,7 +689,8 @@ class UserConfig {
       dataExtensions: this.dataExtensions,
       extensionMap: this.extensionMap,
       quietMode: this.quietMode,
-      events: this.events
+      events: this.events,
+      middlewares: this.middlewares
     };
   }
 }

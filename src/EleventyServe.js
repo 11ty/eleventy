@@ -36,7 +36,7 @@ class EleventyServe {
     return TemplatePath.join(this.getRedirectDir(dirName), "index.html");
   }
 
-  getOptions(port) {
+  async getOptions(port) {
     let pathPrefix = this.getPathPrefix();
 
     // TODO customize this in Configuration API?
@@ -60,16 +60,25 @@ class EleventyServe {
       }
     }
 
+    const baseConfig = {
+      server: serverConfig,
+      port: port || 8080,
+      ignore: ["node_modules"],
+      watch: false,
+      open: false,
+      notify: false,
+      index: "index.html"
+    };
+
+    const middlewares = [];
+    for (const { isAsync, callback } of this.config.middlewares) {
+      const middleware = isAsync ? await callback(baseConfig) : callback(baseConfig);
+      middlewares.push(middleware);
+    }
+    baseConfig['middleware'] = middlewares;
+
     return Object.assign(
-      {
-        server: serverConfig,
-        port: port || 8080,
-        ignore: ["node_modules"],
-        watch: false,
-        open: false,
-        notify: false,
-        index: "index.html"
-      },
+      baseConfig,
       this.config.browserSyncConfig
     );
   }
@@ -113,7 +122,7 @@ class EleventyServe {
     );
   }
 
-  serve(port) {
+  async serve(port) {
     // only load on serve—this is pretty expensive
     const browserSync = require("browser-sync");
     this.server = browserSync.create();
