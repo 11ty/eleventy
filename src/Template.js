@@ -606,7 +606,11 @@ class Template extends TemplateContent {
     }
 
     await this.runLinters(content, page.inputPath, page.outputPath);
-    content = await this.runTransforms(content, page.outputPath); // pass in page.inputPath?
+    content = await this.runTransforms(
+      content,
+      page.outputPath,
+      page.inputPath
+    );
     return content;
   }
 
