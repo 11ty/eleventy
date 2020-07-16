@@ -452,12 +452,12 @@ Arguments:
    * @private
    * @method
    */
-  async _watch() {
+  async _watch(path) {
     if (this.watchManager.isBuildRunning()) {
       return;
     }
 
-    this.config.events.emit("beforeWatch");
+    this.config.events.emit("beforeWatch", path);
 
     this.watchManager.setBuildRunning();
 
@@ -522,7 +522,7 @@ Arguments:
       console.log(
         `You saved while Eleventy was running, let’s run again. (${this.watchManager.getPendingQueueSize()} remain)`
       );
-      await this._watch();
+      await this._watch(path);
     } else {
       console.log("Watching…");
     }
@@ -675,7 +675,7 @@ Arguments:
         this._addFileToWatchQueue(path);
         clearTimeout(watchDelay);
         watchDelay = setTimeout(async () => {
-          await this._watch();
+          await this._watch(path);
         }, this.config.watchThrottleWaitTime);
       } catch (e) {
         EleventyErrorHandler.fatal(e, "Eleventy fatal watch error");
