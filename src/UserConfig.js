@@ -228,9 +228,11 @@ class UserConfig {
     this.nunjucksTags[name] = bench.add(`"${name}" Nunjucks Custom Tag`, tagFn);
   }
 
-  addGlobalData(name, callback) {
-    name = this.getNamespacedName(name);
-    this.globalData[name] = callback;
+  addGlobalData(data) {
+    for (const [key, value] of Object.entries(data)) {
+      const name = this.getNamespacedName(key);
+      this.globalData[name] = value;
+    }
   }
 
   addTransform(name, callback) {
@@ -331,7 +333,9 @@ class UserConfig {
 
   _normalizeTemplateFormats(templateFormats) {
     if (typeof templateFormats === "string") {
-      templateFormats = templateFormats.split(",").map(format => format.trim());
+      templateFormats = templateFormats
+        .split(",")
+        .map((format) => format.trim());
     }
     return templateFormats;
   }
@@ -635,7 +639,7 @@ class UserConfig {
       Object.assign(
         {
           key: fileExtension,
-          extension: fileExtension
+          extension: fileExtension,
         },
         options
       )
@@ -687,7 +691,7 @@ class UserConfig {
       dataExtensions: this.dataExtensions,
       extensionMap: this.extensionMap,
       quietMode: this.quietMode,
-      events: this.events
+      events: this.events,
     };
   }
 }
