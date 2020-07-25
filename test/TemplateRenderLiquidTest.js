@@ -968,3 +968,52 @@ test("Liquid Shortcode (with async function, error throwing)", async t => {
     ) > -1
   );
 });
+
+test("Liquid Render a false #1069", async t => {
+  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+    "{{ falseValue }}"
+  );
+  t.is(await fn({ falseValue: false }), "false");
+});
+
+test("Liquid Render Square Brackets #680 dash single quotes", async t => {
+  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+    "<p>{{ test['hey-a'] }}</p>"
+  );
+  t.is(await fn({ test: { "hey-a": 1 } }), "<p>1</p>");
+});
+
+test.skip("Liquid Render Square Brackets #680 dash single quotes spaces", async t => {
+  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+    "<p>{{ test[ 'hey-a' ] }}</p>"
+  );
+  t.is(await fn({ test: { "hey-a": 1 } }), "<p>1</p>");
+});
+
+test("Liquid Render Square Brackets #680 dash double quotes", async t => {
+  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+    '<p>{{ test["hey-a"] }}</p>'
+  );
+  t.is(await fn({ test: { "hey-a": 1 } }), "<p>1</p>");
+});
+
+test.skip("Liquid Render Square Brackets #680 dash double quotes spaces", async t => {
+  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+    '<p>{{ test[ "hey-a" ] }}</p>'
+  );
+  t.is(await fn({ test: { "hey-a": 1 } }), "<p>1</p>");
+});
+
+test("Liquid Render Square Brackets #680 variable reference", async t => {
+  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+    "<p>{{ test[ref] }}</p>"
+  );
+  t.is(await fn({ test: { "hey-a": 1 }, ref: "hey-a" }), "<p>1</p>");
+});
+
+test.skip("Liquid Render Square Brackets #680 variable reference array", async t => {
+  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+    "<p>{{ test[ref[0]] }}</p>"
+  );
+  t.is(await fn({ test: { "hey-a": 1 }, ref: ["hey-a"] }), "<p>1</p>");
+});

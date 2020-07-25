@@ -12,7 +12,9 @@ const EleventyErrorUtil = require("./EleventyErrorUtil");
 const config = require("./Config");
 const debug = require("debug")("Eleventy:TemplateContent");
 const debugDev = require("debug")("Dev:Eleventy:TemplateContent");
+const bench = require("./BenchmarkManager").get("Aggregate");
 
+class TemplateContentFrontMatterError extends EleventyBaseError {}
 class TemplateContentCompileError extends EleventyBaseError {}
 class TemplateContentRenderError extends EleventyBaseError {}
 
@@ -78,7 +80,15 @@ class TemplateContent {
 
     if (this.inputContent) {
       let options = this.config.frontMatterParsingOptions || {};
-      let fm = matter(this.inputContent, options);
+      let fm;
+      try {
+        fm = matter(this.inputContent, options);
+      } catch (e) {
+        throw new TemplateContentFrontMatterError(
+          `Having trouble reading front matter from template ${this.inputPath}`,
+          e
+        );
+      }
       if (options.excerpt && fm.excerpt) {
         let excerptString = fm.excerpt + (options.excerpt_separator || "---");
         if (fm.content.startsWith(excerptString + os.EOL)) {
@@ -101,17 +111,22 @@ class TemplateContent {
       this.frontMatter = {
         data: {},
         content: "",
-        excerpt: ""
+        excerpt: "",
       };
     }
   }
 
   async getInputContent() {
-    if (this.engine.needsToReadFileContents()) {
-      return fs.readFile(this.inputPath, "utf-8");
+    if (!this.engine.needsToReadFileContents()) {
+      return "";
     }
 
-    return "";
+    let templateBenchmark = bench.get("Template Read");
+    templateBenchmark.before();
+    let content = await fs.readFile(this.inputPath, "utf-8");
+    templateBenchmark.after();
+
+    return content;
   }
 
   async getFrontMatter() {
@@ -170,7 +185,10 @@ class TemplateContent {
     );
 
     try {
+      let templateBenchmark = bench.get("Template Compile");
+      templateBenchmark.before();
       let fn = await this.templateRender.getCompiledTemplate(str);
+      templateBenchmark.after();
       debugDev("%o getCompiledTemplate function created", this.inputPath);
       return fn;
     } catch (e) {
@@ -185,7 +203,10 @@ class TemplateContent {
   async render(str, data, bypassMarkdown) {
     try {
       let fn = await this.compile(str, bypassMarkdown);
+      let templateBenchmark = bench.get("Template Render");
+      templateBenchmark.before();
       let rendered = await fn(data);
+      templateBenchmark.after();
       debugDev(
         "%o getCompiledTemplate called, rendered content created",
         this.inputPath

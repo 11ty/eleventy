@@ -8,6 +8,8 @@ const EleventyServe = require("./EleventyServe");
 const EleventyWatch = require("./EleventyWatch");
 const EleventyWatchTargets = require("./EleventyWatchTargets");
 const EleventyFiles = require("./EleventyFiles");
+const { performance } = require("perf_hooks");
+
 const templateCache = require("./TemplateCache");
 const simplePlural = require("./Util/Pluralize");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
@@ -61,8 +63,12 @@ class Eleventy {
      */
     this.isDryRun = false;
 
-    /** @member {Date} - The time of instantiation. */
-    this.start = new Date();
+    if (performance) {
+      debug("Eleventy warm up time (in ms) %o", performance.now());
+    }
+
+    /** @member {Number} - The timestamp of Eleventy start. */
+    this.start = this.getNewTimestamp();
 
     /**
      * @member {Array<String>} - Subset of template types.
@@ -86,6 +92,13 @@ class Eleventy {
     this.watchTargets = new EleventyWatchTargets();
     this.watchTargets.addAndMakeGlob(this.config.additionalWatchTargets);
     this.watchTargets.watchJavaScriptDependencies = this.config.watchJavaScriptDependencies;
+  }
+
+  getNewTimestamp() {
+    if (performance) {
+      return performance.now();
+    }
+    return new Date().getTime();
   }
 
   /** @type {String} */
@@ -186,7 +199,7 @@ class Eleventy {
    */
   async restart() {
     debug("Restarting");
-    this.start = new Date();
+    this.start = this.getNewTimestamp();
     templateCache.clear();
     bench.reset();
     this.eleventyFiles.restart();
@@ -227,26 +240,28 @@ class Eleventy {
 
     let writeCount = this.writer.getWriteCount();
     let skippedCount = this.writer.getSkippedCount();
-
     let copyCount = this.writer.getCopyCount();
-    let skippedCopyCount = this.writer.getSkippedCopyCount();
+
+    let slashRet = [];
 
     if (copyCount) {
-      ret.push(
-        `Copied ${copyCount} ${simplePlural(copyCount, "item", "items")}${
-          skippedCopyCount ? ` (skipped ${skippedCopyCount})` : ""
-        } /`
+      slashRet.push(
+        `Copied ${copyCount} ${simplePlural(copyCount, "file", "files")}`
       );
     }
 
-    ret.push(
+    slashRet.push(
       `Wrote ${writeCount} ${simplePlural(writeCount, "file", "files")}${
         skippedCount ? ` (skipped ${skippedCount})` : ""
       }`
     );
 
+    if (slashRet.length) {
+      ret.push(slashRet.join(" / "));
+    }
+
     let versionStr = `v${pkg.version}`;
-    let time = ((new Date() - this.start) / 1000).toFixed(2);
+    let time = ((this.getNewTimestamp() - this.start) / 1000).toFixed(2);
     ret.push(`in ${time} ${simplePlural(time, "second", "seconds")}`);
 
     if (writeCount >= 10) {
@@ -484,7 +499,7 @@ Arguments:
     // Is a CSS input file and is not in the includes folder
     // TODO check output path file extension of this template (not input path)
     // TODO add additional API for this, maybe a config callback?
-    let onlyCssChanges = this.watchManager.hasAllQueueFiles(path => {
+    let onlyCssChanges = this.watchManager.hasAllQueueFiles((path) => {
       return (
         path.endsWith(".css") &&
         // TODO how to make this work with relative includes?
@@ -611,7 +626,7 @@ Arguments:
     return Object.assign(
       {
         ignored: ignores,
-        ignoreInitial: true
+        ignoreInitial: true,
         // also interesting: awaitWriteFinish
       },
       configOptions
@@ -634,6 +649,9 @@ Arguments:
     // See: TemplateWriter:pathCache and EleventyWatchTargets
     await this.write();
 
+    let initWatchBench = this.watcherBench.get("Start up --watch");
+    initWatchBench.before();
+
     await this.initWatch();
 
     // TODO improve unwatching if JS dependencies are removed (or files are deleted)
@@ -642,7 +660,10 @@ Arguments:
 
     let watcher = chokidar.watch(rawFiles, this.getChokidarConfig());
 
-    this.watcherBench.finish("Initialize --watch", 10, this.isVerbose);
+    initWatchBench.after();
+
+    this.watcherBench.setIsVerbose(true);
+    this.watcherBench.finish("Watch");
 
     console.log("Watching…");
 
@@ -662,12 +683,12 @@ Arguments:
       }
     }
 
-    watcher.on("change", async path => {
+    watcher.on("change", async (path) => {
       console.log("File changed:", path);
       await watchRun.call(this, path);
     });
 
-    watcher.on("add", async path => {
+    watcher.on("add", async (path) => {
       console.log("File added:", path);
       await watchRun.call(this, path);
     });
@@ -714,10 +735,13 @@ Arguments:
       EleventyErrorHandler.logger = this.logger;
     }
 
+    this.config.events.emit("beforeBuild");
+
     try {
       let promise = this.writer.write();
 
       ret = await promise;
+      this.config.events.emit("afterBuild");
     } catch (e) {
       EleventyErrorHandler.initialMessage(
         "Problem writing Eleventy templates",

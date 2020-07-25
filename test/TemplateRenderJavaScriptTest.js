@@ -335,3 +335,27 @@ test("JS Class Async Render with a function (async function, throws error)", asy
     ) > -1
   );
 });
+
+test("JS function has access to built in filters", async t => {
+  t.plan(6);
+  let tr = getNewTemplateRender("./test/stubs/function-fns.11ty.js");
+
+  let fn = await tr.getCompiledTemplate();
+  await fn({ avaTest: t, page: { url: "/hi/" } });
+});
+
+test("Class has access to built in filters", async t => {
+  t.plan(6);
+  let tr = getNewTemplateRender("./test/stubs/class-fns.11ty.js");
+
+  let fn = await tr.getCompiledTemplate();
+  await fn({ avaTest: t, page: { url: "/hi/" } });
+});
+
+test("Class has page property already and keeps it", async t => {
+  t.plan(2);
+  let tr = getNewTemplateRender("./test/stubs/class-fns-has-page.11ty.js");
+
+  let fn = await tr.getCompiledTemplate();
+  await fn({ avaTest: t, page: { url: "/hi/" } });
+});

@@ -112,10 +112,10 @@ class TemplateWriter {
       path,
       this.inputDir,
       this.outputDir,
-      this.templateData
+      this.templateData,
+      this.extensionMap
     );
 
-    tmpl.extensionMap = this.extensionMap;
     tmpl.setIsVerbose(this.isVerbose);
 
     // --incremental only writes files that trigger a build during --watch

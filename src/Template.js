@@ -14,11 +14,13 @@ const TemplateFileSlug = require("./TemplateFileSlug");
 const ComputedData = require("./ComputedData");
 const Pagination = require("./Plugins/Pagination");
 const TemplateContentPrematureUseError = require("./Errors/TemplateContentPrematureUseError");
+
 const debug = require("debug")("Eleventy:Template");
 const debugDev = require("debug")("Dev:Eleventy:Template");
+const bench = require("./BenchmarkManager").get("Aggregate");
 
 class Template extends TemplateContent {
-  constructor(path, inputDir, outputDir, templateData) {
+  constructor(path, inputDir, outputDir, templateData, extensionMap) {
     debugDev("new Template(%o)", path);
     super(path, inputDir);
 
@@ -32,6 +34,8 @@ class Template extends TemplateContent {
     } else {
       this.outputDir = false;
     }
+
+    this.extensionMap = extensionMap;
 
     this.linters = [];
     this.transforms = [];
@@ -82,7 +86,8 @@ class Template extends TemplateContent {
       this._layout = TemplateLayout.getTemplate(
         layoutKey,
         this.getInputDir(),
-        this.config
+        this.config,
+        this.extensionMap
       );
     }
     return this._layout;
@@ -349,7 +354,7 @@ class Template extends TemplateContent {
   }
 
   async runLinters(str, inputPath, outputPath) {
-    this.linters.forEach(function(linter) {
+    this.linters.forEach(function (linter) {
       // these can be asynchronous but no guarantee of order when they run
       linter.call(this, str, inputPath, outputPath);
     });
@@ -386,40 +391,61 @@ class Template extends TemplateContent {
         );
       }
     } else if (typeof obj === "string") {
-      computedData.add(
+      computedData.addTemplateString(
         parentKey,
-        async innerData => {
+        async (innerData) => {
           return await super.render(obj, innerData, true);
         },
         declaredDependencies
       );
     } else {
+      // Numbers, booleans, etc
       computedData.add(parentKey, obj, declaredDependencies);
     }
   }
 
-  async augmentFinalData(data) {
+  async addComputedData(data) {
     // will _not_ consume renderData
-    let computedData = new ComputedData();
+    this.computedData = new ComputedData();
+
+    // Add permalink (outside of eleventyComputed) to computed graph
+    // if(data.permalink) {
+    //   this._addComputedEntry(this.computedData, data.permalink, "permalink");
+    // }
+
+    // Note that `permalink` is only a thing that gets consumed—it does not go directly into generated data
     // this allows computed entries to use page.url or page.outputPath and they’ll be resolved properly
-    this._addComputedEntry(
-      computedData,
-      {
-        page: {
-          url: async data => await this.getOutputHref(data),
-          outputPath: async data => await this.getOutputPath(data)
-        }
-      },
-      null,
-      ["permalink"]
-    ); // declared dependency
+    this.computedData.addTemplateString(
+      "page.url",
+      async (data) => await this.getOutputHref(data),
+      data.permalink ? ["permalink"] : undefined
+    );
+
+    this.computedData.addTemplateString(
+      "page.outputPath",
+      async (data) => await this.getOutputPath(data),
+      data.permalink ? ["permalink"] : undefined
+    );
 
     if (this.config.keys.computed in data) {
-      this._addComputedEntry(computedData, data[this.config.keys.computed]);
+      this._addComputedEntry(
+        this.computedData,
+        data[this.config.keys.computed]
+      );
     }
-    await computedData.setupData(data);
 
-    // deprecated, use eleventyComputed instead.
+    // limited run of computed data—save the stuff that relies on collections for later.
+    debug("First round of computed data for %o", this.inputPath);
+    await this.computedData.setupData(data, function (entry) {
+      return !this.isUsesStartsWith(entry, "collections.");
+
+      // TODO possible improvement here is to only process page.url, page.outputPath, permalink
+      // instead of only punting on things that rely on collections.
+      // let firstPhaseComputedData = ["page.url", "page.outputPath", ...this.getOrderFor("page.url"), ...this.getOrderFor("page.outputPath")];
+      // return firstPhaseComputedData.indexOf(entry) > -1;
+    });
+
+    // Deprecated, use eleventyComputed instead.
     if ("renderData" in data) {
       data.renderData = await this.mapDataAsRenderedTemplates(
         data.renderData,
@@ -428,12 +454,17 @@ class Template extends TemplateContent {
     }
   }
 
+  async resolveRemainingComputedData(data) {
+    debug("Second round of computed data for %o", this.inputPath);
+    await this.computedData.processRemainingData(data);
+  }
+
   async getTemplates(data) {
     // TODO cache this
     let results = [];
 
     if (!Pagination.hasPagination(data)) {
-      await this.augmentFinalData(data);
+      await this.addComputedData(data);
 
       results.push({
         template: this,
@@ -455,24 +486,24 @@ class Template extends TemplateContent {
             );
           }
           return this._templateContent;
-        }
+        },
       });
     } else {
       // needs collections for pagination items
       // but individual pagination entries won’t be part of a collection
       this.paging = new Pagination(data);
       this.paging.setTemplate(this);
-      let templates = await this.paging.getPageTemplates();
+      let pageTemplates = await this.paging.getPageTemplates();
       let pageNumber = 0;
-      for (let page of templates) {
+      for (let page of pageTemplates) {
         let pageData = Object.assign({}, await page.getData());
+
+        await page.addComputedData(pageData);
 
         // Issue #115
         if (data.collections) {
           pageData.collections = data.collections;
         }
-
-        await page.augmentFinalData(pageData);
 
         results.push({
           template: page,
@@ -494,7 +525,7 @@ class Template extends TemplateContent {
               );
             }
             return this._templateContent;
-          }
+          },
         });
       }
     }
@@ -534,13 +565,13 @@ class Template extends TemplateContent {
 
     let lang = {
       start: "Writing",
-      finished: "written."
+      finished: "written.",
     };
 
     if (!shouldWriteFile) {
       lang = {
         start: "Skipping",
-        finished: "" // not used, promise doesn’t resolve
+        finished: "", // not used, promise doesn’t resolve
       };
     }
 
@@ -553,7 +584,10 @@ class Template extends TemplateContent {
     if (!shouldWriteFile) {
       this.skippedCount++;
     } else {
+      let templateBenchmark = bench.get("Template Write");
+      templateBenchmark.before();
       return fs.outputFile(outputPath, finalContent).then(() => {
+        templateBenchmark.after();
         this.writeCount++;
         debug(`${outputPath} ${lang.finished}.`);
       });
@@ -580,7 +614,8 @@ class Template extends TemplateContent {
     let promises = [];
     for (let page of mapEntry._pages) {
       let content = await this.renderPageEntry(mapEntry, page);
-      promises.push(this._write(page.outputPath, content));
+      let promise = this._write(page.outputPath, content);
+      promises.push(promise);
     }
 
     return Promise.all(promises);
@@ -603,7 +638,8 @@ class Template extends TemplateContent {
       this.inputPath,
       this.inputDir,
       this.outputDir,
-      this.templateData
+      this.templateData,
+      this.extensionMap
     );
     tmpl.config = this.config;
 
@@ -711,7 +747,7 @@ class Template extends TemplateContent {
     entries.push({
       template: this,
       inputPath: this.inputPath,
-      data: data
+      data: data,
     });
     return entries;
   }

@@ -3,7 +3,7 @@ const TemplatePath = require("./TemplatePath");
 const debug = require("debug")("Eleventy:TemplatePassthrough");
 const fastglob = require("fast-glob");
 const EleventyBaseError = require("./EleventyBaseError");
-//const bench = require("./BenchmarkManager").get("PassthroughCopy");
+const aggregateBench = require("./BenchmarkManager").get("Aggregate");
 
 class TemplatePassthroughError extends EleventyBaseError {}
 
@@ -55,12 +55,15 @@ class TemplatePassthrough {
 
   async getFiles(glob) {
     debug("Searching for: %o", glob);
+    let bench = aggregateBench.get("Searching the file system");
+    bench.before();
     const files = TemplatePath.addLeadingDotSlashArray(
       await fastglob(glob, {
         caseSensitiveMatch: false,
         dot: true
       })
     );
+    bench.after();
     return files;
   }
 
@@ -70,15 +73,21 @@ class TemplatePassthrough {
         TemplatePath.stripLeadingDotSlash(this.outputDir)
       )
     ) {
-      // Uncomment this if you want to add benchmarking to copy
-      // (Warning, it seems to be noisy and low value feedback)
-      // return bench.addAsync(`Copying ${src}`, function() {
-      //  // copy() returns a promise
-      //  return copy(src, dest, copyOptions);
-      // });
-
+      let fileCopyCount = 0;
       // copy() returns a promise
-      return copy(src, dest, copyOptions);
+      return copy(src, dest, copyOptions)
+        .on(copy.events.COPY_FILE_START, function(copyOp) {
+          // Access to individual files at `copyOp.src`
+          debug("Copying individual file %o", copyOp.src);
+          aggregateBench.get("Passthrough Copy File").before();
+        })
+        .on(copy.events.COPY_FILE_COMPLETE, function() {
+          fileCopyCount++;
+          aggregateBench.get("Passthrough Copy File").after();
+        })
+        .then(() => {
+          return fileCopyCount;
+        });
     }
     return Promise.reject(
       new TemplatePassthroughError(

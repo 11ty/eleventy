@@ -3,13 +3,11 @@ const fs = require("fs-extra");
 const TemplatePath = require("../TemplatePath");
 const EleventyExtensionMap = require("../EleventyExtensionMap");
 const debug = require("debug")("Eleventy:TemplateEngine");
+const aggregateBench = require("../BenchmarkManager").get("Aggregate");
 
 class TemplateEngine {
   constructor(name, includesDir) {
     this.name = name;
-
-    this.extensionMap = new EleventyExtensionMap();
-    this.extensions = this.extensionMap.getExtensionsFromKey(name);
     this.includesDir = includesDir;
     this.partialsHaveBeenCached = false;
     this.partials = [];
@@ -33,6 +31,25 @@ class TemplateEngine {
 
   set engineManager(manager) {
     this._engineManager = manager;
+  }
+
+  get extensionMap() {
+    if (!this._extensionMap) {
+      this._extensionMap = new EleventyExtensionMap();
+      // this._extensionMap.config = this.config;
+    }
+    return this._extensionMap;
+  }
+
+  set extensionMap(map) {
+    this._extensionMap = map;
+  }
+
+  get extensions() {
+    if (!this._extensions) {
+      this._extensions = this.extensionMap.getExtensionsFromKey(this.name);
+    }
+    return this._extensions;
   }
 
   getName() {
@@ -61,6 +78,8 @@ class TemplateEngine {
     // TODO: reuse mustache partials in handlebars?
     let partialFiles = [];
     if (this.includesDir) {
+      let bench = aggregateBench.get("Searching the file system");
+      bench.before();
       this.extensions.forEach(function(extension) {
         partialFiles = partialFiles.concat(
           fastglob.sync(prefix + extension, {
@@ -69,6 +88,7 @@ class TemplateEngine {
           })
         );
       });
+      bench.after();
     }
 
     partialFiles = TemplatePath.addLeadingDotSlashArray(partialFiles);

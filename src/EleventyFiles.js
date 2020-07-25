@@ -10,6 +10,7 @@ const TemplatePassthroughManager = require("./TemplatePassthroughManager");
 const config = require("./Config");
 const debug = require("debug")("Eleventy:EleventyFiles");
 // const debugDev = require("debug")("Dev:Eleventy:EleventyFiles");
+const aggregateBench = require("./BenchmarkManager").get("Aggregate");
 
 class EleventyFiles {
   constructor(input, outputDir, formats, passthroughAll) {
@@ -313,12 +314,15 @@ class EleventyFiles {
     let globs = this.getFileGlobs();
 
     debug("Searching for: %o", globs);
+    let bench = aggregateBench.get("Searching the file system");
+    bench.before();
     let paths = TemplatePath.addLeadingDotSlashArray(
       await fastglob(globs, {
         caseSensitiveMatch: false,
         dot: true
       })
     );
+    bench.after();
 
     if ("extensionMap" in this.config) {
       let extensions = this.config.extensionMap;
@@ -355,13 +359,17 @@ class EleventyFiles {
   // TODO this isn’t great but reduces complexity avoiding using TemplateData:getLocalDataPaths for each template in the cache
   async getWatcherTemplateJavaScriptDataFiles() {
     let globs = await this.getTemplateData().getTemplateJavaScriptDataFileGlob();
-    return TemplatePath.addLeadingDotSlashArray(
+    let bench = aggregateBench.get("Searching the file system");
+    bench.before();
+    let results = TemplatePath.addLeadingDotSlashArray(
       await fastglob(globs, {
         ignore: ["**/node_modules/**"],
         caseSensitiveMatch: false,
         dot: true
       })
     );
+    bench.after();
+    return results;
   }
 
   /* Ignored by `eleventy --watch` */

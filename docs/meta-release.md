@@ -22,6 +22,8 @@
 1. Tag new version
 1. `npm publish --access=public`
 
+1. Bonus for 0.x branch, make sure it still works in node 8 (see `Temp/eleventy-node-8` sample project)
+
 ## If branch docs do not exist
 
 1. Make sure `localDev: false` in `config.js`

@@ -15,7 +15,6 @@ class TemplatePassthroughManager {
 
   reset() {
     this.count = 0;
-    this.skippedCount = 0;
     this.incrementalFile = null;
     debug("Resetting counts to 0");
   }
@@ -57,7 +56,7 @@ class TemplatePassthroughManager {
       inputPath: TemplatePath.addLeadingDotSlash(path),
       outputPath: outputPath
         ? TemplatePath.stripLeadingDotSlash(outputPath)
-        : true
+        : true,
     };
   }
 
@@ -78,7 +77,7 @@ class TemplatePassthroughManager {
   }
 
   getConfigPathGlobs() {
-    return this.getConfigPaths().map(path => {
+    return this.getConfigPaths().map((path) => {
       return TemplatePath.convertToRecursiveGlobSync(path.inputPath);
     });
   }
@@ -103,10 +102,6 @@ class TemplatePassthroughManager {
     return this.count;
   }
 
-  getSkippedCount() {
-    return this.skippedCount;
-  }
-
   async copyPath(path) {
     let pass = new TemplatePassthrough(path, this.outputDir, this.inputDir);
 
@@ -118,19 +113,26 @@ class TemplatePassthroughManager {
 
     return pass
       .write()
-      .then(() => {
+      .then((fileCopyCount) => {
         if (pass.isDryRun) {
-          this.skippedCount++;
+          // We don’t count the skipped files as we need to iterate over them
           debug(
             "Skipped %o (either from --dryrun or --incremental)",
             path.inputPath
           );
         } else {
-          this.count++;
-          debug("Copied %o", path.inputPath);
+          if (Array.isArray(fileCopyCount)) {
+            // globs
+            for (let count of fileCopyCount) {
+              this.count += count;
+            }
+          } else {
+            this.count += fileCopyCount;
+          }
+          debug("Copied %o (%d files)", path.inputPath, fileCopyCount || 0);
         }
       })
-      .catch(function(e) {
+      .catch(function (e) {
         return Promise.reject(
           new TemplatePassthroughManagerCopyError(
             `Having trouble copying '${path.inputPath}'`,
@@ -181,7 +183,7 @@ class TemplatePassthroughManager {
     let promises = [];
     debug("TemplatePassthrough copy started.");
     for (let path of this.getConfigPaths()) {
-      debug(`TemplatePassthrough copying from config: ${path}`);
+      debug(`TemplatePassthrough copying from config: %o`, path);
       promises.push(this.copyPath(path));
     }
 
@@ -189,7 +191,7 @@ class TemplatePassthroughManager {
     for (let path of passthroughPaths) {
       let normalizedPath = this._normalizePaths(path);
       debug(
-        `TemplatePassthrough copying from non-matching file extension: ${normalizedPath}`
+        `TemplatePassthrough copying from non-matching file extension: ${normalizedPath.inputPath}`
       );
       promises.push(this.copyPath(normalizedPath));
     }

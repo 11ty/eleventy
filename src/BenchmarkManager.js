@@ -1,15 +1,26 @@
 const BenchmarkGroup = require("./BenchmarkGroup");
+const { performance } = require("perf_hooks");
 
 class BenchmarkManager {
   constructor() {
-    this.benches = {};
+    this.benchmarkGroups = {};
     this.isVerbose = true;
+    this.start = this.getNewTimestamp();
   }
 
   reset() {
-    for (var j in this.benches) {
-      this.benches[j].reset();
+    this.start = this.getNewTimestamp();
+
+    for (var j in this.benchmarkGroups) {
+      this.benchmarkGroups[j].reset();
     }
+  }
+
+  getNewTimestamp() {
+    if (performance) {
+      return performance.now();
+    }
+    return new Date().getTime();
   }
 
   setVerboseOutput(isVerbose) {
@@ -17,15 +28,23 @@ class BenchmarkManager {
   }
 
   getBenchmarkGroup(name) {
-    if (!this.benches[name]) {
-      this.benches[name] = new BenchmarkGroup();
+    if (!this.benchmarkGroups[name]) {
+      this.benchmarkGroups[name] = new BenchmarkGroup();
+
+      // Special behavior for aggregate benchmarks
+      // so they don’t console.log every time
+      if (name === "Aggregate") {
+        this.benchmarkGroups[name].setIsVerbose(false);
+      } else {
+        this.benchmarkGroups[name].setIsVerbose(this.isVerbose);
+      }
     }
 
-    return this.benches[name];
+    return this.benchmarkGroups[name];
   }
 
   getAll() {
-    return this.benches;
+    return this.benchmarkGroups;
   }
 
   get(name) {
@@ -36,9 +55,10 @@ class BenchmarkManager {
     return this.getAll();
   }
 
-  finish(thresholdPercent) {
-    for (var j in this.benches) {
-      this.benches[j].finish(j, thresholdPercent, this.isVerbose);
+  finish() {
+    let totalTimeSpentBenchmarking = this.getNewTimestamp() - this.start;
+    for (var j in this.benchmarkGroups) {
+      this.benchmarkGroups[j].finish(j, totalTimeSpentBenchmarking);
     }
   }
 }

@@ -2,8 +2,9 @@ const TemplateEngine = require("./TemplateEngine");
 const TemplatePath = require("../TemplatePath");
 const EleventyBaseError = require("../EleventyBaseError");
 const deleteRequireCache = require("../Util/DeleteRequireCache");
+const getJavaScriptData = require("../Util/GetJavaScriptData");
 
-class JavaScriptTemplateInvalidDataFormatError extends EleventyBaseError {}
+class JavaScriptTemplateNotDefined extends EleventyBaseError {}
 
 class JavaScript extends TemplateEngine {
   constructor(name, includesDir) {
@@ -23,7 +24,7 @@ class JavaScript extends TemplateEngine {
   // Function, Class
   // Object
   _getInstance(mod) {
-    let noop = function() {
+    let noop = function () {
       return "";
     };
 
@@ -34,18 +35,12 @@ class JavaScript extends TemplateEngine {
         mod.prototype &&
         ("data" in mod.prototype || "render" in mod.prototype)
       ) {
-        // render function is optional
         if (!("render" in mod.prototype)) {
           mod.prototype.render = noop;
         }
         return new mod();
       } else {
-        // let fn = function() {};
-        // fn.prototype.render = mod;
-        // return new fn();
-        return {
-          render: mod
-        };
+        return { render: mod };
       }
     } else if ("data" in mod || "render" in mod) {
       if (!("render" in mod)) {
@@ -63,7 +58,13 @@ class JavaScript extends TemplateEngine {
     const mod = this._getRequire(inputPath);
     let inst = this._getInstance(mod);
 
-    this.instances[inputPath] = inst;
+    if (inst) {
+      this.instances[inputPath] = inst;
+    } else {
+      throw new JavaScriptTemplateNotDefined(
+        `No JavaScript template returned from ${inputPath} (did you assign to module.exports?)`
+      );
+    }
     return inst;
   }
 
@@ -90,30 +91,19 @@ class JavaScript extends TemplateEngine {
 
   async getExtraDataFromFile(inputPath) {
     let inst = this.getInstanceFromInputPath(inputPath);
-    if (inst && "data" in inst) {
-      // get extra data from `data` method,
-      // either as a function or getter or object literal
-      let result = await (typeof inst.data === "function"
-        ? inst.data()
-        : inst.data);
-      if (typeof result !== "object") {
-        throw new JavaScriptTemplateInvalidDataFormatError(
-          `Invalid data format returned from ${inputPath}: typeof ${typeof result}`
-        );
-      }
-      return result;
-    }
+    return await getJavaScriptData(inst, inputPath);
   }
 
-  getJavaScriptFunctions(inst, data) {
+  getJavaScriptFunctions(inst) {
     let fns = {};
     let configFns = this.config.javascriptFunctions;
+
     for (let key in configFns) {
-      // If collision on `page`, prefer user’s `page`
-      if (!inst || !inst.page) {
-        fns[key] = configFns[key].bind(
-          Object.assign(inst, { page: data.page })
-        );
+      // prefer pre-existing `page` javascriptFunction, if one exists
+      if (key === "page") {
+        // do nothing
+      } else {
+        fns[key] = configFns[key].bind(inst);
       }
     }
     return fns;
@@ -123,16 +113,18 @@ class JavaScript extends TemplateEngine {
     let inst;
     if (str) {
       // When str has a value, it's being used for permalinks in data
-      // and maybe not be a str (could be any valid *.11ty.js)
       inst = this._getInstance(str);
     } else {
       // For normal templates, str will be falsy.
       inst = this.getInstanceFromInputPath(inputPath);
     }
-
     if (inst && "render" in inst) {
-      return function(data) {
-        Object.assign(inst, this.getJavaScriptFunctions(inst, data));
+      return function (data) {
+        // only blow away existing inst.page if it has a page.url
+        if (!inst.page || inst.page.url) {
+          inst.page = data.page;
+        }
+        Object.assign(inst, this.getJavaScriptFunctions(inst));
 
         return this.normalize(inst.render.call(inst, data));
       }.bind(this);

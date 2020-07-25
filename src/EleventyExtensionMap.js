@@ -1,3 +1,4 @@
+const TemplateEngineManager = require("./TemplateEngineManager");
 const TemplatePath = require("./TemplatePath");
 
 class EleventyExtensionMap {
@@ -26,6 +27,15 @@ class EleventyExtensionMap {
   }
   set config(cfg) {
     this.configOverride = cfg;
+  }
+
+  get engineManager() {
+    if (!this._engineManager) {
+      this._engineManager = new TemplateEngineManager();
+      this._engineManager.config = this.config;
+    }
+
+    return this._engineManager;
   }
 
   /* Used for layout path resolution */
