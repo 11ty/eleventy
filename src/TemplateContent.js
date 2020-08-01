@@ -7,6 +7,7 @@ const lodashSet = require("lodash/set");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const TemplateData = require("./TemplateData");
 const TemplateRender = require("./TemplateRender");
+const TemplatePath = require("./TemplatePath");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
 const config = require("./Config");
@@ -116,6 +117,20 @@ class TemplateContent {
     }
   }
 
+  static _inputCache = new Map();
+
+  static cache(path, content) {
+    this._inputCache.set(TemplatePath.absolutePath(path), content);
+  }
+
+  static getCached(path) {
+    return this._inputCache.get(TemplatePath.absolutePath(path));
+  }
+
+  static deleteCached(path) {
+    this._inputCache.delete(TemplatePath.absolutePath(path));
+  }
+
   async getInputContent() {
     if (!this.engine.needsToReadFileContents()) {
       return "";
@@ -123,7 +138,11 @@ class TemplateContent {
 
     let templateBenchmark = bench.get("Template Read");
     templateBenchmark.before();
-    let content = await fs.readFile(this.inputPath, "utf-8");
+    let content = TemplateContent.getCached(this.inputPath);
+    if(!content) {
+      content = await fs.readFile(this.inputPath, "utf-8");
+      TemplateContent.cache(this.inputPath, content);
+    }
     templateBenchmark.after();
 
     return content;
@@ -175,6 +194,20 @@ class TemplateContent {
     }
   }
 
+  static _compileEngineCache = new Map();
+
+  _getCompileCache(str, bypassMarkdown) {
+    let engineName = this.engine.getName() + "::" + (!!bypassMarkdown);
+    let engineMap = TemplateContent._compileEngineCache.get(engineName);
+    if (!engineMap) {
+      engineMap = new Map();
+      TemplateContent._compileEngineCache.set(engineName, engineMap);
+    }
+
+    let cacheable = this.engine.cacheable;
+    return [ cacheable, str , engineMap ];
+  }
+
   async compile(str, bypassMarkdown) {
     await this.setupTemplateRender(bypassMarkdown);
 
@@ -185,11 +218,23 @@ class TemplateContent {
     );
 
     try {
+      let [ cacheable, key, cache ] = 
+          this._getCompileCache(str, bypassMarkdown);
+      if (cacheable && cache.has(key)) {
+        return cache.get(key);
+      }
+
+      // Compilation is async, so we eagerly cache a Promise that eventually
+      // resolves to the compiled function
+      let res;
+      cache.set(key, new Promise((resolve) => { res = resolve; }));
+
       let templateBenchmark = bench.get("Template Compile");
       templateBenchmark.before();
       let fn = await this.templateRender.getCompiledTemplate(str);
       templateBenchmark.after();
       debugDev("%o getCompiledTemplate function created", this.inputPath);
+      res(fn);
       return fn;
     } catch (e) {
       debug(`Having trouble compiling template ${this.inputPath}: %O`, str);

@@ -1,6 +1,11 @@
 const TemplateEngine = require("./TemplateEngine");
 
 class Html extends TemplateEngine {
+  constructor(name, includesDir) {
+    super(name, includesDir);
+    this.cacheable = true;
+  }
+
   async compile(str, inputPath, preTemplateEngine) {
     if (preTemplateEngine) {
       let engine = this.engineManager.getEngine(

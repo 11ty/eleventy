@@ -20,6 +20,7 @@ class Liquid extends TemplateEngine {
       keyword: /[a-zA-Z0-9\.\-\_]+/,
       "ignore:whitespace": /[, \t]+/ // includes comma separator
     });
+    this.cacheable = true;
   }
 
   setLibrary(lib) {

@@ -11,6 +11,8 @@ class Nunjucks extends TemplateEngine {
     super(name, includesDir);
 
     this.setLibrary(this.config.libraryOverrides.njk);
+
+    this.cacheable = true;
   }
 
   setLibrary(env) {
@@ -19,7 +21,7 @@ class Nunjucks extends TemplateEngine {
       new NunjucksLib.Environment(
         new NunjucksLib.FileSystemLoader([
           super.getIncludesDir(),
-          TemplatePath.getWorkingDir()
+          TemplatePath.getWorkingDir(),
         ])
       );
     this.setEngineLib(this.njkEnv);
@@ -87,7 +89,7 @@ class Nunjucks extends TemplateEngine {
     function ShortcodeFunction() {
       this.tags = [shortcodeName];
 
-      this.parse = function(parser, nodes, lexer) {
+      this.parse = function (parser, nodes, lexer) {
         let args;
         let tok = parser.nextToken();
 
@@ -107,7 +109,7 @@ class Nunjucks extends TemplateEngine {
         return new nodes.CallExtension(this, "run", args);
       };
 
-      this.run = function(...args) {
+      this.run = function (...args) {
         let resolve;
         if (isAsync) {
           resolve = args.pop();
@@ -118,10 +120,10 @@ class Nunjucks extends TemplateEngine {
         if (isAsync) {
           shortcodeFn
             .call(Nunjucks._normalizeShortcodeContext(context), ...argArray)
-            .then(function(returnValue) {
+            .then(function (returnValue) {
               resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
             })
-            .catch(function(e) {
+            .catch(function (e) {
               resolve(
                 new EleventyShortcodeError(
                   `Error with Nunjucks shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
@@ -158,7 +160,7 @@ class Nunjucks extends TemplateEngine {
     function PairedShortcodeFunction() {
       this.tags = [shortcodeName];
 
-      this.parse = function(parser, nodes, lexer) {
+      this.parse = function (parser, nodes, lexer) {
         var tok = parser.nextToken();
 
         var args = parser.parseSignature(true, true);
@@ -173,7 +175,7 @@ class Nunjucks extends TemplateEngine {
         return new nodes.CallExtension(this, "run", args, [body]);
       };
 
-      this.run = function(...args) {
+      this.run = function (...args) {
         let resolve;
         if (isAsync) {
           resolve = args.pop();
@@ -188,10 +190,10 @@ class Nunjucks extends TemplateEngine {
               body(),
               ...argArray
             )
-            .then(function(returnValue) {
+            .then(function (returnValue) {
               resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
             })
-            .catch(function(e) {
+            .catch(function (e) {
               resolve(
                 new EleventyShortcodeError(
                   `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
@@ -225,15 +227,31 @@ class Nunjucks extends TemplateEngine {
   }
 
   async compile(str, inputPath) {
+    // Defend against syntax customisations:
+    //    https://mozilla.github.io/nunjucks/api.html#customizing-syntax
+    let optsTags = this.njkEnv.opts.tags || {};
+    let blockStart = optsTags.blockStart || "{%";
+    let variableStart = optsTags.variableStart || "{{";
+    let commentStart = optsTags.variableStart || "{#";
+    let needsCompile =
+      str.indexOf(blockStart) != -1 ||
+      str.indexOf(variableStart) != -1 ||
+      str.indexOf(commentStart) != -1;
+    if (!needsCompile) {
+      return async function () {
+        return str;
+      };
+    }
+
     let tmpl;
     if (!inputPath || inputPath === "njk" || inputPath === "md") {
       tmpl = NunjucksLib.compile(str, this.njkEnv);
     } else {
       tmpl = NunjucksLib.compile(str, this.njkEnv, inputPath);
     }
-    return async function(data) {
-      return new Promise(function(resolve, reject) {
-        tmpl.render(data, function(err, res) {
+    return async function (data) {
+      return new Promise(function (resolve, reject) {
+        tmpl.render(data, function (err, res) {
           if (err) {
             reject(err);
           } else {

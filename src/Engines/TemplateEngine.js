@@ -12,6 +12,7 @@ class TemplateEngine {
     this.partialsHaveBeenCached = false;
     this.partials = [];
     this.engineLib = null;
+    this.cacheable = false;
   }
 
   get config() {
