@@ -112,12 +112,10 @@ class TemplateContent {
       this.frontMatter = {
         data: {},
         content: "",
-        excerpt: "",
+        excerpt: ""
       };
     }
   }
-
-  static _inputCache = new Map();
 
   static cache(path, content) {
     this._inputCache.set(TemplatePath.absolutePath(path), content);
@@ -139,7 +137,7 @@ class TemplateContent {
     let templateBenchmark = bench.get("Template Read");
     templateBenchmark.before();
     let content = TemplateContent.getCached(this.inputPath);
-    if(!content) {
+    if (!content) {
       content = await fs.readFile(this.inputPath, "utf-8");
       TemplateContent.cache(this.inputPath, content);
     }
@@ -194,10 +192,8 @@ class TemplateContent {
     }
   }
 
-  static _compileEngineCache = new Map();
-
   _getCompileCache(str, bypassMarkdown) {
-    let engineName = this.engine.getName() + "::" + (!!bypassMarkdown);
+    let engineName = this.engine.getName() + "::" + !!bypassMarkdown;
     let engineMap = TemplateContent._compileEngineCache.get(engineName);
     if (!engineMap) {
       engineMap = new Map();
@@ -205,7 +201,7 @@ class TemplateContent {
     }
 
     let cacheable = this.engine.cacheable;
-    return [ cacheable, str , engineMap ];
+    return [cacheable, str, engineMap];
   }
 
   async compile(str, bypassMarkdown) {
@@ -218,8 +214,7 @@ class TemplateContent {
     );
 
     try {
-      let [ cacheable, key, cache ] = 
-          this._getCompileCache(str, bypassMarkdown);
+      let [cacheable, key, cache] = this._getCompileCache(str, bypassMarkdown);
       if (cacheable && cache.has(key)) {
         return cache.get(key);
       }
@@ -227,7 +222,12 @@ class TemplateContent {
       // Compilation is async, so we eagerly cache a Promise that eventually
       // resolves to the compiled function
       let res;
-      cache.set(key, new Promise((resolve) => { res = resolve; }));
+      cache.set(
+        key,
+        new Promise(resolve => {
+          res = resolve;
+        })
+      );
 
       let templateBenchmark = bench.get("Template Compile");
       templateBenchmark.before();
@@ -274,5 +274,8 @@ class TemplateContent {
     }
   }
 }
+
+TemplateContent._inputCache = new Map();
+TemplateContent._compileEngineCache = new Map();
 
 module.exports = TemplateContent;

@@ -3,6 +3,12 @@ const Sortable = require("./Util/Sortable");
 const TemplatePath = require("./TemplatePath");
 
 class TemplateCollection extends Sortable {
+  constructor() {
+    super();
+
+    this._filteredByGlobsCache = new Map();
+  }
+
   // right now this is only used by the tests
   async _testAddTemplate(template) {
     let data = await template.getData();
@@ -28,12 +34,10 @@ class TemplateCollection extends Sortable {
       globs = [globs];
     }
 
-    globs = globs.map((glob) => TemplatePath.addLeadingDotSlash(glob));
+    globs = globs.map(glob => TemplatePath.addLeadingDotSlash(glob));
 
     return globs;
   }
-
-  _filteredByGlobsCache = new Map();
 
   getFilteredByGlob(globs) {
     globs = this.getGlobs(globs);
@@ -49,7 +53,7 @@ class TemplateCollection extends Sortable {
       this._filteredByGlobsCache = new Map();
     }
 
-    let filtered = this.getAllSorted().filter((item) => {
+    let filtered = this.getAllSorted().filter(item => {
       if (multimatch([item.inputPath], globs).length) {
         return true;
       }
@@ -62,19 +66,19 @@ class TemplateCollection extends Sortable {
   }
 
   getFilteredByTag(tagName) {
-    return this.getAllSorted().filter((item) => {
+    return this.getAllSorted().filter(item => {
       if (!tagName) {
         return true;
       } else if (Array.isArray(item.data.tags)) {
-        return item.data.tags.some((tag) => tag === tagName);
+        return item.data.tags.some(tag => tag === tagName);
       }
       return false;
     });
   }
 
   getFilteredByTags(...tags) {
-    return this.getAllSorted().filter((item) =>
-      tags.every((requiredTag) => {
+    return this.getAllSorted().filter(item =>
+      tags.every(requiredTag => {
         const itemTags = item.data.tags;
         if (Array.isArray(itemTags)) {
           return itemTags.includes(requiredTag);

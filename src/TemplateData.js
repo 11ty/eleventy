@@ -52,6 +52,10 @@ class TemplateData {
 
     this.rawImports = {};
     this.globalData = null;
+
+    // It's common for data files not to exist, so we avoid going to the FS to
+    // re-check if they do via a quick-and-dirty cache.
+    this._fsExistsCache = new FSExistsCache();
   }
 
   get extensionMap() {
@@ -387,10 +391,6 @@ class TemplateData {
       }
     }
   }
-
-  // It's common for data files not to exist, so we avoid going to the FS to
-  // re-check if they do via a quick-and-dirty cache.
-  _fsExistsCache = new FSExistsCache();
 
   async getDataValue(path, rawImports, ignoreProcessing) {
     let extension = TemplatePath.getExtension(path);
