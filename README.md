@@ -13,7 +13,9 @@ Works with HTML, Markdown, Liquid, Nunjucks, Handlebars, Mustache, EJS, Haml, Pu
 - Support [11ty on Open Collective](https://opencollective.com/11ty)
 - [11ty on npm](https://www.npmjs.com/org/11ty)
 - [11ty on GitHub](https://github.com/11ty)
-- [11ty/eleventy on Travis CI](https://travis-ci.org/11ty/eleventy)
+- Continuous Integration:
+  - [Travis CI](https://travis-ci.org/11ty/eleventy)
+  - [GitHub Actions](https://github.com/11ty/eleventy/actions?query=workflow%3A.github%2Fworkflows%2Fci.yml)
 
 [![npm Version](https://img.shields.io/npm/v/@11ty/eleventy.svg?style=for-the-badge)](https://www.npmjs.com/package/@11ty/eleventy) [![GitHub issues](https://img.shields.io/github/issues/11ty/eleventy.svg?style=for-the-badge)](https://github.com/11ty/eleventy/issues) [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=for-the-badge)](https://github.com/prettier/prettier) [![npm Downloads](https://img.shields.io/npm/dt/@11ty/eleventy.svg?style=for-the-badge)](https://www.npmjs.com/package/@11ty/eleventy)
 
