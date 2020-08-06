@@ -117,7 +117,7 @@ class TemplateConfig {
 
     // remove special merge keys from object
     let savedForSpecialMerge = {
-      templateFormatsAdded: eleventyConfigApiMergingObject.templateFormatsAdded,
+      templateFormatsAdded: eleventyConfigApiMergingObject.templateFormatsAdded
     };
     delete eleventyConfigApiMergingObject.templateFormatsAdded;
 
