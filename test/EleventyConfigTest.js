@@ -3,8 +3,8 @@ import eleventyConfig from "../src/EleventyConfig";
 
 // more in TemplateConfigTest.js
 
-test.cb("Events", t => {
-  eleventyConfig.on("testEvent", function(arg1, arg2, arg3) {
+test.cb("Events", (t) => {
+  eleventyConfig.on("testEvent", function (arg1, arg2, arg3) {
     t.is(arg1, "arg1");
     t.is(arg2, "arg2");
     t.is(arg3, "arg3");
@@ -14,30 +14,50 @@ test.cb("Events", t => {
   eleventyConfig.emit("testEvent", "arg1", "arg2", "arg3");
 });
 
-test("Add Collections", t => {
-  eleventyConfig.addCollection("myCollection", function(collection) {});
+test.cb("Async Events", (t) => {
+  let arg1;
+
+  eleventyConfig.on(
+    "asyncTestEvent",
+    (_arg1) =>
+      new Promise((resolve) => {
+        setTimeout(() => {
+          arg1 = _arg1;
+          resolve();
+        }, 10);
+      })
+  );
+
+  eleventyConfig.emit("asyncTestEvent", "arg1").then(() => {
+    t.is(arg1, "arg1");
+    t.end();
+  });
+});
+
+test("Add Collections", (t) => {
+  eleventyConfig.addCollection("myCollection", function (collection) {});
   t.deepEqual(Object.keys(eleventyConfig.getCollections()), ["myCollection"]);
 });
 
-test("Add Collections throws error on key collision", t => {
-  eleventyConfig.addCollection("myCollectionCollision", function(
+test("Add Collections throws error on key collision", (t) => {
+  eleventyConfig.addCollection("myCollectionCollision", function (
     collection
   ) {});
 
   t.throws(() => {
-    eleventyConfig.addCollection("myCollectionCollision", function(
+    eleventyConfig.addCollection("myCollectionCollision", function (
       collection
     ) {});
   });
 });
 
-test("Set manual Pass-through File Copy (single call)", t => {
+test("Set manual Pass-through File Copy (single call)", (t) => {
   eleventyConfig.addPassthroughCopy("img");
 
   t.is(eleventyConfig.passthroughCopies["img"], true);
 });
 
-test("Set manual Pass-through File Copy (chained calls)", t => {
+test("Set manual Pass-through File Copy (chained calls)", (t) => {
   eleventyConfig
     .addPassthroughCopy("css")
     .addPassthroughCopy("js")
@@ -50,10 +70,10 @@ test("Set manual Pass-through File Copy (chained calls)", t => {
   t.is(eleventyConfig.passthroughCopies["./src/empty"], "./");
 });
 
-test("Set manual Pass-through File Copy (glob patterns)", t => {
+test("Set manual Pass-through File Copy (glob patterns)", (t) => {
   eleventyConfig.addPassthroughCopy({
     "./src/static/**/*": "renamed",
-    "./src/markdown/*.md": ""
+    "./src/markdown/*.md": "",
   });
 
   // does not exist
@@ -65,27 +85,27 @@ test("Set manual Pass-through File Copy (glob patterns)", t => {
   t.is(eleventyConfig.passthroughCopies["./src/markdown/*.md"], "");
 });
 
-test("Set Template Formats (string)", t => {
+test("Set Template Formats (string)", (t) => {
   eleventyConfig.setTemplateFormats("ejs, njk, liquid");
   t.deepEqual(eleventyConfig.templateFormats, ["ejs", "njk", "liquid"]);
 });
 
-test("Set Template Formats (array)", t => {
+test("Set Template Formats (array)", (t) => {
   eleventyConfig.setTemplateFormats(["ejs", "njk", "liquid"]);
   t.deepEqual(eleventyConfig.templateFormats, ["ejs", "njk", "liquid"]);
 });
 
-test("Set Template Formats (js passthrough copy)", t => {
+test("Set Template Formats (js passthrough copy)", (t) => {
   eleventyConfig.setTemplateFormats("ejs, njk, liquid, js");
   t.deepEqual(eleventyConfig.templateFormats, ["ejs", "njk", "liquid", "js"]);
 });
 
-test("Set Template Formats (11ty.js)", t => {
+test("Set Template Formats (11ty.js)", (t) => {
   eleventyConfig.setTemplateFormats("ejs, njk, liquid, 11ty.js");
   t.deepEqual(eleventyConfig.templateFormats, [
     "ejs",
     "njk",
     "liquid",
-    "11ty.js"
+    "11ty.js",
   ]);
 });

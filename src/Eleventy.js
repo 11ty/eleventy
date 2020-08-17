@@ -459,7 +459,7 @@ Arguments:
       return;
     }
 
-    this.config.events.emit("beforeWatch");
+    await this.config.events.emit("beforeWatch");
 
     this.watchManager.setBuildRunning();
 
@@ -737,13 +737,13 @@ Arguments:
       EleventyErrorHandler.logger = this.logger;
     }
 
-    this.config.events.emit("beforeBuild");
+    await this.config.events.emit("beforeBuild");
 
     try {
       let promise = this.writer.write();
 
       ret = await promise;
-      this.config.events.emit("afterBuild");
+      await this.config.events.emit("afterBuild");
     } catch (e) {
       EleventyErrorHandler.initialMessage(
         "Problem writing Eleventy templates",

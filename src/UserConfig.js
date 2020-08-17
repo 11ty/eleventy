@@ -1,7 +1,7 @@
-const EventEmitter = require("events");
 const chalk = require("chalk");
 const semver = require("semver");
 const { DateTime } = require("luxon");
+const EventEmitter = require("./Util/AsyncEventEmitter");
 const EleventyBaseError = require("./EleventyBaseError");
 const bench = require("./BenchmarkManager").get("Configuration");
 const aggregateBench = require("./BenchmarkManager").get("Aggregate");
@@ -325,7 +325,9 @@ class UserConfig {
 
   _normalizeTemplateFormats(templateFormats) {
     if (typeof templateFormats === "string") {
-      templateFormats = templateFormats.split(",").map(format => format.trim());
+      templateFormats = templateFormats
+        .split(",")
+        .map((format) => format.trim());
     }
     return templateFormats;
   }
@@ -629,7 +631,7 @@ class UserConfig {
       Object.assign(
         {
           key: fileExtension,
-          extension: fileExtension
+          extension: fileExtension,
         },
         options
       )
@@ -680,7 +682,7 @@ class UserConfig {
       dataExtensions: this.dataExtensions,
       extensionMap: this.extensionMap,
       quietMode: this.quietMode,
-      events: this.events
+      events: this.events,
     };
   }
 }
