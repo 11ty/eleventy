@@ -1,3 +1,3 @@
 # Filters, Tags, etc.
 
-Moved to [https://www.11ty.io/docs/filters/](https://www.11ty.io/docs/filters/).
+Moved to [https://www.11ty.dev/docs/filters/](https://www.11ty.dev/docs/filters/).

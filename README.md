@@ -1,4 +1,4 @@
-<p align="center"><img src="https://www.11ty.io/img/logo-github.png" alt="eleventy Logo"></p>
+<p align="center"><img src="https://www.11ty.dev/img/logo-github.png" alt="eleventy Logo"></p>
 
 # eleventy 🕚⚡️
 
@@ -6,7 +6,7 @@ A simpler static site generator. An alternative to Jekyll. Written in JavaScript
 
 Works with HTML, Markdown, Liquid, Nunjucks, Handlebars, Mustache, EJS, Haml, Pug, and JavaScript Template Literals.
 
-## ➡ [Documentation](https://www.11ty.io/docs/)
+## ➡ [Documentation](https://www.11ty.dev/docs/)
 
 - Please star [this repo on GitHub](https://github.com/11ty/eleventy/)!
 - Follow us on Twitter [@eleven_ty](https://twitter.com/eleven_ty)
@@ -25,7 +25,7 @@ Works with HTML, Markdown, Liquid, Nunjucks, Handlebars, Mustache, EJS, Haml, Pu
 npm install @11ty/eleventy --save-dev
 ```
 
-Read our [Getting Started guide](https://www.11ty.io/docs/getting-started/).
+Read our [Getting Started guide](https://www.11ty.dev/docs/getting-started/).
 
 ## Tests
 
@@ -47,4 +47,4 @@ npm run test
 
 ## Plugins
 
-See the [official docs on plugins](https://www.11ty.io/docs/plugins/).
+See the [official docs on plugins](https://www.11ty.dev/docs/plugins/).
