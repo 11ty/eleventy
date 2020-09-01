@@ -370,9 +370,7 @@ test("libraryOverrides", (t) => {
 
 test("addGlobalData", (t) => {
   eleventyConfig.reset();
-  eleventyConfig.addGlobalData({
-    function: () => new Date(),
-  });
+  eleventyConfig.addGlobalData("function", () => new Date());
 
   let templateCfg = new TemplateConfig(
     require("../src/defaultConfig.js"),

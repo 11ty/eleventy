@@ -228,11 +228,10 @@ class UserConfig {
     this.nunjucksTags[name] = bench.add(`"${name}" Nunjucks Custom Tag`, tagFn);
   }
 
-  addGlobalData(data) {
-    for (const [key, value] of Object.entries(data)) {
-      const name = this.getNamespacedName(key);
-      this.globalData[name] = value;
-    }
+  addGlobalData(name, data) {
+    name = this.getNamespacedName(name);
+    this.globalData[name] = data;
+    return this;
   }
 
   addTransform(name, callback) {
