@@ -272,14 +272,37 @@ class TemplateData {
     return globalData;
   }
 
+  async getInitialGlobalData() {
+    let globalData = {};
+    if (this.config.globalData) {
+      let keys = Object.keys(this.config.globalData);
+      for (let j = 0; j < keys.length; j++) {
+        let returnValue = this.config.globalData[keys[j]];
+
+        if (typeof returnValue === "function") {
+          returnValue = await returnValue();
+        }
+        globalData[keys[j]] = returnValue;
+      }
+    }
+    return globalData;
+  }
+
   async getData() {
     let rawImports = this.getRawImports();
+
+    let initialGlobalData = await this.getInitialGlobalData();
 
     if (!this.globalData) {
       let globalJson = await this.getAllGlobalData();
 
       // OK: Shallow merge when combining rawImports (pkg) with global data files
-      this.globalData = Object.assign({}, globalJson, rawImports);
+      this.globalData = Object.assign(
+        {},
+        initialGlobalData,
+        globalJson,
+        rawImports
+      );
     }
 
     return this.globalData;
