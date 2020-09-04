@@ -113,7 +113,7 @@
     "minimist": "^1.2.5",
     "moo": "^0.5.1",
     "multimatch": "^4.0.0",
-    "mustache": "^2.3.2",
+    "mustache": "^4.0.1",
     "normalize-path": "^3.0.0",
     "nunjucks": "^3.2.2",
     "parse-filepath": "^1.0.2",
