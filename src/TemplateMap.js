@@ -22,6 +22,7 @@ class TemplateMap {
     this.cached = false;
     this.configCollections = null;
     this.verboseOutput = true;
+    this.collection = new TemplateCollection();
   }
 
   get tagPrefix() {
@@ -36,13 +37,6 @@ class TemplateMap {
 
   getMap() {
     return this.map;
-  }
-
-  get collection() {
-    if (!this._collection) {
-      this._collection = new TemplateCollection();
-    }
-    return this._collection;
   }
 
   getTagTarget(str) {
@@ -107,13 +101,14 @@ class TemplateMap {
 
         if (entry.data.tags) {
           for (let tag of entry.data.tags) {
-            if (!graph.hasNode(tagPrefix + tag)) {
-              graph.addNode(tagPrefix + tag);
+            let tagWithPrefix = tagPrefix + tag;
+            if (!graph.hasNode(tagWithPrefix)) {
+              graph.addNode(tagWithPrefix);
             }
 
             // collections.tagName
             // Dependency from tag to inputPath
-            graph.addDependency(tagPrefix + tag, entry.inputPath);
+            graph.addDependency(tagWithPrefix, entry.inputPath);
           }
         }
       }
@@ -129,6 +124,7 @@ class TemplateMap {
     graph.addNode(tagPrefix + "all");
 
     let userConfigCollections = this.getUserConfigCollectionNames();
+
     // Add tags from named user config collections
     for (let tag of userConfigCollections) {
       graph.addNode(tagPrefix + tag);
@@ -156,18 +152,20 @@ class TemplateMap {
 
           if (entry.data.tags) {
             for (let tag of entry.data.tags) {
-              if (!graph.hasNode(tagPrefix + tag)) {
-                graph.addNode(tagPrefix + tag);
+              let tagWithPrefix = tagPrefix + tag;
+              if (!graph.hasNode(tagWithPrefix)) {
+                graph.addNode(tagWithPrefix);
               }
               // collections.tagName
               // Dependency from tag to inputPath
-              graph.addDependency(tagPrefix + tag, entry.inputPath);
+              graph.addDependency(tagWithPrefix, entry.inputPath);
             }
           }
         }
       }
     }
-    return graph.overallOrder();
+    let order = graph.overallOrder();
+    return order;
   }
 
   getPaginatedOverCollectionsMappedDependencies() {
@@ -228,6 +226,7 @@ class TemplateMap {
     return graph.overallOrder();
   }
 
+  // TODO(slightlyoff): major bottleneck
   async initDependencyMap(dependencyMap) {
     let tagPrefix = this.tagPrefix;
     for (let depEntry of dependencyMap) {
@@ -275,6 +274,7 @@ class TemplateMap {
       entry.data.collections = this.collectionsData;
     }
 
+
     let dependencyMap = this.getMappedDependencies();
     await this.initDependencyMap(dependencyMap);
 
@@ -308,6 +308,7 @@ class TemplateMap {
     this.checkForDuplicatePermalinks();
   }
 
+  // TODO(slightlyoff): hot inner loop?
   getMapEntryForInputPath(inputPath) {
     for (let map of this.map) {
       if (map.inputPath === inputPath) {

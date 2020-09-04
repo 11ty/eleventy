@@ -41,7 +41,7 @@ class EleventyWatch {
     if (typeof file === "function") {
       filterCallback = file;
     } else {
-      filterCallback = path => path === file;
+      filterCallback = (path) => path === file;
     }
 
     return this.activeQueue.filter(filterCallback);
@@ -90,7 +90,7 @@ class EleventyWatch {
       return this.pendingQueue.length ? [this.pendingQueue.shift()] : [];
     }
 
-    let ret = this.pendingQueue.filter(() => true);
+    let ret = this.pendingQueue.slice();
     this.pendingQueue = [];
     return ret;
   }

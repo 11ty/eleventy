@@ -3,6 +3,12 @@ const Sortable = require("./Util/Sortable");
 const TemplatePath = require("./TemplatePath");
 
 class TemplateCollection extends Sortable {
+  constructor() {
+    super();
+
+    this._filteredByGlobsCache = new Map();
+  }
+
   // right now this is only used by the tests
   async _testAddTemplate(template) {
     let data = await template.getData();
@@ -12,7 +18,7 @@ class TemplateCollection extends Sortable {
   }
 
   getAll() {
-    return this.items.filter(() => true);
+    return this.items.slice();
   }
 
   getAllSorted() {
@@ -36,13 +42,27 @@ class TemplateCollection extends Sortable {
   getFilteredByGlob(globs) {
     globs = this.getGlobs(globs);
 
-    return this.getAllSorted().filter(item => {
+    let key = globs.join("::");
+    if (!this._dirty) {
+      // Try to find a pre-sorted list and clone it.
+      if (this._filteredByGlobsCache.has(key)) {
+        return [...this._filteredByGlobsCache.get(key)];
+      }
+    } else if (this._filteredByGlobsCache.size) {
+      // Blow away cache
+      this._filteredByGlobsCache = new Map();
+    }
+
+    let filtered = this.getAllSorted().filter(item => {
       if (multimatch([item.inputPath], globs).length) {
         return true;
       }
 
       return false;
     });
+    this._dirty = false;
+    this._filteredByGlobsCache.set(key, [...filtered]);
+    return filtered;
   }
 
   getFilteredByTag(tagName) {

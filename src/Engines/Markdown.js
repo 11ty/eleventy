@@ -9,6 +9,8 @@ class Markdown extends TemplateEngine {
     this.markdownOptions = {};
 
     this.setLibrary(this.config.libraryOverrides.md);
+
+    this.cacheable = true;
   }
 
   setLibrary(mdLib) {

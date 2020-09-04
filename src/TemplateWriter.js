@@ -37,6 +37,8 @@ class TemplateWriter {
 
     // TODO can we get rid of this? It’s only used for tests in `get eleventyFiles``
     this.passthroughAll = isPassthroughAll;
+
+    this._templatePathCache = new Map();
   }
 
   get templateFormats() {
@@ -108,13 +110,19 @@ class TemplateWriter {
   }
 
   _createTemplate(path) {
-    let tmpl = new Template(
+    let tmpl = this._templatePathCache.get(path);
+    if (tmpl) {
+      return tmpl;
+    }
+
+    tmpl = new Template(
       path,
       this.inputDir,
       this.outputDir,
       this.templateData,
       this.extensionMap
     );
+    this._templatePathCache.set(path, tmpl);
 
     tmpl.setIsVerbose(this.isVerbose);
 
@@ -188,7 +196,7 @@ class TemplateWriter {
       passthroughManager.setIncrementalFile(this.incrementalFile);
     }
 
-    return passthroughManager.copyAll(paths).catch(e => {
+    return passthroughManager.copyAll(paths).catch((e) => {
       EleventyErrorHandler.warn(e, "Error with passthrough copy");
       return Promise.reject(
         new TemplateWriterWriteError("Having trouble copying", e)
@@ -199,14 +207,16 @@ class TemplateWriter {
   async writeTemplates(paths) {
     let promises = [];
 
+    // console.time("writeTemplates:_createTemplateMap");
     // TODO optimize await here
     await this._createTemplateMap(paths);
+    // console.timeEnd("writeTemplates:_createTemplateMap");
     debug("Template map created.");
 
     let usedTemplateContentTooEarlyMap = [];
     for (let mapEntry of this.templateMap.getMap()) {
       promises.push(
-        this._writeTemplate(mapEntry).catch(function(e) {
+        this._writeTemplate(mapEntry).catch(function (e) {
           // Premature templateContent in layout render, this also happens in
           // TemplateMap.populateContentDataInMap for non-layout content
           if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
@@ -225,7 +235,7 @@ class TemplateWriter {
 
     for (let mapEntry of usedTemplateContentTooEarlyMap) {
       promises.push(
-        this._writeTemplate(mapEntry).catch(function(e) {
+        this._writeTemplate(mapEntry).catch(function (e) {
           return Promise.reject(
             new TemplateWriterWriteError(
               `Having trouble writing template (second pass): ${mapEntry.outputPath}`,
@@ -254,7 +264,7 @@ class TemplateWriter {
       promises.push(...(await this.writeTemplates(paths)));
     }
 
-    return Promise.all(promises).catch(e => {
+    return Promise.all(promises).catch((e) => {
       EleventyErrorHandler.error(e, "Error writing templates");
       throw e;
     });

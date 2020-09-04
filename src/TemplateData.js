@@ -20,6 +20,26 @@ const deleteRequireCache = require("./Util/DeleteRequireCache");
 const bench = require("./BenchmarkManager").get("Data");
 const aggregateBench = require("./BenchmarkManager").get("Aggregate");
 
+class FSExistsCache {
+  constructor() {
+    this._cache = new Map();
+  }
+  has(path) {
+    return this._cache.has(path);
+  }
+  exists(path) {
+    let exists = this._cache.get(path);
+    if (!this.has(path)) {
+      exists = fs.pathExistsSync(path);
+      this._cache.set(path, exists);
+    }
+    return exists;
+  }
+  markExists(path, value = true) {
+    this._cache.set(path, !!value);
+  }
+}
+
 class TemplateDataParseError extends EleventyBaseError {}
 
 class TemplateData {
@@ -32,6 +52,10 @@ class TemplateData {
 
     this.rawImports = {};
     this.globalData = null;
+
+    // It's common for data files not to exist, so we avoid going to the FS to
+    // re-check if they do via a quick-and-dirty cache.
+    this._fsExistsCache = new FSExistsCache();
   }
 
   get extensionMap() {
@@ -180,7 +204,7 @@ class TemplateData {
 
     let fsBench = aggregateBench.get("Searching the file system");
     fsBench.before();
-    let paths = await fastglob(await this.getGlobalDataGlob(), {
+    let paths = fastglob.sync(await this.getGlobalDataGlob(), {
       caseSensitiveMatch: false,
       dot: true
     });
@@ -248,14 +272,37 @@ class TemplateData {
     return globalData;
   }
 
+  async getInitialGlobalData() {
+    let globalData = {};
+    if (this.config.globalData) {
+      let keys = Object.keys(this.config.globalData);
+      for (let j = 0; j < keys.length; j++) {
+        let returnValue = this.config.globalData[keys[j]];
+
+        if (typeof returnValue === "function") {
+          returnValue = await returnValue();
+        }
+        globalData[keys[j]] = returnValue;
+      }
+    }
+    return globalData;
+  }
+
   async getData() {
     let rawImports = this.getRawImports();
+
+    let initialGlobalData = await this.getInitialGlobalData();
 
     if (!this.globalData) {
       let globalJson = await this.getAllGlobalData();
 
       // OK: Shallow merge when combining rawImports (pkg) with global data files
-      this.globalData = Object.assign({}, globalJson, rawImports);
+      this.globalData = Object.assign(
+        {},
+        initialGlobalData,
+        globalJson,
+        rawImports
+      );
     }
 
     return this.globalData;
@@ -267,6 +314,16 @@ class TemplateData {
     if (!Array.isArray(localDataPaths)) {
       localDataPaths = [localDataPaths];
     }
+
+    // Filter out files we know don't exist to avoid overhead for checking
+    localDataPaths = localDataPaths.filter(path => {
+      return this._fsExistsCache.exists(path);
+    });
+
+    if (!localDataPaths.length) {
+      return localData;
+    }
+
     for (let path of localDataPaths) {
       // clean up data for template/directory data files only.
       let dataForPath = await this.getDataValue(path, null, true);
@@ -370,7 +427,11 @@ class TemplateData {
     ) {
       // JS data file or require’d JSON (no preprocessing needed)
       let localPath = TemplatePath.absolutePath(path);
-      if (!(await fs.pathExists(localPath))) {
+      let exists = this._fsExistsCache.exists(localPath);
+      // Make sure that relative lookups benefit from cache
+      this._fsExistsCache.markExists(path, exists);
+
+      if (!exists) {
         return {};
       }
 
