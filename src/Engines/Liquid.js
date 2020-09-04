@@ -1,5 +1,5 @@
 const moo = require("moo");
-const LiquidLib = require("liquidjs");
+const liquidLib = require("liquidjs");
 const TemplateEngine = require("./TemplateEngine");
 const TemplatePath = require("../TemplatePath");
 // const debug = require("debug")("Eleventy:Liquid");
@@ -27,7 +27,7 @@ class Liquid extends TemplateEngine {
     this.liquidLibOverride = lib;
 
     // warning, the include syntax supported here does not exactly match what Jekyll uses.
-    this.liquidLib = lib || LiquidLib(this.getLiquidOptions());
+    this.liquidLib = lib || new liquidLib.Liquid(this.getLiquidOptions());
     this.setEngineLib(this.liquidLib);
 
     this.addFilters(this.config.liquidFilters);
@@ -49,7 +49,7 @@ class Liquid extends TemplateEngine {
       root: [super.getIncludesDir()], // overrides in compile with inputPath below
       extname: ".liquid",
       dynamicPartials: false,
-      strict_filters: false
+      strictFilters: false
     };
 
     let options = Object.assign(defaults, this.liquidOptions || {});
@@ -98,7 +98,7 @@ class Liquid extends TemplateEngine {
     }
   }
 
-  static parseArguments(lexer, str, scope) {
+  static async parseArguments(lexer, str, scope, engine) {
     let argArray = [];
 
     if (typeof str === "string") {
@@ -117,7 +117,7 @@ class Liquid extends TemplateEngine {
           line: 1,
           col: 1 }*/
         if (arg.type.indexOf("ignore:") === -1) {
-          argArray.push(LiquidLib.evalExp(arg.value, scope)); // or evalValue
+          argArray.push(await engine.evalValue(arg.value, scope));
         }
         arg = lexer.next();
       }
@@ -126,10 +126,10 @@ class Liquid extends TemplateEngine {
     return argArray;
   }
 
-  static _normalizeShortcodeScope(scope) {
+  static _normalizeShortcodeScope(ctx) {
     let obj = {};
-    if (scope && scope.contexts && scope.contexts[0]) {
-      obj.page = scope.contexts[0].page;
+    if (ctx) {
+      obj.page = ctx.get(["page"]);
     }
     return obj;
   }
@@ -142,8 +142,13 @@ class Liquid extends TemplateEngine {
           this.name = tagToken.name;
           this.args = tagToken.args;
         },
-        render: function(scope, hash) {
-          let argArray = Liquid.parseArguments(_t.argLexer, this.args, scope);
+        render: async function(scope, hash) {
+          let argArray = await Liquid.parseArguments(
+            _t.argLexer,
+            this.args,
+            scope,
+            this.liquid
+          );
           return Promise.resolve(
             shortcodeFn.call(
               Liquid._normalizeShortcodeScope(scope),
@@ -174,22 +179,22 @@ class Liquid extends TemplateEngine {
 
           stream.start();
         },
-        render: function(scope, hash) {
-          let argArray = Liquid.parseArguments(_t.argLexer, this.args, scope);
-
-          return new Promise((resolve, reject) => {
-            liquidEngine.renderer
-              .renderTemplates(this.templates, scope)
-              .then(function(html) {
-                resolve(
-                  shortcodeFn.call(
-                    Liquid._normalizeShortcodeScope(scope),
-                    html,
-                    ...argArray
-                  )
-                );
-              });
-          });
+        render: function*(ctx, hash) {
+          let argArray = yield Liquid.parseArguments(
+            _t.argLexer,
+            this.args,
+            ctx,
+            this.liquid
+          );
+          const html = yield this.liquid.renderer.renderTemplates(
+            this.templates,
+            ctx
+          );
+          return shortcodeFn.call(
+            Liquid._normalizeShortcodeScope(ctx),
+            html,
+            ...argArray
+          );
         }
       };
     });
