@@ -9,7 +9,7 @@ function getNewTemplateRender(name, inputDir) {
 }
 
 // EJS
-test("EJS", t => {
+test("EJS", (t) => {
   t.is(getNewTemplateRender("ejs").getEngineName(), "ejs");
   t.is(
     getNewTemplateRender("./test/stubs/filename.ejs").getEngineName(),
@@ -17,23 +17,14 @@ test("EJS", t => {
   );
 });
 
-test("EJS Render", async t => {
+test("EJS Render", async (t) => {
   let fn = await getNewTemplateRender("ejs").getCompiledTemplate(
     "<p><%= name %></p>"
   );
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });
 
-test("EJS Render Absolute Include, Preprocessor Directive", async t => {
-  // includes require a full filename passed in
-  let fn = await getNewTemplateRender(
-    "./test/stubs/filename.ejs",
-    "./test/stubs/"
-  ).getCompiledTemplate("<p><% include /included %></p>");
-  t.is(await fn(), "<p>This is an include.</p>");
-});
-
-test("EJS Render Absolute Include, Fxn no Data", async t => {
+test("EJS Render Absolute Include, Fxn no Data", async (t) => {
   // includes require a full filename passed in
   let fn = await getNewTemplateRender(
     "./test/stubs/filename.ejs",
@@ -42,7 +33,7 @@ test("EJS Render Absolute Include, Fxn no Data", async t => {
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-test("EJS Render Absolute Include, Fxn with Data", async t => {
+test("EJS Render Absolute Include, Fxn with Data", async (t) => {
   // includes require a full filename passed in
   let fn = await getNewTemplateRender(
     "./test/stubs/filename.ejs",
@@ -53,34 +44,34 @@ test("EJS Render Absolute Include, Fxn with Data", async t => {
   t.is(await fn(), "<p>This is an Bill.</p>");
 });
 
-test("EJS Render Relative Include (no leading dot-slash for current dir), Preprocessor Directive", async t => {
+test("EJS Render Relative Include (no leading dot-slash for current dir)", async (t) => {
   // includes require a full filename passed in
   let fn = await getNewTemplateRender(
     "./test/stubs/relative-ejs/dir/filename.ejs",
     "./test/stubs/"
-  ).getCompiledTemplate("<p><% include included %></p>");
+  ).getCompiledTemplate("<p><%- include('included') -%></p>");
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-test("EJS Render Relative Include Current dir to Subdir, Preprocessor Directive", async t => {
+test("EJS Render Relative Include Current dir to Subdir", async (t) => {
   // includes require a full filename passed in
   let fn = await getNewTemplateRender(
     "./test/stubs/relative-ejs/filename.ejs",
     "./test/stubs/"
-  ).getCompiledTemplate("<p><% include ./dir/included %></p>");
+  ).getCompiledTemplate("<p><%- include('./dir/included') -%></p>");
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-test("EJS Render Relative Include Parent dir to Subdir, Preprocessor Directive", async t => {
+test("EJS Render Relative Include Parent dir to Subdir", async (t) => {
   // includes require a full filename passed in
   let fn = await getNewTemplateRender(
     "./test/stubs/relative-ejs/dir/filename.ejs",
     "./test/stubs/"
-  ).getCompiledTemplate("<p><% include ../dir/included %></p>");
+  ).getCompiledTemplate("<p><%- include('../dir/included') -%></p>");
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-test("EJS Render Relative Include, Fxn no Data", async t => {
+test("EJS Render Relative Include, Fxn no Data", async (t) => {
   // includes require a full filename passed in
   let fn = await getNewTemplateRender(
     "./test/stubs/filename.ejs",
@@ -89,7 +80,7 @@ test("EJS Render Relative Include, Fxn no Data", async t => {
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-test("EJS Render Relative Include current dir to subdir, Fxn no Data", async t => {
+test("EJS Render Relative Include current dir to subdir, Fxn no Data", async (t) => {
   // includes require a full filename passed in
   let fn = await getNewTemplateRender(
     "./test/stubs/relative-ejs/filename.ejs",
@@ -98,7 +89,7 @@ test("EJS Render Relative Include current dir to subdir, Fxn no Data", async t =
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-test("EJS Render Relative Include, Fxn with Data", async t => {
+test("EJS Render Relative Include, Fxn with Data", async (t) => {
   // includes require a full filename passed in
   let fn = await getNewTemplateRender(
     "./test/stubs/filename.ejs",
@@ -109,7 +100,7 @@ test("EJS Render Relative Include, Fxn with Data", async t => {
   t.is(await fn(), "<p>This is an Bill.</p>");
 });
 
-test("EJS Render: with Library Override", async t => {
+test("EJS Render: with Library Override", async (t) => {
   let tr = getNewTemplateRender("ejs");
 
   let lib = require("ejs");
