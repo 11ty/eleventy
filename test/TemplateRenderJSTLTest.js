@@ -1,6 +1,6 @@
-import test from "ava";
-import TemplateRender from "../src/TemplateRender";
-import EleventyExtensionMap from "../src/EleventyExtensionMap";
+const test = require("ava");
+const TemplateRender = require("../src/TemplateRender");
+const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 
 function getNewTemplateRender(name, inputDir) {
   let tr = new TemplateRender(name, inputDir);
@@ -9,11 +9,11 @@ function getNewTemplateRender(name, inputDir) {
 }
 
 // ES6
-test("ES6 Template Literal", t => {
+test("ES6 Template Literal", (t) => {
   t.is(getNewTemplateRender("jstl").getEngineName(), "jstl");
 });
 
-test("ES6 Template Literal Render (Backticks)", async t => {
+test("ES6 Template Literal Render (Backticks)", async (t) => {
   // pass in a string here, we don’t want to compile the template in the test :O
   let fn = await getNewTemplateRender("jstl").getCompiledTemplate(
     "`<p>${name.toUpperCase()}</p>`"
@@ -21,7 +21,7 @@ test("ES6 Template Literal Render (Backticks)", async t => {
   t.is(await fn({ name: "Tim" }), "<p>TIM</p>");
 });
 
-test("ES6 Template Literal Render (No backticks)", async t => {
+test("ES6 Template Literal Render (No backticks)", async (t) => {
   // pass in a string here, we don’t want to compile the template in the test :O
   let fn = await getNewTemplateRender("jstl").getCompiledTemplate(
     "<p>${name.toUpperCase()}</p>"
@@ -29,7 +29,7 @@ test("ES6 Template Literal Render (No backticks)", async t => {
   t.is(await fn({ name: "Tim" }), "<p>TIM</p>");
 });
 
-test("ES6 Template Literal with newlines", async t => {
+test("ES6 Template Literal with newlines", async (t) => {
   // pass in a string here, we don’t want to compile the template in the test :O
   let fn = await getNewTemplateRender("jstl").getCompiledTemplate(
     "Test\n\nMarkdown Syntax ${name}\n"
@@ -37,7 +37,7 @@ test("ES6 Template Literal with newlines", async t => {
   t.is(await fn({ name: "Tim" }), "Test\n\nMarkdown Syntax Tim\n");
 });
 
-test("ES6 Template Literal with markdown", async t => {
+test("ES6 Template Literal with markdown", async (t) => {
   // pass in a string here, we don’t want to compile the template in the test :O
   let fn = await getNewTemplateRender("jstl").getCompiledTemplate(
     "Test\n```\nMarkdown Syntax ${name}\n```"

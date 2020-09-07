@@ -1,9 +1,9 @@
-import test from "ava";
-import Template from "../src/Template";
-import TemplateMap from "../src/TemplateMap";
-import TemplateCollection from "../src/TemplateCollection";
-import UsingCircularTemplateContentReferenceError from "../src/Errors/UsingCircularTemplateContentReferenceError";
-import normalizeNewLines from "./Util/normalizeNewLines";
+const test = require("ava");
+const Template = require("../src/Template");
+const TemplateMap = require("../src/TemplateMap");
+const TemplateCollection = require("../src/TemplateCollection");
+const UsingCircularTemplateContentReferenceError = require("../src/Errors/UsingCircularTemplateContentReferenceError");
+const normalizeNewLines = require("./Util/normalizeNewLines");
 
 let tmpl1 = new Template(
   "./test/stubs/templateMapCollection/test1.md",
@@ -26,7 +26,7 @@ let tmpl5 = new Template(
   "./test/stubs/_site"
 );
 
-test("TemplateMap has collections added", async t => {
+test("TemplateMap has collections added", async (t) => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   await tm.add(tmpl2);
@@ -36,7 +36,7 @@ test("TemplateMap has collections added", async t => {
   t.is(tm.collection.getAll().length, 2);
 });
 
-test("TemplateMap compared to Collection API", async t => {
+test("TemplateMap compared to Collection API", async (t) => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   await tm.add(tmpl4);
@@ -58,7 +58,7 @@ test("TemplateMap compared to Collection API", async t => {
   t.deepEqual(posts[1].template, tmpl4);
 });
 
-test("populating the collection twice should clear the previous values (--watch was making it cumulative)", async t => {
+test("populating the collection twice should clear the previous values (--watch was making it cumulative)", async (t) => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   await tm.add(tmpl2);
@@ -69,7 +69,7 @@ test("populating the collection twice should clear the previous values (--watch 
   t.is(tm.getMap().length, 2);
 });
 
-test("TemplateMap adds collections data and has templateContent values", async t => {
+test("TemplateMap adds collections data and has templateContent values", async (t) => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   await tm.add(tmpl2);
@@ -99,7 +99,7 @@ test("TemplateMap adds collections data and has templateContent values", async t
   );
 });
 
-test("TemplateMap circular references (map without templateContent)", async t => {
+test("TemplateMap circular references (map without templateContent)", async (t) => {
   let tm = new TemplateMap();
   await tm.add(
     new Template(
@@ -123,7 +123,7 @@ test("TemplateMap circular references (map without templateContent)", async t =>
   );
 });
 
-test("TemplateMap circular references (map.templateContent)", async t => {
+test("TemplateMap circular references (map.templateContent)", async (t) => {
   let tm = new TemplateMap();
   await tm.add(
     new Template(
@@ -141,12 +141,12 @@ test("TemplateMap circular references (map.templateContent)", async t => {
       await tm.cache();
     },
     {
-      instanceOf: UsingCircularTemplateContentReferenceError
+      instanceOf: UsingCircularTemplateContentReferenceError,
     }
   );
 });
 
-test("Issue #115, mixing pagination and collections", async t => {
+test("Issue #115, mixing pagination and collections", async (t) => {
   let tmplFoos = new Template(
     "./test/stubs/issue-115/template-foos.liquid",
     "./test/stubs/",
@@ -207,7 +207,7 @@ This page is bars
   );
 });
 
-test("Issue #115 with layout, mixing pagination and collections", async t => {
+test("Issue #115 with layout, mixing pagination and collections", async (t) => {
   let tmplFoos = new Template(
     "./test/stubs/issue-115/template-foos.liquid",
     "./test/stubs/",
@@ -268,7 +268,7 @@ This page is bars
   );
 });
 
-test("TemplateMap adds collections data and has page data values using .cache()", async t => {
+test("TemplateMap adds collections data and has page data values using .cache()", async (t) => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   await tm.add(tmpl2);
@@ -288,7 +288,7 @@ test("TemplateMap adds collections data and has page data values using .cache()"
   t.truthy(map[0].data.page.date);
 });
 
-test("TemplateMap adds collections data and has page data values using ._testGetCollectionsData()", async t => {
+test("TemplateMap adds collections data and has page data values using ._testGetCollectionsData()", async (t) => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   await tm.add(tmpl2);
@@ -312,15 +312,15 @@ test("TemplateMap adds collections data and has page data values using ._testGet
   t.is(collections.all[0].data.page.fileSlug, "test1");
 });
 
-test("Url should be available in user config collections API calls", async t => {
+test("Url should be available in user config collections API calls", async (t) => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   await tm.add(tmpl2);
   tm.setUserConfigCollections({
-    userCollection: function(collection) {
+    userCollection: function (collection) {
       let all = collection.getAll();
       return all;
-    }
+    },
   });
 
   let collections = await tm._testGetCollectionsData();
@@ -342,10 +342,10 @@ test("Url should be available in user config collections API calls", async t => 
   );
 });
 
-test("Url should be available in user config collections API calls (test in callback)", async t => {
+test("Url should be available in user config collections API calls (test in callback)", async (t) => {
   let tm = new TemplateMap();
   tm.setUserConfigCollections({
-    userCollection: function(collection) {
+    userCollection: function (collection) {
       let all = collection.getAll();
       t.is(all[0].url, "/templateMapCollection/test1/");
       t.is(
@@ -359,7 +359,7 @@ test("Url should be available in user config collections API calls (test in call
       );
 
       return all;
-    }
+    },
   });
 
   await tm.add(tmpl1);
@@ -367,7 +367,7 @@ test("Url should be available in user config collections API calls (test in call
   await tm.cache();
 });
 
-test("Should be able to paginate a tag generated collection", async t => {
+test("Should be able to paginate a tag generated collection", async (t) => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   await tm.add(tmpl2);
@@ -384,7 +384,7 @@ test("Should be able to paginate a tag generated collection", async t => {
   t.truthy(collections.dog.length);
 });
 
-test("Should be able to paginate a user config collection", async t => {
+test("Should be able to paginate a user config collection", async (t) => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   await tm.add(tmpl2);
@@ -397,10 +397,10 @@ test("Should be able to paginate a user config collection", async t => {
   await tm.add(pagedTmpl);
 
   tm.setUserConfigCollections({
-    userCollection: function(collection) {
+    userCollection: function (collection) {
       let all = collection.getFilteredByTag("dog");
       return all;
-    }
+    },
   });
 
   let collections = await tm._testGetCollectionsData();
@@ -408,7 +408,7 @@ test("Should be able to paginate a user config collection", async t => {
   t.truthy(collections.userCollection.length);
 });
 
-test("Should be able to paginate a user config collection (uses rendered permalink)", async t => {
+test("Should be able to paginate a user config collection (uses rendered permalink)", async (t) => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   await tm.add(tmpl2);
@@ -421,7 +421,7 @@ test("Should be able to paginate a user config collection (uses rendered permali
   await tm.add(pagedTmpl);
 
   tm.setUserConfigCollections({
-    userCollection: function(collection) {
+    userCollection: function (collection) {
       let all = collection.getFilteredByTag("dog");
       t.is(all[0].url, "/templateMapCollection/test1/");
       t.is(
@@ -429,7 +429,7 @@ test("Should be able to paginate a user config collection (uses rendered permali
         "./test/stubs/_site/templateMapCollection/test1/index.html"
       );
       return all;
-    }
+    },
   });
 
   let collections = await tm._testGetCollectionsData();
@@ -443,7 +443,7 @@ test("Should be able to paginate a user config collection (uses rendered permali
   t.is(urls.indexOf("/test-title/hello/") > -1, true);
 });
 
-test("Should be able to paginate a user config collection (paged template is also tagged)", async t => {
+test("Should be able to paginate a user config collection (paged template is also tagged)", async (t) => {
   let tm = new TemplateMap();
   await tm.add(tmpl1); // has dog tag
   await tm.add(tmpl2); // does not have dog tag
@@ -457,10 +457,10 @@ test("Should be able to paginate a user config collection (paged template is als
   await tm.add(pagedTmpl);
 
   tm.setUserConfigCollections({
-    userCollection: function(collection) {
+    userCollection: function (collection) {
       let all = collection.getFilteredByTag("dog");
       return all;
-    }
+    },
   });
 
   let collections = await tm._testGetCollectionsData();
@@ -471,7 +471,7 @@ test("Should be able to paginate a user config collection (paged template is als
   t.is(collections.haha[0].url, "/templateMapCollection/paged-cfg-tagged/");
 });
 
-test("Should be able to paginate a user config collection (paged template is also tagged, add all pages to collections)", async t => {
+test("Should be able to paginate a user config collection (paged template is also tagged, add all pages to collections)", async (t) => {
   let tm = new TemplateMap();
   await tm.add(tmpl1); // has dog tag
   await tm.add(tmpl2); // does not have dog tag
@@ -485,10 +485,10 @@ test("Should be able to paginate a user config collection (paged template is als
   await tm.add(pagedTmpl);
 
   tm.setUserConfigCollections({
-    userCollection: function(collection) {
+    userCollection: function (collection) {
       let all = collection.getFilteredByTag("dog");
       return all;
-    }
+    },
   });
 
   let collections = await tm._testGetCollectionsData();
@@ -506,7 +506,7 @@ test("Should be able to paginate a user config collection (paged template is als
   );
 });
 
-test("Should be able to paginate a user config collection (paged template is also tagged, uses custom rendered permalink)", async t => {
+test("Should be able to paginate a user config collection (paged template is also tagged, uses custom rendered permalink)", async (t) => {
   let tm = new TemplateMap();
   await tm.add(tmpl1); // has dog tag
   await tm.add(tmpl2); // does not have dog tag
@@ -520,10 +520,10 @@ test("Should be able to paginate a user config collection (paged template is als
   await tm.add(pagedTmpl);
 
   tm.setUserConfigCollections({
-    userCollection: function(collection) {
+    userCollection: function (collection) {
       let all = collection.getFilteredByTag("dog");
       return all;
-    }
+    },
   });
 
   let collections = await tm._testGetCollectionsData();
@@ -532,7 +532,7 @@ test("Should be able to paginate a user config collection (paged template is als
   t.is(collections.haha[0].url, "/test-title/goodbye/");
 });
 
-test("Should be able to paginate a user config collection (paged template is also tagged, uses custom rendered permalink, add all pages to collections)", async t => {
+test("Should be able to paginate a user config collection (paged template is also tagged, uses custom rendered permalink, add all pages to collections)", async (t) => {
   let tm = new TemplateMap();
   await tm.add(tmpl1); // has dog tag
   await tm.add(tmpl2); // does not have dog tag
@@ -546,10 +546,10 @@ test("Should be able to paginate a user config collection (paged template is als
   await tm.add(pagedTmpl);
 
   tm.setUserConfigCollections({
-    userCollection: function(collection) {
+    userCollection: function (collection) {
       let all = collection.getFilteredByTag("dog");
       return all;
-    }
+    },
   });
 
   let collections = await tm._testGetCollectionsData();
@@ -559,7 +559,7 @@ test("Should be able to paginate a user config collection (paged template is als
   t.is(collections.haha[1].url, "/test-title-4/goodbye/");
 });
 
-test("TemplateMap render and templateContent are the same (templateContent doesn’t have layout but makes proper use of layout front matter data)", async t => {
+test("TemplateMap render and templateContent are the same (templateContent doesn’t have layout but makes proper use of layout front matter data)", async (t) => {
   let tm = new TemplateMap();
   let tmplLayout = new Template(
     "./test/stubs/templateMapCollection/testWithLayout.md",
@@ -575,7 +575,7 @@ test("TemplateMap render and templateContent are the same (templateContent doesn
   t.is((await map[0].template.render(map[0].data)).trim(), "<p>Inherited</p>");
 });
 
-test("Should be able to paginate a tag generated collection (and it has templateContent)", async t => {
+test("Should be able to paginate a tag generated collection (and it has templateContent)", async (t) => {
   let tm = new TemplateMap();
   await tm.add(tmpl1); // has dog tag
   await tm.add(tmpl2); // does not have dog tag
@@ -615,7 +615,7 @@ test("Should be able to paginate a tag generated collection (and it has template
   );
 });
 
-test("Should be able to paginate a tag generated collection when aliased (and it has templateContent)", async t => {
+test("Should be able to paginate a tag generated collection when aliased (and it has templateContent)", async (t) => {
   let tm = new TemplateMap();
   await tm.add(tmpl1); // has dog tag
   await tm.add(tmpl2); // does not have dog tag
@@ -649,7 +649,7 @@ test("Should be able to paginate a tag generated collection when aliased (and it
   );
 });
 
-test("Issue #253: Paginated template with a tag should put multiple pages into a collection", async t => {
+test("Issue #253: Paginated template with a tag should put multiple pages into a collection", async (t) => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   await tm.add(tmpl2);
@@ -664,10 +664,10 @@ test("Issue #253: Paginated template with a tag should put multiple pages into a
 
   // TODO test user config collections (no actual tests against this collection yet)
   tm.setUserConfigCollections({
-    userCollection: function(collection) {
+    userCollection: function (collection) {
       let all = collection.getFilteredByTag("dog");
       return all;
-    }
+    },
   });
 
   let collections = await tm._testGetCollectionsData();
@@ -679,37 +679,37 @@ test("Issue #253: Paginated template with a tag should put multiple pages into a
   t.is(collections.haha[1].url, "/tagged-pagination-multiples/test/1/");
 });
 
-test("getUserConfigCollectionNames", async t => {
+test("getUserConfigCollectionNames", async (t) => {
   let tm = new TemplateMap();
 
   tm.setUserConfigCollections({
-    userCollection: function(collection) {
+    userCollection: function (collection) {
       return collection.getAll();
     },
-    otherUserCollection: function(collection) {
+    otherUserCollection: function (collection) {
       return collection.getAll();
-    }
+    },
   });
 
   t.deepEqual(tm.getUserConfigCollectionNames(), [
     "userCollection",
-    "otherUserCollection"
+    "otherUserCollection",
   ]);
 });
 
-test("isUserConfigCollectionName", t => {
+test("isUserConfigCollectionName", (t) => {
   let tm = new TemplateMap();
   tm.setUserConfigCollections({
-    userCollection: function(collection) {
+    userCollection: function (collection) {
       return collection.getAll();
-    }
+    },
   });
 
   t.is(tm.isUserConfigCollectionName("userCollection"), true);
   t.is(tm.isUserConfigCollectionName("userCollection2"), false);
 });
 
-test("Dependency Map should have nodes that have no dependencies and no dependents", async t => {
+test("Dependency Map should have nodes that have no dependencies and no dependents", async (t) => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   await tm.add(tmpl5);
@@ -717,31 +717,31 @@ test("Dependency Map should have nodes that have no dependencies and no dependen
   await tm.cache();
 
   let deps = await tm.getMappedDependencies();
-  t.true(deps.filter(dep => dep.indexOf("test5.md") > -1).length > 0);
+  t.true(deps.filter((dep) => dep.indexOf("test5.md") > -1).length > 0);
 
   let collections = await tm._testGetCollectionsData();
   t.is(collections.all.length, 2);
 });
 
-test("Dependency Map should have include orphan user config collections (in the correct order)", async t => {
+test("Dependency Map should have include orphan user config collections (in the correct order)", async (t) => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   await tm.add(tmpl5);
 
   tm.setUserConfigCollections({
-    userCollection: function(collection) {
+    userCollection: function (collection) {
       return collection.getAll();
-    }
+    },
   });
 
   await tm.cache();
 
   let deps = await tm.getMappedDependencies();
-  t.true(deps.filter(dep => dep.indexOf("userCollection") > -1).length === 0);
+  t.true(deps.filter((dep) => dep.indexOf("userCollection") > -1).length === 0);
 
   let delayedDeps = await tm.getDelayedMappedDependencies();
   t.true(
-    delayedDeps.filter(dep => dep.indexOf("userCollection") > -1).length > 0
+    delayedDeps.filter((dep) => dep.indexOf("userCollection") > -1).length > 0
   );
 
   let collections = await tm._testGetCollectionsData();
@@ -749,7 +749,7 @@ test("Dependency Map should have include orphan user config collections (in the 
   t.is(collections.userCollection.length, 2);
 });
 
-test("Template pages should not have layouts when added to collections", async t => {
+test("Template pages should not have layouts when added to collections", async (t) => {
   let tm = new TemplateMap();
   let tmpl = new Template(
     "./test/stubs/collection-layout-wrap.njk",
@@ -764,7 +764,7 @@ test("Template pages should not have layouts when added to collections", async t
   t.is(collections.all[0].templateContent, "Layout Test");
 });
 
-test("Paginated template pages should not have layouts when added to collections", async t => {
+test("Paginated template pages should not have layouts when added to collections", async (t) => {
   let tm = new TemplateMap();
 
   let pagedTmpl = new Template(
@@ -782,7 +782,7 @@ test("Paginated template pages should not have layouts when added to collections
   t.is(collections.all[2].templateContent, "three");
 });
 
-test("Tag pages. Allow pagination over all collections a la `data: collections`", async t => {
+test("Tag pages. Allow pagination over all collections a la `data: collections`", async (t) => {
   let tm = new TemplateMap();
 
   let pagedTmpl = new Template(
@@ -799,17 +799,17 @@ test("Tag pages. Allow pagination over all collections a la `data: collections`"
 
   let collectionTagPagesTemplateContents = new Set(
     collections.all
-      .filter(function(entry) {
+      .filter(function (entry) {
         return entry.inputPath.endsWith("tagpages.njk");
       })
-      .map(function(entry) {
+      .map(function (entry) {
         return entry.templateContent.trim();
       })
   );
   t.deepEqual(collectionTagPagesTemplateContents, new Set(["post"]));
 });
 
-test("Tag pages (all pages added to collections). Allow pagination over all collections a la `data: collections`", async t => {
+test("Tag pages (all pages added to collections). Allow pagination over all collections a la `data: collections`", async (t) => {
   let tm = new TemplateMap();
 
   let pagedTmpl = new Template(
@@ -826,10 +826,10 @@ test("Tag pages (all pages added to collections). Allow pagination over all coll
 
   let collectionTagPagesTemplateContents = new Set(
     collections.all
-      .filter(function(entry) {
+      .filter(function (entry) {
         return entry.inputPath.endsWith("tagpagesall.njk");
       })
-      .map(function(entry) {
+      .map(function (entry) {
         return entry.templateContent.trim();
       })
   );
@@ -839,7 +839,7 @@ test("Tag pages (all pages added to collections). Allow pagination over all coll
   );
 });
 
-test("eleventyExcludeFromCollections", async t => {
+test("eleventyExcludeFromCollections", async (t) => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
 
@@ -860,7 +860,7 @@ test("eleventyExcludeFromCollections", async t => {
   t.is(collections.dog.length, 1);
 });
 
-test("Paginate over collections.all", async t => {
+test("Paginate over collections.all", async (t) => {
   let tm = new TemplateMap();
 
   let pagedTmpl = new Template(
@@ -875,19 +875,19 @@ test("Paginate over collections.all", async t => {
   let collections = await tm._testGetCollectionsData();
   t.is(collections.all.length, 4);
   t.is(
-    collections.all.filter(function(entry) {
+    collections.all.filter(function (entry) {
       return entry.inputPath.endsWith("test1.md");
     }).length,
     1
   );
   t.is(
-    collections.all.filter(function(entry) {
+    collections.all.filter(function (entry) {
       return entry.inputPath.endsWith("test2.md");
     }).length,
     1
   );
   t.is(
-    collections.all.filter(function(entry) {
+    collections.all.filter(function (entry) {
       return entry.inputPath.endsWith("paginateall.njk");
     }).length,
     2
@@ -913,7 +913,7 @@ test("Paginate over collections.all", async t => {
   t.is(map[2]._pages[0].templateContent.trim(), "<h1>Test 2</h1>");
 });
 
-test("Paginate over collections.all WITH a paginate over collections (tag pages)", async t => {
+test("Paginate over collections.all WITH a paginate over collections (tag pages)", async (t) => {
   let tm = new TemplateMap();
 
   let pagedTmpl = new Template(
@@ -936,7 +936,7 @@ test("Paginate over collections.all WITH a paginate over collections (tag pages)
   t.is(collections.all.length, 10);
 });
 
-test("Test a transform with a layout (via templateMap)", async t => {
+test("Test a transform with a layout (via templateMap)", async (t) => {
   t.plan(7);
   let tm = new TemplateMap();
   let tmpl = new Template(
@@ -945,14 +945,14 @@ test("Test a transform with a layout (via templateMap)", async t => {
     "./test/stubs-475/_site"
   );
 
-  tmpl.addLinter(function(content, inputPath, outputPath) {
+  tmpl.addLinter(function (content, inputPath, outputPath) {
     // should be pre-transform content
     t.is(content, "<html><body>This is content.</body></html>");
     t.true(inputPath.endsWith("transform-layout.njk"));
     t.true(outputPath.endsWith("transform-layout/index.html"));
   });
 
-  tmpl.addTransform(function(content, outputPath) {
+  tmpl.addTransform(function (content, outputPath) {
     t.is(content, "<html><body>This is content.</body></html>");
     t.true(outputPath.endsWith("transform-layout/index.html"));
     return "OVERRIDE BY A TRANSFORM";
@@ -973,17 +973,17 @@ test("Test a transform with a layout (via templateMap)", async t => {
   }
 });
 
-test("Async user collection addCollection method", async t => {
+test("Async user collection addCollection method", async (t) => {
   let tm = new TemplateMap();
   await tm.add(tmpl1);
   tm.setUserConfigCollections({
-    userCollection: async function(collection) {
+    userCollection: async function (collection) {
       return new Promise((resolve, reject) => {
-        setTimeout(function() {
+        setTimeout(function () {
           resolve(collection.getAll());
         }, 50);
       });
-    }
+    },
   });
 
   let collections = await tm._testGetCollectionsData();
@@ -992,7 +992,7 @@ test("Async user collection addCollection method", async t => {
   t.is(collections.userCollection[0].data.collections.userCollection.length, 1);
 });
 
-test("Duplicate permalinks in template map", async t => {
+test("Duplicate permalinks in template map", async (t) => {
   let tmpl1 = new Template(
     "./test/stubs/permalink-conflicts/test1.md",
     "./test/stubs/",
@@ -1012,7 +1012,7 @@ test("Duplicate permalinks in template map", async t => {
   });
 });
 
-test("No duplicate permalinks in template map, using false", async t => {
+test("No duplicate permalinks in template map, using false", async (t) => {
   let tmpl1 = new Template(
     "./test/stubs/permalink-conflicts-false/test1.md",
     "./test/stubs/",
@@ -1031,7 +1031,7 @@ test("No duplicate permalinks in template map, using false", async t => {
   t.true(true);
 });
 
-test("Duplicate permalinks in template map, no leading slash", async t => {
+test("Duplicate permalinks in template map, no leading slash", async (t) => {
   let tmpl1 = new Template(
     "./test/stubs/permalink-conflicts/test1.md",
     "./test/stubs/",
@@ -1052,7 +1052,7 @@ test("Duplicate permalinks in template map, no leading slash", async t => {
   });
 });
 
-test("TemplateMap circular references (map.templateContent) using eleventyExcludeFromCollections and collections.all", async t => {
+test("TemplateMap circular references (map.templateContent) using eleventyExcludeFromCollections and collections.all", async (t) => {
   let tm = new TemplateMap();
   await tm.add(
     new Template(
@@ -1076,7 +1076,7 @@ test("TemplateMap circular references (map.templateContent) using eleventyExclud
   t.deepEqual(tm.getMappedDependencies(), [
     "./test/stubs/issue-522/template.md",
     "___TAG___all",
-    "./test/stubs/issue-522/excluded.md"
+    "./test/stubs/issue-522/excluded.md",
   ]);
 
   await tm.cache();

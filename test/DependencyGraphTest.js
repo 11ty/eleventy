@@ -1,6 +1,6 @@
-import test from "ava";
+const test = require("ava");
 
-test("Dependency graph nodes don’t require dependencies", async t => {
+test("Dependency graph nodes don’t require dependencies", async (t) => {
   const DependencyGraph = require("dependency-graph").DepGraph;
   let graph = new DependencyGraph();
 
@@ -19,11 +19,11 @@ test("Dependency graph nodes don’t require dependencies", async t => {
     "all",
     "template-a",
     "template-b",
-    "template-c"
+    "template-c",
   ]);
 });
 
-test("Dependency graph assumptions", async t => {
+test("Dependency graph assumptions", async (t) => {
   const DependencyGraph = require("dependency-graph").DepGraph;
   let graph = new DependencyGraph();
 
@@ -41,6 +41,6 @@ test("Dependency graph assumptions", async t => {
     "template-b",
     "template-c",
     "all",
-    "userCollection"
+    "userCollection",
   ]);
 });

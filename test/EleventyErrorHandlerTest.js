@@ -1,36 +1,36 @@
-import test from "ava";
-import EleventyErrorHandler from "../src/EleventyErrorHandler";
+const test = require("ava");
+const EleventyErrorHandler = require("../src/EleventyErrorHandler");
 
 let output = [];
 
-test.beforeEach(t => {
+test.beforeEach((t) => {
   output = [];
 
   EleventyErrorHandler.isChalkEnabled = false;
   EleventyErrorHandler.logger = {
-    log: function(str) {
+    log: function (str) {
       output.push(str);
     },
-    warn: function(str) {
+    warn: function (str) {
       output.push(str);
     },
-    error: function(str) {
+    error: function (str) {
       output.push(str);
-    }
+    },
   };
 });
 
-test.afterEach(t => {
+test.afterEach((t) => {
   EleventyErrorHandler.isChalkEnabled = true;
   EleventyErrorHandler.logger = null;
 });
 
-test("Disable chalk", t => {
+test("Disable chalk", (t) => {
   EleventyErrorHandler.isChalkEnabled = false;
   t.is(EleventyErrorHandler.isChalkEnabled, false);
 });
 
-test("Log a warning, error", t => {
+test("Log a warning, error", (t) => {
   EleventyErrorHandler.warn(new Error("Test warning"), "Hello");
 
   let expected = `Hello: (more in DEBUG output)

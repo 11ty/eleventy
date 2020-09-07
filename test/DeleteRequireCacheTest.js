@@ -1,9 +1,9 @@
-import test from "ava";
-import path from "path";
-import deleteRequireCache from "../src/Util/DeleteRequireCache";
-import template from "./stubs/function.11ty";
+const test = require("ava");
+const path = require("path");
+const deleteRequireCache = require("../src/Util/DeleteRequireCache");
+const template = require("./stubs/function.11ty");
 
-test("deleteRequireCache", t => {
+test("deleteRequireCache", (t) => {
   const modulePath = path.normalize(
     path.join(__dirname, "./stubs/function.11ty.js")
   );

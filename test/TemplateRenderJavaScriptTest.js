@@ -1,6 +1,6 @@
-import test from "ava";
-import TemplateRender from "../src/TemplateRender";
-import EleventyExtensionMap from "../src/EleventyExtensionMap";
+const test = require("ava");
+const TemplateRender = require("../src/TemplateRender");
+const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 
 function getNewTemplateRender(name, inputDir) {
   let tr = new TemplateRender(name, inputDir);
@@ -8,7 +8,7 @@ function getNewTemplateRender(name, inputDir) {
   return tr;
 }
 
-test("JS", t => {
+test("JS", (t) => {
   t.is(getNewTemplateRender("11ty.js").getEngineName(), "11ty.js");
   t.is(
     getNewTemplateRender("./test/stubs/filename.11ty.js").getEngineName(),
@@ -21,28 +21,28 @@ test("JS", t => {
   );
 });
 
-test("JS Render a string (no data)", async t => {
+test("JS Render a string (no data)", async (t) => {
   let fn = await getNewTemplateRender(
     "./test/stubs/string.11ty.js"
   ).getCompiledTemplate();
   t.is(await fn({ name: "Bill" }), "<p>Zach</p>");
 });
 
-test("JS Render a promise (no data)", async t => {
+test("JS Render a promise (no data)", async (t) => {
   let fn = await getNewTemplateRender(
     "./test/stubs/promise.11ty.js"
   ).getCompiledTemplate();
   t.is(await fn({ name: "Bill" }), "<p>Zach</p>");
 });
 
-test("JS Render a buffer (no data)", async t => {
+test("JS Render a buffer (no data)", async (t) => {
   let fn = await getNewTemplateRender(
     "./test/stubs/buffer.11ty.js"
   ).getCompiledTemplate();
   t.is(await fn({ name: "Bill" }), "<p>tést</p>");
 });
 
-test("JS Render a function", async t => {
+test("JS Render a function", async (t) => {
   let fn = await getNewTemplateRender(
     "./test/stubs/function.11ty.js"
   ).getCompiledTemplate();
@@ -50,7 +50,7 @@ test("JS Render a function", async t => {
   t.is(await fn({ name: "Bill" }), "<p>Bill</p>");
 });
 
-test("JS Render a function (arrow syntax)", async t => {
+test("JS Render a function (arrow syntax)", async (t) => {
   let fn = await getNewTemplateRender(
     "./test/stubs/function-arrow.11ty.js"
   ).getCompiledTemplate();
@@ -58,7 +58,7 @@ test("JS Render a function (arrow syntax)", async t => {
   t.is(await fn({ name: "Bill" }), "<p>Bill</p>");
 });
 
-test("JS Render a function, returns a Buffer", async t => {
+test("JS Render a function, returns a Buffer", async (t) => {
   let fn = await getNewTemplateRender(
     "./test/stubs/function-buffer.11ty.js"
   ).getCompiledTemplate();
@@ -67,7 +67,7 @@ test("JS Render a function, returns a Buffer", async t => {
   t.is(await fn({ name: "Bill" }), "<p>Bill</p>");
 });
 
-test("JS Render a function (Markdown)", async t => {
+test("JS Render a function (Markdown)", async (t) => {
   let tr = getNewTemplateRender("./test/stubs/function-markdown.11ty.js");
   tr.setEngineOverride("11ty.js,md");
   let fn = await tr.getCompiledTemplate();
@@ -75,7 +75,7 @@ test("JS Render a function (Markdown)", async t => {
   t.is((await fn({ name: "Bill" })).trim(), "<h1>Bill</h1>");
 });
 
-test("JS Render a function (Collections)", async t => {
+test("JS Render a function (Collections)", async (t) => {
   let tr = getNewTemplateRender("./test/stubs/use-collection.11ty.js");
   let fn = await tr.getCompiledTemplate();
   t.is(
@@ -85,23 +85,23 @@ test("JS Render a function (Collections)", async t => {
           post: [
             {
               data: {
-                title: "Testing"
-              }
+                title: "Testing",
+              },
             },
             {
               data: {
-                title: "Testing2"
-              }
-            }
-          ]
-        }
+                title: "Testing2",
+              },
+            },
+          ],
+        },
       })
     ).trim(),
     `<ul><li>Testing</li><li>Testing2</li></ul>`
   );
 });
 
-test("JS Render an async function", async t => {
+test("JS Render an async function", async (t) => {
   let fn = await getNewTemplateRender(
     "./test/stubs/function-async.11ty.js"
   ).getCompiledTemplate();
@@ -109,7 +109,7 @@ test("JS Render an async function", async t => {
   t.is(await fn({ name: "Bill" }), "<p>Bill</p>");
 });
 
-test("JS Render with a Class", async t => {
+test("JS Render with a Class", async (t) => {
   let fn = await getNewTemplateRender(
     "./test/stubs/class.11ty.js"
   ).getCompiledTemplate();
@@ -117,7 +117,7 @@ test("JS Render with a Class", async t => {
   t.is(await fn({ name: "Bill" }), "<p>BillBillTed</p>");
 });
 
-test("JS Render with a Class, returns a buffer", async t => {
+test("JS Render with a Class, returns a buffer", async (t) => {
   let fn = await getNewTemplateRender(
     "./test/stubs/class-buffer.11ty.js"
   ).getCompiledTemplate();
@@ -126,7 +126,7 @@ test("JS Render with a Class, returns a buffer", async t => {
   t.is(await fn({ name: "Bill" }), "<p>BillBillTed</p>");
 });
 
-test("JS Render with a Class, async render", async t => {
+test("JS Render with a Class, async render", async (t) => {
   let fn = await getNewTemplateRender(
     "./test/stubs/class-async.11ty.js"
   ).getCompiledTemplate();
@@ -134,7 +134,7 @@ test("JS Render with a Class, async render", async t => {
   t.is(await fn({ name: "Bill" }), "<p>Bill</p>");
 });
 
-test("JS Render using Vue", async t => {
+test("JS Render using Vue", async (t) => {
   let fn = await getNewTemplateRender(
     "./test/stubs/vue.11ty.js"
   ).getCompiledTemplate();
@@ -148,7 +148,7 @@ test("JS Render using Vue", async t => {
   );
 });
 
-test("JS Render using Vue (with a layout)", async t => {
+test("JS Render using Vue (with a layout)", async (t) => {
   let fn = await getNewTemplateRender(
     "./test/stubs/vue-layout.11ty.js"
   ).getCompiledTemplate();
@@ -160,7 +160,7 @@ test("JS Render using Vue (with a layout)", async t => {
   );
 });
 
-test("JS Render using ViperHTML", async t => {
+test("JS Render using ViperHTML", async (t) => {
   let fn = await getNewTemplateRender(
     "./test/stubs/viperhtml.11ty.js"
   ).getCompiledTemplate();
@@ -173,20 +173,20 @@ test("JS Render using ViperHTML", async t => {
   );
 });
 
-test("JS Render with a function", async t => {
+test("JS Render with a function", async (t) => {
   t.plan(8);
 
   let tr = getNewTemplateRender("./test/stubs/function-filter.11ty.js");
   tr.config = {
     javascriptFunctions: {
-      upper: function(val) {
+      upper: function (val) {
         t.is(this.page.url, "/hi/");
         // sanity check to make sure data didn’t propagate
         t.not(this.name, "Zach");
         t.not(this.name, "Bill");
         return new String(val).toUpperCase();
-      }
-    }
+      },
+    },
   };
 
   let fn = await tr.getCompiledTemplate();
@@ -195,14 +195,14 @@ test("JS Render with a function", async t => {
 });
 
 // This doesn’t work, per arrow functions
-test.skip("Issue #934: JS Render with an arrow function and javascript function", async t => {
+test.skip("Issue #934: JS Render with an arrow function and javascript function", async (t) => {
   let tr = new TemplateRender("./test/stubs/function-filter-arrow.11ty.js");
   tr.config = {
     javascriptFunctions: {
-      upper: function(val) {
+      upper: function (val) {
         return new String(val).toUpperCase();
-      }
-    }
+      },
+    },
   };
 
   let fn = await tr.getCompiledTemplate();
@@ -210,19 +210,19 @@ test.skip("Issue #934: JS Render with an arrow function and javascript function"
   t.is(await fn({ name: "Bill" }), "<p>BILL</p>");
 });
 
-test("JS Render with a function and async filter", async t => {
+test("JS Render with a function and async filter", async (t) => {
   t.plan(4);
 
   let tr = new TemplateRender("./test/stubs/function-async-filter.11ty.js");
   tr.config = {
     javascriptFunctions: {
-      upper: function(val) {
-        return new Promise(resolve => {
+      upper: function (val) {
+        return new Promise((resolve) => {
           t.is(this.page.url, "/hi/");
           resolve(new String(val).toUpperCase());
         });
-      }
-    }
+      },
+    },
   };
 
   let fn = await tr.getCompiledTemplate();
@@ -230,16 +230,16 @@ test("JS Render with a function and async filter", async t => {
   t.is(await fn({ name: "Bill", page: { url: "/hi/" } }), "<p>BILL</p>");
 });
 
-test("JS Render with a function prototype", async t => {
+test("JS Render with a function prototype", async (t) => {
   t.plan(4);
   let tr = getNewTemplateRender("./test/stubs/function-prototype.11ty.js");
   tr.config = {
     javascriptFunctions: {
-      upper: function(val) {
+      upper: function (val) {
         t.is(this.page.url, "/hi/");
         return new String(val).toUpperCase();
-      }
-    }
+      },
+    },
   };
 
   let fn = await tr.getCompiledTemplate();
@@ -253,17 +253,17 @@ test("JS Render with a function prototype", async t => {
   );
 });
 
-test("JS Class Render with a function", async t => {
+test("JS Class Render with a function", async (t) => {
   t.plan(4);
 
   let tr = getNewTemplateRender("./test/stubs/class-filter.11ty.js");
   tr.config = {
     javascriptFunctions: {
-      upper: function(val) {
+      upper: function (val) {
         t.is(this.page.url, "/hi/");
         return new String(val).toUpperCase();
-      }
-    }
+      },
+    },
   };
 
   let fn = await tr.getCompiledTemplate();
@@ -271,17 +271,17 @@ test("JS Class Render with a function", async t => {
   t.is(await fn({ name: "Bill", page: { url: "/hi/" } }), "<p>BILLBillTed</p>");
 });
 
-test("JS Class Async Render with a function", async t => {
+test("JS Class Async Render with a function", async (t) => {
   t.plan(4);
 
   let tr = getNewTemplateRender("./test/stubs/class-async-filter.11ty.js");
   tr.config = {
     javascriptFunctions: {
-      upper: function(val) {
+      upper: function (val) {
         t.is(this.page.url, "/hi/");
         return new String(val).toUpperCase();
-      }
-    }
+      },
+    },
   };
 
   let fn = await tr.getCompiledTemplate();
@@ -290,16 +290,16 @@ test("JS Class Async Render with a function", async t => {
   t.is(await fn({ name: "Bill", page: { url: "/hi/" } }), "<p>BILLBillTed</p>");
 });
 
-test("JS Class Async Render with a function (sync function, throws error)", async t => {
+test("JS Class Async Render with a function (sync function, throws error)", async (t) => {
   let tr = new TemplateRender("./test/stubs/function-throws.11ty.js");
   tr.config = {
     javascriptFunctions: {
-      upper: function(val) {
+      upper: function (val) {
         throw new Error(
           "JS Class Async Render with a function (sync function, throws error)"
         );
-      }
-    }
+      },
+    },
   };
 
   let error = await t.throwsAsync(async () => {
@@ -313,16 +313,16 @@ test("JS Class Async Render with a function (sync function, throws error)", asyn
   );
 });
 
-test("JS Class Async Render with a function (async function, throws error)", async t => {
+test("JS Class Async Render with a function (async function, throws error)", async (t) => {
   let tr = new TemplateRender("./test/stubs/function-throws-async.11ty.js");
   tr.config = {
     javascriptFunctions: {
-      upper: async function(val) {
+      upper: async function (val) {
         throw new Error(
           "JS Class Async Render with a function (async function, throws error)"
         );
-      }
-    }
+      },
+    },
   };
 
   let error = await t.throwsAsync(async () => {
@@ -336,7 +336,7 @@ test("JS Class Async Render with a function (async function, throws error)", asy
   );
 });
 
-test("JS function has access to built in filters", async t => {
+test("JS function has access to built in filters", async (t) => {
   t.plan(6);
   let tr = getNewTemplateRender("./test/stubs/function-fns.11ty.js");
 
@@ -344,7 +344,7 @@ test("JS function has access to built in filters", async t => {
   await fn({ avaTest: t, page: { url: "/hi/" } });
 });
 
-test("Class has access to built in filters", async t => {
+test("Class has access to built in filters", async (t) => {
   t.plan(6);
   let tr = getNewTemplateRender("./test/stubs/class-fns.11ty.js");
 
@@ -352,7 +352,7 @@ test("Class has access to built in filters", async t => {
   await fn({ avaTest: t, page: { url: "/hi/" } });
 });
 
-test("Class has page property already and keeps it", async t => {
+test("Class has page property already and keeps it", async (t) => {
   t.plan(2);
   let tr = getNewTemplateRender("./test/stubs/class-fns-has-page.11ty.js");
 

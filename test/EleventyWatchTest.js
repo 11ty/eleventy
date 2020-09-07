@@ -1,7 +1,7 @@
-import test from "ava";
-import EleventyWatch from "../src/EleventyWatch";
+const test = require("ava");
+const EleventyWatch = require("../src/EleventyWatch");
 
-test("Standard", t => {
+test("Standard", (t) => {
   let watch = new EleventyWatch();
   t.is(watch.isBuildRunning(), false);
 
@@ -12,7 +12,7 @@ test("Standard", t => {
   t.is(watch.isBuildRunning(), false);
 });
 
-test("Incremental", t => {
+test("Incremental", (t) => {
   let watch = new EleventyWatch();
   t.is(watch.getIncrementalFile(), false);
 
@@ -36,7 +36,7 @@ test("Incremental", t => {
   t.is(watch.getIncrementalFile(), false);
 });
 
-test("Incremental queue 2", t => {
+test("Incremental queue 2", (t) => {
   let watch = new EleventyWatch();
   t.is(watch.getIncrementalFile(), false);
 
@@ -61,7 +61,7 @@ test("Incremental queue 2", t => {
   t.is(watch.getIncrementalFile(), false);
 });
 
-test("Incremental add while active", t => {
+test("Incremental add while active", (t) => {
   let watch = new EleventyWatch();
   t.is(watch.getIncrementalFile(), false);
 
@@ -90,7 +90,7 @@ test("Incremental add while active", t => {
   t.is(watch.getIncrementalFile(), false);
 });
 
-test("Non-incremental", t => {
+test("Non-incremental", (t) => {
   let watch = new EleventyWatch();
   t.is(watch.getIncrementalFile(), false);
 
@@ -113,7 +113,7 @@ test("Non-incremental", t => {
   t.is(watch.getIncrementalFile(), false);
 });
 
-test("Non-incremental queue 2", t => {
+test("Non-incremental queue 2", (t) => {
   let watch = new EleventyWatch();
   t.is(watch.getIncrementalFile(), false);
 
@@ -137,7 +137,7 @@ test("Non-incremental queue 2", t => {
   t.is(watch.getIncrementalFile(), false);
 });
 
-test("Non-incremental add while active", t => {
+test("Non-incremental add while active", (t) => {
   let watch = new EleventyWatch();
   t.is(watch.getIncrementalFile(), false);
 
@@ -165,25 +165,25 @@ test("Non-incremental add while active", t => {
   t.is(watch.getIncrementalFile(), false);
 });
 
-test("Active queue tests", t => {
+test("Active queue tests", (t) => {
   let watch = new EleventyWatch();
   watch.addToPendingQueue("test.md");
   watch.addToPendingQueue("test2.md");
   watch.addToPendingQueue("test.css");
 
   t.is(
-    watch.hasAllQueueFiles(path => path.startsWith("./test")),
+    watch.hasAllQueueFiles((path) => path.startsWith("./test")),
     false
   );
 
   watch.setBuildRunning();
   t.is(watch.hasAllQueueFiles("slkdjflkjsdlkfj"), false);
   t.is(
-    watch.hasAllQueueFiles(path => path.startsWith("./test")),
+    watch.hasAllQueueFiles((path) => path.startsWith("./test")),
     true
   );
   t.is(
-    watch.hasAllQueueFiles(path => path.endsWith(".css")),
+    watch.hasAllQueueFiles((path) => path.endsWith(".css")),
     false
   );
 
@@ -192,31 +192,31 @@ test("Active queue tests", t => {
   watch.setBuildFinished();
 
   t.is(
-    watch.hasAllQueueFiles(path => path.startsWith("./test")),
+    watch.hasAllQueueFiles((path) => path.startsWith("./test")),
     false
   );
 });
 
-test("Active queue tests, all CSS files", t => {
+test("Active queue tests, all CSS files", (t) => {
   let watch = new EleventyWatch();
   watch.addToPendingQueue("test.css");
   watch.addToPendingQueue("test2.css");
   watch.addToPendingQueue("test3.css");
 
   t.is(
-    watch.hasAllQueueFiles(path => path.endsWith(".css")),
+    watch.hasAllQueueFiles((path) => path.endsWith(".css")),
     false
   );
 
   watch.setBuildRunning();
   t.is(
-    watch.hasAllQueueFiles(path => path.endsWith(".css")),
+    watch.hasAllQueueFiles((path) => path.endsWith(".css")),
     true
   );
   watch.setBuildFinished();
 
   t.is(
-    watch.hasAllQueueFiles(path => path.endsWith(".css")),
+    watch.hasAllQueueFiles((path) => path.endsWith(".css")),
     false
   );
 });

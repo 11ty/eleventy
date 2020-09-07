@@ -1,7 +1,7 @@
-import test from "ava";
-import UserConfig from "../src/UserConfig";
+const test = require("ava");
+const UserConfig = require("../src/UserConfig");
 
-test("Template Formats", t => {
+test("Template Formats", (t) => {
   let cfg = new UserConfig();
 
   t.falsy(cfg.getMergingConfigObject().templateFormats);
@@ -15,7 +15,7 @@ test("Template Formats", t => {
   t.deepEqual(cfg.getMergingConfigObject().templateFormats, ["njk", "liquid"]);
 });
 
-test("Template Formats (Arrays)", t => {
+test("Template Formats (Arrays)", (t) => {
   let cfg = new UserConfig();
 
   t.falsy(cfg.getMergingConfigObject().templateFormats);

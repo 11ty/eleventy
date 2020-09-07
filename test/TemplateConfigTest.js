@@ -1,7 +1,7 @@
-import test from "ava";
-import md from "markdown-it";
-import TemplateConfig from "../src/TemplateConfig";
-import eleventyConfig from "../src/EleventyConfig";
+const test = require("ava");
+const md = require("markdown-it");
+const TemplateConfig = require("../src/TemplateConfig");
+const eleventyConfig = require("../src/EleventyConfig");
 
 test("Template Config local config overrides base config", async (t) => {
   let templateCfg = new TemplateConfig(

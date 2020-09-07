@@ -1,7 +1,7 @@
-import test from "ava";
-import TemplatePermalink from "../src/TemplatePermalink";
+const test = require("ava");
+const TemplatePermalink = require("../src/TemplatePermalink");
 
-test("Simple straight permalink", t => {
+test("Simple straight permalink", (t) => {
   t.is(
     new TemplatePermalink("permalinksubfolder/test.html").toString(),
     "permalinksubfolder/test.html"
@@ -26,7 +26,7 @@ test("Simple straight permalink", t => {
   );
 });
 
-test("Permalink without filename", t => {
+test("Permalink without filename", (t) => {
   t.is(
     new TemplatePermalink("permalinksubfolder/").toString(),
     "permalinksubfolder/index.html"
@@ -54,7 +54,7 @@ test("Permalink without filename", t => {
   );
 });
 
-test("Permalink with pagination subdir", t => {
+test("Permalink with pagination subdir", (t) => {
   t.is(
     new TemplatePermalink("permalinksubfolder/test.html", "0/").toString(),
     "permalinksubfolder/0/test.html"
@@ -74,7 +74,7 @@ test("Permalink with pagination subdir", t => {
   );
 });
 
-test("Permalink generate", t => {
+test("Permalink generate", (t) => {
   let gen = TemplatePermalink.generate;
 
   t.is(gen("./", "index").toString(), "index.html");
@@ -89,7 +89,7 @@ test("Permalink generate", t => {
   t.is(gen(".", "test", "1/").toHref(), "/test/1/");
 });
 
-test("Permalink generate with suffix", t => {
+test("Permalink generate with suffix", (t) => {
   let gen = TemplatePermalink.generate;
 
   t.is(gen(".", "test", null, "-o").toString(), "test/index-o.html");
@@ -98,7 +98,7 @@ test("Permalink generate with suffix", t => {
   t.is(gen(".", "test", "1/", "-o").toHref(), "/test/1/index-o.html");
 });
 
-test("Permalink generate with new extension", t => {
+test("Permalink generate with new extension", (t) => {
   let gen = TemplatePermalink.generate;
 
   t.is(gen(".", "test", null, null, "css").toString(), "test.css");
@@ -107,7 +107,7 @@ test("Permalink generate with new extension", t => {
   t.is(gen(".", "test", "1/", null, "css").toHref(), "/1/test.css");
 });
 
-test("Permalink generate with subfolders", t => {
+test("Permalink generate with subfolders", (t) => {
   let gen = TemplatePermalink.generate;
 
   t.is(
@@ -134,7 +134,7 @@ test("Permalink generate with subfolders", t => {
   );
 });
 
-test("Permalink matching folder and filename", t => {
+test("Permalink matching folder and filename", (t) => {
   let gen = TemplatePermalink.generate;
   let hasDupe = TemplatePermalink._hasDuplicateFolder;
   t.is(hasDupe("subfolder", "component"), false);
