@@ -408,42 +408,45 @@ class Template extends TemplateContent {
     // will _not_ consume renderData
     this.computedData = new ComputedData();
 
-    // Add permalink (outside of eleventyComputed) to computed graph
-    // if(data.permalink) {
-    //   this._addComputedEntry(this.computedData, data.permalink, "permalink");
-    // }
-
-    // Note that `permalink` is only a thing that gets consumed—it does not go directly into generated data
-    // this allows computed entries to use page.url or page.outputPath and they’ll be resolved properly
-    this.computedData.addTemplateString(
-      "page.url",
-      async (data) => await this.getOutputHref(data),
-      data.permalink ? ["permalink"] : undefined
-    );
-
-    this.computedData.addTemplateString(
-      "page.outputPath",
-      async (data) => await this.getOutputPath(data),
-      data.permalink ? ["permalink"] : undefined
-    );
-
     if (this.config.keys.computed in data) {
+      // Note that `permalink` is only a thing that gets consumed—it does not go directly into generated data
+      // this allows computed entries to use page.url or page.outputPath and they’ll be resolved properly
+      this.computedData.addTemplateString(
+        "page.url",
+        async (data) => await this.getOutputHref(data),
+        data.permalink ? ["permalink"] : undefined
+      );
+
+      this.computedData.addTemplateString(
+        "page.outputPath",
+        async (data) => await this.getOutputPath(data),
+        data.permalink ? ["permalink"] : undefined
+      );
+
+      // actually add the computed data
       this._addComputedEntry(
         this.computedData,
         data[this.config.keys.computed]
       );
+
+      // limited run of computed data—save the stuff that relies on collections for later.
+      debug("First round of computed data for %o", this.inputPath);
+      await this.computedData.setupData(data, function (entry) {
+        return !this.isUsesStartsWith(entry, "collections.");
+
+        // TODO possible improvement here is to only process page.url, page.outputPath, permalink
+        // instead of only punting on things that rely on collections.
+        // let firstPhaseComputedData = ["page.url", "page.outputPath", ...this.getOrderFor("page.url"), ...this.getOrderFor("page.outputPath")];
+        // return firstPhaseComputedData.indexOf(entry) > -1;
+      });
+    } else {
+      if (!("page" in data)) {
+        data.page = {};
+      }
+
+      data.page.url = await this.getOutputHref(data);
+      data.page.outputPath = await this.getOutputPath(data);
     }
-
-    // limited run of computed data—save the stuff that relies on collections for later.
-    debug("First round of computed data for %o", this.inputPath);
-    await this.computedData.setupData(data, function (entry) {
-      return !this.isUsesStartsWith(entry, "collections.");
-
-      // TODO possible improvement here is to only process page.url, page.outputPath, permalink
-      // instead of only punting on things that rely on collections.
-      // let firstPhaseComputedData = ["page.url", "page.outputPath", ...this.getOrderFor("page.url"), ...this.getOrderFor("page.outputPath")];
-      // return firstPhaseComputedData.indexOf(entry) > -1;
-    });
 
     // Deprecated, use eleventyComputed instead.
     if ("renderData" in data) {
