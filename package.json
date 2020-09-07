@@ -103,7 +103,6 @@
     "gray-matter": "^4.0.2",
     "hamljs": "^0.6.2",
     "handlebars": "^4.7.6",
-    "javascript-stringify": "^2.0.1",
     "liquidjs": "^9.15.0",
     "lodash": "^4.17.20",
     "luxon": "^1.25.0",

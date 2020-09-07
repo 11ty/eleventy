@@ -14,7 +14,6 @@ function getTemplateLayoutInstance(key, inputDir, map) {
       "pug",
       "njk",
       "html",
-      "jstl",
       "11ty.js",
     ]);
   }

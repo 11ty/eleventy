@@ -14,7 +14,6 @@ function getResolverInstance(path, inputDir, map) {
       "pug",
       "njk",
       "html",
-      "jstl",
       "11ty.js",
     ]);
   }

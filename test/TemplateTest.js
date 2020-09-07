@@ -359,30 +359,6 @@ test("Liquid template with include", async (t) => {
   );
 });
 
-test("ES6 Template Literal (No Backticks)", async (t) => {
-  let dataObj = new TemplateData("./test/stubs/");
-  let tmpl = getNewTemplate(
-    "./test/stubs/formatTest.jstl",
-    "./test/stubs/",
-    "dist",
-    dataObj
-  );
-
-  t.is((await tmpl.render(await tmpl.getData())).trim(), `<p>ZACH</p>`);
-});
-
-test("ES6 Template Literal (with Backticks)", async (t) => {
-  let dataObj = new TemplateData("./test/stubs/");
-  let tmpl = getNewTemplate(
-    "./test/stubs/formatTestBackticks.jstl",
-    "./test/stubs/",
-    "dist",
-    dataObj
-  );
-
-  t.is((await tmpl.render(await tmpl.getData())).trim(), `<p>ZACH</p>`);
-});
-
 test("Permalink output directory", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/permalinked.ejs",

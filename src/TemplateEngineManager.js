@@ -21,7 +21,6 @@ class TemplateEngineManager {
       this._keyToClassNameMap = {
         ejs: "Ejs",
         md: "Markdown",
-        jstl: "JavaScriptTemplateLiteral",
         html: "Html",
         hbs: "Handlebars",
         mustache: "Mustache",
