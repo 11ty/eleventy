@@ -1,6 +1,5 @@
 const PugLib = require("pug");
 const TemplateEngine = require("./TemplateEngine");
-const TemplatePath = require("../TemplatePath");
 
 class Pug extends TemplateEngine {
   constructor(name, includesDir) {
@@ -27,7 +26,7 @@ class Pug extends TemplateEngine {
     return Object.assign(
       {
         basedir: includesDir,
-        filename: includesDir
+        filename: includesDir,
       },
       this.pugOptions || {}
     );

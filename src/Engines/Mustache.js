@@ -13,10 +13,10 @@ class Mustache extends TemplateEngine {
     this.setEngineLib(this.mustacheLib);
   }
 
-  async compile(str, inputPath) {
+  async compile(str) {
     let partials = super.getPartials();
 
-    return function(data) {
+    return function (data) {
       return this.render(str, data, partials).trim();
     }.bind(this.mustacheLib);
   }

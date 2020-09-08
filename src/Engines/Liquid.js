@@ -17,8 +17,8 @@ class Liquid extends TemplateEngine {
       number: /[0-9]+\.*[0-9]*/,
       doubleQuoteString: /"(?:\\["\\]|[^\n"\\])*"/,
       singleQuoteString: /'(?:\\['\\]|[^\n'\\])*'/,
-      keyword: /[a-zA-Z0-9\.\-\_]+/,
-      "ignore:whitespace": /[, \t]+/ // includes comma separator
+      keyword: /[a-zA-Z0-9.\-_]+/,
+      "ignore:whitespace": /[, \t]+/, // includes comma separator
     });
     this.cacheable = true;
   }
@@ -49,7 +49,7 @@ class Liquid extends TemplateEngine {
       root: [super.getIncludesDir()], // overrides in compile with inputPath below
       extname: ".liquid",
       dynamicPartials: false,
-      strictFilters: false
+      strictFilters: false,
     };
 
     let options = Object.assign(defaults, this.liquidOptions || {});
@@ -136,50 +136,51 @@ class Liquid extends TemplateEngine {
 
   addShortcode(shortcodeName, shortcodeFn) {
     let _t = this;
-    this.addTag(shortcodeName, function(liquidEngine) {
+    this.addTag(shortcodeName, function () {
       return {
-        parse: function(tagToken, remainTokens) {
+        parse: function (tagToken) {
           this.name = tagToken.name;
           this.args = tagToken.args;
         },
-        render: async function(scope, hash) {
+        render: async function (scope) {
           let argArray = await Liquid.parseArguments(
             _t.argLexer,
             this.args,
             scope,
             this.liquid
           );
+
           return Promise.resolve(
             shortcodeFn.call(
               Liquid._normalizeShortcodeScope(scope),
               ...argArray
             )
           );
-        }
+        },
       };
     });
   }
 
   addPairedShortcode(shortcodeName, shortcodeFn) {
     let _t = this;
-    this.addTag(shortcodeName, function(liquidEngine) {
+    this.addTag(shortcodeName, function (liquidEngine) {
       return {
-        parse: function(tagToken, remainTokens) {
+        parse: function (tagToken, remainTokens) {
           this.name = tagToken.name;
           this.args = tagToken.args;
           this.templates = [];
 
           var stream = liquidEngine.parser
             .parseStream(remainTokens)
-            .on("template", tpl => this.templates.push(tpl))
-            .on("tag:end" + shortcodeName, token => stream.stop())
-            .on("end", x => {
+            .on("template", (tpl) => this.templates.push(tpl))
+            .on("tag:end" + shortcodeName, () => stream.stop())
+            .on("end", () => {
               throw new Error(`tag ${tagToken.raw} not closed`);
             });
 
           stream.start();
         },
-        render: function*(ctx, hash) {
+        render: function* (ctx) {
           let argArray = yield Liquid.parseArguments(
             _t.argLexer,
             this.args,
@@ -195,7 +196,7 @@ class Liquid extends TemplateEngine {
             html,
             ...argArray
           );
-        }
+        },
       };
     });
   }
@@ -211,10 +212,10 @@ class Liquid extends TemplateEngine {
     } else {
       options.root = [
         super.getIncludesDir(),
-        TemplatePath.getDirFromFilePath(inputPath)
+        TemplatePath.getDirFromFilePath(inputPath),
       ];
     }
-    return async function(data) {
+    return async function (data) {
       return engine.render(tmpl, data, options);
     };
   }

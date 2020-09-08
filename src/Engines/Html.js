@@ -15,11 +15,11 @@ class Html extends TemplateEngine {
       );
       let fn = await engine.compile(str, inputPath);
 
-      return async function(data) {
+      return async function (data) {
         return fn(data);
       };
     } else {
-      return function(data) {
+      return function () {
         // do nothing with data if parseHtmlWith is falsy
         return str;
       };
