@@ -687,9 +687,10 @@ test.skip("Liquid Include Scope Leak", async (t) => {
   t.is(await fn({ test: 1 }), "<p>21</p>");
 });
 
-// TODO this will change in 1.0
+// Note: this strictFilters default changed in 1.0 from false to true
 test("Liquid Missing Filter Issue #183 (no strictFilters)", async (t) => {
   let tr = getNewTemplateRender("liquid", "./test/stubs/");
+  tr.engine.setLiquidOptions({ strictFilters: false });
 
   try {
     await tr._testRender("{{ 'test' | prefixWithZach }}", {});
@@ -699,9 +700,9 @@ test("Liquid Missing Filter Issue #183 (no strictFilters)", async (t) => {
   }
 });
 
+// Note: this strictFilters default changed in 1.0 from false to true
 test("Liquid Missing Filter Issue #183", async (t) => {
   let tr = getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.setLiquidOptions({ strictFilters: true });
 
   try {
     await tr._testRender("{{ 'test' | prefixWithZach }}", {});

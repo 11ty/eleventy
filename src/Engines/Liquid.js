@@ -49,7 +49,7 @@ class Liquid extends TemplateEngine {
       root: [super.getIncludesDir()], // overrides in compile with inputPath below
       extname: ".liquid",
       dynamicPartials: false,
-      strictFilters: false,
+      strictFilters: true,
     };
 
     let options = Object.assign(defaults, this.liquidOptions || {});
