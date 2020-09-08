@@ -384,6 +384,10 @@ class UserConfig {
     this.useGitIgnore = !!enabled;
   }
 
+  setEleventyIgnoreFile(file) {
+    this.eleventyIgnoreFile = file;
+  }
+
   addShortcode(name, callback) {
     debug("Adding universal shortcode %o", this.getNamespacedName(name));
     this.addNunjucksShortcode(name, callback);
@@ -680,6 +684,7 @@ class UserConfig {
       libraryOverrides: this.libraryOverrides,
       dynamicPermalinks: this.dynamicPermalinks,
       useGitIgnore: this.useGitIgnore,
+      eleventyIgnoreFile: this.eleventyIgnoreFile,
       dataDeepMerge: this.dataDeepMerge,
       watchJavaScriptDependencies: this.watchJavaScriptDependencies,
       additionalWatchTargets: this.additionalWatchTargets,

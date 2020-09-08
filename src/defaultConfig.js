@@ -38,6 +38,7 @@ module.exports = function (config) {
     passthroughFileCopy: true,
     htmlOutputSuffix: "-o",
     jsDataFileSuffix: ".11tydata",
+    eleventyIgnoreFile: ".eleventyignore",
     keys: {
       package: "pkg",
       layout: "layout",

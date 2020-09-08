@@ -271,11 +271,11 @@ class EleventyFiles {
 
     if (this.config.eleventyignoreOverride !== false) {
       let eleventyIgnores = [
-        TemplatePath.join(rootDirectory, ".eleventyignore")
+        TemplatePath.join(rootDirectory, this.config.eleventyIgnoreFile)
       ];
       if (rootDirectory !== absoluteInputDir) {
         eleventyIgnores.push(
-          TemplatePath.join(this.inputDir, ".eleventyignore")
+          TemplatePath.join(this.inputDir, this.config.eleventyIgnoreFile)
         );
       }
 
