@@ -49,6 +49,7 @@ test("Eleventy file watching", async (t) => {
   elev.setFormats("njk");
 
   await elev.init();
+  await elev.eleventyFiles.getFiles();
   await elev.initWatch();
   t.deepEqual(await elev.getWatchedFiles(), [
     "./test/stubs/**/*.njk",

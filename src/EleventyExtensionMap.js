@@ -56,6 +56,15 @@ class EleventyExtensionMap {
     return files;
   }
 
+  isFullTemplateFilename(path) {
+    for (let extension of this.validTemplateLanguageKeys) {
+      if (path.endsWith(`.${extension}`)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   getPassthroughCopyGlobs(inputDir) {
     return this._getGlobs(this.passthroughCopyKeys, inputDir);
   }

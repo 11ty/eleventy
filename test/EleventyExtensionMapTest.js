@@ -143,3 +143,22 @@ test("getKey", (t) => {
   t.is(map.getKey("component"), undefined);
   t.is(map.getKey("component.js"), undefined);
 });
+
+test("isFullTemplateFilename (not a passthrough copy extension)", (t) => {
+  let map = new EleventyExtensionMap([
+    "liquid",
+    "njk",
+    "11ty.js",
+    "ejs",
+    "pug",
+    "js",
+    "css",
+  ]);
+  t.true(map.isFullTemplateFilename("template.liquid"));
+  t.true(map.isFullTemplateFilename("template.njk"));
+  t.true(map.isFullTemplateFilename("template.11ty.js"));
+  t.true(map.isFullTemplateFilename("template.ejs"));
+  t.true(map.isFullTemplateFilename("template.pug"));
+  t.false(map.isFullTemplateFilename("passthrough.js"));
+  t.false(map.isFullTemplateFilename("passthrough.css"));
+});

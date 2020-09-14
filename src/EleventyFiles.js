@@ -150,7 +150,7 @@ class EleventyFiles {
 
     if (this.passthroughAll) {
       this.templateGlobsWithIgnoresFromFiles = TemplateGlob.map([
-        TemplateGlob.normalizePath(this.input, "/**")
+        TemplateGlob.normalizePath(this.input, "/**"),
       ]).concat(this.fileIgnores);
     } else {
       this.templateGlobsWithIgnoresFromFiles = this.templateGlobs.concat(
@@ -201,7 +201,7 @@ class EleventyFiles {
       }
     }
 
-    ignores.forEach(function(path) {
+    ignores.forEach(function (path) {
       debug(`${ignoreFiles} ignoring: ${path}`);
     });
     return ignores;
@@ -213,10 +213,10 @@ class EleventyFiles {
     if (ignoreContent) {
       ignores = ignoreContent
         .split("\n")
-        .map(line => {
+        .map((line) => {
           return line.trim();
         })
-        .filter(line => {
+        .filter((line) => {
           if (line.charAt(0) === "!") {
             debug(
               ">>> When processing .gitignore/.eleventyignore, Eleventy does not currently support negative patterns but encountered one:"
@@ -232,7 +232,7 @@ class EleventyFiles {
             line.length > 0 && line.charAt(0) !== "#" && line.charAt(0) !== "!"
           );
         })
-        .map(line => {
+        .map((line) => {
           let path = TemplateGlob.normalizePath(dir, "/", line);
           path = TemplatePath.addLeadingDotSlash(
             TemplatePath.relativePath(path)
@@ -271,7 +271,7 @@ class EleventyFiles {
 
     if (this.config.eleventyignoreOverride !== false) {
       let eleventyIgnores = [
-        TemplatePath.join(rootDirectory, ".eleventyignore")
+        TemplatePath.join(rootDirectory, ".eleventyignore"),
       ];
       if (rootDirectory !== absoluteInputDir) {
         eleventyIgnores.push(
@@ -307,7 +307,16 @@ class EleventyFiles {
   }
 
   getWatchPathCache() {
-    return this.pathCache;
+    // Issue #1325: make sure passthrough copy files are not included here
+    if (!this.pathCache) {
+      throw new Error(
+        "Watching requires `.getFiles()` to be called first in EleventyFiles"
+      );
+    }
+
+    return this.pathCache.filter((path) =>
+      this.extensionMap.isFullTemplateFilename(path)
+    );
   }
 
   async getFiles() {
@@ -319,14 +328,14 @@ class EleventyFiles {
     let paths = TemplatePath.addLeadingDotSlashArray(
       await fastglob(globs, {
         caseSensitiveMatch: false,
-        dot: true
+        dot: true,
       })
     );
     bench.after();
 
     if ("extensionMap" in this.config) {
       let extensions = this.config.extensionMap;
-      paths = paths.filter(function(path) {
+      paths = paths.filter(function (path) {
         for (let entry of extensions) {
           // TODO `.${extension}` ?
           if (path.endsWith(entry.extension) && entry.filter) {
@@ -365,7 +374,7 @@ class EleventyFiles {
       await fastglob(globs, {
         ignore: ["**/node_modules/**"],
         caseSensitiveMatch: false,
-        dot: true
+        dot: true,
       })
     );
     bench.after();
@@ -375,7 +384,7 @@ class EleventyFiles {
   /* Ignored by `eleventy --watch` */
   getGlobWatcherIgnores() {
     // convert to format without ! since they are passed in as a separate argument to glob watcher
-    return this.fileIgnores.map(ignore =>
+    return this.fileIgnores.map((ignore) =>
       TemplatePath.stripLeadingDotSlash(ignore.substr(1))
     );
   }
@@ -403,7 +412,7 @@ class EleventyFiles {
   }
 
   _getIncludesAndDataDirIgnores() {
-    return this._getIncludesAndDataDirs().map(function(dir) {
+    return this._getIncludesAndDataDirs().map(function (dir) {
       return "!" + dir;
     });
   }

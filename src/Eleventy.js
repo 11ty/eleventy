@@ -590,13 +590,13 @@ Arguments:
     // Config file dependencies
     this.watchTargets.addDependencies(
       config.getLocalProjectConfigFile(),
-      filterOutGlobalDataFiles.bind(this)
+      filterOutGlobalDataFiles
     );
 
     // Deps from Global Data (that aren’t in the global data directory, everything is watched there)
     this.watchTargets.addDependencies(
       this.templateData.getWatchPathCache(),
-      filterOutGlobalDataFiles.bind(this)
+      filterOutGlobalDataFiles
     );
 
     this.watchTargets.addDependencies(
