@@ -64,6 +64,19 @@ test("Eleventy file watching", async (t) => {
   ]);
 });
 
+test("Eleventy file watching (don’t watch deps of passthrough copy .js files)", async (t) => {
+  let elev = new Eleventy("./test/stubs-1325", "./test/stubs-1325/_site");
+  elev.setFormats("11ty.js,js");
+
+  await elev.init();
+  await elev.eleventyFiles.getFiles();
+  await elev.initWatch();
+
+  t.deepEqual(await elev.eleventyFiles.getWatchPathCache(), [
+    "./test/stubs-1325/test.11ty.js",
+  ]);
+});
+
 test("Eleventy file watching (no JS dependencies)", async (t) => {
   let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
   elev.setFormats("njk");
