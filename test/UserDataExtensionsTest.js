@@ -12,6 +12,7 @@ function injectDataExtensions(dataObj) {
 test("Local data", async (t) => {
   let dataObj = new TemplateData("./test/stubs-630/");
   injectDataExtensions(dataObj);
+  dataObj.setDataTemplateEngine("liquid");
 
   let data = await dataObj.getData();
 
@@ -73,8 +74,8 @@ test("Local files", async (t) => {
 
 test("Global data", async (t) => {
   let dataObj = new TemplateData("./test/stubs-630/");
-
   injectDataExtensions(dataObj);
+  dataObj.setDataTemplateEngine("liquid");
 
   t.deepEqual(await dataObj.getGlobalDataGlob(), [
     "./test/stubs-630/_data/**/*.(nosj|yaml|json|cjs|js)",

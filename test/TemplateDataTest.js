@@ -13,6 +13,7 @@ test("Create", async (t) => {
 
 test("getData()", async (t) => {
   let dataObj = new TemplateData("./test/stubs/");
+  dataObj.setDataTemplateEngine("liquid");
 
   t.is(dataObj.getData().toString(), "[object Promise]");
 
@@ -30,6 +31,16 @@ test("getData()", async (t) => {
   );
 });
 
+test("getData() use default processing (false)", async (t) => {
+  let dataObj = new TemplateData("./test/stubs/");
+  let data = await dataObj.getData();
+  t.is(
+    data.globalData.datakey2,
+    "{{pkg.name}}",
+    `variables should not resolve`
+  );
+});
+
 test("Data dir does not exist", async (t) => {
   await t.throwsAsync(async () => {
     let dataObj = new TemplateData("./test/thisdirectorydoesnotexist");
@@ -39,6 +50,8 @@ test("Data dir does not exist", async (t) => {
 
 test("Add local data", async (t) => {
   let dataObj = new TemplateData("./test/stubs/");
+  dataObj.setDataTemplateEngine("liquid");
+
   let data = await dataObj.getData();
 
   t.is(data.globalData.datakey1, "datavalue1");
@@ -72,6 +85,8 @@ test("Get local data async JS", async (t) => {
 
 test("addLocalData() doesn’t exist but doesn’t fail (template file does exist)", async (t) => {
   let dataObj = new TemplateData("./test/stubs/");
+  dataObj.setDataTemplateEngine("liquid");
+
   let data = await dataObj.getData();
   let beforeDataKeyCount = Object.keys(data);
 
@@ -86,6 +101,8 @@ test("addLocalData() doesn’t exist but doesn’t fail (template file does exis
 
 test("addLocalData() doesn’t exist but doesn’t fail (template file does not exist)", async (t) => {
   let dataObj = new TemplateData("./test/stubs/");
+  dataObj.setDataTemplateEngine("liquid");
+
   let data = await dataObj.getData();
   let beforeDataKeyCount = Object.keys(data);
 

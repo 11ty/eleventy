@@ -34,7 +34,7 @@ module.exports = function (config) {
     pathPrefix: "/",
     markdownTemplateEngine: "liquid",
     htmlTemplateEngine: "liquid",
-    dataTemplateEngine: "liquid",
+    dataTemplateEngine: false, // change in 1.0
     passthroughFileCopy: true,
     htmlOutputSuffix: "-o",
     jsDataFileSuffix: ".11tydata",
