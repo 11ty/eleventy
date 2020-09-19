@@ -154,12 +154,12 @@ class TemplateData {
     let paths = [
       `${dir}/**/*.json`, // covers .11tydata.json too
       `${dir}/**/*${this.config.jsDataFileSuffix}.cjs`,
-      `${dir}/**/*${this.config.jsDataFileSuffix}.js`
+      `${dir}/**/*${this.config.jsDataFileSuffix}.js`,
     ];
 
     if (this.hasUserDataExtensions()) {
       let userPaths = this.getUserDataExtensions().map(
-        extension => `${dir}/**/*.${extension}` // covers .11tydata.{extension} too
+        (extension) => `${dir}/**/*.${extension}` // covers .11tydata.{extension} too
       );
       paths = userPaths.concat(paths);
     }
@@ -170,7 +170,7 @@ class TemplateData {
   async getTemplateJavaScriptDataFileGlob() {
     let dir = await this.getInputDir();
     return TemplatePath.addLeadingDotSlashArray([
-      `${dir}/**/*${this.config.jsDataFileSuffix}.js`
+      `${dir}/**/*${this.config.jsDataFileSuffix}.js`,
     ]);
   }
 
@@ -206,7 +206,7 @@ class TemplateData {
     fsBench.before();
     let paths = fastglob.sync(await this.getGlobalDataGlob(), {
       caseSensitiveMatch: false,
-      dot: true
+      dot: true,
     });
     fsBench.after();
 
@@ -316,7 +316,7 @@ class TemplateData {
     }
 
     // Filter out files we know don't exist to avoid overhead for checking
-    localDataPaths = localDataPaths.filter(path => {
+    localDataPaths = localDataPaths.filter((path) => {
       return this._fsExistsCache.exists(path);
     });
 
@@ -415,11 +415,11 @@ class TemplateData {
     }
   }
 
+  // ignoreProcessing = false for global data files
+  // ignoreProcessing = true for local data files
   async getDataValue(path, rawImports, ignoreProcessing) {
     let extension = TemplatePath.getExtension(path);
 
-    // ignoreProcessing = false for global data files
-    // ignoreProcessing = true for local data files
     if (
       extension === "js" ||
       extension === "cjs" ||
