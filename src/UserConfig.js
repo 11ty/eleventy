@@ -75,6 +75,8 @@ class UserConfig {
     }
   }
 
+  // Duplicate event bindings are avoided with the `reset` method above.
+  // A new EventEmitter instance is created when the config is reset.
   on(eventName, callback) {
     return this.events.on(eventName, callback);
   }

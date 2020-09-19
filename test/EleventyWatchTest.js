@@ -19,21 +19,26 @@ test("Incremental", (t) => {
   watch.incremental = true;
   t.is(watch.getPendingQueueSize(), 0);
   t.is(watch.getIncrementalFile(), false);
+  t.deepEqual(watch.getActiveQueue(), []);
 
   watch.addToPendingQueue("test.md");
   t.is(watch.getPendingQueueSize(), 1);
   t.is(watch.getActiveQueueSize(), 0);
   t.is(watch.getIncrementalFile(), false);
+  t.deepEqual(watch.getActiveQueue(), []);
 
   watch.setBuildRunning();
   t.is(watch.getPendingQueueSize(), 0);
   t.is(watch.getActiveQueueSize(), 1);
   t.is(watch.getIncrementalFile(), "./test.md");
+  t.deepEqual(watch.getActiveQueue(), ["./test.md"]);
 
   watch.setBuildFinished();
   t.is(watch.getPendingQueueSize(), 0);
   t.is(watch.getActiveQueueSize(), 0);
   t.is(watch.getIncrementalFile(), false);
+  t.deepEqual(watch.getActiveQueue(), []);
+  t.deepEqual(watch.getPendingQueue(), []);
 });
 
 test("Incremental queue 2", (t) => {
@@ -43,22 +48,27 @@ test("Incremental queue 2", (t) => {
   watch.incremental = true;
   t.is(watch.getPendingQueueSize(), 0);
   t.is(watch.getIncrementalFile(), false);
+  t.deepEqual(watch.getActiveQueue(), []);
 
   watch.addToPendingQueue("test.md");
   watch.addToPendingQueue("test2.md");
   t.is(watch.getPendingQueueSize(), 2);
   t.is(watch.getActiveQueueSize(), 0);
   t.is(watch.getIncrementalFile(), false);
+  t.deepEqual(watch.getActiveQueue(), []);
 
   watch.setBuildRunning();
   t.is(watch.getPendingQueueSize(), 1);
   t.is(watch.getActiveQueueSize(), 1);
   t.is(watch.getIncrementalFile(), "./test.md");
+  t.deepEqual(watch.getActiveQueue(), ["./test.md"]);
 
   watch.setBuildFinished();
   t.is(watch.getPendingQueueSize(), 1);
   t.is(watch.getActiveQueueSize(), 0);
   t.is(watch.getIncrementalFile(), false);
+  t.deepEqual(watch.getPendingQueue(), ["./test2.md"]);
+  t.deepEqual(watch.getActiveQueue(), []);
 });
 
 test("Incremental add while active", (t) => {
@@ -68,26 +78,32 @@ test("Incremental add while active", (t) => {
   watch.incremental = true;
   t.is(watch.getPendingQueueSize(), 0);
   t.is(watch.getIncrementalFile(), false);
+  t.deepEqual(watch.getActiveQueue(), []);
 
   watch.addToPendingQueue("test.md");
   t.is(watch.getPendingQueueSize(), 1);
   t.is(watch.getActiveQueueSize(), 0);
   t.is(watch.getIncrementalFile(), false);
+  t.deepEqual(watch.getActiveQueue(), []);
 
   watch.setBuildRunning();
   t.is(watch.getPendingQueueSize(), 0);
   t.is(watch.getActiveQueueSize(), 1);
   t.is(watch.getIncrementalFile(), "./test.md");
+  t.deepEqual(watch.getActiveQueue(), ["./test.md"]);
 
   watch.addToPendingQueue("test2.md");
   t.is(watch.getPendingQueueSize(), 1);
   t.is(watch.getActiveQueueSize(), 1);
   t.is(watch.getIncrementalFile(), "./test.md");
+  t.deepEqual(watch.getActiveQueue(), ["./test.md"]);
 
   watch.setBuildFinished();
   t.is(watch.getPendingQueueSize(), 1);
   t.is(watch.getActiveQueueSize(), 0);
   t.is(watch.getIncrementalFile(), false);
+  t.deepEqual(watch.getPendingQueue(), ["./test2.md"]);
+  t.deepEqual(watch.getActiveQueue(), []);
 });
 
 test("Non-incremental", (t) => {
@@ -96,21 +112,25 @@ test("Non-incremental", (t) => {
 
   t.is(watch.getPendingQueueSize(), 0);
   t.is(watch.getIncrementalFile(), false);
+  t.deepEqual(watch.getActiveQueue(), []);
 
   watch.addToPendingQueue("test.md");
   t.is(watch.getPendingQueueSize(), 1);
   t.is(watch.getActiveQueueSize(), 0);
   t.is(watch.getIncrementalFile(), false);
+  t.deepEqual(watch.getActiveQueue(), []);
 
   watch.setBuildRunning();
   t.is(watch.getPendingQueueSize(), 0);
   t.is(watch.getActiveQueueSize(), 1);
   t.is(watch.getIncrementalFile(), false);
+  t.deepEqual(watch.getActiveQueue(), ["./test.md"]);
 
   watch.setBuildFinished();
   t.is(watch.getPendingQueueSize(), 0);
   t.is(watch.getActiveQueueSize(), 0);
   t.is(watch.getIncrementalFile(), false);
+  t.deepEqual(watch.getActiveQueue(), []);
 });
 
 test("Non-incremental queue 2", (t) => {
@@ -119,22 +139,27 @@ test("Non-incremental queue 2", (t) => {
 
   t.is(watch.getPendingQueueSize(), 0);
   t.is(watch.getIncrementalFile(), false);
+  t.deepEqual(watch.getActiveQueue(), []);
 
   watch.addToPendingQueue("test.md");
   watch.addToPendingQueue("test2.md");
   t.is(watch.getPendingQueueSize(), 2);
   t.is(watch.getActiveQueueSize(), 0);
   t.is(watch.getIncrementalFile(), false);
+  t.deepEqual(watch.getActiveQueue(), []);
 
   watch.setBuildRunning();
   t.is(watch.getPendingQueueSize(), 0);
   t.is(watch.getActiveQueueSize(), 2);
   t.is(watch.getIncrementalFile(), false);
+  t.deepEqual(watch.getActiveQueue(), ["./test.md", "./test2.md"]);
 
   watch.setBuildFinished();
   t.is(watch.getPendingQueueSize(), 0);
   t.is(watch.getActiveQueueSize(), 0);
   t.is(watch.getIncrementalFile(), false);
+  t.deepEqual(watch.getPendingQueue(), []);
+  t.deepEqual(watch.getActiveQueue(), []);
 });
 
 test("Non-incremental add while active", (t) => {
@@ -148,21 +173,26 @@ test("Non-incremental add while active", (t) => {
   t.is(watch.getPendingQueueSize(), 1);
   t.is(watch.getActiveQueueSize(), 0);
   t.is(watch.getIncrementalFile(), false);
+  t.deepEqual(watch.getActiveQueue(), []);
 
   watch.setBuildRunning();
   t.is(watch.getPendingQueueSize(), 0);
   t.is(watch.getActiveQueueSize(), 1);
   t.is(watch.getIncrementalFile(), false);
+  t.deepEqual(watch.getActiveQueue(), ["./test.md"]);
 
   watch.addToPendingQueue("test.md");
   t.is(watch.getPendingQueueSize(), 1);
   t.is(watch.getActiveQueueSize(), 1);
   t.is(watch.getIncrementalFile(), false);
+  t.deepEqual(watch.getActiveQueue(), ["./test.md"]);
 
   watch.setBuildFinished();
   t.is(watch.getPendingQueueSize(), 1);
   t.is(watch.getActiveQueueSize(), 0);
   t.is(watch.getIncrementalFile(), false);
+  t.deepEqual(watch.getPendingQueue(), ["./test.md"]);
+  t.deepEqual(watch.getActiveQueue(), []);
 });
 
 test("Active queue tests", (t) => {

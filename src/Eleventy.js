@@ -459,9 +459,9 @@ Arguments:
       return;
     }
 
-    this.config.events.emit("beforeWatch");
-
     this.watchManager.setBuildRunning();
+
+    this.config.events.emit("beforeWatch", this.watchManager.getActiveQueue());
 
     // reset and reload global configuration :O
     if (this.watchManager.hasQueuedFile(config.getLocalProjectConfigFile())) {
