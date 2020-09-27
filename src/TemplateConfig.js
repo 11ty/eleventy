@@ -21,8 +21,6 @@ class TemplateConfig {
     } else {
       this.customRootConfig = null;
     }
-    this.initializeRootConfig();
-    this.config = this.mergeConfig(this.localProjectConfigPath);
   }
 
   getLocalProjectConfigFile() {
@@ -37,20 +35,21 @@ class TemplateConfig {
     this._inputDir = inputDir;
   }
 
-  reset() {
+  async reset() {
     eleventyConfig.reset();
-    this.initializeRootConfig();
-    this.config = this.mergeConfig(this.localProjectConfigPath);
+    await this.init();
   }
 
   getConfig() {
+    if (!this.config) {
+      throw new Error(`getConfig() cannot be called before UserConfig.init().`);
+    }
     return this.config;
   }
 
-  setProjectConfigPath(path) {
+  async setProjectConfigPath(path) {
     this.localProjectConfigPath = path;
-
-    this.config = this.mergeConfig(path);
+    this.config = await this.mergeConfig(path);
   }
 
   setPathPrefix(pathPrefix) {
@@ -59,23 +58,30 @@ class TemplateConfig {
     this.config.pathPrefix = pathPrefix;
   }
 
-  initializeRootConfig() {
+  async init() {
     this.rootConfig = this.customRootConfig || require("./defaultConfig.js");
 
     if (typeof this.rootConfig === "function") {
-      this.rootConfig = this.rootConfig(eleventyConfig);
+      this.rootConfig = await this.rootConfig(eleventyConfig);
       // debug( "rootConfig is a function, after calling, eleventyConfig is %o", eleventyConfig );
     }
     debug("rootConfig %o", this.rootConfig);
+
+    this.config = await this.mergeConfig(this.localProjectConfigPath);
   }
 
-  mergeConfig(localProjectConfigPath) {
+  async mergeConfig(localProjectConfigPath) {
     let localConfig = {};
     let path = TemplatePath.join(
       TemplatePath.getWorkingDir(),
       localProjectConfigPath
     );
-    debug(`Merging config with ${path}`);
+    console.log(`Merging config with ${path}`);
+
+    // Note for Mike: I'm delaying the processing of plugins until here.
+    // Remember to come back and have a solid think about if this could
+    // results in different results when merging
+    await eleventyConfig.applyPlugins();
 
     if (fs.existsSync(path)) {
       try {
@@ -88,7 +94,7 @@ class TemplateConfig {
         // debug( "localConfig require return value: %o", localConfig );
 
         if (typeof localConfig === "function") {
-          localConfig = localConfig(eleventyConfig);
+          localConfig = await localConfig(eleventyConfig);
           // debug( "localConfig is a function, after calling, eleventyConfig is %o", eleventyConfig );
 
           if (
@@ -117,7 +123,7 @@ class TemplateConfig {
 
     // remove special merge keys from object
     let savedForSpecialMerge = {
-      templateFormatsAdded: eleventyConfigApiMergingObject.templateFormatsAdded
+      templateFormatsAdded: eleventyConfigApiMergingObject.templateFormatsAdded,
     };
     delete eleventyConfigApiMergingObject.templateFormatsAdded;
 
@@ -149,7 +155,6 @@ class TemplateConfig {
     merged.templateFormats = lodashUniq(merged.templateFormats);
 
     debug("Current configuration: %o", merged);
-
     return merged;
   }
 }

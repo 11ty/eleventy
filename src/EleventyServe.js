@@ -1,14 +1,15 @@
 const fs = require("fs-extra");
 
 const TemplatePath = require("./TemplatePath");
-const config = require("./Config");
 const debug = require("debug")("EleventyServe");
 
 class EleventyServe {
-  constructor() {}
+  constructor(templateConfig) {
+    this.config = templateConfig.getConfig();
+  }
 
   get config() {
-    return this.configOverride || config.getConfig();
+    return this.configOverride || this.config;
   }
   set config(config) {
     this.configOverride = config;
@@ -41,7 +42,7 @@ class EleventyServe {
 
     // TODO customize this in Configuration API?
     let serverConfig = {
-      baseDir: this.outputDir
+      baseDir: this.outputDir,
     };
 
     let redirectDirName = this.getRedirectDirOverride();
@@ -68,7 +69,7 @@ class EleventyServe {
         watch: false,
         open: false,
         notify: false,
-        index: "index.html"
+        index: "index.html",
       },
       this.config.browserSyncConfig
     );
@@ -78,7 +79,7 @@ class EleventyServe {
     if (dirName && dirName !== "/") {
       let savedPathFilename = this.getRedirectFilename(dirName);
 
-      setTimeout(function() {
+      setTimeout(function () {
         if (!fs.existsSync(savedPathFilename)) {
           debug(`Cleanup redirect: Could not find ${savedPathFilename}`);
           return;
@@ -94,7 +95,7 @@ class EleventyServe {
           return;
         }
 
-        fs.unlink(savedPathFilename, err => {
+        fs.unlink(savedPathFilename, (err) => {
           if (!err) {
             debug(`Cleanup redirect: Deleted ${savedPathFilename}`);
           }

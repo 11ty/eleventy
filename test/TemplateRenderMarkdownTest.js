@@ -5,10 +5,16 @@ const md = require("markdown-it");
 const mdEmoji = require("markdown-it-emoji");
 const UserConfig = require("../src/UserConfig");
 const eleventySyntaxHighlightPlugin = require("@11ty/eleventy-plugin-syntaxhighlight");
+const templateConfig = require("../src/Config");
+
+test.before(async () => {
+  // This runs concurrently with the above
+  await templateConfig.init();
+});
 
 function getNewTemplateRender(name, inputDir) {
-  let tr = new TemplateRender(name, inputDir);
-  tr.extensionMap = new EleventyExtensionMap();
+  let tr = new TemplateRender(name, inputDir, templateConfig);
+  tr.extensionMap = new EleventyExtensionMap([], templateConfig);
   return tr;
 }
 
@@ -255,7 +261,7 @@ test("Markdown Render: use Markdown inside of a Liquid shortcode (Issue #536)", 
   let tr = getNewTemplateRender("md");
 
   let cls = require("../src/Engines/Liquid");
-  let liquidEngine = new cls("liquid", tr.getIncludesDir());
+  let liquidEngine = new cls("liquid", tr.getIncludesDir(), templateConfig);
   liquidEngine.addShortcode("testShortcode", function () {
     return "## My Other Title";
   });
@@ -279,7 +285,7 @@ test("Markdown Render: use Markdown inside of a Nunjucks shortcode (Issue #536)"
   let tr = getNewTemplateRender("md");
 
   let cls = require("../src/Engines/Nunjucks");
-  let nunjucksEngine = new cls("njk", tr.getIncludesDir());
+  let nunjucksEngine = new cls("njk", tr.getIncludesDir(), templateConfig);
   nunjucksEngine.addShortcode("testShortcode", function () {
     return "## My Other Title";
   });
@@ -303,7 +309,7 @@ test("Markdown Render: use Markdown inside of a Liquid paired shortcode (Issue #
   let tr = getNewTemplateRender("md");
 
   let cls = require("../src/Engines/Liquid");
-  let liquidEngine = new cls("liquid", tr.getIncludesDir());
+  let liquidEngine = new cls("liquid", tr.getIncludesDir(), templateConfig);
   liquidEngine.addPairedShortcode("testShortcode", function (content) {
     return content;
   });
@@ -327,7 +333,7 @@ test("Markdown Render: use Markdown inside of a Nunjucks paired shortcode (Issue
   let tr = getNewTemplateRender("md");
 
   let cls = require("../src/Engines/Nunjucks");
-  let nunjucksEngine = new cls("njk", tr.getIncludesDir());
+  let nunjucksEngine = new cls("njk", tr.getIncludesDir(), templateConfig);
   nunjucksEngine.addPairedShortcode("testShortcode", function (content) {
     return content;
   });
