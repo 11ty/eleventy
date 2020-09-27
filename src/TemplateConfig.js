@@ -76,12 +76,11 @@ class TemplateConfig {
       TemplatePath.getWorkingDir(),
       localProjectConfigPath
     );
-    console.log(`Merging config with ${path}`);
+    debug(`Merging config with ${path}`);
 
     // Note for Mike: I'm delaying the processing of plugins until here.
     // Remember to come back and have a solid think about if this could
     // results in different results when merging
-    await eleventyConfig.applyPlugins();
 
     if (fs.existsSync(path)) {
       try {
@@ -118,6 +117,7 @@ class TemplateConfig {
     } else {
       debug("Eleventy local project config file not found, skipping.");
     }
+    await eleventyConfig.applyPlugins();
 
     let eleventyConfigApiMergingObject = eleventyConfig.getMergingConfigObject();
 
@@ -155,6 +155,7 @@ class TemplateConfig {
     merged.templateFormats = lodashUniq(merged.templateFormats);
 
     debug("Current configuration: %o", merged);
+
     return merged;
   }
 }
