@@ -57,8 +57,8 @@ test("Eleventy set input/output", async (t) => {
 test("Eleventy file watching", async (t) => {
   let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
   elev.setFormats("njk");
-
   await elev.init();
+
   await elev.eleventyFiles.getFiles();
   await elev.initWatch();
   t.deepEqual(await elev.getWatchedFiles(), [
@@ -77,8 +77,8 @@ test("Eleventy file watching", async (t) => {
 test("Eleventy file watching (don’t watch deps of passthrough copy .js files)", async (t) => {
   let elev = new Eleventy("./test/stubs-1325", "./test/stubs-1325/_site");
   elev.setFormats("11ty.js,js");
-
   await elev.init();
+
   await elev.eleventyFiles.getFiles();
   await elev.initWatch();
 
@@ -87,18 +87,19 @@ test("Eleventy file watching (don’t watch deps of passthrough copy .js files)"
   ]);
 });
 
-test("Eleventy file watching (no JS dependencies)", async (t) => {
+test.only("Eleventy file watching (no JS dependencies)", async (t) => {
   let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
   elev.setFormats("njk");
+  await elev.init();
 
   let wt = new EleventyWatchTargets();
   wt.watchJavaScriptDependencies = false;
   elev.setWatchTargets(wt);
 
-  await elev.init();
   await elev.eleventyFiles.getFiles();
   await elev.initWatch();
-  t.deepEqual(await elev.getWatchedFiles(), [
+  const watchedFiles = await elev.getWatchedFiles();
+  t.deepEqual(watchedFiles, [
     "./test/stubs/**/*.njk",
     "./test/stubs/_includes/**",
     "./test/stubs/_data/**",

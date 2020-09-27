@@ -145,6 +145,7 @@ test("Markdown Render: use prism highlighter (no language)", async (t) => {
   let tr = getNewTemplateRender("md");
   let userConfig = new UserConfig();
   userConfig.addPlugin(eleventySyntaxHighlightPlugin);
+  await userConfig.applyPlugins();
 
   let markdownHighlight = userConfig.getMergingConfigObject()
     .markdownHighlighter;
@@ -169,6 +170,7 @@ test("Markdown Render: use prism highlighter", async (t) => {
   let tr = getNewTemplateRender("md");
   let userConfig = new UserConfig();
   userConfig.addPlugin(eleventySyntaxHighlightPlugin);
+  await userConfig.applyPlugins();
 
   let markdownHighlight = userConfig.getMergingConfigObject()
     .markdownHighlighter;
@@ -192,6 +194,7 @@ test("Markdown Render: use prism highlighter (no space before language)", async 
   let tr = getNewTemplateRender("md");
   let userConfig = new UserConfig();
   userConfig.addPlugin(eleventySyntaxHighlightPlugin);
+  await userConfig.applyPlugins();
 
   let markdownHighlight = userConfig.getMergingConfigObject()
     .markdownHighlighter;
@@ -215,6 +218,7 @@ test("Markdown Render: use prism highlighter, line highlighting", async (t) => {
   let tr = getNewTemplateRender("md");
   let userConfig = new UserConfig();
   userConfig.addPlugin(eleventySyntaxHighlightPlugin);
+  await userConfig.applyPlugins();
 
   let markdownHighlight = userConfig.getMergingConfigObject()
     .markdownHighlighter;
@@ -238,6 +242,7 @@ test("Markdown Render: use prism highlighter, line highlighting with fallback `t
   let tr = getNewTemplateRender("md");
   let userConfig = new UserConfig();
   userConfig.addPlugin(eleventySyntaxHighlightPlugin);
+  await userConfig.applyPlugins();
 
   let markdownHighlight = userConfig.getMergingConfigObject()
     .markdownHighlighter;
@@ -251,6 +256,7 @@ test("Markdown Render: use prism highlighter, line highlighting with fallback `t
   let fn = await tr.getCompiledTemplate(`\`\`\` text/0
 var key = "value";
 \`\`\``);
+
   t.is(
     (await fn()).trim(),
     `<pre class="language-text"><code class="language-text"><mark class="highlight-line highlight-line-active">var key = "value";</mark></code></pre>`
