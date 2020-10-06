@@ -118,8 +118,6 @@ class EleventyServe {
     const browserSync = require("browser-sync");
     this.server = browserSync.create();
 
-    console.log("server created");
-
     let pathPrefix = this.getPathPrefix();
 
     if (this.savedPathPrefix && pathPrefix !== this.savedPathPrefix) {
