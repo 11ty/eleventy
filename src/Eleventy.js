@@ -279,11 +279,11 @@ class Eleventy {
    * @returns {} - tbd.
    */
   async init() {
-    await config.init();
-
-    /** @member {Object} - tbd. */
+    if (!this.config) {
+      await config.init();
+      /** @member {Object} - tbd. */
+    }
     this.config = config.getConfig();
-
     /**
      * @member {Boolean} - Is Eleventy running in verbose mode?
      * @default true
