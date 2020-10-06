@@ -4,13 +4,12 @@ const TemplatePath = require("./TemplatePath");
 const debug = require("debug")("EleventyServe");
 
 class EleventyServe {
-  constructor(templateConfig) {
-    this.config = templateConfig.getConfig();
-  }
+  constructor() {}
 
   get config() {
     return this.configOverride || this.config;
   }
+
   set config(config) {
     this.configOverride = config;
   }
@@ -118,6 +117,8 @@ class EleventyServe {
     // only load on serve—this is pretty expensive
     const browserSync = require("browser-sync");
     this.server = browserSync.create();
+
+    console.log("server created");
 
     let pathPrefix = this.getPathPrefix();
 

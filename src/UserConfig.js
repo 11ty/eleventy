@@ -360,11 +360,6 @@ class UserConfig {
       this.templateFormatsAdded = [];
     }
 
-    console.log({
-      templateFormatsAdded: this.templateFormatsAdded,
-      templateFormats: this.templateFormats,
-    });
-
     this.templateFormatsAdded = this.templateFormatsAdded.concat(
       this._normalizeTemplateFormats(templateFormats)
     );

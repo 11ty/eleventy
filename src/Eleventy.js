@@ -74,6 +74,15 @@ class Eleventy {
 
     /** @member {String} - Holds the path to the output directory. */
     this.rawOutput = output;
+
+    /** @member {Object} - tbd. */
+    this.watchManager = new EleventyWatch();
+
+    /** @member {Object} - tbd. */
+    this.watchTargets = new EleventyWatchTargets();
+
+    /** @member {Object} - tbd. */
+    this.eleventyServe = new EleventyServe();
   }
 
   getNewTimestamp() {
@@ -281,16 +290,11 @@ class Eleventy {
      */
     this.isVerbose = process.env.DEBUG ? false : !this.config.quietMode;
 
-    /** @member {Object} - tbd. */
-    this.watchManager = new EleventyWatch();
-
-    /** @member {Object} - tbd. */
-    this.watchTargets = new EleventyWatchTargets();
     this.watchTargets.addAndMakeGlob(this.config.additionalWatchTargets);
     this.watchTargets.watchJavaScriptDependencies = this.config.watchJavaScriptDependencies;
 
     /** @member {Object} - tbd. */
-    this.eleventyServe = new EleventyServe(config);
+    this.eleventyServe.config = config;
 
     this.config.inputDir = this.inputDir;
 
