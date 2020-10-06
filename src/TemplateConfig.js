@@ -117,7 +117,8 @@ class TemplateConfig {
     } else {
       debug("Eleventy local project config file not found, skipping.");
     }
-    await eleventyConfig.applyPlugins();
+
+    await eleventyConfig.applyPlugins(localConfig);
 
     let eleventyConfigApiMergingObject = eleventyConfig.getMergingConfigObject();
 
