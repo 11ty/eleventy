@@ -70,6 +70,45 @@ class TemplateConfig {
     this.config = await this.mergeConfig(this.localProjectConfigPath);
   }
 
+  mergeEleventyConfig(localConfig) {
+    let eleventyConfigApiMergingObject = eleventyConfig.getMergingConfigObject();
+
+    // remove special merge keys from object
+    let savedForSpecialMerge = {
+      templateFormatsAdded: eleventyConfigApiMergingObject.templateFormatsAdded,
+    };
+    delete eleventyConfigApiMergingObject.templateFormatsAdded;
+
+    localConfig = lodashMerge(localConfig, eleventyConfigApiMergingObject);
+
+    // blow away any templateFormats set in config return object and prefer those set in config API.
+    localConfig.templateFormats =
+      eleventyConfigApiMergingObject.templateFormats ||
+      localConfig.templateFormats;
+
+    // debug("eleventyConfig.getMergingConfigObject: %o", eleventyConfig.getMergingConfigObject());
+    debug("localConfig: %o", localConfig);
+    debug("overrides: %o", this.overrides);
+
+    // Object assign overrides original values (good only for templateFormats) but not good for anything else
+    let merged = lodashMerge({}, this.rootConfig, localConfig, this.overrides);
+    // blow away any templateFormats upstream (don’t deep merge)
+    merged.templateFormats =
+      localConfig.templateFormats || this.rootConfig.templateFormats;
+
+    // Additive should preserve original templateFormats, wherever those come from (config API or config return object)
+    if (savedForSpecialMerge.templateFormatsAdded) {
+      merged.templateFormats = merged.templateFormats.concat(
+        savedForSpecialMerge.templateFormatsAdded
+      );
+    }
+
+    // Unique
+    merged.templateFormats = lodashUniq(merged.templateFormats);
+
+    return merged;
+  }
+
   async mergeConfig(localProjectConfigPath) {
     let localConfig = {};
     let path = TemplatePath.join(
@@ -118,45 +157,13 @@ class TemplateConfig {
       debug("Eleventy local project config file not found, skipping.");
     }
 
-    await eleventyConfig.applyPlugins(localConfig);
-
-    let eleventyConfigApiMergingObject = eleventyConfig.getMergingConfigObject();
-
-    // remove special merge keys from object
-    let savedForSpecialMerge = {
-      templateFormatsAdded: eleventyConfigApiMergingObject.templateFormatsAdded,
-    };
-    delete eleventyConfigApiMergingObject.templateFormatsAdded;
-
-    localConfig = lodashMerge(localConfig, eleventyConfigApiMergingObject);
-
-    // blow away any templateFormats set in config return object and prefer those set in config API.
-    localConfig.templateFormats =
-      eleventyConfigApiMergingObject.templateFormats ||
-      localConfig.templateFormats;
-
-    // debug("eleventyConfig.getMergingConfigObject: %o", eleventyConfig.getMergingConfigObject());
-    debug("localConfig: %o", localConfig);
-    debug("overrides: %o", this.overrides);
-
-    // Object assign overrides original values (good only for templateFormats) but not good for anything else
-    let merged = lodashMerge({}, this.rootConfig, localConfig, this.overrides);
-    // blow away any templateFormats upstream (don’t deep merge)
-    merged.templateFormats =
-      localConfig.templateFormats || this.rootConfig.templateFormats;
-
-    // Additive should preserve original templateFormats, wherever those come from (config API or config return object)
-    if (savedForSpecialMerge.templateFormatsAdded) {
-      merged.templateFormats = merged.templateFormats.concat(
-        savedForSpecialMerge.templateFormatsAdded
-      );
-    }
-
-    // Unique
-    merged.templateFormats = lodashUniq(merged.templateFormats);
+    // If passing template config data to plugins, we need to re-merge the data after applying plugins
+    // each plugin has the abilty to change the eleventyConfig and thus the data that is merged from this
+    let merged = this.mergeEleventyConfig(localConfig);
+    await eleventyConfig.applyPlugins(merged);
+    merged = this.mergeEleventyConfig(localConfig);
 
     debug("Current configuration: %o", merged);
-
     return merged;
   }
 }

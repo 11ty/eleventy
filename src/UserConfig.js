@@ -278,7 +278,7 @@ class UserConfig {
     this.plugins.push({ plugin, options });
   }
 
-  async applyPlugins(rootConfig) {
+  async applyPlugins(templateConfig) {
     for (let index = 0; index < this.plugins.length; index++) {
       const { plugin, options } = this.plugins[index];
       // TODO support function.name in plugin config functions
@@ -287,15 +287,15 @@ class UserConfig {
       if (typeof plugin === "function") {
         pluginBench.before();
         let configFunction = plugin;
-        await configFunction(this, options, rootConfig);
+        await configFunction(this, options, templateConfig);
         pluginBench.after();
       } else if (plugin && plugin.configFunction) {
         pluginBench.before();
         if (options && typeof options.init === "function") {
-          options.init.call(this, plugin.initArguments || {}, rootConfig);
+          options.init.call(this, plugin.initArguments || {}, templateConfig);
         }
 
-        await plugin.configFunction(this, options, rootConfig);
+        await plugin.configFunction(this, options, templateConfig);
         pluginBench.after();
       } else {
         throw new UserConfigError(
