@@ -154,12 +154,12 @@ class TemplateData {
     let paths = [
       `${dir}/**/*.json`, // covers .11tydata.json too
       `${dir}/**/*${this.config.jsDataFileSuffix}.cjs`,
-      `${dir}/**/*${this.config.jsDataFileSuffix}.js`
+      `${dir}/**/*${this.config.jsDataFileSuffix}.js`,
     ];
 
     if (this.hasUserDataExtensions()) {
       let userPaths = this.getUserDataExtensions().map(
-        extension => `${dir}/**/*.${extension}` // covers .11tydata.{extension} too
+        (extension) => `${dir}/**/*.${extension}` // covers .11tydata.{extension} too
       );
       paths = userPaths.concat(paths);
     }
@@ -170,7 +170,7 @@ class TemplateData {
   async getTemplateJavaScriptDataFileGlob() {
     let dir = await this.getInputDir();
     return TemplatePath.addLeadingDotSlashArray([
-      `${dir}/**/*${this.config.jsDataFileSuffix}.js`
+      `${dir}/**/*${this.config.jsDataFileSuffix}.js`,
     ]);
   }
 
@@ -206,7 +206,7 @@ class TemplateData {
     fsBench.before();
     let paths = fastglob.sync(await this.getGlobalDataGlob(), {
       caseSensitiveMatch: false,
-      dot: true
+      dot: true,
     });
     fsBench.after();
 
@@ -316,7 +316,7 @@ class TemplateData {
     }
 
     // Filter out files we know don't exist to avoid overhead for checking
-    localDataPaths = localDataPaths.filter(path => {
+    localDataPaths = localDataPaths.filter((path) => {
       return this._fsExistsCache.exists(path);
     });
 
@@ -324,10 +324,24 @@ class TemplateData {
       return localData;
     }
 
+    let dataSource = {};
     for (let path of localDataPaths) {
       // clean up data for template/directory data files only.
       let dataForPath = await this.getDataValue(path, null, true);
       let cleanedDataForPath = TemplateData.cleanupData(dataForPath);
+
+      for (const key in cleanedDataForPath) {
+        if (dataSource.hasOwnProperty(key)) {
+          debugWarn(
+            "Warning: '%s' from '%s' is in use. Overwriting with %s",
+            key,
+            dataSource[key],
+            path
+          );
+        }
+        dataSource[key] = path;
+      }
+
       TemplateData.mergeDeep(this.config, localData, cleanedDataForPath);
       // debug("`combineLocalData` (iterating) for %o: %O", path, localData);
     }
