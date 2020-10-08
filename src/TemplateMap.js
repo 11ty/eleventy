@@ -274,7 +274,6 @@ class TemplateMap {
       entry.data.collections = this.collectionsData;
     }
 
-
     let dependencyMap = this.getMappedDependencies();
     await this.initDependencyMap(dependencyMap);
 
@@ -296,7 +295,7 @@ class TemplateMap {
       secondPaginatedDepMap
     );
     let orderedMap = orderedPaths.map(
-      function(inputPath) {
+      function (inputPath) {
         return this.getMapEntryForInputPath(inputPath);
       }.bind(this)
     );
@@ -531,7 +530,7 @@ class TemplateMap {
           }\`. Use distinct \`permalink\` values to resolve this conflict.
   1. ${entry.inputPath}
 ${permalinks[page.url]
-  .map(function(inputPath, index) {
+  .map(function (inputPath, index) {
     return `  ${index + 2}. ${inputPath}\n`;
   })
   .join("")}

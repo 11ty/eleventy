@@ -1,6 +1,6 @@
-import test from "ava";
-import TemplateRender from "../src/TemplateRender";
-import EleventyExtensionMap from "../src/EleventyExtensionMap";
+const test = require("ava");
+const TemplateRender = require("../src/TemplateRender");
+const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 
 function getNewTemplateRender(name, inputDir) {
   let tr = new TemplateRender(name, inputDir);

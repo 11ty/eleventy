@@ -1,7 +1,7 @@
-import test from "ava";
-import normalizeNewLines from "./Util/normalizeNewLines";
+const test = require("ava");
+const normalizeNewLines = require("./Util/normalizeNewLines");
 
-test("normalizeNewLines", t => {
+test("normalizeNewLines", (t) => {
   t.is(normalizeNewLines("\n"), "\n");
   t.is(normalizeNewLines("\r\n"), "\n");
   t.is(normalizeNewLines("\r\n\n"), "\n\n");

@@ -1,15 +1,15 @@
-import test from "ava";
-import Benchmark from "../src/Benchmark";
+const test = require("ava");
+const Benchmark = require("../src/Benchmark");
 
 function between(t, value, lowerBound, upperBound) {
   t.truthy(value >= lowerBound);
   t.truthy(value <= upperBound);
 }
 
-test.cb("Standard Benchmark", t => {
+test.cb("Standard Benchmark", (t) => {
   let b = new Benchmark();
   b.before();
-  setTimeout(function() {
+  setTimeout(function () {
     b.after();
     t.truthy(b.getTotal() >= 10);
     t.end();
@@ -18,11 +18,11 @@ test.cb("Standard Benchmark", t => {
 
 test.cb(
   "Nested Benchmark (nested calls are ignored while a parent is measuring)",
-  t => {
+  (t) => {
     let b = new Benchmark();
     b.before();
 
-    setTimeout(function() {
+    setTimeout(function () {
       b.before();
       b.after();
       t.truthy(b.getTotal() <= 0.1);
@@ -34,17 +34,17 @@ test.cb(
   }
 );
 
-test.cb("Reset Benchmark", t => {
+test.cb("Reset Benchmark", (t) => {
   let b = new Benchmark();
   b.before();
   b.reset();
 
-  setTimeout(function() {
+  setTimeout(function () {
     b.before();
     b.after();
     t.truthy(b.getTotal() <= 0.1);
 
-    t.throws(function() {
+    t.throws(function () {
       // throws because we reset
       b.after();
     });

@@ -1,8 +1,8 @@
-import test from "ava";
-import Template from "../src/Template";
-import TemplateData from "../src/TemplateData";
-import TemplateMap from "../src/TemplateMap";
-import getNewTemplate from "./_getNewTemplateForTests";
+const test = require("ava");
+const Template = require("../src/Template");
+const TemplateData = require("../src/TemplateData");
+const TemplateMap = require("../src/TemplateMap");
+const getNewTemplate = require("./_getNewTemplateForTests");
 
 test("Computed data can see tag generated collections", async (t) => {
   let tm = new TemplateMap();

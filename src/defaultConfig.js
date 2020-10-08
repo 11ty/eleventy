@@ -2,7 +2,7 @@ const urlFilter = require("./Filters/Url");
 const slugFilter = require("./Filters/Slug");
 const getCollectionItem = require("./Filters/GetCollectionItem");
 
-module.exports = function(config) {
+module.exports = function (config) {
   config.addFilter("slug", slugFilter);
   config.addFilter("url", urlFilter);
   config.addFilter("log", console.log);
@@ -28,14 +28,13 @@ module.exports = function(config) {
       "pug",
       "njk",
       "html",
-      "jstl",
-      "11ty.js"
+      "11ty.js",
     ],
     // if your site lives in a subdirectory, change this
     pathPrefix: "/",
     markdownTemplateEngine: "liquid",
     htmlTemplateEngine: "liquid",
-    dataTemplateEngine: "liquid",
+    dataTemplateEngine: false, // change in 1.0
     passthroughFileCopy: true,
     htmlOutputSuffix: "-o",
     jsDataFileSuffix: ".11tydata",
@@ -45,19 +44,19 @@ module.exports = function(config) {
       permalink: "permalink",
       permalinkRoot: "permalinkBypassOutputDir",
       engineOverride: "templateEngineOverride",
-      computed: "eleventyComputed"
+      computed: "eleventyComputed",
     },
     dir: {
       input: ".",
       includes: "_includes",
       data: "_data",
-      output: "_site"
+      output: "_site",
     },
     // deprecated, use config.addTransform
     filters: {},
     // deprecated, use config.addHandlebarsHelper
     handlebarsHelpers: {},
     // deprecated, use config.addNunjucksFilter
-    nunjucksFilters: {}
+    nunjucksFilters: {},
   };
 };

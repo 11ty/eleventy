@@ -19,8 +19,7 @@ module.exports = function getNewTemplate(
       "pug",
       "njk",
       "html",
-      "jstl",
-      "11ty.js"
+      "11ty.js",
     ]);
   }
   let tmpl = new Template(path, inputDir, outputDir, templateData, map);

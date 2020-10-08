@@ -429,11 +429,11 @@ class TemplateData {
     }
   }
 
+  // ignoreProcessing = false for global data files
+  // ignoreProcessing = true for local data files
   async getDataValue(path, rawImports, ignoreProcessing) {
     let extension = TemplatePath.getExtension(path);
 
-    // ignoreProcessing = false for global data files
-    // ignoreProcessing = true for local data files
     if (
       extension === "js" ||
       extension === "cjs" ||

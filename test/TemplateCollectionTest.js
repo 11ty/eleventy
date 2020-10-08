@@ -1,8 +1,8 @@
-import test from "ava";
-import multimatch from "multimatch";
-import Template from "../src/Template";
-import Collection from "../src/TemplateCollection";
-import Sortable from "../src/Util/Sortable";
+const test = require("ava");
+const multimatch = require("multimatch");
+const Template = require("../src/Template");
+const Collection = require("../src/TemplateCollection");
+const Sortable = require("../src/Util/Sortable");
 
 let tmpl1 = new Template(
   "./test/stubs/collection/test1.md",
@@ -40,7 +40,7 @@ let tmpl7 = new Template(
   "./test/stubs/_site"
 );
 
-test("Basic setup", async t => {
+test("Basic setup", async (t) => {
   let c = new Collection();
   await c._testAddTemplate(tmpl1);
   await c._testAddTemplate(tmpl2);
@@ -49,7 +49,7 @@ test("Basic setup", async t => {
   t.is(c.length, 3);
 });
 
-test("sortFunctionDateInputPath", async t => {
+test("sortFunctionDateInputPath", async (t) => {
   let c = new Collection();
   await c._testAddTemplate(tmpl1);
   await c._testAddTemplate(tmpl4);
@@ -62,7 +62,7 @@ test("sortFunctionDateInputPath", async t => {
   t.deepEqual(posts[2].template, tmpl5);
 });
 
-test("getFilteredByTag", async t => {
+test("getFilteredByTag", async (t) => {
   let c = new Collection();
   await c._testAddTemplate(tmpl1);
   await c._testAddTemplate(tmpl2);
@@ -83,7 +83,7 @@ test("getFilteredByTag", async t => {
   t.deepEqual(dogs[0].template, tmpl1);
 });
 
-test("getFilteredByTag (added out of order, sorted)", async t => {
+test("getFilteredByTag (added out of order, sorted)", async (t) => {
   let c = new Collection();
   await c._testAddTemplate(tmpl3);
   await c._testAddTemplate(tmpl2);
@@ -105,7 +105,7 @@ test("getFilteredByTag (added out of order, sorted)", async t => {
   t.deepEqual(dogs[0].template, tmpl1);
 });
 
-test("getFilteredByTags", async t => {
+test("getFilteredByTags", async (t) => {
   let c = new Collection();
   await c._testAddTemplate(tmpl1);
   await c._testAddTemplate(tmpl2);
@@ -125,7 +125,7 @@ test("getFilteredByTags", async t => {
   t.deepEqual(dogs[0].template, tmpl1);
 });
 
-test("getFilteredByTags (added out of order, sorted)", async t => {
+test("getFilteredByTags (added out of order, sorted)", async (t) => {
   let c = new Collection();
   await c._testAddTemplate(tmpl3);
   await c._testAddTemplate(tmpl2);
@@ -148,7 +148,7 @@ test("getFilteredByTags (added out of order, sorted)", async t => {
   t.deepEqual(dogs[0].template, tmpl1);
 });
 
-test("getFilteredByGlob", async t => {
+test("getFilteredByGlob", async (t) => {
   let c = new Collection();
   await c._testAddTemplate(tmpl1);
   await c._testAddTemplate(tmpl6);
@@ -159,7 +159,7 @@ test("getFilteredByGlob", async t => {
   t.deepEqual(markdowns[0].template, tmpl1);
 });
 
-test("getFilteredByGlob no dash dot", async t => {
+test("getFilteredByGlob no dash dot", async (t) => {
   let c = new Collection();
   await c._testAddTemplate(tmpl1);
   await c._testAddTemplate(tmpl6);
@@ -175,7 +175,7 @@ test("getFilteredByGlob no dash dot", async t => {
   t.deepEqual(htmls[1].template, tmpl7);
 });
 
-test("partial match on tag string, issue 95", async t => {
+test("partial match on tag string, issue 95", async (t) => {
   let cat = new Template(
     "./test/stubs/issue-95/cat.md",
     "./test/stubs/",
@@ -195,7 +195,7 @@ test("partial match on tag string, issue 95", async t => {
   t.is(posts.length, 1);
 });
 
-test("multimatch assumptions, issue #127", async t => {
+test("multimatch assumptions, issue #127", async (t) => {
   t.deepEqual(
     multimatch(
       ["src/bookmarks/test.md"],
@@ -216,7 +216,7 @@ test("multimatch assumptions, issue #127", async t => {
   t.deepEqual(globs, ["./**/+(bookmarks|posts|screencasts)/**/!(index)*.md"]);
 
   t.deepEqual(multimatch(["./src/bookmarks/test.md"], globs), [
-    "./src/bookmarks/test.md"
+    "./src/bookmarks/test.md",
   ]);
   t.deepEqual(multimatch(["./src/bookmarks/index.md"], globs), []);
   t.deepEqual(multimatch(["./src/bookmarks/index2.md"], globs), []);
@@ -226,7 +226,7 @@ test("multimatch assumptions, issue #127", async t => {
   );
 });
 
-test("Sort in place (issue #352)", async t => {
+test("Sort in place (issue #352)", async (t) => {
   let c = new Collection();
   await c._testAddTemplate(tmpl1);
   await c._testAddTemplate(tmpl4);

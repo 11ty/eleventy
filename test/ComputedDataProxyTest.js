@@ -1,5 +1,5 @@
-import test from "ava";
-import ComputedDataProxy from "../src/ComputedDataProxy";
+const test = require("ava");
+const ComputedDataProxy = require("../src/ComputedDataProxy");
 
 test("Get vars used by function", async (t) => {
   let cd = new ComputedDataProxy(["key1"]);

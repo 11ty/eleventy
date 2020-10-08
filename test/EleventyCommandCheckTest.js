@@ -1,36 +1,36 @@
-import test from "ava";
-import EleventyCommandCheck from "../src/EleventyCommandCheck";
+const test = require("ava");
+const EleventyCommandCheck = require("../src/EleventyCommandCheck");
 
-test("Constructor", t => {
+test("Constructor", (t) => {
   let cmdCheck = new EleventyCommandCheck({});
   t.is(cmdCheck.toString(), "");
 });
 
-test("Has an argument", t => {
+test("Has an argument", (t) => {
   let cmdCheck = new EleventyCommandCheck({
-    input: "src"
+    input: "src",
   });
   t.is(cmdCheck.toString(), "--input=src");
 });
 
-test("Boolean argument", t => {
+test("Boolean argument", (t) => {
   let cmdCheck = new EleventyCommandCheck({
-    version: true
+    version: true,
   });
   t.is(cmdCheck.toString(), "--version");
 });
 
-test("Multiple arguments", t => {
+test("Multiple arguments", (t) => {
   let cmdCheck = new EleventyCommandCheck({
     input: "src",
-    version: true
+    version: true,
   });
 
   // technically invalid but eleventy should quit early on --version
   t.is(cmdCheck.toString(), "--input=src --version");
 });
 
-test("getArgumentLookupMap", t => {
+test("getArgumentLookupMap", (t) => {
   let cmdCheck = new EleventyCommandCheck({});
   t.is(cmdCheck.getArgumentLookupMap()["input"], true);
   t.is(cmdCheck.getArgumentLookupMap()["version"], true);
@@ -43,7 +43,7 @@ test("getArgumentLookupMap", t => {
   t.is(cmdCheck.isKnownArgument("_"), true);
 });
 
-test("throws", t => {
+test("throws", (t) => {
   let cmdCheck = new EleventyCommandCheck({ "unknown-argument": true });
   t.throws(() => {
     cmdCheck.hasUnknownArguments();

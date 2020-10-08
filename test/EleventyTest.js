@@ -1,11 +1,11 @@
-import test from "ava";
-import Eleventy from "../src/Eleventy";
-import EleventyWatchTargets from "../src/EleventyWatchTargets";
-import templateConfig from "../src/Config";
+const test = require("ava");
+const Eleventy = require("../src/Eleventy");
+const EleventyWatchTargets = require("../src/EleventyWatchTargets");
+const templateConfig = require("../src/Config");
 
 const config = templateConfig.getConfig();
 
-test("Eleventy, defaults inherit from config", async t => {
+test("Eleventy, defaults inherit from config", async (t) => {
   let elev = new Eleventy();
 
   t.truthy(elev.input);
@@ -14,26 +14,26 @@ test("Eleventy, defaults inherit from config", async t => {
   t.is(elev.outputDir, config.dir.output);
 });
 
-test("Eleventy, get version", t => {
+test("Eleventy, get version", (t) => {
   let elev = new Eleventy();
 
   t.truthy(elev.getVersion());
 });
 
-test("Eleventy, get help", t => {
+test("Eleventy, get help", (t) => {
   let elev = new Eleventy();
 
   t.truthy(elev.getHelp());
 });
 
-test("Eleventy, set is verbose", t => {
+test("Eleventy, set is verbose", (t) => {
   let elev = new Eleventy();
   elev.setIsVerbose(true);
 
   t.true(elev.isVerbose);
 });
 
-test("Eleventy set input/output", async t => {
+test("Eleventy set input/output", async (t) => {
   let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
 
   t.is(elev.input, "./test/stubs");
@@ -44,11 +44,12 @@ test("Eleventy set input/output", async t => {
   t.truthy(elev.writer);
 });
 
-test("Eleventy file watching", async t => {
+test("Eleventy file watching", async (t) => {
   let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
   elev.setFormats("njk");
 
   await elev.init();
+  await elev.eleventyFiles.getFiles();
   await elev.initWatch();
   t.deepEqual(await elev.getWatchedFiles(), [
     "./test/stubs/**/*.njk",
@@ -59,11 +60,24 @@ test("Eleventy file watching", async t => {
     "./test/stubs/**/*.11tydata.cjs",
     "./test/stubs/**/*.11tydata.js",
     "./test/stubs/deps/dep1.js",
-    "./test/stubs/deps/dep2.js"
+    "./test/stubs/deps/dep2.js",
   ]);
 });
 
-test("Eleventy file watching (no JS dependencies)", async t => {
+test("Eleventy file watching (don’t watch deps of passthrough copy .js files)", async (t) => {
+  let elev = new Eleventy("./test/stubs-1325", "./test/stubs-1325/_site");
+  elev.setFormats("11ty.js,js");
+
+  await elev.init();
+  await elev.eleventyFiles.getFiles();
+  await elev.initWatch();
+
+  t.deepEqual(await elev.eleventyFiles.getWatchPathCache(), [
+    "./test/stubs-1325/test.11ty.js",
+  ]);
+});
+
+test("Eleventy file watching (no JS dependencies)", async (t) => {
   let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
   elev.setFormats("njk");
 
@@ -80,11 +94,11 @@ test("Eleventy file watching (no JS dependencies)", async t => {
     "./.eleventy.js",
     "./test/stubs/**/*.json",
     "./test/stubs/**/*.11tydata.cjs",
-    "./test/stubs/**/*.11tydata.js"
+    "./test/stubs/**/*.11tydata.js",
   ]);
 });
 
-test("Eleventy set input/output, one file input", async t => {
+test("Eleventy set input/output, one file input", async (t) => {
   let elev = new Eleventy("./test/stubs/index.html", "./test/stubs/_site");
 
   t.is(elev.input, "./test/stubs/index.html");
@@ -92,7 +106,7 @@ test("Eleventy set input/output, one file input", async t => {
   t.is(elev.outputDir, "./test/stubs/_site");
 });
 
-test("Eleventy set input/output, one file input root dir", async t => {
+test("Eleventy set input/output, one file input root dir", async (t) => {
   let elev = new Eleventy("./README.md", "./test/stubs/_site");
 
   t.is(elev.input, "./README.md");
@@ -100,7 +114,7 @@ test("Eleventy set input/output, one file input root dir", async t => {
   t.is(elev.outputDir, "./test/stubs/_site");
 });
 
-test("Eleventy set input/output, one file input root dir without leading dot/slash", async t => {
+test("Eleventy set input/output, one file input root dir without leading dot/slash", async (t) => {
   let elev = new Eleventy("README.md", "./test/stubs/_site");
 
   t.is(elev.input, "README.md");
@@ -108,7 +122,7 @@ test("Eleventy set input/output, one file input root dir without leading dot/sla
   t.is(elev.outputDir, "./test/stubs/_site");
 });
 
-test("Eleventy set input/output, one file input exitCode", async t => {
+test("Eleventy set input/output, one file input exitCode", async (t) => {
   let previousExitCode = process.exitCode;
   let elev = new Eleventy(
     "./test/stubs/exitCode/failure.njk",
@@ -117,9 +131,9 @@ test("Eleventy set input/output, one file input exitCode", async t => {
 
   // TODO make this output quieter
   elev.setLogger({
-    log: function() {},
-    warn: function() {},
-    error: function() {}
+    log: function () {},
+    warn: function () {},
+    error: function () {},
   });
 
   await elev.init();

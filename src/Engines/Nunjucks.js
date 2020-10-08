@@ -89,7 +89,7 @@ class Nunjucks extends TemplateEngine {
     function ShortcodeFunction() {
       this.tags = [shortcodeName];
 
-      this.parse = function (parser, nodes, lexer) {
+      this.parse = function (parser, nodes) {
         let args;
         let tok = parser.nextToken();
 
@@ -160,7 +160,7 @@ class Nunjucks extends TemplateEngine {
     function PairedShortcodeFunction() {
       this.tags = [shortcodeName];
 
-      this.parse = function (parser, nodes, lexer) {
+      this.parse = function (parser, nodes) {
         var tok = parser.nextToken();
 
         var args = parser.parseSignature(true, true);
