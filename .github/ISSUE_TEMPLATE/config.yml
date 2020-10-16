@@ -1,0 +1,7 @@
+contact_links:
+  - name: Discord Community
+    url: https://discord.gg/GBkBy9u
+    about: Ask the community on Discord
+  - name: GitHub Discussions
+    url: https://github.com/11ty/eleventy/discussions/
+    about: If you've got a question, start a discussion
