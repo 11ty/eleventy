@@ -333,10 +333,10 @@ class TemplateData {
       for (const key in cleanedDataForPath) {
         if (dataSource.hasOwnProperty(key)) {
           debugWarn(
-            "Warning: '%s' from '%s' is in use. Overwriting with %s",
+            "overwriting '%s' with data from '%s'. Previous data location was %s",
             key,
-            dataSource[key],
-            path
+            path,
+            dataSource[key]
           );
         }
         dataSource[key] = path;
