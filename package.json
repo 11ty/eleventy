@@ -94,7 +94,7 @@
   },
   "dependencies": {
     "@11ty/dependency-tree": "^1.0.0",
-    "browser-sync": "^2.26.7",
+    "browser-sync": "^2.26.13",
     "chalk": "^3.0.0",
     "chokidar": "^3.4.0",
     "debug": "^4.1.1",

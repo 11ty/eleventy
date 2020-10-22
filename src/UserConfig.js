@@ -74,6 +74,8 @@ class UserConfig {
     }
   }
 
+  // Duplicate event bindings are avoided with the `reset` method above.
+  // A new EventEmitter instance is created when the config is reset.
   on(eventName, callback) {
     return this.events.on(eventName, callback);
   }
@@ -325,7 +327,9 @@ class UserConfig {
 
   _normalizeTemplateFormats(templateFormats) {
     if (typeof templateFormats === "string") {
-      templateFormats = templateFormats.split(",").map(format => format.trim());
+      templateFormats = templateFormats
+        .split(",")
+        .map((format) => format.trim());
     }
     return templateFormats;
   }
@@ -629,7 +633,7 @@ class UserConfig {
       Object.assign(
         {
           key: fileExtension,
-          extension: fileExtension
+          extension: fileExtension,
         },
         options
       )
@@ -680,7 +684,7 @@ class UserConfig {
       dataExtensions: this.dataExtensions,
       extensionMap: this.extensionMap,
       quietMode: this.quietMode,
-      events: this.events
+      events: this.events,
     };
   }
 }

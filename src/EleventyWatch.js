@@ -36,12 +36,25 @@ class EleventyWatch {
     return this.activeQueue[0];
   }
 
+  /* Returns the changed files currently being operated on in the current `watch` build
+   * Works with or without incremental (though in incremental only one file per time will be processed)
+   */
+  getActiveQueue() {
+    if (!this.isActive) {
+      return [];
+    } else if (this.incremental) {
+      return [this.activeQueue[0]];
+    }
+
+    return this.activeQueue;
+  }
+
   _queueMatches(file) {
     let filterCallback;
     if (typeof file === "function") {
       filterCallback = file;
     } else {
-      filterCallback = path => path === file;
+      filterCallback = (path) => path === file;
     }
 
     return this.activeQueue.filter(filterCallback);
@@ -78,6 +91,10 @@ class EleventyWatch {
 
   getPendingQueueSize() {
     return this.pendingQueue.length;
+  }
+
+  getPendingQueue() {
+    return this.pendingQueue;
   }
 
   getActiveQueueSize() {
