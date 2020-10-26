@@ -6,8 +6,8 @@ const parsePath = require("parse-filepath");
 const EleventyFiles = require("../src/EleventyFiles");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 const TemplateWriter = require("../src/TemplateWriter");
-// Not sure why but this import up `ava` and _createTemplate 👀
-// import Template from "../src/Template";
+// Not sure why but this required `ava` and _createTemplate 👀
+// const Template = require("../src/Template");
 const eleventyConfig = require("../src/EleventyConfig");
 const normalizeNewLines = require("./Util/normalizeNewLines");
 

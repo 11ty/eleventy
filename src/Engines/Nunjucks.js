@@ -19,10 +19,12 @@ class Nunjucks extends TemplateEngine {
     this.njkEnv =
       env ||
       new NunjucksLib.Environment(
-        new NunjucksLib.FileSystemLoader([
-          super.getIncludesDir(),
-          TemplatePath.getWorkingDir(),
-        ])
+        new NunjucksLib.FileSystemLoader(
+          [super.getIncludesDir(), TemplatePath.getWorkingDir()],
+          {
+            noCache: true,
+          }
+        )
       );
     this.setEngineLib(this.njkEnv);
 

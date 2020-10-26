@@ -1,5 +1,6 @@
 const test = require("ava");
 const fs = require("fs-extra");
+const fsp = require("fs").promises;
 const pretty = require("pretty");
 const Template = require("../src/Template");
 const TemplateData = require("../src/TemplateData");
@@ -2036,4 +2037,56 @@ test("Engine Singletons", async (t) => {
   );
 
   t.deepEqual(tmpl1.engine, tmpl2.engine);
+});
+
+test("Make sure layout cache takes new changes during watch (nunjucks)", async (t) => {
+  await fsp.writeFile(
+    "./test/stubs-layout-cache/_includes/include-script-1.js",
+    `alert("hi");`,
+    { encoding: "utf8" }
+  );
+
+  let tmpl = getNewTemplate(
+    "./test/stubs-layout-cache/test.njk",
+    "./test/stubs-layout-cache/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+
+  t.is((await tmpl.render(data)).trim(), '<script>alert("hi");</script>');
+
+  await fsp.writeFile(
+    "./test/stubs-layout-cache/_includes/include-script-1.js",
+    `alert("bye");`,
+    { encoding: "utf8" }
+  );
+
+  t.is((await tmpl.render(data)).trim(), '<script>alert("bye");</script>');
+});
+
+test("Make sure layout cache takes new changes during watch (liquid)", async (t) => {
+  await fsp.writeFile(
+    "./test/stubs-layout-cache/_includes/include-script-2.js",
+    `alert("hi");`,
+    { encoding: "utf8" }
+  );
+
+  let tmpl = getNewTemplate(
+    "./test/stubs-layout-cache/test.liquid",
+    "./test/stubs-layout-cache/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+
+  t.is((await tmpl.render(data)).trim(), '<script>alert("hi");</script>');
+
+  await fsp.writeFile(
+    "./test/stubs-layout-cache/_includes/include-script-2.js",
+    `alert("bye");`,
+    { encoding: "utf8" }
+  );
+
+  t.is((await tmpl.render(data)).trim(), '<script>alert("bye");</script>');
 });
