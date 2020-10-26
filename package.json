@@ -64,7 +64,7 @@
       "./test/*.js"
     ],
     "ignoredByWatcher": [
-      "./test/stubs/**/*"
+      "./test/stubs*/**/*"
     ]
   },
   "lint-staged": {
