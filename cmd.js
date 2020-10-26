@@ -47,25 +47,26 @@ try {
 
   let elev = new Eleventy(argv.input, argv.output);
 
+  elev.setPathPrefix(argv.pathprefix);
+  elev.setDryRun(argv.dryrun);
+  elev.setIncrementalBuild(argv.incremental);
+  elev.setPassthroughAll(argv.passthroughall);
+  elev.setFormats(argv.formats);
+  if (argv.config) {
+    await elev.setConfigPathOverride(argv.config);
+  }
+
+  // --quiet and --quiet=true resolves to true
+  if (argv.quiet === true || argv.quiet === false) {
+    elev.setIsVerbose(!argv.quiet);
+  }
+
   // careful, we can’t use async/await here to error properly
   // with old node versions in `please-upgrade-node` above.
   elev
     .init()
     .then(async function () {
       // Async config is going to require everything inside init()
-      if (argv.config) {
-        await elev.setConfigPathOverride(argv.config);
-      }
-      elev.setPathPrefix(argv.pathprefix);
-      elev.setDryRun(argv.dryrun);
-      elev.setIncrementalBuild(argv.incremental);
-      elev.setPassthroughAll(argv.passthroughall);
-      elev.setFormats(argv.formats);
-
-      // --quiet and --quiet=true resolves to true
-      if (argv.quiet === true || argv.quiet === false) {
-        elev.setIsVerbose(!argv.quiet);
-      }
 
       if (argv.version) {
         console.log(elev.getVersion());
