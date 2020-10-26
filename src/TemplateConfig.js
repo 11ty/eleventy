@@ -117,10 +117,6 @@ class TemplateConfig {
     );
     debug(`Merging config with ${path}`);
 
-    // Note for Mike: I'm delaying the processing of plugins until here.
-    // Remember to come back and have a solid think about if this could
-    // results in different results when merging
-
     if (fs.existsSync(path)) {
       try {
         // remove from require cache so it will grab a fresh copy
