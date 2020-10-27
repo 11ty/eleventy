@@ -112,7 +112,7 @@ class TemplateContent {
       this.frontMatter = {
         data: {},
         content: "",
-        excerpt: ""
+        excerpt: "",
       };
     }
   }
@@ -224,7 +224,7 @@ class TemplateContent {
       let res;
       cache.set(
         key,
-        new Promise(resolve => {
+        new Promise((resolve) => {
           res = resolve;
         })
       );
@@ -261,7 +261,7 @@ class TemplateContent {
       if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
         throw e;
       } else {
-        let engine = this.templateRender.getEnginesStr();
+        let engine = this.templateRender.getReadableEnginesList();
         debug(
           `Having trouble rendering ${engine} template ${this.inputPath}: %O`,
           str

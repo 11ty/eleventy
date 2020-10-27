@@ -578,8 +578,13 @@ class Template extends TemplateContent {
       };
     }
 
+    let engineList = this.templateRender.getReadableEnginesListDifferingFromFileExtension();
     if (this.isVerbose) {
-      console.log(`${lang.start} ${outputPath} from ${this.inputPath}.`);
+      console.log(
+        `${lang.start} ${outputPath} from ${this.inputPath}${
+          engineList ? ` (${engineList})` : ""
+        }`
+      );
     } else {
       debug(`${lang.start} %o from %o.`, outputPath, this.inputPath);
     }

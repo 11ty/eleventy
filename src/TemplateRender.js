@@ -127,12 +127,30 @@ class TemplateRender {
     return engines;
   }
 
-  // used for error logging.
-  getEnginesStr() {
-    if (this.engineName === "md" && this.useMarkdown) {
-      return this.parseMarkdownWith + " (and markdown)";
+  // used for error logging and console output.
+  getReadableEnginesList() {
+    return (
+      this.getReadableEnginesListDifferingFromFileExtension() || this.engineName
+    );
+  }
+
+  getReadableEnginesListDifferingFromFileExtension() {
+    if (
+      this.engineName === "md" &&
+      this.useMarkdown &&
+      this.parseMarkdownWith
+    ) {
+      return this.parseMarkdownWith;
     }
-    return this.engineName;
+    if (this.engineName === "html" && this.parseHtmlWith) {
+      return this.parseHtmlWith;
+    }
+
+    // templateEngineOverride in play and template language differs from file extension
+    let keyFromFilename = this.extensionMap.getKey(this.engineNameOrPath);
+    if (keyFromFilename !== this.engineName) {
+      return this.engineName;
+    }
   }
 
   setEngineOverride(engineName, bypassMarkdown) {
@@ -182,10 +200,12 @@ class TemplateRender {
     this.useMarkdown = !!useMarkdown;
   }
 
+  // this is only called for templateEngineOverride
   setMarkdownEngine(markdownEngine) {
     this.parseMarkdownWith = markdownEngine;
   }
 
+  // this is only called for templateEngineOverride
   setHtmlEngine(htmlEngineName) {
     this.parseHtmlWith = htmlEngineName;
   }
