@@ -463,7 +463,6 @@ class Template extends TemplateContent {
   }
 
   async getTemplates(data) {
-    // TODO cache this
     let results = [];
 
     if (!Pagination.hasPagination(data)) {
