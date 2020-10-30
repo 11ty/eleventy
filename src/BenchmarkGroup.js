@@ -6,6 +6,7 @@ const debugBenchmark = require("debug")("Eleventy:Benchmark");
 class BenchmarkGroup {
   constructor() {
     this.benchmarks = {};
+    // Warning: aggregate benchmarks automatically default to false via BenchmarkManager->getBenchmarkGroup
     this.isVerbose = true;
     this.minimumThresholdMs = 0;
     this.minimumThresholdPercent = 8;
@@ -25,7 +26,7 @@ class BenchmarkGroup {
   add(type, callback) {
     let benchmark = (this.benchmarks[type] = new Benchmark());
 
-    return function(...args) {
+    return function (...args) {
       benchmark.before();
       let ret = callback.call(this, ...args);
       benchmark.after();

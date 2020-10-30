@@ -30,7 +30,7 @@ test("Eleventy, set is verbose", (t) => {
   let elev = new Eleventy();
   elev.setIsVerbose(true);
 
-  t.true(elev.isVerbose);
+  t.true(elev.verboseMode);
 });
 
 test("Eleventy set input/output", async (t) => {
