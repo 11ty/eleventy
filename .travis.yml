@@ -3,6 +3,7 @@ node_js:
   - 10
   - 12
   - 14
+  - 15
 before_script:
   - npm install
 script: npm run test
