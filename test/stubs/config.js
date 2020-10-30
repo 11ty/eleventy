@@ -1,6 +1,6 @@
 const pretty = require("pretty");
 
-module.exports = function(config) {
+module.exports = function (config) {
   /* {
     template,
     inputPath,
@@ -17,21 +17,21 @@ module.exports = function(config) {
     pathPrefix: "/testdir",
 
     keys: {
-      package: "pkg2"
+      package: "pkg2",
     },
-    filters: {
-      prettyHtml: function(str, outputPath) {
+    transforms: {
+      prettyHtml: function (str, outputPath) {
         if (outputPath.split(".").pop() === "html") {
           return pretty(str, { ocd: true });
         } else {
           return str;
         }
-      }
+      },
     },
     nunjucksFilters: {
-      testing: str => {
+      testing: (str) => {
         return str;
-      }
-    }
+      },
+    },
   };
 };

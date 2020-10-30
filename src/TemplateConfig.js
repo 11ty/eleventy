@@ -100,6 +100,15 @@ class TemplateConfig {
             );
           }
         }
+
+        if (
+          localConfig.filters !== undefined &&
+          Object.keys(localConfig.filters).length
+        ) {
+          throw new EleventyConfigError(
+            `The \`filters\` configuration option was renamed in Eleventy 0.3.3 and removed in Eleventy 1.0. Please use the \`addTransform\` configuration method instead. Read more: https://www.11ty.dev/docs/config/#transforms`
+          );
+        }
       } catch (err) {
         throw new EleventyConfigError(
           `Error in your Eleventy config file '${path}'.` +
@@ -117,7 +126,7 @@ class TemplateConfig {
 
     // remove special merge keys from object
     let savedForSpecialMerge = {
-      templateFormatsAdded: eleventyConfigApiMergingObject.templateFormatsAdded
+      templateFormatsAdded: eleventyConfigApiMergingObject.templateFormatsAdded,
     };
     delete eleventyConfigApiMergingObject.templateFormatsAdded;
 

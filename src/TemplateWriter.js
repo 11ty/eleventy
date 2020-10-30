@@ -139,10 +139,10 @@ class TemplateWriter {
      *   return pretty(str, { ocd: true });
      * }
      */
-    for (let transformName in this.config.filters) {
-      let transform = this.config.filters[transformName];
+    for (let transformName in this.config.transforms) {
+      let transform = this.config.transforms[transformName];
       if (typeof transform === "function") {
-        tmpl.addTransform(transform);
+        tmpl.addTransform(transformName, transform);
       }
     }
 

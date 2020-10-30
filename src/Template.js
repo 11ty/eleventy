@@ -1,4 +1,5 @@
 const fs = require("fs-extra");
+const chalk = require("chalk");
 const parsePath = require("parse-filepath");
 const normalize = require("normalize-path");
 const lodashIsObject = require("lodash/isObject");
@@ -354,19 +355,45 @@ class Template extends TemplateContent {
   }
 
   async runLinters(str, inputPath, outputPath) {
-    this.linters.forEach(function (linter) {
+    for (let linter of this.linters) {
       // these can be asynchronous but no guarantee of order when they run
-      linter.call(this, str, inputPath, outputPath);
+      linter.call(
+        {
+          inputPath,
+          outputPath,
+        },
+        str,
+        inputPath,
+        outputPath
+      );
+    }
+  }
+
+  addTransform(name, callback) {
+    this.transforms.push({
+      name,
+      callback,
     });
   }
 
-  addTransform(callback) {
-    this.transforms.push(callback);
-  }
-
-  async runTransforms(str, outputPath, inputPath) {
+  // Warning: this argument list is the reverse of linters (inputPath then outputPath)
+  async runTransforms(str, inputPath, outputPath) {
     for (let transform of this.transforms) {
-      str = await transform.call(this, str, outputPath, inputPath);
+      str = await transform.callback.call(
+        {
+          inputPath,
+          outputPath,
+        },
+        str,
+        outputPath
+      );
+      if (!str && this.isVerbose) {
+        console.log(
+          chalk.yellow(
+            `Warning: Transform \`${transform.name}\` returned empty when writing ${outputPath} from ${inputPath}.`
+          )
+        );
+      }
     }
 
     return str;
@@ -618,7 +645,11 @@ class Template extends TemplateContent {
     }
 
     await this.runLinters(content, page.inputPath, page.outputPath);
-    content = await this.runTransforms(content, page.outputPath); // pass in page.inputPath?
+    content = await this.runTransforms(
+      content,
+      page.inputPath,
+      page.outputPath
+    );
     return content;
   }
 
@@ -654,7 +685,7 @@ class Template extends TemplateContent {
     tmpl.config = this.config;
 
     for (let transform of this.transforms) {
-      tmpl.addTransform(transform);
+      tmpl.addTransform(transform.name, transform.callback);
     }
     for (let linter of this.linters) {
       tmpl.addLinter(linter);

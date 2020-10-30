@@ -52,8 +52,6 @@ module.exports = function (config) {
       data: "_data",
       output: "_site",
     },
-    // deprecated, use config.addTransform
-    filters: {},
     // deprecated, use config.addHandlebarsHelper
     handlebarsHelpers: {},
     // deprecated, use config.addNunjucksFilter

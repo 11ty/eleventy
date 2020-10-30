@@ -1173,7 +1173,7 @@ test("Test a transform", async (t) => {
     "./test/stubs/_site"
   );
 
-  tmpl.addTransform(function (content, outputPath) {
+  tmpl.addTransform("transformName", function (content, outputPath) {
     t.true(outputPath.endsWith(".html"));
     return "OVERRIDE BY A TRANSFORM";
   });
@@ -1192,7 +1192,7 @@ test.skip("Test a transform (does it have inputPath?)", async (t) => {
     "./test/stubs/_site"
   );
 
-  tmpl.addTransform(function (content, outputPath, inputPath) {
+  tmpl.addTransform("transformName", function (content, outputPath, inputPath) {
     t.true(outputPath.endsWith(".html"));
     t.true(!!inputPath);
     return "OVERRIDE BY A TRANSFORM";
@@ -1211,7 +1211,7 @@ test("Test a transform with pages", async (t) => {
     "./test/stubs/_site"
   );
 
-  tmpl.addTransform(function (content, outputPath) {
+  tmpl.addTransform("transformName", function (content, outputPath) {
     // should run twice, one for each page
     t.true(content.length > 0);
     t.true(outputPath.endsWith(".html"));
@@ -1231,7 +1231,7 @@ test("Test a transform with a layout", async (t) => {
     "./test/stubs-475/_site"
   );
 
-  tmpl.addTransform(function (content, outputPath) {
+  tmpl.addTransform("transformName", function (content, outputPath) {
     t.is(content, "<html><body>This is content.</body></html>");
     t.true(outputPath.endsWith(".html"));
     return "OVERRIDE BY A TRANSFORM";
@@ -1250,7 +1250,7 @@ test("Test a single asynchronous transform", async (t) => {
     "./test/stubs/_site"
   );
 
-  tmpl.addTransform(async function (content, outputPath) {
+  tmpl.addTransform("transformName", async function (content, outputPath) {
     t.true(outputPath.endsWith("template/index.html"));
 
     return new Promise((resolve, reject) => {
@@ -1273,7 +1273,7 @@ test("Test multiple asynchronous transforms", async (t) => {
     "./test/stubs/_site"
   );
 
-  tmpl.addTransform(async function (content, outputPath) {
+  tmpl.addTransform("transformName", async function (content, outputPath) {
     t.true(outputPath.endsWith("template/index.html"));
 
     return new Promise((resolve, reject) => {
@@ -1284,7 +1284,7 @@ test("Test multiple asynchronous transforms", async (t) => {
   });
 
   // uppercase
-  tmpl.addTransform(async function (str, outputPath) {
+  tmpl.addTransform("transformName", async function (str, outputPath) {
     t.true(outputPath.endsWith("template/index.html"));
 
     return new Promise((resolve, reject) => {

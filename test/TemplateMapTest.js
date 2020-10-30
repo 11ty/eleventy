@@ -952,7 +952,7 @@ test("Test a transform with a layout (via templateMap)", async (t) => {
     t.true(outputPath.endsWith("transform-layout/index.html"));
   });
 
-  tmpl.addTransform(function (content, outputPath) {
+  tmpl.addTransform("transformName", function (content, outputPath) {
     t.is(content, "<html><body>This is content.</body></html>");
     t.true(outputPath.endsWith("transform-layout/index.html"));
     return "OVERRIDE BY A TRANSFORM";

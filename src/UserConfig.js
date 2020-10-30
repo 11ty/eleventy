@@ -46,8 +46,7 @@ class UserConfig {
     this.passthroughCopies = {};
     this.layoutAliases = {};
     this.linters = {};
-    // now named `transforms` in API
-    this.filters = {};
+    this.transforms = {};
     this.activeNamespace = "";
     this.DateTime = DateTime;
     this.dynamicPermalinks = true;
@@ -239,10 +238,7 @@ class UserConfig {
   addTransform(name, callback) {
     name = this.getNamespacedName(name);
 
-    // these are now called transforms
-    // this naming is kept here for backwards compatibility
-    // TODO major version change
-    this.filters[name] = callback;
+    this.transforms[name] = callback;
   }
 
   addLinter(name, callback) {
@@ -655,7 +651,8 @@ class UserConfig {
     return {
       templateFormats: this.templateFormats,
       templateFormatsAdded: this.templateFormatsAdded,
-      filters: this.filters, // now called transforms
+      // filters removed in 1.0 (use addTransform instead)
+      transforms: this.transforms,
       linters: this.linters,
       globalData: this.globalData,
       layoutAliases: this.layoutAliases,
