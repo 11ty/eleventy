@@ -239,8 +239,12 @@ class Pagination {
       cloned.setPaginationData(override);
 
       // TO DO subdirectory to links if the site doesn’t live at /
-      links.push("/" + (await cloned.getOutputLink()));
-      hrefs.push(await cloned.getOutputHref());
+      let [outputLink, outputHref] = await Promise.all([
+        cloned.getOutputLink(),
+        cloned.getOutputHref(),
+      ]);
+      links.push("/" + outputLink);
+      hrefs.push(outputHref);
     }
 
     // we loop twice to pass in the appropriate prev/next links (already full generated now)

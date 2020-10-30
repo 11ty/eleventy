@@ -676,7 +676,7 @@ Arguments:
     this.watcher = watcher;
 
     let watchDelay;
-    async function watchRun(path) {
+    let watchRun = async (path) => {
       try {
         this._addFileToWatchQueue(path);
         clearTimeout(watchDelay);
@@ -687,16 +687,16 @@ Arguments:
         EleventyErrorHandler.fatal(e, "Eleventy fatal watch error");
         this.stopWatch();
       }
-    }
+    };
 
     watcher.on("change", async (path) => {
       console.log("File changed:", path);
-      await watchRun.call(this, path);
+      await watchRun(path);
     });
 
     watcher.on("add", async (path) => {
       console.log("File added:", path);
-      await watchRun.call(this, path);
+      await watchRun(path);
     });
 
     process.on("SIGINT", () => this.stopWatch());

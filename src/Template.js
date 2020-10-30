@@ -194,19 +194,19 @@ class Template extends TemplateContent {
       let str = await super.render(data, templateData, true);
       return str;
     } else if (Array.isArray(data)) {
-      let arr = [];
-      for (let j = 0, k = data.length; j < k; j++) {
-        arr.push(await this.mapDataAsRenderedTemplates(data[j], templateData));
-      }
-      return arr;
+      return Promise.all(
+        data.map((item) => this.mapDataAsRenderedTemplates(item, templateData))
+      );
     } else if (lodashIsObject(data)) {
       let obj = {};
-      for (let value in data) {
-        obj[value] = await this.mapDataAsRenderedTemplates(
-          data[value],
-          templateData
-        );
-      }
+      await Promise.all(
+        Object.keys(data).map(async (value) => {
+          obj[value] = await this.mapDataAsRenderedTemplates(
+            data[value],
+            templateData
+          );
+        })
+      );
       return obj;
     }
 
@@ -463,85 +463,90 @@ class Template extends TemplateContent {
   }
 
   async getTemplates(data) {
-    let results = [];
-
     if (!Pagination.hasPagination(data)) {
       await this.addComputedData(data);
 
-      results.push({
-        template: this,
-        inputPath: this.inputPath,
-        fileSlug: this.fileSlugStr,
-        filePathStem: this.filePathStem,
-        data: data,
-        date: data.page.date,
-        outputPath: data.page.outputPath,
-        url: data.page.url,
-        set templateContent(content) {
-          this._templateContent = content;
+      return [
+        {
+          template: this,
+          inputPath: this.inputPath,
+          fileSlug: this.fileSlugStr,
+          filePathStem: this.filePathStem,
+          data: data,
+          date: data.page.date,
+          outputPath: data.page.outputPath,
+          url: data.page.url,
+          set templateContent(content) {
+            this._templateContent = content;
+          },
+          get templateContent() {
+            if (this._templateContent === undefined) {
+              // should at least warn here
+              throw new TemplateContentPrematureUseError(
+                `Tried to use templateContent too early (${this.inputPath})`
+              );
+            }
+            return this._templateContent;
+          },
         },
-        get templateContent() {
-          if (this._templateContent === undefined) {
-            // should at least warn here
-            throw new TemplateContentPrematureUseError(
-              `Tried to use templateContent too early (${this.inputPath})`
-            );
-          }
-          return this._templateContent;
-        },
-      });
+      ];
     } else {
       // needs collections for pagination items
       // but individual pagination entries won’t be part of a collection
       this.paging = new Pagination(data);
       this.paging.setTemplate(this);
       let pageTemplates = await this.paging.getPageTemplates();
-      let pageNumber = 0;
-      for (let page of pageTemplates) {
-        let pageData = Object.assign({}, await page.getData());
 
-        await page.addComputedData(pageData);
+      return await Promise.all(
+        pageTemplates.map(async (page, pageNumber) => {
+          let pageData = Object.assign({}, await page.getData());
 
-        // Issue #115
-        if (data.collections) {
-          pageData.collections = data.collections;
-        }
+          await page.addComputedData(pageData);
 
-        results.push({
-          template: page,
-          inputPath: this.inputPath,
-          fileSlug: this.fileSlugStr,
-          filePathStem: this.filePathStem,
-          data: pageData,
-          date: pageData.page.date,
-          pageNumber: pageNumber++,
-          outputPath: pageData.page.outputPath,
-          url: pageData.page.url,
-          set templateContent(content) {
-            this._templateContent = content;
-          },
-          get templateContent() {
-            if (this._templateContent === undefined) {
-              throw new TemplateContentPrematureUseError(
-                `Tried to use templateContent too early (${this.inputPath} page ${this.pageNumber})`
-              );
-            }
-            return this._templateContent;
-          },
-        });
-      }
+          // Issue #115
+          if (data.collections) {
+            pageData.collections = data.collections;
+          }
+
+          return {
+            template: page,
+            inputPath: this.inputPath,
+            fileSlug: this.fileSlugStr,
+            filePathStem: this.filePathStem,
+            data: pageData,
+            date: pageData.page.date,
+            pageNumber: pageNumber,
+            outputPath: pageData.page.outputPath,
+            url: pageData.page.url,
+            set templateContent(content) {
+              this._templateContent = content;
+            },
+            get templateContent() {
+              if (this._templateContent === undefined) {
+                throw new TemplateContentPrematureUseError(
+                  `Tried to use templateContent too early (${this.inputPath} page ${this.pageNumber})`
+                );
+              }
+              return this._templateContent;
+            },
+          };
+        })
+      );
     }
-
-    return results;
   }
 
   async getRenderedTemplates(data) {
     let pages = await this.getTemplates(data);
-    for (let page of pages) {
-      let content = await page.template._getContent(page.outputPath, page.data);
+    await Promise.all(
+      pages.map(async (page) => {
+        let content = await page.template._getContent(
+          page.outputPath,
+          page.data
+        );
 
-      page.templateContent = content;
-    }
+        page.templateContent = content;
+      })
+    );
     return pages;
   }
 
@@ -618,14 +623,12 @@ class Template extends TemplateContent {
   }
 
   async writeMapEntry(mapEntry) {
-    let promises = [];
-    for (let page of mapEntry._pages) {
-      let content = await this.renderPageEntry(mapEntry, page);
-      let promise = this._write(page.outputPath, content);
-      promises.push(promise);
-    }
-
-    return Promise.all(promises);
+    await Promise.all(
+      mapEntry._pages.map(async (page) => {
+        let content = await this.renderPageEntry(mapEntry, page);
+        return this._write(page.outputPath, content);
+      })
+    );
   }
 
   // TODO is this still used by anything but tests?
@@ -636,7 +639,7 @@ class Template extends TemplateContent {
       promises.push(this._write(tmpl.outputPath, tmpl.templateContent));
     }
 
-    return Promise.all(promises);
+    await Promise.all(promises);
   }
 
   // TODO this but better
@@ -763,19 +766,22 @@ class Template extends TemplateContent {
 
   async _testCompleteRender() {
     let entries = await this.getTemplateMapEntries();
-    let contents = [];
 
-    for (let entry of entries) {
-      entry._pages = await entry.template.getTemplates(entry.data);
+    let nestedContent = await Promise.all(
+      entries.map(async (entry) => {
+        entry._pages = await entry.template.getTemplates(entry.data);
+        return Promise.all(
+          entry._pages.map(async (page) => {
+            page.templateContent = await entry.template.getTemplateMapContent(
+              page
+            );
+            return this.renderPageEntry(entry, page);
+          })
+        );
+      })
+    );
 
-      let page;
-      for (page of entry._pages) {
-        page.templateContent = await entry.template.getTemplateMapContent(page);
-      }
-      for (page of entry._pages) {
-        contents.push(await this.renderPageEntry(entry, page));
-      }
-    }
+    let contents = [].concat(...nestedContent);
     return contents;
   }
 }

@@ -131,7 +131,7 @@ class TemplateEngine {
       let fn = await this.compile(str);
       return fn(data);
     } catch (e) {
-      return Promise.reject(e);
+      throw e;
     }
   }
 
