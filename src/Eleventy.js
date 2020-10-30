@@ -479,10 +479,14 @@ Arguments:
         incrementalFile,
         this.eleventyFiles.getIncludesDir()
       );
+      let isLayout = TemplatePath.startsWithSubPath(
+        incrementalFile,
+        this.eleventyFiles.getLayoutsDir()
+      );
       let isJSDependency = this.watchTargets.isJavaScriptDependency(
         incrementalFile
       );
-      if (!isInclude && !isJSDependency) {
+      if (!isInclude && !isLayout && !isJSDependency) {
         this.writer.setIncrementalFile(incrementalFile);
       }
     }
