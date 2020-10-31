@@ -23,7 +23,8 @@ class EleventyServe {
     let cfgPrefix = this.config.pathPrefix;
     if (cfgPrefix) {
       // add leading / (for browsersync), see #1454
-      return path.join("/", cfgPrefix);
+      // path.join uses \\ for Windows so we split and rejoin
+      return path.join("/", cfgPrefix).split(path.sep).join("/");
     }
     return "/";
   }
