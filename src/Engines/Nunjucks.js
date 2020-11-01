@@ -4,6 +4,34 @@ const TemplatePath = require("../TemplatePath");
 const EleventyErrorUtil = require("../EleventyErrorUtil");
 const EleventyBaseError = require("../EleventyBaseError");
 
+/*
+// HACKITYHACKHACKHACKHACK
+*/
+let pathMap = new Map();
+let tc = NunjucksLib.Template.prototype._compile;
+let getKey = (obj) => {
+  return `${obj.path} :: ${obj.tmplStr.length}`;
+};
+NunjucksLib.Template.prototype._compile = function (...args) {
+  if (!this.tmplProps && pathMap.has(getKey(this))) {
+    // console.log(`### cached ${getKey(this)}`);
+    let pathProps = pathMap.get(getKey(this));
+    this.blocks = pathProps.blocks;
+    this.rootRenderFunc = pathProps.rootRenderFunc;
+    this.compiled = true;
+  } else {
+    tc.call(this, ...args);
+    // console.log(`### caching for ${getKey(this)}`);
+    pathMap.set(getKey(this), {
+      blocks: this.blocks,
+      rootRenderFunc: this.rootRenderFunc,
+    });
+  }
+};
+/*
+// END HACKITYHACKHACKHACKHACK
+*/
+
 class EleventyShortcodeError extends EleventyBaseError {}
 
 class Nunjucks extends TemplateEngine {
