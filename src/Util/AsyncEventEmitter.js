@@ -1,6 +1,4 @@
 const EventEmitter = require("events");
-const lodashGet = require("lodash/get");
-const lodashIsEmpty = require("lodash/isEmpty");
 
 class AsyncEventEmitter extends EventEmitter {
   async emit(type, ...args) {
