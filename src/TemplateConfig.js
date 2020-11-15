@@ -183,6 +183,7 @@ class TemplateConfig {
         }
 
         if (
+          localConfig &&
           localConfig.filters !== undefined &&
           Object.keys(localConfig.filters).length
         ) {
