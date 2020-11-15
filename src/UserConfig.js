@@ -30,6 +30,7 @@ class UserConfig {
     this.nunjucksFilters = {};
     this.nunjucksAsyncFilters = {};
     this.nunjucksTags = {};
+    this.nunjucksGlobals = {};
     this.nunjucksShortcodes = {};
     this.nunjucksAsyncShortcodes = {};
     this.nunjucksPairedShortcodes = {};
@@ -233,6 +234,24 @@ class UserConfig {
     name = this.getNamespacedName(name);
     this.globalData[name] = data;
     return this;
+  }
+
+  addNunjucksGlobal(name, globalFn) {
+    name = this.getNamespacedName(name);
+
+    if (this.nunjucksGlobals[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Nunjucks global with `addNunjucksGlobal(%o)`"
+        ),
+        name
+      );
+    }
+
+    this.nunjucksGlobals[name] = bench.add(
+      `"${name}" Nunjucks Global`,
+      globalFn
+    );
   }
 
   addTransform(name, callback) {
@@ -665,6 +684,7 @@ class UserConfig {
       nunjucksFilters: this.nunjucksFilters,
       nunjucksAsyncFilters: this.nunjucksAsyncFilters,
       nunjucksTags: this.nunjucksTags,
+      nunjucksGlobals: this.nunjucksGlobals,
       nunjucksAsyncShortcodes: this.nunjucksAsyncShortcodes,
       nunjucksShortcodes: this.nunjucksShortcodes,
       nunjucksAsyncPairedShortcodes: this.nunjucksAsyncPairedShortcodes,
