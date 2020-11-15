@@ -52,7 +52,7 @@ class TemplateRender {
     this._engineName = this.extensionMap.getKey(engineNameOrPath);
     if (!this._engineName) {
       throw new TemplateRenderUnknownEngineError(
-        `Unknown engine for ${engineNameOrPath} (supported extensions: ${Object.keys(this.extensionMap.extensionToKeyMap).join(' ')})`
+        `Unknown engine for ${engineNameOrPath} (supported extensions: ${this.extensionMap.getReadableFileExtensions()})`
       );
     }
 

@@ -170,6 +170,10 @@ class EleventyExtensionMap {
 
     return this._extensionToKeyMap;
   }
+
+  getReadableFileExtensions() {
+    return Object.keys(this.extensionToKeyMap).join(" ");
+  }
 }
 
 module.exports = EleventyExtensionMap;
