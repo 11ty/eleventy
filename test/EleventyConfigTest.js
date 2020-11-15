@@ -14,6 +14,26 @@ test.cb("Events", (t) => {
   eleventyConfig.emit("testEvent", "arg1", "arg2", "arg3");
 });
 
+test.cb("Async Events", (t) => {
+  let arg1;
+
+  eleventyConfig.on(
+    "asyncTestEvent",
+    (_arg1) =>
+      new Promise((resolve) => {
+        setTimeout(() => {
+          arg1 = _arg1;
+          resolve();
+        }, 10);
+      })
+  );
+
+  eleventyConfig.emit("asyncTestEvent", "arg1").then(() => {
+    t.is(arg1, "arg1");
+    t.end();
+  });
+});
+
 test("Add Collections", (t) => {
   eleventyConfig.addCollection("myCollection", function (collection) {});
   t.deepEqual(Object.keys(eleventyConfig.getCollections()), ["myCollection"]);
