@@ -1,8 +1,10 @@
 const fs = require("fs-extra");
 const path = require("path");
+const lodashCastArray = require("lodash/castArray");
 
 const TemplatePath = require("./TemplatePath");
 const config = require("./Config");
+const ErrorOverlayMiddleware = require("./Middleware/ErrorOverlayMiddleware");
 const debug = require("debug")("EleventyServe");
 
 class EleventyServe {
@@ -67,18 +69,22 @@ class EleventyServe {
       }
     }
 
-    return Object.assign(
-      {
-        server: serverConfig,
-        port: port || 8080,
-        ignore: ["node_modules"],
-        watch: false,
-        open: false,
-        notify: false,
-        index: "index.html",
-      },
-      this.config.browserSyncConfig
-    );
+    return {
+      server: serverConfig,
+      port: port || 8080,
+      ignore: ["node_modules"],
+      watch: false,
+      open: false,
+      notify: false,
+      index: "index.html",
+      ...this.config.browserSyncConfig,
+      middleware: [
+        ErrorOverlayMiddleware(() => this.error),
+        ...lodashCastArray(
+          (this.config.browserSyncConfig || {}).middleware || []
+        ),
+      ],
+    };
   }
 
   cleanupRedirect(dirName) {
@@ -172,6 +178,16 @@ class EleventyServe {
         this.server.reload(filesToReload);
       }
     }
+  }
+
+  showError(error) {
+    this.error = error;
+    this.reload();
+  }
+
+  clearError() {
+    this.error = null;
+    this.reload();
   }
 }
 
