@@ -394,8 +394,8 @@ test("Get ignores (both .eleventyignore and .gitignore exists, but .gitignore ha
 test("getTemplateData caching", (t) => {
   let evf = new EleventyFiles("test/stubs", "test/stubs/_site", []);
   evf.init();
-  let templateDataFirstCall = evf.getTemplateData();
-  let templateDataSecondCall = evf.getTemplateData();
+  let templateDataFirstCall = evf.templateData;
+  let templateDataSecondCall = evf.templateData;
   t.is(templateDataFirstCall, templateDataSecondCall);
 });
 
