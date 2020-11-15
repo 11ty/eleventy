@@ -63,7 +63,7 @@ class Pagination {
     this.alias = data.pagination.alias;
 
     this.target = this._resolveItems();
-    this.items = this.getPagedItems();
+    this.items = this.pagedItems;
   }
 
   setTemplate(tmpl) {
@@ -134,8 +134,7 @@ class Pagination {
     return result;
   }
 
-  getPagedItems() {
-    // TODO switch to a getter
+  get pagedItems() {
     if (!this.data) {
       throw new Error("Missing `setData` call for Pagination object.");
     }
