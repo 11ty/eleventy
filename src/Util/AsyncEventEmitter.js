@@ -4,18 +4,12 @@ const lodashIsEmpty = require("lodash/isEmpty");
 
 class AsyncEventEmitter extends EventEmitter {
   async emit(type, ...args) {
-    const handler = lodashGet(this._events, type);
-    if (lodashIsEmpty(handler) && typeof handler !== "function") {
+    let listeners = this.listeners(type);
+    if (!listeners.length) {
       return;
     }
 
-    if (typeof handler === "function") {
-      await handler.apply(this, args);
-    } else {
-      await Promise.all(handler.map((h) => h.apply(this, args)));
-    }
-
-    return true;
+    return await Promise.all(listeners.map((h) => h.apply(this, args)));
   }
 }
 
