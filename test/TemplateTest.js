@@ -20,6 +20,15 @@ async function getRenderedData(tmpl, pageNumber = 0) {
   return templates[pageNumber].data;
 }
 
+async function write(tmpl, data) {
+  let templates = await tmpl.getRenderedTemplates(data);
+  let promises = [];
+  for (let template of templates) {
+    promises.push(tmpl._write(template.outputPath, template.templateContent));
+  }
+  return Promise.all(promises);
+}
+
 function cleanHtml(str) {
   return pretty(str, { ocd: true });
 }
@@ -1326,7 +1335,7 @@ test("permalink: false", async (t) => {
   t.is(await tmpl.getOutputHref(), false);
 
   let data = await tmpl.getData();
-  await tmpl.write(false, data);
+  await write(tmpl, data);
 
   // Input file exists (sanity check for paths)
   t.is(fs.existsSync("./test/stubs/permalink-false/"), true);

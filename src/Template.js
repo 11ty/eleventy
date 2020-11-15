@@ -662,17 +662,6 @@ class Template extends TemplateContent {
     );
   }
 
-  // TODO is this still used by anything but tests?
-  async write(outputPath, data) {
-    let templates = await this.getRenderedTemplates(data);
-    let promises = [];
-    for (let tmpl of templates) {
-      promises.push(this._write(tmpl.outputPath, tmpl.templateContent));
-    }
-
-    await Promise.all(promises);
-  }
-
   // TODO this but better
   clone() {
     let tmpl = new Template(
