@@ -284,7 +284,10 @@ class EleventyFiles {
       );
     }
 
-    files = files.concat(TemplateGlob.map("!" + this.outputDir + "/**"));
+    // ignore output dir unless that would occlude all input
+    if (!TemplatePath.startsWithSubPath(this.inputDir, this.outputDir)) {
+      files = files.concat(TemplateGlob.map("!" + this.outputDir + "/**"));
+    }
 
     return files;
   }
