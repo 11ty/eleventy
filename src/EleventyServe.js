@@ -75,6 +75,7 @@ class EleventyServe {
         watch: false,
         open: false,
         notify: false,
+        ui: false, // Default changed in 1.0
         index: "index.html",
       },
       this.config.browserSyncConfig
