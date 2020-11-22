@@ -16,19 +16,8 @@ test("Multiple formats", (t) => {
   t.deepEqual(map.getGlobs("src"), ["./src/**/*.njk", "./src/**/*.pug"]);
 });
 
-test("Invalid keys are filtered (no passthrough copy)", (t) => {
-  let map = new EleventyExtensionMap(["lksdjfjlsk"]);
-  map.config = {
-    passthroughFileCopy: false,
-  };
-  t.deepEqual(map.getGlobs("."), []);
-});
-
 test("Invalid keys are filtered (using passthrough copy)", (t) => {
   let map = new EleventyExtensionMap(["lksdjfjlsk"]);
-  map.config = {
-    passthroughFileCopy: true,
-  };
   t.deepEqual(map.getGlobs("."), ["./**/*.lksdjfjlsk"]);
 });
 

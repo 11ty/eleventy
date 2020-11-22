@@ -61,18 +61,13 @@ class TemplatePassthroughManager {
   }
 
   getConfigPaths() {
-    if (!this.config.passthroughFileCopy) {
-      debug("`passthroughFileCopy` is disabled in config, bypassing.");
-      return [];
-    }
-
     let paths = [];
     let target = this.config.passthroughCopies || {};
-    debug("`passthroughFileCopy` config paths: %o", target);
+    debug("`addPassthroughCopy` config API paths: %o", target);
     for (let path in target) {
       paths.push(this._normalizePaths(path, target[path]));
     }
-    debug("`passthroughFileCopy` config normalized paths: %o", paths);
+    debug("`addPassthroughCopy` config API normalized paths: %o", paths);
     return paths;
   }
 
@@ -83,11 +78,6 @@ class TemplatePassthroughManager {
   }
 
   getNonTemplatePaths(paths) {
-    if (!this.config.passthroughFileCopy) {
-      debug("`passthroughFileCopy` is disabled in config, bypassing.");
-      return [];
-    }
-
     let matches = [];
     for (let path of paths) {
       if (!this.extensionMap.hasEngine(path)) {
@@ -162,11 +152,6 @@ class TemplatePassthroughManager {
   // bottleneck to eleventy. The copies are performed asynchronously and don’t affect eleventy
   // write times in a significant way.
   async copyAll(paths) {
-    if (!this.config.passthroughFileCopy) {
-      debug("`passthroughFileCopy` is disabled in config, bypassing.");
-      return;
-    }
-
     if (
       this.incrementalFile &&
       this.isPassthroughCopyFile(paths, this.incrementalFile)

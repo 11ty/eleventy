@@ -74,11 +74,7 @@ class EleventyExtensionMap {
   }
 
   getGlobs(inputDir) {
-    if (this.config.passthroughFileCopy) {
-      return this._getGlobs(this.unfilteredFormatKeys, inputDir);
-    }
-
-    return this._getGlobs(this.validTemplateLanguageKeys, inputDir);
+    return this._getGlobs(this.unfilteredFormatKeys, inputDir);
   }
 
   _getGlobs(formatKeys, inputDir) {

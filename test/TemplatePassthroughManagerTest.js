@@ -5,7 +5,6 @@ const TemplatePassthroughManager = require("../src/TemplatePassthroughManager");
 test("Get paths from Config", async (t) => {
   let mgr = new TemplatePassthroughManager();
   mgr.setConfig({
-    passthroughFileCopy: true,
     passthroughCopies: {
       img: true,
     },
@@ -17,7 +16,6 @@ test("Get paths from Config", async (t) => {
 test("isPassthroughCopyFile", async (t) => {
   let mgr = new TemplatePassthroughManager();
   mgr.setConfig({
-    passthroughFileCopy: true,
     passthroughCopies: {
       img: true,
       fonts: true,
@@ -36,22 +34,9 @@ test("isPassthroughCopyFile", async (t) => {
   );
 });
 
-test("Empty config paths when disabled in config", async (t) => {
-  let mgr = new TemplatePassthroughManager();
-  mgr.setConfig({
-    passthroughFileCopy: false,
-    passthroughCopies: {
-      img: true,
-    },
-  });
-
-  t.deepEqual(mgr.getConfigPaths(), []);
-});
-
 test("Get glob paths from config", async (t) => {
   let mgr = new TemplatePassthroughManager();
   mgr.setConfig({
-    passthroughFileCopy: true,
     passthroughCopies: {
       "test/stubs/img": true,
       "test/stubs/img/**": "./",
@@ -68,53 +53,36 @@ test("Get glob paths from config", async (t) => {
 
 test("Get file paths", async (t) => {
   let mgr = new TemplatePassthroughManager();
-  mgr.setConfig({
-    passthroughFileCopy: true,
-  });
-
   t.deepEqual(mgr.getNonTemplatePaths(["test.png"]), ["test.png"]);
 });
 
 test("Get file paths (filter out real templates)", async (t) => {
   let mgr = new TemplatePassthroughManager();
-  mgr.setConfig({
-    passthroughFileCopy: true,
-  });
 
   t.deepEqual(mgr.getNonTemplatePaths(["test.njk"]), []);
 });
 
 test("Get file paths (filter out real templates), multiple", async (t) => {
   let mgr = new TemplatePassthroughManager();
-  mgr.setConfig({
-    passthroughFileCopy: true,
-  });
 
   t.deepEqual(mgr.getNonTemplatePaths(["test.njk", "test.png"]), ["test.png"]);
 });
 
 test("Get file paths with a js file (filter out real templates), multiple", async (t) => {
   let mgr = new TemplatePassthroughManager();
-  mgr.setConfig({
-    passthroughFileCopy: true,
-  });
 
   t.deepEqual(mgr.getNonTemplatePaths(["test.njk", "test.js"]), ["test.js"]);
 });
 
-test("Get file paths when disabled in config", async (t) => {
+// This test used to be for passthroughFileCopy: false in config
+test("Get file paths (one image path)", async (t) => {
   let mgr = new TemplatePassthroughManager();
-  mgr.setConfig({
-    passthroughFileCopy: false,
-  });
-
-  t.deepEqual(mgr.getNonTemplatePaths(["test.png"]), []);
+  t.deepEqual(mgr.getNonTemplatePaths(["test.png"]), ["test.png"]);
 });
 
 test("Naughty paths outside of project dir", async (t) => {
   let mgr = new TemplatePassthroughManager();
   mgr.setConfig({
-    passthroughFileCopy: true,
     passthroughCopies: {
       "../static": true,
       "../*": "./",

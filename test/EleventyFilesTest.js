@@ -553,7 +553,6 @@ test("Glob Watcher Files with Config Passthroughs (one template format)", async 
   mgr.setInputDir("test/stubs");
   mgr.setOutputDir("test/stubs/_site");
   mgr.setConfig({
-    passthroughFileCopy: true,
     passthroughCopies: {
       "test/stubs/img/": true,
     },
