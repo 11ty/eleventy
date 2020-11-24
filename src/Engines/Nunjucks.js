@@ -37,7 +37,7 @@ const EleventyBaseError = require("../EleventyBaseError");
   };
 
   let _compile = NunjucksLib.Template.prototype._compile;
-  NunjucksLib.Template.prototype._compile = function (...args) {
+  NunjucksLib.Template.prototype._compile = function _wrap_compile(...args) {
     if (!this.compiled && !this.tmplProps && templateCache.has(getKey(this))) {
       let pathProps = templateCache.get(getKey(this));
       this.blocks = pathProps.blocks;
@@ -54,7 +54,10 @@ const EleventyBaseError = require("../EleventyBaseError");
 
   let extensionIdCounter = 0;
   let addExtension = NunjucksLib.Environment.prototype.addExtension;
-  NunjucksLib.Environment.prototype.addExtension = function (name, ext) {
+  NunjucksLib.Environment.prototype.addExtension = function _wrap_addExtension(
+    name,
+    ext
+  ) {
     ext.__id = extensionIdCounter++;
     return addExtension.call(this, name, ext);
   };
@@ -121,7 +124,6 @@ class Nunjucks extends TemplateEngine {
       );
     }
 
-    // clearCache();
     this.njkEnv.addExtension(name, tagObj);
   }
 
@@ -222,7 +224,6 @@ class Nunjucks extends TemplateEngine {
       };
     }
 
-    // clearCache();
     this.njkEnv.addExtension(shortcodeName, new ShortcodeFunction());
   }
 
@@ -293,7 +294,6 @@ class Nunjucks extends TemplateEngine {
       };
     }
 
-    // clearCache();
     this.njkEnv.addExtension(shortcodeName, new PairedShortcodeFunction());
   }
 
