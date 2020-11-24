@@ -5,76 +5,60 @@ const EleventyErrorUtil = require("../EleventyErrorUtil");
 const EleventyBaseError = require("../EleventyBaseError");
 
 /*
- * HACKITYHACKHACKHACKHACK
+ * This IFFE applies a monkey-patch to Nunjucks internals to cache
+ * compiled templates and re-use them where possible. It's relatively
+ * pessimistic (conservative) about cache clearing to ensure correctness.
  */
-let inc = ((i) => {
-  return () => {
-    return i++;
-  };
-})(0);
-let pathMap = new Map();
-
-let clearCache = (reason = "") => {
-  if (pathMap.size > 0) {
-    pathMap.clear();
-  }
-};
-
-let clearAndWrap = (name, obj = NunjucksLib.Environment) => {
-  let orig = obj.prototype[name];
-  obj.prototype[name] = function (...args) {
-    clearCache(name);
-    return orig.call(this, ...args);
-  };
-};
-
-clearAndWrap("addExtension");
-clearAndWrap("removeExtension");
-
 (function () {
-  // IFFE to prevent temp var leakage
-  let getKey = (obj) => {
-    let eids = obj.env.extensionsList.reduce((v, c) => {
-      return c.__id ? v + " : " + c.__id : v;
-    }, "");
-    let k =
-      `${obj.path || obj.tmplStr} :: ${obj.tmplStr.length} :: ` +
-      `${obj.env.asyncFilters.length} :: (${eids})`; /* +
-            (
-              (obj.env.extensionsList.length) ? 
-                `${Object.keys(obj.env.extensions).join("|")} :: (${eids})` :
-                ""
-            );
-            */
-    return k;
+  let templateCache = new Map();
+
+  let clearAndWrap = (name, obj = NunjucksLib.Environment) => {
+    let orig = obj.prototype[name];
+    obj.prototype[name] = function (...args) {
+      templateCache.clear();
+      return orig.call(this, ...args);
+    };
   };
-  let tc = NunjucksLib.Template.prototype._compile;
+
+  clearAndWrap("addExtension");
+  clearAndWrap("removeExtension");
+
+  let getKey = (obj) => {
+    return [
+      obj.path || obj.tmplStr,
+      obj.tmplStr.length,
+      obj.env.asyncFilters.length,
+      obj.env.extensionsList
+        .map((e) => {
+          return e.__id || "";
+        })
+        .join(":"),
+    ].join(" :: ");
+  };
+
+  let _compile = NunjucksLib.Template.prototype._compile;
   NunjucksLib.Template.prototype._compile = function (...args) {
-    // console.log(`NunjucksLib.Template.prototype._compile`);
-    if (!this.compiled && !this.tmplProps && pathMap.has(getKey(this))) {
-      let pathProps = pathMap.get(getKey(this));
+    if (!this.compiled && !this.tmplProps && templateCache.has(getKey(this))) {
+      let pathProps = templateCache.get(getKey(this));
       this.blocks = pathProps.blocks;
       this.rootRenderFunc = pathProps.rootRenderFunc;
       this.compiled = true;
     } else {
-      tc.call(this, ...args);
-      pathMap.set(getKey(this), {
+      _compile.call(this, ...args);
+      templateCache.set(getKey(this), {
         blocks: this.blocks,
         rootRenderFunc: this.rootRenderFunc,
       });
     }
   };
 
-  let ae = NunjucksLib.Environment.prototype.addExtension;
-  NunjucksLib.Environment.prototype.addExtension = function (...args) {
-    let e = args[1];
-    e.__id = inc();
-    return ae.call(this, ...args);
+  let extensionIdCounter = 0;
+  let addExtension = NunjucksLib.Environment.prototype.addExtension;
+  NunjucksLib.Environment.prototype.addExtension = function (name, ext) {
+    ext.__id = extensionIdCounter++;
+    return addExtension.call(this, name, ext);
   };
 })();
-/*
- * END HACKITYHACKHACKHACKHACK
- */
 
 class EleventyShortcodeError extends EleventyBaseError {}
 
@@ -137,7 +121,7 @@ class Nunjucks extends TemplateEngine {
       );
     }
 
-    clearCache("addTag");
+    // clearCache();
     this.njkEnv.addExtension(name, tagObj);
   }
 
@@ -238,8 +222,7 @@ class Nunjucks extends TemplateEngine {
       };
     }
 
-    // Invalidate the caches.
-    clearCache("addShortcode");
+    // clearCache();
     this.njkEnv.addExtension(shortcodeName, new ShortcodeFunction());
   }
 
@@ -310,7 +293,7 @@ class Nunjucks extends TemplateEngine {
       };
     }
 
-    clearCache("addPairedShortcode");
+    // clearCache();
     this.njkEnv.addExtension(shortcodeName, new PairedShortcodeFunction());
   }
 
