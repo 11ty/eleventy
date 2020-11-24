@@ -5,32 +5,76 @@ const EleventyErrorUtil = require("../EleventyErrorUtil");
 const EleventyBaseError = require("../EleventyBaseError");
 
 /*
-// HACKITYHACKHACKHACKHACK
-*/
+ * HACKITYHACKHACKHACKHACK
+ */
+let inc = ((i) => {
+  return () => {
+    return i++;
+  };
+})(0);
 let pathMap = new Map();
-let tc = NunjucksLib.Template.prototype._compile;
-let getKey = (obj) => {
-  return `${obj.path} :: ${obj.tmplStr.length}`;
-};
-NunjucksLib.Template.prototype._compile = function (...args) {
-  if (!this.tmplProps && pathMap.has(getKey(this))) {
-    // console.log(`### cached ${getKey(this)}`);
-    let pathProps = pathMap.get(getKey(this));
-    this.blocks = pathProps.blocks;
-    this.rootRenderFunc = pathProps.rootRenderFunc;
-    this.compiled = true;
-  } else {
-    tc.call(this, ...args);
-    // console.log(`### caching for ${getKey(this)}`);
-    pathMap.set(getKey(this), {
-      blocks: this.blocks,
-      rootRenderFunc: this.rootRenderFunc,
-    });
+
+let clearCache = (reason = "") => {
+  if (pathMap.size > 0) {
+    pathMap.clear();
   }
 };
+
+let clearAndWrap = (name, obj = NunjucksLib.Environment) => {
+  let orig = obj.prototype[name];
+  obj.prototype[name] = function (...args) {
+    clearCache(name);
+    return orig.call(this, ...args);
+  };
+};
+
+clearAndWrap("addExtension");
+clearAndWrap("removeExtension");
+
+(function () {
+  // IFFE to prevent temp var leakage
+  let getKey = (obj) => {
+    let eids = obj.env.extensionsList.reduce((v, c) => {
+      return c.__id ? v + " : " + c.__id : v;
+    }, "");
+    let k =
+      `${obj.path || obj.tmplStr} :: ${obj.tmplStr.length} :: ` +
+      `${obj.env.asyncFilters.length} :: (${eids})`; /* +
+            (
+              (obj.env.extensionsList.length) ? 
+                `${Object.keys(obj.env.extensions).join("|")} :: (${eids})` :
+                ""
+            );
+            */
+    return k;
+  };
+  let tc = NunjucksLib.Template.prototype._compile;
+  NunjucksLib.Template.prototype._compile = function (...args) {
+    // console.log(`NunjucksLib.Template.prototype._compile`);
+    if (!this.compiled && !this.tmplProps && pathMap.has(getKey(this))) {
+      let pathProps = pathMap.get(getKey(this));
+      this.blocks = pathProps.blocks;
+      this.rootRenderFunc = pathProps.rootRenderFunc;
+      this.compiled = true;
+    } else {
+      tc.call(this, ...args);
+      pathMap.set(getKey(this), {
+        blocks: this.blocks,
+        rootRenderFunc: this.rootRenderFunc,
+      });
+    }
+  };
+
+  let ae = NunjucksLib.Environment.prototype.addExtension;
+  NunjucksLib.Environment.prototype.addExtension = function (...args) {
+    let e = args[1];
+    e.__id = inc();
+    return ae.call(this, ...args);
+  };
+})();
 /*
-// END HACKITYHACKHACKHACKHACK
-*/
+ * END HACKITYHACKHACKHACKHACK
+ */
 
 class EleventyShortcodeError extends EleventyBaseError {}
 
@@ -92,6 +136,7 @@ class Nunjucks extends TemplateEngine {
       );
     }
 
+    clearCache("addTag");
     this.njkEnv.addExtension(name, tagObj);
   }
 
@@ -165,7 +210,6 @@ class Nunjucks extends TemplateEngine {
             });
         } else {
           try {
-            // console.log( shortcodeFn.toString() );
             return new NunjucksLib.runtime.SafeString(
               shortcodeFn.call(
                 Nunjucks._normalizeShortcodeContext(context),
@@ -183,6 +227,8 @@ class Nunjucks extends TemplateEngine {
       };
     }
 
+    // Invalidate the caches.
+    clearCache("addShortcode");
     this.njkEnv.addExtension(shortcodeName, new ShortcodeFunction());
   }
 
@@ -253,6 +299,7 @@ class Nunjucks extends TemplateEngine {
       };
     }
 
+    clearCache("addPairedShortcode");
     this.njkEnv.addExtension(shortcodeName, new PairedShortcodeFunction());
   }
 
