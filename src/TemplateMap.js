@@ -5,6 +5,7 @@ const EleventyErrorUtil = require("./EleventyErrorUtil");
 const UsingCircularTemplateContentReferenceError = require("./Errors/UsingCircularTemplateContentReferenceError");
 // TODO the config setup here is overly complex. Why aren’t we injecting config instance like everywhere else?
 const eleventyConfig = require("./EleventyConfig");
+const config = require("./Config");
 const debug = require("debug")("Eleventy:TemplateMap");
 const debugDev = require("debug")("Dev:Eleventy:TemplateMap");
 
@@ -99,8 +100,8 @@ class TemplateMap {
         // collections.all
         graph.addDependency(tagPrefix + "all", entry.inputPath);
 
-        if (entry.data.tags) {
-          for (let tag of entry.data.tags) {
+        if (entry.data[config.tagsCollection]) {
+          for (let tag of entry.data[config.tagsCollection]) {
             let tagWithPrefix = tagPrefix + tag;
             if (!graph.hasNode(tagWithPrefix)) {
               graph.addNode(tagWithPrefix);
@@ -150,8 +151,8 @@ class TemplateMap {
           // collections.all
           graph.addDependency(tagPrefix + "all", entry.inputPath);
 
-          if (entry.data.tags) {
-            for (let tag of entry.data.tags) {
+          if (entry.data[config.tagsCollection]) {
+            for (let tag of entry.data[config.tagsCollection]) {
               let tagWithPrefix = tagPrefix + tag;
               if (!graph.hasNode(tagWithPrefix)) {
                 graph.addNode(tagWithPrefix);
@@ -395,7 +396,7 @@ class TemplateMap {
   _testGetAllTags() {
     let allTags = {};
     for (let map of this.map) {
-      let tags = map.data.tags;
+      let tags = map.data[config.tagsCollection];
       if (Array.isArray(tags)) {
         for (let tag of tags) {
           allTags[tag] = true;

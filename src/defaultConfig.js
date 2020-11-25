@@ -45,6 +45,7 @@ module.exports = function (config) {
       permalinkRoot: "permalinkBypassOutputDir",
       engineOverride: "templateEngineOverride",
       computed: "eleventyComputed",
+      tags: "tags",
     },
     dir: {
       input: ".",
