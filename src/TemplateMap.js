@@ -71,6 +71,23 @@ class TemplateMap {
     let tagPrefix = this.tagPrefix;
 
     graph.addNode(tagPrefix + "all");
+    if (typeof config.config.writeTagsToCollections === "string") {
+      const field = config.config.writeTagsToCollections;
+      // prevent issues when using --serve
+      if (!eleventyConfig.hasCollection(field)) {
+        eleventyConfig.addCollection(field, function (collections) {
+          return collections.getAllSorted().reduce((collected, entry) => {
+            const input = entry.data[field];
+            const values = Array.isArray(input) ? input : [input];
+            for (let value of values) {
+              collected[value] = collected[value] || [];
+              collected[value].push(entry);
+            }
+            return collected;
+          }, {});
+        });
+      }
+    }
 
     for (let entry of this.map) {
       if (this.isPaginationOverAllCollections(entry)) {
@@ -100,16 +117,28 @@ class TemplateMap {
         // collections.all
         graph.addDependency(tagPrefix + "all", entry.inputPath);
 
-        if (entry.data[config.tagsCollection]) {
+        if (
+          config.config.writeTagsToCollections === true &&
+          entry.data[config.tagsCollection]
+        ) {
           for (let tag of entry.data[config.tagsCollection]) {
             let tagWithPrefix = tagPrefix + tag;
             if (!graph.hasNode(tagWithPrefix)) {
               graph.addNode(tagWithPrefix);
             }
-
-            // collections.tagName
-            // Dependency from tag to inputPath
-            graph.addDependency(tagWithPrefix, entry.inputPath);
+            if (typeof config.config.writeTagsToCollections === "string") {
+              const path = tagPrefix + config.config.writeTagsToCollections;
+              if (!graph.hasNode(path)) {
+                graph.addNode(path);
+                graph.addDependency(path, entry.inputPath);
+              }
+              console.log(entry.inputPath, path, tagWithPrefix);
+              graph.addDependency(tagWithPrefix, path);
+            } else {
+              // collections.tagName
+              // Dependency from tag to inputPath
+              graph.addDependency(tagWithPrefix, entry.inputPath);
+            }
           }
         }
       }

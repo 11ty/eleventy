@@ -47,6 +47,7 @@ module.exports = function (config) {
       computed: "eleventyComputed",
       tags: "tags",
     },
+    writeTagsToCollections: true, // true - legacy behaviour, false - disables, string value - item inside collections
     dir: {
       input: ".",
       includes: "_includes",
