@@ -12,17 +12,6 @@ const EleventyBaseError = require("../EleventyBaseError");
 (function () {
   let templateCache = new Map();
 
-  let clearAndWrap = (name, obj = NunjucksLib.Environment) => {
-    let orig = obj.prototype[name];
-    obj.prototype[name] = function (...args) {
-      templateCache.clear();
-      return orig.call(this, ...args);
-    };
-  };
-
-  clearAndWrap("addExtension");
-  clearAndWrap("removeExtension");
-
   let getKey = (obj) => {
     return [
       obj.path || obj.tmplStr,
@@ -58,7 +47,9 @@ const EleventyBaseError = require("../EleventyBaseError");
     name,
     ext
   ) {
-    ext.__id = extensionIdCounter++;
+    if (!("__id" in ext)) {
+      ext.__id = extensionIdCounter++;
+    }
     return addExtension.call(this, name, ext);
   };
 })();
