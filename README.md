@@ -7,9 +7,7 @@
 <p align="center">Works with HTML, Markdown, Liquid, Nunjucks, Handlebars, Mustache, EJS, Haml, Pug, and JavaScript Template Literals.</p>
 
 <h3 align="center"><a href="https://github/11ty">GitHub</a> · <a href="https://twitter.com/eleven_ty">Twitter</a> · <a href="https://11ty.dev/docs/">Docs</a> · <a href="https://opencollective.com/11ty">Support us on Open Collective</a> · <a href="https://github.com/11ty/eleventy/stargazers">Star Eleventy on GitHub</a> · <a href="https://discord.com/invite/GBkBy9u">Discord</a> · <a href="https://npmjs.com/org/11ty">npm</a> · <a href="https://github.com/11ty/eleventy/actions?query=workflow%3A.github%2Fworkflows%2Fci.yml">GitHub Actions CI</a>
-
-<br />
-
+<br><br>
 <p align="center"><a href="https://www.npmjs.com/package/@11ty/eleventy"><img src="https://img.shields.io/npm/v/@11ty/eleventy.svg?style=for-the-badge" alt="Eleventy on npm" /></a> <a href="https://github.com/11ty/eleventy/issues"><img src="https://img.shields.io/github/issues/11ty/eleventy.svg?style=for-the-badge" alt="Eleventy Issues" /></a> <a href="https://github.com/prettier/prettier"><img src="https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=for-the-badge" alt="code style: prettier" /></a><a href="https://www.npmjs.com/package/@11ty/eleventy"><img src="https://img.shields.io/npm/dt/@11ty/eleventy.svg?style=for-the-badge" alt="npm Downloads"></a>
   
 ## Installation
