@@ -70,10 +70,13 @@ class TemplateEngine {
   }
 
   /**
+   * Search for and cache partial files.
+   *
+   * This only runs if getPartials() is called, which is only for Mustache/Handlebars.
+   *
    * @protected
    */
   async cachePartialFiles() {
-    // This only runs if getPartials() is called, which is only for Mustache/Handlebars
     this.partialsHaveBeenCached = true;
     let partials = {};
     let prefix = this.includesDir + "/**/*.";
@@ -82,22 +85,22 @@ class TemplateEngine {
     if (this.includesDir) {
       let bench = aggregateBench.get("Searching the file system");
       bench.before();
-      this.extensions.forEach(function (extension) {
+      await Promise.all(this.extensions.map(async function (extension) {
         partialFiles = partialFiles.concat(
-          fastglob.sync(prefix + extension, {
+          await fastglob(prefix + extension, {
             caseSensitiveMatch: false,
             dot: true,
           })
         );
-      });
+      }));
       bench.after();
     }
 
     partialFiles = TemplatePath.addLeadingDotSlashArray(partialFiles);
 
-    for (let j = 0, k = partialFiles.length; j < k; j++) {
+    await Promise.all(partialFiles.map(async (partialFile) => {
       let partialPath = TemplatePath.stripLeadingSubPath(
-        partialFiles[j],
+        partialFile,
         this.includesDir
       );
       let partialPathNoExt = partialPath;
@@ -107,8 +110,8 @@ class TemplateEngine {
           "." + extension
         );
       });
-      partials[partialPathNoExt] = fs.readFileSync(partialFiles[j], "utf-8");
-    }
+      partials[partialPathNoExt] = await fs.readFile(partialFile, "utf-8");
+    }));
 
     debug(
       `${this.includesDir}/*.{${this.extensions}} found partials for: %o`,
