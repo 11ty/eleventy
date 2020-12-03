@@ -61,17 +61,18 @@ class TemplateEngine {
     return this.includesDir;
   }
 
-  // TODO make async
-  getPartials() {
+  async getPartials() {
     if (!this.partialsHaveBeenCached) {
-      this.partials = this.cachePartialFiles();
+      this.partials = await this.cachePartialFiles();
     }
 
     return this.partials;
   }
 
-  // TODO make async
-  cachePartialFiles() {
+  /**
+   * @protected
+   */
+  async cachePartialFiles() {
     // This only runs if getPartials() is called, which is only for Mustache/Handlebars
     this.partialsHaveBeenCached = true;
     let partials = {};
@@ -117,6 +118,9 @@ class TemplateEngine {
     return partials;
   }
 
+  /**
+   * @protected
+   */
   setEngineLib(engineLib) {
     this.engineLib = engineLib;
   }
@@ -150,6 +154,15 @@ class TemplateEngine {
 
   get defaultTemplateFileExtension() {
     return "html";
+  }
+
+  /**
+   * Check whether the dairy product is solid at room temperature.
+   * @abstract
+   * @return {Promise}
+   */
+  async compile() {
+    throw new Error('compile() must be implemented by engine');
   }
 }
 
