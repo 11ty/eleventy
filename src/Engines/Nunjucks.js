@@ -6,8 +6,7 @@ const EleventyBaseError = require("../EleventyBaseError");
 
 /*
  * This IFFE applies a monkey-patch to Nunjucks internals to cache
- * compiled templates and re-use them where possible. It's relatively
- * pessimistic (conservative) about cache clearing to ensure correctness.
+ * compiled templates and re-use them where possible.
  */
 (function () {
   let templateCache = new Map();
@@ -51,6 +50,50 @@ const EleventyBaseError = require("../EleventyBaseError");
       ext.__id = extensionIdCounter++;
     }
     return addExtension.call(this, name, ext);
+  };
+
+  // NunjucksLib.runtime.Frame.prototype.set is the hotest in-template method.
+  // We replace it with a version that doesn't allocate a `parts` array on
+  // repeat key use.
+  let partsCache = new Map();
+  let partsFromCache = (name) => {
+    if (partsCache.has(name)) {
+      return partsCache.get(name);
+    }
+
+    let parts = name.split(".");
+    partsCache.set(name, parts);
+    return parts;
+  };
+
+  let frameSet = NunjucksLib.runtime.Frame.prototype.set;
+  NunjucksLib.runtime.Frame.prototype.set = function _replacement_set(
+    name,
+    val,
+    resolveUp
+  ) {
+    let parts = partsFromCache(name);
+    let frame = this;
+    let obj = frame.variables;
+
+    if (resolveUp) {
+      if ((frame = this.resolve(parts[0], true))) {
+        frame.set(name, val);
+        return;
+      }
+    }
+
+    // A slightly faster version of the intermediate object allocation loop
+    let count = parts.length - 1;
+    let i = 0;
+    let id = parts[0];
+    while (i < count) {
+      if (!obj.hasOwnProperty(id)) {
+        obj = obj[id] = {};
+      }
+      id = parts[++i];
+    }
+    obj[id] = val;
   };
 })();
 
