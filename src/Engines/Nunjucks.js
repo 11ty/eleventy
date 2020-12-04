@@ -3,9 +3,10 @@ const TemplateEngine = require("./TemplateEngine");
 const TemplatePath = require("../TemplatePath");
 const EleventyErrorUtil = require("../EleventyErrorUtil");
 const EleventyBaseError = require("../EleventyBaseError");
+const eventBus = require("../EventBus");
 
 /*
- * This IFFE applies a monkey-patch to Nunjucks internals to cache
+ * The IFFE below apply a monkey-patch to Nunjucks internals to cache
  * compiled templates and re-use them where possible.
  */
 (function () {
@@ -23,6 +24,17 @@ const EleventyBaseError = require("../EleventyBaseError");
         .join(":"),
     ].join(" :: ");
   };
+
+  let evictByPath = (path) => {
+    let keys = templateCache.keys();
+    // Likely to be slow; do we care?
+    for (let k of keys) {
+      if (k.indexOf(path) >= 0) {
+        templateCache.delete(k);
+      }
+    }
+  };
+  eventBus.on("resourceModified", evictByPath);
 
   let _compile = NunjucksLib.Template.prototype._compile;
   NunjucksLib.Template.prototype._compile = function _wrap_compile(...args) {
@@ -109,16 +121,17 @@ class Nunjucks extends TemplateEngine {
   }
 
   setLibrary(env) {
-    this.njkEnv =
-      env ||
-      new NunjucksLib.Environment(
-        new NunjucksLib.FileSystemLoader(
-          [super.getIncludesDir(), TemplatePath.getWorkingDir()],
-          {
-            noCache: true,
-          }
-        )
-      );
+    let fsLoader = new NunjucksLib.FileSystemLoader([
+      super.getIncludesDir(),
+      TemplatePath.getWorkingDir(),
+    ]);
+    this.njkEnv = env || new NunjucksLib.Environment(fsLoader);
+    // Correct, but overbroad. Better would be to evict more granularly, but
+    // resolution from paths isn't straightforward.
+    eventBus.on("resourceModified", (path) => {
+      this.njkEnv.invalidateCache();
+    });
+
     this.setEngineLib(this.njkEnv);
 
     this.addFilters(this.config.nunjucksFilters);

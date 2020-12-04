@@ -14,6 +14,7 @@ const config = require("./Config");
 const debug = require("debug")("Eleventy:TemplateContent");
 const debugDev = require("debug")("Dev:Eleventy:TemplateContent");
 const bench = require("./BenchmarkManager").get("Aggregate");
+const eventBus = require("./EventBus");
 
 class TemplateContentFrontMatterError extends EleventyBaseError {}
 class TemplateContentCompileError extends EleventyBaseError {}
@@ -277,5 +278,8 @@ class TemplateContent {
 
 TemplateContent._inputCache = new Map();
 TemplateContent._compileEngineCache = new Map();
+eventBus.on("resourceModified", (path) => {
+  TemplateContent.deleteCached(path);
+});
 
 module.exports = TemplateContent;

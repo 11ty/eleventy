@@ -2049,11 +2049,9 @@ test("Engine Singletons", async (t) => {
 });
 
 test("Make sure layout cache takes new changes during watch (nunjucks)", async (t) => {
-  await fsp.writeFile(
-    "./test/stubs-layout-cache/_includes/include-script-1.js",
-    `alert("hi");`,
-    { encoding: "utf8" }
-  );
+  let filePath = "./test/stubs-layout-cache/_includes/include-script-1.js";
+
+  await fsp.writeFile(filePath, `alert("hi");`, { encoding: "utf8" });
 
   let tmpl = getNewTemplate(
     "./test/stubs-layout-cache/test.njk",
@@ -2065,13 +2063,23 @@ test("Make sure layout cache takes new changes during watch (nunjucks)", async (
 
   t.is((await tmpl.render(data)).trim(), '<script>alert("hi");</script>');
 
-  await fsp.writeFile(
-    "./test/stubs-layout-cache/_includes/include-script-1.js",
-    `alert("bye");`,
-    { encoding: "utf8" }
-  );
+  let eventBus = require("../src/EventBus");
+  let chokidar = require("chokidar");
+  let watcher = chokidar.watch(filePath, { interval: 10, persistent: true });
+  watcher.on("change", (path, stats) => {
+    eventBus.emit("resourceModified", path);
+  });
+
+  await fsp.writeFile(filePath, `alert("bye");`, { encoding: "utf8" });
+
+  // Give Chokidar time to see the change;
+  await new Promise((res, rej) => {
+    setTimeout(res, 200);
+  });
 
   t.is((await tmpl.render(data)).trim(), '<script>alert("bye");</script>');
+
+  await watcher.close();
 });
 
 test("Make sure layout cache takes new changes during watch (liquid)", async (t) => {
