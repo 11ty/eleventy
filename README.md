@@ -1,4 +1,4 @@
-<p align="center"><img src="https://www.11ty.dev/img/logo-github.png" alt="Eleventy logo"></p>
+<p align="center"><img src="https://www.11ty.dev/img/logo-github.png" alt="Eleventy logo" height="250"></p>
 
 <h1 align="center">eleventy 🕚⚡️</h1>
 
@@ -40,4 +40,6 @@ npm run test
 
 See the [official docs on plugins](https://www.11ty.dev/docs/plugins/).
 
-<p align="center"><img src="https://raw.githubusercontent.com/11ty/11ty-website/master/img/possum-balloon-original-sm.png" alt="Eleventy mascot" /></p>
+<br />
+<br />
+<p align="center"><img src="https://raw.githubusercontent.com/11ty/11ty-website/master/img/possum-balloon-original-sm.png" alt="Eleventy mascot" height="250" /></p>
