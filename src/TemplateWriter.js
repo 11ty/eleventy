@@ -186,10 +186,12 @@ class TemplateWriter {
   async _writeTemplate(mapEntry) {
     let tmpl = mapEntry.template;
 
-    return tmpl.writeMapEntry(mapEntry).then(() => {
-      this.skippedCount += tmpl.getSkippedCount();
-      this.writeCount += tmpl.getWriteCount();
-    });
+    await Promise.all(
+      mapEntry._pages.map((page) => tmpl.writePageEntry(mapEntry, page))
+    );
+
+    this.skippedCount += tmpl.getSkippedCount();
+    this.writeCount += tmpl.getWriteCount();
   }
 
   async writePassthroughCopy(paths) {
