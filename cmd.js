@@ -24,6 +24,7 @@ try {
       "quiet",
       "version",
       "watch",
+      "ondemand",
       "dryrun",
       "help",
       "serve",
@@ -80,6 +81,7 @@ try {
       } else if (argv.help) {
         console.log(elev.getHelp());
       } else if (argv.serve) {
+        elev.setOnDemand(argv.ondemand);
         elev.watch().then(function () {
           elev.serve(argv.port);
         });

@@ -34,6 +34,7 @@ class TemplateWriter {
     this.isDryRun = false;
     this.writeCount = 0;
     this.skippedCount = 0;
+    this.onDemandCount = 0;
 
     // TODO can we get rid of this? It’s only used for tests in `get eleventyFiles``
     this.passthroughAll = isPassthroughAll;
@@ -61,6 +62,7 @@ class TemplateWriter {
   restart() {
     this.writeCount = 0;
     this.skippedCount = 0;
+    this.onDemandCount = 0;
     debugDev("Resetting counts to 0");
   }
 
@@ -249,6 +251,53 @@ class TemplateWriter {
     return promises;
   }
 
+  async prepareOnDemand() {
+    let onDemandBuild = {};
+
+    // TODO: this models write()
+
+    let paths = await this._getAllPaths();
+    await this.writePassthroughCopy(paths);
+
+    await this._createTemplateMap(paths);
+    debug("Template map created.");
+
+    if (
+      this.incrementalFile &&
+      this.eleventyFiles
+        .getPassthroughManager()
+        .isPassthroughCopyFile(paths, this.incrementalFile)
+    ) {
+      return onDemandBuild;
+    }
+
+    for (let mapEntry of this.templateMap.getMap()) {
+      let {template: tmpl, _pages: pages} = mapEntry;
+
+      for (let page of pages) {
+        // in ondemand, building with no permalink isn't supported
+        const {outputPath} = page;
+        if (outputPath === false) {
+          continue;
+        }
+        this.onDemandCount++;
+
+        // return the same promise if requested multiple times
+        let p;
+        onDemandBuild[outputPath] = () => {
+          if (p === undefined) {
+            p = tmpl.writePageEntry(mapEntry, page);
+          }
+          return p.then(() => {
+            console.log(`Built ${request}…`);
+          });
+        };
+      }
+    }
+
+    return onDemandBuild;
+  }
+
   async write() {
     let paths = await this._getAllPaths();
     let promises = [];
@@ -301,6 +350,10 @@ class TemplateWriter {
 
   getSkippedCount() {
     return this.skippedCount;
+  }
+
+  getOnDemandCount() {
+    return this.onDemandCount;
   }
 }
 

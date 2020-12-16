@@ -79,8 +79,14 @@ class Eleventy {
      */
     this.formatsOverride = null;
 
+    /** @member {Boolean} */
+    this.isOnDemand = false;
+
+    /** @member {Object<string, Function>} */
+    this._onDemandBuild = {};
+
     /** @member {Object} - tbd. */
-    this.eleventyServe = new EleventyServe();
+    this.eleventyServe = new EleventyServe(this._requestBuild.bind(this));
 
     /** @member {String} - Holds the path to the input directory. */
     this.rawInput = input;
@@ -95,6 +101,30 @@ class Eleventy {
     this.watchTargets = new EleventyWatchTargets();
     this.watchTargets.addAndMakeGlob(this.config.additionalWatchTargets);
     this.watchTargets.watchJavaScriptDependencies = this.config.watchJavaScriptDependencies;
+  }
+
+  async _requestBuild(p) {
+    if (!this.isOnDemand) {
+      return;
+    }
+
+    p = TemplatePath.join(this.outputDir, p);
+
+    let requests = [];
+    if (p.endsWith('/')) {
+      requests.push(p + 'index.html');
+    } else if (!p.endsWith('.html')) {
+      requests.push(p, p + '/index.html');
+    } else {
+      requests.push(p);
+    }
+
+    for (let request of requests) {
+      let run = this._onDemandBuild[request];
+      if (run) {
+        return run();
+      }
+    }
   }
 
   getNewTimestamp() {
@@ -244,6 +274,7 @@ class Eleventy {
     let writeCount = this.writer.getWriteCount();
     let skippedCount = this.writer.getSkippedCount();
     let copyCount = this.writer.getCopyCount();
+    let onDemandCount = this.writer.getOnDemandCount();
 
     let slashRet = [];
 
@@ -253,11 +284,19 @@ class Eleventy {
       );
     }
 
-    slashRet.push(
-      `Wrote ${writeCount} ${simplePlural(writeCount, "file", "files")}${
-        skippedCount ? ` (skipped ${skippedCount})` : ""
-      }`
-    );
+    if (onDemandCount) {
+      slashRet.push(
+        `Prepared ${onDemandCount} ${simplePlural(onDemandCount, "file", "files")}`
+      );
+    }
+
+    if (writeCount || skippedCount || onDemandCount === 0) {
+      slashRet.push(
+        `Wrote ${writeCount} ${simplePlural(writeCount, "file", "files")}${
+          skippedCount ? ` (skipped ${skippedCount})` : ""
+        }`
+      );
+    }
 
     if (slashRet.length) {
       ret.push(slashRet.join(" / "));
@@ -378,6 +417,16 @@ Verbose Output: ${this.verboseMode}`);
     if (formats && formats !== "*") {
       this.formatsOverride = formats.split(",");
     }
+  }
+
+  /**
+   * Updates the verbose mode of Eleventy.
+   *
+   * @method
+   * @param {Boolean} isOnDemand - Shall Eleventy run in on demand mode when serving?
+   */
+  setOnDemand(isOnDemand) {
+    this.isOnDemand = isOnDemand;
   }
 
   /**
@@ -759,9 +808,14 @@ Arguments:
     await this.config.events.emit("beforeBuild");
 
     try {
-      let promise = this.writer.write();
+      if (this.isOnDemand) {
+        this._onDemandBuild = await this.writer.prepareOnDemand();
+        debug(`Generated ${Object.keys(this._onDemandBuild).length} on-demand candidates…`);
+      } else {
+        let promise = this.writer.write();
+        ret = await promise;
+      }
 
-      ret = await promise;
       await this.config.events.emit("afterBuild");
     } catch (e) {
       EleventyErrorHandler.initialMessage(

@@ -6,7 +6,9 @@ const config = require("./Config");
 const debug = require("debug")("EleventyServe");
 
 class EleventyServe {
-  constructor() {}
+  constructor(requestBuild) {
+    this._requestBuild = requestBuild;
+  }
 
   get config() {
     return this.configOverride || config.getConfig();
@@ -152,6 +154,18 @@ class EleventyServe {
     this.cleanupRedirect(this.savedPathPrefix);
 
     let options = this.getOptions(port);
+
+    // if we're on ondemand mode, this will force a build of the file: otherwise, it's a noop
+    options.middleware = [
+      (req, res, next) => {
+        let p = req.url.slice(1);
+        this._requestBuild(p).catch((err) => {
+          // TODO: do something with this error
+          debug(`Could not requestBuild for request: ${req.url}`);
+        }).then(() => next());
+      }
+    ];
+
     this.server.init(options);
 
     // this needs to happen after `.getOptions`
