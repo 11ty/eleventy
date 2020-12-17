@@ -275,6 +275,11 @@ class UserConfig {
     return this.collections;
   }
 
+  /**
+   * Add a new user defined collection.
+   * @param {string} name Name of the collection
+   * @param {(collectionsApi: TemplateCollection) => unknown[] | Promise<unknown[]>} callback
+   */
   addCollection(name, callback) {
     name = this.getNamespacedName(name);
 

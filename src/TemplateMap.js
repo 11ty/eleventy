@@ -228,18 +228,23 @@ class TemplateMap {
 
   // TODO(slightlyoff): major bottleneck
   async initDependencyMap(dependencyMap) {
+    async function loadCollectionsData(depEntry) {
+      let tagName = depEntry.substr(tagPrefix.length);
+      if (this.isUserConfigCollectionName(tagName)) {
+        // async
+        this.collectionsData[tagName] = await this.getUserConfigCollection(
+          tagName
+        );
+      } else {
+        this.collectionsData[tagName] = this.getTaggedCollection(tagName);
+      }
+    }
+
+    let collectionsDataJobs = [];
     let tagPrefix = this.tagPrefix;
     for (let depEntry of dependencyMap) {
       if (depEntry.startsWith(tagPrefix)) {
-        let tagName = depEntry.substr(tagPrefix.length);
-        if (this.isUserConfigCollectionName(tagName)) {
-          // async
-          this.collectionsData[tagName] = await this.getUserConfigCollection(
-            tagName
-          );
-        } else {
-          this.collectionsData[tagName] = this.getTaggedCollection(tagName);
-        }
+        collectionsDataJobs.push(loadCollectionsData(depEntry));
       } else {
         let map = this.getMapEntryForInputPath(depEntry);
         map._pages = await map.template.getTemplates(map.data);
@@ -264,6 +269,9 @@ class TemplateMap {
         }
       }
     }
+
+    // Run loadCollectionsData in parallel, wait for all jobs to finish
+    await Promise.all(collectionsDataJobs);
   }
 
   async cache() {
