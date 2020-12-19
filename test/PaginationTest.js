@@ -714,3 +714,232 @@ test("Pagination make sure pageNumber is numeric for {{ pageNumber + 1 }} Issue 
   t.is(templates[0].data.pagination.pageNumber, 0);
   t.not(templates[0].data.pagination.pageNumber, "0");
 });
+
+test("Paginate multiple data in frontmatter", async (t) => {
+  let tmpl = new Template(
+    "./test/stubs/paged/pagedinlinemultipledata.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let pages = await tmpl.getTemplates(data);
+  t.is(pages.length, 4);
+
+  t.is(pages[0].outputPath, "./dist/paged/pagedinlinemultipledata/index.html");
+  t.is(
+    (await pages[0].template.render(pages[0].data)).trim(),
+    `<ol><li>item1</li><li>item2</li><li>item3</li><li>item4</li></ol>
+<ol><li>cool1</li><li>cool2</li><li>cool3</li><li>cool4</li></ol>`
+  );
+
+  t.is(
+    pages[1].outputPath,
+    "./dist/paged/pagedinlinemultipledata/1/index.html"
+  );
+  t.is(
+    (await pages[1].template.render(pages[1].data)).trim(),
+    `<ol><li>item1</li><li>item2</li><li>item3</li><li>item4</li></ol>
+<ol><li>cool5</li><li>cool6</li><li>cool7</li><li>cool8</li></ol>`
+  );
+
+  t.is(
+    pages[2].outputPath,
+    "./dist/paged/pagedinlinemultipledata/2/index.html"
+  );
+  t.is(
+    (await pages[2].template.render(pages[2].data)).trim(),
+    `<ol><li>item5</li><li>item6</li><li>item7</li><li>item8</li></ol>
+<ol><li>cool1</li><li>cool2</li><li>cool3</li><li>cool4</li></ol>`
+  );
+
+  t.is(
+    pages[3].outputPath,
+    "./dist/paged/pagedinlinemultipledata/3/index.html"
+  );
+  t.is(
+    (await pages[3].template.render(pages[3].data)).trim(),
+    `<ol><li>item5</li><li>item6</li><li>item7</li><li>item8</li></ol>
+<ol><li>cool5</li><li>cool6</li><li>cool7</li><li>cool8</li></ol>`
+  );
+});
+
+test("Alias to multiple page data", async (t) => {
+  let tmpl = new Template(
+    "./test/stubs/paged/pagedaliasmultipledata.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let pages = await tmpl.getTemplates(data);
+
+  t.is(pages.length, 6);
+  t.is(pages[0].outputPath, "./dist/pagedalias/item1/other1/index.html");
+  t.is(pages[1].outputPath, "./dist/pagedalias/item1/other2/index.html");
+  t.is(pages[3].outputPath, "./dist/pagedalias/item2/other1/index.html");
+
+  t.is((await pages[0].template.render(pages[0].data)).trim(), "item1 other1");
+  t.is((await pages[1].template.render(pages[1].data)).trim(), "item1 other2");
+});
+
+test("Permalink with pagination variables (numeric) multiple data", async (t) => {
+  let tmpl = new Template(
+    "./test/stubs/paged/pagedaliasmultipledatalinks.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let pages = await tmpl.getTemplates(data);
+
+  const pickTestProperties = ({
+    pageNumber,
+    firstPageHref,
+    firstPageLink,
+    lastPageHref,
+    lastPageLink,
+    nextPageHref,
+    nextPageLink,
+    previousPageLink,
+    previousPageHref,
+    href,
+    hrefs,
+    items,
+    links,
+  }) => ({
+    pageNumber,
+    firstPageHref,
+    firstPageLink,
+    lastPageHref,
+    lastPageLink,
+    nextPageHref,
+    nextPageLink,
+    previousPageLink,
+    previousPageHref,
+    href,
+    hrefs,
+    items,
+    links,
+  });
+
+  t.deepEqual(pages[0].data.pagination.map(pickTestProperties), [
+    {
+      firstPageLink: "/pagedalias/item1/other1/index.html",
+      firstPageHref: "/pagedalias/item1/other1/",
+      lastPageLink: "/pagedalias/item3/other1/index.html",
+      lastPageHref: "/pagedalias/item3/other1/",
+      nextPageLink: "/pagedalias/item2/other1/index.html",
+      nextPageHref: "/pagedalias/item2/other1/",
+      previousPageLink: null,
+      previousPageHref: null,
+      pageNumber: 0,
+      links: [
+        "/pagedalias/item1/other1/index.html",
+        "/pagedalias/item2/other1/index.html",
+        "/pagedalias/item3/other1/index.html",
+      ],
+      items: ["item1"],
+      hrefs: [
+        "/pagedalias/item1/other1/",
+        "/pagedalias/item2/other1/",
+        "/pagedalias/item3/other1/",
+      ],
+      href: {
+        first: "/pagedalias/item1/other1/",
+        last: "/pagedalias/item3/other1/",
+        next: "/pagedalias/item2/other1/",
+        previous: null,
+      },
+    },
+    {
+      pageNumber: 0,
+      firstPageHref: "/pagedalias/item1/other1/",
+      firstPageLink: "/pagedalias/item1/other1/index.html",
+      lastPageHref: "/pagedalias/item1/other3/",
+      lastPageLink: "/pagedalias/item1/other3/index.html",
+      nextPageHref: "/pagedalias/item1/other2/",
+      nextPageLink: "/pagedalias/item1/other2/index.html",
+      previousPageLink: null,
+      previousPageHref: null,
+      href: {
+        first: "/pagedalias/item1/other1/",
+        last: "/pagedalias/item1/other3/",
+        next: "/pagedalias/item1/other2/",
+        previous: null,
+      },
+      hrefs: [
+        "/pagedalias/item1/other1/",
+        "/pagedalias/item1/other2/",
+        "/pagedalias/item1/other3/",
+      ],
+      items: ["other1"],
+      links: [
+        "/pagedalias/item1/other1/index.html",
+        "/pagedalias/item1/other2/index.html",
+        "/pagedalias/item1/other3/index.html",
+      ],
+    },
+  ]);
+
+  t.deepEqual(pages[4].data.pagination.map(pickTestProperties), [
+    {
+      firstPageHref: "/pagedalias/item1/other2/",
+      firstPageLink: "/pagedalias/item1/other2/index.html",
+      href: {
+        first: "/pagedalias/item1/other2/",
+        last: "/pagedalias/item3/other2/",
+        next: "/pagedalias/item3/other2/",
+        previous: "/pagedalias/item1/other2/",
+      },
+      hrefs: [
+        "/pagedalias/item1/other2/",
+        "/pagedalias/item2/other2/",
+        "/pagedalias/item3/other2/",
+      ],
+      items: ["item2"],
+      lastPageHref: "/pagedalias/item3/other2/",
+      lastPageLink: "/pagedalias/item3/other2/index.html",
+      links: [
+        "/pagedalias/item1/other2/index.html",
+        "/pagedalias/item2/other2/index.html",
+        "/pagedalias/item3/other2/index.html",
+      ],
+      nextPageHref: "/pagedalias/item3/other2/",
+      nextPageLink: "/pagedalias/item3/other2/index.html",
+      pageNumber: 1,
+      previousPageHref: "/pagedalias/item1/other2/",
+      previousPageLink: "/pagedalias/item1/other2/index.html",
+    },
+    {
+      firstPageHref: "/pagedalias/item2/other1/",
+      firstPageLink: "/pagedalias/item2/other1/index.html",
+      href: {
+        first: "/pagedalias/item2/other1/",
+        last: "/pagedalias/item2/other3/",
+        next: "/pagedalias/item2/other3/",
+        previous: "/pagedalias/item2/other1/",
+      },
+      hrefs: [
+        "/pagedalias/item2/other1/",
+        "/pagedalias/item2/other2/",
+        "/pagedalias/item2/other3/",
+      ],
+      items: ["other2"],
+      lastPageHref: "/pagedalias/item2/other3/",
+      lastPageLink: "/pagedalias/item2/other3/index.html",
+      links: [
+        "/pagedalias/item2/other1/index.html",
+        "/pagedalias/item2/other2/index.html",
+        "/pagedalias/item2/other3/index.html",
+      ],
+      nextPageHref: "/pagedalias/item2/other3/",
+      nextPageLink: "/pagedalias/item2/other3/index.html",
+      pageNumber: 1,
+      previousPageHref: "/pagedalias/item2/other1/",
+      previousPageLink: "/pagedalias/item2/other1/index.html",
+    },
+  ]);
+});
+
+test.todo("Test getPageCount with multiple pagination");
