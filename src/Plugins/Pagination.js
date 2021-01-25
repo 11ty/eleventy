@@ -192,6 +192,7 @@ class Pagination {
           data: this.data.pagination.data,
           size: this.data.pagination.size,
           alias: this.alias,
+          reversed: this.data.pagination.reverse === true,
 
           pages: this.size === 1 ? items.map((entry) => entry[0]) : items,
 
