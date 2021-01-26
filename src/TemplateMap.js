@@ -253,7 +253,13 @@ class TemplateMap {
           if (
             counter === 0 ||
             (map.data.pagination &&
-              map.data.pagination.addAllPagesToCollections)
+              (map.data.pagination.addAllPagesToCollections ||
+                (Array.isArray(map.data.pagination) &&
+                  page.data.pagination.every(
+                    (pagination, ii) =>
+                      !pagination.pageNumber ||
+                      map.data.pagination[ii].addAllPagesToCollections
+                  ))))
           ) {
             if (!map.data.eleventyExcludeFromCollections) {
               // TODO do we need .template in collection entries?
