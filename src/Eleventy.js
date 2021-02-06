@@ -18,6 +18,7 @@ const deleteRequireCache = require("./Util/DeleteRequireCache");
 const config = require("./Config");
 const bench = require("./BenchmarkManager");
 const debug = require("debug")("Eleventy");
+const eventBus = require("./EventBus");
 
 /**
  * @module 11ty/eleventy/Eleventy
@@ -449,7 +450,7 @@ Arguments:
    * @param {String} changedFilePath - File that triggered a re-run (added or modified)
    */
   async _addFileToWatchQueue(changedFilePath) {
-    TemplateContent.deleteCached(changedFilePath);
+    eventBus.emit("resourceModified", changedFilePath);
     this.watchManager.addToPendingQueue(changedFilePath);
   }
 
