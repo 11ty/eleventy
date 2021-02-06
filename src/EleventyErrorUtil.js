@@ -63,7 +63,8 @@ class EleventyErrorUtil {
     return (
       e instanceof TemplateContentPrematureUseError ||
       (e.originalError &&
-        e.originalError.name === "RenderError" &&
+        (e.originalError.name === "RenderError" ||
+          e.originalError.name === "UndefinedVariableError") &&
         e.originalError.originalError instanceof
           TemplateContentPrematureUseError) || // Liquid
       e.message.indexOf("TemplateContentPrematureUseError") > -1
