@@ -4,7 +4,7 @@ let yaml = require("js-yaml");
 
 function injectDataExtensions(dataObj) {
   dataObj.config.dataExtensions = new Map([
-    ["yaml", (s) => yaml.safeLoad(s)],
+    ["yaml", (s) => yaml.load(s)],
     ["nosj", JSON.parse],
   ]);
 }
