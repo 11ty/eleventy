@@ -215,18 +215,6 @@ class Eleventy {
   }
 
   /**
-   * Marks the finish of a run of Eleventy.
-   *
-   * @method
-   */
-  finish() {
-    bench.finish();
-
-    (this.logger || console).log(this.logFinished());
-    debug("Finished writing templates.");
-  }
-
-  /**
    * Logs some statistics after a complete run of Eleventy.
    *
    * @method
@@ -744,13 +732,24 @@ Arguments:
   }
 
   /**
+   * Backwards compatibility method.
+   *
+   * @async
+   * @method
+   * @returns {Promise<{}>}
+   */
+  async write() {
+    return this.executeBuild();
+  }
+
+  /**
    * tbd.
    *
    * @async
    * @method
    * @returns {Promise<{}>} ret - tbd.
    */
-  async write() {
+  async executeBuild(to = "fs") {
     let ret;
     if (this.logger) {
       EleventyErrorHandler.logger = this.logger;
@@ -759,7 +758,16 @@ Arguments:
     await this.config.events.emit("beforeBuild");
 
     try {
-      let promise = this.writer.write();
+      let promise;
+      if (to === "fs") {
+        promise = this.writer.write();
+      } else if (to === "json") {
+        promise = this.writer.getJSON();
+      } else {
+        throw new Error(
+          `Invalid argument for \`Eleventy->executeBuild(${to})\`, expected "json" or "fs".`
+        );
+      }
 
       ret = await promise;
       await this.config.events.emit("afterBuild");
@@ -772,7 +780,12 @@ Arguments:
       EleventyErrorHandler.fatal(e);
     }
 
-    this.finish();
+    bench.finish();
+
+    if (to !== "json") {
+      (this.logger || console).log(this.logFinished());
+    }
+    debug("Finished writing templates.");
 
     debug(`
 Getting frustrated? Have a suggestion/feature request/feedback?

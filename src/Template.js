@@ -653,10 +653,18 @@ class Template extends TemplateContent {
     return content;
   }
 
-  async writeMapEntry(mapEntry) {
-    await Promise.all(
+  async generateMapEntry(mapEntry, to) {
+    return Promise.all(
       mapEntry._pages.map(async (page) => {
         let content = await this.renderPageEntry(mapEntry, page);
+        if (to === "json") {
+          return {
+            url: page.url,
+            inputPath: page.inputPath,
+            content: content,
+          };
+        }
+
         return this._write(page.outputPath, content);
       })
     );

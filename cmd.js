@@ -19,7 +19,15 @@ const EleventyErrorHandler = require("./src/EleventyErrorHandler");
 try {
   const EleventyCommandCheckError = require("./src/EleventyCommandCheckError");
   const argv = require("minimist")(process.argv.slice(2), {
-    string: ["input", "output", "formats", "config", "pathprefix", "port"],
+    string: [
+      "input",
+      "output",
+      "formats",
+      "config",
+      "pathprefix",
+      "port",
+      "to",
+    ],
     boolean: [
       "quiet",
       "version",
@@ -86,7 +94,19 @@ try {
       } else if (argv.watch) {
         elev.watch();
       } else {
-        elev.write();
+        if (argv.to !== "fs" && argv.to !== "json") {
+          throw new EleventyCommandCheckError(
+            `Invalid --to value: ${argv.to}. Supported values: \`fs\` and \`json\`.`
+          );
+        }
+
+        let promise = elev.executeBuild(argv.to);
+
+        if (argv.to === "json") {
+          promise.then((result) => {
+            console.log(result);
+          });
+        }
       }
     })
     .catch(EleventyErrorHandler.fatal);

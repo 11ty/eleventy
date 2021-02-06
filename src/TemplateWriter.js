@@ -8,6 +8,7 @@ const EleventyErrorHandler = require("./EleventyErrorHandler");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
 
 const config = require("./Config");
+const lodashFlatten = require("lodash/flatten");
 const debug = require("debug")("Eleventy:TemplateWriter");
 const debugDev = require("debug")("Dev:Eleventy:TemplateWriter");
 
@@ -181,12 +182,13 @@ class TemplateWriter {
     return this.templateMap;
   }
 
-  async _writeTemplate(mapEntry) {
+  async _generateTemplate(mapEntry, to) {
     let tmpl = mapEntry.template;
 
-    return tmpl.writeMapEntry(mapEntry).then(() => {
+    return tmpl.generateMapEntry(mapEntry, to).then((pages) => {
       this.skippedCount += tmpl.getSkippedCount();
       this.writeCount += tmpl.getWriteCount();
+      return pages;
     });
   }
 
@@ -204,19 +206,19 @@ class TemplateWriter {
     });
   }
 
-  async writeTemplates(paths) {
+  async generateTemplates(paths, to = "fs") {
     let promises = [];
 
-    // console.time("writeTemplates:_createTemplateMap");
+    // console.time("generateTemplates:_createTemplateMap");
     // TODO optimize await here
     await this._createTemplateMap(paths);
-    // console.timeEnd("writeTemplates:_createTemplateMap");
+    // console.timeEnd("generateTemplates:_createTemplateMap");
     debug("Template map created.");
 
     let usedTemplateContentTooEarlyMap = [];
     for (let mapEntry of this.templateMap.getMap()) {
       promises.push(
-        this._writeTemplate(mapEntry).catch(function (e) {
+        this._generateTemplate(mapEntry, to).catch(function (e) {
           // Premature templateContent in layout render, this also happens in
           // TemplateMap.populateContentDataInMap for non-layout content
           if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
@@ -235,7 +237,7 @@ class TemplateWriter {
 
     for (let mapEntry of usedTemplateContentTooEarlyMap) {
       promises.push(
-        this._writeTemplate(mapEntry).catch(function (e) {
+        this._generateTemplate(mapEntry, to).catch(function (e) {
           return Promise.reject(
             new TemplateWriterWriteError(
               `Having trouble writing template (second pass): ${mapEntry.outputPath}`,
@@ -261,13 +263,29 @@ class TemplateWriter {
         .getPassthroughManager()
         .isPassthroughCopyFile(paths, this.incrementalFile)
     ) {
-      promises.push(...(await this.writeTemplates(paths)));
+      promises.push(...(await this.generateTemplates(paths)));
     }
 
     return Promise.all(promises).catch((e) => {
       EleventyErrorHandler.error(e, "Error writing templates");
       throw e;
     });
+  }
+
+  // Passthrough copy not supported in JSON output.
+  // --incremental not supported in JSON output.
+  async getJSON() {
+    let paths = await this._getAllPaths();
+    let promises = await this.generateTemplates(paths, "json");
+
+    return Promise.all(promises)
+      .then((results) => {
+        return lodashFlatten(results); // switch to results.flat(1) with Node 12+
+      })
+      .catch((e) => {
+        EleventyErrorHandler.error(e, "Error generating templates");
+        throw e;
+      });
   }
 
   setVerboseOutput(isVerbose) {
