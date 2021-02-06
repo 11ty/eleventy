@@ -94,18 +94,16 @@ try {
       } else if (argv.watch) {
         elev.watch();
       } else {
-        if (argv.to !== "fs" && argv.to !== "json") {
+        if (argv.to === "json") {
+          elev.toJSON().then((result) => {
+            console.log(result);
+          });
+        } else if (!argv.to || argv.to === "fs") {
+          elev.write();
+        } else {
           throw new EleventyCommandCheckError(
             `Invalid --to value: ${argv.to}. Supported values: \`fs\` and \`json\`.`
           );
-        }
-
-        let promise = elev.executeBuild(argv.to);
-
-        if (argv.to === "json") {
-          promise.then((result) => {
-            console.log(result);
-          });
         }
       }
     })

@@ -732,7 +732,7 @@ Arguments:
   }
 
   /**
-   * Backwards compatibility method.
+   * Writes templates to the file system.
    *
    * @async
    * @method
@@ -740,6 +740,17 @@ Arguments:
    */
   async write() {
     return this.executeBuild();
+  }
+
+  /**
+   * Renders templates to a JSON object.
+   *
+   * @async
+   * @method
+   * @returns {Promise<{}>}
+   */
+  async toJSON() {
+    return this.executeBuild("json");
   }
 
   /**
