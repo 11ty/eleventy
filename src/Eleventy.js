@@ -754,6 +754,17 @@ Arguments:
   }
 
   /**
+   * Renders templates to an NDJSON object (newline delimited).
+   *
+   * @async
+   * @method
+   * @returns {Promise<{}>}
+   */
+  async toNDJSON() {
+    return this.executeBuild("ndjson");
+  }
+
+  /**
    * tbd.
    *
    * @async
@@ -773,7 +784,9 @@ Arguments:
       if (to === "fs") {
         promise = this.writer.write();
       } else if (to === "json") {
-        promise = this.writer.getJSON();
+        promise = this.writer.getJSON("json");
+      } else if (to === "ndjson") {
+        promise = this.writer.getJSON("ndjson");
       } else {
         throw new Error(
           `Invalid argument for \`Eleventy->executeBuild(${to})\`, expected "json" or "fs".`
@@ -793,7 +806,7 @@ Arguments:
 
     bench.finish();
 
-    if (to !== "json") {
+    if (to === "fs") {
       (this.logger || console).log(this.logFinished());
     }
     debug("Finished writing templates.");

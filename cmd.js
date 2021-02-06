@@ -96,13 +96,15 @@ try {
       } else {
         if (argv.to === "json") {
           elev.toJSON().then((result) => {
-            console.log(result);
+            console.log(JSON.stringify(result));
           });
+        } else if (argv.to === "ndjson") {
+          elev.toNDJSON();
         } else if (!argv.to || argv.to === "fs") {
           elev.write();
         } else {
           throw new EleventyCommandCheckError(
-            `Invalid --to value: ${argv.to}. Supported values: \`fs\` and \`json\`.`
+            `Invalid --to value: ${argv.to}. Supported values: \`fs\`, \`json\`, and \`ndjson\`.`
           );
         }
       }

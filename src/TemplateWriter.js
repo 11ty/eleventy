@@ -274,9 +274,9 @@ class TemplateWriter {
 
   // Passthrough copy not supported in JSON output.
   // --incremental not supported in JSON output.
-  async getJSON() {
+  async getJSON(to = "json") {
     let paths = await this._getAllPaths();
-    let promises = await this.generateTemplates(paths, "json");
+    let promises = await this.generateTemplates(paths, to);
 
     return Promise.all(promises)
       .then((results) => {
