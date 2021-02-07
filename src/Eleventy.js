@@ -789,7 +789,7 @@ Arguments:
         promise = this.writer.getJSON("ndjson");
       } else {
         throw new Error(
-          `Invalid argument for \`Eleventy->executeBuild(${to})\`, expected "json" or "fs".`
+          `Invalid argument for \`Eleventy->executeBuild(${to})\`, expected "json", "ndjson", or "fs".`
         );
       }
 
