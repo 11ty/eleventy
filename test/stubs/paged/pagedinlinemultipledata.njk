@@ -1,0 +1,27 @@
+---
+pagination:
+  - data: testdata1
+    size: 4
+  - data: testdata2
+    size: 4
+testdata1:
+ - item1
+ - item2
+ - item3
+ - item4
+ - item5
+ - item6
+ - item7
+ - item8
+testdata2:
+ - cool1
+ - cool2
+ - cool3
+ - cool4
+ - cool5
+ - cool6
+ - cool7
+ - cool8
+---
+<ol>{% for item in pagination[0].items %}<li>{{ item }}</li>{% endfor %}</ol>
+<ol>{% for item in pagination[1].items %}<li>{{ item }}</li>{% endfor %}</ol>
