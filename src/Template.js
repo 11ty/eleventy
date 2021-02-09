@@ -69,6 +69,11 @@ class Template extends TemplateContent {
     return this._logger;
   }
 
+  /* Setter for Logger */
+  set logger(logger) {
+    this._logger = logger;
+  }
+
   setIsVerbose(isVerbose) {
     this.isVerbose = isVerbose;
     this.logger.isVerbose = isVerbose;
@@ -669,7 +674,7 @@ class Template extends TemplateContent {
 
           if (to === "ndjson") {
             let jsonString = JSON.stringify(obj);
-            console.log(jsonString);
+            this.logger.stdout(jsonString);
             return jsonString;
           }
 
@@ -692,6 +697,7 @@ class Template extends TemplateContent {
       this.extensionMap
     );
     tmpl.config = this.config;
+    tmpl.logger = this.logger;
 
     for (let transform of this.transforms) {
       tmpl.addTransform(transform.name, transform.callback);

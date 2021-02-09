@@ -41,6 +41,10 @@ class ConsoleLogger {
     this.message(msg);
   }
 
+  stdout(msg) {
+    console.log(msg);
+  }
+
   message(message, type = "log", chalkColor = false) {
     if (!this.isVerbose || process.env.DEBUG) {
       debug(message);

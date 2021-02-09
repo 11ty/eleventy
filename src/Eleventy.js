@@ -305,7 +305,7 @@ class Eleventy {
       this.templateData,
       this.isPassthroughAll
     );
-
+    this.writer.logger = this.logger;
     this.writer.extensionMap = this.extensionMap;
     this.writer.setEleventyFiles(this.eleventyFiles);
 
@@ -350,7 +350,7 @@ Verbose Output: ${this.verboseMode}`);
     return this._isVerboseMode;
   }
 
-  /* Getter for logger */
+  /* Getter for Logger */
   get logger() {
     if (!this._logger) {
       this._logger = new ConsoleLogger();
@@ -360,11 +360,17 @@ Verbose Output: ${this.verboseMode}`);
     return this._logger;
   }
 
+  /* Setter for Logger */
+  set logger(logger) {
+    this._logger = logger;
+  }
+
   /* Getter for error handler */
   get errorHandler() {
     if (!this._errorHandler) {
       this._errorHandler = new EleventyErrorHandler();
       this._errorHandler.isVerbose = this.verboseMode;
+      this._errorHandler.logger = this.logger;
     }
 
     return this._errorHandler;
@@ -748,16 +754,6 @@ Arguments:
    */
   serve(port) {
     this.eleventyServe.serve(port);
-  }
-
-  /* For testing */
-  /**
-   * Updates the logger.
-   *
-   * @param {} logger - The new logger.
-   */
-  setLogger(logger) {
-    this.logger = logger;
   }
 
   /**

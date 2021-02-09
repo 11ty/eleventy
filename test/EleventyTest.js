@@ -139,7 +139,10 @@ test("Eleventy set input/output, one file input exitCode", async (t) => {
 
 test("Eleventy to json", async (t) => {
   let elev = new Eleventy("./test/stubs--to/", "./test/stubs--to/_site");
+  elev.setIsVerbose(false);
+
   await elev.init();
+
   let result = await elev.toJSON();
 
   t.deepEqual(
@@ -169,8 +172,26 @@ test("Eleventy to ndjson", async (t) => {
 
   elev.setIsVerbose(false);
 
+  let output = [];
+  let fn = function (str) {
+    output.push(str);
+  };
+  elev.logger = {
+    log: fn,
+    warn: fn,
+    error: fn,
+    message: fn,
+    stdout: fn,
+  };
+
   await elev.init();
+
   let results = await elev.toNDJSON();
+  t.deepEqual(output, [
+    `{"url":"/test/","inputPath":"./test/stubs--to/test.md","content":"<h1>hi</h1>\\n"}`,
+    `{"url":"/test2/","inputPath":"./test/stubs--to/test2.liquid","content":"hello"}`,
+  ]);
+
   let parsed = results.split("\n").map((entry) => JSON.parse(entry));
   t.deepEqual(
     parsed.filter((entry) => entry.url === "/test/"),

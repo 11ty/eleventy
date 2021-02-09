@@ -6,6 +6,7 @@ const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyErrorHandler = require("./EleventyErrorHandler");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
+const ConsoleLogger = require("./Util/ConsoleLogger");
 
 const config = require("./Config");
 const lodashFlatten = require("lodash/flatten");
@@ -59,9 +60,25 @@ class TemplateWriter {
     if (!this._errorHandler) {
       this._errorHandler = new EleventyErrorHandler();
       this._errorHandler.isVerbose = this.verboseMode;
+      this._errorHandler.logger = this.logger;
     }
 
     return this._errorHandler;
+  }
+
+  /* Getter for Logger */
+  get logger() {
+    if (!this._logger) {
+      this._logger = new ConsoleLogger();
+      this._logger.isVerbose = this.verboseMode;
+    }
+
+    return this._logger;
+  }
+
+  /* Setter for Logger */
+  set logger(logger) {
+    this._logger = logger;
   }
 
   /* For testing */
@@ -133,6 +150,7 @@ class TemplateWriter {
       this.templateData,
       this.extensionMap
     );
+    tmpl.logger = this.logger;
     this._templatePathCache.set(path, tmpl);
 
     tmpl.setIsVerbose(this.isVerbose);
