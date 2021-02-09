@@ -101,7 +101,7 @@ try {
       } else {
         if (argv.to === "json") {
           elev.toJSON().then((result) => {
-            console.log(JSON.stringify(result));
+            console.log(JSON.stringify(result, null, 2));
           });
         } else if (argv.to === "ndjson") {
           elev.toNDJSON();
