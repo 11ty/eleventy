@@ -54,6 +54,16 @@ class TemplateWriter {
     this._templateFormats = value;
   }
 
+  /* Getter for error handler */
+  get errorHandler() {
+    if (!this._errorHandler) {
+      this._errorHandler = new EleventyErrorHandler();
+      this._errorHandler.isVerbose = this.verboseMode;
+    }
+
+    return this._errorHandler;
+  }
+
   /* For testing */
   overrideConfig(config) {
     this.config = config;
@@ -199,7 +209,7 @@ class TemplateWriter {
     }
 
     return passthroughManager.copyAll(paths).catch((e) => {
-      EleventyErrorHandler.warn(e, "Error with passthrough copy");
+      this.errorHandler.warn(e, "Error with passthrough copy");
       return Promise.reject(
         new TemplateWriterWriteError("Having trouble copying", e)
       );
@@ -267,7 +277,7 @@ class TemplateWriter {
     }
 
     return Promise.all(promises).catch((e) => {
-      EleventyErrorHandler.error(e, "Error writing templates");
+      this.errorHandler.error(e, "Error writing templates");
       throw e;
     });
   }
@@ -280,16 +290,18 @@ class TemplateWriter {
 
     return Promise.all(promises)
       .then((results) => {
-        return lodashFlatten(results); // switch to results.flat(1) with Node 12+
+        let flat = lodashFlatten(results); // switch to results.flat(1) with Node 12+
+        return flat;
       })
       .catch((e) => {
-        EleventyErrorHandler.error(e, "Error generating templates");
+        this.errorHandler.error(e, "Error generating templates");
         throw e;
       });
   }
 
   setVerboseOutput(isVerbose) {
     this.isVerbose = isVerbose;
+    this.errorHandler.isVerbose = isVerbose;
   }
 
   setDryRun(isDryRun) {

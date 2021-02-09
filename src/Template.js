@@ -1,5 +1,4 @@
 const fs = require("fs-extra");
-const chalk = require("chalk");
 const parsePath = require("parse-filepath");
 const normalize = require("normalize-path");
 const lodashIsObject = require("lodash/isObject");
@@ -15,6 +14,7 @@ const TemplateFileSlug = require("./TemplateFileSlug");
 const ComputedData = require("./ComputedData");
 const Pagination = require("./Plugins/Pagination");
 const TemplateContentPrematureUseError = require("./Errors/TemplateContentPrematureUseError");
+const ConsoleLogger = require("./Util/ConsoleLogger");
 
 const debug = require("debug")("Eleventy:Template");
 const debugDev = require("debug")("Dev:Eleventy:Template");
@@ -61,8 +61,17 @@ class Template extends TemplateContent {
     this.filePathStem = this.fileSlug.getFullPathWithoutExtension();
   }
 
+  get logger() {
+    if (!this._logger) {
+      this._logger = new ConsoleLogger();
+      this._logger.isVerbose = this.isVerbose;
+    }
+    return this._logger;
+  }
+
   setIsVerbose(isVerbose) {
     this.isVerbose = isVerbose;
+    this.logger.isVerbose = isVerbose;
   }
 
   setDryRun(isDryRun) {
@@ -387,11 +396,9 @@ class Template extends TemplateContent {
         str,
         outputPath
       );
-      if (!str && this.isVerbose) {
-        console.log(
-          chalk.yellow(
-            `Warning: Transform \`${transform.name}\` returned empty when writing ${outputPath} from ${inputPath}.`
-          )
+      if (!str) {
+        this.logger.warn(
+          `Warning: Transform \`${transform.name}\` returned empty when writing ${outputPath} from ${inputPath}.`
         );
       }
     }
@@ -610,15 +617,11 @@ class Template extends TemplateContent {
     }
 
     let engineList = this.templateRender.getReadableEnginesListDifferingFromFileExtension();
-    if (this.isVerbose) {
-      console.log(
-        `${lang.start} ${outputPath} from ${this.inputPath}${
-          engineList ? ` (${engineList})` : ""
-        }`
-      );
-    } else {
-      debug(`${lang.start} %o from %o.`, outputPath, this.inputPath);
-    }
+    this.logger.log(
+      `${lang.start} ${outputPath} from ${this.inputPath}${
+        engineList ? ` (${engineList})` : ""
+      }`
+    );
 
     if (!shouldWriteFile) {
       this.skippedCount++;
@@ -665,7 +668,9 @@ class Template extends TemplateContent {
           };
 
           if (to === "ndjson") {
-            console.log(JSON.stringify(obj));
+            let jsonString = JSON.stringify(obj);
+            console.log(jsonString);
+            return jsonString;
           }
 
           // json

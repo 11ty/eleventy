@@ -71,6 +71,11 @@ try {
     quietMode: argv.quiet,
   });
 
+  if (argv.to === "json" || argv.to === "ndjson") {
+    // override logging output
+    elev.setIsVerbose(false);
+  }
+
   elev.setConfigPathOverride(argv.config);
   elev.setPathPrefix(argv.pathprefix);
   elev.setDryRun(argv.dryrun);

@@ -148,7 +148,6 @@ class Nunjucks extends TemplateEngine {
             });
         } else {
           try {
-            // console.log( shortcodeFn.toString() );
             return new NunjucksLib.runtime.SafeString(
               shortcodeFn.call(
                 Nunjucks._normalizeShortcodeContext(context),

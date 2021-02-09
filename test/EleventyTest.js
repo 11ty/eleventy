@@ -128,18 +128,68 @@ test("Eleventy set input/output, one file input exitCode", async (t) => {
     "./test/stubs/exitCode/failure.njk",
     "./test/stubs/exitCode/_site"
   );
-
-  // TODO make this output quieter
-  elev.setLogger({
-    log: function () {},
-    warn: function () {},
-    error: function () {},
-  });
-
+  elev.setIsVerbose(false);
   await elev.init();
   await elev.write();
 
   t.is(process.exitCode, 1);
 
   process.exitCode = previousExitCode;
+});
+
+test("Eleventy to json", async (t) => {
+  let elev = new Eleventy("./test/stubs--to/", "./test/stubs--to/_site");
+  await elev.init();
+  let result = await elev.toJSON();
+
+  t.deepEqual(
+    result.filter((entry) => entry.url === "/test/"),
+    [
+      {
+        url: "/test/",
+        inputPath: "./test/stubs--to/test.md",
+        content: "<h1>hi</h1>\n",
+      },
+    ]
+  );
+  t.deepEqual(
+    result.filter((entry) => entry.url === "/test2/"),
+    [
+      {
+        url: "/test2/",
+        inputPath: "./test/stubs--to/test2.liquid",
+        content: "hello",
+      },
+    ]
+  );
+});
+
+test("Eleventy to ndjson", async (t) => {
+  let elev = new Eleventy("./test/stubs--to/", "./test/stubs--to/_site");
+
+  elev.setIsVerbose(false);
+
+  await elev.init();
+  let results = await elev.toNDJSON();
+  let parsed = results.split("\n").map((entry) => JSON.parse(entry));
+  t.deepEqual(
+    parsed.filter((entry) => entry.url === "/test/"),
+    [
+      {
+        url: "/test/",
+        inputPath: "./test/stubs--to/test.md",
+        content: "<h1>hi</h1>\n",
+      },
+    ]
+  );
+  t.deepEqual(
+    parsed.filter((entry) => entry.url === "/test2/"),
+    [
+      {
+        url: "/test2/",
+        inputPath: "./test/stubs--to/test2.liquid",
+        content: "hello",
+      },
+    ]
+  );
 });

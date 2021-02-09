@@ -27,7 +27,6 @@ test("Local data", async (t) => {
   let withLocalData = await dataObj.getLocalData(
     "./test/stubs-630/component-yaml/component.njk"
   );
-  // console.log("localdata", withLocalData);
 
   t.is(withLocalData.yamlKey1, "yaml1");
   t.is(withLocalData.yamlKey2, "yaml2");
