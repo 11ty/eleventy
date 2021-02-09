@@ -30,7 +30,7 @@ test.cb(
       b.after();
       t.truthy(b.getTotal() >= 10);
       t.end();
-    }, 10);
+    }, 100);
   }
 );
 
@@ -49,5 +49,5 @@ test.cb("Reset Benchmark", (t) => {
       b.after();
     });
     t.end();
-  }, 10);
+  }, 100);
 });
