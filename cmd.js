@@ -76,6 +76,7 @@ try {
     elev.setIsVerbose(false);
   }
 
+  elev.setViaCommandLine(true);
   elev.setConfigPathOverride(argv.config);
   elev.setPathPrefix(argv.pathprefix);
   elev.setDryRun(argv.dryrun);

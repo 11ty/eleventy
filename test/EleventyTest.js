@@ -138,7 +138,7 @@ test("Eleventy set input/output, one file input exitCode", async (t) => {
 });
 
 test("Eleventy to json", async (t) => {
-  let elev = new Eleventy("./test/stubs--to/", "./test/stubs--to/_site");
+  let elev = new Eleventy("./test/stubs--to/");
   elev.setIsVerbose(false);
 
   await elev.init();
@@ -167,10 +167,46 @@ test("Eleventy to json", async (t) => {
   );
 });
 
-test("Eleventy to ndjson", async (t) => {
-  let elev = new Eleventy("./test/stubs--to/", "./test/stubs--to/_site");
+test("Eleventy to ndjson (via command line-ish, to stdout)", async (t) => {
+  let elev = new Eleventy("./test/stubs--to/");
 
   elev.setIsVerbose(false);
+  elev.setViaCommandLine(true);
+
+  let output = [];
+  let fn = function (str) {
+    output.push(str);
+  };
+  elev.logger = {
+    log: fn,
+    warn: fn,
+    error: fn,
+    message: fn,
+    toStream: fn,
+  };
+
+  await elev.init();
+  await elev.toNDJSON();
+
+  t.deepEqual(
+    output.filter((entry) => entry.startsWith(`{"url":"/test/"`)),
+    [
+      `{"url":"/test/","inputPath":"./test/stubs--to/test.md","content":"<h1>hi</h1>\\n"}`,
+    ]
+  );
+  t.deepEqual(
+    output.filter((entry) => entry.startsWith(`{"url":"/test2/"`)),
+    [
+      `{"url":"/test2/","inputPath":"./test/stubs--to/test2.liquid","content":"hello"}`,
+    ]
+  );
+});
+
+test("Eleventy to ndjson (no cmd line output when using programmatic API)", async (t) => {
+  let elev = new Eleventy("./test/stubs--to/");
+
+  elev.setIsVerbose(false);
+  elev.setViaCommandLine(false);
 
   let output = [];
   let fn = function (str) {
@@ -185,32 +221,42 @@ test("Eleventy to ndjson", async (t) => {
   };
 
   await elev.init();
+  await elev.toNDJSON();
 
-  let results = await elev.toNDJSON();
-  t.deepEqual(output, [
-    `{"url":"/test/","inputPath":"./test/stubs--to/test.md","content":"<h1>hi</h1>\\n"}`,
-    `{"url":"/test2/","inputPath":"./test/stubs--to/test2.liquid","content":"hello"}`,
-  ]);
+  t.deepEqual(output, []);
+});
 
-  let parsed = results.split("\n").map((entry) => JSON.parse(entry));
-  t.deepEqual(
-    parsed.filter((entry) => entry.url === "/test/"),
-    [
-      {
-        url: "/test/",
-        inputPath: "./test/stubs--to/test.md",
-        content: "<h1>hi</h1>\n",
-      },
-    ]
-  );
-  t.deepEqual(
-    parsed.filter((entry) => entry.url === "/test2/"),
-    [
-      {
-        url: "/test2/",
-        inputPath: "./test/stubs--to/test2.liquid",
-        content: "hello",
-      },
-    ]
-  );
+test.cb("Eleventy to ndjson (returns stream)", (t) => {
+  let elev = new Eleventy("./test/stubs--to/");
+
+  elev.setIsVerbose(false);
+  elev.setViaCommandLine(false);
+
+  elev.init().then(() => {
+    elev.toNDJSON().then((stream) => {
+      let results = [];
+      stream.on("data", function (jsonObj) {
+        if (jsonObj.url === "/test/") {
+          t.deepEqual(jsonObj, {
+            url: "/test/",
+            inputPath: "./test/stubs--to/test.md",
+            content: "<h1>hi</h1>\n",
+          });
+        }
+        if (jsonObj.url === "/test2/") {
+          t.deepEqual(jsonObj, {
+            url: "/test2/",
+            inputPath: "./test/stubs--to/test2.liquid",
+            content: "hello",
+          });
+        }
+
+        results.push(jsonObj);
+
+        if (results.length >= 2) {
+          t.end();
+        }
+      });
+    });
+  });
 });

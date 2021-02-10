@@ -105,6 +105,16 @@ class Eleventy {
     return new Date().getTime();
   }
 
+  /**
+   * Sets the whether or not this instance was created from the command line (via cmd.js)
+   *
+   * @method
+   * @param {Boolean} isViaCommandLine
+   */
+  setViaCommandLine(isViaCommandLine) {
+    this.isViaCommandLine = isViaCommandLine;
+  }
+
   /** @type {String} */
   get input() {
     return this.rawInput || this.config.dir.input;
@@ -355,6 +365,7 @@ Verbose Output: ${this.verboseMode}`);
     if (!this._logger) {
       this._logger = new ConsoleLogger();
       this._logger.isVerbose = this.verboseMode;
+      this._logger.isViaCommandLine = this.isViaCommandLine;
     }
 
     return this._logger;
@@ -779,11 +790,11 @@ Arguments:
   }
 
   /**
-   * Renders templates to an NDJSON object (newline delimited).
+   * Returns a stream of new line delimited (NDJSON) objects
    *
    * @async
    * @method
-   * @returns {Promise<{}>}
+   * @returns {Promise<{ReadableStream}>}
    */
   async toNDJSON() {
     return this.executeBuild("ndjson");
@@ -816,8 +827,10 @@ Arguments:
       }
 
       ret = await promise;
+
       if (to === "ndjson") {
-        ret = ret.join("\n");
+        // return a stream
+        ret = this.logger.closeStream(to);
       }
       await this.config.events.emit("afterBuild");
     } catch (e) {

@@ -1,9 +1,13 @@
 const chalk = require("chalk");
 const debug = require("debug")("Eleventy:Logger");
+const Readable = require("stream").Readable;
+const split = require("split");
 
 class ConsoleLogger {
   constructor() {
     this._isVerbose = true;
+    this.isViaCommandLine = false;
+    this.outputStream = Readable();
   }
 
   get isVerbose() {
@@ -41,8 +45,24 @@ class ConsoleLogger {
     this.message(msg);
   }
 
-  stdout(msg) {
-    console.log(msg);
+  toStream(msg, suffix = "") {
+    // only output to stdout/console if we’re running in command line
+    if (this.isViaCommandLine) {
+      console.log(msg);
+    } else {
+      this.outputStream.push(msg + suffix);
+    }
+  }
+
+  closeStream(to = "") {
+    this.outputStream.push(null);
+
+    if (to === "ndjson") {
+      return this.outputStream.pipe(
+        split(JSON.parse, null, { trailing: false })
+      );
+    }
+    return this.outputStream;
   }
 
   message(message, type = "log", chalkColor = false) {
