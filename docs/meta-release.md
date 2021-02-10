@@ -1,3 +1,11 @@
+# Canary Release Procedure
+
+1. npmclean aka `rm -rf node_modules && rm -f package-lock.json && npm install`
+1. Make sure `npx ava` runs okay
+1. Update version in `package.json`, include `-canary.1` suffix
+1. Tag new version
+1. `npm publish --access=public --tag=canary`
+
 # Beta Release Procedure
 
 1. update minor dependencies in package.json?
