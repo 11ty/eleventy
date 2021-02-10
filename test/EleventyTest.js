@@ -171,7 +171,6 @@ test("Eleventy to ndjson (via command line-ish, to stdout)", async (t) => {
   let elev = new Eleventy("./test/stubs--to/");
 
   elev.setIsVerbose(false);
-  elev.setViaCommandLine(true);
 
   let output = [];
   let fn = function (str) {
@@ -206,7 +205,6 @@ test("Eleventy to ndjson (no cmd line output when using programmatic API)", asyn
   let elev = new Eleventy("./test/stubs--to/");
 
   elev.setIsVerbose(false);
-  elev.setViaCommandLine(false);
 
   let output = [];
   let fn = function (str) {
@@ -230,7 +228,6 @@ test.cb("Eleventy to ndjson (returns stream)", (t) => {
   let elev = new Eleventy("./test/stubs--to/");
 
   elev.setIsVerbose(false);
-  elev.setViaCommandLine(false);
 
   elev.init().then(() => {
     elev.toNDJSON().then((stream) => {

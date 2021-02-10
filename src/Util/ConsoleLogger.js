@@ -6,7 +6,6 @@ const split = require("split");
 class ConsoleLogger {
   constructor() {
     this._isVerbose = true;
-    this.isViaCommandLine = false;
     this.outputStream = Readable();
   }
 
@@ -46,12 +45,7 @@ class ConsoleLogger {
   }
 
   toStream(msg, suffix = "") {
-    // only output to stdout/console if we’re running in command line
-    if (this.isViaCommandLine) {
-      console.log(msg);
-    } else {
-      this.outputStream.push(msg + suffix);
-    }
+    this.outputStream.push(msg + suffix);
   }
 
   closeStream(to = "") {
@@ -59,7 +53,8 @@ class ConsoleLogger {
 
     if (to === "ndjson") {
       return this.outputStream.pipe(
-        split(JSON.parse, null, { trailing: false })
+        // split(JSON.parse, null, { trailing: false })
+        split(null, null, { trailing: false })
       );
     }
     return this.outputStream;

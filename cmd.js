@@ -50,17 +50,16 @@ try {
   debug("command: eleventy ", argv.toString());
   const Eleventy = require("./src/Eleventy");
 
+  let errorHandler = new EleventyErrorHandler();
+
   process.on("unhandledRejection", (error, promise) => {
-    EleventyErrorHandler.error(
-      error,
-      `Unhandled rejection in promise (${promise})`
-    );
+    errorHandler.error(error, `Unhandled rejection in promise (${promise})`);
   });
   process.on("uncaughtException", (error) => {
-    EleventyErrorHandler.fatal(error, "Uncaught exception");
+    errorHandler.fatal(error, "Uncaught exception");
   });
   process.on("rejectionHandled", (promise) => {
-    EleventyErrorHandler.warn(
+    errorHandler.warn(
       promise,
       "A promise rejection was handled asynchronously"
     );
@@ -71,12 +70,14 @@ try {
     quietMode: argv.quiet,
   });
 
+  // reuse ErrorHandler instance in Eleventy
+  errorHandler = elev.errorHandler;
+
   if (argv.to === "json" || argv.to === "ndjson") {
     // override logging output
     elev.setIsVerbose(false);
   }
 
-  elev.setViaCommandLine(true);
   elev.setConfigPathOverride(argv.config);
   elev.setPathPrefix(argv.pathprefix);
   elev.setDryRun(argv.dryrun);
@@ -101,11 +102,20 @@ try {
         elev.watch();
       } else {
         if (argv.to === "json") {
-          elev.toJSON().then((result) => {
+          elev.toJSON().then(function (result) {
             console.log(JSON.stringify(result, null, 2));
           });
         } else if (argv.to === "ndjson") {
-          elev.toNDJSON();
+          elev
+            .toNDJSON()
+            .then(function (stream) {
+              stream
+                .on("data", function (jsonString) {
+                  console.log(jsonString);
+                })
+                .on("error", errorHandler.fatal.bind(errorHandler));
+            })
+            .catch(errorHandler.fatal.bind(errorHandler));
         } else if (!argv.to || argv.to === "fs") {
           elev.write();
         } else {
@@ -115,7 +125,7 @@ try {
         }
       }
     })
-    .catch(EleventyErrorHandler.fatal);
+    .catch(errorHandler.fatal.bind(errorHandler));
 } catch (e) {
-  EleventyErrorHandler.fatal(e, "Eleventy fatal error");
+  errorHandler.fatal(e, "Eleventy fatal error");
 }
