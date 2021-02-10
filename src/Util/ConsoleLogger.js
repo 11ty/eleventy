@@ -44,8 +44,8 @@ class ConsoleLogger {
     this.message(msg);
   }
 
-  toStream(msg, suffix = "") {
-    this.outputStream.push(msg + suffix);
+  toStream(msg) {
+    this.outputStream.push(msg);
   }
 
   closeStream(to = "") {

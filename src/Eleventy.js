@@ -819,6 +819,7 @@ Arguments:
 
       if (to === "ndjson") {
         // return a stream
+        // TODO this might return only after all the templates have been added to the stream
         ret = this.logger.closeStream(to);
       }
       await this.config.events.emit("afterBuild");

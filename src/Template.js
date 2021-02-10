@@ -674,7 +674,7 @@ class Template extends TemplateContent {
 
           if (to === "ndjson") {
             let jsonString = JSON.stringify(obj);
-            this.logger.toStream(jsonString, "\n");
+            this.logger.toStream(jsonString + "\n");
             return;
           }
 
