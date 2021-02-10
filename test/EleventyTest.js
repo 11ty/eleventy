@@ -167,64 +167,7 @@ test("Eleventy to json", async (t) => {
   );
 });
 
-test("Eleventy to ndjson (via command line-ish, to stdout)", async (t) => {
-  let elev = new Eleventy("./test/stubs--to/");
-
-  elev.setIsVerbose(false);
-
-  let output = [];
-  let fn = function (str) {
-    output.push(str);
-  };
-  elev.logger = {
-    log: fn,
-    warn: fn,
-    error: fn,
-    message: fn,
-    toStream: fn,
-  };
-
-  await elev.init();
-  await elev.toNDJSON();
-
-  t.deepEqual(
-    output.filter((entry) => entry.startsWith(`{"url":"/test/"`)),
-    [
-      `{"url":"/test/","inputPath":"./test/stubs--to/test.md","content":"<h1>hi</h1>\\n"}`,
-    ]
-  );
-  t.deepEqual(
-    output.filter((entry) => entry.startsWith(`{"url":"/test2/"`)),
-    [
-      `{"url":"/test2/","inputPath":"./test/stubs--to/test2.liquid","content":"hello"}`,
-    ]
-  );
-});
-
-test("Eleventy to ndjson (no cmd line output when using programmatic API)", async (t) => {
-  let elev = new Eleventy("./test/stubs--to/");
-
-  elev.setIsVerbose(false);
-
-  let output = [];
-  let fn = function (str) {
-    output.push(str);
-  };
-  elev.logger = {
-    log: fn,
-    warn: fn,
-    error: fn,
-    message: fn,
-    stdout: fn,
-  };
-
-  await elev.init();
-  await elev.toNDJSON();
-
-  t.deepEqual(output, []);
-});
-
-test.cb("Eleventy to ndjson (returns stream)", (t) => {
+test.cb("Eleventy to ndjson (returns a stream)", (t) => {
   let elev = new Eleventy("./test/stubs--to/");
 
   elev.setIsVerbose(false);
