@@ -17,6 +17,7 @@ if (process.env.DEBUG) {
 const EleventyErrorHandler = require("./src/EleventyErrorHandler");
 
 try {
+  let errorHandler = new EleventyErrorHandler();
   const EleventyCommandCheckError = require("./src/EleventyCommandCheckError");
   const argv = require("minimist")(process.argv.slice(2), {
     string: [
@@ -49,8 +50,6 @@ try {
   });
   debug("command: eleventy ", argv.toString());
   const Eleventy = require("./src/Eleventy");
-
-  let errorHandler = new EleventyErrorHandler();
 
   process.on("unhandledRejection", (error, promise) => {
     errorHandler.error(error, `Unhandled rejection in promise (${promise})`);
@@ -109,11 +108,7 @@ try {
           elev
             .toNDJSON()
             .then(function (stream) {
-              stream
-                .on("data", function (jsonString) {
-                  console.log(jsonString);
-                })
-                .on("error", errorHandler.fatal.bind(errorHandler));
+              stream.pipe(process.stdout);
             })
             .catch(errorHandler.fatal.bind(errorHandler));
         } else if (!argv.to || argv.to === "fs") {
@@ -127,5 +122,6 @@ try {
     })
     .catch(errorHandler.fatal.bind(errorHandler));
 } catch (e) {
+  let errorHandler = new EleventyErrorHandler();
   errorHandler.fatal(e, "Eleventy fatal error");
 }
