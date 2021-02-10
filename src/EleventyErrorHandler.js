@@ -14,7 +14,7 @@ class EleventyErrorHandler {
 
   set isVerbose(verbose) {
     this._isVerbose = !!verbose;
-    this.logger = !!verbose;
+    this.logger.isVerbose = !!verbose;
   }
 
   get logger() {
