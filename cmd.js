@@ -17,9 +17,18 @@ if (process.env.DEBUG) {
 const EleventyErrorHandler = require("./src/EleventyErrorHandler");
 
 try {
+  let errorHandler = new EleventyErrorHandler();
   const EleventyCommandCheckError = require("./src/EleventyCommandCheckError");
   const argv = require("minimist")(process.argv.slice(2), {
-    string: ["input", "output", "formats", "config", "pathprefix", "port"],
+    string: [
+      "input",
+      "output",
+      "formats",
+      "config",
+      "pathprefix",
+      "port",
+      "to",
+    ],
     boolean: [
       "quiet",
       "version",
@@ -43,16 +52,13 @@ try {
   const Eleventy = require("./src/Eleventy");
 
   process.on("unhandledRejection", (error, promise) => {
-    EleventyErrorHandler.error(
-      error,
-      `Unhandled rejection in promise (${promise})`
-    );
+    errorHandler.error(error, `Unhandled rejection in promise (${promise})`);
   });
   process.on("uncaughtException", (error) => {
-    EleventyErrorHandler.fatal(error, "Uncaught exception");
+    errorHandler.fatal(error, "Uncaught exception");
   });
   process.on("rejectionHandled", (promise) => {
-    EleventyErrorHandler.warn(
+    errorHandler.warn(
       promise,
       "A promise rejection was handled asynchronously"
     );
@@ -62,6 +68,14 @@ try {
     // --quiet and --quiet=true both resolve to true
     quietMode: argv.quiet,
   });
+
+  // reuse ErrorHandler instance in Eleventy
+  errorHandler = elev.errorHandler;
+
+  if (argv.to === "json" || argv.to === "ndjson") {
+    // override logging output
+    elev.setIsVerbose(false);
+  }
 
   elev.setConfigPathOverride(argv.config);
   elev.setPathPrefix(argv.pathprefix);
@@ -86,10 +100,28 @@ try {
       } else if (argv.watch) {
         elev.watch();
       } else {
-        elev.write();
+        if (argv.to === "json") {
+          elev.toJSON().then(function (result) {
+            console.log(JSON.stringify(result, null, 2));
+          });
+        } else if (argv.to === "ndjson") {
+          elev
+            .toNDJSON()
+            .then(function (stream) {
+              stream.pipe(process.stdout);
+            })
+            .catch(errorHandler.fatal.bind(errorHandler));
+        } else if (!argv.to || argv.to === "fs") {
+          elev.write();
+        } else {
+          throw new EleventyCommandCheckError(
+            `Invalid --to value: ${argv.to}. Supported values: \`fs\`, \`json\`, and \`ndjson\`.`
+          );
+        }
       }
     })
-    .catch(EleventyErrorHandler.fatal);
+    .catch(errorHandler.fatal.bind(errorHandler));
 } catch (e) {
-  EleventyErrorHandler.fatal(e, "Eleventy fatal error");
+  let errorHandler = new EleventyErrorHandler();
+  errorHandler.fatal(e, "Eleventy fatal error");
 }

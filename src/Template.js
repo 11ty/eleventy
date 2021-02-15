@@ -1,5 +1,4 @@
 const fs = require("fs-extra");
-const chalk = require("chalk");
 const parsePath = require("parse-filepath");
 const normalize = require("normalize-path");
 const lodashIsObject = require("lodash/isObject");
@@ -15,6 +14,7 @@ const TemplateFileSlug = require("./TemplateFileSlug");
 const ComputedData = require("./ComputedData");
 const Pagination = require("./Plugins/Pagination");
 const TemplateContentPrematureUseError = require("./Errors/TemplateContentPrematureUseError");
+const ConsoleLogger = require("./Util/ConsoleLogger");
 
 const debug = require("debug")("Eleventy:Template");
 const debugDev = require("debug")("Dev:Eleventy:Template");
@@ -61,8 +61,22 @@ class Template extends TemplateContent {
     this.filePathStem = this.fileSlug.getFullPathWithoutExtension();
   }
 
+  get logger() {
+    if (!this._logger) {
+      this._logger = new ConsoleLogger();
+      this._logger.isVerbose = this.isVerbose;
+    }
+    return this._logger;
+  }
+
+  /* Setter for Logger */
+  set logger(logger) {
+    this._logger = logger;
+  }
+
   setIsVerbose(isVerbose) {
     this.isVerbose = isVerbose;
+    this.logger.isVerbose = isVerbose;
   }
 
   setDryRun(isDryRun) {
@@ -387,11 +401,9 @@ class Template extends TemplateContent {
         str,
         outputPath
       );
-      if (!str && this.isVerbose) {
-        console.log(
-          chalk.yellow(
-            `Warning: Transform \`${transform.name}\` returned empty when writing ${outputPath} from ${inputPath}.`
-          )
+      if (!str) {
+        this.logger.warn(
+          `Warning: Transform \`${transform.name}\` returned empty when writing ${outputPath} from ${inputPath}.`
         );
       }
     }
@@ -610,15 +622,11 @@ class Template extends TemplateContent {
     }
 
     let engineList = this.templateRender.getReadableEnginesListDifferingFromFileExtension();
-    if (this.isVerbose) {
-      console.log(
-        `${lang.start} ${outputPath} from ${this.inputPath}${
-          engineList ? ` (${engineList})` : ""
-        }`
-      );
-    } else {
-      debug(`${lang.start} %o from %o.`, outputPath, this.inputPath);
-    }
+    this.logger.log(
+      `${lang.start} ${outputPath} from ${this.inputPath}${
+        engineList ? ` (${engineList})` : ""
+      }`
+    );
 
     if (!shouldWriteFile) {
       this.skippedCount++;
@@ -653,10 +661,27 @@ class Template extends TemplateContent {
     return content;
   }
 
-  async writeMapEntry(mapEntry) {
-    await Promise.all(
+  async generateMapEntry(mapEntry, to) {
+    return Promise.all(
       mapEntry._pages.map(async (page) => {
         let content = await this.renderPageEntry(mapEntry, page);
+        if (to === "json" || to === "ndjson") {
+          let obj = {
+            url: page.url,
+            inputPath: page.inputPath,
+            content: content,
+          };
+
+          if (to === "ndjson") {
+            let jsonString = JSON.stringify(obj);
+            this.logger.toStream(jsonString + "\n");
+            return;
+          }
+
+          // json
+          return obj;
+        }
+
         return this._write(page.outputPath, content);
       })
     );
@@ -672,6 +697,7 @@ class Template extends TemplateContent {
       this.extensionMap
     );
     tmpl.config = this.config;
+    tmpl.logger = this.logger;
 
     for (let transform of this.transforms) {
       tmpl.addTransform(transform.name, transform.callback);

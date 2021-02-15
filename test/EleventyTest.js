@@ -128,18 +128,75 @@ test("Eleventy set input/output, one file input exitCode", async (t) => {
     "./test/stubs/exitCode/failure.njk",
     "./test/stubs/exitCode/_site"
   );
-
-  // TODO make this output quieter
-  elev.setLogger({
-    log: function () {},
-    warn: function () {},
-    error: function () {},
-  });
-
+  elev.setIsVerbose(false);
   await elev.init();
   await elev.write();
 
   t.is(process.exitCode, 1);
 
   process.exitCode = previousExitCode;
+});
+
+test("Eleventy to json", async (t) => {
+  let elev = new Eleventy("./test/stubs--to/");
+  elev.setIsVerbose(false);
+
+  await elev.init();
+
+  let result = await elev.toJSON();
+
+  t.deepEqual(
+    result.filter((entry) => entry.url === "/test/"),
+    [
+      {
+        url: "/test/",
+        inputPath: "./test/stubs--to/test.md",
+        content: "<h1>hi</h1>\n",
+      },
+    ]
+  );
+  t.deepEqual(
+    result.filter((entry) => entry.url === "/test2/"),
+    [
+      {
+        url: "/test2/",
+        inputPath: "./test/stubs--to/test2.liquid",
+        content: "hello",
+      },
+    ]
+  );
+});
+
+test.cb("Eleventy to ndjson (returns a stream)", (t) => {
+  let elev = new Eleventy("./test/stubs--to/");
+
+  elev.setIsVerbose(false);
+
+  elev.init().then(() => {
+    elev.toNDJSON().then((stream) => {
+      let results = [];
+      stream.on("data", function (jsonObj) {
+        if (jsonObj.url === "/test/") {
+          t.deepEqual(jsonObj, {
+            url: "/test/",
+            inputPath: "./test/stubs--to/test.md",
+            content: "<h1>hi</h1>\n",
+          });
+        }
+        if (jsonObj.url === "/test2/") {
+          t.deepEqual(jsonObj, {
+            url: "/test2/",
+            inputPath: "./test/stubs--to/test2.liquid",
+            content: "hello",
+          });
+        }
+
+        results.push(jsonObj);
+
+        if (results.length >= 2) {
+          t.end();
+        }
+      });
+    });
+  });
 });

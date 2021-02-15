@@ -10,6 +10,7 @@ const EleventyServe = require("./EleventyServe");
 const EleventyWatch = require("./EleventyWatch");
 const EleventyWatchTargets = require("./EleventyWatchTargets");
 const EleventyFiles = require("./EleventyFiles");
+const ConsoleLogger = require("./Util/ConsoleLogger");
 const { performance } = require("perf_hooks");
 
 const templateCache = require("./TemplateCache");
@@ -216,18 +217,6 @@ class Eleventy {
   }
 
   /**
-   * Marks the finish of a run of Eleventy.
-   *
-   * @method
-   */
-  finish() {
-    bench.finish();
-
-    (this.logger || console).log(this.logFinished());
-    debug("Finished writing templates.");
-  }
-
-  /**
    * Logs some statistics after a complete run of Eleventy.
    *
    * @method
@@ -317,7 +306,7 @@ class Eleventy {
       this.templateData,
       this.isPassthroughAll
     );
-
+    this.writer.logger = this.logger;
     this.writer.extensionMap = this.extensionMap;
     this.writer.setEleventyFiles(this.eleventyFiles);
 
@@ -347,11 +336,45 @@ Verbose Output: ${this.verboseMode}`);
     if (bench) {
       bench.setVerboseOutput(this._isVerboseMode);
     }
+
+    if (this.logger) {
+      this.logger.isVerbose = this._isVerboseMode;
+    }
+
+    if (this.errorHandler) {
+      this.errorHandler.isVerbose = this._isVerboseMode;
+    }
   }
 
   /* Getter for verbose mode */
   get verboseMode() {
     return this._isVerboseMode;
+  }
+
+  /* Getter for Logger */
+  get logger() {
+    if (!this._logger) {
+      this._logger = new ConsoleLogger();
+      this._logger.isVerbose = this.verboseMode;
+    }
+
+    return this._logger;
+  }
+
+  /* Setter for Logger */
+  set logger(logger) {
+    this._logger = logger;
+  }
+
+  /* Getter for error handler */
+  get errorHandler() {
+    if (!this._errorHandler) {
+      this._errorHandler = new EleventyErrorHandler();
+      this._errorHandler.isVerbose = this.verboseMode;
+      this._errorHandler.logger = this.logger;
+    }
+
+    return this._errorHandler;
   }
 
   /**
@@ -534,12 +557,12 @@ Arguments:
     this.watchManager.setBuildFinished();
 
     if (this.watchManager.getPendingQueueSize() > 0) {
-      console.log(
+      this.logger.log(
         `You saved while Eleventy was running, let’s run again. (${this.watchManager.getPendingQueueSize()} remain)`
       );
       await this._watch();
     } else {
-      console.log("Watching…");
+      this.logger.log("Watching…");
     }
   }
 
@@ -679,7 +702,7 @@ Arguments:
 
     this.watcherBench.finish("Watch");
 
-    console.log("Watching…");
+    this.logger.log("Watching…");
 
     this.watcher = watcher;
 
@@ -696,22 +719,22 @@ Arguments:
         });
       } catch (e) {
         if (e instanceof EleventyBaseError) {
-          EleventyErrorHandler.error(e, "Eleventy watch error");
+          this.errorHandler.error(e, "Eleventy watch error");
           this.watchManager.setBuildFinished();
         } else {
-          EleventyErrorHandler.fatal(e, "Eleventy fatal watch error");
+          this.errorHandler.fatal(e, "Eleventy fatal watch error");
           this.stopWatch();
         }
       }
     };
 
     watcher.on("change", async (path) => {
-      console.log("File changed:", path);
+      this.logger.log(`File changed: ${path}`);
       await watchRun(path);
     });
 
     watcher.on("add", async (path) => {
-      console.log("File added:", path);
+      this.logger.log(`File added: ${path}`);
       await watchRun(path);
     });
 
@@ -734,14 +757,37 @@ Arguments:
     this.eleventyServe.serve(port);
   }
 
-  /* For testing */
   /**
-   * Updates the logger.
+   * Writes templates to the file system.
    *
-   * @param {} logger - The new logger.
+   * @async
+   * @method
+   * @returns {Promise<{}>}
    */
-  setLogger(logger) {
-    this.logger = logger;
+  async write() {
+    return this.executeBuild();
+  }
+
+  /**
+   * Renders templates to a JSON object.
+   *
+   * @async
+   * @method
+   * @returns {Promise<{}>}
+   */
+  async toJSON() {
+    return this.executeBuild("json");
+  }
+
+  /**
+   * Returns a stream of new line delimited (NDJSON) objects
+   *
+   * @async
+   * @method
+   * @returns {Promise<{ReadableStream}>}
+   */
+  async toNDJSON() {
+    return this.executeBuild("ndjson");
   }
 
   /**
@@ -751,36 +797,52 @@ Arguments:
    * @method
    * @returns {Promise<{}>} ret - tbd.
    */
-  async write() {
+  async executeBuild(to = "fs") {
     let ret;
-    if (this.logger) {
-      EleventyErrorHandler.logger = this.logger;
-    }
 
     await this.config.events.emit("beforeBuild");
 
     try {
-      let promise = this.writer.write();
+      let promise;
+      if (to === "fs") {
+        promise = this.writer.write();
+      } else if (to === "json") {
+        promise = this.writer.getJSON("json");
+      } else if (to === "ndjson") {
+        promise = this.writer.getJSON("ndjson");
+      } else {
+        throw new Error(
+          `Invalid argument for \`Eleventy->executeBuild(${to})\`, expected "json", "ndjson", or "fs".`
+        );
+      }
 
       ret = await promise;
+
+      if (to === "ndjson") {
+        // return a stream
+        // TODO this might return only after all the templates have been added to the stream
+        ret = this.logger.closeStream(to);
+      }
       await this.config.events.emit("afterBuild");
     } catch (e) {
-      EleventyErrorHandler.initialMessage(
+      this.errorHandler.initialMessage(
         "Problem writing Eleventy templates",
         "error",
         "red"
       );
-      EleventyErrorHandler.fatal(e);
+      this.errorHandler.fatal(e);
     }
 
-    this.finish();
+    bench.finish();
+
+    if (to === "fs") {
+      this.logger.log(this.logFinished());
+    }
+    debug("Finished writing templates.");
 
     debug(`
 Getting frustrated? Have a suggestion/feature request/feedback?
 I want to hear it! Open an issue: https://github.com/11ty/eleventy/issues/new`);
-
-    // unset the logger
-    EleventyErrorHandler.logger = undefined;
 
     return ret;
   }
