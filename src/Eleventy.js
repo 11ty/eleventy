@@ -440,7 +440,7 @@ Arguments:
      --quiet
        Don’t print all written files (off by default)
      --config=filename.js
-       Override the eleventy config file path (default: \`.eleventy.js\`)
+       Override the eleventy config file path (default: \`.eleventyrc.js\`)
      --pathprefix='/'
        Change all url template filters to use this subdirectory.
      --dryrun

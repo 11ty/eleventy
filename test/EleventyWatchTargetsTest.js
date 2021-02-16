@@ -5,24 +5,24 @@ test("Basic", (t) => {
   let targets = new EleventyWatchTargets();
   t.deepEqual(targets.getTargets(), []);
 
-  targets.add(".eleventy.js");
-  t.deepEqual(targets.getTargets(), ["./.eleventy.js"]);
+  targets.add(".eleventyrc.js");
+  t.deepEqual(targets.getTargets(), ["./.eleventyrc.js"]);
 });
 
 test("Removes duplicates", (t) => {
   let targets = new EleventyWatchTargets();
 
-  targets.add(".eleventy.js");
-  targets.add("./.eleventy.js");
-  t.deepEqual(targets.getTargets(), ["./.eleventy.js"]);
+  targets.add(".eleventyrc.js");
+  targets.add("./.eleventyrc.js");
+  t.deepEqual(targets.getTargets(), ["./.eleventyrc.js"]);
 });
 
 test("Add array", (t) => {
   let targets = new EleventyWatchTargets();
 
-  targets.add([".eleventy.js", "b.js"]);
+  targets.add([".eleventyrc.js", "b.js"]);
   targets.add(["b.js", "c.js"]);
-  t.deepEqual(targets.getTargets(), ["./.eleventy.js", "./b.js", "./c.js"]);
+  t.deepEqual(targets.getTargets(), ["./.eleventyrc.js", "./b.js", "./c.js"]);
 });
 
 test("Add and make glob", (t) => {

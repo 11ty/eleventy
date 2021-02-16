@@ -42,9 +42,9 @@ class TemplateConfig {
 
     /**
      * @member {String} - Path to local project config.
-     * @default .eleventy.js
+     * @default .eleventyrc.js
      */
-    this.localProjectConfigPath = localProjectConfigPath || ".eleventy.js";
+    this.localProjectConfigPath = localProjectConfigPath || ".eleventyrc.js";
 
     if (customRootConfig) {
       /**

@@ -125,15 +125,15 @@ test("normalizeUrlPath", (t) => {
 
 test("absolutePath", (t) => {
   t.is(
-    TemplatePath.absolutePath(".eleventy.js").split("/").pop(),
-    ".eleventy.js"
+    TemplatePath.absolutePath(".eleventyrc.js").split("/").pop(),
+    ".eleventyrc.js"
   );
 });
 
 test("absolutePath and relativePath", (t) => {
   t.is(
-    TemplatePath.relativePath(TemplatePath.absolutePath(".eleventy.js")),
-    ".eleventy.js"
+    TemplatePath.relativePath(TemplatePath.absolutePath(".eleventyrc.js")),
+    ".eleventyrc.js"
   );
 });
 
