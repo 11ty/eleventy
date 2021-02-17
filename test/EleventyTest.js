@@ -111,7 +111,7 @@ test("Eleventy set input/output, one file input, deeper subdirectory", async (t)
     "./test/stubs/subdir/index.html",
     "./test/stubs/_site"
   );
-  elev.inputDir = "./test/stubs";
+  elev.setInputDir("./test/stubs");
 
   t.is(elev.input, "./test/stubs/subdir/index.html");
   t.is(elev.inputDir, "./test/stubs");

@@ -121,11 +121,8 @@ class Eleventy {
     return TemplatePath.getDir(this.input);
   }
 
-  /** @type {String} */
-  set inputDir(dir) {
-    if (TemplatePath.isDirectorySync(dir)) {
-      this._inputDir = dir;
-    }
+  setInputDir(dir) {
+    this._inputDir = dir;
   }
 
   /** @type {String} */
