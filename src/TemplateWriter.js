@@ -43,6 +43,12 @@ class TemplateWriter {
     this._templatePathCache = new Map();
   }
 
+  /* Overrides this.input and this.inputDir */
+  setInput(inputDir, input) {
+    this.inputDir = inputDir;
+    this.input = input;
+  }
+
   get templateFormats() {
     return this._templateFormats;
   }
@@ -117,12 +123,13 @@ class TemplateWriter {
     if (!this._eleventyFiles) {
       // if not, we can create one (used only by tests)
       this._eleventyFiles = new EleventyFiles(
-        this.input,
+        this.inputDir,
         this.outputDir,
         this.templateFormats,
         this.passthroughAll
       );
 
+      this._eleventyFiles.setInput(this.inputDir, this.input);
       this._eleventyFiles.init();
     }
 

@@ -24,6 +24,21 @@ class EleventyFiles {
     this.passthroughAll = !!passthroughAll;
 
     this.formats = formats;
+
+    // init has not yet been called()
+    this.alreadyInit = false;
+  }
+
+  /* Overrides this.input and this.inputDir */
+  setInput(inputDir, input) {
+    this.inputDir = inputDir;
+    this.input = input;
+
+    this.initConfig();
+
+    if (this.alreadyInit) {
+      this.init();
+    }
   }
 
   initConfig() {
@@ -41,6 +56,8 @@ class EleventyFiles {
   }
 
   init() {
+    this.alreadyInit = true;
+
     // Input was a directory
     if (this.input === this.inputDir) {
       this.templateGlobs = this.extensionMap.getGlobs(this.inputDir);

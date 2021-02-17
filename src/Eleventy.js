@@ -295,11 +295,13 @@ class Eleventy {
     this.extensionMap = new EleventyExtensionMap(formats);
 
     this.eleventyFiles = new EleventyFiles(
-      this.input,
+      this.inputDir,
       this.outputDir,
       formats,
       this.isPassthroughAll
     );
+
+    this.eleventyFiles.setInput(this.inputDir, this.input);
     this.eleventyFiles.extensionMap = this.extensionMap;
     this.eleventyFiles.init();
 
@@ -308,12 +310,13 @@ class Eleventy {
     this.eleventyFiles.templateData = this.templateData;
 
     this.writer = new TemplateWriter(
-      this.input,
+      this.inputDir,
       this.outputDir,
       formats,
       this.templateData,
       this.isPassthroughAll
     );
+    this.writer.setInput(this.inputDir, this.input);
     this.writer.logger = this.logger;
     this.writer.extensionMap = this.extensionMap;
     this.writer.setEleventyFiles(this.eleventyFiles);
