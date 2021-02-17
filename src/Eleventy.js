@@ -113,7 +113,19 @@ class Eleventy {
 
   /** @type {String} */
   get inputDir() {
+    if (this._inputDir) {
+      // set manually via setter
+      return this._inputDir;
+    }
+
     return TemplatePath.getDir(this.input);
+  }
+
+  /** @type {String} */
+  set inputDir(dir) {
+    if (TemplatePath.isDirectorySync(dir)) {
+      this._inputDir = dir;
+    }
   }
 
   /** @type {String} */
