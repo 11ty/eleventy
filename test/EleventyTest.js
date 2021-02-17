@@ -106,6 +106,18 @@ test("Eleventy set input/output, one file input", async (t) => {
   t.is(elev.outputDir, "./test/stubs/_site");
 });
 
+test("Eleventy set input/output, one file input, deeper subdirectory", async (t) => {
+  let elev = new Eleventy(
+    "./test/stubs/subdir/index.html",
+    "./test/stubs/_site"
+  );
+  elev.setInputDir("./test/stubs");
+
+  t.is(elev.input, "./test/stubs/subdir/index.html");
+  t.is(elev.inputDir, "./test/stubs");
+  t.is(elev.outputDir, "./test/stubs/_site");
+});
+
 test("Eleventy set input/output, one file input root dir", async (t) => {
   let elev = new Eleventy("./README.md", "./test/stubs/_site");
 
