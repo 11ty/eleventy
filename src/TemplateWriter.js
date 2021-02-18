@@ -24,6 +24,8 @@ class TemplateWriter {
     isPassthroughAll
   ) {
     this.config = config.getConfig();
+    this.userConfig = config.userConfig;
+
     this.input = inputPath;
     this.inputDir = TemplatePath.getDir(inputPath);
     this.outputDir = outputDir;
@@ -209,6 +211,7 @@ class TemplateWriter {
 
   async _createTemplateMap(paths) {
     this.templateMap = new TemplateMap();
+    this.templateMap.userConfig = this.userConfig;
 
     await this._addToTemplateMap(paths);
     await this.templateMap.cache();

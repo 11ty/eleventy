@@ -4,7 +4,7 @@ const lodashUniq = require("lodash/uniq");
 const lodashMerge = require("lodash/merge");
 const TemplatePath = require("./TemplatePath");
 const EleventyBaseError = require("./EleventyBaseError");
-const eleventyConfig = require("./EleventyConfig");
+const UserConfig = require("./UserConfig");
 const debug = require("debug")("Eleventy:TemplateConfig");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
 
@@ -37,6 +37,8 @@ class EleventyConfigError extends EleventyBaseError {}
  */
 class TemplateConfig {
   constructor(customRootConfig, localProjectConfigPath) {
+    this.userConfig = new UserConfig();
+
     /** @member {module:11ty/eleventy/TemplateConfig~TemplateConfig~override} - tbd. */
     this.overrides = {};
 
@@ -58,10 +60,7 @@ class TemplateConfig {
 
     this.initializeRootConfig();
 
-    /**
-     * @member {module:11ty/eleventy/TemplateConfig~TemplateConfig~config} - tbd.
-     */
-    this.config = this.mergeConfig(this.localProjectConfigPath);
+    this.hasConfigMerged = false;
   }
 
   /**
@@ -86,7 +85,7 @@ class TemplateConfig {
    * Resets the configuration.
    */
   reset() {
-    eleventyConfig.reset();
+    this.userConfig.reset();
     this.initializeRootConfig();
     this.config = this.mergeConfig(this.localProjectConfigPath);
   }
@@ -106,6 +105,10 @@ class TemplateConfig {
    * @returns {{}} - The config object.
    */
   getConfig() {
+    if (!this.hasConfigMerged) {
+      this.config = this.mergeConfig(this.localProjectConfigPath);
+      this.hasConfigMerged = true;
+    }
     return this.config;
   }
 
@@ -128,6 +131,10 @@ class TemplateConfig {
   setPathPrefix(pathPrefix) {
     debug("Setting pathPrefix to %o", pathPrefix);
     this.overrides.pathPrefix = pathPrefix;
+
+    if (!this.hasConfigMerged) {
+      this.getConfig();
+    }
     this.config.pathPrefix = pathPrefix;
   }
 
@@ -138,8 +145,8 @@ class TemplateConfig {
     this.rootConfig = this.customRootConfig || require("./defaultConfig.js");
 
     if (typeof this.rootConfig === "function") {
-      this.rootConfig = this.rootConfig(eleventyConfig);
-      // debug( "rootConfig is a function, after calling, eleventyConfig is %o", eleventyConfig );
+      this.rootConfig = this.rootConfig(this.userConfig);
+      // debug( "rootConfig is a function, after calling, this.userConfig is %o", this.userConfig );
     }
     debug("rootConfig %o", this.rootConfig);
   }
@@ -169,8 +176,8 @@ class TemplateConfig {
         // debug( "localConfig require return value: %o", localConfig );
 
         if (typeof localConfig === "function") {
-          localConfig = localConfig(eleventyConfig);
-          // debug( "localConfig is a function, after calling, eleventyConfig is %o", eleventyConfig );
+          localConfig = localConfig(this.userConfig);
+          // debug( "localConfig is a function, after calling, this.userConfig is %o", this.userConfig );
 
           if (
             typeof localConfig === "object" &&
@@ -204,7 +211,7 @@ class TemplateConfig {
       debug("Eleventy local project config file not found, skipping.");
     }
 
-    let eleventyConfigApiMergingObject = eleventyConfig.getMergingConfigObject();
+    let eleventyConfigApiMergingObject = this.userConfig.getMergingConfigObject();
 
     // remove special merge keys from object
     let savedForSpecialMerge = {
@@ -219,7 +226,7 @@ class TemplateConfig {
       eleventyConfigApiMergingObject.templateFormats ||
       localConfig.templateFormats;
 
-    // debug("eleventyConfig.getMergingConfigObject: %o", eleventyConfig.getMergingConfigObject());
+    // debug("this.userConfig.getMergingConfigObject: %o", this.userConfig.getMergingConfigObject());
     debug("localConfig: %o", localConfig);
     debug("overrides: %o", this.overrides);
 

@@ -8,7 +8,6 @@ const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 const TemplateWriter = require("../src/TemplateWriter");
 // Not sure why but this required `ava` and _createTemplate 👀
 // const Template = require("../src/Template");
-const eleventyConfig = require("../src/EleventyConfig");
 const normalizeNewLines = require("./Util/normalizeNewLines");
 
 // TODO make sure if output is a subdir of input dir that they don’t conflict.
@@ -110,8 +109,7 @@ test("__testGetCollectionsData with custom collection (ascending)", async (t) =>
     ["md"]
   );
 
-  /* Careful here, eleventyConfig is a global */
-  eleventyConfig.addCollection("customPostsAsc", function (collection) {
+  tw.userConfig.addCollection("customPostsAsc", function (collection) {
     return collection.getFilteredByTag("post").sort(function (a, b) {
       return a.date - b.date;
     });
@@ -132,8 +130,7 @@ test("__testGetCollectionsData with custom collection (descending)", async (t) =
     ["md"]
   );
 
-  /* Careful here, eleventyConfig is a global */
-  eleventyConfig.addCollection("customPosts", function (collection) {
+  tw.userConfig.addCollection("customPosts", function (collection) {
     return collection.getFilteredByTag("post").sort(function (a, b) {
       return b.date - a.date;
     });
@@ -154,8 +151,7 @@ test("__testGetCollectionsData with custom collection (filter only to markdown i
     ["md"]
   );
 
-  /* Careful here, eleventyConfig is a global */
-  eleventyConfig.addCollection("onlyMarkdown", function (collection) {
+  tw.userConfig.addCollection("onlyMarkdown", function (collection) {
     return collection.getAllSorted().filter(function (item) {
       let extension = item.inputPath.split(".").pop();
       return extension === "md";
@@ -400,8 +396,7 @@ test("Custom collection returns array", async (t) => {
     ["md"]
   );
 
-  /* Careful here, eleventyConfig is a global */
-  eleventyConfig.addCollection("returnAllInputPaths", function (collection) {
+  tw.userConfig.addCollection("returnAllInputPaths", function (collection) {
     return collection.getAllSorted().map(function (item) {
       return item.inputPath;
     });
@@ -422,8 +417,7 @@ test("Custom collection returns a string", async (t) => {
     ["md"]
   );
 
-  /* Careful here, eleventyConfig is a global */
-  eleventyConfig.addCollection("returnATestString", function (collection) {
+  tw.userConfig.addCollection("returnATestString", function (collection) {
     return "test";
   });
 
@@ -440,8 +434,7 @@ test("Custom collection returns an object", async (t) => {
     ["md"]
   );
 
-  /* Careful here, eleventyConfig is a global */
-  eleventyConfig.addCollection("returnATestObject", function () {
+  tw.userConfig.addCollection("returnATestObject", function () {
     return { test: "value" };
   });
 
