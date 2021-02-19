@@ -11,12 +11,12 @@ const EleventyWatch = require("./EleventyWatch");
 const EleventyWatchTargets = require("./EleventyWatchTargets");
 const EleventyFiles = require("./EleventyFiles");
 const ConsoleLogger = require("./Util/ConsoleLogger");
+const TemplateConfig = require("./TemplateConfig");
 const { performance } = require("perf_hooks");
 
 const templateCache = require("./TemplateCache");
 const simplePlural = require("./Util/Pluralize");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
-const config = require("./Config");
 const bench = require("./BenchmarkManager");
 const debug = require("debug")("Eleventy");
 
@@ -32,9 +32,14 @@ const debug = require("debug")("Eleventy");
  * @returns {module:11ty/eleventy/Eleventy~Eleventy}
  */
 class Eleventy {
-  constructor(input, output, options = {}) {
-    /** @member {module:11ty/eleventy/TemplateConfig~TemplateConfig~config} - TemplateConfig instance */
-    this.config = config.getConfig();
+  constructor(input, output, options = {}, eleventyConfig = null) {
+    if (!eleventyConfig) {
+      this.eleventyConfig = new TemplateConfig();
+    } else {
+      this.eleventyConfig = eleventyConfig;
+    }
+
+    this.config = this.eleventyConfig.getConfig();
 
     /**
      * @member {String} - The path to Eleventy's config file.
@@ -82,6 +87,7 @@ class Eleventy {
 
     /** @member {Object} - tbd. */
     this.eleventyServe = new EleventyServe();
+    this.eleventyServe.config = this.eleventyConfig;
 
     /** @member {String} - Holds the path to the input directory. */
     this.rawInput = input;
@@ -174,8 +180,8 @@ class Eleventy {
    */
   setPathPrefix(pathPrefix) {
     if (pathPrefix || pathPrefix === "") {
-      config.setPathPrefix(pathPrefix);
-      this.config = config.getConfig();
+      this.eleventyConfig.setPathPrefix(pathPrefix);
+      this.config = this.eleventyConfig.getConfig();
     }
   }
 
@@ -199,8 +205,8 @@ class Eleventy {
     if (configPath) {
       this.configPath = configPath;
 
-      config.setProjectConfigPath(configPath);
-      this.config = config.getConfig();
+      this.eleventyConfig.setProjectConfigPath(configPath);
+      this.config = this.eleventyConfig.getConfig();
     }
   }
 
@@ -298,14 +304,14 @@ class Eleventy {
       this.inputDir,
       this.outputDir,
       formats,
-      this.isPassthroughAll
+      this.eleventyConfig
     );
-
+    this.eleventyFiles.setPassthroughAll(this.isPassthroughAll);
     this.eleventyFiles.setInput(this.inputDir, this.input);
     this.eleventyFiles.extensionMap = this.extensionMap;
     this.eleventyFiles.init();
 
-    this.templateData = new TemplateData(this.inputDir);
+    this.templateData = new TemplateData(this.inputDir, this.eleventyConfig);
     this.templateData.extensionMap = this.extensionMap;
     this.eleventyFiles.templateData = this.templateData;
 
@@ -314,7 +320,7 @@ class Eleventy {
       this.outputDir,
       formats,
       this.templateData,
-      this.isPassthroughAll
+      this.eleventyConfig
     );
     this.writer.setInput(this.inputDir, this.input);
     this.writer.logger = this.logger;
@@ -465,9 +471,9 @@ Arguments:
    * @method
    */
   resetConfig() {
-    config.reset();
+    this.eleventyConfig.reset();
 
-    this.config = config.getConfig();
+    this.config = this.eleventyConfig.getConfig();
     this.eleventyServe.config = this.config;
 
     // only use config quietMode if --quiet not set on CLI
@@ -507,7 +513,11 @@ Arguments:
     );
 
     // reset and reload global configuration :O
-    if (this.watchManager.hasQueuedFile(config.getLocalProjectConfigFile())) {
+    if (
+      this.watchManager.hasQueuedFile(
+        this.eleventyConfig.getLocalProjectConfigFile()
+      )
+    ) {
       this.resetConfig();
     }
 
@@ -599,7 +609,7 @@ Arguments:
     this.watchTargets.add(this.eleventyFiles.getGlobWatcherFiles());
 
     // Watch the local project config file
-    this.watchTargets.add(config.getLocalProjectConfigFile());
+    this.watchTargets.add(this.eleventyConfig.getLocalProjectConfigFile());
 
     // Template and Directory Data Files
     this.watchTargets.add(
@@ -636,7 +646,7 @@ Arguments:
 
     // Config file dependencies
     this.watchTargets.addDependencies(
-      config.getLocalProjectConfigFile(),
+      this.eleventyConfig.getLocalProjectConfigFile(),
       filterOutGlobalDataFiles
     );
 

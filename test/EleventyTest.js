@@ -1,12 +1,12 @@
 const test = require("ava");
 const Eleventy = require("../src/Eleventy");
 const EleventyWatchTargets = require("../src/EleventyWatchTargets");
-const templateConfig = require("../src/Config");
-
-const config = templateConfig.getConfig();
+const TemplateConfig = require("../src/TemplateConfig");
 
 test("Eleventy, defaults inherit from config", async (t) => {
   let elev = new Eleventy();
+
+  let config = new TemplateConfig().getConfig();
 
   t.truthy(elev.input);
   t.truthy(elev.outputDir);
