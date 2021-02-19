@@ -6,22 +6,28 @@ const TemplateData = require("./TemplateData");
 const TemplateGlob = require("./TemplateGlob");
 const TemplatePath = require("./TemplatePath");
 const TemplatePassthroughManager = require("./TemplatePassthroughManager");
+const EleventyBaseError = require("./EleventyBaseError");
 
-const config = require("./Config");
+class EleventyFilesError extends EleventyBaseError {}
+
 const debug = require("debug")("Eleventy:EleventyFiles");
 // const debugDev = require("debug")("Dev:Eleventy:EleventyFiles");
 const aggregateBench = require("./BenchmarkManager").get("Aggregate");
 
 class EleventyFiles {
-  constructor(input, outputDir, formats, passthroughAll) {
-    this.config = config.getConfig();
+  constructor(input, outputDir, formats, eleventyConfig) {
+    if (!eleventyConfig) {
+      throw new EleventyFilesError("Missing config argument.");
+    }
+    this.eleventyConfig = eleventyConfig;
+    this.config = eleventyConfig.getConfig();
     this.input = input;
     this.inputDir = TemplatePath.getDir(this.input);
     this.outputDir = outputDir;
 
     this.initConfig();
 
-    this.passthroughAll = !!passthroughAll;
+    this.passthroughAll = false;
 
     this.formats = formats;
 
@@ -29,7 +35,8 @@ class EleventyFiles {
     this.alreadyInit = false;
   }
 
-  /* Overrides this.input and this.inputDir */
+  /* Overrides this.input and this.inputDir,
+   * Useful when input is a file and inputDir is not its direct parent */
   setInput(inputDir, input) {
     this.inputDir = inputDir;
     this.input = input;
@@ -105,6 +112,7 @@ class EleventyFiles {
     this.config = config;
     this.initConfig();
   }
+
   /* Set command root for local project paths */
   _setLocalPathRoot(dir) {
     this.localPathRoot = dir;
@@ -150,7 +158,7 @@ class EleventyFiles {
 
   get templateData() {
     if (!this._templateData) {
-      this._templateData = new TemplateData(this.inputDir);
+      this._templateData = new TemplateData(this.inputDir, this.eleventyConfig);
     }
     return this._templateData;
   }
