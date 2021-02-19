@@ -1,10 +1,12 @@
 const test = require("ava");
 const TemplateRender = require("../src/TemplateRender");
+const TemplateConfig = require("../src/TemplateConfig");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 
 function getNewTemplateRender(name, inputDir) {
+  let eleventyConfig = new TemplateConfig();
   let tr = new TemplateRender(name, inputDir);
-  tr.extensionMap = new EleventyExtensionMap();
+  tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   return tr;
 }
 
@@ -22,21 +24,21 @@ test("Liquid", (t) => {
 });
 
 test("Liquid Render Addition", async (t) => {
-  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+  let fn = await getNewTemplateRender("liquid").getCompiledTemplate(
     "<p>{{ number | plus: 1 }}</p>"
   );
   t.is(await fn({ number: 1 }), "<p>2</p>");
 });
 
 test("Liquid Render Raw", async (t) => {
-  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+  let fn = await getNewTemplateRender("liquid").getCompiledTemplate(
     "<p>{% raw %}{{name}}{% endraw %}</p>"
   );
   t.is(await fn({ name: "tim" }), "<p>{{name}}</p>");
 });
 
 test("Liquid Render Raw Multiline", async (t) => {
-  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+  let fn = await getNewTemplateRender("liquid").getCompiledTemplate(
     `<p>{% raw %}
 {{name}}
 {% endraw %}</p>`
@@ -162,7 +164,7 @@ test("Liquid Custom Filter", async (t) => {
 });
 
 test.skip("Liquid Async Filter", async (t) => {
-  let tr = new TemplateRender("liquid", "test/stubs");
+  let tr = getNewTemplateRender("liquid", "test/stubs");
   tr.engine.addFilter({
     myAsyncFilter: function (value) {
       return new Promise((resolve, reject) => {
@@ -293,7 +295,7 @@ test("Liquid Shortcode", async (t) => {
 test("Liquid Shortcode returns promise", async (t) => {
   t.plan(2);
 
-  let tr = new TemplateRender("liquid", "./test/stubs/");
+  let tr = getNewTemplateRender("liquid", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function (str) {
     // Data in context
     t.is(this.page.url, "/hi/");
@@ -319,7 +321,7 @@ test("Liquid Shortcode returns promise", async (t) => {
 test("Liquid Shortcode returns promise (await inside)", async (t) => {
   t.plan(2);
 
-  let tr = new TemplateRender("liquid", "./test/stubs/");
+  let tr = getNewTemplateRender("liquid", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", async function (str) {
     // Data in context
     t.is(this.page.url, "/hi/");
@@ -341,7 +343,7 @@ test("Liquid Shortcode returns promise (await inside)", async (t) => {
 test("Liquid Shortcode returns promise (no await inside)", async (t) => {
   t.plan(2);
 
-  let tr = new TemplateRender("liquid", "./test/stubs/");
+  let tr = getNewTemplateRender("liquid", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", async function (str) {
     // Data in context
     t.is(this.page.url, "/hi/");
@@ -404,7 +406,7 @@ test("Liquid Paired Shortcode", async (t) => {
 
 test("Liquid Async Paired Shortcode", async (t) => {
   t.plan(2);
-  let tr = new TemplateRender("liquid", "./test/stubs/");
+  let tr = getNewTemplateRender("liquid", "./test/stubs/");
   tr.engine.addPairedShortcode("postfixWithZach", function (content, str) {
     // Data in context
     t.is(this.page.url, "/hi/");
@@ -858,14 +860,12 @@ test("Issue 347: Liquid Shortcode boolean argument", async (t) => {
 
 test("Issue 347: Liquid Paired Shortcode with Spaces", async (t) => {
   let tr = getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.addPairedShortcode("postfixWithZach", function (
-    content,
-    str1,
-    num,
-    str2
-  ) {
-    return str1 + num + str2 + content + "Zach";
-  });
+  tr.engine.addPairedShortcode(
+    "postfixWithZach",
+    function (content, str1, num, str2) {
+      return str1 + num + str2 + content + "Zach";
+    }
+  );
 
   t.is(
     await tr._testRender(
@@ -884,7 +884,7 @@ test("Liquid Render with dash variable Issue #567", async (t) => {
 });
 
 test("Issue 600: Liquid Shortcode argument page.url", async (t) => {
-  let tr = new TemplateRender("liquid", "./test/stubs/");
+  let tr = getNewTemplateRender("liquid", "./test/stubs/");
   tr.engine.addShortcode("issue600", function (str) {
     return str + "Zach";
   });
@@ -898,7 +898,7 @@ test("Issue 600: Liquid Shortcode argument page.url", async (t) => {
 });
 
 test("Issue 600: Liquid Shortcode argument with dashes", async (t) => {
-  let tr = new TemplateRender("liquid", "./test/stubs/");
+  let tr = getNewTemplateRender("liquid", "./test/stubs/");
   tr.engine.addShortcode("issue600b", function (str) {
     return str + "Zach";
   });
@@ -912,7 +912,7 @@ test("Issue 600: Liquid Shortcode argument with dashes", async (t) => {
 });
 
 test("Issue 600: Liquid Shortcode argument with underscores", async (t) => {
-  let tr = new TemplateRender("liquid", "./test/stubs/");
+  let tr = getNewTemplateRender("liquid", "./test/stubs/");
   tr.engine.addShortcode("issue600c", function (str) {
     return str + "Zach";
   });
@@ -927,7 +927,7 @@ test("Issue 600: Liquid Shortcode argument with underscores", async (t) => {
 
 test.skip("Issue 611: Run a function", async (t) => {
   // This works in Nunjucks
-  let tr = new TemplateRender("liquid", "./test/stubs/");
+  let tr = getNewTemplateRender("liquid", "./test/stubs/");
 
   t.is(
     await tr._testRender("{{ test() }}", {
@@ -940,7 +940,7 @@ test.skip("Issue 611: Run a function", async (t) => {
 });
 
 test("Liquid Shortcode (with sync function, error throwing)", async (t) => {
-  let tr = new TemplateRender("liquid", "./test/stubs/");
+  let tr = getNewTemplateRender("liquid", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function (str) {
     throw new Error("Liquid Shortcode (with sync function, error throwing)");
   });
@@ -956,7 +956,7 @@ test("Liquid Shortcode (with sync function, error throwing)", async (t) => {
 });
 
 test("Liquid Shortcode (with async function, error throwing)", async (t) => {
-  let tr = new TemplateRender("liquid", "./test/stubs/");
+  let tr = getNewTemplateRender("liquid", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", async function (str) {
     throw new Error("Liquid Shortcode (with async function, error throwing)");
   });
@@ -972,49 +972,49 @@ test("Liquid Shortcode (with async function, error throwing)", async (t) => {
 });
 
 test("Liquid Render a false #1069", async (t) => {
-  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+  let fn = await getNewTemplateRender("liquid").getCompiledTemplate(
     "{{ falseValue }}"
   );
   t.is(await fn({ falseValue: false }), "false");
 });
 
 test("Liquid Render Square Brackets #680 dash single quotes", async (t) => {
-  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+  let fn = await getNewTemplateRender("liquid").getCompiledTemplate(
     "<p>{{ test['hey-a'] }}</p>"
   );
   t.is(await fn({ test: { "hey-a": 1 } }), "<p>1</p>");
 });
 
 test("Liquid Render Square Brackets #680 dash single quotes spaces", async (t) => {
-  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+  let fn = await getNewTemplateRender("liquid").getCompiledTemplate(
     "<p>{{ test[ 'hey-a' ] }}</p>"
   );
   t.is(await fn({ test: { "hey-a": 1 } }), "<p>1</p>");
 });
 
 test("Liquid Render Square Brackets #680 dash double quotes", async (t) => {
-  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+  let fn = await getNewTemplateRender("liquid").getCompiledTemplate(
     '<p>{{ test["hey-a"] }}</p>'
   );
   t.is(await fn({ test: { "hey-a": 1 } }), "<p>1</p>");
 });
 
 test("Liquid Render Square Brackets #680 dash double quotes spaces", async (t) => {
-  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+  let fn = await getNewTemplateRender("liquid").getCompiledTemplate(
     '<p>{{ test[ "hey-a" ] }}</p>'
   );
   t.is(await fn({ test: { "hey-a": 1 } }), "<p>1</p>");
 });
 
 test("Liquid Render Square Brackets #680 variable reference", async (t) => {
-  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+  let fn = await getNewTemplateRender("liquid").getCompiledTemplate(
     "<p>{{ test[ref] }}</p>"
   );
   t.is(await fn({ test: { "hey-a": 1 }, ref: "hey-a" }), "<p>1</p>");
 });
 
 test("Liquid Render Square Brackets #680 variable reference array", async (t) => {
-  let fn = await new TemplateRender("liquid").getCompiledTemplate(
+  let fn = await getNewTemplateRender("liquid").getCompiledTemplate(
     "<p>{{ test[ref[0]] }}</p>"
   );
   t.is(await fn({ test: { "hey-a": 1 }, ref: ["hey-a"] }), "<p>1</p>");

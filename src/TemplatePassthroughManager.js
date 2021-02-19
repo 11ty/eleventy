@@ -29,8 +29,7 @@ class TemplatePassthroughManager {
 
   get extensionMap() {
     if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap();
-      this._extensionMap.config = this.config;
+      this._extensionMap = new EleventyExtensionMap([], this.config);
     }
     return this._extensionMap;
   }

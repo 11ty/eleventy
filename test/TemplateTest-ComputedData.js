@@ -1,8 +1,8 @@
 const test = require("ava");
 const Template = require("../src/Template");
 const TemplateData = require("../src/TemplateData");
-const { cloneDeep } = require("lodash");
 const getNewTemplate = require("./_getNewTemplateForTests");
+const TemplateConfig = require("../src/TemplateConfig");
 
 async function getRenderedData(tmpl, pageNumber = 0) {
   let data = await tmpl.getData();
@@ -120,12 +120,15 @@ test("eleventyComputed true primitive", async (t) => {
 });
 
 test("eleventyComputed relies on global data", async (t) => {
-  let dataObj = new TemplateData("./test/stubs/");
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = getNewTemplate(
     "./test/stubs/eleventyComputed/use-global-data.njk",
     "./test/stubs/",
     "./dist",
-    dataObj
+    dataObj,
+    null,
+    eleventyConfig
   );
 
   let fetchedData = await tmpl.getData();
@@ -135,19 +138,21 @@ test("eleventyComputed relies on global data", async (t) => {
 });
 
 test("eleventyComputed intermixes with global data", async (t) => {
-  let dataObj = new TemplateData("./test/stubs-computed-global/");
-
-  let config = cloneDeep(dataObj.config);
-  config.dataDeepMerge = true;
-  dataObj._setConfig(config);
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.setDataDeepMerge(true);
+  let dataObj = new TemplateData(
+    "./test/stubs-computed-global/",
+    eleventyConfig
+  );
 
   let tmpl = getNewTemplate(
     "./test/stubs-computed-global/intermix.njk",
     "./test/stubs-computed-global/",
     "./dist",
-    dataObj
+    dataObj,
+    null,
+    eleventyConfig
   );
-  tmpl.config = config;
 
   let fetchedData = await tmpl.getData();
   t.truthy(fetchedData.eleventyComputed.image);

@@ -8,19 +8,27 @@ const EleventyExtensionMap = require("./EleventyExtensionMap");
 const TemplateData = require("./TemplateData");
 const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
+const TemplateConfig = require("./TemplateConfig");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
-const config = require("./Config");
 const debug = require("debug")("Eleventy:TemplateContent");
 const debugDev = require("debug")("Dev:Eleventy:TemplateContent");
 const bench = require("./BenchmarkManager").get("Aggregate");
 
+class TemplateContentConfigError extends EleventyBaseError {}
 class TemplateContentFrontMatterError extends EleventyBaseError {}
 class TemplateContentCompileError extends EleventyBaseError {}
 class TemplateContentRenderError extends EleventyBaseError {}
 
 class TemplateContent {
-  constructor(inputPath, inputDir) {
+  constructor(inputPath, inputDir, config) {
+    if (!config) {
+      throw new TemplateContentConfigError(
+        "Missing `config` argument to TemplateContent"
+      );
+    }
+    this.config = config;
+
     this.inputPath = inputPath;
 
     if (inputDir) {
@@ -33,8 +41,7 @@ class TemplateContent {
   /* Used by tests */
   get extensionMap() {
     if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap();
-      this._extensionMap.config = this.config;
+      this._extensionMap = new EleventyExtensionMap([], this.config);
     }
     return this._extensionMap;
   }
@@ -48,10 +55,9 @@ class TemplateContent {
   }
 
   get config() {
-    if (!this._config) {
-      this._config = config.getConfig();
+    if (this._config instanceof TemplateConfig) {
+      return this._config.getConfig();
     }
-
     return this._config;
   }
 

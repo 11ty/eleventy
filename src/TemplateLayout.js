@@ -3,22 +3,24 @@ const TemplateContent = require("./TemplateContent");
 const TemplateData = require("./TemplateData");
 const TemplatePath = require("./TemplatePath");
 
-// TODO move this into the constructor
 const templateCache = require("./TemplateCache");
-const config = require("./Config");
 // const debug = require("debug")("Eleventy:TemplateLayout");
 const debugDev = require("debug")("Dev:Eleventy:TemplateLayout");
 
 class TemplateLayout extends TemplateContent {
-  constructor(key, inputDir, extensionMap) {
-    // TODO getConfig() is duplicated in TemplateContent (super)
-    let cfg = config.getConfig();
+  constructor(key, inputDir, extensionMap, config) {
+    if (!config) {
+      throw new Error("Expected `config` in TemplateLayout constructor.");
+    }
+
     let resolvedPath = new TemplateLayoutPathResolver(
       key,
       inputDir,
-      extensionMap
+      extensionMap,
+      config
     ).getFullPath();
-    super(resolvedPath, inputDir);
+
+    super(resolvedPath, inputDir, config);
 
     if (!extensionMap) {
       throw new Error("Expected `extensionMap` in TemplateLayout constructor.");
@@ -27,7 +29,6 @@ class TemplateLayout extends TemplateContent {
     this.dataKeyLayoutPath = key;
     this.inputPath = resolvedPath;
     this.inputDir = inputDir;
-    this.config = cfg;
   }
 
   static resolveFullKey(key, inputDir) {
@@ -41,8 +42,7 @@ class TemplateLayout extends TemplateContent {
       return templateCache.get(fullKey);
     }
 
-    let tmpl = new TemplateLayout(key, inputDir, extensionMap);
-    tmpl.config = config;
+    let tmpl = new TemplateLayout(key, inputDir, extensionMap, config);
     templateCache.add(fullKey, tmpl);
 
     return tmpl;
@@ -52,7 +52,7 @@ class TemplateLayout extends TemplateContent {
     return {
       key: this.dataKeyLayoutPath,
       template: this,
-      frontMatterData: await this.getFrontMatterData()
+      frontMatterData: await this.getFrontMatterData(),
     };
   }
 

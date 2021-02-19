@@ -11,7 +11,6 @@ const TemplateGlob = require("./TemplateGlob");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");
 
-const config = require("./Config");
 const debugWarn = require("debug")("Eleventy:Warnings");
 const debug = require("debug")("Eleventy:TemplateData");
 const debugDev = require("debug")("Dev:Eleventy:TemplateData");
@@ -40,11 +39,17 @@ class FSExistsCache {
   }
 }
 
+class TemplateDataConfigError extends EleventyBaseError {}
 class TemplateDataParseError extends EleventyBaseError {}
 
 class TemplateData {
-  constructor(inputDir) {
-    this.config = config.getConfig();
+  constructor(inputDir, eleventyConfig) {
+    if (!eleventyConfig) {
+      throw new TemplateDataConfigError("Missing `config`.");
+    }
+    this.eleventyConfig = eleventyConfig;
+    this.config = this.eleventyConfig.getConfig();
+
     this.dataTemplateEngine = this.config.dataTemplateEngine;
 
     this.inputDirNeedsCheck = false;
@@ -60,8 +65,7 @@ class TemplateData {
 
   get extensionMap() {
     if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap();
-      this._extensionMap.config = this.config;
+      this._extensionMap = new EleventyExtensionMap([], this.config);
     }
     return this._extensionMap;
   }

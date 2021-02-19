@@ -1,8 +1,17 @@
 const TemplateEngineManager = require("./TemplateEngineManager");
+const TemplateConfig = require("./TemplateConfig");
 const TemplatePath = require("./TemplatePath");
+const EleventyBaseError = require("./EleventyBaseError");
+
+class EleventyExtensionMapConfigError extends EleventyBaseError {}
 
 class EleventyExtensionMap {
-  constructor(formatKeys) {
+  constructor(formatKeys, config) {
+    if (!config) {
+      throw new EleventyExtensionMapConfigError("Missing `config` argument.");
+    }
+    this.config = config;
+
     this.formatKeys = formatKeys;
 
     this.setFormats(formatKeys);
@@ -22,11 +31,15 @@ class EleventyExtensionMap {
     );
   }
 
-  get config() {
-    return this.configOverride || require("./Config").getConfig();
-  }
   set config(cfg) {
-    this.configOverride = cfg;
+    this._config = cfg;
+  }
+
+  get config() {
+    if (this._config instanceof TemplateConfig) {
+      return this._config.getConfig();
+    }
+    return this._config;
   }
 
   get engineManager() {

@@ -21,9 +21,9 @@ const debugDev = require("debug")("Dev:Eleventy:Template");
 const bench = require("./BenchmarkManager").get("Aggregate");
 
 class Template extends TemplateContent {
-  constructor(path, inputDir, outputDir, templateData, extensionMap) {
+  constructor(path, inputDir, outputDir, templateData, extensionMap, config) {
     debugDev("new Template(%o)", path);
-    super(path, inputDir);
+    super(path, inputDir, config);
 
     this.parsed = parsePath(path);
 
@@ -532,7 +532,7 @@ class Template extends TemplateContent {
     } else {
       // needs collections for pagination items
       // but individual pagination entries won’t be part of a collection
-      this.paging = new Pagination(data);
+      this.paging = new Pagination(data, this.config);
       this.paging.setTemplate(this);
       let pageTemplates = await this.paging.getPageTemplates();
 
@@ -694,9 +694,9 @@ class Template extends TemplateContent {
       this.inputDir,
       this.outputDir,
       this.templateData,
-      this.extensionMap
+      this.extensionMap,
+      this.config
     );
-    tmpl.config = this.config;
     tmpl.logger = this.logger;
 
     for (let transform of this.transforms) {

@@ -5,9 +5,11 @@ const EleventyErrorUtil = require("./EleventyErrorUtil");
 const UsingCircularTemplateContentReferenceError = require("./Errors/UsingCircularTemplateContentReferenceError");
 const debug = require("debug")("Eleventy:TemplateMap");
 const debugDev = require("debug")("Dev:Eleventy:TemplateMap");
-const config = require("./Config");
 
 const EleventyBaseError = require("./EleventyBaseError");
+
+class TemplateMapConfigError extends EleventyBaseError {}
+
 class DuplicatePermalinkOutputError extends EleventyBaseError {
   get removeDuplicateErrorStringFromOutput() {
     return true;
@@ -15,7 +17,11 @@ class DuplicatePermalinkOutputError extends EleventyBaseError {
 }
 
 class TemplateMap {
-  constructor() {
+  constructor(eleventyConfig) {
+    if (!eleventyConfig) {
+      throw new TemplateMapConfigError("Missing config argument.");
+    }
+    this.eleventyConfig = eleventyConfig;
     this.map = [];
     this.collectionsData = null;
     this.cached = false;
@@ -30,7 +36,8 @@ class TemplateMap {
 
   get userConfig() {
     if (!this._userConfig) {
-      this._userConfig = config.userConfig;
+      this.config = this.eleventyConfig.getConfig();
+      this._userConfig = this.eleventyConfig.userConfig;
     }
 
     return this._userConfig;

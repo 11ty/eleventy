@@ -298,7 +298,7 @@ class Eleventy {
     this.config.inputDir = this.inputDir;
 
     let formats = this.formatsOverride || this.config.templateFormats;
-    this.extensionMap = new EleventyExtensionMap(formats);
+    this.extensionMap = new EleventyExtensionMap(formats, this.eleventyConfig);
 
     this.eleventyFiles = new EleventyFiles(
       this.inputDir,

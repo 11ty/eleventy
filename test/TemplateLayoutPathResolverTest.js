@@ -1,23 +1,33 @@
 const test = require("ava");
+const TemplateConfig = require("../src/TemplateConfig");
 const TemplateLayoutPathResolver = require("../src/TemplateLayoutPathResolver");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 
 function getResolverInstance(path, inputDir, map) {
+  let eleventyConfig = new TemplateConfig();
   if (!map) {
-    map = new EleventyExtensionMap([
-      "liquid",
-      "ejs",
-      "md",
-      "hbs",
-      "mustache",
-      "haml",
-      "pug",
-      "njk",
-      "html",
-      "11ty.js",
-    ]);
+    map = new EleventyExtensionMap(
+      [
+        "liquid",
+        "ejs",
+        "md",
+        "hbs",
+        "mustache",
+        "haml",
+        "pug",
+        "njk",
+        "html",
+        "11ty.js",
+      ],
+      eleventyConfig
+    );
   }
-  return new TemplateLayoutPathResolver(path, inputDir, map);
+  return new TemplateLayoutPathResolver(
+    path,
+    inputDir,
+    map,
+    eleventyConfig.getConfig()
+  );
 }
 
 test("Layout", (t) => {

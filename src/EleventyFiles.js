@@ -17,7 +17,7 @@ const aggregateBench = require("./BenchmarkManager").get("Aggregate");
 class EleventyFiles {
   constructor(input, outputDir, formats, eleventyConfig) {
     if (!eleventyConfig) {
-      throw new EleventyFilesError("Missing config argument.");
+      throw new EleventyFilesError("Missing `eleventyConfig`` argument.");
     }
     this.eleventyConfig = eleventyConfig;
     this.config = eleventyConfig.getConfig();
@@ -125,7 +125,10 @@ class EleventyFiles {
   get extensionMap() {
     // for tests
     if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap(this.formats);
+      this._extensionMap = new EleventyExtensionMap(
+        this.formats,
+        this.eleventyConfig
+      );
       this._extensionMap.config = this.config;
     }
     return this._extensionMap;

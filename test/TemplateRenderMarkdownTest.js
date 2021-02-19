@@ -1,5 +1,6 @@
 const test = require("ava");
 const TemplateRender = require("../src/TemplateRender");
+const TemplateConfig = require("../src/TemplateConfig");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 const md = require("markdown-it");
 const mdEmoji = require("markdown-it-emoji");
@@ -7,8 +8,9 @@ const UserConfig = require("../src/UserConfig");
 const eleventySyntaxHighlightPlugin = require("@11ty/eleventy-plugin-syntaxhighlight");
 
 function getNewTemplateRender(name, inputDir) {
+  let eleventyConfig = new TemplateConfig();
   let tr = new TemplateRender(name, inputDir);
-  tr.extensionMap = new EleventyExtensionMap();
+  tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   return tr;
 }
 

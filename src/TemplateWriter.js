@@ -8,11 +8,11 @@ const EleventyErrorHandler = require("./EleventyErrorHandler");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
 const ConsoleLogger = require("./Util/ConsoleLogger");
 
-const config = require("./Config");
 const lodashFlatten = require("lodash/flatten");
 const debug = require("debug")("Eleventy:TemplateWriter");
 const debugDev = require("debug")("Dev:Eleventy:TemplateWriter");
 
+class TemplateWriterError extends EleventyBaseError {}
 class TemplateWriterWriteError extends EleventyBaseError {}
 
 class TemplateWriter {
@@ -21,10 +21,14 @@ class TemplateWriter {
     outputDir,
     templateFormats, // TODO remove this, see `get eleventyFiles` first
     templateData,
-    isPassthroughAll
+    eleventyConfig
   ) {
-    this.config = config.getConfig();
-    this.userConfig = config.userConfig;
+    if (!eleventyConfig) {
+      throw new TemplateWriterError("Missing config argument.");
+    }
+    this.eleventyConfig = eleventyConfig;
+    this.config = eleventyConfig.getConfig();
+    this.userConfig = eleventyConfig.userConfig;
 
     this.input = inputPath;
     this.inputDir = TemplatePath.getDir(inputPath);
@@ -39,13 +43,11 @@ class TemplateWriter {
     this.writeCount = 0;
     this.skippedCount = 0;
 
-    // TODO can we get rid of this? It’s only used for tests in `get eleventyFiles``
-    this.passthroughAll = isPassthroughAll;
-
     this._templatePathCache = new Map();
   }
 
-  /* Overrides this.input and this.inputDir */
+  /* Overrides this.input and this.inputDir
+   * Useful when input is a file and inputDir is not its direct parent */
   setInput(inputDir, input) {
     this.inputDir = inputDir;
     this.input = input;
@@ -106,8 +108,10 @@ class TemplateWriter {
 
   get extensionMap() {
     if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap(this.templateFormats);
-      this._extensionMap.config = this.config;
+      this._extensionMap = new EleventyExtensionMap(
+        this.templateFormats,
+        this.eleventyConfig
+      );
     }
     return this._extensionMap;
   }
@@ -128,7 +132,7 @@ class TemplateWriter {
         this.inputDir,
         this.outputDir,
         this.templateFormats,
-        this.passthroughAll
+        this.eleventyConfig
       );
 
       this._eleventyFiles.setInput(this.inputDir, this.input);
@@ -157,8 +161,10 @@ class TemplateWriter {
       this.inputDir,
       this.outputDir,
       this.templateData,
-      this.extensionMap
+      this.extensionMap,
+      this.config
     );
+
     tmpl.logger = this.logger;
     this._templatePathCache.set(path, tmpl);
 
@@ -210,8 +216,7 @@ class TemplateWriter {
   }
 
   async _createTemplateMap(paths) {
-    this.templateMap = new TemplateMap();
-    this.templateMap.userConfig = this.userConfig;
+    this.templateMap = new TemplateMap(this.eleventyConfig);
 
     await this._addToTemplateMap(paths);
     await this.templateMap.cache();
