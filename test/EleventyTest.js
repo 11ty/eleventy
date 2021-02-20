@@ -212,3 +212,15 @@ test.cb("Eleventy to ndjson (returns a stream)", (t) => {
     });
   });
 });
+
+test("Two Eleventies, two configs!!! (config used to be a global)", async (t) => {
+  let elev1 = new Eleventy();
+
+  t.is(elev1.eleventyConfig, elev1.eleventyConfig);
+  t.is(elev1.config, elev1.config);
+  t.is(JSON.stringify(elev1.config), JSON.stringify(elev1.config));
+
+  let elev2 = new Eleventy();
+  t.not(elev1.eleventyConfig, elev2.eleventyConfig);
+  t.is(JSON.stringify(elev1.config), JSON.stringify(elev2.config));
+});

@@ -3,8 +3,13 @@ const slugFilter = require("./Filters/Slug");
 const getCollectionItem = require("./Filters/GetCollectionItem");
 
 module.exports = function (config) {
+  let eleventyConfig = this;
   config.addFilter("slug", slugFilter);
-  config.addFilter("url", urlFilter);
+  config.addFilter("url", function (url, pathPrefixOverride) {
+    let pathPrefix =
+      pathPrefixOverride || eleventyConfig.getConfig().pathPrefix;
+    return urlFilter.call(this, url, pathPrefix);
+  });
   config.addFilter("log", console.log);
 
   config.addFilter("getCollectionItem", (collection, page) =>

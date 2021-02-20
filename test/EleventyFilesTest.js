@@ -652,6 +652,9 @@ test("Glob Watcher Files with File Extension Passthroughs", async (t) => {
 
 test("Glob Watcher Files with Config Passthroughs (one template format)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.passthroughCopies = {
+    "test/stubs/img/": true,
+  };
   let evf = new EleventyFiles(
     "test/stubs",
     "test/stubs/_site",
@@ -663,11 +666,6 @@ test("Glob Watcher Files with Config Passthroughs (one template format)", async 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
   mgr.setInputDir("test/stubs");
   mgr.setOutputDir("test/stubs/_site");
-  mgr.setConfig({
-    passthroughCopies: {
-      "test/stubs/img/": true,
-    },
-  });
   evf.setPassthroughManager(mgr);
 
   t.deepEqual(evf.getGlobWatcherFiles(), [

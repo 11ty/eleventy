@@ -699,6 +699,12 @@ test.skip("JavaScript with alias", async (t) => {
 
 test("Passthrough file output", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.passthroughCopies = {
+    "./test/stubs/template-passthrough/static": true,
+    "./test/stubs/template-passthrough/static/": "./",
+    "./test/stubs/template-passthrough/static/**/*": "./all/",
+    "./test/stubs/template-passthrough/static/**/*.js": "./js/",
+  };
   let tw = new TemplateWriter(
     "./test/stubs/template-passthrough/",
     "./test/stubs/template-passthrough/_site",
@@ -708,14 +714,6 @@ test("Passthrough file output", async (t) => {
   );
 
   const mgr = tw.eleventyFiles.getPassthroughManager();
-  mgr.setConfig({
-    passthroughCopies: {
-      "./test/stubs/template-passthrough/static": true,
-      "./test/stubs/template-passthrough/static/": "./",
-      "./test/stubs/template-passthrough/static/**/*": "./all/",
-      "./test/stubs/template-passthrough/static/**/*.js": "./js/",
-    },
-  });
 
   await tw.write();
 

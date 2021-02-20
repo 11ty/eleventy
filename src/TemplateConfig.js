@@ -145,7 +145,7 @@ class TemplateConfig {
     this.rootConfig = this.customRootConfig || require("./defaultConfig.js");
 
     if (typeof this.rootConfig === "function") {
-      this.rootConfig = this.rootConfig(this.userConfig);
+      this.rootConfig = this.rootConfig.call(this, this.userConfig);
       // debug( "rootConfig is a function, after calling, this.userConfig is %o", this.userConfig );
     }
     debug("rootConfig %o", this.rootConfig);
