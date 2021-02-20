@@ -65,6 +65,7 @@ class UserConfig {
     this.dataExtensions = new Map();
 
     this.quietMode = false;
+    this.useTemplateCache = true;
   }
 
   versionCheck(expected) {
@@ -660,6 +661,10 @@ class UserConfig {
     this.dataExtensions.set(formatExtension, formatParser);
   }
 
+  setUseTemplateCache(bypass) {
+    this.useTemplateCache = !!bypass;
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
@@ -704,6 +709,7 @@ class UserConfig {
       extensionMap: this.extensionMap,
       quietMode: this.quietMode,
       events: this.events,
+      useTemplateCache: this.useTemplateCache,
     };
   }
 }

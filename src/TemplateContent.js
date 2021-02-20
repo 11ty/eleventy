@@ -146,10 +146,16 @@ class TemplateContent {
 
     let templateBenchmark = bench.get("Template Read");
     templateBenchmark.before();
-    let content = TemplateContent.getCached(this.inputPath);
+    let content;
+    if (this.config.useTemplateCache) {
+      content = TemplateContent.getCached(this.inputPath);
+    }
     if (!content) {
       content = await fs.readFile(this.inputPath, "utf-8");
-      TemplateContent.cache(this.inputPath, content);
+
+      if (this.config.useTemplateCache) {
+        TemplateContent.cache(this.inputPath, content);
+      }
     }
     templateBenchmark.after();
 
@@ -224,27 +230,34 @@ class TemplateContent {
     );
 
     try {
-      let [cacheable, key, cache] = this._getCompileCache(str, bypassMarkdown);
-      if (cacheable && cache.has(key)) {
-        return cache.get(key);
-      }
-
-      // Compilation is async, so we eagerly cache a Promise that eventually
-      // resolves to the compiled function
       let res;
-      cache.set(
-        key,
-        new Promise((resolve) => {
-          res = resolve;
-        })
-      );
+      if (this.config.useTemplateCache) {
+        let [cacheable, key, cache] = this._getCompileCache(
+          str,
+          bypassMarkdown
+        );
+        if (cacheable && cache.has(key)) {
+          return cache.get(key);
+        }
+
+        // Compilation is async, so we eagerly cache a Promise that eventually
+        // resolves to the compiled function
+        cache.set(
+          key,
+          new Promise((resolve) => {
+            res = resolve;
+          })
+        );
+      }
 
       let templateBenchmark = bench.get("Template Compile");
       templateBenchmark.before();
       let fn = await this.templateRender.getCompiledTemplate(str);
       templateBenchmark.after();
       debugDev("%o getCompiledTemplate function created", this.inputPath);
-      res(fn);
+      if (this.config.useTemplateCache && res) {
+        res(fn);
+      }
       return fn;
     } catch (e) {
       debug(`Having trouble compiling template ${this.inputPath}: %O`, str);

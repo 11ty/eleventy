@@ -36,16 +36,20 @@ class TemplateLayout extends TemplateContent {
   }
 
   static getTemplate(key, inputDir, config, extensionMap) {
-    let fullKey = TemplateLayout.resolveFullKey(key, inputDir);
-    if (templateCache.has(fullKey)) {
-      debugDev("Found %o in TemplateCache", key);
-      return templateCache.get(fullKey);
+    if (config.useTemplateCache) {
+      let fullKey = TemplateLayout.resolveFullKey(key, inputDir);
+      if (templateCache.has(fullKey)) {
+        debugDev("Found %o in TemplateCache", key);
+        return templateCache.get(fullKey);
+      }
+
+      let tmpl = new TemplateLayout(key, inputDir, extensionMap, config);
+      templateCache.add(fullKey, tmpl);
+
+      return tmpl;
+    } else {
+      return new TemplateLayout(key, inputDir, extensionMap, config);
     }
-
-    let tmpl = new TemplateLayout(key, inputDir, extensionMap, config);
-    templateCache.add(fullKey, tmpl);
-
-    return tmpl;
   }
 
   async getTemplateLayoutMapEntry() {
