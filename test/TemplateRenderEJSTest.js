@@ -5,7 +5,7 @@ const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 
 function getNewTemplateRender(name, inputDir) {
   let eleventyConfig = new TemplateConfig();
-  let tr = new TemplateRender(name, inputDir);
+  let tr = new TemplateRender(name, inputDir, eleventyConfig);
   tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   return tr;
 }

@@ -10,7 +10,7 @@ class EleventyExtensionMap {
     if (!config) {
       throw new EleventyExtensionMapConfigError("Missing `config` argument.");
     }
-    this.config = config;
+    this._config = config;
 
     this.formatKeys = formatKeys;
 
@@ -44,8 +44,7 @@ class EleventyExtensionMap {
 
   get engineManager() {
     if (!this._engineManager) {
-      this._engineManager = new TemplateEngineManager();
-      this._engineManager.config = this.config;
+      this._engineManager = new TemplateEngineManager(this.config);
     }
 
     return this._engineManager;

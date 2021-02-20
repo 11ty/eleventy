@@ -5,16 +5,18 @@ const TemplateConfig = require("../src/TemplateConfig");
 const Vue = require("vue");
 const renderer = require("vue-server-renderer").createRenderer();
 
-function getNewTemplateRender(name, inputDir) {
-  let eleventyConfig = new TemplateConfig();
-  let tr = new TemplateRender(name, inputDir);
+function getNewTemplateRender(name, inputDir, eleventyConfig) {
+  if (!eleventyConfig) {
+    eleventyConfig = new TemplateConfig();
+  }
+  let tr = new TemplateRender(name, inputDir, eleventyConfig);
   tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   return tr;
 }
 
 test("Custom plaintext Render", async (t) => {
-  let tr = getNewTemplateRender("txt");
-  tr.config.extensionMap.add({
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.extensionMap.add({
     extension: "txt",
     key: "txt",
     compile: function (str, inputPath) {
@@ -25,6 +27,8 @@ test("Custom plaintext Render", async (t) => {
     },
   });
 
+  let tr = getNewTemplateRender("txt", null, eleventyConfig);
+
   let fn = await tr.getCompiledTemplate("<p>Paragraph</p>");
   t.is(await fn(), "<p>Paragraph</p>");
   t.is(await fn({}), "<p>Paragraph</p>");
@@ -33,7 +37,7 @@ test("Custom plaintext Render", async (t) => {
 test("Custom Vue Render", async (t) => {
   let tr = getNewTemplateRender("vue");
 
-  tr.config.extensionMap.add({
+  tr.eleventyConfig.userConfig.extensionMap.add({
     extension: "vue",
     key: "vue",
     compile: function (str, inputPath) {
@@ -52,11 +56,11 @@ test("Custom Vue Render", async (t) => {
   t.is(await fn({ test: "Hello" }), `<p data-server-rendered="true">Hello</p>`);
 });
 
-test("Custom Sass Render", async (t) => {
-  const sass = require("node-sass");
-  let tr = getNewTemplateRender("sass");
+const sass = require("node-sass");
 
-  tr.config.extensionMap.add({
+test("Custom Sass Render", async (t) => {
+  let tr = getNewTemplateRender("sass");
+  tr.eleventyConfig.userConfig.extensionMap.add({
     extension: "sass",
     key: "sass",
     compile: function (str, inputPath) {

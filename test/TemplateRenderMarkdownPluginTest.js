@@ -6,7 +6,7 @@ const md = require("markdown-it");
 
 function getNewTemplateRender(name, inputDir) {
   let eleventyConfig = new TemplateConfig();
-  let tr = new TemplateRender(name, inputDir);
+  let tr = new TemplateRender(name, inputDir, eleventyConfig);
   tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   return tr;
 }

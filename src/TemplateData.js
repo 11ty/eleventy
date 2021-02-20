@@ -401,7 +401,7 @@ class TemplateData {
         );
       }
     } else {
-      let tr = new TemplateRender(engineName, this.inputDir);
+      let tr = new TemplateRender(engineName, this.inputDir, this.config);
       tr.extensionMap = this.extensionMap;
 
       let fn = await tr.getCompiledTemplate(rawInput);

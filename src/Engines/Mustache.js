@@ -2,8 +2,8 @@ const MustacheLib = require("mustache");
 const TemplateEngine = require("./TemplateEngine");
 
 class Mustache extends TemplateEngine {
-  constructor(name, includesDir) {
-    super(name, includesDir);
+  constructor(name, includesDir, config) {
+    super(name, includesDir, config);
 
     this.setLibrary(this.config.libraryOverrides.mustache);
   }

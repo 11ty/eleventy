@@ -527,14 +527,8 @@ test("Pagination with deep data merge with alias #147", async (t) => {
     "./test/stubs/",
     "./dist"
   );
-  tmpl.config = {
-    keys: {
-      layout: "layout",
-      permalink: "permalink",
-    },
-    dynamicPermalinks: true,
-    dataDeepMerge: true,
-  };
+  tmpl.config.dynamicPermalinks = true;
+  tmpl.config.deepDataMerge = true;
 
   let data = await tmpl.getData();
   let pages = await tmpl.getTemplates(data);

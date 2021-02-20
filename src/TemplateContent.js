@@ -67,7 +67,11 @@ class TemplateContent {
 
   get templateRender() {
     if (!this._templateRender) {
-      this._templateRender = new TemplateRender(this.inputPath, this.inputDir);
+      this._templateRender = new TemplateRender(
+        this.inputPath,
+        this.inputDir,
+        this.config
+      );
       this._templateRender.extensionMap = this.extensionMap;
     }
 

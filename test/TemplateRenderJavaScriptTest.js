@@ -5,7 +5,7 @@ const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 
 function getNewTemplateRender(name, inputDir) {
   let eleventyConfig = new TemplateConfig();
-  let tr = new TemplateRender(name, inputDir);
+  let tr = new TemplateRender(name, inputDir, eleventyConfig);
   tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   return tr;
 }
@@ -198,7 +198,7 @@ test("JS Render with a function", async (t) => {
 
 // This doesn’t work, per arrow functions
 test.skip("Issue #934: JS Render with an arrow function and javascript function", async (t) => {
-  let tr = new TemplateRender("./test/stubs/function-filter-arrow.11ty.js");
+  let tr = getNewTemplateRender("./test/stubs/function-filter-arrow.11ty.js");
   tr.config = {
     javascriptFunctions: {
       upper: function (val) {

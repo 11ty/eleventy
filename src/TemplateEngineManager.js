@@ -1,19 +1,13 @@
-const config = require("./Config");
-
+const EleventyBaseError = require("./EleventyBaseError");
+class TemplateEngineManagerConfigError extends EleventyBaseError {}
 class TemplateEngineManager {
-  constructor() {
+  constructor(config) {
     this.engineCache = {};
-  }
 
-  get config() {
-    if (!this._config) {
-      this._config = config.getConfig();
+    if (!config) {
+      throw new TemplateEngineManagerConfigError("Missing `config` argument.");
     }
-    return this._config;
-  }
-
-  set config(cfg) {
-    this._config = cfg;
+    this.config = config;
   }
 
   get keyToClassNameMap() {
@@ -63,9 +57,8 @@ class TemplateEngineManager {
 
     let path = "./Engines/" + this.getClassNameFromTemplateKey(name);
     const cls = require(path);
-    let instance = new cls(name, includesDir);
+    let instance = new cls(name, includesDir, this.config);
     instance.extensionMap = extensionMap;
-    instance.config = this.config;
     instance.engineManager = this;
 
     // Make sure cache key is based on name and not path
