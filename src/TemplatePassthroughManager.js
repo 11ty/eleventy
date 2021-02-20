@@ -1,15 +1,21 @@
-const config = require("./Config");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");
 const TemplatePassthrough = require("./TemplatePassthrough");
 const TemplatePath = require("./TemplatePath");
 const debug = require("debug")("Eleventy:TemplatePassthroughManager");
 
+class TemplatePassthroughManagerConfigError extends EleventyBaseError {}
 class TemplatePassthroughManagerCopyError extends EleventyBaseError {}
 
 class TemplatePassthroughManager {
-  constructor() {
-    this.config = config.getConfig();
+  constructor(eleventyConfig) {
+    if (!eleventyConfig) {
+      throw new TemplatePassthroughManagerConfigError(
+        "Missing `config` argument."
+      );
+    }
+    this.eleventyConfig = eleventyConfig;
+    this.config = eleventyConfig.getConfig();
     this.reset();
   }
 
@@ -17,10 +23,6 @@ class TemplatePassthroughManager {
     this.count = 0;
     this.incrementalFile = null;
     debug("Resetting counts to 0");
-  }
-
-  setConfig(configOverride) {
-    this.config = configOverride || {};
   }
 
   set extensionMap(extensionMap) {

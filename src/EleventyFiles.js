@@ -139,7 +139,7 @@ class EleventyFiles {
   }
 
   initPassthroughManager() {
-    let mgr = new TemplatePassthroughManager();
+    let mgr = new TemplatePassthroughManager(this.eleventyConfig);
     mgr.setInputDir(this.inputDir);
     mgr.setOutputDir(this.outputDir);
     mgr.extensionMap = this.extensionMap;
