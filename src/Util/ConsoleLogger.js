@@ -60,8 +60,8 @@ class ConsoleLogger {
     return this.outputStream;
   }
 
-  message(message, type = "log", chalkColor = false) {
-    if (!this.isVerbose || process.env.DEBUG) {
+  message(message, type = "log", chalkColor = false, forceToConsole = false) {
+    if (!forceToConsole && (!this.isVerbose || process.env.DEBUG)) {
       debug(message);
     } else if (this._logger !== false) {
       let logger = this._logger || console;

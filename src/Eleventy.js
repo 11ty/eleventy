@@ -855,9 +855,8 @@ Arguments:
     }
 
     bench.finish();
-
     if (to === "fs") {
-      this.logger.log(this.logFinished());
+      this.logger.message(this.logFinished(), "info", "green", true);
     }
     debug("Finished writing templates.");
 
