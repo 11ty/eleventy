@@ -452,9 +452,11 @@ test("Parent directory for data (Issue #337)", async (t) => {
 test("addGlobalData values", async (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.addGlobalData("myFunction", () => "fn-value");
-  eleventyConfig.userConfig.addGlobalData("myPromise", () =>
-    Promise.resolve("promise-value")
-  );
+  eleventyConfig.userConfig.addGlobalData("myPromise", () => {
+    return new Promise((resolve) => {
+      setTimeout(resolve, 100, "promise-value");
+    });
+  });
   eleventyConfig.userConfig.addGlobalData("myAsync", async () =>
     Promise.resolve("promise-value")
   );
