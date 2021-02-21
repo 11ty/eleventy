@@ -280,13 +280,14 @@ class TemplateData {
     let globalData = {};
     if (this.config.globalData) {
       let keys = Object.keys(this.config.globalData);
-      for (let j = 0; j < keys.length; j++) {
-        let returnValue = this.config.globalData[keys[j]];
+      for (let key of keys) {
+        let returnValue = this.config.globalData[key];
 
         if (typeof returnValue === "function") {
           returnValue = await returnValue();
         }
-        globalData[keys[j]] = returnValue;
+
+        globalData[key] = returnValue;
       }
     }
     return globalData;

@@ -448,3 +448,24 @@ test("Parent directory for data (Issue #337)", async (t) => {
     },
   });
 });
+
+test("addGlobalData values", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.addGlobalData("myFunction", () => "fn-value");
+  eleventyConfig.userConfig.addGlobalData("myPromise", () =>
+    Promise.resolve("promise-value")
+  );
+  eleventyConfig.userConfig.addGlobalData("myAsync", async () =>
+    Promise.resolve("promise-value")
+  );
+
+  let dataObj = new TemplateData(
+    "./test/stubs-global-data-config-api/",
+    eleventyConfig
+  );
+  let data = await dataObj.getData();
+
+  t.is(data.myFunction, "fn-value");
+  t.is(data.myPromise, "promise-value");
+  t.is(data.myAsync, "promise-value");
+});
