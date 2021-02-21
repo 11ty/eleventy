@@ -6,6 +6,7 @@ const TemplatePath = require("./TemplatePath");
 const EleventyBaseError = require("./EleventyBaseError");
 const UserConfig = require("./UserConfig");
 const debug = require("debug")("Eleventy:TemplateConfig");
+const debugDev = require("debug")("Dev:Eleventy:TemplateConfig");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
 
 /**
@@ -106,6 +107,7 @@ class TemplateConfig {
    */
   getConfig() {
     if (!this.hasConfigMerged) {
+      debugDev("Merging via getConfig (first time)");
       this.config = this.mergeConfig(this.localProjectConfigPath);
       this.hasConfigMerged = true;
     }
@@ -120,7 +122,13 @@ class TemplateConfig {
   setProjectConfigPath(path) {
     this.localProjectConfigPath = path;
 
-    this.config = this.mergeConfig(path);
+    if (this.hasConfigMerged) {
+      // merge it again
+      debugDev(
+        "Merging in getConfig again after setting the local project config path."
+      );
+      this.config = this.mergeConfig(path);
+    }
   }
 
   /**
@@ -163,6 +171,7 @@ class TemplateConfig {
       TemplatePath.getWorkingDir(),
       localProjectConfigPath
     );
+
     debug(`Merging config with ${path}`);
 
     if (fs.existsSync(path)) {
@@ -184,11 +193,12 @@ class TemplateConfig {
             typeof localConfig.then === "function"
           ) {
             throw new EleventyConfigError(
-              `Error in your Eleventy config file '${path}': Returning a promise is not supported`
+              `Error in your Eleventy config file '${path}': Returning a promise is not yet supported.`
             );
           }
         }
 
+        // Still using removed `filters`? this was renamed to transforms
         if (
           localConfig &&
           localConfig.filters !== undefined &&

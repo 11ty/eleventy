@@ -67,6 +67,7 @@ try {
   let elev = new Eleventy(argv.input, argv.output, {
     // --quiet and --quiet=true both resolve to true
     quietMode: argv.quiet,
+    configPath: argv.config,
   });
 
   // reuse ErrorHandler instance in Eleventy
@@ -77,7 +78,6 @@ try {
     elev.setIsVerbose(false);
   }
 
-  elev.setConfigPathOverride(argv.config);
   elev.setPathPrefix(argv.pathprefix);
   elev.setDryRun(argv.dryrun);
   elev.setIncrementalBuild(argv.incremental);

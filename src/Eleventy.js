@@ -34,18 +34,21 @@ const debug = require("debug")("Eleventy");
 class Eleventy {
   constructor(input, output, options = {}, eleventyConfig = null) {
     if (!eleventyConfig) {
-      this.eleventyConfig = new TemplateConfig();
+      this.eleventyConfig = new TemplateConfig(null, options.configPath);
     } else {
       this.eleventyConfig = eleventyConfig;
+      if (options.configPath) {
+        this.eleventyConfig.setProjectConfigPath(options.configPath);
+      }
     }
-
-    this.config = this.eleventyConfig.getConfig();
 
     /**
      * @member {String} - The path to Eleventy's config file.
      * @default null
      */
-    this.configPath = null;
+    this.configPath = options.configPath;
+
+    this.config = this.eleventyConfig.getConfig();
 
     /**
      * @member {Boolean} - Was verbose mode overwritten?
@@ -193,21 +196,6 @@ class Eleventy {
    */
   setWatchTargets(watchTargets) {
     this.watchTargets = watchTargets;
-  }
-
-  /**
-   * Updates the config path.
-   *
-   * @method
-   * @param {String} configPath - The new config path.
-   */
-  setConfigPathOverride(configPath) {
-    if (configPath) {
-      this.configPath = configPath;
-
-      this.eleventyConfig.setProjectConfigPath(configPath);
-      this.config = this.eleventyConfig.getConfig();
-    }
   }
 
   /**
