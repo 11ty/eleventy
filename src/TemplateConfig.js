@@ -86,6 +86,7 @@ class TemplateConfig {
    * Resets the configuration.
    */
   reset() {
+    debugDev("Resetting configuration: TemplateConfig and UserConfig.");
     this.userConfig.reset();
     this.initializeRootConfig();
     this.config = this.mergeConfig(this.localProjectConfigPath);
@@ -209,6 +210,7 @@ class TemplateConfig {
           );
         }
       } catch (err) {
+        // TODO the error message here is bad and I feel bad (needs more accurate info)
         throw new EleventyConfigError(
           `Error in your Eleventy config file '${path}'.` +
             (err.message.includes("Cannot find module")

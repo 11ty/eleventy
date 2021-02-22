@@ -115,7 +115,7 @@ class TemplateLayout extends TemplateContent {
   }
 
   async getCompiledLayoutFunctions() {
-    if (this.compileCache) {
+    if (this.config.useTemplateCache && this.compileCache) {
       return this.compileCache;
     }
 
@@ -128,7 +128,9 @@ class TemplateLayout extends TemplateContent {
         )
       );
     }
-    this.compileCache = fns;
+    if (this.config.useTemplateCache) {
+      this.compileCache = fns;
+    }
     return fns;
   }
 

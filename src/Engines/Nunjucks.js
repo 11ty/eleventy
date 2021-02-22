@@ -26,6 +26,7 @@ class Nunjucks extends TemplateEngine {
           }
         )
       );
+
     this.setEngineLib(this.njkEnv);
 
     this.addFilters(this.config.nunjucksFilters);
@@ -255,11 +256,15 @@ class Nunjucks extends TemplateEngine {
       };
     }
 
+    // for(let loader of this.njkEnv.loaders) {
+    //   loader.cache = {};
+    // }
+
     let tmpl;
     if (!inputPath || inputPath === "njk" || inputPath === "md") {
-      tmpl = NunjucksLib.compile(str, this.njkEnv);
+      tmpl = new NunjucksLib.Template(str, this.njkEnv, null, true);
     } else {
-      tmpl = NunjucksLib.compile(str, this.njkEnv, inputPath);
+      tmpl = new NunjucksLib.Template(str, this.njkEnv, inputPath, true);
     }
     return async function (data) {
       return new Promise(function (resolve, reject) {

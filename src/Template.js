@@ -695,7 +695,7 @@ class Template extends TemplateContent {
       this.outputDir,
       this.templateData,
       this.extensionMap,
-      this.config
+      this.eleventyConfig
     );
     tmpl.logger = this.logger;
 

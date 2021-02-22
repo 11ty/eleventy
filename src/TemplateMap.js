@@ -37,6 +37,7 @@ class TemplateMap {
   get userConfig() {
     if (!this._userConfig) {
       this.config = this.eleventyConfig.getConfig();
+      // TODO use this.config for this, need to add collections to mergable props in userconfig
       this._userConfig = this.eleventyConfig.userConfig;
     }
 

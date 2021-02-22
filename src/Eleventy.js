@@ -42,6 +42,11 @@ class Eleventy {
       }
     }
 
+    if (options.config && typeof options.config === "function") {
+      // TODO use return object here?
+      options.config(this.eleventyConfig.userConfig);
+    }
+
     /**
      * @member {String} - The path to Eleventy's config file.
      * @default null

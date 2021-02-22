@@ -2,12 +2,12 @@ const EleventyBaseError = require("./EleventyBaseError");
 class TemplateEngineManagerConfigError extends EleventyBaseError {}
 class TemplateEngineManager {
   constructor(config) {
-    this.engineCache = {};
-
     if (!config) {
       throw new TemplateEngineManagerConfigError("Missing `config` argument.");
     }
     this.config = config;
+
+    this.engineCache = {};
   }
 
   get keyToClassNameMap() {
@@ -57,6 +57,7 @@ class TemplateEngineManager {
 
     let path = "./Engines/" + this.getClassNameFromTemplateKey(name);
     const cls = require(path);
+
     let instance = new cls(name, includesDir, this.config);
     instance.extensionMap = extensionMap;
     instance.engineManager = this;

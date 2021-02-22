@@ -296,7 +296,7 @@ class TemplateData {
   async getData() {
     let rawImports = this.getRawImports();
 
-    let initialGlobalData = await this.getInitialGlobalData();
+    this.configApiGlobalData = await this.getInitialGlobalData();
 
     if (!this.globalData) {
       let globalJson = await this.getAllGlobalData();
@@ -304,7 +304,7 @@ class TemplateData {
       // OK: Shallow merge when combining rawImports (pkg) with global data files
       this.globalData = Object.assign(
         {},
-        initialGlobalData,
+        this.configApiGlobalData,
         globalJson,
         rawImports
       );
@@ -448,7 +448,7 @@ class TemplateData {
 
       let returnValue = require(localPath);
       if (typeof returnValue === "function") {
-        returnValue = await returnValue();
+        returnValue = await returnValue(this.configApiGlobalData || {});
       }
 
       dataBench.after();

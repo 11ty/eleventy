@@ -61,6 +61,15 @@ class TemplateContent {
     return this._config;
   }
 
+  get eleventyConfig() {
+    if (this._config instanceof TemplateConfig) {
+      return this._config;
+    }
+    throw new TemplateContentConfigError(
+      "Tried to get an eleventyConfig but none was found."
+    );
+  }
+
   get engine() {
     return this.templateRender.engine;
   }
