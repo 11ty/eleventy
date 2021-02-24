@@ -1,12 +1,12 @@
 const test = require("ava");
 const Eleventy = require("../src/Eleventy");
 const EleventyWatchTargets = require("../src/EleventyWatchTargets");
-const templateConfig = require("../src/Config");
-
-const config = templateConfig.getConfig();
+const TemplateConfig = require("../src/TemplateConfig");
 
 test("Eleventy, defaults inherit from config", async (t) => {
   let elev = new Eleventy();
+
+  let config = new TemplateConfig().getConfig();
 
   t.truthy(elev.input);
   t.truthy(elev.outputDir);
@@ -211,4 +211,16 @@ test.cb("Eleventy to ndjson (returns a stream)", (t) => {
       });
     });
   });
+});
+
+test("Two Eleventies, two configs!!! (config used to be a global)", async (t) => {
+  let elev1 = new Eleventy();
+
+  t.is(elev1.eleventyConfig, elev1.eleventyConfig);
+  t.is(elev1.config, elev1.config);
+  t.is(JSON.stringify(elev1.config), JSON.stringify(elev1.config));
+
+  let elev2 = new Eleventy();
+  t.not(elev1.eleventyConfig, elev2.eleventyConfig);
+  t.is(JSON.stringify(elev1.config), JSON.stringify(elev2.config));
 });

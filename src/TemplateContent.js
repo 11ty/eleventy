@@ -8,20 +8,28 @@ const EleventyExtensionMap = require("./EleventyExtensionMap");
 const TemplateData = require("./TemplateData");
 const TemplateRender = require("./TemplateRender");
 const TemplatePath = require("./TemplatePath");
+const TemplateConfig = require("./TemplateConfig");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
-const config = require("./Config");
 const debug = require("debug")("Eleventy:TemplateContent");
 const debugDev = require("debug")("Dev:Eleventy:TemplateContent");
 const bench = require("./BenchmarkManager").get("Aggregate");
 const eventBus = require("./EventBus");
 
+class TemplateContentConfigError extends EleventyBaseError {}
 class TemplateContentFrontMatterError extends EleventyBaseError {}
 class TemplateContentCompileError extends EleventyBaseError {}
 class TemplateContentRenderError extends EleventyBaseError {}
 
 class TemplateContent {
-  constructor(inputPath, inputDir) {
+  constructor(inputPath, inputDir, config) {
+    if (!config) {
+      throw new TemplateContentConfigError(
+        "Missing `config` argument to TemplateContent"
+      );
+    }
+    this.config = config;
+
     this.inputPath = inputPath;
 
     if (inputDir) {
@@ -34,8 +42,7 @@ class TemplateContent {
   /* Used by tests */
   get extensionMap() {
     if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap();
-      this._extensionMap.config = this.config;
+      this._extensionMap = new EleventyExtensionMap([], this.config);
     }
     return this._extensionMap;
   }
@@ -49,11 +56,19 @@ class TemplateContent {
   }
 
   get config() {
-    if (!this._config) {
-      this._config = config.getConfig();
+    if (this._config instanceof TemplateConfig) {
+      return this._config.getConfig();
     }
-
     return this._config;
+  }
+
+  get eleventyConfig() {
+    if (this._config instanceof TemplateConfig) {
+      return this._config;
+    }
+    throw new TemplateContentConfigError(
+      "Tried to get an eleventyConfig but none was found."
+    );
   }
 
   get engine() {
@@ -62,7 +77,11 @@ class TemplateContent {
 
   get templateRender() {
     if (!this._templateRender) {
-      this._templateRender = new TemplateRender(this.inputPath, this.inputDir);
+      this._templateRender = new TemplateRender(
+        this.inputPath,
+        this.inputDir,
+        this.config
+      );
       this._templateRender.extensionMap = this.extensionMap;
     }
 
@@ -137,10 +156,16 @@ class TemplateContent {
 
     let templateBenchmark = bench.get("Template Read");
     templateBenchmark.before();
-    let content = TemplateContent.getCached(this.inputPath);
+    let content;
+    if (this.config.useTemplateCache) {
+      content = TemplateContent.getCached(this.inputPath);
+    }
     if (!content) {
       content = await fs.readFile(this.inputPath, "utf-8");
-      TemplateContent.cache(this.inputPath, content);
+
+      if (this.config.useTemplateCache) {
+        TemplateContent.cache(this.inputPath, content);
+      }
     }
     templateBenchmark.after();
 
@@ -215,29 +240,40 @@ class TemplateContent {
     );
 
     try {
-      let [cacheable, key, cache] = this._getCompileCache(str, bypassMarkdown);
-      if (cacheable && cache.has(key)) {
-        return cache.get(key);
-      }
-
-      // Compilation is async, so we eagerly cache a Promise that eventually
-      // resolves to the compiled function
       let res;
-      cache.set(
-        key,
-        new Promise((resolve) => {
-          res = resolve;
-        })
-      );
+      if (this.config.useTemplateCache) {
+        let [cacheable, key, cache] = this._getCompileCache(
+          str,
+          bypassMarkdown
+        );
+        if (cacheable && cache.has(key)) {
+          return cache.get(key);
+        }
+
+        // Compilation is async, so we eagerly cache a Promise that eventually
+        // resolves to the compiled function
+        cache.set(
+          key,
+          new Promise((resolve) => {
+            res = resolve;
+          })
+        );
+      }
 
       let templateBenchmark = bench.get("Template Compile");
       templateBenchmark.before();
       let fn = await this.templateRender.getCompiledTemplate(str);
       templateBenchmark.after();
       debugDev("%o getCompiledTemplate function created", this.inputPath);
-      res(fn);
+      if (this.config.useTemplateCache && res) {
+        res(fn);
+      }
       return fn;
     } catch (e) {
+      let [cacheable, key, cache] = this._getCompileCache(str, bypassMarkdown);
+      if (cacheable) {
+        cache.delete(key);
+      }
       debug(`Having trouble compiling template ${this.inputPath}: %O`, str);
       throw new TemplateContentCompileError(
         `Having trouble compiling template ${this.inputPath}`,

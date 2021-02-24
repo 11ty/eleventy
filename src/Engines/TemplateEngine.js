@@ -1,29 +1,38 @@
 const fastglob = require("fast-glob");
 const fs = require("fs-extra");
 const TemplatePath = require("../TemplatePath");
+const TemplateConfig = require("../TemplateConfig");
 const EleventyExtensionMap = require("../EleventyExtensionMap");
+const EleventyBaseError = require("../EleventyBaseError");
 const debug = require("debug")("Eleventy:TemplateEngine");
 const aggregateBench = require("../BenchmarkManager").get("Aggregate");
 
+class TemplateEngineConfigError extends EleventyBaseError {}
+
 class TemplateEngine {
-  constructor(name, includesDir) {
+  constructor(name, includesDir, config) {
     this.name = name;
     this.includesDir = includesDir;
     this.partialsHaveBeenCached = false;
     this.partials = [];
     this.engineLib = null;
     this.cacheable = false;
+
+    if (!config) {
+      throw new TemplateEngineConfigError("Missing `config` argument.");
+    }
+    this._config = config;
+  }
+
+  set config(cfg) {
+    this._config = cfg;
   }
 
   get config() {
-    if (!this._config) {
-      this._config = require("../Config").getConfig();
+    if (this._config instanceof TemplateConfig) {
+      return this._config.getConfig();
     }
     return this._config;
-  }
-
-  set config(config) {
-    this._config = config;
   }
 
   get engineManager() {
@@ -36,8 +45,7 @@ class TemplateEngine {
 
   get extensionMap() {
     if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap();
-      // this._extensionMap.config = this.config;
+      this._extensionMap = new EleventyExtensionMap([], this.config);
     }
     return this._extensionMap;
   }

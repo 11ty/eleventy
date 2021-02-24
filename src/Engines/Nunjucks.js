@@ -112,8 +112,8 @@ const eventBus = require("../EventBus");
 class EleventyShortcodeError extends EleventyBaseError {}
 
 class Nunjucks extends TemplateEngine {
-  constructor(name, includesDir) {
-    super(name, includesDir);
+  constructor(name, includesDir, config) {
+    super(name, includesDir, config);
 
     this.setLibrary(this.config.libraryOverrides.njk);
 
@@ -361,11 +361,15 @@ class Nunjucks extends TemplateEngine {
       };
     }
 
+    // for(let loader of this.njkEnv.loaders) {
+    //   loader.cache = {};
+    // }
+
     let tmpl;
     if (!inputPath || inputPath === "njk" || inputPath === "md") {
-      tmpl = NunjucksLib.compile(str, this.njkEnv);
+      tmpl = new NunjucksLib.Template(str, this.njkEnv, null, true);
     } else {
-      tmpl = NunjucksLib.compile(str, this.njkEnv, inputPath);
+      tmpl = new NunjucksLib.Template(str, this.njkEnv, inputPath, true);
     }
     return async function (data) {
       return new Promise(function (resolve, reject) {

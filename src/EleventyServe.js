@@ -2,17 +2,25 @@ const fs = require("fs-extra");
 const path = require("path");
 
 const TemplatePath = require("./TemplatePath");
-const config = require("./Config");
+const EleventyBaseError = require("./EleventyBaseError");
 const debug = require("debug")("EleventyServe");
 
+class EleventyServeConfigError extends EleventyBaseError {}
 class EleventyServe {
   constructor() {}
 
   get config() {
-    return this.configOverride || config.getConfig();
+    if (!this._config) {
+      throw new EleventyServeConfigError(
+        "You need to set the config property on EleventyServe."
+      );
+    }
+
+    return this._config;
   }
+
   set config(config) {
-    this.configOverride = config;
+    this._config = config;
   }
 
   setOutputDir(outputDir) {

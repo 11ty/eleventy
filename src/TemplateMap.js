@@ -3,12 +3,13 @@ const DependencyGraph = require("dependency-graph").DepGraph;
 const TemplateCollection = require("./TemplateCollection");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
 const UsingCircularTemplateContentReferenceError = require("./Errors/UsingCircularTemplateContentReferenceError");
-// TODO the config setup here is overly complex. Why aren’t we injecting config instance like everywhere else?
-const eleventyConfig = require("./EleventyConfig");
 const debug = require("debug")("Eleventy:TemplateMap");
 const debugDev = require("debug")("Dev:Eleventy:TemplateMap");
 
 const EleventyBaseError = require("./EleventyBaseError");
+
+class TemplateMapConfigError extends EleventyBaseError {}
+
 class DuplicatePermalinkOutputError extends EleventyBaseError {
   get removeDuplicateErrorStringFromOutput() {
     return true;
@@ -16,13 +17,31 @@ class DuplicatePermalinkOutputError extends EleventyBaseError {
 }
 
 class TemplateMap {
-  constructor() {
+  constructor(eleventyConfig) {
+    if (!eleventyConfig) {
+      throw new TemplateMapConfigError("Missing config argument.");
+    }
+    this.eleventyConfig = eleventyConfig;
     this.map = [];
     this.collectionsData = null;
     this.cached = false;
     this.configCollections = null;
     this.verboseOutput = true;
     this.collection = new TemplateCollection();
+  }
+
+  set userConfig(config) {
+    this._userConfig = config;
+  }
+
+  get userConfig() {
+    if (!this._userConfig) {
+      this.config = this.eleventyConfig.getConfig();
+      // TODO use this.config for this, need to add collections to mergable props in userconfig
+      this._userConfig = this.eleventyConfig.userConfig;
+    }
+
+    return this._userConfig;
   }
 
   get tagPrefix() {
@@ -435,19 +454,20 @@ class TemplateMap {
   }
 
   isUserConfigCollectionName(name) {
-    let collections = this.configCollections || eleventyConfig.getCollections();
+    let collections =
+      this.configCollections || this.userConfig.getCollections();
     return name && !!collections[name];
   }
 
   getUserConfigCollectionNames() {
     return Object.keys(
-      this.configCollections || eleventyConfig.getCollections()
+      this.configCollections || this.userConfig.getCollections()
     );
   }
 
   async getUserConfigCollection(name) {
     let configCollections =
-      this.configCollections || eleventyConfig.getCollections();
+      this.configCollections || this.userConfig.getCollections();
 
     // This works with async now
     let result = await configCollections[name](this.collection);
@@ -459,7 +479,7 @@ class TemplateMap {
   async _testGetUserConfigCollectionsData() {
     let collections = {};
     let configCollections =
-      this.configCollections || eleventyConfig.getCollections();
+      this.configCollections || this.userConfig.getCollections();
 
     for (let name in configCollections) {
       collections[name] = configCollections[name](this.collection);

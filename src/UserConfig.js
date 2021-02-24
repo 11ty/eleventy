@@ -65,12 +65,13 @@ class UserConfig {
     this.dataExtensions = new Map();
 
     this.quietMode = false;
+    this.useTemplateCache = true;
   }
 
   versionCheck(expected) {
     if (!semver.satisfies(pkg.version, expected)) {
       throw new UserConfigError(
-        `This project requires the eleventy version to match '${expected}' but found ${pkg.version}. Use \`npm update @11ty/eleventy -g\` to upgrade the eleventy global or \`npm update @11ty/eleventy --save\` to upgrade your local project version.`
+        `This project requires the Eleventy version to match '${expected}' but found ${pkg.version}. Use \`npm update @11ty/eleventy -g\` to upgrade the eleventy global or \`npm update @11ty/eleventy --save\` to upgrade your local project version.`
       );
     }
   }
@@ -660,6 +661,10 @@ class UserConfig {
     this.dataExtensions.set(formatExtension, formatParser);
   }
 
+  setUseTemplateCache(bypass) {
+    this.useTemplateCache = !!bypass;
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
@@ -704,6 +709,7 @@ class UserConfig {
       extensionMap: this.extensionMap,
       quietMode: this.quietMode,
       events: this.events,
+      useTemplateCache: this.useTemplateCache,
     };
   }
 }

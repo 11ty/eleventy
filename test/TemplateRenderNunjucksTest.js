@@ -1,10 +1,12 @@
 const test = require("ava");
 const TemplateRender = require("../src/TemplateRender");
+const TemplateConfig = require("../src/TemplateConfig");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 
 function getNewTemplateRender(name, inputDir) {
-  let tr = new TemplateRender(name, inputDir);
-  tr.extensionMap = new EleventyExtensionMap();
+  let eleventyConfig = new TemplateConfig();
+  let tr = new TemplateRender(name, inputDir, eleventyConfig);
+  tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   return tr;
 }
 
@@ -31,7 +33,7 @@ test("Nunjucks Render", async (t) => {
 });
 
 test("Nunjucks Render Addition", async (t) => {
-  let fn = await new TemplateRender("njk").getCompiledTemplate(
+  let fn = await getNewTemplateRender("njk").getCompiledTemplate(
     "<p>{{ number + 1 }}</p>"
   );
   t.is(await fn({ number: 1 }), "<p>2</p>");
@@ -147,7 +149,7 @@ test("Nunjucks Render Relative Include (ambiguous path, file exists in _includes
 });
 
 test("Nunjucks Async Filter", async (t) => {
-  let tr = new TemplateRender("njk", "test/stubs");
+  let tr = getNewTemplateRender("njk", "test/stubs");
   let engine = tr.engine;
   engine.addFilters(
     {
@@ -164,7 +166,7 @@ test("Nunjucks Async Filter", async (t) => {
 });
 
 test("Nunjucks Render set with a filter", async (t) => {
-  let tr = new TemplateRender("njk", "test/stubs");
+  let tr = getNewTemplateRender("njk", "test/stubs");
   let engine = tr.engine;
   engine.addFilters({
     uppercase: function (str) {
@@ -316,7 +318,7 @@ test("Nunjucks Shortcode", async (t) => {
 test("Nunjucks Async Shortcode", async (t) => {
   t.plan(2);
 
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode(
     "postfixWithZach",
     function (str) {
@@ -346,7 +348,7 @@ test("Nunjucks Async Shortcode", async (t) => {
 test("Nunjucks Async function Shortcode", async (t) => {
   t.plan(2);
 
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode(
     "postfixWithZach",
     async function (str) {
@@ -370,7 +372,7 @@ test("Nunjucks Async function Shortcode", async (t) => {
 });
 
 test("Nunjucks Async function Shortcode (with sync function, error throwing)", async (t) => {
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode(
     "postfixWithZach",
     function (str) {
@@ -392,7 +394,7 @@ test("Nunjucks Async function Shortcode (with sync function, error throwing)", a
 });
 
 test("Nunjucks Async function Shortcode (with async function, error throwing)", async (t) => {
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode(
     "postfixWithZachError",
     async function (str) {
@@ -414,7 +416,7 @@ test("Nunjucks Async function Shortcode (with async function, error throwing)", 
 });
 
 test("Nunjucks Async function paired Shortcode (with sync function, error throwing)", async (t) => {
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode(
     "postfixWithZachError",
     function (str) {
@@ -439,7 +441,7 @@ test("Nunjucks Async function paired Shortcode (with sync function, error throwi
 });
 
 test("Nunjucks Async function paired Shortcode (with async function, error throwing)", async (t) => {
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode(
     "postfixWithZachError",
     async function (str) {
@@ -513,7 +515,7 @@ test("Nunjucks Paired Shortcode", async (t) => {
 test("Nunjucks Async Paired Shortcode", async (t) => {
   t.plan(2);
 
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode(
     "postfixWithZach",
     function (content, str) {
@@ -642,7 +644,7 @@ test("Nunjucks Shortcode Multiple Args", async (t) => {
 });
 
 test("Nunjucks Shortcode Multiple Args (Comma is required)", async (t) => {
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function (str, str2) {
     return str + str2 + "Zach";
   });
@@ -784,7 +786,7 @@ test("Nunjucks Test if statements on arrays (Issue #524)", async (t) => {
 
 test("Issue 611: Run a function", async (t) => {
   // This does not work in Liquid
-  let tr = new TemplateRender("njk", "./test/stubs/");
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
 
   t.is(
     await tr._testRender("{{ test() }}", {

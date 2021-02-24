@@ -32,16 +32,21 @@ class ConsoleLogger {
     this._logger = logger;
   }
 
+  log(msg) {
+    this.message(msg);
+  }
+
+  forceLog(msg) {
+    this.message(msg, undefined, undefined, true);
+  }
+
   warn(msg) {
     this.message(msg, "warn", "yellow");
   }
 
+  // Is this used?
   error(msg) {
     this.message(msg, "error", "red");
-  }
-
-  log(msg) {
-    this.message(msg);
   }
 
   toStream(msg) {
@@ -60,8 +65,8 @@ class ConsoleLogger {
     return this.outputStream;
   }
 
-  message(message, type = "log", chalkColor = false) {
-    if (!this.isVerbose || process.env.DEBUG) {
+  message(message, type = "log", chalkColor = false, forceToConsole = false) {
+    if (!forceToConsole && (!this.isVerbose || process.env.DEBUG)) {
       debug(message);
     } else if (this._logger !== false) {
       let logger = this._logger || console;

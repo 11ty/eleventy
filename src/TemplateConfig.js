@@ -4,8 +4,9 @@ const lodashUniq = require("lodash/uniq");
 const lodashMerge = require("lodash/merge");
 const TemplatePath = require("./TemplatePath");
 const EleventyBaseError = require("./EleventyBaseError");
-const eleventyConfig = require("./EleventyConfig");
+const UserConfig = require("./UserConfig");
 const debug = require("debug")("Eleventy:TemplateConfig");
+const debugDev = require("debug")("Dev:Eleventy:TemplateConfig");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
 
 /**
@@ -37,6 +38,8 @@ class EleventyConfigError extends EleventyBaseError {}
  */
 class TemplateConfig {
   constructor(customRootConfig, localProjectConfigPath) {
+    this.userConfig = new UserConfig();
+
     /** @member {module:11ty/eleventy/TemplateConfig~TemplateConfig~override} - tbd. */
     this.overrides = {};
 
@@ -58,10 +61,7 @@ class TemplateConfig {
 
     this.initializeRootConfig();
 
-    /**
-     * @member {module:11ty/eleventy/TemplateConfig~TemplateConfig~config} - tbd.
-     */
-    this.config = this.mergeConfig(this.localProjectConfigPath);
+    this.hasConfigMerged = false;
   }
 
   /**
@@ -86,7 +86,8 @@ class TemplateConfig {
    * Resets the configuration.
    */
   reset() {
-    eleventyConfig.reset();
+    debugDev("Resetting configuration: TemplateConfig and UserConfig.");
+    this.userConfig.reset();
     this.initializeRootConfig();
     this.config = this.mergeConfig(this.localProjectConfigPath);
   }
@@ -106,6 +107,11 @@ class TemplateConfig {
    * @returns {{}} - The config object.
    */
   getConfig() {
+    if (!this.hasConfigMerged) {
+      debugDev("Merging via getConfig (first time)");
+      this.config = this.mergeConfig(this.localProjectConfigPath);
+      this.hasConfigMerged = true;
+    }
     return this.config;
   }
 
@@ -117,7 +123,13 @@ class TemplateConfig {
   setProjectConfigPath(path) {
     this.localProjectConfigPath = path;
 
-    this.config = this.mergeConfig(path);
+    if (this.hasConfigMerged) {
+      // merge it again
+      debugDev(
+        "Merging in getConfig again after setting the local project config path."
+      );
+      this.config = this.mergeConfig(path);
+    }
   }
 
   /**
@@ -128,6 +140,10 @@ class TemplateConfig {
   setPathPrefix(pathPrefix) {
     debug("Setting pathPrefix to %o", pathPrefix);
     this.overrides.pathPrefix = pathPrefix;
+
+    if (!this.hasConfigMerged) {
+      this.getConfig();
+    }
     this.config.pathPrefix = pathPrefix;
   }
 
@@ -138,8 +154,8 @@ class TemplateConfig {
     this.rootConfig = this.customRootConfig || require("./defaultConfig.js");
 
     if (typeof this.rootConfig === "function") {
-      this.rootConfig = this.rootConfig(eleventyConfig);
-      // debug( "rootConfig is a function, after calling, eleventyConfig is %o", eleventyConfig );
+      this.rootConfig = this.rootConfig.call(this, this.userConfig);
+      // debug( "rootConfig is a function, after calling, this.userConfig is %o", this.userConfig );
     }
     debug("rootConfig %o", this.rootConfig);
   }
@@ -156,6 +172,7 @@ class TemplateConfig {
       TemplatePath.getWorkingDir(),
       localProjectConfigPath
     );
+
     debug(`Merging config with ${path}`);
 
     if (fs.existsSync(path)) {
@@ -169,19 +186,20 @@ class TemplateConfig {
         // debug( "localConfig require return value: %o", localConfig );
 
         if (typeof localConfig === "function") {
-          localConfig = localConfig(eleventyConfig);
-          // debug( "localConfig is a function, after calling, eleventyConfig is %o", eleventyConfig );
+          localConfig = localConfig(this.userConfig);
+          // debug( "localConfig is a function, after calling, this.userConfig is %o", this.userConfig );
 
           if (
             typeof localConfig === "object" &&
             typeof localConfig.then === "function"
           ) {
             throw new EleventyConfigError(
-              `Error in your Eleventy config file '${path}': Returning a promise is not supported`
+              `Error in your Eleventy config file '${path}': Returning a promise is not yet supported.`
             );
           }
         }
 
+        // Still using removed `filters`? this was renamed to transforms
         if (
           localConfig &&
           localConfig.filters !== undefined &&
@@ -192,6 +210,7 @@ class TemplateConfig {
           );
         }
       } catch (err) {
+        // TODO the error message here is bad and I feel bad (needs more accurate info)
         throw new EleventyConfigError(
           `Error in your Eleventy config file '${path}'.` +
             (err.message.includes("Cannot find module")
@@ -204,7 +223,7 @@ class TemplateConfig {
       debug("Eleventy local project config file not found, skipping.");
     }
 
-    let eleventyConfigApiMergingObject = eleventyConfig.getMergingConfigObject();
+    let eleventyConfigApiMergingObject = this.userConfig.getMergingConfigObject();
 
     // remove special merge keys from object
     let savedForSpecialMerge = {
@@ -219,7 +238,7 @@ class TemplateConfig {
       eleventyConfigApiMergingObject.templateFormats ||
       localConfig.templateFormats;
 
-    // debug("eleventyConfig.getMergingConfigObject: %o", eleventyConfig.getMergingConfigObject());
+    // debug("this.userConfig.getMergingConfigObject: %o", this.userConfig.getMergingConfigObject());
     debug("localConfig: %o", localConfig);
     debug("overrides: %o", this.overrides);
 

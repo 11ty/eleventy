@@ -52,7 +52,7 @@ try {
   const Eleventy = require("./src/Eleventy");
 
   process.on("unhandledRejection", (error, promise) => {
-    errorHandler.error(error, `Unhandled rejection in promise (${promise})`);
+    errorHandler.error(error, "Unhandled rejection in promise");
   });
   process.on("uncaughtException", (error) => {
     errorHandler.fatal(error, "Uncaught exception");
@@ -67,6 +67,7 @@ try {
   let elev = new Eleventy(argv.input, argv.output, {
     // --quiet and --quiet=true both resolve to true
     quietMode: argv.quiet,
+    configPath: argv.config,
   });
 
   // reuse ErrorHandler instance in Eleventy
@@ -77,7 +78,6 @@ try {
     elev.setIsVerbose(false);
   }
 
-  elev.setConfigPathOverride(argv.config);
   elev.setPathPrefix(argv.pathprefix);
   elev.setDryRun(argv.dryrun);
   elev.setIncrementalBuild(argv.incremental);
@@ -86,42 +86,54 @@ try {
 
   // careful, we can’t use async/await here to error properly
   // with old node versions in `please-upgrade-node` above.
-  elev
-    .init()
-    .then(function () {
+  elev.init().then(function () {
+    try {
       if (argv.version) {
         console.log(elev.getVersion());
       } else if (argv.help) {
         console.log(elev.getHelp());
       } else if (argv.serve) {
-        elev.watch().then(function () {
-          elev.serve(argv.port);
-        });
+        let startBrowsersync = true;
+        elev
+          .watch()
+          .catch((e) => {
+            // Build failed but error message already displayed.
+            startBrowsersync = false;
+            console.log("Watch catch");
+          })
+          .then(function () {
+            if (startBrowsersync) {
+              elev.serve(argv.port);
+            }
+          });
       } else if (argv.watch) {
-        elev.watch();
+        elev.watch().catch((e) => {
+          console.log("watch catch 2");
+        });
       } else {
         if (argv.to === "json") {
           elev.toJSON().then(function (result) {
             console.log(JSON.stringify(result, null, 2));
           });
         } else if (argv.to === "ndjson") {
-          elev
-            .toNDJSON()
-            .then(function (stream) {
-              stream.pipe(process.stdout);
-            })
-            .catch(errorHandler.fatal.bind(errorHandler));
+          elev.toNDJSON().then(function (stream) {
+            stream.pipe(process.stdout);
+          });
         } else if (!argv.to || argv.to === "fs") {
           elev.write();
         } else {
           throw new EleventyCommandCheckError(
-            `Invalid --to value: ${argv.to}. Supported values: \`fs\`, \`json\`, and \`ndjson\`.`
+            `Invalid --to value: ${argv.to}. Supported values: \`fs\` (default), \`json\`, and \`ndjson\`.`
           );
         }
       }
-    })
-    .catch(errorHandler.fatal.bind(errorHandler));
+    } catch (e) {
+      errorHandler.fatal(e, "Eleventy CLI Error");
+    }
+  });
+  // unlikely because we handle a lot of errors internally in Eleventy
+  // .catch(errorHandler.fatal.bind(errorHandler));
 } catch (e) {
   let errorHandler = new EleventyErrorHandler();
-  errorHandler.fatal(e, "Eleventy fatal error");
+  errorHandler.fatal(e, "Eleventy CLI Fatal Error");
 }
