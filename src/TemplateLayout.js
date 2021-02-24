@@ -44,6 +44,7 @@ class TemplateLayout extends TemplateContent {
       }
 
       let tmpl = new TemplateLayout(key, inputDir, extensionMap, config);
+      debugDev("Added %o to TemplateCache", key);
       templateCache.add(fullKey, tmpl);
 
       return tmpl;
@@ -55,6 +56,7 @@ class TemplateLayout extends TemplateContent {
   async getTemplateLayoutMapEntry() {
     return {
       key: this.dataKeyLayoutPath,
+      inputDir: this.inputDir,
       template: this,
       frontMatterData: await this.getFrontMatterData(),
     };
@@ -73,7 +75,7 @@ class TemplateLayout extends TemplateContent {
     while (mapEntry.frontMatterData && cfgKey in mapEntry.frontMatterData) {
       let layout = TemplateLayout.getTemplate(
         mapEntry.frontMatterData[cfgKey],
-        this.inputDir,
+        mapEntry.inputDir,
         this.config,
         this.extensionMap
       );
@@ -114,23 +116,22 @@ class TemplateLayout extends TemplateContent {
     return this.layoutChain;
   }
 
-  async getCompiledLayoutFunctions() {
-    if (this.config.useTemplateCache && this.compileCache) {
-      return this.compileCache;
+  async getCompiledLayoutFunctions(layoutMap) {
+    let fns = [];
+    try {
+      for (let layoutEntry of layoutMap) {
+        fns.push(
+          await layoutEntry.template.compile(
+            await layoutEntry.template.getPreRender()
+          )
+        );
+      }
+    } catch (e) {
+      debugDev("Clearing TemplateCache after error.");
+      templateCache.clear();
+      return Promise.reject(e);
     }
 
-    let map = await this.getTemplateLayoutMap();
-    let fns = [];
-    for (let layoutMap of map) {
-      fns.push(
-        await layoutMap.template.compile(
-          await layoutMap.template.getPreRender()
-        )
-      );
-    }
-    if (this.config.useTemplateCache) {
-      this.compileCache = fns;
-    }
     return fns;
   }
 
@@ -153,7 +154,8 @@ class TemplateLayout extends TemplateContent {
   async render(data, templateContent) {
     data = TemplateLayout.augmentDataWithContent(data, templateContent);
 
-    let fns = await this.getCompiledLayoutFunctions();
+    let layoutMap = await this.getTemplateLayoutMap();
+    let fns = await this.getCompiledLayoutFunctions(layoutMap);
     for (let fn of fns) {
       templateContent = await fn(data);
       data = TemplateLayout.augmentDataWithContent(data, templateContent);

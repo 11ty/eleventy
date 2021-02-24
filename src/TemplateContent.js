@@ -269,6 +269,10 @@ class TemplateContent {
       }
       return fn;
     } catch (e) {
+      let [cacheable, key, cache] = this._getCompileCache(str, bypassMarkdown);
+      if (cacheable) {
+        cache.delete(key);
+      }
       debug(`Having trouble compiling template ${this.inputPath}: %O`, str);
       throw new TemplateContentCompileError(
         `Having trouble compiling template ${this.inputPath}`,
