@@ -308,10 +308,8 @@ class TemplateWriter {
     ) {
       promises.push(...(await this.generateTemplates(paths)));
     }
-
     return Promise.all(promises).catch((e) => {
-      this.errorHandler.error(e, "Error writing templates");
-      throw e;
+      return Promise.reject(e);
     });
   }
 

@@ -44,13 +44,13 @@ class EleventyErrorHandler {
 
   error(e, msg) {
     if (msg) {
-      this.initialMessage(msg, "error", "red");
+      this.initialMessage(msg, "error", "red", true);
     }
-    this.log(e, "error");
+    this.log(e, "error", undefined, undefined, true);
   }
 
   //https://nodejs.org/api/process.html
-  log(e, type = "log", prefix = ">") {
+  log(e, type = "log", prefix = ">", chalkColor = "", forceToConsole = false) {
     let ref = e;
     while (ref) {
       let nextRef = ref.originalError;
@@ -66,7 +66,9 @@ class EleventyErrorHandler {
           ).trim()}
 
 \`${ref.name}\` was thrown${!nextRef && ref.stack ? ":" : ""}`,
-        type
+        type,
+        chalkColor,
+        forceToConsole
       );
 
       if (process.env.DEBUG) {
@@ -83,18 +85,29 @@ class EleventyErrorHandler {
             "(Repeated output has been truncated…)"
           );
         }
-        this.logger.message(prefix + stackStr.split("\n").join("\n" + prefix));
+        this.logger.message(
+          prefix + stackStr.split("\n").join("\n" + prefix),
+          type,
+          chalkColor,
+          forceToConsole
+        );
       }
       ref = nextRef;
     }
   }
 
-  initialMessage(message, type = "log", chalkColor = "blue") {
+  initialMessage(
+    message,
+    type = "log",
+    chalkColor = "blue",
+    forceToConsole = false
+  ) {
     if (message) {
       this.logger.message(
         message + ":" + (process.env.DEBUG ? "" : " (more in DEBUG output)"),
         type,
-        chalkColor
+        chalkColor,
+        forceToConsole
       );
     }
   }

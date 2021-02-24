@@ -32,16 +32,21 @@ class ConsoleLogger {
     this._logger = logger;
   }
 
+  log(msg) {
+    this.message(msg);
+  }
+
+  forceLog(msg) {
+    this.message(msg, undefined, undefined, true);
+  }
+
   warn(msg) {
     this.message(msg, "warn", "yellow");
   }
 
+  // Is this used?
   error(msg) {
     this.message(msg, "error", "red");
-  }
-
-  log(msg) {
-    this.message(msg);
   }
 
   toStream(msg) {

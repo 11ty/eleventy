@@ -537,7 +537,8 @@ Arguments:
       }
     }
 
-    await this.write();
+    let writeResult = await this.write();
+    let hasError = !!writeResult.error;
 
     this.writer.resetIncrementalFile();
 
@@ -699,7 +700,11 @@ Arguments:
 
     // Note that watching indirectly depends on this for fetching dependencies from JS files
     // See: TemplateWriter:pathCache and EleventyWatchTargets
-    await this.write();
+    let result = await this.write();
+    if (result.error) {
+      // build failed—quit watch early
+      return Promise.reject(result.error);
+    }
 
     let initWatchBench = this.watcherBench.get("Start up --watch");
     initWatchBench.before();
@@ -716,7 +721,7 @@ Arguments:
 
     this.watcherBench.finish("Watch");
 
-    this.logger.log("Watching…");
+    this.logger.forceLog("Watching…");
 
     this.watcher = watcher;
 
@@ -743,12 +748,12 @@ Arguments:
     };
 
     watcher.on("change", async (path) => {
-      this.logger.log(`File changed: ${path}`);
+      this.logger.forceLog(`File changed: ${path}`);
       await watchRun(path);
     });
 
     watcher.on("add", async (path) => {
-      this.logger.log(`File added: ${path}`);
+      this.logger.forceLog(`File added: ${path}`);
       await watchRun(path);
     });
 
@@ -813,10 +818,10 @@ Arguments:
    */
   async executeBuild(to = "fs") {
     let ret;
-
-    await this.config.events.emit("beforeBuild");
+    let hasError = false;
 
     try {
+      await this.config.events.emit("beforeBuild");
       let promise;
       if (to === "fs") {
         promise = this.writer.write();
@@ -834,30 +839,36 @@ Arguments:
 
       if (to === "ndjson") {
         // return a stream
-        // TODO this might return only after all the templates have been added to the stream
+        // TODO this might output the ndjson rows only after all the templates have been written to the stream?
         ret = this.logger.closeStream(to);
       }
+
       await this.config.events.emit("afterBuild");
     } catch (e) {
-      this.errorHandler.initialMessage(
-        "Problem writing Eleventy templates",
-        "error",
-        "red"
-      );
-      this.errorHandler.fatal(e);
+      hasError = true;
+      ret = {
+        error: e,
+      };
+      this.errorHandler.fatal(e, "Problem writing Eleventy templates");
+    } finally {
+      // Note, this executes even though we return above in `catch`
+      bench.finish();
+      if (to === "fs") {
+        this.logger.message(
+          this.logFinished(),
+          "info",
+          hasError ? "red" : "green",
+          true
+        );
+      }
+      debug("Finished writing templates.");
+
+      debug(`
+      Getting frustrated? Have a suggestion/feature request/feedback?
+      I want to hear it! Open an issue: https://github.com/11ty/eleventy/issues/new`);
+
+      return ret;
     }
-
-    bench.finish();
-    if (to === "fs") {
-      this.logger.message(this.logFinished(), "info", "green", true);
-    }
-    debug("Finished writing templates.");
-
-    debug(`
-Getting frustrated? Have a suggestion/feature request/feedback?
-I want to hear it! Open an issue: https://github.com/11ty/eleventy/issues/new`);
-
-    return ret;
   }
 }
 
