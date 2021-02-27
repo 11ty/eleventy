@@ -239,6 +239,9 @@ class TemplateConfig {
     // Unique
     merged.templateFormats = lodashUniq(merged.templateFormats);
 
+	// Append config path location
+    merged.configPath = path;
+
     debug("Current configuration: %o", merged);
 
     return merged;
