@@ -1,7 +1,8 @@
 const fs = require("fs-extra");
 const config = require("./Config");
+const EleventyExtensionMap = require("./EleventyExtensionMap");
 const TemplatePath = require("./TemplatePath");
-// const debug = require("debug")("Eleventy:TemplateLayoutPathResolver");
+const debug = require("debug")("Eleventy:TemplateLayoutPathResolver");
 
 class TemplateLayoutPathResolver {
   constructor(path, inputDir, extensionMap) {
@@ -44,7 +45,6 @@ class TemplateLayoutPathResolver {
     // we might be able to move this into the constructor?
     this.aliases = Object.assign({}, this.config.layoutAliases, this.aliases);
     // debug("Current layout aliases: %o", this.aliases);
-
     if (this.path in this.aliases) {
       // debug(
       //   "Substituting layout: %o maps to %o",
@@ -53,6 +53,7 @@ class TemplateLayoutPathResolver {
       // );
       this.path = this.aliases[this.path];
     }
+
 
     this.pathAlreadyHasExtension = this.dir + "/" + this.path;
     if (
@@ -124,7 +125,16 @@ class TemplateLayoutPathResolver {
       layoutsDir = "_includes";
     }
 
-    return TemplatePath.join(this.inputDir, layoutsDir);
+    // Check to see if we start with an @
+    let baseDir = this.inputDir;
+    if(layoutsDir.startsWith('@')) {
+      // Make path relative to .eleventy.js
+      baseDir = TemplatePath.dirname(this.config.configPath);
+      // remove the @
+      layoutsDir = layoutsDir.substring(1);
+    }
+
+    return TemplatePath.join(baseDir, layoutsDir);
   }
 }
 

@@ -5,6 +5,12 @@ const fs = require("fs");
 
 function TemplatePath() {}
 
+// expose "dirname" path function
+// (gets the directory from a file name)
+TemplatePath.dirname = function(thePath) {
+  return path.dirname(thePath);
+};
+
 /**
  * @returns {String} the absolute path to Eleventy’s project directory.
  */
