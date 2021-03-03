@@ -55,11 +55,7 @@ class EleventyFiles {
   get validTemplateGlobs() {
     if (!this._validTemplateGlobs) {
       let globs;
-      if (this.input === this.inputDir) {
-        globs = this.extensionMap.getValidGlobs(this.inputDir);
-      } else {
-        globs = this.templateGlobs;
-      }
+      globs = this.input === this.inputDir ? this.extensionMap.getValidGlobs(this.inputDir) : this.templateGlobs;
       this._validTemplateGlobs = globs;
     }
     return this._validTemplateGlobs;

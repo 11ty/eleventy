@@ -50,41 +50,29 @@ class Markdown extends TemplateEngine {
 
     if (preTemplateEngine) {
       let engine;
-      if (typeof preTemplateEngine === "string") {
-        engine = this.engineManager.getEngine(
+      engine = typeof preTemplateEngine === "string" ? this.engineManager.getEngine(
           preTemplateEngine,
           super.getIncludesDir(),
           this.extensionMap
-        );
-      } else {
-        engine = preTemplateEngine;
-      }
+        ) : preTemplateEngine;
 
       let fnReady = engine.compile(str, inputPath);
 
-      if (bypassMarkdown) {
-        return async function (data) {
+      return bypassMarkdown ? async function (data) {
           let fn = await fnReady;
           return fn(data);
-        };
-      } else {
-        return async function (data) {
+        } : async function (data) {
           let fn = await fnReady;
           let preTemplateEngineRender = await fn(data);
           let finishedRender = mdlib.render(preTemplateEngineRender, data);
           return finishedRender;
         };
-      }
     } else {
-      if (bypassMarkdown) {
-        return function () {
+      return bypassMarkdown ? function () {
           return str;
-        };
-      } else {
-        return function (data) {
+        } : function (data) {
           return mdlib.render(str, data);
         };
-      }
     }
   }
 }

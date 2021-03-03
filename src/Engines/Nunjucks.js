@@ -78,7 +78,6 @@ const eventBus = require("../EventBus");
     return parts;
   };
 
-  let frameSet = NunjucksLib.runtime.Frame.prototype.set;
   NunjucksLib.runtime.Frame.prototype.set = function _replacement_set(
     name,
     val,
@@ -100,7 +99,7 @@ const eventBus = require("../EventBus");
     let i = 0;
     let id = parts[0];
     while (i < count) {
-      if (!obj.hasOwnProperty(id)) {
+      if (!Object.prototype.hasOwnProperty.call(obj, id)) {
         obj = obj[id] = {};
       }
       id = parts[++i];
@@ -128,7 +127,7 @@ class Nunjucks extends TemplateEngine {
     this.njkEnv = env || new NunjucksLib.Environment(fsLoader);
     // Correct, but overbroad. Better would be to evict more granularly, but
     // resolution from paths isn't straightforward.
-    eventBus.on("resourceModified", (path) => {
+    eventBus.on("resourceModified", () => {
       this.njkEnv.invalidateCache();
     });
 
@@ -362,11 +361,7 @@ class Nunjucks extends TemplateEngine {
     }
 
     let tmpl;
-    if (!inputPath || inputPath === "njk" || inputPath === "md") {
-      tmpl = NunjucksLib.compile(str, this.njkEnv);
-    } else {
-      tmpl = NunjucksLib.compile(str, this.njkEnv, inputPath);
-    }
+    tmpl = !inputPath || inputPath === "njk" || inputPath === "md" ? NunjucksLib.compile(str, this.njkEnv) : NunjucksLib.compile(str, this.njkEnv, inputPath);
     return async function (data) {
       return new Promise(function (resolve, reject) {
         tmpl.render(data, function (err, res) {

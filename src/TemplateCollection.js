@@ -80,11 +80,7 @@ class TemplateCollection extends Sortable {
     return this.getAllSorted().filter(item =>
       tags.every(requiredTag => {
         const itemTags = item.data.tags;
-        if (Array.isArray(itemTags)) {
-          return itemTags.includes(requiredTag);
-        } else {
-          return itemTags === requiredTag;
-        }
+        return Array.isArray(itemTags) ? itemTags.includes(requiredTag) : itemTags === requiredTag;
       })
     );
   }
