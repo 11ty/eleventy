@@ -5,6 +5,42 @@ const TemplatePath = require("../src/TemplatePath");
 const TemplateConfig = require("../src/TemplateConfig");
 const TemplatePassthroughManager = require("../src/TemplatePassthroughManager");
 
+test("Dirs paths", async (t) => {
+  let eleventyConfig = new TemplateConfig({
+    dir: {
+      input: "src",
+      includes: "includes",
+      data: "data",
+      output: "dist",
+    },
+  });
+
+  let evf = new EleventyFiles("src", "dist", [], eleventyConfig);
+
+  t.deepEqual(evf.inputDir, "src");
+  t.deepEqual(evf.includesDir, "src/includes");
+  t.deepEqual(evf.getDataDir(), "src/data");
+  t.deepEqual(evf.outputDir, "dist");
+});
+
+test("Dirs paths (relative)", async (t) => {
+  let eleventyConfig = new TemplateConfig({
+    dir: {
+      input: "src",
+      includes: "../includes",
+      data: "../data",
+      output: "dist",
+    },
+  });
+
+  let evf = new EleventyFiles("src", "dist", [], eleventyConfig);
+
+  t.deepEqual(evf.inputDir, "src");
+  t.deepEqual(evf.includesDir, "includes");
+  t.deepEqual(evf.getDataDir(), "data");
+  t.deepEqual(evf.outputDir, "dist");
+});
+
 test("getFiles", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let evf = new EleventyFiles(
