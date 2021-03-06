@@ -1,3 +1,5 @@
+const fs = require("fs");
+const isGlob = require("is-glob");
 const copy = require("recursive-copy");
 const TemplatePath = require("./TemplatePath");
 const debug = require("debug")("Eleventy:TemplatePassthrough");
@@ -9,6 +11,8 @@ class TemplatePassthroughError extends EleventyBaseError {}
 
 class TemplatePassthrough {
   constructor(path, outputDir, inputDir) {
+    this.rawPath = path;
+
     // inputPath is relative to the root of your project and not your Eleventy input directory.
     this.inputPath = path.inputPath;
     // inputDir is only used when stripping from output path in `getOutputPath`
@@ -18,6 +22,10 @@ class TemplatePassthrough {
     this.outputDir = outputDir;
 
     this.isDryRun = false;
+  }
+
+  getPath() {
+    return this.rawPath;
   }
 
   getOutputPath(inputFileFromGlob) {
@@ -60,73 +68,110 @@ class TemplatePassthrough {
     const files = TemplatePath.addLeadingDotSlashArray(
       await fastglob(glob, {
         caseSensitiveMatch: false,
-        dot: true
+        dot: true,
       })
     );
     bench.after();
     return files;
   }
 
+  /* Types:
+   * 1. via glob, individual files found
+   * 2. directory, triggers an event for each file
+   * 3. individual file
+   */
   async copy(src, dest, copyOptions) {
     if (
-      TemplatePath.stripLeadingDotSlash(dest).includes(
+      !TemplatePath.stripLeadingDotSlash(dest).includes(
         TemplatePath.stripLeadingDotSlash(this.outputDir)
       )
     ) {
-      let fileCopyCount = 0;
-      // copy() returns a promise
-      return copy(src, dest, copyOptions)
-        .on(copy.events.COPY_FILE_START, function(copyOp) {
-          // Access to individual files at `copyOp.src`
-          debug("Copying individual file %o", copyOp.src);
-          aggregateBench.get("Passthrough Copy File").before();
-        })
-        .on(copy.events.COPY_FILE_COMPLETE, function() {
-          fileCopyCount++;
-          aggregateBench.get("Passthrough Copy File").after();
-        })
-        .then(() => {
-          return fileCopyCount;
-        });
+      return Promise.reject(
+        new TemplatePassthroughError(
+          "Destination is not in the site output directory. Check your passthrough paths."
+        )
+      );
     }
-    return Promise.reject(
-      new TemplatePassthroughError(
-        "Destination is not in the site output directory. Check your passthrough paths."
-      )
-    );
+
+    let fileCopyCount = 0;
+    let map = {};
+
+    // returns a promise
+    return copy(src, dest, copyOptions)
+      .on(copy.events.COPY_FILE_START, function (copyOp) {
+        // Access to individual files at `copyOp.src`
+        debug("Copying individual file %o", copyOp.src);
+        map[copyOp.src] = copyOp.dest;
+        aggregateBench.get("Passthrough Copy File").before();
+      })
+      .on(copy.events.COPY_FILE_COMPLETE, function () {
+        fileCopyCount++;
+        aggregateBench.get("Passthrough Copy File").after();
+      })
+      .then(() => {
+        return {
+          count: fileCopyCount,
+          map,
+        };
+      });
   }
 
   async write() {
+    if (this.isDryRun) {
+      return Promise.resolve({
+        count: 0,
+        map: {},
+      });
+    }
+
     const copyOptions = {
       overwrite: true,
       dot: true,
       junk: false,
-      results: false
+      results: false,
     };
+    let promises = [];
 
-    if (!this.isDryRun) {
-      debug("Copying %o", this.inputPath);
+    debug("Copying %o", this.inputPath);
 
-      // If directory or file, recursive copy
-      if (await TemplatePath.exists(this.inputPath)) {
-        // IMPORTANT: this returns a promise, does not await for promise to finish
-        return this.copy(this.inputPath, this.getOutputPath(), copyOptions);
-      }
-
-      // If not directory or file, attempt to get globs
-      const files = await this.getFiles(this.inputPath);
-
-      const promises = files.map(inputFile =>
-        this.copy(inputFile, this.getOutputPath(inputFile), copyOptions)
+    if (!isGlob(this.inputPath) && fs.existsSync(this.inputPath)) {
+      // IMPORTANT: this returns a promise, does not await for promise to finish
+      promises.push(
+        this.copy(this.inputPath, this.getOutputPath(), copyOptions)
       );
+    } else {
+      // If not directory or file, attempt to get globs
+      let files = await this.getFiles(this.inputPath);
 
-      return Promise.all(promises).catch(err => {
+      promises = files.map((inputFile) => {
+        let target = this.getOutputPath(inputFile);
+        return this.copy(inputFile, target, copyOptions);
+      });
+    }
+
+    // IMPORTANT: this returns an array of promises, does not await for promise to finish
+    return Promise.all(promises)
+      .then((results) => {
+        // collate the count and input/output map results from the array.
+        let count = 0;
+        let map = {};
+
+        for (let result of results) {
+          count += result.count;
+          Object.assign(map, result.map);
+        }
+
+        return {
+          count,
+          map,
+        };
+      })
+      .catch((err) => {
         throw new TemplatePassthroughError(
           `Error copying passthrough files: ${err.message}`,
           err
         );
       });
-    }
   }
 }
 

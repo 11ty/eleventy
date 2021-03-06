@@ -1,4 +1,5 @@
 const test = require("ava");
+const fs = require("fs");
 const TemplatePath = require("../src/TemplatePath");
 
 test("getDir", (t) => {
@@ -321,8 +322,8 @@ test("isDirectory", async (t) => {
 });
 
 test("exists", async (t) => {
-  t.is(await TemplatePath.exists("asdlkfjklsadjflkja"), false);
-  t.is(await TemplatePath.exists("test"), true);
-  t.is(await TemplatePath.exists("test/stubs"), true);
-  t.is(await TemplatePath.exists("test/stubs/.eleventyignore"), true);
+  t.is(fs.existsSync("asdlkfjklsadjflkja"), false);
+  t.is(fs.existsSync("test"), true);
+  t.is(fs.existsSync("test/stubs"), true);
+  t.is(fs.existsSync("test/stubs/.eleventyignore"), true);
 });
