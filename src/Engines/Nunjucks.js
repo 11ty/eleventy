@@ -9,105 +9,105 @@ const eventBus = require("../EventBus");
  * The IFFE below apply a monkey-patch to Nunjucks internals to cache
  * compiled templates and re-use them where possible.
  */
-(function () {
-  let templateCache = new Map();
+// (function () {
+//   let templateCache = new Map();
 
-  let getKey = (obj) => {
-    return [
-      obj.path || obj.tmplStr,
-      obj.tmplStr.length,
-      obj.env.asyncFilters.length,
-      obj.env.extensionsList
-        .map((e) => {
-          return e.__id || "";
-        })
-        .join(":"),
-    ].join(" :: ");
-  };
+//   let getKey = (obj) => {
+//     return [
+//       obj.path || obj.tmplStr,
+//       obj.tmplStr.length,
+//       obj.env.asyncFilters.length,
+//       obj.env.extensionsList
+//         .map((e) => {
+//           return e.__id || "";
+//         })
+//         .join(":"),
+//     ].join(" :: ");
+//   };
 
-  let evictByPath = (path) => {
-    let keys = templateCache.keys();
-    // Likely to be slow; do we care?
-    for (let k of keys) {
-      if (k.indexOf(path) >= 0) {
-        templateCache.delete(k);
-      }
-    }
-  };
-  eventBus.on("resourceModified", evictByPath);
+//   let evictByPath = (path) => {
+//     let keys = templateCache.keys();
+//     // Likely to be slow; do we care?
+//     for (let k of keys) {
+//       if (k.indexOf(path) >= 0) {
+//         templateCache.delete(k);
+//       }
+//     }
+//   };
+//   eventBus.on("resourceModified", evictByPath);
 
-  let _compile = NunjucksLib.Template.prototype._compile;
-  NunjucksLib.Template.prototype._compile = function _wrap_compile(...args) {
-    if (!this.compiled && !this.tmplProps && templateCache.has(getKey(this))) {
-      let pathProps = templateCache.get(getKey(this));
-      this.blocks = pathProps.blocks;
-      this.rootRenderFunc = pathProps.rootRenderFunc;
-      this.compiled = true;
-    } else {
-      _compile.call(this, ...args);
-      templateCache.set(getKey(this), {
-        blocks: this.blocks,
-        rootRenderFunc: this.rootRenderFunc,
-      });
-    }
-  };
+//   let _compile = NunjucksLib.Template.prototype._compile;
+//   NunjucksLib.Template.prototype._compile = function _wrap_compile(...args) {
+//     if (!this.compiled && !this.tmplProps && templateCache.has(getKey(this))) {
+//       let pathProps = templateCache.get(getKey(this));
+//       this.blocks = pathProps.blocks;
+//       this.rootRenderFunc = pathProps.rootRenderFunc;
+//       this.compiled = true;
+//     } else {
+//       _compile.call(this, ...args);
+//       templateCache.set(getKey(this), {
+//         blocks: this.blocks,
+//         rootRenderFunc: this.rootRenderFunc,
+//       });
+//     }
+//   };
 
-  let extensionIdCounter = 0;
-  let addExtension = NunjucksLib.Environment.prototype.addExtension;
-  NunjucksLib.Environment.prototype.addExtension = function _wrap_addExtension(
-    name,
-    ext
-  ) {
-    if (!("__id" in ext)) {
-      ext.__id = extensionIdCounter++;
-    }
-    return addExtension.call(this, name, ext);
-  };
+//   let extensionIdCounter = 0;
+//   let addExtension = NunjucksLib.Environment.prototype.addExtension;
+//   NunjucksLib.Environment.prototype.addExtension = function _wrap_addExtension(
+//     name,
+//     ext
+//   ) {
+//     if (!("__id" in ext)) {
+//       ext.__id = extensionIdCounter++;
+//     }
+//     return addExtension.call(this, name, ext);
+//   };
 
-  // NunjucksLib.runtime.Frame.prototype.set is the hotest in-template method.
-  // We replace it with a version that doesn't allocate a `parts` array on
-  // repeat key use.
-  let partsCache = new Map();
-  let partsFromCache = (name) => {
-    if (partsCache.has(name)) {
-      return partsCache.get(name);
-    }
+//   // NunjucksLib.runtime.Frame.prototype.set is the hotest in-template method.
+//   // We replace it with a version that doesn't allocate a `parts` array on
+//   // repeat key use.
+//   let partsCache = new Map();
+//   let partsFromCache = (name) => {
+//     if (partsCache.has(name)) {
+//       return partsCache.get(name);
+//     }
 
-    let parts = name.split(".");
-    partsCache.set(name, parts);
-    return parts;
-  };
+//     let parts = name.split(".");
+//     partsCache.set(name, parts);
+//     return parts;
+//   };
 
-  let frameSet = NunjucksLib.runtime.Frame.prototype.set;
-  NunjucksLib.runtime.Frame.prototype.set = function _replacement_set(
-    name,
-    val,
-    resolveUp
-  ) {
-    let parts = partsFromCache(name);
-    let frame = this;
-    let obj = frame.variables;
+//   let frameSet = NunjucksLib.runtime.Frame.prototype.set;
+//   NunjucksLib.runtime.Frame.prototype.set = function _replacement_set(
+//     name,
+//     val,
+//     resolveUp
+//   ) {
+//     let parts = partsFromCache(name);
+//     let frame = this;
+//     let obj = frame.variables;
 
-    if (resolveUp) {
-      if ((frame = this.resolve(parts[0], true))) {
-        frame.set(name, val);
-        return;
-      }
-    }
+//     if (resolveUp) {
+//       if ((frame = this.resolve(parts[0], true))) {
+//         frame.set(name, val);
+//         return;
+//       }
+//     }
 
-    // A slightly faster version of the intermediate object allocation loop
-    let count = parts.length - 1;
-    let i = 0;
-    let id = parts[0];
-    while (i < count) {
-      if (!obj.hasOwnProperty(id)) {
-        obj = obj[id] = {};
-      }
-      id = parts[++i];
-    }
-    obj[id] = val;
-  };
-})();
+//     // A slightly faster version of the intermediate object allocation loop
+//     let count = parts.length - 1;
+//     let i = 0;
+//     let id = parts[0];
+//     while (i < count) {
+//       if (!obj.hasOwnProperty(id)) {
+//         obj = obj[id] = {};
+//       }
+//       id = parts[++i];
+//     }
+//     obj[id] = val;
+//   };
+// })();
 
 class EleventyShortcodeError extends EleventyBaseError {}
 
