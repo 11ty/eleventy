@@ -2,6 +2,8 @@ const test = require("ava");
 const fs = require("fs-extra");
 const TemplatePassthroughManager = require("../src/TemplatePassthroughManager");
 const TemplateConfig = require("../src/TemplateConfig");
+const EleventyFiles = require("../src/EleventyFiles");
+const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 
 test("Get paths from Config", async (t) => {
   let eleventyConfig = new TemplateConfig();
@@ -99,7 +101,8 @@ test("Naughty paths outside of project dir", async (t) => {
 
   await t.throwsAsync(async function () {
     for (let path of mgr.getConfigPaths()) {
-      await mgr.copyPath(path);
+      let pass = mgr.getTemplatePassthroughForPath(path);
+      await mgr.copyPassthrough(pass);
     }
   });
 
@@ -120,4 +123,55 @@ test("Naughty paths outside of project dir", async (t) => {
   for (let result of results) {
     t.false(result);
   }
+});
+
+test("getAllNormalizedPaths", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.passthroughCopies = {
+    img: true,
+  };
+
+  let mgr = new TemplatePassthroughManager(eleventyConfig);
+  t.deepEqual(mgr.getAllNormalizedPaths(), [
+    { inputPath: "./img", outputPath: true },
+  ]);
+});
+
+test("getAllNormalizedPaths with globs", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.passthroughCopies = {
+    img: true,
+    "img/**": "./",
+    "img/*.js": "./",
+  };
+
+  let mgr = new TemplatePassthroughManager(eleventyConfig);
+  t.deepEqual(mgr.getAllNormalizedPaths(), [
+    { inputPath: "./img", outputPath: true },
+    { inputPath: "./img/**", outputPath: "" },
+    { inputPath: "./img/*.js", outputPath: "" },
+  ]);
+});
+
+test("Look for uniqueness on template passthrough paths #1677", async (t) => {
+  let formats = [];
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.passthroughCopies = {
+    "./test/stubs/template-passthrough-duplicates/**/*.png": "./",
+  };
+
+  let files = new EleventyFiles(
+    "test/stubs/template-passthrough-duplicates",
+    "test/stubs/template-passthrough-duplicates/_site",
+    formats,
+    eleventyConfig
+  );
+  files.init();
+
+  let mgr = files.getPassthroughManager();
+  await t.throwsAsync(async function () {
+    await mgr.copyAll();
+  });
+
+  fs.unlinkSync("test/stubs/template-passthrough-duplicates/_site/avatar.png");
 });

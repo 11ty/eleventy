@@ -525,10 +525,13 @@ Arguments:
         incrementalFile,
         this.eleventyFiles.getIncludesDir()
       );
-      let isLayout = TemplatePath.startsWithSubPath(
-        incrementalFile,
-        this.eleventyFiles.getLayoutsDir()
-      );
+
+      let isLayout = false;
+      let layoutsDir = this.eleventyFiles.getLayoutsDir();
+      if (layoutsDir) {
+        isLayout = TemplatePath.startsWithSubPath(incrementalFile, layoutsDir);
+      }
+
       let isJSDependency = this.watchTargets.isJavaScriptDependency(
         incrementalFile
       );
@@ -537,8 +540,9 @@ Arguments:
       }
     }
 
-    let writeResult = await this.write();
-    let hasError = !!writeResult.error;
+    await this.write();
+    // let writeResult = await this.write();
+    // let hasError = !!writeResult.error;
 
     this.writer.resetIncrementalFile();
 
@@ -680,7 +684,10 @@ Arguments:
       {
         ignored: ignores,
         ignoreInitial: true,
-        // also interesting: awaitWriteFinish
+        awaitWriteFinish: {
+          stabilityThreshold: 150,
+          pollInterval: 25,
+        },
       },
       configOptions
     );
