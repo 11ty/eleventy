@@ -1,38 +1,50 @@
 const TemplateEngineManager = require("./TemplateEngineManager");
+const TemplateConfig = require("./TemplateConfig");
 const TemplatePath = require("./TemplatePath");
+const EleventyBaseError = require("./EleventyBaseError");
+
+class EleventyExtensionMapConfigError extends EleventyBaseError {}
 
 class EleventyExtensionMap {
-  constructor(formatKeys) {
+  constructor(formatKeys, config) {
+    if (!config) {
+      throw new EleventyExtensionMapConfigError("Missing `config` argument.");
+    }
+    this._config = config;
+
     this.formatKeys = formatKeys;
 
     this.setFormats(formatKeys);
   }
 
   setFormats(formatKeys = []) {
-    this.unfilteredFormatKeys = formatKeys.map(function(key) {
+    this.unfilteredFormatKeys = formatKeys.map(function (key) {
       return key.trim().toLowerCase();
     });
 
-    this.validTemplateLanguageKeys = this.unfilteredFormatKeys.filter(key =>
+    this.validTemplateLanguageKeys = this.unfilteredFormatKeys.filter((key) =>
       this.hasExtension(key)
     );
 
     this.passthroughCopyKeys = this.unfilteredFormatKeys.filter(
-      key => !this.hasExtension(key)
+      (key) => !this.hasExtension(key)
     );
   }
 
-  get config() {
-    return this.configOverride || require("./Config").getConfig();
-  }
   set config(cfg) {
-    this.configOverride = cfg;
+    this._config = cfg;
+  }
+
+  get config() {
+    if (this._config instanceof TemplateConfig) {
+      return this._config.getConfig();
+    }
+    return this._config;
   }
 
   get engineManager() {
     if (!this._engineManager) {
-      this._engineManager = new TemplateEngineManager();
-      this._engineManager.config = this.config;
+      this._engineManager = new TemplateEngineManager(this.config);
     }
 
     return this._engineManager;
@@ -46,14 +58,23 @@ class EleventyExtensionMap {
 
     let files = [];
     this.validTemplateLanguageKeys.forEach(
-      function(key) {
-        this.getExtensionsFromKey(key).forEach(function(extension) {
+      function (key) {
+        this.getExtensionsFromKey(key).forEach(function (extension) {
           files.push((dir ? dir + "/" : "") + path + "." + extension);
         });
       }.bind(this)
     );
 
     return files;
+  }
+
+  isFullTemplateFilename(path) {
+    for (let extension of this.validTemplateLanguageKeys) {
+      if (path.endsWith(`.${extension}`)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   getPassthroughCopyGlobs(inputDir) {
@@ -65,20 +86,16 @@ class EleventyExtensionMap {
   }
 
   getGlobs(inputDir) {
-    if (this.config.passthroughFileCopy) {
-      return this._getGlobs(this.unfilteredFormatKeys, inputDir);
-    }
-
-    return this._getGlobs(this.validTemplateLanguageKeys, inputDir);
+    return this._getGlobs(this.unfilteredFormatKeys, inputDir);
   }
 
   _getGlobs(formatKeys, inputDir) {
     let dir = TemplatePath.convertToRecursiveGlobSync(inputDir);
     let globs = [];
     formatKeys.forEach(
-      function(key) {
+      function (key) {
         if (this.hasExtension(key)) {
-          this.getExtensionsFromKey(key).forEach(function(extension) {
+          this.getExtensionsFromKey(key).forEach(function (extension) {
             globs.push(dir + "/*." + extension);
           });
         } else {
@@ -141,7 +158,6 @@ class EleventyExtensionMap {
       this._extensionToKeyMap = {
         ejs: "ejs",
         md: "md",
-        jstl: "jstl",
         html: "html",
         hbs: "hbs",
         mustache: "mustache",
@@ -150,7 +166,7 @@ class EleventyExtensionMap {
         njk: "njk",
         liquid: "liquid",
         "11ty.js": "11ty.js",
-        "11ty.cjs": "11ty.js"
+        "11ty.cjs": "11ty.js",
       };
 
       if ("extensionMap" in this.config) {
@@ -161,6 +177,10 @@ class EleventyExtensionMap {
     }
 
     return this._extensionToKeyMap;
+  }
+
+  getReadableFileExtensions() {
+    return Object.keys(this.extensionToKeyMap).join(" ");
   }
 }
 

@@ -1,44 +1,44 @@
-import test from "ava";
-import fastglob from "fast-glob";
-import TemplatePath from "../src/TemplatePath";
-import TemplateGlob from "../src/TemplateGlob";
+const test = require("ava");
+const fastglob = require("fast-glob");
+const TemplatePath = require("../src/TemplatePath");
+const TemplateGlob = require("../src/TemplateGlob");
 
-test("TemplatePath assumptions", t => {
+test("TemplatePath assumptions", (t) => {
   t.is(TemplatePath.normalize("ignoredFolder"), "ignoredFolder");
   t.is(TemplatePath.normalize("./ignoredFolder"), "ignoredFolder");
   t.is(TemplatePath.normalize("./ignoredFolder/"), "ignoredFolder");
 });
 
-test("Normalize string argument", t => {
+test("Normalize string argument", (t) => {
   t.deepEqual(TemplateGlob.map("views"), "./views");
   t.deepEqual(TemplateGlob.map("views/"), "./views");
   t.deepEqual(TemplateGlob.map("./views"), "./views");
   t.deepEqual(TemplateGlob.map("./views/"), "./views");
 });
 
-test("Normalize with nots", t => {
+test("Normalize with nots", (t) => {
   t.deepEqual(TemplateGlob.map("!views"), "!./views");
   t.deepEqual(TemplateGlob.map("!views/"), "!./views");
   t.deepEqual(TemplateGlob.map("!./views"), "!./views");
   t.deepEqual(TemplateGlob.map("!./views/"), "!./views");
 });
 
-test("Normalize with globstar", t => {
+test("Normalize with globstar", (t) => {
   t.deepEqual(TemplateGlob.map("!views/**"), "!./views/**");
   t.deepEqual(TemplateGlob.map("!./views/**"), "!./views/**");
 });
 
-test("Normalize with globstar and star", t => {
+test("Normalize with globstar and star", (t) => {
   t.deepEqual(TemplateGlob.map("!views/**/*"), "!./views/**/*");
   t.deepEqual(TemplateGlob.map("!./views/**/*"), "!./views/**/*");
 });
 
-test("Normalize with globstar and star and file extension", t => {
+test("Normalize with globstar and star and file extension", (t) => {
   t.deepEqual(TemplateGlob.map("!views/**/*.json"), "!./views/**/*.json");
   t.deepEqual(TemplateGlob.map("!./views/**/*.json"), "!./views/**/*.json");
 });
 
-test("NormalizePath with globstar and star and file extension", t => {
+test("NormalizePath with globstar and star and file extension", (t) => {
   t.deepEqual(
     TemplateGlob.normalizePath("views", "/", "**/*.json"),
     "./views/**/*.json"
@@ -49,7 +49,7 @@ test("NormalizePath with globstar and star and file extension", t => {
   );
 });
 
-test("NormalizePath with globstar and star and file extension (errors)", t => {
+test("NormalizePath with globstar and star and file extension (errors)", (t) => {
   t.throws(() => {
     TemplateGlob.normalizePath("!views/**/*.json");
   });
@@ -67,24 +67,24 @@ test("NormalizePath with globstar and star and file extension (errors)", t => {
   });
 });
 
-test("Normalize array argument", t => {
+test("Normalize array argument", (t) => {
   t.deepEqual(TemplateGlob.map(["views", "content"]), ["./views", "./content"]);
   t.deepEqual(TemplateGlob.map("views/"), "./views");
   t.deepEqual(TemplateGlob.map("./views"), "./views");
   t.deepEqual(TemplateGlob.map("./views/"), "./views");
 });
 
-test("matuzo project issue with fastglob assumptions", async t => {
+test("matuzo project issue with fastglob assumptions", async (t) => {
   let dotslashincludes = await fastglob(
     TemplateGlob.map([
       "./test/stubs/globby/**/*.html",
       "!./test/stubs/globby/_includes/**/*",
-      "!./test/stubs/globby/_data/**/*"
+      "!./test/stubs/globby/_data/**/*",
     ])
   );
 
   t.is(
-    dotslashincludes.filter(function(file) {
+    dotslashincludes.filter(function (file) {
       return file.indexOf("_includes") > -1;
     }).length,
     0
@@ -94,18 +94,18 @@ test("matuzo project issue with fastglob assumptions", async t => {
     TemplateGlob.map([
       "test/stubs/globby/**/*.html",
       "!./test/stubs/globby/_includes/**/*",
-      "!./test/stubs/globby/_data/**/*"
+      "!./test/stubs/globby/_data/**/*",
     ])
   );
   t.is(
-    globincludes.filter(function(file) {
+    globincludes.filter(function (file) {
       return file.indexOf("_includes") > -1;
     }).length,
     0
   );
 });
 
-test("fastglob assumptions", async t => {
+test("fastglob assumptions", async (t) => {
   let glob = await fastglob("test/stubs/ignoredFolder/**");
   t.is(glob.length, 1);
 
@@ -114,19 +114,19 @@ test("fastglob assumptions", async t => {
 
   let glob3 = await fastglob([
     "./test/stubs/ignoredFolder/**/*.md",
-    "!./test/stubs/ignoredFolder/**"
+    "!./test/stubs/ignoredFolder/**",
   ]);
   t.is(glob3.length, 0);
 
   let glob4 = await fastglob([
     "./test/stubs/ignoredFolder/*.md",
-    "!./test/stubs/ignoredFolder/**"
+    "!./test/stubs/ignoredFolder/**",
   ]);
   t.is(glob4.length, 0);
 
   let glob5 = await fastglob([
     "./test/stubs/ignoredFolder/ignored.md",
-    "!./test/stubs/ignoredFolder/**"
+    "!./test/stubs/ignoredFolder/**",
   ]);
   t.is(glob5.length, 0);
 });

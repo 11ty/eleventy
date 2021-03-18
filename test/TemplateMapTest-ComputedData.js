@@ -1,28 +1,39 @@
-import test from "ava";
-import Template from "../src/Template";
-import TemplateData from "../src/TemplateData";
-import TemplateMap from "../src/TemplateMap";
-import getNewTemplate from "./_getNewTemplateForTests";
+const test = require("ava");
+const TemplateConfig = require("../src/TemplateConfig");
+const TemplateData = require("../src/TemplateData");
+const TemplateMap = require("../src/TemplateMap");
+const getNewTemplate = require("./_getNewTemplateForTests");
 
 test("Computed data can see tag generated collections", async (t) => {
-  let tm = new TemplateMap();
+  let eleventyConfig = new TemplateConfig();
+  let tm = new TemplateMap(eleventyConfig);
 
-  let dataObj = new TemplateData("./test/stubs-computed-collections/");
+  let dataObj = new TemplateData(
+    "./test/stubs-computed-collections/",
+    eleventyConfig
+  );
   let tmpl = getNewTemplate(
     "./test/stubs-computed-collections/collections.njk",
     "./test/stubs-computed-collections/",
     "./dist",
-    dataObj
+    dataObj,
+    null,
+    eleventyConfig
   );
 
   await tm.add(tmpl);
 
-  let dataObj2 = new TemplateData("./test/stubs-computed-collections/");
+  let dataObj2 = new TemplateData(
+    "./test/stubs-computed-collections/",
+    eleventyConfig
+  );
   let tmpl2 = getNewTemplate(
     "./test/stubs-computed-collections/dog.njk",
     "./test/stubs-computed-collections/",
     "./dist",
-    dataObj2
+    dataObj2,
+    null,
+    eleventyConfig
   );
 
   await tm.add(tmpl2);
@@ -46,24 +57,35 @@ test("Computed data can see tag generated collections", async (t) => {
 });
 
 test("Computed data can see paginated data, Issue #1138", async (t) => {
-  let tm = new TemplateMap();
+  let eleventyConfig = new TemplateConfig();
+  let tm = new TemplateMap(eleventyConfig);
 
-  let dataObj = new TemplateData("./test/stubs-computed-pagination/");
+  let dataObj = new TemplateData(
+    "./test/stubs-computed-pagination/",
+    eleventyConfig
+  );
   let tmpl = getNewTemplate(
     "./test/stubs-computed-pagination/paginated.njk",
     "./test/stubs-computed-pagination/",
     "./dist",
-    dataObj
+    dataObj,
+    null,
+    eleventyConfig
   );
 
   await tm.add(tmpl);
 
-  let dataObj2 = new TemplateData("./test/stubs-computed-pagination/");
+  let dataObj2 = new TemplateData(
+    "./test/stubs-computed-pagination/",
+    eleventyConfig
+  );
   let tmpl2 = getNewTemplate(
     "./test/stubs-computed-pagination/child.11ty.js",
     "./test/stubs-computed-pagination/",
     "./dist",
-    dataObj2
+    dataObj2,
+    null,
+    eleventyConfig
   );
 
   await tm.add(tmpl2);
@@ -99,24 +121,35 @@ test("Computed data can see paginated data, Issue #1138", async (t) => {
 });
 
 test("Computed data in directory data file consumes data file data, Issue #1137", async (t) => {
-  let tm = new TemplateMap();
+  let eleventyConfig = new TemplateConfig();
+  let tm = new TemplateMap(eleventyConfig);
 
-  let dataObj = new TemplateData("./test/stubs-computed-dirdata/");
+  let dataObj = new TemplateData(
+    "./test/stubs-computed-dirdata/",
+    eleventyConfig
+  );
   let tmpl = getNewTemplate(
     "./test/stubs-computed-dirdata/dir/first.11ty.js",
     "./test/stubs-computed-dirdata/",
     "./dist",
-    dataObj
+    dataObj,
+    null,
+    eleventyConfig
   );
 
   await tm.add(tmpl);
 
-  let dataObj2 = new TemplateData("./test/stubs-computed-dirdata/");
+  let dataObj2 = new TemplateData(
+    "./test/stubs-computed-dirdata/",
+    eleventyConfig
+  );
   let tmpl2 = getNewTemplate(
     "./test/stubs-computed-dirdata/dir/second.11ty.js",
     "./test/stubs-computed-dirdata/",
     "./dist",
-    dataObj2
+    dataObj2,
+    null,
+    eleventyConfig
   );
 
   await tm.add(tmpl2);
@@ -131,24 +164,35 @@ test("Computed data in directory data file consumes data file data, Issue #1137"
 });
 
 test("Computed data can filter collections (and other array methods)", async (t) => {
-  let tm = new TemplateMap();
+  let eleventyConfig = new TemplateConfig();
+  let tm = new TemplateMap(eleventyConfig);
 
-  let dataObj = new TemplateData("./test/stubs-computed-collections-filter/");
+  let dataObj = new TemplateData(
+    "./test/stubs-computed-collections-filter/",
+    eleventyConfig
+  );
   let tmpl = getNewTemplate(
     "./test/stubs-computed-collections-filter/collections.njk",
     "./test/stubs-computed-collections-filter/",
     "./dist",
-    dataObj
+    dataObj,
+    null,
+    eleventyConfig
   );
 
   await tm.add(tmpl);
 
-  let dataObj2 = new TemplateData("./test/stubs-computed-collections-filter/");
+  let dataObj2 = new TemplateData(
+    "./test/stubs-computed-collections-filter/",
+    eleventyConfig
+  );
   let tmpl2 = getNewTemplate(
     "./test/stubs-computed-collections-filter/dog.njk",
     "./test/stubs-computed-collections-filter/",
     "./dist",
-    dataObj2
+    dataObj2,
+    null,
+    eleventyConfig
   );
 
   await tm.add(tmpl2);

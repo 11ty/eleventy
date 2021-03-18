@@ -1,3 +1,12 @@
+# Canary Release Procedure
+
+1. npmclean aka `rm -rf node_modules && rm -f package-lock.json && npm install`
+1. Make sure `npx ava` runs okay
+1. Update version in `package.json`, include `-canary.1` suffix
+1. Check it all in and commit
+1. Tag new version
+1. `npm publish --access=public --tag=canary`
+
 # Beta Release Procedure
 
 1. update minor dependencies in package.json?
@@ -26,7 +35,6 @@
 
 ## If branch docs do not exist
 
-1. Make sure `localDev: false` in `config.js`
 1. Check in a new `11ty-website` site with updated `package.json` version.
 1. Add version to 11ty-website `versions.json`
 1. Commit it

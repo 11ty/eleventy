@@ -1,18 +1,20 @@
-const chalk = require("chalk");
-
+const ConsoleLogger = require("./Util/ConsoleLogger");
 const Benchmark = require("./Benchmark");
 const debugBenchmark = require("debug")("Eleventy:Benchmark");
 
 class BenchmarkGroup {
   constructor() {
     this.benchmarks = {};
+    // Warning: aggregate benchmarks automatically default to false via BenchmarkManager->getBenchmarkGroup
     this.isVerbose = true;
+    this.logger = new ConsoleLogger(this.isVerbose);
     this.minimumThresholdMs = 0;
     this.minimumThresholdPercent = 8;
   }
 
   setIsVerbose(isVerbose) {
     this.isVerbose = isVerbose;
+    this.logger.isVerbose = isVerbose;
   }
 
   reset() {
@@ -25,7 +27,7 @@ class BenchmarkGroup {
   add(type, callback) {
     let benchmark = (this.benchmarks[type] = new Benchmark());
 
-    return function(...args) {
+    return function (...args) {
       benchmark.before();
       let ret = callback.call(this, ...args);
       benchmark.after();
@@ -90,20 +92,16 @@ class BenchmarkGroup {
         );
       }
 
-      let str = chalk.yellow(
-        `Benchmark (${label}): ${type} took ${totalForBenchmark.toFixed(0)}ms ${
-          extraOutput.length ? `(${extraOutput.join(", ")})` : ""
-        }`
-      );
+      let str = `Benchmark (${label}): ${type} took ${totalForBenchmark.toFixed(
+        0
+      )}ms ${extraOutput.length ? `(${extraOutput.join(", ")})` : ""}`;
 
       if (
         (isAbsoluteMinimumComparison &&
           totalForBenchmark >= this.minimumThresholdMs) ||
         percent > this.minimumThresholdPercent
       ) {
-        if (this.isVerbose) {
-          console.log(str);
-        }
+        this.logger.warn(str);
       }
 
       if (totalForBenchmark.toFixed(0) > 0) {

@@ -1,7 +1,7 @@
-import test from "ava";
-import pluralize from "../src/Util/Pluralize";
+const test = require("ava");
+const pluralize = require("../src/Util/Pluralize");
 
-test("Pluralize", t => {
+test("Pluralize", (t) => {
   t.is(pluralize(0, "test", "tests"), "tests");
   t.is(pluralize(1, "test", "tests"), "test");
   t.is(pluralize(2, "test", "tests"), "tests");

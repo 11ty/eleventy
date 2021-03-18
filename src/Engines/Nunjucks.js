@@ -3,25 +3,135 @@ const TemplateEngine = require("./TemplateEngine");
 const TemplatePath = require("../TemplatePath");
 const EleventyErrorUtil = require("../EleventyErrorUtil");
 const EleventyBaseError = require("../EleventyBaseError");
+const eventBus = require("../EventBus");
+
+/*
+ * The IFFE below apply a monkey-patch to Nunjucks internals to cache
+ * compiled templates and re-use them where possible.
+ */
+// (function () {
+//   let templateCache = new Map();
+
+//   let getKey = (obj) => {
+//     return [
+//       obj.path || obj.tmplStr,
+//       obj.tmplStr.length,
+//       obj.env.asyncFilters.length,
+//       obj.env.extensionsList
+//         .map((e) => {
+//           return e.__id || "";
+//         })
+//         .join(":"),
+//     ].join(" :: ");
+//   };
+
+//   let evictByPath = (path) => {
+//     let keys = templateCache.keys();
+//     // Likely to be slow; do we care?
+//     for (let k of keys) {
+//       if (k.indexOf(path) >= 0) {
+//         templateCache.delete(k);
+//       }
+//     }
+//   };
+//   eventBus.on("resourceModified", evictByPath);
+
+//   let _compile = NunjucksLib.Template.prototype._compile;
+//   NunjucksLib.Template.prototype._compile = function _wrap_compile(...args) {
+//     if (!this.compiled && !this.tmplProps && templateCache.has(getKey(this))) {
+//       let pathProps = templateCache.get(getKey(this));
+//       this.blocks = pathProps.blocks;
+//       this.rootRenderFunc = pathProps.rootRenderFunc;
+//       this.compiled = true;
+//     } else {
+//       _compile.call(this, ...args);
+//       templateCache.set(getKey(this), {
+//         blocks: this.blocks,
+//         rootRenderFunc: this.rootRenderFunc,
+//       });
+//     }
+//   };
+
+//   let extensionIdCounter = 0;
+//   let addExtension = NunjucksLib.Environment.prototype.addExtension;
+//   NunjucksLib.Environment.prototype.addExtension = function _wrap_addExtension(
+//     name,
+//     ext
+//   ) {
+//     if (!("__id" in ext)) {
+//       ext.__id = extensionIdCounter++;
+//     }
+//     return addExtension.call(this, name, ext);
+//   };
+
+//   // NunjucksLib.runtime.Frame.prototype.set is the hotest in-template method.
+//   // We replace it with a version that doesn't allocate a `parts` array on
+//   // repeat key use.
+//   let partsCache = new Map();
+//   let partsFromCache = (name) => {
+//     if (partsCache.has(name)) {
+//       return partsCache.get(name);
+//     }
+
+//     let parts = name.split(".");
+//     partsCache.set(name, parts);
+//     return parts;
+//   };
+
+//   let frameSet = NunjucksLib.runtime.Frame.prototype.set;
+//   NunjucksLib.runtime.Frame.prototype.set = function _replacement_set(
+//     name,
+//     val,
+//     resolveUp
+//   ) {
+//     let parts = partsFromCache(name);
+//     let frame = this;
+//     let obj = frame.variables;
+
+//     if (resolveUp) {
+//       if ((frame = this.resolve(parts[0], true))) {
+//         frame.set(name, val);
+//         return;
+//       }
+//     }
+
+//     // A slightly faster version of the intermediate object allocation loop
+//     let count = parts.length - 1;
+//     let i = 0;
+//     let id = parts[0];
+//     while (i < count) {
+//       if (!obj.hasOwnProperty(id)) {
+//         obj = obj[id] = {};
+//       }
+//       id = parts[++i];
+//     }
+//     obj[id] = val;
+//   };
+// })();
 
 class EleventyShortcodeError extends EleventyBaseError {}
 
 class Nunjucks extends TemplateEngine {
-  constructor(name, includesDir) {
-    super(name, includesDir);
+  constructor(name, includesDir, config) {
+    super(name, includesDir, config);
 
     this.setLibrary(this.config.libraryOverrides.njk);
+
+    this.cacheable = true;
   }
 
   setLibrary(env) {
-    this.njkEnv =
-      env ||
-      new NunjucksLib.Environment(
-        new NunjucksLib.FileSystemLoader([
-          super.getIncludesDir(),
-          TemplatePath.getWorkingDir()
-        ])
-      );
+    let fsLoader = new NunjucksLib.FileSystemLoader([
+      super.getIncludesDir(),
+      TemplatePath.getWorkingDir(),
+    ]);
+    this.njkEnv = env || new NunjucksLib.Environment(fsLoader);
+    // Correct, but overbroad. Better would be to evict more granularly, but
+    // resolution from paths isn't straightforward.
+    eventBus.on("resourceModified", (path) => {
+      this.njkEnv.invalidateCache();
+    });
+
     this.setEngineLib(this.njkEnv);
 
     this.addFilters(this.config.nunjucksFilters);
@@ -36,6 +146,7 @@ class Nunjucks extends TemplateEngine {
       this.config.nunjucksAsyncPairedShortcodes,
       true
     );
+    this.addGlobals(this.config.nunjucksGlobals);
   }
 
   addFilters(helpers, isAsync) {
@@ -63,6 +174,16 @@ class Nunjucks extends TemplateEngine {
     this.njkEnv.addExtension(name, tagObj);
   }
 
+  addGlobals(globals) {
+    for (let name in globals) {
+      this.addGlobal(name, globals[name]);
+    }
+  }
+
+  addGlobal(name, globalFn) {
+    this.njkEnv.addGlobal(name, globalFn);
+  }
+
   addAllShortcodes(shortcodes, isAsync = false) {
     for (let name in shortcodes) {
       this.addShortcode(name, shortcodes[name], isAsync);
@@ -87,7 +208,7 @@ class Nunjucks extends TemplateEngine {
     function ShortcodeFunction() {
       this.tags = [shortcodeName];
 
-      this.parse = function(parser, nodes, lexer) {
+      this.parse = function (parser, nodes) {
         let args;
         let tok = parser.nextToken();
 
@@ -107,7 +228,7 @@ class Nunjucks extends TemplateEngine {
         return new nodes.CallExtension(this, "run", args);
       };
 
-      this.run = function(...args) {
+      this.run = function (...args) {
         let resolve;
         if (isAsync) {
           resolve = args.pop();
@@ -118,10 +239,10 @@ class Nunjucks extends TemplateEngine {
         if (isAsync) {
           shortcodeFn
             .call(Nunjucks._normalizeShortcodeContext(context), ...argArray)
-            .then(function(returnValue) {
+            .then(function (returnValue) {
               resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
             })
-            .catch(function(e) {
+            .catch(function (e) {
               resolve(
                 new EleventyShortcodeError(
                   `Error with Nunjucks shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
@@ -133,7 +254,6 @@ class Nunjucks extends TemplateEngine {
             });
         } else {
           try {
-            // console.log( shortcodeFn.toString() );
             return new NunjucksLib.runtime.SafeString(
               shortcodeFn.call(
                 Nunjucks._normalizeShortcodeContext(context),
@@ -158,7 +278,7 @@ class Nunjucks extends TemplateEngine {
     function PairedShortcodeFunction() {
       this.tags = [shortcodeName];
 
-      this.parse = function(parser, nodes, lexer) {
+      this.parse = function (parser, nodes) {
         var tok = parser.nextToken();
 
         var args = parser.parseSignature(true, true);
@@ -173,7 +293,7 @@ class Nunjucks extends TemplateEngine {
         return new nodes.CallExtension(this, "run", args, [body]);
       };
 
-      this.run = function(...args) {
+      this.run = function (...args) {
         let resolve;
         if (isAsync) {
           resolve = args.pop();
@@ -188,10 +308,10 @@ class Nunjucks extends TemplateEngine {
               body(),
               ...argArray
             )
-            .then(function(returnValue) {
+            .then(function (returnValue) {
               resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
             })
-            .catch(function(e) {
+            .catch(function (e) {
               resolve(
                 new EleventyShortcodeError(
                   `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
@@ -225,15 +345,35 @@ class Nunjucks extends TemplateEngine {
   }
 
   async compile(str, inputPath) {
+    // Defend against syntax customisations:
+    //    https://mozilla.github.io/nunjucks/api.html#customizing-syntax
+    let optsTags = this.njkEnv.opts.tags || {};
+    let blockStart = optsTags.blockStart || "{%";
+    let variableStart = optsTags.variableStart || "{{";
+    let commentStart = optsTags.variableStart || "{#";
+    let needsCompile =
+      str.indexOf(blockStart) != -1 ||
+      str.indexOf(variableStart) != -1 ||
+      str.indexOf(commentStart) != -1;
+    if (!needsCompile) {
+      return async function () {
+        return str;
+      };
+    }
+
+    // for(let loader of this.njkEnv.loaders) {
+    //   loader.cache = {};
+    // }
+
     let tmpl;
     if (!inputPath || inputPath === "njk" || inputPath === "md") {
-      tmpl = NunjucksLib.compile(str, this.njkEnv);
+      tmpl = new NunjucksLib.Template(str, this.njkEnv, null, true);
     } else {
-      tmpl = NunjucksLib.compile(str, this.njkEnv, inputPath);
+      tmpl = new NunjucksLib.Template(str, this.njkEnv, inputPath, true);
     }
-    return async function(data) {
-      return new Promise(function(resolve, reject) {
-        tmpl.render(data, function(err, res) {
+    return async function (data) {
+      return new Promise(function (resolve, reject) {
+        tmpl.render(data, function (err, res) {
           if (err) {
             reject(err);
           } else {

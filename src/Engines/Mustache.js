@@ -2,8 +2,8 @@ const MustacheLib = require("mustache");
 const TemplateEngine = require("./TemplateEngine");
 
 class Mustache extends TemplateEngine {
-  constructor(name, includesDir) {
-    super(name, includesDir);
+  constructor(name, includesDir, config) {
+    super(name, includesDir, config);
 
     this.setLibrary(this.config.libraryOverrides.mustache);
   }
@@ -13,10 +13,10 @@ class Mustache extends TemplateEngine {
     this.setEngineLib(this.mustacheLib);
   }
 
-  async compile(str, inputPath) {
+  async compile(str) {
     let partials = super.getPartials();
 
-    return function(data) {
+    return function (data) {
       return this.render(str, data, partials).trim();
     }.bind(this.mustacheLib);
   }

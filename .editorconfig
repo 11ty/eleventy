@@ -10,3 +10,6 @@ charset = utf-8
 
 [*.js]
 insert_final_newline = true
+
+[/test/stubs*/**]
+insert_final_newline = unset

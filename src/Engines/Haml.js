@@ -1,10 +1,9 @@
 const HamlLib = require("hamljs");
 const TemplateEngine = require("./TemplateEngine");
-const config = require("../Config");
 
 class Haml extends TemplateEngine {
-  constructor(name, includesDir) {
-    super(name, includesDir);
+  constructor(name, includesDir, config) {
+    super(name, includesDir, config);
 
     this.setLibrary(this.config.libraryOverrides.haml);
   }
@@ -14,7 +13,7 @@ class Haml extends TemplateEngine {
     this.setEngineLib(lib);
   }
 
-  async compile(str, inputPath) {
+  async compile(str) {
     return this.hamlLib.compile(str);
   }
 }

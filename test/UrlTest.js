@@ -1,12 +1,22 @@
-import test from "ava";
-import url from "../src/Filters/Url.js";
+const test = require("ava");
+const TemplateConfig = require("../src/TemplateConfig.js");
+const url = require("../src/Filters/Url.js");
+
+test("Test url filter passing in pathPrefix from config", (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let pp = eleventyConfig.getConfig().pathPrefix;
+  t.is(pp, "/");
+
+  t.is(url("test", pp), "test");
+  t.is(url("/test", pp), "/test");
+});
 
 test("Test url filter without passing in pathPrefix", (t) => {
-  let projectConfig = require("../src/Config").getConfig();
-  t.is(projectConfig.pathPrefix, "/");
+  let eleventyConfig = new TemplateConfig();
+  let urlFilter = eleventyConfig.userConfig.getFilter("url");
 
-  t.is(url("test"), "test");
-  t.is(url("/test"), "/test");
+  t.is(urlFilter("test"), "test");
+  t.is(urlFilter("/test"), "/test");
 });
 
 test("Test url filter with passthrough urls", (t) => {

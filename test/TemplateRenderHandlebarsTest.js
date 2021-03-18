@@ -1,47 +1,49 @@
-import test from "ava";
-import TemplateRender from "../src/TemplateRender";
-import EleventyExtensionMap from "../src/EleventyExtensionMap";
+const test = require("ava");
+const TemplateRender = require("../src/TemplateRender");
+const TemplateConfig = require("../src/TemplateConfig");
+const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 
 function getNewTemplateRender(name, inputDir) {
-  let tr = new TemplateRender(name, inputDir);
-  tr.extensionMap = new EleventyExtensionMap();
+  let eleventyConfig = new TemplateConfig();
+  let tr = new TemplateRender(name, inputDir, eleventyConfig);
+  tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   return tr;
 }
 
 // Handlebars
-test("Handlebars", t => {
+test("Handlebars", (t) => {
   t.is(getNewTemplateRender("hbs").getEngineName(), "hbs");
 });
 
-test("Handlebars Render", async t => {
+test("Handlebars Render", async (t) => {
   let fn = await getNewTemplateRender("hbs").getCompiledTemplate(
     "<p>{{name}}</p>"
   );
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });
 
-test("Handlebars Render Unescaped Output (no HTML)", async t => {
+test("Handlebars Render Unescaped Output (no HTML)", async (t) => {
   let fn = await getNewTemplateRender("hbs").getCompiledTemplate(
     "<p>{{{name}}}</p>"
   );
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });
 
-test("Handlebars Render Escaped Output", async t => {
+test("Handlebars Render Escaped Output", async (t) => {
   let fn = await getNewTemplateRender("hbs").getCompiledTemplate(
     "<p>{{name}}</p>"
   );
   t.is(await fn({ name: "<b>Zach</b>" }), "<p>&lt;b&gt;Zach&lt;/b&gt;</p>");
 });
 
-test("Handlebars Render Unescaped Output (HTML)", async t => {
+test("Handlebars Render Unescaped Output (HTML)", async (t) => {
   let fn = await getNewTemplateRender("hbs").getCompiledTemplate(
     "<p>{{{name}}}</p>"
   );
   t.is(await fn({ name: "<b>Zach</b>" }), "<p><b>Zach</b></p>");
 });
 
-test("Handlebars Render Partial", async t => {
+test("Handlebars Render Partial", async (t) => {
   let fn = await getNewTemplateRender(
     "hbs",
     "./test/stubs/"
@@ -49,7 +51,7 @@ test("Handlebars Render Partial", async t => {
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-test.skip("Handlebars Render Partial (Relative)", async t => {
+test.skip("Handlebars Render Partial (Relative)", async (t) => {
   let fn = await getNewTemplateRender(
     "./test/stubs/does_not_exist_and_thats_ok.hbs",
     "./test/stubs/"
@@ -59,7 +61,7 @@ test.skip("Handlebars Render Partial (Relative)", async t => {
   t.is(await fn(), "<p>This is an includdde.</p>");
 });
 
-test("Handlebars Render Partial (Subdirectory)", async t => {
+test("Handlebars Render Partial (Subdirectory)", async (t) => {
   let fn = await getNewTemplateRender(
     "hbs",
     "./test/stubs/"
@@ -67,7 +69,7 @@ test("Handlebars Render Partial (Subdirectory)", async t => {
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-test("Handlebars Render Partial with variable", async t => {
+test("Handlebars Render Partial with variable", async (t) => {
   let fn = await getNewTemplateRender(
     "hbs",
     "./test/stubs/"
@@ -75,7 +77,7 @@ test("Handlebars Render Partial with variable", async t => {
   t.is(await fn({ name: "Zach" }), "<p>This is a Zach.</p>");
 });
 
-test("Handlebars Render: with Library Override", async t => {
+test("Handlebars Render: with Library Override", async (t) => {
   let tr = getNewTemplateRender("hbs");
 
   let lib = require("handlebars");
@@ -85,12 +87,12 @@ test("Handlebars Render: with Library Override", async t => {
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });
 
-test("Handlebars Render Helper", async t => {
+test("Handlebars Render Helper", async (t) => {
   let tr = getNewTemplateRender("hbs");
   tr.engine.addHelpers({
-    helpername: function() {
+    helpername: function () {
       return "Zach";
-    }
+    },
   });
 
   let fn = await tr.getCompiledTemplate(
@@ -99,12 +101,12 @@ test("Handlebars Render Helper", async t => {
   t.is(await fn({ name: "Zach" }), "<p>This is a Zach Zach.</p>");
 });
 
-test("Handlebars Render Helper (uses argument)", async t => {
+test("Handlebars Render Helper (uses argument)", async (t) => {
   let tr = getNewTemplateRender("hbs");
   tr.engine.addHelpers({
-    helpername2: function(name) {
+    helpername2: function (name) {
       return "Zach";
-    }
+    },
   });
 
   let fn = await tr.getCompiledTemplate(
@@ -113,18 +115,18 @@ test("Handlebars Render Helper (uses argument)", async t => {
   t.is(await fn({ name: "Zach" }), "<p>This is a Zach.</p>");
 });
 
-test("Handlebars Render Shortcode", async t => {
+test("Handlebars Render Shortcode", async (t) => {
   t.plan(3);
   let tr = getNewTemplateRender("hbs");
   tr.engine.addShortcodes({
-    shortcodename: function(name) {
+    shortcodename: function (name) {
       // Data in context
       // Note Handlebars exposes all data while other template languages only expose { page }. See #741
       t.is(this.name, "Howdy");
       t.is(this.page.url, "/hi/");
 
       return name.toUpperCase();
-    }
+    },
   });
 
   let fn = await tr.getCompiledTemplate(
@@ -136,17 +138,17 @@ test("Handlebars Render Shortcode", async t => {
   );
 });
 
-test("Handlebars Render HTML in Shortcode (Issue #460)", async t => {
+test("Handlebars Render HTML in Shortcode (Issue #460)", async (t) => {
   t.plan(2);
   let tr = getNewTemplateRender("hbs");
   tr.engine.addShortcodes({
-    shortcodenamehtml: function(name) {
+    shortcodenamehtml: function (name) {
       // Data in context
       // Note Handlebars exposes all data while other template languages only expose { page }. See #741
       t.is(this.name, "Howdy");
 
       return `<span>${name.toUpperCase()}</span>`;
-    }
+    },
   });
 
   let fn = await tr.getCompiledTemplate(
@@ -155,19 +157,19 @@ test("Handlebars Render HTML in Shortcode (Issue #460)", async t => {
   t.is(await fn({ name: "Howdy" }), "<p>This is a <span>HOWDY</span>.</p>");
 });
 
-test("Handlebars Render Shortcode (Multiple args)", async t => {
+test("Handlebars Render Shortcode (Multiple args)", async (t) => {
   t.plan(3);
 
   let tr = getNewTemplateRender("hbs");
   tr.engine.addShortcodes({
-    shortcodename2: function(name, name2) {
+    shortcodename2: function (name, name2) {
       // Data in context
       // Note Handlebars exposes all data while other template languages only expose { page }. See #741
       t.is(this.name, "Howdy");
       t.is(this.name2, "Zach");
 
       return name.toUpperCase() + name2.toUpperCase();
-    }
+    },
   });
 
   let fn = await tr.getCompiledTemplate(
@@ -179,18 +181,18 @@ test("Handlebars Render Shortcode (Multiple args)", async t => {
   );
 });
 
-test("Handlebars Render Paired Shortcode", async t => {
+test("Handlebars Render Paired Shortcode", async (t) => {
   t.plan(2);
 
   let tr = getNewTemplateRender("hbs");
   tr.engine.addPairedShortcodes({
-    shortcodename3: function(content, name, options) {
+    shortcodename3: function (content, name, options) {
       // Data in context
       // Note Handlebars exposes all data while other template languages only expose { page }. See #741
       t.is(this.name, "Howdy");
 
       return (content + name).toUpperCase();
-    }
+    },
   });
 
   let fn = await tr.getCompiledTemplate(
@@ -199,18 +201,18 @@ test("Handlebars Render Paired Shortcode", async t => {
   t.is(await fn({ name: "Howdy" }), "<p>This is a TESTINGHOWDY.</p>");
 });
 
-test("Handlebars Render Paired Shortcode (HTML)", async t => {
+test("Handlebars Render Paired Shortcode (HTML)", async (t) => {
   t.plan(2);
 
   let tr = getNewTemplateRender("hbs");
   tr.engine.addPairedShortcodes({
-    shortcodename3html: function(content, name, options) {
+    shortcodename3html: function (content, name, options) {
       // Data in context
       // Note Handlebars exposes all data while other template languages only expose { page }. See #741
       t.is(this.name, "Howdy");
 
       return `<span>${(content + name).toUpperCase()}</span>`;
-    }
+    },
   });
 
   let fn = await tr.getCompiledTemplate(
@@ -222,18 +224,18 @@ test("Handlebars Render Paired Shortcode (HTML)", async t => {
   );
 });
 
-test("Handlebars Render Paired Shortcode (Spaces)", async t => {
+test("Handlebars Render Paired Shortcode (Spaces)", async (t) => {
   t.plan(2);
 
   let tr = getNewTemplateRender("hbs");
   tr.engine.addPairedShortcodes({
-    shortcodename4: function(content, name, options) {
+    shortcodename4: function (content, name, options) {
       // Data in context
       // Note Handlebars exposes all data while other template languages only expose { page }. See #741
       t.is(this.name, "Howdy");
 
       return (content + name).toUpperCase();
-    }
+    },
   });
 
   let fn = await tr.getCompiledTemplate(
@@ -242,30 +244,30 @@ test("Handlebars Render Paired Shortcode (Spaces)", async t => {
   t.is(await fn({ name: "Howdy" }), "<p>This is a TESTINGHOWDY.</p>");
 });
 
-test("Handlebars Render Paired Shortcode with a Nested Single Shortcode", async t => {
+test("Handlebars Render Paired Shortcode with a Nested Single Shortcode", async (t) => {
   t.plan(5);
 
   let tr = getNewTemplateRender("hbs");
   tr.engine.addShortcodes({
-    shortcodechild: function(txt, options) {
+    shortcodechild: function (txt, options) {
       // Data in context
       // Note Handlebars exposes all data while other template languages only expose { page }. See #741
       t.is(this.name, "Howdy");
       t.is(this.name2, "Zach");
 
       return txt;
-    }
+    },
   });
 
   tr.engine.addPairedShortcodes({
-    shortcodeparent: function(content, name, name2, options) {
+    shortcodeparent: function (content, name, name2, options) {
       // Data in context
       // Note Handlebars exposes all data while other template languages only expose { page }. See #741
       t.is(this.name, "Howdy");
       t.is(this.name2, "Zach");
 
       return (content + name + name2).toUpperCase();
-    }
+    },
   });
 
   let fn = await tr.getCompiledTemplate(
@@ -277,12 +279,12 @@ test("Handlebars Render Paired Shortcode with a Nested Single Shortcode", async 
   );
 });
 
-test("Handlebars Render Raw Output (Issue #436)", async t => {
+test("Handlebars Render Raw Output (Issue #436)", async (t) => {
   let tr = getNewTemplateRender("hbs");
   tr.engine.addHelpers({
-    "raw-helper": function(options) {
+    "raw-helper": function (options) {
       return options.fn();
-    }
+    },
   });
 
   let fn = await tr.getCompiledTemplate(
@@ -291,12 +293,12 @@ test("Handlebars Render Raw Output (Issue #436)", async t => {
   t.is(await fn({ name: "Zach" }), "{{bar}}");
 });
 
-test("Handlebars Render Raw Output (Issue #436 with if statement)", async t => {
+test("Handlebars Render Raw Output (Issue #436 with if statement)", async (t) => {
   let tr = getNewTemplateRender("hbs");
   tr.engine.addHelpers({
-    "raw-helper": function(options) {
+    "raw-helper": function (options) {
       return options.fn();
-    }
+    },
   });
 
   let fn = await tr.getCompiledTemplate(
@@ -312,15 +314,18 @@ test("Handlebars Render Raw Output (Issue #436 with if statement)", async t => {
   );
 });
 
-test("Handlebars Render #each with Global Variable (Issue #759)", async t => {
-  let fn = await new TemplateRender("hbs", "./test/stubs/").getCompiledTemplate(
+test("Handlebars Render #each with Global Variable (Issue #759)", async (t) => {
+  let fn = await getNewTemplateRender(
+    "hbs",
+    "./test/stubs/"
+  ).getCompiledTemplate(
     `<ul>{{#each navigation as |navItem|}}<li><a href={{navItem.link}}>{{../name}}{{navItem.text}}</a></li>{{/each}}</ul>`
   );
   t.is(
     (
       await fn({
         name: "Zach",
-        navigation: [{ link: "a", text: "text" }]
+        navigation: [{ link: "a", text: "text" }],
       })
     ).trim(),
     `<ul><li><a href=a>Zachtext</a></li></ul>`

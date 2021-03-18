@@ -1,74 +1,72 @@
-import test from "ava";
-import TemplateRender from "../src/TemplateRender";
-import EleventyExtensionMap from "../src/EleventyExtensionMap";
-import templateConfig from "../src/Config";
-import Vue from "vue";
+const test = require("ava");
+const TemplateRender = require("../src/TemplateRender");
+const EleventyExtensionMap = require("../src/EleventyExtensionMap");
+const TemplateConfig = require("../src/TemplateConfig");
+const Vue = require("vue");
 const renderer = require("vue-server-renderer").createRenderer();
 
-function getNewTemplateRender(name, inputDir) {
-  let tr = new TemplateRender(name, inputDir);
-  tr.extensionMap = new EleventyExtensionMap();
+function getNewTemplateRender(name, inputDir, eleventyConfig) {
+  if (!eleventyConfig) {
+    eleventyConfig = new TemplateConfig();
+  }
+  let tr = new TemplateRender(name, inputDir, eleventyConfig);
+  tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   return tr;
 }
 
-test("Custom plaintext Render", async t => {
-  let tr = getNewTemplateRender("txt");
-
-  const config = templateConfig.getConfig();
-  tr.config = Object.assign({}, config);
-  tr.config.extensionMap.add({
+test("Custom plaintext Render", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.extensionMap.add({
     extension: "txt",
     key: "txt",
-    compile: function(str, inputPath) {
+    compile: function (str, inputPath) {
       // plaintext
-      return function(data) {
+      return function (data) {
         return str;
       };
-    }
+    },
   });
+
+  let tr = getNewTemplateRender("txt", null, eleventyConfig);
 
   let fn = await tr.getCompiledTemplate("<p>Paragraph</p>");
   t.is(await fn(), "<p>Paragraph</p>");
   t.is(await fn({}), "<p>Paragraph</p>");
 });
 
-test("Custom Vue Render", async t => {
+test("Custom Vue Render", async (t) => {
   let tr = getNewTemplateRender("vue");
 
-  const config = templateConfig.getConfig();
-  tr.config = Object.assign({}, config);
-  tr.config.extensionMap.add({
+  tr.eleventyConfig.userConfig.extensionMap.add({
     extension: "vue",
     key: "vue",
-    compile: function(str, inputPath) {
-      return async function(data) {
+    compile: function (str, inputPath) {
+      return async function (data) {
         const app = new Vue({
           template: str,
-          data: data
+          data: data,
         });
 
         return renderer.renderToString(app);
       };
-    }
+    },
   });
 
   let fn = await tr.getCompiledTemplate(`<p v-html="test">Paragraph</p>`);
   t.is(await fn({ test: "Hello" }), `<p data-server-rendered="true">Hello</p>`);
 });
 
-test("Custom Sass Render", async t => {
-  const sass = require("node-sass");
-  let tr = getNewTemplateRender("sass");
+const sass = require("node-sass");
 
-  const config = templateConfig.getConfig();
-  tr.config = Object.assign({}, config);
-  tr.config.extensionMap.add({
+test("Custom Sass Render", async (t) => {
+  let tr = getNewTemplateRender("sass");
+  tr.eleventyConfig.userConfig.extensionMap.add({
     extension: "sass",
     key: "sass",
-    compile: function(str, inputPath) {
+    compile: function (str, inputPath) {
       // TODO declare data variables as SASS variables?
-      return async function(data) {
-        return new Promise(function(resolve, reject) {
+      return async function (data) {
+        return new Promise(function (resolve, reject) {
           sass.render(
             {
               data: str,
@@ -76,9 +74,9 @@ test("Custom Sass Render", async t => {
               style: "expanded",
               // TODO
               // sourcemap: "file",
-              outFile: "test_this_is_to_not_write_a_file.css"
+              outFile: "test_this_is_to_not_write_a_file.css",
             },
-            function(error, result) {
+            function (error, result) {
               if (error) {
                 reject(error);
               } else {
@@ -88,7 +86,7 @@ test("Custom Sass Render", async t => {
           );
         });
       };
-    }
+    },
   });
 
   let fn = await tr.getCompiledTemplate(`$color: blue; p { color: $color; }`);

@@ -1,12 +1,12 @@
 const moo = require("moo");
-const LiquidLib = require("liquidjs");
+const liquidLib = require("liquidjs");
 const TemplateEngine = require("./TemplateEngine");
 const TemplatePath = require("../TemplatePath");
 // const debug = require("debug")("Eleventy:Liquid");
 
 class Liquid extends TemplateEngine {
-  constructor(name, includesDir) {
-    super(name, includesDir);
+  constructor(name, includesDir, config) {
+    super(name, includesDir, config);
 
     this.liquidOptions = {};
 
@@ -17,16 +17,17 @@ class Liquid extends TemplateEngine {
       number: /[0-9]+\.*[0-9]*/,
       doubleQuoteString: /"(?:\\["\\]|[^\n"\\])*"/,
       singleQuoteString: /'(?:\\['\\]|[^\n'\\])*'/,
-      keyword: /[a-zA-Z0-9\.\-\_]+/,
-      "ignore:whitespace": /[, \t]+/ // includes comma separator
+      keyword: /[a-zA-Z0-9.\-_]+/,
+      "ignore:whitespace": /[, \t]+/, // includes comma separator
     });
+    this.cacheable = true;
   }
 
   setLibrary(lib) {
     this.liquidLibOverride = lib;
 
     // warning, the include syntax supported here does not exactly match what Jekyll uses.
-    this.liquidLib = lib || LiquidLib(this.getLiquidOptions());
+    this.liquidLib = lib || new liquidLib.Liquid(this.getLiquidOptions());
     this.setEngineLib(this.liquidLib);
 
     this.addFilters(this.config.liquidFilters);
@@ -48,7 +49,7 @@ class Liquid extends TemplateEngine {
       root: [super.getIncludesDir()], // overrides in compile with inputPath below
       extname: ".liquid",
       dynamicPartials: false,
-      strict_filters: false
+      strictFilters: true,
     };
 
     let options = Object.assign(defaults, this.liquidOptions || {});
@@ -97,7 +98,7 @@ class Liquid extends TemplateEngine {
     }
   }
 
-  static parseArguments(lexer, str, scope) {
+  static async parseArguments(lexer, str, scope, engine) {
     let argArray = [];
 
     if (typeof str === "string") {
@@ -116,7 +117,7 @@ class Liquid extends TemplateEngine {
           line: 1,
           col: 1 }*/
         if (arg.type.indexOf("ignore:") === -1) {
-          argArray.push(LiquidLib.evalExp(arg.value, scope)); // or evalValue
+          argArray.push(await engine.evalValue(arg.value, scope));
         }
         arg = lexer.next();
       }
@@ -125,78 +126,84 @@ class Liquid extends TemplateEngine {
     return argArray;
   }
 
-  static _normalizeShortcodeScope(scope) {
+  static _normalizeShortcodeScope(ctx) {
     let obj = {};
-    if (scope && scope.contexts && scope.contexts[0]) {
-      obj.page = scope.contexts[0].page;
+    if (ctx) {
+      obj.page = ctx.get(["page"]);
     }
     return obj;
   }
 
   addShortcode(shortcodeName, shortcodeFn) {
     let _t = this;
-    this.addTag(shortcodeName, function(liquidEngine) {
+    this.addTag(shortcodeName, function () {
       return {
-        parse: function(tagToken, remainTokens) {
+        parse: function (tagToken) {
           this.name = tagToken.name;
           this.args = tagToken.args;
         },
-        render: function(scope, hash) {
-          let argArray = Liquid.parseArguments(_t.argLexer, this.args, scope);
+        render: async function (scope) {
+          let argArray = await Liquid.parseArguments(
+            _t.argLexer,
+            this.args,
+            scope,
+            this.liquid
+          );
+
           return Promise.resolve(
             shortcodeFn.call(
               Liquid._normalizeShortcodeScope(scope),
               ...argArray
             )
           );
-        }
+        },
       };
     });
   }
 
   addPairedShortcode(shortcodeName, shortcodeFn) {
     let _t = this;
-    this.addTag(shortcodeName, function(liquidEngine) {
+    this.addTag(shortcodeName, function (liquidEngine) {
       return {
-        parse: function(tagToken, remainTokens) {
+        parse: function (tagToken, remainTokens) {
           this.name = tagToken.name;
           this.args = tagToken.args;
           this.templates = [];
 
           var stream = liquidEngine.parser
             .parseStream(remainTokens)
-            .on("template", tpl => this.templates.push(tpl))
-            .on("tag:end" + shortcodeName, token => stream.stop())
-            .on("end", x => {
+            .on("template", (tpl) => this.templates.push(tpl))
+            .on("tag:end" + shortcodeName, () => stream.stop())
+            .on("end", () => {
               throw new Error(`tag ${tagToken.raw} not closed`);
             });
 
           stream.start();
         },
-        render: function(scope, hash) {
-          let argArray = Liquid.parseArguments(_t.argLexer, this.args, scope);
-
-          return new Promise((resolve, reject) => {
-            liquidEngine.renderer
-              .renderTemplates(this.templates, scope)
-              .then(function(html) {
-                resolve(
-                  shortcodeFn.call(
-                    Liquid._normalizeShortcodeScope(scope),
-                    html,
-                    ...argArray
-                  )
-                );
-              });
-          });
-        }
+        render: function* (ctx) {
+          let argArray = yield Liquid.parseArguments(
+            _t.argLexer,
+            this.args,
+            ctx,
+            this.liquid
+          );
+          const html = yield this.liquid.renderer.renderTemplates(
+            this.templates,
+            ctx
+          );
+          return shortcodeFn.call(
+            Liquid._normalizeShortcodeScope(ctx),
+            html,
+            ...argArray
+          );
+        },
       };
     });
   }
 
   async compile(str, inputPath) {
     let engine = this.liquidLib;
-    let tmpl = await engine.parse(str, inputPath);
+    let tmplReady = engine.parse(str, inputPath);
 
     // Required for relative includes
     let options = {};
@@ -205,10 +212,13 @@ class Liquid extends TemplateEngine {
     } else {
       options.root = [
         super.getIncludesDir(),
-        TemplatePath.getDirFromFilePath(inputPath)
+        TemplatePath.getDirFromFilePath(inputPath),
       ];
     }
-    return async function(data) {
+
+    return async function (data) {
+      let tmpl = await tmplReady;
+
       return engine.render(tmpl, data, options);
     };
   }

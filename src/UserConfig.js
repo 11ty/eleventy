@@ -1,7 +1,7 @@
-const EventEmitter = require("events");
 const chalk = require("chalk");
 const semver = require("semver");
 const { DateTime } = require("luxon");
+const EventEmitter = require("./Util/AsyncEventEmitter");
 const EleventyBaseError = require("./EleventyBaseError");
 const bench = require("./BenchmarkManager").get("Configuration");
 const aggregateBench = require("./BenchmarkManager").get("Aggregate");
@@ -30,6 +30,7 @@ class UserConfig {
     this.nunjucksFilters = {};
     this.nunjucksAsyncFilters = {};
     this.nunjucksTags = {};
+    this.nunjucksGlobals = {};
     this.nunjucksShortcodes = {};
     this.nunjucksAsyncShortcodes = {};
     this.nunjucksPairedShortcodes = {};
@@ -46,8 +47,7 @@ class UserConfig {
     this.passthroughCopies = {};
     this.layoutAliases = {};
     this.linters = {};
-    // now named `transforms` in API
-    this.filters = {};
+    this.transforms = {};
     this.activeNamespace = "";
     this.DateTime = DateTime;
     this.dynamicPermalinks = true;
@@ -57,6 +57,7 @@ class UserConfig {
     this.watchJavaScriptDependencies = true;
     this.additionalWatchTargets = [];
     this.browserSyncConfig = {};
+    this.globalData = {};
     this.chokidarConfig = {};
     this.watchThrottleWaitTime = 0; //ms
 
@@ -64,16 +65,19 @@ class UserConfig {
     this.dataExtensions = new Map();
 
     this.quietMode = false;
+    this.useTemplateCache = true;
   }
 
   versionCheck(expected) {
     if (!semver.satisfies(pkg.version, expected)) {
       throw new UserConfigError(
-        `This project requires the eleventy version to match '${expected}' but found ${pkg.version}. Use \`npm update @11ty/eleventy -g\` to upgrade the eleventy global or \`npm update @11ty/eleventy --save\` to upgrade your local project version.`
+        `This project requires the Eleventy version to match '${expected}' but found ${pkg.version}. Use \`npm update @11ty/eleventy -g\` to upgrade the eleventy global or \`npm update @11ty/eleventy --save\` to upgrade your local project version.`
       );
     }
   }
 
+  // Duplicate event bindings are avoided with the `reset` method above.
+  // A new EventEmitter instance is created when the config is reset.
   on(eventName, callback) {
     return this.events.on(eventName, callback);
   }
@@ -227,13 +231,34 @@ class UserConfig {
     this.nunjucksTags[name] = bench.add(`"${name}" Nunjucks Custom Tag`, tagFn);
   }
 
+  addGlobalData(name, data) {
+    name = this.getNamespacedName(name);
+    this.globalData[name] = data;
+    return this;
+  }
+
+  addNunjucksGlobal(name, globalFn) {
+    name = this.getNamespacedName(name);
+
+    if (this.nunjucksGlobals[name]) {
+      debug(
+        chalk.yellow(
+          "Warning, overwriting a Nunjucks global with `addNunjucksGlobal(%o)`"
+        ),
+        name
+      );
+    }
+
+    this.nunjucksGlobals[name] = bench.add(
+      `"${name}" Nunjucks Global`,
+      globalFn
+    );
+  }
+
   addTransform(name, callback) {
     name = this.getNamespacedName(name);
 
-    // these are now called transforms
-    // this naming is kept here for backwards compatibility
-    // TODO major version change
-    this.filters[name] = callback;
+    this.transforms[name] = callback;
   }
 
   addLinter(name, callback) {
@@ -325,7 +350,9 @@ class UserConfig {
 
   _normalizeTemplateFormats(templateFormats) {
     if (typeof templateFormats === "string") {
-      templateFormats = templateFormats.split(",").map(format => format.trim());
+      templateFormats = templateFormats
+        .split(",")
+        .map((format) => format.trim());
     }
     return templateFormats;
   }
@@ -619,17 +646,11 @@ class UserConfig {
       return;
     }
 
-    console.log(
-      chalk.yellow(
-        "Warning: Configuration API `addExtension` is an experimental Eleventy feature with an unstable API. Be careful!"
-      )
-    );
-
     this.extensionMap.add(
       Object.assign(
         {
           key: fileExtension,
-          extension: fileExtension
+          extension: fileExtension,
         },
         options
       )
@@ -640,12 +661,18 @@ class UserConfig {
     this.dataExtensions.set(formatExtension, formatParser);
   }
 
+  setUseTemplateCache(bypass) {
+    this.useTemplateCache = !!bypass;
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
       templateFormatsAdded: this.templateFormatsAdded,
-      filters: this.filters, // now called transforms
+      // filters removed in 1.0 (use addTransform instead)
+      transforms: this.transforms,
       linters: this.linters,
+      globalData: this.globalData,
       layoutAliases: this.layoutAliases,
       passthroughCopies: this.passthroughCopies,
       liquidOptions: this.liquidOptions,
@@ -656,6 +683,7 @@ class UserConfig {
       nunjucksFilters: this.nunjucksFilters,
       nunjucksAsyncFilters: this.nunjucksAsyncFilters,
       nunjucksTags: this.nunjucksTags,
+      nunjucksGlobals: this.nunjucksGlobals,
       nunjucksAsyncShortcodes: this.nunjucksAsyncShortcodes,
       nunjucksShortcodes: this.nunjucksShortcodes,
       nunjucksAsyncPairedShortcodes: this.nunjucksAsyncPairedShortcodes,
@@ -680,7 +708,8 @@ class UserConfig {
       dataExtensions: this.dataExtensions,
       extensionMap: this.extensionMap,
       quietMode: this.quietMode,
-      events: this.events
+      events: this.events,
+      useTemplateCache: this.useTemplateCache,
     };
   }
 }

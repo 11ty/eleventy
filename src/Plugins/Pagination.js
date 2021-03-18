@@ -2,13 +2,19 @@ const lodashChunk = require("lodash/chunk");
 const lodashGet = require("lodash/get");
 const lodashSet = require("lodash/set");
 const EleventyBaseError = require("../EleventyBaseError");
-const config = require("../Config");
 
+class PaginationConfigError extends EleventyBaseError {}
 class PaginationError extends EleventyBaseError {}
 
 class Pagination {
-  constructor(data) {
-    this.config = config.getConfig();
+  constructor(data, config) {
+    if (!config) {
+      throw new PaginationConfigError(
+        "Expected `config` argument to Pagination class."
+      );
+    }
+
+    this.config = config;
 
     this.setData(data);
   }
@@ -63,7 +69,7 @@ class Pagination {
     this.alias = data.pagination.alias;
 
     this.target = this._resolveItems();
-    this.items = this.getPagedItems();
+    this.items = this.pagedItems;
   }
 
   setTemplate(tmpl) {
@@ -113,7 +119,7 @@ class Pagination {
       keys = Object.keys(fullDataSet);
     }
 
-    let result = keys.filter(() => true);
+    let result = keys.slice();
 
     if (
       this.data.pagination.before &&
@@ -128,14 +134,13 @@ class Pagination {
     }
 
     if (this.data.pagination.filter) {
-      result = result.filter(value => !this.isFiltered(value));
+      result = result.filter((value) => !this.isFiltered(value));
     }
 
     return result;
   }
 
-  getPagedItems() {
-    // TODO switch to a getter
+  get pagedItems() {
     if (!this.data) {
       throw new Error("Missing `setData` call for Pagination object.");
     }
@@ -194,7 +199,7 @@ class Pagination {
           size: this.data.pagination.size,
           alias: this.alias,
 
-          pages: this.size === 1 ? items.map(entry => entry[0]) : items,
+          pages: this.size === 1 ? items.map((entry) => entry[0]) : items,
 
           // See Issue #345 for more examples
           page: {
@@ -219,12 +224,12 @@ class Pagination {
               ? this.size === 1
                 ? items[items.length - 1][0]
                 : items[items.length - 1]
-              : null
+              : null,
           },
 
           items: items[pageNumber],
-          pageNumber: pageNumber
-        }
+          pageNumber: pageNumber,
+        },
       };
 
       if (this.alias) {
@@ -239,13 +244,17 @@ class Pagination {
       cloned.setPaginationData(override);
 
       // TO DO subdirectory to links if the site doesn’t live at /
-      links.push("/" + (await cloned.getOutputLink()));
-      hrefs.push(await cloned.getOutputHref());
+      let [outputLink, outputHref] = await Promise.all([
+        cloned.getOutputLink(),
+        cloned.getOutputHref(),
+      ]);
+      links.push("/" + outputLink);
+      hrefs.push(outputHref);
     }
 
     // we loop twice to pass in the appropriate prev/next links (already full generated now)
     templates.forEach(
-      function(cloned, pageNumber) {
+      function (cloned, pageNumber) {
         let pageObj = {};
 
         // links are okay but hrefs are better
@@ -282,7 +291,7 @@ class Pagination {
           previous: pageObj.previousPageHref,
           next: pageObj.nextPageHref,
           first: pageObj.firstPageHref,
-          last: pageObj.lastPageHref
+          last: pageObj.lastPageHref,
         };
 
         Object.assign(overrides[pageNumber].pagination, pageObj);

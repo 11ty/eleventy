@@ -3,12 +3,13 @@ const DependencyGraph = require("dependency-graph").DepGraph;
 const TemplateCollection = require("./TemplateCollection");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
 const UsingCircularTemplateContentReferenceError = require("./Errors/UsingCircularTemplateContentReferenceError");
-// TODO the config setup here is overly complex. Why aren’t we injecting config instance like everywhere else?
-const eleventyConfig = require("./EleventyConfig");
 const debug = require("debug")("Eleventy:TemplateMap");
 const debugDev = require("debug")("Dev:Eleventy:TemplateMap");
 
 const EleventyBaseError = require("./EleventyBaseError");
+
+class TemplateMapConfigError extends EleventyBaseError {}
+
 class DuplicatePermalinkOutputError extends EleventyBaseError {
   get removeDuplicateErrorStringFromOutput() {
     return true;
@@ -16,12 +17,31 @@ class DuplicatePermalinkOutputError extends EleventyBaseError {
 }
 
 class TemplateMap {
-  constructor() {
+  constructor(eleventyConfig) {
+    if (!eleventyConfig) {
+      throw new TemplateMapConfigError("Missing config argument.");
+    }
+    this.eleventyConfig = eleventyConfig;
     this.map = [];
     this.collectionsData = null;
     this.cached = false;
     this.configCollections = null;
     this.verboseOutput = true;
+    this.collection = new TemplateCollection();
+  }
+
+  set userConfig(config) {
+    this._userConfig = config;
+  }
+
+  get userConfig() {
+    if (!this._userConfig) {
+      this.config = this.eleventyConfig.getConfig();
+      // TODO use this.config for this, need to add collections to mergable props in userconfig
+      this._userConfig = this.eleventyConfig.userConfig;
+    }
+
+    return this._userConfig;
   }
 
   get tagPrefix() {
@@ -36,13 +56,6 @@ class TemplateMap {
 
   getMap() {
     return this.map;
-  }
-
-  get collection() {
-    if (!this._collection) {
-      this._collection = new TemplateCollection();
-    }
-    return this._collection;
   }
 
   getTagTarget(str) {
@@ -107,13 +120,14 @@ class TemplateMap {
 
         if (entry.data.tags) {
           for (let tag of entry.data.tags) {
-            if (!graph.hasNode(tagPrefix + tag)) {
-              graph.addNode(tagPrefix + tag);
+            let tagWithPrefix = tagPrefix + tag;
+            if (!graph.hasNode(tagWithPrefix)) {
+              graph.addNode(tagWithPrefix);
             }
 
             // collections.tagName
             // Dependency from tag to inputPath
-            graph.addDependency(tagPrefix + tag, entry.inputPath);
+            graph.addDependency(tagWithPrefix, entry.inputPath);
           }
         }
       }
@@ -129,6 +143,7 @@ class TemplateMap {
     graph.addNode(tagPrefix + "all");
 
     let userConfigCollections = this.getUserConfigCollectionNames();
+
     // Add tags from named user config collections
     for (let tag of userConfigCollections) {
       graph.addNode(tagPrefix + tag);
@@ -156,18 +171,20 @@ class TemplateMap {
 
           if (entry.data.tags) {
             for (let tag of entry.data.tags) {
-              if (!graph.hasNode(tagPrefix + tag)) {
-                graph.addNode(tagPrefix + tag);
+              let tagWithPrefix = tagPrefix + tag;
+              if (!graph.hasNode(tagWithPrefix)) {
+                graph.addNode(tagWithPrefix);
               }
               // collections.tagName
               // Dependency from tag to inputPath
-              graph.addDependency(tagPrefix + tag, entry.inputPath);
+              graph.addDependency(tagWithPrefix, entry.inputPath);
             }
           }
         }
       }
     }
-    return graph.overallOrder();
+    let order = graph.overallOrder();
+    return order;
   }
 
   getPaginatedOverCollectionsMappedDependencies() {
@@ -228,6 +245,7 @@ class TemplateMap {
     return graph.overallOrder();
   }
 
+  // TODO(slightlyoff): major bottleneck
   async initDependencyMap(dependencyMap) {
     let tagPrefix = this.tagPrefix;
     for (let depEntry of dependencyMap) {
@@ -296,7 +314,7 @@ class TemplateMap {
       secondPaginatedDepMap
     );
     let orderedMap = orderedPaths.map(
-      function(inputPath) {
+      function (inputPath) {
         return this.getMapEntryForInputPath(inputPath);
       }.bind(this)
     );
@@ -308,6 +326,7 @@ class TemplateMap {
     this.checkForDuplicatePermalinks();
   }
 
+  // TODO(slightlyoff): hot inner loop?
   getMapEntryForInputPath(inputPath) {
     for (let map of this.map) {
       if (map.inputPath === inputPath) {
@@ -435,19 +454,20 @@ class TemplateMap {
   }
 
   isUserConfigCollectionName(name) {
-    let collections = this.configCollections || eleventyConfig.getCollections();
+    let collections =
+      this.configCollections || this.userConfig.getCollections();
     return name && !!collections[name];
   }
 
   getUserConfigCollectionNames() {
     return Object.keys(
-      this.configCollections || eleventyConfig.getCollections()
+      this.configCollections || this.userConfig.getCollections()
     );
   }
 
   async getUserConfigCollection(name) {
     let configCollections =
-      this.configCollections || eleventyConfig.getCollections();
+      this.configCollections || this.userConfig.getCollections();
 
     // This works with async now
     let result = await configCollections[name](this.collection);
@@ -459,7 +479,7 @@ class TemplateMap {
   async _testGetUserConfigCollectionsData() {
     let collections = {};
     let configCollections =
-      this.configCollections || eleventyConfig.getCollections();
+      this.configCollections || this.userConfig.getCollections();
 
     for (let name in configCollections) {
       collections[name] = configCollections[name](this.collection);
@@ -530,7 +550,7 @@ class TemplateMap {
           }\`. Use distinct \`permalink\` values to resolve this conflict.
   1. ${entry.inputPath}
 ${permalinks[page.url]
-  .map(function(inputPath, index) {
+  .map(function (inputPath, index) {
     return `  ${index + 2}. ${inputPath}\n`;
   })
   .join("")}
