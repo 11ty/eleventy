@@ -205,11 +205,10 @@ class TemplateWriter {
     for (let path of paths) {
       if (this.extensionMap.hasEngine(path)) {
         promises.push(
-          this.templateMap.add(this._createTemplate(path)).then(() => {
-            debug(`${path} added to map.`);
-          })
+          this.templateMap.add(this._createTemplate(path))
         );
       }
+      debug(`${path} begun adding to map.`);
     }
 
     return Promise.all(promises);
