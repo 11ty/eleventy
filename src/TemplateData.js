@@ -485,7 +485,7 @@ class TemplateData {
     // data suffix
     paths.push(base + dataSuffix + ".js");
     paths.push(base + dataSuffix + ".cjs");
-    paths.push(base + dataSuffix + ".json");
+    paths.push(base + dataSuffix + ".json"); // default: .11tydata.json
 
     // inject user extensions
     this._pushExtensionsToPaths(paths, base + dataSuffix, extensions);
@@ -514,6 +514,7 @@ class TemplateData {
 
       let filePathNoExt = parsed.dir + "/" + fileNameNoExt;
       let dataSuffix = this.config.jsDataFileSuffix;
+      // default dataSuffix: .11tydata, is appended in _addBaseToPaths
       debug("Using %o to find data files.", dataSuffix);
 
       this._addBaseToPaths(paths, filePathNoExt, userExtensions);
@@ -530,6 +531,10 @@ class TemplateData {
         }
         if (!inputDir || (dir.indexOf(inputDir) === 0 && dir !== inputDir)) {
           this._addBaseToPaths(paths, dirPathNoExt, userExtensions);
+          if (this.config.jsDataFileBase) {
+            let jsDataFile = dir + "/" + this.config.jsDataFileBase;
+            this._addBaseToPaths(paths, jsDataFile, userExtensions);
+          }
         }
       }
 
@@ -541,6 +546,12 @@ class TemplateData {
         );
         if (lastInputDir !== "./") {
           this._addBaseToPaths(paths, lastInputDir, userExtensions);
+        }
+        // also in root input dir, search for index.11tydata.json et al
+        if (this.config.jsDataFileBase) {
+          let jsDataFile = (TemplatePath.getDirFromFilePath(lastInputDir) +
+            "/" + this.config.jsDataFileBase);
+          this._addBaseToPaths(paths, jsDataFile, userExtensions);
         }
       }
     }
