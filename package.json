@@ -45,7 +45,8 @@
     "doc": "jsdoc -c .jsdoc.conf.json -d ./api-docs -p ./package.json -R README.md -t ./node_modules/ink-docstrap/template -r src/",
     "test": "npx ava --verbose",
     "lint-staged": "lint-staged",
-    "coverage": "npx nyc ava && npx nyc report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && node cmd.js --config=docs-src/.eleventy.docs.js"
+    "coverage": "npx nyc ava && npx nyc report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && node cmd.js --config=docs-src/.eleventy.docs.js",
+    "prepare": "husky install"
   },
   "author": {
     "name": "Zach Leatherman",
@@ -124,11 +125,5 @@
     "split": "^1.0.1",
     "time-require": "^0.1.2",
     "valid-url": "^1.0.9"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run lint-staged",
-      "pre-push": "npm run test"
-    }
   }
 }

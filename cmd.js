@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 const pkg = require("./package.json");
-const chalk = require("chalk"); // node 8+
 require("please-upgrade-node")(pkg, {
   message: function (requiredVersion) {
-    return chalk.red(
-      `Eleventy requires Node ${requiredVersion}. You’ll need to upgrade to use it!`
+    return (
+      "Eleventy requires Node " +
+      requiredVersion +
+      ". You will need to upgrade Node to use Eleventy!"
     );
   },
 });
