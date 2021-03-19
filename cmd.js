@@ -2,7 +2,11 @@
 const pkg = require("./package.json");
 require("please-upgrade-node")(pkg, {
   message: function (requiredVersion) {
-    return `Eleventy requires Node ${requiredVersion}. You’ll need to upgrade Node to use Eleventy!`;
+    return (
+      "Eleventy requires Node " +
+      requiredVersion +
+      ". You will need to upgrade Node to use Eleventy!"
+    );
   },
 });
 
