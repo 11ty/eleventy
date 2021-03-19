@@ -1,4 +1,4 @@
-# Code Coverage for Eleventy v0.12.0
+# Code Coverage for Eleventy v0.12.1
 
 | Filename                                                   | % Lines | % Statements | % Functions | % Branches |
 | ---------------------------------------------------------- | ------- | ------------ | ----------- | ---------- |
