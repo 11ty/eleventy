@@ -26,7 +26,6 @@
 
 ## If branch docs do not exist
 
-1. Make sure `localDev: false` in `config.js`
 1. Check in a new `11ty-website` site with updated `package.json` version.
 1. Add version to 11ty-website `versions.json`
 1. Commit it

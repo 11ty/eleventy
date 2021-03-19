@@ -8,7 +8,7 @@
   "main": "src/Eleventy.js",
   "license": "MIT",
   "engines": {
-    "node": ">=8"
+    "node": ">=10"
   },
   "funding": {
     "type": "opencollective",

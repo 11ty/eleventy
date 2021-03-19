@@ -1,12 +1,9 @@
 #!/usr/bin/env node
 const pkg = require("./package.json");
-const chalk = require("chalk"); // node 8+
 require("please-upgrade-node")(pkg, {
-  message: function(requiredVersion) {
-    return chalk.red(
-      `Eleventy requires Node ${requiredVersion}. You’ll need to upgrade to use it!`
-    );
-  }
+  message: function (requiredVersion) {
+    return `Eleventy requires Node ${requiredVersion}. You’ll need to upgrade Node to use Eleventy!`;
+  },
 });
 
 if (process.env.DEBUG) {
@@ -19,8 +16,8 @@ try {
   const argv = require("minimist")(process.argv.slice(2), {
     boolean: ["quiet"],
     default: {
-      quiet: null
-    }
+      quiet: null,
+    },
   });
   const Eleventy = require("./src/Eleventy");
   const EleventyCommandCheck = require("./src/EleventyCommandCheck");
@@ -31,10 +28,10 @@ try {
       `Unhandled rejection in promise (${promise})`
     );
   });
-  process.on("uncaughtException", error => {
+  process.on("uncaughtException", (error) => {
     EleventyErrorHandler.fatal(error, "Uncaught exception");
   });
-  process.on("rejectionHandled", promise => {
+  process.on("rejectionHandled", (promise) => {
     EleventyErrorHandler.warn(
       promise,
       "A promise rejection was handled asynchronously"
@@ -62,13 +59,13 @@ try {
   // with old node versions in `please-upgrade-node` above.
   elev
     .init()
-    .then(function() {
+    .then(function () {
       if (argv.version) {
         console.log(elev.getVersion());
       } else if (argv.help) {
         console.log(elev.getHelp());
       } else if (argv.serve) {
-        elev.watch().then(function() {
+        elev.watch().then(function () {
           elev.serve(argv.port);
         });
       } else if (argv.watch) {
