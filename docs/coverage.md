@@ -1,17 +1,17 @@
-# Code Coverage for Eleventy v0.11.0
+# Code Coverage for Eleventy v0.12.0
 
 | Filename                                                   | % Lines | % Statements | % Functions | % Branches |
 | ---------------------------------------------------------- | ------- | ------------ | ----------- | ---------- |
-| `total`                                                    | 88.48%  | 88.52%       | 87.29%      | 80.92%     |
+| `total`                                                    | 88.45%  | 88.49%       | 87.32%      | 80.84%     |
 | `src/Benchmark.js`                                         | 94.44%  | 94.44%       | 100%        | 83.33%     |
-| `src/BenchmarkGroup.js`                                    | 76.09%  | 76.09%       | 66.67%      | 61.9%      |
+| `src/BenchmarkGroup.js`                                    | 73.91%  | 73.91%       | 66.67%      | 52.38%     |
 | `src/BenchmarkManager.js`                                  | 77.78%  | 77.78%       | 75%         | 75%        |
 | `src/ComputedData.js`                                      | 100%    | 100%         | 100%        | 100%       |
 | `src/ComputedDataProxy.js`                                 | 98.04%  | 98.04%       | 100%        | 90.63%     |
 | `src/ComputedDataQueue.js`                                 | 100%    | 100%         | 100%        | 72.73%     |
 | `src/ComputedDataTemplateString.js`                        | 100%    | 100%         | 100%        | 83.33%     |
 | `src/Config.js`                                            | 100%    | 100%         | 100%        | 100%       |
-| `src/Eleventy.js`                                          | 55.2%   | 54.95%       | 50%         | 42.86%     |
+| `src/Eleventy.js`                                          | 55.16%  | 54.91%       | 50%         | 42.86%     |
 | `src/EleventyBaseError.js`                                 | 100%    | 100%         | 100%        | 100%       |
 | `src/EleventyCommandCheck.js`                              | 100%    | 100%         | 100%        | 87.5%      |
 | `src/EleventyConfig.js`                                    | 100%    | 100%         | 100%        | 100%       |
@@ -20,7 +20,7 @@
 | `src/EleventyExtensionMap.js`                              | 100%    | 100%         | 100%        | 100%       |
 | `src/EleventyFiles.js`                                     | 93.94%  | 93.94%       | 90%         | 83.61%     |
 | `src/EleventyServe.js`                                     | 37.29%  | 37.29%       | 56.25%      | 27.78%     |
-| `src/EleventyWatch.js`                                     | 100%    | 100%         | 100%        | 88.24%     |
+| `src/EleventyWatch.js`                                     | 100%    | 100%         | 100%        | 90.48%     |
 | `src/EleventyWatchTargets.js`                              | 91.84%  | 91.84%       | 85.71%      | 93.33%     |
 | `src/Template.js`                                          | 95.15%  | 95.18%       | 98.18%      | 88.7%      |
 | `src/TemplateCache.js`                                     | 100%    | 100%         | 100%        | 100%       |
@@ -41,7 +41,7 @@
 | `src/TemplatePermalinkNoWrite.js`                          | 100%    | 100%         | 100%        | 100%       |
 | `src/TemplateRender.js`                                    | 98.75%  | 98.75%       | 100%        | 97.83%     |
 | `src/TemplateWriter.js`                                    | 78.57%  | 78.57%       | 71.88%      | 50%        |
-| `src/UserConfig.js`                                        | 59.53%  | 59.72%       | 45.61%      | 46.59%     |
+| `src/UserConfig.js`                                        | 59.72%  | 59.72%       | 45.61%      | 46.59%     |
 | `src/defaultConfig.js`                                     | 78.57%  | 78.57%       | 25%         | 100%       |
 | `src/Engines/Custom.js`                                    | 44.12%  | 44.12%       | 57.14%      | 25%        |
 | `src/Engines/Ejs.js`                                       | 94.74%  | 94.74%       | 85.71%      | 88.89%     |
