@@ -9,6 +9,7 @@ const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 const EleventyErrorUtil = require("../src/EleventyErrorUtil");
 const TemplateContentPrematureUseError = require("../src/Errors/TemplateContentPrematureUseError");
 const normalizeNewLines = require("./Util/normalizeNewLines");
+const eventBus = require("../src/EventBus");
 
 const getNewTemplate = require("./_getNewTemplateForTests");
 
@@ -2083,31 +2084,16 @@ test("Make sure layout cache takes new changes during watch (nunjucks)", async (
 
   t.is((await tmpl.render(data)).trim(), '<script>alert("hi");</script>');
 
-  let eventBus = require("../src/EventBus");
-  let chokidar = require("chokidar");
-  let watcher = chokidar.watch(filePath, { interval: 10, persistent: true });
-  watcher.on("change", (path, stats) => {
-    eventBus.emit("resourceModified", path);
-  });
-
   await fsp.writeFile(filePath, `alert("bye");`, { encoding: "utf8" });
 
-  // Give Chokidar time to see the change;
-  await new Promise((res, rej) => {
-    setTimeout(res, 200);
-  });
+  eventBus.emit("resourceModified", filePath);
 
   t.is((await tmpl.render(data)).trim(), '<script>alert("bye");</script>');
-
-  await watcher.close();
 });
 
 test("Make sure layout cache takes new changes during watch (liquid)", async (t) => {
-  await fsp.writeFile(
-    "./test/stubs-layout-cache/_includes/include-script-2.js",
-    `alert("hi");`,
-    { encoding: "utf8" }
-  );
+  let filePath = "./test/stubs-layout-cache/_includes/include-script-2.js";
+  await fsp.writeFile(filePath, `alert("hi");`, { encoding: "utf8" });
 
   let tmpl = getNewTemplate(
     "./test/stubs-layout-cache/test.liquid",
@@ -2119,11 +2105,9 @@ test("Make sure layout cache takes new changes during watch (liquid)", async (t)
 
   t.is((await tmpl.render(data)).trim(), '<script>alert("hi");</script>');
 
-  await fsp.writeFile(
-    "./test/stubs-layout-cache/_includes/include-script-2.js",
-    `alert("bye");`,
-    { encoding: "utf8" }
-  );
+  await fsp.writeFile(filePath, `alert("bye");`, { encoding: "utf8" });
+
+  eventBus.emit("resourceModified", filePath);
 
   t.is((await tmpl.render(data)).trim(), '<script>alert("bye");</script>');
 });
