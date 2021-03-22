@@ -24,6 +24,7 @@
 1. update minor dependencies in package.json? `npm outdated` `npm update --save`
 1. npmclean aka `rm -rf node_modules && rm -f package-lock.json && npm install`
 1. If the minimum Node version changed, make sure you update `package.json` engines property.
+1. Bonus: make sure the error message works correctly for Node versions less than 10. 0.12.x+ requires Node 10+. 1.x+ requires Node 12+
 1. npm audit
 1. Make sure `npx ava` runs okay
 1. Update version in `package.json`
@@ -31,8 +32,6 @@
 1. Check it all in and commit
 1. Tag new version
 1. `npm publish --access=public`
-
-1. Bonus for 0.x branch, make sure it still works in node 8 (see `Temp/eleventy-node-8` sample project)
 
 ## If Docs branch does not yet exist
 
