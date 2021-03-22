@@ -150,51 +150,72 @@ class TemplateWriter {
     return this.allPaths;
   }
 
-  _createTemplate(path) {
-    let tmpl = this._templatePathCache.get(path);
-    if (tmpl) {
-      return tmpl;
-    }
-
-    tmpl = new Template(
-      path,
-      this.inputDir,
-      this.outputDir,
-      this.templateData,
-      this.extensionMap,
-      this.eleventyConfig
+  _isIncrementalFileAPassthroughCopy(paths) {
+    let passthroughManager = this.eleventyFiles.getPassthroughManager();
+    return passthroughManager.isPassthroughCopyFile(
+      paths,
+      this.incrementalFile
     );
+  }
 
-    tmpl.logger = this.logger;
-    this._templatePathCache.set(path, tmpl);
+  _createTemplate(path, allPaths) {
+    let tmpl = this._templatePathCache.get(path);
+    if (!tmpl) {
+      tmpl = new Template(
+        path,
+        this.inputDir,
+        this.outputDir,
+        this.templateData,
+        this.extensionMap,
+        this.eleventyConfig
+      );
+
+      tmpl.logger = this.logger;
+      this._templatePathCache.set(path, tmpl);
+
+      /*
+       * Sample filter: arg str, return pretty HTML string
+       * function(str) {
+       *   return pretty(str, { ocd: true });
+       * }
+       */
+      for (let transformName in this.config.transforms) {
+        let transform = this.config.transforms[transformName];
+        if (typeof transform === "function") {
+          tmpl.addTransform(transformName, transform);
+        }
+      }
+
+      for (let linterName in this.config.linters) {
+        let linter = this.config.linters[linterName];
+        if (typeof linter === "function") {
+          tmpl.addLinter(linter);
+        }
+      }
+    }
 
     tmpl.setIsVerbose(this.isVerbose);
 
     // --incremental only writes files that trigger a build during --watch
-    if (this.incrementalFile && path !== this.incrementalFile) {
-      tmpl.setDryRun(true);
+    if (this.incrementalFile) {
+      // incremental file is a passthrough copy (not a template)
+      if (this._isIncrementalFileAPassthroughCopy(allPaths)) {
+        tmpl.setDryRun(true);
+        // Passthrough copy check is above this (order is important)
+      } else if (
+        tmpl.isFileRelevantToThisTemplate(this.incrementalFile, {
+          incrementalFileIsFullTemplate: this.eleventyFiles.isFullTemplateFile(
+            allPaths,
+            this.incrementalFile
+          ),
+        })
+      ) {
+        tmpl.setDryRun(this.isDryRun);
+      } else {
+        tmpl.setDryRun(true);
+      }
     } else {
       tmpl.setDryRun(this.isDryRun);
-    }
-
-    /*
-     * Sample filter: arg str, return pretty HTML string
-     * function(str) {
-     *   return pretty(str, { ocd: true });
-     * }
-     */
-    for (let transformName in this.config.transforms) {
-      let transform = this.config.transforms[transformName];
-      if (typeof transform === "function") {
-        tmpl.addTransform(transformName, transform);
-      }
-    }
-
-    for (let linterName in this.config.linters) {
-      let linter = this.config.linters[linterName];
-      if (typeof linter === "function") {
-        tmpl.addLinter(linter);
-      }
     }
 
     return tmpl;
@@ -204,9 +225,7 @@ class TemplateWriter {
     let promises = [];
     for (let path of paths) {
       if (this.extensionMap.hasEngine(path)) {
-        promises.push(
-          this.templateMap.add(this._createTemplate(path))
-        );
+        promises.push(this.templateMap.add(this._createTemplate(path, paths)));
       }
       debug(`${path} begun adding to map.`);
     }
@@ -236,9 +255,7 @@ class TemplateWriter {
 
   async writePassthroughCopy(paths) {
     let passthroughManager = this.eleventyFiles.getPassthroughManager();
-    if (this.incrementalFile) {
-      passthroughManager.setIncrementalFile(this.incrementalFile);
-    }
+    passthroughManager.setIncrementalFile(this.incrementalFile);
 
     return passthroughManager.copyAll(paths).catch((e) => {
       this.errorHandler.warn(e, "Error with passthrough copy");
@@ -296,17 +313,11 @@ class TemplateWriter {
   async write() {
     let paths = await this._getAllPaths();
     let promises = [];
+
     promises.push(this.writePassthroughCopy(paths));
 
-    // Only write templates if not using incremental OR if incremental file was *not* a passthrough copy
-    if (
-      !this.incrementalFile ||
-      !this.eleventyFiles
-        .getPassthroughManager()
-        .isPassthroughCopyFile(paths, this.incrementalFile)
-    ) {
-      promises.push(...(await this.generateTemplates(paths)));
-    }
+    promises.push(...(await this.generateTemplates(paths)));
+
     return Promise.all(promises).catch((e) => {
       return Promise.reject(e);
     });

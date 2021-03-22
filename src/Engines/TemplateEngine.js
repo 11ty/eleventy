@@ -61,6 +61,15 @@ class TemplateEngine {
     return this._extensions;
   }
 
+  get extensionEntries() {
+    if (!this._extensionEntries) {
+      this._extensionEntries = this.extensionMap.getExtensionEntriesFromKey(
+        this.name
+      );
+    }
+    return this._extensionEntries;
+  }
+
   getName() {
     return this.name;
   }

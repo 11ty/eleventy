@@ -133,7 +133,7 @@ test("getKey", (t) => {
   t.is(map.getKey("component.js"), undefined);
 });
 
-test("isFullTemplateFilename (not a passthrough copy extension)", (t) => {
+test("isFullTemplateFilePath (not a passthrough copy extension)", (t) => {
   let map = getExtensionMap([
     "liquid",
     "njk",
@@ -143,11 +143,11 @@ test("isFullTemplateFilename (not a passthrough copy extension)", (t) => {
     "js",
     "css",
   ]);
-  t.true(map.isFullTemplateFilename("template.liquid"));
-  t.true(map.isFullTemplateFilename("template.njk"));
-  t.true(map.isFullTemplateFilename("template.11ty.js"));
-  t.true(map.isFullTemplateFilename("template.ejs"));
-  t.true(map.isFullTemplateFilename("template.pug"));
-  t.false(map.isFullTemplateFilename("passthrough.js"));
-  t.false(map.isFullTemplateFilename("passthrough.css"));
+  t.true(map.isFullTemplateFilePath("template.liquid"));
+  t.true(map.isFullTemplateFilePath("template.njk"));
+  t.true(map.isFullTemplateFilePath("template.11ty.js"));
+  t.true(map.isFullTemplateFilePath("template.ejs"));
+  t.true(map.isFullTemplateFilePath("template.pug"));
+  t.false(map.isFullTemplateFilePath("passthrough.js"));
+  t.false(map.isFullTemplateFilePath("passthrough.css"));
 });

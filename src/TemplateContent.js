@@ -310,6 +310,50 @@ class TemplateContent {
       }
     }
   }
+
+  getExtensionEntries() {
+    let extensions = this.templateRender.engine.extensionEntries;
+    return extensions;
+  }
+
+  isFileRelevantToThisTemplate(incrementalFile, metadata = {}) {
+    // always relevant if incremental file not set (build everything)
+    if (!incrementalFile) {
+      return true;
+    }
+
+    let incrementalFileIsFullTemplate = metadata.incrementalFileIsFullTemplate;
+    let extensionEntries = this.getExtensionEntries().filter(
+      (entry) => !!entry.isIncrementalMatch
+    );
+    if (extensionEntries.length) {
+      for (let entry of extensionEntries) {
+        if (
+          entry.isIncrementalMatch.call(
+            {
+              inputPath: this.inputPath,
+            },
+            incrementalFile
+          )
+        ) {
+          return true;
+        }
+      }
+    } else {
+      // Not great way of building all templates if this is a layout, include, JS dependency.
+      // TODO improve this for default langs
+      if (!incrementalFileIsFullTemplate) {
+        return true;
+      }
+
+      // only build if this input path is the same as the file that was changed
+      if (this.inputPath === incrementalFile) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 }
 
 TemplateContent._inputCache = new Map();

@@ -521,24 +521,7 @@ Arguments:
 
     let incrementalFile = this.watchManager.getIncrementalFile();
     if (incrementalFile) {
-      // TODO remove these and delegate to the template dependency graph
-      let isInclude = TemplatePath.startsWithSubPath(
-        incrementalFile,
-        this.eleventyFiles.getIncludesDir()
-      );
-
-      let isLayout = false;
-      let layoutsDir = this.eleventyFiles.getLayoutsDir();
-      if (layoutsDir) {
-        isLayout = TemplatePath.startsWithSubPath(incrementalFile, layoutsDir);
-      }
-
-      let isJSDependency = this.watchTargets.isJavaScriptDependency(
-        incrementalFile
-      );
-      if (!isInclude && !isLayout && !isJSDependency) {
-        this.writer.setIncrementalFile(incrementalFile);
-      }
+      this.writer.setIncrementalFile(incrementalFile);
     }
 
     await this.write();

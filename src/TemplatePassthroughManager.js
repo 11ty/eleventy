@@ -51,7 +51,9 @@ class TemplatePassthroughManager {
   }
 
   setIncrementalFile(path) {
-    this.incrementalFile = path;
+    if (path) {
+      this.incrementalFile = path;
+    }
   }
 
   _normalizePaths(path, outputPath) {
@@ -168,11 +170,11 @@ class TemplatePassthroughManager {
   }
 
   getAllNormalizedPaths(paths) {
-    if (
-      this.incrementalFile &&
-      this.isPassthroughCopyFile(paths, this.incrementalFile)
-    ) {
-      return [this._normalizePaths(this.incrementalFile)];
+    if (this.incrementalFile) {
+      if (this.isPassthroughCopyFile(paths, this.incrementalFile)) {
+        return [this._normalizePaths(this.incrementalFile)];
+      }
+      return [];
     }
 
     let normalizedPaths = [];

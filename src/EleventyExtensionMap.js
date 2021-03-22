@@ -71,7 +71,10 @@ class EleventyExtensionMap {
     return files;
   }
 
-  isFullTemplateFilename(path) {
+  // Warning: this would false positive on an include, but is only used
+  // on paths found from the file system glob search.
+  // TODO: Method name might just need to be renamed to something more accurate.
+  isFullTemplateFilePath(path) {
     for (let extension of this.validTemplateLanguageKeys) {
       if (path.endsWith(`.${extension}`)) {
         return true;
@@ -126,6 +129,18 @@ class EleventyExtensionMap {
       }
     }
     return extensions;
+  }
+
+  getExtensionEntriesFromKey(key) {
+    let entries = [];
+    if ("extensionMap" in this.config) {
+      for (let entry of this.config.extensionMap) {
+        if (entry.key === key) {
+          entries.push(entry);
+        }
+      }
+    }
+    return entries;
   }
 
   hasEngine(pathOrKey) {

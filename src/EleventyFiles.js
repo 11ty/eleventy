@@ -105,6 +105,7 @@ class EleventyFiles {
   restart() {
     this.passthroughManager.reset();
     this.setupGlobs();
+    this._glob = null;
   }
 
   /* For testing */
@@ -344,40 +345,65 @@ class EleventyFiles {
       );
     }
 
+    // Filter out the passthrough copy paths.
     return this.pathCache.filter((path) =>
-      this.extensionMap.isFullTemplateFilename(path)
+      this.extensionMap.isFullTemplateFilePath(path)
     );
   }
 
-  async getFiles() {
+  _globSearch() {
+    if (this._glob) {
+      return this._glob;
+    }
+
     let globs = this.getFileGlobs();
 
+    // returns a promise
     debug("Searching for: %o", globs);
+    this._glob = fastglob(globs, {
+      caseSensitiveMatch: false,
+      dot: true,
+    });
+
+    return this._glob;
+  }
+
+  async getFiles() {
     let bench = aggregateBench.get("Searching the file system");
     bench.before();
-    let paths = TemplatePath.addLeadingDotSlashArray(
-      await fastglob(globs, {
-        caseSensitiveMatch: false,
-        dot: true,
-      })
-    );
+    let globResults = await this._globSearch();
+    let paths = TemplatePath.addLeadingDotSlashArray(globResults);
     bench.after();
 
+    // filter individual paths in the new config-specified extension
+    // where is this used?
     if ("extensionMap" in this.config) {
       let extensions = this.config.extensionMap;
-      paths = paths.filter(function (path) {
-        for (let entry of extensions) {
-          // TODO `.${extension}` ?
-          if (path.endsWith(entry.extension) && entry.filter) {
-            return entry.filter(path);
+      if (Array.from(extensions).filter((entry) => !!entry.filter).length) {
+        paths = paths.filter(function (path) {
+          for (let entry of extensions) {
+            if (entry.filter && path.endsWith(`.${entry.extension}`)) {
+              return entry.filter(path);
+            }
           }
-        }
-        return true;
-      });
+          return true;
+        });
+      }
     }
 
     this.pathCache = paths;
     return paths;
+  }
+
+  // Assumption here that filePath is not a passthrough copy file
+  isFullTemplateFile(paths, filePath) {
+    for (let path of paths) {
+      if (path === filePath) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /* For `eleventy --watch` */

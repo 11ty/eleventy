@@ -2056,14 +2056,16 @@ test("Engine Singletons", async (t) => {
     "./test/stubs/engine-singletons/",
     "./dist",
     null,
-    map
+    map,
+    eleventyConfig
   );
   let tmpl2 = getNewTemplate(
     "./test/stubs/engine-singletons/second.njk",
     "./test/stubs/engine-singletons/",
     "./dist",
     null,
-    map
+    map,
+    eleventyConfig
   );
 
   t.deepEqual(tmpl1.engine, tmpl2.engine);
@@ -2110,4 +2112,40 @@ test("Make sure layout cache takes new changes during watch (liquid)", async (t)
   eventBus.emit("resourceModified", filePath);
 
   t.is((await tmpl.render(data)).trim(), '<script>alert("bye");</script>');
+});
+
+test("Add Extension via Configuration (txt file)", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.extensionMap.add({
+    extension: "txt",
+    key: "txt",
+    isIncrementalMatch: function (incrementalFilePath) {
+      // do some kind of check
+      return this.inputPath === incrementalFilePath;
+    },
+    compile: function (str, inputPath) {
+      // plaintext
+      return function (data) {
+        return str;
+      };
+    },
+  });
+
+  let map = new EleventyExtensionMap([], eleventyConfig);
+  let tmpl = getNewTemplate(
+    "./test/stubs/default.txt",
+    "./test/stubs/",
+    "./dist",
+    null,
+    map,
+    eleventyConfig
+  );
+
+  let extensions = tmpl.getExtensionEntries();
+  t.deepEqual(extensions[0].key, "txt");
+  t.deepEqual(extensions[0].extension, "txt");
+
+  t.truthy(tmpl.isFileRelevantToThisTemplate("./test/stubs/default.txt"));
+  t.falsy(tmpl.isFileRelevantToThisTemplate("./test/stubs/default2.txt"));
+  t.falsy(tmpl.isFileRelevantToThisTemplate("./test/stubs/default.njk"));
 });
