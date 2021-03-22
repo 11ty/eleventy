@@ -10,6 +10,9 @@ class EleventyExtensionMap {
     if (!config) {
       throw new EleventyExtensionMapConfigError("Missing `config` argument.");
     }
+    if (config instanceof TemplateConfig) {
+      this.eleventyConfig = config;
+    }
     this._config = config;
 
     this.formatKeys = formatKeys;

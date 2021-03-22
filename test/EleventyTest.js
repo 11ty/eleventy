@@ -224,3 +224,14 @@ test("Two Eleventies, two configs!!! (config used to be a global)", async (t) =>
   t.not(elev1.eleventyConfig, elev2.eleventyConfig);
   t.is(JSON.stringify(elev1.config), JSON.stringify(elev2.config));
 });
+
+test("Config propagates to other instances correctly", async (t) => {
+  let elev = new Eleventy();
+  await elev.init();
+
+  t.is(elev.extensionMap.eleventyConfig, elev.eleventyConfig);
+  t.is(elev.eleventyServe.config, elev.eleventyConfig);
+  t.is(elev.eleventyFiles.eleventyConfig, elev.eleventyConfig);
+  t.is(elev.templateData.eleventyConfig, elev.eleventyConfig);
+  t.is(elev.writer.eleventyConfig, elev.eleventyConfig);
+});
