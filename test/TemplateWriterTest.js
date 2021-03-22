@@ -425,6 +425,8 @@ test("Glob Watcher Files with Passthroughs", (t) => {
 });
 
 test("Pagination and TemplateContent", async (t) => {
+  rimraf.sync("./test/stubs/pagination-templatecontent/_site/");
+
   let eleventyConfig = new TemplateConfig();
   let tw = new TemplateWriter(
     "./test/stubs/pagination-templatecontent",
@@ -698,6 +700,8 @@ test.skip("JavaScript with alias", async (t) => {
 });
 
 test("Passthrough file output", async (t) => {
+  rimraf.sync("./test/stubs/template-passthrough/_site/");
+
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.passthroughCopies = {
     "./test/stubs/template-passthrough/static": true,
