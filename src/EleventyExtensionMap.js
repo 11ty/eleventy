@@ -98,17 +98,15 @@ class EleventyExtensionMap {
   _getGlobs(formatKeys, inputDir) {
     let dir = TemplatePath.convertToRecursiveGlobSync(inputDir);
     let globs = [];
-    formatKeys.forEach(
-      function (key) {
-        if (this.hasExtension(key)) {
-          this.getExtensionsFromKey(key).forEach(function (extension) {
-            globs.push(dir + "/*." + extension);
-          });
-        } else {
-          globs.push(dir + "/*." + key);
+    for (let key of formatKeys) {
+      if (this.hasExtension(key)) {
+        for (let extension of this.getExtensionsFromKey(key)) {
+          globs.push(dir + "/*." + extension);
         }
-      }.bind(this)
-    );
+      } else {
+        globs.push(dir + "/*." + key);
+      }
+    }
     return globs;
   }
 
