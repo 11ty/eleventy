@@ -65,7 +65,7 @@ class EleventyFiles {
   init() {
     this.alreadyInit = true;
 
-    // Input was a directory
+    // Input is a directory
     if (this.input === this.inputDir) {
       this.templateGlobs = this.extensionMap.getGlobs(this.inputDir);
     } else {
@@ -79,6 +79,7 @@ class EleventyFiles {
   get validTemplateGlobs() {
     if (!this._validTemplateGlobs) {
       let globs;
+      // Input is a directory
       if (this.input === this.inputDir) {
         globs = this.extensionMap.getValidGlobs(this.inputDir);
       } else {
@@ -175,20 +176,26 @@ class EleventyFiles {
 
   setupGlobs() {
     this.fileIgnores = this.getIgnores();
+    this.extraIgnores = this._getIncludesAndDataDirs();
 
     if (this.passthroughAll) {
-      this.templateGlobsWithIgnoresFromFiles = TemplateGlob.map([
+      this.normalizedTemplateGlobs = TemplateGlob.map([
         TemplateGlob.normalizePath(this.input, "/**"),
-      ]).concat(this.fileIgnores);
+      ]);
     } else {
-      this.templateGlobsWithIgnoresFromFiles = this.templateGlobs.concat(
-        this.fileIgnores
-      );
+      this.normalizedTemplateGlobs = this.templateGlobs;
     }
+  }
 
-    this.templateGlobsWithAllIgnores = this.templateGlobsWithIgnoresFromFiles.concat(
-      this._getIncludesAndDataDirIgnores()
-    );
+  getIgnoreGlobs() {
+    let uniqueIgnores = new Set();
+    for (let ignore of this.fileIgnores) {
+      uniqueIgnores.add(ignore);
+    }
+    for (let ignore of this.extraIgnores) {
+      uniqueIgnores.add(ignore);
+    }
+    return Array.from(uniqueIgnores);
   }
 
   static getFileIgnores(ignoreFiles, defaultIfFileDoesNotExist) {
@@ -221,10 +228,10 @@ class EleventyFiles {
     }
 
     if (!fileFound && defaultIfFileDoesNotExist) {
-      ignores.push("!" + TemplateGlob.normalizePath(defaultIfFileDoesNotExist));
+      ignores.push(TemplateGlob.normalizePath(defaultIfFileDoesNotExist));
       for (let dir of dirs) {
         ignores.push(
-          "!" + TemplateGlob.normalizePath(dir, defaultIfFileDoesNotExist)
+          TemplateGlob.normalizePath(dir, defaultIfFileDoesNotExist)
         );
       }
     }
@@ -270,11 +277,11 @@ class EleventyFiles {
             // Note these folders must exist to get /** suffix
             let stat = fs.statSync(path);
             if (stat.isDirectory()) {
-              return "!" + path + "/**";
+              return path + "/**";
             }
-            return "!" + path;
+            return path;
           } catch (e) {
-            return "!" + path;
+            return path;
           }
         });
     }
@@ -315,7 +322,7 @@ class EleventyFiles {
 
     // ignore output dir unless that would occlude all input
     if (!TemplatePath.startsWithSubPath(this.inputDir, this.outputDir)) {
-      files = files.concat(TemplateGlob.map("!" + this.outputDir + "/**"));
+      files = files.concat(TemplateGlob.map(this.outputDir + "/**"));
     }
 
     return files;
@@ -330,7 +337,7 @@ class EleventyFiles {
   }
 
   getFileGlobs() {
-    return this.templateGlobsWithAllIgnores;
+    return this.normalizedTemplateGlobs;
   }
 
   getRawFiles() {
@@ -363,6 +370,7 @@ class EleventyFiles {
     this._glob = fastglob(globs, {
       caseSensitiveMatch: false,
       dot: true,
+      ignore: this.getIgnoreGlobs(),
     });
 
     return this._glob;
@@ -441,7 +449,7 @@ class EleventyFiles {
   getGlobWatcherIgnores() {
     // convert to format without ! since they are passed in as a separate argument to glob watcher
     return this.fileIgnores.map((ignore) =>
-      TemplatePath.stripLeadingDotSlash(ignore.substr(1))
+      TemplatePath.stripLeadingDotSlash(ignore)
     );
   }
 
@@ -465,12 +473,6 @@ class EleventyFiles {
     }
 
     return files;
-  }
-
-  _getIncludesAndDataDirIgnores() {
-    return this._getIncludesAndDataDirs().map(function (dir) {
-      return "!" + dir;
-    });
   }
 }
 
