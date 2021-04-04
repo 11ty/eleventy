@@ -52,6 +52,12 @@ test("Easy slug with date, index", (t) => {
   t.is(fs.getFullPathWithoutExtension(), "/index");
 });
 
+test("Easy slug with only a date and no suffix", (t) => {
+  let fs = getNewSlugInstance("./2018-01-01.html");
+  t.is(fs.getSlug(), "2018-01-01");
+  t.is(fs.getFullPathWithoutExtension(), "/2018-01-01");
+});
+
 /* Directories */
 
 test("Easy slug with dir", (t) => {
