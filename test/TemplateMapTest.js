@@ -19,8 +19,6 @@ function getNewTemplate(filename, input, output, eleventyConfig) {
 }
 
 function getNewTemplateByNumber(num, eleventyConfig) {
-  let extensions = ["md", "md", "md", "md", "md", "html", "njk"];
-
   return getNewTemplate(
     `./test/stubs/templateMapCollection/test${num}.md`,
     "./test/stubs/",
@@ -1246,4 +1244,40 @@ test("TemplateMap circular references (map.templateContent) using eleventyExclud
 
   let collections = await tm._testGetCollectionsData();
   t.is(collections.all.length, 1);
+});
+
+test("permalink object with build", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let tm = new TemplateMap(eleventyConfig);
+  let tmplLayout = getNewTemplate(
+    "./test/stubs/permalink-build/permalink-build.md",
+    "./test/stubs/",
+    "./test/stubs/_site",
+    eleventyConfig
+  );
+
+  await tm.add(tmplLayout);
+
+  let map = tm.getMap();
+  await tm.cache();
+
+  t.is(map[0]._pages.length, 1);
+});
+
+test("permalink object without build", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let tm = new TemplateMap(eleventyConfig);
+  let tmplLayout = getNewTemplate(
+    "./test/stubs/permalink-nobuild/permalink-nobuild.md",
+    "./test/stubs/",
+    "./test/stubs/_site",
+    eleventyConfig
+  );
+
+  await tm.add(tmplLayout);
+
+  let map = tm.getMap();
+  await tm.cache();
+
+  t.is(map[0]._pages.length, 0);
 });

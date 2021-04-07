@@ -128,6 +128,15 @@ class Template extends TemplateContent {
     );
   }
 
+  _getRawPermalinkInstance(permalinkValue) {
+    // unrendered!
+    let perm = new TemplatePermalink(
+      permalinkValue,
+      this.extraOutputSubdirectory
+    );
+    return perm;
+  }
+
   async _getLink(data) {
     if (!data) {
       data = await this.getData();
@@ -182,11 +191,7 @@ class Template extends TemplateContent {
     }
 
     if (permalinkValue !== undefined) {
-      let perm = new TemplatePermalink(
-        permalinkValue,
-        this.extraOutputSubdirectory
-      );
-      return perm;
+      return this._getRawPermalinkInstance(permalinkValue);
     }
 
     // No `permalink` specified in data cascade, do the default
@@ -208,6 +213,12 @@ class Template extends TemplateContent {
     }
 
     return this._usePermalinkRoot;
+  }
+
+  isProcessible(data) {
+    let rawPermalinkValue = data[this.config.keys.permalink];
+    let link = this._getRawPermalinkInstance(rawPermalinkValue);
+    return link.isProcessible;
   }
 
   // TODO instead of htmlIOException, do a global search to check if output path = input path and then add extra suffix
@@ -847,13 +858,15 @@ class Template extends TemplateContent {
   async getTemplateMapEntries() {
     debugDev("%o getMapped()", this.inputPath);
 
+    // Important reminder: This is where the template data is first generated via TemplateMap
     let data = await this.getData();
+
     let entries = [];
     // does not return outputPath or url, we don’t want to render permalinks yet
     entries.push({
       template: this,
       inputPath: this.inputPath,
-      data: data,
+      data,
     });
     return entries;
   }

@@ -3,4 +3,4 @@ permalink:
   build: /url/
 ---
 
-This shouldn’t write
+This should be the same as `permalink: /url/`

@@ -244,6 +244,7 @@ class Pagination {
       cloned.setPaginationData(override);
 
       // TO DO subdirectory to links if the site doesn’t live at /
+      // TODO missing data argument means Template.getData is regenerated, maybe doesn’t matter because of data cache?
       let { link, href } = await cloned.getOutputLocations();
       links.push("/" + link);
       hrefs.push(href);

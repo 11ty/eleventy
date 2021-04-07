@@ -2162,3 +2162,25 @@ test("Add Extension via Configuration (txt file)", async (t) => {
   t.falsy(tmpl.isFileRelevantToThisTemplate("./test/stubs/default2.txt"));
   t.falsy(tmpl.isFileRelevantToThisTemplate("./test/stubs/default.njk"));
 });
+
+test("permalink object with build", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-build/permalink-build.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  t.is(await tmpl.getOutputLink(), "/url/index.html");
+  t.is(await tmpl.getOutputHref(), "/url/");
+});
+
+test("permalink object without build", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-nobuild/permalink-nobuild.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  t.is(await tmpl.getOutputLink(), false);
+  t.is(await tmpl.getOutputHref(), false);
+});

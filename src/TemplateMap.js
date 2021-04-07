@@ -49,6 +49,7 @@ class TemplateMap {
   }
 
   async add(template) {
+    // getTemplateMapEntries is where the Template.getData is first generated
     for (let map of await template.getTemplateMapEntries()) {
       this.map.push(map);
     }
@@ -250,6 +251,7 @@ class TemplateMap {
     let tagPrefix = this.tagPrefix;
     for (let depEntry of dependencyMap) {
       if (depEntry.startsWith(tagPrefix)) {
+        // is a tag (collection) entry
         let tagName = depEntry.substr(tagPrefix.length);
         if (this.isUserConfigCollectionName(tagName)) {
           // async
@@ -260,27 +262,32 @@ class TemplateMap {
           this.collectionsData[tagName] = this.getTaggedCollection(tagName);
         }
       } else {
+        // is a template entry
         let map = this.getMapEntryForInputPath(depEntry);
-        map._pages = await map.template.getTemplates(map.data);
+        if (!map.template.isProcessible(map.data)) {
+          map._pages = [];
+        } else {
+          map._pages = await map.template.getTemplates(map.data);
 
-        let counter = 0;
-        for (let page of map._pages) {
-          // Copy outputPath to map entry
-          if (!map.outputPath) {
-            map.outputPath = page.outputPath;
-          }
-
-          if (
-            counter === 0 ||
-            (map.data.pagination &&
-              map.data.pagination.addAllPagesToCollections)
-          ) {
-            if (!map.data.eleventyExcludeFromCollections) {
-              // TODO do we need .template in collection entries?
-              this.collection.add(page);
+          let counter = 0;
+          for (let page of map._pages) {
+            // Copy outputPath to map entry
+            if (!map.outputPath) {
+              map.outputPath = page.outputPath;
             }
+
+            if (
+              counter === 0 ||
+              (map.data.pagination &&
+                map.data.pagination.addAllPagesToCollections)
+            ) {
+              if (!map.data.eleventyExcludeFromCollections) {
+                // TODO do we need .template in collection entries?
+                this.collection.add(page);
+              }
+            }
+            counter++;
           }
-          counter++;
         }
       }
     }
