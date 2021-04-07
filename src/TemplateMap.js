@@ -265,10 +265,11 @@ class TemplateMap {
 
         let counter = 0;
         for (let page of map._pages) {
-          // TODO do we need this in map entries?
+          // Copy outputPath to map entry
           if (!map.outputPath) {
             map.outputPath = page.outputPath;
           }
+
           if (
             counter === 0 ||
             (map.data.pagination &&

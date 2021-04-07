@@ -1,14 +1,13 @@
 const fs = require("fs-extra");
 const parsePath = require("parse-filepath");
 const normalize = require("normalize-path");
-const lodashIsObject = require("lodash/isObject");
+const isPlainObject = require("lodash/isPlainObject");
 const { DateTime } = require("luxon");
 
 const TemplateData = require("./TemplateData");
 const TemplateContent = require("./TemplateContent");
 const TemplatePath = require("./TemplatePath");
 const TemplatePermalink = require("./TemplatePermalink");
-const TemplatePermalinkNoWrite = require("./TemplatePermalinkNoWrite");
 const TemplateLayout = require("./TemplateLayout");
 const TemplateFileSlug = require("./TemplateFileSlug");
 const ComputedData = require("./ComputedData");
@@ -135,33 +134,62 @@ class Template extends TemplateContent {
     }
 
     let permalink = data[this.config.keys.permalink];
-    if (permalink) {
-      // render variables inside permalink front matter, bypass markdown
-      let permalinkValue;
-      if (!this.config.dynamicPermalinks || data.dynamicPermalink === false) {
-        debugDev("Not using dynamicPermalinks, using %o", permalink);
-        permalinkValue = permalink;
-      } else {
-        permalinkValue = await super.render(permalink, data, true);
+    let permalinkValue;
+
+    // v1.0 added support for `permalink: true`
+    // `permalink: true` is a more accurate alias for `permalink: false` behavior:
+    // render but no file system write, e.g. use in collections only)
+    if (typeof permalink === "boolean") {
+      debugDev("Using boolean permalink %o", permalink);
+      permalinkValue = permalink;
+    } else if (
+      permalink &&
+      (!this.config.dynamicPermalinks || data.dynamicPermalink === false)
+    ) {
+      debugDev("Not using dynamic permalinks, using %o", permalink);
+      permalinkValue = permalink;
+    } else if (isPlainObject(permalink)) {
+      let promises = [];
+      let order = [];
+      for (let key in permalink) {
+        order.push(key);
+        promises.push(super.render(permalink[key], data, true));
+      }
+      let results = await Promise.all(promises);
+
+      permalinkValue = {};
+      for (let j = 0, k = order.length; j < k; j++) {
+        permalinkValue[order[j]] = results[j];
         debug(
-          "Rendering permalink for %o: %s becomes %o",
+          "Rendering permalink.%o for %o: %s becomes %o",
+          order[j],
           this.inputPath,
           permalink,
-          permalinkValue
+          results[j]
         );
         debugDev("Permalink rendered with data: %o", data);
       }
+    } else if (permalink) {
+      // render variables inside permalink front matter, bypass markdown
+      permalinkValue = await super.render(permalink, data, true);
+      debug(
+        "Rendering permalink for %o: %s becomes %o",
+        this.inputPath,
+        permalink,
+        permalinkValue
+      );
+      debugDev("Permalink rendered with data: %o", data);
+    }
 
+    if (permalinkValue !== undefined) {
       let perm = new TemplatePermalink(
         permalinkValue,
         this.extraOutputSubdirectory
       );
-
       return perm;
-    } else if (permalink === false) {
-      return new TemplatePermalinkNoWrite();
     }
 
+    // No `permalink` specified in data cascade, do the default
     return TemplatePermalink.generate(
       this.getTemplateSubfolder(),
       this.baseFile,
@@ -171,30 +199,54 @@ class Template extends TemplateContent {
     );
   }
 
-  // TODO instead of htmlIOException, do a global search to check if output path = input path and then add extra suffix
-  async getOutputLink(data) {
-    let link = await this._getLink(data);
-    return link.toString();
+  async usePermalinkRoot() {
+    if (this._usePermalinkRoot === undefined) {
+      // TODO this only works with immediate front matter and not data files
+      this._usePermalinkRoot = (await this.getFrontMatterData())[
+        this.config.keys.permalinkRoot
+      ];
+    }
+
+    return this._usePermalinkRoot;
   }
 
+  // TODO instead of htmlIOException, do a global search to check if output path = input path and then add extra suffix
+  async getOutputLocations(data) {
+    let link = await this._getLink(data);
+
+    let path;
+    if (await this.usePermalinkRoot()) {
+      path = link.toPathFromRoot();
+    } else {
+      path = link.toPath(this.outputDir);
+    }
+
+    return {
+      link: link.toLink(),
+      href: link.toHref(),
+      path: path,
+    };
+  }
+
+  // Preferred to use the singular `getOutputLocations` above.
+  async getOutputLink(data) {
+    let link = await this._getLink(data);
+    return link.toLink();
+  }
+
+  // Preferred to use the singular `getOutputLocations` above.
   async getOutputHref(data) {
     let link = await this._getLink(data);
     return link.toHref();
   }
 
+  // Preferred to use the singular `getOutputLocations` above.
   async getOutputPath(data) {
-    let uri = await this.getOutputLink(data);
-
-    if (uri === false) {
-      return false;
-    } else if (
-      (await this.getFrontMatterData())[this.config.keys.permalinkRoot]
-    ) {
-      // TODO this only works with immediate front matter and not data files
-      return normalize(uri);
-    } else {
-      return normalize(this.outputDir + "/" + uri);
+    let link = await this._getLink(data);
+    if (await this.usePermalinkRoot()) {
+      return link.toPathFromRoot();
     }
+    return link.toPath(this.outputDir);
   }
 
   setPaginationData(paginationData) {
@@ -212,7 +264,7 @@ class Template extends TemplateContent {
       return Promise.all(
         data.map((item) => this.mapDataAsRenderedTemplates(item, templateData))
       );
-    } else if (lodashIsObject(data)) {
+    } else if (isPlainObject(data)) {
       let obj = {};
       await Promise.all(
         Object.keys(data).map(async (value) => {
@@ -412,10 +464,10 @@ class Template extends TemplateContent {
   }
 
   _addComputedEntry(computedData, obj, parentKey, declaredDependencies) {
-    // this check must come before lodashIsObject
+    // this check must come before isPlainObject
     if (typeof obj === "function") {
       computedData.add(parentKey, obj, declaredDependencies);
-    } else if (lodashIsObject(obj)) {
+    } else if (isPlainObject(obj)) {
       for (let key in obj) {
         let keys = [];
         if (parentKey) {
@@ -483,8 +535,9 @@ class Template extends TemplateContent {
         data.page = {};
       }
 
-      data.page.url = await this.getOutputHref(data);
-      data.page.outputPath = await this.getOutputPath(data);
+      let { href, path } = await this.getOutputLocations(data);
+      data.page.url = href;
+      data.page.outputPath = path;
     }
 
     // Deprecated, use eleventyComputed instead.
@@ -574,14 +627,12 @@ class Template extends TemplateContent {
     }
   }
 
+  // TODO move this into tests (this is only used by tests)
   async getRenderedTemplates(data) {
     let pages = await this.getTemplates(data);
     await Promise.all(
       pages.map(async (page) => {
-        let content = await page.template._getContent(
-          page.outputPath,
-          page.data
-        );
+        let content = await page.template._getContent(page.data);
 
         page.templateContent = content;
       })
@@ -589,7 +640,7 @@ class Template extends TemplateContent {
     return pages;
   }
 
-  async _getContent(outputPath, data) {
+  async _getContent(data) {
     return await this.render(data);
   }
 
@@ -787,10 +838,7 @@ class Template extends TemplateContent {
 
   async getTemplateMapContent(pageMapEntry) {
     pageMapEntry.template.setWrapWithLayouts(false);
-    let content = await pageMapEntry.template._getContent(
-      pageMapEntry.outputPath,
-      pageMapEntry.data
-    );
+    let content = await pageMapEntry.template._getContent(pageMapEntry.data);
     pageMapEntry.template.setWrapWithLayouts(true);
 
     return content;

@@ -1360,10 +1360,10 @@ test("permalink: false", async (t) => {
     "./test/stubs/_site"
   );
 
-  t.is(await tmpl.getOutputLink(), false);
-  t.is(await tmpl.getOutputHref(), false);
-
   let data = await tmpl.getData();
+  t.is(await tmpl.getOutputLink(data), false);
+  t.is(await tmpl.getOutputHref(data), false);
+
   await write(tmpl, data);
 
   // Input file exists (sanity check for paths)
@@ -1377,6 +1377,19 @@ test("permalink: false", async (t) => {
     fs.existsSync("./test/stubs/_site/permalink-false/test/index.html"),
     false
   );
+});
+
+test("permalink: true", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-true/permalink-true.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let data = await tmpl.getData();
+  await t.throwsAsync(async () => {
+    await tmpl.getOutputLink(data);
+  });
 });
 
 test("Disable dynamic permalinks", async (t) => {
