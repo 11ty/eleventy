@@ -686,7 +686,7 @@ class Template extends TemplateContent {
     let engineList = this.templateRender.getReadableEnginesListDifferingFromFileExtension();
     this.logger.log(
       `${lang.start} ${outputPath} from ${this.inputPath}${
-        engineList ? ` (${engineList})` : ""
+        engineList ? ` (using ${engineList})` : ""
       }`
     );
 
