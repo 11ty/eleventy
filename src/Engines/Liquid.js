@@ -50,6 +50,8 @@ class Liquid extends TemplateEngine {
       extname: ".liquid",
       dynamicPartials: false,
       strictFilters: true,
+      // TODO?
+      // cache: true,
     };
 
     let options = Object.assign(defaults, this.liquidOptions || {});
@@ -201,7 +203,22 @@ class Liquid extends TemplateEngine {
     });
   }
 
+  needsCompilation(str) {
+    let options = this.liquidLib.options;
+
+    return (
+      str.indexOf(options.tagDelimiterLeft) !== -1 ||
+      str.indexOf(options.outputDelimiterLeft) !== -1
+    );
+  }
+
   async compile(str, inputPath) {
+    if (!this.needsCompilation(str)) {
+      return async function (data) {
+        return str;
+      };
+    }
+
     let engine = this.liquidLib;
     let tmplReady = engine.parse(str, inputPath);
 

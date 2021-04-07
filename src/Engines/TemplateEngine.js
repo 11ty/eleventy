@@ -168,6 +168,11 @@ class TemplateEngine {
   get defaultTemplateFileExtension() {
     return "html";
   }
+
+  // whether or not compile is needed or can we return the plaintext?
+  needsCompilation(str) {
+    return true;
+  }
 }
 
 module.exports = TemplateEngine;

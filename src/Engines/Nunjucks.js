@@ -344,18 +344,22 @@ class Nunjucks extends TemplateEngine {
     this.njkEnv.addExtension(shortcodeName, new PairedShortcodeFunction());
   }
 
-  async compile(str, inputPath) {
+  needsCompilation(str) {
     // Defend against syntax customisations:
     //    https://mozilla.github.io/nunjucks/api.html#customizing-syntax
     let optsTags = this.njkEnv.opts.tags || {};
     let blockStart = optsTags.blockStart || "{%";
     let variableStart = optsTags.variableStart || "{{";
     let commentStart = optsTags.variableStart || "{#";
-    let needsCompile =
-      str.indexOf(blockStart) != -1 ||
-      str.indexOf(variableStart) != -1 ||
-      str.indexOf(commentStart) != -1;
-    if (!needsCompile) {
+    return (
+      str.indexOf(blockStart) !== -1 ||
+      str.indexOf(variableStart) !== -1 ||
+      str.indexOf(commentStart) !== -1
+    );
+  }
+
+  async compile(str, inputPath) {
+    if (!this.needsCompilation(str)) {
       return async function () {
         return str;
       };

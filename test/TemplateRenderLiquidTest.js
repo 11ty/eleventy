@@ -1019,3 +1019,14 @@ test("Liquid Render Square Brackets #680 variable reference array", async (t) =>
   );
   t.is(await fn({ test: { "hey-a": 1 }, ref: ["hey-a"] }), "<p>1</p>");
 });
+
+test("Liquid bypass compilation", async (t) => {
+  let tr = getNewTemplateRender("liquid");
+
+  t.is(tr.engine.needsCompilation("<p>{{ me }}</p>"), true);
+  t.is(
+    tr.engine.needsCompilation("<p>{% comment %}{% endcomment %}</p>"),
+    true
+  );
+  t.is(tr.engine.needsCompilation("<p>test</p>"), false);
+});

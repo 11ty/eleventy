@@ -797,3 +797,11 @@ test("Issue 611: Run a function", async (t) => {
     "alkdsjfksljaZach"
   );
 });
+
+test("Nunjucks bypass compilation", async (t) => {
+  let tr = getNewTemplateRender("njk");
+
+  t.is(tr.engine.needsCompilation("<p>{{ me }}</p>"), true);
+  t.is(tr.engine.needsCompilation("<p>{% tag %}{% endtag %}</p>"), true);
+  t.is(tr.engine.needsCompilation("<p>test</p>"), false);
+});
