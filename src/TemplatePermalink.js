@@ -23,33 +23,38 @@ class TemplatePermalink {
 
     // permalink: false and permalink: build: false
     if (typeof rawLink === "boolean") {
-      if(rawLink === false) {
+      if (rawLink === false) {
         this._outputToFileSystem = false;
       } else {
         throw new Error(
-          `\`permalink: ${isLinkAnObject ? "build: " : ""}true\` is not a supported feature in Eleventy. Did you mean \`permalink: ${isLinkAnObject ? "build: " : ""}false\`?`
+          `\`permalink: ${
+            isLinkAnObject ? "build: " : ""
+          }true\` is not a supported feature in Eleventy. Did you mean \`permalink: ${
+            isLinkAnObject ? "build: " : ""
+          }false\`?`
         );
       }
-    } else if(rawLink) {
+    } else if (rawLink) {
       this.rawLink = rawLink;
     }
 
-    if(isLinkAnObject) {
-      if("external" in link) {
-        this.externalLink = link.external;
+    if (isLinkAnObject) {
+      if ("external" in link) {
+        this.externalLink = link.cloud;
       }
 
       // default for permalink objects without a build URL
-      if(!("behavior" in link) && !("build" in link)) {
+      if (!("behavior" in link) && !("build" in link)) {
         link.behavior = "skip-render";
       }
 
-      if(link.behavior === "skip-write") { // same as permalink: false and permalink: build: false
+      if (link.behavior === "skip-write") {
+        // same as permalink: false and permalink: build: false
         this._outputToFileSystem = false;
-      } else if(link.behavior === "skip-render") {
+      } else if (link.behavior === "skip-render") {
         this._outputToFileSystem = false;
         this._isRendered = false;
-      } else if(link.behavior === "skip") {
+      } else if (link.behavior === "skip") {
         this._outputToFileSystem = false;
         this._isRendered = false;
         this._isIgnoredTemplate = true;
@@ -64,7 +69,8 @@ class TemplatePermalink {
   }
 
   toLink() {
-    if (!this.rawLink) { // empty or false
+    if (!this.rawLink) {
+      // empty or false
       return false;
     }
 
@@ -82,10 +88,11 @@ class TemplatePermalink {
   // index.html becomes /
   // test/index.html becomes test/
   toHref() {
-    if(this.externalLink) {
+    if (this.externalLink) {
       return this.externalLink;
     }
-    if (!this.rawLink) { // empty or false
+    if (!this.rawLink) {
+      // empty or false
       return false;
     }
 

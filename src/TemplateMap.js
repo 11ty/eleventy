@@ -44,7 +44,7 @@ class TemplateMap {
   }
 
   get config() {
-    if(!this._config) {
+    if (!this._config) {
       this._config = this.eleventyConfig.getConfig();
     }
     return this._config;
@@ -273,7 +273,10 @@ class TemplateMap {
         if (map.behavior.ignored) {
           map._pages = [];
         } else {
-          map._pages = await map.template.getTemplates(map.data, map.behavior.rendered);
+          map._pages = await map.template.getTemplates(
+            map.data,
+            map.behavior.rendered
+          );
 
           let counter = 0;
           for (let page of map._pages) {
@@ -340,23 +343,28 @@ class TemplateMap {
 
     this.checkForDuplicatePermalinks();
 
-    await this.config.events.emit("dependencyMap", this.generateDependencyMapEventObject(orderedMap));
+    await this.config.events.emit(
+      "dependencyMap",
+      this.generateDependencyMapEventObject(orderedMap)
+    );
   }
 
   generateDependencyMapEventObject(orderedMap) {
     let entries = [];
-    for(let entry of orderedMap) {
+    for (let entry of orderedMap) {
       let ret = {
         inputPath: entry.inputPath,
-        isExternal: !!(entry.data.permalink && entry.data.permalink.external)
+        isExternal: !!(entry.data.permalink && entry.data.permalink.cloud),
       };
 
       // TODO `needs: []` array of inputPath or glob? this template uses
 
-      for(let page of entry._pages) {
-        entries.push(Object.assign({}, ret, {
-          url: page.url
-        }));
+      for (let page of entry._pages) {
+        entries.push(
+          Object.assign({}, ret, {
+            url: page.url,
+          })
+        );
       }
     }
     return entries;
@@ -409,7 +417,7 @@ class TemplateMap {
       if (!map._pages) {
         throw new Error(`Content pages not found for ${map.inputPath}`);
       }
-      if(!map.behavior.rendered) {
+      if (!map.behavior.rendered) {
         continue;
       }
       try {

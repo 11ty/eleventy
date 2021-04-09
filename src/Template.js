@@ -167,13 +167,13 @@ class Template extends TemplateContent {
     } else if (isPlainObject(permalink)) {
       let promises = [];
       let keys = [];
-      if(permalink.build) {
+      if (permalink.build) {
         keys.push("build");
         promises.push(super.render(permalink.build, data, true));
       }
-      if(permalink.external) {
-        keys.push("external");
-        promises.push(super.render(permalink.external, data, true));
+      if (permalink.cloud) {
+        keys.push("cloud");
+        promises.push(super.render(permalink.cloud, data, true));
       }
 
       let results = await Promise.all(promises);
@@ -590,7 +590,7 @@ class Template extends TemplateContent {
             this._templateContent = content;
           },
           get templateContent() {
-            if(shouldRender) {
+            if (shouldRender) {
               if (this._templateContent === undefined) {
                 // should at least warn here
                 throw new TemplateContentPrematureUseError(
@@ -598,7 +598,9 @@ class Template extends TemplateContent {
                 );
               }
             } else {
-              throw new TemplateContentUnrenderedTemplateError(`Tried to use templateContent on unrendered template. You need a valid permalink (or permalink object) to use templateContent on ${this.inputPath}`);
+              throw new TemplateContentUnrenderedTemplateError(
+                `Tried to use templateContent on unrendered template. You need a valid permalink (or permalink object) to use templateContent on ${this.inputPath}`
+              );
             }
             return this._templateContent;
           },
@@ -636,14 +638,16 @@ class Template extends TemplateContent {
               this._templateContent = content;
             },
             get templateContent() {
-              if(shouldRender) {
+              if (shouldRender) {
                 if (this._templateContent === undefined) {
                   throw new TemplateContentPrematureUseError(
                     `Tried to use templateContent too early (${this.inputPath} page ${this.pageNumber})`
                   );
                 }
               } else {
-                throw new TemplateContentUnrenderedTemplateError(`Tried to use templateContent on unrendered template. You need a valid permalink (or permalink object) to use templateContent on ${this.inputPath} page ${this.pageNumber}`);
+                throw new TemplateContentUnrenderedTemplateError(
+                  `Tried to use templateContent on unrendered template. You need a valid permalink (or permalink object) to use templateContent on ${this.inputPath} page ${this.pageNumber}`
+                );
               }
               return this._templateContent;
             },
@@ -731,7 +735,7 @@ class Template extends TemplateContent {
         let content;
 
         // Note that behavior.rendered is overridden when using json or ndjson output
-        if(mapEntry.behavior.rendered) {
+        if (mapEntry.behavior.rendered) {
           // this reuses page.templateContent, it doesn’t render it
           content = await this.renderPageEntry(mapEntry, page);
         }
@@ -753,7 +757,7 @@ class Template extends TemplateContent {
           return obj;
         }
 
-        if(!mapEntry.behavior.rendered) {
+        if (!mapEntry.behavior.rendered) {
           debug(
             "Template not written %o from %o (via permalink.behavior).",
             page.outputPath,
@@ -886,7 +890,7 @@ class Template extends TemplateContent {
     debugDev("%o getMapped()", this.inputPath);
 
     // Important reminder: This is where the template data is first generated via TemplateMap
-    let data = dataOverride || await this.getData();
+    let data = dataOverride || (await this.getData());
 
     let rawPermalinkValue = data[this.config.keys.permalink];
     let link = this._getRawPermalinkInstance(rawPermalinkValue);
@@ -899,9 +903,12 @@ class Template extends TemplateContent {
       data,
       behavior: {
         ignored: link.isTemplateIgnored(),
-        rendered: this.outputFormat === "json" || this.outputFormat === "ndjson" || link.isTemplateRendered(),
+        rendered:
+          this.outputFormat === "json" ||
+          this.outputFormat === "ndjson" ||
+          link.isTemplateRendered(),
         writeable: link.isTemplateWriteable(),
-      }
+      },
     });
     return entries;
   }
