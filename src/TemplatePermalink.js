@@ -39,7 +39,7 @@ class TemplatePermalink {
     }
 
     if (isLinkAnObject) {
-      if ("external" in link) {
+      if ("cloud" in link) {
         this.externalLink = link.cloud;
       }
 
