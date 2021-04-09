@@ -486,7 +486,7 @@ test("Custom collection returns a string", async (t) => {
     eleventyConfig
   );
 
-  tw.userConfig.addCollection("returnATestString", function (collection) {
+  tw.userConfig.addCollection("returnATestString", function () {
     return "test";
   });
 
@@ -709,6 +709,7 @@ test("Passthrough file output", async (t) => {
     "./test/stubs/template-passthrough/static/**/*": "./all/",
     "./test/stubs/template-passthrough/static/**/*.js": "./js/",
   };
+
   let tw = new TemplateWriter(
     "./test/stubs/template-passthrough/",
     "./test/stubs/template-passthrough/_site",
@@ -716,8 +717,6 @@ test("Passthrough file output", async (t) => {
     null,
     eleventyConfig
   );
-
-  const mgr = tw.eleventyFiles.getPassthroughManager();
 
   await tw.write();
 

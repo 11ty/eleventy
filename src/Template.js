@@ -13,6 +13,7 @@ const TemplateFileSlug = require("./TemplateFileSlug");
 const ComputedData = require("./ComputedData");
 const Pagination = require("./Plugins/Pagination");
 const TemplateContentPrematureUseError = require("./Errors/TemplateContentPrematureUseError");
+const TemplateContentUnrenderedTemplateError = require("./Errors/TemplateContentUnrenderedTemplateError");
 const ConsoleLogger = require("./Util/ConsoleLogger");
 
 const debug = require("debug")("Eleventy:Template");
@@ -58,6 +59,8 @@ class Template extends TemplateContent {
     );
     this.fileSlugStr = this.fileSlug.getSlug();
     this.filePathStem = this.fileSlug.getFullPathWithoutExtension();
+
+    this.outputFormat = "fs";
   }
 
   get logger() {
@@ -71,6 +74,10 @@ class Template extends TemplateContent {
   /* Setter for Logger */
   set logger(logger) {
     this._logger = logger;
+  }
+
+  setOutputFormat(to) {
+    this.outputFormat = to;
   }
 
   setIsVerbose(isVerbose) {
@@ -159,24 +166,29 @@ class Template extends TemplateContent {
       permalinkValue = permalink;
     } else if (isPlainObject(permalink)) {
       let promises = [];
-      let order = [];
-      for (let key in permalink) {
-        order.push(key);
-        promises.push(super.render(permalink[key], data, true));
+      let keys = [];
+      if(permalink.build) {
+        keys.push("build");
+        promises.push(super.render(permalink.build, data, true));
       }
+      if(permalink.external) {
+        keys.push("external");
+        promises.push(super.render(permalink.external, data, true));
+      }
+
       let results = await Promise.all(promises);
 
-      permalinkValue = {};
-      for (let j = 0, k = order.length; j < k; j++) {
-        permalinkValue[order[j]] = results[j];
+      permalinkValue = Object.assign({}, permalink);
+      for (let j = 0, k = keys.length; j < k; j++) {
+        let key = keys[j];
+        permalinkValue[key] = results[j];
         debug(
           "Rendering permalink.%o for %o: %s becomes %o",
-          order[j],
+          key,
           this.inputPath,
-          permalink,
+          permalink[key],
           results[j]
         );
-        debugDev("Permalink rendered with data: %o", data);
       }
     } else if (permalink) {
       // render variables inside permalink front matter, bypass markdown
@@ -204,6 +216,7 @@ class Template extends TemplateContent {
     );
   }
 
+  // TODO add support for a key inside the `permalink` object for this
   async usePermalinkRoot() {
     if (this._usePermalinkRoot === undefined) {
       // TODO this only works with immediate front matter and not data files
@@ -213,12 +226,6 @@ class Template extends TemplateContent {
     }
 
     return this._usePermalinkRoot;
-  }
-
-  isProcessible(data) {
-    let rawPermalinkValue = data[this.config.keys.permalink];
-    let link = this._getRawPermalinkInstance(rawPermalinkValue);
-    return link.isProcessible;
   }
 
   // TODO instead of htmlIOException, do a global search to check if output path = input path and then add extra suffix
@@ -565,7 +572,7 @@ class Template extends TemplateContent {
     await this.computedData.processRemainingData(data);
   }
 
-  async getTemplates(data) {
+  async getTemplates(data, shouldRender = true) {
     if (!Pagination.hasPagination(data)) {
       await this.addComputedData(data);
 
@@ -583,11 +590,15 @@ class Template extends TemplateContent {
             this._templateContent = content;
           },
           get templateContent() {
-            if (this._templateContent === undefined) {
-              // should at least warn here
-              throw new TemplateContentPrematureUseError(
-                `Tried to use templateContent too early (${this.inputPath})`
-              );
+            if(shouldRender) {
+              if (this._templateContent === undefined) {
+                // should at least warn here
+                throw new TemplateContentPrematureUseError(
+                  `Tried to use templateContent too early (${this.inputPath})`
+                );
+              }
+            } else {
+              throw new TemplateContentUnrenderedTemplateError(`Tried to use templateContent on unrendered template. You need a valid permalink (or permalink object) to use templateContent on ${this.inputPath}`);
             }
             return this._templateContent;
           },
@@ -625,10 +636,14 @@ class Template extends TemplateContent {
               this._templateContent = content;
             },
             get templateContent() {
-              if (this._templateContent === undefined) {
-                throw new TemplateContentPrematureUseError(
-                  `Tried to use templateContent too early (${this.inputPath} page ${this.pageNumber})`
-                );
+              if(shouldRender) {
+                if (this._templateContent === undefined) {
+                  throw new TemplateContentPrematureUseError(
+                    `Tried to use templateContent too early (${this.inputPath} page ${this.pageNumber})`
+                  );
+                }
+              } else {
+                throw new TemplateContentUnrenderedTemplateError(`Tried to use templateContent on unrendered template. You need a valid permalink (or permalink object) to use templateContent on ${this.inputPath} page ${this.pageNumber}`);
               }
               return this._templateContent;
             },
@@ -643,7 +658,7 @@ class Template extends TemplateContent {
     let pages = await this.getTemplates(data);
     await Promise.all(
       pages.map(async (page) => {
-        let content = await page.template._getContent(page.data);
+        let content = await page.template.render(page.data);
 
         page.templateContent = content;
       })
@@ -651,24 +666,11 @@ class Template extends TemplateContent {
     return pages;
   }
 
-  async _getContent(data) {
-    return await this.render(data);
-  }
-
   async _write(outputPath, finalContent) {
     let shouldWriteFile = true;
 
     if (this.isDryRun) {
       shouldWriteFile = false;
-    }
-
-    if (outputPath === false) {
-      debug(
-        "Ignored %o from %o (permalink: false).",
-        outputPath,
-        this.inputPath
-      );
-      return;
     }
 
     let lang = {
@@ -726,7 +728,14 @@ class Template extends TemplateContent {
   async generateMapEntry(mapEntry, to) {
     return Promise.all(
       mapEntry._pages.map(async (page) => {
-        let content = await this.renderPageEntry(mapEntry, page);
+        let content;
+
+        // Note that behavior.rendered is overridden when using json or ndjson output
+        if(mapEntry.behavior.rendered) {
+          // this reuses page.templateContent, it doesn’t render it
+          content = await this.renderPageEntry(mapEntry, page);
+        }
+
         if (to === "json" || to === "ndjson") {
           let obj = {
             url: page.url,
@@ -742,6 +751,24 @@ class Template extends TemplateContent {
 
           // json
           return obj;
+        }
+
+        if(!mapEntry.behavior.rendered) {
+          debug(
+            "Template not written %o from %o (via permalink.behavior).",
+            page.outputPath,
+            mapEntry.template.inputPath
+          );
+          return;
+        }
+
+        if (!mapEntry.behavior.writeable) {
+          debug(
+            "Template not written %o from %o (via permalink: false, permalink.build: false, or a permalink object without a build property).",
+            page.outputPath,
+            mapEntry.template.inputPath
+          );
+          return;
         }
 
         return this._write(page.outputPath, content);
@@ -849,17 +876,20 @@ class Template extends TemplateContent {
 
   async getTemplateMapContent(pageMapEntry) {
     pageMapEntry.template.setWrapWithLayouts(false);
-    let content = await pageMapEntry.template._getContent(pageMapEntry.data);
+    let content = await pageMapEntry.template.render(pageMapEntry.data);
     pageMapEntry.template.setWrapWithLayouts(true);
 
     return content;
   }
 
-  async getTemplateMapEntries() {
+  async getTemplateMapEntries(dataOverride) {
     debugDev("%o getMapped()", this.inputPath);
 
     // Important reminder: This is where the template data is first generated via TemplateMap
-    let data = await this.getData();
+    let data = dataOverride || await this.getData();
+
+    let rawPermalinkValue = data[this.config.keys.permalink];
+    let link = this._getRawPermalinkInstance(rawPermalinkValue);
 
     let entries = [];
     // does not return outputPath or url, we don’t want to render permalinks yet
@@ -867,6 +897,11 @@ class Template extends TemplateContent {
       template: this,
       inputPath: this.inputPath,
       data,
+      behavior: {
+        ignored: link.isTemplateIgnored(),
+        rendered: this.outputFormat === "json" || this.outputFormat === "ndjson" || link.isTemplateRendered(),
+        writeable: link.isTemplateWriteable(),
+      }
     });
     return entries;
   }

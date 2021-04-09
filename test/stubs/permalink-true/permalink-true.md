@@ -2,4 +2,4 @@
 permalink: true
 ---
 
-This shouldn’t write
+This should throw an error.

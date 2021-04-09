@@ -206,7 +206,7 @@ class TemplateConfig {
           Object.keys(localConfig.filters).length
         ) {
           throw new EleventyConfigError(
-            `The \`filters\` configuration option was renamed in Eleventy 0.3.3 and removed in Eleventy 1.0. Please use the \`addTransform\` configuration method instead. Read more: https://www.11ty.dev/docs/config/#transforms`
+            "The `filters` configuration option was renamed in Eleventy 0.3.3 and removed in Eleventy 1.0. Please use the `addTransform` configuration method instead. Read more: https://www.11ty.dev/docs/config/#transforms"
           );
         }
       } catch (err) {

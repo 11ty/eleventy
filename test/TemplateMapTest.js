@@ -2,6 +2,7 @@ const test = require("ava");
 const TemplateMap = require("../src/TemplateMap");
 const TemplateCollection = require("../src/TemplateCollection");
 const UsingCircularTemplateContentReferenceError = require("../src/Errors/UsingCircularTemplateContentReferenceError");
+const TemplateContentUnrenderedTemplateError = require("../src/Errors/TemplateContentUnrenderedTemplateError");
 const normalizeNewLines = require("./Util/normalizeNewLines");
 const TemplateConfig = require("../src/TemplateConfig");
 
@@ -1123,7 +1124,7 @@ test("Async user collection addCollection method", async (t) => {
   await tm.add(tmpl1);
   tm.setUserConfigCollections({
     userCollection: async function (collection) {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         setTimeout(function () {
           resolve(collection.getAll());
         }, 50);
@@ -1264,20 +1265,25 @@ test("permalink object with build", async (t) => {
   t.is(map[0]._pages.length, 1);
 });
 
-test("permalink object without build", async (t) => {
+test("permalink object without build (defaults to no-render mode)", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let tm = new TemplateMap(eleventyConfig);
-  let tmplLayout = getNewTemplate(
+  let tmpl = getNewTemplate(
     "./test/stubs/permalink-nobuild/permalink-nobuild.md",
     "./test/stubs/",
     "./test/stubs/_site",
     eleventyConfig
   );
 
-  await tm.add(tmplLayout);
+  await tm.add(tmpl);
 
   let map = tm.getMap();
   await tm.cache();
 
-  t.is(map[0]._pages.length, 0);
+  t.is(map[0]._pages.length, 1);
+  t.throws(() => {
+    map[0]._pages[0].templateContent;
+  }, {
+    instanceOf: TemplateContentUnrenderedTemplateError
+  });
 });

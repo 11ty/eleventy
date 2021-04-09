@@ -163,12 +163,11 @@ test("Permalink Object, just build", (t) => {
     false
   );
 
-  t.is(
+  t.throws(() => {
     new TemplatePermalink({
       build: true,
-    }).toLink(),
-    false
-  );
+    }).toLink();
+  });
 
   t.is(
     new TemplatePermalink({

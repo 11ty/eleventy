@@ -158,7 +158,7 @@ class TemplateWriter {
     );
   }
 
-  _createTemplate(path, allPaths) {
+  _createTemplate(path, allPaths, to = "fs") {
     let tmpl = this._templatePathCache.get(path);
     if (!tmpl) {
       tmpl = new Template(
@@ -169,6 +169,7 @@ class TemplateWriter {
         this.extensionMap,
         this.eleventyConfig
       );
+      tmpl.setOutputFormat(to);
 
       tmpl.logger = this.logger;
       this._templatePathCache.set(path, tmpl);
@@ -221,11 +222,11 @@ class TemplateWriter {
     return tmpl;
   }
 
-  async _addToTemplateMap(paths) {
+  async _addToTemplateMap(paths, to = "fs") {
     let promises = [];
     for (let path of paths) {
       if (this.extensionMap.hasEngine(path)) {
-        promises.push(this.templateMap.add(this._createTemplate(path, paths)));
+        promises.push(this.templateMap.add(this._createTemplate(path, paths, to)));
       }
       debug(`${path} begun adding to map.`);
     }
@@ -233,10 +234,10 @@ class TemplateWriter {
     return Promise.all(promises);
   }
 
-  async _createTemplateMap(paths) {
+  async _createTemplateMap(paths, to) {
     this.templateMap = new TemplateMap(this.eleventyConfig);
 
-    await this._addToTemplateMap(paths);
+    await this._addToTemplateMap(paths, to);
     await this.templateMap.cache();
 
     debugDev("TemplateMap cache complete.");
@@ -270,7 +271,7 @@ class TemplateWriter {
 
     // console.time("generateTemplates:_createTemplateMap");
     // TODO optimize await here
-    await this._createTemplateMap(paths);
+    await this._createTemplateMap(paths, to);
     // console.timeEnd("generateTemplates:_createTemplateMap");
     debug("Template map created.");
 

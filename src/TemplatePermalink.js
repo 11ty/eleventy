@@ -6,41 +6,56 @@ const isPlainObject = require("lodash/isPlainObject");
 class TemplatePermalink {
   // `link` with template syntax should have already been rendered in Template.js
   constructor(link, extraSubdir) {
-    // these defaults may get overriden below
-    this.isProcessible = true;
-    this.outputToFileSystem = true;
+    let isLinkAnObject = isPlainObject(link);
 
-    if (link === true) {
-      throw new Error(
-        "`permalink: true` is not a supported feature in Eleventy. Did you mean `permalink: false`?"
-      );
-    }
-    if (link === false) {
-      // permalink: false // doesn’t match `permalink: build: false` only for backwards compat
-      this.outputToFileSystem = false;
-      return;
-    }
+    this._isIgnoredTemplate = false;
+    this._isRendered = true;
+    this._outputToFileSystem = true;
 
     let rawLink;
-    if (isPlainObject(link)) {
+    if (isLinkAnObject) {
       if ("build" in link) {
         rawLink = link.build;
-        // permalink: build: true
-        // permalink: build: false
-        if (typeof rawLink === "boolean") {
-          this.outputToFileSystem = false;
-          this.isProcessible = rawLink;
-        }
-      } else {
-        // opt out of build
-        this.outputToFileSystem = false;
-        this.isProcessible = false;
       }
     } else {
       rawLink = link;
     }
 
-    this.rawLink = rawLink;
+    // permalink: false and permalink: build: false
+    if (typeof rawLink === "boolean") {
+      if(rawLink === false) {
+        this._outputToFileSystem = false;
+      } else {
+        throw new Error(
+          `\`permalink: ${isLinkAnObject ? "build: " : ""}true\` is not a supported feature in Eleventy. Did you mean \`permalink: ${isLinkAnObject ? "build: " : ""}false\`?`
+        );
+      }
+    } else if(rawLink) {
+      this.rawLink = rawLink;
+    }
+
+    if(isLinkAnObject) {
+      if("external" in link) {
+        this.externalLink = link.external;
+      }
+
+      // default for permalink objects without a build URL
+      if(!("behavior" in link) && !("build" in link)) {
+        link.behavior = "skip-render";
+      }
+
+      if(link.behavior === "skip-write") { // same as permalink: false and permalink: build: false
+        this._outputToFileSystem = false;
+      } else if(link.behavior === "skip-render") {
+        this._outputToFileSystem = false;
+        this._isRendered = false;
+      } else if(link.behavior === "skip") {
+        this._outputToFileSystem = false;
+        this._isRendered = false;
+        this._isIgnoredTemplate = true;
+      }
+    }
+
     this.extraPaginationSubdir = extraSubdir || "";
   }
 
@@ -49,7 +64,7 @@ class TemplatePermalink {
   }
 
   toLink() {
-    if (!this.outputToFileSystem) {
+    if (!this.rawLink) { // empty or false
       return false;
     }
 
@@ -67,7 +82,10 @@ class TemplatePermalink {
   // index.html becomes /
   // test/index.html becomes test/
   toHref() {
-    if (!this.outputToFileSystem) {
+    if(this.externalLink) {
+      return this.externalLink;
+    }
+    if (!this.rawLink) { // empty or false
       return false;
     }
 
@@ -103,8 +121,16 @@ class TemplatePermalink {
     return normalize(uri);
   }
 
-  isTemplateProcessable() {
-    return this.isProcessible;
+  isTemplateIgnored() {
+    return this._isIgnoredTemplate;
+  }
+
+  isTemplateRendered() {
+    return this._isRendered;
+  }
+
+  isTemplateWriteable() {
+    return this._outputToFileSystem;
   }
 
   static _hasDuplicateFolder(dir, base) {

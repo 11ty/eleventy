@@ -19,11 +19,32 @@ async function getRenderedData(tmpl, pageNumber = 0) {
   return templates[pageNumber].data;
 }
 
+async function getTemplateMapEntriesWithContent(template, data) {
+  let entries = await template.getTemplateMapEntries(data);
+
+  return Promise.all(
+    entries.map(async (entry) => {
+      entry._pages = await entry.template.getTemplates(entry.data);
+      await Promise.all(
+        entry._pages.map(async (page) => {
+          page.templateContent = await entry.template.getTemplateMapContent(
+            page
+          );
+          return page;
+        })
+      );
+      return entry;
+    })
+  );
+}
+
 async function write(tmpl, data) {
-  let templates = await tmpl.getRenderedTemplates(data);
+  let mapEntries = await getTemplateMapEntriesWithContent(tmpl, data);
   let promises = [];
-  for (let template of templates) {
-    promises.push(tmpl._write(template.outputPath, template.templateContent));
+  for (let entry of mapEntries) {
+    if(entry.behavior.writeable) {
+      promises.push(tmpl._write(entry.outputPath, entry.templateContent));
+    }
   }
   return Promise.all(promises);
 }
@@ -376,7 +397,7 @@ test("Liquid template", async (t) => {
     eleventyConfig
   );
 
-  t.is(await tmpl.render(await tmpl.getData()), `<p>Zach</p>`);
+  t.is(await tmpl.render(await tmpl.getData()), "<p>Zach</p>");
 });
 
 test("Liquid template with include", async (t) => {
@@ -1103,7 +1124,7 @@ test("Override base templating engine from .njk to ejs (with a layout that uses 
 
   t.is(
     (await tmpl.render(await tmpl.getData())).trim(),
-    '<div id="layoutvalue"><h2>My Title</h2></div>'
+    `<div id="layoutvalue"><h2>My Title</h2></div>`
   );
 });
 
@@ -1291,7 +1312,7 @@ test("Test a single asynchronous transform", async (t) => {
   tmpl.addTransform("transformName", async function (content, outputPath) {
     t.true(outputPath.endsWith("template/index.html"));
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       setTimeout(function (str, outputPath) {
         resolve("OVERRIDE BY A TRANSFORM");
       }, 50);
