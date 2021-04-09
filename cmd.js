@@ -49,6 +49,8 @@ try {
       );
     },
   });
+
+  // TODO fix debug output: `Eleventy:cmd command: eleventy  [object Object] +0ms`
   debug("command: eleventy ", argv.toString());
   const Eleventy = require("./src/Eleventy");
 
