@@ -116,6 +116,7 @@ class EleventyFiles {
   }
 
   /* Set command root for local project paths */
+  // This is only used by tests
   _setLocalPathRoot(dir) {
     this.localPathRoot = dir;
   }

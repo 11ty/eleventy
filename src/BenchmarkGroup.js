@@ -92,6 +92,7 @@ class BenchmarkGroup {
         );
       }
 
+      // TODO move the % to the beginning of the string for easier comparison
       let str = `Benchmark (${label}): ${type} took ${totalForBenchmark.toFixed(
         0
       )}ms ${extraOutput.length ? `(${extraOutput.join(", ")})` : ""}`;
