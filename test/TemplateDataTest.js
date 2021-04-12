@@ -429,15 +429,14 @@ test("TemplateData.cleanupData", (t) => {
 });
 
 test("Parent directory for data (Issue #337)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let dataObj = new TemplateData("./test/stubs-337/src/", eleventyConfig);
-  dataObj._setConfig({
+  let eleventyConfig = new TemplateConfig({
     dataTemplateEngine: false,
     dir: {
       input: "./test/stubs-337/src/",
       data: "../data/",
     },
   });
+  let dataObj = new TemplateData("./test/stubs-337/src/", eleventyConfig);
   dataObj.setInputDir("./test/stubs-337/src/");
 
   let data = await dataObj.getData();
