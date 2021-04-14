@@ -4,15 +4,13 @@ const TemplateConfig = require("../src/TemplateConfig");
 
 test("Constructor", (t) => {
   let es = new EleventyServe();
-  let cfg = new TemplateConfig().getConfig();
-  es.config = cfg;
+  es.config = new TemplateConfig();
   t.is(es.getPathPrefix(), "/");
 });
 
 test("Directories", (t) => {
   let es = new EleventyServe();
-  let cfg = new TemplateConfig().getConfig();
-  es.config = cfg;
+  es.config = new TemplateConfig();
 
   es.setOutputDir("_site");
   t.is(es.getRedirectDir("test"), "_site/test");
@@ -21,9 +19,10 @@ test("Directories", (t) => {
 
 test("Get Options", (t) => {
   let es = new EleventyServe();
-  let cfg = new TemplateConfig().getConfig();
+  let eleventyConfig = new TemplateConfig();
+  let cfg = eleventyConfig.getConfig();
   cfg.pathPrefix = "/";
-  es.config = cfg;
+  es.config = eleventyConfig;
   es.setOutputDir("_site");
 
   t.deepEqual(es.getOptions(), {
@@ -43,9 +42,10 @@ test("Get Options", (t) => {
 
 test("Get Options (with a pathPrefix)", (t) => {
   let es = new EleventyServe();
-  let cfg = new TemplateConfig().getConfig();
+  let eleventyConfig = new TemplateConfig();
+  let cfg = eleventyConfig.getConfig();
   cfg.pathPrefix = "/web/";
-  es.config = cfg;
+  es.config = eleventyConfig;
   es.setOutputDir("_site");
 
   t.deepEqual(es.getOptions(), {
@@ -68,12 +68,13 @@ test("Get Options (with a pathPrefix)", (t) => {
 
 test("Get Options (override in config)", (t) => {
   let es = new EleventyServe();
-  let cfg = new TemplateConfig().getConfig();
+  let eleventyConfig = new TemplateConfig();
+  let cfg = eleventyConfig.getConfig();
   cfg.pathPrefix = "/";
   cfg.browserSyncConfig = {
     notify: true,
   };
-  es.config = cfg;
+  es.config = eleventyConfig;
   es.setOutputDir("_site");
 
   t.deepEqual(es.getOptions(), {

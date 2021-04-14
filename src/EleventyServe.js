@@ -28,7 +28,7 @@ class EleventyServe {
   }
 
   getPathPrefix() {
-    let cfgPrefix = this.config.pathPrefix;
+    let cfgPrefix = this.config.getConfig().pathPrefix;
     if (cfgPrefix) {
       // add leading / (for browsersync), see #1454
       // path.join uses \\ for Windows so we split and rejoin
@@ -87,7 +87,7 @@ class EleventyServe {
         ghostMode: false, // Default changed in 1.0
         index: "index.html",
       },
-      this.config.browserSyncConfig
+      this.config.getConfig().browserSyncConfig
     );
   }
 
@@ -121,12 +121,13 @@ class EleventyServe {
   }
 
   serveRedirect(dirName) {
+    let pathPrefix = this.getPathPrefix();
     fs.outputFile(
       this.getRedirectFilename(dirName),
       `<!doctype html>
-  <meta http-equiv="refresh" content="0; url=${this.config.pathPrefix}">
+  <meta http-equiv="refresh" content="0; url=${pathPrefix}">
   <title>Browsersync pathPrefix Redirect</title>
-  <a href="${this.config.pathPrefix}">Go to ${this.config.pathPrefix}</a>`
+  <a href="${pathPrefix}">Go to ${pathPrefix}</a>`
     );
   }
 
