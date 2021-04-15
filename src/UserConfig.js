@@ -20,6 +20,7 @@ class UserConfig {
     debug("Resetting EleventyConfig to initial values.");
     this.events = new EventEmitter();
     this.collections = {};
+    this.precompiledCollections = {};
     this.templateFormats = undefined;
 
     this.liquidOptions = {};
@@ -665,6 +666,10 @@ class UserConfig {
     this.useTemplateCache = !!bypass;
   }
 
+  setPrecompiledCollections(collections) {
+    this.precompiledCollections = collections;
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
@@ -710,6 +715,7 @@ class UserConfig {
       quietMode: this.quietMode,
       events: this.events,
       useTemplateCache: this.useTemplateCache,
+      precompiledCollections: this.precompiledCollections,
     };
   }
 }

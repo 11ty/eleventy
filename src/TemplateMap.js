@@ -252,6 +252,28 @@ class TemplateMap {
     return graph.overallOrder();
   }
 
+  async setCollectionByTagName(tagName) {
+    if (this.isUserConfigCollectionName(tagName)) {
+      // async
+      this.collectionsData[tagName] = await this.getUserConfigCollection(
+        tagName
+      );
+    } else {
+      this.collectionsData[tagName] = this.getTaggedCollection(tagName);
+    }
+
+    let precompiled = this.config.precompiledCollections;
+    if (precompiled && precompiled[tagName]) {
+      if (
+        tagName === "all" ||
+        !Array.isArray(this.collectionsData[tagName]) ||
+        this.collectionsData[tagName].length === 0
+      ) {
+        this.collectionsData[tagName] = precompiled[tagName];
+      }
+    }
+  }
+
   // TODO(slightlyoff): major bottleneck
   async initDependencyMap(dependencyMap) {
     let tagPrefix = this.tagPrefix;
@@ -259,14 +281,7 @@ class TemplateMap {
       if (depEntry.startsWith(tagPrefix)) {
         // is a tag (collection) entry
         let tagName = depEntry.substr(tagPrefix.length);
-        if (this.isUserConfigCollectionName(tagName)) {
-          // async
-          this.collectionsData[tagName] = await this.getUserConfigCollection(
-            tagName
-          );
-        } else {
-          this.collectionsData[tagName] = this.getTaggedCollection(tagName);
-        }
+        await this.setCollectionByTagName(tagName);
       } else {
         // is a template entry
         let map = this.getMapEntryForInputPath(depEntry);
@@ -564,8 +579,11 @@ class TemplateMap {
         }
 
         let entry = this.getMapEntryForInputPath(item.inputPath);
-        let index = item.pageNumber || 0;
-        item.templateContent = entry._pages[index]._templateContent;
+        // This check skips precompiled collections
+        if (entry) {
+          let index = item.pageNumber || 0;
+          item.templateContent = entry._pages[index]._templateContent;
+        }
       }
     }
   }
