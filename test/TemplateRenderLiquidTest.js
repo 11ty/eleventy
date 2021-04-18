@@ -1030,3 +1030,19 @@ test("Liquid bypass compilation", async (t) => {
   );
   t.is(tr.engine.needsCompilation("<p>test</p>"), false);
 });
+
+test("Liquid reverse filter in {{ }}", async (t) => {
+  // https://liquidjs.com/filters/reverse.html
+  let fn = await getNewTemplateRender("liquid").getCompiledTemplate(
+    "{{ test | reverse }}"
+  );
+  t.is(await fn({ test: [1, 2, 3] }), "[3,2,1]");
+});
+
+test("Liquid reverse filter in {% for %}", async (t) => {
+  // https://liquidjs.com/tags/for.html#reversed
+  let fn = await getNewTemplateRender("liquid").getCompiledTemplate(
+    "{% for num in test reversed %}{{ num }}{% endfor %}"
+  );
+  t.is(await fn({ test: [1, 2, 3] }), "321");
+});
