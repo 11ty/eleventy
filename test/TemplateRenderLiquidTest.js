@@ -1036,7 +1036,7 @@ test("Liquid reverse filter in {{ }}", async (t) => {
   let fn = await getNewTemplateRender("liquid").getCompiledTemplate(
     "{{ test | reverse }}"
   );
-  t.is(await fn({ test: [1, 2, 3] }), "[3,2,1]");
+  t.is(await fn({ test: [1, 2, 3] }), "3,2,1");
 });
 
 test("Liquid reverse filter in {% for %}", async (t) => {
