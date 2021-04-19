@@ -229,8 +229,9 @@ test("Config propagates to other instances correctly", async (t) => {
   let elev = new Eleventy();
   await elev.init();
 
+  t.is(elev.eleventyServe.config, elev.config);
+
   t.is(elev.extensionMap.eleventyConfig, elev.eleventyConfig);
-  t.is(elev.eleventyServe.config, elev.eleventyConfig);
   t.is(elev.eleventyFiles.eleventyConfig, elev.eleventyConfig);
   t.is(elev.templateData.eleventyConfig, elev.eleventyConfig);
   t.is(elev.writer.eleventyConfig, elev.eleventyConfig);

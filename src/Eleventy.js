@@ -1,7 +1,6 @@
 const pkg = require("../package.json");
 const TemplatePath = require("./TemplatePath");
 const TemplateData = require("./TemplateData");
-const TemplateContent = require("./TemplateContent");
 const TemplateWriter = require("./TemplateWriter");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyErrorHandler = require("./EleventyErrorHandler");
@@ -96,7 +95,7 @@ class Eleventy {
 
     /** @member {Object} - tbd. */
     this.eleventyServe = new EleventyServe();
-    this.eleventyServe.config = this.eleventyConfig;
+    this.eleventyServe.config = this.config;
 
     /** @member {String} - Holds the path to the input directory. */
     this.rawInput = input;
