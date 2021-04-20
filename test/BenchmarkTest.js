@@ -42,7 +42,6 @@ test.cb("Reset Benchmark", (t) => {
   setTimeout(function () {
     b.before();
     b.after();
-    t.truthy(b.getTotal() <= 0.1);
 
     t.throws(function () {
       // throws because we reset
