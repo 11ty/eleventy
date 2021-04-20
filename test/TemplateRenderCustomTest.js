@@ -56,7 +56,7 @@ test("Custom Vue Render", async (t) => {
   t.is(await fn({ test: "Hello" }), `<p data-server-rendered="true">Hello</p>`);
 });
 
-const sass = require("node-sass");
+const sass = require("sass");
 
 test("Custom Sass Render", async (t) => {
   let tr = getNewTemplateRender("sass");
@@ -72,6 +72,7 @@ test("Custom Sass Render", async (t) => {
               data: str,
               includePaths: [tr.inputDir, tr.includesDir],
               style: "expanded",
+              indentType: "space",
               // TODO
               // sourcemap: "file",
               outFile: "test_this_is_to_not_write_a_file.css",
@@ -93,6 +94,7 @@ test("Custom Sass Render", async (t) => {
   t.is(
     (await fn({})).trim(),
     `p {
-  color: blue; }`
+  color: blue;
+}`
   );
 });
