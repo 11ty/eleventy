@@ -810,6 +810,12 @@ Arguments:
     let ret;
     let hasError = false;
 
+    if (!this.writer) {
+      this.errorHandler.fatal(new Error(
+        "Did you call Eleventy.init to create the TemplateWriter instance? Hint: you probably didn’t."
+      ), "Problem writing Eleventy templates");
+    }
+
     try {
       await this.config.events.emit("beforeBuild");
       let promise;
