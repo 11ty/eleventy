@@ -470,3 +470,19 @@ test("addGlobalData values", async (t) => {
   t.is(data.myPromise, "promise-value");
   t.is(data.myAsync, "promise-value");
 });
+
+test("addGlobalData complex key", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.addGlobalData("deep.nested.one", () => "first");
+  eleventyConfig.userConfig.addGlobalData("deep.nested.two", () => "second");
+
+  let dataObj = new TemplateData(
+    "./test/stubs-global-data-config-api-nested/",
+    eleventyConfig
+  );
+  let data = await dataObj.getData();
+
+  t.is(data.deep.existing, true);
+  t.is(data.deep.nested.one, "first");
+  t.is(data.deep.nested.two, "second");
+});

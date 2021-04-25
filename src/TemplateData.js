@@ -289,7 +289,7 @@ class TemplateData {
           returnValue = await returnValue();
         }
 
-        globalData[key] = returnValue;
+        lodashset(globalData, key, returnValue);
       }
     }
     return globalData;
@@ -302,14 +302,10 @@ class TemplateData {
 
     if (!this.globalData) {
       let globalJson = await this.getAllGlobalData();
+      let mergedGlobalData = merge(globalJson, this.configApiGlobalData);
 
       // OK: Shallow merge when combining rawImports (pkg) with global data files
-      this.globalData = Object.assign(
-        {},
-        this.configApiGlobalData,
-        globalJson,
-        rawImports
-      );
+      this.globalData = Object.assign({}, mergedGlobalData, rawImports);
     }
 
     return this.globalData;
