@@ -10,7 +10,7 @@ class TemplatePermalink {
 
     this._isIgnoredTemplate = false;
     this._isRendered = true;
-    this._outputToFileSystem = true;
+    this._writeToFileSystem = true;
 
     let rawLink;
     if (isLinkAnObject) {
@@ -24,7 +24,7 @@ class TemplatePermalink {
     // permalink: false and permalink: build: false
     if (typeof rawLink === "boolean") {
       if (rawLink === false) {
-        this._outputToFileSystem = false;
+        this._writeToFileSystem = false;
       } else {
         throw new Error(
           `\`permalink: ${
@@ -43,19 +43,19 @@ class TemplatePermalink {
         this.externalLink = link.cloud;
       }
 
-      // default for permalink objects without a build URL
+      // default if permalink is an Object but does not have a `build` prop
       if (!("behavior" in link) && !("build" in link)) {
-        link.behavior = "skip-render";
+        link.behavior = "read";
       }
 
-      if (link.behavior === "skip-write") {
+      if (link.behavior === "render") {
         // same as permalink: false and permalink: build: false
-        this._outputToFileSystem = false;
-      } else if (link.behavior === "skip-render") {
-        this._outputToFileSystem = false;
+        this._writeToFileSystem = false;
+      } else if (link.behavior === "read") {
+        this._writeToFileSystem = false;
         this._isRendered = false;
       } else if (link.behavior === "skip") {
-        this._outputToFileSystem = false;
+        this._writeToFileSystem = false;
         this._isRendered = false;
         this._isIgnoredTemplate = true;
       }
@@ -128,16 +128,21 @@ class TemplatePermalink {
     return normalize(uri);
   }
 
-  isTemplateIgnored() {
-    return this._isIgnoredTemplate;
-  }
+  getBehavior(outputFormat = "fs") {
+    let obj = {
+      read: !this._isIgnoredTemplate,
+      render: this._isRendered,
+      write: this._writeToFileSystem,
+    };
 
-  isTemplateRendered() {
-    return this._isRendered;
-  }
+    // override render behavior for --json or --ndjson
+    if (outputFormat !== "fs") {
+      obj.render = "override";
+    }
 
-  isTemplateWriteable() {
-    return this._outputToFileSystem;
+    obj.includeInCollections = obj.read && obj.render;
+
+    return obj;
   }
 
   static _hasDuplicateFolder(dir, base) {

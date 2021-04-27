@@ -2,6 +2,7 @@ const fs = require("fs-extra");
 const parsePath = require("parse-filepath");
 const normalize = require("normalize-path");
 const isPlainObject = require("lodash/isPlainObject");
+const lodashGet = require("lodash/get");
 const { DateTime } = require("luxon");
 
 const TemplateData = require("./TemplateData");
@@ -572,8 +573,33 @@ class Template extends TemplateContent {
     await this.computedData.processRemainingData(data);
   }
 
-  async getTemplates(data, shouldRender = true) {
-    if (!Pagination.hasPagination(data)) {
+  async getTemplates(data, behavior) {
+    if (!behavior) {
+      behavior = {
+        read: true,
+        render: true,
+        write: true,
+      };
+    }
+
+    // no pagination on permalink.cloud for local builds
+    let hasPagination = Pagination.hasPagination(data);
+    let isCloudRenderOnBuild = !behavior.render;
+    let isCloudRenderOnCloud = behavior.render === "override";
+
+    if (!hasPagination || isCloudRenderOnBuild || isCloudRenderOnCloud) {
+      // inject pagination page data for just this one entry for cloud render
+      if (isCloudRenderOnCloud && hasPagination) {
+        let pagination = new Pagination(data, this.config);
+        let paginationItems = pagination.getTruncatedCloudData(data);
+        let override = pagination.getOverrideData(paginationItems);
+        // TODO errors or warnings when trying to access `pagination.pages`, pageNumber, links, hrefs, etc
+        this.setPaginationData(override);
+
+        // TODO: better?
+        Object.assign(data, override);
+      }
+
       await this.addComputedData(data);
 
       return [
@@ -590,17 +616,17 @@ class Template extends TemplateContent {
             this._templateContent = content;
           },
           get templateContent() {
-            if (shouldRender) {
-              if (this._templateContent === undefined) {
+            if (this._templateContent === undefined) {
+              if (behavior.render) {
                 // should at least warn here
                 throw new TemplateContentPrematureUseError(
                   `Tried to use templateContent too early (${this.inputPath})`
                 );
+              } else {
+                throw new TemplateContentUnrenderedTemplateError(
+                  `Tried to use templateContent on unrendered template. You need a valid permalink (or permalink object) to use templateContent on ${this.inputPath}`
+                );
               }
-            } else {
-              throw new TemplateContentUnrenderedTemplateError(
-                `Tried to use templateContent on unrendered template. You need a valid permalink (or permalink object) to use templateContent on ${this.inputPath}`
-              );
             }
             return this._templateContent;
           },
@@ -615,6 +641,7 @@ class Template extends TemplateContent {
 
       return await Promise.all(
         pageTemplates.map(async (page, pageNumber) => {
+          // TODO get smarter with something like Object.assign(data, override);
           let pageData = Object.assign({}, await page.getData());
 
           await page.addComputedData(pageData);
@@ -638,7 +665,7 @@ class Template extends TemplateContent {
               this._templateContent = content;
             },
             get templateContent() {
-              if (shouldRender) {
+              if (behavior.render) {
                 if (this._templateContent === undefined) {
                   throw new TemplateContentPrematureUseError(
                     `Tried to use templateContent too early (${this.inputPath} page ${this.pageNumber})`
@@ -734,8 +761,8 @@ class Template extends TemplateContent {
       mapEntry._pages.map(async (page) => {
         let content;
 
-        // Note that behavior.rendered is overridden when using json or ndjson output
-        if (mapEntry.behavior.rendered) {
+        // Note that behavior.render is overridden when using json or ndjson output
+        if (mapEntry.behavior.render) {
           // this reuses page.templateContent, it doesn’t render it
           content = await this.renderPageEntry(mapEntry, page);
         }
@@ -757,7 +784,7 @@ class Template extends TemplateContent {
           return obj;
         }
 
-        if (!mapEntry.behavior.rendered) {
+        if (!mapEntry.behavior.render) {
           debug(
             "Template not written %o from %o (via permalink.behavior).",
             page.outputPath,
@@ -766,7 +793,7 @@ class Template extends TemplateContent {
           return;
         }
 
-        if (!mapEntry.behavior.writeable) {
+        if (!mapEntry.behavior.write) {
           debug(
             "Template not written %o from %o (via permalink: false, permalink.build: false, or a permalink object without a build property).",
             page.outputPath,
@@ -895,20 +922,14 @@ class Template extends TemplateContent {
     let rawPermalinkValue = data[this.config.keys.permalink];
     let link = this._getRawPermalinkInstance(rawPermalinkValue);
 
+    let behavior = link.getBehavior(this.outputFormat);
     let entries = [];
     // does not return outputPath or url, we don’t want to render permalinks yet
     entries.push({
       template: this,
       inputPath: this.inputPath,
       data,
-      behavior: {
-        ignored: link.isTemplateIgnored(),
-        rendered:
-          this.outputFormat === "json" ||
-          this.outputFormat === "ndjson" ||
-          link.isTemplateRendered(),
-        writeable: link.isTemplateWriteable(),
-      },
+      behavior,
     });
     return entries;
   }

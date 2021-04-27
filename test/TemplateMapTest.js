@@ -1265,7 +1265,7 @@ test("permalink object with build", async (t) => {
   t.is(map[0]._pages.length, 1);
 });
 
-test("permalink object without build (defaults to no-render mode)", async (t) => {
+test("permalink object without build (defaults to `read` mode)", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let tm = new TemplateMap(eleventyConfig);
   let tmpl = getNewTemplate(
@@ -1281,9 +1281,12 @@ test("permalink object without build (defaults to no-render mode)", async (t) =>
   await tm.cache();
 
   t.is(map[0]._pages.length, 1);
-  t.throws(() => {
-    map[0]._pages[0].templateContent;
-  }, {
-    instanceOf: TemplateContentUnrenderedTemplateError
-  });
+  t.throws(
+    () => {
+      map[0]._pages[0].templateContent;
+    },
+    {
+      instanceOf: TemplateContentUnrenderedTemplateError,
+    }
+  );
 });

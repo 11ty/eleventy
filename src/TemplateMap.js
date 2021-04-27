@@ -121,7 +121,10 @@ class TemplateMap {
         graph.addNode(entry.inputPath);
       }
 
-      if (!entry.data.eleventyExcludeFromCollections) {
+      if (
+        !entry.data.eleventyExcludeFromCollections &&
+        entry.behavior.includeInCollections
+      ) {
         // collections.all
         graph.addDependency(tagPrefix + "all", entry.inputPath);
 
@@ -172,7 +175,10 @@ class TemplateMap {
         }
         graph.addDependency(entry.inputPath, tagPrefix + paginationTagTarget);
 
-        if (!entry.data.eleventyExcludeFromCollections) {
+        if (
+          !entry.data.eleventyExcludeFromCollections &&
+          entry.behavior.includeInCollections
+        ) {
           // collections.all
           graph.addDependency(tagPrefix + "all", entry.inputPath);
 
@@ -213,7 +219,10 @@ class TemplateMap {
           graph.addNode(entry.inputPath);
         }
 
-        if (!entry.data.eleventyExcludeFromCollections) {
+        if (
+          !entry.data.eleventyExcludeFromCollections &&
+          entry.behavior.includeInCollections
+        ) {
           // collections.all
           graph.addDependency(tagPrefix + "all", entry.inputPath);
         }
@@ -242,7 +251,10 @@ class TemplateMap {
           graph.addNode(entry.inputPath);
         }
 
-        if (!entry.data.eleventyExcludeFromCollections) {
+        if (
+          !entry.data.eleventyExcludeFromCollections &&
+          entry.behavior.includeInCollections
+        ) {
           // collections.all
           graph.addDependency(tagPrefix + "all", entry.inputPath);
         }
@@ -285,13 +297,10 @@ class TemplateMap {
       } else {
         // is a template entry
         let map = this.getMapEntryForInputPath(depEntry);
-        if (map.behavior.ignored) {
+        if (!map.behavior.read) {
           map._pages = [];
         } else {
-          map._pages = await map.template.getTemplates(
-            map.data,
-            map.behavior.rendered
-          );
+          map._pages = await map.template.getTemplates(map.data, map.behavior);
 
           let counter = 0;
           for (let page of map._pages) {
@@ -305,7 +314,10 @@ class TemplateMap {
               (map.data.pagination &&
                 map.data.pagination.addAllPagesToCollections)
             ) {
-              if (!map.data.eleventyExcludeFromCollections) {
+              if (
+                !map.data.eleventyExcludeFromCollections &&
+                map.behavior.includeInCollections
+              ) {
                 // TODO do we need .template in collection entries?
                 this.collection.add(page);
               }
@@ -432,7 +444,7 @@ class TemplateMap {
       if (!map._pages) {
         throw new Error(`Content pages not found for ${map.inputPath}`);
       }
-      if (!map.behavior.rendered) {
+      if (!map.behavior.render) {
         continue;
       }
       try {
