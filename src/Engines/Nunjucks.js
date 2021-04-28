@@ -295,8 +295,8 @@ class Nunjucks extends TemplateEngine {
         let body = args.pop();
         let [context, ...argArray] = args;
 
-        body(function (err, bodyContent) {
-          if (err) {
+        body(function (e, bodyContent) {
+          if (e) {
             resolve(
               new EleventyShortcodeError(
                 `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
