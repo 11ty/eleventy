@@ -42,7 +42,7 @@ async function write(tmpl, data) {
   let mapEntries = await getTemplateMapEntriesWithContent(tmpl, data);
   let promises = [];
   for (let entry of mapEntries) {
-    if(entry.behavior.writeable) {
+    if (entry.behavior.writeable) {
       promises.push(tmpl._write(entry.outputPath, entry.templateContent));
     }
   }
@@ -1486,7 +1486,8 @@ test("Front matter date with quotes (njk), issue #258", async (t) => {
 
 test("Data Cascade (Deep merge)", async (t) => {
   let eleventyConfig = new TemplateConfig();
-  eleventyConfig.userConfig.setDataDeepMerge(true);
+  // Default changed in 1.0
+  // eleventyConfig.userConfig.setDataDeepMerge(true);
   let dataObj = new TemplateData("./test/", eleventyConfig);
   await dataObj.cacheData();
 
@@ -1520,6 +1521,8 @@ test("Data Cascade (Deep merge)", async (t) => {
 
 test("Data Cascade (Shallow merge)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  // Default changed in 1.0
+  eleventyConfig.userConfig.setDataDeepMerge(false);
   let dataObj = new TemplateData("./test/", eleventyConfig);
   await dataObj.cacheData();
 
@@ -1549,7 +1552,8 @@ test("Data Cascade (Shallow merge)", async (t) => {
 
 test("Data Cascade Tag Merge (Deep merge)", async (t) => {
   let eleventyConfig = new TemplateConfig();
-  eleventyConfig.userConfig.setDataDeepMerge(true);
+  // Default changed in 1.0
+  // eleventyConfig.userConfig.setDataDeepMerge(true);
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   await dataObj.cacheData();
 
@@ -1568,6 +1572,8 @@ test("Data Cascade Tag Merge (Deep merge)", async (t) => {
 
 test("Data Cascade Tag Merge (Shallow merge)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  // Default changed in 1.0
+  eleventyConfig.userConfig.setDataDeepMerge(false);
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   await dataObj.cacheData();
 
@@ -1586,6 +1592,8 @@ test("Data Cascade Tag Merge (Shallow merge)", async (t) => {
 
 test('Local data inherits tags string ([tags] vs "tags") Shallow Merge', async (t) => {
   let eleventyConfig = new TemplateConfig();
+  // Default changed in 1.0
+  eleventyConfig.userConfig.setDataDeepMerge(false);
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   await dataObj.cacheData();
 
@@ -1604,7 +1612,8 @@ test('Local data inherits tags string ([tags] vs "tags") Shallow Merge', async (
 
 test('Local data inherits tags string ([tags] vs "tags") Deep Merge', async (t) => {
   let eleventyConfig = new TemplateConfig();
-  eleventyConfig.userConfig.setDataDeepMerge(true);
+  // Default changed in 1.0
+  // eleventyConfig.userConfig.setDataDeepMerge(true);
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   await dataObj.cacheData();
 
