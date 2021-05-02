@@ -114,7 +114,7 @@ class Pagination {
   _resolveItems() {
     let fullDataSet = this._get(this.data, this._getDataKey());
 
-    // TODO maybe don’t operate on the full data set for a cloud render
+    // TODO maybe don’t operate on the full data set for a serverless render
 
     let keys;
     if (Array.isArray(fullDataSet)) {
@@ -326,14 +326,14 @@ class Pagination {
     return pagesCache;
   }
 
-  getTruncatedCloudData(data) {
-    let cloudKey = data.pagination.cloud;
-    if (!cloudKey) {
+  getTruncatedServerlessData(data) {
+    let serverlessKey = data.pagination.serverless;
+    if (!serverlessKey) {
       throw new Error(
-        "Missing `cloud` key in `pagination` object to point to pagination data."
+        "Missing `serverless` key in `pagination` object to point to pagination data."
       );
     }
-    let resolvedKey = this._get(data, cloudKey);
+    let resolvedKey = this._get(data, serverlessKey);
     let fullDataSet = this._get(data, this._getDataKey());
     return [this._get(fullDataSet, resolvedKey)];
   }

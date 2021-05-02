@@ -172,9 +172,9 @@ class Template extends TemplateContent {
         keys.push("build");
         promises.push(super.render(permalink.build, data, true));
       }
-      if (permalink.cloud) {
-        keys.push("cloud");
-        promises.push(super.render(permalink.cloud, data, true));
+      if (permalink.serverless) {
+        keys.push("serverless");
+        promises.push(super.render(permalink.serverless, data, true));
       }
 
       let results = await Promise.all(promises);
@@ -582,16 +582,20 @@ class Template extends TemplateContent {
       };
     }
 
-    // no pagination on permalink.cloud for local builds
+    // no pagination on permalink.serverless for local builds
     let hasPagination = Pagination.hasPagination(data);
-    let isCloudRenderOnBuild = !behavior.render;
-    let isCloudRenderOnCloud = behavior.render === "override";
+    let isServerlessRenderOnBuild = !behavior.render;
+    let isServerlessRenderOnServerless = behavior.render === "override";
 
-    if (!hasPagination || isCloudRenderOnBuild || isCloudRenderOnCloud) {
-      // inject pagination page data for just this one entry for cloud render
-      if (isCloudRenderOnCloud && hasPagination) {
+    if (
+      !hasPagination ||
+      isServerlessRenderOnBuild ||
+      isServerlessRenderOnServerless
+    ) {
+      // inject pagination page data for just this one entry for serverless render
+      if (isServerlessRenderOnServerless && hasPagination) {
         let pagination = new Pagination(data, this.config);
-        let paginationItems = pagination.getTruncatedCloudData(data);
+        let paginationItems = pagination.getTruncatedServerlessData(data);
         let override = pagination.getOverrideData(paginationItems);
         // TODO errors or warnings when trying to access `pagination.pages`, pageNumber, links, hrefs, etc
         this.setPaginationData(override);
@@ -719,7 +723,7 @@ class Template extends TemplateContent {
     let engineList = this.templateRender.getReadableEnginesListDifferingFromFileExtension();
     this.logger.log(
       `${lang.start} ${outputPath} from ${this.inputPath}${
-        engineList ? ` (using ${engineList})` : ""
+        engineList ? ` (${engineList})` : ""
       }`
     );
 

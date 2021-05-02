@@ -39,8 +39,8 @@ class TemplatePermalink {
     }
 
     if (isLinkAnObject) {
-      if ("cloud" in link) {
-        this.externalLink = link.cloud;
+      if ("serverless" in link) {
+        this.externalLink = link.serverless;
       }
 
       // default if permalink is an Object but does not have a `build` prop

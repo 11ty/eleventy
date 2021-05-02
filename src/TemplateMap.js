@@ -381,7 +381,7 @@ class TemplateMap {
     for (let entry of orderedMap) {
       let ret = {
         inputPath: entry.inputPath,
-        isExternal: !!(entry.data.permalink && entry.data.permalink.cloud),
+        isExternal: !!(entry.data.permalink && entry.data.permalink.serverless),
       };
 
       // TODO `needs: []` array of inputPath or glob? this template uses
