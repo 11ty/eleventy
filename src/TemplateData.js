@@ -74,6 +74,14 @@ class TemplateData {
     this._extensionMap = map;
   }
 
+  get environmentVariables() {
+    return this._env;
+  }
+
+  set environmentVariables(env) {
+    this._env = env;
+  }
+
   /* Used by tests */
   _setConfig(config) {
     this.config = config;
@@ -291,6 +299,15 @@ class TemplateData {
 
         lodashset(globalData, key, returnValue);
       }
+    }
+    if (this.environmentVariables) {
+      if (!("eleventy" in globalData)) {
+        globalData.eleventy = {};
+      }
+      if (!("env" in globalData.eleventy)) {
+        globalData.eleventy.env = {};
+      }
+      Object.assign(globalData.eleventy.env, this.environmentVariables);
     }
     return globalData;
   }

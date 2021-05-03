@@ -44,6 +44,19 @@ test("Eleventy set input/output", async (t) => {
   t.truthy(elev.writer);
 });
 
+test("Eleventy process.ENV", async (t) => {
+  let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
+
+  process.env.ELEVENTY_ROOT = "";
+  t.falsy(process.env.ELEVENTY_ROOT);
+  await elev.init();
+  t.truthy(process.env.ELEVENTY_ROOT);
+
+  // all ELEVENTY_ env variables are also available on eleventy.env
+  let globals = await elev.templateData.getInitialGlobalData();
+  t.truthy(globals.eleventy.env.root);
+});
+
 test("Eleventy file watching", async (t) => {
   let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
   elev.setFormats("njk");

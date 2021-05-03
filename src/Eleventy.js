@@ -110,6 +110,9 @@ class Eleventy {
     this.watchTargets = new EleventyWatchTargets();
     this.watchTargets.addAndMakeGlob(this.config.additionalWatchTargets);
     this.watchTargets.watchJavaScriptDependencies = this.config.watchJavaScriptDependencies;
+
+    this.env = this.getEnvironmentVariableValues();
+    this.initializeEnvironmentVariables(this.env);
   }
 
   getNewTimestamp() {
@@ -306,6 +309,9 @@ class Eleventy {
 
     this.templateData = new TemplateData(this.inputDir, this.eleventyConfig);
     this.templateData.extensionMap = this.extensionMap;
+    if (this.env) {
+      this.templateData.environmentVariables = this.env;
+    }
     this.eleventyFiles.templateData = this.templateData;
 
     this.writer = new TemplateWriter(
@@ -333,6 +339,33 @@ Verbose Output: ${this.verboseMode}`);
     this.writer.setDryRun(this.isDryRun);
 
     return this.templateData.cacheData();
+  }
+
+  getEnvironmentVariableValues() {
+    let absolutePathToConfig = TemplatePath.absolutePath(
+      this.eleventyConfig.getLocalProjectConfigFile()
+    );
+    let root = TemplatePath.getDirFromFilePath(absolutePathToConfig);
+
+    return {
+      root,
+    };
+  }
+
+  /**
+   * Set process.ENV variables for use in Eleventy projects
+   *
+   * @method
+   */
+  initializeEnvironmentVariables(env) {
+    process.env.ELEVENTY_ROOT = env.root;
+    debug("Setting process.env.ELEVENTY_ROOT: %o", env.root);
+
+    // careful here, setting to false will cast to string "false" which is truthy
+    if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
+      process.env.ELEVENTY_SERVERLESS = true;
+      debug("Setting process.env.ELEVENTY_SERVERLESS: %o", true);
+    }
   }
 
   /* Setter for verbose mode */
@@ -811,9 +844,12 @@ Arguments:
     let hasError = false;
 
     if (!this.writer) {
-      this.errorHandler.fatal(new Error(
-        "Did you call Eleventy.init to create the TemplateWriter instance? Hint: you probably didn’t."
-      ), "Problem writing Eleventy templates");
+      this.errorHandler.fatal(
+        new Error(
+          "Did you call Eleventy.init to create the TemplateWriter instance? Hint: you probably didn’t."
+        ),
+        "Problem writing Eleventy templates"
+      );
     }
 
     try {
