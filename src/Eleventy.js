@@ -53,6 +53,16 @@ class Eleventy {
      */
     this.configPath = options.configPath;
 
+    /**
+     * @member {Object} - Initialize Eleventy environment variables
+     * @default null
+     */
+    this.env = this.getEnvironmentVariableValues();
+    this.initializeEnvironmentVariables(this.env);
+
+    /**
+     * @member {Object} - Initialize Eleventy’s configuration, including the user config file
+     */
     this.config = this.eleventyConfig.getConfig();
 
     /**
@@ -110,9 +120,6 @@ class Eleventy {
     this.watchTargets = new EleventyWatchTargets();
     this.watchTargets.addAndMakeGlob(this.config.additionalWatchTargets);
     this.watchTargets.watchJavaScriptDependencies = this.config.watchJavaScriptDependencies;
-
-    this.env = this.getEnvironmentVariableValues();
-    this.initializeEnvironmentVariables(this.env);
   }
 
   getNewTimestamp() {
