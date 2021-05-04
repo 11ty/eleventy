@@ -298,6 +298,10 @@ class Eleventy {
    * @returns {} - tbd.
    */
   async init() {
+    if (this.env) {
+      await this.config.events.emit("eleventy.env", this.env);
+    }
+
     this.config.inputDir = this.inputDir;
 
     let formats = this.formatsOverride || this.config.templateFormats;
@@ -348,13 +352,14 @@ Verbose Output: ${this.verboseMode}`);
     return this.templateData.cacheData();
   }
 
+  // These are all set as initial global data under eleventy.env.* (see TemplateData->environmentVariables)
   getEnvironmentVariableValues() {
-    let absolutePathToConfig = TemplatePath.absolutePath(
-      this.eleventyConfig.getLocalProjectConfigFile()
-    );
+    let configPath = this.eleventyConfig.getLocalProjectConfigFile();
+    let absolutePathToConfig = TemplatePath.absolutePath(configPath);
     let root = TemplatePath.getDirFromFilePath(absolutePathToConfig);
 
     return {
+      config: absolutePathToConfig,
       root,
     };
   }

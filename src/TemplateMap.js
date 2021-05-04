@@ -371,7 +371,7 @@ class TemplateMap {
     this.checkForDuplicatePermalinks();
 
     await this.config.events.emit(
-      "dependencyMap",
+      "eleventy.dependencyMap",
       this.generateDependencyMapEventObject(orderedMap)
     );
   }

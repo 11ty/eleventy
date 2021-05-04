@@ -257,7 +257,7 @@ class TemplateData {
       await this.getGlobalDataFiles()
     );
 
-    this.config.events.emit("globalDataFiles", files);
+    this.config.events.emit("eleventy.globalDataFiles", files);
 
     let dataFileConflicts = {};
 
