@@ -585,7 +585,10 @@ class Template extends TemplateContent {
     // no pagination on permalink.serverless for local builds
     let hasPagination = Pagination.hasPagination(data);
     let isServerlessRenderOnBuild = !behavior.render;
-    let isServerlessRenderOnServerless = behavior.render === "override";
+    let isServerlessRenderOnServerless =
+      behavior.render === "override" &&
+      hasPagination &&
+      "serverless" in data.pagination;
 
     if (
       !hasPagination ||

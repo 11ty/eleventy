@@ -327,13 +327,13 @@ class Pagination {
   }
 
   getTruncatedServerlessData(data) {
-    let serverlessKey = data.pagination.serverless;
-    if (!serverlessKey) {
+    if (!("serverless" in data.pagination)) {
       throw new Error(
         "Missing `serverless` key in `pagination` object to point to pagination data."
       );
     }
-    let resolvedKey = this._get(data, serverlessKey);
+
+    let resolvedKey = this._get(data, data.pagination.serverless);
     let fullDataSet = this._get(data, this._getDataKey());
     return [this._get(fullDataSet, resolvedKey)];
   }
