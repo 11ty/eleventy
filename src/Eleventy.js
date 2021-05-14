@@ -917,3 +917,5 @@ Arguments:
 }
 
 module.exports = Eleventy;
+module.exports.Serverless = require("./Serverless");
+module.exports.ServerlessPlugin = require("./Plugins/ServerlessPlugin");

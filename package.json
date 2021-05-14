@@ -93,6 +93,7 @@
   },
   "dependencies": {
     "@11ty/dependency-tree": "^2.0.0",
+    "@iarna/toml": "^2.2.5",
     "browser-sync": "^2.26.14",
     "chalk": "^4.1.0",
     "chokidar": "^3.5.1",
@@ -124,6 +125,7 @@
     "slugify": "^1.4.7",
     "split": "^1.0.1",
     "time-require": "^0.1.2",
+    "url-pattern": "^1.0.3",
     "valid-url": "^1.0.9"
   }
 }
