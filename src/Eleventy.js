@@ -119,7 +119,8 @@ class Eleventy {
     /** @member {Object} - tbd. */
     this.watchTargets = new EleventyWatchTargets();
     this.watchTargets.addAndMakeGlob(this.config.additionalWatchTargets);
-    this.watchTargets.watchJavaScriptDependencies = this.config.watchJavaScriptDependencies;
+    this.watchTargets.watchJavaScriptDependencies =
+      this.config.watchJavaScriptDependencies;
   }
 
   getNewTimestamp() {
@@ -337,18 +338,29 @@ class Eleventy {
     this.writer.extensionMap = this.extensionMap;
     this.writer.setEleventyFiles(this.eleventyFiles);
 
+    let dirs = {
+      input: this.inputDir,
+      data: this.templateData.getDataDir(),
+      includes: this.eleventyFiles.getIncludesDir(),
+      layouts: this.eleventyFiles.getLayoutsDir(),
+      output: this.outputDir,
+    };
+
     debug(`Directories:
-Input: ${this.inputDir}
-Data: ${this.templateData.getDataDir()}
-Includes: ${this.eleventyFiles.getIncludesDir()}
-Layouts: ${this.eleventyFiles.getLayoutsDir()}
-Output: ${this.outputDir}
+Input: ${dirs.input}
+Data: ${dirs.data}
+Includes: ${dirs.includes}
+Layouts: ${dirs.layouts}
+Output: ${dirs.output}
 Template Formats: ${formats.join(",")}
 Verbose Output: ${this.verboseMode}`);
 
     this.writer.setVerboseOutput(this.verboseMode);
     this.writer.setDryRun(this.isDryRun);
 
+    this.config.events.emit("eleventy.directories", dirs);
+
+    // …why does this return this
     return this.templateData.cacheData();
   }
 
