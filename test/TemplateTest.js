@@ -2131,7 +2131,7 @@ test("Make sure layout cache takes new changes during watch (nunjucks)", async (
 
   await fsp.writeFile(filePath, `alert("bye");`, { encoding: "utf8" });
 
-  eventBus.emit("resourceModified", filePath);
+  eventBus.emit("eleventy.resourceModified", filePath);
 
   t.is((await tmpl.render(data)).trim(), '<script>alert("bye");</script>');
 });
@@ -2152,7 +2152,7 @@ test("Make sure layout cache takes new changes during watch (liquid)", async (t)
 
   await fsp.writeFile(filePath, `alert("bye");`, { encoding: "utf8" });
 
-  eventBus.emit("resourceModified", filePath);
+  eventBus.emit("eleventy.resourceModified", filePath);
 
   t.is((await tmpl.render(data)).trim(), '<script>alert("bye");</script>');
 });

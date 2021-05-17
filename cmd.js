@@ -71,6 +71,7 @@ try {
     // --quiet and --quiet=true both resolve to true
     quietMode: argv.quiet,
     configPath: argv.config,
+    source: "cli",
   });
 
   // reuse ErrorHandler instance in Eleventy

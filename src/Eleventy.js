@@ -54,6 +54,12 @@ class Eleventy {
     this.configPath = options.configPath;
 
     /**
+     * @member {String} - Called via CLI (`cli`) or Programmatically (`script`)
+     * @default "script"
+     */
+    this.source = options.source || "script";
+
+    /**
      * @member {Object} - Initialize Eleventy environment variables
      * @default null
      */
@@ -373,6 +379,7 @@ Verbose Output: ${this.verboseMode}`);
     return {
       config: absolutePathToConfig,
       root,
+      source: this.source,
     };
   }
 
@@ -384,6 +391,8 @@ Verbose Output: ${this.verboseMode}`);
   initializeEnvironmentVariables(env) {
     process.env.ELEVENTY_ROOT = env.root;
     debug("Setting process.env.ELEVENTY_ROOT: %o", env.root);
+
+    process.env.ELEVENTY_SOURCE = this.source;
 
     // careful here, setting to false will cast to string "false" which is truthy
     if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
@@ -540,7 +549,7 @@ Arguments:
    * @param {String} changedFilePath - File that triggered a re-run (added or modified)
    */
   async _addFileToWatchQueue(changedFilePath) {
-    eventBus.emit("resourceModified", changedFilePath);
+    eventBus.emit("eleventy.resourceModified", changedFilePath);
     this.watchManager.addToPendingQueue(changedFilePath);
   }
 
@@ -557,10 +566,9 @@ Arguments:
 
     this.watchManager.setBuildRunning();
 
-    await this.config.events.emit(
-      "beforeWatch",
-      this.watchManager.getActiveQueue()
-    );
+    let queue = this.watchManager.getActiveQueue();
+    await this.config.events.emit("beforeWatch", queue);
+    await this.config.events.emit("eleventy.beforeWatch", queue);
 
     // reset and reload global configuration :O
     if (
@@ -878,6 +886,8 @@ Arguments:
 
     try {
       await this.config.events.emit("beforeBuild");
+      await this.config.events.emit("eleventy.before");
+
       let promise;
       if (to === "fs") {
         promise = this.writer.write();
@@ -900,6 +910,7 @@ Arguments:
       }
 
       await this.config.events.emit("afterBuild");
+      await this.config.events.emit("eleventy.after");
     } catch (e) {
       hasError = true;
       ret = {
@@ -930,4 +941,4 @@ Arguments:
 
 module.exports = Eleventy;
 module.exports.Serverless = require("./Serverless");
-module.exports.ServerlessPlugin = require("./Plugins/ServerlessPlugin");
+module.exports.ServerlessBundlerPlugin = require("./Plugins/ServerlessBundlerPlugin");

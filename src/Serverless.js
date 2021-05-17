@@ -7,9 +7,9 @@ const UrlPattern = require("url-pattern");
 const debug = require("debug")("Eleventy:Serverless");
 
 class Serverless {
-  constructor(name, event, options = {}) {
+  constructor(name, path, options = {}) {
     this.name = name;
-    this.event = event;
+    this.path = path;
 
     this.options = Object.assign(
       {
@@ -22,6 +22,7 @@ class Serverless {
           let pattern = new UrlPattern(url);
           return pattern.match(path);
         },
+        query: {},
       },
       options
     );
@@ -59,9 +60,22 @@ class Serverless {
     return require(fullPath);
   }
 
-  matchUrlPattern(contentMap) {
+  isServerlessUrl(urlPath) {
+    let contentMap = this.getContentMap();
+
     for (let url in contentMap) {
-      let result = this.options.matchUrlPattern(this.event.path, url);
+      if (this.options.matchUrlPattern(urlPath, url)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  matchUrlPattern(urlPath) {
+    let contentMap = this.getContentMap();
+
+    for (let url in contentMap) {
+      let result = this.options.matchUrlPattern(urlPath, url);
       if (result) {
         return {
           pathParams: result,
@@ -70,11 +84,7 @@ class Serverless {
       }
     }
 
-    throw new Error(
-      `No matching URL found for ${this.event.path} in ${JSON.stringify(
-        contentMap
-      )}`
-    );
+    return {};
   }
 
   async render(options = {}) {
@@ -85,14 +95,22 @@ class Serverless {
 
     let inputDir = path.join(this.dir, this.options.inputDir);
     let configPath = path.join(this.dir, this.options.configFilename);
-    let { pathParams, inputPath } = this.matchUrlPattern(this.getContentMap());
+    let { pathParams, inputPath } = this.matchUrlPattern(this.path);
+
+    if (!pathParams || !inputPath) {
+      throw new Error(
+        `No matching URL found for ${this.path} in ${JSON.stringify(
+          this.getContentMap()
+        )}`
+      );
+    }
 
     debug(`Current dir: ${process.cwd()}`);
     debug(`Project dir: ${this.dir}`);
     debug(`Config path:  ${configPath}`);
 
     debug(`Input dir: ${inputDir}`);
-    debug(`Requested URL:  ${this.event.path}`);
+    debug(`Requested URL:  ${this.path}`);
     debug(`Path params:  ${pathParams}`);
     debug(`Input path:  ${inputPath}`);
 
@@ -107,7 +125,7 @@ class Serverless {
 
         // Add the params to Global Data
         eleventyConfig.addGlobalData("eleventy.serverless", {
-          query: this.event.queryStringParameters,
+          query: this.options.query,
           path: pathParams,
         });
       },

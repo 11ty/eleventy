@@ -1,5 +1,4 @@
 const fs = require("fs");
-const fsp = fs.promises;
 const path = require("path");
 const TOML = require("@iarna/toml");
 const copy = require("recursive-copy");
@@ -50,6 +49,7 @@ class BundlerHelper {
     this.name = name;
     this.options = options;
     this.dir = path.join(options.functionsDir, name);
+    this.copyCount = 0;
   }
 
   getOutputPath(filepath) {
@@ -57,18 +57,24 @@ class BundlerHelper {
   }
 
   copyFile(fullPath, outputFilename) {
-    console.log(`Copying ${fullPath} to ${this.getOutputPath(outputFilename)}`);
+    debug(
+      `Eleventy Serverless: Copying ${fullPath} to ${this.getOutputPath(
+        outputFilename
+      )}`
+    );
     fs.copyFileSync(fullPath, this.getOutputPath(outputFilename));
+    this.copyCount++;
   }
 
   recursiveCopy(src, dest) {
     let finalDest = this.getOutputPath(dest || src);
-
     return copy(src, finalDest, {
       overwrite: true,
       dot: true,
       junk: false,
       results: false,
+    }).on(copy.events.COPY_FILE_COMPLETE, () => {
+      this.copyCount++;
     });
   }
 
@@ -137,7 +143,7 @@ module.exports = function (eleventyConfig, options = {}) {
 
         let newCfg = addRedirectsWithoutDuplicates(cfg, redirects);
         fs.writeFileSync(configFilename, TOML.stringify(newCfg));
-        console.log(
+        debug(
           `Eleventy Serverless (${options.name}), writing (×${redirects.length}): ${configFilename}`
         );
       },
@@ -151,14 +157,13 @@ module.exports = function (eleventyConfig, options = {}) {
     );
   }
 
-  let dir = path.join(options.functionsDir, options.name);
-
-  if (!process.env.ELEVENTY_SERVERLESS) {
+  if (process.env.ELEVENTY_SOURCE === "cli") {
     let helper = new BundlerHelper(options.name, options);
     helper.writeDependencyEntryFile();
 
-    // extra copy targets
-    (async function () {
+    eleventyConfig.on("eleventy.after", async () => {
+      // extra copy targets
+      // we put these in after a build so that we can grab files generated _by_ the build too
       if (options.copy && Array.isArray(options.copy)) {
         let promises = [];
         for (let cp of options.copy) {
@@ -175,7 +180,13 @@ module.exports = function (eleventyConfig, options = {}) {
         }
         await Promise.all(promises);
       }
-    })();
+
+      console.log(
+        `Eleventy Serverless: ${
+          helper.copyCount
+        } files bundled with ${helper.getOutputPath("")}.`
+      );
+    });
 
     // TODO is this necessary or can we just use require("eleventy.config.js") in the `eleventy-bundler-modules.js` file
     eleventyConfig.on("eleventy.env", (env) => {
@@ -189,10 +200,10 @@ module.exports = function (eleventyConfig, options = {}) {
 
     eleventyConfig.on("eleventy.directories", async (dirs) => {
       let promises = [];
-      promises.push(copy(dirs.data, helper.getOutputPath(dirs.data)));
-      promises.push(copy(dirs.includes, helper.getOutputPath(dirs.includes)));
+      promises.push(helper.recursiveCopy(dirs.data));
+      promises.push(helper.recursiveCopy(dirs.includes));
       if (dirs.layouts) {
-        promises.push(copy(dirs.layouts, helper.getOutputPath(dirs.layouts)));
+        promises.push(helper.recursiveCopy(dirs.layouts));
       }
       await Promise.all(promises);
     });
@@ -211,9 +222,10 @@ module.exports = function (eleventyConfig, options = {}) {
       if (mapEntryCount > 0) {
         let filename = helper.getOutputPath("eleventy-serverless-map.json");
         fs.writeFileSync(filename, JSON.stringify(outputMap, null, 2));
-        console.log(
+        debug(
           `Eleventy Serverless (${options.name}), writing (×${mapEntryCount}): ${filename}`
         );
+        this.copyCount++;
 
         // Write redirects into netlify.toml
         options.redirects(outputMap);

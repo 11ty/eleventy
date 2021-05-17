@@ -34,7 +34,7 @@ const eventBus = require("../EventBus");
 //       }
 //     }
 //   };
-//   eventBus.on("resourceModified", evictByPath);
+//   eventBus.on("eleventy.resourceModified", evictByPath);
 
 //   let _compile = NunjucksLib.Template.prototype._compile;
 //   NunjucksLib.Template.prototype._compile = function _wrap_compile(...args) {
@@ -128,7 +128,7 @@ class Nunjucks extends TemplateEngine {
     this.njkEnv = env || new NunjucksLib.Environment(fsLoader);
     // Correct, but overbroad. Better would be to evict more granularly, but
     // resolution from paths isn't straightforward.
-    eventBus.on("resourceModified", (path) => {
+    eventBus.on("eleventy.resourceModified", (path) => {
       this.njkEnv.invalidateCache();
     });
 
