@@ -131,9 +131,10 @@ class EleventyServe {
   }
 
   serve(port) {
-    // only load on serve—this is pretty expensive
-    const browserSync = require("browser-sync");
-    this.server = browserSync.create("eleventy-server");
+    // Only load on serve—this is pretty expensive
+    // We use a module name here to hide this from the serverless bundler.
+    let moduleName = "browser-sync";
+    this.server = require(moduleName).create("eleventy-server");
 
     let pathPrefix = this.getPathPrefix();
 
