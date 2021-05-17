@@ -23,6 +23,7 @@ class Serverless {
           return pattern.match(path);
         },
         query: {},
+        precompiledCollections: {},
       },
       options
     );
@@ -87,7 +88,7 @@ class Serverless {
     return {};
   }
 
-  async render(options = {}) {
+  async render() {
     // TODO is this necessary?
     if (this.dir.startsWith("/var/task/")) {
       process.chdir(this.dir);
@@ -117,9 +118,9 @@ class Serverless {
     let elev = new Eleventy(inputPath, null, {
       configPath,
       config: (eleventyConfig) => {
-        if (options.precompiledCollections) {
+        if (Object.keys(this.options.precompiledCollections).length > 0) {
           eleventyConfig.setPrecompiledCollections(
-            options.precompiledCollections
+            this.options.precompiledCollections
           );
         }
 
