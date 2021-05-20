@@ -132,9 +132,17 @@ class EleventyServe {
 
   serve(port) {
     // Only load on serve—this is pretty expensive
-    // We use a module name here to hide this from the serverless bundler.
-    let moduleName = "browser-sync";
-    this.server = require(moduleName).create("eleventy-server");
+    // We use a string module name and try/catch here to hide this from the zisi and esbuild serverless bundlers
+    let server;
+    // eslint-disable-next-line no-useless-catch
+    try {
+      let moduleName = "browser-sync";
+      server = require(moduleName);
+    } catch (e) {
+      throw e;
+    }
+
+    this.server = server.create("eleventy-server");
 
     let pathPrefix = this.getPathPrefix();
 

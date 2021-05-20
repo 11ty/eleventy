@@ -119,7 +119,8 @@ class Eleventy {
     /** @member {Object} - tbd. */
     this.watchTargets = new EleventyWatchTargets();
     this.watchTargets.addAndMakeGlob(this.config.additionalWatchTargets);
-    this.watchTargets.watchJavaScriptDependencies = this.config.watchJavaScriptDependencies;
+    this.watchTargets.watchJavaScriptDependencies =
+      this.config.watchJavaScriptDependencies;
   }
 
   getNewTimestamp() {
@@ -731,7 +732,15 @@ Arguments:
     this.watcherBench.setMinimumThresholdMs(500);
     this.watcherBench.reset();
 
-    const chokidar = require("chokidar");
+    // We use a string module name and try/catch here to hide this from the zisi and esbuild serverless bundlers
+    let chokidar;
+    // eslint-disable-next-line no-useless-catch
+    try {
+      let moduleName = "chokidar";
+      chokidar = require(moduleName);
+    } catch (e) {
+      throw e;
+    }
 
     // Note that watching indirectly depends on this for fetching dependencies from JS files
     // See: TemplateWriter:pathCache and EleventyWatchTargets
