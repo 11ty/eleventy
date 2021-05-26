@@ -114,6 +114,35 @@ class BundlerHelper {
       modules
     );
   }
+
+  browserSyncMiddleware() {
+    let serverlessFilepath = TemplatePath.addLeadingDotSlash(
+      path.join(TemplatePath.getWorkingDir(), this.dir, "index")
+    );
+
+    return async (req, res, next) => {
+      let serverlessFunction = require(serverlessFilepath);
+      let url = new URL(req.url, "http://localhost/"); // any domain will do here, we just want the searchParams
+
+      let start = new Date();
+      let result = await serverlessFunction.handler({
+        httpMethod: "GET",
+        path: req.url,
+        queryStringParameters: Object.fromEntries(url.searchParams),
+      });
+
+      if (result.statusCode === 404) {
+        // return static file
+        return next();
+      }
+
+      res.writeHead(result.statusCode, result.headers || {});
+      res.write(result.body);
+      res.end();
+
+      console.log(`Dynamic Render: ${req.url} (${Date.now() - start}ms)`);
+    };
+  }
 }
 
 module.exports = function (eleventyConfig, options = {}) {
@@ -161,6 +190,10 @@ module.exports = function (eleventyConfig, options = {}) {
     let helper = new BundlerHelper(options.name, options);
     helper.writeDependencyEntryFile();
 
+    eleventyConfig.setBrowserSyncConfig({
+      middleware: [helper.browserSyncMiddleware()],
+    });
+
     eleventyConfig.on("eleventy.after", async () => {
       // extra copy targets
       // we put these in after a build so that we can grab files generated _by_ the build too
@@ -188,7 +221,6 @@ module.exports = function (eleventyConfig, options = {}) {
       );
     });
 
-    // TODO is this necessary or can we just use require("eleventy.config.js") in the `eleventy-bundler-modules.js` file
     eleventyConfig.on("eleventy.env", (env) => {
       helper.copyFile(env.config, "eleventy.config.js");
       helper.writeDependencyConfigFile(env.config);

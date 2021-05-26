@@ -13,16 +13,18 @@ class Serverless {
 
     this.options = Object.assign(
       {
-        inputDir: "src",
+        inputDir: ".",
         functionsDir: "functions/",
         mapFilename: "eleventy-serverless-map.json",
-        // The bundle script sets the bundled config file name
+        // The ServerlessBundlerPlugin hard-codes to this (even if you used a different file name)
         configFilename: "eleventy.config.js",
         matchUrlPattern: function (path, url) {
           let pattern = new UrlPattern(url);
           return pattern.match(path);
         },
+        // Query String Parameters
         query: {},
+        // Inject shared collections
         precompiledCollections: {},
       },
       options
@@ -99,11 +101,13 @@ class Serverless {
     let { pathParams, inputPath } = this.matchUrlPattern(this.path);
 
     if (!pathParams || !inputPath) {
-      throw new Error(
+      let err = new Error(
         `No matching URL found for ${this.path} in ${JSON.stringify(
           this.getContentMap()
         )}`
       );
+      err.httpStatusCode = 404;
+      throw err;
     }
 
     debug(`Current dir: ${process.cwd()}`);
@@ -137,10 +141,14 @@ class Serverless {
 
     let json = await elev.toJSON();
     if (!json.length) {
-      throw new Error("Couldn’t find any generated output from Eleventy.");
+      let err = new Error(
+        `Couldn’t find any generated output from Eleventy (URL path parameters: ${JSON.stringify(
+          pathParams
+        )}).`
+      );
+      err.httpStatusCode = 404;
+      throw err;
     }
-
-    debug(`Eleventy generated ${json.length} templates.`);
 
     for (let entry of json) {
       if (entry.inputPath === inputPath) {
@@ -151,7 +159,7 @@ class Serverless {
     // Log to Serverless Function output
     console.log(json);
     throw new Error(
-      `Couldn’t find any matching output from Eleventy for ${inputPath}`
+      `Couldn’t find any matching output from Eleventy for ${inputPath} (${json.length} pages rendered).`
     );
   }
 }
