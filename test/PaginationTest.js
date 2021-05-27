@@ -755,3 +755,41 @@ test("Pagination make sure pageNumber is numeric for {{ pageNumber + 1 }} Issue 
   t.is(templates[0].data.pagination.pageNumber, 0);
   t.not(templates[0].data.pagination.pageNumber, "0");
 });
+
+test("Pagination mutable global data", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData(
+    "./test/stubs/paged-global-data-mutable/",
+    eleventyConfig
+  );
+  await dataObj.cacheData();
+
+  let tmpl = getNewTemplate(
+    "./test/stubs/paged-global-data-mutable/paged-differing-data-set.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj,
+    null,
+    eleventyConfig
+  );
+
+  let data = await tmpl.getData();
+  let templates = await tmpl.getTemplates(data);
+  t.is(templates.length, 3);
+  t.deepEqual(templates[0].data.pagination.items[0], {
+    key1: "item1",
+    key2: "item2",
+  });
+  t.deepEqual(templates[1].data.pagination.items[0], {
+    key3: "item3",
+    key4: "item4",
+  });
+  t.deepEqual(templates[2].data.pagination.items[0], {
+    key5: "item5",
+    key6: "item6",
+  });
+
+  t.deepEqual(templates[0].data.item, { key1: "item1", key2: "item2" });
+  t.deepEqual(templates[1].data.item, { key3: "item3", key4: "item4" });
+  t.deepEqual(templates[2].data.item, { key5: "item5", key6: "item6" });
+});
