@@ -38,12 +38,13 @@ async function getTemplateMapEntriesWithContent(template, data) {
   );
 }
 
-async function write(tmpl, data) {
-  let mapEntries = await getTemplateMapEntriesWithContent(tmpl, data);
+async function writeMapEntries(mapEntries) {
   let promises = [];
   for (let entry of mapEntries) {
-    if (entry.behavior.writeable) {
-      promises.push(tmpl._write(entry.outputPath, entry.templateContent));
+    if (entry.template.behavior.isWriteable()) {
+      promises.push(
+        entry.template._write(entry.outputPath, entry.templateContent)
+      );
     }
   }
   return Promise.all(promises);
@@ -1382,10 +1383,15 @@ test("permalink: false", async (t) => {
   );
 
   let data = await tmpl.getData();
-  t.is(await tmpl.getOutputLink(data), false);
-  t.is(await tmpl.getOutputHref(data), false);
 
-  await write(tmpl, data);
+  let mapEntries = await getTemplateMapEntriesWithContent(tmpl, data);
+  for (let entry of mapEntries) {
+    t.is(entry.template.behavior.isWriteable(), false);
+    t.is(entry.data.page.url, false);
+    t.is(entry.data.page.outputPath, false);
+  }
+
+  await writeMapEntries(mapEntries);
 
   // Input file exists (sanity check for paths)
   t.is(fs.existsSync("./test/stubs/permalink-false/"), true);
@@ -1396,6 +1402,40 @@ test("permalink: false", async (t) => {
   t.is(fs.existsSync("./test/stubs/_site/permalink-false/test/"), false);
   t.is(
     fs.existsSync("./test/stubs/_site/permalink-false/test/index.html"),
+    false
+  );
+});
+
+test("permalink: false inside of eleventyComputed, Issue #1754", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-false-computed/test.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let data = await tmpl.getData();
+  let mapEntries = await getTemplateMapEntriesWithContent(tmpl, data);
+  for (let entry of mapEntries) {
+    t.is(entry.template.behavior.isWriteable(), false);
+    t.is(entry.data.page.url, false);
+    t.is(entry.data.page.outputPath, false);
+  }
+  await writeMapEntries(mapEntries);
+
+  // Input file exists (sanity check for paths)
+  t.is(fs.existsSync("./test/stubs/permalink-false-computed/"), true);
+  t.is(fs.existsSync("./test/stubs/permalink-false-computed/test.md"), true);
+
+  // Output does not exist
+  t.is(fs.existsSync("./test/stubs/_site/permalink-false-computed/"), false);
+  t.is(
+    fs.existsSync("./test/stubs/_site/permalink-false-computed/test/"),
+    false
+  );
+  t.is(
+    fs.existsSync(
+      "./test/stubs/_site/permalink-false-computed/test/index.html"
+    ),
     false
   );
 });

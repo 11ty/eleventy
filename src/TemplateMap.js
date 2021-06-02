@@ -123,7 +123,7 @@ class TemplateMap {
 
       if (
         !entry.data.eleventyExcludeFromCollections &&
-        entry.behavior.includeInCollections
+        entry.template.behavior.isIncludedInCollections()
       ) {
         // collections.all
         graph.addDependency(tagPrefix + "all", entry.inputPath);
@@ -177,7 +177,7 @@ class TemplateMap {
 
         if (
           !entry.data.eleventyExcludeFromCollections &&
-          entry.behavior.includeInCollections
+          entry.template.behavior.isIncludedInCollections()
         ) {
           // collections.all
           graph.addDependency(tagPrefix + "all", entry.inputPath);
@@ -221,7 +221,7 @@ class TemplateMap {
 
         if (
           !entry.data.eleventyExcludeFromCollections &&
-          entry.behavior.includeInCollections
+          entry.template.behavior.isIncludedInCollections()
         ) {
           // collections.all
           graph.addDependency(tagPrefix + "all", entry.inputPath);
@@ -253,7 +253,7 @@ class TemplateMap {
 
         if (
           !entry.data.eleventyExcludeFromCollections &&
-          entry.behavior.includeInCollections
+          entry.template.behavior.isIncludedInCollections()
         ) {
           // collections.all
           graph.addDependency(tagPrefix + "all", entry.inputPath);
@@ -297,33 +297,29 @@ class TemplateMap {
       } else {
         // is a template entry
         let map = this.getMapEntryForInputPath(depEntry);
-        if (!map.behavior.read) {
-          map._pages = [];
-        } else {
-          map._pages = await map.template.getTemplates(map.data, map.behavior);
+        map._pages = await map.template.getTemplates(map.data);
 
-          let counter = 0;
-          for (let page of map._pages) {
-            // Copy outputPath to map entry
-            if (!map.outputPath) {
-              map.outputPath = page.outputPath;
-            }
-
-            if (
-              counter === 0 ||
-              (map.data.pagination &&
-                map.data.pagination.addAllPagesToCollections)
-            ) {
-              if (
-                !map.data.eleventyExcludeFromCollections &&
-                map.behavior.includeInCollections
-              ) {
-                // TODO do we need .template in collection entries?
-                this.collection.add(page);
-              }
-            }
-            counter++;
+        let counter = 0;
+        for (let page of map._pages) {
+          // Copy outputPath to map entry
+          if (!map.outputPath) {
+            map.outputPath = page.outputPath;
           }
+
+          if (
+            counter === 0 ||
+            (map.data.pagination &&
+              map.data.pagination.addAllPagesToCollections)
+          ) {
+            if (
+              !map.data.eleventyExcludeFromCollections &&
+              map.template.behavior.isIncludedInCollections()
+            ) {
+              // TODO do we need .template in collection entries?
+              this.collection.add(page);
+            }
+          }
+          counter++;
         }
       }
     }
@@ -343,10 +339,12 @@ class TemplateMap {
     let delayedDependencyMap = this.getDelayedMappedDependencies();
     await this.initDependencyMap(delayedDependencyMap);
 
-    let firstPaginatedDepMap = this.getPaginatedOverCollectionsMappedDependencies();
+    let firstPaginatedDepMap =
+      this.getPaginatedOverCollectionsMappedDependencies();
     await this.initDependencyMap(firstPaginatedDepMap);
 
-    let secondPaginatedDepMap = this.getPaginatedOverAllCollectionMappedDependencies();
+    let secondPaginatedDepMap =
+      this.getPaginatedOverAllCollectionMappedDependencies();
     await this.initDependencyMap(secondPaginatedDepMap);
 
     await this.resolveRemainingComputedData();
@@ -444,7 +442,7 @@ class TemplateMap {
       if (!map._pages) {
         throw new Error(`Content pages not found for ${map.inputPath}`);
       }
-      if (!map.behavior.render) {
+      if (!map.template.behavior.isRenderable()) {
         continue;
       }
       try {

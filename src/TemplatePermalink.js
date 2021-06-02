@@ -8,7 +8,6 @@ class TemplatePermalink {
   constructor(link, extraSubdir) {
     let isLinkAnObject = isPlainObject(link);
 
-    this._isIgnoredTemplate = false;
     this._isRendered = true;
     this._writeToFileSystem = true;
 
@@ -54,10 +53,6 @@ class TemplatePermalink {
       } else if (link.behavior === "read") {
         this._writeToFileSystem = false;
         this._isRendered = false;
-      } else if (link.behavior === "skip") {
-        this._writeToFileSystem = false;
-        this._isRendered = false;
-        this._isIgnoredTemplate = true;
       }
     }
 
@@ -126,23 +121,6 @@ class TemplatePermalink {
     }
 
     return normalize(uri);
-  }
-
-  getBehavior(outputFormat = "fs") {
-    let obj = {
-      read: !this._isIgnoredTemplate,
-      render: this._isRendered,
-      write: this._writeToFileSystem,
-    };
-
-    // override render behavior for --json or --ndjson
-    if (outputFormat !== "fs") {
-      obj.render = "override";
-    }
-
-    obj.includeInCollections = obj.read && obj.render;
-
-    return obj;
   }
 
   static _hasDuplicateFolder(dir, base) {

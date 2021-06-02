@@ -2,7 +2,6 @@ const fs = require("fs-extra");
 const parsePath = require("parse-filepath");
 const normalize = require("normalize-path");
 const isPlainObject = require("lodash/isPlainObject");
-const lodashGet = require("lodash/get");
 const { DateTime } = require("luxon");
 
 const TemplateData = require("./TemplateData");
@@ -16,6 +15,7 @@ const Pagination = require("./Plugins/Pagination");
 const TemplateContentPrematureUseError = require("./Errors/TemplateContentPrematureUseError");
 const TemplateContentUnrenderedTemplateError = require("./Errors/TemplateContentUnrenderedTemplateError");
 const ConsoleLogger = require("./Util/ConsoleLogger");
+const TemplateBehavior = require("./TemplateBehavior");
 
 const debug = require("debug")("Eleventy:Template");
 const debugDev = require("debug")("Dev:Eleventy:Template");
@@ -62,6 +62,9 @@ class Template extends TemplateContent {
     this.filePathStem = this.fileSlug.getFullPathWithoutExtension();
 
     this.outputFormat = "fs";
+
+    this.behavior = new TemplateBehavior();
+    this.behavior.setOutputFormat(this.outputFormat);
   }
 
   get logger() {
@@ -79,6 +82,7 @@ class Template extends TemplateContent {
 
   setOutputFormat(to) {
     this.outputFormat = to;
+    this.behavior.setOutputFormat(to);
   }
 
   setIsVerbose(isVerbose) {
@@ -142,6 +146,9 @@ class Template extends TemplateContent {
       permalinkValue,
       this.extraOutputSubdirectory
     );
+
+    this.behavior.setFromPermalink(perm);
+
     return perm;
   }
 
@@ -153,9 +160,8 @@ class Template extends TemplateContent {
     let permalink = data[this.config.keys.permalink];
     let permalinkValue;
 
-    // v1.0 added support for `permalink: true`
-    // `permalink: true` is a more accurate alias for `permalink: false` behavior:
-    // render but no file system write, e.g. use in collections only)
+    // `permalink: false` means render but no file system write, e.g. use in collections only)
+    // `permalink: true` throws an error
     if (typeof permalink === "boolean") {
       debugDev("Using boolean permalink %o", permalink);
       permalinkValue = permalink;
@@ -573,20 +579,12 @@ class Template extends TemplateContent {
     await this.computedData.processRemainingData(data);
   }
 
-  async getTemplates(data, behavior) {
-    if (!behavior) {
-      behavior = {
-        read: true,
-        render: true,
-        write: true,
-      };
-    }
-
+  async getTemplates(data) {
     // no pagination on permalink.serverless for local builds
     let hasPagination = Pagination.hasPagination(data);
-    let isServerlessRenderOnBuild = !behavior.render;
+    let isServerlessRenderOnBuild = !this.behavior.isRenderable();
     let isServerlessRenderOnServerless =
-      behavior.render === "override" &&
+      this.behavior.isRenderForced() &&
       hasPagination &&
       "serverless" in data.pagination;
 
@@ -624,7 +622,7 @@ class Template extends TemplateContent {
           },
           get templateContent() {
             if (this._templateContent === undefined) {
-              if (behavior.render) {
+              if (this.template.behavior.isRenderable()) {
                 // should at least warn here
                 throw new TemplateContentPrematureUseError(
                   `Tried to use templateContent too early (${this.inputPath})`
@@ -672,7 +670,7 @@ class Template extends TemplateContent {
               this._templateContent = content;
             },
             get templateContent() {
-              if (behavior.render) {
+              if (this.template.behavior.isRenderable()) {
                 if (this._templateContent === undefined) {
                   throw new TemplateContentPrematureUseError(
                     `Tried to use templateContent too early (${this.inputPath} page ${this.pageNumber})`
@@ -723,7 +721,8 @@ class Template extends TemplateContent {
       };
     }
 
-    let engineList = this.templateRender.getReadableEnginesListDifferingFromFileExtension();
+    let engineList =
+      this.templateRender.getReadableEnginesListDifferingFromFileExtension();
     this.logger.log(
       `${lang.start} ${outputPath} from ${this.inputPath}${
         engineList ? ` (${engineList})` : ""
@@ -769,7 +768,7 @@ class Template extends TemplateContent {
         let content;
 
         // Note that behavior.render is overridden when using json or ndjson output
-        if (mapEntry.behavior.render) {
+        if (mapEntry.template.behavior.isRenderable()) {
           // this reuses page.templateContent, it doesn’t render it
           content = await this.renderPageEntry(mapEntry, page);
         }
@@ -791,7 +790,7 @@ class Template extends TemplateContent {
           return obj;
         }
 
-        if (!mapEntry.behavior.render) {
+        if (!mapEntry.template.behavior.isRenderable()) {
           debug(
             "Template not written %o from %o (via permalink.behavior).",
             page.outputPath,
@@ -800,7 +799,7 @@ class Template extends TemplateContent {
           return;
         }
 
-        if (!mapEntry.behavior.write) {
+        if (!mapEntry.template.behavior.isWriteable()) {
           debug(
             "Template not written %o from %o (via permalink: false, permalink.build: false, or a permalink object without a build property).",
             page.outputPath,
@@ -926,17 +925,12 @@ class Template extends TemplateContent {
     // Important reminder: This is where the template data is first generated via TemplateMap
     let data = dataOverride || (await this.getData());
 
-    let rawPermalinkValue = data[this.config.keys.permalink];
-    let link = this._getRawPermalinkInstance(rawPermalinkValue);
-
-    let behavior = link.getBehavior(this.outputFormat);
     let entries = [];
     // does not return outputPath or url, we don’t want to render permalinks yet
     entries.push({
       template: this,
       inputPath: this.inputPath,
       data,
-      behavior,
     });
     return entries;
   }
