@@ -43,6 +43,7 @@ class TemplatePermalink {
       }
 
       // default if permalink is an Object but does not have a `build` prop
+      // note that `read` will opt-out this template from collections. See TemplateBehavior->isIncludedInCollections
       if (!("behavior" in link) && !("build" in link)) {
         link.behavior = "read";
       }

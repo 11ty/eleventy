@@ -988,6 +988,32 @@ test("eleventyExcludeFromCollections", async (t) => {
   t.is(collections.dog.length, 1);
 });
 
+test("eleventyExcludeFromCollections and permalink: false", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
+
+  let tm = new TemplateMap(eleventyConfig);
+  await tm.add(tmpl1);
+
+  let excludedTmpl = getNewTemplate(
+    "./test/stubs/eleventyExcludeFromCollectionsPermalinkFalse.njk",
+    "./test/stubs/",
+    "./test/stubs/_site",
+    eleventyConfig
+  );
+
+  await tm.add(excludedTmpl);
+
+  await tm.cache();
+
+  t.is(tm.getMap().length, 2);
+
+  let collections = await tm._testGetCollectionsData();
+  t.is(collections.all.length, 1);
+  t.is(collections.post.length, 1);
+  t.is(collections.dog.length, 1);
+});
+
 test("Paginate over collections.all", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
