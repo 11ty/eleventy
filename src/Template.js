@@ -63,7 +63,7 @@ class Template extends TemplateContent {
 
     this.outputFormat = "fs";
 
-    this.behavior = new TemplateBehavior();
+    this.behavior = new TemplateBehavior(this.config);
     this.behavior.setOutputFormat(this.outputFormat);
   }
 
@@ -582,19 +582,19 @@ class Template extends TemplateContent {
   async getTemplates(data) {
     // no pagination on permalink.serverless for local builds
     let hasPagination = Pagination.hasPagination(data);
-    let isServerlessRenderOnBuild = !this.behavior.isRenderable();
-    let isServerlessRenderOnServerless =
+    let isServerlessTemplateRenderingViaBuild = !this.behavior.isRenderable();
+    let isServerlessTemplateRenderingViaServerless =
       this.behavior.isRenderForced() &&
       hasPagination &&
       "serverless" in data.pagination;
 
     if (
       !hasPagination ||
-      isServerlessRenderOnBuild ||
-      isServerlessRenderOnServerless
+      isServerlessTemplateRenderingViaBuild ||
+      isServerlessTemplateRenderingViaServerless
     ) {
       // inject pagination page data for just this one entry for serverless render
-      if (isServerlessRenderOnServerless && hasPagination) {
+      if (isServerlessTemplateRenderingViaServerless && hasPagination) {
         let pagination = new Pagination(data, this.config);
         let paginationItems = pagination.getTruncatedServerlessData(data);
         let override = pagination.getOverrideData(paginationItems);
@@ -925,6 +925,8 @@ class Template extends TemplateContent {
     // Important reminder: This is where the template data is first generated via TemplateMap
     let data = dataOverride || (await this.getData());
 
+    this.behavior.setRenderViaDataCascade(data);
+
     let entries = [];
     // does not return outputPath or url, we don’t want to render permalinks yet
     entries.push({
@@ -932,6 +934,7 @@ class Template extends TemplateContent {
       inputPath: this.inputPath,
       data,
     });
+
     return entries;
   }
 
