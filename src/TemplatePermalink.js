@@ -37,10 +37,11 @@ class TemplatePermalink {
       this.rawLink = rawLink;
     }
 
+    this.serverlessUrls = {};
+
     if (isLinkAnObject) {
-      if ("serverless" in link) {
-        this.externalLink = link.serverless;
-      }
+      Object.assign(this.serverlessUrls, link);
+      delete this.serverlessUrls.build;
 
       // default if permalink is an Object but does not have a `build` prop
       // note that this will opt-out this template from collections. See TemplateBehavior->isIncludedInCollections
@@ -51,6 +52,10 @@ class TemplatePermalink {
     }
 
     this.extraPaginationSubdir = extraSubdir || "";
+  }
+
+  getServerlessUrls() {
+    return this.serverlessUrls;
   }
 
   _cleanLink(link) {
@@ -80,9 +85,6 @@ class TemplatePermalink {
   // index.html becomes /
   // test/index.html becomes test/
   toHref() {
-    if (this.externalLink) {
-      return this.externalLink;
-    }
     if (!this.rawLink) {
       // empty or false
       return false;

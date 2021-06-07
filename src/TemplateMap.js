@@ -369,27 +369,26 @@ class TemplateMap {
     this.checkForDuplicatePermalinks();
 
     await this.config.events.emit(
-      "eleventy.dependencyMap",
-      this.generateDependencyMapEventObject(orderedMap)
+      "eleventy.serverlessUrlMap",
+      this.generateServerlessUrlMap(orderedMap)
     );
   }
 
-  generateDependencyMapEventObject(orderedMap) {
+  generateServerlessUrlMap(orderedMap) {
     let entries = [];
     for (let entry of orderedMap) {
-      let ret = {
-        inputPath: entry.inputPath,
-        isExternal: !!(entry.data.permalink && entry.data.permalink.serverless),
-      };
-
-      // TODO `needs: []` array of inputPath or glob? this template uses
-
       for (let page of entry._pages) {
-        entries.push(
-          Object.assign({}, ret, {
+        let serverless = {};
+        if (isPlainObject(page.data.permalink)) {
+          // These are rendered in the template language!
+          Object.assign(serverless, page.template.getServerlessUrls());
+
+          entries.push({
+            inputPath: entry.inputPath,
             url: page.url,
-          })
-        );
+            serverless,
+          });
+        }
       }
     }
     return entries;
@@ -614,20 +613,15 @@ class TemplateMap {
     for (let entry of this.map) {
       for (let page of entry._pages) {
         if (page.url === false) {
-          // do nothing, note that url exists in serverless mode
+          // do nothing (also serverless)
         } else if (!permalinks[page.url]) {
           permalinks[page.url] = [entry.inputPath];
         } else {
-          // in serverless mode, page.outputPath is `false`
-          let isServerlessTemplate = !page.outputPath;
-
           warnings[
             page.outputPath
-          ] = `Output conflict: multiple input files are ${
-            isServerlessTemplate
-              ? "using the same serverless path"
-              : `writing to \`${page.outputPath}\``
-          }. Use distinct \`permalink\` values to resolve this conflict.
+          ] = `Output conflict: multiple input files are writing to \`${
+            page.outputPath
+          }\`. Use distinct \`permalink\` values to resolve this conflict.
   1. ${entry.inputPath}
 ${permalinks[page.url]
   .map(function (inputPath, index) {

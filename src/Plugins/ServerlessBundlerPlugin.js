@@ -240,12 +240,22 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       await Promise.all(promises);
     });
 
-    eleventyConfig.on("eleventy.dependencyMap", (templateMap) => {
+    eleventyConfig.on("eleventy.serverlessUrlMap", (templateMap) => {
       let outputMap = {};
 
       for (let entry of templateMap) {
-        if (entry.isExternal) {
-          outputMap[entry.url] = entry.inputPath;
+        for (let key in entry.serverless) {
+          if (key === options.name) {
+            if (outputMap[entry.serverless[key]]) {
+              throw new Error(
+                `Serverless URL conflict: multiple input files are using the same URL path (in \`permalink\`): ${
+                  outputMap[entry.serverless[key]]
+                } and ${entry.inputPath}`
+              );
+            }
+
+            outputMap[entry.serverless[key]] = entry.inputPath;
+          }
         }
       }
 

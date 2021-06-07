@@ -2254,3 +2254,50 @@ test("permalink object without build", async (t) => {
   t.is(await tmpl.getOutputLink(), false);
   t.is(await tmpl.getOutputHref(), false);
 });
+
+test("permalink object _getLink", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-nobuild/permalink-nobuild.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let link = await tmpl._getLink({
+    permalink: {
+      serverless: "/serverless/",
+    },
+  });
+  t.is(await link.toLink(), false);
+  t.is(await link.toHref(), false);
+  t.deepEqual(link.getServerlessUrls(), {
+    serverless: "/serverless/",
+  });
+  t.deepEqual(tmpl.getServerlessUrls(), {
+    serverless: "/serverless/",
+  });
+
+  let link2 = await tmpl._getLink({
+    permalink: {
+      build: "/build/",
+    },
+  });
+  t.is(await link2.toLink(), "/build/index.html");
+  t.is(await link2.toHref(), "/build/");
+  t.deepEqual(link2.getServerlessUrls(), {});
+  t.deepEqual(tmpl.getServerlessUrls(), {});
+
+  let link3 = await tmpl._getLink({
+    permalink: {
+      build: "/build/",
+      serverless: "/serverless/",
+    },
+  });
+  t.is(await link3.toLink(), "/build/index.html");
+  t.is(await link3.toHref(), "/build/");
+  t.deepEqual(link3.getServerlessUrls(), {
+    serverless: "/serverless/",
+  });
+  t.deepEqual(tmpl.getServerlessUrls(), {
+    serverless: "/serverless/",
+  });
+});

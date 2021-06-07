@@ -65,6 +65,8 @@ class Template extends TemplateContent {
 
     this.behavior = new TemplateBehavior(this.config);
     this.behavior.setOutputFormat(this.outputFormat);
+
+    this.serverlessUrls = null;
   }
 
   get logger() {
@@ -140,14 +142,23 @@ class Template extends TemplateContent {
     );
   }
 
+  getServerlessUrls() {
+    if (!this.serverlessUrls) {
+      throw new Error(
+        "Permalink has not yet processed. Calls to Template->getServerlessUrls not yet allowed."
+      );
+    }
+    return this.serverlessUrls;
+  }
+
   _getRawPermalinkInstance(permalinkValue) {
-    // unrendered!
     let perm = new TemplatePermalink(
       permalinkValue,
       this.extraOutputSubdirectory
     );
 
     this.behavior.setFromPermalink(perm);
+    this.serverlessUrls = perm.getServerlessUrls();
 
     return perm;
   }
@@ -174,18 +185,14 @@ class Template extends TemplateContent {
     } else if (isPlainObject(permalink)) {
       let promises = [];
       let keys = [];
-      if (permalink.build) {
-        keys.push("build");
-        promises.push(super.render(permalink.build, data, true));
-      }
-      if (permalink.serverless) {
-        keys.push("serverless");
-        promises.push(super.render(permalink.serverless, data, true));
+      for (let key in permalink) {
+        keys.push(key);
+        promises.push(super.render(permalink[key], data, true));
       }
 
       let results = await Promise.all(promises);
 
-      permalinkValue = Object.assign({}, permalink);
+      permalinkValue = {};
       for (let j = 0, k = keys.length; j < k; j++) {
         let key = keys[j];
         permalinkValue[key] = results[j];

@@ -182,7 +182,7 @@ test("Permalink Object, serverless URLs", (t) => {
     new TemplatePermalink({
       serverless: "permalinksubfolder/test.html",
     }).toHref(),
-    "permalinksubfolder/test.html"
+    false
   );
 
   t.is(
@@ -194,8 +194,22 @@ test("Permalink Object, serverless URLs", (t) => {
 
   t.is(
     new TemplatePermalink({
+      request: "/url/",
+    }).toHref(),
+    false
+  );
+
+  t.is(
+    new TemplatePermalink({
       rando: "/url/",
     }).toLink(),
+    false
+  );
+
+  t.is(
+    new TemplatePermalink({
+      rando: "/url/",
+    }).toHref(),
     false
   );
 });
