@@ -168,6 +168,22 @@ test("Permalink Object, just build", (t) => {
       build: true,
     }).toLink();
   });
+});
+
+test("Permalink Object, serverless URLs", (t) => {
+  t.is(
+    new TemplatePermalink({
+      serverless: "permalinksubfolder/test.html",
+    }).toLink(),
+    false
+  );
+
+  t.is(
+    new TemplatePermalink({
+      serverless: "permalinksubfolder/test.html",
+    }).toHref(),
+    "permalinksubfolder/test.html"
+  );
 
   t.is(
     new TemplatePermalink({

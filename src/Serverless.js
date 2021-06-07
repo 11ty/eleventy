@@ -16,13 +16,13 @@ class Serverless {
         inputDir: ".",
         functionsDir: "functions/",
         mapFilename: "eleventy-serverless-map.json",
-        // The ServerlessBundlerPlugin hard-codes to this (even if you used a different file name)
+        // ServerlessBundlerPlugin hard-codes to this (even if you used a different file name)
         configFilename: "eleventy.config.js",
-        matchUrlPattern: function (path, url) {
-          let pattern = new UrlPattern(url);
+        // Query String Parameters
+        matchUrlToPattern(path, urlToCompare) {
+          let pattern = new UrlPattern(urlToCompare);
           return pattern.match(path);
         },
-        // Query String Parameters
         query: {},
         // Inject shared collections
         precompiledCollections: {},
@@ -67,7 +67,7 @@ class Serverless {
     let contentMap = this.getContentMap();
 
     for (let url in contentMap) {
-      if (this.options.matchUrlPattern(urlPath, url)) {
+      if (this.options.matchUrlToPattern(urlPath, url)) {
         return true;
       }
     }
@@ -76,15 +76,30 @@ class Serverless {
 
   matchUrlPattern(urlPath) {
     let contentMap = this.getContentMap();
+    let matches = [];
 
     for (let url in contentMap) {
-      let result = this.options.matchUrlPattern(urlPath, url);
+      let result = this.options.matchUrlToPattern(urlPath, url);
       if (result) {
-        return {
+        matches.push({
+          compareTo: url,
           pathParams: result,
           inputPath: contentMap[url],
-        };
+        });
       }
+    }
+
+    if (matches.length) {
+      if (matches.length > 1) {
+        console.log(
+          `Eleventy Serverless conflict: there are multiple serverless paths that match the current URL (${urlPath}): ${JSON.stringify(
+            matches,
+            null,
+            2
+          )}`
+        );
+      }
+      return matches[0];
     }
 
     return {};

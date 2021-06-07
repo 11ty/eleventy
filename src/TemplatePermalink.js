@@ -43,15 +43,8 @@ class TemplatePermalink {
       }
 
       // default if permalink is an Object but does not have a `build` prop
-      // note that `read` will opt-out this template from collections. See TemplateBehavior->isIncludedInCollections
-      if (!("behavior" in link) && !("build" in link)) {
-        link.behavior = "read";
-      }
-
-      if (link.behavior === "render") {
-        // same as permalink: false and permalink: build: false
-        this._writeToFileSystem = false;
-      } else if (link.behavior === "read") {
+      // note that this will opt-out this template from collections. See TemplateBehavior->isIncludedInCollections
+      if (!("build" in link)) {
         this._writeToFileSystem = false;
         this._isRendered = false;
       }
@@ -79,6 +72,9 @@ class TemplatePermalink {
       parsed.base
     );
   }
+
+  // This method is used to generate the `page.url` variable.
+  // Note that in serverless mode this should still exist to generate the content map
 
   // remove all index.html’s from links
   // index.html becomes /

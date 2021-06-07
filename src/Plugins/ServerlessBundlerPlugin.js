@@ -145,7 +145,7 @@ class BundlerHelper {
   }
 }
 
-module.exports = function (eleventyConfig, options = {}) {
+function EleventyPlugin(eleventyConfig, options = {}) {
   options = Object.assign(
     {
       name: "",
@@ -269,4 +269,6 @@ module.exports = function (eleventyConfig, options = {}) {
       }
     });
   }
-};
+}
+
+module.exports = EleventyPlugin;
