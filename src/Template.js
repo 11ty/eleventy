@@ -589,28 +589,8 @@ class Template extends TemplateContent {
   async getTemplates(data) {
     // no pagination with permalink.serverless
     let hasPagination = Pagination.hasPagination(data);
-    let isPaginatedServerlessTemplateRenderingViaServerless =
-      this.behavior.isRenderForced() &&
-      hasPagination &&
-      "serverless" in data.pagination;
 
-    if (
-      !hasPagination ||
-      !this.behavior.isRenderable() ||
-      isPaginatedServerlessTemplateRenderingViaServerless
-    ) {
-      // inject pagination page data for just this one entry for serverless render
-      if (isPaginatedServerlessTemplateRenderingViaServerless) {
-        let pagination = new Pagination(data, this.config);
-        let paginationItems = pagination.getTruncatedServerlessData(data);
-        let override = pagination.getOverrideData(paginationItems);
-        // TODO errors or warnings when trying to access `pagination.pages`, pageNumber, links, hrefs, etc
-        this.setPaginationData(override);
-
-        // TODO: better?
-        Object.assign(data, override);
-      }
-
+    if (!hasPagination) {
       await this.addComputedData(data);
 
       return [
@@ -648,6 +628,7 @@ class Template extends TemplateContent {
       // but individual pagination entries won’t be part of a collection
       this.paging = new Pagination(data, this.config);
       this.paging.setTemplate(this);
+
       let pageTemplates = await this.paging.getPageTemplates();
 
       return await Promise.all(
@@ -676,16 +657,16 @@ class Template extends TemplateContent {
               this._templateContent = content;
             },
             get templateContent() {
-              if (this.template.behavior.isRenderable()) {
-                if (this._templateContent === undefined) {
+              if (this._templateContent === undefined) {
+                if (this.template.behavior.isRenderable()) {
                   throw new TemplateContentPrematureUseError(
                     `Tried to use templateContent too early (${this.inputPath} page ${this.pageNumber})`
                   );
+                } else {
+                  throw new TemplateContentUnrenderedTemplateError(
+                    `Tried to use templateContent on unrendered template. You need a valid permalink (or permalink object) to use templateContent on ${this.inputPath} page ${this.pageNumber}`
+                  );
                 }
-              } else {
-                throw new TemplateContentUnrenderedTemplateError(
-                  `Tried to use templateContent on unrendered template. You need a valid permalink (or permalink object) to use templateContent on ${this.inputPath} page ${this.pageNumber}`
-                );
               }
               return this._templateContent;
             },
@@ -798,7 +779,7 @@ class Template extends TemplateContent {
 
         if (!mapEntry.template.behavior.isRenderable()) {
           debug(
-            "Template not written %o from %o (via permalink.behavior).",
+            "Template not written %o from %o (via serverless permalink).",
             page.outputPath,
             mapEntry.template.inputPath
           );

@@ -263,6 +263,10 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       for (let entry of templateMap) {
         for (let key in entry.serverless) {
           if (key === options.name) {
+            if (outputMap[entry.serverless[key]] === entry.inputPath) {
+              continue;
+            }
+
             if (outputMap[entry.serverless[key]]) {
               throw new Error(
                 `Serverless URL conflict: multiple input files are using the same URL path (in \`permalink\`): ${

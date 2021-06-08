@@ -12,6 +12,7 @@ class TemplateBehavior {
     this.config = config;
   }
 
+  // permalink *has* a build key or output is json/ndjson
   isRenderable() {
     return this.render || this.isRenderForced();
   }
@@ -28,6 +29,7 @@ class TemplateBehavior {
     return this.write;
   }
 
+  // Duplicate logic with TemplatePermalink constructor
   setRenderViaDataCascade(data) {
     // render is false *only* if `build` key does not exist in permalink objects (both in data and eleventyComputed)
     // (note that permalink: false means it won’t write but will still render)
@@ -48,7 +50,9 @@ class TemplateBehavior {
   }
 
   setFromPermalink(templatePermalink) {
+    // this.render is duplicated between TemplatePermalink and `setRenderViaDataCascade` above
     this.render = templatePermalink._isRendered;
+
     this.write = templatePermalink._writeToFileSystem;
   }
 }
