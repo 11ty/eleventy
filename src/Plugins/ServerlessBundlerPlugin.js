@@ -107,7 +107,9 @@ class BundlerHelper {
     let modules = getNodeModulesList([configPath]);
     this.writeBundlerDependenciesFile(
       "eleventy-app-config-modules.js",
-      modules
+      modules.filter(
+        (name) => this.options.excludeDependencies.indexOf(name) === -1
+      )
     );
   }
 
@@ -115,7 +117,9 @@ class BundlerHelper {
     let modules = getNodeModulesList(globalDataFileList);
     this.writeBundlerDependenciesFile(
       "eleventy-app-globalData-modules.js",
-      modules
+      modules.filter(
+        (name) => this.options.excludeDependencies.indexOf(name) === -1
+      )
     );
   }
 
@@ -155,6 +159,11 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       name: "",
       functionsDir: "./functions/",
       copy: [],
+
+      // Dependencies explicitly declared from configuration and global data can be excluded and hidden from bundler.
+      // Excluded from: `eleventy-app-config-modules.js` and `eleventy-app-globalData-modules.js`
+      excludeDependencies: [],
+
       // Add automated redirects to netlify.toml (appends or creates, avoids duplicate entries)
       redirects: function (outputMap) {
         let redirects = [];
@@ -173,9 +182,9 @@ function EleventyPlugin(eleventyConfig, options = {}) {
         if (fs.existsSync(configFilename)) {
           cfg = TOML.parse(fs.readFileSync(configFilename));
         }
+        let cfgWithRedirects = addRedirectsWithoutDuplicates(cfg, redirects);
 
-        let newCfg = addRedirectsWithoutDuplicates(cfg, redirects);
-        fs.writeFileSync(configFilename, TOML.stringify(newCfg));
+        fs.writeFileSync(configFilename, TOML.stringify(cfgWithRedirects));
         debug(
           `Eleventy Serverless (${options.name}), writing (×${redirects.length}): ${configFilename}`
         );
@@ -225,7 +234,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       console.log(
         `Eleventy Serverless: ${
           helper.copyCount
-        } files bundled with ${helper.getOutputPath("")}.`
+        } files bundled to ${helper.getOutputPath("")}.`
       );
     });
 
