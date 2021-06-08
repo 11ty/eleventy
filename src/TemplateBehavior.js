@@ -28,10 +28,6 @@ class TemplateBehavior {
     return this.write;
   }
 
-  isIncludedInCollections() {
-    return this.isRenderable();
-  }
-
   setRenderViaDataCascade(data) {
     // render is false *only* if `build` key does not exist in permalink objects (both in data and eleventyComputed)
     // (note that permalink: false means it won’t write but will still render)

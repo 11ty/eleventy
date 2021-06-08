@@ -44,7 +44,6 @@ class TemplatePermalink {
       delete this.serverlessUrls.build;
 
       // default if permalink is an Object but does not have a `build` prop
-      // note that this will opt-out this template from collections. See TemplateBehavior->isIncludedInCollections
       if (!("build" in link)) {
         this._writeToFileSystem = false;
         this._isRendered = false;

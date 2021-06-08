@@ -121,10 +121,7 @@ class TemplateMap {
         graph.addNode(entry.inputPath);
       }
 
-      if (
-        !entry.data.eleventyExcludeFromCollections &&
-        entry.template.behavior.isIncludedInCollections()
-      ) {
+      if (!entry.data.eleventyExcludeFromCollections) {
         // collections.all
         graph.addDependency(tagPrefix + "all", entry.inputPath);
 
@@ -175,10 +172,7 @@ class TemplateMap {
         }
         graph.addDependency(entry.inputPath, tagPrefix + paginationTagTarget);
 
-        if (
-          !entry.data.eleventyExcludeFromCollections &&
-          entry.template.behavior.isIncludedInCollections()
-        ) {
+        if (!entry.data.eleventyExcludeFromCollections) {
           // collections.all
           graph.addDependency(tagPrefix + "all", entry.inputPath);
 
@@ -219,10 +213,7 @@ class TemplateMap {
           graph.addNode(entry.inputPath);
         }
 
-        if (
-          !entry.data.eleventyExcludeFromCollections &&
-          entry.template.behavior.isIncludedInCollections()
-        ) {
+        if (!entry.data.eleventyExcludeFromCollections) {
           // collections.all
           graph.addDependency(tagPrefix + "all", entry.inputPath);
         }
@@ -251,10 +242,7 @@ class TemplateMap {
           graph.addNode(entry.inputPath);
         }
 
-        if (
-          !entry.data.eleventyExcludeFromCollections &&
-          entry.template.behavior.isIncludedInCollections()
-        ) {
+        if (!entry.data.eleventyExcludeFromCollections) {
           // collections.all
           graph.addDependency(tagPrefix + "all", entry.inputPath);
         }
@@ -311,10 +299,7 @@ class TemplateMap {
             (map.data.pagination &&
               map.data.pagination.addAllPagesToCollections)
           ) {
-            if (
-              !map.data.eleventyExcludeFromCollections &&
-              map.template.behavior.isIncludedInCollections()
-            ) {
+            if (!map.data.eleventyExcludeFromCollections) {
               // TODO do we need .template in collection entries?
               this.collection.add(page);
             }

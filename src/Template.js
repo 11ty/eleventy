@@ -587,21 +587,20 @@ class Template extends TemplateContent {
   }
 
   async getTemplates(data) {
-    // no pagination on permalink.serverless for local builds
+    // no pagination with permalink.serverless
     let hasPagination = Pagination.hasPagination(data);
-    let isServerlessTemplateRenderingViaBuild = !this.behavior.isRenderable();
-    let isServerlessTemplateRenderingViaServerless =
+    let isPaginatedServerlessTemplateRenderingViaServerless =
       this.behavior.isRenderForced() &&
       hasPagination &&
       "serverless" in data.pagination;
 
     if (
       !hasPagination ||
-      isServerlessTemplateRenderingViaBuild ||
-      isServerlessTemplateRenderingViaServerless
+      !this.behavior.isRenderable() ||
+      isPaginatedServerlessTemplateRenderingViaServerless
     ) {
       // inject pagination page data for just this one entry for serverless render
-      if (isServerlessTemplateRenderingViaServerless && hasPagination) {
+      if (isPaginatedServerlessTemplateRenderingViaServerless) {
         let pagination = new Pagination(data, this.config);
         let paginationItems = pagination.getTruncatedServerlessData(data);
         let override = pagination.getOverrideData(paginationItems);
