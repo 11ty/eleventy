@@ -52,6 +52,10 @@ class BundlerHelper {
     this.copyCount = 0;
   }
 
+  reset() {
+    this.copyCount = 0;
+  }
+
   getOutputPath(filepath) {
     return TemplatePath.addLeadingDotSlash(path.join(this.dir, filepath));
   }
@@ -192,6 +196,10 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 
     eleventyConfig.setBrowserSyncConfig({
       middleware: [helper.browserSyncMiddleware()],
+    });
+
+    eleventyConfig.on("eleventy.before", async () => {
+      helper.reset();
     });
 
     eleventyConfig.on("eleventy.after", async () => {
