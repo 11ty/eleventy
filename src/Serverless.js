@@ -42,6 +42,7 @@ class Serverless {
     let paths = [
       path.join(TemplatePath.getWorkingDir(), dir), // netlify dev
       path.join("/var/task/src/", dir), // AWS Lambda absolute path
+      path.join(TemplatePath.getWorkingDir()), // after the chdir below
     ];
 
     for (let path of paths) {
@@ -106,6 +107,10 @@ class Serverless {
   }
 
   async render() {
+    if (this.dir.startsWith("/var/task/")) {
+      process.chdir(this.dir);
+    }
+
     let inputDir = path.join(this.dir, this.options.inputDir);
     let configPath = path.join(this.dir, this.configFilename);
     let { pathParams, inputPath } = this.matchUrlPattern(this.path);
