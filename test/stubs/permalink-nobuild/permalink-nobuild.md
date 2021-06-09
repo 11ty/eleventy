@@ -1,6 +1,6 @@
 ---
 permalink:
-  request: /url/
+  serverless: /url/
 ---
 
-This shouldn’t write to the file system and in fact not be processed at all.
+This shouldn’t write to the file system or be rendered by a template engine.

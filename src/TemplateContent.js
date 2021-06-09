@@ -358,7 +358,7 @@ class TemplateContent {
 
 TemplateContent._inputCache = new Map();
 TemplateContent._compileEngineCache = new Map();
-eventBus.on("resourceModified", (path) => {
+eventBus.on("eleventy.resourceModified", (path) => {
   TemplateContent.deleteCached(path);
 });
 

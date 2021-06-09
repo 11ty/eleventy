@@ -8,7 +8,6 @@ class TemplatePermalink {
   constructor(link, extraSubdir) {
     let isLinkAnObject = isPlainObject(link);
 
-    this._isIgnoredTemplate = false;
     this._isRendered = true;
     this._writeToFileSystem = true;
 
@@ -38,30 +37,24 @@ class TemplatePermalink {
       this.rawLink = rawLink;
     }
 
+    this.serverlessUrls = {};
+
     if (isLinkAnObject) {
-      if ("serverless" in link) {
-        this.externalLink = link.serverless;
-      }
+      Object.assign(this.serverlessUrls, link);
+      delete this.serverlessUrls.build;
 
       // default if permalink is an Object but does not have a `build` prop
-      if (!("behavior" in link) && !("build" in link)) {
-        link.behavior = "read";
-      }
-
-      if (link.behavior === "render") {
-        // same as permalink: false and permalink: build: false
-        this._writeToFileSystem = false;
-      } else if (link.behavior === "read") {
+      if (!("build" in link)) {
         this._writeToFileSystem = false;
         this._isRendered = false;
-      } else if (link.behavior === "skip") {
-        this._writeToFileSystem = false;
-        this._isRendered = false;
-        this._isIgnoredTemplate = true;
       }
     }
 
     this.extraPaginationSubdir = extraSubdir || "";
+  }
+
+  getServerlessUrls() {
+    return this.serverlessUrls;
   }
 
   _cleanLink(link) {
@@ -84,13 +77,13 @@ class TemplatePermalink {
     );
   }
 
+  // This method is used to generate the `page.url` variable.
+  // Note that in serverless mode this should still exist to generate the content map
+
   // remove all index.html’s from links
   // index.html becomes /
   // test/index.html becomes test/
   toHref() {
-    if (this.externalLink) {
-      return this.externalLink;
-    }
     if (!this.rawLink) {
       // empty or false
       return false;
@@ -126,23 +119,6 @@ class TemplatePermalink {
     }
 
     return normalize(uri);
-  }
-
-  getBehavior(outputFormat = "fs") {
-    let obj = {
-      read: !this._isIgnoredTemplate,
-      render: this._isRendered,
-      write: this._writeToFileSystem,
-    };
-
-    // override render behavior for --json or --ndjson
-    if (outputFormat !== "fs") {
-      obj.render = "override";
-    }
-
-    obj.includeInCollections = obj.read && obj.render;
-
-    return obj;
   }
 
   static _hasDuplicateFolder(dir, base) {

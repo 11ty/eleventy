@@ -38,12 +38,13 @@ async function getTemplateMapEntriesWithContent(template, data) {
   );
 }
 
-async function write(tmpl, data) {
-  let mapEntries = await getTemplateMapEntriesWithContent(tmpl, data);
+async function writeMapEntries(mapEntries) {
   let promises = [];
   for (let entry of mapEntries) {
-    if (entry.behavior.writeable) {
-      promises.push(tmpl._write(entry.outputPath, entry.templateContent));
+    if (entry.template.behavior.isWriteable()) {
+      promises.push(
+        entry.template._write(entry.outputPath, entry.templateContent)
+      );
     }
   }
   return Promise.all(promises);
@@ -1382,10 +1383,15 @@ test("permalink: false", async (t) => {
   );
 
   let data = await tmpl.getData();
-  t.is(await tmpl.getOutputLink(data), false);
-  t.is(await tmpl.getOutputHref(data), false);
 
-  await write(tmpl, data);
+  let mapEntries = await getTemplateMapEntriesWithContent(tmpl, data);
+  for (let entry of mapEntries) {
+    t.is(entry.template.behavior.isWriteable(), false);
+    t.is(entry.data.page.url, false);
+    t.is(entry.data.page.outputPath, false);
+  }
+
+  await writeMapEntries(mapEntries);
 
   // Input file exists (sanity check for paths)
   t.is(fs.existsSync("./test/stubs/permalink-false/"), true);
@@ -1396,6 +1402,40 @@ test("permalink: false", async (t) => {
   t.is(fs.existsSync("./test/stubs/_site/permalink-false/test/"), false);
   t.is(
     fs.existsSync("./test/stubs/_site/permalink-false/test/index.html"),
+    false
+  );
+});
+
+test("permalink: false inside of eleventyComputed, Issue #1754", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-false-computed/test.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let data = await tmpl.getData();
+  let mapEntries = await getTemplateMapEntriesWithContent(tmpl, data);
+  for (let entry of mapEntries) {
+    t.is(entry.template.behavior.isWriteable(), false);
+    t.is(entry.data.page.url, false);
+    t.is(entry.data.page.outputPath, false);
+  }
+  await writeMapEntries(mapEntries);
+
+  // Input file exists (sanity check for paths)
+  t.is(fs.existsSync("./test/stubs/permalink-false-computed/"), true);
+  t.is(fs.existsSync("./test/stubs/permalink-false-computed/test.md"), true);
+
+  // Output does not exist
+  t.is(fs.existsSync("./test/stubs/_site/permalink-false-computed/"), false);
+  t.is(
+    fs.existsSync("./test/stubs/_site/permalink-false-computed/test/"),
+    false
+  );
+  t.is(
+    fs.existsSync(
+      "./test/stubs/_site/permalink-false-computed/test/index.html"
+    ),
     false
   );
 });
@@ -2131,7 +2171,7 @@ test("Make sure layout cache takes new changes during watch (nunjucks)", async (
 
   await fsp.writeFile(filePath, `alert("bye");`, { encoding: "utf8" });
 
-  eventBus.emit("resourceModified", filePath);
+  eventBus.emit("eleventy.resourceModified", filePath);
 
   t.is((await tmpl.render(data)).trim(), '<script>alert("bye");</script>');
 });
@@ -2152,7 +2192,7 @@ test("Make sure layout cache takes new changes during watch (liquid)", async (t)
 
   await fsp.writeFile(filePath, `alert("bye");`, { encoding: "utf8" });
 
-  eventBus.emit("resourceModified", filePath);
+  eventBus.emit("eleventy.resourceModified", filePath);
 
   t.is((await tmpl.render(data)).trim(), '<script>alert("bye");</script>');
 });
@@ -2213,4 +2253,51 @@ test("permalink object without build", async (t) => {
 
   t.is(await tmpl.getOutputLink(), false);
   t.is(await tmpl.getOutputHref(), false);
+});
+
+test("permalink object _getLink", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-nobuild/permalink-nobuild.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let link = await tmpl._getLink({
+    permalink: {
+      serverless: "/serverless/",
+    },
+  });
+  t.is(await link.toLink(), false);
+  t.is(await link.toHref(), false);
+  t.deepEqual(link.getServerlessUrls(), {
+    serverless: "/serverless/",
+  });
+  t.deepEqual(tmpl.getServerlessUrls(), {
+    serverless: "/serverless/",
+  });
+
+  let link2 = await tmpl._getLink({
+    permalink: {
+      build: "/build/",
+    },
+  });
+  t.is(await link2.toLink(), "/build/index.html");
+  t.is(await link2.toHref(), "/build/");
+  t.deepEqual(link2.getServerlessUrls(), {});
+  t.deepEqual(tmpl.getServerlessUrls(), {});
+
+  let link3 = await tmpl._getLink({
+    permalink: {
+      build: "/build/",
+      serverless: "/serverless/",
+    },
+  });
+  t.is(await link3.toLink(), "/build/index.html");
+  t.is(await link3.toHref(), "/build/");
+  t.deepEqual(link3.getServerlessUrls(), {
+    serverless: "/serverless/",
+  });
+  t.deepEqual(tmpl.getServerlessUrls(), {
+    serverless: "/serverless/",
+  });
 });

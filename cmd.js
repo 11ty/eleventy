@@ -71,6 +71,7 @@ try {
     // --quiet and --quiet=true both resolve to true
     quietMode: argv.quiet,
     configPath: argv.config,
+    source: "cli",
   });
 
   // reuse ErrorHandler instance in Eleventy
@@ -104,7 +105,7 @@ try {
             .catch((e) => {
               // Build failed but error message already displayed.
               startBrowsersync = false;
-              console.log("Watch catch");
+              // A build error occurred and we aren’t going to --serve
             })
             .then(function () {
               if (startBrowsersync) {
@@ -113,7 +114,7 @@ try {
             });
         } else if (argv.watch) {
           elev.watch().catch((e) => {
-            console.log("watch catch 2");
+            // A build error occurred and we aren’t going to --watch
           });
         } else {
           if (argv.to === "json") {
