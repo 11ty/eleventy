@@ -84,13 +84,11 @@ class BundlerHelper {
 
   writeBundlerDependenciesFile(filename, deps = []) {
     let modules = deps.map((name) => `require("${name}");`);
-    if (modules.length) {
-      let fullPath = this.getOutputPath(filename);
-      fs.writeFileSync(fullPath, modules.join("\n"));
-      debug(
-        `Writing a file to make it very obvious to the serverless bundler which extra \`require\`s are needed from the config file (×${modules.length}): ${fullPath}`
-      );
-    }
+    let fullPath = this.getOutputPath(filename);
+    fs.writeFileSync(fullPath, modules.join("\n"));
+    debug(
+      `Writing a file to make it very obvious to the serverless bundler which extra \`require\`s are needed from the config file (×${modules.length}): ${fullPath}`
+    );
   }
 
   writeDependencyEntryFile() {
@@ -288,14 +286,15 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 
       // Maps input files to output paths
       let mapEntryCount = Object.keys(outputMap).length;
-      if (mapEntryCount > 0) {
-        let filename = helper.getOutputPath("eleventy-serverless-map.json");
-        fs.writeFileSync(filename, JSON.stringify(outputMap, null, 2));
-        debug(
-          `Eleventy Serverless (${options.name}), writing (×${mapEntryCount}): ${filename}`
-        );
-        this.copyCount++;
+      // This is expected to exist even if empty
+      let filename = helper.getOutputPath("eleventy-serverless-map.json");
+      fs.writeFileSync(filename, JSON.stringify(outputMap, null, 2));
+      debug(
+        `Eleventy Serverless (${options.name}), writing (×${mapEntryCount}): ${filename}`
+      );
+      this.copyCount++;
 
+      if (mapEntryCount > 0) {
         // Write redirects into netlify.toml
         options.redirects(outputMap);
 
