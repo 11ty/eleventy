@@ -106,11 +106,6 @@ class Serverless {
   }
 
   async render() {
-    // TODO is this necessary?
-    if (this.dir.startsWith("/var/task/")) {
-      process.chdir(this.dir);
-    }
-
     let inputDir = path.join(this.dir, this.options.inputDir);
     let configPath = path.join(this.dir, this.configFilename);
     let { pathParams, inputPath } = this.matchUrlPattern(this.path);
