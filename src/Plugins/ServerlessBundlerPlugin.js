@@ -262,20 +262,26 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 
       for (let entry of templateMap) {
         for (let key in entry.serverless) {
-          if (key === options.name) {
-            if (outputMap[entry.serverless[key]] === entry.inputPath) {
+          if (key !== options.name) {
+            continue;
+          }
+          let urls = entry.serverless[key];
+          if (!Array.isArray(urls)) {
+            urls = [entry.serverless[key]];
+          }
+          for (let eligibleUrl of urls) {
+            // ignore duplicates that have the same input file, via Pagination.
+            if (outputMap[eligibleUrl] === entry.inputPath) {
               continue;
             }
 
-            if (outputMap[entry.serverless[key]]) {
+            if (outputMap[eligibleUrl]) {
               throw new Error(
-                `Serverless URL conflict: multiple input files are using the same URL path (in \`permalink\`): ${
-                  outputMap[entry.serverless[key]]
-                } and ${entry.inputPath}`
+                `Serverless URL conflict: multiple input files are using the same URL path (in \`permalink\`): ${outputMap[eligibleUrl]} and ${entry.inputPath}`
               );
             }
 
-            outputMap[entry.serverless[key]] = entry.inputPath;
+            outputMap[eligibleUrl] = entry.inputPath;
           }
         }
       }
