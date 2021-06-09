@@ -86,19 +86,17 @@ class BundlerHelper {
     let modules = deps.map((name) => `require("${name}");`);
     let fullPath = this.getOutputPath(filename);
     fs.writeFileSync(fullPath, modules.join("\n"));
+    this.copyCount++;
     debug(
       `Writing a file to make it very obvious to the serverless bundler which extra \`require\`s are needed from the config file (×${modules.length}): ${fullPath}`
     );
   }
 
   writeDependencyEntryFile() {
-    let modulesFilename = this.getOutputPath("eleventy-bundler-modules.js");
-    if (!fs.existsSync(modulesFilename)) {
-      this.writeBundlerDependenciesFile("eleventy-bundler-modules.js", [
-        "./eleventy-app-config-modules.js",
-        "./eleventy-app-globaldata-modules.js",
-      ]);
-    }
+    this.writeBundlerDependenciesFile("eleventy-bundler-modules.js", [
+      "./eleventy-app-config-modules.js",
+      "./eleventy-app-globaldata-modules.js",
+    ]);
   }
 
   writeDependencyConfigFile(configPath) {
@@ -199,7 +197,6 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 
   if (process.env.ELEVENTY_SOURCE === "cli") {
     let helper = new BundlerHelper(options.name, options);
-    helper.writeDependencyEntryFile();
 
     eleventyConfig.setBrowserSyncConfig({
       middleware: [helper.browserSyncMiddleware()],
@@ -207,6 +204,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 
     eleventyConfig.on("eleventy.before", async () => {
       helper.reset();
+      helper.writeDependencyEntryFile();
     });
 
     eleventyConfig.on("eleventy.after", async () => {
