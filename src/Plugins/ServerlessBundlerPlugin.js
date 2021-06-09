@@ -116,7 +116,7 @@ class BundlerHelper {
   writeDependencyGlobalDataFile(globalDataFileList) {
     let modules = getNodeModulesList(globalDataFileList);
     this.writeBundlerDependenciesFile(
-      "eleventy-app-globalData-modules.js",
+      "eleventy-app-globaldata-modules.js",
       modules.filter(
         (name) => this.options.excludeDependencies.indexOf(name) === -1
       )
@@ -161,7 +161,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       copy: [],
 
       // Dependencies explicitly declared from configuration and global data can be excluded and hidden from bundler.
-      // Excluded from: `eleventy-app-config-modules.js` and `eleventy-app-globalData-modules.js`
+      // Excluded from: `eleventy-app-config-modules.js` and `eleventy-app-globaldata-modules.js`
       excludeDependencies: [],
 
       // Add automated redirects to netlify.toml (appends or creates, avoids duplicate entries)
