@@ -4,6 +4,7 @@ const TOML = require("@iarna/toml");
 const copy = require("recursive-copy");
 const dependencyTree = require("@11ty/dependency-tree");
 const TemplatePath = require("../TemplatePath");
+const deleteRequireCache = require("../Util/DeleteRequireCache");
 const debug = require("debug")("Eleventy:Serverless");
 
 function getNodeModulesList(files) {
@@ -123,16 +124,20 @@ class BundlerHelper {
     let serverlessFilepath = TemplatePath.addLeadingDotSlash(
       path.join(TemplatePath.getWorkingDir(), this.dir, "index")
     );
+    deleteRequireCache(TemplatePath.absolutePath(serverlessFilepath));
 
     return async (req, res, next) => {
       let serverlessFunction = require(serverlessFilepath);
       let url = new URL(req.url, "http://localhost/"); // any domain will do here, we just want the searchParams
+      let queryParams = Object.fromEntries(url.searchParams);
 
       let start = new Date();
       let result = await serverlessFunction.handler({
         httpMethod: "GET",
-        path: req.url,
-        queryStringParameters: Object.fromEntries(url.searchParams),
+        path: url.pathname,
+        // @netlify/functions builder overwrites these to {} intentionally
+        // See https://github.com/netlify/functions/issues/38
+        queryStringParameters: queryParams,
       });
 
       if (result.statusCode === 404) {
@@ -228,9 +233,9 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       }
 
       console.log(
-        `Eleventy Serverless: ${
-          helper.copyCount
-        } files bundled to ${helper.getOutputPath("")}.`
+        `Eleventy Serverless: ${helper.copyCount} file${
+          helper.copyCount !== 1 ? "s" : ""
+        } bundled to ${helper.getOutputPath("")}.`
       );
     });
 

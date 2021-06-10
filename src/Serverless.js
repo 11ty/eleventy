@@ -21,11 +21,11 @@ class Serverless {
       {
         inputDir: ".",
         functionsDir: "functions/",
-        // Query String Parameters
         matchUrlToPattern(path, urlToCompare) {
           let pattern = new UrlPattern(urlToCompare);
           return pattern.match(path);
         },
+        // Query String Parameters
         query: {},
         // Inject shared collections
         precompiledCollections: {},
