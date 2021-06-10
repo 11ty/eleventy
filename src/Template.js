@@ -832,6 +832,24 @@ class Template extends TemplateContent {
     return this.skippedCount;
   }
 
+  async getInputFileStat() {
+    if (this._stats) {
+      return this._stats;
+    }
+
+    this._stats = new Promise((resolve, reject) => {
+      fs.stat(this.inputPath, (err, stats) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(stats);
+        }
+      });
+    });
+
+    return this._stats;
+  }
+
   async getMappedDate(data) {
     // TODO(slightlyoff): lots of I/O!
 
@@ -847,11 +865,12 @@ class Template extends TemplateContent {
         debug("getMappedDate: YAML parsed it: %o", data.date);
         return data.date;
       } else {
-        let stat = fs.statSync(this.inputPath);
         // string
         if (data.date.toLowerCase() === "last modified") {
+          let stat = await this.getInputFileStat();
           return new Date(stat.ctimeMs);
         } else if (data.date.toLowerCase() === "created") {
+          let stat = await this.getInputFileStat();
           return new Date(stat.birthtimeMs);
         } else {
           // try to parse with Luxon
@@ -884,7 +903,7 @@ class Template extends TemplateContent {
         return dateObj;
       }
 
-      let stat = fs.statSync(this.inputPath);
+      let stat = await this.getInputFileStat();
       let createdDate = new Date(stat.birthtimeMs);
       debug(
         "getMappedDate: using file created time for %o of %o (from %o)",
