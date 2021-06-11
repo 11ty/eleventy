@@ -145,6 +145,7 @@ class Serverless {
 
         // Add the params to Global Data
         eleventyConfig.addGlobalData("eleventy.serverless", {
+          pathname: this.path,
           query: this.options.query,
           path: pathParams,
         });
