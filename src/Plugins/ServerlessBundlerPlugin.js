@@ -82,14 +82,22 @@ class BundlerHelper {
     this.copyCount++;
   }
 
-  recursiveCopy(src, dest) {
+  recursiveCopy(src, dest, options = {}) {
     let finalDest = this.getOutputPath(dest || src);
-    return copy(src, finalDest, {
-      overwrite: true,
-      dot: true,
-      junk: false,
-      results: false,
-    }).on(copy.events.COPY_FILE_COMPLETE, () => {
+    return copy(
+      src,
+      finalDest,
+      Object.assign(
+        {
+          overwrite: true,
+          dot: true,
+          junk: false,
+          results: false,
+        },
+        this.options.copyOptions,
+        options
+      )
+    ).on(copy.events.COPY_FILE_COMPLETE, () => {
       this.copyCount++;
     });
   }
@@ -172,6 +180,9 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       functionsDir: "./functions/",
       copy: [],
 
+      // https://www.npmjs.com/package/recursive-copy#usage
+      copyOptions: {},
+
       // Dependencies explicitly declared from configuration and global data can be excluded and hidden from bundler.
       // Excluded from: `eleventy-app-config-modules.js` and `eleventy-app-globaldata-modules.js`
       excludeDependencies: [],
@@ -237,7 +248,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
           if (typeof cp === "string") {
             promises.push(helper.recursiveCopy(cp));
           } else if (cp.from && cp.to) {
-            promises.push(helper.recursiveCopy(cp.from, cp.to));
+            promises.push(helper.recursiveCopy(cp.from, cp.to, cp.options));
           } else {
             debug(
               "Ignored extra copy %o (needs to be a string or a {from: '', to: ''})",
