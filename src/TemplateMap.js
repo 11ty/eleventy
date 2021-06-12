@@ -287,24 +287,35 @@ class TemplateMap {
         let map = this.getMapEntryForInputPath(depEntry);
         map._pages = await map.template.getTemplates(map.data);
 
-        let counter = 0;
-        for (let page of map._pages) {
-          // Copy outputPath to map entry
-          if (!map.outputPath) {
-            map.outputPath = page.outputPath;
-          }
+        if (map._pages.length === 0) {
+          // Setup serverlessUrls even if data set is 0 pages. This fixes 404 issue
+          // with full build not including Sanity drafts but serverless render does
+          // include Sanity drafts.
 
-          if (
-            counter === 0 ||
-            (map.data.pagination &&
-              map.data.pagination.addAllPagesToCollections)
-          ) {
-            if (!map.data.eleventyExcludeFromCollections) {
-              // TODO do we need .template in collection entries?
-              this.collection.add(page);
+          // We want these empty-data pagination templates to show up in the serverlessUrlMap.
+          map.template.initServerlessUrlsForEmptyPaginationTemplates(
+            map.data.permalink
+          );
+        } else {
+          let counter = 0;
+          for (let page of map._pages) {
+            // Copy outputPath to map entry
+            if (!map.outputPath) {
+              map.outputPath = page.outputPath;
             }
+
+            if (
+              counter === 0 ||
+              (map.data.pagination &&
+                map.data.pagination.addAllPagesToCollections)
+            ) {
+              if (!map.data.eleventyExcludeFromCollections) {
+                // TODO do we need .template in collection entries?
+                this.collection.add(page);
+              }
+            }
+            counter++;
           }
-          counter++;
         }
       }
     }
@@ -362,17 +373,31 @@ class TemplateMap {
   generateServerlessUrlMap(orderedMap) {
     let entries = [];
     for (let entry of orderedMap) {
-      for (let page of entry._pages) {
+      // Pagination templates with 0 pages should still populate
+      // serverlessUrls into this event. We want these to still show up
+      // in the inputPath to URL map and in the redirects.
+      if (entry._pages.length === 0) {
         let serverless = {};
-        if (isPlainObject(page.data.permalink)) {
+        if (isPlainObject(entry.data.permalink)) {
           // These are rendered in the template language!
-          Object.assign(serverless, page.template.getServerlessUrls());
-
+          Object.assign(serverless, entry.template.getServerlessUrls());
           entries.push({
             inputPath: entry.inputPath,
-            url: page.url,
             serverless,
           });
+        }
+      } else {
+        for (let page of entry._pages) {
+          let serverless = {};
+          if (isPlainObject(page.data.permalink)) {
+            // These are rendered in the template language!
+            Object.assign(serverless, page.template.getServerlessUrls());
+
+            entries.push({
+              inputPath: entry.inputPath,
+              serverless,
+            });
+          }
         }
       }
     }

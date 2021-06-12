@@ -1325,7 +1325,6 @@ test("serverlessUrlMap Event (without `build`, only `serverless`)", async (t) =>
     t.deepEqual(templateMap, [
       {
         inputPath: "./test/stubs/permalink-nobuild/permalink-nobuild.md",
-        url: false,
         serverless: {
           serverless: "/url/",
         },
@@ -1353,7 +1352,6 @@ test("serverlessUrlMap Event (with `build`)", async (t) => {
     t.deepEqual(templateMap, [
       {
         inputPath: "./test/stubs/permalink-build/permalink-build.md",
-        url: "/url/",
         serverless: {},
       },
     ]);
@@ -1380,7 +1378,6 @@ test("serverlessUrlMap Event (with `build` and `serverless`)", async (t) => {
       {
         inputPath:
           "./test/stubs/permalink-build-serverless/permalink-build-serverless.md",
-        url: "/url/",
         serverless: {
           serverless: "/some-other-url/",
         },
@@ -1409,7 +1406,6 @@ test("serverlessUrlMap Event (with templating on both `build` and `serverless`)"
       {
         inputPath:
           "./test/stubs/permalink-build-serverless-rendered/permalink-build-serverless-rendered.md",
-        url: "/url/",
         serverless: {
           serverless: "/some-other-url/",
         },
@@ -1420,6 +1416,34 @@ test("serverlessUrlMap Event (with templating on both `build` and `serverless`)"
   let tm = new TemplateMap(eleventyConfig);
   let tmpl = getNewTemplate(
     "./test/stubs/permalink-build-serverless-rendered/permalink-build-serverless-rendered.md",
+    "./test/stubs/",
+    "./test/stubs/_site",
+    eleventyConfig
+  );
+
+  await tm.add(tmpl);
+  await tm.cache();
+});
+
+test("serverlessUrlMap Event (empty pagination template with `serverless` should still show up)", async (t) => {
+  t.plan(1);
+
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.on("eleventy.serverlessUrlMap", (templateMap) => {
+    t.deepEqual(templateMap, [
+      {
+        inputPath:
+          "./test/stubs/permalink-serverless-empty-pagination/permalink-serverless-empty-pagination.md",
+        serverless: {
+          serverless: "/url/",
+        },
+      },
+    ]);
+  });
+
+  let tm = new TemplateMap(eleventyConfig);
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-serverless-empty-pagination/permalink-serverless-empty-pagination.md",
     "./test/stubs/",
     "./test/stubs/_site",
     eleventyConfig

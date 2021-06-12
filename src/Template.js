@@ -151,6 +151,17 @@ class Template extends TemplateContent {
     return this.serverlessUrls;
   }
 
+  initServerlessUrlsForEmptyPaginationTemplates(permalinkValue) {
+    if (isPlainObject(permalinkValue)) {
+      let buildlessPermalink = Object.assign({}, permalinkValue);
+      delete buildlessPermalink.build;
+
+      if (Object.keys(buildlessPermalink).length) {
+        return this._getRawPermalinkInstance(buildlessPermalink);
+      }
+    }
+  }
+
   _getRawPermalinkInstance(permalinkValue) {
     let perm = new TemplatePermalink(
       permalinkValue,
