@@ -295,3 +295,45 @@ test("Issue #403: all .eleventyignores should be relative paths not absolute pat
     0
   );
 });
+
+test("Same input and output directories, issues #186 and #1129", (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let evf = new EleventyFiles("test/stubs/", "test/stubs/", [], eleventyConfig);
+  evf._setConfig({
+    useGitIgnore: false,
+    dir: {
+      input: "test/stubs",
+      output: "",
+      includes: "",
+    },
+  });
+  evf.init();
+
+  t.deepEqual(
+    evf.getIgnores().filter((entry) => entry.indexOf("_site") > -1),
+    []
+  );
+});
+
+test("Single input file is in the output directory, issues #186", (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let evf = new EleventyFiles(
+    "test/stubs/test.njk",
+    "test/stubs/",
+    ["njk"],
+    eleventyConfig
+  );
+  evf._setConfig({
+    useGitIgnore: false,
+    dir: {
+      input: "test/stubs",
+      output: "",
+      includes: "",
+    },
+  });
+  evf.init();
+  t.deepEqual(
+    evf.getIgnores().filter((entry) => entry.indexOf("_site") > -1),
+    []
+  );
+});
