@@ -30,6 +30,7 @@ class EleventyFiles {
     this.passthroughAll = false;
 
     this.formats = formats;
+    this.eleventyIgnoreContent = false;
 
     // init has not yet been called()
     this.alreadyInit = false;
@@ -290,22 +291,27 @@ class EleventyFiles {
     return ignores;
   }
 
+  setEleventyIgnoreContent(content) {
+    this.eleventyIgnoreContent = content;
+  }
+
   getIgnores() {
     let files = [];
     let rootDirectory = this.localPathRoot || TemplatePath.getWorkingDir();
-    let absoluteInputDir = TemplatePath.absolutePath(this.inputDir);
-    if (this.config.useGitIgnore) {
-      let gitIgnores = [TemplatePath.join(rootDirectory, ".gitignore")];
-      if (rootDirectory !== absoluteInputDir) {
-        gitIgnores.push(TemplatePath.join(this.inputDir, ".gitignore"));
-      }
 
+    if (this.config.useGitIgnore) {
       files = files.concat(
-        EleventyFiles.getFileIgnores(gitIgnores, "node_modules/**")
+        EleventyFiles.getFileIgnores(
+          [TemplatePath.join(rootDirectory, ".gitignore")],
+          "node_modules/**"
+        )
       );
     }
 
-    if (this.config.eleventyignoreOverride !== false) {
+    if (this.eleventyIgnoreContent !== false) {
+      files = files.concat(this.eleventyIgnoreContent);
+    } else {
+      let absoluteInputDir = TemplatePath.absolutePath(this.inputDir);
       let eleventyIgnores = [
         TemplatePath.join(rootDirectory, ".eleventyignore"),
       ];
@@ -315,13 +321,10 @@ class EleventyFiles {
         );
       }
 
-      files = files.concat(
-        this.config.eleventyignoreOverride ||
-          EleventyFiles.getFileIgnores(eleventyIgnores)
-      );
+      files = files.concat(EleventyFiles.getFileIgnores(eleventyIgnores));
     }
 
-    // ignore output dir unless that would occlude all input
+    // ignore output dir unless that would exclude all input
     if (!TemplatePath.startsWithSubPath(this.inputDir, this.outputDir)) {
       files = files.concat(TemplateGlob.map(this.outputDir + "/**"));
     }
