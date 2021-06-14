@@ -43,7 +43,7 @@ function addRedirectsWithoutDuplicates(name, config, newRedirects) {
       }
     }
     if (!found) {
-      redirects.push(r);
+      redirects.unshift(r);
     }
   }
 
