@@ -35,6 +35,16 @@ function addRedirectsWithoutDuplicates(name, config, newRedirects) {
     );
   });
 
+  // Sort for stable order
+  newRedirects.sort((a, b) => {
+    if (a.from < b.from) {
+      return -1;
+    } else if (a.from > b.from) {
+      return 1;
+    }
+    return 0;
+  });
+
   for (let r of newRedirects) {
     let found = false;
     for (let entry of redirects) {
