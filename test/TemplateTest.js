@@ -2301,3 +2301,26 @@ test("permalink object _getLink", async (t) => {
     serverless: "/serverless/",
   });
 });
+
+test("Resolve page.url from eleventy serverless data", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-build-serverless/permalink-build-serverless.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  let fakeData = {
+    eleventy: {
+      serverless: {
+        pathname: "/test/",
+      },
+    },
+    permalink: {
+      serverless: "/serverless/",
+    },
+  };
+  let outputHref = await tmpl.getOutputHref(fakeData);
+  t.is(outputHref, "/test/");
+
+  let { href } = await tmpl.getOutputLocations(fakeData);
+  t.is(href, "/test/");
+});

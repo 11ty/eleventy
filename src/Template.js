@@ -2,6 +2,7 @@ const fs = require("fs-extra");
 const parsePath = require("parse-filepath");
 const normalize = require("normalize-path");
 const isPlainObject = require("lodash/isPlainObject");
+const get = require("lodash/get");
 const { DateTime } = require("luxon");
 
 const TemplateData = require("./TemplateData");
@@ -253,6 +254,17 @@ class Template extends TemplateContent {
     return this._usePermalinkRoot;
   }
 
+  // Makes page.url out of the serverless pathname
+  getServerlessOutputHref(data, resolvedLink) {
+    if (resolvedLink === false) {
+      let pathname = get(data, "eleventy.serverless.pathname");
+      if (pathname) {
+        return pathname;
+      }
+    }
+    return resolvedLink;
+  }
+
   // TODO instead of htmlIOException, do a global search to check if output path = input path and then add extra suffix
   async getOutputLocations(data) {
     let link = await this._getLink(data);
@@ -266,7 +278,7 @@ class Template extends TemplateContent {
 
     return {
       link: link.toLink(),
-      href: link.toHref(),
+      href: this.getServerlessOutputHref(data, link.toHref()),
       path: path,
     };
   }
@@ -280,7 +292,7 @@ class Template extends TemplateContent {
   // Preferred to use the singular `getOutputLocations` above.
   async getOutputHref(data) {
     let link = await this._getLink(data);
-    return link.toHref();
+    return this.getServerlessOutputHref(data, link.toHref());
   }
 
   // Preferred to use the singular `getOutputLocations` above.
