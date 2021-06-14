@@ -256,12 +256,11 @@ class Template extends TemplateContent {
 
   // Makes page.url out of the serverless pathname
   getServerlessOutputHref(data, resolvedLink) {
-    if (resolvedLink === false) {
-      let pathname = get(data, "eleventy.serverless.pathname");
-      if (pathname) {
-        return pathname;
-      }
+    let pathname = get(data, "eleventy.serverless.pathname");
+    if (pathname) {
+      return pathname;
     }
+
     return resolvedLink;
   }
 
