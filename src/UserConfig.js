@@ -652,6 +652,10 @@ class UserConfig {
   }
 
   addExtension(fileExtension, options = {}) {
+    if (!process.env.ELEVENTY_EXPERIMENTAL) {
+      return;
+    }
+
     this.extensionMap.add(
       Object.assign(
         {
