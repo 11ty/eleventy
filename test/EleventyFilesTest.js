@@ -1,7 +1,6 @@
 const test = require("ava");
 const fastglob = require("fast-glob");
 const EleventyFiles = require("../src/EleventyFiles");
-const TemplatePath = require("../src/TemplatePath");
 const TemplateConfig = require("../src/TemplateConfig");
 const TemplatePassthroughManager = require("../src/TemplatePassthroughManager");
 
@@ -224,13 +223,9 @@ test("Parse multiple .eleventyignores", (t) => {
   );
 });
 
-test("defaults if passed file name does not exist", (t) => {
-  let ignores = EleventyFiles.getFileIgnores(
-    ".thisfiledoesnotexist",
-    "node_modules/**"
-  );
-  t.truthy(ignores.length);
-  t.is(ignores[0], "./node_modules/**");
+test("Passed file name does not exist", (t) => {
+  let ignores = EleventyFiles.getFileIgnores(".thisfiledoesnotexist");
+  t.deepEqual(ignores, []);
 });
 
 test(".eleventyignore files", async (t) => {

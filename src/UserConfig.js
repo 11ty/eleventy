@@ -53,7 +53,11 @@ class UserConfig {
     this.activeNamespace = "";
     this.DateTime = DateTime;
     this.dynamicPermalinks = true;
+
     this.useGitIgnore = true;
+    this.ignores = new Set();
+    this.ignores.add("node_modules/**");
+
     this.dataDeepMerge = true;
     this.extensionMap = new Set();
     this.watchJavaScriptDependencies = true;
@@ -708,6 +712,7 @@ class UserConfig {
       libraryOverrides: this.libraryOverrides,
       dynamicPermalinks: this.dynamicPermalinks,
       useGitIgnore: this.useGitIgnore,
+      ignores: this.ignores,
       dataDeepMerge: this.dataDeepMerge,
       watchJavaScriptDependencies: this.watchJavaScriptDependencies,
       additionalWatchTargets: this.additionalWatchTargets,
