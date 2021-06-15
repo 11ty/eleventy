@@ -2042,7 +2042,7 @@ This is content.`
 });
 
 test.skip("Custom Front Matter Parsing Options (using TOML)", async (t) => {
-  // Depends on https://github.com/jonschlinkert/gray-matter/issues/92 for Windows
+  // Currently fails on Windows, needs https://github.com/jonschlinkert/gray-matter/issues/92
   let toml = require("toml");
 
   let tmpl = getNewTemplate(
@@ -2055,7 +2055,6 @@ test.skip("Custom Front Matter Parsing Options (using TOML)", async (t) => {
       toml: toml.parse.bind(toml),
     },
   };
-  tmpl.config = newConfig;
 
   let frontmatter = await tmpl.getFrontMatter();
   t.deepEqual(frontmatter.data, {

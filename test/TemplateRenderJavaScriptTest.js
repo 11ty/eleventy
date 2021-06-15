@@ -196,7 +196,7 @@ test("JS Render with a function", async (t) => {
   t.is(await fn({ name: "Bill", page: { url: "/hi/" } }), "<p>BILLT9000</p>");
 });
 
-// This doesn’t work, per arrow functions
+// This doesn’t work because arrow functions don’t do `this`
 test.skip("Issue #934: JS Render with an arrow function and javascript function", async (t) => {
   let tr = getNewTemplateRender("./test/stubs/function-filter-arrow.11ty.js");
   tr.config = {
