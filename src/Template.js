@@ -254,14 +254,11 @@ class Template extends TemplateContent {
     return this._usePermalinkRoot;
   }
 
-  // Makes page.url out of the serverless pathname
-  getServerlessOutputHref(data, resolvedLink) {
+  _getServerlessPath(data) {
     let pathname = get(data, "eleventy.serverless.pathname");
     if (pathname) {
       return pathname;
     }
-
-    return resolvedLink;
   }
 
   // TODO instead of htmlIOException, do a global search to check if output path = input path and then add extra suffix
@@ -275,15 +272,28 @@ class Template extends TemplateContent {
       path = link.toPath(this.outputDir);
     }
 
+    // Makes page.url out of the serverless pathname
+    let serverlessPath = this._getServerlessPath(data);
+    if (serverlessPath) {
+      return {
+        link: false,
+        href: serverlessPath,
+        path: false,
+      };
+    }
+
     return {
       link: link.toLink(),
-      href: this.getServerlessOutputHref(data, link.toHref()),
+      href: link.toHref(),
       path: path,
     };
   }
 
   // Preferred to use the singular `getOutputLocations` above.
   async getOutputLink(data) {
+    if (this._getServerlessPath(data)) {
+      return false;
+    }
     let link = await this._getLink(data);
     return link.toLink();
   }
@@ -291,11 +301,14 @@ class Template extends TemplateContent {
   // Preferred to use the singular `getOutputLocations` above.
   async getOutputHref(data) {
     let link = await this._getLink(data);
-    return this.getServerlessOutputHref(data, link.toHref());
+    return this._getServerlessPath(data) || link.toHref();
   }
 
   // Preferred to use the singular `getOutputLocations` above.
   async getOutputPath(data) {
+    if (this._getServerlessPath(data)) {
+      return false;
+    }
     let link = await this._getLink(data);
     if (await this.usePermalinkRoot()) {
       return link.toPathFromRoot();

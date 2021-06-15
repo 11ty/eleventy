@@ -2315,12 +2315,85 @@ test("Resolve page.url from eleventy serverless data", async (t) => {
       },
     },
     permalink: {
-      serverless: "/serverless/",
+      serverless: "/serverless/", // this is ignored and pathname above is used!
     },
   };
   let outputHref = await tmpl.getOutputHref(fakeData);
   t.is(outputHref, "/test/");
 
-  let { href } = await tmpl.getOutputLocations(fakeData);
+  let outputLink = await tmpl.getOutputLink(fakeData);
+  t.is(outputLink, false);
+
+  let outputPath = await tmpl.getOutputPath(fakeData);
+  t.is(outputPath, false);
+
+  let { href, link, path } = await tmpl.getOutputLocations(fakeData);
   t.is(href, "/test/");
+  t.is(link, false);
+  t.is(path, false);
+});
+
+test("Resolve page.url from eleventy serverless data (when build also exists in permalink)", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-build-serverless/permalink-build-serverless.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  let fakeData = {
+    eleventy: {
+      serverless: {
+        pathname: "/test/",
+      },
+    },
+    permalink: {
+      build: "/build/",
+      serverless: "/serverless/", // this is ignored and pathname above is used!
+    },
+  };
+
+  let outputHref = await tmpl.getOutputHref(fakeData);
+  t.is(outputHref, "/test/");
+
+  // These should be false because the eleventy.serverless object is set.
+  // When in build-mode they would not be false.
+  let outputLink = await tmpl.getOutputLink(fakeData);
+  t.is(outputLink, false);
+
+  let outputPath = await tmpl.getOutputPath(fakeData);
+  t.is(outputPath, false);
+
+  let { href, link, path } = await tmpl.getOutputLocations(fakeData);
+  t.is(href, "/test/");
+  t.is(link, false);
+  t.is(path, false);
+});
+
+test("Do not resolve page.url from eleventy serverless data (when build also exists in permalink)", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-build-serverless/permalink-build-serverless.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  let fakeData = {
+    permalink: {
+      build: "/build/",
+      serverless: "/serverless/",
+    },
+  };
+
+  let outputHref = await tmpl.getOutputHref(fakeData);
+  t.is(outputHref, "/build/");
+
+  // These should be false because the eleventy.serverless object is set.
+  // When in build-mode they would not be false.
+  let outputLink = await tmpl.getOutputLink(fakeData);
+  t.is(outputLink, "/build/index.html");
+
+  let outputPath = await tmpl.getOutputPath(fakeData);
+  t.is(outputPath, "./test/stubs/_site/build/index.html");
+
+  let { href, link, path } = await tmpl.getOutputLocations(fakeData);
+  t.is(href, "/build/");
+  t.is(link, "/build/index.html");
+  t.is(path, "./test/stubs/_site/build/index.html");
 });
