@@ -254,6 +254,10 @@ class Template extends TemplateContent {
     return this._usePermalinkRoot;
   }
 
+  _useServerlessOverride(data) {
+    return get(data, "eleventy.serverless.pathnameOverridesPageUrl", true);
+  }
+
   _getServerlessPath(data) {
     let pathname = get(data, "eleventy.serverless.pathname");
     if (pathname) {
@@ -277,7 +281,9 @@ class Template extends TemplateContent {
     if (serverlessPath) {
       return {
         link: false,
-        href: serverlessPath,
+        href: this._useServerlessOverride(data)
+          ? serverlessPath
+          : link.toHref(),
         path: false,
       };
     }
@@ -301,7 +307,10 @@ class Template extends TemplateContent {
   // Preferred to use the singular `getOutputLocations` above.
   async getOutputHref(data) {
     let link = await this._getLink(data);
-    return this._getServerlessPath(data) || link.toHref();
+    let pathname = this._getServerlessPath(data);
+    return pathname && this._useServerlessOverride(data)
+      ? pathname
+      : link.toHref();
   }
 
   // Preferred to use the singular `getOutputLocations` above.
