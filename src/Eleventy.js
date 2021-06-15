@@ -487,7 +487,7 @@ Verbose Output: ${this.verboseMode}`);
    * @returns {String} - The version of Eleventy.
    */
   getVersion() {
-    return require("../package.json").version;
+    return pkg.version;
   }
 
   /**
