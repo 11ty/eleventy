@@ -7,6 +7,39 @@ const TemplatePath = require("../TemplatePath");
 const deleteRequireCache = require("../Util/DeleteRequireCache");
 const debug = require("debug")("Eleventy:Serverless");
 
+// Provider specific
+const redirectHandlers = {
+  "netlify-toml": function (name, outputMap) {
+    let newRedirects = [];
+    for (let url in outputMap) {
+      newRedirects.push({
+        from: url,
+        to: `/.netlify/functions/${name}`,
+        status: 200,
+        force: true,
+        _generated_by_eleventy_serverless: name,
+      });
+    }
+
+    let configFilename = "./netlify.toml";
+    let cfg = {};
+    // parse existing netlify.toml
+    if (fs.existsSync(configFilename)) {
+      cfg = TOML.parse(fs.readFileSync(configFilename));
+    }
+    let cfgWithRedirects = addRedirectsWithoutDuplicates(
+      name,
+      cfg,
+      newRedirects
+    );
+
+    fs.writeFileSync(configFilename, TOML.stringify(cfgWithRedirects));
+    debug(
+      `Eleventy Serverless (${name}), writing (×${newRedirects.length}): ${configFilename}`
+    );
+  },
+};
+
 function getNodeModulesList(files) {
   let pkgs = new Set();
 
@@ -197,36 +230,9 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       // Excluded from: `eleventy-app-config-modules.js` and `eleventy-app-globaldata-modules.js`
       excludeDependencies: [],
 
-      // Add automated redirects to netlify.toml (appends or creates, avoids duplicate entries)
-      redirects: function (outputMap) {
-        let newRedirects = [];
-        for (let url in outputMap) {
-          newRedirects.push({
-            from: url,
-            to: `/.netlify/functions/${options.name}`,
-            status: 200,
-            force: true,
-            _generated_by_eleventy_serverless: options.name,
-          });
-        }
-
-        let configFilename = "./netlify.toml";
-        let cfg = {};
-        // parse existing netlify.toml
-        if (fs.existsSync(configFilename)) {
-          cfg = TOML.parse(fs.readFileSync(configFilename));
-        }
-        let cfgWithRedirects = addRedirectsWithoutDuplicates(
-          options.name,
-          cfg,
-          newRedirects
-        );
-
-        fs.writeFileSync(configFilename, TOML.stringify(cfgWithRedirects));
-        debug(
-          `Eleventy Serverless (${options.name}), writing (×${newRedirects.length}): ${configFilename}`
-        );
-      },
+      // Add automated redirects (appends or creates, avoids duplicate entries)
+      // Also accepts a custom callback function(name, outputMap)
+      redirects: "netlify-toml",
     },
     options
   );
@@ -334,8 +340,17 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       );
       this.copyCount++;
 
-      // Write redirects into netlify.toml (even if no redirects exist for this function to handle deletes)
-      options.redirects(outputMap);
+      // Write redirects (even if no redirects exist for this function to handle deletes)
+      if (options.redirects) {
+        if (
+          typeof options.redirects === "string" &&
+          redirectHandlers[options.redirects]
+        ) {
+          redirectHandlers[options.redirects](options.name, outputMap);
+        } else if (typeof options.redirects === "function") {
+          options.redirects(options.name, outputMap);
+        }
+      }
 
       if (mapEntryCount > 0) {
         // Copy templates to bundle folder
