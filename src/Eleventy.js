@@ -96,6 +96,13 @@ class Eleventy {
      */
     this.isDryRun = false;
 
+    /**
+     * @member {Boolean} - Explicit input directory (usually used when input is a single file/serverless)
+     */
+    if (options.inputDir) {
+      this.setInputDir(options.inputDir);
+    }
+
     if (performance) {
       debug("Eleventy warm up time (in ms) %o", performance.now());
     }
@@ -374,6 +381,7 @@ Verbose Output: ${this.verboseMode}`);
   getEnvironmentVariableValues() {
     let configPath = this.eleventyConfig.getLocalProjectConfigFile();
     let absolutePathToConfig = TemplatePath.absolutePath(configPath);
+    // TODO(zachleat): if config is not in root (e.g. using --config=)
     let root = TemplatePath.getDirFromFilePath(absolutePathToConfig);
 
     return {

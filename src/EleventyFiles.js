@@ -70,6 +70,7 @@ class EleventyFiles {
     if (this.input === this.inputDir) {
       this.templateGlobs = this.extensionMap.getGlobs(this.inputDir);
     } else {
+      // input is not a directory
       this.templateGlobs = TemplateGlob.map([this.input]);
     }
 

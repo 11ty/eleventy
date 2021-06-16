@@ -113,7 +113,7 @@ class Serverless {
       process.chdir(this.dir);
     }
 
-    let inputDir = path.join(this.dir, this.options.inputDir);
+    let inputDir = this.options.inputDir;
     let configPath = path.join(this.dir, this.configFilename);
     let { pathParams, inputPath } = this.matchUrlPattern(this.path);
 
@@ -133,11 +133,12 @@ class Serverless {
 
     debug(`Input dir: ${inputDir}`);
     debug(`Requested URL:  ${this.path}`);
-    debug(`Path params:  ${pathParams}`);
+    debug("Path params: %o", pathParams);
     debug(`Input path:  ${inputPath}`);
 
     let elev = new Eleventy(inputPath, null, {
       configPath,
+      inputDir,
       config: (eleventyConfig) => {
         if (Object.keys(this.options.precompiledCollections).length > 0) {
           eleventyConfig.setPrecompiledCollections(
@@ -146,16 +147,22 @@ class Serverless {
         }
 
         // Add the params to Global Data
-        eleventyConfig.addGlobalData("eleventy.serverless", {
+        let globalData = {
           pathname: this.path,
-          pathnameOverridesPageUrl: this.options.pathnameOverridesPageUrl,
           query: this.options.query,
           path: pathParams,
-        });
+        };
+
+        // leave out if default value
+        if (!this.options.pathnameOverridesPageUrl) {
+          globalData.pathnameOverridesPageUrl =
+            this.options.pathnameOverridesPageUrl;
+        }
+
+        eleventyConfig.addGlobalData("eleventy.serverless", globalData);
       },
     });
 
-    elev.setInputDir(inputDir);
     await elev.init();
 
     let json = await elev.toJSON();
