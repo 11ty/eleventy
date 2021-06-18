@@ -282,7 +282,7 @@ class EleventyFiles {
   }
 
   getIgnores() {
-    let rootDirectory = this.localPathRoot || TemplatePath.getWorkingDir();
+    let rootDirectory = this.localPathRoot || ".";
     let files = [];
 
     for (let ignore of this.config.ignores) {
@@ -301,16 +301,16 @@ class EleventyFiles {
       files = files.concat(this.eleventyIgnoreContent);
     } else {
       let absoluteInputDir = TemplatePath.absolutePath(this.inputDir);
-      let eleventyIgnores = [
+      let eleventyIgnoreFiles = [
         TemplatePath.join(rootDirectory, ".eleventyignore"),
       ];
       if (rootDirectory !== absoluteInputDir) {
-        eleventyIgnores.push(
+        eleventyIgnoreFiles.push(
           TemplatePath.join(this.inputDir, ".eleventyignore")
         );
       }
 
-      files = files.concat(EleventyFiles.getFileIgnores(eleventyIgnores));
+      files = files.concat(EleventyFiles.getFileIgnores(eleventyIgnoreFiles));
     }
 
     // ignore output dir unless that would exclude all input
