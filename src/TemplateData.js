@@ -462,6 +462,9 @@ class TemplateData {
       deleteRequireCache(localPath);
 
       let returnValue = require(localPath);
+      // TODO special exception for Global data `permalink.js`
+      // module.exports = (data) => `${data.page.filePathStem}/`; // Does not work
+      // module.exports = () => ((data) => `${data.page.filePathStem}/`); // Works
       if (typeof returnValue === "function") {
         returnValue = await returnValue(this.configApiGlobalData || {});
       }

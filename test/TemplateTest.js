@@ -2250,8 +2250,8 @@ test("permalink object without build", async (t) => {
     "./test/stubs/_site"
   );
 
-  t.is(await tmpl.getOutputLink(), false);
-  t.is(await tmpl.getOutputHref(), false);
+  t.is(await tmpl.getOutputLink(), "/url/");
+  t.is(await tmpl.getOutputHref(), "/url/");
 });
 
 test("permalink object _getLink", async (t) => {
@@ -2266,8 +2266,9 @@ test("permalink object _getLink", async (t) => {
       serverless: "/serverless/",
     },
   });
-  t.is(await link.toLink(), false);
-  t.is(await link.toHref(), false);
+  t.is(await link.toLink(), "/serverless/");
+  t.is(await link.toHref(), "/serverless/");
+
   t.deepEqual(link.getServerlessUrls(), {
     serverless: "/serverless/",
   });
@@ -2299,75 +2300,129 @@ test("permalink object _getLink", async (t) => {
   t.deepEqual(tmpl.getServerlessUrls(), {
     serverless: "/serverless/",
   });
+
+  // template syntax
+  let link4 = await tmpl._getLink({
+    test: "a",
+    permalink: {
+      build: "/build{{ test }}/",
+      serverless: "/serverless{{ test }}/",
+    },
+  });
+  t.is(await link4.toLink(), "/builda/index.html");
+  t.is(await link4.toHref(), "/builda/");
+  t.deepEqual(link4.getServerlessUrls(), {
+    serverless: "/serverlessa/",
+  });
+  t.deepEqual(tmpl.getServerlessUrls(), {
+    serverless: "/serverlessa/",
+  });
 });
 
-test("Resolve page.url from eleventy serverless data", async (t) => {
+test("permalink object _getLink (array of serverless URLs)", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-nobuild/permalink-nobuild.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  // Array of URLs is supported
+  let link4 = await tmpl._getLink({
+    permalink: {
+      serverless: ["/serverless1/", "/serverless2/"],
+    },
+  });
+  t.is(await link4.toLink(), "/serverless1/");
+  t.is(await link4.toHref(), "/serverless1/");
+
+  t.deepEqual(link4.getServerlessUrls(), {
+    serverless: ["/serverless1/", "/serverless2/"],
+  });
+  t.deepEqual(tmpl.getServerlessUrls(), {
+    serverless: ["/serverless1/", "/serverless2/"],
+  });
+});
+
+test("permalink object _getLink (array of serverless URLs with template syntax)", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-nobuild/permalink-nobuild.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  // Array of URLs is supported
+  let link = await tmpl._getLink({
+    test: "a",
+    permalink: {
+      serverless: ["/serverless1{{ test }}/", "/serverless2{{ test }}/"],
+    },
+  });
+  t.is(await link.toLink(), "/serverless1a/");
+  t.is(await link.toHref(), "/serverless1a/");
+
+  t.deepEqual(link.getServerlessUrls(), {
+    serverless: ["/serverless1a/", "/serverless2a/"],
+  });
+  t.deepEqual(tmpl.getServerlessUrls(), {
+    serverless: ["/serverless1a/", "/serverless2a/"],
+  });
+});
+
+test("Do not resolve page.url from eleventy serverless data", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/permalink-build-serverless/permalink-build-serverless.md",
     "./test/stubs/",
     "./test/stubs/_site"
   );
   let fakeData = {
-    eleventy: {
-      serverless: {
-        pathname: "/test/",
-      },
-    },
     permalink: {
-      serverless: "/serverless/", // this is ignored and pathname above is used!
+      serverless: "/serverless/",
     },
   };
   let outputHref = await tmpl.getOutputHref(fakeData);
-  t.is(outputHref, "/test/");
+  t.is(outputHref, "/serverless/");
 
   let outputLink = await tmpl.getOutputLink(fakeData);
-  t.is(outputLink, false);
+  t.is(outputLink, "/serverless/");
 
   let outputPath = await tmpl.getOutputPath(fakeData);
   t.is(outputPath, false);
 
   let { href, link, path } = await tmpl.getOutputLocations(fakeData);
-  t.is(href, "/test/");
-  t.is(link, false);
+  t.is(href, "/serverless/");
+  t.is(link, "/serverless/");
   t.is(path, false);
 });
 
-test("Resolve page.url from eleventy serverless data (when build also exists in permalink)", async (t) => {
+test("Do not resolve page.url from eleventy serverless data (when build also exists in permalink and serverless global data exists)", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/permalink-build-serverless/permalink-build-serverless.md",
     "./test/stubs/",
     "./test/stubs/_site"
   );
   let fakeData = {
-    eleventy: {
-      serverless: {
-        pathname: "/test/",
-      },
-    },
     permalink: {
       build: "/build/",
-      serverless: "/serverless/", // this is ignored and pathname above is used!
+      serverless: "/serverless/",
     },
   };
 
   let outputHref = await tmpl.getOutputHref(fakeData);
-  t.is(outputHref, "/test/");
+  t.is(outputHref, "/build/");
 
-  // These should be false because the eleventy.serverless object is set.
-  // When in build-mode they would not be false.
   let outputLink = await tmpl.getOutputLink(fakeData);
-  t.is(outputLink, false);
+  t.is(outputLink, "/build/index.html");
 
   let outputPath = await tmpl.getOutputPath(fakeData);
-  t.is(outputPath, false);
+  t.is(outputPath, "./test/stubs/_site/build/index.html");
 
   let { href, link, path } = await tmpl.getOutputLocations(fakeData);
-  t.is(href, "/test/");
-  t.is(link, false);
-  t.is(path, false);
+  t.is(href, "/build/");
+  t.is(link, "/build/index.html");
+  t.is(path, "./test/stubs/_site/build/index.html");
 });
 
-test("Do not resolve page.url from eleventy serverless data (when build also exists in permalink)", async (t) => {
+test("Do not resolve page.url from eleventy serverless data (when build also exists in permalink and serverless global data does not exist)", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/permalink-build-serverless/permalink-build-serverless.md",
     "./test/stubs/",
@@ -2404,12 +2459,6 @@ test("Do not override page.url with serverless url", async (t) => {
     "./test/stubs/_site"
   );
   let fakeData = {
-    eleventy: {
-      serverless: {
-        pathname: "/test/",
-        pathnameOverridesPageUrl: false,
-      },
-    },
     permalink: {
       build: "/build/",
       serverless: "/serverless/",
@@ -2419,16 +2468,43 @@ test("Do not override page.url with serverless url", async (t) => {
   let outputHref = await tmpl.getOutputHref(fakeData);
   t.is(outputHref, "/build/");
 
-  // These should be false because the eleventy.serverless object is set.
-  // When in build-mode they would not be false.
   let outputLink = await tmpl.getOutputLink(fakeData);
-  t.is(outputLink, false);
+  t.is(outputLink, "/build/index.html");
 
   let outputPath = await tmpl.getOutputPath(fakeData);
-  t.is(outputPath, false);
+  t.is(outputPath, "./test/stubs/_site/build/index.html");
 
   let { href, link, path } = await tmpl.getOutputLocations(fakeData);
   t.is(href, "/build/");
-  t.is(link, false);
-  t.is(path, false);
+  t.is(link, "/build/index.html");
+  t.is(path, "./test/stubs/_site/build/index.html");
+});
+
+test("Permalink is an object but an empty object (inherit default behavior)", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-empty-object/empty-object.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  let data = await tmpl.getData();
+
+  let outputHref = await tmpl.getOutputHref(data);
+  t.is(outputHref, "/permalink-empty-object/empty-object/");
+
+  let outputLink = await tmpl.getOutputLink(data);
+  t.is(outputLink, "permalink-empty-object/empty-object/index.html");
+
+  let outputPath = await tmpl.getOutputPath(data);
+  t.is(
+    outputPath,
+    "./test/stubs/_site/permalink-empty-object/empty-object/index.html"
+  );
+
+  let { href, link, path } = await tmpl.getOutputLocations(data);
+  t.is(href, "/permalink-empty-object/empty-object/");
+  t.is(link, "permalink-empty-object/empty-object/index.html");
+  t.is(
+    path,
+    "./test/stubs/_site/permalink-empty-object/empty-object/index.html"
+  );
 });

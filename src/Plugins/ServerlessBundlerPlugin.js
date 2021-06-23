@@ -156,13 +156,23 @@ class BundlerHelper {
   }
 
   writeDependencyEntryFile() {
-    this.writeBundlerDependenciesFile("eleventy-bundler-modules.js", [
-      "./eleventy-app-config-modules.js",
-      "./eleventy-app-globaldata-modules.js",
-    ]);
+    // we write this even when disabled because the serverless function expects it
+    this.writeBundlerDependenciesFile(
+      "eleventy-bundler-modules.js",
+      this.options.bundlerEnabled
+        ? [
+            "./eleventy-app-config-modules.js",
+            "./eleventy-app-globaldata-modules.js",
+          ]
+        : []
+    );
   }
 
   writeDependencyConfigFile(configPath) {
+    if (!this.options.bundlerEnabled) {
+      return;
+    }
+
     let modules = getNodeModulesList([configPath]);
     this.writeBundlerDependenciesFile(
       "eleventy-app-config-modules.js",
@@ -173,6 +183,10 @@ class BundlerHelper {
   }
 
   writeDependencyGlobalDataFile(globalDataFileList) {
+    if (!this.options.bundlerEnabled) {
+      return;
+    }
+
     let modules = getNodeModulesList(globalDataFileList);
     this.writeBundlerDependenciesFile(
       "eleventy-app-globaldata-modules.js",
@@ -233,6 +247,9 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       // Add automated redirects (appends or creates, avoids duplicate entries)
       // Also accepts a custom callback function(name, outputMap)
       redirects: "netlify-toml",
+
+      // Useful for local develop to disable all bundle copying
+      bundlerEnabled: true,
     },
     options
   );
@@ -256,6 +273,10 @@ function EleventyPlugin(eleventyConfig, options = {}) {
     });
 
     eleventyConfig.on("eleventy.after", async () => {
+      if (!options.bundlerEnabled) {
+        return;
+      }
+
       // extra copy targets
       // we put these in after a build so that we can grab files generated _by_ the build too
       if (options.copy && Array.isArray(options.copy)) {
@@ -283,7 +304,10 @@ function EleventyPlugin(eleventyConfig, options = {}) {
     });
 
     eleventyConfig.on("eleventy.env", (env) => {
-      helper.copyFile(env.config, "eleventy.config.js");
+      if (options.bundlerEnabled) {
+        helper.copyFile(env.config, "eleventy.config.js");
+      }
+
       helper.writeDependencyConfigFile(env.config);
     });
 
@@ -292,6 +316,10 @@ function EleventyPlugin(eleventyConfig, options = {}) {
     });
 
     eleventyConfig.on("eleventy.directories", async (dirs) => {
+      if (!options.bundlerEnabled) {
+        return;
+      }
+
       let promises = [];
       promises.push(helper.recursiveCopy(dirs.data));
       promises.push(helper.recursiveCopy(dirs.includes));
@@ -341,7 +369,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       this.copyCount++;
 
       // Write redirects (even if no redirects exist for this function to handle deletes)
-      if (options.redirects) {
+      if (options.bundlerEnabled && options.redirects) {
         if (
           typeof options.redirects === "string" &&
           redirectHandlers[options.redirects]
@@ -352,7 +380,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
         }
       }
 
-      if (mapEntryCount > 0) {
+      if (options.bundlerEnabled && mapEntryCount > 0) {
         // Copy templates to bundle folder
         for (let url in outputMap) {
           helper.recursiveCopy(outputMap[url]);

@@ -21,8 +21,6 @@ class Serverless {
       {
         inputDir: ".",
         functionsDir: "functions/",
-        // Whether the serverless pathname overrides the page.url data value.
-        pathnameOverridesPageUrl: true,
         matchUrlToPattern(path, urlToCompare) {
           let pattern = new UrlPattern(urlToCompare);
           return pattern.match(path);
@@ -113,7 +111,7 @@ class Serverless {
       process.chdir(this.dir);
     }
 
-    let inputDir = this.options.inputDir;
+    let inputDir = this.options.input || this.options.inputDir;
     let configPath = path.join(this.dir, this.configFilename);
     let { pathParams, inputPath } = this.matchUrlPattern(this.path);
 
@@ -136,7 +134,7 @@ class Serverless {
     debug("Path params: %o", pathParams);
     debug(`Input path:  ${inputPath}`);
 
-    let elev = new Eleventy(inputPath, null, {
+    let elev = new Eleventy(this.options.input || inputPath, null, {
       configPath,
       inputDir,
       config: (eleventyConfig) => {
@@ -148,16 +146,9 @@ class Serverless {
 
         // Add the params to Global Data
         let globalData = {
-          pathname: this.path,
           query: this.options.query,
           path: pathParams,
         };
-
-        // leave out if default value
-        if (!this.options.pathnameOverridesPageUrl) {
-          globalData.pathnameOverridesPageUrl =
-            this.options.pathnameOverridesPageUrl;
-        }
 
         eleventyConfig.addGlobalData("eleventy.serverless", globalData);
       },
