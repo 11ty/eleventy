@@ -195,30 +195,45 @@ class Template extends TemplateContent {
       debugDev("Not using dynamic permalinks, using %o", permalink);
       permalinkValue = permalink;
     } else if (isPlainObject(permalink)) {
-      let promises = [];
-      let keys = [];
-      for (let key in permalink) {
-        keys.push(key);
-        promises.push(super.render(permalink[key], data, true));
-      }
+      // Empty permalink {} object should act as if no permalink was set at all
+      // and inherit the default behavior
+      let isEmptyObject = Object.keys(permalink).length === 0;
+      if (!isEmptyObject) {
+        let promises = [];
+        let keys = [];
+        for (let key in permalink) {
+          keys.push(key);
+          if (key !== "build" && Array.isArray(permalink[key])) {
+            promises.push(
+              Promise.all(
+                [...permalink[key]].map((entry) =>
+                  super.renderPermalink(entry, data, true)
+                )
+              )
+            );
+          } else {
+            promises.push(super.renderPermalink(permalink[key], data, true));
+          }
+        }
 
-      let results = await Promise.all(promises);
+        let results = await Promise.all(promises);
 
-      permalinkValue = {};
-      for (let j = 0, k = keys.length; j < k; j++) {
-        let key = keys[j];
-        permalinkValue[key] = results[j];
-        debug(
-          "Rendering permalink.%o for %o: %s becomes %o",
-          key,
-          this.inputPath,
-          permalink[key],
-          results[j]
-        );
+        permalinkValue = {};
+        for (let j = 0, k = keys.length; j < k; j++) {
+          let key = keys[j];
+          permalinkValue[key] = results[j];
+          debug(
+            "Rendering permalink.%o for %o: %s becomes %o",
+            key,
+            this.inputPath,
+            permalink[key],
+            results[j]
+          );
+        }
       }
     } else if (permalink) {
       // render variables inside permalink front matter, bypass markdown
-      permalinkValue = await super.render(permalink, data, true);
+      permalinkValue = await super.renderPermalink(permalink, data, true);
       debug(
         "Rendering permalink for %o: %s becomes %o",
         this.inputPath,
@@ -242,7 +257,6 @@ class Template extends TemplateContent {
     );
   }
 
-  // TODO add support for a key inside the `permalink` object for this
   async usePermalinkRoot() {
     if (this._usePermalinkRoot === undefined) {
       // TODO this only works with immediate front matter and not data files
@@ -252,17 +266,6 @@ class Template extends TemplateContent {
     }
 
     return this._usePermalinkRoot;
-  }
-
-  _useServerlessOverride(data) {
-    return get(data, "eleventy.serverless.pathnameOverridesPageUrl", true);
-  }
-
-  _getServerlessPath(data) {
-    let pathname = get(data, "eleventy.serverless.pathname");
-    if (pathname) {
-      return pathname;
-    }
   }
 
   // TODO instead of htmlIOException, do a global search to check if output path = input path and then add extra suffix
@@ -276,18 +279,6 @@ class Template extends TemplateContent {
       path = link.toPath(this.outputDir);
     }
 
-    // Makes page.url out of the serverless pathname
-    let serverlessPath = this._getServerlessPath(data);
-    if (serverlessPath) {
-      return {
-        link: false,
-        href: this._useServerlessOverride(data)
-          ? serverlessPath
-          : link.toHref(),
-        path: false,
-      };
-    }
-
     return {
       link: link.toLink(),
       href: link.toHref(),
@@ -297,9 +288,6 @@ class Template extends TemplateContent {
 
   // Preferred to use the singular `getOutputLocations` above.
   async getOutputLink(data) {
-    if (this._getServerlessPath(data)) {
-      return false;
-    }
     let link = await this._getLink(data);
     return link.toLink();
   }
@@ -307,17 +295,11 @@ class Template extends TemplateContent {
   // Preferred to use the singular `getOutputLocations` above.
   async getOutputHref(data) {
     let link = await this._getLink(data);
-    let pathname = this._getServerlessPath(data);
-    return pathname && this._useServerlessOverride(data)
-      ? pathname
-      : link.toHref();
+    return link.toHref();
   }
 
   // Preferred to use the singular `getOutputLocations` above.
   async getOutputPath(data) {
-    if (this._getServerlessPath(data)) {
-      return false;
-    }
     let link = await this._getLink(data);
     if (await this.usePermalinkRoot()) {
       return link.toPathFromRoot();
@@ -578,6 +560,7 @@ class Template extends TemplateContent {
     if (this.config.keys.computed in data) {
       // Note that `permalink` is only a thing that gets consumed—it does not go directly into generated data
       // this allows computed entries to use page.url or page.outputPath and they’ll be resolved properly
+
       this.computedData.addTemplateString(
         "page.url",
         async (data) => await this.getOutputHref(data),

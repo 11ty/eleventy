@@ -55,7 +55,12 @@ class ComputedDataTemplateString {
     } catch (e) {
       debug("Computed Data first pass data resolution error: %o", e);
     }
-    return this.findVarsInOutput(output);
+
+    // page.outputPath on serverless urls returns false.
+    if (typeof output === "string") {
+      return this.findVarsInOutput(output);
+    }
+    return [];
   }
 }
 

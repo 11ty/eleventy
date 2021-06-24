@@ -1,4 +1,5 @@
 const fs = require("fs");
+const fsp = fs.promises;
 const path = require("path");
 const TOML = require("@iarna/toml");
 const copy = require("recursive-copy");
@@ -156,13 +157,23 @@ class BundlerHelper {
   }
 
   writeDependencyEntryFile() {
-    this.writeBundlerDependenciesFile("eleventy-bundler-modules.js", [
-      "./eleventy-app-config-modules.js",
-      "./eleventy-app-globaldata-modules.js",
-    ]);
+    // we write this even when disabled because the serverless function expects it
+    this.writeBundlerDependenciesFile(
+      "eleventy-bundler-modules.js",
+      this.options.copyEnabled
+        ? [
+            "./eleventy-app-config-modules.js",
+            "./eleventy-app-globaldata-modules.js",
+          ]
+        : []
+    );
   }
 
   writeDependencyConfigFile(configPath) {
+    if (!this.options.copyEnabled) {
+      return;
+    }
+
     let modules = getNodeModulesList([configPath]);
     this.writeBundlerDependenciesFile(
       "eleventy-app-config-modules.js",
@@ -173,6 +184,10 @@ class BundlerHelper {
   }
 
   writeDependencyGlobalDataFile(globalDataFileList) {
+    if (!this.options.copyEnabled) {
+      return;
+    }
+
     let modules = getNodeModulesList(globalDataFileList);
     this.writeBundlerDependenciesFile(
       "eleventy-app-globaldata-modules.js",
@@ -211,8 +226,35 @@ class BundlerHelper {
       res.write(result.body);
       res.end();
 
-      console.log(`Dynamic Render: ${req.url} (${Date.now() - start}ms)`);
+      console.log(
+        `Serverless (${this.name}): ${req.url} (${Date.now() - start}ms)`
+      );
     };
+  }
+
+  async ensureDir() {
+    return fsp.mkdir(this.getOutputPath(""), {
+      recursive: true,
+    });
+  }
+
+  async writeServerlessFunctionFile() {
+    let filepath = this.getOutputPath("index.js");
+    if (!fs.existsSync(filepath)) {
+      let defaultContentPath = TemplatePath.absolutePath(
+        __dirname,
+        "./DefaultServerlessFunctionContent.js"
+      );
+
+      let contents = await fsp.readFile(defaultContentPath, "utf-8");
+      contents = contents.replace(/\%\%NAME\%\%/g, this.name);
+      contents = contents.replace(/\%\%INPUT_DIR\%\%/g, this.options.inputDir);
+      contents = contents.replace(
+        /\%\%FUNCTIONS_DIR\%\%/g,
+        this.options.functionsDir
+      );
+      return fsp.writeFile(filepath, contents);
+    }
   }
 }
 
@@ -233,6 +275,12 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       // Add automated redirects (appends or creates, avoids duplicate entries)
       // Also accepts a custom callback function(name, outputMap)
       redirects: "netlify-toml",
+
+      // Useful for local develop to disable all bundle copying
+      copyEnabled: true,
+
+      // Input directory (used to generate the default serverless file)
+      inputDir: ".",
     },
     options
   );
@@ -252,10 +300,16 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 
     eleventyConfig.on("eleventy.before", async () => {
       helper.reset();
+      await helper.ensureDir();
+      await helper.writeServerlessFunctionFile();
       helper.writeDependencyEntryFile();
     });
 
     eleventyConfig.on("eleventy.after", async () => {
+      if (!options.copyEnabled) {
+        return;
+      }
+
       // extra copy targets
       // we put these in after a build so that we can grab files generated _by_ the build too
       if (options.copy && Array.isArray(options.copy)) {
@@ -282,9 +336,14 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       );
     });
 
-    eleventyConfig.on("eleventy.env", (env) => {
-      helper.copyFile(env.config, "eleventy.config.js");
-      helper.writeDependencyConfigFile(env.config);
+    eleventyConfig.on("eleventy.env", async (env) => {
+      await helper.ensureDir();
+
+      if (options.copyEnabled) {
+        helper.copyFile(env.config, "eleventy.config.js");
+
+        helper.writeDependencyConfigFile(env.config);
+      }
     });
 
     eleventyConfig.on("eleventy.globalDataFiles", (fileList) => {
@@ -292,6 +351,10 @@ function EleventyPlugin(eleventyConfig, options = {}) {
     });
 
     eleventyConfig.on("eleventy.directories", async (dirs) => {
+      if (!options.copyEnabled) {
+        return;
+      }
+
       let promises = [];
       promises.push(helper.recursiveCopy(dirs.data));
       promises.push(helper.recursiveCopy(dirs.includes));
@@ -341,7 +404,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       this.copyCount++;
 
       // Write redirects (even if no redirects exist for this function to handle deletes)
-      if (options.redirects) {
+      if (options.copyEnabled && options.redirects) {
         if (
           typeof options.redirects === "string" &&
           redirectHandlers[options.redirects]
@@ -352,7 +415,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
         }
       }
 
-      if (mapEntryCount > 0) {
+      if (options.copyEnabled && mapEntryCount > 0) {
         // Copy templates to bundle folder
         for (let url in outputMap) {
           helper.recursiveCopy(outputMap[url]);

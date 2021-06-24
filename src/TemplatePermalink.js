@@ -11,18 +11,35 @@ class TemplatePermalink {
     this._isRendered = true;
     this._writeToFileSystem = true;
 
-    let rawLink;
+    let buildLink;
+
     if (isLinkAnObject) {
       if ("build" in link) {
-        rawLink = link.build;
+        buildLink = link.build;
+      }
+
+      // find the first string key
+      for (let key in link) {
+        if (typeof key !== "string") {
+          continue;
+        }
+        if (key !== "build" && link[key] !== false) {
+          // is array of serverless urls, use the first one
+          if (Array.isArray(link[key])) {
+            this.primaryServerlessUrl = link[key][0];
+          } else {
+            this.primaryServerlessUrl = link[key];
+          }
+        }
+        break;
       }
     } else {
-      rawLink = link;
+      buildLink = link;
     }
 
     // permalink: false and permalink: build: false
-    if (typeof rawLink === "boolean") {
-      if (rawLink === false) {
+    if (typeof buildLink === "boolean") {
+      if (buildLink === false) {
         this._writeToFileSystem = false;
       } else {
         throw new Error(
@@ -33,8 +50,8 @@ class TemplatePermalink {
           }false\`?`
         );
       }
-    } else if (rawLink) {
-      this.rawLink = rawLink;
+    } else if (buildLink) {
+      this.buildLink = buildLink;
     }
 
     this.serverlessUrls = {};
@@ -57,17 +74,19 @@ class TemplatePermalink {
     return this.serverlessUrls;
   }
 
-  _cleanLink(link) {
+  _addDefaultLinkFilename(link) {
     return link + (link.substr(-1) === "/" ? "index.html" : "");
   }
 
   toLink() {
-    if (!this.rawLink) {
+    if (this.primaryServerlessUrl) {
+      return this.primaryServerlessUrl;
+    } else if (!this.buildLink) {
       // empty or false
       return false;
     }
 
-    let cleanLink = this._cleanLink(this.rawLink);
+    let cleanLink = this._addDefaultLinkFilename(this.buildLink);
     let parsed = parsePath(cleanLink);
 
     return TemplatePath.join(
@@ -84,7 +103,9 @@ class TemplatePermalink {
   // index.html becomes /
   // test/index.html becomes test/
   toHref() {
-    if (!this.rawLink) {
+    if (this.primaryServerlessUrl) {
+      return this.primaryServerlessUrl;
+    } else if (!this.buildLink) {
       // empty or false
       return false;
     }
@@ -102,6 +123,10 @@ class TemplatePermalink {
   }
 
   toPath(outputDir) {
+    if (!this.buildLink) {
+      return false;
+    }
+
     let uri = this.toLink();
 
     if (uri === false) {
@@ -112,6 +137,10 @@ class TemplatePermalink {
   }
 
   toPathFromRoot() {
+    if (!this.buildLink) {
+      return false;
+    }
+
     let uri = this.toLink();
 
     if (uri === false) {

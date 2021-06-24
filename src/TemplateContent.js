@@ -282,7 +282,15 @@ class TemplateContent {
     }
   }
 
+  async renderPermalink(permalink, data, bypassMarkdown) {
+    return this._render(permalink, data, bypassMarkdown);
+  }
+
   async render(str, data, bypassMarkdown) {
+    return this._render(str, data, bypassMarkdown);
+  }
+
+  async _render(str, data, bypassMarkdown) {
     try {
       let fn = await this.compile(str, bypassMarkdown);
       let templateBenchmark = bench.get("Template Render");
