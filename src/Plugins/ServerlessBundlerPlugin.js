@@ -128,25 +128,28 @@ class BundlerHelper {
   }
 
   recursiveCopy(src, dest, options = {}) {
-    if (isGlob(src) || fs.existsSync(src)) {
-      let finalDest = this.getOutputPath(dest || src);
-      return copy(
-        src,
-        finalDest,
-        Object.assign(
-          {
-            overwrite: true,
-            dot: true,
-            junk: false,
-            results: false,
-          },
-          this.options.copyOptions,
-          options
-        )
-      ).on(copy.events.COPY_FILE_COMPLETE, () => {
-        this.copyCount++;
-      });
+    // skip this one if not a glob and doesn’t exist
+    if (!isGlob(src) && !fs.existsSync(src)) {
+      return;
     }
+
+    let finalDest = this.getOutputPath(dest || src);
+    return copy(
+      src,
+      finalDest,
+      Object.assign(
+        {
+          overwrite: true,
+          dot: true,
+          junk: false,
+          results: false,
+        },
+        this.options.copyOptions,
+        options
+      )
+    ).on(copy.events.COPY_FILE_COMPLETE, () => {
+      this.copyCount++;
+    });
   }
 
   writeBundlerDependenciesFile(filename, deps = []) {
