@@ -555,7 +555,7 @@ class Template extends TemplateContent {
 
   async addComputedData(data) {
     // will _not_ consume renderData
-    this.computedData = new ComputedData();
+    this.computedData = new ComputedData(this.config);
 
     if (this.config.keys.computed in data) {
       // Note that `permalink` is only a thing that gets consumed—it does not go directly into generated data

@@ -8,17 +8,27 @@ const ComputedDataProxy = require("./ComputedDataProxy");
 const debug = require("debug")("Eleventy:ComputedData");
 
 class ComputedData {
-  constructor() {
+  constructor(config) {
     this.computed = {};
     this.templateStringKeyLookup = {};
     this.computedKeys = new Set();
     this.declaredDependencies = {};
     this.queue = new ComputedDataQueue();
+    this.config = config;
   }
 
   add(key, fn, declaredDependencies = []) {
     this.computedKeys.add(key);
     this.declaredDependencies[key] = declaredDependencies;
+
+    // bind config filters/JS functions
+    if (typeof fn === "function") {
+      let fns = {};
+      if (this.config) {
+        fns = this.config.javascriptFunctions;
+      }
+      fn = fn.bind(fns);
+    }
 
     lodashSet(this.computed, key, fn);
   }

@@ -16,8 +16,8 @@ class ComputedDataTemplateString {
 
     // is this ¯\_(lisp)_/¯
     // must be strings that won’t be escaped by template languages
-    this.prefix = "(((((11ty(((((";
-    this.suffix = ")))))11ty)))))";
+    this.prefix = "(((11ty(((";
+    this.suffix = ")))11ty)))";
   }
 
   getProxyData() {
