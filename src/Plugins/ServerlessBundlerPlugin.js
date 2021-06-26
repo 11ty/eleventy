@@ -1,6 +1,7 @@
 const fs = require("fs");
 const fsp = fs.promises;
 const path = require("path");
+const isGlob = require("is-glob");
 const TOML = require("@iarna/toml");
 const copy = require("recursive-copy");
 const dependencyTree = require("@11ty/dependency-tree");
@@ -127,23 +128,25 @@ class BundlerHelper {
   }
 
   recursiveCopy(src, dest, options = {}) {
-    let finalDest = this.getOutputPath(dest || src);
-    return copy(
-      src,
-      finalDest,
-      Object.assign(
-        {
-          overwrite: true,
-          dot: true,
-          junk: false,
-          results: false,
-        },
-        this.options.copyOptions,
-        options
-      )
-    ).on(copy.events.COPY_FILE_COMPLETE, () => {
-      this.copyCount++;
-    });
+    if (isGlob(src) || fs.existsSync(src)) {
+      let finalDest = this.getOutputPath(dest || src);
+      return copy(
+        src,
+        finalDest,
+        Object.assign(
+          {
+            overwrite: true,
+            dot: true,
+            junk: false,
+            results: false,
+          },
+          this.options.copyOptions,
+          options
+        )
+      ).on(copy.events.COPY_FILE_COMPLETE, () => {
+        this.copyCount++;
+      });
+    }
   }
 
   writeBundlerDependenciesFile(filename, deps = []) {
