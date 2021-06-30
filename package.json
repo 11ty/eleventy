@@ -60,6 +60,7 @@
   "bugs": "https://github.com/11ty/eleventy/issues",
   "homepage": "https://www.11ty.dev/",
   "ava": {
+    "environmentVariables": {},
     "failFast": false,
     "files": [
       "./test/*.js"

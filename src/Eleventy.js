@@ -477,6 +477,7 @@ Verbose Output: ${this.verboseMode}`);
       isVerbose = false;
     }
 
+    bench.setVerboseOutput(isVerbose);
     this.verboseMode = isVerbose;
   }
 
@@ -938,7 +939,6 @@ Arguments:
       };
       this.errorHandler.fatal(e, "Problem writing Eleventy templates");
     } finally {
-      // Note, this executes even though we return above in `catch`
       bench.finish();
       if (to === "fs") {
         this.logger.message(
@@ -953,9 +953,9 @@ Arguments:
       debug(`
       Getting frustrated? Have a suggestion/feature request/feedback?
       I want to hear it! Open an issue: https://github.com/11ty/eleventy/issues/new`);
-
-      return ret;
     }
+
+    return ret;
   }
 }
 
