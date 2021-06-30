@@ -543,9 +543,10 @@ class Template extends TemplateContent {
       computedData.addTemplateString(
         parentKey,
         async (innerData) => {
-          return await super.render(obj, innerData, true);
+          return await this.renderComputedData(obj, innerData, true);
         },
-        declaredDependencies
+        declaredDependencies,
+        this.getParseForSymbolsFunction(obj)
       );
     } else {
       // Numbers, booleans, etc
@@ -564,13 +565,15 @@ class Template extends TemplateContent {
       this.computedData.addTemplateString(
         "page.url",
         async (data) => await this.getOutputHref(data),
-        data.permalink ? ["permalink"] : undefined
+        data.permalink ? ["permalink"] : undefined,
+        false // skip symbol resolution
       );
 
       this.computedData.addTemplateString(
         "page.outputPath",
         async (data) => await this.getOutputPath(data),
-        data.permalink ? ["permalink"] : undefined
+        data.permalink ? ["permalink"] : undefined,
+        false // skip symbol resolution
       );
 
       // actually add the computed data

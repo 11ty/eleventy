@@ -1,5 +1,4 @@
 const test = require("ava");
-const Template = require("../src/Template");
 const TemplateData = require("../src/TemplateData");
 const getNewTemplate = require("./_getNewTemplateForTests");
 const TemplateConfig = require("../src/TemplateConfig");
@@ -166,4 +165,24 @@ test("eleventyComputed intermixes with global data", async (t) => {
   t.is(data.image2, "second");
   t.is(data.image3, "third-global");
   t.is(data.eleventyNavigation.key, "nested-first-global");
+});
+
+test("eleventyComputed using symbol parsing on template strings", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs-computed-symbolparse/test.njk",
+    "./test/stubs-computed-symbolparse/",
+    "./test/stubs-computed-symbolparse/_site"
+  );
+  tmpl.config.nunjucksFilters.fail = function (str) {
+    // Filter expects a certain String format, don’t use the (((11ty))) string hack
+    if (!str || str.length !== 1) {
+      throw new Error("Expect a one character string");
+    }
+    return `${str}`;
+  };
+
+  let data = await getRenderedData(tmpl);
+  t.is(data.a, "a");
+  t.is(data.b, "b");
+  t.is(data.c, "ab");
 });

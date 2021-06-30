@@ -10,6 +10,7 @@ const debug = require("debug")("Eleventy:ComputedData");
 class ComputedData {
   constructor(config) {
     this.computed = {};
+    this.symbolParseFunctions = {};
     this.templateStringKeyLookup = {};
     this.computedKeys = new Set();
     this.declaredDependencies = {};
@@ -17,24 +18,33 @@ class ComputedData {
     this.config = config;
   }
 
-  add(key, fn, declaredDependencies = []) {
+  add(key, renderFn, declaredDependencies = [], symbolParseFn = undefined) {
     this.computedKeys.add(key);
     this.declaredDependencies[key] = declaredDependencies;
 
     // bind config filters/JS functions
-    if (typeof fn === "function") {
+    if (typeof renderFn === "function") {
       let fns = {};
       if (this.config) {
         fns = this.config.javascriptFunctions;
       }
-      fn = fn.bind(fns);
+      renderFn = renderFn.bind(fns);
     }
 
-    lodashSet(this.computed, key, fn);
+    lodashSet(this.computed, key, renderFn);
+
+    if (symbolParseFn) {
+      lodashSet(this.symbolParseFunctions, key, symbolParseFn);
+    }
   }
 
-  addTemplateString(key, fn, declaredDependencies = []) {
-    this.add(key, fn, declaredDependencies);
+  addTemplateString(
+    key,
+    renderFn,
+    declaredDependencies = [],
+    symbolParseFn = undefined
+  ) {
+    this.add(key, renderFn, declaredDependencies, symbolParseFn);
     this.templateStringKeyLookup[key] = true;
   }
 
@@ -49,13 +59,22 @@ class ComputedData {
 
       if (typeof computed !== "function") {
         // add nodes for non functions (primitives like booleans, etc)
+        // This will not handle template strings, as they are normalized to functions
         this.queue.addNode(key);
       } else {
         this.queue.uses(key, this.declaredDependencies[key]);
 
-        let isTemplateString = !!this.templateStringKeyLookup[key];
-        let proxy = isTemplateString ? proxyByTemplateString : proxyByProxy;
-        let varsUsed = await proxy.findVarsUsed(computed, data);
+        let symbolParseFn = lodashGet(this.symbolParseFunctions, key);
+        let varsUsed = [];
+        if (symbolParseFn) {
+          // use the parseForSymbols function in the TemplateEngine
+          varsUsed = symbolParseFn();
+        } else if (symbolParseFn !== false) {
+          // skip resolution is this is false (just use declaredDependencies)
+          let isTemplateString = !!this.templateStringKeyLookup[key];
+          let proxy = isTemplateString ? proxyByTemplateString : proxyByProxy;
+          varsUsed = await proxy.findVarsUsed(computed, data);
+        }
 
         debug("%o accesses %o variables", key, varsUsed);
         let filteredVarsUsed = varsUsed.filter((varUsed) => {

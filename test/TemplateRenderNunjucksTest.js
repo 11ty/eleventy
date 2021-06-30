@@ -805,3 +805,28 @@ test("Nunjucks bypass compilation", async (t) => {
   t.is(tr.engine.needsCompilation("<p>{% tag %}{% endtag %}</p>"), true);
   t.is(tr.engine.needsCompilation("<p>test</p>"), false);
 });
+
+test("Nunjucks Parse for Symbols", async (t) => {
+  let tr = getNewTemplateRender("njk");
+  let engine = tr.engine;
+
+  t.deepEqual(engine.parseForSymbols("<p>{{ name }}</p>"), ["name"]);
+  t.deepEqual(engine.parseForSymbols("<p>{{ eleventy.deep.nested }}</p>"), [
+    "eleventy.deep.nested",
+  ]);
+  t.deepEqual(engine.parseForSymbols("<p>{{ a }} {{ b }}</p>"), ["a", "b"]);
+  t.deepEqual(
+    engine.parseForSymbols("<p>{% if true %}{{ c }}{% endif %}</p>"),
+    ["c"]
+  );
+  t.deepEqual(
+    engine.parseForSymbols("<p>{% if false %}{{ c }}{% endif %}</p>"),
+    ["c"]
+  );
+  t.deepEqual(engine.parseForSymbols("{{ collections.all[0] }}>"), [
+    "collections.all",
+  ]);
+  t.deepEqual(engine.parseForSymbols("{{ collections.mine }}>"), [
+    "collections.mine",
+  ]);
+});

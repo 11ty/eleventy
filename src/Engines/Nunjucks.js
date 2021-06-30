@@ -1,4 +1,6 @@
 const NunjucksLib = require("nunjucks");
+const parser = NunjucksLib.parser;
+const nodes = NunjucksLib.nodes;
 const TemplateEngine = require("./TemplateEngine");
 const TemplatePath = require("../TemplatePath");
 const EleventyErrorUtil = require("../EleventyErrorUtil");
@@ -358,6 +360,37 @@ class Nunjucks extends TemplateEngine {
     );
   }
 
+  /* Outputs an Array of lodash.get selectors */
+  parseForSymbols(str) {
+    let obj = parser.parse(str);
+    let linesplit = str.split("\n");
+    let values = obj.findAll(nodes.Value);
+    let symbols = obj.findAll(nodes.Symbol).map((entry) => {
+      let name = [entry.value];
+      let nestedIndex = -1;
+      for (let val of values) {
+        if (nestedIndex > -1) {
+          /* deep.object.syntax */
+          if (linesplit[val.lineno].charAt(nestedIndex) === ".") {
+            name.push(val.value);
+            nestedIndex += val.value.length + 1;
+          } else {
+            nestedIndex = -1;
+          }
+        } else if (
+          val.lineno === entry.lineno &&
+          val.colno === entry.colno &&
+          val.value === entry.value
+        ) {
+          nestedIndex = entry.colno + entry.value.length;
+        }
+      }
+      return name.join(".");
+    });
+
+    return symbols;
+  }
+
   async compile(str, inputPath) {
     if (!this.needsCompilation(str)) {
       return async function () {
@@ -375,6 +408,7 @@ class Nunjucks extends TemplateEngine {
     } else {
       tmpl = new NunjucksLib.Template(str, this.njkEnv, inputPath, true);
     }
+
     return async function (data) {
       return new Promise(function (resolve, reject) {
         tmpl.render(data, function (err, res) {

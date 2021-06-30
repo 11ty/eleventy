@@ -282,6 +282,18 @@ class TemplateContent {
     }
   }
 
+  getParseForSymbolsFunction(str) {
+    if ("parseForSymbols" in this.engine) {
+      return () => {
+        return this.engine.parseForSymbols(str);
+      };
+    }
+  }
+
+  async renderComputedData(str, data) {
+    return this._render(str, data, true);
+  }
+
   async renderPermalink(permalink, data, bypassMarkdown) {
     return this._render(permalink, data, bypassMarkdown);
   }
