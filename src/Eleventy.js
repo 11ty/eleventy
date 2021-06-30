@@ -450,6 +450,10 @@ Verbose Output: ${this.verboseMode}`);
     this._logger = logger;
   }
 
+  disableLogger() {
+    this._logger.overrideLogger(false);
+  }
+
   /* Getter for error handler */
   get errorHandler() {
     if (!this._errorHandler) {

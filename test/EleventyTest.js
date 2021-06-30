@@ -45,10 +45,10 @@ test("Eleventy set input/output", async (t) => {
 });
 
 test("Eleventy process.ENV", async (t) => {
-  let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
-
-  process.env.ELEVENTY_ROOT = "";
+  delete process.env.ELEVENTY_ROOT;
   t.falsy(process.env.ELEVENTY_ROOT);
+
+  let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
   await elev.init();
   t.truthy(process.env.ELEVENTY_ROOT);
 
@@ -154,6 +154,7 @@ test("Eleventy set input/output, one file input exitCode", async (t) => {
     "./test/stubs/exitCode/_site"
   );
   elev.setIsVerbose(false);
+  elev.disableLogger();
   await elev.init();
   await elev.write();
 
