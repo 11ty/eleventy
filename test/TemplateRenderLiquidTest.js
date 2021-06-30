@@ -1046,3 +1046,34 @@ test("Liquid reverse filter in {% for %}", async (t) => {
   );
   t.is(await fn({ test: [1, 2, 3] }), "321");
 });
+
+test("Liquid Parse for Symbols", async (t) => {
+  let tr = getNewTemplateRender("liquid");
+  let engine = tr.engine;
+
+  t.deepEqual(engine.parseForSymbols("<p>{{ name }}</p>"), ["name"]);
+  t.deepEqual(engine.parseForSymbols("<p>{{ eleventy.deep.nested }}</p>"), [
+    "eleventy.deep.nested",
+  ]);
+  t.deepEqual(engine.parseForSymbols("<p>{{ a }} {{ b }}</p>"), ["a", "b"]);
+  t.deepEqual(
+    engine.parseForSymbols("<p>{% if true %}{{ c }}{% endif %}</p>"),
+    ["c"]
+  );
+  t.deepEqual(
+    engine.parseForSymbols("<p>{% if false %}{{ c }}{% endif %}</p>"),
+    ["c"]
+  );
+
+  t.deepEqual(engine.parseForSymbols("{{ collections.all[0] }}>"), [
+    // Note that the Nunjucks parser returns collections.all
+    "collections.all[0]",
+  ]);
+  t.deepEqual(engine.parseForSymbols("{{ collections.mine }}>"), [
+    "collections.mine",
+  ]);
+
+  t.deepEqual(engine.parseForSymbols("{{ collections.mine | test }}>"), [
+    "collections.mine",
+  ]);
+});

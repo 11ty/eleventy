@@ -203,6 +203,18 @@ class Liquid extends TemplateEngine {
     });
   }
 
+  parseForSymbols(str) {
+    let tokenizer = new liquidLib.Tokenizer(str);
+    let tokens = tokenizer.readTopLevelTokens();
+    let symbols = tokens
+      .filter((token) => token.kind === liquidLib.TokenKind.Output)
+      .map((token) => {
+        // manually remove filters 😅
+        return token.content.split("|").map((entry) => entry.trim())[0];
+      });
+    return symbols;
+  }
+
   needsCompilation(str) {
     let options = this.liquidLib.options;
 

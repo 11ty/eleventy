@@ -167,7 +167,7 @@ test("eleventyComputed intermixes with global data", async (t) => {
   t.is(data.eleventyNavigation.key, "nested-first-global");
 });
 
-test("eleventyComputed using symbol parsing on template strings", async (t) => {
+test("eleventyComputed using symbol parsing on template strings (nunjucks)", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs-computed-symbolparse/test.njk",
     "./test/stubs-computed-symbolparse/",
@@ -177,6 +177,26 @@ test("eleventyComputed using symbol parsing on template strings", async (t) => {
     // Filter expects a certain String format, don’t use the (((11ty))) string hack
     if (!str || str.length !== 1) {
       throw new Error("Expect a one character string");
+    }
+    return `${str}`;
+  };
+
+  let data = await getRenderedData(tmpl);
+  t.is(data.a, "a");
+  t.is(data.b, "b");
+  t.is(data.c, "ab");
+});
+
+test.skip("eleventyComputed using symbol parsing on template strings (liquid)", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs-computed-symbolparse/test.liquid",
+    "./test/stubs-computed-symbolparse/",
+    "./test/stubs-computed-symbolparse/_site"
+  );
+  tmpl.config.liquidFilters.fail = function (str) {
+    // Filter expects a certain String format, don’t use the (((11ty))) string hack
+    if (!str || str.length !== 1) {
+      throw new Error("Expect a one character string: " + str);
     }
     return `${str}`;
   };

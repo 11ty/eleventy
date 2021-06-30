@@ -824,9 +824,16 @@ test("Nunjucks Parse for Symbols", async (t) => {
     ["c"]
   );
   t.deepEqual(engine.parseForSymbols("{{ collections.all[0] }}>"), [
+    // Note that the Liquid parser returns collections.all[0]
     "collections.all",
   ]);
   t.deepEqual(engine.parseForSymbols("{{ collections.mine }}>"), [
+    "collections.mine",
+  ]);
+
+  t.deepEqual(engine.parseForSymbols("{{ collections.mine | test }}>"), [
+    // TODO not ideal to have `test` in here?
+    "test",
     "collections.mine",
   ]);
 });

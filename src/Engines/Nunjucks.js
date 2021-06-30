@@ -388,7 +388,7 @@ class Nunjucks extends TemplateEngine {
       return name.join(".");
     });
 
-    return symbols;
+    return Array.from(new Set(symbols));
   }
 
   async compile(str, inputPath) {
