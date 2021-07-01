@@ -1,6 +1,4 @@
 const NunjucksLib = require("nunjucks");
-const parser = NunjucksLib.parser;
-const nodes = NunjucksLib.nodes;
 const TemplateEngine = require("./TemplateEngine");
 const TemplatePath = require("../TemplatePath");
 const EleventyErrorUtil = require("../EleventyErrorUtil");
@@ -206,8 +204,8 @@ class Nunjucks extends TemplateEngine {
     return obj;
   }
 
-  addShortcode(shortcodeName, shortcodeFn, isAsync = false) {
-    function ShortcodeFunction() {
+  _getShortcodeFn(shortcodeName, shortcodeFn, isAsync = false) {
+    return function ShortcodeFunction() {
       this.tags = [shortcodeName];
 
       this.parse = function (parser, nodes) {
@@ -271,13 +269,11 @@ class Nunjucks extends TemplateEngine {
           }
         }
       };
-    }
-
-    this.njkEnv.addExtension(shortcodeName, new ShortcodeFunction());
+    };
   }
 
-  addPairedShortcode(shortcodeName, shortcodeFn, isAsync = false) {
-    function PairedShortcodeFunction() {
+  _getPairedShortcodeFn(shortcodeName, shortcodeFn, isAsync = false) {
+    return function PairedShortcodeFunction() {
       this.tags = [shortcodeName];
 
       this.parse = function (parser, nodes) {
@@ -341,9 +337,17 @@ class Nunjucks extends TemplateEngine {
           }
         }
       };
-    }
+    };
+  }
 
-    this.njkEnv.addExtension(shortcodeName, new PairedShortcodeFunction());
+  addShortcode(shortcodeName, shortcodeFn, isAsync = false) {
+    let fn = this._getShortcodeFn(shortcodeName, shortcodeFn, isAsync);
+    this.njkEnv.addExtension(shortcodeName, new fn());
+  }
+
+  addPairedShortcode(shortcodeName, shortcodeFn, isAsync = false) {
+    let fn = this._getPairedShortcodeFn(shortcodeName, shortcodeFn, isAsync);
+    this.njkEnv.addExtension(shortcodeName, new fn());
   }
 
   needsCompilation(str) {
@@ -360,9 +364,42 @@ class Nunjucks extends TemplateEngine {
     );
   }
 
+  _getParseExtensions() {
+    if (this._parseExtensions) {
+      return this._parseExtensions;
+    }
+
+    // add extensions so the parser knows about our custom tags/blocks
+    let ext = [];
+    for (let name in this.config.nunjucksTags) {
+      let fn = this._getShortcodeFn(name, () => {});
+      ext.push(new fn());
+    }
+    for (let name in this.config.nunjucksShortcodes) {
+      let fn = this._getShortcodeFn(name, () => {});
+      ext.push(new fn());
+    }
+    for (let name in this.config.nunjucksAsyncShortcodes) {
+      let fn = this._getShortcodeFn(name, () => {}, true);
+      ext.push(new fn());
+    }
+    for (let name in this.config.nunjucksPairedShortcodes) {
+      let fn = this._getPairedShortcodeFn(name, () => {});
+      ext.push(new fn());
+    }
+    for (let name in this.config.nunjucksAsyncPairedShortcodes) {
+      let fn = this._getPairedShortcodeFn(name, () => {}, true);
+      ext.push(new fn());
+    }
+
+    this._parseExtensions = ext;
+    return ext;
+  }
+
   /* Outputs an Array of lodash.get selectors */
   parseForSymbols(str) {
-    let obj = parser.parse(str);
+    const { parser, nodes } = NunjucksLib;
+    let obj = parser.parse(str, this._getParseExtensions());
     let linesplit = str.split("\n");
     let values = obj.findAll(nodes.Value);
     let symbols = obj.findAll(nodes.Symbol).map((entry) => {

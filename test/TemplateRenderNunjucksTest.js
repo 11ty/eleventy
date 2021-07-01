@@ -837,3 +837,11 @@ test("Nunjucks Parse for Symbols", async (t) => {
     "collections.mine",
   ]);
 });
+
+test("Nunjucks Parse for Symbols with custom block", async (t) => {
+  let tr = getNewTemplateRender("njk");
+  let engine = tr.engine;
+  engine.config.nunjucksShortcodes.test = function () {};
+
+  t.deepEqual(engine.parseForSymbols("<p>{{ name }} {% test %}</p>"), ["name"]);
+});
