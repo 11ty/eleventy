@@ -9,7 +9,8 @@ module.exports = function (url, pathPrefix) {
   if (
     validUrl.isUri(url) ||
     url.indexOf("http://") === 0 ||
-    url.indexOf("https://") === 0
+    url.indexOf("https://") === 0 ||
+    (url.indexOf("//") === 0 && url !== "//")
   ) {
     return url;
   }
