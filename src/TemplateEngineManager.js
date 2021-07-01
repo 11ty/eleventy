@@ -92,7 +92,7 @@ class TemplateEngineManager {
     // If the user providers a "Custom" engine using addExtension,
     // But that engine's instance is *not* custom,
     // The user must be overriding an existing engine
-    // i.e. addExtension('md', function overrideBehavior() {...})
+    // i.e. addExtension('md', { ...overrideBehavior })
     if (
       this.getClassNameFromTemplateKey(name) === "Custom" &&
       instance.constructor.name !== "CustomEngine"
