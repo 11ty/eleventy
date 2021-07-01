@@ -80,9 +80,9 @@ test("Custom Markdown Render with `compile` override + call to default compiler"
   eleventyConfig.userConfig.extensionMap.add({
     extension: "md",
     key: "md",
-    compile: function (str, inputPath, defaultCompiler) {
+    compile: function (str, inputPath) {
       return async function (data) {
-        const result = await defaultCompiler(data);
+        const result = await this.defaultCompiler(data);
         return `<custom-wrapper>${result.trim()}</custom-wrapper>`;
       };
     },

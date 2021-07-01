@@ -94,11 +94,11 @@ class CustomEngine extends TemplateEngine {
     }
 
     // TODO generalize this (look at JavaScript.js)
-    return this.entry.compile.bind({ config: this.config })(
-      str,
-      inputPath,
-      defaultCompiler
-    );
+    return this.entry.compile
+      // give the user access to this engine's default compiler, if any
+      .bind({ config: this.config, defaultCompiler })(str, inputPath)
+      // bind again for access inside function (data) {...}
+      .bind({ defaultCompiler });
   }
 
   get defaultTemplateFileExtension() {
