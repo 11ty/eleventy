@@ -1,11 +1,15 @@
 const urlFilter = require("./Filters/Url");
 const serverlessUrlFilter = require("./Filters/ServerlessUrl");
 const slugFilter = require("./Filters/Slug");
+const slugifyFilter = require("./Filters/Slugify");
 const getCollectionItem = require("./Filters/GetCollectionItem");
 
 module.exports = function (config) {
   let eleventyConfig = this;
+
   config.addFilter("slug", slugFilter);
+  config.addFilter("slugify", slugifyFilter);
+
   config.addFilter("url", function (url, pathPrefixOverride) {
     let pathPrefix =
       pathPrefixOverride || eleventyConfig.getConfig().pathPrefix;
