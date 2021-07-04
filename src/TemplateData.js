@@ -586,6 +586,9 @@ class TemplateData {
       } else if (data.tags === null) {
         data.tags = [];
       }
+
+      // Deduplicate tags
+      data.tags = [...new Set(data.tags)];
     }
 
     return data;
