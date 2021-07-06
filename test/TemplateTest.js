@@ -2273,64 +2273,6 @@ test("Do not resolve page.url from eleventy serverless data", async (t) => {
   t.is(path, false);
 });
 
-test("Do not resolve page.url from eleventy serverless data (when build also exists in permalink and serverless global data exists)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/permalink-build-serverless/permalink-build-serverless.md",
-    "./test/stubs/",
-    "./test/stubs/_site"
-  );
-  let fakeData = {
-    permalink: {
-      build: "/build/",
-      serverless: "/serverless/",
-    },
-  };
-
-  let outputHref = await tmpl.getOutputHref(fakeData);
-  t.is(outputHref, "/build/");
-
-  let outputLink = await tmpl.getOutputLink(fakeData);
-  t.is(outputLink, "/build/index.html");
-
-  let outputPath = await tmpl.getOutputPath(fakeData);
-  t.is(outputPath, "./test/stubs/_site/build/index.html");
-
-  let { href, link, path } = await tmpl.getOutputLocations(fakeData);
-  t.is(href, "/build/");
-  t.is(link, "/build/index.html");
-  t.is(path, "./test/stubs/_site/build/index.html");
-});
-
-test("Do not resolve page.url from eleventy serverless data (when build also exists in permalink and serverless global data does not exist)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/permalink-build-serverless/permalink-build-serverless.md",
-    "./test/stubs/",
-    "./test/stubs/_site"
-  );
-  let fakeData = {
-    permalink: {
-      build: "/build/",
-      serverless: "/serverless/",
-    },
-  };
-
-  let outputHref = await tmpl.getOutputHref(fakeData);
-  t.is(outputHref, "/build/");
-
-  // These should be false because the eleventy.serverless object is set.
-  // When in build-mode they would not be false.
-  let outputLink = await tmpl.getOutputLink(fakeData);
-  t.is(outputLink, "/build/index.html");
-
-  let outputPath = await tmpl.getOutputPath(fakeData);
-  t.is(outputPath, "./test/stubs/_site/build/index.html");
-
-  let { href, link, path } = await tmpl.getOutputLocations(fakeData);
-  t.is(href, "/build/");
-  t.is(link, "/build/index.html");
-  t.is(path, "./test/stubs/_site/build/index.html");
-});
-
 test("Do not override page.url with serverless url", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/permalink-build-serverless/permalink-build-serverless.md",
