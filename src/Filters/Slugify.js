@@ -1,8 +1,7 @@
-const slugify = require("slugify");
+const slugify = require("@sindresorhus/slugify");
 
 module.exports = function(str, options = {}) {
   return slugify(str, Object.assign({
-    replacement: "-",
-    lower: true
+    decamelize: false
   }, options));
 };

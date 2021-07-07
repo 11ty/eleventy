@@ -95,6 +95,7 @@
   "dependencies": {
     "@11ty/dependency-tree": "^2.0.0",
     "@iarna/toml": "^2.2.5",
+    "@sindresorhus/slugify": "^1.1.2",
     "browser-sync": "^2.26.14",
     "chalk": "^4.1.0",
     "chokidar": "^3.5.1",
