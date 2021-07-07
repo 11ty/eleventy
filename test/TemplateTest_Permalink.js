@@ -200,16 +200,6 @@ test("Using slugify filter!", async (t) => {
   t.is(await tmpl.getOutputPath(), "./dist/subdir/slug-love-candidate-lyublyu/index.html");
 });
 
-test("Using slugify filter with apostrophe", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/slugify-filter/apostrophe.njk",
-    "./test/slugify-filter/",
-    "./dist"
-  );
-
-  t.is(await tmpl.getOutputPath(), "./dist/subdir/hi-i-m-zach/index.html");
-});
-
 test("Using slugify filter with comma", async (t) => {
   let tmpl = getNewTemplate(
     "./test/slugify-filter/comma.njk",
