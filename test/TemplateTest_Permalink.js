@@ -200,7 +200,7 @@ test("Using slugify filter!", async (t) => {
   t.is(await tmpl.getOutputPath(), "./dist/subdir/slug-love-candidate-lyublyu/index.html");
 });
 
-test("Using slugify filter with comma", async (t) => {
+test("Using slugify filter with comma and apostrophe", async (t) => {
   let tmpl = getNewTemplate(
     "./test/slugify-filter/comma.njk",
     "./test/slugify-filter/",
@@ -208,4 +208,24 @@ test("Using slugify filter with comma", async (t) => {
   );
 
   t.is(await tmpl.getOutputPath(), "./dist/subdir/hi-i-m-zach/index.html");
+});
+
+test("Using slug filter with options params", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/slugify-filter/slug-options.njk",
+    "./test/slugify-filter/",
+    "./dist"
+  );
+
+  t.is(await tmpl.getOutputPath(), "./dist/subdir/hi_i_am_zach/index.html");
+});
+
+test("Using slugify filter with options params", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/slugify-filter/slugify-options.njk",
+    "./test/slugify-filter/",
+    "./dist"
+  );
+
+  t.is(await tmpl.getOutputPath(), "./dist/subdir/hi-i-m-z-ach/index.html");
 });
