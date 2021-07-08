@@ -1425,6 +1425,26 @@ test("Data Cascade Tag Merge (Deep merge)", async (t) => {
   t.deepEqual(data.tags.sort(), ["tagA", "tagB", "tagC", "tagD"]);
 });
 
+test("Data Cascade Tag Merge (Deep Merge - Deduplication)", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  // Default changed in 1.0
+  // eleventyConfig.userConfig.setDataDeepMerge(true);
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  await dataObj.cacheData();
+
+  let tmpl = getNewTemplate(
+    "./test/stubs/data-cascade/template.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj,
+    null,
+    eleventyConfig
+  );
+
+  let data = await tmpl.getData();
+  t.deepEqual(data.tags.sort(), ["tagA", "tagB", "tagC", "tagD"]);
+});
+
 test("Data Cascade Tag Merge (Shallow merge)", async (t) => {
   let eleventyConfig = new TemplateConfig();
   // Default changed in 1.0
