@@ -177,6 +177,7 @@ test("Eleventy to json", async (t) => {
       {
         url: "/test/",
         inputPath: "./test/stubs--to/test.md",
+        outputPath: "_site/test/index.html",
         content: "<h1>hi</h1>\n",
       },
     ]
@@ -187,6 +188,7 @@ test("Eleventy to json", async (t) => {
       {
         url: "/test2/",
         inputPath: "./test/stubs--to/test2.liquid",
+        outputPath: "_site/test2/index.html",
         content: "hello",
       },
     ]

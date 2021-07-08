@@ -794,6 +794,7 @@ class Template extends TemplateContent {
           let obj = {
             url: page.url,
             inputPath: page.inputPath,
+            outputPath: page.outputPath,
             content: content,
           };
 
