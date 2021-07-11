@@ -616,7 +616,12 @@ class UserConfig {
   }
 
   setDataDeepMerge(deepMerge) {
+    this._dataDeepMergeModified = true;
     this.dataDeepMerge = !!deepMerge;
+  }
+
+  isDataDeepMergeModified() {
+    return this._dataDeepMergeModified;
   }
 
   addWatchTarget(additionalWatchTargets) {

@@ -906,8 +906,11 @@ Arguments:
     }
 
     try {
-      await this.config.events.emit("beforeBuild");
-      await this.config.events.emit("eleventy.before");
+      let eventsArg = {
+        inputDir: this.config.inputDir,
+      };
+      await this.config.events.emit("beforeBuild", eventsArg);
+      await this.config.events.emit("eleventy.before", eventsArg);
 
       let promise;
       if (to === "fs") {
@@ -930,8 +933,8 @@ Arguments:
         ret = this.logger.closeStream(to);
       }
 
-      await this.config.events.emit("afterBuild");
-      await this.config.events.emit("eleventy.after");
+      await this.config.events.emit("afterBuild", eventsArg);
+      await this.config.events.emit("eleventy.after", eventsArg);
     } catch (e) {
       hasError = true;
       ret = {
