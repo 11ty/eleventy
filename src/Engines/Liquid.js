@@ -48,7 +48,6 @@ class Liquid extends TemplateEngine {
     let defaults = {
       root: [super.getIncludesDir()], // overrides in compile with inputPath below
       extname: ".liquid",
-      dynamicPartials: true,
       strictFilters: true,
       // TODO?
       // cache: true,
