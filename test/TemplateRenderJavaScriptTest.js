@@ -162,19 +162,6 @@ test("JS Render using Vue (with a layout)", async (t) => {
   );
 });
 
-test("JS Render using ViperHTML", async (t) => {
-  let fn = await getNewTemplateRender(
-    "./test/stubs/viperhtml.11ty.js"
-  ).getCompiledTemplate();
-  t.is(
-    await fn({ name: "Zach", html: "<strong>Hi</strong>" }),
-    `<div>
-  This is a viper template, Zach
-  <strong>Hi</strong>
-</div>`
-  );
-});
-
 test("JS Render with a function", async (t) => {
   t.plan(8);
 
