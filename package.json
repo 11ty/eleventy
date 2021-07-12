@@ -42,7 +42,6 @@
   ],
   "scripts": {
     "default": "npm run test",
-    "doc": "jsdoc -c .jsdoc.conf.json -d ./api-docs -p ./package.json -R README.md -t ./node_modules/ink-docstrap/template -r src/",
     "test": "npx ava --verbose",
     "lint-staged": "lint-staged",
     "coverage": "npx nyc ava && npx nyc report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && node cmd.js --config=docs-src/.eleventy.docs.js",
@@ -78,8 +77,6 @@
     "@11ty/eleventy-plugin-syntaxhighlight": "^3.1.1",
     "ava": "^3.15.0",
     "husky": "^7.0.1",
-    "ink-docstrap": "1.3.2",
-    "jsdoc": "3.6.7",
     "js-yaml": "^4.1.0",
     "lint-staged": "^11.0.0",
     "markdown-it-emoji": "^2.0.0",
