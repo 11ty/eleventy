@@ -74,7 +74,7 @@
     ]
   },
   "devDependencies": {
-    "@11ty/eleventy-plugin-syntaxhighlight": "^3.1.1",
+    "@11ty/eleventy-plugin-syntaxhighlight": "^3.1.2",
     "ava": "^3.15.0",
     "husky": "^7.0.1",
     "js-yaml": "^4.1.0",
