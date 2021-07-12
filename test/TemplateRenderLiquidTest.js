@@ -64,10 +64,11 @@ test("Liquid Render Include", async (t) => {
     "liquid"
   );
 
-  let fn = await getNewTemplateRender(
-    "liquid",
-    "./test/stubs/"
-  ).getCompiledTemplate("<p>{% include included %}</p>");
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/");
+  tr.engine.setLiquidOptions({
+    dynamicPartials: false,
+  });
+  let fn = await tr.getCompiledTemplate("<p>{% include included %}</p>");
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
@@ -77,26 +78,35 @@ test("Liquid Render Relative Include", async (t) => {
     "liquid"
   );
 
-  let fn = await getNewTemplateRender(
-    "liquid",
-    "./test/stubs/"
-  ).getCompiledTemplate("<p>{% include ./included %}</p>");
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/");
+  tr.engine.setLiquidOptions({
+    dynamicPartials: false,
+  });
+  let fn = await tr.getCompiledTemplate("<p>{% include ./included %}</p>");
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
 test("Liquid Render Relative (current dir) Include", async (t) => {
-  let fn = await getNewTemplateRender(
+  let tr = await getNewTemplateRender(
     "./test/stubs/relative-liquid/does_not_exist_and_thats_ok.liquid",
     "./test/stubs/"
-  ).getCompiledTemplate("<p>{% include ./dir/included %}</p>");
+  );
+  tr.engine.setLiquidOptions({
+    dynamicPartials: false,
+  });
+  let fn = await tr.getCompiledTemplate("<p>{% include ./dir/included %}</p>");
   t.is(await fn(), "<p>TIME IS RELATIVE.</p>");
 });
 
 test("Liquid Render Relative (parent dir) Include", async (t) => {
-  let fn = await getNewTemplateRender(
+  let tr = await getNewTemplateRender(
     "./test/stubs/relative-liquid/dir/does_not_exist_and_thats_ok.liquid",
     "./test/stubs/"
-  ).getCompiledTemplate("<p>{% include ../dir/included %}</p>");
+  );
+  tr.engine.setLiquidOptions({
+    dynamicPartials: false,
+  });
+  let fn = await tr.getCompiledTemplate("<p>{% include ../dir/included %}</p>");
   t.is(await fn(), "<p>TIME IS RELATIVE.</p>");
 });
 
@@ -106,7 +116,7 @@ test.skip("Liquid Render Relative (relative include should ignore _includes dir)
     "./test/stubs/"
   );
 
-  let fn = await tr.getCompiledTemplate(`<p>{% include ./included %}</p>`);
+  let fn = await tr.getCompiledTemplate(`<p>{% include './included' %}</p>`);
 
   // This is currently wrong, it uses _includes/included.liquid instead of ./included.liquid
   // Not changing the above to ../stubs/included works fine because that’s not an ambiguous reference.
@@ -119,10 +129,11 @@ test("Liquid Render Include with Liquid Suffix", async (t) => {
     "liquid"
   );
 
-  let fn = await getNewTemplateRender(
-    "liquid",
-    "./test/stubs/"
-  ).getCompiledTemplate("<p>{% include included.liquid %}</p>");
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/");
+  tr.engine.setLiquidOptions({
+    dynamicPartials: false,
+  });
+  let fn = await tr.getCompiledTemplate("<p>{% include included.liquid %}</p>");
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
@@ -132,10 +143,11 @@ test("Liquid Render Include with HTML Suffix", async (t) => {
     "liquid"
   );
 
-  let fn = await getNewTemplateRender(
-    "liquid",
-    "./test/stubs/"
-  ).getCompiledTemplate("<p>{% include included.html %}</p>");
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/");
+  tr.engine.setLiquidOptions({
+    dynamicPartials: false,
+  });
+  let fn = await tr.getCompiledTemplate("<p>{% include included.html %}</p>");
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
@@ -145,10 +157,11 @@ test("Liquid Render Include with HTML Suffix and Data Pass in", async (t) => {
     "liquid"
   );
 
-  let fn = await getNewTemplateRender(
-    "liquid",
-    "./test/stubs/"
-  ).getCompiledTemplate(
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/");
+  tr.engine.setLiquidOptions({
+    dynamicPartials: false,
+  });
+  let fn = await tr.getCompiledTemplate(
     "{% include included-data.html, myVariable: 'myValue' %}"
   );
   t.is((await fn()).trim(), "This is an include. myValue");
@@ -432,57 +445,65 @@ test("Liquid Async Paired Shortcode", async (t) => {
 });
 
 test("Liquid Render Include Subfolder", async (t) => {
-  let fn = await getNewTemplateRender(
-    "liquid",
-    "./test/stubs/"
-  ).getCompiledTemplate(`<p>{% include subfolder/included.liquid %}</p>`);
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/");
+  tr.engine.setLiquidOptions({
+    dynamicPartials: false,
+  });
+  let fn = await tr.getCompiledTemplate(
+    `<p>{% include subfolder/included.liquid %}</p>`
+  );
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
 test("Liquid Render Include Subfolder HTML", async (t) => {
-  let fn = await getNewTemplateRender(
-    "liquid",
-    "./test/stubs/"
-  ).getCompiledTemplate(`<p>{% include subfolder/included.html %}</p>`);
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/");
+  tr.engine.setLiquidOptions({
+    dynamicPartials: false,
+  });
+  let fn = await tr.getCompiledTemplate(
+    `<p>{% include subfolder/included.html %}</p>`
+  );
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
 test("Liquid Render Include Subfolder No file extension", async (t) => {
-  let fn = await getNewTemplateRender(
-    "liquid",
-    "./test/stubs/"
-  ).getCompiledTemplate(`<p>{% include subfolder/included %}</p>`);
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/");
+  tr.engine.setLiquidOptions({
+    dynamicPartials: false,
+  });
+  let fn = await tr.getCompiledTemplate(
+    `<p>{% include subfolder/included %}</p>`
+  );
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-// Skipped tests pending https://github.com/harttle/liquidjs/issues/61
-// Resolution: we’re going to leave this skipped as LiquidJS will require dynamicPartials
-// to be on for quoted includes!
-test.skip("Liquid Render Include Subfolder Single quotes", async (t) => {
-  let fn = await getNewTemplateRender(
-    "liquid",
-    "./test/stubs/"
-  ).getCompiledTemplate(`<p>{% include 'subfolder/included.liquid' %}</p>`);
+// Related to https://github.com/harttle/liquidjs/issues/61
+// Note that we swapped the dynamicPartials default in Eleventy 1.0 from false to true
+test("Liquid Render Include Subfolder Single quotes", async (t) => {
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/");
+  let fn = await tr.getCompiledTemplate(
+    `<p>{% include 'subfolder/included.liquid' %}</p>`
+  );
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-test.skip("Liquid Render Include Subfolder Double quotes", async (t) => {
-  let fn = await getNewTemplateRender(
-    "liquid",
-    "./test/stubs/"
-  ).getCompiledTemplate(`<p>{% include "subfolder/included.liquid" %}</p>`);
+test("Liquid Render Include Subfolder Double quotes", async (t) => {
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/");
+  let fn = await tr.getCompiledTemplate(
+    `<p>{% include "subfolder/included.liquid" %}</p>`
+  );
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-test.skip("Liquid Render Include Subfolder Single quotes HTML", async (t) => {
-  let fn = await getNewTemplateRender(
-    "liquid",
-    "./test/stubs/"
-  ).getCompiledTemplate(`<p>{% include 'subfolder/included.html' %}</p>`);
+test("Liquid Render Include Subfolder Single quotes HTML", async (t) => {
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/");
+  let fn = await tr.getCompiledTemplate(
+    `<p>{% include 'subfolder/included.html' %}</p>`
+  );
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-test.skip("Liquid Render Include Subfolder Double quotes HTML", async (t) => {
+test("Liquid Render Include Subfolder Double quotes HTML", async (t) => {
   let fn = await getNewTemplateRender(
     "liquid",
     "./test/stubs/"
@@ -490,7 +511,7 @@ test.skip("Liquid Render Include Subfolder Double quotes HTML", async (t) => {
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-test.skip("Liquid Render Include Subfolder Single quotes No file extension", async (t) => {
+test("Liquid Render Include Subfolder Single quotes No file extension", async (t) => {
   let fn = await getNewTemplateRender(
     "liquid",
     "./test/stubs/"
@@ -498,27 +519,25 @@ test.skip("Liquid Render Include Subfolder Single quotes No file extension", asy
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-test.skip("Liquid Render Include Subfolder Double quotes No file extension", async (t) => {
+test("Liquid Render Include Subfolder Double quotes No file extension", async (t) => {
   let fn = await getNewTemplateRender(
     "liquid",
     "./test/stubs/"
   ).getCompiledTemplate(`<p>{% include "subfolder/included" %}</p>`);
   t.is(await fn(), "<p>This is an include.</p>");
 });
-/* End skipped tests */
+/* End tests related to dynamicPartials */
 
 test("Liquid Options Overrides", async (t) => {
   let tr = getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.setLiquidOptions({ dynamicPartials: true });
+  tr.engine.setLiquidOptions({ dynamicPartials: false });
 
   let options = tr.engine.getLiquidOptions();
-  t.is(options.dynamicPartials, true);
+  t.is(options.dynamicPartials, false);
 });
 
 test("Liquid Render Include Subfolder Single quotes no extension dynamicPartials true", async (t) => {
   let tr = getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.setLiquidOptions({ dynamicPartials: true });
-
   let fn = await tr.getCompiledTemplate(
     `<p>{% include 'subfolder/included' %}</p>`
   );
@@ -530,8 +549,6 @@ test("Liquid Render Include Subfolder Single quotes (relative include current di
     "./test/stubs/does_not_exist_and_thats_ok.liquid",
     "./test/stubs/"
   );
-  tr.engine.setLiquidOptions({ dynamicPartials: true });
-
   let fn = await tr.getCompiledTemplate(
     `<p>{% include './relative-liquid/dir/included' %}</p>`
   );
@@ -543,8 +560,6 @@ test("Liquid Render Include Subfolder Single quotes (relative include parent dir
     "./test/stubs/subfolder/does_not_exist_and_thats_ok.liquid",
     "./test/stubs/"
   );
-  tr.engine.setLiquidOptions({ dynamicPartials: true });
-
   let fn = await tr.getCompiledTemplate(
     `<p>{% include '../relative-liquid/dir/included' %}</p>`
   );
@@ -553,8 +568,6 @@ test("Liquid Render Include Subfolder Single quotes (relative include parent dir
 
 test("Liquid Render Include Subfolder Double quotes no extension dynamicPartials true", async (t) => {
   let tr = getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.setLiquidOptions({ dynamicPartials: true });
-
   let fn = await tr.getCompiledTemplate(
     `<p>{% include "subfolder/included" %}</p>`
   );
@@ -563,8 +576,6 @@ test("Liquid Render Include Subfolder Double quotes no extension dynamicPartials
 
 test("Liquid Render Include Subfolder Single quotes dynamicPartials true", async (t) => {
   let tr = getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.setLiquidOptions({ dynamicPartials: true });
-
   let fn = await tr.getCompiledTemplate(
     `<p>{% include 'subfolder/included.liquid' %}</p>`
   );
@@ -573,8 +584,6 @@ test("Liquid Render Include Subfolder Single quotes dynamicPartials true", async
 
 test("Liquid Render Include Subfolder Double quotes dynamicPartials true", async (t) => {
   let tr = getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.setLiquidOptions({ dynamicPartials: true });
-
   let fn = await tr.getCompiledTemplate(
     `<p>{% include "subfolder/included.liquid" %}</p>`
   );
@@ -583,8 +592,6 @@ test("Liquid Render Include Subfolder Double quotes dynamicPartials true", async
 
 test("Liquid Render Include Subfolder Single quotes HTML dynamicPartials true", async (t) => {
   let tr = getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.setLiquidOptions({ dynamicPartials: true });
-
   let fn = await tr.getCompiledTemplate(
     `<p>{% include 'subfolder/included.html' %}</p>`
   );
@@ -593,8 +600,6 @@ test("Liquid Render Include Subfolder Single quotes HTML dynamicPartials true", 
 
 test("Liquid Render Include Subfolder Double quotes HTML dynamicPartials true", async (t) => {
   let tr = getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.setLiquidOptions({ dynamicPartials: true });
-
   let fn = await tr.getCompiledTemplate(
     `<p>{% include "subfolder/included.html" %}</p>`
   );
@@ -603,8 +608,6 @@ test("Liquid Render Include Subfolder Double quotes HTML dynamicPartials true", 
 
 test("Liquid Render Include Subfolder Single quotes HTML dynamicPartials true, data passed in", async (t) => {
   let tr = getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.setLiquidOptions({ dynamicPartials: true });
-
   let fn = await tr.getCompiledTemplate(
     `<p>{% include 'subfolder/included.html', myVariable: 'myValue' %}</p>`
   );
@@ -613,8 +616,6 @@ test("Liquid Render Include Subfolder Single quotes HTML dynamicPartials true, d
 
 test("Liquid Render Include Subfolder Double quotes HTML dynamicPartials true, data passed in", async (t) => {
   let tr = getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.setLiquidOptions({ dynamicPartials: true });
-
   let fn = await tr.getCompiledTemplate(
     `<p>{% include "subfolder/included.html", myVariable: "myValue" %}</p>`
   );
