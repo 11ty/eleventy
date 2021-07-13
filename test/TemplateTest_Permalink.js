@@ -125,7 +125,6 @@ test("Disable dynamic permalinks", async (t) => {
   t.is(await tmpl.getOutputHref(), "/{{justastring}}/");
 });
 
-
 test("Permalink with variables!", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/permalinkdata.njk",
@@ -197,7 +196,10 @@ test("Using slugify filter!", async (t) => {
     "./dist"
   );
 
-  t.is(await tmpl.getOutputPath(), "./dist/subdir/slug-love-candidate-lyublyu/index.html");
+  t.is(
+    await tmpl.getOutputPath(),
+    "./dist/subdir/slug-love-candidate-lyublyu/index.html"
+  );
 });
 
 test("Using slugify filter with comma and apostrophe", async (t) => {
@@ -228,4 +230,24 @@ test("Using slugify filter with options params", async (t) => {
   );
 
   t.is(await tmpl.getOutputPath(), "./dist/subdir/hi-i-m-z-ach/index.html");
+});
+
+test("Using slugify filter with a number #854", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/slugify-filter/slugify-number.njk",
+    "./test/slugify-filter/",
+    "./dist"
+  );
+
+  t.is(await tmpl.getOutputPath(), "./dist/subdir/1/index.html");
+});
+
+test("Using slug filter with a number #854", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/slugify-filter/slug-number.njk",
+    "./test/slugify-filter/",
+    "./dist"
+  );
+
+  t.is(await tmpl.getOutputPath(), "./dist/subdir/1/index.html");
 });
