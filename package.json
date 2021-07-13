@@ -78,7 +78,7 @@
     "ava": "^3.15.0",
     "husky": "^7.0.1",
     "js-yaml": "^4.1.0",
-    "lint-staged": "^11.0.0",
+    "lint-staged": "^11.0.1",
     "markdown-it-emoji": "^2.0.0",
     "nyc": "^15.1.0",
     "prettier": "^2.3.2",
