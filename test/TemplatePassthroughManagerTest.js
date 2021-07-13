@@ -1,5 +1,5 @@
 const test = require("ava");
-const fs = require("fs-extra");
+const fs = require("fs");
 const TemplatePassthroughManager = require("../src/TemplatePassthroughManager");
 const TemplateConfig = require("../src/TemplateConfig");
 const EleventyFiles = require("../src/EleventyFiles");
@@ -114,14 +114,8 @@ test("Naughty paths outside of project dir", async (t) => {
     "./test/stubs/img.jpg",
   ];
 
-  let results = await Promise.all(
-    output.map(function (path) {
-      return fs.exists(path);
-    })
-  );
-
-  for (let result of results) {
-    t.false(result);
+  for (let path of output) {
+    t.false(fs.existsSync(path));
   }
 });
 

@@ -1,4 +1,4 @@
-const fs = require("fs-extra");
+const fs = require("fs");
 const path = require("path");
 
 const TemplatePath = require("./TemplatePath");
@@ -121,7 +121,10 @@ class EleventyServe {
   }
 
   serveRedirect(dirName) {
-    fs.outputFile(
+    fs.mkdirSync(this.getRedirectDir(dirName), {
+      recursive: true,
+    });
+    fs.writeFileSync(
       this.getRedirectFilename(dirName),
       `<!doctype html>
   <meta http-equiv="refresh" content="0; url=${this.config.pathPrefix}">

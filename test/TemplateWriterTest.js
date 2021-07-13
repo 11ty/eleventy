@@ -1,5 +1,5 @@
 const test = require("ava");
-const fs = require("fs-extra");
+const fs = require("fs");
 const rimraf = require("rimraf");
 const fastglob = require("fast-glob");
 const parsePath = require("parse-filepath");
@@ -733,14 +733,8 @@ test("Passthrough file output", async (t) => {
     "./test/stubs/template-passthrough/_site/test.js",
   ];
 
-  let results = await Promise.all(
-    output.map(function (path) {
-      return fs.exists(path);
-    })
-  );
-
-  for (let result of results) {
-    t.true(result);
+  for (let path of output) {
+    t.true(fs.existsSync(path));
   }
 
   rimraf.sync("./test/stubs/template-passthrough/_site/");

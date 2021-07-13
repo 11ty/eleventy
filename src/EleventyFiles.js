@@ -1,4 +1,4 @@
-const fs = require("fs-extra");
+const fs = require("fs");
 const fastglob = require("fast-glob");
 
 const EleventyExtensionMap = require("./EleventyExtensionMap");
