@@ -4,6 +4,7 @@ const fs = require("fs");
 const Eleventy = require("./Eleventy");
 const TemplatePath = require("./TemplatePath");
 const UrlPattern = require("url-pattern");
+const deleteRequireCache = require("./Util/DeleteRequireCache");
 const debug = require("debug")("Eleventy:Serverless");
 
 class Serverless {
@@ -75,7 +76,10 @@ class Serverless {
     debug(
       `Including content map (maps output URLs to input files) from ${fullPath}`
     );
-    return require(fullPath);
+    deleteRequireCache(fullPath);
+
+    let mapContent = require(fullPath);
+    return mapContent;
   }
 
   isServerlessUrl(urlPath) {
