@@ -239,6 +239,7 @@ class Eleventy {
     templateCache.clear();
     bench.reset();
     this.eleventyFiles.restart();
+    this.extensionMap.reset();
 
     // reload package.json values (if applicable)
     // TODO only reset this if it changed
@@ -543,6 +544,9 @@ Arguments:
    * @method
    */
   resetConfig() {
+    this.env = this.getEnvironmentVariableValues();
+    this.initializeEnvironmentVariables(this.env);
+
     this.eleventyConfig.reset();
 
     this.config = this.eleventyConfig.getConfig();

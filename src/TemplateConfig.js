@@ -175,9 +175,7 @@ class TemplateConfig {
     if (fs.existsSync(path)) {
       try {
         // remove from require cache so it will grab a fresh copy
-        if (path in require.cache) {
-          deleteRequireCache(path);
-        }
+        deleteRequireCache(path);
 
         localConfig = require(path);
         // debug( "localConfig require return value: %o", localConfig );
@@ -220,7 +218,8 @@ class TemplateConfig {
       debug("Eleventy local project config file not found, skipping.");
     }
 
-    let eleventyConfigApiMergingObject = this.userConfig.getMergingConfigObject();
+    let eleventyConfigApiMergingObject =
+      this.userConfig.getMergingConfigObject();
 
     // remove special merge keys from object
     let savedForSpecialMerge = {

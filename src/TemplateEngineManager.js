@@ -35,6 +35,10 @@ class TemplateEngineManager {
     return this._keyToClassNameMap;
   }
 
+  reset() {
+    this.engineCache = {};
+  }
+
   getClassNameFromTemplateKey(key) {
     let keys = this.keyToClassNameMap;
 
