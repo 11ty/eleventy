@@ -1,4 +1,5 @@
-const fs = require("fs-extra");
+const fs = require("fs");
+const path = require("path");
 const parsePath = require("parse-filepath");
 const normalize = require("normalize-path");
 const isPlainObject = require("lodash/isPlainObject");
@@ -751,11 +752,11 @@ class Template extends TemplateContent {
     } else {
       let templateBenchmark = bench.get("Template Write");
       templateBenchmark.before();
-      return fs.outputFile(outputPath, finalContent).then(() => {
-        templateBenchmark.after();
-        this.writeCount++;
-        debug(`${outputPath} ${lang.finished}.`);
-      });
+      await fs.promises.mkdir(path.parse(outputPath).dir, { recursive: true });
+      await fs.promises.writeFile(outputPath, finalContent);
+      templateBenchmark.after();
+      this.writeCount++;
+      debug(`${outputPath} ${lang.finished}.`);
     }
   }
 
@@ -868,15 +869,7 @@ class Template extends TemplateContent {
       return this._stats;
     }
 
-    this._stats = new Promise((resolve, reject) => {
-      fs.stat(this.inputPath, (err, stats) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(stats);
-        }
-      });
-    });
+    this._stats = fs.promises.stat(this.inputPath);
 
     return this._stats;
   }
