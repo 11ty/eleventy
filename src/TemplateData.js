@@ -1,4 +1,4 @@
-const fs = require("fs-extra");
+const fs = require("fs");
 const fastglob = require("fast-glob");
 const parsePath = require("parse-filepath");
 const lodashset = require("lodash/set");
@@ -29,7 +29,7 @@ class FSExistsCache {
   exists(path) {
     let exists = this._cache.get(path);
     if (!this.has(path)) {
-      exists = fs.pathExistsSync(path);
+      exists = fs.existsSync(path);
       this._cache.set(path, exists);
     }
     return exists;
@@ -140,7 +140,7 @@ class TemplateData {
 
   async _checkInputDir() {
     if (this.inputDirNeedsCheck) {
-      let globalPathStat = await fs.stat(this.inputDir);
+      let globalPathStat = await fs.promises.stat(this.inputDir);
 
       if (!globalPathStat.isDirectory()) {
         throw new Error("Could not find data path directory: " + this.inputDir);
@@ -392,7 +392,7 @@ class TemplateData {
   async _loadFileContents(path) {
     let rawInput;
     try {
-      rawInput = await fs.readFile(path, "utf-8");
+      rawInput = await fs.promises.readFile(path, "utf-8");
     } catch (e) {
       // if file does not exist, return nothing
     }

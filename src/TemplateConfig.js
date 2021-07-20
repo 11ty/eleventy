@@ -1,4 +1,4 @@
-const fs = require("fs-extra");
+const fs = require("fs");
 const chalk = require("chalk");
 const lodashUniq = require("lodash/uniq");
 const lodashMerge = require("lodash/merge");
