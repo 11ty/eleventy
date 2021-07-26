@@ -3,7 +3,6 @@ const path = require("path");
 const parsePath = require("parse-filepath");
 const normalize = require("normalize-path");
 const isPlainObject = require("lodash/isPlainObject");
-const get = require("lodash/get");
 const { DateTime } = require("luxon");
 
 const TemplateData = require("./TemplateData");
@@ -752,11 +751,16 @@ class Template extends TemplateContent {
     } else {
       let templateBenchmark = bench.get("Template Write");
       templateBenchmark.before();
-      await fs.promises.mkdir(path.parse(outputPath).dir, { recursive: true });
-      await fs.promises.writeFile(outputPath, finalContent);
-      templateBenchmark.after();
-      this.writeCount++;
-      debug(`${outputPath} ${lang.finished}.`);
+
+      // TODO add a cache to check if this was already created
+      let templateOutputDir = path.parse(outputPath).dir;
+      await fs.promises.mkdir(templateOutputDir, { recursive: true });
+
+      return fs.promises.writeFile(outputPath, finalContent).then(() => {
+        templateBenchmark.after();
+        this.writeCount++;
+        debug(`${outputPath} ${lang.finished}.`);
+      });
     }
   }
 
