@@ -878,10 +878,31 @@ class Template extends TemplateContent {
     return this._stats;
   }
 
-  async getMappedDate(data) {
-    // TODO(slightlyoff): lots of I/O!
+  async _getDateInstance(key = "birthtimeMs") {
+    let stat = await this.getInputFileStat();
 
-    // should we use Luxon dates everywhere? Right now using built-in `Date`
+    // Issue 1823: https://github.com/11ty/eleventy/issues/1823
+    // return current Date in a Lambda
+    // otherwise ctime would be "1980-01-01T00:00:00.000Z"
+    // otherwise birthtime would be "1970-01-01T00:00:00.000Z"
+    if (stat.birthtimeMs === 0) {
+      return new Date();
+    }
+
+    let newDate = new Date(stat[key]);
+
+    debug(
+      "Template date: using file’s %o for %o of %o (from %o)",
+      key,
+      this.inputPath,
+      newDate,
+      stat.birthtimeMs
+    );
+
+    return newDate;
+  }
+
+  async getMappedDate(data) {
     if ("date" in data && data.date) {
       debug(
         "getMappedDate: using a date in the data for %o of %o",
@@ -895,11 +916,9 @@ class Template extends TemplateContent {
       } else {
         // string
         if (data.date.toLowerCase() === "last modified") {
-          let stat = await this.getInputFileStat();
-          return new Date(stat.ctimeMs);
+          return this._getDateInstance("ctimeMs");
         } else if (data.date.toLowerCase() === "created") {
-          let stat = await this.getInputFileStat();
-          return new Date(stat.birthtimeMs);
+          return this._getDateInstance("birthtimeMs");
         } else {
           // try to parse with Luxon
           let date = DateTime.fromISO(data.date, { zone: "utc" });
@@ -931,17 +950,7 @@ class Template extends TemplateContent {
         return dateObj;
       }
 
-      let stat = await this.getInputFileStat();
-      let createdDate = new Date(stat.birthtimeMs);
-      debug(
-        "getMappedDate: using file created time for %o of %o (from %o)",
-        this.inputPath,
-        createdDate,
-        stat.birthtimeMs
-      );
-
-      // CREATED
-      return createdDate;
+      return this._getDateInstance("birthtimeMs");
     }
   }
 
