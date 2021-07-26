@@ -1,4 +1,4 @@
-const parsePath = require("parse-filepath");
+const path = require("path");
 const TemplatePath = require("./TemplatePath");
 const normalize = require("normalize-path");
 const isPlainObject = require("lodash/isPlainObject");
@@ -87,7 +87,7 @@ class TemplatePermalink {
     }
 
     let cleanLink = this._addDefaultLinkFilename(this.buildLink);
-    let parsed = parsePath(cleanLink);
+    let parsed = path.parse(cleanLink);
 
     return TemplatePath.join(
       parsed.dir,

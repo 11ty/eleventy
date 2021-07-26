@@ -1,6 +1,5 @@
 const path = require("path");
 const normalize = require("normalize-path");
-const parsePath = require("parse-filepath");
 const fs = require("fs");
 
 function TemplatePath() {}
@@ -31,23 +30,23 @@ TemplatePath.getDir = function (path) {
  * Returns the directory portion of a path that either points to a file
  * or ends in a glob pattern. If `path` points to a directory,
  * the returned value will have its last path segment stripped
- * due to how [`parsePath`][1] works.
+ * due to how [`path.parse`][1] works.
  *
- * [1]: https://www.npmjs.com/package/parse-filepath
+ * [1]: https://nodejs.org/api/path.html#path_path_parse_path
  *
  * @param {String} path A path
  * @returns {String} the directory portion of a path.
  */
-TemplatePath.getDirFromFilePath = function (path) {
-  return parsePath(path).dir || ".";
+TemplatePath.getDirFromFilePath = function (filePath) {
+  return path.parse(filePath).dir || ".";
 };
 
 /**
  * Returns the last path segment in a path (no leading/trailing slashes).
  *
- * Assumes [`parsePath`][1] was called on `path` before.
+ * Assumes [`path.parse`][1] was called on `path` before.
  *
- * [1]: https://www.npmjs.com/package/parse-filepath
+ * [1]: https://nodejs.org/api/path.html#path_path_parse_path
  *
  * @param {String} path A path
  * @returns {String} the last path segment in a path
