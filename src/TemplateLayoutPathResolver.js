@@ -1,4 +1,4 @@
-const fs = require("fs-extra");
+const fs = require("fs");
 const TemplatePath = require("./TemplatePath");
 // const debug = require("debug")("Eleventy:TemplateLayoutPathResolver");
 

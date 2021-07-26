@@ -1,5 +1,5 @@
 const os = require("os");
-const fs = require("fs-extra");
+const fs = require("fs");
 const normalize = require("normalize-path");
 const matter = require("gray-matter");
 const lodashSet = require("lodash/set");
@@ -161,7 +161,7 @@ class TemplateContent {
       content = TemplateContent.getCached(this.inputPath);
     }
     if (!content) {
-      content = await fs.readFile(this.inputPath, "utf-8");
+      content = await fs.promises.readFile(this.inputPath, "utf-8");
 
       if (this.config.useTemplateCache) {
         TemplateContent.cache(this.inputPath, content);
