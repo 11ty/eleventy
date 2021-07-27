@@ -1,5 +1,6 @@
 const EleventyBaseError = require("./EleventyBaseError");
 class TemplateEngineManagerConfigError extends EleventyBaseError {}
+
 class TemplateEngineManager {
   constructor(config) {
     if (!config) {
@@ -34,6 +35,10 @@ class TemplateEngineManager {
     return this._keyToClassNameMap;
   }
 
+  reset() {
+    this.engineCache = {};
+  }
+
   getClassNameFromTemplateKey(key) {
     let keys = this.keyToClassNameMap;
 
@@ -55,8 +60,31 @@ class TemplateEngineManager {
       return this.engineCache[name];
     }
 
-    let path = "./Engines/" + this.getClassNameFromTemplateKey(name);
-    const cls = require(path);
+    let cls;
+    // We include these as raw strings (and not more readable variables) so they’re parsed by the bundler.
+    if (name === "ejs") {
+      cls = require("./Engines/Ejs");
+    } else if (name === "md") {
+      cls = require("./Engines/Markdown");
+    } else if (name === "html") {
+      cls = require("./Engines/Html");
+    } else if (name === "hbs") {
+      cls = require("./Engines/Handlebars");
+    } else if (name === "mustache") {
+      cls = require("./Engines/Mustache");
+    } else if (name === "haml") {
+      cls = require("./Engines/Haml");
+    } else if (name === "pug") {
+      cls = require("./Engines/Pug");
+    } else if (name === "njk") {
+      cls = require("./Engines/Nunjucks");
+    } else if (name === "liquid") {
+      cls = require("./Engines/Liquid");
+    } else if (name === "11ty.js") {
+      cls = require("./Engines/JavaScript");
+    } else {
+      cls = require("./Engines/Custom");
+    }
 
     let instance = new cls(name, includesDir, this.config);
     instance.extensionMap = extensionMap;

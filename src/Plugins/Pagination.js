@@ -67,9 +67,36 @@ class Pagination {
 
     this.size = data.pagination.size;
     this.alias = data.pagination.alias;
+    // TODO do we need the full data set for serverless?
+    this.fullDataSet = this._get(this.data, this._getDataKey());
 
-    this.target = this._resolveItems();
-    this.chunkedItems = this.pagedItems;
+    // truncate pagination data to one entry for serverless render
+    if (
+      data.pagination.serverless &&
+      this._has(data, data.pagination.serverless)
+    ) {
+      // Warn: this doesn’t run filter/before/pagination transformations
+      // Warn: `pagination.pages`, pageNumber, links, hrefs, etc
+      let serverlessPaginationKey = this._get(data, data.pagination.serverless);
+      this.chunkedItems = [
+        [this._get(this.fullDataSet, serverlessPaginationKey)],
+      ];
+    } else {
+      // this returns an array
+      this.target = this._resolveItems();
+
+      // Serverless Shortcut when key is not found in data set (probably running local build and expected a :path param in data)
+      // Only collections are relevant for templates that don’t have a permalink.build, they don’t have a templateContent and aren’t written to disk
+      if (
+        data.pagination.serverless &&
+        !data.pagination.addAllPagesToCollections
+      ) {
+        // use the first page only
+        this.chunkedItems = [this.pagedItems[0]];
+      } else {
+        this.chunkedItems = this.pagedItems;
+      }
+    }
   }
 
   setTemplate(tmpl) {
@@ -100,6 +127,12 @@ class Pagination {
     return false;
   }
 
+  _has(target, key) {
+    let notFoundValue = "__NOT_FOUND_ERROR__";
+    let data = lodashGet(target, key, notFoundValue);
+    return data !== notFoundValue;
+  }
+
   _get(target, key) {
     let notFoundValue = "__NOT_FOUND_ERROR__";
     let data = lodashGet(target, key, notFoundValue);
@@ -112,17 +145,13 @@ class Pagination {
   }
 
   _resolveItems() {
-    let fullDataSet = this._get(this.data, this._getDataKey());
-
-    // TODO maybe don’t operate on the full data set for a serverless render
-
     let keys;
-    if (Array.isArray(fullDataSet)) {
-      keys = fullDataSet;
+    if (Array.isArray(this.fullDataSet)) {
+      keys = this.fullDataSet;
     } else if (this.resolveDataToObjectValues()) {
-      keys = Object.values(fullDataSet);
+      keys = Object.values(this.fullDataSet);
     } else {
-      keys = Object.keys(fullDataSet);
+      keys = Object.keys(this.fullDataSet);
     }
 
     // keys must be an array
@@ -269,11 +298,7 @@ class Pagination {
       return [];
     }
 
-    if (this.pagesCache) {
-      return this.pagesCache;
-    }
-
-    let pagesCache = [];
+    let pages = [];
     let items = this.chunkedItems;
     let tmpl = this.template;
     let templates = [];
@@ -318,24 +343,10 @@ class Pagination {
       let cloned = templates[pageNumber];
       cloned.setPaginationData(overrides[pageNumber]);
 
-      pagesCache.push(cloned);
+      pages.push(cloned);
     }
 
-    this.pagesCache = pagesCache;
-
-    return pagesCache;
-  }
-
-  getTruncatedServerlessData(data) {
-    let serverlessKey = data.pagination.serverless;
-    if (!serverlessKey) {
-      throw new Error(
-        "Missing `serverless` key in `pagination` object to point to pagination data."
-      );
-    }
-    let resolvedKey = this._get(data, serverlessKey);
-    let fullDataSet = this._get(data, this._getDataKey());
-    return [this._get(fullDataSet, resolvedKey)];
+    return pages;
   }
 }
 

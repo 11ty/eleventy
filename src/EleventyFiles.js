@@ -1,4 +1,4 @@
-const fs = require("fs-extra");
+const fs = require("fs");
 const fastglob = require("fast-glob");
 
 const EleventyExtensionMap = require("./EleventyExtensionMap");
@@ -30,6 +30,7 @@ class EleventyFiles {
     this.passthroughAll = false;
 
     this.formats = formats;
+    this.eleventyIgnoreContent = false;
 
     // init has not yet been called()
     this.alreadyInit = false;
@@ -69,6 +70,7 @@ class EleventyFiles {
     if (this.input === this.inputDir) {
       this.templateGlobs = this.extensionMap.getGlobs(this.inputDir);
     } else {
+      // input is not a directory
       this.templateGlobs = TemplateGlob.map([this.input]);
     }
 
@@ -111,6 +113,10 @@ class EleventyFiles {
 
   /* For testing */
   _setConfig(config) {
+    if (!config.ignores) {
+      config.ignores = new Set();
+      config.ignores.add("node_modules/**");
+    }
     this.config = config;
     this.initConfig();
   }
@@ -199,47 +205,28 @@ class EleventyFiles {
     return Array.from(uniqueIgnores);
   }
 
-  static getFileIgnores(ignoreFiles, defaultIfFileDoesNotExist) {
+  static getFileIgnores(ignoreFiles) {
     if (!Array.isArray(ignoreFiles)) {
       ignoreFiles = [ignoreFiles];
     }
 
     let ignores = [];
-    let fileFound = false;
-    let dirs = [];
     for (let ignorePath of ignoreFiles) {
       ignorePath = TemplatePath.normalize(ignorePath);
 
       let dir = TemplatePath.getDirFromFilePath(ignorePath);
-      dirs.push(dir);
 
       if (fs.existsSync(ignorePath) && fs.statSync(ignorePath).size > 0) {
-        fileFound = true;
         let ignoreContent = fs.readFileSync(ignorePath, "utf-8");
 
-        // make sure that empty .gitignore with spaces takes default ignore.
-        if (ignoreContent.trim().length === 0) {
-          fileFound = false;
-        } else {
-          ignores = ignores.concat(
-            EleventyFiles.normalizeIgnoreContent(dir, ignoreContent)
-          );
-        }
-      }
-    }
-
-    if (!fileFound && defaultIfFileDoesNotExist) {
-      ignores.push(TemplateGlob.normalizePath(defaultIfFileDoesNotExist));
-      for (let dir of dirs) {
-        ignores.push(
-          TemplateGlob.normalizePath(dir, defaultIfFileDoesNotExist)
+        ignores = ignores.concat(
+          EleventyFiles.normalizeIgnoreContent(dir, ignoreContent)
         );
       }
     }
 
-    ignores.forEach(function (path) {
-      debug(`${ignoreFiles} ignoring: ${path}`);
-    });
+    ignores.forEach((path) => debug(`${ignoreFiles} ignoring: ${path}`));
+
     return ignores;
   }
 
@@ -290,38 +277,43 @@ class EleventyFiles {
     return ignores;
   }
 
-  getIgnores() {
-    let files = [];
-    let rootDirectory = this.localPathRoot || TemplatePath.getWorkingDir();
-    let absoluteInputDir = TemplatePath.absolutePath(this.inputDir);
-    if (this.config.useGitIgnore) {
-      let gitIgnores = [TemplatePath.join(rootDirectory, ".gitignore")];
-      if (rootDirectory !== absoluteInputDir) {
-        gitIgnores.push(TemplatePath.join(this.inputDir, ".gitignore"));
-      }
+  setEleventyIgnoreContent(content) {
+    this.eleventyIgnoreContent = content;
+  }
 
+  getIgnores() {
+    let rootDirectory = this.localPathRoot || ".";
+    let files = [];
+
+    for (let ignore of this.config.ignores) {
+      files = files.concat(TemplateGlob.normalizePath(rootDirectory, ignore));
+    }
+
+    if (this.config.useGitIgnore) {
       files = files.concat(
-        EleventyFiles.getFileIgnores(gitIgnores, "node_modules/**")
+        EleventyFiles.getFileIgnores([
+          TemplatePath.join(rootDirectory, ".gitignore"),
+        ])
       );
     }
 
-    if (this.config.eleventyignoreOverride !== false) {
-      let eleventyIgnores = [
+    if (this.eleventyIgnoreContent !== false) {
+      files = files.concat(this.eleventyIgnoreContent);
+    } else {
+      let absoluteInputDir = TemplatePath.absolutePath(this.inputDir);
+      let eleventyIgnoreFiles = [
         TemplatePath.join(rootDirectory, ".eleventyignore"),
       ];
       if (rootDirectory !== absoluteInputDir) {
-        eleventyIgnores.push(
+        eleventyIgnoreFiles.push(
           TemplatePath.join(this.inputDir, ".eleventyignore")
         );
       }
 
-      files = files.concat(
-        this.config.eleventyignoreOverride ||
-          EleventyFiles.getFileIgnores(eleventyIgnores)
-      );
+      files = files.concat(EleventyFiles.getFileIgnores(eleventyIgnoreFiles));
     }
 
-    // ignore output dir unless that would occlude all input
+    // ignore output dir unless that would exclude all input
     if (!TemplatePath.startsWithSubPath(this.inputDir, this.outputDir)) {
       files = files.concat(TemplateGlob.map(this.outputDir + "/**"));
     }

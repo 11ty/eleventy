@@ -53,6 +53,10 @@ class EleventyExtensionMap {
     return this._engineManager;
   }
 
+  reset() {
+    this.engineManager.reset();
+  }
+
   /* Used for layout path resolution */
   getFileList(path, dir) {
     if (!path) {

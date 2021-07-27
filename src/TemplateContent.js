@@ -1,5 +1,5 @@
 const os = require("os");
-const fs = require("fs-extra");
+const fs = require("fs");
 const normalize = require("normalize-path");
 const matter = require("gray-matter");
 const lodashSet = require("lodash/set");
@@ -161,7 +161,7 @@ class TemplateContent {
       content = TemplateContent.getCached(this.inputPath);
     }
     if (!content) {
-      content = await fs.readFile(this.inputPath, "utf-8");
+      content = await fs.promises.readFile(this.inputPath, "utf-8");
 
       if (this.config.useTemplateCache) {
         TemplateContent.cache(this.inputPath, content);
@@ -282,7 +282,27 @@ class TemplateContent {
     }
   }
 
+  getParseForSymbolsFunction(str) {
+    if ("parseForSymbols" in this.engine) {
+      return () => {
+        return this.engine.parseForSymbols(str);
+      };
+    }
+  }
+
+  async renderComputedData(str, data) {
+    return this._render(str, data, true);
+  }
+
+  async renderPermalink(permalink, data, bypassMarkdown) {
+    return this._render(permalink, data, bypassMarkdown);
+  }
+
   async render(str, data, bypassMarkdown) {
+    return this._render(str, data, bypassMarkdown);
+  }
+
+  async _render(str, data, bypassMarkdown) {
     try {
       let fn = await this.compile(str, bypassMarkdown);
       let templateBenchmark = bench.get("Template Render");
@@ -358,7 +378,7 @@ class TemplateContent {
 
 TemplateContent._inputCache = new Map();
 TemplateContent._compileEngineCache = new Map();
-eventBus.on("resourceModified", (path) => {
+eventBus.on("eleventy.resourceModified", (path) => {
   TemplateContent.deleteCached(path);
 });
 

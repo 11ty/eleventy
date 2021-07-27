@@ -1,8 +1,8 @@
 const test = require("ava");
-const fs = require("fs-extra");
+const fs = require("fs");
 const rimraf = require("rimraf");
 const fastglob = require("fast-glob");
-const parsePath = require("parse-filepath");
+const path = require("path");
 const EleventyFiles = require("../src/EleventyFiles");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 const TemplateWriter = require("../src/TemplateWriter");
@@ -149,8 +149,14 @@ test("__testGetCollectionsData with custom collection (ascending)", async (t) =>
   let templateMap = await tw._createTemplateMap(paths);
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.customPostsAsc.length, 2);
-  t.is(parsePath(collectionsData.customPostsAsc[0].inputPath).base, "test1.md");
-  t.is(parsePath(collectionsData.customPostsAsc[1].inputPath).base, "test2.md");
+  t.is(
+    path.parse(collectionsData.customPostsAsc[0].inputPath).base,
+    "test1.md"
+  );
+  t.is(
+    path.parse(collectionsData.customPostsAsc[1].inputPath).base,
+    "test2.md"
+  );
 });
 
 test("__testGetCollectionsData with custom collection (descending)", async (t) => {
@@ -173,8 +179,8 @@ test("__testGetCollectionsData with custom collection (descending)", async (t) =
   let templateMap = await tw._createTemplateMap(paths);
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.customPosts.length, 2);
-  t.is(parsePath(collectionsData.customPosts[0].inputPath).base, "test2.md");
-  t.is(parsePath(collectionsData.customPosts[1].inputPath).base, "test1.md");
+  t.is(path.parse(collectionsData.customPosts[0].inputPath).base, "test2.md");
+  t.is(path.parse(collectionsData.customPosts[1].inputPath).base, "test1.md");
 });
 
 test("__testGetCollectionsData with custom collection (filter only to markdown input)", async (t) => {
@@ -198,8 +204,8 @@ test("__testGetCollectionsData with custom collection (filter only to markdown i
   let templateMap = await tw._createTemplateMap(paths);
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.onlyMarkdown.length, 2);
-  t.is(parsePath(collectionsData.onlyMarkdown[0].inputPath).base, "test1.md");
-  t.is(parsePath(collectionsData.onlyMarkdown[1].inputPath).base, "test2.md");
+  t.is(path.parse(collectionsData.onlyMarkdown[0].inputPath).base, "test1.md");
+  t.is(path.parse(collectionsData.onlyMarkdown[1].inputPath).base, "test2.md");
 });
 
 test("Pagination with a Collection", async (t) => {
@@ -472,8 +478,8 @@ test("Custom collection returns array", async (t) => {
   let templateMap = await tw._createTemplateMap(paths);
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.returnAllInputPaths.length, 2);
-  t.is(parsePath(collectionsData.returnAllInputPaths[0]).base, "test1.md");
-  t.is(parsePath(collectionsData.returnAllInputPaths[1]).base, "test2.md");
+  t.is(path.parse(collectionsData.returnAllInputPaths[0]).base, "test1.md");
+  t.is(path.parse(collectionsData.returnAllInputPaths[1]).base, "test2.md");
 });
 
 test("Custom collection returns a string", async (t) => {
@@ -733,14 +739,8 @@ test("Passthrough file output", async (t) => {
     "./test/stubs/template-passthrough/_site/test.js",
   ];
 
-  let results = await Promise.all(
-    output.map(function (path) {
-      return fs.exists(path);
-    })
-  );
-
-  for (let result of results) {
-    t.true(result);
+  for (let path of output) {
+    t.true(fs.existsSync(path));
   }
 
   rimraf.sync("./test/stubs/template-passthrough/_site/");

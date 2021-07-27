@@ -1,4 +1,4 @@
-const parsePath = require("parse-filepath");
+const path = require("path");
 const TemplatePath = require("./TemplatePath");
 const normalize = require("normalize-path");
 const isPlainObject = require("lodash/isPlainObject");
@@ -8,22 +8,38 @@ class TemplatePermalink {
   constructor(link, extraSubdir) {
     let isLinkAnObject = isPlainObject(link);
 
-    this._isIgnoredTemplate = false;
     this._isRendered = true;
     this._writeToFileSystem = true;
 
-    let rawLink;
+    let buildLink;
+
     if (isLinkAnObject) {
       if ("build" in link) {
-        rawLink = link.build;
+        buildLink = link.build;
+      }
+
+      // find the first string key
+      for (let key in link) {
+        if (typeof key !== "string") {
+          continue;
+        }
+        if (key !== "build" && link[key] !== false) {
+          // is array of serverless urls, use the first one
+          if (Array.isArray(link[key])) {
+            this.primaryServerlessUrl = link[key][0];
+          } else {
+            this.primaryServerlessUrl = link[key];
+          }
+        }
+        break;
       }
     } else {
-      rawLink = link;
+      buildLink = link;
     }
 
     // permalink: false and permalink: build: false
-    if (typeof rawLink === "boolean") {
-      if (rawLink === false) {
+    if (typeof buildLink === "boolean") {
+      if (buildLink === false) {
         this._writeToFileSystem = false;
       } else {
         throw new Error(
@@ -34,48 +50,44 @@ class TemplatePermalink {
           }false\`?`
         );
       }
-    } else if (rawLink) {
-      this.rawLink = rawLink;
+    } else if (buildLink) {
+      this.buildLink = buildLink;
     }
 
+    this.serverlessUrls = {};
+
     if (isLinkAnObject) {
-      if ("serverless" in link) {
-        this.externalLink = link.serverless;
-      }
+      Object.assign(this.serverlessUrls, link);
+      delete this.serverlessUrls.build;
 
       // default if permalink is an Object but does not have a `build` prop
-      if (!("behavior" in link) && !("build" in link)) {
-        link.behavior = "read";
-      }
-
-      if (link.behavior === "render") {
-        // same as permalink: false and permalink: build: false
-        this._writeToFileSystem = false;
-      } else if (link.behavior === "read") {
+      if (!("build" in link)) {
         this._writeToFileSystem = false;
         this._isRendered = false;
-      } else if (link.behavior === "skip") {
-        this._writeToFileSystem = false;
-        this._isRendered = false;
-        this._isIgnoredTemplate = true;
       }
     }
 
     this.extraPaginationSubdir = extraSubdir || "";
   }
 
-  _cleanLink(link) {
+  getServerlessUrls() {
+    return this.serverlessUrls;
+  }
+
+  _addDefaultLinkFilename(link) {
     return link + (link.substr(-1) === "/" ? "index.html" : "");
   }
 
   toLink() {
-    if (!this.rawLink) {
+    if (this.primaryServerlessUrl) {
+      return this.primaryServerlessUrl;
+    } else if (!this.buildLink) {
       // empty or false
       return false;
     }
 
-    let cleanLink = this._cleanLink(this.rawLink);
-    let parsed = parsePath(cleanLink);
+    let cleanLink = this._addDefaultLinkFilename(this.buildLink);
+    let parsed = path.parse(cleanLink);
 
     return TemplatePath.join(
       parsed.dir,
@@ -84,14 +96,16 @@ class TemplatePermalink {
     );
   }
 
+  // This method is used to generate the `page.url` variable.
+  // Note that in serverless mode this should still exist to generate the content map
+
   // remove all index.html’s from links
   // index.html becomes /
   // test/index.html becomes test/
   toHref() {
-    if (this.externalLink) {
-      return this.externalLink;
-    }
-    if (!this.rawLink) {
+    if (this.primaryServerlessUrl) {
+      return this.primaryServerlessUrl;
+    } else if (!this.buildLink) {
       // empty or false
       return false;
     }
@@ -109,6 +123,10 @@ class TemplatePermalink {
   }
 
   toPath(outputDir) {
+    if (!this.buildLink) {
+      return false;
+    }
+
     let uri = this.toLink();
 
     if (uri === false) {
@@ -119,6 +137,10 @@ class TemplatePermalink {
   }
 
   toPathFromRoot() {
+    if (!this.buildLink) {
+      return false;
+    }
+
     let uri = this.toLink();
 
     if (uri === false) {
@@ -126,23 +148,6 @@ class TemplatePermalink {
     }
 
     return normalize(uri);
-  }
-
-  getBehavior(outputFormat = "fs") {
-    let obj = {
-      read: !this._isIgnoredTemplate,
-      render: this._isRendered,
-      write: this._writeToFileSystem,
-    };
-
-    // override render behavior for --json or --ndjson
-    if (outputFormat !== "fs") {
-      obj.render = "override";
-    }
-
-    obj.includeInCollections = obj.read && obj.render;
-
-    return obj;
   }
 
   static _hasDuplicateFolder(dir, base) {

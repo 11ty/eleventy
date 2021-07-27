@@ -162,19 +162,6 @@ test("JS Render using Vue (with a layout)", async (t) => {
   );
 });
 
-test("JS Render using ViperHTML", async (t) => {
-  let fn = await getNewTemplateRender(
-    "./test/stubs/viperhtml.11ty.js"
-  ).getCompiledTemplate();
-  t.is(
-    await fn({ name: "Zach", html: "<strong>Hi</strong>" }),
-    `<div>
-  This is a viper template, Zach
-  <strong>Hi</strong>
-</div>`
-  );
-});
-
 test("JS Render with a function", async (t) => {
   t.plan(8);
 
@@ -196,7 +183,7 @@ test("JS Render with a function", async (t) => {
   t.is(await fn({ name: "Bill", page: { url: "/hi/" } }), "<p>BILLT9000</p>");
 });
 
-// This doesn’t work, per arrow functions
+// This doesn’t work because arrow functions don’t do `this`
 test.skip("Issue #934: JS Render with an arrow function and javascript function", async (t) => {
   let tr = getNewTemplateRender("./test/stubs/function-filter-arrow.11ty.js");
   tr.config = {

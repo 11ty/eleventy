@@ -1,5 +1,4 @@
 const test = require("ava");
-const fs = require("fs-extra");
 const fsp = require("fs").promises;
 const pretty = require("pretty");
 
@@ -17,36 +16,6 @@ async function getRenderedData(tmpl, pageNumber = 0) {
   let data = await tmpl.getData();
   let templates = await tmpl.getTemplates(data);
   return templates[pageNumber].data;
-}
-
-async function getTemplateMapEntriesWithContent(template, data) {
-  let entries = await template.getTemplateMapEntries(data);
-
-  return Promise.all(
-    entries.map(async (entry) => {
-      entry._pages = await entry.template.getTemplates(entry.data);
-      await Promise.all(
-        entry._pages.map(async (page) => {
-          page.templateContent = await entry.template.getTemplateMapContent(
-            page
-          );
-          return page;
-        })
-      );
-      return entry;
-    })
-  );
-}
-
-async function write(tmpl, data) {
-  let mapEntries = await getTemplateMapEntriesWithContent(tmpl, data);
-  let promises = [];
-  for (let entry of mapEntries) {
-    if (entry.behavior.writeable) {
-      promises.push(tmpl._write(entry.outputPath, entry.templateContent));
-    }
-  }
-  return Promise.all(promises);
 }
 
 function cleanHtml(str) {
@@ -622,70 +591,6 @@ test("Clone the template", async (t) => {
   t.is(await tmpl.getOutputPath(), "./dist/default/index.html");
   t.is(await cloned.getOutputPath(), "./dist/default/index.html");
   t.is(cloned.extensionMap, tmpl.extensionMap);
-});
-
-test("Permalink with variables!", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/permalinkdata.njk",
-    "./test/stubs/",
-    "./dist"
-  );
-
-  t.is(await tmpl.getOutputPath(), "./dist/subdir/slug-candidate/index.html");
-});
-
-test("Permalink with variables and JS front matter!", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/permalinkdata-jsfn.njk",
-    "./test/stubs/",
-    "./dist"
-  );
-
-  t.is(await tmpl.getOutputPath(), "./dist/subdir/slug/index.html");
-});
-
-// This is broken right now, permalink must use the same template language as the template
-test.skip("Use a JavaScript function for permalink in any template language", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/permalinkdata-jspermalinkfn.njk",
-    "./test/stubs/",
-    "./dist"
-  );
-
-  t.is(await tmpl.getOutputPath(), "./dist/subdir/slug/index.html");
-});
-
-test("Permalink with dates!", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/permalinkdate.liquid",
-    "./test/stubs/",
-    "./dist"
-  );
-
-  t.is(await tmpl.getOutputPath(), "./dist/2016/01/01/index.html");
-});
-
-test("Permalink with dates on file name regex!", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/2016-02-01-permalinkdate.liquid",
-    "./test/stubs/",
-    "./dist"
-  );
-
-  t.is(await tmpl.getOutputPath(), "./dist/2016/02/01/index.html");
-});
-
-test("Reuse permalink in directory specific data file", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
-    "./test/stubs/reuse-permalink/test1.liquid",
-    "./test/stubs/",
-    "./dist",
-    dataObj
-  );
-
-  t.is(await tmpl.getOutputPath(), "./dist/2016/01/01/index.html");
 });
 
 test("mapDataAsRenderedTemplates", async (t) => {
@@ -1374,56 +1279,6 @@ test("Test a linter", async (t) => {
   await tmpl._testCompleteRender();
 });
 
-test("permalink: false", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/permalink-false/test.md",
-    "./test/stubs/",
-    "./test/stubs/_site"
-  );
-
-  let data = await tmpl.getData();
-  t.is(await tmpl.getOutputLink(data), false);
-  t.is(await tmpl.getOutputHref(data), false);
-
-  await write(tmpl, data);
-
-  // Input file exists (sanity check for paths)
-  t.is(fs.existsSync("./test/stubs/permalink-false/"), true);
-  t.is(fs.existsSync("./test/stubs/permalink-false/test.md"), true);
-
-  // Output does not exist
-  t.is(fs.existsSync("./test/stubs/_site/permalink-false/"), false);
-  t.is(fs.existsSync("./test/stubs/_site/permalink-false/test/"), false);
-  t.is(
-    fs.existsSync("./test/stubs/_site/permalink-false/test/index.html"),
-    false
-  );
-});
-
-test("permalink: true", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/permalink-true/permalink-true.md",
-    "./test/stubs/",
-    "./test/stubs/_site"
-  );
-
-  let data = await tmpl.getData();
-  await t.throwsAsync(async () => {
-    await tmpl.getOutputLink(data);
-  });
-});
-
-test("Disable dynamic permalinks", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/dynamic-permalink/test.njk",
-    "./test/stubs/",
-    "./test/stubs/_site"
-  );
-
-  t.is(await tmpl.getOutputLink(), "/{{justastring}}/index.html");
-  t.is(await tmpl.getOutputHref(), "/{{justastring}}/");
-});
-
 test("Front Matter Tags (Single)", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/templatetest-frontmatter/single.njk",
@@ -1551,6 +1406,26 @@ test("Data Cascade (Shallow merge)", async (t) => {
 });
 
 test("Data Cascade Tag Merge (Deep merge)", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  // Default changed in 1.0
+  // eleventyConfig.userConfig.setDataDeepMerge(true);
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  await dataObj.cacheData();
+
+  let tmpl = getNewTemplate(
+    "./test/stubs/data-cascade/template.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj,
+    null,
+    eleventyConfig
+  );
+
+  let data = await tmpl.getData();
+  t.deepEqual(data.tags.sort(), ["tagA", "tagB", "tagC", "tagD"]);
+});
+
+test("Data Cascade Tag Merge (Deep Merge - Deduplication)", async (t) => {
   let eleventyConfig = new TemplateConfig();
   // Default changed in 1.0
   // eleventyConfig.userConfig.setDataDeepMerge(true);
@@ -2002,7 +1877,7 @@ This is content.`
 });
 
 test.skip("Custom Front Matter Parsing Options (using TOML)", async (t) => {
-  // Depends on https://github.com/jonschlinkert/gray-matter/issues/92 for Windows
+  // Currently fails on Windows, needs https://github.com/jonschlinkert/gray-matter/issues/92
   let toml = require("toml");
 
   let tmpl = getNewTemplate(
@@ -2015,7 +1890,6 @@ test.skip("Custom Front Matter Parsing Options (using TOML)", async (t) => {
       toml: toml.parse.bind(toml),
     },
   };
-  tmpl.config = newConfig;
 
   let frontmatter = await tmpl.getFrontMatter();
   t.deepEqual(frontmatter.data, {
@@ -2131,7 +2005,7 @@ test("Make sure layout cache takes new changes during watch (nunjucks)", async (
 
   await fsp.writeFile(filePath, `alert("bye");`, { encoding: "utf8" });
 
-  eventBus.emit("resourceModified", filePath);
+  eventBus.emit("eleventy.resourceModified", filePath);
 
   t.is((await tmpl.render(data)).trim(), '<script>alert("bye");</script>');
 });
@@ -2152,7 +2026,7 @@ test("Make sure layout cache takes new changes during watch (liquid)", async (t)
 
   await fsp.writeFile(filePath, `alert("bye");`, { encoding: "utf8" });
 
-  eventBus.emit("resourceModified", filePath);
+  eventBus.emit("eleventy.resourceModified", filePath);
 
   t.is((await tmpl.render(data)).trim(), '<script>alert("bye");</script>');
 });
@@ -2211,6 +2085,203 @@ test("permalink object without build", async (t) => {
     "./test/stubs/_site"
   );
 
-  t.is(await tmpl.getOutputLink(), false);
-  t.is(await tmpl.getOutputHref(), false);
+  t.is(await tmpl.getOutputLink(), "/url/");
+  t.is(await tmpl.getOutputHref(), "/url/");
+});
+
+test("permalink object _getLink", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-nobuild/permalink-nobuild.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  let link = await tmpl._getLink({
+    permalink: {
+      serverless: "/serverless/",
+    },
+  });
+  t.is(await link.toLink(), "/serverless/");
+  t.is(await link.toHref(), "/serverless/");
+
+  t.deepEqual(link.getServerlessUrls(), {
+    serverless: "/serverless/",
+  });
+  t.deepEqual(tmpl.getServerlessUrls(), {
+    serverless: "/serverless/",
+  });
+
+  let link2 = await tmpl._getLink({
+    permalink: {
+      build: "/build/",
+    },
+  });
+  t.is(await link2.toLink(), "/build/index.html");
+  t.is(await link2.toHref(), "/build/");
+  t.deepEqual(link2.getServerlessUrls(), {});
+  t.deepEqual(tmpl.getServerlessUrls(), {});
+
+  let link3 = await tmpl._getLink({
+    permalink: {
+      build: "/build/",
+      serverless: "/serverless/",
+    },
+  });
+  t.is(await link3.toLink(), "/build/index.html");
+  t.is(await link3.toHref(), "/build/");
+  t.deepEqual(link3.getServerlessUrls(), {
+    serverless: "/serverless/",
+  });
+  t.deepEqual(tmpl.getServerlessUrls(), {
+    serverless: "/serverless/",
+  });
+
+  // template syntax
+  let link4 = await tmpl._getLink({
+    test: "a",
+    permalink: {
+      build: "/build{{ test }}/",
+      serverless: "/serverless{{ test }}/",
+    },
+  });
+  t.is(await link4.toLink(), "/builda/index.html");
+  t.is(await link4.toHref(), "/builda/");
+  t.deepEqual(link4.getServerlessUrls(), {
+    serverless: "/serverlessa/",
+  });
+  t.deepEqual(tmpl.getServerlessUrls(), {
+    serverless: "/serverlessa/",
+  });
+});
+
+test("permalink object _getLink (array of serverless URLs)", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-nobuild/permalink-nobuild.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  // Array of URLs is supported
+  let link4 = await tmpl._getLink({
+    permalink: {
+      serverless: ["/serverless1/", "/serverless2/"],
+    },
+  });
+  t.is(await link4.toLink(), "/serverless1/");
+  t.is(await link4.toHref(), "/serverless1/");
+
+  t.deepEqual(link4.getServerlessUrls(), {
+    serverless: ["/serverless1/", "/serverless2/"],
+  });
+  t.deepEqual(tmpl.getServerlessUrls(), {
+    serverless: ["/serverless1/", "/serverless2/"],
+  });
+});
+
+test("permalink object _getLink (array of serverless URLs with template syntax)", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-nobuild/permalink-nobuild.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+
+  // Array of URLs is supported
+  let link = await tmpl._getLink({
+    test: "a",
+    permalink: {
+      serverless: ["/serverless1{{ test }}/", "/serverless2{{ test }}/"],
+    },
+  });
+  t.is(await link.toLink(), "/serverless1a/");
+  t.is(await link.toHref(), "/serverless1a/");
+
+  t.deepEqual(link.getServerlessUrls(), {
+    serverless: ["/serverless1a/", "/serverless2a/"],
+  });
+  t.deepEqual(tmpl.getServerlessUrls(), {
+    serverless: ["/serverless1a/", "/serverless2a/"],
+  });
+});
+
+test("Do not resolve page.url from eleventy serverless data", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-build-serverless/permalink-build-serverless.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  let fakeData = {
+    permalink: {
+      serverless: "/serverless/",
+    },
+  };
+  let outputHref = await tmpl.getOutputHref(fakeData);
+  t.is(outputHref, "/serverless/");
+
+  let outputLink = await tmpl.getOutputLink(fakeData);
+  t.is(outputLink, "/serverless/");
+
+  let outputPath = await tmpl.getOutputPath(fakeData);
+  t.is(outputPath, false);
+
+  let { href, link, path } = await tmpl.getOutputLocations(fakeData);
+  t.is(href, "/serverless/");
+  t.is(link, "/serverless/");
+  t.is(path, false);
+});
+
+test("Do not override page.url with serverless url", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-build-serverless/permalink-build-serverless.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  let fakeData = {
+    permalink: {
+      build: "/build/",
+      serverless: "/serverless/",
+    },
+  };
+
+  let outputHref = await tmpl.getOutputHref(fakeData);
+  t.is(outputHref, "/build/");
+
+  let outputLink = await tmpl.getOutputLink(fakeData);
+  t.is(outputLink, "/build/index.html");
+
+  let outputPath = await tmpl.getOutputPath(fakeData);
+  t.is(outputPath, "./test/stubs/_site/build/index.html");
+
+  let { href, link, path } = await tmpl.getOutputLocations(fakeData);
+  t.is(href, "/build/");
+  t.is(link, "/build/index.html");
+  t.is(path, "./test/stubs/_site/build/index.html");
+});
+
+test("Permalink is an object but an empty object (inherit default behavior)", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-empty-object/empty-object.md",
+    "./test/stubs/",
+    "./test/stubs/_site"
+  );
+  let data = await tmpl.getData();
+
+  let outputHref = await tmpl.getOutputHref(data);
+  t.is(outputHref, "/permalink-empty-object/empty-object/");
+
+  let outputLink = await tmpl.getOutputLink(data);
+  t.is(outputLink, "permalink-empty-object/empty-object/index.html");
+
+  let outputPath = await tmpl.getOutputPath(data);
+  t.is(
+    outputPath,
+    "./test/stubs/_site/permalink-empty-object/empty-object/index.html"
+  );
+
+  let { href, link, path } = await tmpl.getOutputLocations(data);
+  t.is(href, "/permalink-empty-object/empty-object/");
+  t.is(link, "permalink-empty-object/empty-object/index.html");
+  t.is(
+    path,
+    "./test/stubs/_site/permalink-empty-object/empty-object/index.html"
+  );
 });

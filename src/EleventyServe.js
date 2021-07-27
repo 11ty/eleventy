@@ -1,4 +1,4 @@
-const fs = require("fs-extra");
+const fs = require("fs");
 const path = require("path");
 
 const TemplatePath = require("./TemplatePath");
@@ -121,7 +121,10 @@ class EleventyServe {
   }
 
   serveRedirect(dirName) {
-    fs.outputFile(
+    fs.mkdirSync(this.getRedirectDir(dirName), {
+      recursive: true,
+    });
+    fs.writeFileSync(
       this.getRedirectFilename(dirName),
       `<!doctype html>
   <meta http-equiv="refresh" content="0; url=${this.config.pathPrefix}">
@@ -131,9 +134,18 @@ class EleventyServe {
   }
 
   serve(port) {
-    // only load on serve—this is pretty expensive
-    const browserSync = require("browser-sync");
-    this.server = browserSync.create("eleventy-server");
+    // Only load on serve—this is pretty expensive
+    // We use a string module name and try/catch here to hide this from the zisi and esbuild serverless bundlers
+    let server;
+    // eslint-disable-next-line no-useless-catch
+    try {
+      let moduleName = "browser-sync";
+      server = require(moduleName);
+    } catch (e) {
+      throw e;
+    }
+
+    this.server = server.create("eleventy-server");
 
     let pathPrefix = this.getPathPrefix();
 

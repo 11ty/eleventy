@@ -3,6 +3,7 @@ const semver = require("semver");
 const { DateTime } = require("luxon");
 const EventEmitter = require("./Util/AsyncEventEmitter");
 const EleventyBaseError = require("./EleventyBaseError");
+const merge = require("./Util/Merge");
 const bench = require("./BenchmarkManager").get("Configuration");
 const aggregateBench = require("./BenchmarkManager").get("Aggregate");
 const debug = require("debug")("Eleventy:UserConfig");
@@ -52,7 +53,11 @@ class UserConfig {
     this.activeNamespace = "";
     this.DateTime = DateTime;
     this.dynamicPermalinks = true;
+
     this.useGitIgnore = true;
+    this.ignores = new Set();
+    this.ignores.add("node_modules/**");
+
     this.dataDeepMerge = true;
     this.extensionMap = new Set();
     this.watchJavaScriptDependencies = true;
@@ -611,7 +616,12 @@ class UserConfig {
   }
 
   setDataDeepMerge(deepMerge) {
+    this._dataDeepMergeModified = true;
     this.dataDeepMerge = !!deepMerge;
+  }
+
+  isDataDeepMergeModified() {
+    return this._dataDeepMergeModified;
   }
 
   addWatchTarget(additionalWatchTargets) {
@@ -622,8 +632,12 @@ class UserConfig {
     this.watchJavaScriptDependencies = !!watchEnabled;
   }
 
-  setBrowserSyncConfig(options = {}) {
-    this.browserSyncConfig = options;
+  setBrowserSyncConfig(options = {}, mergeOptions = true) {
+    if (mergeOptions) {
+      this.browserSyncConfig = merge(this.browserSyncConfig, options);
+    } else {
+      this.browserSyncConfig = options;
+    }
   }
 
   setChokidarConfig(options = {}) {
@@ -703,6 +717,7 @@ class UserConfig {
       libraryOverrides: this.libraryOverrides,
       dynamicPermalinks: this.dynamicPermalinks,
       useGitIgnore: this.useGitIgnore,
+      ignores: this.ignores,
       dataDeepMerge: this.dataDeepMerge,
       watchJavaScriptDependencies: this.watchJavaScriptDependencies,
       additionalWatchTargets: this.additionalWatchTargets,

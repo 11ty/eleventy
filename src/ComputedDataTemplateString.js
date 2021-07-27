@@ -16,8 +16,8 @@ class ComputedDataTemplateString {
 
     // is this ¯\_(lisp)_/¯
     // must be strings that won’t be escaped by template languages
-    this.prefix = "(((((11ty(((((";
-    this.suffix = ")))))11ty)))))";
+    this.prefix = "(((11ty(((";
+    this.suffix = ")))11ty)))";
   }
 
   getProxyData() {
@@ -55,7 +55,12 @@ class ComputedDataTemplateString {
     } catch (e) {
       debug("Computed Data first pass data resolution error: %o", e);
     }
-    return this.findVarsInOutput(output);
+
+    // page.outputPath on serverless urls returns false.
+    if (typeof output === "string") {
+      return this.findVarsInOutput(output);
+    }
+    return [];
   }
 }
 

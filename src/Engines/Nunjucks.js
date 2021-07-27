@@ -34,7 +34,7 @@ const eventBus = require("../EventBus");
 //       }
 //     }
 //   };
-//   eventBus.on("resourceModified", evictByPath);
+//   eventBus.on("eleventy.resourceModified", evictByPath);
 
 //   let _compile = NunjucksLib.Template.prototype._compile;
 //   NunjucksLib.Template.prototype._compile = function _wrap_compile(...args) {
@@ -128,7 +128,7 @@ class Nunjucks extends TemplateEngine {
     this.njkEnv = env || new NunjucksLib.Environment(fsLoader);
     // Correct, but overbroad. Better would be to evict more granularly, but
     // resolution from paths isn't straightforward.
-    eventBus.on("resourceModified", (path) => {
+    eventBus.on("eleventy.resourceModified", (path) => {
       this.njkEnv.invalidateCache();
     });
 
@@ -204,8 +204,8 @@ class Nunjucks extends TemplateEngine {
     return obj;
   }
 
-  addShortcode(shortcodeName, shortcodeFn, isAsync = false) {
-    function ShortcodeFunction() {
+  _getShortcodeFn(shortcodeName, shortcodeFn, isAsync = false) {
+    return function ShortcodeFunction() {
       this.tags = [shortcodeName];
 
       this.parse = function (parser, nodes) {
@@ -269,13 +269,11 @@ class Nunjucks extends TemplateEngine {
           }
         }
       };
-    }
-
-    this.njkEnv.addExtension(shortcodeName, new ShortcodeFunction());
+    };
   }
 
-  addPairedShortcode(shortcodeName, shortcodeFn, isAsync = false) {
-    function PairedShortcodeFunction() {
+  _getPairedShortcodeFn(shortcodeName, shortcodeFn, isAsync = false) {
+    return function PairedShortcodeFunction() {
       this.tags = [shortcodeName];
 
       this.parse = function (parser, nodes) {
@@ -339,9 +337,17 @@ class Nunjucks extends TemplateEngine {
           }
         }
       };
-    }
+    };
+  }
 
-    this.njkEnv.addExtension(shortcodeName, new PairedShortcodeFunction());
+  addShortcode(shortcodeName, shortcodeFn, isAsync = false) {
+    let fn = this._getShortcodeFn(shortcodeName, shortcodeFn, isAsync);
+    this.njkEnv.addExtension(shortcodeName, new fn());
+  }
+
+  addPairedShortcode(shortcodeName, shortcodeFn, isAsync = false) {
+    let fn = this._getPairedShortcodeFn(shortcodeName, shortcodeFn, isAsync);
+    this.njkEnv.addExtension(shortcodeName, new fn());
   }
 
   needsCompilation(str) {
@@ -356,6 +362,70 @@ class Nunjucks extends TemplateEngine {
       str.indexOf(variableStart) !== -1 ||
       str.indexOf(commentStart) !== -1
     );
+  }
+
+  _getParseExtensions() {
+    if (this._parseExtensions) {
+      return this._parseExtensions;
+    }
+
+    // add extensions so the parser knows about our custom tags/blocks
+    let ext = [];
+    for (let name in this.config.nunjucksTags) {
+      let fn = this._getShortcodeFn(name, () => {});
+      ext.push(new fn());
+    }
+    for (let name in this.config.nunjucksShortcodes) {
+      let fn = this._getShortcodeFn(name, () => {});
+      ext.push(new fn());
+    }
+    for (let name in this.config.nunjucksAsyncShortcodes) {
+      let fn = this._getShortcodeFn(name, () => {}, true);
+      ext.push(new fn());
+    }
+    for (let name in this.config.nunjucksPairedShortcodes) {
+      let fn = this._getPairedShortcodeFn(name, () => {});
+      ext.push(new fn());
+    }
+    for (let name in this.config.nunjucksAsyncPairedShortcodes) {
+      let fn = this._getPairedShortcodeFn(name, () => {}, true);
+      ext.push(new fn());
+    }
+
+    this._parseExtensions = ext;
+    return ext;
+  }
+
+  /* Outputs an Array of lodash.get selectors */
+  parseForSymbols(str) {
+    const { parser, nodes } = NunjucksLib;
+    let obj = parser.parse(str, this._getParseExtensions());
+    let linesplit = str.split("\n");
+    let values = obj.findAll(nodes.Value);
+    let symbols = obj.findAll(nodes.Symbol).map((entry) => {
+      let name = [entry.value];
+      let nestedIndex = -1;
+      for (let val of values) {
+        if (nestedIndex > -1) {
+          /* deep.object.syntax */
+          if (linesplit[val.lineno].charAt(nestedIndex) === ".") {
+            name.push(val.value);
+            nestedIndex += val.value.length + 1;
+          } else {
+            nestedIndex = -1;
+          }
+        } else if (
+          val.lineno === entry.lineno &&
+          val.colno === entry.colno &&
+          val.value === entry.value
+        ) {
+          nestedIndex = entry.colno + entry.value.length;
+        }
+      }
+      return name.join(".");
+    });
+
+    return Array.from(new Set(symbols));
   }
 
   async compile(str, inputPath) {
@@ -375,6 +445,7 @@ class Nunjucks extends TemplateEngine {
     } else {
       tmpl = new NunjucksLib.Template(str, this.njkEnv, inputPath, true);
     }
+
     return async function (data) {
       return new Promise(function (resolve, reject) {
         tmpl.render(data, function (err, res) {

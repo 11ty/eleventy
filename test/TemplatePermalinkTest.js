@@ -168,18 +168,92 @@ test("Permalink Object, just build", (t) => {
       build: true,
     }).toLink();
   });
+});
 
+test("Permalink Object, serverless URLs", (t) => {
+  // serverless
+  t.is(
+    new TemplatePermalink({
+      serverless: "permalinksubfolder/test.html",
+    }).toLink(),
+    "permalinksubfolder/test.html"
+  );
+
+  t.is(
+    new TemplatePermalink({
+      serverless: "permalinksubfolder/test.html",
+    }).toHref(),
+    "permalinksubfolder/test.html"
+  );
+
+  // request
   t.is(
     new TemplatePermalink({
       request: "/url/",
     }).toLink(),
-    false
+    "/url/"
+  );
+
+  t.is(
+    new TemplatePermalink({
+      request: "/url/",
+    }).toHref(),
+    "/url/"
+  );
+
+  // rando
+  t.is(
+    new TemplatePermalink({
+      rando: "/url/",
+    }).toLink(),
+    "/url/"
   );
 
   t.is(
     new TemplatePermalink({
       rando: "/url/",
-    }).toLink(),
-    false
+    }).toHref(),
+    "/url/"
   );
+});
+
+test("Permalink Object, combo build and serverless URLs", (t) => {
+  t.is(
+    new TemplatePermalink({
+      build: "/url/",
+      serverless: "/serverless/",
+    }).toLink(),
+    "/url/index.html"
+  );
+
+  t.is(
+    new TemplatePermalink({
+      build: "/url/",
+      serverless: "/serverless/",
+    }).toHref(),
+    "/url/"
+  );
+
+  // reordered, serverless is primary
+  t.is(
+    new TemplatePermalink({
+      serverless: "/serverless/",
+      build: "/url/",
+    }).toLink(),
+    "/serverless/"
+  );
+
+  t.is(
+    new TemplatePermalink({
+      serverless: "/serverless/",
+      build: "/url/",
+    }).toHref(),
+    "/serverless/"
+  );
+});
+
+test("Permalink Object, empty object", (t) => {
+  t.is(new TemplatePermalink({}).toLink(), false);
+
+  t.is(new TemplatePermalink({}).toHref(), false);
 });

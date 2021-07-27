@@ -1,4 +1,4 @@
-const fs = require("fs-extra");
+const fs = require("fs");
 const chalk = require("chalk");
 const lodashUniq = require("lodash/uniq");
 const lodashMerge = require("lodash/merge");
@@ -175,9 +175,7 @@ class TemplateConfig {
     if (fs.existsSync(path)) {
       try {
         // remove from require cache so it will grab a fresh copy
-        if (path in require.cache) {
-          deleteRequireCache(path);
-        }
+        deleteRequireCache(path);
 
         localConfig = require(path);
         // debug( "localConfig require return value: %o", localConfig );
@@ -210,7 +208,7 @@ class TemplateConfig {
         // TODO the error message here is bad and I feel bad (needs more accurate info)
         throw new EleventyConfigError(
           `Error in your Eleventy config file '${path}'.` +
-            (err.message.includes("Cannot find module")
+            (err.message && err.message.includes("Cannot find module")
               ? chalk.blueBright(" You may need to run `npm install`.")
               : ""),
           err
@@ -220,7 +218,8 @@ class TemplateConfig {
       debug("Eleventy local project config file not found, skipping.");
     }
 
-    let eleventyConfigApiMergingObject = this.userConfig.getMergingConfigObject();
+    let eleventyConfigApiMergingObject =
+      this.userConfig.getMergingConfigObject();
 
     // remove special merge keys from object
     let savedForSpecialMerge = {

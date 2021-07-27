@@ -1,6 +1,6 @@
-const fs = require("fs-extra");
+const fs = require("fs");
 const fastglob = require("fast-glob");
-const parsePath = require("parse-filepath");
+const path = require("path");
 const lodashset = require("lodash/set");
 const lodashget = require("lodash/get");
 const lodashUniq = require("lodash/uniq");
@@ -29,7 +29,7 @@ class FSExistsCache {
   exists(path) {
     let exists = this._cache.get(path);
     if (!this.has(path)) {
-      exists = fs.pathExistsSync(path);
+      exists = fs.existsSync(path);
       this._cache.set(path, exists);
     }
     return exists;
@@ -140,7 +140,7 @@ class TemplateData {
 
   async _checkInputDir() {
     if (this.inputDirNeedsCheck) {
-      let globalPathStat = await fs.stat(this.inputDir);
+      let globalPathStat = await fs.promises.stat(this.inputDir);
 
       if (!globalPathStat.isDirectory()) {
         throw new Error("Could not find data path directory: " + this.inputDir);
@@ -241,9 +241,12 @@ class TemplateData {
     return paths;
   }
 
-  getObjectPathForDataFile(path) {
-    let reducedPath = TemplatePath.stripLeadingSubPath(path, this.dataDir);
-    let parsed = parsePath(reducedPath);
+  getObjectPathForDataFile(dataFilePath) {
+    let reducedPath = TemplatePath.stripLeadingSubPath(
+      dataFilePath,
+      this.dataDir
+    );
+    let parsed = path.parse(reducedPath);
     let folders = parsed.dir ? parsed.dir.split("/") : [];
     folders.push(parsed.name);
 
@@ -392,7 +395,7 @@ class TemplateData {
   async _loadFileContents(path) {
     let rawInput;
     try {
-      rawInput = await fs.readFile(path, "utf-8");
+      rawInput = await fs.promises.readFile(path, "utf-8");
     } catch (e) {
       // if file does not exist, return nothing
     }
@@ -462,6 +465,9 @@ class TemplateData {
       deleteRequireCache(localPath);
 
       let returnValue = require(localPath);
+      // TODO special exception for Global data `permalink.js`
+      // module.exports = (data) => `${data.page.filePathStem}/`; // Does not work
+      // module.exports = () => ((data) => `${data.page.filePathStem}/`); // Works
       if (typeof returnValue === "function") {
         returnValue = await returnValue(this.configApiGlobalData || {});
       }
@@ -512,7 +518,7 @@ class TemplateData {
 
   async getLocalDataPaths(templatePath) {
     let paths = [];
-    let parsed = parsePath(templatePath);
+    let parsed = path.parse(templatePath);
     let inputDir = TemplatePath.addLeadingDotSlash(
       TemplatePath.normalize(this.inputDir)
     );
@@ -583,6 +589,9 @@ class TemplateData {
       } else if (data.tags === null) {
         data.tags = [];
       }
+
+      // Deduplicate tags
+      data.tags = [...new Set(data.tags)];
     }
 
     return data;
