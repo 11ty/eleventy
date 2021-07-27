@@ -1,6 +1,5 @@
 const fs = require("fs");
 const path = require("path");
-const parsePath = require("parse-filepath");
 const normalize = require("normalize-path");
 const isPlainObject = require("lodash/isPlainObject");
 const { DateTime } = require("luxon");
@@ -23,11 +22,18 @@ const debugDev = require("debug")("Dev:Eleventy:Template");
 const bench = require("./BenchmarkManager").get("Aggregate");
 
 class Template extends TemplateContent {
-  constructor(path, inputDir, outputDir, templateData, extensionMap, config) {
-    debugDev("new Template(%o)", path);
-    super(path, inputDir, config);
+  constructor(
+    templatePath,
+    inputDir,
+    outputDir,
+    templateData,
+    extensionMap,
+    config
+  ) {
+    debugDev("new Template(%o)", templatePath);
+    super(templatePath, inputDir, config);
 
-    this.parsed = parsePath(path);
+    this.parsed = path.parse(templatePath);
 
     // for pagination
     this.extraOutputSubdirectory = "";

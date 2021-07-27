@@ -1,4 +1,4 @@
-const parsePath = require("parse-filepath");
+const path = require("path");
 const TemplatePath = require("./TemplatePath");
 
 class TemplateFileSlug {
@@ -14,7 +14,7 @@ class TemplateFileSlug {
     this.dirs = dirs;
     this.dirs.pop();
 
-    this.parsed = parsePath(inputPath);
+    this.parsed = path.parse(inputPath);
     this.filenameNoExt = extensionMap.removeTemplateExtension(this.parsed.base);
   }
 

@@ -1,6 +1,6 @@
 const fs = require("fs");
 const fastglob = require("fast-glob");
-const parsePath = require("parse-filepath");
+const path = require("path");
 const lodashset = require("lodash/set");
 const lodashget = require("lodash/get");
 const lodashUniq = require("lodash/uniq");
@@ -241,9 +241,12 @@ class TemplateData {
     return paths;
   }
 
-  getObjectPathForDataFile(path) {
-    let reducedPath = TemplatePath.stripLeadingSubPath(path, this.dataDir);
-    let parsed = parsePath(reducedPath);
+  getObjectPathForDataFile(dataFilePath) {
+    let reducedPath = TemplatePath.stripLeadingSubPath(
+      dataFilePath,
+      this.dataDir
+    );
+    let parsed = path.parse(reducedPath);
     let folders = parsed.dir ? parsed.dir.split("/") : [];
     folders.push(parsed.name);
 
@@ -515,7 +518,7 @@ class TemplateData {
 
   async getLocalDataPaths(templatePath) {
     let paths = [];
-    let parsed = parsePath(templatePath);
+    let parsed = path.parse(templatePath);
     let inputDir = TemplatePath.addLeadingDotSlash(
       TemplatePath.normalize(this.inputDir)
     );
