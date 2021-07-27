@@ -104,6 +104,7 @@ class Eleventy {
     }
 
     if (performance) {
+      // TODO this doesn’t reset in serverless mode correctly (cumulative from start of --serve/watch)
       debug("Eleventy warm up time (in ms) %o", performance.now());
     }
 
