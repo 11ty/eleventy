@@ -42,6 +42,7 @@
   ],
   "scripts": {
     "default": "npm run test",
+    "format": "prettier src/ --write",
     "test": "npx ava --verbose",
     "lint-staged": "lint-staged",
     "coverage": "npx nyc ava && npx nyc report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && node cmd.js --config=docs-src/.eleventy.docs.js",
