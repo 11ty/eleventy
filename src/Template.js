@@ -760,7 +760,9 @@ class Template extends TemplateContent {
 
       // TODO add a cache to check if this was already created
       let templateOutputDir = path.parse(outputPath).dir;
-      await fs.promises.mkdir(templateOutputDir, { recursive: true });
+      if (templateOutputDir) {
+        await fs.promises.mkdir(templateOutputDir, { recursive: true });
+      }
 
       return fs.promises.writeFile(outputPath, finalContent).then(() => {
         templateBenchmark.after();
