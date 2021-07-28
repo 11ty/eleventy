@@ -160,25 +160,24 @@ class TemplateConfig {
     debug("rootConfig %o", this.rootConfig);
   }
 
-  processPlugins(localConfig) {
-    // eleventyConfig.plugins
-    eleventyConfig.plugins.forEach(({ plugin, options }) => {
-      eleventyConfig.dir = localConfig.dir;
+  processPlugins(userConfig, localConfig) {
+    userConfig.plugins.forEach(({ plugin, options }) => {
+      userConfig.dir = localConfig.dir;
       // TODO support function.name in plugin config functions
       debug("Adding plugin (unknown name: check your config file).");
       let pluginBench = aggregateBench.get("Configuration addPlugin");
       if (typeof plugin === "function") {
         pluginBench.before();
         let configFunction = plugin;
-        configFunction(eleventyConfig, options);
+        configFunction(userConfig, options);
         pluginBench.after();
       } else if (plugin && plugin.configFunction) {
         pluginBench.before();
         if (options && typeof options.init === "function") {
-          options.init.call(eleventyConfig, plugin.initArguments || {});
+          options.init.call(userConfig, plugin.initArguments || {});
         }
 
-        plugin.configFunction(eleventyConfig, options);
+        plugin.configFunction(userConfig, options);
         pluginBench.after();
       } else {
         throw new UserConfigError(
@@ -251,9 +250,10 @@ class TemplateConfig {
     // Delay processing plugins until after the result of localConfig is returned
     // But BEFORE the rest of the config options are merged
     // this way we can pass directories and other template information to plugins
-    this.processPlugins(localConfig);
+    this.processPlugins(this.userConfig, localConfig);
 
-    let eleventyConfigApiMergingObject = eleventyConfig.getMergingConfigObject();
+    let eleventyConfigApiMergingObject =
+      this.userConfig.getMergingConfigObject();
 
     // remove special merge keys from object
 
