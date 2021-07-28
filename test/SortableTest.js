@@ -1,13 +1,13 @@
-import test from "ava";
-import { DateTime } from "luxon";
-import Sortable from "../src/Util/Sortable";
+const test = require("ava");
+const { DateTime } = require("luxon");
+const Sortable = require("../src/Util/Sortable");
 
-test("get Sort Function", t => {
+test("get Sort Function", (t) => {
   let s = new Sortable();
   t.deepEqual(s.getSortFunction(), Sortable.sortFunctionAlphabeticAscending);
 });
 
-test("Alphabetic Ascending", t => {
+test("Alphabetic Ascending", (t) => {
   let s = new Sortable();
   t.false(s.isSortNumeric);
   t.true(s.isSortAscending);
@@ -18,7 +18,7 @@ test("Alphabetic Ascending", t => {
   t.deepEqual(s.sort(), ["a", "m", "z"]);
 });
 
-test("Alphabetic Ascending (shortcut)", t => {
+test("Alphabetic Ascending (shortcut)", (t) => {
   let s = new Sortable();
   s.add("a");
   s.add("z");
@@ -26,7 +26,7 @@ test("Alphabetic Ascending (shortcut)", t => {
   t.deepEqual(s.sortAscending(), ["a", "m", "z"]);
 });
 
-test("Alphabetic Descending", t => {
+test("Alphabetic Descending", (t) => {
   let s = new Sortable();
   s.setSortDescending();
   t.false(s.isSortNumeric);
@@ -38,7 +38,7 @@ test("Alphabetic Descending", t => {
   t.deepEqual(s.sort(), ["z", "m", "a"]);
 });
 
-test("Alphabetic Descending (shortcut)", t => {
+test("Alphabetic Descending (shortcut)", (t) => {
   let s = new Sortable();
   s.add("a");
   s.add("z");
@@ -46,7 +46,7 @@ test("Alphabetic Descending (shortcut)", t => {
   t.deepEqual(s.sortDescending(), ["z", "m", "a"]);
 });
 
-test("Numeric Ascending", t => {
+test("Numeric Ascending", (t) => {
   let s = new Sortable();
   s.setSortNumeric(true);
   t.true(s.isSortNumeric);
@@ -58,7 +58,7 @@ test("Numeric Ascending", t => {
   t.deepEqual(s.sort(), [1, 2, 4]);
 });
 
-test("Numeric Descending", t => {
+test("Numeric Descending", (t) => {
   let s = new Sortable();
   s.setSortNumeric(true);
   s.setSortDescending();
@@ -71,13 +71,13 @@ test("Numeric Descending", t => {
   t.deepEqual(s.sort(), [4, 2, 1]);
 });
 
-test("Date Assumptions", t => {
+test("Date Assumptions", (t) => {
   t.is(DateTime.fromISO("2007-10-10") - new Date(2007, 9, 10).getTime(), 0);
   t.is(DateTime.fromISO("2008-10-10") - new Date(2008, 9, 10).getTime(), 0);
   t.not(DateTime.fromISO("2008-10-10") - new Date(2007, 9, 10).getTime(), 0);
 });
 
-test("Date and Sortable Assumptions", t => {
+test("Date and Sortable Assumptions", (t) => {
   // Sortable works here without extra code because Luxon’s valueOf works in equality comparison (for alphabetic lists)
   t.is(
     Sortable.sortFunctionAlphabeticAscending(
@@ -139,7 +139,7 @@ test("Date and Sortable Assumptions", t => {
   );
 });
 
-test("Date Ascending", t => {
+test("Date Ascending", (t) => {
   let s = new Sortable();
   let date1 = DateTime.fromISO("2007-10-10");
   let date2 = DateTime.fromISO("2008-10-10");
@@ -150,7 +150,7 @@ test("Date Ascending", t => {
   t.deepEqual(s.sort(), [date1, date2, date3]);
 });
 
-test("Date Descending", t => {
+test("Date Descending", (t) => {
   let s = new Sortable();
   s.setSortDescending();
   let date1 = DateTime.fromISO("2007-10-10");
@@ -162,7 +162,7 @@ test("Date Descending", t => {
   t.deepEqual(s.sort(), [date3, date2, date1]);
 });
 
-test("Alphabetic Ascending (str sort arg)", t => {
+test("Alphabetic Ascending (str sort arg)", (t) => {
   let s = new Sortable();
   s.add("a");
   s.add("z");
@@ -170,7 +170,7 @@ test("Alphabetic Ascending (str sort arg)", t => {
   t.deepEqual(s.sort("ascending"), ["a", "m", "z"]);
 });
 
-test("Alphabetic Descending (str sort arg)", t => {
+test("Alphabetic Descending (str sort arg)", (t) => {
   let s = new Sortable();
   s.add("a");
   s.add("z");
@@ -178,7 +178,7 @@ test("Alphabetic Descending (str sort arg)", t => {
   t.deepEqual(s.sort("descending"), ["z", "m", "a"]);
 });
 
-test("Alphabetic Ascending (short str sort arg)", t => {
+test("Alphabetic Ascending (short str sort arg)", (t) => {
   let s = new Sortable();
   s.add("a");
   s.add("z");
@@ -186,7 +186,7 @@ test("Alphabetic Ascending (short str sort arg)", t => {
   t.deepEqual(s.sort("A-Z"), ["a", "m", "z"]);
 });
 
-test("Alphabetic Descending (short str sort arg)", t => {
+test("Alphabetic Descending (short str sort arg)", (t) => {
   let s = new Sortable();
   s.add("a");
   s.add("z");

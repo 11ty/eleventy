@@ -1,10 +1,19 @@
-import test from "ava";
-import TemplateRender from "../src/TemplateRender";
-import md from "markdown-it";
+const test = require("ava");
+const TemplateRender = require("../src/TemplateRender");
+const TemplateConfig = require("../src/TemplateConfig");
+const EleventyExtensionMap = require("../src/EleventyExtensionMap");
+const md = require("markdown-it");
+
+function getNewTemplateRender(name, inputDir) {
+  let eleventyConfig = new TemplateConfig();
+  let tr = new TemplateRender(name, inputDir, eleventyConfig);
+  tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
+  return tr;
+}
 
 const createTestMarkdownPlugin = () => {
-  const plugin = md => {
-    md.core.ruler.after("inline", "replace-link", function(state) {
+  const plugin = (md) => {
+    md.core.ruler.after("inline", "replace-link", function (state) {
       plugin.environment = state.env;
       const link = state.tokens[1].children[0].attrs[0][1];
       state.tokens[1].children[0].attrs[0][1] = `${link}?data=${state.env.some}`;
@@ -15,8 +24,8 @@ const createTestMarkdownPlugin = () => {
   return plugin;
 };
 
-test("Markdown Render: with HTML prerender, sends context data to the markdown library", async t => {
-  let tr = new TemplateRender("md");
+test("Markdown Render: with HTML prerender, sends context data to the markdown library", async (t) => {
+  let tr = getNewTemplateRender("md");
 
   const plugin = createTestMarkdownPlugin();
   let mdLib = md().use(plugin);
@@ -30,8 +39,8 @@ test("Markdown Render: with HTML prerender, sends context data to the markdown l
   t.is(result, '<p><a href="http://link.com?data=data">link text</a></p>\n');
 });
 
-test("Markdown Render: without HTML prerender, sends context data to the markdown library", async t => {
-  let tr = new TemplateRender("md");
+test("Markdown Render: without HTML prerender, sends context data to the markdown library", async (t) => {
+  let tr = getNewTemplateRender("md");
 
   const plugin = createTestMarkdownPlugin();
   let mdLib = md().use(plugin);

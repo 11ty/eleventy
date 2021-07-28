@@ -62,7 +62,7 @@ class EleventyWatchTargets {
   }
 
   addAndMakeGlob(targets) {
-    targets = this._normalizeTargets(targets).map(entry =>
+    targets = this._normalizeTargets(targets).map((entry) =>
       TemplatePath.convertToRecursiveGlobSync(entry)
     );
     this.addRaw(targets);
@@ -90,15 +90,15 @@ class EleventyWatchTargets {
   getJavaScriptDependenciesFromList(files = []) {
     let depSet = new Set();
     files
-      .filter(file => file.endsWith(".js") || file.endsWith(".cjs")) // TODO does this need to work with aliasing? what other JS extensions will have deps?
-      .forEach(file => {
+      .filter((file) => file.endsWith(".js") || file.endsWith(".cjs")) // TODO does this need to work with aliasing? what other JS extensions will have deps?
+      .forEach((file) => {
         dependencyTree(file, { allowNotFound: true })
-          .map(dependency => {
+          .map((dependency) => {
             return TemplatePath.addLeadingDotSlash(
               TemplatePath.relativePath(dependency)
             );
           })
-          .forEach(dependency => {
+          .forEach((dependency) => {
             depSet.add(dependency);
           });
       });

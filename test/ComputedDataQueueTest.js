@@ -1,5 +1,5 @@
-import test from "ava";
-import ComputedDataQueue from "../src/ComputedDataQueue";
+const test = require("ava");
+const ComputedDataQueue = require("../src/ComputedDataQueue");
 
 test("Standard uses", (t) => {
   let queue = new ComputedDataQueue();

@@ -1,0 +1,7 @@
+contact_links:
+  - name: I have a question about Eleventy
+    url: https://github.com/11ty/eleventy/discussions/
+    about: General education topics should be filed on our Discussions board e.g. “How do I do this in Eleventy?” or “Can Eleventy do this?”
+  - name: Discord Community
+    url: https://discord.gg/GBkBy9u
+    about: Ask the community on Discord

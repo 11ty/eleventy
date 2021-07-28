@@ -1,12 +1,15 @@
-const fs = require("fs-extra");
-const config = require("./Config");
-const EleventyExtensionMap = require("./EleventyExtensionMap");
+const fs = require("fs");
 const TemplatePath = require("./TemplatePath");
-const debug = require("debug")("Eleventy:TemplateLayoutPathResolver");
+// const debug = require("debug")("Eleventy:TemplateLayoutPathResolver");
 
 class TemplateLayoutPathResolver {
-  constructor(path, inputDir, extensionMap) {
-    this._config = config.getConfig();
+  constructor(path, inputDir, extensionMap, config) {
+    if (!config) {
+      throw new Error(
+        "Expected `config` in TemplateLayoutPathResolver constructor"
+      );
+    }
+    this._config = config;
     this.inputDir = inputDir;
     this.originalPath = path;
     this.path = path;

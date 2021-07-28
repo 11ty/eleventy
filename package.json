@@ -1,14 +1,17 @@
 {
   "name": "@11ty/eleventy",
-  "version": "0.11.0",
+  "version": "1.0.0-canary.39",
   "description": "Transform a directory of templates into HTML.",
   "publishConfig": {
     "access": "public"
   },
   "main": "src/Eleventy.js",
+  "bin": {
+    "eleventy": "./cmd.js"
+  },
   "license": "MIT",
   "engines": {
-    "node": ">=8"
+    "node": ">=12"
   },
   "funding": {
     "type": "opencollective",
@@ -37,15 +40,13 @@
     "ejs",
     "haml"
   ],
-  "bin": {
-    "eleventy": "./cmd.js"
-  },
   "scripts": {
     "default": "npm run test",
-    "doc": "jsdoc -c .jsdoc.conf.json -d ./api-docs -p ./package.json -R README.md -t ./node_modules/ink-docstrap/template -r src/*.js",
+    "format": "prettier src/ --write",
     "test": "npx ava --verbose",
     "lint-staged": "lint-staged",
-    "coverage": "npx nyc ava && npx nyc report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && node cmd.js --config=docs-src/.eleventy.docs.js"
+    "coverage": "npx nyc ava && npx nyc report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && node cmd.js --config=docs-src/.eleventy.docs.js",
+    "prepare": "husky install"
   },
   "author": {
     "name": "Zach Leatherman",
@@ -59,13 +60,13 @@
   "bugs": "https://github.com/11ty/eleventy/issues",
   "homepage": "https://www.11ty.dev/",
   "ava": {
-    "babel": true,
+    "environmentVariables": {},
     "failFast": false,
     "files": [
       "./test/*.js"
     ],
     "ignoredByWatcher": [
-      "./test/stubs/**/*"
+      "./test/stubs*/**/*"
     ]
   },
   "lint-staged": {
@@ -74,62 +75,54 @@
     ]
   },
   "devDependencies": {
-    "@11ty/eleventy-plugin-syntaxhighlight": "^3.0.1",
-    "@ava/babel": "^1.0.1",
-    "ava": "^3.8.2",
-    "husky": "^4.2.5",
-    "ink-docstrap": "1.3.2",
-    "js-yaml": "^3.13.1",
-    "jsdoc": "3.6.4",
-    "lint-staged": "^10.2.2",
-    "markdown-it-emoji": "^1.4.0",
-    "node-sass": "^4.14.1",
-    "nyc": "^15.0.1",
-    "prettier": "^2.0.5",
+    "@11ty/eleventy-plugin-syntaxhighlight": "^3.1.2",
+    "ava": "^3.15.0",
+    "husky": "^7.0.1",
+    "js-yaml": "^4.1.0",
+    "lint-staged": "^11.1.1",
+    "markdown-it-emoji": "^2.0.0",
+    "nyc": "^15.1.0",
+    "prettier": "^2.3.2",
     "rimraf": "^3.0.2",
+    "sass": "^1.36.0",
     "toml": "^3.0.0",
-    "viperhtml": "^2.17.1",
-    "vue": "^2.6.11",
-    "vue-server-renderer": "^2.6.11"
+    "vue": "^2.6.14",
+    "vue-server-renderer": "^2.6.14"
   },
   "dependencies": {
-    "@11ty/dependency-tree": "^1.0.0",
-    "browser-sync": "^2.26.7",
-    "chalk": "^3.0.0",
-    "chokidar": "^3.4.0",
-    "debug": "^4.1.1",
-    "dependency-graph": "^0.9.0",
-    "ejs": "^2.7.4",
-    "fast-glob": "^3.2.2",
-    "fs-extra": "^8.1.0",
-    "gray-matter": "^4.0.2",
+    "@11ty/dependency-tree": "^2.0.0",
+    "@iarna/toml": "^2.2.5",
+    "@sindresorhus/slugify": "^1.1.2",
+    "browser-sync": "^2.27.5",
+    "chalk": "^4.1.1",
+    "chokidar": "^3.5.2",
+    "debug": "^4.3.2",
+    "dependency-graph": "^0.11.0",
+    "ejs": "^3.1.6",
+    "fast-glob": "^3.2.7",
+    "gray-matter": "^4.0.3",
     "hamljs": "^0.6.2",
-    "handlebars": "^4.7.6",
-    "javascript-stringify": "^2.0.1",
-    "liquidjs": "^6.4.3",
-    "lodash": "^4.17.15",
-    "luxon": "^1.24.1",
-    "markdown-it": "^10.0.0",
+    "handlebars": "^4.7.7",
+    "is-glob": "^4.0.1",
+    "liquidjs": "^9.25.1",
+    "lodash": "^4.17.21",
+    "luxon": "^2.0.1",
+    "markdown-it": "^12.1.0",
     "minimist": "^1.2.5",
     "moo": "^0.5.1",
-    "multimatch": "^4.0.0",
-    "mustache": "^2.3.2",
+    "multimatch": "^5.0.0",
+    "mustache": "^4.2.0",
     "normalize-path": "^3.0.0",
-    "nunjucks": "^3.2.1",
-    "parse-filepath": "^1.0.2",
+    "nunjucks": "^3.2.3",
     "please-upgrade-node": "^3.2.0",
     "pretty": "^2.0.0",
-    "pug": "^2.0.4",
-    "recursive-copy": "^2.0.10",
-    "semver": "^7.3.2",
-    "slugify": "^1.4.0",
+    "pug": "^3.0.2",
+    "recursive-copy": "^2.0.13",
+    "semver": "^7.3.5",
+    "slugify": "^1.6.0",
+    "split": "^1.0.1",
     "time-require": "^0.1.2",
+    "url-pattern": "^1.0.3",
     "valid-url": "^1.0.9"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run lint-staged",
-      "pre-push": "npm run test"
-    }
   }
 }

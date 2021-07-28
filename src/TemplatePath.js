@@ -1,6 +1,5 @@
 const path = require("path");
 const normalize = require("normalize-path");
-const parsePath = require("parse-filepath");
 const fs = require("fs");
 
 function TemplatePath() {}
@@ -8,7 +7,7 @@ function TemplatePath() {}
 /**
  * @returns {String} the absolute path to Eleventy’s project directory.
  */
-TemplatePath.getWorkingDir = function() {
+TemplatePath.getWorkingDir = function () {
   return TemplatePath.normalize(path.resolve("."));
 };
 
@@ -19,7 +18,7 @@ TemplatePath.getWorkingDir = function() {
  * @param {String} path A path
  * @returns {String} the directory portion of a path.
  */
-TemplatePath.getDir = function(path) {
+TemplatePath.getDir = function (path) {
   if (TemplatePath.isDirectorySync(path)) {
     return path;
   }
@@ -31,28 +30,28 @@ TemplatePath.getDir = function(path) {
  * Returns the directory portion of a path that either points to a file
  * or ends in a glob pattern. If `path` points to a directory,
  * the returned value will have its last path segment stripped
- * due to how [`parsePath`][1] works.
+ * due to how [`path.parse`][1] works.
  *
- * [1]: https://www.npmjs.com/package/parse-filepath
+ * [1]: https://nodejs.org/api/path.html#path_path_parse_path
  *
  * @param {String} path A path
  * @returns {String} the directory portion of a path.
  */
-TemplatePath.getDirFromFilePath = function(path) {
-  return parsePath(path).dir || ".";
+TemplatePath.getDirFromFilePath = function (filePath) {
+  return path.parse(filePath).dir || ".";
 };
 
 /**
  * Returns the last path segment in a path (no leading/trailing slashes).
  *
- * Assumes [`parsePath`][1] was called on `path` before.
+ * Assumes [`path.parse`][1] was called on `path` before.
  *
- * [1]: https://www.npmjs.com/package/parse-filepath
+ * [1]: https://nodejs.org/api/path.html#path_path_parse_path
  *
  * @param {String} path A path
  * @returns {String} the last path segment in a path
  */
-TemplatePath.getLastPathSegment = function(path) {
+TemplatePath.getLastPathSegment = function (path) {
   if (!path.includes("/")) {
     return path;
   }
@@ -68,7 +67,7 @@ TemplatePath.getLastPathSegment = function(path) {
  * @returns {String[]} an array of paths pointing to each path segment of the
  * provided `path`.
  */
-TemplatePath.getAllDirs = function(path) {
+TemplatePath.getAllDirs = function (path) {
   // Trim a trailing slash if there is one
   path = path.replace(/\/$/, "");
 
@@ -79,7 +78,7 @@ TemplatePath.getAllDirs = function(path) {
   return path
     .split("/")
     .map((segment, index, array) => array.slice(0, index + 1).join("/"))
-    .filter(path => path !== ".")
+    .filter((path) => path !== ".")
     .reverse();
 };
 
@@ -93,7 +92,7 @@ TemplatePath.getAllDirs = function(path) {
  * @param {String} thePath The path that should be normalized.
  * @returns {String} the normalized path.
  */
-TemplatePath.normalize = function(thePath) {
+TemplatePath.normalize = function (thePath) {
   return normalize(path.normalize(thePath));
 };
 
@@ -108,7 +107,7 @@ TemplatePath.normalize = function(thePath) {
  * @param {String[]} paths An arbitrary amount of path segments.
  * @returns {String} the normalized and joined path.
  */
-TemplatePath.join = function(...paths) {
+TemplatePath.join = function (...paths) {
   return normalize(path.join(...paths));
 };
 
@@ -120,7 +119,7 @@ TemplatePath.join = function(...paths) {
  * @param {String[]} urlPaths
  * @returns {String} a normalized URL path described by the given URL path segments.
  */
-TemplatePath.normalizeUrlPath = function(...urlPaths) {
+TemplatePath.normalizeUrlPath = function (...urlPaths) {
   const urlPath = path.posix.join(...urlPaths);
   return urlPath.replace(/\/+$/, "/");
 };
@@ -132,7 +131,26 @@ TemplatePath.normalizeUrlPath = function(...urlPaths) {
  * @param {String[]} paths
  * @returns {String} the absolute path described by the given path segments.
  */
-TemplatePath.absolutePath = function(...paths) {
+TemplatePath.absolutePath = function (...paths) {
+  let i = 0;
+  // check all the paths before we short circuit from the first index
+  for (let path of paths) {
+    if (path.startsWith("/") && i > 0) {
+      throw new Error(
+        `Only the first parameter to Template.absolutePath can be an absolute path. Received: ${path} from ${paths}`
+      );
+    }
+    i++;
+  }
+
+  let j = 0;
+  for (let path of paths) {
+    if (j === 0 && path.startsWith("/")) {
+      return TemplatePath.join(...paths);
+    }
+    j++;
+  }
+
   return TemplatePath.join(TemplatePath.getWorkingDir(), ...paths);
 };
 
@@ -142,7 +160,7 @@ TemplatePath.absolutePath = function(...paths) {
  * @param {String} absolutePath
  * @returns {String} the relative path.
  */
-TemplatePath.relativePath = function(absolutePath) {
+TemplatePath.relativePath = function (absolutePath) {
   return TemplatePath.stripLeadingSubPath(
     absolutePath,
     TemplatePath.getWorkingDir()
@@ -155,8 +173,8 @@ TemplatePath.relativePath = function(absolutePath) {
  * @param {String[]} paths
  * @returns {String[]}
  */
-TemplatePath.addLeadingDotSlashArray = function(paths) {
-  return paths.map(path => TemplatePath.addLeadingDotSlash(path));
+TemplatePath.addLeadingDotSlashArray = function (paths) {
+  return paths.map((path) => TemplatePath.addLeadingDotSlash(path));
 };
 
 /**
@@ -165,7 +183,7 @@ TemplatePath.addLeadingDotSlashArray = function(paths) {
  * @param {String} path
  * @returns {String}
  */
-TemplatePath.addLeadingDotSlash = function(path) {
+TemplatePath.addLeadingDotSlash = function (path) {
   if (path === "." || path === "..") {
     return path + "/";
   }
@@ -183,7 +201,7 @@ TemplatePath.addLeadingDotSlash = function(path) {
  * @param {String} path
  * @returns {String} the `path` without a leading dot-slash segment.
  */
-TemplatePath.stripLeadingDotSlash = function(path) {
+TemplatePath.stripLeadingDotSlash = function (path) {
   return typeof path === "string" ? path.replace(/^\.\//, "") : path;
 };
 
@@ -194,7 +212,7 @@ TemplatePath.stripLeadingDotSlash = function(path) {
  * @param {String} subPath A path
  * @returns {Boolean} whether `path` starts with `subPath`.
  */
-TemplatePath.startsWithSubPath = function(path, subPath) {
+TemplatePath.startsWithSubPath = function (path, subPath) {
   path = TemplatePath.normalize(path);
   subPath = TemplatePath.normalize(subPath);
 
@@ -209,7 +227,7 @@ TemplatePath.startsWithSubPath = function(path, subPath) {
  * @param {String} subPath A path
  * @returns {String} the `path` without `subPath` at the start of it.
  */
-TemplatePath.stripLeadingSubPath = function(path, subPath) {
+TemplatePath.stripLeadingSubPath = function (path, subPath) {
   path = TemplatePath.normalize(path);
   subPath = TemplatePath.normalize(subPath);
 
@@ -224,7 +242,7 @@ TemplatePath.stripLeadingSubPath = function(path, subPath) {
  * @param {String} path A path
  * @returns {Boolean} whether `path` points to an existing directory.
  */
-TemplatePath.isDirectorySync = function(path) {
+TemplatePath.isDirectorySync = function (path) {
   return fs.existsSync(path) && fs.statSync(path).isDirectory();
 };
 
@@ -232,26 +250,11 @@ TemplatePath.isDirectorySync = function(path) {
  * @param {String} path A path
  * @returns {Boolean} whether `path` points to an existing directory.
  */
-TemplatePath.isDirectory = async function(path) {
-  return new Promise(resolve => {
+TemplatePath.isDirectory = async function (path) {
+  return new Promise((resolve) => {
     fs.stat(path, (err, stats) => {
       if (stats) {
         resolve(stats.isDirectory());
-      }
-      resolve(false);
-    });
-  });
-};
-
-/**
- * @param {String} path A path
- * @returns {Boolean} whether `path` points to a existing directory or file.
- */
-TemplatePath.exists = async function(path) {
-  return new Promise(resolve => {
-    fs.stat(path, (err, stats) => {
-      if (stats) {
-        resolve(true);
       }
       resolve(false);
     });
@@ -266,7 +269,7 @@ TemplatePath.exists = async function(path) {
  * @param {String} path
  * @returns {String}
  */
-TemplatePath.convertToRecursiveGlobSync = function(path) {
+TemplatePath.convertToRecursiveGlobSync = function (path) {
   if (path === "") {
     return "./**";
   }
@@ -288,7 +291,7 @@ TemplatePath.convertToRecursiveGlobSync = function(path) {
  * @param {String} path
  * @returns {String}
  */
-TemplatePath.convertToRecursiveGlob = async function(path) {
+TemplatePath.convertToRecursiveGlob = async function (path) {
   if (path === "") {
     return "./**";
   }
@@ -310,7 +313,7 @@ TemplatePath.convertToRecursiveGlob = async function(path) {
  * @returns {String} the path’s extension if it exists;
  * otherwise, the empty string.
  */
-TemplatePath.getExtension = function(thePath) {
+TemplatePath.getExtension = function (thePath) {
   return path.extname(thePath).replace(/^\./, "");
 };
 
@@ -321,7 +324,7 @@ TemplatePath.getExtension = function(thePath) {
  * @param {String} extension
  * @returns {String}
  */
-TemplatePath.removeExtension = function(path, extension = undefined) {
+TemplatePath.removeExtension = function (path, extension = undefined) {
   if (extension === undefined) {
     return path;
   }

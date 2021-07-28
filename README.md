@@ -1,4 +1,4 @@
-<p align="center"><img src="https://www.11ty.io/img/logo-github.png" alt="eleventy Logo"></p>
+<p align="center"><img src="https://www.11ty.dev/img/logo-github.png" alt="eleventy Logo"></p>
 
 # eleventy 🕚⚡️
 
@@ -6,14 +6,15 @@ A simpler static site generator. An alternative to Jekyll. Written in JavaScript
 
 Works with HTML, Markdown, Liquid, Nunjucks, Handlebars, Mustache, EJS, Haml, Pug, and JavaScript Template Literals.
 
-## ➡ [Documentation](https://www.11ty.io/docs/)
+## ➡ [Documentation](https://www.11ty.dev/docs/)
 
 - Please star [this repo on GitHub](https://github.com/11ty/eleventy/)!
 - Follow us on Twitter [@eleven_ty](https://twitter.com/eleven_ty)
 - Support [11ty on Open Collective](https://opencollective.com/11ty)
 - [11ty on npm](https://www.npmjs.com/org/11ty)
 - [11ty on GitHub](https://github.com/11ty)
-- [11ty/eleventy on Travis CI](https://travis-ci.org/11ty/eleventy)
+- Continuous Integration:
+  - [GitHub Actions](https://github.com/11ty/eleventy/actions?query=workflow%3A.github%2Fworkflows%2Fci.yml)
 
 [![npm Version](https://img.shields.io/npm/v/@11ty/eleventy.svg?style=for-the-badge)](https://www.npmjs.com/package/@11ty/eleventy) [![GitHub issues](https://img.shields.io/github/issues/11ty/eleventy.svg?style=for-the-badge)](https://github.com/11ty/eleventy/issues) [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=for-the-badge)](https://github.com/prettier/prettier) [![npm Downloads](https://img.shields.io/npm/dt/@11ty/eleventy.svg?style=for-the-badge)](https://www.npmjs.com/package/@11ty/eleventy)
 
@@ -23,7 +24,7 @@ Works with HTML, Markdown, Liquid, Nunjucks, Handlebars, Mustache, EJS, Haml, Pu
 npm install @11ty/eleventy --save-dev
 ```
 
-Read our [Getting Started guide](https://www.11ty.io/docs/getting-started/).
+Read our [Getting Started guide](https://www.11ty.dev/docs/getting-started/).
 
 ## Tests
 
@@ -45,4 +46,4 @@ npm run test
 
 ## Plugins
 
-See the [official docs on plugins](https://www.11ty.io/docs/plugins/).
+See the [official docs on plugins](https://www.11ty.dev/docs/plugins/).

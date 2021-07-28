@@ -1,10 +1,9 @@
 const HandlebarsLib = require("handlebars");
 const TemplateEngine = require("./TemplateEngine");
-const config = require("../Config");
 
 class Handlebars extends TemplateEngine {
-  constructor(name, includesDir) {
-    super(name, includesDir);
+  constructor(name, includesDir, config) {
+    super(name, includesDir, config);
 
     this.setLibrary(this.config.libraryOverrides.hbs);
   }
@@ -43,7 +42,7 @@ class Handlebars extends TemplateEngine {
   addPairedShortcodes(shortcodes) {
     for (let name in shortcodes) {
       let callback = shortcodes[name];
-      this.addHelper(name, function(...args) {
+      this.addHelper(name, function (...args) {
         let options = args[args.length - 1];
         let content = "";
         if (options && options.fn) {
@@ -55,9 +54,9 @@ class Handlebars extends TemplateEngine {
     }
   }
 
-  async compile(str, inputPath) {
+  async compile(str) {
     let fn = this.handlebarsLib.compile(str);
-    return function(data) {
+    return function (data) {
       return fn(data);
     };
   }

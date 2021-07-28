@@ -1,21 +1,24 @@
 const validUrl = require("valid-url");
 const TemplatePath = require("../TemplatePath");
 
-module.exports = function(url, pathPrefix) {
+// This is also used in the Eleventy Navigation plugin
+module.exports = function (url, pathPrefix) {
   // work with undefined
   url = url || "";
 
   if (
     validUrl.isUri(url) ||
     url.indexOf("http://") === 0 ||
-    url.indexOf("https://") === 0
+    url.indexOf("https://") === 0 ||
+    (url.indexOf("//") === 0 && url !== "//")
   ) {
     return url;
   }
 
   if (pathPrefix === undefined || typeof pathPrefix !== "string") {
-    let projectConfig = require("../Config").getConfig();
-    pathPrefix = projectConfig.pathPrefix;
+    // When you retrieve this with config.getFilter("url") it
+    // grabs the pathPrefix argument from your config for you.
+    throw new Error("pathPrefix (String) is required in the `url` filter.");
   }
 
   let normUrl = TemplatePath.normalizeUrlPath(url);

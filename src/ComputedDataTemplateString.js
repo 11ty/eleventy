@@ -16,8 +16,8 @@ class ComputedDataTemplateString {
 
     // is this ¯\_(lisp)_/¯
     // must be strings that won’t be escaped by template languages
-    this.prefix = "(((((11ty(((((";
-    this.suffix = ")))))11ty)))))";
+    this.prefix = "(((11ty(((";
+    this.suffix = ")))11ty)))";
   }
 
   getProxyData() {
@@ -46,20 +46,21 @@ class ComputedDataTemplateString {
     return Array.from(vars);
   }
 
-  async findVarsUsed(fn, data = {}) {
+  async findVarsUsed(fn) {
     let proxyData = this.getProxyData();
     let output;
-    // let savedLog = console.log;
-    // console.log = () => {};
     // Mitigation for #1061, errors with filters in the first pass shouldn’t fail the whole thing.
     try {
       output = await fn(proxyData);
     } catch (e) {
       debug("Computed Data first pass data resolution error: %o", e);
     }
-    // console.log = savedLog;
 
-    return this.findVarsInOutput(output);
+    // page.outputPath on serverless urls returns false.
+    if (typeof output === "string") {
+      return this.findVarsInOutput(output);
+    }
+    return [];
   }
 }
 

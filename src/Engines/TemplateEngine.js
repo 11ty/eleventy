@@ -1,28 +1,38 @@
 const fastglob = require("fast-glob");
-const fs = require("fs-extra");
+const fs = require("fs");
 const TemplatePath = require("../TemplatePath");
+const TemplateConfig = require("../TemplateConfig");
 const EleventyExtensionMap = require("../EleventyExtensionMap");
+const EleventyBaseError = require("../EleventyBaseError");
 const debug = require("debug")("Eleventy:TemplateEngine");
 const aggregateBench = require("../BenchmarkManager").get("Aggregate");
 
+class TemplateEngineConfigError extends EleventyBaseError {}
+
 class TemplateEngine {
-  constructor(name, includesDir) {
+  constructor(name, includesDir, config) {
     this.name = name;
     this.includesDir = includesDir;
     this.partialsHaveBeenCached = false;
     this.partials = [];
     this.engineLib = null;
+    this.cacheable = false;
+
+    if (!config) {
+      throw new TemplateEngineConfigError("Missing `config` argument.");
+    }
+    this._config = config;
+  }
+
+  set config(cfg) {
+    this._config = cfg;
   }
 
   get config() {
-    if (!this._config) {
-      this._config = require("../Config").getConfig();
+    if (this._config instanceof TemplateConfig) {
+      return this._config.getConfig();
     }
     return this._config;
-  }
-
-  set config(config) {
-    this._config = config;
   }
 
   get engineManager() {
@@ -35,8 +45,7 @@ class TemplateEngine {
 
   get extensionMap() {
     if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap();
-      // this._extensionMap.config = this.config;
+      this._extensionMap = new EleventyExtensionMap([], this.config);
     }
     return this._extensionMap;
   }
@@ -50,6 +59,15 @@ class TemplateEngine {
       this._extensions = this.extensionMap.getExtensionsFromKey(this.name);
     }
     return this._extensions;
+  }
+
+  get extensionEntries() {
+    if (!this._extensionEntries) {
+      this._extensionEntries = this.extensionMap.getExtensionEntriesFromKey(
+        this.name
+      );
+    }
+    return this._extensionEntries;
   }
 
   getName() {
@@ -80,11 +98,11 @@ class TemplateEngine {
     if (this.includesDir) {
       let bench = aggregateBench.get("Searching the file system");
       bench.before();
-      this.extensions.forEach(function(extension) {
+      this.extensions.forEach(function (extension) {
         partialFiles = partialFiles.concat(
           fastglob.sync(prefix + extension, {
             caseSensitiveMatch: false,
-            dot: true
+            dot: true,
           })
         );
       });
@@ -99,7 +117,7 @@ class TemplateEngine {
         this.includesDir
       );
       let partialPathNoExt = partialPath;
-      this.extensions.forEach(function(extension) {
+      this.extensions.forEach(function (extension) {
         partialPathNoExt = TemplatePath.removeExtension(
           partialPathNoExt,
           "." + extension
@@ -130,7 +148,7 @@ class TemplateEngine {
       let fn = await this.compile(str);
       return fn(data);
     } catch (e) {
-      return Promise.reject(e);
+      throw e;
     }
   }
 
@@ -139,16 +157,21 @@ class TemplateEngine {
     return true;
   }
 
-  getExtraDataFromFile(inputPath) {
+  getExtraDataFromFile() {
     return {};
   }
 
-  initRequireCache(inputPath) {
+  initRequireCache() {
     // do nothing
   }
 
   get defaultTemplateFileExtension() {
     return "html";
+  }
+
+  // whether or not compile is needed or can we return the plaintext?
+  needsCompilation(str) {
+    return true;
   }
 }
 

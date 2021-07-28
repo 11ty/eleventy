@@ -1,19 +1,14 @@
-const config = require("./Config");
+const EleventyBaseError = require("./EleventyBaseError");
+class TemplateEngineManagerConfigError extends EleventyBaseError {}
 
 class TemplateEngineManager {
-  constructor() {
-    this.engineCache = {};
-  }
-
-  get config() {
-    if (!this._config) {
-      this._config = config.getConfig();
+  constructor(config) {
+    if (!config) {
+      throw new TemplateEngineManagerConfigError("Missing `config` argument.");
     }
-    return this._config;
-  }
+    this.config = config;
 
-  set config(cfg) {
-    this._config = cfg;
+    this.engineCache = {};
   }
 
   get keyToClassNameMap() {
@@ -21,7 +16,6 @@ class TemplateEngineManager {
       this._keyToClassNameMap = {
         ejs: "Ejs",
         md: "Markdown",
-        jstl: "JavaScriptTemplateLiteral",
         html: "Html",
         hbs: "Handlebars",
         mustache: "Mustache",
@@ -39,6 +33,10 @@ class TemplateEngineManager {
       }
     }
     return this._keyToClassNameMap;
+  }
+
+  reset() {
+    this.engineCache = {};
   }
 
   getClassNameFromTemplateKey(key) {
@@ -62,11 +60,34 @@ class TemplateEngineManager {
       return this.engineCache[name];
     }
 
-    let path = "./Engines/" + this.getClassNameFromTemplateKey(name);
-    const cls = require(path);
-    let instance = new cls(name, includesDir);
+    let cls;
+    // We include these as raw strings (and not more readable variables) so they’re parsed by the bundler.
+    if (name === "ejs") {
+      cls = require("./Engines/Ejs");
+    } else if (name === "md") {
+      cls = require("./Engines/Markdown");
+    } else if (name === "html") {
+      cls = require("./Engines/Html");
+    } else if (name === "hbs") {
+      cls = require("./Engines/Handlebars");
+    } else if (name === "mustache") {
+      cls = require("./Engines/Mustache");
+    } else if (name === "haml") {
+      cls = require("./Engines/Haml");
+    } else if (name === "pug") {
+      cls = require("./Engines/Pug");
+    } else if (name === "njk") {
+      cls = require("./Engines/Nunjucks");
+    } else if (name === "liquid") {
+      cls = require("./Engines/Liquid");
+    } else if (name === "11ty.js") {
+      cls = require("./Engines/JavaScript");
+    } else {
+      cls = require("./Engines/Custom");
+    }
+
+    let instance = new cls(name, includesDir, this.config);
     instance.extensionMap = extensionMap;
-    instance.config = this.config;
     instance.engineManager = this;
 
     // Make sure cache key is based on name and not path

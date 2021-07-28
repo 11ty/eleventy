@@ -1,6 +1,6 @@
-const fs = require("fs-extra");
+const fs = require("fs");
 const fastglob = require("fast-glob");
-const parsePath = require("parse-filepath");
+const path = require("path");
 const lodashset = require("lodash/set");
 const lodashget = require("lodash/get");
 const lodashUniq = require("lodash/uniq");
@@ -11,7 +11,6 @@ const TemplateGlob = require("./TemplateGlob");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");
 
-const config = require("./Config");
 const debugWarn = require("debug")("Eleventy:Warnings");
 const debug = require("debug")("Eleventy:TemplateData");
 const debugDev = require("debug")("Dev:Eleventy:TemplateData");
@@ -20,11 +19,37 @@ const deleteRequireCache = require("./Util/DeleteRequireCache");
 const bench = require("./BenchmarkManager").get("Data");
 const aggregateBench = require("./BenchmarkManager").get("Aggregate");
 
+class FSExistsCache {
+  constructor() {
+    this._cache = new Map();
+  }
+  has(path) {
+    return this._cache.has(path);
+  }
+  exists(path) {
+    let exists = this._cache.get(path);
+    if (!this.has(path)) {
+      exists = fs.existsSync(path);
+      this._cache.set(path, exists);
+    }
+    return exists;
+  }
+  markExists(path, value = true) {
+    this._cache.set(path, !!value);
+  }
+}
+
+class TemplateDataConfigError extends EleventyBaseError {}
 class TemplateDataParseError extends EleventyBaseError {}
 
 class TemplateData {
-  constructor(inputDir) {
-    this.config = config.getConfig();
+  constructor(inputDir, eleventyConfig) {
+    if (!eleventyConfig) {
+      throw new TemplateDataConfigError("Missing `config`.");
+    }
+    this.eleventyConfig = eleventyConfig;
+    this.config = this.eleventyConfig.getConfig();
+
     this.dataTemplateEngine = this.config.dataTemplateEngine;
 
     this.inputDirNeedsCheck = false;
@@ -32,18 +57,29 @@ class TemplateData {
 
     this.rawImports = {};
     this.globalData = null;
+
+    // It's common for data files not to exist, so we avoid going to the FS to
+    // re-check if they do via a quick-and-dirty cache.
+    this._fsExistsCache = new FSExistsCache();
   }
 
   get extensionMap() {
     if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap();
-      this._extensionMap.config = this.config;
+      this._extensionMap = new EleventyExtensionMap([], this.config);
     }
     return this._extensionMap;
   }
 
   set extensionMap(map) {
     this._extensionMap = map;
+  }
+
+  get environmentVariables() {
+    return this._env;
+  }
+
+  set environmentVariables(env) {
+    this._env = env;
   }
 
   /* Used by tests */
@@ -104,7 +140,7 @@ class TemplateData {
 
   async _checkInputDir() {
     if (this.inputDirNeedsCheck) {
-      let globalPathStat = await fs.stat(this.inputDir);
+      let globalPathStat = await fs.promises.stat(this.inputDir);
 
       if (!globalPathStat.isDirectory()) {
         throw new Error("Could not find data path directory: " + this.inputDir);
@@ -130,12 +166,12 @@ class TemplateData {
     let paths = [
       `${dir}/**/*.json`, // covers .11tydata.json too
       `${dir}/**/*${this.config.jsDataFileSuffix}.cjs`,
-      `${dir}/**/*${this.config.jsDataFileSuffix}.js`
+      `${dir}/**/*${this.config.jsDataFileSuffix}.js`,
     ];
 
     if (this.hasUserDataExtensions()) {
       let userPaths = this.getUserDataExtensions().map(
-        extension => `${dir}/**/*.${extension}` // covers .11tydata.{extension} too
+        (extension) => `${dir}/**/*.${extension}` // covers .11tydata.{extension} too
       );
       paths = userPaths.concat(paths);
     }
@@ -146,7 +182,7 @@ class TemplateData {
   async getTemplateJavaScriptDataFileGlob() {
     let dir = await this.getInputDir();
     return TemplatePath.addLeadingDotSlashArray([
-      `${dir}/**/*${this.config.jsDataFileSuffix}.js`
+      `${dir}/**/*${this.config.jsDataFileSuffix}.js`,
     ]);
   }
 
@@ -180,9 +216,9 @@ class TemplateData {
 
     let fsBench = aggregateBench.get("Searching the file system");
     fsBench.before();
-    let paths = await fastglob(await this.getGlobalDataGlob(), {
+    let paths = fastglob.sync(await this.getGlobalDataGlob(), {
       caseSensitiveMatch: false,
-      dot: true
+      dot: true,
     });
     fsBench.after();
 
@@ -205,9 +241,12 @@ class TemplateData {
     return paths;
   }
 
-  getObjectPathForDataFile(path) {
-    let reducedPath = TemplatePath.stripLeadingSubPath(path, this.dataDir);
-    let parsed = parsePath(reducedPath);
+  getObjectPathForDataFile(dataFilePath) {
+    let reducedPath = TemplatePath.stripLeadingSubPath(
+      dataFilePath,
+      this.dataDir
+    );
+    let parsed = path.parse(reducedPath);
     let folders = parsed.dir ? parsed.dir.split("/") : [];
     folders.push(parsed.name);
 
@@ -220,6 +259,8 @@ class TemplateData {
     let files = TemplatePath.addLeadingDotSlashArray(
       await this.getGlobalDataFiles()
     );
+
+    this.config.events.emit("eleventy.globalDataFiles", files);
 
     let dataFileConflicts = {};
 
@@ -248,14 +289,43 @@ class TemplateData {
     return globalData;
   }
 
+  async getInitialGlobalData() {
+    let globalData = {};
+    if (this.config.globalData) {
+      let keys = Object.keys(this.config.globalData);
+      for (let key of keys) {
+        let returnValue = this.config.globalData[key];
+
+        if (typeof returnValue === "function") {
+          returnValue = await returnValue();
+        }
+
+        lodashset(globalData, key, returnValue);
+      }
+    }
+    if (this.environmentVariables) {
+      if (!("eleventy" in globalData)) {
+        globalData.eleventy = {};
+      }
+      if (!("env" in globalData.eleventy)) {
+        globalData.eleventy.env = {};
+      }
+      Object.assign(globalData.eleventy.env, this.environmentVariables);
+    }
+    return globalData;
+  }
+
   async getData() {
     let rawImports = this.getRawImports();
 
+    this.configApiGlobalData = await this.getInitialGlobalData();
+
     if (!this.globalData) {
       let globalJson = await this.getAllGlobalData();
+      let mergedGlobalData = merge(globalJson, this.configApiGlobalData);
 
       // OK: Shallow merge when combining rawImports (pkg) with global data files
-      this.globalData = Object.assign({}, globalJson, rawImports);
+      this.globalData = Object.assign({}, mergedGlobalData, rawImports);
     }
 
     return this.globalData;
@@ -267,6 +337,16 @@ class TemplateData {
     if (!Array.isArray(localDataPaths)) {
       localDataPaths = [localDataPaths];
     }
+
+    // Filter out files we know don't exist to avoid overhead for checking
+    localDataPaths = localDataPaths.filter((path) => {
+      return this._fsExistsCache.exists(path);
+    });
+
+    if (!localDataPaths.length) {
+      return localData;
+    }
+
     for (let path of localDataPaths) {
       // clean up data for template/directory data files only.
       let dataForPath = await this.getDataValue(path, null, true);
@@ -315,7 +395,7 @@ class TemplateData {
   async _loadFileContents(path) {
     let rawInput;
     try {
-      rawInput = await fs.readFile(path, "utf-8");
+      rawInput = await fs.promises.readFile(path, "utf-8");
     } catch (e) {
       // if file does not exist, return nothing
     }
@@ -340,7 +420,7 @@ class TemplateData {
         );
       }
     } else {
-      let tr = new TemplateRender(engineName, this.inputDir);
+      let tr = new TemplateRender(engineName, this.inputDir, this.config);
       tr.extensionMap = this.extensionMap;
 
       let fn = await tr.getCompiledTemplate(rawInput);
@@ -358,11 +438,11 @@ class TemplateData {
     }
   }
 
+  // ignoreProcessing = false for global data files
+  // ignoreProcessing = true for local data files
   async getDataValue(path, rawImports, ignoreProcessing) {
     let extension = TemplatePath.getExtension(path);
 
-    // ignoreProcessing = false for global data files
-    // ignoreProcessing = true for local data files
     if (
       extension === "js" ||
       extension === "cjs" ||
@@ -370,7 +450,11 @@ class TemplateData {
     ) {
       // JS data file or require’d JSON (no preprocessing needed)
       let localPath = TemplatePath.absolutePath(path);
-      if (!(await fs.pathExists(localPath))) {
+      let exists = this._fsExistsCache.exists(localPath);
+      // Make sure that relative lookups benefit from cache
+      this._fsExistsCache.markExists(path, exists);
+
+      if (!exists) {
         return {};
       }
 
@@ -381,8 +465,11 @@ class TemplateData {
       deleteRequireCache(localPath);
 
       let returnValue = require(localPath);
+      // TODO special exception for Global data `permalink.js`
+      // module.exports = (data) => `${data.page.filePathStem}/`; // Does not work
+      // module.exports = () => ((data) => `${data.page.filePathStem}/`); // Works
       if (typeof returnValue === "function") {
-        returnValue = await returnValue();
+        returnValue = await returnValue(this.configApiGlobalData || {});
       }
 
       dataBench.after();
@@ -431,7 +518,7 @@ class TemplateData {
 
   async getLocalDataPaths(templatePath) {
     let paths = [];
-    let parsed = parsePath(templatePath);
+    let parsed = path.parse(templatePath);
     let inputDir = TemplatePath.addLeadingDotSlash(
       TemplatePath.normalize(this.inputDir)
     );
@@ -502,6 +589,9 @@ class TemplateData {
       } else if (data.tags === null) {
         data.tags = [];
       }
+
+      // Deduplicate tags
+      data.tags = [...new Set(data.tags)];
     }
 
     return data;

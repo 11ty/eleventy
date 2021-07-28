@@ -1,18 +1,18 @@
-import test from "ava";
-import getCollectionItem from "../src/Filters/GetCollectionItem";
+const test = require("ava");
+const getCollectionItem = require("../src/Filters/GetCollectionItem");
 
-test("getCollectionItem", t => {
+test("getCollectionItem", (t) => {
   let first = {
     inputPath: "hello.md",
-    outputPath: "/hello/"
+    outputPath: "/hello/",
   };
   let second = {
     inputPath: "hello2.md",
-    outputPath: "/hello2/"
+    outputPath: "/hello2/",
   };
   let third = {
     inputPath: "hello3.md",
-    outputPath: "/hello3/"
+    outputPath: "/hello3/",
   };
   let collections = [first, second, third];
 

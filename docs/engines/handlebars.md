@@ -1,3 +1,3 @@
 # Handlebars
 
-Moved to [https://www.11ty.io/docs/languages/handlebars/](https://www.11ty.io/docs/languages/handlebars/).
+Moved to [https://www.11ty.dev/docs/languages/handlebars/](https://www.11ty.dev/docs/languages/handlebars/).

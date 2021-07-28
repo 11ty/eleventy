@@ -1,6 +1,11 @@
 const TemplateEngine = require("./TemplateEngine");
 
 class Html extends TemplateEngine {
+  constructor(name, includesDir, config) {
+    super(name, includesDir, config);
+    this.cacheable = true;
+  }
+
   async compile(str, inputPath, preTemplateEngine) {
     if (preTemplateEngine) {
       let engine = this.engineManager.getEngine(
@@ -8,13 +13,15 @@ class Html extends TemplateEngine {
         super.getIncludesDir(),
         this.extensionMap
       );
-      let fn = await engine.compile(str, inputPath);
+      let fnReady = engine.compile(str, inputPath);
 
-      return async function(data) {
+      return async function (data) {
+        let fn = await fnReady;
+
         return fn(data);
       };
     } else {
-      return function(data) {
+      return function () {
         // do nothing with data if parseHtmlWith is falsy
         return str;
       };

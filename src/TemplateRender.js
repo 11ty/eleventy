@@ -1,18 +1,27 @@
 const TemplatePath = require("./TemplatePath");
+const TemplateConfig = require("./TemplateConfig");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 // const debug = require("debug")("Eleventy:TemplateRender");
 
+class TemplateRenderConfigError extends EleventyBaseError {}
 class TemplateRenderUnknownEngineError extends EleventyBaseError {}
 
 // works with full path names or short engine name
 class TemplateRender {
-  constructor(tmplPath, inputDir) {
+  constructor(tmplPath, inputDir, config) {
     if (!tmplPath) {
       throw new Error(
         `TemplateRender requires a tmplPath argument, instead of ${tmplPath}`
       );
     }
+    if (!config) {
+      throw new TemplateRenderConfigError("Missing `config` argument.");
+    }
+    if (config instanceof TemplateConfig) {
+      this.eleventyConfig = config;
+    }
+    this.config = config;
 
     this.engineNameOrPath = tmplPath;
     this.inputDir = inputDir;
@@ -25,8 +34,8 @@ class TemplateRender {
   }
 
   get config() {
-    if (!this._config) {
-      this._config = require("./Config").getConfig();
+    if (this._config instanceof TemplateConfig) {
+      return this._config.getConfig();
     }
     return this._config;
   }
@@ -41,17 +50,18 @@ class TemplateRender {
 
   get extensionMap() {
     if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap();
+      this._extensionMap = new EleventyExtensionMap([], this.config);
     }
     return this._extensionMap;
   }
 
+  // Runs once per template
   init(engineNameOrPath) {
     this.extensionMap.config = this.config;
     this._engineName = this.extensionMap.getKey(engineNameOrPath);
     if (!this._engineName) {
       throw new TemplateRenderUnknownEngineError(
-        `Unknown engine for ${engineNameOrPath}`
+        `Unknown engine for ${engineNameOrPath} (supported extensions: ${this.extensionMap.getReadableFileExtensions()})`
       );
     }
 
@@ -89,10 +99,10 @@ class TemplateRender {
     let usingMarkdown = false;
     (engineName || "")
       .split(",")
-      .map(name => {
+      .map((name) => {
         return name.toLowerCase().trim();
       })
-      .forEach(name => {
+      .forEach((name) => {
         // html is assumed (treated as plaintext by the system)
         if (!name || name === "html") {
           return;
@@ -126,12 +136,30 @@ class TemplateRender {
     return engines;
   }
 
-  // used for error logging.
-  getEnginesStr() {
-    if (this.engineName === "md" && this.useMarkdown) {
-      return this.parseMarkdownWith + " (and markdown)";
+  // used for error logging and console output.
+  getReadableEnginesList() {
+    return (
+      this.getReadableEnginesListDifferingFromFileExtension() || this.engineName
+    );
+  }
+
+  getReadableEnginesListDifferingFromFileExtension() {
+    if (
+      this.engineName === "md" &&
+      this.useMarkdown &&
+      this.parseMarkdownWith
+    ) {
+      return this.parseMarkdownWith;
     }
-    return this.engineName;
+    if (this.engineName === "html" && this.parseHtmlWith) {
+      return this.parseHtmlWith;
+    }
+
+    // templateEngineOverride in play and template language differs from file extension
+    let keyFromFilename = this.extensionMap.getKey(this.engineNameOrPath);
+    if (keyFromFilename !== this.engineName) {
+      return this.engineName;
+    }
   }
 
   setEngineOverride(engineName, bypassMarkdown) {
@@ -181,10 +209,12 @@ class TemplateRender {
     this.useMarkdown = !!useMarkdown;
   }
 
+  // this is only called for templateEngineOverride
   setMarkdownEngine(markdownEngine) {
     this.parseMarkdownWith = markdownEngine;
   }
 
+  // this is only called for templateEngineOverride
   setHtmlEngine(htmlEngineName) {
     this.parseHtmlWith = htmlEngineName;
   }

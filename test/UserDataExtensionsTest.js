@@ -1,17 +1,20 @@
-import test from "ava";
-import TemplateData from "../src/TemplateData";
+const test = require("ava");
+const TemplateConfig = require("../src/TemplateConfig");
+const TemplateData = require("../src/TemplateData");
 let yaml = require("js-yaml");
 
 function injectDataExtensions(dataObj) {
   dataObj.config.dataExtensions = new Map([
-    ["yaml", s => yaml.safeLoad(s)],
-    ["nosj", JSON.parse]
+    ["yaml", (s) => yaml.load(s)],
+    ["nosj", JSON.parse],
   ]);
 }
 
-test("Local data", async t => {
-  let dataObj = new TemplateData("./test/stubs-630/");
+test("Local data", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
   injectDataExtensions(dataObj);
+  dataObj.setDataTemplateEngine("liquid");
 
   let data = await dataObj.getData();
 
@@ -26,7 +29,6 @@ test("Local data", async t => {
   let withLocalData = await dataObj.getLocalData(
     "./test/stubs-630/component-yaml/component.njk"
   );
-  // console.log("localdata", withLocalData);
 
   t.is(withLocalData.yamlKey1, "yaml1");
   t.is(withLocalData.yamlKey2, "yaml2");
@@ -37,8 +39,9 @@ test("Local data", async t => {
   t.is(withLocalData.jsKey1, "js1");
 });
 
-test("Local files", async t => {
-  let dataObj = new TemplateData("./test/stubs-630/");
+test("Local files", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
   injectDataExtensions(dataObj);
   let files = await dataObj.getLocalDataPaths(
     "./test/stubs-630/component-yaml/component.njk"
@@ -67,17 +70,18 @@ test("Local files", async t => {
     "./test/stubs-630/component-yaml/component.11tydata.nosj",
     "./test/stubs-630/component-yaml/component.11tydata.json",
     "./test/stubs-630/component-yaml/component.11tydata.cjs",
-    "./test/stubs-630/component-yaml/component.11tydata.js"
+    "./test/stubs-630/component-yaml/component.11tydata.js",
   ]);
 });
 
-test("Global data", async t => {
-  let dataObj = new TemplateData("./test/stubs-630/");
-
+test("Global data", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
   injectDataExtensions(dataObj);
+  dataObj.setDataTemplateEngine("liquid");
 
   t.deepEqual(await dataObj.getGlobalDataGlob(), [
-    "./test/stubs-630/_data/**/*.(nosj|yaml|json|cjs|js)"
+    "./test/stubs-630/_data/**/*.(nosj|yaml|json|cjs|js)",
   ]);
 
   let data = await dataObj.getData();
@@ -103,8 +107,9 @@ test("Global data", async t => {
   t.is(data.subdir.globalDataSubdir.keyyaml, "yaml");
 });
 
-test("Global data merging and priority", async t => {
-  let dataObj = new TemplateData("./test/stubs-630/");
+test("Global data merging and priority", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
   injectDataExtensions(dataObj);
 
   let data = await dataObj.getData();

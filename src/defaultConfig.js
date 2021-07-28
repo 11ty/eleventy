@@ -1,11 +1,23 @@
 const urlFilter = require("./Filters/Url");
+const serverlessUrlFilter = require("./Filters/ServerlessUrl");
 const slugFilter = require("./Filters/Slug");
+const slugifyFilter = require("./Filters/Slugify");
 const getCollectionItem = require("./Filters/GetCollectionItem");
 
-module.exports = function(config) {
+module.exports = function (config) {
+  let eleventyConfig = this;
+
   config.addFilter("slug", slugFilter);
-  config.addFilter("url", urlFilter);
+  config.addFilter("slugify", slugifyFilter);
+
+  config.addFilter("url", function (url, pathPrefixOverride) {
+    let pathPrefix =
+      pathPrefixOverride || eleventyConfig.getConfig().pathPrefix;
+    return urlFilter.call(this, url, pathPrefix);
+  });
   config.addFilter("log", console.log);
+
+  config.addFilter("serverlessUrl", serverlessUrlFilter);
 
   config.addFilter("getCollectionItem", (collection, page) =>
     getCollectionItem(collection, page)
@@ -28,15 +40,13 @@ module.exports = function(config) {
       "pug",
       "njk",
       "html",
-      "jstl",
-      "11ty.js"
+      "11ty.js",
     ],
     // if your site lives in a subdirectory, change this
     pathPrefix: "/",
     markdownTemplateEngine: "liquid",
     htmlTemplateEngine: "liquid",
-    dataTemplateEngine: "liquid",
-    passthroughFileCopy: true,
+    dataTemplateEngine: false, // change in 1.0
     htmlOutputSuffix: "-o",
     jsDataFileSuffix: ".11tydata",
     keys: {
@@ -45,19 +55,17 @@ module.exports = function(config) {
       permalink: "permalink",
       permalinkRoot: "permalinkBypassOutputDir",
       engineOverride: "templateEngineOverride",
-      computed: "eleventyComputed"
+      computed: "eleventyComputed",
     },
     dir: {
       input: ".",
       includes: "_includes",
       data: "_data",
-      output: "_site"
+      output: "_site",
     },
-    // deprecated, use config.addTransform
-    filters: {},
     // deprecated, use config.addHandlebarsHelper
     handlebarsHelpers: {},
     // deprecated, use config.addNunjucksFilter
-    nunjucksFilters: {}
+    nunjucksFilters: {},
   };
 };
