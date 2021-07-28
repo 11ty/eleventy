@@ -711,6 +711,7 @@ class UserConfig {
       extensionMap: this.extensionMap,
       quietMode: this.quietMode,
       events: this.events,
+      plugins: this.plugins,
       useTemplateCache: this.useTemplateCache,
       precompiledCollections: this.precompiledCollections,
     };
