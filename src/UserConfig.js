@@ -5,7 +5,6 @@ const EventEmitter = require("./Util/AsyncEventEmitter");
 const EleventyBaseError = require("./EleventyBaseError");
 const merge = require("./Util/Merge");
 const bench = require("./BenchmarkManager").get("Configuration");
-const aggregateBench = require("./BenchmarkManager").get("Aggregate");
 const debug = require("debug")("Eleventy:UserConfig");
 const pkg = require("../package.json");
 
@@ -71,6 +70,9 @@ class UserConfig {
     this.dataExtensions = new Map();
 
     this.quietMode = false;
+
+    this.plugins = [];
+
     this.useTemplateCache = true;
   }
 
@@ -295,27 +297,7 @@ class UserConfig {
   }
 
   addPlugin(plugin, options) {
-    // TODO support function.name in plugin config functions
-    debug("Adding plugin (unknown name: check your config file).");
-    let pluginBench = aggregateBench.get("Configuration addPlugin");
-    if (typeof plugin === "function") {
-      pluginBench.before();
-      let configFunction = plugin;
-      configFunction(this, options);
-      pluginBench.after();
-    } else if (plugin && plugin.configFunction) {
-      pluginBench.before();
-      if (options && typeof options.init === "function") {
-        options.init.call(this, plugin.initArguments || {});
-      }
-
-      plugin.configFunction(this, options);
-      pluginBench.after();
-    } else {
-      throw new UserConfigError(
-        "Invalid EleventyConfig.addPlugin signature. Should be a function or a valid Eleventy plugin object."
-      );
-    }
+    this.plugins.push({ plugin, options });
   }
 
   getNamespacedName(name) {
