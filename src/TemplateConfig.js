@@ -110,7 +110,7 @@ class TemplateConfig {
   getConfig() {
     if (!this.hasConfigMerged) {
       debugDev("Merging via getConfig (first time)");
-      this.config = this.mergeConfig(this.projectConfigPath);
+      this.config = this.mergeConfig();
       this.hasConfigMerged = true;
     }
     return this.config;
@@ -129,7 +129,8 @@ class TemplateConfig {
       debugDev(
         "Merging in getConfig again after setting the local project config path."
       );
-      this.config = this.mergeConfig(path);
+      this.hasConfigMerged = false;
+      this.getConfig();
     }
   }
 
@@ -160,24 +161,24 @@ class TemplateConfig {
     debug("rootConfig %o", this.rootConfig);
   }
 
-  processPlugins(userConfig, localConfig) {
-    userConfig.plugins.forEach(({ plugin, options }) => {
-      userConfig.dir = localConfig.dir;
+  processPlugins({ dir }) {
+    this.userConfig.plugins.forEach(({ plugin, options }) => {
+      this.userConfig.dir = dir;
       // TODO support function.name in plugin config functions
       debug("Adding plugin (unknown name: check your config file).");
       let pluginBench = aggregateBench.get("Configuration addPlugin");
       if (typeof plugin === "function") {
         pluginBench.before();
         let configFunction = plugin;
-        configFunction(userConfig, options);
+        configFunction(this.userConfig, options);
         pluginBench.after();
       } else if (plugin && plugin.configFunction) {
         pluginBench.before();
         if (options && typeof options.init === "function") {
-          options.init.call(userConfig, plugin.initArguments || {});
+          options.init.call(this.userConfig, plugin.initArguments || {});
         }
 
-        plugin.configFunction(userConfig, options);
+        plugin.configFunction(this.userConfig, options);
         pluginBench.after();
       } else {
         throw new UserConfigError(
@@ -195,10 +196,7 @@ class TemplateConfig {
    */
   mergeConfig() {
     let localConfig = {};
-    let path = TemplatePath.join(
-      TemplatePath.getWorkingDir(),
-      this.projectConfigPath
-    );
+    let path = TemplatePath.absolutePath(this.projectConfigPath);
 
     debug(`Merging config with ${path}`);
 
@@ -250,7 +248,7 @@ class TemplateConfig {
     // Delay processing plugins until after the result of localConfig is returned
     // But BEFORE the rest of the config options are merged
     // this way we can pass directories and other template information to plugins
-    this.processPlugins(this.userConfig, localConfig);
+    this.processPlugins(localConfig);
 
     let eleventyConfigApiMergingObject =
       this.userConfig.getMergingConfigObject();
