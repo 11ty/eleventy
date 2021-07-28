@@ -265,6 +265,11 @@ class BundlerHelper {
 }
 
 function EleventyPlugin(eleventyConfig, options = {}) {
+  let inputDir = ".";
+  if (eleventyConfig.dir && eleventyConfig.dir.input) {
+    inputDir = eleventyConfig.dir.input;
+  }
+
   options = Object.assign(
     {
       name: "",
@@ -286,7 +291,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       copyEnabled: true,
 
       // Input directory (used to generate the default serverless file)
-      inputDir: ".",
+      inputDir,
     },
     options
   );
