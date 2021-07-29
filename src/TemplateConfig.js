@@ -64,6 +64,11 @@ class TemplateConfig {
     this.hasConfigMerged = false;
   }
 
+  /* Getter for Logger */
+  setLogger(logger) {
+    this.logger = logger;
+  }
+
   /**
    * Normalises local project config file path.
    *
@@ -161,9 +166,19 @@ class TemplateConfig {
     debug("rootConfig %o", this.rootConfig);
   }
 
+  /*
+   * Process the userland plugins from the Config
+   *
+   * @param {Object} - the return Object from the user’s config file.
+   */
   processPlugins({ dir }) {
+    this.userConfig.dir = dir;
+
+    if (this.logger) {
+      this.userConfig.logger = this.logger;
+    }
+
     this.userConfig.plugins.forEach(({ plugin, options }) => {
-      this.userConfig.dir = dir;
       // TODO support function.name in plugin config functions
       debug("Adding plugin (unknown name: check your config file).");
       let pluginBench = aggregateBench.get("Configuration addPlugin");

@@ -42,6 +42,8 @@ class Eleventy {
       }
     }
 
+    this.eleventyConfig.setLogger(this.logger);
+
     if (options.config && typeof options.config === "function") {
       // TODO use return object here?
       options.config(this.eleventyConfig.userConfig);
@@ -449,6 +451,7 @@ Verbose Output: ${this.verboseMode}`);
 
   /* Setter for Logger */
   set logger(logger) {
+    this.eleventyConfig.setLogger(logger);
     this._logger = logger;
   }
 
@@ -477,6 +480,9 @@ Verbose Output: ${this.verboseMode}`);
     // Debug mode should always run quiet (all output goes to debug logger)
     if (process.env.DEBUG) {
       isVerbose = false;
+    }
+    if (this.logger) {
+      this.logger.isVerbose = isVerbose;
     }
 
     bench.setVerboseOutput(isVerbose);

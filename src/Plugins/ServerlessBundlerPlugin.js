@@ -102,11 +102,12 @@ function addRedirectsWithoutDuplicates(name, config, newRedirects) {
 }
 
 class BundlerHelper {
-  constructor(name, options) {
+  constructor(name, options, eleventyConfig) {
     this.name = name;
     this.options = options;
     this.dir = path.join(options.functionsDir, name);
     this.copyCount = 0;
+    this.eleventyConfig = eleventyConfig;
   }
 
   reset() {
@@ -232,7 +233,7 @@ class BundlerHelper {
       res.write(result.body);
       res.end();
 
-      console.log(
+      this.eleventyConfig.logger.forceLog(
         `Serverless (${this.name}): ${req.url} (${Date.now() - start}ms)`
       );
     };
@@ -303,7 +304,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
   }
 
   if (process.env.ELEVENTY_SOURCE === "cli") {
-    let helper = new BundlerHelper(options.name, options);
+    let helper = new BundlerHelper(options.name, options, eleventyConfig);
 
     eleventyConfig.setBrowserSyncConfig({
       middleware: [helper.browserSyncMiddleware()],
@@ -340,8 +341,8 @@ function EleventyPlugin(eleventyConfig, options = {}) {
         await Promise.all(promises);
       }
 
-      console.log(
-        `Eleventy Serverless: ${helper.copyCount} file${
+      eleventyConfig.logger.log(
+        `Serverless: ${helper.copyCount} file${
           helper.copyCount !== 1 ? "s" : ""
         } bundled to ${helper.getOutputPath("")}.`
       );
