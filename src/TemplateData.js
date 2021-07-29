@@ -250,7 +250,7 @@ class TemplateData {
     let folders = parsed.dir ? parsed.dir.split("/") : [];
     folders.push(parsed.name);
 
-    return folders.join(".");
+    return folders;
   }
 
   async getAllGlobalData() {
@@ -265,21 +265,27 @@ class TemplateData {
     let dataFileConflicts = {};
 
     for (let j = 0, k = files.length; j < k; j++) {
-      let objectPathTarget = await this.getObjectPathForDataFile(files[j]);
       let data = await this.getDataValue(files[j], rawImports);
+      let objectPathTarget = this.getObjectPathForDataFile(files[j]);
+
+      // Since we're joining directory paths and an array is not useable as an objectkey since two identical arrays are not double equal,
+      // we can just join the array by a forbidden character ("/"" is chosen here, since it works on Linux, Mac and Windows).
+      // If at some point this isn't enough anymore, it would be possible to just use JSON.stringify(objectPathTarget) since that
+      // is guaranteed to work but is signifivcantly slower.
+      let objectPathTargetString = objectPathTarget.join("/");
 
       // if two global files have the same path (but different extensions)
       // and conflict, let’s merge them.
-      if (dataFileConflicts[objectPathTarget]) {
+      if (dataFileConflicts[objectPathTargetString]) {
         debugWarn(
-          `merging global data from ${files[j]} with an already existing global data file (${dataFileConflicts[objectPathTarget]}). Overriding existing keys.`
+          `merging global data from ${files[j]} with an already existing global data file (${dataFileConflicts[objectPathTargetString]}). Overriding existing keys.`
         );
 
         let oldData = lodashget(globalData, objectPathTarget);
         data = TemplateData.mergeDeep(this.config, oldData, data);
       }
 
-      dataFileConflicts[objectPathTarget] = files[j];
+      dataFileConflicts[objectPathTargetString] = files[j];
       debug(
         `Found global data file ${files[j]} and adding as: ${objectPathTarget}`
       );
