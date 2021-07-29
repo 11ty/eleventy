@@ -448,6 +448,29 @@ test("Parent directory for data (Issue #337)", async (t) => {
   });
 });
 
+test("Dots in datafile path (Issue #1242)", async (t) => {
+  let eleventyConfig = new TemplateConfig({
+    dataTemplateEngine: false,
+    dir: {
+      input: "./test/stubs-1242/",
+      data: "_data/",
+    },
+  });
+  let dataObj = new TemplateData("./test/stubs-1242/", eleventyConfig);
+  dataObj.setInputDir("./test/stubs-1242/");
+
+  let data = await dataObj.getData();
+
+  t.deepEqual(data, {
+    "xyz.dottest": {
+      hi: "bye",
+      test: {
+        abc: 42,
+      },
+    },
+  });
+});
+
 test("addGlobalData values", async (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.addGlobalData("myFunction", () => "fn-value");
