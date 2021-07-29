@@ -176,17 +176,16 @@ test("Liquid Custom Filter", async (t) => {
   t.is(await tr._testRender("{{ 'test' | prefixWithZach }}", {}), "Zachtest");
 });
 
-test.skip("Liquid Async Filter", async (t) => {
+test("Liquid Async Filter", async (t) => {
   let tr = getNewTemplateRender("liquid", "test/stubs");
-  tr.engine.addFilter({
-    myAsyncFilter: function (value) {
-      return new Promise((resolve, reject) => {
-        setTimeout(function () {
-          resolve(`HI${value}`);
-        }, 100);
-      });
-    },
+  tr.engine.addFilter("myAsyncFilter", async function (value) {
+    return new Promise((resolve, reject) => {
+      setTimeout(function () {
+        resolve(`HI${value}`);
+      }, 100);
+    });
   });
+
   let fn = await tr.getCompiledTemplate("{{ 'test' | myAsyncFilter }}");
   t.is((await fn()).trim(), "HItest");
 });
