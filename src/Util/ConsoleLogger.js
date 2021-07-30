@@ -2,7 +2,7 @@ const chalk = require("chalk");
 const debug = require("debug")("Eleventy:Logger");
 const Readable = require("stream").Readable;
 const split = require("split");
-/** @typedef {import('stream').Readble Readable} */
+/** @typedef {import('stream').Readable Readable} */
 
 /**
  * Logger implementation that logs to STDOUT.
