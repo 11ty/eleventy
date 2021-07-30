@@ -162,22 +162,6 @@ test("Date Descending", (t) => {
   t.deepEqual(s.sort(), [date3, date2, date1]);
 });
 
-test("Alphabetic Ascending (str sort arg)", (t) => {
-  let s = new Sortable();
-  s.add("a");
-  s.add("z");
-  s.add("m");
-  t.deepEqual(s.sort("ascending"), ["a", "m", "z"]);
-});
-
-test("Alphabetic Descending (str sort arg)", (t) => {
-  let s = new Sortable();
-  s.add("a");
-  s.add("z");
-  s.add("m");
-  t.deepEqual(s.sort("descending"), ["z", "m", "a"]);
-});
-
 test("Alphabetic Ascending (short str sort arg)", (t) => {
   let s = new Sortable();
   s.add("a");

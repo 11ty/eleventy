@@ -1,5 +1,3 @@
-const capitalize = require("./Capitalize");
-
 class Sortable {
   constructor() {
     this.isSortAscending = true;
@@ -8,10 +6,10 @@ class Sortable {
     this._dirty = true;
 
     this.sortFunctionStringMap = {
-      "A-Z": "Ascending",
-      "Z-A": "Descending",
-      "0-9": "NumericAscending",
-      "9-0": "NumericDescending",
+      "A-Z": "sortFunctionAscending",
+      "Z-A": "sortFunctionDescending",
+      "0-9": "sortFunctionNumericAscending",
+      "9-0": "sortFunctionNumericDescending",
     };
   }
 
@@ -28,11 +26,20 @@ class Sortable {
     if (!sortFunction) {
       sortFunction = this.getSortFunction();
     } else if (typeof sortFunction === "string") {
-      if (sortFunction in this.sortFunctionStringMap) {
-        sortFunction = this.sortFunctionStringMap[sortFunction];
+      let key = sortFunction;
+      let name;
+      if (key in this.sortFunctionStringMap) {
+        name = this.sortFunctionStringMap[key];
       }
-
-      sortFunction = Sortable["sortFunction" + capitalize(sortFunction)];
+      if (Sortable[name]) {
+        sortFunction = Sortable[name];
+      } else {
+        throw new Error(
+          `Invalid String argument for sort(). Received \`${key}\`. Valid values: ${Object.keys(
+            this.sortFunctionStringMap
+          )}`
+        );
+      }
     }
 
     return this.items.slice().sort(sortFunction);
