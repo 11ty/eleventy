@@ -1,6 +1,6 @@
-const fs = require("fs-extra");
+const fs = require("fs");
 const fastglob = require("fast-glob");
-const parsePath = require("parse-filepath");
+const path = require("path");
 const lodashset = require("lodash/set");
 const lodashget = require("lodash/get");
 const lodashUniq = require("lodash/uniq");
@@ -11,7 +11,6 @@ const TemplateGlob = require("./TemplateGlob");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");
 
-const config = require("./Config");
 const debugWarn = require("debug")("Eleventy:Warnings");
 const debug = require("debug")("Eleventy:TemplateData");
 const debugDev = require("debug")("Dev:Eleventy:TemplateData");
@@ -30,7 +29,7 @@ class FSExistsCache {
   exists(path) {
     let exists = this._cache.get(path);
     if (!this.has(path)) {
-      exists = fs.pathExistsSync(path);
+      exists = fs.existsSync(path);
       this._cache.set(path, exists);
     }
     return exists;
@@ -40,11 +39,17 @@ class FSExistsCache {
   }
 }
 
+class TemplateDataConfigError extends EleventyBaseError {}
 class TemplateDataParseError extends EleventyBaseError {}
 
 class TemplateData {
-  constructor(inputDir) {
-    this.config = config.getConfig();
+  constructor(inputDir, eleventyConfig) {
+    if (!eleventyConfig) {
+      throw new TemplateDataConfigError("Missing `config`.");
+    }
+    this.eleventyConfig = eleventyConfig;
+    this.config = this.eleventyConfig.getConfig();
+
     this.dataTemplateEngine = this.config.dataTemplateEngine;
 
     this.inputDirNeedsCheck = false;
@@ -60,14 +65,21 @@ class TemplateData {
 
   get extensionMap() {
     if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap();
-      this._extensionMap.config = this.config;
+      this._extensionMap = new EleventyExtensionMap([], this.config);
     }
     return this._extensionMap;
   }
 
   set extensionMap(map) {
     this._extensionMap = map;
+  }
+
+  get environmentVariables() {
+    return this._env;
+  }
+
+  set environmentVariables(env) {
+    this._env = env;
   }
 
   /* Used by tests */
@@ -128,7 +140,7 @@ class TemplateData {
 
   async _checkInputDir() {
     if (this.inputDirNeedsCheck) {
-      let globalPathStat = await fs.stat(this.inputDir);
+      let globalPathStat = await fs.promises.stat(this.inputDir);
 
       if (!globalPathStat.isDirectory()) {
         throw new Error("Could not find data path directory: " + this.inputDir);
@@ -229,9 +241,12 @@ class TemplateData {
     return paths;
   }
 
-  getObjectPathForDataFile(path) {
-    let reducedPath = TemplatePath.stripLeadingSubPath(path, this.dataDir);
-    let parsed = parsePath(reducedPath);
+  getObjectPathForDataFile(dataFilePath) {
+    let reducedPath = TemplatePath.stripLeadingSubPath(
+      dataFilePath,
+      this.dataDir
+    );
+    let parsed = path.parse(reducedPath);
     let folders = parsed.dir ? parsed.dir.split("/") : [];
     folders.push(parsed.name);
 
@@ -244,6 +259,8 @@ class TemplateData {
     let files = TemplatePath.addLeadingDotSlashArray(
       await this.getGlobalDataFiles()
     );
+
+    this.config.events.emit("eleventy.globalDataFiles", files);
 
     let dataFileConflicts = {};
 
@@ -276,14 +293,24 @@ class TemplateData {
     let globalData = {};
     if (this.config.globalData) {
       let keys = Object.keys(this.config.globalData);
-      for (let j = 0; j < keys.length; j++) {
-        let returnValue = this.config.globalData[keys[j]];
+      for (let key of keys) {
+        let returnValue = this.config.globalData[key];
 
         if (typeof returnValue === "function") {
           returnValue = await returnValue();
         }
-        globalData[keys[j]] = returnValue;
+
+        lodashset(globalData, key, returnValue);
       }
+    }
+    if (this.environmentVariables) {
+      if (!("eleventy" in globalData)) {
+        globalData.eleventy = {};
+      }
+      if (!("env" in globalData.eleventy)) {
+        globalData.eleventy.env = {};
+      }
+      Object.assign(globalData.eleventy.env, this.environmentVariables);
     }
     return globalData;
   }
@@ -291,18 +318,14 @@ class TemplateData {
   async getData() {
     let rawImports = this.getRawImports();
 
-    let initialGlobalData = await this.getInitialGlobalData();
+    this.configApiGlobalData = await this.getInitialGlobalData();
 
     if (!this.globalData) {
       let globalJson = await this.getAllGlobalData();
+      let mergedGlobalData = merge(globalJson, this.configApiGlobalData);
 
       // OK: Shallow merge when combining rawImports (pkg) with global data files
-      this.globalData = Object.assign(
-        {},
-        initialGlobalData,
-        globalJson,
-        rawImports
-      );
+      this.globalData = Object.assign({}, mergedGlobalData, rawImports);
     }
 
     return this.globalData;
@@ -372,7 +395,7 @@ class TemplateData {
   async _loadFileContents(path) {
     let rawInput;
     try {
-      rawInput = await fs.readFile(path, "utf-8");
+      rawInput = await fs.promises.readFile(path, "utf-8");
     } catch (e) {
       // if file does not exist, return nothing
     }
@@ -397,7 +420,7 @@ class TemplateData {
         );
       }
     } else {
-      let tr = new TemplateRender(engineName, this.inputDir);
+      let tr = new TemplateRender(engineName, this.inputDir, this.config);
       tr.extensionMap = this.extensionMap;
 
       let fn = await tr.getCompiledTemplate(rawInput);
@@ -442,8 +465,11 @@ class TemplateData {
       deleteRequireCache(localPath);
 
       let returnValue = require(localPath);
+      // TODO special exception for Global data `permalink.js`
+      // module.exports = (data) => `${data.page.filePathStem}/`; // Does not work
+      // module.exports = () => ((data) => `${data.page.filePathStem}/`); // Works
       if (typeof returnValue === "function") {
-        returnValue = await returnValue();
+        returnValue = await returnValue(this.configApiGlobalData || {});
       }
 
       dataBench.after();
@@ -492,7 +518,7 @@ class TemplateData {
 
   async getLocalDataPaths(templatePath) {
     let paths = [];
-    let parsed = parsePath(templatePath);
+    let parsed = path.parse(templatePath);
     let inputDir = TemplatePath.addLeadingDotSlash(
       TemplatePath.normalize(this.inputDir)
     );
@@ -563,6 +589,9 @@ class TemplateData {
       } else if (data.tags === null) {
         data.tags = [];
       }
+
+      // Deduplicate tags
+      data.tags = [...new Set(data.tags)];
     }
 
     return data;

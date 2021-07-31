@@ -1,9 +1,11 @@
 const test = require("ava");
 const TemplateFileSlug = require("../src/TemplateFileSlug");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
+const TemplateConfig = require("../src/TemplateConfig");
 
 function getNewSlugInstance(path, inputDir) {
-  let extensionMap = new EleventyExtensionMap();
+  let eleventyConfig = new TemplateConfig();
+  let extensionMap = new EleventyExtensionMap([], eleventyConfig);
   let fs = new TemplateFileSlug(path, inputDir, extensionMap);
   return fs;
 }
@@ -48,6 +50,12 @@ test("Easy slug with date, index", (t) => {
   let fs = getNewSlugInstance("./2018-01-01-index.html");
   t.is(fs.getSlug(), "");
   t.is(fs.getFullPathWithoutExtension(), "/index");
+});
+
+test("Easy slug with only a date and no suffix", (t) => {
+  let fs = getNewSlugInstance("./2018-01-01.html");
+  t.is(fs.getSlug(), "2018-01-01");
+  t.is(fs.getFullPathWithoutExtension(), "/2018-01-01");
 });
 
 /* Directories */

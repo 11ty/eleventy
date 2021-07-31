@@ -1,4 +1,5 @@
 const test = require("ava");
+const fs = require("fs");
 const TemplatePath = require("../src/TemplatePath");
 
 test("getDir", (t) => {
@@ -128,6 +129,19 @@ test("absolutePath", (t) => {
     TemplatePath.absolutePath(".eleventy.js").split("/").pop(),
     ".eleventy.js"
   );
+  t.is(TemplatePath.absolutePath("/tmp/.eleventy.js"), "/tmp/.eleventy.js");
+  t.is(
+    TemplatePath.absolutePath("/var/task/", ".eleventy.js"),
+    "/var/task/.eleventy.js"
+  );
+
+  t.throws(() => {
+    TemplatePath.absolutePath("/var/task/", "/var/task/.eleventy.js");
+  });
+
+  t.throws(() => {
+    TemplatePath.absolutePath("file1.js", "test/file2.js", "/tmp/.eleventy.js");
+  });
 });
 
 test("absolutePath and relativePath", (t) => {
@@ -321,8 +335,8 @@ test("isDirectory", async (t) => {
 });
 
 test("exists", async (t) => {
-  t.is(await TemplatePath.exists("asdlkfjklsadjflkja"), false);
-  t.is(await TemplatePath.exists("test"), true);
-  t.is(await TemplatePath.exists("test/stubs"), true);
-  t.is(await TemplatePath.exists("test/stubs/.eleventyignore"), true);
+  t.is(fs.existsSync("asdlkfjklsadjflkja"), false);
+  t.is(fs.existsSync("test"), true);
+  t.is(fs.existsSync("test/stubs"), true);
+  t.is(fs.existsSync("test/stubs/.eleventyignore"), true);
 });

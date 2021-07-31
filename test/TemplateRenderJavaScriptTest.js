@@ -1,10 +1,12 @@
 const test = require("ava");
 const TemplateRender = require("../src/TemplateRender");
+const TemplateConfig = require("../src/TemplateConfig");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 
 function getNewTemplateRender(name, inputDir) {
-  let tr = new TemplateRender(name, inputDir);
-  tr.extensionMap = new EleventyExtensionMap();
+  let eleventyConfig = new TemplateConfig();
+  let tr = new TemplateRender(name, inputDir, eleventyConfig);
+  tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   return tr;
 }
 
@@ -14,9 +16,9 @@ test("JS", (t) => {
     getNewTemplateRender("./test/stubs/filename.11ty.js").getEngineName(),
     "11ty.js"
   );
-  t.is(new TemplateRender("11ty.cjs").getEngineName(), "11ty.js");
+  t.is(getNewTemplateRender("11ty.cjs").getEngineName(), "11ty.js");
   t.is(
-    new TemplateRender("./test/stubs/filename.11ty.cjs").getEngineName(),
+    getNewTemplateRender("./test/stubs/filename.11ty.cjs").getEngineName(),
     "11ty.js"
   );
 });
@@ -160,19 +162,6 @@ test("JS Render using Vue (with a layout)", async (t) => {
   );
 });
 
-test("JS Render using ViperHTML", async (t) => {
-  let fn = await getNewTemplateRender(
-    "./test/stubs/viperhtml.11ty.js"
-  ).getCompiledTemplate();
-  t.is(
-    await fn({ name: "Zach", html: "<strong>Hi</strong>" }),
-    `<div>
-  This is a viper template, Zach
-  <strong>Hi</strong>
-</div>`
-  );
-});
-
 test("JS Render with a function", async (t) => {
   t.plan(8);
 
@@ -194,9 +183,9 @@ test("JS Render with a function", async (t) => {
   t.is(await fn({ name: "Bill", page: { url: "/hi/" } }), "<p>BILLT9000</p>");
 });
 
-// This doesn’t work, per arrow functions
+// This doesn’t work because arrow functions don’t do `this`
 test.skip("Issue #934: JS Render with an arrow function and javascript function", async (t) => {
-  let tr = new TemplateRender("./test/stubs/function-filter-arrow.11ty.js");
+  let tr = getNewTemplateRender("./test/stubs/function-filter-arrow.11ty.js");
   tr.config = {
     javascriptFunctions: {
       upper: function (val) {
@@ -213,7 +202,7 @@ test.skip("Issue #934: JS Render with an arrow function and javascript function"
 test("JS Render with a function and async filter", async (t) => {
   t.plan(4);
 
-  let tr = new TemplateRender("./test/stubs/function-async-filter.11ty.js");
+  let tr = getNewTemplateRender("./test/stubs/function-async-filter.11ty.js");
   tr.config = {
     javascriptFunctions: {
       upper: function (val) {
@@ -291,7 +280,7 @@ test("JS Class Async Render with a function", async (t) => {
 });
 
 test("JS Class Async Render with a function (sync function, throws error)", async (t) => {
-  let tr = new TemplateRender("./test/stubs/function-throws.11ty.js");
+  let tr = getNewTemplateRender("./test/stubs/function-throws.11ty.js");
   tr.config = {
     javascriptFunctions: {
       upper: function (val) {
@@ -314,7 +303,7 @@ test("JS Class Async Render with a function (sync function, throws error)", asyn
 });
 
 test("JS Class Async Render with a function (async function, throws error)", async (t) => {
-  let tr = new TemplateRender("./test/stubs/function-throws-async.11ty.js");
+  let tr = getNewTemplateRender("./test/stubs/function-throws-async.11ty.js");
   tr.config = {
     javascriptFunctions: {
       upper: async function (val) {

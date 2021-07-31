@@ -1,16 +1,18 @@
 const test = require("ava");
+const TemplateConfig = require("../src/TemplateConfig");
 const TemplateData = require("../src/TemplateData");
 let yaml = require("js-yaml");
 
 function injectDataExtensions(dataObj) {
   dataObj.config.dataExtensions = new Map([
-    ["yaml", (s) => yaml.safeLoad(s)],
+    ["yaml", (s) => yaml.load(s)],
     ["nosj", JSON.parse],
   ]);
 }
 
 test("Local data", async (t) => {
-  let dataObj = new TemplateData("./test/stubs-630/");
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
   injectDataExtensions(dataObj);
   dataObj.setDataTemplateEngine("liquid");
 
@@ -27,7 +29,6 @@ test("Local data", async (t) => {
   let withLocalData = await dataObj.getLocalData(
     "./test/stubs-630/component-yaml/component.njk"
   );
-  // console.log("localdata", withLocalData);
 
   t.is(withLocalData.yamlKey1, "yaml1");
   t.is(withLocalData.yamlKey2, "yaml2");
@@ -39,7 +40,8 @@ test("Local data", async (t) => {
 });
 
 test("Local files", async (t) => {
-  let dataObj = new TemplateData("./test/stubs-630/");
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
   injectDataExtensions(dataObj);
   let files = await dataObj.getLocalDataPaths(
     "./test/stubs-630/component-yaml/component.njk"
@@ -73,7 +75,8 @@ test("Local files", async (t) => {
 });
 
 test("Global data", async (t) => {
-  let dataObj = new TemplateData("./test/stubs-630/");
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
   injectDataExtensions(dataObj);
   dataObj.setDataTemplateEngine("liquid");
 
@@ -105,7 +108,8 @@ test("Global data", async (t) => {
 });
 
 test("Global data merging and priority", async (t) => {
-  let dataObj = new TemplateData("./test/stubs-630/");
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
   injectDataExtensions(dataObj);
 
   let data = await dataObj.getData();

@@ -3,8 +3,8 @@ const semver = require("semver");
 const { DateTime } = require("luxon");
 const EventEmitter = require("./Util/AsyncEventEmitter");
 const EleventyBaseError = require("./EleventyBaseError");
+const merge = require("./Util/Merge");
 const bench = require("./BenchmarkManager").get("Configuration");
-const aggregateBench = require("./BenchmarkManager").get("Aggregate");
 const debug = require("debug")("Eleventy:UserConfig");
 const pkg = require("../package.json");
 
@@ -20,6 +20,7 @@ class UserConfig {
     debug("Resetting EleventyConfig to initial values.");
     this.events = new EventEmitter();
     this.collections = {};
+    this.precompiledCollections = {};
     this.templateFormats = undefined;
 
     this.liquidOptions = {};
@@ -51,8 +52,12 @@ class UserConfig {
     this.activeNamespace = "";
     this.DateTime = DateTime;
     this.dynamicPermalinks = true;
+
     this.useGitIgnore = true;
-    this.dataDeepMerge = false;
+    this.ignores = new Set();
+    this.ignores.add("node_modules/**");
+
+    this.dataDeepMerge = true;
     this.extensionMap = new Set();
     this.watchJavaScriptDependencies = true;
     this.additionalWatchTargets = [];
@@ -65,12 +70,16 @@ class UserConfig {
     this.dataExtensions = new Map();
 
     this.quietMode = false;
+
+    this.plugins = [];
+
+    this.useTemplateCache = true;
   }
 
   versionCheck(expected) {
     if (!semver.satisfies(pkg.version, expected)) {
       throw new UserConfigError(
-        `This project requires the eleventy version to match '${expected}' but found ${pkg.version}. Use \`npm update @11ty/eleventy -g\` to upgrade the eleventy global or \`npm update @11ty/eleventy --save\` to upgrade your local project version.`
+        `This project requires the Eleventy version to match '${expected}' but found ${pkg.version}. Use \`npm update @11ty/eleventy -g\` to upgrade the eleventy global or \`npm update @11ty/eleventy --save\` to upgrade your local project version.`
       );
     }
   }
@@ -288,27 +297,7 @@ class UserConfig {
   }
 
   addPlugin(plugin, options) {
-    // TODO support function.name in plugin config functions
-    debug("Adding plugin (unknown name: check your config file).");
-    let pluginBench = aggregateBench.get("Configuration addPlugin");
-    if (typeof plugin === "function") {
-      pluginBench.before();
-      let configFunction = plugin;
-      configFunction(this, options);
-      pluginBench.after();
-    } else if (plugin && plugin.configFunction) {
-      pluginBench.before();
-      if (options && typeof options.init === "function") {
-        options.init.call(this, plugin.initArguments || {});
-      }
-
-      plugin.configFunction(this, options);
-      pluginBench.after();
-    } else {
-      throw new UserConfigError(
-        "Invalid EleventyConfig.addPlugin signature. Should be a function or a valid Eleventy plugin object."
-      );
-    }
+    this.plugins.push({ plugin, options });
   }
 
   getNamespacedName(name) {
@@ -609,7 +598,12 @@ class UserConfig {
   }
 
   setDataDeepMerge(deepMerge) {
+    this._dataDeepMergeModified = true;
     this.dataDeepMerge = !!deepMerge;
+  }
+
+  isDataDeepMergeModified() {
+    return this._dataDeepMergeModified;
   }
 
   addWatchTarget(additionalWatchTargets) {
@@ -620,8 +614,12 @@ class UserConfig {
     this.watchJavaScriptDependencies = !!watchEnabled;
   }
 
-  setBrowserSyncConfig(options = {}) {
-    this.browserSyncConfig = options;
+  setBrowserSyncConfig(options = {}, mergeOptions = true) {
+    if (mergeOptions) {
+      this.browserSyncConfig = merge(this.browserSyncConfig, options);
+    } else {
+      this.browserSyncConfig = options;
+    }
   }
 
   setChokidarConfig(options = {}) {
@@ -645,12 +643,6 @@ class UserConfig {
       return;
     }
 
-    console.log(
-      chalk.yellow(
-        "Warning: Configuration API `addExtension` is an experimental Eleventy feature with an unstable API. Be careful!"
-      )
-    );
-
     this.extensionMap.add(
       Object.assign(
         {
@@ -664,6 +656,14 @@ class UserConfig {
 
   addDataExtension(formatExtension, formatParser) {
     this.dataExtensions.set(formatExtension, formatParser);
+  }
+
+  setUseTemplateCache(bypass) {
+    this.useTemplateCache = !!bypass;
+  }
+
+  setPrecompiledCollections(collections) {
+    this.precompiledCollections = collections;
   }
 
   getMergingConfigObject() {
@@ -699,6 +699,7 @@ class UserConfig {
       libraryOverrides: this.libraryOverrides,
       dynamicPermalinks: this.dynamicPermalinks,
       useGitIgnore: this.useGitIgnore,
+      ignores: this.ignores,
       dataDeepMerge: this.dataDeepMerge,
       watchJavaScriptDependencies: this.watchJavaScriptDependencies,
       additionalWatchTargets: this.additionalWatchTargets,
@@ -710,6 +711,9 @@ class UserConfig {
       extensionMap: this.extensionMap,
       quietMode: this.quietMode,
       events: this.events,
+      plugins: this.plugins,
+      useTemplateCache: this.useTemplateCache,
+      precompiledCollections: this.precompiledCollections,
     };
   }
 }

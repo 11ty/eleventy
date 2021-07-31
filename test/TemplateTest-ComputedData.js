@@ -1,8 +1,7 @@
 const test = require("ava");
-const Template = require("../src/Template");
 const TemplateData = require("../src/TemplateData");
-const { cloneDeep } = require("lodash");
 const getNewTemplate = require("./_getNewTemplateForTests");
+const TemplateConfig = require("../src/TemplateConfig");
 
 async function getRenderedData(tmpl, pageNumber = 0) {
   let data = await tmpl.getData();
@@ -120,12 +119,15 @@ test("eleventyComputed true primitive", async (t) => {
 });
 
 test("eleventyComputed relies on global data", async (t) => {
-  let dataObj = new TemplateData("./test/stubs/");
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = getNewTemplate(
     "./test/stubs/eleventyComputed/use-global-data.njk",
     "./test/stubs/",
     "./dist",
-    dataObj
+    dataObj,
+    null,
+    eleventyConfig
   );
 
   let fetchedData = await tmpl.getData();
@@ -135,19 +137,21 @@ test("eleventyComputed relies on global data", async (t) => {
 });
 
 test("eleventyComputed intermixes with global data", async (t) => {
-  let dataObj = new TemplateData("./test/stubs-computed-global/");
-
-  let config = cloneDeep(dataObj.config);
-  config.dataDeepMerge = true;
-  dataObj._setConfig(config);
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.setDataDeepMerge(true);
+  let dataObj = new TemplateData(
+    "./test/stubs-computed-global/",
+    eleventyConfig
+  );
 
   let tmpl = getNewTemplate(
     "./test/stubs-computed-global/intermix.njk",
     "./test/stubs-computed-global/",
     "./dist",
-    dataObj
+    dataObj,
+    null,
+    eleventyConfig
   );
-  tmpl.config = config;
 
   let fetchedData = await tmpl.getData();
   t.truthy(fetchedData.eleventyComputed.image);
@@ -161,4 +165,44 @@ test("eleventyComputed intermixes with global data", async (t) => {
   t.is(data.image2, "second");
   t.is(data.image3, "third-global");
   t.is(data.eleventyNavigation.key, "nested-first-global");
+});
+
+test("eleventyComputed using symbol parsing on template strings (nunjucks)", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs-computed-symbolparse/test.njk",
+    "./test/stubs-computed-symbolparse/",
+    "./test/stubs-computed-symbolparse/_site"
+  );
+  tmpl.config.nunjucksFilters.fail = function (str) {
+    // Filter expects a certain String format, don’t use the (((11ty))) string hack
+    if (!str || str.length !== 1) {
+      throw new Error("Expect a one character string");
+    }
+    return `${str}`;
+  };
+
+  let data = await getRenderedData(tmpl);
+  t.is(data.a, "a");
+  t.is(data.b, "b");
+  t.is(data.c, "ab");
+});
+
+test.skip("eleventyComputed using symbol parsing on template strings (liquid)", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs-computed-symbolparse/test.liquid",
+    "./test/stubs-computed-symbolparse/",
+    "./test/stubs-computed-symbolparse/_site"
+  );
+  tmpl.config.liquidFilters.fail = function (str) {
+    // Filter expects a certain String format, don’t use the (((11ty))) string hack
+    if (!str || str.length !== 1) {
+      throw new Error("Expect a one character string: " + str);
+    }
+    return `${str}`;
+  };
+
+  let data = await getRenderedData(tmpl);
+  t.is(data.a, "a");
+  t.is(data.b, "b");
+  t.is(data.c, "ab");
 });

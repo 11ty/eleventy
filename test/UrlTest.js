@@ -1,12 +1,22 @@
 const test = require("ava");
+const TemplateConfig = require("../src/TemplateConfig.js");
 const url = require("../src/Filters/Url.js");
 
-test("Test url filter without passing in pathPrefix", (t) => {
-  let projectConfig = require("../src/Config").getConfig();
-  t.is(projectConfig.pathPrefix, "/");
+test("Test url filter passing in pathPrefix from config", (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let pp = eleventyConfig.getConfig().pathPrefix;
+  t.is(pp, "/");
 
-  t.is(url("test"), "test");
-  t.is(url("/test"), "/test");
+  t.is(url("test", pp), "test");
+  t.is(url("/test", pp), "/test");
+});
+
+test("Test url filter without passing in pathPrefix", (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let urlFilter = eleventyConfig.userConfig.getFilter("url");
+
+  t.is(urlFilter("test"), "test");
+  t.is(urlFilter("/test"), "/test");
 });
 
 test("Test url filter with passthrough urls", (t) => {
@@ -116,13 +126,13 @@ test("Test url filter", (t) => {
 
   t.is(url("test", "/"), "test");
   t.is(url("/test", "/"), "/test");
-  t.is(url("//test", "/"), "/test");
+  t.is(url("//test", "/"), "//test");
   t.is(url("./test", "/"), "test");
   t.is(url("../test", "/"), "../test");
 
   t.is(url("test/", "/"), "test/");
   t.is(url("/test/", "/"), "/test/");
-  t.is(url("//test/", "/"), "/test/");
+  t.is(url("//test/", "/"), "//test/");
   t.is(url("./test/", "/"), "test/");
   t.is(url("../test/", "/"), "../test/");
 });
@@ -141,13 +151,13 @@ test("Test url filter with custom pathPrefix (empty, gets overwritten by root co
 
   t.is(url("test", ""), "test");
   t.is(url("/test", ""), "/test");
-  t.is(url("//test", ""), "/test");
+  t.is(url("//test", ""), "//test");
   t.is(url("./test", ""), "test");
   t.is(url("../test", ""), "../test");
 
   t.is(url("test/", ""), "test/");
   t.is(url("/test/", ""), "/test/");
-  t.is(url("//test/", ""), "/test/");
+  t.is(url("//test/", ""), "//test/");
   t.is(url("./test/", ""), "test/");
   t.is(url("../test/", ""), "../test/");
 });
@@ -166,13 +176,13 @@ test("Test url filter with custom pathPrefix (leading slash)", (t) => {
 
   t.is(url("test", "/testdir"), "test");
   t.is(url("/test", "/testdir"), "/testdir/test");
-  t.is(url("//test", "/testdir"), "/testdir/test");
+  t.is(url("//test", "/testdir"), "//test");
   t.is(url("./test", "/testdir"), "test");
   t.is(url("../test", "/testdir"), "../test");
 
   t.is(url("test/", "/testdir"), "test/");
   t.is(url("/test/", "/testdir"), "/testdir/test/");
-  t.is(url("//test/", "/testdir"), "/testdir/test/");
+  t.is(url("//test/", "/testdir"), "//test/");
   t.is(url("./test/", "/testdir"), "test/");
   t.is(url("../test/", "/testdir"), "../test/");
 });
@@ -191,13 +201,13 @@ test("Test url filter with custom pathPrefix (double slash)", (t) => {
 
   t.is(url("test", "/testdir/"), "test");
   t.is(url("/test", "/testdir/"), "/testdir/test");
-  t.is(url("//test", "/testdir/"), "/testdir/test");
+  t.is(url("//test", "/testdir/"), "//test");
   t.is(url("./test", "/testdir/"), "test");
   t.is(url("../test", "/testdir/"), "../test");
 
   t.is(url("test/", "/testdir/"), "test/");
   t.is(url("/test/", "/testdir/"), "/testdir/test/");
-  t.is(url("//test/", "/testdir/"), "/testdir/test/");
+  t.is(url("//test/", "/testdir/"), "//test/");
   t.is(url("./test/", "/testdir/"), "test/");
   t.is(url("../test/", "/testdir/"), "../test/");
 });
@@ -216,13 +226,13 @@ test("Test url filter with custom pathPrefix (trailing slash)", (t) => {
 
   t.is(url("test", "testdir/"), "test");
   t.is(url("/test", "testdir/"), "/testdir/test");
-  t.is(url("//test", "testdir/"), "/testdir/test");
+  t.is(url("//test", "testdir/"), "//test");
   t.is(url("./test", "testdir/"), "test");
   t.is(url("../test", "testdir/"), "../test");
 
   t.is(url("test/", "testdir/"), "test/");
   t.is(url("/test/", "testdir/"), "/testdir/test/");
-  t.is(url("//test/", "testdir/"), "/testdir/test/");
+  t.is(url("//test/", "testdir/"), "//test/");
   t.is(url("./test/", "testdir/"), "test/");
   t.is(url("../test/", "testdir/"), "../test/");
 });
@@ -241,13 +251,14 @@ test("Test url filter with custom pathPrefix (no slash)", (t) => {
 
   t.is(url("test", "testdir"), "test");
   t.is(url("/test", "testdir"), "/testdir/test");
-  t.is(url("//test", "testdir"), "/testdir/test");
+  t.is(url("//test", "testdir"), "//test");
+  t.is(url("//foo.com", "testdir"), "//foo.com");
   t.is(url("./test", "testdir"), "test");
   t.is(url("../test", "testdir"), "../test");
 
   t.is(url("test/", "testdir"), "test/");
   t.is(url("/test/", "testdir"), "/testdir/test/");
-  t.is(url("//test/", "testdir"), "/testdir/test/");
+  t.is(url("//test/", "testdir"), "//test/");
   t.is(url("./test/", "testdir"), "test/");
   t.is(url("../test/", "testdir"), "../test/");
 });

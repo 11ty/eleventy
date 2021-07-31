@@ -1,18 +1,27 @@
 const TemplatePath = require("./TemplatePath");
+const TemplateConfig = require("./TemplateConfig");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 // const debug = require("debug")("Eleventy:TemplateRender");
 
+class TemplateRenderConfigError extends EleventyBaseError {}
 class TemplateRenderUnknownEngineError extends EleventyBaseError {}
 
 // works with full path names or short engine name
 class TemplateRender {
-  constructor(tmplPath, inputDir) {
+  constructor(tmplPath, inputDir, config) {
     if (!tmplPath) {
       throw new Error(
         `TemplateRender requires a tmplPath argument, instead of ${tmplPath}`
       );
     }
+    if (!config) {
+      throw new TemplateRenderConfigError("Missing `config` argument.");
+    }
+    if (config instanceof TemplateConfig) {
+      this.eleventyConfig = config;
+    }
+    this.config = config;
 
     this.engineNameOrPath = tmplPath;
     this.inputDir = inputDir;
@@ -25,8 +34,8 @@ class TemplateRender {
   }
 
   get config() {
-    if (!this._config) {
-      this._config = require("./Config").getConfig();
+    if (this._config instanceof TemplateConfig) {
+      return this._config.getConfig();
     }
     return this._config;
   }
@@ -41,7 +50,7 @@ class TemplateRender {
 
   get extensionMap() {
     if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap();
+      this._extensionMap = new EleventyExtensionMap([], this.config);
     }
     return this._extensionMap;
   }

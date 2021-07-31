@@ -1,12 +1,12 @@
 const test = require("ava");
 const Eleventy = require("../src/Eleventy");
 const EleventyWatchTargets = require("../src/EleventyWatchTargets");
-const templateConfig = require("../src/Config");
-
-const config = templateConfig.getConfig();
+const TemplateConfig = require("../src/TemplateConfig");
 
 test("Eleventy, defaults inherit from config", async (t) => {
   let elev = new Eleventy();
+
+  let config = new TemplateConfig().getConfig();
 
   t.truthy(elev.input);
   t.truthy(elev.outputDir);
@@ -42,6 +42,19 @@ test("Eleventy set input/output", async (t) => {
   await elev.init();
   t.truthy(elev.templateData);
   t.truthy(elev.writer);
+});
+
+test("Eleventy process.ENV", async (t) => {
+  delete process.env.ELEVENTY_ROOT;
+  t.falsy(process.env.ELEVENTY_ROOT);
+
+  let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
+  await elev.init();
+  t.truthy(process.env.ELEVENTY_ROOT);
+
+  // all ELEVENTY_ env variables are also available on eleventy.env
+  let globals = await elev.templateData.getInitialGlobalData();
+  t.truthy(globals.eleventy.env.root);
 });
 
 test("Eleventy file watching", async (t) => {
@@ -106,6 +119,18 @@ test("Eleventy set input/output, one file input", async (t) => {
   t.is(elev.outputDir, "./test/stubs/_site");
 });
 
+test("Eleventy set input/output, one file input, deeper subdirectory", async (t) => {
+  let elev = new Eleventy(
+    "./test/stubs/subdir/index.html",
+    "./test/stubs/_site"
+  );
+  elev.setInputDir("./test/stubs");
+
+  t.is(elev.input, "./test/stubs/subdir/index.html");
+  t.is(elev.inputDir, "./test/stubs");
+  t.is(elev.outputDir, "./test/stubs/_site");
+});
+
 test("Eleventy set input/output, one file input root dir", async (t) => {
   let elev = new Eleventy("./README.md", "./test/stubs/_site");
 
@@ -128,18 +153,102 @@ test("Eleventy set input/output, one file input exitCode", async (t) => {
     "./test/stubs/exitCode/failure.njk",
     "./test/stubs/exitCode/_site"
   );
-
-  // TODO make this output quieter
-  elev.setLogger({
-    log: function () {},
-    warn: function () {},
-    error: function () {},
-  });
-
+  elev.setIsVerbose(false);
+  elev.disableLogger();
   await elev.init();
   await elev.write();
 
   t.is(process.exitCode, 1);
 
   process.exitCode = previousExitCode;
+});
+
+test("Eleventy to json", async (t) => {
+  let elev = new Eleventy("./test/stubs--to/");
+  elev.setIsVerbose(false);
+
+  await elev.init();
+
+  let result = await elev.toJSON();
+
+  t.deepEqual(
+    result.filter((entry) => entry.url === "/test/"),
+    [
+      {
+        url: "/test/",
+        inputPath: "./test/stubs--to/test.md",
+        outputPath: "_site/test/index.html",
+        content: "<h1>hi</h1>\n",
+      },
+    ]
+  );
+  t.deepEqual(
+    result.filter((entry) => entry.url === "/test2/"),
+    [
+      {
+        url: "/test2/",
+        inputPath: "./test/stubs--to/test2.liquid",
+        outputPath: "_site/test2/index.html",
+        content: "hello",
+      },
+    ]
+  );
+});
+
+test.cb("Eleventy to ndjson (returns a stream)", (t) => {
+  let elev = new Eleventy("./test/stubs--to/");
+
+  elev.setIsVerbose(false);
+
+  elev.init().then(() => {
+    elev.toNDJSON().then((stream) => {
+      let results = [];
+      stream.on("data", function (jsonObj) {
+        if (jsonObj.url === "/test/") {
+          t.deepEqual(jsonObj, {
+            url: "/test/",
+            inputPath: "./test/stubs--to/test.md",
+            content: "<h1>hi</h1>\n",
+          });
+        }
+        if (jsonObj.url === "/test2/") {
+          t.deepEqual(jsonObj, {
+            url: "/test2/",
+            inputPath: "./test/stubs--to/test2.liquid",
+            content: "hello",
+          });
+        }
+
+        results.push(jsonObj);
+
+        if (results.length >= 2) {
+          t.end();
+        }
+      });
+    });
+  });
+});
+
+test("Two Eleventies, two configs!!! (config used to be a global)", async (t) => {
+  let elev1 = new Eleventy();
+
+  t.is(elev1.eleventyConfig, elev1.eleventyConfig);
+  t.is(elev1.config, elev1.config);
+  t.is(JSON.stringify(elev1.config), JSON.stringify(elev1.config));
+
+  let elev2 = new Eleventy();
+  t.not(elev1.eleventyConfig, elev2.eleventyConfig);
+  t.is(JSON.stringify(elev1.config), JSON.stringify(elev2.config));
+});
+
+test("Config propagates to other instances correctly", async (t) => {
+  let elev = new Eleventy();
+  await elev.init();
+
+  t.is(elev.eleventyServe.config, elev.config);
+
+  t.is(elev.extensionMap.eleventyConfig, elev.eleventyConfig);
+  t.is(elev.eleventyFiles.eleventyConfig, elev.eleventyConfig);
+  t.is(elev.templateData.eleventyConfig, elev.eleventyConfig);
+  t.is(elev.writer.eleventyConfig, elev.eleventyConfig);
 });

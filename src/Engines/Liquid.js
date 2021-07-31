@@ -5,8 +5,8 @@ const TemplatePath = require("../TemplatePath");
 // const debug = require("debug")("Eleventy:Liquid");
 
 class Liquid extends TemplateEngine {
-  constructor(name, includesDir) {
-    super(name, includesDir);
+  constructor(name, includesDir, config) {
+    super(name, includesDir, config);
 
     this.liquidOptions = {};
 
@@ -48,8 +48,9 @@ class Liquid extends TemplateEngine {
     let defaults = {
       root: [super.getIncludesDir()], // overrides in compile with inputPath below
       extname: ".liquid",
-      dynamicPartials: false,
       strictFilters: true,
+      // TODO?
+      // cache: true,
     };
 
     let options = Object.assign(defaults, this.liquidOptions || {});
@@ -201,7 +202,34 @@ class Liquid extends TemplateEngine {
     });
   }
 
+  parseForSymbols(str) {
+    let tokenizer = new liquidLib.Tokenizer(str);
+    let tokens = tokenizer.readTopLevelTokens();
+    let symbols = tokens
+      .filter((token) => token.kind === liquidLib.TokenKind.Output)
+      .map((token) => {
+        // manually remove filters 😅
+        return token.content.split("|").map((entry) => entry.trim())[0];
+      });
+    return symbols;
+  }
+
+  needsCompilation(str) {
+    let options = this.liquidLib.options;
+
+    return (
+      str.indexOf(options.tagDelimiterLeft) !== -1 ||
+      str.indexOf(options.outputDelimiterLeft) !== -1
+    );
+  }
+
   async compile(str, inputPath) {
+    if (!this.needsCompilation(str)) {
+      return async function (data) {
+        return str;
+      };
+    }
+
     let engine = this.liquidLib;
     let tmplReady = engine.parse(str, inputPath);
 

@@ -1,10 +1,12 @@
 const test = require("ava");
 const TemplateRender = require("../src/TemplateRender");
+const TemplateConfig = require("../src/TemplateConfig");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 
 function getNewTemplateRender(name, inputDir) {
-  let tr = new TemplateRender(name, inputDir);
-  tr.extensionMap = new EleventyExtensionMap();
+  let eleventyConfig = new TemplateConfig();
+  let tr = new TemplateRender(name, inputDir, eleventyConfig);
+  tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   return tr;
 }
 
@@ -313,7 +315,10 @@ test("Handlebars Render Raw Output (Issue #436 with if statement)", async (t) =>
 });
 
 test("Handlebars Render #each with Global Variable (Issue #759)", async (t) => {
-  let fn = await new TemplateRender("hbs", "./test/stubs/").getCompiledTemplate(
+  let fn = await getNewTemplateRender(
+    "hbs",
+    "./test/stubs/"
+  ).getCompiledTemplate(
     `<ul>{{#each navigation as |navItem|}}<li><a href={{navItem.link}}>{{../name}}{{navItem.text}}</a></li>{{/each}}</ul>`
   );
   t.is(
