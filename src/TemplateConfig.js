@@ -263,7 +263,7 @@ class TemplateConfig {
     // Delay processing plugins until after the result of localConfig is returned
     // But BEFORE the rest of the config options are merged
     // this way we can pass directories and other template information to plugins
-    this.processPlugins(localConfig);
+    this.processPlugins(localConfig || {});
 
     let eleventyConfigApiMergingObject =
       this.userConfig.getMergingConfigObject();
