@@ -946,15 +946,15 @@ class Template extends TemplateContent {
         }
       }
     } else {
-      let filenameRegex = this.inputPath.match(/(\d{4}-\d{2}-\d{2})/);
-      if (filenameRegex !== null) {
-        let dateObj = DateTime.fromISO(filenameRegex[1], {
+      let filepathRegex = this.inputPath.match(/(\d{4}-\d{2}-\d{2})/);
+      if (filepathRegex !== null) {
+        let dateObj = DateTime.fromISO(filepathRegex[1], {
           zone: "utc",
         }).toJSDate();
         debug(
           "getMappedDate: using filename regex time for %o of %o: %o",
           this.inputPath,
-          filenameRegex[1],
+          filepathRegex[1],
           dateObj
         );
         return dateObj;
