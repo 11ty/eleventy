@@ -362,6 +362,18 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       helper.writeDependencyGlobalDataFile(fileList);
     });
 
+    eleventyConfig.on("eleventy.dataFiles", async (fileList) => {
+      if (!options.copyEnabled) {
+        return;
+      }
+
+      let promises = [];
+      for (let file of fileList) {
+        promises.push(helper.recursiveCopy(file));
+      }
+      await Promise.all(promises);
+    });
+
     eleventyConfig.on("eleventy.directories", async (dirs) => {
       if (!options.copyEnabled) {
         return;

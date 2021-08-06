@@ -343,6 +343,8 @@ class TemplateData {
       return this._fsExistsCache.exists(path);
     });
 
+    this.config.events.emit("eleventy.dataFiles", localDataPaths);
+
     if (!localDataPaths.length) {
       return localData;
     }
