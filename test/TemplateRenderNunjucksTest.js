@@ -867,3 +867,14 @@ test("Use addNunjucksGlobal with literal", async (t) => {
   let fn = await tr.getCompiledTemplate("<p>{{ fortytwo }}</p>");
   t.is(await fn(), "<p>42</p>");
 });
+
+// Async not supported here
+test.skip("Use addNunjucksGlobal with async function", async (t) => {
+  let templateConfig = new TemplateConfig();
+  templateConfig.userConfig.addNunjucksGlobal("fortytwo", getPromise(42));
+
+  let tr = getNewTemplateRender("njk", null, templateConfig);
+
+  let fn = await tr.getCompiledTemplate("<p>{{ fortytwo() }}</p>");
+  t.is(await fn(), "<p>42</p>");
+});
