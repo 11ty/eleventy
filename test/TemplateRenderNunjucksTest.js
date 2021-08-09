@@ -3,14 +3,14 @@ const TemplateRender = require("../src/TemplateRender");
 const TemplateConfig = require("../src/TemplateConfig");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 
-function getNewTemplateRender(name, inputDir) {
-  let eleventyConfig = new TemplateConfig();
+function getNewTemplateRender(name, inputDir, eleventyConfig) {
+  if (!eleventyConfig) {
+    eleventyConfig = new TemplateConfig();
+  }
   let tr = new TemplateRender(name, inputDir, eleventyConfig);
   tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   return tr;
 }
-
-class TestEleventyError extends Error {}
 
 async function getPromise(resolveTo) {
   return new Promise(function (resolve) {
@@ -844,4 +844,26 @@ test("Nunjucks Parse for Symbols with custom block", async (t) => {
   engine.config.nunjucksShortcodes.test = function () {};
 
   t.deepEqual(engine.parseForSymbols("<p>{{ name }} {% test %}</p>"), ["name"]);
+});
+
+test("Use addNunjucksGlobal with function", async (t) => {
+  let templateConfig = new TemplateConfig();
+  templateConfig.userConfig.addNunjucksGlobal("fortytwo", function () {
+    return 42;
+  });
+
+  let tr = getNewTemplateRender("njk", null, templateConfig);
+
+  let fn = await tr.getCompiledTemplate("<p>{{ fortytwo() }}</p>");
+  t.is(await fn(), "<p>42</p>");
+});
+
+test("Use addNunjucksGlobal with literal", async (t) => {
+  let templateConfig = new TemplateConfig();
+  templateConfig.userConfig.addNunjucksGlobal("fortytwo", 42);
+
+  let tr = getNewTemplateRender("njk", null, templateConfig);
+
+  let fn = await tr.getCompiledTemplate("<p>{{ fortytwo }}</p>");
+  t.is(await fn(), "<p>42</p>");
 });

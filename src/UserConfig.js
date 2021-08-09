@@ -245,7 +245,7 @@ class UserConfig {
     return this;
   }
 
-  addNunjucksGlobal(name, globalFn) {
+  addNunjucksGlobal(name, globalType) {
     name = this.getNamespacedName(name);
 
     if (this.nunjucksGlobals[name]) {
@@ -257,10 +257,14 @@ class UserConfig {
       );
     }
 
-    this.nunjucksGlobals[name] = bench.add(
-      `"${name}" Nunjucks Global`,
-      globalFn
-    );
+    if (typeof globalType === "function") {
+      this.nunjucksGlobals[name] = bench.add(
+        `"${name}" Nunjucks Global`,
+        globalType
+      );
+    } else {
+      this.nunjucksGlobals[name] = globalType;
+    }
   }
 
   addTransform(name, callback) {
