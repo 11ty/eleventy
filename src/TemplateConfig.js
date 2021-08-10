@@ -177,6 +177,7 @@ class TemplateConfig {
       this.userConfig.logger = this.logger;
     }
 
+    // for Nested addPlugin calls, Issue #1925
     this.userConfig._enablePluginExecution();
 
     this.userConfig.plugins.forEach(({ plugin, options }) => {
