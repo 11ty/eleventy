@@ -404,3 +404,93 @@ test(".addWatchTarget adds a watch target", (t) => {
   let cfg = templateCfg.getConfig();
   t.deepEqual(cfg.additionalWatchTargets, ["/testdirectory/"]);
 });
+
+test("Nested .addPlugin calls", (t) => {
+  t.plan(2);
+  let templateCfg = new TemplateConfig();
+
+  templateCfg.userConfig.addPlugin(function OuterPlugin(eleventyConfig) {
+    t.truthy(true);
+
+    eleventyConfig.addPlugin(function InnerPlugin(eleventyConfig) {
+      t.truthy(true);
+    });
+  });
+
+  templateCfg.getConfig();
+});
+
+test("Nested .addPlugin calls (×3)", (t) => {
+  t.plan(3);
+  let templateCfg = new TemplateConfig();
+
+  templateCfg.userConfig.addPlugin(function OuterPlugin(eleventyConfig) {
+    t.truthy(true);
+
+    eleventyConfig.addPlugin(function InnerPlugin(eleventyConfig) {
+      t.truthy(true);
+
+      eleventyConfig.addPlugin(function InnerPlugin(eleventyConfig) {
+        t.truthy(true);
+      });
+    });
+  });
+
+  templateCfg.getConfig();
+});
+
+test("Nested .addPlugin calls order", (t) => {
+  t.plan(3);
+  let templateCfg = new TemplateConfig();
+  let order = [];
+
+  templateCfg.userConfig.addPlugin(function OuterPlugin(eleventyConfig) {
+    order.push(1);
+    t.deepEqual(order, [1]);
+
+    eleventyConfig.addPlugin(function InnerPlugin(eleventyConfig) {
+      order.push(2);
+      t.deepEqual(order, [1, 2]);
+
+      eleventyConfig.addPlugin(function InnerPlugin(eleventyConfig) {
+        order.push(3);
+        t.deepEqual(order, [1, 2, 3]);
+      });
+    });
+  });
+
+  templateCfg.getConfig();
+});
+
+test("Nested .addPlugin calls. More complex order", (t) => {
+  t.plan(5);
+  let templateCfg = new TemplateConfig();
+  let order = [];
+
+  templateCfg.userConfig.addPlugin(function OuterPlugin(eleventyConfig) {
+    order.push("1");
+    t.deepEqual(order, ["1"]);
+
+    eleventyConfig.addPlugin(function InnerPlugin(eleventyConfig) {
+      order.push("2");
+      t.deepEqual(order, ["1", "2"]);
+
+      eleventyConfig.addPlugin(function InnerPlugin(eleventyConfig) {
+        order.push("3a");
+        t.deepEqual(order, ["1", "2", "3a"]);
+      });
+
+      eleventyConfig.addPlugin(function InnerPlugin(eleventyConfig) {
+        order.push("3b");
+        t.deepEqual(order, ["1", "2", "3a", "3b"]);
+      });
+    });
+
+    eleventyConfig.addPlugin(function InnerPlugin(eleventyConfig) {
+      order.push("2b");
+      t.deepEqual(order, ["1", "2", "3a", "3b", "2b"]);
+    });
+  });
+
+  templateCfg.getConfig();
+});

@@ -8,7 +8,6 @@ const UserConfig = require("./UserConfig");
 const debug = require("debug")("Eleventy:TemplateConfig");
 const debugDev = require("debug")("Dev:Eleventy:TemplateConfig");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
-const aggregateBench = require("./BenchmarkManager").get("Aggregate");
 
 /**
  * @module 11ty/eleventy/TemplateConfig
@@ -178,28 +177,10 @@ class TemplateConfig {
       this.userConfig.logger = this.logger;
     }
 
-    this.userConfig.plugins.forEach(({ plugin, options }) => {
-      // TODO support function.name in plugin config functions
-      debug("Adding plugin (unknown name: check your config file).");
-      let pluginBench = aggregateBench.get("Configuration addPlugin");
-      if (typeof plugin === "function") {
-        pluginBench.before();
-        let configFunction = plugin;
-        configFunction(this.userConfig, options);
-        pluginBench.after();
-      } else if (plugin && plugin.configFunction) {
-        pluginBench.before();
-        if (options && typeof options.init === "function") {
-          options.init.call(this.userConfig, plugin.initArguments || {});
-        }
+    this.userConfig._enablePluginExecution();
 
-        plugin.configFunction(this.userConfig, options);
-        pluginBench.after();
-      } else {
-        throw new UserConfigError(
-          "Invalid EleventyConfig.addPlugin signature. Should be a function or a valid Eleventy plugin object."
-        );
-      }
+    this.userConfig.plugins.forEach(({ plugin, options }) => {
+      this.userConfig._executePlugin(plugin, options);
     });
   }
 
