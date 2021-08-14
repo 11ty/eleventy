@@ -160,6 +160,10 @@ test("addLeadingDotSlash", (t) => {
   t.is(TemplatePath.addLeadingDotSlash("/dist"), "/dist");
   t.is(TemplatePath.addLeadingDotSlash("dist"), "./dist");
   t.is(TemplatePath.addLeadingDotSlash(".nyc_output"), "./.nyc_output");
+
+  // TODO How to test this on Windows? path.isAbsolute is OS dependent 😱
+  // let windowsAbsolutePath = `C:\\Users\\$USER\\$PROJECT\\netlify\\functions\\serverless\\index`;
+  // t.is(TemplatePath.addLeadingDotSlash(windowsAbsolutePath), windowsAbsolutePath);
 });
 
 test("addLeadingDotSlashArray", (t) => {

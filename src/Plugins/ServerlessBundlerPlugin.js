@@ -106,6 +106,13 @@ class BundlerHelper {
     this.name = name;
     this.options = options;
     this.dir = path.join(options.functionsDir, name);
+    if (path.isAbsolute(this.dir)) {
+      throw new Error(
+        "Absolute paths are not yet supported for `functionsDir` in the serverless bundler. Received: " +
+          options.functionsDir
+      );
+    }
+
     this.copyCount = 0;
     this.eleventyConfig = eleventyConfig;
   }

@@ -183,16 +183,20 @@ TemplatePath.addLeadingDotSlashArray = function (paths) {
  * @param {String} path
  * @returns {String}
  */
-TemplatePath.addLeadingDotSlash = function (path) {
-  if (path === "." || path === "..") {
-    return path + "/";
+TemplatePath.addLeadingDotSlash = function (pathArg) {
+  if (pathArg === "." || pathArg === "..") {
+    return pathArg + "/";
   }
 
-  if (path.startsWith("/") || path.startsWith("./") || path.startsWith("../")) {
-    return path;
+  if (
+    path.isAbsolute(pathArg) ||
+    pathArg.startsWith("./") ||
+    pathArg.startsWith("../")
+  ) {
+    return pathArg;
   }
 
-  return "./" + path;
+  return "./" + pathArg;
 };
 
 /**
