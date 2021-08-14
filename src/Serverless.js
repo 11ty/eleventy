@@ -29,12 +29,15 @@ class Serverless {
     // ServerlessBundlerPlugin hard-codes to this (even if you used a different file name)
     this.configFilename = "eleventy.config.js";
 
+    // Configuration Information
+    this.configInfoFilename = "eleventy-serverless.json";
+
     // Maps input files to eligible serverless URLs
     this.mapFilename = "eleventy-serverless-map.json";
 
     this.options = Object.assign(
       {
-        inputDir: ".",
+        inputDir: null, // override only, we now inject this.
         functionsDir: "functions/",
         matchUrlToPattern(path, urlToCompare) {
           let pattern = new UrlPattern(urlToCompare);
@@ -76,10 +79,21 @@ class Serverless {
     debug(
       `Including content map (maps output URLs to input files) from ${fullPath}`
     );
+    // TODO dedicated reset method, don’t delete this every time
     deleteRequireCache(fullPath);
 
     let mapContent = require(fullPath);
     return mapContent;
+  }
+
+  getConfigInfo() {
+    let fullPath = TemplatePath.absolutePath(this.dir, this.configInfoFilename);
+    debug(`Including config info file from ${fullPath}`);
+    // TODO dedicated reset method, don’t delete this every time
+    deleteRequireCache(fullPath);
+
+    let configInfo = require(fullPath);
+    return configInfo;
   }
 
   isServerlessUrl(urlPath) {
@@ -129,7 +143,10 @@ class Serverless {
       process.chdir(this.dir);
     }
 
-    let inputDir = this.options.input || this.options.inputDir;
+    let inputDir =
+      this.options.input ||
+      this.options.inputDir ||
+      this.getConfigInfo().dir.input;
     let configPath = path.join(this.dir, this.configFilename);
     let { pathParams, inputPath } = this.matchUrlPattern(this.path);
 

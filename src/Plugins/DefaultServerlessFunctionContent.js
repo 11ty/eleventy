@@ -8,7 +8,6 @@ async function handler(event) {
   let elev = new EleventyServerless("%%NAME%%", {
     path: event.path,
     query: event.queryStringParameters,
-    inputDir: "%%INPUT_DIR%%",
     functionsDir: "%%FUNCTIONS_DIR%%",
   });
 

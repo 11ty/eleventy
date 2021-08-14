@@ -365,7 +365,7 @@ class Eleventy {
 
     debug(`Directories:
 Input (Dir): ${dirs.input}
-Input (File?): ${this.rawInput}
+Input (File): ${this.rawInput}
 Data: ${dirs.data}
 Includes: ${dirs.includes}
 Layouts: ${dirs.layouts}
