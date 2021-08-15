@@ -97,7 +97,7 @@ class TemplateEngineManager {
       this.getClassNameFromTemplateKey(name) === "Custom" &&
       instance.constructor.name !== "CustomEngine"
     ) {
-      const CustomEngine = require("./Engines/Custom");
+      const CustomEngine = this.getEngineClassByExtension();
       const overrideCustomEngine = new CustomEngine(
         name,
         includesDir,
