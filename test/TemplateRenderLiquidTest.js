@@ -3,8 +3,12 @@ const TemplateRender = require("../src/TemplateRender");
 const TemplateConfig = require("../src/TemplateConfig");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 
-function getNewTemplateRender(name, inputDir) {
+function getNewTemplateRender(name, inputDir, userConfig = {}) {
   let eleventyConfig = new TemplateConfig();
+  for (let key in userConfig) {
+    eleventyConfig.userConfig[key] = userConfig[key];
+  }
+
   let tr = new TemplateRender(name, inputDir, eleventyConfig);
   tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   return tr;
@@ -64,10 +68,12 @@ test("Liquid Render Include", async (t) => {
     "liquid"
   );
 
-  let tr = await getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.setLiquidOptions({
-    dynamicPartials: false,
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/", {
+    liquidOptions: {
+      dynamicPartials: false,
+    },
   });
+
   let fn = await tr.getCompiledTemplate("<p>{% include included %}</p>");
   t.is(await fn(), "<p>This is an include.</p>");
 });
@@ -78,10 +84,12 @@ test("Liquid Render Relative Include", async (t) => {
     "liquid"
   );
 
-  let tr = await getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.setLiquidOptions({
-    dynamicPartials: false,
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/", {
+    liquidOptions: {
+      dynamicPartials: false,
+    },
   });
+
   let fn = await tr.getCompiledTemplate("<p>{% include ./included %}</p>");
   t.is(await fn(), "<p>This is an include.</p>");
 });
@@ -89,11 +97,14 @@ test("Liquid Render Relative Include", async (t) => {
 test("Liquid Render Relative (current dir) Include", async (t) => {
   let tr = await getNewTemplateRender(
     "./test/stubs/relative-liquid/does_not_exist_and_thats_ok.liquid",
-    "./test/stubs/"
+    "./test/stubs/",
+    {
+      liquidOptions: {
+        dynamicPartials: false,
+      },
+    }
   );
-  tr.engine.setLiquidOptions({
-    dynamicPartials: false,
-  });
+
   let fn = await tr.getCompiledTemplate("<p>{% include ./dir/included %}</p>");
   t.is(await fn(), "<p>TIME IS RELATIVE.</p>");
 });
@@ -101,11 +112,14 @@ test("Liquid Render Relative (current dir) Include", async (t) => {
 test("Liquid Render Relative (parent dir) Include", async (t) => {
   let tr = await getNewTemplateRender(
     "./test/stubs/relative-liquid/dir/does_not_exist_and_thats_ok.liquid",
-    "./test/stubs/"
+    "./test/stubs/",
+    {
+      liquidOptions: {
+        dynamicPartials: false,
+      },
+    }
   );
-  tr.engine.setLiquidOptions({
-    dynamicPartials: false,
-  });
+
   let fn = await tr.getCompiledTemplate("<p>{% include ../dir/included %}</p>");
   t.is(await fn(), "<p>TIME IS RELATIVE.</p>");
 });
@@ -129,10 +143,12 @@ test("Liquid Render Include with Liquid Suffix", async (t) => {
     "liquid"
   );
 
-  let tr = await getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.setLiquidOptions({
-    dynamicPartials: false,
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/", {
+    liquidOptions: {
+      dynamicPartials: false,
+    },
   });
+
   let fn = await tr.getCompiledTemplate("<p>{% include included.liquid %}</p>");
   t.is(await fn(), "<p>This is an include.</p>");
 });
@@ -143,10 +159,12 @@ test("Liquid Render Include with HTML Suffix", async (t) => {
     "liquid"
   );
 
-  let tr = await getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.setLiquidOptions({
-    dynamicPartials: false,
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/", {
+    liquidOptions: {
+      dynamicPartials: false,
+    },
   });
+
   let fn = await tr.getCompiledTemplate("<p>{% include included.html %}</p>");
   t.is(await fn(), "<p>This is an include.</p>");
 });
@@ -157,10 +175,12 @@ test("Liquid Render Include with HTML Suffix and Data Pass in", async (t) => {
     "liquid"
   );
 
-  let tr = await getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.setLiquidOptions({
-    dynamicPartials: false,
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/", {
+    liquidOptions: {
+      dynamicPartials: false,
+    },
   });
+
   let fn = await tr.getCompiledTemplate(
     "{% include included-data.html, myVariable: 'myValue' %}"
   );
@@ -444,10 +464,12 @@ test("Liquid Async Paired Shortcode", async (t) => {
 });
 
 test("Liquid Render Include Subfolder", async (t) => {
-  let tr = await getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.setLiquidOptions({
-    dynamicPartials: false,
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/", {
+    liquidOptions: {
+      dynamicPartials: false,
+    },
   });
+
   let fn = await tr.getCompiledTemplate(
     `<p>{% include subfolder/included.liquid %}</p>`
   );
@@ -455,10 +477,12 @@ test("Liquid Render Include Subfolder", async (t) => {
 });
 
 test("Liquid Render Include Subfolder HTML", async (t) => {
-  let tr = await getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.setLiquidOptions({
-    dynamicPartials: false,
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/", {
+    liquidOptions: {
+      dynamicPartials: false,
+    },
   });
+
   let fn = await tr.getCompiledTemplate(
     `<p>{% include subfolder/included.html %}</p>`
   );
@@ -466,10 +490,12 @@ test("Liquid Render Include Subfolder HTML", async (t) => {
 });
 
 test("Liquid Render Include Subfolder No file extension", async (t) => {
-  let tr = await getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.setLiquidOptions({
-    dynamicPartials: false,
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/", {
+    liquidOptions: {
+      dynamicPartials: false,
+    },
   });
+
   let fn = await tr.getCompiledTemplate(
     `<p>{% include subfolder/included %}</p>`
   );
@@ -528,8 +554,11 @@ test("Liquid Render Include Subfolder Double quotes No file extension", async (t
 /* End tests related to dynamicPartials */
 
 test("Liquid Options Overrides", async (t) => {
-  let tr = getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.setLiquidOptions({ dynamicPartials: false });
+  let tr = getNewTemplateRender("liquid", "./test/stubs/", {
+    liquidOptions: {
+      dynamicPartials: false,
+    },
+  });
 
   let options = tr.engine.getLiquidOptions();
   t.is(options.dynamicPartials, false);
@@ -691,8 +720,11 @@ test.skip("Liquid Include Scope Leak", async (t) => {
 
 // Note: this strictFilters default changed in 1.0 from false to true
 test("Liquid Missing Filter Issue #183 (no strictFilters)", async (t) => {
-  let tr = getNewTemplateRender("liquid", "./test/stubs/");
-  tr.engine.setLiquidOptions({ strictFilters: false });
+  let tr = getNewTemplateRender("liquid", "./test/stubs/", {
+    liquidOptions: {
+      strictFilters: false,
+    },
+  });
 
   try {
     await tr._testRender("{{ 'test' | prefixWithZach }}", {});

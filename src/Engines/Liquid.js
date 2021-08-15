@@ -8,10 +8,9 @@ class Liquid extends TemplateEngine {
   constructor(name, includesDir, config) {
     super(name, includesDir, config);
 
-    this.liquidOptions = {};
+    this.liquidOptions = this.config.liquidOptions || {};
 
     this.setLibrary(this.config.libraryOverrides.liquid);
-    this.setLiquidOptions(this.config.liquidOptions);
 
     this.argLexer = moo.compile({
       number: /[0-9]+\.*[0-9]*/,
@@ -23,11 +22,9 @@ class Liquid extends TemplateEngine {
     this.cacheable = true;
   }
 
-  setLibrary(lib) {
-    this.liquidLibOverride = lib;
-
+  setLibrary(override) {
     // warning, the include syntax supported here does not exactly match what Jekyll uses.
-    this.liquidLib = lib || new liquidLib.Liquid(this.getLiquidOptions());
+    this.liquidLib = override || new liquidLib.Liquid(this.getLiquidOptions());
     this.setEngineLib(this.liquidLib);
 
     this.addFilters(this.config.liquidFilters);
@@ -36,12 +33,6 @@ class Liquid extends TemplateEngine {
     this.addCustomTags(this.config.liquidTags);
     this.addAllShortcodes(this.config.liquidShortcodes);
     this.addAllPairedShortcodes(this.config.liquidPairedShortcodes);
-  }
-
-  setLiquidOptions(options) {
-    this.liquidOptions = options;
-
-    this.setLibrary(this.liquidLibOverride);
   }
 
   getLiquidOptions() {

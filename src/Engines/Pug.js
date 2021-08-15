@@ -5,19 +5,14 @@ class Pug extends TemplateEngine {
   constructor(name, includesDir, config) {
     super(name, includesDir, config);
 
-    this.pugOptions = {};
+    this.pugOptions = this.config.pugOptions || {};
 
     this.setLibrary(this.config.libraryOverrides.pug);
-    this.setPugOptions(this.config.pugOptions);
   }
 
-  setLibrary(lib) {
-    this.pugLib = lib || PugLib;
+  setLibrary(override) {
+    this.pugLib = override || PugLib;
     this.setEngineLib(this.pugLib);
-  }
-
-  setPugOptions(options) {
-    this.pugOptions = options;
   }
 
   getPugOptions() {

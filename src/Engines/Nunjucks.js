@@ -125,18 +125,24 @@ class EleventyShortcodeError extends EleventyBaseError {}
 class Nunjucks extends TemplateEngine {
   constructor(name, includesDir, config) {
     super(name, includesDir, config);
+    this.nunjucksEnvironmentOptions =
+      this.config.nunjucksEnvironmentOptions || {};
 
     this.setLibrary(this.config.libraryOverrides.njk);
 
     this.cacheable = true;
   }
 
-  setLibrary(env) {
+  setLibrary(override) {
     let fsLoader = new NunjucksLib.FileSystemLoader([
       super.getIncludesDir(),
       TemplatePath.getWorkingDir(),
     ]);
-    this.njkEnv = env || new NunjucksLib.Environment(fsLoader);
+
+    this.njkEnv =
+      override ||
+      new NunjucksLib.Environment(fsLoader, this.nunjucksEnvironmentOptions);
+
     // Correct, but overbroad. Better would be to evict more granularly, but
     // resolution from paths isn't straightforward.
     eventBus.on("eleventy.resourceModified", (path) => {

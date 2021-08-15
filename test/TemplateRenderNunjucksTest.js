@@ -7,6 +7,7 @@ function getNewTemplateRender(name, inputDir, eleventyConfig) {
   if (!eleventyConfig) {
     eleventyConfig = new TemplateConfig();
   }
+
   let tr = new TemplateRender(name, inputDir, eleventyConfig);
   tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   return tr;
@@ -877,4 +878,35 @@ test.skip("Use addNunjucksGlobal with async function", async (t) => {
 
   let fn = await tr.getCompiledTemplate("<p>{{ fortytwo() }}</p>");
   t.is(await fn(), "<p>42</p>");
+});
+
+test("Use config driven Nunjucks Environment Options (throws on undefined variable)", async (t) => {
+  let templateConfig = new TemplateConfig();
+  templateConfig.userConfig.setNunjucksEnvironmentOptions({
+    throwOnUndefined: true,
+  });
+
+  let tr = getNewTemplateRender("njk", null, templateConfig);
+
+  let fn = await tr.getCompiledTemplate("<p>   {{ test }}</p>");
+  await t.throwsAsync(async () => {
+    await fn({});
+  });
+});
+
+test("Use config driven Nunjucks Environment Options (autoescape)", async (t) => {
+  let templateConfig = new TemplateConfig();
+  templateConfig.userConfig.setNunjucksEnvironmentOptions({
+    autoescape: false,
+  });
+
+  let tr = getNewTemplateRender("njk", null, templateConfig);
+
+  let fn = await tr.getCompiledTemplate("<p>{{ test }}</p>");
+  t.is(
+    await fn({
+      test: "<b>Hi</b>",
+    }),
+    "<p><b>Hi</b></p>"
+  );
 });

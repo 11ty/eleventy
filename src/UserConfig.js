@@ -29,6 +29,7 @@ class UserConfig {
     this.liquidFilters = {};
     this.liquidShortcodes = {};
     this.liquidPairedShortcodes = {};
+    this.nunjucksEnvironmentOptions = {};
     this.nunjucksFilters = {};
     this.nunjucksAsyncFilters = {};
     this.nunjucksTags = {};
@@ -400,9 +401,16 @@ class UserConfig {
 
   setLibrary(engineName, libraryInstance) {
     // Pug options are passed to `compile` and not in the library constructor so we don’t need to warn
-    if (engineName === "liquid" && this.mdOptions) {
+    if (engineName === "liquid" && Object.keys(this.liquidOptions).length) {
       debug(
-        "WARNING: using `eleventyConfig.setLibrary` will override any configuration set using `.setLiquidOptions` or with the `liquidOptions` key in the config object. You’ll need to pass these options to the library yourself."
+        "WARNING: using `eleventyConfig.setLibrary` will override any configuration set using `.setLiquidOptions` via the config API. You’ll need to pass these options to the library yourself."
+      );
+    } else if (
+      engineName === "njk" &&
+      Object.keys(this.nunjucksEnvironmentOptions).length
+    ) {
+      debug(
+        "WARNING: using `eleventyConfig.setLibrary` will override any configuration set using `.setNunjucksEnvironmentOptions` via the config API. You’ll need to pass these options to the library yourself."
       );
     }
 
@@ -415,6 +423,10 @@ class UserConfig {
 
   setLiquidOptions(options) {
     this.liquidOptions = options;
+  }
+
+  setNunjucksEnvironmentOptions(options) {
+    this.nunjucksEnvironmentOptions = options;
   }
 
   setEjsOptions(options) {
@@ -716,6 +728,7 @@ class UserConfig {
       liquidFilters: this.liquidFilters,
       liquidShortcodes: this.liquidShortcodes,
       liquidPairedShortcodes: this.liquidPairedShortcodes,
+      nunjucksEnvironmentOptions: this.nunjucksEnvironmentOptions,
       nunjucksFilters: this.nunjucksFilters,
       nunjucksAsyncFilters: this.nunjucksAsyncFilters,
       nunjucksTags: this.nunjucksTags,
