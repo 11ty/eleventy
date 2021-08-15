@@ -82,7 +82,7 @@ test("Custom Markdown Render with `compile` override + call to default compiler"
     key: "md",
     compile: function (str, inputPath) {
       return async function (data) {
-        const result = await this.defaultCompiler(data);
+        const result = await this.defaultRenderer(data);
         return `<custom-wrapper>${result.trim()}</custom-wrapper>`;
       };
     },
@@ -116,8 +116,8 @@ test("Custom Vue Render", async (t) => {
     },
   });
 
-  let fn = await tr.getCompiledTemplate(`<p v-html="test">Paragraph</p>`);
-  t.is(await fn({ test: "Hello" }), `<p data-server-rendered="true">Hello</p>`);
+  let fn = await tr.getCompiledTemplate('<p v-html="test">Paragraph</p>');
+  t.is(await fn({ test: "Hello" }), '<p data-server-rendered="true">Hello</p>');
 });
 
 const sass = require("sass");
@@ -154,7 +154,7 @@ test("Custom Sass Render", async (t) => {
     },
   });
 
-  let fn = await tr.getCompiledTemplate(`$color: blue; p { color: $color; }`);
+  let fn = await tr.getCompiledTemplate("$color: blue; p { color: $color; }");
   t.is(
     (await fn({})).trim(),
     `p {
