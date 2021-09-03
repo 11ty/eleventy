@@ -520,30 +520,45 @@ Verbose Output: ${this.verboseMode}`);
    * @returns {String} - The help mesage.
    */
   getHelp() {
-    return `usage: eleventy
+    return `Usage: eleventy
        eleventy --input=. --output=./_site
        eleventy --serve
 
 Arguments:
+
      --version
+
      --input=.
        Input template files (default: \`.\`)
+
      --output=_site
        Write HTML output to this folder (default: \`_site\`)
+
      --serve
        Run web server on --port (default 8080) and watch them too
+
      --watch
        Wait for files to change and automatically rewrite (no web server)
+
      --formats=liquid,md
        Whitelist only certain template types (default: \`*\`)
+
      --quiet
        Don’t print all written files (off by default)
+
      --config=filename.js
        Override the eleventy config file path (default: \`.eleventy.js\`)
+
      --pathprefix='/'
        Change all url template filters to use this subdirectory.
+
      --dryrun
        Don’t write any files. Useful with \`DEBUG=Eleventy* npx eleventy\`
+
+     --to=json
+     --to=ndjson
+       Change the output to JSON or NDJSON (default: \`fs\`)
+
      --help`;
   }
 
