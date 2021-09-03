@@ -407,7 +407,8 @@ Verbose Output: ${this.verboseMode}`);
 
     process.env.ELEVENTY_SOURCE = this.source;
 
-    // careful here, setting to false will cast to string "false" which is truthy
+    // TODO @zachleat this needs to be extensible. https://github.com/11ty/eleventy/issues/1957
+    // Careful here, setting to false will cast to string "false" which is truthy.
     if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
       process.env.ELEVENTY_SERVERLESS = true;
       debug("Setting process.env.ELEVENTY_SERVERLESS: %o", true);

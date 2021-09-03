@@ -1,17 +1,21 @@
-const validUrl = require("valid-url");
 const TemplatePath = require("../TemplatePath");
+
+function isValidUrl(url) {
+  try {
+    new URL(url);
+    return true;
+  } catch (e) {
+    // invalid url OR local path
+    return false;
+  }
+}
 
 // This is also used in the Eleventy Navigation plugin
 module.exports = function (url, pathPrefix) {
   // work with undefined
   url = url || "";
 
-  if (
-    validUrl.isUri(url) ||
-    url.indexOf("http://") === 0 ||
-    url.indexOf("https://") === 0 ||
-    (url.indexOf("//") === 0 && url !== "//")
-  ) {
+  if (isValidUrl(url) || (url.indexOf("//") === 0 && url !== "//")) {
     return url;
   }
 

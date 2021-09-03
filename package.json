@@ -122,7 +122,6 @@
     "slugify": "^1.6.0",
     "split": "^1.0.1",
     "time-require": "^0.1.2",
-    "url-pattern": "^1.0.3",
-    "valid-url": "^1.0.9"
+    "url-pattern": "^1.0.3"
   }
 }
