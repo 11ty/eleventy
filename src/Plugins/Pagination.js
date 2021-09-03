@@ -310,7 +310,9 @@ class Pagination {
       let cloned = tmpl.clone();
 
       // TODO maybe also move this permalink additions up into the pagination class
-      if (pageNumber > 0 && !this.data[this.config.keys.permalink]) {
+      let hasPermalinkField = Boolean(this.data[this.config.keys.permalink]);
+      let hasComputedPermalinkField = Boolean(this.data.eleventyComputed && this.data.eleventyComputed[this.config.keys.permalink]);
+      if (pageNumber > 0 && !(hasPermalinkField || hasComputedPermalinkField)) {
         cloned.setExtraOutputSubdirectory(pageNumber);
       }
 
