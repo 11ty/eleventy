@@ -3,11 +3,11 @@ const TemplatePermalink = require("../src/TemplatePermalink");
 
 test("Simple straight permalink", (t) => {
   t.is(
-    new TemplatePermalink("permalinksubfolder/test.html").toLink(),
+    new TemplatePermalink("permalinksubfolder/test.html").toOutputPath(),
     "permalinksubfolder/test.html"
   );
   t.is(
-    new TemplatePermalink("./permalinksubfolder/test.html").toLink(),
+    new TemplatePermalink("./permalinksubfolder/test.html").toOutputPath(),
     "permalinksubfolder/test.html"
   );
 
@@ -28,15 +28,15 @@ test("Simple straight permalink", (t) => {
 
 test("Permalink without filename", (t) => {
   t.is(
-    new TemplatePermalink("permalinksubfolder/").toLink(),
+    new TemplatePermalink("permalinksubfolder/").toOutputPath(),
     "permalinksubfolder/index.html"
   );
   t.is(
-    new TemplatePermalink("./permalinksubfolder/").toLink(),
+    new TemplatePermalink("./permalinksubfolder/").toOutputPath(),
     "permalinksubfolder/index.html"
   );
   t.is(
-    new TemplatePermalink("/permalinksubfolder/").toLink(),
+    new TemplatePermalink("/permalinksubfolder/").toOutputPath(),
     "/permalinksubfolder/index.html"
   );
 
@@ -56,11 +56,11 @@ test("Permalink without filename", (t) => {
 
 test("Permalink with pagination subdir", (t) => {
   t.is(
-    new TemplatePermalink("permalinksubfolder/test.html", "0/").toLink(),
+    new TemplatePermalink("permalinksubfolder/test.html", "0/").toOutputPath(),
     "permalinksubfolder/0/test.html"
   );
   t.is(
-    new TemplatePermalink("permalinksubfolder/test.html", "1/").toLink(),
+    new TemplatePermalink("permalinksubfolder/test.html", "1/").toOutputPath(),
     "permalinksubfolder/1/test.html"
   );
 
@@ -77,33 +77,33 @@ test("Permalink with pagination subdir", (t) => {
 test("Permalink generate", (t) => {
   let gen = TemplatePermalink.generate;
 
-  t.is(gen("./", "index").toLink(), "index.html");
+  t.is(gen("./", "index").toOutputPath(), "index.html");
   t.is(gen("./", "index").toHref(), "/");
-  t.is(gen(".", "index").toLink(), "index.html");
+  t.is(gen(".", "index").toOutputPath(), "index.html");
   t.is(gen(".", "index").toHref(), "/");
-  t.is(gen(".", "test").toLink(), "test/index.html");
+  t.is(gen(".", "test").toOutputPath(), "test/index.html");
   t.is(gen(".", "test").toHref(), "/test/");
-  t.is(gen(".", "test", "0/").toLink(), "test/0/index.html");
+  t.is(gen(".", "test", "0/").toOutputPath(), "test/0/index.html");
   t.is(gen(".", "test", "0/").toHref(), "/test/0/");
-  t.is(gen(".", "test", "1/").toLink(), "test/1/index.html");
+  t.is(gen(".", "test", "1/").toOutputPath(), "test/1/index.html");
   t.is(gen(".", "test", "1/").toHref(), "/test/1/");
 });
 
 test("Permalink generate with suffix", (t) => {
   let gen = TemplatePermalink.generate;
 
-  t.is(gen(".", "test", null, "-o").toLink(), "test/index-o.html");
+  t.is(gen(".", "test", null, "-o").toOutputPath(), "test/index-o.html");
   t.is(gen(".", "test", null, "-o").toHref(), "/test/index-o.html");
-  t.is(gen(".", "test", "1/", "-o").toLink(), "test/1/index-o.html");
+  t.is(gen(".", "test", "1/", "-o").toOutputPath(), "test/1/index-o.html");
   t.is(gen(".", "test", "1/", "-o").toHref(), "/test/1/index-o.html");
 });
 
 test("Permalink generate with new extension", (t) => {
   let gen = TemplatePermalink.generate;
 
-  t.is(gen(".", "test", null, null, "css").toLink(), "test.css");
+  t.is(gen(".", "test", null, null, "css").toOutputPath(), "test.css");
   t.is(gen(".", "test", null, null, "css").toHref(), "/test.css");
-  t.is(gen(".", "test", "1/", null, "css").toLink(), "1/test.css");
+  t.is(gen(".", "test", "1/", null, "css").toOutputPath(), "1/test.css");
   t.is(gen(".", "test", "1/", null, "css").toHref(), "/1/test.css");
 });
 
@@ -111,15 +111,15 @@ test("Permalink generate with subfolders", (t) => {
   let gen = TemplatePermalink.generate;
 
   t.is(
-    gen("permalinksubfolder/", "index").toLink(),
+    gen("permalinksubfolder/", "index").toOutputPath(),
     "permalinksubfolder/index.html"
   );
   t.is(
-    gen("permalinksubfolder/", "test").toLink(),
+    gen("permalinksubfolder/", "test").toOutputPath(),
     "permalinksubfolder/test/index.html"
   );
   t.is(
-    gen("permalinksubfolder/", "test", "1/", "-o").toLink(),
+    gen("permalinksubfolder/", "test", "1/", "-o").toOutputPath(),
     "permalinksubfolder/test/1/index-o.html"
   );
 
@@ -144,7 +144,7 @@ test("Permalink matching folder and filename", (t) => {
   t.is(hasDupe("component", "component"), true);
   t.is(hasDupe("component/", "component"), true);
 
-  t.is(gen("component/", "component").toLink(), "component/index.html");
+  t.is(gen("component/", "component").toOutputPath(), "component/index.html");
   t.is(gen("component/", "component").toHref(), "/component/");
 });
 
@@ -152,21 +152,21 @@ test("Permalink Object, just build", (t) => {
   t.is(
     new TemplatePermalink({
       build: "permalinksubfolder/test.html",
-    }).toLink(),
+    }).toOutputPath(),
     "permalinksubfolder/test.html"
   );
 
   t.is(
     new TemplatePermalink({
       build: false,
-    }).toLink(),
+    }).toOutputPath(),
     false
   );
 
   t.throws(() => {
     new TemplatePermalink({
       build: true,
-    }).toLink();
+    }).toOutputPath();
   });
 });
 
@@ -175,8 +175,8 @@ test("Permalink Object, serverless URLs", (t) => {
   t.is(
     new TemplatePermalink({
       serverless: "permalinksubfolder/test.html",
-    }).toLink(),
-    "permalinksubfolder/test.html"
+    }).toOutputPath(),
+    false
   );
 
   t.is(
@@ -190,8 +190,8 @@ test("Permalink Object, serverless URLs", (t) => {
   t.is(
     new TemplatePermalink({
       request: "/url/",
-    }).toLink(),
-    "/url/"
+    }).toOutputPath(),
+    false
   );
 
   t.is(
@@ -205,8 +205,8 @@ test("Permalink Object, serverless URLs", (t) => {
   t.is(
     new TemplatePermalink({
       rando: "/url/",
-    }).toLink(),
-    "/url/"
+    }).toOutputPath(),
+    false
   );
 
   t.is(
@@ -222,7 +222,7 @@ test("Permalink Object, combo build and serverless URLs", (t) => {
     new TemplatePermalink({
       build: "/url/",
       serverless: "/serverless/",
-    }).toLink(),
+    }).toOutputPath(),
     "/url/index.html"
   );
 
@@ -239,8 +239,8 @@ test("Permalink Object, combo build and serverless URLs", (t) => {
     new TemplatePermalink({
       serverless: "/serverless/",
       build: "/url/",
-    }).toLink(),
-    "/serverless/"
+    }).toOutputPath(),
+    "/url/index.html"
   );
 
   t.is(
@@ -253,7 +253,7 @@ test("Permalink Object, combo build and serverless URLs", (t) => {
 });
 
 test("Permalink Object, empty object", (t) => {
-  t.is(new TemplatePermalink({}).toLink(), false);
+  t.is(new TemplatePermalink({}).toOutputPath(), false);
 
   t.is(new TemplatePermalink({}).toHref(), false);
 });

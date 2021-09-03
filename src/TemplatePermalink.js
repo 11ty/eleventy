@@ -78,10 +78,8 @@ class TemplatePermalink {
     return link + (link.substr(-1) === "/" ? "index.html" : "");
   }
 
-  toLink() {
-    if (this.primaryServerlessUrl) {
-      return this.primaryServerlessUrl;
-    } else if (!this.buildLink) {
+  toOutputPath() {
+    if (!this.buildLink) {
       // empty or false
       return false;
     }
@@ -110,7 +108,7 @@ class TemplatePermalink {
       return false;
     }
 
-    let transformedLink = this.toLink();
+    let transformedLink = this.toOutputPath();
     let original =
       (transformedLink.charAt(0) !== "/" ? "/" : "") + transformedLink;
     let needle = "/index.html";
@@ -127,7 +125,7 @@ class TemplatePermalink {
       return false;
     }
 
-    let uri = this.toLink();
+    let uri = this.toOutputPath();
 
     if (uri === false) {
       return false;
@@ -141,7 +139,7 @@ class TemplatePermalink {
       return false;
     }
 
-    let uri = this.toLink();
+    let uri = this.toOutputPath();
 
     if (uri === false) {
       return false;

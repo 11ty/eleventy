@@ -286,16 +286,16 @@ class Template extends TemplateContent {
     }
 
     return {
-      link: link.toLink(),
+      rawPath: link.toOutputPath(),
       href: link.toHref(),
       path: path,
     };
   }
 
   // Preferred to use the singular `getOutputLocations` above.
-  async getOutputLink(data) {
+  async getRawOutputPath(data) {
     let link = await this._getLink(data);
-    return link.toLink();
+    return link.toOutputPath();
   }
 
   // Preferred to use the singular `getOutputLocations` above.
