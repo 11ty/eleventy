@@ -10,7 +10,7 @@ const eventBus = require("../EventBus");
  * compiled templates and re-use them where possible.
  */
 (function () {
-  if (process.env.ELEVENTY_NUNJUCKS_SPEEDBOOST_OPTOUT) {
+  if (!process.env.ELEVENTY_NUNJUCKS_SPEEDBOOST_OPTIN) {
     return;
   }
 
