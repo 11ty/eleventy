@@ -407,7 +407,9 @@ Verbose Output: ${this.verboseMode}`);
 
     process.env.ELEVENTY_SOURCE = this.source;
 
-    // TODO @zachleat this needs to be extensible. https://github.com/11ty/eleventy/issues/1957
+    // TODO (@zachleat) this needs to be extensible. https://github.com/11ty/eleventy/issues/1957
+    // Note: when using --serve, ELEVENTY_SERVERLESS is set manually in Serverless.js
+
     // Careful here, setting to false will cast to string "false" which is truthy.
     if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
       process.env.ELEVENTY_SERVERLESS = true;

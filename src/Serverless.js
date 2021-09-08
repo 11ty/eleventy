@@ -54,6 +54,21 @@ class Serverless {
     this.dir = this.getProjectDir();
   }
 
+  initializeEnvironmentVariables() {
+    // set and delete env variables to make it work the same on --serve
+    this.serverlessEnvironmentVariableAlreadySet =
+      !!process.env.ELEVENTY_SERVERLESS;
+    if (!this.serverlessEnvironmentVariableAlreadySet) {
+      process.env.ELEVENTY_SERVERLESS = true;
+    }
+  }
+
+  deleteEnvironmentVariables() {
+    if (!this.serverlessEnvironmentVariableAlreadySet) {
+      delete process.env.ELEVENTY_SERVERLESS;
+    }
+  }
+
   getProjectDir() {
     // TODO? improve with process.env.LAMBDA_TASK_ROOT—was `/var/task/` on lambda (not local)
     let dir = path.join(this.options.functionsDir, this.name);
@@ -169,6 +184,9 @@ class Serverless {
     debug("Path params: %o", pathParams);
     debug(`Input path:  ${inputPath}`);
 
+    // TODO (@zachleat) change to use this hook: https://github.com/11ty/eleventy/issues/1957
+    this.initializeEnvironmentVariables();
+
     let elev = new Eleventy(this.options.input || inputPath, null, {
       configPath,
       inputDir,
@@ -192,6 +210,10 @@ class Serverless {
     await elev.init();
 
     let json = await elev.toJSON();
+
+    // TODO (@zachleat)  https://github.com/11ty/eleventy/issues/1957
+    this.deleteEnvironmentVariables();
+
     if (!json.length) {
       let err = new Error(
         `Couldn’t find any generated output from Eleventy (URL path parameters: ${JSON.stringify(
