@@ -257,3 +257,13 @@ test("Permalink Object, empty object", (t) => {
 
   t.is(new TemplatePermalink({}).toHref(), false);
 });
+
+test("Permalink Object, serverless with path params", (t) => {
+  let perm = new TemplatePermalink({
+    serverless: "/serverless/:test/",
+  });
+  perm.setServerlessPathData({
+    test: "yeearg",
+  });
+  t.is(perm.toHref(), "/serverless/yeearg/");
+});

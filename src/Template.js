@@ -174,6 +174,9 @@ class Template extends TemplateContent {
       permalinkValue,
       this.extraOutputSubdirectory
     );
+    if (this.templateData) {
+      perm.setServerlessPathData(this.templateData.getServerlessPathData());
+    }
 
     this.behavior.setFromPermalink(perm);
     this.serverlessUrls = perm.getServerlessUrls();

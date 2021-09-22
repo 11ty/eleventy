@@ -2,6 +2,7 @@ const path = require("path");
 const TemplatePath = require("./TemplatePath");
 const normalize = require("normalize-path");
 const isPlainObject = require("lodash/isPlainObject");
+const serverlessUrlFilter = require("./Filters/ServerlessUrl");
 
 class TemplatePermalink {
   // `link` with template syntax should have already been rendered in Template.js
@@ -70,6 +71,10 @@ class TemplatePermalink {
     this.extraPaginationSubdir = extraSubdir || "";
   }
 
+  setServerlessPathData(data) {
+    this.serverlessPathData = data;
+  }
+
   getServerlessUrls() {
     return this.serverlessUrls;
   }
@@ -102,6 +107,12 @@ class TemplatePermalink {
   // test/index.html becomes test/
   toHref() {
     if (this.primaryServerlessUrl) {
+      if (this.serverlessPathData) {
+        return serverlessUrlFilter(
+          this.primaryServerlessUrl,
+          this.serverlessPathData
+        );
+      }
       return this.primaryServerlessUrl;
     } else if (!this.buildLink) {
       // empty or false

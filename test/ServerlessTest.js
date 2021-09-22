@@ -22,3 +22,14 @@ test("Test a transform on serverless output.", async (t) => {
 
   t.is((await elev.render()).trim(), "<h1>Hi</h1><p>Hi</p>");
 });
+
+test("Test page.url on serverless output.", async (t) => {
+  let elev = new EleventyServerless("test1", {
+    path: "/sample/",
+    query: {},
+    inputDir: "./test/serverless-stubs-page-url/",
+    functionsDir: "./test/serverless-stubs-page-url/functions/",
+  });
+
+  t.is((await elev.render()).trim(), "<h1>/sample/</h1>");
+});

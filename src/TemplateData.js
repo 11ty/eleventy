@@ -598,6 +598,17 @@ class TemplateData {
 
     return data;
   }
+
+  getServerlessPathData() {
+    if (
+      this.configApiGlobalData &&
+      this.configApiGlobalData.eleventy &&
+      this.configApiGlobalData.eleventy.serverless &&
+      this.configApiGlobalData.eleventy.serverless.path
+    ) {
+      return this.configApiGlobalData.eleventy.serverless.path;
+    }
+  }
 }
 
 module.exports = TemplateData;
