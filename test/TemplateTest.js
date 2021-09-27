@@ -527,7 +527,7 @@ test("Posts inherits local JSON, layouts", async (t) => {
     "./test/stubs/posts/post1.11tydata.js",
   ]);
 
-  let localData = await dataObj.getLocalData(tmpl.getInputPath());
+  let localData = await dataObj._testGetLocalData(tmpl.getInputPath());
   t.is(localData.layout, "mylocallayout.njk");
   t.truthy(localData.pkg);
 
@@ -565,7 +565,7 @@ test("Template and folder name are the same, make sure data imports work ok", as
     "./test/stubs/posts/posts.11tydata.js",
   ]);
 
-  let localData = await dataObj.getLocalData(tmpl.getInputPath());
+  let localData = await dataObj._testGetLocalData(tmpl.getInputPath());
   t.is(localData.layout, "mylocallayout.njk");
   t.truthy(localData.pkg);
 
@@ -1930,27 +1930,6 @@ test("Issue #446: Layout has a permalink with a different template language than
   t.is(data.page.url, "/test/");
 });
 
-// Prior to and including 0.10.0 this mismatched the documentation)!
-test("Layout front matter should override template files", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-
-  let dataObj = new TemplateData(
-    "./test/stubs-data-cascade/layout-data-files/",
-    eleventyConfig
-  );
-  let tmpl = getNewTemplate(
-    "./test/stubs-data-cascade/layout-data-files/test.njk",
-    "./test/stubs-data-cascade/layout-data-files/",
-    "./dist",
-    dataObj,
-    null,
-    eleventyConfig
-  );
-
-  let data = await tmpl.getData();
-  t.is(data.shared, "layout");
-});
-
 test("Get Layout Chain", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs-incremental/layout-chain/test.njk",
@@ -1958,7 +1937,7 @@ test("Get Layout Chain", async (t) => {
     "./dist"
   );
 
-  let layoutChain = await tmpl.getLayoutChain();
+  let layoutChain = await tmpl._testGetLayoutChain();
   t.deepEqual(layoutChain, [
     "./test/stubs-incremental/layout-chain/_includes/base.njk",
     "./test/stubs-incremental/layout-chain/_includes/parent.njk",

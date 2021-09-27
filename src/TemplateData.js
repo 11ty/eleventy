@@ -359,7 +359,18 @@ class TemplateData {
     return localData;
   }
 
-  async getLocalData(templatePath) {
+  async getTemplateDirectoryData(templatePath) {
+    let localDataPaths = await this.getLocalDataPaths(templatePath);
+    let importedData = await this.combineLocalData(localDataPaths);
+    // OK-ish: shallow merge when combining template/data dir files
+    return Object.assign({}, importedData);
+  }
+
+  async getGlobalData() {
+    return this.getData();
+  }
+
+  async _testGetLocalData(templatePath) {
     let localDataPaths = await this.getLocalDataPaths(templatePath);
     let importedData = await this.combineLocalData(localDataPaths);
     let globalData = await this.getData();

@@ -128,12 +128,12 @@ class Template extends TemplateContent {
     return this._layout;
   }
 
-  async getLayoutChain() {
+  async _testGetLayoutChain() {
     if (!this._layout) {
       await this.getData();
     }
 
-    return this._layout.getLayoutChain();
+    return this._layout._testGetLayoutChain();
   }
 
   get baseFile() {
@@ -360,10 +360,17 @@ class Template extends TemplateContent {
     if (!this.dataCache) {
       debugDev("%o getData()", this.inputPath);
       let localData = {};
+      let globalData = {};
 
       if (this.templateData) {
-        localData = await this.templateData.getLocalData(this.inputPath);
-        debugDev("%o getData() getLocalData", this.inputPath);
+        localData = await this.templateData.getTemplateDirectoryData(
+          this.inputPath
+        );
+        globalData = await this.templateData.getGlobalData(this.inputPath);
+        debugDev(
+          "%o getData() getTemplateDirectoryData and getGlobalData",
+          this.inputPath
+        );
       }
 
       let frontMatterData = await this.getFrontMatterData();
@@ -371,6 +378,7 @@ class Template extends TemplateContent {
         frontMatterData[this.config.keys.layout] ||
         localData[this.config.keys.layout];
 
+      // Layout front matter data
       let mergedLayoutData = {};
       if (layoutKey) {
         let layout = this.getLayout(layoutKey);
@@ -382,11 +390,13 @@ class Template extends TemplateContent {
         );
       }
 
+      // START HERE, move front merged layout data lower than local data
       let mergedData = TemplateData.mergeDeep(
         this.config,
         {},
-        localData,
+        globalData,
         mergedLayoutData,
+        localData,
         frontMatterData
       );
       mergedData = await this.addPageDate(mergedData);

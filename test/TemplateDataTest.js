@@ -61,7 +61,7 @@ test("Add local data", async (t) => {
   t.is(data.globalData.datakey1, "datavalue1");
   t.is(data.globalData.datakey2, "@11ty/eleventy");
 
-  let withLocalData = await dataObj.getLocalData(
+  let withLocalData = await dataObj._testGetLocalData(
     "./test/stubs/component/component.njk"
   );
   t.is(withLocalData.globalData.datakey1, "datavalue1");
@@ -79,7 +79,7 @@ test("Get local data async JS", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
 
-  let withLocalData = await dataObj.getLocalData(
+  let withLocalData = await dataObj._testGetLocalData(
     "./test/stubs/component-async/component.njk"
   );
 
@@ -97,7 +97,7 @@ test("addLocalData() doesn’t exist but doesn’t fail (template file does exis
   let beforeDataKeyCount = Object.keys(data);
 
   // template file does exist
-  let withLocalData = await dataObj.getLocalData(
+  let withLocalData = await dataObj._testGetLocalData(
     "./test/stubs/datafiledoesnotexist/template.njk"
   );
   t.is(withLocalData.globalData.datakey1, "datavalue1");
@@ -113,7 +113,7 @@ test("addLocalData() doesn’t exist but doesn’t fail (template file does not 
   let data = await dataObj.getData();
   let beforeDataKeyCount = Object.keys(data);
 
-  let withLocalData = await dataObj.getLocalData(
+  let withLocalData = await dataObj._testGetLocalData(
     "./test/stubs/datafiledoesnotexist/templatedoesnotexist.njk"
   );
   t.is(withLocalData.globalData.datakey1, "datavalue1");
