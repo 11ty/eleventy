@@ -378,18 +378,6 @@ class TemplateData {
     return this.getData();
   }
 
-  // TODO get rid of this, it’s been refactored to separate `getTemplateDirectoryData` and `getGlobalData` calls
-  async _testGetLocalData(templatePath) {
-    let localDataPaths = await this.getLocalDataPaths(templatePath);
-    let importedData = await this.combineLocalData(localDataPaths);
-    let globalData = await this.getData();
-
-    // OK-ish: shallow merge when combining template/data dir files with global data files
-    let localData = Object.assign({}, globalData, importedData);
-    // debug("`getLocalData` for %o: %O", templatePath, localData);
-    return localData;
-  }
-
   getUserDataExtensions() {
     if (!this.config.dataExtensions) {
       return [];

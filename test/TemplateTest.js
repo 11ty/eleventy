@@ -527,9 +527,11 @@ test("Posts inherits local JSON, layouts", async (t) => {
     "./test/stubs/posts/post1.11tydata.js",
   ]);
 
-  let localData = await dataObj._testGetLocalData(tmpl.getInputPath());
+  let localData = await dataObj.getTemplateDirectoryData(tmpl.getInputPath());
   t.is(localData.layout, "mylocallayout.njk");
-  t.truthy(localData.pkg);
+
+  let globalData = await dataObj.getGlobalData();
+  t.truthy(globalData.pkg);
 
   let data = await tmpl.getData();
   t.is(localData.layout, "mylocallayout.njk");
@@ -565,9 +567,11 @@ test("Template and folder name are the same, make sure data imports work ok", as
     "./test/stubs/posts/posts.11tydata.js",
   ]);
 
-  let localData = await dataObj._testGetLocalData(tmpl.getInputPath());
+  let localData = await dataObj.getTemplateDirectoryData(tmpl.getInputPath());
   t.is(localData.layout, "mylocallayout.njk");
-  t.truthy(localData.pkg);
+
+  let globalData = await dataObj.getGlobalData();
+  t.truthy(globalData.pkg);
 
   let data = await tmpl.getData();
   t.is(localData.layout, "mylocallayout.njk");

@@ -2,6 +2,17 @@ const test = require("ava");
 const TemplateData = require("../src/TemplateData");
 const TemplateConfig = require("../src/TemplateConfig");
 
+async function testGetLocalData(tmplData, templatePath) {
+  let localDataPaths = await tmplData.getLocalDataPaths(templatePath);
+  let importedData = await tmplData.combineLocalData(localDataPaths);
+  let globalData = await tmplData.getData();
+
+  // OK-ish: shallow merge when combining template/data dir files with global data files
+  let localData = Object.assign({}, globalData, importedData);
+  // debug("`getLocalData` for %o: %O", templatePath, localData);
+  return localData;
+}
+
 test("Create", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let config = eleventyConfig.getConfig();
@@ -61,7 +72,8 @@ test("Add local data", async (t) => {
   t.is(data.globalData.datakey1, "datavalue1");
   t.is(data.globalData.datakey2, "@11ty/eleventy");
 
-  let withLocalData = await dataObj._testGetLocalData(
+  let withLocalData = await testGetLocalData(
+    dataObj,
     "./test/stubs/component/component.njk"
   );
   t.is(withLocalData.globalData.datakey1, "datavalue1");
@@ -79,7 +91,8 @@ test("Get local data async JS", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
 
-  let withLocalData = await dataObj._testGetLocalData(
+  let withLocalData = await testGetLocalData(
+    dataObj,
     "./test/stubs/component-async/component.njk"
   );
 
@@ -97,7 +110,8 @@ test("addLocalData() doesn’t exist but doesn’t fail (template file does exis
   let beforeDataKeyCount = Object.keys(data);
 
   // template file does exist
-  let withLocalData = await dataObj._testGetLocalData(
+  let withLocalData = await testGetLocalData(
+    dataObj,
     "./test/stubs/datafiledoesnotexist/template.njk"
   );
   t.is(withLocalData.globalData.datakey1, "datavalue1");
@@ -113,7 +127,8 @@ test("addLocalData() doesn’t exist but doesn’t fail (template file does not 
   let data = await dataObj.getData();
   let beforeDataKeyCount = Object.keys(data);
 
-  let withLocalData = await dataObj._testGetLocalData(
+  let withLocalData = await testGetLocalData(
+    dataObj,
     "./test/stubs/datafiledoesnotexist/templatedoesnotexist.njk"
   );
   t.is(withLocalData.globalData.datakey1, "datavalue1");

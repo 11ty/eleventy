@@ -26,7 +26,7 @@ test("Local data", async (t) => {
   t.is(data.globalData4.datakey1, "datavalue4");
   t.is(data.globalData4.datakey2, "@11ty/eleventy--nosj");
 
-  let withLocalData = await dataObj._testGetLocalData(
+  let withLocalData = await dataObj.getTemplateDirectoryData(
     "./test/stubs-630/component-yaml/component.njk"
   );
 
