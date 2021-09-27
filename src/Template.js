@@ -390,7 +390,6 @@ class Template extends TemplateContent {
         );
       }
 
-      // START HERE, move front merged layout data lower than local data
       let mergedData = TemplateData.mergeDeep(
         this.config,
         {},

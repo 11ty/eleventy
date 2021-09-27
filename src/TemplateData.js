@@ -57,6 +57,7 @@ class TemplateData {
 
     this.rawImports = {};
     this.globalData = null;
+    this.templateDirectoryData = {};
 
     // It's common for data files not to exist, so we avoid going to the FS to
     // re-check if they do via a quick-and-dirty cache.
@@ -121,6 +122,7 @@ class TemplateData {
 
   clearData() {
     this.globalData = null;
+    this.templateDirectoryData = {};
   }
 
   async cacheData() {
@@ -360,16 +362,23 @@ class TemplateData {
   }
 
   async getTemplateDirectoryData(templatePath) {
-    let localDataPaths = await this.getLocalDataPaths(templatePath);
-    let importedData = await this.combineLocalData(localDataPaths);
-    // OK-ish: shallow merge when combining template/data dir files
-    return Object.assign({}, importedData);
+    if (!this.templateDirectoryData[templatePath]) {
+      let localDataPaths = await this.getLocalDataPaths(templatePath);
+      let importedData = await this.combineLocalData(localDataPaths);
+
+      this.templateDirectoryData[templatePath] = Object.assign(
+        {},
+        importedData
+      );
+    }
+    return this.templateDirectoryData[templatePath];
   }
 
   async getGlobalData() {
     return this.getData();
   }
 
+  // TODO get rid of this, it’s been refactored to separate `getTemplateDirectoryData` and `getGlobalData` calls
   async _testGetLocalData(templatePath) {
     let localDataPaths = await this.getLocalDataPaths(templatePath);
     let importedData = await this.combineLocalData(localDataPaths);

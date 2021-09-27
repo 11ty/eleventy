@@ -793,3 +793,24 @@ test("Pagination mutable global data", async (t) => {
   t.deepEqual(templates[1].data.item, { key3: "item3", key4: "item4" });
   t.deepEqual(templates[2].data.item, { key5: "item5", key6: "item6" });
 });
+
+test("Pagination template/dir data files run once, Issue 919", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData("./test/stubs-919/", eleventyConfig);
+
+  let tmpl = getNewTemplate(
+    "./test/stubs-919/test.njk",
+    "./test/stubs-919/",
+    "./dist",
+    dataObj,
+    null,
+    eleventyConfig
+  );
+
+  let data = await tmpl.getData();
+  let templates = await tmpl.getTemplates(data);
+
+  t.is(templates.length, 3);
+  t.is(templates[0].data.test, templates[1].data.test);
+  t.is(templates[1].data.test, templates[2].data.test);
+});
