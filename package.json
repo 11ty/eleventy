@@ -114,6 +114,7 @@
     "mustache": "^4.2.0",
     "normalize-path": "^3.0.0",
     "nunjucks": "^3.2.3",
+    "path-to-regexp": "^6.2.0",
     "please-upgrade-node": "^3.2.0",
     "pretty": "^2.0.0",
     "pug": "^3.0.2",
@@ -121,7 +122,6 @@
     "semver": "^7.3.5",
     "slugify": "^1.6.0",
     "split": "^1.0.1",
-    "time-require": "^0.1.2",
-    "url-pattern": "^1.0.3"
+    "time-require": "^0.1.2"
   }
 }

@@ -1,8 +1,8 @@
-const UrlPattern = require("url-pattern");
+const { compile } = require("path-to-regexp");
 
 function stringify(url, urlData = {}) {
-  let pattern = new UrlPattern(url);
-  return pattern.stringify(urlData);
+  let fn = compile(url, { encode: encodeURIComponent });
+  return fn(urlData);
 }
 
 module.exports = function (url, urlData = {}) {

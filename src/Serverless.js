@@ -3,7 +3,7 @@ const fs = require("fs");
 
 const Eleventy = require("./Eleventy");
 const TemplatePath = require("./TemplatePath");
-const UrlPattern = require("url-pattern");
+const { match } = require("path-to-regexp");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
 const debug = require("debug")("Eleventy:Serverless");
 
@@ -40,8 +40,8 @@ class Serverless {
         inputDir: null, // override only, we now inject this.
         functionsDir: "functions/",
         matchUrlToPattern(path, urlToCompare) {
-          let pattern = new UrlPattern(urlToCompare);
-          return pattern.match(path);
+          let fn = match(urlToCompare, { decode: decodeURIComponent });
+          return fn(path);
         },
         // Query String Parameters
         query: {},
@@ -131,7 +131,7 @@ class Serverless {
       if (result) {
         matches.push({
           compareTo: url,
-          pathParams: result,
+          pathParams: result.params,
           inputPath: contentMap[url],
         });
       }
