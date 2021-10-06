@@ -1,6 +1,6 @@
 {
   "name": "@11ty/eleventy",
-  "version": "1.0.0-canary.44",
+  "version": "1.0.0-beta.1",
   "description": "Transform a directory of templates into HTML.",
   "publishConfig": {
     "access": "public"
@@ -79,7 +79,7 @@
     "ava": "^3.15.0",
     "husky": "^7.0.2",
     "js-yaml": "^4.1.0",
-    "lint-staged": "^11.1.2",
+    "lint-staged": "^11.2.0",
     "markdown-it-emoji": "^2.0.0",
     "nyc": "^15.1.0",
     "prettier": "^2.4.1",
@@ -120,7 +120,7 @@
     "pug": "^3.0.2",
     "recursive-copy": "^2.0.13",
     "semver": "^7.3.5",
-    "slugify": "^1.6.0",
+    "slugify": "^1.6.1",
     "split": "^1.0.1",
     "time-require": "^0.1.2"
   }
