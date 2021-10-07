@@ -80,7 +80,11 @@ class UserConfig {
   }
 
   versionCheck(expected) {
-    if (!semver.satisfies(pkg.version, expected)) {
+    if (
+      !semver.satisfies(pkg.version, expected, {
+        includePrerelease: true,
+      })
+    ) {
       throw new UserConfigError(
         `This project requires the Eleventy version to match '${expected}' but found ${pkg.version}. Use \`npm update @11ty/eleventy -g\` to upgrade the eleventy global or \`npm update @11ty/eleventy --save\` to upgrade your local project version.`
       );
