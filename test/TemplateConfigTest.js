@@ -115,6 +115,7 @@ test("Add universal filter", (t) => {
   t.not(Object.keys(cfg.handlebarsHelpers).indexOf("myFilterName"), -1);
   t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
 });
+
 test("Add namespaced universal filter", (t) => {
   let templateCfg = new TemplateConfig(
     require("../src/defaultConfig.js"),
@@ -146,6 +147,56 @@ test("Add namespaced universal filter using underscore", (t) => {
   );
   templateCfg.userConfig.namespace("testNamespace_", function () {
     templateCfg.userConfig.addFilter("myFilterName", function () {});
+  });
+
+  let cfg = templateCfg.getConfig();
+  t.not(
+    Object.keys(cfg.liquidFilters).indexOf("testNamespace_myFilterName"),
+    -1
+  );
+  t.not(
+    Object.keys(cfg.handlebarsHelpers).indexOf("testNamespace_myFilterName"),
+    -1
+  );
+  t.not(
+    Object.keys(cfg.nunjucksFilters).indexOf("testNamespace_myFilterName"),
+    -1
+  );
+});
+
+test("Add namespaced plugin", (t) => {
+  let templateCfg = new TemplateConfig();
+
+  templateCfg.userConfig.namespace("testNamespace", function () {
+    templateCfg.userConfig.addPlugin(function (eleventyConfig) {
+      eleventyConfig.addFilter("MyFilterName", function () {});
+    });
+  });
+
+  let cfg = templateCfg.getConfig();
+  t.not(
+    Object.keys(cfg.liquidFilters).indexOf("testNamespaceMyFilterName"),
+    -1
+  );
+  t.not(
+    Object.keys(cfg.handlebarsHelpers).indexOf("testNamespaceMyFilterName"),
+    -1
+  );
+  t.not(
+    Object.keys(cfg.nunjucksFilters).indexOf("testNamespaceMyFilterName"),
+    -1
+  );
+});
+
+test("Add namespaced plugin using underscore", (t) => {
+  let templateCfg = new TemplateConfig(
+    require("../src/defaultConfig.js"),
+    "./test/stubs/config.js"
+  );
+  templateCfg.userConfig.namespace("testNamespace_", function () {
+    templateCfg.userConfig.addPlugin(function (config) {
+      config.addFilter("myFilterName", function () {});
+    });
   });
 
   let cfg = templateCfg.getConfig();

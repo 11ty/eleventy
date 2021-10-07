@@ -180,9 +180,14 @@ class TemplateConfig {
     // for Nested addPlugin calls, Issue #1925
     this.userConfig._enablePluginExecution();
 
-    this.userConfig.plugins.forEach(({ plugin, options }) => {
+    let storedActiveNamespace = this.userConfig.activeNamespace;
+
+    this.userConfig.plugins.forEach(({ plugin, options, pluginNamespace }) => {
+      this.userConfig.activeNamespace = pluginNamespace;
       this.userConfig._executePlugin(plugin, options);
     });
+
+    this.userConfig.activeNamespace = storedActiveNamespace;
   }
 
   /**
