@@ -188,7 +188,7 @@ test("eleventyComputed using symbol parsing on template strings (nunjucks)", asy
 });
 
 // TODO why is this skipped? https://github.com/11ty/eleventy/commit/79245d85bcfba3ce8e8b75d84315c6c5bd81bbd3
-test.skip("eleventyComputed using symbol parsing on template strings (liquid)", async (t) => {
+test("eleventyComputed using symbol parsing on template strings (liquid)", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs-computed-symbolparse/test.liquid",
     "./test/stubs-computed-symbolparse/",
