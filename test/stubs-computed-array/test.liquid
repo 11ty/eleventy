@@ -1,0 +1,8 @@
+---
+dynamicValue: "test"
+eleventyComputed:
+  notArray: "{{ dynamicValue }}"
+  array:
+    - "static value"
+    - "{{ dynamicValue }}"
+---

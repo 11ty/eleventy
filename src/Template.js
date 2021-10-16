@@ -543,7 +543,7 @@ class Template extends TemplateContent {
     // this check must come before isPlainObject
     if (typeof obj === "function") {
       computedData.add(parentKey, obj, declaredDependencies);
-    } else if (isPlainObject(obj)) {
+    } else if (Array.isArray(obj) || isPlainObject(obj)) {
       for (let key in obj) {
         let keys = [];
         if (parentKey) {
