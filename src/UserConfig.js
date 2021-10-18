@@ -316,7 +316,11 @@ class UserConfig {
     if (this._pluginExecution) {
       this._executePlugin(plugin, options);
     } else {
-      this.plugins.push({ plugin, options });
+      this.plugins.push({
+        plugin,
+        options,
+        pluginNamespace: this.activeNamespace,
+      });
     }
   }
 
