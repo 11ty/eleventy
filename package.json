@@ -121,7 +121,6 @@
     "recursive-copy": "^2.0.13",
     "semver": "^7.3.5",
     "slugify": "^1.6.1",
-    "split": "^1.0.1",
     "time-require": "^0.1.2"
   }
 }

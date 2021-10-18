@@ -8,7 +8,6 @@ const EleventyErrorHandler = require("./EleventyErrorHandler");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
 const ConsoleLogger = require("./Util/ConsoleLogger");
 
-const lodashFlatten = require("lodash/flatten");
 const debug = require("debug")("Eleventy:TemplateWriter");
 const debugDev = require("debug")("Dev:Eleventy:TemplateWriter");
 
@@ -334,7 +333,7 @@ class TemplateWriter {
 
     return Promise.all(promises)
       .then((results) => {
-        let flat = lodashFlatten(results); // switch to results.flat(1) with Node 12+
+        let flat = results.flat();
         return flat;
       })
       .catch((e) => {

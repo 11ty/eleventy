@@ -1,7 +1,6 @@
 const chalk = require("chalk");
 const debug = require("debug")("Eleventy:Logger");
 const Readable = require("stream").Readable;
-const split = require("split");
 
 class ConsoleLogger {
   constructor() {
@@ -55,13 +54,6 @@ class ConsoleLogger {
 
   closeStream(to = "") {
     this.outputStream.push(null);
-
-    if (to === "ndjson") {
-      return this.outputStream.pipe(
-        // split(JSON.parse, null, { trailing: false })
-        split(null, null, { trailing: false })
-      );
-    }
     return this.outputStream;
   }
 

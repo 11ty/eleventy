@@ -195,6 +195,43 @@ test("Eleventy to json", async (t) => {
   );
 });
 
+test("Eleventy to ndjson", async (t) => {
+  let elev = new Eleventy("./test/stubs--to/");
+
+  elev.setIsVerbose(false);
+
+  await elev.init();
+
+  let stream = await elev.toNDJSON();
+  let count = 0;
+  await new Promise((resolve) => {
+    stream.on("data", function (buf) {
+      count++;
+      let jsonObj = JSON.parse(buf.toString());
+      if (jsonObj.url === "/test/") {
+        t.deepEqual(jsonObj, {
+          url: "/test/",
+          inputPath: "./test/stubs--to/test.md",
+          outputPath: "_site/test/index.html",
+          content: "<h1>hi</h1>\n",
+        });
+      }
+      if (jsonObj.url === "/test2/") {
+        t.deepEqual(jsonObj, {
+          url: "/test2/",
+          inputPath: "./test/stubs--to/test2.liquid",
+          outputPath: "_site/test2/index.html",
+          content: "hello",
+        });
+      }
+
+      if (count >= 2) {
+        resolve();
+      }
+    });
+  });
+});
+
 test.cb("Eleventy to ndjson (returns a stream)", (t) => {
   let elev = new Eleventy("./test/stubs--to/");
 
@@ -208,6 +245,7 @@ test.cb("Eleventy to ndjson (returns a stream)", (t) => {
           t.deepEqual(jsonObj, {
             url: "/test/",
             inputPath: "./test/stubs--to/test.md",
+            outputPath: "_site/test/index.html",
             content: "<h1>hi</h1>\n",
           });
         }
@@ -215,6 +253,7 @@ test.cb("Eleventy to ndjson (returns a stream)", (t) => {
           t.deepEqual(jsonObj, {
             url: "/test2/",
             inputPath: "./test/stubs--to/test2.liquid",
+            outputPath: "_site/test2/index.html",
             content: "hello",
           });
         }

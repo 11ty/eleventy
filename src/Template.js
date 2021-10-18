@@ -1,4 +1,5 @@
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 const normalize = require("normalize-path");
 const isPlainObject = require("lodash/isPlainObject");
@@ -825,7 +826,7 @@ class Template extends TemplateContent {
 
           if (to === "ndjson") {
             let jsonString = JSON.stringify(obj);
-            this.logger.toStream(jsonString + "\n");
+            this.logger.toStream(jsonString + os.EOL);
             return;
           }
 
