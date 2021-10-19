@@ -154,6 +154,7 @@ class TemplatePassthroughManager {
   }
 
   isPassthroughCopyFile(paths, changedFile) {
+    // passthrough copy by non-matching engine extension (via templateFormats)
     for (let path of paths) {
       if (path === changedFile && !this.extensionMap.hasEngine(path)) {
         return true;
@@ -162,7 +163,7 @@ class TemplatePassthroughManager {
 
     for (let path of this.getConfigPaths()) {
       if (TemplatePath.startsWithSubPath(changedFile, path.inputPath)) {
-        return true;
+        return path;
       }
     }
 
@@ -171,7 +172,20 @@ class TemplatePassthroughManager {
 
   getAllNormalizedPaths(paths) {
     if (this.incrementalFile) {
-      if (this.isPassthroughCopyFile(paths, this.incrementalFile)) {
+      let isPassthrough = this.isPassthroughCopyFile(
+        paths,
+        this.incrementalFile
+      );
+      if (isPassthrough) {
+        if (isPassthrough.outputPath) {
+          return [
+            this._normalizePaths(
+              this.incrementalFile,
+              isPassthrough.outputPath
+            ),
+          ];
+        }
+
         return [this._normalizePaths(this.incrementalFile)];
       }
       return [];

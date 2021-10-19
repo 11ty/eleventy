@@ -808,7 +808,7 @@ Arguments:
     // See: TemplateWriter:pathCache and EleventyWatchTargets
     let result = await this.write();
     if (result.error) {
-      // build failed—quit watch early
+      // initial build failed—quit watch early
       return Promise.reject(result.error);
     }
 
