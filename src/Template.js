@@ -738,7 +738,7 @@ class Template extends TemplateContent {
     return pages;
   }
 
-  async _write(outputPath, finalContent) {
+  async _write(outputPath, mapEntry, page) {
     let shouldWriteFile = true;
 
     if (this.isDryRun) {
@@ -777,7 +777,15 @@ class Template extends TemplateContent {
         await fs.promises.mkdir(templateOutputDir, { recursive: true });
       }
 
-      return fs.promises.writeFile(outputPath, finalContent).then(() => {
+      let content;
+
+      // Note that behavior.render is overridden when using json or ndjson output
+      if (mapEntry.template.behavior.isRenderable()) {
+        // this reuses page.templateContent, it doesn’t render it
+        content = await this.renderPageEntry(mapEntry, page);
+      }
+
+      return fs.promises.writeFile(outputPath, content).then(() => {
         templateBenchmark.after();
         this.writeCount++;
         debug(`${outputPath} ${lang.finished}.`);
@@ -808,15 +816,15 @@ class Template extends TemplateContent {
   async generateMapEntry(mapEntry, to) {
     return Promise.all(
       mapEntry._pages.map(async (page) => {
-        let content;
-
-        // Note that behavior.render is overridden when using json or ndjson output
-        if (mapEntry.template.behavior.isRenderable()) {
-          // this reuses page.templateContent, it doesn’t render it
-          content = await this.renderPageEntry(mapEntry, page);
-        }
-
         if (to === "json" || to === "ndjson") {
+          let content;
+
+          // Note that behavior.render is overridden when using json or ndjson output
+          if (mapEntry.template.behavior.isRenderable()) {
+            // this reuses page.templateContent, it doesn’t render it
+            content = await this.renderPageEntry(mapEntry, page);
+          }
+
           let obj = {
             url: page.url,
             inputPath: page.inputPath,
@@ -852,7 +860,7 @@ class Template extends TemplateContent {
           return;
         }
 
-        return this._write(page.outputPath, content);
+        return this._write(page.outputPath, mapEntry, page);
       })
     );
   }
