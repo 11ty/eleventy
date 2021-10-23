@@ -1,6 +1,10 @@
 # Ignore installed npm modules
 node_modules/
 
+# cPanel generated folders for nodeJS
+tmp
+public
+
 # Ignore build tool output, e.g. code coverage
 .nyc_output/
 coverage/
@@ -12,7 +16,7 @@ api-docs/
 .vscode
 .idea
 
-# Ignore eleventy output when doing manuell tests
+# Ignore eleventy output when doing manual tests
 _site/
 
 package-lock.json
