@@ -9,36 +9,48 @@ const TemplatePath = require("../TemplatePath");
 const deleteRequireCache = require("../Util/DeleteRequireCache");
 const debug = require("debug")("Eleventy:Serverless");
 
+function netlifyTomlRedirectHandler(name, outputMap, target) {
+  if (!target) {
+    throw new Error(
+      `Missing redirect target in Eleventy Serverless Bundler Plugin. Received ${target}`
+    );
+  }
+
+  let newRedirects = [];
+  for (let url in outputMap) {
+    newRedirects.push({
+      from: url,
+      to: `${target}${name}`,
+      status: 200,
+      force: true,
+      _generated_by_eleventy_serverless: name,
+    });
+  }
+
+  let configFilename = "./netlify.toml";
+  let cfg = {};
+  // parse existing netlify.toml
+  if (fs.existsSync(configFilename)) {
+    cfg = TOML.parse(fs.readFileSync(configFilename));
+  }
+  let cfgWithRedirects = addRedirectsWithoutDuplicates(name, cfg, newRedirects);
+
+  fs.writeFileSync(configFilename, TOML.stringify(cfgWithRedirects));
+  debug(
+    `Eleventy Serverless (${name}), writing (×${newRedirects.length}): ${configFilename}`
+  );
+}
+
 // Provider specific
 const redirectHandlers = {
   "netlify-toml": function (name, outputMap) {
-    let newRedirects = [];
-    for (let url in outputMap) {
-      newRedirects.push({
-        from: url,
-        to: `/.netlify/functions/${name}`,
-        status: 200,
-        force: true,
-        _generated_by_eleventy_serverless: name,
-      });
-    }
-
-    let configFilename = "./netlify.toml";
-    let cfg = {};
-    // parse existing netlify.toml
-    if (fs.existsSync(configFilename)) {
-      cfg = TOML.parse(fs.readFileSync(configFilename));
-    }
-    let cfgWithRedirects = addRedirectsWithoutDuplicates(
-      name,
-      cfg,
-      newRedirects
-    );
-
-    fs.writeFileSync(configFilename, TOML.stringify(cfgWithRedirects));
-    debug(
-      `Eleventy Serverless (${name}), writing (×${newRedirects.length}): ${configFilename}`
-    );
+    return netlifyTomlRedirectHandler(name, outputMap, "/.netlify/functions/");
+  },
+  "netlify-toml-functions": function (name, outputMap) {
+    return netlifyTomlRedirectHandler(name, outputMap, "/.netlify/functions/");
+  },
+  "netlify-toml-builders": function (name, outputMap) {
+    return netlifyTomlRedirectHandler(name, outputMap, "/.netlify/builders/");
   },
 };
 
