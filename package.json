@@ -93,7 +93,7 @@
     "@11ty/dependency-tree": "^2.0.0",
     "@iarna/toml": "^2.2.5",
     "@sindresorhus/slugify": "^1.1.2",
-    "browser-sync": "^2.27.5",
+    "browser-sync": "^2.27.6",
     "chalk": "^4.1.2",
     "chokidar": "^3.5.2",
     "debug": "^4.3.2",
