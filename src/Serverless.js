@@ -47,6 +47,8 @@ class Serverless {
         query: {},
         // Inject shared collections
         precompiledCollections: {},
+        // Configuration callback
+        config: function (eleventyConfig) {},
       },
       options
     );
@@ -204,6 +206,10 @@ class Serverless {
         };
 
         eleventyConfig.addGlobalData("eleventy.serverless", globalData);
+
+        if (this.options.config && typeof this.options.config === "function") {
+          this.options.config(eleventyConfig);
+        }
       },
     });
 
