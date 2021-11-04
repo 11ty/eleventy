@@ -3,6 +3,8 @@ const os = require("os");
 const path = require("path");
 const normalize = require("normalize-path");
 const isPlainObject = require("lodash/isPlainObject");
+const lodashGet = require("lodash/get");
+const lodashSet = require("lodash/set");
 const { DateTime } = require("luxon");
 
 const TemplateData = require("./TemplateData");
@@ -805,6 +807,15 @@ class Template extends TemplateContent {
     return content;
   }
 
+  retrieveDataForJsonOutput(data, selectors) {
+    let filtered = {};
+    for (let selector of selectors) {
+      let value = lodashGet(data, selector);
+      lodashSet(filtered, selector, value);
+    }
+    return filtered;
+  }
+
   async generateMapEntry(mapEntry, to) {
     return Promise.all(
       mapEntry._pages.map(async (page) => {
@@ -823,6 +834,16 @@ class Template extends TemplateContent {
             outputPath: page.outputPath,
             content: content,
           };
+
+          if (
+            this.config.dataFilterSelectors &&
+            this.config.dataFilterSelectors.size > 0
+          ) {
+            obj.data = this.retrieveDataForJsonOutput(
+              page.data,
+              this.config.dataFilterSelectors
+            );
+          }
 
           if (to === "ndjson") {
             let jsonString = JSON.stringify(obj);

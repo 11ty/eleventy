@@ -155,7 +155,7 @@ class Serverless {
     return {};
   }
 
-  async render() {
+  async getOutput() {
     if (this.dir.startsWith("/var/task/")) {
       process.chdir(this.dir);
     }
@@ -220,9 +220,17 @@ class Serverless {
     // TODO (@zachleat)  https://github.com/11ty/eleventy/issues/1957
     this.deleteEnvironmentVariables();
 
+    return json.filter((entry) => {
+      return entry.inputPath === inputPath;
+    });
+  }
+
+  async render() {
+    let json = await this.getOutput();
+
     if (!json.length) {
       let err = new Error(
-        `Couldn’t find any generated output from Eleventy (URL path parameters: ${JSON.stringify(
+        `Couldn’t find any generated output from Eleventy (Input path: ${inputPath}, URL path parameters: ${JSON.stringify(
           pathParams
         )}).`
       );
@@ -230,17 +238,7 @@ class Serverless {
       throw err;
     }
 
-    for (let entry of json) {
-      if (entry.inputPath === inputPath) {
-        return entry.content;
-      }
-    }
-
-    // Log to Serverless Function output
-    console.log(json);
-    throw new Error(
-      `Couldn’t find any matching output from Eleventy for ${inputPath} (${json.length} pages rendered).`
-    );
+    return json[0].content;
   }
 }
 

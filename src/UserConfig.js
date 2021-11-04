@@ -77,6 +77,7 @@ class UserConfig {
     this._pluginExecution = false;
 
     this.useTemplateCache = true;
+    this.dataFilterSelectors = new Set();
   }
 
   versionCheck(expected) {
@@ -770,6 +771,7 @@ class UserConfig {
       plugins: this.plugins,
       useTemplateCache: this.useTemplateCache,
       precompiledCollections: this.precompiledCollections,
+      dataFilterSelectors: this.dataFilterSelectors,
     };
   }
 }
