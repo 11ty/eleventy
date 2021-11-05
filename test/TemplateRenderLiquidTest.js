@@ -2,9 +2,10 @@ const test = require("ava");
 const TemplateRender = require("../src/TemplateRender");
 const TemplateConfig = require("../src/TemplateConfig");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
+const { Drop } = require("liquidjs");
 
-function getNewTemplateRender(name, inputDir, userConfig = {}) {
-  let eleventyConfig = new TemplateConfig();
+function getNewTemplateRender(name, inputDir, userConfig = {}, templateConfig) {
+  let eleventyConfig = new TemplateConfig(templateConfig);
   for (let key in userConfig) {
     eleventyConfig.userConfig[key] = userConfig[key];
   }
@@ -102,6 +103,11 @@ test("Liquid Render Relative (current dir) Include", async (t) => {
       liquidOptions: {
         dynamicPartials: false,
       },
+    },
+    {
+      dir: {
+        includes: "relative-liquid",
+      },
     }
   );
 
@@ -117,6 +123,11 @@ test("Liquid Render Relative (parent dir) Include", async (t) => {
       liquidOptions: {
         dynamicPartials: false,
       },
+    },
+    {
+      dir: {
+        includes: "relative-liquid",
+      },
     }
   );
 
@@ -124,10 +135,16 @@ test("Liquid Render Relative (parent dir) Include", async (t) => {
   t.is(await fn(), "<p>TIME IS RELATIVE.</p>");
 });
 
-test.skip("Liquid Render Relative (relative include should ignore _includes dir) Include", async (t) => {
+test("Liquid Render Relative (relative include should ignore _includes dir) Include", async (t) => {
   let tr = getNewTemplateRender(
     "./test/stubs/does_not_exist_and_thats_ok.liquid",
-    "./test/stubs/"
+    "./test/stubs/",
+    {},
+    {
+      dir: {
+        includes: ".",
+      },
+    }
   );
 
   let fn = await tr.getCompiledTemplate(`<p>{% include './included' %}</p>`);
@@ -575,7 +592,13 @@ test("Liquid Render Include Subfolder Single quotes no extension dynamicPartials
 test("Liquid Render Include Subfolder Single quotes (relative include current dir) dynamicPartials true", async (t) => {
   let tr = getNewTemplateRender(
     "./test/stubs/does_not_exist_and_thats_ok.liquid",
-    "./test/stubs/"
+    "./test/stubs/",
+    {},
+    {
+      dir: {
+        includes: "relative-liquid",
+      },
+    }
   );
   let fn = await tr.getCompiledTemplate(
     `<p>{% include './relative-liquid/dir/included' %}</p>`
@@ -586,7 +609,13 @@ test("Liquid Render Include Subfolder Single quotes (relative include current di
 test("Liquid Render Include Subfolder Single quotes (relative include parent dir) dynamicPartials true", async (t) => {
   let tr = getNewTemplateRender(
     "./test/stubs/subfolder/does_not_exist_and_thats_ok.liquid",
-    "./test/stubs/"
+    "./test/stubs/",
+    {},
+    {
+      dir: {
+        includes: "relative-liquid",
+      },
+    }
   );
   let fn = await tr.getCompiledTemplate(
     `<p>{% include '../relative-liquid/dir/included' %}</p>`
@@ -704,17 +733,32 @@ test("Liquid Shortcode Multiple Args", async (t) => {
   );
 });
 
-test.skip("Liquid Include Scope Leak", async (t) => {
+test("Liquid Include Scope Leak", async (t) => {
   t.is(
     getNewTemplateRender("liquid", "./test/stubs/").getEngineName(),
     "liquid"
   );
 
-  // This might be by design?
+  // This is by design, `include` assigns value to its parent scope,
+  // use `{% render %}` for separated, clean scope
+  // see: https://github.com/harttle/liquidjs/issues/404#issuecomment-955660149
   let fn = await getNewTemplateRender(
     "liquid",
     "./test/stubs/"
-  ).getCompiledTemplate("<p>{% include scopeleak %}{{ test }}</p>");
+  ).getCompiledTemplate("<p>{% include 'scopeleak' %}{{ test }}</p>");
+  t.is(await fn({ test: 1 }), "<p>22</p>");
+});
+
+test("Liquid Render Scope Leak", async (t) => {
+  t.is(
+    getNewTemplateRender("liquid", "./test/stubs/").getEngineName(),
+    "liquid"
+  );
+
+  let fn = await getNewTemplateRender(
+    "liquid",
+    "./test/stubs/"
+  ).getCompiledTemplate("<p>{% render 'scopeleak' %}{{ test }}</p>");
   t.is(await fn({ test: 1 }), "<p>21</p>");
 });
 
@@ -957,15 +1001,17 @@ test("Issue 600: Liquid Shortcode argument with underscores", async (t) => {
   );
 });
 
-test.skip("Issue 611: Run a function", async (t) => {
-  // This works in Nunjucks
+test("Issue 611: Run a function", async (t) => {
+  // function calls in Nunjucks can be replaced by custom Drops
   let tr = getNewTemplateRender("liquid", "./test/stubs/");
-
+  class CustomDrop extends Drop {
+    valueOf() {
+      return "alkdsjfksljaZach";
+    }
+  }
   t.is(
-    await tr._testRender("{{ test() }}", {
-      test: function () {
-        return "alkdsjfksljaZach";
-      },
+    await tr._testRender("{{ test }}", {
+      test: new CustomDrop(),
     }),
     "alkdsjfksljaZach"
   );
