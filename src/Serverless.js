@@ -220,15 +220,11 @@ class Serverless {
     // TODO (@zachleat)  https://github.com/11ty/eleventy/issues/1957
     this.deleteEnvironmentVariables();
 
-    return json.filter((entry) => {
+    let filtered = json.filter((entry) => {
       return entry.inputPath === inputPath;
     });
-  }
 
-  async render() {
-    let json = await this.getOutput();
-
-    if (!json.length) {
+    if (!filtered.length) {
       let err = new Error(
         `Couldn’t find any generated output from Eleventy (Input path: ${inputPath}, URL path parameters: ${JSON.stringify(
           pathParams
@@ -237,6 +233,13 @@ class Serverless {
       err.httpStatusCode = 404;
       throw err;
     }
+
+    return filtered;
+  }
+
+  /* Deprecated, use `getOutput` directly instead. */
+  async render() {
+    let json = await this.getOutput();
 
     return json[0].content;
   }
