@@ -55,6 +55,28 @@ test("Get Layout Chain", async (t) => {
   ]);
 });
 
+test("Throw an error if a layout references itself as the layout", async (t) => {
+  await t.throwsAsync(async () => {
+    const tl = getTemplateLayoutInstance(
+      "layouts/layout-cycle-self.njk",
+      "./test/stubs"
+    );
+    const layoutChain = await tl._testGetLayoutChain();
+    return layoutChain;
+  });
+});
+
+test("Throw an error if a circular layout chain is detected", async (t) => {
+  await t.throwsAsync(async () => {
+    const tl = getTemplateLayoutInstance(
+      "layouts/layout-cycle-a.njk",
+      "./test/stubs"
+    );
+    const layoutChain = await tl._testGetLayoutChain();
+    return layoutChain;
+  });
+});
+
 test("Get Front Matter Data", async (t) => {
   let tl = getTemplateLayoutInstance(
     "layouts/layout-inherit-a.njk",

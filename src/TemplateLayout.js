@@ -70,11 +70,25 @@ class TemplateLayout extends TemplateContent {
     let cfgKey = this.config.keys.layout;
     let map = [];
     let mapEntry = await this.getTemplateLayoutMapEntry();
+
+    // Keep track of every layout we see so we can detect cyclical layout chains (e.g., a => b => c => a).
+    const seenLayoutKeys = new Set();
+    seenLayoutKeys.add(mapEntry.key);
     map.push(mapEntry);
 
     while (mapEntry.frontMatterData && cfgKey in mapEntry.frontMatterData) {
+      // Layout of the current layout
+      const parentLayoutKey = mapEntry.frontMatterData[cfgKey];
+      // Abort if a circular layout chain is detected. Otherwise, we'll time out and run out of memory.
+      if (seenLayoutKeys.has(parentLayoutKey)) {
+        throw new Error(
+          `Circular layout chain detected starting at ${map[0].key}. The layout ${parentLayoutKey} was specified twice in this layout chain.`
+        );
+      }
+      // Keep track of this layout so we can detect duplicates in subsequent iterations
+      seenLayoutKeys.add(parentLayoutKey);
       let layout = TemplateLayout.getTemplate(
-        mapEntry.frontMatterData[cfgKey],
+        parentLayoutKey,
         mapEntry.inputDir,
         this.config,
         this.extensionMap
