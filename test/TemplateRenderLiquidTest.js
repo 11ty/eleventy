@@ -148,9 +148,6 @@ test("Liquid Render Relative (relative include should ignore _includes dir) Incl
   );
 
   let fn = await tr.getCompiledTemplate(`<p>{% include './included' %}</p>`);
-
-  // This is currently wrong, it uses _includes/included.liquid instead of ./included.liquid
-  // Not changing the above to ../stubs/included works fine because that’s not an ambiguous reference.
   t.is(await fn(), "<p>This is not in the includes dir.</p>");
 });
 
