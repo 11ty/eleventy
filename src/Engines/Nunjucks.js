@@ -123,8 +123,8 @@ const eventBus = require("../EventBus");
 class EleventyShortcodeError extends EleventyBaseError {}
 
 class Nunjucks extends TemplateEngine {
-  constructor(name, includesDir, config) {
-    super(name, includesDir, config);
+  constructor(name, dirs, config) {
+    super(name, dirs, config);
     this.nunjucksEnvironmentOptions =
       this.config.nunjucksEnvironmentOptions || {};
 

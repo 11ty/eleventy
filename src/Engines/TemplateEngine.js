@@ -10,9 +10,17 @@ const aggregateBench = require("../BenchmarkManager").get("Aggregate");
 class TemplateEngineConfigError extends EleventyBaseError {}
 
 class TemplateEngine {
-  constructor(name, includesDir, config) {
+  constructor(name, dirs, config) {
     this.name = name;
-    this.includesDir = includesDir;
+
+    if (!dirs) {
+      dirs = {};
+    }
+
+    this.dirs = dirs;
+    this.inputDir = dirs.input;
+    this.includesDir = dirs.includes;
+
     this.partialsHaveBeenCached = false;
     this.partials = [];
     this.engineLib = null;

@@ -76,10 +76,10 @@ class TemplateEngineManager {
     }
   }
 
-  getEngine(name, includesDir, extensionMap) {
+  getEngine(name, dirs, extensionMap) {
     if (!this.hasEngine(name)) {
       throw new Error(
-        `Template Engine ${name} does not exist in getEngine (includes dir: ${includesDir})`
+        `Template Engine ${name} does not exist in getEngine (dirs: ${dirs})`
       );
     }
 
@@ -89,7 +89,7 @@ class TemplateEngineManager {
 
     let cls = this.getEngineClassByExtension(name);
 
-    let instance = new cls(name, includesDir, this.config);
+    let instance = new cls(name, dirs, this.config);
     instance.extensionMap = extensionMap;
     instance.engineManager = this;
 
@@ -102,11 +102,7 @@ class TemplateEngineManager {
       instance.constructor.name !== "CustomEngine"
     ) {
       const CustomEngine = this.getEngineClassByExtension();
-      const overrideCustomEngine = new CustomEngine(
-        name,
-        includesDir,
-        this.config
-      );
+      const overrideCustomEngine = new CustomEngine(name, dirs, this.config);
       // Keep track of the "default" engine 11ty would normally use
       // This allows the user to access the default engine in their override
       overrideCustomEngine.setDefaultEngine(instance);

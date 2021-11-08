@@ -2,8 +2,8 @@ const TemplateEngine = require("./TemplateEngine");
 const getJavaScriptData = require("../Util/GetJavaScriptData");
 
 class CustomEngine extends TemplateEngine {
-  constructor(name, includesDir, config) {
-    super(name, includesDir, config);
+  constructor(name, dirs, config) {
+    super(name, dirs, config);
 
     this.entry = this.getExtensionMapEntry();
     this.needsInit =

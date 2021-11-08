@@ -7,8 +7,8 @@ const getJavaScriptData = require("../Util/GetJavaScriptData");
 class JavaScriptTemplateNotDefined extends EleventyBaseError {}
 
 class JavaScript extends TemplateEngine {
-  constructor(name, includesDir, config) {
-    super(name, includesDir, config);
+  constructor(name, dirs, config) {
+    super(name, dirs, config);
     this.instances = {};
   }
 

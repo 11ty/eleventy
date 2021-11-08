@@ -4,8 +4,8 @@ const TemplateConfig = require("../src/TemplateConfig");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 const { Drop } = require("liquidjs");
 
-function getNewTemplateRender(name, inputDir, userConfig = {}, templateConfig) {
-  let eleventyConfig = new TemplateConfig(templateConfig);
+function getNewTemplateRender(name, inputDir, userConfig = {}) {
+  let eleventyConfig = new TemplateConfig();
   for (let key in userConfig) {
     eleventyConfig.userConfig[key] = userConfig[key];
   }
@@ -103,11 +103,6 @@ test("Liquid Render Relative (current dir) Include", async (t) => {
       liquidOptions: {
         dynamicPartials: false,
       },
-    },
-    {
-      dir: {
-        includes: "relative-liquid",
-      },
     }
   );
 
@@ -123,11 +118,6 @@ test("Liquid Render Relative (parent dir) Include", async (t) => {
       liquidOptions: {
         dynamicPartials: false,
       },
-    },
-    {
-      dir: {
-        includes: "relative-liquid",
-      },
     }
   );
 
@@ -139,12 +129,7 @@ test("Liquid Render Relative (relative include should ignore _includes dir) Incl
   let tr = getNewTemplateRender(
     "./test/stubs/does_not_exist_and_thats_ok.liquid",
     "./test/stubs/",
-    {},
-    {
-      dir: {
-        includes: ".",
-      },
-    }
+    {}
   );
 
   let fn = await tr.getCompiledTemplate(`<p>{% include './included' %}</p>`);
@@ -590,12 +575,7 @@ test("Liquid Render Include Subfolder Single quotes (relative include current di
   let tr = getNewTemplateRender(
     "./test/stubs/does_not_exist_and_thats_ok.liquid",
     "./test/stubs/",
-    {},
-    {
-      dir: {
-        includes: "relative-liquid",
-      },
-    }
+    {}
   );
   let fn = await tr.getCompiledTemplate(
     `<p>{% include './relative-liquid/dir/included' %}</p>`
@@ -607,12 +587,7 @@ test("Liquid Render Include Subfolder Single quotes (relative include parent dir
   let tr = getNewTemplateRender(
     "./test/stubs/subfolder/does_not_exist_and_thats_ok.liquid",
     "./test/stubs/",
-    {},
-    {
-      dir: {
-        includes: "relative-liquid",
-      },
-    }
+    {}
   );
   let fn = await tr.getCompiledTemplate(
     `<p>{% include '../relative-liquid/dir/included' %}</p>`

@@ -2,8 +2,8 @@ const PugLib = require("pug");
 const TemplateEngine = require("./TemplateEngine");
 
 class Pug extends TemplateEngine {
-  constructor(name, includesDir, config) {
-    super(name, includesDir, config);
+  constructor(name, dirs, config) {
+    super(name, dirs, config);
 
     this.pugOptions = this.config.pugOptions || {};
 

@@ -5,8 +5,8 @@ const TemplatePath = require("../TemplatePath");
 // const debug = require("debug")("Eleventy:Liquid");
 
 class Liquid extends TemplateEngine {
-  constructor(name, includesDir, config) {
-    super(name, includesDir, config);
+  constructor(name, dirs, config) {
+    super(name, dirs, config);
 
     this.liquidOptions = this.config.liquidOptions || {};
 
@@ -37,7 +37,7 @@ class Liquid extends TemplateEngine {
 
   getLiquidOptions() {
     let defaults = {
-      root: [super.getIncludesDir()], // overrides in compile with inputPath below
+      root: [this.dirs.includes, this.dirs.input], // supplemented in compile with inputPath below
       extname: ".liquid",
       strictFilters: true,
       // TODO?
@@ -229,10 +229,7 @@ class Liquid extends TemplateEngine {
     if (!inputPath || inputPath === "njk" || inputPath === "md") {
       // do nothing
     } else {
-      options.root = [
-        super.getIncludesDir(),
-        TemplatePath.getDirFromFilePath(inputPath),
-      ];
+      options.root = [TemplatePath.getDirFromFilePath(inputPath)];
     }
 
     return async function (data) {
