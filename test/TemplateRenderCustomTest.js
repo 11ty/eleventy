@@ -2,8 +2,9 @@ const test = require("ava");
 const TemplateRender = require("../src/TemplateRender");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 const TemplateConfig = require("../src/TemplateConfig");
-const Vue = require("vue");
-const renderer = require("vue-server-renderer").createRenderer();
+
+const { createSSRApp } = require("vue");
+const { renderToString } = require("@vue/server-renderer");
 
 function getNewTemplateRender(name, inputDir, eleventyConfig) {
   if (!eleventyConfig) {
@@ -104,20 +105,22 @@ test("Custom Vue Render", async (t) => {
   tr.eleventyConfig.userConfig.extensionMap.add({
     extension: "vue",
     key: "vue",
-    compile: function (str, inputPath) {
+    compile: function (str) {
       return async function (data) {
-        const app = new Vue({
+        const app = createSSRApp({
           template: str,
-          data: data,
+          data: function () {
+            return data;
+          },
         });
 
-        return renderer.renderToString(app);
+        return renderToString(app);
       };
     },
   });
 
   let fn = await tr.getCompiledTemplate('<p v-html="test">Paragraph</p>');
-  t.is(await fn({ test: "Hello" }), '<p data-server-rendered="true">Hello</p>');
+  t.is(await fn({ test: "Hello" }), "<p>Hello</p>");
 });
 
 const sass = require("sass");

@@ -142,11 +142,11 @@ test("JS Render using Vue", async (t) => {
   ).getCompiledTemplate();
   t.is(
     await fn({ name: "Zach" }),
-    '<p data-server-rendered="true">Hello Zach, this is a Vue template.</p>'
+    "<p>Hello Zach, this is a Vue template.</p>"
   );
   t.is(
     await fn({ name: "Bill" }),
-    '<p data-server-rendered="true">Hello Bill, this is a Vue template.</p>'
+    "<p>Hello Bill, this is a Vue template.</p>"
   );
 });
 
@@ -158,7 +158,7 @@ test("JS Render using Vue (with a layout)", async (t) => {
     await fn({ name: "Zach" }),
     `<!doctype html>
 <title>Test</title>
-<p data-server-rendered="true">Hello Zach, this is a Vue template.</p>`
+<p>Hello Zach, this is a Vue template.</p>`
   );
 });
 
