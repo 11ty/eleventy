@@ -5,6 +5,14 @@ const TemplatePath = require("../TemplatePath");
 // const debug = require("debug")("Eleventy:Liquid");
 
 class Liquid extends TemplateEngine {
+  static argumentLexerOptions = {
+    number: /[0-9]+\.*[0-9]*/,
+    doubleQuoteString: /"(?:\\["\\]|[^\n"\\])*"/,
+    singleQuoteString: /'(?:\\['\\]|[^\n'\\])*'/,
+    keyword: /[a-zA-Z0-9.\-_]+/,
+    "ignore:whitespace": /[, \t]+/, // includes comma separator
+  };
+
   constructor(name, dirs, config) {
     super(name, dirs, config);
 
@@ -12,13 +20,7 @@ class Liquid extends TemplateEngine {
 
     this.setLibrary(this.config.libraryOverrides.liquid);
 
-    this.argLexer = moo.compile({
-      number: /[0-9]+\.*[0-9]*/,
-      doubleQuoteString: /"(?:\\["\\]|[^\n"\\])*"/,
-      singleQuoteString: /'(?:\\['\\]|[^\n'\\])*'/,
-      keyword: /[a-zA-Z0-9.\-_]+/,
-      "ignore:whitespace": /[, \t]+/, // includes comma separator
-    });
+    this.argLexer = moo.compile(Liquid.argumentLexerOptions);
     this.cacheable = true;
   }
 
@@ -92,6 +94,10 @@ class Liquid extends TemplateEngine {
 
   static async parseArguments(lexer, str, scope, engine) {
     let argArray = [];
+
+    if (!lexer) {
+      lexer = moo.compile(Liquid.argumentLexerOptions);
+    }
 
     if (typeof str === "string") {
       // TODO key=value key2=value
