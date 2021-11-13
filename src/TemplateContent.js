@@ -189,13 +189,18 @@ class TemplateContent {
   }
 
   async getFrontMatterData() {
+    if (this._frontMatterDataCache) {
+      return this._frontMatterDataCache;
+    }
+
     if (!this.frontMatter) {
       await this.read();
     }
-
     let extraData = await this.engine.getExtraDataFromFile(this.inputPath);
     let data = TemplateData.mergeDeep({}, this.frontMatter.data, extraData);
-    return TemplateData.cleanupData(data);
+    let cleanedData = TemplateData.cleanupData(data);
+    this._frontMatterDataCache = cleanedData;
+    return cleanedData;
   }
 
   async getEngineOverride() {
