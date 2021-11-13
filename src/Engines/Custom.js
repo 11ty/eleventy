@@ -58,7 +58,7 @@ class CustomEngine extends TemplateEngine {
 
     if ("getData" in this.entry) {
       if (typeof this.entry.getData === "function") {
-        return await this.entry.getData(inputPath);
+        return this.entry.getData(inputPath);
       } else {
         if (!("getInstanceFromInputPath" in this.entry)) {
           return Promise.reject(
@@ -67,8 +67,46 @@ class CustomEngine extends TemplateEngine {
             )
           );
         }
+
+        let keys = new Set();
+        if (this.entry.getData === true) {
+          keys.add("data");
+        } else if (Array.isArray(this.entry.getData)) {
+          for (let key of this.entry.getData) {
+            keys.add(key);
+          }
+        }
+        if (keys.size === 0) {
+          return Promise.reject(
+            new Error(
+              `getData must be an array of keys or \`true\` in your addExtension configuration.`
+            )
+          );
+        }
+
         let inst = await this.entry.getInstanceFromInputPath(inputPath);
-        return await getJavaScriptData(inst, inputPath);
+        let mixins;
+        if (this.config) {
+          mixins = this.config.javascriptFunctions;
+        }
+
+        // override keys set at the plugin level in the individual template
+        if (inst.eleventyDataKey) {
+          keys = new Set(inst.eleventyDataKey);
+        }
+
+        let promises = [];
+        for (let key of keys) {
+          promises.push(getJavaScriptData(inst, inputPath, key, mixins));
+        }
+
+        let results = await Promise.all(promises);
+        let data = {};
+        for (let result of results) {
+          Object.assign(data, result);
+        }
+
+        return data;
       }
     }
   }
