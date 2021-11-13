@@ -316,6 +316,8 @@ class Eleventy {
    * @returns {} - tbd.
    */
   async init() {
+    await this.config.events.emit("eleventy.config", this.eleventyConfig);
+
     if (this.env) {
       await this.config.events.emit("eleventy.env", this.env);
     }

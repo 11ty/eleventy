@@ -184,6 +184,12 @@ class EleventyFiles {
   setupGlobs() {
     this.fileIgnores = this.getIgnores();
     this.extraIgnores = this._getIncludesAndDataDirs();
+    this.uniqueIgnores = this.getIgnoreGlobs();
+
+    // Conditional added for tests that don’t have a config
+    if (this.config && this.config.events) {
+      this.config.events.emit("eleventy.ignores", this.uniqueIgnores);
+    }
 
     if (this.passthroughAll) {
       this.normalizedTemplateGlobs = TemplateGlob.map([
@@ -360,10 +366,11 @@ class EleventyFiles {
 
     // returns a promise
     debug("Searching for: %o", globs);
+
     this._glob = fastglob(globs, {
       caseSensitiveMatch: false,
       dot: true,
-      ignore: this.getIgnoreGlobs(),
+      ignore: this.uniqueIgnores,
     });
 
     return this._glob;
