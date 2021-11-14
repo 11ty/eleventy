@@ -42,9 +42,9 @@ async function renderFile(inputPath, templateLang, dir = {}, templateConfig) {
     );
   }
 
-  inputPath = TemplatePath.normalizeOperatingSystemFilePath(inputPath);
-
-  if (!fs.existsSync(inputPath)) {
+  if (
+    !fs.existsSync(TemplatePath.normalizeOperatingSystemFilePath(inputPath))
+  ) {
     throw new Error(
       "Could not find render plugin file for renderFile, looking for: " +
         inputPath
