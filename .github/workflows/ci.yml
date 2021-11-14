@@ -17,6 +17,8 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: npm install
-      - run: npm test
+      - run: npm run testci
+        env:
+          DEBUG: EleventyVue*
 env:
   YARN_GPG: no
