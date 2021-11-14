@@ -341,4 +341,16 @@ TemplatePath.removeExtension = function (path, extension = undefined) {
   return path;
 };
 
+/**
+ * Accepts a relative file path that is using a standard directory separator and
+ * normalizes it using the local operating system separator.
+ * e.g. `./my/dir/` stays `./my/dir/` on *nix and becomes `.\\my\\dir\\` on Windows
+ *
+ * @param {String} filePath
+ * @returns {String} a file path with the correct local directory separator.
+ */
+TemplatePath.normalizeOperatingSystemFilePath = function (filePath, sep = "/") {
+  return filePath.split(sep).join(path.sep);
+};
+
 module.exports = TemplatePath;

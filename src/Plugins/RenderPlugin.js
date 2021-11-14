@@ -4,6 +4,7 @@ const fsp = fs.promises;
 
 // TODO first-class Markdown container/component (will need to be synchronous for markdown-it)
 
+const TemplatePath = require("../TemplatePath");
 const TemplateRender = require("../TemplateRender");
 const TemplateConfig = require("../TemplateConfig");
 const Liquid = require("../Engines/Liquid");
@@ -40,6 +41,8 @@ async function renderFile(inputPath, templateLang, dir = {}, templateConfig) {
       "Missing file path argument passed to the `templatefile` shortcode."
     );
   }
+
+  inputPath = TemplatePath.normalizeOperatingSystemFilePath(inputPath);
 
   if (!fs.existsSync(inputPath)) {
     throw new Error(
