@@ -1,0 +1,9 @@
+---
+hi: value
+argData:
+  hi: liquidHi
+  bye: liquidBye
+---
+{% renderTemplate "njk" argData %}
+* {{ hi | reverse }}
+{% endrenderTemplate %}

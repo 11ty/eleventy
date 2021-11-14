@@ -493,6 +493,9 @@ Verbose Output: ${this.verboseMode}`);
 
     bench.setVerboseOutput(isVerbose);
     this.verboseMode = isVerbose;
+
+    // Set verbose mode in config file
+    this.eleventyConfig.verbose = this.verboseMode;
   }
 
   /**
@@ -997,3 +1000,4 @@ Arguments:
 module.exports = Eleventy;
 module.exports.EleventyServerless = require("./Serverless");
 module.exports.EleventyServerlessBundlerPlugin = require("./Plugins/ServerlessBundlerPlugin");
+module.exports.EleventyRenderPlugin = require("./Plugins/RenderPlugin");

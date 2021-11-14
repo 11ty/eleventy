@@ -1,4 +1,3 @@
-const chalk = require("chalk");
 const ConsoleLogger = require("./Util/ConsoleLogger");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
 const debug = require("debug")("Eleventy:EleventyErrorHandler");

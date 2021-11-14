@@ -66,7 +66,8 @@
       "./test/*.js"
     ],
     "ignoredByWatcher": [
-      "./test/stubs*/**/*"
+      "./test/stubs*/**/*",
+      ".cache"
     ]
   },
   "lint-staged": {
@@ -76,6 +77,7 @@
   },
   "devDependencies": {
     "@11ty/eleventy-plugin-syntaxhighlight": "^3.1.3",
+    "@11ty/eleventy-plugin-vue": "1.0.0-canary.5",
     "@vue/server-renderer": "^3.2.21",
     "ava": "^3.15.0",
     "husky": "^7.0.4",
