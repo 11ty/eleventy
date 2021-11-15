@@ -97,7 +97,12 @@ class CustomEngine extends TemplateEngine {
 
         let promises = [];
         for (let key of keys) {
-          promises.push(getJavaScriptData(inst, inputPath, key, mixins));
+          promises.push(
+            getJavaScriptData(inst, inputPath, key, {
+              mixins,
+              isObjectRequired: key === "data",
+            })
+          );
         }
 
         let results = await Promise.all(promises);
