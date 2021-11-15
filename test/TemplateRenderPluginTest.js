@@ -124,9 +124,9 @@ TESTING IN LIQUID
   );
 });
 
-test("Use nunjucks file in liquid without specifying syntax (should infer from extension)", async (t) => {
+test("Use nunjucks file in njk (uses renderTemplate inside of the nunjucks file)", async (t) => {
   let html = await getTestOutputForFile(
-    "./test/stubs-render-plugin/njk-file-no-syntax.liquid"
+    "./test/stubs-render-plugin/njk-file.njk"
   );
   t.is(
     html,
@@ -136,6 +136,13 @@ TESTING IN LIQUID
 
 * 999`
   );
+});
+
+test("Use 11ty.js file in njk", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/11tyjs-file.njk"
+  );
+  t.is(html, `TESTING`);
 });
 
 // Skip this for now, toJSON calls actually change the exitCode of the process when they error, which is probably not what we want?

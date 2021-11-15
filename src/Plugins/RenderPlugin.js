@@ -61,7 +61,7 @@ async function renderFile(inputPath, templateLang, dir = {}, templateConfig) {
     tr.setEngineOverride(templateLang);
   }
 
-  if (tr.engine.entry && tr.engine.entry.read === false) {
+  if (!tr.engine.needsToReadFileContents()) {
     return tr.getCompiledTemplate(null);
   }
 
@@ -105,7 +105,11 @@ function EleventyPlugin(eleventyConfig, options = {}) {
         let end = this.tokens[this.tokens.length - 1].token.end;
         let body = this.tokens[0].token.input.substring(start, end);
 
-        return shortcodeFn.call(normalizedContext, body, ...argArray);
+        return renderStringShortcodeFn.call(
+          normalizedContext,
+          body,
+          ...argArray
+        );
       },
     };
   }
@@ -176,7 +180,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
           normalizedContext.page = context.ctx.page;
         }
 
-        shortcodeFn
+        renderStringShortcodeFn
           .call(normalizedContext, body(), ...argArray)
           .then(function (returnValue) {
             resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
@@ -208,7 +212,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
     templateConfig = cfg;
   });
 
-  async function shortcodeFn(content, templateLang, data = {}) {
+  async function renderStringShortcodeFn(content, templateLang, data = {}) {
     let fn = await render.call(
       this,
       content,
@@ -228,8 +232,27 @@ function EleventyPlugin(eleventyConfig, options = {}) {
     return output;
   }
 
+  async function renderFileShortcodeFn(inputPath, data = {}, templateLang) {
+    let fn = await renderFile.call(
+      this,
+      inputPath,
+      templateLang,
+      eleventyConfig.dir,
+      templateConfig
+    );
+
+    // save `page` for re-use
+    data.page = this.page;
+
+    let output = await fn(data);
+    // console.log( "--->", this.page.inputPath, "using", inputPath, "using", templateLang );
+    // console.log( { data } );
+    // console.log( { output } );
+    return output;
+  }
+
   // Render strings
-  eleventyConfig.addJavaScriptFunction(opts.tagName, shortcodeFn);
+  eleventyConfig.addJavaScriptFunction(opts.tagName, renderStringShortcodeFn);
 
   eleventyConfig.addLiquidTag(opts.tagName, function (liquidEngine) {
     return liquidTemplateTag(liquidEngine, opts.tagName);
@@ -240,26 +263,11 @@ function EleventyPlugin(eleventyConfig, options = {}) {
   });
 
   // Render File
-  eleventyConfig.addLiquidShortcode(
+  eleventyConfig.addJavaScriptFunction(opts.tagNameFile, renderFileShortcodeFn);
+  eleventyConfig.addLiquidShortcode(opts.tagNameFile, renderFileShortcodeFn);
+  eleventyConfig.addNunjucksAsyncShortcode(
     opts.tagNameFile,
-    async function (inputPath, templateLang, data = {}) {
-      let fn = await renderFile.call(
-        this,
-        inputPath,
-        templateLang,
-        eleventyConfig.dir,
-        templateConfig
-      );
-
-      // save `page` for re-use
-      data.page = this.page;
-
-      let output = await fn(data);
-      // console.log( "--->", this.page.inputPath, "using", inputPath, "using", templateLang );
-      // console.log( { data } );
-      // console.log( { output } );
-      return output;
-    }
+    renderFileShortcodeFn
   );
 }
 
