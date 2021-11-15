@@ -1,8 +1,8 @@
-# Code Coverage for Eleventy v1.0.0-beta.6
+# Code Coverage for Eleventy v1.0.0-beta.7
 
 | Filename                                                       | % Lines | % Statements | % Functions | % Branches |
 | -------------------------------------------------------------- | ------- | ------------ | ----------- | ---------- |
-| `total`                                                        | 83.02%  | 83.05%       | 84%         | 74.58%     |
+| `total`                                                        | 83.06%  | 83.08%       | 84%         | 74.68%     |
 | `cmd.js`                                                       | 61.81%  | 61.81%       | 9.09%       | 58.33%     |
 | `.cache/vue/include.js`                                        | 100%    | 100%         | 100%        | 100%       |
 | `.cache/vue/include.vue_vue_type_script_lang.js`               | 100%    | 100%         | 100%        | 100%       |
@@ -68,12 +68,12 @@
 | `src/Filters/Slugify.js`                                       | 100%    | 100%         | 100%        | 100%       |
 | `src/Filters/Url.js`                                           | 95%     | 95%          | 100%        | 95.23%     |
 | `src/Plugins/Pagination.js`                                    | 88.97%  | 89.28%       | 91.3%       | 77.77%     |
-| `src/Plugins/RenderPlugin.js`                                  | 89.71%  | 89.71%       | 90.47%      | 65%        |
+| `src/Plugins/RenderPlugin.js`                                  | 91.42%  | 91.42%       | 90.47%      | 69.23%     |
 | `src/Plugins/ServerlessBundlerPlugin.js`                       | 6.45%   | 6.38%        | 0%          | 0%         |
 | `src/Util/AsyncEventEmitter.js`                                | 100%    | 100%         | 100%        | 100%       |
 | `src/Util/ConsoleLogger.js`                                    | 85.71%  | 85.71%       | 76.92%      | 89.47%     |
 | `src/Util/DeleteRequireCache.js`                               | 100%    | 100%         | 100%        | 100%       |
-| `src/Util/GetJavaScriptData.js`                                | 100%    | 100%         | 100%        | 91.66%     |
+| `src/Util/GetJavaScriptData.js`                                | 100%    | 100%         | 100%        | 92.85%     |
 | `src/Util/Merge.js`                                            | 92.85%  | 92.85%       | 100%        | 87.5%      |
 | `src/Util/Pluralize.js`                                        | 100%    | 100%         | 100%        | 100%       |
 | `src/Util/Sortable.js`                                         | 93.75%  | 93.75%       | 90%         | 90%        |
