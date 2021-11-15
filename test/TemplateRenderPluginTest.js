@@ -153,6 +153,13 @@ test("Use 11ty.js file in njk", async (t) => {
   t.is(html, `TESTING`);
 });
 
+test("Use txt file in njk (override to 11ty.js)", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/11tyjs-file-override.njk"
+  );
+  t.is(html, `TESTING`);
+});
+
 // Skip this for now, toJSON calls actually change the exitCode of the process when they error,
 // which is not ideal.
 test.skip("Use nunjucks file in liquid but it doesn’t exist", async (t) => {
@@ -172,4 +179,12 @@ test("No syntax passed, uses html (plaintext) by default; in liquid (this is bas
     `# Hello {{ hi }}
 * Testing`
   );
+});
+
+// Not yet supported
+test.skip("renderFile but the target has front matter.", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/using-frontmatter.liquid"
+  );
+  t.is(html, `frontmatterString`);
 });

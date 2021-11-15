@@ -44,7 +44,7 @@ async function render(
 async function renderFile(inputPath, templateLang, dir = {}, templateConfig) {
   if (!inputPath) {
     throw new Error(
-      "Missing file path argument passed to the `templatefile` shortcode."
+      "Missing file path argument passed to the `renderFile` shortcode."
     );
   }
 
@@ -52,7 +52,7 @@ async function renderFile(inputPath, templateLang, dir = {}, templateConfig) {
     !fs.existsSync(TemplatePath.normalizeOperatingSystemFilePath(inputPath))
   ) {
     throw new Error(
-      "Could not find render plugin file for renderFile, looking for: " +
+      "Could not find render plugin file for the `renderFile` shortcode, looking for: " +
         inputPath
     );
   }
