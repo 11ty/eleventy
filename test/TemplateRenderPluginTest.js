@@ -68,6 +68,14 @@ test("Use nunjucks in 11ty.js", async (t) => {
   t.is(html, `* iHtpircsavaj`);
 });
 
+// This is not yet supported and currently throws an error.
+test.skip("Use 11ty.js in liquid", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/11tyjs.liquid"
+  );
+  t.is(html, `TESTING`);
+});
+
 test("Use nunjucks in liquid", async (t) => {
   let html = await getTestOutputForFile(
     "./test/stubs-render-plugin/nunjucks.liquid"
@@ -145,8 +153,8 @@ test("Use 11ty.js file in njk", async (t) => {
   t.is(html, `TESTING`);
 });
 
-// Skip this for now, toJSON calls actually change the exitCode of the process when they error, which is probably not what we want?
-// Not sure yet.
+// Skip this for now, toJSON calls actually change the exitCode of the process when they error,
+// which is not ideal.
 test.skip("Use nunjucks file in liquid but it doesn’t exist", async (t) => {
   await t.throwsAsync(async () => {
     await getTestOutputForFile(

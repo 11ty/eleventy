@@ -32,6 +32,12 @@ async function render(content, templateLang, dir = {}, templateConfig) {
   let tr = new TemplateRender(templateLang, includesDir, templateConfig);
   tr.setEngineOverride(templateLang);
 
+  if (tr.engine.name === "11ty.js") {
+    throw new Error(
+      "11ty.js is not yet supported as a template engine for `renderTemplate`. Use `renderFile` instead!"
+    );
+  }
+
   return tr.getCompiledTemplate(content);
 }
 
