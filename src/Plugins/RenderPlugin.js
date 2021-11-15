@@ -17,13 +17,12 @@ function getFullIncludesDirectory(dir = {}) {
   return fullIncludesDir;
 }
 
-async function render(content, templateLang, dir = {}, templateConfig) {
-  if (!templateLang) {
-    throw new Error(
-      "Missing template syntax argument passed to the `template` shortcode."
-    );
-  }
-
+async function render(
+  content,
+  templateLang = "html",
+  dir = {},
+  templateConfig
+) {
   if (!templateConfig) {
     templateConfig = new TemplateConfig();
   }
@@ -41,6 +40,7 @@ async function render(content, templateLang, dir = {}, templateConfig) {
   return tr.getCompiledTemplate(content);
 }
 
+// No templateLang default, it should infer from the inputPath.
 async function renderFile(inputPath, templateLang, dir = {}, templateConfig) {
   if (!inputPath) {
     throw new Error(
