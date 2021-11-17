@@ -80,7 +80,11 @@ test("Use nunjucks in liquid", async (t) => {
   let html = await getTestOutputForFile(
     "./test/stubs-render-plugin/nunjucks.liquid"
   );
-  t.is(html, `* iHdiuqil`);
+  t.is(
+    html,
+    `* iHdiuqil
+* lfjksdlba`
+  );
 });
 
 test("Use markdown in liquid", async (t) => {
@@ -187,4 +191,12 @@ test.skip("renderFile but the target has front matter.", async (t) => {
     "./test/stubs-render-plugin/using-frontmatter.liquid"
   );
   t.is(html, `frontmatterString`);
+});
+
+// Idea from https://twitter.com/raymondcamden/status/1460961620247650312
+test("Capture nunjucks render output to a liquid variable", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/capture-njk.liquid"
+  );
+  t.is(html, `4`);
 });

@@ -5,5 +5,7 @@ argData:
   bye: liquidBye
 ---
 {% renderTemplate "njk" argData %}
+{% set bye = "abldskjfl" %}
 * {{ hi | reverse }}
+* {{ bye | reverse }}
 {% endrenderTemplate %}

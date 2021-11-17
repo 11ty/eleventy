@@ -31,7 +31,8 @@ async function render(
   let tr = new TemplateRender(templateLang, includesDir, templateConfig);
   tr.setEngineOverride(templateLang);
 
-  if (tr.engine.name === "11ty.js") {
+  // TODO tie this to the class, not the extension
+  if (tr.engine.name === "11ty.js" || tr.engine.name === "11ty.cjs") {
     throw new Error(
       "11ty.js is not yet supported as a template engine for `renderTemplate`. Use `renderFile` instead!"
     );
@@ -78,6 +79,7 @@ async function renderFile(inputPath, templateLang, dir = {}, templateConfig) {
 
 function EleventyPlugin(eleventyConfig, options = {}) {
   function liquidTemplateTag(liquidEngine, tagName) {
+    // via https://github.com/harttle/liquidjs/blob/b5a22fa0910c708fe7881ef170ed44d3594e18f3/src/builtin/tags/raw.ts
     return {
       parse: function (tagToken, remainTokens) {
         this.name = tagToken.name;
@@ -86,10 +88,12 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 
         var stream = liquidEngine.parser
           .parseStream(remainTokens)
-          .on("template", (tpl) => this.tokens.push(tpl))
-          .on("tag:end" + tagName, () => stream.stop())
+          .on("token", (token) => {
+            if (token.name === "end" + tagName) stream.stop();
+            else this.tokens.push(token);
+          })
           .on("end", () => {
-            throw new Error(`tag ${tagToken.raw} not closed`);
+            throw new Error(`tag ${tagToken.getText()} not closed`);
           });
 
         stream.start();
@@ -107,9 +111,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
           this.liquid
         );
 
-        let start = this.tokens[0].token.begin;
-        let end = this.tokens[this.tokens.length - 1].token.end;
-        let body = this.tokens[0].token.input.substring(start, end);
+        let body = this.tokens.map((token) => token.getText()).join("");
 
         return renderStringShortcodeFn.call(
           normalizedContext,
