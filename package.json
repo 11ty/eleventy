@@ -1,6 +1,6 @@
 {
   "name": "@11ty/eleventy",
-  "version": "1.0.0-beta.7",
+  "version": "1.0.0-beta.8",
   "description": "Transform a directory of templates into HTML.",
   "publishConfig": {
     "access": "public"
