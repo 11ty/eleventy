@@ -326,8 +326,7 @@ class UserConfig {
   }
 
   _executePlugin(plugin, options) {
-    // TODO support function.name in plugin config functions
-    debug("Adding plugin (unknown name: check your config file).");
+    debug(`Adding ${plugin.name || "anonymous"} plugin`);
     let pluginBench = aggregateBench.get("Configuration addPlugin");
     if (typeof plugin === "function") {
       pluginBench.before();
