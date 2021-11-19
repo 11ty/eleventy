@@ -9,26 +9,30 @@ const TemplateRender = require("../TemplateRender");
 const TemplateConfig = require("../TemplateConfig");
 const Liquid = require("../Engines/Liquid");
 
-function getFullIncludesDirectory(dir = {}) {
-  let inputDir = dir.input || ".";
-  let includesDir = dir.includes || "_includes";
-  let fullIncludesDir = path.join(inputDir, includesDir);
-
-  return fullIncludesDir;
+function normalizeDirectories(dir = {}) {
+  return Object.assign(
+    {
+      input: ".",
+    },
+    dir
+  );
 }
 
 async function render(
   content,
   templateLang = "html",
-  dir = {},
+  normalizedDirs = {},
   templateConfig
 ) {
   if (!templateConfig) {
     templateConfig = new TemplateConfig();
   }
 
-  let includesDir = getFullIncludesDirectory(dir);
-  let tr = new TemplateRender(templateLang, includesDir, templateConfig);
+  let tr = new TemplateRender(
+    templateLang,
+    normalizedDirs.input,
+    templateConfig
+  );
   tr.setEngineOverride(templateLang);
 
   // TODO tie this to the class, not the extension
@@ -42,7 +46,12 @@ async function render(
 }
 
 // No templateLang default, it should infer from the inputPath.
-async function renderFile(inputPath, templateLang, dir = {}, templateConfig) {
+async function renderFile(
+  inputPath,
+  templateLang,
+  normalizedDirs = {},
+  templateConfig
+) {
   if (!inputPath) {
     throw new Error(
       "Missing file path argument passed to the `renderFile` shortcode."
@@ -62,8 +71,7 @@ async function renderFile(inputPath, templateLang, dir = {}, templateConfig) {
     templateConfig = new TemplateConfig();
   }
 
-  let includesDir = getFullIncludesDirectory(dir);
-  let tr = new TemplateRender(inputPath, includesDir, templateConfig);
+  let tr = new TemplateRender(inputPath, normalizedDirs.input, templateConfig);
   if (templateLang) {
     tr.setEngineOverride(templateLang);
   }
@@ -225,19 +233,14 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       this,
       content,
       templateLang,
-      eleventyConfig.dir,
+      normalizeDirectories(eleventyConfig.dir),
       templateConfig
     );
 
     // save `page` for reuse
     data.page = this.page;
 
-    let output = await fn(data);
-    // console.log( "--->", this.page.inputPath, "using", templateLang );
-    // console.log( { data } );
-    // console.log( { content } );
-    // console.log( { output } );
-    return output;
+    return fn(data);
   }
 
   async function renderFileShortcodeFn(inputPath, data = {}, templateLang) {
@@ -245,18 +248,14 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       this,
       inputPath,
       templateLang,
-      eleventyConfig.dir,
+      normalizeDirectories(eleventyConfig.dir),
       templateConfig
     );
 
     // save `page` for re-use
     data.page = this.page;
 
-    let output = await fn(data);
-    // console.log( "--->", this.page.inputPath, "using", inputPath, "using", templateLang );
-    // console.log( { data } );
-    // console.log( { output } );
-    return output;
+    return fn(data);
   }
 
   // Render strings
