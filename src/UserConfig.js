@@ -1,4 +1,4 @@
-const chalk = require("chalk");
+const chalk = require("kleur");
 const semver = require("semver");
 const { DateTime } = require("luxon");
 const EventEmitter = require("./Util/AsyncEventEmitter");

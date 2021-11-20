@@ -1,5 +1,5 @@
 const fs = require("fs");
-const chalk = require("chalk");
+const chalk = require("kleur");
 const lodashUniq = require("lodash/uniq");
 const lodashMerge = require("lodash/merge");
 const TemplatePath = require("./TemplatePath");
@@ -238,7 +238,7 @@ class TemplateConfig {
         throw new EleventyConfigError(
           `Error in your Eleventy config file '${path}'.` +
             (err.message && err.message.includes("Cannot find module")
-              ? chalk.blueBright(" You may need to run `npm install`.")
+              ? chalk.cyan(" You may need to run `npm install`.")
               : ""),
           err
         );

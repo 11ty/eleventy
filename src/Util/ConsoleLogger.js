@@ -1,4 +1,4 @@
-const chalk = require("chalk");
+const chalk = require("kleur");
 const debug = require("debug")("Eleventy:Logger");
 const Readable = require("stream").Readable;
 
