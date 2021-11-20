@@ -83,3 +83,24 @@ test("Directory data files should be more specific in data cascade than Layout f
   let data = await tmpl.getData();
   t.is(data.cascade, "dir-data-file");
 });
+
+test("Global Data Files should be more specific in data cascade than Custom Global Data", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+
+  eleventyConfig.userConfig.addGlobalData("cascade", "from-custom-global-data");
+  let dataObj = new TemplateData(
+    "./test/stubs-data-cascade/custom-versus-global/",
+    eleventyConfig
+  );
+  let tmpl = getNewTemplate(
+    "./test/stubs-data-cascade/custom-versus-global/test.njk",
+    "./test/stubs-data-cascade/custom-versus-global/",
+    "./dist",
+    dataObj,
+    null,
+    eleventyConfig
+  );
+
+  let data = await tmpl.getData();
+  t.is(data.cascade, "from-global-data");
+});

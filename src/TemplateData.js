@@ -324,7 +324,7 @@ class TemplateData {
 
     if (!this.globalData) {
       let globalJson = await this.getAllGlobalData();
-      let mergedGlobalData = merge(globalJson, this.configApiGlobalData);
+      let mergedGlobalData = merge(this.configApiGlobalData, globalJson);
 
       // OK: Shallow merge when combining rawImports (pkg) with global data files
       this.globalData = Object.assign({}, mergedGlobalData, rawImports);
