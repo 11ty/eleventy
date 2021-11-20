@@ -200,3 +200,12 @@ test("Capture nunjucks render output to a liquid variable", async (t) => {
   );
   t.is(html, `4`);
 });
+
+// Idea from https://twitter.com/raymondcamden/status/1460961620247650312
+// Possibly blocked by async in {% set %} https://github.com/mozilla/nunjucks/issues/815
+test("Capture liquid render output to a njk variable", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/capture-liquid.njk"
+  );
+  t.is(html, `4`);
+});

@@ -193,6 +193,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 
         let normalizedContext = {};
         if (context.ctx && context.ctx.page) {
+          normalizedContext.ctx = context.ctx;
           normalizedContext.page = context.ctx.page;
         }
 

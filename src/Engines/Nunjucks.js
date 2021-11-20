@@ -155,6 +155,12 @@ class Nunjucks extends TemplateEngine {
     this.addFilters(this.config.nunjucksAsyncFilters, true);
 
     // TODO these all go to the same place (addTag), add warnings for overwrites
+    // TODO(zachleat): variableName should work with quotes or without quotes (same as {% set %})
+    this.addPairedShortcode("setAsync", function (content, variableName) {
+      this.ctx[variableName] = content;
+      return "";
+    });
+
     this.addCustomTags(this.config.nunjucksTags);
     this.addAllShortcodes(this.config.nunjucksShortcodes);
     this.addAllPairedShortcodes(this.config.nunjucksPairedShortcodes);
@@ -211,6 +217,7 @@ class Nunjucks extends TemplateEngine {
   static _normalizeShortcodeContext(context) {
     let obj = {};
     if (context.ctx && context.ctx.page) {
+      obj.ctx = context.ctx;
       obj.page = context.ctx.page;
     }
     return obj;
