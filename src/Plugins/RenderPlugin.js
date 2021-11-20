@@ -196,19 +196,38 @@ function EleventyPlugin(eleventyConfig, options = {}) {
           normalizedContext.page = context.ctx.page;
         }
 
-        renderStringShortcodeFn
-          .call(normalizedContext, body(), ...argArray)
-          .then(function (returnValue) {
-            resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
-          })
-          .catch(function (e) {
+        body(function (e, bodyContent) {
+          if (e) {
             resolve(
-              new Error(
-                `Error with Nunjucks paired shortcode \`${tagName}\`${e.message}`
-              ),
-              null
+              new EleventyShortcodeError(
+                `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+                  e
+                )}`
+              )
             );
-          });
+          }
+
+          Promise.resolve(
+            renderStringShortcodeFn.call(
+              normalizedContext,
+              bodyContent,
+              ...argArray
+            )
+          )
+            .then(function (returnValue) {
+              resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
+            })
+            .catch(function (e) {
+              resolve(
+                new EleventyShortcodeError(
+                  `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+                    e
+                  )}`
+                ),
+                null
+              );
+            });
+        });
       };
     })();
   }
