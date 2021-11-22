@@ -232,7 +232,7 @@ class Liquid extends TemplateEngine {
 
     // Required for relative includes
     let options = {};
-    if (!inputPath || inputPath === "njk" || inputPath === "md") {
+    if (!inputPath || inputPath === "liquid" || inputPath === "md") {
       // do nothing
     } else {
       options.root = [TemplatePath.getDirFromFilePath(inputPath)];

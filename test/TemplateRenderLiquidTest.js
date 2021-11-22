@@ -79,7 +79,7 @@ test("Liquid Render Include", async (t) => {
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-test("Liquid Render Relative Include", async (t) => {
+test("Liquid Render Relative Include (dynamicPartials off)", async (t) => {
   t.is(
     getNewTemplateRender("liquid", "./test/stubs/").getEngineName(),
     "liquid"
@@ -91,7 +91,21 @@ test("Liquid Render Relative Include", async (t) => {
     },
   });
 
+  // Important note: when inputPath is set to `liquid`, this *only* uses _includes relative paths in Liquid->compile
   let fn = await tr.getCompiledTemplate("<p>{% include ./included %}</p>");
+  t.is(await fn(), "<p>This is an include.</p>");
+});
+
+test("Liquid Render Relative Include (dynamicPartials on)", async (t) => {
+  t.is(
+    getNewTemplateRender("liquid", "./test/stubs/").getEngineName(),
+    "liquid"
+  );
+
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/");
+
+  // Important note: when inputPath is set to `liquid`, this *only* uses _includes relative paths in Liquid->compile
+  let fn = await tr.getCompiledTemplate("<p>{% include './included' %}</p>");
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
