@@ -4,6 +4,7 @@ const VuePlugin = require("@11ty/eleventy-plugin-vue");
 
 const Eleventy = require("../src/Eleventy");
 const normalizeNewLines = require("./Util/normalizeNewLines");
+const removeNewLines = require("./Util/removeNewLines");
 
 async function getTestOutput(input, configCallback = function () {}) {
   let elev = new Eleventy(input, "./_site/", {
@@ -108,7 +109,6 @@ test("Use vue in liquid", async (t) => {
   t.is(html, `<div> HELLO WE ARE VUEING <p>liquidHi</p></div>`);
 });
 
-// Skip until we can get this working on Windows
 test("Use vue SFC file in liquid", async (t) => {
   // We point this to a directory instead of a single input file because the Eleventy Vue plugin needs
   // to be able to find the Vue SFC files too (and won’t if we point to a single input vue file)
@@ -208,4 +208,21 @@ test("Capture liquid render output to a njk variable", async (t) => {
     "./test/stubs-render-plugin/capture-liquid.njk"
   );
   t.is(html, `4`);
+});
+
+test("Using a Vue renderFile inside of serverPrefetch (or `data`): Vue -> Liquid -> Markdown -> Vue", async (t) => {
+  // We point this to a directory instead of a single input file because the Eleventy Vue plugin needs
+  // to be able to find the Vue SFC files too (and won’t if we point to a single input vue file)
+  let result = await getTestOutput(
+    "./test/stubs-render-plugin-vue-nested/",
+    function (eleventyConfig) {
+      eleventyConfig.addPlugin(VuePlugin);
+    }
+  );
+
+  let html = removeNewLines(result[0].content.trim());
+  t.is(
+    html,
+    `<div><div><h1>This is 1.</h1><p><span>2</span></p></div><style>/* test.js Component */body {  color: red;}/* _includes/include.js Component */body {  color: rebeccapurple;}</style></div>`
+  );
 });
