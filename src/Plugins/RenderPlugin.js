@@ -1,4 +1,3 @@
-const path = require("path");
 const fs = require("fs");
 const fsp = fs.promises;
 
@@ -22,7 +21,7 @@ async function render(
   content,
   templateLang = "html",
   normalizedDirs = {},
-  templateConfig
+  { templateConfig, extensionMap }
 ) {
   if (!templateConfig) {
     templateConfig = new TemplateConfig();
@@ -33,6 +32,7 @@ async function render(
     normalizedDirs.input,
     templateConfig
   );
+  tr.extensionMap = extensionMap;
   tr.setEngineOverride(templateLang);
 
   // TODO tie this to the class, not the extension
@@ -50,7 +50,7 @@ async function renderFile(
   inputPath,
   templateLang,
   normalizedDirs = {},
-  templateConfig
+  { templateConfig, extensionMap }
 ) {
   if (!inputPath) {
     throw new Error(
@@ -72,6 +72,7 @@ async function renderFile(
   }
 
   let tr = new TemplateRender(inputPath, normalizedDirs.input, templateConfig);
+  tr.extensionMap = extensionMap;
   if (templateLang) {
     tr.setEngineOverride(templateLang);
   }
@@ -248,13 +249,21 @@ function EleventyPlugin(eleventyConfig, options = {}) {
     templateConfig = cfg;
   });
 
+  let extensionMap;
+  eleventyConfig.on("eleventy.extensionmap", (map) => {
+    extensionMap = map;
+  });
+
   async function renderStringShortcodeFn(content, templateLang, data = {}) {
     let fn = await render.call(
       this,
       content,
       templateLang,
       normalizeDirectories(eleventyConfig.dir),
-      templateConfig
+      {
+        templateConfig,
+        extensionMap,
+      }
     );
 
     // save `page` for reuse
@@ -269,7 +278,10 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       inputPath,
       templateLang,
       normalizeDirectories(eleventyConfig.dir),
-      templateConfig
+      {
+        templateConfig,
+        extensionMap,
+      }
     );
 
     // save `page` for re-use

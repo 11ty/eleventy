@@ -326,6 +326,7 @@ class Eleventy {
 
     let formats = this.formatsOverride || this.config.templateFormats;
     this.extensionMap = new EleventyExtensionMap(formats, this.eleventyConfig);
+    await this.config.events.emit("eleventy.extensionmap", this.extensionMap);
 
     this.eleventyFiles = new EleventyFiles(
       this.inputDir,
