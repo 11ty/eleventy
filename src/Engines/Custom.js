@@ -8,8 +8,6 @@ class CustomEngine extends TemplateEngine {
     this.entry = this.getExtensionMapEntry();
     this.needsInit =
       "init" in this.entry && typeof this.entry.init === "function";
-    this.initStarted = false;
-    this.initFinished = false;
 
     this._defaultEngine = undefined;
   }
@@ -43,13 +41,10 @@ class CustomEngine extends TemplateEngine {
   // before continuing on.
   async _runningInit() {
     if (this.needsInit) {
-      if (this.initStarted) {
-        await this.initStarted;
-      } else if (!this.initFinished) {
-        this.initStarted = this.entry.init.bind({ config: this.config })();
-        await this.initStarted;
-        this.initFinished = true;
+      if (!this._initing) {
+        this._initing = this.entry.init.bind({ config: this.config })();
       }
+      await this._initing;
     }
   }
 
