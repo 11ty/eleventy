@@ -87,7 +87,8 @@ class CustomEngine extends TemplateEngine {
         let inst = await this.entry.getInstanceFromInputPath(inputPath);
         let mixins;
         if (this.config) {
-          mixins = this.config.javascriptFunctions;
+          // Object.assign usage: see TemplateRenderCustomTest.js: `JavaScript functions should not be mutable but not *that* mutable`
+          mixins = Object.assign({}, this.config.javascriptFunctions);
         }
 
         // override keys set at the plugin level in the individual template

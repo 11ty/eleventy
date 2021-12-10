@@ -1,7 +1,9 @@
 const test = require("ava");
+const TemplateData = require("../src/TemplateData");
 const TemplateRender = require("../src/TemplateRender");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 const TemplateConfig = require("../src/TemplateConfig");
+const getNewTemplate = require("./_getNewTemplateForTests");
 
 const { createSSRApp } = require("vue");
 const { renderToString } = require("@vue/server-renderer");
@@ -164,4 +166,52 @@ test("Custom Sass Render", async (t) => {
   color: blue;
 }`
   );
+});
+
+/*
+serverPrefetch: function() {
+    return this.getBlogAuthors().then(response => this.glossary = response)
+  },
+*/
+test("JavaScript functions should not be mutable but not *that* mutable", async (t) => {
+  t.plan(3);
+
+  let eleventyConfig = new TemplateConfig();
+
+  let instance = {
+    dataForCascade: function () {
+      // was mutating this.config.javascriptFunctions!
+      this.shouldnotmutatethething = 1;
+      return {};
+    },
+  };
+
+  eleventyConfig.userConfig.extensionMap.add({
+    extension: "js1",
+    key: "js1",
+    getData: ["dataForCascade"],
+    getInstanceFromInputPath: function (inputPath) {
+      t.truthy(true);
+      return instance;
+    },
+    compile: function (str, inputPath) {
+      t.falsy(this.config.javascriptFunctions.shouldnotmutatethething);
+
+      // plaintext
+      return (data) => {
+        return str;
+      };
+    },
+  });
+
+  let tmpl = getNewTemplate(
+    "./test/stubs-custom-extension/test.js1",
+    "./test/stubs-custom-extension/",
+    "dist",
+    null,
+    null,
+    eleventyConfig
+  );
+  let data = await tmpl.getData();
+  t.is(await tmpl.render(data), "<p>Paragraph</p>");
 });

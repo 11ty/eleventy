@@ -91,7 +91,7 @@ class JavaScript extends TemplateEngine {
 
   async getExtraDataFromFile(inputPath) {
     let inst = this.getInstanceFromInputPath(inputPath);
-    return await getJavaScriptData(inst, inputPath);
+    return getJavaScriptData(inst, inputPath);
   }
 
   getJavaScriptFunctions(inst) {
@@ -103,6 +103,7 @@ class JavaScript extends TemplateEngine {
       if (key === "page") {
         // do nothing
       } else {
+        // note: bind creates a new function
         fns[key] = configFns[key].bind(inst);
       }
     }
