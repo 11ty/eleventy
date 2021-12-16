@@ -545,6 +545,9 @@ Arguments:
      --serve
        Run web server on --port (default 8080) and watch them too
 
+     --port
+       Run the --serve web server on this port (default 8080)
+
      --watch
        Wait for files to change and automatically rewrite (no web server)
 
