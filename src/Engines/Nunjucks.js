@@ -338,6 +338,10 @@ class Nunjucks extends TemplateEngine {
     this.njkEnv.addExtension(shortcodeName, new fn());
   }
 
+  permalinkNeedsCompilation(str) {
+    return this.needsCompilation(str);
+  }
+
   needsCompilation(str) {
     // Defend against syntax customisations:
     //    https://mozilla.github.io/nunjucks/api.html#customizing-syntax
@@ -409,12 +413,6 @@ class Nunjucks extends TemplateEngine {
   }
 
   async compile(str, inputPath) {
-    if (!this.needsCompilation(str)) {
-      return async function () {
-        return str;
-      };
-    }
-
     // for(let loader of this.njkEnv.loaders) {
     //   loader.cache = {};
     // }

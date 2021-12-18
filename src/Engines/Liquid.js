@@ -211,6 +211,10 @@ class Liquid extends TemplateEngine {
     return symbols;
   }
 
+  permalinkNeedsCompilation(str) {
+    return this.needsCompilation(str);
+  }
+
   needsCompilation(str) {
     let options = this.liquidLib.options;
 
@@ -221,12 +225,6 @@ class Liquid extends TemplateEngine {
   }
 
   async compile(str, inputPath) {
-    if (!this.needsCompilation(str)) {
-      return async function (data) {
-        return str;
-      };
-    }
-
     let engine = this.liquidLib;
     let tmplReady = engine.parse(str, inputPath);
 

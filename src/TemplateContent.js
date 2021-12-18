@@ -97,7 +97,11 @@ class TemplateContent {
   }
 
   async read() {
-    this.inputContent = await this.getInputContent();
+    if (this.inputContent) {
+      await this.inputContent;
+    } else {
+      this.inputContent = await this.getInputContent();
+    }
 
     if (this.inputContent) {
       let options = this.config.frontMatterParsingOptions || {};
@@ -149,11 +153,15 @@ class TemplateContent {
     this._inputCache.delete(TemplatePath.absolutePath(path));
   }
 
+  // Used via clone
+  setInputContent(content) {
+    this.inputContent = content;
+  }
+
   async getInputContent() {
     if (!this.engine.needsToReadFileContents()) {
       return "";
     }
-
     let templateBenchmark = bench.get("Template Read");
     templateBenchmark.before();
     let content;
@@ -232,11 +240,19 @@ class TemplateContent {
     }
 
     let cacheable = this.engine.cacheable;
-    return [cacheable, str, engineMap];
+    let key = this.engine.getCompileCacheKey(str, this.inputPath);
+
+    return [cacheable, key, engineMap];
   }
 
   async compile(str, bypassMarkdown) {
     await this.setupTemplateRender(bypassMarkdown);
+
+    if (bypassMarkdown && !this.engine.needsCompilation(str)) {
+      return async function () {
+        return str;
+      };
+    }
 
     debugDev(
       "%o compile() using engine: %o",
@@ -322,6 +338,12 @@ class TemplateContent {
   }
 
   async renderPermalink(permalink, data) {
+    if (
+      typeof permalink === "string" &&
+      !this.engine.permalinkNeedsCompilation(permalink)
+    ) {
+      return permalink;
+    }
     if (typeof permalink === "function") {
       return this._renderFunction(permalink, data);
     }
@@ -335,6 +357,10 @@ class TemplateContent {
 
   async _render(str, data, bypassMarkdown) {
     try {
+      if (bypassMarkdown && !this.engine.needsCompilation(str)) {
+        return str;
+      }
+
       let fn = await this.compile(str, bypassMarkdown);
       let templateBenchmark = bench.get("Render");
       let paginationSuffix = [];

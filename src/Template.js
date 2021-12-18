@@ -886,6 +886,10 @@ class Template extends TemplateContent {
       this.extensionMap,
       this.eleventyConfig
     );
+
+    // Avoid re-reads, especially for pagination
+    tmpl.setInputContent(this.inputContent);
+
     tmpl.logger = this.logger;
 
     for (let transform of this.transforms) {

@@ -452,8 +452,10 @@ class TemplateMap {
         throw new Error(`Content pages not found for ${map.inputPath}`);
       }
       if (!map.template.behavior.isRenderable()) {
+        // Note that empty pagination templates will be skipped here as not renderable
         continue;
       }
+
       try {
         for (let pageEntry of map._pages) {
           pageEntry.templateContent = await map.template.getTemplateMapContent(

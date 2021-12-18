@@ -10,6 +10,8 @@ class JavaScript extends TemplateEngine {
   constructor(name, dirs, config) {
     super(name, dirs, config);
     this.instances = {};
+
+    this.cacheable = false;
   }
 
   normalize(result) {

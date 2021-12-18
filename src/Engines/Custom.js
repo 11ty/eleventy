@@ -11,6 +11,11 @@ class CustomEngine extends TemplateEngine {
       "init" in this.entry && typeof this.entry.init === "function";
 
     this._defaultEngine = undefined;
+
+    // Enable cacheability for this template
+    if (this.entry.compileOptions && "cache" in this.entry.compileOptions) {
+      this.cacheable = this.entry.compileOptions.cache;
+    }
   }
 
   getExtensionMapEntry() {
@@ -160,6 +165,30 @@ class CustomEngine extends TemplateEngine {
 
   get defaultTemplateFileExtension() {
     return this.entry.outputFileExtension;
+  }
+
+  getCompileCacheKey(str, inputPath) {
+    if (
+      this.entry.compileOptions &&
+      "getCacheKey" in this.entry.compileOptions
+    ) {
+      if (typeof this.entry.compileOptions.getCacheKey !== "function") {
+        throw new Error(
+          `\`compileOptions.getCacheKey\` must be a function in addExtension for the ${this.name} type`
+        );
+      }
+
+      return this.entry.compileOptions.getCacheKey(str, inputPath);
+    }
+    return super.getCompileCacheKey(str, inputPath);
+  }
+
+  permalinkNeedsCompilation(str) {
+    if (this.entry.compileOptions && "permalink" in this.entry.compileOptions) {
+      return this.entry.compileOptions.permalink;
+    }
+
+    return true;
   }
 }
 

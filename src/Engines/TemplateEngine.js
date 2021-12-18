@@ -173,8 +173,16 @@ class TemplateEngine {
     // do nothing
   }
 
+  getCompileCacheKey(str, inputPath) {
+    return str;
+  }
+
   get defaultTemplateFileExtension() {
     return "html";
+  }
+
+  permalinkNeedsCompilation(str) {
+    return this.needsCompilation(str);
   }
 
   // whether or not compile is needed or can we return the plaintext?
