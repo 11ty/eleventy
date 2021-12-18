@@ -131,7 +131,7 @@ class TemplateEngine {
           "." + extension
         );
       });
-      partials[partialPathNoExt] = fs.readFileSync(partialFiles[j], "utf-8");
+      partials[partialPathNoExt] = fs.readFileSync(partialFiles[j], "utf8");
     }
 
     debug(

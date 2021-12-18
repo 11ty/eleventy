@@ -1,4 +1,8 @@
-const fs = require("fs");
+const fs = require("graceful-fs");
+const util = require("util");
+const writeFile = util.promisify(fs.writeFile);
+const mkdir = util.promisify(fs.mkdir);
+
 const os = require("os");
 const path = require("path");
 const normalize = require("normalize-path");
@@ -774,10 +778,10 @@ class Template extends TemplateContent {
       // TODO add a cache to check if this was already created
       let templateOutputDir = path.parse(outputPath).dir;
       if (templateOutputDir) {
-        await fs.promises.mkdir(templateOutputDir, { recursive: true });
+        await mkdir(templateOutputDir, { recursive: true });
       }
 
-      return fs.promises.writeFile(outputPath, finalContent).then(() => {
+      return writeFile(outputPath, finalContent).then(() => {
         templateBenchmark.after();
         this.writeCount++;
         debug(`${outputPath} ${lang.finished}.`);

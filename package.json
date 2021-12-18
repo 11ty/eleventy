@@ -101,6 +101,7 @@
     "dependency-graph": "^0.11.0",
     "ejs": "^3.1.6",
     "fast-glob": "^3.2.7",
+    "graceful-fs": "^4.2.8",
     "gray-matter": "^4.0.3",
     "hamljs": "^0.6.2",
     "handlebars": "^4.7.7",

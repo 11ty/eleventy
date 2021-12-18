@@ -405,7 +405,7 @@ class TemplateData {
   async _loadFileContents(path) {
     let rawInput;
     try {
-      rawInput = await fs.promises.readFile(path, "utf-8");
+      rawInput = await fs.promises.readFile(path, "utf8");
     } catch (e) {
       // if file does not exist, return nothing
     }

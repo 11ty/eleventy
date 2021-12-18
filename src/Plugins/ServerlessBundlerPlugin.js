@@ -272,7 +272,7 @@ class BundlerHelper {
         "./DefaultServerlessFunctionContent.js"
       );
 
-      let contents = await fsp.readFile(defaultContentPath, "utf-8");
+      let contents = await fsp.readFile(defaultContentPath, "utf8");
       contents = contents.replace(/\%\%NAME\%\%/g, this.name);
       contents = contents.replace(
         /\%\%FUNCTIONS_DIR\%\%/g,

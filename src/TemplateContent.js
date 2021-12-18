@@ -1,5 +1,7 @@
 const os = require("os");
-const fs = require("fs");
+const fs = require("graceful-fs");
+const util = require("util");
+const readFile = util.promisify(fs.readFile);
 const normalize = require("normalize-path");
 const matter = require("gray-matter");
 const lodashSet = require("lodash/set");
@@ -169,7 +171,7 @@ class TemplateContent {
       content = TemplateContent.getCached(this.inputPath);
     }
     if (!content) {
-      content = await fs.promises.readFile(this.inputPath, "utf-8");
+      content = await readFile(this.inputPath, "utf8");
 
       if (this.config.useTemplateCache) {
         TemplateContent.cache(this.inputPath, content);

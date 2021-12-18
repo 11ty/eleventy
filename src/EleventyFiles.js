@@ -223,7 +223,7 @@ class EleventyFiles {
       let dir = TemplatePath.getDirFromFilePath(ignorePath);
 
       if (fs.existsSync(ignorePath) && fs.statSync(ignorePath).size > 0) {
-        let ignoreContent = fs.readFileSync(ignorePath, "utf-8");
+        let ignoreContent = fs.readFileSync(ignorePath, "utf8");
 
         ignores = ignores.concat(
           EleventyFiles.normalizeIgnoreContent(dir, ignoreContent)

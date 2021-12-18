@@ -101,7 +101,7 @@ class EleventyServe {
           return;
         }
 
-        let savedPathContent = fs.readFileSync(savedPathFilename, "utf-8");
+        let savedPathContent = fs.readFileSync(savedPathFilename, "utf8");
         if (
           savedPathContent.indexOf("Browsersync pathPrefix Redirect") === -1
         ) {
