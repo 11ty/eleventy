@@ -226,3 +226,10 @@ test("Using a Vue renderFile inside of serverPrefetch (or `data`): Vue -> Liquid
     `<div><div><h1>This is 1.</h1><p><span>2</span></p></div><style>/* test.js Component */body {  color: red;}/* _includes/include.js Component */body {  color: rebeccapurple;}</style></div>`
   );
 });
+
+test("Remap non-object data to data._ if object is not passed in", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/bad-data.njk"
+  );
+  t.is(html, "string");
+});

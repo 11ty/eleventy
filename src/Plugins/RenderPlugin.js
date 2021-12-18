@@ -1,7 +1,8 @@
 const fs = require("fs");
 const fsp = fs.promises;
+const lodashIsPlainObject = require("lodash/isPlainObject");
 
-// TODO first-class Markdown container/component (will need to be synchronous for markdown-it)
+// TODO add a first-class Markdown component to expose this using Markdown-only syntax (will need to be synchronous for markdown-it)
 
 const TemplatePath = require("../TemplatePath");
 const TemplateRender = require("../TemplateRender");
@@ -266,6 +267,13 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       }
     );
 
+    // if the user passes a string or other literal, remap to an object.
+    if (!lodashIsPlainObject(data)) {
+      data = {
+        _: data,
+      };
+    }
+
     // save `page` for reuse
     data.page = this.page;
 
@@ -283,6 +291,13 @@ function EleventyPlugin(eleventyConfig, options = {}) {
         extensionMap,
       }
     );
+
+    // if the user passes a string or other literal, remap to an object.
+    if (!lodashIsPlainObject(data)) {
+      data = {
+        _: data,
+      };
+    }
 
     // save `page` for re-use
     data.page = this.page;
