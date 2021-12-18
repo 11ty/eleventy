@@ -337,28 +337,30 @@ class TemplateContent {
     try {
       let fn = await this.compile(str, bypassMarkdown);
       let templateBenchmark = bench.get("Render");
-      let inputPathBenchmark = bench.get(
-        `> Render > ${this.inputPath}${
-          "pagination" in data ? " (Paginated Aggregate)" : ""
-        }`
-      );
-      let outputUrlBenchmark;
+      let paginationSuffix = [];
       if ("pagination" in data) {
-        outputUrlBenchmark = bench.get(
-          `> Render > ${this.inputPath} (Pagination) to ${data.page.url}`
-        );
+        paginationSuffix.push(" (Pagination");
+        if (data.pagination.pages) {
+          paginationSuffix.push(
+            `: ${data.pagination.pages.length} page${
+              data.pagination.pages.length !== 1 ? "s" : ""
+            }`
+          );
+        }
+        paginationSuffix.push(")");
       }
+
+      let inputPathBenchmark = bench.get(
+        `> Render > ${this.inputPath}${paginationSuffix.join("")}`
+      );
+
       templateBenchmark.before();
       if (inputPathBenchmark) {
         inputPathBenchmark.before();
       }
-      if (outputUrlBenchmark) {
-        outputUrlBenchmark.before();
-      }
+
       let rendered = await fn(data);
-      if (outputUrlBenchmark) {
-        outputUrlBenchmark.after();
-      }
+
       if (inputPathBenchmark) {
         inputPathBenchmark.after();
       }
