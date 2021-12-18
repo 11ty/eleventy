@@ -266,8 +266,13 @@ class TemplateContent {
       }
 
       let templateBenchmark = bench.get("Template Compile");
+      let inputPathBenchmark = bench.get(
+        `> Template Compile > ${this.inputPath}`
+      );
       templateBenchmark.before();
+      inputPathBenchmark.before();
       let fn = await this.templateRender.getCompiledTemplate(str);
+      inputPathBenchmark.after();
       templateBenchmark.after();
       debugDev("%o getCompiledTemplate function created", this.inputPath);
       if (this.config.useTemplateCache && res) {
@@ -295,12 +300,33 @@ class TemplateContent {
     }
   }
 
+  // used by computed data or for permalink functions
+  async _renderFunction(fn, data) {
+    let mixins = Object.assign({}, this.config.javascriptFunctions);
+    let result = await fn.call(mixins, data);
+
+    // normalize Buffer away if returned from permalink
+    if (Buffer.isBuffer(result)) {
+      return result.toString();
+    }
+
+    return result;
+  }
+
   async renderComputedData(str, data) {
+    if (typeof str === "function") {
+      return this._renderFunction(str, data);
+    }
+
     return this._render(str, data, true);
   }
 
-  async renderPermalink(permalink, data, bypassMarkdown) {
-    return this._render(permalink, data, bypassMarkdown);
+  async renderPermalink(permalink, data) {
+    if (typeof permalink === "function") {
+      return this._renderFunction(permalink, data);
+    }
+
+    return this._render(permalink, data, true);
   }
 
   async render(str, data, bypassMarkdown) {
@@ -310,9 +336,32 @@ class TemplateContent {
   async _render(str, data, bypassMarkdown) {
     try {
       let fn = await this.compile(str, bypassMarkdown);
-      let templateBenchmark = bench.get("Template Render");
+      let templateBenchmark = bench.get("Render");
+      let inputPathBenchmark = bench.get(
+        `> Render > ${this.inputPath}${
+          "pagination" in data ? " (Paginated Aggregate)" : ""
+        }`
+      );
+      let outputUrlBenchmark;
+      if ("pagination" in data) {
+        outputUrlBenchmark = bench.get(
+          `> Render > ${this.inputPath} (Pagination) to ${data.page.url}`
+        );
+      }
       templateBenchmark.before();
+      if (inputPathBenchmark) {
+        inputPathBenchmark.before();
+      }
+      if (outputUrlBenchmark) {
+        outputUrlBenchmark.before();
+      }
       let rendered = await fn(data);
+      if (outputUrlBenchmark) {
+        outputUrlBenchmark.after();
+      }
+      if (inputPathBenchmark) {
+        inputPathBenchmark.after();
+      }
       templateBenchmark.after();
       debugDev(
         "%o getCompiledTemplate called, rendered content created",
@@ -347,7 +396,6 @@ class TemplateContent {
       return true;
     }
 
-    let incrementalFileIsFullTemplate = metadata.incrementalFileIsFullTemplate;
     let extensionEntries = this.getExtensionEntries().filter(
       (entry) => !!entry.isIncrementalMatch
     );
@@ -364,10 +412,14 @@ class TemplateContent {
           return true;
         }
       }
+
+      return false;
     } else {
+      // This is the fallback way of determining if something is incremental (no isIncrementalMatch available)
+
       // Not great way of building all templates if this is a layout, include, JS dependency.
       // TODO improve this for default langs
-      if (!incrementalFileIsFullTemplate) {
+      if (!metadata.isFullTemplate) {
         return true;
       }
 

@@ -1,5 +1,6 @@
 const TemplateEngine = require("./TemplateEngine");
 const getJavaScriptData = require("../Util/GetJavaScriptData");
+const bench = require("../BenchmarkManager").get("Aggregate");
 
 class CustomEngine extends TemplateEngine {
   constructor(name, dirs, config) {
@@ -41,10 +42,17 @@ class CustomEngine extends TemplateEngine {
   // before continuing on.
   async _runningInit() {
     if (this.needsInit) {
+      let initBench = bench.get(`Engine (${this.name}) Init`);
+      initBench.before();
       if (!this._initing) {
-        this._initing = this.entry.init.bind({ config: this.config })();
+        this._initing = this.entry.init.bind({
+          config: this.config,
+          bench,
+        })();
       }
       await this._initing;
+      this.needsInit = false;
+      initBench.after();
     }
   }
 
@@ -52,10 +60,16 @@ class CustomEngine extends TemplateEngine {
     await this._runningInit();
 
     if ("getData" in this.entry) {
+      let dataBench = bench.get(`Engine (${this.name}) Get Data From File`);
+      dataBench.before();
+
       if (typeof this.entry.getData === "function") {
-        return this.entry.getData(inputPath);
+        let data = this.entry.getData(inputPath);
+        dataBench.after();
+        return data;
       } else {
         if (!("getInstanceFromInputPath" in this.entry)) {
+          dataBench.after();
           return Promise.reject(
             new Error(
               `getInstanceFromInputPath callback missing from ${this.name} template engine plugin.`
@@ -71,7 +85,9 @@ class CustomEngine extends TemplateEngine {
             keys.add(key);
           }
         }
+
         if (keys.size === 0) {
+          dataBench.after();
           return Promise.reject(
             new Error(
               `getData must be an array of keys or \`true\` in your addExtension configuration.`
@@ -106,6 +122,7 @@ class CustomEngine extends TemplateEngine {
         for (let result of results) {
           Object.assign(data, result);
         }
+        dataBench.after();
 
         return data;
       }
@@ -123,7 +140,7 @@ class CustomEngine extends TemplateEngine {
           inputPath,
           ...args
         );
-        return await render(data);
+        return render(data);
       };
     }
 

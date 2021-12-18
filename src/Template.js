@@ -219,12 +219,12 @@ class Template extends TemplateContent {
             promises.push(
               Promise.all(
                 [...permalink[key]].map((entry) =>
-                  super.renderPermalink(entry, data, true)
+                  super.renderPermalink(entry, data)
                 )
               )
             );
           } else {
-            promises.push(super.renderPermalink(permalink[key], data, true));
+            promises.push(super.renderPermalink(permalink[key], data));
           }
         }
 
@@ -245,7 +245,7 @@ class Template extends TemplateContent {
       }
     } else if (permalink) {
       // render variables inside permalink front matter, bypass markdown
-      permalinkValue = await super.renderPermalink(permalink, data, true);
+      permalinkValue = await super.renderPermalink(permalink, data);
       debug(
         "Rendering permalink for %o: %s becomes %o",
         this.inputPath,
@@ -471,8 +471,6 @@ class Template extends TemplateContent {
     return super.render(str, data, bypassMarkdown);
   }
 
-  // TODO at least some of this isn’t being used in the normal build
-  // Render is used for `renderData` and `permalink` but otherwise `renderPageEntry` is being used
   async render(data) {
     debugDev("%o render()", this.inputPath);
     if (!data) {
@@ -998,6 +996,7 @@ class Template extends TemplateContent {
     }
   }
 
+  /* This is the primary render mechanism, called via TemplateMap->populateContentDataInMap */
   async getTemplateMapContent(pageMapEntry) {
     pageMapEntry.template.setWrapWithLayouts(false);
     let content = await pageMapEntry.template.render(pageMapEntry.data);

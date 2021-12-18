@@ -73,29 +73,28 @@ class BenchmarkGroup {
     return this.benchmarks[type];
   }
 
+  padNumber(num, length) {
+    if (("" + num).length >= length) {
+      return num;
+    }
+
+    let prefix = new Array(length + 1).join(" ");
+    return (prefix + num).substr(-1 * length);
+  }
+
   finish(label, totalTimeSpent) {
     for (var type in this.benchmarks) {
       let bench = this.benchmarks[type];
       let isAbsoluteMinimumComparison = this.minimumThresholdMs > 0;
       let totalForBenchmark = bench.getTotal();
-      let percent = (totalForBenchmark * 100) / totalTimeSpent;
+      let percent = Math.round((totalForBenchmark * 100) / totalTimeSpent);
 
-      let extraOutput = [];
-      if (!isAbsoluteMinimumComparison) {
-        extraOutput.push(`${percent.toFixed(1)}%`);
-      }
-      let timesCalledCount = bench.getTimesCalled();
-      if (timesCalledCount > 1) {
-        extraOutput.push(`called ${timesCalledCount}×`);
-        extraOutput.push(
-          `${(totalForBenchmark / timesCalledCount).toFixed(1)}ms each`
-        );
-      }
-
-      // TODO move the % to the beginning of the string for easier comparison
-      let str = `Benchmark (${label}): ${type} took ${totalForBenchmark.toFixed(
-        0
-      )}ms ${extraOutput.length ? `(${extraOutput.join(", ")})` : ""}`;
+      let output = {
+        ms: this.padNumber(totalForBenchmark.toFixed(0), 6),
+        percent: this.padNumber(percent, 3),
+        calls: this.padNumber(bench.getTimesCalled(), 5),
+      };
+      let str = `Benchmark ${output.ms}ms ${output.percent}% ${output.calls}× (${label}) ${type}`;
 
       if (
         (isAbsoluteMinimumComparison &&

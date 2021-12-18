@@ -204,7 +204,7 @@ class TemplateWriter {
         // Passthrough copy check is above this (order is important)
       } else if (
         tmpl.isFileRelevantToThisTemplate(this.incrementalFile, {
-          incrementalFileIsFullTemplate: this.eleventyFiles.isFullTemplateFile(
+          isFullTemplate: this.eleventyFiles.isFullTemplateFile(
             allPaths,
             this.incrementalFile
           ),

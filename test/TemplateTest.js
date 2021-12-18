@@ -2048,6 +2048,22 @@ test("Add Extension via Configuration (txt file)", async (t) => {
   t.truthy(tmpl.isFileRelevantToThisTemplate("./test/stubs/default.txt"));
   t.falsy(tmpl.isFileRelevantToThisTemplate("./test/stubs/default2.txt"));
   t.falsy(tmpl.isFileRelevantToThisTemplate("./test/stubs/default.njk"));
+
+  t.truthy(
+    tmpl.isFileRelevantToThisTemplate("./test/stubs/default.txt", {
+      isFullTemplate: true,
+    })
+  );
+  t.falsy(
+    tmpl.isFileRelevantToThisTemplate("./test/stubs/default2.txt", {
+      isFullTemplate: true,
+    })
+  );
+  t.falsy(
+    tmpl.isFileRelevantToThisTemplate("./test/stubs/default.njk", {
+      isFullTemplate: true,
+    })
+  );
 });
 
 test("permalink object with build", async (t) => {
