@@ -11,10 +11,6 @@ require("please-upgrade-node")(pkg, {
 });
 const debug = require("debug")("Eleventy:cmd");
 
-if (process.env.DEBUG) {
-  require("time-require");
-}
-
 const EleventyErrorHandler = require("./src/EleventyErrorHandler");
 
 try {

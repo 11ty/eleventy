@@ -123,7 +123,6 @@
     "pug": "^3.0.2",
     "recursive-copy": "^2.0.13",
     "semver": "^7.3.5",
-    "slugify": "^1.6.4",
-    "time-require": "^0.1.2"
+    "slugify": "^1.6.4"
   }
 }
