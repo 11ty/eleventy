@@ -944,3 +944,57 @@ test("Use config driven Nunjucks Environment Options (autoescape)", async (t) =>
     "<p><b>Hi</b></p>"
   );
 });
+
+test("Nunjucks Shortcode in a loop (everything is sync)", async (t) => {
+  let templateConfig = new TemplateConfig();
+  templateConfig.userConfig.addNunjucksShortcode(
+    "genericshortcode",
+    function (str) {
+      return str;
+    }
+  );
+
+  let tr = getNewTemplateRender(
+    "njk",
+    "./test/stubs-njk-async/",
+    templateConfig
+  );
+
+  let fn = await tr.getCompiledTemplate(
+    "{% for item in list %}{% include 'loop.njk' %}{% endfor %}"
+  );
+
+  t.is(
+    await fn({
+      list: ["a", "b", "c"],
+    }),
+    "included_a-aincluded_b-bincluded_c-c"
+  );
+});
+
+// TODO!
+test.skip("Weird issue with number arguments in a loop (not parsing literals properly?)", async (t) => {
+  let templateConfig = new TemplateConfig();
+  templateConfig.userConfig.addNunjucksShortcode(
+    "genericshortcode",
+    function (str) {
+      return str;
+    }
+  );
+
+  let tr = getNewTemplateRender(
+    "njk",
+    "./test/stubs-njk-async/",
+    templateConfig
+  );
+  let fn = await tr.getCompiledTemplate(
+    "{% for item in list %}{{item}}-{% genericshortcode item %}{% endfor %}"
+  );
+
+  t.is(
+    await fn({
+      list: [1, 2, 3],
+    }),
+    "1-12-23-3"
+  );
+});
