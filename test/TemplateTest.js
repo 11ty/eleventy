@@ -2292,3 +2292,80 @@ test("Permalink is an object but an empty object (inherit default behavior)", as
     "./test/stubs/_site/permalink-empty-object/empty-object/index.html"
   );
 });
+
+test("Custom extension (.txt) with custom permalink compile function", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.extensionMap.add({
+    extension: "txt",
+    key: "txt",
+    compileOptions: {
+      // pass in your own custom permalink function.
+      permalink: async function (permalinkString, inputPath) {
+        t.is(permalinkString, "custom-extension.lit");
+        t.is(inputPath, "./test/stubs/custom-extension.txt");
+        return async function () {
+          return "HAHA_THIS_ALWAYS_GOES_HERE.txt";
+        };
+      },
+    },
+    compile: function (str, inputPath) {
+      // plaintext
+      return function (data) {
+        return str;
+      };
+    },
+  });
+
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let tmpl = getNewTemplate(
+    "./test/stubs/custom-extension.txt",
+    "./test/stubs/",
+    "dist",
+    dataObj,
+    null,
+    eleventyConfig
+  );
+
+  let data = await tmpl.getData();
+  t.is(await tmpl.render(data), "Sample content");
+  t.deepEqual(await tmpl.getOutputLocations(data), {
+    href: "/HAHA_THIS_ALWAYS_GOES_HERE.txt",
+    path: "dist/HAHA_THIS_ALWAYS_GOES_HERE.txt",
+    rawPath: "HAHA_THIS_ALWAYS_GOES_HERE.txt",
+  });
+});
+
+test("Custom extension with and opt-out of permalink compilation", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.extensionMap.add({
+    extension: "txt",
+    key: "txt",
+    compileOptions: {
+      permalink: false,
+    },
+    compile: function (str, inputPath) {
+      // plaintext
+      return function (data) {
+        return str;
+      };
+    },
+  });
+
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let tmpl = getNewTemplate(
+    "./test/stubs/custom-extension.txt",
+    "./test/stubs/",
+    "dist",
+    dataObj,
+    null,
+    eleventyConfig
+  );
+
+  let data = await tmpl.getData();
+  t.is(await tmpl.render(data), "Sample content");
+  t.deepEqual(await tmpl.getOutputLocations(data), {
+    href: "/custom-extension.lit",
+    path: "dist/custom-extension.lit",
+    rawPath: "custom-extension.lit",
+  });
+});

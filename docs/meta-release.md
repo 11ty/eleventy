@@ -1,4 +1,4 @@
-# ESM dependency list
+# List of dependencies that went ESM
 
 - `lint-staged` ESM at 12.x
 - `@sindresorhus/slugify` ESM at 2.x

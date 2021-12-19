@@ -319,9 +319,9 @@ class TemplateContent {
   }
 
   // used by computed data or for permalink functions
-  async _renderFunction(fn, data) {
+  async _renderFunction(fn, ...args) {
     let mixins = Object.assign({}, this.config.javascriptFunctions);
-    let result = await fn.call(mixins, data);
+    let result = await fn.call(mixins, ...args);
 
     // normalize Buffer away if returned from permalink
     if (Buffer.isBuffer(result)) {
@@ -340,12 +340,30 @@ class TemplateContent {
   }
 
   async renderPermalink(permalink, data) {
-    if (
-      typeof permalink === "string" &&
-      !this.engine.permalinkNeedsCompilation(permalink)
-    ) {
-      return permalink;
+    if (typeof permalink === "string") {
+      let permalinkCompilation =
+        this.engine.permalinkNeedsCompilation(permalink);
+      if (permalinkCompilation === false) {
+        return permalink;
+      }
+
+      if (permalinkCompilation && typeof permalinkCompilation === "function") {
+        /* Usage:
+        permalink: function(permalinkString, inputPath) {
+          return async function(data) {
+            return "THIS IS MY RENDERED PERMALINK";
+          }
+        }
+        */
+        let fn = await this._renderFunction(
+          permalinkCompilation,
+          permalink,
+          this.inputPath
+        );
+        return this._renderFunction(fn, data);
+      }
     }
+
     if (typeof permalink === "function") {
       return this._renderFunction(permalink, data);
     }
