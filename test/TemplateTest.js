@@ -1740,15 +1740,22 @@ test("Throws a Premature Template Content Error (haml)", async (t) => {
   t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
 });
 
-test.skip("Issue 413 weird date format", async (t) => {
+test("Issue 413 weird date format", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs-413/date-frontmatter.md",
     "./test/stubs-413/",
     "./dist"
   );
 
-  let data = await tmpl.getData();
-  t.is(data.page.date, "");
+  let error = await t.throwsAsync(async function () {
+    await tmpl.getData();
+  });
+
+  t.truthy(
+    error.message.indexOf(
+      "date front matter value (2019-03-13 20:18:42 +0000) is invalid"
+    ) > -1
+  );
 });
 
 test("Custom Front Matter Parsing Options", async (t) => {
