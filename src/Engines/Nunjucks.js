@@ -163,7 +163,12 @@ class Nunjucks extends TemplateEngine {
 
     this.addCustomTags(this.config.nunjucksTags);
     this.addAllShortcodes(this.config.nunjucksShortcodes);
+    this.addAllShortcodes(this.config.nunjucksAsyncShortcodes, true);
     this.addAllPairedShortcodes(this.config.nunjucksPairedShortcodes);
+    this.addAllPairedShortcodes(
+      this.config.nunjucksAsyncPairedShortcodes,
+      true
+    );
     this.addGlobals(this.config.nunjucksGlobals);
   }
 
@@ -202,15 +207,15 @@ class Nunjucks extends TemplateEngine {
     this.njkEnv.addGlobal(name, globalFn);
   }
 
-  addAllShortcodes(shortcodes) {
+  addAllShortcodes(shortcodes, isAsync = false) {
     for (let name in shortcodes) {
-      this.addShortcode(name, shortcodes[name]);
+      this.addShortcode(name, shortcodes[name], isAsync);
     }
   }
 
-  addAllPairedShortcodes(shortcodes) {
+  addAllPairedShortcodes(shortcodes, isAsync = false) {
     for (let name in shortcodes) {
-      this.addPairedShortcode(name, shortcodes[name]);
+      this.addPairedShortcode(name, shortcodes[name], isAsync);
     }
   }
 
@@ -223,7 +228,7 @@ class Nunjucks extends TemplateEngine {
     return obj;
   }
 
-  _getShortcodeFn(shortcodeName, shortcodeFn) {
+  _getShortcodeFn(shortcodeName, shortcodeFn, isAsync = false) {
     return function ShortcodeFunction() {
       this.tags = [shortcodeName];
 
@@ -241,37 +246,57 @@ class Nunjucks extends TemplateEngine {
         }
 
         parser.advanceAfterBlockEnd(tok.value);
-        return new nodes.CallExtensionAsync(this, "run", args);
+        if (isAsync) {
+          return new nodes.CallExtensionAsync(this, "run", args);
+        }
+        return new nodes.CallExtension(this, "run", args);
       };
 
       this.run = function (...args) {
-        let callback = args.pop();
+        let resolve;
+        if (isAsync) {
+          resolve = args.pop();
+        }
+
         let [context, ...argArray] = args;
 
-        Promise.resolve(
-          shortcodeFn.call(
-            Nunjucks._normalizeShortcodeContext(context),
-            ...argArray
-          )
-        )
-          .then(function (returnValue) {
-            callback(null, new NunjucksLib.runtime.SafeString(returnValue));
-          })
-          .catch(function (e) {
-            callback(
-              new EleventyShortcodeError(
-                `Error with Nunjucks shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
-                  e
-                )}`
-              ),
-              null
+        if (isAsync) {
+          shortcodeFn
+            .call(Nunjucks._normalizeShortcodeContext(context), ...argArray)
+            .then(function (returnValue) {
+              resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
+            })
+            .catch(function (e) {
+              resolve(
+                new EleventyShortcodeError(
+                  `Error with Nunjucks shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+                    e
+                  )}`
+                ),
+                null
+              );
+            });
+        } else {
+          try {
+            return new NunjucksLib.runtime.SafeString(
+              shortcodeFn.call(
+                Nunjucks._normalizeShortcodeContext(context),
+                ...argArray
+              )
             );
-          });
+          } catch (e) {
+            throw new EleventyShortcodeError(
+              `Error with Nunjucks shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+                e
+              )}`
+            );
+          }
+        }
       };
     };
   }
 
-  _getPairedShortcodeFn(shortcodeName, shortcodeFn) {
+  _getPairedShortcodeFn(shortcodeName, shortcodeFn, isAsync = false) {
     return function PairedShortcodeFunction() {
       this.tags = [shortcodeName];
 
@@ -303,38 +328,60 @@ class Nunjucks extends TemplateEngine {
             );
           }
 
-          Promise.resolve(
-            shortcodeFn.call(
-              Nunjucks._normalizeShortcodeContext(context),
-              bodyContent,
-              ...argArray
-            )
-          )
-            .then(function (returnValue) {
-              resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
-            })
-            .catch(function (e) {
+          if (isAsync) {
+            shortcodeFn
+              .call(
+                Nunjucks._normalizeShortcodeContext(context),
+                bodyContent,
+                ...argArray
+              )
+              .then(function (returnValue) {
+                resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
+              })
+              .catch(function (e) {
+                resolve(
+                  new EleventyShortcodeError(
+                    `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+                      e
+                    )}`
+                  ),
+                  null
+                );
+              });
+          } else {
+            try {
+              resolve(
+                null,
+                new NunjucksLib.runtime.SafeString(
+                  shortcodeFn.call(
+                    Nunjucks._normalizeShortcodeContext(context),
+                    bodyContent,
+                    ...argArray
+                  )
+                )
+              );
+            } catch (e) {
               resolve(
                 new EleventyShortcodeError(
                   `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
                     e
                   )}`
-                ),
-                null
+                )
               );
-            });
+            }
+          }
         });
       };
     };
   }
 
-  addShortcode(shortcodeName, shortcodeFn) {
-    let fn = this._getShortcodeFn(shortcodeName, shortcodeFn);
+  addShortcode(shortcodeName, shortcodeFn, isAsync = false) {
+    let fn = this._getShortcodeFn(shortcodeName, shortcodeFn, isAsync);
     this.njkEnv.addExtension(shortcodeName, new fn());
   }
 
-  addPairedShortcode(shortcodeName, shortcodeFn) {
-    let fn = this._getPairedShortcodeFn(shortcodeName, shortcodeFn);
+  addPairedShortcode(shortcodeName, shortcodeFn, isAsync = false) {
+    let fn = this._getPairedShortcodeFn(shortcodeName, shortcodeFn, isAsync);
     this.njkEnv.addExtension(shortcodeName, new fn());
   }
 
@@ -371,8 +418,16 @@ class Nunjucks extends TemplateEngine {
       let fn = this._getShortcodeFn(name, () => {});
       ext.push(new fn());
     }
+    for (let name in this.config.nunjucksAsyncShortcodes) {
+      let fn = this._getShortcodeFn(name, () => {}, true);
+      ext.push(new fn());
+    }
     for (let name in this.config.nunjucksPairedShortcodes) {
       let fn = this._getPairedShortcodeFn(name, () => {});
+      ext.push(new fn());
+    }
+    for (let name in this.config.nunjucksAsyncPairedShortcodes) {
+      let fn = this._getPairedShortcodeFn(name, () => {}, true);
       ext.push(new fn());
     }
 

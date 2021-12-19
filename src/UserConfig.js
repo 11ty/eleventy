@@ -35,7 +35,9 @@ class UserConfig {
     this.nunjucksTags = {};
     this.nunjucksGlobals = {};
     this.nunjucksShortcodes = {};
+    this.nunjucksAsyncShortcodes = {};
     this.nunjucksPairedShortcodes = {};
+    this.nunjucksAsyncPairedShortcodes = {};
     this.handlebarsHelpers = {};
     this.handlebarsShortcodes = {};
     this.handlebarsPairedShortcodes = {};
@@ -458,33 +460,50 @@ class UserConfig {
   // Undocumented method as a mitigation to reduce risk of #498
   addAsyncShortcode(name, callback) {
     debug("Adding universal async shortcode %o", this.getNamespacedName(name));
-    this.addNunjucksShortcode(name, callback);
+    this.addNunjucksAsyncShortcode(name, callback);
     this.addLiquidShortcode(name, callback);
     this.addJavaScriptFunction(name, callback);
     // not supported in Handlebars
   }
 
-  // DEPRECATED, with 1.0.0-beta.9 and #1749 we don’t need to distinguish between async/sync shortcodes now
   addNunjucksAsyncShortcode(name, callback) {
-    this.addNunjucksShortcode(name, callback);
-  }
-
-  addNunjucksShortcode(name, callback) {
     name = this.getNamespacedName(name);
 
-    if (this.nunjucksShortcodes[name]) {
+    if (this.nunjucksAsyncShortcodes[name]) {
       debug(
         chalk.yellow(
-          "Warning, overwriting a Nunjucks Shortcode with `addNunjucksShortcode(%o)`"
+          "Warning, overwriting a Nunjucks Async Shortcode with `addNunjucksAsyncShortcode(%o)`"
         ),
         name
       );
     }
 
-    this.nunjucksShortcodes[name] = bench.add(
-      `"${name}" Nunjucks Shortcode`,
+    this.nunjucksAsyncShortcodes[name] = bench.add(
+      `"${name}" Nunjucks Async Shortcode`,
       callback
     );
+  }
+
+  addNunjucksShortcode(name, callback, isAsync = false) {
+    if (isAsync) {
+      this.addNunjucksAsyncShortcode(name, callback);
+    } else {
+      name = this.getNamespacedName(name);
+
+      if (this.nunjucksShortcodes[name]) {
+        debug(
+          chalk.yellow(
+            "Warning, overwriting a Nunjucks Shortcode with `addNunjucksShortcode(%o)`"
+          ),
+          name
+        );
+      }
+
+      this.nunjucksShortcodes[name] = bench.add(
+        `"${name}" Nunjucks Shortcode`,
+        callback
+      );
+    }
   }
 
   addLiquidShortcode(name, callback) {
@@ -537,35 +556,50 @@ class UserConfig {
       "Adding universal async paired shortcode %o",
       this.getNamespacedName(name)
     );
-
-    // as of 1.0.0-beta.9 and #1749 we don’t need to distinguish between async/sync shortcodes now
-    this.addPairedNunjucksShortcode(name, callback);
+    this.addPairedNunjucksAsyncShortcode(name, callback);
     this.addPairedLiquidShortcode(name, callback);
     this.addJavaScriptFunction(name, callback);
     // not supported in Handlebars
   }
 
-  // DEPRECATED, with 1.0.0-beta.9 and #1749 we don’t need to distinguish between async/sync shortcodes now
   addPairedNunjucksAsyncShortcode(name, callback) {
-    this.addPairedNunjucksShortcode(name, callback);
-  }
-
-  addPairedNunjucksShortcode(name, callback) {
     name = this.getNamespacedName(name);
 
-    if (this.nunjucksPairedShortcodes[name]) {
+    if (this.nunjucksAsyncPairedShortcodes[name]) {
       debug(
         chalk.yellow(
-          "Warning, overwriting a Nunjucks Paired Shortcode with `addPairedNunjucksShortcode(%o)`"
+          "Warning, overwriting a Nunjucks Async Paired Shortcode with `addPairedNunjucksAsyncShortcode(%o)`"
         ),
         name
       );
     }
 
-    this.nunjucksPairedShortcodes[name] = bench.add(
-      `"${name}" Nunjucks Paired Shortcode`,
+    this.nunjucksAsyncPairedShortcodes[name] = bench.add(
+      `"${name}" Nunjucks Async Paired Shortcode`,
       callback
     );
+  }
+
+  addPairedNunjucksShortcode(name, callback, isAsync = false) {
+    if (isAsync) {
+      this.addPairedNunjucksAsyncShortcode(name, callback);
+    } else {
+      name = this.getNamespacedName(name);
+
+      if (this.nunjucksPairedShortcodes[name]) {
+        debug(
+          chalk.yellow(
+            "Warning, overwriting a Nunjucks Paired Shortcode with `addPairedNunjucksShortcode(%o)`"
+          ),
+          name
+        );
+      }
+
+      this.nunjucksPairedShortcodes[name] = bench.add(
+        `"${name}" Nunjucks Paired Shortcode`,
+        callback
+      );
+    }
   }
 
   addPairedLiquidShortcode(name, callback) {
@@ -707,7 +741,9 @@ class UserConfig {
       nunjucksAsyncFilters: this.nunjucksAsyncFilters,
       nunjucksTags: this.nunjucksTags,
       nunjucksGlobals: this.nunjucksGlobals,
+      nunjucksAsyncShortcodes: this.nunjucksAsyncShortcodes,
       nunjucksShortcodes: this.nunjucksShortcodes,
+      nunjucksAsyncPairedShortcodes: this.nunjucksAsyncPairedShortcodes,
       nunjucksPairedShortcodes: this.nunjucksPairedShortcodes,
       handlebarsHelpers: this.handlebarsHelpers,
       handlebarsShortcodes: this.handlebarsShortcodes,
