@@ -83,3 +83,25 @@ test("Directory data files should be more specific in data cascade than Layout f
   let data = await tmpl.getData();
   t.is(data.cascade, "dir-data-file");
 });
+
+test("Layout front matter is included if the layout is specified by globalData", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.addGlobalData("layout", "base.njk");
+  eleventyConfig.userConfig.addGlobalData("layoutData", "global");
+
+  let dataObj = new TemplateData(
+    "./test/stubs-data-cascade/global-layout/",
+    eleventyConfig
+  );
+  let tmpl = getNewTemplate(
+    "./test/stubs-data-cascade/global-layout/test.njk",
+    "./test/stubs-data-cascade/global-layout/",
+    "./dist",
+    dataObj,
+    null,
+    eleventyConfig
+  );
+
+  let data = await tmpl.getData();
+  t.is(data.layoutData, "layout");
+});
