@@ -403,7 +403,8 @@ class Template extends TemplateContent {
       let frontMatterData = await this.getFrontMatterData();
       let layoutKey =
         frontMatterData[this.config.keys.layout] ||
-        localData[this.config.keys.layout];
+        localData[this.config.keys.layout] ||
+        globalData[this.config.keys.layout];
 
       // Layout front matter data
       let mergedLayoutData = {};
