@@ -259,6 +259,27 @@ class Template extends TemplateContent {
       debugDev("Permalink rendered with data: %o", data);
     }
 
+    // Override default permalink behavior. Only do this if permalink was _not_ in the data cascade
+    if (!permalink) {
+      let permalinkCompilation = this.engine.permalinkNeedsCompilation("");
+      if (typeof permalinkCompilation === "function") {
+        let ret = await this._renderFunction(
+          permalinkCompilation,
+          permalinkValue,
+          this.inputPath
+        );
+        if (ret !== undefined) {
+          if (typeof ret === "function") {
+            // function
+            permalinkValue = await this._renderFunction(ret, data);
+          } else {
+            // scalar
+            permalinkValue = ret;
+          }
+        }
+      }
+    }
+
     if (permalinkValue !== undefined) {
       return this._getRawPermalinkInstance(permalinkValue);
     }
@@ -779,6 +800,16 @@ class Template extends TemplateContent {
       let templateOutputDir = path.parse(outputPath).dir;
       if (templateOutputDir) {
         await mkdir(templateOutputDir, { recursive: true });
+      }
+
+      if (Buffer.isBuffer(finalContent)) {
+        finalContent = finalContent.toString();
+      }
+
+      if (typeof finalContent !== "string") {
+        throw new Error(
+          `The return value from the render function for the ${this.engine.name} template was not a string. Received ${finalContent}`
+        );
       }
 
       return writeFile(outputPath, finalContent).then(() => {

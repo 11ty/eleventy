@@ -155,12 +155,12 @@ class CustomEngine extends TemplateEngine {
     }
 
     // TODO generalize this (look at JavaScript.js)
-    return (
-      this.entry.compile
-        .bind({ config: this.config })(str, inputPath)
-        // give the user access to this engine's default renderer, if any
-        .bind({ defaultRenderer })
-    );
+    let fn = this.entry.compile.bind({ config: this.config })(str, inputPath);
+    if (typeof fn === "function") {
+      // give the user access to this engine's default renderer, if any
+      return fn.bind({ defaultRenderer });
+    }
+    return fn;
   }
 
   get defaultTemplateFileExtension() {
@@ -185,6 +185,10 @@ class CustomEngine extends TemplateEngine {
 
   permalinkNeedsCompilation(str) {
     if (this.entry.compileOptions && "permalink" in this.entry.compileOptions) {
+      let p = this.entry.compileOptions.permalink;
+      if (p === false || p === "raw") {
+        return false;
+      }
       return this.entry.compileOptions.permalink;
     }
 

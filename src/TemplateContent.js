@@ -340,28 +340,29 @@ class TemplateContent {
   }
 
   async renderPermalink(permalink, data) {
-    if (typeof permalink === "string") {
-      let permalinkCompilation =
-        this.engine.permalinkNeedsCompilation(permalink);
-      if (permalinkCompilation === false) {
-        return permalink;
-      }
+    let permalinkCompilation = this.engine.permalinkNeedsCompilation(permalink);
+    // No string compilation:
+    //    ({ compileOptions: { permalink: "raw" }})
+    // These mean `permalink: false`, which is no file system writing:
+    //    ({ compileOptions: { permalink: () => false }})
+    //    ({ compileOptions: { permalink: () => (() = > false) }})
+    if (permalinkCompilation === false) {
+      return permalink;
+    }
 
-      if (permalinkCompilation && typeof permalinkCompilation === "function") {
-        /* Usage:
-        permalink: function(permalinkString, inputPath) {
-          return async function(data) {
-            return "THIS IS MY RENDERED PERMALINK";
-          }
-        }
-        */
-        let fn = await this._renderFunction(
-          permalinkCompilation,
-          permalink,
-          this.inputPath
-        );
-        return this._renderFunction(fn, data);
+    /* Usage:
+    permalink: function(permalinkString, inputPath) {
+      return async function(data) {
+        return "THIS IS MY RENDERED PERMALINK";
       }
+    }
+    */
+    if (permalinkCompilation && typeof permalinkCompilation === "function") {
+      permalink = await this._renderFunction(
+        permalinkCompilation,
+        permalink,
+        this.inputPath
+      );
     }
 
     if (typeof permalink === "function") {
@@ -382,6 +383,8 @@ class TemplateContent {
       }
 
       let fn = await this.compile(str, bypassMarkdown);
+
+      // Benchmark
       let templateBenchmark = bench.get("Render");
       let paginationSuffix = [];
       if ("pagination" in data) {
