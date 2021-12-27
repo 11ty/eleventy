@@ -603,7 +603,10 @@ class TemplateMap {
         // This check skips precompiled collections
         if (entry) {
           let index = item.pageNumber || 0;
-          item.templateContent = entry._pages[index]._templateContent;
+          let content = entry._pages[index]._templateContent;
+          if (content !== undefined) {
+            item.templateContent = content;
+          }
         }
       }
     }

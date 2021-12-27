@@ -186,9 +186,15 @@ class CustomEngine extends TemplateEngine {
   permalinkNeedsCompilation(str) {
     if (this.entry.compileOptions && "permalink" in this.entry.compileOptions) {
       let p = this.entry.compileOptions.permalink;
-      if (p === false || p === "raw") {
+      if (p === "raw") {
         return false;
       }
+
+      // permalink: false is aliased to permalink: () => false
+      if (p === false) {
+        return () => false;
+      }
+
       return this.entry.compileOptions.permalink;
     }
 

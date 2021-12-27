@@ -344,6 +344,7 @@ class TemplateContent {
     // No string compilation:
     //    ({ compileOptions: { permalink: "raw" }})
     // These mean `permalink: false`, which is no file system writing:
+    //    ({ compileOptions: { permalink: false }})
     //    ({ compileOptions: { permalink: () => false }})
     //    ({ compileOptions: { permalink: () => (() = > false) }})
     if (permalinkCompilation === false) {

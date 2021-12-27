@@ -492,6 +492,7 @@ class Template extends TemplateContent {
     return ret;
   }
 
+  // Used only by tests
   async renderContent(str, data, bypassMarkdown) {
     return super.render(str, data, bypassMarkdown);
   }
@@ -678,11 +679,18 @@ class Template extends TemplateContent {
           date: data.page.date,
           outputPath: data.page.outputPath,
           url: data.page.url,
+          checkTemplateContent: true,
           set templateContent(content) {
+            if (content === undefined) {
+              this.checkTemplateContent = false;
+            }
             this._templateContent = content;
           },
           get templateContent() {
-            if (this._templateContent === undefined) {
+            if (
+              this.checkTemplateContent &&
+              this._templateContent === undefined
+            ) {
               if (this.template.behavior.isRenderable()) {
                 // should at least warn here
                 throw new TemplateContentPrematureUseError(
@@ -728,11 +736,18 @@ class Template extends TemplateContent {
             pageNumber: pageNumber,
             outputPath: pageData.page.outputPath,
             url: pageData.page.url,
+            checkTemplateContent: true,
             set templateContent(content) {
+              if (content === undefined) {
+                this.checkTemplateContent = false;
+              }
               this._templateContent = content;
             },
             get templateContent() {
-              if (this._templateContent === undefined) {
+              if (
+                this.checkTemplateContent &&
+                this._templateContent === undefined
+              ) {
                 if (this.template.behavior.isRenderable()) {
                   throw new TemplateContentPrematureUseError(
                     `Tried to use templateContent too early (${this.inputPath} page ${this.pageNumber})`
@@ -803,13 +818,9 @@ class Template extends TemplateContent {
         await mkdir(templateOutputDir, { recursive: true });
       }
 
-      if (Buffer.isBuffer(finalContent)) {
-        finalContent = finalContent.toString();
-      }
-
-      if (typeof finalContent !== "string") {
+      if (!Buffer.isBuffer(finalContent) && typeof finalContent !== "string") {
         throw new Error(
-          `The return value from the render function for the ${this.engine.name} template was not a string. Received ${finalContent}`
+          `The return value from the render function for the ${this.engine.name} template was not a String or Buffer. Received ${finalContent}`
         );
       }
 
@@ -854,7 +865,6 @@ class Template extends TemplateContent {
     return Promise.all(
       mapEntry._pages.map(async (page) => {
         let content;
-
         // Note that behavior.render is overridden when using json or ndjson output
         if (mapEntry.template.behavior.isRenderable()) {
           // this reuses page.templateContent, it doesn’t render it
@@ -907,7 +917,10 @@ class Template extends TemplateContent {
           return;
         }
 
-        return this._write(page.outputPath, content);
+        // compile returned undefined
+        if (content !== undefined) {
+          return this._write(page.outputPath, content);
+        }
       })
     );
   }

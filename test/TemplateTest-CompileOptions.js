@@ -47,13 +47,48 @@ test("Custom extension (.txt) with custom permalink compile function", async (t)
   });
 });
 
-test("Custom extension with and opt-out of permalink compilation", async (t) => {
+test("Custom extension with and compileOptions.permalink = false", async (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.extensionMap.add({
     extension: "txt",
     key: "txt",
     compileOptions: {
       permalink: false,
+    },
+    compile: function (str, inputPath) {
+      // plaintext
+      return function (data) {
+        return str;
+      };
+    },
+  });
+
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let tmpl = getNewTemplate(
+    "./test/stubs/custom-extension.txt",
+    "./test/stubs/",
+    "dist",
+    dataObj,
+    null,
+    eleventyConfig
+  );
+
+  let data = await tmpl.getData();
+  t.is(await tmpl.render(data), "Sample content");
+  t.deepEqual(await tmpl.getOutputLocations(data), {
+    href: false,
+    path: false,
+    rawPath: false,
+  });
+});
+
+test("Custom extension with and opt-out of permalink compilation", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.extensionMap.add({
+    extension: "txt",
+    key: "txt",
+    compileOptions: {
+      permalink: "raw",
     },
     compile: function (str, inputPath) {
       // plaintext
@@ -205,4 +240,36 @@ test("Custom extension (.txt) with custom permalink compile function that return
     path: false,
     rawPath: false,
   });
+});
+
+test("Custom extension (.txt) that returns undefined from compile", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.extensionMap.add({
+    extension: "txt",
+    key: "txt",
+    compile: function (str, inputPath) {
+      t.is(str, "Sample content");
+      return function (data) {
+        return undefined;
+      };
+    },
+  });
+
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let tmpl = getNewTemplate(
+    "./test/stubs/custom-extension-no-permalink.txt",
+    "./test/stubs/",
+    "dist",
+    dataObj,
+    null,
+    eleventyConfig
+  );
+
+  let data = await tmpl.getData();
+  t.is(await tmpl.render(data), undefined);
+  let pages = await tmpl.getTemplates(data);
+  for (let page of pages) {
+    page.templateContent = undefined;
+    t.is(page.templateContent, undefined); // shouldn’t throw an error
+  }
 });
