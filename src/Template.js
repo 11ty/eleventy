@@ -547,6 +547,7 @@ class Template extends TemplateContent {
   // Warning: this argument list is the reverse of linters (inputPath then outputPath)
   async runTransforms(str, inputPath, outputPath) {
     for (let transform of this.transforms) {
+      let hadStrBefore = !!str;
       str = await transform.callback.call(
         {
           inputPath,
@@ -555,7 +556,7 @@ class Template extends TemplateContent {
         str,
         outputPath
       );
-      if (!str) {
+      if (hadStrBefore && !str) {
         this.logger.warn(
           `Warning: Transform \`${transform.name}\` returned empty when writing ${outputPath} from ${inputPath}.`
         );
