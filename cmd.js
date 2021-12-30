@@ -46,8 +46,7 @@ try {
     },
   });
 
-  // TODO fix debug output: `Eleventy:cmd command: eleventy  [object Object] +0ms`
-  debug("command: eleventy ", argv.toString());
+  debug("command: eleventy %o", argv);
   const Eleventy = require("./src/Eleventy");
 
   process.on("unhandledRejection", (error, promise) => {
