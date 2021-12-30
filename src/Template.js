@@ -468,6 +468,7 @@ class Template extends TemplateContent {
     data.page.inputPath = this.inputPath;
     data.page.fileSlug = this.fileSlugStr;
     data.page.filePathStem = this.filePathStem;
+    data.page.outputFileExtension = this.engine.defaultTemplateFileExtension;
 
     return data;
   }
