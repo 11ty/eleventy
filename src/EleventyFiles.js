@@ -352,9 +352,12 @@ class EleventyFiles {
     }
 
     // Filter out the passthrough copy paths.
-    return this.pathCache.filter((path) =>
-      this.extensionMap.isFullTemplateFilePath(path)
-    );
+    return this.pathCache.filter((path) => {
+      return (
+        this.extensionMap.isFullTemplateFilePath(path) &&
+        this.extensionMap.shouldSpiderJavaScriptDependencies(path)
+      );
+    });
   }
 
   _globSearch() {

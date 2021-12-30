@@ -200,6 +200,17 @@ class CustomEngine extends TemplateEngine {
 
     return true;
   }
+
+  static shouldSpiderJavaScriptDependencies(entry) {
+    if (
+      entry.compileOptions &&
+      "spiderJavaScriptDependencies" in entry.compileOptions
+    ) {
+      return entry.compileOptions.spiderJavaScriptDependencies;
+    }
+
+    return false;
+  }
 }
 
 module.exports = CustomEngine;

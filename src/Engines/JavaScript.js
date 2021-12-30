@@ -133,6 +133,10 @@ class JavaScript extends TemplateEngine {
       }.bind(this);
     }
   }
+
+  static shouldSpiderJavaScriptDependencies() {
+    return true;
+  }
 }
 
 module.exports = JavaScript;

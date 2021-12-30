@@ -740,7 +740,8 @@ Arguments:
     }
 
     // Template files .11ty.js
-    this.watchTargets.addDependencies(this.eleventyFiles.getWatchPathCache());
+    let templateFiles = this.eleventyFiles.getWatchPathCache();
+    this.watchTargets.addDependencies(templateFiles);
 
     // Config file dependencies
     this.watchTargets.addDependencies(

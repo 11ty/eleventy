@@ -189,6 +189,11 @@ class TemplateEngine {
   needsCompilation(str) {
     return true;
   }
+
+  // See https://www.11ty.dev/docs/watch-serve/#watch-javascript-dependencies
+  static shouldSpiderJavaScriptDependencies() {
+    return false;
+  }
 }
 
 module.exports = TemplateEngine;
