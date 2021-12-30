@@ -267,6 +267,14 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       }
     );
 
+    if (fn === undefined) {
+      return;
+    } else if (typeof fn !== "function") {
+      throw new Error(
+        `The \`compile\` function did not return a function. Received ${fn}`
+      );
+    }
+
     // if the user passes a string or other literal, remap to an object.
     if (!lodashIsPlainObject(data)) {
       data = {
@@ -291,6 +299,14 @@ function EleventyPlugin(eleventyConfig, options = {}) {
         extensionMap,
       }
     );
+
+    if (fn === undefined) {
+      return;
+    } else if (typeof fn !== "function") {
+      throw new Error(
+        `The \`compile\` function did not return a function. Received ${fn}`
+      );
+    }
 
     // if the user passes a string or other literal, remap to an object.
     if (!lodashIsPlainObject(data)) {

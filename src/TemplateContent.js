@@ -384,6 +384,13 @@ class TemplateContent {
       }
 
       let fn = await this.compile(str, bypassMarkdown);
+      if (fn === undefined) {
+        return;
+      } else if (typeof fn !== "function") {
+        throw new Error(
+          `The \`compile\` function did not return a function. Received ${fn}`
+        );
+      }
 
       // Benchmark
       let templateBenchmark = bench.get("Render");
