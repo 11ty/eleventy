@@ -67,23 +67,15 @@ class CustomEngine extends TemplateEngine {
     await this._runningInit();
 
     if ("getData" in this.entry) {
-      let dataBench = bench.get(`Engine (${this.name}) Get Data From File`);
-      dataBench.before();
-
       if (typeof this.entry.getData === "function") {
+        let dataBench = bench.get(
+          `Engine (${this.name}) Get Data From File (Function)`
+        );
+        dataBench.before();
         let data = this.entry.getData(inputPath);
         dataBench.after();
         return data;
       } else {
-        if (!("getInstanceFromInputPath" in this.entry)) {
-          dataBench.after();
-          return Promise.reject(
-            new Error(
-              `getInstanceFromInputPath callback missing from ${this.name} template engine plugin.`
-            )
-          );
-        }
-
         let keys = new Set();
         if (this.entry.getData === true) {
           keys.add("data");
@@ -94,13 +86,17 @@ class CustomEngine extends TemplateEngine {
         }
 
         if (keys.size === 0) {
-          dataBench.after();
+          return;
+        } else if (!("getInstanceFromInputPath" in this.entry)) {
           return Promise.reject(
             new Error(
-              `getData must be an array of keys or \`true\` in your addExtension configuration.`
+              `getInstanceFromInputPath callback missing from ${this.name} template engine plugin.`
             )
           );
         }
+
+        let dataBench = bench.get(`Engine (${this.name}) Get Data From File`);
+        dataBench.before();
 
         let inst = await this.entry.getInstanceFromInputPath(inputPath);
         let mixins;

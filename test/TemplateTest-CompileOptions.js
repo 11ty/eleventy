@@ -2,7 +2,6 @@ const test = require("ava");
 
 const TemplateConfig = require("../src/TemplateConfig");
 const TemplateData = require("../src/TemplateData");
-const TemplateContent = require("../src/TemplateContent");
 
 const getNewTemplate = require("./_getNewTemplateForTests");
 
