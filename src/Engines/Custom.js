@@ -15,6 +15,8 @@ class CustomEngine extends TemplateEngine {
     // Enable cacheability for this template
     if (this.entry.compileOptions && "cache" in this.entry.compileOptions) {
       this.cacheable = this.entry.compileOptions.cache;
+    } else if (this.needsToReadFileContents()) {
+      this.cacheable = true;
     }
   }
 

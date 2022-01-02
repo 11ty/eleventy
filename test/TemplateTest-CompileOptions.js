@@ -2,6 +2,7 @@ const test = require("ava");
 
 const TemplateConfig = require("../src/TemplateConfig");
 const TemplateData = require("../src/TemplateData");
+const TemplateContent = require("../src/TemplateContent");
 
 const getNewTemplate = require("./_getNewTemplateForTests");
 
@@ -11,6 +12,7 @@ test("Custom extension (.txt) with custom permalink compile function", async (t)
     extension: "txt",
     key: "txt",
     compileOptions: {
+      cache: false,
       // pass in your own custom permalink function.
       permalink: async function (permalinkString, inputPath) {
         t.is(permalinkString, "custom-extension.lit");
@@ -53,6 +55,7 @@ test("Custom extension with and compileOptions.permalink = false", async (t) => 
     extension: "txt",
     key: "txt",
     compileOptions: {
+      cache: false,
       permalink: false,
     },
     compile: function (str, inputPath) {
@@ -88,6 +91,7 @@ test("Custom extension with and opt-out of permalink compilation", async (t) => 
     extension: "txt",
     key: "txt",
     compileOptions: {
+      cache: false,
       permalink: "raw",
     },
     compile: function (str, inputPath) {
@@ -123,6 +127,7 @@ test("Custom extension (.txt) with custom permalink compile function but no perm
     extension: "txt",
     key: "txt",
     compileOptions: {
+      cache: false,
       // pass in your own custom permalink function.
       permalink: async function (permalinkString, inputPath) {
         t.is(permalinkString, undefined);
@@ -166,6 +171,7 @@ test("Custom extension (.txt) with custom permalink compile function (that retur
     extension: "txt",
     key: "txt",
     compileOptions: {
+      cache: false,
       permalink: async function (permalinkString, inputPath) {
         t.is(permalinkString, undefined);
         t.is(inputPath, "./test/stubs/custom-extension-no-permalink.txt");
@@ -207,6 +213,7 @@ test("Custom extension (.txt) with custom permalink compile function that return
     extension: "txt",
     key: "txt",
     compileOptions: {
+      cache: false,
       permalink: async function (permalinkString, inputPath) {
         t.is(permalinkString, undefined);
         t.is(inputPath, "./test/stubs/custom-extension-no-permalink.txt");
@@ -247,6 +254,9 @@ test("Custom extension (.txt) that returns undefined from compile", async (t) =>
   eleventyConfig.userConfig.extensionMap.add({
     extension: "txt",
     key: "txt",
+    compileOptions: {
+      cache: false,
+    },
     compile: function (str, inputPath) {
       t.is(str, "Sample content");
       return function (data) {
