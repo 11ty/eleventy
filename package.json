@@ -84,6 +84,7 @@
     "js-yaml": "^4.1.0",
     "lint-staged": "^11.2.6",
     "markdown-it-emoji": "^2.0.0",
+    "marked": "^4.0.8",
     "nyc": "^15.1.0",
     "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
