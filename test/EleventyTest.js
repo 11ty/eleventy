@@ -322,3 +322,48 @@ test("Eleventy programmatic API without init", async (t) => {
     ]
   );
 });
+
+test("Can Eleventy run two executeBuilds in parallel?", async (t) => {
+  let elev = new Eleventy("./test/stubs--to/");
+  elev.setIsVerbose(false);
+
+  let p1 = elev.toJSON();
+  let p2 = elev.toJSON();
+  let [result1, result2] = await Promise.all([p1, p2]);
+
+  let test1Result = [
+    {
+      url: "/test/",
+      inputPath: "./test/stubs--to/test.md",
+      outputPath: "_site/test/index.html",
+      content: "<h1>hi</h1>\n",
+    },
+  ];
+
+  let test2Result = [
+    {
+      url: "/test2/",
+      inputPath: "./test/stubs--to/test2.liquid",
+      outputPath: "_site/test2/index.html",
+      content: "hello",
+    },
+  ];
+
+  t.deepEqual(
+    result1.filter((entry) => entry.url === "/test/"),
+    test1Result
+  );
+  t.deepEqual(
+    result1.filter((entry) => entry.url === "/test2/"),
+    test2Result
+  );
+
+  t.deepEqual(
+    result2.filter((entry) => entry.url === "/test/"),
+    test1Result
+  );
+  t.deepEqual(
+    result2.filter((entry) => entry.url === "/test2/"),
+    test2Result
+  );
+});
