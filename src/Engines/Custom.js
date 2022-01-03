@@ -64,72 +64,73 @@ class CustomEngine extends TemplateEngine {
   }
 
   async getExtraDataFromFile(inputPath) {
+    if (!("getData" in this.entry) || this.entry.getData === false) {
+      return;
+    }
+
     await this._runningInit();
 
-    if ("getData" in this.entry) {
-      if (typeof this.entry.getData === "function") {
-        let dataBench = bench.get(
-          `Engine (${this.name}) Get Data From File (Function)`
-        );
-        dataBench.before();
-        let data = this.entry.getData(inputPath);
-        dataBench.after();
-        return data;
-      } else {
-        let keys = new Set();
-        if (this.entry.getData === true) {
-          keys.add("data");
-        } else if (Array.isArray(this.entry.getData)) {
-          for (let key of this.entry.getData) {
-            keys.add(key);
-          }
-        }
+    if (typeof this.entry.getData === "function") {
+      let dataBench = bench.get(
+        `Engine (${this.name}) Get Data From File (Function)`
+      );
+      dataBench.before();
+      let data = this.entry.getData(inputPath);
+      dataBench.after();
+      return data;
+    }
 
-        if (keys.size === 0) {
-          return;
-        } else if (!("getInstanceFromInputPath" in this.entry)) {
-          return Promise.reject(
-            new Error(
-              `getInstanceFromInputPath callback missing from ${this.name} template engine plugin.`
-            )
-          );
-        }
+    // if getData is not false or a function then `getInstanceFromInputPath` must exist
+    if (!("getInstanceFromInputPath" in this.entry)) {
+      return Promise.reject(
+        new Error(
+          `getInstanceFromInputPath callback missing from ${this.name} template engine plugin.`
+        )
+      );
+    }
 
-        let dataBench = bench.get(`Engine (${this.name}) Get Data From File`);
-        dataBench.before();
-
-        let inst = await this.entry.getInstanceFromInputPath(inputPath);
-        let mixins;
-        if (this.config) {
-          // Object.assign usage: see TemplateRenderCustomTest.js: `JavaScript functions should not be mutable but not *that* mutable`
-          mixins = Object.assign({}, this.config.javascriptFunctions);
-        }
-
-        // override keys set at the plugin level in the individual template
-        if (inst.eleventyDataKey) {
-          keys = new Set(inst.eleventyDataKey);
-        }
-
-        let promises = [];
-        for (let key of keys) {
-          promises.push(
-            getJavaScriptData(inst, inputPath, key, {
-              mixins,
-              isObjectRequired: key === "data",
-            })
-          );
-        }
-
-        let results = await Promise.all(promises);
-        let data = {};
-        for (let result of results) {
-          Object.assign(data, result);
-        }
-        dataBench.after();
-
-        return data;
+    let keys = new Set();
+    if (this.entry.getData === true) {
+      keys.add("data");
+    } else if (Array.isArray(this.entry.getData)) {
+      for (let key of this.entry.getData) {
+        keys.add(key);
       }
     }
+
+    let dataBench = bench.get(`Engine (${this.name}) Get Data From File`);
+    dataBench.before();
+
+    let inst = await this.entry.getInstanceFromInputPath(inputPath);
+    // override keys set at the plugin level in the individual template
+    if (inst.eleventyDataKey) {
+      keys = new Set(inst.eleventyDataKey);
+    }
+
+    let mixins;
+    if (this.config) {
+      // Object.assign usage: see TemplateRenderCustomTest.js: `JavaScript functions should not be mutable but not *that* mutable`
+      mixins = Object.assign({}, this.config.javascriptFunctions);
+    }
+
+    let promises = [];
+    for (let key of keys) {
+      promises.push(
+        getJavaScriptData(inst, inputPath, key, {
+          mixins,
+          isObjectRequired: key === "data",
+        })
+      );
+    }
+
+    let results = await Promise.all(promises);
+    let data = {};
+    for (let result of results) {
+      Object.assign(data, result);
+    }
+    dataBench.after();
+
+    return data;
   }
 
   async compile(str, inputPath, ...args) {
