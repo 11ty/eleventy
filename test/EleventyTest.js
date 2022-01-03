@@ -155,7 +155,7 @@ test("Eleventy set input/output, one file input exitCode", async (t) => {
   );
   elev.setIsVerbose(false);
   elev.disableLogger();
-  await elev.init();
+  // await elev.init(); // no longer necessary
   await elev.write();
 
   t.is(process.exitCode, 1);
@@ -167,7 +167,7 @@ test("Eleventy to json", async (t) => {
   let elev = new Eleventy("./test/stubs--to/");
   elev.setIsVerbose(false);
 
-  await elev.init();
+  // await elev.init(); // no longer necessary
 
   let result = await elev.toJSON();
 
@@ -200,7 +200,7 @@ test("Eleventy to ndjson", async (t) => {
 
   elev.setIsVerbose(false);
 
-  await elev.init();
+  // await elev.init(); // no longer necessary
 
   let stream = await elev.toNDJSON();
   let count = 0;
@@ -237,33 +237,34 @@ test.cb("Eleventy to ndjson (returns a stream)", (t) => {
 
   elev.setIsVerbose(false);
 
-  elev.init().then(() => {
-    elev.toNDJSON().then((stream) => {
-      let results = [];
-      stream.on("data", function (jsonObj) {
-        if (jsonObj.url === "/test/") {
-          t.deepEqual(jsonObj, {
-            url: "/test/",
-            inputPath: "./test/stubs--to/test.md",
-            outputPath: "_site/test/index.html",
-            content: "<h1>hi</h1>\n",
-          });
-        }
-        if (jsonObj.url === "/test2/") {
-          t.deepEqual(jsonObj, {
-            url: "/test2/",
-            inputPath: "./test/stubs--to/test2.liquid",
-            outputPath: "_site/test2/index.html",
-            content: "hello",
-          });
-        }
+  // elev.init().then(() => { // no longer necessary
+  // });
 
-        results.push(jsonObj);
+  elev.toNDJSON().then((stream) => {
+    let results = [];
+    stream.on("data", function (jsonObj) {
+      if (jsonObj.url === "/test/") {
+        t.deepEqual(jsonObj, {
+          url: "/test/",
+          inputPath: "./test/stubs--to/test.md",
+          outputPath: "_site/test/index.html",
+          content: "<h1>hi</h1>\n",
+        });
+      }
+      if (jsonObj.url === "/test2/") {
+        t.deepEqual(jsonObj, {
+          url: "/test2/",
+          inputPath: "./test/stubs--to/test2.liquid",
+          outputPath: "_site/test2/index.html",
+          content: "hello",
+        });
+      }
 
-        if (results.length >= 2) {
-          t.end();
-        }
-      });
+      results.push(jsonObj);
+
+      if (results.length >= 2) {
+        t.end();
+      }
     });
   });
 });
@@ -290,4 +291,34 @@ test("Config propagates to other instances correctly", async (t) => {
   t.is(elev.eleventyFiles.eleventyConfig, elev.eleventyConfig);
   t.is(elev.templateData.eleventyConfig, elev.eleventyConfig);
   t.is(elev.writer.eleventyConfig, elev.eleventyConfig);
+});
+
+test("Eleventy programmatic API without init", async (t) => {
+  let elev = new Eleventy("./test/stubs--to/");
+  elev.setIsVerbose(false);
+
+  let result = await elev.toJSON();
+
+  t.deepEqual(
+    result.filter((entry) => entry.url === "/test/"),
+    [
+      {
+        url: "/test/",
+        inputPath: "./test/stubs--to/test.md",
+        outputPath: "_site/test/index.html",
+        content: "<h1>hi</h1>\n",
+      },
+    ]
+  );
+  t.deepEqual(
+    result.filter((entry) => entry.url === "/test2/"),
+    [
+      {
+        url: "/test2/",
+        inputPath: "./test/stubs--to/test2.liquid",
+        outputPath: "_site/test2/index.html",
+        content: "hello",
+      },
+    ]
+  );
 });

@@ -45,8 +45,7 @@ class CustomEngine extends TemplateEngine {
     return true;
   }
 
-  // If we init from multiple places, wait for the first init to finish
-  // before continuing on.
+  // If we init from multiple places, wait for the first init to finish before continuing on.
   async _runningInit() {
     if (this.needsInit) {
       let initBench = bench.get(`Engine (${this.name}) Init`);

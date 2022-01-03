@@ -99,6 +99,12 @@ class Eleventy {
     this.isDryRun = false;
 
     /**
+     * @member {Boolean} - Has init run?
+     * @default true
+     */
+    this.needsInit = true;
+
+    /**
      * @member {Boolean} - Explicit input directory (usually used when input is a single file/serverless)
      */
     if (options.inputDir) {
@@ -381,8 +387,12 @@ Verbose Output: ${this.verboseMode}`);
 
     this.config.events.emit("eleventy.directories", dirs);
 
-    // …why does this return this
-    return this.templateData.cacheData();
+    let data = this.templateData.cacheData();
+
+    this.needsInit = false;
+
+    // …why does it return this
+    return data;
   }
 
   // These are all set as initial global data under eleventy.env.* (see TemplateData->environmentVariables)
@@ -933,17 +943,25 @@ Arguments:
    * @returns {Promise<{}>} ret - tbd.
    */
   async executeBuild(to = "fs") {
-    let ret;
-    let hasError = false;
+    if (this.needsInit) {
+      if (!this._initing) {
+        this._initing = this.init();
+      }
+      await this._initing;
+      this.needsInit = false;
+    }
 
     if (!this.writer) {
       this.errorHandler.fatal(
         new Error(
-          "Did you call Eleventy.init to create the TemplateWriter instance? Hint: you probably didn’t."
+          "Eleventy didn’t run init() properly and wasn’t able to create a TemplateWriter."
         ),
         "Problem writing Eleventy templates"
       );
     }
+
+    let ret;
+    let hasError = false;
 
     try {
       let eventsArg = {
