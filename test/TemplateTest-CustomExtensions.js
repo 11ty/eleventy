@@ -250,9 +250,10 @@ test("Overridden liquid gets used from a markdown template", async (t) => {
       cache: false,
     },
     compile: function (str, inputPath) {
+      t.true(true);
+
       // plaintext
       return function (data) {
-        t.true(true);
         return this.defaultRenderer();
       };
     },
