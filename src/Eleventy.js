@@ -99,7 +99,7 @@ class Eleventy {
     this.isDryRun = false;
 
     /**
-     * @member {Boolean} - Has init run?
+     * @member {Boolean} - Does the init() method still need to be run (or hasn’t finished yet)
      * @default true
      */
     this.needsInit = true;
