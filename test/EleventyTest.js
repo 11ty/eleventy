@@ -232,17 +232,17 @@ test("Eleventy to ndjson", async (t) => {
   });
 });
 
-test.cb("Eleventy to ndjson (returns a stream)", (t) => {
+test("Eleventy to ndjson (returns a stream)", async (t) => {
   let elev = new Eleventy("./test/stubs--to/");
 
   elev.setIsVerbose(false);
 
-  // elev.init().then(() => { // no longer necessary
-  // });
+  let stream = await elev.toNDJSON();
 
-  elev.toNDJSON().then((stream) => {
+  await new Promise((resolve) => {
     let results = [];
-    stream.on("data", function (jsonObj) {
+    stream.on("data", function (entry) {
+      let jsonObj = JSON.parse(entry);
       if (jsonObj.url === "/test/") {
         t.deepEqual(jsonObj, {
           url: "/test/",
@@ -263,7 +263,7 @@ test.cb("Eleventy to ndjson (returns a stream)", (t) => {
       results.push(jsonObj);
 
       if (results.length >= 2) {
-        t.end();
+        resolve();
       }
     });
   });

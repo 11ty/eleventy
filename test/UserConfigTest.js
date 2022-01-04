@@ -43,36 +43,40 @@ test("Template Formats (Arrays)", (t) => {
 
 // more in TemplateConfigTest.js
 
-test.cb("Events", (t) => {
-  let userCfg = new UserConfig();
-  userCfg.on("testEvent", function (arg1, arg2, arg3) {
-    t.is(arg1, "arg1");
-    t.is(arg2, "arg2");
-    t.is(arg3, "arg3");
-    t.end();
-  });
+test("Events", async (t) => {
+  await new Promise((resolve) => {
+    let userCfg = new UserConfig();
+    userCfg.on("testEvent", function (arg1, arg2, arg3) {
+      t.is(arg1, "arg1");
+      t.is(arg2, "arg2");
+      t.is(arg3, "arg3");
+      resolve();
+    });
 
-  userCfg.emit("testEvent", "arg1", "arg2", "arg3");
+    userCfg.emit("testEvent", "arg1", "arg2", "arg3");
+  });
 });
 
-test.cb("Async Events", (t) => {
-  let userCfg = new UserConfig();
-  let arg1;
+test("Async Events", async (t) => {
+  await new Promise((resolve) => {
+    let userCfg = new UserConfig();
+    let arg1;
 
-  userCfg.on(
-    "asyncTestEvent",
-    (_arg1) =>
-      new Promise((resolve) => {
-        setTimeout(() => {
-          arg1 = _arg1;
-          resolve();
-        }, 10);
-      })
-  );
+    userCfg.on(
+      "asyncTestEvent",
+      (_arg1) =>
+        new Promise((resolve) => {
+          setTimeout(() => {
+            arg1 = _arg1;
+            resolve();
+          }, 10);
+        })
+    );
 
-  userCfg.emit("asyncTestEvent", "arg1").then(() => {
-    t.is(arg1, "arg1");
-    t.end();
+    userCfg.emit("asyncTestEvent", "arg1").then(() => {
+      t.is(arg1, "arg1");
+      resolve();
+    });
   });
 });
 
