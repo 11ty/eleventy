@@ -1,6 +1,8 @@
 const BenchmarkGroup = require("./BenchmarkGroup");
 const { performance } = require("perf_hooks");
 
+// TODO this should not be a singleton, it belongs in the config or somewhere on the Eleventy instance.
+
 class BenchmarkManager {
   constructor() {
     this.benchmarkGroups = {};
