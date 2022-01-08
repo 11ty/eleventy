@@ -78,9 +78,19 @@ class Pagination {
       // Warn: this doesn’t run filter/before/pagination transformations
       // Warn: `pagination.pages`, pageNumber, links, hrefs, etc
       let serverlessPaginationKey = this._get(data, data.pagination.serverless);
-      this.chunkedItems = [
-        [this._get(this.fullDataSet, serverlessPaginationKey)],
-      ];
+
+      if (typeof data.pagination.serverlessFilter === "function") {
+        this.chunkedItems = [
+          data.pagination.serverlessFilter(
+            this.fullDataSet,
+            serverlessPaginationKey
+          ),
+        ];
+      } else {
+        this.chunkedItems = [
+          [this._get(this.fullDataSet, serverlessPaginationKey)],
+        ];
+      }
     } else {
       // this returns an array
       this.target = this._resolveItems();
@@ -311,7 +321,10 @@ class Pagination {
 
       // TODO maybe also move this permalink additions up into the pagination class
       let hasPermalinkField = Boolean(this.data[this.config.keys.permalink]);
-      let hasComputedPermalinkField = Boolean(this.data.eleventyComputed && this.data.eleventyComputed[this.config.keys.permalink]);
+      let hasComputedPermalinkField = Boolean(
+        this.data.eleventyComputed &&
+          this.data.eleventyComputed[this.config.keys.permalink]
+      );
       if (pageNumber > 0 && !(hasPermalinkField || hasComputedPermalinkField)) {
         cloned.setExtraOutputSubdirectory(pageNumber);
       }
