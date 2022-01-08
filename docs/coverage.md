@@ -1,8 +1,8 @@
-# Code Coverage for Eleventy v1.0.0-beta.10
+# Code Coverage for Eleventy v1.0.0
 
 | Filename                                                                 | % Lines | % Statements | % Functions | % Branches |
 | ------------------------------------------------------------------------ | ------- | ------------ | ----------- | ---------- |
-| `total`                                                                  | 83.83%  | 83.86%       | 84.68%      | 75.69%     |
+| `total`                                                                  | 83.8%   | 83.83%       | 84.68%      | 75.6%      |
 | `cmd.js`                                                                 | 62.26%  | 62.26%       | 9.09%       | 59.09%     |
 | `.cache/vue/include.js`                                                  | 100%    | 100%         | 100%        | 100%       |
 | `.cache/vue/include.vue_vue_type_script_lang.js`                         | 100%    | 100%         | 100%        | 100%       |
@@ -37,7 +37,7 @@
 | `src/TemplateCache.js`                                                   | 81.81%  | 81.81%       | 85.71%      | 50%        |
 | `src/TemplateCollection.js`                                              | 88.09%  | 88.63%       | 93.33%      | 68.75%     |
 | `src/TemplateConfig.js`                                                  | 86.04%  | 86.04%       | 64.28%      | 85.36%     |
-| `src/TemplateContent.js`                                                 | 89.32%  | 89.32%       | 97.22%      | 77.47%     |
+| `src/TemplateContent.js`                                                 | 89.37%  | 89.37%       | 97.22%      | 77.39%     |
 | `src/TemplateData.js`                                                    | 95.45%  | 95.5%        | 98%         | 84.76%     |
 | `src/TemplateEngineManager.js`                                           | 96.15%  | 96.15%       | 85.71%      | 97.05%     |
 | `src/TemplateFileSlug.js`                                                | 100%    | 100%         | 100%        | 100%       |
@@ -53,7 +53,7 @@
 | `src/TemplateWriter.js`                                                  | 80.68%  | 80.68%       | 71.79%      | 52.77%     |
 | `src/UserConfig.js`                                                      | 68.29%  | 68.29%       | 61.53%      | 51.48%     |
 | `src/defaultConfig.js`                                                   | 85.71%  | 85.71%       | 40%         | 100%       |
-| `src/Engines/Custom.js`                                                  | 87.77%  | 87.91%       | 100%        | 80%        |
+| `src/Engines/Custom.js`                                                  | 88.04%  | 88.17%       | 100%        | 79.03%     |
 | `src/Engines/Ejs.js`                                                     | 94.73%  | 94.73%       | 85.71%      | 88.88%     |
 | `src/Engines/Haml.js`                                                    | 100%    | 100%         | 100%        | 100%       |
 | `src/Engines/Handlebars.js`                                              | 100%    | 100%         | 100%        | 83.33%     |
@@ -73,7 +73,7 @@
 | `src/Filters/Slug.js`                                                    | 100%    | 100%         | 100%        | 100%       |
 | `src/Filters/Slugify.js`                                                 | 100%    | 100%         | 100%        | 100%       |
 | `src/Filters/Url.js`                                                     | 95%     | 95%          | 100%        | 95.23%     |
-| `src/Plugins/Pagination.js`                                              | 89.13%  | 89.43%       | 91.3%       | 78.72%     |
+| `src/Plugins/Pagination.js`                                              | 87.85%  | 88.19%       | 91.3%       | 77.08%     |
 | `src/Plugins/RenderPlugin.js`                                            | 87.06%  | 87.28%       | 91.3%       | 64.15%     |
 | `src/Plugins/ServerlessBundlerPlugin.js`                                 | 6.45%   | 6.38%        | 0%          | 0%         |
 | `src/Util/AsyncEventEmitter.js`                                          | 100%    | 100%         | 100%        | 100%       |
