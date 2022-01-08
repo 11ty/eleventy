@@ -48,9 +48,9 @@ class CustomEngine extends TemplateEngine {
   // If we init from multiple places, wait for the first init to finish before continuing on.
   async _runningInit() {
     if (this.needsInit) {
-      let initBench = bench.get(`Engine (${this.name}) Init`);
-      initBench.before();
       if (!this._initing) {
+        this._initBench = bench.get(`Engine (${this.name}) Init`);
+        this._initBench.before();
         this._initing = this.entry.init.bind({
           config: this.config,
           bench,
@@ -58,7 +58,11 @@ class CustomEngine extends TemplateEngine {
       }
       await this._initing;
       this.needsInit = false;
-      initBench.after();
+
+      if (this._initBench) {
+        this._initBench.after();
+        this._initBench = undefined;
+      }
     }
   }
 
