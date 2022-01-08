@@ -269,18 +269,20 @@ class TemplateContent {
           str,
           bypassMarkdown
         );
-        if (cacheable && cache.has(key)) {
-          return cache.get(key);
-        }
+        if (cacheable && key) {
+          if (cache.has(key)) {
+            return cache.get(key);
+          }
 
-        // Compilation is async, so we eagerly cache a Promise that eventually
-        // resolves to the compiled function
-        cache.set(
-          key,
-          new Promise((resolve) => {
-            res = resolve;
-          })
-        );
+          // Compilation is async, so we eagerly cache a Promise that eventually
+          // resolves to the compiled function
+          cache.set(
+            key,
+            new Promise((resolve) => {
+              res = resolve;
+            })
+          );
+        }
       }
 
       let templateBenchmark = bench.get("Template Compile");
@@ -299,7 +301,7 @@ class TemplateContent {
       return fn;
     } catch (e) {
       let [cacheable, key, cache] = this._getCompileCache(str, bypassMarkdown);
-      if (cacheable) {
+      if (cacheable && key) {
         cache.delete(key);
       }
       debug(`Having trouble compiling template ${this.inputPath}: %O`, str);
