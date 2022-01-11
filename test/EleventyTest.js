@@ -278,6 +278,8 @@ test("Two Eleventies, two configs!!! (config used to be a global)", async (t) =>
 
   let elev2 = new Eleventy();
   t.not(elev1.eleventyConfig, elev2.eleventyConfig);
+  elev1.config.benchmarkManager = null;
+  elev2.config.benchmarkManager = null;
   t.is(JSON.stringify(elev1.config), JSON.stringify(elev2.config));
 });
 

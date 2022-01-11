@@ -16,7 +16,6 @@ const { performance } = require("perf_hooks");
 const templateCache = require("./TemplateCache");
 const simplePlural = require("./Util/Pluralize");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
-const bench = require("./BenchmarkManager");
 const debug = require("debug")("Eleventy");
 const eventBus = require("./EventBus");
 
@@ -72,6 +71,11 @@ class Eleventy {
      * @member {Object} - Initialize Eleventy’s configuration, including the user config file
      */
     this.config = this.eleventyConfig.getConfig();
+
+    /**
+     * @member {Object} - Singleton BenchmarkManager instance
+     */
+    this.bench = this.config.benchmarkManager;
 
     /**
      * @member {Boolean} - Was verbose mode overwritten?
@@ -246,7 +250,7 @@ class Eleventy {
     debug("Restarting");
     this.start = this.getNewTimestamp();
     templateCache.clear();
-    bench.reset();
+    this.bench.reset();
     this.eleventyFiles.restart();
     this.extensionMap.reset();
 
@@ -438,9 +442,7 @@ Verbose Output: ${this.verboseMode}`);
       this.writer.setVerboseOutput(this._isVerboseMode);
     }
 
-    if (bench) {
-      bench.setVerboseOutput(this._isVerboseMode);
-    }
+    this.bench.setVerboseOutput(this._isVerboseMode);
 
     if (this.logger) {
       this.logger.isVerbose = this._isVerboseMode;
@@ -502,7 +504,7 @@ Verbose Output: ${this.verboseMode}`);
       this.logger.isVerbose = isVerbose;
     }
 
-    bench.setVerboseOutput(isVerbose);
+    this.bench.setVerboseOutput(isVerbose);
     this.verboseMode = isVerbose;
 
     // Set verbose mode in config file
@@ -701,7 +703,7 @@ Arguments:
    * @returns {} - tbd.
    */
   get watcherBench() {
-    return bench.get("Watcher");
+    return this.bench.get("Watcher");
   }
 
   /**
@@ -1000,7 +1002,7 @@ Arguments:
       };
       this.errorHandler.fatal(e, "Problem writing Eleventy templates");
     } finally {
-      bench.finish();
+      this.bench.finish();
       if (to === "fs") {
         this.logger.message(
           this.logFinished(),

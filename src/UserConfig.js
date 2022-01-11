@@ -3,9 +3,8 @@ const semver = require("semver");
 const { DateTime } = require("luxon");
 const EventEmitter = require("./Util/AsyncEventEmitter");
 const EleventyBaseError = require("./EleventyBaseError");
+const BenchmarkManager = require("./BenchmarkManager");
 const merge = require("./Util/Merge");
-const bench = require("./BenchmarkManager").get("Configuration");
-const aggregateBench = require("./BenchmarkManager").get("Aggregate");
 const debug = require("debug")("Eleventy:UserConfig");
 const pkg = require("../package.json");
 
@@ -20,6 +19,13 @@ class UserConfig {
   reset() {
     debug("Resetting EleventyConfig to initial values.");
     this.events = new EventEmitter();
+
+    this.benchmarkManager = new BenchmarkManager();
+    this.benchmarks = {
+      config: this.benchmarkManager.get("Configuration"),
+      aggregate: this.benchmarkManager.get("Aggregate"),
+    };
+
     this.collections = {};
     this.precompiledCollections = {};
     this.templateFormats = undefined;
@@ -132,7 +138,10 @@ class UserConfig {
         name
       );
     }
-    this.liquidTags[name] = bench.add(`"${name}" Liquid Custom Tag`, tagFn);
+    this.liquidTags[name] = this.benchmarks.config.add(
+      `"${name}" Liquid Custom Tag`,
+      tagFn
+    );
   }
 
   addLiquidFilter(name, callback) {
@@ -147,7 +156,10 @@ class UserConfig {
       );
     }
 
-    this.liquidFilters[name] = bench.add(`"${name}" Liquid Filter`, callback);
+    this.liquidFilters[name] = this.benchmarks.config.add(
+      `"${name}" Liquid Filter`,
+      callback
+    );
   }
 
   addNunjucksAsyncFilter(name, callback) {
@@ -162,7 +174,7 @@ class UserConfig {
       );
     }
 
-    this.nunjucksAsyncFilters[name] = bench.add(
+    this.nunjucksAsyncFilters[name] = this.benchmarks.config.add(
       `"${name}" Nunjucks Async Filter`,
       callback
     );
@@ -185,7 +197,7 @@ class UserConfig {
         );
       }
 
-      this.nunjucksFilters[name] = bench.add(
+      this.nunjucksFilters[name] = this.benchmarks.config.add(
         `"${name}" Nunjucks Filter`,
         callback
       );
@@ -204,7 +216,7 @@ class UserConfig {
       );
     }
 
-    this.handlebarsHelpers[name] = bench.add(
+    this.handlebarsHelpers[name] = this.benchmarks.config.add(
       `"${name}" Handlebars Helper`,
       callback
     );
@@ -249,7 +261,10 @@ class UserConfig {
       );
     }
 
-    this.nunjucksTags[name] = bench.add(`"${name}" Nunjucks Custom Tag`, tagFn);
+    this.nunjucksTags[name] = this.benchmarks.config.add(
+      `"${name}" Nunjucks Custom Tag`,
+      tagFn
+    );
   }
 
   addGlobalData(name, data) {
@@ -271,7 +286,7 @@ class UserConfig {
     }
 
     if (typeof globalType === "function") {
-      this.nunjucksGlobals[name] = bench.add(
+      this.nunjucksGlobals[name] = this.benchmarks.config.add(
         `"${name}" Nunjucks Global`,
         globalType
       );
@@ -327,20 +342,23 @@ class UserConfig {
 
   _executePlugin(plugin, options) {
     debug(`Adding ${plugin.name || "anonymous"} plugin`);
-    let pluginBench = aggregateBench.get("Configuration addPlugin");
+    let pluginBenchmark = this.benchmarks.aggregate.get(
+      "Configuration addPlugin"
+    );
     if (typeof plugin === "function") {
-      pluginBench.before();
+      pluginBenchmark.before();
+      this.benchmarks.config;
       let configFunction = plugin;
       configFunction(this, options);
-      pluginBench.after();
+      pluginBenchmark.after();
     } else if (plugin && plugin.configFunction) {
-      pluginBench.before();
+      pluginBenchmark.before();
       if (options && typeof options.init === "function") {
         options.init.call(this, plugin.initArguments || {});
       }
 
       plugin.configFunction(this, options);
-      pluginBench.after();
+      pluginBenchmark.after();
     } else {
       throw new UserConfigError(
         "Invalid EleventyConfig.addPlugin signature. Should be a function or a valid Eleventy plugin object."
@@ -478,7 +496,7 @@ class UserConfig {
       );
     }
 
-    this.nunjucksAsyncShortcodes[name] = bench.add(
+    this.nunjucksAsyncShortcodes[name] = this.benchmarks.config.add(
       `"${name}" Nunjucks Async Shortcode`,
       callback
     );
@@ -499,7 +517,7 @@ class UserConfig {
         );
       }
 
-      this.nunjucksShortcodes[name] = bench.add(
+      this.nunjucksShortcodes[name] = this.benchmarks.config.add(
         `"${name}" Nunjucks Shortcode`,
         callback
       );
@@ -518,7 +536,7 @@ class UserConfig {
       );
     }
 
-    this.liquidShortcodes[name] = bench.add(
+    this.liquidShortcodes[name] = this.benchmarks.config.add(
       `"${name}" Liquid Shortcode`,
       callback
     );
@@ -536,7 +554,7 @@ class UserConfig {
       );
     }
 
-    this.handlebarsShortcodes[name] = bench.add(
+    this.handlebarsShortcodes[name] = this.benchmarks.config.add(
       `"${name}" Handlebars Shortcode`,
       callback
     );
@@ -574,7 +592,7 @@ class UserConfig {
       );
     }
 
-    this.nunjucksAsyncPairedShortcodes[name] = bench.add(
+    this.nunjucksAsyncPairedShortcodes[name] = this.benchmarks.config.add(
       `"${name}" Nunjucks Async Paired Shortcode`,
       callback
     );
@@ -595,7 +613,7 @@ class UserConfig {
         );
       }
 
-      this.nunjucksPairedShortcodes[name] = bench.add(
+      this.nunjucksPairedShortcodes[name] = this.benchmarks.config.add(
         `"${name}" Nunjucks Paired Shortcode`,
         callback
       );
@@ -614,7 +632,7 @@ class UserConfig {
       );
     }
 
-    this.liquidPairedShortcodes[name] = bench.add(
+    this.liquidPairedShortcodes[name] = this.benchmarks.config.add(
       `"${name}" Liquid Paired Shortcode`,
       callback
     );
@@ -632,7 +650,7 @@ class UserConfig {
       );
     }
 
-    this.handlebarsPairedShortcodes[name] = bench.add(
+    this.handlebarsPairedShortcodes[name] = this.benchmarks.config.add(
       `"${name}" Handlebars Paired Shortcode`,
       callback
     );
@@ -650,7 +668,7 @@ class UserConfig {
       );
     }
 
-    this.javascriptFunctions[name] = bench.add(
+    this.javascriptFunctions[name] = this.benchmarks.config.add(
       `"${name}" JavaScript Function`,
       callback
     );
@@ -767,6 +785,7 @@ class UserConfig {
       extensionMap: this.extensionMap,
       quietMode: this.quietMode,
       events: this.events,
+      benchmarkManager: this.benchmarkManager,
       plugins: this.plugins,
       useTemplateCache: this.useTemplateCache,
       precompiledCollections: this.precompiledCollections,

@@ -1,14 +1,19 @@
 const test = require("ava");
+const TemplateConfig = require("../src/TemplateConfig");
 const TemplatePassthrough = require("../src/TemplatePassthrough");
 
 const getTemplatePassthrough = (path, outputDir, inputDir) => {
+  let eleventyConfig = new TemplateConfig();
+  let config = eleventyConfig.getConfig();
+
   if (typeof path === "object") {
-    return new TemplatePassthrough(path, outputDir, inputDir);
+    return new TemplatePassthrough(path, outputDir, inputDir, config);
   }
   return new TemplatePassthrough(
     { inputPath: path, outputPath: true },
     outputDir,
-    inputDir
+    inputDir,
+    config
   );
 };
 

@@ -63,7 +63,7 @@ class TemplateConfig {
     this.hasConfigMerged = false;
   }
 
-  /* Getter for Logger */
+  /* Setter for Logger */
   setLogger(logger) {
     this.logger = logger;
   }

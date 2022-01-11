@@ -16,9 +16,6 @@ const debug = require("debug")("Eleventy:TemplateData");
 const debugDev = require("debug")("Dev:Eleventy:TemplateData");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
 
-const bench = require("./BenchmarkManager").get("Data");
-const aggregateBench = require("./BenchmarkManager").get("Aggregate");
-
 class FSExistsCache {
   constructor() {
     this._cache = new Map();
@@ -49,6 +46,10 @@ class TemplateData {
     }
     this.eleventyConfig = eleventyConfig;
     this.config = this.eleventyConfig.getConfig();
+    this.benchmarks = {
+      data: this.config.benchmarkManager.get("Data"),
+      aggregate: this.config.benchmarkManager.get("Aggregate"),
+    };
 
     this.dataTemplateEngine = this.config.dataTemplateEngine;
 
@@ -216,7 +217,7 @@ class TemplateData {
   async getGlobalDataFiles() {
     let priorities = this.getGlobalDataExtensionPriorities();
 
-    let fsBench = aggregateBench.get("Searching the file system");
+    let fsBench = this.benchmarks.aggregate.get("Searching the file system");
     fsBench.before();
     let paths = fastglob.sync(await this.getGlobalDataGlob(), {
       caseSensitiveMatch: false,
@@ -468,9 +469,9 @@ class TemplateData {
         return {};
       }
 
-      let aggregateDataBench = aggregateBench.get("Data File");
+      let aggregateDataBench = this.benchmarks.aggregate.get("Data File");
       aggregateDataBench.before();
-      let dataBench = bench.get(`\`${path}\``);
+      let dataBench = this.benchmarks.data.get(`\`${path}\``);
       dataBench.before();
       deleteRequireCache(localPath);
 

@@ -26,7 +26,6 @@ const TemplateBehavior = require("./TemplateBehavior");
 
 const debug = require("debug")("Eleventy:Template");
 const debugDev = require("debug")("Dev:Eleventy:Template");
-const bench = require("./BenchmarkManager").get("Aggregate");
 
 class Template extends TemplateContent {
   constructor(
@@ -810,7 +809,7 @@ class Template extends TemplateContent {
     if (!shouldWriteFile) {
       this.skippedCount++;
     } else {
-      let templateBenchmark = bench.get("Template Write");
+      let templateBenchmark = this.bench.get("Template Write");
       templateBenchmark.before();
 
       // TODO add a cache to check if this was already created

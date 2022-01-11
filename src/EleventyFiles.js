@@ -12,15 +12,17 @@ class EleventyFilesError extends EleventyBaseError {}
 
 const debug = require("debug")("Eleventy:EleventyFiles");
 // const debugDev = require("debug")("Dev:Eleventy:EleventyFiles");
-const aggregateBench = require("./BenchmarkManager").get("Aggregate");
 
 class EleventyFiles {
   constructor(input, outputDir, formats, eleventyConfig) {
     if (!eleventyConfig) {
       throw new EleventyFilesError("Missing `eleventyConfig`` argument.");
     }
+
     this.eleventyConfig = eleventyConfig;
     this.config = eleventyConfig.getConfig();
+    this.aggregateBench = this.config.benchmarkManager.get("Aggregate");
+
     this.input = input;
     this.inputDir = TemplatePath.getDir(this.input);
     this.outputDir = outputDir;
@@ -380,7 +382,7 @@ class EleventyFiles {
   }
 
   async getFiles() {
-    let bench = aggregateBench.get("Searching the file system");
+    let bench = this.aggregateBench.get("Searching the file system");
     bench.before();
     let globResults = await this._globSearch();
     let paths = TemplatePath.addLeadingDotSlashArray(globResults);
@@ -435,7 +437,7 @@ class EleventyFiles {
   // TODO this isn’t great but reduces complexity avoiding using TemplateData:getLocalDataPaths for each template in the cache
   async getWatcherTemplateJavaScriptDataFiles() {
     let globs = await this.templateData.getTemplateJavaScriptDataFileGlob();
-    let bench = aggregateBench.get("Searching the file system");
+    let bench = this.aggregateBench.get("Searching the file system");
     bench.before();
     let results = TemplatePath.addLeadingDotSlashArray(
       await fastglob(globs, {

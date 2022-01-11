@@ -1,6 +1,5 @@
 const TemplateEngine = require("./TemplateEngine");
 const getJavaScriptData = require("../Util/GetJavaScriptData");
-const bench = require("../BenchmarkManager").get("Aggregate");
 
 class CustomEngine extends TemplateEngine {
   constructor(name, dirs, config) {
@@ -49,11 +48,13 @@ class CustomEngine extends TemplateEngine {
   async _runningInit() {
     if (this.needsInit) {
       if (!this._initing) {
-        this._initBench = bench.get(`Engine (${this.name}) Init`);
+        this._initBench = this.benchmarks.aggregate.get(
+          `Engine (${this.name}) Init`
+        );
         this._initBench.before();
         this._initing = this.entry.init.bind({
           config: this.config,
-          bench,
+          bench: this.benchmarks.aggregate,
         })();
       }
       await this._initing;
@@ -74,7 +75,7 @@ class CustomEngine extends TemplateEngine {
     await this._runningInit();
 
     if (typeof this.entry.getData === "function") {
-      let dataBench = bench.get(
+      let dataBench = this.benchmarks.aggregate.get(
         `Engine (${this.name}) Get Data From File (Function)`
       );
       dataBench.before();
@@ -101,7 +102,9 @@ class CustomEngine extends TemplateEngine {
       }
     }
 
-    let dataBench = bench.get(`Engine (${this.name}) Get Data From File`);
+    let dataBench = this.benchmarks.aggregate.get(
+      `Engine (${this.name}) Get Data From File`
+    );
     dataBench.before();
 
     let inst = await this.entry.getInstanceFromInputPath(inputPath);

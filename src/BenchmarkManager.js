@@ -65,5 +65,4 @@ class BenchmarkManager {
   }
 }
 
-let manager = new BenchmarkManager();
-module.exports = manager;
+module.exports = BenchmarkManager;

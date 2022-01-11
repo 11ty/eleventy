@@ -98,7 +98,12 @@ class TemplatePassthroughManager {
   }
 
   getTemplatePassthroughForPath(path) {
-    return new TemplatePassthrough(path, this.outputDir, this.inputDir);
+    return new TemplatePassthrough(
+      path,
+      this.outputDir,
+      this.inputDir,
+      this.config
+    );
   }
 
   async copyPassthrough(pass) {

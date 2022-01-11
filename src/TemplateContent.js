@@ -15,7 +15,6 @@ const EleventyBaseError = require("./EleventyBaseError");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
 const debug = require("debug")("Eleventy:TemplateContent");
 const debugDev = require("debug")("Dev:Eleventy:TemplateContent");
-const bench = require("./BenchmarkManager").get("Aggregate");
 const eventBus = require("./EventBus");
 
 class TemplateContentConfigError extends EleventyBaseError {}
@@ -62,6 +61,10 @@ class TemplateContent {
       return this._config.getConfig();
     }
     return this._config;
+  }
+
+  get bench() {
+    return this.config.benchmarkManager.get("Aggregate");
   }
 
   get eleventyConfig() {
@@ -164,7 +167,7 @@ class TemplateContent {
     if (!this.engine.needsToReadFileContents()) {
       return "";
     }
-    let templateBenchmark = bench.get("Template Read");
+    let templateBenchmark = this.bench.get("Template Read");
     templateBenchmark.before();
     let content;
     if (this.config.useTemplateCache) {
@@ -271,6 +274,7 @@ class TemplateContent {
         );
         if (cacheable && key) {
           if (cache.has(key)) {
+            this.bench.get("Template Compile Cache Hit").incrementCount();
             return cache.get(key);
           }
 
@@ -285,8 +289,8 @@ class TemplateContent {
         }
       }
 
-      let templateBenchmark = bench.get("Template Compile");
-      let inputPathBenchmark = bench.get(
+      let templateBenchmark = this.bench.get("Template Compile");
+      let inputPathBenchmark = this.bench.get(
         `> Template Compile > ${this.inputPath}`
       );
       templateBenchmark.before();
@@ -395,7 +399,7 @@ class TemplateContent {
       }
 
       // Benchmark
-      let templateBenchmark = bench.get("Render");
+      let templateBenchmark = this.bench.get("Render");
       let paginationSuffix = [];
       if ("pagination" in data) {
         paginationSuffix.push(" (Pagination");
@@ -409,7 +413,7 @@ class TemplateContent {
         paginationSuffix.push(")");
       }
 
-      let inputPathBenchmark = bench.get(
+      let inputPathBenchmark = this.bench.get(
         `> Render > ${this.inputPath}${paginationSuffix.join("")}`
       );
 

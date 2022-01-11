@@ -5,7 +5,6 @@ const TemplateConfig = require("../TemplateConfig");
 const EleventyExtensionMap = require("../EleventyExtensionMap");
 const EleventyBaseError = require("../EleventyBaseError");
 const debug = require("debug")("Eleventy:TemplateEngine");
-const aggregateBench = require("../BenchmarkManager").get("Aggregate");
 
 class TemplateEngineConfigError extends EleventyBaseError {}
 
@@ -41,6 +40,15 @@ class TemplateEngine {
       return this._config.getConfig();
     }
     return this._config;
+  }
+
+  get benchmarks() {
+    if (!this._benchmarks) {
+      this._benchmarks = {
+        aggregate: this.config.benchmarkManager.get("Aggregate"),
+      };
+    }
+    return this._benchmarks;
   }
 
   get engineManager() {
@@ -104,7 +112,7 @@ class TemplateEngine {
     // TODO: reuse mustache partials in handlebars?
     let partialFiles = [];
     if (this.includesDir) {
-      let bench = aggregateBench.get("Searching the file system");
+      let bench = this.benchmarks.aggregate.get("Searching the file system");
       bench.before();
       this.extensions.forEach(function (extension) {
         partialFiles = partialFiles.concat(

@@ -1,11 +1,6 @@
 const test = require("ava");
 const Benchmark = require("../src/Benchmark");
 
-function between(t, value, lowerBound, upperBound) {
-  t.truthy(value >= lowerBound);
-  t.truthy(value <= upperBound);
-}
-
 test("Standard Benchmark", async (t) => {
   await new Promise((resolve) => {
     let b = new Benchmark();
