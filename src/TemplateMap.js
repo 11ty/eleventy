@@ -627,7 +627,7 @@ class TemplateMap {
     let warnings = {};
     for (let entry of this.map) {
       for (let page of entry._pages) {
-        if (page.url === false) {
+        if (page.outputPath === false || page.url === false) {
           // do nothing (also serverless)
         } else if (!permalinks[page.url]) {
           permalinks[page.url] = [entry.inputPath];
