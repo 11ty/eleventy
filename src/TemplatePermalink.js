@@ -25,12 +25,7 @@ class TemplatePermalink {
           continue;
         }
         if (key !== "build" && link[key] !== false) {
-          // is array of serverless urls, use the first one
-          if (Array.isArray(link[key])) {
-            this.primaryServerlessUrl = link[key][0];
-          } else {
-            this.primaryServerlessUrl = link[key];
-          }
+          this.primaryServerlessUrl = link[key]; // can be an array or string
         }
         break;
       }
@@ -108,11 +103,25 @@ class TemplatePermalink {
   toHref() {
     if (this.primaryServerlessUrl) {
       if (this.serverlessPathData) {
-        return serverlessUrlFilter(
+        let urls = serverlessUrlFilter(
           this.primaryServerlessUrl,
           this.serverlessPathData
         );
+
+        // Array of *matching* serverless urls only
+        if (Array.isArray(urls)) {
+          // return first
+          return urls[0];
+        }
+
+        return urls;
       }
+
+      if (Array.isArray(this.primaryServerlessUrl)) {
+        // return first
+        return this.primaryServerlessUrl[0];
+      }
+
       return this.primaryServerlessUrl;
     } else if (!this.buildLink) {
       // empty or false
