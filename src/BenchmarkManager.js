@@ -29,6 +29,10 @@ class BenchmarkManager {
     this.isVerbose = !!isVerbose;
   }
 
+  hasBenchmarkGroup(name) {
+    return name in this.benchmarkGroups;
+  }
+
   getBenchmarkGroup(name) {
     if (!this.benchmarkGroups[name]) {
       this.benchmarkGroups[name] = new BenchmarkGroup();

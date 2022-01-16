@@ -290,9 +290,7 @@ class TemplateContent {
       }
 
       let templateBenchmark = this.bench.get("Template Compile");
-      let inputPathBenchmark = this.bench.get(
-        `> Template Compile > ${this.inputPath}`
-      );
+      let inputPathBenchmark = this.bench.get(`> Compile > ${this.inputPath}`);
       templateBenchmark.before();
       inputPathBenchmark.before();
       let fn = await this.templateRender.getCompiledTemplate(str);
@@ -416,14 +414,26 @@ class TemplateContent {
       let inputPathBenchmark = this.bench.get(
         `> Render > ${this.inputPath}${paginationSuffix.join("")}`
       );
+      let outputPathBenchmark;
+      if (data.page && data.page.outputPath) {
+        outputPathBenchmark = this.bench.get(
+          `> Render > ${data.page.outputPath}`
+        );
+      }
 
       templateBenchmark.before();
       if (inputPathBenchmark) {
         inputPathBenchmark.before();
       }
+      if (outputPathBenchmark) {
+        outputPathBenchmark.before();
+      }
 
       let rendered = await fn(data);
 
+      if (outputPathBenchmark) {
+        outputPathBenchmark.after();
+      }
       if (inputPathBenchmark) {
         inputPathBenchmark.after();
       }

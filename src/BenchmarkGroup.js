@@ -66,6 +66,10 @@ class BenchmarkGroup {
     this.minimumThresholdPercent = val;
   }
 
+  has(type) {
+    return !!this.benchmarks[type];
+  }
+
   get(type) {
     if (!this.benchmarks[type]) {
       this.benchmarks[type] = new Benchmark();
