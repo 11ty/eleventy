@@ -294,6 +294,8 @@ class TemplateData {
 
   async getInitialGlobalData() {
     let globalData = {};
+
+    // via eleventyConfig.addGlobalData
     if (this.config.globalData) {
       let keys = Object.keys(this.config.globalData);
       for (let key of keys) {
@@ -306,6 +308,7 @@ class TemplateData {
         lodashset(globalData, key, returnValue);
       }
     }
+
     if (this.environmentVariables) {
       if (!("eleventy" in globalData)) {
         globalData.eleventy = {};
@@ -315,15 +318,16 @@ class TemplateData {
       }
       Object.assign(globalData.eleventy.env, this.environmentVariables);
     }
+
     return globalData;
   }
 
   async getData() {
     let rawImports = this.getRawImports();
 
-    this.configApiGlobalData = await this.getInitialGlobalData();
-
     if (!this.globalData) {
+      this.configApiGlobalData = await this.getInitialGlobalData();
+
       let globalJson = await this.getAllGlobalData();
       let mergedGlobalData = merge(globalJson, this.configApiGlobalData);
 

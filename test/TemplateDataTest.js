@@ -486,6 +486,24 @@ test("addGlobalData values", async (t) => {
   t.is(data.myAsync, "promise-value");
 });
 
+test("addGlobalData should execute once.", async (t) => {
+  let count = 0;
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.addGlobalData("count", () => {
+    count++;
+    return count;
+  });
+
+  let dataObj = new TemplateData(
+    "./test/stubs-global-data-config-api/",
+    eleventyConfig
+  );
+  let data = await dataObj.getData();
+
+  t.is(data.count, 1);
+  t.is(count, 1);
+});
+
 test("addGlobalData complex key", async (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.addGlobalData("deep.nested.one", () => "first");
