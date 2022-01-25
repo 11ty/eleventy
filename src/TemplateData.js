@@ -423,7 +423,7 @@ class TemplateData {
 
     if (ignoreProcessing || engineName === false) {
       try {
-        return parser(rawInput);
+        return parser(rawInput, path);
       } catch (e) {
         throw new TemplateDataParseError(
           `Having trouble parsing data file ${path}`,
@@ -439,7 +439,7 @@ class TemplateData {
       try {
         // pass in rawImports, don’t pass in global data, that’s what we’re parsing
         let raw = await fn(rawImports);
-        return parser(raw);
+        return parser(raw, path);
       } catch (e) {
         throw new TemplateDataParseError(
           `Having trouble parsing data file ${path}`,
