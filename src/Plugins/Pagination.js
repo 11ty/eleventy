@@ -191,7 +191,13 @@ class Pagination {
       throw new Error("Missing `setData` call for Pagination object.");
     }
 
-    return lodashChunk(this.target, this.size);
+    const chunks = lodashChunk(this.target, this.size);
+
+    if (this.data.pagination && this.data.pagination.renderEmpty) {
+      return chunks.length ? chunks : [[]];
+    } else {
+      return chunks;
+    }
   }
 
   // TODO this name is not good
