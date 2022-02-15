@@ -1,4 +1,4 @@
-const isPlainObject = require("../Util/IsPlainObject");
+const isPlainObject = require("./IsPlainObject");
 const OVERRIDE_PREFIX = "override:";
 
 function getMergedItem(target, source, parentKey) {
