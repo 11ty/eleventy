@@ -1,4 +1,4 @@
-const isPlainObject = require("lodash/isPlainObject");
+const isPlainObject = require("./Util/IsPlainObject");
 
 class TemplateBehavior {
   constructor(config) {

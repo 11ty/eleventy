@@ -1,7 +1,7 @@
 const path = require("path");
 const TemplatePath = require("./TemplatePath");
 const normalize = require("normalize-path");
-const isPlainObject = require("lodash/isPlainObject");
+const isPlainObject = require("./Util/IsPlainObject");
 const serverlessUrlFilter = require("./Filters/ServerlessUrl");
 
 class TemplatePermalink {
