@@ -213,8 +213,6 @@ class Serverless {
       },
     });
 
-    await elev.init();
-
     let json = await elev.toJSON();
 
     // TODO (@zachleat)  https://github.com/11ty/eleventy/issues/1957
