@@ -372,7 +372,7 @@ test("Can Eleventy run two executeBuilds in parallel?", async (t) => {
 
 test("Eleventy addGlobalData should run once.", async (t) => {
   let count = 0;
-  let elev = new Eleventy("./test/stubs", "./test/stubs/_site", {
+  let elev = new Eleventy("./test/stubs-noop/", "./test/stubs-noop/_site", {
     config: function (eleventyConfig) {
       eleventyConfig.addGlobalData("count", () => {
         count++;
