@@ -1,4 +1,4 @@
-const isPlainObject = require("lodash/isPlainObject");
+const isPlainObject = require("./Util/IsPlainObject");
 const DependencyGraph = require("dependency-graph").DepGraph;
 const TemplateCollection = require("./TemplateCollection");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
