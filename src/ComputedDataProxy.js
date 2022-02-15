@@ -1,6 +1,6 @@
 const lodashSet = require("lodash/set");
 const lodashGet = require("lodash/get");
-const isPlainObject = require("./Util/isPlainObject");
+const isPlainObject = require("./Util/IsPlainObject");
 
 /* Calculates computed data using Proxies */
 class ComputedDataProxy {
