@@ -372,3 +372,69 @@ test("Front matter in a custom extension", async (t) => {
   t.is(data.frontmatter, 1);
   t.is((await tmpl.render(data)).trim(), "hi");
 });
+
+test("Access to default renderer when you override an existing extension (async compile function, arrow render function)", async (t) => {
+  t.plan(2);
+
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.extensionMap.add({
+    extension: "liquid",
+    key: "liquid",
+    compileOptions: {
+      cache: false,
+    },
+    compile: async function (str, inputPath) {
+      // plaintext
+      return async (data) => {
+        t.true(true);
+        return this.defaultRenderer();
+      };
+    },
+  });
+
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let tmpl = getNewTemplate(
+    "./test/stubs/default.liquid",
+    "./test/stubs/",
+    "dist",
+    dataObj,
+    null,
+    eleventyConfig
+  );
+
+  let data = await tmpl.getData();
+  t.is(await tmpl.render(data), "hi");
+});
+
+test("Access to default renderer when you override an existing extension (async compile function, async render function)", async (t) => {
+  t.plan(2);
+
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.extensionMap.add({
+    extension: "liquid",
+    key: "liquid",
+    compileOptions: {
+      cache: false,
+    },
+    compile: async function (str, inputPath) {
+      // plaintext
+      return async function (data) {
+        t.true(true);
+        return this.defaultRenderer();
+      };
+    },
+  });
+
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let tmpl = getNewTemplate(
+    "./test/stubs/default.liquid",
+    "./test/stubs/",
+    "dist",
+    dataObj,
+    null,
+    eleventyConfig
+  );
+
+  let data = await tmpl.getData();
+  t.is(await tmpl.render(data), "hi");
+});

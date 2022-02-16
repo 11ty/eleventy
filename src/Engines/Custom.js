@@ -160,11 +160,19 @@ class CustomEngine extends TemplateEngine {
     }
 
     // TODO generalize this (look at JavaScript.js)
-    let fn = this.entry.compile.bind({ config: this.config })(str, inputPath);
-    if (typeof fn === "function") {
-      // give the user access to this engine's default renderer, if any
+    let fn = this.entry.compile.bind({
+      config: this.config,
+      defaultRenderer, // bind defaultRenderer to compile function
+    })(str, inputPath);
+
+    // Bind defaultRenderer to render function
+    if ("then" in fn && typeof fn.then === "function") {
+      // Promise, wait to bind
+      return fn.then((fn) => fn.bind({ defaultRenderer }));
+    } else if ("bind" in fn && typeof fn.bind === "function") {
       return fn.bind({ defaultRenderer });
     }
+
     return fn;
   }
 
