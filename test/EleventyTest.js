@@ -370,7 +370,7 @@ test("Can Eleventy run two executeBuilds in parallel?", async (t) => {
   );
 });
 
-test("Eleventy addGlobalData should run once.", async (t) => {
+test("Eleventy addGlobalData should run once", async (t) => {
   let count = 0;
   let elev = new Eleventy("./test/stubs-noop/", "./test/stubs-noop/_site", {
     config: function (eleventyConfig) {
@@ -383,4 +383,18 @@ test("Eleventy addGlobalData should run once.", async (t) => {
 
   let results = await elev.toJSON();
   t.is(count, 1);
+});
+
+test("Eleventy addGlobalData can feed layouts to populate data cascade with layout data, issue #1245", async (t) => {
+  let count = 0;
+  let elev = new Eleventy("./test/stubs-2145/", "./test/stubs-2145/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.addGlobalData("layout", () => "layout.njk");
+      eleventyConfig.dataFilterSelectors.add("LayoutData");
+    },
+  });
+
+  let [result] = await elev.toJSON();
+  t.deepEqual(result.data, { LayoutData: 123 });
+  t.is(result.content.trim(), "FromLayoutlayout.njk");
 });
