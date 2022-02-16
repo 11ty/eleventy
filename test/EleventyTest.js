@@ -398,3 +398,10 @@ test("Eleventy addGlobalData can feed layouts to populate data cascade with layo
   t.deepEqual(result.data, { LayoutData: 123 });
   t.is(result.content.trim(), "FromLayoutlayout.njk");
 });
+
+test("Unicode in front matter `tags`, issue #670", async (t) => {
+  let elev = new Eleventy("./test/stubs-670/", "./test/stubs-670/_site");
+
+  let [result] = await elev.toJSON();
+  t.is(result.content.trim(), "./test/stubs-670/content.liquid");
+});
