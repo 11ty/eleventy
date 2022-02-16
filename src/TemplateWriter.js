@@ -11,8 +11,9 @@ const ConsoleLogger = require("./Util/ConsoleLogger");
 const debug = require("debug")("Eleventy:TemplateWriter");
 const debugDev = require("debug")("Dev:Eleventy:TemplateWriter");
 
-class TemplateWriterError extends EleventyBaseError {}
-class TemplateWriterWriteError extends EleventyBaseError {}
+class TemplateWriterMissingConfigArgError extends EleventyBaseError {}
+class EleventyPassthroughCopyError extends EleventyBaseError {}
+class EleventyTemplateError extends EleventyBaseError {}
 
 class TemplateWriter {
   constructor(
@@ -23,7 +24,7 @@ class TemplateWriter {
     eleventyConfig
   ) {
     if (!eleventyConfig) {
-      throw new TemplateWriterError("Missing config argument.");
+      throw new TemplateWriterMissingConfigArgError("Missing config argument.");
     }
     this.eleventyConfig = eleventyConfig;
     this.config = eleventyConfig.getConfig();
@@ -262,7 +263,7 @@ class TemplateWriter {
     return passthroughManager.copyAll(paths).catch((e) => {
       this.errorHandler.warn(e, "Error with passthrough copy");
       return Promise.reject(
-        new TemplateWriterWriteError("Having trouble copying", e)
+        new EleventyPassthroughCopyError("Having trouble copying", e)
       );
     });
   }
@@ -286,8 +287,8 @@ class TemplateWriter {
             usedTemplateContentTooEarlyMap.push(mapEntry);
           } else {
             return Promise.reject(
-              new TemplateWriterWriteError(
-                `Having trouble writing template: ${mapEntry.outputPath}`,
+              new EleventyTemplateError(
+                `Having trouble writing template: "${mapEntry.outputPath}"`,
                 e
               )
             );
@@ -300,8 +301,8 @@ class TemplateWriter {
       promises.push(
         this._generateTemplate(mapEntry, to).catch(function (e) {
           return Promise.reject(
-            new TemplateWriterWriteError(
-              `Having trouble writing template (second pass): ${mapEntry.outputPath}`,
+            new EleventyTemplateError(
+              `Having trouble writing template (second pass): "${mapEntry.outputPath}"`,
               e
             )
           );

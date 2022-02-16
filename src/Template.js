@@ -19,10 +19,14 @@ const TemplateLayout = require("./TemplateLayout");
 const TemplateFileSlug = require("./TemplateFileSlug");
 const ComputedData = require("./ComputedData");
 const Pagination = require("./Plugins/Pagination");
-const TemplateContentPrematureUseError = require("./Errors/TemplateContentPrematureUseError");
-const TemplateContentUnrenderedTemplateError = require("./Errors/TemplateContentUnrenderedTemplateError");
 const ConsoleLogger = require("./Util/ConsoleLogger");
 const TemplateBehavior = require("./TemplateBehavior");
+
+const TemplateContentPrematureUseError = require("./Errors/TemplateContentPrematureUseError");
+const TemplateContentUnrenderedTemplateError = require("./Errors/TemplateContentUnrenderedTemplateError");
+
+const EleventyBaseError = require("./EleventyBaseError");
+class EleventyTransformError extends EleventyBaseError {}
 
 const debug = require("debug")("Eleventy:Template");
 const debugDev = require("debug")("Dev:Eleventy:Template");
@@ -54,7 +58,6 @@ class Template extends TemplateContent {
 
     this.linters = [];
     this.transforms = [];
-    this.plugins = {};
     this.templateData = templateData;
     if (this.templateData) {
       this.templateData.setInputDir(this.inputDir);
@@ -546,21 +549,27 @@ class Template extends TemplateContent {
     });
   }
 
-  // Warning: this argument list is the reverse of linters (inputPath then outputPath)
   async runTransforms(str, inputPath, outputPath) {
-    for (let transform of this.transforms) {
-      let hadStrBefore = !!str;
-      str = await transform.callback.call(
-        {
-          inputPath,
-          outputPath,
-        },
-        str,
-        outputPath
-      );
-      if (hadStrBefore && !str) {
-        this.logger.warn(
-          `Warning: Transform \`${transform.name}\` returned empty when writing ${outputPath} from ${inputPath}.`
+    for (let { callback, name } of this.transforms) {
+      try {
+        let hadStrBefore = !!str;
+        str = await callback.call(
+          {
+            inputPath,
+            outputPath,
+          },
+          str,
+          outputPath
+        );
+        if (hadStrBefore && !str) {
+          this.logger.warn(
+            `Warning: Transform \`${name}\` returned empty when writing ${outputPath} from ${inputPath}.`
+          );
+        }
+      } catch (e) {
+        throw new EleventyTransformError(
+          `Transform \`${name}\` encountered an error when transforming ${inputPath}.`,
+          e
         );
       }
     }

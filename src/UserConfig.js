@@ -340,8 +340,21 @@ class UserConfig {
     }
   }
 
+  // Using Function.name https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name#examples
+  _getPluginName(plugin) {
+    if (typeof plugin === "function") {
+      return plugin.name;
+    } else if (
+      plugin.configFunction &&
+      typeof plugin.configFunction === "function"
+    ) {
+      return plugin.configFunction.name;
+    }
+  }
+
   _executePlugin(plugin, options) {
-    debug(`Adding ${plugin.name || "anonymous"} plugin`);
+    let name = this._getPluginName(plugin);
+    debug(`Adding ${name || "anonymous"} plugin`);
     let pluginBenchmark = this.benchmarks.aggregate.get(
       "Configuration addPlugin"
     );

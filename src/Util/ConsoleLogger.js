@@ -61,7 +61,7 @@ class ConsoleLogger {
     if (!forceToConsole && (!this.isVerbose || process.env.DEBUG)) {
       debug(message);
     } else if (this._logger !== false) {
-      message = `[11ty] ${message}`;
+      message = `[11ty] ${message.split("\n").join("\n[11ty] ")}`;
 
       let logger = this._logger || console;
       if (chalkColor && this.isChalkEnabled) {

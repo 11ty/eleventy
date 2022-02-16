@@ -45,12 +45,20 @@ class EleventyErrorHandler {
     if (msg) {
       this.initialMessage(msg, "error", "red", true);
     }
-    this.log(e, "error", undefined, undefined, true);
+    this.log(e, "error", undefined, true);
   }
 
   //https://nodejs.org/api/process.html
-  log(e, type = "log", prefix = ">", chalkColor = "", forceToConsole = false) {
+  log(e, type = "log", chalkColor = "", forceToConsole = false) {
+    let errorCount = 0;
+    let errorCountRef = e;
+    while (errorCountRef) {
+      errorCount++;
+      errorCountRef = errorCountRef.originalError;
+    }
+
     let ref = e;
+    let index = 1;
     while (ref) {
       let nextRef = ref.originalError;
       if (!nextRef && EleventyErrorUtil.hasEmbeddedError(ref.message)) {
@@ -58,13 +66,10 @@ class EleventyErrorHandler {
       }
 
       this.logger.message(
-        (process.env.DEBUG ? "" : `${prefix} `) +
-          `${(
-            EleventyErrorUtil.cleanMessage(ref.message) ||
-            "(No error message provided)"
-          ).trim()}
-
-\`${ref.name}\` was thrown${!nextRef && ref.stack ? ":" : ""}`,
+        `${errorCount > 1 ? `${index}. ` : ""}${(
+          EleventyErrorUtil.cleanMessage(ref.message) ||
+          "(No error message provided)"
+        ).trim()} (via ${ref.name})`,
         type,
         chalkColor,
         forceToConsole
@@ -85,13 +90,14 @@ class EleventyErrorHandler {
           );
         }
         this.logger.message(
-          prefix + stackStr.split("\n").join("\n" + prefix),
+          "\nOriginal error stack trace: " + stackStr,
           type,
           chalkColor,
           forceToConsole
         );
       }
       ref = nextRef;
+      index++;
     }
   }
 

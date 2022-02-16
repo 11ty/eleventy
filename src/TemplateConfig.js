@@ -31,6 +31,11 @@ const deleteRequireCache = require("./Util/DeleteRequireCache");
 class EleventyConfigError extends EleventyBaseError {}
 
 /**
+ * Errors in eleventy plugins.
+ */
+class EleventyPluginError extends EleventyBaseError {}
+
+/**
  * Config for a template.
  *
  * @param {{}} customRootConfig - tbd.
@@ -181,11 +186,29 @@ class TemplateConfig {
     this.userConfig._enablePluginExecution();
 
     let storedActiveNamespace = this.userConfig.activeNamespace;
+    for (let { plugin, options, pluginNamespace } of this.userConfig.plugins) {
+      try {
+        this.userConfig.activeNamespace = pluginNamespace;
+        this.userConfig._executePlugin(plugin, options);
+      } catch (e) {
+        let name = this.userConfig._getPluginName(plugin);
+        let namespaces = [storedActiveNamespace, pluginNamespace].filter(
+          (entry) => !!entry
+        );
 
-    this.userConfig.plugins.forEach(({ plugin, options, pluginNamespace }) => {
-      this.userConfig.activeNamespace = pluginNamespace;
-      this.userConfig._executePlugin(plugin, options);
-    });
+        let namespaceStr = "";
+        if (namespaces.length) {
+          namespaceStr = ` (namespace: ${namespaces.join(".")})`;
+        }
+
+        throw new EleventyPluginError(
+          `Error processing ${
+            name ? `the \`${name}\`` : "a"
+          } plugin${namespaceStr}`,
+          e
+        );
+      }
+    }
 
     this.userConfig.activeNamespace = storedActiveNamespace;
   }
