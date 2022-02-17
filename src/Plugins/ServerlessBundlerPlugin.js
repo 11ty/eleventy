@@ -127,6 +127,7 @@ class BundlerHelper {
 
     this.copyCount = 0;
     this.eleventyConfig = eleventyConfig;
+    this.localDataModulesFileCreated = false;
   }
 
   reset() {
@@ -182,6 +183,21 @@ class BundlerHelper {
     );
   }
 
+  writeBundlerLocalDependenciesFile(filename, deps = []) {
+    let modules = deps.map((name) => `require("${name}");`);
+    let fullPath = this.getOutputPath(filename);
+    if (this.localDataModulesFileCreated) {
+      fs.appendFileSync(fullPath, "\n" + modules.join("\n"));
+    } else if (modules.length > 0) {
+      this.localDataModulesFileCreated = true;
+      fs.writeFileSync(fullPath, modules.filter((x) => x).join("\n"));
+    }
+    this.copyCount++;
+    debug(
+      `Writing a file to make it very obvious to the serverless bundler which extra \`require\`s are needed from the config file (×${modules.length}): ${fullPath}`
+    );
+  }
+
   writeDependencyEntryFile() {
     // we write this even when disabled because the serverless function expects it
     this.writeBundlerDependenciesFile(
@@ -190,7 +206,7 @@ class BundlerHelper {
         ? [
             "./eleventy-app-config-modules.js",
             "./eleventy-app-globaldata-modules.js",
-            "./eleventy-app-templatedata-modules.js",
+            "./eleventy-app-localdata-modules.js",
           ]
         : []
     );
@@ -224,14 +240,14 @@ class BundlerHelper {
     );
   }
 
-  writeDependencyTemplateDataFile(dataFileList) {
+  writeDependencyLocalDataFile(dataFileList) {
     if (!this.options.copyEnabled) {
       return;
     }
 
     let modules = getNodeModulesList(dataFileList);
-    this.writeBundlerDependenciesFile(
-      "eleventy-app-templatedata-modules.js",
+    this.writeBundlerLocalDependenciesFile(
+      "eleventy-app-localdata-modules.js",
       modules.filter(
         (name) => this.options.excludeDependencies.indexOf(name) === -1
       )
@@ -392,7 +408,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
         return;
       }
 
-      helper.writeDependencyTemplateDataFile(fileList);
+      helper.writeDependencyLocalDataFile(fileList);
 
       let promises = [];
       for (let file of fileList) {
