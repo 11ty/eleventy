@@ -132,6 +132,7 @@ class BundlerHelper {
 
   reset() {
     this.copyCount = 0;
+    this.localDataModulesFileCreated = false;
   }
 
   getOutputPath(filepath) {
