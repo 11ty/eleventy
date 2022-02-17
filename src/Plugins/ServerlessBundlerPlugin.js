@@ -190,6 +190,7 @@ class BundlerHelper {
         ? [
             "./eleventy-app-config-modules.js",
             "./eleventy-app-globaldata-modules.js",
+            "./eleventy-app-templatedata-modules.js",
           ]
         : []
     );
@@ -217,6 +218,20 @@ class BundlerHelper {
     let modules = getNodeModulesList(globalDataFileList);
     this.writeBundlerDependenciesFile(
       "eleventy-app-globaldata-modules.js",
+      modules.filter(
+        (name) => this.options.excludeDependencies.indexOf(name) === -1
+      )
+    );
+  }
+
+  writeDependencyTemplateDataFile(dataFileList) {
+    if (!this.options.copyEnabled) {
+      return;
+    }
+
+    let modules = getNodeModulesList(dataFileList);
+    this.writeBundlerDependenciesFile(
+      "eleventy-app-templatedata-modules.js",
       modules.filter(
         (name) => this.options.excludeDependencies.indexOf(name) === -1
       )
@@ -376,6 +391,8 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       if (!options.copyEnabled) {
         return;
       }
+
+      helper.writeDependencyTemplateDataFile(fileList);
 
       let promises = [];
       for (let file of fileList) {
