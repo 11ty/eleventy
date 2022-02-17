@@ -9,36 +9,48 @@ const TemplatePath = require("../TemplatePath");
 const deleteRequireCache = require("../Util/DeleteRequireCache");
 const debug = require("debug")("Eleventy:Serverless");
 
+function netlifyTomlRedirectHandler(name, outputMap, target) {
+  if (!target) {
+    throw new Error(
+      `Missing redirect target in Eleventy Serverless Bundler Plugin. Received ${target}`
+    );
+  }
+
+  let newRedirects = [];
+  for (let url in outputMap) {
+    newRedirects.push({
+      from: url,
+      to: `${target}${name}`,
+      status: 200,
+      force: true,
+      _generated_by_eleventy_serverless: name,
+    });
+  }
+
+  let configFilename = "./netlify.toml";
+  let cfg = {};
+  // parse existing netlify.toml
+  if (fs.existsSync(configFilename)) {
+    cfg = TOML.parse(fs.readFileSync(configFilename));
+  }
+  let cfgWithRedirects = addRedirectsWithoutDuplicates(name, cfg, newRedirects);
+
+  fs.writeFileSync(configFilename, TOML.stringify(cfgWithRedirects));
+  debug(
+    `Eleventy Serverless (${name}), writing (×${newRedirects.length}): ${configFilename}`
+  );
+}
+
 // Provider specific
 const redirectHandlers = {
   "netlify-toml": function (name, outputMap) {
-    let newRedirects = [];
-    for (let url in outputMap) {
-      newRedirects.push({
-        from: url,
-        to: `/.netlify/functions/${name}`,
-        status: 200,
-        force: true,
-        _generated_by_eleventy_serverless: name,
-      });
-    }
-
-    let configFilename = "./netlify.toml";
-    let cfg = {};
-    // parse existing netlify.toml
-    if (fs.existsSync(configFilename)) {
-      cfg = TOML.parse(fs.readFileSync(configFilename));
-    }
-    let cfgWithRedirects = addRedirectsWithoutDuplicates(
-      name,
-      cfg,
-      newRedirects
-    );
-
-    fs.writeFileSync(configFilename, TOML.stringify(cfgWithRedirects));
-    debug(
-      `Eleventy Serverless (${name}), writing (×${newRedirects.length}): ${configFilename}`
-    );
+    return netlifyTomlRedirectHandler(name, outputMap, "/.netlify/functions/");
+  },
+  "netlify-toml-functions": function (name, outputMap) {
+    return netlifyTomlRedirectHandler(name, outputMap, "/.netlify/functions/");
+  },
+  "netlify-toml-builders": function (name, outputMap) {
+    return netlifyTomlRedirectHandler(name, outputMap, "/.netlify/builders/");
   },
 };
 
@@ -106,6 +118,13 @@ class BundlerHelper {
     this.name = name;
     this.options = options;
     this.dir = path.join(options.functionsDir, name);
+    if (path.isAbsolute(this.dir)) {
+      throw new Error(
+        "Absolute paths are not yet supported for `functionsDir` in the serverless bundler. Received: " +
+          options.functionsDir
+      );
+    }
+
     this.copyCount = 0;
     this.eleventyConfig = eleventyConfig;
   }
@@ -253,9 +272,8 @@ class BundlerHelper {
         "./DefaultServerlessFunctionContent.js"
       );
 
-      let contents = await fsp.readFile(defaultContentPath, "utf-8");
+      let contents = await fsp.readFile(defaultContentPath, "utf8");
       contents = contents.replace(/\%\%NAME\%\%/g, this.name);
-      contents = contents.replace(/\%\%INPUT_DIR\%\%/g, this.options.inputDir);
       contents = contents.replace(
         /\%\%FUNCTIONS_DIR\%\%/g,
         this.options.functionsDir
@@ -266,11 +284,6 @@ class BundlerHelper {
 }
 
 function EleventyPlugin(eleventyConfig, options = {}) {
-  let inputDir = ".";
-  if (eleventyConfig.dir && eleventyConfig.dir.input) {
-    inputDir = eleventyConfig.dir.input;
-  }
-
   options = Object.assign(
     {
       name: "",
@@ -290,9 +303,6 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 
       // Useful for local develop to disable all bundle copying
       copyEnabled: true,
-
-      // Input directory (used to generate the default serverless file)
-      inputDir,
     },
     options
   );
@@ -362,17 +372,44 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       helper.writeDependencyGlobalDataFile(fileList);
     });
 
-    eleventyConfig.on("eleventy.directories", async (dirs) => {
+    eleventyConfig.on("eleventy.dataFiles", async (fileList) => {
       if (!options.copyEnabled) {
         return;
       }
 
       let promises = [];
-      promises.push(helper.recursiveCopy(dirs.data));
-      promises.push(helper.recursiveCopy(dirs.includes));
-      if (dirs.layouts) {
-        promises.push(helper.recursiveCopy(dirs.layouts));
+      for (let file of fileList) {
+        promises.push(helper.recursiveCopy(file));
       }
+      await Promise.all(promises);
+    });
+
+    eleventyConfig.on("eleventy.directories", async (dirs) => {
+      let promises = [];
+      if (options.copyEnabled) {
+        promises.push(helper.recursiveCopy(dirs.data));
+        promises.push(helper.recursiveCopy(dirs.includes));
+        if (dirs.layouts) {
+          promises.push(helper.recursiveCopy(dirs.layouts));
+        }
+      }
+
+      let filename = helper.getOutputPath("eleventy-serverless.json");
+      promises.push(
+        fsp.writeFile(
+          filename,
+          JSON.stringify(
+            {
+              dir: dirs,
+            },
+            null,
+            2
+          )
+        )
+      );
+      debug(`Eleventy Serverless (${options.name}), writing ${filename}`);
+      this.copyCount++;
+
       await Promise.all(promises);
     });
 
@@ -394,6 +431,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
               continue;
             }
 
+            // duplicates that don’t use the same input file, throw an error.
             if (outputMap[eligibleUrl]) {
               throw new Error(
                 `Serverless URL conflict: multiple input files are using the same URL path (in \`permalink\`): ${outputMap[eligibleUrl]} and ${entry.inputPath}`

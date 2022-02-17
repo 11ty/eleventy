@@ -23,8 +23,18 @@ test("isPassthroughCopyFile", async (t) => {
   };
   let mgr = new TemplatePassthroughManager(eleventyConfig);
 
-  t.true(mgr.isPassthroughCopyFile([], "./img/test.png"));
-  t.true(mgr.isPassthroughCopyFile([], "./fonts/Roboto.woff"));
+  t.truthy(mgr.isPassthroughCopyFile([], "./img/test.png"));
+  t.deepEqual(mgr.isPassthroughCopyFile([], "./img/test.png"), {
+    inputPath: "./img",
+    outputPath: true,
+  });
+
+  t.truthy(mgr.isPassthroughCopyFile([], "./fonts/Roboto.woff"));
+  t.deepEqual(mgr.isPassthroughCopyFile([], "./fonts/Roboto.woff"), {
+    inputPath: "./fonts",
+    outputPath: true,
+  });
+
   t.false(mgr.isPassthroughCopyFile([], "./docs/test.njk"));
   t.false(mgr.isPassthroughCopyFile([], "./other-dir/test.png"));
   t.true(

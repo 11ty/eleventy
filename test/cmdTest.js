@@ -1,54 +1,65 @@
 const test = require("ava");
 const { exec } = require("child_process");
+const { resolve } = require("path");
 
-test.cb("Test command line exit code success", (t) => {
-  exec(
-    "node ./cmd.js --input=test/stubs/exitCode_success --dryrun",
-    (error, stdout, stderr) => {
-      t.falsy(error);
-      t.end();
-    }
-  );
+test("Test command line exit code success", async (t) => {
+  await new Promise((resolve) => {
+    exec(
+      "node ./cmd.js --input=test/stubs/exitCode_success --dryrun",
+      (error, stdout, stderr) => {
+        t.falsy(error);
+        resolve();
+      }
+    );
+  });
 });
 
-test.cb("Test command line exit code for template error", (t) => {
-  exec(
-    "node ./cmd.js --input=test/stubs/exitCode --dryrun",
-    (error, stdout, stderr) => {
-      t.is(error.code, 1);
-      t.end();
-    }
-  );
+test("Test command line exit code for template error", async (t) => {
+  await new Promise((resolve) => {
+    exec(
+      "node ./cmd.js --input=test/stubs/exitCode --dryrun",
+      (error, stdout, stderr) => {
+        t.is(error.code, 1);
+        resolve();
+      }
+    );
+  });
 });
 
-test.cb("Test command line exit code for global data error", (t) => {
-  exec(
-    "node ./cmd.js --input=test/stubs/exitCode_globalData --dryrun",
-    (error, stdout, stderr) => {
-      t.is(error.code, 1);
-      t.end();
-    }
-  );
+test("Test command line exit code for global data error", async (t) => {
+  await new Promise((resolve) => {
+    exec(
+      "node ./cmd.js --input=test/stubs/exitCode_globalData --dryrun",
+      (error, stdout, stderr) => {
+        t.is(error.code, 1);
+        resolve();
+      }
+    );
+  });
 });
 
-test.cb("Test data should not process in a --help", (t) => {
-  exec(
-    "node ./cmd.js --input=test/stubs/cmd-help-processing --help",
-    (error, stdout, stderr) => {
-      t.falsy(error);
-      t.is(stdout.indexOf("THIS SHOULD NOT LOG TO CONSOLE"), -1);
-      t.end();
-    }
-  );
+test("Test data should not process in a --help", async (t) => {
+  await new Promise((resolve) => {
+    exec(
+      "node ./cmd.js --input=test/stubs/cmd-help-processing --help",
+      (error, stdout, stderr) => {
+        t.falsy(error);
+        t.is(stdout.indexOf("THIS SHOULD NOT LOG TO CONSOLE"), -1);
+        resolve();
+      }
+    );
+  });
 });
 
-test.cb("Test data should not process in a --version", (t) => {
-  exec(
-    "node ./cmd.js --input=test/stubs/cmd-help-processing --version",
-    (error, stdout, stderr) => {
-      t.falsy(error);
-      t.is(stdout.indexOf("THIS SHOULD NOT LOG TO CONSOLE"), -1);
-      t.end();
-    }
-  );
+test("Test data should not process in a --version", async (t) => {
+  await new Promise((resolve) => {
+    exec(
+      "node ./cmd.js --input=test/stubs/cmd-help-processing --version",
+      (error, stdout, stderr) => {
+        t.falsy(error);
+        t.is(stdout.indexOf("THIS SHOULD NOT LOG TO CONSOLE"), -1);
+        resolve();
+      }
+    );
+  });
 });

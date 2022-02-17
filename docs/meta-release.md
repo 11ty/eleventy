@@ -1,3 +1,9 @@
+# List of dependencies that went ESM
+
+- `lint-staged` ESM at 12.x
+- `@sindresorhus/slugify` ESM at 2.x
+- `multimatch` is ESM at 6
+
 # Canary Release Procedure
 
 1. npmclean aka `rm -rf node_modules && rm -f package-lock.json && npm install`

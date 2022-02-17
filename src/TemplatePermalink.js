@@ -1,7 +1,8 @@
 const path = require("path");
 const TemplatePath = require("./TemplatePath");
 const normalize = require("normalize-path");
-const isPlainObject = require("lodash/isPlainObject");
+const isPlainObject = require("./Util/IsPlainObject");
+const serverlessUrlFilter = require("./Filters/ServerlessUrl");
 
 class TemplatePermalink {
   // `link` with template syntax should have already been rendered in Template.js
@@ -24,12 +25,7 @@ class TemplatePermalink {
           continue;
         }
         if (key !== "build" && link[key] !== false) {
-          // is array of serverless urls, use the first one
-          if (Array.isArray(link[key])) {
-            this.primaryServerlessUrl = link[key][0];
-          } else {
-            this.primaryServerlessUrl = link[key];
-          }
+          this.primaryServerlessUrl = link[key]; // can be an array or string
         }
         break;
       }
@@ -70,6 +66,10 @@ class TemplatePermalink {
     this.extraPaginationSubdir = extraSubdir || "";
   }
 
+  setServerlessPathData(data) {
+    this.serverlessPathData = data;
+  }
+
   getServerlessUrls() {
     return this.serverlessUrls;
   }
@@ -78,10 +78,8 @@ class TemplatePermalink {
     return link + (link.substr(-1) === "/" ? "index.html" : "");
   }
 
-  toLink() {
-    if (this.primaryServerlessUrl) {
-      return this.primaryServerlessUrl;
-    } else if (!this.buildLink) {
+  toOutputPath() {
+    if (!this.buildLink) {
       // empty or false
       return false;
     }
@@ -104,13 +102,33 @@ class TemplatePermalink {
   // test/index.html becomes test/
   toHref() {
     if (this.primaryServerlessUrl) {
+      if (this.serverlessPathData) {
+        let urls = serverlessUrlFilter(
+          this.primaryServerlessUrl,
+          this.serverlessPathData
+        );
+
+        // Array of *matching* serverless urls only
+        if (Array.isArray(urls)) {
+          // return first
+          return urls[0];
+        }
+
+        return urls;
+      }
+
+      if (Array.isArray(this.primaryServerlessUrl)) {
+        // return first
+        return this.primaryServerlessUrl[0];
+      }
+
       return this.primaryServerlessUrl;
     } else if (!this.buildLink) {
       // empty or false
       return false;
     }
 
-    let transformedLink = this.toLink();
+    let transformedLink = this.toOutputPath();
     let original =
       (transformedLink.charAt(0) !== "/" ? "/" : "") + transformedLink;
     let needle = "/index.html";
@@ -127,7 +145,7 @@ class TemplatePermalink {
       return false;
     }
 
-    let uri = this.toLink();
+    let uri = this.toOutputPath();
 
     if (uri === false) {
       return false;
@@ -141,7 +159,7 @@ class TemplatePermalink {
       return false;
     }
 
-    let uri = this.toLink();
+    let uri = this.toOutputPath();
 
     if (uri === false) {
       return false;

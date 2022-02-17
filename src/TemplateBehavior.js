@@ -1,4 +1,4 @@
-const isPlainObject = require("lodash/isPlainObject");
+const isPlainObject = require("./Util/IsPlainObject");
 
 class TemplateBehavior {
   constructor(config) {
@@ -36,12 +36,16 @@ class TemplateBehavior {
 
     let keys = new Set();
     if (isPlainObject(data.permalink)) {
-      keys.add(...Object.keys(data.permalink));
+      for (let key of Object.keys(data.permalink)) {
+        keys.add(key);
+      }
     }
 
     let computedKey = this.config.keys.computed;
     if (computedKey in data && isPlainObject(data[computedKey].permalink)) {
-      keys.add(...Object.keys(data[computedKey].permalink));
+      for (let key of Object.keys(data[computedKey].permalink)) {
+        keys.add(key);
+      }
     }
 
     if (keys.size) {

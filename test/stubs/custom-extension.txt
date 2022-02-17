@@ -1,0 +1,4 @@
+---
+permalink: custom-extension.lit
+---
+Sample content

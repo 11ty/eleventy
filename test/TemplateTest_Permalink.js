@@ -110,7 +110,7 @@ test("permalink: true", async (t) => {
 
   let data = await tmpl.getData();
   await t.throwsAsync(async () => {
-    await tmpl.getOutputLink(data);
+    await tmpl.getRawOutputPath(data);
   });
 });
 
@@ -121,7 +121,7 @@ test("Disable dynamic permalinks", async (t) => {
     "./test/stubs/_site"
   );
 
-  t.is(await tmpl.getOutputLink(), "/{{justastring}}/index.html");
+  t.is(await tmpl.getRawOutputPath(), "/{{justastring}}/index.html");
   t.is(await tmpl.getOutputHref(), "/{{justastring}}/");
 });
 

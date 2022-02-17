@@ -18,6 +18,8 @@ class EleventyExtensionMap {
     this.formatKeys = formatKeys;
 
     this.setFormats(formatKeys);
+
+    this._spiderJsDepsCache = {};
   }
 
   setFormats(formatKeys = []) {
@@ -87,6 +89,54 @@ class EleventyExtensionMap {
     return false;
   }
 
+  getCustomExtensionEntry(extension) {
+    if (!this.config.extensionMap) {
+      return;
+    }
+
+    for (let entry of this.config.extensionMap) {
+      if (entry.extension === extension) {
+        return entry;
+      }
+    }
+  }
+
+  getValidExtensionsForPath(path) {
+    let extensions = new Set();
+    for (let extension in this.extensionToKeyMap) {
+      if (path.endsWith(`.${extension}`)) {
+        extensions.add(extension);
+      }
+    }
+
+    // if multiple extensions are valid, sort from longest to shortest
+    // e.g. .11ty.js and .js
+    let sorted = Array.from(extensions)
+      .filter((extension) => this.validTemplateLanguageKeys.includes(extension))
+      .sort((a, b) => b.length - a.length);
+
+    return sorted;
+  }
+
+  shouldSpiderJavaScriptDependencies(path) {
+    let extensions = this.getValidExtensionsForPath(path);
+    for (let extension of extensions) {
+      if (extension in this._spiderJsDepsCache) {
+        return this._spiderJsDepsCache[extension];
+      }
+
+      let cls = this.engineManager.getEngineClassByExtension(extension);
+      if (cls) {
+        let entry = this.getCustomExtensionEntry(extension);
+        let shouldSpider = cls.shouldSpiderJavaScriptDependencies(entry);
+        this._spiderJsDepsCache[extension] = shouldSpider;
+        return shouldSpider;
+      }
+    }
+
+    return false;
+  }
+
   getPassthroughCopyGlobs(inputDir) {
     return this._getGlobs(this.passthroughCopyKeys, inputDir);
   }
@@ -133,6 +183,7 @@ class EleventyExtensionMap {
     return extensions;
   }
 
+  // Only `addExtension` configuration API extensions
   getExtensionEntriesFromKey(key) {
     let entries = [];
     if ("extensionMap" in this.config) {

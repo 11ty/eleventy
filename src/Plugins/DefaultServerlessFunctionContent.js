@@ -8,17 +8,21 @@ async function handler(event) {
   let elev = new EleventyServerless("%%NAME%%", {
     path: event.path,
     query: event.queryStringParameters,
-    inputDir: "%%INPUT_DIR%%",
     functionsDir: "%%FUNCTIONS_DIR%%",
   });
 
   try {
+    let [page] = await elev.getOutput();
+
+    // If you want some of the data cascade available in `page.data`, use `eleventyConfig.dataFilterSelectors`.
+    // Read more: https://www.11ty.dev/docs/config/#data-filter-selectors
+
     return {
       statusCode: 200,
       headers: {
         "Content-Type": "text/html; charset=UTF-8",
       },
-      body: await elev.render(),
+      body: page.content,
     };
   } catch (error) {
     // Only console log for matching serverless paths

@@ -1,5 +1,5 @@
 const fs = require("fs");
-const chalk = require("chalk");
+const chalk = require("kleur");
 const lodashUniq = require("lodash/uniq");
 const lodashMerge = require("lodash/merge");
 const TemplatePath = require("./TemplatePath");
@@ -8,7 +8,6 @@ const UserConfig = require("./UserConfig");
 const debug = require("debug")("Eleventy:TemplateConfig");
 const debugDev = require("debug")("Dev:Eleventy:TemplateConfig");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
-const aggregateBench = require("./BenchmarkManager").get("Aggregate");
 
 /**
  * @module 11ty/eleventy/TemplateConfig
@@ -30,6 +29,11 @@ const aggregateBench = require("./BenchmarkManager").get("Aggregate");
  * Errors in eleventy config.
  */
 class EleventyConfigError extends EleventyBaseError {}
+
+/**
+ * Errors in eleventy plugins.
+ */
+class EleventyPluginError extends EleventyBaseError {}
 
 /**
  * Config for a template.
@@ -64,7 +68,7 @@ class TemplateConfig {
     this.hasConfigMerged = false;
   }
 
-  /* Getter for Logger */
+  /* Setter for Logger */
   setLogger(logger) {
     this.logger = logger;
   }
@@ -178,29 +182,35 @@ class TemplateConfig {
       this.userConfig.logger = this.logger;
     }
 
-    this.userConfig.plugins.forEach(({ plugin, options }) => {
-      // TODO support function.name in plugin config functions
-      debug("Adding plugin (unknown name: check your config file).");
-      let pluginBench = aggregateBench.get("Configuration addPlugin");
-      if (typeof plugin === "function") {
-        pluginBench.before();
-        let configFunction = plugin;
-        configFunction(this.userConfig, options);
-        pluginBench.after();
-      } else if (plugin && plugin.configFunction) {
-        pluginBench.before();
-        if (options && typeof options.init === "function") {
-          options.init.call(this.userConfig, plugin.initArguments || {});
+    // for Nested addPlugin calls, Issue #1925
+    this.userConfig._enablePluginExecution();
+
+    let storedActiveNamespace = this.userConfig.activeNamespace;
+    for (let { plugin, options, pluginNamespace } of this.userConfig.plugins) {
+      try {
+        this.userConfig.activeNamespace = pluginNamespace;
+        this.userConfig._executePlugin(plugin, options);
+      } catch (e) {
+        let name = this.userConfig._getPluginName(plugin);
+        let namespaces = [storedActiveNamespace, pluginNamespace].filter(
+          (entry) => !!entry
+        );
+
+        let namespaceStr = "";
+        if (namespaces.length) {
+          namespaceStr = ` (namespace: ${namespaces.join(".")})`;
         }
 
-        plugin.configFunction(this.userConfig, options);
-        pluginBench.after();
-      } else {
-        throw new UserConfigError(
-          "Invalid EleventyConfig.addPlugin signature. Should be a function or a valid Eleventy plugin object."
+        throw new EleventyPluginError(
+          `Error processing ${
+            name ? `the \`${name}\`` : "a"
+          } plugin${namespaceStr}`,
+          e
         );
       }
-    });
+    }
+
+    this.userConfig.activeNamespace = storedActiveNamespace;
   }
 
   /**
@@ -251,7 +261,7 @@ class TemplateConfig {
         throw new EleventyConfigError(
           `Error in your Eleventy config file '${path}'.` +
             (err.message && err.message.includes("Cannot find module")
-              ? chalk.blueBright(" You may need to run `npm install`.")
+              ? chalk.cyan(" You may need to run `npm install`.")
               : ""),
           err
         );
@@ -263,7 +273,7 @@ class TemplateConfig {
     // Delay processing plugins until after the result of localConfig is returned
     // But BEFORE the rest of the config options are merged
     // this way we can pass directories and other template information to plugins
-    this.processPlugins(localConfig);
+    this.processPlugins(localConfig || {});
 
     let eleventyConfigApiMergingObject =
       this.userConfig.getMergingConfigObject();

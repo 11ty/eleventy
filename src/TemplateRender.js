@@ -24,10 +24,12 @@ class TemplateRender {
     this.config = config;
 
     this.engineNameOrPath = tmplPath;
-    this.inputDir = inputDir;
 
-    // optional
-    this.includesDir = this._normalizeIncludesDir(inputDir);
+    this.inputDir = inputDir ? inputDir : this.config.dir.input;
+    this.includesDir = TemplatePath.join(
+      this.inputDir,
+      this.config.dir.includes
+    );
 
     this.parseMarkdownWith = this.config.markdownTemplateEngine;
     this.parseHtmlWith = this.config.htmlTemplateEngine;
@@ -67,7 +69,7 @@ class TemplateRender {
 
     this._engine = this.extensionMap.engineManager.getEngine(
       this._engineName,
-      this.includesDir,
+      this.getDirs(),
       this.extensionMap
     );
     this._engine.config = this.config;
@@ -190,15 +192,15 @@ class TemplateRender {
     return this.engineName;
   }
 
-  getIncludesDir() {
-    return this.includesDir;
+  getDirs() {
+    return {
+      input: this.inputDir,
+      includes: this.includesDir,
+    };
   }
 
-  _normalizeIncludesDir(dir) {
-    return TemplatePath.join(
-      dir ? dir : this.config.dir.input,
-      this.config.dir.includes
-    );
+  getIncludesDir() {
+    return this.includesDir;
   }
 
   isEngine(engine) {

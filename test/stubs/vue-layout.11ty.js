@@ -1,20 +1,19 @@
-const Vue = require("vue");
-const renderer = require("vue-server-renderer").createRenderer({
-  template: `<!doctype html>
-<title>{{ title }}</title>
-<!--vue-ssr-outlet-->`
-});
+const { createSSRApp } = require("vue");
+const { renderToString } = require("@vue/server-renderer");
 
-module.exports = async function(data) {
-  var app = new Vue({
+module.exports = async function (data) {
+  var app = createSSRApp({
     template: "<p>Hello {{ data.name }}, this is a Vue template.</p>",
-    data: function() {
+    data: function () {
       return { data };
-    }
+    },
     // components: {
     //   'test': ComponentA
     // }
   });
 
-  return renderer.renderToString(app, { title: "Test" });
+  let content = await renderToString(app, { title: "Test" });
+  return `<!doctype html>
+<title>Test</title>
+${content}`;
 };

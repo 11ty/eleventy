@@ -1,4 +1,4 @@
-const isPlainObject = require("lodash/isPlainObject");
+const isPlainObject = require("./Util/IsPlainObject");
 const DependencyGraph = require("dependency-graph").DepGraph;
 const TemplateCollection = require("./TemplateCollection");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
@@ -452,8 +452,10 @@ class TemplateMap {
         throw new Error(`Content pages not found for ${map.inputPath}`);
       }
       if (!map.template.behavior.isRenderable()) {
+        // Note that empty pagination templates will be skipped here as not renderable
         continue;
       }
+
       try {
         for (let pageEntry of map._pages) {
           pageEntry.templateContent = await map.template.getTemplateMapContent(
@@ -601,7 +603,10 @@ class TemplateMap {
         // This check skips precompiled collections
         if (entry) {
           let index = item.pageNumber || 0;
-          item.templateContent = entry._pages[index]._templateContent;
+          let content = entry._pages[index]._templateContent;
+          if (content !== undefined) {
+            item.templateContent = content;
+          }
         }
       }
     }
@@ -622,7 +627,7 @@ class TemplateMap {
     let warnings = {};
     for (let entry of this.map) {
       for (let page of entry._pages) {
-        if (page.url === false) {
+        if (page.outputPath === false || page.url === false) {
           // do nothing (also serverless)
         } else if (!permalinks[page.url]) {
           permalinks[page.url] = [entry.inputPath];

@@ -9,123 +9,140 @@ const eventBus = require("../EventBus");
  * The IFFE below apply a monkey-patch to Nunjucks internals to cache
  * compiled templates and re-use them where possible.
  */
-// (function () {
-//   let templateCache = new Map();
+(function () {
+  if (!process.env.ELEVENTY_NUNJUCKS_SPEEDBOOST_OPTIN) {
+    return;
+  }
 
-//   let getKey = (obj) => {
-//     return [
-//       obj.path || obj.tmplStr,
-//       obj.tmplStr.length,
-//       obj.env.asyncFilters.length,
-//       obj.env.extensionsList
-//         .map((e) => {
-//           return e.__id || "";
-//         })
-//         .join(":"),
-//     ].join(" :: ");
-//   };
+  let templateCache = new Map();
 
-//   let evictByPath = (path) => {
-//     let keys = templateCache.keys();
-//     // Likely to be slow; do we care?
-//     for (let k of keys) {
-//       if (k.indexOf(path) >= 0) {
-//         templateCache.delete(k);
-//       }
-//     }
-//   };
-//   eventBus.on("eleventy.resourceModified", evictByPath);
+  let getKey = (obj) => {
+    return [
+      obj.path || obj.tmplStr,
+      obj.tmplStr.length,
+      obj.env.asyncFilters.length,
+      obj.env.extensionsList
+        .map((e) => {
+          return e.__id || "";
+        })
+        .join(":"),
+    ].join(" :: ");
+  };
 
-//   let _compile = NunjucksLib.Template.prototype._compile;
-//   NunjucksLib.Template.prototype._compile = function _wrap_compile(...args) {
-//     if (!this.compiled && !this.tmplProps && templateCache.has(getKey(this))) {
-//       let pathProps = templateCache.get(getKey(this));
-//       this.blocks = pathProps.blocks;
-//       this.rootRenderFunc = pathProps.rootRenderFunc;
-//       this.compiled = true;
-//     } else {
-//       _compile.call(this, ...args);
-//       templateCache.set(getKey(this), {
-//         blocks: this.blocks,
-//         rootRenderFunc: this.rootRenderFunc,
-//       });
-//     }
-//   };
+  let evictByPath = (path) => {
+    let keys = templateCache.keys();
+    // Likely to be slow; do we care?
+    for (let k of keys) {
+      if (k.indexOf(path) >= 0) {
+        templateCache.delete(k);
+      }
+    }
+  };
+  eventBus.on("eleventy.resourceModified", evictByPath);
 
-//   let extensionIdCounter = 0;
-//   let addExtension = NunjucksLib.Environment.prototype.addExtension;
-//   NunjucksLib.Environment.prototype.addExtension = function _wrap_addExtension(
-//     name,
-//     ext
-//   ) {
-//     if (!("__id" in ext)) {
-//       ext.__id = extensionIdCounter++;
-//     }
-//     return addExtension.call(this, name, ext);
-//   };
+  let _compile = NunjucksLib.Template.prototype._compile;
+  NunjucksLib.Template.prototype._compile = function _wrap_compile(...args) {
+    if (!this.compiled && !this.tmplProps && templateCache.has(getKey(this))) {
+      let pathProps = templateCache.get(getKey(this));
+      this.blocks = pathProps.blocks;
+      this.rootRenderFunc = pathProps.rootRenderFunc;
+      this.compiled = true;
+    } else {
+      _compile.call(this, ...args);
+      templateCache.set(getKey(this), {
+        blocks: this.blocks,
+        rootRenderFunc: this.rootRenderFunc,
+      });
+    }
+  };
 
-//   // NunjucksLib.runtime.Frame.prototype.set is the hotest in-template method.
-//   // We replace it with a version that doesn't allocate a `parts` array on
-//   // repeat key use.
-//   let partsCache = new Map();
-//   let partsFromCache = (name) => {
-//     if (partsCache.has(name)) {
-//       return partsCache.get(name);
-//     }
+  let extensionIdCounter = 0;
+  let addExtension = NunjucksLib.Environment.prototype.addExtension;
+  NunjucksLib.Environment.prototype.addExtension = function _wrap_addExtension(
+    name,
+    ext
+  ) {
+    if (!("__id" in ext)) {
+      ext.__id = extensionIdCounter++;
+    }
+    return addExtension.call(this, name, ext);
+  };
 
-//     let parts = name.split(".");
-//     partsCache.set(name, parts);
-//     return parts;
-//   };
+  // NunjucksLib.runtime.Frame.prototype.set is the hotest in-template method.
+  // We replace it with a version that doesn't allocate a `parts` array on
+  // repeat key use.
+  let partsCache = new Map();
+  let partsFromCache = (name) => {
+    if (partsCache.has(name)) {
+      return partsCache.get(name);
+    }
 
-//   let frameSet = NunjucksLib.runtime.Frame.prototype.set;
-//   NunjucksLib.runtime.Frame.prototype.set = function _replacement_set(
-//     name,
-//     val,
-//     resolveUp
-//   ) {
-//     let parts = partsFromCache(name);
-//     let frame = this;
-//     let obj = frame.variables;
+    let parts = name.split(".");
+    partsCache.set(name, parts);
+    return parts;
+  };
 
-//     if (resolveUp) {
-//       if ((frame = this.resolve(parts[0], true))) {
-//         frame.set(name, val);
-//         return;
-//       }
-//     }
+  let frameSet = NunjucksLib.runtime.Frame.prototype.set;
+  NunjucksLib.runtime.Frame.prototype.set = function _replacement_set(
+    name,
+    val,
+    resolveUp
+  ) {
+    let parts = partsFromCache(name);
+    let frame = this;
+    let obj = frame.variables;
 
-//     // A slightly faster version of the intermediate object allocation loop
-//     let count = parts.length - 1;
-//     let i = 0;
-//     let id = parts[0];
-//     while (i < count) {
-//       if (!obj.hasOwnProperty(id)) {
-//         obj = obj[id] = {};
-//       }
-//       id = parts[++i];
-//     }
-//     obj[id] = val;
-//   };
-// })();
+    if (resolveUp) {
+      if ((frame = this.resolve(parts[0], true))) {
+        frame.set(name, val);
+        return;
+      }
+    }
+
+    // A slightly faster version of the intermediate object allocation loop
+    let count = parts.length - 1;
+    let i = 0;
+    let id = parts[0];
+    while (i < count) {
+      // TODO(zachleat) use Object.hasOwn when supported
+      if ("hasOwnProperty" in obj) {
+        if (!obj.hasOwnProperty(id)) {
+          obj = obj[id] = {};
+        }
+      } else if (!(id in obj)) {
+        // Handle Objects with null prototypes (Nunjucks looping stuff)
+        obj = obj[id] = {};
+      }
+
+      id = parts[++i];
+    }
+    obj[id] = val;
+  };
+})();
 
 class EleventyShortcodeError extends EleventyBaseError {}
 
 class Nunjucks extends TemplateEngine {
-  constructor(name, includesDir, config) {
-    super(name, includesDir, config);
+  constructor(name, dirs, config) {
+    super(name, dirs, config);
+    this.nunjucksEnvironmentOptions =
+      this.config.nunjucksEnvironmentOptions || {};
 
     this.setLibrary(this.config.libraryOverrides.njk);
 
     this.cacheable = true;
   }
 
-  setLibrary(env) {
+  setLibrary(override) {
     let fsLoader = new NunjucksLib.FileSystemLoader([
       super.getIncludesDir(),
       TemplatePath.getWorkingDir(),
     ]);
-    this.njkEnv = env || new NunjucksLib.Environment(fsLoader);
+
+    this.njkEnv =
+      override ||
+      new NunjucksLib.Environment(fsLoader, this.nunjucksEnvironmentOptions);
+
     // Correct, but overbroad. Better would be to evict more granularly, but
     // resolution from paths isn't straightforward.
     eventBus.on("eleventy.resourceModified", (path) => {
@@ -138,6 +155,12 @@ class Nunjucks extends TemplateEngine {
     this.addFilters(this.config.nunjucksAsyncFilters, true);
 
     // TODO these all go to the same place (addTag), add warnings for overwrites
+    // TODO(zachleat): variableName should work with quotes or without quotes (same as {% set %})
+    this.addPairedShortcode("setAsync", function (content, variableName) {
+      this.ctx[variableName] = content;
+      return "";
+    });
+
     this.addCustomTags(this.config.nunjucksTags);
     this.addAllShortcodes(this.config.nunjucksShortcodes);
     this.addAllShortcodes(this.config.nunjucksAsyncShortcodes, true);
@@ -199,6 +222,7 @@ class Nunjucks extends TemplateEngine {
   static _normalizeShortcodeContext(context) {
     let obj = {};
     if (context.ctx && context.ctx.page) {
+      obj.ctx = context.ctx;
       obj.page = context.ctx.page;
     }
     return obj;
@@ -285,57 +309,68 @@ class Nunjucks extends TemplateEngine {
         var body = parser.parseUntilBlocks("end" + shortcodeName);
         parser.advanceAfterBlockEnd();
 
-        if (isAsync) {
-          return new nodes.CallExtensionAsync(this, "run", args, [body]);
-        }
-        return new nodes.CallExtension(this, "run", args, [body]);
+        return new nodes.CallExtensionAsync(this, "run", args, [body]);
       };
 
       this.run = function (...args) {
-        let resolve;
-        if (isAsync) {
-          resolve = args.pop();
-        }
+        let resolve = args.pop();
         let body = args.pop();
         let [context, ...argArray] = args;
 
-        if (isAsync) {
-          shortcodeFn
-            .call(
-              Nunjucks._normalizeShortcodeContext(context),
-              body(),
-              ...argArray
-            )
-            .then(function (returnValue) {
-              resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
-            })
-            .catch(function (e) {
+        body(function (e, bodyContent) {
+          if (e) {
+            resolve(
+              new EleventyShortcodeError(
+                `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+                  e
+                )}`
+              )
+            );
+          }
+
+          if (isAsync) {
+            shortcodeFn
+              .call(
+                Nunjucks._normalizeShortcodeContext(context),
+                bodyContent,
+                ...argArray
+              )
+              .then(function (returnValue) {
+                resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
+              })
+              .catch(function (e) {
+                resolve(
+                  new EleventyShortcodeError(
+                    `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+                      e
+                    )}`
+                  ),
+                  null
+                );
+              });
+          } else {
+            try {
+              resolve(
+                null,
+                new NunjucksLib.runtime.SafeString(
+                  shortcodeFn.call(
+                    Nunjucks._normalizeShortcodeContext(context),
+                    bodyContent,
+                    ...argArray
+                  )
+                )
+              );
+            } catch (e) {
               resolve(
                 new EleventyShortcodeError(
                   `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
                     e
                   )}`
-                ),
-                null
+                )
               );
-            });
-        } else {
-          try {
-            return new NunjucksLib.runtime.SafeString(
-              shortcodeFn.call(
-                Nunjucks._normalizeShortcodeContext(context),
-                body(),
-                ...argArray
-              )
-            );
-          } catch (e) {
-            throw new EleventyShortcodeError(
-              `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
-                e
-              )}`
-            );
+            }
           }
-        }
+        });
       };
     };
   }
@@ -348,6 +383,10 @@ class Nunjucks extends TemplateEngine {
   addPairedShortcode(shortcodeName, shortcodeFn, isAsync = false) {
     let fn = this._getPairedShortcodeFn(shortcodeName, shortcodeFn, isAsync);
     this.njkEnv.addExtension(shortcodeName, new fn());
+  }
+
+  permalinkNeedsCompilation(str) {
+    return this.needsCompilation(str);
   }
 
   needsCompilation(str) {
@@ -429,12 +468,6 @@ class Nunjucks extends TemplateEngine {
   }
 
   async compile(str, inputPath) {
-    if (!this.needsCompilation(str)) {
-      return async function () {
-        return str;
-      };
-    }
-
     // for(let loader of this.njkEnv.loaders) {
     //   loader.cache = {};
     // }

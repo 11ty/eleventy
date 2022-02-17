@@ -18,6 +18,10 @@ class Benchmark {
     this.beforeTimers = [];
   }
 
+  incrementCount() {
+    this.timesCalled++;
+  }
+
   // TODO(slightlyoff):
   //    disable all of these hrtime requests when not benchmarking
   before() {

@@ -1,4 +1,4 @@
-const isPlainObject = require("lodash/isPlainObject");
+const isPlainObject = require("./IsPlainObject");
 const OVERRIDE_PREFIX = "override:";
 
 function getMergedItem(target, source, parentKey) {

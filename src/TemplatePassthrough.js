@@ -5,12 +5,19 @@ const TemplatePath = require("./TemplatePath");
 const debug = require("debug")("Eleventy:TemplatePassthrough");
 const fastglob = require("fast-glob");
 const EleventyBaseError = require("./EleventyBaseError");
-const aggregateBench = require("./BenchmarkManager").get("Aggregate");
 
 class TemplatePassthroughError extends EleventyBaseError {}
 
 class TemplatePassthrough {
-  constructor(path, outputDir, inputDir) {
+  constructor(path, outputDir, inputDir, config) {
+    if (!config) {
+      throw new TemplatePassthroughError("Missing `config`.");
+    }
+    this.config = config;
+    this.benchmarks = {
+      aggregate: this.config.benchmarkManager.get("Aggregate"),
+    };
+
     this.rawPath = path;
 
     // inputPath is relative to the root of your project and not your Eleventy input directory.
@@ -63,15 +70,15 @@ class TemplatePassthrough {
 
   async getFiles(glob) {
     debug("Searching for: %o", glob);
-    let bench = aggregateBench.get("Searching the file system");
-    bench.before();
+    let b = this.benchmarks.aggregate.get("Searching the file system");
+    b.before();
     const files = TemplatePath.addLeadingDotSlashArray(
       await fastglob(glob, {
         caseSensitiveMatch: false,
         dot: true,
       })
     );
-    bench.after();
+    b.after();
     return files;
   }
 
@@ -98,15 +105,15 @@ class TemplatePassthrough {
 
     // returns a promise
     return copy(src, dest, copyOptions)
-      .on(copy.events.COPY_FILE_START, function (copyOp) {
+      .on(copy.events.COPY_FILE_START, (copyOp) => {
         // Access to individual files at `copyOp.src`
         debug("Copying individual file %o", copyOp.src);
         map[copyOp.src] = copyOp.dest;
-        aggregateBench.get("Passthrough Copy File").before();
+        this.benchmarks.aggregate.get("Passthrough Copy File").before();
       })
-      .on(copy.events.COPY_FILE_COMPLETE, function () {
+      .on(copy.events.COPY_FILE_COMPLETE, () => {
         fileCopyCount++;
-        aggregateBench.get("Passthrough Copy File").after();
+        this.benchmarks.aggregate.get("Passthrough Copy File").after();
       })
       .then(() => {
         return {

@@ -1,8 +1,8 @@
 const TemplateEngine = require("./TemplateEngine");
 
 class Html extends TemplateEngine {
-  constructor(name, includesDir, config) {
-    super(name, includesDir, config);
+  constructor(name, dirs, config) {
+    super(name, dirs, config);
     this.cacheable = true;
   }
 
@@ -10,7 +10,7 @@ class Html extends TemplateEngine {
     if (preTemplateEngine) {
       let engine = this.engineManager.getEngine(
         preTemplateEngine,
-        super.getIncludesDir(),
+        this.dirs,
         this.extensionMap
       );
       let fnReady = engine.compile(str, inputPath);

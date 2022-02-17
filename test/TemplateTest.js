@@ -527,9 +527,11 @@ test("Posts inherits local JSON, layouts", async (t) => {
     "./test/stubs/posts/post1.11tydata.js",
   ]);
 
-  let localData = await dataObj.getLocalData(tmpl.getInputPath());
+  let localData = await dataObj.getTemplateDirectoryData(tmpl.getInputPath());
   t.is(localData.layout, "mylocallayout.njk");
-  t.truthy(localData.pkg);
+
+  let globalData = await dataObj.getGlobalData();
+  t.truthy(globalData.pkg);
 
   let data = await tmpl.getData();
   t.is(localData.layout, "mylocallayout.njk");
@@ -565,9 +567,11 @@ test("Template and folder name are the same, make sure data imports work ok", as
     "./test/stubs/posts/posts.11tydata.js",
   ]);
 
-  let localData = await dataObj.getLocalData(tmpl.getInputPath());
+  let localData = await dataObj.getTemplateDirectoryData(tmpl.getInputPath());
   t.is(localData.layout, "mylocallayout.njk");
-  t.truthy(localData.pkg);
+
+  let globalData = await dataObj.getGlobalData();
+  t.truthy(globalData.pkg);
 
   let data = await tmpl.getData();
   t.is(localData.layout, "mylocallayout.njk");
@@ -1090,7 +1094,7 @@ test("renderContent on a markdown file, permalink should not render markdown", a
     "/news/my-test-file/index.html"
   );
 
-  t.is(await tmpl.getOutputLink(), "/news/my-test-file/index.html");
+  t.is(await tmpl.getRawOutputPath(), "/news/my-test-file/index.html");
 });
 
 test("renderContent on a markdown file, permalink should not render markdown (with variable)", async (t) => {
@@ -1109,7 +1113,7 @@ test("renderContent on a markdown file, permalink should not render markdown (wi
     "/news/my-title/index.html"
   );
 
-  t.is(await tmpl.getOutputLink(), "/news/my-title/index.html");
+  t.is(await tmpl.getRawOutputPath(), "/news/my-title/index.html");
 });
 
 test("renderContent on a markdown file, permalink should not render markdown (has override)", async (t) => {
@@ -1124,7 +1128,7 @@ test("renderContent on a markdown file, permalink should not render markdown (ha
     "/news/my-test-file/index.html"
   );
 
-  t.is(await tmpl.getOutputLink(), "/news/my-test-file/index.html");
+  t.is(await tmpl.getRawOutputPath(), "/news/my-test-file/index.html");
 });
 
 /* Transforms */
@@ -1736,15 +1740,22 @@ test("Throws a Premature Template Content Error (haml)", async (t) => {
   t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
 });
 
-test.skip("Issue 413 weird date format", async (t) => {
+test("Issue 413 weird date format", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs-413/date-frontmatter.md",
     "./test/stubs-413/",
     "./dist"
   );
 
-  let data = await tmpl.getData();
-  t.is(data.page.date, "");
+  let error = await t.throwsAsync(async function () {
+    await tmpl.getData();
+  });
+
+  t.truthy(
+    error.message.indexOf(
+      "date front matter value (2019-03-13 20:18:42 +0000) is invalid"
+    ) > -1
+  );
 });
 
 test("Custom Front Matter Parsing Options", async (t) => {
@@ -1930,27 +1941,6 @@ test("Issue #446: Layout has a permalink with a different template language than
   t.is(data.page.url, "/test/");
 });
 
-// Prior to and including 0.10.0 this mismatched the documentation)!
-test("Layout front matter should override template files", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-
-  let dataObj = new TemplateData(
-    "./test/stubs-data-cascade/layout-data-files/",
-    eleventyConfig
-  );
-  let tmpl = getNewTemplate(
-    "./test/stubs-data-cascade/layout-data-files/test.njk",
-    "./test/stubs-data-cascade/layout-data-files/",
-    "./dist",
-    dataObj,
-    null,
-    eleventyConfig
-  );
-
-  let data = await tmpl.getData();
-  t.is(data.shared, "layout");
-});
-
 test("Get Layout Chain", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs-incremental/layout-chain/test.njk",
@@ -1958,7 +1948,7 @@ test("Get Layout Chain", async (t) => {
     "./dist"
   );
 
-  let layoutChain = await tmpl.getLayoutChain();
+  let layoutChain = await tmpl._testGetLayoutChain();
   t.deepEqual(layoutChain, [
     "./test/stubs-incremental/layout-chain/_includes/base.njk",
     "./test/stubs-incremental/layout-chain/_includes/parent.njk",
@@ -2065,6 +2055,22 @@ test("Add Extension via Configuration (txt file)", async (t) => {
   t.truthy(tmpl.isFileRelevantToThisTemplate("./test/stubs/default.txt"));
   t.falsy(tmpl.isFileRelevantToThisTemplate("./test/stubs/default2.txt"));
   t.falsy(tmpl.isFileRelevantToThisTemplate("./test/stubs/default.njk"));
+
+  t.truthy(
+    tmpl.isFileRelevantToThisTemplate("./test/stubs/default.txt", {
+      isFullTemplate: true,
+    })
+  );
+  t.falsy(
+    tmpl.isFileRelevantToThisTemplate("./test/stubs/default2.txt", {
+      isFullTemplate: true,
+    })
+  );
+  t.falsy(
+    tmpl.isFileRelevantToThisTemplate("./test/stubs/default.njk", {
+      isFullTemplate: true,
+    })
+  );
 });
 
 test("permalink object with build", async (t) => {
@@ -2074,7 +2080,7 @@ test("permalink object with build", async (t) => {
     "./test/stubs/_site"
   );
 
-  t.is(await tmpl.getOutputLink(), "/url/index.html");
+  t.is(await tmpl.getRawOutputPath(), "/url/index.html");
   t.is(await tmpl.getOutputHref(), "/url/");
 });
 
@@ -2085,7 +2091,8 @@ test("permalink object without build", async (t) => {
     "./test/stubs/_site"
   );
 
-  t.is(await tmpl.getOutputLink(), "/url/");
+  t.is(await tmpl.getRawOutputPath(), false);
+  t.is(await tmpl.getOutputPath(), false);
   t.is(await tmpl.getOutputHref(), "/url/");
 });
 
@@ -2101,7 +2108,7 @@ test("permalink object _getLink", async (t) => {
       serverless: "/serverless/",
     },
   });
-  t.is(await link.toLink(), "/serverless/");
+  t.is(await link.toOutputPath(), false);
   t.is(await link.toHref(), "/serverless/");
 
   t.deepEqual(link.getServerlessUrls(), {
@@ -2116,7 +2123,7 @@ test("permalink object _getLink", async (t) => {
       build: "/build/",
     },
   });
-  t.is(await link2.toLink(), "/build/index.html");
+  t.is(await link2.toOutputPath(), "/build/index.html");
   t.is(await link2.toHref(), "/build/");
   t.deepEqual(link2.getServerlessUrls(), {});
   t.deepEqual(tmpl.getServerlessUrls(), {});
@@ -2127,7 +2134,7 @@ test("permalink object _getLink", async (t) => {
       serverless: "/serverless/",
     },
   });
-  t.is(await link3.toLink(), "/build/index.html");
+  t.is(await link3.toOutputPath(), "/build/index.html");
   t.is(await link3.toHref(), "/build/");
   t.deepEqual(link3.getServerlessUrls(), {
     serverless: "/serverless/",
@@ -2144,7 +2151,7 @@ test("permalink object _getLink", async (t) => {
       serverless: "/serverless{{ test }}/",
     },
   });
-  t.is(await link4.toLink(), "/builda/index.html");
+  t.is(await link4.toOutputPath(), "/builda/index.html");
   t.is(await link4.toHref(), "/builda/");
   t.deepEqual(link4.getServerlessUrls(), {
     serverless: "/serverlessa/",
@@ -2167,7 +2174,7 @@ test("permalink object _getLink (array of serverless URLs)", async (t) => {
       serverless: ["/serverless1/", "/serverless2/"],
     },
   });
-  t.is(await link4.toLink(), "/serverless1/");
+  t.is(await link4.toOutputPath(), false);
   t.is(await link4.toHref(), "/serverless1/");
 
   t.deepEqual(link4.getServerlessUrls(), {
@@ -2192,7 +2199,7 @@ test("permalink object _getLink (array of serverless URLs with template syntax)"
       serverless: ["/serverless1{{ test }}/", "/serverless2{{ test }}/"],
     },
   });
-  t.is(await link.toLink(), "/serverless1a/");
+  t.is(await link.toOutputPath(), false);
   t.is(await link.toHref(), "/serverless1a/");
 
   t.deepEqual(link.getServerlessUrls(), {
@@ -2217,15 +2224,15 @@ test("Do not resolve page.url from eleventy serverless data", async (t) => {
   let outputHref = await tmpl.getOutputHref(fakeData);
   t.is(outputHref, "/serverless/");
 
-  let outputLink = await tmpl.getOutputLink(fakeData);
-  t.is(outputLink, "/serverless/");
+  let outputLink = await tmpl.getRawOutputPath(fakeData);
+  t.is(outputLink, false);
 
   let outputPath = await tmpl.getOutputPath(fakeData);
   t.is(outputPath, false);
 
-  let { href, link, path } = await tmpl.getOutputLocations(fakeData);
+  let { href, rawPath, path } = await tmpl.getOutputLocations(fakeData);
   t.is(href, "/serverless/");
-  t.is(link, "/serverless/");
+  t.is(rawPath, false);
   t.is(path, false);
 });
 
@@ -2245,15 +2252,15 @@ test("Do not override page.url with serverless url", async (t) => {
   let outputHref = await tmpl.getOutputHref(fakeData);
   t.is(outputHref, "/build/");
 
-  let outputLink = await tmpl.getOutputLink(fakeData);
+  let outputLink = await tmpl.getRawOutputPath(fakeData);
   t.is(outputLink, "/build/index.html");
 
   let outputPath = await tmpl.getOutputPath(fakeData);
   t.is(outputPath, "./test/stubs/_site/build/index.html");
 
-  let { href, link, path } = await tmpl.getOutputLocations(fakeData);
+  let { href, rawPath, path } = await tmpl.getOutputLocations(fakeData);
   t.is(href, "/build/");
-  t.is(link, "/build/index.html");
+  t.is(rawPath, "/build/index.html");
   t.is(path, "./test/stubs/_site/build/index.html");
 });
 
@@ -2268,7 +2275,7 @@ test("Permalink is an object but an empty object (inherit default behavior)", as
   let outputHref = await tmpl.getOutputHref(data);
   t.is(outputHref, "/permalink-empty-object/empty-object/");
 
-  let outputLink = await tmpl.getOutputLink(data);
+  let outputLink = await tmpl.getRawOutputPath(data);
   t.is(outputLink, "permalink-empty-object/empty-object/index.html");
 
   let outputPath = await tmpl.getOutputPath(data);
@@ -2277,9 +2284,9 @@ test("Permalink is an object but an empty object (inherit default behavior)", as
     "./test/stubs/_site/permalink-empty-object/empty-object/index.html"
   );
 
-  let { href, link, path } = await tmpl.getOutputLocations(data);
+  let { href, rawPath, path } = await tmpl.getOutputLocations(data);
   t.is(href, "/permalink-empty-object/empty-object/");
-  t.is(link, "permalink-empty-object/empty-object/index.html");
+  t.is(rawPath, "permalink-empty-object/empty-object/index.html");
   t.is(
     path,
     "./test/stubs/_site/permalink-empty-object/empty-object/index.html"

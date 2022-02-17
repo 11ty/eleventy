@@ -447,7 +447,7 @@ test("Pagination and TemplateContent", async (t) => {
 
   let content = fs.readFileSync(
     "./test/stubs/pagination-templatecontent/_site/index.html",
-    "utf-8"
+    "utf8"
   );
   t.is(
     content.trim(),

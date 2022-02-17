@@ -5,29 +5,28 @@ const TemplatePath = require("../TemplatePath");
 // const debug = require("debug")("Eleventy:Liquid");
 
 class Liquid extends TemplateEngine {
-  constructor(name, includesDir, config) {
-    super(name, includesDir, config);
+  static argumentLexerOptions = {
+    number: /[0-9]+\.*[0-9]*/,
+    doubleQuoteString: /"(?:\\["\\]|[^\n"\\])*"/,
+    singleQuoteString: /'(?:\\['\\]|[^\n'\\])*'/,
+    keyword: /[a-zA-Z0-9.\-_]+/,
+    "ignore:whitespace": /[, \t]+/, // includes comma separator
+  };
 
-    this.liquidOptions = {};
+  constructor(name, dirs, config) {
+    super(name, dirs, config);
+
+    this.liquidOptions = this.config.liquidOptions || {};
 
     this.setLibrary(this.config.libraryOverrides.liquid);
-    this.setLiquidOptions(this.config.liquidOptions);
 
-    this.argLexer = moo.compile({
-      number: /[0-9]+\.*[0-9]*/,
-      doubleQuoteString: /"(?:\\["\\]|[^\n"\\])*"/,
-      singleQuoteString: /'(?:\\['\\]|[^\n'\\])*'/,
-      keyword: /[a-zA-Z0-9.\-_]+/,
-      "ignore:whitespace": /[, \t]+/, // includes comma separator
-    });
+    this.argLexer = moo.compile(Liquid.argumentLexerOptions);
     this.cacheable = true;
   }
 
-  setLibrary(lib) {
-    this.liquidLibOverride = lib;
-
+  setLibrary(override) {
     // warning, the include syntax supported here does not exactly match what Jekyll uses.
-    this.liquidLib = lib || new liquidLib.Liquid(this.getLiquidOptions());
+    this.liquidLib = override || new liquidLib.Liquid(this.getLiquidOptions());
     this.setEngineLib(this.liquidLib);
 
     this.addFilters(this.config.liquidFilters);
@@ -38,15 +37,9 @@ class Liquid extends TemplateEngine {
     this.addAllPairedShortcodes(this.config.liquidPairedShortcodes);
   }
 
-  setLiquidOptions(options) {
-    this.liquidOptions = options;
-
-    this.setLibrary(this.liquidLibOverride);
-  }
-
   getLiquidOptions() {
     let defaults = {
-      root: [super.getIncludesDir()], // overrides in compile with inputPath below
+      root: [this.dirs.includes, this.dirs.input], // supplemented in compile with inputPath below
       extname: ".liquid",
       strictFilters: true,
       // TODO?
@@ -101,6 +94,10 @@ class Liquid extends TemplateEngine {
 
   static async parseArguments(lexer, str, scope, engine) {
     let argArray = [];
+
+    if (!lexer) {
+      lexer = moo.compile(Liquid.argumentLexerOptions);
+    }
 
     if (typeof str === "string") {
       // TODO key=value key2=value
@@ -214,6 +211,10 @@ class Liquid extends TemplateEngine {
     return symbols;
   }
 
+  permalinkNeedsCompilation(str) {
+    return this.needsCompilation(str);
+  }
+
   needsCompilation(str) {
     let options = this.liquidLib.options;
 
@@ -224,24 +225,15 @@ class Liquid extends TemplateEngine {
   }
 
   async compile(str, inputPath) {
-    if (!this.needsCompilation(str)) {
-      return async function (data) {
-        return str;
-      };
-    }
-
     let engine = this.liquidLib;
     let tmplReady = engine.parse(str, inputPath);
 
     // Required for relative includes
     let options = {};
-    if (!inputPath || inputPath === "njk" || inputPath === "md") {
+    if (!inputPath || inputPath === "liquid" || inputPath === "md") {
       // do nothing
     } else {
-      options.root = [
-        super.getIncludesDir(),
-        TemplatePath.getDirFromFilePath(inputPath),
-      ];
+      options.root = [TemplatePath.getDirFromFilePath(inputPath)];
     }
 
     return async function (data) {

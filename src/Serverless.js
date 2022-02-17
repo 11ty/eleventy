@@ -3,7 +3,7 @@ const fs = require("fs");
 
 const Eleventy = require("./Eleventy");
 const TemplatePath = require("./TemplatePath");
-const UrlPattern = require("url-pattern");
+const { match } = require("path-to-regexp");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
 const debug = require("debug")("Eleventy:Serverless");
 
@@ -29,26 +29,46 @@ class Serverless {
     // ServerlessBundlerPlugin hard-codes to this (even if you used a different file name)
     this.configFilename = "eleventy.config.js";
 
+    // Configuration Information
+    this.configInfoFilename = "eleventy-serverless.json";
+
     // Maps input files to eligible serverless URLs
     this.mapFilename = "eleventy-serverless-map.json";
 
     this.options = Object.assign(
       {
-        inputDir: ".",
+        inputDir: null, // override only, we now inject this.
         functionsDir: "functions/",
         matchUrlToPattern(path, urlToCompare) {
-          let pattern = new UrlPattern(urlToCompare);
-          return pattern.match(path);
+          let fn = match(urlToCompare, { decode: decodeURIComponent });
+          return fn(path);
         },
         // Query String Parameters
         query: {},
         // Inject shared collections
         precompiledCollections: {},
+        // Configuration callback
+        config: function (eleventyConfig) {},
       },
       options
     );
 
     this.dir = this.getProjectDir();
+  }
+
+  initializeEnvironmentVariables() {
+    // set and delete env variables to make it work the same on --serve
+    this.serverlessEnvironmentVariableAlreadySet =
+      !!process.env.ELEVENTY_SERVERLESS;
+    if (!this.serverlessEnvironmentVariableAlreadySet) {
+      process.env.ELEVENTY_SERVERLESS = true;
+    }
+  }
+
+  deleteEnvironmentVariables() {
+    if (!this.serverlessEnvironmentVariableAlreadySet) {
+      delete process.env.ELEVENTY_SERVERLESS;
+    }
   }
 
   getProjectDir() {
@@ -76,10 +96,21 @@ class Serverless {
     debug(
       `Including content map (maps output URLs to input files) from ${fullPath}`
     );
+    // TODO dedicated reset method, don’t delete this every time
     deleteRequireCache(fullPath);
 
     let mapContent = require(fullPath);
     return mapContent;
+  }
+
+  getConfigInfo() {
+    let fullPath = TemplatePath.absolutePath(this.dir, this.configInfoFilename);
+    debug(`Including config info file from ${fullPath}`);
+    // TODO dedicated reset method, don’t delete this every time
+    deleteRequireCache(fullPath);
+
+    let configInfo = require(fullPath);
+    return configInfo;
   }
 
   isServerlessUrl(urlPath) {
@@ -102,7 +133,7 @@ class Serverless {
       if (result) {
         matches.push({
           compareTo: url,
-          pathParams: result,
+          pathParams: result.params,
           inputPath: contentMap[url],
         });
       }
@@ -124,12 +155,15 @@ class Serverless {
     return {};
   }
 
-  async render() {
+  async getOutput() {
     if (this.dir.startsWith("/var/task/")) {
       process.chdir(this.dir);
     }
 
-    let inputDir = this.options.input || this.options.inputDir;
+    let inputDir =
+      this.options.input ||
+      this.options.inputDir ||
+      this.getConfigInfo().dir.input;
     let configPath = path.join(this.dir, this.configFilename);
     let { pathParams, inputPath } = this.matchUrlPattern(this.path);
 
@@ -152,6 +186,9 @@ class Serverless {
     debug("Path params: %o", pathParams);
     debug(`Input path:  ${inputPath}`);
 
+    // TODO (@zachleat) change to use this hook: https://github.com/11ty/eleventy/issues/1957
+    this.initializeEnvironmentVariables();
+
     let elev = new Eleventy(this.options.input || inputPath, null, {
       configPath,
       inputDir,
@@ -169,15 +206,25 @@ class Serverless {
         };
 
         eleventyConfig.addGlobalData("eleventy.serverless", globalData);
+
+        if (this.options.config && typeof this.options.config === "function") {
+          this.options.config(eleventyConfig);
+        }
       },
     });
 
-    await elev.init();
-
     let json = await elev.toJSON();
-    if (!json.length) {
+
+    // TODO (@zachleat)  https://github.com/11ty/eleventy/issues/1957
+    this.deleteEnvironmentVariables();
+
+    let filtered = json.filter((entry) => {
+      return entry.inputPath === inputPath;
+    });
+
+    if (!filtered.length) {
       let err = new Error(
-        `Couldn’t find any generated output from Eleventy (URL path parameters: ${JSON.stringify(
+        `Couldn’t find any generated output from Eleventy (Input path: ${inputPath}, URL path parameters: ${JSON.stringify(
           pathParams
         )}).`
       );
@@ -185,17 +232,14 @@ class Serverless {
       throw err;
     }
 
-    for (let entry of json) {
-      if (entry.inputPath === inputPath) {
-        return entry.content;
-      }
-    }
+    return filtered;
+  }
 
-    // Log to Serverless Function output
-    console.log(json);
-    throw new Error(
-      `Couldn’t find any matching output from Eleventy for ${inputPath} (${json.length} pages rendered).`
-    );
+  /* Deprecated, use `getOutput` directly instead. */
+  async render() {
+    let json = await this.getOutput();
+
+    return json[0].content;
   }
 }
 

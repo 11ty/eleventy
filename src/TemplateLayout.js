@@ -109,7 +109,7 @@ class TemplateLayout extends TemplateContent {
     return data;
   }
 
-  async getLayoutChain() {
+  async _testGetLayoutChain() {
     if (!this.layoutChain) {
       await this.getData();
     }

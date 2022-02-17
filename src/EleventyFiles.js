@@ -12,15 +12,17 @@ class EleventyFilesError extends EleventyBaseError {}
 
 const debug = require("debug")("Eleventy:EleventyFiles");
 // const debugDev = require("debug")("Dev:Eleventy:EleventyFiles");
-const aggregateBench = require("./BenchmarkManager").get("Aggregate");
 
 class EleventyFiles {
   constructor(input, outputDir, formats, eleventyConfig) {
     if (!eleventyConfig) {
       throw new EleventyFilesError("Missing `eleventyConfig`` argument.");
     }
+
     this.eleventyConfig = eleventyConfig;
     this.config = eleventyConfig.getConfig();
+    this.aggregateBench = this.config.benchmarkManager.get("Aggregate");
+
     this.input = input;
     this.inputDir = TemplatePath.getDir(this.input);
     this.outputDir = outputDir;
@@ -184,6 +186,12 @@ class EleventyFiles {
   setupGlobs() {
     this.fileIgnores = this.getIgnores();
     this.extraIgnores = this._getIncludesAndDataDirs();
+    this.uniqueIgnores = this.getIgnoreGlobs();
+
+    // Conditional added for tests that don’t have a config
+    if (this.config && this.config.events) {
+      this.config.events.emit("eleventy.ignores", this.uniqueIgnores);
+    }
 
     if (this.passthroughAll) {
       this.normalizedTemplateGlobs = TemplateGlob.map([
@@ -217,7 +225,7 @@ class EleventyFiles {
       let dir = TemplatePath.getDirFromFilePath(ignorePath);
 
       if (fs.existsSync(ignorePath) && fs.statSync(ignorePath).size > 0) {
-        let ignoreContent = fs.readFileSync(ignorePath, "utf-8");
+        let ignoreContent = fs.readFileSync(ignorePath, "utf8");
 
         ignores = ignores.concat(
           EleventyFiles.normalizeIgnoreContent(dir, ignoreContent)
@@ -346,9 +354,12 @@ class EleventyFiles {
     }
 
     // Filter out the passthrough copy paths.
-    return this.pathCache.filter((path) =>
-      this.extensionMap.isFullTemplateFilePath(path)
-    );
+    return this.pathCache.filter((path) => {
+      return (
+        this.extensionMap.isFullTemplateFilePath(path) &&
+        this.extensionMap.shouldSpiderJavaScriptDependencies(path)
+      );
+    });
   }
 
   _globSearch() {
@@ -360,17 +371,18 @@ class EleventyFiles {
 
     // returns a promise
     debug("Searching for: %o", globs);
+
     this._glob = fastglob(globs, {
       caseSensitiveMatch: false,
       dot: true,
-      ignore: this.getIgnoreGlobs(),
+      ignore: this.uniqueIgnores,
     });
 
     return this._glob;
   }
 
   async getFiles() {
-    let bench = aggregateBench.get("Searching the file system");
+    let bench = this.aggregateBench.get("Searching the file system");
     bench.before();
     let globResults = await this._globSearch();
     let paths = TemplatePath.addLeadingDotSlashArray(globResults);
@@ -425,7 +437,7 @@ class EleventyFiles {
   // TODO this isn’t great but reduces complexity avoiding using TemplateData:getLocalDataPaths for each template in the cache
   async getWatcherTemplateJavaScriptDataFiles() {
     let globs = await this.templateData.getTemplateJavaScriptDataFileGlob();
-    let bench = aggregateBench.get("Searching the file system");
+    let bench = this.aggregateBench.get("Searching the file system");
     bench.before();
     let results = TemplatePath.addLeadingDotSlashArray(
       await fastglob(globs, {

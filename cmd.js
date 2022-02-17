@@ -11,10 +11,6 @@ require("please-upgrade-node")(pkg, {
 });
 const debug = require("debug")("Eleventy:cmd");
 
-if (process.env.DEBUG) {
-  require("time-require");
-}
-
 const EleventyErrorHandler = require("./src/EleventyErrorHandler");
 
 try {
@@ -50,8 +46,7 @@ try {
     },
   });
 
-  // TODO fix debug output: `Eleventy:cmd command: eleventy  [object Object] +0ms`
-  debug("command: eleventy ", argv.toString());
+  debug("command: eleventy %o", argv);
   const Eleventy = require("./src/Eleventy");
 
   process.on("unhandledRejection", (error, promise) => {

@@ -134,18 +134,18 @@ TemplatePath.normalizeUrlPath = function (...urlPaths) {
 TemplatePath.absolutePath = function (...paths) {
   let i = 0;
   // check all the paths before we short circuit from the first index
-  for (let path of paths) {
-    if (path.startsWith("/") && i > 0) {
+  for (let p of paths) {
+    if (path.isAbsolute(p) && i > 0) {
       throw new Error(
-        `Only the first parameter to Template.absolutePath can be an absolute path. Received: ${path} from ${paths}`
+        `Only the first parameter to Template.absolutePath can be an absolute path. Received: ${p} from ${paths}`
       );
     }
     i++;
   }
 
   let j = 0;
-  for (let path of paths) {
-    if (j === 0 && path.startsWith("/")) {
+  for (let p of paths) {
+    if (j === 0 && path.isAbsolute(p)) {
       return TemplatePath.join(...paths);
     }
     j++;
@@ -183,16 +183,20 @@ TemplatePath.addLeadingDotSlashArray = function (paths) {
  * @param {String} path
  * @returns {String}
  */
-TemplatePath.addLeadingDotSlash = function (path) {
-  if (path === "." || path === "..") {
-    return path + "/";
+TemplatePath.addLeadingDotSlash = function (pathArg) {
+  if (pathArg === "." || pathArg === "..") {
+    return pathArg + "/";
   }
 
-  if (path.startsWith("/") || path.startsWith("./") || path.startsWith("../")) {
-    return path;
+  if (
+    path.isAbsolute(pathArg) ||
+    pathArg.startsWith("./") ||
+    pathArg.startsWith("../")
+  ) {
+    return pathArg;
   }
 
-  return "./" + path;
+  return "./" + pathArg;
 };
 
 /**
@@ -335,6 +339,18 @@ TemplatePath.removeExtension = function (path, extension = undefined) {
   }
 
   return path;
+};
+
+/**
+ * Accepts a relative file path that is using a standard directory separator and
+ * normalizes it using the local operating system separator.
+ * e.g. `./my/dir/` stays `./my/dir/` on *nix and becomes `.\\my\\dir\\` on Windows
+ *
+ * @param {String} filePath
+ * @returns {String} a file path with the correct local directory separator.
+ */
+TemplatePath.normalizeOperatingSystemFilePath = function (filePath, sep = "/") {
+  return filePath.split(sep).join(path.sep);
 };
 
 module.exports = TemplatePath;

@@ -16,9 +16,6 @@ const debug = require("debug")("Eleventy:TemplateData");
 const debugDev = require("debug")("Dev:Eleventy:TemplateData");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
 
-const bench = require("./BenchmarkManager").get("Data");
-const aggregateBench = require("./BenchmarkManager").get("Aggregate");
-
 class FSExistsCache {
   constructor() {
     this._cache = new Map();
@@ -49,6 +46,10 @@ class TemplateData {
     }
     this.eleventyConfig = eleventyConfig;
     this.config = this.eleventyConfig.getConfig();
+    this.benchmarks = {
+      data: this.config.benchmarkManager.get("Data"),
+      aggregate: this.config.benchmarkManager.get("Aggregate"),
+    };
 
     this.dataTemplateEngine = this.config.dataTemplateEngine;
 
@@ -57,6 +58,7 @@ class TemplateData {
 
     this.rawImports = {};
     this.globalData = null;
+    this.templateDirectoryData = {};
 
     // It's common for data files not to exist, so we avoid going to the FS to
     // re-check if they do via a quick-and-dirty cache.
@@ -121,6 +123,7 @@ class TemplateData {
 
   clearData() {
     this.globalData = null;
+    this.templateDirectoryData = {};
   }
 
   async cacheData() {
@@ -214,7 +217,7 @@ class TemplateData {
   async getGlobalDataFiles() {
     let priorities = this.getGlobalDataExtensionPriorities();
 
-    let fsBench = aggregateBench.get("Searching the file system");
+    let fsBench = this.benchmarks.aggregate.get("Searching the file system");
     fsBench.before();
     let paths = fastglob.sync(await this.getGlobalDataGlob(), {
       caseSensitiveMatch: false,
@@ -291,6 +294,8 @@ class TemplateData {
 
   async getInitialGlobalData() {
     let globalData = {};
+
+    // via eleventyConfig.addGlobalData
     if (this.config.globalData) {
       let keys = Object.keys(this.config.globalData);
       for (let key of keys) {
@@ -303,6 +308,7 @@ class TemplateData {
         lodashset(globalData, key, returnValue);
       }
     }
+
     if (this.environmentVariables) {
       if (!("eleventy" in globalData)) {
         globalData.eleventy = {};
@@ -312,15 +318,16 @@ class TemplateData {
       }
       Object.assign(globalData.eleventy.env, this.environmentVariables);
     }
+
     return globalData;
   }
 
   async getData() {
     let rawImports = this.getRawImports();
 
-    this.configApiGlobalData = await this.getInitialGlobalData();
-
     if (!this.globalData) {
+      this.configApiGlobalData = await this.getInitialGlobalData();
+
       let globalJson = await this.getAllGlobalData();
       let mergedGlobalData = merge(globalJson, this.configApiGlobalData);
 
@@ -343,6 +350,8 @@ class TemplateData {
       return this._fsExistsCache.exists(path);
     });
 
+    this.config.events.emit("eleventy.dataFiles", localDataPaths);
+
     if (!localDataPaths.length) {
       return localData;
     }
@@ -357,15 +366,21 @@ class TemplateData {
     return localData;
   }
 
-  async getLocalData(templatePath) {
-    let localDataPaths = await this.getLocalDataPaths(templatePath);
-    let importedData = await this.combineLocalData(localDataPaths);
-    let globalData = await this.getData();
+  async getTemplateDirectoryData(templatePath) {
+    if (!this.templateDirectoryData[templatePath]) {
+      let localDataPaths = await this.getLocalDataPaths(templatePath);
+      let importedData = await this.combineLocalData(localDataPaths);
 
-    // OK-ish: shallow merge when combining template/data dir files with global data files
-    let localData = Object.assign({}, globalData, importedData);
-    // debug("`getLocalData` for %o: %O", templatePath, localData);
-    return localData;
+      this.templateDirectoryData[templatePath] = Object.assign(
+        {},
+        importedData
+      );
+    }
+    return this.templateDirectoryData[templatePath];
+  }
+
+  async getGlobalData() {
+    return this.getData();
   }
 
   getUserDataExtensions() {
@@ -395,7 +410,7 @@ class TemplateData {
   async _loadFileContents(path) {
     let rawInput;
     try {
-      rawInput = await fs.promises.readFile(path, "utf-8");
+      rawInput = await fs.promises.readFile(path, "utf8");
     } catch (e) {
       // if file does not exist, return nothing
     }
@@ -458,9 +473,9 @@ class TemplateData {
         return {};
       }
 
-      let aggregateDataBench = aggregateBench.get("Data File");
+      let aggregateDataBench = this.benchmarks.aggregate.get("Data File");
       aggregateDataBench.before();
-      let dataBench = bench.get(`\`${path}\``);
+      let dataBench = this.benchmarks.data.get(`\`${path}\``);
       dataBench.before();
       deleteRequireCache(localPath);
 
@@ -595,6 +610,17 @@ class TemplateData {
     }
 
     return data;
+  }
+
+  getServerlessPathData() {
+    if (
+      this.configApiGlobalData &&
+      this.configApiGlobalData.eleventy &&
+      this.configApiGlobalData.eleventy.serverless &&
+      this.configApiGlobalData.eleventy.serverless.path
+    ) {
+      return this.configApiGlobalData.eleventy.serverless.path;
+    }
   }
 }
 

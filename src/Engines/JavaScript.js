@@ -7,9 +7,11 @@ const getJavaScriptData = require("../Util/GetJavaScriptData");
 class JavaScriptTemplateNotDefined extends EleventyBaseError {}
 
 class JavaScript extends TemplateEngine {
-  constructor(name, includesDir, config) {
-    super(name, includesDir, config);
+  constructor(name, dirs, config) {
+    super(name, dirs, config);
     this.instances = {};
+
+    this.cacheable = false;
   }
 
   normalize(result) {
@@ -91,7 +93,7 @@ class JavaScript extends TemplateEngine {
 
   async getExtraDataFromFile(inputPath) {
     let inst = this.getInstanceFromInputPath(inputPath);
-    return await getJavaScriptData(inst, inputPath);
+    return getJavaScriptData(inst, inputPath);
   }
 
   getJavaScriptFunctions(inst) {
@@ -103,6 +105,7 @@ class JavaScript extends TemplateEngine {
       if (key === "page") {
         // do nothing
       } else {
+        // note: bind creates a new function
         fns[key] = configFns[key].bind(inst);
       }
     }
@@ -129,6 +132,10 @@ class JavaScript extends TemplateEngine {
         return this.normalize(inst.render.call(inst, data));
       }.bind(this);
     }
+  }
+
+  static shouldSpiderJavaScriptDependencies() {
+    return true;
   }
 }
 
