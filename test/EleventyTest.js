@@ -402,6 +402,13 @@ test("Eleventy addGlobalData can feed layouts to populate data cascade with layo
 test("Unicode in front matter `tags`, issue #670", async (t) => {
   let elev = new Eleventy("./test/stubs-670/", "./test/stubs-670/_site");
 
-  let [result] = await elev.toJSON();
-  t.is(result.content.trim(), "./test/stubs-670/content.liquid");
+  let results = await elev.toJSON();
+  results.sort((a, b) => {
+    if (a.inputPath > b.inputPath) {
+      return -1;
+    }
+    return 1;
+  });
+
+  t.is(results[0].content.trim(), "2,all,Cañon City,");
 });
