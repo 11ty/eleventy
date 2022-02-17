@@ -1,6 +1,6 @@
 {
   "name": "@11ty/eleventy",
-  "version": "1.0.1-canary.2",
+  "version": "1.0.1-canary.3",
   "description": "Transform a directory of templates into HTML.",
   "publishConfig": {
     "access": "public"
@@ -88,9 +88,9 @@
     "nyc": "^15.1.0",
     "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
-    "sass": "^1.49.7",
+    "sass": "^1.49.8",
     "toml": "^3.0.0",
-    "vue": "^3.2.26"
+    "vue": "^3.2.31"
   },
   "dependencies": {
     "@11ty/dependency-tree": "^2.0.0",
