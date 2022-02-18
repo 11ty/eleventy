@@ -238,6 +238,7 @@ class BundlerHelper {
       let result = await serverlessFunction.handler({
         httpMethod: "GET",
         path: url.pathname,
+        rawUrl: url.toString(),
         // @netlify/functions builder overwrites these to {} intentionally
         // See https://github.com/netlify/functions/issues/38
         queryStringParameters: queryParams,

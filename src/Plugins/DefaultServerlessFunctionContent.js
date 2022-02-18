@@ -6,7 +6,7 @@ require("./eleventy-bundler-modules.js");
 
 async function handler(event) {
   let elev = new EleventyServerless("%%NAME%%", {
-    path: event.path,
+    path: new URL(event.rawUrl).pathname,
     query: event.queryStringParameters,
     functionsDir: "%%FUNCTIONS_DIR%%",
   });
@@ -45,9 +45,11 @@ async function handler(event) {
 }
 
 // Choose one:
-// * Runs on each request: AWS Lambda (or Netlify Function)
+// * Runs on each request: AWS Lambda, Netlify Function
 // * Runs on first request only: Netlify On-demand Builder
-//   (don’t forget to `npm install @netlify/functions`)
+//    1. Don’t forget to `npm install @netlify/functions`
+//    2. Also use `redirects: "netlify-toml-builders"` in your config file’s serverless bundler options:
+//       https://www.11ty.dev/docs/plugins/serverless/#bundler-options
 
 exports.handler = handler;
 
