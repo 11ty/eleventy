@@ -96,7 +96,6 @@
     "@11ty/dependency-tree": "^2.0.0",
     "@iarna/toml": "^2.2.5",
     "@sindresorhus/slugify": "^1.1.2",
-    "browser-sync": "^2.27.7",
     "chokidar": "^3.5.3",
     "cross-spawn": "^7.0.3",
     "debug": "^4.3.3",

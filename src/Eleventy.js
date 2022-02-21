@@ -71,6 +71,7 @@ class Eleventy {
      * @member {Object} - Initialize Eleventy’s configuration, including the user config file
      */
     this.config = this.eleventyConfig.getConfig();
+    this.config.eleventyServe = this.config.eleventyServe || EleventyServe;
 
     /**
      * @member {Object} - Singleton BenchmarkManager instance
@@ -130,7 +131,7 @@ class Eleventy {
     this.formatsOverride = null;
 
     /** @member {Object} - tbd. */
-    this.eleventyServe = new EleventyServe();
+    this.eleventyServe = new this.config.eleventyServe();
     this.eleventyServe.config = this.config;
 
     /** @member {String} - Holds the path to the input directory. */

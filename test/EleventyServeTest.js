@@ -19,6 +19,8 @@ test("Directories", (t) => {
   t.is(es.getRedirectFilename("test"), "_site/test/index.html");
 });
 
+// TODO: these should be moved to the external eleventy-browser-sync "EleventyServe" plugin
+/*
 test("Get Options", (t) => {
   let es = new EleventyServe();
   let cfg = new TemplateConfig().getConfig();
@@ -90,3 +92,4 @@ test("Get Options (override in config)", (t) => {
     ghostMode: false,
   });
 });
+*/
