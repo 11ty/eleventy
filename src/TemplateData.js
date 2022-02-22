@@ -492,11 +492,12 @@ class TemplateData {
       return this._parseDataFile(path, rawImports, ignoreProcessing, parser);
     } else if (extension === "json") {
       // File to string, parse with JSON (preprocess)
+      const parser = (content) => JSON.parse(content)
       return this._parseDataFile(
         path,
         rawImports,
         ignoreProcessing,
-        JSON.parse
+        parser
       );
     } else {
       throw new TemplateDataParseError(
