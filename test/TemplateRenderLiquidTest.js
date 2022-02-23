@@ -1098,7 +1098,7 @@ test("Liquid bypass compilation", async (t) => {
 test("Liquid reverse filter in {{ }}", async (t) => {
   // https://liquidjs.com/filters/reverse.html
   let fn = await getNewTemplateRender("liquid").getCompiledTemplate(
-    "{{ test | reverse }}"
+    "{{ test | reverse | join: ',' }}"
   );
   t.is(await fn({ test: [1, 2, 3] }), "3,2,1");
 });
