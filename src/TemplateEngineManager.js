@@ -24,6 +24,9 @@ class TemplateEngineManager {
         njk: "Nunjucks",
         liquid: "Liquid",
         "11ty.js": "JavaScript",
+        "11ty.jsx": "JavaScript",
+        "11ty.ts": "JavaScript",
+        "11ty.tsx": "JavaScript",
       };
 
       if ("extensionMap" in this.config) {
