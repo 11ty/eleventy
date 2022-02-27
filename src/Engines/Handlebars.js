@@ -27,22 +27,20 @@ class Handlebars extends TemplateEngine {
     this.handlebarsLib.registerHelper(name, callback);
   }
 
-  wrapHelper(callback) {
-    let jsFuncs = this.config.javascriptFunctions;
+  static wrapHelper(callback) {
     return function () {
       const newThis = {
-        ...jsFuncs,
+        ...this,
         ctx: this,
-        page: this.page,
+        // page: this.page
       };
-      // Handlebars passes an additional argument
       return callback.call(newThis, ...arguments);
     };
   }
 
   addHelpers(helpers) {
     for (let name in helpers) {
-      this.addHelper(name, this.wrapHelper(helpers[name]));
+      this.addHelper(name, Handlebars.wrapHelper(helpers[name]));
     }
   }
 

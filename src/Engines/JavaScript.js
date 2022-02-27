@@ -106,17 +106,16 @@ class JavaScript extends TemplateEngine {
         // do nothing
       } else {
         // note: wrapping creates a new function
-        fns[key] = this.wrapJavaScriptFunction(inst, configFns[key]);
+        fns[key] = JavaScript.wrapJavaScriptFunction(inst, configFns[key]);
       }
     }
     return fns;
   }
 
-  wrapJavaScriptFunction(inst, fn) {
-    let jsFuncs = this.config.javascriptFunctions;
+  static wrapJavaScriptFunction(inst, fn) {
     return function () {
       const newThis = {
-        ...jsFuncs,
+        ...this,
         ctx: inst,
         page: inst.page,
       };
