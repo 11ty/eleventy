@@ -65,7 +65,23 @@ class Liquid extends TemplateEngine {
   }
 
   addFilter(name, filter) {
-    this.liquidLib.registerFilter(name, filter);
+    this.liquidLib.registerFilter(name, this.wrapFilter(filter));
+  }
+
+  wrapFilter(filter) {
+    let jsFuncs = this.config.javascriptFunctions;
+    return function () {
+      const newThis = {
+        ...jsFuncs,
+        ctx: {
+          ...this.context.environments,
+        },
+        page: {
+          ...this.context.environments.page,
+        },
+      };
+      return filter.call(newThis, ...arguments);
+    };
   }
 
   addTag(name, tagFn) {
