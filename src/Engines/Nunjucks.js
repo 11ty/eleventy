@@ -174,8 +174,20 @@ class Nunjucks extends TemplateEngine {
 
   addFilters(helpers, isAsync) {
     for (let name in helpers) {
-      this.njkEnv.addFilter(name, helpers[name], isAsync);
+      this.njkEnv.addFilter(name, this.wrapFilter(helpers[name]), isAsync);
     }
+  }
+
+  wrapFilter(filter) {
+    let jsFuncs = this.config.javascriptFunctions;
+    return function () {
+      const newThis = {
+        ...jsFuncs,
+        ctx: this.ctx,
+        page: this.ctx.page,
+      };
+      return filter.call(newThis, ...arguments);
+    };
   }
 
   addCustomTags(tags) {
