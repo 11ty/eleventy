@@ -105,11 +105,23 @@ class JavaScript extends TemplateEngine {
       if (key === "page") {
         // do nothing
       } else {
-        // note: bind creates a new function
-        fns[key] = configFns[key].bind(inst);
+        // note: wrapping creates a new function
+        fns[key] = this.wrapJavaScriptFunction(inst, configFns[key]);
       }
     }
     return fns;
+  }
+
+  wrapJavaScriptFunction(inst, fn) {
+    let jsFuncs = this.config.javascriptFunctions;
+    return function () {
+      const newThis = {
+        ...jsFuncs,
+        ctx: inst,
+        page: inst.page,
+      };
+      return fn.call(newThis, ...arguments);
+    };
   }
 
   async compile(str, inputPath) {
