@@ -96,13 +96,13 @@
     "@11ty/dependency-tree": "^2.0.0",
     "@iarna/toml": "^2.2.5",
     "@sindresorhus/slugify": "^1.1.2",
-    "browser-sync": "^2.27.7",
     "chokidar": "^3.5.3",
     "cross-spawn": "^7.0.3",
     "debug": "^4.3.3",
     "dependency-graph": "^0.11.0",
     "ejs": "^3.1.6",
     "fast-glob": "^3.2.11",
+    "finalhandler": "^1.1.2",
     "graceful-fs": "^4.2.9",
     "gray-matter": "^4.0.3",
     "hamljs": "^0.6.2",
@@ -125,6 +125,8 @@
     "pug": "^3.0.2",
     "recursive-copy": "^2.0.14",
     "semver": "^7.3.5",
-    "slugify": "^1.6.5"
+    "serve-static": "^1.14.2",
+    "slugify": "^1.6.5",
+    "ws": "^8.5.0"
   }
 }

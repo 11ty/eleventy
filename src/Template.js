@@ -791,7 +791,7 @@ class Template extends TemplateContent {
     return pages;
   }
 
-  async _write(outputPath, finalContent) {
+  async _write({ url, outputPath }, finalContent) {
     let shouldWriteFile = true;
 
     if (this.isDryRun) {
@@ -840,6 +840,11 @@ class Template extends TemplateContent {
         templateBenchmark.after();
         this.writeCount++;
         debug(`${outputPath} ${lang.finished}.`);
+        return {
+          inputPath: this.inputPath,
+          url,
+          content: finalContent,
+        };
       });
     }
   }
@@ -931,7 +936,7 @@ class Template extends TemplateContent {
 
         // compile returned undefined
         if (content !== undefined) {
-          return this._write(page.outputPath, content);
+          return this._write(page, content);
         }
       })
     );

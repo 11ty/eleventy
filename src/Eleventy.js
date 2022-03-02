@@ -652,9 +652,12 @@ Arguments:
       this.writer.setIncrementalFile(incrementalFile);
     }
 
-    await this.write();
-    // let writeResult = await this.write();
-    // let hasError = !!writeResult.error;
+    let writeResults = await this.write();
+    let passthroughCopyResults;
+    let templateResults;
+    if (!writeResults.error) {
+      [passthroughCopyResults, ...templateResults] = writeResults;
+    }
 
     this.writer.resetIncrementalFile();
 
@@ -679,10 +682,20 @@ Arguments:
       );
     });
 
-    if (onlyCssChanges) {
-      this.eleventyServe.reload("*.css");
+    if (writeResults.error) {
+      this.eleventyServe.sendError({
+        error: writeResults.error,
+      });
     } else {
-      this.eleventyServe.reload();
+      await this.eleventyServe.reload({
+        files: this.watchManager.getActiveQueue(),
+        subtype: onlyCssChanges ? "css" : undefined,
+        build: {
+          // For later?
+          // passthroughCopy: passthroughCopyResults,
+          templates: templateResults.flat(),
+        },
+      });
     }
 
     this.watchManager.setBuildFinished();

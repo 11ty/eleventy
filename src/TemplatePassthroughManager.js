@@ -147,6 +147,11 @@ class TemplatePassthroughManager {
           }
           debug("Copied %o (%d files)", path.inputPath, count || 0);
         }
+
+        return {
+          count,
+          map,
+        };
       })
       .catch(function (e) {
         return Promise.reject(
@@ -231,8 +236,9 @@ class TemplatePassthroughManager {
 
     return Promise.all(
       passthroughs.map((pass) => this.copyPassthrough(pass))
-    ).then(() => {
+    ).then((result) => {
       debug(`TemplatePassthrough copy finished. Current count: ${this.count}`);
+      return result;
     });
   }
 }

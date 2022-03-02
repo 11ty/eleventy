@@ -52,7 +52,6 @@ class ConsoleLogger {
     this.message(msg, "warn", "yellow");
   }
 
-  // Is this used?
   /** @param {string} msg */
   error(msg) {
     this.message(msg, "error", "red");

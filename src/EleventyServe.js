@@ -1,11 +1,12 @@
-const fs = require("fs");
 const path = require("path");
 
 const TemplatePath = require("./TemplatePath");
+const EleventyServeAdapter = require("./EleventyServeAdapter");
 const EleventyBaseError = require("./EleventyBaseError");
 const debug = require("debug")("EleventyServe");
 
 class EleventyServeConfigError extends EleventyBaseError {}
+
 class EleventyServe {
   constructor() {}
 
@@ -28,27 +29,41 @@ class EleventyServe {
   }
 
   getPathPrefix() {
-    let cfgPrefix = this.config.pathPrefix;
-    if (cfgPrefix) {
-      // add leading / (for browsersync), see #1454
-      // path.join uses \\ for Windows so we split and rejoin
-      return path.join("/", cfgPrefix).split(path.sep).join("/");
-    }
-    return "/";
+    return EleventyServeAdapter.normalizePathPrefix(this.config.pathPrefix);
   }
 
-  getRedirectDir(dirName) {
-    return TemplatePath.join(this.outputDir, dirName);
-  }
-  getRedirectDirOverride() {
-    // has a pathPrefix, add a /index.html template to redirect to /pathPrefix/
-    if (this.getPathPrefix() !== "/") {
-      return "_eleventy_redirect";
+  get server() {
+    if (this._server) {
+      return this._server;
     }
-  }
 
-  getRedirectFilename(dirName) {
-    return TemplatePath.join(this.getRedirectDir(dirName), "index.html");
+    this._usingBrowserSync = true;
+
+    try {
+      // Look for project browser-sync (peer dep)
+      let projectRequirePath = TemplatePath.absolutePath(
+        "./node_modules/browser-sync"
+      );
+      this._server = require(projectRequirePath);
+    } catch (e) {
+      debug("Could not find local project browser-sync.");
+      try {
+        this._server = require("browser-sync");
+      } catch (e) {
+        debug("Could not find globally installed browser-sync.");
+      }
+    }
+
+    if (!this._server) {
+      debug("Using fallback serve-static");
+      this._server = EleventyServeAdapter.getServer(
+        "eleventy-server",
+        this.config
+      );
+      this._usingBrowserSync = false;
+    }
+
+    return this._server;
   }
 
   getOptions(port) {
@@ -59,20 +74,10 @@ class EleventyServe {
       baseDir: this.outputDir,
     };
 
-    let redirectDirName = this.getRedirectDirOverride();
-    // has a pathPrefix, add a /index.html template to redirect to /pathPrefix/
-    if (redirectDirName) {
-      serverConfig.baseDir = this.getRedirectDir(redirectDirName);
+    if (pathPrefix) {
+      serverConfig.baseDir = undefined;
       serverConfig.routes = {};
       serverConfig.routes[pathPrefix] = this.outputDir;
-
-      // if has a savedPathPrefix, use the /savedPathPrefix/index.html template to redirect to /pathPrefix/
-      if (this.savedPathPrefix) {
-        serverConfig.routes[this.savedPathPrefix] = TemplatePath.join(
-          this.outputDir,
-          this.savedPathPrefix
-        );
-      }
     }
 
     return Object.assign(
@@ -91,91 +96,13 @@ class EleventyServe {
     );
   }
 
-  cleanupRedirect(dirName) {
-    if (dirName && dirName !== "/") {
-      let savedPathFilename = this.getRedirectFilename(dirName);
-
-      setTimeout(function () {
-        if (!fs.existsSync(savedPathFilename)) {
-          debug(`Cleanup redirect: Could not find ${savedPathFilename}`);
-          return;
-        }
-
-        let savedPathContent = fs.readFileSync(savedPathFilename, "utf8");
-        if (
-          savedPathContent.indexOf("Browsersync pathPrefix Redirect") === -1
-        ) {
-          debug(
-            `Cleanup redirect: Found ${savedPathFilename} but it wasn’t an eleventy redirect.`
-          );
-          return;
-        }
-
-        fs.unlink(savedPathFilename, (err) => {
-          if (!err) {
-            debug(`Cleanup redirect: Deleted ${savedPathFilename}`);
-          }
-        });
-      }, 2000);
-    }
-  }
-
-  serveRedirect(dirName) {
-    fs.mkdirSync(this.getRedirectDir(dirName), {
-      recursive: true,
-    });
-    fs.writeFileSync(
-      this.getRedirectFilename(dirName),
-      `<!doctype html>
-  <meta http-equiv="refresh" content="0; url=${this.config.pathPrefix}">
-  <title>Browsersync pathPrefix Redirect</title>
-  <a href="${this.config.pathPrefix}">Go to ${this.config.pathPrefix}</a>`
-    );
-  }
-
   serve(port) {
-    // Only load on serve—this is pretty expensive
-    // We use a string module name and try/catch here to hide this from the zisi and esbuild serverless bundlers
-    let server;
-    // eslint-disable-next-line no-useless-catch
-    try {
-      let moduleName = "browser-sync";
-      server = require(moduleName);
-    } catch (e) {
-      throw e;
-    }
-
-    this.server = server.create("eleventy-server");
-
-    let pathPrefix = this.getPathPrefix();
-
-    if (this.savedPathPrefix && pathPrefix !== this.savedPathPrefix) {
-      let redirectFilename = this.getRedirectFilename(this.savedPathPrefix);
-      if (!fs.existsSync(redirectFilename)) {
-        debug(
-          `Redirecting BrowserSync from ${this.savedPathPrefix} to ${pathPrefix}`
-        );
-        this.serveRedirect(this.savedPathPrefix);
-      } else {
-        debug(
-          `Config updated with a new pathPrefix. Tried to set up a transparent redirect but found a template already existing at ${redirectFilename}. You’ll have to navigate manually.`
-        );
-      }
-    }
-
-    let redirectDirName = this.getRedirectDirOverride();
-    // has a pathPrefix, add a /index.html template to redirect to /pathPrefix/
-    if (redirectDirName) {
-      this.serveRedirect(redirectDirName);
-    }
-
-    this.cleanupRedirect(this.savedPathPrefix);
-
     let options = this.getOptions(port);
+
     this.server.init(options);
 
     // this needs to happen after `.getOptions`
-    this.savedPathPrefix = pathPrefix;
+    this.savedPathPrefix = this.getPathPrefix();
   }
 
   close() {
@@ -184,14 +111,28 @@ class EleventyServe {
     }
   }
 
-  /* filesToReload is optional */
-  reload(filesToReload) {
-    if (this.server) {
-      if (this.getPathPrefix() !== this.savedPathPrefix) {
-        this.server.exit();
-        this.serve();
+  sendError({ error }) {
+    if (!this._usingBrowserSync && this.server) {
+      this.server.sendError({
+        error,
+      });
+    }
+  }
+
+  async reload(reloadEvent = {}) {
+    if (!this.server) {
+      return;
+    }
+
+    if (this.getPathPrefix() !== this.savedPathPrefix) {
+      this.server.exit();
+      this.serve();
+    } else {
+      if (this._usingBrowserSync) {
+        // Backwards compat
+        this.server.reload(reloadEvent.subtype === "css" ? "*.css" : undefined);
       } else {
-        this.server.reload(filesToReload);
+        await this.server.reload(reloadEvent);
       }
     }
   }

@@ -317,6 +317,7 @@ class TemplateWriter {
     let paths = await this._getAllPaths();
     let promises = [];
 
+    // The ordering here is important to destructuring in Eleventy->_watch
     promises.push(this.writePassthroughCopy(paths));
 
     promises.push(...(await this.generateTemplates(paths)));
