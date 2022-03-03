@@ -40,7 +40,6 @@ class EleventyServeAdapter {
   constructor(name, config) {
     this.name = name;
     this.config = config;
-
     this.logger = new ConsoleLogger(true);
   }
 
@@ -59,6 +58,7 @@ class EleventyServeAdapter {
   }
 
   getOutputDirFilePath(filepath, filename = "") {
+    // TODO check absolute path of the file and output folder and make sure they overlap
     if (filepath.startsWith("..")) {
       throw new Error("Invalid path");
     }
@@ -82,8 +82,6 @@ class EleventyServeAdapter {
    *    /resource/ matches /resource/index.html
    */
   mapUrlToFilePath(url) {
-    // TODO important, check to make sure nothing outside of the output directory is found
-
     let u = new URL(url, "http://localhost/"); // this localhost is not used
     url = u.pathname;
 
@@ -96,8 +94,8 @@ class EleventyServeAdapter {
           statusCode: 404,
         };
       }
+
       url = url.substr(pathPrefix.length);
-      console.log("un-pathprefixed", url);
     }
 
     let rawPath = this.getOutputDirFilePath(url);
@@ -186,7 +184,7 @@ class EleventyServeAdapter {
       return content.replace("<!doctype html>", `<!doctype html>${script}`);
     }
 
-    // Notably, this works without content at all!!
+    // Notably, works without content at all!!
     return (content || "") + script;
   }
 

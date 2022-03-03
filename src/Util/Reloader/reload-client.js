@@ -4,17 +4,44 @@
     return;
   }
 
-  // TODO remove this
-  console.log("Page reload.", Date.now());
+  class Util {
+    static pad(num, digits = 2) {
+      let zeroes = new Array(digits + 1).join(0);
+      return `${zeroes}${num}`.substr(-1 * digits);
+    }
+
+    static output(type, ...messages) {
+      let now = new Date();
+      let date = `${Util.pad(now.getUTCHours())}:${Util.pad(
+        now.getUTCMinutes()
+      )}:${Util.pad(now.getUTCSeconds())}.${Util.pad(
+        now.getUTCMilliseconds(),
+        3
+      )}`;
+      console[type](`[11ty][${date} UTC]`, ...messages);
+    }
+
+    static capitalize(word) {
+      return word.substr(0, 1).toUpperCase() + word.substr(1);
+    }
+  }
 
   class EleventyReload {
+    static log(message) {
+      Util.output("log", message);
+    }
+    static logError(message, error) {
+      Util.output("error", message, error);
+    }
+
     static reconnect(e) {
       if (document.visibilityState === "visible") {
         EleventyReload.init({ mode: "reconnect" });
       }
     }
+
     static init(options = {}) {
-      console.log("[11ty] Connecting…");
+      EleventyReload.log("Trying to connect…");
       let { port } = new URL(document.location.href);
       // TODO add a path here so that it doesn’t collide with any app websockets
       let socket = new WebSocket(`ws://localhost:${port}`);
@@ -23,7 +50,7 @@
       socket.addEventListener("message", async function (event) {
         try {
           let data = JSON.parse(event.data);
-          // console.log( JSON.stringify(data, null, 2) );
+          // EleventyReload.log( JSON.stringify(data, null, 2) );
           let {
             type,
             subtype,
@@ -43,14 +70,14 @@
                 url.searchParams.set("_11ty", Date.now());
                 link.href = url.toString();
               }
-              console.log(`[11ty] No-reload CSS update applied.`);
+              EleventyReload.log(`CSS updated without page reload.`);
             } else {
               const { default: morphdom } = await import(
                 `${pathprefix || "/"}morphdom-esm.js`
               );
               let morphed = false;
 
-              // console.log( JSON.stringify(build.templates, null, 2) );
+              // EleventyReload.log( JSON.stringify(build.templates, null, 2) );
               for (let template of build.templates || []) {
                 if (template.url === document.location.pathname) {
                   // Importantly, if this does not match but is still relevant
@@ -60,34 +87,36 @@
                     // Notable limitation: this won’t re-run script elements
                     morphed = true;
                     morphdom(document.documentElement, template.content);
-                    console.log(`[11ty] No-reload HTML delta applied.`);
+                    EleventyReload.log(
+                      `HTML delta applied without page reload.`
+                    );
                   }
                   break;
                 }
               }
 
               if (!morphed) {
-                console.log(`[11ty] Reload initiated.`);
+                EleventyReload.log(`Page reload initiated.`);
                 window.location.reload();
               }
             }
           } else if (type === "eleventy.msg") {
-            console.log(`[11ty] ${message}`);
+            EleventyReload.log(`${message}`);
           } else if (type === "eleventy.error") {
             // Log Eleventy build errors
             // Extra parsing for Node Error objects
             let e = JSON.parse(error);
-            console.error(`[11ty] Eleventy Build error:  ${e.message}`, e);
+            EleventyReload.error(`Build error:  ${e.message}`, e);
           } else if (type === "eleventy.status") {
             if (status === "connected" && options.mode === "reconnect") {
               window.location.reload();
             }
-            console.log(`[11ty] Reload status: ${status}`);
+            EleventyReload.log(Util.capitalize(status));
           } else {
-            console.log("[11ty] Unknown Reload event type", data);
+            EleventyReload.log("Unknown event type", data);
           }
         } catch (e) {
-          console.log("[11ty] Error", event.data, e.message);
+          EleventyReload.log("Error", event.data, e.message);
         }
       });
 
@@ -111,6 +140,9 @@
       });
     }
   }
+
+  // TODO remove this?
+  // EleventyReload.log("Page reload.", Date.now());
 
   EleventyReload.init();
 })();
