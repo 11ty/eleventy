@@ -55,7 +55,7 @@ class EleventyServe {
     }
 
     if (!this._server) {
-      debug("Using fallback serve-static");
+      debug("Using default server.");
       this._server = EleventyServeAdapter.getServer(
         "eleventy-server",
         this.config

@@ -58,12 +58,16 @@ class EleventyServeAdapter {
   }
 
   getOutputDirFilePath(filepath, filename = "") {
-    // TODO check absolute path of the file and output folder and make sure they overlap
-    if (filepath.startsWith("..")) {
+    let computedPath = path.join(this.config.dir.output, filepath, filename);
+
+    // Check that the file is in the output path (error if folks try use `..` in the filepath)
+    let absComputedPath = TemplatePath.absolutePath(computedPath);
+    let absOutputDir = TemplatePath.absolutePath(computedPath);
+    if (!absComputedPath.startsWith(absOutputDir)) {
       throw new Error("Invalid path");
     }
 
-    return path.join(this.config.dir.output, filepath, filename);
+    return computedPath;
   }
 
   isOutputFilePathExists(rawPath) {
@@ -359,12 +363,17 @@ class EleventyServeAdapter {
     let pathprefix = EleventyServeAdapter.normalizePathPrefix(
       this.config.pathPrefix
     );
-    // Add pathPrefix to all template urls
     if (build.templates) {
-      build.templates = build.templates.map((tmpl) => {
-        tmpl.url = EleventyServeAdapter.joinUrlParts(pathprefix, tmpl.url);
-        return tmpl;
-      });
+      build.templates = build.templates
+        .filter((entry) => {
+          // Filter to only include watched templates that were updated
+          return (files || []).includes(entry.inputPath);
+        })
+        .map((entry) => {
+          // Add pathPrefix to all template urls
+          entry.url = EleventyServeAdapter.joinUrlParts(pathprefix, entry.url);
+          return entry;
+        });
     }
 
     this.sendUpdateNotification({
