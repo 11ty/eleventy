@@ -72,7 +72,6 @@ class EleventyServe {
         this.config.dir.output,
         this.getDefaultServerOptions(),
         {
-          transformUrl: PathPrefixer.joinUrlParts,
           templatePath: TemplatePath,
           logger: new ConsoleLogger(true),
         }
