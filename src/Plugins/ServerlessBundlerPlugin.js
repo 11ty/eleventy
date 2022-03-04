@@ -223,7 +223,7 @@ class BundlerHelper {
     );
   }
 
-  browserSyncMiddleware() {
+  serverMiddleware() {
     let serverlessFilepath = TemplatePath.addLeadingDotSlash(
       path.join(TemplatePath.getWorkingDir(), this.dir, "index")
     );
@@ -318,7 +318,11 @@ function EleventyPlugin(eleventyConfig, options = {}) {
     let helper = new BundlerHelper(options.name, options, eleventyConfig);
 
     eleventyConfig.setBrowserSyncConfig({
-      middleware: [helper.browserSyncMiddleware()],
+      middleware: [helper.serverMiddleware()],
+    });
+
+    eleventyConfig.setServerOptions({
+      middleware: [helper.serverMiddleware()],
     });
 
     eleventyConfig.on("eleventy.before", async () => {

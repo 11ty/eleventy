@@ -10,6 +10,7 @@ const EleventyWatch = require("./EleventyWatch");
 const EleventyWatchTargets = require("./EleventyWatchTargets");
 const EleventyFiles = require("./EleventyFiles");
 const ConsoleLogger = require("./Util/ConsoleLogger");
+const PathPrefixer = require("./Util/PathPrefixer");
 const TemplateConfig = require("./TemplateConfig");
 const { performance } = require("perf_hooks");
 
@@ -308,11 +309,6 @@ class Eleventy {
       );
     } else {
       ret.push(`(${versionStr})`);
-    }
-
-    let pathPrefix = this.config.pathPrefix;
-    if (pathPrefix && pathPrefix !== "/") {
-      return `Using pathPrefix: ${pathPrefix}\n${ret.join(" ")}`;
     }
 
     return ret.join(" ");
@@ -687,13 +683,25 @@ Arguments:
         error: writeResults.error,
       });
     } else {
+      let normalizedPathPrefix = PathPrefixer.normalizePathPrefix(
+        this.config.pathPrefix
+      );
       await this.eleventyServe.reload({
         files: this.watchManager.getActiveQueue(),
         subtype: onlyCssChanges ? "css" : undefined,
         build: {
           // For later?
           // passthroughCopy: passthroughCopyResults,
-          templates: templateResults.flat(),
+          templates: templateResults
+            .flat()
+            .filter((entry) => !!entry)
+            .map((entry) => {
+              entry.url = PathPrefixer.joinUrlParts(
+                normalizedPathPrefix,
+                entry.url
+              );
+              return entry;
+            }),
         },
       });
     }

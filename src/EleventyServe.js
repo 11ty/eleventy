@@ -1,11 +1,15 @@
-const path = require("path");
-
+const EleventyServeAdapter = require("@11ty/eleventy-dev-server");
 const TemplatePath = require("./TemplatePath");
-const EleventyServeAdapter = require("./EleventyServeAdapter");
 const EleventyBaseError = require("./EleventyBaseError");
+const ConsoleLogger = require("./Util/ConsoleLogger");
+const PathPrefixer = require("./Util/PathPrefixer");
 const debug = require("debug")("EleventyServe");
 
 class EleventyServeConfigError extends EleventyBaseError {}
+
+const DEFAULT_SERVER_OPTIONS = {
+  port: 8080,
+};
 
 class EleventyServe {
   constructor() {}
@@ -29,7 +33,26 @@ class EleventyServe {
   }
 
   getPathPrefix() {
-    return EleventyServeAdapter.normalizePathPrefix(this.config.pathPrefix);
+    return PathPrefixer.normalizePathPrefix(this.config.pathPrefix);
+  }
+
+  getBrowserSync() {
+    try {
+      // Look for project browser-sync (peer dep)
+      let projectRequirePath = TemplatePath.absolutePath(
+        "./node_modules/browser-sync"
+      );
+      return require(projectRequirePath);
+    } catch (e) {
+      debug("Could not find local project browser-sync.");
+
+      // This will work with a globally installed browser-sync
+      // try {
+      //   this._server = require("browser-sync");
+      // } catch (e) {
+      //   debug("Could not find globally installed browser-sync.");
+      // }
+    }
   }
 
   get server() {
@@ -38,35 +61,28 @@ class EleventyServe {
     }
 
     this._usingBrowserSync = true;
-
-    try {
-      // Look for project browser-sync (peer dep)
-      let projectRequirePath = TemplatePath.absolutePath(
-        "./node_modules/browser-sync"
-      );
-      this._server = require(projectRequirePath);
-    } catch (e) {
-      debug("Could not find local project browser-sync.");
-      try {
-        this._server = require("browser-sync");
-      } catch (e) {
-        debug("Could not find globally installed browser-sync.");
-      }
-    }
+    this._server = this.getBrowserSync();
 
     if (!this._server) {
-      debug("Using default server.");
+      this._usingBrowserSync = false;
+      debug("Using Eleventy Serve server.");
+      // TODO option to use a different server than @11ty/eleventy-dev-server
       this._server = EleventyServeAdapter.getServer(
         "eleventy-server",
-        this.config
+        this.config.dir.output,
+        this.getDefaultServerOptions(),
+        {
+          transformUrl: PathPrefixer.joinUrlParts,
+          templatePath: TemplatePath,
+          logger: new ConsoleLogger(true),
+        }
       );
-      this._usingBrowserSync = false;
     }
 
     return this._server;
   }
 
-  getOptions(port) {
+  getBrowserSyncOptions(port) {
     let pathPrefix = this.getPathPrefix();
 
     // TODO customize this in Configuration API?
@@ -83,7 +99,7 @@ class EleventyServe {
     return Object.assign(
       {
         server: serverConfig,
-        port: port || 8080,
+        port: port || DEFAULT_SERVER_OPTIONS.port,
         ignore: ["node_modules"],
         watch: false,
         open: false,
@@ -94,6 +110,28 @@ class EleventyServe {
       },
       this.config.browserSyncConfig
     );
+  }
+
+  getDefaultServerOptions(port) {
+    let opts = Object.assign(
+      {
+        pathPrefix: PathPrefixer.normalizePathPrefix(this.config.pathPrefix),
+      },
+      DEFAULT_SERVER_OPTIONS,
+      this.config.serverOptions
+    );
+
+    if (port) {
+      return Object.assign(opts, { port });
+    }
+    return opts;
+  }
+
+  getOptions(port) {
+    if (this._usingBrowserSync === true || this.getBrowserSync()) {
+      return this.getBrowserSyncOptions(port);
+    }
+    return this.getDefaultServerOptions(port);
   }
 
   serve(port) {
@@ -111,6 +149,7 @@ class EleventyServe {
     }
   }
 
+  // Not available in Browser Sync
   sendError({ error }) {
     if (!this._usingBrowserSync && this.server) {
       this.server.sendError({

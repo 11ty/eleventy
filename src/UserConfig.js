@@ -70,6 +70,7 @@ class UserConfig {
     this.watchJavaScriptDependencies = true;
     this.additionalWatchTargets = [];
     this.browserSyncConfig = {};
+    this.serverOptions = {};
     this.globalData = {};
     this.chokidarConfig = {};
     this.watchThrottleWaitTime = 0; //ms
@@ -704,6 +705,14 @@ class UserConfig {
     this.watchJavaScriptDependencies = !!watchEnabled;
   }
 
+  setServerOptions(options = {}, override = false) {
+    if (override) {
+      this.serverOptions = options;
+    } else {
+      this.serverOptions = merge(this.serverOptions, options);
+    }
+  }
+
   setBrowserSyncConfig(options = {}, mergeOptions = true) {
     if (mergeOptions) {
       this.browserSyncConfig = merge(this.browserSyncConfig, options);
@@ -791,6 +800,7 @@ class UserConfig {
       watchJavaScriptDependencies: this.watchJavaScriptDependencies,
       additionalWatchTargets: this.additionalWatchTargets,
       browserSyncConfig: this.browserSyncConfig,
+      serverOptions: this.serverOptions,
       chokidarConfig: this.chokidarConfig,
       watchThrottleWaitTime: this.watchThrottleWaitTime,
       frontMatterParsingOptions: this.frontMatterParsingOptions,

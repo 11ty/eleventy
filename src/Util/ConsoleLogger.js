@@ -48,6 +48,11 @@ class ConsoleLogger {
   }
 
   /** @param {string} msg */
+  info(msg) {
+    this.message(msg, "warn", "blue");
+  }
+
+  /** @param {string} msg */
   warn(msg) {
     this.message(msg, "warn", "yellow");
   }
