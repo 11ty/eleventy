@@ -1,4 +1,4 @@
-const TemplatePath = require("../TemplatePath");
+const { TemplatePath } = require("@11ty/eleventy-utils");
 
 function isValidUrl(url) {
   try {

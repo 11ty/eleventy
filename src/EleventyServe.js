@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const TemplatePath = require("./TemplatePath");
+const { TemplatePath } = require("@11ty/eleventy-utils");
 const EleventyBaseError = require("./EleventyBaseError");
 const debug = require("debug")("EleventyServe");
 

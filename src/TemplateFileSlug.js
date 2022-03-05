@@ -1,5 +1,5 @@
 const path = require("path");
-const TemplatePath = require("./TemplatePath");
+const { TemplatePath } = require("@11ty/eleventy-utils");
 
 class TemplateFileSlug {
   constructor(inputPath, inputDir, extensionMap) {

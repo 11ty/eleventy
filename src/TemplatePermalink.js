@@ -1,6 +1,7 @@
 const path = require("path");
-const TemplatePath = require("./TemplatePath");
 const normalize = require("normalize-path");
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const isPlainObject = require("./Util/IsPlainObject");
 const serverlessUrlFilter = require("./Filters/ServerlessUrl");
 

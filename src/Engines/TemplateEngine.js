@@ -1,6 +1,7 @@
 const fastglob = require("fast-glob");
 const fs = require("fs");
-const TemplatePath = require("../TemplatePath");
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const TemplateConfig = require("../TemplateConfig");
 const EleventyExtensionMap = require("../EleventyExtensionMap");
 const EleventyBaseError = require("../EleventyBaseError");

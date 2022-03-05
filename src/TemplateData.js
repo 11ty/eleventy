@@ -4,9 +4,10 @@ const path = require("path");
 const lodashset = require("lodash/set");
 const lodashget = require("lodash/get");
 const lodashUniq = require("lodash/uniq");
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const merge = require("./Util/Merge");
 const TemplateRender = require("./TemplateRender");
-const TemplatePath = require("./TemplatePath");
 const TemplateGlob = require("./TemplateGlob");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");

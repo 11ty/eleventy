@@ -1,7 +1,8 @@
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const TemplateLayoutPathResolver = require("./TemplateLayoutPathResolver");
 const TemplateContent = require("./TemplateContent");
 const TemplateData = require("./TemplateData");
-const TemplatePath = require("./TemplatePath");
 
 const templateCache = require("./TemplateCache");
 // const debug = require("debug")("Eleventy:TemplateLayout");

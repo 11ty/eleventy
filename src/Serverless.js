@@ -1,9 +1,9 @@
 const path = require("path");
 const fs = require("fs");
+const { match } = require("path-to-regexp");
+const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const Eleventy = require("./Eleventy");
-const TemplatePath = require("./TemplatePath");
-const { match } = require("path-to-regexp");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
 const debug = require("debug")("Eleventy:Serverless");
 

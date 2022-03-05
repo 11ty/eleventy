@@ -9,6 +9,7 @@ const normalize = require("normalize-path");
 const lodashGet = require("lodash/get");
 const lodashSet = require("lodash/set");
 const { DateTime } = require("luxon");
+const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const isPlainObject = require("./Util/IsPlainObject");
 const ConsoleLogger = require("./Util/ConsoleLogger");
@@ -16,7 +17,6 @@ const getDateFromGitLastUpdated = require("./Util/DateGitLastUpdated");
 
 const TemplateData = require("./TemplateData");
 const TemplateContent = require("./TemplateContent");
-const TemplatePath = require("./TemplatePath");
 const TemplatePermalink = require("./TemplatePermalink");
 const TemplateLayout = require("./TemplateLayout");
 const TemplateFileSlug = require("./TemplateFileSlug");
