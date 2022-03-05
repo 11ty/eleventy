@@ -1,5 +1,6 @@
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const Template = require("./Template");
-const TemplatePath = require("./TemplatePath");
 const TemplateMap = require("./TemplateMap");
 const EleventyFiles = require("./EleventyFiles");
 const EleventyExtensionMap = require("./EleventyExtensionMap");

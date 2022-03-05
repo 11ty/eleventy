@@ -1,9 +1,10 @@
 const fs = require("fs");
 const isGlob = require("is-glob");
 const copy = require("recursive-copy");
-const TemplatePath = require("./TemplatePath");
-const debug = require("debug")("Eleventy:TemplatePassthrough");
 const fastglob = require("fast-glob");
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
+const debug = require("debug")("Eleventy:TemplatePassthrough");
 const EleventyBaseError = require("./EleventyBaseError");
 
 class TemplatePassthroughError extends EleventyBaseError {}

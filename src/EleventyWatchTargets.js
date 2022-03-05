@@ -1,5 +1,6 @@
 const dependencyTree = require("@11ty/dependency-tree");
-const TemplatePath = require("./TemplatePath");
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const deleteRequireCache = require("./Util/DeleteRequireCache");
 
 class EleventyWatchTargets {

@@ -1,7 +1,9 @@
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");
 const TemplatePassthrough = require("./TemplatePassthrough");
-const TemplatePath = require("./TemplatePath");
+
 const debug = require("debug")("Eleventy:TemplatePassthroughManager");
 const debugDev = require("debug")("Dev:Eleventy:TemplatePassthroughManager");
 
@@ -186,6 +188,7 @@ class TemplatePassthroughManager {
         paths,
         this.incrementalFile
       );
+
       if (isPassthrough) {
         if (isPassthrough.outputPath) {
           return [

@@ -1,6 +1,7 @@
 const NunjucksLib = require("nunjucks");
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const TemplateEngine = require("./TemplateEngine");
-const TemplatePath = require("../TemplatePath");
 const EleventyErrorUtil = require("../EleventyErrorUtil");
 const EleventyBaseError = require("../EleventyBaseError");
 const eventBus = require("../EventBus");

@@ -1,5 +1,7 @@
+const { TemplatePath } = require("@11ty/eleventy-utils");
+const { performance } = require("perf_hooks");
+
 const pkg = require("../package.json");
-const TemplatePath = require("./TemplatePath");
 const TemplateData = require("./TemplateData");
 const TemplateWriter = require("./TemplateWriter");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
@@ -12,7 +14,6 @@ const EleventyFiles = require("./EleventyFiles");
 const ConsoleLogger = require("./Util/ConsoleLogger");
 const PathPrefixer = require("./Util/PathPrefixer");
 const TemplateConfig = require("./TemplateConfig");
-const { performance } = require("perf_hooks");
 
 const templateCache = require("./TemplateCache");
 const simplePlural = require("./Util/Pluralize");

@@ -1,5 +1,6 @@
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const TemplateEngine = require("./TemplateEngine");
-const TemplatePath = require("../TemplatePath");
 const EleventyBaseError = require("../EleventyBaseError");
 const deleteRequireCache = require("../Util/DeleteRequireCache");
 const getJavaScriptData = require("../Util/GetJavaScriptData");

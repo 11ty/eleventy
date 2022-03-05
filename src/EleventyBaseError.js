@@ -4,7 +4,7 @@
 class EleventyBaseError extends Error {
   /**
    * @param {string} message - The error message to display.
-   * @param {Error} originalError - The original error catched.
+   * @param {Error} originalError - The original error caught.
    */
   constructor(message, originalError) {
     super(message);
@@ -15,7 +15,7 @@ class EleventyBaseError extends Error {
     Error.captureStackTrace(this, this.constructor);
 
     if (originalError) {
-      /** @type {Error} - The original error catched. */
+      /** @type {Error} - The original error caught. */
       this.originalError = originalError;
     }
   }

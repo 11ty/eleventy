@@ -1,5 +1,6 @@
 const EleventyServeAdapter = require("@11ty/eleventy-dev-server");
-const TemplatePath = require("./TemplatePath");
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const EleventyBaseError = require("./EleventyBaseError");
 const ConsoleLogger = require("./Util/ConsoleLogger");
 const PathPrefixer = require("./Util/PathPrefixer");
