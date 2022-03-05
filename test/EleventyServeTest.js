@@ -9,16 +9,6 @@ test("Constructor", (t) => {
   t.is(es.getPathPrefix(), "/");
 });
 
-test("Directories", (t) => {
-  let es = new EleventyServe();
-  let cfg = new TemplateConfig().getConfig();
-  es.config = cfg;
-
-  es.setOutputDir("_site");
-  t.is(es.getRedirectDir("test"), "_site/test");
-  t.is(es.getRedirectFilename("test"), "_site/test/index.html");
-});
-
 test("Get Options", (t) => {
   let es = new EleventyServe();
   let cfg = new TemplateConfig().getConfig();
@@ -27,17 +17,8 @@ test("Get Options", (t) => {
   es.setOutputDir("_site");
 
   t.deepEqual(es.getOptions(), {
-    ignore: ["node_modules"],
-    index: "index.html",
-    notify: false,
-    open: false,
+    pathPrefix: "/",
     port: 8080,
-    server: {
-      baseDir: "_site",
-    },
-    watch: false,
-    ui: false,
-    ghostMode: false,
   });
 });
 
@@ -49,20 +30,8 @@ test("Get Options (with a pathPrefix)", (t) => {
   es.setOutputDir("_site");
 
   t.deepEqual(es.getOptions(), {
-    ignore: ["node_modules"],
-    index: "index.html",
-    notify: false,
-    open: false,
+    pathPrefix: "/web/",
     port: 8080,
-    server: {
-      baseDir: "_site/_eleventy_redirect",
-      routes: {
-        "/web/": "_site",
-      },
-    },
-    watch: false,
-    ui: false,
-    ghostMode: false,
   });
 });
 
@@ -77,16 +46,7 @@ test("Get Options (override in config)", (t) => {
   es.setOutputDir("_site");
 
   t.deepEqual(es.getOptions(), {
-    ignore: ["node_modules"],
-    index: "index.html",
-    notify: true,
-    open: false,
+    pathPrefix: "/",
     port: 8080,
-    server: {
-      baseDir: "_site",
-    },
-    watch: false,
-    ui: false,
-    ghostMode: false,
   });
 });
