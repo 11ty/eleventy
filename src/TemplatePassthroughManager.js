@@ -1,3 +1,5 @@
+const multimatch = require("multimatch");
+const isGlob = require("is-glob");
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const EleventyExtensionMap = require("./EleventyExtensionMap");
@@ -175,6 +177,13 @@ class TemplatePassthroughManager {
 
     for (let path of this.getConfigPaths()) {
       if (TemplatePath.startsWithSubPath(changedFile, path.inputPath)) {
+        return path;
+      }
+      if (
+        changedFile &&
+        isGlob(path.inputPath) &&
+        multimatch([changedFile], [path.inputPath]).length
+      ) {
         return path;
       }
     }
