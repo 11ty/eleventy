@@ -16,7 +16,10 @@ test("Get Options", (t) => {
   es.config = cfg;
   es.setOutputDir("_site");
 
-  t.deepEqual(es.getOptions(), {
+  let opts = es.getOptions();
+  delete opts.logger;
+
+  t.deepEqual(opts, {
     pathPrefix: "/",
     port: 8080,
   });
@@ -29,7 +32,10 @@ test("Get Options (with a pathPrefix)", (t) => {
   es.config = cfg;
   es.setOutputDir("_site");
 
-  t.deepEqual(es.getOptions(), {
+  let opts = es.getOptions();
+  delete opts.logger;
+
+  t.deepEqual(opts, {
     pathPrefix: "/web/",
     port: 8080,
   });
@@ -45,7 +51,10 @@ test("Get Options (override in config)", (t) => {
   es.config = cfg;
   es.setOutputDir("_site");
 
-  t.deepEqual(es.getOptions(), {
+  let opts = es.getOptions();
+  delete opts.logger;
+
+  t.deepEqual(opts, {
     pathPrefix: "/",
     port: 8080,
   });

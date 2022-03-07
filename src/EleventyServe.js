@@ -1,4 +1,3 @@
-const EleventyServeAdapter = require("@11ty/eleventy-dev-server");
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const EleventyBaseError = require("./EleventyBaseError");
@@ -9,6 +8,7 @@ const debug = require("debug")("EleventyServe");
 class EleventyServeConfigError extends EleventyBaseError {}
 
 const DEFAULT_SERVER_OPTIONS = {
+  module: "@11ty/eleventy-dev-server",
   port: 8080,
 };
 
@@ -26,6 +26,7 @@ class EleventyServe {
   }
 
   set config(config) {
+    this._options = null;
     this._config = config;
   }
 
@@ -33,27 +34,53 @@ class EleventyServe {
     this.outputDir = outputDir;
   }
 
-  getPathPrefix() {
-    return PathPrefixer.normalizePathPrefix(this.config.pathPrefix);
+  getServerModule(name) {
+    try {
+      if (!name || name === DEFAULT_SERVER_OPTIONS.module) {
+        return require(DEFAULT_SERVER_OPTIONS.module);
+      }
+
+      // Look for peer dep in local project
+      let projectNodeModulesPath = TemplatePath.absolutePath("./node_modules/");
+      let serverPath = TemplatePath.absolutePath(projectNodeModulesPath, name);
+
+      // No references outside of the project node_modules are allowed
+      if (!serverPath.startsWith(projectNodeModulesPath)) {
+        throw new Error(
+          "Invalid node_modules name for Eleventy server instance, received:" +
+            name
+        );
+      }
+
+      let module = require(serverPath);
+
+      if (!("getServer" in module)) {
+        throw new Error(
+          `Eleventy server module requires a \`getServer\` static method. Could not find one on module: \`${name}\``
+        );
+      }
+
+      return module;
+    } catch (e) {
+      debug(
+        "Could not find your custom Eleventy server: %o. Using the default server instead.",
+        e
+      );
+      return require(DEFAULT_SERVER_OPTIONS.module);
+    }
   }
 
-  getBrowserSync() {
-    try {
-      // Look for project browser-sync (peer dep)
-      let projectRequirePath = TemplatePath.absolutePath(
-        "./node_modules/browser-sync"
-      );
-      return require(projectRequirePath);
-    } catch (e) {
-      debug("Could not find local project browser-sync.");
-
-      // This will work with a globally installed browser-sync
-      // try {
-      //   this._server = require("browser-sync");
-      // } catch (e) {
-      //   debug("Could not find globally installed browser-sync.");
-      // }
+  get options() {
+    if (this._options) {
+      return this._options;
     }
+
+    this._options = this.getOptions();
+
+    // TODO improve by sorting keys here
+    this._savedOptions = JSON.stringify(this._options);
+
+    return this._options;
   }
 
   get server() {
@@ -61,118 +88,78 @@ class EleventyServe {
       return this._server;
     }
 
-    this._usingBrowserSync = true;
-    this._server = this.getBrowserSync();
+    let serverModule = this.getServerModule(this.options.module);
 
-    if (!this._server) {
-      this._usingBrowserSync = false;
-      debug("Using Eleventy Serve server.");
-      // TODO option to use a different server than @11ty/eleventy-dev-server
-      this._server = EleventyServeAdapter.getServer(
-        "eleventy-server",
-        this.config.dir.output,
-        this.getDefaultServerOptions(),
-        {
-          templatePath: TemplatePath,
-          logger: new ConsoleLogger(true),
-        }
-      );
-    }
+    // Static method `getServer` was already checked in `getServerModule`
+    this._server = serverModule.getServer(
+      "eleventy-server",
+      this.config.dir.output,
+      this.options
+    );
 
     return this._server;
   }
 
-  getBrowserSyncOptions(port) {
-    let pathPrefix = this.getPathPrefix();
-
-    // TODO customize this in Configuration API?
-    let serverConfig = {
-      baseDir: this.outputDir,
-    };
-
-    if (pathPrefix) {
-      serverConfig.baseDir = undefined;
-      serverConfig.routes = {};
-      serverConfig.routes[pathPrefix] = this.outputDir;
-    }
-
-    return Object.assign(
-      {
-        server: serverConfig,
-        port: port || DEFAULT_SERVER_OPTIONS.port,
-        ignore: ["node_modules"],
-        watch: false,
-        open: false,
-        notify: false,
-        ui: false, // Default changed in 1.0
-        ghostMode: false, // Default changed in 1.0
-        index: "index.html",
-      },
-      this.config.browserSyncConfig
-    );
+  set server(val) {
+    this._server = val;
   }
 
-  getDefaultServerOptions(port) {
+  getOptions() {
     let opts = Object.assign(
       {
         pathPrefix: PathPrefixer.normalizePathPrefix(this.config.pathPrefix),
+        logger: new ConsoleLogger(true),
       },
       DEFAULT_SERVER_OPTIONS,
       this.config.serverOptions
     );
 
-    if (port) {
-      return Object.assign(opts, { port });
-    }
     return opts;
   }
 
-  getOptions(port) {
-    if (this._usingBrowserSync === true || this.getBrowserSync()) {
-      return this.getBrowserSyncOptions(port);
-    }
-    return this.getDefaultServerOptions(port);
-  }
-
+  // Port comes in here from --port on the command line
   serve(port) {
-    let options = this.getOptions(port);
+    let server = this.server;
 
-    this.server.init(options);
-
-    // this needs to happen after `.getOptions`
-    this.savedPathPrefix = this.getPathPrefix();
+    this._commandLinePort = port;
+    server.serve(port || this.options.port);
   }
 
   close() {
     if (this.server) {
-      this.server.exit();
+      this.server.close();
+      this.server = undefined;
     }
   }
 
-  // Not available in Browser Sync
   sendError({ error }) {
-    if (!this._usingBrowserSync && this.server) {
+    if (this.server) {
       this.server.sendError({
         error,
       });
     }
   }
 
+  // Restart the server entirely
+  restart() {
+    this.close();
+
+    // saved --port in `serve()`
+    this.serve(this._commandLinePort);
+  }
+
+  // Live reload the server
   async reload(reloadEvent = {}) {
     if (!this.server) {
       return;
     }
 
-    if (this.getPathPrefix() !== this.savedPathPrefix) {
-      this.server.exit();
-      this.serve();
+    // Restart the server if the options have changed
+    if (JSON.stringify(this.getOptions()) !== this._savedOptions) {
+      debug("Server options changed, we’re restarting the server");
+      this.restart();
     } else {
-      if (this._usingBrowserSync) {
-        // Backwards compat
-        this.server.reload(reloadEvent.subtype === "css" ? "*.css" : undefined);
-      } else {
-        await this.server.reload(reloadEvent);
-      }
+      await this.server.reload(reloadEvent);
     }
   }
 }

@@ -923,6 +923,8 @@ Arguments:
    * @param {Number} port - The HTTP port to serve Eleventy from.
    */
   serve(port) {
+    // Port is optional and in this case likely via --port on the command line
+    // May defer to configuration API options `port` property
     this.eleventyServe.serve(port);
   }
 

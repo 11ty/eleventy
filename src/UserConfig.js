@@ -713,6 +713,7 @@ class UserConfig {
     }
   }
 
+  // TODO show deprecation warning (use `setServerOptions` instead)
   setBrowserSyncConfig(options = {}, mergeOptions = true) {
     if (mergeOptions) {
       this.browserSyncConfig = merge(this.browserSyncConfig, options);

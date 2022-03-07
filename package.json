@@ -94,6 +94,7 @@
   },
   "dependencies": {
     "@11ty/dependency-tree": "^2.0.0",
+    "@11ty/eleventy-utils": "^1.0.0",
     "@iarna/toml": "^2.2.5",
     "@sindresorhus/slugify": "^1.1.2",
     "chokidar": "^3.5.3",
