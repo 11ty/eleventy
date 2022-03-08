@@ -2,59 +2,53 @@ const test = require("ava");
 const EleventyServe = require("../src/EleventyServe");
 const TemplateConfig = require("../src/TemplateConfig");
 
-test("Constructor", (t) => {
+async function getServerInstance(cfg) {
   let es = new EleventyServe();
-  let cfg = new TemplateConfig().getConfig();
+  if (!cfg) {
+    cfg = new TemplateConfig().getConfig();
+  }
   es.config = cfg;
-  t.is(es.getPathPrefix(), "/");
+  await es.init();
+
+  delete es.options.logger;
+  delete es.options.module;
+
+  return es;
+}
+
+test("Constructor", async (t) => {
+  let es = await getServerInstance();
+  t.is(es.options.pathPrefix, "/");
 });
 
-test("Get Options", (t) => {
-  let es = new EleventyServe();
-  let cfg = new TemplateConfig().getConfig();
-  cfg.pathPrefix = "/";
-  es.config = cfg;
+test("Get Options", async (t) => {
+  let es = await getServerInstance();
   es.setOutputDir("_site");
 
-  let opts = es.getOptions();
-  delete opts.logger;
-
-  t.deepEqual(opts, {
+  t.deepEqual(es.options, {
     pathPrefix: "/",
     port: 8080,
   });
 });
 
-test("Get Options (with a pathPrefix)", (t) => {
-  let es = new EleventyServe();
+test("Get Options (with a pathPrefix)", async (t) => {
   let cfg = new TemplateConfig().getConfig();
   cfg.pathPrefix = "/web/";
-  es.config = cfg;
+
+  let es = await getServerInstance(cfg);
   es.setOutputDir("_site");
 
-  let opts = es.getOptions();
-  delete opts.logger;
-
-  t.deepEqual(opts, {
+  t.deepEqual(es.options, {
     pathPrefix: "/web/",
     port: 8080,
   });
 });
 
-test("Get Options (override in config)", (t) => {
-  let es = new EleventyServe();
-  let cfg = new TemplateConfig().getConfig();
-  cfg.pathPrefix = "/";
-  cfg.browserSyncConfig = {
-    notify: true,
-  };
-  es.config = cfg;
+test("Get Options (override in config)", async (t) => {
+  let es = await getServerInstance();
   es.setOutputDir("_site");
 
-  let opts = es.getOptions();
-  delete opts.logger;
-
-  t.deepEqual(opts, {
+  t.deepEqual(es.options, {
     pathPrefix: "/",
     port: 8080,
   });
