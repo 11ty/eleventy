@@ -3,6 +3,8 @@ const { TemplatePath } = require("@11ty/eleventy-utils");
 const EleventyBaseError = require("./EleventyBaseError");
 const ConsoleLogger = require("./Util/ConsoleLogger");
 const PathPrefixer = require("./Util/PathPrefixer");
+const merge = require("./Util/Merge");
+
 const debug = require("debug")("EleventyServe");
 
 class EleventyServeConfigError extends EleventyBaseError {}
@@ -13,7 +15,10 @@ const DEFAULT_SERVER_OPTIONS = {
 };
 
 class EleventyServe {
-  constructor() {}
+  constructor() {
+    this.logger = new ConsoleLogger(true);
+    this._initOptionsFetched = false;
+  }
 
   get config() {
     if (!this._config) {
@@ -62,10 +67,11 @@ class EleventyServe {
 
       return module;
     } catch (e) {
-      debug(
-        "Could not find your custom Eleventy server: %o. Using the default server instead.",
-        e
+      this.logger.error(
+        "There was an error with your custom Eleventy server. We’re using the default server instead.\n" +
+          e.message
       );
+      debug("Eleventy server error %o", e);
       return require(DEFAULT_SERVER_OPTIONS.module);
     }
   }
@@ -75,10 +81,22 @@ class EleventyServe {
       return this._options;
     }
 
-    this._options = this.getOptions();
+    this._options = Object.assign(
+      {
+        pathPrefix: PathPrefixer.normalizePathPrefix(this.config.pathPrefix),
+        logger: this.logger,
+      },
+      DEFAULT_SERVER_OPTIONS,
+      this.config.serverOptions
+    );
 
     // TODO improve by sorting keys here
-    this._savedOptions = JSON.stringify(this._options);
+    this._savedConfigOptions = JSON.stringify(this.config.serverOptions);
+    if (!this._initOptionsFetched) {
+      throw new Error(
+        "Init options have not yet been fetched in setup callback."
+      );
+    }
 
     return this._options;
   }
@@ -104,48 +122,51 @@ class EleventyServe {
     this._server = val;
   }
 
-  getOptions() {
-    let opts = Object.assign(
-      {
-        pathPrefix: PathPrefixer.normalizePathPrefix(this.config.pathPrefix),
-        logger: new ConsoleLogger(true),
-      },
-      DEFAULT_SERVER_OPTIONS,
-      this.config.serverOptions
-    );
+  async init() {
+    this._initOptionsFetched = true;
 
-    return opts;
+    let setupCallback = this.config.serverOptions.setup;
+    if (setupCallback && typeof setupCallback === "function") {
+      let opts = await setupCallback();
+      if (opts) {
+        merge(this.options, opts);
+      }
+    }
   }
 
   // Port comes in here from --port on the command line
-  serve(port) {
-    let server = this.server;
-
+  async serve(port) {
     this._commandLinePort = port;
-    server.serve(port || this.options.port);
+    if (!this._initOptionsFetched) {
+      await this.init();
+    }
+
+    this.server.serve(port || this.options.port);
   }
 
-  close() {
+  async close() {
     if (this.server) {
-      this.server.close();
+      await this.server.close();
       this.server = undefined;
     }
   }
 
-  sendError({ error }) {
+  async sendError({ error }) {
     if (this.server) {
-      this.server.sendError({
+      await this.server.sendError({
         error,
       });
     }
   }
 
   // Restart the server entirely
-  restart() {
-    this.close();
+  // We don’t want to use a native `restart` method (e.g. restart() in Vite) so that
+  // we can correctly handle a `module` property change (changing the server type)
+  async restart() {
+    await this.close();
 
     // saved --port in `serve()`
-    this.serve(this._commandLinePort);
+    await this.serve(this._commandLinePort);
   }
 
   // Live reload the server
@@ -155,9 +176,11 @@ class EleventyServe {
     }
 
     // Restart the server if the options have changed
-    if (JSON.stringify(this.getOptions()) !== this._savedOptions) {
+    if (
+      JSON.stringify(this.config.serverOptions) !== this._savedConfigOptions
+    ) {
       debug("Server options changed, we’re restarting the server");
-      this.restart();
+      await this.restart();
     } else {
       await this.server.reload(reloadEvent);
     }

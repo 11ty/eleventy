@@ -390,6 +390,10 @@ Verbose Output: ${this.verboseMode}`);
 
     let data = this.templateData.cacheData();
 
+    if (this.eleventyServe) {
+      await this.eleventyServe.init();
+    }
+
     this.needsInit = false;
 
     // …why does it return this
