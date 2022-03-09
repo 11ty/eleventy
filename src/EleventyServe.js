@@ -92,9 +92,9 @@ class EleventyServe {
 
     // TODO improve by sorting keys here
     this._savedConfigOptions = JSON.stringify(this.config.serverOptions);
-    if (!this._initOptionsFetched) {
+    if (!this._initOptionsFetched && this.getSetupCallback()) {
       throw new Error(
-        "Init options have not yet been fetched in setup callback."
+        "Init options have not yet been fetched in the setup callback. This probably means that `init()` has not yet been called."
       );
     }
 
@@ -122,11 +122,18 @@ class EleventyServe {
     this._server = val;
   }
 
+  getSetupCallback() {
+    let setupCallback = this.config.serverOptions.setup;
+    if (setupCallback && typeof setupCallback === "function") {
+      return setupCallback;
+    }
+  }
+
   async init() {
     this._initOptionsFetched = true;
 
-    let setupCallback = this.config.serverOptions.setup;
-    if (setupCallback && typeof setupCallback === "function") {
+    let setupCallback = this.getSetupCallback();
+    if (setupCallback) {
       let opts = await setupCallback();
       if (opts) {
         merge(this.options, opts);
