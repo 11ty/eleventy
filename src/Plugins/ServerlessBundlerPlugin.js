@@ -318,10 +318,6 @@ function EleventyPlugin(eleventyConfig, options = {}) {
   if (process.env.ELEVENTY_SOURCE === "cli") {
     let helper = new BundlerHelper(options.name, options, eleventyConfig);
 
-    eleventyConfig.setBrowserSyncConfig({
-      middleware: [helper.serverMiddleware()],
-    });
-
     eleventyConfig.setServerOptions({
       middleware: [helper.serverMiddleware()],
     });
