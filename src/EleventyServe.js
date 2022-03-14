@@ -12,7 +12,7 @@ class EleventyServeConfigError extends EleventyBaseError {}
 const DEFAULT_SERVER_OPTIONS = {
   module: "@11ty/eleventy-dev-server",
   port: 8080,
-  pathPrefix: "/",
+  // pathPrefix: "/",
   // setup: function() {},
   // logger: { info: function() {}, error: function() {} }
 };
