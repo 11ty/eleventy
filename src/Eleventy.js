@@ -134,6 +134,7 @@ class Eleventy {
     /** @member {Object} - tbd. */
     this.eleventyServe = new EleventyServe();
     this.eleventyServe.config = this.config;
+    this.eleventyServe.eleventyConfig = this.eleventyConfig;
 
     /** @member {String} - Holds the path to the input directory. */
     this.rawInput = input;

@@ -12,6 +12,9 @@ class EleventyServeConfigError extends EleventyBaseError {}
 const DEFAULT_SERVER_OPTIONS = {
   module: "@11ty/eleventy-dev-server",
   port: 8080,
+  pathPrefix: "/",
+  // setup: function() {},
+  // logger: { info: function() {}, error: function() {} }
 };
 
 class EleventyServe {
@@ -33,6 +36,20 @@ class EleventyServe {
   set config(config) {
     this._options = null;
     this._config = config;
+  }
+
+  get eleventyConfig() {
+    if (!this._eleventyConfig) {
+      throw new EleventyServeConfigError(
+        "You need to set the eleventyConfig property on EleventyServe."
+      );
+    }
+
+    return this._eleventyConfig;
+  }
+
+  set eleventyConfig(config) {
+    this._eleventyConfig = config;
   }
 
   setOutputDir(outputDir) {
@@ -63,6 +80,26 @@ class EleventyServe {
         throw new Error(
           `Eleventy server module requires a \`getServer\` static method. Could not find one on module: \`${name}\``
         );
+      }
+
+      let serverPackageJsonPath = TemplatePath.absolutePath(
+        serverPath,
+        "package.json"
+      );
+      let serverPackageJson = require(serverPackageJsonPath);
+      if (
+        serverPackageJson["11ty"] &&
+        serverPackageJson["11ty"].compatibility
+      ) {
+        try {
+          this.eleventyConfig.userConfig.versionCheck(
+            serverPackageJson["11ty"].compatibility
+          );
+        } catch (e) {
+          this.logger.warn(
+            `WARN: Eleventy Server Plugin (${name}) Compatibility: ${e.message}`
+          );
+        }
       }
 
       return module;
