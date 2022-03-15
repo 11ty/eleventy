@@ -168,13 +168,15 @@ class EleventyServe {
   }
 
   async init() {
-    this._initOptionsFetched = true;
+    if (!this._initOptionsFetched) {
+      this._initOptionsFetched = true;
 
-    let setupCallback = this.getSetupCallback();
-    if (setupCallback) {
-      let opts = await setupCallback();
-      if (opts) {
-        merge(this.options, opts);
+      let setupCallback = this.getSetupCallback();
+      if (setupCallback) {
+        let opts = await setupCallback();
+        if (opts) {
+          merge(this.options, opts);
+        }
       }
     }
   }
