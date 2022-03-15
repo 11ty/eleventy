@@ -391,10 +391,6 @@ Verbose Output: ${this.verboseMode}`);
 
     let data = this.templateData.cacheData();
 
-    if (this.eleventyServe) {
-      await this.eleventyServe.init();
-    }
-
     this.needsInit = false;
 
     // …why does it return this
@@ -927,10 +923,10 @@ Arguments:
    *
    * @param {Number} port - The HTTP port to serve Eleventy from.
    */
-  serve(port) {
+  async serve(port) {
     // Port is optional and in this case likely via --port on the command line
     // May defer to configuration API options `port` property
-    this.eleventyServe.serve(port);
+    return this.eleventyServe.serve(port);
   }
 
   /**
