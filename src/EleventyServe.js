@@ -86,6 +86,7 @@ class EleventyServe {
         serverPath,
         "package.json"
       );
+
       let serverPackageJson = require(serverPackageJsonPath);
       if (
         serverPackageJson["11ty"] &&
@@ -97,7 +98,7 @@ class EleventyServe {
           );
         } catch (e) {
           this.logger.warn(
-            `WARN: Eleventy Server Plugin (${name}) Compatibility: ${e.message}`
+            `Warning: \`${name}\` Plugin Compatibility: ${e.message}`
           );
         }
       }
