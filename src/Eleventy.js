@@ -1018,6 +1018,11 @@ Arguments:
         ret = this.logger.closeStream(to);
       }
 
+      // Passing the processed output to the eleventy.after event is new in 2.0
+      let [passthroughCopyResults, ...templateResults] = ret;
+      let processedResults = templateResults.flat().filter((entry) => !!entry);
+      eventsArg.results = processedResults;
+
       await this.config.events.emit("afterBuild", eventsArg);
       await this.config.events.emit("eleventy.after", eventsArg);
     } catch (e) {
