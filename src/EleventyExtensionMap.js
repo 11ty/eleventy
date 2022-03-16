@@ -239,6 +239,9 @@ class EleventyExtensionMap {
         liquid: "liquid",
         "11ty.js": "11ty.js",
         "11ty.cjs": "11ty.js",
+        "11ty.jsx": "11ty.js",
+        "11ty.ts": "11ty.js",
+        "11ty.tsx": "11ty.js",
       };
 
       if ("extensionMap" in this.config) {
