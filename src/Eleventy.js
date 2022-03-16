@@ -86,6 +86,12 @@ class Eleventy {
     this.verboseModeSetViaCommandLineParam = false;
 
     /**
+     * @member {String} - One of build, serve, or watch
+     * @default "build"
+     */
+    this.runMode = "build";
+
+    /**
      * @member {Boolean} - Is Eleventy running in verbose mode?
      * @default true
      */
@@ -519,6 +525,16 @@ Verbose Output: ${this.verboseMode}`);
     if (formats && formats !== "*") {
       this.formatsOverride = formats.split(",");
     }
+  }
+
+  /**
+   * Updates the run mode of Eleventy.
+   *
+   * @method
+   * @param {String} runMode - One of "watch" or "serve"
+   */
+  setRunMode(runMode) {
+    this.runMode = runMode;
   }
 
   /**
@@ -993,6 +1009,8 @@ Arguments:
     try {
       let eventsArg = {
         inputDir: this.config.inputDir,
+        dir: this.config.dir,
+        runMode: this.runMode,
       };
       await this.config.events.emit("beforeBuild", eventsArg);
       await this.config.events.emit("eleventy.before", eventsArg);
@@ -1012,16 +1030,16 @@ Arguments:
 
       ret = await promise;
 
+      // Passing the processed output to the eleventy.after event is new in 2.0
+      let [passthroughCopyResults, ...templateResults] = ret;
+      let processedResults = templateResults.flat().filter((entry) => !!entry);
+      eventsArg.results = processedResults;
+
       if (to === "ndjson") {
         // return a stream
         // TODO this might output the ndjson rows only after all the templates have been written to the stream?
         ret = this.logger.closeStream(to);
       }
-
-      // Passing the processed output to the eleventy.after event is new in 2.0
-      let [passthroughCopyResults, ...templateResults] = ret;
-      let processedResults = templateResults.flat().filter((entry) => !!entry);
-      eventsArg.results = processedResults;
 
       await this.config.events.emit("afterBuild", eventsArg);
       await this.config.events.emit("eleventy.after", eventsArg);

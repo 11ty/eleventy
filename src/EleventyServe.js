@@ -192,14 +192,14 @@ class EleventyServe {
   }
 
   async close() {
-    if (this.server) {
+    if (this._server) {
       await this.server.close();
       this.server = undefined;
     }
   }
 
   async sendError({ error }) {
-    if (this.server) {
+    if (this._server) {
       await this.server.sendError({
         error,
       });
@@ -218,7 +218,7 @@ class EleventyServe {
 
   // Live reload the server
   async reload(reloadEvent = {}) {
-    if (!this.server) {
+    if (!this._server) {
       return;
     }
 

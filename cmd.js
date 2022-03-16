@@ -88,6 +88,12 @@ try {
     elev.setPassthroughAll(argv.passthroughall);
     elev.setFormats(argv.formats);
 
+    if (argv.watch) {
+      elev.setRunMode("watch");
+    } else if (argv.serve) {
+      elev.setRunMode("serve");
+    }
+
     // careful, we can’t use async/await here to error properly
     // with old node versions in `please-upgrade-node` above.
     elev

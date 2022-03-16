@@ -842,6 +842,7 @@ class Template extends TemplateContent {
         debug(`${outputPath} ${lang.finished}.`);
         return {
           inputPath: this.inputPath,
+          outputPath: outputPath,
           url,
           content: finalContent,
         };
