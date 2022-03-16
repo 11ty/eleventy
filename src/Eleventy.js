@@ -1011,6 +1011,7 @@ Arguments:
         inputDir: this.config.inputDir,
         dir: this.config.dir,
         runMode: this.runMode,
+        outputMode: to,
       };
       await this.config.events.emit("beforeBuild", eventsArg);
       await this.config.events.emit("eleventy.before", eventsArg);
@@ -1032,8 +1033,11 @@ Arguments:
 
       // Passing the processed output to the eleventy.after event is new in 2.0
       let [passthroughCopyResults, ...templateResults] = ret;
-      let processedResults = templateResults.flat().filter((entry) => !!entry);
-      eventsArg.results = processedResults;
+      if (to === "fs") {
+        eventsArg.results = templateResults.flat().filter((entry) => !!entry);
+      } else {
+        eventsArg.results = templateResults.filter((entry) => !!entry);
+      }
 
       if (to === "ndjson") {
         // return a stream
