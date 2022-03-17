@@ -101,13 +101,15 @@ class TemplatePassthroughManager {
     return this.count;
   }
 
-  getTemplatePassthroughForPath(path) {
-    return new TemplatePassthrough(
+  getTemplatePassthroughForPath(path, isIncremental = false) {
+    let inst = new TemplatePassthrough(
       path,
       this.outputDir,
       this.inputDir,
       this.config
     );
+    inst.setIsIncremental(isIncremental);
+    return inst;
   }
 
   async copyPassthrough(pass) {
@@ -243,7 +245,11 @@ class TemplatePassthroughManager {
     let normalizedPaths = this.getAllNormalizedPaths(paths);
     let passthroughs = [];
     for (let path of normalizedPaths) {
-      passthroughs.push(this.getTemplatePassthroughForPath(path));
+      // if incrementalFile is set but it isn’t a passthrough copy, normalizedPaths will be an empty array
+      let isIncremental = !!this.incrementalFile;
+      passthroughs.push(
+        this.getTemplatePassthroughForPath(path, isIncremental)
+      );
     }
 
     return Promise.all(
