@@ -1,4 +1,4 @@
-<p align="center"><img src="https://www.11ty.dev/img/logo.svg" width="200" height="200" alt="eleventy Logo"></p>
+<p align="center"><img src="https://www.11ty.dev/img/logo-github.png" width="200" height="200" alt="eleventy Logo"></p>
 
 # eleventy 🕚⚡️🎈🐀
 
