@@ -298,3 +298,13 @@ test("Output paths match with different templatePassthrough methods", async (t) 
 //   t.truthy(pass);
 //   t.is(pass.getOutputPath(), "_site/rename.js");
 // });
+
+test("Bug with incremental copying to a directory output, issue #2278", async (t) => {
+  let pass1 = getTemplatePassthrough(
+    { inputPath: "./public/test.css", outputPath: "/" },
+    "test/stubs",
+    "."
+  );
+  pass1.setIsIncremental(true);
+  t.is(pass1.getOutputPath(), "test/stubs/test.css");
+});
