@@ -1,6 +1,7 @@
 const test = require("ava");
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const EleventyFiles = require("../src/EleventyFiles");
-const TemplatePath = require("../src/TemplatePath");
 const TemplateConfig = require("../src/TemplateConfig");
 
 /* .eleventyignore and .gitignore combos */

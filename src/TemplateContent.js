@@ -5,11 +5,11 @@ const readFile = util.promisify(fs.readFile);
 const normalize = require("normalize-path");
 const matter = require("gray-matter");
 const lodashSet = require("lodash/set");
+const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const TemplateData = require("./TemplateData");
 const TemplateRender = require("./TemplateRender");
-const TemplatePath = require("./TemplatePath");
 const TemplateConfig = require("./TemplateConfig");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyErrorUtil = require("./EleventyErrorUtil");

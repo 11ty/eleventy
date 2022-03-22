@@ -1,9 +1,11 @@
 const fs = require("fs");
+const path = require("path");
 const isGlob = require("is-glob");
 const copy = require("recursive-copy");
-const TemplatePath = require("./TemplatePath");
-const debug = require("debug")("Eleventy:TemplatePassthrough");
 const fastglob = require("fast-glob");
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
+const debug = require("debug")("Eleventy:TemplatePassthrough");
 const EleventyBaseError = require("./EleventyBaseError");
 
 class TemplatePassthroughError extends EleventyBaseError {}
@@ -29,6 +31,7 @@ class TemplatePassthrough {
     this.outputDir = outputDir;
 
     this.isDryRun = false;
+    this.isIncremental = false;
   }
 
   getPath() {
@@ -54,7 +57,21 @@ class TemplatePassthrough {
       return this.getOutputPathForGlobFile(inputFileFromGlob);
     }
 
-    return TemplatePath.normalize(TemplatePath.join(outputDir, outputPath));
+    // Bug when copying incremental file overwriting output directory (and making it a file)
+    // e.g. public/test.css -> _site
+    // https://github.com/11ty/eleventy/issues/2278
+    let fullOutputPath = TemplatePath.normalize(
+      TemplatePath.join(outputDir, outputPath)
+    );
+
+    if (this.isIncremental && TemplatePath.isDirectorySync(fullOutputPath)) {
+      let filename = path.parse(inputPath).base;
+      return TemplatePath.normalize(
+        TemplatePath.join(outputDir, outputPath, filename)
+      );
+    }
+
+    return fullOutputPath;
   }
 
   getOutputPathForGlobFile(inputFileFromGlob) {
@@ -66,6 +83,10 @@ class TemplatePassthrough {
 
   setDryRun(isDryRun) {
     this.isDryRun = !!isDryRun;
+  }
+
+  setIsIncremental(isIncremental) {
+    this.isIncremental = isIncremental;
   }
 
   async getFiles(glob) {
@@ -142,7 +163,6 @@ class TemplatePassthrough {
     debug("Copying %o", this.inputPath);
 
     if (!isGlob(this.inputPath) && fs.existsSync(this.inputPath)) {
-      // IMPORTANT: this returns a promise, does not await for promise to finish
       promises.push(
         this.copy(this.inputPath, this.getOutputPath(), copyOptions)
       );

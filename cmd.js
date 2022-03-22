@@ -88,6 +88,12 @@ try {
     elev.setPassthroughAll(argv.passthroughall);
     elev.setFormats(argv.formats);
 
+    if (argv.watch) {
+      elev.setRunMode("watch");
+    } else if (argv.serve) {
+      elev.setRunMode("serve");
+    }
+
     // careful, we can’t use async/await here to error properly
     // with old node versions in `please-upgrade-node` above.
     elev
@@ -95,16 +101,16 @@ try {
       .then(function () {
         try {
           if (argv.serve) {
-            let startBrowsersync = true;
+            let shouldStartServer = true;
             elev
               .watch()
               .catch((e) => {
                 // Build failed but error message already displayed.
-                startBrowsersync = false;
+                shouldStartServer = false;
                 // A build error occurred and we aren’t going to --serve
               })
               .then(function () {
-                if (startBrowsersync) {
+                if (shouldStartServer) {
                   elev.serve(argv.port);
                 }
               });

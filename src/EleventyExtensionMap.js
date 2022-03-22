@@ -1,6 +1,7 @@
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const TemplateEngineManager = require("./TemplateEngineManager");
 const TemplateConfig = require("./TemplateConfig");
-const TemplatePath = require("./TemplatePath");
 const EleventyBaseError = require("./EleventyBaseError");
 
 class EleventyExtensionMapConfigError extends EleventyBaseError {}

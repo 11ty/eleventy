@@ -1,10 +1,10 @@
 const fs = require("fs");
 const fsp = fs.promises;
 const isPlainObject = require("../Util/IsPlainObject");
+const { TemplatePath } = require("@11ty/eleventy-utils");
 
 // TODO add a first-class Markdown component to expose this using Markdown-only syntax (will need to be synchronous for markdown-it)
 
-const TemplatePath = require("../TemplatePath");
 const TemplateRender = require("../TemplateRender");
 const TemplateConfig = require("../TemplateConfig");
 const Liquid = require("../Engines/Liquid");

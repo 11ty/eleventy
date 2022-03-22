@@ -1,7 +1,8 @@
 const moo = require("moo");
 const liquidLib = require("liquidjs");
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const TemplateEngine = require("./TemplateEngine");
-const TemplatePath = require("../TemplatePath");
 // const debug = require("debug")("Eleventy:Liquid");
 
 class Liquid extends TemplateEngine {

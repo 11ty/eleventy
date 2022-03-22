@@ -1,5 +1,6 @@
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const Template = require("./Template");
-const TemplatePath = require("./TemplatePath");
 const TemplateMap = require("./TemplateMap");
 const EleventyFiles = require("./EleventyFiles");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
@@ -317,6 +318,7 @@ class TemplateWriter {
     let paths = await this._getAllPaths();
     let promises = [];
 
+    // The ordering here is important to destructuring in Eleventy->_watch
     promises.push(this.writePassthroughCopy(paths));
 
     promises.push(...(await this.generateTemplates(paths)));

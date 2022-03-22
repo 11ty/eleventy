@@ -1,5 +1,7 @@
+const { TemplatePath } = require("@11ty/eleventy-utils");
+const { performance } = require("perf_hooks");
+
 const pkg = require("../package.json");
-const TemplatePath = require("./TemplatePath");
 const TemplateData = require("./TemplateData");
 const TemplateWriter = require("./TemplateWriter");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
@@ -10,8 +12,8 @@ const EleventyWatch = require("./EleventyWatch");
 const EleventyWatchTargets = require("./EleventyWatchTargets");
 const EleventyFiles = require("./EleventyFiles");
 const ConsoleLogger = require("./Util/ConsoleLogger");
+const PathPrefixer = require("./Util/PathPrefixer");
 const TemplateConfig = require("./TemplateConfig");
-const { performance } = require("perf_hooks");
 
 const templateCache = require("./TemplateCache");
 const simplePlural = require("./Util/Pluralize");
@@ -84,6 +86,12 @@ class Eleventy {
     this.verboseModeSetViaCommandLineParam = false;
 
     /**
+     * @member {String} - One of build, serve, or watch
+     * @default "build"
+     */
+    this.runMode = "build";
+
+    /**
      * @member {Boolean} - Is Eleventy running in verbose mode?
      * @default true
      */
@@ -132,6 +140,7 @@ class Eleventy {
     /** @member {Object} - tbd. */
     this.eleventyServe = new EleventyServe();
     this.eleventyServe.config = this.config;
+    this.eleventyServe.eleventyConfig = this.eleventyConfig;
 
     /** @member {String} - Holds the path to the input directory. */
     this.rawInput = input;
@@ -308,11 +317,6 @@ class Eleventy {
       );
     } else {
       ret.push(`(${versionStr})`);
-    }
-
-    let pathPrefix = this.config.pathPrefix;
-    if (pathPrefix && pathPrefix !== "/") {
-      return `Using pathPrefix: ${pathPrefix}\n${ret.join(" ")}`;
     }
 
     return ret.join(" ");
@@ -524,6 +528,16 @@ Verbose Output: ${this.verboseMode}`);
   }
 
   /**
+   * Updates the run mode of Eleventy.
+   *
+   * @method
+   * @param {String} runMode - One of "watch" or "serve"
+   */
+  setRunMode(runMode) {
+    this.runMode = runMode;
+  }
+
+  /**
    * Reads the version of Eleventy.
    *
    * @method
@@ -652,9 +666,12 @@ Arguments:
       this.writer.setIncrementalFile(incrementalFile);
     }
 
-    await this.write();
-    // let writeResult = await this.write();
-    // let hasError = !!writeResult.error;
+    let writeResults = await this.write();
+    let passthroughCopyResults;
+    let templateResults;
+    if (!writeResults.error) {
+      [passthroughCopyResults, ...templateResults] = writeResults;
+    }
 
     this.writer.resetIncrementalFile();
 
@@ -679,10 +696,32 @@ Arguments:
       );
     });
 
-    if (onlyCssChanges) {
-      this.eleventyServe.reload("*.css");
+    if (writeResults.error) {
+      this.eleventyServe.sendError({
+        error: writeResults.error,
+      });
     } else {
-      this.eleventyServe.reload();
+      let normalizedPathPrefix = PathPrefixer.normalizePathPrefix(
+        this.config.pathPrefix
+      );
+      await this.eleventyServe.reload({
+        files: this.watchManager.getActiveQueue(),
+        subtype: onlyCssChanges ? "css" : undefined,
+        build: {
+          // For later?
+          // passthroughCopy: passthroughCopyResults,
+          templates: templateResults
+            .flat()
+            .filter((entry) => !!entry)
+            .map((entry) => {
+              entry.url = PathPrefixer.joinUrlParts(
+                normalizedPathPrefix,
+                entry.url
+              );
+              return entry;
+            }),
+        },
+      });
     }
 
     this.watchManager.setBuildFinished();
@@ -900,8 +939,10 @@ Arguments:
    *
    * @param {Number} port - The HTTP port to serve Eleventy from.
    */
-  serve(port) {
-    this.eleventyServe.serve(port);
+  async serve(port) {
+    // Port is optional and in this case likely via --port on the command line
+    // May defer to configuration API options `port` property
+    return this.eleventyServe.serve(port);
   }
 
   /**
@@ -968,6 +1009,9 @@ Arguments:
     try {
       let eventsArg = {
         inputDir: this.config.inputDir,
+        dir: this.config.dir,
+        runMode: this.runMode,
+        outputMode: to,
       };
       await this.config.events.emit("beforeBuild", eventsArg);
       await this.config.events.emit("eleventy.before", eventsArg);
@@ -986,6 +1030,14 @@ Arguments:
       }
 
       ret = await promise;
+
+      // Passing the processed output to the eleventy.after event is new in 2.0
+      let [passthroughCopyResults, ...templateResults] = ret;
+      if (to === "fs") {
+        eventsArg.results = templateResults.flat().filter((entry) => !!entry);
+      } else {
+        eventsArg.results = templateResults.filter((entry) => !!entry);
+      }
 
       if (to === "ndjson") {
         // return a stream

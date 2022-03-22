@@ -2,6 +2,7 @@ const test = require("ava");
 const Eleventy = require("../src/Eleventy");
 const EleventyWatchTargets = require("../src/EleventyWatchTargets");
 const TemplateConfig = require("../src/TemplateConfig");
+const DateGitLastUpdated = require("../src/Util/DateGitLastUpdated");
 
 test("Eleventy, defaults inherit from config", async (t) => {
   let elev = new Eleventy();
@@ -411,4 +412,15 @@ test("Unicode in front matter `tags`, issue #670", async (t) => {
   });
 
   t.is(results[0].content.trim(), "2,all,Cañon City,");
+});
+
+test("#142: date 'git Last Modified' populates page.date", async (t) => {
+  let elev = new Eleventy("./test/stubs-142/", "./test/stubs-142/_site");
+
+  let results = await elev.toJSON();
+  let [result] = results;
+
+  // This doesn’t test the validity of the function, only that it populates page.date.
+  let comparisonDate = DateGitLastUpdated("./test/stubs-142/index.njk");
+  t.is(result.content.trim(), "" + comparisonDate.getTime());
 });

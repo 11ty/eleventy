@@ -6,20 +6,22 @@ const mkdir = util.promisify(fs.mkdir);
 const os = require("os");
 const path = require("path");
 const normalize = require("normalize-path");
-const isPlainObject = require("./Util/IsPlainObject");
 const lodashGet = require("lodash/get");
 const lodashSet = require("lodash/set");
 const { DateTime } = require("luxon");
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
+const isPlainObject = require("./Util/IsPlainObject");
+const ConsoleLogger = require("./Util/ConsoleLogger");
+const getDateFromGitLastUpdated = require("./Util/DateGitLastUpdated");
 
 const TemplateData = require("./TemplateData");
 const TemplateContent = require("./TemplateContent");
-const TemplatePath = require("./TemplatePath");
 const TemplatePermalink = require("./TemplatePermalink");
 const TemplateLayout = require("./TemplateLayout");
 const TemplateFileSlug = require("./TemplateFileSlug");
 const ComputedData = require("./ComputedData");
 const Pagination = require("./Plugins/Pagination");
-const ConsoleLogger = require("./Util/ConsoleLogger");
 const TemplateBehavior = require("./TemplateBehavior");
 
 const TemplateContentPrematureUseError = require("./Errors/TemplateContentPrematureUseError");
@@ -789,7 +791,7 @@ class Template extends TemplateContent {
     return pages;
   }
 
-  async _write(outputPath, finalContent) {
+  async _write({ url, outputPath }, finalContent) {
     let shouldWriteFile = true;
 
     if (this.isDryRun) {
@@ -838,6 +840,12 @@ class Template extends TemplateContent {
         templateBenchmark.after();
         this.writeCount++;
         debug(`${outputPath} ${lang.finished}.`);
+        return {
+          inputPath: this.inputPath,
+          outputPath: outputPath,
+          url,
+          content: finalContent,
+        };
       });
     }
   }
@@ -929,7 +937,7 @@ class Template extends TemplateContent {
 
         // compile returned undefined
         if (content !== undefined) {
-          return this._write(page.outputPath, content);
+          return this._write(page, content);
         }
       })
     );
@@ -1016,30 +1024,40 @@ class Template extends TemplateContent {
         // YAML does its own date parsing
         debug("getMappedDate: YAML parsed it: %o", data.date);
         return data.date;
-      } else {
-        // string
-        if (data.date.toLowerCase() === "last modified") {
-          return this._getDateInstance("ctimeMs");
-        } else if (data.date.toLowerCase() === "created") {
-          return this._getDateInstance("birthtimeMs");
-        } else {
-          // try to parse with Luxon
-          let date = DateTime.fromISO(data.date, { zone: "utc" });
-          if (!date.isValid) {
-            throw new Error(
-              `date front matter value (${data.date}) is invalid for ${this.inputPath}`
-            );
-          }
-          debug(
-            "getMappedDate: Luxon parsed %o: %o and %o",
-            data.date,
-            date,
-            date.toJSDate()
-          );
-
-          return date.toJSDate();
-        }
       }
+
+      // special strings
+      if (data.date.toLowerCase() === "git last modified") {
+        let d = getDateFromGitLastUpdated(this.inputPath);
+        if (d) {
+          return d;
+        }
+
+        // return now if this file is not yet available in `git`
+        return Date.now();
+      }
+      if (data.date.toLowerCase() === "last modified") {
+        return this._getDateInstance("ctimeMs");
+      }
+      if (data.date.toLowerCase() === "created") {
+        return this._getDateInstance("birthtimeMs");
+      }
+
+      // try to parse with Luxon
+      let date = DateTime.fromISO(data.date, { zone: "utc" });
+      if (!date.isValid) {
+        throw new Error(
+          `date front matter value (${data.date}) is invalid for ${this.inputPath}`
+        );
+      }
+      debug(
+        "getMappedDate: Luxon parsed %o: %o and %o",
+        data.date,
+        date,
+        date.toJSDate()
+      );
+
+      return date.toJSDate();
     } else {
       let filepathRegex = this.inputPath.match(/(\d{4}-\d{2}-\d{2})/);
       if (filepathRegex !== null) {

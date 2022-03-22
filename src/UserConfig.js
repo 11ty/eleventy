@@ -69,7 +69,7 @@ class UserConfig {
     this.extensionMap = new Set();
     this.watchJavaScriptDependencies = true;
     this.additionalWatchTargets = [];
-    this.browserSyncConfig = {};
+    this.serverOptions = {};
     this.globalData = {};
     this.chokidarConfig = {};
     this.watchThrottleWaitTime = 0; //ms
@@ -704,12 +704,18 @@ class UserConfig {
     this.watchJavaScriptDependencies = !!watchEnabled;
   }
 
-  setBrowserSyncConfig(options = {}, mergeOptions = true) {
-    if (mergeOptions) {
-      this.browserSyncConfig = merge(this.browserSyncConfig, options);
+  setServerOptions(options = {}, override = false) {
+    if (override) {
+      this.serverOptions = options;
     } else {
-      this.browserSyncConfig = options;
+      this.serverOptions = merge(this.serverOptions, options);
     }
+  }
+
+  setBrowserSyncConfig() {
+    debug(
+      "The `setBrowserSyncConfig` method was removed in Eleventy 2.0.0. Use `setServerOptions` with the new Eleventy development server or the `@11ty/eleventy-browser-sync` plugin moving forward."
+    );
   }
 
   setChokidarConfig(options = {}) {
@@ -790,7 +796,7 @@ class UserConfig {
       dataDeepMerge: this.dataDeepMerge,
       watchJavaScriptDependencies: this.watchJavaScriptDependencies,
       additionalWatchTargets: this.additionalWatchTargets,
-      browserSyncConfig: this.browserSyncConfig,
+      serverOptions: this.serverOptions,
       chokidarConfig: this.chokidarConfig,
       watchThrottleWaitTime: this.watchThrottleWaitTime,
       frontMatterParsingOptions: this.frontMatterParsingOptions,

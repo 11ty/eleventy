@@ -1,4 +1,4 @@
-const TemplatePath = require("./TemplatePath");
+const { TemplatePath } = require("@11ty/eleventy-utils");
 
 class TemplateGlob {
   static normalizePath(...paths) {

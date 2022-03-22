@@ -5,7 +5,8 @@ const isGlob = require("is-glob");
 const TOML = require("@iarna/toml");
 const copy = require("recursive-copy");
 const dependencyTree = require("@11ty/dependency-tree");
-const TemplatePath = require("../TemplatePath");
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const deleteRequireCache = require("../Util/DeleteRequireCache");
 const debug = require("debug")("Eleventy:Serverless");
 
@@ -255,7 +256,7 @@ class BundlerHelper {
     );
   }
 
-  browserSyncMiddleware() {
+  serverMiddleware() {
     let serverlessFilepath = TemplatePath.addLeadingDotSlash(
       path.join(TemplatePath.getWorkingDir(), this.dir, "index")
     );
@@ -270,6 +271,7 @@ class BundlerHelper {
       let result = await serverlessFunction.handler({
         httpMethod: "GET",
         path: url.pathname,
+        rawUrl: url.toString(),
         // @netlify/functions builder overwrites these to {} intentionally
         // See https://github.com/netlify/functions/issues/38
         queryStringParameters: queryParams,
@@ -348,8 +350,8 @@ function EleventyPlugin(eleventyConfig, options = {}) {
   if (process.env.ELEVENTY_SOURCE === "cli") {
     let helper = new BundlerHelper(options.name, options, eleventyConfig);
 
-    eleventyConfig.setBrowserSyncConfig({
-      middleware: [helper.browserSyncMiddleware()],
+    eleventyConfig.setServerOptions({
+      middleware: [helper.serverMiddleware()],
     });
 
     eleventyConfig.on("eleventy.before", async () => {
