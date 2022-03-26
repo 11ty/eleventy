@@ -9,30 +9,20 @@ const TemplateRender = require("../TemplateRender");
 const TemplateConfig = require("../TemplateConfig");
 const Liquid = require("../Engines/Liquid");
 
-function normalizeDirectories(dir = {}) {
-  return Object.assign(
-    {
-      input: ".",
-    },
-    dir
-  );
-}
-
 async function render(
   content,
   templateLang = "html",
-  normalizedDirs = {},
-  { templateConfig, extensionMap }
+  { templateConfig, extensionMap, config } = {}
 ) {
   if (!templateConfig) {
-    templateConfig = new TemplateConfig();
+    templateConfig = new TemplateConfig(null, false);
+  }
+  if (config && typeof config === "function") {
+    await config(templateConfig.userConfig);
   }
 
-  let tr = new TemplateRender(
-    templateLang,
-    normalizedDirs.input,
-    templateConfig
-  );
+  let cfg = templateConfig.getConfig();
+  let tr = new TemplateRender(templateLang, cfg.dir.input, templateConfig);
   tr.extensionMap = extensionMap;
   tr.setEngineOverride(templateLang);
 
@@ -49,9 +39,8 @@ async function render(
 // No templateLang default, it should infer from the inputPath.
 async function renderFile(
   inputPath,
-  templateLang,
-  normalizedDirs = {},
-  { templateConfig, extensionMap }
+  { templateConfig, extensionMap, config } = {},
+  templateLang
 ) {
   if (!inputPath) {
     throw new Error(
@@ -69,10 +58,14 @@ async function renderFile(
   }
 
   if (!templateConfig) {
-    templateConfig = new TemplateConfig();
+    templateConfig = new TemplateConfig(null, false);
+  }
+  if (config && typeof config === "function") {
+    await config(templateConfig.userConfig);
   }
 
-  let tr = new TemplateRender(inputPath, normalizedDirs.input, templateConfig);
+  let cfg = templateConfig.getConfig();
+  let tr = new TemplateRender(inputPath, cfg.dir.input, templateConfig);
   tr.extensionMap = extensionMap;
   if (templateLang) {
     tr.setEngineOverride(templateLang);
@@ -256,16 +249,10 @@ function EleventyPlugin(eleventyConfig, options = {}) {
   });
 
   async function renderStringShortcodeFn(content, templateLang, data = {}) {
-    let fn = await render.call(
-      this,
-      content,
-      templateLang,
-      normalizeDirectories(eleventyConfig.dir),
-      {
-        templateConfig,
-        extensionMap,
-      }
-    );
+    let fn = await render.call(this, content, templateLang, {
+      templateConfig,
+      extensionMap,
+    });
 
     if (fn === undefined) {
       return;
@@ -292,12 +279,11 @@ function EleventyPlugin(eleventyConfig, options = {}) {
     let fn = await renderFile.call(
       this,
       inputPath,
-      templateLang,
-      normalizeDirectories(eleventyConfig.dir),
       {
         templateConfig,
         extensionMap,
-      }
+      },
+      templateLang
     );
 
     if (fn === undefined) {
@@ -342,3 +328,5 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 }
 
 module.exports = EleventyPlugin;
+module.exports.File = renderFile;
+module.exports.String = render;
