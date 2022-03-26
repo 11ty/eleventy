@@ -68,7 +68,10 @@ class EleventyWatch {
   }
 
   hasQueuedFile(file) {
-    return this._queueMatches(file).length > 0;
+    if (file) {
+      return this._queueMatches(file).length > 0;
+    }
+    return false;
   }
 
   get pendingQueue() {

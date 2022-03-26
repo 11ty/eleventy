@@ -405,16 +405,20 @@ Verbose Output: ${this.verboseMode}`);
 
   // These are all set as initial global data under eleventy.env.* (see TemplateData->environmentVariables)
   getEnvironmentVariableValues() {
-    let configPath = this.eleventyConfig.getLocalProjectConfigFile();
-    let absolutePathToConfig = TemplatePath.absolutePath(configPath);
-    // TODO(zachleat): if config is not in root (e.g. using --config=)
-    let root = TemplatePath.getDirFromFilePath(absolutePathToConfig);
-
-    return {
-      config: absolutePathToConfig,
-      root,
+    let values = {
       source: this.source,
     };
+    let configPath = this.eleventyConfig.getLocalProjectConfigFile();
+    if (configPath) {
+      let absolutePathToConfig = TemplatePath.absolutePath(configPath);
+      values.config = absolutePathToConfig;
+
+      // TODO(zachleat): if config is not in root (e.g. using --config=)
+      let root = TemplatePath.getDirFromFilePath(absolutePathToConfig);
+      values.root = root;
+    }
+
+    return values;
   }
 
   /**

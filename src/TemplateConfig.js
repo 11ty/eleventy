@@ -52,7 +52,10 @@ class TemplateConfig {
      * @member {String} - Path to local project config.
      * @default .eleventy.js
      */
-    this.projectConfigPath = projectConfigPath || ".eleventy.js";
+    this.projectConfigPath = ".eleventy.js";
+    if (projectConfigPath !== undefined) {
+      this.projectConfigPath = projectConfigPath;
+    }
 
     if (customRootConfig) {
       /**
@@ -80,7 +83,9 @@ class TemplateConfig {
    * @returns {String} - The normalised local project config file path.
    */
   getLocalProjectConfigFile() {
-    return TemplatePath.addLeadingDotSlash(this.projectConfigPath);
+    if (this.projectConfigPath) {
+      return TemplatePath.addLeadingDotSlash(this.projectConfigPath);
+    }
   }
 
   get inputDir() {
@@ -221,11 +226,13 @@ class TemplateConfig {
    */
   mergeConfig() {
     let localConfig = {};
-    let path = TemplatePath.absolutePath(this.projectConfigPath);
+    let path = this.projectConfigPath
+      ? TemplatePath.absolutePath(this.projectConfigPath)
+      : false;
 
     debug(`Merging config with ${path}`);
 
-    if (fs.existsSync(path)) {
+    if (path && fs.existsSync(path)) {
       try {
         // remove from require cache so it will grab a fresh copy
         deleteRequireCache(path);
