@@ -165,6 +165,22 @@ class TemplateRender {
     }
   }
 
+  getEnginesList() {
+    if (
+      this.engineName === "md" &&
+      this.useMarkdown &&
+      this.parseMarkdownWith
+    ) {
+      return `${this.parseMarkdownWith},md`;
+    }
+    if (this.engineName === "html" && this.parseHtmlWith) {
+      return this.parseHtmlWith;
+    }
+
+    // templateEngineOverride in play
+    return this.extensionMap.getKey(this.engineNameOrPath);
+  }
+
   setEngineOverride(engineName, bypassMarkdown) {
     let engines = TemplateRender.parseEngineOverrides(engineName);
 
