@@ -9,9 +9,8 @@ const normalize = require("normalize-path");
 const lodashGet = require("lodash/get");
 const lodashSet = require("lodash/set");
 const { DateTime } = require("luxon");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
 
-const isPlainObject = require("./Util/IsPlainObject");
 const ConsoleLogger = require("./Util/ConsoleLogger");
 const getDateFromGitLastUpdated = require("./Util/DateGitLastUpdated");
 

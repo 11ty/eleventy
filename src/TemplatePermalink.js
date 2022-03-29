@@ -1,8 +1,7 @@
 const path = require("path");
 const normalize = require("normalize-path");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
 
-const isPlainObject = require("./Util/IsPlainObject");
 const serverlessUrlFilter = require("./Filters/ServerlessUrl");
 
 class TemplatePermalink {
