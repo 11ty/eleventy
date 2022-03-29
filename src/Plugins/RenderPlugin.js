@@ -104,6 +104,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
         let normalizedContext = {};
         if (ctx) {
           normalizedContext.page = ctx.get(["page"]);
+          normalizedContext.eleventy = ctx.get(["eleventy"]);
         }
 
         let argArray = await Liquid.parseArguments(
@@ -189,6 +190,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
         if (context.ctx && context.ctx.page) {
           normalizedContext.ctx = context.ctx;
           normalizedContext.page = context.ctx.page;
+          normalizedContext.eleventy = context.ctx.eleventy;
         }
 
         body(function (e, bodyContent) {
@@ -268,8 +270,9 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       };
     }
 
-    // save `page` for reuse
+    // save `page` and `eleventy` for reuse
     data.page = this.page;
+    data.eleventy = this.eleventy;
 
     return fn(data);
   }
@@ -300,8 +303,9 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       };
     }
 
-    // save `page` for re-use
+    // save `page` and `eleventy` for reuse
     data.page = this.page;
+    data.eleventy = this.eleventy;
 
     return fn(data);
   }

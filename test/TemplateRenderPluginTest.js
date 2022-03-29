@@ -350,3 +350,38 @@ tested.
 * njkHi test test njkBye 138`
   );
 });
+
+test("Use page in renderTemplate (liquid in liquid)", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/liquid-page.liquid"
+  );
+  t.is(html, `/liquid-page/`);
+});
+
+test("Use page in renderTemplate (liquid in njk)", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/liquid-page.njk"
+  );
+  t.is(html, `/liquid-page/`);
+});
+
+test("Use page in renderTemplate (njk in liquid)", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/njk-page.liquid"
+  );
+  t.is(html, `/njk-page/`);
+});
+
+test("Use eleventy in renderTemplate (njk in liquid)", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/njk-eleventy.liquid"
+  );
+  t.is(html, `1`);
+});
+
+test("Use eleventy in renderTemplate (liquid in njk)", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/liquid-eleventy.njk"
+  );
+  t.is(html, `1`);
+});
