@@ -385,3 +385,16 @@ test("Use eleventy in renderTemplate (liquid in njk)", async (t) => {
   );
   t.is(html, `1`);
 });
+test.skip("Use nunjucks in liquid (access to all global data)", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/nunjucks-global.liquid"
+  );
+  t.is(html, `globalHi`);
+});
+
+test.skip("Use liquid in njk (access to all global data)", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/liquid-global.njk"
+  );
+  t.is(html, `globalHi`);
+});
