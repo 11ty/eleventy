@@ -1,4 +1,3 @@
-const fastglob = require("fast-glob");
 const fs = require("fs");
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
@@ -106,6 +105,9 @@ class TemplateEngine {
 
   // TODO make async
   cachePartialFiles() {
+    // Try to skip this require if not used (for bundling reasons)
+    const fastglob = require("fast-glob");
+
     // This only runs if getPartials() is called, which is only for Mustache/Handlebars
     this.partialsHaveBeenCached = true;
     let partials = {};
