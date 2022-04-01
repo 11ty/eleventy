@@ -14,20 +14,53 @@ class Nunjucks extends TemplateEngine {
     this.nunjucksEnvironmentOptions =
       this.config.nunjucksEnvironmentOptions || {};
 
+    this.nunjucksPrecompiledTemplates =
+      this.config.nunjucksPrecompiledTemplates || {};
+    this._usingPrecompiled =
+      Object.keys(this.nunjucksPrecompiledTemplates).length > 0;
+
     this.setLibrary(this.config.libraryOverrides.njk);
 
     this.cacheable = true;
   }
 
-  setLibrary(override) {
-    let fsLoader = new NunjucksLib.FileSystemLoader([
-      super.getIncludesDir(),
-      TemplatePath.getWorkingDir(),
-    ]);
+  _setEnv(override) {
+    // Precompiled templates to avoid eval!
+    if (this._usingPrecompiled) {
+      function NodePrecompiledLoader() {}
+      NodePrecompiledLoader.prototype.getSource = (name) => {
+        // https://github.com/mozilla/nunjucks/blob/fd500902d7c88672470c87170796de52fc0f791a/nunjucks/src/precompiled-loader.js#L5
+        return {
+          src: {
+            type: "code",
+            obj: this.nunjucksPrecompiledTemplates[name],
+          },
+          // Maybe add this?
+          // path,
+          // noCache: true
+        };
+      };
 
-    this.njkEnv =
-      override ||
-      new NunjucksLib.Environment(fsLoader, this.nunjucksEnvironmentOptions);
+      this.njkEnv =
+        override ||
+        new NunjucksLib.Environment(
+          new NodePrecompiledLoader(),
+          this.nunjucksEnvironmentOptions
+        );
+    } else {
+      let fsLoader = new NunjucksLib.FileSystemLoader([
+        super.getIncludesDir(),
+        TemplatePath.getWorkingDir(),
+      ]);
+
+      this.njkEnv =
+        override ||
+        new NunjucksLib.Environment(fsLoader, this.nunjucksEnvironmentOptions);
+    }
+  }
+
+  setLibrary(override) {
+    this._setEnv(override);
 
     // Correct, but overbroad. Better would be to evict more granularly, but
     // resolution from paths isn't straightforward.
@@ -283,6 +316,7 @@ class Nunjucks extends TemplateEngine {
     let blockStart = optsTags.blockStart || "{%";
     let variableStart = optsTags.variableStart || "{{";
     let commentStart = optsTags.variableStart || "{#";
+
     return (
       str.indexOf(blockStart) !== -1 ||
       str.indexOf(variableStart) !== -1 ||
@@ -355,12 +389,11 @@ class Nunjucks extends TemplateEngine {
   }
 
   async compile(str, inputPath) {
-    // for(let loader of this.njkEnv.loaders) {
-    //   loader.cache = {};
-    // }
-
     let tmpl;
-    if (!inputPath || inputPath === "njk" || inputPath === "md") {
+
+    if (this._usingPrecompiled) {
+      tmpl = this.njkEnv.getTemplate(str, true);
+    } else if (!inputPath || inputPath === "njk" || inputPath === "md") {
       tmpl = new NunjucksLib.Template(str, this.njkEnv, null, true);
     } else {
       tmpl = new NunjucksLib.Template(str, this.njkEnv, inputPath, true);
