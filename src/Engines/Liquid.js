@@ -129,6 +129,7 @@ class Liquid extends TemplateEngine {
     let obj = {};
     if (ctx) {
       obj.page = ctx.get(["page"]);
+      obj.eleventy = ctx.get(["eleventy"]);
     }
     return obj;
   }

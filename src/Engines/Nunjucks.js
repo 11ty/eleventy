@@ -110,6 +110,7 @@ class Nunjucks extends TemplateEngine {
     if (context.ctx && context.ctx.page) {
       obj.ctx = context.ctx;
       obj.page = context.ctx.page;
+      obj.eleventy = context.ctx.eleventy;
     }
     return obj;
   }
