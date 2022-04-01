@@ -333,3 +333,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 module.exports = EleventyPlugin;
 module.exports.File = renderFile;
 module.exports.String = render;
+
+module.exports.GetEmptyConfig = function () {
+  return new TemplateConfig(null, false);
+};
