@@ -16,6 +16,7 @@ async function render(
   if (!templateConfig) {
     templateConfig = new TemplateConfig(null, false);
   }
+  // TODO should this run every time??? probably not?
   if (config && typeof config === "function") {
     await config(templateConfig.userConfig);
   }
@@ -233,6 +234,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
     {
       tagName: "renderTemplate",
       tagNameFile: "renderFile",
+      templateConfig: null,
     },
     options
   );
@@ -251,7 +253,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 
   async function renderStringShortcodeFn(content, templateLang, data = {}) {
     let fn = await render.call(this, content, templateLang, {
-      templateConfig,
+      templateConfig: opts.templateConfig || templateConfig,
       extensionMap,
     });
 
@@ -282,7 +284,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       this,
       inputPath,
       {
-        templateConfig,
+        templateConfig: opts.templateConfig || templateConfig,
         extensionMap,
       },
       templateLang
