@@ -25,8 +25,10 @@ class Nunjucks extends TemplateEngine {
   }
 
   _setEnv(override) {
-    // Precompiled templates to avoid eval!
-    if (this._usingPrecompiled) {
+    if (override) {
+      this.njkEnv = override;
+    } else if (this._usingPrecompiled) {
+      // Precompiled templates to avoid eval!
       function NodePrecompiledLoader() {}
       NodePrecompiledLoader.prototype.getSource = (name) => {
         // https://github.com/mozilla/nunjucks/blob/fd500902d7c88672470c87170796de52fc0f791a/nunjucks/src/precompiled-loader.js#L5
@@ -41,22 +43,26 @@ class Nunjucks extends TemplateEngine {
         };
       };
 
-      this.njkEnv =
-        override ||
-        new NunjucksLib.Environment(
-          new NodePrecompiledLoader(),
-          this.nunjucksEnvironmentOptions
-        );
+      this.njkEnv = new NunjucksLib.Environment(
+        new NodePrecompiledLoader(),
+        this.nunjucksEnvironmentOptions
+      );
     } else {
       let fsLoader = new NunjucksLib.FileSystemLoader([
         super.getIncludesDir(),
         TemplatePath.getWorkingDir(),
       ]);
 
-      this.njkEnv =
-        override ||
-        new NunjucksLib.Environment(fsLoader, this.nunjucksEnvironmentOptions);
+      this.njkEnv = new NunjucksLib.Environment(
+        fsLoader,
+        this.nunjucksEnvironmentOptions
+      );
     }
+
+    this.config.events.emit("eleventy.engine.njk", {
+      nunjucks: NunjucksLib,
+      environment: this.njkEnv,
+    });
   }
 
   setLibrary(override) {
