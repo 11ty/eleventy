@@ -16,6 +16,7 @@ async function render(
   if (!templateConfig) {
     templateConfig = new TemplateConfig(null, false);
   }
+
   // TODO should this run every time??? probably not?
   if (config && typeof config === "function") {
     await config(templateConfig.userConfig);
@@ -313,23 +314,32 @@ function EleventyPlugin(eleventyConfig, options = {}) {
   }
 
   // Render strings
-  eleventyConfig.addJavaScriptFunction(opts.tagName, renderStringShortcodeFn);
+  if (opts.tagName) {
+    // use falsy to opt-out
+    eleventyConfig.addJavaScriptFunction(opts.tagName, renderStringShortcodeFn);
 
-  eleventyConfig.addLiquidTag(opts.tagName, function (liquidEngine) {
-    return liquidTemplateTag(liquidEngine, opts.tagName);
-  });
+    eleventyConfig.addLiquidTag(opts.tagName, function (liquidEngine) {
+      return liquidTemplateTag(liquidEngine, opts.tagName);
+    });
 
-  eleventyConfig.addNunjucksTag(opts.tagName, function (nunjucksLib) {
-    return nunjucksTemplateTag(nunjucksLib, opts.tagName);
-  });
+    eleventyConfig.addNunjucksTag(opts.tagName, function (nunjucksLib) {
+      return nunjucksTemplateTag(nunjucksLib, opts.tagName);
+    });
+  }
 
   // Render File
-  eleventyConfig.addJavaScriptFunction(opts.tagNameFile, renderFileShortcodeFn);
-  eleventyConfig.addLiquidShortcode(opts.tagNameFile, renderFileShortcodeFn);
-  eleventyConfig.addNunjucksAsyncShortcode(
-    opts.tagNameFile,
-    renderFileShortcodeFn
-  );
+  if (opts.tagNameFile) {
+    // use `false` to opt-out
+    eleventyConfig.addJavaScriptFunction(
+      opts.tagNameFile,
+      renderFileShortcodeFn
+    );
+    eleventyConfig.addLiquidShortcode(opts.tagNameFile, renderFileShortcodeFn);
+    eleventyConfig.addNunjucksAsyncShortcode(
+      opts.tagNameFile,
+      renderFileShortcodeFn
+    );
+  }
 }
 
 module.exports = EleventyPlugin;
