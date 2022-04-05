@@ -1,5 +1,6 @@
 const test = require("ava");
 const RenderPlugin = require("../src/Plugins/RenderPlugin");
+const RenderManager = RenderPlugin.RenderManager;
 const RenderPluginFile = RenderPlugin.File;
 const RenderPluginString = RenderPlugin.String;
 
@@ -249,7 +250,13 @@ test("Remap non-object data to data._ if object is not passed in", async (t) => 
 });
 
 test("Direct use of render string plugin, rendering Nunjucks (and nested Liquid)", async (t) => {
-  let fn = await RenderPluginString(
+  let renderMgr = new RenderManager();
+  renderMgr.config(function (eleventyConfig) {
+    eleventyConfig.addFilter("testing", function () {
+      return "tested.";
+    });
+  });
+  let fn = await renderMgr.compile(
     `{%- set nunjucksVar = 69 -%}
 {{ hi }}
 {{ nunjucksVar }}
@@ -259,16 +266,9 @@ test("Direct use of render string plugin, rendering Nunjucks (and nested Liquid)
 * {{ hi }} test test {{ bye }} {{ liquidVar }}
 {% endrenderTemplate %}
 `,
-    "njk",
-    {
-      config: function (eleventyConfig) {
-        eleventyConfig.addPlugin(RenderPlugin);
-        eleventyConfig.addFilter("testing", function () {
-          return "tested.";
-        });
-      },
-    }
+    "njk"
   );
+
   let data = {
     hi: "nunjucksHi",
     argData: {
@@ -290,7 +290,14 @@ tested.
 });
 
 test("Direct use of render string plugin, rendering Liquid (and nested Nunjucks)", async (t) => {
-  let fn = await RenderPluginString(
+  let renderMgr = new RenderManager();
+  renderMgr.config(function (eleventyConfig) {
+    eleventyConfig.addFilter("testing", function () {
+      return "tested.";
+    });
+  });
+
+  let fn = await renderMgr.compile(
     `{%- assign liquidVar = 69 -%}
 {{ hi }}
 {{ liquidVar }}
@@ -300,15 +307,7 @@ test("Direct use of render string plugin, rendering Liquid (and nested Nunjucks)
 * {{ hi }} test test {{ bye }} {{ njkVar }}
 {% endrenderTemplate %}
 `,
-    "liquid",
-    {
-      config: function (eleventyConfig) {
-        eleventyConfig.addPlugin(RenderPlugin);
-        eleventyConfig.addFilter("testing", function () {
-          return "tested.";
-        });
-      },
-    }
+    "liquid"
   );
   let data = {
     hi: "liquidHi",

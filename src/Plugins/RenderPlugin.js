@@ -11,7 +11,7 @@ const Liquid = require("../Engines/Liquid");
 async function render(
   content,
   templateLang,
-  { templateConfig, extensionMap, config } = {}
+  { templateConfig, extensionMap } = {}
 ) {
   if (!templateConfig) {
     templateConfig = new TemplateConfig(null, false);
@@ -20,11 +20,6 @@ async function render(
   // Breaking change in 2.0+, previous default was `html`
   if (!templateLang) {
     templateLang = this.page.templateSyntax;
-  }
-
-  // TODO should this run every time??? probably not?
-  if (config && typeof config === "function") {
-    await config(templateConfig.userConfig);
   }
 
   let cfg = templateConfig.getConfig();
@@ -357,6 +352,29 @@ module.exports = EleventyPlugin;
 module.exports.File = renderFile;
 module.exports.String = render;
 
-module.exports.GetEmptyConfig = function () {
-  return new TemplateConfig(null, false);
-};
+// Will re-use the same configuration instance both at a top level and across any nested renders
+class RenderManager {
+  constructor() {
+    this.templateConfig = new TemplateConfig(null, false);
+
+    this.templateConfig.userConfig.addPlugin(EleventyPlugin, {
+      templateConfig: this.templateConfig,
+    });
+  }
+
+  // Async friendly but requires await upstream
+  config(callback) {
+    // run an extra `function(eleventyConfig)` configuration callbacks
+    if (callback && typeof callback === "function") {
+      return callback(this.templateConfig.userConfig);
+    }
+  }
+
+  compile(content, templateLang, options = {}) {
+    options.templateConfig = this.templateConfig;
+
+    return render(content, templateLang, options);
+  }
+}
+
+module.exports.RenderManager = RenderManager;
