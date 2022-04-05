@@ -10,11 +10,16 @@ const Liquid = require("../Engines/Liquid");
 
 async function render(
   content,
-  templateLang = "html",
+  templateLang,
   { templateConfig, extensionMap, config } = {}
 ) {
   if (!templateConfig) {
     templateConfig = new TemplateConfig(null, false);
+  }
+
+  // Breaking change in 2.0+, previous default was `html`
+  if (!templateLang) {
+    templateLang = this.page.templateSyntax;
   }
 
   // TODO should this run every time??? probably not?
@@ -253,6 +258,12 @@ function EleventyPlugin(eleventyConfig, options = {}) {
   });
 
   async function renderStringShortcodeFn(content, templateLang, data = {}) {
+    // Default is fn(content, templateLang, data) but we want to support fn(content, data) too
+    if (typeof templateLang !== "string") {
+      data = templateLang;
+      templateLang = false;
+    }
+
     let fn = await render.call(this, content, templateLang, {
       templateConfig: opts.templateConfig || templateConfig,
       extensionMap,

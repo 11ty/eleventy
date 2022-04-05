@@ -177,13 +177,24 @@ test.skip("Use nunjucks file in liquid but it doesn’t exist", async (t) => {
   });
 });
 
-test("No syntax passed, uses html (plaintext) by default; in liquid (this is basically an alias for the `raw` tag)", async (t) => {
+test("No syntax passed, uses parent page syntax: liquid", async (t) => {
   let html = await getTestOutputForFile(
     "./test/stubs-render-plugin/false.liquid"
   );
   t.is(
     html,
-    `# Hello {{ hi }}
+    `# Hello Bruno
+* Testing`
+  );
+});
+
+test("No syntax passed (uses parent page syntax), but does pass data: liquid", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/data-no-templatelang.liquid"
+  );
+  t.is(
+    html,
+    `# Hello Bruno
 * Testing`
   );
 });
