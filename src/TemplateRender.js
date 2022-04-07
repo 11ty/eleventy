@@ -96,6 +96,13 @@ class TemplateRender {
   }
 
   static parseEngineOverrides(engineName) {
+    if (typeof (engineName || "") !== "string") {
+      throw new Error(
+        "Expected String passed to parseEngineOverrides. Received: " +
+          engineName
+      );
+    }
+
     let overlappingEngineWarningCount = 0;
     let engines = [];
     let uniqueLookup = {};
@@ -165,7 +172,14 @@ class TemplateRender {
     }
   }
 
-  getEnginesList() {
+  // We pass in templateEngineOverride here because it isn’t yet applied to templateRender
+  getEnginesList(engineOverride) {
+    if (engineOverride) {
+      let engines =
+        TemplateRender.parseEngineOverrides(engineOverride).reverse();
+      return engines;
+    }
+
     if (
       this.engineName === "md" &&
       this.useMarkdown &&

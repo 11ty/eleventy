@@ -473,7 +473,9 @@ class Template extends TemplateContent {
     data.page.fileSlug = this.fileSlugStr;
     data.page.filePathStem = this.filePathStem;
     data.page.outputFileExtension = this.engine.defaultTemplateFileExtension;
-    data.page.templateSyntax = this.templateRender.getEnginesList();
+    data.page.templateSyntax = this.templateRender.getEnginesList(
+      data[this.config.keys.engineOverride]
+    );
 
     return data;
   }

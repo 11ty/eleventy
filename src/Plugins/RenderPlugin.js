@@ -17,7 +17,7 @@ async function render(
     templateConfig = new TemplateConfig(null, false);
   }
 
-  // Breaking change in 2.0+, previous default was `html`
+  // Breaking change in 2.0+, previous default was `html` and now we default to the page template syntax
   if (!templateLang) {
     templateLang = this.page.templateSyntax;
   }

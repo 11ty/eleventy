@@ -2292,3 +2292,13 @@ test("Permalink is an object but an empty object (inherit default behavior)", as
     "./test/stubs/_site/permalink-empty-object/empty-object/index.html"
   );
 });
+
+test("page.templateSyntax works with templateEngineOverride", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/overrides/page-templatesyntax.md",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is((await tmpl.render(await tmpl.getData())).trim(), "<p>njk,md</p>");
+});
