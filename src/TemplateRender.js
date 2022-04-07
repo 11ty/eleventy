@@ -177,7 +177,7 @@ class TemplateRender {
     if (engineOverride) {
       let engines =
         TemplateRender.parseEngineOverrides(engineOverride).reverse();
-      return engines;
+      return engines.join(",");
     }
 
     if (
