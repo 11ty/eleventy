@@ -1,5 +1,6 @@
 const test = require("ava");
 const EleventyWatchTargets = require("../src/EleventyWatchTargets");
+const JavaScriptDependencies = require("../src/Util/JavaScriptDependencies");
 
 test("Basic", (t) => {
   let targets = new EleventyWatchTargets();
@@ -34,9 +35,8 @@ test("Add and make glob", (t) => {
 });
 
 test("JavaScript get dependencies", (t) => {
-  let targets = new EleventyWatchTargets();
   t.deepEqual(
-    targets.getJavaScriptDependenciesFromList(["./test/stubs/config-deps.js"]),
+    JavaScriptDependencies.getDependencies(["./test/stubs/config-deps.js"]),
     ["./test/stubs/config-deps-upstream.js"]
   );
 });
