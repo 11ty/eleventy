@@ -1,7 +1,7 @@
-const dependencyTree = require("@11ty/dependency-tree");
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const deleteRequireCache = require("./Util/DeleteRequireCache");
+const JavaScriptDependencies = require("./Util/JavaScriptDependencies");
 
 class EleventyWatchTargets {
   constructor() {
@@ -76,7 +76,7 @@ class EleventyWatchTargets {
     }
 
     targets = this._normalizeTargets(targets);
-    let deps = this.getJavaScriptDependenciesFromList(targets);
+    let deps = JavaScriptDependencies.getDependencies(targets);
     if (filterCallback) {
       deps = deps.filter(filterCallback);
     }
@@ -86,25 +86,6 @@ class EleventyWatchTargets {
 
   setWriter(templateWriter) {
     this.writer = templateWriter;
-  }
-
-  getJavaScriptDependenciesFromList(files = []) {
-    let depSet = new Set();
-    files
-      .filter((file) => file.endsWith(".js") || file.endsWith(".cjs")) // TODO does this need to work with aliasing? what other JS extensions will have deps?
-      .forEach((file) => {
-        dependencyTree(file, { allowNotFound: true })
-          .map((dependency) => {
-            return TemplatePath.addLeadingDotSlash(
-              TemplatePath.relativePath(dependency)
-            );
-          })
-          .forEach((dependency) => {
-            depSet.add(dependency);
-          });
-      });
-
-    return Array.from(depSet);
   }
 
   clearDependencyRequireCache() {
