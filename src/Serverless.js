@@ -5,6 +5,7 @@ const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const Eleventy = require("./Eleventy");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
+const normalizeServerlessUrl = require("./Util/NormalizeServerlessUrl");
 const debug = require("debug")("Eleventy:Serverless");
 
 class Serverless {
@@ -40,6 +41,8 @@ class Serverless {
         inputDir: null, // override only, we now inject this.
         functionsDir: "functions/",
         matchUrlToPattern(path, urlToCompare) {
+          urlToCompare = normalizeServerlessUrl(urlToCompare);
+
           let fn = match(urlToCompare, { decode: decodeURIComponent });
           return fn(path);
         },

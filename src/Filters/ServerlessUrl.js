@@ -1,7 +1,12 @@
 const { compile } = require("path-to-regexp");
+const normalizeServerlessUrl = require("../Util/NormalizeServerlessUrl");
 
 function stringify(url, urlData = {}) {
-  let fn = compile(url, { encode: encodeURIComponent });
+  url = normalizeServerlessUrl(url);
+
+  let fn = compile(url, {
+    encode: encodeURIComponent,
+  });
   return fn(urlData);
 }
 
