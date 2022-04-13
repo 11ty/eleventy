@@ -210,7 +210,7 @@ class BundlerHelper {
     );
     deleteRequireCache(TemplatePath.absolutePath(serverlessFilepath));
 
-    return async (req, res, next) => {
+    return async function EleventyServerlessMiddleware(req, res, next) {
       let serverlessFunction = require(serverlessFilepath);
       let url = new URL(req.url, "http://localhost/"); // any domain will do here, we just want the searchParams
       let queryParams = Object.fromEntries(url.searchParams);
@@ -237,7 +237,7 @@ class BundlerHelper {
       this.eleventyConfig.logger.forceLog(
         `Serverless (${this.name}): ${req.url} (${Date.now() - start}ms)`
       );
-    };
+    }.bind(this);
   }
 
   async ensureDir() {
