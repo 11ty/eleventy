@@ -2333,3 +2333,17 @@ test("eleventyComputed returns nested permalink object Issue #1898", async (t) =
   t.is(page.url, "/i18n/en/");
   t.is(page.outputPath, false);
 });
+
+test("eleventyComputed returns permalink object using permalink string (with replace) Issue #1898", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/stubs-computed-permalink/eleventycomputed-object-replace.11ty.js",
+    "./test/stubs/stubs-computed-permalink/",
+    "./test/stubs/stubs-computed-permalink/_site"
+  );
+
+  let data = await tmpl.getData();
+  let [page] = await tmpl.getTemplates(data);
+
+  t.is(page.url, "/i18n/en/");
+  t.is(page.outputPath, false);
+});
