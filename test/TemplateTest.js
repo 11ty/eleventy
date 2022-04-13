@@ -2292,3 +2292,44 @@ test("Permalink is an object but an empty object (inherit default behavior)", as
     "./test/stubs/_site/permalink-empty-object/empty-object/index.html"
   );
 });
+
+test("permalink function returns serverless object Issue #1898", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/stubs-computed-permalink//object.11ty.js",
+    "./test/stubs/stubs-computed-permalink/",
+    "./test/stubs/stubs-computed-permalink/_site"
+  );
+  let data = await tmpl.getData();
+  let [page] = await tmpl.getTemplates(data);
+
+  t.is(page.url, "/i18n/en/");
+  t.is(page.outputPath, false);
+});
+
+test("eleventyComputed returns permalink object Issue #1898", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/stubs-computed-permalink/eleventycomputed-object.11ty.js",
+    "./test/stubs/stubs-computed-permalink/",
+    "./test/stubs/stubs-computed-permalink/_site"
+  );
+
+  let data = await tmpl.getData();
+  let [page] = await tmpl.getTemplates(data);
+
+  t.is(page.url, "/i18n/en/");
+  t.is(page.outputPath, false);
+});
+
+test("eleventyComputed returns nested permalink object Issue #1898", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/stubs-computed-permalink/eleventycomputed-nested-object.11ty.js",
+    "./test/stubs/stubs-computed-permalink/",
+    "./test/stubs/stubs-computed-permalink/_site"
+  );
+
+  let data = await tmpl.getData();
+  let [page] = await tmpl.getTemplates(data);
+
+  t.is(page.url, "/i18n/en/");
+  t.is(page.outputPath, false);
+});
