@@ -8,6 +8,7 @@ const UserConfig = require("./UserConfig");
 const debug = require("debug")("Eleventy:TemplateConfig");
 const debugDev = require("debug")("Dev:Eleventy:TemplateConfig");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
+const eventBus = require("./EventBus");
 
 /**
  * @module 11ty/eleventy/TemplateConfig
@@ -98,8 +99,10 @@ class TemplateConfig {
     debugDev("Resetting configuration: TemplateConfig and UserConfig.");
     this.userConfig.reset();
     this.initializeRootConfig();
+    this.forceReloadConfig();
 
-    this.config = this.mergeConfig();
+    // Clear the compile cache
+    eventBus.emit("eleventy.compileCacheReset");
   }
 
   /**
@@ -109,6 +112,14 @@ class TemplateConfig {
    */
   resetOnWatch() {
     // nothing yet
+  }
+
+  /**
+   * Force a reload of the configuration object.
+   */
+  forceReloadConfig() {
+    this.hasConfigMerged = false;
+    this.getConfig();
   }
 
   /**
@@ -138,8 +149,7 @@ class TemplateConfig {
       debugDev(
         "Merging in getConfig again after setting the local project config path."
       );
-      this.hasConfigMerged = false;
-      this.getConfig();
+      this.forceReloadConfig();
     }
   }
 
@@ -153,7 +163,7 @@ class TemplateConfig {
     this.overrides.pathPrefix = pathPrefix;
 
     if (!this.hasConfigMerged) {
-      this.getConfig();
+      this.forceReloadConfig();
     }
     this.config.pathPrefix = pathPrefix;
   }

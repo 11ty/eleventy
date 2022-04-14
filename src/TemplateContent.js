@@ -272,6 +272,7 @@ class TemplateContent {
           str,
           bypassMarkdown
         );
+
         if (cacheable && key) {
           if (cache.has(key)) {
             this.bench.get("Template Compile Cache Hit").incrementCount();
@@ -512,6 +513,11 @@ TemplateContent._inputCache = new Map();
 TemplateContent._compileEngineCache = new Map();
 eventBus.on("eleventy.resourceModified", (path) => {
   TemplateContent.deleteCached(path);
+});
+
+// Used when the configuration file reset https://github.com/11ty/eleventy/issues/2147
+eventBus.on("eleventy.compileCacheReset", (path) => {
+  TemplateContent._compileEngineCache = new Map();
 });
 
 module.exports = TemplateContent;
