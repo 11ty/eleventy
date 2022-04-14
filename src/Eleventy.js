@@ -540,20 +540,27 @@ Verbose Output: ${this.verboseMode}`);
   /**
    * Reads the version of Eleventy.
    *
-   * @method
+   * @static
    * @returns {String} - The version of Eleventy.
    */
-  getVersion() {
+  static getVersion() {
     return pkg.version;
+  }
+
+  /**
+   * @deprecated since 1.0.1, use static Eleventy.getVersion()
+   */
+  getVersion() {
+    return Eleventy.getVersion();
   }
 
   /**
    * Shows a help message including usage.
    *
-   * @method
+   * @static
    * @returns {String} - The help mesage.
    */
-  getHelp() {
+  static getHelp() {
     return `Usage: eleventy
        eleventy --input=. --output=./_site
        eleventy --serve
@@ -597,6 +604,13 @@ Arguments:
        Change the output to JSON or NDJSON (default: \`fs\`)
 
      --help`;
+  }
+
+  /**
+   * @deprecated since 1.0.1, use static Eleventy.getHelp()
+   */
+  getHelp() {
+    return Eleventy.getHelp();
   }
 
   /**
