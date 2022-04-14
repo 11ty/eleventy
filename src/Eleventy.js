@@ -942,7 +942,7 @@ Arguments:
   }
 
   stopWatch() {
-    debug("Cleaning up chokidar and browsersync (if exists) instances.");
+    debug("Cleaning up chokidar and server instances, if they exist.");
     this.eleventyServe.close();
     this.watcher.close();
     process.exit();
