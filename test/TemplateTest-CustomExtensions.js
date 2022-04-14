@@ -438,3 +438,31 @@ test("Access to default renderer when you override an existing extension (async 
   let data = await tmpl.getData();
   t.is(await tmpl.render(data), "hi");
 });
+
+test("Return undefined in compile to ignore #2267", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.extensionMap.add({
+    extension: "txt",
+    key: "txt",
+    compileOptions: {
+      cache: false,
+    },
+    getData: false,
+    compile: function (str, inputPath) {
+      return;
+    },
+  });
+
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let tmpl = getNewTemplate(
+    "./test/stubs/custom-extension.txt",
+    "./test/stubs/",
+    "dist",
+    dataObj,
+    null,
+    eleventyConfig
+  );
+
+  let data = await tmpl.getData();
+  t.is(await tmpl.render(data), undefined);
+});

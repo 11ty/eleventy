@@ -165,12 +165,15 @@ class CustomEngine extends TemplateEngine {
       defaultRenderer, // bind defaultRenderer to compile function
     })(str, inputPath);
 
-    // Bind defaultRenderer to render function
-    if ("then" in fn && typeof fn.then === "function") {
-      // Promise, wait to bind
-      return fn.then((fn) => fn.bind({ defaultRenderer }));
-    } else if ("bind" in fn && typeof fn.bind === "function") {
-      return fn.bind({ defaultRenderer });
+    // Support `undefined` to skip compile/render
+    if (fn) {
+      // Bind defaultRenderer to render function
+      if ("then" in fn && typeof fn.then === "function") {
+        // Promise, wait to bind
+        return fn.then((fn) => fn.bind({ defaultRenderer }));
+      } else if ("bind" in fn && typeof fn.bind === "function") {
+        return fn.bind({ defaultRenderer });
+      }
     }
 
     return fn;

@@ -215,3 +215,19 @@ test("JavaScript functions should not be mutable but not *that* mutable", async 
   let data = await tmpl.getData();
   t.is(await tmpl.render(data), "<p>Paragraph</p>");
 });
+
+test("Return undefined in compile to ignore #2267", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.extensionMap.add({
+    extension: "txt",
+    key: "txt",
+    compile: function (str, inputPath) {
+      return;
+    },
+  });
+
+  let tr = getNewTemplateRender("txt", null, eleventyConfig);
+
+  let fn = await tr.getCompiledTemplate("<p>Paragraph</p>");
+  t.is(fn, undefined);
+});
