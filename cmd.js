@@ -62,21 +62,21 @@ try {
     );
   });
 
-  let elev = new Eleventy(argv.input, argv.output, {
-    // --quiet and --quiet=true both resolve to true
-    quietMode: argv.quiet,
-    configPath: argv.config,
-    source: "cli",
-  });
-
-  // reuse ErrorHandler instance in Eleventy
-  errorHandler = elev.errorHandler;
-
   if (argv.version) {
-    console.log(elev.getVersion());
+    console.log(Eleventy.getVersion());
   } else if (argv.help) {
-    console.log(elev.getHelp());
+    console.log(Eleventy.getHelp());
   } else {
+    let elev = new Eleventy(argv.input, argv.output, {
+      // --quiet and --quiet=true both resolve to true
+      quietMode: argv.quiet,
+      configPath: argv.config,
+      source: "cli",
+    });
+
+    // reuse ErrorHandler instance in Eleventy
+    errorHandler = elev.errorHandler;
+
     if (argv.to === "json" || argv.to === "ndjson") {
       // override logging output
       elev.setIsVerbose(false);
