@@ -1,6 +1,6 @@
 {
   "name": "@11ty/eleventy",
-  "version": "2.0.0-canary.4",
+  "version": "2.0.0-canary.5",
   "description": "Transform a directory of templates into HTML.",
   "publishConfig": {
     "access": "public"
@@ -78,11 +78,11 @@
   "devDependencies": {
     "@11ty/eleventy-plugin-syntaxhighlight": "^4.0.0",
     "@11ty/eleventy-plugin-vue": "1.0.0-canary.8",
-    "@vue/server-renderer": "^3.2.32",
+    "@vue/server-renderer": "^3.2.33",
     "ava": "^3.15.0",
     "husky": "^7.0.4",
     "js-yaml": "^4.1.0",
-    "lint-staged": "^12.3.7",
+    "lint-staged": "^12.3.8",
     "markdown-it-emoji": "^2.0.0",
     "marked": "^4.0.14",
     "nyc": "^15.1.0",
@@ -90,7 +90,7 @@
     "rimraf": "^3.0.2",
     "sass": "^1.50.0",
     "toml": "^3.0.0",
-    "vue": "^3.2.32"
+    "vue": "^3.2.33"
   },
   "dependencies": {
     "@11ty/dependency-tree": "^2.0.1",
