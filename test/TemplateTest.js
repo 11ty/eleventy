@@ -1362,6 +1362,7 @@ test("Data Cascade (Deep merge)", async (t) => {
   let data = await tmpl.getData();
   t.deepEqual(Object.keys(data).sort(), [
     "datafile",
+    "eleventy",
     "frontmatter",
     "page",
     "parent",
@@ -1397,6 +1398,7 @@ test("Data Cascade (Shallow merge)", async (t) => {
   let data = await tmpl.getData();
   t.deepEqual(Object.keys(data).sort(), [
     "datafile",
+    "eleventy",
     "frontmatter",
     "page",
     "parent",

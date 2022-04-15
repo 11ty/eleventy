@@ -456,10 +456,8 @@ test("Parent directory for data (Issue #337)", async (t) => {
 
   let data = await dataObj.getData();
 
-  t.deepEqual(data, {
-    xyz: {
-      hi: "bye",
-    },
+  t.deepEqual(data.xyz, {
+    hi: "bye",
   });
 });
 
@@ -516,6 +514,25 @@ test("addGlobalData complex key", async (t) => {
   let data = await dataObj.getData();
 
   t.is(data.deep.existing, true);
+  t.is(data.deep.nested.one, "first");
+  t.is(data.deep.nested.two, "second");
+});
+
+test("eleventy.version and eleventy.generator returned from data", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.addGlobalData("deep.nested.one", () => "first");
+  eleventyConfig.userConfig.addGlobalData("deep.nested.two", () => "second");
+
+  let dataObj = new TemplateData("./test/stubs-empty/", eleventyConfig);
+  let data = await dataObj.getData();
+
+  let version = require("semver")
+    .coerce(require("../package.json").version)
+    .toString();
+
+  t.is(data.eleventy.version, version);
+  t.is(data.eleventy.generator, `Eleventy v${version}`);
+
   t.is(data.deep.nested.one, "first");
   t.is(data.deep.nested.two, "second");
 });

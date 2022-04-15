@@ -1,9 +1,11 @@
+const pkg = require("../package.json");
 const fs = require("fs");
 const fastglob = require("fast-glob");
 const path = require("path");
 const lodashset = require("lodash/set");
 const lodashget = require("lodash/get");
 const lodashUniq = require("lodash/uniq");
+const semver = require("semver");
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const merge = require("./Util/Merge");
@@ -310,10 +312,14 @@ class TemplateData {
       }
     }
 
+    if (!("eleventy" in globalData)) {
+      globalData.eleventy = {};
+    }
+    // #2293 for meta[name=generator]
+    globalData.eleventy.version = semver.coerce(pkg.version).toString();
+    globalData.eleventy.generator = `Eleventy v${globalData.eleventy.version}`;
+
     if (this.environmentVariables) {
-      if (!("eleventy" in globalData)) {
-        globalData.eleventy = {};
-      }
       if (!("env" in globalData.eleventy)) {
         globalData.eleventy.env = {};
       }
