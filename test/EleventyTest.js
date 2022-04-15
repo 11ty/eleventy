@@ -424,3 +424,17 @@ test("#142: date 'git Last Modified' populates page.date", async (t) => {
   let comparisonDate = DateGitLastUpdated("./test/stubs-142/index.njk");
   t.is(result.content.trim(), "" + comparisonDate.getTime());
 });
+
+test("#2167: Pagination with permalink: false", async (t) => {
+  let elev = new Eleventy("./test/stubs-2167/", "./test/stubs-2167/_site");
+  elev.setDryRun(true);
+
+  let [passthroughCopy, pages] = await elev.write();
+
+  t.is(pages.length, 5);
+
+  for (let j = 0, k = pages.length; j < k; j++) {
+    // falsy if not writeable or is not renderable
+    t.is(pages[j], undefined);
+  }
+});

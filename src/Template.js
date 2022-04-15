@@ -943,8 +943,8 @@ class Template extends TemplateContent {
     );
   }
 
-  // TODO this but better
   clone() {
+    // TODO do we need to even run the constructor here or can we simplify it even more
     let tmpl = new Template(
       this.inputPath,
       this.inputDir,
@@ -954,19 +954,9 @@ class Template extends TemplateContent {
       this.eleventyConfig
     );
 
-    // Avoid re-reads, especially for pagination
-    tmpl.setInputContent(this.inputContent);
-
-    tmpl.logger = this.logger;
-
-    for (let transform of this.transforms) {
-      tmpl.addTransform(transform.name, transform.callback);
+    for (let key in this) {
+      tmpl[key] = this[key];
     }
-    for (let linter of this.linters) {
-      tmpl.addLinter(linter);
-    }
-    tmpl.setIsVerbose(this.isVerbose);
-    tmpl.setDryRun(this.isDryRun);
 
     return tmpl;
   }
