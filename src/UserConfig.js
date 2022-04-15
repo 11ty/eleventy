@@ -35,7 +35,9 @@ class UserConfig {
     this.liquidFilters = {};
     this.liquidShortcodes = {};
     this.liquidPairedShortcodes = {};
+
     this.nunjucksEnvironmentOptions = {};
+    this.nunjucksPrecompiledTemplates = {};
     this.nunjucksFilters = {};
     this.nunjucksAsyncFilters = {};
     this.nunjucksTags = {};
@@ -44,9 +46,11 @@ class UserConfig {
     this.nunjucksAsyncShortcodes = {};
     this.nunjucksPairedShortcodes = {};
     this.nunjucksAsyncPairedShortcodes = {};
+
     this.handlebarsHelpers = {};
     this.handlebarsShortcodes = {};
     this.handlebarsPairedShortcodes = {};
+
     this.javascriptFunctions = {};
     this.pugOptions = {};
     this.ejsOptions = {};
@@ -468,6 +472,10 @@ class UserConfig {
     this.nunjucksEnvironmentOptions = options;
   }
 
+  setNunjucksPrecompiledTemplates(templates) {
+    this.nunjucksPrecompiledTemplates = templates;
+  }
+
   setEjsOptions(options) {
     this.ejsOptions = options;
   }
@@ -774,6 +782,7 @@ class UserConfig {
       liquidShortcodes: this.liquidShortcodes,
       liquidPairedShortcodes: this.liquidPairedShortcodes,
       nunjucksEnvironmentOptions: this.nunjucksEnvironmentOptions,
+      nunjucksPrecompiledTemplates: this.nunjucksPrecompiledTemplates,
       nunjucksFilters: this.nunjucksFilters,
       nunjucksAsyncFilters: this.nunjucksAsyncFilters,
       nunjucksTags: this.nunjucksTags,

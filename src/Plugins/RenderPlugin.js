@@ -1,7 +1,6 @@
 const fs = require("fs");
 const fsp = fs.promises;
-const isPlainObject = require("../Util/IsPlainObject");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
 
 // TODO add a first-class Markdown component to expose this using Markdown-only syntax (will need to be synchronous for markdown-it)
 
@@ -9,30 +8,22 @@ const TemplateRender = require("../TemplateRender");
 const TemplateConfig = require("../TemplateConfig");
 const Liquid = require("../Engines/Liquid");
 
-function normalizeDirectories(dir = {}) {
-  return Object.assign(
-    {
-      input: ".",
-    },
-    dir
-  );
-}
-
 async function render(
   content,
-  templateLang = "html",
-  normalizedDirs = {},
-  { templateConfig, extensionMap }
+  templateLang,
+  { templateConfig, extensionMap } = {}
 ) {
   if (!templateConfig) {
-    templateConfig = new TemplateConfig();
+    templateConfig = new TemplateConfig(null, false);
   }
 
-  let tr = new TemplateRender(
-    templateLang,
-    normalizedDirs.input,
-    templateConfig
-  );
+  // Breaking change in 2.0+, previous default was `html` and now we default to the page template syntax
+  if (!templateLang) {
+    templateLang = this.page.templateSyntax;
+  }
+
+  let cfg = templateConfig.getConfig();
+  let tr = new TemplateRender(templateLang, cfg.dir.input, templateConfig);
   tr.extensionMap = extensionMap;
   tr.setEngineOverride(templateLang);
 
@@ -49,9 +40,8 @@ async function render(
 // No templateLang default, it should infer from the inputPath.
 async function renderFile(
   inputPath,
-  templateLang,
-  normalizedDirs = {},
-  { templateConfig, extensionMap }
+  { templateConfig, extensionMap, config } = {},
+  templateLang
 ) {
   if (!inputPath) {
     throw new Error(
@@ -69,10 +59,14 @@ async function renderFile(
   }
 
   if (!templateConfig) {
-    templateConfig = new TemplateConfig();
+    templateConfig = new TemplateConfig(null, false);
+  }
+  if (config && typeof config === "function") {
+    await config(templateConfig.userConfig);
   }
 
-  let tr = new TemplateRender(inputPath, normalizedDirs.input, templateConfig);
+  let cfg = templateConfig.getConfig();
+  let tr = new TemplateRender(inputPath, cfg.dir.input, templateConfig);
   tr.extensionMap = extensionMap;
   if (templateLang) {
     tr.setEngineOverride(templateLang);
@@ -112,6 +106,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
         let normalizedContext = {};
         if (ctx) {
           normalizedContext.page = ctx.get(["page"]);
+          normalizedContext.eleventy = ctx.get(["eleventy"]);
         }
 
         let argArray = await Liquid.parseArguments(
@@ -197,6 +192,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
         if (context.ctx && context.ctx.page) {
           normalizedContext.ctx = context.ctx;
           normalizedContext.page = context.ctx.page;
+          normalizedContext.eleventy = context.ctx.eleventy;
         }
 
         body(function (e, bodyContent) {
@@ -239,6 +235,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
     {
       tagName: "renderTemplate",
       tagNameFile: "renderFile",
+      templateConfig: null,
     },
     options
   );
@@ -256,16 +253,16 @@ function EleventyPlugin(eleventyConfig, options = {}) {
   });
 
   async function renderStringShortcodeFn(content, templateLang, data = {}) {
-    let fn = await render.call(
-      this,
-      content,
-      templateLang,
-      normalizeDirectories(eleventyConfig.dir),
-      {
-        templateConfig,
-        extensionMap,
-      }
-    );
+    // Default is fn(content, templateLang, data) but we want to support fn(content, data) too
+    if (typeof templateLang !== "string") {
+      data = templateLang;
+      templateLang = false;
+    }
+
+    let fn = await render.call(this, content, templateLang, {
+      templateConfig: opts.templateConfig || templateConfig,
+      extensionMap,
+    });
 
     if (fn === undefined) {
       return;
@@ -282,8 +279,9 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       };
     }
 
-    // save `page` for reuse
+    // save `page` and `eleventy` for reuse
     data.page = this.page;
+    data.eleventy = this.eleventy;
 
     return fn(data);
   }
@@ -292,12 +290,11 @@ function EleventyPlugin(eleventyConfig, options = {}) {
     let fn = await renderFile.call(
       this,
       inputPath,
-      templateLang,
-      normalizeDirectories(eleventyConfig.dir),
       {
-        templateConfig,
+        templateConfig: opts.templateConfig || templateConfig,
         extensionMap,
-      }
+      },
+      templateLang
     );
 
     if (fn === undefined) {
@@ -315,30 +312,69 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       };
     }
 
-    // save `page` for re-use
+    // save `page` and `eleventy` for reuse
     data.page = this.page;
+    data.eleventy = this.eleventy;
 
     return fn(data);
   }
 
   // Render strings
-  eleventyConfig.addJavaScriptFunction(opts.tagName, renderStringShortcodeFn);
+  if (opts.tagName) {
+    // use falsy to opt-out
+    eleventyConfig.addJavaScriptFunction(opts.tagName, renderStringShortcodeFn);
 
-  eleventyConfig.addLiquidTag(opts.tagName, function (liquidEngine) {
-    return liquidTemplateTag(liquidEngine, opts.tagName);
-  });
+    eleventyConfig.addLiquidTag(opts.tagName, function (liquidEngine) {
+      return liquidTemplateTag(liquidEngine, opts.tagName);
+    });
 
-  eleventyConfig.addNunjucksTag(opts.tagName, function (nunjucksLib) {
-    return nunjucksTemplateTag(nunjucksLib, opts.tagName);
-  });
+    eleventyConfig.addNunjucksTag(opts.tagName, function (nunjucksLib) {
+      return nunjucksTemplateTag(nunjucksLib, opts.tagName);
+    });
+  }
 
   // Render File
-  eleventyConfig.addJavaScriptFunction(opts.tagNameFile, renderFileShortcodeFn);
-  eleventyConfig.addLiquidShortcode(opts.tagNameFile, renderFileShortcodeFn);
-  eleventyConfig.addNunjucksAsyncShortcode(
-    opts.tagNameFile,
-    renderFileShortcodeFn
-  );
+  if (opts.tagNameFile) {
+    // use `false` to opt-out
+    eleventyConfig.addJavaScriptFunction(
+      opts.tagNameFile,
+      renderFileShortcodeFn
+    );
+    eleventyConfig.addLiquidShortcode(opts.tagNameFile, renderFileShortcodeFn);
+    eleventyConfig.addNunjucksAsyncShortcode(
+      opts.tagNameFile,
+      renderFileShortcodeFn
+    );
+  }
 }
 
 module.exports = EleventyPlugin;
+module.exports.File = renderFile;
+module.exports.String = render;
+
+// Will re-use the same configuration instance both at a top level and across any nested renders
+class RenderManager {
+  constructor() {
+    this.templateConfig = new TemplateConfig(null, false);
+
+    this.templateConfig.userConfig.addPlugin(EleventyPlugin, {
+      templateConfig: this.templateConfig,
+    });
+  }
+
+  // Async friendly but requires await upstream
+  config(callback) {
+    // run an extra `function(eleventyConfig)` configuration callbacks
+    if (callback && typeof callback === "function") {
+      return callback(this.templateConfig.userConfig);
+    }
+  }
+
+  compile(content, templateLang, options = {}) {
+    options.templateConfig = this.templateConfig;
+
+    return render(content, templateLang, options);
+  }
+}
+
+module.exports.RenderManager = RenderManager;

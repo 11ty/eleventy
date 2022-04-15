@@ -1,5 +1,6 @@
-const isPlainObject = require("./Util/IsPlainObject");
 const DependencyGraph = require("dependency-graph").DepGraph;
+const { isPlainObject } = require("@11ty/eleventy-utils");
+
 const TemplateCollection = require("./TemplateCollection");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
 const UsingCircularTemplateContentReferenceError = require("./Errors/UsingCircularTemplateContentReferenceError");

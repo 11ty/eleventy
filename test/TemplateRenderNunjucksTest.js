@@ -2,6 +2,7 @@ const test = require("ava");
 const TemplateRender = require("../src/TemplateRender");
 const TemplateConfig = require("../src/TemplateConfig");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
+const normalizeNewLines = require("./Util/normalizeNewLines");
 
 function getNewTemplateRender(name, inputDir, eleventyConfig) {
   if (!eleventyConfig) {
@@ -996,5 +997,67 @@ test.skip("Weird issue with number arguments in a loop (not parsing literals pro
       list: [1, 2, 3],
     }),
     "1-12-23-3"
+  );
+});
+
+test("Use a precompiled Nunjucks template", async (t) => {
+  // custom loader object
+
+  let templateConfig = new TemplateConfig();
+  templateConfig.userConfig.setNunjucksPrecompiledTemplates({
+    "RenderDirect:BQAPaWxMHTxOqfCSB_bEoWTvtWt-obPbnZTUznRl9LA": (function () {
+      function root(env, context, frame, runtime, cb) {
+        var lineno = 0;
+        var colno = 0;
+        var output = "";
+        try {
+          var parentTemplate = null;
+          var t_1;
+          t_1 = 34;
+          frame.set("nunjucksVar", t_1, true);
+          if (frame.topLevel) {
+            context.setVariable("nunjucksVar", t_1);
+          }
+          if (frame.topLevel) {
+            context.addExport("nunjucksVar", t_1);
+          }
+          output += runtime.suppressValue(
+            runtime.contextOrFrameLookup(context, frame, "hi"),
+            env.opts.autoescape
+          );
+          output += "\n";
+          output += runtime.suppressValue(
+            runtime.contextOrFrameLookup(context, frame, "nunjucksVar"),
+            env.opts.autoescape
+          );
+          if (parentTemplate) {
+            parentTemplate.rootRenderFunc(env, context, frame, runtime, cb);
+          } else {
+            cb(null, output);
+          }
+        } catch (e) {
+          cb(runtime.handleError(e, lineno, colno));
+        }
+      }
+      return {
+        root: root,
+      };
+    })(),
+  });
+
+  let tr = getNewTemplateRender("njk", null, templateConfig);
+
+  // Just pass a unique key in here if you’re using precompiled templates via config.
+  let fn = await tr.getCompiledTemplate(
+    "RenderDirect:BQAPaWxMHTxOqfCSB_bEoWTvtWt-obPbnZTUznRl9LA"
+  );
+  t.is(
+    normalizeNewLines(
+      await fn({
+        hi: "Zach",
+      })
+    ),
+    `Zach
+34`
   );
 });

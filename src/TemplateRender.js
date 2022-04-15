@@ -96,6 +96,13 @@ class TemplateRender {
   }
 
   static parseEngineOverrides(engineName) {
+    if (typeof (engineName || "") !== "string") {
+      throw new Error(
+        "Expected String passed to parseEngineOverrides. Received: " +
+          engineName
+      );
+    }
+
     let overlappingEngineWarningCount = 0;
     let engines = [];
     let uniqueLookup = {};
@@ -163,6 +170,29 @@ class TemplateRender {
     if (keyFromFilename !== this.engineName) {
       return this.engineName;
     }
+  }
+
+  // We pass in templateEngineOverride here because it isn’t yet applied to templateRender
+  getEnginesList(engineOverride) {
+    if (engineOverride) {
+      let engines =
+        TemplateRender.parseEngineOverrides(engineOverride).reverse();
+      return engines.join(",");
+    }
+
+    if (
+      this.engineName === "md" &&
+      this.useMarkdown &&
+      this.parseMarkdownWith
+    ) {
+      return `${this.parseMarkdownWith},md`;
+    }
+    if (this.engineName === "html" && this.parseHtmlWith) {
+      return this.parseHtmlWith;
+    }
+
+    // templateEngineOverride in play
+    return this.extensionMap.getKey(this.engineNameOrPath);
   }
 
   setEngineOverride(engineName, bypassMarkdown) {

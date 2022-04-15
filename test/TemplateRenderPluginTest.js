@@ -1,5 +1,9 @@
 const test = require("ava");
 const RenderPlugin = require("../src/Plugins/RenderPlugin");
+const RenderManager = RenderPlugin.RenderManager;
+const RenderPluginFile = RenderPlugin.File;
+const RenderPluginString = RenderPlugin.String;
+
 const VuePlugin = require("@11ty/eleventy-plugin-vue");
 
 const Eleventy = require("../src/Eleventy");
@@ -174,13 +178,24 @@ test.skip("Use nunjucks file in liquid but it doesn’t exist", async (t) => {
   });
 });
 
-test("No syntax passed, uses html (plaintext) by default; in liquid (this is basically an alias for the `raw` tag)", async (t) => {
+test("No syntax passed, uses parent page syntax: liquid", async (t) => {
   let html = await getTestOutputForFile(
     "./test/stubs-render-plugin/false.liquid"
   );
   t.is(
     html,
-    `# Hello {{ hi }}
+    `# Hello Bruno
+* Testing`
+  );
+});
+
+test("No syntax passed (uses parent page syntax), but does pass data: liquid", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/data-no-templatelang.liquid"
+  );
+  t.is(
+    html,
+    `# Hello Bruno
 * Testing`
   );
 });
@@ -232,4 +247,164 @@ test("Remap non-object data to data._ if object is not passed in", async (t) => 
     "./test/stubs-render-plugin/bad-data.njk"
   );
   t.is(html, "string");
+});
+
+test("Direct use of render string plugin, rendering Nunjucks (and nested Liquid)", async (t) => {
+  let renderMgr = new RenderManager();
+  renderMgr.config(function (eleventyConfig) {
+    eleventyConfig.addFilter("testing", function () {
+      return "tested.";
+    });
+  });
+  let fn = await renderMgr.compile(
+    `{%- set nunjucksVar = 69 -%}
+{{ hi }}
+{{ nunjucksVar }}
+{{ "who" | testing }}
+{% renderTemplate "liquid", argData %}
+{% assign liquidVar = 138 %}
+* {{ hi }} test test {{ bye }} {{ liquidVar }}
+{% endrenderTemplate %}
+`,
+    "njk"
+  );
+
+  let data = {
+    hi: "nunjucksHi",
+    argData: {
+      hi: "liquidHi",
+      bye: "liquidBye",
+    },
+  };
+  let html = await fn(data);
+
+  t.is(
+    normalizeNewLines(html.trim()),
+    `nunjucksHi
+69
+tested.
+
+
+* liquidHi test test liquidBye 138`
+  );
+});
+
+test("Direct use of render string plugin, rendering Liquid (and nested Nunjucks)", async (t) => {
+  let renderMgr = new RenderManager();
+  renderMgr.config(function (eleventyConfig) {
+    eleventyConfig.addFilter("testing", function () {
+      return "tested.";
+    });
+  });
+
+  let fn = await renderMgr.compile(
+    `{%- assign liquidVar = 69 -%}
+{{ hi }}
+{{ liquidVar }}
+{{ "who" | testing }}
+{% renderTemplate "njk", argData %}
+{% set njkVar = 138 %}
+* {{ hi }} test test {{ bye }} {{ njkVar }}
+{% endrenderTemplate %}
+`,
+    "liquid"
+  );
+  let data = {
+    hi: "liquidHi",
+    argData: {
+      hi: "njkHi",
+      bye: "njkBye",
+    },
+  };
+  let html = await fn(data);
+
+  t.is(
+    normalizeNewLines(html.trim()),
+    `liquidHi
+69
+tested.
+
+
+* njkHi test test njkBye 138`
+  );
+});
+
+test("Direct use of render file plugin, rendering Nunjucks (and nested Liquid)", async (t) => {
+  let fn = await RenderPluginFile(
+    "./test/stubs-render-plugin/liquid-direct.njk",
+    {
+      config: function (eleventyConfig) {
+        eleventyConfig.addPlugin(RenderPlugin);
+        eleventyConfig.addFilter("testing", function () {
+          return "tested.";
+        });
+      },
+    }
+  );
+  let data = {
+    hi: "liquidHi",
+    argData: {
+      hi: "njkHi",
+      bye: "njkBye",
+    },
+  };
+  let html = await fn(data);
+
+  t.is(
+    normalizeNewLines(html.trim()),
+    `liquidHi
+69
+tested.
+
+
+* njkHi test test njkBye 138`
+  );
+});
+
+test("Use page in renderTemplate (liquid in liquid)", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/liquid-page.liquid"
+  );
+  t.is(html, `/liquid-page/`);
+});
+
+test("Use page in renderTemplate (liquid in njk)", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/liquid-page.njk"
+  );
+  t.is(html, `/liquid-page/`);
+});
+
+test("Use page in renderTemplate (njk in liquid)", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/njk-page.liquid"
+  );
+  t.is(html, `/njk-page/`);
+});
+
+test("Use eleventy in renderTemplate (njk in liquid)", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/njk-eleventy.liquid"
+  );
+  t.is(html, `1`);
+});
+
+test("Use eleventy in renderTemplate (liquid in njk)", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/liquid-eleventy.njk"
+  );
+  t.is(html, `1`);
+});
+test.skip("Use nunjucks in liquid (access to all global data)", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/nunjucks-global.liquid"
+  );
+  t.is(html, `globalHi`);
+});
+
+test.skip("Use liquid in njk (access to all global data)", async (t) => {
+  let html = await getTestOutputForFile(
+    "./test/stubs-render-plugin/liquid-global.njk"
+  );
+  t.is(html, `globalHi`);
 });

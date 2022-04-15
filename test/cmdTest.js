@@ -1,6 +1,5 @@
 const test = require("ava");
 const { exec } = require("child_process");
-const { resolve } = require("path");
 
 test("Test command line exit code success", async (t) => {
   await new Promise((resolve) => {

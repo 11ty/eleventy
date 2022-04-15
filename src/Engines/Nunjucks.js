@@ -6,121 +6,6 @@ const EleventyErrorUtil = require("../EleventyErrorUtil");
 const EleventyBaseError = require("../EleventyBaseError");
 const eventBus = require("../EventBus");
 
-/*
- * The IFFE below apply a monkey-patch to Nunjucks internals to cache
- * compiled templates and re-use them where possible.
- */
-(function () {
-  if (!process.env.ELEVENTY_NUNJUCKS_SPEEDBOOST_OPTIN) {
-    return;
-  }
-
-  let templateCache = new Map();
-
-  let getKey = (obj) => {
-    return [
-      obj.path || obj.tmplStr,
-      obj.tmplStr.length,
-      obj.env.asyncFilters.length,
-      obj.env.extensionsList
-        .map((e) => {
-          return e.__id || "";
-        })
-        .join(":"),
-    ].join(" :: ");
-  };
-
-  let evictByPath = (path) => {
-    let keys = templateCache.keys();
-    // Likely to be slow; do we care?
-    for (let k of keys) {
-      if (k.indexOf(path) >= 0) {
-        templateCache.delete(k);
-      }
-    }
-  };
-  eventBus.on("eleventy.resourceModified", evictByPath);
-
-  let _compile = NunjucksLib.Template.prototype._compile;
-  NunjucksLib.Template.prototype._compile = function _wrap_compile(...args) {
-    if (!this.compiled && !this.tmplProps && templateCache.has(getKey(this))) {
-      let pathProps = templateCache.get(getKey(this));
-      this.blocks = pathProps.blocks;
-      this.rootRenderFunc = pathProps.rootRenderFunc;
-      this.compiled = true;
-    } else {
-      _compile.call(this, ...args);
-      templateCache.set(getKey(this), {
-        blocks: this.blocks,
-        rootRenderFunc: this.rootRenderFunc,
-      });
-    }
-  };
-
-  let extensionIdCounter = 0;
-  let addExtension = NunjucksLib.Environment.prototype.addExtension;
-  NunjucksLib.Environment.prototype.addExtension = function _wrap_addExtension(
-    name,
-    ext
-  ) {
-    if (!("__id" in ext)) {
-      ext.__id = extensionIdCounter++;
-    }
-    return addExtension.call(this, name, ext);
-  };
-
-  // NunjucksLib.runtime.Frame.prototype.set is the hotest in-template method.
-  // We replace it with a version that doesn't allocate a `parts` array on
-  // repeat key use.
-  let partsCache = new Map();
-  let partsFromCache = (name) => {
-    if (partsCache.has(name)) {
-      return partsCache.get(name);
-    }
-
-    let parts = name.split(".");
-    partsCache.set(name, parts);
-    return parts;
-  };
-
-  let frameSet = NunjucksLib.runtime.Frame.prototype.set;
-  NunjucksLib.runtime.Frame.prototype.set = function _replacement_set(
-    name,
-    val,
-    resolveUp
-  ) {
-    let parts = partsFromCache(name);
-    let frame = this;
-    let obj = frame.variables;
-
-    if (resolveUp) {
-      if ((frame = this.resolve(parts[0], true))) {
-        frame.set(name, val);
-        return;
-      }
-    }
-
-    // A slightly faster version of the intermediate object allocation loop
-    let count = parts.length - 1;
-    let i = 0;
-    let id = parts[0];
-    while (i < count) {
-      // TODO(zachleat) use Object.hasOwn when supported
-      if ("hasOwnProperty" in obj) {
-        if (!obj.hasOwnProperty(id)) {
-          obj = obj[id] = {};
-        }
-      } else if (!(id in obj)) {
-        // Handle Objects with null prototypes (Nunjucks looping stuff)
-        obj = obj[id] = {};
-      }
-
-      id = parts[++i];
-    }
-    obj[id] = val;
-  };
-})();
-
 class EleventyShortcodeError extends EleventyBaseError {}
 
 class Nunjucks extends TemplateEngine {
@@ -129,20 +14,59 @@ class Nunjucks extends TemplateEngine {
     this.nunjucksEnvironmentOptions =
       this.config.nunjucksEnvironmentOptions || {};
 
+    this.nunjucksPrecompiledTemplates =
+      this.config.nunjucksPrecompiledTemplates || {};
+    this._usingPrecompiled =
+      Object.keys(this.nunjucksPrecompiledTemplates).length > 0;
+
     this.setLibrary(this.config.libraryOverrides.njk);
 
     this.cacheable = true;
   }
 
-  setLibrary(override) {
-    let fsLoader = new NunjucksLib.FileSystemLoader([
-      super.getIncludesDir(),
-      TemplatePath.getWorkingDir(),
-    ]);
+  _setEnv(override) {
+    if (override) {
+      this.njkEnv = override;
+    } else if (this._usingPrecompiled) {
+      // Precompiled templates to avoid eval!
+      function NodePrecompiledLoader() {}
+      NodePrecompiledLoader.prototype.getSource = (name) => {
+        // https://github.com/mozilla/nunjucks/blob/fd500902d7c88672470c87170796de52fc0f791a/nunjucks/src/precompiled-loader.js#L5
+        return {
+          src: {
+            type: "code",
+            obj: this.nunjucksPrecompiledTemplates[name],
+          },
+          // Maybe add this?
+          // path,
+          // noCache: true
+        };
+      };
 
-    this.njkEnv =
-      override ||
-      new NunjucksLib.Environment(fsLoader, this.nunjucksEnvironmentOptions);
+      this.njkEnv = new NunjucksLib.Environment(
+        new NodePrecompiledLoader(),
+        this.nunjucksEnvironmentOptions
+      );
+    } else {
+      let fsLoader = new NunjucksLib.FileSystemLoader([
+        super.getIncludesDir(),
+        TemplatePath.getWorkingDir(),
+      ]);
+
+      this.njkEnv = new NunjucksLib.Environment(
+        fsLoader,
+        this.nunjucksEnvironmentOptions
+      );
+    }
+
+    this.config.events.emit("eleventy.engine.njk", {
+      nunjucks: NunjucksLib,
+      environment: this.njkEnv,
+    });
+  }
+
+  setLibrary(override) {
+    this._setEnv(override);
 
     // Correct, but overbroad. Better would be to evict more granularly, but
     // resolution from paths isn't straightforward.
@@ -225,6 +149,7 @@ class Nunjucks extends TemplateEngine {
     if (context.ctx && context.ctx.page) {
       obj.ctx = context.ctx;
       obj.page = context.ctx.page;
+      obj.eleventy = context.ctx.eleventy;
     }
     return obj;
   }
@@ -397,6 +322,7 @@ class Nunjucks extends TemplateEngine {
     let blockStart = optsTags.blockStart || "{%";
     let variableStart = optsTags.variableStart || "{{";
     let commentStart = optsTags.variableStart || "{#";
+
     return (
       str.indexOf(blockStart) !== -1 ||
       str.indexOf(variableStart) !== -1 ||
@@ -469,12 +395,11 @@ class Nunjucks extends TemplateEngine {
   }
 
   async compile(str, inputPath) {
-    // for(let loader of this.njkEnv.loaders) {
-    //   loader.cache = {};
-    // }
-
     let tmpl;
-    if (!inputPath || inputPath === "njk" || inputPath === "md") {
+
+    if (this._usingPrecompiled) {
+      tmpl = this.njkEnv.getTemplate(str, true);
+    } else if (!inputPath || inputPath === "njk" || inputPath === "md") {
       tmpl = new NunjucksLib.Template(str, this.njkEnv, null, true);
     } else {
       tmpl = new NunjucksLib.Template(str, this.njkEnv, inputPath, true);

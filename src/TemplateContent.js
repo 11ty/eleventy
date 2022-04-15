@@ -221,8 +221,7 @@ class TemplateContent {
     return frontMatterData[this.config.keys.engineOverride];
   }
 
-  async setupTemplateRender(bypassMarkdown) {
-    let engineOverride = await this.getEngineOverride();
+  async setupTemplateRender(engineOverride, bypassMarkdown) {
     if (engineOverride !== undefined) {
       debugDev(
         "%o overriding template engine to use %o",
@@ -250,8 +249,8 @@ class TemplateContent {
     return [cacheable, key, engineMap];
   }
 
-  async compile(str, bypassMarkdown) {
-    await this.setupTemplateRender(bypassMarkdown);
+  async compile(str, bypassMarkdown, engineOverride) {
+    await this.setupTemplateRender(engineOverride, bypassMarkdown);
 
     if (bypassMarkdown && !this.engine.needsCompilation(str)) {
       return async function () {
@@ -388,7 +387,11 @@ class TemplateContent {
         return str;
       }
 
-      let fn = await this.compile(str, bypassMarkdown);
+      let fn = await this.compile(
+        str,
+        bypassMarkdown,
+        data[this.config.keys.engineOverride]
+      );
       if (fn === undefined) {
         return;
       } else if (typeof fn !== "function") {

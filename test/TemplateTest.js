@@ -2347,3 +2347,13 @@ test("eleventyComputed returns permalink object using permalink string (with rep
   t.is(page.url, "/i18n/en/");
   t.is(page.outputPath, false);
 });
+
+test("page.templateSyntax works with templateEngineOverride", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/overrides/page-templatesyntax.md",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  t.is((await tmpl.render(await tmpl.getData())).trim(), "<p>njk,md</p>");
+});

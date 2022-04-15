@@ -1,4 +1,4 @@
-const isPlainObject = require("./Util/IsPlainObject");
+const { isPlainObject } = require("@11ty/eleventy-utils");
 
 class TemplateBehavior {
   constructor(config) {
