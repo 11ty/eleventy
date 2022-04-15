@@ -13,6 +13,8 @@
 1. Tag new version
 1. `npm publish --access=public --tag=canary`
 
+Unfortunate thing about npm: if you push a 1.0.0-canary.x to `canary` after a `2.0.0-canary.x`, it will use the last pushed tag (not the highest version number)
+
 # Beta Release Procedure
 
 1. update minor dependencies in package.json?
