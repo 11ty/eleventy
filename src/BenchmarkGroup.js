@@ -92,11 +92,12 @@ class BenchmarkGroup {
       let isAbsoluteMinimumComparison = this.minimumThresholdMs > 0;
       let totalForBenchmark = bench.getTotal();
       let percent = Math.round((totalForBenchmark * 100) / totalTimeSpent);
+      let callCount = bench.getTimesCalled();
 
       let output = {
         ms: this.padNumber(totalForBenchmark.toFixed(0), 6),
         percent: this.padNumber(percent, 3),
-        calls: this.padNumber(bench.getTimesCalled(), 5),
+        calls: this.padNumber(callCount, 5),
       };
       let str = `Benchmark ${output.ms}ms ${output.percent}% ${output.calls}× (${label}) ${type}`;
 
@@ -108,7 +109,12 @@ class BenchmarkGroup {
         this.logger.warn(str);
       }
 
-      if (totalForBenchmark.toFixed(0) > 0) {
+      // Don’t log if 0ms or only called ×1 time
+      // Exception for things that are only counting (no execution time measured), e.g. 0ms and counts > 100
+      if (
+        (totalForBenchmark.toFixed(0) > 0 && callCount > 1) ||
+        callCount > 100
+      ) {
         debugBenchmark(str);
       }
     }

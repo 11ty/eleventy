@@ -5,14 +5,13 @@ const slugifyFilter = require("./Filters/Slugify");
 const getCollectionItem = require("./Filters/GetCollectionItem");
 
 module.exports = function (config) {
-  let eleventyConfig = this;
+  let templateConfig = this;
 
   config.addFilter("slug", slugFilter);
   config.addFilter("slugify", slugifyFilter);
 
   config.addFilter("url", function (url, pathPrefixOverride) {
-    let pathPrefix =
-      pathPrefixOverride || eleventyConfig.getConfig().pathPrefix;
+    let pathPrefix = pathPrefixOverride || templateConfig.getPathPrefix();
     return urlFilter.call(this, url, pathPrefix);
   });
   config.addFilter("log", console.log);

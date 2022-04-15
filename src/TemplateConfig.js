@@ -174,6 +174,19 @@ class TemplateConfig {
   }
 
   /**
+   * Gets the current path prefix denoting the root folder the output will be deployed to
+   *
+   *  @returns {String} - The path prefix string
+   */
+  getPathPrefix() {
+    if (!this.hasConfigMerged) {
+      this.getConfig();
+    }
+
+    return this.config.pathPrefix;
+  }
+
+  /**
    * Bootstraps the config object.
    */
   initializeRootConfig() {

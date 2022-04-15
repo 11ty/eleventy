@@ -278,6 +278,8 @@ class TemplateContent {
             return cache.get(key);
           }
 
+          this.bench.get("Template Compile Cache Miss").incrementCount();
+
           // Compilation is async, so we eagerly cache a Promise that eventually
           // resolves to the compiled function
           cache.set(
@@ -402,8 +404,10 @@ class TemplateContent {
 
       // Benchmark
       let templateBenchmark = this.bench.get("Render");
+      let logRenderToOutputBenchmark = true;
       let paginationSuffix = [];
       if ("pagination" in data) {
+        logRenderToOutputBenchmark = false; // skip benchmark for each individual pagination entry
         paginationSuffix.push(" (Pagination");
         if (data.pagination.pages) {
           paginationSuffix.push(
@@ -419,9 +423,9 @@ class TemplateContent {
         `> Render > ${this.inputPath}${paginationSuffix.join("")}`
       );
       let outputPathBenchmark;
-      if (data.page && data.page.outputPath) {
+      if (data.page && data.page.outputPath && logRenderToOutputBenchmark) {
         outputPathBenchmark = this.bench.get(
-          `> Render > ${data.page.outputPath}`
+          `> Render to > ${data.page.outputPath}`
         );
       }
 
