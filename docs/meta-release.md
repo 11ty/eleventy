@@ -46,7 +46,6 @@ Unfortunate thing about npm: if you push a 1.0.0-canary.x to `canary` after a `2
 1. Check in a new `11ty-website` site with updated `package.json` version.
 1. Add version to 11ty-website `versions.json`
 1. Commit it
-1. Run ./deploy.sh to push to production branch for 11ty-website
 1. Create a new branch for branched version
 1. Go to https://app.netlify.com/sites/11ty/settings/domain and set up a subdomain for it.
 
