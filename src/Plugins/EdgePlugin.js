@@ -264,13 +264,13 @@ function EleventyEdgePlugin(eleventyConfig, opts = {}) {
           path.join(options.functionsDir, "_generated/precompiled.js"),
           `export default { ${content.join(",\n")} }`
         ),
+        // TODO call the esbuild stuff directly to build the lib file as part of the edge bundler
         fsp.copyFile(source, target),
       ]);
     });
   }
 
   // TODO add a route checker to show a warning if edge shortcodes are used on pages that are not handled in edge function routes
-  // TODO make the `npm run package` script a prepublish? https://docs.npmjs.com/cli/v6/using-npm/scripts#prepare-and-prepublish
 }
 
 module.exports = EleventyEdgePlugin;
