@@ -1,3 +1,6 @@
+# Generated files
+package/generated*
+
 # Ignore installed npm modules
 node_modules/
 

@@ -1096,3 +1096,4 @@ module.exports = Eleventy;
 module.exports.EleventyServerless = require("./Serverless");
 module.exports.EleventyServerlessBundlerPlugin = require("./Plugins/ServerlessBundlerPlugin");
 module.exports.EleventyRenderPlugin = require("./Plugins/RenderPlugin");
+module.exports.EleventyEdgePlugin = require("./Plugins/EdgePlugin");

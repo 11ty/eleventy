@@ -7,6 +7,7 @@
 # Canary Release Procedure
 
 1. npmclean aka `rm -rf node_modules && rm -f package-lock.json && npm install`
+1. `npm run package` to generate a new Eleventy Edge lib
 1. Make sure `npx ava` runs okay
 1. Update version in `package.json`, include `-canary.1` suffix
 1. Check it all in and commit
@@ -19,6 +20,7 @@ Unfortunate thing about npm: if you push a 1.0.0-canary.x to `canary` after a `2
 
 1. update minor dependencies in package.json?
 1. npmclean aka `rm -rf node_modules && rm -f package-lock.json && npm install`
+1. `npm run package` to generate a new Eleventy Edge lib
 1. npm audit
 1. Make sure `npx ava` runs okay
 1. Update version in `package.json`, include `-beta.1` suffix
@@ -33,6 +35,7 @@ Unfortunate thing about npm: if you push a 1.0.0-canary.x to `canary` after a `2
 1. npmclean aka `rm -rf node_modules && rm -f package-lock.json && npm install`
 1. If the minimum Node version changed, make sure you update `package.json` engines property.
 1. Bonus: make sure the error message works correctly for Node versions less than 10. 0.12.x+ requires Node 10+. 1.x+ requires Node 12+
+1. `npm run package` to generate a new Eleventy Edge lib
 1. npm audit
 1. Make sure `npx ava` runs okay
 1. Update version in `package.json`
