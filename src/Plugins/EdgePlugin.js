@@ -246,7 +246,7 @@ function EleventyEdgePlugin(eleventyConfig, opts = {}) {
       });
     }
 
-    // Generate app precompiled.js file and generate default edge function (if needed)
+    // Generate app eleventy-edge-app-data.js file and generate default edge function (if needed)
     eleventyConfig.on("eleventy.after", async () => {
       await fsp.mkdir(path.join(options.functionsDir, "_generated"), {
         recursive: true,
@@ -262,7 +262,7 @@ function EleventyEdgePlugin(eleventyConfig, opts = {}) {
       content.push(helper.precompiledTemplates.toString());
 
       await fsp.writeFile(
-        path.join(options.functionsDir, "_generated/precompiled.js"),
+        path.join(options.functionsDir, "_generated/eleventy-edge-app-data.js"),
         `export default { ${content.join(",\n")} }`
       );
 
