@@ -147,8 +147,12 @@ class BundlerHelper {
   }
 
   writeBundlerDependenciesFile(filename, deps = []) {
-    let modules = deps.map((name) => `require("${name}");`);
     let fullPath = this.getOutputPath(filename);
+    if (deps.length === 0 && fs.existsSync(fullPath)) {
+      return;
+    }
+
+    let modules = deps.map((name) => `require("${name}");`);
     fs.writeFileSync(fullPath, modules.join("\n"));
     this.copyCount++;
     debug(
