@@ -1,104 +1,97 @@
 const path = require("path");
-const { promises: fsp } = require("fs");
-const { createHash } = require("crypto");
+const fs = require("fs");
+const fsp = fs.promises;
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const rawContentLiquidTag = require("./Edge/LiquidEdge.js");
 const rawContentNunjucksTag = require("./Edge/NunjucksEdge.js");
+const PrecompiledNunjucks = require("./Edge/PrecompiledNunjucks.js");
+const EdgeTemplateDataID = require("./Edge/EdgeTemplateDataID.js");
 
-class PrecompiledNunjucks {
+class EdgeHelper {
   constructor() {
-    this.rawTemplates = {};
+    this.ids = new EdgeTemplateDataID();
+    this.precompiledTemplates = new PrecompiledNunjucks();
   }
 
-  getPrecompiledTemplateKey(str) {
-    let hash = createHash("sha256");
-    hash.update(str);
-    return "EleventyEdgeNunjucksPrecompile:" + hash.digest("hex");
+  setOptions(options) {
+    this.options = options;
   }
 
-  setLibraries({ nunjucks, nunjucksEnv }) {
-    this.nunjucks = nunjucks;
-    this.nunjucksEnv = nunjucksEnv;
+  getOutputPath(filepath) {
+    return TemplatePath.addLeadingDotSlash(
+      path.join(this.options.functionsDir, filepath)
+    );
   }
 
-  add(str) {
-    // for precompiled template object key
-    let key = this.getPrecompiledTemplateKey(str);
-    this.rawTemplates[key] = str;
-    return key;
+  // Technically this import is optional: you could import directly from "https://cdn.11ty.dev/edge@1.0.0/eleventy-edge.js"
+  // However, we don’t need folks to update all of their edge handlers imports manually when we bump a version.
+  async writeImportMap() {
+    let manifest = {
+      functions: [],
+      import_map: "./import_map.json",
+      version: 1,
+    };
+
+    let importMap = {
+      imports: {
+        "eleventy:edge": `https://cdn.11ty.dev/edge@${this.options.eleventyEdgeVersion}/eleventy-edge.js`,
+      },
+    };
+
+    let dir = this.options.importMap;
+    if (dir) {
+      await fsp.mkdir(dir, {
+        recursive: true,
+      });
+      await fsp.writeFile(
+        path.join(dir, "manifest.json"),
+        JSON.stringify(manifest, null, 2)
+      );
+      await fsp.writeFile(
+        path.join(dir, "import_map.json"),
+        JSON.stringify(importMap, null, 2)
+      );
+    }
   }
 
-  toString() {
-    let ret = [];
-    if (Object.keys(this.rawTemplates).length > 0) {
-      if (!this.nunjucks || !this.nunjucksEnv) {
-        throw new Error("Missing Nunjucks and Nunjucks environment");
-      }
+  async writeDefaultEdgeFunctionFile() {
+    let filepath = this.getOutputPath("eleventy-edge.js");
 
-      for (let key in this.rawTemplates) {
-        let precompiled = this.nunjucks.precompileString(
-          this.rawTemplates[key],
-          {
-            name: key,
-            env: this.nunjucksEnv,
-            asFunction: true,
-            force: true,
-            wrapper: function ([tmpl], opts) {
-              // console.log( { templates, opts } );
-              return `(function() {${tmpl.template}}())`;
-            },
-          }
+    if (fs.existsSync(filepath)) {
+      let contents = await fsp.readFile(filepath, "utf8");
+      if (
+        contents
+          .trim()
+          .startsWith(
+            `import { EleventyEdge } from "./_generated/eleventy-edge.js";`
+          )
+      ) {
+        throw new Error(
+          `Experimental early adopter API change alert! Unfortunately we changed the default imports for Eleventy Edge in Eleventy v2.0.0-canary.7. The easiest thing you can do is delete your existing \`${path.join(
+            this.options.functionsDir,
+            "eleventy-edge.js"
+          )}\` and let Eleventy generate a new one for you.`
         );
-
-        ret.push(`"${key}": ${precompiled},`);
       }
-    }
+    } else {
+      let defaultContentPath = TemplatePath.absolutePath(
+        __dirname,
+        "./DefaultEdgeFunctionContent.js"
+      );
 
-    return `"nunjucksPrecompiled": {
-  ${ret.join("\n")}
-}`;
+      let contents = await fsp.readFile(defaultContentPath, "utf8");
+      contents = contents.replace(/\%\%EDGE_NAME\%\%/g, this.options.name);
+      contents = contents.replace(
+        /\%\%EDGE_VERSION\%\%/g,
+        this.options.eleventyEdgeVersion
+      );
+      return fsp.writeFile(filepath, contents);
+    }
   }
 }
 
-class EdgeTemplateDataID {
-  constructor() {
-    this.data = {};
-  }
-
-  reset() {
-    this.data = {};
-  }
-
-  hasData(data = {}) {
-    return Object.keys(data).length > 0;
-  }
-
-  getDataKey(data = {}) {
-    if (!this.hasData(data)) {
-      return;
-    }
-
-    let hash = createHash("sha256");
-    hash.update(JSON.stringify(data));
-    return "ELEVENTYEDGEDATA_" + hash.digest("hex");
-  }
-
-  addData(data) {
-    let key = this.getDataKey(data);
-    if (key) {
-      this.data[key] = data;
-      return key;
-    }
-  }
-
-  toString() {
-    return `"buildTimeData": ${JSON.stringify(this.data, null, 2)}`;
-  }
-}
-
-let ids = new EdgeTemplateDataID();
-let precompiledTemplates = new PrecompiledNunjucks();
+let helper = new EdgeHelper();
 
 function renderAsLiquid(
   functionName,
@@ -143,13 +136,13 @@ function renderAsLiquid(
       );
     }
 
-    body = precompiledTemplates.add(body);
+    body = helper.precompiledTemplates.add(body);
   }
 
   let dataVar = "";
   let extraData = [];
-  if (ids.hasData(serializedData)) {
-    let key = ids.addData(serializedData);
+  if (helper.ids.hasData(serializedData)) {
+    let key = helper.ids.addData(serializedData);
     if (key) {
       if (process.env.ELEVENTY_SERVERLESS) {
         if (languages[0] === "liquid") {
@@ -194,10 +187,20 @@ function EleventyEdgePlugin(eleventyConfig, opts = {}) {
     {
       name: "edge",
       functionsDir: "./netlify/edge-functions/",
-      compatibility: ">=2", // compatibity check with Eleventy core version
+
+      // for the default Deno import
+      eleventyEdgeVersion: "1.0.0",
+
+      // runtime compatibity check with Eleventy core version
+      compatibility: ">=2",
+
+      // directory to write the import_map.json to (also supported: false)
+      importMap: ".netlify/edge-functions/",
     },
     opts
   );
+
+  helper.setOptions(options);
 
   // TODO add middleware support so that we can just run on Eleventy Dev Server directly
   // eleventyConfig.setServerOptions({
@@ -209,7 +212,7 @@ function EleventyEdgePlugin(eleventyConfig, opts = {}) {
   // })
 
   eleventyConfig.on("eleventy.engine.njk", ({ nunjucks, environment }) => {
-    precompiledTemplates.setLibraries({
+    helper.precompiledTemplates.setLibraries({
       nunjucks: nunjucks,
       nunjucksEnv: environment,
     });
@@ -237,6 +240,13 @@ function EleventyEdgePlugin(eleventyConfig, opts = {}) {
 
   // Edge Functions with Serverless mode, don’t write files.
   if (!process.env.ELEVENTY_SERVERLESS) {
+    if (options.importMap) {
+      eleventyConfig.on("eleventy.before", async () => {
+        await helper.writeImportMap(helper.importMap);
+      });
+    }
+
+    // Generate app precompiled.js file and generate default edge function (if needed)
     eleventyConfig.on("eleventy.after", async () => {
       await fsp.mkdir(path.join(options.functionsDir, "_generated"), {
         recursive: true,
@@ -248,25 +258,15 @@ function EleventyEdgePlugin(eleventyConfig, opts = {}) {
           `"eleventy": { "compatibility": "${options.compatibility}" }`
         );
       }
-      content.push(ids.toString());
-      content.push(precompiledTemplates.toString());
+      content.push(helper.ids.toString());
+      content.push(helper.precompiledTemplates.toString());
 
-      let source = path.join(
-        __dirname,
-        "../../package/generated-eleventy-edge-lib.js"
-      );
-      let target = TemplatePath.addLeadingDotSlash(
-        path.join(options.functionsDir, "_generated/eleventy-edge.js")
+      await fsp.writeFile(
+        path.join(options.functionsDir, "_generated/precompiled.js"),
+        `export default { ${content.join(",\n")} }`
       );
 
-      return Promise.all([
-        fsp.writeFile(
-          path.join(options.functionsDir, "_generated/precompiled.js"),
-          `export default { ${content.join(",\n")} }`
-        ),
-        // TODO call the esbuild stuff directly to build the lib file as part of the edge bundler
-        fsp.copyFile(source, target),
-      ]);
+      await helper.writeDefaultEdgeFunctionFile();
     });
   }
 

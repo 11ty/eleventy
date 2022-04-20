@@ -45,7 +45,6 @@
     "format": "prettier src/ --write",
     "test": "npx ava --verbose",
     "lint-staged": "lint-staged",
-    "package": "node package/compile-edge-lib.js",
     "coverage": "npx nyc ava && npx nyc report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && node cmd.js --config=docs-src/.eleventy.docs.js",
     "prepare": "husky install"
   },
@@ -81,7 +80,6 @@
     "@11ty/eleventy-plugin-vue": "1.0.0-canary.8",
     "@vue/server-renderer": "^3.2.33",
     "ava": "^3.15.0",
-    "esbuild": "^0.14.36",
     "husky": "^7.0.4",
     "js-yaml": "^4.1.0",
     "lint-staged": "^12.3.8",
