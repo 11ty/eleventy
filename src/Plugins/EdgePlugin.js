@@ -166,12 +166,16 @@ function renderAsLiquid(
     css: { comments: ["/*", "*/"] },
     js: { comments: ["/*", "*/"] },
   };
+
   let type = "html";
-  if (this.page.url.endsWith(".css")) {
-    type = "css";
-  } else if (this.page.url.endsWith(".js")) {
-    //  || this.page.url.endsWith(".cjs") || this.page.url.endsWith(".mjs")
-    type = "js";
+  // when permalink is false, this.page.url is false
+  if (this.page.url) {
+    if (this.page.url.endsWith(".css")) {
+      type = "css";
+    } else if (this.page.url.endsWith(".js")) {
+      // TODO more extensions here?
+      type = "js";
+    }
   }
 
   return `${
