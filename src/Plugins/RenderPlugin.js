@@ -362,7 +362,7 @@ class RenderManager {
     });
   }
 
-  // Async friendly but requires await upstream
+  // `callback` is async-friendly but requires await upstream
   config(callback) {
     // run an extra `function(eleventyConfig)` configuration callbacks
     if (callback && typeof callback === "function") {
