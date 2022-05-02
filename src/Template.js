@@ -69,7 +69,6 @@ class Template extends TemplateContent {
     this.isDryRun = false;
     this.writeCount = 0;
     this.skippedCount = 0;
-    this.wrapWithLayouts = true;
     this.fileSlug = new TemplateFileSlug(
       this.inputPath,
       this.inputDir,
@@ -111,10 +110,6 @@ class Template extends TemplateContent {
 
   setDryRun(isDryRun) {
     this.isDryRun = !!isDryRun;
-  }
-
-  setWrapWithLayouts(wrap) {
-    this.wrapWithLayouts = wrap;
   }
 
   setExtraOutputSubdirectory(dir) {
@@ -187,7 +182,6 @@ class Template extends TemplateContent {
     if (this.templateData) {
       perm.setServerlessPathData(this.templateData.getServerlessPathData());
     }
-
     this.behavior.setFromPermalink(perm);
     this.serverlessUrls = perm.getServerlessUrls();
 
@@ -466,29 +460,22 @@ class Template extends TemplateContent {
     return layout.render(tmplData, templateContent);
   }
 
-  async _testRenderWithoutLayouts(data) {
-    this.setWrapWithLayouts(false);
-    let ret = await this.render(data);
-    this.setWrapWithLayouts(true);
-    return ret;
-  }
-
   // Used only by tests
   async renderContent(str, data, bypassMarkdown) {
     return super.render(str, data, bypassMarkdown);
   }
 
-  async render(data) {
+  async render(data, wrapWithLayouts = true) {
     debugDev("%o render()", this.inputPath);
     if (!data) {
       throw new Error("`data` needs to be passed into render()");
     }
 
-    if (!this.wrapWithLayouts && data[this.config.keys.layout]) {
+    if (!wrapWithLayouts && data[this.config.keys.layout]) {
       debugDev("Template.render is bypassing layouts for %o.", this.inputPath);
     }
 
-    if (this.wrapWithLayouts && data[this.config.keys.layout]) {
+    if (wrapWithLayouts && data[this.config.keys.layout]) {
       debugDev(
         "Template.render found layout: %o",
         data[this.config.keys.layout]
@@ -588,7 +575,6 @@ class Template extends TemplateContent {
   }
 
   async addComputedData(data) {
-    // will _not_ consume renderData
     this.computedData = new ComputedData(this.config);
 
     if (this.config.keys.computed in data) {
@@ -1036,11 +1022,7 @@ class Template extends TemplateContent {
 
   /* This is the primary render mechanism, called via TemplateMap->populateContentDataInMap */
   async getTemplateMapContent(pageMapEntry) {
-    pageMapEntry.template.setWrapWithLayouts(false);
-    let content = await pageMapEntry.template.render(pageMapEntry.data);
-    pageMapEntry.template.setWrapWithLayouts(true);
-
-    return content;
+    return pageMapEntry.template.render(pageMapEntry.data, false);
   }
 
   async getTemplateMapEntries(dataOverride) {
@@ -1060,27 +1042,6 @@ class Template extends TemplateContent {
     });
 
     return entries;
-  }
-
-  async _testCompleteRender() {
-    let entries = await this.getTemplateMapEntries();
-
-    let nestedContent = await Promise.all(
-      entries.map(async (entry) => {
-        entry._pages = await entry.template.getTemplates(entry.data);
-        return Promise.all(
-          entry._pages.map(async (page) => {
-            page.templateContent = await entry.template.getTemplateMapContent(
-              page
-            );
-            return this.renderPageEntry(entry, page);
-          })
-        );
-      })
-    );
-
-    let contents = [].concat(...nestedContent);
-    return contents;
   }
 }
 

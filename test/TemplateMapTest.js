@@ -28,6 +28,11 @@ function getNewTemplateByNumber(num, eleventyConfig) {
   );
 }
 
+async function testRenderWithoutLayouts(template, data) {
+  let ret = await template.render(data, false);
+  return ret;
+}
+
 test("TemplateMap has collections added", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
@@ -107,11 +112,11 @@ test("TemplateMap adds collections data and has templateContent values", async (
   t.is(map[1].data.collections.all.length, 2);
 
   t.is(
-    await map[0].template._testRenderWithoutLayouts(map[0].data),
+    await testRenderWithoutLayouts(map[0].template, map[0].data),
     map[0]._pages[0].templateContent
   );
   t.is(
-    await map[1].template._testRenderWithoutLayouts(map[1].data),
+    await testRenderWithoutLayouts(map[1].template, map[1].data),
     map[1]._pages[0].templateContent
   );
 });
@@ -132,7 +137,7 @@ test("TemplateMap circular references (map without templateContent)", async (t) 
   t.is(map[0].data.collections.all.length, 1);
 
   t.is(
-    await map[0].template._testRenderWithoutLayouts(map[0].data),
+    await testRenderWithoutLayouts(map[0].template, map[0].data),
     map[0]._pages[0].templateContent
   );
 });

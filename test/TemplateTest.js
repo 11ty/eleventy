@@ -22,6 +22,27 @@ function cleanHtml(str) {
   return pretty(str, { ocd: true });
 }
 
+async function _testCompleteRender(tmpl) {
+  let entries = await tmpl.getTemplateMapEntries();
+
+  let nestedContent = await Promise.all(
+    entries.map(async (entry) => {
+      entry._pages = await entry.template.getTemplates(entry.data);
+      return Promise.all(
+        entry._pages.map(async (page) => {
+          page.templateContent = await entry.template.getTemplateMapContent(
+            page
+          );
+          return tmpl.renderPageEntry(entry, page);
+        })
+      );
+    })
+  );
+
+  let contents = [].concat(...nestedContent);
+  return contents;
+}
+
 test("getTemplateSubFolder", (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/template.ejs",
@@ -246,8 +267,6 @@ test("One Layout (layouts disabled)", async (t) => {
     eleventyConfig
   );
 
-  tmpl.setWrapWithLayouts(false);
-
   t.is(
     (await tmpl.getFrontMatter()).data[tmpl.config.keys.layout],
     "defaultLayoutLayoutContent"
@@ -256,7 +275,7 @@ test("One Layout (layouts disabled)", async (t) => {
   let data = await tmpl.getData();
   t.is(data[tmpl.config.keys.layout], "defaultLayoutLayoutContent");
 
-  t.is(cleanHtml(await tmpl.render(data)), "<p>Hello.</p>");
+  t.is(cleanHtml(await tmpl.render(data, false)), "<p>Hello.</p>");
 
   t.is(data.keymain, "valuemain");
   t.is(data.keylayout, "valuelayout");
@@ -1074,7 +1093,7 @@ test("Test a transform", async (t) => {
     return "OVERRIDE BY A TRANSFORM";
   });
 
-  let renders = await tmpl._testCompleteRender();
+  let renders = await _testCompleteRender(tmpl);
   t.is(renders[0], "OVERRIDE BY A TRANSFORM");
 });
 
@@ -1094,7 +1113,7 @@ test.skip("Test a transform (does it have inputPath?)", async (t) => {
     return "OVERRIDE BY A TRANSFORM";
   });
 
-  let renders = await tmpl._testCompleteRender();
+  let renders = await _testCompleteRender(tmpl);
   t.is(renders[0], "OVERRIDE BY A TRANSFORM");
 });
 
@@ -1114,7 +1133,7 @@ test("Test a transform with pages", async (t) => {
     return "OVERRIDE BY A TRANSFORM";
   });
 
-  let renders = await tmpl._testCompleteRender();
+  let renders = await _testCompleteRender(tmpl);
   t.is(renders[0], "OVERRIDE BY A TRANSFORM");
 });
 
@@ -1133,7 +1152,7 @@ test("Test a transform with a layout", async (t) => {
     return "OVERRIDE BY A TRANSFORM";
   });
 
-  let renders = await tmpl._testCompleteRender();
+  let renders = await _testCompleteRender(tmpl);
   t.is(renders[0], "OVERRIDE BY A TRANSFORM");
 });
 
@@ -1156,7 +1175,7 @@ test("Test a single asynchronous transform", async (t) => {
     });
   });
 
-  let renders = await tmpl._testCompleteRender();
+  let renders = await _testCompleteRender(tmpl);
   t.is(renders[0], "OVERRIDE BY A TRANSFORM");
 });
 
@@ -1190,7 +1209,7 @@ test("Test multiple asynchronous transforms", async (t) => {
     });
   });
 
-  let renders = await tmpl._testCompleteRender();
+  let renders = await _testCompleteRender(tmpl);
   t.is(renders[0], "LOWERCASE TRANSFORM");
 });
 
@@ -1208,7 +1227,7 @@ test("Test a linter", async (t) => {
     t.true(outputPath.endsWith("index.html"));
   });
 
-  await tmpl._testCompleteRender();
+  await _testCompleteRender(tmpl);
 });
 
 test("Front Matter Tags (Single)", async (t) => {
