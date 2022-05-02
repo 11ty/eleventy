@@ -193,21 +193,6 @@ test("JavaScript template type (class with data permalink function using a filte
   );
 });
 
-test("JavaScript template type (class with renderData)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/class-data-renderdata.11ty.js",
-    "./test/stubs/",
-    "./dist"
-  );
-
-  let data = await tmpl.getData();
-  let pages = await tmpl.getRenderedTemplates(data);
-  t.is(
-    pages[0].templateContent.trim(),
-    "<p>StringTesthowdy Zach, meet Thanos</p>"
-  );
-});
-
 test("JavaScript template type (should use the same class instance for data and render)", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/oneinstance.11ty.js",

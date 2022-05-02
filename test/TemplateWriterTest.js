@@ -548,32 +548,6 @@ test("fileSlug should exist in a collection", async (t) => {
   t.is(templates[0].templateContent.trim(), "fileSlug:/dog1/:dog1");
 });
 
-test("renderData should exist and be resolved in a collection (Issue #289)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let tw = new TemplateWriter(
-    "./test/stubs/collection-renderdata",
-    "./test/stubs/collection-renderdata/_site",
-    ["njk"],
-    null,
-    eleventyConfig
-  );
-
-  let paths = await tw._getAllPaths();
-  let templateMap = await tw._createTemplateMap(paths);
-
-  let collectionsData = await templateMap._testGetCollectionsData();
-  t.is(collectionsData.dog.length, 1);
-
-  let mapEntry = templateMap.getMapEntryForInputPath(
-    "./test/stubs/collection-renderdata/template.njk"
-  );
-  t.truthy(mapEntry);
-  t.is(mapEntry.inputPath, "./test/stubs/collection-renderdata/template.njk");
-
-  let templates = await mapEntry.template.getRenderedTemplates(mapEntry.data);
-  t.is(templates[0].templateContent.trim(), "value2-value1.css");
-});
-
 test("Write Test 11ty.js", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let tw = new TemplateWriter(

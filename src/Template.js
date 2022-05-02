@@ -351,33 +351,6 @@ class Template extends TemplateContent {
     this.paginationData = paginationData;
   }
 
-  async mapDataAsRenderedTemplates(data, templateData) {
-    // function supported in JavaScript type
-    if (typeof data === "string" || typeof data === "function") {
-      debug("rendering data.renderData for %o", this.inputPath);
-      // bypassMarkdown
-      let str = await super.render(data, templateData, true);
-      return str;
-    } else if (Array.isArray(data)) {
-      return Promise.all(
-        data.map((item) => this.mapDataAsRenderedTemplates(item, templateData))
-      );
-    } else if (isPlainObject(data)) {
-      let obj = {};
-      await Promise.all(
-        Object.keys(data).map(async (value) => {
-          obj[value] = await this.mapDataAsRenderedTemplates(
-            data[value],
-            templateData
-          );
-        })
-      );
-      return obj;
-    }
-
-    return data;
-  }
-
   async _testGetAllLayoutFrontMatterData() {
     let frontMatterData = await this.getFrontMatterData();
     if (frontMatterData[this.config.keys.layout]) {
@@ -660,14 +633,6 @@ class Template extends TemplateContent {
       let { href, path } = await this.getOutputLocations(data);
       data.page.url = href;
       data.page.outputPath = path;
-    }
-
-    // Deprecated, use eleventyComputed instead.
-    if ("renderData" in data) {
-      data.renderData = await this.mapDataAsRenderedTemplates(
-        data.renderData,
-        data
-      );
     }
   }
 
