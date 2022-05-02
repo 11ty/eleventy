@@ -30,8 +30,8 @@ async function _testCompleteRender(tmpl) {
       entry._pages = await entry.template.getTemplates(entry.data);
       return Promise.all(
         entry._pages.map(async (page) => {
-          page.templateContent = await entry.template.getTemplateMapContent(
-            page
+          page.templateContent = await page.template.renderWithoutLayout(
+            page.data
           );
           return tmpl.renderPageEntry(entry, page);
         })
@@ -275,7 +275,7 @@ test("One Layout (layouts disabled)", async (t) => {
   let data = await tmpl.getData();
   t.is(data[tmpl.config.keys.layout], "defaultLayoutLayoutContent");
 
-  t.is(cleanHtml(await tmpl.render(data, false)), "<p>Hello.</p>");
+  t.is(cleanHtml(await tmpl.renderWithoutLayout(data)), "<p>Hello.</p>");
 
   t.is(data.keymain, "valuemain");
   t.is(data.keylayout, "valuelayout");
@@ -1029,7 +1029,7 @@ test("Override base templating engine from .md to ejs,md (with a layout that use
   );
 });
 
-test("renderContent on a markdown file, permalink should not render markdown", async (t) => {
+test("renderDirect on a markdown file, permalink should not render markdown", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/permalink-markdown.md",
     "./test/stubs/",
@@ -1037,14 +1037,14 @@ test("renderContent on a markdown file, permalink should not render markdown", a
   );
 
   t.is(
-    await tmpl.renderContent("/news/my-test-file/index.html", {}, true),
+    await tmpl.renderDirect("/news/my-test-file/index.html", {}, true),
     "/news/my-test-file/index.html"
   );
 
   t.is(await tmpl.getRawOutputPath(), "/news/my-test-file/index.html");
 });
 
-test("renderContent on a markdown file, permalink should not render markdown (with variable)", async (t) => {
+test("renderDirect on a markdown file, permalink should not render markdown (with variable)", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/permalink-markdown-var.md",
     "./test/stubs/",
@@ -1052,7 +1052,7 @@ test("renderContent on a markdown file, permalink should not render markdown (wi
   );
 
   t.is(
-    await tmpl.renderContent(
+    await tmpl.renderDirect(
       "/news/{{ slug }}/index.html",
       { slug: "my-title" },
       true
@@ -1063,7 +1063,7 @@ test("renderContent on a markdown file, permalink should not render markdown (wi
   t.is(await tmpl.getRawOutputPath(), "/news/my-title/index.html");
 });
 
-test("renderContent on a markdown file, permalink should not render markdown (has override)", async (t) => {
+test("renderDirect on a markdown file, permalink should not render markdown (has override)", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/permalink-markdown-override.md",
     "./test/stubs/",
@@ -1071,7 +1071,7 @@ test("renderContent on a markdown file, permalink should not render markdown (ha
   );
 
   t.is(
-    await tmpl.renderContent("/news/my-test-file/index.html", {}, true),
+    await tmpl.renderDirect("/news/my-test-file/index.html", {}, true),
     "/news/my-test-file/index.html"
   );
 

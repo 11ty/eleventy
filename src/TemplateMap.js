@@ -459,9 +459,8 @@ class TemplateMap {
 
       try {
         for (let pageEntry of map._pages) {
-          pageEntry.templateContent = await map.template.getTemplateMapContent(
-            pageEntry
-          );
+          pageEntry.templateContent =
+            await pageEntry.template.renderWithoutLayout(pageEntry.data);
         }
       } catch (e) {
         if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
@@ -478,9 +477,8 @@ class TemplateMap {
     for (let map of usedTemplateContentTooEarlyMap) {
       try {
         for (let pageEntry of map._pages) {
-          pageEntry.templateContent = await map.template.getTemplateMapContent(
-            pageEntry
-          );
+          pageEntry.templateContent =
+            await pageEntry.template.renderWithoutLayout(pageEntry.data);
         }
       } catch (e) {
         if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
@@ -617,7 +615,9 @@ class TemplateMap {
     let promises = [];
     for (let entry of this.map) {
       for (let page of entry._pages) {
-        promises.push(page.template.resolveRemainingComputedData(page.data));
+        if (this.config.keys.computed in page.data) {
+          promises.push(page.template.resolveRemainingComputedData(page.data));
+        }
       }
     }
     return Promise.all(promises);

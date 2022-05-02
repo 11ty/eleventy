@@ -29,7 +29,7 @@ function getNewTemplateByNumber(num, eleventyConfig) {
 }
 
 async function testRenderWithoutLayouts(template, data) {
-  let ret = await template.render(data, false);
+  let ret = await template.renderWithoutLayout(data);
   return ret;
 }
 

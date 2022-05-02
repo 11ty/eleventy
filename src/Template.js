@@ -460,30 +460,28 @@ class Template extends TemplateContent {
     return layout.render(tmplData, templateContent);
   }
 
-  // Used only by tests
-  async renderContent(str, data, bypassMarkdown) {
+  async renderDirect(str, data, bypassMarkdown) {
     return super.render(str, data, bypassMarkdown);
   }
 
-  async render(data, wrapWithLayouts = true) {
+  // This is the primary render mechanism, called via TemplateMap->populateContentDataInMap
+  async renderWithoutLayout(data) {
+    let content = await this.getPreRender();
+    return this.renderDirect(content, data);
+  }
+
+  // render *with* Layouts
+  async render(data) {
     debugDev("%o render()", this.inputPath);
     if (!data) {
       throw new Error("`data` needs to be passed into render()");
     }
 
-    if (!wrapWithLayouts && data[this.config.keys.layout]) {
-      debugDev("Template.render is bypassing layouts for %o.", this.inputPath);
-    }
-
-    if (wrapWithLayouts && data[this.config.keys.layout]) {
-      debugDev(
-        "Template.render found layout: %o",
-        data[this.config.keys.layout]
-      );
+    if (data[this.config.keys.layout]) {
       return this.renderLayout(this, data);
     } else {
-      debugDev("Template.render renderContent for %o", this.inputPath);
-      return super.render(await this.getPreRender(), data);
+      debugDev("Template.render renderDirect for %o", this.inputPath);
+      return this.renderWithoutLayout(data);
     }
   }
 
@@ -622,6 +620,7 @@ class Template extends TemplateContent {
     }
   }
 
+  // Computed data consuming collections!
   async resolveRemainingComputedData(data) {
     debug("Second round of computed data for %o", this.inputPath);
     await this.computedData.processRemainingData(data);
@@ -678,12 +677,10 @@ class Template extends TemplateContent {
       this.paging.setTemplate(this);
 
       let pageTemplates = await this.paging.getPageTemplates();
-
       return await Promise.all(
         pageTemplates.map(async (page, pageNumber) => {
-          // TODO get smarter with something like Object.assign(data, override);
-          let pageData = Object.assign({}, await page.getData());
-
+          // TODO `getData` was already computed in `getPageTemplates` but it does have an internal `dataCache`
+          let pageData = Object.assign({}, await page.getData()); // re-uses .dataCache
           await page.addComputedData(pageData);
 
           // Issue #115
@@ -907,6 +904,7 @@ class Template extends TemplateContent {
       this.eleventyConfig
     );
 
+    // preserves caches too, like this.dataCache, _frontMatterDataCache
     for (let key in this) {
       tmpl[key] = this[key];
     }
@@ -1018,11 +1016,6 @@ class Template extends TemplateContent {
 
       return this._getDateInstance("birthtimeMs");
     }
-  }
-
-  /* This is the primary render mechanism, called via TemplateMap->populateContentDataInMap */
-  async getTemplateMapContent(pageMapEntry) {
-    return pageMapEntry.template.render(pageMapEntry.data, false);
   }
 
   async getTemplateMapEntries(dataOverride) {
