@@ -110,13 +110,6 @@ class TemplateLayout extends TemplateContent {
     return data;
   }
 
-  async _testGetLayoutChain() {
-    if (!this.layoutChain) {
-      await this.getData();
-    }
-    return this.layoutChain;
-  }
-
   async getCompiledLayoutFunctions(layoutMap) {
     let fns = [];
     try {

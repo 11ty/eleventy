@@ -133,14 +133,6 @@ class Template extends TemplateContent {
     return this._layout;
   }
 
-  async _testGetLayoutChain() {
-    if (!this._layout) {
-      await this.getData();
-    }
-
-    return this._layout._testGetLayoutChain();
-  }
-
   get baseFile() {
     return this.extensionMap.removeTemplateExtension(this.parsed.base);
   }
