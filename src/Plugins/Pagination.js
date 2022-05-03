@@ -212,27 +212,8 @@ class Pagination {
     return this.size === 1 ? pageItems[0] : pageItems;
   }
 
-  getOverrideData(pageItems) {
-    let override = {
-      pagination: {
-        data: this.data.pagination.data,
-        size: this.data.pagination.size,
-        alias: this.alias,
-        items: pageItems,
-      },
-    };
-
-    if (this.alias) {
-      lodashSet(override, this.alias, this.getNormalizedItems(pageItems));
-    }
-
-    return override;
-  }
-
   getOverrideDataPages(items, pageNumber) {
-    let obj = {
-      pages: this.size === 1 ? items.map((entry) => entry[0]) : items,
-
+    return {
       // See Issue #345 for more examples
       page: {
         previous:
@@ -251,11 +232,9 @@ class Pagination {
 
       pageNumber,
     };
-
-    return obj;
   }
 
-  getOverrideDataLinks(pageNumber, templates, links) {
+  getOverrideDataLinks(pageNumber, templateCount, links) {
     let obj = {};
 
     // links are okay but hrefs are better
@@ -263,7 +242,7 @@ class Pagination {
     obj.previous = obj.previousPageLink;
 
     obj.nextPageLink =
-      pageNumber < templates.length - 1 ? links[pageNumber + 1] : null;
+      pageNumber < templateCount - 1 ? links[pageNumber + 1] : null;
     obj.next = obj.nextPageLink;
 
     obj.firstPageLink = links.length > 0 ? links[0] : null;
@@ -275,13 +254,13 @@ class Pagination {
     return obj;
   }
 
-  getOverrideDataHrefs(pageNumber, templates, hrefs) {
+  getOverrideDataHrefs(pageNumber, templateCount, hrefs) {
     let obj = {};
 
     // hrefs are better than links
     obj.previousPageHref = pageNumber > 0 ? hrefs[pageNumber - 1] : null;
     obj.nextPageHref =
-      pageNumber < templates.length - 1 ? hrefs[pageNumber + 1] : null;
+      pageNumber < templateCount - 1 ? hrefs[pageNumber + 1] : null;
 
     obj.firstPageHref = hrefs.length > 0 ? hrefs[0] : null;
     obj.lastPageHref = hrefs.length > 0 ? hrefs[hrefs.length - 1] : null;
@@ -308,32 +287,58 @@ class Pagination {
       return [];
     }
 
-    let pages = [];
+    let entries = [];
     let items = this.chunkedItems;
-    let tmpl = this.template;
-    let templates = [];
+    let pages = this.size === 1 ? items.map((entry) => entry[0]) : items;
+
     let links = [];
     let hrefs = [];
     let overrides = [];
 
-    for (let pageNumber = 0, k = items.length; pageNumber < k; pageNumber++) {
-      let cloned = tmpl.clone();
+    let paginationDataObject = {
+      data: this.data.pagination.data,
+      size: this.data.pagination.size,
+      alias: this.alias,
+      pages,
+    };
 
-      // TODO maybe also move this permalink additions up into the pagination class
-      let hasPermalinkField = Boolean(this.data[this.config.keys.permalink]);
-      let hasComputedPermalinkField = Boolean(
-        this.data.eleventyComputed &&
-          this.data.eleventyComputed[this.config.keys.permalink]
-      );
-      if (pageNumber > 0 && !(hasPermalinkField || hasComputedPermalinkField)) {
+    let hasPermalinkField = Boolean(this.data[this.config.keys.permalink]);
+    let hasComputedPermalinkField = Boolean(
+      this.data.eleventyComputed &&
+        this.data.eleventyComputed[this.config.keys.permalink]
+    );
+
+    // TODO future improvement dea: use a light Template wrapper for paged template clones (PagedTemplate?)
+    // so that we don’t have the memory cost of the full template (and can reuse the parent
+    // template for some things)
+    for (
+      let pageNumber = 0, pageNumberStop = items.length;
+      pageNumber < pageNumberStop;
+      pageNumber++
+    ) {
+      let cloned = this.template.clone();
+
+      if (pageNumber > 0 && !hasPermalinkField && !hasComputedPermalinkField) {
         cloned.setExtraOutputSubdirectory(pageNumber);
       }
 
-      templates.push(cloned);
+      let override = {
+        pagination: {
+          items: items[pageNumber],
+        },
+      };
 
-      let override = this.getOverrideData(items[pageNumber]);
+      if (this.alias) {
+        lodashSet(
+          override,
+          this.alias,
+          this.getNormalizedItems(items[pageNumber])
+        );
+      }
+
       Object.assign(
         override.pagination,
+        paginationDataObject,
         this.getOverrideDataPages(items, pageNumber)
       );
 
@@ -341,27 +346,38 @@ class Pagination {
       cloned.setPaginationData(override);
 
       // TO DO subdirectory to links if the site doesn’t live at /
-      // TODO missing data argument means Template.getData is regenerated, maybe doesn’t matter because of data cache?
-      let { rawPath, href } = await cloned.getOutputLocations();
+      let clonedData = await cloned.getData(); // note that `cloned.dataCache` was preserved
+      let { rawPath, href } = await cloned.getOutputLocations(clonedData);
       links.push("/" + rawPath);
       hrefs.push(href);
+
+      entries.push({
+        template: cloned,
+        data: clonedData,
+      });
     }
 
     // we loop twice to pass in the appropriate prev/next links (already full generated now)
-    for (let pageNumber = 0; pageNumber < templates.length; pageNumber++) {
-      let linksObj = this.getOverrideDataLinks(pageNumber, templates, links);
+    for (let pageNumber = 0; pageNumber < entries.length; pageNumber++) {
+      let linksObj = this.getOverrideDataLinks(
+        pageNumber,
+        entries.length,
+        links
+      );
       Object.assign(overrides[pageNumber].pagination, linksObj);
 
-      let hrefsObj = this.getOverrideDataHrefs(pageNumber, templates, hrefs);
+      let hrefsObj = this.getOverrideDataHrefs(
+        pageNumber,
+        entries.length,
+        hrefs
+      );
       Object.assign(overrides[pageNumber].pagination, hrefsObj);
 
-      let cloned = templates[pageNumber];
-      cloned.setPaginationData(overrides[pageNumber]);
-
-      pages.push(cloned);
+      let entry = entries[pageNumber];
+      entry.template.setPaginationData(overrides[pageNumber]);
     }
 
-    return pages;
+    return entries;
   }
 }
 

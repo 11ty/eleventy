@@ -16,7 +16,7 @@ function getMergedItem(target, source, parentKey) {
     return target.concat(source);
   } else if (isPlainObject(target)) {
     if (isPlainObject(source)) {
-      for (var key in source) {
+      for (let key in source) {
         let newKey = key;
         if (key.indexOf(OVERRIDE_PREFIX) === 0) {
           newKey = key.substr(OVERRIDE_PREFIX.length);
@@ -30,10 +30,11 @@ function getMergedItem(target, source, parentKey) {
     return source;
   }
 }
+
 function Merge(target, ...sources) {
   // Remove override prefixes from root target.
   if (isPlainObject(target)) {
-    for (var key in target) {
+    for (let key in target) {
       if (key.indexOf(OVERRIDE_PREFIX) === 0) {
         target[key.substr(OVERRIDE_PREFIX.length)] = target[key];
         delete target[key];
@@ -41,7 +42,7 @@ function Merge(target, ...sources) {
     }
   }
 
-  for (var source of sources) {
+  for (let source of sources) {
     if (!source) {
       continue;
     }

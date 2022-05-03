@@ -23,7 +23,8 @@ function cleanHtml(str) {
 }
 
 async function _testCompleteRender(tmpl) {
-  let entries = await tmpl.getTemplateMapEntries();
+  let data = await tmpl.getData();
+  let entries = await tmpl.getTemplateMapEntries(data);
 
   let nestedContent = await Promise.all(
     entries.map(async (entry) => {
@@ -1493,7 +1494,8 @@ test("Throws a Premature Template Content Error from rendering (njk)", async (t)
     "./test/stubs/_site"
   );
 
-  let mapEntries = await tmpl.getTemplateMapEntries();
+  let data = await tmpl.getData();
+  let mapEntries = await tmpl.getTemplateMapEntries(data);
   let pageEntries = await tmpl.getTemplates({
     page: {},
     sample: {
@@ -1562,7 +1564,8 @@ test("Throws a Premature Template Content Error from rendering (pug)", async (t)
     "./test/stubs/_site"
   );
 
-  let mapEntries = await tmpl.getTemplateMapEntries();
+  let data = await tmpl.getData();
+  let mapEntries = await tmpl.getTemplateMapEntries(data);
   let pageEntries = await tmpl.getTemplates({
     page: {},
     sample: {
@@ -1601,7 +1604,8 @@ test("Throws a Premature Template Content Error from rendering (md)", async (t) 
     "./test/stubs/_site"
   );
 
-  let mapEntries = await tmpl.getTemplateMapEntries();
+  let data = await tmpl.getData();
+  let mapEntries = await tmpl.getTemplateMapEntries(data);
   let pageEntries = await tmpl.getTemplates({
     page: {},
     sample: {
@@ -1640,7 +1644,8 @@ test("Throws a Premature Template Content Error from rendering (hbs)", async (t)
     "./test/stubs/_site"
   );
 
-  let mapEntries = await tmpl.getTemplateMapEntries();
+  let data = await tmpl.getData();
+  let mapEntries = await tmpl.getTemplateMapEntries(data);
   let pageEntries = await tmpl.getTemplates({
     page: {},
     sample: {

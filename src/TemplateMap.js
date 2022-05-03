@@ -56,8 +56,10 @@ class TemplateMap {
   }
 
   async add(template) {
-    // getTemplateMapEntries is where the Template.getData is first generated
-    for (let map of await template.getTemplateMapEntries()) {
+    // This is where the data is first generated for the template
+    let data = await template.getData();
+
+    for (let map of await template.getTemplateMapEntries(data)) {
       this.map.push(map);
     }
   }

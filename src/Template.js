@@ -63,7 +63,7 @@ class Template extends TemplateContent {
     if (this.templateData) {
       this.templateData.setInputDir(this.inputDir);
     }
-    this.paginationData = {};
+    this.paginationData = null;
 
     this.isVerbose = true;
     this.isDryRun = false;
@@ -397,10 +397,16 @@ class Template extends TemplateContent {
     }
 
     // Don’t deep merge pagination data! See https://github.com/11ty/eleventy/issues/147#issuecomment-440802454
-    return Object.assign(
-      TemplateData.mergeDeep(this.config, {}, this.dataCache),
-      this.paginationData
-    );
+    if (this.paginationData) {
+      return Object.assign(
+        // Fixed: pagination was failing with `setDataDeepMerge(false)`
+        // TODO: can we use Object.assign here too instead of deep merging?
+        TemplateData.merge({}, this.dataCache),
+        this.paginationData
+      );
+    }
+
+    return this.dataCache;
   }
 
   async addPageDate(data) {
@@ -631,7 +637,7 @@ class Template extends TemplateContent {
           inputPath: this.inputPath,
           fileSlug: this.fileSlugStr,
           filePathStem: this.filePathStem,
-          data: data,
+          data,
           date: data.page.date,
           outputPath: data.page.outputPath,
           url: data.page.url,
@@ -670,26 +676,24 @@ class Template extends TemplateContent {
 
       let pageTemplates = await this.paging.getPageTemplates();
       return await Promise.all(
-        pageTemplates.map(async (page, pageNumber) => {
-          // TODO `getData` was already computed in `getPageTemplates` but it does have an internal `dataCache`
-          let pageData = Object.assign({}, await page.getData()); // re-uses .dataCache
-          await page.addComputedData(pageData);
-
+        pageTemplates.map(async (pageEntry, pageNumber) => {
           // Issue #115
           if (data.collections) {
-            pageData.collections = data.collections;
+            pageEntry.data.collections = data.collections;
           }
 
+          await pageEntry.template.addComputedData(pageEntry.data);
+
           return {
-            template: page,
+            template: pageEntry.template,
             inputPath: this.inputPath,
             fileSlug: this.fileSlugStr,
             filePathStem: this.filePathStem,
-            data: pageData,
-            date: pageData.page.date,
+            data: pageEntry.data,
+            date: pageEntry.data.page.date,
             pageNumber: pageNumber,
-            outputPath: pageData.page.outputPath,
-            url: pageData.page.url,
+            outputPath: pageEntry.data.page.outputPath,
+            url: pageEntry.data.page.url,
             checkTemplateContent: true,
             set templateContent(content) {
               if (content === undefined) {
@@ -1010,11 +1014,9 @@ class Template extends TemplateContent {
     }
   }
 
-  async getTemplateMapEntries(dataOverride) {
+  // Important reminder: Template data is first generated in TemplateMap
+  async getTemplateMapEntries(data) {
     debugDev("%o getMapped()", this.inputPath);
-
-    // Important reminder: This is where the template data is first generated via TemplateMap
-    let data = dataOverride || (await this.getData());
 
     this.behavior.setRenderViaDataCascade(data);
 
