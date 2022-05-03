@@ -33,6 +33,13 @@ async function testRenderWithoutLayouts(template, data) {
   return ret;
 }
 
+async function addTemplate(collection, template) {
+  let data = await template.getData();
+  for (let map of await template.getTemplates(data)) {
+    collection.add(map);
+  }
+}
+
 test("TemplateMap has collections added", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
@@ -63,8 +70,8 @@ test("TemplateMap compared to Collection API", async (t) => {
   t.deepEqual(map[1].data.collections.post[1].template, tmpl4);
 
   let c = new TemplateCollection();
-  await c._testAddTemplate(tmpl1);
-  await c._testAddTemplate(tmpl4);
+  await addTemplate(c, tmpl1);
+  await addTemplate(c, tmpl4);
 
   let posts = c.getFilteredByTag("post");
   t.is(posts.length, 2);

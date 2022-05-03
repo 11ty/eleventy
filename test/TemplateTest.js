@@ -71,7 +71,9 @@ test("output path maps to an html file", async (t) => {
   t.is(tmpl.inputDir, "./test/stubs");
   t.is(tmpl.outputDir, "./dist");
   t.is(tmpl.getTemplateSubfolder(), "");
-  t.is(await tmpl.getOutputPath(), "./dist/template/index.html");
+
+  let data = await tmpl.getData();
+  t.is(await tmpl.getOutputPath(data), "./dist/template/index.html");
 });
 
 test("subfolder outputs to a subfolder", async (t) => {
@@ -80,9 +82,10 @@ test("subfolder outputs to a subfolder", async (t) => {
     "./test/stubs/",
     "./dist"
   );
+  let data = await tmpl.getData();
   t.is(tmpl.parsed.dir, "./test/stubs/subfolder");
   t.is(tmpl.getTemplateSubfolder(), "subfolder");
-  t.is(await tmpl.getOutputPath(), "./dist/subfolder/index.html");
+  t.is(await tmpl.getOutputPath(data), "./dist/subfolder/index.html");
 });
 
 test("subfolder outputs to double subfolder", async (t) => {
@@ -91,9 +94,10 @@ test("subfolder outputs to double subfolder", async (t) => {
     "./test/stubs/",
     "./dist"
   );
+  let data = await tmpl.getData();
   t.is(tmpl.parsed.dir, "./test/stubs/subfolder/subfolder");
   t.is(tmpl.getTemplateSubfolder(), "subfolder/subfolder");
-  t.is(await tmpl.getOutputPath(), "./dist/subfolder/subfolder/index.html");
+  t.is(await tmpl.getOutputPath(data), "./dist/subfolder/subfolder/index.html");
 });
 
 test("HTML files output to the same as the input directory have a file suffix added (only if index, this is not index).", async (t) => {
@@ -102,7 +106,8 @@ test("HTML files output to the same as the input directory have a file suffix ad
     "./test/stubs",
     "./test/stubs"
   );
-  t.is(await tmpl.getOutputPath(), "./test/stubs/testing/index.html");
+  let data = await tmpl.getData();
+  t.is(await tmpl.getOutputPath(data), "./test/stubs/testing/index.html");
 });
 
 test("HTML files output to the same as the input directory have a file suffix added (only if index, this _is_ index).", async (t) => {
@@ -111,7 +116,8 @@ test("HTML files output to the same as the input directory have a file suffix ad
     "./test/stubs",
     "./test/stubs"
   );
-  t.is(await tmpl.getOutputPath(), "./test/stubs/index-o.html");
+  let data = await tmpl.getData();
+  t.is(await tmpl.getOutputPath(data), "./test/stubs/index-o.html");
 });
 
 test("HTML files output to the same as the input directory have a file suffix added (only if index, this _is_ index, subfolder).", async (t) => {
@@ -120,7 +126,8 @@ test("HTML files output to the same as the input directory have a file suffix ad
     "./test/stubs",
     "./test/stubs"
   );
-  t.is(await tmpl.getOutputPath(), "./test/stubs/subfolder/index-o.html");
+  let data = await tmpl.getData();
+  t.is(await tmpl.getOutputPath(data), "./test/stubs/subfolder/index-o.html");
 });
 
 test("Test raw front matter from template (yaml)", async (t) => {
@@ -407,7 +414,8 @@ test("Permalink output directory", async (t) => {
     "./test/stubs/",
     "./dist"
   );
-  t.is(await tmpl.getOutputPath(), "./dist/permalinksubfolder/index.html");
+  let data = await tmpl.getData();
+  t.is(await tmpl.getOutputPath(data), "./dist/permalinksubfolder/index.html");
 });
 
 test("Permalink output directory from layout", async (t) => {
@@ -416,7 +424,8 @@ test("Permalink output directory from layout", async (t) => {
     "./test/stubs/",
     "./dist"
   );
-  t.is(await tmpl.getOutputPath(), "./dist/hello/index.html");
+  let data = await tmpl.getData();
+  t.is(await tmpl.getOutputPath(data), "./dist/hello/index.html");
 });
 
 test("Permalink output directory from layout (fileslug)", async (t) => {
@@ -425,8 +434,9 @@ test("Permalink output directory from layout (fileslug)", async (t) => {
     "./test/stubs/",
     "./dist"
   );
+  let data = await tmpl.getData();
   t.is(
-    await tmpl.getOutputPath(),
+    await tmpl.getOutputPath(data),
     "./dist/test/permalink-in-layout-fileslug/index.html"
   );
 });
@@ -444,7 +454,7 @@ test("Layout from template-data-file that has a permalink (fileslug) Issue #121"
   let data = await tmpl.getData();
   let renderedTmpl = (await tmpl.getRenderedTemplates(data))[0];
   t.is(renderedTmpl.templateContent, "Wrapper:Test 1:test");
-  t.is(await tmpl.getOutputPath(), "./dist/test/index.html");
+  t.is(await tmpl.getOutputPath(data), "./dist/test/index.html");
 });
 
 test("Fileslug in an 11ty.js template Issue #588", async (t) => {
@@ -609,10 +619,13 @@ test("Clone the template", async (t) => {
     "./dist"
   );
 
-  let cloned = tmpl.clone();
+  let data = await tmpl.getData();
 
-  t.is(await tmpl.getOutputPath(), "./dist/default/index.html");
-  t.is(await cloned.getOutputPath(), "./dist/default/index.html");
+  let cloned = tmpl.clone();
+  let clonedData = await cloned.getData();
+
+  t.is(await tmpl.getOutputPath(data), "./dist/default/index.html");
+  t.is(await cloned.getOutputPath(clonedData), "./dist/default/index.html");
   t.is(cloned.extensionMap, tmpl.extensionMap);
 });
 
@@ -1035,13 +1048,13 @@ test("renderDirect on a markdown file, permalink should not render markdown", as
     "./test/stubs/",
     "./dist"
   );
-
+  let data = await tmpl.getData();
   t.is(
     await tmpl.renderDirect("/news/my-test-file/index.html", {}, true),
     "/news/my-test-file/index.html"
   );
 
-  t.is(await tmpl.getRawOutputPath(), "/news/my-test-file/index.html");
+  t.is(await tmpl.getRawOutputPath(data), "/news/my-test-file/index.html");
 });
 
 test("renderDirect on a markdown file, permalink should not render markdown (with variable)", async (t) => {
@@ -1050,7 +1063,7 @@ test("renderDirect on a markdown file, permalink should not render markdown (wit
     "./test/stubs/",
     "./dist"
   );
-
+  let data = await tmpl.getData();
   t.is(
     await tmpl.renderDirect(
       "/news/{{ slug }}/index.html",
@@ -1060,7 +1073,7 @@ test("renderDirect on a markdown file, permalink should not render markdown (wit
     "/news/my-title/index.html"
   );
 
-  t.is(await tmpl.getRawOutputPath(), "/news/my-title/index.html");
+  t.is(await tmpl.getRawOutputPath(data), "/news/my-title/index.html");
 });
 
 test("renderDirect on a markdown file, permalink should not render markdown (has override)", async (t) => {
@@ -1069,13 +1082,13 @@ test("renderDirect on a markdown file, permalink should not render markdown (has
     "./test/stubs/",
     "./dist"
   );
-
+  let data = await tmpl.getData();
   t.is(
     await tmpl.renderDirect("/news/my-test-file/index.html", {}, true),
     "/news/my-test-file/index.html"
   );
 
-  t.is(await tmpl.getRawOutputPath(), "/news/my-test-file/index.html");
+  t.is(await tmpl.getRawOutputPath(data), "/news/my-test-file/index.html");
 });
 
 /* Transforms */
@@ -2029,9 +2042,9 @@ test("permalink object with build", async (t) => {
     "./test/stubs/",
     "./test/stubs/_site"
   );
-
-  t.is(await tmpl.getRawOutputPath(), "/url/index.html");
-  t.is(await tmpl.getOutputHref(), "/url/");
+  let data = await tmpl.getData();
+  t.is(await tmpl.getRawOutputPath(data), "/url/index.html");
+  t.is(await tmpl.getOutputHref(data), "/url/");
 });
 
 test("permalink object without build", async (t) => {
@@ -2040,10 +2053,10 @@ test("permalink object without build", async (t) => {
     "./test/stubs/",
     "./test/stubs/_site"
   );
-
-  t.is(await tmpl.getRawOutputPath(), false);
-  t.is(await tmpl.getOutputPath(), false);
-  t.is(await tmpl.getOutputHref(), "/url/");
+  let data = await tmpl.getData();
+  t.is(await tmpl.getRawOutputPath(data), false);
+  t.is(await tmpl.getOutputPath(data), false);
+  t.is(await tmpl.getOutputHref(data), "/url/");
 });
 
 test("permalink object _getLink", async (t) => {

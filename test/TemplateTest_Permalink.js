@@ -120,9 +120,10 @@ test("Disable dynamic permalinks", async (t) => {
     "./test/stubs/",
     "./test/stubs/_site"
   );
+  let data = await tmpl.getData();
 
-  t.is(await tmpl.getRawOutputPath(), "/{{justastring}}/index.html");
-  t.is(await tmpl.getOutputHref(), "/{{justastring}}/");
+  t.is(await tmpl.getRawOutputPath(data), "/{{justastring}}/index.html");
+  t.is(await tmpl.getOutputHref(data), "/{{justastring}}/");
 });
 
 test("Permalink with variables!", async (t) => {
@@ -132,7 +133,12 @@ test("Permalink with variables!", async (t) => {
     "./dist"
   );
 
-  t.is(await tmpl.getOutputPath(), "./dist/subdir/slug-candidate/index.html");
+  let data = await tmpl.getData();
+
+  t.is(
+    await tmpl.getOutputPath(data),
+    "./dist/subdir/slug-candidate/index.html"
+  );
 });
 
 test("Permalink with variables and JS front matter!", async (t) => {
@@ -141,8 +147,8 @@ test("Permalink with variables and JS front matter!", async (t) => {
     "./test/stubs/",
     "./dist"
   );
-
-  t.is(await tmpl.getOutputPath(), "./dist/subdir/slug/index.html");
+  let data = await tmpl.getData();
+  t.is(await tmpl.getOutputPath(data), "./dist/subdir/slug/index.html");
 });
 
 // This is broken right now, permalink must use the same template language as the template
@@ -153,7 +159,8 @@ test.skip("Use a JavaScript function for permalink in any template language", as
     "./dist"
   );
 
-  t.is(await tmpl.getOutputPath(), "./dist/subdir/slug/index.html");
+  let data = await tmpl.getData();
+  t.is(await tmpl.getOutputPath(data), "./dist/subdir/slug/index.html");
 });
 
 test("Permalink with dates!", async (t) => {
@@ -162,8 +169,8 @@ test("Permalink with dates!", async (t) => {
     "./test/stubs/",
     "./dist"
   );
-
-  t.is(await tmpl.getOutputPath(), "./dist/2016/01/01/index.html");
+  let data = await tmpl.getData();
+  t.is(await tmpl.getOutputPath(data), "./dist/2016/01/01/index.html");
 });
 
 test.skip("Permalink with dates on file name regex!", async (t) => {
@@ -172,8 +179,8 @@ test.skip("Permalink with dates on file name regex!", async (t) => {
     "./test/stubs/",
     "./dist"
   );
-
-  t.is(await tmpl.getOutputPath(), "./dist/2016/02/01/index.html");
+  let data = await tmpl.getData();
+  t.is(await tmpl.getOutputPath(data), "./dist/2016/02/01/index.html");
 });
 
 test("Reuse permalink in directory specific data file", async (t) => {
@@ -185,8 +192,8 @@ test("Reuse permalink in directory specific data file", async (t) => {
     "./dist",
     dataObj
   );
-
-  t.is(await tmpl.getOutputPath(), "./dist/2016/01/01/index.html");
+  let data = await tmpl.getData();
+  t.is(await tmpl.getOutputPath(data), "./dist/2016/01/01/index.html");
 });
 
 test("Using slugify filter!", async (t) => {
@@ -195,9 +202,9 @@ test("Using slugify filter!", async (t) => {
     "./test/slugify-filter/",
     "./dist"
   );
-
+  let data = await tmpl.getData();
   t.is(
-    await tmpl.getOutputPath(),
+    await tmpl.getOutputPath(data),
     "./dist/subdir/slug-love-candidate-lyublyu/index.html"
   );
 });
@@ -208,8 +215,8 @@ test("Using slugify filter with comma and apostrophe", async (t) => {
     "./test/slugify-filter/",
     "./dist"
   );
-
-  t.is(await tmpl.getOutputPath(), "./dist/subdir/hi-i-m-zach/index.html");
+  let data = await tmpl.getData();
+  t.is(await tmpl.getOutputPath(data), "./dist/subdir/hi-i-m-zach/index.html");
 });
 
 test("Using slug filter with options params", async (t) => {
@@ -218,8 +225,8 @@ test("Using slug filter with options params", async (t) => {
     "./test/slugify-filter/",
     "./dist"
   );
-
-  t.is(await tmpl.getOutputPath(), "./dist/subdir/hi_i_am_zach/index.html");
+  let data = await tmpl.getData();
+  t.is(await tmpl.getOutputPath(data), "./dist/subdir/hi_i_am_zach/index.html");
 });
 
 test("Using slugify filter with options params", async (t) => {
@@ -228,8 +235,8 @@ test("Using slugify filter with options params", async (t) => {
     "./test/slugify-filter/",
     "./dist"
   );
-
-  t.is(await tmpl.getOutputPath(), "./dist/subdir/hi-i-m-z-ach/index.html");
+  let data = await tmpl.getData();
+  t.is(await tmpl.getOutputPath(data), "./dist/subdir/hi-i-m-z-ach/index.html");
 });
 
 test("Using slugify filter with a number #854", async (t) => {
@@ -238,8 +245,8 @@ test("Using slugify filter with a number #854", async (t) => {
     "./test/slugify-filter/",
     "./dist"
   );
-
-  t.is(await tmpl.getOutputPath(), "./dist/subdir/1/index.html");
+  let data = await tmpl.getData();
+  t.is(await tmpl.getOutputPath(data), "./dist/subdir/1/index.html");
 });
 
 test("Using slug filter with a number #854", async (t) => {
@@ -248,6 +255,6 @@ test("Using slug filter with a number #854", async (t) => {
     "./test/slugify-filter/",
     "./dist"
   );
-
-  t.is(await tmpl.getOutputPath(), "./dist/subdir/1/index.html");
+  let data = await tmpl.getData();
+  t.is(await tmpl.getOutputPath(data), "./dist/subdir/1/index.html");
 });

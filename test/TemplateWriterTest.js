@@ -35,8 +35,10 @@ test("Output is a subdir of input", async (t) => {
 
   let tmpl = tw._createTemplate(files[0]);
   t.is(tmpl.inputDir, "./test/stubs/writeTest");
+
+  let data = await tmpl.getData();
   t.is(
-    await tmpl.getOutputPath(),
+    await tmpl.getOutputPath(data),
     "./test/stubs/writeTest/_writeTestSite/test/index.html"
   );
 });
@@ -306,19 +308,20 @@ test("Pagination with a Collection (apply all pages to collections)", async (t) 
   let mainTmpl = tw._createTemplate(
     "./test/stubs/paged/collection-apply-to-all/main.njk"
   );
-  let outputPath = await mainTmpl.getOutputPath();
+  let data = await mainTmpl.getData();
+  let outputPath = await mainTmpl.getOutputPath(data);
   t.is(outputPath, "./test/stubs/_site/main/index.html");
   t.is(mapEntry.outputPath, "./test/stubs/_site/main/index.html");
 
   let templates = await mapEntry.template.getRenderedTemplates(mapEntry.data);
   t.is(templates.length, 2);
   t.is(
-    await templates[0].template.getOutputPath(),
+    await templates[0].template.getOutputPath(templates[0].data),
     "./test/stubs/_site/main/index.html"
   );
   t.is(templates[0].outputPath, "./test/stubs/_site/main/index.html");
   t.is(
-    await templates[1].template.getOutputPath(),
+    await templates[1].template.getOutputPath(templates[1].data),
     "./test/stubs/_site/main/1/index.html"
   );
   t.is(templates[1].outputPath, "./test/stubs/_site/main/1/index.html");
@@ -356,7 +359,8 @@ test("Use a collection inside of a template", async (t) => {
   let mainTmpl = tw._createTemplate(
     "./test/stubs/collection-template/template.ejs"
   );
-  let outputPath = await mainTmpl.getOutputPath();
+  let data = await mainTmpl.getData();
+  let outputPath = await mainTmpl.getOutputPath(data);
   t.is(
     outputPath,
     "./test/stubs/collection-template/_site/template/index.html"
@@ -401,7 +405,8 @@ test("Use a collection inside of a layout", async (t) => {
   let mainTmpl = tw._createTemplate(
     "./test/stubs/collection-layout/template.ejs"
   );
-  let outputPath = await mainTmpl.getOutputPath();
+  let data = await mainTmpl.getData();
+  let outputPath = await mainTmpl.getOutputPath(data);
   t.is(outputPath, "./test/stubs/collection-layout/_site/template/index.html");
 
   let templates = await mapEntry.template.getRenderedTemplates(mapEntry.data);
@@ -573,8 +578,9 @@ test("Write Test 11ty.js", async (t) => {
   t.deepEqual(files, ["./test/stubs/writeTestJS/test.11ty.js"]);
 
   let tmpl = tw._createTemplate(files[0]);
+  let data = await tmpl.getData();
   t.is(
-    await tmpl.getOutputPath(),
+    await tmpl.getOutputPath(data),
     "./test/stubs/_writeTestJSSite/test/index.html"
   );
 });

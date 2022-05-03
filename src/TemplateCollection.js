@@ -9,14 +9,6 @@ class TemplateCollection extends Sortable {
     this._filteredByGlobsCache = new Map();
   }
 
-  // TODO move this into tests (this is only used by tests)
-  async _testAddTemplate(template) {
-    let data = await template.getData();
-    for (let map of await template.getTemplates(data)) {
-      this.add(map);
-    }
-  }
-
   getAll() {
     return this.items.slice();
   }

@@ -332,8 +332,8 @@ test("Template with Pagination, getRenderedTemplates", async (t) => {
     "./dist"
   );
 
-  let outputPath = await tmpl.getOutputPath();
   let data = await tmpl.getData();
+  let outputPath = await tmpl.getOutputPath(data);
   t.is(outputPath, "./dist/paged/index.html");
 
   let templates = await tmpl.getRenderedTemplates(data);

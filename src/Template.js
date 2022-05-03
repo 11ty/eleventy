@@ -182,7 +182,7 @@ class Template extends TemplateContent {
 
   async _getLink(data) {
     if (!data) {
-      data = await this.getData();
+      throw new Error("data argument missing in Template->_getLink");
     }
 
     let permalink = data[this.config.keys.permalink];
