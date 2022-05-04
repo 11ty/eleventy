@@ -274,11 +274,15 @@ class TemplateContent {
 
         if (cacheable && key) {
           if (cache.has(key)) {
-            this.bench.get("Template Compile Cache Hit").incrementCount();
+            this.bench
+              .get("(count) Template Compile Cache Hit")
+              .incrementCount();
             return cache.get(key);
           }
 
-          this.bench.get("Template Compile Cache Miss").incrementCount();
+          this.bench
+            .get("(count) Template Compile Cache Miss")
+            .incrementCount();
 
           // Compilation is async, so we eagerly cache a Promise that eventually
           // resolves to the compiled function
@@ -346,6 +350,15 @@ class TemplateContent {
   }
 
   async renderPermalink(permalink, data) {
+    this.bench.get("(count) Render Permalink").incrementCount();
+    this.bench
+      .get(
+        `(count) > Render Permalink > ${
+          this.inputPath
+        }${this._getPaginationLogSuffix(data)}`
+      )
+      .incrementCount();
+
     let permalinkCompilation = this.engine.permalinkNeedsCompilation(permalink);
     // No string compilation:
     //    ({ compileOptions: { permalink: "raw" }})
@@ -384,6 +397,24 @@ class TemplateContent {
     return this._render(str, data, bypassMarkdown);
   }
 
+  _getPaginationLogSuffix(data) {
+    let suffix = [];
+    if ("pagination" in data) {
+      suffix.push(" (");
+      if (data.pagination.pages) {
+        suffix.push(
+          `${data.pagination.pages.length} page${
+            data.pagination.pages.length !== 1 ? "s" : ""
+          }`
+        );
+      } else {
+        suffix.push("Pagination");
+      }
+      suffix.push(")");
+    }
+    return suffix.join("");
+  }
+
   async _render(str, data, bypassMarkdown) {
     try {
       if (bypassMarkdown && !this.engine.needsCompilation(str)) {
@@ -405,23 +436,10 @@ class TemplateContent {
 
       // Benchmark
       let templateBenchmark = this.bench.get("Render");
-      let logRenderToOutputBenchmark = true;
-      let paginationSuffix = [];
-      if ("pagination" in data) {
-        logRenderToOutputBenchmark = false; // skip benchmark for each individual pagination entry
-        paginationSuffix.push(" (Pagination");
-        if (data.pagination.pages) {
-          paginationSuffix.push(
-            `: ${data.pagination.pages.length} page${
-              data.pagination.pages.length !== 1 ? "s" : ""
-            }`
-          );
-        }
-        paginationSuffix.push(")");
-      }
-
+      // Skip benchmark for each individual pagination entry (very busy output)
+      let logRenderToOutputBenchmark = "pagination" in data;
       let inputPathBenchmark = this.bench.get(
-        `> Render > ${this.inputPath}${paginationSuffix.join("")}`
+        `> Render > ${this.inputPath}${this._getPaginationLogSuffix(data)}`
       );
       let outputPathBenchmark;
       if (data.page && data.page.outputPath && logRenderToOutputBenchmark) {

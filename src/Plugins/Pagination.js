@@ -347,9 +347,16 @@ class Pagination {
 
       // TO DO subdirectory to links if the site doesn’t live at /
       let clonedData = await cloned.getData(); // note that `cloned.dataCache` was preserved
-      let { rawPath, href } = await cloned.getOutputLocations(clonedData);
+      let { rawPath, path, href } = await cloned.getOutputLocations(clonedData);
       links.push("/" + rawPath);
       hrefs.push(href);
+
+      // This page.url and page.outputPath are used to avoid another getOutputLocations call later, see Template->addComputedData
+      if (!clonedData.page) {
+        clonedData.page = {};
+      }
+      clonedData.page.url = href;
+      clonedData.page.outputPath = path;
 
       entries.push({
         template: cloned,

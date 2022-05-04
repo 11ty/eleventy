@@ -296,6 +296,7 @@ class Template extends TemplateContent {
 
   // TODO instead of htmlIOException, do a global search to check if output path = input path and then add extra suffix
   async getOutputLocations(data) {
+    this.bench.get("(count) getOutputLocations").incrementCount();
     let link = await this._getLink(data);
 
     let path;
@@ -312,20 +313,24 @@ class Template extends TemplateContent {
     };
   }
 
+  // This is likely now a test-only method
   // Preferred to use the singular `getOutputLocations` above.
   async getRawOutputPath(data) {
+    this.bench.get("(count) getRawOutputPath").incrementCount();
     let link = await this._getLink(data);
     return link.toOutputPath();
   }
 
   // Preferred to use the singular `getOutputLocations` above.
   async getOutputHref(data) {
+    this.bench.get("(count) getOutputHref").incrementCount();
     let link = await this._getLink(data);
     return link.toHref();
   }
 
   // Preferred to use the singular `getOutputLocations` above.
   async getOutputPath(data) {
+    this.bench.get("(count) getOutputPath").incrementCount();
     let link = await this._getLink(data);
     if (await this.usePermalinkRoot()) {
       return link.toPathFromRoot();
@@ -610,6 +615,11 @@ class Template extends TemplateContent {
     } else {
       if (!("page" in data)) {
         data.page = {};
+      }
+
+      // pagination will already have these set via Pagination->getPageTemplates
+      if (data.page.url && data.page.outputPath) {
+        return;
       }
 
       let { href, path } = await this.getOutputLocations(data);
