@@ -357,7 +357,7 @@ class TemplateContent {
       return permalink;
     }
 
-    /* Usage:
+    /* Custom `compile` function for permalinks, usage:
     permalink: function(permalinkString, inputPath) {
       return async function(data) {
         return "THIS IS MY RENDERED PERMALINK";
@@ -372,6 +372,7 @@ class TemplateContent {
       );
     }
 
+    // Raw permalink function (in the app code data cascade)
     if (typeof permalink === "function") {
       return this._renderFunction(permalink, data);
     }

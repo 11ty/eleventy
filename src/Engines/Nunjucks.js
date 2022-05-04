@@ -311,8 +311,11 @@ class Nunjucks extends TemplateEngine {
     this.njkEnv.addExtension(shortcodeName, new fn());
   }
 
+  // Don’t return a boolean if permalink is a function (see TemplateContent->renderPermalink)
   permalinkNeedsCompilation(str) {
-    return this.needsCompilation(str);
+    if (typeof str === "string") {
+      return this.needsCompilation(str);
+    }
   }
 
   needsCompilation(str) {
