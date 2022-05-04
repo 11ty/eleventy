@@ -2,6 +2,18 @@ const lodashChunk = require("lodash/chunk");
 const lodashGet = require("lodash/get");
 const lodashSet = require("lodash/set");
 const EleventyBaseError = require("../EleventyBaseError");
+const { DeepCopy } = require("../Util/Merge");
+
+function proxyWrap(target, fallback) {
+  return new Proxy(target, {
+    get(target, prop) {
+      if (prop in target) {
+        return target[prop];
+      }
+      return fallback[prop];
+    },
+  });
+}
 
 class PaginationConfigError extends EleventyBaseError {}
 class PaginationError extends EleventyBaseError {}
@@ -293,7 +305,6 @@ class Pagination {
 
     let links = [];
     let hrefs = [];
-    let overrides = [];
 
     let paginationDataObject = {
       data: this.data.pagination.data,
@@ -307,6 +318,9 @@ class Pagination {
       this.data.eleventyComputed &&
         this.data.eleventyComputed[this.config.keys.permalink]
     );
+
+    // Reuse parent `template.dataCache` for a small memory efficiency win
+    let parentData = DeepCopy({}, this.data);
 
     // TODO future improvement dea: use a light Template wrapper for paged template clones (PagedTemplate?)
     // so that we don’t have the memory cost of the full template (and can reuse the parent
@@ -322,39 +336,36 @@ class Pagination {
         cloned.setExtraOutputSubdirectory(pageNumber);
       }
 
-      let override = {
+      let paginationData = {
         pagination: {
           items: items[pageNumber],
         },
       };
+      Object.assign(
+        paginationData.pagination,
+        paginationDataObject,
+        this.getOverrideDataPages(items, pageNumber)
+      );
 
       if (this.alias) {
         lodashSet(
-          override,
+          paginationData,
           this.alias,
           this.getNormalizedItems(items[pageNumber])
         );
       }
 
-      Object.assign(
-        override.pagination,
-        paginationDataObject,
-        this.getOverrideDataPages(items, pageNumber)
-      );
+      paginationData.page = proxyWrap({}, parentData.page);
 
-      overrides.push(override);
-      cloned.setPaginationData(override);
+      // Do *not* deep merge pagination data! See https://github.com/11ty/eleventy/issues/147#issuecomment-440802454
+      let clonedData = proxyWrap(paginationData, parentData);
 
-      // TO DO subdirectory to links if the site doesn’t live at /
-      let clonedData = await cloned.getData(); // note that `cloned.dataCache` was preserved
       let { rawPath, path, href } = await cloned.getOutputLocations(clonedData);
+      // TO DO subdirectory to links if the site doesn’t live at /
       links.push("/" + rawPath);
       hrefs.push(href);
 
-      // This page.url and page.outputPath are used to avoid another getOutputLocations call later, see Template->addComputedData
-      if (!clonedData.page) {
-        clonedData.page = {};
-      }
+      // page.url and page.outputPath are used to avoid another getOutputLocations call later, see Template->addComputedData
       clonedData.page.url = href;
       clonedData.page.outputPath = path;
 
@@ -365,23 +376,22 @@ class Pagination {
     }
 
     // we loop twice to pass in the appropriate prev/next links (already full generated now)
-    for (let pageNumber = 0; pageNumber < entries.length; pageNumber++) {
+    let numberOfEntries = entries.length;
+    for (let pageNumber = 0; pageNumber < numberOfEntries; pageNumber++) {
       let linksObj = this.getOverrideDataLinks(
         pageNumber,
-        entries.length,
+        numberOfEntries,
         links
       );
-      Object.assign(overrides[pageNumber].pagination, linksObj);
+
+      Object.assign(entries[pageNumber].data.pagination, linksObj);
 
       let hrefsObj = this.getOverrideDataHrefs(
         pageNumber,
-        entries.length,
+        numberOfEntries,
         hrefs
       );
-      Object.assign(overrides[pageNumber].pagination, hrefsObj);
-
-      let entry = entries[pageNumber];
-      entry.template.setPaginationData(overrides[pageNumber]);
+      Object.assign(entries[pageNumber].data.pagination, hrefsObj);
     }
 
     return entries;

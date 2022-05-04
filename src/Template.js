@@ -63,7 +63,6 @@ class Template extends TemplateContent {
     if (this.templateData) {
       this.templateData.setInputDir(this.inputDir);
     }
-    this.paginationData = null;
 
     this.isVerbose = true;
     this.isDryRun = false;
@@ -338,10 +337,6 @@ class Template extends TemplateContent {
     return link.toPath(this.outputDir);
   }
 
-  setPaginationData(paginationData) {
-    this.paginationData = paginationData;
-  }
-
   async _testGetAllLayoutFrontMatterData() {
     let frontMatterData = await this.getFrontMatterData();
     if (frontMatterData[this.config.keys.layout]) {
@@ -352,66 +347,53 @@ class Template extends TemplateContent {
   }
 
   async getData() {
-    if (!this.dataCache) {
-      debugDev("%o getData()", this.inputPath);
-      let localData = {};
-      let globalData = {};
+    // Note: we removed the `dataCache` property as caching now happens upstream in TemplateMap
+    debugDev("%o getData()", this.inputPath);
+    let localData = {};
+    let globalData = {};
 
-      if (this.templateData) {
-        localData = await this.templateData.getTemplateDirectoryData(
-          this.inputPath
-        );
-        globalData = await this.templateData.getGlobalData(this.inputPath);
-        debugDev(
-          "%o getData() getTemplateDirectoryData and getGlobalData",
-          this.inputPath
-        );
-      }
-
-      let frontMatterData = await this.getFrontMatterData();
-      let layoutKey =
-        frontMatterData[this.config.keys.layout] ||
-        localData[this.config.keys.layout] ||
-        globalData[this.config.keys.layout];
-
-      // Layout front matter data
-      let mergedLayoutData = {};
-      if (layoutKey) {
-        let layout = this.getLayout(layoutKey);
-
-        mergedLayoutData = await layout.getData();
-        debugDev(
-          "%o getData() get merged layout chain front matter",
-          this.inputPath
-        );
-      }
-
-      let mergedData = TemplateData.mergeDeep(
-        this.config,
-        {},
-        globalData,
-        mergedLayoutData,
-        localData,
-        frontMatterData
+    if (this.templateData) {
+      localData = await this.templateData.getTemplateDirectoryData(
+        this.inputPath
       );
-      mergedData = await this.addPageDate(mergedData);
-      mergedData = this.addPageData(mergedData);
-      debugDev("%o getData() mergedData", this.inputPath);
-
-      this.dataCache = mergedData;
-    }
-
-    // Don’t deep merge pagination data! See https://github.com/11ty/eleventy/issues/147#issuecomment-440802454
-    if (this.paginationData) {
-      return Object.assign(
-        // Fixed: pagination was failing with `setDataDeepMerge(false)`
-        // TODO: can we use Object.assign here too instead of deep merging?
-        TemplateData.merge({}, this.dataCache),
-        this.paginationData
+      globalData = await this.templateData.getGlobalData(this.inputPath);
+      debugDev(
+        "%o getData() getTemplateDirectoryData and getGlobalData",
+        this.inputPath
       );
     }
 
-    return this.dataCache;
+    let frontMatterData = await this.getFrontMatterData();
+    let layoutKey =
+      frontMatterData[this.config.keys.layout] ||
+      localData[this.config.keys.layout] ||
+      globalData[this.config.keys.layout];
+
+    // Layout front matter data
+    let mergedLayoutData = {};
+    if (layoutKey) {
+      let layout = this.getLayout(layoutKey);
+
+      mergedLayoutData = await layout.getData();
+      debugDev(
+        "%o getData() get merged layout chain front matter",
+        this.inputPath
+      );
+    }
+
+    let mergedData = TemplateData.mergeDeep(
+      this.config,
+      {},
+      globalData,
+      mergedLayoutData,
+      localData,
+      frontMatterData
+    );
+    mergedData = await this.addPageDate(mergedData);
+    mergedData = this.addPageData(mergedData);
+    debugDev("%o getData() mergedData", this.inputPath);
+
+    return mergedData;
   }
 
   async addPageDate(data) {
@@ -687,11 +669,15 @@ class Template extends TemplateContent {
       let pageTemplates = await this.paging.getPageTemplates();
       return await Promise.all(
         pageTemplates.map(async (pageEntry, pageNumber) => {
-          // Issue #115
           if (data.collections) {
+            // Issue #115
             pageEntry.data.collections = data.collections;
           }
 
+          // eleventyComputed needs to exist on proxy for it to iterate and set data
+          if (data.eleventyComputed) {
+            pageEntry.data.eleventyComputed = data.eleventyComputed;
+          }
           await pageEntry.template.addComputedData(pageEntry.data);
 
           return {
@@ -910,7 +896,7 @@ class Template extends TemplateContent {
       this.eleventyConfig
     );
 
-    // preserves caches too, like this.dataCache, _frontMatterDataCache
+    // preserves caches too, e.g. _frontMatterDataCache
     for (let key in this) {
       tmpl[key] = this[key];
     }
