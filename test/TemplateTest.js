@@ -320,6 +320,45 @@ test("One Layout (_layoutContent deprecated but supported)", async (t) => {
   t.is(data.keylayout, "valuelayout");
 });
 
+test("Liquid shortcode with multiple arguments(issue #2348)", async (t) => {
+  // NOTE issue #2348 was only active when you were processing multiple templates at the same time.
+
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.addShortcode("simplelink", function (text, url) {
+    return `<a href="${url}">${text} (${url})</a>`;
+  });
+
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+
+  let tmpl = getNewTemplate(
+    "./test/stubs/templateWithLiquidShortcodeMultipleArguments.liquid",
+    "./test/stubs/",
+    "dist",
+    dataObj,
+    null,
+    eleventyConfig
+  );
+
+  t.is(
+    (await tmpl.getFrontMatter()).data[tmpl.config.keys.layout],
+    "layoutLiquid.liquid"
+  );
+
+  let data = await tmpl.getData();
+  t.is(data[tmpl.config.keys.layout], "layoutLiquid.liquid");
+
+  t.is(
+    normalizeNewLines(cleanHtml(await tmpl.renderLayout(tmpl, data))),
+    `<div id="layout">
+  <p>Hello.</p>
+  <a href="/somepage">world (/somepage)</a>
+</div>`
+  );
+
+  t.is(data.keymain, "valuemain");
+  t.is(data.keylayout, "valuelayout");
+});
+
 test("One Layout (liquid test)", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
