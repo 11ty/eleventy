@@ -3,17 +3,7 @@ const lodashGet = require("lodash/get");
 const lodashSet = require("lodash/set");
 const EleventyBaseError = require("../EleventyBaseError");
 const { DeepCopy } = require("../Util/Merge");
-
-function proxyWrap(target, fallback) {
-  return new Proxy(target, {
-    get(target, prop) {
-      if (prop in target) {
-        return target[prop];
-      }
-      return fallback[prop];
-    },
-  });
-}
+const { ProxyWrap } = require("../Util/ProxyWrap");
 
 class PaginationConfigError extends EleventyBaseError {}
 class PaginationError extends EleventyBaseError {}
@@ -306,21 +296,36 @@ class Pagination {
     let links = [];
     let hrefs = [];
 
-    let paginationDataObject = {
-      data: this.data.pagination.data,
-      size: this.data.pagination.size,
-      alias: this.alias,
-      pages,
-    };
-
     let hasPermalinkField = Boolean(this.data[this.config.keys.permalink]);
     let hasComputedPermalinkField = Boolean(
       this.data.eleventyComputed &&
         this.data.eleventyComputed[this.config.keys.permalink]
     );
 
-    // Reuse parent `template.dataCache` for a small memory efficiency win
-    let parentData = DeepCopy({}, this.data);
+    // Reuse parent `template.data` cache for a small memory efficiency win
+    let collections = this.data.collections;
+    if (collections) {
+      delete this.data.collections;
+    }
+
+    let parentData = DeepCopy(
+      {
+        pagination: {
+          data: this.data.pagination.data,
+          size: this.data.pagination.size,
+          alias: this.alias,
+          pages,
+        },
+      },
+      this.data
+    );
+
+    // Restore skipped collections
+    if (collections) {
+      this.data.collections = collections;
+      // Keep the original reference to the collections, no deep copy!!
+      parentData.collections = collections;
+    }
 
     // TODO future improvement dea: use a light Template wrapper for paged template clones (PagedTemplate?)
     // so that we don’t have the memory cost of the full template (and can reuse the parent
@@ -340,10 +345,10 @@ class Pagination {
         pagination: {
           items: items[pageNumber],
         },
+        page: {},
       };
       Object.assign(
         paginationData.pagination,
-        paginationDataObject,
         this.getOverrideDataPages(items, pageNumber)
       );
 
@@ -355,10 +360,8 @@ class Pagination {
         );
       }
 
-      paginationData.page = proxyWrap({}, parentData.page);
-
       // Do *not* deep merge pagination data! See https://github.com/11ty/eleventy/issues/147#issuecomment-440802454
-      let clonedData = proxyWrap(paginationData, parentData);
+      let clonedData = ProxyWrap(paginationData, parentData);
 
       let { rawPath, path, href } = await cloned.getOutputLocations(clonedData);
       // TO DO subdirectory to links if the site doesn’t live at /

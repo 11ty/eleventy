@@ -58,6 +58,17 @@ class TemplateRender {
     return this._extensionMap;
   }
 
+  getEngineByName(name) {
+    let engine = this.extensionMap.engineManager.getEngine(
+      name,
+      this.getDirs(),
+      this.extensionMap
+    );
+    engine.config = this.config;
+
+    return engine;
+  }
+
   // Runs once per template
   init(engineNameOrPath) {
     this.extensionMap.config = this.config;
@@ -68,12 +79,7 @@ class TemplateRender {
       );
     }
 
-    this._engine = this.extensionMap.engineManager.getEngine(
-      this._engineName,
-      this.getDirs(),
-      this.extensionMap
-    );
-    this._engine.config = this.config;
+    this._engine = this.getEngineByName(this._engineName);
     this._engine.initRequireCache(engineNameOrPath);
 
     if (this.useMarkdown === undefined) {
@@ -170,6 +176,17 @@ class TemplateRender {
     if (keyFromFilename !== this.engineName) {
       return this.engineName;
     }
+  }
+
+  // TODO templateEngineOverride
+  getPreprocessorEngine() {
+    if (this.engineName === "md" && this.parseMarkdownWith) {
+      return this.parseMarkdownWith;
+    }
+    if (this.engineName === "html" && this.parseHtmlWith) {
+      return this.parseHtmlWith;
+    }
+    return this.extensionMap.getKey(this.engineNameOrPath);
   }
 
   // We pass in templateEngineOverride here because it isn’t yet applied to templateRender

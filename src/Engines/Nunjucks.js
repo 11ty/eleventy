@@ -394,7 +394,8 @@ class Nunjucks extends TemplateEngine {
       return name.join(".");
     });
 
-    return Array.from(new Set(symbols));
+    let uniqueSymbols = Array.from(new Set(symbols));
+    return uniqueSymbols;
   }
 
   async compile(str, inputPath) {

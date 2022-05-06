@@ -321,9 +321,21 @@ class TemplateContent {
   }
 
   getParseForSymbolsFunction(str) {
-    if ("parseForSymbols" in this.engine) {
+    let engine = this.engine;
+
+    // Don’t use markdown as the engine to parse for symbols
+    let preprocessorEngine = this.templateRender.getPreprocessorEngine(); // TODO pass in engineOverride here
+    if (preprocessorEngine && engine.getName() !== preprocessorEngine) {
+      let replacementEngine =
+        this.templateRender.getEngineByName(preprocessorEngine);
+      if (replacementEngine) {
+        engine = replacementEngine;
+      }
+    }
+
+    if ("parseForSymbols" in engine) {
       return () => {
-        return this.engine.parseForSymbols(str);
+        return engine.parseForSymbols(str);
       };
     }
   }
@@ -360,6 +372,7 @@ class TemplateContent {
       .incrementCount();
 
     let permalinkCompilation = this.engine.permalinkNeedsCompilation(permalink);
+
     // No string compilation:
     //    ({ compileOptions: { permalink: "raw" }})
     // These mean `permalink: false`, which is no file system writing:
@@ -426,6 +439,7 @@ class TemplateContent {
         bypassMarkdown,
         data[this.config.keys.engineOverride]
       );
+
       if (fn === undefined) {
         return;
       } else if (typeof fn !== "function") {

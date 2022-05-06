@@ -1,9 +1,18 @@
 const { isPlainObject } = require("@11ty/eleventy-utils");
 const OVERRIDE_PREFIX = "override:";
 
-function getMergedItem(target, source, parentKey, overridePrefix) {
-  // if key is prefixed with overridePrefix, it just keeps the new source value (no merging)
-  if (overridePrefix && parentKey && parentKey.indexOf(overridePrefix) === 0) {
+function cleanKey(key, prefix) {
+  if (prefix && key.startsWith(prefix)) {
+    return key.substr(prefix.length);
+  }
+  return key;
+}
+
+function getMergedItem(target, source, parentKey, prefixes = {}) {
+  let { override } = prefixes;
+
+  // if key is prefixed with override prefix, it just keeps the new source value (no merging)
+  if (override && parentKey && parentKey.startsWith(override)) {
     return source;
   }
 
@@ -17,15 +26,13 @@ function getMergedItem(target, source, parentKey, overridePrefix) {
   } else if (isPlainObject(target)) {
     if (isPlainObject(source)) {
       for (let key in source) {
-        let newKey = key;
-        if (overridePrefix && key.startsWith(overridePrefix)) {
-          newKey = key.substr(overridePrefix.length);
-        }
-        target[newKey] = getMergedItem(
+        let overrideKey = cleanKey(key, override);
+
+        target[overrideKey] = getMergedItem(
           target[key],
           source[key],
-          newKey,
-          overridePrefix
+          overrideKey,
+          prefixes
         );
       }
     }
@@ -63,7 +70,9 @@ function Merge(target, ...sources) {
     if (!source) {
       continue;
     }
-    target = getMergedItem(target, source, null, OVERRIDE_PREFIX);
+    target = getMergedItem(target, source, null, {
+      override: OVERRIDE_PREFIX,
+    });
   }
 
   return target;

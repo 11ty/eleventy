@@ -438,3 +438,65 @@ test("#2167: Pagination with permalink: false", async (t) => {
     t.is(pages[j], undefined);
   }
 });
+
+test("Pagination over collection using eleventyComputed (liquid)", async (t) => {
+  t.plan(5);
+  let elev = new Eleventy(
+    "./test/stubs-pagination-computed-quotes/",
+    "./test/stubs-pagination-computed-quotes/_site",
+    {
+      config: function (eleventyConfig) {
+        eleventyConfig.addFilter("selectRandomFromArray", (arr) => {
+          t.true(Array.isArray(arr));
+          t.deepEqual(arr, ["The person that shared this is awesome"]);
+          return arr[0];
+        });
+      },
+    }
+  );
+
+  let results = await elev.toJSON();
+  t.is(results.length, 2);
+  let content = results.map((entry) => entry.content).sort();
+  t.is(content[0], "No");
+  t.is(content[1], "The person that shared this is awesome");
+});
+
+test("Pagination over collection using eleventyComputed (njk)", async (t) => {
+  t.plan(5);
+  let elev = new Eleventy(
+    "./test/stubs-pagination-computed-quotes-njk/",
+    "./test/stubs-pagination-computed-quotes-njk/_site",
+    {
+      config: function (eleventyConfig) {
+        eleventyConfig.addFilter("selectRandomFromArray", (arr) => {
+          t.true(Array.isArray(arr));
+          t.deepEqual(arr, ["The person that shared this is awesome"]);
+          return arr[0];
+        });
+      },
+    }
+  );
+
+  let results = await elev.toJSON();
+  t.is(results.length, 2);
+  let content = results.map((entry) => entry.content).sort();
+  t.is(content[0], "No");
+  t.is(content[1], "The person that shared this is awesome");
+});
+
+test("Paginated template uses proxy and global data", async (t) => {
+  let elev = new Eleventy(
+    "./test/proxy-pagination-globaldata/",
+    "./test/proxy-pagination-globaldata/_site",
+    {
+      config: function (eleventyConfig) {},
+    }
+  );
+
+  let results = await elev.toJSON();
+  let allContentMatches = results.filter((entry) => {
+    return entry.content.trim() === "BANNER TEXT";
+  });
+  t.is(results.length, allContentMatches.length);
+});

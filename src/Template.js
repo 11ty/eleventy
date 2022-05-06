@@ -546,7 +546,7 @@ class Template extends TemplateContent {
       computedData.addTemplateString(
         parentKey,
         async (innerData) => {
-          return await this.renderComputedData(obj, innerData, true);
+          return await this.renderComputedData(obj, innerData);
         },
         declaredDependencies,
         this.getParseForSymbolsFunction(obj)
@@ -564,6 +564,8 @@ class Template extends TemplateContent {
       // Note that `permalink` is only a thing that gets consumed—it does not go directly into generated data
       // this allows computed entries to use page.url or page.outputPath and they’ll be resolved properly
 
+      // TODO Room for optimization here—we don’t need to recalculate `getOutputHref` and `getOutputPath`
+      // TODO Why are these using addTemplateString instead of add
       this.computedData.addTemplateString(
         "page.url",
         async (data) => await this.getOutputHref(data),
@@ -618,9 +620,7 @@ class Template extends TemplateContent {
 
   async getTemplates(data) {
     // no pagination with permalink.serverless
-    let hasPagination = Pagination.hasPagination(data);
-
-    if (!hasPagination) {
+    if (!Pagination.hasPagination(data)) {
       await this.addComputedData(data);
 
       return [
@@ -669,15 +669,6 @@ class Template extends TemplateContent {
       let pageTemplates = await this.paging.getPageTemplates();
       return await Promise.all(
         pageTemplates.map(async (pageEntry, pageNumber) => {
-          if (data.collections) {
-            // Issue #115
-            pageEntry.data.collections = data.collections;
-          }
-
-          // eleventyComputed needs to exist on proxy for it to iterate and set data
-          if (data.eleventyComputed) {
-            pageEntry.data.eleventyComputed = data.eleventyComputed;
-          }
           await pageEntry.template.addComputedData(pageEntry.data);
 
           return {
