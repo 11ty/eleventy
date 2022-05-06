@@ -116,13 +116,16 @@ class Liquid extends TemplateEngine {
           line: 1,
           col: 1 }*/
         if (arg.type.indexOf("ignore:") === -1) {
-          argArray.push(await engine.evalValue(arg.value, scope));
+          // Push the promise into an array instead of awaiting it here.
+          // This forces the promises to run in order with the correct scope value for each arg.
+          // Otherwise they run out of order and can lead to undefined values for arguments in layout template shortcodes.
+          argArray.push(engine.evalValue(arg.value, scope));
         }
         arg = lexer.next();
       }
     }
 
-    return argArray;
+    return await Promise.all(argArray);
   }
 
   static _normalizeShortcodeScope(ctx) {
