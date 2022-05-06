@@ -221,9 +221,12 @@ class Serverless {
     // TODO (@zachleat)  https://github.com/11ty/eleventy/issues/1957
     this.deleteEnvironmentVariables();
 
-    let filtered = json.filter((entry) => {
-      return entry.inputPath === inputPath;
-    });
+    let filtered = [];
+    if (Array.isArray(json)) {
+      filtered = json.filter((entry) => {
+        return entry.inputPath === inputPath;
+      });
+    }
 
     if (!filtered.length) {
       let err = new Error(
