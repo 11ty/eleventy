@@ -18,8 +18,10 @@ class ComputedDataProxy {
 
   getProxyData(data, keyRef) {
     // WARNING: SIDE EFFECTS
-    // TODO should make another effort to get rid of this
     // Set defaults for keys not already set on parent data
+
+    // TODO should make another effort to get rid of this,
+    // See the ProxyWrap util for more proxy handlers that will likely fix this
     let undefinedValue = "__11TY_UNDEFINED__";
     if (this.computedKeys) {
       for (let key of this.computedKeys) {

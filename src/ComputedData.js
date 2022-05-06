@@ -15,7 +15,6 @@ class ComputedData {
     this.computedKeys = new Set();
     this.declaredDependencies = {};
     this.queue = new ComputedDataQueue();
-    this.usesLog = {};
     this.config = config;
   }
 
@@ -78,9 +77,6 @@ class ComputedData {
           varsUsed = await proxy.findVarsUsed(computed, data);
         }
 
-        // save the uses for hoisting below
-        this.usesLog[key] = varsUsed;
-
         debug("%o accesses %o variables", key, varsUsed);
         let filteredVarsUsed = varsUsed.filter((varUsed) => {
           return (
@@ -93,39 +89,12 @@ class ComputedData {
     }
   }
 
-  // Workaround to hoist proxied data (via pagination) into the top level object for use in template languages
-  // (see tests: "Pagination over collection using eleventyComputed")
-  hoistProxyData(data, vars = []) {
-    // pagination is the only code path using proxies for data aliasing
-    if (!("pagination" in data)) {
-      return;
-    }
-    let defaultValue = "____DEFAULT_11ty_VALUE___";
-    for (let v of vars) {
-      let value = lodashGet(data, v, defaultValue);
-      if (value !== defaultValue) {
-        lodashSet(data, v, value);
-      }
-    }
-  }
-
-  getHoistedVars(key) {
-    let deps = this.usesLog[key];
-    let hoists = Array.from(new Set(deps));
-    return hoists;
-  }
-
   async _setupDataEntry(data, order) {
     debug("Computed data order of execution: %o", order);
     for (let key of order) {
       let computed = lodashGet(this.computed, key);
 
       if (typeof computed === "function") {
-        let shouldHoistData = !!this.templateStringKeyLookup[key];
-        if (shouldHoistData) {
-          let hoists = this.getHoistedVars(key);
-          this.hoistProxyData(data, hoists);
-        }
         let ret = await computed(data);
         lodashSet(data, key, ret);
       } else if (computed !== undefined) {
