@@ -6,19 +6,9 @@ function wrapObject(target, fallback) {
     getOwnPropertyDescriptor(target, prop) {
       // console.log( "handler:getOwnPropertyDescriptor", prop );
       if (prop in target) {
-        return {
-          value: target[prop],
-          configurable: true,
-          enumerable: true,
-          writable: true,
-        };
+        return Reflect.getOwnPropertyDescriptor(target, prop);
       } else if (prop in fallback) {
-        return {
-          value: fallback[prop],
-          configurable: true,
-          enumerable: true,
-          writable: true,
-        };
+        return Reflect.getOwnPropertyDescriptor(fallback, prop);
       }
     },
     // Liquid needs this
