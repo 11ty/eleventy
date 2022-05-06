@@ -7,12 +7,12 @@
 # Canary Release Procedure
 
 1. npmclean aka `rm -rf node_modules && rm -f package-lock.json && npm install`
-1. `npm run package` to generate a new Eleventy Edge lib
 1. Make sure `npx ava` runs okay
 1. Update version in `package.json`, include `-canary.1` suffix
 1. Check it all in and commit
 1. Tag new version
 1. `npm publish --access=public --tag=canary`
+1. Use the `eleventy-edge-cdn` project to generate a new Eleventy Edge lib
 
 Unfortunate thing about npm: if you push a 1.0.0-canary.x to `canary` after a `2.0.0-canary.x`, it will use the last pushed tag (not the highest version number)
 
@@ -20,7 +20,6 @@ Unfortunate thing about npm: if you push a 1.0.0-canary.x to `canary` after a `2
 
 1. update minor dependencies in package.json?
 1. npmclean aka `rm -rf node_modules && rm -f package-lock.json && npm install`
-1. `npm run package` to generate a new Eleventy Edge lib
 1. npm audit
 1. Make sure `npx ava` runs okay
 1. Update version in `package.json`, include `-beta.1` suffix
@@ -28,6 +27,7 @@ Unfortunate thing about npm: if you push a 1.0.0-canary.x to `canary` after a `2
 1. Check it all in and commit
 1. Tag new version
 1. `npm publish --access=public --tag=beta`
+1. Use the `eleventy-edge-cdn` project to generate a new Eleventy Edge lib
 
 # Release Procedure
 
@@ -40,7 +40,6 @@ Unfortunate thing about npm: if you push a 1.0.0-canary.x to `canary` after a `2
 - 1.x+ requires Node 12+
 - 2.x+ requires Node 14+
 
-1. `npm run package` to generate a new Eleventy Edge lib
 1. npm audit
 1. Make sure `npx ava` runs okay
 1. Update version in `package.json`
@@ -48,6 +47,7 @@ Unfortunate thing about npm: if you push a 1.0.0-canary.x to `canary` after a `2
 1. Check it all in and commit
 1. Tag new version
 1. `npm publish --access=public`
+1. Use the `eleventy-edge-cdn` project to generate a new Eleventy Edge lib
 
 ## If Docs branch does not yet exist
 
