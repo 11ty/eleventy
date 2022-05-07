@@ -217,7 +217,12 @@ class EleventyExtensionMap {
   removeTemplateExtension(path) {
     for (var extension in this.extensionToKeyMap) {
       if (path === extension || path.endsWith("." + extension)) {
-        return path.substr(0, path.length - 1 - extension.length);
+        return path.slice(
+          0,
+          path.length - 1 - extension.length < 0
+            ? 0
+            : path.length - 1 - extension.length
+        );
       }
     }
     return path;

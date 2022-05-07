@@ -38,7 +38,10 @@ class ComputedDataTemplateString {
     let vars = new Set();
     let splits = output.split(this.prefix);
     for (let split of splits) {
-      let varName = split.substr(0, split.indexOf(this.suffix));
+      let varName = split.slice(
+        0,
+        split.indexOf(this.suffix) < 0 ? 0 : split.indexOf(this.suffix)
+      );
       if (varName) {
         vars.add(varName);
       }

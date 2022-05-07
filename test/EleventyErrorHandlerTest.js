@@ -21,7 +21,7 @@ test("Log a warning, warning", (t) => {
   errorHandler.warn(new Error("Test warning"), "Hello");
 
   let expected = "Hello: (more in DEBUG output)";
-  t.is(output.join("\n").substr(0, expected.length), expected);
+  t.is(output.join("\n").slice(0, expected.length), expected);
 });
 
 test("Log a warning, error", (t) => {
@@ -49,5 +49,5 @@ test("Log a warning, error", (t) => {
 Test error (via Error)
 
 Original error stack trace: Error: Test error`;
-  t.is(output.join("\n").substr(0, expected.length), expected);
+  t.is(output.join("\n").slice(0, expected.length), expected);
 });

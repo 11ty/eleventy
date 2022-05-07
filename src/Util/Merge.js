@@ -3,7 +3,7 @@ const OVERRIDE_PREFIX = "override:";
 
 function cleanKey(key, prefix) {
   if (prefix && key.startsWith(prefix)) {
-    return key.substr(prefix.length);
+    return key.slice(prefix.length);
   }
   return key;
 }
@@ -60,7 +60,7 @@ function Merge(target, ...sources) {
   if (isPlainObject(target)) {
     for (let key in target) {
       if (key.indexOf(OVERRIDE_PREFIX) === 0) {
-        target[key.substr(OVERRIDE_PREFIX.length)] = target[key];
+        target[key.slice(OVERRIDE_PREFIX.length)] = target[key];
         delete target[key];
       }
     }

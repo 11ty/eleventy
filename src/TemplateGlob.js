@@ -15,7 +15,7 @@ class TemplateGlob {
   static normalize(path) {
     path = path.trim();
     if (path.charAt(0) === "!") {
-      return "!" + TemplateGlob.normalizePath(path.substr(1));
+      return "!" + TemplateGlob.normalizePath(path.slice(1));
     } else {
       return TemplateGlob.normalizePath(path);
     }

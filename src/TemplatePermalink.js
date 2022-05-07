@@ -75,7 +75,7 @@ class TemplatePermalink {
   }
 
   _addDefaultLinkFilename(link) {
-    return link + (link.substr(-1) === "/" ? "index.html" : "");
+    return link + (link.slice(-1) === "/" ? "index.html" : "");
   }
 
   toOutputPath() {
@@ -134,8 +134,8 @@ class TemplatePermalink {
     let needle = "/index.html";
     if (original === needle) {
       return "/";
-    } else if (original.substr(-1 * needle.length) === needle) {
-      return original.substr(0, original.length - needle.length) + "/";
+    } else if (original.slice(-1 * needle.length) === needle) {
+      return original.slice(0, original.length - needle.length) + "/";
     }
     return original;
   }

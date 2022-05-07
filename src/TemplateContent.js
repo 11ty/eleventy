@@ -126,10 +126,10 @@ class TemplateContent {
           fm.content =
             fm.excerpt.trim() +
             "\n" +
-            fm.content.substr((excerptString + os.EOL).length);
+            fm.content.slice((excerptString + os.EOL).length);
         } else if (fm.content.startsWith(excerptString)) {
           // no newline after excerpt separator
-          fm.content = fm.excerpt + fm.content.substr(excerptString.length);
+          fm.content = fm.excerpt + fm.content.slice(excerptString.length);
         }
 
         // alias, defaults to page.excerpt

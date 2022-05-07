@@ -70,7 +70,7 @@ class TemplateMap {
 
   getTagTarget(str) {
     if (str.startsWith("collections.")) {
-      return str.substr("collections.".length);
+      return str.slice("collections.".length);
     }
   }
 
@@ -283,7 +283,7 @@ class TemplateMap {
     for (let depEntry of dependencyMap) {
       if (depEntry.startsWith(tagPrefix)) {
         // is a tag (collection) entry
-        let tagName = depEntry.substr(tagPrefix.length);
+        let tagName = depEntry.slice(tagPrefix.length);
         await this.setCollectionByTagName(tagName);
       } else {
         // is a template entry

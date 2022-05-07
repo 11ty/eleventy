@@ -28,7 +28,12 @@ class EleventyErrorUtil {
       return "" + msg;
     }
 
-    return msg.substr(0, msg.indexOf(EleventyErrorUtil.prefix));
+    return msg.slice(
+      0,
+      msg.indexOf(EleventyErrorUtil.prefix) < 0
+        ? 0
+        : msg.indexOf(EleventyErrorUtil.prefix)
+    );
   }
 
   static deconvertErrorToObject(error) {

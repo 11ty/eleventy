@@ -781,9 +781,9 @@ test("Issue 258: Liquid Render Date", async (t) => {
     "<p>{{ myDate }}</p>"
   );
   let dateStr = await fn({ myDate: new Date(Date.UTC(2016, 0, 1, 0, 0, 0)) });
-  t.is(dateStr.substr(0, 3), "<p>");
-  t.is(dateStr.substr(-4), "</p>");
-  t.not(dateStr.substr(2, 1), '"');
+  t.is(dateStr.slice(0, 3), "<p>");
+  t.is(dateStr.slice(-4), "</p>");
+  t.not(dateStr.slice(2, 1), '"');
 });
 
 test("Issue 347: Liquid addTags with space in argument", async (t) => {
