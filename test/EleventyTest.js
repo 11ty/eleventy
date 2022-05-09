@@ -3,6 +3,7 @@ const Eleventy = require("../src/Eleventy");
 const EleventyWatchTargets = require("../src/EleventyWatchTargets");
 const TemplateConfig = require("../src/TemplateConfig");
 const DateGitLastUpdated = require("../src/Util/DateGitLastUpdated");
+const normalizeNewLines = require("./Util/normalizeNewLines");
 
 test("Eleventy, defaults inherit from config", async (t) => {
   let elev = new Eleventy();
@@ -499,4 +500,32 @@ test("Paginated template uses proxy and global data", async (t) => {
     return entry.content.trim() === "BANNER TEXT";
   });
   t.is(results.length, allContentMatches.length);
+});
+
+test("Liquid shortcode with multiple arguments(issue #2348)", async (t) => {
+  // NOTE issue #2348 was only active when you were processing multiple templates at the same time.
+
+  let elev = new Eleventy("./test/stubs-2367/", "./test/stubs-2367/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.addShortcode("simplelink", function (...args) {
+        return JSON.stringify(args);
+      });
+    },
+  });
+
+  let arr = [
+    "layout",
+    "/mylayout",
+    "layout",
+    "/mylayout",
+    "layout",
+    "/mylayout",
+  ];
+  let str = normalizeNewLines(`${JSON.stringify(arr)}
+${JSON.stringify(arr)}`);
+  let results = await elev.toJSON();
+  t.is(results.length, 2);
+  let content = results.map((entry) => entry.content).sort();
+  t.is(normalizeNewLines(content[0]), str);
+  t.is(normalizeNewLines(content[1]), str);
 });
