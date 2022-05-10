@@ -278,7 +278,7 @@ class TemplateData {
       // we can just join the array by a forbidden character ("/"" is chosen here, since it works on Linux, Mac and Windows).
       // If at some point this isn't enough anymore, it would be possible to just use JSON.stringify(objectPathTarget) since that
       // is guaranteed to work but is signifivcantly slower.
-      let objectPathTargetString = objectPathTarget.join("/");
+      let objectPathTargetString = objectPathTarget.join(path.sep);
 
       // if two global files have the same path (but different extensions)
       // and conflict, let’s merge them.

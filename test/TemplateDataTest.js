@@ -474,12 +474,10 @@ test("Dots in datafile path (Issue #1242)", async (t) => {
 
   let data = await dataObj.getData();
 
-  t.deepEqual(data, {
-    "xyz.dottest": {
-      hi: "bye",
-      test: {
-        abc: 42,
-      },
+  t.deepEqual(data["xyz.dottest"], {
+    hi: "bye",
+    test: {
+      abc: 42,
     },
   });
 });
