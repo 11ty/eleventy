@@ -370,7 +370,6 @@ class TemplateData {
     }
 
     for (let path of localDataPaths) {
-      // clean up data for template/directory data files only.
       let dataForPath = await this.getDataValue(path, null, true);
       if (!isPlainObject(dataForPath)) {
         debug(
@@ -379,6 +378,7 @@ class TemplateData {
           dataForPath
         );
       } else {
+        // clean up data for template/directory data files only.
         let cleanedDataForPath = TemplateData.cleanupData(dataForPath);
         TemplateData.mergeDeep(this.config, localData, cleanedDataForPath);
       }
@@ -427,27 +427,48 @@ class TemplateData {
     return this.config.dataExtensions && this.config.dataExtensions.size > 0;
   }
 
-  async _loadFileContents(path) {
+  async _loadFileContents(path, options = {}) {
     let rawInput;
+    let encoding = "utf8";
+    if ("encoding" in options) {
+      encoding = options.encoding;
+    }
+
     try {
-      rawInput = await fs.promises.readFile(path, "utf8");
+      rawInput = await fs.promises.readFile(path, encoding);
     } catch (e) {
       // if file does not exist, return nothing
     }
     return rawInput;
   }
 
-  async _parseDataFile(path, rawImports, ignoreProcessing, parser) {
-    let rawInput = await this._loadFileContents(path);
+  async _parseDataFile(
+    path,
+    rawImports,
+    ignoreProcessing,
+    parser,
+    options = {}
+  ) {
+    let readFile = !("read" in options) || options.read === true;
     let engineName = this.dataTemplateEngine;
+    let processAsTemplate = !ignoreProcessing && engineName !== false;
 
-    if (!rawInput) {
+    let rawInput;
+    if (readFile || processAsTemplate) {
+      rawInput = await this._loadFileContents(path, options);
+    }
+
+    if (readFile && !rawInput) {
       return {};
     }
 
-    if (ignoreProcessing || engineName === false) {
+    if (!processAsTemplate) {
       try {
-        return parser(rawInput);
+        if (readFile) {
+          return parser(rawInput, path);
+        } else {
+          return parser(path);
+        }
       } catch (e) {
         throw new TemplateDataParseError(
           `Having trouble parsing data file ${path}`,
@@ -455,6 +476,7 @@ class TemplateData {
         );
       }
     } else {
+      // processing will always read the input file
       let tr = new TemplateRender(engineName, this.inputDir, this.config);
       tr.extensionMap = this.extensionMap;
 
@@ -512,8 +534,14 @@ class TemplateData {
       return returnValue;
     } else if (this.isUserDataExtension(extension)) {
       // Other extensions
-      var parser = this.getUserDataParser(extension);
-      return this._parseDataFile(path, rawImports, ignoreProcessing, parser);
+      let { parser, options } = this.getUserDataParser(extension);
+      return this._parseDataFile(
+        path,
+        rawImports,
+        ignoreProcessing,
+        parser,
+        options
+      );
     } else if (extension === "json") {
       // File to string, parse with JSON (preprocess)
       return this._parseDataFile(

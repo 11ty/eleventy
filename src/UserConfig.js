@@ -754,8 +754,12 @@ class UserConfig {
     );
   }
 
-  addDataExtension(formatExtension, formatParser) {
-    this.dataExtensions.set(formatExtension, formatParser);
+  addDataExtension(extension, parser, options = {}) {
+    this.dataExtensions.set(extension, {
+      extension,
+      parser,
+      options,
+    });
   }
 
   setUseTemplateCache(bypass) {

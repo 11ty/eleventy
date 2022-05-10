@@ -2230,7 +2230,14 @@ test("page.templateSyntax works with templateEngineOverride", async (t) => {
 test("Error messaging, returning literals (not objects) from custom data extension", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs-1691/", eleventyConfig);
-  dataObj.config.dataExtensions = new Map([["txt", (s) => s]]);
+  dataObj.config.dataExtensions = new Map([
+    [
+      "txt",
+      {
+        parser: (s) => s,
+      },
+    ],
+  ]);
   let tmpl = getNewTemplate(
     "./test/stubs-1691/template.njk",
     "./test/stubs-1691/",
