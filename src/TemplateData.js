@@ -611,7 +611,7 @@ class TemplateData {
   }
 
   static cleanupData(data) {
-    if ("tags" in data) {
+    if (typeof data === "object" && "tags" in data) {
       if (typeof data.tags === "string") {
         data.tags = data.tags ? [data.tags] : [];
       } else if (data.tags === null) {
