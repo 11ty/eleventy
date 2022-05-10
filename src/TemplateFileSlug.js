@@ -18,12 +18,13 @@ class TemplateFileSlug {
     this.filenameNoExt = extensionMap.removeTemplateExtension(this.parsed.base);
   }
 
+  // `page.filePathStem` see https://www.11ty.dev/docs/data-eleventy-supplied/#page-variable
   getFullPathWithoutExtension() {
     return "/" + TemplatePath.join(...this.dirs, this._getRawSlug());
   }
 
   _getRawSlug() {
-    const slug = this.filenameNoExt;
+    let slug = this.filenameNoExt;
     return this._stripDateFromSlug(slug);
   }
 
@@ -36,6 +37,7 @@ class TemplateFileSlug {
     return slug;
   }
 
+  // `page.fileSlug` see https://www.11ty.dev/docs/data-eleventy-supplied/#page-variable
   getSlug() {
     let rawSlug = this._getRawSlug();
 
@@ -43,7 +45,7 @@ class TemplateFileSlug {
       if (!this.dirs.length) {
         return "";
       }
-      const lastDir = this.dirs[this.dirs.length - 1];
+      let lastDir = this.dirs[this.dirs.length - 1];
       return this._stripDateFromSlug(lastDir);
     }
 

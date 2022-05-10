@@ -985,6 +985,7 @@ class Template extends TemplateContent {
     } else {
       let filepathRegex = this.inputPath.match(/(\d{4}-\d{2}-\d{2})/);
       if (filepathRegex !== null) {
+        // if multiple are found in the path, use the first one for the date
         let dateObj = DateTime.fromISO(filepathRegex[1], {
           zone: "utc",
         }).toJSDate();
