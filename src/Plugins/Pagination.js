@@ -302,7 +302,7 @@ class Pagination {
         this.data.eleventyComputed[this.config.keys.permalink]
     );
 
-    // Reuse parent `template.data` cache for a small memory efficiency win
+    // Do *not* pass collections through DeepCopy, we’ll re-add them back in later.
     let collections = this.data.collections;
     if (collections) {
       delete this.data.collections;
