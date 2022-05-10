@@ -6,7 +6,7 @@ const lodashset = require("lodash/set");
 const lodashget = require("lodash/get");
 const lodashUniq = require("lodash/uniq");
 const semver = require("semver");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
 
 const merge = require("./Util/Merge");
 const TemplateRender = require("./TemplateRender");
@@ -372,9 +372,16 @@ class TemplateData {
     for (let path of localDataPaths) {
       // clean up data for template/directory data files only.
       let dataForPath = await this.getDataValue(path, null, true);
-      let cleanedDataForPath = TemplateData.cleanupData(dataForPath);
-      TemplateData.mergeDeep(this.config, localData, cleanedDataForPath);
-      // debug("`combineLocalData` (iterating) for %o: %O", path, localData);
+      if (!isPlainObject(dataForPath)) {
+        debug(
+          "Warning: Template and Directory data files expect an object to be returned, instead `%o` returned `%o`",
+          path,
+          dataForPath
+        );
+      } else {
+        let cleanedDataForPath = TemplateData.cleanupData(dataForPath);
+        TemplateData.mergeDeep(this.config, localData, cleanedDataForPath);
+      }
     }
     return localData;
   }
@@ -611,7 +618,7 @@ class TemplateData {
   }
 
   static cleanupData(data) {
-    if (typeof data === "object" && "tags" in data) {
+    if (isPlainObject(data) && "tags" in data) {
       if (typeof data.tags === "string") {
         data.tags = data.tags ? [data.tags] : [];
       } else if (data.tags === null) {

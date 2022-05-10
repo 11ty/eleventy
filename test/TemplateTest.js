@@ -2225,3 +2225,21 @@ test("page.templateSyntax works with templateEngineOverride", async (t) => {
 
   t.is((await tmpl.render(await tmpl.getData())).trim(), "<p>njk,md</p>");
 });
+
+// Inspired by https://github.com/11ty/eleventy/pull/1691
+test("Error messaging, returning literals (not objects) from custom data extension", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData("./test/stubs-1691/", eleventyConfig);
+  dataObj.config.dataExtensions = new Map([["txt", (s) => s]]);
+  let tmpl = getNewTemplate(
+    "./test/stubs-1691/template.njk",
+    "./test/stubs-1691/",
+    "dist",
+    dataObj,
+    null,
+    eleventyConfig
+  );
+
+  let data = await tmpl.getData();
+  t.is(data.str, "Testing");
+});
