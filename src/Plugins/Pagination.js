@@ -202,12 +202,6 @@ class Pagination {
     }
   }
 
-  // TODO this name is not good
-  // “To cancel” means to not write the original root template
-  cancel() {
-    return this.hasPagination();
-  }
-
   getPageCount() {
     if (!this.hasPagination()) {
       return 0;
