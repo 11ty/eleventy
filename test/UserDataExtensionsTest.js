@@ -183,21 +183,25 @@ test("Binary data files, encoding: null (multiple data extensions)", async (t) =
   t.plan(4);
 
   let eleventyConfig = new TemplateConfig();
-  eleventyConfig.userConfig.addDataExtension(
-    "jpg,png",
-    function (s) {
+  eleventyConfig.userConfig.addDataExtension("jpg,png", {
+    parser: function (s) {
       t.true(Buffer.isBuffer(s));
       // s is a Buffer, just return the length as a sample
       return s.length;
     },
-    {
-      encoding: null,
-    }
-  );
+    encoding: null,
+  });
 
   let dataObj = new TemplateData("./test/stubs-2378/", eleventyConfig);
 
   let data = await dataObj.getData();
   t.is(data.images.dog, 43183);
   t.is(data.images.dogpng, 2890);
+});
+
+test("Missing `parser` property to addDataExtension object throws error", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  t.throws(() => {
+    eleventyConfig.userConfig.addDataExtension("jpg", {});
+  });
 });

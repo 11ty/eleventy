@@ -754,7 +754,20 @@ class UserConfig {
     );
   }
 
-  addDataExtension(extensionList, parser, options = {}) {
+  addDataExtension(extensionList, parser) {
+    let options = {};
+    // second argument is an object with a `parser` callback
+    if (typeof parser !== "function") {
+      if (!("parser" in parser)) {
+        throw new Error(
+          "Expected `parser` property in second argument object to `eleventyConfig.addDataExtension`"
+        );
+      }
+
+      options = parser;
+      parser = options.parser;
+    }
+
     for (let extension of extensionList.split(",")) {
       this.dataExtensions.set(extension, {
         extension,
