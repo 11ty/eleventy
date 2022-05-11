@@ -167,6 +167,7 @@ class TemplateData {
     return dir;
   }
 
+  // This is used exclusively for --watch and --serve chokidar targets
   async getTemplateDataFileGlob() {
     let dir = await this.getInputDir();
     let paths = [

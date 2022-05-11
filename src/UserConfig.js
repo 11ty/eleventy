@@ -754,12 +754,14 @@ class UserConfig {
     );
   }
 
-  addDataExtension(extension, parser, options = {}) {
-    this.dataExtensions.set(extension, {
-      extension,
-      parser,
-      options,
-    });
+  addDataExtension(extensionList, parser, options = {}) {
+    for (let extension of extensionList.split(",")) {
+      this.dataExtensions.set(extension, {
+        extension,
+        parser,
+        options,
+      });
+    }
   }
 
   setUseTemplateCache(bypass) {
