@@ -336,9 +336,10 @@ class Pagination {
     // TODO future improvement dea: use a light Template wrapper for paged template clones (PagedTemplate?)
     // so that we don’t have the memory cost of the full template (and can reuse the parent
     // template for some things)
+
     for (
-      let pageNumber = 0, pageNumberStop = items.length;
-      pageNumber < pageNumberStop;
+      let pageNumber = 0;
+      pageNumber < items.length;
       pageNumber++
     ) {
       let cloned = this.template.clone();
