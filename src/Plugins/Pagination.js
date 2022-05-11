@@ -331,14 +331,9 @@ class Pagination {
     // so that we don’t have the memory cost of the full template (and can reuse the parent
     // template for some things)
 
-    let pageNumberStop = items.length;
-    if(pageNumberStop === 0 && this.data.pagination.pageOnEmptyData) {
-      pageNumberStop = 1;
-    }
-
     for (
       let pageNumber = 0;
-      pageNumber < pageNumberStop;
+      pageNumber < items.length;
       pageNumber++
     ) {
       let cloned = this.template.clone();
