@@ -2,6 +2,17 @@ const test = require("ava");
 const TemplateData = require("../src/TemplateData");
 const TemplateConfig = require("../src/TemplateConfig");
 
+async function testGetLocalData(tmplData, templatePath) {
+  let localDataPaths = await tmplData.getLocalDataPaths(templatePath);
+  let importedData = await tmplData.combineLocalData(localDataPaths);
+  let globalData = await tmplData.getData();
+
+  // OK-ish: shallow merge when combining template/data dir files with global data files
+  let localData = Object.assign({}, globalData, importedData);
+  // debug("`getLocalData` for %o: %O", templatePath, localData);
+  return localData;
+}
+
 test("Create", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let config = eleventyConfig.getConfig();
@@ -61,7 +72,8 @@ test("Add local data", async (t) => {
   t.is(data.globalData.datakey1, "datavalue1");
   t.is(data.globalData.datakey2, "@11ty/eleventy");
 
-  let withLocalData = await dataObj.getLocalData(
+  let withLocalData = await testGetLocalData(
+    dataObj,
     "./test/stubs/component/component.njk"
   );
   t.is(withLocalData.globalData.datakey1, "datavalue1");
@@ -79,7 +91,8 @@ test("Get local data async JS", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
 
-  let withLocalData = await dataObj.getLocalData(
+  let withLocalData = await testGetLocalData(
+    dataObj,
     "./test/stubs/component-async/component.njk"
   );
 
@@ -97,7 +110,8 @@ test("addLocalData() doesn’t exist but doesn’t fail (template file does exis
   let beforeDataKeyCount = Object.keys(data);
 
   // template file does exist
-  let withLocalData = await dataObj.getLocalData(
+  let withLocalData = await testGetLocalData(
+    dataObj,
     "./test/stubs/datafiledoesnotexist/template.njk"
   );
   t.is(withLocalData.globalData.datakey1, "datavalue1");
@@ -113,7 +127,8 @@ test("addLocalData() doesn’t exist but doesn’t fail (template file does not 
   let data = await dataObj.getData();
   let beforeDataKeyCount = Object.keys(data);
 
-  let withLocalData = await dataObj.getLocalData(
+  let withLocalData = await testGetLocalData(
+    dataObj,
     "./test/stubs/datafiledoesnotexist/templatedoesnotexist.njk"
   );
   t.is(withLocalData.globalData.datakey1, "datavalue1");
@@ -429,22 +444,40 @@ test("TemplateData.cleanupData", (t) => {
 });
 
 test("Parent directory for data (Issue #337)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let dataObj = new TemplateData("./test/stubs-337/src/", eleventyConfig);
-  dataObj._setConfig({
+  let eleventyConfig = new TemplateConfig({
     dataTemplateEngine: false,
     dir: {
       input: "./test/stubs-337/src/",
       data: "../data/",
     },
   });
+  let dataObj = new TemplateData("./test/stubs-337/src/", eleventyConfig);
   dataObj.setInputDir("./test/stubs-337/src/");
 
   let data = await dataObj.getData();
 
-  t.deepEqual(data, {
-    xyz: {
-      hi: "bye",
+  t.deepEqual(data.xyz, {
+    hi: "bye",
+  });
+});
+
+test("Dots in datafile path (Issue #1242)", async (t) => {
+  let eleventyConfig = new TemplateConfig({
+    dataTemplateEngine: false,
+    dir: {
+      input: "./test/stubs-1242/",
+      data: "_data/",
+    },
+  });
+  let dataObj = new TemplateData("./test/stubs-1242/", eleventyConfig);
+  dataObj.setInputDir("./test/stubs-1242/");
+
+  let data = await dataObj.getData();
+
+  t.deepEqual(data["xyz.dottest"], {
+    hi: "bye",
+    test: {
+      abc: 42,
     },
   });
 });
@@ -470,4 +503,57 @@ test("addGlobalData values", async (t) => {
   t.is(data.myFunction, "fn-value");
   t.is(data.myPromise, "promise-value");
   t.is(data.myAsync, "promise-value");
+});
+
+test("addGlobalData should execute once.", async (t) => {
+  let count = 0;
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.addGlobalData("count", () => {
+    count++;
+    return count;
+  });
+
+  let dataObj = new TemplateData(
+    "./test/stubs-global-data-config-api/",
+    eleventyConfig
+  );
+  let data = await dataObj.getData();
+
+  t.is(data.count, 1);
+  t.is(count, 1);
+});
+
+test("addGlobalData complex key", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.addGlobalData("deep.nested.one", () => "first");
+  eleventyConfig.userConfig.addGlobalData("deep.nested.two", () => "second");
+
+  let dataObj = new TemplateData(
+    "./test/stubs-global-data-config-api-nested/",
+    eleventyConfig
+  );
+  let data = await dataObj.getData();
+
+  t.is(data.deep.existing, true);
+  t.is(data.deep.nested.one, "first");
+  t.is(data.deep.nested.two, "second");
+});
+
+test("eleventy.version and eleventy.generator returned from data", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.addGlobalData("deep.nested.one", () => "first");
+  eleventyConfig.userConfig.addGlobalData("deep.nested.two", () => "second");
+
+  let dataObj = new TemplateData("./test/stubs-empty/", eleventyConfig);
+  let data = await dataObj.getData();
+
+  let version = require("semver")
+    .coerce(require("../package.json").version)
+    .toString();
+
+  t.is(data.eleventy.version, version);
+  t.is(data.eleventy.generator, `Eleventy v${version}`);
+
+  t.is(data.deep.nested.one, "first");
+  t.is(data.deep.nested.two, "second");
 });

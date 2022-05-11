@@ -1,12 +1,13 @@
 const test = require("ava");
+const fs = require("fs");
 const TemplateConfig = require("../src/TemplateConfig");
 const TemplateData = require("../src/TemplateData");
 let yaml = require("js-yaml");
 
 function injectDataExtensions(dataObj) {
   dataObj.config.dataExtensions = new Map([
-    ["yaml", (s) => yaml.load(s)],
-    ["nosj", JSON.parse],
+    ["yaml", { parser: (s) => yaml.load(s) }],
+    ["nosj", { parser: JSON.parse }],
   ]);
 }
 
@@ -26,7 +27,7 @@ test("Local data", async (t) => {
   t.is(data.globalData4.datakey1, "datavalue4");
   t.is(data.globalData4.datakey2, "@11ty/eleventy--nosj");
 
-  let withLocalData = await dataObj.getLocalData(
+  let withLocalData = await dataObj.getTemplateDirectoryData(
     "./test/stubs-630/component-yaml/component.njk"
   );
 
@@ -126,4 +127,81 @@ test("Global data merging and priority", async (t) => {
   t.is(data.mergingGlobalData.jsonkey, "json");
   t.is(data.mergingGlobalData.yamlkey, "yaml");
   t.is(data.mergingGlobalData.nosjkey, "nosj");
+});
+
+test("Binary data files, encoding: null", async (t) => {
+  t.plan(2);
+
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData("./test/stubs-2378/", eleventyConfig);
+  dataObj.config.dataExtensions = new Map([
+    [
+      "jpg",
+      {
+        parser: (s) => {
+          t.true(Buffer.isBuffer(s));
+          // s is a Buffer, just return the length as a sample
+          return s.length;
+        },
+        options: {
+          encoding: null,
+        },
+      },
+    ],
+  ]);
+
+  let data = await dataObj.getData();
+  t.is(data.images.dog, 43183);
+});
+
+test("Binary data files, read: false", async (t) => {
+  t.plan(2);
+
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData("./test/stubs-2378/", eleventyConfig);
+  dataObj.config.dataExtensions = new Map([
+    [
+      "jpg",
+      {
+        parser: (s) => {
+          t.true(fs.existsSync(s));
+          // s is a Buffer, just return the length as a sample
+          return s;
+        },
+        options: {
+          read: false,
+        },
+      },
+    ],
+  ]);
+
+  let data = await dataObj.getData();
+  t.is(data.images.dog, "./test/stubs-2378/_data/images/dog.jpg");
+});
+
+test("Binary data files, encoding: null (multiple data extensions)", async (t) => {
+  t.plan(4);
+
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.addDataExtension("jpg, png", {
+    parser: function (s) {
+      t.true(Buffer.isBuffer(s));
+      // s is a Buffer, just return the length as a sample
+      return s.length;
+    },
+    encoding: null,
+  });
+
+  let dataObj = new TemplateData("./test/stubs-2378/", eleventyConfig);
+
+  let data = await dataObj.getData();
+  t.is(data.images.dog, 43183);
+  t.is(data.images.dogpng, 2890);
+});
+
+test("Missing `parser` property to addDataExtension object throws error", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  t.throws(() => {
+    eleventyConfig.userConfig.addDataExtension("jpg", {});
+  });
 });

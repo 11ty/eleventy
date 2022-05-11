@@ -1,6 +1,6 @@
 {
   "name": "@11ty/eleventy",
-  "version": "1.0.0-canary.10",
+  "version": "2.0.0-canary.9",
   "description": "Transform a directory of templates into HTML.",
   "publishConfig": {
     "access": "public"
@@ -11,7 +11,7 @@
   },
   "license": "MIT",
   "engines": {
-    "node": ">=12"
+    "node": ">=14"
   },
   "funding": {
     "type": "opencollective",
@@ -42,7 +42,7 @@
   ],
   "scripts": {
     "default": "npm run test",
-    "doc": "jsdoc -c .jsdoc.conf.json -d ./api-docs -p ./package.json -R README.md -t ./node_modules/ink-docstrap/template -r src/",
+    "format": "prettier src/ --write",
     "test": "npx ava --verbose",
     "lint-staged": "lint-staged",
     "coverage": "npx nyc ava && npx nyc report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && node cmd.js --config=docs-src/.eleventy.docs.js",
@@ -60,12 +60,14 @@
   "bugs": "https://github.com/11ty/eleventy/issues",
   "homepage": "https://www.11ty.dev/",
   "ava": {
+    "environmentVariables": {},
     "failFast": false,
     "files": [
       "./test/*.js"
     ],
     "ignoredByWatcher": [
-      "./test/stubs*/**/*"
+      "./test/stubs*/**/*",
+      ".cache"
     ]
   },
   "lint-staged": {
@@ -74,56 +76,56 @@
     ]
   },
   "devDependencies": {
-    "@11ty/eleventy-plugin-syntaxhighlight": "^3.1.0",
+    "@11ty/eleventy-plugin-syntaxhighlight": "^4.0.0",
+    "@11ty/eleventy-plugin-vue": "1.0.0-canary.8",
+    "@vue/server-renderer": "^3.2.33",
     "ava": "^3.15.0",
-    "husky": "^5.1.3",
-    "ink-docstrap": "1.3.2",
-    "js-yaml": "^4.0.0",
-    "jsdoc": "3.6.6",
-    "lint-staged": "^10.5.4",
-    "markdown-it-emoji": "^2.0.0",
-    "node-sass": "^5.0.0",
+    "husky": "^7.0.4",
+    "js-yaml": "^4.1.0",
+    "lint-staged": "^12.4.1",
+    "markdown-it-emoji": "^2.0.2",
+    "marked": "^4.0.15",
     "nyc": "^15.1.0",
-    "prettier": "^2.2.1",
+    "pretty": "^2.0.0",
+    "prettier": "^2.6.2",
     "rimraf": "^3.0.2",
+    "sass": "^1.51.0",
     "toml": "^3.0.0",
-    "viperhtml": "^2.17.1",
-    "vue": "^2.6.12",
-    "vue-server-renderer": "^2.6.12"
+    "vue": "^3.2.33"
   },
   "dependencies": {
-    "@11ty/dependency-tree": "^1.0.0",
-    "browser-sync": "^2.26.14",
-    "chalk": "^4.1.0",
-    "chokidar": "^3.5.1",
-    "debug": "^4.3.1",
+    "@11ty/dependency-tree": "^2.0.1",
+    "@11ty/eleventy-dev-server": "^1.0.0-canary.8",
+    "@11ty/eleventy-utils": "^1.0.1",
+    "@iarna/toml": "^2.2.5",
+    "@sindresorhus/slugify": "^1.1.2",
+    "chokidar": "^3.5.3",
+    "cross-spawn": "^7.0.3",
+    "debug": "^4.3.4",
     "dependency-graph": "^0.11.0",
-    "ejs": "^3.1.6",
-    "fast-glob": "^3.2.5",
-    "fs-extra": "^9.1.0",
-    "gray-matter": "^4.0.2",
+    "ejs": "^3.1.7",
+    "fast-glob": "^3.2.11",
+    "graceful-fs": "^4.2.10",
+    "gray-matter": "^4.0.3",
     "hamljs": "^0.6.2",
     "handlebars": "^4.7.7",
-    "is-glob": "^4.0.1",
-    "liquidjs": "^9.23.2",
+    "is-glob": "^4.0.3",
+    "kleur": "^4.1.4 ",
+    "liquidjs": "^9.37.0",
     "lodash": "^4.17.21",
-    "luxon": "^1.26.0",
-    "markdown-it": "^12.0.4",
-    "minimist": "^1.2.5",
+    "luxon": "^2.3.2",
+    "markdown-it": "^13.0.1",
+    "minimist": "^1.2.6",
     "moo": "^0.5.1",
     "multimatch": "^5.0.0",
-    "mustache": "^4.1.0",
+    "mustache": "^4.2.0",
     "normalize-path": "^3.0.0",
     "nunjucks": "^3.2.3",
-    "parse-filepath": "^1.0.2",
+    "path-to-regexp": "^6.2.0",
     "please-upgrade-node": "^3.2.0",
-    "pretty": "^2.0.0",
     "pug": "^3.0.2",
-    "recursive-copy": "^2.0.11",
-    "semver": "^7.3.4",
-    "slugify": "^1.4.7",
-    "split": "^1.0.1",
-    "time-require": "^0.1.2",
-    "valid-url": "^1.0.9"
+    "recursive-copy": "^2.0.14",
+    "semver": "^7.3.7",
+    "slugify": "^1.6.5"
   }
 }

@@ -1,13 +1,14 @@
-const fs = require("fs-extra");
-const chalk = require("chalk");
+const fs = require("fs");
+const chalk = require("kleur");
 const lodashUniq = require("lodash/uniq");
 const lodashMerge = require("lodash/merge");
-const TemplatePath = require("./TemplatePath");
+const { TemplatePath } = require("@11ty/eleventy-utils");
 const EleventyBaseError = require("./EleventyBaseError");
 const UserConfig = require("./UserConfig");
 const debug = require("debug")("Eleventy:TemplateConfig");
 const debugDev = require("debug")("Dev:Eleventy:TemplateConfig");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
+const eventBus = require("./EventBus");
 
 /**
  * @module 11ty/eleventy/TemplateConfig
@@ -31,13 +32,18 @@ const deleteRequireCache = require("./Util/DeleteRequireCache");
 class EleventyConfigError extends EleventyBaseError {}
 
 /**
+ * Errors in eleventy plugins.
+ */
+class EleventyPluginError extends EleventyBaseError {}
+
+/**
  * Config for a template.
  *
  * @param {{}} customRootConfig - tbd.
- * @param {String} localProjectConfigPath - Path to local project config.
+ * @param {String} projectConfigPath - Path to local project config.
  */
 class TemplateConfig {
-  constructor(customRootConfig, localProjectConfigPath) {
+  constructor(customRootConfig, projectConfigPath) {
     this.userConfig = new UserConfig();
 
     /** @member {module:11ty/eleventy/TemplateConfig~TemplateConfig~override} - tbd. */
@@ -47,7 +53,10 @@ class TemplateConfig {
      * @member {String} - Path to local project config.
      * @default .eleventy.js
      */
-    this.localProjectConfigPath = localProjectConfigPath || ".eleventy.js";
+    this.projectConfigPath = ".eleventy.js";
+    if (projectConfigPath !== undefined) {
+      this.projectConfigPath = projectConfigPath;
+    }
 
     if (customRootConfig) {
       /**
@@ -60,8 +69,12 @@ class TemplateConfig {
     }
 
     this.initializeRootConfig();
-
     this.hasConfigMerged = false;
+  }
+
+  /* Setter for Logger */
+  setLogger(logger) {
+    this.logger = logger;
   }
 
   /**
@@ -71,7 +84,9 @@ class TemplateConfig {
    * @returns {String} - The normalised local project config file path.
    */
   getLocalProjectConfigFile() {
-    return TemplatePath.addLeadingDotSlash(this.localProjectConfigPath);
+    if (this.projectConfigPath) {
+      return TemplatePath.addLeadingDotSlash(this.projectConfigPath);
+    }
   }
 
   get inputDir() {
@@ -89,7 +104,10 @@ class TemplateConfig {
     debugDev("Resetting configuration: TemplateConfig and UserConfig.");
     this.userConfig.reset();
     this.initializeRootConfig();
-    this.config = this.mergeConfig(this.localProjectConfigPath);
+    this.forceReloadConfig();
+
+    // Clear the compile cache
+    eventBus.emit("eleventy.compileCacheReset");
   }
 
   /**
@@ -102,6 +120,14 @@ class TemplateConfig {
   }
 
   /**
+   * Force a reload of the configuration object.
+   */
+  forceReloadConfig() {
+    this.hasConfigMerged = false;
+    this.getConfig();
+  }
+
+  /**
    * Returns the config object.
    *
    * @returns {{}} - The config object.
@@ -109,7 +135,7 @@ class TemplateConfig {
   getConfig() {
     if (!this.hasConfigMerged) {
       debugDev("Merging via getConfig (first time)");
-      this.config = this.mergeConfig(this.localProjectConfigPath);
+      this.config = this.mergeConfig();
       this.hasConfigMerged = true;
     }
     return this.config;
@@ -121,14 +147,14 @@ class TemplateConfig {
    * @param {String} path - The new config path.
    */
   setProjectConfigPath(path) {
-    this.localProjectConfigPath = path;
+    this.projectConfigPath = path;
 
     if (this.hasConfigMerged) {
       // merge it again
       debugDev(
         "Merging in getConfig again after setting the local project config path."
       );
-      this.config = this.mergeConfig(path);
+      this.forceReloadConfig();
     }
   }
 
@@ -142,9 +168,22 @@ class TemplateConfig {
     this.overrides.pathPrefix = pathPrefix;
 
     if (!this.hasConfigMerged) {
-      this.getConfig();
+      this.forceReloadConfig();
     }
     this.config.pathPrefix = pathPrefix;
+  }
+
+  /**
+   * Gets the current path prefix denoting the root folder the output will be deployed to
+   *
+   *  @returns {String} - The path prefix string
+   */
+  getPathPrefix() {
+    if (!this.hasConfigMerged) {
+      this.getConfig();
+    }
+
+    return this.config.pathPrefix;
   }
 
   /**
@@ -152,7 +191,6 @@ class TemplateConfig {
    */
   initializeRootConfig() {
     this.rootConfig = this.customRootConfig || require("./defaultConfig.js");
-
     if (typeof this.rootConfig === "function") {
       this.rootConfig = this.rootConfig.call(this, this.userConfig);
       // debug( "rootConfig is a function, after calling, this.userConfig is %o", this.userConfig );
@@ -160,31 +198,70 @@ class TemplateConfig {
     debug("rootConfig %o", this.rootConfig);
   }
 
+  /*
+   * Process the userland plugins from the Config
+   *
+   * @param {Object} - the return Object from the user’s config file.
+   */
+  processPlugins({ dir }) {
+    this.userConfig.dir = dir;
+
+    if (this.logger) {
+      this.userConfig.logger = this.logger;
+    }
+
+    // for Nested addPlugin calls, Issue #1925
+    this.userConfig._enablePluginExecution();
+
+    let storedActiveNamespace = this.userConfig.activeNamespace;
+    for (let { plugin, options, pluginNamespace } of this.userConfig.plugins) {
+      try {
+        this.userConfig.activeNamespace = pluginNamespace;
+        this.userConfig._executePlugin(plugin, options);
+      } catch (e) {
+        let name = this.userConfig._getPluginName(plugin);
+        let namespaces = [storedActiveNamespace, pluginNamespace].filter(
+          (entry) => !!entry
+        );
+
+        let namespaceStr = "";
+        if (namespaces.length) {
+          namespaceStr = ` (namespace: ${namespaces.join(".")})`;
+        }
+
+        throw new EleventyPluginError(
+          `Error processing ${
+            name ? `the \`${name}\`` : "a"
+          } plugin${namespaceStr}`,
+          e
+        );
+      }
+    }
+
+    this.userConfig.activeNamespace = storedActiveNamespace;
+  }
+
   /**
    * Merges different config files together.
    *
-   * @param {String} localProjectConfigPath - Path to local project config.
+   * @param {String} projectConfigPath - Path to project config.
    * @returns {{}} merged - The merged config file.
    */
-  mergeConfig(localProjectConfigPath) {
+  mergeConfig() {
     let localConfig = {};
-    let path = TemplatePath.join(
-      TemplatePath.getWorkingDir(),
-      localProjectConfigPath
-    );
+    let path = this.projectConfigPath
+      ? TemplatePath.absolutePath(this.projectConfigPath)
+      : false;
 
     debug(`Merging config with ${path}`);
 
-    if (fs.existsSync(path)) {
+    if (path && fs.existsSync(path)) {
       try {
         // remove from require cache so it will grab a fresh copy
-        if (path in require.cache) {
-          deleteRequireCache(path);
-        }
+        deleteRequireCache(path);
 
         localConfig = require(path);
         // debug( "localConfig require return value: %o", localConfig );
-
         if (typeof localConfig === "function") {
           localConfig = localConfig(this.userConfig);
           // debug( "localConfig is a function, after calling, this.userConfig is %o", this.userConfig );
@@ -206,15 +283,15 @@ class TemplateConfig {
           Object.keys(localConfig.filters).length
         ) {
           throw new EleventyConfigError(
-            `The \`filters\` configuration option was renamed in Eleventy 0.3.3 and removed in Eleventy 1.0. Please use the \`addTransform\` configuration method instead. Read more: https://www.11ty.dev/docs/config/#transforms`
+            "The `filters` configuration option was renamed in Eleventy 0.3.3 and removed in Eleventy 1.0. Please use the `addTransform` configuration method instead. Read more: https://www.11ty.dev/docs/config/#transforms"
           );
         }
       } catch (err) {
         // TODO the error message here is bad and I feel bad (needs more accurate info)
         throw new EleventyConfigError(
           `Error in your Eleventy config file '${path}'.` +
-            (err.message.includes("Cannot find module")
-              ? chalk.blueBright(" You may need to run `npm install`.")
+            (err.message && err.message.includes("Cannot find module")
+              ? chalk.cyan(" You may need to run `npm install`.")
               : ""),
           err
         );
@@ -223,44 +300,61 @@ class TemplateConfig {
       debug("Eleventy local project config file not found, skipping.");
     }
 
-    let eleventyConfigApiMergingObject = this.userConfig.getMergingConfigObject();
+    let templateFormats = this.rootConfig.templateFormats || [];
+    if (localConfig && localConfig.templateFormats) {
+      templateFormats = localConfig.templateFormats;
+      delete localConfig.templateFormats;
+    }
 
-    // remove special merge keys from object
-    let savedForSpecialMerge = {
-      templateFormatsAdded: eleventyConfigApiMergingObject.templateFormatsAdded,
-    };
+    let mergedConfig = lodashMerge({}, this.rootConfig, localConfig);
+
+    // Delay processing plugins until after the result of localConfig is returned
+    // But BEFORE the rest of the config options are merged
+    // this way we can pass directories and other template information to plugins
+
+    // Temporarily restore templateFormats
+    mergedConfig.templateFormats = templateFormats;
+    this.processPlugins(mergedConfig);
+    delete mergedConfig.templateFormats;
+
+    let eleventyConfigApiMergingObject =
+      this.userConfig.getMergingConfigObject();
+
+    // `templateFormats` is via `setTemplateFormats`
+    // `templateFormatsAdded` is via `addTemplateFormats`
+    let templateFormatsAdded =
+      eleventyConfigApiMergingObject.templateFormatsAdded || [];
     delete eleventyConfigApiMergingObject.templateFormatsAdded;
+    if (
+      eleventyConfigApiMergingObject &&
+      eleventyConfigApiMergingObject.templateFormats
+    ) {
+      templateFormats = eleventyConfigApiMergingObject.templateFormats;
+      delete eleventyConfigApiMergingObject.templateFormats;
+    }
 
-    localConfig = lodashMerge(localConfig, eleventyConfigApiMergingObject);
-
-    // blow away any templateFormats set in config return object and prefer those set in config API.
-    localConfig.templateFormats =
-      eleventyConfigApiMergingObject.templateFormats ||
-      localConfig.templateFormats;
+    lodashMerge(mergedConfig, eleventyConfigApiMergingObject);
 
     // debug("this.userConfig.getMergingConfigObject: %o", this.userConfig.getMergingConfigObject());
-    debug("localConfig: %o", localConfig);
+    // debug("mergedConfig: %o", mergedConfig);
     debug("overrides: %o", this.overrides);
 
     // Object assign overrides original values (good only for templateFormats) but not good for anything else
-    let merged = lodashMerge({}, this.rootConfig, localConfig, this.overrides);
-    // blow away any templateFormats upstream (don’t deep merge)
-    merged.templateFormats =
-      localConfig.templateFormats || this.rootConfig.templateFormats;
+    if (this.overrides && this.overrides.templateFormats) {
+      templateFormats = this.overrides.templateFormats;
+      delete this.overrides.templateFormats;
+    }
+    lodashMerge(mergedConfig, this.overrides);
 
     // Additive should preserve original templateFormats, wherever those come from (config API or config return object)
-    if (savedForSpecialMerge.templateFormatsAdded) {
-      merged.templateFormats = merged.templateFormats.concat(
-        savedForSpecialMerge.templateFormatsAdded
-      );
-    }
+    mergedConfig.templateFormats = lodashUniq([
+      ...templateFormats,
+      ...templateFormatsAdded,
+    ]);
 
-    // Unique
-    merged.templateFormats = lodashUniq(merged.templateFormats);
+    debug("Current configuration: %o", mergedConfig);
 
-    debug("Current configuration: %o", merged);
-
-    return merged;
+    return mergedConfig;
   }
 }
 

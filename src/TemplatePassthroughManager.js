@@ -1,7 +1,11 @@
+const multimatch = require("multimatch");
+const isGlob = require("is-glob");
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");
 const TemplatePassthrough = require("./TemplatePassthrough");
-const TemplatePath = require("./TemplatePath");
+
 const debug = require("debug")("Eleventy:TemplatePassthroughManager");
 const debugDev = require("debug")("Dev:Eleventy:TemplatePassthroughManager");
 
@@ -51,7 +55,9 @@ class TemplatePassthroughManager {
   }
 
   setIncrementalFile(path) {
-    this.incrementalFile = path;
+    if (path) {
+      this.incrementalFile = path;
+    }
   }
 
   _normalizePaths(path, outputPath) {
@@ -95,8 +101,15 @@ class TemplatePassthroughManager {
     return this.count;
   }
 
-  getTemplatePassthroughForPath(path) {
-    return new TemplatePassthrough(path, this.outputDir, this.inputDir);
+  getTemplatePassthroughForPath(path, isIncremental = false) {
+    let inst = new TemplatePassthrough(
+      path,
+      this.outputDir,
+      this.inputDir,
+      this.config
+    );
+    inst.setIsIncremental(isIncremental);
+    return inst;
   }
 
   async copyPassthrough(pass) {
@@ -140,6 +153,11 @@ class TemplatePassthroughManager {
           }
           debug("Copied %o (%d files)", path.inputPath, count || 0);
         }
+
+        return {
+          count,
+          map,
+        };
       })
       .catch(function (e) {
         return Promise.reject(
@@ -152,6 +170,7 @@ class TemplatePassthroughManager {
   }
 
   isPassthroughCopyFile(paths, changedFile) {
+    // passthrough copy by non-matching engine extension (via templateFormats)
     for (let path of paths) {
       if (path === changedFile && !this.extensionMap.hasEngine(path)) {
         return true;
@@ -160,7 +179,14 @@ class TemplatePassthroughManager {
 
     for (let path of this.getConfigPaths()) {
       if (TemplatePath.startsWithSubPath(changedFile, path.inputPath)) {
-        return true;
+        return path;
+      }
+      if (
+        changedFile &&
+        isGlob(path.inputPath) &&
+        multimatch([changedFile], [path.inputPath]).length
+      ) {
+        return path;
       }
     }
 
@@ -168,11 +194,25 @@ class TemplatePassthroughManager {
   }
 
   getAllNormalizedPaths(paths) {
-    if (
-      this.incrementalFile &&
-      this.isPassthroughCopyFile(paths, this.incrementalFile)
-    ) {
-      return [this._normalizePaths(this.incrementalFile)];
+    if (this.incrementalFile) {
+      let isPassthrough = this.isPassthroughCopyFile(
+        paths,
+        this.incrementalFile
+      );
+
+      if (isPassthrough) {
+        if (isPassthrough.outputPath) {
+          return [
+            this._normalizePaths(
+              this.incrementalFile,
+              isPassthrough.outputPath
+            ),
+          ];
+        }
+
+        return [this._normalizePaths(this.incrementalFile)];
+      }
+      return [];
     }
 
     let normalizedPaths = [];
@@ -205,13 +245,18 @@ class TemplatePassthroughManager {
     let normalizedPaths = this.getAllNormalizedPaths(paths);
     let passthroughs = [];
     for (let path of normalizedPaths) {
-      passthroughs.push(this.getTemplatePassthroughForPath(path));
+      // if incrementalFile is set but it isn’t a passthrough copy, normalizedPaths will be an empty array
+      let isIncremental = !!this.incrementalFile;
+      passthroughs.push(
+        this.getTemplatePassthroughForPath(path, isIncremental)
+      );
     }
 
     return Promise.all(
       passthroughs.map((pass) => this.copyPassthrough(pass))
-    ).then(() => {
+    ).then((result) => {
       debug(`TemplatePassthrough copy finished. Current count: ${this.count}`);
+      return result;
     });
   }
 }

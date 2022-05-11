@@ -2,15 +2,17 @@ const test = require("ava");
 const TemplateRender = require("../src/TemplateRender");
 const TemplateConfig = require("../src/TemplateConfig");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
+const normalizeNewLines = require("./Util/normalizeNewLines");
 
-function getNewTemplateRender(name, inputDir) {
-  let eleventyConfig = new TemplateConfig();
+function getNewTemplateRender(name, inputDir, eleventyConfig) {
+  if (!eleventyConfig) {
+    eleventyConfig = new TemplateConfig();
+  }
+
   let tr = new TemplateRender(name, inputDir, eleventyConfig);
   tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   return tr;
 }
-
-class TestEleventyError extends Error {}
 
 async function getPromise(resolveTo) {
   return new Promise(function (resolve) {
@@ -545,6 +547,40 @@ test("Nunjucks Async Paired Shortcode", async (t) => {
   );
 });
 
+test("Nunjucks Nested Async Paired Shortcode", async (t) => {
+  t.plan(3);
+
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  tr.engine.addPairedShortcode(
+    "postfixWithZach",
+    function (content, str) {
+      // Data in context
+      t.is(this.page.url, "/hi/");
+
+      return new Promise(function (resolve) {
+        setTimeout(function () {
+          resolve(str + content + "Zach");
+        });
+      });
+    },
+    true
+  );
+
+  t.is(
+    await tr._testRender(
+      "{% postfixWithZach name %}Content{% postfixWithZach name2 %}Content{% endpostfixWithZach %}{% endpostfixWithZach %}",
+      {
+        name: "test",
+        name2: "test2",
+        page: {
+          url: "/hi/",
+        },
+      }
+    ),
+    "testContenttest2ContentZachZach"
+  );
+});
+
 test("Nunjucks Paired Shortcode without args", async (t) => {
   let tr = getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode("postfixWithZach", function (content) {
@@ -795,5 +831,233 @@ test("Issue 611: Run a function", async (t) => {
       },
     }),
     "alkdsjfksljaZach"
+  );
+});
+
+test("Nunjucks bypass compilation", async (t) => {
+  let tr = getNewTemplateRender("njk");
+
+  t.is(tr.engine.needsCompilation("<p>{{ me }}</p>"), true);
+  t.is(tr.engine.needsCompilation("<p>{% tag %}{% endtag %}</p>"), true);
+  t.is(tr.engine.needsCompilation("<p>test</p>"), false);
+});
+
+test("Nunjucks Parse for Symbols", async (t) => {
+  let tr = getNewTemplateRender("njk");
+  let engine = tr.engine;
+
+  t.deepEqual(engine.parseForSymbols("<p>{{ name }}</p>"), ["name"]);
+  t.deepEqual(engine.parseForSymbols("<p>{{ eleventy.deep.nested }}</p>"), [
+    "eleventy.deep.nested",
+  ]);
+  t.deepEqual(engine.parseForSymbols("<p>{{ a }} {{ b }}</p>"), ["a", "b"]);
+  t.deepEqual(
+    engine.parseForSymbols("<p>{% if true %}{{ c }}{% endif %}</p>"),
+    ["c"]
+  );
+  t.deepEqual(
+    engine.parseForSymbols("<p>{% if false %}{{ c }}{% endif %}</p>"),
+    ["c"]
+  );
+  t.deepEqual(engine.parseForSymbols("{{ collections.all[0] }}>"), [
+    // Note that the Liquid parser returns collections.all[0]
+    "collections.all",
+  ]);
+  t.deepEqual(engine.parseForSymbols("{{ collections.mine }}>"), [
+    "collections.mine",
+  ]);
+
+  t.deepEqual(engine.parseForSymbols("{{ collections.mine | test }}>"), [
+    // TODO not ideal to have `test` in here?
+    "test",
+    "collections.mine",
+  ]);
+});
+
+test("Nunjucks Parse for Symbols with custom block", async (t) => {
+  let tr = getNewTemplateRender("njk");
+  let engine = tr.engine;
+  engine.config.nunjucksShortcodes.test = function () {};
+
+  t.deepEqual(engine.parseForSymbols("<p>{{ name }} {% test %}</p>"), ["name"]);
+});
+
+test("Use addNunjucksGlobal with function", async (t) => {
+  let templateConfig = new TemplateConfig();
+  templateConfig.userConfig.addNunjucksGlobal("fortytwo", function () {
+    return 42;
+  });
+
+  let tr = getNewTemplateRender("njk", null, templateConfig);
+
+  let fn = await tr.getCompiledTemplate("<p>{{ fortytwo() }}</p>");
+  t.is(await fn(), "<p>42</p>");
+});
+
+test("Use addNunjucksGlobal with literal", async (t) => {
+  let templateConfig = new TemplateConfig();
+  templateConfig.userConfig.addNunjucksGlobal("fortytwo", 42);
+
+  let tr = getNewTemplateRender("njk", null, templateConfig);
+
+  let fn = await tr.getCompiledTemplate("<p>{{ fortytwo }}</p>");
+  t.is(await fn(), "<p>42</p>");
+});
+
+// Async not supported here
+test.skip("Use addNunjucksGlobal with async function", async (t) => {
+  let templateConfig = new TemplateConfig();
+  templateConfig.userConfig.addNunjucksGlobal("fortytwo", getPromise(42));
+
+  let tr = getNewTemplateRender("njk", null, templateConfig);
+
+  let fn = await tr.getCompiledTemplate("<p>{{ fortytwo() }}</p>");
+  t.is(await fn(), "<p>42</p>");
+});
+
+test("Use config driven Nunjucks Environment Options (throws on undefined variable)", async (t) => {
+  let templateConfig = new TemplateConfig();
+  templateConfig.userConfig.setNunjucksEnvironmentOptions({
+    throwOnUndefined: true,
+  });
+
+  let tr = getNewTemplateRender("njk", null, templateConfig);
+
+  let fn = await tr.getCompiledTemplate("<p>   {{ test }}</p>");
+  await t.throwsAsync(async () => {
+    await fn({});
+  });
+});
+
+test("Use config driven Nunjucks Environment Options (autoescape)", async (t) => {
+  let templateConfig = new TemplateConfig();
+  templateConfig.userConfig.setNunjucksEnvironmentOptions({
+    autoescape: false,
+  });
+
+  let tr = getNewTemplateRender("njk", null, templateConfig);
+
+  let fn = await tr.getCompiledTemplate("<p>{{ test }}</p>");
+  t.is(
+    await fn({
+      test: "<b>Hi</b>",
+    }),
+    "<p><b>Hi</b></p>"
+  );
+});
+
+test("Nunjucks Shortcode in a loop (everything is sync)", async (t) => {
+  let templateConfig = new TemplateConfig();
+  templateConfig.userConfig.addNunjucksShortcode(
+    "genericshortcode",
+    function (str) {
+      return str;
+    }
+  );
+
+  let tr = getNewTemplateRender(
+    "njk",
+    "./test/stubs-njk-async/",
+    templateConfig
+  );
+
+  let fn = await tr.getCompiledTemplate(
+    "{% for item in list %}{% include 'loop.njk' %}{% endfor %}"
+  );
+
+  t.is(
+    await fn({
+      list: ["a", "b", "c"],
+    }),
+    "included_a-aincluded_b-bincluded_c-c"
+  );
+});
+
+// TODO!
+test.skip("Weird issue with number arguments in a loop (not parsing literals properly?)", async (t) => {
+  let templateConfig = new TemplateConfig();
+  templateConfig.userConfig.addNunjucksShortcode(
+    "genericshortcode",
+    function (str) {
+      return str;
+    }
+  );
+
+  let tr = getNewTemplateRender(
+    "njk",
+    "./test/stubs-njk-async/",
+    templateConfig
+  );
+  let fn = await tr.getCompiledTemplate(
+    "{% for item in list %}{{item}}-{% genericshortcode item %}{% endfor %}"
+  );
+
+  t.is(
+    await fn({
+      list: [1, 2, 3],
+    }),
+    "1-12-23-3"
+  );
+});
+
+test("Use a precompiled Nunjucks template", async (t) => {
+  // custom loader object
+
+  let templateConfig = new TemplateConfig();
+  templateConfig.userConfig.setNunjucksPrecompiledTemplates({
+    "RenderDirect:BQAPaWxMHTxOqfCSB_bEoWTvtWt-obPbnZTUznRl9LA": (function () {
+      function root(env, context, frame, runtime, cb) {
+        var lineno = 0;
+        var colno = 0;
+        var output = "";
+        try {
+          var parentTemplate = null;
+          var t_1;
+          t_1 = 34;
+          frame.set("nunjucksVar", t_1, true);
+          if (frame.topLevel) {
+            context.setVariable("nunjucksVar", t_1);
+          }
+          if (frame.topLevel) {
+            context.addExport("nunjucksVar", t_1);
+          }
+          output += runtime.suppressValue(
+            runtime.contextOrFrameLookup(context, frame, "hi"),
+            env.opts.autoescape
+          );
+          output += "\n";
+          output += runtime.suppressValue(
+            runtime.contextOrFrameLookup(context, frame, "nunjucksVar"),
+            env.opts.autoescape
+          );
+          if (parentTemplate) {
+            parentTemplate.rootRenderFunc(env, context, frame, runtime, cb);
+          } else {
+            cb(null, output);
+          }
+        } catch (e) {
+          cb(runtime.handleError(e, lineno, colno));
+        }
+      }
+      return {
+        root: root,
+      };
+    })(),
+  });
+
+  let tr = getNewTemplateRender("njk", null, templateConfig);
+
+  // Just pass a unique key in here if you’re using precompiled templates via config.
+  let fn = await tr.getCompiledTemplate(
+    "RenderDirect:BQAPaWxMHTxOqfCSB_bEoWTvtWt-obPbnZTUznRl9LA"
+  );
+  t.is(
+    normalizeNewLines(
+      await fn({
+        hi: "Zach",
+      })
+    ),
+    `Zach
+34`
   );
 });

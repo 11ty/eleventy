@@ -1,13 +1,27 @@
-const fs = require("fs-extra");
-const path = require("path");
+const { TemplatePath } = require("@11ty/eleventy-utils");
 
-const TemplatePath = require("./TemplatePath");
 const EleventyBaseError = require("./EleventyBaseError");
+const ConsoleLogger = require("./Util/ConsoleLogger");
+const PathPrefixer = require("./Util/PathPrefixer");
+const merge = require("./Util/Merge");
+
 const debug = require("debug")("EleventyServe");
 
 class EleventyServeConfigError extends EleventyBaseError {}
+
+const DEFAULT_SERVER_OPTIONS = {
+  module: "@11ty/eleventy-dev-server",
+  port: 8080,
+  // pathPrefix: "/",
+  // setup: function() {},
+  // logger: { info: function() {}, error: function() {} }
+};
+
 class EleventyServe {
-  constructor() {}
+  constructor() {
+    this.logger = new ConsoleLogger(true);
+    this._initOptionsFetched = false;
+  }
 
   get config() {
     if (!this._config) {
@@ -20,167 +34,202 @@ class EleventyServe {
   }
 
   set config(config) {
+    this._options = null;
     this._config = config;
+  }
+
+  get eleventyConfig() {
+    if (!this._eleventyConfig) {
+      throw new EleventyServeConfigError(
+        "You need to set the eleventyConfig property on EleventyServe."
+      );
+    }
+
+    return this._eleventyConfig;
+  }
+
+  set eleventyConfig(config) {
+    this._eleventyConfig = config;
   }
 
   setOutputDir(outputDir) {
     this.outputDir = outputDir;
   }
 
-  getPathPrefix() {
-    let cfgPrefix = this.config.pathPrefix;
-    if (cfgPrefix) {
-      // add leading / (for browsersync), see #1454
-      // path.join uses \\ for Windows so we split and rejoin
-      return path.join("/", cfgPrefix).split(path.sep).join("/");
-    }
-    return "/";
-  }
+  getServerModule(name) {
+    try {
+      if (!name || name === DEFAULT_SERVER_OPTIONS.module) {
+        return require(DEFAULT_SERVER_OPTIONS.module);
+      }
 
-  getRedirectDir(dirName) {
-    return TemplatePath.join(this.outputDir, dirName);
-  }
-  getRedirectDirOverride() {
-    // has a pathPrefix, add a /index.html template to redirect to /pathPrefix/
-    if (this.getPathPrefix() !== "/") {
-      return "_eleventy_redirect";
-    }
-  }
+      // Look for peer dep in local project
+      let projectNodeModulesPath = TemplatePath.absolutePath("./node_modules/");
+      let serverPath = TemplatePath.absolutePath(projectNodeModulesPath, name);
 
-  getRedirectFilename(dirName) {
-    return TemplatePath.join(this.getRedirectDir(dirName), "index.html");
-  }
-
-  getOptions(port) {
-    let pathPrefix = this.getPathPrefix();
-
-    // TODO customize this in Configuration API?
-    let serverConfig = {
-      baseDir: this.outputDir,
-    };
-
-    let redirectDirName = this.getRedirectDirOverride();
-    // has a pathPrefix, add a /index.html template to redirect to /pathPrefix/
-    if (redirectDirName) {
-      serverConfig.baseDir = this.getRedirectDir(redirectDirName);
-      serverConfig.routes = {};
-      serverConfig.routes[pathPrefix] = this.outputDir;
-
-      // if has a savedPathPrefix, use the /savedPathPrefix/index.html template to redirect to /pathPrefix/
-      if (this.savedPathPrefix) {
-        serverConfig.routes[this.savedPathPrefix] = TemplatePath.join(
-          this.outputDir,
-          this.savedPathPrefix
+      // No references outside of the project node_modules are allowed
+      if (!serverPath.startsWith(projectNodeModulesPath)) {
+        throw new Error(
+          "Invalid node_modules name for Eleventy server instance, received:" +
+            name
         );
       }
-    }
 
-    return Object.assign(
-      {
-        server: serverConfig,
-        port: port || 8080,
-        ignore: ["node_modules"],
-        watch: false,
-        open: false,
-        notify: false,
-        ui: false, // Default changed in 1.0
-        ghostMode: false, // Default changed in 1.0
-        index: "index.html",
-      },
-      this.config.browserSyncConfig
-    );
-  }
+      let module = require(serverPath);
 
-  cleanupRedirect(dirName) {
-    if (dirName && dirName !== "/") {
-      let savedPathFilename = this.getRedirectFilename(dirName);
+      if (!("getServer" in module)) {
+        throw new Error(
+          `Eleventy server module requires a \`getServer\` static method. Could not find one on module: \`${name}\``
+        );
+      }
 
-      setTimeout(function () {
-        if (!fs.existsSync(savedPathFilename)) {
-          debug(`Cleanup redirect: Could not find ${savedPathFilename}`);
-          return;
-        }
+      let serverPackageJsonPath = TemplatePath.absolutePath(
+        serverPath,
+        "package.json"
+      );
 
-        let savedPathContent = fs.readFileSync(savedPathFilename, "utf-8");
-        if (
-          savedPathContent.indexOf("Browsersync pathPrefix Redirect") === -1
-        ) {
-          debug(
-            `Cleanup redirect: Found ${savedPathFilename} but it wasn’t an eleventy redirect.`
+      let serverPackageJson = require(serverPackageJsonPath);
+      if (
+        serverPackageJson["11ty"] &&
+        serverPackageJson["11ty"].compatibility
+      ) {
+        try {
+          this.eleventyConfig.userConfig.versionCheck(
+            serverPackageJson["11ty"].compatibility
           );
-          return;
+        } catch (e) {
+          this.logger.warn(
+            `Warning: \`${name}\` Plugin Compatibility: ${e.message}`
+          );
         }
+      }
 
-        fs.unlink(savedPathFilename, (err) => {
-          if (!err) {
-            debug(`Cleanup redirect: Deleted ${savedPathFilename}`);
-          }
-        });
-      }, 2000);
+      return module;
+    } catch (e) {
+      this.logger.error(
+        "There was an error with your custom Eleventy server. We’re using the default server instead.\n" +
+          e.message
+      );
+      debug("Eleventy server error %o", e);
+      return require(DEFAULT_SERVER_OPTIONS.module);
     }
   }
 
-  serveRedirect(dirName) {
-    fs.outputFile(
-      this.getRedirectFilename(dirName),
-      `<!doctype html>
-  <meta http-equiv="refresh" content="0; url=${this.config.pathPrefix}">
-  <title>Browsersync pathPrefix Redirect</title>
-  <a href="${this.config.pathPrefix}">Go to ${this.config.pathPrefix}</a>`
+  get options() {
+    if (this._options) {
+      return this._options;
+    }
+
+    this._options = Object.assign(
+      {
+        pathPrefix: PathPrefixer.normalizePathPrefix(this.config.pathPrefix),
+        logger: this.logger,
+      },
+      DEFAULT_SERVER_OPTIONS,
+      this.config.serverOptions
     );
+
+    // TODO improve by sorting keys here
+    this._savedConfigOptions = JSON.stringify(this.config.serverOptions);
+    if (!this._initOptionsFetched && this.getSetupCallback()) {
+      throw new Error(
+        "Init options have not yet been fetched in the setup callback. This probably means that `init()` has not yet been called."
+      );
+    }
+
+    return this._options;
   }
 
-  serve(port) {
-    // only load on serve—this is pretty expensive
-    const browserSync = require("browser-sync");
-    this.server = browserSync.create("eleventy-server");
+  get server() {
+    if (this._server) {
+      return this._server;
+    }
 
-    let pathPrefix = this.getPathPrefix();
+    let serverModule = this.getServerModule(this.options.module);
 
-    if (this.savedPathPrefix && pathPrefix !== this.savedPathPrefix) {
-      let redirectFilename = this.getRedirectFilename(this.savedPathPrefix);
-      if (!fs.existsSync(redirectFilename)) {
-        debug(
-          `Redirecting BrowserSync from ${this.savedPathPrefix} to ${pathPrefix}`
-        );
-        this.serveRedirect(this.savedPathPrefix);
-      } else {
-        debug(
-          `Config updated with a new pathPrefix. Tried to set up a transparent redirect but found a template already existing at ${redirectFilename}. You’ll have to navigate manually.`
-        );
+    // Static method `getServer` was already checked in `getServerModule`
+    this._server = serverModule.getServer(
+      "eleventy-server",
+      this.config.dir.output,
+      this.options
+    );
+
+    return this._server;
+  }
+
+  set server(val) {
+    this._server = val;
+  }
+
+  getSetupCallback() {
+    let setupCallback = this.config.serverOptions.setup;
+    if (setupCallback && typeof setupCallback === "function") {
+      return setupCallback;
+    }
+  }
+
+  async init() {
+    if (!this._initOptionsFetched) {
+      this._initOptionsFetched = true;
+
+      let setupCallback = this.getSetupCallback();
+      if (setupCallback) {
+        let opts = await setupCallback();
+        if (opts) {
+          merge(this.options, opts);
+        }
       }
     }
-
-    let redirectDirName = this.getRedirectDirOverride();
-    // has a pathPrefix, add a /index.html template to redirect to /pathPrefix/
-    if (redirectDirName) {
-      this.serveRedirect(redirectDirName);
-    }
-
-    this.cleanupRedirect(this.savedPathPrefix);
-
-    let options = this.getOptions(port);
-    this.server.init(options);
-
-    // this needs to happen after `.getOptions`
-    this.savedPathPrefix = pathPrefix;
   }
 
-  close() {
-    if (this.server) {
-      this.server.exit();
+  // Port comes in here from --port on the command line
+  async serve(port) {
+    this._commandLinePort = port;
+    if (!this._initOptionsFetched) {
+      await this.init();
+    }
+
+    this.server.serve(port || this.options.port);
+  }
+
+  async close() {
+    if (this._server) {
+      await this.server.close();
+      this.server = undefined;
     }
   }
 
-  /* filesToReload is optional */
-  reload(filesToReload) {
-    if (this.server) {
-      if (this.getPathPrefix() !== this.savedPathPrefix) {
-        this.server.exit();
-        this.serve();
-      } else {
-        this.server.reload(filesToReload);
-      }
+  async sendError({ error }) {
+    if (this._server) {
+      await this.server.sendError({
+        error,
+      });
+    }
+  }
+
+  // Restart the server entirely
+  // We don’t want to use a native `restart` method (e.g. restart() in Vite) so that
+  // we can correctly handle a `module` property change (changing the server type)
+  async restart() {
+    await this.close();
+
+    // saved --port in `serve()`
+    await this.serve(this._commandLinePort);
+  }
+
+  // Live reload the server
+  async reload(reloadEvent = {}) {
+    if (!this._server) {
+      return;
+    }
+
+    // Restart the server if the options have changed
+    if (
+      JSON.stringify(this.config.serverOptions) !== this._savedConfigOptions
+    ) {
+      debug("Server options changed, we’re restarting the server");
+      await this.restart();
+    } else {
+      await this.server.reload(reloadEvent);
     }
   }
 }

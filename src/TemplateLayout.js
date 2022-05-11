@@ -1,7 +1,8 @@
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const TemplateLayoutPathResolver = require("./TemplateLayoutPathResolver");
 const TemplateContent = require("./TemplateContent");
 const TemplateData = require("./TemplateData");
-const TemplatePath = require("./TemplatePath");
 
 const templateCache = require("./TemplateCache");
 // const debug = require("debug")("Eleventy:TemplateLayout");
@@ -72,9 +73,25 @@ class TemplateLayout extends TemplateContent {
     let mapEntry = await this.getTemplateLayoutMapEntry();
     map.push(mapEntry);
 
+    // Keep track of every layout we see so we can detect cyclical layout chains (e.g., a => b => c => a).
+    const seenLayoutKeys = new Set();
+    seenLayoutKeys.add(mapEntry.key);
+
     while (mapEntry.frontMatterData && cfgKey in mapEntry.frontMatterData) {
+      // Layout of the current layout
+      const parentLayoutKey = mapEntry.frontMatterData[cfgKey];
+      // Abort if a circular layout chain is detected. Otherwise, we'll time out and run out of memory.
+      if (seenLayoutKeys.has(parentLayoutKey)) {
+        throw new Error(
+          `Your layouts have a circular reference, starting at ${map[0].key}! The layout ${parentLayoutKey} was specified twice in this layout chain.`
+        );
+      }
+
+      // Keep track of this layout so we can detect duplicates in subsequent iterations
+      seenLayoutKeys.add(parentLayoutKey);
+
       let layout = TemplateLayout.getTemplate(
-        mapEntry.frontMatterData[cfgKey],
+        parentLayoutKey,
         mapEntry.inputDir,
         this.config,
         this.extensionMap
@@ -107,13 +124,6 @@ class TemplateLayout extends TemplateContent {
     this.layoutChain = layoutChain.reverse();
     this.dataCache = data;
     return data;
-  }
-
-  async getLayoutChain() {
-    if (!this.layoutChain) {
-      await this.getData();
-    }
-    return this.layoutChain;
   }
 
   async getCompiledLayoutFunctions(layoutMap) {

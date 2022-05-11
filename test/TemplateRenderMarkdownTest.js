@@ -139,12 +139,11 @@ This is some code.
 
 test("Markdown Render: use prism highlighter (no language)", async (t) => {
   let tr = getNewTemplateRender("md");
-  let userConfig = new UserConfig();
+  let eleventyConfig = new TemplateConfig();
+  let userConfig = eleventyConfig.userConfig;
   userConfig.addPlugin(eleventySyntaxHighlightPlugin);
 
-  let markdownHighlight = userConfig.getMergingConfigObject()
-    .markdownHighlighter;
-
+  let markdownHighlight = eleventyConfig.getConfig().markdownHighlighter;
   let mdLib = md();
   mdLib.set({
     highlight: markdownHighlight,
@@ -163,11 +162,11 @@ This is some code.
 
 test("Markdown Render: use prism highlighter", async (t) => {
   let tr = getNewTemplateRender("md");
-  let userConfig = new UserConfig();
+  let eleventyConfig = new TemplateConfig();
+  let userConfig = eleventyConfig.userConfig;
   userConfig.addPlugin(eleventySyntaxHighlightPlugin);
 
-  let markdownHighlight = userConfig.getMergingConfigObject()
-    .markdownHighlighter;
+  let markdownHighlight = eleventyConfig.getConfig().markdownHighlighter;
 
   let mdLib = md();
   mdLib.set({
@@ -186,11 +185,11 @@ var key = "value";
 
 test("Markdown Render: use prism highlighter (no space before language)", async (t) => {
   let tr = getNewTemplateRender("md");
-  let userConfig = new UserConfig();
+  let eleventyConfig = new TemplateConfig();
+  let userConfig = eleventyConfig.userConfig;
   userConfig.addPlugin(eleventySyntaxHighlightPlugin);
 
-  let markdownHighlight = userConfig.getMergingConfigObject()
-    .markdownHighlighter;
+  let markdownHighlight = eleventyConfig.getConfig().markdownHighlighter;
 
   let mdLib = md();
   mdLib.set({
@@ -209,11 +208,11 @@ var key = "value";
 
 test("Markdown Render: use prism highlighter, line highlighting", async (t) => {
   let tr = getNewTemplateRender("md");
-  let userConfig = new UserConfig();
+  let eleventyConfig = new TemplateConfig();
+  let userConfig = eleventyConfig.userConfig;
   userConfig.addPlugin(eleventySyntaxHighlightPlugin);
 
-  let markdownHighlight = userConfig.getMergingConfigObject()
-    .markdownHighlighter;
+  let markdownHighlight = eleventyConfig.getConfig().markdownHighlighter;
 
   let mdLib = md();
   mdLib.set({
@@ -232,11 +231,11 @@ var key = "value";
 
 test("Markdown Render: use prism highlighter, line highlighting with fallback `text` language.", async (t) => {
   let tr = getNewTemplateRender("md");
-  let userConfig = new UserConfig();
+  let eleventyConfig = new TemplateConfig();
+  let userConfig = eleventyConfig.userConfig;
   userConfig.addPlugin(eleventySyntaxHighlightPlugin);
 
-  let markdownHighlight = userConfig.getMergingConfigObject()
-    .markdownHighlighter;
+  let markdownHighlight = eleventyConfig.getConfig().markdownHighlighter;
 
   let mdLib = md();
   mdLib.set({
@@ -257,7 +256,8 @@ test("Markdown Render: use Markdown inside of a Liquid shortcode (Issue #536)", 
   let tr = getNewTemplateRender("md");
   let eleventyConfig = new TemplateConfig();
   let cls = require("../src/Engines/Liquid");
-  let liquidEngine = new cls("liquid", tr.getIncludesDir(), eleventyConfig);
+
+  let liquidEngine = new cls("liquid", tr.getDirs(), eleventyConfig);
   liquidEngine.addShortcode("testShortcode", function () {
     return "## My Other Title";
   });
@@ -281,7 +281,7 @@ test("Markdown Render: use Markdown inside of a Nunjucks shortcode (Issue #536)"
   let tr = getNewTemplateRender("md");
   let eleventyConfig = new TemplateConfig();
   let cls = require("../src/Engines/Nunjucks");
-  let nunjucksEngine = new cls("njk", tr.getIncludesDir(), eleventyConfig);
+  let nunjucksEngine = new cls("njk", tr.getDirs(), eleventyConfig);
   nunjucksEngine.addShortcode("testShortcode", function () {
     return "## My Other Title";
   });
@@ -330,7 +330,7 @@ test("Markdown Render: use Markdown inside of a Nunjucks paired shortcode (Issue
   let eleventyConfig = new TemplateConfig();
 
   let cls = require("../src/Engines/Nunjucks");
-  let nunjucksEngine = new cls("njk", tr.getIncludesDir(), eleventyConfig);
+  let nunjucksEngine = new cls("njk", tr.getDirs(), eleventyConfig);
   nunjucksEngine.addPairedShortcode("testShortcode", function (content) {
     return content;
   });

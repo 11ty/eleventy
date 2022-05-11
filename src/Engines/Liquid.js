@@ -1,33 +1,33 @@
 const moo = require("moo");
 const liquidLib = require("liquidjs");
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const TemplateEngine = require("./TemplateEngine");
-const TemplatePath = require("../TemplatePath");
 // const debug = require("debug")("Eleventy:Liquid");
 
 class Liquid extends TemplateEngine {
-  constructor(name, includesDir, config) {
-    super(name, includesDir, config);
+  static argumentLexerOptions = {
+    number: /[0-9]+\.*[0-9]*/,
+    doubleQuoteString: /"(?:\\["\\]|[^\n"\\])*"/,
+    singleQuoteString: /'(?:\\['\\]|[^\n'\\])*'/,
+    keyword: /[a-zA-Z0-9.\-_]+/,
+    "ignore:whitespace": /[, \t]+/, // includes comma separator
+  };
 
-    this.liquidOptions = {};
+  constructor(name, dirs, config) {
+    super(name, dirs, config);
+
+    this.liquidOptions = this.config.liquidOptions || {};
 
     this.setLibrary(this.config.libraryOverrides.liquid);
-    this.setLiquidOptions(this.config.liquidOptions);
 
-    this.argLexer = moo.compile({
-      number: /[0-9]+\.*[0-9]*/,
-      doubleQuoteString: /"(?:\\["\\]|[^\n"\\])*"/,
-      singleQuoteString: /'(?:\\['\\]|[^\n'\\])*'/,
-      keyword: /[a-zA-Z0-9.\-_]+/,
-      "ignore:whitespace": /[, \t]+/, // includes comma separator
-    });
+    this.argLexer = moo.compile(Liquid.argumentLexerOptions);
     this.cacheable = true;
   }
 
-  setLibrary(lib) {
-    this.liquidLibOverride = lib;
-
+  setLibrary(override) {
     // warning, the include syntax supported here does not exactly match what Jekyll uses.
-    this.liquidLib = lib || new liquidLib.Liquid(this.getLiquidOptions());
+    this.liquidLib = override || new liquidLib.Liquid(this.getLiquidOptions());
     this.setEngineLib(this.liquidLib);
 
     this.addFilters(this.config.liquidFilters);
@@ -38,18 +38,13 @@ class Liquid extends TemplateEngine {
     this.addAllPairedShortcodes(this.config.liquidPairedShortcodes);
   }
 
-  setLiquidOptions(options) {
-    this.liquidOptions = options;
-
-    this.setLibrary(this.liquidLibOverride);
-  }
-
   getLiquidOptions() {
     let defaults = {
-      root: [super.getIncludesDir()], // overrides in compile with inputPath below
+      root: [this.dirs.includes, this.dirs.input], // supplemented in compile with inputPath below
       extname: ".liquid",
-      dynamicPartials: false,
       strictFilters: true,
+      // TODO?
+      // cache: true,
     };
 
     let options = Object.assign(defaults, this.liquidOptions || {});
@@ -101,6 +96,10 @@ class Liquid extends TemplateEngine {
   static async parseArguments(lexer, str, scope, engine) {
     let argArray = [];
 
+    if (!lexer) {
+      lexer = moo.compile(Liquid.argumentLexerOptions);
+    }
+
     if (typeof str === "string") {
       // TODO key=value key2=value
       // TODO JSON?
@@ -117,19 +116,23 @@ class Liquid extends TemplateEngine {
           line: 1,
           col: 1 }*/
         if (arg.type.indexOf("ignore:") === -1) {
-          argArray.push(await engine.evalValue(arg.value, scope));
+          // Push the promise into an array instead of awaiting it here.
+          // This forces the promises to run in order with the correct scope value for each arg.
+          // Otherwise they run out of order and can lead to undefined values for arguments in layout template shortcodes.
+          argArray.push(engine.evalValue(arg.value, scope));
         }
         arg = lexer.next();
       }
     }
 
-    return argArray;
+    return await Promise.all(argArray);
   }
 
   static _normalizeShortcodeScope(ctx) {
     let obj = {};
     if (ctx) {
       obj.page = ctx.get(["page"]);
+      obj.eleventy = ctx.get(["eleventy"]);
     }
     return obj;
   }
@@ -201,19 +204,44 @@ class Liquid extends TemplateEngine {
     });
   }
 
+  parseForSymbols(str) {
+    let tokenizer = new liquidLib.Tokenizer(str);
+    let tokens = tokenizer.readTopLevelTokens();
+    let symbols = tokens
+      .filter((token) => token.kind === liquidLib.TokenKind.Output)
+      .map((token) => {
+        // manually remove filters 😅
+        return token.content.split("|").map((entry) => entry.trim())[0];
+      });
+    return symbols;
+  }
+
+  // Don’t return a boolean if permalink is a function (see TemplateContent->renderPermalink)
+  permalinkNeedsCompilation(str) {
+    if (typeof str === "string") {
+      return this.needsCompilation(str);
+    }
+  }
+
+  needsCompilation(str) {
+    let options = this.liquidLib.options;
+
+    return (
+      str.indexOf(options.tagDelimiterLeft) !== -1 ||
+      str.indexOf(options.outputDelimiterLeft) !== -1
+    );
+  }
+
   async compile(str, inputPath) {
     let engine = this.liquidLib;
     let tmplReady = engine.parse(str, inputPath);
 
     // Required for relative includes
     let options = {};
-    if (!inputPath || inputPath === "njk" || inputPath === "md") {
+    if (!inputPath || inputPath === "liquid" || inputPath === "md") {
       // do nothing
     } else {
-      options.root = [
-        super.getIncludesDir(),
-        TemplatePath.getDirFromFilePath(inputPath),
-      ];
+      options.root = [TemplatePath.getDirFromFilePath(inputPath)];
     }
 
     return async function (data) {

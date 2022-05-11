@@ -1,5 +1,5 @@
 const test = require("ava");
-const fs = require("fs-extra");
+const fs = require("fs");
 const TemplatePassthroughManager = require("../src/TemplatePassthroughManager");
 const TemplateConfig = require("../src/TemplateConfig");
 const EleventyFiles = require("../src/EleventyFiles");
@@ -23,8 +23,18 @@ test("isPassthroughCopyFile", async (t) => {
   };
   let mgr = new TemplatePassthroughManager(eleventyConfig);
 
-  t.true(mgr.isPassthroughCopyFile([], "./img/test.png"));
-  t.true(mgr.isPassthroughCopyFile([], "./fonts/Roboto.woff"));
+  t.truthy(mgr.isPassthroughCopyFile([], "./img/test.png"));
+  t.deepEqual(mgr.isPassthroughCopyFile([], "./img/test.png"), {
+    inputPath: "./img",
+    outputPath: true,
+  });
+
+  t.truthy(mgr.isPassthroughCopyFile([], "./fonts/Roboto.woff"));
+  t.deepEqual(mgr.isPassthroughCopyFile([], "./fonts/Roboto.woff"), {
+    inputPath: "./fonts",
+    outputPath: true,
+  });
+
   t.false(mgr.isPassthroughCopyFile([], "./docs/test.njk"));
   t.false(mgr.isPassthroughCopyFile([], "./other-dir/test.png"));
   t.true(
@@ -114,14 +124,8 @@ test("Naughty paths outside of project dir", async (t) => {
     "./test/stubs/img.jpg",
   ];
 
-  let results = await Promise.all(
-    output.map(function (path) {
-      return fs.exists(path);
-    })
-  );
-
-  for (let result of results) {
-    t.false(result);
+  for (let path of output) {
+    t.false(fs.existsSync(path));
   }
 });
 

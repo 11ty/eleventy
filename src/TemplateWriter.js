@@ -1,5 +1,6 @@
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const Template = require("./Template");
-const TemplatePath = require("./TemplatePath");
 const TemplateMap = require("./TemplateMap");
 const EleventyFiles = require("./EleventyFiles");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
@@ -8,12 +9,12 @@ const EleventyErrorHandler = require("./EleventyErrorHandler");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
 const ConsoleLogger = require("./Util/ConsoleLogger");
 
-const lodashFlatten = require("lodash/flatten");
 const debug = require("debug")("Eleventy:TemplateWriter");
 const debugDev = require("debug")("Dev:Eleventy:TemplateWriter");
 
-class TemplateWriterError extends EleventyBaseError {}
-class TemplateWriterWriteError extends EleventyBaseError {}
+class TemplateWriterMissingConfigArgError extends EleventyBaseError {}
+class EleventyPassthroughCopyError extends EleventyBaseError {}
+class EleventyTemplateError extends EleventyBaseError {}
 
 class TemplateWriter {
   constructor(
@@ -24,7 +25,7 @@ class TemplateWriter {
     eleventyConfig
   ) {
     if (!eleventyConfig) {
-      throw new TemplateWriterError("Missing config argument.");
+      throw new TemplateWriterMissingConfigArgError("Missing config argument.");
     }
     this.eleventyConfig = eleventyConfig;
     this.config = eleventyConfig.getConfig();
@@ -150,62 +151,84 @@ class TemplateWriter {
     return this.allPaths;
   }
 
-  _createTemplate(path) {
-    let tmpl = this._templatePathCache.get(path);
-    if (tmpl) {
-      return tmpl;
-    }
-
-    tmpl = new Template(
-      path,
-      this.inputDir,
-      this.outputDir,
-      this.templateData,
-      this.extensionMap,
-      this.eleventyConfig
+  _isIncrementalFileAPassthroughCopy(paths) {
+    let passthroughManager = this.eleventyFiles.getPassthroughManager();
+    return passthroughManager.isPassthroughCopyFile(
+      paths,
+      this.incrementalFile
     );
+  }
 
-    tmpl.logger = this.logger;
-    this._templatePathCache.set(path, tmpl);
+  _createTemplate(path, allPaths, to = "fs") {
+    let tmpl = this._templatePathCache.get(path);
+    if (!tmpl) {
+      tmpl = new Template(
+        path,
+        this.inputDir,
+        this.outputDir,
+        this.templateData,
+        this.extensionMap,
+        this.eleventyConfig
+      );
+      tmpl.setOutputFormat(to);
+
+      tmpl.logger = this.logger;
+      this._templatePathCache.set(path, tmpl);
+
+      /*
+       * Sample filter: arg str, return pretty HTML string
+       * function(str) {
+       *   return pretty(str, { ocd: true });
+       * }
+       */
+      for (let transformName in this.config.transforms) {
+        let transform = this.config.transforms[transformName];
+        if (typeof transform === "function") {
+          tmpl.addTransform(transformName, transform);
+        }
+      }
+
+      for (let linterName in this.config.linters) {
+        let linter = this.config.linters[linterName];
+        if (typeof linter === "function") {
+          tmpl.addLinter(linter);
+        }
+      }
+    }
 
     tmpl.setIsVerbose(this.isVerbose);
 
     // --incremental only writes files that trigger a build during --watch
-    if (this.incrementalFile && path !== this.incrementalFile) {
-      tmpl.setDryRun(true);
+    if (this.incrementalFile) {
+      // incremental file is a passthrough copy (not a template)
+      if (this._isIncrementalFileAPassthroughCopy(allPaths)) {
+        tmpl.setDryRun(true);
+        // Passthrough copy check is above this (order is important)
+      } else if (
+        tmpl.isFileRelevantToThisTemplate(this.incrementalFile, {
+          isFullTemplate: this.eleventyFiles.isFullTemplateFile(
+            allPaths,
+            this.incrementalFile
+          ),
+        })
+      ) {
+        tmpl.setDryRun(this.isDryRun);
+      } else {
+        tmpl.setDryRun(true);
+      }
     } else {
       tmpl.setDryRun(this.isDryRun);
-    }
-
-    /*
-     * Sample filter: arg str, return pretty HTML string
-     * function(str) {
-     *   return pretty(str, { ocd: true });
-     * }
-     */
-    for (let transformName in this.config.transforms) {
-      let transform = this.config.transforms[transformName];
-      if (typeof transform === "function") {
-        tmpl.addTransform(transformName, transform);
-      }
-    }
-
-    for (let linterName in this.config.linters) {
-      let linter = this.config.linters[linterName];
-      if (typeof linter === "function") {
-        tmpl.addLinter(linter);
-      }
     }
 
     return tmpl;
   }
 
-  async _addToTemplateMap(paths) {
+  async _addToTemplateMap(paths, to = "fs") {
     let promises = [];
     for (let path of paths) {
       if (this.extensionMap.hasEngine(path)) {
         promises.push(
-          this.templateMap.add(this._createTemplate(path))
+          this.templateMap.add(this._createTemplate(path, paths, to))
         );
       }
       debug(`${path} begun adding to map.`);
@@ -214,10 +237,10 @@ class TemplateWriter {
     return Promise.all(promises);
   }
 
-  async _createTemplateMap(paths) {
+  async _createTemplateMap(paths, to) {
     this.templateMap = new TemplateMap(this.eleventyConfig);
 
-    await this._addToTemplateMap(paths);
+    await this._addToTemplateMap(paths, to);
     await this.templateMap.cache();
 
     debugDev("TemplateMap cache complete.");
@@ -236,14 +259,12 @@ class TemplateWriter {
 
   async writePassthroughCopy(paths) {
     let passthroughManager = this.eleventyFiles.getPassthroughManager();
-    if (this.incrementalFile) {
-      passthroughManager.setIncrementalFile(this.incrementalFile);
-    }
+    passthroughManager.setIncrementalFile(this.incrementalFile);
 
     return passthroughManager.copyAll(paths).catch((e) => {
       this.errorHandler.warn(e, "Error with passthrough copy");
       return Promise.reject(
-        new TemplateWriterWriteError("Having trouble copying", e)
+        new EleventyPassthroughCopyError("Having trouble copying", e)
       );
     });
   }
@@ -253,7 +274,7 @@ class TemplateWriter {
 
     // console.time("generateTemplates:_createTemplateMap");
     // TODO optimize await here
-    await this._createTemplateMap(paths);
+    await this._createTemplateMap(paths, to);
     // console.timeEnd("generateTemplates:_createTemplateMap");
     debug("Template map created.");
 
@@ -267,8 +288,8 @@ class TemplateWriter {
             usedTemplateContentTooEarlyMap.push(mapEntry);
           } else {
             return Promise.reject(
-              new TemplateWriterWriteError(
-                `Having trouble writing template: ${mapEntry.outputPath}`,
+              new EleventyTemplateError(
+                `Having trouble writing template: "${mapEntry.outputPath}"`,
                 e
               )
             );
@@ -281,8 +302,8 @@ class TemplateWriter {
       promises.push(
         this._generateTemplate(mapEntry, to).catch(function (e) {
           return Promise.reject(
-            new TemplateWriterWriteError(
-              `Having trouble writing template (second pass): ${mapEntry.outputPath}`,
+            new EleventyTemplateError(
+              `Having trouble writing template (second pass): "${mapEntry.outputPath}"`,
               e
             )
           );
@@ -296,17 +317,12 @@ class TemplateWriter {
   async write() {
     let paths = await this._getAllPaths();
     let promises = [];
+
+    // The ordering here is important to destructuring in Eleventy->_watch
     promises.push(this.writePassthroughCopy(paths));
 
-    // Only write templates if not using incremental OR if incremental file was *not* a passthrough copy
-    if (
-      !this.incrementalFile ||
-      !this.eleventyFiles
-        .getPassthroughManager()
-        .isPassthroughCopyFile(paths, this.incrementalFile)
-    ) {
-      promises.push(...(await this.generateTemplates(paths)));
-    }
+    promises.push(...(await this.generateTemplates(paths)));
+
     return Promise.all(promises).catch((e) => {
       return Promise.reject(e);
     });
@@ -320,7 +336,7 @@ class TemplateWriter {
 
     return Promise.all(promises)
       .then((results) => {
-        let flat = lodashFlatten(results); // switch to results.flat(1) with Node 12+
+        let flat = results.flat();
         return flat;
       })
       .catch((e) => {

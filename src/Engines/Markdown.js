@@ -3,8 +3,8 @@ const TemplateEngine = require("./TemplateEngine");
 // const debug = require("debug")("Eleventy:Markdown");
 
 class Markdown extends TemplateEngine {
-  constructor(name, includesDir, config) {
-    super(name, includesDir, config);
+  constructor(name, dirs, config) {
+    super(name, dirs, config);
 
     this.markdownOptions = {};
 
@@ -53,7 +53,7 @@ class Markdown extends TemplateEngine {
       if (typeof preTemplateEngine === "string") {
         engine = this.engineManager.getEngine(
           preTemplateEngine,
-          super.getIncludesDir(),
+          this.dirs,
           this.extensionMap
         );
       } else {

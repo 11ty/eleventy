@@ -52,6 +52,12 @@ test("Easy slug with date, index", (t) => {
   t.is(fs.getFullPathWithoutExtension(), "/index");
 });
 
+test("Easy slug with only a date and no suffix", (t) => {
+  let fs = getNewSlugInstance("./2018-01-01.html");
+  t.is(fs.getSlug(), "2018-01-01");
+  t.is(fs.getFullPathWithoutExtension(), "/2018-01-01");
+});
+
 /* Directories */
 
 test("Easy slug with dir", (t) => {
@@ -88,6 +94,12 @@ test("Easy slug with date, index with dir", (t) => {
   let fs = getNewSlugInstance("./test/2018-01-01-index.html");
   t.is(fs.getSlug(), "test");
   t.is(fs.getFullPathWithoutExtension(), "/test/index");
+});
+
+test("Strips date from dir name", (t) => {
+  let fs = getNewSlugInstance("./2021-11-20-my-awesome-post/index.md");
+  t.is(fs.getSlug(), "my-awesome-post");
+  t.is(fs.getFullPathWithoutExtension(), "/2021-11-20-my-awesome-post/index");
 });
 
 /* Pass Input dir */

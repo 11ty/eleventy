@@ -1,24 +1,20 @@
 const test = require("ava");
 const Benchmark = require("../src/Benchmark");
 
-function between(t, value, lowerBound, upperBound) {
-  t.truthy(value >= lowerBound);
-  t.truthy(value <= upperBound);
-}
-
-test.cb("Standard Benchmark", (t) => {
-  let b = new Benchmark();
-  b.before();
-  setTimeout(function () {
-    b.after();
-    t.truthy(b.getTotal() >= 0);
-    t.end();
-  }, 100);
+test("Standard Benchmark", async (t) => {
+  await new Promise((resolve) => {
+    let b = new Benchmark();
+    b.before();
+    setTimeout(function () {
+      b.after();
+      t.truthy(b.getTotal() >= 0);
+      resolve();
+    }, 100);
+  });
 });
 
-test.cb(
-  "Nested Benchmark (nested calls are ignored while a parent is measuring)",
-  (t) => {
+test("Nested Benchmark (nested calls are ignored while a parent is measuring)", async (t) => {
+  await new Promise((resolve) => {
     let b = new Benchmark();
     b.before();
 
@@ -29,25 +25,27 @@ test.cb(
 
       b.after();
       t.truthy(b.getTotal() >= 10);
-      t.end();
+      resolve();
     }, 100);
-  }
-);
+  });
+});
 
-test.cb("Reset Benchmark", (t) => {
-  let b = new Benchmark();
-  b.before();
-  b.reset();
-
-  setTimeout(function () {
+test("Reset Benchmark", async (t) => {
+  await new Promise((resolve) => {
+    let b = new Benchmark();
     b.before();
-    b.after();
-    t.truthy(b.getTotal() <= 0.1);
+    b.reset();
 
-    t.throws(function () {
-      // throws because we reset
+    setTimeout(function () {
+      b.before();
       b.after();
-    });
-    t.end();
-  }, 100);
+
+      t.throws(function () {
+        // throws because we reset
+        b.after();
+      });
+
+      resolve();
+    }, 100);
+  });
 });

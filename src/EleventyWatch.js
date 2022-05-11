@@ -1,4 +1,4 @@
-const TemplatePath = require("./TemplatePath");
+const { TemplatePath } = require("@11ty/eleventy-utils");
 
 /* Decides when to watch and in what mode to watch
  * Incremental builds don’t batch changes, they queue.
@@ -68,7 +68,10 @@ class EleventyWatch {
   }
 
   hasQueuedFile(file) {
-    return this._queueMatches(file).length > 0;
+    if (file) {
+      return this._queueMatches(file).length > 0;
+    }
+    return false;
   }
 
   get pendingQueue() {

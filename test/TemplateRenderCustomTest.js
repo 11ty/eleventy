@@ -1,9 +1,12 @@
 const test = require("ava");
+const TemplateData = require("../src/TemplateData");
 const TemplateRender = require("../src/TemplateRender");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 const TemplateConfig = require("../src/TemplateConfig");
-const Vue = require("vue");
-const renderer = require("vue-server-renderer").createRenderer();
+const getNewTemplate = require("./_getNewTemplateForTests");
+
+const { createSSRApp } = require("vue");
+const { renderToString } = require("@vue/server-renderer");
 
 function getNewTemplateRender(name, inputDir, eleventyConfig) {
   if (!eleventyConfig) {
@@ -34,29 +37,95 @@ test("Custom plaintext Render", async (t) => {
   t.is(await fn({}), "<p>Paragraph</p>");
 });
 
+test("Custom Markdown Render with `compile` override", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+
+  eleventyConfig.userConfig.extensionMap.add({
+    extension: "md",
+    key: "md",
+    compile: function (str, inputPath) {
+      return function (data) {
+        return `<not-markdown>${str.trim()}</not-markdown>`;
+      };
+    },
+  });
+
+  let tr = getNewTemplateRender("md", null, eleventyConfig);
+
+  let fn = await tr.getCompiledTemplate("# Markdown?");
+  t.is((await fn()).trim(), "<not-markdown># Markdown?</not-markdown>");
+  t.is((await fn({})).trim(), "<not-markdown># Markdown?</not-markdown>");
+});
+
+test("Custom Markdown Render without `compile` override", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let initCalled = false;
+
+  eleventyConfig.userConfig.extensionMap.add({
+    extension: "md",
+    key: "md",
+    init: function () {
+      initCalled = true;
+    },
+  });
+
+  let tr = getNewTemplateRender("md", null, eleventyConfig);
+
+  let fn = await tr.getCompiledTemplate("# Header");
+  t.is(initCalled, true);
+  t.is((await fn()).trim(), "<h1>Header</h1>");
+  t.is((await fn({})).trim(), "<h1>Header</h1>");
+});
+
+test("Custom Markdown Render with `compile` override + call to default compiler", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+
+  eleventyConfig.userConfig.extensionMap.add({
+    extension: "md",
+    key: "md",
+    compile: function (str, inputPath) {
+      return async function (data) {
+        const result = await this.defaultRenderer(data);
+        return `<custom-wrapper>${result.trim()}</custom-wrapper>`;
+      };
+    },
+  });
+
+  let tr = getNewTemplateRender("md", null, eleventyConfig);
+
+  let fn = await tr.getCompiledTemplate("Hey {{name}}");
+  t.is((await fn()).trim(), "<custom-wrapper><p>Hey</p></custom-wrapper>");
+  t.is(
+    (await fn({ name: "Zach" })).trim(),
+    "<custom-wrapper><p>Hey Zach</p></custom-wrapper>"
+  );
+});
+
 test("Custom Vue Render", async (t) => {
   let tr = getNewTemplateRender("vue");
 
   tr.eleventyConfig.userConfig.extensionMap.add({
     extension: "vue",
     key: "vue",
-    compile: function (str, inputPath) {
+    compile: function (str) {
       return async function (data) {
-        const app = new Vue({
+        const app = createSSRApp({
           template: str,
-          data: data,
+          data: function () {
+            return data;
+          },
         });
 
-        return renderer.renderToString(app);
+        return renderToString(app);
       };
     },
   });
 
-  let fn = await tr.getCompiledTemplate(`<p v-html="test">Paragraph</p>`);
-  t.is(await fn({ test: "Hello" }), `<p data-server-rendered="true">Hello</p>`);
+  let fn = await tr.getCompiledTemplate('<p v-html="test">Paragraph</p>');
+  t.is(await fn({ test: "Hello" }), "<p>Hello</p>");
 });
 
-const sass = require("node-sass");
+const sass = require("sass");
 
 test("Custom Sass Render", async (t) => {
   let tr = getNewTemplateRender("sass");
@@ -72,6 +141,7 @@ test("Custom Sass Render", async (t) => {
               data: str,
               includePaths: [tr.inputDir, tr.includesDir],
               style: "expanded",
+              indentType: "space",
               // TODO
               // sourcemap: "file",
               outFile: "test_this_is_to_not_write_a_file.css",
@@ -89,10 +159,75 @@ test("Custom Sass Render", async (t) => {
     },
   });
 
-  let fn = await tr.getCompiledTemplate(`$color: blue; p { color: $color; }`);
+  let fn = await tr.getCompiledTemplate("$color: blue; p { color: $color; }");
   t.is(
     (await fn({})).trim(),
     `p {
-  color: blue; }`
+  color: blue;
+}`
   );
+});
+
+/*
+serverPrefetch: function() {
+    return this.getBlogAuthors().then(response => this.glossary = response)
+  },
+*/
+test("JavaScript functions should not be mutable but not *that* mutable", async (t) => {
+  t.plan(3);
+
+  let eleventyConfig = new TemplateConfig();
+
+  let instance = {
+    dataForCascade: function () {
+      // was mutating this.config.javascriptFunctions!
+      this.shouldnotmutatethething = 1;
+      return {};
+    },
+  };
+
+  eleventyConfig.userConfig.extensionMap.add({
+    extension: "js1",
+    key: "js1",
+    getData: ["dataForCascade"],
+    getInstanceFromInputPath: function (inputPath) {
+      t.truthy(true);
+      return instance;
+    },
+    compile: function (str, inputPath) {
+      t.falsy(this.config.javascriptFunctions.shouldnotmutatethething);
+
+      // plaintext
+      return (data) => {
+        return str;
+      };
+    },
+  });
+
+  let tmpl = getNewTemplate(
+    "./test/stubs-custom-extension/test.js1",
+    "./test/stubs-custom-extension/",
+    "dist",
+    null,
+    null,
+    eleventyConfig
+  );
+  let data = await tmpl.getData();
+  t.is(await tmpl.render(data), "<p>Paragraph</p>");
+});
+
+test("Return undefined in compile to ignore #2267", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.extensionMap.add({
+    extension: "txt",
+    key: "txt",
+    compile: function (str, inputPath) {
+      return;
+    },
+  });
+
+  let tr = getNewTemplateRender("txt", null, eleventyConfig);
+
+  let fn = await tr.getCompiledTemplate("<p>Paragraph</p>");
+  t.is(fn, undefined);
 });

@@ -77,6 +77,14 @@ test("Handlebars Render Partial with variable", async (t) => {
   t.is(await fn({ name: "Zach" }), "<p>This is a Zach.</p>");
 });
 
+test("Handlebars Render Partial with parameter", async (t) => {
+  let fn = await getNewTemplateRender(
+    "hbs",
+    "./test/stubs-hbs-partial-var/"
+  ).getCompiledTemplate("{{> myPartial parameter=name }}");
+  t.is(await fn({ name: "Zach" }), "The result is Zach");
+});
+
 test("Handlebars Render: with Library Override", async (t) => {
   let tr = getNewTemplateRender("hbs");
 

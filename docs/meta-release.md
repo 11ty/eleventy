@@ -1,3 +1,9 @@
+# List of dependencies that went ESM
+
+- `lint-staged` ESM at 12.x
+- `@sindresorhus/slugify` ESM at 2.x
+- `multimatch` is ESM at 6
+
 # Canary Release Procedure
 
 1. npmclean aka `rm -rf node_modules && rm -f package-lock.json && npm install`
@@ -6,6 +12,9 @@
 1. Check it all in and commit
 1. Tag new version
 1. `npm publish --access=public --tag=canary`
+1. Use the `eleventy-edge-cdn` project to generate a new Eleventy Edge lib
+
+Unfortunate thing about npm: if you push a 1.0.0-canary.x to `canary` after a `2.0.0-canary.x`, it will use the last pushed tag (not the highest version number)
 
 # Beta Release Procedure
 
@@ -18,12 +27,19 @@
 1. Check it all in and commit
 1. Tag new version
 1. `npm publish --access=public --tag=beta`
+1. Use the `eleventy-edge-cdn` project to generate a new Eleventy Edge lib
 
 # Release Procedure
 
 1. update minor dependencies in package.json? `npm outdated` `npm update --save`
 1. npmclean aka `rm -rf node_modules && rm -f package-lock.json && npm install`
 1. If the minimum Node version changed, make sure you update `package.json` engines property.
+1. Bonus: make sure the error message works correctly for Node versions less than 10.
+
+- 0.12.x+ requires Node 10+
+- 1.x+ requires Node 12+
+- 2.x+ requires Node 14+
+
 1. npm audit
 1. Make sure `npx ava` runs okay
 1. Update version in `package.json`
@@ -31,15 +47,13 @@
 1. Check it all in and commit
 1. Tag new version
 1. `npm publish --access=public`
-
-1. Bonus for 0.x branch, make sure it still works in node 8 (see `Temp/eleventy-node-8` sample project)
+1. Use the `eleventy-edge-cdn` project to generate a new Eleventy Edge lib
 
 ## If Docs branch does not yet exist
 
 1. Check in a new `11ty-website` site with updated `package.json` version.
 1. Add version to 11ty-website `versions.json`
 1. Commit it
-1. Run ./deploy.sh to push to production branch for 11ty-website
 1. Create a new branch for branched version
 1. Go to https://app.netlify.com/sites/11ty/settings/domain and set up a subdomain for it.
 

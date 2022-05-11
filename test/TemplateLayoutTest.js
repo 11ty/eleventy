@@ -48,7 +48,9 @@ test("Get Layout Chain", async (t) => {
     "./test/stubs"
   );
 
-  t.deepEqual(await tl.getLayoutChain(), [
+  await tl.getData();
+
+  t.deepEqual(tl.layoutChain, [
     "./test/stubs/_includes/layouts/layout-inherit-a.njk",
     "./test/stubs/_includes/layouts/layout-inherit-b.njk",
     "./test/stubs/_includes/layouts/layout-inherit-c.njk",
@@ -72,7 +74,8 @@ test("Get Front Matter Data", async (t) => {
     secondinherits: "b",
     thirdinherits: "c",
   });
-  t.deepEqual(await tl.getLayoutChain(), [
+
+  t.deepEqual(tl.layoutChain, [
     "./test/stubs/_includes/layouts/layout-inherit-a.njk",
     "./test/stubs/_includes/layouts/layout-inherit-b.njk",
     "./test/stubs/_includes/layouts/layout-inherit-c.njk",
@@ -204,4 +207,27 @@ test("Cache Duplicates (use full key for cache)", async (t) => {
   t.is((await tlb.render({})).trim(), "Hello B");
 
   t.is((await tla.render({})).trim(), "Hello A");
+});
+
+test("Throw an error if a layout references itself as the layout", async (t) => {
+  await t.throwsAsync(async () => {
+    const tl = getTemplateLayoutInstance(
+      "layout-cycle-self.njk",
+      "./test/stubs-circular-layout"
+    );
+
+    const layoutChain = await tl._testGetLayoutChain();
+    return layoutChain;
+  });
+});
+
+test("Throw an error if a circular layout chain is detected", async (t) => {
+  await t.throwsAsync(async () => {
+    const tl = getTemplateLayoutInstance(
+      "layout-cycle-a.njk",
+      "./test/stubsstubs-circular-layout"
+    );
+    const layoutChain = await tl._testGetLayoutChain();
+    return layoutChain;
+  });
 });

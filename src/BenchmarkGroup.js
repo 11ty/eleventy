@@ -66,6 +66,10 @@ class BenchmarkGroup {
     this.minimumThresholdPercent = val;
   }
 
+  has(type) {
+    return !!this.benchmarks[type];
+  }
+
   get(type) {
     if (!this.benchmarks[type]) {
       this.benchmarks[type] = new Benchmark();
@@ -73,28 +77,29 @@ class BenchmarkGroup {
     return this.benchmarks[type];
   }
 
+  padNumber(num, length) {
+    if (("" + num).length >= length) {
+      return num;
+    }
+
+    let prefix = new Array(length + 1).join(" ");
+    return (prefix + num).substr(-1 * length);
+  }
+
   finish(label, totalTimeSpent) {
     for (var type in this.benchmarks) {
       let bench = this.benchmarks[type];
       let isAbsoluteMinimumComparison = this.minimumThresholdMs > 0;
       let totalForBenchmark = bench.getTotal();
-      let percent = (totalForBenchmark * 100) / totalTimeSpent;
+      let percent = Math.round((totalForBenchmark * 100) / totalTimeSpent);
+      let callCount = bench.getTimesCalled();
 
-      let extraOutput = [];
-      if (!isAbsoluteMinimumComparison) {
-        extraOutput.push(`${percent.toFixed(1)}%`);
-      }
-      let timesCalledCount = bench.getTimesCalled();
-      if (timesCalledCount > 1) {
-        extraOutput.push(`called ${timesCalledCount}×`);
-        extraOutput.push(
-          `${(totalForBenchmark / timesCalledCount).toFixed(1)}ms each`
-        );
-      }
-
-      let str = `Benchmark (${label}): ${type} took ${totalForBenchmark.toFixed(
-        0
-      )}ms ${extraOutput.length ? `(${extraOutput.join(", ")})` : ""}`;
+      let output = {
+        ms: this.padNumber(totalForBenchmark.toFixed(0), 6),
+        percent: this.padNumber(percent, 3),
+        calls: this.padNumber(callCount, 5),
+      };
+      let str = `Benchmark ${output.ms}ms ${output.percent}% ${output.calls}× (${label}) ${type}`;
 
       if (
         (isAbsoluteMinimumComparison &&
@@ -104,7 +109,12 @@ class BenchmarkGroup {
         this.logger.warn(str);
       }
 
-      if (totalForBenchmark.toFixed(0) > 0) {
+      // Don’t log if 0ms or only called ×1 time
+      // Exception for things that are only counting (no execution time measured), e.g. 0ms and counts > 100
+      if (
+        (totalForBenchmark.toFixed(0) > 0 && callCount > 1) ||
+        callCount > 100
+      ) {
         debugBenchmark(str);
       }
     }

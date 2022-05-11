@@ -133,7 +133,7 @@ test("getKey", (t) => {
   t.is(map.getKey("component.js"), undefined);
 });
 
-test("isFullTemplateFilename (not a passthrough copy extension)", (t) => {
+test("isFullTemplateFilePath (not a passthrough copy extension)", (t) => {
   let map = getExtensionMap([
     "liquid",
     "njk",
@@ -143,11 +143,49 @@ test("isFullTemplateFilename (not a passthrough copy extension)", (t) => {
     "js",
     "css",
   ]);
-  t.true(map.isFullTemplateFilename("template.liquid"));
-  t.true(map.isFullTemplateFilename("template.njk"));
-  t.true(map.isFullTemplateFilename("template.11ty.js"));
-  t.true(map.isFullTemplateFilename("template.ejs"));
-  t.true(map.isFullTemplateFilename("template.pug"));
-  t.false(map.isFullTemplateFilename("passthrough.js"));
-  t.false(map.isFullTemplateFilename("passthrough.css"));
+  t.true(map.isFullTemplateFilePath("template.liquid"));
+  t.true(map.isFullTemplateFilePath("template.njk"));
+  t.true(map.isFullTemplateFilePath("template.11ty.js"));
+  t.true(map.isFullTemplateFilePath("template.ejs"));
+  t.true(map.isFullTemplateFilePath("template.pug"));
+  t.false(map.isFullTemplateFilePath("passthrough.js"));
+  t.false(map.isFullTemplateFilePath("passthrough.css"));
+});
+
+test("getValidExtensionsForPath", (t) => {
+  let cfg = new TemplateConfig();
+  cfg.userConfig.extensionMap.add({
+    key: "js",
+    extension: "js",
+  });
+
+  let map = getExtensionMap(["liquid", "njk", "11ty.js", "js"], cfg);
+
+  t.deepEqual(map.getValidExtensionsForPath("template.liquid"), ["liquid"]);
+  t.deepEqual(map.getValidExtensionsForPath("template.11ty.js"), [
+    "11ty.js",
+    "js",
+  ]);
+  t.deepEqual(map.getValidExtensionsForPath("template.pug"), []);
+  t.deepEqual(map.getValidExtensionsForPath("template.liquid.js"), ["js"]);
+  t.deepEqual(map.getValidExtensionsForPath("njk.liquid.11ty.js"), [
+    "11ty.js",
+    "js",
+  ]);
+});
+
+test("shouldSpiderJavaScriptDependencies", (t) => {
+  let cfg = new TemplateConfig();
+  cfg.userConfig.extensionMap.add({
+    key: "js",
+    extension: "js",
+  });
+
+  let map = getExtensionMap(["liquid", "njk", "11ty.js", "js"], cfg);
+
+  t.deepEqual(map.shouldSpiderJavaScriptDependencies("template.liquid"), false);
+  t.deepEqual(map.shouldSpiderJavaScriptDependencies("template.njk"), false);
+  t.deepEqual(map.shouldSpiderJavaScriptDependencies("template.css"), false);
+  t.deepEqual(map.shouldSpiderJavaScriptDependencies("template.11ty.js"), true);
+  t.deepEqual(map.shouldSpiderJavaScriptDependencies("template.js"), false);
 });

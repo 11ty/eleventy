@@ -11,10 +11,6 @@ require("please-upgrade-node")(pkg, {
 });
 const debug = require("debug")("Eleventy:cmd");
 
-if (process.env.DEBUG) {
-  require("time-require");
-}
-
 const EleventyErrorHandler = require("./src/EleventyErrorHandler");
 
 try {
@@ -49,11 +45,12 @@ try {
       );
     },
   });
-  debug("command: eleventy ", argv.toString());
+
+  debug("command: eleventy %o", argv);
   const Eleventy = require("./src/Eleventy");
 
   process.on("unhandledRejection", (error, promise) => {
-    errorHandler.error(error, "Unhandled rejection in promise");
+    errorHandler.fatal(error, "Unhandled rejection in promise");
   });
   process.on("uncaughtException", (error) => {
     errorHandler.fatal(error, "Uncaught exception");
@@ -65,75 +62,85 @@ try {
     );
   });
 
-  let elev = new Eleventy(argv.input, argv.output, {
-    // --quiet and --quiet=true both resolve to true
-    quietMode: argv.quiet,
-    configPath: argv.config,
-  });
+  if (argv.version) {
+    console.log(Eleventy.getVersion());
+  } else if (argv.help) {
+    console.log(Eleventy.getHelp());
+  } else {
+    let elev = new Eleventy(argv.input, argv.output, {
+      // --quiet and --quiet=true both resolve to true
+      quietMode: argv.quiet,
+      configPath: argv.config,
+      source: "cli",
+    });
 
-  // reuse ErrorHandler instance in Eleventy
-  errorHandler = elev.errorHandler;
+    // reuse ErrorHandler instance in Eleventy
+    errorHandler = elev.errorHandler;
 
-  if (argv.to === "json" || argv.to === "ndjson") {
-    // override logging output
-    elev.setIsVerbose(false);
-  }
-
-  elev.setPathPrefix(argv.pathprefix);
-  elev.setDryRun(argv.dryrun);
-  elev.setIncrementalBuild(argv.incremental);
-  elev.setPassthroughAll(argv.passthroughall);
-  elev.setFormats(argv.formats);
-
-  // careful, we can’t use async/await here to error properly
-  // with old node versions in `please-upgrade-node` above.
-  elev.init().then(function () {
-    try {
-      if (argv.version) {
-        console.log(elev.getVersion());
-      } else if (argv.help) {
-        console.log(elev.getHelp());
-      } else if (argv.serve) {
-        let startBrowsersync = true;
-        elev
-          .watch()
-          .catch((e) => {
-            // Build failed but error message already displayed.
-            startBrowsersync = false;
-            console.log("Watch catch");
-          })
-          .then(function () {
-            if (startBrowsersync) {
-              elev.serve(argv.port);
-            }
-          });
-      } else if (argv.watch) {
-        elev.watch().catch((e) => {
-          console.log("watch catch 2");
-        });
-      } else {
-        if (argv.to === "json") {
-          elev.toJSON().then(function (result) {
-            console.log(JSON.stringify(result, null, 2));
-          });
-        } else if (argv.to === "ndjson") {
-          elev.toNDJSON().then(function (stream) {
-            stream.pipe(process.stdout);
-          });
-        } else if (!argv.to || argv.to === "fs") {
-          elev.write();
-        } else {
-          throw new EleventyCommandCheckError(
-            `Invalid --to value: ${argv.to}. Supported values: \`fs\` (default), \`json\`, and \`ndjson\`.`
-          );
-        }
-      }
-    } catch (e) {
-      errorHandler.fatal(e, "Eleventy CLI Error");
+    if (argv.to === "json" || argv.to === "ndjson") {
+      // override logging output
+      elev.setIsVerbose(false);
     }
-  });
-  // unlikely because we handle a lot of errors internally in Eleventy
-  // .catch(errorHandler.fatal.bind(errorHandler));
+
+    elev.setPathPrefix(argv.pathprefix);
+    elev.setDryRun(argv.dryrun);
+    elev.setIncrementalBuild(argv.incremental);
+    elev.setPassthroughAll(argv.passthroughall);
+    elev.setFormats(argv.formats);
+
+    if (argv.watch) {
+      elev.setRunMode("watch");
+    } else if (argv.serve) {
+      elev.setRunMode("serve");
+    }
+
+    // careful, we can’t use async/await here to error properly
+    // with old node versions in `please-upgrade-node` above.
+    elev
+      .init()
+      .then(function () {
+        try {
+          if (argv.serve) {
+            let shouldStartServer = true;
+            elev
+              .watch()
+              .catch((e) => {
+                // Build failed but error message already displayed.
+                shouldStartServer = false;
+                // A build error occurred and we aren’t going to --serve
+              })
+              .then(function () {
+                if (shouldStartServer) {
+                  elev.serve(argv.port);
+                }
+              });
+          } else if (argv.watch) {
+            elev.watch().catch((e) => {
+              // A build error occurred and we aren’t going to --watch
+            });
+          } else {
+            if (argv.to === "json") {
+              elev.toJSON().then(function (result) {
+                console.log(JSON.stringify(result, null, 2));
+              });
+            } else if (argv.to === "ndjson") {
+              elev.toNDJSON().then(function (stream) {
+                stream.pipe(process.stdout);
+              });
+            } else if (!argv.to || argv.to === "fs") {
+              elev.write();
+            } else {
+              throw new EleventyCommandCheckError(
+                `Invalid --to value: ${argv.to}. Supported values: \`fs\` (default), \`json\`, and \`ndjson\`.`
+              );
+            }
+          }
+        } catch (e) {
+          errorHandler.fatal(e, "Eleventy CLI Error");
+        }
+      })
+      .catch(errorHandler.fatal.bind(errorHandler));
+  }
 } catch (e) {
   let errorHandler = new EleventyErrorHandler();
   errorHandler.fatal(e, "Eleventy CLI Fatal Error");

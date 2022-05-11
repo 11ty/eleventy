@@ -1,10 +1,10 @@
-<p align="center"><img src="https://www.11ty.dev/img/logo-github.png" alt="eleventy Logo"></p>
+<p align="center"><img src="https://www.11ty.dev/img/logo-github.svg" width="200" height="200" alt="eleventy Logo"></p>
 
-# eleventy 🕚⚡️
+# eleventy 🕚⚡️🎈🐀
 
 A simpler static site generator. An alternative to Jekyll. Written in JavaScript. Transforms a directory of templates (of varying types) into HTML.
 
-Works with HTML, Markdown, Liquid, Nunjucks, Handlebars, Mustache, EJS, Haml, Pug, and JavaScript Template Literals.
+Works with HTML, Markdown, JavaScript, Liquid, Nunjucks, Handlebars, Mustache, EJS, Haml, and Pug.
 
 ## ➡ [Documentation](https://www.11ty.dev/docs/)
 
@@ -37,10 +37,10 @@ npm run test
 - [Code Coverage Statistics](https://github.com/11ty/eleventy/blob/master/docs/coverage.md)
 - [Benchmark for Performance Regressions](https://github.com/11ty/eleventy-benchmark)
 
-## Major Roadmapped Features
+## Community Roadmap
 
-- [Top Feature Requests](https://github.com/11ty/eleventy/issues?q=label%3Aneeds-votes+sort%3Areactions-%2B1-desc) (Add your own votes using the 👍 reaction)
-- [Documentation Requests](https://github.com/11ty/eleventy/issues?utf8=%E2%9C%93&q=is%3Aissue+sort%3Areactions-%2B1-desc+is%3Aclosed+label%3Adocumentation+label%3Aneeds-votes) (Add your own votes using the 👍 reaction)
+- [Top Feature Requests](https://github.com/11ty/eleventy/issues?q=label%3Aneeds-votes+sort%3Areactions-%2B1-desc+label%3Aenhancement) (Add your own votes using the 👍 reaction)
+- [Documentation Requests](https://github.com/11ty/eleventy/issues?q=is%3Aissue+label%3Adocumentation+label%3Aneeds-votes+sort%3Areactions-%2B1-desc) (Add your own votes using the 👍 reaction)
 - [Top Bugs 😱](https://github.com/11ty/eleventy/issues?q=is%3Aissue+is%3Aopen+label%3Abug+sort%3Areactions-%2B1-desc) (Add your own votes using the 👍 reaction)
 - [Newest Bugs 🙀](https://github.com/11ty/eleventy/issues?q=is%3Aopen+is%3Aissue+label%3Abug)
 

@@ -1,7 +1,6 @@
 const test = require("ava");
 const fastglob = require("fast-glob");
 const EleventyFiles = require("../src/EleventyFiles");
-const TemplatePath = require("../src/TemplatePath");
 const TemplateConfig = require("../src/TemplateConfig");
 const TemplatePassthroughManager = require("../src/TemplatePassthroughManager");
 
@@ -174,8 +173,10 @@ test("Single File Input (shallow path)", async (t) => {
   );
   evf.init();
 
-  let globs = evf.getFileGlobs().filter((path) => path !== "!./README.md");
-  let files = await fastglob(globs);
+  let globs = evf.getFileGlobs(); //.filter((path) => path !== "./README.md");
+  let files = await fastglob(globs, {
+    ignore: evf.getIgnoreGlobs(),
+  });
   t.is(evf.getRawFiles().length, 1);
   t.is(files.length, 1);
   t.is(files[0], "./README.md");
@@ -202,8 +203,8 @@ test("Glob Input", async (t) => {
 test(".eleventyignore parsing", (t) => {
   let ignores = EleventyFiles.getFileIgnores("./test/stubs/.eleventyignore");
   t.is(ignores.length, 2);
-  t.is(ignores[0], "!./test/stubs/ignoredFolder/**");
-  t.is(ignores[1], "!./test/stubs/ignoredFolder/ignored.md");
+  t.is(ignores[0], "./test/stubs/ignoredFolder/**");
+  t.is(ignores[1], "./test/stubs/ignoredFolder/ignored.md");
 });
 
 test("Parse multiple .eleventyignores", (t) => {
@@ -213,25 +214,18 @@ test("Parse multiple .eleventyignores", (t) => {
   ]);
   t.is(ignores.length, 4);
   // Note these folders must exist!
-  t.is(ignores[0], "!./test/stubs/multiple-ignores/ignoredFolder/**");
-  t.is(ignores[1], "!./test/stubs/multiple-ignores/ignoredFolder/ignored.md");
-  t.is(
-    ignores[2],
-    "!./test/stubs/multiple-ignores/subfolder/ignoredFolder2/**"
-  );
+  t.is(ignores[0], "./test/stubs/multiple-ignores/ignoredFolder/**");
+  t.is(ignores[1], "./test/stubs/multiple-ignores/ignoredFolder/ignored.md");
+  t.is(ignores[2], "./test/stubs/multiple-ignores/subfolder/ignoredFolder2/**");
   t.is(
     ignores[3],
-    "!./test/stubs/multiple-ignores/subfolder/ignoredFolder2/ignored2.md"
+    "./test/stubs/multiple-ignores/subfolder/ignoredFolder2/ignored2.md"
   );
 });
 
-test("defaults if passed file name does not exist", (t) => {
-  let ignores = EleventyFiles.getFileIgnores(
-    ".thisfiledoesnotexist",
-    "node_modules/**"
-  );
-  t.truthy(ignores.length);
-  t.is(ignores[0], "!./node_modules/**");
+test("Passed file name does not exist", (t) => {
+  let ignores = EleventyFiles.getFileIgnores(".thisfiledoesnotexist");
+  t.deepEqual(ignores, []);
 });
 
 test(".eleventyignore files", async (t) => {
@@ -246,7 +240,9 @@ test(".eleventyignore files", async (t) => {
   let ignoredFiles = await fastglob("test/stubs/ignoredFolder/*.md");
   t.is(ignoredFiles.length, 1);
 
-  let files = await fastglob(evf.getFileGlobs());
+  let files = await fastglob(evf.getFileGlobs(), {
+    ignore: evf.getIgnoreGlobs(),
+  });
 
   t.true(files.length > 0);
 
@@ -257,225 +253,6 @@ test(".eleventyignore files", async (t) => {
     0
   );
 });
-
-/* .eleventyignore and .gitignore combos */
-test("Get ignores (no .eleventyignore no .gitignore)", (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let evf = new EleventyFiles(
-    "test/stubs/ignore1",
-    "test/stubs/ignore1/_site",
-    [],
-    eleventyConfig
-  );
-  evf.init();
-
-  evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
-
-  t.deepEqual(evf.getIgnores(), [
-    "!./node_modules/**",
-    "!./test/stubs/ignorelocalroot/node_modules/**",
-    "!./test/stubs/ignore1/node_modules/**",
-    "!./test/stubs/ignorelocalroot/test.md",
-    "!./test/stubs/ignore1/_site/**",
-  ]);
-});
-
-test("Get ignores (no .eleventyignore)", (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let evf = new EleventyFiles(
-    "test/stubs/ignore2",
-    "test/stubs/ignore2/_site",
-    [],
-    eleventyConfig
-  );
-  evf.init();
-  evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
-
-  t.deepEqual(evf.getIgnores(), [
-    "!./test/stubs/ignore2/thisshouldnotexist12345",
-    "!./test/stubs/ignorelocalroot/test.md",
-    "!./test/stubs/ignore2/_site/**",
-  ]);
-});
-
-test("Get ignores (no .eleventyignore, using setUseGitIgnore(false))", (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let evf = new EleventyFiles(
-    "test/stubs/ignore2",
-    "test/stubs/ignore2/_site",
-    [],
-    eleventyConfig
-  );
-  evf.init();
-
-  evf._setConfig({
-    useGitIgnore: false,
-    dir: {
-      includes: "_includes",
-    },
-  });
-  evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
-
-  t.deepEqual(evf.getIgnores(), [
-    "!./test/stubs/ignorelocalroot/test.md",
-    "!./test/stubs/ignore2/_site/**",
-  ]);
-});
-
-test("Get ignores (no .gitignore)", (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let evf = new EleventyFiles(
-    "test/stubs/ignore3",
-    "test/stubs/ignore3/_site",
-    [],
-    eleventyConfig
-  );
-  evf.init();
-  evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
-
-  t.deepEqual(evf.getIgnores(), [
-    "!./node_modules/**",
-    "!./test/stubs/ignorelocalroot/node_modules/**",
-    "!./test/stubs/ignore3/node_modules/**",
-    "!./test/stubs/ignorelocalroot/test.md",
-    "!./test/stubs/ignore3/ignoredFolder/**",
-    "!./test/stubs/ignore3/ignoredFolder/ignored.md",
-    "!./test/stubs/ignore3/_site/**",
-  ]);
-});
-
-test("Get ignores (both .eleventyignore and .gitignore)", (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let evf = new EleventyFiles(
-    "test/stubs/ignore4",
-    "test/stubs/ignore4/_site",
-    [],
-    eleventyConfig
-  );
-  evf.init();
-  evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
-
-  t.deepEqual(evf.getIgnores(), [
-    "!./test/stubs/ignore4/thisshouldnotexist12345",
-    "!./test/stubs/ignorelocalroot/test.md",
-    "!./test/stubs/ignore4/ignoredFolder/**",
-    "!./test/stubs/ignore4/ignoredFolder/ignored.md",
-    "!./test/stubs/ignore4/_site/**",
-  ]);
-});
-
-test("Get ignores (both .eleventyignore and .gitignore, using setUseGitIgnore(false))", (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let evf = new EleventyFiles(
-    "test/stubs/ignore4",
-    "test/stubs/ignore4/_site",
-    [],
-    eleventyConfig
-  );
-  evf.init();
-
-  evf._setConfig({
-    useGitIgnore: false,
-    dir: {
-      includes: "_includes",
-    },
-  });
-  evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
-
-  t.deepEqual(evf.getIgnores(), [
-    "!./test/stubs/ignorelocalroot/test.md",
-    "!./test/stubs/ignore4/ignoredFolder/**",
-    "!./test/stubs/ignore4/ignoredFolder/ignored.md",
-    "!./test/stubs/ignore4/_site/**",
-  ]);
-});
-
-test("Get ignores (no .eleventyignore  .gitignore exists but empty)", (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let evf = new EleventyFiles(
-    "test/stubs/ignore5",
-    "test/stubs/ignore5/_site",
-    [],
-    eleventyConfig
-  );
-  evf.init();
-
-  evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
-
-  t.deepEqual(evf.getIgnores(), [
-    "!./node_modules/**",
-    "!./test/stubs/ignorelocalroot/node_modules/**",
-    "!./test/stubs/ignore5/node_modules/**",
-    "!./test/stubs/ignorelocalroot/test.md",
-    "!./test/stubs/ignore5/_site/**",
-  ]);
-});
-
-test("Get ignores (both .eleventyignore and .gitignore exists, but .gitignore is empty)", (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let evf = new EleventyFiles(
-    "test/stubs/ignore6",
-    "test/stubs/ignore6/_site",
-    [],
-    eleventyConfig
-  );
-  evf.init();
-  evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
-
-  t.deepEqual(evf.getIgnores(), [
-    "!./node_modules/**",
-    "!./test/stubs/ignorelocalroot/node_modules/**",
-    "!./test/stubs/ignore6/node_modules/**",
-    "!./test/stubs/ignorelocalroot/test.md",
-    "!./test/stubs/ignore6/ignoredFolder/**",
-    "!./test/stubs/ignore6/ignoredFolder/ignored.md",
-    "!./test/stubs/ignore6/_site/**",
-  ]);
-});
-
-test("Get ignores (no .eleventyignore  .gitignore exists but has spaces inside)", (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let evf = new EleventyFiles(
-    "test/stubs/ignore7",
-    "test/stubs/ignore7/_site",
-    [],
-    eleventyConfig
-  );
-  evf.init();
-
-  evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
-
-  t.deepEqual(evf.getIgnores(), [
-    "!./node_modules/**",
-    "!./test/stubs/ignorelocalroot/node_modules/**",
-    "!./test/stubs/ignore7/node_modules/**",
-    "!./test/stubs/ignorelocalroot/test.md",
-    "!./test/stubs/ignore7/_site/**",
-  ]);
-});
-
-test("Get ignores (both .eleventyignore and .gitignore exists, but .gitignore has spaces inside)", (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let evf = new EleventyFiles(
-    "test/stubs/ignore8",
-    "test/stubs/ignore8/_site",
-    [],
-    eleventyConfig
-  );
-  evf.init();
-  evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
-
-  t.deepEqual(evf.getIgnores(), [
-    "!./node_modules/**",
-    "!./test/stubs/ignorelocalroot/node_modules/**",
-    "!./test/stubs/ignore8/node_modules/**",
-    "!./test/stubs/ignorelocalroot/test.md",
-    "!./test/stubs/ignore8/ignoredFolder/**",
-    "!./test/stubs/ignore8/ignoredFolder/ignored.md",
-    "!./test/stubs/ignore8/_site/**",
-  ]);
-});
-/* End .eleventyignore and .gitignore combos */
 
 test("getTemplateData caching", (t) => {
   let eleventyConfig = new TemplateConfig();
@@ -526,22 +303,6 @@ test("Include and Data Dirs", (t) => {
   ]);
 });
 
-test("Ignore Include and Data Dirs", (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let evf = new EleventyFiles(
-    "test/stubs",
-    "test/stubs/_site",
-    [],
-    eleventyConfig
-  );
-  evf.init();
-
-  t.deepEqual(evf._getIncludesAndDataDirIgnores(), [
-    "!./test/stubs/_includes/**",
-    "!./test/stubs/_data/**",
-  ]);
-});
-
 test("Input to 'src' and empty includes dir (issue #403)", (t) => {
   let eleventyConfig = new TemplateConfig();
   let evf = new EleventyFiles(
@@ -550,9 +311,9 @@ test("Input to 'src' and empty includes dir (issue #403)", (t) => {
     ["md", "liquid", "html"],
     eleventyConfig
   );
+  evf.setEleventyIgnoreContent("!./src/_includes/**");
   evf._setConfig({
     useGitIgnore: false,
-    eleventyignoreOverride: "!./src/_includes/**",
     dir: {
       input: ".",
       output: "_site",
@@ -566,89 +327,10 @@ test("Input to 'src' and empty includes dir (issue #403)", (t) => {
     "./src/**/*.md",
     "./src/**/*.liquid",
     "./src/**/*.html",
-    "!./src/_includes/**",
-    "!./src/_site/**",
-    "!./src/_data/**",
+    // "!./src/_includes/**",
+    // "!./src/_site/**",
+    // "!./src/_data/**",
   ]);
-});
-
-test("Bad expected output, this indicates a bug upstream in a dependency.  Input to 'src' and empty includes dir (issue #403, full paths in eleventyignore)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let evf = new EleventyFiles(
-    "test/stubs-403",
-    "test/stubs-403/_site",
-    ["liquid"],
-    eleventyConfig
-  );
-  evf._setConfig({
-    useGitIgnore: false,
-    eleventyignoreOverride:
-      "!" + TemplatePath.absolutePath("test/stubs-403/_includes") + "/**",
-    dir: {
-      input: "test/stubs-403",
-      output: "_site",
-      includes: "",
-      data: false,
-    },
-  });
-  evf.init();
-
-  t.deepEqual(await evf.getFiles(), [
-    "./test/stubs-403/template.liquid",
-    // This is bad, because it uses an absolutePath above. it should be excluded
-    "./test/stubs-403/_includes/include.liquid",
-  ]);
-});
-
-test("Workaround for Bad expected output, this indicates a bug upstream in a dependency.  Input to 'src' and empty includes dir (issue #403, full paths in eleventyignore)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let evf = new EleventyFiles(
-    "test/stubs-403",
-    "test/stubs-403/_site",
-    ["liquid"],
-    eleventyConfig
-  );
-  evf._setConfig({
-    useGitIgnore: false,
-    eleventyignoreOverride: "!./test/stubs-403/_includes/**",
-    dir: {
-      input: "test/stubs-403",
-      output: "_site",
-      includes: "",
-      data: false,
-    },
-  });
-  evf.init();
-
-  t.deepEqual(await evf.getFiles(), ["./test/stubs-403/template.liquid"]);
-});
-
-test("Issue #403: all .eleventyignores should be relative paths not absolute paths", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let evf = new EleventyFiles(
-    "test/stubs-403",
-    "test/stubs-403/_site",
-    ["liquid"],
-    eleventyConfig
-  );
-  evf._setConfig({
-    useGitIgnore: false,
-    dir: {
-      input: "test/stubs-403",
-      output: "_site",
-      includes: "",
-      data: false,
-    },
-  });
-  evf.init();
-
-  let globs = await evf.getFileGlobs();
-  t.is(
-    globs.filter((glob) => {
-      return glob.indexOf(TemplatePath.absolutePath()) > -1;
-    }).length,
-    0
-  );
 });
 
 test("Glob Watcher Files", async (t) => {
@@ -750,6 +432,6 @@ test("Test that negations are ignored (for now) PR#709, will change when #693 is
       `hello
 !testing`
     ),
-    ["!./hello"]
+    ["./hello"]
   );
 });

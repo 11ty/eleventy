@@ -1,5 +1,6 @@
-const fs = require("fs-extra");
-const TemplatePath = require("./TemplatePath");
+const fs = require("fs");
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 // const debug = require("debug")("Eleventy:TemplateLayoutPathResolver");
 
 class TemplateLayoutPathResolver {

@@ -1,14 +1,19 @@
 const test = require("ava");
+const TemplateConfig = require("../src/TemplateConfig");
 const TemplatePassthrough = require("../src/TemplatePassthrough");
 
 const getTemplatePassthrough = (path, outputDir, inputDir) => {
+  let eleventyConfig = new TemplateConfig();
+  let config = eleventyConfig.getConfig();
+
   if (typeof path === "object") {
-    return new TemplatePassthrough(path, outputDir, inputDir);
+    return new TemplatePassthrough(path, outputDir, inputDir, config);
   }
   return new TemplatePassthrough(
     { inputPath: path, outputPath: true },
     outputDir,
-    inputDir
+    inputDir,
+    config
   );
 };
 
@@ -293,3 +298,13 @@ test("Output paths match with different templatePassthrough methods", async (t) 
 //   t.truthy(pass);
 //   t.is(pass.getOutputPath(), "_site/rename.js");
 // });
+
+test("Bug with incremental copying to a directory output, issue #2278", async (t) => {
+  let pass1 = getTemplatePassthrough(
+    { inputPath: "./public/test.css", outputPath: "/" },
+    "test/stubs",
+    "."
+  );
+  pass1.setIsIncremental(true);
+  t.is(pass1.getOutputPath(), "test/stubs/test.css");
+});

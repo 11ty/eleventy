@@ -2,6 +2,7 @@ const test = require("ava");
 const TemplateMap = require("../src/TemplateMap");
 const TemplateCollection = require("../src/TemplateCollection");
 const UsingCircularTemplateContentReferenceError = require("../src/Errors/UsingCircularTemplateContentReferenceError");
+const TemplateContentUnrenderedTemplateError = require("../src/Errors/TemplateContentUnrenderedTemplateError");
 const normalizeNewLines = require("./Util/normalizeNewLines");
 const TemplateConfig = require("../src/TemplateConfig");
 
@@ -19,14 +20,24 @@ function getNewTemplate(filename, input, output, eleventyConfig) {
 }
 
 function getNewTemplateByNumber(num, eleventyConfig) {
-  let extensions = ["md", "md", "md", "md", "md", "html", "njk"];
-
   return getNewTemplate(
     `./test/stubs/templateMapCollection/test${num}.md`,
     "./test/stubs/",
     "./test/stubs/_site",
     eleventyConfig
   );
+}
+
+async function testRenderWithoutLayouts(template, data) {
+  let ret = await template.renderWithoutLayout(data);
+  return ret;
+}
+
+async function addTemplate(collection, template) {
+  let data = await template.getData();
+  for (let map of await template.getTemplates(data)) {
+    collection.add(map);
+  }
 }
 
 test("TemplateMap has collections added", async (t) => {
@@ -59,8 +70,8 @@ test("TemplateMap compared to Collection API", async (t) => {
   t.deepEqual(map[1].data.collections.post[1].template, tmpl4);
 
   let c = new TemplateCollection();
-  await c._testAddTemplate(tmpl1);
-  await c._testAddTemplate(tmpl4);
+  await addTemplate(c, tmpl1);
+  await addTemplate(c, tmpl4);
 
   let posts = c.getFilteredByTag("post");
   t.is(posts.length, 2);
@@ -108,11 +119,11 @@ test("TemplateMap adds collections data and has templateContent values", async (
   t.is(map[1].data.collections.all.length, 2);
 
   t.is(
-    await map[0].template._testRenderWithoutLayouts(map[0].data),
+    await testRenderWithoutLayouts(map[0].template, map[0].data),
     map[0]._pages[0].templateContent
   );
   t.is(
-    await map[1].template._testRenderWithoutLayouts(map[1].data),
+    await testRenderWithoutLayouts(map[1].template, map[1].data),
     map[1]._pages[0].templateContent
   );
 });
@@ -133,7 +144,7 @@ test("TemplateMap circular references (map without templateContent)", async (t) 
   t.is(map[0].data.collections.all.length, 1);
 
   t.is(
-    await map[0].template._testRenderWithoutLayouts(map[0].data),
+    await testRenderWithoutLayouts(map[0].template, map[0].data),
     map[0]._pages[0].templateContent
   );
 });
@@ -989,6 +1000,32 @@ test("eleventyExcludeFromCollections", async (t) => {
   t.is(collections.dog.length, 1);
 });
 
+test("eleventyExcludeFromCollections and permalink: false", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
+
+  let tm = new TemplateMap(eleventyConfig);
+  await tm.add(tmpl1);
+
+  let excludedTmpl = getNewTemplate(
+    "./test/stubs/eleventyExcludeFromCollectionsPermalinkFalse.njk",
+    "./test/stubs/",
+    "./test/stubs/_site",
+    eleventyConfig
+  );
+
+  await tm.add(excludedTmpl);
+
+  await tm.cache();
+
+  t.is(tm.getMap().length, 2);
+
+  let collections = await tm._testGetCollectionsData();
+  t.is(collections.all.length, 1);
+  t.is(collections.post.length, 1);
+  t.is(collections.dog.length, 1);
+});
+
 test("Paginate over collections.all", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
@@ -1125,7 +1162,7 @@ test("Async user collection addCollection method", async (t) => {
   await tm.add(tmpl1);
   tm.setUserConfigCollections({
     userCollection: async function (collection) {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         setTimeout(function () {
           resolve(collection.getAll());
         }, 50);
@@ -1246,4 +1283,184 @@ test("TemplateMap circular references (map.templateContent) using eleventyExclud
 
   let collections = await tm._testGetCollectionsData();
   t.is(collections.all.length, 1);
+});
+
+test("permalink object with build", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let tm = new TemplateMap(eleventyConfig);
+  let tmplLayout = getNewTemplate(
+    "./test/stubs/permalink-build/permalink-build.md",
+    "./test/stubs/",
+    "./test/stubs/_site",
+    eleventyConfig
+  );
+
+  await tm.add(tmplLayout);
+
+  let map = tm.getMap();
+  await tm.cache();
+
+  t.is(map[0]._pages.length, 1);
+});
+
+test("permalink object without build (defaults to `read` mode)", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let tm = new TemplateMap(eleventyConfig);
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-nobuild/permalink-nobuild.md",
+    "./test/stubs/",
+    "./test/stubs/_site",
+    eleventyConfig
+  );
+
+  await tm.add(tmpl);
+
+  let map = tm.getMap();
+  await tm.cache();
+
+  t.is(map[0]._pages.length, 1);
+  t.throws(
+    () => {
+      map[0]._pages[0].templateContent;
+    },
+    {
+      instanceOf: TemplateContentUnrenderedTemplateError,
+    }
+  );
+});
+
+test("serverlessUrlMap Event (without `build`, only `serverless`)", async (t) => {
+  t.plan(1);
+
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.on("eleventy.serverlessUrlMap", (templateMap) => {
+    t.deepEqual(templateMap, [
+      {
+        inputPath: "./test/stubs/permalink-nobuild/permalink-nobuild.md",
+        serverless: {
+          serverless: "/url/",
+        },
+      },
+    ]);
+  });
+
+  let tm = new TemplateMap(eleventyConfig);
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-nobuild/permalink-nobuild.md",
+    "./test/stubs/",
+    "./test/stubs/_site",
+    eleventyConfig
+  );
+
+  await tm.add(tmpl);
+  await tm.cache();
+});
+
+test("serverlessUrlMap Event (with `build`)", async (t) => {
+  t.plan(1);
+
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.on("eleventy.serverlessUrlMap", (templateMap) => {
+    t.deepEqual(templateMap, [
+      {
+        inputPath: "./test/stubs/permalink-build/permalink-build.md",
+        serverless: {},
+      },
+    ]);
+  });
+
+  let tm = new TemplateMap(eleventyConfig);
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-build/permalink-build.md",
+    "./test/stubs/",
+    "./test/stubs/_site",
+    eleventyConfig
+  );
+
+  await tm.add(tmpl);
+  await tm.cache();
+});
+
+test("serverlessUrlMap Event (with `build` and `serverless`)", async (t) => {
+  t.plan(1);
+
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.on("eleventy.serverlessUrlMap", (templateMap) => {
+    t.deepEqual(templateMap, [
+      {
+        inputPath:
+          "./test/stubs/permalink-build-serverless/permalink-build-serverless.md",
+        serverless: {
+          serverless: "/some-other-url/",
+        },
+      },
+    ]);
+  });
+
+  let tm = new TemplateMap(eleventyConfig);
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-build-serverless/permalink-build-serverless.md",
+    "./test/stubs/",
+    "./test/stubs/_site",
+    eleventyConfig
+  );
+
+  await tm.add(tmpl);
+  await tm.cache();
+});
+
+test("serverlessUrlMap Event (with templating on both `build` and `serverless`)", async (t) => {
+  t.plan(1);
+
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.on("eleventy.serverlessUrlMap", (templateMap) => {
+    t.deepEqual(templateMap, [
+      {
+        inputPath:
+          "./test/stubs/permalink-build-serverless-rendered/permalink-build-serverless-rendered.md",
+        serverless: {
+          serverless: "/some-other-url/",
+        },
+      },
+    ]);
+  });
+
+  let tm = new TemplateMap(eleventyConfig);
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-build-serverless-rendered/permalink-build-serverless-rendered.md",
+    "./test/stubs/",
+    "./test/stubs/_site",
+    eleventyConfig
+  );
+
+  await tm.add(tmpl);
+  await tm.cache();
+});
+
+test("serverlessUrlMap Event (empty pagination template with `serverless` should still show up)", async (t) => {
+  t.plan(1);
+
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.on("eleventy.serverlessUrlMap", (templateMap) => {
+    t.deepEqual(templateMap, [
+      {
+        inputPath:
+          "./test/stubs/permalink-serverless-empty-pagination/permalink-serverless-empty-pagination.md",
+        serverless: {
+          serverless: "/url/",
+        },
+      },
+    ]);
+  });
+
+  let tm = new TemplateMap(eleventyConfig);
+  let tmpl = getNewTemplate(
+    "./test/stubs/permalink-serverless-empty-pagination/permalink-serverless-empty-pagination.md",
+    "./test/stubs/",
+    "./test/stubs/_site",
+    eleventyConfig
+  );
+
+  await tm.add(tmpl);
+  await tm.cache();
 });
