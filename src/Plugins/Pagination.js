@@ -337,7 +337,7 @@ class Pagination {
     }
 
     for (
-      let pageNumber = 0, pageNumberStop = items.length;
+      let pageNumber = 0;
       pageNumber < pageNumberStop;
       pageNumber++
     ) {
