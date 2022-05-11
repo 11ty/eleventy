@@ -4,6 +4,7 @@ const lodashSet = require("lodash/set");
 const EleventyBaseError = require("../EleventyBaseError");
 const { DeepCopy } = require("../Util/Merge");
 const { ProxyWrap } = require("../Util/ProxyWrap");
+const getPaginationDataKey = require("../Util/GetPaginationDataKey");
 
 class PaginationConfigError extends EleventyBaseError {}
 class PaginationError extends EleventyBaseError {}
@@ -32,13 +33,13 @@ class Pagination {
     return Pagination.hasPagination(this.data);
   }
 
-  circularReferenceCheck(data) {
-    if (data.eleventyExcludeFromCollections) {
+  circularReferenceCheck() {
+    if (this.data.eleventyExcludeFromCollections) {
       return;
     }
 
-    let key = data.pagination.data;
-    let tags = data.tags || [];
+    let key = getPaginationDataKey(this.data);
+    let tags = this.data.tags || [];
     for (let tag of tags) {
       if (`collections.${tag}` === key) {
         throw new PaginationError(
@@ -65,7 +66,7 @@ class Pagination {
     } else if (!("size" in data.pagination)) {
       throw new Error("Missing pagination size in front matter data.");
     }
-    this.circularReferenceCheck(data);
+    this.circularReferenceCheck();
 
     this.size = data.pagination.size;
     this.alias = data.pagination.alias;
@@ -141,16 +142,18 @@ class Pagination {
 
   _has(target, key) {
     let notFoundValue = "__NOT_FOUND_ERROR__";
-    let data = lodashGet(target, key, notFoundValue);
+    let paginationDataKey = getPaginationDataKey(this.data);
+    let data = lodashGet(target, paginationDataKey, notFoundValue);
     return data !== notFoundValue;
   }
 
   _get(target, key) {
     let notFoundValue = "__NOT_FOUND_ERROR__";
-    let data = lodashGet(target, key, notFoundValue);
+    let paginationDataKey = getPaginationDataKey(this.data);
+    let data = lodashGet(target, paginationDataKey, notFoundValue);
     if (data === notFoundValue) {
       throw new Error(
-        `Could not find pagination data, went looking for: ${key}`
+        `Could not find pagination data, went looking for: ${paginationDataKey}`
       );
     }
     return data;
