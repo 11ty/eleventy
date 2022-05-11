@@ -183,7 +183,7 @@ test("Binary data files, encoding: null (multiple data extensions)", async (t) =
   t.plan(4);
 
   let eleventyConfig = new TemplateConfig();
-  eleventyConfig.userConfig.addDataExtension("jpg,png", {
+  eleventyConfig.userConfig.addDataExtension("jpg, png", {
     parser: function (s) {
       t.true(Buffer.isBuffer(s));
       // s is a Buffer, just return the length as a sample

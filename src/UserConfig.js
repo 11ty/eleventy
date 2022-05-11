@@ -768,7 +768,8 @@ class UserConfig {
       parser = options.parser;
     }
 
-    for (let extension of extensionList.split(",")) {
+    let extensions = extensionList.split(",").map((s) => s.trim());
+    for (let extension of extensions) {
       this.dataExtensions.set(extension, {
         extension,
         parser,
