@@ -195,7 +195,7 @@ class Pagination {
 
     const chunks = lodashChunk(this.target, this.size);
 
-    if (this.data.pagination && this.data.pagination.renderEmpty) {
+    if (this.data.pagination && this.data.pagination.generatePageOnEmptyData) {
       return chunks.length ? chunks : [[]];
     } else {
       return chunks;
@@ -337,11 +337,7 @@ class Pagination {
     // so that we don’t have the memory cost of the full template (and can reuse the parent
     // template for some things)
 
-    for (
-      let pageNumber = 0;
-      pageNumber < items.length;
-      pageNumber++
-    ) {
+    for (let pageNumber = 0; pageNumber < items.length; pageNumber++) {
       let cloned = this.template.clone();
 
       if (pageNumber > 0 && !hasPermalinkField && !hasComputedPermalinkField) {

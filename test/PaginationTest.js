@@ -64,7 +64,7 @@ test("Empty paged data", async (t) => {
   t.is((await paging.getPageTemplates()).length, 0);
 });
 
-test("Empty paged data with pageOnEmptyData enabled", async (t) => {
+test("Empty paged data with generatePageOnEmptyData enabled", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let tmpl = getNewTemplate(
     "./test/stubs/paged/paged-empty-pageonemptydata.njk",
@@ -79,8 +79,8 @@ test("Empty paged data with pageOnEmptyData enabled", async (t) => {
   let paging = new Pagination(data, tmpl.config);
   paging.setTemplate(tmpl);
 
-  t.is(paging.getPageCount(), 0);
-  t.is(paging.pagedItems.length, 0);
+  t.is(paging.getPageCount(), 1);
+  t.is(paging.pagedItems.length, 1);
   t.is((await paging.getPageTemplates()).length, 1);
 });
 
