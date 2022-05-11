@@ -332,7 +332,7 @@ class Pagination {
     // template for some things)
 
     let pageNumberStop = items.length;
-    if(items.length === 0 && this.data.pagination.pageOnEmptyData) {
+    if(pageNumberStop === 0 && this.data.pagination.pageOnEmptyData) {
       pageNumberStop = 1;
     }
 
