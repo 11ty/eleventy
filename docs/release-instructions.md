@@ -1,4 +1,8 @@
-# List of dependencies that went ESM
+# Dependency notes
+
+- `@iarna/toml` has a 3.0 that we have never been on but it was released the same day as the last 2.x https://github.com/BinaryMuse/toml-node/commits/master (needs more investigation)
+
+## List of dependencies that went ESM
 
 - `@sindresorhus/slugify` ESM at 2.x
 - `multimatch` is ESM at 6
