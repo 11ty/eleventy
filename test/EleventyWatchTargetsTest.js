@@ -45,6 +45,16 @@ test("JavaScript addDependencies", (t) => {
   let targets = new EleventyWatchTargets();
   targets.addDependencies("./test/stubs/config-deps.js");
   t.deepEqual(targets.getTargets(), ["./test/stubs/config-deps-upstream.js"]);
+
+  t.true(
+    targets.uses(
+      "./test/stubs/config-deps.js",
+      "./test/stubs/config-deps-upstream.js"
+    )
+  );
+  t.false(
+    targets.uses("./test/stubs/config-deps.js", "./test/stubs/config-deps.js")
+  );
 });
 
 test("JavaScript addDependencies (one file has two dependencies)", (t) => {
@@ -54,6 +64,25 @@ test("JavaScript addDependencies (one file has two dependencies)", (t) => {
     "./test/stubs/dependencies/dep1.js",
     "./test/stubs/dependencies/dep2.js",
   ]);
+
+  t.true(
+    targets.uses(
+      "./test/stubs/dependencies/two-deps.11ty.js",
+      "./test/stubs/dependencies/dep1.js"
+    )
+  );
+  t.true(
+    targets.uses(
+      "./test/stubs/dependencies/two-deps.11ty.js",
+      "./test/stubs/dependencies/dep2.js"
+    )
+  );
+  t.false(
+    targets.uses(
+      "./test/stubs/dependencies/two-deps.11ty.js",
+      "./test/stubs/dependencies/dep3.js"
+    )
+  );
 });
 
 test("JavaScript addDependencies (skip JS deps)", (t) => {
@@ -61,6 +90,25 @@ test("JavaScript addDependencies (skip JS deps)", (t) => {
   targets.watchJavaScriptDependencies = false;
   targets.addDependencies("./test/stubs/dependencies/two-deps.11ty.js");
   t.deepEqual(targets.getTargets(), []);
+
+  t.false(
+    targets.uses(
+      "./test/stubs/dependencies/two-deps.11ty.js",
+      "./test/stubs/dependencies/dep1.js"
+    )
+  );
+  t.false(
+    targets.uses(
+      "./test/stubs/dependencies/two-deps.11ty.js",
+      "./test/stubs/dependencies/dep2.js"
+    )
+  );
+  t.false(
+    targets.uses(
+      "./test/stubs/dependencies/two-deps.11ty.js",
+      "./test/stubs/dependencies/dep3.js"
+    )
+  );
 });
 
 test("JavaScript addDependencies with a filter", (t) => {
@@ -69,6 +117,12 @@ test("JavaScript addDependencies with a filter", (t) => {
     return path.indexOf("./test/stubs/") === -1;
   });
   t.deepEqual(targets.getTargets(), []);
+  t.false(
+    targets.uses(
+      "./test/stubs/dependencies/config-deps.js",
+      "./test/stubs/dependencies/config-deps-upstream.js"
+    )
+  );
 });
 
 test("add, addDependencies falsy values are filtered", (t) => {

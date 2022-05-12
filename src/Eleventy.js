@@ -649,6 +649,28 @@ Arguments:
     this.watchManager.addToPendingQueue(changedFilePath);
   }
 
+  _shouldResetConfig() {
+    let configFilePath = this.eleventyConfig.getLocalProjectConfigFile();
+    let configFileChanged = this.watchManager.hasQueuedFile(configFilePath);
+    if (configFileChanged) {
+      return true;
+    }
+
+    // Any dependencies of the config file changed
+    let configFileDependencies =
+      this.watchTargets.getDependenciesOf(configFilePath);
+    for (let dep of configFileDependencies) {
+      if (this.watchManager.hasQueuedFile(dep)) {
+        // Delete from require cache so that updates to the module are re-required
+        deleteRequireCache(TemplatePath.absolutePath(dep));
+
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   /**
    * tbd.
    *
@@ -667,11 +689,7 @@ Arguments:
     await this.config.events.emit("eleventy.beforeWatch", queue);
 
     // reset and reload global configuration :O
-    if (
-      this.watchManager.hasQueuedFile(
-        this.eleventyConfig.getLocalProjectConfigFile()
-      )
-    ) {
+    if (this._shouldResetConfig()) {
       this.resetConfig();
     }
 
