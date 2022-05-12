@@ -7,9 +7,9 @@ const EleventyFiles = require("../src/EleventyFiles");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 const TemplateWriter = require("../src/TemplateWriter");
 const TemplateConfig = require("../src/TemplateConfig");
-// Not sure why but this required `ava` and _createTemplate 👀
-// const Template = require("../src/Template");
 const normalizeNewLines = require("./Util/normalizeNewLines");
+
+const getRenderedTmpls = require("./_getRenderedTemplates");
 
 // TODO make sure if output is a subdir of input dir that they don’t conflict.
 test("Output is a subdir of input", async (t) => {
@@ -313,7 +313,7 @@ test("Pagination with a Collection (apply all pages to collections)", async (t) 
   t.is(outputPath, "./test/stubs/_site/main/index.html");
   t.is(mapEntry.outputPath, "./test/stubs/_site/main/index.html");
 
-  let templates = await mapEntry.template.getRenderedTemplates(mapEntry.data);
+  let templates = await getRenderedTmpls(mapEntry.template, mapEntry.data);
   t.is(templates.length, 2);
   t.is(
     await templates[0].template.getOutputPath(templates[0].data),
@@ -366,7 +366,7 @@ test("Use a collection inside of a template", async (t) => {
     "./test/stubs/collection-template/_site/template/index.html"
   );
 
-  let templates = await mapEntry.template.getRenderedTemplates(mapEntry.data);
+  let templates = await getRenderedTmpls(mapEntry.template, mapEntry.data);
 
   // test content
   t.is(
@@ -409,7 +409,7 @@ test("Use a collection inside of a layout", async (t) => {
   let outputPath = await mainTmpl.getOutputPath(data);
   t.is(outputPath, "./test/stubs/collection-layout/_site/template/index.html");
 
-  let templates = await mapEntry.template.getRenderedTemplates(mapEntry.data);
+  let templates = await getRenderedTmpls(mapEntry.template, mapEntry.data);
 
   // test content
   t.is(
@@ -549,7 +549,7 @@ test("fileSlug should exist in a collection", async (t) => {
   t.truthy(mapEntry);
   t.is(mapEntry.inputPath, "./test/stubs/collection-slug/template.njk");
 
-  let templates = await mapEntry.template.getRenderedTemplates(mapEntry.data);
+  let templates = await getRenderedTmpls(mapEntry.template, mapEntry.data);
   t.is(templates[0].templateContent.trim(), "fileSlug:/dog1/:dog1");
 });
 

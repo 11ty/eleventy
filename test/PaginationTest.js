@@ -4,6 +4,7 @@ const Pagination = require("../src/Plugins/Pagination");
 const TemplateConfig = require("../src/TemplateConfig");
 
 const getNewTemplate = require("./_getNewTemplateForTests");
+const getRenderedTmpls = require("./_getRenderedTemplates");
 
 test("No data passed to pagination", async (t) => {
   let eleventyConfig = new TemplateConfig();
@@ -365,7 +366,7 @@ test("Permalink with pagination variables (and an if statement, liquid)", async 
   t.is(pages[1].outputPath, "./dist/paged/page-1/index.html");
 });
 
-test("Template with Pagination, getRenderedTemplates", async (t) => {
+test("Template with Pagination", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/paged/pagedpermalinkif.njk",
     "./test/stubs/",
@@ -376,7 +377,7 @@ test("Template with Pagination, getRenderedTemplates", async (t) => {
   let outputPath = await tmpl.getOutputPath(data);
   t.is(outputPath, "./dist/paged/index.html");
 
-  let templates = await tmpl.getRenderedTemplates(data);
+  let templates = await getRenderedTmpls(tmpl, data);
   t.is(templates.length, 2);
 });
 
@@ -395,7 +396,7 @@ test("Issue 135", async (t) => {
   );
 
   let data = await tmpl.getData();
-  let templates = await tmpl.getRenderedTemplates(data);
+  let templates = await getRenderedTmpls(tmpl, data);
   t.is(data.articles.length, 1);
   t.is(data.articles[0].title, "Do you even paginate bro?");
   t.is(
@@ -424,7 +425,7 @@ test("Template with Pagination, getTemplates has page variables set", async (t) 
   t.is(templates[1].data.page.outputPath, "./dist/paged/page-1/index.html");
 });
 
-test("Template with Pagination, getRenderedTemplates has page variables set", async (t) => {
+test("Template with Pagination, has page variables set", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/paged/pagedpermalinkif.njk",
     "./test/stubs/",
@@ -432,7 +433,7 @@ test("Template with Pagination, getRenderedTemplates has page variables set", as
   );
 
   let data = await tmpl.getData();
-  let pages = await tmpl.getRenderedTemplates(data);
+  let pages = await getRenderedTmpls(tmpl, data);
   t.is(pages[0].data.page.url, "/paged/");
   t.is(pages[0].data.page.outputPath, "./dist/paged/index.html");
 

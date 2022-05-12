@@ -711,19 +711,6 @@ class Template extends TemplateContent {
     }
   }
 
-  // TODO move this into tests (this is only used by tests)
-  async getRenderedTemplates(data) {
-    let pages = await this.getTemplates(data);
-    await Promise.all(
-      pages.map(async (page) => {
-        let content = await page.template.render(page.data);
-
-        page.templateContent = content;
-      })
-    );
-    return pages;
-  }
-
   async _write({ url, outputPath }, finalContent) {
     let shouldWriteFile = true;
 

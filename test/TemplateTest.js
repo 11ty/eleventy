@@ -11,6 +11,7 @@ const normalizeNewLines = require("./Util/normalizeNewLines");
 const eventBus = require("../src/EventBus");
 
 const getNewTemplate = require("./_getNewTemplateForTests");
+const getRenderedTmpls = require("./_getRenderedTemplates");
 
 async function getRenderedData(tmpl, pageNumber = 0) {
   let data = await tmpl.getData();
@@ -147,7 +148,7 @@ test("Test raw front matter from template (yaml)", async (t) => {
   t.is(data.key1, "value1");
   t.is(data.key3, "value3");
 
-  let pages = await tmpl.getRenderedTemplates(data);
+  let pages = await getRenderedTmpls(tmpl, data);
   t.is(pages[0].templateContent.trim(), "c:value1:value2:value3");
 });
 
@@ -166,7 +167,7 @@ test("Test raw front matter from template (json)", async (t) => {
   t.is(data.key1, "value1");
   t.is(data.key3, "value3");
 
-  let pages = await tmpl.getRenderedTemplates(data);
+  let pages = await getRenderedTmpls(tmpl, data);
   t.is(pages[0].templateContent.trim(), "c:value1:value2:value3");
 });
 
@@ -185,7 +186,7 @@ test("Test raw front matter from template (js)", async (t) => {
   t.is(data.key1, "value1");
   t.is(data.key3, "value3");
 
-  let pages = await tmpl.getRenderedTemplates(data);
+  let pages = await getRenderedTmpls(tmpl, data);
   t.is(pages[0].templateContent.trim(), "c:value1:VALUE2:value3");
 });
 
@@ -453,7 +454,7 @@ test("Layout from template-data-file that has a permalink (fileslug) Issue #121"
   );
 
   let data = await tmpl.getData();
-  let renderedTmpl = (await tmpl.getRenderedTemplates(data))[0];
+  let renderedTmpl = (await getRenderedTmpls(tmpl, data))[0];
   t.is(renderedTmpl.templateContent, "Wrapper:Test 1:test");
   t.is(await tmpl.getOutputPath(data), "./dist/test/index.html");
 });
@@ -466,7 +467,7 @@ test("Fileslug in an 11ty.js template Issue #588", async (t) => {
   );
 
   let data = await tmpl.getData();
-  let renderedTmpl = (await tmpl.getRenderedTemplates(data))[0];
+  let renderedTmpl = (await getRenderedTmpls(tmpl, data))[0];
   t.is(renderedTmpl.templateContent, "<p>fileslug</p>");
 });
 
@@ -658,7 +659,7 @@ test("Issue #603: page.date Liquid", async (t) => {
   t.truthy(data.page.date);
   t.truthy(data.page.date.toUTCString());
 
-  let pages = await tmpl.getRenderedTemplates(data);
+  let pages = await getRenderedTmpls(tmpl, data);
   t.is(pages[0].templateContent.trim(), data.page.date.toString());
 });
 
@@ -673,7 +674,7 @@ test("Issue #603: page.date Nunjucks", async (t) => {
   t.truthy(data.page.date);
   t.truthy(data.page.date.toUTCString());
 
-  let pages = await tmpl.getRenderedTemplates(data);
+  let pages = await getRenderedTmpls(tmpl, data);
   t.is(pages[0].templateContent.trim(), data.page.date.toString());
 });
 
@@ -689,7 +690,7 @@ test("Issue #603: page.date.toUTCString() Nunjucks", async (t) => {
   t.truthy(data.page.date);
   t.truthy(data.page.date.toUTCString());
 
-  let pages = await tmpl.getRenderedTemplates(data);
+  let pages = await getRenderedTmpls(tmpl, data);
   t.is(pages[0].templateContent.trim(), data.page.date.toUTCString());
 });
 
@@ -727,6 +728,7 @@ test("getTemplates() data has all the page variables", async (t) => {
   t.is(templates[0].data.page.outputPath, "./dist/template/index.html");
 });
 
+// Warning `getRenderedTemplates()` is a test function now, so this might be a test testing the tests
 test("getRenderedTemplates() data has all the page variables", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/template.ejs",
@@ -735,7 +737,7 @@ test("getRenderedTemplates() data has all the page variables", async (t) => {
   );
   let data = await tmpl.getData();
 
-  let templates = await tmpl.getRenderedTemplates(data);
+  let templates = await getRenderedTmpls(tmpl, data);
   t.is(templates[0].data.page.url, "/template/");
   t.is(templates[0].data.page.fileSlug, "template");
   t.is(templates[0].filePathStem, "/template");
@@ -1156,7 +1158,7 @@ test("Front Matter Tags (Single)", async (t) => {
   let fulldata = await tmpl.getData();
   t.deepEqual(fulldata.tags, ["single-tag"]);
 
-  let pages = await tmpl.getRenderedTemplates(fulldata);
+  let pages = await getRenderedTmpls(tmpl, fulldata);
   t.is(pages[0].templateContent.trim(), "Has single-tag");
 });
 
@@ -1172,7 +1174,7 @@ test("Front Matter Tags (Multiple)", async (t) => {
   let fulldata = await tmpl.getData();
   t.deepEqual(fulldata.tags, ["multi-tag", "multi-tag-2"]);
 
-  let pages = await tmpl.getRenderedTemplates(fulldata);
+  let pages = await getRenderedTmpls(tmpl, fulldata);
   t.is(pages[0].templateContent.trim(), "Has multi-tag-2");
 });
 
@@ -1186,7 +1188,7 @@ test("Front matter date with quotes (liquid), issue #258", async (t) => {
   let data = await tmpl.getData();
   t.is(data.mydate.toISOString(), "2009-04-15T11:34:34.000Z");
 
-  let pages = await tmpl.getRenderedTemplates(data);
+  let pages = await getRenderedTmpls(tmpl, data);
   t.is(pages[0].templateContent.trim(), "2009-04-15");
 });
 
@@ -1200,7 +1202,7 @@ test("Front matter date with quotes (njk), issue #258", async (t) => {
   let data = await tmpl.getData();
   t.is(data.mydate.toISOString(), "2009-04-15T00:34:34.000Z");
 
-  let pages = await tmpl.getRenderedTemplates(data);
+  let pages = await getRenderedTmpls(tmpl, data);
   t.is(pages[0].templateContent.trim(), "2009-04-15T00:34:34.000Z");
 });
 
@@ -1789,7 +1791,7 @@ test("global variable with dashes Issue #567 (liquid)", async (t) => {
   let data = await tmpl.getData();
   t.is(data["is-it-tasty"], "Yes");
 
-  let pages = await tmpl.getRenderedTemplates(data);
+  let pages = await getRenderedTmpls(tmpl, data);
   t.is(pages[0].templateContent.trim(), "Yes");
 });
 
@@ -1802,7 +1804,7 @@ test("Issue #446: Layout has a permalink with a different template language than
 
   let data = await tmpl.getData();
   // this call is needed for page data to be added
-  let pages = await tmpl.getRenderedTemplates(data);
+  let pages = await getRenderedTmpls(tmpl, data);
 
   t.is(data.permalink, "/{{ page.fileSlug }}/");
   t.is(data.page.url, "/test/");

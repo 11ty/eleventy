@@ -7,6 +7,7 @@ const normalizeNewLines = require("./Util/normalizeNewLines");
 const TemplateConfig = require("../src/TemplateConfig");
 
 const getNewTemplateForTests = require("./_getNewTemplateForTests");
+const getRenderedTmpls = require("./_getRenderedTemplates");
 
 function getNewTemplate(filename, input, output, eleventyConfig) {
   return getNewTemplateForTests(
@@ -229,7 +230,7 @@ test("Issue #115, mixing pagination and collections", async (t) => {
   t.is(Object.keys(map[2].data.collections.foos).length, 1);
   t.is(Object.keys(map[2].data.collections.bars).length, 1);
 
-  let entry = await map[2].template.getRenderedTemplates(map[2].data);
+  let entry = await getRenderedTmpls(map[2].template, map[2].data);
   t.deepEqual(
     normalizeNewLines(entry[0].templateContent),
     `This page is foos
@@ -294,7 +295,7 @@ test("Issue #115 with layout, mixing pagination and collections", async (t) => {
   t.is(Object.keys(map[2].data.collections.foos).length, 1);
   t.is(Object.keys(map[2].data.collections.bars).length, 1);
 
-  let entry = await map[2].template.getRenderedTemplates(map[2].data);
+  let entry = await getRenderedTmpls(map[2].template, map[2].data);
   t.deepEqual(
     normalizeNewLines(entry[0].templateContent),
     `This page is foos
@@ -691,7 +692,8 @@ test("Should be able to paginate a tag generated collection (and it has template
     "./test/stubs/templateMapCollection/paged-tag-dogs-templateContent.md"
   );
 
-  let templates = await pagedMapEntry.template.getRenderedTemplates(
+  let templates = await getRenderedTmpls(
+    pagedMapEntry.template,
     pagedMapEntry.data
   );
   t.is(templates.length, 2);
@@ -737,10 +739,10 @@ test("Should be able to paginate a tag generated collection when aliased (and it
     "./test/stubs/templateMapCollection/paged-tag-dogs-templateContent-alias.md"
   );
 
-  let templates = await pagedMapEntry.template.getRenderedTemplates(
+  let templates = await getRenderedTmpls(
+    pagedMapEntry.template,
     pagedMapEntry.data
   );
-
   t.is(templates.length, 1);
   t.is(templates[0].data.pagination.pageNumber, 0);
   t.is(
