@@ -1,6 +1,5 @@
 # List of dependencies that went ESM
 
-- `lint-staged` ESM at 12.x
 - `@sindresorhus/slugify` ESM at 2.x
 - `multimatch` is ESM at 6
 
