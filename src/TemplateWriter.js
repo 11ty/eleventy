@@ -289,7 +289,7 @@ class TemplateWriter {
           } else {
             return Promise.reject(
               new EleventyTemplateError(
-                `Having trouble writing template: "${mapEntry.outputPath}"`,
+                `Having trouble writing to "${mapEntry.outputPath}" from "${mapEntry.inputPath}"`,
                 e
               )
             );
@@ -303,7 +303,7 @@ class TemplateWriter {
         this._generateTemplate(mapEntry, to).catch(function (e) {
           return Promise.reject(
             new EleventyTemplateError(
-              `Having trouble writing template (second pass): "${mapEntry.outputPath}"`,
+              `Having trouble writing to (second pass) "${mapEntry.outputPath}" from "${mapEntry.inputPath}"`,
               e
             )
           );

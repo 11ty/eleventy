@@ -663,8 +663,7 @@ class Template extends TemplateContent {
     } else {
       // needs collections for pagination items
       // but individual pagination entries won’t be part of a collection
-      this.paging = new Pagination(data, this.config);
-      this.paging.setTemplate(this);
+      this.paging = new Pagination(this, data, this.config);
 
       let pageTemplates = await this.paging.getPageTemplates();
       return await Promise.all(

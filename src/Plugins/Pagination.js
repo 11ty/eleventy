@@ -1,6 +1,8 @@
 const lodashChunk = require("lodash/chunk");
 const lodashGet = require("lodash/get");
 const lodashSet = require("lodash/set");
+const { isPlainObject } = require("@11ty/eleventy-utils");
+
 const EleventyBaseError = require("../EleventyBaseError");
 const { DeepCopy } = require("../Util/Merge");
 const { ProxyWrap } = require("../Util/ProxyWrap");
@@ -9,7 +11,7 @@ class PaginationConfigError extends EleventyBaseError {}
 class PaginationError extends EleventyBaseError {}
 
 class Pagination {
-  constructor(data, config) {
+  constructor(tmpl, data, config) {
     if (!config) {
       throw new PaginationConfigError(
         "Expected `config` argument to Pagination class."
@@ -18,7 +20,15 @@ class Pagination {
 
     this.config = config;
 
+    this.setTemplate(tmpl);
     this.setData(data);
+  }
+
+  get inputPathForErrorMessages() {
+    if (this.template) {
+      return ` (${this.template.inputPath})`;
+    }
+    return "";
   }
 
   static hasPagination(data) {
@@ -27,7 +37,9 @@ class Pagination {
 
   hasPagination() {
     if (!this.data) {
-      throw new Error("Missing `setData` call for Pagination object.");
+      throw new Error(
+        `Missing \`setData\` call for Pagination object${this.inputPathForErrorMessages}`
+      );
     }
     return Pagination.hasPagination(this.data);
   }
@@ -42,9 +54,7 @@ class Pagination {
     for (let tag of tags) {
       if (`collections.${tag}` === key) {
         throw new PaginationError(
-          `Pagination circular reference${
-            this.template ? ` on ${this.template.inputPath}` : ""
-          }, data:\`${key}\` iterates over both the \`${tag}\` tag and also supplies pages to that tag.`
+          `Pagination circular reference${this.inputPathForErrorMessages}, data:\`${key}\` iterates over both the \`${tag}\` tag and also supplies pages to that tag.`
         );
       }
     }
@@ -60,10 +70,12 @@ class Pagination {
 
     if (!data.pagination) {
       throw new Error(
-        "Misconfigured pagination data in template front matter (YAML front matter precaution: did you use tabs and not spaces for indentation?)."
+        `Misconfigured pagination data in template front matter${this.inputPathForErrorMessages} (YAML front matter precaution: did you use tabs and not spaces for indentation?).`
       );
     } else if (!("size" in data.pagination)) {
-      throw new Error("Missing pagination size in front matter data.");
+      throw new Error(
+        `Missing pagination size in front matter data${this.inputPathForErrorMessages}`
+      );
     }
     this.circularReferenceCheck(data);
 
@@ -119,7 +131,7 @@ class Pagination {
     return this.data.pagination.data;
   }
 
-  resolveDataToObjectValues() {
+  shouldResolveDataToObjectValues() {
     if ("resolve" in this.data.pagination) {
       return this.data.pagination.resolve === "values";
     }
@@ -150,7 +162,7 @@ class Pagination {
     let data = lodashGet(target, key, notFoundValue);
     if (data === notFoundValue) {
       throw new Error(
-        `Could not find pagination data, went looking for: ${key}`
+        `Could not find pagination data${this.inputPathForErrorMessages}, went looking for: ${key}`
       );
     }
     return data;
@@ -160,10 +172,16 @@ class Pagination {
     let keys;
     if (Array.isArray(this.fullDataSet)) {
       keys = this.fullDataSet;
-    } else if (this.resolveDataToObjectValues()) {
-      keys = Object.values(this.fullDataSet);
+    } else if (isPlainObject(this.fullDataSet)) {
+      if (this.shouldResolveDataToObjectValues()) {
+        keys = Object.values(this.fullDataSet);
+      } else {
+        keys = Object.keys(this.fullDataSet);
+      }
     } else {
-      keys = Object.keys(this.fullDataSet);
+      throw new Error(
+        `Unexpected data found in pagination target${this.inputPathForErrorMessages}: expected an Array or an Object.`
+      );
     }
 
     // keys must be an array
@@ -190,7 +208,9 @@ class Pagination {
 
   get pagedItems() {
     if (!this.data) {
-      throw new Error("Missing `setData` call for Pagination object.");
+      throw new Error(
+        `Missing \`setData\` call for Pagination object${this.inputPathForErrorMessages}`
+      );
     }
 
     const chunks = lodashChunk(this.target, this.size);
@@ -282,7 +302,9 @@ class Pagination {
 
   async getPageTemplates() {
     if (!this.data) {
-      throw new Error("Missing `setData` call for Pagination object.");
+      throw new Error(
+        `Missing \`setData\` call for Pagination object${this.inputPathForErrorMessages}`
+      );
     }
 
     if (!this.hasPagination()) {

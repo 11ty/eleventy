@@ -17,8 +17,7 @@ test("No data passed to pagination", async (t) => {
     eleventyConfig
   );
 
-  let paging = new Pagination({}, tmpl.config);
-  paging.setTemplate(tmpl);
+  let paging = new Pagination(tmpl, {}, tmpl.config);
 
   t.is(paging.pagedItems.length, 0);
   t.is((await paging.getPageTemplates()).length, 0);
@@ -36,7 +35,7 @@ test("No pagination", async (t) => {
   );
 
   let data = await tmpl.getData();
-  let paging = new Pagination(data, tmpl.config);
+  let paging = new Pagination(tmpl, data, tmpl.config);
   paging.setTemplate(tmpl);
 
   t.falsy(data.pagination);
@@ -57,7 +56,7 @@ test("Empty paged data", async (t) => {
   );
 
   let data = await tmpl.getData();
-  let paging = new Pagination(data, tmpl.config);
+  let paging = new Pagination(tmpl, data, tmpl.config);
   paging.setTemplate(tmpl);
 
   t.is(paging.getPageCount(), 0);
@@ -77,7 +76,7 @@ test("Empty paged data with generatePageOnEmptyData enabled", async (t) => {
   );
 
   let data = await tmpl.getData();
-  let paging = new Pagination(data, tmpl.config);
+  let paging = new Pagination(tmpl, data, tmpl.config);
   paging.setTemplate(tmpl);
 
   t.is(paging.getPageCount(), 1);
@@ -97,7 +96,7 @@ test("Pagination enabled in frontmatter", async (t) => {
   );
 
   let data = await tmpl.getData();
-  let paging = new Pagination(data, tmpl.config);
+  let paging = new Pagination(tmpl, data, tmpl.config);
   paging.setTemplate(tmpl);
 
   t.truthy(data.testdata);
@@ -121,7 +120,7 @@ test("Resolve paged data in frontmatter", async (t) => {
   );
 
   let data = await tmpl.getData();
-  let paging = new Pagination(data, tmpl.config);
+  let paging = new Pagination(tmpl, data, tmpl.config);
   paging.setTemplate(tmpl);
   t.is(paging._resolveItems().length, 8);
   t.is(paging.getPageCount(), 2);
@@ -612,6 +611,7 @@ test("No circular dependency (does not throw)", (t) => {
   let eleventyConfig = new TemplateConfig();
 
   new Pagination(
+    null,
     {
       collections: {
         tag1: [],
@@ -632,6 +632,7 @@ test("Circular dependency (pagination iterates over tag1 but also supplies pages
   t.throws(() => {
     let eleventyConfig = new TemplateConfig();
     new Pagination(
+      null,
       {
         collections: {
           tag1: [],
@@ -651,6 +652,7 @@ test("Circular dependency (pagination iterates over tag1 but also supplies pages
 test("Circular dependency but should not error because it uses eleventyExcludeFromCollections", (t) => {
   let eleventyConfig = new TemplateConfig();
   new Pagination(
+    null,
     {
       eleventyExcludeFromCollections: true,
       collections: {
