@@ -193,7 +193,7 @@ function EleventyEdgePlugin(eleventyConfig, opts = {}) {
       functionsDir: "./netlify/edge-functions/",
 
       // for the default Deno import
-      eleventyEdgeVersion: "1.0.0",
+      eleventyEdgeVersion: "1.0.1",
 
       // runtime compatibity check with Eleventy core version
       compatibility: ">=2",
