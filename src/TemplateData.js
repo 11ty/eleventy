@@ -1,11 +1,9 @@
-const pkg = require("../package.json");
 const fs = require("fs");
 const fastglob = require("fast-glob");
 const path = require("path");
 const lodashset = require("lodash/set");
 const lodashget = require("lodash/get");
 const lodashUniq = require("lodash/uniq");
-const semver = require("semver");
 const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
 
 const merge = require("./Util/Merge");
@@ -13,6 +11,7 @@ const TemplateRender = require("./TemplateRender");
 const TemplateGlob = require("./TemplateGlob");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");
+const TemplateDataInitialGlobalData = require("./TemplateDataInitialGlobalData");
 
 const debugWarn = require("debug")("Eleventy:Warnings");
 const debug = require("debug")("Eleventy:TemplateData");
@@ -66,6 +65,10 @@ class TemplateData {
     // It's common for data files not to exist, so we avoid going to the FS to
     // re-check if they do via a quick-and-dirty cache.
     this._fsExistsCache = new FSExistsCache();
+
+    this.initialGlobalData = new TemplateDataInitialGlobalData(
+      this.eleventyConfig
+    );
   }
 
   get extensionMap() {
@@ -303,28 +306,7 @@ class TemplateData {
   }
 
   async getInitialGlobalData() {
-    let globalData = {};
-
-    // via eleventyConfig.addGlobalData
-    if (this.config.globalData) {
-      let keys = Object.keys(this.config.globalData);
-      for (let key of keys) {
-        let returnValue = this.config.globalData[key];
-
-        if (typeof returnValue === "function") {
-          returnValue = await returnValue();
-        }
-
-        lodashset(globalData, key, returnValue);
-      }
-    }
-
-    if (!("eleventy" in globalData)) {
-      globalData.eleventy = {};
-    }
-    // #2293 for meta[name=generator]
-    globalData.eleventy.version = semver.coerce(pkg.version).toString();
-    globalData.eleventy.generator = `Eleventy v${globalData.eleventy.version}`;
+    let globalData = await this.initialGlobalData.getData();
 
     if (this.environmentVariables) {
       if (!("env" in globalData.eleventy)) {

@@ -213,22 +213,13 @@ test("getAllGlobalData() with js function data file", async (t) => {
 
 test("getAllGlobalData() with config globalData", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.addGlobalData("example", () => "one");
+  eleventyConfig.userConfig.addGlobalData("example2", async () => "two");
+  eleventyConfig.userConfig.addGlobalData("example3", "static");
+
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
 
-  dataObj._setConfig({
-    ...dataObj.config,
-    globalData: {
-      example: () => {
-        return "one";
-      },
-      example2: async () => {
-        return "two";
-      },
-      example3: "static",
-    },
-  });
-
-  let data = await dataObj.cacheData(true);
+  let data = await dataObj.cacheData();
 
   t.is(data.example, "one");
   t.is(data.example2, "two");
