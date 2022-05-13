@@ -4,11 +4,14 @@ const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
 
 // TODO add a first-class Markdown component to expose this using Markdown-only syntax (will need to be synchronous for markdown-it)
 
+const Merge = require("../Util/Merge");
+const { ProxyWrap } = require("../Util/ProxyWrap");
+const TemplateDataInitialGlobalData = require("../TemplateDataInitialGlobalData");
 const TemplateRender = require("../TemplateRender");
 const TemplateConfig = require("../TemplateConfig");
 const Liquid = require("../Engines/Liquid");
 
-async function render(
+async function compile(
   content,
   templateLang,
   { templateConfig, extensionMap } = {}
@@ -38,7 +41,7 @@ async function render(
 }
 
 // No templateLang default, it should infer from the inputPath.
-async function renderFile(
+async function compileFile(
   inputPath,
   { templateConfig, extensionMap, config } = {},
   templateLang
@@ -81,7 +84,46 @@ async function renderFile(
   return tr.getCompiledTemplate(content);
 }
 
+async function renderShortcodeFn(fn, data) {
+  if (fn === undefined) {
+    return;
+  } else if (typeof fn !== "function") {
+    throw new Error(
+      `The \`compile\` function did not return a function. Received ${fn}`
+    );
+  }
+
+  // if the user passes a string or other literal, remap to an object.
+  if (!isPlainObject(data)) {
+    data = {
+      _: data,
+    };
+  }
+
+  if ("data" in this && isPlainObject(this.data)) {
+    // when options.accessGlobalData is true, this allows the global data
+    // to be accessed inside of the shortcode as a fallback
+    data = ProxyWrap(data, this.data);
+  } else {
+    // save `page` and `eleventy` for reuse
+    data.page = this.page;
+    data.eleventy = this.eleventy;
+  }
+
+  return fn(data);
+}
+
 function EleventyPlugin(eleventyConfig, options = {}) {
+  let opts = Object.assign(
+    {
+      tagName: "renderTemplate",
+      tagNameFile: "renderFile",
+      templateConfig: null,
+      accessGlobalData: false,
+    },
+    options
+  );
+
   function liquidTemplateTag(liquidEngine, tagName) {
     // via https://github.com/harttle/liquidjs/blob/b5a22fa0910c708fe7881ef170ed44d3594e18f3/src/builtin/tags/raw.ts
     return {
@@ -105,6 +147,11 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       render: async function (ctx) {
         let normalizedContext = {};
         if (ctx) {
+          if (opts.accessGlobalData) {
+            // parent template data cascade
+            normalizedContext.data = ctx.environments;
+          }
+
           normalizedContext.page = ctx.get(["page"]);
           normalizedContext.eleventy = ctx.get(["eleventy"]);
         }
@@ -118,9 +165,10 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 
         let body = this.tokens.map((token) => token.getText()).join("");
 
-        return renderStringShortcodeFn.call(
+        return _renderStringShortcodeFn.call(
           normalizedContext,
           body,
+          // templateLang, data
           ...argArray
         );
       },
@@ -191,6 +239,12 @@ function EleventyPlugin(eleventyConfig, options = {}) {
         let normalizedContext = {};
         if (context.ctx && context.ctx.page) {
           normalizedContext.ctx = context.ctx;
+
+          // TODO .data
+          // if(opts.accessGlobalData) {
+          //   normalizedContext.data = context.ctx;
+          // }
+
           normalizedContext.page = context.ctx.page;
           normalizedContext.eleventy = context.ctx.eleventy;
         }
@@ -207,9 +261,10 @@ function EleventyPlugin(eleventyConfig, options = {}) {
           }
 
           Promise.resolve(
-            renderStringShortcodeFn.call(
+            _renderStringShortcodeFn.call(
               normalizedContext,
               bodyContent,
+              // templateLang, data
               ...argArray
             )
           )
@@ -231,15 +286,6 @@ function EleventyPlugin(eleventyConfig, options = {}) {
     })();
   }
 
-  let opts = Object.assign(
-    {
-      tagName: "renderTemplate",
-      tagNameFile: "renderFile",
-      templateConfig: null,
-    },
-    options
-  );
-
   // This will only work on 1.0.0-beta.5+ but is only necessary if you want to reuse your config inside of template shortcodes.
   // Just rendering raw templates (without filters, shortcodes, etc. from your config) will work fine on old versions.
   let templateConfig;
@@ -252,42 +298,23 @@ function EleventyPlugin(eleventyConfig, options = {}) {
     extensionMap = map;
   });
 
-  async function renderStringShortcodeFn(content, templateLang, data = {}) {
+  async function _renderStringShortcodeFn(content, templateLang, data = {}) {
     // Default is fn(content, templateLang, data) but we want to support fn(content, data) too
     if (typeof templateLang !== "string") {
       data = templateLang;
       templateLang = false;
     }
 
-    let fn = await render.call(this, content, templateLang, {
+    let fn = await compile.call(this, content, templateLang, {
       templateConfig: opts.templateConfig || templateConfig,
       extensionMap,
     });
 
-    if (fn === undefined) {
-      return;
-    } else if (typeof fn !== "function") {
-      throw new Error(
-        `The \`compile\` function did not return a function. Received ${fn}`
-      );
-    }
-
-    // if the user passes a string or other literal, remap to an object.
-    if (!isPlainObject(data)) {
-      data = {
-        _: data,
-      };
-    }
-
-    // save `page` and `eleventy` for reuse
-    data.page = this.page;
-    data.eleventy = this.eleventy;
-
-    return fn(data);
+    return renderShortcodeFn.call(this, fn, data);
   }
 
-  async function renderFileShortcodeFn(inputPath, data = {}, templateLang) {
-    let fn = await renderFile.call(
+  async function _renderFileShortcodeFn(inputPath, data = {}, templateLang) {
+    let fn = await compileFile.call(
       this,
       inputPath,
       {
@@ -297,32 +324,16 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       templateLang
     );
 
-    if (fn === undefined) {
-      return;
-    } else if (typeof fn !== "function") {
-      throw new Error(
-        `The \`compile\` function did not return a function. Received ${fn}`
-      );
-    }
-
-    // if the user passes a string or other literal, remap to an object.
-    if (!isPlainObject(data)) {
-      data = {
-        _: data,
-      };
-    }
-
-    // save `page` and `eleventy` for reuse
-    data.page = this.page;
-    data.eleventy = this.eleventy;
-
-    return fn(data);
+    return renderShortcodeFn.call(this, fn, data);
   }
 
   // Render strings
   if (opts.tagName) {
     // use falsy to opt-out
-    eleventyConfig.addJavaScriptFunction(opts.tagName, renderStringShortcodeFn);
+    eleventyConfig.addJavaScriptFunction(
+      opts.tagName,
+      _renderStringShortcodeFn
+    );
 
     eleventyConfig.addLiquidTag(opts.tagName, function (liquidEngine) {
       return liquidTemplateTag(liquidEngine, opts.tagName);
@@ -338,27 +349,29 @@ function EleventyPlugin(eleventyConfig, options = {}) {
     // use `false` to opt-out
     eleventyConfig.addJavaScriptFunction(
       opts.tagNameFile,
-      renderFileShortcodeFn
+      _renderFileShortcodeFn
     );
-    eleventyConfig.addLiquidShortcode(opts.tagNameFile, renderFileShortcodeFn);
+    eleventyConfig.addLiquidShortcode(opts.tagNameFile, _renderFileShortcodeFn);
     eleventyConfig.addNunjucksAsyncShortcode(
       opts.tagNameFile,
-      renderFileShortcodeFn
+      _renderFileShortcodeFn
     );
   }
 }
 
 module.exports = EleventyPlugin;
-module.exports.File = renderFile;
-module.exports.String = render;
+module.exports.File = compileFile;
+module.exports.String = compile;
 
 // Will re-use the same configuration instance both at a top level and across any nested renders
 class RenderManager {
   constructor() {
     this.templateConfig = new TemplateConfig(null, false);
 
+    // This is the only plugin running on the Edge
     this.templateConfig.userConfig.addPlugin(EleventyPlugin, {
       templateConfig: this.templateConfig,
+      accessGlobalData: true,
     });
   }
 
@@ -370,10 +383,38 @@ class RenderManager {
     }
   }
 
+  get initialGlobalData() {
+    if (!this._data) {
+      this._data = new TemplateDataInitialGlobalData(this.templateConfig);
+    }
+    return this._data;
+  }
+
+  // because we don’t have access to the full data cascade—but
+  // we still want configuration data added via `addGlobalData`
+  async getData(...data) {
+    let globalData = await this.initialGlobalData.getData();
+    let merged = Merge({}, globalData, ...data);
+    return merged;
+  }
+
   compile(content, templateLang, options = {}) {
+    // Missing here: extensionMap
     options.templateConfig = this.templateConfig;
 
-    return render(content, templateLang, options);
+    // We don’t need `compile.call(this)` here because the Edge always uses "liquid" as the template lang (instead of relying on this.page.templateSyntax)
+    // returns promise
+    return compile(content, templateLang, options);
+  }
+
+  async render(fn, edgeData, buildTimeData) {
+    let mergedData = await this.getData(edgeData);
+    // Set .data for options.accessGlobalData feature
+    let context = {
+      data: mergedData,
+    };
+
+    return renderShortcodeFn.call(context, fn, buildTimeData);
   }
 }
 
