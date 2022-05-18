@@ -186,3 +186,55 @@ test("Remove stale path", (t) => {
     ],
   });
 });
+
+test("Additional test for #2392", (t) => {
+  let r = new NetlifyRedirects("possum");
+  let newRedirects = r.getNewRedirects(
+    {
+      "/admin/*": "./test.njk",
+    },
+    "/.netlify/builders/"
+  );
+
+  let results = r.getResults(newRedirects, {
+    redirects: [
+      {
+        force: true,
+        from: "/admin/*",
+        to: "/.netlify/builders/possum",
+        _generated_by_eleventy_serverless: "possum",
+        status: 200,
+        conditions: {
+          Role: ["admin"],
+        },
+      },
+      {
+        force: true,
+        from: "/admin/*",
+        to: "/login/",
+        status: 401,
+      },
+    ],
+  });
+
+  t.deepEqual(results, {
+    redirects: [
+      {
+        force: true,
+        from: "/admin/*",
+        to: "/.netlify/builders/possum",
+        _generated_by_eleventy_serverless: "possum",
+        status: 200,
+        conditions: {
+          Role: ["admin"],
+        },
+      },
+      {
+        force: true,
+        from: "/admin/*",
+        to: "/login/",
+        status: 401,
+      },
+    ],
+  });
+});
