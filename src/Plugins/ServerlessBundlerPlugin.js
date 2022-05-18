@@ -167,11 +167,19 @@ class BundlerHelper {
 
       res.writeHead(result.statusCode, result.headers || {});
       res.write(result.body);
-      res.end();
 
       this.eleventyConfig.logger.forceLog(
         `Serverless (${this.name}): ${req.url} (${Date.now() - start}ms)`
       );
+
+      // eleventy-dev-server 1.0.0-canary.10 and newer
+      if ("_shouldForceEnd" in res) {
+        res._shouldForceEnd = true;
+        next();
+      } else {
+        // eleventy-dev-server 1.0.0-canary.9 and below
+        res.end();
+      }
     }.bind(this);
   }
 
