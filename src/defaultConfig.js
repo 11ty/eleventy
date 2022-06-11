@@ -4,6 +4,52 @@ const slugFilter = require("./Filters/Slug");
 const slugifyFilter = require("./Filters/Slugify");
 const getCollectionItem = require("./Filters/GetCollectionItem");
 
+/**
+ * @module 11ty/eleventy/defaultConfig
+ */
+
+/**
+ * @callback addFilter - Register a global filter.
+ * @param {string} name - Register a template filter by this name.
+ * @param {function} callback - The filter logic.
+ */
+
+/**
+ * @typedef {Object} config
+ * @property {addFilter} addFilter - Register a new global filter.
+ */
+
+/**
+ * @typedef {Object} defaultConfig
+ * @property {Array<String>} templateFormats - An array of accepted template formats.
+ * @property {String} [pathPrefix='/'] - The directory under which all output files should be written to.
+ * @property {String} [markdownTemplateEngine='liquid'] - Template engine to process markdown files with.
+ * @property {String} [htmlTemplateEngine='liquid'] - Template engine to process html files with.
+ * @property {Boolean} [dataTemplateEngine=false] - Changed in v1.0
+ * @property {String} [htmlOutputSuffix='-o']
+ * @property {String} [jsDataFileSuffix='.11tydata'] - File suffix for jsData files.
+ * @property {Object} keys
+ * @property {String} [keys.package='pkg']
+ * @property {String} [keys.layout='layout']
+ * @property {String} [keys.permalink='permalink']
+ * @property {String} [keys.permalinkRoot='permalinkBypassOutputDir']
+ * @property {String} [keys.engineOverride='templateEngineOverride']
+ * @property {String} [keys.computed='eleventyComputed']
+ * @property {Object} dir
+ * @property {String} [dir.input='.']
+ * @property {String} [dir.includes='_includes']
+ * @property {String} [dir.data='_data']
+ * @property {String} [dir.output='_site']
+ * @deprecated handlebarsHelpers
+ * @deprecated nunjucksFilters
+ */
+
+/**
+ * Default configuration object factory.
+ *
+ * @param {config} config - Eleventy configuration object.
+ * @returns {defaultConfig}
+ */
 module.exports = function (config) {
   let templateConfig = this;
 
