@@ -149,15 +149,38 @@ test("Eleventy set input/output, one file input root dir without leading dot/sla
   t.is(elev.outputDir, "./test/stubs/_site");
 });
 
-test("Eleventy set input/output, one file input exitCode", async (t) => {
+test("Eleventy set input/output, one file input exitCode (script)", async (t) => {
   let previousExitCode = process.exitCode;
   let elev = new Eleventy(
     "./test/stubs/exitCode/failure.njk",
-    "./test/stubs/exitCode/_site"
+    "./test/stubs/exitCode/_site",
+    {
+      source: "script",
+    }
   );
   elev.setIsVerbose(false);
   elev.disableLogger();
-  // await elev.init(); // no longer necessary
+
+  await t.throwsAsync(async () => {
+    await elev.write();
+  });
+
+  // no change to the exit code when running script
+  t.is(process.exitCode, previousExitCode);
+});
+
+test("Eleventy set input/output, one file input exitCode (cli)", async (t) => {
+  let previousExitCode = process.exitCode;
+  let elev = new Eleventy(
+    "./test/stubs/exitCode/failure.njk",
+    "./test/stubs/exitCode/_site",
+    {
+      source: "cli",
+    }
+  );
+  elev.setIsVerbose(false);
+  elev.disableLogger();
+
   await elev.write();
 
   t.is(process.exitCode, 1);
@@ -168,8 +191,6 @@ test("Eleventy set input/output, one file input exitCode", async (t) => {
 test("Eleventy to json", async (t) => {
   let elev = new Eleventy("./test/stubs--to/");
   elev.setIsVerbose(false);
-
-  // await elev.init(); // no longer necessary
 
   let result = await elev.toJSON();
 
@@ -201,8 +222,6 @@ test("Eleventy to ndjson", async (t) => {
   let elev = new Eleventy("./test/stubs--to/");
 
   elev.setIsVerbose(false);
-
-  // await elev.init(); // no longer necessary
 
   let stream = await elev.toNDJSON();
   let count = 0;

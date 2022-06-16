@@ -1088,7 +1088,14 @@ Arguments:
       ret = {
         error: e,
       };
-      this.errorHandler.fatal(e, "Problem writing Eleventy templates");
+
+      // Issue #2405
+      if (this.source === "script") {
+        this.errorHandler.error(e, "Problem writing Eleventy templates");
+        throw e;
+      } else {
+        this.errorHandler.fatal(e, "Problem writing Eleventy templates");
+      }
     } finally {
       this.bench.finish();
       if (to === "fs") {
