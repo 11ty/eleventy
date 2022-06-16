@@ -88,6 +88,8 @@ class UserConfig {
 
     this.useTemplateCache = true;
     this.dataFilterSelectors = new Set();
+
+    this.libraryAmendments = {};
   }
 
   versionCheck(expected) {
@@ -458,6 +460,16 @@ class UserConfig {
     }
 
     this.libraryOverrides[engineName.toLowerCase()] = libraryInstance;
+  }
+
+  /* These callbacks run on both libraryOverrides and default library instances */
+  amendLibrary(engineName, callback) {
+    let name = engineName.toLowerCase();
+    if (!this.libraryAmendments[name]) {
+      this.libraryAmendments[name] = [];
+    }
+
+    this.libraryAmendments[name].push(callback);
   }
 
   setPugOptions(options) {
@@ -838,6 +850,7 @@ class UserConfig {
       useTemplateCache: this.useTemplateCache,
       precompiledCollections: this.precompiledCollections,
       dataFilterSelectors: this.dataFilterSelectors,
+      libraryAmendments: this.libraryAmendments,
     };
   }
 }
