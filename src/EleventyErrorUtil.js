@@ -72,7 +72,7 @@ class EleventyErrorUtil {
           e.originalError.name === "UndefinedVariableError") &&
         e.originalError.originalError instanceof
           TemplateContentPrematureUseError) || // Liquid
-      e.message.indexOf("TemplateContentPrematureUseError") > -1
+      (e.message || "").indexOf("TemplateContentPrematureUseError") > -1
     ); // Nunjucks
   }
 }
