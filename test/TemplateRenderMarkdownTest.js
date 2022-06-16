@@ -379,6 +379,22 @@ test("Markdown Render: use amendLibrary to re-enable indented code blocks. Issue
 
   let tr = getNewTemplateRender("md", null, eleventyConfig);
 
+  let fn = await tr.getCompiledTemplate("    This is a test");
+  let content = await fn();
+  t.is(
+    normalizeNewLines(content.trim()),
+    `<pre><code>This is a test
+</code></pre>`
+  );
+});
+
+test("Markdown Render: amendLibrary works with setLibrary to re-enable indented code blocks. Issue #2438", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let userConfig = eleventyConfig.userConfig;
+  userConfig.amendLibrary("md", (lib) => lib.enable("code"));
+
+  let tr = getNewTemplateRender("md", null, eleventyConfig);
+
   let mdLib = md();
   tr.engine.setLibrary(mdLib);
 
@@ -389,6 +405,27 @@ test("Markdown Render: use amendLibrary to re-enable indented code blocks. Issue
     `<pre><code>This is a test
 </code></pre>`
   );
+});
+
+test("Markdown Render: multiple amendLibrary calls. Issue #2438", async (t) => {
+  t.plan(3);
+
+  let eleventyConfig = new TemplateConfig();
+  let userConfig = eleventyConfig.userConfig;
+  userConfig.amendLibrary("md", (lib) => {
+    t.true(true);
+    lib.enable("code");
+  });
+  userConfig.amendLibrary("md", (lib) => {
+    t.true(true);
+    lib.disable("code");
+  });
+
+  let tr = getNewTemplateRender("md", null, eleventyConfig);
+
+  let fn = await tr.getCompiledTemplate("    This is a test");
+  let content = await fn();
+  t.is(normalizeNewLines(content.trim()), "<p>This is a test</p>");
 });
 
 test("Markdown Render: use amendLibrary to add a Plugin", async (t) => {
