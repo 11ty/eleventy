@@ -21,25 +21,25 @@ const getCollectionItem = require("./Filters/GetCollectionItem");
 
 /**
  * @typedef {Object} defaultConfig
- * @property {Array<String>} templateFormats - An array of accepted template formats.
- * @property {String} [pathPrefix='/'] - The directory under which all output files should be written to.
- * @property {String} [markdownTemplateEngine='liquid'] - Template engine to process markdown files with.
- * @property {String} [htmlTemplateEngine='liquid'] - Template engine to process html files with.
- * @property {Boolean} [dataTemplateEngine=false] - Changed in v1.0
- * @property {String} [htmlOutputSuffix='-o']
- * @property {String} [jsDataFileSuffix='.11tydata'] - File suffix for jsData files.
+ * @property {Array<string>} templateFormats - An array of accepted template formats.
+ * @property {string} [pathPrefix='/'] - The directory under which all output files should be written to.
+ * @property {string} [markdownTemplateEngine='liquid'] - Template engine to process markdown files with.
+ * @property {string} [htmlTemplateEngine='liquid'] - Template engine to process html files with.
+ * @property {boolean} [dataTemplateEngine=false] - Changed in v1.0
+ * @property {string} [htmlOutputSuffix='-o']
+ * @property {string} [jsDataFileSuffix='.11tydata'] - File suffix for jsData files.
  * @property {Object} keys
- * @property {String} [keys.package='pkg']
- * @property {String} [keys.layout='layout']
- * @property {String} [keys.permalink='permalink']
- * @property {String} [keys.permalinkRoot='permalinkBypassOutputDir']
- * @property {String} [keys.engineOverride='templateEngineOverride']
- * @property {String} [keys.computed='eleventyComputed']
+ * @property {string} [keys.package='pkg']
+ * @property {string} [keys.layout='layout']
+ * @property {string} [keys.permalink='permalink']
+ * @property {string} [keys.permalinkRoot='permalinkBypassOutputDir']
+ * @property {string} [keys.engineOverride='templateEngineOverride']
+ * @property {string} [keys.computed='eleventyComputed']
  * @property {Object} dir
- * @property {String} [dir.input='.']
- * @property {String} [dir.includes='_includes']
- * @property {String} [dir.data='_data']
- * @property {String} [dir.output='_site']
+ * @property {string} [dir.input='.']
+ * @property {string} [dir.includes='_includes']
+ * @property {string} [dir.data='_data']
+ * @property {string} [dir.output='_site']
  * @deprecated handlebarsHelpers
  * @deprecated nunjucksFilters
  */
