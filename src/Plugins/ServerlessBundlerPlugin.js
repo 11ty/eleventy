@@ -3,6 +3,7 @@ const fsp = fs.promises;
 const path = require("path");
 const isGlob = require("is-glob");
 const copy = require("recursive-copy");
+const querystring = require("querystring");
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const NetlifyRedirects = require("./Serverless/NetlifyRedirects");
@@ -139,6 +140,28 @@ class BundlerHelper {
     return this.copyFileList(localModules);
   }
 
+  // https://github.com/11ty/eleventy/issues/2422
+  // This behavior is dictated by AWS Lambda https://aws.amazon.com/blogs/compute/support-for-multi-value-parameters-in-amazon-api-gateway/
+  // Duplicate keys are provided as a single comma separated string
+  getSingleValueQueryParams(searchParams) {
+    let obj = {};
+    for (let [key, value] of searchParams) {
+      if (!obj[key]) {
+        obj[key] = value;
+      } else {
+        obj[key] += `, ${value}`;
+      }
+    }
+    return obj;
+  }
+
+  // https://github.com/11ty/eleventy/issues/2422
+  // This behavior is dictated by AWS Lambda https://aws.amazon.com/blogs/compute/support-for-multi-value-parameters-in-amazon-api-gateway/
+  // Duplicate keys are combined into one array of values
+  getMultiValueQueryParams(searchParams) {
+    return querystring.parse(searchParams.toString());
+  }
+
   serverMiddleware() {
     let serverlessFilepath = TemplatePath.addLeadingDotSlash(
       path.join(TemplatePath.getWorkingDir(), this.dir, "index")
@@ -148,16 +171,19 @@ class BundlerHelper {
     return async function EleventyServerlessMiddleware(req, res, next) {
       let serverlessFunction = require(serverlessFilepath);
       let url = new URL(req.url, "http://localhost/"); // any domain will do here, we just want the searchParams
-      let queryParams = Object.fromEntries(url.searchParams);
 
       let start = new Date();
       let result = await serverlessFunction.handler({
         httpMethod: "GET",
         path: url.pathname,
         rawUrl: url.toString(),
+
         // @netlify/functions builder overwrites these to {} intentionally
         // See https://github.com/netlify/functions/issues/38
-        queryStringParameters: queryParams,
+        queryStringParameters: this.getSingleValueQueryParams(url.searchParams),
+        multiValueQueryStringParameters: this.getMultiValueQueryParams(
+          url.searchParams
+        ),
       });
 
       if (result.statusCode === 404) {
