@@ -46,6 +46,18 @@ class TemplateLayoutPathResolver {
   }
 
   init() {
+    // EJS tests fail in `TemplateLayoutPathResolverTest.js` if config.path is not checked
+    if (this.config.path) {
+      let processedInputPath = this.config.path(this.path);
+      if (processedInputPath) {
+        if (processedInputPath !== this.path) {
+          this.fullPath = processedInputPath;
+          this.filename = this.path;
+          return;
+        }
+      }
+    }
+
     // we might be able to move this into the constructor?
     this.aliases = Object.assign({}, this.config.layoutAliases, this.aliases);
     // debug("Current layout aliases: %o", this.aliases);
