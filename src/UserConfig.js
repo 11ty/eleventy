@@ -94,6 +94,8 @@ class UserConfig {
     this.dataFilterSelectors = new Set();
 
     this.libraryAmendments = {};
+
+    this.paths = {};
   }
 
   versionCheck(expected) {
