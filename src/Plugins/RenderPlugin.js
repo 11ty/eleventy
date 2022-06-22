@@ -52,15 +52,6 @@ async function compileFile(
     );
   }
 
-  if (
-    !fs.existsSync(TemplatePath.normalizeOperatingSystemFilePath(inputPath))
-  ) {
-    throw new Error(
-      "Could not find render plugin file for the `renderFile` shortcode, looking for: " +
-        inputPath
-    );
-  }
-
   if (!templateConfig) {
     templateConfig = new TemplateConfig(null, false);
   }
@@ -69,6 +60,17 @@ async function compileFile(
   }
 
   let cfg = templateConfig.getConfig();
+
+  let processedInputPath = cfg.path(inputPath);
+  if (!processedInputPath) {
+    throw new Error(
+      "Could not find render plugin file for the `renderFile` shortcode, looking for: " +
+        inputPath
+    );
+  } else {
+    inputPath = processedInputPath;
+  }
+
   let tr = new TemplateRender(inputPath, cfg.dir.input, templateConfig);
   tr.extensionMap = extensionMap;
   if (templateLang) {

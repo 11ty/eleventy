@@ -8,6 +8,10 @@ const merge = require("./Util/Merge");
 const debug = require("debug")("Eleventy:UserConfig");
 const pkg = require("../package.json");
 
+const { TemplatePath } = require("@11ty/eleventy-utils");
+const fs = require("fs");
+const path = require("path");
+
 class UserConfigError extends EleventyBaseError {}
 
 // API to expose configuration options in config file
@@ -90,6 +94,8 @@ class UserConfig {
     this.dataFilterSelectors = new Set();
 
     this.libraryAmendments = {};
+
+    this.paths = {};
   }
 
   versionCheck(expected) {
@@ -851,7 +857,50 @@ class UserConfig {
       precompiledCollections: this.precompiledCollections,
       dataFilterSelectors: this.dataFilterSelectors,
       libraryAmendments: this.libraryAmendments,
+      paths: this.paths,
+      path: this.path,
     };
+  }
+
+  paths = {};
+
+  path() {
+    switch (arguments.length) {
+      case 1:
+        let file = arguments[0];
+
+        //         if (path.isAbsolute(file) && fs.existsSync(file)) {
+        if (fs.existsSync(file)) {
+          return file;
+        }
+
+        let parts = file.split(":");
+
+        if (parts.length == 2) {
+          if (!this.paths[parts[0]]) return false;
+
+          for (let storedPath of this.paths[parts[0]]) {
+            if (fs.existsSync(storedPath + parts[1])) {
+              return storedPath + parts[1];
+            }
+          }
+        }
+
+        return false;
+
+      case 2:
+        if (!this.paths[arguments[0]]) {
+          this.paths[arguments[0]] = [];
+        }
+        this.paths[arguments[0]].unshift(
+          TemplatePath.normalizeOperatingSystemFilePath(arguments[1]).replace(
+            /\/$/,
+            ""
+          ) + "/"
+        );
+    }
+
+    return null;
   }
 }
 
