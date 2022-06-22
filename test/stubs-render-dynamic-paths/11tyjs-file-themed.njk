@@ -1,0 +1,9 @@
+---
+layout: "views:default.njk"
+hi: value
+argData:
+  hi: liquidHi
+  bye: liquidBye
+---
+{% renderFile "./test/stubs-render-plugin/_includes/include.11ty.js", argData %}
+{% renderFile "includes:include.11ty.js", argData %}
