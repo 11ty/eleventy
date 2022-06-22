@@ -119,8 +119,20 @@ class TemplatePassthroughManager {
       );
     }
 
-    let path = pass.getPath();
+    let { inputPath } = pass.getPath();
+
     pass.setDryRun(this.isDryRun);
+
+    // TODO https://github.com/11ty/eleventy/issues/2174#issuecomment-1162420197
+    // De-dupe both the input and output paired together to avoid the case
+    // where an input/output pair has been added via multiple passthrough methods (glob, file suffix, etc)
+    // Probably start with the `filter` callback in recursive-copy but it only passes relative paths
+    // See the note in TemplatePassthrough.js->write()
+
+    // Also note that `recursive-copy` handles repeated overwrite copy to the same destination just fine.
+    // e.g. `for(let j=0, k=1000; j<k; j++) { copy("coolkid.jpg", "_site/coolkid.jpg"); }`
+
+    // Eventually we’ll want to move all of this to use Node’s fs.cp, which is experimental and only on Node 16+
 
     return pass
       .write()
@@ -128,9 +140,19 @@ class TemplatePassthroughManager {
         for (let src in map) {
           let dest = map[src];
           if (this.conflictMap[dest]) {
-            throw new TemplatePassthroughManagerCopyError(
-              `Multiple passthrough copy files are trying to write to the same output file (${dest}). ${src} and ${this.conflictMap[dest]}`
-            );
+            if (src !== this.conflictMap[dest]) {
+              throw new TemplatePassthroughManagerCopyError(
+                `Multiple passthrough copy files are trying to write to the same output file (${dest}). ${src} and ${this.conflictMap[dest]}`
+              );
+            } else {
+              // Multiple entries from the same source
+              debug(
+                "A passthrough copy entry (%o) caused the same file (%o) to be copied more than once to the output (%o). This is atomically safe but a waste of build resources.",
+                inputPath,
+                src,
+                dest
+              );
+            }
           }
 
           debugDev(
@@ -138,6 +160,7 @@ class TemplatePassthroughManager {
             dest,
             src
           );
+
           this.conflictMap[dest] = src;
         }
 
@@ -145,13 +168,13 @@ class TemplatePassthroughManager {
           // We don’t count the skipped files as we need to iterate over them
           debug(
             "Skipped %o (either from --dryrun or --incremental)",
-            path.inputPath
+            inputPath
           );
         } else {
           if (count) {
             this.count += count;
           }
-          debug("Copied %o (%d files)", path.inputPath, count || 0);
+          debug("Copied %o (%d files)", inputPath, count || 0);
         }
 
         return {
@@ -162,7 +185,7 @@ class TemplatePassthroughManager {
       .catch(function (e) {
         return Promise.reject(
           new TemplatePassthroughManagerCopyError(
-            `Having trouble copying '${path.inputPath}'`,
+            `Having trouble copying '${inputPath}'`,
             e
           )
         );
@@ -243,6 +266,7 @@ class TemplatePassthroughManager {
   async copyAll(paths) {
     debug("TemplatePassthrough copy started.");
     let normalizedPaths = this.getAllNormalizedPaths(paths);
+
     let passthroughs = [];
     for (let path of normalizedPaths) {
       // if incrementalFile is set but it isn’t a passthrough copy, normalizedPaths will be an empty array

@@ -34,6 +34,7 @@ class TemplatePassthrough {
     this.isIncremental = false;
   }
 
+  /* { inputPath, outputPath } though outputPath is *not* the full path: just the output directory */
   getPath() {
     return this.rawPath;
   }
@@ -103,6 +104,30 @@ class TemplatePassthrough {
     return files;
   }
 
+  // maps input paths to output paths
+  async getFileMap() {
+    if (!isGlob(this.inputPath) && fs.existsSync(this.inputPath)) {
+      return [
+        {
+          inputPath: this.inputPath,
+          outputPath: this.getOutputPath(),
+        },
+      ];
+    }
+
+    let paths = [];
+    // If not directory or file, attempt to get globs
+    let files = await this.getFiles(this.inputPath);
+    for (let inputPath of files) {
+      paths.push({
+        inputPath,
+        outputPath: this.getOutputPath(inputPath),
+      });
+    }
+
+    return paths;
+  }
+
   /* Types:
    * 1. via glob, individual files found
    * 2. directory, triggers an event for each file
@@ -123,7 +148,6 @@ class TemplatePassthrough {
 
     let fileCopyCount = 0;
     let map = {};
-
     // returns a promise
     return copy(src, dest, copyOptions)
       .on(copy.events.COPY_FILE_START, (copyOp) => {
@@ -132,7 +156,7 @@ class TemplatePassthrough {
         map[copyOp.src] = copyOp.dest;
         this.benchmarks.aggregate.get("Passthrough Copy File").before();
       })
-      .on(copy.events.COPY_FILE_COMPLETE, () => {
+      .on(copy.events.COPY_FILE_COMPLETE, (copyOp) => {
         fileCopyCount++;
         this.benchmarks.aggregate.get("Passthrough Copy File").after();
       })
@@ -157,24 +181,17 @@ class TemplatePassthrough {
       dot: true,
       junk: false,
       results: false,
+      // Note: `filter` callback function only passes in a relative path, which is unreliable
+      // See https://github.com/timkendrick/recursive-copy/blob/4c9a8b8a4bf573285e9c4a649a30a2b59ccf441c/lib/copy.js#L59
+      // e.g. `{ filePaths: [ './img/coolkid.jpg' ], relativePaths: [ '' ] }`
     };
-    let promises = [];
 
     debug("Copying %o", this.inputPath);
+    let fileMap = await this.getFileMap();
 
-    if (!isGlob(this.inputPath) && fs.existsSync(this.inputPath)) {
-      promises.push(
-        this.copy(this.inputPath, this.getOutputPath(), copyOptions)
-      );
-    } else {
-      // If not directory or file, attempt to get globs
-      let files = await this.getFiles(this.inputPath);
-
-      promises = files.map((inputFile) => {
-        let target = this.getOutputPath(inputFile);
-        return this.copy(inputFile, target, copyOptions);
-      });
-    }
+    let promises = fileMap.map((entry) => {
+      return this.copy(entry.inputPath, entry.outputPath, copyOptions);
+    });
 
     // IMPORTANT: this returns an array of promises, does not await for promise to finish
     return Promise.all(promises)
