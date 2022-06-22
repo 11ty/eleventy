@@ -123,7 +123,7 @@ class TemplatePassthroughManager {
 
     pass.setDryRun(this.isDryRun);
 
-    // TODO https://github.com/11ty/eleventy/issues/2174#issuecomment-1162420197
+    // TODO https://github.com/11ty/eleventy/issues/2452
     // De-dupe both the input and output paired together to avoid the case
     // where an input/output pair has been added via multiple passthrough methods (glob, file suffix, etc)
     // Probably start with the `filter` callback in recursive-copy but it only passes relative paths
