@@ -429,10 +429,14 @@ class EleventyFiles {
     // TODO improvement: tie the includes and data to specific file extensions (currently using `**`)
     let directoryGlobs = this._getIncludesAndDataDirs();
 
-    // TODO config API method to revert to previous passthrough copy behavior
-    // return this.validTemplateGlobs.concat(this.passthroughGlobs).concat(directoryGlobs);
+    if (this.config.serverPassthroughCopyBehavior === "passthrough") {
+      return this.validTemplateGlobs.concat(directoryGlobs);
+    }
 
-    return this.validTemplateGlobs.concat(directoryGlobs);
+    // Revert to old passthroughcopy copy files behavior
+    return this.validTemplateGlobs
+      .concat(this.passthroughGlobs)
+      .concat(directoryGlobs);
   }
 
   /* For `eleventy --watch` */

@@ -977,20 +977,22 @@ Arguments:
       await watchRun(path);
     });
 
-    // Separate watcher for passthrough copy, we only want to trigger a server reload for changes to these files
-    this.passthroughWatcher = chokidar.watch(
-      this.eleventyFiles.getGlobWatcherFilesForPassthroughCopy(),
-      this.getChokidarConfig()
-    );
-    this.passthroughWatcher.on("change", async (path) => {
-      this.logger.forceLog(`Passthrough copy file changed: ${path}`);
-      this.triggerServerReload([path]);
-    });
+    if (this.config.serverPassthroughCopyBehavior === "passthrough") {
+      // Separate watcher for passthrough copy, we only want to trigger a server reload for changes to these files
+      this.passthroughWatcher = chokidar.watch(
+        this.eleventyFiles.getGlobWatcherFilesForPassthroughCopy(),
+        this.getChokidarConfig()
+      );
+      this.passthroughWatcher.on("change", async (path) => {
+        this.logger.forceLog(`Passthrough copy file changed: ${path}`);
+        this.triggerServerReload([path]);
+      });
 
-    this.passthroughWatcher.on("add", async (path) => {
-      this.logger.forceLog(`Passthrough copy file added: ${path}`);
-      this.triggerServerReload([path]);
-    });
+      this.passthroughWatcher.on("add", async (path) => {
+        this.logger.forceLog(`Passthrough copy file added: ${path}`);
+        this.triggerServerReload([path]);
+      });
+    }
 
     process.on("SIGINT", () => this.stopWatch());
   }
@@ -999,7 +1001,11 @@ Arguments:
     debug("Cleaning up chokidar and server instances, if they exist.");
     this.eleventyServe.close();
     this.watcher.close();
-    this.passthroughWatcher.close();
+
+    if (this.passthroughWatcher) {
+      this.passthroughWatcher.close();
+    }
+
     process.exit();
   }
 

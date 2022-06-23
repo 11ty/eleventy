@@ -195,7 +195,10 @@ class TemplatePassthrough {
 
     let promises = fileMap.map((entry) => {
       // For-free passthrough copy
-      if (this.runMode === "serve" || this.runMode === "watch") {
+      if (
+        this.config.serverPassthroughCopyBehavior === "passthrough" &&
+        (this.runMode === "serve" || this.runMode === "watch")
+      ) {
         let aliasMap = {};
         aliasMap[entry.inputPath] = entry.outputPath;
 

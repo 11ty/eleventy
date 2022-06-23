@@ -90,6 +90,8 @@ class UserConfig {
     this.dataFilterSelectors = new Set();
 
     this.libraryAmendments = {};
+
+    this.serverPassthroughCopyBehavior = "passthrough";
   }
 
   versionCheck(expected) {
@@ -798,6 +800,12 @@ class UserConfig {
     this.precompiledCollections = collections;
   }
 
+  // "passthrough" is the default, no other value is explicitly required in code
+  // but opt-out via "copy" is suggested
+  setServerPassthroughCopyBehavior(behavior) {
+    this.serverPassthroughCopyBehavior = behavior;
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
@@ -851,6 +859,7 @@ class UserConfig {
       precompiledCollections: this.precompiledCollections,
       dataFilterSelectors: this.dataFilterSelectors,
       libraryAmendments: this.libraryAmendments,
+      serverPassthroughCopyBehavior: this.serverPassthroughCopyBehavior,
     };
   }
 }
