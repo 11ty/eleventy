@@ -86,6 +86,10 @@ class TemplatePassthrough {
     this.isDryRun = !!isDryRun;
   }
 
+  setRunMode(runMode) {
+    this.runMode = runMode;
+  }
+
   setIsIncremental(isIncremental) {
     this.isIncremental = isIncremental;
   }
@@ -176,7 +180,10 @@ class TemplatePassthrough {
       });
     }
 
-    const copyOptions = {
+    debug("Copying %o", this.inputPath);
+    let fileMap = await this.getFileMap();
+
+    let copyOptions = {
       overwrite: true,
       dot: true,
       junk: false,
@@ -186,10 +193,19 @@ class TemplatePassthrough {
       // e.g. `{ filePaths: [ './img/coolkid.jpg' ], relativePaths: [ '' ] }`
     };
 
-    debug("Copying %o", this.inputPath);
-    let fileMap = await this.getFileMap();
-
     let promises = fileMap.map((entry) => {
+      // For-free passthrough copy
+      if (this.runMode === "serve" || this.runMode === "watch") {
+        let aliasMap = {};
+        aliasMap[entry.inputPath] = entry.outputPath;
+
+        return Promise.resolve({
+          count: 0,
+          map: aliasMap,
+        });
+      }
+
+      // Copy the files (only in build mode)
       return this.copy(entry.inputPath, entry.outputPath, copyOptions);
     });
 

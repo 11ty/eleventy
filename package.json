@@ -95,7 +95,7 @@
   },
   "dependencies": {
     "@11ty/dependency-tree": "^2.0.1",
-    "@11ty/eleventy-dev-server": "^1.0.0-canary.9",
+    "@11ty/eleventy-dev-server": "^1.0.0-canary.11",
     "@11ty/eleventy-utils": "^1.0.1",
     "@iarna/toml": "^2.2.5",
     "@sindresorhus/slugify": "^1.1.2",

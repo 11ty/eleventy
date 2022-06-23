@@ -362,9 +362,12 @@ test("Glob Watcher Files with File Extension Passthroughs", async (t) => {
 
   t.deepEqual(evf.getGlobWatcherFiles(), [
     "./test/stubs/**/*.njk",
-    "./test/stubs/**/*.png",
     "./test/stubs/_includes/**",
     "./test/stubs/_data/**",
+  ]);
+
+  t.deepEqual(evf.getGlobWatcherFilesForPassthroughCopy(), [
+    "./test/stubs/**/*.png",
   ]);
 });
 
@@ -388,9 +391,12 @@ test("Glob Watcher Files with Config Passthroughs (one template format)", async 
 
   t.deepEqual(evf.getGlobWatcherFiles(), [
     "./test/stubs/**/*.njk",
-    "./test/stubs/img/**",
     "./test/stubs/_includes/**",
     "./test/stubs/_data/**",
+  ]);
+
+  t.deepEqual(evf.getGlobWatcherFilesForPassthroughCopy(), [
+    "./test/stubs/img/**",
   ]);
 });
 

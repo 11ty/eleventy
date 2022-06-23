@@ -50,8 +50,18 @@ class EleventyServe {
 
   set eleventyConfig(config) {
     this._eleventyConfig = config;
+    this._eleventyConfig.userConfig.events.on(
+      "eleventy.passthrough",
+      ({ map }) => {
+        // for-free passthrough copy
+        if ("setAliases" in this.server) {
+          this.server.setAliases(map);
+        }
+      }
+    );
   }
 
+  // TODO this doesn’t seem to be used internally
   setOutputDir(outputDir) {
     this.outputDir = outputDir;
   }

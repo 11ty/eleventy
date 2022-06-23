@@ -54,6 +54,10 @@ class TemplatePassthroughManager {
     this.isDryRun = !!isDryRun;
   }
 
+  setRunMode(runMode) {
+    this.runMode = runMode;
+  }
+
   setIncrementalFile(path) {
     if (path) {
       this.incrementalFile = path;
@@ -108,7 +112,11 @@ class TemplatePassthroughManager {
       this.inputDir,
       this.config
     );
+
     inst.setIsIncremental(isIncremental);
+    inst.setDryRun(this.isDryRun);
+    inst.setRunMode(this.runMode);
+
     return inst;
   }
 
@@ -120,8 +128,6 @@ class TemplatePassthroughManager {
     }
 
     let { inputPath } = pass.getPath();
-
-    pass.setDryRun(this.isDryRun);
 
     // TODO https://github.com/11ty/eleventy/issues/2452
     // De-dupe both the input and output paired together to avoid the case
@@ -260,6 +266,22 @@ class TemplatePassthroughManager {
     return normalizedPaths;
   }
 
+  // keys: output
+  // values: input
+  getAliasesFromPassthroughResults(result) {
+    let entries = {};
+    for (let entry of result) {
+      for (let src in entry.map) {
+        let dest = TemplatePath.stripLeadingSubPath(
+          entry.map[src],
+          this.outputDir
+        );
+        entries["/" + dest] = src;
+      }
+    }
+    return entries;
+  }
+
   // Performance note: these can actually take a fair bit of time, but aren’t a
   // bottleneck to eleventy. The copies are performed asynchronously and don’t affect eleventy
   // write times in a significant way.
@@ -278,7 +300,11 @@ class TemplatePassthroughManager {
 
     return Promise.all(
       passthroughs.map((pass) => this.copyPassthrough(pass))
-    ).then((result) => {
+    ).then(async (result) => {
+      await this.config.events.emit("eleventy.passthrough", {
+        map: this.getAliasesFromPassthroughResults(result),
+      });
+
       debug(`TemplatePassthrough copy finished. Current count: ${this.count}`);
       return result;
     });

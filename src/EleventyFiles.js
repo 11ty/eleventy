@@ -145,6 +145,10 @@ class EleventyFiles {
     return this._extensionMap;
   }
 
+  setRunMode(runMode) {
+    this.runMode = runMode;
+  }
+
   setPassthroughAll(passthroughAll) {
     this.passthroughAll = !!passthroughAll;
   }
@@ -153,6 +157,7 @@ class EleventyFiles {
     let mgr = new TemplatePassthroughManager(this.eleventyConfig);
     mgr.setInputDir(this.inputDir);
     mgr.setOutputDir(this.outputDir);
+    mgr.setRunMode(this.runMode);
     mgr.extensionMap = this.extensionMap;
     this.passthroughManager = mgr;
   }
@@ -421,10 +426,18 @@ class EleventyFiles {
 
   /* For `eleventy --watch` */
   getGlobWatcherFiles() {
-    // TODO is it better to tie the includes and data to specific file extensions or keep the **?
-    return this.validTemplateGlobs
-      .concat(this.passthroughGlobs)
-      .concat(this._getIncludesAndDataDirs());
+    // TODO improvement: tie the includes and data to specific file extensions (currently using `**`)
+    let directoryGlobs = this._getIncludesAndDataDirs();
+
+    // TODO config API method to revert to previous passthrough copy behavior
+    // return this.validTemplateGlobs.concat(this.passthroughGlobs).concat(directoryGlobs);
+
+    return this.validTemplateGlobs.concat(directoryGlobs);
+  }
+
+  /* For `eleventy --watch` */
+  getGlobWatcherFilesForPassthroughCopy() {
+    return this.passthroughGlobs;
   }
 
   /* For `eleventy --watch` */

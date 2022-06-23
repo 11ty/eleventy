@@ -350,6 +350,7 @@ class Eleventy {
     );
     this.eleventyFiles.setPassthroughAll(this.isPassthroughAll);
     this.eleventyFiles.setInput(this.inputDir, this.input);
+    this.eleventyFiles.setRunMode(this.runMode);
     this.eleventyFiles.extensionMap = this.extensionMap;
     this.eleventyFiles.init();
 
@@ -535,7 +536,7 @@ Verbose Output: ${this.verboseMode}`);
    * Updates the run mode of Eleventy.
    *
    * @method
-   * @param {String} runMode - One of "watch" or "serve"
+   * @param {String} runMode - One of "build", "watch", or "serve"
    */
   setRunMode(runMode) {
     this.runMode = runMode;
@@ -881,6 +882,22 @@ Arguments:
     );
   }
 
+  async triggerServerReload(changedFiles) {
+    let onlyApplyingCssChanges =
+      changedFiles.filter((entry) => entry.endsWith(".css")).length ===
+      changedFiles.length;
+
+    // returns a promise
+    return this.eleventyServe.reload({
+      files: changedFiles,
+      subtype: onlyApplyingCssChanges ? "css" : undefined,
+      build: {
+        // As of right now this is only used for the passthrough copy watcher so templates are unnecessary
+        templates: [],
+      },
+    });
+  }
+
   /**
    * Start the watching of files.
    *
@@ -960,6 +977,21 @@ Arguments:
       await watchRun(path);
     });
 
+    // Separate watcher for passthrough copy, we only want to trigger a server reload for changes to these files
+    this.passthroughWatcher = chokidar.watch(
+      this.eleventyFiles.getGlobWatcherFilesForPassthroughCopy(),
+      this.getChokidarConfig()
+    );
+    this.passthroughWatcher.on("change", async (path) => {
+      this.logger.forceLog(`Passthrough copy file changed: ${path}`);
+      this.triggerServerReload([path]);
+    });
+
+    this.passthroughWatcher.on("add", async (path) => {
+      this.logger.forceLog(`Passthrough copy file added: ${path}`);
+      this.triggerServerReload([path]);
+    });
+
     process.on("SIGINT", () => this.stopWatch());
   }
 
@@ -967,6 +999,7 @@ Arguments:
     debug("Cleaning up chokidar and server instances, if they exist.");
     this.eleventyServe.close();
     this.watcher.close();
+    this.passthroughWatcher.close();
     process.exit();
   }
 
