@@ -67,10 +67,14 @@ class TemplatePassthrough {
       TemplatePath.join(outputDir, outputPath)
     );
 
-    if (this.isIncremental && TemplatePath.isDirectorySync(fullOutputPath)) {
+    if (
+      fs.existsSync(inputPath) &&
+      !TemplatePath.isDirectorySync(inputPath) &&
+      TemplatePath.isDirectorySync(fullOutputPath)
+    ) {
       let filename = path.parse(inputPath).base;
       return TemplatePath.normalize(
-        TemplatePath.join(outputDir, outputPath, filename)
+        TemplatePath.join(fullOutputPath, filename)
       );
     }
 
@@ -141,7 +145,7 @@ class TemplatePassthrough {
    */
   async copy(src, dest, copyOptions) {
     if (
-      !TemplatePath.stripLeadingDotSlash(dest).includes(
+      !TemplatePath.stripLeadingDotSlash(dest).startsWith(
         TemplatePath.stripLeadingDotSlash(this.outputDir)
       )
     ) {
