@@ -158,6 +158,7 @@ class TemplateEngine {
 
     // Run engine amendments (via issue #2438)
     for (let amendment of this.config.libraryAmendments[this.name] || []) {
+      // TODO it’d be nice if this were async friendly
       amendment(engineLib);
     }
   }
