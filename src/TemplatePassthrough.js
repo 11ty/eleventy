@@ -32,6 +32,8 @@ class TemplatePassthrough {
     this.outputPath = path.outputPath;
     this.outputDir = outputDir;
 
+    this.copyOptions = path.copyOptions; // custom options for recursive-copy
+
     this.isDryRun = false;
     this.isIncremental = false;
   }
@@ -189,15 +191,22 @@ class TemplatePassthrough {
     debug("Copying %o", this.inputPath);
     let fileMap = await this.getFileMap();
 
-    let copyOptions = {
-      overwrite: true,
-      dot: true,
-      junk: false,
+    // default options for recursive-copy
+    // see https://www.npmjs.com/package/recursive-copy#arguments
+    const copyOptionsDefault = {
+      overwrite: true, // overwrite output. fails when input is directory (mkdir) and output is file
+      dot: true, // copy dotfiles
+      junk: false, // copy cache files like Thumbs.db
       results: false,
+      expand: false, // follow symlinks (matches recursive-copy default)
+      debug: false, // (matches recursive-copy default)
+
       // Note: `filter` callback function only passes in a relative path, which is unreliable
       // See https://github.com/timkendrick/recursive-copy/blob/4c9a8b8a4bf573285e9c4a649a30a2b59ccf441c/lib/copy.js#L59
       // e.g. `{ filePaths: [ './img/coolkid.jpg' ], relativePaths: [ '' ] }`
     };
+
+    const copyOptions = Object.assign(copyOptionsDefault, this.copyOptions);
 
     let promises = fileMap.map((entry) => {
       // For-free passthrough copy

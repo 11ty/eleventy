@@ -64,21 +64,24 @@ class TemplatePassthroughManager {
     }
   }
 
-  _normalizePaths(path, outputPath) {
+  _normalizePaths(path, outputPath, copyOptions = {}) {
     return {
       inputPath: TemplatePath.addLeadingDotSlash(path),
       outputPath: outputPath
         ? TemplatePath.stripLeadingDotSlash(outputPath)
         : true,
+      copyOptions,
     };
   }
 
   getConfigPaths() {
-    let paths = [];
-    let target = this.config.passthroughCopies || {};
-    debug("`addPassthroughCopy` config API paths: %o", target);
-    for (let path in target) {
-      paths.push(this._normalizePaths(path, target[path]));
+    const paths = [];
+    const pathsRaw = this.config.passthroughCopies || {};
+    debug("`addPassthroughCopy` config API paths: %o", pathsRaw);
+    for (const [inputPath, { outputPath, copyOptions }] of Object.entries(
+      pathsRaw
+    )) {
+      paths.push(this._normalizePaths(inputPath, outputPath, copyOptions));
     }
     debug("`addPassthroughCopy` config API normalized paths: %o", paths);
     return paths;
@@ -244,22 +247,26 @@ class TemplatePassthroughManager {
       return [];
     }
 
-    let normalizedPaths = [];
-
-    let pathsFromConfigurationFile = this.getConfigPaths();
-    for (let path of pathsFromConfigurationFile) {
-      debug("TemplatePassthrough copying from config: %o", path);
-      normalizedPaths.push(path);
+    const normalizedPaths = this.getConfigPaths();
+    if (debug.enabled) {
+      for (const path of normalizedPaths) {
+        debug("TemplatePassthrough copying from config: %o", path);
+      }
     }
 
     if (paths && paths.length) {
-      let passthroughPaths = this.getNonTemplatePaths(paths);
-      for (let path of passthroughPaths) {
-        let normalizedPath = this._normalizePaths(path);
-        debug(
-          `TemplatePassthrough copying from non-matching file extension: ${normalizedPath.inputPath}`
-        );
+      const passthroughPaths = this.getNonTemplatePaths(paths);
+      for (const path of passthroughPaths) {
+        const normalizedPath = this._normalizePaths(path);
         normalizedPaths.push(normalizedPath);
+      }
+      if (debug.enabled) {
+        for (const path of passthroughPaths) {
+          const normalizedPath = this._normalizePaths(path);
+          debug(
+            `TemplatePassthrough copying from non-matching file extension: ${normalizedPath.inputPath}`
+          );
+        }
       }
     }
 
@@ -289,14 +296,12 @@ class TemplatePassthroughManager {
     debug("TemplatePassthrough copy started.");
     let normalizedPaths = this.getAllNormalizedPaths(paths);
 
-    let passthroughs = [];
-    for (let path of normalizedPaths) {
+    let passthroughs = normalizedPaths.map((path) => {
       // if incrementalFile is set but it isn’t a passthrough copy, normalizedPaths will be an empty array
       let isIncremental = !!this.incrementalFile;
-      passthroughs.push(
-        this.getTemplatePassthroughForPath(path, isIncremental)
-      );
-    }
+
+      return this.getTemplatePassthroughForPath(path, isIncremental);
+    });
 
     return Promise.all(
       passthroughs.map((pass) => this.copyPassthrough(pass))
