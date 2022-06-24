@@ -75,10 +75,10 @@ class TemplatePassthroughManager {
   }
 
   getConfigPaths() {
-    const paths = [];
-    const pathsRaw = this.config.passthroughCopies || {};
+    let paths = [];
+    let pathsRaw = this.config.passthroughCopies || {};
     debug("`addPassthroughCopy` config API paths: %o", pathsRaw);
-    for (const [inputPath, { outputPath, copyOptions }] of Object.entries(
+    for (let [inputPath, { outputPath, copyOptions }] of Object.entries(
       pathsRaw
     )) {
       paths.push(this._normalizePaths(inputPath, outputPath, copyOptions));

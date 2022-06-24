@@ -3,7 +3,6 @@ const fs = require("fs");
 const TemplatePassthroughManager = require("../src/TemplatePassthroughManager");
 const TemplateConfig = require("../src/TemplateConfig");
 const EleventyFiles = require("../src/EleventyFiles");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 
 test("Get paths from Config", async (t) => {
   let eleventyConfig = new TemplateConfig();

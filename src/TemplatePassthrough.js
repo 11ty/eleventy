@@ -44,7 +44,7 @@ class TemplatePassthrough {
   }
 
   getOutputPath(inputFileFromGlob) {
-    const { inputDir, outputDir, outputPath, inputPath } = this;
+    let { inputDir, outputDir, outputPath, inputPath } = this;
 
     if (outputPath === true) {
       return TemplatePath.normalize(
@@ -106,7 +106,7 @@ class TemplatePassthrough {
     debug("Searching for: %o", glob);
     let b = this.benchmarks.aggregate.get("Searching the file system");
     b.before();
-    const files = TemplatePath.addLeadingDotSlashArray(
+    let files = TemplatePath.addLeadingDotSlashArray(
       await fastglob(glob, {
         caseSensitiveMatch: false,
         dot: true,
@@ -193,7 +193,7 @@ class TemplatePassthrough {
 
     // default options for recursive-copy
     // see https://www.npmjs.com/package/recursive-copy#arguments
-    const copyOptionsDefault = {
+    let copyOptionsDefault = {
       overwrite: true, // overwrite output. fails when input is directory (mkdir) and output is file
       dot: true, // copy dotfiles
       junk: false, // copy cache files like Thumbs.db
@@ -206,7 +206,7 @@ class TemplatePassthrough {
       // e.g. `{ filePaths: [ './img/coolkid.jpg' ], relativePaths: [ '' ] }`
     };
 
-    const copyOptions = Object.assign(copyOptionsDefault, this.copyOptions);
+    let copyOptions = Object.assign(copyOptionsDefault, this.copyOptions);
 
     let promises = fileMap.map((entry) => {
       // For-free passthrough copy
