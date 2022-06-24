@@ -247,26 +247,23 @@ class TemplatePassthroughManager {
       return [];
     }
 
-    const normalizedPaths = this.getConfigPaths();
+    let normalizedPaths = this.getConfigPaths();
     if (debug.enabled) {
-      for (const path of normalizedPaths) {
+      for (let path of normalizedPaths) {
         debug("TemplatePassthrough copying from config: %o", path);
       }
     }
 
     if (paths && paths.length) {
-      const passthroughPaths = this.getNonTemplatePaths(paths);
-      for (const path of passthroughPaths) {
-        const normalizedPath = this._normalizePaths(path);
+      let passthroughPaths = this.getNonTemplatePaths(paths);
+      for (let path of passthroughPaths) {
+        let normalizedPath = this._normalizePaths(path);
+
+        debug(
+          `TemplatePassthrough copying from non-matching file extension: ${normalizedPath.inputPath}`
+        );
+
         normalizedPaths.push(normalizedPath);
-      }
-      if (debug.enabled) {
-        for (const path of passthroughPaths) {
-          const normalizedPath = this._normalizePaths(path);
-          debug(
-            `TemplatePassthrough copying from non-matching file extension: ${normalizedPath.inputPath}`
-          );
-        }
       }
     }
 

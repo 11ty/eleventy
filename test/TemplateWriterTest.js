@@ -692,19 +692,15 @@ test("Passthrough file output", async (t) => {
   eleventyConfig.userConfig.passthroughCopies = {
     "./test/stubs/template-passthrough/static": {
       outputPath: true,
-      copyOptions: {},
     },
     "./test/stubs/template-passthrough/static/": {
       outputPath: "./",
-      copyOptions: {},
     },
     "./test/stubs/template-passthrough/static/**/*": {
       outputPath: "./all/",
-      copyOptions: {},
     },
     "./test/stubs/template-passthrough/static/**/*.js": {
       outputPath: "./js/",
-      copyOptions: {},
     },
   };
 

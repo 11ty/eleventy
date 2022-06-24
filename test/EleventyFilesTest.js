@@ -393,7 +393,7 @@ test("Glob Watcher Files with File Extension Passthroughs with Dev Server (for f
 test("Glob Watcher Files with Config Passthroughs (one template format)", async (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.passthroughCopies = {
-    "test/stubs/img/": true,
+    "test/stubs/img/": { outputPath: true },
   };
   let evf = new EleventyFiles(
     "test/stubs",
@@ -419,7 +419,7 @@ test("Glob Watcher Files with Config Passthroughs (one template format)", async 
 test("Glob Watcher Files with Config Passthroughs (one template format) with Dev Server (for free passthrough copy #2456)", async (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.passthroughCopies = {
-    "test/stubs/img/": true,
+    "test/stubs/img/": { outputPath: true },
   };
   let evf = new EleventyFiles(
     "test/stubs",

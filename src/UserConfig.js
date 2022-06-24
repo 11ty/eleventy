@@ -418,10 +418,9 @@ class UserConfig {
    */
   addPassthroughCopy(fileOrDir, copyOptions = {}) {
     if (typeof fileOrDir === "string") {
-      const inputPath = fileOrDir;
-      this.passthroughCopies[inputPath] = { outputPath: true, copyOptions };
+      this.passthroughCopies[fileOrDir] = { outputPath: true, copyOptions };
     } else {
-      for (const [inputPath, outputPath] of Object.entries(fileOrDir)) {
+      for (let [inputPath, outputPath] of Object.entries(fileOrDir)) {
         this.passthroughCopies[inputPath] = { outputPath, copyOptions };
       }
     }

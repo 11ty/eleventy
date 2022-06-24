@@ -29,12 +29,14 @@ test("isPassthroughCopyFile", async (t) => {
   t.deepEqual(mgr.isPassthroughCopyFile([], "./img/test.png"), {
     inputPath: "./img",
     outputPath: true,
+    copyOptions: {},
   });
 
   t.truthy(mgr.isPassthroughCopyFile([], "./fonts/Roboto.woff"));
   t.deepEqual(mgr.isPassthroughCopyFile([], "./fonts/Roboto.woff"), {
     inputPath: "./fonts",
     outputPath: true,
+    copyOptions: {},
   });
 
   t.false(mgr.isPassthroughCopyFile([], "./docs/test.njk"));
@@ -165,7 +167,6 @@ test("Look for uniqueness on template passthrough paths #1677", async (t) => {
   eleventyConfig.userConfig.passthroughCopies = {
     "./test/stubs/template-passthrough-duplicates/**/*.png": {
       outputPath: "./",
-      copyOptions: {},
     },
   };
 
