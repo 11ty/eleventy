@@ -362,6 +362,25 @@ test("Glob Watcher Files with File Extension Passthroughs", async (t) => {
 
   t.deepEqual(evf.getGlobWatcherFiles(), [
     "./test/stubs/**/*.njk",
+    "./test/stubs/**/*.png",
+    "./test/stubs/_includes/**",
+    "./test/stubs/_data/**",
+  ]);
+});
+
+test("Glob Watcher Files with File Extension Passthroughs with Dev Server (for free passthrough copy #2456)", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let evf = new EleventyFiles(
+    "test/stubs",
+    "test/stubs/_site",
+    ["njk", "png"],
+    eleventyConfig
+  );
+  evf.setRunMode("serve");
+  evf.init();
+
+  t.deepEqual(evf.getGlobWatcherFiles(), [
+    "./test/stubs/**/*.njk",
     "./test/stubs/_includes/**",
     "./test/stubs/_data/**",
   ]);
@@ -382,6 +401,33 @@ test("Glob Watcher Files with Config Passthroughs (one template format)", async 
     ["njk"],
     eleventyConfig
   );
+  evf.init();
+
+  let mgr = new TemplatePassthroughManager(eleventyConfig);
+  mgr.setInputDir("test/stubs");
+  mgr.setOutputDir("test/stubs/_site");
+  evf.setPassthroughManager(mgr);
+
+  t.deepEqual(evf.getGlobWatcherFiles(), [
+    "./test/stubs/**/*.njk",
+    "./test/stubs/img/**",
+    "./test/stubs/_includes/**",
+    "./test/stubs/_data/**",
+  ]);
+});
+
+test("Glob Watcher Files with Config Passthroughs (one template format) with Dev Server (for free passthrough copy #2456)", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.passthroughCopies = {
+    "test/stubs/img/": true,
+  };
+  let evf = new EleventyFiles(
+    "test/stubs",
+    "test/stubs/_site",
+    ["njk"],
+    eleventyConfig
+  );
+  evf.setRunMode("serve");
   evf.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);

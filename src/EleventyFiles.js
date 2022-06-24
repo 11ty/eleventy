@@ -7,6 +7,7 @@ const TemplateData = require("./TemplateData");
 const TemplateGlob = require("./TemplateGlob");
 const TemplatePassthroughManager = require("./TemplatePassthroughManager");
 const EleventyBaseError = require("./EleventyBaseError");
+const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
 
 class EleventyFilesError extends EleventyBaseError {}
 
@@ -429,7 +430,7 @@ class EleventyFiles {
     // TODO improvement: tie the includes and data to specific file extensions (currently using `**`)
     let directoryGlobs = this._getIncludesAndDataDirs();
 
-    if (this.config.serverPassthroughCopyBehavior === "passthrough") {
+    if (checkPassthroughCopyBehavior(this.config, this.runMode)) {
       return this.validTemplateGlobs.concat(directoryGlobs);
     }
 

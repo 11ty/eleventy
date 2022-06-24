@@ -4,6 +4,7 @@ const EleventyBaseError = require("./EleventyBaseError");
 const ConsoleLogger = require("./Util/ConsoleLogger");
 const PathPrefixer = require("./Util/PathPrefixer");
 const merge = require("./Util/Merge");
+const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
 
 const debug = require("debug")("EleventyServe");
 
@@ -51,8 +52,7 @@ class EleventyServe {
   set eleventyConfig(config) {
     this._eleventyConfig = config;
     if (
-      this._eleventyConfig.userConfig.serverPassthroughCopyBehavior ===
-      "passthrough"
+      checkPassthroughCopyBehavior(this._eleventyConfig.userConfig, "serve")
     ) {
       this._eleventyConfig.userConfig.events.on(
         "eleventy.passthrough",

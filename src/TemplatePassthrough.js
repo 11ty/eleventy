@@ -5,8 +5,10 @@ const copy = require("recursive-copy");
 const fastglob = require("fast-glob");
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
-const debug = require("debug")("Eleventy:TemplatePassthrough");
 const EleventyBaseError = require("./EleventyBaseError");
+const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
+
+const debug = require("debug")("Eleventy:TemplatePassthrough");
 
 class TemplatePassthroughError extends EleventyBaseError {}
 
@@ -195,10 +197,7 @@ class TemplatePassthrough {
 
     let promises = fileMap.map((entry) => {
       // For-free passthrough copy
-      if (
-        this.config.serverPassthroughCopyBehavior === "passthrough" &&
-        (this.runMode === "serve" || this.runMode === "watch")
-      ) {
+      if (checkPassthroughCopyBehavior(this.config, this.runMode)) {
         let aliasMap = {};
         aliasMap[entry.inputPath] = entry.outputPath;
 

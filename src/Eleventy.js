@@ -18,6 +18,7 @@ const TemplateConfig = require("./TemplateConfig");
 const templateCache = require("./TemplateCache");
 const simplePlural = require("./Util/Pluralize");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
+const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
 const debug = require("debug")("Eleventy");
 const eventBus = require("./EventBus");
 
@@ -977,7 +978,7 @@ Arguments:
       await watchRun(path);
     });
 
-    if (this.config.serverPassthroughCopyBehavior === "passthrough") {
+    if (checkPassthroughCopyBehavior(this.config, this.runMode)) {
       // Separate watcher for passthrough copy, we only want to trigger a server reload for changes to these files
       this.passthroughWatcher = chokidar.watch(
         this.eleventyFiles.getGlobWatcherFilesForPassthroughCopy(),
