@@ -944,7 +944,7 @@ class Template extends TemplateContent {
         }
 
         // return now if this file is not yet available in `git`
-        return Date.now();
+        return new Date();
       }
       if (data.date.toLowerCase() === "last modified") {
         return this._getDateInstance("ctimeMs");
