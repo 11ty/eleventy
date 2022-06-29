@@ -20,6 +20,7 @@ test("Get ignores (no .eleventyignore no .gitignore)", (t) => {
 
   t.deepEqual(evf.getIgnores(), [
     "./test/stubs/ignorelocalroot/node_modules/**",
+    "./test/stubs/ignorelocalroot/.git/**",
     "./test/stubs/ignorelocalroot/test.md",
     "./test/stubs/ignore1/_site/**",
   ]);
@@ -38,6 +39,7 @@ test("Get ignores (no .eleventyignore)", (t) => {
 
   t.deepEqual(evf.getIgnores(), [
     "./test/stubs/ignorelocalrootgitignore/node_modules/**",
+    "./test/stubs/ignorelocalrootgitignore/.git/**",
     "./test/stubs/ignorelocalrootgitignore/thisshouldnotexist12345",
     "./test/stubs/ignorelocalrootgitignore/test.md",
     "./test/stubs/ignore2/_site/**",
@@ -82,6 +84,7 @@ test("Get ignores (no .gitignore)", (t) => {
 
   t.deepEqual(evf.getIgnores(), [
     "./test/stubs/ignorelocalroot/node_modules/**",
+    "./test/stubs/ignorelocalroot/.git/**",
     "./test/stubs/ignorelocalroot/test.md",
     "./test/stubs/ignore3/ignoredFolder/**",
     "./test/stubs/ignore3/ignoredFolder/ignored.md",
@@ -102,6 +105,7 @@ test("Get ignores (project .eleventyignore and root .gitignore)", (t) => {
 
   t.deepEqual(evf.getIgnores(), [
     "./test/stubs/ignorelocalrootgitignore/node_modules/**",
+    "./test/stubs/ignorelocalrootgitignore/.git/**",
     "./test/stubs/ignorelocalrootgitignore/thisshouldnotexist12345",
     "./test/stubs/ignorelocalrootgitignore/test.md",
     "./test/stubs/ignore4/ignoredFolder/**",
@@ -151,6 +155,7 @@ test("Get ignores (no .eleventyignore  .gitignore exists but empty)", (t) => {
 
   t.deepEqual(evf.getIgnores(), [
     "./test/stubs/ignorelocalroot/node_modules/**",
+    "./test/stubs/ignorelocalroot/.git/**",
     "./test/stubs/ignorelocalroot/test.md",
     "./test/stubs/ignore5/_site/**",
   ]);
@@ -169,6 +174,7 @@ test("Get ignores (both .eleventyignore and .gitignore exists, but .gitignore is
 
   t.deepEqual(evf.getIgnores(), [
     "./test/stubs/ignorelocalroot/node_modules/**",
+    "./test/stubs/ignorelocalroot/.git/**",
     "./test/stubs/ignorelocalroot/test.md",
     "./test/stubs/ignore6/ignoredFolder/**",
     "./test/stubs/ignore6/ignoredFolder/ignored.md",
