@@ -81,12 +81,7 @@ class Pagination {
 
     this.size = data.pagination.size;
     this.alias = data.pagination.alias;
-    this.skip = data.pagination.skip || 0;
-    if (typeof this.skip !== "number") {
-      throw new Error(
-        `Missing pagination skip in front matter data${this.inputPathForErrorMessages}`
-      );
-    }
+
     // TODO do we need the full data set for serverless?
     this.fullDataSet = this._get(this.data, this._getDataKey());
 
@@ -113,7 +108,7 @@ class Pagination {
       }
     } else {
       // this returns an array and skips no elements by default
-      this.target = this._resolveItems().slice(this.skip);
+      this.target = this._resolveItems();
 
       // Serverless Shortcut when key is not found in data set (probably running local build and expected a :path param in data)
       // Only collections are relevant for templates that don’t have a permalink.build, they don’t have a templateContent and aren’t written to disk
@@ -207,6 +202,15 @@ class Pagination {
 
     if (this.data.pagination.filter) {
       result = result.filter((value) => !this.isFiltered(value));
+    }
+
+    if (this.data.pagination.skip) {
+      if (typeof this.data.pagination.skip !== "number") {
+        throw new Error(
+          `Missing pagination skip in front matter data${this.inputPathForErrorMessages}`
+        );
+      }
+      result = result.slice(this.data.pagination.skip);
     }
 
     return result;
