@@ -652,21 +652,23 @@ Arguments:
   }
 
   _shouldResetConfig() {
-    let configFilePath = this.eleventyConfig.getLocalProjectConfigFile();
-    let configFileChanged = this.watchManager.hasQueuedFile(configFilePath);
-    if (configFileChanged) {
+    let configFilePaths = this.eleventyConfig.getLocalProjectConfigFiles();
+    let configFilesChanged = this.watchManager.hasQueuedFiles(configFilePaths);
+    if (configFilesChanged) {
       return true;
     }
 
-    // Any dependencies of the config file changed
-    let configFileDependencies =
-      this.watchTargets.getDependenciesOf(configFilePath);
-    for (let dep of configFileDependencies) {
-      if (this.watchManager.hasQueuedFile(dep)) {
-        // Delete from require cache so that updates to the module are re-required
-        deleteRequireCache(TemplatePath.absolutePath(dep));
+    for (const configFilePath of configFilePaths) {
+      // Any dependencies of the config file changed
+      let configFileDependencies =
+        this.watchTargets.getDependenciesOf(configFilePath);
+      for (let dep of configFileDependencies) {
+        if (this.watchManager.hasQueuedFile(dep)) {
+          // Delete from require cache so that updates to the module are re-required
+          deleteRequireCache(TemplatePath.absolutePath(dep));
 
-        return true;
+          return true;
+        }
       }
     }
 
@@ -796,7 +798,7 @@ Arguments:
     this.watchTargets.add(this.eleventyFiles.getGlobWatcherFiles());
 
     // Watch the local project config file
-    this.watchTargets.add(this.eleventyConfig.getLocalProjectConfigFile());
+    this.watchTargets.add(this.eleventyConfig.getLocalProjectConfigFiles());
 
     // Template and Directory Data Files
     this.watchTargets.add(
@@ -834,7 +836,7 @@ Arguments:
 
     // Config file dependencies
     this.watchTargets.addDependencies(
-      this.eleventyConfig.getLocalProjectConfigFile(),
+      this.eleventyConfig.getLocalProjectConfigFiles(),
       filterOutGlobalDataFiles
     );
 

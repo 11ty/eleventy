@@ -53,9 +53,14 @@ class TemplateConfig {
      * @member {String} - Path to local project config.
      * @default .eleventy.js
      */
-    this.projectConfigPath = ".eleventy.js";
+    this.projectConfigPaths = [
+      ".eleventy.js",
+      ".eleventy.cjs",
+      "eleventy.config.js",
+      "eleventy.config.cjs",
+    ];
     if (projectConfigPath !== undefined) {
-      this.projectConfigPath = projectConfigPath;
+      this.projectConfigPaths = [projectConfigPath];
     }
 
     if (customRootConfig) {
@@ -84,9 +89,22 @@ class TemplateConfig {
    * @returns {String} - The normalised local project config file path.
    */
   getLocalProjectConfigFile() {
-    if (this.projectConfigPath) {
-      return TemplatePath.addLeadingDotSlash(this.projectConfigPath);
+    let configFiles = this.getLocalProjectConfigFiles();
+    // Add the configFiles[0] in case of a test, where no file exists on the file system
+    let configFile =
+      configFiles.find((path) => path && fs.existsSync(path)) || configFiles[0];
+    if (configFile) {
+      return configFile;
     }
+  }
+
+  getLocalProjectConfigFiles() {
+    if (this.projectConfigPaths && this.projectConfigPaths.length > 0) {
+      return TemplatePath.addLeadingDotSlashArray(
+        this.projectConfigPaths.filter((path) => path)
+      );
+    }
+    return [];
   }
 
   get inputDir() {
@@ -147,7 +165,11 @@ class TemplateConfig {
    * @param {String} path - The new config path.
    */
   setProjectConfigPath(path) {
-    this.projectConfigPath = path;
+    if (path !== undefined) {
+      this.projectConfigPaths = [path];
+    } else {
+      this.projectConfigPaths = [];
+    }
 
     if (this.hasConfigMerged) {
       // merge it again
@@ -249,13 +271,14 @@ class TemplateConfig {
    */
   mergeConfig() {
     let localConfig = {};
-    let path = this.projectConfigPath
-      ? TemplatePath.absolutePath(this.projectConfigPath)
-      : false;
+    let path = this.projectConfigPaths
+      .filter((path) => path)
+      .map((path) => TemplatePath.absolutePath(path))
+      .find((path) => fs.existsSync(path));
 
     debug(`Merging config with ${path}`);
 
-    if (path && fs.existsSync(path)) {
+    if (path) {
       try {
         // remove from require cache so it will grab a fresh copy
         deleteRequireCache(path);

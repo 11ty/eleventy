@@ -74,6 +74,15 @@ class EleventyWatch {
     return false;
   }
 
+  hasQueuedFiles(files) {
+    for (const file of files) {
+      if (this.hasQueuedFile(file)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   get pendingQueue() {
     if (!this._queue) {
       this._queue = [];
