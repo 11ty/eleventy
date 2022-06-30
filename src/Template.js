@@ -13,6 +13,7 @@ const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
 
 const ConsoleLogger = require("./Util/ConsoleLogger");
 const getDateFromGitLastUpdated = require("./Util/DateGitLastUpdated");
+const getDateFromGitFirstAdded = require("./Util/DateGitFirstAdded");
 
 const TemplateData = require("./TemplateData");
 const TemplateContent = require("./TemplateContent");
@@ -948,6 +949,15 @@ class Template extends TemplateContent {
       }
       if (data.date.toLowerCase() === "last modified") {
         return this._getDateInstance("ctimeMs");
+      }
+      if (data.date.toLowerCase() === "git created") {
+        let d = getDateFromGitFirstAdded(this.inputPath);
+        if (d) {
+          return d;
+        }
+
+        // return now if this file is not yet available in `git`
+        return new Date();
       }
       if (data.date.toLowerCase() === "created") {
         return this._getDateInstance("birthtimeMs");

@@ -2,6 +2,7 @@ const test = require("ava");
 const Eleventy = require("../src/Eleventy");
 const EleventyWatchTargets = require("../src/EleventyWatchTargets");
 const TemplateConfig = require("../src/TemplateConfig");
+const DateGitFirstAdded = require("../src/Util/DateGitFirstAdded.js");
 const DateGitLastUpdated = require("../src/Util/DateGitLastUpdated");
 const normalizeNewLines = require("./Util/normalizeNewLines");
 
@@ -547,4 +548,15 @@ ${JSON.stringify(arr)}`);
   let content = results.map((entry) => entry.content).sort();
   t.is(normalizeNewLines(content[0]), str);
   t.is(normalizeNewLines(content[1]), str);
+});
+
+test("#2224: date 'git created' populates page.date", async (t) => {
+  let elev = new Eleventy("./test/stubs-2224/", "./test/stubs-2224/_site");
+
+  let results = await elev.toJSON();
+  let [result] = results;
+
+  // This doesn’t test the validity of the function, only that it populates page.date.
+  let comparisonDate = DateGitFirstAdded("./test/stubs-2224/index.njk");
+  t.is(result.content.trim(), "" + comparisonDate.getTime());
 });
