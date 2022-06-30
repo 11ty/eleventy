@@ -446,6 +446,10 @@ test("#142: date 'git Last Modified' populates page.date", async (t) => {
   t.is(result.content.trim(), "" + comparisonDate.getTime());
 });
 
+test("DateGitLastUpdated returns undefined on nonexistent path", (t) => {
+  t.is(DateGitLastUpdated("./test/invalid.invalid"), undefined);
+});
+
 test("#2167: Pagination with permalink: false", async (t) => {
   let elev = new Eleventy("./test/stubs-2167/", "./test/stubs-2167/_site");
   elev.setDryRun(true);
@@ -559,4 +563,8 @@ test("#2224: date 'git created' populates page.date", async (t) => {
   // This doesn’t test the validity of the function, only that it populates page.date.
   let comparisonDate = DateGitFirstAdded("./test/stubs-2224/index.njk");
   t.is(result.content.trim(), "" + comparisonDate.getTime());
+});
+
+test("DateGitFirstAdded returns undefined on nonexistent path", async (t) => {
+  t.is(DateGitFirstAdded("./test/invalid.invalid"), undefined);
 });
