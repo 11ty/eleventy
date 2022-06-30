@@ -47,3 +47,11 @@ test("Array nested", (t) => {
   t.deepEqual(test.child[1], [2]);
   t.deepEqual(test.child[1][0], 2);
 });
+
+test("Fails for invalid target", (t) => {
+  t.throws(() => ProxyWrap(true, {}));
+});
+
+test("Fails for invalid fallback", (t) => {
+  t.throws(() => ProxyWrap({}, true));
+});
