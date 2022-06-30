@@ -326,7 +326,7 @@ test("De-duplicated ignores", (t) => {
   t.deepEqual(evf.getIgnores(), [
     "./test/stubs/ignore-dedupe/node_modules/**",
     "./test/stubs/ignore-dedupe/.git/**",
-    "./test/stubs/ignore-dedupe/ignoredFolder/**",
+    "./test/stubs/ignore-dedupe/ignoredFolder",
     "./test/stubs/ignore-dedupe/_site/**",
   ]);
 });
