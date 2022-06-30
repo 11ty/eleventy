@@ -297,22 +297,23 @@ class EleventyFiles {
 
   getIgnores() {
     let rootDirectory = this.localPathRoot || ".";
-    let files = [];
+    let files = new Set();
 
     for (let ignore of this.config.ignores) {
-      files = files.concat(TemplateGlob.normalizePath(rootDirectory, ignore));
+      files.add(TemplateGlob.normalizePath(rootDirectory, ignore));
     }
 
     if (this.config.useGitIgnore) {
-      files = files.concat(
-        EleventyFiles.getFileIgnores([
-          TemplatePath.join(rootDirectory, ".gitignore"),
-        ])
-      );
+      for (let ignore of EleventyFiles.getFileIgnores([
+        TemplatePath.join(rootDirectory, ".gitignore"),
+      ])) {
+        files.add(ignore);
+      }
     }
 
+    // testing API
     if (this.eleventyIgnoreContent !== false) {
-      files = files.concat(this.eleventyIgnoreContent);
+      files.add(this.eleventyIgnoreContent);
     } else {
       let absoluteInputDir = TemplatePath.absolutePath(this.inputDir);
       let eleventyIgnoreFiles = [
@@ -324,15 +325,17 @@ class EleventyFiles {
         );
       }
 
-      files = files.concat(EleventyFiles.getFileIgnores(eleventyIgnoreFiles));
+      for (let ignore of EleventyFiles.getFileIgnores(eleventyIgnoreFiles)) {
+        files.add(ignore);
+      }
     }
 
     // ignore output dir unless that would exclude all input
     if (!TemplatePath.startsWithSubPath(this.inputDir, this.outputDir)) {
-      files = files.concat(TemplateGlob.map(this.outputDir + "/**"));
+      files.add(TemplateGlob.map(this.outputDir + "/**"));
     }
 
-    return files;
+    return Array.from(files);
   }
 
   getIncludesDir() {
@@ -471,9 +474,11 @@ class EleventyFiles {
   /* Ignored by `eleventy --watch` */
   getGlobWatcherIgnores() {
     // convert to format without ! since they are passed in as a separate argument to glob watcher
-    return this.fileIgnores.map((ignore) =>
+    let entries = this.fileIgnores.map((ignore) =>
       TemplatePath.stripLeadingDotSlash(ignore)
     );
+    // de-duplicated
+    return Array.from(new Set(entries));
   }
 
   _getIncludesAndDataDirs() {

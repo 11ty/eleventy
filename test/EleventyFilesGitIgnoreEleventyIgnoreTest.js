@@ -305,3 +305,28 @@ test("Single input file is in the output directory, issues #186", (t) => {
     []
   );
 });
+
+test("De-duplicated ignores", (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let evf = new EleventyFiles(
+    "test/stubs/ignore-dedupe",
+    "test/stubs/ignore-dedupe/_site",
+    [],
+    eleventyConfig
+  );
+  evf.init();
+
+  evf._setLocalPathRoot("./test/stubs/ignore-dedupe");
+
+  t.deepEqual(evf.getGlobWatcherFiles(), [
+    "./test/stubs/ignore-dedupe/_includes/**",
+    "./test/stubs/ignore-dedupe/_data/**",
+  ]);
+
+  t.deepEqual(evf.getIgnores(), [
+    "./test/stubs/ignore-dedupe/node_modules/**",
+    "./test/stubs/ignore-dedupe/.git/**",
+    "./test/stubs/ignore-dedupe/ignoredFolder/**",
+    "./test/stubs/ignore-dedupe/_site/**",
+  ]);
+});
