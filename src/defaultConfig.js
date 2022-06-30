@@ -14,7 +14,10 @@ module.exports = function (config) {
     let pathPrefix = pathPrefixOverride || templateConfig.getPathPrefix();
     return urlFilter.call(this, url, pathPrefix);
   });
-  config.addFilter("log", console.log);
+  config.addFilter("log", (input, ...messages) => {
+    console.log(input, ...messages);
+    return input;
+  });
 
   config.addFilter("serverlessUrl", serverlessUrlFilter);
 
