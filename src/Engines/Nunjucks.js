@@ -190,7 +190,10 @@ class Nunjucks extends TemplateEngine {
           shortcodeFn
             .call(Nunjucks._normalizeShortcodeContext(context), ...argArray)
             .then(function (returnValue) {
-              resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
+              resolve(
+                null,
+                new NunjucksLib.runtime.SafeString("" + returnValue)
+              );
             })
             .catch(function (e) {
               resolve(
@@ -204,12 +207,11 @@ class Nunjucks extends TemplateEngine {
             });
         } else {
           try {
-            return new NunjucksLib.runtime.SafeString(
-              shortcodeFn.call(
-                Nunjucks._normalizeShortcodeContext(context),
-                ...argArray
-              )
+            let ret = shortcodeFn.call(
+              Nunjucks._normalizeShortcodeContext(context),
+              ...argArray
             );
+            return new NunjucksLib.runtime.SafeString("" + ret);
           } catch (e) {
             throw new EleventyShortcodeError(
               `Error with Nunjucks shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(

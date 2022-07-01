@@ -489,6 +489,15 @@ test("Nunjucks Shortcode Safe Output", async (t) => {
   );
 });
 
+test("Nunjucks Shortcode return non-string value", async (t) => {
+  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  tr.engine.addShortcode("getYear", function () {
+    return 2022;
+  });
+
+  t.is(await tr._testRender("{% getYear %}"), "2022");
+});
+
 test("Nunjucks Paired Shortcode", async (t) => {
   t.plan(2);
 
