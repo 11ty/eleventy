@@ -1,4 +1,5 @@
 const path = require("path");
+const PathNormalizer = require("./PathNormalizer.js");
 
 class PathPrefixer {
   static normalizePathPrefix(pathPrefix) {
@@ -12,10 +13,7 @@ class PathPrefixer {
   }
 
   static joinUrlParts(...parts) {
-    return path
-      .join(...parts)
-      .split(path.sep)
-      .join("/");
+    return PathNormalizer.normalizeSeperator(path.join(...parts));
   }
 }
 
