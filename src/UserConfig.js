@@ -91,8 +91,8 @@ class UserConfig {
     this.dataFilterSelectors = new Set();
 
     this.libraryAmendments = {};
-
     this.serverPassthroughCopyBehavior = "passthrough";
+    this.urlTransforms = [];
   }
 
   versionCheck(expected) {
@@ -812,6 +812,10 @@ class UserConfig {
     this.serverPassthroughCopyBehavior = behavior;
   }
 
+  addUrlTransform(callback) {
+    this.urlTransforms.push(callback);
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
@@ -866,6 +870,7 @@ class UserConfig {
       dataFilterSelectors: this.dataFilterSelectors,
       libraryAmendments: this.libraryAmendments,
       serverPassthroughCopyBehavior: this.serverPassthroughCopyBehavior,
+      urlTransforms: this.urlTransforms,
     };
   }
 }

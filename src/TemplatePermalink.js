@@ -66,6 +66,14 @@ class TemplatePermalink {
     this.extraPaginationSubdir = extraSubdir || "";
   }
 
+  setUrlTransforms(transforms) {
+    this._urlTransforms = transforms;
+  }
+
+  get urlTransforms() {
+    return this._urlTransforms || [];
+  }
+
   setServerlessPathData(data) {
     this.serverlessPathData = data;
   }
@@ -131,12 +139,25 @@ class TemplatePermalink {
     let transformedLink = this.toOutputPath();
     let original =
       (transformedLink.charAt(0) !== "/" ? "/" : "") + transformedLink;
-    let needle = "/index.html";
-    if (original === needle) {
-      return "/";
-    } else if (original.slice(-1 * needle.length) === needle) {
-      return original.slice(0, original.length - needle.length) + "/";
+
+    for (let transform of this.urlTransforms) {
+      original = transform({ outputPath: original }) ?? original;
     }
+
+    let needleHtml = "/index.html";
+    let needleBare = "/index";
+    let needleBareTrailingSlash = "/index/";
+    if (original.endsWith(needleHtml)) {
+      return original.slice(0, original.length - needleHtml.length) + "/";
+    } else if (original.endsWith(needleBare)) {
+      return original.slice(0, original.length - needleBare.length) + "/";
+    } else if (original.endsWith(needleBareTrailingSlash)) {
+      return (
+        original.slice(0, original.length - needleBareTrailingSlash.length) +
+        "/"
+      );
+    }
+
     return original;
   }
 
@@ -183,12 +204,13 @@ class TemplatePermalink {
     suffix,
     fileExtension = "html"
   ) {
-    let hasDupeFolder = TemplatePermalink._hasDuplicateFolder(
-      dir,
-      filenameNoExt
-    );
     let path;
     if (fileExtension === "html") {
+      let hasDupeFolder = TemplatePermalink._hasDuplicateFolder(
+        dir,
+        filenameNoExt
+      );
+
       path =
         (dir ? dir + "/" : "") +
         (filenameNoExt !== "index" && !hasDupeFolder

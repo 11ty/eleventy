@@ -265,3 +265,231 @@ test("Permalink Object, serverless with path params", (t) => {
   });
   t.is(perm.toHref(), "/serverless/yeearg/");
 });
+
+test("Permalink generate apache content negotiation #761", (t) => {
+  let tp = new TemplatePermalink("index.es.html");
+  tp.setUrlTransforms([
+    function ({ outputPath }) {
+      return "/";
+    },
+  ]);
+
+  t.is(tp.toHref(), "/");
+  t.is(tp.toOutputPath(), "index.es.html");
+
+  // Note that generate does some preprocessing to the raw permalink value (compared to `new TemplatePermalink`)
+  let tp1 = TemplatePermalink.generate("", "index.es");
+  tp1.setUrlTransforms([
+    function ({ outputPath }) {
+      return "/";
+    },
+  ]);
+  t.is(tp1.toHref(), "/");
+  // best paired with https://www.11ty.dev/docs/data-eleventy-supplied/#filepathstem for index.es.html
+  t.is(tp1.toOutputPath(), "index.es/index.html");
+});
+
+test("Permalink generate apache content negotiation with subdirectory #761", (t) => {
+  let tp = new TemplatePermalink("test/index.es.html");
+  tp.setUrlTransforms([
+    function ({ outputPath }) {
+      return "/test/";
+    },
+  ]);
+
+  t.is(tp.toHref(), "/test/");
+  t.is(tp.toOutputPath(), "test/index.es.html");
+
+  // Note that generate does some preprocessing to the raw permalink value (compared to `new TemplatePermalink`)
+  let tp1 = TemplatePermalink.generate("test", "index.es");
+  tp1.setUrlTransforms([
+    function ({ outputPath }) {
+      return "/test/";
+    },
+  ]);
+
+  t.is(tp1.toHref(), "/test/");
+  // best paired with https://www.11ty.dev/docs/data-eleventy-supplied/#filepathstem for test/index.es.html
+  t.is(tp1.toOutputPath(), "test/index.es/index.html");
+});
+
+test("Permalink generate apache content negotiation non-index file name #761", (t) => {
+  // Note that generate does some preprocessing to the raw permalink value (compared to `new TemplatePermalink`)
+  let tp = TemplatePermalink.generate("permalinksubfolder", "about.es");
+
+  t.is(tp.toHref(), "/permalinksubfolder/about.es/");
+  t.is(tp.toOutputPath(), "permalinksubfolder/about.es/index.html");
+});
+
+test("Permalink generate with urlTransforms #761", (t) => {
+  // Note that TemplatePermalink.generate is used by Template and different from new TemplatePermalink
+  let tp = TemplatePermalink.generate("permalinksubfolder", "index.es");
+
+  tp.setUrlTransforms([
+    function ({ outputPath }) {
+      return "/permalinksubfolder/";
+    },
+  ]);
+
+  t.is(tp.toHref(), "/permalinksubfolder/");
+  // best paired with https://www.11ty.dev/docs/data-eleventy-supplied/#filepathstem for permalinksubfolder/index.es.html
+  t.is(tp.toOutputPath(), "permalinksubfolder/index.es/index.html");
+});
+
+test("Permalink generate with urlTransforms (skip via undefined) #761", (t) => {
+  // Note that TemplatePermalink.generate is used by Template and different from new TemplatePermalink
+  let tp = TemplatePermalink.generate("permalinksubfolder", "index.es");
+
+  tp.setUrlTransforms([
+    function ({ outputPath }) {
+      // return nothing
+    },
+  ]);
+
+  t.is(tp.toHref(), "/permalinksubfolder/index.es/");
+  // best paired with https://www.11ty.dev/docs/data-eleventy-supplied/#filepathstem for permalinksubfolder/index.es.html
+  t.is(tp.toOutputPath(), "permalinksubfolder/index.es/index.html");
+});
+
+test("Permalink generate with 2 urlTransforms #761", (t) => {
+  // Note that TemplatePermalink.generate is used by Template and different from new TemplatePermalink
+  let tp = TemplatePermalink.generate("permalinksubfolder", "index.es");
+  tp.setUrlTransforms([
+    function ({ outputPath }) {
+      return "/abc/";
+    },
+    function ({ outputPath }) {
+      return "/def/";
+    },
+  ]);
+
+  t.is(tp.toHref(), "/def/");
+  // best paired with https://www.11ty.dev/docs/data-eleventy-supplied/#filepathstem for permalinksubfolder/index.es.html
+  t.is(tp.toOutputPath(), "permalinksubfolder/index.es/index.html");
+});
+
+test("Permalink generate with urlTransforms returns index.html #761", (t) => {
+  // Note that TemplatePermalink.generate is used by Template and different from new TemplatePermalink
+  let tp = TemplatePermalink.generate("permalinksubfolder", "index.es");
+  tp.setUrlTransforms([
+    function ({ outputPath }) {
+      return "/abc/index.html";
+    },
+  ]);
+
+  t.is(tp.toHref(), "/abc/");
+  // best paired with https://www.11ty.dev/docs/data-eleventy-supplied/#filepathstem for permalinksubfolder/index.es.html
+  t.is(tp.toOutputPath(), "permalinksubfolder/index.es/index.html");
+});
+
+test("Permalink generate with urlTransforms code (index file) #761", (t) => {
+  let tp1 = new TemplatePermalink("index.es.html");
+
+  tp1.setUrlTransforms([
+    function ({ outputPath }) {
+      if ((outputPath || "").match(new RegExp(".[a-z]{2}.html$", "i"))) {
+        // trailing slash
+        return outputPath.slice(0, -1 * ".en.html".length) + "/";
+      }
+    },
+  ]);
+
+  t.is(tp1.toHref(), "/");
+
+  let tp2 = new TemplatePermalink("index.es.html");
+
+  tp2.setUrlTransforms([
+    function ({ outputPath }) {
+      if ((outputPath || "").match(new RegExp(".[a-z]{2}.html$", "i"))) {
+        // no trailing slash
+        return outputPath.slice(0, -1 * ".en.html".length);
+      }
+    },
+  ]);
+
+  t.is(tp2.toHref(), "/");
+});
+
+test("Permalink generate with urlTransforms code (not index file) #761", (t) => {
+  let tp1 = new TemplatePermalink("about.es.html");
+
+  tp1.setUrlTransforms([
+    function ({ outputPath }) {
+      if ((outputPath || "").match(new RegExp(".[a-z]{2}.html$", "i"))) {
+        // trailing slash
+        return outputPath.slice(0, -1 * ".en.html".length) + "/";
+      }
+    },
+  ]);
+
+  t.is(tp1.toHref(), "/about/");
+
+  let tp2 = new TemplatePermalink("about.es.html");
+
+  tp2.setUrlTransforms([
+    function ({ outputPath }) {
+      if ((outputPath || "").match(new RegExp(".[a-z]{2}.html$", "i"))) {
+        // no trailing slash
+        return outputPath.slice(0, -1 * ".en.html".length);
+      }
+    },
+  ]);
+
+  t.is(tp2.toHref(), "/about");
+});
+
+test("Permalink generate with urlTransforms code (index file with subdir) #761", (t) => {
+  let tp1 = new TemplatePermalink("subdir/index.es.html");
+
+  tp1.setUrlTransforms([
+    function ({ outputPath }) {
+      if ((outputPath || "").match(new RegExp(".[a-z]{2}.html$", "i"))) {
+        // trailing slash
+        return outputPath.slice(0, -1 * ".en.html".length) + "/";
+      }
+    },
+  ]);
+
+  t.is(tp1.toHref(), "/subdir/");
+
+  let tp2 = new TemplatePermalink("subdir/index.es.html");
+
+  tp2.setUrlTransforms([
+    function ({ outputPath }) {
+      if ((outputPath || "").match(new RegExp(".[a-z]{2}.html$", "i"))) {
+        // no trailing slash
+        return outputPath.slice(0, -1 * ".en.html".length);
+      }
+    },
+  ]);
+
+  t.is(tp2.toHref(), "/subdir/");
+});
+
+test("Permalink generate with urlTransforms code (not-index file with subdir) #761", (t) => {
+  let tp1 = new TemplatePermalink("subdir/about.es.html");
+
+  tp1.setUrlTransforms([
+    function ({ outputPath }) {
+      if ((outputPath || "").match(new RegExp(".[a-z]{2}.html$", "i"))) {
+        // trailing slash
+        return outputPath.slice(0, -1 * ".en.html".length) + "/";
+      }
+    },
+  ]);
+
+  t.is(tp1.toHref(), "/subdir/about/");
+
+  let tp2 = new TemplatePermalink("subdir/about.es.html");
+
+  tp2.setUrlTransforms([
+    function ({ outputPath }) {
+      if ((outputPath || "").match(new RegExp(".[a-z]{2}.html$", "i"))) {
+        // no trailing slash
+        return outputPath.slice(0, -1 * ".en.html".length);
+      }
+    },
+  ]);
+
+  t.is(tp2.toHref(), "/subdir/about");
+});

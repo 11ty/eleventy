@@ -171,6 +171,8 @@ class Template extends TemplateContent {
       permalinkValue,
       this.extraOutputSubdirectory
     );
+    perm.setUrlTransforms(this.config.urlTransforms);
+
     if (this.templateData) {
       perm.setServerlessPathData(this.templateData.getServerlessPathData());
     }
@@ -274,13 +276,15 @@ class Template extends TemplateContent {
     }
 
     // No `permalink` specified in data cascade, do the default
-    return TemplatePermalink.generate(
+    let p = TemplatePermalink.generate(
       this.getTemplateSubfolder(),
       this.baseFile,
       this.extraOutputSubdirectory,
       this.htmlIOException ? this.config.htmlOutputSuffix : "",
       this.engine.defaultTemplateFileExtension
     );
+    p.setUrlTransforms(this.config.urlTransforms);
+    return p;
   }
 
   async usePermalinkRoot() {
