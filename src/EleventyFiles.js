@@ -303,31 +303,13 @@ class EleventyFiles {
       files.add(TemplateGlob.normalizePath(rootDirectory, ignore));
     }
 
-    if (this.config.useGitIgnore) {
-      for (let ignore of EleventyFiles.getFileIgnores([
-        TemplatePath.join(rootDirectory, ".gitignore"),
-      ])) {
-        files.add(ignore);
-      }
+    for (let ignore of EleventyFiles.getFileIgnores(this.getIgnoreFiles())) {
+      files.add(ignore);
     }
 
     // testing API
     if (this.eleventyIgnoreContent !== false) {
       files.add(this.eleventyIgnoreContent);
-    } else {
-      let absoluteInputDir = TemplatePath.absolutePath(this.inputDir);
-      let eleventyIgnoreFiles = [
-        TemplatePath.join(rootDirectory, ".eleventyignore"),
-      ];
-      if (rootDirectory !== absoluteInputDir) {
-        eleventyIgnoreFiles.push(
-          TemplatePath.join(this.inputDir, ".eleventyignore")
-        );
-      }
-
-      for (let ignore of EleventyFiles.getFileIgnores(eleventyIgnoreFiles)) {
-        files.add(ignore);
-      }
     }
 
     // ignore output dir unless that would exclude all input
@@ -336,6 +318,25 @@ class EleventyFiles {
     }
 
     return Array.from(files);
+  }
+
+  getIgnoreFiles() {
+    let ignoreFiles = [];
+    let rootDirectory = this.localPathRoot || ".";
+
+    if (this.config.useGitIgnore) {
+      ignoreFiles.push(TemplatePath.join(rootDirectory, ".gitignore"));
+    }
+
+    if (this.eleventyIgnoreContent === false) {
+      let absoluteInputDir = TemplatePath.absolutePath(this.inputDir);
+      ignoreFiles.push(TemplatePath.join(rootDirectory, ".eleventyignore"));
+      if (rootDirectory !== absoluteInputDir) {
+        ignoreFiles.push(TemplatePath.join(this.inputDir, ".eleventyignore"));
+      }
+    }
+
+    return ignoreFiles;
   }
 
   getIncludesDir() {
