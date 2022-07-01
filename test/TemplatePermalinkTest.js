@@ -1,5 +1,6 @@
 const test = require("ava");
 const TemplatePermalink = require("../src/TemplatePermalink");
+const { generate } = TemplatePermalink;
 
 test("Simple straight permalink", (t) => {
   t.is(
@@ -75,67 +76,61 @@ test("Permalink with pagination subdir", (t) => {
 });
 
 test("Permalink generate", (t) => {
-  let gen = TemplatePermalink.generate;
-
-  t.is(gen("./", "index").toOutputPath(), "index.html");
-  t.is(gen("./", "index").toHref(), "/");
-  t.is(gen(".", "index").toOutputPath(), "index.html");
-  t.is(gen(".", "index").toHref(), "/");
-  t.is(gen(".", "test").toOutputPath(), "test/index.html");
-  t.is(gen(".", "test").toHref(), "/test/");
-  t.is(gen(".", "test", "0/").toOutputPath(), "test/0/index.html");
-  t.is(gen(".", "test", "0/").toHref(), "/test/0/");
-  t.is(gen(".", "test", "1/").toOutputPath(), "test/1/index.html");
-  t.is(gen(".", "test", "1/").toHref(), "/test/1/");
+  t.is(generate("./", "index").toOutputPath(), "index.html");
+  t.is(generate("./", "index").toHref(), "/");
+  t.is(generate(".", "index").toOutputPath(), "index.html");
+  t.is(generate(".", "index").toHref(), "/");
+  t.is(generate(".", "test").toOutputPath(), "test/index.html");
+  t.is(generate(".", "test").toHref(), "/test/");
+  t.is(generate(".", "test", "0/").toOutputPath(), "test/0/index.html");
+  t.is(generate(".", "test", "0/").toHref(), "/test/0/");
+  t.is(generate(".", "test", "1/").toOutputPath(), "test/1/index.html");
+  t.is(generate(".", "test", "1/").toHref(), "/test/1/");
 });
 
 test("Permalink generate with suffix", (t) => {
-  let gen = TemplatePermalink.generate;
-
-  t.is(gen(".", "test", null, "-o").toOutputPath(), "test/index-o.html");
-  t.is(gen(".", "test", null, "-o").toHref(), "/test/index-o.html");
-  t.is(gen(".", "test", "1/", "-o").toOutputPath(), "test/1/index-o.html");
-  t.is(gen(".", "test", "1/", "-o").toHref(), "/test/1/index-o.html");
+  t.is(generate(".", "test", null, "-o").toOutputPath(), "test/index-o.html");
+  t.is(generate(".", "test", null, "-o").toHref(), "/test/index-o.html");
+  t.is(generate(".", "test", "1/", "-o").toOutputPath(), "test/1/index-o.html");
+  t.is(generate(".", "test", "1/", "-o").toHref(), "/test/1/index-o.html");
 });
 
 test("Permalink generate with new extension", (t) => {
-  let gen = TemplatePermalink.generate;
-
-  t.is(gen(".", "test", null, null, "css").toOutputPath(), "test.css");
-  t.is(gen(".", "test", null, null, "css").toHref(), "/test.css");
-  t.is(gen(".", "test", "1/", null, "css").toOutputPath(), "1/test.css");
-  t.is(gen(".", "test", "1/", null, "css").toHref(), "/1/test.css");
+  t.is(generate(".", "test", null, null, "css").toOutputPath(), "test.css");
+  t.is(generate(".", "test", null, null, "css").toHref(), "/test.css");
+  t.is(generate(".", "test", "1/", null, "css").toOutputPath(), "1/test.css");
+  t.is(generate(".", "test", "1/", null, "css").toHref(), "/1/test.css");
 });
 
 test("Permalink generate with subfolders", (t) => {
-  let gen = TemplatePermalink.generate;
-
   t.is(
-    gen("permalinksubfolder/", "index").toOutputPath(),
+    generate("permalinksubfolder/", "index").toOutputPath(),
     "permalinksubfolder/index.html"
   );
   t.is(
-    gen("permalinksubfolder/", "test").toOutputPath(),
+    generate("permalinksubfolder/", "test").toOutputPath(),
     "permalinksubfolder/test/index.html"
   );
   t.is(
-    gen("permalinksubfolder/", "test", "1/", "-o").toOutputPath(),
+    generate("permalinksubfolder/", "test", "1/", "-o").toOutputPath(),
     "permalinksubfolder/test/1/index-o.html"
   );
 
-  t.is(gen("permalinksubfolder/", "index").toHref(), "/permalinksubfolder/");
   t.is(
-    gen("permalinksubfolder/", "test").toHref(),
+    generate("permalinksubfolder/", "index").toHref(),
+    "/permalinksubfolder/"
+  );
+  t.is(
+    generate("permalinksubfolder/", "test").toHref(),
     "/permalinksubfolder/test/"
   );
   t.is(
-    gen("permalinksubfolder/", "test", "1/", "-o").toHref(),
+    generate("permalinksubfolder/", "test", "1/", "-o").toHref(),
     "/permalinksubfolder/test/1/index-o.html"
   );
 });
 
 test("Permalink matching folder and filename", (t) => {
-  let gen = TemplatePermalink.generate;
   let hasDupe = TemplatePermalink._hasDuplicateFolder;
   t.is(hasDupe("subfolder", "component"), false);
   t.is(hasDupe("subfolder/", "component"), false);
@@ -144,8 +139,11 @@ test("Permalink matching folder and filename", (t) => {
   t.is(hasDupe("component", "component"), true);
   t.is(hasDupe("component/", "component"), true);
 
-  t.is(gen("component/", "component").toOutputPath(), "component/index.html");
-  t.is(gen("component/", "component").toHref(), "/component/");
+  t.is(
+    generate("component/", "component").toOutputPath(),
+    "component/index.html"
+  );
+  t.is(generate("component/", "component").toHref(), "/component/");
 });
 
 test("Permalink Object, just build", (t) => {
