@@ -5,6 +5,7 @@ module.exports = function (str, options = {}) {
     "" + str,
     Object.assign(
       {
+        // lowercase: true, // default
         decamelize: false,
       },
       options
