@@ -632,8 +632,8 @@ class TemplateMap {
       for (let page of entry._pages) {
         if (page.outputPath === false || page.url === false) {
           // do nothing (also serverless)
-        } else if (!permalinks[page.url]) {
-          permalinks[page.url] = [entry.inputPath];
+        } else if (!permalinks[page.outputPath]) {
+          permalinks[page.outputPath] = [entry.inputPath];
         } else {
           warnings[
             page.outputPath
@@ -641,14 +641,14 @@ class TemplateMap {
             page.outputPath
           }\`. Use distinct \`permalink\` values to resolve this conflict.
   1. ${entry.inputPath}
-${permalinks[page.url]
+${permalinks[page.outputPath]
   .map(function (inputPath, index) {
     return `  ${index + 2}. ${inputPath}\n`;
   })
   .join("")}
 `;
 
-          permalinks[page.url].push(entry.inputPath);
+          permalinks[page.outputPath].push(entry.inputPath);
         }
       }
     }
