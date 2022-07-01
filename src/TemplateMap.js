@@ -8,6 +8,7 @@ const debug = require("debug")("Eleventy:TemplateMap");
 const debugDev = require("debug")("Dev:Eleventy:TemplateMap");
 
 const EleventyBaseError = require("./EleventyBaseError");
+const TemplateData = require("./TemplateData.js");
 
 class TemplateMapConfigError extends EleventyBaseError {}
 
@@ -124,22 +125,17 @@ class TemplateMap {
         graph.addNode(entry.inputPath);
       }
 
-      if (!entry.data.eleventyExcludeFromCollections) {
-        // collections.all
-        graph.addDependency(tagPrefix + "all", entry.inputPath);
-
-        if (entry.data.tags) {
-          for (let tag of entry.data.tags) {
-            let tagWithPrefix = tagPrefix + tag;
-            if (!graph.hasNode(tagWithPrefix)) {
-              graph.addNode(tagWithPrefix);
-            }
-
-            // collections.tagName
-            // Dependency from tag to inputPath
-            graph.addDependency(tagWithPrefix, entry.inputPath);
-          }
+      for (let collection of TemplateData.getIncludedCollectionNames(
+        entry.data
+      )) {
+        let collectionWithPrefix = tagPrefix + collection;
+        if (!graph.hasNode(collectionWithPrefix)) {
+          graph.addNode(collectionWithPrefix);
         }
+
+        // collections.tagName
+        // Dependency from tag to inputPath
+        graph.addDependency(collectionWithPrefix, entry.inputPath);
       }
     }
 
@@ -175,21 +171,16 @@ class TemplateMap {
         }
         graph.addDependency(entry.inputPath, tagPrefix + paginationTagTarget);
 
-        if (!entry.data.eleventyExcludeFromCollections) {
-          // collections.all
-          graph.addDependency(tagPrefix + "all", entry.inputPath);
-
-          if (entry.data.tags) {
-            for (let tag of entry.data.tags) {
-              let tagWithPrefix = tagPrefix + tag;
-              if (!graph.hasNode(tagWithPrefix)) {
-                graph.addNode(tagWithPrefix);
-              }
-              // collections.tagName
-              // Dependency from tag to inputPath
-              graph.addDependency(tagWithPrefix, entry.inputPath);
-            }
+        for (let collection of TemplateData.getIncludedCollectionNames(
+          entry.data
+        )) {
+          let collectionWithPrefix = tagPrefix + collection;
+          if (!graph.hasNode(collectionWithPrefix)) {
+            graph.addNode(collectionWithPrefix);
           }
+          // collections.tagName
+          // Dependency from tag to inputPath
+          graph.addDependency(collectionWithPrefix, entry.inputPath);
         }
       }
     }
@@ -312,7 +303,7 @@ class TemplateMap {
               (map.data.pagination &&
                 map.data.pagination.addAllPagesToCollections)
             ) {
-              if (!map.data.eleventyExcludeFromCollections) {
+              if (map.data.eleventyExcludeFromCollections !== true) {
                 // TODO do we need .template in collection entries?
                 this.collection.add(page);
               }

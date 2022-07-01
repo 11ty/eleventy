@@ -6,6 +6,7 @@ const { isPlainObject } = require("@11ty/eleventy-utils");
 const EleventyBaseError = require("../EleventyBaseError");
 const { DeepCopy } = require("../Util/Merge");
 const { ProxyWrap } = require("../Util/ProxyWrap");
+const TemplateData = require("../TemplateData.js");
 
 class PaginationConfigError extends EleventyBaseError {}
 class PaginationError extends EleventyBaseError {}
@@ -45,16 +46,13 @@ class Pagination {
   }
 
   circularReferenceCheck(data) {
-    if (data.eleventyExcludeFromCollections) {
-      return;
-    }
-
     let key = data.pagination.data;
-    let tags = data.tags || [];
-    for (let tag of tags) {
+    let includedTags = TemplateData.getIncludedTagNames(data);
+
+    for (let tag of includedTags) {
       if (`collections.${tag}` === key) {
         throw new PaginationError(
-          `Pagination circular reference${this.inputPathForErrorMessages}, data:\`${key}\` iterates over both the \`${tag}\` tag and also supplies pages to that tag.`
+          `Pagination circular reference${this.inputPathForErrorMessages}, data:\`${key}\` iterates over both the \`${tag}\` collection and also supplies pages to that collection.`
         );
       }
     }

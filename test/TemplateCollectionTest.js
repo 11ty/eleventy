@@ -18,7 +18,18 @@ function getNewTemplate(filename, input, output, eleventyConfig) {
 }
 
 function getNewTemplateByNumber(num, eleventyConfig) {
-  let extensions = ["md", "md", "md", "md", "md", "html", "njk"];
+  let extensions = [
+    "md",
+    "md",
+    "md",
+    "md",
+    "md",
+    "html",
+    "njk",
+    "md",
+    "md",
+    "md",
+  ];
 
   return getNewTemplateForTests(
     `./test/stubs/collection/test${num}.${extensions[num - 1]}`,
@@ -295,4 +306,24 @@ test("Sort in place (issue #352)", async (t) => {
   t.deepEqual(posts3[0].template, tmpl5);
   t.deepEqual(posts3[1].template, tmpl1);
   t.deepEqual(posts3[2].template, tmpl4);
+});
+
+test("getFilteredByTag with excludes", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let tmpl8 = getNewTemplateByNumber(8, eleventyConfig);
+  let tmpl9 = getNewTemplateByNumber(9, eleventyConfig);
+  let tmpl10 = getNewTemplateByNumber(10, eleventyConfig);
+
+  let c = new Collection();
+  await addTemplate(c, tmpl8);
+  await addTemplate(c, tmpl9);
+  await addTemplate(c, tmpl10);
+
+  let posts = c.getFilteredByTag("post");
+  t.is(posts.length, 0);
+
+  let cats = c.getFilteredByTag("office");
+  t.is(cats.length, 2);
+  t.deepEqual(cats[0].template, tmpl9);
+  t.deepEqual(cats[1].template, tmpl10);
 });

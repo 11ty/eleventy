@@ -653,6 +653,51 @@ class TemplateData {
       return this.configApiGlobalData.eleventy.serverless.path;
     }
   }
+
+  static getNormalizedExcludedCollections(data) {
+    let excludes = [];
+    if ("eleventyExcludeFromCollections" in data) {
+      if (data.eleventyExcludeFromCollections !== true) {
+        if (Array.isArray(data.eleventyExcludeFromCollections)) {
+          excludes = data.eleventyExcludeFromCollections;
+        } else if (typeof data.eleventyExcludeFromCollections === "string") {
+          excludes = [data.eleventyExcludeFromCollections];
+        }
+      }
+    }
+    return {
+      excludes,
+      excludeAll: data.eleventyExcludeFromCollections === true,
+    };
+  }
+
+  static getIncludedCollectionNames(data) {
+    if ("tags" in data) {
+      let excludes = TemplateData.getNormalizedExcludedCollections(data);
+      if (excludes.excludeAll) {
+        return [];
+      } else {
+        return ["all", ...data.tags].filter(
+          (tag) => !excludes.excludes.includes(tag)
+        );
+      }
+    } else {
+      return ["all"];
+    }
+  }
+
+  static getIncludedTagNames(data) {
+    if ("tags" in data) {
+      let excludes = TemplateData.getNormalizedExcludedCollections(data);
+      if (excludes.excludeAll) {
+        return [];
+      } else {
+        return data.tags.filter((tag) => !excludes.excludes.includes(tag));
+      }
+    } else {
+      return [];
+    }
+  }
 }
 
 module.exports = TemplateData;

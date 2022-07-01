@@ -1275,9 +1275,9 @@ test("TemplateMap circular references (map.templateContent) using eleventyExclud
   t.falsy(map[0].data.collections);
 
   t.deepEqual(tm.getMappedDependencies(), [
+    "./test/stubs/issue-522/excluded.md",
     "./test/stubs/issue-522/template.md",
     "___TAG___all",
-    "./test/stubs/issue-522/excluded.md",
   ]);
 
   await tm.cache();

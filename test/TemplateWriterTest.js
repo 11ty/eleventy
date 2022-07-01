@@ -112,7 +112,7 @@ test("_testGetAllTags", async (t) => {
   let templateMap = await tw._createTemplateMap(paths);
   let tags = templateMap._testGetAllTags();
 
-  t.deepEqual(tags.sort(), ["cat", "dog", "post"].sort());
+  t.deepEqual(tags.sort(), ["cat", "dog", "post", "office"].sort());
 });
 
 test("Collection of files sorted by date", async (t) => {
