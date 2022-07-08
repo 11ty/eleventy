@@ -1162,3 +1162,4 @@ module.exports.EleventyServerless = require("./Serverless");
 module.exports.EleventyServerlessBundlerPlugin = require("./Plugins/ServerlessBundlerPlugin");
 module.exports.EleventyRenderPlugin = require("./Plugins/RenderPlugin");
 module.exports.EleventyEdgePlugin = require("./Plugins/EdgePlugin");
+module.exports.EleventyI18nPlugin = require("./Plugins/I18nPlugin");

@@ -360,6 +360,11 @@ class TemplateMap {
       }.bind(this)
     );
 
+    await this.config.events.emit("eleventy.contentMap", {
+      inputPathToUrl: this.generateContentMap(orderedMap),
+      urlToInputPath: this.generateUrlMap(orderedMap),
+    });
+
     await this.populateContentDataInMap(orderedMap);
 
     this.populateCollectionsWithContent();
@@ -371,6 +376,27 @@ class TemplateMap {
       "eleventy.serverlessUrlMap",
       this.generateServerlessUrlMap(orderedMap)
     );
+  }
+
+  generateContentMap(orderedMap) {
+    let entries = {};
+    for (let entry of orderedMap) {
+      entries[entry.inputPath] = entry._pages.map((entry) => entry.url);
+    }
+    return entries;
+  }
+
+  generateUrlMap(orderedMap) {
+    let entries = {};
+    for (let entry of orderedMap) {
+      for (let page of entry._pages) {
+        if (!entries[page.url]) {
+          entries[page.url] = [];
+        }
+        entries[page.url].push(entry.inputPath);
+      }
+    }
+    return entries;
   }
 
   generateServerlessUrlMap(orderedMap) {
