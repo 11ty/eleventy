@@ -7,14 +7,14 @@
 // rather than just raw comparison.
 // e.g. --pathprefix=/en/ should return `/en/en/` for `/en/index.liquid`
 const { DeepCopy } = require("../Util/Merge");
+const bcp47Normalize = require("bcp-47-normalize");
 
 class Comparator {
-  static langCodeRegex = /^[a-z]{2}([\-\_][a-z]{2})?$/i;
-  static langCodeRegexWithSlashes = /^\/([a-z]{2}(?:[\-\_][a-z]{2})?)\//i;
-
+  // https://en.wikipedia.org/wiki/IETF_language_tag#Relation_to_other_standards
+  // Requires a primary language code (before the first -) to be 2 or 3 characters
   static isLangCode(code) {
-    let match = (code || "").match(Comparator.langCodeRegex);
-    return !!match;
+    let [s] = (code || "").split("-");
+    return (s.length === 2 || s.length === 3) && !!bcp47Normalize(code);
   }
 
   // search for same input path files with only differing locale
@@ -100,16 +100,16 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
   // Normalize a theoretical URL based on the current page’s language
   // If a non-localized file exists, returns the URL without a language assigned
   // Fails if no file exists (localized and not localized)
-  eleventyConfig.addFilter(options.filters.url, function (url, langCode = "") {
-    if (!langCode) {
-      let pageUrl =
-        this.page?.url ||
-        this.ctx?.page?.url ||
-        this.context?.environments?.page?.url;
+  eleventyConfig.addFilter(options.filters.url, function (url) {
+    let pageUrl =
+      this.page?.url ||
+      this.ctx?.page?.url ||
+      this.context?.environments?.page?.url;
 
-      let lang = pageUrl.match(Comparator.langCodeRegexWithSlashes);
-      langCode = (lang && lang[1]) || options.defaultLanguage;
-    }
+    let s = pageUrl.split("/");
+    let langCode =
+      (s.length > 0 && Comparator.isLangCode(s[1]) ? s[1] : "") ||
+      options.defaultLanguage;
 
     let comparisonUrl = `/${langCode}${url}`;
     if (contentMaps.urls[comparisonUrl]) {
