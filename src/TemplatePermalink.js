@@ -102,6 +102,34 @@ class TemplatePermalink {
     );
   }
 
+  // Used in url transforms feature
+  static getUrlStem(original) {
+    let subject = original;
+    if (original.endsWith(".html")) {
+      subject = original.slice(0, -1 * ".html".length);
+    }
+    return TemplatePermalink.normalizePathToUrl(subject);
+  }
+
+  static normalizePathToUrl(original) {
+    let compare = original || "";
+
+    let needleHtml = "/index.html";
+    let needleBareTrailingSlash = "/index/";
+    let needleBare = "/index";
+    if (compare.endsWith(needleHtml)) {
+      return compare.slice(0, compare.length - needleHtml.length) + "/";
+    } else if (compare.endsWith(needleBareTrailingSlash)) {
+      return (
+        compare.slice(0, compare.length - needleBareTrailingSlash.length) + "/"
+      );
+    } else if (compare.endsWith(needleBare)) {
+      return compare.slice(0, compare.length - needleBare.length) + "/";
+    }
+
+    return original;
+  }
+
   // This method is used to generate the `page.url` variable.
   // Note that in serverless mode this should still exist to generate the content map
 
@@ -140,25 +168,16 @@ class TemplatePermalink {
     let original =
       (transformedLink.charAt(0) !== "/" ? "/" : "") + transformedLink;
 
+    let normalized = TemplatePermalink.normalizePathToUrl(original) || "";
     for (let transform of this.urlTransforms) {
-      original = transform({ outputPath: original }) ?? original;
+      original =
+        transform({
+          url: normalized,
+          urlStem: TemplatePermalink.getUrlStem(original),
+        }) ?? original;
     }
 
-    let needleHtml = "/index.html";
-    let needleBare = "/index";
-    let needleBareTrailingSlash = "/index/";
-    if (original.endsWith(needleHtml)) {
-      return original.slice(0, original.length - needleHtml.length) + "/";
-    } else if (original.endsWith(needleBare)) {
-      return original.slice(0, original.length - needleBare.length) + "/";
-    } else if (original.endsWith(needleBareTrailingSlash)) {
-      return (
-        original.slice(0, original.length - needleBareTrailingSlash.length) +
-        "/"
-      );
-    }
-
-    return original;
+    return TemplatePermalink.normalizePathToUrl(original);
   }
 
   toPath(outputDir) {

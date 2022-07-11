@@ -269,7 +269,7 @@ test("Permalink Object, serverless with path params", (t) => {
 test("Permalink generate apache content negotiation #761", (t) => {
   let tp = new TemplatePermalink("index.es.html");
   tp.setUrlTransforms([
-    function ({ outputPath }) {
+    function ({ url }) {
       return "/";
     },
   ]);
@@ -280,7 +280,7 @@ test("Permalink generate apache content negotiation #761", (t) => {
   // Note that generate does some preprocessing to the raw permalink value (compared to `new TemplatePermalink`)
   let tp1 = TemplatePermalink.generate("", "index.es");
   tp1.setUrlTransforms([
-    function ({ outputPath }) {
+    function ({ url }) {
       return "/";
     },
   ]);
@@ -292,7 +292,7 @@ test("Permalink generate apache content negotiation #761", (t) => {
 test("Permalink generate apache content negotiation with subdirectory #761", (t) => {
   let tp = new TemplatePermalink("test/index.es.html");
   tp.setUrlTransforms([
-    function ({ outputPath }) {
+    function ({ url }) {
       return "/test/";
     },
   ]);
@@ -303,7 +303,7 @@ test("Permalink generate apache content negotiation with subdirectory #761", (t)
   // Note that generate does some preprocessing to the raw permalink value (compared to `new TemplatePermalink`)
   let tp1 = TemplatePermalink.generate("test", "index.es");
   tp1.setUrlTransforms([
-    function ({ outputPath }) {
+    function ({ url }) {
       return "/test/";
     },
   ]);
@@ -326,7 +326,7 @@ test("Permalink generate with urlTransforms #761", (t) => {
   let tp = TemplatePermalink.generate("permalinksubfolder", "index.es");
 
   tp.setUrlTransforms([
-    function ({ outputPath }) {
+    function ({ url }) {
       return "/permalinksubfolder/";
     },
   ]);
@@ -341,7 +341,7 @@ test("Permalink generate with urlTransforms (skip via undefined) #761", (t) => {
   let tp = TemplatePermalink.generate("permalinksubfolder", "index.es");
 
   tp.setUrlTransforms([
-    function ({ outputPath }) {
+    function ({ url }) {
       // return nothing
     },
   ]);
@@ -355,10 +355,10 @@ test("Permalink generate with 2 urlTransforms #761", (t) => {
   // Note that TemplatePermalink.generate is used by Template and different from new TemplatePermalink
   let tp = TemplatePermalink.generate("permalinksubfolder", "index.es");
   tp.setUrlTransforms([
-    function ({ outputPath }) {
+    function ({ url }) {
       return "/abc/";
     },
-    function ({ outputPath }) {
+    function ({ url }) {
       return "/def/";
     },
   ]);
@@ -372,7 +372,7 @@ test("Permalink generate with urlTransforms returns index.html #761", (t) => {
   // Note that TemplatePermalink.generate is used by Template and different from new TemplatePermalink
   let tp = TemplatePermalink.generate("permalinksubfolder", "index.es");
   tp.setUrlTransforms([
-    function ({ outputPath }) {
+    function ({ url }) {
       return "/abc/index.html";
     },
   ]);
@@ -386,10 +386,13 @@ test("Permalink generate with urlTransforms code (index file) #761", (t) => {
   let tp1 = new TemplatePermalink("index.es.html");
 
   tp1.setUrlTransforms([
-    function ({ outputPath }) {
-      if ((outputPath || "").match(new RegExp(".[a-z]{2}.html$", "i"))) {
+    function ({ url, urlStem }) {
+      t.is(url, "/index.es.html");
+      t.is(urlStem, "/index.es");
+
+      if (url.match(/\.[a-z]{2}\.html$/i)) {
         // trailing slash
-        return outputPath.slice(0, -1 * ".en.html".length) + "/";
+        return url.slice(0, -1 * ".en.html".length) + "/";
       }
     },
   ]);
@@ -399,10 +402,13 @@ test("Permalink generate with urlTransforms code (index file) #761", (t) => {
   let tp2 = new TemplatePermalink("index.es.html");
 
   tp2.setUrlTransforms([
-    function ({ outputPath }) {
-      if ((outputPath || "").match(new RegExp(".[a-z]{2}.html$", "i"))) {
+    function ({ url, urlStem }) {
+      t.is(url, "/index.es.html");
+      t.is(urlStem, "/index.es");
+
+      if (url.match(/\.[a-z]{2}\.html$/i)) {
         // no trailing slash
-        return outputPath.slice(0, -1 * ".en.html".length);
+        return url.slice(0, -1 * ".en.html".length);
       }
     },
   ]);
@@ -414,10 +420,13 @@ test("Permalink generate with urlTransforms code (not index file) #761", (t) => 
   let tp1 = new TemplatePermalink("about.es.html");
 
   tp1.setUrlTransforms([
-    function ({ outputPath }) {
-      if ((outputPath || "").match(new RegExp(".[a-z]{2}.html$", "i"))) {
+    function ({ url, urlStem }) {
+      t.is(url, "/about.es.html");
+      t.is(urlStem, "/about.es");
+
+      if (url.match(/\.[a-z]{2}\.html$/i)) {
         // trailing slash
-        return outputPath.slice(0, -1 * ".en.html".length) + "/";
+        return url.slice(0, -1 * ".en.html".length) + "/";
       }
     },
   ]);
@@ -427,10 +436,10 @@ test("Permalink generate with urlTransforms code (not index file) #761", (t) => 
   let tp2 = new TemplatePermalink("about.es.html");
 
   tp2.setUrlTransforms([
-    function ({ outputPath }) {
-      if ((outputPath || "").match(new RegExp(".[a-z]{2}.html$", "i"))) {
+    function ({ url }) {
+      if (url.match(/\.[a-z]{2}\.html$/i)) {
         // no trailing slash
-        return outputPath.slice(0, -1 * ".en.html".length);
+        return url.slice(0, -1 * ".en.html".length);
       }
     },
   ]);
@@ -442,10 +451,13 @@ test("Permalink generate with urlTransforms code (index file with subdir) #761",
   let tp1 = new TemplatePermalink("subdir/index.es.html");
 
   tp1.setUrlTransforms([
-    function ({ outputPath }) {
-      if ((outputPath || "").match(new RegExp(".[a-z]{2}.html$", "i"))) {
+    function ({ url, urlStem }) {
+      t.is(url, "/subdir/index.es.html");
+      t.is(urlStem, "/subdir/index.es");
+
+      if (url.match(/\.[a-z]{2}\.html$/i)) {
         // trailing slash
-        return outputPath.slice(0, -1 * ".en.html".length) + "/";
+        return url.slice(0, -1 * ".en.html".length) + "/";
       }
     },
   ]);
@@ -455,10 +467,13 @@ test("Permalink generate with urlTransforms code (index file with subdir) #761",
   let tp2 = new TemplatePermalink("subdir/index.es.html");
 
   tp2.setUrlTransforms([
-    function ({ outputPath }) {
-      if ((outputPath || "").match(new RegExp(".[a-z]{2}.html$", "i"))) {
+    function ({ url, urlStem }) {
+      t.is(url, "/subdir/index.es.html");
+      t.is(urlStem, "/subdir/index.es");
+
+      if (url.match(/\.[a-z]{2}\.html$/i)) {
         // no trailing slash
-        return outputPath.slice(0, -1 * ".en.html".length);
+        return url.slice(0, -1 * ".en.html".length);
       }
     },
   ]);
@@ -470,10 +485,13 @@ test("Permalink generate with urlTransforms code (not-index file with subdir) #7
   let tp1 = new TemplatePermalink("subdir/about.es.html");
 
   tp1.setUrlTransforms([
-    function ({ outputPath }) {
-      if ((outputPath || "").match(new RegExp(".[a-z]{2}.html$", "i"))) {
+    function ({ url, urlStem }) {
+      if (url.match(/\.[a-z]{2}\.html$/i)) {
+        t.is(url, "/subdir/about.es.html");
+        t.is(urlStem, "/subdir/about.es");
+
         // trailing slash
-        return outputPath.slice(0, -1 * ".en.html".length) + "/";
+        return url.slice(0, -1 * ".en.html".length) + "/";
       }
     },
   ]);
@@ -483,10 +501,13 @@ test("Permalink generate with urlTransforms code (not-index file with subdir) #7
   let tp2 = new TemplatePermalink("subdir/about.es.html");
 
   tp2.setUrlTransforms([
-    function ({ outputPath }) {
-      if ((outputPath || "").match(new RegExp(".[a-z]{2}.html$", "i"))) {
+    function ({ url, urlStem }) {
+      t.is(url, "/subdir/about.es.html");
+      t.is(urlStem, "/subdir/about.es");
+
+      if (url.match(/\.[a-z]{2}\.html$/i)) {
         // no trailing slash
-        return outputPath.slice(0, -1 * ".en.html".length);
+        return url.slice(0, -1 * ".en.html".length);
       }
     },
   ]);
