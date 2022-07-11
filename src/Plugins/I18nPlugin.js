@@ -1,9 +1,16 @@
-// TODO compatibility with pathprefix
+// pathPrefix note:
+// When using `locale_url` filter with the `url` filter, `locale_url` must run first like
+// `| locale_url | url`. If you run `| url | locale_url` it won’t match correctly.
 
+// TODO improvement would be to throw an error if `locale_url` finds a url with the
+// path prefix at the beginning? Would need a better way to know `url` has transformed a string
+// rather than just raw comparison.
+// e.g. --pathprefix=/en/ should return `/en/en/` for `/en/index.liquid`
 const { DeepCopy } = require("../Util/Merge");
 
 class Comparator {
   static langCodeRegex = /^[a-z]{2}([\-\_][a-z]{2})?$/i;
+  static langCodeRegexWithSlashes = /^\/([a-z]{2}(?:[\-\_][a-z]{2})?)\//i;
 
   static isLangCode(code) {
     let match = (code || "").match(Comparator.langCodeRegex);
@@ -99,7 +106,8 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
         this.page?.url ||
         this.ctx?.page?.url ||
         this.context?.environments?.page?.url;
-      let lang = pageUrl.match(/^\/([a-z]{2})\//i);
+
+      let lang = pageUrl.match(Comparator.langCodeRegexWithSlashes);
       langCode = (lang && lang[1]) || options.defaultLanguage;
     }
 
@@ -116,7 +124,7 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
       contentMaps.urls[url] ||
       (!url.endsWith("/") && contentMaps.urls[`${url}/`])
     ) {
-      // do nothing
+      // do nothing, this is not a localized file (independent of a language code)
     } else {
       // You’re linking to a localized file that doesn’t exist!
       throw new Error(

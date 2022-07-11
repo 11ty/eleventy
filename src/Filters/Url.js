@@ -15,7 +15,7 @@ module.exports = function (url, pathPrefix) {
   // work with undefined
   url = url || "";
 
-  if (isValidUrl(url) || (url.indexOf("//") === 0 && url !== "//")) {
+  if (isValidUrl(url) || (url.startsWith("//") && url !== "//")) {
     return url;
   }
 

@@ -408,7 +408,6 @@ test("Eleventy addGlobalData should run once", async (t) => {
 });
 
 test("Eleventy addGlobalData can feed layouts to populate data cascade with layout data, issue #1245", async (t) => {
-  let count = 0;
   let elev = new Eleventy("./test/stubs-2145/", "./test/stubs-2145/_site", {
     config: function (eleventyConfig) {
       eleventyConfig.addGlobalData("layout", () => "layout.njk");
@@ -450,6 +449,7 @@ test("DateGitLastUpdated returns undefined on nonexistent path", (t) => {
   t.is(DateGitLastUpdated("./test/invalid.invalid"), undefined);
 });
 
+/* This test writes to the console */
 test("#2167: Pagination with permalink: false", async (t) => {
   let elev = new Eleventy("./test/stubs-2167/", "./test/stubs-2167/_site");
   elev.setDryRun(true);
@@ -567,4 +567,18 @@ test("#2224: date 'git created' populates page.date", async (t) => {
 
 test("DateGitFirstAdded returns undefined on nonexistent path", async (t) => {
   t.is(DateGitFirstAdded("./test/invalid.invalid"), undefined);
+});
+
+test("Does pathPrefix affect page URLs", async (t) => {
+  let elev = new Eleventy("./README.md", "./_site", {
+    config: function (eleventyConfig) {
+      return {
+        pathPrefix: "/testdirectory/",
+      };
+    },
+  });
+
+  let results = await elev.toJSON();
+  let [result] = results;
+  t.is(result.url, "/README/");
 });
