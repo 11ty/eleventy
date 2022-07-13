@@ -1,3 +1,5 @@
 {{ "/" | locale_url }}
+{{ "/" | locale_url("en-us") }}
 {{ "/non-lang-file/" | locale_url }}
-{{ page.inputPath | locale_links }}
+{{ page.inputPath | locale_links | dump | safe }}
+{{ "" | locale_links | dump | safe }}

@@ -10,8 +10,8 @@ test("Comparator.isLangCode", (t) => {
 
   t.is(Comparator.isLangCode("en"), true);
   t.is(Comparator.isLangCode("en-us"), true);
-  t.is(Comparator.isLangCode("dee"), true);
 
+  t.is(Comparator.isLangCode("dee"), false);
   t.is(Comparator.isLangCode("en_us"), false);
   t.is(Comparator.isLangCode("d"), false);
   t.is(Comparator.isLangCode("deed"), false);
@@ -20,31 +20,59 @@ test("Comparator.isLangCode", (t) => {
 });
 
 test("Comparator.matchLanguageFolder", (t) => {
-  // Note that template extensions are removed upstream by the plugin
-  t.is(Comparator.matchLanguageFolder("/en/test.hbs", "/es/test.hbs"), true);
-  t.is(Comparator.matchLanguageFolder("/en/test", "/es/test"), true);
-  t.is(Comparator.matchLanguageFolder("/en-us/test", "/es/test"), true);
-  t.is(Comparator.matchLanguageFolder("/es-mx/test", "/en-us/test"), true);
+  t.deepEqual(Comparator.matchLanguageFolder("/en/test.hbs", "/es/test.hbs"), [
+    "en",
+    "es",
+  ]);
+
+  // Note that template extensions and input directory paths are removed upstream by the plugin
+  t.deepEqual(Comparator.matchLanguageFolder("/en/test", "/es/test"), [
+    "en",
+    "es",
+  ]);
+  t.deepEqual(Comparator.matchLanguageFolder("/en-us/test", "/es/test"), [
+    "en-us",
+    "es",
+  ]);
+  t.deepEqual(Comparator.matchLanguageFolder("/es-mx/test", "/en-us/test"), [
+    "es-mx",
+    "en-us",
+  ]);
+  t.deepEqual(Comparator.matchLanguageFolder("en/test", "es/test"), [
+    "en",
+    "es",
+  ]);
+  t.deepEqual(Comparator.matchLanguageFolder("en/test", "src/test"), false);
+  t.deepEqual(Comparator.matchLanguageFolder("en/test", "xx/test"), false);
+
+  // Even though `src` is possibly valid, we only match the first one
+  t.deepEqual(Comparator.matchLanguageFolder("en/src/test", "es/src/test"), [
+    "en",
+    "es",
+  ]);
 
   // invalid first
   t.is(Comparator.matchLanguageFolder("/e/test.hbs", "/es/test.hbs"), false);
   t.is(Comparator.matchLanguageFolder("/n/test", "/es/test"), false);
-  t.is(Comparator.matchLanguageFolder("/eus/test", "/es/test"), true);
+  t.is(Comparator.matchLanguageFolder("/eus/test", "/es/test"), false);
 
   // invalid second
   t.is(Comparator.matchLanguageFolder("/en/test.hbs", "/e/test.hbs"), false);
   t.is(Comparator.matchLanguageFolder("/en/test", "/e/test"), false);
   t.is(Comparator.matchLanguageFolder("/en-us/test", "/s/test"), false);
 
-  // both invalid
-  t.is(Comparator.matchLanguageFolder("/esx/test", "/ens/test"), true);
+  // invalid both
+  t.deepEqual(Comparator.matchLanguageFolder("/esx/test", "/ens/test"), false);
 });
 
 test("contentMap Event from Eleventy", async (t) => {
   t.plan(3);
   let elev = new Eleventy("./test/stubs-i18n/", "./test/stubs-i18n/_site", {
     config: function (eleventyConfig) {
-      eleventyConfig.addPlugin(I18nPlugin);
+      eleventyConfig.addPlugin(I18nPlugin, {
+        defaultLanguage: "en",
+        errorMode: "allow-fallback",
+      });
 
       eleventyConfig.on("eleventy.contentMap", (maps) => {
         t.truthy(maps);
@@ -73,10 +101,30 @@ function getContentFor(results, filename) {
   return normalizeNewLines(content.trim());
 }
 
+test("errorMode default", async (t) => {
+  let elev = new Eleventy("./test/stubs-i18n/", "./test/stubs-i18n/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.addPlugin(I18nPlugin, {
+        defaultLanguage: "en",
+        // errorMode: "allow-fallback"
+      });
+    },
+  });
+  elev.setIsVerbose(false);
+  elev.disableLogger();
+
+  await t.throwsAsync(async () => {
+    let results = await elev.toJSON();
+  });
+});
+
 test("locale_url and locale_links Filters", async (t) => {
   let elev = new Eleventy("./test/stubs-i18n/", "./test/stubs-i18n/_site", {
     config: function (eleventyConfig) {
-      eleventyConfig.addPlugin(I18nPlugin);
+      eleventyConfig.addPlugin(I18nPlugin, {
+        defaultLanguage: "en",
+        errorMode: "allow-fallback",
+      });
     },
   });
 
@@ -84,27 +132,36 @@ test("locale_url and locale_links Filters", async (t) => {
   t.is(
     getContentFor(results, "/non-lang-file.njk"),
     `/en/
-/non-lang-file/`
+/en-us/
+/non-lang-file/
+[]
+[]`
   );
 
   t.is(
     getContentFor(results, "/es/index.njk"),
     `/es/
+/en-us/
 /non-lang-file/
-/en-us/,/en/`
+[{"url":"/en/","lang":"en","label":"English"},{"url":"/en-us/","lang":"en-us","label":"English"}]
+[{"url":"/en/","lang":"en","label":"English"},{"url":"/en-us/","lang":"en-us","label":"English"}]`
   );
 
   t.is(
     getContentFor(results, "/en/index.liquid"),
     `/en/
+/en-us/
 /non-lang-file/
-/en-us//es/`
+[{"url":"/en-us/","lang":"en-us","label":"English"},{"url":"/es/","lang":"es","label":"Español"}]
+[{"url":"/en-us/","lang":"en-us","label":"English"},{"url":"/es/","lang":"es","label":"Español"}]`
   );
 
   t.is(
     getContentFor(results, "/en-us/index.11ty.js"),
     `/en-us/
+/es/
 /non-lang-file/
-/en/,/es/`
+[{"url":"/en/","lang":"en","label":"English"},{"url":"/es/","lang":"es","label":"Español"}]
+[{"url":"/en/","lang":"en","label":"English"},{"url":"/es/","lang":"es","label":"Español"}]`
   );
 });
