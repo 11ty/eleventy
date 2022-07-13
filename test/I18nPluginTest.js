@@ -1,6 +1,6 @@
 const test = require("ava");
 const I18nPlugin = require("../src/Plugins/I18nPlugin");
-const { Comparator } = I18nPlugin;
+const { Comparator, LangUtils } = I18nPlugin;
 const Eleventy = require("../src/Eleventy");
 const normalizeNewLines = require("./Util/normalizeNewLines");
 
@@ -19,13 +19,13 @@ test("Comparator.isLangCode", (t) => {
   t.is(Comparator.isLangCode("deedee"), false);
 });
 
-test("Comparator.swapLanguageCode", (t) => {
-  t.is(Comparator.swapLanguageCode("/"), "/"); // skip
-  t.is(Comparator.swapLanguageCode("/", "en"), "/"); // skip
-  t.is(Comparator.swapLanguageCode("/es/", "en"), "/en/");
-  t.is(Comparator.swapLanguageCode("/es/", "not"), "/es/"); // skip
-  t.is(Comparator.swapLanguageCode("/not-a-lang/", "en"), "/not-a-lang/"); // skip
-  t.is(Comparator.swapLanguageCode("/es/es/es/", "en"), "/en/es/es/"); // first only
+test("LangUtils.swapLanguageCode", (t) => {
+  t.is(LangUtils.swapLanguageCode("/"), "/"); // skip
+  t.is(LangUtils.swapLanguageCode("/", "en"), "/"); // skip
+  t.is(LangUtils.swapLanguageCode("/es/", "en"), "/en/");
+  t.is(LangUtils.swapLanguageCode("/es/", "not"), "/es/"); // skip
+  t.is(LangUtils.swapLanguageCode("/not-a-lang/", "en"), "/not-a-lang/"); // skip
+  t.is(LangUtils.swapLanguageCode("/es/es/es/", "en"), "/en/es/es/"); // first only
 });
 
 test("Comparator.matchLanguageFolder", (t) => {
@@ -86,11 +86,12 @@ test("contentMap Event from Eleventy", async (t) => {
       eleventyConfig.on("eleventy.contentMap", (maps) => {
         t.truthy(maps);
         t.deepEqual(maps.urlToInputPath, {
-          "/en/": ["./test/stubs-i18n/en/index.liquid"],
-          "/en-us/": ["./test/stubs-i18n/en-us/index.11ty.js"],
-          "/es/": ["./test/stubs-i18n/es/index.njk"],
-          "/non-lang-file/": ["./test/stubs-i18n/non-lang-file.njk"],
+          "/en/": "./test/stubs-i18n/en/index.liquid",
+          "/en-us/": "./test/stubs-i18n/en-us/index.11ty.js",
+          "/es/": "./test/stubs-i18n/es/index.njk",
+          "/non-lang-file/": "./test/stubs-i18n/non-lang-file.njk",
         });
+
         t.deepEqual(maps.inputPathToUrl, {
           "./test/stubs-i18n/en/index.liquid": ["/en/"],
           "./test/stubs-i18n/en-us/index.11ty.js": ["/en-us/"],
@@ -123,7 +124,7 @@ test("errorMode default", async (t) => {
   elev.disableLogger();
 
   await t.throwsAsync(async () => {
-    let results = await elev.toJSON();
+    await elev.toJSON();
   });
 });
 

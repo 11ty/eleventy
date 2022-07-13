@@ -10,7 +10,7 @@ const { DeepCopy } = require("../Util/Merge");
 const bcp47Normalize = require("bcp-47-normalize");
 const iso639 = require("iso-639-1");
 
-class Comparator {
+class LangUtils {
   static swapLanguageCode(str, langCode) {
     if (!Comparator.isLangCode(langCode)) {
       return str;
@@ -28,12 +28,22 @@ class Comparator {
       })
       .join("/");
   }
+}
 
+class Comparator {
   // https://en.wikipedia.org/wiki/IETF_language_tag#Relation_to_other_standards
   // Requires a ISO-639-1 language code at the start (2 characters before the first -)
   static isLangCode(code) {
     let [s] = (code || "").split("-");
     return iso639.validate(s) && !!bcp47Normalize(code);
+  }
+
+  static urlHasLangCode(url, code) {
+    if (!Comparator.isLangCode(code)) {
+      return false;
+    }
+
+    return url.split("/").some((entry) => entry === code);
   }
 
   // Search for same input path files with only differing locale folders
@@ -68,6 +78,124 @@ class Comparator {
   }
 }
 
+function getPageInFilter(context) {
+  return (
+    context.page || context.ctx?.page || context.context?.environments?.page
+  );
+}
+
+function normalizeInputPath(inputPath, extensionMap) {
+  if (extensionMap) {
+    return extensionMap.removeTemplateExtension(inputPath);
+  }
+  return inputPath;
+}
+
+function getLocaleMap(inputPathToUrl, extensionMap) {
+  // map of input paths => array of localized urls
+  let localeMap = {};
+  let inputPaths = Object.keys(inputPathToUrl);
+
+  // map of input paths without extensions
+  let inputPathsWithoutTemplateExtensionsMap = {};
+  for (let path of inputPaths) {
+    inputPathsWithoutTemplateExtensionsMap[path] = normalizeInputPath(
+      path,
+      extensionMap
+    );
+  }
+
+  for (let comparisonInputPath of inputPaths) {
+    for (let inputPath of inputPaths) {
+      // Compare *without* template extensions: `/en/about.liquid` should match `/es/about.11ty.js`
+      let matched = Comparator.matchLanguageFolder(
+        inputPathsWithoutTemplateExtensionsMap[comparisonInputPath],
+        inputPathsWithoutTemplateExtensionsMap[inputPath]
+      );
+      if (matched) {
+        if (!localeMap[comparisonInputPath]) {
+          localeMap[comparisonInputPath] = [];
+        }
+
+        let [, langCode] = matched;
+        for (let url of inputPathToUrl[inputPath]) {
+          localeMap[comparisonInputPath].push({
+            url,
+            lang: langCode,
+            label: iso639.getNativeName(langCode.split("-")[0]),
+          });
+        }
+      }
+    }
+  }
+
+  // Default sorted by lang code
+  for (let key in localeMap) {
+    localeMap[key].sort(function (a, b) {
+      if (a.lang < b.lang) {
+        return -1;
+      }
+      if (a.lang > b.lang) {
+        return 1;
+      }
+      return 0;
+    });
+  }
+
+  return localeMap;
+}
+
+/*
+ * Input sample:
+ *
+    {
+      '/en-us/': './test/stubs-i18n/en-us/index.11ty.js',
+      '/en/': './test/stubs-i18n/en/index.liquid',
+      '/es/': './test/stubs-i18n/es/index.njk',
+      '/non-lang-file/': './test/stubs-i18n/non-lang-file.njk'
+    }
+*/
+function getUrlMap(urlToInputPath, extensionMap) {
+  // map of input paths => array of localized urls
+  let urlMap = {};
+
+  // map of input paths without extensions
+  let inputPathsWithoutTemplateExtensionsMap = {};
+  for (let path of Object.values(urlToInputPath)) {
+    inputPathsWithoutTemplateExtensionsMap[path] = normalizeInputPath(
+      path,
+      extensionMap
+    );
+  }
+
+  for (let comparisonUrl in urlToInputPath) {
+    for (let url in urlToInputPath) {
+      let comparisonInputPath = urlToInputPath[comparisonUrl];
+      let inputPath = urlToInputPath[url];
+
+      // Compare *without* template extensions: `/en/about.liquid` should match `/es/about.11ty.js`
+      let matched = Comparator.matchLanguageFolder(
+        inputPathsWithoutTemplateExtensionsMap[comparisonInputPath],
+        inputPathsWithoutTemplateExtensionsMap[inputPath]
+      );
+      if (matched) {
+        if (!urlMap[comparisonUrl]) {
+          urlMap[comparisonUrl] = [];
+        }
+
+        urlMap[comparisonUrl].push(url);
+      }
+    }
+  }
+
+  // Default sorted by lang code
+  for (let url in urlMap) {
+    urlMap[url].sort();
+  }
+
+  return urlMap;
+}
+
 function EleventyPlugin(eleventyConfig, opts = {}) {
   let options = DeepCopy(
     {
@@ -91,68 +219,14 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
     extensionMap = map;
   });
 
-  function normalizeInputPath(inputPath) {
-    if (extensionMap) {
-      return extensionMap.removeTemplateExtension(inputPath);
-    }
-    return inputPath;
-  }
-
   let contentMaps = {};
   eleventyConfig.on(
     "eleventy.contentMap",
     function ({ urlToInputPath, inputPathToUrl, inputPathToOutputPath }) {
-      contentMaps.urls = urlToInputPath;
       contentMaps.inputOutput = inputPathToOutputPath;
-
-      // map of input paths => array of localized urls
-      let localeMap = {};
-      let inputPaths = Object.keys(inputPathToUrl);
-
-      // map of input paths without extensions
-      let inputPathsWithoutTemplateExtensionsMap = {};
-      for (let path of inputPaths) {
-        inputPathsWithoutTemplateExtensionsMap[path] = normalizeInputPath(path);
-      }
-
-      for (let comparisonInputPath of inputPaths) {
-        for (let inputPath of inputPaths) {
-          // Compare *without* template extensions: `/en/about.liquid` should match `/es/about.11ty.js`
-          let matched = Comparator.matchLanguageFolder(
-            inputPathsWithoutTemplateExtensionsMap[comparisonInputPath],
-            inputPathsWithoutTemplateExtensionsMap[inputPath]
-          );
-          if (matched) {
-            if (!localeMap[comparisonInputPath]) {
-              localeMap[comparisonInputPath] = [];
-            }
-
-            let [, langCode] = matched;
-            for (let url of inputPathToUrl[inputPath]) {
-              localeMap[comparisonInputPath].push({
-                url,
-                lang: langCode,
-                label: iso639.getNativeName(langCode.split("-")[0]),
-              });
-            }
-          }
-        }
-      }
-
-      // Default sorted by lang code
-      for (let key in localeMap) {
-        localeMap[key].sort(function (a, b) {
-          if (a.lang < b.lang) {
-            return -1;
-          }
-          if (a.lang > b.lang) {
-            return 1;
-          }
-          return 0;
-        });
-      }
-
-      contentMaps.localeLinksMap = localeMap;
+      contentMaps.localeLinksMap = getLocaleMap(inputPathToUrl, extensionMap);
+      contentMaps.urls = urlToInputPath;
+      contentMaps.localeUrlsMap = getUrlMap(urlToInputPath, extensionMap);
     }
   );
 
@@ -164,25 +238,28 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
     function (url, langCodeOverride) {
       let langCode = langCodeOverride;
       if (!langCode) {
-        let pageUrl =
-          this.page?.url ||
-          this.ctx?.page?.url ||
-          this.context?.environments?.page?.url;
-
+        let pageUrl = getPageInFilter(this)?.url;
         let s = pageUrl.split("/");
         langCode =
           (s.length > 0 && Comparator.isLangCode(s[1]) ? s[1] : "") ||
           options.defaultLanguage;
       }
 
-      let comparisonUrl = `/${langCode}${url}`;
-      if (contentMaps.urls[comparisonUrl]) {
-        return comparisonUrl;
+      // Already has a language code on it and has a relevant url with the target language code
+      // TODO trailing slash here
+      let relevantUrls = (contentMaps.localeUrlsMap[url] || []).filter(
+        (entry) => Comparator.urlHasLangCode(entry, langCode)
+      );
+      if (relevantUrls.length) {
+        return relevantUrls[0];
       }
-      // Support missing trailing slash in url
+
+      // Prepend language code to URL
+      let comparisonUrl = `/${langCode}${url}`;
       if (
-        !comparisonUrl.endsWith("/") &&
-        contentMaps.urls[`${comparisonUrl}/`]
+        contentMaps.localeUrlsMap[comparisonUrl] ||
+        (!comparisonUrl.endsWith("/") &&
+          contentMaps.localeUrlsMap[`${comparisonUrl}/`])
       ) {
         return comparisonUrl;
       }
@@ -210,12 +287,7 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
 
   // Find the links that are localized alternates to the inputPath argument
   eleventyConfig.addFilter(options.filters.links, function (inputPathOverride) {
-    let inputPath =
-      inputPathOverride ||
-      this.page?.inputPath ||
-      this.ctx?.page?.inputPath ||
-      this.context?.environments?.page?.inputPath;
-
+    let inputPath = inputPathOverride || getPageInFilter(this)?.inputPath;
     return contentMaps.localeLinksMap[inputPath] || [];
   });
 
@@ -223,12 +295,7 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
   eleventyConfig.addFilter(
     "11ty.i18n.getLocaleRootPage",
     function (pageOverride) {
-      let page =
-        pageOverride ||
-        this.page ||
-        this.ctx?.page ||
-        this.context?.environments?.page;
-
+      let page = pageOverride || getPageInFilter(this);
       let url;
       if (contentMaps.localeLinksMap[page.inputPath]) {
         for (let entry of contentMaps.localeLinksMap[page.inputPath]) {
@@ -238,7 +305,7 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
         }
       }
 
-      let inputPath = Comparator.swapLanguageCode(
+      let inputPath = LangUtils.swapLanguageCode(
         page.inputPath,
         options.defaultLanguage
       );
@@ -255,7 +322,7 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
       let result = {
         url,
         inputPath,
-        filePathStem: Comparator.swapLanguageCode(
+        filePathStem: LangUtils.swapLanguageCode(
           page.filePathStem,
           options.defaultLanguage
         ),
@@ -272,3 +339,4 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
 
 module.exports = EleventyPlugin;
 module.exports.Comparator = Comparator;
+module.exports.LangUtils = LangUtils;

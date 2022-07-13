@@ -399,10 +399,8 @@ class TemplateMap {
     let entries = {};
     for (let entry of orderedMap) {
       for (let page of entry._pages) {
-        if (!entries[page.url]) {
-          entries[page.url] = [];
-        }
-        entries[page.url].push(entry.inputPath);
+        // duplicate urls throw an error, so we can return non array here
+        entries[page.url] = entry.inputPath;
       }
     }
     return entries;
