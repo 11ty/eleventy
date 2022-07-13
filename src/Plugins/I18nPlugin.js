@@ -11,6 +11,24 @@ const bcp47Normalize = require("bcp-47-normalize");
 const iso639 = require("iso-639-1");
 
 class Comparator {
+  static swapLanguageCode(str, langCode) {
+    if (!Comparator.isLangCode(langCode)) {
+      return str;
+    }
+
+    let found = false;
+    return str
+      .split("/")
+      .map((entry) => {
+        if (!found && Comparator.isLangCode(entry)) {
+          found = true;
+          return langCode;
+        }
+        return entry;
+      })
+      .join("/");
+  }
+
   // https://en.wikipedia.org/wiki/IETF_language_tag#Relation_to_other_standards
   // Requires a ISO-639-1 language code at the start (2 characters before the first -)
   static isLangCode(code) {
@@ -83,8 +101,9 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
   let contentMaps = {};
   eleventyConfig.on(
     "eleventy.contentMap",
-    function ({ urlToInputPath, inputPathToUrl }) {
+    function ({ urlToInputPath, inputPathToUrl, inputPathToOutputPath }) {
       contentMaps.urls = urlToInputPath;
+      contentMaps.inputOutput = inputPathToOutputPath;
 
       // map of input paths => array of localized urls
       let localeMap = {};
@@ -199,6 +218,56 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
 
     return contentMaps.localeLinksMap[inputPath] || [];
   });
+
+  // If paginated, returns first result only
+  eleventyConfig.addFilter(
+    "11ty.i18n.getLocaleRootPage",
+    function (pageOverride) {
+      let page =
+        pageOverride ||
+        this.page ||
+        this.ctx?.page ||
+        this.context?.environments?.page;
+
+      let url;
+      if (contentMaps.localeLinksMap[page.inputPath]) {
+        for (let entry of contentMaps.localeLinksMap[page.inputPath]) {
+          if (entry.lang === options.defaultLanguage) {
+            url = entry.url;
+          }
+        }
+      }
+
+      let inputPath = Comparator.swapLanguageCode(
+        page.inputPath,
+        options.defaultLanguage
+      );
+
+      if (
+        !url ||
+        !Array.isArray(contentMaps.inputOutput[inputPath]) ||
+        contentMaps.inputOutput[inputPath].length === 0
+      ) {
+        // not found
+        return page;
+      }
+
+      let result = {
+        url,
+        inputPath,
+        filePathStem: Comparator.swapLanguageCode(
+          page.filePathStem,
+          options.defaultLanguage
+        ),
+
+        // note that the permalink/slug may be different for the localized file!
+        // /es/cuatro/
+        // /en/four/
+        outputPath: contentMaps.inputOutput[inputPath][0],
+      };
+      return result;
+    }
+  );
 }
 
 module.exports = EleventyPlugin;

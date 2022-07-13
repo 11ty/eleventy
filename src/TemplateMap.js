@@ -361,7 +361,8 @@ class TemplateMap {
     );
 
     await this.config.events.emit("eleventy.contentMap", {
-      inputPathToUrl: this.generateContentMap(orderedMap),
+      inputPathToOutputPath: this.generateInputOutputContentMap(orderedMap),
+      inputPathToUrl: this.generateInputUrlContentMap(orderedMap),
       urlToInputPath: this.generateUrlMap(orderedMap),
     });
 
@@ -378,7 +379,15 @@ class TemplateMap {
     );
   }
 
-  generateContentMap(orderedMap) {
+  generateInputOutputContentMap(orderedMap) {
+    let entries = {};
+    for (let entry of orderedMap) {
+      entries[entry.inputPath] = entry._pages.map((entry) => entry.outputPath);
+    }
+    return entries;
+  }
+
+  generateInputUrlContentMap(orderedMap) {
     let entries = {};
     for (let entry of orderedMap) {
       entries[entry.inputPath] = entry._pages.map((entry) => entry.url);

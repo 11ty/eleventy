@@ -19,6 +19,15 @@ test("Comparator.isLangCode", (t) => {
   t.is(Comparator.isLangCode("deedee"), false);
 });
 
+test("Comparator.swapLanguageCode", (t) => {
+  t.is(Comparator.swapLanguageCode("/"), "/"); // skip
+  t.is(Comparator.swapLanguageCode("/", "en"), "/"); // skip
+  t.is(Comparator.swapLanguageCode("/es/", "en"), "/en/");
+  t.is(Comparator.swapLanguageCode("/es/", "not"), "/es/"); // skip
+  t.is(Comparator.swapLanguageCode("/not-a-lang/", "en"), "/not-a-lang/"); // skip
+  t.is(Comparator.swapLanguageCode("/es/es/es/", "en"), "/en/es/es/"); // first only
+});
+
 test("Comparator.matchLanguageFolder", (t) => {
   t.deepEqual(Comparator.matchLanguageFolder("/en/test.hbs", "/es/test.hbs"), [
     "en",
