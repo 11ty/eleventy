@@ -93,83 +93,6 @@ function normalizeInputPath(inputPath, extensionMap) {
 
 /*
  * Input: {
- *   './test/stubs-i18n/en-us/index.11ty.js': [ '/en-us/' ],
- *   './test/stubs-i18n/en/index.liquid': [ '/en/' ],
- *   './test/stubs-i18n/non-lang-file.njk': [ '/non-lang-file/' ],
- *   './test/stubs-i18n/es/index.njk': [ '/es/' ]
- * }
- *
- * Output: {
- *   "./test/stubs-i18n/en-us/index.11ty.js": [
- *     { "url": "/en/", "lang": "en", "label": "English" },
- *     { "url": "/es/", "lang": "es", "label": "Español" }
- *   ],
- *   "./test/stubs-i18n/en/index.liquid": [
- *     { "url": "/en-us/", "lang": "en-us", "label": "English" },
- *     { "url": "/es/", "lang": "es", "label": "Español" }
- *   ],
- *   "./test/stubs-i18n/es/index.njk": [
- *     { "url": "/en/", "lang": "en", "label": "English" },
- *     { "url": "/en-us/", "lang": "en-us", "label": "English" }
- *   ]
- * }
- */
-function getLocaleMap(inputPathToUrl, extensionMap) {
-  // map of input paths => array of localized urls
-  let localeMap = {};
-  let inputPaths = Object.keys(inputPathToUrl);
-
-  // map of input paths without extensions
-  let inputPathsWithoutTemplateExtensionsMap = {};
-  for (let path of inputPaths) {
-    inputPathsWithoutTemplateExtensionsMap[path] = normalizeInputPath(
-      path,
-      extensionMap
-    );
-  }
-
-  for (let comparisonInputPath of inputPaths) {
-    for (let inputPath of inputPaths) {
-      // Compare *without* template extensions: `/en/about.liquid` should match `/es/about.11ty.js`
-      let matched = Comparator.matchLanguageFolder(
-        inputPathsWithoutTemplateExtensionsMap[comparisonInputPath],
-        inputPathsWithoutTemplateExtensionsMap[inputPath]
-      );
-      if (matched) {
-        if (!localeMap[comparisonInputPath]) {
-          localeMap[comparisonInputPath] = [];
-        }
-
-        let [, langCode] = matched;
-        for (let url of inputPathToUrl[inputPath]) {
-          localeMap[comparisonInputPath].push({
-            url,
-            lang: langCode,
-            label: iso639.getNativeName(langCode.split("-")[0]),
-          });
-        }
-      }
-    }
-  }
-
-  // Default sorted by lang code
-  for (let key in localeMap) {
-    localeMap[key].sort(function (a, b) {
-      if (a.lang < b.lang) {
-        return -1;
-      }
-      if (a.lang > b.lang) {
-        return 1;
-      }
-      return 0;
-    });
-  }
-
-  return localeMap;
-}
-
-/*
- * Input: {
  *   '/en-us/': './test/stubs-i18n/en-us/index.11ty.js',
  *   '/en/': './test/stubs-i18n/en/index.liquid',
  *   '/es/': './test/stubs-i18n/es/index.njk',
@@ -210,14 +133,27 @@ function getLocaleUrlsMap(urlToInputPath, extensionMap) {
           urlMap[comparisonUrl] = [];
         }
 
-        urlMap[comparisonUrl].push(url);
+        let [, langCode] = matched;
+        urlMap[comparisonUrl].push({
+          url,
+          lang: langCode,
+          label: iso639.getNativeName(langCode.split("-")[0]),
+        });
       }
     }
   }
 
   // Default sorted by lang code
-  for (let url in urlMap) {
-    urlMap[url].sort();
+  for (let key in urlMap) {
+    urlMap[key].sort(function (a, b) {
+      if (a.lang < b.lang) {
+        return -1;
+      }
+      if (a.lang > b.lang) {
+        return 1;
+      }
+      return 0;
+    });
   }
 
   return urlMap;
@@ -254,7 +190,6 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
       contentMaps.inputPathToUrl = inputPathToUrl;
       contentMaps.urlToInputPath = urlToInputPath;
 
-      contentMaps.localeLinksMap = getLocaleMap(inputPathToUrl, extensionMap);
       contentMaps.localeUrlsMap = getLocaleUrlsMap(
         urlToInputPath,
         extensionMap
@@ -278,16 +213,19 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
       }
 
       // Already has a language code on it and has a relevant url with the target language code
-      // TODO trailing slash
-      if (contentMaps.localeUrlsMap[url]) {
-        for (let existingUrl of contentMaps.localeUrlsMap[url]) {
-          if (Comparator.urlHasLangCode(existingUrl, langCode)) {
-            return existingUrl;
+      if (
+        contentMaps.localeUrlsMap[url] ||
+        (!url.endsWith("/") && contentMaps.localeUrlsMap[`${url}/`])
+      ) {
+        for (let existingUrlObj of contentMaps.localeUrlsMap[url] ||
+          contentMaps.localeUrlsMap[`${url}/`]) {
+          if (Comparator.urlHasLangCode(existingUrlObj.url, langCode)) {
+            return existingUrlObj.url;
           }
         }
       }
 
-      // Prepend language code to URL
+      // Needs the language code prepended to the URL
       let prependedLangCodeUrl = `/${langCode}${url}`;
       if (
         contentMaps.localeUrlsMap[prependedLangCodeUrl] ||
@@ -304,13 +242,13 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
         // this is not a localized file (independent of a language code)
         if (options.errorMode === "strict") {
           throw new Error(
-            `Localized file for URL ${prependedLangCodeUrl} was not found in your project. A non-localized version does exist—are you sure you meant to use the \`${options.filters.url}\` filter for this? You can bypass this error using the \`errorMode\` option in the I18N plugin (currently: ${options.errorMode}).`
+            `Localized file for URL ${prependedLangCodeUrl} was not found in your project. A non-localized version does exist—are you sure you meant to use the \`${options.filters.url}\` filter for this? You can bypass this error using the \`errorMode\` option in the I18N plugin (current value: "${options.errorMode}").`
           );
         }
       } else if (options.errorMode === "allow-fallback") {
         // You’re linking to a localized file that doesn’t exist!
         throw new Error(
-          `Localized file for URL ${prependedLangCodeUrl} was not found in your project! You will need to add it if you want to link to it using the \`${options.filters.url}\` filter. You can bypass this error using the \`errorMode\` option in the I18N plugin (currently: ${options.errorMode}).`
+          `Localized file for URL ${prependedLangCodeUrl} was not found in your project! You will need to add it if you want to link to it using the \`${options.filters.url}\` filter. You can bypass this error using the \`errorMode\` option in the I18N plugin (current value: "${options.errorMode}").`
         );
       }
 
@@ -318,10 +256,11 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
     }
   );
 
+  // Refactor to use url
   // Find the links that are localized alternates to the inputPath argument
-  eleventyConfig.addFilter(options.filters.links, function (inputPathOverride) {
-    let inputPath = inputPathOverride || getPageInFilter(this)?.inputPath;
-    return contentMaps.localeLinksMap[inputPath] || [];
+  eleventyConfig.addFilter(options.filters.links, function (urlOverride) {
+    let url = urlOverride || getPageInFilter(this)?.url;
+    return contentMaps.localeUrlsMap[url] || [];
   });
 
   // If paginated, returns first result only
@@ -329,9 +268,9 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
     "locale_page", // This is not exposed in `options` because it is an Eleventy internals filter (used in get*CollectionItem filters)
     function (pageOverride) {
       let page = pageOverride || getPageInFilter(this);
-      let url;
-      if (contentMaps.localeLinksMap[page.inputPath]) {
-        for (let entry of contentMaps.localeLinksMap[page.inputPath]) {
+      let url; // new url
+      if (contentMaps.localeUrlsMap[page.url]) {
+        for (let entry of contentMaps.localeUrlsMap[page.url]) {
           if (entry.lang === options.defaultLanguage) {
             url = entry.url;
           }

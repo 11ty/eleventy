@@ -154,6 +154,8 @@ test("locale_url and locale_links Filters", async (t) => {
   t.is(
     getContentFor(results, "/es/index.njk"),
     `/es/
+/es/
+/es/
 /en-us/
 /non-lang-file/
 [{"url":"/en/","lang":"en","label":"English"},{"url":"/en-us/","lang":"en-us","label":"English"}]
@@ -163,6 +165,8 @@ test("locale_url and locale_links Filters", async (t) => {
   t.is(
     getContentFor(results, "/en/index.liquid"),
     `/en/
+/en/
+/en/
 /en-us/
 /non-lang-file/
 [{"url":"/en-us/","lang":"en-us","label":"English"},{"url":"/es/","lang":"es","label":"Español"}]
@@ -172,6 +176,8 @@ test("locale_url and locale_links Filters", async (t) => {
   t.is(
     getContentFor(results, "/en-us/index.11ty.js"),
     `/en-us/
+/en-us/
+/en-us/
 /es/
 /non-lang-file/
 [{"url":"/en/","lang":"en","label":"English"},{"url":"/es/","lang":"es","label":"Español"}]
