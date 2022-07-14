@@ -5,8 +5,8 @@ const slugifyFilter = require("./Filters/Slugify");
 const getCollectionItem = require("./Filters/GetCollectionItem");
 
 function getPageInFilter(context, config) {
-  // Work with src/Plugins/I18nPlugin.js to retrieve root pages (not i18n pages)
-  let localeFilter = config.getFilter("11ty.i18n.getLocaleRootPage");
+  // Work with I18n Plugin src/Plugins/I18nPlugin.js to retrieve root pages (not i18n pages)
+  let localeFilter = config.getFilter("locale_page");
   if (localeFilter && typeof localeFilter === "function") {
     return localeFilter.call(context);
   }
