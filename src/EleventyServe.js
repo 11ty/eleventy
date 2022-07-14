@@ -22,6 +22,7 @@ class EleventyServe {
   constructor() {
     this.logger = new ConsoleLogger(true);
     this._initOptionsFetched = false;
+    this._pendingAliases = {};
   }
 
   get config() {
@@ -37,6 +38,16 @@ class EleventyServe {
   set config(config) {
     this._options = null;
     this._config = config;
+  }
+
+  initAliases(aliases) {
+    if (this._server) {
+      if ("setAliases" in this._server) {
+        this._server.setAliases(aliases);
+      }
+    } else {
+      this._pendingAliases = aliases;
+    }
   }
 
   get eleventyConfig() {
@@ -58,9 +69,7 @@ class EleventyServe {
         "eleventy.passthrough",
         ({ map }) => {
           // for-free passthrough copy
-          if ("setAliases" in this.server) {
-            this.server.setAliases(map);
-          }
+          this.initAliases(map);
         }
       );
     }
@@ -145,6 +154,7 @@ class EleventyServe {
 
     // TODO improve by sorting keys here
     this._savedConfigOptions = JSON.stringify(this.config.serverOptions);
+
     if (!this._initOptionsFetched && this.getSetupCallback()) {
       throw new Error(
         "Init options have not yet been fetched in the setup callback. This probably means that `init()` has not yet been called."
@@ -168,6 +178,11 @@ class EleventyServe {
       this.options
     );
 
+    if (Object.keys(this._pendingAliases).length) {
+      this.initAliases(this._pendingAliases);
+      this._pendingAliases = {};
+    }
+
     return this._server;
   }
 
@@ -183,25 +198,30 @@ class EleventyServe {
   }
 
   async init() {
-    if (!this._initOptionsFetched) {
-      this._initOptionsFetched = true;
+    if (!this._initPromise) {
+      this._initPromise = new Promise(async (resolve) => {
+        let setupCallback = this.getSetupCallback();
+        if (setupCallback) {
+          let opts = await setupCallback();
+          this._initOptionsFetched = true;
 
-      let setupCallback = this.getSetupCallback();
-      if (setupCallback) {
-        let opts = await setupCallback();
-        if (opts) {
-          merge(this.options, opts);
+          if (opts) {
+            merge(this.options, opts);
+          }
         }
-      }
+
+        resolve();
+      });
     }
+
+    return this._initPromise;
   }
 
   // Port comes in here from --port on the command line
   async serve(port) {
     this._commandLinePort = port;
-    if (!this._initOptionsFetched) {
-      await this.init();
-    }
+
+    await this.init();
 
     this.server.serve(port || this.options.port);
   }
@@ -209,6 +229,7 @@ class EleventyServe {
   async close() {
     if (this._server) {
       await this.server.close();
+
       this.server = undefined;
     }
   }
