@@ -6,6 +6,7 @@
 
 - `@sindresorhus/slugify` ESM at 2.x
 - `multimatch` is ESM at 6
+- `bcp-47-normalize` at 1.x
 
 # Canary Release Procedure
 
