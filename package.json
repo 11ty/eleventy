@@ -61,7 +61,7 @@
   "homepage": "https://www.11ty.dev/",
   "ava": {
     "environmentVariables": {},
-    "failFast": false,
+    "failFast": true,
     "files": [
       "./test/*.js"
     ],
