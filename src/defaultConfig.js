@@ -2,7 +2,6 @@ const urlFilter = require("./Filters/Url");
 const serverlessUrlFilter = require("./Filters/ServerlessUrl");
 const slugFilter = require("./Filters/Slug");
 const slugifyFilter = require("./Filters/Slugify");
-const getCollectionItem = require("./Filters/GetCollectionItem");
 const getLocaleCollectionItem = require("./Filters/GetLocaleCollectionItem");
 
 module.exports = function (config) {
