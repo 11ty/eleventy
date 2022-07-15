@@ -263,24 +263,26 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
     return contentMaps.localeUrlsMap[url] || [];
   });
 
+  // Returns a `page`-esque variable for the root default language page
   // If paginated, returns first result only
   eleventyConfig.addFilter(
     "locale_page", // This is not exposed in `options` because it is an Eleventy internals filter (used in get*CollectionItem filters)
-    function (pageOverride) {
+    function (pageOverride, languageCode) {
+      if (!languageCode) {
+        languageCode = options.defaultLanguage;
+      }
+
       let page = pageOverride || getPageInFilter(this);
       let url; // new url
       if (contentMaps.localeUrlsMap[page.url]) {
         for (let entry of contentMaps.localeUrlsMap[page.url]) {
-          if (entry.lang === options.defaultLanguage) {
+          if (entry.lang === languageCode) {
             url = entry.url;
           }
         }
       }
 
-      let inputPath = LangUtils.swapLanguageCode(
-        page.inputPath,
-        options.defaultLanguage
-      );
+      let inputPath = LangUtils.swapLanguageCode(page.inputPath, languageCode);
 
       if (
         !url ||
@@ -297,9 +299,10 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
         inputPath,
         filePathStem: LangUtils.swapLanguageCode(
           page.filePathStem,
-          options.defaultLanguage
+          languageCode
         ),
         // outputPath is omitted here, not necessary for GetCollectionItem.js if url is provided
+        __locale_page_resolved: true,
       };
       return result;
     }

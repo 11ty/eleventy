@@ -3,19 +3,7 @@ const serverlessUrlFilter = require("./Filters/ServerlessUrl");
 const slugFilter = require("./Filters/Slug");
 const slugifyFilter = require("./Filters/Slugify");
 const getCollectionItem = require("./Filters/GetCollectionItem");
-
-function getPageInFilter(context, config) {
-  // Work with I18n Plugin src/Plugins/I18nPlugin.js to retrieve root pages (not i18n pages)
-  let localeFilter = config.getFilter("locale_page");
-  if (localeFilter && typeof localeFilter === "function") {
-    return localeFilter.call(context);
-  }
-
-  let page =
-    context.page || context.ctx?.page || context.context?.environments?.page;
-
-  return page;
-}
+const getLocaleCollectionItem = require("./Filters/GetLocaleCollectionItem");
 
 module.exports = function (config) {
   let templateConfig = this;
@@ -34,22 +22,71 @@ module.exports = function (config) {
 
   config.addFilter("serverlessUrl", serverlessUrlFilter);
 
-  config.addFilter("getCollectionItem", function (collection, pageOverride) {
-    let page = pageOverride || getPageInFilter(this, config);
-    return getCollectionItem(collection, page);
-  });
+  config.addFilter(
+    "getPreviousCollectionItemForCurrentPage",
+    function (collection, langCode) {
+      return getLocaleCollectionItem.call(
+        this,
+        config,
+        collection,
+        null,
+        langCode,
+        -1
+      );
+    }
+  );
+
+  config.addFilter(
+    "getNextCollectionItemForCurrentPage",
+    function (collection, langCode) {
+      return getLocaleCollectionItem.call(
+        this,
+        config,
+        collection,
+        null,
+        langCode,
+        1
+      );
+    }
+  );
+
+  config.addFilter(
+    "getCollectionItem",
+    function (collection, pageOverride, langCode) {
+      return getLocaleCollectionItem.call(
+        this,
+        config,
+        collection,
+        pageOverride,
+        langCode,
+        0
+      );
+    }
+  );
   config.addFilter(
     "getPreviousCollectionItem",
-    function (collection, pageOverride) {
-      let page = pageOverride || getPageInFilter(this, config);
-      return getCollectionItem(collection, page, -1);
+    function (collection, pageOverride, langCode) {
+      return getLocaleCollectionItem.call(
+        this,
+        config,
+        collection,
+        pageOverride,
+        langCode,
+        -1
+      );
     }
   );
   config.addFilter(
     "getNextCollectionItem",
-    function (collection, pageOverride) {
-      let page = pageOverride || getPageInFilter(this, config);
-      return getCollectionItem(collection, page, 1);
+    function (collection, pageOverride, langCode) {
+      return getLocaleCollectionItem.call(
+        this,
+        config,
+        collection,
+        pageOverride,
+        langCode,
+        1
+      );
     }
   );
 
