@@ -136,12 +136,17 @@ class TemplateContent {
         let alias = options.excerpt_alias || "page.excerpt";
         lodashSet(fm.data, alias, fm.excerpt);
       }
+      if (options.sections && fm.sections) {
+        let alias = options.sections_alias || "page.sections";
+        lodashSet(fm.data, alias, fm.sections);
+      }
       this.frontMatter = fm;
     } else {
       this.frontMatter = {
         data: {},
         content: "",
         excerpt: "",
+        sections: "",
       };
     }
   }
