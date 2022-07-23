@@ -273,6 +273,7 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
     {
       defaultLanguage: "",
       dictionary: {},
+      dictKey: "i18n",
       filters: {
         url: "locale_url",
         links: "locale_links",
@@ -427,20 +428,28 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
     // Determine the target language, or use the default
     const lang = context.lang || options.defaultLanguage;
 
-    // Extend the dictionary if a i18n object exists
-    const addIns = context?.i18n; // Default dictionary values will be overwritten if there are conflicts
+    // Extend the dictionary if an object with the dictionary key exists
+    const addIns = context.hasOwnProperty(options.dictKey)
+      ? context[options.dictKey]
+      : false; // Default dictionary values will be overwritten if there are conflicts
 
-    // Build the extended dictionary for the context of the current page
-    const extendedDictionary = createLangDictionary(
-      lang,
-      addIns,
-      DeepCopy(options.dictionary)
-    );
+    // Use dictionary as is if no additional entries are provided, or build the extended dictionary for the context of the current page
+    const extendedDictionary = !addIns
+      ? options.dictionary
+      : createLangDictionary(lang, addIns, DeepCopy(options.dictionary));
 
     // Find the nested value of the translation, or the default language one if the value isn't found
     const translation =
       getDeep(extendedDictionary, `${key}.${lang}`) ||
       getDeep(extendedDictionary, `${key}.${options.defaultLanguage}`);
+
+    // If no translation was found, throw an error
+    if (!translation) {
+      throw new Error(
+        `The dictionary entry for [${key}] was not found in the target language or the default language.`
+      );
+    }
+
     return translation;
   });
 }
