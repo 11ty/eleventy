@@ -28,6 +28,61 @@ class LangUtils {
       })
       .join("/");
   }
+
+  static buildDictionary(localeDictionaries = {}) {
+    // Ensure we get an object
+    if (!isObject(localeDictionaries)) {
+      throw new Error(
+        `The buildDictionaries method expects an object with one or more properties whose key is the language code and the value is the dictionary for that language's translations.`
+      );
+    }
+
+    // Initialize the dictionary
+    const dictionary = {};
+
+    // Build the dictionary from each language file
+    for (const [locale, i18n] of Object.entries(localeDictionaries)) {
+      /*
+       * Each language's locale file should have a "lang" property and an "i18n" property (nesting is allowed for the latter):
+       * {
+       *   "lang": "en",
+       *   "i18n": {
+       *     "home": "Home",
+       *     "feed": {
+       *       "label": "Feed",
+       *       "cta": "Subscribe to the RSS feed"
+       *     }
+       *   }
+       * }
+       */
+
+      // Add the dictionary entries from that locale to the dictionary
+      createLangDictionary(locale, i18n, dictionary);
+    }
+
+    /*
+     * After assigning the values of each locale's dictionary (e.g. "en" and "fr"), the output will have shifted the object so the locale is the last key of the chain:
+     * {
+     *   "home": {
+     *     "en": "Home",
+     *     "fr": "Acceuil",
+     *   },
+     *   "feed": {
+     *     "label": {
+     *       "en": "Feed",
+     *       "fr": "Flux"
+     *     },
+     *     "cta": {
+     *       "en": "Subscribe to the RSS feed",
+     *       "fr": "S'inscrire au flux RSS",
+     *     }
+     *   }
+     * }
+     */
+
+    // Return the full set
+    return dictionary;
+  }
 }
 
 class Comparator {
@@ -89,6 +144,60 @@ function normalizeInputPath(inputPath, extensionMap) {
     return extensionMap.removeTemplateExtension(inputPath);
   }
   return inputPath;
+}
+
+function isObject(obj) {
+  return (
+    Object.prototype.toString.call(obj).slice(8, -1).toLowerCase() === "object"
+  );
+}
+
+function createLangDictionary(lang, object, dictionary = {}) {
+  if (!object) {
+    return dictionary;
+  }
+  for (const [key, value] of Object.entries(object)) {
+    // Create an empty object for the property if it does not exist
+    if (typeof dictionary[key] === "undefined") {
+      dictionary[key] = {};
+    }
+
+    if (isObject(value)) {
+      // If it's an object, recursively assign
+      dictionary[key] = DeepCopy(
+        dictionary[key],
+        createLangDictionary(lang, value, dictionary[key])
+      );
+    } else {
+      // End of the line: set the translation value for the provided lang
+      dictionary[key][lang] = value;
+    }
+  }
+  return dictionary;
+}
+
+function getDeep(obj, keys) {
+  if (!obj || !isObject(obj)) {
+    throw `The provided argument is not an object.`;
+  }
+  if (typeof keys === "string") {
+    keys = keys.split(".").map((key) => key.trim());
+  }
+  if (keys.length === 0) {
+    return false;
+  }
+
+  while (keys.length > 0) {
+    const key = keys.shift();
+    if (!obj.hasOwnProperty(key)) {
+      return false;
+    }
+    obj = obj[key];
+    if (!obj) {
+      return false;
+    }
+  }
+  return obj;
 }
 
 /*
@@ -163,9 +272,11 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
   let options = DeepCopy(
     {
       defaultLanguage: "",
+      dictionary: {},
       filters: {
         url: "locale_url",
         links: "locale_links",
+        dict: "locale_dict",
       },
       errorMode: "strict", // allow-fallback, never
     },
@@ -307,6 +418,31 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
       return result;
     }
   );
+
+  // Translate strings of text based on a dictionary, with a fallback to the default language
+  eleventyConfig.addFilter(options.filters.dict, function (key) {
+    // Find the page context
+    const context = this?.ctx || this.context?.environments;
+
+    // Determine the target language, or use the default
+    const lang = context.lang || options.defaultLanguage;
+
+    // Extend the dictionary if a i18n object exists
+    const addIns = context?.i18n; // Default dictionary values will be overwritten if there are conflicts
+
+    // Build the extended dictionary for the context of the current page
+    const extendedDictionary = createLangDictionary(
+      lang,
+      addIns,
+      DeepCopy(options.dictionary)
+    );
+
+    // Find the nested value of the translation, or the default language one if the value isn't found
+    const translation =
+      getDeep(extendedDictionary, `${key}.${lang}`) ||
+      getDeep(extendedDictionary, `${key}.${options.defaultLanguage}`);
+    return translation;
+  });
 }
 
 module.exports = EleventyPlugin;
