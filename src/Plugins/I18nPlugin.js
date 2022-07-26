@@ -193,7 +193,7 @@ function getDeep(obj, keys) {
       return false;
     }
     obj = obj[key];
-    if (!obj) {
+    if (typeof obj === "undefined") {
       return false;
     }
   }
@@ -439,12 +439,14 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
       : createLangDictionary(lang, addIns, DeepCopy(options.dictionary));
 
     // Find the nested value of the translation, or the default language one if the value isn't found
-    const translation =
-      getDeep(extendedDictionary, `${key}.${lang}`) ||
-      getDeep(extendedDictionary, `${key}.${options.defaultLanguage}`);
+    // (note that a localized string can be an empty string, which is falsy, so there needs to be a strictly false check in place)
+    let translation = getDeep(fullDictionary, `${key}.${lang}`);
+    if (translation === false) {
+      translation = getDeep(fullDictionary, `${key}.${defaultLang}`);
+    }
 
     // If no translation was found, throw an error
-    if (!translation) {
+    if (translation === false) {
       throw new Error(
         `The dictionary entry for [${key}] was not found in the target language or the default language.`
       );
