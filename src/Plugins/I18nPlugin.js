@@ -11,6 +11,11 @@ const bcp47Normalize = require("bcp-47-normalize");
 const iso639 = require("iso-639-1");
 
 class LangUtils {
+  static getLanguageCodeFromUrl(url) {
+    let s = (url || "").split("/");
+    return s.length > 0 && Comparator.isLangCode(s[1]) ? s[1] : "";
+  }
+
   static swapLanguageCode(str, langCode) {
     if (!Comparator.isLangCode(langCode)) {
       return str;
@@ -197,20 +202,27 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
     }
   );
 
+  eleventyConfig.addGlobalData("eleventyComputed.page.lang", () => {
+    // if addGlobalData receives a function it will execute it immediately,
+    // so we return a nested function for computed data
+    return (data) => {
+      return (
+        LangUtils.getLanguageCodeFromUrl(data.page.url) ||
+        options.defaultLanguage
+      );
+    };
+  });
+
   // Normalize a theoretical URL based on the current page’s language
   // If a non-localized file exists, returns the URL without a language assigned
   // Fails if no file exists (localized and not localized)
   eleventyConfig.addFilter(
     options.filters.url,
     function (url, langCodeOverride) {
-      let langCode = langCodeOverride;
-      if (!langCode) {
-        let pageUrl = getPageInFilter(this)?.url;
-        let s = pageUrl.split("/");
-        langCode =
-          (s.length > 0 && Comparator.isLangCode(s[1]) ? s[1] : "") ||
-          options.defaultLanguage;
-      }
+      let langCode =
+        langCodeOverride ||
+        LangUtils.getLanguageCodeFromUrl(getPageInFilter(this)?.url) ||
+        options.defaultLanguage;
 
       // Already has a language code on it and has a relevant url with the target language code
       if (

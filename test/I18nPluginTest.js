@@ -148,7 +148,8 @@ test("locale_url and locale_links Filters", async (t) => {
 /en-us/
 /non-lang-file/
 []
-[]`
+[]
+en`
   );
 
   t.is(
@@ -159,7 +160,8 @@ test("locale_url and locale_links Filters", async (t) => {
 /en-us/
 /non-lang-file/
 [{"url":"/en/","lang":"en","label":"English"},{"url":"/en-us/","lang":"en-us","label":"English"}]
-[{"url":"/en/","lang":"en","label":"English"},{"url":"/en-us/","lang":"en-us","label":"English"}]`
+[{"url":"/en/","lang":"en","label":"English"},{"url":"/en-us/","lang":"en-us","label":"English"}]
+es`
   );
 
   t.is(
@@ -170,7 +172,8 @@ test("locale_url and locale_links Filters", async (t) => {
 /en-us/
 /non-lang-file/
 [{"url":"/en-us/","lang":"en-us","label":"English"},{"url":"/es/","lang":"es","label":"Español"}]
-[{"url":"/en-us/","lang":"en-us","label":"English"},{"url":"/es/","lang":"es","label":"Español"}]`
+[{"url":"/en-us/","lang":"en-us","label":"English"},{"url":"/es/","lang":"es","label":"Español"}]
+en`
   );
 
   t.is(
@@ -181,6 +184,7 @@ test("locale_url and locale_links Filters", async (t) => {
 /es/
 /non-lang-file/
 [{"url":"/en/","lang":"en","label":"English"},{"url":"/es/","lang":"es","label":"Español"}]
-[{"url":"/en/","lang":"en","label":"English"},{"url":"/es/","lang":"es","label":"Español"}]`
+[{"url":"/en/","lang":"en","label":"English"},{"url":"/es/","lang":"es","label":"Español"}]
+en-us`
   );
 });
