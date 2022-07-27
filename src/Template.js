@@ -563,9 +563,9 @@ class Template extends TemplateContent {
   }
 
   async addComputedData(data) {
-    this.computedData = new ComputedData(this.config);
-
     if (this.config.keys.computed in data) {
+      this.computedData = new ComputedData(this.config);
+
       // Note that `permalink` is only a thing that gets consumed—it does not go directly into generated data
       // this allows computed entries to use page.url or page.outputPath and they’ll be resolved properly
 
@@ -619,8 +619,11 @@ class Template extends TemplateContent {
 
   // Computed data consuming collections!
   async resolveRemainingComputedData(data) {
-    debug("Second round of computed data for %o", this.inputPath);
-    await this.computedData.processRemainingData(data);
+    // If it doesn’t exist, computed data is not used for this template
+    if (this.computedData) {
+      debug("Second round of computed data for %o", this.inputPath);
+      await this.computedData.processRemainingData(data);
+    }
   }
 
   async getTemplates(data) {
