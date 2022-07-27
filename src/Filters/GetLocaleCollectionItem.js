@@ -42,7 +42,7 @@ function getLocaleCollectionItem(
     langCode
   );
   // already localized (or default language)
-  if (!"__locale_page_resolved" in modifiedLocalePage) {
+  if (!("__locale_page_resolved" in modifiedLocalePage)) {
     return modifiedRootItem;
   }
 
