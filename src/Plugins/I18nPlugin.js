@@ -280,6 +280,7 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
   eleventyConfig.addFilter(
     "locale_page", // This is not exposed in `options` because it is an Eleventy internals filter (used in get*CollectionItem filters)
     function (pageOverride, languageCode) {
+      // both args here are optional
       if (!languageCode) {
         languageCode = options.defaultLanguage;
       }

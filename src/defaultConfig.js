@@ -22,34 +22,6 @@ module.exports = function (config) {
   config.addFilter("serverlessUrl", serverlessUrlFilter);
 
   config.addFilter(
-    "getPreviousCollectionItemForCurrentPage",
-    function (collection, langCode) {
-      return getLocaleCollectionItem.call(
-        this,
-        config,
-        collection,
-        null,
-        langCode,
-        -1
-      );
-    }
-  );
-
-  config.addFilter(
-    "getNextCollectionItemForCurrentPage",
-    function (collection, langCode) {
-      return getLocaleCollectionItem.call(
-        this,
-        config,
-        collection,
-        null,
-        langCode,
-        1
-      );
-    }
-  );
-
-  config.addFilter(
     "getCollectionItem",
     function (collection, pageOverride, langCode) {
       return getLocaleCollectionItem.call(
