@@ -1756,9 +1756,9 @@ This is content.`
   );
 });
 
-test.skip("Custom Front Matter Parsing Options (using TOML)", async (t) => {
+test("Custom Front Matter Parsing Options (using TOML)", async (t) => {
   // Currently fails on Windows, needs https://github.com/jonschlinkert/gray-matter/issues/92
-  let toml = require("toml");
+  const TOML = require("@iarna/toml");
 
   let tmpl = getNewTemplate(
     "./test/stubs/custom-frontmatter/template-toml.njk",
@@ -1767,7 +1767,7 @@ test.skip("Custom Front Matter Parsing Options (using TOML)", async (t) => {
   );
   tmpl.config.frontMatterParsingOptions = {
     engines: {
-      toml: toml.parse.bind(toml),
+      toml: TOML.parse.bind(TOML),
     },
   };
 
