@@ -71,6 +71,16 @@ class Eleventy {
     this.initializeEnvironmentVariables(this.env);
 
     /**
+     * @member {String} - The top level directory the site pretends to reside in
+     * @default "/"
+     */
+    this.pathPrefix = options.pathPrefix || "/";
+
+    if (this.pathPrefix || this.pathPrefix === "") {
+      this.eleventyConfig.setPathPrefix(this.pathPrefix);
+    }
+
+    /**
      * @member {Object} - Initialize Eleventy’s configuration, including the user config file
      */
     this.config = this.eleventyConfig.getConfig();

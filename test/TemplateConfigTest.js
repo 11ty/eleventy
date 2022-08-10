@@ -545,3 +545,26 @@ test("Nested .addPlugin calls. More complex order", (t) => {
 
   templateCfg.getConfig();
 });
+
+test(".addPlugin has access to pathPrefix", (t) => {
+  t.plan(1);
+  let templateCfg = new TemplateConfig();
+
+  templateCfg.userConfig.addPlugin(function (eleventyConfig) {
+    t.is(eleventyConfig.pathPrefix, "/");
+  });
+
+  templateCfg.getConfig();
+});
+
+test(".addPlugin has access to pathPrefix (override method)", (t) => {
+  t.plan(1);
+  let templateCfg = new TemplateConfig();
+  templateCfg.setPathPrefix("/test/");
+
+  templateCfg.userConfig.addPlugin(function (eleventyConfig) {
+    t.is(eleventyConfig.pathPrefix, "/test/");
+  });
+
+  templateCfg.getConfig();
+});

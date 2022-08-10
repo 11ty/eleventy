@@ -68,10 +68,11 @@ try {
     console.log(Eleventy.getHelp());
   } else {
     let elev = new Eleventy(argv.input, argv.output, {
+      source: "cli",
       // --quiet and --quiet=true both resolve to true
       quietMode: argv.quiet,
       configPath: argv.config,
-      source: "cli",
+      pathPrefix: argv.pathprefix,
     });
 
     // reuse ErrorHandler instance in Eleventy
@@ -82,7 +83,6 @@ try {
       elev.setIsVerbose(false);
     }
 
-    elev.setPathPrefix(argv.pathprefix);
     elev.setDryRun(argv.dryrun);
     elev.setIncrementalBuild(argv.incremental);
     elev.setPassthroughAll(argv.passthroughall);

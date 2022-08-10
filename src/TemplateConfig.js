@@ -166,11 +166,6 @@ class TemplateConfig {
   setPathPrefix(pathPrefix) {
     debug("Setting pathPrefix to %o", pathPrefix);
     this.overrides.pathPrefix = pathPrefix;
-
-    if (!this.hasConfigMerged) {
-      this.forceReloadConfig();
-    }
-    this.config.pathPrefix = pathPrefix;
   }
 
   /**
@@ -179,6 +174,10 @@ class TemplateConfig {
    *  @returns {String} - The path prefix string
    */
   getPathPrefix() {
+    if (this.overrides.pathPrefix || this.overrides.pathPrefix === "") {
+      return this.overrides.pathPrefix;
+    }
+
     if (!this.hasConfigMerged) {
       this.getConfig();
     }
@@ -203,8 +202,9 @@ class TemplateConfig {
    *
    * @param {Object} - the return Object from the user’s config file.
    */
-  processPlugins({ dir }) {
+  processPlugins({ dir, pathPrefix }) {
     this.userConfig.dir = dir;
+    this.userConfig.pathPrefix = pathPrefix;
 
     if (this.logger) {
       this.userConfig.logger = this.logger;
@@ -314,6 +314,12 @@ class TemplateConfig {
 
     // Temporarily restore templateFormats
     mergedConfig.templateFormats = templateFormats;
+
+    // Setup pathPrefix set via command line for plugin consumption
+    if (this.overrides.pathPrefix || this.overrides.pathPrefix === "") {
+      mergedConfig.pathPrefix = this.overrides.pathPrefix;
+    }
+
     this.processPlugins(mergedConfig);
     delete mergedConfig.templateFormats;
 
