@@ -52,12 +52,12 @@ body:
     id: repro-url
     attributes:
       label: Reproduction URL
-      description: If applicable, please provide a URL to a reproduction.
-      placeholder: github.com/11ty/reproduction
+      description: "Optional: The URL to the **public** repository for the reproduction. _[parser:url]_"
+      placeholder: e.g. https://github.com/zachleat/zachleat.com
     validations:
       required: false
   - type: textarea
     id: screenshots
     attributes:
       label: Screenshots
-      description: If applicable, add screenshots to help explain your problem.
+      description: "Optional: If applicable, add screenshots to help explain your problem."
