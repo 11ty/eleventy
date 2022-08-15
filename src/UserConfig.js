@@ -67,7 +67,7 @@ class UserConfig {
 
     this.useGitIgnore = true;
     this.ignores = new Set();
-    this.ignores.add("node_modules/**");
+    this.ignores.add("**/node_modules/**");
     this.ignores.add(".git/**");
 
     this.dataDeepMerge = true;

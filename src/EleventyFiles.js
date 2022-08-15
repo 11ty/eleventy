@@ -118,7 +118,7 @@ class EleventyFiles {
   _setConfig(config) {
     if (!config.ignores) {
       config.ignores = new Set();
-      config.ignores.add("node_modules/**");
+      config.ignores.add("**/node_modules/**");
     }
     this.config = config;
     this.initConfig();
