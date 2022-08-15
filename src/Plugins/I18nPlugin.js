@@ -1,3 +1,5 @@
+const path = require("path");
+
 // pathPrefix note:
 // When using `locale_url` filter with the `url` filter, `locale_url` must run first like
 // `| locale_url | url`. If you run `| url | locale_url` it won’t match correctly.
@@ -11,20 +13,23 @@ const bcp47Normalize = require("bcp-47-normalize");
 const iso639 = require("iso-639-1");
 
 class LangUtils {
+  static getLanguageCodeFromFilePath(filepath) {
+    return (filepath || "")
+      .split(path.sep)
+      .find((entry) => Comparator.isLangCode(entry));
+  }
+
   static getLanguageCodeFromUrl(url) {
     let s = (url || "").split("/");
     return s.length > 0 && Comparator.isLangCode(s[1]) ? s[1] : "";
   }
 
-  static swapLanguageCode(str, langCode) {
-    if (!Comparator.isLangCode(langCode)) {
-      return str;
-    }
-
+  static swapLanguageCodeNoCheck(str, langCode) {
     let found = false;
     return str
       .split("/")
       .map((entry) => {
+        // only match the first one
         if (!found && Comparator.isLangCode(entry)) {
           found = true;
           return langCode;
@@ -33,6 +38,14 @@ class LangUtils {
       })
       .join("/");
   }
+
+  static swapLanguageCode(str, langCode) {
+    if (!Comparator.isLangCode(langCode)) {
+      return str;
+    }
+
+    return LangUtils.swapLanguageCodeNoCheck(str, langCode);
+  }
 }
 
 class Comparator {
@@ -40,7 +53,13 @@ class Comparator {
   // Requires a ISO-639-1 language code at the start (2 characters before the first -)
   static isLangCode(code) {
     let [s] = (code || "").split("-");
-    return iso639.validate(s) && !!bcp47Normalize(code);
+    if (!iso639.validate(s)) {
+      return false;
+    }
+    if (!bcp47Normalize(code)) {
+      return false;
+    }
+    return true;
   }
 
   static urlHasLangCode(url, code) {
@@ -98,59 +117,43 @@ function normalizeInputPath(inputPath, extensionMap) {
 
 /*
  * Input: {
- *   '/en-us/': './test/stubs-i18n/en-us/index.11ty.js',
- *   '/en/': './test/stubs-i18n/en/index.liquid',
- *   '/es/': './test/stubs-i18n/es/index.njk',
+ *   '/en-us/test/': './test/stubs-i18n/en-us/test.11ty.js',
+ *   '/en/test/': './test/stubs-i18n/en/test.liquid',
+ *   '/es/test/': './test/stubs-i18n/es/test.njk',
  *   '/non-lang-file/': './test/stubs-i18n/non-lang-file.njk'
  * }
  *
  * Output: {
- *   '/en-us/': [ '/en/', '/es/' ],
- *   '/en/': [ '/en-us/', '/es/' ],
- *   '/es/': [ '/en-us/', '/en/' ]
+ *   '/en-us/test/': [ { url: '/en/test/' }, { url: '/es/test/' } ],
+ *   '/en/test/': [ { url: '/en-us/test/' }, { url: '/es/test/' } ],
+ *   '/es/test/': [ { url: '/en-us/test/' }, { url: '/en/test/' } ]
  * }
  */
 function getLocaleUrlsMap(urlToInputPath, extensionMap) {
-  // map of input paths => array of localized urls
-  let urlMap = {};
+  let filemap = {};
+  for (let url in urlToInputPath) {
+    let originalFilepath = urlToInputPath[url];
+    let filepath = normalizeInputPath(originalFilepath, extensionMap);
+    let replaced = LangUtils.swapLanguageCodeNoCheck(filepath, "__11ty_i18n");
+    if (!filemap[replaced]) {
+      filemap[replaced] = [];
+    }
 
-  // map of input paths without extensions
-  let inputPathsWithoutTemplateExtensionsMap = {};
-  for (let path of Object.values(urlToInputPath)) {
-    inputPathsWithoutTemplateExtensionsMap[path] = normalizeInputPath(
-      path,
-      extensionMap
-    );
-  }
-
-  for (let comparisonUrl in urlToInputPath) {
-    for (let url in urlToInputPath) {
-      let comparisonInputPath = urlToInputPath[comparisonUrl];
-      let inputPath = urlToInputPath[url];
-
-      // Compare *without* template extensions: `/en/about.liquid` should match `/es/about.11ty.js`
-      let matched = Comparator.matchLanguageFolder(
-        inputPathsWithoutTemplateExtensionsMap[comparisonInputPath],
-        inputPathsWithoutTemplateExtensionsMap[inputPath]
-      );
-      if (matched) {
-        if (!urlMap[comparisonUrl]) {
-          urlMap[comparisonUrl] = [];
-        }
-
-        let [, langCode] = matched;
-        urlMap[comparisonUrl].push({
-          url,
-          lang: langCode,
-          label: iso639.getNativeName(langCode.split("-")[0]),
-        });
-      }
+    let langCode = LangUtils.getLanguageCodeFromFilePath(originalFilepath);
+    if (langCode) {
+      filemap[replaced].push({
+        url,
+        lang: langCode,
+        label: iso639.getNativeName(langCode.split("-")[0]),
+      });
+    } else {
+      filemap[replaced].push({ url });
     }
   }
 
   // Default sorted by lang code
-  for (let key in urlMap) {
-    urlMap[key].sort(function (a, b) {
+  for (let key in filemap) {
+    filemap[key].sort(function (a, b) {
       if (a.lang < b.lang) {
         return -1;
       }
@@ -159,6 +162,17 @@ function getLocaleUrlsMap(urlToInputPath, extensionMap) {
       }
       return 0;
     });
+  }
+
+  // map of input paths => array of localized urls
+  let urlMap = {};
+  for (let filepath in filemap) {
+    for (let entry of filemap[filepath]) {
+      let url = entry.url;
+      if (!urlMap[url]) {
+        urlMap[url] = filemap[filepath].filter((entry) => entry.url !== url);
+      }
+    }
   }
 
   return urlMap;
@@ -183,6 +197,8 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
     );
   }
 
+  let benchmarkManager = eleventyConfig.benchmarkManager.get("Aggregate");
+
   let extensionMap;
   eleventyConfig.on("eleventy.extensionmap", (map) => {
     extensionMap = map;
@@ -192,13 +208,17 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
   eleventyConfig.on(
     "eleventy.contentMap",
     function ({ urlToInputPath, inputPathToUrl }) {
+      let bench = benchmarkManager.get("(i18n Plugin) Setting up content map.");
+      bench.before();
       contentMaps.inputPathToUrl = inputPathToUrl;
       contentMaps.urlToInputPath = urlToInputPath;
 
       contentMaps.localeUrlsMap = getLocaleUrlsMap(
         urlToInputPath,
-        extensionMap
+        extensionMap,
+        benchmarkManager
       );
+      bench.after();
     }
   );
 
