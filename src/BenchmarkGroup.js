@@ -109,11 +109,11 @@ class BenchmarkGroup {
         this.logger.warn(str);
       }
 
-      // Don’t log if 0ms or only called ×1 time
-      // Exception for things that are only counting (no execution time measured), e.g. 0ms and counts > 100
+      // Opt out of logging if low count (1× or 2×) or 0ms / 1%
       if (
-        (totalForBenchmark.toFixed(0) > 0 && callCount > 1) ||
-        callCount > 100
+        totalForBenchmark.toFixed(0) > 1 || // more than 1ms
+        callCount > 2 || // more than 2×
+        percent > 1 // more than 1%
       ) {
         debugBenchmark(str);
       }
