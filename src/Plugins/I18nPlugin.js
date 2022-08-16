@@ -1,5 +1,3 @@
-const path = require("path");
-
 // pathPrefix note:
 // When using `locale_url` filter with the `url` filter, `locale_url` must run first like
 // `| locale_url | url`. If you run `| url | locale_url` it won’t match correctly.
