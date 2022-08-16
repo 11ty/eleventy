@@ -119,7 +119,7 @@ class EleventyWatchTargets {
 
   clearDependencyRequireCache() {
     for (let path of this.dependencies) {
-      deleteRequireCache(TemplatePath.absolutePath(path));
+      deleteRequireCache(path);
     }
   }
 

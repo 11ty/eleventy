@@ -7,7 +7,7 @@ const querystring = require("querystring");
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const NetlifyRedirects = require("./Serverless/NetlifyRedirects");
-const deleteRequireCache = require("../Util/DeleteRequireCache");
+const { EleventyRequire } = require("../Util/Require");
 const JavaScriptDependencies = require("../Util/JavaScriptDependencies");
 const debug = require("debug")("Eleventy:Serverless");
 
@@ -166,10 +166,9 @@ class BundlerHelper {
     let serverlessFilepath = TemplatePath.addLeadingDotSlash(
       path.join(TemplatePath.getWorkingDir(), this.dir, "index")
     );
-    deleteRequireCache(TemplatePath.absolutePath(serverlessFilepath));
 
     return async function EleventyServerlessMiddleware(req, res, next) {
-      let serverlessFunction = require(serverlessFilepath);
+      let serverlessFunction = EleventyRequire(serverlessFilepath);
       let url = new URL(req.url, "http://localhost/"); // any domain will do here, we just want the searchParams
 
       let start = new Date();

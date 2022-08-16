@@ -12,11 +12,11 @@ const TemplateGlob = require("./TemplateGlob");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");
 const TemplateDataInitialGlobalData = require("./TemplateDataInitialGlobalData");
+const { EleventyRequire } = require("./Util/Require");
 
 const debugWarn = require("debug")("Eleventy:Warnings");
 const debug = require("debug")("Eleventy:TemplateData");
 const debugDev = require("debug")("Dev:Eleventy:TemplateData");
-const deleteRequireCache = require("./Util/DeleteRequireCache");
 
 class FSExistsCache {
   constructor() {
@@ -502,9 +502,8 @@ class TemplateData {
       aggregateDataBench.before();
       let dataBench = this.benchmarks.data.get(`\`${path}\``);
       dataBench.before();
-      deleteRequireCache(localPath);
 
-      let returnValue = require(localPath);
+      let returnValue = EleventyRequire(localPath);
       // TODO special exception for Global data `permalink.js`
       // module.exports = (data) => `${data.page.filePathStem}/`; // Does not work
       // module.exports = () => ((data) => `${data.page.filePathStem}/`); // Works

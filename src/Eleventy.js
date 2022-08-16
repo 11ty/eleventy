@@ -276,7 +276,7 @@ class Eleventy {
 
     // reload package.json values (if applicable)
     // TODO only reset this if it changed
-    deleteRequireCache(TemplatePath.absolutePath("package.json"));
+    deleteRequireCache("package.json");
 
     await this.init();
   }
@@ -675,7 +675,7 @@ Arguments:
       for (let dep of configFileDependencies) {
         if (this.watchManager.hasQueuedFile(dep)) {
           // Delete from require cache so that updates to the module are re-required
-          deleteRequireCache(TemplatePath.absolutePath(dep));
+          deleteRequireCache(dep);
 
           return true;
         }

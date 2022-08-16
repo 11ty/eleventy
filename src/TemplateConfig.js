@@ -3,12 +3,13 @@ const chalk = require("kleur");
 const lodashUniq = require("lodash/uniq");
 const lodashMerge = require("lodash/merge");
 const { TemplatePath } = require("@11ty/eleventy-utils");
-const EleventyBaseError = require("./EleventyBaseError");
-const UserConfig = require("./UserConfig");
+const EleventyBaseError = require("./EleventyBaseError.js");
+const UserConfig = require("./UserConfig.js");
+const { EleventyRequire } = require("./Util/Require.js");
+const eventBus = require("./EventBus.js");
+
 const debug = require("debug")("Eleventy:TemplateConfig");
 const debugDev = require("debug")("Dev:Eleventy:TemplateConfig");
-const deleteRequireCache = require("./Util/DeleteRequireCache");
-const eventBus = require("./EventBus");
 
 /**
  * @module 11ty/eleventy/TemplateConfig
@@ -272,17 +273,13 @@ class TemplateConfig {
     let localConfig = {};
     let path = this.projectConfigPaths
       .filter((path) => path)
-      .map((path) => TemplatePath.absolutePath(path))
       .find((path) => fs.existsSync(path));
 
     debug(`Merging config with ${path}`);
 
     if (path) {
       try {
-        // remove from require cache so it will grab a fresh copy
-        deleteRequireCache(path);
-
-        localConfig = require(path);
+        localConfig = EleventyRequire(path);
         // debug( "localConfig require return value: %o", localConfig );
         if (typeof localConfig === "function") {
           localConfig = localConfig(this.userConfig);

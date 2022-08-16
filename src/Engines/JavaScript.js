@@ -82,10 +82,7 @@ class JavaScript extends TemplateEngine {
 
   // only remove from cache once on startup (if it already exists)
   initRequireCache(inputPath) {
-    let requirePath = TemplatePath.absolutePath(inputPath);
-    if (requirePath) {
-      deleteRequireCache(requirePath);
-    }
+    deleteRequireCache(inputPath);
 
     if (inputPath in this.instances) {
       delete this.instances[inputPath];
