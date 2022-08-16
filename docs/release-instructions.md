@@ -8,68 +8,47 @@
 - `multimatch` is ESM at 6
 - `bcp-47-normalize` at 1.x
 
-# Canary Release Procedure
-
-1. npmclean aka `rm -rf node_modules && rm -f package-lock.json && npm install`
-1. Make sure `npx ava` runs okay
-1. Update version in `package.json`, include `-canary.1` suffix
-1. Check it all in and commit
-1. Tag new version
-1. `npm publish --access=public --tag=canary`
-1. (if applicable), build and commit a new the `eleventy-edge-cdn` project to generate a new Eleventy Edge lib.
-
-Unfortunate thing about npm: if you push a 1.0.0-canary.x to `canary` after a `2.0.0-canary.x`, it will use the last pushed tag (not the highest version number)
-
-# Beta Release Procedure
-
-1. update minor dependencies in package.json?
-1. npmclean aka `rm -rf node_modules && rm -f package-lock.json && npm install`
-1. npm audit
-1. Make sure `npx ava` runs okay
-1. Update version in `package.json`, include `-beta.1` suffix
-1. Run `npm run coverage`
-1. Check it all in and commit
-1. Tag new version
-1. `npm publish --access=public --tag=beta`
-1. (if applicable), build and commit a new the `eleventy-edge-cdn` project to generate a new Eleventy Edge lib.
-
 # Release Procedure
 
-1. update minor dependencies in package.json? `npm outdated` `npm update --save`
-1. npmclean aka `rm -rf node_modules && rm -f package-lock.json && npm install`
+1. (Optional) Update minor dependencies in package.json
+   - `npm outdated`
+   - `npm update --save`
 1. If the minimum Node version changed, make sure you update `package.json` engines property.
-1. Bonus: make sure the error message works correctly for Node versions less than 10.
-
-- 0.12.x+ requires Node 10+
-- 1.x+ requires Node 12+
-- 2.x+ requires Node 14+
-
-1. npm audit
+   - Make sure the error message works correctly for Node versions less than 10.
+     - 0.12.x+ requires Node 10+
+     - 1.x+ requires Node 12+
+     - 2.x+ requires Node 14+
+1. `rm -rf node_modules && rm -f package-lock.json && npm install`
+1. `npm audit`
 1. Make sure `npx ava` runs okay
 1. Update version in `package.json`
-1. Run `npm run coverage`
+   - (Canary) Use `-canary.1` suffix
+   - (Beta) Use `-beta.1` suffix
+1. (Beta) Run `npm run coverage`
 1. Check it all in and commit
 1. Tag new version
-1. `npm publish --access=public`
-1. (if applicable), build and commit a new the `eleventy-edge-cdn` project to generate a new Eleventy Edge lib.
+1. Release
+   - (Main) `npm publish --access=public`
+   - (Canary) `npm publish --access=public --tag=canary`
+   - (Beta) `npm publish --access=public --tag=beta`
+1. (Optional) Build and commit a new the `eleventy-edge-cdn` project to generate a new Eleventy Edge lib.
 
-## If Docs branch does not yet exist
+Unfortunate note about npm `canary` tag: if you push a 1.0.0-canary.x to `canary` after a `2.0.0-canary.x`, it will use the last pushed tag when you npm install from `canary` (not the highest version number)
+
+# Docs/Website (Main releases only)
 
 1. Check in a new `11ty-website` site with updated `package.json` version.
-1. Add version to 11ty-website `versions.json`
+1. Add version to `11ty-website` `versions.json`
 1. Commit it
 1. Create a new branch for branched version
+1. (Main) Check out the previous version git branch and add `outdated: true` to `_data/config.json` and commit/push.
 1. Go to https://app.netlify.com/sites/11ty/settings/domain and set up a subdomain for it.
 
-### Always:
+# Release Notes on GitHub (Main releases only)
 
-1. Check out the previous version git branch and add `outdated: true` to `_data/config.json` and commit/push.
-2. Update `eleventy-base-blog`?
+1. Draft a new release on GitHub
+1. Fetch OpenCollective usernames for release notes https://www.11ty.dev/supporters-for-release-notes/
 
----
+# Extras
 
-## If Branch docs already exist, 11ty-website (unlikely, I don’t do this any more)
-
-1. Check to make sure `"prerelease": false` in `_data/config.json`
-2. Check to make sure `"prerelease": true` does not exist in current version in `_data/versions.json`
-3. Merge branch to master.
+1. Update `eleventy-base-blog`?
