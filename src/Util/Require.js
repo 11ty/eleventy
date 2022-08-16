@@ -1,8 +1,8 @@
 const { TemplatePath } = require("@11ty/eleventy-utils");
 const { deleteRequireCacheAbsolute } = require("./DeleteRequireCache");
 
-function requireLocal(path) {
-  let absolutePath = TemplatePath.absolutePath(path);
+function requireLocal(localPath) {
+  let absolutePath = TemplatePath.absolutePath(localPath);
 
   return requireAbsolute(absolutePath);
 }
