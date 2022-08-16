@@ -13,9 +13,9 @@ const bcp47Normalize = require("bcp-47-normalize");
 const iso639 = require("iso-639-1");
 
 class LangUtils {
-  static getLanguageCodeFromFilePath(filepath) {
+  static getLanguageCodeFromInputPath(filepath) {
     return (filepath || "")
-      .split(path.sep)
+      .split("/")
       .find((entry) => Comparator.isLangCode(entry));
   }
 
@@ -139,7 +139,7 @@ function getLocaleUrlsMap(urlToInputPath, extensionMap) {
       filemap[replaced] = [];
     }
 
-    let langCode = LangUtils.getLanguageCodeFromFilePath(originalFilepath);
+    let langCode = LangUtils.getLanguageCodeFromInputPath(originalFilepath);
     if (langCode) {
       filemap[replaced].push({
         url,
