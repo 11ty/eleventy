@@ -55,8 +55,8 @@ class TemplateConfig {
      */
     this.projectConfigPaths = [
       ".eleventy.js",
-      ".eleventy.cjs",
       "eleventy.config.js",
+      ".eleventy.cjs",
       "eleventy.config.cjs",
     ];
     if (projectConfigPath !== undefined) {
