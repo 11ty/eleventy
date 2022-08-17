@@ -242,13 +242,14 @@ class UserConfig {
 
     // This method *requires* `async function` and will not work with `function` that returns a promise
     if (callback instanceof ComparisonAsyncFunction) {
-      this.addNunjucksAsyncFilter(name, async function (value, cb) {
-        let ret = await callback(value);
+      this.addNunjucksAsyncFilter(name, async function (...args) {
+        let cb = args.pop();
+        let ret = await callback.call(this, ...args);
         cb(null, ret);
       });
     } else {
-      this.addNunjucksFilter(name, function (value) {
-        let ret = callback(value);
+      this.addNunjucksFilter(name, function (...args) {
+        let ret = callback.call(this, ...args);
         if (ret instanceof Promise) {
           throw new Error(
             `Nunjucks *is* async-friendly with \`addFilter("${name}", async function() {})\` but you need to supply an \`async function\`. You returned a promise from \`addFilter("${name}", function() {})\`. Alternatively, use the \`addAsyncFilter("${name}")\` configuration API method.`
@@ -269,8 +270,9 @@ class UserConfig {
     // namespacing happens downstream
     this.addLiquidFilter(name, callback);
     this.addJavaScriptFunction(name, callback);
-    this.addNunjucksAsyncFilter(name, async function (value, cb) {
-      let ret = await callback(value);
+    this.addNunjucksAsyncFilter(name, async function (...args) {
+      let cb = args.pop();
+      let ret = await callback.call(this, ...args);
       cb(null, ret);
     });
   }
