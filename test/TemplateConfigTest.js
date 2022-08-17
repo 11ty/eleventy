@@ -568,3 +568,17 @@ test(".addPlugin has access to pathPrefix (override method)", (t) => {
 
   templateCfg.getConfig();
 });
+
+test("falsy pathPrefix should fall back to default", (t) => {
+  t.plan(1);
+  let templateCfg = new TemplateConfig(
+    require("../src/defaultConfig.js"),
+    "./test/stubs/config-empty-pathprefix.js"
+  );
+
+  templateCfg.userConfig.addPlugin(function (eleventyConfig) {
+    t.is(eleventyConfig.pathPrefix, "/");
+  });
+
+  templateCfg.getConfig();
+});

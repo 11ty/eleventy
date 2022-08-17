@@ -196,7 +196,7 @@ class TemplateConfig {
    *  @returns {String} - The path prefix string
    */
   getPathPrefix() {
-    if (this.overrides.pathPrefix || this.overrides.pathPrefix === "") {
+    if (this.overrides.pathPrefix) {
       return this.overrides.pathPrefix;
     }
 
@@ -335,8 +335,12 @@ class TemplateConfig {
     mergedConfig.templateFormats = templateFormats;
 
     // Setup pathPrefix set via command line for plugin consumption
-    if (this.overrides.pathPrefix || this.overrides.pathPrefix === "") {
+    if (this.overrides.pathPrefix) {
       mergedConfig.pathPrefix = this.overrides.pathPrefix;
+    }
+    // Returning a falsy value (e.g. "") from user config should reset to the default value.
+    if (!mergedConfig.pathPrefix) {
+      mergedConfig.pathPrefix = this.rootConfig.pathPrefix;
     }
 
     this.processPlugins(mergedConfig);
