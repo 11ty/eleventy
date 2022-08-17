@@ -1070,3 +1070,41 @@ test("Use a precompiled Nunjucks template", async (t) => {
 34`
   );
 });
+
+test("Make sure addFilter is async-friendly for Nunjucks", async (t) => {
+  let templateConfig = new TemplateConfig();
+  // requires async function
+  templateConfig.userConfig.addFilter("fortytwo", async function () {
+    return getPromise(42);
+  });
+
+  let tr = getNewTemplateRender("njk", null, templateConfig);
+
+  let fn = await tr.getCompiledTemplate("<p>{{ 'hi' | fortytwo }}</p>");
+  t.is(await fn(), "<p>42</p>");
+});
+
+test("Throw an error when you return a promise in addFilter for Nunjucks", async (t) => {
+  let templateConfig = new TemplateConfig();
+  // requires async function
+  templateConfig.userConfig.addFilter("fortytwo", function () {
+    return getPromise(42);
+  });
+
+  let tr = getNewTemplateRender("njk", null, templateConfig);
+  let fn = await tr.getCompiledTemplate("<p>{{ 'hi' | fortytwo }}</p>");
+  await t.throwsAsync(fn);
+});
+
+test("addAsyncFilter for Nunjucks", async (t) => {
+  let templateConfig = new TemplateConfig();
+  // works without async function (can return promise)
+  templateConfig.userConfig.addAsyncFilter("fortytwo", function () {
+    return getPromise(42);
+  });
+
+  let tr = getNewTemplateRender("njk", null, templateConfig);
+
+  let fn = await tr.getCompiledTemplate("<p>{{ 'hi' | fortytwo }}</p>");
+  t.is(await fn(), "<p>42</p>");
+});

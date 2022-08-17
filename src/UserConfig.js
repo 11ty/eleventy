@@ -10,6 +10,8 @@ const pkg = require("../package.json");
 
 class UserConfigError extends EleventyBaseError {}
 
+const ComparisonAsyncFunction = (async () => {}).constructor;
+
 // API to expose configuration options in config file
 class UserConfig {
   constructor() {
@@ -236,11 +238,41 @@ class UserConfig {
 
     // namespacing happens downstream
     this.addLiquidFilter(name, callback);
-    this.addNunjucksFilter(name, callback);
     this.addJavaScriptFunction(name, callback);
 
-    // TODO remove Handlebars helpers in Universal Filters. Use shortcodes instead (the Handlebars template syntax is the same).
-    this.addHandlebarsHelper(name, callback);
+    // This method *requires* `async function` and will not work with `function` that returns a promise
+    if (callback instanceof ComparisonAsyncFunction) {
+      this.addNunjucksAsyncFilter(name, async function (value, cb) {
+        let ret = await callback(value);
+        cb(null, ret);
+      });
+    } else {
+      this.addNunjucksFilter(name, function (value) {
+        let ret = callback(value);
+        if (ret instanceof Promise) {
+          throw new Error(
+            `Nunjucks *is* async-friendly with \`addFilter("${name}", async function() {})\` but you need to supply an \`async function\`. You returned a promise from \`addFilter("${name}", function() {})\`. Alternatively, use the \`addAsyncFilter("${name}")\` configuration API method.`
+          );
+        }
+        return ret;
+      });
+
+      // TODO remove Handlebars helpers in Universal Filters. Use shortcodes instead (the Handlebars template syntax is the same).
+      this.addHandlebarsHelper(name, callback);
+    }
+  }
+
+  // Liquid, Nunjucks, and JS only
+  addAsyncFilter(name, callback) {
+    debug("Adding universal async filter %o", this.getNamespacedName(name));
+
+    // namespacing happens downstream
+    this.addLiquidFilter(name, callback);
+    this.addJavaScriptFunction(name, callback);
+    this.addNunjucksAsyncFilter(name, async function (value, cb) {
+      let ret = await callback(value);
+      cb(null, ret);
+    });
   }
 
   getFilter(name) {
