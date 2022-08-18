@@ -355,7 +355,7 @@ test("Using the HTML base plugin with pathPrefix: /test/ and base: http://exampl
     config: function (eleventyConfig) {
       eleventyConfig.setUseTemplateCache(false);
       eleventyConfig.addPlugin(HtmlBasePlugin, {
-        base: "http://example.com/",
+        baseHref: "http://example.com/",
       });
     },
   });
@@ -393,7 +393,7 @@ test("Using the HTML base plugin strips extra path in full URL base (default pat
     config: function (eleventyConfig) {
       eleventyConfig.setUseTemplateCache(false);
       eleventyConfig.addPlugin(HtmlBasePlugin, {
-        base: "http://example.com/hello/", // extra path will be stripped
+        baseHref: "http://example.com/hello/", // extra path will be stripped
       });
     },
   });
@@ -433,7 +433,7 @@ test("Using the HTML base plugin strips extra path in full URL base (pathPrefix:
     config: function (eleventyConfig) {
       eleventyConfig.setUseTemplateCache(false);
       eleventyConfig.addPlugin(HtmlBasePlugin, {
-        base: "http://example.com/hello/", // extra path will be stripped
+        baseHref: "http://example.com/hello/", // extra path will be stripped
       });
     },
   });

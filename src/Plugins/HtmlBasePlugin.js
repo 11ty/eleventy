@@ -71,7 +71,7 @@ module.exports = function (eleventyConfig, defaultOptions = {}) {
       // eleventyConfig.pathPrefix is new in Eleventy 2.0.0-canary.15
       // `base` can be a directory (for path prefix transformations)
       //    OR a full URL with origin and pathname
-      base: eleventyConfig.pathPrefix,
+      baseHref: eleventyConfig.pathPrefix,
 
       extensions: "html",
 
@@ -85,7 +85,7 @@ module.exports = function (eleventyConfig, defaultOptions = {}) {
     defaultOptions
   );
 
-  if (opts.base === undefined) {
+  if (opts.baseHref === undefined) {
     throw new Error(
       "The `base` option is required in the Eleventy HTML Base plugin."
     );
@@ -98,7 +98,7 @@ module.exports = function (eleventyConfig, defaultOptions = {}) {
   eleventyConfig.addFilter(
     opts.filters.base,
     function (url, baseOverride, pageUrlOverride) {
-      let base = baseOverride || opts.base;
+      let base = baseOverride || opts.baseHref;
 
       // Do nothing with a default base
       if (base === "/") {
@@ -119,7 +119,7 @@ module.exports = function (eleventyConfig, defaultOptions = {}) {
   eleventyConfig.addAsyncFilter(
     opts.filters.html,
     function (content, baseOverride, pageUrlOverride) {
-      let base = baseOverride || opts.base;
+      let base = baseOverride || opts.baseHref;
 
       // Do nothing with a default base
       if (base === "/") {
@@ -140,7 +140,7 @@ module.exports = function (eleventyConfig, defaultOptions = {}) {
   );
 
   // Skip the transform with a default base
-  if (opts.base !== "/") {
+  if (opts.baseHref !== "/") {
     let extensionMap = {};
     for (let ext of opts.extensions.split(",")) {
       extensionMap[ext] = true;
@@ -150,7 +150,7 @@ module.exports = function (eleventyConfig, defaultOptions = {}) {
       let ext = this.outputPath?.split(".").pop();
       if (extensionMap[ext]) {
         return addToAllHtmlUrls(content, (url) => {
-          return transformUrl.call(this, url.trim(), opts.base, {
+          return transformUrl.call(this, url.trim(), opts.baseHref, {
             pathPrefix: eleventyConfig.pathPrefix,
             pageUrl: this.url,
           });
