@@ -479,13 +479,15 @@ class Template extends TemplateContent {
     this.linters.push(callback);
   }
 
-  async runLinters(str, inputPath, outputPath) {
+  async runLinters(str, page) {
+    let { inputPath, outputPath, url } = page;
     for (let linter of this.linters) {
       // these can be asynchronous but no guarantee of order when they run
       linter.call(
         {
           inputPath,
           outputPath,
+          url,
         },
         str,
         inputPath,
@@ -501,7 +503,8 @@ class Template extends TemplateContent {
     });
   }
 
-  async runTransforms(str, inputPath, outputPath) {
+  async runTransforms(str, page) {
+    let { inputPath, outputPath, url } = page;
     for (let { callback, name } of this.transforms) {
       try {
         let hadStrBefore = !!str;
@@ -509,6 +512,7 @@ class Template extends TemplateContent {
           {
             inputPath,
             outputPath,
+            url,
           },
           str,
           outputPath
@@ -788,12 +792,8 @@ class Template extends TemplateContent {
       content = page.templateContent;
     }
 
-    await this.runLinters(content, page.inputPath, page.outputPath);
-    content = await this.runTransforms(
-      content,
-      page.inputPath,
-      page.outputPath
-    );
+    await this.runLinters(content, page);
+    content = await this.runTransforms(content, page);
     return content;
   }
 
