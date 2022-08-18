@@ -129,6 +129,7 @@ function normalizeInputPath(inputPath, extensionMap) {
  */
 function getLocaleUrlsMap(urlToInputPath, extensionMap) {
   let filemap = {};
+  let paginationTemplateCheck = {};
   for (let url in urlToInputPath) {
     let originalFilepath = urlToInputPath[url];
     let filepath = normalizeInputPath(originalFilepath, extensionMap);
@@ -138,14 +139,20 @@ function getLocaleUrlsMap(urlToInputPath, extensionMap) {
     }
 
     let langCode = LangUtils.getLanguageCodeFromInputPath(originalFilepath);
-    if (langCode) {
-      filemap[replaced].push({
-        url,
-        lang: langCode,
-        label: iso639.getNativeName(langCode.split("-")[0]),
-      });
-    } else {
-      filemap[replaced].push({ url });
+    let paginationCheckKey = `${originalFilepath}__${langCode}`;
+
+    // pagination templates should only match once per language
+    if (!paginationTemplateCheck[paginationCheckKey]) {
+      if (langCode) {
+        filemap[replaced].push({
+          url,
+          lang: langCode,
+          label: iso639.getNativeName(langCode.split("-")[0]),
+        });
+      } else {
+        filemap[replaced].push({ url });
+      }
+      paginationTemplateCheck[paginationCheckKey] = true;
     }
   }
 
@@ -168,7 +175,9 @@ function getLocaleUrlsMap(urlToInputPath, extensionMap) {
     for (let entry of filemap[filepath]) {
       let url = entry.url;
       if (!urlMap[url]) {
-        urlMap[url] = filemap[filepath].filter((entry) => entry.url !== url);
+        urlMap[url] = filemap[filepath].filter((entry) => {
+          return entry.url !== url;
+        });
       }
     }
   }
