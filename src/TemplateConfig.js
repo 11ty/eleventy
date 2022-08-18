@@ -54,13 +54,19 @@ class TemplateConfig {
      * @member {String} - Path to local project config.
      * @default .eleventy.js
      */
-    this.projectConfigPaths = [
-      ".eleventy.js",
-      "eleventy.config.js",
-      "eleventy.config.cjs",
-    ];
     if (projectConfigPath !== undefined) {
-      this.projectConfigPaths = [projectConfigPath];
+      if (!projectConfigPath) {
+        // falsy skips config files
+        this.projectConfigPaths = [];
+      } else {
+        this.projectConfigPaths = [projectConfigPath];
+      }
+    } else {
+      this.projectConfigPaths = [
+        ".eleventy.js",
+        "eleventy.config.js",
+        "eleventy.config.cjs",
+      ];
     }
 
     if (customRootConfig) {

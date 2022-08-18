@@ -46,6 +46,17 @@ class Eleventy {
 
     this.eleventyConfig.setLogger(this.logger);
 
+    /**
+     * @member {String} - The top level directory the site pretends to reside in
+     * @default "/"
+     */
+    this.pathPrefix = options.pathPrefix || "/";
+
+    if (this.pathPrefix || this.pathPrefix === "") {
+      this.eleventyConfig.setPathPrefix(this.pathPrefix);
+    }
+
+    /* Programmatic API config */
     if (options.config && typeof options.config === "function") {
       // TODO use return object here?
       options.config(this.eleventyConfig.userConfig);
@@ -69,16 +80,6 @@ class Eleventy {
      */
     this.env = this.getEnvironmentVariableValues();
     this.initializeEnvironmentVariables(this.env);
-
-    /**
-     * @member {String} - The top level directory the site pretends to reside in
-     * @default "/"
-     */
-    this.pathPrefix = options.pathPrefix || "/";
-
-    if (this.pathPrefix || this.pathPrefix === "") {
-      this.eleventyConfig.setPathPrefix(this.pathPrefix);
-    }
 
     /**
      * @member {Object} - Initialize Eleventy’s configuration, including the user config file
@@ -1175,3 +1176,4 @@ module.exports.EleventyServerlessBundlerPlugin = require("./Plugins/ServerlessBu
 module.exports.EleventyRenderPlugin = require("./Plugins/RenderPlugin");
 module.exports.EleventyEdgePlugin = require("./Plugins/EdgePlugin");
 module.exports.EleventyI18nPlugin = require("./Plugins/I18nPlugin");
+module.exports.EleventyHtmlBasePlugin = require("./Plugins/HtmlBasePlugin");

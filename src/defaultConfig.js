@@ -10,10 +10,12 @@ module.exports = function (config) {
   config.addFilter("slug", slugFilter);
   config.addFilter("slugify", slugifyFilter);
 
-  config.addFilter("url", function (url, pathPrefixOverride) {
+  // Add pathPrefix manually to a URL
+  config.addFilter("url", function addPathPrefix(url, pathPrefixOverride) {
     let pathPrefix = pathPrefixOverride || templateConfig.getPathPrefix();
     return urlFilter.call(this, url, pathPrefix);
   });
+
   config.addFilter("log", (input, ...messages) => {
     console.log(input, ...messages);
     return input;

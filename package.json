@@ -124,6 +124,8 @@
     "nunjucks": "^3.2.3",
     "path-to-regexp": "^6.2.1",
     "please-upgrade-node": "^3.2.0",
+    "posthtml": "^0.16.6",
+    "posthtml-urls": "^1.0.0",
     "pug": "^3.0.2",
     "recursive-copy": "^2.0.14",
     "semver": "^7.3.7",

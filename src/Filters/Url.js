@@ -10,7 +10,7 @@ function isValidUrl(url) {
   }
 }
 
-// This is also used in the Eleventy Navigation plugin
+// Note: This filter is used in the Eleventy Navigation plugin in versions prior to 0.3.4
 module.exports = function (url, pathPrefix) {
   // work with undefined
   url = url || "";
