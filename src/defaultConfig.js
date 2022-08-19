@@ -1,10 +1,12 @@
-const urlFilter = require("./Filters/Url");
-const serverlessUrlFilter = require("./Filters/ServerlessUrl");
-const slugFilter = require("./Filters/Slug");
-const slugifyFilter = require("./Filters/Slugify");
-const getLocaleCollectionItem = require("./Filters/GetLocaleCollectionItem");
+import Url from "./Filters/Url.js";
+import serverlessUrlFilter from "./Filters/ServerlessUrl.js";
+import slugFilter from "./Filters/Slug.js";
+import slugifyFilter from "./Filters/Slugify.js";
+import GetLocaleCollectionItem from "./Filters/GetLocaleCollectionItem.js";
+const { call } = Url;
+const { call: _call } = GetLocaleCollectionItem;
 
-module.exports = function (config) {
+export default function (config) {
   let templateConfig = this;
 
   config.addFilter("slug", slugFilter);
@@ -13,7 +15,7 @@ module.exports = function (config) {
   // Add pathPrefix manually to a URL
   config.addFilter("url", function addPathPrefix(url, pathPrefixOverride) {
     let pathPrefix = pathPrefixOverride || templateConfig.getPathPrefix();
-    return urlFilter.call(this, url, pathPrefix);
+    return call(this, url, pathPrefix);
   });
 
   config.addFilter("log", (input, ...messages) => {
@@ -26,40 +28,19 @@ module.exports = function (config) {
   config.addFilter(
     "getCollectionItem",
     function (collection, pageOverride, langCode) {
-      return getLocaleCollectionItem.call(
-        this,
-        config,
-        collection,
-        pageOverride,
-        langCode,
-        0
-      );
+      return _call(this, config, collection, pageOverride, langCode, 0);
     }
   );
   config.addFilter(
     "getPreviousCollectionItem",
     function (collection, pageOverride, langCode) {
-      return getLocaleCollectionItem.call(
-        this,
-        config,
-        collection,
-        pageOverride,
-        langCode,
-        -1
-      );
+      return _call(this, config, collection, pageOverride, langCode, -1);
     }
   );
   config.addFilter(
     "getNextCollectionItem",
     function (collection, pageOverride, langCode) {
-      return getLocaleCollectionItem.call(
-        this,
-        config,
-        collection,
-        pageOverride,
-        langCode,
-        1
-      );
+      return _call(this, config, collection, pageOverride, langCode, 1);
     }
   );
 
@@ -102,4 +83,4 @@ module.exports = function (config) {
     // deprecated, use config.addNunjucksFilter
     nunjucksFilters: {},
   };
-};
+}

@@ -1,13 +1,13 @@
-const test = require("ava");
-const path = require("path");
-const {
-  deleteRequireCacheAbsolute,
-} = require("../src/Util/DeleteRequireCache");
-const template = require("./stubs/function.11ty");
+import test from "ava";
+import { createRequire } from "node:module";
+import { normalize, join } from "node:path";
+import { deleteRequireCacheAbsolute } from "../src/Util/DeleteRequireCache.js";
+import template from "./stubs/function.11ty.js";
 
+const require = createRequire(import.meta.url);
 test("deleteRequireCache", (t) => {
-  const modulePath = path.normalize(
-    path.join(__dirname, "./stubs/function.11ty.js")
+  const modulePath = normalize(
+    new URL("./stubs/function.11ty.js", import.meta.url).pathname
   );
   const posixModulePath = useForwardSlashes(modulePath);
   const windowsModulePath = useBackwardSlashes(modulePath);

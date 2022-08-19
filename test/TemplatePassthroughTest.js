@@ -1,6 +1,6 @@
-const test = require("ava");
-const TemplateConfig = require("../src/TemplateConfig");
-const TemplatePassthrough = require("../src/TemplatePassthrough");
+import test from "ava";
+import TemplateConfig from "../src/TemplateConfig.js";
+import TemplatePassthrough from "../src/TemplatePassthrough.js";
 
 const getTemplatePassthrough = (path, outputDir, inputDir) => {
   let eleventyConfig = new TemplateConfig();

@@ -1,9 +1,9 @@
-const BenchmarkGroup = require("./BenchmarkGroup");
-const { performance } = require("perf_hooks");
+import BenchmarkGroup from "./BenchmarkGroup.js";
+import { performance } from "node:perf_hooks";
 
 // TODO this should not be a singleton, it belongs in the config or somewhere on the Eleventy instance.
 
-class BenchmarkManager {
+export default class BenchmarkManager {
   constructor() {
     this.benchmarkGroups = {};
     this.isVerbose = true;
@@ -68,5 +68,3 @@ class BenchmarkManager {
     }
   }
 }
-
-module.exports = BenchmarkManager;

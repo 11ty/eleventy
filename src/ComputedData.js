@@ -1,13 +1,14 @@
-const lodashGet = require("lodash/get");
-const lodashSet = require("lodash/set");
+import lodashGet from "lodash/get.js";
+import lodashSet from "lodash/set.js";
 
-const ComputedDataQueue = require("./ComputedDataQueue");
-const ComputedDataTemplateString = require("./ComputedDataTemplateString");
-const ComputedDataProxy = require("./ComputedDataProxy");
+import ComputedDataQueue from "./ComputedDataQueue.js";
+import ComputedDataTemplateString from "./ComputedDataTemplateString.js";
+import ComputedDataProxy from "./ComputedDataProxy.js";
 
-const debug = require("debug")("Eleventy:ComputedData");
+import Debug from "debug";
+const debug = Debug("Eleventy:ComputedData");
 
-class ComputedData {
+export default class ComputedData {
   constructor(config) {
     this.computed = {};
     this.symbolParseFunctions = {};
@@ -120,5 +121,3 @@ class ComputedData {
     this.queue.markComputed(order);
   }
 }
-
-module.exports = ComputedData;

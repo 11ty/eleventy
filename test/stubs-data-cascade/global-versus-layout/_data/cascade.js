@@ -1,1 +1,1 @@
-module.exports = "from-global-data";
+export default "from-global-data";

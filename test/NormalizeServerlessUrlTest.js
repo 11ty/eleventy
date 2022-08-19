@@ -1,5 +1,5 @@
-const test = require("ava");
-const normalizeServerlessUrl = require("../src/Util/NormalizeServerlessUrl");
+import test from "ava";
+import normalizeServerlessUrl from "../src/Util/NormalizeServerlessUrl.js";
 
 test("serverlessUrl Stringify", (t) => {
   // Straight string

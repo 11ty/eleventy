@@ -1,5 +1,5 @@
-const test = require("ava");
-const pluralize = require("../src/Util/Pluralize");
+import test from "ava";
+import pluralize from "../src/Util/Pluralize.js";
 
 test("Pluralize", (t) => {
   t.is(pluralize(0, "test", "tests"), "tests");

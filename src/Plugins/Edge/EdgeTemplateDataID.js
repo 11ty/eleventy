@@ -1,6 +1,6 @@
-const { createHash } = require("crypto");
+import { createHash } from "node:crypto";
 
-class EdgeTemplateDataID {
+export default class EdgeTemplateDataID {
   constructor() {
     this.data = {};
   }
@@ -35,5 +35,3 @@ class EdgeTemplateDataID {
     return `"buildTimeData": ${JSON.stringify(this.data, null, 2)}`;
   }
 }
-
-module.exports = EdgeTemplateDataID;

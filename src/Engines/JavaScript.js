@@ -1,13 +1,13 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const TemplateEngine = require("./TemplateEngine");
-const EleventyBaseError = require("../EleventyBaseError");
-const deleteRequireCache = require("../Util/DeleteRequireCache");
-const getJavaScriptData = require("../Util/GetJavaScriptData");
+import TemplateEngine from "./TemplateEngine.js";
+import EleventyBaseError from "../EleventyBaseError.js";
+import deleteRequireCache from "../Util/DeleteRequireCache.js";
+import getJavaScriptData from "../Util/GetJavaScriptData.js";
 
 class JavaScriptTemplateNotDefined extends EleventyBaseError {}
 
-class JavaScript extends TemplateEngine {
+export default class JavaScript extends TemplateEngine {
   constructor(name, dirs, config) {
     super(name, dirs, config);
     this.instances = {};
@@ -65,7 +65,7 @@ class JavaScript extends TemplateEngine {
       this.instances[inputPath] = inst;
     } else {
       throw new JavaScriptTemplateNotDefined(
-        `No JavaScript template returned from ${inputPath} (did you assign to module.exports?)`
+        `No JavaScript template returned from ${inputPath} (did you export default?)`
       );
     }
     return inst;
@@ -136,5 +136,3 @@ class JavaScript extends TemplateEngine {
     return true;
   }
 }
-
-module.exports = JavaScript;

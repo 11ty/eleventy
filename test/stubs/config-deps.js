@@ -1,6 +1,6 @@
-const pretty = require("pretty");
-const Dep = require("./config-deps-upstream");
+import pretty from "pretty";
+import Dep from "./config-deps-upstream";
 
-module.exports = function(config) {
+export default function (config) {
   return {};
-};
+}

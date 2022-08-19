@@ -1,14 +1,14 @@
-const NunjucksLib = require("nunjucks");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import NunjucksLib, { Environment, FileSystemLoader, Template } from "nunjucks";
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const TemplateEngine = require("./TemplateEngine");
-const EleventyErrorUtil = require("../EleventyErrorUtil");
-const EleventyBaseError = require("../EleventyBaseError");
-const eventBus = require("../EventBus");
+import TemplateEngine from "./TemplateEngine.js";
+import EleventyErrorUtil from "../EleventyErrorUtil.js";
+import EleventyBaseError from "../EleventyBaseError.js";
+import EventBus from "../EventBus.js";
 
 class EleventyShortcodeError extends EleventyBaseError {}
 
-class Nunjucks extends TemplateEngine {
+export default class Nunjucks extends TemplateEngine {
   constructor(name, dirs, config) {
     super(name, dirs, config);
     this.nunjucksEnvironmentOptions =
@@ -43,20 +43,17 @@ class Nunjucks extends TemplateEngine {
         };
       };
 
-      this.njkEnv = new NunjucksLib.Environment(
+      this.njkEnv = new Environment(
         new NodePrecompiledLoader(),
         this.nunjucksEnvironmentOptions
       );
     } else {
-      let fsLoader = new NunjucksLib.FileSystemLoader([
+      let fsLoader = new FileSystemLoader([
         super.getIncludesDir(),
         TemplatePath.getWorkingDir(),
       ]);
 
-      this.njkEnv = new NunjucksLib.Environment(
-        fsLoader,
-        this.nunjucksEnvironmentOptions
-      );
+      this.njkEnv = new Environment(fsLoader, this.nunjucksEnvironmentOptions);
     }
 
     this.config.events.emit("eleventy.engine.njk", {
@@ -70,7 +67,7 @@ class Nunjucks extends TemplateEngine {
 
     // Correct, but overbroad. Better would be to evict more granularly, but
     // resolution from paths isn't straightforward.
-    eventBus.on("eleventy.resourceModified", (path) => {
+    EventBus.on("eleventy.resourceModified", (path) => {
       this.njkEnv.invalidateCache();
     });
 
@@ -190,10 +187,7 @@ class Nunjucks extends TemplateEngine {
           shortcodeFn
             .call(Nunjucks._normalizeShortcodeContext(context), ...argArray)
             .then(function (returnValue) {
-              resolve(
-                null,
-                new NunjucksLib.runtime.SafeString("" + returnValue)
-              );
+              resolve(null, new Nunjucks.runtime.SafeString("" + returnValue));
             })
             .catch(function (e) {
               resolve(
@@ -211,7 +205,7 @@ class Nunjucks extends TemplateEngine {
               Nunjucks._normalizeShortcodeContext(context),
               ...argArray
             );
-            return new NunjucksLib.runtime.SafeString("" + ret);
+            return new Nunjucks.runtime.SafeString("" + ret);
           } catch (e) {
             throw new EleventyShortcodeError(
               `Error with Nunjucks shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
@@ -264,7 +258,7 @@ class Nunjucks extends TemplateEngine {
                 ...argArray
               )
               .then(function (returnValue) {
-                resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
+                resolve(null, new Nunjucks.runtime.SafeString(returnValue));
               })
               .catch(function (e) {
                 resolve(
@@ -280,7 +274,7 @@ class Nunjucks extends TemplateEngine {
             try {
               resolve(
                 null,
-                new NunjucksLib.runtime.SafeString(
+                new Nunjucks.runtime.SafeString(
                   shortcodeFn.call(
                     Nunjucks._normalizeShortcodeContext(context),
                     bodyContent,
@@ -406,9 +400,9 @@ class Nunjucks extends TemplateEngine {
     if (this._usingPrecompiled) {
       tmpl = this.njkEnv.getTemplate(str, true);
     } else if (!inputPath || inputPath === "njk" || inputPath === "md") {
-      tmpl = new NunjucksLib.Template(str, this.njkEnv, null, true);
+      tmpl = new Template(str, this.njkEnv, null, true);
     } else {
-      tmpl = new NunjucksLib.Template(str, this.njkEnv, inputPath, true);
+      tmpl = new Template(str, this.njkEnv, inputPath, true);
     }
 
     return async function (data) {
@@ -424,5 +418,3 @@ class Nunjucks extends TemplateEngine {
     };
   }
 }
-
-module.exports = Nunjucks;

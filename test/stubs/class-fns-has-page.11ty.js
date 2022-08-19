@@ -1,4 +1,4 @@
-class TestWithPage {
+export default class TestWithPage {
   get page() {
     return "this-is-my-page";
   }
@@ -8,5 +8,3 @@ class TestWithPage {
     data.avaTest.is(data.page.url, "/hi/");
   }
 }
-
-module.exports = TestWithPage;

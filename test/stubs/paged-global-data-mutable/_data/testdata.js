@@ -1,4 +1,4 @@
-module.exports = [
+export default [
   {
     key1: "item1",
     key2: "item2",

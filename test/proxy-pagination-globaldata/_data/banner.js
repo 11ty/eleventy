@@ -1,3 +1,1 @@
-module.exports = {
-  content: "BANNER TEXT",
-};
+export const content = "BANNER TEXT";

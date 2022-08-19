@@ -1,14 +1,16 @@
-const fs = require("fs");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { readFileSync } from "node:fs";
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const TemplateConfig = require("../TemplateConfig");
-const EleventyExtensionMap = require("../EleventyExtensionMap");
-const EleventyBaseError = require("../EleventyBaseError");
-const debug = require("debug")("Eleventy:TemplateEngine");
+import TemplateConfig from "../TemplateConfig.js";
+import EleventyExtensionMap from "../EleventyExtensionMap.js";
+import EleventyBaseError from "../EleventyBaseError.js";
+
+import Debug from "debug";
+const debug = Debug("Eleventy:TemplateEngine");
 
 class TemplateEngineConfigError extends EleventyBaseError {}
 
-class TemplateEngine {
+export default class TemplateEngine {
   constructor(name, dirs, config) {
     this.name = name;
 
@@ -142,7 +144,7 @@ class TemplateEngine {
           "." + extension
         );
       });
-      partials[partialPathNoExt] = fs.readFileSync(partialFiles[j], "utf8");
+      partials[partialPathNoExt] = readFileSync(partialFiles[j], "utf8");
     }
 
     debug(
@@ -212,5 +214,3 @@ class TemplateEngine {
     return false;
   }
 }
-
-module.exports = TemplateEngine;

@@ -1,5 +1,5 @@
-const test = require("ava");
-const ComputedDataTemplateString = require("../src/ComputedDataTemplateString");
+import test from "ava";
+import ComputedDataTemplateString from "../src/ComputedDataTemplateString.js";
 
 test("Get fake proxy data", (t) => {
   let cd = new ComputedDataTemplateString(["key1", "key2"]);

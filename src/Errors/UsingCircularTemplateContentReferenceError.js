@@ -1,5 +1,3 @@
-const EleventyBaseError = require("../EleventyBaseError");
+import EleventyBaseError from "../EleventyBaseError.js";
 
-class UsingCircularTemplateContentReferenceError extends EleventyBaseError {}
-
-module.exports = UsingCircularTemplateContentReferenceError;
+export default class UsingCircularTemplateContentReferenceError extends EleventyBaseError {}

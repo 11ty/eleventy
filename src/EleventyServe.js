@@ -1,12 +1,13 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const EleventyBaseError = require("./EleventyBaseError");
-const ConsoleLogger = require("./Util/ConsoleLogger");
-const PathPrefixer = require("./Util/PathPrefixer");
-const merge = require("./Util/Merge");
-const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
+import EleventyBaseError from "./EleventyBaseError.js";
+import ConsoleLogger from "./Util/ConsoleLogger.js";
+import PathPrefixer from "./Util/PathPrefixer.js";
+import merge from "./Util/Merge.js";
+import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 
-const debug = require("debug")("EleventyServe");
+import Debug from "debug";
+const debug = Debug("EleventyServe");
 
 class EleventyServeConfigError extends EleventyBaseError {}
 
@@ -18,7 +19,7 @@ const DEFAULT_SERVER_OPTIONS = {
   // logger: { info: function() {}, error: function() {} }
 };
 
-class EleventyServe {
+export default class EleventyServe {
   constructor() {
     this.logger = new ConsoleLogger(true);
     this._initOptionsFetched = false;
@@ -269,5 +270,3 @@ class EleventyServe {
     }
   }
 }
-
-module.exports = EleventyServe;

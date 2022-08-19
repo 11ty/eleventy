@@ -1,8 +1,11 @@
-const ConsoleLogger = require("./Util/ConsoleLogger");
-const EleventyErrorUtil = require("./EleventyErrorUtil");
-const debug = require("debug")("Eleventy:EleventyErrorHandler");
+import ConsoleLogger from "./Util/ConsoleLogger.js";
+import EleventyErrorUtil from "./EleventyErrorUtil.js";
+const { hasEmbeddedError, deconvertErrorToObject, cleanMessage } =
+  EleventyErrorUtil;
+import Debug from "debug";
+const debug = Debug("Eleventy:EleventyErrorHandler");
 
-class EleventyErrorHandler {
+export default class EleventyErrorHandler {
   constructor() {
     this._isVerbose = true;
   }
@@ -61,14 +64,13 @@ class EleventyErrorHandler {
     let index = 1;
     while (ref) {
       let nextRef = ref.originalError;
-      if (!nextRef && EleventyErrorUtil.hasEmbeddedError(ref.message)) {
-        nextRef = EleventyErrorUtil.deconvertErrorToObject(ref);
+      if (!nextRef && hasEmbeddedError(ref.message)) {
+        nextRef = deconvertErrorToObject(ref);
       }
 
       this.logger.message(
         `${errorCount > 1 ? `${index}. ` : ""}${(
-          EleventyErrorUtil.cleanMessage(ref.message) ||
-          "(No error message provided)"
+          cleanMessage(ref.message) || "(No error message provided)"
         ).trim()} (via ${ref.name})`,
         type,
         chalkColor,
@@ -117,5 +119,3 @@ class EleventyErrorHandler {
     }
   }
 }
-
-module.exports = EleventyErrorHandler;

@@ -1,2 +1,2 @@
-require("lodash");
-require("./child.js");
+import "lodash";
+import "./child.js";

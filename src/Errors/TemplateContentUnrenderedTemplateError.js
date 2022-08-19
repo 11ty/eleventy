@@ -1,5 +1,3 @@
-const EleventyBaseError = require("../EleventyBaseError");
+import EleventyBaseError from "../EleventyBaseError.js";
 
-class TemplateContentUnrenderedTemplateError extends EleventyBaseError {}
-
-module.exports = TemplateContentUnrenderedTemplateError;
+export default class TemplateContentUnrenderedTemplateError extends EleventyBaseError {}

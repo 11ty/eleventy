@@ -1,7 +1,7 @@
-const test = require("ava");
-const TemplateRender = require("../src/TemplateRender");
-const TemplateConfig = require("../src/TemplateConfig");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
+import test from "ava";
+import TemplateRender from "../src/TemplateRender.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
 function getNewTemplateRender(name, inputDir, config) {
   let eleventyConfig = config;
@@ -127,7 +127,7 @@ test("Pug getEngineLib", async (t) => {
 test("Pug Render: with Library Override", async (t) => {
   let tr = getNewTemplateRender("pug");
 
-  let lib = require("pug");
+  let lib = await import("pug");
   tr.engine.setLibrary(lib);
 
   let fn = await tr.getCompiledTemplate("p= name");

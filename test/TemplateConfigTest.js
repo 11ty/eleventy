@@ -1,10 +1,10 @@
-const test = require("ava");
-const md = require("markdown-it");
-const TemplateConfig = require("../src/TemplateConfig");
+import test from "ava";
+import md from "markdown-it";
+import TemplateConfig from "../src/TemplateConfig.js";
 
 test("Template Config local config overrides base config", async (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   let cfg = templateCfg.getConfig();
@@ -34,7 +34,7 @@ test("Template Config local config overrides base config", async (t) => {
 
 test("Add liquid tag", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.addLiquidTag("myTagName", function () {});
@@ -44,7 +44,7 @@ test("Add liquid tag", (t) => {
 
 test("Add nunjucks tag", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.addNunjucksTag("myNunjucksTag", function () {});
@@ -54,7 +54,7 @@ test("Add nunjucks tag", (t) => {
 
 test("Add nunjucks global", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.addNunjucksGlobal("myNunjucksGlobal1", function () {});
@@ -67,7 +67,7 @@ test("Add nunjucks global", (t) => {
 
 test("Add liquid filter", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.addLiquidFilter(
@@ -83,7 +83,7 @@ test("Add liquid filter", (t) => {
 
 test("Add handlebars helper", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.addHandlebarsHelper("myHelperName", function () {});
@@ -94,7 +94,7 @@ test("Add handlebars helper", (t) => {
 
 test("Add nunjucks filter", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.addNunjucksFilter("myFilterName", function () {});
@@ -105,7 +105,7 @@ test("Add nunjucks filter", (t) => {
 
 test("Add universal filter", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.addFilter("myFilterName", function () {});
@@ -118,7 +118,7 @@ test("Add universal filter", (t) => {
 
 test("Add namespaced universal filter", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.namespace("testNamespace", function () {
@@ -142,7 +142,7 @@ test("Add namespaced universal filter", (t) => {
 
 test("Add namespaced universal filter using underscore", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.namespace("testNamespace_", function () {
@@ -190,7 +190,7 @@ test("Add namespaced plugin", (t) => {
 
 test("Add namespaced plugin using underscore", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.namespace("testNamespace_", function () {
@@ -216,7 +216,7 @@ test("Add namespaced plugin using underscore", (t) => {
 
 test("Empty namespace", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.namespace("", function () {
@@ -229,7 +229,7 @@ test("Empty namespace", (t) => {
 
 test("Nested Empty Inner namespace", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
 
@@ -245,7 +245,7 @@ test("Nested Empty Inner namespace", (t) => {
 
 test("Nested Empty Outer namespace", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.namespace("", function () {
@@ -259,11 +259,11 @@ test("Nested Empty Outer namespace", (t) => {
 });
 
 // important for backwards compatibility with old
-// `module.exports = function (eleventyConfig, pluginNamespace) {`
+// `export default function (eleventyConfig, pluginNamespace) {`
 // plugin code
 test("Non-string namespaces are ignored", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.namespace(["lkdsjflksd"], function () {
@@ -276,7 +276,7 @@ test("Non-string namespaces are ignored", (t) => {
 
 test(".addPlugin oddity: I don’t think pluginNamespace was ever passed in here, but we don’t want this to break", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
 
@@ -292,7 +292,7 @@ test(".addPlugin oddity: I don’t think pluginNamespace was ever passed in here
 
 test("Test url universal filter with custom pathPrefix (no slash)", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.setPathPrefix("/testdirectory/");
@@ -302,7 +302,7 @@ test("Test url universal filter with custom pathPrefix (no slash)", (t) => {
 
 test("setTemplateFormats(string)", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   // 0.11.0 removes dupes
@@ -314,7 +314,7 @@ test("setTemplateFormats(string)", (t) => {
 
 test("setTemplateFormats(array)", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.setTemplateFormats(["ejs", "njk", "liquid"]);
@@ -325,7 +325,7 @@ test("setTemplateFormats(array)", (t) => {
 
 test("setTemplateFormats(array, size 1)", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.setTemplateFormats(["liquid"]);
@@ -336,7 +336,7 @@ test("setTemplateFormats(array, size 1)", (t) => {
 
 test("setTemplateFormats(empty array)", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.setTemplateFormats([]);
@@ -347,7 +347,7 @@ test("setTemplateFormats(empty array)", (t) => {
 
 test("setTemplateFormats(null)", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.setTemplateFormats(null);
@@ -358,7 +358,7 @@ test("setTemplateFormats(null)", (t) => {
 
 test("multiple setTemplateFormats calls", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.setTemplateFormats("njk");
@@ -370,7 +370,7 @@ test("multiple setTemplateFormats calls", (t) => {
 
 test("addTemplateFormats()", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.addTemplateFormats("vue");
@@ -388,7 +388,7 @@ test("both setTemplateFormats and addTemplateFormats", (t) => {
   // project config file config return object
 
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.addTemplateFormats("vue");
@@ -401,7 +401,7 @@ test("both setTemplateFormats and addTemplateFormats", (t) => {
 test("libraryOverrides", (t) => {
   let mdLib = md();
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.setLibrary("md", mdLib);
@@ -415,7 +415,7 @@ test("libraryOverrides", (t) => {
 
 test("addGlobalData", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.addGlobalData("function", () => new Date());
@@ -427,7 +427,7 @@ test("addGlobalData", (t) => {
 test("Properly throws error on missing module #182", (t) => {
   t.throws(function () {
     let templateCfg = new TemplateConfig(
-      require("../src/defaultConfig.js"),
+      await import("../src/defaultConfig.js"),
       "./test/stubs/broken-config.js"
     );
 
@@ -438,7 +438,7 @@ test("Properly throws error on missing module #182", (t) => {
 test("Properly throws error when config returns a Promise", (t) => {
   t.throws(function () {
     let templateCfg = new TemplateConfig(
-      require("../src/defaultConfig.js"),
+      await import("../src/defaultConfig.js"),
       "./test/stubs/config-promise.js"
     );
     templateCfg.getConfig();
@@ -447,7 +447,7 @@ test("Properly throws error when config returns a Promise", (t) => {
 
 test(".addWatchTarget adds a watch target", (t) => {
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
   templateCfg.userConfig.addWatchTarget("/testdirectory/");
@@ -572,7 +572,7 @@ test(".addPlugin has access to pathPrefix (override method)", (t) => {
 test("falsy pathPrefix should fall back to default", (t) => {
   t.plan(1);
   let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
+    await import("../src/defaultConfig.js"),
     "./test/stubs/config-empty-pathprefix.js"
   );
 

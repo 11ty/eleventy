@@ -1,8 +1,8 @@
-class Test {
+export default class Test {
   get data() {
     return {
       key: "value1",
-      permalink: data => Buffer.from(`/my-permalink/${data.key}/`)
+      permalink: (data) => Buffer.from(`/my-permalink/${data.key}/`),
     };
   }
 
@@ -10,5 +10,3 @@ class Test {
     return `<p>${name}</p>`;
   }
 }
-
-module.exports = Test;

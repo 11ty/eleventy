@@ -1,7 +1,5 @@
-module.exports = {
-  eleventyComputed: {
-    webmentions: (data) => {
-      return data.test;
-    },
+export const eleventyComputed = {
+  webmentions: (data) => {
+    return data.test;
   },
 };

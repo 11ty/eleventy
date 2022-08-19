@@ -1,7 +1,7 @@
-const test = require("ava");
-const TemplateRender = require("../src/TemplateRender");
-const TemplateConfig = require("../src/TemplateConfig");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
+import test from "ava";
+import TemplateRender, { parseEngineOverrides } from "../src/TemplateRender.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
 function getNewTemplateRender(name, inputDir) {
   let eleventyConfig = new TemplateConfig();
@@ -39,28 +39,25 @@ test("Valid Override", async (t) => {
 });
 
 test("Parse Overrides to get Prioritized Engine List", async (t) => {
-  t.deepEqual(TemplateRender.parseEngineOverrides(""), []);
-  t.deepEqual(TemplateRender.parseEngineOverrides(null), []);
-  t.deepEqual(TemplateRender.parseEngineOverrides(undefined), []);
-  t.deepEqual(TemplateRender.parseEngineOverrides(false), []);
-  t.deepEqual(TemplateRender.parseEngineOverrides("html"), []);
-  t.deepEqual(TemplateRender.parseEngineOverrides("html,html"), []);
-  t.deepEqual(TemplateRender.parseEngineOverrides("html,md,md"), ["md"]);
-  t.deepEqual(TemplateRender.parseEngineOverrides("ejs,md"), ["md", "ejs"]);
-  t.deepEqual(TemplateRender.parseEngineOverrides("ejs"), ["ejs"]);
-  t.deepEqual(TemplateRender.parseEngineOverrides("njk"), ["njk"]);
-  t.deepEqual(TemplateRender.parseEngineOverrides("ejs,html"), ["ejs"]);
-  t.deepEqual(TemplateRender.parseEngineOverrides("ejs,md,html"), [
-    "md",
-    "ejs",
-  ]);
-  t.deepEqual(TemplateRender.parseEngineOverrides("njk,njk"), ["njk"]);
+  t.deepEqual(parseEngineOverrides(""), []);
+  t.deepEqual(parseEngineOverrides(null), []);
+  t.deepEqual(parseEngineOverrides(undefined), []);
+  t.deepEqual(parseEngineOverrides(false), []);
+  t.deepEqual(parseEngineOverrides("html"), []);
+  t.deepEqual(parseEngineOverrides("html,html"), []);
+  t.deepEqual(parseEngineOverrides("html,md,md"), ["md"]);
+  t.deepEqual(parseEngineOverrides("ejs,md"), ["md", "ejs"]);
+  t.deepEqual(parseEngineOverrides("ejs"), ["ejs"]);
+  t.deepEqual(parseEngineOverrides("njk"), ["njk"]);
+  t.deepEqual(parseEngineOverrides("ejs,html"), ["ejs"]);
+  t.deepEqual(parseEngineOverrides("ejs,md,html"), ["md", "ejs"]);
+  t.deepEqual(parseEngineOverrides("njk,njk"), ["njk"]);
 
   t.throws(function () {
-    TemplateRender.parseEngineOverrides("njk,ejs");
+    parseEngineOverrides("njk,ejs");
   });
   t.throws(function () {
-    TemplateRender.parseEngineOverrides("ejs,njk,html");
+    parseEngineOverrides("ejs,njk,html");
   });
 });
 

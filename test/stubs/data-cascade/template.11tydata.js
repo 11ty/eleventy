@@ -1,8 +1,6 @@
-module.exports = {
-  parent: {
-    child: 2,
-    datafile: true,
-  },
+export const parent = {
+  child: 2,
   datafile: true,
-  tags: ["tagC", "tagD", "tagD"],
 };
+export const datafile = true;
+export const tags = ["tagC", "tagD", "tagD"];

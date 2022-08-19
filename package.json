@@ -6,6 +6,7 @@
     "access": "public"
   },
   "main": "src/Eleventy.js",
+  "type": "module",
   "bin": {
     "eleventy": "./cmd.js"
   },

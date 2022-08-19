@@ -1,6 +1,6 @@
-const Dep = require("./class-with-dep-upstream.js");
+import Dep from "./class-with-dep-upstream.js";
 
-class Test {
+export default class Test {
   returnsBill() {
     return "Bill";
   }
@@ -13,5 +13,3 @@ class Test {
     return `<p>${name}${this.returnsBill()}${Test.returnsTed()}</p>`;
   }
 }
-
-module.exports = Test;

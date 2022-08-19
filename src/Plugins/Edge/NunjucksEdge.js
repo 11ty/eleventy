@@ -1,4 +1,9 @@
-function rawContentNunjucksTag(nunjucks, nunjucksEnv, renderFn, tagName) {
+export default function rawContentNunjucksTag(
+  nunjucks,
+  nunjucksEnv,
+  renderFn,
+  tagName
+) {
   return new (function () {
     this.tags = [tagName];
 
@@ -101,5 +106,3 @@ function rawContentNunjucksTag(nunjucks, nunjucksEnv, renderFn, tagName) {
     };
   })();
 }
-
-module.exports = rawContentNunjucksTag;

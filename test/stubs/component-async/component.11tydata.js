@@ -1,9 +1,9 @@
-module.exports = async function() {
-  return new Promise(resolve => {
-    setTimeout(function() {
+export default async function () {
+  return new Promise((resolve) => {
+    setTimeout(function () {
       resolve({
-        localdatakeyfromjs: "howdydoody"
+        localdatakeyfromjs: "howdydoody",
       });
     }, 1);
   });
-};
+}

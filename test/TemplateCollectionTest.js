@@ -1,10 +1,12 @@
-const test = require("ava");
-const multimatch = require("multimatch");
-const Template = require("../src/Template");
-const TemplateConfig = require("../src/TemplateConfig");
-const Collection = require("../src/TemplateCollection");
-const Sortable = require("../src/Util/Sortable");
-const getNewTemplateForTests = require("../test/_getNewTemplateForTests");
+import test from "ava";
+import multimatch from "multimatch";
+import Template from "../src/Template.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import Collection from "../src/TemplateCollection.j";
+import Sortable from "../src/Util/Sortable.js";
+import getNewTemplateForTests from "../test/_getNewTemplateForTests.js";
+
+const { sortFunctionDate, sortFunctionDateInputPath } = Sortable;
 
 function getNewTemplate(filename, input, output, eleventyConfig) {
   return getNewTemplateForTests(
@@ -62,7 +64,7 @@ test("sortFunctionDate", async (t) => {
   await addTemplate(c, tmpl4);
   await addTemplate(c, tmpl5);
 
-  let posts = c.sort(Sortable.sortFunctionDate);
+  let posts = c.sort(sortFunctionDate);
   t.is(posts.length, 3);
   t.deepEqual(posts[0].template, tmpl4);
   t.deepEqual(posts[1].template, tmpl1);
@@ -80,7 +82,7 @@ test("sortFunctionDateInputPath", async (t) => {
   await addTemplate(c, tmpl4);
   await addTemplate(c, tmpl5);
 
-  let posts = c.sort(Sortable.sortFunctionDateInputPath);
+  let posts = c.sort(sortFunctionDateInputPath);
   t.is(posts.length, 3);
   t.deepEqual(posts[0].template, tmpl4);
   t.deepEqual(posts[1].template, tmpl1);

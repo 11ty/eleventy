@@ -1,5 +1,5 @@
-const test = require("ava");
-const EleventyErrorUtil = require("../src/EleventyErrorUtil");
+import test from "ava";
+import EleventyErrorUtil from "../src/EleventyErrorUtil.js";
 
 const SAMPLE_ERROR = new Error("Nothing to see here");
 

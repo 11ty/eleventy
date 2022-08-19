@@ -1,4 +1,4 @@
-class Test {
+export default class Test {
   returnsBill() {
     return "Bill";
   }
@@ -13,5 +13,3 @@ class Test {
     );
   }
 }
-
-module.exports = Test;

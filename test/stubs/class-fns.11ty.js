@@ -1,4 +1,4 @@
-class Test {
+export default class Test {
   render({ avaTest }) {
     avaTest.truthy(this.url);
     avaTest.truthy(this.slug);
@@ -8,5 +8,3 @@ class Test {
     avaTest.truthy(this.page);
   }
 }
-
-module.exports = Test;

@@ -1,14 +1,18 @@
-const test = require("ava");
-const RenderPlugin = require("../src/Plugins/RenderPlugin");
-const RenderManager = RenderPlugin.RenderManager;
-const RenderPluginFile = RenderPlugin.File;
-const RenderPluginString = RenderPlugin.String;
+import test, { skip } from "ava";
+import RenderPlugin, {
+  RenderManager as _RenderManager,
+  File,
+  String,
+} from "../src/Plugins/RenderPlugin.js";
+const RenderManager = _RenderManager;
+const RenderPluginFile = File;
+const RenderPluginString = String;
 
-const VuePlugin = require("@11ty/eleventy-plugin-vue");
+import VuePlugin from "@11ty/eleventy-plugin-vue";
 
-const Eleventy = require("../src/Eleventy");
-const normalizeNewLines = require("./Util/normalizeNewLines");
-const removeNewLines = require("./Util/removeNewLines");
+import Eleventy from "../src/Eleventy.js";
+import normalizeNewLines from "./Util/normalizeNewLines.js";
+import removeNewLines from "./Util/removeNewLines.js";
 
 async function getTestOutput(input, configCallback = function () {}) {
   let elev = new Eleventy(input, "./_site/", {
@@ -74,7 +78,7 @@ test("Use nunjucks in 11ty.js", async (t) => {
 });
 
 // This is not yet supported and currently throws an error.
-test.skip("Use 11ty.js in liquid", async (t) => {
+skip("Use 11ty.js in liquid", async (t) => {
   let html = await getTestOutputForFile(
     "./test/stubs-render-plugin/11tyjs.liquid"
   );
@@ -170,7 +174,7 @@ test("Use txt file in njk (override to 11ty.js)", async (t) => {
 
 // Skip this for now, toJSON calls actually change the exitCode of the process when they error,
 // which is not ideal.
-test.skip("Use nunjucks file in liquid but it doesn’t exist", async (t) => {
+skip("Use nunjucks file in liquid but it doesn’t exist", async (t) => {
   await t.throwsAsync(async () => {
     await getTestOutputForFile(
       "./test/stubs-render-plugin/njk-file-not-exist.liquid"
@@ -201,7 +205,7 @@ test("No syntax passed (uses parent page syntax), but does pass data: liquid", a
 });
 
 // Not yet supported
-test.skip("renderFile but the target has front matter.", async (t) => {
+skip("renderFile but the target has front matter.", async (t) => {
   let html = await getTestOutputForFile(
     "./test/stubs-render-plugin/using-frontmatter.liquid"
   );
@@ -395,14 +399,14 @@ test("Use eleventy in renderTemplate (liquid in njk)", async (t) => {
   );
   t.is(html, `1`);
 });
-test.skip("Use nunjucks in liquid (access to all global data)", async (t) => {
+skip("Use nunjucks in liquid (access to all global data)", async (t) => {
   let html = await getTestOutputForFile(
     "./test/stubs-render-plugin/nunjucks-global.liquid"
   );
   t.is(html, `globalHi`);
 });
 
-test.skip("Use liquid in njk (access to all global data)", async (t) => {
+skip("Use liquid in njk (access to all global data)", async (t) => {
   let html = await getTestOutputForFile(
     "./test/stubs-render-plugin/liquid-global.njk"
   );

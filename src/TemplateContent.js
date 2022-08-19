@@ -1,28 +1,30 @@
-const os = require("os");
-const fs = require("graceful-fs");
-const util = require("util");
-const readFile = util.promisify(fs.readFile);
-const normalize = require("normalize-path");
-const matter = require("gray-matter");
-const lodashSet = require("lodash/set");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { EOL } from "node:os";
+import { readFile } from "node:fs/promises";
+import normalize from "normalize-path";
+import matter from "gray-matter";
+import lodashSet from "lodash/set.js";
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const EleventyExtensionMap = require("./EleventyExtensionMap");
-const TemplateData = require("./TemplateData");
-const TemplateRender = require("./TemplateRender");
-const TemplateConfig = require("./TemplateConfig");
-const EleventyBaseError = require("./EleventyBaseError");
-const EleventyErrorUtil = require("./EleventyErrorUtil");
-const debug = require("debug")("Eleventy:TemplateContent");
-const debugDev = require("debug")("Dev:Eleventy:TemplateContent");
-const eventBus = require("./EventBus");
+import EleventyExtensionMap from "./EleventyExtensionMap.js";
+import TemplateData from "./TemplateData.js";
+import TemplateRender from "./TemplateRender.js";
+import TemplateConfig from "./TemplateConfig.js";
+import EleventyBaseError from "./EleventyBaseError.js";
+import EleventyErrorUtil from "./EleventyErrorUtil.js";
+import Debug from "debug";
+const debug = Debug("Eleventy:TemplateContent");
+const debugDev = Debug("Dev:Eleventy:TemplateContent");
+import EventBus from "./EventBus.js";
 
 class TemplateContentConfigError extends EleventyBaseError {}
 class TemplateContentFrontMatterError extends EleventyBaseError {}
 class TemplateContentCompileError extends EleventyBaseError {}
 class TemplateContentRenderError extends EleventyBaseError {}
 
-class TemplateContent {
+export default class TemplateContent {
+  static _inputCache = new Map();
+  static _compileEngineCache = new Map();
+
   constructor(inputPath, inputDir, config) {
     if (!config) {
       throw new TemplateContentConfigError(
@@ -121,12 +123,12 @@ class TemplateContent {
       }
       if (options.excerpt && fm.excerpt) {
         let excerptString = fm.excerpt + (options.excerpt_separator || "---");
-        if (fm.content.startsWith(excerptString + os.EOL)) {
+        if (fm.content.startsWith(excerptString + EOL)) {
           // with a newline after excerpt separator
           fm.content =
             fm.excerpt.trim() +
             "\n" +
-            fm.content.slice((excerptString + os.EOL).length);
+            fm.content.slice((excerptString + EOL).length);
         } else if (fm.content.startsWith(excerptString)) {
           // no newline after excerpt separator
           fm.content = fm.excerpt + fm.content.slice(excerptString.length);
@@ -320,14 +322,15 @@ class TemplateContent {
     }
   }
 
-  getParseForSymbolsFunction(str) {
+  async getParseForSymbolsFunction(str) {
     let engine = this.engine;
 
     // Don’t use markdown as the engine to parse for symbols
     let preprocessorEngine = this.templateRender.getPreprocessorEngine(); // TODO pass in engineOverride here
     if (preprocessorEngine && engine.getName() !== preprocessorEngine) {
-      let replacementEngine =
-        this.templateRender.getEngineByName(preprocessorEngine);
+      let replacementEngine = await this.templateRender.getEngineByName(
+        preprocessorEngine
+      );
       if (replacementEngine) {
         engine = replacementEngine;
       }
@@ -549,15 +552,11 @@ class TemplateContent {
   }
 }
 
-TemplateContent._inputCache = new Map();
-TemplateContent._compileEngineCache = new Map();
-eventBus.on("eleventy.resourceModified", (path) => {
+EventBus.on("eleventy.resourceModified", (path) => {
   TemplateContent.deleteCached(path);
 });
 
 // Used when the configuration file reset https://github.com/11ty/eleventy/issues/2147
-eventBus.on("eleventy.compileCacheReset", (path) => {
+EventBus.on("eleventy.compileCacheReset", (path) => {
   TemplateContent._compileEngineCache = new Map();
 });
-
-module.exports = TemplateContent;

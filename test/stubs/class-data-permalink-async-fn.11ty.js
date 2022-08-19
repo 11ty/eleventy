@@ -1,14 +1,14 @@
-class Test {
+export default class Test {
   get data() {
     return {
       key: "value1",
-      permalink: async function(data) {
+      permalink: async function (data) {
         return new Promise((resolve, reject) => {
-          setTimeout(function() {
+          setTimeout(function () {
             resolve(`/my-permalink/${data.key}/`);
           }, 100);
         });
-      }
+      },
     };
   }
 
@@ -16,5 +16,3 @@ class Test {
     return `<p>${name}</p>`;
   }
 }
-
-module.exports = Test;

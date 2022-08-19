@@ -1,9 +1,9 @@
-const test = require("ava");
-const fs = require("fs");
-const TemplateConfig = require("../src/TemplateConfig");
-const TemplateData = require("../src/TemplateData");
+import test, { skip } from "ava";
+import { existsSync } from "node:fs";
+import TemplateConfig from "../src/TemplateConfig.js";
+import TemplateData from "../src/TemplateData.js";
 
-const getNewTemplate = require("./_getNewTemplateForTests");
+import getNewTemplate from "./_getNewTemplateForTests.js";
 
 async function writeMapEntries(mapEntries) {
   let promises = [];
@@ -55,14 +55,14 @@ test("permalink: false", async (t) => {
   await writeMapEntries(mapEntries);
 
   // Input file exists (sanity check for paths)
-  t.is(fs.existsSync("./test/stubs/permalink-false/"), true);
-  t.is(fs.existsSync("./test/stubs/permalink-false/test.md"), true);
+  t.is(existsSync("./test/stubs/permalink-false/"), true);
+  t.is(existsSync("./test/stubs/permalink-false/test.md"), true);
 
   // Output does not exist
-  t.is(fs.existsSync("./test/stubs/_site/permalink-false/"), false);
-  t.is(fs.existsSync("./test/stubs/_site/permalink-false/test/"), false);
+  t.is(existsSync("./test/stubs/_site/permalink-false/"), false);
+  t.is(existsSync("./test/stubs/_site/permalink-false/test/"), false);
   t.is(
-    fs.existsSync("./test/stubs/_site/permalink-false/test/index.html"),
+    existsSync("./test/stubs/_site/permalink-false/test/index.html"),
     false
   );
 });
@@ -84,17 +84,17 @@ test("permalink: false inside of eleventyComputed, Issue #1754", async (t) => {
   await writeMapEntries(mapEntries);
 
   // Input file exists (sanity check for paths)
-  t.is(fs.existsSync("./test/stubs/permalink-false-computed/"), true);
-  t.is(fs.existsSync("./test/stubs/permalink-false-computed/test.md"), true);
+  t.is(existsSync("./test/stubs/permalink-false-computed/"), true);
+  t.is(existsSync("./test/stubs/permalink-false-computed/test.md"), true);
 
   // Output does not exist
-  t.is(fs.existsSync("./test/stubs/_site/permalink-false-computed/"), false);
+  t.is(existsSync("./test/stubs/_site/permalink-false-computed/"), false);
   t.is(
-    fs.existsSync("./test/stubs/_site/permalink-false-computed/test/"),
+    existsSync("./test/stubs/_site/permalink-false-computed/test/"),
     false
   );
   t.is(
-    fs.existsSync(
+    existsSync(
       "./test/stubs/_site/permalink-false-computed/test/index.html"
     ),
     false
@@ -152,7 +152,7 @@ test("Permalink with variables and JS front matter!", async (t) => {
 });
 
 // This is broken right now, permalink must use the same template language as the template
-test.skip("Use a JavaScript function for permalink in any template language", async (t) => {
+skip("Use a JavaScript function for permalink in any template language", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/permalinkdata-jspermalinkfn.njk",
     "./test/stubs/",
@@ -173,7 +173,7 @@ test("Permalink with dates!", async (t) => {
   t.is(await tmpl.getOutputPath(data), "./dist/2016/01/01/index.html");
 });
 
-test.skip("Permalink with dates on file name regex!", async (t) => {
+skip("Permalink with dates on file name regex!", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/2016-02-01-permalinkdate.liquid",
     "./test/stubs/",

@@ -1,12 +1,12 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const TemplateEngineManager = require("./TemplateEngineManager");
-const TemplateConfig = require("./TemplateConfig");
-const EleventyBaseError = require("./EleventyBaseError");
+import TemplateEngineManager from "./TemplateEngineManager.js";
+import TemplateConfig from "./TemplateConfig.js";
+import EleventyBaseError from "./EleventyBaseError.js";
 
 class EleventyExtensionMapConfigError extends EleventyBaseError {}
 
-class EleventyExtensionMap {
+export default class EleventyExtensionMap {
   constructor(formatKeys, config) {
     if (!config) {
       throw new EleventyExtensionMapConfigError("Missing `config` argument.");
@@ -119,16 +119,18 @@ class EleventyExtensionMap {
     return sorted;
   }
 
-  shouldSpiderJavaScriptDependencies(path) {
+  async shouldSpiderJavaScriptDependencies(path) {
     let extensions = this.getValidExtensionsForPath(path);
     for (let extension of extensions) {
       if (extension in this._spiderJsDepsCache) {
         return this._spiderJsDepsCache[extension];
       }
 
-      let cls = this.engineManager.getEngineClassByExtension(extension);
+      let cls = await this.engineManager.getEngineClassByExtension(extension);
       if (cls) {
         let entry = this.getCustomExtensionEntry(extension);
+        if (typeof cls.shouldSpiderJavaScriptDependencies !== "function")
+          console.log(cls);
         let shouldSpider = cls.shouldSpiderJavaScriptDependencies(entry);
         this._spiderJsDepsCache[extension] = shouldSpider;
         return shouldSpider;
@@ -260,5 +262,3 @@ class EleventyExtensionMap {
     return Object.keys(this.extensionToKeyMap).join(" ");
   }
 }
-
-module.exports = EleventyExtensionMap;

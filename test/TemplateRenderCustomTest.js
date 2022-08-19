@@ -1,12 +1,12 @@
-const test = require("ava");
-const TemplateData = require("../src/TemplateData");
-const TemplateRender = require("../src/TemplateRender");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
-const TemplateConfig = require("../src/TemplateConfig");
-const getNewTemplate = require("./_getNewTemplateForTests");
+import test from "ava";
+import TemplateData from "../src/TemplateData.js";
+import TemplateRender from "../src/TemplateRender.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import getNewTemplate from "./_getNewTemplateForTests.js";
 
-const { createSSRApp } = require("vue");
-const { renderToString } = require("@vue/server-renderer");
+import { createSSRApp } from "vue";
+import { renderToString } from "@vue/server-renderer";
 
 function getNewTemplateRender(name, inputDir, eleventyConfig) {
   if (!eleventyConfig) {
@@ -125,7 +125,7 @@ test("Custom Vue Render", async (t) => {
   t.is(await fn({ test: "Hello" }), "<p>Hello</p>");
 });
 
-const sass = require("sass");
+import { render } from "sass";
 
 test("Custom Sass Render", async (t) => {
   let tr = getNewTemplateRender("sass");
@@ -136,7 +136,7 @@ test("Custom Sass Render", async (t) => {
       // TODO declare data variables as SASS variables?
       return async function (data) {
         return new Promise(function (resolve, reject) {
-          sass.render(
+          render(
             {
               data: str,
               includePaths: [tr.inputDir, tr.includesDir],

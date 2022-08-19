@@ -1,9 +1,9 @@
-const lodashSet = require("lodash/set");
-const lodashGet = require("lodash/get");
-const { isPlainObject } = require("@11ty/eleventy-utils");
+import lodashSet from "lodash/set.js";
+import lodashGet from "lodash/get.js";
+import { isPlainObject } from "@11ty/eleventy-utils";
 
 /* Calculates computed data using Proxies */
-class ComputedDataProxy {
+export default class ComputedDataProxy {
   constructor(computedKeys) {
     if (Array.isArray(computedKeys)) {
       this.computedKeys = new Set(computedKeys);
@@ -126,5 +126,3 @@ class ComputedDataProxy {
     return Array.from(keyRef);
   }
 }
-
-module.exports = ComputedDataProxy;

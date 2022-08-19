@@ -1,4 +1,4 @@
-const getCollectionItem = require("./GetCollectionItem");
+import getCollectionItem from "./GetCollectionItem.js";
 
 // Work with I18n Plugin src/Plugins/I18nPlugin.js to retrieve root pages (not i18n pages)
 function resolveRootPage(config, pageOverride, languageCode) {
@@ -11,7 +11,7 @@ function resolveRootPage(config, pageOverride, languageCode) {
   return localeFilter.call(this, pageOverride, languageCode);
 }
 
-function getLocaleCollectionItem(
+export default function getLocaleCollectionItem(
   config,
   collection,
   pageOverride,
@@ -55,5 +55,3 @@ function getLocaleCollectionItem(
     [];
   return getCollectionItem(all, modifiedLocalePage, 0);
 }
-
-module.exports = getLocaleCollectionItem;

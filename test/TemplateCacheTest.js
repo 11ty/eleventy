@@ -1,11 +1,13 @@
-const test = require("ava");
-const Template = require("../src/Template");
-const templateCache = require("../src/TemplateCache");
+import test from "ava";
+import Template from "../src/Template.js";
+import TemplateCache from "../src/TemplateCache.js";
 
-const getNewTemplate = require("./_getNewTemplateForTests");
+import getNewTemplate from "./_getNewTemplateForTests.js";
+
+const { clear, add, size, has, get } = TemplateCache;
 
 test("Cache can save templates", (t) => {
-  templateCache.clear();
+  clear();
 
   let tmpl = getNewTemplate(
     "./test/stubs/template.ejs",
@@ -13,12 +15,12 @@ test("Cache can save templates", (t) => {
     "./dist"
   );
 
-  templateCache.add("./test/stubs/template.ejs", tmpl);
-  t.is(templateCache.size(), 1);
+  add("./test/stubs/template.ejs", tmpl);
+  t.is(size(), 1);
 });
 
 test("TemplateCache clear", (t) => {
-  templateCache.clear();
+  clear();
 
   let tmpl = getNewTemplate(
     "./test/stubs/template.ejs",
@@ -26,14 +28,14 @@ test("TemplateCache clear", (t) => {
     "./dist"
   );
 
-  templateCache.add("./test/stubs/template.ejs", tmpl);
-  t.is(templateCache.size(), 1);
-  templateCache.clear();
-  t.is(templateCache.size(), 0);
+  add("./test/stubs/template.ejs", tmpl);
+  t.is(size(), 1);
+  clear();
+  t.is(size(), 0);
 });
 
 test("TemplateCache has", (t) => {
-  templateCache.clear();
+  clear();
 
   let tmpl = getNewTemplate(
     "./test/stubs/template.ejs",
@@ -41,12 +43,12 @@ test("TemplateCache has", (t) => {
     "./dist"
   );
 
-  templateCache.add("./test/stubs/template.ejs", tmpl);
-  t.is(templateCache.has("./test/stubs/template.ejs"), true);
+  add("./test/stubs/template.ejs", tmpl);
+  t.is(has("./test/stubs/template.ejs"), true);
 });
 
 test("TemplateCache get success", (t) => {
-  templateCache.clear();
+  clear();
 
   let tmpl = getNewTemplate(
     "./test/stubs/template.ejs",
@@ -54,12 +56,12 @@ test("TemplateCache get success", (t) => {
     "./dist"
   );
 
-  templateCache.add("./test/stubs/template.ejs", tmpl);
-  t.truthy(templateCache.get("./test/stubs/template.ejs"));
+  add("./test/stubs/template.ejs", tmpl);
+  t.truthy(get("./test/stubs/template.ejs"));
 });
 
 test("TemplateCache get fail", (t) => {
-  templateCache.clear();
+  clear();
 
   let tmpl = getNewTemplate(
     "./test/stubs/template.ejs",
@@ -67,8 +69,8 @@ test("TemplateCache get fail", (t) => {
     "./dist"
   );
 
-  templateCache.add("./test/stubs/template.ejs", tmpl);
+  add("./test/stubs/template.ejs", tmpl);
   t.throws(function () {
-    templateCache.get("./test/stubs/template298374892.ejs");
+    get("./test/stubs/template298374892.ejs");
   });
 });

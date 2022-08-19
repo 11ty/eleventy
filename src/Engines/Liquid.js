@@ -1,11 +1,11 @@
-const moo = require("moo");
-const liquidLib = require("liquidjs");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import moo from "moo";
+import { Liquid as _Liquid, Tokenizer, TokenKind } from "liquidjs";
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const TemplateEngine = require("./TemplateEngine");
+import TemplateEngine from "./TemplateEngine.js";
 // const debug = require("debug")("Eleventy:Liquid");
 
-class Liquid extends TemplateEngine {
+export default class Liquid extends TemplateEngine {
   static argumentLexerOptions = {
     number: /[0-9]+\.*[0-9]*/,
     doubleQuoteString: /"(?:\\["\\]|[^\n"\\])*"/,
@@ -27,7 +27,7 @@ class Liquid extends TemplateEngine {
 
   setLibrary(override) {
     // warning, the include syntax supported here does not exactly match what Jekyll uses.
-    this.liquidLib = override || new liquidLib.Liquid(this.getLiquidOptions());
+    this.liquidLib = override || new _Liquid(this.getLiquidOptions());
     this.setEngineLib(this.liquidLib);
 
     this.addFilters(this.config.liquidFilters);
@@ -205,10 +205,10 @@ class Liquid extends TemplateEngine {
   }
 
   parseForSymbols(str) {
-    let tokenizer = new liquidLib.Tokenizer(str);
+    let tokenizer = new Tokenizer(str);
     let tokens = tokenizer.readTopLevelTokens();
     let symbols = tokens
-      .filter((token) => token.kind === liquidLib.TokenKind.Output)
+      .filter((token) => token.kind === TokenKind.Output)
       .map((token) => {
         // manually remove filters 😅
         return token.content.split("|").map((entry) => entry.trim())[0];
@@ -251,5 +251,3 @@ class Liquid extends TemplateEngine {
     };
   }
 }
-
-module.exports = Liquid;

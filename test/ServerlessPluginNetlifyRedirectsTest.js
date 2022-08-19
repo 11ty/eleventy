@@ -1,5 +1,5 @@
-const test = require("ava");
-const NetlifyRedirects = require("../src/Plugins/Serverless/NetlifyRedirects");
+import test from "ava";
+import NetlifyRedirects from "../src/Plugins/Serverless/NetlifyRedirects.js";
 
 test("Starter", (t) => {
   let r = new NetlifyRedirects("possum");

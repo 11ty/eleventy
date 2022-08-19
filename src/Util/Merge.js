@@ -1,4 +1,4 @@
-const { isPlainObject } = require("@11ty/eleventy-utils");
+import { isPlainObject } from "@11ty/eleventy-utils";
 const OVERRIDE_PREFIX = "override:";
 
 function cleanKey(key, prefix) {
@@ -44,7 +44,7 @@ function getMergedItem(target, source, parentKey, prefixes = {}) {
 }
 
 // The same as Merge but without override prefixes
-function DeepCopy(targetObject, ...sources) {
+export function DeepCopy(targetObject, ...sources) {
   for (let source of sources) {
     if (!source) {
       continue;
@@ -55,7 +55,7 @@ function DeepCopy(targetObject, ...sources) {
   return targetObject;
 }
 
-function Merge(target, ...sources) {
+export default function Merge(target, ...sources) {
   // Remove override prefixes from root target.
   if (isPlainObject(target)) {
     for (let key in target) {
@@ -77,6 +77,3 @@ function Merge(target, ...sources) {
 
   return target;
 }
-
-module.exports = Merge;
-module.exports.DeepCopy = DeepCopy;

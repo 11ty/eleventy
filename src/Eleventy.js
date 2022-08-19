@@ -1,26 +1,32 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
-const { performance } = require("perf_hooks");
+import { TemplatePath } from "@11ty/eleventy-utils";
+import { performance } from "node:perf_hooks";
+import { createRequire } from "node:module";
 
-const pkg = require("../package.json");
-const TemplateData = require("./TemplateData");
-const TemplateWriter = require("./TemplateWriter");
-const EleventyExtensionMap = require("./EleventyExtensionMap");
-const EleventyErrorHandler = require("./EleventyErrorHandler");
-const EleventyBaseError = require("./EleventyBaseError");
-const EleventyServe = require("./EleventyServe");
-const EleventyWatch = require("./EleventyWatch");
-const EleventyWatchTargets = require("./EleventyWatchTargets");
-const EleventyFiles = require("./EleventyFiles");
-const ConsoleLogger = require("./Util/ConsoleLogger");
-const PathPrefixer = require("./Util/PathPrefixer");
-const TemplateConfig = require("./TemplateConfig");
+import TemplateData from "./TemplateData.js";
+import TemplateWriter from "./TemplateWriter.js";
+import EleventyExtensionMap from "./EleventyExtensionMap.js";
+import EleventyErrorHandler from "./EleventyErrorHandler.js";
+import EleventyBaseError from "./EleventyBaseError.js";
+import EleventyServe from "./EleventyServe.js";
+import EleventyWatch from "./EleventyWatch.js";
+import EleventyWatchTargets from "./EleventyWatchTargets.js";
+import EleventyFiles from "./EleventyFiles.js";
+import ConsoleLogger from "./Util/ConsoleLogger.js";
+import PathPrefixer from "./Util/PathPrefixer.js";
+import TemplateConfig from "./TemplateConfig.js";
 
-const templateCache = require("./TemplateCache");
-const simplePlural = require("./Util/Pluralize");
-const deleteRequireCache = require("./Util/DeleteRequireCache");
-const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
-const debug = require("debug")("Eleventy");
-const eventBus = require("./EventBus");
+import TemplateCache from "./TemplateCache.js";
+import simplePlural from "./Util/Pluralize.js";
+import deleteRequireCache from "./Util/DeleteRequireCache.js";
+import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
+import eventBus from "./EventBus.js";
+import Debug from "debug";
+
+const debug = Debug("Eleventy");
+
+const { clear } = TemplateCache;
+const require = createRequire(import.meta.url);
+const { version } = require("../package.json");
 
 /**
  * @module 11ty/eleventy/Eleventy
@@ -33,7 +39,7 @@ const eventBus = require("./EventBus");
  * @param {String} output - Where to write rendered files to.
  * @returns {module:11ty/eleventy/Eleventy~Eleventy}
  */
-class Eleventy {
+export default class Eleventy {
   constructor(input, output, options = {}, eleventyConfig = null) {
     if (!eleventyConfig) {
       this.eleventyConfig = new TemplateConfig(null, options.configPath);
@@ -270,7 +276,7 @@ class Eleventy {
   async restart() {
     debug("Restarting");
     this.start = this.getNewTimestamp();
-    templateCache.clear();
+    clear();
     this.bench.reset();
     this.eleventyFiles.restart();
     this.extensionMap.reset();
@@ -319,7 +325,7 @@ class Eleventy {
       ret.push(slashRet.join(" / "));
     }
 
-    let versionStr = `v${pkg.version}`;
+    let versionStr = `v${version}`;
     let time = ((this.getNewTimestamp() - this.start) / 1000).toFixed(2);
     ret.push(`in ${time} ${simplePlural(time, "second", "seconds")}`);
 
@@ -367,6 +373,7 @@ class Eleventy {
     this.eleventyFiles.init();
 
     this.templateData = new TemplateData(this.inputDir, this.eleventyConfig);
+    await this.templateData.init();
     this.templateData.extensionMap = this.extensionMap;
     if (this.env) {
       this.templateData.environmentVariables = this.env;
@@ -387,7 +394,7 @@ class Eleventy {
 
     let dirs = {
       input: this.inputDir,
-      data: this.templateData.getDataDir(),
+      data: await this.templateData.getDataDir(),
       includes: this.eleventyFiles.getIncludesDir(),
       layouts: this.eleventyFiles.getLayoutsDir(),
       output: this.outputDir,
@@ -561,7 +568,7 @@ Verbose Output: ${this.verboseMode}`);
    * @returns {String} - The version of Eleventy.
    */
   static getVersion() {
-    return pkg.version;
+    return version;
   }
 
   /**
@@ -836,28 +843,28 @@ Arguments:
       return;
     }
 
-    let dataDir = this.templateData.getDataDir();
+    let dataDir = await this.templateData.getDataDir();
     function filterOutGlobalDataFiles(path) {
       return !dataDir || path.indexOf(dataDir) === -1;
     }
 
     // Template files .11ty.js
-    let templateFiles = this.eleventyFiles.getWatchPathCache();
-    this.watchTargets.addDependencies(templateFiles);
+    let templateFiles = await this.eleventyFiles.getWatchPathCache();
+    await this.watchTargets.addDependencies(templateFiles);
 
     // Config file dependencies
-    this.watchTargets.addDependencies(
+    await this.watchTargets.addDependencies(
       this.eleventyConfig.getLocalProjectConfigFiles(),
       filterOutGlobalDataFiles
     );
 
     // Deps from Global Data (that aren’t in the global data directory, everything is watched there)
-    this.watchTargets.addDependencies(
+    await this.watchTargets.addDependencies(
       this.templateData.getWatchPathCache(),
       filterOutGlobalDataFiles
     );
 
-    this.watchTargets.addDependencies(
+    await this.watchTargets.addDependencies(
       await this.eleventyFiles.getWatcherTemplateJavaScriptDataFiles()
     );
   }
@@ -927,7 +934,7 @@ Arguments:
     // eslint-disable-next-line no-useless-catch
     try {
       let moduleName = "chokidar";
-      chokidar = require(moduleName);
+      chokidar = await import(moduleName).then((x) => x.default);
     } catch (e) {
       throw e;
     }
@@ -1170,10 +1177,9 @@ Arguments:
   }
 }
 
-module.exports = Eleventy;
-module.exports.EleventyServerless = require("./Serverless");
-module.exports.EleventyServerlessBundlerPlugin = require("./Plugins/ServerlessBundlerPlugin");
-module.exports.EleventyRenderPlugin = require("./Plugins/RenderPlugin");
-module.exports.EleventyEdgePlugin = require("./Plugins/EdgePlugin");
-module.exports.EleventyI18nPlugin = require("./Plugins/I18nPlugin");
-module.exports.EleventyHtmlBasePlugin = require("./Plugins/HtmlBasePlugin");
+export { default as EleventyServerless } from "./Serverless.js";
+export { default as EleventyServerlessBundlerPlugin } from "./Plugins/ServerlessBundlerPlugin.js";
+export { default as EleventyRenderPlugin } from "./Plugins/RenderPlugin.js";
+export { default as EleventyEdgePlugin } from "./Plugins/EdgePlugin.js";
+export { default as EleventyI18nPlugin } from "./Plugins/I18nPlugin.js";
+export { default as EleventyHtmlBasePlugin } from "./Plugins/HtmlBasePlugin.js";

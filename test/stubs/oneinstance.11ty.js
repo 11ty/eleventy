@@ -1,4 +1,4 @@
-class Test {
+export default class Test {
   constructor() {
     this.rand = Math.random();
   }
@@ -6,7 +6,7 @@ class Test {
   get data() {
     return {
       name: "Ted",
-      rand: this.rand
+      rand: this.rand,
     };
   }
 
@@ -14,5 +14,3 @@ class Test {
     return `<p>${name}${this.rand}</p>`;
   }
 }
-
-module.exports = Test;

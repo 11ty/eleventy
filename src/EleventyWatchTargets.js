@@ -1,10 +1,11 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
-const { DepGraph } = require("dependency-graph");
+import { TemplatePath } from "@11ty/eleventy-utils";
+import { DepGraph } from "dependency-graph";
 
-const deleteRequireCache = require("./Util/DeleteRequireCache");
-const JavaScriptDependencies = require("./Util/JavaScriptDependencies");
+import deleteRequireCache from "./Util/DeleteRequireCache.js";
+import JavaScriptDependencies from "./Util/JavaScriptDependencies.js";
+const { getDependencies } = JavaScriptDependencies;
 
-class EleventyWatchTargets {
+export default class EleventyWatchTargets {
   constructor() {
     this.targets = new Set();
     this.dependencies = new Set();
@@ -96,13 +97,13 @@ class EleventyWatchTargets {
   }
 
   // add only a target’s dependencies
-  addDependencies(targets, filterCallback) {
+  async addDependencies(targets, filterCallback) {
     if (!this.watchJavaScriptDependencies) {
       return;
     }
 
     targets = this._normalizeTargets(targets);
-    let deps = JavaScriptDependencies.getDependencies(targets);
+    let deps = await getDependencies(targets);
     if (filterCallback) {
       deps = deps.filter(filterCallback);
     }
@@ -131,5 +132,3 @@ class EleventyWatchTargets {
     return Array.from(this.targets);
   }
 }
-
-module.exports = EleventyWatchTargets;

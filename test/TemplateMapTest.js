@@ -1,13 +1,13 @@
-const test = require("ava");
-const TemplateMap = require("../src/TemplateMap");
-const TemplateCollection = require("../src/TemplateCollection");
-const UsingCircularTemplateContentReferenceError = require("../src/Errors/UsingCircularTemplateContentReferenceError");
-const TemplateContentUnrenderedTemplateError = require("../src/Errors/TemplateContentUnrenderedTemplateError");
-const normalizeNewLines = require("./Util/normalizeNewLines");
-const TemplateConfig = require("../src/TemplateConfig");
+import test from "ava";
+import TemplateMap from "../src/TemplateMap.js";
+import TemplateCollection from "../src/TemplateCollection.js";
+import UsingCircularTemplateContentReferenceError from "../src/Errors/UsingCircularTemplateContentReferenceError.js";
+import TemplateContentUnrenderedTemplateError from "../src/Errors/TemplateContentUnrenderedTemplateError.js";
+import normalizeNewLines from "./Util/normalizeNewLines.js";
+import TemplateConfig from "../src/TemplateConfig.js";
 
-const getNewTemplateForTests = require("./_getNewTemplateForTests");
-const getRenderedTmpls = require("./_getRenderedTemplates");
+import getNewTemplateForTests from "./_getNewTemplateForTests.js";
+import getRenderedTmpls from "./_getRenderedTemplates.js";
 
 function getNewTemplate(filename, input, output, eleventyConfig) {
   return getNewTemplateForTests(

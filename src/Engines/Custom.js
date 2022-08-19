@@ -1,7 +1,7 @@
-const TemplateEngine = require("./TemplateEngine");
-const getJavaScriptData = require("../Util/GetJavaScriptData");
+import TemplateEngine from "./TemplateEngine.js";
+import getJavaScriptData from "../Util/GetJavaScriptData.js";
 
-class CustomEngine extends TemplateEngine {
+export default class CustomEngine extends TemplateEngine {
   constructor(name, dirs, config) {
     super(name, dirs, config);
 
@@ -233,5 +233,3 @@ class CustomEngine extends TemplateEngine {
     return false;
   }
 }
-
-module.exports = CustomEngine;

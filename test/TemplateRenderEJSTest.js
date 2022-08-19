@@ -1,7 +1,7 @@
-const test = require("ava");
-const TemplateRender = require("../src/TemplateRender");
-const TemplateConfig = require("../src/TemplateConfig");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
+import test from "ava";
+import TemplateRender from "../src/TemplateRender.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
 function getNewTemplateRender(name, inputDir) {
   let eleventyConfig = new TemplateConfig();
@@ -105,7 +105,7 @@ test("EJS Render Relative Include, Fxn with Data", async (t) => {
 test("EJS Render: with Library Override", async (t) => {
   let tr = getNewTemplateRender("ejs");
 
-  let lib = require("ejs");
+  let lib = await import("ejs");
   tr.engine.setLibrary(lib);
 
   let fn = await tr.getCompiledTemplate("<p><%= name %></p>");

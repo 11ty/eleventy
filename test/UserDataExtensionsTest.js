@@ -1,12 +1,12 @@
-const test = require("ava");
-const fs = require("fs");
-const TemplateConfig = require("../src/TemplateConfig");
-const TemplateData = require("../src/TemplateData");
-let yaml = require("js-yaml");
+import test from "ava";
+import { existsSync } from "node:fs";
+import TemplateConfig from "../src/TemplateConfig.js";
+import TemplateData from "../src/TemplateData.js";
+import { load } from "js-yaml";
 
 function injectDataExtensions(dataObj) {
   dataObj.config.dataExtensions = new Map([
-    ["yaml", { parser: (s) => yaml.load(s) }],
+    ["yaml", { parser: (s) => load(s) }],
     ["nosj", { parser: JSON.parse }],
   ]);
 }
@@ -164,7 +164,7 @@ test("Binary data files, read: false", async (t) => {
       "jpg",
       {
         parser: (s) => {
-          t.true(fs.existsSync(s));
+          t.true(existsSync(s));
           // s is a Buffer, just return the length as a sample
           return s;
         },

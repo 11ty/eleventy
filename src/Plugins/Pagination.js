@@ -1,16 +1,16 @@
-const lodashChunk = require("lodash/chunk");
-const lodashGet = require("lodash/get");
-const lodashSet = require("lodash/set");
-const { isPlainObject } = require("@11ty/eleventy-utils");
+import lodashChunk from "lodash/chunk.js";
+import lodashGet from "lodash/get.js";
+import lodashSet from "lodash/set.js";
+import { isPlainObject } from "@11ty/eleventy-utils";
 
-const EleventyBaseError = require("../EleventyBaseError");
-const { DeepCopy } = require("../Util/Merge");
-const { ProxyWrap } = require("../Util/ProxyWrap");
+import EleventyBaseError from "../EleventyBaseError.js";
+import { DeepCopy } from "../Util/Merge.js";
+import { ProxyWrap } from "../Util/ProxyWrap.js";
 
 class PaginationConfigError extends EleventyBaseError {}
 class PaginationError extends EleventyBaseError {}
 
-class Pagination {
+export default class Pagination {
   constructor(tmpl, data, config) {
     if (!config) {
       throw new PaginationConfigError(
@@ -419,5 +419,3 @@ class Pagination {
     return entries;
   }
 }
-
-module.exports = Pagination;

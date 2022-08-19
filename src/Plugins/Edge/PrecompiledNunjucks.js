@@ -1,6 +1,6 @@
-const { createHash } = require("crypto");
+import { createHash } from "node:crypto";
 
-class PrecompiledNunjucks {
+export default class PrecompiledNunjucks {
   constructor() {
     this.rawTemplates = {};
   }
@@ -54,5 +54,3 @@ class PrecompiledNunjucks {
 }`;
   }
 }
-
-module.exports = PrecompiledNunjucks;

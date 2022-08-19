@@ -1,1 +1,1 @@
-require("kleur");
+import "kleur";

@@ -1,10 +1,10 @@
-const EventEmitter = require("events");
+import EventEmitter from "node:events";
 
 /**
  * This class emits events asynchronously.
  * It can be used for time measurements during a build.
  */
-class AsyncEventEmitter extends EventEmitter {
+export default class AsyncEventEmitter extends EventEmitter {
   /**
    * @param {string} type - The event name to emit.
    * @param {*[]} args - Additional arguments that get passed to listeners.
@@ -19,5 +19,3 @@ class AsyncEventEmitter extends EventEmitter {
     return Promise.all(listeners.map((listener) => listener.apply(this, args)));
   }
 }
-
-module.exports = AsyncEventEmitter;

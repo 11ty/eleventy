@@ -1,17 +1,17 @@
-const test = require("ava");
-const fsp = require("fs").promises;
-const pretty = require("pretty");
+import test, { skip } from "ava";
+import { promises as fsp } from "fs";
+import pretty from "pretty";
 
-const TemplateConfig = require("../src/TemplateConfig");
-const TemplateData = require("../src/TemplateData");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
-const EleventyErrorUtil = require("../src/EleventyErrorUtil");
-const TemplateContentPrematureUseError = require("../src/Errors/TemplateContentPrematureUseError");
-const normalizeNewLines = require("./Util/normalizeNewLines");
-const eventBus = require("../src/EventBus");
+import TemplateConfig from "../src/TemplateConfig.js";
+import TemplateData from "../src/TemplateData.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import EleventyErrorUtil from "../src/EleventyErrorUtil.js";
+import TemplateContentPrematureUseError from "../src/Errors/TemplateContentPrematureUseError.js";
+import normalizeNewLines from "./Util/normalizeNewLines.js";
+import EventBus from "../src/EventBus.js";
 
-const getNewTemplate = require("./_getNewTemplateForTests");
-const getRenderedTmpls = require("./_getRenderedTemplates");
+import getNewTemplate from "./_getNewTemplateForTests.js";
+import getRenderedTmpls from "./_getRenderedTemplates.js";
 
 async function getRenderedData(tmpl, pageNumber = 0) {
   let data = await tmpl.getData();
@@ -1014,7 +1014,7 @@ test("Test a transform", async (t) => {
 });
 
 // #789: https://github.com/11ty/eleventy/issues/789
-test.skip("Test a transform (does it have inputPath?)", async (t) => {
+skip("Test a transform (does it have inputPath?)", async (t) => {
   t.plan(3);
 
   let tmpl = getNewTemplate(
@@ -1758,7 +1758,7 @@ This is content.`
 
 test("Custom Front Matter Parsing Options (using TOML)", async (t) => {
   // Currently fails on Windows, needs https://github.com/jonschlinkert/gray-matter/issues/92
-  const TOML = require("@iarna/toml");
+  const TOML = await import("@iarna/toml");
 
   let tmpl = getNewTemplate(
     "./test/stubs/custom-frontmatter/template-toml.njk",
@@ -1865,7 +1865,7 @@ test("Make sure layout cache takes new changes during watch (nunjucks)", async (
 
   await fsp.writeFile(filePath, `alert("bye");`, { encoding: "utf8" });
 
-  eventBus.emit("eleventy.resourceModified", filePath);
+  EventBus.emit("eleventy.resourceModified", filePath);
 
   t.is((await tmpl.render(data)).trim(), '<script>alert("bye");</script>');
 });
@@ -1886,7 +1886,7 @@ test("Make sure layout cache takes new changes during watch (liquid)", async (t)
 
   await fsp.writeFile(filePath, `alert("bye");`, { encoding: "utf8" });
 
-  eventBus.emit("eleventy.resourceModified", filePath);
+  EventBus.emit("eleventy.resourceModified", filePath);
 
   t.is((await tmpl.render(data)).trim(), '<script>alert("bye");</script>');
 });

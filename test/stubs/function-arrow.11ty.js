@@ -1,1 +1,1 @@
-module.exports = ({ name }) => `<p>${name}</p>`;
+export default ({ name }) => `<p>${name}</p>`;

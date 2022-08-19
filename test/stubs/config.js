@@ -1,6 +1,6 @@
-const pretty = require("pretty");
+import pretty from "pretty";
 
-module.exports = function (config) {
+export default function (config) {
   /* {
     template,
     inputPath,
@@ -34,4 +34,4 @@ module.exports = function (config) {
       },
     },
   };
-};
+}

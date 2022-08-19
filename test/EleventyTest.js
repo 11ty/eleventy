@@ -1,10 +1,10 @@
-const test = require("ava");
-const Eleventy = require("../src/Eleventy");
-const EleventyWatchTargets = require("../src/EleventyWatchTargets");
-const TemplateConfig = require("../src/TemplateConfig");
-const DateGitFirstAdded = require("../src/Util/DateGitFirstAdded.js");
-const DateGitLastUpdated = require("../src/Util/DateGitLastUpdated");
-const normalizeNewLines = require("./Util/normalizeNewLines");
+import test from "ava";
+import Eleventy from "../src/Eleventy.js";
+import EleventyWatchTargets from "../src/EleventyWatchTargets.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import DateGitFirstAdded from "../src/Util/DateGitFirstAdded.js";
+import DateGitLastUpdated from "../src/Util/DateGitLastUpdated.js";
+import normalizeNewLines from "./Util/normalizeNewLines.js";
 
 test("Eleventy, defaults inherit from config", async (t) => {
   let elev = new Eleventy();

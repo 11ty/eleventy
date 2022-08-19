@@ -1,15 +1,15 @@
-const test = require("ava");
-const fs = require("fs");
-const rimraf = require("rimraf");
-const fastglob = require("fast-glob");
-const path = require("path");
-const EleventyFiles = require("../src/EleventyFiles");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
-const TemplateWriter = require("../src/TemplateWriter");
-const TemplateConfig = require("../src/TemplateConfig");
-const normalizeNewLines = require("./Util/normalizeNewLines");
+import test, { skip } from "ava";
+import { readFileSync, existsSync } from "node:fs";
+import { sync } from "rimraf";
+import fastglob from "fast-glob";
+import { parse } from "node:path";
+import EleventyFiles from "../src/EleventyFiles.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import TemplateWriter from "../src/TemplateWriter.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import normalizeNewLines from "./Util/normalizeNewLines.js";
 
-const getRenderedTmpls = require("./_getRenderedTemplates");
+import getRenderedTmpls from "./_getRenderedTemplates.js";
 
 // TODO make sure if output is a subdir of input dir that they don’t conflict.
 test("Output is a subdir of input", async (t) => {
@@ -27,7 +27,7 @@ test("Output is a subdir of input", async (t) => {
     ["ejs", "md"],
     eleventyConfig
   );
-  evf.init();
+  await evf.init();
 
   let files = await fastglob(evf.getFileGlobs());
   t.is(evf.getRawFiles().length, 2);
@@ -152,11 +152,11 @@ test("__testGetCollectionsData with custom collection (ascending)", async (t) =>
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.customPostsAsc.length, 2);
   t.is(
-    path.parse(collectionsData.customPostsAsc[0].inputPath).base,
+    parse(collectionsData.customPostsAsc[0].inputPath).base,
     "test1.md"
   );
   t.is(
-    path.parse(collectionsData.customPostsAsc[1].inputPath).base,
+    parse(collectionsData.customPostsAsc[1].inputPath).base,
     "test2.md"
   );
 });
@@ -181,8 +181,8 @@ test("__testGetCollectionsData with custom collection (descending)", async (t) =
   let templateMap = await tw._createTemplateMap(paths);
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.customPosts.length, 2);
-  t.is(path.parse(collectionsData.customPosts[0].inputPath).base, "test2.md");
-  t.is(path.parse(collectionsData.customPosts[1].inputPath).base, "test1.md");
+  t.is(parse(collectionsData.customPosts[0].inputPath).base, "test2.md");
+  t.is(parse(collectionsData.customPosts[1].inputPath).base, "test1.md");
 });
 
 test("__testGetCollectionsData with custom collection (filter only to markdown input)", async (t) => {
@@ -206,8 +206,8 @@ test("__testGetCollectionsData with custom collection (filter only to markdown i
   let templateMap = await tw._createTemplateMap(paths);
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.onlyMarkdown.length, 2);
-  t.is(path.parse(collectionsData.onlyMarkdown[0].inputPath).base, "test1.md");
-  t.is(path.parse(collectionsData.onlyMarkdown[1].inputPath).base, "test2.md");
+  t.is(parse(collectionsData.onlyMarkdown[0].inputPath).base, "test1.md");
+  t.is(parse(collectionsData.onlyMarkdown[1].inputPath).base, "test2.md");
 });
 
 test("Pagination with a Collection", async (t) => {
@@ -436,7 +436,7 @@ test("Glob Watcher Files with Passthroughs", (t) => {
 });
 
 test("Pagination and TemplateContent", async (t) => {
-  rimraf.sync("./test/stubs/pagination-templatecontent/_site/");
+  sync("./test/stubs/pagination-templatecontent/_site/");
 
   let eleventyConfig = new TemplateConfig();
   let tw = new TemplateWriter(
@@ -450,7 +450,7 @@ test("Pagination and TemplateContent", async (t) => {
   tw.setVerboseOutput(false);
   await tw.write();
 
-  let content = fs.readFileSync(
+  let content = readFileSync(
     "./test/stubs/pagination-templatecontent/_site/index.html",
     "utf8"
   );
@@ -460,7 +460,7 @@ test("Pagination and TemplateContent", async (t) => {
 <h1>Post 2</h1>`
   );
 
-  rimraf.sync("./test/stubs/pagination-templatecontent/_site/");
+  sync("./test/stubs/pagination-templatecontent/_site/");
 });
 
 test("Custom collection returns array", async (t) => {
@@ -483,8 +483,8 @@ test("Custom collection returns array", async (t) => {
   let templateMap = await tw._createTemplateMap(paths);
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.returnAllInputPaths.length, 2);
-  t.is(path.parse(collectionsData.returnAllInputPaths[0]).base, "test1.md");
-  t.is(path.parse(collectionsData.returnAllInputPaths[1]).base, "test2.md");
+  t.is(parse(collectionsData.returnAllInputPaths[0]).base, "test1.md");
+  t.is(parse(collectionsData.returnAllInputPaths[1]).base, "test2.md");
 });
 
 test("Custom collection returns a string", async (t) => {
@@ -568,7 +568,7 @@ test("Write Test 11ty.js", async (t) => {
     ["11ty.js"],
     eleventyConfig
   );
-  evf.init();
+  await evf.init();
 
   let files = await fastglob(evf.getFileGlobs());
   t.deepEqual(evf.getRawFiles(), [
@@ -585,7 +585,7 @@ test("Write Test 11ty.js", async (t) => {
   );
 });
 
-test.skip("Markdown with alias", async (t) => {
+skip("Markdown with alias", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let map = new EleventyExtensionMap(["md"], eleventyConfig);
   map.config = {
@@ -601,7 +601,7 @@ test.skip("Markdown with alias", async (t) => {
     eleventyConfig
   );
   evf._setExtensionMap(map);
-  evf.init();
+  await evf.init();
 
   let files = await fastglob(evf.getFileGlobs());
   t.deepEqual(evf.getRawFiles(), [
@@ -635,7 +635,7 @@ test.skip("Markdown with alias", async (t) => {
   );
 });
 
-test.skip("JavaScript with alias", async (t) => {
+skip("JavaScript with alias", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let map = new EleventyExtensionMap(["11ty.js"], eleventyConfig);
   map.config = {
@@ -651,7 +651,7 @@ test.skip("JavaScript with alias", async (t) => {
     eleventyConfig
   );
   evf._setExtensionMap(map);
-  evf.init();
+  await evf.init();
 
   let files = await fastglob(evf.getFileGlobs());
   t.deepEqual(
@@ -686,7 +686,7 @@ test.skip("JavaScript with alias", async (t) => {
 });
 
 test("Passthrough file output", async (t) => {
-  rimraf.sync("./test/stubs/template-passthrough/_site/");
+  sync("./test/stubs/template-passthrough/_site/");
 
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.passthroughCopies = {
@@ -728,8 +728,8 @@ test("Passthrough file output", async (t) => {
   ];
 
   for (let path of output) {
-    t.true(fs.existsSync(path));
+    t.true(existsSync(path));
   }
 
-  rimraf.sync("./test/stubs/template-passthrough/_site/");
+  sync("./test/stubs/template-passthrough/_site/");
 });

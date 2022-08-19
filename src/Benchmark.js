@@ -1,6 +1,6 @@
-const { performance } = require("perf_hooks");
+import { performance } from "node:perf_hooks";
 
-class Benchmark {
+export default class Benchmark {
   constructor() {
     this.reset();
   }
@@ -48,5 +48,3 @@ class Benchmark {
     return this.timeSpent;
   }
 }
-
-module.exports = Benchmark;

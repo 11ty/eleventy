@@ -1,4 +1,4 @@
-const { isPlainObject } = require("@11ty/eleventy-utils");
+import { isPlainObject } from "@11ty/eleventy-utils";
 
 function wrapObject(target, fallback) {
   return new Proxy(target, {
@@ -45,7 +45,7 @@ function wrapObject(target, fallback) {
   });
 }
 
-function ProxyWrap(target, fallback) {
+export function ProxyWrap(target, fallback) {
   if (!isPlainObject(target) || !isPlainObject(fallback)) {
     throw new Error(
       "ProxyWrap expects objects for both the target and fallback"
@@ -55,6 +55,6 @@ function ProxyWrap(target, fallback) {
   return wrapped;
 }
 
-module.exports = {
+export default {
   ProxyWrap,
 };

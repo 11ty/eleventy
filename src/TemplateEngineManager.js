@@ -1,7 +1,7 @@
-const EleventyBaseError = require("./EleventyBaseError");
+import EleventyBaseError from "./EleventyBaseError.js";
 class TemplateEngineManagerConfigError extends EleventyBaseError {}
 
-class TemplateEngineManager {
+export default class TemplateEngineManager {
   constructor(config) {
     if (!config) {
       throw new TemplateEngineManagerConfigError("Missing `config` argument.");
@@ -49,34 +49,34 @@ class TemplateEngineManager {
     return !!this.getClassNameFromTemplateKey(name);
   }
 
-  getEngineClassByExtension(extension) {
+  async getEngineClassByExtension(extension) {
     // We include these as raw strings (and not more readable variables) so they’re parsed by the bundler.
     if (extension === "ejs") {
-      return require("./Engines/Ejs");
+      return import("./Engines/Ejs.js").then((x) => x.default);
     } else if (extension === "md") {
-      return require("./Engines/Markdown");
+      return import("./Engines/Markdown.js").then((x) => x.default);
     } else if (extension === "html") {
-      return require("./Engines/Html");
+      return import("./Engines/Html.js").then((x) => x.default);
     } else if (extension === "hbs") {
-      return require("./Engines/Handlebars");
+      return import("./Engines/Handlebars.js").then((x) => x.default);
     } else if (extension === "mustache") {
-      return require("./Engines/Mustache");
+      return import("./Engines/Mustache.js").then((x) => x.default);
     } else if (extension === "haml") {
-      return require("./Engines/Haml");
+      return import("./Engines/Haml.js").then((x) => x.default);
     } else if (extension === "pug") {
-      return require("./Engines/Pug");
+      return import("./Engines/Pug.js").then((x) => x.default);
     } else if (extension === "njk") {
-      return require("./Engines/Nunjucks");
+      return import("./Engines/Nunjucks.js").then((x) => x.default);
     } else if (extension === "liquid") {
-      return require("./Engines/Liquid");
+      return import("./Engines/Liquid.js").then((x) => x.default);
     } else if (extension === "11ty.js") {
-      return require("./Engines/JavaScript");
+      return import("./Engines/JavaScript.js").then((x) => x.default);
     } else {
-      return require("./Engines/Custom");
+      return import("./Engines/Custom.js").then((x) => x.default);
     }
   }
 
-  getEngine(name, dirs, extensionMap) {
+  async getEngine(name, dirs, extensionMap) {
     if (!this.hasEngine(name)) {
       throw new Error(
         `Template Engine ${name} does not exist in getEngine (dirs: ${dirs})`
@@ -87,7 +87,7 @@ class TemplateEngineManager {
       return this.engineCache[name];
     }
 
-    let cls = this.getEngineClassByExtension(name);
+    let cls = await this.getEngineClassByExtension(name);
 
     let instance = new cls(name, dirs, this.config);
     instance.extensionMap = extensionMap;
@@ -101,7 +101,7 @@ class TemplateEngineManager {
       this.getClassNameFromTemplateKey(name) === "Custom" &&
       instance.constructor.name !== "CustomEngine"
     ) {
-      const CustomEngine = this.getEngineClassByExtension();
+      const CustomEngine = await this.getEngineClassByExtension();
       const overrideCustomEngine = new CustomEngine(name, dirs, this.config);
       // Keep track of the "default" engine 11ty would normally use
       // This allows the user to access the default engine in their override
@@ -115,5 +115,3 @@ class TemplateEngineManager {
     return instance;
   }
 }
-
-module.exports = TemplateEngineManager;

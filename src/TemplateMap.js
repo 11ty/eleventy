@@ -1,13 +1,14 @@
-const DependencyGraph = require("dependency-graph").DepGraph;
-const { isPlainObject } = require("@11ty/eleventy-utils");
+import { DepGraph as DependencyGraph } from "dependency-graph";
+import { isPlainObject } from "@11ty/eleventy-utils";
 
-const TemplateCollection = require("./TemplateCollection");
-const EleventyErrorUtil = require("./EleventyErrorUtil");
-const UsingCircularTemplateContentReferenceError = require("./Errors/UsingCircularTemplateContentReferenceError");
-const debug = require("debug")("Eleventy:TemplateMap");
-const debugDev = require("debug")("Dev:Eleventy:TemplateMap");
+import TemplateCollection from "./TemplateCollection.js";
+import EleventyErrorUtil from "./EleventyErrorUtil.js";
+import UsingCircularTemplateContentReferenceError from "./Errors/UsingCircularTemplateContentReferenceError.js";
+import Debug from "debug";
+const debug = Debug("Eleventy:TemplateMap");
+const debugDev = Debug("Dev:Eleventy:TemplateMap");
 
-const EleventyBaseError = require("./EleventyBaseError");
+import EleventyBaseError from "./EleventyBaseError.js";
 
 class TemplateMapConfigError extends EleventyBaseError {}
 
@@ -17,7 +18,7 @@ class DuplicatePermalinkOutputError extends EleventyBaseError {
   }
 }
 
-class TemplateMap {
+export default class TemplateMap {
   constructor(eleventyConfig) {
     if (!eleventyConfig) {
       throw new TemplateMapConfigError("Missing config argument.");
@@ -692,5 +693,3 @@ ${permalinks[page.outputPath]
     return this.collectionsData;
   }
 }
-
-module.exports = TemplateMap;

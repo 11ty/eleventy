@@ -1,7 +1,7 @@
-const test = require("ava");
-const semver = require("semver");
-const getNewTemplate = require("./_getNewTemplateForTests");
-const getRenderedTmpls = require("./_getRenderedTemplates");
+import test from "ava";
+import semver from "semver";
+import getNewTemplate from "./_getNewTemplateForTests.js";
+import getRenderedTmpls from "./_getRenderedTemplates.js";
 
 test("JavaScript template type (function)", async (t) => {
   let tmpl = getNewTemplate(

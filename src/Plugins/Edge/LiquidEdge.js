@@ -1,6 +1,6 @@
-const { Tokenizer, evalToken } = require("liquidjs");
+import { Tokenizer, evalToken } from "liquidjs";
 
-function rawContentLiquidTag(liquidEngine, renderFn, tagName) {
+export default function rawContentLiquidTag(liquidEngine, renderFn, tagName) {
   // via https://github.com/harttle/liquidjs/blob/b5a22fa0910c708fe7881ef170ed44d3594e18f3/src/builtin/tags/raw.ts
   return {
     parse: function (tagToken, remainTokens) {
@@ -44,5 +44,3 @@ function rawContentLiquidTag(liquidEngine, renderFn, tagName) {
     },
   };
 }
-
-module.exports = rawContentLiquidTag;

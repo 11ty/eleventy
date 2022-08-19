@@ -1,5 +1,3 @@
-const EleventyBaseError = require("../EleventyBaseError");
+import EleventyBaseError from "../EleventyBaseError.js";
 
-class TemplateContentPrematureUseError extends EleventyBaseError {}
-
-module.exports = TemplateContentPrematureUseError;
+export default class TemplateContentPrematureUseError extends EleventyBaseError {}

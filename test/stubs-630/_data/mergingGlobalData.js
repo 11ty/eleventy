@@ -1,4 +1,2 @@
-module.exports = {
-  datakey0: "js-value0",
-  jskey: "js"
-};
+export const datakey0 = "js-value0";
+export const jskey = "js";

@@ -1,6 +1,6 @@
-const test = require("ava");
-const TemplatePermalink = require("../src/TemplatePermalink");
-const { generate } = TemplatePermalink;
+import test from "ava";
+import TemplatePermalink from "../src/TemplatePermalink.js";
+const { generate, _hasDuplicateFolder } = TemplatePermalink;
 
 test("Simple straight permalink", (t) => {
   t.is(
@@ -131,7 +131,7 @@ test("Permalink generate with subfolders", (t) => {
 });
 
 test("Permalink matching folder and filename", (t) => {
-  let hasDupe = TemplatePermalink._hasDuplicateFolder;
+  let hasDupe = _hasDuplicateFolder;
   t.is(hasDupe("subfolder", "component"), false);
   t.is(hasDupe("subfolder/", "component"), false);
   t.is(hasDupe(".", "component"), false);
@@ -278,7 +278,7 @@ test("Permalink generate apache content negotiation #761", (t) => {
   t.is(tp.toOutputPath(), "index.es.html");
 
   // Note that generate does some preprocessing to the raw permalink value (compared to `new TemplatePermalink`)
-  let tp1 = TemplatePermalink.generate("", "index.es");
+  let tp1 = _generate("", "index.es");
   tp1.setUrlTransforms([
     function ({ url }) {
       return "/";
@@ -301,7 +301,7 @@ test("Permalink generate apache content negotiation with subdirectory #761", (t)
   t.is(tp.toOutputPath(), "test/index.es.html");
 
   // Note that generate does some preprocessing to the raw permalink value (compared to `new TemplatePermalink`)
-  let tp1 = TemplatePermalink.generate("test", "index.es");
+  let tp1 = _generate("test", "index.es");
   tp1.setUrlTransforms([
     function ({ url }) {
       return "/test/";
@@ -315,7 +315,7 @@ test("Permalink generate apache content negotiation with subdirectory #761", (t)
 
 test("Permalink generate apache content negotiation non-index file name #761", (t) => {
   // Note that generate does some preprocessing to the raw permalink value (compared to `new TemplatePermalink`)
-  let tp = TemplatePermalink.generate("permalinksubfolder", "about.es");
+  let tp = _generate("permalinksubfolder", "about.es");
 
   t.is(tp.toHref(), "/permalinksubfolder/about.es/");
   t.is(tp.toOutputPath(), "permalinksubfolder/about.es/index.html");
@@ -323,7 +323,7 @@ test("Permalink generate apache content negotiation non-index file name #761", (
 
 test("Permalink generate with urlTransforms #761", (t) => {
   // Note that TemplatePermalink.generate is used by Template and different from new TemplatePermalink
-  let tp = TemplatePermalink.generate("permalinksubfolder", "index.es");
+  let tp = _generate("permalinksubfolder", "index.es");
 
   tp.setUrlTransforms([
     function ({ url }) {
@@ -338,7 +338,7 @@ test("Permalink generate with urlTransforms #761", (t) => {
 
 test("Permalink generate with urlTransforms (skip via undefined) #761", (t) => {
   // Note that TemplatePermalink.generate is used by Template and different from new TemplatePermalink
-  let tp = TemplatePermalink.generate("permalinksubfolder", "index.es");
+  let tp = _generate("permalinksubfolder", "index.es");
 
   tp.setUrlTransforms([
     function ({ url }) {
@@ -353,7 +353,7 @@ test("Permalink generate with urlTransforms (skip via undefined) #761", (t) => {
 
 test("Permalink generate with 2 urlTransforms #761", (t) => {
   // Note that TemplatePermalink.generate is used by Template and different from new TemplatePermalink
-  let tp = TemplatePermalink.generate("permalinksubfolder", "index.es");
+  let tp = _generate("permalinksubfolder", "index.es");
   tp.setUrlTransforms([
     function ({ url }) {
       return "/abc/";
@@ -370,7 +370,7 @@ test("Permalink generate with 2 urlTransforms #761", (t) => {
 
 test("Permalink generate with urlTransforms returns index.html #761", (t) => {
   // Note that TemplatePermalink.generate is used by Template and different from new TemplatePermalink
-  let tp = TemplatePermalink.generate("permalinksubfolder", "index.es");
+  let tp = _generate("permalinksubfolder", "index.es");
   tp.setUrlTransforms([
     function ({ url }) {
       return "/abc/index.html";

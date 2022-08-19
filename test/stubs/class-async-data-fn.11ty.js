@@ -1,9 +1,9 @@
-class Test {
+export default class Test {
   async data() {
     return new Promise((resolve, reject) => {
-      setTimeout(function() {
+      setTimeout(function () {
         resolve({
-          name: "Ted"
+          name: "Ted",
         });
       }, 50);
     });
@@ -13,5 +13,3 @@ class Test {
     return `<p>${name}</p>`;
   }
 }
-
-module.exports = Test;

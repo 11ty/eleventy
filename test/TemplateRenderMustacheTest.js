@@ -1,7 +1,7 @@
-const test = require("ava");
-const TemplateRender = require("../src/TemplateRender");
-const TemplateConfig = require("../src/TemplateConfig");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
+import test, { skip } from "ava";
+import TemplateRender from "../src/TemplateRender.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
 function getNewTemplateRender(name, inputDir) {
   let eleventyConfig = new TemplateConfig();
@@ -30,7 +30,7 @@ test("Mustache Render Partial (raw text content)", async (t) => {
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-test.skip("Mustache Render Partial (relative path, raw text content)", async (t) => {
+skip("Mustache Render Partial (relative path, raw text content)", async (t) => {
   let fn = await getNewTemplateRender(
     "./test/stubs/does_not_exist_and_thats_ok.mustache",
     "./test/stubs/"
@@ -57,7 +57,7 @@ test("Mustache Render Partial (Subdirectory)", async (t) => {
 test("Mustache Render: with Library Override", async (t) => {
   let tr = getNewTemplateRender("mustache");
 
-  let lib = require("mustache");
+  let lib = await import("mustache");
   tr.engine.setLibrary(lib);
 
   let fn = await tr.getCompiledTemplate("<p>{{name}}</p>");

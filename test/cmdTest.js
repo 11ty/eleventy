@@ -1,5 +1,5 @@
-const test = require("ava");
-const { exec } = require("child_process");
+import test from "ava";
+import { exec } from "child_process";
 
 test("Test command line exit code success", async (t) => {
   await new Promise((resolve) => {

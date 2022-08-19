@@ -1,3 +1,3 @@
-module.exports = function(data) {
+export default function (data) {
   return `<p>${data.name}</p>`;
-};
+}

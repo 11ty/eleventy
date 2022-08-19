@@ -1,7 +1,7 @@
-const test = require("ava");
-const TemplateConfig = require("../src/TemplateConfig");
-const TemplateLayoutPathResolver = require("../src/TemplateLayoutPathResolver");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
+import test from "ava";
+import TemplateConfig from "../src/TemplateConfig.js";
+import TemplateLayoutPathResolver from "../src/TemplateLayoutPathResolver.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
 function getResolverInstance(path, inputDir, map) {
   let eleventyConfig = new TemplateConfig();

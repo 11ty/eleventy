@@ -1,14 +1,16 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const TemplateLayoutPathResolver = require("./TemplateLayoutPathResolver");
-const TemplateContent = require("./TemplateContent");
-const TemplateData = require("./TemplateData");
+import TemplateLayoutPathResolver from "./TemplateLayoutPathResolver.js";
+import TemplateContent from "./TemplateContent.js";
+import TemplateData from "./TemplateData.js";
+import TemplateCache from "./TemplateCache.js";
+import Debug from "debug";
 
-const templateCache = require("./TemplateCache");
-// const debug = require("debug")("Eleventy:TemplateLayout");
-const debugDev = require("debug")("Dev:Eleventy:TemplateLayout");
+// const debug = Debug("Eleventy:TemplateLayout");
+const debugDev = Debug("Dev:Eleventy:TemplateLayout");
+const { has, get, add, clear } = TemplateCache;
 
-class TemplateLayout extends TemplateContent {
+export default class TemplateLayout extends TemplateContent {
   constructor(key, inputDir, extensionMap, config) {
     if (!config) {
       throw new Error("Expected `config` in TemplateLayout constructor.");
@@ -39,14 +41,14 @@ class TemplateLayout extends TemplateContent {
   static getTemplate(key, inputDir, config, extensionMap) {
     if (config.useTemplateCache) {
       let fullKey = TemplateLayout.resolveFullKey(key, inputDir);
-      if (templateCache.has(fullKey)) {
+      if (has(fullKey)) {
         debugDev("Found %o in TemplateCache", key);
-        return templateCache.get(fullKey);
+        return get(fullKey);
       }
 
       let tmpl = new TemplateLayout(key, inputDir, extensionMap, config);
       debugDev("Added %o to TemplateCache", key);
-      templateCache.add(fullKey, tmpl);
+      add(fullKey, tmpl);
 
       return tmpl;
     } else {
@@ -138,7 +140,7 @@ class TemplateLayout extends TemplateContent {
       }
     } catch (e) {
       debugDev("Clearing TemplateCache after error.");
-      templateCache.clear();
+      clear();
       return Promise.reject(e);
     }
 
@@ -174,5 +176,3 @@ class TemplateLayout extends TemplateContent {
     return templateContent;
   }
 }
-
-module.exports = TemplateLayout;

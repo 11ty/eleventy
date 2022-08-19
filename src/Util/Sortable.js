@@ -1,4 +1,4 @@
-class Sortable {
+export default class Sortable {
   constructor() {
     this.isSortAscending = true;
     this.isSortNumeric = false;
@@ -141,5 +141,3 @@ class Sortable {
     }
   }
 }
-
-module.exports = Sortable;

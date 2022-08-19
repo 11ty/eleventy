@@ -1,6 +1,6 @@
-const test = require("ava");
-const TemplateConfig = require("../src/TemplateConfig.js");
-const url = require("../src/Filters/Url.js");
+import test from "ava";
+import TemplateConfig from "../src/TemplateConfig.js";
+import url from "../src/Filters/Url.js";
 
 test("Test url filter passing in pathPrefix from config", (t) => {
   let eleventyConfig = new TemplateConfig();

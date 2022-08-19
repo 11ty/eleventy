@@ -1,7 +1,7 @@
-module.exports.data = {
+export const data = {
   test: "second",
 };
 
-module.exports.render = function (data) {
+export function render(data) {
   return "second";
-};
+}

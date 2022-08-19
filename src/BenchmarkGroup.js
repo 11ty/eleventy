@@ -1,8 +1,10 @@
-const ConsoleLogger = require("./Util/ConsoleLogger");
-const Benchmark = require("./Benchmark");
-const debugBenchmark = require("debug")("Eleventy:Benchmark");
+import ConsoleLogger from "./Util/ConsoleLogger.js";
+import Benchmark from "./Benchmark.js";
+import Debug from "debug";
 
-class BenchmarkGroup {
+const debugBenchmark = Debug("Eleventy:Benchmark");
+
+export default class BenchmarkGroup {
   constructor() {
     this.benchmarks = {};
     // Warning: aggregate benchmarks automatically default to false via BenchmarkManager->getBenchmarkGroup
@@ -120,5 +122,3 @@ class BenchmarkGroup {
     }
   }
 }
-
-module.exports = BenchmarkGroup;

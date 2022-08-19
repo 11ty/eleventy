@@ -1,7 +1,7 @@
-const TemplateContentPrematureUseError = require("./Errors/TemplateContentPrematureUseError");
+import TemplateContentPrematureUseError from "./Errors/TemplateContentPrematureUseError.js";
 
 /* Hack to workaround the variety of error handling schemes in template languages */
-class EleventyErrorUtil {
+export default class EleventyErrorUtil {
   static get prefix() {
     return ">>>>>11ty>>>>>";
   }
@@ -76,5 +76,3 @@ class EleventyErrorUtil {
     ); // Nunjucks
   }
 }
-
-module.exports = EleventyErrorUtil;

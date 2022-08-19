@@ -1,22 +1,22 @@
-const fs = require("fs");
-const fastglob = require("fast-glob");
-const path = require("path");
-const lodashset = require("lodash/set");
-const lodashget = require("lodash/get");
-const lodashUniq = require("lodash/uniq");
-const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
+import { existsSync, promises } from "node:fs";
+import fastglob from "fast-glob";
+import { parse, sep } from "node:path";
+import lodashset from "lodash/set.js";
+import lodashget from "lodash/get.js";
+import lodashUniq from "lodash/uniq.js";
+import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
-const merge = require("./Util/Merge");
-const TemplateRender = require("./TemplateRender");
-const TemplateGlob = require("./TemplateGlob");
-const EleventyExtensionMap = require("./EleventyExtensionMap");
-const EleventyBaseError = require("./EleventyBaseError");
-const TemplateDataInitialGlobalData = require("./TemplateDataInitialGlobalData");
-const { EleventyRequire } = require("./Util/Require");
+import merge from "./Util/Merge.js";
+import TemplateRender from "./TemplateRender.js";
+import TemplateGlob from "./TemplateGlob.js";
+import EleventyExtensionMap from "./EleventyExtensionMap.js";
+import EleventyBaseError from "./EleventyBaseError.js";
+import TemplateDataInitialGlobalData from "./TemplateDataInitialGlobalData.js";
 
-const debugWarn = require("debug")("Eleventy:Warnings");
-const debug = require("debug")("Eleventy:TemplateData");
-const debugDev = require("debug")("Dev:Eleventy:TemplateData");
+import Debug from "debug";
+const debugWarn = Debug("Eleventy:Warnings");
+const debug = Debug("Eleventy:TemplateData");
+const debugDev = Debug("Dev:Eleventy:TemplateData");
 
 class FSExistsCache {
   constructor() {
@@ -28,7 +28,7 @@ class FSExistsCache {
   exists(path) {
     let exists = this._cache.get(path);
     if (!this.has(path)) {
-      exists = fs.existsSync(path);
+      exists = existsSync(path);
       this._cache.set(path, exists);
     }
     return exists;
@@ -41,13 +41,17 @@ class FSExistsCache {
 class TemplateDataConfigError extends EleventyBaseError {}
 class TemplateDataParseError extends EleventyBaseError {}
 
-class TemplateData {
+export default class TemplateData {
   constructor(inputDir, eleventyConfig) {
     if (!eleventyConfig) {
       throw new TemplateDataConfigError("Missing `config`.");
     }
     this.eleventyConfig = eleventyConfig;
-    this.config = this.eleventyConfig.getConfig();
+    this._inputDir = inputDir;
+  }
+
+  async init() {
+    this.config = await this.eleventyConfig.getConfig();
     this.benchmarks = {
       data: this.config.benchmarkManager.get("Data"),
       aggregate: this.config.benchmarkManager.get("Aggregate"),
@@ -56,7 +60,7 @@ class TemplateData {
     this.dataTemplateEngine = this.config.dataTemplateEngine;
 
     this.inputDirNeedsCheck = false;
-    this.setInputDir(inputDir);
+    this.setInputDir(this._inputDir);
 
     this.rawImports = {};
     this.globalData = null;
@@ -91,7 +95,7 @@ class TemplateData {
   }
 
   /* Used by tests */
-  _setConfig(config) {
+  async _setConfig(config) {
     this.config = config;
     this.dataTemplateEngine = this.config.dataTemplateEngine;
   }
@@ -108,11 +112,11 @@ class TemplateData {
     this.dataTemplateEngine = engineName;
   }
 
-  getRawImports() {
+  async getRawImports() {
     let pkgPath = TemplatePath.absolutePath("package.json");
 
     try {
-      this.rawImports[this.config.keys.package] = require(pkgPath);
+      this.rawImports[this.config.keys.package] = await import(pkgPath);
     } catch (e) {
       debug(
         "Could not find and/or require package.json for data preprocessing at %o",
@@ -149,7 +153,7 @@ class TemplateData {
 
   async _checkInputDir() {
     if (this.inputDirNeedsCheck) {
-      let globalPathStat = await fs.promises.stat(this.inputDir);
+      let globalPathStat = await promises.stat(this.inputDir);
 
       if (!globalPathStat.isDirectory()) {
         throw new Error("Could not find data path directory: " + this.inputDir);
@@ -256,7 +260,7 @@ class TemplateData {
       dataFilePath,
       this.dataDir
     );
-    let parsed = path.parse(reducedPath);
+    let parsed = parse(reducedPath);
     let folders = parsed.dir ? parsed.dir.split("/") : [];
     folders.push(parsed.name);
 
@@ -264,7 +268,7 @@ class TemplateData {
   }
 
   async getAllGlobalData() {
-    let rawImports = this.getRawImports();
+    let rawImports = await this.getRawImports();
     let globalData = {};
     let files = TemplatePath.addLeadingDotSlashArray(
       await this.getGlobalDataFiles()
@@ -282,7 +286,7 @@ class TemplateData {
       // we can just join the array by a forbidden character ("/"" is chosen here, since it works on Linux, Mac and Windows).
       // If at some point this isn't enough anymore, it would be possible to just use JSON.stringify(objectPathTarget) since that
       // is guaranteed to work but is signifivcantly slower.
-      let objectPathTargetString = objectPathTarget.join(path.sep);
+      let objectPathTargetString = objectPathTarget.join(sep);
 
       // if two global files have the same path (but different extensions)
       // and conflict, let’s merge them.
@@ -319,7 +323,7 @@ class TemplateData {
   }
 
   async getData() {
-    let rawImports = this.getRawImports();
+    let rawImports = await this.getRawImports();
 
     if (!this.globalData) {
       this.configApiGlobalData = await this.getInitialGlobalData();
@@ -418,7 +422,7 @@ class TemplateData {
     }
 
     try {
-      rawInput = await fs.promises.readFile(path, encoding);
+      rawInput = await promises.readFile(path, encoding);
     } catch (e) {
       // if file does not exist, return nothing
     }
@@ -503,7 +507,10 @@ class TemplateData {
       let dataBench = this.benchmarks.data.get(`\`${path}\``);
       dataBench.before();
 
-      let returnValue = EleventyRequire(localPath);
+      let returnValue = await import(
+        localPath,
+        localPath.endsWith(".json") ? { type: "json" } : undefined
+      );
       // TODO special exception for Global data `permalink.js`
       // module.exports = (data) => `${data.page.filePathStem}/`; // Does not work
       // module.exports = () => ((data) => `${data.page.filePathStem}/`); // Works
@@ -563,7 +570,7 @@ class TemplateData {
 
   async getLocalDataPaths(templatePath) {
     let paths = [];
-    let parsed = path.parse(templatePath);
+    let parsed = parse(templatePath);
     let inputDir = TemplatePath.addLeadingDotSlash(
       TemplatePath.normalize(this.inputDir)
     );
@@ -653,5 +660,3 @@ class TemplateData {
     }
   }
 }
-
-module.exports = TemplateData;

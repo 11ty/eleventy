@@ -1,7 +1,7 @@
-exports.data = {
-  name: "Ted"
+export const data = {
+  name: "Ted",
 };
 
-exports.render = function({ name }) {
+export function render({ name }) {
   return `<p>${name}</p>`;
-};
+}

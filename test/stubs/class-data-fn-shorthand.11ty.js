@@ -1,4 +1,4 @@
-function Test() {}
+export default function Test() {}
 
 // this doesn’t return an object?? 🤡
 // Test.prototype.data = () => { name: "Ted" };
@@ -26,5 +26,3 @@ class Test {
   render({ name }) => `<p>${name}</p>`;
 }
 */
-
-module.exports = Test;

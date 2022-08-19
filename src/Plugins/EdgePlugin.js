@@ -1,12 +1,12 @@
-const path = require("path");
-const fs = require("fs");
-const fsp = fs.promises;
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { join } from "node:path";
+import { promises, existsSync } from "node:fs";
+const fsp = promises;
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const rawContentLiquidTag = require("./Edge/LiquidEdge.js");
-const rawContentNunjucksTag = require("./Edge/NunjucksEdge.js");
-const PrecompiledNunjucks = require("./Edge/PrecompiledNunjucks.js");
-const EdgeTemplateDataID = require("./Edge/EdgeTemplateDataID.js");
+import rawContentLiquidTag from "./Edge/LiquidEdge.js";
+import rawContentNunjucksTag from "./Edge/NunjucksEdge.js";
+import PrecompiledNunjucks from "./Edge/PrecompiledNunjucks.js";
+import EdgeTemplateDataID from "./Edge/EdgeTemplateDataID.js";
 
 class EdgeHelper {
   constructor() {
@@ -20,7 +20,7 @@ class EdgeHelper {
 
   getOutputPath(filepath) {
     return TemplatePath.addLeadingDotSlash(
-      path.join(this.options.functionsDir, filepath)
+      join(this.options.functionsDir, filepath)
     );
   }
 
@@ -45,11 +45,11 @@ class EdgeHelper {
         recursive: true,
       });
       await fsp.writeFile(
-        path.join(dir, "manifest.json"),
+        join(dir, "manifest.json"),
         JSON.stringify(manifest, null, 2)
       );
       await fsp.writeFile(
-        path.join(dir, "import_map.json"),
+        join(dir, "import_map.json"),
         JSON.stringify(importMap, null, 2)
       );
     }
@@ -58,7 +58,7 @@ class EdgeHelper {
   async writeDefaultEdgeFunctionFile() {
     let filepath = this.getOutputPath("eleventy-edge.js");
 
-    if (fs.existsSync(filepath)) {
+    if (existsSync(filepath)) {
       let contents = await fsp.readFile(filepath, "utf8");
       if (
         contents
@@ -68,7 +68,7 @@ class EdgeHelper {
           )
       ) {
         throw new Error(
-          `Experimental early adopter API change alert! Unfortunately we changed the default imports for Eleventy Edge in Eleventy v2.0.0-canary.7. The easiest thing you can do is delete your existing \`${path.join(
+          `Experimental early adopter API change alert! Unfortunately we changed the default imports for Eleventy Edge in Eleventy v2.0.0-canary.7. The easiest thing you can do is delete your existing \`${join(
             this.options.functionsDir,
             "eleventy-edge.js"
           )}\` and let Eleventy generate a new one for you.`
@@ -186,7 +186,7 @@ function renderAsLiquid(
 }
 
 // Build time plugin to create ELEVENTYEDGE comments that will be later evaluated at the Edge
-function EleventyEdgePlugin(eleventyConfig, opts = {}) {
+export default function EleventyEdgePlugin(eleventyConfig, opts = {}) {
   let options = Object.assign(
     {
       name: "edge",
@@ -252,7 +252,7 @@ function EleventyEdgePlugin(eleventyConfig, opts = {}) {
 
     // Generate app eleventy-edge-app-data.js file and generate default edge function (if needed)
     eleventyConfig.on("eleventy.after", async () => {
-      await fsp.mkdir(path.join(options.functionsDir, "_generated"), {
+      await fsp.mkdir(join(options.functionsDir, "_generated"), {
         recursive: true,
       });
 
@@ -266,7 +266,7 @@ function EleventyEdgePlugin(eleventyConfig, opts = {}) {
       content.push(helper.precompiledTemplates.toString());
 
       await fsp.writeFile(
-        path.join(options.functionsDir, "_generated/eleventy-edge-app-data.js"),
+        join(options.functionsDir, "_generated/eleventy-edge-app-data.js"),
         `export default { ${content.join(",\n")} }`
       );
 
@@ -276,5 +276,3 @@ function EleventyEdgePlugin(eleventyConfig, opts = {}) {
 
   // TODO add a route checker to show a warning if edge shortcodes are used on pages that are not handled in edge function routes
 }
-
-module.exports = EleventyEdgePlugin;

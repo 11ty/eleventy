@@ -1,5 +1,5 @@
-const test = require("ava");
-const { ProxyWrap } = require("../src/Util/ProxyWrap.js");
+import test from "ava";
+import { ProxyWrap } from "../src/Util/ProxyWrap.js";
 
 test("Basic wrap", (t) => {
   let test = ProxyWrap({}, { a: 1 });

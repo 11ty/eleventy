@@ -1,15 +1,15 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const TemplateConfig = require("./TemplateConfig");
-const EleventyBaseError = require("./EleventyBaseError");
-const EleventyExtensionMap = require("./EleventyExtensionMap");
+import TemplateConfig from "./TemplateConfig.js";
+import EleventyBaseError from "./EleventyBaseError.js";
+import EleventyExtensionMap from "./EleventyExtensionMap.js";
 // const debug = require("debug")("Eleventy:TemplateRender");
 
 class TemplateRenderConfigError extends EleventyBaseError {}
 class TemplateRenderUnknownEngineError extends EleventyBaseError {}
 
 // works with full path names or short engine name
-class TemplateRender {
+export default class TemplateRender {
   constructor(tmplPath, inputDir, config) {
     if (!tmplPath) {
       throw new Error(
@@ -58,8 +58,8 @@ class TemplateRender {
     return this._extensionMap;
   }
 
-  getEngineByName(name) {
-    let engine = this.extensionMap.engineManager.getEngine(
+  async getEngineByName(name) {
+    let engine = await this.extensionMap.engineManager.getEngine(
       name,
       this.getDirs(),
       this.extensionMap
@@ -70,7 +70,8 @@ class TemplateRender {
   }
 
   // Runs once per template
-  init(engineNameOrPath) {
+  async init(engineNameOrPath) {
+    if (this.engine) return;
     this.extensionMap.config = this.config;
     this._engineName = this.extensionMap.getKey(engineNameOrPath);
     if (!this._engineName) {
@@ -79,12 +80,13 @@ class TemplateRender {
       );
     }
 
-    this._engine = this.getEngineByName(this._engineName);
+    this._engine = await this.getEngineByName(this._engineName);
     this._engine.initRequireCache(engineNameOrPath);
 
     if (this.useMarkdown === undefined) {
       this.setUseMarkdown(this._engineName === "md");
     }
+    this.engine = this._engine;
   }
 
   get engineName() {
@@ -92,13 +94,6 @@ class TemplateRender {
       this.init(this.engineNameOrPath);
     }
     return this._engineName;
-  }
-
-  get engine() {
-    if (!this._engine) {
-      this.init(this.engineNameOrPath);
-    }
-    return this._engine;
   }
 
   static parseEngineOverrides(engineName) {
@@ -276,6 +271,7 @@ class TemplateRender {
   async getCompiledTemplate(str) {
     // TODO refactor better, move into TemplateEngine logic
     if (this.engineName === "md") {
+      await this.init(this.engineName);
       return this.engine.compile(
         str,
         this.engineNameOrPath,
@@ -283,15 +279,15 @@ class TemplateRender {
         !this.useMarkdown
       );
     } else if (this.engineName === "html") {
+      await this.init(this.engineName);
       return this.engine.compile(
         str,
         this.engineNameOrPath,
         this.parseHtmlWith
       );
     } else {
+      await this.init(this.engineNameOrPath);
       return this.engine.compile(str, this.engineNameOrPath);
     }
   }
 }
-
-module.exports = TemplateRender;

@@ -1,7 +1,7 @@
-const PugLib = require("pug");
-const TemplateEngine = require("./TemplateEngine");
+import PugLib from "pug";
+import TemplateEngine from "./TemplateEngine.js";
 
-class Pug extends TemplateEngine {
+export default class Pug extends TemplateEngine {
   constructor(name, dirs, config) {
     super(name, dirs, config);
 
@@ -38,5 +38,3 @@ class Pug extends TemplateEngine {
     return this.pugLib.compile(str, options);
   }
 }
-
-module.exports = Pug;

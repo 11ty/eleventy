@@ -1,6 +1,6 @@
-const path = require("path");
+import { join, sep } from "node:path";
 
-class PathPrefixer {
+export default class PathPrefixer {
   static normalizePathPrefix(pathPrefix) {
     if (pathPrefix) {
       // add leading / (for browsersync), see #1454
@@ -12,11 +12,8 @@ class PathPrefixer {
   }
 
   static joinUrlParts(...parts) {
-    return path
-      .join(...parts)
-      .split(path.sep)
+    return join(...parts)
+      .split(sep)
       .join("/");
   }
 }
-
-module.exports = PathPrefixer;

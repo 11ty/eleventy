@@ -1,7 +1,7 @@
-module.exports = async function(data) {
+export default async function (data) {
   return new Promise((resolve, reject) => {
-    setTimeout(function() {
+    setTimeout(function () {
       resolve(`<p>${data.name}</p>`);
     }, 100);
   });
-};
+}

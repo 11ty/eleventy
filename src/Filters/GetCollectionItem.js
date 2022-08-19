@@ -1,4 +1,4 @@
-module.exports = function getCollectionItem(collection, page, modifier = 0) {
+export default function getCollectionItem(collection, page, modifier = 0) {
   let j = 0;
   let index;
   for (let item of collection) {
@@ -17,4 +17,4 @@ module.exports = function getCollectionItem(collection, page, modifier = 0) {
       return collection[index + modifier];
     }
   }
-};
+}

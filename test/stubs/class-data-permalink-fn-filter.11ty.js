@@ -1,10 +1,10 @@
-class Test {
+export default class Test {
   get data() {
     return {
       title: "My Super Cool Title",
-      permalink: function({ title }) {
+      permalink: function ({ title }) {
         return `/my-permalink/${this.slug(title)}/`;
-      }
+      },
     };
   }
 
@@ -12,5 +12,3 @@ class Test {
     return `<p>${name}</p>`;
   }
 }
-
-module.exports = Test;

@@ -1,8 +1,8 @@
-const pkg = require("../package.json");
-const semver = require("semver");
-const lodashset = require("lodash/set");
+import semver from "semver";
+import { readFile } from "node:fs/promises";
+import lodashset from "lodash/set.js";
 
-class TemplateDataInitialGlobalData {
+export default class TemplateDataInitialGlobalData {
   constructor(templateConfig) {
     if (!templateConfig) {
       throw new TemplateDataConfigError("Missing `config`.");
@@ -32,11 +32,12 @@ class TemplateDataInitialGlobalData {
       globalData.eleventy = {};
     }
     // #2293 for meta[name=generator]
-    globalData.eleventy.version = semver.coerce(pkg.version).toString();
+    const { version } = JSON.parse(
+      await readFile(new URL("../package.json", import.meta.url), "utf8")
+    );
+    globalData.eleventy.version = semver.coerce(version).toString();
     globalData.eleventy.generator = `Eleventy v${globalData.eleventy.version}`;
 
     return globalData;
   }
 }
-
-module.exports = TemplateDataInitialGlobalData;

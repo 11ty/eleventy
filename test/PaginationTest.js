@@ -1,10 +1,11 @@
-const test = require("ava");
-const TemplateData = require("../src/TemplateData");
-const Pagination = require("../src/Plugins/Pagination");
-const TemplateConfig = require("../src/TemplateConfig");
+import test from "ava";
+import TemplateData from "../src/TemplateData.js";
+import Pagination from "../src/Plugins/Pagination.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import slugify from "slugify";
 
-const getNewTemplate = require("./_getNewTemplateForTests");
-const getRenderedTmpls = require("./_getRenderedTemplates");
+import getNewTemplate from "./_getNewTemplateForTests.js";
+import getRenderedTmpls from "./_getRenderedTemplates.js";
 
 test("No data passed to pagination", async (t) => {
   let eleventyConfig = new TemplateConfig();
@@ -158,6 +159,7 @@ test("Paginate data in frontmatter", async (t) => {
 test("Paginate external data file", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  await dataObj.init();
   await dataObj.cacheData();
 
   let tmpl = getNewTemplate(
@@ -191,7 +193,6 @@ test("Paginate external data file", async (t) => {
 });
 
 test("Slugify test", (t) => {
-  const slugify = require("slugify");
   t.is(slugify("This is a test", { lower: true }), "this-is-a-test");
   t.is(slugify("This", { lower: true }), "this");
   t.is(slugify("ThisLKSDFDS", { lower: true }), "thislksdfds");
@@ -383,6 +384,7 @@ test("Template with Pagination", async (t) => {
 test("Issue 135", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  await dataObj.init();
   await dataObj.cacheData();
 
   let tmpl = getNewTemplate(
@@ -724,6 +726,7 @@ test("Pagination `before` Callback with `reverse: true` (test order of operation
 test("Pagination new v0.10.0 href/hrefs", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  await dataObj.init();
   await dataObj.cacheData();
 
   let tmpl = getNewTemplate(
@@ -753,6 +756,7 @@ test("Pagination new v0.10.0 href/hrefs", async (t) => {
 test("Pagination new v0.10.0 page/pages", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  await dataObj.init();
   await dataObj.cacheData();
 
   let tmpl = getNewTemplate(
@@ -817,6 +821,7 @@ test("Pagination mutable global data", async (t) => {
     "./test/stubs/paged-global-data-mutable/",
     eleventyConfig
   );
+  await dataObj.init();
   await dataObj.cacheData();
 
   let tmpl = getNewTemplate(
@@ -852,6 +857,7 @@ test("Pagination mutable global data", async (t) => {
 test("Pagination template/dir data files run once, Issue 919", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs-919/", eleventyConfig);
+  await dataObj.init();
 
   let tmpl = getNewTemplate(
     "./test/stubs-919/test.njk",

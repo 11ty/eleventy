@@ -1,7 +1,7 @@
-const test = require("ava");
-const HtmlBasePlugin = require("../src/Plugins/HtmlBasePlugin");
-const Eleventy = require("../src/Eleventy");
-const normalizeNewLines = require("./Util/normalizeNewLines");
+import test from "ava";
+import HtmlBasePlugin from "../src/Plugins/HtmlBasePlugin.js";
+import Eleventy from "../src/Eleventy.js";
+import normalizeNewLines from "./Util/normalizeNewLines.js";
 
 function getContentFor(results, filename) {
   let content = results.filter((entry) =>

@@ -1,8 +1,8 @@
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
-const TemplateConfig = require("../src/TemplateConfig");
-const Template = require("../src/Template");
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import Template from "../src/Template.js";
 
-module.exports = function getNewTemplate(
+export default function getNewTemplate(
   path,
   inputDir,
   outputDir,
@@ -35,4 +35,4 @@ module.exports = function getNewTemplate(
     map,
     eleventyConfig
   );
-};
+}

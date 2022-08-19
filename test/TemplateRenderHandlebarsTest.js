@@ -1,7 +1,7 @@
-const test = require("ava");
-const TemplateRender = require("../src/TemplateRender");
-const TemplateConfig = require("../src/TemplateConfig");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
+import test, { skip } from "ava";
+import TemplateRender from "../src/TemplateRender.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
 function getNewTemplateRender(name, inputDir) {
   let eleventyConfig = new TemplateConfig();
@@ -51,7 +51,7 @@ test("Handlebars Render Partial", async (t) => {
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
-test.skip("Handlebars Render Partial (Relative)", async (t) => {
+skip("Handlebars Render Partial (Relative)", async (t) => {
   let fn = await getNewTemplateRender(
     "./test/stubs/does_not_exist_and_thats_ok.hbs",
     "./test/stubs/"
@@ -88,7 +88,7 @@ test("Handlebars Render Partial with parameter", async (t) => {
 test("Handlebars Render: with Library Override", async (t) => {
   let tr = getNewTemplateRender("hbs");
 
-  let lib = require("handlebars");
+  let lib = await import("handlebars");
   tr.engine.setLibrary(lib);
 
   let fn = await tr.getCompiledTemplate("<p>{{name}}</p>");

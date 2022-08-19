@@ -1,13 +1,11 @@
-module.exports = {
-  eleventyNavigation: {
-    key: data => {
-      return "nested-first-global";
-    }
+export const eleventyNavigation = {
+  key: (data) => {
+    return "nested-first-global";
   },
-  image2: data => {
-    return "second-global";
-  },
-  image3: data => {
-    return "third-global";
-  }
 };
+export function image2(data) {
+  return "second-global";
+}
+export function image3(data) {
+  return "third-global";
+}

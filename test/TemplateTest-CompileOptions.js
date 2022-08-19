@@ -1,9 +1,9 @@
-const test = require("ava");
+import test from "ava";
 
-const TemplateConfig = require("../src/TemplateConfig");
-const TemplateData = require("../src/TemplateData");
+import TemplateConfig from "../src/TemplateConfig.js";
+import TemplateData from "../src/TemplateData.js";
 
-const getNewTemplate = require("./_getNewTemplateForTests");
+import getNewTemplate from "./_getNewTemplateForTests.js";
 
 test("Custom extension (.txt) with custom permalink compile function", async (t) => {
   let eleventyConfig = new TemplateConfig();

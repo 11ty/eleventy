@@ -1,6 +1,6 @@
 // This is invalid, data must be an object
-exports.data = "Ted";
+export const data = "Ted";
 
-exports.render = function(name) {
+export function render(name) {
   return `<p>${JSON.stringify(name)}</p>`;
-};
+}

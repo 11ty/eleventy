@@ -1,5 +1,5 @@
-module.exports = function({ collections }) {
+export default function ({ collections }) {
   return `<ul>${collections.post
-    .map(post => `<li>${post.data.title}</li>`)
+    .map((post) => `<li>${post.data.title}</li>`)
     .join("")}</ul>`;
-};
+}

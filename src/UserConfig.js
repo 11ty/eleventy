@@ -1,19 +1,22 @@
-const chalk = require("kleur");
-const semver = require("semver");
-const { DateTime } = require("luxon");
-const EventEmitter = require("./Util/AsyncEventEmitter");
-const EleventyBaseError = require("./EleventyBaseError");
-const BenchmarkManager = require("./BenchmarkManager");
-const merge = require("./Util/Merge");
-const debug = require("debug")("Eleventy:UserConfig");
-const pkg = require("../package.json");
+import kleur from "kleur";
+import semver from "semver";
+import { DateTime } from "luxon";
+import EventEmitter from "./Util/AsyncEventEmitter.js";
+import EleventyBaseError from "./EleventyBaseError.js";
+import BenchmarkManager from "./BenchmarkManager.js";
+import merge from "./Util/Merge.js";
+import Debug from "debug";
+const debug = Debug("Eleventy:UserConfig");
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+const { version } = require("../package.json");
 
 class UserConfigError extends EleventyBaseError {}
 
 const ComparisonAsyncFunction = (async () => {}).constructor;
 
 // API to expose configuration options in config file
-class UserConfig {
+export default class UserConfig {
   constructor() {
     this.reset();
   }
@@ -99,12 +102,12 @@ class UserConfig {
 
   versionCheck(expected) {
     if (
-      !semver.satisfies(pkg.version, expected, {
+      !semver.satisfies(version, expected, {
         includePrerelease: true,
       })
     ) {
       throw new UserConfigError(
-        `This project requires the Eleventy version to match '${expected}' but found ${pkg.version}. Use \`npm update @11ty/eleventy -g\` to upgrade the eleventy global or \`npm update @11ty/eleventy --save\` to upgrade your local project version.`
+        `This project requires the Eleventy version to match '${expected}' but found ${version}. Use \`npm update @11ty/eleventy -g\` to upgrade the eleventy global or \`npm update @11ty/eleventy --save\` to upgrade your local project version.`
       );
     }
   }
@@ -143,7 +146,7 @@ class UserConfig {
 
     if (this.liquidTags[name]) {
       debug(
-        chalk.yellow(
+        kleur.yellow(
           "Warning, overwriting a Liquid tag with `addLiquidTag(%o)`"
         ),
         name
@@ -160,7 +163,7 @@ class UserConfig {
 
     if (this.liquidFilters[name]) {
       debug(
-        chalk.yellow(
+        kleur.yellow(
           "Warning, overwriting a Liquid filter with `addLiquidFilter(%o)`"
         ),
         name
@@ -178,7 +181,7 @@ class UserConfig {
 
     if (this.nunjucksAsyncFilters[name]) {
       debug(
-        chalk.yellow(
+        kleur.yellow(
           "Warning, overwriting a Nunjucks filter with `addNunjucksAsyncFilter(%o)`"
         ),
         name
@@ -201,7 +204,7 @@ class UserConfig {
 
       if (this.nunjucksFilters[name]) {
         debug(
-          chalk.yellow(
+          kleur.yellow(
             "Warning, overwriting a Nunjucks filter with `addNunjucksFilter(%o)`"
           ),
           name
@@ -220,7 +223,7 @@ class UserConfig {
 
     if (this.handlebarsHelpers[name]) {
       debug(
-        chalk.yellow(
+        kleur.yellow(
           "Warning, overwriting a Handlebars helper with `addHandlebarsHelper(%o)`."
         ),
         name
@@ -297,7 +300,7 @@ class UserConfig {
 
     if (this.nunjucksTags[name]) {
       debug(
-        chalk.yellow(
+        kleur.yellow(
           "Warning, overwriting a Nunjucks tag with `addNunjucksTag(%o)`"
         ),
         name
@@ -321,7 +324,7 @@ class UserConfig {
 
     if (this.nunjucksGlobals[name]) {
       debug(
-        chalk.yellow(
+        kleur.yellow(
           "Warning, overwriting a Nunjucks global with `addNunjucksGlobal(%o)`"
         ),
         name
@@ -564,7 +567,7 @@ class UserConfig {
 
     if (this.nunjucksAsyncShortcodes[name]) {
       debug(
-        chalk.yellow(
+        kleur.yellow(
           "Warning, overwriting a Nunjucks Async Shortcode with `addNunjucksAsyncShortcode(%o)`"
         ),
         name
@@ -585,7 +588,7 @@ class UserConfig {
 
       if (this.nunjucksShortcodes[name]) {
         debug(
-          chalk.yellow(
+          kleur.yellow(
             "Warning, overwriting a Nunjucks Shortcode with `addNunjucksShortcode(%o)`"
           ),
           name
@@ -604,7 +607,7 @@ class UserConfig {
 
     if (this.liquidShortcodes[name]) {
       debug(
-        chalk.yellow(
+        kleur.yellow(
           "Warning, overwriting a Liquid Shortcode with `addLiquidShortcode(%o)`"
         ),
         name
@@ -622,7 +625,7 @@ class UserConfig {
 
     if (this.handlebarsShortcodes[name]) {
       debug(
-        chalk.yellow(
+        kleur.yellow(
           "Warning, overwriting a Handlebars Shortcode with `addHandlebarsShortcode(%o)`"
         ),
         name
@@ -660,7 +663,7 @@ class UserConfig {
 
     if (this.nunjucksAsyncPairedShortcodes[name]) {
       debug(
-        chalk.yellow(
+        kleur.yellow(
           "Warning, overwriting a Nunjucks Async Paired Shortcode with `addPairedNunjucksAsyncShortcode(%o)`"
         ),
         name
@@ -681,7 +684,7 @@ class UserConfig {
 
       if (this.nunjucksPairedShortcodes[name]) {
         debug(
-          chalk.yellow(
+          kleur.yellow(
             "Warning, overwriting a Nunjucks Paired Shortcode with `addPairedNunjucksShortcode(%o)`"
           ),
           name
@@ -700,7 +703,7 @@ class UserConfig {
 
     if (this.liquidPairedShortcodes[name]) {
       debug(
-        chalk.yellow(
+        kleur.yellow(
           "Warning, overwriting a Liquid Paired Shortcode with `addPairedLiquidShortcode(%o)`"
         ),
         name
@@ -718,7 +721,7 @@ class UserConfig {
 
     if (this.handlebarsPairedShortcodes[name]) {
       debug(
-        chalk.yellow(
+        kleur.yellow(
           "Warning, overwriting a Handlebars Paired Shortcode with `addPairedHandlebarsShortcode(%o)`"
         ),
         name
@@ -736,7 +739,7 @@ class UserConfig {
 
     if (this.javascriptFunctions[name]) {
       debug(
-        chalk.yellow(
+        kleur.yellow(
           "Warning, overwriting a JavaScript template function with `addJavaScriptFunction(%o)`"
         ),
         name
@@ -908,5 +911,3 @@ class UserConfig {
     };
   }
 }
-
-module.exports = UserConfig;

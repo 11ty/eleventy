@@ -1,7 +1,7 @@
-class Test {
+export default class Test {
   get data() {
     return {
-      permalink: Buffer.from("/my-permalink/")
+      permalink: Buffer.from("/my-permalink/"),
     };
   }
 
@@ -9,5 +9,3 @@ class Test {
     return `<p>${name}</p>`;
   }
 }
-
-module.exports = Test;

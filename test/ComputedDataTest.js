@@ -1,6 +1,6 @@
-const test = require("ava");
-const ComputedData = require("../src/ComputedData");
-const TemplateConfig = require("../src/TemplateConfig");
+import test from "ava";
+import ComputedData from "../src/ComputedData.js";
+import TemplateConfig from "../src/TemplateConfig.js";
 
 test("Basic get/set", async (t) => {
   let cd = new ComputedData();
@@ -397,7 +397,7 @@ test("Get var order and process it in two stages", async (t) => {
 
 test("Use JavaScript functions (filters) in computed data functions", async (t) => {
   let eleventyCfg = new TemplateConfig();
-  let cfg = eleventyCfg.getConfig();
+  let cfg = await eleventyCfg.getConfig();
   cfg.javascriptFunctions.alwaysBlue = function (str) {
     return str + " is blue";
   };

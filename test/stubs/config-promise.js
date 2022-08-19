@@ -1,5 +1,5 @@
-module.exports = async function() {
+export default async function () {
   return {
-    layouts: "promise"
+    layouts: "promise",
   };
-};
+}

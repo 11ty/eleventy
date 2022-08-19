@@ -1,5 +1,5 @@
-const test = require("ava");
-const EleventyServerless = require("../src/Serverless");
+import test from "ava";
+import EleventyServerless from "../src/Serverless.js";
 
 test("Test a one-template markdown render.", async (t) => {
   let elev = new EleventyServerless("test1", {

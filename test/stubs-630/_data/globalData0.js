@@ -1,3 +1,1 @@
-module.exports = {
-  datakey1: "datavalue0"
-};
+export const datakey1 = "datavalue0";

@@ -1,1 +1,1 @@
-module.exports = Buffer.from("<p>tést</p>");
+export default Buffer.from("<p>tést</p>");

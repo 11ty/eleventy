@@ -1,5 +1,5 @@
-module.exports = function (config) {
+export default function (config) {
   return {
     pathPrefix: "",
   };
-};
+}

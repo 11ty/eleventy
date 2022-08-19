@@ -1,4 +1,4 @@
-module.exports.data = {
+export const data = {
   lang: "en",
   permalink: "/i18n/{{lang}}/",
   eleventyComputed: {

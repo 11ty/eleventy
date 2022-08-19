@@ -1,3 +1,1 @@
-module.exports = {
-  tags: "tag3"
-};
+export const tags = "tag3";

@@ -1,10 +1,14 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
-const { deleteRequireCacheAbsolute } = require("./DeleteRequireCache");
+import { TemplatePath } from "@11ty/eleventy-utils";
+import deleteRequireCacheAbsolute from "./DeleteRequireCache.js";
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
 
 function requireLocal(localPath) {
   let absolutePath = TemplatePath.absolutePath(localPath);
 
-  return requireAbsolute(absolutePath);
+  if (localPath.endsWith(".cjs") || !localPath.endsWith(".js"))
+    return requireAbsolute(absolutePath);
+  else return import(localPath);
 }
 
 function requireAbsolute(absolutePath) {
@@ -14,5 +18,5 @@ function requireAbsolute(absolutePath) {
   return require(absolutePath);
 }
 
-module.exports.EleventyRequire = requireLocal;
-module.exports.EleventyRequireAbsolute = requireAbsolute;
+export { requireLocal as EleventyRequire };
+export { requireAbsolute as EleventyRequireAbsolute };

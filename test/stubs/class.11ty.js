@@ -1,4 +1,4 @@
-class Test {
+export default class Test {
   returnsBill() {
     return "Bill";
   }
@@ -11,5 +11,3 @@ class Test {
     return `<p>${name}${this.returnsBill()}${Test.returnsTed()}</p>`;
   }
 }
-
-module.exports = Test;

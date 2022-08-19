@@ -1,10 +1,17 @@
-const test = require("ava");
-const { DateTime } = require("luxon");
-const Sortable = require("../src/Util/Sortable");
+import test from "ava";
+import { DateTime } from "luxon";
+import Sortable from "../src/Util/Sortable";
+
+const {
+  sortFunctionAlphabeticAscending,
+  sortFunctionAlphabeticDescending,
+  sortFunctionNumericAscending,
+  sortFunctionNumericDescending,
+} = Sortable;
 
 test("get Sort Function", (t) => {
   let s = new Sortable();
-  t.deepEqual(s.getSortFunction(), Sortable.sortFunctionAlphabeticAscending);
+  t.deepEqual(s.getSortFunction(), sortFunctionAlphabeticAscending);
 });
 
 test("Alphabetic Ascending", (t) => {
@@ -80,14 +87,14 @@ test("Date Assumptions", (t) => {
 test("Date and Sortable Assumptions", (t) => {
   // Sortable works here without extra code because Luxon’s valueOf works in equality comparison (for alphabetic lists)
   t.is(
-    Sortable.sortFunctionAlphabeticAscending(
+    sortFunctionAlphabeticAscending(
       DateTime.fromISO("2007-10-10"),
       new Date(2007, 9, 10).getTime()
     ),
     0
   );
   t.is(
-    Sortable.sortFunctionAlphabeticDescending(
+    sortFunctionAlphabeticDescending(
       DateTime.fromISO("2007-10-10"),
       new Date(2007, 9, 10).getTime()
     ),
@@ -95,14 +102,14 @@ test("Date and Sortable Assumptions", (t) => {
   );
 
   t.is(
-    Sortable.sortFunctionAlphabeticAscending(
+    sortFunctionAlphabeticAscending(
       DateTime.fromISO("2008-10-10"),
       new Date(2007, 9, 10).getTime()
     ),
     1
   );
   t.is(
-    Sortable.sortFunctionAlphabeticDescending(
+    sortFunctionAlphabeticDescending(
       DateTime.fromISO("2008-10-10"),
       new Date(2007, 9, 10).getTime()
     ),
@@ -111,14 +118,14 @@ test("Date and Sortable Assumptions", (t) => {
 
   // Sortable works here without extra code because Luxon’s valueOf works in subtraction (for numeric lists)
   t.is(
-    Sortable.sortFunctionNumericAscending(
+    sortFunctionNumericAscending(
       DateTime.fromISO("2008-10-10"),
       new Date(2008, 9, 10).getTime()
     ),
     0
   );
   t.is(
-    Sortable.sortFunctionNumericDescending(
+    sortFunctionNumericDescending(
       DateTime.fromISO("2008-10-10"),
       new Date(2008, 9, 10).getTime()
     ),
@@ -126,13 +133,13 @@ test("Date and Sortable Assumptions", (t) => {
   );
 
   t.true(
-    Sortable.sortFunctionNumericAscending(
+    sortFunctionNumericAscending(
       DateTime.fromISO("2008-10-10"),
       new Date(2007, 9, 10).getTime()
     ) > 0
   );
   t.true(
-    Sortable.sortFunctionNumericDescending(
+    sortFunctionNumericDescending(
       DateTime.fromISO("2008-10-10"),
       new Date(2007, 9, 10).getTime()
     ) < 0

@@ -1,6 +1,6 @@
-const test = require("ava");
-const TemplateEngine = require("../src/Engines/TemplateEngine");
-const TemplateConfig = require("../src/TemplateConfig");
+import test from "ava";
+import TemplateEngine from "../src/Engines/TemplateEngine.js";
+import TemplateConfig from "../src/TemplateConfig.js";
 
 test("Unsupported engine", async (t) => {
   let eleventyConfig = new TemplateConfig();

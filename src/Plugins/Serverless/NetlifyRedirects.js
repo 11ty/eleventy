@@ -1,8 +1,9 @@
-const fs = require("fs");
-const TOML = require("@iarna/toml");
-const debug = require("debug")("Eleventy:Serverless");
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { parse, stringify } from "@iarna/toml";
+import Debug from "debug";
+const debug = Debug("Eleventy:Serverless");
 
-class NetlifyRedirects {
+export default class NetlifyRedirects {
   constructor(name) {
     this.name = name;
   }
@@ -93,8 +94,8 @@ class NetlifyRedirects {
 
   // parse existing netlify.toml
   getExistingConfig(filename = "./netlify.toml") {
-    if (fs.existsSync(filename)) {
-      return TOML.parse(fs.readFileSync(filename));
+    if (existsSync(filename)) {
+      return parse(readFileSync(filename));
     }
 
     return {};
@@ -107,12 +108,10 @@ class NetlifyRedirects {
     let existingCfg = this.getExistingConfig(configFilename);
     let results = this.getResults(newRedirects, existingCfg);
 
-    fs.writeFileSync(configFilename, TOML.stringify(results));
+    writeFileSync(configFilename, stringify(results));
 
     debug(
       `Eleventy Serverless (${this.name}), writing (×${newRedirects.length}): ${configFilename}`
     );
   }
 }
-
-module.exports = NetlifyRedirects;

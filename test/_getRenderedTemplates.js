@@ -1,4 +1,4 @@
-module.exports = async function getRenderedTemplates(template, data) {
+export default async function getRenderedTemplates(template, data) {
   let pages = await template.getTemplates(data);
   await Promise.all(
     pages.map(async (page) => {
@@ -8,4 +8,4 @@ module.exports = async function getRenderedTemplates(template, data) {
     })
   );
   return pages;
-};
+}

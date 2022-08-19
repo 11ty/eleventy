@@ -1,11 +1,11 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { TemplatePath } from "@11ty/eleventy-utils";
 
 /* Decides when to watch and in what mode to watch
  * Incremental builds don’t batch changes, they queue.
  * Nonincremental builds batch.
  */
 
-class EleventyWatch {
+export default class EleventyWatch {
   constructor() {
     this.incremental = false;
     this.isActive = false;
@@ -124,5 +124,3 @@ class EleventyWatch {
     return ret;
   }
 }
-
-module.exports = EleventyWatch;

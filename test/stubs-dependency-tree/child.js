@@ -1,1 +1,1 @@
-require("./grandchild");
+import "./grandchild.js";

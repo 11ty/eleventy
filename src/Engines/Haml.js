@@ -1,7 +1,7 @@
-const HamlLib = require("hamljs");
-const TemplateEngine = require("./TemplateEngine");
+import HamlLib from "hamljs";
+import TemplateEngine from "./TemplateEngine.js";
 
-class Haml extends TemplateEngine {
+export default class Haml extends TemplateEngine {
   constructor(name, dirs, config) {
     super(name, dirs, config);
 
@@ -17,5 +17,3 @@ class Haml extends TemplateEngine {
     return this.hamlLib.compile(str);
   }
 }
-
-module.exports = Haml;

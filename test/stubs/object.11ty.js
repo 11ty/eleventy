@@ -1,8 +1,6 @@
-module.exports = {
-  data: {
-    name: "Ted"
-  },
-  render: function({ name }) {
-    return `<p>${name}</p>`;
-  }
+export const data = {
+  name: "Ted",
 };
+export function render({ name }) {
+  return `<p>${name}</p>`;
+}

@@ -1,6 +1,6 @@
-const test = require("ava");
-const path = require("path");
-const PathPrefixer = require("../src/Util/PathPrefixer");
+import test from "ava";
+import { sep } from "node:path";
+import PathPrefixer from "../src/Util/PathPrefixer.js";
 
 test("joinUrlParts", (t) => {
   t.is(PathPrefixer.joinUrlParts("a"), "a");
@@ -14,21 +14,12 @@ test("joinUrlParts", (t) => {
 test("joinUrlParts (Windows)", (t) => {
   // The replace calls are needed, since "\" is a valid path char on unix
   t.is(PathPrefixer.joinUrlParts("a"), "a");
-  t.is(PathPrefixer.joinUrlParts("a\\b".replace(/\\/g, path.sep)), "a/b");
-  t.is(PathPrefixer.joinUrlParts("\\a\\b".replace(/\\/g, path.sep)), "/a/b");
-  t.is(PathPrefixer.joinUrlParts("a\\b\\c".replace(/\\/g, path.sep)), "a/b/c");
-  t.is(
-    PathPrefixer.joinUrlParts("a\\b".replace(/\\/g, path.sep), "c"),
-    "a/b/c"
-  );
-  t.is(
-    PathPrefixer.joinUrlParts("a\\b\\c\\".replace(/\\/g, path.sep)),
-    "a/b/c/"
-  );
-  t.is(
-    PathPrefixer.joinUrlParts("a\\b/c\\".replace(/\\/g, path.sep)),
-    "a/b/c/"
-  );
+  t.is(PathPrefixer.joinUrlParts("a\\b".replace(/\\/g, sep)), "a/b");
+  t.is(PathPrefixer.joinUrlParts("\\a\\b".replace(/\\/g, sep)), "/a/b");
+  t.is(PathPrefixer.joinUrlParts("a\\b\\c".replace(/\\/g, sep)), "a/b/c");
+  t.is(PathPrefixer.joinUrlParts("a\\b".replace(/\\/g, sep), "c"), "a/b/c");
+  t.is(PathPrefixer.joinUrlParts("a\\b\\c\\".replace(/\\/g, sep)), "a/b/c/");
+  t.is(PathPrefixer.joinUrlParts("a\\b/c\\".replace(/\\/g, sep)), "a/b/c/");
 });
 
 test("normalizePathPrefix", (t) => {

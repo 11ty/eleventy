@@ -1,8 +1,8 @@
-const markdownIt = require("markdown-it");
-const TemplateEngine = require("./TemplateEngine");
+import markdownIt from "markdown-it";
+import TemplateEngine from "./TemplateEngine";
 // const debug = require("debug")("Eleventy:Markdown");
 
-class Markdown extends TemplateEngine {
+export default class Markdown extends TemplateEngine {
   constructor(name, dirs, config) {
     super(name, dirs, config);
 
@@ -54,7 +54,7 @@ class Markdown extends TemplateEngine {
     if (preTemplateEngine) {
       let engine;
       if (typeof preTemplateEngine === "string") {
-        engine = this.engineManager.getEngine(
+        engine = await this.engineManager.getEngine(
           preTemplateEngine,
           this.dirs,
           this.extensionMap
@@ -91,5 +91,3 @@ class Markdown extends TemplateEngine {
     }
   }
 }
-
-module.exports = Markdown;

@@ -1,8 +1,9 @@
-const posthtml = require("posthtml");
-const urls = require("posthtml-urls");
-const urlFilter = require("../Filters/Url.js");
-const PathPrefixer = require("../Util/PathPrefixer.js");
-const { DeepCopy } = require("../Util/Merge");
+import posthtml from "posthtml";
+import urls from "posthtml-urls";
+import Url from "../Filters/Url.js";
+import PathPrefixer from "../Util/PathPrefixer.js";
+import { DeepCopy } from "../Util/Merge.js";
+const { call } = Url;
 
 function isValidUrl(url) {
   try {
@@ -49,7 +50,7 @@ function transformUrl(url, base, opts = {}) {
   }
 
   // Not a full URL, nor a full base URL (call the built-in `url` filter)
-  return urlFilter.call(this, url, base);
+  return call(this, url, base);
 }
 
 async function addToAllHtmlUrls(htmlContent, callback, processOptions = {}) {
@@ -65,7 +66,7 @@ async function addToAllHtmlUrls(htmlContent, callback, processOptions = {}) {
   return result.html;
 }
 
-module.exports = function (eleventyConfig, defaultOptions = {}) {
+export default function (eleventyConfig, defaultOptions = {}) {
   let opts = DeepCopy(
     {
       // eleventyConfig.pathPrefix is new in Eleventy 2.0.0-canary.15
@@ -160,6 +161,6 @@ module.exports = function (eleventyConfig, defaultOptions = {}) {
       return content;
     });
   }
-};
+}
 
-module.exports.applyBaseToUrl = transformUrl;
+export const applyBaseToUrl = transformUrl;

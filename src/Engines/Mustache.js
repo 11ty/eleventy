@@ -1,7 +1,7 @@
-const MustacheLib = require("mustache");
-const TemplateEngine = require("./TemplateEngine");
+import MustacheLib from "mustache";
+import TemplateEngine from "./TemplateEngine.js";
 
-class Mustache extends TemplateEngine {
+export default class Mustache extends TemplateEngine {
   constructor(name, dirs, config) {
     super(name, dirs, config);
 
@@ -21,5 +21,3 @@ class Mustache extends TemplateEngine {
     }.bind(this.mustacheLib);
   }
 }
-
-module.exports = Mustache;

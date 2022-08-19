@@ -1,10 +1,10 @@
-const test = require("ava");
+import test from "ava";
 
-const TemplateConfig = require("../src/TemplateConfig");
-const TemplateData = require("../src/TemplateData");
-const TemplateContent = require("../src/TemplateContent");
+import TemplateConfig from "../src/TemplateConfig.js";
+import TemplateData from "../src/TemplateData.js";
+import TemplateContent from "../src/TemplateContent.js";
 
-const getNewTemplate = require("./_getNewTemplateForTests");
+import getNewTemplate from "./_getNewTemplateForTests.js";
 
 test("Using getData: false without getInstanceFromInputPath works ok", async (t) => {
   let eleventyConfig = new TemplateConfig();
@@ -274,7 +274,7 @@ test("Overridden liquid gets used from a markdown template", async (t) => {
 });
 
 test("Use marked for markdown", async (t) => {
-  const { marked } = require("marked");
+  const { marked } = await import("marked");
 
   t.plan(2);
 

@@ -1,39 +1,32 @@
-const fs = require("fs");
-const fastglob = require("fast-glob");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { existsSync, statSync, readFileSync } from "node:fs";
+import fastglob from "fast-glob";
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const EleventyExtensionMap = require("./EleventyExtensionMap");
-const TemplateData = require("./TemplateData");
-const TemplateGlob = require("./TemplateGlob");
-const TemplatePassthroughManager = require("./TemplatePassthroughManager");
-const EleventyBaseError = require("./EleventyBaseError");
-const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
+import EleventyExtensionMap from "./EleventyExtensionMap.js";
+import TemplateData from "./TemplateData.js";
+import TemplateGlob from "./TemplateGlob.js";
+import TemplatePassthroughManager from "./TemplatePassthroughManager.js";
+import EleventyBaseError from "./EleventyBaseError.js";
+import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 
 class EleventyFilesError extends EleventyBaseError {}
 
-const debug = require("debug")("Eleventy:EleventyFiles");
+import Debug from "debug";
+const debug = Debug("Eleventy:EleventyFiles");
 // const debugDev = require("debug")("Dev:Eleventy:EleventyFiles");
 
-class EleventyFiles {
+export default class EleventyFiles {
   constructor(input, outputDir, formats, eleventyConfig) {
     if (!eleventyConfig) {
       throw new EleventyFilesError("Missing `eleventyConfig`` argument.");
     }
 
     this.eleventyConfig = eleventyConfig;
-    this.config = eleventyConfig.getConfig();
-    this.aggregateBench = this.config.benchmarkManager.get("Aggregate");
-
-    this.input = input;
-    this.inputDir = TemplatePath.getDir(this.input);
-    this.outputDir = outputDir;
-
-    this.initConfig();
-
-    this.passthroughAll = false;
-
     this.formats = formats;
-    this.eleventyIgnoreContent = false;
+    this.input = input;
+    this.outputDir = outputDir;
+    this.inputDir = TemplatePath.getDir(this.input);
+    this.layoutsDir = TemplatePath.join(this.inputDir, "_includes");
 
     // init has not yet been called()
     this.alreadyInit = false;
@@ -52,7 +45,10 @@ class EleventyFiles {
     }
   }
 
-  initConfig() {
+  async initConfig() {
+    this.config = await this.eleventyConfig.getConfig();
+    this.aggregateBench = this.config.benchmarkManager.get("Aggregate");
+
     this.includesDir = TemplatePath.join(
       this.inputDir,
       this.config.dir.includes
@@ -61,14 +57,17 @@ class EleventyFiles {
     if ("layouts" in this.config.dir) {
       this.layoutsDir = TemplatePath.join(
         this.inputDir,
-        this.config.dir.layouts
+        this.config.dir.layouts ?? "_includes"
       );
     }
+
+    this.passthroughAll = false;
+
+    this.eleventyIgnoreContent = false;
+    this.initializedConfig = true;
   }
 
-  init() {
-    this.alreadyInit = true;
-
+  async init() {
     // Input is a directory
     if (this.input === this.inputDir) {
       this.templateGlobs = this.extensionMap.getGlobs(this.inputDir);
@@ -78,7 +77,9 @@ class EleventyFiles {
     }
 
     this.initPassthroughManager();
-    this.setupGlobs();
+    await this.initConfig();
+    await this.setupGlobs();
+    this.alreadyInit = true;
   }
 
   get validTemplateGlobs() {
@@ -108,26 +109,27 @@ class EleventyFiles {
     return Array.from(paths);
   }
 
-  restart() {
+  async restart() {
     this.passthroughManager.reset();
-    this.setupGlobs();
+    await this.setupGlobs();
     this._glob = null;
   }
 
   /* For testing */
-  _setConfig(config) {
+  async _setConfig(config) {
     if (!config.ignores) {
       config.ignores = new Set();
       config.ignores.add("**/node_modules/**");
     }
     this.config = config;
-    this.initConfig();
+    await this.setupGlobs();
   }
 
   /* Set command root for local project paths */
   // This is only used by tests
-  _setLocalPathRoot(dir) {
+  async _setLocalPathRoot(dir) {
     this.localPathRoot = dir;
+    await this.setupGlobs();
   }
 
   set extensionMap(extensionMap) {
@@ -174,6 +176,7 @@ class EleventyFiles {
 
   set templateData(templateData) {
     this._templateData = templateData;
+    this._templateDataInitialized = this.templateData.init();
   }
 
   get templateData() {
@@ -183,15 +186,16 @@ class EleventyFiles {
     return this._templateData;
   }
 
-  getDataDir() {
+  async getDataDir() {
     let data = this.templateData;
+    await this._templateDataInitialized;
 
     return data.getDataDir();
   }
 
-  setupGlobs() {
+  async setupGlobs() {
     this.fileIgnores = this.getIgnores();
-    this.extraIgnores = this._getIncludesAndDataDirs();
+    this.extraIgnores = await this._getIncludesAndDataDirs();
     this.uniqueIgnores = this.getIgnoreGlobs();
 
     // Conditional added for tests that don’t have a config
@@ -230,8 +234,8 @@ class EleventyFiles {
 
       let dir = TemplatePath.getDirFromFilePath(ignorePath);
 
-      if (fs.existsSync(ignorePath) && fs.statSync(ignorePath).size > 0) {
-        let ignoreContent = fs.readFileSync(ignorePath, "utf8");
+      if (existsSync(ignorePath) && statSync(ignorePath).size > 0) {
+        let ignoreContent = readFileSync(ignorePath, "utf8");
 
         ignores = ignores.concat(
           EleventyFiles.normalizeIgnoreContent(dir, ignoreContent)
@@ -277,7 +281,7 @@ class EleventyFiles {
 
           try {
             // Note these folders must exist to get /** suffix
-            let stat = fs.statSync(path);
+            let stat = statSync(path);
             if (stat.isDirectory()) {
               return path + "/**";
             }
@@ -354,7 +358,7 @@ class EleventyFiles {
     return this.templateGlobs;
   }
 
-  getWatchPathCache() {
+  async getWatchPathCache() {
     // Issue #1325: make sure passthrough copy files are not included here
     if (!this.pathCache) {
       throw new Error(
@@ -363,12 +367,15 @@ class EleventyFiles {
     }
 
     // Filter out the passthrough copy paths.
-    return this.pathCache.filter((path) => {
-      return (
+    const filtered = [];
+    for (const path of this.pathCache) {
+      if (
         this.extensionMap.isFullTemplateFilePath(path) &&
-        this.extensionMap.shouldSpiderJavaScriptDependencies(path)
-      );
-    });
+        (await this.extensionMap.shouldSpiderJavaScriptDependencies(path))
+      )
+        filtered.push(path);
+    }
+    return filtered;
   }
 
   _globSearch() {
@@ -429,9 +436,9 @@ class EleventyFiles {
   }
 
   /* For `eleventy --watch` */
-  getGlobWatcherFiles() {
+  async getGlobWatcherFiles() {
     // TODO improvement: tie the includes and data to specific file extensions (currently using `**`)
-    let directoryGlobs = this._getIncludesAndDataDirs();
+    let directoryGlobs = await this._getIncludesAndDataDirs();
 
     if (checkPassthroughCopyBehavior(this.config, this.runMode)) {
       return this.validTemplateGlobs.concat(directoryGlobs);
@@ -451,12 +458,14 @@ class EleventyFiles {
   /* For `eleventy --watch` */
   async getGlobWatcherTemplateDataFiles() {
     let templateData = this.templateData;
+    await templateData.init();
     return await templateData.getTemplateDataFileGlob();
   }
 
   /* For `eleventy --watch` */
   // TODO this isn’t great but reduces complexity avoiding using TemplateData:getLocalDataPaths for each template in the cache
   async getWatcherTemplateJavaScriptDataFiles() {
+    await this._templateDataInitialized;
     let globs = await this.templateData.getTemplateJavaScriptDataFileGlob();
     let bench = this.aggregateBench.get("Searching the file system");
     bench.before();
@@ -481,7 +490,7 @@ class EleventyFiles {
     return Array.from(new Set(entries));
   }
 
-  _getIncludesAndDataDirs() {
+  async _getIncludesAndDataDirs() {
     let files = [];
     // we want this to fail on "" because we don’t want to ignore the
     // entire input directory when using ""
@@ -496,12 +505,10 @@ class EleventyFiles {
     }
 
     if (this.config.dir.data && this.config.dir.data !== ".") {
-      let dataDir = this.getDataDir();
+      let dataDir = await this.getDataDir();
       files = files.concat(TemplateGlob.map(dataDir + "/**"));
     }
 
     return files;
   }
 }
-
-module.exports = EleventyFiles;

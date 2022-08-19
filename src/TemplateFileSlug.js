@@ -1,7 +1,7 @@
-const path = require("path");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { parse } from "node:path";
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-class TemplateFileSlug {
+export default class TemplateFileSlug {
   constructor(inputPath, inputDir, extensionMap) {
     if (inputDir) {
       inputPath = TemplatePath.stripLeadingSubPath(inputPath, inputDir);
@@ -14,7 +14,7 @@ class TemplateFileSlug {
     this.dirs = dirs;
     this.dirs.pop();
 
-    this.parsed = path.parse(inputPath);
+    this.parsed = parse(inputPath);
     this.filenameNoExt = extensionMap.removeTemplateExtension(this.parsed.base);
   }
 
@@ -52,5 +52,3 @@ class TemplateFileSlug {
     return rawSlug;
   }
 }
-
-module.exports = TemplateFileSlug;

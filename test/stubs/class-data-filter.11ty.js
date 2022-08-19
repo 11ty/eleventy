@@ -1,7 +1,7 @@
-class Test {
+export default class Test {
   get data() {
     return {
-      name: "Ted"
+      name: "Ted",
     };
   }
 
@@ -9,5 +9,3 @@ class Test {
     return `<p>${this.upper(name)}</p>`;
   }
 }
-
-module.exports = Test;

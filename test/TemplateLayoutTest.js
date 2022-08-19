@@ -1,7 +1,8 @@
-const test = require("ava");
-const TemplateConfig = require("../src/TemplateConfig");
-const TemplateLayout = require("../src/TemplateLayout");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
+import test from "ava";
+import TemplateConfig from "../src/TemplateConfig.js";
+import TemplateLayout from "../src/TemplateLayout.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+const { augmentDataWithContent } = TemplateLayout;
 
 function getTemplateLayoutInstance(key, inputDir, map) {
   let eleventyConfig = new TemplateConfig();
@@ -89,32 +90,29 @@ test("Get Front Matter Data", async (t) => {
 });
 
 test("Augment data with layoutContent", async (t) => {
-  t.deepEqual(TemplateLayout.augmentDataWithContent(null, null), {
+  t.deepEqual(augmentDataWithContent(null, null), {
     content: null,
     layoutContent: null,
     _layoutContent: null,
   });
 
-  t.deepEqual(TemplateLayout.augmentDataWithContent(null, "Test"), {
+  t.deepEqual(augmentDataWithContent(null, "Test"), {
     content: "Test",
     layoutContent: "Test",
     _layoutContent: "Test",
   });
 
-  t.deepEqual(TemplateLayout.augmentDataWithContent({}, "Test 2"), {
+  t.deepEqual(augmentDataWithContent({}, "Test 2"), {
     content: "Test 2",
     layoutContent: "Test 2",
     _layoutContent: "Test 2",
   });
 
-  t.deepEqual(
-    TemplateLayout.augmentDataWithContent({ content: "Abc" }, "Test 3"),
-    {
-      content: "Test 3",
-      layoutContent: "Test 3",
-      _layoutContent: "Test 3",
-    }
-  );
+  t.deepEqual(augmentDataWithContent({ content: "Abc" }, "Test 3"), {
+    content: "Test 3",
+    layoutContent: "Test 3",
+    _layoutContent: "Test 3",
+  });
 });
 
 test("Render Layout", async (t) => {

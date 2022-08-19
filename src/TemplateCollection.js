@@ -1,8 +1,10 @@
-const multimatch = require("multimatch");
-const Sortable = require("./Util/Sortable");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import multimatch from "multimatch";
+import Sortable from "./Util/Sortable.js";
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-class TemplateCollection extends Sortable {
+const { sortFunctionDateInputPath, sortFunctionDate } = Sortable;
+
+export default class TemplateCollection extends Sortable {
   constructor() {
     super();
 
@@ -14,11 +16,11 @@ class TemplateCollection extends Sortable {
   }
 
   getAllSorted() {
-    return this.sort(Sortable.sortFunctionDateInputPath);
+    return this.sort(sortFunctionDateInputPath);
   }
 
   getSortedByDate() {
-    return this.sort(Sortable.sortFunctionDate);
+    return this.sort(sortFunctionDate);
   }
 
   getGlobs(globs) {
@@ -81,5 +83,3 @@ class TemplateCollection extends Sortable {
     );
   }
 }
-
-module.exports = TemplateCollection;

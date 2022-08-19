@@ -1,18 +1,19 @@
-const fs = require("fs");
-const path = require("path");
-const isGlob = require("is-glob");
-const copy = require("recursive-copy");
-const fastglob = require("fast-glob");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { existsSync } from "node:fs";
+import { parse } from "node:path";
+import isGlob from "is-glob";
+import copy, { events } from "recursive-copy";
+import fastglob from "fast-glob";
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const EleventyBaseError = require("./EleventyBaseError");
-const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
+import EleventyBaseError from "./EleventyBaseError.js";
+import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 
-const debug = require("debug")("Eleventy:TemplatePassthrough");
+import Debug from "debug";
+const debug = Debug("Eleventy:TemplatePassthrough");
 
 class TemplatePassthroughError extends EleventyBaseError {}
 
-class TemplatePassthrough {
+export default class TemplatePassthrough {
   constructor(path, outputDir, inputDir, config) {
     if (!config) {
       throw new TemplatePassthroughError("Missing `config`.");
@@ -70,11 +71,11 @@ class TemplatePassthrough {
     );
 
     if (
-      fs.existsSync(inputPath) &&
+      existsSync(inputPath) &&
       !TemplatePath.isDirectorySync(inputPath) &&
       TemplatePath.isDirectorySync(fullOutputPath)
     ) {
-      let filename = path.parse(inputPath).base;
+      let filename = parse(inputPath).base;
       return TemplatePath.normalize(
         TemplatePath.join(fullOutputPath, filename)
       );
@@ -118,7 +119,7 @@ class TemplatePassthrough {
 
   // maps input paths to output paths
   async getFileMap() {
-    if (!isGlob(this.inputPath) && fs.existsSync(this.inputPath)) {
+    if (!isGlob(this.inputPath) && existsSync(this.inputPath)) {
       return [
         {
           inputPath: this.inputPath,
@@ -162,13 +163,13 @@ class TemplatePassthrough {
     let map = {};
     // returns a promise
     return copy(src, dest, copyOptions)
-      .on(copy.events.COPY_FILE_START, (copyOp) => {
+      .on(events.COPY_FILE_START, (copyOp) => {
         // Access to individual files at `copyOp.src`
         debug("Copying individual file %o", copyOp.src);
         map[copyOp.src] = copyOp.dest;
         this.benchmarks.aggregate.get("Passthrough Copy File").before();
       })
-      .on(copy.events.COPY_FILE_COMPLETE, (copyOp) => {
+      .on(events.COPY_FILE_COMPLETE, (copyOp) => {
         fileCopyCount++;
         this.benchmarks.aggregate.get("Passthrough Copy File").after();
       })
@@ -249,5 +250,3 @@ class TemplatePassthrough {
       });
   }
 }
-
-module.exports = TemplatePassthrough;

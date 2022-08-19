@@ -1,8 +1,8 @@
-const test = require("ava");
-const TemplateRender = require("../src/TemplateRender");
-const TemplateConfig = require("../src/TemplateConfig");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
-const { Drop } = require("liquidjs");
+import test from "ava";
+import TemplateRender from "../src/TemplateRender.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import { Liquid, Drop } from "liquidjs";
 
 function getNewTemplateRender(name, inputDir, userConfig = {}) {
   let eleventyConfig = new TemplateConfig();
@@ -667,7 +667,6 @@ test("Liquid Render Include Subfolder Double quotes HTML dynamicPartials true, d
 
 test("Liquid Render: with Library Override", async (t) => {
   const tr = getNewTemplateRender("liquid");
-  const { Liquid } = require("liquidjs");
   tr.engine.setLibrary(new Liquid());
 
   const fn = await tr.getCompiledTemplate("<p>{{name | capitalize}}</p>");

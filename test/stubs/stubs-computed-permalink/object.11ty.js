@@ -1,4 +1,4 @@
-module.exports.data = {
+export const data = {
   lang: "en",
   permalink: function (data) {
     return {

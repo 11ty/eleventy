@@ -1,15 +1,17 @@
-const fs = require("fs");
-const fsp = fs.promises;
-const path = require("path");
-const isGlob = require("is-glob");
-const copy = require("recursive-copy");
-const querystring = require("querystring");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { promises as _promises, existsSync, writeFileSync } from "fs";
+const fsp = _promises;
+import { join, isAbsolute } from "node:path";
+import isGlob from "is-glob";
+import copy, { events } from "recursive-copy";
+import { parse } from "querystring";
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const NetlifyRedirects = require("./Serverless/NetlifyRedirects");
-const { EleventyRequire } = require("../Util/Require");
-const JavaScriptDependencies = require("../Util/JavaScriptDependencies");
-const debug = require("debug")("Eleventy:Serverless");
+import NetlifyRedirects from "./Serverless/NetlifyRedirects.js";
+import { EleventyRequire } from "../Util/Require.js";
+import JavaScriptDependencies from "../Util/JavaScriptDependencies.js";
+import Debug from "debug";
+const { getDependencies } = JavaScriptDependencies;
+const debug = Debug("Eleventy:Serverless");
 
 // Provider specific
 const redirectHandlers = {
@@ -31,8 +33,8 @@ class BundlerHelper {
   constructor(name, options, eleventyConfig) {
     this.name = name;
     this.options = options;
-    this.dir = path.join(options.functionsDir, name);
-    if (path.isAbsolute(this.dir)) {
+    this.dir = join(options.functionsDir, name);
+    if (isAbsolute(this.dir)) {
       throw new Error(
         "Absolute paths are not yet supported for `functionsDir` in the serverless bundler. Received: " +
           options.functionsDir
@@ -48,12 +50,12 @@ class BundlerHelper {
   }
 
   getOutputPath(filepath) {
-    return TemplatePath.addLeadingDotSlash(path.join(this.dir, filepath));
+    return TemplatePath.addLeadingDotSlash(join(this.dir, filepath));
   }
 
   recursiveCopy(src, dest, options = {}) {
     // skip this one if not a glob and doesn’t exist
-    if (!isGlob(src) && !fs.existsSync(src)) {
+    if (!isGlob(src) && !existsSync(src)) {
       return;
     }
 
@@ -73,19 +75,19 @@ class BundlerHelper {
         this.options.copyOptions,
         options
       )
-    ).on(copy.events.COPY_FILE_COMPLETE, () => {
+    ).on(events.COPY_FILE_COMPLETE, () => {
       this.copyCount++;
     });
   }
 
   writeBundlerDependenciesFile(filename, deps = []) {
     let fullPath = this.getOutputPath(filename);
-    if (deps.length === 0 && fs.existsSync(fullPath)) {
+    if (deps.length === 0 && existsSync(fullPath)) {
       return;
     }
 
     let modules = deps.map((name) => `require("${name}");`);
-    fs.writeFileSync(fullPath, modules.join("\n"));
+    writeFileSync(fullPath, modules.join("\n"));
     this.copyCount++;
     debug(
       `Writing a file to make it very obvious to the serverless bundler which extra \`require\`s are needed from the config file (×${modules.length}): ${fullPath}`
@@ -127,7 +129,7 @@ class BundlerHelper {
       return;
     }
 
-    let nodeModules = JavaScriptDependencies.getDependencies(files, true);
+    let nodeModules = await getDependencies(files, true);
     this.writeBundlerDependenciesFile(
       dependencyFilename,
       nodeModules.filter(
@@ -135,7 +137,7 @@ class BundlerHelper {
       )
     );
 
-    let localModules = JavaScriptDependencies.getDependencies(files, false);
+    let localModules = await getDependencies(files, false);
     // promise
     return this.copyFileList(localModules);
   }
@@ -159,12 +161,12 @@ class BundlerHelper {
   // This behavior is dictated by AWS Lambda https://aws.amazon.com/blogs/compute/support-for-multi-value-parameters-in-amazon-api-gateway/
   // Duplicate keys are combined into one array of values
   getMultiValueQueryParams(searchParams) {
-    return querystring.parse(searchParams.toString());
+    return parse(searchParams.toString());
   }
 
   serverMiddleware() {
     let serverlessFilepath = TemplatePath.addLeadingDotSlash(
-      path.join(TemplatePath.getWorkingDir(), this.dir, "index")
+      join(TemplatePath.getWorkingDir(), this.dir, "index")
     );
 
     return async function EleventyServerlessMiddleware(req, res, next) {
@@ -216,7 +218,7 @@ class BundlerHelper {
 
   async writeServerlessFunctionFile() {
     let filepath = this.getOutputPath("index.js");
-    if (!fs.existsSync(filepath)) {
+    if (!existsSync(filepath)) {
       let defaultContentPath = TemplatePath.absolutePath(
         __dirname,
         "./DefaultServerlessFunctionContent.js"
@@ -233,7 +235,7 @@ class BundlerHelper {
   }
 }
 
-function EleventyPlugin(eleventyConfig, options = {}) {
+export default function EleventyPlugin(eleventyConfig, options = {}) {
   options = Object.assign(
     {
       name: "",
@@ -410,7 +412,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       let mapEntryCount = Object.keys(outputMap).length;
       // This is expected to exist even if empty
       let filename = helper.getOutputPath("eleventy-serverless-map.json");
-      fs.writeFileSync(filename, JSON.stringify(outputMap, null, 2));
+      writeFileSync(filename, JSON.stringify(outputMap, null, 2));
       debug(
         `Eleventy Serverless (${options.name}), writing (×${mapEntryCount}): ${filename}`
       );
@@ -437,5 +439,3 @@ function EleventyPlugin(eleventyConfig, options = {}) {
     });
   }
 }
-
-module.exports = EleventyPlugin;

@@ -1,14 +1,16 @@
-const path = require("path");
-const fs = require("fs");
-const { match } = require("path-to-regexp");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { join } from "node:path";
+import { existsSync } from "node:fs";
+import { match } from "path-to-regexp";
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const Eleventy = require("./Eleventy");
-const { EleventyRequireAbsolute } = require("./Util/Require");
-const normalizeServerlessUrl = require("./Util/NormalizeServerlessUrl");
-const debug = require("debug")("Eleventy:Serverless");
+import Eleventy from "./Eleventy.js";
+import { EleventyRequireAbsolute } from "./Util/Require.js";
+import normalizeServerlessUrl from "./Util/NormalizeServerlessUrl.js";
+import Debug from "debug";
 
-class Serverless {
+const debug = Debug("Eleventy:Serverless");
+
+export default class Serverless {
   constructor(name, path, options = {}) {
     this.name = name;
 
@@ -76,15 +78,15 @@ class Serverless {
 
   getProjectDir() {
     // TODO? improve with process.env.LAMBDA_TASK_ROOT—was `/var/task/` on lambda (not local)
-    let dir = path.join(this.options.functionsDir, this.name);
+    let dir = join(this.options.functionsDir, this.name);
     let paths = [
-      path.join(TemplatePath.getWorkingDir(), dir), // netlify dev
-      path.join("/var/task/src/", dir), // AWS Lambda absolute path
-      path.join(TemplatePath.getWorkingDir()), // after the chdir below
+      join(TemplatePath.getWorkingDir(), dir), // netlify dev
+      join("/var/task/src/", dir), // AWS Lambda absolute path
+      join(TemplatePath.getWorkingDir()), // after the chdir below
     ];
 
     for (let path of paths) {
-      if (fs.existsSync(path)) {
+      if (existsSync(path)) {
         return path;
       }
     }
@@ -163,7 +165,7 @@ class Serverless {
       this.options.input ||
       this.options.inputDir ||
       this.getConfigInfo().dir.input;
-    let configPath = path.join(this.dir, this.configFilename);
+    let configPath = join(this.dir, this.configFilename);
     let { pathParams, inputPath } = this.matchUrlPattern(this.path);
 
     if (!pathParams || !inputPath) {
@@ -244,5 +246,3 @@ class Serverless {
     return json[0].content;
   }
 }
-
-module.exports = Serverless;

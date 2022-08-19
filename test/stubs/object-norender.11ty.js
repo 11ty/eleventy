@@ -1,5 +1,3 @@
-module.exports = {
-  data: {
-    name: "Ted"
-  }
+export const data = {
+  name: "Ted",
 };

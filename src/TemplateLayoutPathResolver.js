@@ -1,9 +1,9 @@
-const fs = require("fs");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { existsSync } from "node:fs";
+import { TemplatePath } from "@11ty/eleventy-utils";
 
 // const debug = require("debug")("Eleventy:TemplateLayoutPathResolver");
 
-class TemplateLayoutPathResolver {
+export default class TemplateLayoutPathResolver {
   constructor(path, inputDir, extensionMap, config) {
     if (!config) {
       throw new Error(
@@ -62,7 +62,7 @@ class TemplateLayoutPathResolver {
     this.pathAlreadyHasExtension = this.dir + "/" + this.path;
     if (
       this.path.split(".").length > 0 &&
-      fs.existsSync(this.pathAlreadyHasExtension)
+      existsSync(this.pathAlreadyHasExtension)
     ) {
       this.filename = this.path;
       this.fullPath = TemplatePath.addLeadingDotSlash(
@@ -101,7 +101,7 @@ class TemplateLayoutPathResolver {
   }
 
   findFileName() {
-    if (!fs.existsSync(this.dir)) {
+    if (!existsSync(this.dir)) {
       throw Error(
         "TemplateLayoutPathResolver directory does not exist for " +
           this.path +
@@ -112,7 +112,7 @@ class TemplateLayoutPathResolver {
 
     for (let filename of this.extensionMap.getFileList(this.path)) {
       // TODO async
-      if (fs.existsSync(this.dir + "/" + filename)) {
+      if (existsSync(this.dir + "/" + filename)) {
         return filename;
       }
     }
@@ -132,5 +132,3 @@ class TemplateLayoutPathResolver {
     return TemplatePath.join(this.inputDir, layoutsDir);
   }
 }
-
-module.exports = TemplateLayoutPathResolver;

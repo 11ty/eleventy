@@ -1,9 +1,9 @@
-const DependencyGraph = require("dependency-graph").DepGraph;
+import { DepGraph as DependencyGraph } from "dependency-graph";
 
 /* Keeps track of the dependency graph between computed data variables
  * Removes keys from the graph when they are computed.
  */
-class ComputedDataQueue {
+export default class ComputedDataQueue {
   constructor() {
     this.graph = new DependencyGraph();
   }
@@ -60,5 +60,3 @@ class ComputedDataQueue {
     }
   }
 }
-
-module.exports = ComputedDataQueue;

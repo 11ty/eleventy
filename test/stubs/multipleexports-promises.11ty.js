@@ -1,15 +1,15 @@
-exports.data = async function() {
+export async function data() {
   return new Promise((resolve, reject) => {
-    setTimeout(function() {
+    setTimeout(function () {
       resolve({ name: "Ted" });
     }, 100);
   });
-};
+}
 
-exports.render = async function({ name }) {
+export async function render({ name }) {
   return new Promise((resolve, reject) => {
-    setTimeout(function() {
+    setTimeout(function () {
       resolve(`<p>${name}</p>`);
     }, 100);
   });
-};
+}

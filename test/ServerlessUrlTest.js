@@ -1,5 +1,5 @@
-const test = require("ava");
-const ServerlessUrl = require("../src/Filters/ServerlessUrl");
+import test from "ava";
+import ServerlessUrl from "../src/Filters/ServerlessUrl";
 
 test("serverlessUrl Stringify", (t) => {
   // Straight string

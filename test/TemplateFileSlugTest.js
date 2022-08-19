@@ -1,7 +1,7 @@
-const test = require("ava");
-const TemplateFileSlug = require("../src/TemplateFileSlug");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
-const TemplateConfig = require("../src/TemplateConfig");
+import test from "ava";
+import TemplateFileSlug from "../src/TemplateFileSlug.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import TemplateConfig from "../src/TemplateConfig.js";
 
 function getNewSlugInstance(path, inputDir) {
   let eleventyConfig = new TemplateConfig();

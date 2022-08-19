@@ -1,8 +1,8 @@
-const test = require("ava");
-const I18nPlugin = require("../src/Plugins/I18nPlugin");
+import test from "ava";
+import I18nPlugin from "../src/Plugins/I18nPlugin.js";
 const { Comparator, LangUtils } = I18nPlugin;
-const Eleventy = require("../src/Eleventy");
-const normalizeNewLines = require("./Util/normalizeNewLines");
+import Eleventy from "../src/Eleventy.js";
+import normalizeNewLines from "./Util/normalizeNewLines.js";
 
 test("Comparator.isLangCode", (t) => {
   t.is(Comparator.isLangCode(null), false);

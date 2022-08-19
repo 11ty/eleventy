@@ -1,5 +1,5 @@
-module.exports = function (eleventyConfig) {
+export default function (eleventyConfig) {
   eleventyConfig.addTransform("transform-html", function (content) {
     return `${content}`.trim() + "<p>Hi</p>";
   });
-};
+}

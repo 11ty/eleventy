@@ -1,22 +1,24 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const Template = require("./Template");
-const TemplateMap = require("./TemplateMap");
-const EleventyFiles = require("./EleventyFiles");
-const EleventyExtensionMap = require("./EleventyExtensionMap");
-const EleventyBaseError = require("./EleventyBaseError");
-const EleventyErrorHandler = require("./EleventyErrorHandler");
-const EleventyErrorUtil = require("./EleventyErrorUtil");
-const ConsoleLogger = require("./Util/ConsoleLogger");
+import Template from "./Template.js";
+import TemplateMap from "./TemplateMap.js";
+import EleventyFiles from "./EleventyFiles.js";
+import EleventyExtensionMap from "./EleventyExtensionMap.js";
+import EleventyBaseError from "./EleventyBaseError.js";
+import EleventyErrorHandler from "./EleventyErrorHandler.js";
+import EleventyErrorUtil from "./EleventyErrorUtil.js";
+import ConsoleLogger from "./Util/ConsoleLogger.js";
 
-const debug = require("debug")("Eleventy:TemplateWriter");
-const debugDev = require("debug")("Dev:Eleventy:TemplateWriter");
+import Debug from "debug";
+const { isPrematureTemplateContentError } = EleventyErrorUtil;
+const debug = Debug("Eleventy:TemplateWriter");
+const debugDev = Debug("Dev:Eleventy:TemplateWriter");
 
 class TemplateWriterMissingConfigArgError extends EleventyBaseError {}
 class EleventyPassthroughCopyError extends EleventyBaseError {}
 class EleventyTemplateError extends EleventyBaseError {}
 
-class TemplateWriter {
+export default class TemplateWriter {
   constructor(
     inputPath,
     outputDir,
@@ -284,7 +286,7 @@ class TemplateWriter {
         this._generateTemplate(mapEntry, to).catch(function (e) {
           // Premature templateContent in layout render, this also happens in
           // TemplateMap.populateContentDataInMap for non-layout content
-          if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
+          if (isPrematureTemplateContentError(e)) {
             usedTemplateContentTooEarlyMap.push(mapEntry);
           } else {
             return Promise.reject(
@@ -379,5 +381,3 @@ class TemplateWriter {
     return this.skippedCount;
   }
 }
-
-module.exports = TemplateWriter;

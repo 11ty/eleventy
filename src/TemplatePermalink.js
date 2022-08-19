@@ -1,10 +1,10 @@
-const path = require("path");
-const normalize = require("normalize-path");
-const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
+import { parse } from "node:path";
+import normalize from "normalize-path";
+import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
-const serverlessUrlFilter = require("./Filters/ServerlessUrl");
+import serverlessUrlFilter from "./Filters/ServerlessUrl.js";
 
-class TemplatePermalink {
+export default class TemplatePermalink {
   // `link` with template syntax should have already been rendered in Template.js
   constructor(link, extraSubdir) {
     let isLinkAnObject = isPlainObject(link);
@@ -93,7 +93,7 @@ class TemplatePermalink {
     }
 
     let cleanLink = this._addDefaultLinkFilename(this.buildLink);
-    let parsed = path.parse(cleanLink);
+    let parsed = parse(cleanLink);
 
     return TemplatePath.join(
       parsed.dir,
@@ -250,5 +250,3 @@ class TemplatePermalink {
     return new TemplatePermalink(path, extraSubdir);
   }
 }
-
-module.exports = TemplatePermalink;

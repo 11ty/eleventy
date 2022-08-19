@@ -1,6 +1,6 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-class TemplateGlob {
+export default class TemplateGlob {
   static normalizePath(...paths) {
     if (paths[0].charAt(0) === "!") {
       throw new Error(
@@ -33,5 +33,3 @@ class TemplateGlob {
     }
   }
 }
-
-module.exports = TemplateGlob;

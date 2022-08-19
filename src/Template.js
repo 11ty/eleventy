@@ -1,39 +1,40 @@
-const fs = require("graceful-fs");
-const util = require("util");
-const writeFile = util.promisify(fs.writeFile);
-const mkdir = util.promisify(fs.mkdir);
+import { writeFile, mkdir } from "node:fs/promises";
 
-const os = require("os");
-const path = require("path");
-const normalize = require("normalize-path");
-const lodashGet = require("lodash/get");
-const lodashSet = require("lodash/set");
-const { DateTime } = require("luxon");
-const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
+import { EOL } from "node:os";
+import { parse } from "node:path";
+import normalize from "normalize-path";
+import lodashGet from "lodash/get.js";
+import lodashSet from "lodash/set.js";
+import { DateTime } from "luxon";
+import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
-const ConsoleLogger = require("./Util/ConsoleLogger");
-const getDateFromGitLastUpdated = require("./Util/DateGitLastUpdated");
-const getDateFromGitFirstAdded = require("./Util/DateGitFirstAdded");
+import ConsoleLogger from "./Util/ConsoleLogger.js";
+import getDateFromGitLastUpdated from "./Util/DateGitLastUpdated.js";
+import getDateFromGitFirstAdded from "./Util/DateGitFirstAdded.js";
 
-const TemplateData = require("./TemplateData");
-const TemplateContent = require("./TemplateContent");
-const TemplatePermalink = require("./TemplatePermalink");
-const TemplateLayout = require("./TemplateLayout");
-const TemplateFileSlug = require("./TemplateFileSlug");
-const ComputedData = require("./ComputedData");
-const Pagination = require("./Plugins/Pagination");
-const TemplateBehavior = require("./TemplateBehavior");
+import TemplateData from "./TemplateData.js";
+import TemplateContent from "./TemplateContent.js";
+import TemplatePermalink from "./TemplatePermalink.js";
+import TemplateLayout from "./TemplateLayout.js";
+import TemplateFileSlug from "./TemplateFileSlug.js";
+import ComputedData from "./ComputedData.js";
+import Pagination from "./Plugins/Pagination.js";
+import TemplateBehavior from "./TemplateBehavior.js";
 
-const TemplateContentPrematureUseError = require("./Errors/TemplateContentPrematureUseError");
-const TemplateContentUnrenderedTemplateError = require("./Errors/TemplateContentUnrenderedTemplateError");
+import TemplateContentPrematureUseError from "./Errors/TemplateContentPrematureUseError.js";
+import TemplateContentUnrenderedTemplateError from "./Errors/TemplateContentUnrenderedTemplateError.js";
 
-const EleventyBaseError = require("./EleventyBaseError");
+import EleventyBaseError from "./EleventyBaseError.js";
 class EleventyTransformError extends EleventyBaseError {}
 
-const debug = require("debug")("Eleventy:Template");
-const debugDev = require("debug")("Dev:Eleventy:Template");
+import Debug from "debug";
+const debug = Debug("Eleventy:Template");
+const debugDev = Debug("Dev:Eleventy:Template");
+const { generate } = TemplatePermalink;
+const { getTemplate } = TemplateLayout;
+const { hasPagination } = Pagination;
 
-class Template extends TemplateContent {
+export default class Template extends TemplateContent {
   constructor(
     templatePath,
     inputDir,
@@ -45,7 +46,7 @@ class Template extends TemplateContent {
     debugDev("new Template(%o)", templatePath);
     super(templatePath, inputDir, config);
 
-    this.parsed = path.parse(templatePath);
+    this.parsed = parse(templatePath);
 
     // for pagination
     this.extraOutputSubdirectory = "";
@@ -123,7 +124,7 @@ class Template extends TemplateContent {
   getLayout(layoutKey) {
     if (!this._layout || layoutKey !== this._layoutKey) {
       this._layoutKey = layoutKey;
-      this._layout = TemplateLayout.getTemplate(
+      this._layout = getTemplate(
         layoutKey,
         this.getInputDir(),
         this.config,
@@ -276,7 +277,7 @@ class Template extends TemplateContent {
     }
 
     // No `permalink` specified in data cascade, do the default
-    let p = TemplatePermalink.generate(
+    let p = generate(
       this.getTemplateSubfolder(),
       this.baseFile,
       this.extraOutputSubdirectory,
@@ -533,7 +534,7 @@ class Template extends TemplateContent {
     return str;
   }
 
-  _addComputedEntry(computedData, obj, parentKey, declaredDependencies) {
+  async _addComputedEntry(computedData, obj, parentKey, declaredDependencies) {
     // this check must come before isPlainObject
     if (typeof obj === "function") {
       computedData.add(parentKey, obj, declaredDependencies);
@@ -544,7 +545,7 @@ class Template extends TemplateContent {
           keys.push(parentKey);
         }
         keys.push(key);
-        this._addComputedEntry(
+        await this._addComputedEntry(
           computedData,
           obj[key],
           keys.join("."),
@@ -558,7 +559,7 @@ class Template extends TemplateContent {
           return await this.renderComputedData(obj, innerData);
         },
         declaredDependencies,
-        this.getParseForSymbolsFunction(obj)
+        await this.getParseForSymbolsFunction(obj)
       );
     } else {
       // Numbers, booleans, etc
@@ -590,7 +591,7 @@ class Template extends TemplateContent {
       );
 
       // actually add the computed data
-      this._addComputedEntry(
+      await this._addComputedEntry(
         this.computedData,
         data[this.config.keys.computed]
       );
@@ -632,7 +633,7 @@ class Template extends TemplateContent {
 
   async getTemplates(data) {
     // no pagination with permalink.serverless
-    if (!Pagination.hasPagination(data)) {
+    if (!hasPagination(data)) {
       await this.addComputedData(data);
 
       return [
@@ -756,7 +757,7 @@ class Template extends TemplateContent {
       templateBenchmark.before();
 
       // TODO add a cache to check if this was already created
-      let templateOutputDir = path.parse(outputPath).dir;
+      let templateOutputDir = parse(outputPath).dir;
       if (templateOutputDir) {
         await mkdir(templateOutputDir, { recursive: true });
       }
@@ -836,7 +837,7 @@ class Template extends TemplateContent {
 
           if (to === "ndjson") {
             let jsonString = JSON.stringify(obj);
-            this.logger.toStream(jsonString + os.EOL);
+            this.logger.toStream(jsonString + EOL);
             return;
           }
 
@@ -902,7 +903,7 @@ class Template extends TemplateContent {
       return this._stats;
     }
 
-    this._stats = fs.promises.stat(this.inputPath);
+    this._stats = _promises.stat(this.inputPath);
 
     return this._stats;
   }
@@ -1022,5 +1023,3 @@ class Template extends TemplateContent {
     return entries;
   }
 }
-
-module.exports = Template;

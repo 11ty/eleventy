@@ -1,9 +1,7 @@
-class Test {
+export default class Test {
   data() {
     return {
-      name: "Ted"
+      name: "Ted",
     };
   }
 }
-
-module.exports = Test;

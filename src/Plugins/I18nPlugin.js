@@ -6,11 +6,12 @@
 // path prefix at the beginning? Would need a better way to know `url` has transformed a string
 // rather than just raw comparison.
 // e.g. --pathprefix=/en/ should return `/en/en/` for `/en/index.liquid`
-const { DeepCopy } = require("../Util/Merge");
-const bcp47Normalize = require("bcp-47-normalize");
-const iso639 = require("iso-639-1");
+import { DeepCopy } from "../Util/Merge.js";
+import bcp47Normalize from "bcp-47-normalize";
+import ISO639 from "iso-639-1";
+const { validate, getNativeName } = ISO639;
 
-class LangUtils {
+export class LangUtils {
   static getLanguageCodeFromInputPath(filepath) {
     return (filepath || "")
       .split("/")
@@ -46,12 +47,12 @@ class LangUtils {
   }
 }
 
-class Comparator {
+export class Comparator {
   // https://en.wikipedia.org/wiki/IETF_language_tag#Relation_to_other_standards
   // Requires a ISO-639-1 language code at the start (2 characters before the first -)
   static isLangCode(code) {
     let [s] = (code || "").split("-");
-    if (!iso639.validate(s)) {
+    if (!validate(s)) {
       return false;
     }
     if (!bcp47Normalize(code)) {
@@ -147,7 +148,7 @@ function getLocaleUrlsMap(urlToInputPath, extensionMap) {
         filemap[replaced].push({
           url,
           lang: langCode,
-          label: iso639.getNativeName(langCode.split("-")[0]),
+          label: getNativeName(langCode.split("-")[0]),
         });
       } else {
         filemap[replaced].push({ url });
@@ -185,7 +186,7 @@ function getLocaleUrlsMap(urlToInputPath, extensionMap) {
   return urlMap;
 }
 
-function EleventyPlugin(eleventyConfig, opts = {}) {
+export default function EleventyPlugin(eleventyConfig, opts = {}) {
   let options = DeepCopy(
     {
       defaultLanguage: "",
@@ -348,7 +349,3 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
     }
   );
 }
-
-module.exports = EleventyPlugin;
-module.exports.Comparator = Comparator;
-module.exports.LangUtils = LangUtils;

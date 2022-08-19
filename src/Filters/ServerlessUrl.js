@@ -1,5 +1,5 @@
-const { compile } = require("path-to-regexp");
-const normalizeServerlessUrl = require("../Util/NormalizeServerlessUrl");
+import { compile } from "path-to-regexp";
+import normalizeServerlessUrl from "../Util/NormalizeServerlessUrl.js";
 
 function stringify(url, urlData = {}) {
   url = normalizeServerlessUrl(url);
@@ -10,7 +10,7 @@ function stringify(url, urlData = {}) {
   return fn(urlData);
 }
 
-module.exports = function (url, urlData = {}) {
+export default function (url, urlData = {}) {
   if (Array.isArray(url)) {
     let errors = [];
     let urls = url
@@ -39,4 +39,4 @@ module.exports = function (url, urlData = {}) {
   }
 
   return stringify(url, urlData);
-};
+}

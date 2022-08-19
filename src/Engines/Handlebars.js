@@ -1,7 +1,7 @@
-const HandlebarsLib = require("handlebars");
-const TemplateEngine = require("./TemplateEngine");
+import HandlebarsLib from "handlebars";
+import TemplateEngine from "./TemplateEngine.js";
 
-class Handlebars extends TemplateEngine {
+export default class Handlebars extends TemplateEngine {
   constructor(name, dirs, config) {
     super(name, dirs, config);
 
@@ -61,5 +61,3 @@ class Handlebars extends TemplateEngine {
     };
   }
 }
-
-module.exports = Handlebars;

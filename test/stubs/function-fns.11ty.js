@@ -1,4 +1,4 @@
-module.exports = function({ avaTest }) {
+export default function ({ avaTest }) {
   avaTest.truthy(this.url);
   avaTest.truthy(this.slug);
   avaTest.truthy(this.log);
@@ -7,4 +7,4 @@ module.exports = function({ avaTest }) {
   avaTest.truthy(this.page);
 
   return "test";
-};
+}

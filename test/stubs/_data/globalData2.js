@@ -1,3 +1,1 @@
-module.exports = {
-  datakeyfromjs: "howdy"
-};
+export const datakeyfromjs = "howdy";

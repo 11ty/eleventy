@@ -1,17 +1,15 @@
-const dependencyTree = require("@11ty/dependency-tree");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import dependencyTree from "@11ty/dependency-tree";
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-class JavaScriptDependencies {
-  static getDependencies(inputFiles, nodeModuleNamesOnly = false) {
+export default class JavaScriptDependencies {
+  static async getDependencies(inputFiles, nodeModuleNamesOnly = false) {
     let depSet = new Set();
 
     // TODO does this need to work with aliasing? what other JS extensions will have deps?
-    let filtered = inputFiles.filter(
-      (file) => file.endsWith(".js") || file.endsWith(".cjs")
-    );
+    let filtered = inputFiles.filter((file) => file.endsWith(".cjs"));
 
     for (let file of filtered) {
-      let modules = dependencyTree(file, {
+      let modules = await dependencyTree(file, {
         nodeModuleNamesOnly,
         allowNotFound: true,
       });
@@ -32,5 +30,3 @@ class JavaScriptDependencies {
     return Array.from(depSet).sort();
   }
 }
-
-module.exports = JavaScriptDependencies;

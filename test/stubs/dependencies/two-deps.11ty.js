@@ -1,4 +1,4 @@
-const dep1 = require("./dep1");
-const dep2 = require("./dep2");
+import dep1 from "./dep1.js";
+import dep2 from "./dep2.js";
 
-module.exports = "";
+export default "";

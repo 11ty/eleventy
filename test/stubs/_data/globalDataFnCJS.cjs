@@ -1,6 +1,6 @@
 const dep1 = require("../deps/dep1");
 
-module.exports = function() {
+export default function() {
   return {
     datakeyfromcjsfn: "common-cjs-howdy"
   };

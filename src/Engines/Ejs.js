@@ -1,7 +1,7 @@
-const ejsLib = require("ejs");
-const TemplateEngine = require("./TemplateEngine");
+import ejsLib from "ejs";
+import TemplateEngine from "./TemplateEngine.js";
 
-class Ejs extends TemplateEngine {
+export default class Ejs extends TemplateEngine {
   constructor(name, dirs, config) {
     super(name, dirs, config);
 
@@ -51,5 +51,3 @@ class Ejs extends TemplateEngine {
     };
   }
 }
-
-module.exports = Ejs;

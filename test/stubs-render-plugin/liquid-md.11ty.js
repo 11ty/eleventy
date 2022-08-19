@@ -1,4 +1,4 @@
-class Tmpl {
+export default class Tmpl {
   data() {
     return {
       argData: {
@@ -20,4 +20,3 @@ class Tmpl {
     );
   }
 }
-module.exports = Tmpl;

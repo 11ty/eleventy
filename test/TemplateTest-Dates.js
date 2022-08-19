@@ -1,5 +1,5 @@
-const test = require("ava");
-const getNewTemplate = require("./_getNewTemplateForTests");
+import test from "ava";
+import getNewTemplate from "./_getNewTemplateForTests.js";
 
 async function getRenderedData(tmpl, pageNumber = 0) {
   let data = await tmpl.getData();

@@ -1,8 +1,8 @@
-const test = require("ava");
-const fs = require("fs");
-const TemplatePassthroughManager = require("../src/TemplatePassthroughManager");
-const TemplateConfig = require("../src/TemplateConfig");
-const EleventyFiles = require("../src/EleventyFiles");
+import test from "ava";
+import { existsSync, unlinkSync } from "node:fs";
+import TemplatePassthroughManager from "../src/TemplatePassthroughManager.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import EleventyFiles from "../src/EleventyFiles.js";
 
 test("Get paths from Config", async (t) => {
   let eleventyConfig = new TemplateConfig();
@@ -128,7 +128,7 @@ test("Naughty paths outside of project dir", async (t) => {
   ];
 
   for (let path of output) {
-    t.false(fs.existsSync(path));
+    t.false(existsSync(path));
   }
 });
 
@@ -175,12 +175,12 @@ test("Look for uniqueness on template passthrough paths #1677", async (t) => {
     formats,
     eleventyConfig
   );
-  files.init();
+  await files.init();
 
   let mgr = files.getPassthroughManager();
   await t.throwsAsync(async function () {
     await mgr.copyAll();
   });
 
-  fs.unlinkSync("test/stubs/template-passthrough-duplicates/_site/avatar.png");
+  unlinkSync("test/stubs/template-passthrough-duplicates/_site/avatar.png");
 });

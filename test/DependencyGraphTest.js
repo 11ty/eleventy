@@ -1,7 +1,7 @@
-const test = require("ava");
+import test from "ava";
+import { DepGraph as DependencyGraph } from "dependency-graph";
 
 test("Dependency graph nodes don’t require dependencies", async (t) => {
-  const DependencyGraph = require("dependency-graph").DepGraph;
   let graph = new DependencyGraph();
 
   graph.addNode("all");
@@ -24,7 +24,6 @@ test("Dependency graph nodes don’t require dependencies", async (t) => {
 });
 
 test("Dependency graph assumptions", async (t) => {
-  const DependencyGraph = require("dependency-graph").DepGraph;
   let graph = new DependencyGraph();
 
   graph.addNode("all");

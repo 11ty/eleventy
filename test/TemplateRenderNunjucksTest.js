@@ -1,8 +1,8 @@
-const test = require("ava");
-const TemplateRender = require("../src/TemplateRender");
-const TemplateConfig = require("../src/TemplateConfig");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
-const normalizeNewLines = require("./Util/normalizeNewLines");
+import test, { skip } from "ava";
+import TemplateRender from "../src/TemplateRender.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import normalizeNewLines from "./Util/normalizeNewLines.js";
 
 function getNewTemplateRender(name, inputDir, eleventyConfig) {
   if (!eleventyConfig) {
@@ -248,7 +248,7 @@ test("Nunjucks getEngineLib", async (t) => {
 test("Nunjucks Render: with Library Override", async (t) => {
   let tr = getNewTemplateRender("njk");
 
-  let lib = require("nunjucks");
+  let lib = await import("nunjucks");
   let env = new lib.Environment(
     new lib.FileSystemLoader("./test/stubs/_includes/")
   );
@@ -914,7 +914,7 @@ test("Use addNunjucksGlobal with literal", async (t) => {
 });
 
 // Async not supported here
-test.skip("Use addNunjucksGlobal with async function", async (t) => {
+skip("Use addNunjucksGlobal with async function", async (t) => {
   let templateConfig = new TemplateConfig();
   templateConfig.userConfig.addNunjucksGlobal("fortytwo", getPromise(42));
 
@@ -983,7 +983,7 @@ test("Nunjucks Shortcode in a loop (everything is sync)", async (t) => {
 });
 
 // TODO!
-test.skip("Weird issue with number arguments in a loop (not parsing literals properly?)", async (t) => {
+skip("Weird issue with number arguments in a loop (not parsing literals properly?)", async (t) => {
   let templateConfig = new TemplateConfig();
   templateConfig.userConfig.addNunjucksShortcode(
     "genericshortcode",

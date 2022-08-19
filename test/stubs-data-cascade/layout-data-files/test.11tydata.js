@@ -1,3 +1,3 @@
-module.exports = {
-  shared: "datafile"
+export default {
+  shared: "datafile",
 };

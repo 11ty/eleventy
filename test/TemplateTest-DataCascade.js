@@ -1,7 +1,7 @@
-const test = require("ava");
-const getNewTemplate = require("./_getNewTemplateForTests");
-const TemplateConfig = require("../src/TemplateConfig");
-const TemplateData = require("../src/TemplateData");
+import test from "ava";
+import getNewTemplate from "./_getNewTemplateForTests.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import TemplateData from "../src/TemplateData.js";
 
 // Prior to and including 0.10.0 this mismatched the documentation)! (Issue #915)
 test("Layout front matter does not override template data files", async (t) => {
