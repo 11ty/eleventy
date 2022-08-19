@@ -11,8 +11,8 @@
 # Release Procedure
 
 1. (Optional) Update minor dependencies in package.json
-   - `npm outdated`
-   - `npm update --save`
+   - `npx npm-check-updates`
+   - or `npm outdated` + `npm update --save`
 1. If the minimum Node version changed, make sure you update `package.json` engines property.
    - Make sure the error message works correctly for Node versions less than 10.
      - 0.12.x+ requires Node 10+
@@ -28,9 +28,9 @@
 1. Check it all in and commit
 1. Tag new version
 1. Release
-   - (Main) `npm publish --access=public`
    - (Canary) `npm publish --access=public --tag=canary`
    - (Beta) `npm publish --access=public --tag=beta`
+   - (Main) `npm publish --access=public`
 1. (Optional) Build and commit a new the `eleventy-edge-cdn` project to generate a new Eleventy Edge lib.
 
 Unfortunate note about npm `canary` tag: if you push a 1.0.0-canary.x to `canary` after a `2.0.0-canary.x`, it will use the last pushed tag when you npm install from `canary` (not the highest version number)
