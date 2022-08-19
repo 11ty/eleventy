@@ -26,6 +26,18 @@ test("Using the filter directly", async (t) => {
     "http://example.com/test/"
   );
 
+  // relative url pathprefix is ignored
+  t.is(applyBaseToUrl("/", "../"), "/");
+  t.is(applyBaseToUrl("/test/", "../"), "/test/");
+  t.is(applyBaseToUrl("subdir/", "../"), "subdir/");
+  t.is(applyBaseToUrl("../subdir/", "../"), "../subdir/");
+  t.is(applyBaseToUrl("./subdir/", "../"), "subdir/");
+  t.is(applyBaseToUrl("http://example.com/", "../"), "http://example.com/");
+  t.is(
+    applyBaseToUrl("http://example.com/test/", "../"),
+    "http://example.com/test/"
+  );
+
   // with a pathprefix
   t.is(applyBaseToUrl("/", "/pathprefix/"), "/pathprefix/");
   t.is(applyBaseToUrl("/test/", "/pathprefix/"), "/pathprefix/test/");
@@ -460,6 +472,46 @@ test("Using the HTML base plugin strips extra path in full URL base (pathPrefix:
 <a href="http://example.com/test/">Home</a>
 <a href="http://example.com/test/deep/subdir/">Test</a>
 <a href="http://example.com/test/subdir/">Test</a>
+</body>
+</html>`
+  );
+});
+
+test("Opt out of the transform with falsy extensions list", async (t) => {
+  let elev = new Eleventy("./test/stubs-base/", "./test/stubs-base/_site", {
+    pathPrefix: "/test/",
+
+    configPath: false,
+    config: function (eleventyConfig) {
+      eleventyConfig.setUseTemplateCache(false);
+      eleventyConfig.addPlugin(HtmlBasePlugin, {
+        extensions: false,
+      });
+    },
+  });
+
+  elev.setIsVerbose(false);
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(
+    getContentFor(results, "/deep/index.html"),
+    `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<title></title>
+<style>div { background-image: url(test.jpg); }</style>
+<style>div { background-image: url(/test/test.jpg); }</style>
+<link rel="stylesheet" href="/test.css">
+<script src="/test.js"></script>
+</head>
+<body>
+<a href="/">Home</a>
+<a href="subdir/">Test</a>
+<a href="../subdir/">Test</a>
 </body>
 </html>`
   );

@@ -75,11 +75,11 @@ module.exports = function (eleventyConfig, defaultOptions = {}) {
 
       extensions: "html",
 
-      name: "eleventy-htmlBaseWithPathPrefix",
+      name: "htmlBaseWithPathPrefix",
       filters: {
         base: "htmlBaseUrl",
         html: "transformWithHtmlBase",
-        pathPrefix: "addPathPrefixToUrl",
+        pathPrefix: "addPathPrefixToFullUrl",
       },
     },
     defaultOptions
@@ -142,23 +142,26 @@ module.exports = function (eleventyConfig, defaultOptions = {}) {
   // Skip the transform with a default base
   if (opts.baseHref !== "/") {
     let extensionMap = {};
-    for (let ext of opts.extensions.split(",")) {
+    for (let ext of (opts.extensions || "").split(",")) {
       extensionMap[ext] = true;
     }
 
-    eleventyConfig.addTransform(opts.name, function (content) {
-      let ext = this.outputPath?.split(".").pop();
-      if (extensionMap[ext]) {
-        return addToAllHtmlUrls(content, (url) => {
-          return transformUrl.call(this, url.trim(), opts.baseHref, {
-            pathPrefix: eleventyConfig.pathPrefix,
-            pageUrl: this.url,
+    // Skip the transform if no extensions are specified
+    if (Object.keys(extensionMap).length > 0) {
+      eleventyConfig.addTransform(opts.name, function (content) {
+        let ext = this.outputPath?.split(".").pop();
+        if (extensionMap[ext]) {
+          return addToAllHtmlUrls(content, (url) => {
+            return transformUrl.call(this, url.trim(), opts.baseHref, {
+              pathPrefix: eleventyConfig.pathPrefix,
+              pageUrl: this.url,
+            });
           });
-        });
-      }
+        }
 
-      return content;
-    });
+        return content;
+      });
+    }
   }
 };
 
