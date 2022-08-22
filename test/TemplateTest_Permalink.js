@@ -258,3 +258,13 @@ test("Using slug filter with a number #854", async (t) => {
   let data = await tmpl.getData();
   t.is(await tmpl.getOutputPath(data), "./dist/subdir/1/index.html");
 });
+
+test.skip("Using slugify filter with multibyte", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/slugify-filter/multibyte.njk",
+    "./test/slugify-filter/",
+    "./dist"
+  );
+  let data = await tmpl.getData();
+  t.is(await tmpl.getOutputPath(data), "./dist/subdir/test-猫/index.html");
+});
