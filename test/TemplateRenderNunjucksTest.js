@@ -1108,3 +1108,40 @@ test("addAsyncFilter for Nunjucks", async (t) => {
   let fn = await tr.getCompiledTemplate("<p>{{ 10 | fortytwo(2) }}</p>");
   t.is(await fn(), "<p>12</p>");
 });
+
+test("Asynchronous filters (via addNunjucksFilter) for Nunjucks", async (t) => {
+  let templateConfig = new TemplateConfig();
+  // works without async function (can return promise)
+  templateConfig.userConfig.addNunjucksFilter(
+    "fortytwo",
+    function (value1, value2, callback) {
+      setTimeout(function () {
+        callback(null, value1 + value2);
+      }, 100);
+    },
+    true
+  );
+
+  let tr = getNewTemplateRender("njk", null, templateConfig);
+
+  let fn = await tr.getCompiledTemplate("<p>{{ 10 | fortytwo(2) }}</p>");
+  t.is(await fn(), "<p>12</p>");
+});
+
+test("Asynchronous filters (via addNunjucksAsyncFilter) for Nunjucks", async (t) => {
+  let templateConfig = new TemplateConfig();
+  // works without async function (can return promise)
+  templateConfig.userConfig.addNunjucksAsyncFilter(
+    "fortytwo",
+    function (value1, value2, callback) {
+      setTimeout(function () {
+        callback(null, value1 + value2);
+      }, 100);
+    }
+  );
+
+  let tr = getNewTemplateRender("njk", null, templateConfig);
+
+  let fn = await tr.getCompiledTemplate("<p>{{ 10 | fortytwo(2) }}</p>");
+  t.is(await fn(), "<p>12</p>");
+});
