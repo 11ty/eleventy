@@ -40,6 +40,12 @@ const { version } = require("../package.json");
  * @returns {module:11ty/eleventy/Eleventy~Eleventy}
  */
 export default class Eleventy {
+  static async from(input, output, options = {}, eleventyConfig = null) {
+    const elev = new Eleventy(input, output, options, eleventyConfig);
+    await elev.initConfig(input, output, options);
+    return elev;
+  }
+
   constructor(input, output, options = {}, eleventyConfig = null) {
     if (!eleventyConfig) {
       this.eleventyConfig = new TemplateConfig(null, options.configPath);
@@ -86,11 +92,13 @@ export default class Eleventy {
      */
     this.env = this.getEnvironmentVariableValues();
     this.initializeEnvironmentVariables(this.env);
+  }
 
+  async initConfig(input, output, options) {
     /**
      * @member {Object} - Initialize Eleventy’s configuration, including the user config file
      */
-    this.config = this.eleventyConfig.getConfig();
+    this.config = await this.eleventyConfig.getConfig();
 
     /**
      * @member {Object} - Singleton BenchmarkManager instance

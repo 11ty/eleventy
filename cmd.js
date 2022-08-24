@@ -69,7 +69,7 @@ try {
   } else if (argv.help) {
     console.log(Eleventy.getHelp());
   } else {
-    let elev = new Eleventy(argv.input, argv.output, {
+    let elev = await Eleventy.from(argv.input, argv.output, {
       source: "cli",
       // --quiet and --quiet=true both resolve to true
       quietMode: argv.quiet,

@@ -15,7 +15,7 @@ import normalizeNewLines from "./Util/normalizeNewLines.js";
 import removeNewLines from "./Util/removeNewLines.js";
 
 async function getTestOutput(input, configCallback = function () {}) {
-  let elev = new Eleventy(input, "./_site/", {
+  let elev = await Eleventy.from(input, "./_site/", {
     config: function (eleventyConfig) {
       eleventyConfig.addPlugin(RenderPlugin);
       configCallback(eleventyConfig);

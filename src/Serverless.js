@@ -190,7 +190,7 @@ export default class Serverless {
     // TODO (@zachleat) change to use this hook: https://github.com/11ty/eleventy/issues/1957
     this.initializeEnvironmentVariables();
 
-    let elev = new Eleventy(this.options.input || inputPath, null, {
+    let elev = await Eleventy.from(this.options.input || inputPath, null, {
       configPath,
       inputDir,
       config: (eleventyConfig) => {

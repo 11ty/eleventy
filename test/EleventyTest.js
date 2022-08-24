@@ -7,7 +7,7 @@ import DateGitLastUpdated from "../src/Util/DateGitLastUpdated.js";
 import normalizeNewLines from "./Util/normalizeNewLines.js";
 
 test("Eleventy, defaults inherit from config", async (t) => {
-  let elev = new Eleventy();
+  let elev = await Eleventy.from();
 
   let config = new TemplateConfig().getConfig();
 
@@ -17,27 +17,27 @@ test("Eleventy, defaults inherit from config", async (t) => {
   t.is(elev.outputDir, config.dir.output);
 });
 
-test("Eleventy, get version", (t) => {
-  let elev = new Eleventy();
+test("Eleventy, get version", async (t) => {
+  let elev = await Eleventy.from();
 
   t.truthy(elev.getVersion());
 });
 
-test("Eleventy, get help", (t) => {
-  let elev = new Eleventy();
+test("Eleventy, get help", async (t) => {
+  let elev = await Eleventy.from();
 
   t.truthy(elev.getHelp());
 });
 
-test("Eleventy, set is verbose", (t) => {
-  let elev = new Eleventy();
+test("Eleventy, set is verbose", async (t) => {
+  let elev = await Eleventy.from();
   elev.setIsVerbose(true);
 
   t.true(elev.verboseMode);
 });
 
 test("Eleventy set input/output", async (t) => {
-  let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
+  let elev = await Eleventy.from("./test/stubs", "./test/stubs/_site");
 
   t.is(elev.input, "./test/stubs");
   t.is(elev.outputDir, "./test/stubs/_site");
@@ -51,7 +51,7 @@ test("Eleventy process.ENV", async (t) => {
   delete process.env.ELEVENTY_ROOT;
   t.falsy(process.env.ELEVENTY_ROOT);
 
-  let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
+  let elev = await Eleventy.from("./test/stubs", "./test/stubs/_site");
   await elev.init();
   t.truthy(process.env.ELEVENTY_ROOT);
 
@@ -61,7 +61,7 @@ test("Eleventy process.ENV", async (t) => {
 });
 
 test("Eleventy file watching", async (t) => {
-  let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
+  let elev = await Eleventy.from("./test/stubs", "./test/stubs/_site");
   elev.setFormats("njk");
 
   await elev.init();
@@ -83,7 +83,10 @@ test("Eleventy file watching", async (t) => {
 });
 
 test("Eleventy file watching (don’t watch deps of passthrough copy .js files)", async (t) => {
-  let elev = new Eleventy("./test/stubs-1325", "./test/stubs-1325/_site");
+  let elev = await Eleventy.from(
+    "./test/stubs-1325",
+    "./test/stubs-1325/_site"
+  );
   elev.setFormats("11ty.js,js");
 
   await elev.init();
@@ -96,7 +99,7 @@ test("Eleventy file watching (don’t watch deps of passthrough copy .js files)"
 });
 
 test("Eleventy file watching (no JS dependencies)", async (t) => {
-  let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
+  let elev = await Eleventy.from("./test/stubs", "./test/stubs/_site");
   elev.setFormats("njk");
 
   let wt = new EleventyWatchTargets();
@@ -119,7 +122,10 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
 });
 
 test("Eleventy set input/output, one file input", async (t) => {
-  let elev = new Eleventy("./test/stubs/index.html", "./test/stubs/_site");
+  let elev = await Eleventy.from(
+    "./test/stubs/index.html",
+    "./test/stubs/_site"
+  );
 
   t.is(elev.input, "./test/stubs/index.html");
   t.is(elev.inputDir, "./test/stubs");
@@ -127,7 +133,7 @@ test("Eleventy set input/output, one file input", async (t) => {
 });
 
 test("Eleventy set input/output, one file input, deeper subdirectory", async (t) => {
-  let elev = new Eleventy(
+  let elev = await Eleventy.from(
     "./test/stubs/subdir/index.html",
     "./test/stubs/_site"
   );
@@ -139,7 +145,7 @@ test("Eleventy set input/output, one file input, deeper subdirectory", async (t)
 });
 
 test("Eleventy set input/output, one file input root dir", async (t) => {
-  let elev = new Eleventy("./README.md", "./test/stubs/_site");
+  let elev = await Eleventy.from("./README.md", "./test/stubs/_site");
 
   t.is(elev.input, "./README.md");
   t.is(elev.inputDir, ".");
@@ -147,7 +153,7 @@ test("Eleventy set input/output, one file input root dir", async (t) => {
 });
 
 test("Eleventy set input/output, one file input root dir without leading dot/slash", async (t) => {
-  let elev = new Eleventy("README.md", "./test/stubs/_site");
+  let elev = await Eleventy.from("README.md", "./test/stubs/_site");
 
   t.is(elev.input, "README.md");
   t.is(elev.inputDir, ".");
@@ -156,7 +162,7 @@ test("Eleventy set input/output, one file input root dir without leading dot/sla
 
 test("Eleventy set input/output, one file input exitCode (script)", async (t) => {
   let previousExitCode = process.exitCode;
-  let elev = new Eleventy(
+  let elev = await Eleventy.from(
     "./test/stubs/exitCode/failure.njk",
     "./test/stubs/exitCode/_site",
     {
@@ -176,7 +182,7 @@ test("Eleventy set input/output, one file input exitCode (script)", async (t) =>
 
 test("Eleventy set input/output, one file input exitCode (cli)", async (t) => {
   let previousExitCode = process.exitCode;
-  let elev = new Eleventy(
+  let elev = await Eleventy.from(
     "./test/stubs/exitCode/failure.njk",
     "./test/stubs/exitCode/_site",
     {
@@ -194,7 +200,7 @@ test("Eleventy set input/output, one file input exitCode (cli)", async (t) => {
 });
 
 test("Eleventy to json", async (t) => {
-  let elev = new Eleventy("./test/stubs--to/");
+  let elev = await Eleventy.from("./test/stubs--to/");
   elev.setIsVerbose(false);
 
   let result = await elev.toJSON();
@@ -224,7 +230,7 @@ test("Eleventy to json", async (t) => {
 });
 
 test("Eleventy to ndjson", async (t) => {
-  let elev = new Eleventy("./test/stubs--to/");
+  let elev = await Eleventy.from("./test/stubs--to/");
 
   elev.setIsVerbose(false);
 
@@ -259,7 +265,7 @@ test("Eleventy to ndjson", async (t) => {
 });
 
 test("Eleventy to ndjson (returns a stream)", async (t) => {
-  let elev = new Eleventy("./test/stubs--to/");
+  let elev = await Eleventy.from("./test/stubs--to/");
 
   elev.setIsVerbose(false);
 
@@ -296,13 +302,13 @@ test("Eleventy to ndjson (returns a stream)", async (t) => {
 });
 
 test("Two Eleventies, two configs!!! (config used to be a global)", async (t) => {
-  let elev1 = new Eleventy();
+  let elev1 = await Eleventy.from();
 
   t.is(elev1.eleventyConfig, elev1.eleventyConfig);
   t.is(elev1.config, elev1.config);
   t.is(JSON.stringify(elev1.config), JSON.stringify(elev1.config));
 
-  let elev2 = new Eleventy();
+  let elev2 = await Eleventy.from();
   t.not(elev1.eleventyConfig, elev2.eleventyConfig);
   elev1.config.benchmarkManager = null;
   elev2.config.benchmarkManager = null;
@@ -310,7 +316,7 @@ test("Two Eleventies, two configs!!! (config used to be a global)", async (t) =>
 });
 
 test("Config propagates to other instances correctly", async (t) => {
-  let elev = new Eleventy();
+  let elev = await Eleventy.from();
   await elev.init();
 
   t.is(elev.eleventyServe.config, elev.config);
@@ -322,7 +328,7 @@ test("Config propagates to other instances correctly", async (t) => {
 });
 
 test("Eleventy programmatic API without init", async (t) => {
-  let elev = new Eleventy("./test/stubs--to/");
+  let elev = await Eleventy.from("./test/stubs--to/");
   elev.setIsVerbose(false);
 
   let result = await elev.toJSON();
@@ -352,7 +358,7 @@ test("Eleventy programmatic API without init", async (t) => {
 });
 
 test("Can Eleventy run two executeBuilds in parallel?", async (t) => {
-  let elev = new Eleventy("./test/stubs--to/");
+  let elev = await Eleventy.from("./test/stubs--to/");
   elev.setIsVerbose(false);
 
   let p1 = elev.toJSON();
@@ -398,26 +404,34 @@ test("Can Eleventy run two executeBuilds in parallel?", async (t) => {
 
 test("Eleventy addGlobalData should run once", async (t) => {
   let count = 0;
-  let elev = new Eleventy("./test/stubs-noop/", "./test/stubs-noop/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.addGlobalData("count", () => {
-        count++;
-        return count;
-      });
-    },
-  });
+  let elev = await Eleventy.from(
+    "./test/stubs-noop/",
+    "./test/stubs-noop/_site",
+    {
+      config: function (eleventyConfig) {
+        eleventyConfig.addGlobalData("count", () => {
+          count++;
+          return count;
+        });
+      },
+    }
+  );
 
   let results = await elev.toJSON();
   t.is(count, 1);
 });
 
 test("Eleventy addGlobalData can feed layouts to populate data cascade with layout data, issue #1245", async (t) => {
-  let elev = new Eleventy("./test/stubs-2145/", "./test/stubs-2145/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.addGlobalData("layout", () => "layout.njk");
-      eleventyConfig.dataFilterSelectors.add("LayoutData");
-    },
-  });
+  let elev = await Eleventy.from(
+    "./test/stubs-2145/",
+    "./test/stubs-2145/_site",
+    {
+      config: function (eleventyConfig) {
+        eleventyConfig.addGlobalData("layout", () => "layout.njk");
+        eleventyConfig.dataFilterSelectors.add("LayoutData");
+      },
+    }
+  );
 
   let [result] = await elev.toJSON();
   t.deepEqual(result.data, { LayoutData: 123 });
@@ -425,7 +439,7 @@ test("Eleventy addGlobalData can feed layouts to populate data cascade with layo
 });
 
 test("Unicode in front matter `tags`, issue #670", async (t) => {
-  let elev = new Eleventy("./test/stubs-670/", "./test/stubs-670/_site");
+  let elev = await Eleventy.from("./test/stubs-670/", "./test/stubs-670/_site");
 
   let results = await elev.toJSON();
   results.sort((a, b) => {
@@ -439,7 +453,7 @@ test("Unicode in front matter `tags`, issue #670", async (t) => {
 });
 
 test("#142: date 'git Last Modified' populates page.date", async (t) => {
-  let elev = new Eleventy("./test/stubs-142/", "./test/stubs-142/_site");
+  let elev = await Eleventy.from("./test/stubs-142/", "./test/stubs-142/_site");
 
   let results = await elev.toJSON();
   let [result] = results;
@@ -455,7 +469,10 @@ test("DateGitLastUpdated returns undefined on nonexistent path", (t) => {
 
 /* This test writes to the console */
 test("#2167: Pagination with permalink: false", async (t) => {
-  let elev = new Eleventy("./test/stubs-2167/", "./test/stubs-2167/_site");
+  let elev = await Eleventy.from(
+    "./test/stubs-2167/",
+    "./test/stubs-2167/_site"
+  );
   elev.setDryRun(true);
 
   let [passthroughCopy, pages] = await elev.write();
@@ -470,7 +487,7 @@ test("#2167: Pagination with permalink: false", async (t) => {
 
 test("Pagination over collection using eleventyComputed (liquid)", async (t) => {
   t.plan(5);
-  let elev = new Eleventy(
+  let elev = await Eleventy.from(
     "./test/stubs-pagination-computed-quotes/",
     "./test/stubs-pagination-computed-quotes/_site",
     {
@@ -493,7 +510,7 @@ test("Pagination over collection using eleventyComputed (liquid)", async (t) => 
 
 test("Pagination over collection using eleventyComputed (njk)", async (t) => {
   t.plan(5);
-  let elev = new Eleventy(
+  let elev = await Eleventy.from(
     "./test/stubs-pagination-computed-quotes-njk/",
     "./test/stubs-pagination-computed-quotes-njk/_site",
     {
@@ -515,7 +532,7 @@ test("Pagination over collection using eleventyComputed (njk)", async (t) => {
 });
 
 test("Paginated template uses proxy and global data", async (t) => {
-  let elev = new Eleventy(
+  let elev = await Eleventy.from(
     "./test/proxy-pagination-globaldata/",
     "./test/proxy-pagination-globaldata/_site",
     {
@@ -533,13 +550,17 @@ test("Paginated template uses proxy and global data", async (t) => {
 test("Liquid shortcode with multiple arguments(issue #2348)", async (t) => {
   // NOTE issue #2348 was only active when you were processing multiple templates at the same time.
 
-  let elev = new Eleventy("./test/stubs-2367/", "./test/stubs-2367/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.addShortcode("simplelink", function (...args) {
-        return JSON.stringify(args);
-      });
-    },
-  });
+  let elev = await Eleventy.from(
+    "./test/stubs-2367/",
+    "./test/stubs-2367/_site",
+    {
+      config: function (eleventyConfig) {
+        eleventyConfig.addShortcode("simplelink", function (...args) {
+          return JSON.stringify(args);
+        });
+      },
+    }
+  );
 
   let arr = [
     "layout",
@@ -559,7 +580,10 @@ ${JSON.stringify(arr)}`);
 });
 
 test("#2224: date 'git created' populates page.date", async (t) => {
-  let elev = new Eleventy("./test/stubs-2224/", "./test/stubs-2224/_site");
+  let elev = await Eleventy.from(
+    "./test/stubs-2224/",
+    "./test/stubs-2224/_site"
+  );
 
   let results = await elev.toJSON();
   let [result] = results;
@@ -573,8 +597,8 @@ test("DateGitFirstAdded returns undefined on nonexistent path", async (t) => {
   t.is(DateGitFirstAdded("./test/invalid.invalid"), undefined);
 });
 
-test("Does pathPrefix affect page URLs", async (t) => {
-  let elev = new Eleventy("./README.md", "./_site", {
+test.only("Does pathPrefix affect page URLs", async (t) => {
+  let elev = await Eleventy.from("./README.md", "./_site", {
     config: function (eleventyConfig) {
       return {
         pathPrefix: "/testdirectory/",

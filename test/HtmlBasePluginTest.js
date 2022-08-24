@@ -288,13 +288,17 @@ test("Using the filter directly", async (t) => {
 });
 
 test("Using the HTML base plugin (default values)", async (t) => {
-  let elev = new Eleventy("./test/stubs-base/", "./test/stubs-base/_site", {
-    configPath: false,
-    config: function (eleventyConfig) {
-      eleventyConfig.setUseTemplateCache(false);
-      eleventyConfig.addPlugin(HtmlBasePlugin);
-    },
-  });
+  let elev = await Eleventy.from(
+    "./test/stubs-base/",
+    "./test/stubs-base/_site",
+    {
+      configPath: false,
+      config: function (eleventyConfig) {
+        eleventyConfig.setUseTemplateCache(false);
+        eleventyConfig.addPlugin(HtmlBasePlugin);
+      },
+    }
+  );
   elev.setIsVerbose(false);
   elev.disableLogger();
 
@@ -323,15 +327,19 @@ test("Using the HTML base plugin (default values)", async (t) => {
 });
 
 test("Using the HTML base plugin with pathPrefix: /test/", async (t) => {
-  let elev = new Eleventy("./test/stubs-base/", "./test/stubs-base/_site", {
-    pathPrefix: "/test/",
+  let elev = await Eleventy.from(
+    "./test/stubs-base/",
+    "./test/stubs-base/_site",
+    {
+      pathPrefix: "/test/",
 
-    configPath: false,
-    config: function (eleventyConfig) {
-      eleventyConfig.setUseTemplateCache(false);
-      eleventyConfig.addPlugin(HtmlBasePlugin);
-    },
-  });
+      configPath: false,
+      config: function (eleventyConfig) {
+        eleventyConfig.setUseTemplateCache(false);
+        eleventyConfig.addPlugin(HtmlBasePlugin);
+      },
+    }
+  );
   elev.setIsVerbose(false);
   elev.disableLogger();
 
@@ -360,17 +368,21 @@ test("Using the HTML base plugin with pathPrefix: /test/", async (t) => {
 });
 
 test("Using the HTML base plugin with pathPrefix: /test/ and base: http://example.com/", async (t) => {
-  let elev = new Eleventy("./test/stubs-base/", "./test/stubs-base/_site", {
-    pathPrefix: "/test/",
+  let elev = await Eleventy.from(
+    "./test/stubs-base/",
+    "./test/stubs-base/_site",
+    {
+      pathPrefix: "/test/",
 
-    configPath: false,
-    config: function (eleventyConfig) {
-      eleventyConfig.setUseTemplateCache(false);
-      eleventyConfig.addPlugin(HtmlBasePlugin, {
-        baseHref: "http://example.com/",
-      });
-    },
-  });
+      configPath: false,
+      config: function (eleventyConfig) {
+        eleventyConfig.setUseTemplateCache(false);
+        eleventyConfig.addPlugin(HtmlBasePlugin, {
+          baseHref: "http://example.com/",
+        });
+      },
+    }
+  );
 
   elev.setIsVerbose(false);
   elev.disableLogger();
@@ -400,15 +412,19 @@ test("Using the HTML base plugin with pathPrefix: /test/ and base: http://exampl
 });
 
 test("Using the HTML base plugin strips extra path in full URL base (default pathPrefix)", async (t) => {
-  let elev = new Eleventy("./test/stubs-base/", "./test/stubs-base/_site", {
-    configPath: false,
-    config: function (eleventyConfig) {
-      eleventyConfig.setUseTemplateCache(false);
-      eleventyConfig.addPlugin(HtmlBasePlugin, {
-        baseHref: "http://example.com/hello/", // extra path will be stripped
-      });
-    },
-  });
+  let elev = await Eleventy.from(
+    "./test/stubs-base/",
+    "./test/stubs-base/_site",
+    {
+      configPath: false,
+      config: function (eleventyConfig) {
+        eleventyConfig.setUseTemplateCache(false);
+        eleventyConfig.addPlugin(HtmlBasePlugin, {
+          baseHref: "http://example.com/hello/", // extra path will be stripped
+        });
+      },
+    }
+  );
 
   elev.setIsVerbose(false);
   elev.disableLogger();
@@ -438,17 +454,21 @@ test("Using the HTML base plugin strips extra path in full URL base (default pat
 });
 
 test("Using the HTML base plugin strips extra path in full URL base (pathPrefix: /test/)", async (t) => {
-  let elev = new Eleventy("./test/stubs-base/", "./test/stubs-base/_site", {
-    pathPrefix: "/test/",
+  let elev = await Eleventy.from(
+    "./test/stubs-base/",
+    "./test/stubs-base/_site",
+    {
+      pathPrefix: "/test/",
 
-    configPath: false,
-    config: function (eleventyConfig) {
-      eleventyConfig.setUseTemplateCache(false);
-      eleventyConfig.addPlugin(HtmlBasePlugin, {
-        baseHref: "http://example.com/hello/", // extra path will be stripped
-      });
-    },
-  });
+      configPath: false,
+      config: function (eleventyConfig) {
+        eleventyConfig.setUseTemplateCache(false);
+        eleventyConfig.addPlugin(HtmlBasePlugin, {
+          baseHref: "http://example.com/hello/", // extra path will be stripped
+        });
+      },
+    }
+  );
 
   elev.setIsVerbose(false);
   elev.disableLogger();
@@ -478,17 +498,21 @@ test("Using the HTML base plugin strips extra path in full URL base (pathPrefix:
 });
 
 test("Opt out of the transform with falsy extensions list", async (t) => {
-  let elev = new Eleventy("./test/stubs-base/", "./test/stubs-base/_site", {
-    pathPrefix: "/test/",
+  let elev = await Eleventy.from(
+    "./test/stubs-base/",
+    "./test/stubs-base/_site",
+    {
+      pathPrefix: "/test/",
 
-    configPath: false,
-    config: function (eleventyConfig) {
-      eleventyConfig.setUseTemplateCache(false);
-      eleventyConfig.addPlugin(HtmlBasePlugin, {
-        extensions: false,
-      });
-    },
-  });
+      configPath: false,
+      config: function (eleventyConfig) {
+        eleventyConfig.setUseTemplateCache(false);
+        eleventyConfig.addPlugin(HtmlBasePlugin, {
+          extensions: false,
+        });
+      },
+    }
+  );
 
   elev.setIsVerbose(false);
   elev.disableLogger();

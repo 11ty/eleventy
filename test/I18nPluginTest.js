@@ -76,34 +76,38 @@ test("Comparator.matchLanguageFolder", (t) => {
 
 test("contentMap Event from Eleventy", async (t) => {
   t.plan(4);
-  let elev = new Eleventy("./test/stubs-i18n/", "./test/stubs-i18n/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.addPlugin(I18nPlugin, {
-        defaultLanguage: "en",
-        errorMode: "allow-fallback",
-      });
-
-      eleventyConfig.on("eleventy.contentMap", (maps) => {
-        t.truthy(maps);
-
-        // if future maps are added, they should be tested here
-        t.is(Object.keys(maps).length, 2);
-        t.deepEqual(maps.urlToInputPath, {
-          "/en/": "./test/stubs-i18n/en/index.liquid",
-          "/en-us/": "./test/stubs-i18n/en-us/index.11ty.js",
-          "/es/": "./test/stubs-i18n/es/index.njk",
-          "/non-lang-file/": "./test/stubs-i18n/non-lang-file.njk",
+  let elev = await Eleventy.from(
+    "./test/stubs-i18n/",
+    "./test/stubs-i18n/_site",
+    {
+      config: function (eleventyConfig) {
+        eleventyConfig.addPlugin(I18nPlugin, {
+          defaultLanguage: "en",
+          errorMode: "allow-fallback",
         });
 
-        t.deepEqual(maps.inputPathToUrl, {
-          "./test/stubs-i18n/en/index.liquid": ["/en/"],
-          "./test/stubs-i18n/en-us/index.11ty.js": ["/en-us/"],
-          "./test/stubs-i18n/es/index.njk": ["/es/"],
-          "./test/stubs-i18n/non-lang-file.njk": ["/non-lang-file/"],
+        eleventyConfig.on("eleventy.contentMap", (maps) => {
+          t.truthy(maps);
+
+          // if future maps are added, they should be tested here
+          t.is(Object.keys(maps).length, 2);
+          t.deepEqual(maps.urlToInputPath, {
+            "/en/": "./test/stubs-i18n/en/index.liquid",
+            "/en-us/": "./test/stubs-i18n/en-us/index.11ty.js",
+            "/es/": "./test/stubs-i18n/es/index.njk",
+            "/non-lang-file/": "./test/stubs-i18n/non-lang-file.njk",
+          });
+
+          t.deepEqual(maps.inputPathToUrl, {
+            "./test/stubs-i18n/en/index.liquid": ["/en/"],
+            "./test/stubs-i18n/en-us/index.11ty.js": ["/en-us/"],
+            "./test/stubs-i18n/es/index.njk": ["/es/"],
+            "./test/stubs-i18n/non-lang-file.njk": ["/non-lang-file/"],
+          });
         });
-      });
-    },
-  });
+      },
+    }
+  );
 
   let results = await elev.toJSON();
 });
@@ -115,14 +119,18 @@ function getContentFor(results, filename) {
 }
 
 test("errorMode default", async (t) => {
-  let elev = new Eleventy("./test/stubs-i18n/", "./test/stubs-i18n/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.addPlugin(I18nPlugin, {
-        defaultLanguage: "en",
-        // errorMode: "allow-fallback"
-      });
-    },
-  });
+  let elev = await Eleventy.from(
+    "./test/stubs-i18n/",
+    "./test/stubs-i18n/_site",
+    {
+      config: function (eleventyConfig) {
+        eleventyConfig.addPlugin(I18nPlugin, {
+          defaultLanguage: "en",
+          // errorMode: "allow-fallback"
+        });
+      },
+    }
+  );
   elev.setIsVerbose(false);
   elev.disableLogger();
 
@@ -132,14 +140,18 @@ test("errorMode default", async (t) => {
 });
 
 test("locale_url and locale_links Filters", async (t) => {
-  let elev = new Eleventy("./test/stubs-i18n/", "./test/stubs-i18n/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.addPlugin(I18nPlugin, {
-        defaultLanguage: "en",
-        errorMode: "allow-fallback",
-      });
-    },
-  });
+  let elev = await Eleventy.from(
+    "./test/stubs-i18n/",
+    "./test/stubs-i18n/_site",
+    {
+      config: function (eleventyConfig) {
+        eleventyConfig.addPlugin(I18nPlugin, {
+          defaultLanguage: "en",
+          errorMode: "allow-fallback",
+        });
+      },
+    }
+  );
 
   let results = await elev.toJSON();
   t.is(
