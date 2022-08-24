@@ -72,21 +72,21 @@ export default function (eleventyConfig, defaultOptions = {}) {
       // eleventyConfig.pathPrefix is new in Eleventy 2.0.0-canary.15
       // `base` can be a directory (for path prefix transformations)
       //    OR a full URL with origin and pathname
-      base: eleventyConfig.pathPrefix,
+      baseHref: eleventyConfig.pathPrefix,
 
       extensions: "html",
 
-      name: "eleventy-htmlBaseWithPathPrefix",
+      name: "htmlBaseWithPathPrefix",
       filters: {
         base: "htmlBaseUrl",
         html: "transformWithHtmlBase",
-        pathPrefix: "addPathPrefixToUrl",
+        pathPrefix: "addPathPrefixToFullUrl",
       },
     },
     defaultOptions
   );
 
-  if (opts.base === undefined) {
+  if (opts.baseHref === undefined) {
     throw new Error(
       "The `base` option is required in the Eleventy HTML Base plugin."
     );
@@ -99,7 +99,7 @@ export default function (eleventyConfig, defaultOptions = {}) {
   eleventyConfig.addFilter(
     opts.filters.base,
     function (url, baseOverride, pageUrlOverride) {
-      let base = baseOverride || opts.base;
+      let base = baseOverride || opts.baseHref;
 
       // Do nothing with a default base
       if (base === "/") {
@@ -120,7 +120,7 @@ export default function (eleventyConfig, defaultOptions = {}) {
   eleventyConfig.addAsyncFilter(
     opts.filters.html,
     function (content, baseOverride, pageUrlOverride) {
-      let base = baseOverride || opts.base;
+      let base = baseOverride || opts.baseHref;
 
       // Do nothing with a default base
       if (base === "/") {
@@ -141,25 +141,28 @@ export default function (eleventyConfig, defaultOptions = {}) {
   );
 
   // Skip the transform with a default base
-  if (opts.base !== "/") {
+  if (opts.baseHref !== "/") {
     let extensionMap = {};
-    for (let ext of opts.extensions.split(",")) {
+    for (let ext of (opts.extensions || "").split(",")) {
       extensionMap[ext] = true;
     }
 
-    eleventyConfig.addTransform(opts.name, function (content) {
-      let ext = this.outputPath?.split(".").pop();
-      if (extensionMap[ext]) {
-        return addToAllHtmlUrls(content, (url) => {
-          return transformUrl.call(this, url.trim(), opts.base, {
-            pathPrefix: eleventyConfig.pathPrefix,
-            pageUrl: this.url,
+    // Skip the transform if no extensions are specified
+    if (Object.keys(extensionMap).length > 0) {
+      eleventyConfig.addTransform(opts.name, function (content) {
+        let ext = this.outputPath?.split(".").pop();
+        if (extensionMap[ext]) {
+          return addToAllHtmlUrls(content, (url) => {
+            return transformUrl.call(this, url.trim(), opts.baseHref, {
+              pathPrefix: eleventyConfig.pathPrefix,
+              pageUrl: this.url,
+            });
           });
-        });
-      }
+        }
 
-      return content;
-    });
+        return content;
+      });
+    }
   }
 }
 
