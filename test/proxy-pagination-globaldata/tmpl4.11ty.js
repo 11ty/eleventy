@@ -1,4 +1,4 @@
-exports.data = {
+export const data = {
   pages: ["page 1"],
   pagination: {
     data: "pages",
@@ -6,4 +6,4 @@ exports.data = {
   },
 };
 
-exports.render = (data) => `${data.banner.content}`;
+export function render(data) { return `${data.banner.content}`; }
