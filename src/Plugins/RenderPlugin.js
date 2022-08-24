@@ -26,8 +26,8 @@ async function compile(
     templateLang = this.page.templateSyntax;
   }
 
-  let cfg = templateConfig.getConfig();
-  let tr = new TemplateRender(templateLang, cfg.dir.input, templateConfig);
+  let cfg = await templateConfig.getConfig();
+  let tr = new TemplateRender(templateLang, cfg.dir.input, cfg);
   tr.extensionMap = extensionMap;
   tr.setEngineOverride(templateLang);
 
@@ -67,8 +67,8 @@ async function compileFile(
     await config(templateConfig.userConfig);
   }
 
-  let cfg = templateConfig.getConfig();
-  let tr = new TemplateRender(inputPath, cfg.dir.input, templateConfig);
+  let cfg = await templateConfig.getConfig();
+  let tr = new TemplateRender(inputPath, cfg.dir.input, cfg);
   tr.extensionMap = extensionMap;
   if (templateLang) {
     tr.setEngineOverride(templateLang);

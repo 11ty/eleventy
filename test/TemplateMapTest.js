@@ -46,7 +46,7 @@ test("TemplateMap has collections added", async (t) => {
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
   let tmpl2 = getNewTemplateByNumber(2, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1);
   await tm.add(tmpl2);
   await tm.cache();
@@ -59,7 +59,7 @@ test("TemplateMap compared to Collection API", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
   let tmpl4 = getNewTemplateByNumber(4, eleventyConfig);
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1);
   await tm.add(tmpl4);
   await tm.cache();
@@ -85,7 +85,7 @@ test("populating the collection twice should clear the previous values (--watch 
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
   let tmpl2 = getNewTemplateByNumber(2, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1);
   await tm.add(tmpl2);
 
@@ -100,7 +100,7 @@ test("TemplateMap adds collections data and has templateContent values", async (
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
   let tmpl2 = getNewTemplateByNumber(2, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1);
   await tm.add(tmpl2);
 
@@ -133,7 +133,7 @@ test("TemplateMap circular references (map without templateContent)", async (t) 
   let eleventyConfig = new TemplateConfig();
   let tmpl3 = getNewTemplateByNumber(3, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl3);
 
   let map = tm.getMap();
@@ -152,7 +152,7 @@ test("TemplateMap circular references (map without templateContent)", async (t) 
 
 test("TemplateMap circular references (map.templateContent)", async (t) => {
   let eleventyConfig = new TemplateConfig();
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   let tmpl = getNewTemplate(
     "./test/stubs/templateMapCollection/templateContent.md",
     "./test/stubs/",
@@ -195,7 +195,7 @@ test("Issue #115, mixing pagination and collections", async (t) => {
     eleventyConfig
   );
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmplFoos);
   await tm.add(tmplBars);
   await tm.add(tmplIndex);
@@ -260,7 +260,7 @@ test("Issue #115 with layout, mixing pagination and collections", async (t) => {
     eleventyConfig
   );
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmplFoos);
   await tm.add(tmplBars);
   await tm.add(tmplIndex);
@@ -309,7 +309,7 @@ test("TemplateMap adds collections data and has page data values using .cache()"
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
   let tmpl2 = getNewTemplateByNumber(2, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1);
   await tm.add(tmpl2);
 
@@ -333,7 +333,7 @@ test("TemplateMap adds collections data and has page data values using ._testGet
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
   let tmpl2 = getNewTemplateByNumber(2, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1);
   await tm.add(tmpl2);
 
@@ -361,7 +361,7 @@ test("Url should be available in user config collections API calls", async (t) =
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
   let tmpl2 = getNewTemplateByNumber(2, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1);
   await tm.add(tmpl2);
   tm.setUserConfigCollections({
@@ -392,7 +392,7 @@ test("Url should be available in user config collections API calls", async (t) =
 
 test("Url should be available in user config collections API calls (test in callback)", async (t) => {
   let eleventyConfig = new TemplateConfig();
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   tm.setUserConfigCollections({
     userCollection: function (collection) {
       let all = collection.getAll();
@@ -423,7 +423,7 @@ test("Should be able to paginate a tag generated collection", async (t) => {
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
   let tmpl2 = getNewTemplateByNumber(2, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1);
   await tm.add(tmpl2);
 
@@ -445,7 +445,7 @@ test("Should be able to paginate a user config collection", async (t) => {
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
   let tmpl2 = getNewTemplateByNumber(2, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1);
   await tm.add(tmpl2);
 
@@ -474,7 +474,7 @@ test("Should be able to paginate a user config collection (uses rendered permali
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
   let tmpl2 = getNewTemplateByNumber(2, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1);
   await tm.add(tmpl2);
 
@@ -515,7 +515,7 @@ test("Should be able to paginate a user config collection (paged template is als
   let tmpl2 = getNewTemplateByNumber(2, eleventyConfig);
   let tmpl4 = getNewTemplateByNumber(4, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1); // has dog tag
   await tm.add(tmpl2); // does not have dog tag
   await tm.add(tmpl4); // has dog tag
@@ -549,7 +549,7 @@ test("Should be able to paginate a user config collection (paged template is als
   let tmpl2 = getNewTemplateByNumber(2, eleventyConfig);
   let tmpl4 = getNewTemplateByNumber(4, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1); // has dog tag
   await tm.add(tmpl2); // does not have dog tag
   await tm.add(tmpl4); // has dog tag
@@ -590,7 +590,7 @@ test("Should be able to paginate a user config collection (paged template is als
   let tmpl2 = getNewTemplateByNumber(2, eleventyConfig);
   let tmpl4 = getNewTemplateByNumber(4, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1); // has dog tag
   await tm.add(tmpl2); // does not have dog tag
   await tm.add(tmpl4); // has dog tag
@@ -622,7 +622,7 @@ test("Should be able to paginate a user config collection (paged template is als
   let tmpl2 = getNewTemplateByNumber(2, eleventyConfig);
   let tmpl4 = getNewTemplateByNumber(4, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1); // has dog tag
   await tm.add(tmpl2); // does not have dog tag
   await tm.add(tmpl4); // has dog tag
@@ -651,7 +651,7 @@ test("Should be able to paginate a user config collection (paged template is als
 
 test("TemplateMap render and templateContent are the same (templateContent doesn’t have layout but makes proper use of layout front matter data)", async (t) => {
   let eleventyConfig = new TemplateConfig();
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   let tmplLayout = getNewTemplate(
     "./test/stubs/templateMapCollection/testWithLayout.md",
     "./test/stubs/",
@@ -673,7 +673,7 @@ test("Should be able to paginate a tag generated collection (and it has template
   let tmpl2 = getNewTemplateByNumber(2, eleventyConfig);
   let tmpl4 = getNewTemplateByNumber(4, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1); // has dog tag
   await tm.add(tmpl2); // does not have dog tag
   await tm.add(tmpl4); // has dog tag
@@ -720,7 +720,7 @@ test("Should be able to paginate a tag generated collection when aliased (and it
   let tmpl2 = getNewTemplateByNumber(2, eleventyConfig);
   let tmpl4 = getNewTemplateByNumber(4, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1); // has dog tag
   await tm.add(tmpl2); // does not have dog tag
   await tm.add(tmpl4); // has dog tag
@@ -760,7 +760,7 @@ test("Issue #253: Paginated template with a tag should put multiple pages into a
   let tmpl2 = getNewTemplateByNumber(2, eleventyConfig);
   let tmpl4 = getNewTemplateByNumber(4, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1);
   await tm.add(tmpl2);
   await tm.add(tmpl4);
@@ -792,7 +792,7 @@ test("Issue #253: Paginated template with a tag should put multiple pages into a
 
 test("getUserConfigCollectionNames", async (t) => {
   let eleventyConfig = new TemplateConfig();
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
 
   tm.setUserConfigCollections({
     userCollection: function (collection) {
@@ -811,7 +811,7 @@ test("getUserConfigCollectionNames", async (t) => {
 
 test("isUserConfigCollectionName", (t) => {
   let eleventyConfig = new TemplateConfig();
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   tm.setUserConfigCollections({
     userCollection: function (collection) {
       return collection.getAll();
@@ -827,7 +827,7 @@ test("Dependency Map should have nodes that have no dependencies and no dependen
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
   let tmpl5 = getNewTemplateByNumber(5, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1);
   await tm.add(tmpl5);
 
@@ -845,7 +845,7 @@ test("Dependency Map should have include orphan user config collections (in the 
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
   let tmpl5 = getNewTemplateByNumber(5, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1);
   await tm.add(tmpl5);
 
@@ -872,7 +872,7 @@ test("Dependency Map should have include orphan user config collections (in the 
 
 test("Template pages should not have layouts when added to collections", async (t) => {
   let eleventyConfig = new TemplateConfig();
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   let tmpl = getNewTemplate(
     "./test/stubs/collection-layout-wrap.njk",
     "./test/stubs/",
@@ -889,7 +889,7 @@ test("Template pages should not have layouts when added to collections", async (
 
 test("Paginated template pages should not have layouts when added to collections", async (t) => {
   let eleventyConfig = new TemplateConfig();
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
 
   let pagedTmpl = getNewTemplate(
     "./test/stubs/tagged-pagination-multiples-layout/test.njk",
@@ -912,7 +912,7 @@ test("Tag pages. Allow pagination over all collections a la `data: collections`"
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
   let tmpl2 = getNewTemplateByNumber(2, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
 
   let pagedTmpl = getNewTemplate(
     "./test/stubs/page-target-collections/tagpages.njk",
@@ -945,7 +945,7 @@ test("Tag pages (all pages added to collections). Allow pagination over all coll
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
   let tmpl2 = getNewTemplateByNumber(2, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
 
   let pagedTmpl = getNewTemplate(
     "./test/stubs/page-target-collections/tagpagesall.njk",
@@ -980,7 +980,7 @@ test("eleventyExcludeFromCollections", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1);
 
   let excludedTmpl = getNewTemplate(
@@ -1006,7 +1006,7 @@ test("eleventyExcludeFromCollections and permalink: false", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1);
 
   let excludedTmpl = getNewTemplate(
@@ -1033,7 +1033,7 @@ test("Paginate over collections.all", async (t) => {
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
   let tmpl2 = getNewTemplateByNumber(2, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
 
   let pagedTmpl = getNewTemplate(
     "./test/stubs/page-target-collections/paginateall.njk",
@@ -1092,7 +1092,7 @@ test("Paginate over collections.all WITH a paginate over collections (tag pages)
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
   let tmpl2 = getNewTemplateByNumber(2, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
 
   let pagedTmpl = getNewTemplate(
     "./test/stubs/page-target-collections/paginateall.njk",
@@ -1120,7 +1120,7 @@ test("Paginate over collections.all WITH a paginate over collections (tag pages)
 test("Test a transform with a layout (via templateMap)", async (t) => {
   t.plan(7);
   let eleventyConfig = new TemplateConfig();
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   let tmpl = getNewTemplate(
     "./test/stubs-475/transform-layout/transform-layout.njk",
     "./test/stubs-475/",
@@ -1160,7 +1160,7 @@ test("Async user collection addCollection method", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1);
   tm.setUserConfigCollections({
     userCollection: async function (collection) {
@@ -1194,7 +1194,7 @@ test("Duplicate permalinks in template map", async (t) => {
     eleventyConfig
   );
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1);
   await tm.add(tmpl2);
   await t.throwsAsync(async () => {
@@ -1218,7 +1218,7 @@ test("No duplicate permalinks in template map, using false", async (t) => {
     eleventyConfig
   );
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1);
   await tm.add(tmpl2);
   await tm.cache();
@@ -1241,7 +1241,7 @@ test("Duplicate permalinks in template map, no leading slash", async (t) => {
     eleventyConfig
   );
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   await tm.add(tmpl1);
   await tm.add(tmpl3);
 
@@ -1253,7 +1253,7 @@ test("Duplicate permalinks in template map, no leading slash", async (t) => {
 test("TemplateMap circular references (map.templateContent) using eleventyExcludeFromCollections and collections.all", async (t) => {
   let eleventyConfig = new TemplateConfig();
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   let tmplExcluded = getNewTemplate(
     "./test/stubs/issue-522/excluded.md",
     "./test/stubs/",
@@ -1289,7 +1289,7 @@ test("TemplateMap circular references (map.templateContent) using eleventyExclud
 
 test("permalink object with build", async (t) => {
   let eleventyConfig = new TemplateConfig();
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   let tmplLayout = getNewTemplate(
     "./test/stubs/permalink-build/permalink-build.md",
     "./test/stubs/",
@@ -1307,7 +1307,7 @@ test("permalink object with build", async (t) => {
 
 test("permalink object without build (defaults to `read` mode)", async (t) => {
   let eleventyConfig = new TemplateConfig();
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   let tmpl = getNewTemplate(
     "./test/stubs/permalink-nobuild/permalink-nobuild.md",
     "./test/stubs/",
@@ -1346,7 +1346,7 @@ test("serverlessUrlMap Event (without `build`, only `serverless`)", async (t) =>
     ]);
   });
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   let tmpl = getNewTemplate(
     "./test/stubs/permalink-nobuild/permalink-nobuild.md",
     "./test/stubs/",
@@ -1371,7 +1371,7 @@ test("serverlessUrlMap Event (with `build`)", async (t) => {
     ]);
   });
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   let tmpl = getNewTemplate(
     "./test/stubs/permalink-build/permalink-build.md",
     "./test/stubs/",
@@ -1399,7 +1399,7 @@ test("serverlessUrlMap Event (with `build` and `serverless`)", async (t) => {
     ]);
   });
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   let tmpl = getNewTemplate(
     "./test/stubs/permalink-build-serverless/permalink-build-serverless.md",
     "./test/stubs/",
@@ -1427,7 +1427,7 @@ test("serverlessUrlMap Event (with templating on both `build` and `serverless`)"
     ]);
   });
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   let tmpl = getNewTemplate(
     "./test/stubs/permalink-build-serverless-rendered/permalink-build-serverless-rendered.md",
     "./test/stubs/",
@@ -1455,7 +1455,7 @@ test("serverlessUrlMap Event (empty pagination template with `serverless` should
     ]);
   });
 
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
   let tmpl = getNewTemplate(
     "./test/stubs/permalink-serverless-empty-pagination/permalink-serverless-empty-pagination.md",
     "./test/stubs/",

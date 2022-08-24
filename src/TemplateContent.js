@@ -15,6 +15,7 @@ import Debug from "debug";
 const debug = Debug("Eleventy:TemplateContent");
 const debugDev = Debug("Dev:Eleventy:TemplateContent");
 import EventBus from "./EventBus.js";
+import BenchmarkManager from "./BenchmarkManager.js";
 
 class TemplateContentConfigError extends EleventyBaseError {}
 class TemplateContentFrontMatterError extends EleventyBaseError {}
@@ -66,6 +67,7 @@ export default class TemplateContent {
   }
 
   get bench() {
+    this.config.benchmarkManager ??= new BenchmarkManager();
     return this.config.benchmarkManager.get("Aggregate");
   }
 
@@ -83,15 +85,6 @@ export default class TemplateContent {
   }
 
   get templateRender() {
-    if (!this._templateRender) {
-      this._templateRender = new TemplateRender(
-        this.inputPath,
-        this.inputDir,
-        this.config
-      );
-      this._templateRender.extensionMap = this.extensionMap;
-    }
-
     return this._templateRender;
   }
 
@@ -163,6 +156,23 @@ export default class TemplateContent {
   // Used via clone
   setInputContent(content) {
     this.inputContent = content;
+  }
+
+  async initConfig() {
+    if (this.config instanceof Promise)
+      this.config = await this.config;
+  }
+
+  async initTemplateRender() {
+    if (!this._templateRender) {
+      this._templateRender = new TemplateRender(
+        this.inputPath,
+        this.inputDir,
+        this.config
+      );
+      await this._templateRender.init(this._templateRender.engineNameOrPath);
+      this._templateRender.extensionMap = this.extensionMap;
+    }
   }
 
   async getInputContent() {

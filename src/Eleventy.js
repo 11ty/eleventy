@@ -55,6 +55,14 @@ export default class Eleventy {
         this.eleventyConfig.setProjectConfigPath(options.configPath);
       }
     }
+  }
+
+  async initConfig(input, output, options) {
+    /**
+     * @member {Object} - Initialize Eleventy’s configuration, including the user config file
+     */
+    this.config = await this.eleventyConfig.getConfig();
+
 
     this.eleventyConfig.setLogger(this.logger);
 
@@ -92,14 +100,6 @@ export default class Eleventy {
      */
     this.env = this.getEnvironmentVariableValues();
     this.initializeEnvironmentVariables(this.env);
-  }
-
-  async initConfig(input, output, options) {
-    /**
-     * @member {Object} - Initialize Eleventy’s configuration, including the user config file
-     */
-    this.config = await this.eleventyConfig.getConfig();
-
     /**
      * @member {Object} - Singleton BenchmarkManager instance
      */

@@ -207,7 +207,7 @@ export default class TemplateRender {
     return this.extensionMap.getKey(this.engineNameOrPath);
   }
 
-  setEngineOverride(engineName, bypassMarkdown) {
+  async setEngineOverride(engineName, bypassMarkdown) {
     let engines = TemplateRender.parseEngineOverrides(engineName);
 
     // when overriding, Template Engines with HTML will instead use the Template Engine as primary and output HTML
@@ -215,11 +215,11 @@ export default class TemplateRender {
     this.setHtmlEngine(false);
 
     if (!engines.length) {
-      this.init("html");
+      await this.init("html");
       return;
     }
 
-    this.init(engines[0]);
+    await this.init(engines[0]);
 
     let usingMarkdown = engines[0] === "md" && !bypassMarkdown;
 

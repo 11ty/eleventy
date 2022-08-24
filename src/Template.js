@@ -1,4 +1,4 @@
-import { writeFile, mkdir } from "node:fs/promises";
+import { writeFile, mkdir, stat } from "node:fs/promises";
 
 import { EOL } from "node:os";
 import { parse } from "node:path";
@@ -35,6 +35,26 @@ const { getTemplate } = TemplateLayout;
 const { hasPagination } = Pagination;
 
 export default class Template extends TemplateContent {
+  static async from(
+    templatePath,
+    inputDir,
+    outputDir,
+    templateData,
+    extensionMap,
+    config
+  ) {
+    const tpl = new Template(
+      templatePath,
+      inputDir,
+      outputDir,
+      templateData,
+      extensionMap,
+      config
+    );
+    await tpl.initConfig();
+    return tpl;
+  }
+
   constructor(
     templatePath,
     inputDir,
@@ -80,10 +100,14 @@ export default class Template extends TemplateContent {
 
     this.outputFormat = "fs";
 
+    this.serverlessUrls = null;
+  }
+
+  async initConfig() {
+    await super.initConfig();
+    await super.initTemplateRender();
     this.behavior = new TemplateBehavior(this.config);
     this.behavior.setOutputFormat(this.outputFormat);
-
-    this.serverlessUrls = null;
   }
 
   get logger() {
@@ -871,9 +895,9 @@ export default class Template extends TemplateContent {
     );
   }
 
-  clone() {
+  async clone() {
     // TODO do we need to even run the constructor here or can we simplify it even more
-    let tmpl = new Template(
+    let tmpl = await Template.from(
       this.inputPath,
       this.inputDir,
       this.outputDir,
@@ -903,7 +927,7 @@ export default class Template extends TemplateContent {
       return this._stats;
     }
 
-    this._stats = _promises.stat(this.inputPath);
+    this._stats = stat(this.inputPath);
 
     return this._stats;
   }

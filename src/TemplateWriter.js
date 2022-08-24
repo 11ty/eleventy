@@ -161,10 +161,10 @@ export default class TemplateWriter {
     );
   }
 
-  _createTemplate(path, allPaths, to = "fs") {
+  async _createTemplate(path, allPaths, to = "fs") {
     let tmpl = this._templatePathCache.get(path);
     if (!tmpl) {
-      tmpl = new Template(
+      tmpl = await Template.from(
         path,
         this.inputDir,
         this.outputDir,
@@ -230,7 +230,7 @@ export default class TemplateWriter {
     for (let path of paths) {
       if (this.extensionMap.hasEngine(path)) {
         promises.push(
-          this.templateMap.add(this._createTemplate(path, paths, to))
+          this.templateMap.add(await this._createTemplate(path, paths, to))
         );
       }
       debug(`${path} begun adding to map.`);
@@ -240,7 +240,7 @@ export default class TemplateWriter {
   }
 
   async _createTemplateMap(paths, to) {
-    this.templateMap = new TemplateMap(this.eleventyConfig);
+    this.templateMap = await TemplateMap.from(this.eleventyConfig);
 
     await this._addToTemplateMap(paths, to);
     await this.templateMap.cache();

@@ -2,17 +2,21 @@ import HandlebarsLib from "handlebars";
 import TemplateEngine from "./TemplateEngine.js";
 
 export default class Handlebars extends TemplateEngine {
-  constructor(name, dirs, config) {
-    super(name, dirs, config);
-
-    this.setLibrary(this.config.libraryOverrides.hbs);
+  static async from(name, dirs, config) {
+    const handlebars = new Handlebars(name, dirs, config);
+    await handlebars.setLibrary(handlebars.config.libraryOverrides.hbs);
+    return handlebars;
   }
 
-  setLibrary(lib) {
+  constructor(name, dirs, config) {
+    super(name, dirs, config);
+  }
+
+  async setLibrary(lib) {
     this.handlebarsLib = lib || HandlebarsLib;
     this.setEngineLib(this.handlebarsLib);
 
-    let partials = super.getPartials();
+    let partials = await super.getPartials();
     for (let name in partials) {
       this.handlebarsLib.registerPartial(name, partials[name]);
     }

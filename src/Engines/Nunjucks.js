@@ -400,9 +400,9 @@ export default class Nunjucks extends TemplateEngine {
     if (this._usingPrecompiled) {
       tmpl = this.njkEnv.getTemplate(str, true);
     } else if (!inputPath || inputPath === "njk" || inputPath === "md") {
-      tmpl = new Template(str, this.njkEnv, null, true);
+      tmpl = await Template.from(str, this.njkEnv, null, true);
     } else {
-      tmpl = new Template(str, this.njkEnv, inputPath, true);
+      tmpl = await Template.from(str, this.njkEnv, inputPath, true);
     }
 
     return async function (data) {

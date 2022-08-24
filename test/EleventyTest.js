@@ -6,10 +6,12 @@ import DateGitFirstAdded from "../src/Util/DateGitFirstAdded.js";
 import DateGitLastUpdated from "../src/Util/DateGitLastUpdated.js";
 import normalizeNewLines from "./Util/normalizeNewLines.js";
 
+Error.stackTraceLimit=Infinity;
 test("Eleventy, defaults inherit from config", async (t) => {
   let elev = await Eleventy.from();
 
-  let config = new TemplateConfig().getConfig();
+  let tpl = new TemplateConfig()
+  let config = await tpl.getConfig();
 
   t.truthy(elev.input);
   t.truthy(elev.outputDir);
@@ -597,7 +599,7 @@ test("DateGitFirstAdded returns undefined on nonexistent path", async (t) => {
   t.is(DateGitFirstAdded("./test/invalid.invalid"), undefined);
 });
 
-test.only("Does pathPrefix affect page URLs", async (t) => {
+test("Does pathPrefix affect page URLs", async (t) => {
   let elev = await Eleventy.from("./README.md", "./_site", {
     config: function (eleventyConfig) {
       return {

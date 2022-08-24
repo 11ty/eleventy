@@ -19,6 +19,12 @@ class DuplicatePermalinkOutputError extends EleventyBaseError {
 }
 
 export default class TemplateMap {
+  static async from(eleventyConfig) {
+    const map = new TemplateMap(eleventyConfig);
+    map._config = await eleventyConfig.getConfig();
+    return map
+  }
+
   constructor(eleventyConfig) {
     if (!eleventyConfig) {
       throw new TemplateMapConfigError("Missing config argument.");
@@ -46,9 +52,6 @@ export default class TemplateMap {
   }
 
   get config() {
-    if (!this._config) {
-      this._config = this.eleventyConfig.getConfig();
-    }
     return this._config;
   }
 

@@ -14,7 +14,7 @@ export default class Mustache extends TemplateEngine {
   }
 
   async compile(str) {
-    let partials = super.getPartials();
+    let partials = await super.getPartials();
 
     return function (data) {
       return this.render(str, data, partials).trim();

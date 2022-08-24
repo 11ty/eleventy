@@ -464,7 +464,7 @@ export default class TemplateData {
       }
     } else {
       // processing will always read the input file
-      let tr = new TemplateRender(engineName, this.inputDir, this.config);
+      let tr = new TemplateRender(engineName, this.inputDir, await this.config);
       tr.extensionMap = this.extensionMap;
 
       let fn = await tr.getCompiledTemplate(rawInput);

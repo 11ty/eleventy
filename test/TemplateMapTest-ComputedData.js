@@ -6,7 +6,7 @@ import getNewTemplate from "./_getNewTemplateForTests";
 
 test("Computed data can see tag generated collections", async (t) => {
   let eleventyConfig = new TemplateConfig();
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
 
   let dataObj = new TemplateData(
     "./test/stubs-computed-collections/",
@@ -58,7 +58,7 @@ test("Computed data can see tag generated collections", async (t) => {
 
 test("Computed data can see paginated data, Issue #1138", async (t) => {
   let eleventyConfig = new TemplateConfig();
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
 
   let dataObj = new TemplateData(
     "./test/stubs-computed-pagination/",
@@ -122,7 +122,7 @@ test("Computed data can see paginated data, Issue #1138", async (t) => {
 
 test("Computed data in directory data file consumes data file data, Issue #1137", async (t) => {
   let eleventyConfig = new TemplateConfig();
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
 
   let dataObj = new TemplateData(
     "./test/stubs-computed-dirdata/",
@@ -165,7 +165,7 @@ test("Computed data in directory data file consumes data file data, Issue #1137"
 
 test("Computed data can filter collections (and other array methods)", async (t) => {
   let eleventyConfig = new TemplateConfig();
-  let tm = new TemplateMap(eleventyConfig);
+  let tm = await TemplateMap.from(eleventyConfig);
 
   let dataObj = new TemplateData(
     "./test/stubs-computed-collections-filter/",

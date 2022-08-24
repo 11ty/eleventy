@@ -2,7 +2,7 @@ import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 import Template from "../src/Template.js";
 
-export default function getNewTemplate(
+export default async function getNewTemplate(
   path,
   inputDir,
   outputDir,
@@ -27,7 +27,7 @@ export default function getNewTemplate(
       eleventyConfig
     );
   }
-  return new Template(
+  return Template.from(
     path,
     inputDir,
     outputDir,

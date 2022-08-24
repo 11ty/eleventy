@@ -1,5 +1,5 @@
 import markdownIt from "markdown-it";
-import TemplateEngine from "./TemplateEngine";
+import TemplateEngine from "./TemplateEngine.js";
 // const debug = require("debug")("Eleventy:Markdown");
 
 export default class Markdown extends TemplateEngine {
