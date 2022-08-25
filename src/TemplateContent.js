@@ -26,6 +26,12 @@ export default class TemplateContent {
   static _inputCache = new Map();
   static _compileEngineCache = new Map();
 
+  static async from(inputPath, inputDir, config) {
+    const tpl = new TemplateContent(inputPath, inputDir, config);
+    await tpl.initConfig();
+    return tpl;
+  }
+
   constructor(inputPath, inputDir, config) {
     if (!config) {
       throw new TemplateContentConfigError(
@@ -60,20 +66,19 @@ export default class TemplateContent {
   }
 
   get config() {
-    if (this._config instanceof TemplateConfig) {
-      return this._config.getConfig();
-    }
     return this._config;
   }
 
   get bench() {
-    this.config.benchmarkManager ??= new BenchmarkManager();
-    return this.config.benchmarkManager.get("Aggregate");
+    this._config.benchmarkManager ??= new BenchmarkManager();
+    return this._config.benchmarkManager.get("Aggregate");
   }
 
   get eleventyConfig() {
     if (this._config instanceof TemplateConfig) {
       return this._config;
+    } else if (this._eleventyConfig instanceof TemplateConfig) {
+      return this._eleventyConfig;
     }
     throw new TemplateContentConfigError(
       "Tried to get an eleventyConfig but none was found."
@@ -159,8 +164,11 @@ export default class TemplateContent {
   }
 
   async initConfig() {
-    if (this.config instanceof Promise)
-      this.config = await this.config;
+    if (this._config instanceof Promise) this._config = await _this.config;
+    if (this._config instanceof TemplateConfig) {
+      this._eleventyConfig = this._config;
+      this._config = await this._config.getConfig();
+    }
   }
 
   async initTemplateRender() {
@@ -168,7 +176,7 @@ export default class TemplateContent {
       this._templateRender = new TemplateRender(
         this.inputPath,
         this.inputDir,
-        this.config
+        await this.config
       );
       await this._templateRender.init(this._templateRender.engineNameOrPath);
       this._templateRender.extensionMap = this.extensionMap;
@@ -214,6 +222,7 @@ export default class TemplateContent {
   }
 
   async getFrontMatterData() {
+    await this.initConfig();
     if (this._frontMatterDataCache) {
       return this._frontMatterDataCache;
     }

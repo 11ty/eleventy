@@ -63,7 +63,6 @@ export default class Eleventy {
      */
     this.config = await this.eleventyConfig.getConfig();
 
-
     this.eleventyConfig.setLogger(this.logger);
 
     /**
@@ -372,7 +371,7 @@ export default class Eleventy {
       this.inputDir,
       this.outputDir,
       formats,
-      this.eleventyConfig
+      await this.eleventyConfig
     );
     this.eleventyFiles.setPassthroughAll(this.isPassthroughAll);
     this.eleventyFiles.setInput(this.inputDir, this.input);
@@ -821,7 +820,7 @@ Arguments:
     this.watchManager = new EleventyWatch();
     this.watchManager.incremental = this.isIncremental;
 
-    this.watchTargets.add(this.eleventyFiles.getGlobWatcherFiles());
+    this.watchTargets.add(await this.eleventyFiles.getGlobWatcherFiles());
 
     // Watch the local project config file
     this.watchTargets.add(this.eleventyConfig.getLocalProjectConfigFiles());

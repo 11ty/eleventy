@@ -304,7 +304,9 @@ export default class TemplatePassthroughManager {
     return Promise.all(
       passthroughs.map((pass) => this.copyPassthrough(pass))
     ).then(async (result) => {
-      await this.config.events.emit("eleventy.passthrough", {
+      await (
+        await this.config
+      ).events.emit("eleventy.passthrough", {
         map: this.getAliasesFromPassthroughResults(result),
       });
 

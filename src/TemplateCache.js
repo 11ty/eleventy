@@ -1,7 +1,7 @@
 // Note: this is only used for TemplateLayout right now but could be used for more
 // Just be careful because right now the TemplateLayout cache keys are not directly mapped to paths
 // So you may get collisions if you use this for other things.
-export default class TemplateCache {
+class TemplateCache {
   constructor() {
     this.cache = {};
   }
@@ -36,3 +36,5 @@ export default class TemplateCache {
     }
   }
 }
+
+export default new TemplateCache();

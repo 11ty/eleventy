@@ -358,7 +358,7 @@ export default class Pagination {
     // template for some things)
 
     for (let pageNumber = 0; pageNumber < items.length; pageNumber++) {
-      let cloned = this.template.clone();
+      let cloned = await this.template.clone();
 
       if (pageNumber > 0 && !hasPermalinkField && !hasComputedPermalinkField) {
         cloned.setExtraOutputSubdirectory(pageNumber);

@@ -1,6 +1,7 @@
 import { existsSync, promises } from "node:fs";
-import fastglob from "fast-glob";
+import { createRequire } from "node:module";
 import { parse, sep } from "node:path";
+import fastglob from "fast-glob";
 import lodashset from "lodash/set.js";
 import lodashget from "lodash/get.js";
 import lodashUniq from "lodash/uniq.js";
@@ -116,7 +117,9 @@ export default class TemplateData {
     let pkgPath = TemplatePath.absolutePath("package.json");
 
     try {
-      this.rawImports[this.config.keys.package] = await import(pkgPath);
+      this.rawImports[this.config.keys.package] = await import(pkgPath, {
+        type: "json",
+      });
     } catch (e) {
       debug(
         "Could not find and/or require package.json for data preprocessing at %o",
@@ -507,10 +510,19 @@ export default class TemplateData {
       let dataBench = this.benchmarks.data.get(`\`${path}\``);
       dataBench.before();
 
-      let returnValue = await import(
-        localPath,
-        localPath.endsWith(".json") ? { type: "json" } : undefined
-      );
+      let returnValue;
+      try {
+        if (extension === "js") returnValue = await import(localPath);
+        else if (extension === "cjs") {
+          const require = createRequire(import.meta.url);
+          returnValue = require(localPath);
+        } else if (extension === "json") {
+          returnValue = await import(localPath, { assert: { type: "json" } });
+        }
+      } catch (e) {
+        console.log(localPath);
+        throw e;
+      }
       // TODO special exception for Global data `permalink.js`
       // module.exports = (data) => `${data.page.filePathStem}/`; // Does not work
       // module.exports = () => ((data) => `${data.page.filePathStem}/`); // Works

@@ -1,4 +1,8 @@
-import NunjucksLib, { Environment, FileSystemLoader, Template } from "nunjucks";
+import NunjucksLib, {
+  Environment,
+  FileSystemLoader,
+  Template as NunjucksTemplate,
+} from "nunjucks";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
 import TemplateEngine from "./TemplateEngine.js";
@@ -400,9 +404,9 @@ export default class Nunjucks extends TemplateEngine {
     if (this._usingPrecompiled) {
       tmpl = this.njkEnv.getTemplate(str, true);
     } else if (!inputPath || inputPath === "njk" || inputPath === "md") {
-      tmpl = await Template.from(str, this.njkEnv, null, true);
+      tmpl = new NunjucksTemplate(str, this.njkEnv, null, true);
     } else {
-      tmpl = await Template.from(str, this.njkEnv, inputPath, true);
+      tmpl = new NunjucksTemplate(str, this.njkEnv, inputPath, true);
     }
 
     return async function (data) {

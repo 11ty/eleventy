@@ -76,7 +76,7 @@ export default class EleventyFiles {
       this.templateGlobs = TemplateGlob.map([this.input]);
     }
 
-    this.initPassthroughManager();
+    await this.initPassthroughManager();
     await this.initConfig();
     await this.setupGlobs();
     this.alreadyInit = true;
@@ -156,8 +156,8 @@ export default class EleventyFiles {
     this.passthroughAll = !!passthroughAll;
   }
 
-  initPassthroughManager() {
-    let mgr = new TemplatePassthroughManager(this.eleventyConfig);
+  async initPassthroughManager() {
+    let mgr = new TemplatePassthroughManager(await this.eleventyConfig);
     mgr.setInputDir(this.inputDir);
     mgr.setOutputDir(this.outputDir);
     mgr.setRunMode(this.runMode);

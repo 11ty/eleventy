@@ -377,6 +377,7 @@ export default class Template extends TemplateContent {
   }
 
   async getData() {
+    await this.initConfig();
     // Note: we removed the `dataCache` property as caching now happens upstream in TemplateMap
     debugDev("%o getData()", this.inputPath);
     let localData = {};
@@ -896,6 +897,7 @@ export default class Template extends TemplateContent {
   }
 
   async clone() {
+    await this.initConfig();
     // TODO do we need to even run the constructor here or can we simplify it even more
     let tmpl = await Template.from(
       this.inputPath,
