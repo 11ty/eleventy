@@ -128,7 +128,7 @@ class TemplateMap {
         // collections.all
         graph.addDependency(tagPrefix + "all", entry.inputPath);
 
-        if (entry.data.tags) {
+        if (entry.data.tags && !entry.data.eleventyComputed?.tags) {
           for (let tag of entry.data.tags) {
             let tagWithPrefix = tagPrefix + tag;
             if (!graph.hasNode(tagWithPrefix)) {
@@ -189,6 +189,19 @@ class TemplateMap {
               // Dependency from tag to inputPath
               graph.addDependency(tagWithPrefix, entry.inputPath);
             }
+          }
+        }
+      }
+
+      if (
+        !entry.data.eleventyExcludeFromCollections &&
+        entry.data.eleventyComputed?.tags &&
+        entry.data.tags
+      ) {
+        for (let tag of entry.data.tags) {
+          let tagWithPrefix = tagPrefix + tag;
+          if (!graph.hasNode(tagWithPrefix)) {
+            graph.addNode(tagWithPrefix);
           }
         }
       }

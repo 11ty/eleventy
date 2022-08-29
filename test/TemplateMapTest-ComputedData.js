@@ -215,3 +215,41 @@ test("Computed data can filter collections (and other array methods)", async (t)
   t.not(map[0].data.dogCollection, map[0].data.collections.dog);
   t.deepEqual(map[0].data.dogCollection, map[0].data.collections.dog);
 });
+
+test("Computed data is included in collection generation. Issue #1297", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let tm = new TemplateMap(eleventyConfig);
+
+  let dataObj = new TemplateData(
+    "./test/stubs-1297/",
+    eleventyConfig
+  );
+
+  let tmpl = getNewTemplate(
+    "./test/stubs-1297/stub.md",
+    "./test/stubs-1297/",
+    "./dist",
+    dataObj,
+    null,
+    eleventyConfig
+  );
+
+  await tm.add(tmpl);
+
+  await tm.cache();
+
+  let map = tm.getMap();
+
+  t.is(map.length, 1);
+
+  t.deepEqual(map[0].data.tags, ['cv', 'stub']);
+
+  t.truthy(map[0].data.collections.all);
+  t.is(map[0].data.collections.all.length, 1);
+  t.truthy(map[0].data.collections.cv);
+  t.is(map[0].data.collections.cv.length, 1);
+  t.truthy(map[0].data.collections.stub);
+  t.is(map[0].data.collections.stub.length, 1);
+
+  t.falsy(map[0].data.collections.toBeErased);
+});
