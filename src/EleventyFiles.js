@@ -105,6 +105,10 @@ class EleventyFiles {
     for (let path of this.extensionMap.getPassthroughCopyGlobs(this.inputDir)) {
       paths.add(path);
     }
+    // passthroughAll catch
+    if (this.passthroughAll) {
+      paths.add(TemplateGlob.normalizePath(this.input, "/**"));
+    }
     return Array.from(paths);
   }
 

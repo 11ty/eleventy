@@ -477,6 +477,20 @@ test("Glob Watcher Files with passthroughAll", async (t) => {
   t.is((await evf.getFileGlobs())[0], "./test/stubs/**");
 });
 
+test("#439 Glob Watcher Files with passthroughAll sets correct watch globs", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let evf = new EleventyFiles(
+    "test/stubs",
+    "test/stubs/_site",
+    [],
+    eleventyConfig
+  );
+  evf.setPassthroughAll(true);
+  evf.init();
+
+  t.deepEqual(evf.passthroughGlobs, ["./test/stubs/**"]);
+});
+
 test("Test that negations are ignored (for now) PR#709, will change when #693 is implemented", async (t) => {
   t.deepEqual(
     EleventyFiles.normalizeIgnoreContent(
