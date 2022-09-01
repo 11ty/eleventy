@@ -198,13 +198,7 @@ class Eleventy {
 
   /** @type {String} */
   get outputDir() {
-    let dir = this.rawOutput || this.config.dir.output;
-    if (dir !== this._savedOutputDir) {
-      this.eleventyServe.setOutputDir(dir);
-    }
-    this._savedOutputDir = dir;
-
-    return dir;
+    return this.rawOutput || this.config.dir.output;
   }
 
   /**
@@ -353,6 +347,13 @@ class Eleventy {
     let formats = this.formatsOverride || this.config.templateFormats;
     this.extensionMap = new EleventyExtensionMap(formats, this.eleventyConfig);
     await this.config.events.emit("eleventy.extensionmap", this.extensionMap);
+
+    // tbd
+    // This is likely async in the future, since updating the output dir of the server
+    // will likely be an async action. Also having this in the getter seems a little unexpected
+    if (this.eleventyServe.outputDir !== this.outputDir) {
+      this.eleventyServe.setOutputDir(this.outputDir);
+    }
 
     this.eleventyFiles = new EleventyFiles(
       this.inputDir,
