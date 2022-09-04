@@ -1,8 +1,8 @@
 const test = require("ava");
+const EleventyServe = require("../src/EleventyServe");
 const TemplateConfig = require("../src/TemplateConfig");
 
 async function getServerInstance(cfg) {
-  const EleventyServe = require("../src/EleventyServe");
   let es = new EleventyServe();
   if (!cfg) {
     cfg = new TemplateConfig().getConfig();
