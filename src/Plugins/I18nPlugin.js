@@ -17,6 +17,17 @@ class LangUtils {
       .find((entry) => Comparator.isLangCode(entry));
   }
 
+  static removeLanguageCodeFromUrl(url) {
+    let langCode = (url || "")
+      .split("/")
+      .find((entry) => Comparator.isLangCode(entry));
+
+    if (!langCode) return url;
+    let newUrl = url.replace('/' + langCode, "");
+
+    return newUrl;
+  }
+  
   static getLanguageCodeFromUrl(url) {
     let s = (url || "").split("/");
     return s.length > 0 && Comparator.isLangCode(s[1]) ? s[1] : "";
@@ -116,44 +127,39 @@ function normalizeInputPath(inputPath, extensionMap) {
 /*
  * Input: {
  *   '/en-us/test/': './test/stubs-i18n/en-us/test.11ty.js',
- *   '/en/test/': './test/stubs-i18n/en/test.liquid',
  *   '/es/test/': './test/stubs-i18n/es/test.njk',
- *   '/non-lang-file/': './test/stubs-i18n/non-lang-file.njk'
+ *   '/test/': './test/stubs-i18n/non-lang-file.njk'
  * }
  *
  * Output: {
- *   '/en-us/test/': [ { url: '/en/test/' }, { url: '/es/test/' } ],
- *   '/en/test/': [ { url: '/en-us/test/' }, { url: '/es/test/' } ],
- *   '/es/test/': [ { url: '/en-us/test/' }, { url: '/en/test/' } ]
+ *   '/test/': [
+ *      { url: '/test/', lang: 'en', label: 'English'}, // Set-by default language
+ *      { url: '/en-us/test/', lang: 'en-us', label: 'English (United States)'} 
+ *      { url: '/es/test/', lang: 'es', label: 'Spanish'} 
+ *    ],
  * }
  */
-function getLocaleUrlsMap(urlToInputPath, extensionMap) {
+function getLocaleUrlsMap(urlToInputPath, defaultLanguage) {
+  // Empty object to map all urls
   let filemap = {};
-  let paginationTemplateCheck = {};
   for (let url in urlToInputPath) {
-    let originalFilepath = urlToInputPath[url];
-    let filepath = normalizeInputPath(originalFilepath, extensionMap);
-    let replaced = LangUtils.swapLanguageCodeNoCheck(filepath, "__11ty_i18n");
-    if (!filemap[replaced]) {
-      filemap[replaced] = [];
-    }
+    // Remove lang code from url
+    let urlWithNoLangCode = LangUtils.removeLanguageCodeFromUrl(url);
 
-    let langCode = LangUtils.getLanguageCodeFromInputPath(originalFilepath);
-    let paginationCheckKey = `${originalFilepath}__${langCode}`;
-
-    // pagination templates should only match once per language
-    if (!paginationTemplateCheck[paginationCheckKey]) {
-      if (langCode) {
-        filemap[replaced].push({
-          url,
-          lang: langCode,
-          label: iso639.getNativeName(langCode.split("-")[0]),
-        });
-      } else {
-        filemap[replaced].push({ url });
-      }
-      paginationTemplateCheck[paginationCheckKey] = true;
+    // If filemap does not have a key with the url with no lang code, create it
+    if (!filemap[urlWithNoLangCode]) {
+      filemap[urlWithNoLangCode] = [];
     }
+    
+    // Grab lang code from original url, if there is not one we can assume it's the default language
+    let langCode = LangUtils.getLanguageCodeFromInputPath(url) ?? defaultLanguage;
+
+    // Push the url with the lang code to the filemap
+    filemap[urlWithNoLangCode].push({
+      url,
+      lang: langCode,
+      label: iso639.getNativeName(langCode.split("-")[0]),
+    });
   }
 
   // Default sorted by lang code
@@ -169,20 +175,7 @@ function getLocaleUrlsMap(urlToInputPath, extensionMap) {
     });
   }
 
-  // map of input paths => array of localized urls
-  let urlMap = {};
-  for (let filepath in filemap) {
-    for (let entry of filemap[filepath]) {
-      let url = entry.url;
-      if (!urlMap[url]) {
-        urlMap[url] = filemap[filepath].filter((entry) => {
-          return entry.url !== url;
-        });
-      }
-    }
-  }
-
-  return urlMap;
+  return filemap;
 }
 
 function EleventyPlugin(eleventyConfig, opts = {}) {
@@ -222,12 +215,13 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
 
       contentMaps.localeUrlsMap = getLocaleUrlsMap(
         urlToInputPath,
-        extensionMap,
+        options.defaultLanguage,
         benchmarkManager
       );
       bench.after();
     }
-  );
+    );
+
 
   eleventyConfig.addGlobalData("eleventyComputed.page.lang", () => {
     // if addGlobalData receives a function it will execute it immediately,
