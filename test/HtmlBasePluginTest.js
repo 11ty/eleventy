@@ -1,5 +1,7 @@
 import test from "ava";
-import HtmlBasePlugin from "../src/Plugins/HtmlBasePlugin.js";
+import HtmlBasePlugin, {
+  applyBaseToUrl,
+} from "../src/Plugins/HtmlBasePlugin.js";
 import Eleventy from "../src/Eleventy.js";
 import normalizeNewLines from "./Util/normalizeNewLines.js";
 
@@ -11,7 +13,6 @@ function getContentFor(results, filename) {
 }
 
 test("Using the filter directly", async (t) => {
-  let { applyBaseToUrl } = HtmlBasePlugin;
   // url, base, pathprefix
 
   // default pathprefix

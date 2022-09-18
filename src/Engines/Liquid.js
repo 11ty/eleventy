@@ -6,6 +6,10 @@ import TemplateEngine from "./TemplateEngine.js";
 // const debug = require("debug")("Eleventy:Liquid");
 
 export default class Liquid extends TemplateEngine {
+  static from(name, dirs, config) {
+    return new this(name, dirs, config);
+  }
+
   static argumentLexerOptions = {
     number: /[0-9]+\.*[0-9]*/,
     doubleQuoteString: /"(?:\\["\\]|[^\n"\\])*"/,

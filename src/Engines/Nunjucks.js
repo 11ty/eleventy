@@ -13,6 +13,10 @@ import EventBus from "../EventBus.js";
 class EleventyShortcodeError extends EleventyBaseError {}
 
 export default class Nunjucks extends TemplateEngine {
+  static from(name, dirs, config) {
+    return new this(name, dirs, config);
+  }
+
   constructor(name, dirs, config) {
     super(name, dirs, config);
     this.nunjucksEnvironmentOptions =

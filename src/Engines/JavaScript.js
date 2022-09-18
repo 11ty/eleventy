@@ -8,6 +8,10 @@ import getJavaScriptData from "../Util/GetJavaScriptData.js";
 class JavaScriptTemplateNotDefined extends EleventyBaseError {}
 
 export default class JavaScript extends TemplateEngine {
+  static from(name, dirs, config) {
+    return new this(name, dirs, config);
+  }
+
   constructor(name, dirs, config) {
     super(name, dirs, config);
     this.instances = {};
@@ -46,10 +50,11 @@ export default class JavaScript extends TemplateEngine {
         return { render: mod };
       }
     } else if ("data" in mod || "render" in mod) {
-      if (!("render" in mod)) {
-        mod.render = noop;
+      const _mod = { ...mod };
+      if (!("render" in _mod)) {
+        _mod.render = noop;
       }
-      return mod;
+      return _mod;
     }
   }
 

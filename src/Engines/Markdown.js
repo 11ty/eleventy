@@ -3,6 +3,10 @@ import TemplateEngine from "./TemplateEngine.js";
 // const debug = require("debug")("Eleventy:Markdown");
 
 export default class Markdown extends TemplateEngine {
+  static from(name, dirs, config) {
+    return new this(name, dirs, config);
+  }
+
   constructor(name, dirs, config) {
     super(name, dirs, config);
 

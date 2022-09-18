@@ -89,7 +89,7 @@ export default class TemplateEngineManager {
 
     let cls = await this.getEngineClassByExtension(name);
 
-    let instance = new cls(name, dirs, this.config);
+    let instance = await cls.from(name, dirs, this.config);
     instance.extensionMap = extensionMap;
     instance.engineManager = this;
 

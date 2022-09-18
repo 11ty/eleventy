@@ -106,7 +106,7 @@ export default class TemplateEngine {
 
   async cachePartialFiles() {
     // Try to skip this import if not used (for bundling reasons)
-    const fastglob = await import("fast-glob");
+    const { default: fastglob } = await import("fast-glob");
 
     // This only runs if getPartials() is called, which is only for Mustache/Handlebars
     this.partialsHaveBeenCached = true;
