@@ -24,54 +24,23 @@ class EdgeHelper {
     );
   }
 
-  // Technically this import is optional: you could import directly from "https://cdn.11ty.dev/edge@1.0.0/eleventy-edge.js"
-  // However, we don’t need folks to update all of their edge handlers imports manually when we bump a version.
-  async writeImportMap() {
-    let manifest = {
-      functions: [],
-      import_map: "./import_map.json",
-      version: 1,
-    };
-
-    let importMap = {
-      imports: {
-        "eleventy:edge": `https://cdn.11ty.dev/edge@${this.options.eleventyEdgeVersion}/eleventy-edge.js`,
-      },
-    };
-
-    let dir = this.options.importMap;
-    if (dir) {
-      await fsp.mkdir(dir, {
-        recursive: true,
-      });
-      await fsp.writeFile(
-        path.join(dir, "manifest.json"),
-        JSON.stringify(manifest, null, 2)
-      );
-      await fsp.writeFile(
-        path.join(dir, "import_map.json"),
-        JSON.stringify(importMap, null, 2)
-      );
-    }
-  }
-
   async writeDefaultEdgeFunctionFile() {
     let filepath = this.getOutputPath("eleventy-edge.js");
 
     if (fs.existsSync(filepath)) {
       let contents = await fsp.readFile(filepath, "utf8");
+      let trimmed = contents.trim();
       if (
-        contents
-          .trim()
-          .startsWith(
-            `import { EleventyEdge } from "./_generated/eleventy-edge.js";`
-          )
+        trimmed.startsWith(
+          `import { EleventyEdge } from "./_generated/eleventy-edge.js";`
+        ) ||
+        trimmed.startsWith(`import { EleventyEdge } from "eleventy:edge";`)
       ) {
         throw new Error(
-          `Experimental early adopter API change alert! Unfortunately we changed the default imports for Eleventy Edge in Eleventy v2.0.0-canary.7. The easiest thing you can do is delete your existing \`${path.join(
+          `Experimental early adopter API change alert! Unfortunately the default imports for Eleventy Edge in the latest canary have changed. The easiest thing you can do is delete your existing \`${path.join(
             this.options.functionsDir,
             "eleventy-edge.js"
-          )}\` and let Eleventy generate a new one for you.`
+          )}\` and let Eleventy generate a new one for you. The new import should be \`import { EleventyEdge, precompiledAppData } from "./_generated/eleventy-edge-app.js";\``
         );
       }
     } else {
@@ -197,9 +166,6 @@ function EleventyEdgePlugin(eleventyConfig, opts = {}) {
 
       // runtime compatibity check with Eleventy core version
       compatibility: ">=2",
-
-      // directory to write the import_map.json to (also supported: false)
-      importMap: ".netlify/edge-functions/",
     },
     opts
   );
@@ -244,13 +210,7 @@ function EleventyEdgePlugin(eleventyConfig, opts = {}) {
 
   // Edge Functions with Serverless mode, don’t write files.
   if (!process.env.ELEVENTY_SERVERLESS) {
-    if (options.importMap) {
-      eleventyConfig.on("eleventy.before", async () => {
-        await helper.writeImportMap(helper.importMap);
-      });
-    }
-
-    // Generate app eleventy-edge-app-data.js file and generate default edge function (if needed)
+    // Generate app eleventy-edge-app.js file and generate default edge function (if needed)
     eleventyConfig.on("eleventy.after", async () => {
       await fsp.mkdir(path.join(options.functionsDir, "_generated"), {
         recursive: true,
@@ -265,9 +225,16 @@ function EleventyEdgePlugin(eleventyConfig, opts = {}) {
       content.push(helper.ids.toString());
       content.push(helper.precompiledTemplates.toString());
 
+      // New replacement for `eleventy:edge` and `eleventy-edge-app-data.js` imports.
       await fsp.writeFile(
-        path.join(options.functionsDir, "_generated/eleventy-edge-app-data.js"),
-        `export default { ${content.join(",\n")} }`
+        path.join(options.functionsDir, "_generated/eleventy-edge-app.js"),
+        `import { EleventyEdge } from "https://cdn.11ty.dev/edge@${
+          options.eleventyEdgeVersion
+        }/eleventy-edge.js";
+
+const precompiledAppData = { ${content.join(",\n")} };
+
+export { EleventyEdge, precompiledAppData }`
       );
 
       await helper.writeDefaultEdgeFunctionFile();
