@@ -521,6 +521,7 @@ class TemplateContent {
           entry.isIncrementalMatch.call(
             {
               inputPath: this.inputPath,
+              isFullTemplate: metadata.isFullTemplate,
             },
             incrementalFile
           )
