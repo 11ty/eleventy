@@ -79,7 +79,7 @@
     "@11ty/eleventy-plugin-syntaxhighlight": "^4.1.0",
     "@11ty/eleventy-plugin-vue": "1.0.0-canary.8",
     "@vue/server-renderer": "^3.2.37",
-    "ava": "^4.3.1",
+    "ava": "^4.3.3",
     "husky": "^8.0.1",
     "js-yaml": "^4.1.0",
     "lint-staged": "^13.0.3",
