@@ -375,7 +375,7 @@ class TemplateMap {
     this.checkForDuplicatePermalinks();
 
     await this.config.events.emitLazy("eleventy.layouts", () =>
-      this.getListOfLayoutFiles()
+      this.generateLayoutsMap()
     );
 
     await this.config.events.emitLazy("eleventy.serverlessUrlMap", () =>
@@ -654,7 +654,7 @@ class TemplateMap {
     return Promise.all(promises);
   }
 
-  getListOfLayoutFiles() {
+  generateLayoutsMap() {
     let layouts = {};
 
     for (let entry of this.map) {
@@ -662,13 +662,20 @@ class TemplateMap {
         let tmpl = page.template;
         let layout = page.data[this.config.keys.layout];
         if (layout) {
-          let layoutInstance = tmpl.getLayout(layout);
-          layouts[layoutInstance.inputPath] = true;
+          let layoutFilePath = tmpl.getLayout(layout)?.inputPath;
+          if (!layouts[layoutFilePath]) {
+            layouts[layoutFilePath] = new Set();
+          }
+          layouts[layoutFilePath].add(page.inputPath);
         }
       }
     }
 
-    return Object.keys(layouts);
+    for (let key in layouts) {
+      layouts[key] = Array.from(layouts[key]);
+    }
+
+    return layouts;
   }
 
   checkForDuplicatePermalinks() {

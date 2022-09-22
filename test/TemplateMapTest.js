@@ -1471,8 +1471,12 @@ test("eleventy.layouts Event", async (t) => {
   t.plan(1);
 
   let eleventyConfig = new TemplateConfig();
-  eleventyConfig.userConfig.on("eleventy.layouts", (layouts) => {
-    t.deepEqual(layouts, ["./test/stubs-layouts-event/_includes/first.liquid"]);
+  eleventyConfig.userConfig.on("eleventy.layouts", (layoutMap) => {
+    t.deepEqual(layoutMap, {
+      "./test/stubs-layouts-event/_includes/first.liquid": [
+        "./test/stubs-layouts-event/page.md",
+      ],
+    });
   });
 
   let tm = new TemplateMap(eleventyConfig);
