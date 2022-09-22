@@ -191,7 +191,9 @@ class TemplateEngine {
   }
 
   getCompileCacheKey(str, inputPath) {
-    return str;
+    // Changing to use inputPath and contents, this created weird bugs when two identical files had different file paths
+    // TODO update docs
+    return inputPath + str;
   }
 
   get defaultTemplateFileExtension() {
