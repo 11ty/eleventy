@@ -303,9 +303,9 @@ class TemplatePassthroughManager {
     return Promise.all(
       passthroughs.map((pass) => this.copyPassthrough(pass))
     ).then(async (result) => {
-      await this.config.events.emit("eleventy.passthrough", {
+      await this.config.events.emitLazy("eleventy.passthrough", () => ({
         map: this.getAliasesFromPassthroughResults(result),
-      });
+      }));
 
       debug(`TemplatePassthrough copy finished. Current count: ${this.count}`);
       return result;
