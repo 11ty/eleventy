@@ -3,10 +3,8 @@ const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const TemplateEngine = require("./TemplateEngine");
 const EleventyErrorUtil = require("../EleventyErrorUtil");
-const EleventyBaseError = require("../EleventyBaseError");
+const EleventyShortcodeError = require("../EleventyShortcodeError");
 const eventBus = require("../EventBus");
-
-class EleventyShortcodeError extends EleventyBaseError {}
 
 class Nunjucks extends TemplateEngine {
   constructor(name, dirs, config) {
