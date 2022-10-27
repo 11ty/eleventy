@@ -961,6 +961,7 @@ Arguments:
 
     let watchDelay;
     let watchRun = async (path) => {
+      path = TemplatePath.normalize(path);
       try {
         this._addFileToWatchQueue(path);
         clearTimeout(watchDelay);
