@@ -58,6 +58,7 @@ class Template extends TemplateContent {
 
     this.extensionMap = extensionMap;
 
+    this._availableConcurrentWrites = 1000;
     this.linters = [];
     this.transforms = [];
     this.templateData = templateData;
@@ -767,9 +768,25 @@ class Template extends TemplateContent {
         );
       }
 
+      // Despite using graceful-fs, for some reason when given a large
+      // number of files it would still end up throwing EMFILE. Limit
+      // the number of concurrent writes to avoid that.
+      await new Promise((resolve) => {
+        let check = () => {
+          if (this._availableConcurrentWrites > 0) {
+            resolve();
+          } else {
+            setTimeout(check, 1000);
+          }
+        };
+        check();
+      });
+      this._availableConcurrentWrites--;
+
       return writeFile(outputPath, finalContent).then(() => {
         templateBenchmark.after();
         this.writeCount++;
+        this._availableConcurrentWrites++;
         debug(`${outputPath} ${lang.finished}.`);
         return {
           inputPath: this.inputPath,
