@@ -463,13 +463,26 @@ class UserConfig {
     return this;
   }
 
-  _normalizeTemplateFormats(templateFormats) {
-    if (typeof templateFormats === "string") {
-      templateFormats = templateFormats
-        .split(",")
-        .map((format) => format.trim());
+  _normalizeTemplateFormats(templateFormats, existingValues) {
+    // setTemplateFormats(null) should return null
+    if (templateFormats === null || templateFormats === undefined) {
+      return null;
     }
-    return templateFormats;
+
+    let set = new Set();
+    if (Array.isArray(templateFormats)) {
+      set = new Set(templateFormats.map((format) => format.trim()));
+    } else if (typeof templateFormats === "string") {
+      for (let format of templateFormats.split(",")) {
+        set.add(format.trim());
+      }
+    }
+
+    for (let format of existingValues || []) {
+      set.add(format);
+    }
+
+    return Array.from(set);
   }
 
   setTemplateFormats(templateFormats) {
@@ -478,11 +491,9 @@ class UserConfig {
 
   // additive, usually for plugins
   addTemplateFormats(templateFormats) {
-    if (!this.templateFormatsAdded) {
-      this.templateFormatsAdded = [];
-    }
-    this.templateFormatsAdded = this.templateFormatsAdded.concat(
-      this._normalizeTemplateFormats(templateFormats)
+    this.templateFormatsAdded = this._normalizeTemplateFormats(
+      templateFormats,
+      this.templateFormatsAdded
     );
   }
 
