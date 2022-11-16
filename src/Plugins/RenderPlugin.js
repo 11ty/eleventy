@@ -9,7 +9,11 @@ const { ProxyWrap } = require("../Util/ProxyWrap");
 const TemplateDataInitialGlobalData = require("../TemplateDataInitialGlobalData");
 const TemplateRender = require("../TemplateRender");
 const TemplateConfig = require("../TemplateConfig");
+const EleventyBaseError = require("../EleventyBaseError");
+const EleventyErrorUtil = require("../EleventyErrorUtil");
 const Liquid = require("../Engines/Liquid");
+
+class EleventyShortcodeError extends EleventyBaseError {}
 
 async function compile(
   content,
@@ -25,7 +29,12 @@ async function compile(
     templateLang = this.page.templateSyntax;
   }
 
-  let cfg = templateConfig.getConfig();
+  let cfg = templateConfig;
+  // templateConfig might already be a userconfig
+  if (cfg instanceof TemplateConfig) {
+    cfg = cfg.getConfig();
+  }
+
   let tr = new TemplateRender(templateLang, cfg.dir.input, templateConfig);
   tr.extensionMap = extensionMap;
   tr.setEngineOverride(templateLang);
@@ -253,7 +262,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
           if (e) {
             resolve(
               new EleventyShortcodeError(
-                `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+                `Error with Nunjucks paired shortcode \`${tagName}\`${EleventyErrorUtil.convertErrorToString(
                   e
                 )}`
               )
@@ -274,7 +283,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
             .catch(function (e) {
               resolve(
                 new EleventyShortcodeError(
-                  `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+                  `Error with Nunjucks paired shortcode \`${tagName}\`${EleventyErrorUtil.convertErrorToString(
                     e
                   )}`
                 ),
