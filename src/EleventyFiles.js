@@ -3,6 +3,7 @@ const fastglob = require("fast-glob");
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const EleventyExtensionMap = require("./EleventyExtensionMap");
+const EleventyWatchTargets = require("./EleventyWatchTargets");
 const TemplateData = require("./TemplateData");
 const TemplateGlob = require("./TemplateGlob");
 const TemplatePassthroughManager = require("./TemplatePassthroughManager");
@@ -216,6 +217,12 @@ class EleventyFiles {
     for (let ignore of this.extraIgnores) {
       uniqueIgnores.add(ignore);
     }
+    // Placing the config ignores last here is import to the tests
+    for (let ignore of this.config.ignores) {
+      uniqueIgnores.add(
+        TemplateGlob.normalizePath(this.localPathRoot || ".", ignore)
+      );
+    }
     return Array.from(uniqueIgnores);
   }
 
@@ -298,10 +305,6 @@ class EleventyFiles {
   getIgnores() {
     let rootDirectory = this.localPathRoot || ".";
     let files = new Set();
-
-    for (let ignore of this.config.ignores) {
-      files.add(TemplateGlob.normalizePath(rootDirectory, ignore));
-    }
 
     if (this.config.useGitIgnore) {
       for (let ignore of EleventyFiles.getFileIgnores([
@@ -474,11 +477,20 @@ class EleventyFiles {
   /* Ignored by `eleventy --watch` */
   getGlobWatcherIgnores() {
     // convert to format without ! since they are passed in as a separate argument to glob watcher
-    let entries = this.fileIgnores.map((ignore) =>
-      TemplatePath.stripLeadingDotSlash(ignore)
+    let entries = new Set(
+      this.fileIgnores.map((ignore) =>
+        TemplatePath.stripLeadingDotSlash(ignore)
+      )
     );
+
+    for (let ignore of this.config.watchIgnores) {
+      entries.add(
+        TemplateGlob.normalizePath(this.localPathRoot || ".", ignore)
+      );
+    }
+
     // de-duplicated
-    return Array.from(new Set(entries));
+    return Array.from(entries);
   }
 
   _getIncludesAndDataDirs() {

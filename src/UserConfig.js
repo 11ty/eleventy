@@ -68,9 +68,12 @@ class UserConfig {
     this.dynamicPermalinks = true;
 
     this.useGitIgnore = true;
-    this.ignores = new Set();
-    this.ignores.add("**/node_modules/**");
-    this.ignores.add(".git/**");
+
+    let defaultIgnores = new Set();
+    defaultIgnores.add("**/node_modules/**");
+    defaultIgnores.add(".git/**");
+    this.ignores = new Set(defaultIgnores);
+    this.watchIgnores = new Set(defaultIgnores);
 
     this.dataDeepMerge = true;
     this.extensionMap = new Set();
@@ -897,6 +900,7 @@ class UserConfig {
       dynamicPermalinks: this.dynamicPermalinks,
       useGitIgnore: this.useGitIgnore,
       ignores: this.ignores,
+      watchIgnores: this.watchIgnores,
       dataDeepMerge: this.dataDeepMerge,
       watchJavaScriptDependencies: this.watchJavaScriptDependencies,
       additionalWatchTargets: this.additionalWatchTargets,
