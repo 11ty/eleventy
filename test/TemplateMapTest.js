@@ -1476,6 +1476,15 @@ test("eleventy.layouts Event", async (t) => {
       "./test/stubs-layouts-event/_includes/first.liquid": [
         "./test/stubs-layouts-event/page.md",
       ],
+      "./test/stubs-layouts-event/_includes/second.liquid": [
+        "./test/stubs-layouts-event/page.md",
+        "./test/stubs-layouts-event/_includes/first.liquid",
+      ],
+      "./test/stubs-layouts-event/_includes/third.liquid": [
+        "./test/stubs-layouts-event/page.md",
+        "./test/stubs-layouts-event/_includes/first.liquid",
+        "./test/stubs-layouts-event/_includes/second.liquid",
+      ],
     });
   });
 

@@ -30,16 +30,20 @@ class AsyncEventEmitter extends EventEmitter {
       return [];
     }
 
-    return this.emit.call(
-      this,
-      type,
-      ...args.map((arg) => {
-        if (typeof arg === "function") {
-          return arg();
+    let argsMap = [];
+    for (let arg of args) {
+      if (typeof arg === "function") {
+        let r = arg();
+        if (r instanceof Promise) {
+          r = await r;
         }
-        return arg;
-      })
-    );
+        argsMap.push(r);
+      } else {
+        argsMap.push(arg);
+      }
+    }
+
+    return this.emit.call(this, type, ...argsMap);
   }
 }
 

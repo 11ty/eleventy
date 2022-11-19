@@ -50,7 +50,7 @@ test("Get Layout Chain", async (t) => {
 
   await tl.getData();
 
-  t.deepEqual(tl.layoutChain, [
+  t.deepEqual(await tl.getLayoutChain(), [
     "./test/stubs/_includes/layouts/layout-inherit-a.njk",
     "./test/stubs/_includes/layouts/layout-inherit-b.njk",
     "./test/stubs/_includes/layouts/layout-inherit-c.njk",
@@ -75,7 +75,7 @@ test("Get Front Matter Data", async (t) => {
     thirdinherits: "c",
   });
 
-  t.deepEqual(tl.layoutChain, [
+  t.deepEqual(await tl.getLayoutChain(), [
     "./test/stubs/_includes/layouts/layout-inherit-a.njk",
     "./test/stubs/_includes/layouts/layout-inherit-b.njk",
     "./test/stubs/_includes/layouts/layout-inherit-c.njk",

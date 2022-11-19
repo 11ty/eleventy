@@ -1819,7 +1819,7 @@ test("Get Layout Chain", async (t) => {
 
   await tmpl.getData();
 
-  t.deepEqual(tmpl._layout.layoutChain, [
+  t.deepEqual(await tmpl._layout.getLayoutChain(), [
     "./test/stubs-incremental/layout-chain/_includes/base.njk",
     "./test/stubs-incremental/layout-chain/_includes/parent.njk",
   ]);
