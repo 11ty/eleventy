@@ -54,3 +54,18 @@ test("Markdown Render: without HTML prerender, sends context data to the markdow
   t.deepEqual(plugin.environment, data);
   t.is(result, '<p><a href="http://link.com?data=data">link text</a></p>\n');
 });
+
+test("Markdown Render: renderer that only implements the render function", async (t) => {
+  let tr = getNewTemplateRender("md");
+  tr.engine.setLibrary({
+    render: (content) => {
+      const [_, text, href] = content.match(/\[(.*)\]\((.*)\)/);
+      return `<p><a href="${href}">${text}</a></p>\n`;
+    },
+  });
+  tr.setHtmlEngine(false);
+
+  let fn = await tr.getCompiledTemplate("[link text](http://link.com)");
+  let result = await fn();
+  t.is(result, '<p><a href="http://link.com">link text</a></p>\n');
+});

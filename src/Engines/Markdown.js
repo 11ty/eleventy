@@ -24,7 +24,7 @@ class Markdown extends TemplateEngine {
       });
     }
 
-    if ("disable" in this.mdLib) {
+    if (typeof this.mdLib.disable === "function") {
       // Disable indented code blocks by default (Issue #2438)
       this.mdLib.disable("code");
     }
