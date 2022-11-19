@@ -4,10 +4,10 @@
 
 ## List of dependencies that went ESM
 
+- `liquidjs` is pinned to 9.41.0 because of https://github.com/11ty/eleventy/issues/2571
 - `@sindresorhus/slugify` ESM at 2.x
 - `multimatch` is ESM at 6
 - `bcp-47-normalize` at 1.x
-- `liquidjs` is pinned to 9.41.0 because of https://github.com/11ty/eleventy/issues/2571
 
 # Release Procedure
 

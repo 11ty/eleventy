@@ -176,3 +176,20 @@ test("Set Template Formats (11ty.js)", (t) => {
   userCfg.setTemplateFormats("ejs, njk, liquid, 11ty.js");
   t.deepEqual(userCfg.templateFormats, ["ejs", "njk", "liquid", "11ty.js"]);
 });
+
+test("Add Template Formats", (t) => {
+  let userCfg = new UserConfig();
+  userCfg.addTemplateFormats("ejs");
+  userCfg.addTemplateFormats("njk");
+  userCfg.addTemplateFormats("webc");
+  userCfg.addTemplateFormats("liquid");
+  userCfg.addTemplateFormats("11ty.js");
+
+  t.deepEqual(userCfg.templateFormatsAdded.sort(), [
+    "11ty.js",
+    "ejs",
+    "liquid",
+    "njk",
+    "webc",
+  ]);
+});

@@ -353,7 +353,18 @@ test("setTemplateFormats(null)", (t) => {
   templateCfg.userConfig.setTemplateFormats(null);
 
   let cfg = templateCfg.getConfig();
-  t.true(cfg.templateFormats.length > 0);
+  t.deepEqual(cfg.templateFormats.sort(), ["md", "njk"]);
+});
+
+test("setTemplateFormats(undefined)", (t) => {
+  let templateCfg = new TemplateConfig(
+    require("../src/defaultConfig.js"),
+    "./test/stubs/config.js"
+  );
+  templateCfg.userConfig.setTemplateFormats(undefined);
+
+  let cfg = templateCfg.getConfig();
+  t.deepEqual(cfg.templateFormats.sort(), ["md", "njk"]);
 });
 
 test("multiple setTemplateFormats calls", (t) => {

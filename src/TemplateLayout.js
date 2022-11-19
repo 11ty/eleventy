@@ -104,6 +104,16 @@ class TemplateLayout extends TemplateContent {
     return map;
   }
 
+  async getLayoutChain() {
+    let map = await this.getTemplateLayoutMap();
+    let layoutChain = [];
+    for (let j = map.length - 1; j >= 0; j--) {
+      layoutChain.push(map[j].template.inputPath);
+    }
+    layoutChain.reverse();
+    return layoutChain;
+  }
+
   async getData() {
     if (this.dataCache) {
       return this.dataCache;
@@ -111,9 +121,7 @@ class TemplateLayout extends TemplateContent {
 
     let map = await this.getTemplateLayoutMap();
     let dataToMerge = [];
-    let layoutChain = [];
     for (let j = map.length - 1; j >= 0; j--) {
-      layoutChain.push(map[j].template.inputPath);
       dataToMerge.push(map[j].frontMatterData);
     }
 
@@ -121,7 +129,6 @@ class TemplateLayout extends TemplateContent {
     let data = TemplateData.mergeDeep(this.config, {}, ...dataToMerge);
     delete data[this.config.keys.layout];
 
-    this.layoutChain = layoutChain.reverse();
     this.dataCache = data;
     return data;
   }

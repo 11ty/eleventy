@@ -374,9 +374,10 @@ class TemplateMap {
 
     this.checkForDuplicatePermalinks();
 
-    await this.config.events.emitLazy("eleventy.layouts", () =>
-      this.generateLayoutsMap()
-    );
+    await this.config.events.emitLazy("eleventy.layouts", () => {
+      // returns promise
+      return this.generateLayoutsMap();
+    });
 
     await this.config.events.emitLazy("eleventy.serverlessUrlMap", () =>
       this.generateServerlessUrlMap(orderedMap)
@@ -654,19 +655,27 @@ class TemplateMap {
     return Promise.all(promises);
   }
 
-  generateLayoutsMap() {
+  async generateLayoutsMap() {
     let layouts = {};
 
     for (let entry of this.map) {
       for (let page of entry._pages) {
         let tmpl = page.template;
-        let layout = page.data[this.config.keys.layout];
-        if (layout) {
-          let layoutFilePath = tmpl.getLayout(layout)?.inputPath;
-          if (!layouts[layoutFilePath]) {
-            layouts[layoutFilePath] = new Set();
+        let layoutKey = page.data[this.config.keys.layout];
+        if (layoutKey) {
+          let layout = tmpl.getLayout(layoutKey);
+          let layoutChain = await layout.getLayoutChain();
+          let priors = [];
+          for (let filepath of layoutChain) {
+            if (!layouts[filepath]) {
+              layouts[filepath] = new Set();
+            }
+            layouts[filepath].add(page.inputPath);
+            for (let prior of priors) {
+              layouts[filepath].add(prior);
+            }
+            priors.push(filepath);
           }
-          layouts[layoutFilePath].add(page.inputPath);
         }
       }
     }
