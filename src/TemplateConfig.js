@@ -192,8 +192,10 @@ class TemplateConfig {
    * @param {String} pathPrefix - The new path prefix.
    */
   setPathPrefix(pathPrefix) {
-    debug("Setting pathPrefix to %o", pathPrefix);
-    this.overrides.pathPrefix = pathPrefix;
+    if(pathPrefix && pathPrefix !== '/'){
+      debug("Setting pathPrefix to %o", pathPrefix);
+      this.overrides.pathPrefix = pathPrefix;
+    }
   }
 
   /**
