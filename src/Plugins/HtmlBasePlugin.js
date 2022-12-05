@@ -149,7 +149,7 @@ module.exports = function (eleventyConfig, defaultOptions = {}) {
     // Skip the transform if no extensions are specified
     if (Object.keys(extensionMap).length > 0) {
       eleventyConfig.addTransform(opts.name, function (content) {
-        let ext = this.outputPath?.split(".").pop();
+        let ext = (this.outputPath || "").split(".").pop();
         if (extensionMap[ext]) {
           return addToAllHtmlUrls(content, (url) => {
             return transformUrl.call(this, url.trim(), opts.baseHref, {

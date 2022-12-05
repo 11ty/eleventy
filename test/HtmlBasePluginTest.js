@@ -516,3 +516,41 @@ test("Opt out of the transform with falsy extensions list", async (t) => {
 </html>`
   );
 });
+
+test("Base plugin with permalink: false, #2602", async (t) => {
+  let elev = new Eleventy("./test/stubs-2602/", "./test/stubs-2602/_site", {
+    pathPrefix: "/test/",
+
+    configPath: false,
+    config: function (eleventyConfig) {
+      eleventyConfig.setUseTemplateCache(false);
+      eleventyConfig.addPlugin(HtmlBasePlugin);
+    },
+  });
+
+  elev.setIsVerbose(false);
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(
+    getContentFor(results, "/deep/index.html"),
+    `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<title></title>
+<style>div { background-image: url(test.jpg); }</style>
+<style>div { background-image: url(/test/test.jpg); }</style>
+<link rel="stylesheet" href="/test/test.css">
+<script src="/test/test.js"></script>
+</head>
+<body>
+<a href="/test/">Home</a>
+<a href="subdir/">Test</a>
+<a href="../subdir/">Test</a>
+</body>
+</html>`
+  );
+});
