@@ -7,6 +7,7 @@ const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
 const Merge = require("../Util/Merge");
 const { ProxyWrap } = require("../Util/ProxyWrap");
 const TemplateDataInitialGlobalData = require("../TemplateDataInitialGlobalData");
+const EleventyShortcodeError = require("../EleventyShortcodeError");
 const TemplateRender = require("../TemplateRender");
 const TemplateConfig = require("../TemplateConfig");
 const EleventyBaseError = require("../EleventyBaseError");
