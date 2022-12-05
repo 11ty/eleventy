@@ -10,7 +10,6 @@ const TemplateDataInitialGlobalData = require("../TemplateDataInitialGlobalData"
 const EleventyShortcodeError = require("../EleventyShortcodeError");
 const TemplateRender = require("../TemplateRender");
 const TemplateConfig = require("../TemplateConfig");
-const EleventyBaseError = require("../EleventyBaseError");
 const EleventyErrorUtil = require("../EleventyErrorUtil");
 const Liquid = require("../Engines/Liquid");
 
