@@ -14,8 +14,6 @@ const EleventyBaseError = require("../EleventyBaseError");
 const EleventyErrorUtil = require("../EleventyErrorUtil");
 const Liquid = require("../Engines/Liquid");
 
-class EleventyShortcodeError extends EleventyBaseError {}
-
 async function compile(
   content,
   templateLang,
