@@ -374,10 +374,9 @@ class TemplateMap {
 
     this.checkForDuplicatePermalinks();
 
-    await this.config.events.emitLazy("eleventy.layouts", () => {
-      // returns promise
-      return this.generateLayoutsMap();
-    });
+    await this.config.events.emitLazy("eleventy.layouts", () =>
+      this.generateLayoutsMap()
+    );
 
     await this.config.events.emitLazy("eleventy.serverlessUrlMap", () =>
       this.generateServerlessUrlMap(orderedMap)
