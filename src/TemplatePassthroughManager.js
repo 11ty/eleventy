@@ -5,6 +5,7 @@ const { TemplatePath } = require("@11ty/eleventy-utils");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");
 const TemplatePassthrough = require("./TemplatePassthrough");
+const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
 
 const debug = require("debug")("Eleventy:TemplatePassthroughManager");
 const debugDev = require("debug")("Dev:Eleventy:TemplatePassthroughManager");
@@ -244,7 +245,11 @@ class TemplatePassthroughManager {
 
         return [this._normalizePaths(this.incrementalFile)];
       }
-      return [];
+
+      // Fixes https://github.com/11ty/eleventy/issues/2491
+      if (!checkPassthroughCopyBehavior(this.config, this.runMode)) {
+        return [];
+      }
     }
 
     let normalizedPaths = this.getConfigPaths();
