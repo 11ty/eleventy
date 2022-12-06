@@ -3,6 +3,7 @@ const serverlessUrlFilter = require("./Filters/ServerlessUrl");
 const slugFilter = require("./Filters/Slug");
 const slugifyFilter = require("./Filters/Slugify");
 const getLocaleCollectionItem = require("./Filters/GetLocaleCollectionItem");
+const getCollectionItemIndex = require("./Filters/GetCollectionItemIndex");
 
 module.exports = function (config) {
   let templateConfig = this;
@@ -22,6 +23,13 @@ module.exports = function (config) {
   });
 
   config.addFilter("serverlessUrl", serverlessUrlFilter);
+
+  config.addFilter(
+    "getCollectionItemIndex",
+    function (collection, pageOverride) {
+      return getCollectionItemIndex.call(this, collection, pageOverride);
+    }
+  );
 
   config.addFilter(
     "getCollectionItem",
