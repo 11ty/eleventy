@@ -344,13 +344,19 @@ class UserConfig {
   addTransform(name, callback) {
     name = this.getNamespacedName(name);
 
-    this.transforms[name] = callback;
+    this.transforms[name] = this.benchmarks.config.add(
+      `"${name}" Transform`,
+      callback
+    );
   }
 
   addLinter(name, callback) {
     name = this.getNamespacedName(name);
 
-    this.linters[name] = callback;
+    this.linters[name] = this.benchmarks.config.add(
+      `"${name}" Linter`,
+      callback
+    );
   }
 
   addLayoutAlias(from, to) {
