@@ -166,7 +166,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
         let rawArgs = Liquid.parseArguments(null, this.args);
         let argArray = [];
         for (let arg of rawArgs) {
-          let b = yield liquidEngine.evalValue(arg, ctx);
+          let b = yield liquidEngine.evalValue(arg, ctx.environments);
           argArray.push(b);
         }
 

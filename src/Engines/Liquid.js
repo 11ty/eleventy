@@ -145,19 +145,19 @@ class Liquid extends TemplateEngine {
           this.name = tagToken.name;
           this.args = tagToken.args;
         },
-        render: function* (ctx) {
+        render: function* (ctx, emitter) {
           let rawArgs = Liquid.parseArguments(_t.argLexer, this.args);
           let argArray = [];
           for (let arg of rawArgs) {
-            let b = yield liquidEngine.evalValue(arg, ctx);
+            let b = yield liquidEngine.evalValue(arg, ctx.environments);
             argArray.push(b);
           }
 
-          let ret = shortcodeFn.call(
+          let ret = yield shortcodeFn.call(
             Liquid._normalizeShortcodeScope(ctx),
             ...argArray
           );
-          yield ret;
+          // emitter.write(ret);
           return ret;
         },
       };
@@ -183,11 +183,11 @@ class Liquid extends TemplateEngine {
 
           stream.start();
         },
-        render: function* (ctx) {
+        render: function* (ctx, emitter) {
           let rawArgs = Liquid.parseArguments(_t.argLexer, this.args);
           let argArray = [];
           for (let arg of rawArgs) {
-            let b = yield liquidEngine.evalValue(arg, ctx);
+            let b = yield liquidEngine.evalValue(arg, ctx.environments);
             argArray.push(b);
           }
 
@@ -196,12 +196,12 @@ class Liquid extends TemplateEngine {
             ctx
           );
 
-          let ret = shortcodeFn.call(
+          let ret = yield shortcodeFn.call(
             Liquid._normalizeShortcodeScope(ctx),
             html,
             ...argArray
           );
-          yield ret;
+          // emitter.write(ret);
           return ret;
         },
       };
