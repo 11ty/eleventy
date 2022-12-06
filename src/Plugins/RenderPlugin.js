@@ -151,7 +151,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 
         stream.start();
       },
-      render: async function (ctx) {
+      render: function* (ctx) {
         let normalizedContext = {};
         if (ctx) {
           if (opts.accessGlobalData) {
@@ -163,21 +163,24 @@ function EleventyPlugin(eleventyConfig, options = {}) {
           normalizedContext.eleventy = ctx.get(["eleventy"]);
         }
 
-        let argArray = await Liquid.parseArguments(
-          null,
-          this.args,
-          ctx,
-          this.liquid
-        );
+        let rawArgs = Liquid.parseArguments(null, this.args);
+        let argArray = [];
+        for (let arg of rawArgs) {
+          let b = yield liquidEngine.evalValue(arg, ctx);
+          argArray.push(b);
+        }
 
+        // plaintext paired shortcode content
         let body = this.tokens.map((token) => token.getText()).join("");
 
-        return _renderStringShortcodeFn.call(
+        let ret = _renderStringShortcodeFn.call(
           normalizedContext,
           body,
           // templateLang, data
           ...argArray
         );
+        yield ret;
+        return ret;
       },
     };
   }
