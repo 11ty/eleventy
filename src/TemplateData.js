@@ -514,7 +514,7 @@ class TemplateData {
       try {
         // pass in rawImports, don’t pass in global data, that’s what we’re parsing
         let raw = await fn(rawImports);
-        return parser(raw);
+        return parser(raw, path);
       } catch (e) {
         throw new TemplateDataParseError(
           `Having trouble parsing data file ${path}`,
@@ -572,12 +572,8 @@ class TemplateData {
       );
     } else if (extension === "json") {
       // File to string, parse with JSON (preprocess)
-      return this._parseDataFile(
-        path,
-        rawImports,
-        ignoreProcessing,
-        JSON.parse
-      );
+      const parser = (content) => JSON.parse(content);
+      return this._parseDataFile(path, rawImports, ignoreProcessing, parser);
     } else {
       throw new TemplateDataParseError(
         `Could not find an appropriate data parser for ${path}. Do you need to add a plugin to your config file?`
