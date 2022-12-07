@@ -496,7 +496,9 @@ class TemplateData {
         if (readFile) {
           return parser(rawInput, path);
         } else {
-          return parser(path);
+          // path as a first argument is when `read: false`
+          // path as a second argument is for consistency with `read: true` API
+          return parser(path, path);
         }
       } catch (e) {
         throw new TemplateDataParseError(
