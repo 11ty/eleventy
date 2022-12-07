@@ -3,28 +3,41 @@ const fs = require("fs");
 const TemplatePassthroughManager = require("../src/TemplatePassthroughManager");
 const TemplateConfig = require("../src/TemplateConfig");
 const EleventyFiles = require("../src/EleventyFiles");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 
 test("Get paths from Config", async (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.passthroughCopies = {
-    img: true,
+    img: { outputPath: true },
   };
   let mgr = new TemplatePassthroughManager(eleventyConfig);
 
-  t.deepEqual(mgr.getConfigPaths(), [{ inputPath: "./img", outputPath: true }]);
+  t.deepEqual(mgr.getConfigPaths(), [
+    { inputPath: "./img", outputPath: true, copyOptions: {} },
+  ]);
 });
 
 test("isPassthroughCopyFile", async (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.passthroughCopies = {
-    img: true,
-    fonts: true,
+    img: { outputPath: true },
+    fonts: { outputPath: true },
   };
   let mgr = new TemplatePassthroughManager(eleventyConfig);
 
-  t.true(mgr.isPassthroughCopyFile([], "./img/test.png"));
-  t.true(mgr.isPassthroughCopyFile([], "./fonts/Roboto.woff"));
+  t.truthy(mgr.isPassthroughCopyFile([], "./img/test.png"));
+  t.deepEqual(mgr.isPassthroughCopyFile([], "./img/test.png"), {
+    inputPath: "./img",
+    outputPath: true,
+    copyOptions: {},
+  });
+
+  t.truthy(mgr.isPassthroughCopyFile([], "./fonts/Roboto.woff"));
+  t.deepEqual(mgr.isPassthroughCopyFile([], "./fonts/Roboto.woff"), {
+    inputPath: "./fonts",
+    outputPath: true,
+    copyOptions: {},
+  });
+
   t.false(mgr.isPassthroughCopyFile([], "./docs/test.njk"));
   t.false(mgr.isPassthroughCopyFile([], "./other-dir/test.png"));
   t.true(
@@ -38,9 +51,9 @@ test("isPassthroughCopyFile", async (t) => {
 test("Get glob paths from config", async (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.passthroughCopies = {
-    "test/stubs/img": true,
-    "test/stubs/img/**": "./",
-    "test/stubs/img/*.js": "./",
+    "test/stubs/img": { outputPath: true },
+    "test/stubs/img/**": { outputPath: "./" },
+    "test/stubs/img/*.js": { outputPath: "./" },
   };
   let mgr = new TemplatePassthroughManager(eleventyConfig);
 
@@ -90,11 +103,11 @@ test("Get file paths (one image path)", async (t) => {
 test("Naughty paths outside of project dir", async (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.passthroughCopies = {
-    "../static": true,
-    "../*": "./",
-    "./test/stubs/template-passthrough2/static/*.css": "./",
-    "./test/stubs/template-passthrough2/static/*.js": "../../",
-    "./test/stubs/template-passthrough2/img.jpg": "../../",
+    "../static": { outputPath: true },
+    "../*": { outputPath: "./" },
+    "./test/stubs/template-passthrough2/static/*.css": { outputPath: "./" },
+    "./test/stubs/template-passthrough2/static/*.js": { outputPath: "../../" },
+    "./test/stubs/template-passthrough2/img.jpg": { outputPath: "../../" },
   };
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
@@ -122,28 +135,28 @@ test("Naughty paths outside of project dir", async (t) => {
 test("getAllNormalizedPaths", async (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.passthroughCopies = {
-    img: true,
+    img: { outputPath: true },
   };
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
   t.deepEqual(mgr.getAllNormalizedPaths(), [
-    { inputPath: "./img", outputPath: true },
+    { inputPath: "./img", outputPath: true, copyOptions: {} },
   ]);
 });
 
 test("getAllNormalizedPaths with globs", async (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.passthroughCopies = {
-    img: true,
-    "img/**": "./",
-    "img/*.js": "./",
+    img: { outputPath: true },
+    "img/**": { outputPath: "./" },
+    "img/*.js": { outputPath: "./" },
   };
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
   t.deepEqual(mgr.getAllNormalizedPaths(), [
-    { inputPath: "./img", outputPath: true },
-    { inputPath: "./img/**", outputPath: "" },
-    { inputPath: "./img/*.js", outputPath: "" },
+    { inputPath: "./img", outputPath: true, copyOptions: {} },
+    { inputPath: "./img/**", outputPath: "", copyOptions: {} },
+    { inputPath: "./img/*.js", outputPath: "", copyOptions: {} },
   ]);
 });
 
@@ -151,7 +164,9 @@ test("Look for uniqueness on template passthrough paths #1677", async (t) => {
   let formats = [];
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.passthroughCopies = {
-    "./test/stubs/template-passthrough-duplicates/**/*.png": "./",
+    "./test/stubs/template-passthrough-duplicates/**/*.png": {
+      outputPath: "./",
+    },
   };
 
   let files = new EleventyFiles(

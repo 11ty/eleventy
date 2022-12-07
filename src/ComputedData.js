@@ -25,6 +25,7 @@ class ComputedData {
     // bind config filters/JS functions
     if (typeof renderFn === "function") {
       let fns = {};
+      // TODO bug? no access to non-universal config things?
       if (this.config) {
         fns = this.config.javascriptFunctions;
       }
@@ -90,9 +91,9 @@ class ComputedData {
 
   async _setupDataEntry(data, order) {
     debug("Computed data order of execution: %o", order);
-
     for (let key of order) {
       let computed = lodashGet(this.computed, key);
+
       if (typeof computed === "function") {
         let ret = await computed(data);
         lodashSet(data, key, ret);

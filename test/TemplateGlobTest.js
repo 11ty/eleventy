@@ -1,6 +1,7 @@
 const test = require("ava");
 const fastglob = require("fast-glob");
-const TemplatePath = require("../src/TemplatePath");
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const TemplateGlob = require("../src/TemplateGlob");
 
 test("TemplatePath assumptions", (t) => {

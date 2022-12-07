@@ -368,10 +368,32 @@ test("Glob Watcher Files with File Extension Passthroughs", async (t) => {
   ]);
 });
 
+test("Glob Watcher Files with File Extension Passthroughs with Dev Server (for free passthrough copy #2456)", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let evf = new EleventyFiles(
+    "test/stubs",
+    "test/stubs/_site",
+    ["njk", "png"],
+    eleventyConfig
+  );
+  evf.setRunMode("serve");
+  evf.init();
+
+  t.deepEqual(evf.getGlobWatcherFiles(), [
+    "./test/stubs/**/*.njk",
+    "./test/stubs/_includes/**",
+    "./test/stubs/_data/**",
+  ]);
+
+  t.deepEqual(evf.getGlobWatcherFilesForPassthroughCopy(), [
+    "./test/stubs/**/*.png",
+  ]);
+});
+
 test("Glob Watcher Files with Config Passthroughs (one template format)", async (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.passthroughCopies = {
-    "test/stubs/img/": true,
+    "test/stubs/img/": { outputPath: true },
   };
   let evf = new EleventyFiles(
     "test/stubs",
@@ -391,6 +413,36 @@ test("Glob Watcher Files with Config Passthroughs (one template format)", async 
     "./test/stubs/img/**",
     "./test/stubs/_includes/**",
     "./test/stubs/_data/**",
+  ]);
+});
+
+test("Glob Watcher Files with Config Passthroughs (one template format) with Dev Server (for free passthrough copy #2456)", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.passthroughCopies = {
+    "test/stubs/img/": { outputPath: true },
+  };
+  let evf = new EleventyFiles(
+    "test/stubs",
+    "test/stubs/_site",
+    ["njk"],
+    eleventyConfig
+  );
+  evf.setRunMode("serve");
+  evf.init();
+
+  let mgr = new TemplatePassthroughManager(eleventyConfig);
+  mgr.setInputDir("test/stubs");
+  mgr.setOutputDir("test/stubs/_site");
+  evf.setPassthroughManager(mgr);
+
+  t.deepEqual(evf.getGlobWatcherFiles(), [
+    "./test/stubs/**/*.njk",
+    "./test/stubs/_includes/**",
+    "./test/stubs/_data/**",
+  ]);
+
+  t.deepEqual(evf.getGlobWatcherFilesForPassthroughCopy(), [
+    "./test/stubs/img/**",
   ]);
 });
 

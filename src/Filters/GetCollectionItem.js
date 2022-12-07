@@ -4,7 +4,7 @@ module.exports = function getCollectionItem(collection, page, modifier = 0) {
   for (let item of collection) {
     if (
       item.inputPath === page.inputPath &&
-      item.outputPath === page.outputPath
+      (item.outputPath === page.outputPath || item.url === page.url)
     ) {
       index = j;
       break;

@@ -11,10 +11,6 @@ require("please-upgrade-node")(pkg, {
 });
 const debug = require("debug")("Eleventy:cmd");
 
-if (process.env.DEBUG) {
-  require("time-require");
-}
-
 const EleventyErrorHandler = require("./src/EleventyErrorHandler");
 
 try {
@@ -50,8 +46,7 @@ try {
     },
   });
 
-  // TODO fix debug output: `Eleventy:cmd command: eleventy  [object Object] +0ms`
-  debug("command: eleventy ", argv.toString());
+  debug("command: eleventy %o", argv);
   const Eleventy = require("./src/Eleventy");
 
   process.on("unhandledRejection", (error, promise) => {
@@ -67,31 +62,37 @@ try {
     );
   });
 
-  let elev = new Eleventy(argv.input, argv.output, {
-    // --quiet and --quiet=true both resolve to true
-    quietMode: argv.quiet,
-    configPath: argv.config,
-    source: "cli",
-  });
-
-  // reuse ErrorHandler instance in Eleventy
-  errorHandler = elev.errorHandler;
-
   if (argv.version) {
-    console.log(elev.getVersion());
+    console.log(Eleventy.getVersion());
   } else if (argv.help) {
-    console.log(elev.getHelp());
+    console.log(Eleventy.getHelp());
   } else {
+    let elev = new Eleventy(argv.input, argv.output, {
+      source: "cli",
+      // --quiet and --quiet=true both resolve to true
+      quietMode: argv.quiet,
+      configPath: argv.config,
+      pathPrefix: argv.pathprefix,
+    });
+
+    // reuse ErrorHandler instance in Eleventy
+    errorHandler = elev.errorHandler;
+
     if (argv.to === "json" || argv.to === "ndjson") {
       // override logging output
       elev.setIsVerbose(false);
     }
 
-    elev.setPathPrefix(argv.pathprefix);
     elev.setDryRun(argv.dryrun);
     elev.setIncrementalBuild(argv.incremental);
     elev.setPassthroughAll(argv.passthroughall);
     elev.setFormats(argv.formats);
+
+    if (argv.watch) {
+      elev.setRunMode("watch");
+    } else if (argv.serve) {
+      elev.setRunMode("serve");
+    }
 
     // careful, we can’t use async/await here to error properly
     // with old node versions in `please-upgrade-node` above.
@@ -100,16 +101,16 @@ try {
       .then(function () {
         try {
           if (argv.serve) {
-            let startBrowsersync = true;
+            let shouldStartServer = true;
             elev
               .watch()
               .catch((e) => {
                 // Build failed but error message already displayed.
-                startBrowsersync = false;
+                shouldStartServer = false;
                 // A build error occurred and we aren’t going to --serve
               })
               .then(function () {
-                if (startBrowsersync) {
+                if (shouldStartServer) {
                   elev.serve(argv.port);
                 }
               });

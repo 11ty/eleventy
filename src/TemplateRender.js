@@ -1,4 +1,5 @@
-const TemplatePath = require("./TemplatePath");
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const TemplateConfig = require("./TemplateConfig");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
@@ -24,10 +25,12 @@ class TemplateRender {
     this.config = config;
 
     this.engineNameOrPath = tmplPath;
-    this.inputDir = inputDir;
 
-    // optional
-    this.includesDir = this._normalizeIncludesDir(inputDir);
+    this.inputDir = inputDir ? inputDir : this.config.dir.input;
+    this.includesDir = TemplatePath.join(
+      this.inputDir,
+      this.config.dir.includes
+    );
 
     this.parseMarkdownWith = this.config.markdownTemplateEngine;
     this.parseHtmlWith = this.config.htmlTemplateEngine;
@@ -55,6 +58,17 @@ class TemplateRender {
     return this._extensionMap;
   }
 
+  getEngineByName(name) {
+    let engine = this.extensionMap.engineManager.getEngine(
+      name,
+      this.getDirs(),
+      this.extensionMap
+    );
+    engine.config = this.config;
+
+    return engine;
+  }
+
   // Runs once per template
   init(engineNameOrPath) {
     this.extensionMap.config = this.config;
@@ -65,12 +79,7 @@ class TemplateRender {
       );
     }
 
-    this._engine = this.extensionMap.engineManager.getEngine(
-      this._engineName,
-      this.includesDir,
-      this.extensionMap
-    );
-    this._engine.config = this.config;
+    this._engine = this.getEngineByName(this._engineName);
     this._engine.initRequireCache(engineNameOrPath);
 
     if (this.useMarkdown === undefined) {
@@ -93,6 +102,13 @@ class TemplateRender {
   }
 
   static parseEngineOverrides(engineName) {
+    if (typeof (engineName || "") !== "string") {
+      throw new Error(
+        "Expected String passed to parseEngineOverrides. Received: " +
+          engineName
+      );
+    }
+
     let overlappingEngineWarningCount = 0;
     let engines = [];
     let uniqueLookup = {};
@@ -162,6 +178,40 @@ class TemplateRender {
     }
   }
 
+  // TODO templateEngineOverride
+  getPreprocessorEngine() {
+    if (this.engineName === "md" && this.parseMarkdownWith) {
+      return this.parseMarkdownWith;
+    }
+    if (this.engineName === "html" && this.parseHtmlWith) {
+      return this.parseHtmlWith;
+    }
+    return this.extensionMap.getKey(this.engineNameOrPath);
+  }
+
+  // We pass in templateEngineOverride here because it isn’t yet applied to templateRender
+  getEnginesList(engineOverride) {
+    if (engineOverride) {
+      let engines =
+        TemplateRender.parseEngineOverrides(engineOverride).reverse();
+      return engines.join(",");
+    }
+
+    if (
+      this.engineName === "md" &&
+      this.useMarkdown &&
+      this.parseMarkdownWith
+    ) {
+      return `${this.parseMarkdownWith},md`;
+    }
+    if (this.engineName === "html" && this.parseHtmlWith) {
+      return this.parseHtmlWith;
+    }
+
+    // templateEngineOverride in play
+    return this.extensionMap.getKey(this.engineNameOrPath);
+  }
+
   setEngineOverride(engineName, bypassMarkdown) {
     let engines = TemplateRender.parseEngineOverrides(engineName);
 
@@ -190,15 +240,15 @@ class TemplateRender {
     return this.engineName;
   }
 
-  getIncludesDir() {
-    return this.includesDir;
+  getDirs() {
+    return {
+      input: this.inputDir,
+      includes: this.includesDir,
+    };
   }
 
-  _normalizeIncludesDir(dir) {
-    return TemplatePath.join(
-      dir ? dir : this.config.dir.input,
-      this.config.dir.includes
-    );
+  getIncludesDir() {
+    return this.includesDir;
   }
 
   isEngine(engine) {

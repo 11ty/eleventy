@@ -1,5 +1,6 @@
-const isPlainObject = require("lodash/isPlainObject");
 const DependencyGraph = require("dependency-graph").DepGraph;
+const { isPlainObject } = require("@11ty/eleventy-utils");
+
 const TemplateCollection = require("./TemplateCollection");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
 const UsingCircularTemplateContentReferenceError = require("./Errors/UsingCircularTemplateContentReferenceError");
@@ -55,8 +56,10 @@ class TemplateMap {
   }
 
   async add(template) {
-    // getTemplateMapEntries is where the Template.getData is first generated
-    for (let map of await template.getTemplateMapEntries()) {
+    // This is where the data is first generated for the template
+    let data = await template.getData();
+
+    for (let map of await template.getTemplateMapEntries(data)) {
       this.map.push(map);
     }
   }
@@ -67,7 +70,7 @@ class TemplateMap {
 
   getTagTarget(str) {
     if (str.startsWith("collections.")) {
-      return str.substr("collections.".length);
+      return str.slice("collections.".length);
     }
   }
 
@@ -280,7 +283,7 @@ class TemplateMap {
     for (let depEntry of dependencyMap) {
       if (depEntry.startsWith(tagPrefix)) {
         // is a tag (collection) entry
-        let tagName = depEntry.substr(tagPrefix.length);
+        let tagName = depEntry.slice(tagPrefix.length);
         await this.setCollectionByTagName(tagName);
       } else {
         // is a template entry
@@ -357,6 +360,13 @@ class TemplateMap {
       }.bind(this)
     );
 
+    await this.config.events.emitLazy("eleventy.contentMap", () => {
+      return {
+        inputPathToUrl: this.generateInputUrlContentMap(orderedMap),
+        urlToInputPath: this.generateUrlMap(orderedMap),
+      };
+    });
+
     await this.populateContentDataInMap(orderedMap);
 
     this.populateCollectionsWithContent();
@@ -364,10 +374,32 @@ class TemplateMap {
 
     this.checkForDuplicatePermalinks();
 
-    await this.config.events.emit(
-      "eleventy.serverlessUrlMap",
+    await this.config.events.emitLazy("eleventy.layouts", () =>
+      this.generateLayoutsMap()
+    );
+
+    await this.config.events.emitLazy("eleventy.serverlessUrlMap", () =>
       this.generateServerlessUrlMap(orderedMap)
     );
+  }
+
+  generateInputUrlContentMap(orderedMap) {
+    let entries = {};
+    for (let entry of orderedMap) {
+      entries[entry.inputPath] = entry._pages.map((entry) => entry.url);
+    }
+    return entries;
+  }
+
+  generateUrlMap(orderedMap) {
+    let entries = {};
+    for (let entry of orderedMap) {
+      for (let page of entry._pages) {
+        // duplicate urls throw an error, so we can return non array here
+        entries[page.url] = entry.inputPath;
+      }
+    }
+    return entries;
   }
 
   generateServerlessUrlMap(orderedMap) {
@@ -452,13 +484,14 @@ class TemplateMap {
         throw new Error(`Content pages not found for ${map.inputPath}`);
       }
       if (!map.template.behavior.isRenderable()) {
+        // Note that empty pagination templates will be skipped here as not renderable
         continue;
       }
+
       try {
         for (let pageEntry of map._pages) {
-          pageEntry.templateContent = await map.template.getTemplateMapContent(
-            pageEntry
-          );
+          pageEntry.templateContent =
+            await pageEntry.template.renderWithoutLayout(pageEntry.data);
         }
       } catch (e) {
         if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
@@ -475,9 +508,8 @@ class TemplateMap {
     for (let map of usedTemplateContentTooEarlyMap) {
       try {
         for (let pageEntry of map._pages) {
-          pageEntry.templateContent = await map.template.getTemplateMapContent(
-            pageEntry
-          );
+          pageEntry.templateContent =
+            await pageEntry.template.renderWithoutLayout(pageEntry.data);
         }
       } catch (e) {
         if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
@@ -601,7 +633,10 @@ class TemplateMap {
         // This check skips precompiled collections
         if (entry) {
           let index = item.pageNumber || 0;
-          item.templateContent = entry._pages[index]._templateContent;
+          let content = entry._pages[index]._templateContent;
+          if (content !== undefined) {
+            item.templateContent = content;
+          }
         }
       }
     }
@@ -611,10 +646,44 @@ class TemplateMap {
     let promises = [];
     for (let entry of this.map) {
       for (let page of entry._pages) {
-        promises.push(page.template.resolveRemainingComputedData(page.data));
+        if (this.config.keys.computed in page.data) {
+          promises.push(page.template.resolveRemainingComputedData(page.data));
+        }
       }
     }
     return Promise.all(promises);
+  }
+
+  async generateLayoutsMap() {
+    let layouts = {};
+
+    for (let entry of this.map) {
+      for (let page of entry._pages) {
+        let tmpl = page.template;
+        let layoutKey = page.data[this.config.keys.layout];
+        if (layoutKey) {
+          let layout = tmpl.getLayout(layoutKey);
+          let layoutChain = await layout.getLayoutChain();
+          let priors = [];
+          for (let filepath of layoutChain) {
+            if (!layouts[filepath]) {
+              layouts[filepath] = new Set();
+            }
+            layouts[filepath].add(page.inputPath);
+            for (let prior of priors) {
+              layouts[filepath].add(prior);
+            }
+            priors.push(filepath);
+          }
+        }
+      }
+    }
+
+    for (let key in layouts) {
+      layouts[key] = Array.from(layouts[key]);
+    }
+
+    return layouts;
   }
 
   checkForDuplicatePermalinks() {
@@ -622,10 +691,10 @@ class TemplateMap {
     let warnings = {};
     for (let entry of this.map) {
       for (let page of entry._pages) {
-        if (page.url === false) {
+        if (page.outputPath === false || page.url === false) {
           // do nothing (also serverless)
-        } else if (!permalinks[page.url]) {
-          permalinks[page.url] = [entry.inputPath];
+        } else if (!permalinks[page.outputPath]) {
+          permalinks[page.outputPath] = [entry.inputPath];
         } else {
           warnings[
             page.outputPath
@@ -633,14 +702,14 @@ class TemplateMap {
             page.outputPath
           }\`. Use distinct \`permalink\` values to resolve this conflict.
   1. ${entry.inputPath}
-${permalinks[page.url]
+${permalinks[page.outputPath]
   .map(function (inputPath, index) {
     return `  ${index + 2}. ${inputPath}\n`;
   })
   .join("")}
 `;
 
-          permalinks[page.url].push(entry.inputPath);
+          permalinks[page.outputPath].push(entry.inputPath);
         }
       }
     }

@@ -187,7 +187,7 @@ test("eleventyComputed using symbol parsing on template strings (nunjucks)", asy
   t.is(data.c, "ab");
 });
 
-test.skip("eleventyComputed using symbol parsing on template strings (liquid)", async (t) => {
+test("eleventyComputed using symbol parsing on template strings (liquid)", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs-computed-symbolparse/test.liquid",
     "./test/stubs-computed-symbolparse/",
@@ -205,4 +205,16 @@ test.skip("eleventyComputed using symbol parsing on template strings (liquid)", 
   t.is(data.a, "a");
   t.is(data.b, "b");
   t.is(data.c, "ab");
+});
+
+test("eleventyComputed render strings in arrays", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs-computed-array/test.liquid",
+    "./test/stubs-computed-array/",
+    "./test/stubs-computed-array/_site"
+  );
+
+  let data = await getRenderedData(tmpl);
+  t.deepEqual(data.array, ["static value", "test"]);
+  t.is(data.notArray, "test");
 });

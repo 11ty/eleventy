@@ -63,3 +63,8 @@ test("Parse Overrides to get Prioritized Engine List", async (t) => {
     TemplateRender.parseEngineOverrides("ejs,njk,html");
   });
 });
+
+test("Make sure getEnginesList returns a string", async (t) => {
+  let tr = getNewTemplateRender("liquid", "./test/stubs");
+  t.is(tr.getEnginesList("njk,md"), "njk,md");
+});

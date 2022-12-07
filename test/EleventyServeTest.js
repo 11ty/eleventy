@@ -2,91 +2,54 @@ const test = require("ava");
 const EleventyServe = require("../src/EleventyServe");
 const TemplateConfig = require("../src/TemplateConfig");
 
-test("Constructor", (t) => {
+async function getServerInstance(cfg) {
   let es = new EleventyServe();
-  let cfg = new TemplateConfig().getConfig();
+  if (!cfg) {
+    cfg = new TemplateConfig().getConfig();
+  }
   es.config = cfg;
-  t.is(es.getPathPrefix(), "/");
+  await es.init();
+
+  delete es.options.logger;
+  delete es.options.module;
+
+  return es;
+}
+
+test("Constructor", async (t) => {
+  let es = await getServerInstance();
+  t.is(es.options.pathPrefix, "/");
 });
 
-test("Directories", (t) => {
-  let es = new EleventyServe();
-  let cfg = new TemplateConfig().getConfig();
-  es.config = cfg;
-
-  es.setOutputDir("_site");
-  t.is(es.getRedirectDir("test"), "_site/test");
-  t.is(es.getRedirectFilename("test"), "_site/test/index.html");
-});
-
-test("Get Options", (t) => {
-  let es = new EleventyServe();
-  let cfg = new TemplateConfig().getConfig();
-  cfg.pathPrefix = "/";
-  es.config = cfg;
+test("Get Options", async (t) => {
+  let es = await getServerInstance();
   es.setOutputDir("_site");
 
-  t.deepEqual(es.getOptions(), {
-    ignore: ["node_modules"],
-    index: "index.html",
-    notify: false,
-    open: false,
+  t.deepEqual(es.options, {
+    pathPrefix: "/",
     port: 8080,
-    server: {
-      baseDir: "_site",
-    },
-    watch: false,
-    ui: false,
-    ghostMode: false,
   });
 });
 
-test("Get Options (with a pathPrefix)", (t) => {
-  let es = new EleventyServe();
+test("Get Options (with a pathPrefix)", async (t) => {
   let cfg = new TemplateConfig().getConfig();
   cfg.pathPrefix = "/web/";
-  es.config = cfg;
+
+  let es = await getServerInstance(cfg);
   es.setOutputDir("_site");
 
-  t.deepEqual(es.getOptions(), {
-    ignore: ["node_modules"],
-    index: "index.html",
-    notify: false,
-    open: false,
+  t.deepEqual(es.options, {
+    pathPrefix: "/web/",
     port: 8080,
-    server: {
-      baseDir: "_site/_eleventy_redirect",
-      routes: {
-        "/web/": "_site",
-      },
-    },
-    watch: false,
-    ui: false,
-    ghostMode: false,
   });
 });
 
-test("Get Options (override in config)", (t) => {
-  let es = new EleventyServe();
-  let cfg = new TemplateConfig().getConfig();
-  cfg.pathPrefix = "/";
-  cfg.browserSyncConfig = {
-    notify: true,
-  };
-  es.config = cfg;
+test("Get Options (override in config)", async (t) => {
+  let es = await getServerInstance();
   es.setOutputDir("_site");
 
-  t.deepEqual(es.getOptions(), {
-    ignore: ["node_modules"],
-    index: "index.html",
-    notify: true,
-    open: false,
+  t.deepEqual(es.options, {
+    pathPrefix: "/",
     port: 8080,
-    server: {
-      baseDir: "_site",
-    },
-    watch: false,
-    ui: false,
-    ghostMode: false,
   });
 });

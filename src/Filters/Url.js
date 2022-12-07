@@ -1,23 +1,27 @@
-const validUrl = require("valid-url");
-const TemplatePath = require("../TemplatePath");
+const { TemplatePath } = require("@11ty/eleventy-utils");
 
-// This is also used in the Eleventy Navigation plugin
+function isValidUrl(url) {
+  try {
+    new URL(url);
+    return true;
+  } catch (e) {
+    // invalid url OR local path
+    return false;
+  }
+}
+
+// Note: This filter is used in the Eleventy Navigation plugin in versions prior to 0.3.4
 module.exports = function (url, pathPrefix) {
   // work with undefined
   url = url || "";
 
-  if (
-    validUrl.isUri(url) ||
-    url.indexOf("http://") === 0 ||
-    url.indexOf("https://") === 0 ||
-    (url.indexOf("//") === 0 && url !== "//")
-  ) {
+  if (isValidUrl(url) || (url.startsWith("//") && url !== "//")) {
     return url;
   }
 
   if (pathPrefix === undefined || typeof pathPrefix !== "string") {
     // When you retrieve this with config.getFilter("url") it
-    // grabs the pathPrefix argument from your config for you.
+    // grabs the pathPrefix argument from your config for you (see defaultConfig.js)
     throw new Error("pathPrefix (String) is required in the `url` filter.");
   }
 

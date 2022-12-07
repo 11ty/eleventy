@@ -1,5 +1,6 @@
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const Template = require("./Template");
-const TemplatePath = require("./TemplatePath");
 const TemplateMap = require("./TemplateMap");
 const EleventyFiles = require("./EleventyFiles");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
@@ -8,12 +9,12 @@ const EleventyErrorHandler = require("./EleventyErrorHandler");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
 const ConsoleLogger = require("./Util/ConsoleLogger");
 
-const lodashFlatten = require("lodash/flatten");
 const debug = require("debug")("Eleventy:TemplateWriter");
 const debugDev = require("debug")("Dev:Eleventy:TemplateWriter");
 
-class TemplateWriterError extends EleventyBaseError {}
-class TemplateWriterWriteError extends EleventyBaseError {}
+class TemplateWriterMissingConfigArgError extends EleventyBaseError {}
+class EleventyPassthroughCopyError extends EleventyBaseError {}
+class EleventyTemplateError extends EleventyBaseError {}
 
 class TemplateWriter {
   constructor(
@@ -24,7 +25,7 @@ class TemplateWriter {
     eleventyConfig
   ) {
     if (!eleventyConfig) {
-      throw new TemplateWriterError("Missing config argument.");
+      throw new TemplateWriterMissingConfigArgError("Missing config argument.");
     }
     this.eleventyConfig = eleventyConfig;
     this.config = eleventyConfig.getConfig();
@@ -205,7 +206,7 @@ class TemplateWriter {
         // Passthrough copy check is above this (order is important)
       } else if (
         tmpl.isFileRelevantToThisTemplate(this.incrementalFile, {
-          incrementalFileIsFullTemplate: this.eleventyFiles.isFullTemplateFile(
+          isFullTemplate: this.eleventyFiles.isFullTemplateFile(
             allPaths,
             this.incrementalFile
           ),
@@ -263,7 +264,7 @@ class TemplateWriter {
     return passthroughManager.copyAll(paths).catch((e) => {
       this.errorHandler.warn(e, "Error with passthrough copy");
       return Promise.reject(
-        new TemplateWriterWriteError("Having trouble copying", e)
+        new EleventyPassthroughCopyError("Having trouble copying", e)
       );
     });
   }
@@ -287,8 +288,8 @@ class TemplateWriter {
             usedTemplateContentTooEarlyMap.push(mapEntry);
           } else {
             return Promise.reject(
-              new TemplateWriterWriteError(
-                `Having trouble writing template: ${mapEntry.outputPath}`,
+              new EleventyTemplateError(
+                `Having trouble writing to "${mapEntry.outputPath}" from "${mapEntry.inputPath}"`,
                 e
               )
             );
@@ -301,8 +302,8 @@ class TemplateWriter {
       promises.push(
         this._generateTemplate(mapEntry, to).catch(function (e) {
           return Promise.reject(
-            new TemplateWriterWriteError(
-              `Having trouble writing template (second pass): ${mapEntry.outputPath}`,
+            new EleventyTemplateError(
+              `Having trouble writing to (second pass) "${mapEntry.outputPath}" from "${mapEntry.inputPath}"`,
               e
             )
           );
@@ -317,6 +318,7 @@ class TemplateWriter {
     let paths = await this._getAllPaths();
     let promises = [];
 
+    // The ordering here is important to destructuring in Eleventy->_watch
     promises.push(this.writePassthroughCopy(paths));
 
     promises.push(...(await this.generateTemplates(paths)));
@@ -334,7 +336,7 @@ class TemplateWriter {
 
     return Promise.all(promises)
       .then((results) => {
-        let flat = lodashFlatten(results); // switch to results.flat(1) with Node 12+
+        let flat = results.flat();
         return flat;
       })
       .catch((e) => {

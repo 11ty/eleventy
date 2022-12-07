@@ -1,7 +1,8 @@
 const path = require("path");
-const TemplatePath = require("./TemplatePath");
 const normalize = require("normalize-path");
-const isPlainObject = require("lodash/isPlainObject");
+const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
+
+const serverlessUrlFilter = require("./Filters/ServerlessUrl");
 
 class TemplatePermalink {
   // `link` with template syntax should have already been rendered in Template.js
@@ -24,12 +25,7 @@ class TemplatePermalink {
           continue;
         }
         if (key !== "build" && link[key] !== false) {
-          // is array of serverless urls, use the first one
-          if (Array.isArray(link[key])) {
-            this.primaryServerlessUrl = link[key][0];
-          } else {
-            this.primaryServerlessUrl = link[key];
-          }
+          this.primaryServerlessUrl = link[key]; // can be an array or string
         }
         break;
       }
@@ -70,18 +66,28 @@ class TemplatePermalink {
     this.extraPaginationSubdir = extraSubdir || "";
   }
 
+  setUrlTransforms(transforms) {
+    this._urlTransforms = transforms;
+  }
+
+  get urlTransforms() {
+    return this._urlTransforms || [];
+  }
+
+  setServerlessPathData(data) {
+    this.serverlessPathData = data;
+  }
+
   getServerlessUrls() {
     return this.serverlessUrls;
   }
 
   _addDefaultLinkFilename(link) {
-    return link + (link.substr(-1) === "/" ? "index.html" : "");
+    return link + (link.slice(-1) === "/" ? "index.html" : "");
   }
 
-  toLink() {
-    if (this.primaryServerlessUrl) {
-      return this.primaryServerlessUrl;
-    } else if (!this.buildLink) {
+  toOutputPath() {
+    if (!this.buildLink) {
       // empty or false
       return false;
     }
@@ -96,6 +102,34 @@ class TemplatePermalink {
     );
   }
 
+  // Used in url transforms feature
+  static getUrlStem(original) {
+    let subject = original;
+    if (original.endsWith(".html")) {
+      subject = original.slice(0, -1 * ".html".length);
+    }
+    return TemplatePermalink.normalizePathToUrl(subject);
+  }
+
+  static normalizePathToUrl(original) {
+    let compare = original || "";
+
+    let needleHtml = "/index.html";
+    let needleBareTrailingSlash = "/index/";
+    let needleBare = "/index";
+    if (compare.endsWith(needleHtml)) {
+      return compare.slice(0, compare.length - needleHtml.length) + "/";
+    } else if (compare.endsWith(needleBareTrailingSlash)) {
+      return (
+        compare.slice(0, compare.length - needleBareTrailingSlash.length) + "/"
+      );
+    } else if (compare.endsWith(needleBare)) {
+      return compare.slice(0, compare.length - needleBare.length) + "/";
+    }
+
+    return original;
+  }
+
   // This method is used to generate the `page.url` variable.
   // Note that in serverless mode this should still exist to generate the content map
 
@@ -104,22 +138,46 @@ class TemplatePermalink {
   // test/index.html becomes test/
   toHref() {
     if (this.primaryServerlessUrl) {
+      if (this.serverlessPathData) {
+        let urls = serverlessUrlFilter(
+          this.primaryServerlessUrl,
+          this.serverlessPathData
+        );
+
+        // Array of *matching* serverless urls only
+        if (Array.isArray(urls)) {
+          // return first
+          return urls[0];
+        }
+
+        return urls;
+      }
+
+      if (Array.isArray(this.primaryServerlessUrl)) {
+        // return first
+        return this.primaryServerlessUrl[0];
+      }
+
       return this.primaryServerlessUrl;
     } else if (!this.buildLink) {
       // empty or false
       return false;
     }
 
-    let transformedLink = this.toLink();
+    let transformedLink = this.toOutputPath();
     let original =
       (transformedLink.charAt(0) !== "/" ? "/" : "") + transformedLink;
-    let needle = "/index.html";
-    if (original === needle) {
-      return "/";
-    } else if (original.substr(-1 * needle.length) === needle) {
-      return original.substr(0, original.length - needle.length) + "/";
+
+    let normalized = TemplatePermalink.normalizePathToUrl(original) || "";
+    for (let transform of this.urlTransforms) {
+      original =
+        transform({
+          url: normalized,
+          urlStem: TemplatePermalink.getUrlStem(original),
+        }) ?? original;
     }
-    return original;
+
+    return TemplatePermalink.normalizePathToUrl(original);
   }
 
   toPath(outputDir) {
@@ -127,7 +185,7 @@ class TemplatePermalink {
       return false;
     }
 
-    let uri = this.toLink();
+    let uri = this.toOutputPath();
 
     if (uri === false) {
       return false;
@@ -141,7 +199,7 @@ class TemplatePermalink {
       return false;
     }
 
-    let uri = this.toLink();
+    let uri = this.toOutputPath();
 
     if (uri === false) {
       return false;
@@ -165,12 +223,13 @@ class TemplatePermalink {
     suffix,
     fileExtension = "html"
   ) {
-    let hasDupeFolder = TemplatePermalink._hasDuplicateFolder(
-      dir,
-      filenameNoExt
-    );
     let path;
     if (fileExtension === "html") {
+      let hasDupeFolder = TemplatePermalink._hasDuplicateFolder(
+        dir,
+        filenameNoExt
+      );
+
       path =
         (dir ? dir + "/" : "") +
         (filenameNoExt !== "index" && !hasDupeFolder

@@ -7,6 +7,7 @@ const normalizeNewLines = require("./Util/normalizeNewLines");
 const TemplateConfig = require("../src/TemplateConfig");
 
 const getNewTemplateForTests = require("./_getNewTemplateForTests");
+const getRenderedTmpls = require("./_getRenderedTemplates");
 
 function getNewTemplate(filename, input, output, eleventyConfig) {
   return getNewTemplateForTests(
@@ -26,6 +27,18 @@ function getNewTemplateByNumber(num, eleventyConfig) {
     "./test/stubs/_site",
     eleventyConfig
   );
+}
+
+async function testRenderWithoutLayouts(template, data) {
+  let ret = await template.renderWithoutLayout(data);
+  return ret;
+}
+
+async function addTemplate(collection, template) {
+  let data = await template.getData();
+  for (let map of await template.getTemplates(data)) {
+    collection.add(map);
+  }
 }
 
 test("TemplateMap has collections added", async (t) => {
@@ -58,8 +71,8 @@ test("TemplateMap compared to Collection API", async (t) => {
   t.deepEqual(map[1].data.collections.post[1].template, tmpl4);
 
   let c = new TemplateCollection();
-  await c._testAddTemplate(tmpl1);
-  await c._testAddTemplate(tmpl4);
+  await addTemplate(c, tmpl1);
+  await addTemplate(c, tmpl4);
 
   let posts = c.getFilteredByTag("post");
   t.is(posts.length, 2);
@@ -107,11 +120,11 @@ test("TemplateMap adds collections data and has templateContent values", async (
   t.is(map[1].data.collections.all.length, 2);
 
   t.is(
-    await map[0].template._testRenderWithoutLayouts(map[0].data),
+    await testRenderWithoutLayouts(map[0].template, map[0].data),
     map[0]._pages[0].templateContent
   );
   t.is(
-    await map[1].template._testRenderWithoutLayouts(map[1].data),
+    await testRenderWithoutLayouts(map[1].template, map[1].data),
     map[1]._pages[0].templateContent
   );
 });
@@ -132,7 +145,7 @@ test("TemplateMap circular references (map without templateContent)", async (t) 
   t.is(map[0].data.collections.all.length, 1);
 
   t.is(
-    await map[0].template._testRenderWithoutLayouts(map[0].data),
+    await testRenderWithoutLayouts(map[0].template, map[0].data),
     map[0]._pages[0].templateContent
   );
 });
@@ -217,7 +230,7 @@ test("Issue #115, mixing pagination and collections", async (t) => {
   t.is(Object.keys(map[2].data.collections.foos).length, 1);
   t.is(Object.keys(map[2].data.collections.bars).length, 1);
 
-  let entry = await map[2].template.getRenderedTemplates(map[2].data);
+  let entry = await getRenderedTmpls(map[2].template, map[2].data);
   t.deepEqual(
     normalizeNewLines(entry[0].templateContent),
     `This page is foos
@@ -282,7 +295,7 @@ test("Issue #115 with layout, mixing pagination and collections", async (t) => {
   t.is(Object.keys(map[2].data.collections.foos).length, 1);
   t.is(Object.keys(map[2].data.collections.bars).length, 1);
 
-  let entry = await map[2].template.getRenderedTemplates(map[2].data);
+  let entry = await getRenderedTmpls(map[2].template, map[2].data);
   t.deepEqual(
     normalizeNewLines(entry[0].templateContent),
     `This page is foos
@@ -679,7 +692,8 @@ test("Should be able to paginate a tag generated collection (and it has template
     "./test/stubs/templateMapCollection/paged-tag-dogs-templateContent.md"
   );
 
-  let templates = await pagedMapEntry.template.getRenderedTemplates(
+  let templates = await getRenderedTmpls(
+    pagedMapEntry.template,
     pagedMapEntry.data
   );
   t.is(templates.length, 2);
@@ -725,10 +739,10 @@ test("Should be able to paginate a tag generated collection when aliased (and it
     "./test/stubs/templateMapCollection/paged-tag-dogs-templateContent-alias.md"
   );
 
-  let templates = await pagedMapEntry.template.getRenderedTemplates(
+  let templates = await getRenderedTmpls(
+    pagedMapEntry.template,
     pagedMapEntry.data
   );
-
   t.is(templates.length, 1);
   t.is(templates[0].data.pagination.pageNumber, 0);
   t.is(
@@ -1446,6 +1460,39 @@ test("serverlessUrlMap Event (empty pagination template with `serverless` should
     "./test/stubs/permalink-serverless-empty-pagination/permalink-serverless-empty-pagination.md",
     "./test/stubs/",
     "./test/stubs/_site",
+    eleventyConfig
+  );
+
+  await tm.add(tmpl);
+  await tm.cache();
+});
+
+test("eleventy.layouts Event", async (t) => {
+  t.plan(1);
+
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.on("eleventy.layouts", (layoutMap) => {
+    t.deepEqual(layoutMap, {
+      "./test/stubs-layouts-event/_includes/first.liquid": [
+        "./test/stubs-layouts-event/page.md",
+      ],
+      "./test/stubs-layouts-event/_includes/second.liquid": [
+        "./test/stubs-layouts-event/page.md",
+        "./test/stubs-layouts-event/_includes/first.liquid",
+      ],
+      "./test/stubs-layouts-event/_includes/third.liquid": [
+        "./test/stubs-layouts-event/page.md",
+        "./test/stubs-layouts-event/_includes/first.liquid",
+        "./test/stubs-layouts-event/_includes/second.liquid",
+      ],
+    });
+  });
+
+  let tm = new TemplateMap(eleventyConfig);
+  let tmpl = getNewTemplate(
+    "./test/stubs-layouts-event/page.md",
+    "./test/stubs-layouts-event/",
+    "./test/stubs-layouts-event/_site",
     eleventyConfig
   );
 

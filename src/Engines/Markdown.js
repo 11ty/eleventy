@@ -3,8 +3,8 @@ const TemplateEngine = require("./TemplateEngine");
 // const debug = require("debug")("Eleventy:Markdown");
 
 class Markdown extends TemplateEngine {
-  constructor(name, includesDir, config) {
-    super(name, includesDir, config);
+  constructor(name, dirs, config) {
+    super(name, dirs, config);
 
     this.markdownOptions = {};
 
@@ -22,6 +22,11 @@ class Markdown extends TemplateEngine {
       this.mdLib.set({
         highlight: this.config.markdownHighlighter,
       });
+    }
+
+    if (typeof this.mdLib.disable === "function") {
+      // Disable indented code blocks by default (Issue #2438)
+      this.mdLib.disable("code");
     }
 
     this.setEngineLib(this.mdLib);
@@ -53,7 +58,7 @@ class Markdown extends TemplateEngine {
       if (typeof preTemplateEngine === "string") {
         engine = this.engineManager.getEngine(
           preTemplateEngine,
-          super.getIncludesDir(),
+          this.dirs,
           this.extensionMap
         );
       } else {

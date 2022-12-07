@@ -28,7 +28,12 @@ class EleventyErrorUtil {
       return "" + msg;
     }
 
-    return msg.substr(0, msg.indexOf(EleventyErrorUtil.prefix));
+    return msg.slice(
+      0,
+      msg.indexOf(EleventyErrorUtil.prefix) < 0
+        ? 0
+        : msg.indexOf(EleventyErrorUtil.prefix)
+    );
   }
 
   static deconvertErrorToObject(error) {
@@ -67,7 +72,7 @@ class EleventyErrorUtil {
           e.originalError.name === "UndefinedVariableError") &&
         e.originalError.originalError instanceof
           TemplateContentPrematureUseError) || // Liquid
-      e.message.indexOf("TemplateContentPrematureUseError") > -1
+      (e.message || "").indexOf("TemplateContentPrematureUseError") > -1
     ); // Nunjucks
   }
 }

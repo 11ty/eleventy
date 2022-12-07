@@ -15,6 +15,12 @@ test("serverlessUrl Stringify", (t) => {
   t.throws(() => ServerlessUrl("/test/:id/", {}));
 });
 
+// https://github.com/11ty/eleventy/issues/2067
+test("serverlessUrl Stringify wildcard", (t) => {
+  t.is(ServerlessUrl("/test/*", { 0: "" }), "/test/");
+  t.is(ServerlessUrl("/test/*", { 0: "ldksjf" }), "/test/ldksjf");
+});
+
 test("serverlessUrl Stringify Arrays", (t) => {
   // Straight string
   t.deepEqual(ServerlessUrl(["/test/", "/testb/"]), ["/test/", "/testb/"]);

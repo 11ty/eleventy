@@ -1,16 +1,27 @@
 const fs = require("fs");
+const path = require("path");
 const isGlob = require("is-glob");
 const copy = require("recursive-copy");
-const TemplatePath = require("./TemplatePath");
-const debug = require("debug")("Eleventy:TemplatePassthrough");
 const fastglob = require("fast-glob");
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const EleventyBaseError = require("./EleventyBaseError");
-const aggregateBench = require("./BenchmarkManager").get("Aggregate");
+const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
+
+const debug = require("debug")("Eleventy:TemplatePassthrough");
 
 class TemplatePassthroughError extends EleventyBaseError {}
 
 class TemplatePassthrough {
-  constructor(path, outputDir, inputDir) {
+  constructor(path, outputDir, inputDir, config) {
+    if (!config) {
+      throw new TemplatePassthroughError("Missing `config`.");
+    }
+    this.config = config;
+    this.benchmarks = {
+      aggregate: this.config.benchmarkManager.get("Aggregate"),
+    };
+
     this.rawPath = path;
 
     // inputPath is relative to the root of your project and not your Eleventy input directory.
@@ -21,15 +32,19 @@ class TemplatePassthrough {
     this.outputPath = path.outputPath;
     this.outputDir = outputDir;
 
+    this.copyOptions = path.copyOptions; // custom options for recursive-copy
+
     this.isDryRun = false;
+    this.isIncremental = false;
   }
 
+  /* { inputPath, outputPath } though outputPath is *not* the full path: just the output directory */
   getPath() {
     return this.rawPath;
   }
 
   getOutputPath(inputFileFromGlob) {
-    const { inputDir, outputDir, outputPath, inputPath } = this;
+    let { inputDir, outputDir, outputPath, inputPath } = this;
 
     if (outputPath === true) {
       return TemplatePath.normalize(
@@ -47,7 +62,25 @@ class TemplatePassthrough {
       return this.getOutputPathForGlobFile(inputFileFromGlob);
     }
 
-    return TemplatePath.normalize(TemplatePath.join(outputDir, outputPath));
+    // Bug when copying incremental file overwriting output directory (and making it a file)
+    // e.g. public/test.css -> _site
+    // https://github.com/11ty/eleventy/issues/2278
+    let fullOutputPath = TemplatePath.normalize(
+      TemplatePath.join(outputDir, outputPath)
+    );
+
+    if (
+      fs.existsSync(inputPath) &&
+      !TemplatePath.isDirectorySync(inputPath) &&
+      TemplatePath.isDirectorySync(fullOutputPath)
+    ) {
+      let filename = path.parse(inputPath).base;
+      return TemplatePath.normalize(
+        TemplatePath.join(fullOutputPath, filename)
+      );
+    }
+
+    return fullOutputPath;
   }
 
   getOutputPathForGlobFile(inputFileFromGlob) {
@@ -61,18 +94,50 @@ class TemplatePassthrough {
     this.isDryRun = !!isDryRun;
   }
 
+  setRunMode(runMode) {
+    this.runMode = runMode;
+  }
+
+  setIsIncremental(isIncremental) {
+    this.isIncremental = isIncremental;
+  }
+
   async getFiles(glob) {
     debug("Searching for: %o", glob);
-    let bench = aggregateBench.get("Searching the file system");
-    bench.before();
-    const files = TemplatePath.addLeadingDotSlashArray(
+    let b = this.benchmarks.aggregate.get("Searching the file system");
+    b.before();
+    let files = TemplatePath.addLeadingDotSlashArray(
       await fastglob(glob, {
         caseSensitiveMatch: false,
         dot: true,
       })
     );
-    bench.after();
+    b.after();
     return files;
+  }
+
+  // maps input paths to output paths
+  async getFileMap() {
+    if (!isGlob(this.inputPath) && fs.existsSync(this.inputPath)) {
+      return [
+        {
+          inputPath: this.inputPath,
+          outputPath: this.getOutputPath(),
+        },
+      ];
+    }
+
+    let paths = [];
+    // If not directory or file, attempt to get globs
+    let files = await this.getFiles(this.inputPath);
+    for (let inputPath of files) {
+      paths.push({
+        inputPath,
+        outputPath: this.getOutputPath(inputPath),
+      });
+    }
+
+    return paths;
   }
 
   /* Types:
@@ -82,7 +147,7 @@ class TemplatePassthrough {
    */
   async copy(src, dest, copyOptions) {
     if (
-      !TemplatePath.stripLeadingDotSlash(dest).includes(
+      !TemplatePath.stripLeadingDotSlash(dest).startsWith(
         TemplatePath.stripLeadingDotSlash(this.outputDir)
       )
     ) {
@@ -95,18 +160,17 @@ class TemplatePassthrough {
 
     let fileCopyCount = 0;
     let map = {};
-
     // returns a promise
     return copy(src, dest, copyOptions)
-      .on(copy.events.COPY_FILE_START, function (copyOp) {
+      .on(copy.events.COPY_FILE_START, (copyOp) => {
         // Access to individual files at `copyOp.src`
         debug("Copying individual file %o", copyOp.src);
         map[copyOp.src] = copyOp.dest;
-        aggregateBench.get("Passthrough Copy File").before();
+        this.benchmarks.aggregate.get("Passthrough Copy File").before();
       })
-      .on(copy.events.COPY_FILE_COMPLETE, function () {
+      .on(copy.events.COPY_FILE_COMPLETE, (copyOp) => {
         fileCopyCount++;
-        aggregateBench.get("Passthrough Copy File").after();
+        this.benchmarks.aggregate.get("Passthrough Copy File").after();
       })
       .then(() => {
         return {
@@ -124,30 +188,41 @@ class TemplatePassthrough {
       });
     }
 
-    const copyOptions = {
-      overwrite: true,
-      dot: true,
-      junk: false,
-      results: false,
-    };
-    let promises = [];
-
     debug("Copying %o", this.inputPath);
+    let fileMap = await this.getFileMap();
 
-    if (!isGlob(this.inputPath) && fs.existsSync(this.inputPath)) {
-      // IMPORTANT: this returns a promise, does not await for promise to finish
-      promises.push(
-        this.copy(this.inputPath, this.getOutputPath(), copyOptions)
-      );
-    } else {
-      // If not directory or file, attempt to get globs
-      let files = await this.getFiles(this.inputPath);
+    // default options for recursive-copy
+    // see https://www.npmjs.com/package/recursive-copy#arguments
+    let copyOptionsDefault = {
+      overwrite: true, // overwrite output. fails when input is directory (mkdir) and output is file
+      dot: true, // copy dotfiles
+      junk: false, // copy cache files like Thumbs.db
+      results: false,
+      expand: false, // follow symlinks (matches recursive-copy default)
+      debug: false, // (matches recursive-copy default)
 
-      promises = files.map((inputFile) => {
-        let target = this.getOutputPath(inputFile);
-        return this.copy(inputFile, target, copyOptions);
-      });
-    }
+      // Note: `filter` callback function only passes in a relative path, which is unreliable
+      // See https://github.com/timkendrick/recursive-copy/blob/4c9a8b8a4bf573285e9c4a649a30a2b59ccf441c/lib/copy.js#L59
+      // e.g. `{ filePaths: [ './img/coolkid.jpg' ], relativePaths: [ '' ] }`
+    };
+
+    let copyOptions = Object.assign(copyOptionsDefault, this.copyOptions);
+
+    let promises = fileMap.map((entry) => {
+      // For-free passthrough copy
+      if (checkPassthroughCopyBehavior(this.config, this.runMode)) {
+        let aliasMap = {};
+        aliasMap[entry.inputPath] = entry.outputPath;
+
+        return Promise.resolve({
+          count: 0,
+          map: aliasMap,
+        });
+      }
+
+      // Copy the files (only in build mode)
+      return this.copy(entry.inputPath, entry.outputPath, copyOptions);
+    });
 
     // IMPORTANT: this returns an array of promises, does not await for promise to finish
     return Promise.all(promises)

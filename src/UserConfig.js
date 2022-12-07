@@ -1,14 +1,16 @@
-const chalk = require("chalk");
+const chalk = require("kleur");
 const semver = require("semver");
 const { DateTime } = require("luxon");
 const EventEmitter = require("./Util/AsyncEventEmitter");
 const EleventyBaseError = require("./EleventyBaseError");
+const BenchmarkManager = require("./BenchmarkManager");
 const merge = require("./Util/Merge");
-const bench = require("./BenchmarkManager").get("Configuration");
 const debug = require("debug")("Eleventy:UserConfig");
 const pkg = require("../package.json");
 
 class UserConfigError extends EleventyBaseError {}
+
+const ComparisonAsyncFunction = (async () => {}).constructor;
 
 // API to expose configuration options in config file
 class UserConfig {
@@ -19,6 +21,13 @@ class UserConfig {
   reset() {
     debug("Resetting EleventyConfig to initial values.");
     this.events = new EventEmitter();
+
+    this.benchmarkManager = new BenchmarkManager();
+    this.benchmarks = {
+      config: this.benchmarkManager.get("Configuration"),
+      aggregate: this.benchmarkManager.get("Aggregate"),
+    };
+
     this.collections = {};
     this.precompiledCollections = {};
     this.templateFormats = undefined;
@@ -28,6 +37,9 @@ class UserConfig {
     this.liquidFilters = {};
     this.liquidShortcodes = {};
     this.liquidPairedShortcodes = {};
+
+    this.nunjucksEnvironmentOptions = {};
+    this.nunjucksPrecompiledTemplates = {};
     this.nunjucksFilters = {};
     this.nunjucksAsyncFilters = {};
     this.nunjucksTags = {};
@@ -36,9 +48,11 @@ class UserConfig {
     this.nunjucksAsyncShortcodes = {};
     this.nunjucksPairedShortcodes = {};
     this.nunjucksAsyncPairedShortcodes = {};
+
     this.handlebarsHelpers = {};
     this.handlebarsShortcodes = {};
     this.handlebarsPairedShortcodes = {};
+
     this.javascriptFunctions = {};
     this.pugOptions = {};
     this.ejsOptions = {};
@@ -54,14 +68,18 @@ class UserConfig {
     this.dynamicPermalinks = true;
 
     this.useGitIgnore = true;
-    this.ignores = new Set();
-    this.ignores.add("node_modules/**");
+
+    let defaultIgnores = new Set();
+    defaultIgnores.add("**/node_modules/**");
+    defaultIgnores.add(".git/**");
+    this.ignores = new Set(defaultIgnores);
+    this.watchIgnores = new Set(defaultIgnores);
 
     this.dataDeepMerge = true;
     this.extensionMap = new Set();
     this.watchJavaScriptDependencies = true;
     this.additionalWatchTargets = [];
-    this.browserSyncConfig = {};
+    this.serverOptions = {};
     this.globalData = {};
     this.chokidarConfig = {};
     this.watchThrottleWaitTime = 0; //ms
@@ -72,12 +90,22 @@ class UserConfig {
     this.quietMode = false;
 
     this.plugins = [];
+    this._pluginExecution = false;
 
     this.useTemplateCache = true;
+    this.dataFilterSelectors = new Set();
+
+    this.libraryAmendments = {};
+    this.serverPassthroughCopyBehavior = "passthrough";
+    this.urlTransforms = [];
   }
 
   versionCheck(expected) {
-    if (!semver.satisfies(pkg.version, expected)) {
+    if (
+      !semver.satisfies(pkg.version, expected, {
+        includePrerelease: true,
+      })
+    ) {
       throw new UserConfigError(
         `This project requires the Eleventy version to match '${expected}' but found ${pkg.version}. Use \`npm update @11ty/eleventy -g\` to upgrade the eleventy global or \`npm update @11ty/eleventy --save\` to upgrade your local project version.`
       );
@@ -92,6 +120,11 @@ class UserConfig {
 
   emit(eventName, ...args) {
     return this.events.emit(eventName, ...args);
+  }
+
+  // Internal method
+  _enablePluginExecution() {
+    this._pluginExecution = true;
   }
 
   // This is a method for plugins, probably shouldn’t use this in projects.
@@ -119,7 +152,10 @@ class UserConfig {
         name
       );
     }
-    this.liquidTags[name] = bench.add(`"${name}" Liquid Custom Tag`, tagFn);
+    this.liquidTags[name] = this.benchmarks.config.add(
+      `"${name}" Liquid Custom Tag`,
+      tagFn
+    );
   }
 
   addLiquidFilter(name, callback) {
@@ -134,7 +170,10 @@ class UserConfig {
       );
     }
 
-    this.liquidFilters[name] = bench.add(`"${name}" Liquid Filter`, callback);
+    this.liquidFilters[name] = this.benchmarks.config.add(
+      `"${name}" Liquid Filter`,
+      callback
+    );
   }
 
   addNunjucksAsyncFilter(name, callback) {
@@ -149,7 +188,7 @@ class UserConfig {
       );
     }
 
-    this.nunjucksAsyncFilters[name] = bench.add(
+    this.nunjucksAsyncFilters[name] = this.benchmarks.config.add(
       `"${name}" Nunjucks Async Filter`,
       callback
     );
@@ -172,7 +211,7 @@ class UserConfig {
         );
       }
 
-      this.nunjucksFilters[name] = bench.add(
+      this.nunjucksFilters[name] = this.benchmarks.config.add(
         `"${name}" Nunjucks Filter`,
         callback
       );
@@ -191,7 +230,7 @@ class UserConfig {
       );
     }
 
-    this.handlebarsHelpers[name] = bench.add(
+    this.handlebarsHelpers[name] = this.benchmarks.config.add(
       `"${name}" Handlebars Helper`,
       callback
     );
@@ -202,11 +241,43 @@ class UserConfig {
 
     // namespacing happens downstream
     this.addLiquidFilter(name, callback);
-    this.addNunjucksFilter(name, callback);
     this.addJavaScriptFunction(name, callback);
 
-    // TODO remove Handlebars helpers in Universal Filters. Use shortcodes instead (the Handlebars template syntax is the same).
-    this.addHandlebarsHelper(name, callback);
+    // This method *requires* `async function` and will not work with `function` that returns a promise
+    if (callback instanceof ComparisonAsyncFunction) {
+      this.addNunjucksAsyncFilter(name, async function (...args) {
+        let cb = args.pop();
+        let ret = await callback.call(this, ...args);
+        cb(null, ret);
+      });
+    } else {
+      this.addNunjucksFilter(name, function (...args) {
+        let ret = callback.call(this, ...args);
+        if (ret instanceof Promise) {
+          throw new Error(
+            `Nunjucks *is* async-friendly with \`addFilter("${name}", async function() {})\` but you need to supply an \`async function\`. You returned a promise from \`addFilter("${name}", function() {})\`. Alternatively, use the \`addAsyncFilter("${name}")\` configuration API method.`
+          );
+        }
+        return ret;
+      });
+
+      // TODO remove Handlebars helpers in Universal Filters. Use shortcodes instead (the Handlebars template syntax is the same).
+      this.addHandlebarsHelper(name, callback);
+    }
+  }
+
+  // Liquid, Nunjucks, and JS only
+  addAsyncFilter(name, callback) {
+    debug("Adding universal async filter %o", this.getNamespacedName(name));
+
+    // namespacing happens downstream
+    this.addLiquidFilter(name, callback);
+    this.addJavaScriptFunction(name, callback);
+    this.addNunjucksAsyncFilter(name, async function (...args) {
+      let cb = args.pop();
+      let ret = await callback.call(this, ...args);
+      cb(null, ret);
+    });
   }
 
   getFilter(name) {
@@ -236,7 +307,10 @@ class UserConfig {
       );
     }
 
-    this.nunjucksTags[name] = bench.add(`"${name}" Nunjucks Custom Tag`, tagFn);
+    this.nunjucksTags[name] = this.benchmarks.config.add(
+      `"${name}" Nunjucks Custom Tag`,
+      tagFn
+    );
   }
 
   addGlobalData(name, data) {
@@ -245,7 +319,7 @@ class UserConfig {
     return this;
   }
 
-  addNunjucksGlobal(name, globalFn) {
+  addNunjucksGlobal(name, globalType) {
     name = this.getNamespacedName(name);
 
     if (this.nunjucksGlobals[name]) {
@@ -257,22 +331,32 @@ class UserConfig {
       );
     }
 
-    this.nunjucksGlobals[name] = bench.add(
-      `"${name}" Nunjucks Global`,
-      globalFn
-    );
+    if (typeof globalType === "function") {
+      this.nunjucksGlobals[name] = this.benchmarks.config.add(
+        `"${name}" Nunjucks Global`,
+        globalType
+      );
+    } else {
+      this.nunjucksGlobals[name] = globalType;
+    }
   }
 
   addTransform(name, callback) {
     name = this.getNamespacedName(name);
 
-    this.transforms[name] = callback;
+    this.transforms[name] = this.benchmarks.config.add(
+      `"${name}" Transform`,
+      callback
+    );
   }
 
   addLinter(name, callback) {
     name = this.getNamespacedName(name);
 
-    this.linters[name] = callback;
+    this.linters[name] = this.benchmarks.config.add(
+      `"${name}" Linter`,
+      callback
+    );
   }
 
   addLayoutAlias(from, to) {
@@ -297,7 +381,54 @@ class UserConfig {
   }
 
   addPlugin(plugin, options) {
-    this.plugins.push({ plugin, options });
+    if (this._pluginExecution) {
+      this._executePlugin(plugin, options);
+    } else {
+      this.plugins.push({
+        plugin,
+        options,
+        pluginNamespace: this.activeNamespace,
+      });
+    }
+  }
+
+  // Using Function.name https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name#examples
+  _getPluginName(plugin) {
+    if (typeof plugin === "function") {
+      return plugin.name;
+    } else if (
+      plugin.configFunction &&
+      typeof plugin.configFunction === "function"
+    ) {
+      return plugin.configFunction.name;
+    }
+  }
+
+  _executePlugin(plugin, options) {
+    let name = this._getPluginName(plugin);
+    debug(`Adding ${name || "anonymous"} plugin`);
+    let pluginBenchmark = this.benchmarks.aggregate.get(
+      "Configuration addPlugin"
+    );
+    if (typeof plugin === "function") {
+      pluginBenchmark.before();
+      this.benchmarks.config;
+      let configFunction = plugin;
+      configFunction(this, options);
+      pluginBenchmark.after();
+    } else if (plugin && plugin.configFunction) {
+      pluginBenchmark.before();
+      if (options && typeof options.init === "function") {
+        options.init.call(this, plugin.initArguments || {});
+      }
+
+      plugin.configFunction(this, options);
+      pluginBenchmark.after();
+    } else {
+      throw new UserConfigError(
+        "Invalid EleventyConfig.addPlugin signature. Should be a function or a valid Eleventy plugin object."
+      );
+    }
   }
 
   getNamespacedName(name) {
@@ -323,26 +454,44 @@ class UserConfig {
    *
    * @param {string|object} fileOrDir The path to the file or directory that should
    * be copied. OR an object where the key is the input glob and the property is the output directory
+   * @param {object} copyOptions options for recursive-copy.
+   * see https://www.npmjs.com/package/recursive-copy#arguments
+   * default options are defined in TemplatePassthrough copyOptionsDefault
    * @returns {any} a reference to the `EleventyConfig` object.
    * @memberof EleventyConfig
    */
-  addPassthroughCopy(fileOrDir) {
+  addPassthroughCopy(fileOrDir, copyOptions = {}) {
     if (typeof fileOrDir === "string") {
-      this.passthroughCopies[fileOrDir] = true;
+      this.passthroughCopies[fileOrDir] = { outputPath: true, copyOptions };
     } else {
-      Object.assign(this.passthroughCopies, fileOrDir);
+      for (let [inputPath, outputPath] of Object.entries(fileOrDir)) {
+        this.passthroughCopies[inputPath] = { outputPath, copyOptions };
+      }
     }
 
     return this;
   }
 
-  _normalizeTemplateFormats(templateFormats) {
-    if (typeof templateFormats === "string") {
-      templateFormats = templateFormats
-        .split(",")
-        .map((format) => format.trim());
+  _normalizeTemplateFormats(templateFormats, existingValues) {
+    // setTemplateFormats(null) should return null
+    if (templateFormats === null || templateFormats === undefined) {
+      return null;
     }
-    return templateFormats;
+
+    let set = new Set();
+    if (Array.isArray(templateFormats)) {
+      set = new Set(templateFormats.map((format) => format.trim()));
+    } else if (typeof templateFormats === "string") {
+      for (let format of templateFormats.split(",")) {
+        set.add(format.trim());
+      }
+    }
+
+    for (let format of existingValues || []) {
+      set.add(format);
+    }
+
+    return Array.from(set);
   }
 
   setTemplateFormats(templateFormats) {
@@ -351,23 +500,38 @@ class UserConfig {
 
   // additive, usually for plugins
   addTemplateFormats(templateFormats) {
-    if (!this.templateFormatsAdded) {
-      this.templateFormatsAdded = [];
-    }
-    this.templateFormatsAdded = this.templateFormatsAdded.concat(
-      this._normalizeTemplateFormats(templateFormats)
+    this.templateFormatsAdded = this._normalizeTemplateFormats(
+      templateFormats,
+      this.templateFormatsAdded
     );
   }
 
   setLibrary(engineName, libraryInstance) {
     // Pug options are passed to `compile` and not in the library constructor so we don’t need to warn
-    if (engineName === "liquid" && this.mdOptions) {
+    if (engineName === "liquid" && Object.keys(this.liquidOptions).length) {
       debug(
-        "WARNING: using `eleventyConfig.setLibrary` will override any configuration set using `.setLiquidOptions` or with the `liquidOptions` key in the config object. You’ll need to pass these options to the library yourself."
+        "WARNING: using `eleventyConfig.setLibrary` will override any configuration set using `.setLiquidOptions` via the config API. You’ll need to pass these options to the library yourself."
+      );
+    } else if (
+      engineName === "njk" &&
+      Object.keys(this.nunjucksEnvironmentOptions).length
+    ) {
+      debug(
+        "WARNING: using `eleventyConfig.setLibrary` will override any configuration set using `.setNunjucksEnvironmentOptions` via the config API. You’ll need to pass these options to the library yourself."
       );
     }
 
     this.libraryOverrides[engineName.toLowerCase()] = libraryInstance;
+  }
+
+  /* These callbacks run on both libraryOverrides and default library instances */
+  amendLibrary(engineName, callback) {
+    let name = engineName.toLowerCase();
+    if (!this.libraryAmendments[name]) {
+      this.libraryAmendments[name] = [];
+    }
+
+    this.libraryAmendments[name].push(callback);
   }
 
   setPugOptions(options) {
@@ -376,6 +540,14 @@ class UserConfig {
 
   setLiquidOptions(options) {
     this.liquidOptions = options;
+  }
+
+  setNunjucksEnvironmentOptions(options) {
+    this.nunjucksEnvironmentOptions = options;
+  }
+
+  setNunjucksPrecompiledTemplates(templates) {
+    this.nunjucksPrecompiledTemplates = templates;
   }
 
   setEjsOptions(options) {
@@ -419,7 +591,7 @@ class UserConfig {
       );
     }
 
-    this.nunjucksAsyncShortcodes[name] = bench.add(
+    this.nunjucksAsyncShortcodes[name] = this.benchmarks.config.add(
       `"${name}" Nunjucks Async Shortcode`,
       callback
     );
@@ -440,7 +612,7 @@ class UserConfig {
         );
       }
 
-      this.nunjucksShortcodes[name] = bench.add(
+      this.nunjucksShortcodes[name] = this.benchmarks.config.add(
         `"${name}" Nunjucks Shortcode`,
         callback
       );
@@ -459,7 +631,7 @@ class UserConfig {
       );
     }
 
-    this.liquidShortcodes[name] = bench.add(
+    this.liquidShortcodes[name] = this.benchmarks.config.add(
       `"${name}" Liquid Shortcode`,
       callback
     );
@@ -477,7 +649,7 @@ class UserConfig {
       );
     }
 
-    this.handlebarsShortcodes[name] = bench.add(
+    this.handlebarsShortcodes[name] = this.benchmarks.config.add(
       `"${name}" Handlebars Shortcode`,
       callback
     );
@@ -515,7 +687,7 @@ class UserConfig {
       );
     }
 
-    this.nunjucksAsyncPairedShortcodes[name] = bench.add(
+    this.nunjucksAsyncPairedShortcodes[name] = this.benchmarks.config.add(
       `"${name}" Nunjucks Async Paired Shortcode`,
       callback
     );
@@ -536,7 +708,7 @@ class UserConfig {
         );
       }
 
-      this.nunjucksPairedShortcodes[name] = bench.add(
+      this.nunjucksPairedShortcodes[name] = this.benchmarks.config.add(
         `"${name}" Nunjucks Paired Shortcode`,
         callback
       );
@@ -555,7 +727,7 @@ class UserConfig {
       );
     }
 
-    this.liquidPairedShortcodes[name] = bench.add(
+    this.liquidPairedShortcodes[name] = this.benchmarks.config.add(
       `"${name}" Liquid Paired Shortcode`,
       callback
     );
@@ -573,7 +745,7 @@ class UserConfig {
       );
     }
 
-    this.handlebarsPairedShortcodes[name] = bench.add(
+    this.handlebarsPairedShortcodes[name] = this.benchmarks.config.add(
       `"${name}" Handlebars Paired Shortcode`,
       callback
     );
@@ -591,7 +763,7 @@ class UserConfig {
       );
     }
 
-    this.javascriptFunctions[name] = bench.add(
+    this.javascriptFunctions[name] = this.benchmarks.config.add(
       `"${name}" JavaScript Function`,
       callback
     );
@@ -614,12 +786,18 @@ class UserConfig {
     this.watchJavaScriptDependencies = !!watchEnabled;
   }
 
-  setBrowserSyncConfig(options = {}, mergeOptions = true) {
-    if (mergeOptions) {
-      this.browserSyncConfig = merge(this.browserSyncConfig, options);
+  setServerOptions(options = {}, override = false) {
+    if (override) {
+      this.serverOptions = options;
     } else {
-      this.browserSyncConfig = options;
+      this.serverOptions = merge(this.serverOptions, options);
     }
+  }
+
+  setBrowserSyncConfig() {
+    debug(
+      "The `setBrowserSyncConfig` method was removed in Eleventy 2.0.0. Use `setServerOptions` with the new Eleventy development server or the `@11ty/eleventy-browser-sync` plugin moving forward."
+    );
   }
 
   setChokidarConfig(options = {}) {
@@ -639,10 +817,6 @@ class UserConfig {
   }
 
   addExtension(fileExtension, options = {}) {
-    if (!process.env.ELEVENTY_EXPERIMENTAL) {
-      return;
-    }
-
     this.extensionMap.add(
       Object.assign(
         {
@@ -654,8 +828,28 @@ class UserConfig {
     );
   }
 
-  addDataExtension(formatExtension, formatParser) {
-    this.dataExtensions.set(formatExtension, formatParser);
+  addDataExtension(extensionList, parser) {
+    let options = {};
+    // second argument is an object with a `parser` callback
+    if (typeof parser !== "function") {
+      if (!("parser" in parser)) {
+        throw new Error(
+          "Expected `parser` property in second argument object to `eleventyConfig.addDataExtension`"
+        );
+      }
+
+      options = parser;
+      parser = options.parser;
+    }
+
+    let extensions = extensionList.split(",").map((s) => s.trim());
+    for (let extension of extensions) {
+      this.dataExtensions.set(extension, {
+        extension,
+        parser,
+        options,
+      });
+    }
   }
 
   setUseTemplateCache(bypass) {
@@ -664,6 +858,16 @@ class UserConfig {
 
   setPrecompiledCollections(collections) {
     this.precompiledCollections = collections;
+  }
+
+  // "passthrough" is the default, no other value is explicitly required in code
+  // but opt-out via "copy" is suggested
+  setServerPassthroughCopyBehavior(behavior) {
+    this.serverPassthroughCopyBehavior = behavior;
+  }
+
+  addUrlTransform(callback) {
+    this.urlTransforms.push(callback);
   }
 
   getMergingConfigObject() {
@@ -681,6 +885,8 @@ class UserConfig {
       liquidFilters: this.liquidFilters,
       liquidShortcodes: this.liquidShortcodes,
       liquidPairedShortcodes: this.liquidPairedShortcodes,
+      nunjucksEnvironmentOptions: this.nunjucksEnvironmentOptions,
+      nunjucksPrecompiledTemplates: this.nunjucksPrecompiledTemplates,
       nunjucksFilters: this.nunjucksFilters,
       nunjucksAsyncFilters: this.nunjucksAsyncFilters,
       nunjucksTags: this.nunjucksTags,
@@ -700,10 +906,11 @@ class UserConfig {
       dynamicPermalinks: this.dynamicPermalinks,
       useGitIgnore: this.useGitIgnore,
       ignores: this.ignores,
+      watchIgnores: this.watchIgnores,
       dataDeepMerge: this.dataDeepMerge,
       watchJavaScriptDependencies: this.watchJavaScriptDependencies,
       additionalWatchTargets: this.additionalWatchTargets,
-      browserSyncConfig: this.browserSyncConfig,
+      serverOptions: this.serverOptions,
       chokidarConfig: this.chokidarConfig,
       watchThrottleWaitTime: this.watchThrottleWaitTime,
       frontMatterParsingOptions: this.frontMatterParsingOptions,
@@ -711,9 +918,14 @@ class UserConfig {
       extensionMap: this.extensionMap,
       quietMode: this.quietMode,
       events: this.events,
+      benchmarkManager: this.benchmarkManager,
       plugins: this.plugins,
       useTemplateCache: this.useTemplateCache,
       precompiledCollections: this.precompiledCollections,
+      dataFilterSelectors: this.dataFilterSelectors,
+      libraryAmendments: this.libraryAmendments,
+      serverPassthroughCopyBehavior: this.serverPassthroughCopyBehavior,
+      urlTransforms: this.urlTransforms,
     };
   }
 }
