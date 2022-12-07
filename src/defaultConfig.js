@@ -90,9 +90,14 @@ module.exports = function (config) {
     htmlTemplateEngine: "liquid",
     dataTemplateEngine: false, // change in 1.0
     htmlOutputSuffix: "-o",
-    jsDataFileSuffix: ".11tydata",
-    jsDataFileBase: null,
-    // set to 'index': in every folder use datafiles 'index.11tydata.json' et al
+
+    // Renamed from `jsDataFileSuffix` in 2.0 (and swapped to an Array)
+    // If you remove "" we won’t look for dir/dir.json or file.json
+    dataFileSuffixes: [".11tydata", ""],
+
+    // "index" will look for `directory/index.*` directory data files instead of `directory/directory.*`
+    dataFileDirBaseNameOverride: false,
+
     keys: {
       package: "pkg",
       layout: "layout",

@@ -170,14 +170,37 @@ class TemplateData {
     return dir;
   }
 
+  // This is a backwards compatibility helper with the old `jsDataFileSuffix` configuration API
+  getDataFileSuffixes() {
+    // New API
+    if (Array.isArray(this.config.dataFileSuffixes)) {
+      return this.config.dataFileSuffixes;
+    }
+    // Backwards compatibility
+    if (this.config.jsDataFileSuffix) {
+      let suffixes = [];
+      suffixes.push(this.config.jsDataFileSuffix); // e.g. filename.11tydata.json
+      suffixes.push(""); // suffix-less for free with old API, e.g. filename.json
+      return suffixes;
+    }
+    return []; // if both of these entries are set to false, use no files
+  }
+
   // This is used exclusively for --watch and --serve chokidar targets
   async getTemplateDataFileGlob() {
     let dir = await this.getInputDir();
     let paths = [
       `${dir}/**/*.json`, // covers .11tydata.json too
-      `${dir}/**/*${this.config.jsDataFileSuffix}.cjs`,
-      `${dir}/**/*${this.config.jsDataFileSuffix}.js`,
     ];
+
+    let suffixes = this.getDataFileSuffixes();
+    for (let suffix of suffixes) {
+      if (suffix) {
+        // TODO this check is purely for backwards compat and I kinda feel like it shouldn’t be here
+        paths.push(`${dir}/**/*${suffix || ""}.cjs`);
+        paths.push(`${dir}/**/*${suffix || ""}.js`);
+      }
+    }
 
     if (this.hasUserDataExtensions()) {
       let userPaths = this.getUserDataExtensions().map(
@@ -189,11 +212,22 @@ class TemplateData {
     return TemplatePath.addLeadingDotSlashArray(paths);
   }
 
+  // For spidering dependencies
+  // TODO Can we reuse getTemplateDataFileGlob instead? Maybe just filter off the .json files before scanning for dependencies
   async getTemplateJavaScriptDataFileGlob() {
     let dir = await this.getInputDir();
-    return TemplatePath.addLeadingDotSlashArray([
-      `${dir}/**/*${this.config.jsDataFileSuffix}.js`,
-    ]);
+
+    let paths = [];
+    let suffixes = this.getDataFileSuffixes();
+    for (let suffix of suffixes) {
+      if (suffix) {
+        // TODO this check is purely for backwards compat and I kinda feel like it shouldn’t be here
+        // paths.push(`${dir}/**/*${suffix || ""}.cjs`); // Same as above
+        paths.push(`${dir}/**/*${suffix || ""}.js`);
+      }
+    }
+
+    return TemplatePath.addLeadingDotSlashArray(paths);
   }
 
   async getGlobalDataGlob() {
@@ -557,20 +591,26 @@ class TemplateData {
     }
   }
 
-  _addBaseToPaths(paths, base, extensions) {
-    let dataSuffix = this.config.jsDataFileSuffix;
+  _addBaseToPaths(paths, base, extensions, nonEmptySuffixesOnly = false) {
+    let suffixes = this.getDataFileSuffixes();
 
-    // data suffix
-    paths.push(base + dataSuffix + ".js");
-    paths.push(base + dataSuffix + ".cjs");
-    paths.push(base + dataSuffix + ".json"); // default: .11tydata.json
+    for (let suffix of suffixes) {
+      suffix = suffix || "";
 
-    // inject user extensions
-    this._pushExtensionsToPaths(paths, base + dataSuffix, extensions);
+      if (nonEmptySuffixesOnly && suffix === "") {
+        continue;
+      }
 
-    // top level
-    paths.push(base + ".json");
-    this._pushExtensionsToPaths(paths, base, extensions);
+      // data suffix
+      if (suffix) {
+        paths.push(base + suffix + ".js");
+        paths.push(base + suffix + ".cjs");
+      }
+      paths.push(base + suffix + ".json"); // default: .11tydata.json
+
+      // inject user extensions
+      this._pushExtensionsToPaths(paths, base + suffix, extensions);
+    }
   }
 
   async getLocalDataPaths(templatePath) {
@@ -590,13 +630,17 @@ class TemplateData {
         parsed.base
       );
 
-      let filePathNoExt = parsed.dir + "/" + fileNameNoExt;
-      let dataSuffix = this.config.jsDataFileSuffix;
       // default dataSuffix: .11tydata, is appended in _addBaseToPaths
-      debug("Using %o to find data files.", dataSuffix);
+      debug(
+        "Using %o suffixes to find data files.",
+        this.getDataFileSuffixes()
+      );
 
+      // Template data file paths
+      let filePathNoExt = parsed.dir + "/" + fileNameNoExt;
       this._addBaseToPaths(paths, filePathNoExt, userExtensions);
 
+      // Directory data file paths
       let allDirs = TemplatePath.getAllDirs(parsed.dir);
 
       debugDev("allDirs: %o", allDirs);
@@ -607,11 +651,13 @@ class TemplateData {
         if (inputDir) {
           debugDev("dirStr: %o; inputDir: %o", dir, inputDir);
         }
-        if (!inputDir || (dir.indexOf(inputDir) === 0 && dir !== inputDir)) {
-          this._addBaseToPaths(paths, dirPathNoExt, userExtensions);
-          if (this.config.jsDataFileBase) {
-            let jsDataFile = dir + "/" + this.config.jsDataFileBase;
-            this._addBaseToPaths(paths, jsDataFile, userExtensions);
+        if (!inputDir || (dir.startsWith(inputDir) && dir !== inputDir)) {
+          if (this.config.dataFileDirBaseNameOverride) {
+            let indexDataFile =
+              dir + "/" + this.config.dataFileDirBaseNameOverride;
+            this._addBaseToPaths(paths, indexDataFile, userExtensions, true);
+          } else {
+            this._addBaseToPaths(paths, dirPathNoExt, userExtensions);
           }
         }
       }
@@ -622,14 +668,16 @@ class TemplateData {
         let lastInputDir = TemplatePath.addLeadingDotSlash(
           TemplatePath.join(inputDir, TemplatePath.getLastPathSegment(inputDir))
         );
-        if (lastInputDir !== "./") {
+
+        // in root input dir, search for index.11tydata.json et al
+        if (this.config.dataFileDirBaseNameOverride) {
+          let indexDataFile =
+            TemplatePath.getDirFromFilePath(lastInputDir) +
+            "/" +
+            this.config.dataFileDirBaseNameOverride;
+          this._addBaseToPaths(paths, indexDataFile, userExtensions, true);
+        } else if (lastInputDir !== "./") {
           this._addBaseToPaths(paths, lastInputDir, userExtensions);
-        }
-        // also in root input dir, search for index.11tydata.json et al
-        if (this.config.jsDataFileBase) {
-          let jsDataFile = (TemplatePath.getDirFromFilePath(lastInputDir) +
-            "/" + this.config.jsDataFileBase);
-          this._addBaseToPaths(paths, jsDataFile, userExtensions);
         }
       }
     }

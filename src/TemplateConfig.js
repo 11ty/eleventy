@@ -192,7 +192,7 @@ class TemplateConfig {
    * @param {String} pathPrefix - The new path prefix.
    */
   setPathPrefix(pathPrefix) {
-    if(pathPrefix && pathPrefix !== '/'){
+    if (pathPrefix && pathPrefix !== "/") {
       debug("Setting pathPrefix to %o", pathPrefix);
       this.overrides.pathPrefix = pathPrefix;
     }
@@ -225,6 +225,11 @@ class TemplateConfig {
       // debug( "rootConfig is a function, after calling, this.userConfig is %o", this.userConfig );
     }
     debug("rootConfig %o", this.rootConfig);
+  }
+
+  /* Add additional overrides to the root config object, used for testing */
+  appendToRootConfig(obj) {
+    Object.assign(this.rootConfig, obj);
   }
 
   /*
