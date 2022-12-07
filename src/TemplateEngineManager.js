@@ -93,7 +93,7 @@ class TemplateEngineManager {
     instance.extensionMap = extensionMap;
     instance.engineManager = this;
 
-    // If the user providers a "Custom" engine using addExtension,
+    // If the user provides a "Custom" engine using addExtension,
     // But that engine's instance is *not* custom,
     // The user must be overriding an existing engine
     // i.e. addExtension('md', { ...overrideBehavior })

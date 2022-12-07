@@ -21,6 +21,7 @@ class CustomEngine extends TemplateEngine {
 
   getExtensionMapEntry() {
     if ("extensionMap" in this.config) {
+      // Iterates over only the user config `addExtension` entries
       for (let entry of this.config.extensionMap) {
         if (entry.key.toLowerCase() === this.name.toLowerCase()) {
           return entry;
@@ -44,6 +45,14 @@ class CustomEngine extends TemplateEngine {
     if ("read" in this.entry) {
       return this.entry.read;
     }
+
+    // Handle aliases to `11ty.js` templates, avoid reading files in the alias, see #2279
+    // Here, we are short circuiting fallback to defaultRenderer, does not account for compile
+    // functions that call defaultRenderer explicitly
+    if (!this.entry.compile && this._defaultEngine) {
+      return this._defaultEngine.needsToReadFileContents();
+    }
+
     return true;
   }
 
@@ -144,7 +153,6 @@ class CustomEngine extends TemplateEngine {
 
   async compile(str, inputPath, ...args) {
     await this._runningInit();
-
     let defaultRenderer;
     if (this._defaultEngine) {
       defaultRenderer = async (data) => {
@@ -159,6 +167,7 @@ class CustomEngine extends TemplateEngine {
 
     // Fall back to default compiler if the user does not provide their own
     if (!this.entry.compile && defaultRenderer) {
+      // If the defaultRenderer is used here, needsToReadFileContents is also aliased to the upstream engine too in needsToReadFileContents(), #2279
       return defaultRenderer;
     }
 

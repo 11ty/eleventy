@@ -388,21 +388,7 @@ class EleventyFiles {
     let paths = TemplatePath.addLeadingDotSlashArray(globResults);
     bench.after();
 
-    // filter individual paths in the new config-specified extension
-    // where is this used?
-    if ("extensionMap" in this.config) {
-      let extensions = this.config.extensionMap;
-      if (Array.from(extensions).filter((entry) => !!entry.filter).length) {
-        paths = paths.filter(function (path) {
-          for (let entry of extensions) {
-            if (entry.filter && path.endsWith(`.${entry.extension}`)) {
-              return entry.filter(path);
-            }
-          }
-          return true;
-        });
-      }
-    }
+    // Note 2.0.0-canary.19 removed a `filter` option for custom template syntax here that was unpublished and unused.
 
     this.pathCache = paths;
     return paths;
