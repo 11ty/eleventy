@@ -94,21 +94,25 @@ class TemplateEngine {
     return this.includesDir;
   }
 
-  // TODO make async
-  getPartials() {
+  async getPartials() {
     if (!this.partialsHaveBeenCached) {
-      this.partials = this.cachePartialFiles();
+      this.partials = await this.cachePartialFiles();
     }
 
     return this.partials;
   }
 
-  // TODO make async
-  cachePartialFiles() {
+  /**
+   * Search for and cache partial files.
+   *
+   * This only runs if getPartials() is called, which is only for Mustache/Handlebars.
+   *
+   * @protected
+   */
+  async cachePartialFiles() {
     // Try to skip this require if not used (for bundling reasons)
     const fastglob = require("fast-glob");
 
-    // This only runs if getPartials() is called, which is only for Mustache/Handlebars
     this.partialsHaveBeenCached = true;
     let partials = {};
     let prefix = this.includesDir + "/**/*.";
@@ -117,22 +121,22 @@ class TemplateEngine {
     if (this.includesDir) {
       let bench = this.benchmarks.aggregate.get("Searching the file system");
       bench.before();
-      this.extensions.forEach(function (extension) {
+      await Promise.all(this.extensions.map(async function (extension) {
         partialFiles = partialFiles.concat(
-          fastglob.sync(prefix + extension, {
+          await fastglob(prefix + extension, {
             caseSensitiveMatch: false,
             dot: true,
           })
         );
-      });
+      }));
       bench.after();
     }
 
     partialFiles = TemplatePath.addLeadingDotSlashArray(partialFiles);
 
-    for (let j = 0, k = partialFiles.length; j < k; j++) {
+    await Promise.all(partialFiles.map(async (partialFile) => {
       let partialPath = TemplatePath.stripLeadingSubPath(
-        partialFiles[j],
+        partialFile,
         this.includesDir
       );
       let partialPathNoExt = partialPath;
@@ -142,8 +146,9 @@ class TemplateEngine {
           "." + extension
         );
       });
-      partials[partialPathNoExt] = fs.readFileSync(partialFiles[j], "utf8");
-    }
+
+      partials[partialPathNoExt] = await fs.readFile(partialFile, "utf8");
+    }));
 
     debug(
       `${this.includesDir}/*.{${this.extensions}} found partials for: %o`,
@@ -153,6 +158,9 @@ class TemplateEngine {
     return partials;
   }
 
+  /**
+   * @protected
+   */
   setEngineLib(engineLib) {
     this.engineLib = engineLib;
 
@@ -207,6 +215,15 @@ class TemplateEngine {
   // whether or not compile is needed or can we return the plaintext?
   needsCompilation(str) {
     return true;
+  }
+
+  /**
+   * Make sure compile is implemented downstream.
+   * @abstract
+   * @return {Promise}
+   */
+  async compile() {
+    throw new Error('compile() must be implemented by engine');
   }
 
   // See https://www.11ty.dev/docs/watch-serve/#watch-javascript-dependencies
