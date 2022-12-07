@@ -1,22 +1,24 @@
 const test = require("ava");
 const TemplateEngineManager = require("../src/TemplateEngineManager");
-const templateConfig = require("../src/Config");
-const config = templateConfig.getConfig();
+const TemplateConfig = require("../src/TemplateConfig");
 
 test("Unsupported engine", async (t) => {
   t.throws(() => {
-    let tem = new TemplateEngineManager();
+    let config = new TemplateConfig().getConfig();
+    let tem = new TemplateEngineManager(config);
     tem.getEngine("doesnotexist");
   });
 });
 
 test("Supported engine", async (t) => {
-  let tem = new TemplateEngineManager();
+  let config = new TemplateConfig().getConfig();
+  let tem = new TemplateEngineManager(config);
   t.truthy(tem.hasEngine("ejs"));
 });
 
 test("Supported custom engine", async (t) => {
-  let tem = new TemplateEngineManager();
+  let config = new TemplateConfig().getConfig();
+  let tem = new TemplateEngineManager(config);
   tem.config = Object.assign({}, config);
   tem.config.extensionMap.add({
     extension: "txt",
@@ -38,9 +40,8 @@ test("Supported custom engine", async (t) => {
 test("Custom engine with custom init", async (t) => {
   let initCount = 0;
   let compileCount = 0;
-  let tem = new TemplateEngineManager();
-  tem.config = Object.assign({}, config);
-  tem.config.extensionMap.add({
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.extensionMap.add({
     extension: "custom1",
     key: "custom1",
     init: async function () {
@@ -52,6 +53,9 @@ test("Custom engine with custom init", async (t) => {
       return () => str;
     },
   });
+
+  let config = eleventyConfig.getConfig();
+  let tem = new TemplateEngineManager(config);
 
   t.truthy(tem.hasEngine("custom1"));
   let engine = tem.getEngine("custom1");
@@ -69,7 +73,8 @@ test("Custom engine with custom init", async (t) => {
 });
 
 test("Handlebars Helpers", async (t) => {
-  let tem = new TemplateEngineManager();
+  let config = new TemplateConfig().getConfig();
+  let tem = new TemplateEngineManager(config);
   let engine = tem.getEngine("hbs");
   engine.addHelpers({
     uppercase: function (name) {
@@ -82,6 +87,7 @@ test("Handlebars Helpers", async (t) => {
 });
 
 test("getEngineLib", async (t) => {
-  let tem = new TemplateEngineManager();
+  let config = new TemplateConfig().getConfig();
+  let tem = new TemplateEngineManager(config);
   t.truthy(tem.getEngine("md").getEngineLib());
 });

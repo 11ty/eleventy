@@ -1,56 +1,78 @@
-const chalk = require("chalk");
+const ConsoleLogger = require("./Util/ConsoleLogger");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
 const debug = require("debug")("Eleventy:EleventyErrorHandler");
 
 class EleventyErrorHandler {
-  static get isChalkEnabled() {
-    if (this._isChalkEnabled !== undefined) {
-      return this._isChalkEnabled;
+  constructor() {
+    this._isVerbose = true;
+  }
+
+  get isVerbose() {
+    return this._isVerbose;
+  }
+
+  set isVerbose(verbose) {
+    this._isVerbose = !!verbose;
+    this.logger.isVerbose = !!verbose;
+  }
+
+  get logger() {
+    if (!this._logger) {
+      this._logger = new ConsoleLogger();
+      this._logger.isVerbose = this.isVerbose;
     }
-    return true;
+
+    return this._logger;
   }
 
-  static set isChalkEnabled(enabled) {
-    this._isChalkEnabled = !!enabled;
+  set logger(logger) {
+    this._logger = logger;
   }
 
-  static warn(e, msg) {
+  warn(e, msg) {
     if (msg) {
-      EleventyErrorHandler.initialMessage(msg, "warn", "yellow");
+      this.initialMessage(msg, "warn", "yellow");
     }
-    EleventyErrorHandler.log(e, "warn");
+    this.log(e, "warn");
   }
 
-  static fatal(e, msg) {
-    EleventyErrorHandler.error(e, msg);
+  fatal(e, msg) {
+    this.error(e, msg);
     process.exitCode = 1;
   }
 
-  static error(e, msg) {
+  error(e, msg) {
     if (msg) {
-      EleventyErrorHandler.initialMessage(msg, "error", "red");
+      this.initialMessage(msg, "error", "red", true);
     }
-    EleventyErrorHandler.log(e, "error");
+    this.log(e, "error", undefined, true);
   }
 
   //https://nodejs.org/api/process.html
-  static log(e, type = "log", prefix = ">") {
+  log(e, type = "log", chalkColor = "", forceToConsole = false) {
+    let errorCount = 0;
+    let errorCountRef = e;
+    while (errorCountRef) {
+      errorCount++;
+      errorCountRef = errorCountRef.originalError;
+    }
+
     let ref = e;
+    let index = 1;
     while (ref) {
       let nextRef = ref.originalError;
       if (!nextRef && EleventyErrorUtil.hasEmbeddedError(ref.message)) {
         nextRef = EleventyErrorUtil.deconvertErrorToObject(ref);
       }
 
-      EleventyErrorHandler.message(
-        (process.env.DEBUG ? "" : `${prefix} `) +
-          `${(
-            EleventyErrorUtil.cleanMessage(ref.message) ||
-            "(No error message provided)"
-          ).trim()}
-
-\`${ref.name}\` was thrown${!nextRef && ref.stack ? ":" : ""}`,
-        type
+      this.logger.message(
+        `${errorCount > 1 ? `${index}. ` : ""}${(
+          EleventyErrorUtil.cleanMessage(ref.message) ||
+          "(No error message provided)"
+        ).trim()} (via ${ref.name})`,
+        type,
+        chalkColor,
+        forceToConsole
       );
 
       if (process.env.DEBUG) {
@@ -67,34 +89,31 @@ class EleventyErrorHandler {
             "(Repeated output has been truncated…)"
           );
         }
-        EleventyErrorHandler.message(
-          prefix + stackStr.split("\n").join("\n" + prefix)
+        this.logger.message(
+          "\nOriginal error stack trace: " + stackStr,
+          type,
+          chalkColor,
+          forceToConsole
         );
       }
       ref = nextRef;
+      index++;
     }
   }
 
-  static initialMessage(message, type = "log", chalkColor = "blue") {
+  initialMessage(
+    message,
+    type = "log",
+    chalkColor = "blue",
+    forceToConsole = false
+  ) {
     if (message) {
-      EleventyErrorHandler.message(
+      this.logger.message(
         message + ":" + (process.env.DEBUG ? "" : " (more in DEBUG output)"),
         type,
-        chalkColor
+        chalkColor,
+        forceToConsole
       );
-    }
-  }
-
-  static message(message, type = "log", chalkColor) {
-    if (process.env.DEBUG) {
-      debug(message);
-    } else {
-      let logger = EleventyErrorHandler.logger || console;
-      if (chalkColor && EleventyErrorHandler.isChalkEnabled) {
-        logger[type](chalk[chalkColor](message));
-      } else {
-        logger[type](message);
-      }
     }
   }
 }

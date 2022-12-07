@@ -1,4 +1,4 @@
-const TemplatePath = require("./TemplatePath");
+const { TemplatePath } = require("@11ty/eleventy-utils");
 
 class TemplateGlob {
   static normalizePath(...paths) {
@@ -15,7 +15,7 @@ class TemplateGlob {
   static normalize(path) {
     path = path.trim();
     if (path.charAt(0) === "!") {
-      return "!" + TemplateGlob.normalizePath(path.substr(1));
+      return "!" + TemplateGlob.normalizePath(path.slice(1));
     } else {
       return TemplateGlob.normalizePath(path);
     }
@@ -25,7 +25,7 @@ class TemplateGlob {
     if (typeof files === "string") {
       return TemplateGlob.normalize(files);
     } else if (Array.isArray(files)) {
-      return files.map(function(path) {
+      return files.map(function (path) {
         return TemplateGlob.normalize(path);
       });
     } else {

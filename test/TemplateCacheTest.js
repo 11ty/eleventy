@@ -2,10 +2,12 @@ const test = require("ava");
 const Template = require("../src/Template");
 const templateCache = require("../src/TemplateCache");
 
+const getNewTemplate = require("./_getNewTemplateForTests");
+
 test("Cache can save templates", (t) => {
   templateCache.clear();
 
-  let tmpl = new Template(
+  let tmpl = getNewTemplate(
     "./test/stubs/template.ejs",
     "./test/stubs/",
     "./dist"
@@ -18,7 +20,7 @@ test("Cache can save templates", (t) => {
 test("TemplateCache clear", (t) => {
   templateCache.clear();
 
-  let tmpl = new Template(
+  let tmpl = getNewTemplate(
     "./test/stubs/template.ejs",
     "./test/stubs/",
     "./dist"
@@ -33,7 +35,7 @@ test("TemplateCache clear", (t) => {
 test("TemplateCache has", (t) => {
   templateCache.clear();
 
-  let tmpl = new Template(
+  let tmpl = getNewTemplate(
     "./test/stubs/template.ejs",
     "./test/stubs/",
     "./dist"
@@ -46,7 +48,7 @@ test("TemplateCache has", (t) => {
 test("TemplateCache get success", (t) => {
   templateCache.clear();
 
-  let tmpl = new Template(
+  let tmpl = getNewTemplate(
     "./test/stubs/template.ejs",
     "./test/stubs/",
     "./dist"
@@ -59,7 +61,7 @@ test("TemplateCache get success", (t) => {
 test("TemplateCache get fail", (t) => {
   templateCache.clear();
 
-  let tmpl = new Template(
+  let tmpl = getNewTemplate(
     "./test/stubs/template.ejs",
     "./test/stubs/",
     "./dist"

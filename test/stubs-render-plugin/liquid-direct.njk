@@ -1,0 +1,8 @@
+{%- set nunjucksVar = 69 -%}
+{{ hi }}
+{{ nunjucksVar }}
+{{ "who" | testing }}
+{% renderTemplate "liquid", argData %}
+{% assign liquidVar = 138 %}
+* {{ hi }} test test {{ bye }} {{ liquidVar }}
+{% endrenderTemplate %}

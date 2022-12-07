@@ -1,5 +1,6 @@
 const test = require("ava");
 const Merge = require("../src/Util/Merge");
+const DeepCopy = Merge.DeepCopy;
 
 test("Shallow Merge", (t) => {
   t.deepEqual(Merge({}, {}), {});
@@ -157,4 +158,13 @@ test("Deep, override: empty", (t) => {
   t.deepEqual(Merge({}, { a: [2] }), { a: [2] });
   t.deepEqual(Merge({}, { "override:a": [2] }), { a: [2] });
   t.deepEqual(Merge({}, { a: { "override:b": [3, 4] } }), { a: { b: [3, 4] } });
+});
+
+test("DeepCopy", (t) => {
+  t.deepEqual(DeepCopy({}, { a: { b: [3, 4] } }), { a: { b: [3, 4] } });
+  t.deepEqual(DeepCopy({}, { a: [2] }), { a: [2] });
+  t.deepEqual(DeepCopy({}, { "override:a": [2] }), { "override:a": [2] });
+  t.deepEqual(DeepCopy({}, { a: { "override:b": [3, 4] } }), {
+    a: { "override:b": [3, 4] },
+  });
 });

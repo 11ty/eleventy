@@ -1,20 +1,74 @@
 const urlFilter = require("./Filters/Url");
+const serverlessUrlFilter = require("./Filters/ServerlessUrl");
 const slugFilter = require("./Filters/Slug");
-const getCollectionItem = require("./Filters/GetCollectionItem");
+const slugifyFilter = require("./Filters/Slugify");
+const getLocaleCollectionItem = require("./Filters/GetLocaleCollectionItem");
+const getCollectionItemIndex = require("./Filters/GetCollectionItemIndex");
 
 module.exports = function (config) {
-  config.addFilter("slug", slugFilter);
-  config.addFilter("url", urlFilter);
-  config.addFilter("log", console.log);
+  let templateConfig = this;
 
-  config.addFilter("getCollectionItem", (collection, page) =>
-    getCollectionItem(collection, page)
+  config.addFilter("slug", slugFilter);
+  config.addFilter("slugify", slugifyFilter);
+
+  // Add pathPrefix manually to a URL
+  config.addFilter("url", function addPathPrefix(url, pathPrefixOverride) {
+    let pathPrefix = pathPrefixOverride || templateConfig.getPathPrefix();
+    return urlFilter.call(this, url, pathPrefix);
+  });
+
+  config.addFilter("log", (input, ...messages) => {
+    console.log(input, ...messages);
+    return input;
+  });
+
+  config.addFilter("serverlessUrl", serverlessUrlFilter);
+
+  config.addFilter(
+    "getCollectionItemIndex",
+    function (collection, pageOverride) {
+      return getCollectionItemIndex.call(this, collection, pageOverride);
+    }
   );
-  config.addFilter("getPreviousCollectionItem", (collection, page) =>
-    getCollectionItem(collection, page, -1)
+
+  config.addFilter(
+    "getCollectionItem",
+    function (collection, pageOverride, langCode) {
+      return getLocaleCollectionItem.call(
+        this,
+        config,
+        collection,
+        pageOverride,
+        langCode,
+        0
+      );
+    }
   );
-  config.addFilter("getNextCollectionItem", (collection, page) =>
-    getCollectionItem(collection, page, 1)
+  config.addFilter(
+    "getPreviousCollectionItem",
+    function (collection, pageOverride, langCode) {
+      return getLocaleCollectionItem.call(
+        this,
+        config,
+        collection,
+        pageOverride,
+        langCode,
+        -1
+      );
+    }
+  );
+  config.addFilter(
+    "getNextCollectionItem",
+    function (collection, pageOverride, langCode) {
+      return getLocaleCollectionItem.call(
+        this,
+        config,
+        collection,
+        pageOverride,
+        langCode,
+        1
+      );
+    }
   );
 
   return {
@@ -35,7 +89,6 @@ module.exports = function (config) {
     markdownTemplateEngine: "liquid",
     htmlTemplateEngine: "liquid",
     dataTemplateEngine: false, // change in 1.0
-    passthroughFileCopy: true,
     htmlOutputSuffix: "-o",
     jsDataFileSuffix: ".11tydata",
     keys: {
@@ -52,8 +105,6 @@ module.exports = function (config) {
       data: "_data",
       output: "_site",
     },
-    // deprecated, use config.addTransform
-    filters: {},
     // deprecated, use config.addHandlebarsHelper
     handlebarsHelpers: {},
     // deprecated, use config.addNunjucksFilter

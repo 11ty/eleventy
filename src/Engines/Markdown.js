@@ -3,8 +3,8 @@ const TemplateEngine = require("./TemplateEngine");
 // const debug = require("debug")("Eleventy:Markdown");
 
 class Markdown extends TemplateEngine {
-  constructor(name, includesDir) {
-    super(name, includesDir);
+  constructor(name, dirs, config) {
+    super(name, dirs, config);
 
     this.markdownOptions = {};
 
@@ -20,8 +20,13 @@ class Markdown extends TemplateEngine {
     // This is separate so devs can pass in a new mdLib and still use the official eleventy plugin for markdown highlighting
     if (this.config.markdownHighlighter) {
       this.mdLib.set({
-        highlight: this.config.markdownHighlighter
+        highlight: this.config.markdownHighlighter,
       });
+    }
+
+    if (typeof this.mdLib.disable === "function") {
+      // Disable indented code blocks by default (Issue #2438)
+      this.mdLib.disable("code");
     }
 
     this.setEngineLib(this.mdLib);
@@ -39,7 +44,7 @@ class Markdown extends TemplateEngine {
 
     return Object.assign(
       {
-        html: true
+        html: true,
       },
       this.markdownOptions || {}
     );
@@ -49,27 +54,27 @@ class Markdown extends TemplateEngine {
     let mdlib = this.mdLib;
 
     if (preTemplateEngine) {
-      let fn;
-
       let engine;
       if (typeof preTemplateEngine === "string") {
         engine = this.engineManager.getEngine(
           preTemplateEngine,
-          super.getIncludesDir(),
+          this.dirs,
           this.extensionMap
         );
       } else {
         engine = preTemplateEngine;
       }
 
-      fn = await engine.compile(str, inputPath);
+      let fnReady = engine.compile(str, inputPath);
 
       if (bypassMarkdown) {
-        return async function(data) {
+        return async function (data) {
+          let fn = await fnReady;
           return fn(data);
         };
       } else {
-        return async function(data) {
+        return async function (data) {
+          let fn = await fnReady;
           let preTemplateEngineRender = await fn(data);
           let finishedRender = mdlib.render(preTemplateEngineRender, data);
           return finishedRender;
@@ -77,11 +82,11 @@ class Markdown extends TemplateEngine {
       }
     } else {
       if (bypassMarkdown) {
-        return function() {
+        return function () {
           return str;
         };
       } else {
-        return function(data) {
+        return function (data) {
           return mdlib.render(str, data);
         };
       }

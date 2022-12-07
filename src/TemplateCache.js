@@ -29,6 +29,12 @@ class TemplateCache {
 
     return this.cache[key];
   }
+
+  remove(key) {
+    if (this.cache[key]) {
+      delete this.cache[key];
+    }
+  }
 }
 
 // singleton

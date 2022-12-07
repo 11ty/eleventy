@@ -1,18 +1,20 @@
-const chalk = require("chalk");
-
+const ConsoleLogger = require("./Util/ConsoleLogger");
 const Benchmark = require("./Benchmark");
 const debugBenchmark = require("debug")("Eleventy:Benchmark");
 
 class BenchmarkGroup {
   constructor() {
     this.benchmarks = {};
+    // Warning: aggregate benchmarks automatically default to false via BenchmarkManager->getBenchmarkGroup
     this.isVerbose = true;
+    this.logger = new ConsoleLogger(this.isVerbose);
     this.minimumThresholdMs = 0;
     this.minimumThresholdPercent = 8;
   }
 
   setIsVerbose(isVerbose) {
     this.isVerbose = isVerbose;
+    this.logger.isVerbose = isVerbose;
   }
 
   reset() {
@@ -25,7 +27,7 @@ class BenchmarkGroup {
   add(type, callback) {
     let benchmark = (this.benchmarks[type] = new Benchmark());
 
-    return function(...args) {
+    return function (...args) {
       benchmark.before();
       let ret = callback.call(this, ...args);
       benchmark.after();
@@ -64,6 +66,10 @@ class BenchmarkGroup {
     this.minimumThresholdPercent = val;
   }
 
+  has(type) {
+    return !!this.benchmarks[type];
+  }
+
   get(type) {
     if (!this.benchmarks[type]) {
       this.benchmarks[type] = new Benchmark();
@@ -71,42 +77,44 @@ class BenchmarkGroup {
     return this.benchmarks[type];
   }
 
+  padNumber(num, length) {
+    if (("" + num).length >= length) {
+      return num;
+    }
+
+    let prefix = new Array(length + 1).join(" ");
+    return (prefix + num).substr(-1 * length);
+  }
+
   finish(label, totalTimeSpent) {
     for (var type in this.benchmarks) {
       let bench = this.benchmarks[type];
       let isAbsoluteMinimumComparison = this.minimumThresholdMs > 0;
       let totalForBenchmark = bench.getTotal();
-      let percent = (totalForBenchmark * 100) / totalTimeSpent;
+      let percent = Math.round((totalForBenchmark * 100) / totalTimeSpent);
+      let callCount = bench.getTimesCalled();
 
-      let extraOutput = [];
-      if (!isAbsoluteMinimumComparison) {
-        extraOutput.push(`${percent.toFixed(1)}%`);
-      }
-      let timesCalledCount = bench.getTimesCalled();
-      if (timesCalledCount > 1) {
-        extraOutput.push(`called ${timesCalledCount}×`);
-        extraOutput.push(
-          `${(totalForBenchmark / timesCalledCount).toFixed(1)}ms each`
-        );
-      }
-
-      let str = chalk.yellow(
-        `Benchmark (${label}): ${type} took ${totalForBenchmark.toFixed(0)}ms ${
-          extraOutput.length ? `(${extraOutput.join(", ")})` : ""
-        }`
-      );
+      let output = {
+        ms: this.padNumber(totalForBenchmark.toFixed(0), 6),
+        percent: this.padNumber(percent, 3),
+        calls: this.padNumber(callCount, 5),
+      };
+      let str = `Benchmark ${output.ms}ms ${output.percent}% ${output.calls}× (${label}) ${type}`;
 
       if (
         (isAbsoluteMinimumComparison &&
           totalForBenchmark >= this.minimumThresholdMs) ||
         percent > this.minimumThresholdPercent
       ) {
-        if (this.isVerbose) {
-          console.log(str);
-        }
+        this.logger.warn(str);
       }
 
-      if (totalForBenchmark.toFixed(0) > 0) {
+      // Opt out of logging if low count (1× or 2×) or 0ms / 1%
+      if (
+        totalForBenchmark.toFixed(0) > 1 || // more than 1ms
+        callCount > 2 || // more than 2×
+        percent > 1 // more than 1%
+      ) {
         debugBenchmark(str);
       }
     }

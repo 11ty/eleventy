@@ -1,10 +1,12 @@
 const test = require("ava");
 const TemplateRender = require("../src/TemplateRender");
+const TemplateConfig = require("../src/TemplateConfig");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 
 function getNewTemplateRender(name, inputDir) {
-  let tr = new TemplateRender(name, inputDir);
-  tr.extensionMap = new EleventyExtensionMap();
+  let eleventyConfig = new TemplateConfig();
+  let tr = new TemplateRender(name, inputDir, eleventyConfig);
+  tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   return tr;
 }
 
@@ -75,6 +77,14 @@ test("Handlebars Render Partial with variable", async (t) => {
   t.is(await fn({ name: "Zach" }), "<p>This is a Zach.</p>");
 });
 
+test("Handlebars Render Partial with parameter", async (t) => {
+  let fn = await getNewTemplateRender(
+    "hbs",
+    "./test/stubs-hbs-partial-var/"
+  ).getCompiledTemplate("{{> myPartial parameter=name }}");
+  t.is(await fn({ name: "Zach" }), "The result is Zach");
+});
+
 test("Handlebars Render: with Library Override", async (t) => {
   let tr = getNewTemplateRender("hbs");
 
@@ -109,6 +119,20 @@ test("Handlebars Render Helper (uses argument)", async (t) => {
 
   let fn = await tr.getCompiledTemplate(
     "<p>This is a {{helpername2 name}}.</p>"
+  );
+  t.is(await fn({ name: "Zach" }), "<p>This is a Zach.</p>");
+});
+
+test("Handlebars Render Helper (uses string argument)", async (t) => {
+  let tr = getNewTemplateRender("hbs");
+  tr.engine.addHelpers({
+    helpername2: function (name) {
+      return name;
+    },
+  });
+
+  let fn = await tr.getCompiledTemplate(
+    `<p>This is a {{helpername2 "Zach"}}.</p>`
   );
   t.is(await fn({ name: "Zach" }), "<p>This is a Zach.</p>");
 });
@@ -313,7 +337,10 @@ test("Handlebars Render Raw Output (Issue #436 with if statement)", async (t) =>
 });
 
 test("Handlebars Render #each with Global Variable (Issue #759)", async (t) => {
-  let fn = await new TemplateRender("hbs", "./test/stubs/").getCompiledTemplate(
+  let fn = await getNewTemplateRender(
+    "hbs",
+    "./test/stubs/"
+  ).getCompiledTemplate(
     `<ul>{{#each navigation as |navItem|}}<li><a href={{navItem.link}}>{{../name}}{{navItem.text}}</a></li>{{/each}}</ul>`
   );
   t.is(
