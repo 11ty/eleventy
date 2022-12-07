@@ -364,10 +364,10 @@ class TemplateData {
       } else {
         // clean up data for template/directory data files only.
         let cleanedDataForPath = TemplateData.cleanupData(dataForPath);
-        for (const key in cleanedDataForPath) {
+        for (let key in cleanedDataForPath) {
           if (dataSource.hasOwnProperty(key)) {
             debugWarn(
-              "overwriting '%s' with data from '%s'. Previous data location was %s",
+              "Local data files have conflicting data. Overwriting '%s' with data from '%s'. Previous data location was from '%s'",
               key,
               path,
               dataSource[key]
