@@ -105,22 +105,23 @@ class TemplateEngine {
   /**
    * Search for and cache partial files.
    *
-   * This only runs if getPartials() is called, which is only for Mustache/Handlebars.
+   * This only runs if getPartials() is called, which only runs if you compile a Mustache/Handlebars template.
    *
    * @protected
    */
   async cachePartialFiles() {
-    // Try to skip this require if not used (for bundling reasons)
-    const fastglob = require("fast-glob");
-
     this.partialsHaveBeenCached = true;
-    let partials = {};
-    let prefix = this.includesDir + "/**/*.";
-    // TODO: reuse mustache partials in handlebars?
-    let partialFiles = [];
+
+    let results = [];
     if (this.includesDir) {
+      // Try to skip this require if not used (for bundling reasons)
+      const fastglob = require("fast-glob");
+
       let bench = this.benchmarks.aggregate.get("Searching the file system");
       bench.before();
+
+      let prefix = this.includesDir + "/**/*.";
+      let partialFiles = [];
       await Promise.all(
         this.extensions.map(async function (extension) {
           partialFiles = partialFiles.concat(
@@ -131,30 +132,42 @@ class TemplateEngine {
           );
         })
       );
+
       bench.after();
+
+      results = await Promise.all(
+        partialFiles.map((partialFile) => {
+          partialFile = TemplatePath.addLeadingDotSlash(partialFile);
+          let partialPath = TemplatePath.stripLeadingSubPath(
+            partialFile,
+            this.includesDir
+          );
+          let partialPathNoExt = partialPath;
+          this.extensions.forEach(function (extension) {
+            partialPathNoExt = TemplatePath.removeExtension(
+              partialPathNoExt,
+              "." + extension
+            );
+          });
+
+          return fs.promises
+            .readFile(partialFile, {
+              encoding: "utf8",
+            })
+            .then((content) => {
+              return {
+                content,
+                path: partialPathNoExt,
+              };
+            });
+        })
+      );
     }
 
-    partialFiles = TemplatePath.addLeadingDotSlashArray(partialFiles);
-
-    await Promise.all(
-      partialFiles.map(async (partialFile) => {
-        let partialPath = TemplatePath.stripLeadingSubPath(
-          partialFile,
-          this.includesDir
-        );
-        let partialPathNoExt = partialPath;
-        this.extensions.forEach(function (extension) {
-          partialPathNoExt = TemplatePath.removeExtension(
-            partialPathNoExt,
-            "." + extension
-          );
-        });
-
-        partials[partialPathNoExt] = await fs.promises.readFile(partialFile, {
-          encoding: "utf8",
-        });
-      })
-    );
+    let partials = {};
+    for (let result of results) {
+      partials[result.path] = result.content;
+    }
 
     debug(
       `${this.includesDir}/*.{${this.extensions}} found partials for: %o`,
