@@ -19,6 +19,7 @@ function getNewTemplateRender(name, inputDir, eleventyConfig) {
 
 test("Custom plaintext Render", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  // addExtension() API
   eleventyConfig.userConfig.extensionMap.add({
     extension: "txt",
     key: "txt",
@@ -40,6 +41,7 @@ test("Custom plaintext Render", async (t) => {
 test("Custom Markdown Render with `compile` override", async (t) => {
   let eleventyConfig = new TemplateConfig();
 
+  // addExtension() API
   eleventyConfig.userConfig.extensionMap.add({
     extension: "md",
     key: "md",
@@ -61,6 +63,7 @@ test("Custom Markdown Render without `compile` override", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let initCalled = false;
 
+  // addExtension() API
   eleventyConfig.userConfig.extensionMap.add({
     extension: "md",
     key: "md",
@@ -80,6 +83,7 @@ test("Custom Markdown Render without `compile` override", async (t) => {
 test("Custom Markdown Render with `compile` override + call to default compiler", async (t) => {
   let eleventyConfig = new TemplateConfig();
 
+  // addExtension() API
   eleventyConfig.userConfig.extensionMap.add({
     extension: "md",
     key: "md",
@@ -104,6 +108,7 @@ test("Custom Markdown Render with `compile` override + call to default compiler"
 test("Custom Vue Render", async (t) => {
   let tr = getNewTemplateRender("vue");
 
+  // addExtension() API
   tr.eleventyConfig.userConfig.extensionMap.add({
     extension: "vue",
     key: "vue",
@@ -129,6 +134,8 @@ const sass = require("sass");
 
 test("Custom Sass Render", async (t) => {
   let tr = getNewTemplateRender("sass");
+
+  // addExtension() API
   tr.eleventyConfig.userConfig.extensionMap.add({
     extension: "sass",
     key: "sass",
@@ -186,6 +193,7 @@ test("JavaScript functions should not be mutable but not *that* mutable", async 
     },
   };
 
+  // addExtension() API
   eleventyConfig.userConfig.extensionMap.add({
     extension: "js1",
     key: "js1",
@@ -218,6 +226,8 @@ test("JavaScript functions should not be mutable but not *that* mutable", async 
 
 test("Return undefined in compile to ignore #2267", async (t) => {
   let eleventyConfig = new TemplateConfig();
+
+  // addExtension() API
   eleventyConfig.userConfig.extensionMap.add({
     extension: "txt",
     key: "txt",
