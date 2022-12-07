@@ -468,6 +468,12 @@ class TemplateData {
     } catch (e) {
       // if file does not exist, return nothing
     }
+
+    // Can return a buffer, string, etc
+    if (typeof rawInput === "string") {
+      return rawInput.trim();
+    }
+
     return rawInput;
   }
 
@@ -483,6 +489,7 @@ class TemplateData {
     let processAsTemplate = !ignoreProcessing && engineName !== false;
 
     let rawInput;
+
     if (readFile || processAsTemplate) {
       rawInput = await this._loadFileContents(path, options);
     }
@@ -531,11 +538,7 @@ class TemplateData {
   async getDataValue(path, rawImports, ignoreProcessing) {
     let extension = TemplatePath.getExtension(path);
 
-    if (
-      extension === "js" ||
-      extension === "cjs" ||
-      (extension === "json" && (ignoreProcessing || !this.dataTemplateEngine))
-    ) {
+    if (extension === "js" || extension === "cjs") {
       // JS data file or require’d JSON (no preprocessing needed)
       let localPath = TemplatePath.absolutePath(path);
       let exists = this._fsExistsCache.exists(localPath);
@@ -565,6 +568,7 @@ class TemplateData {
     } else if (this.isUserDataExtension(extension)) {
       // Other extensions
       let { parser, options } = this.getUserDataParser(extension);
+
       return this._parseDataFile(
         path,
         rawImports,

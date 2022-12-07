@@ -573,3 +573,14 @@ test("eleventy.version and eleventy.generator returned from data", async (t) => 
   t.is(data.deep.nested.one, "first");
   t.is(data.deep.nested.two, "second");
 });
+
+test("getData() empty json file", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData(
+    "./test/stubs-empty-json-data/",
+    eleventyConfig
+  );
+
+  let data = await dataObj.getData();
+  t.deepEqual(data.empty, {});
+});
