@@ -817,15 +817,26 @@ class UserConfig {
   }
 
   addExtension(fileExtension, options = {}) {
-    this.extensionMap.add(
-      Object.assign(
-        {
-          key: fileExtension,
-          extension: fileExtension,
-        },
-        options
-      )
-    );
+    let extensions;
+    // Array support added in 2.0.0-canary.19
+    if (Array.isArray(fileExtension)) {
+      extensions = fileExtension;
+    } else {
+      // single string
+      extensions = [fileExtension];
+    }
+
+    for (let extension of extensions) {
+      this.extensionMap.add(
+        Object.assign(
+          {
+            key: extension,
+            extension: extension,
+          },
+          options
+        )
+      );
+    }
   }
 
   addDataExtension(extensionList, parser) {
