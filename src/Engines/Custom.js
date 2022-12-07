@@ -49,7 +49,11 @@ class CustomEngine extends TemplateEngine {
     // Handle aliases to `11ty.js` templates, avoid reading files in the alias, see #2279
     // Here, we are short circuiting fallback to defaultRenderer, does not account for compile
     // functions that call defaultRenderer explicitly
-    if (!this.entry.compile && this._defaultEngine) {
+    if (
+      !this.entry.compile &&
+      this._defaultEngine &&
+      "needsToReadFileContents" in this._defaultEngine
+    ) {
       return this._defaultEngine.needsToReadFileContents();
     }
 
@@ -80,7 +84,19 @@ class CustomEngine extends TemplateEngine {
   }
 
   async getExtraDataFromFile(inputPath) {
-    if (!("getData" in this.entry) || this.entry.getData === false) {
+    if (this.entry.getData === false) {
+      return;
+    }
+
+    if (!("getData" in this.entry)) {
+      // Handle aliases to `11ty.js` templates, use upstream default engine data fetch, see #2279
+      if (
+        this._defaultEngine &&
+        "getExtraDataFromFile" in this._defaultEngine
+      ) {
+        return this._defaultEngine.getExtraDataFromFile(inputPath);
+      }
+
       return;
     }
 
