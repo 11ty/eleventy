@@ -229,16 +229,6 @@ class Eleventy {
   }
 
   /**
-   * Updates the passthrough mode of Eleventy.
-   *
-   * @method
-   * @param {Boolean} isPassthroughAll - Shall Eleventy passthrough everything?
-   */
-  setPassthroughAll(isPassthroughAll) {
-    this.isPassthroughAll = !!isPassthroughAll;
-  }
-
-  /**
    * Updates the path prefix used in the config.
    *
    * @method
@@ -360,7 +350,6 @@ class Eleventy {
       formats,
       this.eleventyConfig
     );
-    this.eleventyFiles.setPassthroughAll(this.isPassthroughAll);
     this.eleventyFiles.setInput(this.inputDir, this.input);
     this.eleventyFiles.setRunMode(this.runMode);
     this.eleventyFiles.extensionMap = this.extensionMap;

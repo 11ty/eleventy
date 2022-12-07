@@ -33,7 +33,6 @@ try {
       "dryrun",
       "help",
       "serve",
-      "passthroughall",
       "incremental",
     ],
     default: {
@@ -85,7 +84,6 @@ try {
 
     elev.setDryRun(argv.dryrun);
     elev.setIncrementalBuild(argv.incremental);
-    elev.setPassthroughAll(argv.passthroughall);
     elev.setFormats(argv.formats);
 
     if (argv.watch) {

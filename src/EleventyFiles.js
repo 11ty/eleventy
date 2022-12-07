@@ -31,8 +31,6 @@ class EleventyFiles {
 
     this.initConfig();
 
-    this.passthroughAll = false;
-
     this.formats = formats;
     this.eleventyIgnoreContent = false;
 
@@ -151,10 +149,6 @@ class EleventyFiles {
     this.runMode = runMode;
   }
 
-  setPassthroughAll(passthroughAll) {
-    this.passthroughAll = !!passthroughAll;
-  }
-
   initPassthroughManager() {
     let mgr = new TemplatePassthroughManager(this.eleventyConfig);
     mgr.setInputDir(this.inputDir);
@@ -200,13 +194,7 @@ class EleventyFiles {
       this.config.events.emit("eleventy.ignores", this.uniqueIgnores);
     }
 
-    if (this.passthroughAll) {
-      this.normalizedTemplateGlobs = TemplateGlob.map([
-        TemplateGlob.normalizePath(this.input, "/**"),
-      ]);
-    } else {
-      this.normalizedTemplateGlobs = this.templateGlobs;
-    }
+    this.normalizedTemplateGlobs = this.templateGlobs;
   }
 
   getIgnoreGlobs() {
