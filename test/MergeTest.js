@@ -194,6 +194,34 @@ test("Edge case from #2470", (t) => {
   );
 });
 
+test.skip("Edge case from #2684 (multiple conflicting override: props)", (t) => {
+  t.deepEqual(
+    Merge(
+      {
+        a: {
+          "override:b": {
+            c: [1],
+          },
+        },
+      },
+      {
+        a: {
+          "override:b": {
+            c: [2],
+          },
+        },
+      }
+    ),
+    {
+      a: {
+        b: {
+          c: [2],
+        },
+      },
+    }
+  );
+});
+
 test("Deep, override: empty", (t) => {
   t.deepEqual(Merge({}, { a: { b: [3, 4] } }), { a: { b: [3, 4] } });
   t.deepEqual(Merge({}, { a: [2] }), { a: [2] });
