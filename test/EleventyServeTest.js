@@ -53,3 +53,20 @@ test("Get Options (override in config)", async (t) => {
     port: 8080,
   });
 });
+
+test("Sanity test that default output is set correctly", async (t) => {
+  let es = await getServerInstance();
+  es.setOutputDir("_site");
+
+  t.is(es.server.dir, "_site");
+});
+
+// This assert should work once updating the output dir of the server works.
+test.skip("Custom output dir is set correctly", async (t) => {
+  let es = await getServerInstance();
+  es.setOutputDir("x");
+
+  t.is(es.outputDir, "x");
+
+  t.is(es.server.dir, "x");
+});

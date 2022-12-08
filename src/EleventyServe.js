@@ -174,7 +174,7 @@ class EleventyServe {
     // Static method `getServer` was already checked in `getServerModule`
     this._server = serverModule.getServer(
       "eleventy-server",
-      this.config.dir.output,
+      this.outputDir,
       this.options
     );
 
