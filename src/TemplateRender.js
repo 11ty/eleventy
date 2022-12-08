@@ -3,6 +3,7 @@ const { TemplatePath } = require("@11ty/eleventy-utils");
 const TemplateConfig = require("./TemplateConfig");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
+const CustomEngine = require("./Engines/Custom.js");
 // const debug = require("debug")("Eleventy:TemplateRender");
 
 class TemplateRenderConfigError extends EleventyBaseError {}
@@ -160,6 +161,15 @@ class TemplateRender {
   }
 
   getReadableEnginesListDifferingFromFileExtension() {
+    let keyFromFilename = this.extensionMap.getKey(this.engineNameOrPath);
+    if (this.engine instanceof CustomEngine) {
+      if (this.engine.entry && this.engine.entry.name && keyFromFilename !== this.engine.entry.name) {
+        return this.engine.entry.name;
+      } else {
+        return undefined;
+      }
+    }
+
     if (
       this.engineName === "md" &&
       this.useMarkdown &&
@@ -172,7 +182,6 @@ class TemplateRender {
     }
 
     // templateEngineOverride in play and template language differs from file extension
-    let keyFromFilename = this.extensionMap.getKey(this.engineNameOrPath);
     if (keyFromFilename !== this.engineName) {
       return this.engineName;
     }
