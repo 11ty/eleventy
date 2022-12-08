@@ -75,8 +75,9 @@ class EleventyServe {
     }
   }
 
-  // TODO this doesn’t seem to be used internally
-  setOutputDir(outputDir) {
+  async setOutputDir(outputDir) {
+    // TODO check if this is different and if so, restart server (if already running)
+    // This applies if you change the output directory in your config file during watch/serve
     this.outputDir = outputDir;
   }
 

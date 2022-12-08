@@ -338,12 +338,8 @@ class Eleventy {
     this.extensionMap = new EleventyExtensionMap(formats, this.eleventyConfig);
     await this.config.events.emit("eleventy.extensionmap", this.extensionMap);
 
-    // tbd
-    // This is likely async in the future, since updating the output dir of the server
-    // will likely be an async action. Also having this in the getter seems a little unexpected
-    if (this.eleventyServe.outputDir !== this.outputDir) {
-      this.eleventyServe.setOutputDir(this.outputDir);
-    }
+    // This is always available, even when not in --serve mode
+    this.eleventyServe.setOutputDir(this.outputDir);
 
     this.eleventyFiles = new EleventyFiles(
       this.inputDir,
