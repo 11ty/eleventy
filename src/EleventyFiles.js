@@ -205,7 +205,7 @@ class EleventyFiles {
     for (let ignore of this.extraIgnores) {
       uniqueIgnores.add(ignore);
     }
-    // Placing the config ignores last here is import to the tests
+    // Placing the config ignores last here is important to the tests
     for (let ignore of this.config.ignores) {
       uniqueIgnores.add(
         TemplateGlob.normalizePath(this.localPathRoot || ".", ignore)
@@ -291,12 +291,7 @@ class EleventyFiles {
   }
 
   getIgnores() {
-    let rootDirectory = this.localPathRoot || ".";
     let files = new Set();
-
-    for (let ignore of this.config.ignores) {
-      files.add(TemplateGlob.normalizePath(rootDirectory, ignore));
-    }
 
     for (let ignore of EleventyFiles.getFileIgnores(this.getIgnoreFiles())) {
       files.add(ignore);
