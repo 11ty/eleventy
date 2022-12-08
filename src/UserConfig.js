@@ -10,6 +10,8 @@ const pkg = require("../package.json");
 
 class UserConfigError extends EleventyBaseError {}
 
+const ComparisonAsyncFunction = (async () => {}).constructor;
+
 // API to expose configuration options in config file
 class UserConfig {
   constructor() {
@@ -66,9 +68,12 @@ class UserConfig {
     this.dynamicPermalinks = true;
 
     this.useGitIgnore = true;
-    this.ignores = new Set();
-    this.ignores.add("node_modules/**");
-    this.ignores.add(".git/**");
+
+    let defaultIgnores = new Set();
+    defaultIgnores.add("**/node_modules/**");
+    defaultIgnores.add(".git/**");
+    this.ignores = new Set(defaultIgnores);
+    this.watchIgnores = new Set(defaultIgnores);
 
     this.dataDeepMerge = true;
     this.extensionMap = new Set();
@@ -91,8 +96,8 @@ class UserConfig {
     this.dataFilterSelectors = new Set();
 
     this.libraryAmendments = {};
-
     this.serverPassthroughCopyBehavior = "passthrough";
+    this.urlTransforms = [];
   }
 
   versionCheck(expected) {
@@ -236,11 +241,43 @@ class UserConfig {
 
     // namespacing happens downstream
     this.addLiquidFilter(name, callback);
-    this.addNunjucksFilter(name, callback);
     this.addJavaScriptFunction(name, callback);
 
-    // TODO remove Handlebars helpers in Universal Filters. Use shortcodes instead (the Handlebars template syntax is the same).
-    this.addHandlebarsHelper(name, callback);
+    // This method *requires* `async function` and will not work with `function` that returns a promise
+    if (callback instanceof ComparisonAsyncFunction) {
+      this.addNunjucksAsyncFilter(name, async function (...args) {
+        let cb = args.pop();
+        let ret = await callback.call(this, ...args);
+        cb(null, ret);
+      });
+    } else {
+      this.addNunjucksFilter(name, function (...args) {
+        let ret = callback.call(this, ...args);
+        if (ret instanceof Promise) {
+          throw new Error(
+            `Nunjucks *is* async-friendly with \`addFilter("${name}", async function() {})\` but you need to supply an \`async function\`. You returned a promise from \`addFilter("${name}", function() {})\`. Alternatively, use the \`addAsyncFilter("${name}")\` configuration API method.`
+          );
+        }
+        return ret;
+      });
+
+      // TODO remove Handlebars helpers in Universal Filters. Use shortcodes instead (the Handlebars template syntax is the same).
+      this.addHandlebarsHelper(name, callback);
+    }
+  }
+
+  // Liquid, Nunjucks, and JS only
+  addAsyncFilter(name, callback) {
+    debug("Adding universal async filter %o", this.getNamespacedName(name));
+
+    // namespacing happens downstream
+    this.addLiquidFilter(name, callback);
+    this.addJavaScriptFunction(name, callback);
+    this.addNunjucksAsyncFilter(name, async function (...args) {
+      let cb = args.pop();
+      let ret = await callback.call(this, ...args);
+      cb(null, ret);
+    });
   }
 
   getFilter(name) {
@@ -307,13 +344,19 @@ class UserConfig {
   addTransform(name, callback) {
     name = this.getNamespacedName(name);
 
-    this.transforms[name] = callback;
+    this.transforms[name] = this.benchmarks.config.add(
+      `"${name}" Transform`,
+      callback
+    );
   }
 
   addLinter(name, callback) {
     name = this.getNamespacedName(name);
 
-    this.linters[name] = callback;
+    this.linters[name] = this.benchmarks.config.add(
+      `"${name}" Linter`,
+      callback
+    );
   }
 
   addLayoutAlias(from, to) {
@@ -429,13 +472,26 @@ class UserConfig {
     return this;
   }
 
-  _normalizeTemplateFormats(templateFormats) {
-    if (typeof templateFormats === "string") {
-      templateFormats = templateFormats
-        .split(",")
-        .map((format) => format.trim());
+  _normalizeTemplateFormats(templateFormats, existingValues) {
+    // setTemplateFormats(null) should return null
+    if (templateFormats === null || templateFormats === undefined) {
+      return null;
     }
-    return templateFormats;
+
+    let set = new Set();
+    if (Array.isArray(templateFormats)) {
+      set = new Set(templateFormats.map((format) => format.trim()));
+    } else if (typeof templateFormats === "string") {
+      for (let format of templateFormats.split(",")) {
+        set.add(format.trim());
+      }
+    }
+
+    for (let format of existingValues || []) {
+      set.add(format);
+    }
+
+    return Array.from(set);
   }
 
   setTemplateFormats(templateFormats) {
@@ -444,11 +500,9 @@ class UserConfig {
 
   // additive, usually for plugins
   addTemplateFormats(templateFormats) {
-    if (!this.templateFormatsAdded) {
-      this.templateFormatsAdded = [];
-    }
-    this.templateFormatsAdded = this.templateFormatsAdded.concat(
-      this._normalizeTemplateFormats(templateFormats)
+    this.templateFormatsAdded = this._normalizeTemplateFormats(
+      templateFormats,
+      this.templateFormatsAdded
     );
   }
 
@@ -763,15 +817,26 @@ class UserConfig {
   }
 
   addExtension(fileExtension, options = {}) {
-    this.extensionMap.add(
-      Object.assign(
-        {
-          key: fileExtension,
-          extension: fileExtension,
-        },
-        options
-      )
-    );
+    let extensions;
+    // Array support added in 2.0.0-canary.19
+    if (Array.isArray(fileExtension)) {
+      extensions = fileExtension;
+    } else {
+      // single string
+      extensions = [fileExtension];
+    }
+
+    for (let extension of extensions) {
+      this.extensionMap.add(
+        Object.assign(
+          {
+            key: extension,
+            extension: extension,
+          },
+          options
+        )
+      );
+    }
   }
 
   addDataExtension(extensionList, parser) {
@@ -812,6 +877,10 @@ class UserConfig {
     this.serverPassthroughCopyBehavior = behavior;
   }
 
+  addUrlTransform(callback) {
+    this.urlTransforms.push(callback);
+  }
+
   getMergingConfigObject() {
     return {
       templateFormats: this.templateFormats,
@@ -848,6 +917,7 @@ class UserConfig {
       dynamicPermalinks: this.dynamicPermalinks,
       useGitIgnore: this.useGitIgnore,
       ignores: this.ignores,
+      watchIgnores: this.watchIgnores,
       dataDeepMerge: this.dataDeepMerge,
       watchJavaScriptDependencies: this.watchJavaScriptDependencies,
       additionalWatchTargets: this.additionalWatchTargets,
@@ -866,6 +936,7 @@ class UserConfig {
       dataFilterSelectors: this.dataFilterSelectors,
       libraryAmendments: this.libraryAmendments,
       serverPassthroughCopyBehavior: this.serverPassthroughCopyBehavior,
+      urlTransforms: this.urlTransforms,
     };
   }
 }

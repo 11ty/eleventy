@@ -94,55 +94,79 @@ class TemplateEngine {
     return this.includesDir;
   }
 
-  // TODO make async
-  getPartials() {
+  async getPartials() {
     if (!this.partialsHaveBeenCached) {
-      this.partials = this.cachePartialFiles();
+      this.partials = await this.cachePartialFiles();
     }
 
     return this.partials;
   }
 
-  // TODO make async
-  cachePartialFiles() {
-    // Try to skip this require if not used (for bundling reasons)
-    const fastglob = require("fast-glob");
-
-    // This only runs if getPartials() is called, which is only for Mustache/Handlebars
+  /**
+   * Search for and cache partial files.
+   *
+   * This only runs if getPartials() is called, which only runs if you compile a Mustache/Handlebars template.
+   *
+   * @protected
+   */
+  async cachePartialFiles() {
     this.partialsHaveBeenCached = true;
-    let partials = {};
-    let prefix = this.includesDir + "/**/*.";
-    // TODO: reuse mustache partials in handlebars?
-    let partialFiles = [];
+
+    let results = [];
     if (this.includesDir) {
+      // Try to skip this require if not used (for bundling reasons)
+      const fastglob = require("fast-glob");
+
       let bench = this.benchmarks.aggregate.get("Searching the file system");
       bench.before();
-      this.extensions.forEach(function (extension) {
-        partialFiles = partialFiles.concat(
-          fastglob.sync(prefix + extension, {
-            caseSensitiveMatch: false,
-            dot: true,
-          })
-        );
-      });
+
+      let prefix = this.includesDir + "/**/*.";
+      let partialFiles = [];
+      await Promise.all(
+        this.extensions.map(async function (extension) {
+          partialFiles = partialFiles.concat(
+            await fastglob(prefix + extension, {
+              caseSensitiveMatch: false,
+              dot: true,
+            })
+          );
+        })
+      );
+
       bench.after();
+
+      results = await Promise.all(
+        partialFiles.map((partialFile) => {
+          partialFile = TemplatePath.addLeadingDotSlash(partialFile);
+          let partialPath = TemplatePath.stripLeadingSubPath(
+            partialFile,
+            this.includesDir
+          );
+          let partialPathNoExt = partialPath;
+          this.extensions.forEach(function (extension) {
+            partialPathNoExt = TemplatePath.removeExtension(
+              partialPathNoExt,
+              "." + extension
+            );
+          });
+
+          return fs.promises
+            .readFile(partialFile, {
+              encoding: "utf8",
+            })
+            .then((content) => {
+              return {
+                content,
+                path: partialPathNoExt,
+              };
+            });
+        })
+      );
     }
 
-    partialFiles = TemplatePath.addLeadingDotSlashArray(partialFiles);
-
-    for (let j = 0, k = partialFiles.length; j < k; j++) {
-      let partialPath = TemplatePath.stripLeadingSubPath(
-        partialFiles[j],
-        this.includesDir
-      );
-      let partialPathNoExt = partialPath;
-      this.extensions.forEach(function (extension) {
-        partialPathNoExt = TemplatePath.removeExtension(
-          partialPathNoExt,
-          "." + extension
-        );
-      });
-      partials[partialPathNoExt] = fs.readFileSync(partialFiles[j], "utf8");
+    let partials = {};
+    for (let result of results) {
+      partials[result.path] = result.content;
     }
 
     debug(
@@ -153,6 +177,9 @@ class TemplateEngine {
     return partials;
   }
 
+  /**
+   * @protected
+   */
   setEngineLib(engineLib) {
     this.engineLib = engineLib;
 
@@ -191,7 +218,9 @@ class TemplateEngine {
   }
 
   getCompileCacheKey(str, inputPath) {
-    return str;
+    // Changing to use inputPath and contents, this created weird bugs when two identical files had different file paths
+    // TODO update docs
+    return inputPath + str;
   }
 
   get defaultTemplateFileExtension() {
@@ -205,6 +234,15 @@ class TemplateEngine {
   // whether or not compile is needed or can we return the plaintext?
   needsCompilation(str) {
     return true;
+  }
+
+  /**
+   * Make sure compile is implemented downstream.
+   * @abstract
+   * @return {Promise}
+   */
+  async compile() {
+    throw new Error("compile() must be implemented by engine");
   }
 
   // See https://www.11ty.dev/docs/watch-serve/#watch-javascript-dependencies

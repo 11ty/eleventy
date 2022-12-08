@@ -123,6 +123,20 @@ test("Handlebars Render Helper (uses argument)", async (t) => {
   t.is(await fn({ name: "Zach" }), "<p>This is a Zach.</p>");
 });
 
+test("Handlebars Render Helper (uses string argument)", async (t) => {
+  let tr = getNewTemplateRender("hbs");
+  tr.engine.addHelpers({
+    helpername2: function (name) {
+      return name;
+    },
+  });
+
+  let fn = await tr.getCompiledTemplate(
+    `<p>This is a {{helpername2 "Zach"}}.</p>`
+  );
+  t.is(await fn({ name: "Zach" }), "<p>This is a Zach.</p>");
+});
+
 test("Handlebars Render Shortcode", async (t) => {
   t.plan(3);
   let tr = getNewTemplateRender("hbs");

@@ -76,16 +76,18 @@ class JavaScript extends TemplateEngine {
     return require(requirePath);
   }
 
+  /**
+   * JavaScript files defer to the module loader rather than read the files to strings
+   *
+   * @override
+   */
   needsToReadFileContents() {
     return false;
   }
 
   // only remove from cache once on startup (if it already exists)
   initRequireCache(inputPath) {
-    let requirePath = TemplatePath.absolutePath(inputPath);
-    if (requirePath) {
-      deleteRequireCache(requirePath);
-    }
+    deleteRequireCache(inputPath);
 
     if (inputPath in this.instances) {
       delete this.instances[inputPath];

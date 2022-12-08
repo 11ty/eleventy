@@ -5,6 +5,7 @@ const DeepCopy = Merge.DeepCopy;
 test("Shallow Merge", (t) => {
   t.deepEqual(Merge({}, {}), {});
   t.deepEqual(Merge({ a: 1 }, { a: 2 }), { a: 2 });
+  t.deepEqual(Merge({ a: 1 }, { a: 2 }, undefined), { a: 2 });
   t.deepEqual(Merge({ a: 1 }, { a: 2 }, { a: 3 }), { a: 3 });
 
   t.deepEqual(Merge({ a: 1 }, { b: 1 }), { a: 1, b: 1 });
@@ -25,8 +26,17 @@ test("Invalid", (t) => {
   t.deepEqual(Merge({}, "string"), {});
 });
 
+test("Non-Object target", (t) => {
+  t.deepEqual(Merge(1, { a: 1 }), { a: 1 });
+  t.deepEqual(Merge([1], { a: 1 }), { a: 1 });
+  t.deepEqual(Merge("string", { a: 1 }), { a: 1 });
+});
+
 test("Deep", (t) => {
   t.deepEqual(Merge({ a: { b: 1 } }, { a: { c: 1 } }), { a: { b: 1, c: 1 } });
+  t.deepEqual(Merge({ a: { b: 1 } }, { a: { c: 1 } }, undefined), {
+    a: { b: 1, c: 1 },
+  });
 });
 
 test("Deep, override: prefix", (t) => {
@@ -153,6 +163,65 @@ test("Deep, override: prefix at other placements", (t) => {
   );
 });
 
+test("Edge case from #2470", (t) => {
+  t.deepEqual(
+    Merge(
+      {
+        a: {
+          b: {
+            c: [1],
+          },
+        },
+      },
+      {
+        a: {
+          "override:override:b": {
+            c: [2],
+          },
+        },
+      }
+    ),
+    {
+      a: {
+        b: {
+          c: [1],
+        },
+        "override:b": {
+          c: [2],
+        },
+      },
+    }
+  );
+});
+
+test.skip("Edge case from #2684 (multiple conflicting override: props)", (t) => {
+  t.deepEqual(
+    Merge(
+      {
+        a: {
+          "override:b": {
+            c: [1],
+          },
+        },
+      },
+      {
+        a: {
+          "override:b": {
+            c: [2],
+          },
+        },
+      }
+    ),
+    {
+      a: {
+        b: {
+          c: [2],
+        },
+      },
+    }
+  );
+});
+
 test("Deep, override: empty", (t) => {
   t.deepEqual(Merge({}, { a: { b: [3, 4] } }), { a: { b: [3, 4] } });
   t.deepEqual(Merge({}, { a: [2] }), { a: [2] });
@@ -163,6 +232,8 @@ test("Deep, override: empty", (t) => {
 test("DeepCopy", (t) => {
   t.deepEqual(DeepCopy({}, { a: { b: [3, 4] } }), { a: { b: [3, 4] } });
   t.deepEqual(DeepCopy({}, { a: [2] }), { a: [2] });
+  t.deepEqual(DeepCopy({}, { a: [2] }, undefined), { a: [2] });
+  t.deepEqual(DeepCopy({}, undefined, { a: [2] }), { a: [2] });
   t.deepEqual(DeepCopy({}, { "override:a": [2] }), { "override:a": [2] });
   t.deepEqual(DeepCopy({}, { a: { "override:b": [3, 4] } }), {
     a: { "override:b": [3, 4] },

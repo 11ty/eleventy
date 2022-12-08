@@ -7,8 +7,10 @@ const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
 const Merge = require("../Util/Merge");
 const { ProxyWrap } = require("../Util/ProxyWrap");
 const TemplateDataInitialGlobalData = require("../TemplateDataInitialGlobalData");
+const EleventyShortcodeError = require("../EleventyShortcodeError");
 const TemplateRender = require("../TemplateRender");
 const TemplateConfig = require("../TemplateConfig");
+const EleventyErrorUtil = require("../EleventyErrorUtil");
 const Liquid = require("../Engines/Liquid");
 
 async function compile(
@@ -25,7 +27,12 @@ async function compile(
     templateLang = this.page.templateSyntax;
   }
 
-  let cfg = templateConfig.getConfig();
+  let cfg = templateConfig;
+  // templateConfig might already be a userconfig
+  if (cfg instanceof TemplateConfig) {
+    cfg = cfg.getConfig();
+  }
+
   let tr = new TemplateRender(templateLang, cfg.dir.input, templateConfig);
   tr.extensionMap = extensionMap;
   tr.setEngineOverride(templateLang);
@@ -144,11 +151,11 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 
         stream.start();
       },
-      render: async function (ctx) {
+      render: function* (ctx) {
         let normalizedContext = {};
         if (ctx) {
           if (opts.accessGlobalData) {
-            // parent template data cascade
+            // parent template data cascade, should this be `ctx.getAll()` (per below?)
             normalizedContext.data = ctx.environments;
           }
 
@@ -156,21 +163,25 @@ function EleventyPlugin(eleventyConfig, options = {}) {
           normalizedContext.eleventy = ctx.get(["eleventy"]);
         }
 
-        let argArray = await Liquid.parseArguments(
-          null,
-          this.args,
-          ctx,
-          this.liquid
-        );
+        let rawArgs = Liquid.parseArguments(null, this.args);
+        let argArray = [];
+        let contextScope = ctx.getAll();
+        for (let arg of rawArgs) {
+          let b = yield liquidEngine.evalValue(arg, contextScope);
+          argArray.push(b);
+        }
 
+        // plaintext paired shortcode content
         let body = this.tokens.map((token) => token.getText()).join("");
 
-        return _renderStringShortcodeFn.call(
+        let ret = _renderStringShortcodeFn.call(
           normalizedContext,
           body,
           // templateLang, data
           ...argArray
         );
+        yield ret;
+        return ret;
       },
     };
   }
@@ -253,7 +264,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
           if (e) {
             resolve(
               new EleventyShortcodeError(
-                `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+                `Error with Nunjucks paired shortcode \`${tagName}\`${EleventyErrorUtil.convertErrorToString(
                   e
                 )}`
               )
@@ -274,7 +285,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
             .catch(function (e) {
               resolve(
                 new EleventyShortcodeError(
-                  `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+                  `Error with Nunjucks paired shortcode \`${tagName}\`${EleventyErrorUtil.convertErrorToString(
                     e
                   )}`
                 ),

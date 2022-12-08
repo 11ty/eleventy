@@ -1466,3 +1466,36 @@ test("serverlessUrlMap Event (empty pagination template with `serverless` should
   await tm.add(tmpl);
   await tm.cache();
 });
+
+test("eleventy.layouts Event", async (t) => {
+  t.plan(1);
+
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.on("eleventy.layouts", (layoutMap) => {
+    t.deepEqual(layoutMap, {
+      "./test/stubs-layouts-event/_includes/first.liquid": [
+        "./test/stubs-layouts-event/page.md",
+      ],
+      "./test/stubs-layouts-event/_includes/second.liquid": [
+        "./test/stubs-layouts-event/page.md",
+        "./test/stubs-layouts-event/_includes/first.liquid",
+      ],
+      "./test/stubs-layouts-event/_includes/third.liquid": [
+        "./test/stubs-layouts-event/page.md",
+        "./test/stubs-layouts-event/_includes/first.liquid",
+        "./test/stubs-layouts-event/_includes/second.liquid",
+      ],
+    });
+  });
+
+  let tm = new TemplateMap(eleventyConfig);
+  let tmpl = getNewTemplate(
+    "./test/stubs-layouts-event/page.md",
+    "./test/stubs-layouts-event/",
+    "./test/stubs-layouts-event/_site",
+    eleventyConfig
+  );
+
+  await tm.add(tmpl);
+  await tm.cache();
+});

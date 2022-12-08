@@ -3,12 +3,13 @@ const chalk = require("kleur");
 const lodashUniq = require("lodash/uniq");
 const lodashMerge = require("lodash/merge");
 const { TemplatePath } = require("@11ty/eleventy-utils");
-const EleventyBaseError = require("./EleventyBaseError");
-const UserConfig = require("./UserConfig");
+const EleventyBaseError = require("./EleventyBaseError.js");
+const UserConfig = require("./UserConfig.js");
+const { EleventyRequire } = require("./Util/Require.js");
+const eventBus = require("./EventBus.js");
+
 const debug = require("debug")("Eleventy:TemplateConfig");
 const debugDev = require("debug")("Dev:Eleventy:TemplateConfig");
-const deleteRequireCache = require("./Util/DeleteRequireCache");
-const eventBus = require("./EventBus");
 
 /**
  * @module 11ty/eleventy/TemplateConfig
@@ -53,9 +54,19 @@ class TemplateConfig {
      * @member {String} - Path to local project config.
      * @default .eleventy.js
      */
-    this.projectConfigPath = ".eleventy.js";
     if (projectConfigPath !== undefined) {
-      this.projectConfigPath = projectConfigPath;
+      if (!projectConfigPath) {
+        // falsy skips config files
+        this.projectConfigPaths = [];
+      } else {
+        this.projectConfigPaths = [projectConfigPath];
+      }
+    } else {
+      this.projectConfigPaths = [
+        ".eleventy.js",
+        "eleventy.config.js",
+        "eleventy.config.cjs",
+      ];
     }
 
     if (customRootConfig) {
@@ -84,9 +95,22 @@ class TemplateConfig {
    * @returns {String} - The normalised local project config file path.
    */
   getLocalProjectConfigFile() {
-    if (this.projectConfigPath) {
-      return TemplatePath.addLeadingDotSlash(this.projectConfigPath);
+    let configFiles = this.getLocalProjectConfigFiles();
+    // Add the configFiles[0] in case of a test, where no file exists on the file system
+    let configFile =
+      configFiles.find((path) => path && fs.existsSync(path)) || configFiles[0];
+    if (configFile) {
+      return configFile;
     }
+  }
+
+  getLocalProjectConfigFiles() {
+    if (this.projectConfigPaths && this.projectConfigPaths.length > 0) {
+      return TemplatePath.addLeadingDotSlashArray(
+        this.projectConfigPaths.filter((path) => path)
+      );
+    }
+    return [];
   }
 
   get inputDir() {
@@ -147,7 +171,11 @@ class TemplateConfig {
    * @param {String} path - The new config path.
    */
   setProjectConfigPath(path) {
-    this.projectConfigPath = path;
+    if (path !== undefined) {
+      this.projectConfigPaths = [path];
+    } else {
+      this.projectConfigPaths = [];
+    }
 
     if (this.hasConfigMerged) {
       // merge it again
@@ -164,13 +192,10 @@ class TemplateConfig {
    * @param {String} pathPrefix - The new path prefix.
    */
   setPathPrefix(pathPrefix) {
-    debug("Setting pathPrefix to %o", pathPrefix);
-    this.overrides.pathPrefix = pathPrefix;
-
-    if (!this.hasConfigMerged) {
-      this.forceReloadConfig();
+    if (pathPrefix && pathPrefix !== "/") {
+      debug("Setting pathPrefix to %o", pathPrefix);
+      this.overrides.pathPrefix = pathPrefix;
     }
-    this.config.pathPrefix = pathPrefix;
   }
 
   /**
@@ -179,6 +204,10 @@ class TemplateConfig {
    *  @returns {String} - The path prefix string
    */
   getPathPrefix() {
+    if (this.overrides.pathPrefix) {
+      return this.overrides.pathPrefix;
+    }
+
     if (!this.hasConfigMerged) {
       this.getConfig();
     }
@@ -199,12 +228,22 @@ class TemplateConfig {
   }
 
   /*
+   * Add additional overrides to the root config object, used for testing
+   *
+   * @param {Object} - a subset of the return Object from the user’s config file.
+   */
+  appendToRootConfig(obj) {
+    Object.assign(this.rootConfig, obj);
+  }
+
+  /*
    * Process the userland plugins from the Config
    *
    * @param {Object} - the return Object from the user’s config file.
    */
-  processPlugins({ dir }) {
+  processPlugins({ dir, pathPrefix }) {
     this.userConfig.dir = dir;
+    this.userConfig.pathPrefix = pathPrefix;
 
     if (this.logger) {
       this.userConfig.logger = this.logger;
@@ -249,18 +288,15 @@ class TemplateConfig {
    */
   mergeConfig() {
     let localConfig = {};
-    let path = this.projectConfigPath
-      ? TemplatePath.absolutePath(this.projectConfigPath)
-      : false;
+    let path = this.projectConfigPaths
+      .filter((path) => path)
+      .find((path) => fs.existsSync(path));
 
     debug(`Merging config with ${path}`);
 
-    if (path && fs.existsSync(path)) {
+    if (path) {
       try {
-        // remove from require cache so it will grab a fresh copy
-        deleteRequireCache(path);
-
-        localConfig = require(path);
+        localConfig = EleventyRequire(path);
         // debug( "localConfig require return value: %o", localConfig );
         if (typeof localConfig === "function") {
           localConfig = localConfig(this.userConfig);
@@ -314,6 +350,16 @@ class TemplateConfig {
 
     // Temporarily restore templateFormats
     mergedConfig.templateFormats = templateFormats;
+
+    // Setup pathPrefix set via command line for plugin consumption
+    if (this.overrides.pathPrefix) {
+      mergedConfig.pathPrefix = this.overrides.pathPrefix;
+    }
+    // Returning a falsy value (e.g. "") from user config should reset to the default value.
+    if (!mergedConfig.pathPrefix) {
+      mergedConfig.pathPrefix = this.rootConfig.pathPrefix;
+    }
+
     this.processPlugins(mergedConfig);
     delete mergedConfig.templateFormats;
 

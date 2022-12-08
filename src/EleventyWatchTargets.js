@@ -26,16 +26,6 @@ class EleventyWatchTargets {
     return this.dependencies.has(path);
   }
 
-  _normalizeTargets(targets) {
-    if (!targets) {
-      return [];
-    } else if (Array.isArray(targets)) {
-      return targets;
-    }
-
-    return [targets];
-  }
-
   reset() {
     this.newTargets = new Set();
   }
@@ -82,17 +72,29 @@ class EleventyWatchTargets {
     }
   }
 
+  static normalize(targets) {
+    if (!targets) {
+      return [];
+    } else if (Array.isArray(targets)) {
+      return targets;
+    }
+
+    return [targets];
+  }
+
   // add only a target
   add(targets) {
-    targets = this._normalizeTargets(targets);
-    this.addRaw(targets);
+    this.addRaw(EleventyWatchTargets.normalize(targets));
+  }
+
+  static normalizeToGlobs(targets) {
+    return EleventyWatchTargets.normalize(targets).map((entry) =>
+      TemplatePath.convertToRecursiveGlobSync(entry)
+    );
   }
 
   addAndMakeGlob(targets) {
-    targets = this._normalizeTargets(targets).map((entry) =>
-      TemplatePath.convertToRecursiveGlobSync(entry)
-    );
-    this.addRaw(targets);
+    this.addRaw(EleventyWatchTargets.normalizeToGlobs(targets));
   }
 
   // add only a target’s dependencies
@@ -101,7 +103,7 @@ class EleventyWatchTargets {
       return;
     }
 
-    targets = this._normalizeTargets(targets);
+    targets = EleventyWatchTargets.normalize(targets);
     let deps = JavaScriptDependencies.getDependencies(targets);
     if (filterCallback) {
       deps = deps.filter(filterCallback);
@@ -119,7 +121,7 @@ class EleventyWatchTargets {
 
   clearDependencyRequireCache() {
     for (let path of this.dependencies) {
-      deleteRequireCache(TemplatePath.absolutePath(path));
+      deleteRequireCache(path);
     }
   }
 

@@ -171,6 +171,8 @@ class Template extends TemplateContent {
       permalinkValue,
       this.extraOutputSubdirectory
     );
+    perm.setUrlTransforms(this.config.urlTransforms);
+
     if (this.templateData) {
       perm.setServerlessPathData(this.templateData.getServerlessPathData());
     }
@@ -274,13 +276,15 @@ class Template extends TemplateContent {
     }
 
     // No `permalink` specified in data cascade, do the default
-    return TemplatePermalink.generate(
+    let p = TemplatePermalink.generate(
       this.getTemplateSubfolder(),
       this.baseFile,
       this.extraOutputSubdirectory,
       this.htmlIOException ? this.config.htmlOutputSuffix : "",
       this.engine.defaultTemplateFileExtension
     );
+    p.setUrlTransforms(this.config.urlTransforms);
+    return p;
   }
 
   async usePermalinkRoot() {
@@ -475,13 +479,15 @@ class Template extends TemplateContent {
     this.linters.push(callback);
   }
 
-  async runLinters(str, inputPath, outputPath) {
+  async runLinters(str, page) {
+    let { inputPath, outputPath, url } = page;
     for (let linter of this.linters) {
       // these can be asynchronous but no guarantee of order when they run
       linter.call(
         {
           inputPath,
           outputPath,
+          url,
         },
         str,
         inputPath,
@@ -497,7 +503,8 @@ class Template extends TemplateContent {
     });
   }
 
-  async runTransforms(str, inputPath, outputPath) {
+  async runTransforms(str, page) {
+    let { inputPath, outputPath, url } = page;
     for (let { callback, name } of this.transforms) {
       try {
         let hadStrBefore = !!str;
@@ -505,6 +512,7 @@ class Template extends TemplateContent {
           {
             inputPath,
             outputPath,
+            url,
           },
           str,
           outputPath
@@ -559,9 +567,9 @@ class Template extends TemplateContent {
   }
 
   async addComputedData(data) {
-    this.computedData = new ComputedData(this.config);
-
     if (this.config.keys.computed in data) {
+      this.computedData = new ComputedData(this.config);
+
       // Note that `permalink` is only a thing that gets consumed—it does not go directly into generated data
       // this allows computed entries to use page.url or page.outputPath and they’ll be resolved properly
 
@@ -615,8 +623,11 @@ class Template extends TemplateContent {
 
   // Computed data consuming collections!
   async resolveRemainingComputedData(data) {
-    debug("Second round of computed data for %o", this.inputPath);
-    await this.computedData.processRemainingData(data);
+    // If it doesn’t exist, computed data is not used for this template
+    if (this.computedData) {
+      debug("Second round of computed data for %o", this.inputPath);
+      await this.computedData.processRemainingData(data);
+    }
   }
 
   async getTemplates(data) {
@@ -781,12 +792,8 @@ class Template extends TemplateContent {
       content = page.templateContent;
     }
 
-    await this.runLinters(content, page.inputPath, page.outputPath);
-    content = await this.runTransforms(
-      content,
-      page.inputPath,
-      page.outputPath
-    );
+    await this.runLinters(content, page);
+    content = await this.runTransforms(content, page);
     return content;
   }
 

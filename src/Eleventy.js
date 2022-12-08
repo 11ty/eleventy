@@ -46,6 +46,17 @@ class Eleventy {
 
     this.eleventyConfig.setLogger(this.logger);
 
+    /**
+     * @member {String} - The top level directory the site pretends to reside in
+     * @default "/"
+     */
+    this.pathPrefix = options.pathPrefix || "/";
+
+    if (this.pathPrefix || this.pathPrefix === "") {
+      this.eleventyConfig.setPathPrefix(this.pathPrefix);
+    }
+
+    /* Programmatic API config */
     if (options.config && typeof options.config === "function") {
       // TODO use return object here?
       options.config(this.eleventyConfig.userConfig);
@@ -218,16 +229,6 @@ class Eleventy {
   }
 
   /**
-   * Updates the passthrough mode of Eleventy.
-   *
-   * @method
-   * @param {Boolean} isPassthroughAll - Shall Eleventy passthrough everything?
-   */
-  setPassthroughAll(isPassthroughAll) {
-    this.isPassthroughAll = !!isPassthroughAll;
-  }
-
-  /**
    * Updates the path prefix used in the config.
    *
    * @method
@@ -266,7 +267,7 @@ class Eleventy {
 
     // reload package.json values (if applicable)
     // TODO only reset this if it changed
-    deleteRequireCache(TemplatePath.absolutePath("package.json"));
+    deleteRequireCache("package.json");
 
     await this.init();
   }
@@ -349,7 +350,6 @@ class Eleventy {
       formats,
       this.eleventyConfig
     );
-    this.eleventyFiles.setPassthroughAll(this.isPassthroughAll);
     this.eleventyFiles.setInput(this.inputDir, this.input);
     this.eleventyFiles.setRunMode(this.runMode);
     this.eleventyFiles.extensionMap = this.extensionMap;
@@ -652,21 +652,23 @@ Arguments:
   }
 
   _shouldResetConfig() {
-    let configFilePath = this.eleventyConfig.getLocalProjectConfigFile();
-    let configFileChanged = this.watchManager.hasQueuedFile(configFilePath);
-    if (configFileChanged) {
+    let configFilePaths = this.eleventyConfig.getLocalProjectConfigFiles();
+    let configFilesChanged = this.watchManager.hasQueuedFiles(configFilePaths);
+    if (configFilesChanged) {
       return true;
     }
 
-    // Any dependencies of the config file changed
-    let configFileDependencies =
-      this.watchTargets.getDependenciesOf(configFilePath);
-    for (let dep of configFileDependencies) {
-      if (this.watchManager.hasQueuedFile(dep)) {
-        // Delete from require cache so that updates to the module are re-required
-        deleteRequireCache(TemplatePath.absolutePath(dep));
+    for (const configFilePath of configFilePaths) {
+      // Any dependencies of the config file changed
+      let configFileDependencies =
+        this.watchTargets.getDependenciesOf(configFilePath);
+      for (let dep of configFileDependencies) {
+        if (this.watchManager.hasQueuedFile(dep)) {
+          // Delete from require cache so that updates to the module are re-required
+          deleteRequireCache(dep);
 
-        return true;
+          return true;
+        }
       }
     }
 
@@ -797,7 +799,7 @@ Arguments:
     this.watchTargets.add(this.eleventyFiles.getIgnoreFiles());
 
     // Watch the local project config file
-    this.watchTargets.add(this.eleventyConfig.getLocalProjectConfigFile());
+    this.watchTargets.add(this.eleventyConfig.getLocalProjectConfigFiles());
 
     // Template and Directory Data Files
     this.watchTargets.add(
@@ -835,7 +837,7 @@ Arguments:
 
     // Config file dependencies
     this.watchTargets.addDependencies(
-      this.eleventyConfig.getLocalProjectConfigFile(),
+      this.eleventyConfig.getLocalProjectConfigFiles(),
       filterOutGlobalDataFiles
     );
 
@@ -1163,3 +1165,5 @@ module.exports.EleventyServerless = require("./Serverless");
 module.exports.EleventyServerlessBundlerPlugin = require("./Plugins/ServerlessBundlerPlugin");
 module.exports.EleventyRenderPlugin = require("./Plugins/RenderPlugin");
 module.exports.EleventyEdgePlugin = require("./Plugins/EdgePlugin");
+module.exports.EleventyI18nPlugin = require("./Plugins/I18nPlugin");
+module.exports.EleventyHtmlBasePlugin = require("./Plugins/HtmlBasePlugin");

@@ -122,11 +122,18 @@ class TemplateContent {
       if (options.excerpt && fm.excerpt) {
         let excerptString = fm.excerpt + (options.excerpt_separator || "---");
         if (fm.content.startsWith(excerptString + os.EOL)) {
-          // with a newline after excerpt separator
+          // with an os-specific newline after excerpt separator
           fm.content =
             fm.excerpt.trim() +
             "\n" +
             fm.content.slice((excerptString + os.EOL).length);
+        } else if (fm.content.startsWith(excerptString + "\n")) {
+          // with a newline (\n) after excerpt separator
+          // This is necessary for some git configurations on windows
+          fm.content =
+            fm.excerpt.trim() +
+            "\n" +
+            fm.content.slice((excerptString + 1).length);
         } else if (fm.content.startsWith(excerptString)) {
           // no newline after excerpt separator
           fm.content = fm.excerpt + fm.content.slice(excerptString.length);
@@ -521,6 +528,7 @@ class TemplateContent {
           entry.isIncrementalMatch.call(
             {
               inputPath: this.inputPath,
+              isFullTemplate: metadata.isFullTemplate,
             },
             incrementalFile
           )

@@ -1,0 +1,8 @@
+{{ "/" | locale_url }}
+{{ "/en-us/" | locale_url }}
+{{ "/es/" | locale_url }}
+{{ "/" | locale_url: "en-us" }}
+{{ "/non-lang-file/" | locale_url }}
+{{ page.url | locale_links | json }}
+{{ "" | locale_links | json }}
+{{ page.lang }}

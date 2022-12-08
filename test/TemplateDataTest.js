@@ -291,6 +291,31 @@ test("getLocalDataPaths", async (t) => {
   ]);
 });
 
+test("getLocalDataPaths (with dataFileDirBaseNameOverride #1699)", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.appendToRootConfig({
+    dataFileDirBaseNameOverride: "index",
+  });
+
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let paths = await dataObj.getLocalDataPaths(
+    "./test/stubs/component/component.liquid"
+  );
+
+  t.deepEqual(paths, [
+    "./test/stubs/index.11tydata.json",
+    "./test/stubs/index.11tydata.cjs",
+    "./test/stubs/index.11tydata.js",
+    "./test/stubs/component/index.11tydata.json",
+    "./test/stubs/component/index.11tydata.cjs",
+    "./test/stubs/component/index.11tydata.js",
+    "./test/stubs/component/component.json",
+    "./test/stubs/component/component.11tydata.json",
+    "./test/stubs/component/component.11tydata.cjs",
+    "./test/stubs/component/component.11tydata.js",
+  ]);
+});
+
 test("Deeper getLocalDataPaths", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./", eleventyConfig);
@@ -547,4 +572,15 @@ test("eleventy.version and eleventy.generator returned from data", async (t) => 
 
   t.is(data.deep.nested.one, "first");
   t.is(data.deep.nested.two, "second");
+});
+
+test("getData() empty json file", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData(
+    "./test/stubs-empty-json-data/",
+    eleventyConfig
+  );
+
+  let data = await dataObj.getData();
+  t.deepEqual(data.empty, {});
 });

@@ -11,6 +11,16 @@ class TemplateEngineManager {
     this.engineCache = {};
   }
 
+  static isCustomEngineSimpleAlias(entry) {
+    let keys = Object.keys(entry);
+    if (keys.length > 2) {
+      return false;
+    }
+    return !keys.some((key) => {
+      return key !== "key" && key !== "extension";
+    });
+  }
+
   get keyToClassNameMap() {
     if (!this._keyToClassNameMap) {
       this._keyToClassNameMap = {
@@ -26,9 +36,23 @@ class TemplateEngineManager {
         "11ty.js": "JavaScript",
       };
 
+      // Custom entries *can* overwrite default entries above
       if ("extensionMap" in this.config) {
         for (let entry of this.config.extensionMap) {
-          this._keyToClassNameMap[entry.key] = "Custom";
+          // either the key does not already exist or it is not a simple alias and is an override: https://www.11ty.dev/docs/languages/custom/#overriding-an-existing-template-language
+          if (
+            !this._keyToClassNameMap[entry.key] ||
+            !TemplateEngineManager.isCustomEngineSimpleAlias(entry)
+          ) {
+            // throw an error if you try to override a Custom engine, this is a short term error until we swap this to use the extension instead of the key to get the class
+            if (this._keyToClassNameMap[entry.key] === "Custom") {
+              throw new Error(
+                `An attempt was made to override the *already* overridden "${entry.key}" template syntax via the \`addExtension\` configuration API. A maximum of one override is currently supported. If you’re trying to add an alias to an existing syntax, make sure only the \`key\` property is present in the addExtension options object.`
+              );
+            }
+
+            this._keyToClassNameMap[entry.key] = "Custom";
+          }
         }
       }
     }
@@ -83,6 +107,8 @@ class TemplateEngineManager {
       );
     }
 
+    // TODO these cached engines should be based on extensions not name, then we can remove the error in
+    //  "Double override (not aliases) throws an error" test in TemplateRenderCustomTest.js
     if (this.engineCache[name]) {
       return this.engineCache[name];
     }
@@ -93,7 +119,7 @@ class TemplateEngineManager {
     instance.extensionMap = extensionMap;
     instance.engineManager = this;
 
-    // If the user providers a "Custom" engine using addExtension,
+    // If provided a "Custom" engine using addExtension,
     // But that engine's instance is *not* custom,
     // The user must be overriding an existing engine
     // i.e. addExtension('md', { ...overrideBehavior })

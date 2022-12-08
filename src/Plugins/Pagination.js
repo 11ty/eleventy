@@ -192,7 +192,11 @@ class Pagination {
       typeof this.data.pagination.before === "function"
     ) {
       // we don’t need to make a copy of this because we .slice() above to create a new copy
-      result = this.data.pagination.before(result, this.data);
+      let fns = {};
+      if (this.config) {
+        fns = this.config.javascriptFunctions;
+      }
+      result = this.data.pagination.before.call(fns, result, this.data);
     }
 
     if (this.data.pagination.reverse === true) {

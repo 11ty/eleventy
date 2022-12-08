@@ -3,6 +3,7 @@ const fastglob = require("fast-glob");
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const EleventyExtensionMap = require("./EleventyExtensionMap");
+const EleventyWatchTargets = require("./EleventyWatchTargets");
 const TemplateData = require("./TemplateData");
 const TemplateGlob = require("./TemplateGlob");
 const TemplatePassthroughManager = require("./TemplatePassthroughManager");
@@ -29,8 +30,6 @@ class EleventyFiles {
     this.outputDir = outputDir;
 
     this.initConfig();
-
-    this.passthroughAll = false;
 
     this.formats = formats;
     this.eleventyIgnoreContent = false;
@@ -118,7 +117,7 @@ class EleventyFiles {
   _setConfig(config) {
     if (!config.ignores) {
       config.ignores = new Set();
-      config.ignores.add("node_modules/**");
+      config.ignores.add("**/node_modules/**");
     }
     this.config = config;
     this.initConfig();
@@ -148,10 +147,6 @@ class EleventyFiles {
 
   setRunMode(runMode) {
     this.runMode = runMode;
-  }
-
-  setPassthroughAll(passthroughAll) {
-    this.passthroughAll = !!passthroughAll;
   }
 
   initPassthroughManager() {
@@ -199,13 +194,7 @@ class EleventyFiles {
       this.config.events.emit("eleventy.ignores", this.uniqueIgnores);
     }
 
-    if (this.passthroughAll) {
-      this.normalizedTemplateGlobs = TemplateGlob.map([
-        TemplateGlob.normalizePath(this.input, "/**"),
-      ]);
-    } else {
-      this.normalizedTemplateGlobs = this.templateGlobs;
-    }
+    this.normalizedTemplateGlobs = this.templateGlobs;
   }
 
   getIgnoreGlobs() {
@@ -215,6 +204,12 @@ class EleventyFiles {
     }
     for (let ignore of this.extraIgnores) {
       uniqueIgnores.add(ignore);
+    }
+    // Placing the config ignores last here is import to the tests
+    for (let ignore of this.config.ignores) {
+      uniqueIgnores.add(
+        TemplateGlob.normalizePath(this.localPathRoot || ".", ignore)
+      );
     }
     return Array.from(uniqueIgnores);
   }
@@ -398,21 +393,7 @@ class EleventyFiles {
     let paths = TemplatePath.addLeadingDotSlashArray(globResults);
     bench.after();
 
-    // filter individual paths in the new config-specified extension
-    // where is this used?
-    if ("extensionMap" in this.config) {
-      let extensions = this.config.extensionMap;
-      if (Array.from(extensions).filter((entry) => !!entry.filter).length) {
-        paths = paths.filter(function (path) {
-          for (let entry of extensions) {
-            if (entry.filter && path.endsWith(`.${entry.extension}`)) {
-              return entry.filter(path);
-            }
-          }
-          return true;
-        });
-      }
-    }
+    // Note 2.0.0-canary.19 removed a `filter` option for custom template syntax here that was unpublished and unused.
 
     this.pathCache = paths;
     return paths;
@@ -475,11 +456,20 @@ class EleventyFiles {
   /* Ignored by `eleventy --watch` */
   getGlobWatcherIgnores() {
     // convert to format without ! since they are passed in as a separate argument to glob watcher
-    let entries = this.fileIgnores.map((ignore) =>
-      TemplatePath.stripLeadingDotSlash(ignore)
+    let entries = new Set(
+      this.fileIgnores.map((ignore) =>
+        TemplatePath.stripLeadingDotSlash(ignore)
+      )
     );
+
+    for (let ignore of this.config.watchIgnores) {
+      entries.add(
+        TemplateGlob.normalizePath(this.localPathRoot || ".", ignore)
+      );
+    }
+
     // de-duplicated
-    return Array.from(new Set(entries));
+    return Array.from(entries);
   }
 
   _getIncludesAndDataDirs() {

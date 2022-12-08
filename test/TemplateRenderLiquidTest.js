@@ -230,8 +230,8 @@ test("Liquid Custom Tag prefixWithZach", async (t) => {
       parse: function (tagToken, remainTokens) {
         this.str = tagToken.args; // name
       },
-      render: function (scope, hash) {
-        var str = liquidEngine.evalValueSync(this.str, scope); // 'alice'
+      render: function (ctx, hash) {
+        var str = liquidEngine.evalValueSync(this.str, ctx.environments); // 'alice'
         return Promise.resolve("Zach" + str); // 'Alice'
       },
     };
@@ -250,8 +250,8 @@ test("Liquid Custom Tag postfixWithZach", async (t) => {
       parse: function (tagToken, remainTokens) {
         this.str = tagToken.args;
       },
-      render: async function (scope, hash) {
-        var str = await liquidEngine.evalValue(this.str, scope);
+      render: async function (ctx, hash) {
+        var str = await liquidEngine.evalValue(this.str, ctx.environments);
         return Promise.resolve(str + "Zach");
       },
     };
@@ -300,8 +300,8 @@ test("Liquid addTags", async (t) => {
         parse: function (tagToken, remainTokens) {
           this.str = tagToken.args;
         },
-        render: async function (scope, hash) {
-          var str = await liquidEngine.evalValue(this.str, scope);
+        render: async function (ctx, hash) {
+          var str = await liquidEngine.evalValue(this.str, ctx.environments);
           return Promise.resolve(str + "Zach");
         },
       };

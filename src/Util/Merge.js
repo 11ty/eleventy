@@ -8,13 +8,8 @@ function cleanKey(key, prefix) {
   return key;
 }
 
-function getMergedItem(target, source, parentKey, prefixes = {}) {
+function getMergedItem(target, source, prefixes = {}) {
   let { override } = prefixes;
-
-  // if key is prefixed with override prefix, it just keeps the new source value (no merging)
-  if (override && parentKey && parentKey.startsWith(override)) {
-    return source;
-  }
 
   // deep copy objects to avoid sharing and to effect key renaming
   if (!target && isPlainObject(source)) {
@@ -28,19 +23,13 @@ function getMergedItem(target, source, parentKey, prefixes = {}) {
       for (let key in source) {
         let overrideKey = cleanKey(key, override);
 
-        target[overrideKey] = getMergedItem(
-          target[key],
-          source[key],
-          overrideKey,
-          prefixes
-        );
+        target[overrideKey] = getMergedItem(target[key], source[key], prefixes);
       }
     }
     return target;
-  } else {
-    // number, string, class instance, etc
-    return source;
   }
+  // number, string, class instance, etc
+  return source;
 }
 
 // The same as Merge but without override prefixes
@@ -70,7 +59,7 @@ function Merge(target, ...sources) {
     if (!source) {
       continue;
     }
-    target = getMergedItem(target, source, null, {
+    target = getMergedItem(target, source, {
       override: OVERRIDE_PREFIX,
     });
   }

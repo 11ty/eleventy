@@ -3,10 +3,8 @@ const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const TemplateEngine = require("./TemplateEngine");
 const EleventyErrorUtil = require("../EleventyErrorUtil");
-const EleventyBaseError = require("../EleventyBaseError");
+const EleventyShortcodeError = require("../EleventyShortcodeError");
 const eventBus = require("../EventBus");
-
-class EleventyShortcodeError extends EleventyBaseError {}
 
 class Nunjucks extends TemplateEngine {
   constructor(name, dirs, config) {
@@ -190,7 +188,10 @@ class Nunjucks extends TemplateEngine {
           shortcodeFn
             .call(Nunjucks._normalizeShortcodeContext(context), ...argArray)
             .then(function (returnValue) {
-              resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
+              resolve(
+                null,
+                new NunjucksLib.runtime.SafeString("" + returnValue)
+              );
             })
             .catch(function (e) {
               resolve(
@@ -204,12 +205,11 @@ class Nunjucks extends TemplateEngine {
             });
         } else {
           try {
-            return new NunjucksLib.runtime.SafeString(
-              shortcodeFn.call(
-                Nunjucks._normalizeShortcodeContext(context),
-                ...argArray
-              )
+            let ret = shortcodeFn.call(
+              Nunjucks._normalizeShortcodeContext(context),
+              ...argArray
             );
+            return new NunjucksLib.runtime.SafeString("" + ret);
           } catch (e) {
             throw new EleventyShortcodeError(
               `Error with Nunjucks shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(

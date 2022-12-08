@@ -66,6 +66,14 @@ class TemplatePermalink {
     this.extraPaginationSubdir = extraSubdir || "";
   }
 
+  setUrlTransforms(transforms) {
+    this._urlTransforms = transforms;
+  }
+
+  get urlTransforms() {
+    return this._urlTransforms || [];
+  }
+
   setServerlessPathData(data) {
     this.serverlessPathData = data;
   }
@@ -92,6 +100,34 @@ class TemplatePermalink {
       this.extraPaginationSubdir,
       parsed.base
     );
+  }
+
+  // Used in url transforms feature
+  static getUrlStem(original) {
+    let subject = original;
+    if (original.endsWith(".html")) {
+      subject = original.slice(0, -1 * ".html".length);
+    }
+    return TemplatePermalink.normalizePathToUrl(subject);
+  }
+
+  static normalizePathToUrl(original) {
+    let compare = original || "";
+
+    let needleHtml = "/index.html";
+    let needleBareTrailingSlash = "/index/";
+    let needleBare = "/index";
+    if (compare.endsWith(needleHtml)) {
+      return compare.slice(0, compare.length - needleHtml.length) + "/";
+    } else if (compare.endsWith(needleBareTrailingSlash)) {
+      return (
+        compare.slice(0, compare.length - needleBareTrailingSlash.length) + "/"
+      );
+    } else if (compare.endsWith(needleBare)) {
+      return compare.slice(0, compare.length - needleBare.length) + "/";
+    }
+
+    return original;
   }
 
   // This method is used to generate the `page.url` variable.
@@ -131,13 +167,17 @@ class TemplatePermalink {
     let transformedLink = this.toOutputPath();
     let original =
       (transformedLink.charAt(0) !== "/" ? "/" : "") + transformedLink;
-    let needle = "/index.html";
-    if (original === needle) {
-      return "/";
-    } else if (original.slice(-1 * needle.length) === needle) {
-      return original.slice(0, original.length - needle.length) + "/";
+
+    let normalized = TemplatePermalink.normalizePathToUrl(original) || "";
+    for (let transform of this.urlTransforms) {
+      original =
+        transform({
+          url: normalized,
+          urlStem: TemplatePermalink.getUrlStem(original),
+        }) ?? original;
     }
-    return original;
+
+    return TemplatePermalink.normalizePathToUrl(original);
   }
 
   toPath(outputDir) {
@@ -183,12 +223,13 @@ class TemplatePermalink {
     suffix,
     fileExtension = "html"
   ) {
-    let hasDupeFolder = TemplatePermalink._hasDuplicateFolder(
-      dir,
-      filenameNoExt
-    );
     let path;
     if (fileExtension === "html") {
+      let hasDupeFolder = TemplatePermalink._hasDuplicateFolder(
+        dir,
+        filenameNoExt
+      );
+
       path =
         (dir ? dir + "/" : "") +
         (filenameNoExt !== "index" && !hasDupeFolder

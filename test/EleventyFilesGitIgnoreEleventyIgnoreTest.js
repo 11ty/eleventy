@@ -19,10 +19,13 @@ test("Get ignores (no .eleventyignore no .gitignore)", (t) => {
   evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
 
   t.deepEqual(evf.getIgnores(), [
-    "./test/stubs/ignorelocalroot/node_modules/**",
-    "./test/stubs/ignorelocalroot/.git/**",
     "./test/stubs/ignorelocalroot/test.md",
     "./test/stubs/ignore1/_site/**",
+  ]);
+
+  t.deepEqual(evf.getIgnoreGlobs().slice(-2), [
+    "./test/stubs/ignorelocalroot/**/node_modules/**",
+    "./test/stubs/ignorelocalroot/.git/**",
   ]);
 });
 
@@ -38,11 +41,14 @@ test("Get ignores (no .eleventyignore)", (t) => {
   evf._setLocalPathRoot("./test/stubs/ignorelocalrootgitignore");
 
   t.deepEqual(evf.getIgnores(), [
-    "./test/stubs/ignorelocalrootgitignore/node_modules/**",
-    "./test/stubs/ignorelocalrootgitignore/.git/**",
     "./test/stubs/ignorelocalrootgitignore/thisshouldnotexist12345",
     "./test/stubs/ignorelocalrootgitignore/test.md",
     "./test/stubs/ignore2/_site/**",
+  ]);
+
+  t.deepEqual(evf.getIgnoreGlobs().slice(-2), [
+    "./test/stubs/ignorelocalrootgitignore/**/node_modules/**",
+    "./test/stubs/ignorelocalrootgitignore/.git/**",
   ]);
 });
 
@@ -65,9 +71,12 @@ test("Get ignores (no .eleventyignore, using setUseGitIgnore(false))", (t) => {
   evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
 
   t.deepEqual(evf.getIgnores(), [
-    "./test/stubs/ignorelocalroot/node_modules/**",
     "./test/stubs/ignorelocalroot/test.md",
     "./test/stubs/ignore2/_site/**",
+  ]);
+
+  t.deepEqual(evf.getIgnoreGlobs().slice(-1), [
+    "./test/stubs/ignorelocalroot/**/node_modules/**",
   ]);
 });
 
@@ -83,12 +92,15 @@ test("Get ignores (no .gitignore)", (t) => {
   evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
 
   t.deepEqual(evf.getIgnores(), [
-    "./test/stubs/ignorelocalroot/node_modules/**",
-    "./test/stubs/ignorelocalroot/.git/**",
     "./test/stubs/ignorelocalroot/test.md",
     "./test/stubs/ignore3/ignoredFolder/**",
     "./test/stubs/ignore3/ignoredFolder/ignored.md",
     "./test/stubs/ignore3/_site/**",
+  ]);
+
+  t.deepEqual(evf.getIgnoreGlobs().slice(-2), [
+    "./test/stubs/ignorelocalroot/**/node_modules/**",
+    "./test/stubs/ignorelocalroot/.git/**",
   ]);
 });
 
@@ -104,13 +116,16 @@ test("Get ignores (project .eleventyignore and root .gitignore)", (t) => {
   evf._setLocalPathRoot("./test/stubs/ignorelocalrootgitignore");
 
   t.deepEqual(evf.getIgnores(), [
-    "./test/stubs/ignorelocalrootgitignore/node_modules/**",
-    "./test/stubs/ignorelocalrootgitignore/.git/**",
     "./test/stubs/ignorelocalrootgitignore/thisshouldnotexist12345",
     "./test/stubs/ignorelocalrootgitignore/test.md",
     "./test/stubs/ignore4/ignoredFolder/**",
     "./test/stubs/ignore4/ignoredFolder/ignored.md",
     "./test/stubs/ignore4/_site/**",
+  ]);
+
+  t.deepEqual(evf.getIgnoreGlobs().slice(-2), [
+    "./test/stubs/ignorelocalrootgitignore/**/node_modules/**",
+    "./test/stubs/ignorelocalrootgitignore/.git/**",
   ]);
 });
 
@@ -133,11 +148,14 @@ test("Get ignores (project .eleventyignore and root .gitignore, using setUseGitI
   evf._setLocalPathRoot("./test/stubs/ignorelocalrootgitignore");
 
   t.deepEqual(evf.getIgnores(), [
-    "./test/stubs/ignorelocalrootgitignore/node_modules/**",
     "./test/stubs/ignorelocalrootgitignore/test.md",
     "./test/stubs/ignore4/ignoredFolder/**",
     "./test/stubs/ignore4/ignoredFolder/ignored.md",
     "./test/stubs/ignore4/_site/**",
+  ]);
+
+  t.deepEqual(evf.getIgnoreGlobs().slice(-1), [
+    "./test/stubs/ignorelocalrootgitignore/**/node_modules/**",
   ]);
 });
 
@@ -154,10 +172,13 @@ test("Get ignores (no .eleventyignore  .gitignore exists but empty)", (t) => {
   evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
 
   t.deepEqual(evf.getIgnores(), [
-    "./test/stubs/ignorelocalroot/node_modules/**",
-    "./test/stubs/ignorelocalroot/.git/**",
     "./test/stubs/ignorelocalroot/test.md",
     "./test/stubs/ignore5/_site/**",
+  ]);
+
+  t.deepEqual(evf.getIgnoreGlobs().slice(-2), [
+    "./test/stubs/ignorelocalroot/**/node_modules/**",
+    "./test/stubs/ignorelocalroot/.git/**",
   ]);
 });
 
@@ -173,12 +194,15 @@ test("Get ignores (both .eleventyignore and .gitignore exists, but .gitignore is
   evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
 
   t.deepEqual(evf.getIgnores(), [
-    "./test/stubs/ignorelocalroot/node_modules/**",
-    "./test/stubs/ignorelocalroot/.git/**",
     "./test/stubs/ignorelocalroot/test.md",
     "./test/stubs/ignore6/ignoredFolder/**",
     "./test/stubs/ignore6/ignoredFolder/ignored.md",
     "./test/stubs/ignore6/_site/**",
+  ]);
+
+  t.deepEqual(evf.getIgnoreGlobs().slice(-2), [
+    "./test/stubs/ignorelocalroot/**/node_modules/**",
+    "./test/stubs/ignorelocalroot/.git/**",
   ]);
 });
 
@@ -324,9 +348,12 @@ test("De-duplicated ignores", (t) => {
   ]);
 
   t.deepEqual(evf.getIgnores(), [
-    "./test/stubs/ignore-dedupe/node_modules/**",
-    "./test/stubs/ignore-dedupe/.git/**",
     "./test/stubs/ignore-dedupe/ignoredFolder",
     "./test/stubs/ignore-dedupe/_site/**",
+  ]);
+
+  t.deepEqual(evf.getIgnoreGlobs().slice(-2), [
+    "./test/stubs/ignore-dedupe/**/node_modules/**",
+    "./test/stubs/ignore-dedupe/.git/**",
   ]);
 });

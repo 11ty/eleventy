@@ -1,4 +1,5 @@
 const { TemplatePath } = require("@11ty/eleventy-utils");
+const PathNormalizer = require("./Util/PathNormalizer.js");
 
 /* Decides when to watch and in what mode to watch
  * Incremental builds don’t batch changes, they queue.
@@ -74,6 +75,15 @@ class EleventyWatch {
     return false;
   }
 
+  hasQueuedFiles(files) {
+    for (const file of files) {
+      if (this.hasQueuedFile(file)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   get pendingQueue() {
     if (!this._queue) {
       this._queue = [];
@@ -87,7 +97,9 @@ class EleventyWatch {
 
   addToPendingQueue(path) {
     if (path) {
-      path = TemplatePath.addLeadingDotSlash(path);
+      path = PathNormalizer.normalizeSeperator(
+        TemplatePath.addLeadingDotSlash(path)
+      );
       this.pendingQueue.push(path);
     }
   }
