@@ -163,6 +163,37 @@ test("Deep, override: prefix at other placements", (t) => {
   );
 });
 
+test("Edge case from #2470", (t) => {
+  t.deepEqual(
+    Merge(
+      {
+        a: {
+          b: {
+            c: [1],
+          },
+        },
+      },
+      {
+        a: {
+          "override:override:b": {
+            c: [2],
+          },
+        },
+      }
+    ),
+    {
+      a: {
+        b: {
+          c: [1],
+        },
+        "override:b": {
+          c: [2],
+        },
+      },
+    }
+  );
+});
+
 test("Deep, override: empty", (t) => {
   t.deepEqual(Merge({}, { a: { b: [3, 4] } }), { a: { b: [3, 4] } });
   t.deepEqual(Merge({}, { a: [2] }), { a: [2] });
