@@ -796,6 +796,7 @@ Arguments:
     this.watchManager.incremental = this.isIncremental;
 
     this.watchTargets.add(this.eleventyFiles.getGlobWatcherFiles());
+    this.watchTargets.add(this.eleventyFiles.getIgnoreFiles());
 
     // Watch the local project config file
     this.watchTargets.add(this.eleventyConfig.getLocalProjectConfigFiles());
