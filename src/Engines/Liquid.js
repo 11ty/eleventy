@@ -148,8 +148,9 @@ class Liquid extends TemplateEngine {
         render: function* (ctx, emitter) {
           let rawArgs = Liquid.parseArguments(_t.argLexer, this.args);
           let argArray = [];
+          let contextScope = ctx.getAll();
           for (let arg of rawArgs) {
-            let b = yield liquidEngine.evalValue(arg, ctx.environments);
+            let b = yield liquidEngine.evalValue(arg, contextScope);
             argArray.push(b);
           }
 
@@ -186,8 +187,9 @@ class Liquid extends TemplateEngine {
         render: function* (ctx, emitter) {
           let rawArgs = Liquid.parseArguments(_t.argLexer, this.args);
           let argArray = [];
+          let contextScope = ctx.getAll();
           for (let arg of rawArgs) {
-            let b = yield liquidEngine.evalValue(arg, ctx.environments);
+            let b = yield liquidEngine.evalValue(arg, contextScope);
             argArray.push(b);
           }
 

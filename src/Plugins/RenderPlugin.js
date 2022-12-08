@@ -155,7 +155,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
         let normalizedContext = {};
         if (ctx) {
           if (opts.accessGlobalData) {
-            // parent template data cascade
+            // parent template data cascade, should this be `ctx.getAll()` (per below?)
             normalizedContext.data = ctx.environments;
           }
 
@@ -165,8 +165,9 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 
         let rawArgs = Liquid.parseArguments(null, this.args);
         let argArray = [];
+        let contextScope = ctx.getAll();
         for (let arg of rawArgs) {
-          let b = yield liquidEngine.evalValue(arg, ctx.environments);
+          let b = yield liquidEngine.evalValue(arg, contextScope);
           argArray.push(b);
         }
 
