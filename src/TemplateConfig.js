@@ -227,7 +227,11 @@ class TemplateConfig {
     debug("rootConfig %o", this.rootConfig);
   }
 
-  /* Add additional overrides to the root config object, used for testing */
+  /*
+   * Add additional overrides to the root config object, used for testing
+   *
+   * @param {Object} - a subset of the return Object from the user’s config file.
+   */
   appendToRootConfig(obj) {
     Object.assign(this.rootConfig, obj);
   }

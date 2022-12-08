@@ -50,7 +50,6 @@ class CustomEngine extends TemplateEngine {
     // Here, we are short circuiting fallback to defaultRenderer, does not account for compile
     // functions that call defaultRenderer explicitly
     if (
-      !this.entry.compile &&
       this._defaultEngine &&
       "needsToReadFileContents" in this._defaultEngine
     ) {
@@ -183,7 +182,6 @@ class CustomEngine extends TemplateEngine {
 
     // Fall back to default compiler if the user does not provide their own
     if (!this.entry.compile && defaultRenderer) {
-      // If the defaultRenderer is used here, needsToReadFileContents is also aliased to the upstream engine too in needsToReadFileContents(), #2279
       return defaultRenderer;
     }
 
