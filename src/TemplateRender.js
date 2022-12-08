@@ -163,10 +163,14 @@ class TemplateRender {
   getReadableEnginesListDifferingFromFileExtension() {
     let keyFromFilename = this.extensionMap.getKey(this.engineNameOrPath);
     if (this.engine instanceof CustomEngine) {
-      if (this.engine.entry && this.engine.entry.name && keyFromFilename !== this.engine.entry.name) {
+      if (
+        this.engine.entry &&
+        this.engine.entry.name &&
+        keyFromFilename !== this.engine.entry.name
+      ) {
         return this.engine.entry.name;
       } else {
-        return undefined;
+        return;
       }
     }
 
