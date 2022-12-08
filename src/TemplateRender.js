@@ -170,6 +170,7 @@ class TemplateRender {
       ) {
         return this.engine.entry.name;
       } else {
+        // We don’t have a name for it so we return nothing so we don’t misreport (per #2386)
         return;
       }
     }
