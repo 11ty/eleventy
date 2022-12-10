@@ -218,9 +218,15 @@ class TemplateEngine {
   }
 
   getCompileCacheKey(str, inputPath) {
-    // Changing to use inputPath and contents, this created weird bugs when two identical files had different file paths
-    // TODO update docs
-    return inputPath + str;
+    // Changing to use inputPath and contents, using only file contents (`str`) caused issues when two
+    // different files had identical content (2.0.0-canary.16)
+
+    // Caches are now segmented based on inputPath so using inputPath here is superfluous (2.0.0-canary.19)
+    // We do want a non-falsy value here even if `str` is an empty string.
+    return {
+      useCache: true,
+      key: inputPath + str,
+    };
   }
 
   get defaultTemplateFileExtension() {
@@ -247,6 +253,15 @@ class TemplateEngine {
 
   // See https://www.11ty.dev/docs/watch-serve/#watch-javascript-dependencies
   static shouldSpiderJavaScriptDependencies() {
+    return false;
+  }
+
+  // always relevant
+  isFileRelevantTo() {
+    return true;
+  }
+
+  hasDependencies() {
     return false;
   }
 }

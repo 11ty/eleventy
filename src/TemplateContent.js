@@ -242,18 +242,17 @@ class TemplateContent {
     }
   }
 
-  _getCompileCache(str, bypassMarkdown) {
-    let engineName = this.engine.getName() + "::" + !!bypassMarkdown;
-    let engineMap = TemplateContent._compileEngineCache.get(engineName);
-    if (!engineMap) {
-      engineMap = new Map();
-      TemplateContent._compileEngineCache.set(engineName, engineMap);
+  _getCompileCache(str) {
+    // Caches used to be bifurcated based on engine name, now they’re based on inputPath
+    let inputPathMap = TemplateContent._compileCache.get(this.inputPath);
+    if (!inputPathMap) {
+      inputPathMap = new Map();
+      TemplateContent._compileCache.set(this.inputPath, inputPathMap);
     }
 
     let cacheable = this.engine.cacheable;
-    let key = this.engine.getCompileCacheKey(str, this.inputPath);
-
-    return [cacheable, key, engineMap];
+    let { useCache, key } = this.engine.getCompileCacheKey(str, this.inputPath);
+    return [cacheable, key, inputPathMap, useCache];
   }
 
   async compile(str, bypassMarkdown, engineOverride) {
@@ -274,13 +273,9 @@ class TemplateContent {
     try {
       let res;
       if (this.config.useTemplateCache) {
-        let [cacheable, key, cache] = this._getCompileCache(
-          str,
-          bypassMarkdown
-        );
-
+        let [cacheable, key, cache, useCache] = this._getCompileCache(str);
         if (cacheable && key) {
-          if (cache.has(key)) {
+          if (useCache && cache.has(key)) {
             this.bench
               .get("(count) Template Compile Cache Hit")
               .incrementCount();
@@ -290,6 +285,11 @@ class TemplateContent {
           this.bench
             .get("(count) Template Compile Cache Miss")
             .incrementCount();
+
+          // Previously the cache grew when the content changes, in 2.0.0-canary.19
+          // we now segment caches based on inputPath so we also clear all other cache
+          // entries for this inputPath
+          cache.clear();
 
           // Compilation is async, so we eagerly cache a Promise that eventually
           // resolves to the compiled function
@@ -315,7 +315,7 @@ class TemplateContent {
       }
       return fn;
     } catch (e) {
-      let [cacheable, key, cache] = this._getCompileCache(str, bypassMarkdown);
+      let [cacheable, key, cache] = this._getCompileCache(str);
       if (cacheable && key) {
         cache.delete(key);
       }
@@ -509,8 +509,7 @@ class TemplateContent {
   }
 
   getExtensionEntries() {
-    let extensions = this.templateRender.engine.extensionEntries;
-    return extensions;
+    return this.engine.extensionEntries;
   }
 
   isFileRelevantToThisTemplate(incrementalFile, metadata = {}) {
@@ -518,6 +517,18 @@ class TemplateContent {
     if (!incrementalFile) {
       return true;
     }
+
+    let hasDependencies = this.engine.hasDependencies(this.inputPath);
+    let isRelevant = this.engine.isFileRelevantTo(
+      this.inputPath,
+      incrementalFile
+    );
+    debug(
+      "Test dependencies to see if %o is relevant to %o: %o",
+      this.inputPath,
+      incrementalFile,
+      isRelevant
+    );
 
     let extensionEntries = this.getExtensionEntries().filter(
       (entry) => !!entry.isIncrementalMatch
@@ -529,6 +540,8 @@ class TemplateContent {
             {
               inputPath: this.inputPath,
               isFullTemplate: metadata.isFullTemplate,
+              isFileRelevantToInputPath: isRelevant,
+              doesFileHaveDependencies: hasDependencies,
             },
             incrementalFile
           )
@@ -540,10 +553,15 @@ class TemplateContent {
       return false;
     } else {
       // This is the fallback way of determining if something is incremental (no isIncrementalMatch available)
+      if (isRelevant) {
+        return true;
+      }
 
       // Not great way of building all templates if this is a layout, include, JS dependency.
-      // TODO improve this for default langs
-      if (!metadata.isFullTemplate) {
+      // TODO improve this for default template syntaxes
+
+      // only return true here if dependencies are not known
+      if (!hasDependencies && !metadata.isFullTemplate) {
         return true;
       }
 
@@ -558,14 +576,14 @@ class TemplateContent {
 }
 
 TemplateContent._inputCache = new Map();
-TemplateContent._compileEngineCache = new Map();
+TemplateContent._compileCache = new Map();
 eventBus.on("eleventy.resourceModified", (path) => {
   TemplateContent.deleteCached(path);
 });
 
 // Used when the configuration file reset https://github.com/11ty/eleventy/issues/2147
 eventBus.on("eleventy.compileCacheReset", (path) => {
-  TemplateContent._compileEngineCache = new Map();
+  TemplateContent._compileCache = new Map();
 });
 
 module.exports = TemplateContent;

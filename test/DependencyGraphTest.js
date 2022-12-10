@@ -44,3 +44,23 @@ test("Dependency graph assumptions", async (t) => {
     "userCollection",
   ]);
 });
+
+test("Do dependencies get removed when nodes are deleted?", async (t) => {
+  const DependencyGraph = require("dependency-graph").DepGraph;
+  let graph = new DependencyGraph();
+
+  graph.addNode("template-a");
+  graph.addNode("template-b");
+  graph.addDependency("template-a", "template-b");
+  t.deepEqual(graph.overallOrder(), ["template-b", "template-a"]);
+
+  t.deepEqual(graph.dependenciesOf("template-a"), ["template-b"]);
+
+  graph.removeNode("template-b");
+  t.deepEqual(graph.dependenciesOf("template-a"), []);
+
+  graph.addNode("template-b");
+  t.deepEqual(graph.dependenciesOf("template-a"), []);
+
+  t.deepEqual(graph.overallOrder(), ["template-a", "template-b"]);
+});

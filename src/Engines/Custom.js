@@ -1,5 +1,14 @@
 const TemplateEngine = require("./TemplateEngine");
 const getJavaScriptData = require("../Util/GetJavaScriptData");
+const GlobalDependencyMap = require("../GlobalDependencyMap");
+const eventBus = require("../EventBus.js");
+
+let usesMap = new GlobalDependencyMap();
+
+let lastModifiedFile = undefined;
+eventBus.on("eleventy.resourceModified", (path) => {
+  lastModifiedFile = path;
+});
 
 class CustomEngine extends TemplateEngine {
   constructor(name, dirs, config) {
@@ -188,6 +197,9 @@ class CustomEngine extends TemplateEngine {
     // TODO generalize this (look at JavaScript.js)
     let fn = this.entry.compile.bind({
       config: this.config,
+      addDependencies: (from, toArray = []) => {
+        usesMap.addDependency(from, toArray);
+      },
       defaultRenderer, // bind defaultRenderer to compile function
     })(str, inputPath);
 
@@ -214,7 +226,22 @@ class CustomEngine extends TemplateEngine {
     return this.entry.outputFileExtension;
   }
 
+  hasDependencies(inputPath) {
+    if (usesMap.getDependencies(inputPath) === false) {
+      return false;
+    }
+    return true;
+  }
+
+  isFileRelevantTo(inputPath, comparisonFile) {
+    return usesMap.isFileRelevantTo(inputPath, comparisonFile);
+  }
+
   getCompileCacheKey(str, inputPath) {
+    // Return this separately so we know whether or not to use the cached version
+    // but still return a key to cache this new render for next time
+    let useCache = !this.isFileRelevantTo(inputPath, lastModifiedFile);
+
     if (
       this.entry.compileOptions &&
       "getCacheKey" in this.entry.compileOptions
@@ -225,9 +252,17 @@ class CustomEngine extends TemplateEngine {
         );
       }
 
-      return this.entry.compileOptions.getCacheKey(str, inputPath);
+      return {
+        useCache,
+        key: this.entry.compileOptions.getCacheKey(str, inputPath),
+      };
     }
-    return super.getCompileCacheKey(str, inputPath);
+
+    let { key } = super.getCompileCacheKey(str, inputPath);
+    return {
+      useCache,
+      key,
+    };
   }
 
   permalinkNeedsCompilation(str) {
