@@ -122,9 +122,9 @@ test("Custom Vue Render", async (t) => {
   t.is(await fn({ test: "Hello" }), "<p>Hello</p>");
 });
 
-const sass = require("sass");
-
 test("Custom Sass Render", async (t) => {
+  const sass = require("sass");
+
   let tr = getNewTemplateRender("sass");
 
   // addExtension() API

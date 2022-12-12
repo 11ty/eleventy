@@ -1,5 +1,8 @@
 const test = require("ava");
+const fsp = require("fs").promises;
+const eventBus = require("../src/EventBus.js");
 const Eleventy = require("../src/Eleventy");
+const TemplateContent = require("../src/TemplateContent");
 const EleventyWatchTargets = require("../src/EleventyWatchTargets");
 const TemplateConfig = require("../src/TemplateConfig");
 const DateGitFirstAdded = require("../src/Util/DateGitFirstAdded.js");
@@ -591,4 +594,61 @@ test("Does pathPrefix affect page URLs", async (t) => {
   let results = await elev.toJSON();
   let [result] = results;
   t.is(result.url, "/README/");
+});
+
+test("Improvements to custom template syntax APIs, #2258", async (t) => {
+  let elev = new Eleventy("./test/stubs-2258/", "./test/stubs-2258/_site", {
+    configPath: "./test/stubs-2258/eleventy.config.js",
+  });
+
+  let sizes = [
+    TemplateContent._inputCache.size,
+    TemplateContent._compileCache.size,
+  ];
+
+  // Restore previous contents
+  let includeFilePath = "./test/stubs-2258/_includes/_code.scss";
+  let previousContents = `code {
+  padding: 0.25em;
+  line-height: 0;
+}`;
+  let newContents = `/* New content */`;
+  await fsp.writeFile(includeFilePath, previousContents, { encoding: "utf8" });
+
+  let results = await elev.toJSON();
+
+  t.is(results.length, 1);
+  t.is(
+    normalizeNewLines(results[0].content),
+    `${previousContents}
+
+/* Comment */`
+  );
+
+  t.is(sizes[0] + 1, 1);
+  t.is(sizes[1] + 1, 1);
+
+  let results2 = await elev.toJSON();
+
+  t.is(results2.length, 1);
+  t.is(
+    normalizeNewLines(results2[0].content),
+    `${previousContents}
+
+/* Comment */`
+  );
+
+  t.is(sizes[0] + 1, 1);
+  t.is(sizes[1] + 1, 1);
+
+  await fsp.writeFile(includeFilePath, newContents, { encoding: "utf8" });
+  eventBus.emit("eleventy.resourceModified", includeFilePath);
+
+  let results3 = await elev.toJSON();
+  t.is(results3.length, 1);
+  t.is(
+    normalizeNewLines(results3[0].content),
+    `${newContents}
+/* Comment */`
+  );
 });

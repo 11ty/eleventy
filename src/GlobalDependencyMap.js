@@ -21,7 +21,18 @@ class GlobalDependencyMap {
   }
 
   normalizeNode(node) {
-    return TemplatePath.stripLeadingDotSlash(node);
+    if (!node) {
+      return;
+    }
+    if (typeof node !== "string") {
+      throw new Error(
+        "`addDependencies` files must be strings. Received:" + node
+      );
+    }
+
+    // Paths should not be absolute (we convert absolute paths to relative)
+    // Paths should not have a leading dot slash
+    return TemplatePath.stripLeadingDotSlash(TemplatePath.relativePath(node));
   }
 
   delete(node) {
