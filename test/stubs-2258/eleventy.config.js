@@ -19,10 +19,7 @@ module.exports = function (eleventyConfig) {
         loadPaths: dirs,
       });
 
-      let dependencies = result.loadedUrls
-        .filter((dep) => dep.protocol === "file:")
-        .map((entry) => entry.pathname);
-      this.addDependencies(inputPath, dependencies);
+      this.addDependencies(inputPath, result.loadedUrls);
 
       return (data) => {
         return result.css;

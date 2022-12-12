@@ -7,6 +7,9 @@ const eventBus = require("./EventBus.js");
 // TODO extend this to built-in template types, this is only used by Custom templates for now
 
 class GlobalDependencyMap {
+  // URL object with a windows, with file:// already removed (from file:///C:/directory/ to /C:/directory/)
+  static WINDOWS_DRIVE_URL_PATH = /^\/\w\:\//;
+
   constructor() {
     eventBus.on("eleventy.compileCacheReset", () => {
       this._map = undefined;
@@ -25,6 +28,20 @@ class GlobalDependencyMap {
     if (!node) {
       return;
     }
+
+    // Fix URL objects passed in (sass does this)
+    if (typeof node !== "string" && "toString" in node) {
+      node = node.toString();
+    }
+
+    // Fix file:///Users/ or file:///C:/ paths passed in
+    if (node.startsWith("file://")) {
+      node = node.slice("file://".length);
+      if (node.match(GlobalDependencyMap.WINDOWS_DRIVE_URL_PATH)) {
+        node = node.slice(1); // take off the leading slash, /C:/ becomes C:/
+      }
+    }
+
     if (typeof node !== "string") {
       throw new Error(
         "`addDependencies` files must be strings. Received:" + node
