@@ -222,7 +222,7 @@ class TemplateEngine {
     // different files had identical content (2.0.0-canary.16)
 
     // Caches are now segmented based on inputPath so using inputPath here is superfluous (2.0.0-canary.19)
-    // We do want a non-falsy value here even if `str` is an empty string.
+    // But we do want a non-falsy value here even if `str` is an empty string.
     return {
       useCache: true,
       key: inputPath + str,
