@@ -613,6 +613,7 @@ test("Improvements to custom template syntax APIs, #2258", async (t) => {
   line-height: 0;
 }`;
   let newContents = `/* New content */`;
+
   await fsp.writeFile(includeFilePath, previousContents, { encoding: "utf8" });
 
   let results = await elev.toJSON();
@@ -651,4 +652,6 @@ test("Improvements to custom template syntax APIs, #2258", async (t) => {
     `${newContents}
 /* Comment */`
   );
+
+  await fsp.writeFile(includeFilePath, previousContents, { encoding: "utf8" });
 });
