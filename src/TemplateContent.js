@@ -552,21 +552,17 @@ class TemplateContent {
 
       return false;
     } else {
+      // Not great way of building all templates if this is a layout, include, JS dependency.
+      // TODO improve this for default template syntaxes
+
       // This is the fallback way of determining if something is incremental (no isIncrementalMatch available)
+      // This will be true if the inputPath and incrementalFile are the same
       if (isRelevant) {
         return true;
       }
 
-      // Not great way of building all templates if this is a layout, include, JS dependency.
-      // TODO improve this for default template syntaxes
-
       // only return true here if dependencies are not known
       if (!hasDependencies && !metadata.isFullTemplate) {
-        return true;
-      }
-
-      // only build if this input path is the same as the file that was changed
-      if (this.inputPath === incrementalFile) {
         return true;
       }
     }
