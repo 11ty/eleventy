@@ -1,6 +1,7 @@
 const { DepGraph } = require("dependency-graph");
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
+const PathNormalizer = require("./Util/PathNormalizer");
 const eventBus = require("./EventBus.js");
 
 // TODO extend this to built-in template types, this is only used by Custom templates for now
@@ -32,7 +33,10 @@ class GlobalDependencyMap {
 
     // Paths should not be absolute (we convert absolute paths to relative)
     // Paths should not have a leading dot slash
-    return TemplatePath.stripLeadingDotSlash(TemplatePath.relativePath(node));
+    // Paths should always be `/` independent of OS path separator
+    return TemplatePath.stripLeadingDotSlash(
+      PathNormalizer.normalizeSeperator(TemplatePath.relativePath(node))
+    );
   }
 
   delete(node) {

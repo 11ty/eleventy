@@ -601,11 +601,6 @@ test("Improvements to custom template syntax APIs, #2258", async (t) => {
     configPath: "./test/stubs-2258/eleventy.config.js",
   });
 
-  let sizes = [
-    TemplateContent._inputCache.size,
-    TemplateContent._compileCache.size,
-  ];
-
   // Restore previous contents
   let includeFilePath = "./test/stubs-2258/_includes/_code.scss";
   let previousContents = `code {
@@ -615,6 +610,11 @@ test("Improvements to custom template syntax APIs, #2258", async (t) => {
   let newContents = `/* New content */`;
 
   await fsp.writeFile(includeFilePath, previousContents, { encoding: "utf8" });
+
+  let sizes = [
+    TemplateContent._inputCache.size,
+    TemplateContent._compileCache.size,
+  ];
 
   let results = await elev.toJSON();
 
@@ -626,12 +626,11 @@ test("Improvements to custom template syntax APIs, #2258", async (t) => {
 /* Comment */`
   );
 
+  // Cache sizes are now one bigger
   t.is(sizes[0] + 1, 1);
   t.is(sizes[1] + 1, 1);
 
   let results2 = await elev.toJSON();
-
-  t.is(results2.length, 1);
   t.is(
     normalizeNewLines(results2[0].content),
     `${previousContents}
@@ -639,14 +638,16 @@ test("Improvements to custom template syntax APIs, #2258", async (t) => {
 /* Comment */`
   );
 
+  // Cache sizes are unchanged from last build
   t.is(sizes[0] + 1, 1);
   t.is(sizes[1] + 1, 1);
 
   await fsp.writeFile(includeFilePath, newContents, { encoding: "utf8" });
+
+  // Trigger that the file has changed
   eventBus.emit("eleventy.resourceModified", includeFilePath);
 
   let results3 = await elev.toJSON();
-  t.is(results3.length, 1);
   t.is(
     normalizeNewLines(results3[0].content),
     `${newContents}
