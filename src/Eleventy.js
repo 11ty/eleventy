@@ -644,6 +644,7 @@ Arguments:
    * @param {String} changedFilePath - File that triggered a re-run (added or modified)
    */
   async _addFileToWatchQueue(changedFilePath) {
+    // Note: this is a sync event!
     eventBus.emit("eleventy.resourceModified", changedFilePath);
     this.watchManager.addToPendingQueue(changedFilePath);
   }

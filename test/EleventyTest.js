@@ -596,7 +596,7 @@ test("Does pathPrefix affect page URLs", async (t) => {
   t.is(result.url, "/README/");
 });
 
-test("Improvements to custom template syntax APIs, #2258", async (t) => {
+test("Improvements to custom template syntax APIs (includes a layout file) #2258", async (t) => {
   let elev = new Eleventy("./test/stubs-2258/", "./test/stubs-2258/_site", {
     configPath: "./test/stubs-2258/eleventy.config.js",
   });
@@ -621,7 +621,8 @@ test("Improvements to custom template syntax APIs, #2258", async (t) => {
   t.is(results.length, 1);
   t.is(
     normalizeNewLines(results[0].content),
-    `${previousContents}
+    `/* Banner */
+${previousContents}
 
 /* Comment */`
   );
@@ -633,7 +634,8 @@ test("Improvements to custom template syntax APIs, #2258", async (t) => {
   let results2 = await elev.toJSON();
   t.is(
     normalizeNewLines(results2[0].content),
-    `${previousContents}
+    `/* Banner */
+${previousContents}
 
 /* Comment */`
   );
@@ -650,7 +652,8 @@ test("Improvements to custom template syntax APIs, #2258", async (t) => {
   let results3 = await elev.toJSON();
   t.is(
     normalizeNewLines(results3[0].content),
-    `${newContents}
+    `/* Banner */
+${newContents}
 /* Comment */`
   );
 

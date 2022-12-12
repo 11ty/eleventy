@@ -14,6 +14,21 @@ class GlobalDependencyMap {
     eventBus.on("eleventy.compileCacheReset", () => {
       this._map = undefined;
     });
+
+    this.layouts = false;
+  }
+
+  setConfig(config) {
+    if (this.config) {
+      return;
+    }
+
+    this.config = config;
+
+    // These have leading dot slashes, but so do the paths from Eleventy
+    this.config.events.once("eleventy.layouts", (layouts) => {
+      this.layouts = layouts;
+    });
   }
 
   get map() {
@@ -105,6 +120,22 @@ class GlobalDependencyMap {
     return deps.includes(to);
   }
 
+  isFileUsingLayout(templateFilePath, layoutFilePath) {
+    // These have leading dot slashes
+    templateFilePath = TemplatePath.addLeadingDotSlash(templateFilePath);
+    layoutFilePath = TemplatePath.addLeadingDotSlash(layoutFilePath);
+
+    if (
+      this.layouts &&
+      this.layouts[layoutFilePath] &&
+      this.layouts[layoutFilePath].includes(templateFilePath)
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
   isFileRelevantTo(fullTemplateInputPath, comparisonFile) {
     fullTemplateInputPath = this.normalizeNode(fullTemplateInputPath);
     comparisonFile = this.normalizeNode(comparisonFile);
@@ -115,6 +146,10 @@ class GlobalDependencyMap {
     }
     // The file that changed is the relevant file
     if (fullTemplateInputPath === comparisonFile) {
+      return true;
+    }
+    // Eleventy Layouts don’t show up in the dependency graph, so we handle those separately
+    if (this.isFileUsingLayout(fullTemplateInputPath, comparisonFile)) {
       return true;
     }
     // The file that changed is a dependency of the template

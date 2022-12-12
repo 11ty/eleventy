@@ -14,6 +14,8 @@ class CustomEngine extends TemplateEngine {
   constructor(name, dirs, config) {
     super(name, dirs, config);
 
+    usesMap.setConfig(config);
+
     this.entry = this.getExtensionMapEntry();
     this.needsInit =
       "init" in this.entry && typeof this.entry.init === "function";
