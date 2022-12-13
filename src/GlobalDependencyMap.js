@@ -14,8 +14,6 @@ class GlobalDependencyMap {
     eventBus.on("eleventy.compileCacheReset", () => {
       this._map = undefined;
     });
-
-    this.layouts = false;
   }
 
   setConfig(config) {
@@ -27,8 +25,41 @@ class GlobalDependencyMap {
 
     // These have leading dot slashes, but so do the paths from Eleventy
     this.config.events.once("eleventy.layouts", (layouts) => {
-      this.layouts = layouts;
+      // TODO cleanup loose ends here
+      this.addLayoutsToMap(layouts);
     });
+  }
+
+  removeAllLayoutNodes() {
+    let nodes = this.map.overallOrder();
+    for (let node of nodes) {
+      let data = this.map.getNodeData(node);
+      if (!data || !data.type || data.type !== "layout") {
+        continue;
+      }
+      this.map.removeNode(node);
+    }
+  }
+
+  // Eleventy Layouts don’t show up in the dependency graph, so we handle those separately
+  addLayoutsToMap(layouts) {
+    // Clear out any previous layout relationships to make way for the new ones
+    this.removeAllLayoutNodes();
+
+    for (let rawLayout in layouts) {
+      let layout = this.normalizeNode(rawLayout);
+
+      // We add this pre-emptively to add the `layout` data
+      if (!this.map.hasNode(layout)) {
+        this.map.addNode(layout, {
+          type: "layout",
+        });
+      }
+
+      for (let pageTemplate of layouts[rawLayout]) {
+        this.addDependency(pageTemplate, [layout]);
+      }
+    }
   }
 
   get map() {
@@ -44,6 +75,7 @@ class GlobalDependencyMap {
       return;
     }
 
+    // TODO tests for this
     // Fix URL objects passed in (sass does this)
     if (typeof node !== "string" && "toString" in node) {
       node = node.toString();
@@ -79,23 +111,42 @@ class GlobalDependencyMap {
     }
   }
 
-  getDependencies(node) {
+  getDependencies(node, includeLayouts = true) {
     node = this.normalizeNode(node);
+    // console.log( node, this.map.overallOrder() );
+    // console.log( node, this.map.size(), this.map.dependenciesOf(node), this.map.dependantsOf(node) );
 
+    // `false` means the Node was unknown
     if (!this.map.hasNode(node)) {
       return false;
     }
 
-    return this.map.dependenciesOf(node);
+    return this.map.dependenciesOf(node).filter((node) => {
+      if (includeLayouts) {
+        return true;
+      }
+
+      // filter out layouts
+      let data = this.map.getNodeData(node);
+      if (data && data.type) {
+        if (data.type === "layout") {
+          return false;
+        }
+      }
+      return true;
+    });
   }
 
   addDependency(from, toArray = []) {
     from = this.normalizeNode(from);
 
-    // reset any existing for this node
-    this.delete(from);
+    // TODO clear out irrelevant old relationships
 
     this.map.addNode(from);
+
+    if (!Array.isArray(toArray)) {
+      throw new Error("Second argument to `addDependency` must be an Array.");
+    }
 
     for (let to of toArray) {
       to = this.normalizeNode(to);
@@ -103,15 +154,16 @@ class GlobalDependencyMap {
       if (!this.map.hasNode(to)) {
         this.map.addNode(to);
       }
-
-      this.map.addDependency(from, to);
+      if (from !== to) {
+        this.map.addDependency(from, to);
+      }
     }
   }
 
-  hasDependency(from, to) {
+  hasDependency(from, to, includeLayouts) {
     to = this.normalizeNode(to);
 
-    let deps = this.getDependencies(from); // normalizes `from`
+    let deps = this.getDependencies(from, includeLayouts); // normalizes `from`
 
     if (!deps) {
       return false;
@@ -120,23 +172,7 @@ class GlobalDependencyMap {
     return deps.includes(to);
   }
 
-  isFileUsingLayout(templateFilePath, layoutFilePath) {
-    // These have leading dot slashes
-    templateFilePath = TemplatePath.addLeadingDotSlash(templateFilePath);
-    layoutFilePath = TemplatePath.addLeadingDotSlash(layoutFilePath);
-
-    if (
-      this.layouts &&
-      this.layouts[layoutFilePath] &&
-      this.layouts[layoutFilePath].includes(templateFilePath)
-    ) {
-      return true;
-    }
-
-    return false;
-  }
-
-  isFileRelevantTo(fullTemplateInputPath, comparisonFile) {
+  isFileRelevantTo(fullTemplateInputPath, comparisonFile, includeLayouts) {
     fullTemplateInputPath = this.normalizeNode(fullTemplateInputPath);
     comparisonFile = this.normalizeNode(comparisonFile);
 
@@ -148,14 +184,14 @@ class GlobalDependencyMap {
     if (fullTemplateInputPath === comparisonFile) {
       return true;
     }
-    // Eleventy Layouts don’t show up in the dependency graph, so we handle those separately
-    if (this.isFileUsingLayout(fullTemplateInputPath, comparisonFile)) {
-      return true;
-    }
+
     // The file that changed is a dependency of the template
-    if (this.hasDependency(fullTemplateInputPath, comparisonFile)) {
+    if (
+      this.hasDependency(fullTemplateInputPath, comparisonFile, includeLayouts)
+    ) {
       return true;
     }
+
     return false;
   }
 }

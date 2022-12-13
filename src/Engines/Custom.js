@@ -235,14 +235,14 @@ class CustomEngine extends TemplateEngine {
     return true;
   }
 
-  isFileRelevantTo(inputPath, comparisonFile) {
-    return usesMap.isFileRelevantTo(inputPath, comparisonFile);
+  isFileRelevantTo(inputPath, comparisonFile, includeLayouts) {
+    return usesMap.isFileRelevantTo(inputPath, comparisonFile, includeLayouts);
   }
 
   getCompileCacheKey(str, inputPath) {
     // Return this separately so we know whether or not to use the cached version
     // but still return a key to cache this new render for next time
-    let useCache = !this.isFileRelevantTo(inputPath, lastModifiedFile);
+    let useCache = !this.isFileRelevantTo(inputPath, lastModifiedFile, false);
 
     if (
       this.entry.compileOptions &&
