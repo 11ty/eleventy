@@ -75,6 +75,18 @@ class Eleventy {
     this.source = options.source || "script";
 
     /**
+     * @member {Boolean} - Running in serverless mode
+     * @default false
+     */
+
+    // This needs to happen before `getEnvironmentVariableValues` below.
+    if ("isServerless" in options) {
+      this.isServerless = !!options.isServerless;
+    } else {
+      this.isServerless = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+    }
+
+    /**
      * @member {Object} - Initialize Eleventy environment variables
      * @default null
      */
@@ -417,6 +429,9 @@ Verbose Output: ${this.verboseMode}`);
       values.root = root;
     }
 
+    values.source = this.source;
+    values.isServerless = this.isServerless;
+
     return values;
   }
 
@@ -429,13 +444,13 @@ Verbose Output: ${this.verboseMode}`);
     process.env.ELEVENTY_ROOT = env.root;
     debug("Setting process.env.ELEVENTY_ROOT: %o", env.root);
 
-    process.env.ELEVENTY_SOURCE = this.source;
+    process.env.ELEVENTY_SOURCE = env.source;
 
-    // TODO (@zachleat) this needs to be extensible. https://github.com/11ty/eleventy/issues/1957
-    // Note: when using --serve, ELEVENTY_SERVERLESS is set manually in Serverless.js
+    // https://github.com/11ty/eleventy/issues/1957
+    // Note: when using --serve, ELEVENTY_SERVERLESS is also set in Serverless.js
 
     // Careful here, setting to false will cast to string "false" which is truthy.
-    if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    if (env.isServerless) {
       process.env.ELEVENTY_SERVERLESS = true;
       debug("Setting process.env.ELEVENTY_SERVERLESS: %o", true);
     }

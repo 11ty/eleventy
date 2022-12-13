@@ -60,12 +60,8 @@ class Serverless {
   }
 
   initializeEnvironmentVariables() {
-    // set and delete env variables to make it work the same on --serve
     this.serverlessEnvironmentVariableAlreadySet =
       !!process.env.ELEVENTY_SERVERLESS;
-    if (!this.serverlessEnvironmentVariableAlreadySet) {
-      process.env.ELEVENTY_SERVERLESS = true;
-    }
   }
 
   deleteEnvironmentVariables() {
@@ -185,10 +181,11 @@ class Serverless {
     debug("Path params: %o", pathParams);
     debug(`Input path:  ${inputPath}`);
 
-    // TODO (@zachleat) change to use this hook: https://github.com/11ty/eleventy/issues/1957
     this.initializeEnvironmentVariables();
 
     let elev = new Eleventy(this.options.input || inputPath, null, {
+      // https://github.com/11ty/eleventy/issues/1957
+      isServerless: true,
       configPath,
       inputDir,
       config: (eleventyConfig) => {
@@ -214,7 +211,7 @@ class Serverless {
 
     let json = await elev.toJSON();
 
-    // TODO (@zachleat)  https://github.com/11ty/eleventy/issues/1957
+    // https://github.com/11ty/eleventy/issues/1957
     this.deleteEnvironmentVariables();
 
     let filtered = [];
