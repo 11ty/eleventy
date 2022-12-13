@@ -25,6 +25,10 @@ class TemplateLayoutPathResolver {
     this.init();
   }
 
+  setAliases() {
+    this.aliases = Object.assign({}, this.config.layoutAliases, this.aliases);
+  }
+
   set inputDir(dir) {
     this._inputDir = dir;
     this.dir = this.getLayoutsDir();
@@ -59,7 +63,10 @@ class TemplateLayoutPathResolver {
       this.path = this.aliases[this.path];
     }
 
+    let useLayoutResolution = this.config.layoutResolution;
+
     this.pathAlreadyHasExtension = this.dir + "/" + this.path;
+
     if (
       this.path.split(".").length > 0 &&
       fs.existsSync(this.pathAlreadyHasExtension)
@@ -68,7 +75,7 @@ class TemplateLayoutPathResolver {
       this.fullPath = TemplatePath.addLeadingDotSlash(
         this.pathAlreadyHasExtension
       );
-    } else {
+    } else if (useLayoutResolution) {
       this.filename = this.findFileName();
       this.fullPath = TemplatePath.addLeadingDotSlash(
         this.dir + "/" + this.filename

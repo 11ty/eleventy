@@ -204,6 +204,8 @@ test("Test that getData() works", async (t) => {
 
 test("One Layout (using new content var)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.enableLayoutResolution();
+
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = getNewTemplate(
     "./test/stubs/templateWithLayout.ejs",
@@ -235,6 +237,8 @@ test("One Layout (using new content var)", async (t) => {
 
 test("One Layout (using layoutContent)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.enableLayoutResolution();
+
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = getNewTemplate(
     "./test/stubs/templateWithLayoutContent.ejs",
@@ -266,6 +270,8 @@ test("One Layout (using layoutContent)", async (t) => {
 
 test("One Layout (layouts disabled)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.enableLayoutResolution();
+
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = getNewTemplate(
     "./test/stubs/templateWithLayoutContent.ejs",
@@ -292,6 +298,8 @@ test("One Layout (layouts disabled)", async (t) => {
 
 test("One Layout (_layoutContent deprecated but supported)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.enableLayoutResolution();
+
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = getNewTemplate(
     "./test/stubs/templateWithLayoutBackCompat.ejs",
@@ -354,6 +362,8 @@ test("One Layout (liquid test)", async (t) => {
 
 test("Two Layouts", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.enableLayoutResolution();
+
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = getNewTemplate(
     "./test/stubs/templateTwoLayouts.ejs",

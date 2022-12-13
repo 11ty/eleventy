@@ -61,6 +61,8 @@ class UserConfig {
 
     this.passthroughCopies = {};
     this.layoutAliases = {};
+    this.layoutResolution = false; // extension-less layout files
+
     this.linters = {};
     this.transforms = {};
     this.activeNamespace = "";
@@ -361,6 +363,10 @@ class UserConfig {
 
   addLayoutAlias(from, to) {
     this.layoutAliases[from] = to;
+  }
+
+  enableLayoutResolution() {
+    this.layoutResolution = true;
   }
 
   // get config defined collections
@@ -890,6 +896,7 @@ class UserConfig {
       linters: this.linters,
       globalData: this.globalData,
       layoutAliases: this.layoutAliases,
+      layoutResolution: this.layoutResolution,
       passthroughCopies: this.passthroughCopies,
       liquidOptions: this.liquidOptions,
       liquidTags: this.liquidTags,

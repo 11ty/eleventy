@@ -1471,6 +1471,8 @@ test("eleventy.layouts Event", async (t) => {
   t.plan(1);
 
   let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.enableLayoutResolution();
+
   eleventyConfig.userConfig.on("eleventy.layouts", (layoutMap) => {
     t.deepEqual(layoutMap, {
       "./test/stubs-layouts-event/_includes/first.liquid": [

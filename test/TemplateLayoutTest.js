@@ -5,6 +5,8 @@ const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 
 function getTemplateLayoutInstance(key, inputDir, map) {
   let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.enableLayoutResolution();
+
   if (!map) {
     map = new EleventyExtensionMap(
       [
