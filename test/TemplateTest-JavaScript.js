@@ -16,6 +16,10 @@ test("JavaScript template type (function)", async (t) => {
 
   let pages = await getRenderedTmpls(tmpl, data);
   t.is(pages[0].templateContent.trim(), "<p>Zach</p>");
+
+  // New in 2.0.0-canary.19 Issue #1522
+  t.is(pages[0].content.trim(), "<p>Zach</p>");
+  t.is(pages[0].page.url, "/function/");
 });
 
 test("JavaScript template type (class with data getter)", async (t) => {
@@ -30,6 +34,7 @@ test("JavaScript template type (class with data getter)", async (t) => {
 
   let pages = await getRenderedTmpls(tmpl, data);
   t.is(pages[0].templateContent.trim(), "<p>Ted</p>");
+  t.is(pages[0].content.trim(), "<p>Ted</p>");
 });
 
 test("JavaScript template type (class with data method)", async (t) => {
@@ -44,6 +49,7 @@ test("JavaScript template type (class with data method)", async (t) => {
 
   let pages = await getRenderedTmpls(tmpl, data);
   t.is(pages[0].templateContent.trim(), "<p>Ted</p>");
+  t.is(pages[0].content.trim(), "<p>Ted</p>");
 });
 
 if (semver.gte(process.version, "12.4.0")) {
@@ -59,6 +65,7 @@ if (semver.gte(process.version, "12.4.0")) {
 
     let pages = await getRenderedTmpls(tmpl, data);
     t.is(pages[0].templateContent.trim(), "<p>Ted</p>");
+    t.is(pages[0].content.trim(), "<p>Ted</p>");
   });
 }
 
@@ -77,6 +84,7 @@ test("JavaScript template type (class with shorthand data method)", async (t) =>
 
   let pages = await getRenderedTmpls(tmpl, data);
   t.is(pages[0].templateContent.trim(), "<p>Ted</p>");
+  t.is(pages[0].content.trim(), "<p>Ted</p>");
 });
 
 test("JavaScript template type (class with async data method)", async (t) => {
@@ -91,6 +99,7 @@ test("JavaScript template type (class with async data method)", async (t) => {
 
   let pages = await getRenderedTmpls(tmpl, data);
   t.is(pages[0].templateContent.trim(), "<p>Ted</p>");
+  t.is(pages[0].content.trim(), "<p>Ted</p>");
 });
 
 test("JavaScript template type (class with data getter and a javascriptFunction)", async (t) => {
@@ -110,6 +119,7 @@ test("JavaScript template type (class with data getter and a javascriptFunction)
   let data = await tmpl.getData();
   t.is(await tmpl.getOutputPath(data), "./dist/class-data-filter/index.html");
   let pages = await getRenderedTmpls(tmpl, data);
+  t.is(pages[0].content.trim(), "<p>TED</p>");
   t.is(pages[0].templateContent.trim(), "<p>TED</p>");
 });
 
@@ -133,6 +143,7 @@ test("JavaScript template type (class with data method and a javascriptFunction)
     "./dist/class-data-fn-filter/index.html"
   );
   let pages = await getRenderedTmpls(tmpl, data);
+  t.is(pages[0].content.trim(), "<p>TED</p>");
   t.is(pages[0].templateContent.trim(), "<p>TED</p>");
 });
 
@@ -212,6 +223,7 @@ test("JavaScript template type (should use the same class instance for data and 
   // the template renders the random number created in the class constructor
   // the data returns the random number created in the class constructor
   // if they are different, the class is not reused.
+  t.is(pages[0].content.trim(), `<p>Ted${data.rand}</p>`);
   t.is(pages[0].templateContent.trim(), `<p>Ted${data.rand}</p>`);
 });
 
@@ -224,6 +236,7 @@ test("JavaScript template type (multiple exports)", async (t) => {
 
   let data = await tmpl.getData();
   let pages = await getRenderedTmpls(tmpl, data);
+  t.is(pages[0].content.trim(), "<p>Ted</p>");
   t.is(pages[0].templateContent.trim(), "<p>Ted</p>");
 });
 
@@ -238,6 +251,7 @@ test("JavaScript template type (multiple exports, promises)", async (t) => {
   t.is(data.name, "Ted");
 
   let pages = await getRenderedTmpls(tmpl, data);
+  t.is(pages[0].content.trim(), "<p>Ted</p>");
   t.is(pages[0].templateContent.trim(), "<p>Ted</p>");
 });
 
@@ -252,6 +266,7 @@ test("JavaScript template type (object)", async (t) => {
   t.is(data.name, "Ted");
 
   let pages = await getRenderedTmpls(tmpl, data);
+  t.is(pages[0].content.trim(), "<p>Ted</p>");
   t.is(pages[0].templateContent.trim(), "<p>Ted</p>");
 });
 
@@ -267,6 +282,7 @@ test("JavaScript template type (object, no render method)", async (t) => {
 
   let pages = await getRenderedTmpls(tmpl, data);
   t.is(pages[0].templateContent.trim(), "");
+  t.is(pages[0].content.trim(), "");
 });
 
 test("JavaScript template type (class, no render method)", async (t) => {
@@ -281,6 +297,7 @@ test("JavaScript template type (class, no render method)", async (t) => {
 
   let pages = await getRenderedTmpls(tmpl, data);
   t.is(pages[0].templateContent.trim(), "");
+  t.is(pages[0].content.trim(), "");
 });
 test("JavaScript template type (data returns a string)", async (t) => {
   let tmpl = getNewTemplate(

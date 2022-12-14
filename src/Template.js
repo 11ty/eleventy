@@ -636,48 +636,80 @@ class Template extends TemplateContent {
     }
   }
 
+  static augmentWithTemplateContentProperty(obj) {
+    return Object.defineProperties(obj, {
+      checkTemplateContent: {
+        enumerable: false,
+        writable: true,
+        value: true,
+      },
+      _templateContent: {
+        enumerable: false,
+        writable: true,
+        value: undefined,
+      },
+      templateContent: {
+        enumerable: true,
+        set(content) {
+          if (content === undefined) {
+            this.checkTemplateContent = false;
+          }
+          this._templateContent = content;
+        },
+        get() {
+          if (
+            this.checkTemplateContent &&
+            this._templateContent === undefined
+          ) {
+            if (this.template.behavior.isRenderable()) {
+              // should at least warn here
+              throw new TemplateContentPrematureUseError(
+                `Tried to use templateContent too early on ${this.inputPath}${
+                  this.pageNumber ? ` (page ${this.pageNumber})` : ""
+                }`
+              );
+            } else {
+              throw new TemplateContentUnrenderedTemplateError(
+                `Tried to use templateContent on unrendered template. You need a valid permalink (or permalink object) to use templateContent on ${
+                  this.inputPath
+                }${this.pageNumber ? ` (page ${this.pageNumber})` : ""}`
+              );
+            }
+          }
+          return this._templateContent;
+        },
+      },
+      // Alias for templateContent for consistency
+      content: {
+        enumerable: true,
+        get() {
+          return this.templateContent;
+        },
+      },
+    });
+  }
+
   async getTemplates(data) {
     // no pagination with permalink.serverless
     if (!Pagination.hasPagination(data)) {
       await this.addComputedData(data);
 
-      return [
-        {
-          template: this,
-          inputPath: this.inputPath,
-          fileSlug: this.fileSlugStr,
-          filePathStem: this.filePathStem,
-          data,
-          date: data.page.date,
-          outputPath: data.page.outputPath,
-          url: data.page.url,
-          checkTemplateContent: true,
-          set templateContent(content) {
-            if (content === undefined) {
-              this.checkTemplateContent = false;
-            }
-            this._templateContent = content;
-          },
-          get templateContent() {
-            if (
-              this.checkTemplateContent &&
-              this._templateContent === undefined
-            ) {
-              if (this.template.behavior.isRenderable()) {
-                // should at least warn here
-                throw new TemplateContentPrematureUseError(
-                  `Tried to use templateContent too early (${this.inputPath})`
-                );
-              } else {
-                throw new TemplateContentUnrenderedTemplateError(
-                  `Tried to use templateContent on unrendered template. You need a valid permalink (or permalink object) to use templateContent on ${this.inputPath}`
-                );
-              }
-            }
-            return this._templateContent;
-          },
-        },
-      ];
+      let obj = {
+        template: this, // not on the docs but folks are relying on it
+        data,
+
+        page: data.page,
+        inputPath: this.inputPath,
+        fileSlug: this.fileSlugStr,
+        filePathStem: this.filePathStem,
+        date: data.page.date,
+        outputPath: data.page.outputPath,
+        url: data.page.url,
+      };
+
+      obj = Template.augmentWithTemplateContentProperty(obj);
+
+      return [obj];
     } else {
       // needs collections for pagination items
       // but individual pagination entries won’t be part of a collection
@@ -688,41 +720,23 @@ class Template extends TemplateContent {
         pageTemplates.map(async (pageEntry, pageNumber) => {
           await pageEntry.template.addComputedData(pageEntry.data);
 
-          return {
-            template: pageEntry.template,
+          let obj = {
+            template: pageEntry.template, // not on the docs but folks are relying on it
+            pageNumber: pageNumber,
+            data: pageEntry.data,
+
+            page: pageEntry.data.page,
             inputPath: this.inputPath,
             fileSlug: this.fileSlugStr,
             filePathStem: this.filePathStem,
-            data: pageEntry.data,
             date: pageEntry.data.page.date,
-            pageNumber: pageNumber,
             outputPath: pageEntry.data.page.outputPath,
             url: pageEntry.data.page.url,
-            checkTemplateContent: true,
-            set templateContent(content) {
-              if (content === undefined) {
-                this.checkTemplateContent = false;
-              }
-              this._templateContent = content;
-            },
-            get templateContent() {
-              if (
-                this.checkTemplateContent &&
-                this._templateContent === undefined
-              ) {
-                if (this.template.behavior.isRenderable()) {
-                  throw new TemplateContentPrematureUseError(
-                    `Tried to use templateContent too early (${this.inputPath} page ${this.pageNumber})`
-                  );
-                } else {
-                  throw new TemplateContentUnrenderedTemplateError(
-                    `Tried to use templateContent on unrendered template. You need a valid permalink (or permalink object) to use templateContent on ${this.inputPath} page ${this.pageNumber}`
-                  );
-                }
-              }
-              return this._templateContent;
-            },
           };
+
+          obj = Template.augmentWithTemplateContentProperty(obj);
+
+          return obj;
         })
       );
     }
