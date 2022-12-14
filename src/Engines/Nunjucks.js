@@ -157,10 +157,14 @@ class Nunjucks extends TemplateEngine {
 
   static _normalizeShortcodeContext(context) {
     let obj = {};
-    if (context.ctx && context.ctx.page) {
+    if (context.ctx) {
       obj.ctx = context.ctx;
-      obj.page = context.ctx.page;
-      obj.eleventy = context.ctx.eleventy;
+      if (context.ctx.page) {
+        obj.page = context.ctx.page;
+      }
+      if (context.ctx.eleventy) {
+        obj.eleventy = context.ctx.eleventy;
+      }
     }
     return obj;
   }

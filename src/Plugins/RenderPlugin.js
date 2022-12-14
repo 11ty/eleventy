@@ -155,8 +155,8 @@ function EleventyPlugin(eleventyConfig, options = {}) {
         let normalizedContext = {};
         if (ctx) {
           if (opts.accessGlobalData) {
-            // parent template data cascade, should this be `ctx.getAll()` (per below?)
-            normalizedContext.data = ctx.environments;
+            // parent template data cascade
+            normalizedContext.data = ctx.getAll();
           }
 
           normalizedContext.page = ctx.get(["page"]);

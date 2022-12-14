@@ -64,7 +64,8 @@
     "environmentVariables": {},
     "failFast": true,
     "files": [
-      "./test/*.js"
+      "./test/*.js",
+      "./test/_issues/**/*test.js"
     ],
     "ignoredByWatcher": [
       "./test/stubs*/**/*",
