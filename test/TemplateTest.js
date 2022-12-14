@@ -1024,7 +1024,7 @@ test("Test a transform", async (t) => {
 });
 
 // #789: https://github.com/11ty/eleventy/issues/789
-test.skip("Test a transform (does it have inputPath?)", async (t) => {
+test("Test a transform (does it have this.inputPath?)", async (t) => {
   t.plan(3);
 
   let tmpl = getNewTemplate(
@@ -1033,9 +1033,9 @@ test.skip("Test a transform (does it have inputPath?)", async (t) => {
     "./test/stubs/_site"
   );
 
-  tmpl.addTransform("transformName", function (content, outputPath, inputPath) {
+  tmpl.addTransform("transformName", function (content, outputPath) {
     t.true(outputPath.endsWith(".html"));
-    t.true(!!inputPath);
+    t.true(!!this.inputPath);
     return "OVERRIDE BY A TRANSFORM";
   });
 
