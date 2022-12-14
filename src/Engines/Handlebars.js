@@ -22,9 +22,20 @@ class Handlebars extends TemplateEngine {
     this.handlebarsLib.registerHelper(name, callback);
   }
 
+  static wrapHelper(callback) {
+    return function () {
+      const newThis = {
+        ...this,
+        ctx: this,
+        // page: this.page
+      };
+      return callback.call(newThis, ...arguments);
+    };
+  }
+
   addHelpers(helpers) {
     for (let name in helpers) {
-      this.addHelper(name, helpers[name]);
+      this.addHelper(name, Handlebars.wrapHelper(helpers[name]));
     }
   }
 

@@ -99,7 +99,7 @@ class JavaScript extends TemplateEngine {
     return getJavaScriptData(inst, inputPath);
   }
 
-  getJavaScriptFunctions(inst) {
+  getJavaScriptFunctions(inst, data) {
     let fns = {};
     let configFns = this.config.javascriptFunctions;
 
@@ -108,11 +108,26 @@ class JavaScript extends TemplateEngine {
       if (key === "page") {
         // do nothing
       } else {
-        // note: bind creates a new function
-        fns[key] = configFns[key].bind(inst);
+        // note: wrapping creates a new function
+        fns[key] = JavaScript.wrapJavaScriptFunction(
+          inst,
+          data,
+          configFns[key]
+        );
       }
     }
     return fns;
+  }
+
+  static wrapJavaScriptFunction(inst, data, fn) {
+    return function () {
+      const newThis = {
+        ...this,
+        ctx: data,
+        page: inst.page,
+      };
+      return fn.call(newThis, ...arguments);
+    };
   }
 
   async compile(str, inputPath) {
@@ -130,7 +145,7 @@ class JavaScript extends TemplateEngine {
         if (!inst.page || inst.page.url) {
           inst.page = data.page;
         }
-        Object.assign(inst, this.getJavaScriptFunctions(inst));
+        Object.assign(inst, this.getJavaScriptFunctions(inst, data));
 
         return this.normalize(inst.render.call(inst, data));
       }.bind(this);
