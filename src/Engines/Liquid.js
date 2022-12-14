@@ -53,6 +53,28 @@ class Liquid extends TemplateEngine {
     return options;
   }
 
+  static wrapFilter(fn) {
+    return function (...args) {
+      if (this.context && "get" in this.context) {
+        this.page = this.context.get(["page"]);
+        this.eleventy = this.context.get(["eleventy"]);
+      }
+
+      return fn.call(this, ...args);
+    };
+  }
+
+  // Shortcodes
+  static normalizeScope(context) {
+    let obj = {};
+    if (context) {
+      obj.ctx = context;
+      obj.page = context.get(["page"]);
+      obj.eleventy = context.get(["eleventy"]);
+    }
+    return obj;
+  }
+
   addCustomTags(tags) {
     for (let name in tags) {
       this.addTag(name, tags[name]);
@@ -67,17 +89,6 @@ class Liquid extends TemplateEngine {
 
   addFilter(name, filter) {
     this.liquidLib.registerFilter(name, Liquid.wrapFilter(filter));
-  }
-
-  static wrapFilter(fn) {
-    return function (...args) {
-      if (this.context && "get" in this.context) {
-        this.page = this.context.get(["page"]);
-        this.eleventy = this.context.get(["eleventy"]);
-      }
-
-      return fn.call(this, ...args);
-    };
   }
 
   addTag(name, tagFn) {
@@ -139,15 +150,6 @@ class Liquid extends TemplateEngine {
     return argArray;
   }
 
-  static _normalizeShortcodeScope(ctx) {
-    let obj = {};
-    if (ctx) {
-      obj.page = ctx.get(["page"]);
-      obj.eleventy = ctx.get(["eleventy"]);
-    }
-    return obj;
-  }
-
   addShortcode(shortcodeName, shortcodeFn) {
     let _t = this;
     this.addTag(shortcodeName, function (liquidEngine) {
@@ -156,7 +158,7 @@ class Liquid extends TemplateEngine {
           this.name = tagToken.name;
           this.args = tagToken.args;
         },
-        render: function* (ctx, emitter) {
+        render: function* (ctx) {
           let rawArgs = Liquid.parseArguments(_t.argLexer, this.args);
           let argArray = [];
           let contextScope = ctx.getAll();
@@ -166,10 +168,9 @@ class Liquid extends TemplateEngine {
           }
 
           let ret = yield shortcodeFn.call(
-            Liquid._normalizeShortcodeScope(ctx),
+            Liquid.normalizeScope(ctx),
             ...argArray
           );
-          // emitter.write(ret);
           return ret;
         },
       };
@@ -210,7 +211,7 @@ class Liquid extends TemplateEngine {
           );
 
           let ret = yield shortcodeFn.call(
-            Liquid._normalizeShortcodeScope(ctx),
+            Liquid.normalizeScope(ctx),
             html,
             ...argArray
           );

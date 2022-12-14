@@ -114,6 +114,23 @@ class Nunjucks extends TemplateEngine {
     };
   }
 
+  // Shortcodes
+  static normalizeContext(context) {
+    let obj = {};
+    if (context.ctx) {
+      obj.ctx = context.ctx;
+
+      if (context.ctx.page) {
+        obj.page = context.ctx.page;
+      }
+
+      if (context.ctx.eleventy) {
+        obj.eleventy = context.ctx.eleventy;
+      }
+    }
+    return obj;
+  }
+
   addCustomTags(tags) {
     for (let name in tags) {
       this.addTag(name, tags[name]);
@@ -155,20 +172,6 @@ class Nunjucks extends TemplateEngine {
     }
   }
 
-  static _normalizeShortcodeContext(context) {
-    let obj = {};
-    if (context.ctx) {
-      obj.ctx = context.ctx;
-      if (context.ctx.page) {
-        obj.page = context.ctx.page;
-      }
-      if (context.ctx.eleventy) {
-        obj.eleventy = context.ctx.eleventy;
-      }
-    }
-    return obj;
-  }
-
   _getShortcodeFn(shortcodeName, shortcodeFn, isAsync = false) {
     return function ShortcodeFunction() {
       this.tags = [shortcodeName];
@@ -203,7 +206,7 @@ class Nunjucks extends TemplateEngine {
 
         if (isAsync) {
           shortcodeFn
-            .call(Nunjucks._normalizeShortcodeContext(context), ...argArray)
+            .call(Nunjucks.normalizeContext(context), ...argArray)
             .then(function (returnValue) {
               resolve(
                 null,
@@ -223,7 +226,7 @@ class Nunjucks extends TemplateEngine {
         } else {
           try {
             let ret = shortcodeFn.call(
-              Nunjucks._normalizeShortcodeContext(context),
+              Nunjucks.normalizeContext(context),
               ...argArray
             );
             return new NunjucksLib.runtime.SafeString("" + ret);
@@ -274,7 +277,7 @@ class Nunjucks extends TemplateEngine {
           if (isAsync) {
             shortcodeFn
               .call(
-                Nunjucks._normalizeShortcodeContext(context),
+                Nunjucks.normalizeContext(context),
                 bodyContent,
                 ...argArray
               )
@@ -297,7 +300,7 @@ class Nunjucks extends TemplateEngine {
                 null,
                 new NunjucksLib.runtime.SafeString(
                   shortcodeFn.call(
-                    Nunjucks._normalizeShortcodeContext(context),
+                    Nunjucks.normalizeContext(context),
                     bodyContent,
                     ...argArray
                   )
