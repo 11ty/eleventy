@@ -100,12 +100,6 @@ class Comparator {
   }
 }
 
-function getPageInFilter(context) {
-  return (
-    context.page || context.ctx?.page || context.context?.environments?.page
-  );
-}
-
 function normalizeInputPath(inputPath, extensionMap) {
   if (extensionMap) {
     return extensionMap.removeTemplateExtension(inputPath);
@@ -248,7 +242,7 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
     function (url, langCodeOverride) {
       let langCode =
         langCodeOverride ||
-        LangUtils.getLanguageCodeFromUrl(getPageInFilter(this)?.url) ||
+        LangUtils.getLanguageCodeFromUrl(this.page?.url) ||
         options.defaultLanguage;
 
       // Already has a language code on it and has a relevant url with the target language code
@@ -298,7 +292,7 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
   // Refactor to use url
   // Find the links that are localized alternates to the inputPath argument
   eleventyConfig.addFilter(options.filters.links, function (urlOverride) {
-    let url = urlOverride || getPageInFilter(this)?.url;
+    let url = urlOverride || this.page?.url;
     return contentMaps.localeUrlsMap[url] || [];
   });
 
@@ -312,7 +306,7 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
         languageCode = options.defaultLanguage;
       }
 
-      let page = pageOverride || getPageInFilter(this);
+      let page = pageOverride || this.page;
       let url; // new url
       if (contentMaps.localeUrlsMap[page.url]) {
         for (let entry of contentMaps.localeUrlsMap[page.url]) {

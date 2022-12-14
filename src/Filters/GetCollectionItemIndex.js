@@ -1,7 +1,7 @@
 // TODO locale-friendly, see GetLocaleCollectionItem.js)
 module.exports = function getCollectionItemIndex(collection, page) {
   if (!page) {
-    page = this.page || this.ctx?.page || this.context?.environments?.page;
+    page = this.page;
   }
 
   let j = 0;

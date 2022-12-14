@@ -107,11 +107,7 @@ module.exports = function (eleventyConfig, defaultOptions = {}) {
 
       return transformUrl.call(this, url, base, {
         pathPrefix: eleventyConfig.pathPrefix,
-        pageUrl:
-          pageUrlOverride ||
-          this.page?.url ||
-          this.ctx?.page?.url ||
-          this.context?.environments?.page?.url,
+        pageUrl: pageUrlOverride || this.page?.url,
       });
     }
   );
@@ -126,14 +122,10 @@ module.exports = function (eleventyConfig, defaultOptions = {}) {
         return content;
       }
 
-      let fallbackPageUrl =
-        this.page?.url ||
-        this.ctx?.page?.url ||
-        this.context?.environments?.page?.url;
       return addToAllHtmlUrls(content, (url) => {
         return transformUrl.call(this, url.trim(), base, {
           pathPrefix: eleventyConfig.pathPrefix,
-          pageUrl: pageUrlOverride || fallbackPageUrl,
+          pageUrl: pageUrlOverride || this.page?.url,
         });
       });
     }

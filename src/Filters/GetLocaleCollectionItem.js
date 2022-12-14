@@ -18,13 +18,16 @@ function getLocaleCollectionItem(
   langCode,
   indexModifier = 0
 ) {
-  let page = this.page || this.ctx?.page || this.context?.environments?.page;
   if (!langCode) {
     // if page.lang exists (2.0.0-canary.14 and i18n plugin added, use page language)
-    if (page.lang) {
-      langCode = page.lang;
+    if (this.page.lang) {
+      langCode = this.page.lang;
     } else {
-      return getCollectionItem(collection, pageOverride || page, indexModifier);
+      return getCollectionItem(
+        collection,
+        pageOverride || this.page,
+        indexModifier
+      );
     }
   }
 
