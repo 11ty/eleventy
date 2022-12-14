@@ -86,10 +86,10 @@ try {
     elev.setIncrementalBuild(argv.incremental);
     elev.setFormats(argv.formats);
 
-    if (argv.watch) {
-      elev.setRunMode("watch");
-    } else if (argv.serve) {
+    if (argv.serve) {
       elev.setRunMode("serve");
+    } else if (argv.watch) {
+      elev.setRunMode("watch");
     }
 
     // careful, we can’t use async/await here to error properly
