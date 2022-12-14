@@ -95,20 +95,22 @@ class Nunjucks extends TemplateEngine {
     this.addGlobals(this.config.nunjucksGlobals);
   }
 
-  addFilters(helpers, isAsync) {
-    for (let name in helpers) {
-      this.njkEnv.addFilter(name, Nunjucks.wrapFilter(helpers[name]), isAsync);
+  addFilters(filters, isAsync) {
+    for (let name in filters) {
+      this.njkEnv.addFilter(name, Nunjucks.wrapFilter(filters[name]), isAsync);
     }
   }
 
-  static wrapFilter(filter) {
-    return function () {
-      const newThis = {
-        ...this,
-        // ctx: this.ctx,
-        page: this.ctx.page,
-      };
-      return filter.call(newThis, ...arguments);
+  static wrapFilter(fn) {
+    return function (...args) {
+      if (this.ctx && this.ctx.page) {
+        this.page = this.ctx.page;
+      }
+      if (this.ctx && this.ctx.eleventy) {
+        this.eleventy = this.ctx.eleventy;
+      }
+
+      return fn.call(this, ...args);
     };
   }
 

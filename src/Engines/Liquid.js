@@ -69,15 +69,14 @@ class Liquid extends TemplateEngine {
     this.liquidLib.registerFilter(name, Liquid.wrapFilter(filter));
   }
 
-  static wrapFilter(filter) {
-    return function () {
-      let ctx = this.context.environments;
-      const newThis = {
-        ...this,
-        ctx: ctx,
-        page: ctx.page,
-      };
-      return filter.call(newThis, ...arguments);
+  static wrapFilter(fn) {
+    return function (...args) {
+      if (this.context && "get" in this.context) {
+        this.page = this.context.get(["page"]);
+        this.eleventy = this.context.get(["eleventy"]);
+      }
+
+      return fn.call(this, ...args);
     };
   }
 
