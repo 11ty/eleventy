@@ -1,4 +1,4 @@
-const lodashSet = require("lodash/set");
+const lodashSet = require("lodash.set");
 const debug = require("debug")("Eleventy:ComputedDataTemplateString");
 
 /* Calculates computed data in Template Strings.

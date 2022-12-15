@@ -1,8 +1,8 @@
 const fs = require("fs");
 const fastglob = require("fast-glob");
 const path = require("path");
-const lodashset = require("lodash/set");
-const lodashget = require("lodash/get");
+const lodashset = require("lodash.set");
+const lodashget = require("lodash.get");
 const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
 
 const merge = require("./Util/Merge");

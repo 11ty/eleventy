@@ -1,5 +1,5 @@
-const lodashGet = require("lodash/get");
-const lodashSet = require("lodash/set");
+const lodashGet = require("lodash.get");
+const lodashSet = require("lodash.set");
 
 const ComputedDataQueue = require("./ComputedDataQueue");
 const ComputedDataTemplateString = require("./ComputedDataTemplateString");

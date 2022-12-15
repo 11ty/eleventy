@@ -1,6 +1,6 @@
 const pkg = require("../package.json");
 const semver = require("semver");
-const lodashset = require("lodash/set");
+const lodashset = require("lodash.set");
 
 class TemplateDataInitialGlobalData {
   constructor(templateConfig) {

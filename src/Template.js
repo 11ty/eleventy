@@ -6,8 +6,8 @@ const mkdir = util.promisify(fs.mkdir);
 const os = require("os");
 const path = require("path");
 const normalize = require("normalize-path");
-const lodashGet = require("lodash/get");
-const lodashSet = require("lodash/set");
+const lodashGet = require("lodash.get");
+const lodashSet = require("lodash.set");
 const { DateTime } = require("luxon");
 const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
 
