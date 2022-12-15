@@ -281,12 +281,11 @@ class TemplateConfig {
   }
 
   /**
-   * Merges different config files together.
+   * Fetches and executes the local configuration file
    *
-   * @param {String} projectConfigPath - Path to project config.
-   * @returns {{}} merged - The merged config file.
+   * @returns {{}} merged - The merged config file object.
    */
-  mergeConfig() {
+  requireLocalConfigFile() {
     let localConfig = {};
     let path = this.projectConfigPaths
       .filter((path) => path)
@@ -336,6 +335,22 @@ class TemplateConfig {
       debug("Eleventy local project config file not found, skipping.");
     }
 
+    return localConfig;
+  }
+
+  /**
+   * Merges different config files together.
+   *
+   * @param {String} projectConfigPath - Path to project config.
+   * @returns {{}} merged - The merged config file.
+   */
+  mergeConfig() {
+    let localConfig = this.requireLocalConfigFile();
+
+    // Template Formats:
+    // 1. Root Config (usually defaultConfig.js)
+    // 2. Local Config return object (project .eleventy.js)
+    // 3.
     let templateFormats = this.rootConfig.templateFormats || [];
     if (localConfig && localConfig.templateFormats) {
       templateFormats = localConfig.templateFormats;
@@ -344,6 +359,18 @@ class TemplateConfig {
 
     let mergedConfig = merge({}, this.rootConfig, localConfig);
 
+    // Setup a few properties for plugins:
+
+    // Setup pathPrefix set via command line for plugin consumption
+    if (this.overrides.pathPrefix) {
+      mergedConfig.pathPrefix = this.overrides.pathPrefix;
+    }
+
+    // Returning a falsy value (e.g. "") from user config should reset to the default value.
+    if (!mergedConfig.pathPrefix) {
+      mergedConfig.pathPrefix = this.rootConfig.pathPrefix;
+    }
+
     // Delay processing plugins until after the result of localConfig is returned
     // But BEFORE the rest of the config options are merged
     // this way we can pass directories and other template information to plugins
@@ -351,26 +378,15 @@ class TemplateConfig {
     // Temporarily restore templateFormats
     mergedConfig.templateFormats = templateFormats;
 
-    // Setup pathPrefix set via command line for plugin consumption
-    if (this.overrides.pathPrefix) {
-      mergedConfig.pathPrefix = this.overrides.pathPrefix;
-    }
-    // Returning a falsy value (e.g. "") from user config should reset to the default value.
-    if (!mergedConfig.pathPrefix) {
-      mergedConfig.pathPrefix = this.rootConfig.pathPrefix;
-    }
-
     this.processPlugins(mergedConfig);
+
     delete mergedConfig.templateFormats;
 
     let eleventyConfigApiMergingObject =
       this.userConfig.getMergingConfigObject();
 
-    // `templateFormats` is via `setTemplateFormats`
-    // `templateFormatsAdded` is via `addTemplateFormats`
-    let templateFormatsAdded =
-      eleventyConfigApiMergingObject.templateFormatsAdded || [];
-    delete eleventyConfigApiMergingObject.templateFormatsAdded;
+    // `templateFormats` is an override via `setTemplateFormats`
+    // `templateFormatsAdded` is additive via `addTemplateFormats`
     if (
       eleventyConfigApiMergingObject &&
       eleventyConfigApiMergingObject.templateFormats
@@ -379,24 +395,20 @@ class TemplateConfig {
       delete eleventyConfigApiMergingObject.templateFormats;
     }
 
+    let templateFormatsAdded =
+      eleventyConfigApiMergingObject.templateFormatsAdded || [];
+    delete eleventyConfigApiMergingObject.templateFormatsAdded;
+
+    templateFormats = unique([...templateFormats, ...templateFormatsAdded]);
+
     merge(mergedConfig, eleventyConfigApiMergingObject);
 
-    // debug("this.userConfig.getMergingConfigObject: %o", this.userConfig.getMergingConfigObject());
-    // debug("mergedConfig: %o", mergedConfig);
+    // Apply overrides, currently only pathPrefix uses this I think!
     debug("overrides: %o", this.overrides);
-
-    // Object assign overrides original values (good only for templateFormats) but not good for anything else
-    if (this.overrides && this.overrides.templateFormats) {
-      templateFormats = this.overrides.templateFormats;
-      delete this.overrides.templateFormats;
-    }
     merge(mergedConfig, this.overrides);
 
-    // Additive should preserve original templateFormats, wherever those come from (config API or config return object)
-    mergedConfig.templateFormats = unique([
-      ...templateFormats,
-      ...templateFormatsAdded,
-    ]);
+    // Restore templateFormats
+    mergedConfig.templateFormats = templateFormats;
 
     debug("Current configuration: %o", mergedConfig);
     return mergedConfig;
