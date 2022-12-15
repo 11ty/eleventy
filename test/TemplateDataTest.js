@@ -284,6 +284,7 @@ test("getLocalDataPaths", async (t) => {
     "./test/stubs/stubs.11tydata.json",
     "./test/stubs/stubs.11tydata.cjs",
     "./test/stubs/stubs.11tydata.js",
+
     "./test/stubs/component/component.json",
     "./test/stubs/component/component.11tydata.json",
     "./test/stubs/component/component.11tydata.cjs",
@@ -304,9 +305,11 @@ test("getLocalDataPaths (with setDataFileBaseName #1699)", async (t) => {
     "./test/stubs/index.11tydata.json",
     "./test/stubs/index.11tydata.cjs",
     "./test/stubs/index.11tydata.js",
+
     "./test/stubs/component/index.11tydata.json",
     "./test/stubs/component/index.11tydata.cjs",
     "./test/stubs/component/index.11tydata.js",
+
     "./test/stubs/component/component.json",
     "./test/stubs/component/component.11tydata.json",
     "./test/stubs/component/component.11tydata.cjs",
@@ -339,6 +342,7 @@ test("getLocalDataPaths (with setDataFileSuffixes override #1699)", async (t) =>
     "./test/stubs/stubs.howdy.json",
     "./test/stubs/stubs.howdy.cjs",
     "./test/stubs/stubs.howdy.js",
+
     "./test/stubs/component/component.howdy.json",
     "./test/stubs/component/component.howdy.cjs",
     "./test/stubs/component/component.howdy.js",
@@ -374,6 +378,33 @@ test("getLocalDataPaths (with setDataFileSuffixes override with two entries #169
     "./test/stubs/stubs.howdy.json",
     "./test/stubs/stubs.howdy.cjs",
     "./test/stubs/stubs.howdy.js",
+
+    "./test/stubs/component/component.json",
+    "./test/stubs/component/component.howdy.json",
+    "./test/stubs/component/component.howdy.cjs",
+    "./test/stubs/component/component.howdy.js",
+  ]);
+});
+
+test("getLocalDataPaths (with setDataFileSuffixes and setDataFileBaseName #1699)", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.setDataFileBaseName("index");
+  eleventyConfig.userConfig.setDataFileSuffixes([".howdy", ""]);
+
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let paths = await dataObj.getLocalDataPaths(
+    "./test/stubs/component/component.liquid"
+  );
+
+  t.deepEqual(paths, [
+    "./test/stubs/index.howdy.json",
+    "./test/stubs/index.howdy.cjs",
+    "./test/stubs/index.howdy.js",
+
+    "./test/stubs/component/index.howdy.json",
+    "./test/stubs/component/index.howdy.cjs",
+    "./test/stubs/component/index.howdy.js",
+
     "./test/stubs/component/component.json",
     "./test/stubs/component/component.howdy.json",
     "./test/stubs/component/component.howdy.cjs",
