@@ -13,7 +13,13 @@ module.exports = function (config) {
 
   // Add pathPrefix manually to a URL
   config.addFilter("url", function addPathPrefix(url, pathPrefixOverride) {
-    let pathPrefix = pathPrefixOverride || templateConfig.getPathPrefix();
+    let pathPrefix;
+    if (pathPrefixOverride && typeof pathPrefixOverride === "string") {
+      pathPrefix = pathPrefixOverride;
+    } else {
+      pathPrefix = templateConfig.getPathPrefix();
+    }
+
     return urlFilter.call(this, url, pathPrefix);
   });
 
