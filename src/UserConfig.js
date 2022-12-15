@@ -100,6 +100,10 @@ class UserConfig {
     this.libraryAmendments = {};
     this.serverPassthroughCopyBehavior = "passthrough";
     this.urlTransforms = [];
+
+    // Defaults in `defaultConfig.js`
+    this.dataFileSuffixesOverride = false;
+    this.dataFileDirBaseNameOverride = false;
   }
 
   versionCheck(expected) {
@@ -887,8 +891,16 @@ class UserConfig {
     this.urlTransforms.push(callback);
   }
 
+  setDataFileSuffixes(suffixArray) {
+    this.dataFileSuffixesOverride = suffixArray;
+  }
+
+  setDataFileBaseName(baseName) {
+    this.dataFileDirBaseNameOverride = baseName;
+  }
+
   getMergingConfigObject() {
-    return {
+    let obj = {
       templateFormats: this.templateFormats,
       templateFormatsAdded: this.templateFormatsAdded,
       // filters removed in 1.0 (use addTransform instead)
@@ -945,6 +957,17 @@ class UserConfig {
       serverPassthroughCopyBehavior: this.serverPassthroughCopyBehavior,
       urlTransforms: this.urlTransforms,
     };
+
+    if (Array.isArray(this.dataFileSuffixesOverride)) {
+      // no upstream merging of this array, so we add the override: prefix
+      obj["override:dataFileSuffixes"] = this.dataFileSuffixesOverride;
+    }
+
+    if (this.dataFileDirBaseNameOverride) {
+      obj.dataFileDirBaseNameOverride = this.dataFileDirBaseNameOverride;
+    }
+
+    return obj;
   }
 }
 

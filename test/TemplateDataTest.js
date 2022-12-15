@@ -291,11 +291,9 @@ test("getLocalDataPaths", async (t) => {
   ]);
 });
 
-test("getLocalDataPaths (with dataFileDirBaseNameOverride #1699)", async (t) => {
+test("getLocalDataPaths (with setDataFileBaseName #1699)", async (t) => {
   let eleventyConfig = new TemplateConfig();
-  eleventyConfig.appendToRootConfig({
-    dataFileDirBaseNameOverride: "index",
-  });
+  eleventyConfig.userConfig.setDataFileBaseName("index");
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let paths = await dataObj.getLocalDataPaths(
@@ -313,6 +311,58 @@ test("getLocalDataPaths (with dataFileDirBaseNameOverride #1699)", async (t) => 
     "./test/stubs/component/component.11tydata.json",
     "./test/stubs/component/component.11tydata.cjs",
     "./test/stubs/component/component.11tydata.js",
+  ]);
+});
+
+test("getLocalDataPaths (with empty setDataFileSuffixes #1699)", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.setDataFileSuffixes([]);
+
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let paths = await dataObj.getLocalDataPaths(
+    "./test/stubs/component/component.liquid"
+  );
+
+  t.deepEqual(paths, []);
+});
+
+test("getLocalDataPaths (with setDataFileSuffixes override #1699)", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.setDataFileSuffixes([".howdy"]);
+
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let paths = await dataObj.getLocalDataPaths(
+    "./test/stubs/component/component.liquid"
+  );
+
+  t.deepEqual(paths, [
+    "./test/stubs/stubs.howdy.json",
+    "./test/stubs/stubs.howdy.cjs",
+    "./test/stubs/stubs.howdy.js",
+    "./test/stubs/component/component.howdy.json",
+    "./test/stubs/component/component.howdy.cjs",
+    "./test/stubs/component/component.howdy.js",
+  ]);
+});
+
+test("getLocalDataPaths (with setDataFileSuffixes override with two entries #1699)", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.setDataFileSuffixes([".howdy", ""]);
+
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let paths = await dataObj.getLocalDataPaths(
+    "./test/stubs/component/component.liquid"
+  );
+
+  t.deepEqual(paths, [
+    "./test/stubs/stubs.json",
+    "./test/stubs/stubs.howdy.json",
+    "./test/stubs/stubs.howdy.cjs",
+    "./test/stubs/stubs.howdy.js",
+    "./test/stubs/component/component.json",
+    "./test/stubs/component/component.howdy.json",
+    "./test/stubs/component/component.howdy.cjs",
+    "./test/stubs/component/component.howdy.js",
   ]);
 });
 

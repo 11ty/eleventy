@@ -3,10 +3,10 @@ const fastglob = require("fast-glob");
 const path = require("path");
 const lodashset = require("lodash/set");
 const lodashget = require("lodash/get");
-const lodashUniq = require("lodash/uniq");
 const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
 
 const merge = require("./Util/Merge");
+const unique = require("./Util/Unique");
 const TemplateRender = require("./TemplateRender");
 const TemplateGlob = require("./TemplateGlob");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
@@ -176,6 +176,7 @@ class TemplateData {
     if (Array.isArray(this.config.dataFileSuffixes)) {
       return this.config.dataFileSuffixes;
     }
+
     // Backwards compatibility
     if (this.config.jsDataFileSuffix) {
       let suffixes = [];
@@ -685,7 +686,7 @@ class TemplateData {
     }
 
     debug("getLocalDataPaths(%o): %o", templatePath, paths);
-    return lodashUniq(paths).reverse();
+    return unique(paths).reverse();
   }
 
   static mergeDeep(config, target, ...source) {

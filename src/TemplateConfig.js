@@ -1,11 +1,11 @@
 const fs = require("fs");
 const chalk = require("kleur");
-const lodashUniq = require("lodash/uniq");
-const lodashMerge = require("lodash/merge");
 const { TemplatePath } = require("@11ty/eleventy-utils");
 const EleventyBaseError = require("./EleventyBaseError.js");
 const UserConfig = require("./UserConfig.js");
 const { EleventyRequire } = require("./Util/Require.js");
+const merge = require("./Util/Merge.js");
+const unique = require("./Util/Unique");
 const eventBus = require("./EventBus.js");
 
 const debug = require("debug")("Eleventy:TemplateConfig");
@@ -342,7 +342,7 @@ class TemplateConfig {
       delete localConfig.templateFormats;
     }
 
-    let mergedConfig = lodashMerge({}, this.rootConfig, localConfig);
+    let mergedConfig = merge({}, this.rootConfig, localConfig);
 
     // Delay processing plugins until after the result of localConfig is returned
     // But BEFORE the rest of the config options are merged
@@ -379,7 +379,7 @@ class TemplateConfig {
       delete eleventyConfigApiMergingObject.templateFormats;
     }
 
-    lodashMerge(mergedConfig, eleventyConfigApiMergingObject);
+    merge(mergedConfig, eleventyConfigApiMergingObject);
 
     // debug("this.userConfig.getMergingConfigObject: %o", this.userConfig.getMergingConfigObject());
     // debug("mergedConfig: %o", mergedConfig);
@@ -390,16 +390,15 @@ class TemplateConfig {
       templateFormats = this.overrides.templateFormats;
       delete this.overrides.templateFormats;
     }
-    lodashMerge(mergedConfig, this.overrides);
+    merge(mergedConfig, this.overrides);
 
     // Additive should preserve original templateFormats, wherever those come from (config API or config return object)
-    mergedConfig.templateFormats = lodashUniq([
+    mergedConfig.templateFormats = unique([
       ...templateFormats,
       ...templateFormatsAdded,
     ]);
 
     debug("Current configuration: %o", mergedConfig);
-
     return mergedConfig;
   }
 }
