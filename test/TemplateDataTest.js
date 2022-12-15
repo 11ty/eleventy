@@ -345,6 +345,21 @@ test("getLocalDataPaths (with setDataFileSuffixes override #1699)", async (t) =>
   ]);
 });
 
+test("getLocalDataPaths (with setDataFileSuffixes empty string override #1699)", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.setDataFileSuffixes([""]);
+
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let paths = await dataObj.getLocalDataPaths(
+    "./test/stubs/component/component.liquid"
+  );
+
+  t.deepEqual(paths, [
+    "./test/stubs/stubs.json",
+    "./test/stubs/component/component.json",
+  ]);
+});
+
 test("getLocalDataPaths (with setDataFileSuffixes override with two entries #1699)", async (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.setDataFileSuffixes([".howdy", ""]);
