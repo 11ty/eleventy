@@ -48,15 +48,12 @@ test("Get ordered list of templates", async (t) => {
     )
   );
 
-  let [first, second, third, fourth] = tm.getFullTemplateMapOrder();
-  t.deepEqual(
-    first.filter((entry) => !entry.startsWith(TemplateMap.tagPrefix)),
-    [
-      "./test/_issues/975/post.md",
-      "./test/_issues/975/another-post.md",
-      "./test/_issues/975/index.md",
-    ]
-  );
+  let order = tm.getOrderedInputPaths(...tm.getFullTemplateMapOrder());
+  t.deepEqual(order, [
+    "./test/_issues/975/post.md",
+    "./test/_issues/975/another-post.md",
+    "./test/_issues/975/index.md",
+  ]);
 });
 
 test("Get ordered list of templates (reverse add)", async (t) => {
@@ -92,13 +89,10 @@ test("Get ordered list of templates (reverse add)", async (t) => {
     )
   );
 
-  let [first, second, third, fourth] = tm.getFullTemplateMapOrder();
-  t.deepEqual(
-    first.filter((entry) => !entry.startsWith(TemplateMap.tagPrefix)),
-    [
-      "./test/_issues/975/another-post.md",
-      "./test/_issues/975/post.md",
-      "./test/_issues/975/index.md",
-    ]
-  );
+  let order = tm.getOrderedInputPaths(...tm.getFullTemplateMapOrder());
+  t.deepEqual(order, [
+    "./test/_issues/975/another-post.md",
+    "./test/_issues/975/post.md",
+    "./test/_issues/975/index.md",
+  ]);
 });

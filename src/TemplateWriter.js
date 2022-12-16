@@ -159,7 +159,7 @@ class TemplateWriter {
     );
   }
 
-  _createTemplate(path, allPaths, to = "fs") {
+  _createTemplate(path, to = "fs") {
     let tmpl = this._templatePathCache.get(path);
     if (!tmpl) {
       tmpl = new Template(
@@ -194,31 +194,11 @@ class TemplateWriter {
           tmpl.addLinter(linter);
         }
       }
+
+      tmpl.setDryRun(this.isDryRun);
     }
 
     tmpl.setIsVerbose(this.isVerbose);
-
-    // --incremental only writes files that trigger a build during --watch
-    if (this.incrementalFile) {
-      // incremental file is a passthrough copy (not a template)
-      if (this._isIncrementalFileAPassthroughCopy(allPaths)) {
-        tmpl.setDryRun(true);
-        // Passthrough copy check is above this (order is important)
-      } else if (
-        tmpl.isFileRelevantToThisTemplate(this.incrementalFile, {
-          isFullTemplate: this.eleventyFiles.isFullTemplateFile(
-            allPaths,
-            this.incrementalFile
-          ),
-        })
-      ) {
-        tmpl.setDryRun(this.isDryRun);
-      } else {
-        tmpl.setDryRun(true);
-      }
-    } else {
-      tmpl.setDryRun(this.isDryRun);
-    }
 
     return tmpl;
   }
@@ -227,9 +207,7 @@ class TemplateWriter {
     let promises = [];
     for (let path of paths) {
       if (this.extensionMap.hasEngine(path)) {
-        promises.push(
-          this.templateMap.add(this._createTemplate(path, paths, to))
-        );
+        promises.push(this.templateMap.add(this._createTemplate(path, to)));
       }
       debug(`${path} begun adding to map.`);
     }
@@ -237,10 +215,49 @@ class TemplateWriter {
     return Promise.all(promises);
   }
 
+  _assignIncrementalDryRun(allPaths) {
+    if (!this.incrementalFile) {
+      return;
+    }
+
+    // --incremental only writes files that trigger a build during --watch
+    let map = this.templateMap.getMap();
+    let fullGraph = this.templateMap.getTemplateMapDependencyGraph();
+
+    for (let { template, inputPath } of map) {
+      let isRelevant = this.templateMap.isFileRelevantTo(
+        fullGraph,
+        inputPath,
+        this.incrementalFile
+      );
+      // incremental file is a passthrough copy (not a template)
+      if (this._isIncrementalFileAPassthroughCopy(allPaths)) {
+        template.setDryRun(true);
+        // Passthrough copy check is above this (order is important)
+      } else if (
+        template.isFileRelevantToThisTemplate(this.incrementalFile, {
+          isRelevant,
+          isFullTemplate: this.eleventyFiles.isFullTemplateFile(
+            allPaths,
+            this.incrementalFile
+          ),
+        })
+      ) {
+        template.setDryRun(this.isDryRun);
+        // template.setDryRun(this.isDryRun, true);
+      } else {
+        template.setDryRun(true);
+      }
+    }
+  }
+
   async _createTemplateMap(paths, to) {
     this.templateMap = new TemplateMap(this.eleventyConfig);
 
     await this._addToTemplateMap(paths, to);
+
+    this._assignIncrementalDryRun(paths);
+
     await this.templateMap.cache();
 
     debugDev("TemplateMap cache complete.");

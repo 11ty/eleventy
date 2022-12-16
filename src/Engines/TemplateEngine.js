@@ -256,9 +256,8 @@ class TemplateEngine {
     return false;
   }
 
-  // always relevant
   isFileRelevantTo() {
-    return true;
+    return undefined;
   }
 
   hasDependencies() {

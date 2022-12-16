@@ -55,15 +55,12 @@ class TemplateMap {
     return "___TAG___";
   }
 
-  get tagPrefix() {
-    return TemplateMap.tagPrefix;
-  }
-
   async add(template) {
     if (!template) {
       return;
     }
 
+    // IMPORTANT: This is where the data is first generated for the template
     let data = await template.getData();
 
     for (let map of await template.getTemplateMapEntries(data)) {
@@ -106,7 +103,7 @@ class TemplateMap {
       return;
     }
     for (let tag of tags) {
-      let tagWithPrefix = this.tagPrefix + tag;
+      let tagWithPrefix = TemplateMap.tagPrefix + tag;
       if (!graph.hasNode(tagWithPrefix)) {
         graph.addNode(tagWithPrefix);
       }
@@ -123,7 +120,7 @@ class TemplateMap {
     }
 
     for (let tag of deps) {
-      let tagWithPrefix = this.tagPrefix + tag;
+      let tagWithPrefix = TemplateMap.tagPrefix + tag;
       if (!graph.hasNode(tagWithPrefix)) {
         graph.addNode(tagWithPrefix);
       }
@@ -140,7 +137,7 @@ class TemplateMap {
   // Include: Templates that don’t use Pagination
   getMappedDependencies() {
     let graph = new DependencyGraph();
-    let tagPrefix = this.tagPrefix;
+    let tagPrefix = TemplateMap.tagPrefix;
 
     graph.addNode(tagPrefix + "all");
 
@@ -182,14 +179,14 @@ class TemplateMap {
       );
     }
 
-    return graph.overallOrder();
+    return graph;
   }
 
   // Exclude: Pagination templates consuming `collections` or `collections.all`
   // Include: Pagination templates that consume config API collections
   getDelayedMappedDependencies() {
     let graph = new DependencyGraph();
-    let tagPrefix = this.tagPrefix;
+    let tagPrefix = TemplateMap.tagPrefix;
 
     graph.addNode(tagPrefix + "all");
 
@@ -230,14 +227,14 @@ class TemplateMap {
       }
     }
 
-    return graph.overallOrder();
+    return graph;
   }
 
   // Exclude: Pagination templates consuming `collections.all`
   // Include: Pagination templates consuming `collections`
   getPaginatedOverCollectionsMappedDependencies() {
     let graph = new DependencyGraph();
-    let tagPrefix = this.tagPrefix;
+    let tagPrefix = TemplateMap.tagPrefix;
     let allNodeAdded = false;
 
     for (let entry of this.map) {
@@ -270,13 +267,13 @@ class TemplateMap {
       }
     }
 
-    return graph.overallOrder();
+    return graph;
   }
 
   // Include: Pagination templates consuming `collections.all`
   getPaginatedOverAllCollectionMappedDependencies() {
     let graph = new DependencyGraph();
-    let tagPrefix = this.tagPrefix;
+    let tagPrefix = TemplateMap.tagPrefix;
     let allNodeAdded = false;
 
     for (let entry of this.map) {
@@ -310,7 +307,41 @@ class TemplateMap {
       }
     }
 
-    return graph.overallOrder();
+    return graph;
+  }
+
+  getTemplateMapDependencyGraph() {
+    return [
+      this.getMappedDependencies(),
+      this.getDelayedMappedDependencies(),
+      this.getPaginatedOverCollectionsMappedDependencies(),
+      this.getPaginatedOverAllCollectionMappedDependencies(),
+    ];
+  }
+
+  getFullTemplateMapOrder() {
+    // convert dependency graphs to ordered arrays
+    return this.getTemplateMapDependencyGraph().map((entry) =>
+      entry.overallOrder()
+    );
+  }
+
+  isFileRelevantTo(templateMapDependencyGraph, file, comparedTo) {
+    if (file === comparedTo) {
+      return true;
+    }
+
+    // compare in all four graphs
+    for (let graph of templateMapDependencyGraph) {
+      if (!graph.hasNode(file)) {
+        continue;
+      }
+
+      if (graph.dependenciesOf(file).includes(comparedTo)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   async setCollectionByTagName(tagName) {
@@ -337,7 +368,7 @@ class TemplateMap {
 
   // TODO(slightlyoff): major bottleneck
   async initDependencyMap(dependencyMap) {
-    let tagPrefix = this.tagPrefix;
+    let tagPrefix = TemplateMap.tagPrefix;
     for (let depEntry of dependencyMap) {
       if (depEntry.startsWith(tagPrefix)) {
         // is a tag (collection) entry
@@ -382,15 +413,6 @@ class TemplateMap {
     }
   }
 
-  getFullTemplateMapOrder() {
-    return [
-      this.getMappedDependencies(),
-      this.getDelayedMappedDependencies(),
-      this.getPaginatedOverCollectionsMappedDependencies(),
-      this.getPaginatedOverAllCollectionMappedDependencies(),
-    ];
-  }
-
   async cache() {
     debug("Caching collections objects.");
     this.collectionsData = {};
@@ -419,11 +441,10 @@ class TemplateMap {
       firstPaginatedDepMap,
       secondPaginatedDepMap
     );
-    let orderedMap = orderedPaths.map(
-      function (inputPath) {
-        return this.getMapEntryForInputPath(inputPath);
-      }.bind(this)
-    );
+
+    let orderedMap = orderedPaths.map((inputPath) => {
+      return this.getMapEntryForInputPath(inputPath);
+    });
 
     await this.config.events.emitLazy("eleventy.contentMap", () => {
       return {
@@ -511,33 +532,15 @@ class TemplateMap {
   }
 
   // Filter out any tag nodes
-  getOrderedInputPaths(
-    dependencyMap,
-    delayedDependencyMap,
-    firstPaginatedDepMap,
-    secondPaginatedDepMap
-  ) {
+  getOrderedInputPaths(...maps) {
     let orderedMap = [];
-    let tagPrefix = this.tagPrefix;
+    let tagPrefix = TemplateMap.tagPrefix;
 
-    for (let dep of dependencyMap) {
-      if (!dep.startsWith(tagPrefix)) {
-        orderedMap.push(dep);
-      }
-    }
-    for (let dep of delayedDependencyMap) {
-      if (!dep.startsWith(tagPrefix)) {
-        orderedMap.push(dep);
-      }
-    }
-    for (let dep of firstPaginatedDepMap) {
-      if (!dep.startsWith(tagPrefix)) {
-        orderedMap.push(dep);
-      }
-    }
-    for (let dep of secondPaginatedDepMap) {
-      if (!dep.startsWith(tagPrefix)) {
-        orderedMap.push(dep);
+    for (let map of maps) {
+      for (let dep of map) {
+        if (!dep.startsWith(tagPrefix)) {
+          orderedMap.push(dep);
+        }
       }
     }
     return orderedMap;
@@ -549,11 +552,13 @@ class TemplateMap {
       if (!map._pages) {
         throw new Error(`Content pages not found for ${map.inputPath}`);
       }
+      // TODO add `|| map.template.isDryRunViaIncremental` below to opt-out of template render during --incremental
       if (!map.template.behavior.isRenderable()) {
         // Note that empty pagination templates will be skipped here as not renderable
         continue;
       }
 
+      // IMPORTANT: this is where template content is rendered
       try {
         for (let pageEntry of map._pages) {
           pageEntry.templateContent =

@@ -108,8 +108,9 @@ class Template extends TemplateContent {
     this.logger.isVerbose = isVerbose;
   }
 
-  setDryRun(isDryRun) {
+  setDryRun(isDryRun, viaIncremental = false) {
     this.isDryRun = !!isDryRun;
+    this.isDryRunViaIncremental = viaIncremental;
   }
 
   setExtraOutputSubdirectory(dir) {
@@ -775,7 +776,7 @@ class Template extends TemplateContent {
       let templateBenchmark = this.bench.get("Template Write");
       templateBenchmark.before();
 
-      // TODO add a cache to check if this was already created
+      // TODO(@zachleat) add a cache to check if this was already created
       let templateOutputDir = path.parse(outputPath).dir;
       if (templateOutputDir) {
         await mkdir(templateOutputDir, { recursive: true });
@@ -791,6 +792,7 @@ class Template extends TemplateContent {
         templateBenchmark.after();
         this.writeCount++;
         debug(`${outputPath} ${lang.finished}.`);
+
         return {
           inputPath: this.inputPath,
           outputPath: outputPath,
