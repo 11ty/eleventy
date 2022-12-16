@@ -1,0 +1,4 @@
+---
+eleventyImportCollections:
+  - post
+---

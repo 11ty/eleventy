@@ -51,12 +51,19 @@ class TemplateMap {
     return this._config;
   }
 
-  get tagPrefix() {
+  static get tagPrefix() {
     return "___TAG___";
   }
 
+  get tagPrefix() {
+    return TemplateMap.tagPrefix;
+  }
+
   async add(template) {
-    // This is where the data is first generated for the template
+    if (!template) {
+      return;
+    }
+
     let data = await template.getData();
 
     for (let map of await template.getTemplateMapEntries(data)) {
@@ -94,6 +101,43 @@ class TemplateMap {
     }
   }
 
+  addTagsToGraph(graph, inputPath, tags) {
+    if (!Array.isArray(tags)) {
+      return;
+    }
+    for (let tag of tags) {
+      let tagWithPrefix = this.tagPrefix + tag;
+      if (!graph.hasNode(tagWithPrefix)) {
+        graph.addNode(tagWithPrefix);
+      }
+
+      // Populates to collections.tagName
+      // Dependency from tag to inputPath
+      graph.addDependency(tagWithPrefix, inputPath);
+    }
+  }
+
+  addDeclaredDependenciesToGraph(graph, inputPath, deps) {
+    if (!Array.isArray(deps)) {
+      return;
+    }
+
+    for (let tag of deps) {
+      let tagWithPrefix = this.tagPrefix + tag;
+      if (!graph.hasNode(tagWithPrefix)) {
+        graph.addNode(tagWithPrefix);
+      }
+
+      // Dependency from inputPath to collection/tag
+      graph.addDependency(inputPath, tagWithPrefix);
+    }
+  }
+
+  // Exclude: Pagination templates consuming `collections` or `collections.all`
+  // Exclude: Pagination templates that consume config API collections
+
+  // Include: Pagination templates that don’t consume config API collections
+  // Include: Templates that don’t use Pagination
   getMappedDependencies() {
     let graph = new DependencyGraph();
     let tagPrefix = this.tagPrefix;
@@ -125,27 +169,24 @@ class TemplateMap {
       }
 
       if (!entry.data.eleventyExcludeFromCollections) {
-        // collections.all
+        // Populates to collections.all
         graph.addDependency(tagPrefix + "all", entry.inputPath);
 
-        if (entry.data.tags) {
-          for (let tag of entry.data.tags) {
-            let tagWithPrefix = tagPrefix + tag;
-            if (!graph.hasNode(tagWithPrefix)) {
-              graph.addNode(tagWithPrefix);
-            }
-
-            // collections.tagName
-            // Dependency from tag to inputPath
-            graph.addDependency(tagWithPrefix, entry.inputPath);
-          }
-        }
+        this.addTagsToGraph(graph, entry.inputPath, entry.data.tags);
       }
+
+      this.addDeclaredDependenciesToGraph(
+        graph,
+        entry.inputPath,
+        entry.data.eleventyImportCollections
+      );
     }
 
     return graph.overallOrder();
   }
 
+  // Exclude: Pagination templates consuming `collections` or `collections.all`
+  // Include: Pagination templates that consume config API collections
   getDelayedMappedDependencies() {
     let graph = new DependencyGraph();
     let tagPrefix = this.tagPrefix;
@@ -157,7 +198,6 @@ class TemplateMap {
     // Add tags from named user config collections
     for (let tag of userConfigCollections) {
       graph.addNode(tagPrefix + tag);
-      // graph.addDependency( tagPrefix + tag, tagPrefix + "all" );
     }
 
     for (let entry of this.map) {
@@ -176,27 +216,25 @@ class TemplateMap {
         graph.addDependency(entry.inputPath, tagPrefix + paginationTagTarget);
 
         if (!entry.data.eleventyExcludeFromCollections) {
-          // collections.all
+          // Populates into collections.all
           graph.addDependency(tagPrefix + "all", entry.inputPath);
 
-          if (entry.data.tags) {
-            for (let tag of entry.data.tags) {
-              let tagWithPrefix = tagPrefix + tag;
-              if (!graph.hasNode(tagWithPrefix)) {
-                graph.addNode(tagWithPrefix);
-              }
-              // collections.tagName
-              // Dependency from tag to inputPath
-              graph.addDependency(tagWithPrefix, entry.inputPath);
-            }
-          }
+          this.addTagsToGraph(graph, entry.inputPath, entry.data.tags);
         }
+
+        this.addDeclaredDependenciesToGraph(
+          graph,
+          entry.inputPath,
+          entry.data.eleventyImportCollections
+        );
       }
     }
-    let order = graph.overallOrder();
-    return order;
+
+    return graph.overallOrder();
   }
 
+  // Exclude: Pagination templates consuming `collections.all`
+  // Include: Pagination templates consuming `collections`
   getPaginatedOverCollectionsMappedDependencies() {
     let graph = new DependencyGraph();
     let tagPrefix = this.tagPrefix;
@@ -219,13 +257,23 @@ class TemplateMap {
         if (!entry.data.eleventyExcludeFromCollections) {
           // collections.all
           graph.addDependency(tagPrefix + "all", entry.inputPath);
+
+          // Note that `tags` are otherwise ignored here
+          // TODO should we throw an error?
         }
+
+        this.addDeclaredDependenciesToGraph(
+          graph,
+          entry.inputPath,
+          entry.data.eleventyImportCollections
+        );
       }
     }
 
     return graph.overallOrder();
   }
 
+  // Include: Pagination templates consuming `collections.all`
   getPaginatedOverAllCollectionMappedDependencies() {
     let graph = new DependencyGraph();
     let tagPrefix = this.tagPrefix;
@@ -246,9 +294,19 @@ class TemplateMap {
         }
 
         if (!entry.data.eleventyExcludeFromCollections) {
-          // collections.all
+          // Populates into collections.all
+          // This is circular!
           graph.addDependency(tagPrefix + "all", entry.inputPath);
+
+          // Note that `tags` are otherwise ignored here
+          // TODO should we throw an error?
         }
+
+        this.addDeclaredDependenciesToGraph(
+          graph,
+          entry.inputPath,
+          entry.data.eleventyImportCollections
+        );
       }
     }
 
@@ -324,6 +382,15 @@ class TemplateMap {
     }
   }
 
+  getFullTemplateMapOrder() {
+    return [
+      this.getMappedDependencies(),
+      this.getDelayedMappedDependencies(),
+      this.getPaginatedOverCollectionsMappedDependencies(),
+      this.getPaginatedOverAllCollectionMappedDependencies(),
+    ];
+  }
+
   async cache() {
     debug("Caching collections objects.");
     this.collectionsData = {};
@@ -332,18 +399,16 @@ class TemplateMap {
       entry.data.collections = this.collectionsData;
     }
 
-    let dependencyMap = this.getMappedDependencies();
+    let [
+      dependencyMap,
+      delayedDependencyMap,
+      firstPaginatedDepMap,
+      secondPaginatedDepMap,
+    ] = this.getFullTemplateMapOrder();
+
     await this.initDependencyMap(dependencyMap);
-
-    let delayedDependencyMap = this.getDelayedMappedDependencies();
     await this.initDependencyMap(delayedDependencyMap);
-
-    let firstPaginatedDepMap =
-      this.getPaginatedOverCollectionsMappedDependencies();
     await this.initDependencyMap(firstPaginatedDepMap);
-
-    let secondPaginatedDepMap =
-      this.getPaginatedOverAllCollectionMappedDependencies();
     await this.initDependencyMap(secondPaginatedDepMap);
 
     await this.resolveRemainingComputedData();
@@ -445,6 +510,7 @@ class TemplateMap {
     }
   }
 
+  // Filter out any tag nodes
   getOrderedInputPaths(
     dependencyMap,
     delayedDependencyMap,
