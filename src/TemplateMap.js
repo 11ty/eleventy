@@ -175,7 +175,7 @@ class TemplateMap {
       this.addDeclaredDependenciesToGraph(
         graph,
         entry.inputPath,
-        entry.data.eleventyImportCollections
+        entry.data.eleventyImport?.collections
       );
     }
 
@@ -222,7 +222,7 @@ class TemplateMap {
         this.addDeclaredDependenciesToGraph(
           graph,
           entry.inputPath,
-          entry.data.eleventyImportCollections
+          entry.data.eleventyImport?.collections
         );
       }
     }
@@ -262,7 +262,7 @@ class TemplateMap {
         this.addDeclaredDependenciesToGraph(
           graph,
           entry.inputPath,
-          entry.data.eleventyImportCollections
+          entry.data.eleventyImport?.collections
         );
       }
     }
@@ -302,7 +302,7 @@ class TemplateMap {
         this.addDeclaredDependenciesToGraph(
           graph,
           entry.inputPath,
-          entry.data.eleventyImportCollections
+          entry.data.eleventyImport?.collections
         );
       }
     }
@@ -353,8 +353,8 @@ class TemplateMap {
         }
       }
 
-      if (Array.isArray(entry.data.eleventyImportCollections)) {
-        for (let tag of entry.data.eleventyImportCollections) {
+      if (Array.isArray(entry.data.eleventyImport?.collections)) {
+        for (let tag of entry.data.eleventyImport.collections) {
           this.config.uses.addDependencyConsumesCollection(
             entry.inputPath,
             tag
