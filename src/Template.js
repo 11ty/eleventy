@@ -108,9 +108,18 @@ class Template extends TemplateContent {
     this.logger.isVerbose = isVerbose;
   }
 
+  setDryRunViaIncremental(isDryRun) {
+    this.setDryRun(isDryRun, true);
+  }
+
   setDryRun(isDryRun, viaIncremental = false) {
     this.isDryRun = !!isDryRun;
-    this.isDryRunViaIncremental = viaIncremental;
+
+    if (this.isDryRun && viaIncremental) {
+      this.isDryRunViaIncremental = viaIncremental;
+    } else {
+      this.isDryRunViaIncremental = false;
+    }
   }
 
   setExtraOutputSubdirectory(dir) {

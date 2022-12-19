@@ -256,12 +256,15 @@ class TemplateEngine {
     return false;
   }
 
-  isFileRelevantTo() {
-    return undefined;
+  hasDependencies(inputPath) {
+    if (this.config.uses.getDependencies(inputPath) === false) {
+      return false;
+    }
+    return true;
   }
 
-  hasDependencies() {
-    return false;
+  isFileRelevantTo(inputPath, comparisonFile) {
+    return this.config.uses.isFileRelevantTo(inputPath, comparisonFile);
   }
 }
 

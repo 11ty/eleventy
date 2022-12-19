@@ -223,33 +223,27 @@ class TemplateWriter {
 
     // --incremental only writes files that trigger a build during --watch
     let map = this.templateMap.getMap();
-    let fullGraph = this.templateMap.getTemplateMapDependencyGraph();
 
-    for (let { template, inputPath } of map) {
+    // write template relationships to the global dependency graph
+    this.templateMap.addToGlobalDependencyGraph();
+
+    for (let { template } of map) {
       // incremental file is a passthrough copy (not a template)
       if (this._isIncrementalFileAPassthroughCopy(allPaths)) {
         template.setDryRun(true);
+        continue;
         // Passthrough copy check is above this (order is important)
       }
 
-      // TODO change this to use the GlobalDependencyMap so that we don’t need the full data cascade every time
-      let isTemplateMapRelevant = this.templateMap.isFileRelevantTo(
-        fullGraph,
-        inputPath,
-        this.incrementalFile
-      );
-
       if (
         template.isFileRelevantToThisTemplate(this.incrementalFile, {
-          isTemplateMapRelevant,
           isFullTemplate: this.eleventyFiles.isFullTemplateFile(
             allPaths,
             this.incrementalFile
           ),
         })
       ) {
-        template.setDryRun(this.isDryRun);
-        // template.setDryRun(this.isDryRun, true);
+        template.setDryRunViaIncremental(this.isDryRun);
       } else {
         template.setDryRun(true);
       }

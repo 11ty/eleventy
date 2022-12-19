@@ -520,17 +520,11 @@ class TemplateContent {
 
     let hasDependencies = this.engine.hasDependencies(this.inputPath);
 
-    let isEleventyTemplateMapRelevant = metadata.isTemplateMapRelevant;
-    let isEngineRelevant = this.engine.isFileRelevantTo(
+    let isRelevant = this.engine.isFileRelevantTo(
       this.inputPath,
       incrementalFile
     );
 
-    // isEngineRelevant is undefined for the built-in syntaxes
-    let isRelevant =
-      isEngineRelevant === undefined
-        ? isEleventyTemplateMapRelevant
-        : isEleventyTemplateMapRelevant || isEngineRelevant;
     debug(
       "Test dependencies to see if %o is relevant to %o: %o",
       this.inputPath,

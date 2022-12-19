@@ -28,7 +28,6 @@ class GlobalDependencyMap {
 
     // These have leading dot slashes, but so do the paths from Eleventy
     this.config.events.once("eleventy.layouts", (layouts) => {
-      // TODO cleanup loose ends here
       this.addLayoutsToMap(layouts);
     });
   }
@@ -143,7 +142,8 @@ class GlobalDependencyMap {
 
   // node arguments are already normalized
   _addDependency(from, toArray = []) {
-    // TODO clear out irrelevant old relationships, note that this is called for both layouts and by Custom compile->addDependencies
+    // TODO clear out irrelevant old relationships
+    // note that this is called for both layouts and by Custom compile->addDependencies
 
     this.map.addNode(from);
 
@@ -172,18 +172,17 @@ class GlobalDependencyMap {
     return `${GlobalDependencyMap.COLLECTION_KEY}:${entry}`;
   }
 
-  addDependencyConsumesCollection(from, collectionNames = []) {
-    this._addDependency(
-      this.normalizeNode(from),
-      collectionNames.map((name) => this.getCollectionKey(name))
-    );
+  addDependencyConsumesCollection(from, collectionName) {
+    this._addDependency(this.normalizeNode(from), [
+      this.getCollectionKey(collectionName),
+    ]);
   }
 
-  addDependencyPublishesToCollection(from, collectionNames = []) {
+  addDependencyPublishesToCollection(from, collectionName) {
     let normalizedFrom = this.normalizeNode(from);
-    for (let name of collectionNames) {
-      this._addDependency(this.getCollectionKey(name), normalizedFrom);
-    }
+    this._addDependency(this.getCollectionKey(collectionName), [
+      normalizedFrom,
+    ]);
   }
 
   // Layouts are not relevant to compile cache and can be ignored
@@ -208,6 +207,7 @@ class GlobalDependencyMap {
     if (!comparisonFile) {
       return false;
     }
+
     // The file that changed is the relevant file
     if (fullTemplateInputPath === comparisonFile) {
       return true;

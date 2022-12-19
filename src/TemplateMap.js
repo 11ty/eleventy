@@ -326,22 +326,42 @@ class TemplateMap {
     );
   }
 
-  isFileRelevantTo(templateMapDependencyGraph, file, comparedTo) {
-    if (file === comparedTo) {
-      return true;
-    }
-
-    // compare in all four graphs
-    for (let graph of templateMapDependencyGraph) {
-      if (!graph.hasNode(file)) {
-        continue;
+  // Similar to getTemplateMapDependencyGraph but adds those relationships to the global dependency graph used for incremental builds
+  addToGlobalDependencyGraph() {
+    for (let entry of this.map) {
+      let paginationTagTarget = this.getPaginationTagTarget(entry);
+      if (paginationTagTarget) {
+        this.config.uses.addDependencyConsumesCollection(
+          entry.inputPath,
+          paginationTagTarget
+        );
       }
 
-      if (graph.dependenciesOf(file).includes(comparedTo)) {
-        return true;
+      if (!entry.data.eleventyExcludeFromCollections) {
+        this.config.uses.addDependencyPublishesToCollection(
+          entry.inputPath,
+          "all"
+        );
+      }
+
+      if (Array.isArray(entry.data.tags)) {
+        for (let tag of entry.data.tags) {
+          this.config.uses.addDependencyPublishesToCollection(
+            entry.inputPath,
+            tag
+          );
+        }
+      }
+
+      if (Array.isArray(entry.data.eleventyImportCollections)) {
+        for (let tag of entry.data.eleventyImportCollections) {
+          this.config.uses.addDependencyConsumesCollection(
+            entry.inputPath,
+            tag
+          );
+        }
       }
     }
-    return false;
   }
 
   async setCollectionByTagName(tagName) {

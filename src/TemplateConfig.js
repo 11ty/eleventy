@@ -423,6 +423,9 @@ class TemplateConfig {
   }
 
   afterConfigMergeActions(eleventyConfig) {
+    // Add to the merged config too
+    eleventyConfig.uses = this.usesGraph;
+
     // this is used for the layouts event
     this.usesGraph.setConfig(eleventyConfig);
   }
