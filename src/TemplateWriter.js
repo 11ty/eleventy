@@ -216,7 +216,7 @@ class TemplateWriter {
       this.incrementalFile
     );
 
-    let relevantToDeletions = [];
+    let relevantToDeletions = new Set();
     // Update the data cascade and the global dependency map for the one incremental template before everything else (only full templates)
     if (isFullTemplate && this.incrementalFile) {
       let path = this.incrementalFile;
@@ -251,10 +251,9 @@ class TemplateWriter {
           continue;
         }
 
-        let isTemplateRelevantToDeletedCollections =
-          relevantToDeletions.includes(
-            TemplatePath.stripLeadingDotSlash(tmpl.inputPath)
-          );
+        let isTemplateRelevantToDeletedCollections = relevantToDeletions.has(
+          TemplatePath.stripLeadingDotSlash(tmpl.inputPath)
+        );
         if (
           isTemplateRelevantToDeletedCollections ||
           tmpl.isFileRelevantToThisTemplate(this.incrementalFile, {

@@ -162,7 +162,7 @@ class GlobalDependencyMap {
         }
       }
     }
-    return Array.from(templates);
+    return templates;
   }
 
   // Layouts are not relevant to compile cache and can be ignored

@@ -332,8 +332,6 @@ class TemplateMap {
     // Delete incremental from the dependency graph so we get fresh entries!
     // This _must_ happen before any additions, the other ones are in Custom.js and GlobalDependencyMap.js (from the eleventy.layouts Event)
     let deleted = {
-      // TODO dependencies might be the only relevant things here
-      dependencies: new Set(),
       dependants: new Set(),
     };
 
@@ -342,15 +340,8 @@ class TemplateMap {
     }
 
     // New relationships
-    let dependencies = new Set(); // collections consumed
     let dependants = new Set(); // collections published to
-
     for (let entry of this.map) {
-      let paginationTagTarget = this.getPaginationTagTarget(entry);
-      if (paginationTagTarget) {
-        dependencies.add(paginationTagTarget);
-      }
-
       if (!entry.data.eleventyExcludeFromCollections) {
         dependants.add("all");
 
@@ -360,22 +351,11 @@ class TemplateMap {
           }
         }
       }
-
-      if (Array.isArray(entry.data.eleventyImport?.collections)) {
-        for (let tag of entry.data.eleventyImport.collections) {
-          dependencies.add(tag);
-        }
-      }
     }
 
     // Old relationships
     let relationships = this.config.uses.getRelationships(incrementalFile);
 
-    for (let dep of relationships.dependencies) {
-      if (!dependencies.has(dep)) {
-        deleted.dependencies.add(dep);
-      }
-    }
     for (let dep of relationships.dependants) {
       if (!dependants.has(dep)) {
         deleted.dependants.add(dep);
