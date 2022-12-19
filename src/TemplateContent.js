@@ -518,7 +518,7 @@ class TemplateContent {
       return true;
     }
 
-    let hasDependencies = this.engine.hasDependencies(this.inputPath);
+    let hasDependencies = this.engine.hasDependencies(incrementalFile);
 
     let isRelevant = this.engine.isFileRelevantTo(
       this.inputPath,

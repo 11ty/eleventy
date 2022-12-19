@@ -68,7 +68,7 @@ class Template extends TemplateContent {
     this.isVerbose = true;
     this.isDryRun = false;
     this.writeCount = 0;
-    this.skippedCount = 0;
+
     this.fileSlug = new TemplateFileSlug(
       this.inputPath,
       this.inputDir,
@@ -108,18 +108,8 @@ class Template extends TemplateContent {
     this.logger.isVerbose = isVerbose;
   }
 
-  setDryRunViaIncremental(isDryRun) {
-    this.setDryRun(isDryRun, true);
-  }
-
-  setDryRun(isDryRun, viaIncremental = false) {
+  setDryRun(isDryRun) {
     this.isDryRun = !!isDryRun;
-
-    if (this.isDryRun && viaIncremental) {
-      this.isDryRunViaIncremental = viaIncremental;
-    } else {
-      this.isDryRunViaIncremental = false;
-    }
   }
 
   setExtraOutputSubdirectory(dir) {
@@ -775,36 +765,36 @@ class Template extends TemplateContent {
     }
 
     if (!shouldWriteFile) {
-      this.skippedCount++;
-    } else {
-      let templateBenchmark = this.bench.get("Template Write");
-      templateBenchmark.before();
-
-      // TODO(@zachleat) add a cache to check if this was already created
-      let templateOutputDir = path.parse(outputPath).dir;
-      if (templateOutputDir) {
-        await mkdir(templateOutputDir, { recursive: true });
-      }
-
-      if (!Buffer.isBuffer(finalContent) && typeof finalContent !== "string") {
-        throw new Error(
-          `The return value from the render function for the ${this.engine.name} template was not a String or Buffer. Received ${finalContent}`
-        );
-      }
-
-      return writeFile(outputPath, finalContent).then(() => {
-        templateBenchmark.after();
-        this.writeCount++;
-        debug(`${outputPath} ${lang.finished}.`);
-
-        return {
-          inputPath: this.inputPath,
-          outputPath: outputPath,
-          url,
-          content: finalContent,
-        };
-      });
+      return;
     }
+
+    let templateBenchmark = this.bench.get("Template Write");
+    templateBenchmark.before();
+
+    // TODO(@zachleat) add a cache to check if this was already created
+    let templateOutputDir = path.parse(outputPath).dir;
+    if (templateOutputDir) {
+      await mkdir(templateOutputDir, { recursive: true });
+    }
+
+    if (!Buffer.isBuffer(finalContent) && typeof finalContent !== "string") {
+      throw new Error(
+        `The return value from the render function for the ${this.engine.name} template was not a String or Buffer. Received ${finalContent}`
+      );
+    }
+
+    return writeFile(outputPath, finalContent).then(() => {
+      templateBenchmark.after();
+      this.writeCount++;
+      debug(`${outputPath} ${lang.finished}.`);
+
+      return {
+        inputPath: this.inputPath,
+        outputPath: outputPath,
+        url,
+        content: finalContent,
+      };
+    });
   }
 
   async renderPageEntry(mapEntry, page) {
@@ -917,10 +907,6 @@ class Template extends TemplateContent {
 
   getWriteCount() {
     return this.writeCount;
-  }
-
-  getSkippedCount() {
-    return this.skippedCount;
   }
 
   async getInputFileStat() {

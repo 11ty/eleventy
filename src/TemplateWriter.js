@@ -152,6 +152,10 @@ class TemplateWriter {
   }
 
   _isIncrementalFileAPassthroughCopy(paths) {
+    if (!this.incrementalFile) {
+      return false;
+    }
+
     let passthroughManager = this.eleventyFiles.getPassthroughManager();
     return passthroughManager.isPassthroughCopyFile(
       paths,
@@ -206,48 +210,41 @@ class TemplateWriter {
 
   async _addToTemplateMap(paths, to = "fs") {
     let promises = [];
+
+    let isFullTemplate = this.eleventyFiles.isFullTemplateFile(
+      paths,
+      this.incrementalFile
+    );
+
+    let isPassthroughCopy = this._isIncrementalFileAPassthroughCopy(paths);
+
     for (let path of paths) {
       if (this.extensionMap.hasEngine(path)) {
-        promises.push(this.templateMap.add(this._createTemplate(path, to)));
+        let tmpl = this._createTemplate(path, to);
+
+        if (isPassthroughCopy) {
+          tmpl.setDryRun(true);
+          this.skippedCount++;
+          continue;
+        }
+
+        if (
+          tmpl.isFileRelevantToThisTemplate(this.incrementalFile, {
+            isFullTemplate,
+          })
+        ) {
+          // Avoid fetching the data cascade if this if not applicable to incremental
+          promises.push(this.templateMap.add(tmpl));
+          debug(`${path} adding to template map.`);
+        } else {
+          // v2.0.0-canary.21 only incremental matches will be in the template map and the rest are left out
+          this.skippedCount++;
+          debug(`${path} skipped for template map.`);
+        }
       }
-      debug(`${path} begun adding to map.`);
     }
 
     return Promise.all(promises);
-  }
-
-  _assignIncrementalDryRun(allPaths) {
-    if (!this.incrementalFile) {
-      return;
-    }
-
-    // --incremental only writes files that trigger a build during --watch
-    let map = this.templateMap.getMap();
-
-    // write template relationships to the global dependency graph
-    this.templateMap.addToGlobalDependencyGraph();
-
-    for (let { template } of map) {
-      // incremental file is a passthrough copy (not a template)
-      if (this._isIncrementalFileAPassthroughCopy(allPaths)) {
-        template.setDryRun(true);
-        continue;
-        // Passthrough copy check is above this (order is important)
-      }
-
-      if (
-        template.isFileRelevantToThisTemplate(this.incrementalFile, {
-          isFullTemplate: this.eleventyFiles.isFullTemplateFile(
-            allPaths,
-            this.incrementalFile
-          ),
-        })
-      ) {
-        template.setDryRunViaIncremental(this.isDryRun);
-      } else {
-        template.setDryRun(true);
-      }
-    }
   }
 
   async _createTemplateMap(paths, to) {
@@ -255,7 +252,8 @@ class TemplateWriter {
 
     await this._addToTemplateMap(paths, to);
 
-    this._assignIncrementalDryRun(paths);
+    // write template relationships to the global dependency graph for next time
+    this.templateMap.addToGlobalDependencyGraph();
 
     await this.templateMap.cache();
 
@@ -267,7 +265,6 @@ class TemplateWriter {
     let tmpl = mapEntry.template;
 
     return tmpl.generateMapEntry(mapEntry, to).then((pages) => {
-      this.skippedCount += tmpl.getSkippedCount();
       this.writeCount += tmpl.getWriteCount();
       return pages;
     });
@@ -381,10 +378,6 @@ class TemplateWriter {
 
   getCopyCount() {
     return this.eleventyFiles.getPassthroughManager().getCopyCount();
-  }
-
-  getSkippedCopyCount() {
-    return this.eleventyFiles.getPassthroughManager().getSkippedCount();
   }
 
   getWriteCount() {

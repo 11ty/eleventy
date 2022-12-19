@@ -667,25 +667,29 @@ Arguments:
   _shouldResetConfig() {
     let configFilePaths = this.eleventyConfig.getLocalProjectConfigFiles();
     let configFilesChanged = this.watchManager.hasQueuedFiles(configFilePaths);
+
     if (configFilesChanged) {
       return true;
     }
+
+    let returnValue = false;
 
     for (const configFilePath of configFilePaths) {
       // Any dependencies of the config file changed
       let configFileDependencies =
         this.watchTargets.getDependenciesOf(configFilePath);
+
       for (let dep of configFileDependencies) {
         if (this.watchManager.hasQueuedFile(dep)) {
           // Delete from require cache so that updates to the module are re-required
           deleteRequireCache(dep);
 
-          return true;
+          returnValue = true;
         }
       }
     }
 
-    return false;
+    return returnValue;
   }
 
   /**

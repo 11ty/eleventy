@@ -396,6 +396,10 @@ class EleventyFiles {
 
   // Assumption here that filePath is not a passthrough copy file
   isFullTemplateFile(paths, filePath) {
+    if (!filePath) {
+      return false;
+    }
+
     for (let path of paths) {
       if (path === filePath) {
         return true;

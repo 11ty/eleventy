@@ -572,7 +572,7 @@ class TemplateMap {
       if (!map._pages) {
         throw new Error(`Content pages not found for ${map.inputPath}`);
       }
-      // TODO add `|| map.template.isDryRunViaIncremental` below to opt-out of template render during --incremental
+
       if (!map.template.behavior.isRenderable()) {
         // Note that empty pagination templates will be skipped here as not renderable
         continue;
