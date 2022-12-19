@@ -755,20 +755,15 @@ class Template extends TemplateContent {
       finished: "written.",
     };
 
-    if (!shouldWriteFile) {
-      lang = {
-        start: "Skipping",
-        finished: "", // not used, promise doesn’t resolve
-      };
+    if (shouldWriteFile) {
+      let engineList =
+        this.templateRender.getReadableEnginesListDifferingFromFileExtension();
+      this.logger.log(
+        `${lang.start} ${outputPath} from ${this.inputPath}${
+          engineList ? ` (${engineList})` : ""
+        }`
+      );
     }
-
-    let engineList =
-      this.templateRender.getReadableEnginesListDifferingFromFileExtension();
-    this.logger.log(
-      `${lang.start} ${outputPath} from ${this.inputPath}${
-        engineList ? ` (${engineList})` : ""
-      }`
-    );
 
     if (!shouldWriteFile) {
       this.skippedCount++;
