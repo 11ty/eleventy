@@ -1,9 +1,6 @@
 const TemplateEngine = require("./TemplateEngine");
 const getJavaScriptData = require("../Util/GetJavaScriptData");
-const GlobalDependencyMap = require("../GlobalDependencyMap");
 const eventBus = require("../EventBus.js");
-
-let usesMap = new GlobalDependencyMap();
 
 let lastModifiedFile = undefined;
 eventBus.on("eleventy.resourceModified", (path) => {
@@ -13,8 +10,6 @@ eventBus.on("eleventy.resourceModified", (path) => {
 class CustomEngine extends TemplateEngine {
   constructor(name, dirs, config) {
     super(name, dirs, config);
-
-    usesMap.setConfig(config);
 
     this.entry = this.getExtensionMapEntry();
     this.needsInit =
@@ -200,7 +195,7 @@ class CustomEngine extends TemplateEngine {
     let fn = this.entry.compile.bind({
       config: this.config,
       addDependencies: (from, toArray = []) => {
-        usesMap.addDependency(from, toArray);
+        this.config.uses.addDependency(from, toArray);
       },
       defaultRenderer, // bind defaultRenderer to compile function
     })(str, inputPath);
@@ -229,14 +224,18 @@ class CustomEngine extends TemplateEngine {
   }
 
   hasDependencies(inputPath) {
-    if (usesMap.getDependencies(inputPath) === false) {
+    if (this.config.uses.getDependencies(inputPath) === false) {
       return false;
     }
     return true;
   }
 
   isFileRelevantTo(inputPath, comparisonFile, includeLayouts) {
-    return usesMap.isFileRelevantTo(inputPath, comparisonFile, includeLayouts);
+    return this.config.uses.isFileRelevantTo(
+      inputPath,
+      comparisonFile,
+      includeLayouts
+    );
   }
 
   getCompileCacheKey(str, inputPath) {

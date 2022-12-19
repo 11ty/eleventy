@@ -1,8 +1,11 @@
 const fs = require("fs");
 const chalk = require("kleur");
 const { TemplatePath } = require("@11ty/eleventy-utils");
+
 const EleventyBaseError = require("./EleventyBaseError.js");
 const UserConfig = require("./UserConfig.js");
+const GlobalDependencyMap = require("./GlobalDependencyMap.js");
+
 const { EleventyRequire } = require("./Util/Require.js");
 const merge = require("./Util/Merge.js");
 const unique = require("./Util/Unique");
@@ -81,6 +84,8 @@ class TemplateConfig {
 
     this.initializeRootConfig();
     this.hasConfigMerged = false;
+
+    this.usesGraph = new GlobalDependencyMap();
   }
 
   /* Setter for Logger */
@@ -411,7 +416,24 @@ class TemplateConfig {
     mergedConfig.templateFormats = templateFormats;
 
     debug("Current configuration: %o", mergedConfig);
+
+    this.afterConfigMergeActions(mergedConfig);
+
     return mergedConfig;
+  }
+
+  afterConfigMergeActions(eleventyConfig) {
+    // this is used for the layouts event
+    this.usesGraph.setConfig(eleventyConfig);
+  }
+
+  get uses() {
+    if (!this.usesGraph) {
+      throw new Error(
+        "The Eleventy Global Dependency Graph has not yet been initialized."
+      );
+    }
+    return this.usesGraph;
   }
 }
 
