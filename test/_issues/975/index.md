@@ -1,4 +1,4 @@
 ---
-eleventyImportCollections:
-  - post
+eleventyImport:
+  collections: ["post"]
 ---
