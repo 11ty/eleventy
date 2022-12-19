@@ -3,11 +3,13 @@ const { isPlainObject } = require("@11ty/eleventy-utils");
 
 const TemplateCollection = require("./TemplateCollection");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
+const GlobalDependencyMap = require("./GlobalDependencyMap");
+
 const UsingCircularTemplateContentReferenceError = require("./Errors/UsingCircularTemplateContentReferenceError");
+const EleventyBaseError = require("./EleventyBaseError");
+
 const debug = require("debug")("Eleventy:TemplateMap");
 const debugDev = require("debug")("Dev:Eleventy:TemplateMap");
-
-const EleventyBaseError = require("./EleventyBaseError");
 
 class TemplateMapConfigError extends EleventyBaseError {}
 
@@ -326,6 +328,68 @@ class TemplateMap {
     );
   }
 
+  setupDependencyGraphChanges(incrementalFile) {
+    // Delete incremental from the dependency graph so we get fresh entries!
+    // This _must_ happen before any additions, the other ones are in Custom.js and GlobalDependencyMap.js (from the eleventy.layouts Event)
+    let deleted = {
+      // TODO dependencies might be the only relevant things here
+      dependencies: new Set(),
+      dependants: new Set(),
+    };
+
+    if (!incrementalFile) {
+      return deleted;
+    }
+
+    // New relationships
+    let dependencies = new Set(); // collections consumed
+    let dependants = new Set(); // collections published to
+
+    for (let entry of this.map) {
+      let paginationTagTarget = this.getPaginationTagTarget(entry);
+      if (paginationTagTarget) {
+        dependencies.add(paginationTagTarget);
+      }
+
+      if (!entry.data.eleventyExcludeFromCollections) {
+        dependants.add("all");
+
+        if (Array.isArray(entry.data.tags)) {
+          for (let tag of entry.data.tags) {
+            dependants.add(tag);
+          }
+        }
+      }
+
+      if (Array.isArray(entry.data.eleventyImport?.collections)) {
+        for (let tag of entry.data.eleventyImport.collections) {
+          dependencies.add(tag);
+        }
+      }
+    }
+
+    // Old relationships
+    let relationships = this.config.uses.getRelationships(incrementalFile);
+
+    for (let dep of relationships.dependencies) {
+      if (!dependencies.has(dep)) {
+        deleted.dependencies.add(dep);
+      }
+    }
+    for (let dep of relationships.dependants) {
+      if (!dependants.has(dep)) {
+        deleted.dependants.add(dep);
+      }
+    }
+
+    // Actually delete the relationships
+    this.config.uses.resetNode(incrementalFile);
+
+    return this.config.uses.getTemplatesThatConsumeCollections(
+      deleted.dependants
+    );
+  }
+
   // Similar to getTemplateMapDependencyGraph but adds those relationships to the global dependency graph used for incremental builds
   addToGlobalDependencyGraph() {
     for (let entry of this.map) {
@@ -342,14 +406,14 @@ class TemplateMap {
           entry.inputPath,
           "all"
         );
-      }
 
-      if (Array.isArray(entry.data.tags)) {
-        for (let tag of entry.data.tags) {
-          this.config.uses.addDependencyPublishesToCollection(
-            entry.inputPath,
-            tag
-          );
+        if (Array.isArray(entry.data.tags)) {
+          for (let tag of entry.data.tags) {
+            this.config.uses.addDependencyPublishesToCollection(
+              entry.inputPath,
+              tag
+            );
+          }
         }
       }
 

@@ -216,6 +216,24 @@ class TemplateWriter {
       this.incrementalFile
     );
 
+    let relevantToDeletions = [];
+    // Update the data cascade and the global dependency map for the one incremental template before everything else (only full templates)
+    if (isFullTemplate && this.incrementalFile) {
+      let path = this.incrementalFile;
+      let tmpl = this._createTemplate(path, to);
+      let p = this.templateMap.add(tmpl);
+      promises.push(p);
+      await p;
+      debug(`${path} adding to template map.`);
+
+      // establish new relationships for this one template
+      relevantToDeletions = this.templateMap.setupDependencyGraphChanges(
+        tmpl.inputPath
+      );
+
+      this.templateMap.addToGlobalDependencyGraph();
+    }
+
     let isPassthroughCopy = this._isIncrementalFileAPassthroughCopy(paths);
 
     for (let path of paths) {
@@ -228,7 +246,17 @@ class TemplateWriter {
           continue;
         }
 
+        // We already updated the data cascade for this template above
+        if (isFullTemplate && this.incrementalFile === tmpl.inputPath) {
+          continue;
+        }
+
+        let isTemplateRelevantToDeletedCollections =
+          relevantToDeletions.includes(
+            TemplatePath.stripLeadingDotSlash(tmpl.inputPath)
+          );
         if (
+          isTemplateRelevantToDeletedCollections ||
           tmpl.isFileRelevantToThisTemplate(this.incrementalFile, {
             isFullTemplate,
           })
@@ -252,7 +280,7 @@ class TemplateWriter {
 
     await this._addToTemplateMap(paths, to);
 
-    // write template relationships to the global dependency graph for next time
+    // write new template relationships to the global dependency graph for next time
     this.templateMap.addToGlobalDependencyGraph();
 
     await this.templateMap.cache();

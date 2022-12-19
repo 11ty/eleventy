@@ -1,17 +1,16 @@
 const { DepGraph } = require("dependency-graph");
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
-const PathNormalizer = require("./Util/PathNormalizer");
+const PathNormalizer = require("./Util/PathNormalizer.js");
 const eventBus = require("./EventBus.js");
 
-// TODO extend this to built-in template types, this is only used by Custom templates for now
-
 class GlobalDependencyMap {
+  // dependency-graph requires these keys to be alphabetic strings
+  static LAYOUT_KEY = "layout";
+  static COLLECTION_KEY = "__collection:";
+
   // URL object with a windows, with file:// already removed (from file:///C:/directory/ to /C:/directory/)
   static WINDOWS_DRIVE_URL_PATH = /^\/\w\:\//;
-
-  static LAYOUT_KEY = "layout";
-  static COLLECTION_KEY = "collection";
 
   constructor() {
     eventBus.on("eleventy.compileCacheReset", () => {
@@ -39,6 +38,7 @@ class GlobalDependencyMap {
       if (!data || !data.type || data.type !== GlobalDependencyMap.LAYOUT_KEY) {
         continue;
       }
+
       this.map.removeNode(node);
     }
   }
@@ -105,19 +105,69 @@ class GlobalDependencyMap {
     );
   }
 
-  delete(node) {
+  getRelationships(node) {
+    let relationships = {
+      dependants: new Set(),
+      dependencies: new Set(),
+    };
+
+    if (!node) {
+      return relationships;
+    }
+
     node = this.normalizeNode(node);
 
-    if (this.map.hasNode(node)) {
-      this.map.removeNode(node);
+    if (!this.map.hasNode(node)) {
+      return relationships;
     }
+
+    // Direct dependants and dependencies, both publish and consume from collections
+    relationships.dependants = new Set(
+      this.map
+        .directDependantsOf(node)
+        .map((entry) => GlobalDependencyMap.getEntryFromCollectionKey(entry))
+    );
+    relationships.dependencies = new Set(
+      this.map
+        .directDependenciesOf(node)
+        .map((entry) => GlobalDependencyMap.getEntryFromCollectionKey(entry))
+    );
+
+    return relationships;
+  }
+
+  resetNode(node) {
+    node = this.normalizeNode(node);
+
+    if (!this.map.hasNode(node)) {
+      return;
+    }
+
+    for (let dep of this.map.directDependantsOf(node)) {
+      this.map.removeDependency(dep, node);
+    }
+    for (let dep of this.map.directDependenciesOf(node)) {
+      this.map.removeDependency(node, dep);
+    }
+  }
+
+  getTemplatesThatConsumeCollections(collectionNames) {
+    let templates = new Set();
+    for (let name of collectionNames) {
+      for (let node of this.map.dependantsOf(
+        GlobalDependencyMap.getCollectionKeyForEntry(name)
+      )) {
+        if (!node.startsWith(GlobalDependencyMap.COLLECTION_KEY)) {
+          templates.add(node);
+        }
+      }
+    }
+    return Array.from(templates);
   }
 
   // Layouts are not relevant to compile cache and can be ignored
   getDependencies(node, includeLayouts = true) {
     node = this.normalizeNode(node);
-    // console.log( node, this.map.overallOrder() );
-    // console.log( node, this.map.size(), this.map.dependenciesOf(node), this.map.dependantsOf(node) );
 
     // `false` means the Node was unknown
     if (!this.map.hasNode(node)) {
@@ -142,9 +192,6 @@ class GlobalDependencyMap {
 
   // node arguments are already normalized
   _addDependency(from, toArray = []) {
-    // TODO clear out irrelevant old relationships
-    // note that this is called for both layouts and by Custom compile->addDependencies
-
     this.map.addNode(from);
 
     if (!Array.isArray(toArray)) {
@@ -168,21 +215,26 @@ class GlobalDependencyMap {
     );
   }
 
-  getCollectionKey(entry) {
-    return `${GlobalDependencyMap.COLLECTION_KEY}:${entry}`;
+  static getEntryFromCollectionKey(entry) {
+    return entry.slice(GlobalDependencyMap.COLLECTION_KEY.length);
+  }
+
+  static getCollectionKeyForEntry(entry) {
+    return `${GlobalDependencyMap.COLLECTION_KEY}${entry}`;
   }
 
   addDependencyConsumesCollection(from, collectionName) {
     this._addDependency(this.normalizeNode(from), [
-      this.getCollectionKey(collectionName),
+      GlobalDependencyMap.getCollectionKeyForEntry(collectionName),
     ]);
   }
 
   addDependencyPublishesToCollection(from, collectionName) {
     let normalizedFrom = this.normalizeNode(from);
-    this._addDependency(this.getCollectionKey(collectionName), [
-      normalizedFrom,
-    ]);
+    this._addDependency(
+      GlobalDependencyMap.getCollectionKeyForEntry(collectionName),
+      [normalizedFrom]
+    );
   }
 
   // Layouts are not relevant to compile cache and can be ignored
