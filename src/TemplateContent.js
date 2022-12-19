@@ -520,7 +520,7 @@ class TemplateContent {
 
     let hasDependencies = this.engine.hasDependencies(this.inputPath);
 
-    let isEleventyTemplateMapRelevant = metadata.isRelevant;
+    let isEleventyTemplateMapRelevant = metadata.isTemplateMapRelevant;
     let isEngineRelevant = this.engine.isFileRelevantTo(
       this.inputPath,
       incrementalFile

@@ -170,6 +170,7 @@ class TemplateWriter {
         this.extensionMap,
         this.eleventyConfig
       );
+
       tmpl.setOutputFormat(to);
 
       tmpl.logger = this.logger;
@@ -225,18 +226,22 @@ class TemplateWriter {
     let fullGraph = this.templateMap.getTemplateMapDependencyGraph();
 
     for (let { template, inputPath } of map) {
-      let isRelevant = this.templateMap.isFileRelevantTo(
-        fullGraph,
-        inputPath,
-        this.incrementalFile
-      );
       // incremental file is a passthrough copy (not a template)
       if (this._isIncrementalFileAPassthroughCopy(allPaths)) {
         template.setDryRun(true);
         // Passthrough copy check is above this (order is important)
-      } else if (
+      }
+
+      // TODO change this to use the GlobalDependencyMap so that we don’t need the full data cascade every time
+      let isTemplateMapRelevant = this.templateMap.isFileRelevantTo(
+        fullGraph,
+        inputPath,
+        this.incrementalFile
+      );
+
+      if (
         template.isFileRelevantToThisTemplate(this.incrementalFile, {
-          isRelevant,
+          isTemplateMapRelevant,
           isFullTemplate: this.eleventyFiles.isFullTemplateFile(
             allPaths,
             this.incrementalFile

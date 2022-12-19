@@ -10,6 +10,9 @@ class GlobalDependencyMap {
   // URL object with a windows, with file:// already removed (from file:///C:/directory/ to /C:/directory/)
   static WINDOWS_DRIVE_URL_PATH = /^\/\w\:\//;
 
+  static LAYOUT_KEY = "layout";
+  static COLLECTION_KEY = "collection";
+
   constructor() {
     eventBus.on("eleventy.compileCacheReset", () => {
       this._map = undefined;
@@ -34,7 +37,7 @@ class GlobalDependencyMap {
     let nodes = this.map.overallOrder();
     for (let node of nodes) {
       let data = this.map.getNodeData(node);
-      if (!data || !data.type || data.type !== "layout") {
+      if (!data || !data.type || data.type !== GlobalDependencyMap.LAYOUT_KEY) {
         continue;
       }
       this.map.removeNode(node);
@@ -52,7 +55,7 @@ class GlobalDependencyMap {
       // We add this pre-emptively to add the `layout` data
       if (!this.map.hasNode(layout)) {
         this.map.addNode(layout, {
-          type: "layout",
+          type: GlobalDependencyMap.LAYOUT_KEY,
         });
       }
 
@@ -111,6 +114,7 @@ class GlobalDependencyMap {
     }
   }
 
+  // Layouts are not relevant to compile cache and can be ignored
   getDependencies(node, includeLayouts = true) {
     node = this.normalizeNode(node);
     // console.log( node, this.map.overallOrder() );
@@ -137,10 +141,9 @@ class GlobalDependencyMap {
     });
   }
 
-  addDependency(from, toArray = []) {
-    from = this.normalizeNode(from);
-
-    // TODO clear out irrelevant old relationships
+  // node arguments are already normalized
+  _addDependency(from, toArray = []) {
+    // TODO clear out irrelevant old relationships, note that this is called for both layouts and by Custom compile->addDependencies
 
     this.map.addNode(from);
 
@@ -149,8 +152,6 @@ class GlobalDependencyMap {
     }
 
     for (let to of toArray) {
-      to = this.normalizeNode(to);
-
       if (!this.map.hasNode(to)) {
         this.map.addNode(to);
       }
@@ -160,6 +161,32 @@ class GlobalDependencyMap {
     }
   }
 
+  addDependency(from, toArray = []) {
+    this._addDependency(
+      this.normalizeNode(from),
+      toArray.map((to) => this.normalizeNode(to))
+    );
+  }
+
+  getCollectionKey(entry) {
+    return `${GlobalDependencyMap.COLLECTION_KEY}:${entry}`;
+  }
+
+  addDependencyConsumesCollection(from, collectionNames = []) {
+    this._addDependency(
+      this.normalizeNode(from),
+      collectionNames.map((name) => this.getCollectionKey(name))
+    );
+  }
+
+  addDependencyPublishesToCollection(from, collectionNames = []) {
+    let normalizedFrom = this.normalizeNode(from);
+    for (let name of collectionNames) {
+      this._addDependency(this.getCollectionKey(name), normalizedFrom);
+    }
+  }
+
+  // Layouts are not relevant to compile cache and can be ignored
   hasDependency(from, to, includeLayouts) {
     to = this.normalizeNode(to);
 
@@ -172,6 +199,7 @@ class GlobalDependencyMap {
     return deps.includes(to);
   }
 
+  // Layouts are not relevant to compile cache and can be ignored
   isFileRelevantTo(fullTemplateInputPath, comparisonFile, includeLayouts) {
     fullTemplateInputPath = this.normalizeNode(fullTemplateInputPath);
     comparisonFile = this.normalizeNode(comparisonFile);
