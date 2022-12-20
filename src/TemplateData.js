@@ -1,5 +1,4 @@
 const fs = require("fs");
-const fastglob = require("fast-glob");
 const path = require("path");
 const lodashset = require("lodash.set");
 const lodashget = require("lodash.get");
@@ -67,6 +66,10 @@ class TemplateData {
     this._fsExistsCache = new FSExistsCache();
 
     this.initialGlobalData = new TemplateDataInitialGlobalData(this.eleventyConfig);
+  }
+
+  setFileSystemSearch(fileSystemSearch) {
+    this.fileSystemSearch = fileSystemSearch;
   }
 
   get extensionMap() {
@@ -256,10 +259,8 @@ class TemplateData {
 
     let fsBench = this.benchmarks.aggregate.get("Searching the file system (data)");
     fsBench.before();
-    let paths = fastglob.sync(await this.getGlobalDataGlob(), {
-      caseSensitiveMatch: false,
-      dot: true,
-    });
+    let globs = await this.getGlobalDataGlob();
+    let paths = await this.fileSystemSearch.search("global-data", globs);
     fsBench.after();
 
     // sort paths according to extension priorities

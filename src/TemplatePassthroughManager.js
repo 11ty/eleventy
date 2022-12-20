@@ -16,9 +16,7 @@ class TemplatePassthroughManagerCopyError extends EleventyBaseError {}
 class TemplatePassthroughManager {
   constructor(eleventyConfig) {
     if (!eleventyConfig) {
-      throw new TemplatePassthroughManagerConfigError(
-        "Missing `config` argument."
-      );
+      throw new TemplatePassthroughManagerConfigError("Missing `config` argument.");
     }
     this.eleventyConfig = eleventyConfig;
     this.config = eleventyConfig.getConfig();
@@ -68,9 +66,7 @@ class TemplatePassthroughManager {
   _normalizePaths(path, outputPath, copyOptions = {}) {
     return {
       inputPath: TemplatePath.addLeadingDotSlash(path),
-      outputPath: outputPath
-        ? TemplatePath.stripLeadingDotSlash(outputPath)
-        : true,
+      outputPath: outputPath ? TemplatePath.stripLeadingDotSlash(outputPath) : true,
       copyOptions,
     };
   }
@@ -79,9 +75,7 @@ class TemplatePassthroughManager {
     let paths = [];
     let pathsRaw = this.config.passthroughCopies || {};
     debug("`addPassthroughCopy` config API paths: %o", pathsRaw);
-    for (let [inputPath, { outputPath, copyOptions }] of Object.entries(
-      pathsRaw
-    )) {
+    for (let [inputPath, { outputPath, copyOptions }] of Object.entries(pathsRaw)) {
       paths.push(this._normalizePaths(inputPath, outputPath, copyOptions));
     }
     debug("`addPassthroughCopy` config API normalized paths: %o", paths);
@@ -109,14 +103,14 @@ class TemplatePassthroughManager {
     return this.count;
   }
 
-  getTemplatePassthroughForPath(path, isIncremental = false) {
-    let inst = new TemplatePassthrough(
-      path,
-      this.outputDir,
-      this.inputDir,
-      this.config
-    );
+  setFileSystemSearch(fileSystemSearch) {
+    this.fileSystemSearch = fileSystemSearch;
+  }
 
+  getTemplatePassthroughForPath(path, isIncremental = false) {
+    let inst = new TemplatePassthrough(path, this.outputDir, this.inputDir, this.config);
+
+    inst.setFileSystemSearch(this.fileSystemSearch);
     inst.setIsIncremental(isIncremental);
     inst.setDryRun(this.isDryRun);
     inst.setRunMode(this.runMode);
@@ -165,21 +159,14 @@ class TemplatePassthroughManager {
             }
           }
 
-          debugDev(
-            "Adding %o to passthrough copy conflict map, from %o",
-            dest,
-            src
-          );
+          debugDev("Adding %o to passthrough copy conflict map, from %o", dest, src);
 
           this.conflictMap[dest] = src;
         }
 
         if (pass.isDryRun) {
           // We don’t count the skipped files as we need to iterate over them
-          debug(
-            "Skipped %o (either from --dryrun or --incremental)",
-            inputPath
-          );
+          debug("Skipped %o (either from --dryrun or --incremental)", inputPath);
         } else {
           if (count) {
             this.count += count;
@@ -194,10 +181,7 @@ class TemplatePassthroughManager {
       })
       .catch(function (e) {
         return Promise.reject(
-          new TemplatePassthroughManagerCopyError(
-            `Having trouble copying '${inputPath}'`,
-            e
-          )
+          new TemplatePassthroughManagerCopyError(`Having trouble copying '${inputPath}'`, e)
         );
       });
   }
@@ -228,19 +212,11 @@ class TemplatePassthroughManager {
 
   getAllNormalizedPaths(paths) {
     if (this.incrementalFile) {
-      let isPassthrough = this.isPassthroughCopyFile(
-        paths,
-        this.incrementalFile
-      );
+      let isPassthrough = this.isPassthroughCopyFile(paths, this.incrementalFile);
 
       if (isPassthrough) {
         if (isPassthrough.outputPath) {
-          return [
-            this._normalizePaths(
-              this.incrementalFile,
-              isPassthrough.outputPath
-            ),
-          ];
+          return [this._normalizePaths(this.incrementalFile, isPassthrough.outputPath)];
         }
 
         return [this._normalizePaths(this.incrementalFile)];
@@ -281,10 +257,7 @@ class TemplatePassthroughManager {
     let entries = {};
     for (let entry of result) {
       for (let src in entry.map) {
-        let dest = TemplatePath.stripLeadingSubPath(
-          entry.map[src],
-          this.outputDir
-        );
+        let dest = TemplatePath.stripLeadingSubPath(entry.map[src], this.outputDir);
         entries["/" + dest] = src;
       }
     }
@@ -305,16 +278,16 @@ class TemplatePassthroughManager {
       return this.getTemplatePassthroughForPath(path, isIncremental);
     });
 
-    return Promise.all(
-      passthroughs.map((pass) => this.copyPassthrough(pass))
-    ).then(async (result) => {
-      await this.config.events.emitLazy("eleventy.passthrough", () => ({
-        map: this.getAliasesFromPassthroughResults(result),
-      }));
+    return Promise.all(passthroughs.map((pass) => this.copyPassthrough(pass))).then(
+      async (result) => {
+        await this.config.events.emitLazy("eleventy.passthrough", () => ({
+          map: this.getAliasesFromPassthroughResults(result),
+        }));
 
-      debug(`TemplatePassthrough copy finished. Current count: ${this.count}`);
-      return result;
-    });
+        debug(`TemplatePassthrough copy finished. Current count: ${this.count}`);
+        return result;
+      }
+    );
   }
 }
 

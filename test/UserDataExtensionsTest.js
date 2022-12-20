@@ -1,6 +1,7 @@
 const test = require("ava");
 const fs = require("fs");
 const TemplateConfig = require("../src/TemplateConfig");
+const FileSystemSearch = require("../src/FileSystemSearch");
 const TemplateData = require("../src/TemplateData");
 let yaml = require("js-yaml");
 
@@ -16,6 +17,7 @@ test("Local data", async (t) => {
   let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
   injectDataExtensions(dataObj);
   dataObj.setDataTemplateEngine("liquid");
+  dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getData();
 
@@ -44,9 +46,7 @@ test("Local files", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
   injectDataExtensions(dataObj);
-  let files = await dataObj.getLocalDataPaths(
-    "./test/stubs-630/component-yaml/component.njk"
-  );
+  let files = await dataObj.getLocalDataPaths("./test/stubs-630/component-yaml/component.njk");
   t.deepEqual(files, [
     "./test/stubs-630/stubs-630.yaml",
     "./test/stubs-630/stubs-630.nosj",
@@ -80,6 +80,7 @@ test("Global data", async (t) => {
   let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
   injectDataExtensions(dataObj);
   dataObj.setDataTemplateEngine("liquid");
+  dataObj.setFileSystemSearch(new FileSystemSearch());
 
   t.deepEqual(await dataObj.getGlobalDataGlob(), [
     "./test/stubs-630/_data/**/*.(nosj|yaml|json|cjs|js)",
@@ -112,6 +113,7 @@ test("Global data merging and priority", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
   injectDataExtensions(dataObj);
+  dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getData();
 
@@ -149,6 +151,7 @@ test("Binary data files, encoding: null", async (t) => {
       },
     ],
   ]);
+  dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getData();
   t.is(data.images.dog, 43183);
@@ -174,6 +177,7 @@ test("Binary data files, read: false", async (t) => {
       },
     ],
   ]);
+  dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getData();
   t.is(data.images.dog, "./test/stubs-2378/_data/images/dog.jpg");
@@ -193,6 +197,7 @@ test("Binary data files, encoding: null (multiple data extensions)", async (t) =
   });
 
   let dataObj = new TemplateData("./test/stubs-2378/", eleventyConfig);
+  dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getData();
   t.is(data.images.dog, 43183);

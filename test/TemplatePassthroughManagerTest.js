@@ -2,6 +2,7 @@ const test = require("ava");
 const fs = require("fs");
 const TemplatePassthroughManager = require("../src/TemplatePassthroughManager");
 const TemplateConfig = require("../src/TemplateConfig");
+const FileSystemSearch = require("../src/FileSystemSearch");
 const EleventyFiles = require("../src/EleventyFiles");
 
 test("Get paths from Config", async (t) => {
@@ -11,9 +12,7 @@ test("Get paths from Config", async (t) => {
   };
   let mgr = new TemplatePassthroughManager(eleventyConfig);
 
-  t.deepEqual(mgr.getConfigPaths(), [
-    { inputPath: "./img", outputPath: true, copyOptions: {} },
-  ]);
+  t.deepEqual(mgr.getConfigPaths(), [{ inputPath: "./img", outputPath: true, copyOptions: {} }]);
 });
 
 test("isPassthroughCopyFile", async (t) => {
@@ -40,12 +39,7 @@ test("isPassthroughCopyFile", async (t) => {
 
   t.false(mgr.isPassthroughCopyFile([], "./docs/test.njk"));
   t.false(mgr.isPassthroughCopyFile([], "./other-dir/test.png"));
-  t.true(
-    mgr.isPassthroughCopyFile(
-      ["hi", "./other-dir/test.png"],
-      "./other-dir/test.png"
-    )
-  );
+  t.true(mgr.isPassthroughCopyFile(["hi", "./other-dir/test.png"], "./other-dir/test.png"));
 });
 
 test("Get glob paths from config", async (t) => {
@@ -175,6 +169,7 @@ test("Look for uniqueness on template passthrough paths #1677", async (t) => {
     formats,
     eleventyConfig
   );
+  files.setFileSystemSearch(new FileSystemSearch());
   files.init();
 
   let mgr = files.getPassthroughManager();

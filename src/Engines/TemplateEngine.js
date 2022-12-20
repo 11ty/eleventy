@@ -112,7 +112,7 @@ class TemplateEngine {
 
     let results = [];
     if (this.includesDir) {
-      // Try to skip this require if not used (for bundling reasons)
+      // TODO move this to use FileSystemSearch instead.
       const fastglob = require("fast-glob");
 
       let bench = this.benchmarks.aggregate.get("Searching the file system (partials)");

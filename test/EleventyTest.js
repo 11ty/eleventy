@@ -96,9 +96,7 @@ test("Eleventy file watching (don’t watch deps of passthrough copy .js files)"
   await elev.eleventyFiles.getFiles();
   await elev.initWatch();
 
-  t.deepEqual(await elev.eleventyFiles.getWatchPathCache(), [
-    "./test/stubs-1325/test.11ty.js",
-  ]);
+  t.deepEqual(await elev.eleventyFiles.getWatchPathCache(), ["./test/stubs-1325/test.11ty.js"]);
 });
 
 test("Eleventy file watching (no JS dependencies)", async (t) => {
@@ -136,10 +134,7 @@ test("Eleventy set input/output, one file input", async (t) => {
 });
 
 test("Eleventy set input/output, one file input, deeper subdirectory", async (t) => {
-  let elev = new Eleventy(
-    "./test/stubs/subdir/index.html",
-    "./test/stubs/_site"
-  );
+  let elev = new Eleventy("./test/stubs/subdir/index.html", "./test/stubs/_site");
   elev.setInputDir("./test/stubs");
 
   t.is(elev.input, "./test/stubs/subdir/index.html");
@@ -165,13 +160,9 @@ test("Eleventy set input/output, one file input root dir without leading dot/sla
 
 test("Eleventy set input/output, one file input exitCode (script)", async (t) => {
   let previousExitCode = process.exitCode;
-  let elev = new Eleventy(
-    "./test/stubs/exitCode/failure.njk",
-    "./test/stubs/exitCode/_site",
-    {
-      source: "script",
-    }
-  );
+  let elev = new Eleventy("./test/stubs/exitCode/failure.njk", "./test/stubs/exitCode/_site", {
+    source: "script",
+  });
   elev.setIsVerbose(false);
   elev.disableLogger();
 
@@ -185,13 +176,9 @@ test("Eleventy set input/output, one file input exitCode (script)", async (t) =>
 
 test("Eleventy set input/output, one file input exitCode (cli)", async (t) => {
   let previousExitCode = process.exitCode;
-  let elev = new Eleventy(
-    "./test/stubs/exitCode/failure.njk",
-    "./test/stubs/exitCode/_site",
-    {
-      source: "cli",
-    }
-  );
+  let elev = new Eleventy("./test/stubs/exitCode/failure.njk", "./test/stubs/exitCode/_site", {
+    source: "cli",
+  });
   elev.setIsVerbose(false);
   elev.disableLogger();
 
@@ -552,14 +539,7 @@ test("Liquid shortcode with multiple arguments(issue #2348)", async (t) => {
     },
   });
 
-  let arr = [
-    "layout",
-    "/mylayout",
-    "layout",
-    "/mylayout",
-    "layout",
-    "/mylayout",
-  ];
+  let arr = ["layout", "/mylayout", "layout", "/mylayout", "layout", "/mylayout"];
   let str = normalizeNewLines(`${JSON.stringify(arr)}
 ${JSON.stringify(arr)}`);
   let results = await elev.toJSON();
@@ -613,10 +593,7 @@ test("Improvements to custom template syntax APIs (includes a layout file) #2258
 
   await fsp.writeFile(includeFilePath, previousContents, { encoding: "utf8" });
 
-  let sizes = [
-    TemplateContent._inputCache.size,
-    TemplateContent._compileCache.size,
-  ];
+  let sizes = [TemplateContent._inputCache.size, TemplateContent._compileCache.size];
 
   let results = await elev.toJSON();
 
@@ -650,6 +627,8 @@ ${previousContents}
 
   // Trigger that the file has changed
   eventBus.emit("eleventy.resourceModified", includeFilePath);
+
+  elev._setIncrementalFile(includeFilePath);
 
   let results3 = await elev.toJSON();
   t.is(

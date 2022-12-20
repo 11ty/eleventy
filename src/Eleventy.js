@@ -14,6 +14,7 @@ const EleventyFiles = require("./EleventyFiles");
 const ConsoleLogger = require("./Util/ConsoleLogger");
 const PathPrefixer = require("./Util/PathPrefixer");
 const TemplateConfig = require("./TemplateConfig");
+const FileSystemSearch = require("./FileSystemSearch");
 
 const templateCache = require("./TemplateCache");
 const simplePlural = require("./Util/Pluralize");
@@ -370,8 +371,10 @@ class Eleventy {
     this.extensionMap = new EleventyExtensionMap(formats, this.eleventyConfig);
     await this.config.events.emit("eleventy.extensionmap", this.extensionMap);
 
-    // This is always available, even when not in --serve mode
+    // eleventyServe is always available, even when not in --serve mode
     this.eleventyServe.setOutputDir(this.outputDir);
+
+    this.fileSystemSearch = new FileSystemSearch();
 
     this.eleventyFiles = new EleventyFiles(
       this.inputDir,
@@ -379,6 +382,7 @@ class Eleventy {
       formats,
       this.eleventyConfig
     );
+    this.eleventyFiles.setFileSystemSearch(this.fileSystemSearch);
     this.eleventyFiles.setInput(this.inputDir, this.input);
     this.eleventyFiles.setRunMode(this.runMode);
     this.eleventyFiles.extensionMap = this.extensionMap;
@@ -389,6 +393,7 @@ class Eleventy {
     if (this.env) {
       this.templateData.environmentVariables = this.env;
     }
+    this.templateData.setFileSystemSearch(this.fileSystemSearch);
     this.eleventyFiles.templateData = this.templateData;
 
     this.writer = new TemplateWriter(
@@ -684,6 +689,12 @@ Arguments:
     // Note: this is a sync event!
     eventBus.emit("eleventy.resourceModified", changedFilePath);
     this.watchManager.addToPendingQueue(changedFilePath);
+  }
+
+  _setIncrementalFile(incrementalFile) {
+    if (incrementalFile) {
+      this.writer.setIncrementalFile(incrementalFile);
+    }
   }
 
   _shouldResetConfig() {
@@ -1006,7 +1017,12 @@ Arguments:
 
     watcher.on("add", async (path) => {
       this.logger.forceLog(`File added: ${path}`);
+      this.fileSystemSearch.add(path);
       await watchRun(path);
+    });
+
+    watcher.on("unlink", (path) => {
+      this.fileSystemSearch.delete(path);
     });
 
     if (checkPassthroughCopyBehavior(this.config, this.runMode)) {

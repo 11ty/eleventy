@@ -7,6 +7,7 @@ const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyErrorHandler = require("./EleventyErrorHandler");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
+const FileSystemSearch = require("./FileSystemSearch");
 const ConsoleLogger = require("./Util/ConsoleLogger");
 
 const debug = require("debug")("Eleventy:TemplateWriter");
@@ -134,6 +135,7 @@ class TemplateWriter {
       );
 
       this._eleventyFiles.setInput(this.inputDir, this.input);
+      this._eleventyFiles.setFileSystemSearch(new FileSystemSearch());
       this._eleventyFiles.init();
     }
 

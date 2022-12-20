@@ -1,9 +1,8 @@
 const fs = require("fs");
-const fastglob = require("fast-glob");
+
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const EleventyExtensionMap = require("./EleventyExtensionMap");
-const EleventyWatchTargets = require("./EleventyWatchTargets");
 const TemplateData = require("./TemplateData");
 const TemplateGlob = require("./TemplateGlob");
 const TemplatePassthroughManager = require("./TemplatePassthroughManager");
@@ -36,6 +35,10 @@ class EleventyFiles {
 
     // init has not yet been called()
     this.alreadyInit = false;
+  }
+
+  setFileSystemSearch(fileSystemSearch) {
+    this.fileSystemSearch = fileSystemSearch;
   }
 
   /* Overrides this.input and this.inputDir,
@@ -146,6 +149,7 @@ class EleventyFiles {
     mgr.setOutputDir(this.outputDir);
     mgr.setRunMode(this.runMode);
     mgr.extensionMap = this.extensionMap;
+    mgr.setFileSystemSearch(this.fileSystemSearch);
     this.passthroughManager = mgr;
   }
 
@@ -342,22 +346,13 @@ class EleventyFiles {
   }
 
   _globSearch() {
-    if (this._glob) {
-      return this._glob;
-    }
-
     let globs = this.getFileGlobs();
 
     // returns a promise
     debug("Searching for: %o", globs);
-
-    this._glob = fastglob(globs, {
-      caseSensitiveMatch: false,
-      dot: true,
+    return this.fileSystemSearch.search("templates", globs, {
       ignore: this.uniqueIgnores,
     });
-
-    return this._glob;
   }
 
   async getFiles() {
@@ -419,10 +414,8 @@ class EleventyFiles {
     let bench = this.aggregateBench.get("Searching the file system (watching)");
     bench.before();
     let results = TemplatePath.addLeadingDotSlashArray(
-      await fastglob(globs, {
+      await this.fileSystemSearch.search("js-dependencies", globs, {
         ignore: ["**/node_modules/**"],
-        caseSensitiveMatch: false,
-        dot: true,
       })
     );
     bench.after();

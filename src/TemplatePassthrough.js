@@ -2,7 +2,6 @@ const fs = require("fs");
 const path = require("path");
 const isGlob = require("is-glob");
 const copy = require("recursive-copy");
-const fastglob = require("fast-glob");
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const EleventyBaseError = require("./EleventyBaseError");
@@ -95,15 +94,16 @@ class TemplatePassthrough {
     this.isIncremental = isIncremental;
   }
 
+  setFileSystemSearch(fileSystemSearch) {
+    this.fileSystemSearch = fileSystemSearch;
+  }
+
   async getFiles(glob) {
     debug("Searching for: %o", glob);
     let b = this.benchmarks.aggregate.get("Searching the file system (passthrough)");
     b.before();
     let files = TemplatePath.addLeadingDotSlashArray(
-      await fastglob(glob, {
-        caseSensitiveMatch: false,
-        dot: true,
-      })
+      await this.fileSystemSearch.search("passthrough", glob)
     );
     b.after();
     return files;
