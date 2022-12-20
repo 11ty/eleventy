@@ -328,7 +328,7 @@ class TemplateMap {
     );
   }
 
-  setupDependencyGraphChanges(incrementalFile) {
+  setupDependencyGraphChangesForIncrementalFile(incrementalFile) {
     if (!incrementalFile) {
       return new Set();
     }

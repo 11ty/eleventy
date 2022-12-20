@@ -217,6 +217,7 @@ class TemplateWriter {
     );
 
     let relevantToDeletions = new Set();
+
     // Update the data cascade and the global dependency map for the one incremental template before everything else (only full templates)
     if (isFullTemplate && this.incrementalFile) {
       let path = this.incrementalFile;
@@ -226,10 +227,11 @@ class TemplateWriter {
       await p;
       debug(`${path} adding to template map.`);
 
-      // establish new relationships for this one template
-      relevantToDeletions = this.templateMap.setupDependencyGraphChanges(
-        tmpl.inputPath
-      );
+      // establish new relationships for this template
+      relevantToDeletions =
+        this.templateMap.setupDependencyGraphChangesForIncrementalFile(
+          tmpl.inputPath
+        );
 
       this.templateMap.addToGlobalDependencyGraph();
     }
