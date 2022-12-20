@@ -329,44 +329,35 @@ class TemplateMap {
   }
 
   setupDependencyGraphChanges(incrementalFile) {
-    // Delete incremental from the dependency graph so we get fresh entries!
-    // This _must_ happen before any additions, the other ones are in Custom.js and GlobalDependencyMap.js (from the eleventy.layouts Event)
-    let deleted = {
-      dependants: new Set(),
-    };
-
     if (!incrementalFile) {
-      return deleted;
+      return new Set();
     }
 
-    // New relationships
-    let dependants = new Set(); // collections published to
+    // Only dependents: things that consume templates that have deleted dependencies, e.g. if index.md consumes collections.post and a file removes its post tag, regenerate index.md
+    let newCollectionNames = new Set(); // collections published to
     for (let entry of this.map) {
       if (!entry.data.eleventyExcludeFromCollections) {
-        dependants.add("all");
+        newCollectionNames.add("all");
 
         if (Array.isArray(entry.data.tags)) {
           for (let tag of entry.data.tags) {
-            dependants.add(tag);
+            newCollectionNames.add(tag);
           }
         }
       }
     }
 
-    // Old relationships
-    let relationships = this.config.uses.getRelationships(incrementalFile);
+    let deletedCollectionNames = this.config.uses.findCollectionsRemovedFrom(
+      incrementalFile,
+      newCollectionNames
+    );
 
-    for (let dep of relationships.dependants) {
-      if (!dependants.has(dep)) {
-        deleted.dependants.add(dep);
-      }
-    }
-
-    // Actually delete the relationships
+    // Delete incremental from the dependency graph so we get fresh entries!
+    // This _must_ happen before any additions, the other ones are in Custom.js and GlobalDependencyMap.js (from the eleventy.layouts Event)
     this.config.uses.resetNode(incrementalFile);
 
     return this.config.uses.getTemplatesThatConsumeCollections(
-      deleted.dependants
+      deletedCollectionNames
     );
   }
 

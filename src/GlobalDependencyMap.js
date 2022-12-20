@@ -7,7 +7,7 @@ const eventBus = require("./EventBus.js");
 class GlobalDependencyMap {
   // dependency-graph requires these keys to be alphabetic strings
   static LAYOUT_KEY = "layout";
-  static COLLECTION_KEY = "__collection:";
+  static COLLECTION_PREFIX = "__collection:";
 
   // URL object with a windows, with file:// already removed (from file:///C:/directory/ to /C:/directory/)
   static WINDOWS_DRIVE_URL_PATH = /^\/\w\:\//;
@@ -105,35 +105,38 @@ class GlobalDependencyMap {
     );
   }
 
-  getRelationships(node) {
-    let relationships = {
-      dependants: new Set(),
-      dependencies: new Set(),
-    };
-
+  getDependantsFor(node) {
     if (!node) {
-      return relationships;
+      return new Set();
     }
 
     node = this.normalizeNode(node);
 
     if (!this.map.hasNode(node)) {
-      return relationships;
+      return new Set();
     }
 
     // Direct dependants and dependencies, both publish and consume from collections
-    relationships.dependants = new Set(
-      this.map
-        .directDependantsOf(node)
-        .map((entry) => GlobalDependencyMap.getEntryFromCollectionKey(entry))
-    );
-    relationships.dependencies = new Set(
-      this.map
-        .directDependenciesOf(node)
-        .map((entry) => GlobalDependencyMap.getEntryFromCollectionKey(entry))
-    );
+    return this.map.directDependantsOf(node);
+  }
 
-    return relationships;
+  findCollectionsRemovedFrom(node, collectionNames) {
+    let prevDeps = this.getDependantsFor(node).map((entry) => {
+      if (entry.startsWith(GlobalDependencyMap.COLLECTION_PREFIX)) {
+        return GlobalDependencyMap.getEntryFromCollectionKey(entry);
+      }
+      return entry;
+    });
+
+    let prevDepsSet = new Set(prevDeps);
+    let deleted = new Set();
+    for (let dep of prevDepsSet) {
+      if (!collectionNames.has(dep)) {
+        deleted.add(dep);
+      }
+    }
+
+    return deleted;
   }
 
   resetNode(node) {
@@ -157,7 +160,7 @@ class GlobalDependencyMap {
       for (let node of this.map.dependantsOf(
         GlobalDependencyMap.getCollectionKeyForEntry(name)
       )) {
-        if (!node.startsWith(GlobalDependencyMap.COLLECTION_KEY)) {
+        if (!node.startsWith(GlobalDependencyMap.COLLECTION_PREFIX)) {
           templates.add(node);
         }
       }
@@ -216,11 +219,11 @@ class GlobalDependencyMap {
   }
 
   static getEntryFromCollectionKey(entry) {
-    return entry.slice(GlobalDependencyMap.COLLECTION_KEY.length);
+    return entry.slice(GlobalDependencyMap.COLLECTION_PREFIX.length);
   }
 
   static getCollectionKeyForEntry(entry) {
-    return `${GlobalDependencyMap.COLLECTION_KEY}${entry}`;
+    return `${GlobalDependencyMap.COLLECTION_PREFIX}${entry}`;
   }
 
   addDependencyConsumesCollection(from, collectionName) {
