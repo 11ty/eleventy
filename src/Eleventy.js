@@ -180,6 +180,9 @@ class Eleventy {
     this.watchTargets = new EleventyWatchTargets();
     this.watchTargets.addAndMakeGlob(this.config.additionalWatchTargets);
     this.watchTargets.watchJavaScriptDependencies = this.config.watchJavaScriptDependencies;
+
+    /** @member {Object} - tbd. */
+    this.fileSystemSearch = new FileSystemSearch();
   }
 
   getNewTimestamp() {
@@ -373,8 +376,6 @@ class Eleventy {
 
     // eleventyServe is always available, even when not in --serve mode
     this.eleventyServe.setOutputDir(this.outputDir);
-
-    this.fileSystemSearch = new FileSystemSearch();
 
     this.eleventyFiles = new EleventyFiles(
       this.inputDir,
