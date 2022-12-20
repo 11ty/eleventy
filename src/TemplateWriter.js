@@ -109,10 +109,7 @@ class TemplateWriter {
 
   get extensionMap() {
     if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap(
-        this.templateFormats,
-        this.eleventyConfig
-      );
+      this._extensionMap = new EleventyExtensionMap(this.templateFormats, this.eleventyConfig);
     }
     return this._extensionMap;
   }
@@ -144,11 +141,11 @@ class TemplateWriter {
   }
 
   async _getAllPaths() {
-    if (!this.allPaths || this.needToSearchForFiles) {
-      this.allPaths = await this.eleventyFiles.getFiles();
-      debug("Found: %o", this.allPaths);
+    if (!this._allPathsCache || this.needToSearchForFiles) {
+      this._allPathsCache = await this.eleventyFiles.getFiles();
+      debug("Found: %o", this._allPathsCache);
     }
-    return this.allPaths;
+    return this._allPathsCache;
   }
 
   _isIncrementalFileAPassthroughCopy(paths) {
@@ -157,14 +154,12 @@ class TemplateWriter {
     }
 
     let passthroughManager = this.eleventyFiles.getPassthroughManager();
-    return passthroughManager.isPassthroughCopyFile(
-      paths,
-      this.incrementalFile
-    );
+    return passthroughManager.isPassthroughCopyFile(paths, this.incrementalFile);
   }
 
   _createTemplate(path, to = "fs") {
     let tmpl = this._templatePathCache.get(path);
+
     if (!tmpl) {
       tmpl = new Template(
         path,
@@ -199,11 +194,11 @@ class TemplateWriter {
           tmpl.addLinter(linter);
         }
       }
-
-      tmpl.setDryRun(this.isDryRun);
     }
 
+    tmpl.setDryRun(this.isDryRun);
     tmpl.setIsVerbose(this.isVerbose);
+    tmpl.reset();
 
     return tmpl;
   }
@@ -211,10 +206,7 @@ class TemplateWriter {
   async _addToTemplateMap(paths, to = "fs") {
     let promises = [];
 
-    let isFullTemplate = this.eleventyFiles.isFullTemplateFile(
-      paths,
-      this.incrementalFile
-    );
+    let isFullTemplate = this.eleventyFiles.isFullTemplateFile(paths, this.incrementalFile);
 
     let relevantToDeletions = new Set();
 
@@ -222,55 +214,63 @@ class TemplateWriter {
     if (isFullTemplate && this.incrementalFile) {
       let path = this.incrementalFile;
       let tmpl = this._createTemplate(path, to);
+      tmpl.resetForIncremental(); // reset internal caches on the cached template instance
+
       let p = this.templateMap.add(tmpl);
       promises.push(p);
       await p;
       debug(`${path} adding to template map.`);
 
       // establish new relationships for this template
-      relevantToDeletions =
-        this.templateMap.setupDependencyGraphChangesForIncrementalFile(
-          tmpl.inputPath
-        );
+      relevantToDeletions = this.templateMap.setupDependencyGraphChangesForIncrementalFile(
+        tmpl.inputPath
+      );
 
       this.templateMap.addToGlobalDependencyGraph();
     }
 
-    let isPassthroughCopy = this._isIncrementalFileAPassthroughCopy(paths);
+    let isIncrementalFileAPassthroughCopy = this._isIncrementalFileAPassthroughCopy(paths);
 
     for (let path of paths) {
-      if (this.extensionMap.hasEngine(path)) {
-        let tmpl = this._createTemplate(path, to);
+      if (!this.extensionMap.hasEngine(path)) {
+        continue;
+      }
 
-        if (isPassthroughCopy) {
-          tmpl.setDryRun(true);
-          this.skippedCount++;
-          continue;
-        }
+      if (isIncrementalFileAPassthroughCopy) {
+        this.skippedCount++;
+        continue;
+      }
 
-        // We already updated the data cascade for this template above
-        if (isFullTemplate && this.incrementalFile === tmpl.inputPath) {
-          continue;
-        }
+      // We already updated the data cascade for this template above
+      if (isFullTemplate && this.incrementalFile === path) {
+        continue;
+      }
 
+      let tmpl = this._createTemplate(path, to);
+
+      if (this.incrementalFile) {
         let isTemplateRelevantToDeletedCollections = relevantToDeletions.has(
           TemplatePath.stripLeadingDotSlash(tmpl.inputPath)
         );
+
         if (
           isTemplateRelevantToDeletedCollections ||
           tmpl.isFileRelevantToThisTemplate(this.incrementalFile, {
             isFullTemplate,
           })
         ) {
-          // Avoid fetching the data cascade if this if not applicable to incremental
-          promises.push(this.templateMap.add(tmpl));
-          debug(`${path} adding to template map.`);
+          tmpl.resetForIncremental({
+            render: true,
+          });
         } else {
-          // v2.0.0-canary.21 only incremental matches will be in the template map and the rest are left out
+          tmpl.setDryRunViaIncremental();
           this.skippedCount++;
-          debug(`${path} skipped for template map.`);
         }
       }
+
+      // This fetches the data cascade for this template, which we want to avoid if not applicable to incremental
+      promises.push(this.templateMap.add(tmpl));
+      debug(`${path} adding to template map.`);
     }
 
     return Promise.all(promises);
@@ -305,9 +305,7 @@ class TemplateWriter {
 
     return passthroughManager.copyAll(paths).catch((e) => {
       this.errorHandler.warn(e, "Error with passthrough copy");
-      return Promise.reject(
-        new EleventyPassthroughCopyError("Having trouble copying", e)
-      );
+      return Promise.reject(new EleventyPassthroughCopyError("Having trouble copying", e));
     });
   }
 
@@ -415,6 +413,10 @@ class TemplateWriter {
 
   getSkippedCount() {
     return this.skippedCount;
+  }
+
+  get caches() {
+    return ["_templatePathCache"];
   }
 }
 

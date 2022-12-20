@@ -52,16 +52,10 @@ class EleventyFiles {
   }
 
   initConfig() {
-    this.includesDir = TemplatePath.join(
-      this.inputDir,
-      this.config.dir.includes
-    );
+    this.includesDir = TemplatePath.join(this.inputDir, this.config.dir.includes);
 
     if ("layouts" in this.config.dir) {
-      this.layoutsDir = TemplatePath.join(
-        this.inputDir,
-        this.config.dir.layouts
-      );
+      this.layoutsDir = TemplatePath.join(this.inputDir, this.config.dir.layouts);
     }
   }
 
@@ -136,10 +130,7 @@ class EleventyFiles {
   get extensionMap() {
     // for tests
     if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap(
-        this.formats,
-        this.eleventyConfig
-      );
+      this._extensionMap = new EleventyExtensionMap(this.formats, this.eleventyConfig);
       this._extensionMap.config = this.config;
     }
     return this._extensionMap;
@@ -207,9 +198,7 @@ class EleventyFiles {
     }
     // Placing the config ignores last here is important to the tests
     for (let ignore of this.config.ignores) {
-      uniqueIgnores.add(
-        TemplateGlob.normalizePath(this.localPathRoot || ".", ignore)
-      );
+      uniqueIgnores.add(TemplateGlob.normalizePath(this.localPathRoot || ".", ignore));
     }
     return Array.from(uniqueIgnores);
   }
@@ -228,9 +217,7 @@ class EleventyFiles {
       if (fs.existsSync(ignorePath) && fs.statSync(ignorePath).size > 0) {
         let ignoreContent = fs.readFileSync(ignorePath, "utf8");
 
-        ignores = ignores.concat(
-          EleventyFiles.normalizeIgnoreContent(dir, ignoreContent)
-        );
+        ignores = ignores.concat(EleventyFiles.normalizeIgnoreContent(dir, ignoreContent));
       }
     }
 
@@ -254,21 +241,15 @@ class EleventyFiles {
               ">>> When processing .gitignore/.eleventyignore, Eleventy does not currently support negative patterns but encountered one:"
             );
             debug(">>>", line);
-            debug(
-              "Follow along at https://github.com/11ty/eleventy/issues/693 to track support."
-            );
+            debug("Follow along at https://github.com/11ty/eleventy/issues/693 to track support.");
           }
 
           // empty lines or comments get filtered out
-          return (
-            line.length > 0 && line.charAt(0) !== "#" && line.charAt(0) !== "!"
-          );
+          return line.length > 0 && line.charAt(0) !== "#" && line.charAt(0) !== "!";
         })
         .map((line) => {
           let path = TemplateGlob.normalizePath(dir, "/", line);
-          path = TemplatePath.addLeadingDotSlash(
-            TemplatePath.relativePath(path)
-          );
+          path = TemplatePath.addLeadingDotSlash(TemplatePath.relativePath(path));
 
           try {
             // Note these folders must exist to get /** suffix
@@ -348,9 +329,7 @@ class EleventyFiles {
   getWatchPathCache() {
     // Issue #1325: make sure passthrough copy files are not included here
     if (!this.pathCache) {
-      throw new Error(
-        "Watching requires `.getFiles()` to be called first in EleventyFiles"
-      );
+      throw new Error("Watching requires `.getFiles()` to be called first in EleventyFiles");
     }
 
     // Filter out the passthrough copy paths.
@@ -382,7 +361,7 @@ class EleventyFiles {
   }
 
   async getFiles() {
-    let bench = this.aggregateBench.get("Searching the file system");
+    let bench = this.aggregateBench.get("Searching the file system (templates)");
     bench.before();
     let globResults = await this._globSearch();
     let paths = TemplatePath.addLeadingDotSlashArray(globResults);
@@ -419,9 +398,7 @@ class EleventyFiles {
     }
 
     // Revert to old passthroughcopy copy files behavior
-    return this.validTemplateGlobs
-      .concat(this.passthroughGlobs)
-      .concat(directoryGlobs);
+    return this.validTemplateGlobs.concat(this.passthroughGlobs).concat(directoryGlobs);
   }
 
   /* For `eleventy --watch` */
@@ -439,7 +416,7 @@ class EleventyFiles {
   // TODO this isn’t great but reduces complexity avoiding using TemplateData:getLocalDataPaths for each template in the cache
   async getWatcherTemplateJavaScriptDataFiles() {
     let globs = await this.templateData.getTemplateJavaScriptDataFileGlob();
-    let bench = this.aggregateBench.get("Searching the file system");
+    let bench = this.aggregateBench.get("Searching the file system (watching)");
     bench.before();
     let results = TemplatePath.addLeadingDotSlashArray(
       await fastglob(globs, {
@@ -456,15 +433,11 @@ class EleventyFiles {
   getGlobWatcherIgnores() {
     // convert to format without ! since they are passed in as a separate argument to glob watcher
     let entries = new Set(
-      this.fileIgnores.map((ignore) =>
-        TemplatePath.stripLeadingDotSlash(ignore)
-      )
+      this.fileIgnores.map((ignore) => TemplatePath.stripLeadingDotSlash(ignore))
     );
 
     for (let ignore of this.config.watchIgnores) {
-      entries.add(
-        TemplateGlob.normalizePath(this.localPathRoot || ".", ignore)
-      );
+      entries.add(TemplateGlob.normalizePath(this.localPathRoot || ".", ignore));
     }
 
     // de-duplicated

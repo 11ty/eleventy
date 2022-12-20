@@ -178,8 +178,7 @@ class Eleventy {
     /** @member {Object} - tbd. */
     this.watchTargets = new EleventyWatchTargets();
     this.watchTargets.addAndMakeGlob(this.config.additionalWatchTargets);
-    this.watchTargets.watchJavaScriptDependencies =
-      this.config.watchJavaScriptDependencies;
+    this.watchTargets.watchJavaScriptDependencies = this.config.watchJavaScriptDependencies;
   }
 
   getNewTimestamp() {
@@ -300,9 +299,7 @@ class Eleventy {
     let slashRet = [];
 
     if (copyCount) {
-      slashRet.push(
-        `Copied ${copyCount} ${simplePlural(copyCount, "file", "files")}`
-      );
+      slashRet.push(`Copied ${copyCount} ${simplePlural(copyCount, "file", "files")}`);
     }
 
     slashRet.push(
@@ -320,14 +317,37 @@ class Eleventy {
     ret.push(`in ${time} ${simplePlural(time, "second", "seconds")}`);
 
     if (writeCount >= 10) {
-      ret.push(
-        `(${((time * 1000) / writeCount).toFixed(1)}ms each, ${versionStr})`
-      );
+      ret.push(`(${((time * 1000) / writeCount).toFixed(1)}ms each, ${versionStr})`);
     } else {
       ret.push(`(${versionStr})`);
     }
 
     return ret.join(" ");
+  }
+
+  _cache(key, inst) {
+    if (!this._privateCaches) {
+      this._privateCaches = new Map();
+    }
+
+    if (!("caches" in inst)) {
+      throw new Error("To use _cache you need a `caches` getter object");
+    }
+
+    // Restore from cache
+    if (this._privateCaches.has(key)) {
+      let c = this._privateCaches.get(key);
+      for (let cacheKey in c) {
+        inst[cacheKey] = c[cacheKey];
+      }
+    } else {
+      // Set cache
+      let c = {};
+      for (let cacheKey of inst.caches || []) {
+        c[cacheKey] = inst[cacheKey];
+      }
+      this._privateCaches.set(key, c);
+    }
   }
 
   /**
@@ -378,6 +398,8 @@ class Eleventy {
       this.templateData,
       this.eleventyConfig
     );
+    this._cache("TemplateWriter", this.writer);
+
     this.writer.setInput(this.inputDir, this.input);
     this.writer.logger = this.logger;
     this.writer.extensionMap = this.extensionMap;
@@ -676,8 +698,7 @@ Arguments:
 
     for (const configFilePath of configFilePaths) {
       // Any dependencies of the config file changed
-      let configFileDependencies =
-        this.watchTargets.getDependenciesOf(configFilePath);
+      let configFileDependencies = this.watchTargets.getDependenciesOf(configFilePath);
 
       for (let dep of configFileDependencies) {
         if (this.watchManager.hasQueuedFile(dep)) {
@@ -746,10 +767,7 @@ Arguments:
       return (
         path.endsWith(".css") &&
         // TODO how to make this work with relative includes?
-        !TemplatePath.startsWithSubPath(
-          path,
-          this.eleventyFiles.getIncludesDir()
-        )
+        !TemplatePath.startsWithSubPath(path, this.eleventyFiles.getIncludesDir())
       );
     });
 
@@ -758,9 +776,7 @@ Arguments:
         error: writeResults.error,
       });
     } else {
-      let normalizedPathPrefix = PathPrefixer.normalizePathPrefix(
-        this.config.pathPrefix
-      );
+      let normalizedPathPrefix = PathPrefixer.normalizePathPrefix(this.config.pathPrefix);
       await this.eleventyServe.reload({
         files: this.watchManager.getActiveQueue(),
         subtype: onlyCssChanges ? "css" : undefined,
@@ -771,10 +787,7 @@ Arguments:
             .flat()
             .filter((entry) => !!entry)
             .map((entry) => {
-              entry.url = PathPrefixer.joinUrlParts(
-                normalizedPathPrefix,
-                entry.url
-              );
+              entry.url = PathPrefixer.joinUrlParts(normalizedPathPrefix, entry.url);
               return entry;
             }),
         },
@@ -819,9 +832,7 @@ Arguments:
     this.watchTargets.add(this.eleventyConfig.getLocalProjectConfigFiles());
 
     // Template and Directory Data Files
-    this.watchTargets.add(
-      await this.eleventyFiles.getGlobWatcherTemplateDataFiles()
-    );
+    this.watchTargets.add(await this.eleventyFiles.getGlobWatcherTemplateDataFiles());
 
     let benchmark = this.watcherBench.get(
       "Watching JavaScript Dependencies (disable with `eleventyConfig.setWatchJavaScriptDependencies(false)`)"
@@ -905,8 +916,7 @@ Arguments:
 
   async triggerServerReload(changedFiles) {
     let onlyApplyingCssChanges =
-      changedFiles.filter((entry) => entry.endsWith(".css")).length ===
-      changedFiles.length;
+      changedFiles.filter((entry) => entry.endsWith(".css")).length === changedFiles.length;
 
     // returns a promise
     return this.eleventyServe.reload({
@@ -1109,6 +1119,7 @@ Arguments:
         dir: this.config.dir,
         runMode: this.runMode,
         outputMode: to,
+        incremental: this.isIncremental,
       };
       await this.config.events.emit("beforeBuild", eventsArg);
       await this.config.events.emit("eleventy.before", eventsArg);
@@ -1160,12 +1171,7 @@ Arguments:
     } finally {
       this.bench.finish();
       if (to === "fs") {
-        this.logger.message(
-          this.logFinished(),
-          "info",
-          hasError ? "red" : "green",
-          true
-        );
+        this.logger.message(this.logFinished(), "info", hasError ? "red" : "green", true);
       }
       debug("Finished writing templates.");
 

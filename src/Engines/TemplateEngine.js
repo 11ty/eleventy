@@ -79,9 +79,7 @@ class TemplateEngine {
 
   get extensionEntries() {
     if (!this._extensionEntries) {
-      this._extensionEntries = this.extensionMap.getExtensionEntriesFromKey(
-        this.name
-      );
+      this._extensionEntries = this.extensionMap.getExtensionEntriesFromKey(this.name);
     }
     return this._extensionEntries;
   }
@@ -117,7 +115,7 @@ class TemplateEngine {
       // Try to skip this require if not used (for bundling reasons)
       const fastglob = require("fast-glob");
 
-      let bench = this.benchmarks.aggregate.get("Searching the file system");
+      let bench = this.benchmarks.aggregate.get("Searching the file system (partials)");
       bench.before();
 
       let prefix = this.includesDir + "/**/*.";
@@ -138,16 +136,10 @@ class TemplateEngine {
       results = await Promise.all(
         partialFiles.map((partialFile) => {
           partialFile = TemplatePath.addLeadingDotSlash(partialFile);
-          let partialPath = TemplatePath.stripLeadingSubPath(
-            partialFile,
-            this.includesDir
-          );
+          let partialPath = TemplatePath.stripLeadingSubPath(partialFile, this.includesDir);
           let partialPathNoExt = partialPath;
           this.extensions.forEach(function (extension) {
-            partialPathNoExt = TemplatePath.removeExtension(
-              partialPathNoExt,
-              "." + extension
-            );
+            partialPathNoExt = TemplatePath.removeExtension(partialPathNoExt, "." + extension);
           });
 
           return fs.promises

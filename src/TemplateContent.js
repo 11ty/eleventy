@@ -25,9 +25,7 @@ class TemplateContentRenderError extends EleventyBaseError {}
 class TemplateContent {
   constructor(inputPath, inputDir, config) {
     if (!config) {
-      throw new TemplateContentConfigError(
-        "Missing `config` argument to TemplateContent"
-      );
+      throw new TemplateContentConfigError("Missing `config` argument to TemplateContent");
     }
     this.config = config;
 
@@ -37,6 +35,36 @@ class TemplateContent {
       this.inputDir = normalize(inputDir);
     } else {
       this.inputDir = false;
+    }
+  }
+
+  getResetTypes(types) {
+    if (types) {
+      return Object.assign(
+        {
+          data: false,
+          read: false,
+          render: false,
+        },
+        types
+      );
+    }
+
+    return {
+      data: true,
+      read: true,
+      render: true,
+    };
+  }
+
+  // Called during an incremental build when the template instance is cached but needs to be reset because it has changed
+  resetForIncremental(types) {
+    types = this.getResetTypes(types);
+
+    if (types.read) {
+      delete this.frontMatter;
+      delete this.inputContent;
+      delete this._frontMatterDataCache;
     }
   }
 
@@ -71,9 +99,7 @@ class TemplateContent {
     if (this._config instanceof TemplateConfig) {
       return this._config;
     }
-    throw new TemplateContentConfigError(
-      "Tried to get an eleventyConfig but none was found."
-    );
+    throw new TemplateContentConfigError("Tried to get an eleventyConfig but none was found.");
   }
 
   get engine() {
@@ -82,11 +108,7 @@ class TemplateContent {
 
   get templateRender() {
     if (!this._templateRender) {
-      this._templateRender = new TemplateRender(
-        this.inputPath,
-        this.inputDir,
-        this.config
-      );
+      this._templateRender = new TemplateRender(this.inputPath, this.inputDir, this.config);
       this._templateRender.extensionMap = this.extensionMap;
     }
 
@@ -123,17 +145,11 @@ class TemplateContent {
         let excerptString = fm.excerpt + (options.excerpt_separator || "---");
         if (fm.content.startsWith(excerptString + os.EOL)) {
           // with an os-specific newline after excerpt separator
-          fm.content =
-            fm.excerpt.trim() +
-            "\n" +
-            fm.content.slice((excerptString + os.EOL).length);
+          fm.content = fm.excerpt.trim() + "\n" + fm.content.slice((excerptString + os.EOL).length);
         } else if (fm.content.startsWith(excerptString + "\n")) {
           // with a newline (\n) after excerpt separator
           // This is necessary for some git configurations on windows
-          fm.content =
-            fm.excerpt.trim() +
-            "\n" +
-            fm.content.slice((excerptString + 1).length);
+          fm.content = fm.excerpt.trim() + "\n" + fm.content.slice((excerptString + 1).length);
         } else if (fm.content.startsWith(excerptString)) {
           // no newline after excerpt separator
           fm.content = fm.excerpt + fm.content.slice(excerptString.length);
@@ -230,11 +246,7 @@ class TemplateContent {
 
   async setupTemplateRender(engineOverride, bypassMarkdown) {
     if (engineOverride !== undefined) {
-      debugDev(
-        "%o overriding template engine to use %o",
-        this.inputPath,
-        engineOverride
-      );
+      debugDev("%o overriding template engine to use %o", this.inputPath, engineOverride);
 
       this.templateRender.setEngineOverride(engineOverride, bypassMarkdown);
     } else {
@@ -264,11 +276,7 @@ class TemplateContent {
       };
     }
 
-    debugDev(
-      "%o compile() using engine: %o",
-      this.inputPath,
-      this.templateRender.engineName
-    );
+    debugDev("%o compile() using engine: %o", this.inputPath, this.templateRender.engineName);
 
     try {
       let res;
@@ -276,15 +284,11 @@ class TemplateContent {
         let [cacheable, key, cache, useCache] = this._getCompileCache(str);
         if (cacheable && key) {
           if (useCache && cache.has(key)) {
-            this.bench
-              .get("(count) Template Compile Cache Hit")
-              .incrementCount();
+            this.bench.get("(count) Template Compile Cache Hit").incrementCount();
             return cache.get(key);
           }
 
-          this.bench
-            .get("(count) Template Compile Cache Miss")
-            .incrementCount();
+          this.bench.get("(count) Template Compile Cache Miss").incrementCount();
 
           // Previously the cache grew when the content changes, in 2.0.0-canary.19
           // we now segment caches based on inputPath so we also clear all other cache
@@ -333,8 +337,7 @@ class TemplateContent {
     // Don’t use markdown as the engine to parse for symbols
     let preprocessorEngine = this.templateRender.getPreprocessorEngine(); // TODO pass in engineOverride here
     if (preprocessorEngine && engine.getName() !== preprocessorEngine) {
-      let replacementEngine =
-        this.templateRender.getEngineByName(preprocessorEngine);
+      let replacementEngine = this.templateRender.getEngineByName(preprocessorEngine);
       if (replacementEngine) {
         engine = replacementEngine;
       }
@@ -371,11 +374,7 @@ class TemplateContent {
   async renderPermalink(permalink, data) {
     this.bench.get("(count) Render Permalink").incrementCount();
     this.bench
-      .get(
-        `(count) > Render Permalink > ${
-          this.inputPath
-        }${this._getPaginationLogSuffix(data)}`
-      )
+      .get(`(count) > Render Permalink > ${this.inputPath}${this._getPaginationLogSuffix(data)}`)
       .incrementCount();
 
     let permalinkCompilation = this.engine.permalinkNeedsCompilation(permalink);
@@ -398,11 +397,7 @@ class TemplateContent {
     }
     */
     if (permalinkCompilation && typeof permalinkCompilation === "function") {
-      permalink = await this._renderFunction(
-        permalinkCompilation,
-        permalink,
-        this.inputPath
-      );
+      permalink = await this._renderFunction(permalinkCompilation, permalink, this.inputPath);
     }
 
     // Raw permalink function (in the app code data cascade)
@@ -423,9 +418,7 @@ class TemplateContent {
       suffix.push(" (");
       if (data.pagination.pages) {
         suffix.push(
-          `${data.pagination.pages.length} page${
-            data.pagination.pages.length !== 1 ? "s" : ""
-          }`
+          `${data.pagination.pages.length} page${data.pagination.pages.length !== 1 ? "s" : ""}`
         );
       } else {
         suffix.push("Pagination");
@@ -441,18 +434,12 @@ class TemplateContent {
         return str;
       }
 
-      let fn = await this.compile(
-        str,
-        bypassMarkdown,
-        data[this.config.keys.engineOverride]
-      );
+      let fn = await this.compile(str, bypassMarkdown, data[this.config.keys.engineOverride]);
 
       if (fn === undefined) {
         return;
       } else if (typeof fn !== "function") {
-        throw new Error(
-          `The \`compile\` function did not return a function. Received ${fn}`
-        );
+        throw new Error(`The \`compile\` function did not return a function. Received ${fn}`);
       }
 
       // Benchmark
@@ -464,9 +451,7 @@ class TemplateContent {
       );
       let outputPathBenchmark;
       if (data.page && data.page.outputPath && logRenderToOutputBenchmark) {
-        outputPathBenchmark = this.bench.get(
-          `> Render to > ${data.page.outputPath}`
-        );
+        outputPathBenchmark = this.bench.get(`> Render to > ${data.page.outputPath}`);
       }
 
       templateBenchmark.before();
@@ -486,20 +471,14 @@ class TemplateContent {
         inputPathBenchmark.after();
       }
       templateBenchmark.after();
-      debugDev(
-        "%o getCompiledTemplate called, rendered content created",
-        this.inputPath
-      );
+      debugDev("%o getCompiledTemplate called, rendered content created", this.inputPath);
       return rendered;
     } catch (e) {
       if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
         throw e;
       } else {
         let engine = this.templateRender.getReadableEnginesList();
-        debug(
-          `Having trouble rendering ${engine} template ${this.inputPath}: %O`,
-          str
-        );
+        debug(`Having trouble rendering ${engine} template ${this.inputPath}: %O`, str);
         throw new TemplateContentRenderError(
           `Having trouble rendering ${engine} template ${this.inputPath}`,
           e
@@ -520,10 +499,7 @@ class TemplateContent {
 
     let hasDependencies = this.engine.hasDependencies(incrementalFile);
 
-    let isRelevant = this.engine.isFileRelevantTo(
-      this.inputPath,
-      incrementalFile
-    );
+    let isRelevant = this.engine.isFileRelevantTo(this.inputPath, incrementalFile);
 
     debug(
       "Test dependencies to see if %o is relevant to %o: %o",
@@ -532,9 +508,7 @@ class TemplateContent {
       isRelevant
     );
 
-    let extensionEntries = this.getExtensionEntries().filter(
-      (entry) => !!entry.isIncrementalMatch
-    );
+    let extensionEntries = this.getExtensionEntries().filter((entry) => !!entry.isIncrementalMatch);
     if (extensionEntries.length) {
       for (let entry of extensionEntries) {
         if (

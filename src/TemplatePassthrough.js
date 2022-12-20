@@ -50,10 +50,7 @@ class TemplatePassthrough {
       return TemplatePath.normalize(
         TemplatePath.join(
           outputDir,
-          TemplatePath.stripLeadingSubPath(
-            inputFileFromGlob || inputPath,
-            inputDir
-          )
+          TemplatePath.stripLeadingSubPath(inputFileFromGlob || inputPath, inputDir)
         )
       );
     }
@@ -65,9 +62,7 @@ class TemplatePassthrough {
     // Bug when copying incremental file overwriting output directory (and making it a file)
     // e.g. public/test.css -> _site
     // https://github.com/11ty/eleventy/issues/2278
-    let fullOutputPath = TemplatePath.normalize(
-      TemplatePath.join(outputDir, outputPath)
-    );
+    let fullOutputPath = TemplatePath.normalize(TemplatePath.join(outputDir, outputPath));
 
     if (
       fs.existsSync(inputPath) &&
@@ -75,9 +70,7 @@ class TemplatePassthrough {
       TemplatePath.isDirectorySync(fullOutputPath)
     ) {
       let filename = path.parse(inputPath).base;
-      return TemplatePath.normalize(
-        TemplatePath.join(fullOutputPath, filename)
-      );
+      return TemplatePath.normalize(TemplatePath.join(fullOutputPath, filename));
     }
 
     return fullOutputPath;
@@ -104,7 +97,7 @@ class TemplatePassthrough {
 
   async getFiles(glob) {
     debug("Searching for: %o", glob);
-    let b = this.benchmarks.aggregate.get("Searching the file system");
+    let b = this.benchmarks.aggregate.get("Searching the file system (passthrough)");
     b.before();
     let files = TemplatePath.addLeadingDotSlashArray(
       await fastglob(glob, {
@@ -242,10 +235,7 @@ class TemplatePassthrough {
         };
       })
       .catch((err) => {
-        throw new TemplatePassthroughError(
-          `Error copying passthrough files: ${err.message}`,
-          err
-        );
+        throw new TemplatePassthroughError(`Error copying passthrough files: ${err.message}`, err);
       });
   }
 }

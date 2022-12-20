@@ -34,14 +34,7 @@ const debug = require("debug")("Eleventy:Template");
 const debugDev = require("debug")("Dev:Eleventy:Template");
 
 class Template extends TemplateContent {
-  constructor(
-    templatePath,
-    inputDir,
-    outputDir,
-    templateData,
-    extensionMap,
-    config
-  ) {
+  constructor(templatePath, inputDir, outputDir, templateData, extensionMap, config) {
     debugDev("new Template(%o)", templatePath);
     super(templatePath, inputDir, config);
 
@@ -69,11 +62,7 @@ class Template extends TemplateContent {
     this.isDryRun = false;
     this.writeCount = 0;
 
-    this.fileSlug = new TemplateFileSlug(
-      this.inputPath,
-      this.inputDir,
-      this.extensionMap
-    );
+    this.fileSlug = new TemplateFileSlug(this.inputPath, this.inputDir, this.extensionMap);
     this.fileSlugStr = this.fileSlug.getSlug();
     this.filePathStem = this.fileSlug.getFullPathWithoutExtension();
 
@@ -98,6 +87,24 @@ class Template extends TemplateContent {
     this._logger = logger;
   }
 
+  reset() {
+    this.writeCount = 0;
+  }
+
+  resetForIncremental(types) {
+    types = this.getResetTypes(types);
+
+    super.resetForIncremental(types);
+
+    if (types.data) {
+      delete this._dataCache;
+    }
+
+    if (types.render) {
+      delete this._cacheRenderedContent;
+    }
+  }
+
   setOutputFormat(to) {
     this.outputFormat = to;
     this.behavior.setOutputFormat(to);
@@ -106,6 +113,11 @@ class Template extends TemplateContent {
   setIsVerbose(isVerbose) {
     this.isVerbose = isVerbose;
     this.logger.isVerbose = isVerbose;
+  }
+
+  setDryRunViaIncremental() {
+    this.isDryRun = true;
+    this.isIncremental = true;
   }
 
   setDryRun(isDryRun) {
@@ -167,10 +179,7 @@ class Template extends TemplateContent {
   }
 
   _getRawPermalinkInstance(permalinkValue) {
-    let perm = new TemplatePermalink(
-      permalinkValue,
-      this.extraOutputSubdirectory
-    );
+    let perm = new TemplatePermalink(permalinkValue, this.extraOutputSubdirectory);
     perm.setUrlTransforms(this.config.urlTransforms);
 
     if (this.templateData) {
@@ -195,10 +204,7 @@ class Template extends TemplateContent {
     if (typeof permalink === "boolean") {
       debugDev("Using boolean permalink %o", permalink);
       permalinkValue = permalink;
-    } else if (
-      permalink &&
-      (!this.config.dynamicPermalinks || data.dynamicPermalink === false)
-    ) {
+    } else if (permalink && (!this.config.dynamicPermalinks || data.dynamicPermalink === false)) {
       debugDev("Not using dynamic permalinks, using %o", permalink);
       permalinkValue = permalink;
     } else if (isPlainObject(permalink)) {
@@ -212,11 +218,7 @@ class Template extends TemplateContent {
           keys.push(key);
           if (key !== "build" && Array.isArray(permalink[key])) {
             promises.push(
-              Promise.all(
-                [...permalink[key]].map((entry) =>
-                  super.renderPermalink(entry, data)
-                )
-              )
+              Promise.all([...permalink[key]].map((entry) => super.renderPermalink(entry, data)))
             );
           } else {
             promises.push(super.renderPermalink(permalink[key], data));
@@ -241,12 +243,7 @@ class Template extends TemplateContent {
     } else if (permalink) {
       // render variables inside permalink front matter, bypass markdown
       permalinkValue = await super.renderPermalink(permalink, data);
-      debug(
-        "Rendering permalink for %o: %s becomes %o",
-        this.inputPath,
-        permalink,
-        permalinkValue
-      );
+      debug("Rendering permalink for %o: %s becomes %o", this.inputPath, permalink, permalinkValue);
       debugDev("Permalink rendered with data: %o", data);
     }
 
@@ -254,11 +251,7 @@ class Template extends TemplateContent {
     if (!permalink) {
       let permalinkCompilation = this.engine.permalinkNeedsCompilation("");
       if (typeof permalinkCompilation === "function") {
-        let ret = await this._renderFunction(
-          permalinkCompilation,
-          permalinkValue,
-          this.inputPath
-        );
+        let ret = await this._renderFunction(permalinkCompilation, permalinkValue, this.inputPath);
         if (ret !== undefined) {
           if (typeof ret === "function") {
             // function
@@ -290,9 +283,7 @@ class Template extends TemplateContent {
   async usePermalinkRoot() {
     if (this._usePermalinkRoot === undefined) {
       // TODO this only works with immediate front matter and not data files
-      this._usePermalinkRoot = (await this.getFrontMatterData())[
-        this.config.keys.permalinkRoot
-      ];
+      this._usePermalinkRoot = (await this.getFrontMatterData())[this.config.keys.permalinkRoot];
     }
 
     return this._usePermalinkRoot;
@@ -352,20 +343,18 @@ class Template extends TemplateContent {
   }
 
   async getData() {
-    // Note: we removed the `dataCache` property as caching now happens upstream in TemplateMap
+    if (this._dataCache) {
+      return this._dataCache;
+    }
+
     debugDev("%o getData()", this.inputPath);
     let localData = {};
     let globalData = {};
 
     if (this.templateData) {
-      localData = await this.templateData.getTemplateDirectoryData(
-        this.inputPath
-      );
+      localData = await this.templateData.getTemplateDirectoryData(this.inputPath);
       globalData = await this.templateData.getGlobalData(this.inputPath);
-      debugDev(
-        "%o getData() getTemplateDirectoryData and getGlobalData",
-        this.inputPath
-      );
+      debugDev("%o getData() getTemplateDirectoryData and getGlobalData", this.inputPath);
     }
 
     let frontMatterData = await this.getFrontMatterData();
@@ -380,10 +369,7 @@ class Template extends TemplateContent {
       let layout = this.getLayout(layoutKey);
 
       mergedLayoutData = await layout.getData();
-      debugDev(
-        "%o getData() get merged layout chain front matter",
-        this.inputPath
-      );
+      debugDev("%o getData() get merged layout chain front matter", this.inputPath);
     }
 
     let mergedData = TemplateData.mergeDeep(
@@ -398,6 +384,7 @@ class Template extends TemplateContent {
     mergedData = this.addPageData(mergedData);
     debugDev("%o getData() mergedData", this.inputPath);
 
+    this._dataCache = mergedData;
     return mergedData;
   }
 
@@ -443,10 +430,7 @@ class Template extends TemplateContent {
     debug("%o is using layout %o", this.inputPath, layoutKey);
 
     // TODO reuse templateContent from templateMap
-    let templateContent = await super.render(
-      await this.getPreRender(),
-      tmplData
-    );
+    let templateContent = await super.render(await this.getPreRender(), tmplData);
     return layout.render(tmplData, templateContent);
   }
 
@@ -456,8 +440,14 @@ class Template extends TemplateContent {
 
   // This is the primary render mechanism, called via TemplateMap->populateContentDataInMap
   async renderWithoutLayout(data) {
+    if (this._cacheRenderedContent) {
+      return this._cacheRenderedContent;
+    }
+
     let content = await this.getPreRender();
-    return this.renderDirect(content, data);
+    let renderedContent = await this.renderDirect(content, data);
+    this._cacheRenderedContent = renderedContent;
+    return renderedContent;
   }
 
   // render *with* Layouts
@@ -550,12 +540,7 @@ class Template extends TemplateContent {
           keys.push(parentKey);
         }
         keys.push(key);
-        this._addComputedEntry(
-          computedData,
-          obj[key],
-          keys.join("."),
-          declaredDependencies
-        );
+        this._addComputedEntry(computedData, obj[key], keys.join("."), declaredDependencies);
       }
     } else if (typeof obj === "string") {
       computedData.addTemplateString(
@@ -596,10 +581,7 @@ class Template extends TemplateContent {
       );
 
       // actually add the computed data
-      this._addComputedEntry(
-        this.computedData,
-        data[this.config.keys.computed]
-      );
+      this._addComputedEntry(this.computedData, data[this.config.keys.computed]);
 
       // limited run of computed data—save the stuff that relies on collections for later.
       debug("First round of computed data for %o", this.inputPath);
@@ -657,10 +639,7 @@ class Template extends TemplateContent {
           this._templateContent = content;
         },
         get() {
-          if (
-            this.checkTemplateContent &&
-            this._templateContent === undefined
-          ) {
+          if (this.checkTemplateContent && this._templateContent === undefined) {
             if (this.template.behavior.isRenderable()) {
               // should at least warn here
               throw new TemplateContentPrematureUseError(
@@ -743,28 +722,17 @@ class Template extends TemplateContent {
   }
 
   async _write({ url, outputPath }, finalContent) {
-    let shouldWriteFile = true;
-
-    if (this.isDryRun) {
-      shouldWriteFile = false;
-    }
-
     let lang = {
       start: "Writing",
       finished: "written.",
     };
 
-    if (shouldWriteFile) {
-      let engineList =
-        this.templateRender.getReadableEnginesListDifferingFromFileExtension();
+    if (!this.isDryRun) {
+      let engineList = this.templateRender.getReadableEnginesListDifferingFromFileExtension();
       this.logger.log(
-        `${lang.start} ${outputPath} from ${this.inputPath}${
-          engineList ? ` (${engineList})` : ""
-        }`
+        `${lang.start} ${outputPath} from ${this.inputPath}${engineList ? ` (${engineList})` : ""}`
       );
-    }
-
-    if (!shouldWriteFile) {
+    } else if (this.isDryRun) {
       return;
     }
 
@@ -840,14 +808,8 @@ class Template extends TemplateContent {
             content: content,
           };
 
-          if (
-            this.config.dataFilterSelectors &&
-            this.config.dataFilterSelectors.size > 0
-          ) {
-            obj.data = this.retrieveDataForJsonOutput(
-              page.data,
-              this.config.dataFilterSelectors
-            );
+          if (this.config.dataFilterSelectors && this.config.dataFilterSelectors.size > 0) {
+            obj.data = this.retrieveDataForJsonOutput(page.data, this.config.dataFilterSelectors);
           }
 
           if (to === "ndjson") {
@@ -945,11 +907,7 @@ class Template extends TemplateContent {
 
   async getMappedDate(data) {
     if ("date" in data && data.date) {
-      debug(
-        "getMappedDate: using a date in the data for %o of %o",
-        this.inputPath,
-        data.date
-      );
+      debug("getMappedDate: using a date in the data for %o of %o", this.inputPath, data.date);
       if (data.date instanceof Date) {
         // YAML does its own date parsing
         debug("getMappedDate: YAML parsed it: %o", data.date);
@@ -985,16 +943,9 @@ class Template extends TemplateContent {
       // try to parse with Luxon
       let date = DateTime.fromISO(data.date, { zone: "utc" });
       if (!date.isValid) {
-        throw new Error(
-          `date front matter value (${data.date}) is invalid for ${this.inputPath}`
-        );
+        throw new Error(`date front matter value (${data.date}) is invalid for ${this.inputPath}`);
       }
-      debug(
-        "getMappedDate: Luxon parsed %o: %o and %o",
-        data.date,
-        date,
-        date.toJSDate()
-      );
+      debug("getMappedDate: Luxon parsed %o: %o and %o", data.date, date, date.toJSDate());
 
       return date.toJSDate();
     } else {
