@@ -109,12 +109,30 @@ class TemplatePassthrough {
     return files;
   }
 
+  // dir is guaranteed to exist by context
+  // dir may not be a directory
+  addTrailingSlashIfDirectory(dir) {
+    if (dir && typeof dir === "string") {
+      if (dir.endsWith(path.sep)) {
+        return dir;
+      }
+      if (fs.statSync(dir).isDirectory()) {
+        return `${dir}/`;
+      }
+    }
+    return dir;
+  }
+
   // maps input paths to output paths
   async getFileMap() {
+    // TODO VirtualFileSystem candidate
     if (!isGlob(this.inputPath) && fs.existsSync(this.inputPath)) {
+      // When inputPath is a directory, make sure it has a slash for passthrough copy aliasing
+      // https://github.com/11ty/eleventy/issues/2709
+      let inputPath = this.addTrailingSlashIfDirectory(this.inputPath);
       return [
         {
-          inputPath: this.inputPath,
+          inputPath,
           outputPath: this.getOutputPath(),
         },
       ];

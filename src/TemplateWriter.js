@@ -36,7 +36,6 @@ class TemplateWriter {
     this.inputDir = TemplatePath.getDir(inputPath);
     this.outputDir = outputDir;
 
-    this.needToSearchForFiles = null;
     this.templateFormats = templateFormats;
 
     this.templateData = templateData;
@@ -60,10 +59,6 @@ class TemplateWriter {
   }
 
   set templateFormats(value) {
-    if (value !== this._templateFormats) {
-      this.needToSearchForFiles = true;
-    }
-
     this._templateFormats = value;
   }
 
@@ -143,11 +138,8 @@ class TemplateWriter {
   }
 
   async _getAllPaths() {
-    if (!this._allPathsCache || this.needToSearchForFiles) {
-      this._allPathsCache = await this.eleventyFiles.getFiles();
-      debug("Found: %o", this._allPathsCache);
-    }
-    return this._allPathsCache;
+    // this is now cached upstream by FileSystemSearch
+    return this.eleventyFiles.getFiles();
   }
 
   _isIncrementalFileAPassthroughCopy(paths) {
@@ -301,11 +293,11 @@ class TemplateWriter {
     });
   }
 
-  async writePassthroughCopy(paths) {
+  async writePassthroughCopy(templateExtensionPaths) {
     let passthroughManager = this.eleventyFiles.getPassthroughManager();
     passthroughManager.setIncrementalFile(this.incrementalFile);
 
-    return passthroughManager.copyAll(paths).catch((e) => {
+    return passthroughManager.copyAll(templateExtensionPaths).catch((e) => {
       this.errorHandler.warn(e, "Error with passthrough copy");
       return Promise.reject(new EleventyPassthroughCopyError("Having trouble copying", e));
     });

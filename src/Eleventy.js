@@ -672,6 +672,7 @@ Arguments:
 
     this.config = this.eleventyConfig.getConfig();
     this.eleventyServe.config = this.config;
+    this.eleventyServe.eleventyConfig = this.eleventyConfig;
 
     // only use config quietMode if --quiet not set on CLI
     if (!this.verboseModeSetViaCommandLineParam) {

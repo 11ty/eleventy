@@ -166,12 +166,17 @@ class TemplatePassthroughManager {
 
         if (pass.isDryRun) {
           // We don’t count the skipped files as we need to iterate over them
-          debug("Skipped %o (either from --dryrun or --incremental)", inputPath);
+          debug(
+            "Skipped %o (either from --dryrun or --incremental or for-free passthrough copy)",
+            inputPath
+          );
         } else {
           if (count) {
             this.count += count;
+            debug("Copied %o (%d files)", inputPath, count || 0);
+          } else {
+            debug("Skipped copying %o (emulated passthrough copy)", inputPath);
           }
-          debug("Copied %o (%d files)", inputPath, count || 0);
         }
 
         return {
@@ -267,9 +272,9 @@ class TemplatePassthroughManager {
   // Performance note: these can actually take a fair bit of time, but aren’t a
   // bottleneck to eleventy. The copies are performed asynchronously and don’t affect eleventy
   // write times in a significant way.
-  async copyAll(paths) {
+  async copyAll(templateExtensionPaths) {
     debug("TemplatePassthrough copy started.");
-    let normalizedPaths = this.getAllNormalizedPaths(paths);
+    let normalizedPaths = this.getAllNormalizedPaths(templateExtensionPaths);
 
     let passthroughs = normalizedPaths.map((path) => {
       // if incrementalFile is set but it isn’t a passthrough copy, normalizedPaths will be an empty array
@@ -278,16 +283,16 @@ class TemplatePassthroughManager {
       return this.getTemplatePassthroughForPath(path, isIncremental);
     });
 
-    return Promise.all(passthroughs.map((pass) => this.copyPassthrough(pass))).then(
-      async (result) => {
-        await this.config.events.emitLazy("eleventy.passthrough", () => ({
-          map: this.getAliasesFromPassthroughResults(result),
-        }));
+    let promises = passthroughs.map((pass) => this.copyPassthrough(pass));
+    return Promise.all(promises).then(async (results) => {
+      let aliases = this.getAliasesFromPassthroughResults(results);
+      await this.config.events.emit("eleventy.passthrough", {
+        map: aliases,
+      });
 
-        debug(`TemplatePassthrough copy finished. Current count: ${this.count}`);
-        return result;
-      }
-    );
+      debug(`TemplatePassthrough copy finished. Current count: ${this.count}`);
+      return results;
+    });
   }
 }
 
