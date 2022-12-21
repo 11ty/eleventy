@@ -61,7 +61,7 @@ class UserConfig {
 
     this.passthroughCopies = {};
     this.layoutAliases = {};
-    this.layoutResolution = false; // extension-less layout files
+    this.layoutResolution = true; // extension-less layout files
 
     this.linters = {};
     this.transforms = {};
@@ -151,35 +151,19 @@ class UserConfig {
     }
 
     if (this.liquidTags[name]) {
-      debug(
-        chalk.yellow(
-          "Warning, overwriting a Liquid tag with `addLiquidTag(%o)`"
-        ),
-        name
-      );
+      debug(chalk.yellow("Warning, overwriting a Liquid tag with `addLiquidTag(%o)`"), name);
     }
-    this.liquidTags[name] = this.benchmarks.config.add(
-      `"${name}" Liquid Custom Tag`,
-      tagFn
-    );
+    this.liquidTags[name] = this.benchmarks.config.add(`"${name}" Liquid Custom Tag`, tagFn);
   }
 
   addLiquidFilter(name, callback) {
     name = this.getNamespacedName(name);
 
     if (this.liquidFilters[name]) {
-      debug(
-        chalk.yellow(
-          "Warning, overwriting a Liquid filter with `addLiquidFilter(%o)`"
-        ),
-        name
-      );
+      debug(chalk.yellow("Warning, overwriting a Liquid filter with `addLiquidFilter(%o)`"), name);
     }
 
-    this.liquidFilters[name] = this.benchmarks.config.add(
-      `"${name}" Liquid Filter`,
-      callback
-    );
+    this.liquidFilters[name] = this.benchmarks.config.add(`"${name}" Liquid Filter`, callback);
   }
 
   addNunjucksAsyncFilter(name, callback) {
@@ -187,9 +171,7 @@ class UserConfig {
 
     if (this.nunjucksAsyncFilters[name]) {
       debug(
-        chalk.yellow(
-          "Warning, overwriting a Nunjucks filter with `addNunjucksAsyncFilter(%o)`"
-        ),
+        chalk.yellow("Warning, overwriting a Nunjucks filter with `addNunjucksAsyncFilter(%o)`"),
         name
       );
     }
@@ -210,9 +192,7 @@ class UserConfig {
 
       if (this.nunjucksFilters[name]) {
         debug(
-          chalk.yellow(
-            "Warning, overwriting a Nunjucks filter with `addNunjucksFilter(%o)`"
-          ),
+          chalk.yellow("Warning, overwriting a Nunjucks filter with `addNunjucksFilter(%o)`"),
           name
         );
       }
@@ -229,9 +209,7 @@ class UserConfig {
 
     if (this.handlebarsHelpers[name]) {
       debug(
-        chalk.yellow(
-          "Warning, overwriting a Handlebars helper with `addHandlebarsHelper(%o)`."
-        ),
+        chalk.yellow("Warning, overwriting a Handlebars helper with `addHandlebarsHelper(%o)`."),
         name
       );
     }
@@ -305,18 +283,10 @@ class UserConfig {
     }
 
     if (this.nunjucksTags[name]) {
-      debug(
-        chalk.yellow(
-          "Warning, overwriting a Nunjucks tag with `addNunjucksTag(%o)`"
-        ),
-        name
-      );
+      debug(chalk.yellow("Warning, overwriting a Nunjucks tag with `addNunjucksTag(%o)`"), name);
     }
 
-    this.nunjucksTags[name] = this.benchmarks.config.add(
-      `"${name}" Nunjucks Custom Tag`,
-      tagFn
-    );
+    this.nunjucksTags[name] = this.benchmarks.config.add(`"${name}" Nunjucks Custom Tag`, tagFn);
   }
 
   addGlobalData(name, data) {
@@ -330,9 +300,7 @@ class UserConfig {
 
     if (this.nunjucksGlobals[name]) {
       debug(
-        chalk.yellow(
-          "Warning, overwriting a Nunjucks global with `addNunjucksGlobal(%o)`"
-        ),
+        chalk.yellow("Warning, overwriting a Nunjucks global with `addNunjucksGlobal(%o)`"),
         name
       );
     }
@@ -350,25 +318,24 @@ class UserConfig {
   addTransform(name, callback) {
     name = this.getNamespacedName(name);
 
-    this.transforms[name] = this.benchmarks.config.add(
-      `"${name}" Transform`,
-      callback
-    );
+    this.transforms[name] = this.benchmarks.config.add(`"${name}" Transform`, callback);
   }
 
   addLinter(name, callback) {
     name = this.getNamespacedName(name);
 
-    this.linters[name] = this.benchmarks.config.add(
-      `"${name}" Linter`,
-      callback
-    );
+    this.linters[name] = this.benchmarks.config.add(`"${name}" Linter`, callback);
   }
 
   addLayoutAlias(from, to) {
     this.layoutAliases[from] = to;
   }
 
+  setLayoutResolution(resolution) {
+    this.layoutResolution = !!resolution;
+  }
+
+  // compat
   enableLayoutResolution() {
     this.layoutResolution = true;
   }
@@ -406,10 +373,7 @@ class UserConfig {
   _getPluginName(plugin) {
     if (typeof plugin === "function") {
       return plugin.name;
-    } else if (
-      plugin.configFunction &&
-      typeof plugin.configFunction === "function"
-    ) {
+    } else if (plugin.configFunction && typeof plugin.configFunction === "function") {
       return plugin.configFunction.name;
     }
   }
@@ -417,9 +381,7 @@ class UserConfig {
   _executePlugin(plugin, options) {
     let name = this._getPluginName(plugin);
     debug(`Adding ${name || "anonymous"} plugin`);
-    let pluginBenchmark = this.benchmarks.aggregate.get(
-      "Configuration addPlugin"
-    );
+    let pluginBenchmark = this.benchmarks.aggregate.get("Configuration addPlugin");
     if (typeof plugin === "function") {
       pluginBenchmark.before();
       this.benchmarks.config;
@@ -522,10 +484,7 @@ class UserConfig {
       debug(
         "WARNING: using `eleventyConfig.setLibrary` will override any configuration set using `.setLiquidOptions` via the config API. You’ll need to pass these options to the library yourself."
       );
-    } else if (
-      engineName === "njk" &&
-      Object.keys(this.nunjucksEnvironmentOptions).length
-    ) {
+    } else if (engineName === "njk" && Object.keys(this.nunjucksEnvironmentOptions).length) {
       debug(
         "WARNING: using `eleventyConfig.setLibrary` will override any configuration set using `.setNunjucksEnvironmentOptions` via the config API. You’ll need to pass these options to the library yourself."
       );
@@ -615,9 +574,7 @@ class UserConfig {
 
       if (this.nunjucksShortcodes[name]) {
         debug(
-          chalk.yellow(
-            "Warning, overwriting a Nunjucks Shortcode with `addNunjucksShortcode(%o)`"
-          ),
+          chalk.yellow("Warning, overwriting a Nunjucks Shortcode with `addNunjucksShortcode(%o)`"),
           name
         );
       }
@@ -634,9 +591,7 @@ class UserConfig {
 
     if (this.liquidShortcodes[name]) {
       debug(
-        chalk.yellow(
-          "Warning, overwriting a Liquid Shortcode with `addLiquidShortcode(%o)`"
-        ),
+        chalk.yellow("Warning, overwriting a Liquid Shortcode with `addLiquidShortcode(%o)`"),
         name
       );
     }
@@ -675,10 +630,7 @@ class UserConfig {
 
   // Undocumented method as a mitigation to reduce risk of #498
   addPairedAsyncShortcode(name, callback) {
-    debug(
-      "Adding universal async paired shortcode %o",
-      this.getNamespacedName(name)
-    );
+    debug("Adding universal async paired shortcode %o", this.getNamespacedName(name));
     this.addPairedNunjucksAsyncShortcode(name, callback);
     this.addPairedLiquidShortcode(name, callback);
     this.addJavaScriptFunction(name, callback);

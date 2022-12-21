@@ -6,33 +6,16 @@ const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 function getResolverInstance(path, inputDir, { eleventyConfig, map } = {}) {
   if (!eleventyConfig) {
     eleventyConfig = new TemplateConfig();
-    eleventyConfig.userConfig.enableLayoutResolution();
   }
 
   if (!map) {
     map = new EleventyExtensionMap(
-      [
-        "liquid",
-        "ejs",
-        "md",
-        "hbs",
-        "mustache",
-        "haml",
-        "pug",
-        "njk",
-        "html",
-        "11ty.js",
-      ],
+      ["liquid", "ejs", "md", "hbs", "mustache", "haml", "pug", "njk", "html", "11ty.js"],
       eleventyConfig
     );
   }
 
-  return new TemplateLayoutPathResolver(
-    path,
-    inputDir,
-    map,
-    eleventyConfig.getConfig()
-  );
+  return new TemplateLayoutPathResolver(path, inputDir, map, eleventyConfig.getConfig());
 }
 
 test("Layout", (t) => {
@@ -53,7 +36,6 @@ test("Layout (uses empty string includes folder)", (t) => {
       includes: "",
     },
   });
-  eleventyConfig.userConfig.enableLayoutResolution();
 
   let res = getResolverInstance("includesemptystring", "./test/stubs", {
     eleventyConfig,
@@ -70,7 +52,6 @@ test("Layout (uses empty string includes folder) already has extension", (t) => 
       includes: "",
     },
   });
-  eleventyConfig.userConfig.enableLayoutResolution();
 
   let res = getResolverInstance("includesemptystring.ejs", "./test/stubs", {
     eleventyConfig,
@@ -88,7 +69,6 @@ test("Layout (uses layouts folder)", (t) => {
       includes: "_includes",
     },
   });
-  eleventyConfig.userConfig.enableLayoutResolution();
 
   let res = getResolverInstance("layoutsdefault", "./test/stubs", {
     eleventyConfig,
@@ -107,7 +87,6 @@ test("Layout (uses layouts folder) already has extension", (t) => {
     },
   });
 
-  eleventyConfig.userConfig.enableLayoutResolution();
   let res = getResolverInstance("layoutsdefault.ejs", "./test/stubs", {
     eleventyConfig,
   });
@@ -124,7 +103,6 @@ test("Layout (uses empty string layouts folder)", (t) => {
       includes: "_includes",
     },
   });
-  eleventyConfig.userConfig.enableLayoutResolution();
 
   let res = getResolverInstance("layoutsemptystring", "./test/stubs", {
     eleventyConfig,
@@ -135,6 +113,8 @@ test("Layout (uses empty string layouts folder)", (t) => {
 
 test("Layout (uses empty string layouts folder) no template resolution", (t) => {
   let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.setLayoutResolution(false);
+
   eleventyConfig.appendToRootConfig({
     templateFormats: ["ejs"],
     dir: {
@@ -161,7 +141,6 @@ test("Layout (uses empty string layouts folder) already has extension", (t) => {
       includes: "_includes",
     },
   });
-  eleventyConfig.userConfig.enableLayoutResolution();
 
   let res = getResolverInstance("layoutsemptystring.ejs", "./test/stubs", {
     eleventyConfig,
