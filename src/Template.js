@@ -102,6 +102,7 @@ class Template extends TemplateContent {
 
     if (types.render) {
       delete this._cacheRenderedContent;
+      delete this._cacheFinalContent;
     }
   }
 
@@ -766,6 +767,10 @@ class Template extends TemplateContent {
   }
 
   async renderPageEntry(mapEntry, page) {
+    if (this._cacheFinalContent) {
+      return this._cacheFinalContent;
+    }
+
     let content;
     let layoutKey = mapEntry.data[this.config.keys.layout];
     if (layoutKey) {
@@ -778,6 +783,7 @@ class Template extends TemplateContent {
 
     await this.runLinters(content, page);
     content = await this.runTransforms(content, page);
+    this._cacheFinalContent = content;
     return content;
   }
 
