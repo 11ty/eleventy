@@ -177,7 +177,7 @@ class TemplateContent {
     return this._inputCache.get(TemplatePath.absolutePath(path));
   }
 
-  static deleteCached(path) {
+  static deleteFromInputCache(path) {
     this._inputCache.delete(TemplatePath.absolutePath(path));
   }
 
@@ -290,10 +290,7 @@ class TemplateContent {
 
           this.bench.get("(count) Template Compile Cache Miss").incrementCount();
 
-          // Previously the cache grew when the content changes, in 2.0.0-canary.19
-          // we now segment caches based on inputPath so we also clear all other cache
-          // entries for this inputPath
-          cache.clear();
+          // Compile cache is cleared when the resource is modified (below)
 
           // Compilation is async, so we eagerly cache a Promise that eventually
           // resolves to the compiled function
@@ -550,7 +547,15 @@ class TemplateContent {
 TemplateContent._inputCache = new Map();
 TemplateContent._compileCache = new Map();
 eventBus.on("eleventy.resourceModified", (path) => {
-  TemplateContent.deleteCached(path);
+  // delete from input cache
+  TemplateContent.deleteFromInputCache(path);
+
+  // delete form compile cache
+  let normalized = TemplatePath.addLeadingDotSlash(path);
+  let compileCache = TemplateContent._compileCache.get(normalized);
+  if (compileCache) {
+    compileCache.clear();
+  }
 });
 
 // Used when the configuration file reset https://github.com/11ty/eleventy/issues/2147
