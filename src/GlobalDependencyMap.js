@@ -72,6 +72,10 @@ class GlobalDependencyMap {
     return this._map;
   }
 
+  set map(graph) {
+    this._map = graph;
+  }
+
   normalizeNode(node) {
     if (!node) {
       return;
@@ -92,9 +96,7 @@ class GlobalDependencyMap {
     }
 
     if (typeof node !== "string") {
-      throw new Error(
-        "`addDependencies` files must be strings. Received:" + node
-      );
+      throw new Error("`addDependencies` files must be strings. Received:" + node);
     }
 
     // Paths should not be absolute (we convert absolute paths to relative)
@@ -120,7 +122,15 @@ class GlobalDependencyMap {
     return this.map.directDependantsOf(node);
   }
 
+  hasNode(node) {
+    return this.map.hasNode(this.normalizeNode(node));
+  }
+
   findCollectionsRemovedFrom(node, collectionNames) {
+    if (!this.hasNode(node)) {
+      return new Set();
+    }
+
     let prevDeps = this.getDependantsFor(node).map((entry) => {
       if (entry.startsWith(GlobalDependencyMap.COLLECTION_PREFIX)) {
         return GlobalDependencyMap.getEntryFromCollectionKey(entry);
@@ -157,9 +167,7 @@ class GlobalDependencyMap {
   getTemplatesThatConsumeCollections(collectionNames) {
     let templates = new Set();
     for (let name of collectionNames) {
-      for (let node of this.map.dependantsOf(
-        GlobalDependencyMap.getCollectionKeyForEntry(name)
-      )) {
+      for (let node of this.map.dependantsOf(GlobalDependencyMap.getCollectionKeyForEntry(name))) {
         if (!node.startsWith(GlobalDependencyMap.COLLECTION_PREFIX)) {
           templates.add(node);
         }
@@ -234,10 +242,9 @@ class GlobalDependencyMap {
 
   addDependencyPublishesToCollection(from, collectionName) {
     let normalizedFrom = this.normalizeNode(from);
-    this._addDependency(
-      GlobalDependencyMap.getCollectionKeyForEntry(collectionName),
-      [normalizedFrom]
-    );
+    this._addDependency(GlobalDependencyMap.getCollectionKeyForEntry(collectionName), [
+      normalizedFrom,
+    ]);
   }
 
   // Layouts are not relevant to compile cache and can be ignored
@@ -269,13 +276,26 @@ class GlobalDependencyMap {
     }
 
     // The file that changed is a dependency of the template
-    if (
-      this.hasDependency(fullTemplateInputPath, comparisonFile, includeLayouts)
-    ) {
+    if (this.hasDependency(fullTemplateInputPath, comparisonFile, includeLayouts)) {
       return true;
     }
 
     return false;
+  }
+
+  stringify() {
+    return JSON.stringify(this.map);
+  }
+
+  restore(persisted) {
+    let obj = JSON.parse(persisted);
+    let graph = new DepGraph({ circular: true });
+
+    // https://github.com/jriecken/dependency-graph/issues/44
+    for (let key in obj) {
+      graph[key] = obj[key];
+    }
+    this.map = graph;
   }
 }
 
