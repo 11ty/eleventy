@@ -269,6 +269,7 @@ class TemplateWriter {
         ) {
           // Related to the template but not the template (only reset the render cache)
           tmpl.resetCaches({
+            data: true,
             render: true,
           });
         } else {
