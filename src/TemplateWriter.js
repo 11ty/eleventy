@@ -272,6 +272,11 @@ class TemplateWriter {
             render: true,
           });
         } else {
+          // during incremental we only reset the data cache for non-matching templates
+          // https://github.com/11ty/eleventy/issues/2710
+          tmpl.resetCaches({
+            data: true,
+          });
           tmpl.setDryRunViaIncremental();
           this.skippedCount++;
         }
