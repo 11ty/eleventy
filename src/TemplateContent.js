@@ -58,7 +58,7 @@ class TemplateContent {
   }
 
   // Called during an incremental build when the template instance is cached but needs to be reset because it has changed
-  resetForIncremental(types) {
+  resetCaches(types) {
     types = this.getResetTypes(types);
 
     if (types.read) {

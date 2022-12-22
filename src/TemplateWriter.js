@@ -154,7 +154,10 @@ class TemplateWriter {
   _createTemplate(path, to = "fs") {
     let tmpl = this._templatePathCache.get(path);
 
-    if (!tmpl) {
+    let wasCached = false;
+    if (tmpl) {
+      wasCached = true;
+    } else {
       tmpl = new Template(
         path,
         this.inputDir,
@@ -194,21 +197,30 @@ class TemplateWriter {
     tmpl.setIsVerbose(this.isVerbose);
     tmpl.reset();
 
-    return tmpl;
+    return {
+      template: tmpl,
+      wasCached,
+    };
   }
 
   async _addToTemplateMap(paths, to = "fs") {
     let promises = [];
 
-    let isFullTemplate = this.eleventyFiles.isFullTemplateFile(paths, this.incrementalFile);
+    let isIncrementalFileAFullTemplate = this.eleventyFiles.isFullTemplateFile(
+      paths,
+      this.incrementalFile
+    );
+    let isIncrementalFileAPassthroughCopy = this._isIncrementalFileAPassthroughCopy(paths);
 
     let relevantToDeletions = new Set();
 
     // Update the data cascade and the global dependency map for the one incremental template before everything else (only full templates)
-    if (isFullTemplate && this.incrementalFile) {
+    if (isIncrementalFileAFullTemplate && this.incrementalFile) {
       let path = this.incrementalFile;
-      let tmpl = this._createTemplate(path, to);
-      tmpl.resetForIncremental(); // reset internal caches on the cached template instance
+      let { template: tmpl, wasCached } = this._createTemplate(path, to);
+      if (wasCached) {
+        tmpl.resetCaches(); // reset internal caches on the cached template instance
+      }
 
       let p = this.templateMap.add(tmpl);
       promises.push(p);
@@ -223,8 +235,6 @@ class TemplateWriter {
       this.templateMap.addToGlobalDependencyGraph();
     }
 
-    let isIncrementalFileAPassthroughCopy = this._isIncrementalFileAPassthroughCopy(paths);
-
     for (let path of paths) {
       if (!this.extensionMap.hasEngine(path)) {
         continue;
@@ -236,13 +246,17 @@ class TemplateWriter {
       }
 
       // We already updated the data cascade for this template above
-      if (isFullTemplate && this.incrementalFile === path) {
+      if (isIncrementalFileAFullTemplate && this.incrementalFile === path) {
         continue;
       }
 
-      let tmpl = this._createTemplate(path, to);
+      let { template: tmpl, wasCached } = this._createTemplate(path, to);
 
-      if (this.incrementalFile) {
+      if (!this.incrementalFile) {
+        if (wasCached) {
+          tmpl.resetCaches();
+        }
+      } else {
         let isTemplateRelevantToDeletedCollections = relevantToDeletions.has(
           TemplatePath.stripLeadingDotSlash(tmpl.inputPath)
         );
@@ -250,10 +264,11 @@ class TemplateWriter {
         if (
           isTemplateRelevantToDeletedCollections ||
           tmpl.isFileRelevantToThisTemplate(this.incrementalFile, {
-            isFullTemplate,
+            isFullTemplate: isIncrementalFileAFullTemplate,
           })
         ) {
-          tmpl.resetForIncremental({
+          // Related to the template but not the template (only reset the render cache)
+          tmpl.resetCaches({
             render: true,
           });
         } else {

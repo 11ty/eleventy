@@ -91,10 +91,10 @@ class Template extends TemplateContent {
     this.writeCount = 0;
   }
 
-  resetForIncremental(types) {
+  resetCaches(types) {
     types = this.getResetTypes(types);
 
-    super.resetForIncremental(types);
+    super.resetCaches(types);
 
     if (types.data) {
       delete this._dataCache;
