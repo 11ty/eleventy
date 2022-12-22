@@ -12,6 +12,13 @@ class FileSystemSearch {
     this.count = 0;
   }
 
+  getCacheKey(key, globs, options) {
+    if (Array.isArray(globs)) {
+      globs = globs.sort();
+    }
+    return key + JSON.stringify(globs) + JSON.stringify(options);
+  }
+
   // returns a promise
   search(key, globs, options = {}) {
     debug("Glob search (%o) searching for: %o", key, globs);
@@ -27,20 +34,22 @@ class FileSystemSearch {
       options.ignore = options.ignore.map((entry) => TemplatePath.stripLeadingDotSlash(entry));
     }
 
+    let cacheKey = this.getCacheKey(key, globs, options);
+
     // Only after the promise has resolved
-    if (this.outputs[key]) {
-      return Array.from(this.outputs[key]);
+    if (this.outputs[cacheKey]) {
+      return Array.from(this.outputs[cacheKey]);
     }
 
-    if (!this.promises[key]) {
-      this.inputs[key] = {
+    if (!this.promises[cacheKey]) {
+      this.inputs[cacheKey] = {
         input: globs,
         options,
       };
 
       this.count++;
 
-      this.promises[key] = fastglob(
+      this.promises[cacheKey] = fastglob(
         globs,
         Object.assign(
           {
@@ -50,13 +59,15 @@ class FileSystemSearch {
           options
         )
       ).then((results) => {
-        this.outputs[key] = new Set(results.map((entry) => TemplatePath.addLeadingDotSlash(entry)));
-        return Array.from(this.outputs[key]);
+        this.outputs[cacheKey] = new Set(
+          results.map((entry) => TemplatePath.addLeadingDotSlash(entry))
+        );
+        return Array.from(this.outputs[cacheKey]);
       });
     }
 
     // may be an unresolved promise
-    return this.promises[key];
+    return this.promises[cacheKey];
   }
 
   _modify(path, setOperation) {
