@@ -221,33 +221,30 @@ class UserConfig {
   }
 
   addFilter(name, callback) {
+    // This method *requires* `async function` and will not work with `function` that returns a promise
+    if (callback instanceof ComparisonAsyncFunction) {
+      this.addAsyncFilter(name, callback);
+      return;
+    }
+
     debug("Adding universal filter %o", this.getNamespacedName(name));
 
     // namespacing happens downstream
     this.addLiquidFilter(name, callback);
     this.addJavaScriptFunction(name, callback);
 
-    // This method *requires* `async function` and will not work with `function` that returns a promise
-    if (callback instanceof ComparisonAsyncFunction) {
-      this.addNunjucksAsyncFilter(name, async function (...args) {
-        let cb = args.pop();
-        let ret = await callback.call(this, ...args);
-        cb(null, ret);
-      });
-    } else {
-      this.addNunjucksFilter(name, function (...args) {
-        let ret = callback.call(this, ...args);
-        if (ret instanceof Promise) {
-          throw new Error(
-            `Nunjucks *is* async-friendly with \`addFilter("${name}", async function() {})\` but you need to supply an \`async function\`. You returned a promise from \`addFilter("${name}", function() {})\`. Alternatively, use the \`addAsyncFilter("${name}")\` configuration API method.`
-          );
-        }
-        return ret;
-      });
+    this.addNunjucksFilter(name, function (...args) {
+      let ret = callback.call(this, ...args);
+      if (ret instanceof Promise) {
+        throw new Error(
+          `Nunjucks *is* async-friendly with \`addFilter("${name}", async function() {})\` but you need to supply an \`async function\`. You returned a promise from \`addFilter("${name}", function() {})\`. Alternatively, use the \`addAsyncFilter("${name}")\` configuration API method.`
+        );
+      }
+      return ret;
+    });
 
-      // TODO remove Handlebars helpers in Universal Filters. Use shortcodes instead (the Handlebars template syntax is the same).
-      this.addHandlebarsHelper(name, callback);
-    }
+    // TODO remove Handlebars helpers in Universal Filters. Use shortcodes instead (the Handlebars template syntax is the same).
+    this.addHandlebarsHelper(name, callback);
   }
 
   // Liquid, Nunjucks, and JS only
@@ -262,6 +259,8 @@ class UserConfig {
       let ret = await callback.call(this, ...args);
       cb(null, ret);
     });
+
+    // Note: no handlebars
   }
 
   getFilter(name) {
@@ -532,20 +531,30 @@ class UserConfig {
   }
 
   addShortcode(name, callback) {
+    // This method *requires* `async function` and will not work with `function` that returns a promise
+    if (callback instanceof ComparisonAsyncFunction) {
+      this.addAsyncShortcode(name, callback); // Note: no handlebars
+      return;
+    }
+
     debug("Adding universal shortcode %o", this.getNamespacedName(name));
-    this.addNunjucksShortcode(name, callback);
     this.addLiquidShortcode(name, callback);
-    this.addHandlebarsShortcode(name, callback);
     this.addJavaScriptFunction(name, callback);
+    this.addNunjucksShortcode(name, callback);
+
+    // Note: Handlebars is sync-only
+    this.addHandlebarsShortcode(name, callback);
   }
 
-  // Undocumented method as a mitigation to reduce risk of #498
   addAsyncShortcode(name, callback) {
     debug("Adding universal async shortcode %o", this.getNamespacedName(name));
+
+    // Related: #498
     this.addNunjucksAsyncShortcode(name, callback);
     this.addLiquidShortcode(name, callback);
     this.addJavaScriptFunction(name, callback);
-    // not supported in Handlebars
+
+    // Note: Handlebars is not async-friendly
   }
 
   addNunjucksAsyncShortcode(name, callback) {
@@ -621,11 +630,19 @@ class UserConfig {
   }
 
   addPairedShortcode(name, callback) {
+    // This method *requires* `async function` and will not work with `function` that returns a promise
+    if (callback instanceof ComparisonAsyncFunction) {
+      this.addPairedAsyncShortcode(name, callback); // Note: no handlebars
+      return;
+    }
+
     debug("Adding universal paired shortcode %o", this.getNamespacedName(name));
     this.addPairedNunjucksShortcode(name, callback);
     this.addPairedLiquidShortcode(name, callback);
-    this.addPairedHandlebarsShortcode(name, callback);
     this.addJavaScriptFunction(name, callback);
+
+    // Note: Handlebars is sync-only
+    this.addPairedHandlebarsShortcode(name, callback);
   }
 
   // Undocumented method as a mitigation to reduce risk of #498
@@ -634,7 +651,7 @@ class UserConfig {
     this.addPairedNunjucksAsyncShortcode(name, callback);
     this.addPairedLiquidShortcode(name, callback);
     this.addJavaScriptFunction(name, callback);
-    // not supported in Handlebars
+    // Note: Handlebars is sync-only
   }
 
   addPairedNunjucksAsyncShortcode(name, callback) {
