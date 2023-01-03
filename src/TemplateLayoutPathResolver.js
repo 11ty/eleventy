@@ -6,9 +6,7 @@ const { TemplatePath } = require("@11ty/eleventy-utils");
 class TemplateLayoutPathResolver {
   constructor(path, inputDir, extensionMap, config) {
     if (!config) {
-      throw new Error(
-        "Expected `config` in TemplateLayoutPathResolver constructor"
-      );
+      throw new Error("Expected `config` in TemplateLayoutPathResolver constructor");
     }
     this._config = config;
     this.inputDir = inputDir;
@@ -17,9 +15,7 @@ class TemplateLayoutPathResolver {
     this.aliases = {};
     this.extensionMap = extensionMap;
     if (!extensionMap) {
-      throw new Error(
-        "Expected `extensionMap` in TemplateLayoutPathResolver constructor."
-      );
+      throw new Error("Expected `extensionMap` in TemplateLayoutPathResolver constructor.");
     }
 
     this.init();
@@ -67,19 +63,12 @@ class TemplateLayoutPathResolver {
 
     this.pathAlreadyHasExtension = this.dir + "/" + this.path;
 
-    if (
-      this.path.split(".").length > 0 &&
-      fs.existsSync(this.pathAlreadyHasExtension)
-    ) {
+    if (this.path.split(".").length > 0 && fs.existsSync(this.pathAlreadyHasExtension)) {
       this.filename = this.path;
-      this.fullPath = TemplatePath.addLeadingDotSlash(
-        this.pathAlreadyHasExtension
-      );
+      this.fullPath = TemplatePath.addLeadingDotSlash(this.pathAlreadyHasExtension);
     } else if (useLayoutResolution) {
       this.filename = this.findFileName();
-      this.fullPath = TemplatePath.addLeadingDotSlash(
-        this.dir + "/" + this.filename
-      );
+      this.fullPath = TemplatePath.addLeadingDotSlash(this.dir + "/" + this.filename);
     }
   }
 
@@ -110,10 +99,7 @@ class TemplateLayoutPathResolver {
   findFileName() {
     if (!fs.existsSync(this.dir)) {
       throw Error(
-        "TemplateLayoutPathResolver directory does not exist for " +
-          this.path +
-          ": " +
-          this.dir
+        "TemplateLayoutPathResolver directory does not exist for " + this.path + ": " + this.dir
       );
     }
 
@@ -137,6 +123,10 @@ class TemplateLayoutPathResolver {
     }
 
     return TemplatePath.join(this.inputDir, layoutsDir);
+  }
+
+  getNormalizedLayoutKey() {
+    return TemplatePath.stripLeadingSubPath(this.fullPath, this.getLayoutsDir());
   }
 }
 

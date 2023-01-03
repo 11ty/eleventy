@@ -14,22 +14,24 @@ class TemplateLayout extends TemplateContent {
       throw new Error("Expected `config` in TemplateLayout constructor.");
     }
 
-    let resolvedPath = new TemplateLayoutPathResolver(
-      key,
-      inputDir,
-      extensionMap,
-      config
-    ).getFullPath();
+    let resolver = new TemplateLayoutPathResolver(key, inputDir, extensionMap, config);
+    let resolvedPath = resolver.getFullPath();
 
     super(resolvedPath, inputDir, config);
 
     if (!extensionMap) {
       throw new Error("Expected `extensionMap` in TemplateLayout constructor.");
     }
+
     this.extensionMap = extensionMap;
+    this.key = resolver.getNormalizedLayoutKey();
     this.dataKeyLayoutPath = key;
     this.inputPath = resolvedPath;
     this.inputDir = inputDir;
+  }
+
+  getKey() {
+    return this.key;
   }
 
   static resolveFullKey(key, inputDir) {
@@ -37,21 +39,24 @@ class TemplateLayout extends TemplateContent {
   }
 
   static getTemplate(key, inputDir, config, extensionMap) {
-    if (config.useTemplateCache) {
-      let fullKey = TemplateLayout.resolveFullKey(key, inputDir);
-      if (templateCache.has(fullKey)) {
-        debugDev("Found %o in TemplateCache", key);
-        return templateCache.get(fullKey);
-      }
-
-      let tmpl = new TemplateLayout(key, inputDir, extensionMap, config);
-      debugDev("Added %o to TemplateCache", key);
-      templateCache.add(fullKey, tmpl);
-
-      return tmpl;
-    } else {
+    if (!config.useTemplateCache) {
       return new TemplateLayout(key, inputDir, extensionMap, config);
     }
+
+    let fullKey = TemplateLayout.resolveFullKey(key, inputDir);
+    if (templateCache.has(fullKey)) {
+      debugDev("Found %o in TemplateCache", key);
+      return templateCache.get(fullKey);
+    }
+
+    let layout = new TemplateLayout(key, inputDir, extensionMap, config);
+    debugDev("Added %o to TemplateCache", key);
+    templateCache.add(fullKey, layout);
+    // if the fullKey was an alias, also set to the normalized key
+    // e.g. `layout: "default"` and `layout: "default.liquid"` will both map to the same template.
+    templateCache.add(layout.getKey(), layout);
+
+    return layout;
   }
 
   async getTemplateLayoutMapEntry() {
@@ -137,11 +142,7 @@ class TemplateLayout extends TemplateContent {
     let fns = [];
     try {
       for (let layoutEntry of layoutMap) {
-        fns.push(
-          await layoutEntry.template.compile(
-            await layoutEntry.template.getPreRender()
-          )
-        );
+        fns.push(await layoutEntry.template.compile(await layoutEntry.template.getPreRender()));
       }
     } catch (e) {
       debugDev("Clearing TemplateCache after error.");
