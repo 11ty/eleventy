@@ -1589,9 +1589,9 @@ test("Get Layout Chain", async (t) => {
     "./dist"
   );
 
-  await tmpl.getData();
+  let data = await tmpl.getData();
 
-  t.deepEqual(await tmpl._layout.getLayoutChain(), [
+  t.deepEqual(await tmpl.getLayout(data.layout).getLayoutChain(), [
     "./test/stubs-incremental/layout-chain/_includes/base.njk",
     "./test/stubs-incremental/layout-chain/_includes/parent.njk",
   ]);

@@ -1,21 +1,43 @@
+const { TemplatePath } = require("@11ty/eleventy-utils");
+
+const eventBus = require("./EventBus");
+
 // Note: this is only used for TemplateLayout right now but could be used for more
 // Just be careful because right now the TemplateLayout cache keys are not directly mapped to paths
 // So you may get collisions if you use this for other things.
 class TemplateCache {
   constructor() {
     this.cache = {};
+    this.cacheByInputPath = {};
   }
 
   clear() {
     this.cache = {};
+    this.cacheByInputPath = {};
   }
 
   size() {
     return Object.keys(this.cache).length;
   }
 
-  add(key, template) {
-    this.cache[key] = template;
+  add(key, layoutTemplate) {
+    let keys = new Set();
+
+    keys.add(key);
+
+    if ("getKey" in layoutTemplate) {
+      // if `key` was an alias, also set to the pathed layout value too
+      // e.g. `layout: "default"` and `layout: "default.liquid"` will both map to the same template.
+      keys.add(layoutTemplate.getKey());
+    }
+
+    for (let key of keys) {
+      this.cache[key] = layoutTemplate;
+    }
+
+    // also the full template input path for use with eleventy --serve/--watch `_includes/default.liquid`
+    let fullPath = TemplatePath.stripLeadingDotSlash(layoutTemplate.inputPath);
+    this.cacheByInputPath[fullPath] = layoutTemplate;
   }
 
   has(key) {
@@ -30,12 +52,27 @@ class TemplateCache {
     return this.cache[key];
   }
 
-  remove(key) {
-    if (this.cache[key]) {
+  remove(filePath) {
+    filePath = TemplatePath.stripLeadingDotSlash(filePath);
+
+    if (!this.cacheByInputPath[filePath]) {
+      return;
+    }
+
+    let keys = this.cacheByInputPath[filePath].getCacheKeys();
+    delete this.cacheByInputPath[filePath];
+
+    for (let key of keys) {
       delete this.cache[key];
     }
   }
 }
 
+let layoutCache = new TemplateCache();
+
+eventBus.on("eleventy.resourceModified", (path) => {
+  layoutCache.remove(path);
+});
+
 // singleton
-module.exports = new TemplateCache();
+module.exports = layoutCache;

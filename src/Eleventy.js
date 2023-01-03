@@ -269,7 +269,7 @@ class Eleventy {
   async restart() {
     debug("Restarting");
     this.start = this.getNewTimestamp();
-    templateCache.clear();
+
     this.bench.reset();
     this.eleventyFiles.restart();
     this.extensionMap.reset();

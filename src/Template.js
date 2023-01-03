@@ -134,16 +134,13 @@ class Template extends TemplateContent {
   }
 
   getLayout(layoutKey) {
-    if (!this._layout || layoutKey !== this._layoutKey) {
-      this._layoutKey = layoutKey;
-      this._layout = TemplateLayout.getTemplate(
-        layoutKey,
-        this.getInputDir(),
-        this.config,
-        this.extensionMap
-      );
-    }
-    return this._layout;
+    // already cached downstream in TemplateLayout -> TemplateCache
+    return TemplateLayout.getTemplate(
+      layoutKey,
+      this.getInputDir(),
+      this.config,
+      this.extensionMap
+    );
   }
 
   get baseFile() {

@@ -190,12 +190,16 @@ class TemplateContent {
     if (!this.engine.needsToReadFileContents()) {
       return "";
     }
+
     let templateBenchmark = this.bench.get("Template Read");
     templateBenchmark.before();
+
     let content;
+
     if (this.config.useTemplateCache) {
       content = TemplateContent.getCached(this.inputPath);
     }
+
     if (!content) {
       content = await readFile(this.inputPath, "utf8");
 
@@ -203,6 +207,7 @@ class TemplateContent {
         TemplateContent.cache(this.inputPath, content);
       }
     }
+
     templateBenchmark.after();
 
     return content;
@@ -550,7 +555,7 @@ eventBus.on("eleventy.resourceModified", (path) => {
   // delete from input cache
   TemplateContent.deleteFromInputCache(path);
 
-  // delete form compile cache
+  // delete from compile cache
   let normalized = TemplatePath.addLeadingDotSlash(path);
   let compileCache = TemplateContent._compileCache.get(normalized);
   if (compileCache) {

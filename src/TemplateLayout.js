@@ -34,6 +34,10 @@ class TemplateLayout extends TemplateContent {
     return this.key;
   }
 
+  getCacheKeys() {
+    return new Set([this.dataKeyLayoutPath, this.key]);
+  }
+
   static resolveFullKey(key, inputDir) {
     return TemplatePath.join(inputDir, key);
   }
@@ -52,9 +56,6 @@ class TemplateLayout extends TemplateContent {
     let layout = new TemplateLayout(key, inputDir, extensionMap, config);
     debugDev("Added %o to TemplateCache", key);
     templateCache.add(fullKey, layout);
-    // if the fullKey was an alias, also set to the normalized key
-    // e.g. `layout: "default"` and `layout: "default.liquid"` will both map to the same template.
-    templateCache.add(layout.getKey(), layout);
 
     return layout;
   }
