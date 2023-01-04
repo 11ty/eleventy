@@ -66,17 +66,16 @@ class TemplateLayout extends TemplateContent {
 
   async getTemplateLayoutMapEntry() {
     return {
+      // Used by `getTemplate()`
       key: this.dataKeyLayoutPath,
       inputDir: this.inputDir,
-      template: this,
+
+      // used by `getData()`
       frontMatterData: await this.getFrontMatterData(),
     };
   }
 
   async getTemplateLayoutMap() {
-    if (this.mapCache) {
-      return this.mapCache;
-    }
     // For both the eleventy.layouts event and cyclical layout chain checking  (e.g., a => b => c => a)
     let layoutChain = new Set();
     layoutChain.add(this.inputPath);
@@ -154,11 +153,19 @@ class TemplateLayout extends TemplateContent {
   async getCompiledLayoutFunctions(layoutMap) {
     let fns = [];
     try {
-      for (let layoutEntry of layoutMap) {
-        let rawInput = await layoutEntry.template.getPreRender();
+      for (let { key, inputDir } of layoutMap) {
+        let layoutTemplate = TemplateLayout.getTemplate(
+          key,
+          inputDir,
+          this.config,
+          this.extensionMap
+        );
+
+        let rawInput = await layoutTemplate.getPreRender();
+        let renderFunction = await layoutTemplate.compile(rawInput);
 
         fns.push({
-          render: await layoutEntry.template.compile(rawInput),
+          render: renderFunction,
         });
       }
       return fns;
