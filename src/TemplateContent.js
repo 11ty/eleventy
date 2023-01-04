@@ -62,7 +62,7 @@ class TemplateContent {
     types = this.getResetTypes(types);
 
     if (types.read) {
-      delete this.frontMatter;
+      delete this.readingPromise;
       delete this.inputContent;
       delete this._frontMatterDataCache;
     }
@@ -124,49 +124,63 @@ class TemplateContent {
   }
 
   async read() {
-    if (this.inputContent) {
-      await this.inputContent;
-    } else {
-      this.inputContent = await this.getInputContent();
-    }
-
-    if (this.inputContent) {
-      let options = this.config.frontMatterParsingOptions || {};
-      let fm;
-      try {
-        fm = matter(this.inputContent, options);
-      } catch (e) {
-        throw new TemplateContentFrontMatterError(
-          `Having trouble reading front matter from template ${this.inputPath}`,
-          e
-        );
+    if (!this.readingPromise) {
+      if (!this.inputContent) {
+        // cache the promise
+        this.inputContent = this.getInputContent();
       }
-      if (options.excerpt && fm.excerpt) {
-        let excerptString = fm.excerpt + (options.excerpt_separator || "---");
-        if (fm.content.startsWith(excerptString + os.EOL)) {
-          // with an os-specific newline after excerpt separator
-          fm.content = fm.excerpt.trim() + "\n" + fm.content.slice((excerptString + os.EOL).length);
-        } else if (fm.content.startsWith(excerptString + "\n")) {
-          // with a newline (\n) after excerpt separator
-          // This is necessary for some git configurations on windows
-          fm.content = fm.excerpt.trim() + "\n" + fm.content.slice((excerptString + 1).length);
-        } else if (fm.content.startsWith(excerptString)) {
-          // no newline after excerpt separator
-          fm.content = fm.excerpt + fm.content.slice(excerptString.length);
+
+      this.readingPromise = new Promise(async (resolve, reject) => {
+        try {
+          let content = await this.inputContent;
+
+          if (content) {
+            let options = this.config.frontMatterParsingOptions || {};
+            let fm;
+            try {
+              fm = matter(content, options);
+            } catch (e) {
+              throw new TemplateContentFrontMatterError(
+                `Having trouble reading front matter from template ${this.inputPath}`,
+                e
+              );
+            }
+
+            if (options.excerpt && fm.excerpt) {
+              let excerptString = fm.excerpt + (options.excerpt_separator || "---");
+              if (fm.content.startsWith(excerptString + os.EOL)) {
+                // with an os-specific newline after excerpt separator
+                fm.content =
+                  fm.excerpt.trim() + "\n" + fm.content.slice((excerptString + os.EOL).length);
+              } else if (fm.content.startsWith(excerptString + "\n")) {
+                // with a newline (\n) after excerpt separator
+                // This is necessary for some git configurations on windows
+                fm.content =
+                  fm.excerpt.trim() + "\n" + fm.content.slice((excerptString + 1).length);
+              } else if (fm.content.startsWith(excerptString)) {
+                // no newline after excerpt separator
+                fm.content = fm.excerpt + fm.content.slice(excerptString.length);
+              }
+
+              // alias, defaults to page.excerpt
+              let alias = options.excerpt_alias || "page.excerpt";
+              lodashSet(fm.data, alias, fm.excerpt);
+            }
+            resolve(fm);
+          } else {
+            resolve({
+              data: {},
+              content: "",
+              excerpt: "",
+            });
+          }
+        } catch (e) {
+          reject(e);
         }
-
-        // alias, defaults to page.excerpt
-        let alias = options.excerpt_alias || "page.excerpt";
-        lodashSet(fm.data, alias, fm.excerpt);
-      }
-      this.frontMatter = fm;
-    } else {
-      this.frontMatter = {
-        data: {},
-        content: "",
-        excerpt: "",
-      };
+      });
     }
+
+    return this.readingPromise;
   }
 
   static cache(path, content) {
@@ -213,35 +227,36 @@ class TemplateContent {
     return content;
   }
 
+  // This might only be used in tests
   async getFrontMatter() {
-    if (!this.frontMatter) {
-      await this.read();
-    }
-
-    return this.frontMatter;
+    let fm = await this.read();
+    return fm;
   }
 
   async getPreRender() {
-    if (!this.frontMatter) {
-      await this.read();
-    }
+    let fm = await this.read();
 
-    return this.frontMatter.content;
+    return fm.content;
   }
 
   async getFrontMatterData() {
-    if (this._frontMatterDataCache) {
-      return this._frontMatterDataCache;
+    if (!this._frontMatterDataCache) {
+      this._frontMatterDataCache = new Promise(async (resolve, reject) => {
+        try {
+          let fm = await this.read();
+
+          let extraData = await this.engine.getExtraDataFromFile(this.inputPath);
+          let data = TemplateData.mergeDeep({}, fm.data, extraData);
+
+          let cleanedData = TemplateData.cleanupData(data);
+          resolve(cleanedData);
+        } catch (e) {
+          reject(e);
+        }
+      });
     }
 
-    if (!this.frontMatter) {
-      await this.read();
-    }
-    let extraData = await this.engine.getExtraDataFromFile(this.inputPath);
-    let data = TemplateData.mergeDeep({}, this.frontMatter.data, extraData);
-    let cleanedData = TemplateData.cleanupData(data);
-    this._frontMatterDataCache = cleanedData;
-    return cleanedData;
+    return this._frontMatterDataCache;
   }
 
   async getEngineOverride() {

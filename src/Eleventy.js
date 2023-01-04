@@ -16,7 +16,6 @@ const PathPrefixer = require("./Util/PathPrefixer");
 const TemplateConfig = require("./TemplateConfig");
 const FileSystemSearch = require("./FileSystemSearch");
 
-const templateCache = require("./TemplateCache");
 const simplePlural = require("./Util/Pluralize");
 const deleteRequireCache = require("./Util/DeleteRequireCache");
 const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");

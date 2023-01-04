@@ -34,6 +34,10 @@ class TemplateLayout extends TemplateContent {
     return this.key;
   }
 
+  getFullKey() {
+    return TemplateLayout.resolveFullKey(this.dataKeyLayoutPath, this.inputDir);
+  }
+
   getCacheKeys() {
     return new Set([this.dataKeyLayoutPath, this.key]);
   }
@@ -48,16 +52,16 @@ class TemplateLayout extends TemplateContent {
     }
 
     let fullKey = TemplateLayout.resolveFullKey(key, inputDir);
-    if (templateCache.has(fullKey)) {
-      debugDev("Found %o in TemplateCache", key);
-      return templateCache.get(fullKey);
+    if (!templateCache.has(fullKey)) {
+      let layout = new TemplateLayout(key, inputDir, extensionMap, config);
+
+      templateCache.add(layout);
+      debugDev("Added %o to TemplateCache", key);
+
+      return layout;
     }
 
-    let layout = new TemplateLayout(key, inputDir, extensionMap, config);
-    debugDev("Added %o to TemplateCache", key);
-    templateCache.add(fullKey, layout);
-
-    return layout;
+    return templateCache.get(fullKey);
   }
 
   async getTemplateLayoutMapEntry() {
@@ -73,28 +77,19 @@ class TemplateLayout extends TemplateContent {
     if (this.mapCache) {
       return this.mapCache;
     }
+    // For both the eleventy.layouts event and cyclical layout chain checking  (e.g., a => b => c => a)
+    let layoutChain = new Set();
+    layoutChain.add(this.inputPath);
 
     let cfgKey = this.config.keys.layout;
     let map = [];
     let mapEntry = await this.getTemplateLayoutMapEntry();
-    map.push(mapEntry);
 
-    // Keep track of every layout we see so we can detect cyclical layout chains (e.g., a => b => c => a).
-    const seenLayoutKeys = new Set();
-    seenLayoutKeys.add(mapEntry.key);
+    map.push(mapEntry);
 
     while (mapEntry.frontMatterData && cfgKey in mapEntry.frontMatterData) {
       // Layout of the current layout
-      const parentLayoutKey = mapEntry.frontMatterData[cfgKey];
-      // Abort if a circular layout chain is detected. Otherwise, we'll time out and run out of memory.
-      if (seenLayoutKeys.has(parentLayoutKey)) {
-        throw new Error(
-          `Your layouts have a circular reference, starting at ${map[0].key}! The layout ${parentLayoutKey} was specified twice in this layout chain.`
-        );
-      }
-
-      // Keep track of this layout so we can detect duplicates in subsequent iterations
-      seenLayoutKeys.add(parentLayoutKey);
+      let parentLayoutKey = mapEntry.frontMatterData[cfgKey];
 
       let layout = TemplateLayout.getTemplate(
         parentLayoutKey,
@@ -102,56 +97,76 @@ class TemplateLayout extends TemplateContent {
         this.config,
         this.extensionMap
       );
+
+      // Abort if a circular layout chain is detected. Otherwise, we'll time out and run out of memory.
+      if (layoutChain.has(layout.inputPath)) {
+        throw new Error(
+          `Your layouts have a circular reference, starting at ${map[0].key}! The layout at ${layout.inputPath} was specified twice in this layout chain.`
+        );
+      }
+
+      // Keep track of this layout so we can detect duplicates in subsequent iterations
+      layoutChain.add(layout.inputPath);
+
+      // reassign for next loop
       mapEntry = await layout.getTemplateLayoutMapEntry();
+
       map.push(mapEntry);
     }
 
-    this.mapCache = map;
+    this.layoutChain = Array.from(layoutChain);
+
     return map;
   }
 
   async getLayoutChain() {
-    let map = await this.getTemplateLayoutMap();
-    let layoutChain = [];
-    for (let j = map.length - 1; j >= 0; j--) {
-      layoutChain.push(map[j].template.inputPath);
+    if (!Array.isArray(this.layoutChain)) {
+      throw new Error("Layout chain not yet available for " + this.inputPath);
     }
-    layoutChain.reverse();
-    return layoutChain;
+
+    return this.layoutChain;
   }
 
   async getData() {
-    if (this.dataCache) {
-      return this.dataCache;
+    if (!this.dataCache) {
+      this.dataCache = new Promise(async (resolve, reject) => {
+        try {
+          let map = await this.getTemplateLayoutMap();
+          let dataToMerge = [];
+          for (let j = map.length - 1; j >= 0; j--) {
+            dataToMerge.push(map[j].frontMatterData);
+          }
+
+          // Deep merge of layout front matter
+          let data = TemplateData.mergeDeep(this.config, {}, ...dataToMerge);
+          delete data[this.config.keys.layout];
+
+          resolve(data);
+        } catch (e) {
+          reject(e);
+        }
+      });
     }
 
-    let map = await this.getTemplateLayoutMap();
-    let dataToMerge = [];
-    for (let j = map.length - 1; j >= 0; j--) {
-      dataToMerge.push(map[j].frontMatterData);
-    }
-
-    // Deep merge of layout front matter
-    let data = TemplateData.mergeDeep(this.config, {}, ...dataToMerge);
-    delete data[this.config.keys.layout];
-
-    this.dataCache = data;
-    return data;
+    return this.dataCache;
   }
 
   async getCompiledLayoutFunctions(layoutMap) {
     let fns = [];
     try {
       for (let layoutEntry of layoutMap) {
-        fns.push(await layoutEntry.template.compile(await layoutEntry.template.getPreRender()));
+        let rawInput = await layoutEntry.template.getPreRender();
+
+        fns.push({
+          render: await layoutEntry.template.compile(rawInput),
+        });
       }
+      return fns;
     } catch (e) {
       debugDev("Clearing TemplateCache after error.");
       templateCache.clear();
       return Promise.reject(e);
     }
-
-    return fns;
   }
 
   static augmentDataWithContent(data, templateContent) {
@@ -167,17 +182,27 @@ class TemplateLayout extends TemplateContent {
 
   // Inefficient? We want to compile all the templatelayouts into a single reusable callback?
   // Trouble: layouts may need data variables present downstream/upstream
+  // This is called from Template->renderPageEntry
   async render(data, templateContent) {
     data = TemplateLayout.augmentDataWithContent(data, templateContent);
 
     let layoutMap = await this.getTemplateLayoutMap();
-    let fns = await this.getCompiledLayoutFunctions(layoutMap);
-    for (let fn of fns) {
-      templateContent = await fn(data);
+
+    let compiledFunctions = await this.getCompiledLayoutFunctions(layoutMap);
+
+    for (let { render } of compiledFunctions) {
+      templateContent = await render(data);
       data = TemplateLayout.augmentDataWithContent(data, templateContent);
     }
 
     return templateContent;
+  }
+
+  resetCaches(types) {
+    super.resetCaches(types);
+
+    delete this.dataCache;
+    delete this.layoutChain;
   }
 }
 

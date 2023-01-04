@@ -345,14 +345,14 @@ class Template extends TemplateContent {
       return this._dataCache;
     }
 
-    debugDev("%o getData()", this.inputPath);
+    debugDev("%o getData", this.inputPath);
     let localData = {};
     let globalData = {};
 
     if (this.templateData) {
       localData = await this.templateData.getTemplateDirectoryData(this.inputPath);
       globalData = await this.templateData.getGlobalData(this.inputPath);
-      debugDev("%o getData() getTemplateDirectoryData and getGlobalData", this.inputPath);
+      debugDev("%o getData getTemplateDirectoryData and getGlobalData", this.inputPath);
     }
 
     let frontMatterData = await this.getFrontMatterData();
@@ -367,7 +367,7 @@ class Template extends TemplateContent {
       let layout = this.getLayout(layoutKey);
 
       mergedLayoutData = await layout.getData();
-      debugDev("%o getData() get merged layout chain front matter", this.inputPath);
+      debugDev("%o getData merged layout chain front matter", this.inputPath);
     }
 
     let mergedData = TemplateData.mergeDeep(
@@ -380,7 +380,7 @@ class Template extends TemplateContent {
     );
     mergedData = await this.addPageDate(mergedData);
     mergedData = this.addPageData(mergedData);
-    debugDev("%o getData() mergedData", this.inputPath);
+    debugDev("%o getData mergedData", this.inputPath);
 
     this._dataCache = mergedData;
     return mergedData;
@@ -422,13 +422,14 @@ class Template extends TemplateContent {
     return data;
   }
 
+  // TODO This isn’t used any more, see `renderPageEntry`
   async renderLayout(tmpl, tmplData) {
     let layoutKey = tmplData[tmpl.config.keys.layout];
     let layout = this.getLayout(layoutKey);
     debug("%o is using layout %o", this.inputPath, layoutKey);
 
-    // TODO reuse templateContent from templateMap
     let templateContent = await super.render(await this.getPreRender(), tmplData);
+
     return layout.render(tmplData, templateContent);
   }
 
@@ -448,7 +449,7 @@ class Template extends TemplateContent {
     return renderedContent;
   }
 
-  // render *with* Layouts
+  // TODO This isn’t used any more, see `renderPageEntry`
   async render(data) {
     debugDev("%o render()", this.inputPath);
     if (!data) {
@@ -764,6 +765,7 @@ class Template extends TemplateContent {
   }
 
   async renderPageEntry(mapEntry, page) {
+    // cache with transforms output
     if (this._cacheFinalContent) {
       return this._cacheFinalContent;
     }
@@ -780,7 +782,9 @@ class Template extends TemplateContent {
 
     await this.runLinters(content, page);
     content = await this.runTransforms(content, page);
+
     this._cacheFinalContent = content;
+
     return content;
   }
 

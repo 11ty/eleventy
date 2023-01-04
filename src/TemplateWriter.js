@@ -267,13 +267,14 @@ class TemplateWriter {
             isFullTemplate: isIncrementalFileAFullTemplate,
           })
         ) {
-          // Related to the template but not the template (only reset the render cache)
+          // Related to the template but not the template (reset the render cache, not the read cache)
           tmpl.resetCaches({
             data: true,
             render: true,
           });
         } else {
           // During incremental we only reset the data cache for non-matching templates, see https://github.com/11ty/eleventy/issues/2710
+          // Keep caches for read/render
           tmpl.resetCaches({
             data: true,
           });

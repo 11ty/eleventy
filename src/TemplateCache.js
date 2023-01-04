@@ -17,13 +17,22 @@ class TemplateCache {
   }
 
   size() {
-    return Object.keys(this.cache).length;
+    return Object.keys(this.cacheByInputPath).length;
   }
 
-  add(key, layoutTemplate) {
+  add(layoutTemplate) {
     let keys = new Set();
 
-    keys.add(key);
+    if (typeof layoutTemplate === "string") {
+      throw new Error(
+        "Invalid argument type passed to TemplateCache->add(). Should be a TemplateLayout."
+      );
+    }
+
+    if ("getFullKey" in layoutTemplate) {
+      let fullKey = layoutTemplate.getFullKey();
+      keys.add(fullKey);
+    }
 
     if ("getKey" in layoutTemplate) {
       // if `key` was an alias, also set to the pathed layout value too
@@ -35,7 +44,7 @@ class TemplateCache {
       this.cache[key] = layoutTemplate;
     }
 
-    // also the full template input path for use with eleventy --serve/--watch `_includes/default.liquid`
+    // also the full template input path for use with eleventy --serve/--watch e.g. `_includes/default.liquid` (see `remove` below)
     let fullPath = TemplatePath.stripLeadingDotSlash(layoutTemplate.inputPath);
     this.cacheByInputPath[fullPath] = layoutTemplate;
   }
@@ -59,12 +68,15 @@ class TemplateCache {
       return;
     }
 
-    let keys = this.cacheByInputPath[filePath].getCacheKeys();
-    delete this.cacheByInputPath[filePath];
+    let layoutTemplate = this.cacheByInputPath[filePath];
+    layoutTemplate.resetCaches();
 
+    let keys = layoutTemplate.getCacheKeys();
     for (let key of keys) {
       delete this.cache[key];
     }
+
+    delete this.cacheByInputPath[filePath];
   }
 }
 
