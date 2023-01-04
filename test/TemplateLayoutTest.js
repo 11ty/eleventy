@@ -68,25 +68,21 @@ test("Augment data with layoutContent", async (t) => {
   t.deepEqual(TemplateLayout.augmentDataWithContent(null, null), {
     content: null,
     layoutContent: null,
-    _layoutContent: null,
   });
 
   t.deepEqual(TemplateLayout.augmentDataWithContent(null, "Test"), {
     content: "Test",
     layoutContent: "Test",
-    _layoutContent: "Test",
   });
 
   t.deepEqual(TemplateLayout.augmentDataWithContent({}, "Test 2"), {
     content: "Test 2",
     layoutContent: "Test 2",
-    _layoutContent: "Test 2",
   });
 
   t.deepEqual(TemplateLayout.augmentDataWithContent({ content: "Abc" }, "Test 3"), {
     content: "Test 3",
     layoutContent: "Test 3",
-    _layoutContent: "Test 3",
   });
 });
 

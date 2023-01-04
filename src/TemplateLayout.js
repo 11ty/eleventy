@@ -160,9 +160,6 @@ class TemplateLayout extends TemplateContent {
     if (templateContent !== undefined) {
       data.content = templateContent;
       data.layoutContent = templateContent;
-
-      // deprecated
-      data._layoutContent = templateContent;
     }
 
     return data;
