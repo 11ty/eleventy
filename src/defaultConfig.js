@@ -30,52 +30,19 @@ module.exports = function (config) {
 
   config.addFilter("serverlessUrl", serverlessUrlFilter);
 
-  config.addFilter(
-    "getCollectionItemIndex",
-    function (collection, pageOverride) {
-      return getCollectionItemIndex.call(this, collection, pageOverride);
-    }
-  );
+  config.addFilter("getCollectionItemIndex", function (collection, pageOverride) {
+    return getCollectionItemIndex.call(this, collection, pageOverride);
+  });
 
-  config.addFilter(
-    "getCollectionItem",
-    function (collection, pageOverride, langCode) {
-      return getLocaleCollectionItem.call(
-        this,
-        config,
-        collection,
-        pageOverride,
-        langCode,
-        0
-      );
-    }
-  );
-  config.addFilter(
-    "getPreviousCollectionItem",
-    function (collection, pageOverride, langCode) {
-      return getLocaleCollectionItem.call(
-        this,
-        config,
-        collection,
-        pageOverride,
-        langCode,
-        -1
-      );
-    }
-  );
-  config.addFilter(
-    "getNextCollectionItem",
-    function (collection, pageOverride, langCode) {
-      return getLocaleCollectionItem.call(
-        this,
-        config,
-        collection,
-        pageOverride,
-        langCode,
-        1
-      );
-    }
-  );
+  config.addFilter("getCollectionItem", function (collection, pageOverride, langCode) {
+    return getLocaleCollectionItem.call(this, config, collection, pageOverride, langCode, 0);
+  });
+  config.addFilter("getPreviousCollectionItem", function (collection, pageOverride, langCode) {
+    return getLocaleCollectionItem.call(this, config, collection, pageOverride, langCode, -1);
+  });
+  config.addFilter("getNextCollectionItem", function (collection, pageOverride, langCode) {
+    return getLocaleCollectionItem.call(this, config, collection, pageOverride, langCode, 1);
+  });
 
   return {
     templateFormats: [
@@ -94,7 +61,6 @@ module.exports = function (config) {
     pathPrefix: "/",
     markdownTemplateEngine: "liquid",
     htmlTemplateEngine: "liquid",
-    dataTemplateEngine: false, // change in 1.0
     htmlOutputSuffix: "-o",
 
     // Renamed from `jsDataFileSuffix` in 2.0 (and swapped to an Array)

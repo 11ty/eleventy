@@ -52,8 +52,6 @@ class TemplateData {
       aggregate: this.config.benchmarkManager.get("Aggregate"),
     };
 
-    this.dataTemplateEngine = this.config.dataTemplateEngine;
-
     this.inputDirNeedsCheck = false;
     this.setInputDir(inputDir);
 
@@ -94,7 +92,6 @@ class TemplateData {
   /* Used by tests */
   _setConfig(config) {
     this.config = config;
-    this.dataTemplateEngine = this.config.dataTemplateEngine;
   }
 
   setInputDir(inputDir) {
@@ -103,10 +100,6 @@ class TemplateData {
     this.dataDir = this.config.dir.data
       ? TemplatePath.join(inputDir, this.config.dir.data)
       : inputDir;
-  }
-
-  setDataTemplateEngine(engineName) {
-    this.dataTemplateEngine = engineName;
   }
 
   getRawImports() {
@@ -464,12 +457,9 @@ class TemplateData {
 
   async _parseDataFile(path, rawImports, ignoreProcessing, parser, options = {}) {
     let readFile = !("read" in options) || options.read === true;
-    let engineName = this.dataTemplateEngine;
-    let processAsTemplate = !ignoreProcessing && engineName !== false;
-
     let rawInput;
 
-    if (readFile || processAsTemplate) {
+    if (readFile) {
       rawInput = await this._loadFileContents(path, options);
     }
 
@@ -477,32 +467,16 @@ class TemplateData {
       return {};
     }
 
-    if (!processAsTemplate) {
-      try {
-        if (readFile) {
-          return parser(rawInput, path);
-        } else {
-          // path as a first argument is when `read: false`
-          // path as a second argument is for consistency with `read: true` API
-          return parser(path, path);
-        }
-      } catch (e) {
-        throw new TemplateDataParseError(`Having trouble parsing data file ${path}`, e);
+    try {
+      if (readFile) {
+        return parser(rawInput, path);
+      } else {
+        // path as a first argument is when `read: false`
+        // path as a second argument is for consistency with `read: true` API
+        return parser(path, path);
       }
-    } else {
-      // processing will always read the input file
-      let tr = new TemplateRender(engineName, this.inputDir, this.config);
-      tr.extensionMap = this.extensionMap;
-
-      let fn = await tr.getCompiledTemplate(rawInput);
-
-      try {
-        // pass in rawImports, don’t pass in global data, that’s what we’re parsing
-        let raw = await fn(rawImports);
-        return parser(raw, path);
-      } catch (e) {
-        throw new TemplateDataParseError(`Having trouble parsing data file ${path}`, e);
-      }
+    } catch (e) {
+      throw new TemplateDataParseError(`Having trouble parsing data file ${path}`, e);
     }
   }
 

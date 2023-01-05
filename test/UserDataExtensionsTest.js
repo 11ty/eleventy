@@ -16,18 +16,17 @@ test("Local data", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
   injectDataExtensions(dataObj);
-  dataObj.setDataTemplateEngine("liquid");
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getData();
 
   // YAML GLOBAL DATA
   t.is(data.globalData3.datakey1, "datavalue3");
-  t.is(data.globalData3.datakey2, "@11ty/eleventy--yaml");
+  t.is(data.globalData3.datakey2, "{{pkg.name}}--yaml");
 
   // NOSJ (JSON) GLOBAL DATA
   t.is(data.globalData4.datakey1, "datavalue4");
-  t.is(data.globalData4.datakey2, "@11ty/eleventy--nosj");
+  t.is(data.globalData4.datakey2, "{{pkg.name}}--nosj");
 
   let withLocalData = await dataObj.getTemplateDirectoryData(
     "./test/stubs-630/component-yaml/component.njk"
@@ -79,7 +78,6 @@ test("Global data", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
   injectDataExtensions(dataObj);
-  dataObj.setDataTemplateEngine("liquid");
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   t.deepEqual(await dataObj.getGlobalDataGlob(), [
@@ -96,15 +94,15 @@ test("Global data", async (t) => {
 
   // JSON GLOBAL DATA
   t.is(data.globalData2.datakey1, "datavalue2");
-  t.is(data.globalData2.datakey2, "@11ty/eleventy--json");
+  t.is(data.globalData2.datakey2, "{{pkg.name}}--json");
 
   // YAML GLOBAL DATA
   t.is(data.globalData3.datakey1, "datavalue3");
-  t.is(data.globalData3.datakey2, "@11ty/eleventy--yaml");
+  t.is(data.globalData3.datakey2, "{{pkg.name}}--yaml");
 
   // NOSJ (JSON) GLOBAL DATA
   t.is(data.globalData4.datakey1, "datavalue4");
-  t.is(data.globalData4.datakey2, "@11ty/eleventy--nosj");
+  t.is(data.globalData4.datakey2, "{{pkg.name}}--nosj");
 
   t.is(data.subdir.globalDataSubdir.keyyaml, "yaml");
 });
