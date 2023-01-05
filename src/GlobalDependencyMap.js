@@ -157,9 +157,11 @@ class GlobalDependencyMap {
       return;
     }
 
-    for (let dep of this.map.directDependantsOf(node)) {
-      this.map.removeDependency(dep, node);
-    }
+    // We don’t want to remove relationships that consume this, controlled by the upstream content
+    // for (let dep of this.map.directDependantsOf(node)) {
+    //   this.map.removeDependency(dep, node);
+    // }
+
     for (let dep of this.map.directDependenciesOf(node)) {
       this.map.removeDependency(node, dep);
     }
