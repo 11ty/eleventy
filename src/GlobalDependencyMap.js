@@ -131,12 +131,13 @@ class GlobalDependencyMap {
       return new Set();
     }
 
-    let prevDeps = this.getDependantsFor(node).map((entry) => {
-      if (entry.startsWith(GlobalDependencyMap.COLLECTION_PREFIX)) {
+    let prevDeps = this.getDependantsFor(node)
+      .filter((entry) => {
+        return entry.startsWith(GlobalDependencyMap.COLLECTION_PREFIX);
+      })
+      .map((entry) => {
         return GlobalDependencyMap.getEntryFromCollectionKey(entry);
-      }
-      return entry;
-    });
+      });
 
     let prevDepsSet = new Set(prevDeps);
     let deleted = new Set();
@@ -167,7 +168,11 @@ class GlobalDependencyMap {
   getTemplatesThatConsumeCollections(collectionNames) {
     let templates = new Set();
     for (let name of collectionNames) {
-      for (let node of this.map.dependantsOf(GlobalDependencyMap.getCollectionKeyForEntry(name))) {
+      let collectionName = GlobalDependencyMap.getCollectionKeyForEntry(name);
+      if (!this.map.hasNode(collectionName)) {
+        continue;
+      }
+      for (let node of this.map.dependantsOf(collectionName)) {
         if (!node.startsWith(GlobalDependencyMap.COLLECTION_PREFIX)) {
           templates.add(node);
         }
@@ -190,12 +195,10 @@ class GlobalDependencyMap {
         return true;
       }
 
-      // filter out layouts
+      // When includeLayouts is `false` we want to filter out layouts
       let data = this.map.getNodeData(node);
-      if (data && data.type) {
-        if (data.type === "layout") {
-          return false;
-        }
+      if (data && data.type && data.type === "layout") {
+        return false;
       }
       return true;
     });
