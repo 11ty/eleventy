@@ -184,7 +184,7 @@ class Eleventy {
     this.fileSystemSearch = new FileSystemSearch();
 
     this.isIncremental = false;
-    this.isIncrementalInitialBuild = false;
+    this.isRunInitialBuild = true;
   }
 
   getNewTimestamp() {
@@ -234,11 +234,20 @@ class Eleventy {
    * @method
    * @param {Boolean} isIncremental - Shall Eleventy run in incremental build mode and only write the files that trigger watch updates
    */
-  setIncrementalBuild(isIncremental, runInitialBuild) {
+  setIncrementalBuild(isIncremental) {
     this.isIncremental = !!isIncremental;
     this.watchManager.incremental = !!isIncremental;
+  }
 
-    this.isIncrementalInitialBuild = runInitialBuild;
+  /**
+   * Set whether or not to do an initial build
+   *
+   * @method
+   * @param {Boolean} ignoreInitialBuild - Shall Eleventy ignore the default initial build before watching in watch/serve mode?
+   * @default true
+   */
+  setIgnoreInitial(ignoreInitialBuild) {
+    this.isRunInitialBuild = !ignoreInitialBuild;
   }
 
   /**
@@ -414,7 +423,9 @@ class Eleventy {
     this.writer.logger = this.logger;
     this.writer.extensionMap = this.extensionMap;
     this.writer.setEleventyFiles(this.eleventyFiles);
-    this.writer.setIncrementalBuild(this.isIncremental, this.isIncrementalInitialBuild);
+
+    this.writer.setRunInitialBuild(this.isRunInitialBuild);
+    this.writer.setIncrementalBuild(this.isIncremental);
 
     let dirs = {
       input: this.inputDir,

@@ -18,9 +18,19 @@ try {
   const EleventyCommandCheckError = require("./src/EleventyCommandCheckError");
   const argv = require("minimist")(process.argv.slice(2), {
     string: ["input", "output", "formats", "config", "pathprefix", "port", "to"],
-    boolean: ["quiet", "version", "watch", "dryrun", "help", "serve", "incremental", "initial"],
+    boolean: [
+      "quiet",
+      "version",
+      "watch",
+      "dryrun",
+      "help",
+      "serve",
+      "incremental",
+      "ignore-initial",
+    ],
     default: {
       quiet: null,
+      "ignore-initial": false,
     },
     unknown: function (unknownArgument) {
       throw new EleventyCommandCheckError(
@@ -64,7 +74,8 @@ try {
     }
 
     elev.setDryRun(argv.dryrun);
-    elev.setIncrementalBuild(argv.incremental, argv.initial);
+    elev.setIgnoreInitial(argv["ignore-initial"]);
+    elev.setIncrementalBuild(argv.incremental);
     elev.setFormats(argv.formats);
 
     if (argv.serve) {
