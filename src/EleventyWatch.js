@@ -30,11 +30,11 @@ class EleventyWatch {
   }
 
   getIncrementalFile() {
-    if (!this.isActive || !this.incremental || this.activeQueue.length === 0) {
-      return false;
+    if (this.incremental) {
+      return this.activeQueue.length ? this.activeQueue[0] : false;
     }
 
-    return this.activeQueue[0];
+    return false;
   }
 
   /* Returns the changed files currently being operated on in the current `watch` build
@@ -63,8 +63,7 @@ class EleventyWatch {
 
   hasAllQueueFiles(file) {
     return (
-      this.activeQueue.length > 0 &&
-      this.activeQueue.length === this._queueMatches(file).length
+      this.activeQueue.length > 0 && this.activeQueue.length === this._queueMatches(file).length
     );
   }
 
@@ -97,9 +96,7 @@ class EleventyWatch {
 
   addToPendingQueue(path) {
     if (path) {
-      path = PathNormalizer.normalizeSeperator(
-        TemplatePath.addLeadingDotSlash(path)
-      );
+      path = PathNormalizer.normalizeSeperator(TemplatePath.addLeadingDotSlash(path));
       this.pendingQueue.push(path);
     }
   }
