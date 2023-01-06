@@ -65,11 +65,7 @@ class TemplateConfig {
         this.projectConfigPaths = [projectConfigPath];
       }
     } else {
-      this.projectConfigPaths = [
-        ".eleventy.js",
-        "eleventy.config.js",
-        "eleventy.config.cjs",
-      ];
+      this.projectConfigPaths = [".eleventy.js", "eleventy.config.js", "eleventy.config.cjs"];
     }
 
     if (customRootConfig) {
@@ -84,8 +80,6 @@ class TemplateConfig {
 
     this.initializeRootConfig();
     this.hasConfigMerged = false;
-
-    this.usesGraph = new GlobalDependencyMap();
   }
 
   /* Setter for Logger */
@@ -102,8 +96,7 @@ class TemplateConfig {
   getLocalProjectConfigFile() {
     let configFiles = this.getLocalProjectConfigFiles();
     // Add the configFiles[0] in case of a test, where no file exists on the file system
-    let configFile =
-      configFiles.find((path) => path && fs.existsSync(path)) || configFiles[0];
+    let configFile = configFiles.find((path) => path && fs.existsSync(path)) || configFiles[0];
     if (configFile) {
       return configFile;
     }
@@ -111,9 +104,7 @@ class TemplateConfig {
 
   getLocalProjectConfigFiles() {
     if (this.projectConfigPaths && this.projectConfigPaths.length > 0) {
-      return TemplatePath.addLeadingDotSlashArray(
-        this.projectConfigPaths.filter((path) => path)
-      );
+      return TemplatePath.addLeadingDotSlashArray(this.projectConfigPaths.filter((path) => path));
     }
     return [];
   }
@@ -134,6 +125,7 @@ class TemplateConfig {
     this.userConfig.reset();
     this.initializeRootConfig();
     this.forceReloadConfig();
+    this.usesGraph.reset();
 
     // Clear the compile cache
     eventBus.emit("eleventy.compileCacheReset");
@@ -184,9 +176,7 @@ class TemplateConfig {
 
     if (this.hasConfigMerged) {
       // merge it again
-      debugDev(
-        "Merging in getConfig again after setting the local project config path."
-      );
+      debugDev("Merging in getConfig again after setting the local project config path.");
       this.forceReloadConfig();
     }
   }
@@ -264,9 +254,7 @@ class TemplateConfig {
         this.userConfig._executePlugin(plugin, options);
       } catch (e) {
         let name = this.userConfig._getPluginName(plugin);
-        let namespaces = [storedActiveNamespace, pluginNamespace].filter(
-          (entry) => !!entry
-        );
+        let namespaces = [storedActiveNamespace, pluginNamespace].filter((entry) => !!entry);
 
         let namespaceStr = "";
         if (namespaces.length) {
@@ -274,9 +262,7 @@ class TemplateConfig {
         }
 
         throw new EleventyPluginError(
-          `Error processing ${
-            name ? `the \`${name}\`` : "a"
-          } plugin${namespaceStr}`,
+          `Error processing ${name ? `the \`${name}\`` : "a"} plugin${namespaceStr}`,
           e
         );
       }
@@ -292,9 +278,7 @@ class TemplateConfig {
    */
   requireLocalConfigFile() {
     let localConfig = {};
-    let path = this.projectConfigPaths
-      .filter((path) => path)
-      .find((path) => fs.existsSync(path));
+    let path = this.projectConfigPaths.filter((path) => path).find((path) => fs.existsSync(path));
 
     debug(`Merging config with ${path}`);
 
@@ -306,10 +290,7 @@ class TemplateConfig {
           localConfig = localConfig(this.userConfig);
           // debug( "localConfig is a function, after calling, this.userConfig is %o", this.userConfig );
 
-          if (
-            typeof localConfig === "object" &&
-            typeof localConfig.then === "function"
-          ) {
+          if (typeof localConfig === "object" && typeof localConfig.then === "function") {
             throw new EleventyConfigError(
               `Error in your Eleventy config file '${path}': Returning a promise is not yet supported.`
             );
@@ -387,21 +368,16 @@ class TemplateConfig {
 
     delete mergedConfig.templateFormats;
 
-    let eleventyConfigApiMergingObject =
-      this.userConfig.getMergingConfigObject();
+    let eleventyConfigApiMergingObject = this.userConfig.getMergingConfigObject();
 
     // `templateFormats` is an override via `setTemplateFormats`
     // `templateFormatsAdded` is additive via `addTemplateFormats`
-    if (
-      eleventyConfigApiMergingObject &&
-      eleventyConfigApiMergingObject.templateFormats
-    ) {
+    if (eleventyConfigApiMergingObject && eleventyConfigApiMergingObject.templateFormats) {
       templateFormats = eleventyConfigApiMergingObject.templateFormats;
       delete eleventyConfigApiMergingObject.templateFormats;
     }
 
-    let templateFormatsAdded =
-      eleventyConfigApiMergingObject.templateFormatsAdded || [];
+    let templateFormatsAdded = eleventyConfigApiMergingObject.templateFormatsAdded || [];
     delete eleventyConfigApiMergingObject.templateFormatsAdded;
 
     templateFormats = unique([...templateFormats, ...templateFormatsAdded]);
@@ -422,6 +398,13 @@ class TemplateConfig {
     return mergedConfig;
   }
 
+  get usesGraph() {
+    if (!this._usesGraph) {
+      this._usesGraph = new GlobalDependencyMap();
+    }
+    return this._usesGraph;
+  }
+
   afterConfigMergeActions(eleventyConfig) {
     // Add to the merged config too
     eleventyConfig.uses = this.usesGraph;
@@ -432,9 +415,7 @@ class TemplateConfig {
 
   get uses() {
     if (!this.usesGraph) {
-      throw new Error(
-        "The Eleventy Global Dependency Graph has not yet been initialized."
-      );
+      throw new Error("The Eleventy Global Dependency Graph has not yet been initialized.");
     }
     return this.usesGraph;
   }

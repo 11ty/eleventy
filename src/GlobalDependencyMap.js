@@ -3,7 +3,6 @@ const { TemplatePath } = require("@11ty/eleventy-utils");
 const debug = require("debug")("Eleventy:Dependencies");
 
 const PathNormalizer = require("./Util/PathNormalizer.js");
-const eventBus = require("./EventBus.js");
 
 class GlobalDependencyMap {
   // dependency-graph requires these keys to be alphabetic strings
@@ -13,10 +12,8 @@ class GlobalDependencyMap {
   // URL object with a windows, with file:// already removed (from file:///C:/directory/ to /C:/directory/)
   static WINDOWS_DRIVE_URL_PATH = /^\/\w\:\//;
 
-  constructor() {
-    eventBus.on("eleventy.compileCacheReset", () => {
-      this._map = undefined;
-    });
+  reset() {
+    this._map = undefined;
   }
 
   setConfig(config) {
