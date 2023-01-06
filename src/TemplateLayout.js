@@ -130,7 +130,7 @@ class TemplateLayout extends TemplateContent {
 
   async getLayoutChain() {
     if (!Array.isArray(this.layoutChain)) {
-      throw new Error("Layout chain not yet available for " + this.inputPath);
+      await this.getTemplateLayoutMap();
     }
 
     return this.layoutChain;
