@@ -64,6 +64,7 @@ class TemplateContent {
     if (types.read) {
       delete this.readingPromise;
       delete this.inputContent;
+      delete this.frontMatter;
       delete this._frontMatterDataCache;
     }
   }
@@ -113,6 +114,24 @@ class TemplateContent {
     }
 
     return this._templateRender;
+  }
+
+  // For monkey patchers
+  get frontMatter() {
+    if (this.frontMatterOverride) {
+      return this.frontMatterOverride;
+    } else if (this._frontMatter) {
+      return this._frontMatter;
+    } else {
+      throw new Error(
+        "Unfortunately you’re using code that monkey patched some Eleventy internals and it isn’t async-friendly."
+      );
+    }
+  }
+
+  // For monkey patchers
+  set frontMatter(contentOverride) {
+    this.frontMatterOverride = contentOverride;
   }
 
   getInputPath() {
@@ -166,6 +185,12 @@ class TemplateContent {
               let alias = options.excerpt_alias || "page.excerpt";
               lodashSet(fm.data, alias, fm.excerpt);
             }
+
+            // For monkey patchers that used `frontMatter` 🤧
+            // https://github.com/11ty/eleventy/issues/613#issuecomment-999637109
+            // https://github.com/11ty/eleventy/issues/2710#issuecomment-1373854834
+            this._frontMatter = fm;
+
             resolve(fm);
           } else {
             resolve({
@@ -229,12 +254,12 @@ class TemplateContent {
 
   // This might only be used in tests
   async getFrontMatter() {
-    let fm = await this.read();
+    let fm = this.frontMatterOverride ? this.frontMatterOverride : await this.read();
     return fm;
   }
 
   async getPreRender() {
-    let fm = await this.read();
+    let fm = this.frontMatterOverride ? this.frontMatterOverride : await this.read();
 
     return fm.content;
   }

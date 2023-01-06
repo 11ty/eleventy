@@ -1,5 +1,6 @@
 const { DepGraph } = require("dependency-graph");
 const { TemplatePath } = require("@11ty/eleventy-utils");
+const debug = require("debug")("Eleventy:Dependencies");
 
 const PathNormalizer = require("./Util/PathNormalizer.js");
 const eventBus = require("./EventBus.js");
@@ -60,6 +61,9 @@ class GlobalDependencyMap {
 
       for (let pageTemplate of layouts[rawLayout]) {
         this.addDependency(pageTemplate, [layout]);
+
+        // Potential improvement: only add the first template in the chain for a template and manage any upstream layouts by their own relationships
+        break;
       }
     }
   }
@@ -214,6 +218,8 @@ class GlobalDependencyMap {
       throw new Error("Second argument to `addDependency` must be an Array.");
     }
 
+    // debug("%o depends on %o", from, toArray);
+
     for (let to of toArray) {
       if (!this.map.hasNode(to)) {
         this.map.addNode(to);
@@ -240,9 +246,9 @@ class GlobalDependencyMap {
   }
 
   addDependencyConsumesCollection(from, collectionName) {
-    this._addDependency(this.normalizeNode(from), [
-      GlobalDependencyMap.getCollectionKeyForEntry(collectionName),
-    ]);
+    let nodeName = this.normalizeNode(from);
+    debug("%o depends on collection: %o", nodeName, collectionName);
+    this._addDependency(nodeName, [GlobalDependencyMap.getCollectionKeyForEntry(collectionName)]);
   }
 
   addDependencyPublishesToCollection(from, collectionName) {
