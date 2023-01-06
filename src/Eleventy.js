@@ -182,6 +182,9 @@ class Eleventy {
 
     /** @member {Object} - tbd. */
     this.fileSystemSearch = new FileSystemSearch();
+
+    this.isIncremental = false;
+    this.isIncrementalInitialBuild = false;
   }
 
   getNewTimestamp() {
@@ -231,9 +234,11 @@ class Eleventy {
    * @method
    * @param {Boolean} isIncremental - Shall Eleventy run in incremental build mode and only write the files that trigger watch updates
    */
-  setIncrementalBuild(isIncremental) {
+  setIncrementalBuild(isIncremental, runInitialBuild) {
     this.isIncremental = !!isIncremental;
     this.watchManager.incremental = !!isIncremental;
+
+    this.isIncrementalInitialBuild = runInitialBuild;
   }
 
   /**
@@ -409,6 +414,7 @@ class Eleventy {
     this.writer.logger = this.logger;
     this.writer.extensionMap = this.extensionMap;
     this.writer.setEleventyFiles(this.eleventyFiles);
+    this.writer.setIncrementalBuild(this.isIncremental, this.isIncrementalInitialBuild);
 
     let dirs = {
       input: this.inputDir,
@@ -692,6 +698,7 @@ Arguments:
     this.watchManager.addToPendingQueue(changedFilePath);
   }
 
+  // Testing
   _setIncrementalFile(incrementalFile) {
     if (incrementalFile) {
       this.writer.setIncrementalFile(incrementalFile);
@@ -808,9 +815,12 @@ Arguments:
 
     this.watchManager.setBuildFinished();
 
-    if (this.watchManager.getPendingQueueSize() > 0) {
+    let queueSize = this.watchManager.getPendingQueueSize();
+    if (queueSize > 0) {
       this.logger.log(
-        `You saved while Eleventy was running, let’s run again. (${this.watchManager.getPendingQueueSize()} remain)`
+        `You saved while Eleventy was running, let’s run again. (${queueSize} change${
+          queueSize !== 1 ? "s" : ""
+        })`
       );
       await this._watch();
     } else {
@@ -942,7 +952,7 @@ Arguments:
   }
 
   /**
-   * Start the watching of files.
+   * Start the watching of files
    *
    * @async
    * @method

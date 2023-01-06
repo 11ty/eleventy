@@ -203,6 +203,13 @@ class TemplateWriter {
     };
   }
 
+  _setTemplateRenderOverride(tmpl, value) {
+    // Render overrides are only used when `--initial` is not in play and an initial build is not run during incremental use
+    if (this.isIncremental && !this.isIncrementalInitialBuild) {
+      tmpl.setRenderableOverride(value);
+    }
+  }
+
   async _addToTemplateMap(paths, to = "fs") {
     let promises = [];
 
@@ -221,6 +228,7 @@ class TemplateWriter {
       if (wasCached) {
         tmpl.resetCaches(); // reset internal caches on the cached template instance
       }
+      this._setTemplateRenderOverride(tmpl, undefined); // no override (enabled)
 
       let p = this.templateMap.add(tmpl);
       promises.push(p);
@@ -253,6 +261,8 @@ class TemplateWriter {
       let { template: tmpl, wasCached } = this._createTemplate(path, to);
 
       if (!this.incrementalFile) {
+        this._setTemplateRenderOverride(tmpl, false); // disable rendering on all files for initial build
+
         if (wasCached) {
           tmpl.resetCaches();
         }
@@ -272,6 +282,8 @@ class TemplateWriter {
             data: true,
             render: true,
           });
+
+          this._setTemplateRenderOverride(tmpl, undefined); // no override (enabled)
         } else {
           // During incremental we only reset the data cache for non-matching templates, see https://github.com/11ty/eleventy/issues/2710
           // Keep caches for read/render
@@ -279,6 +291,7 @@ class TemplateWriter {
             data: true,
           });
 
+          this._setTemplateRenderOverride(tmpl, false); // disabled
           tmpl.setDryRunViaIncremental();
           this.skippedCount++;
         }
@@ -412,6 +425,10 @@ class TemplateWriter {
     this.eleventyFiles.getPassthroughManager().setDryRun(this.isDryRun);
   }
 
+  setIncrementalBuild(isIncremental, runInitialBuild) {
+    this.isIncremental = isIncremental;
+    this.isIncrementalInitialBuild = runInitialBuild;
+  }
   setIncrementalFile(incrementalFile) {
     this.incrementalFile = incrementalFile;
   }

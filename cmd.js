@@ -17,24 +17,8 @@ try {
   let errorHandler = new EleventyErrorHandler();
   const EleventyCommandCheckError = require("./src/EleventyCommandCheckError");
   const argv = require("minimist")(process.argv.slice(2), {
-    string: [
-      "input",
-      "output",
-      "formats",
-      "config",
-      "pathprefix",
-      "port",
-      "to",
-    ],
-    boolean: [
-      "quiet",
-      "version",
-      "watch",
-      "dryrun",
-      "help",
-      "serve",
-      "incremental",
-    ],
+    string: ["input", "output", "formats", "config", "pathprefix", "port", "to"],
+    boolean: ["quiet", "version", "watch", "dryrun", "help", "serve", "incremental", "initial"],
     default: {
       quiet: null,
     },
@@ -55,10 +39,7 @@ try {
     errorHandler.fatal(error, "Uncaught exception");
   });
   process.on("rejectionHandled", (promise) => {
-    errorHandler.warn(
-      promise,
-      "A promise rejection was handled asynchronously"
-    );
+    errorHandler.warn(promise, "A promise rejection was handled asynchronously");
   });
 
   if (argv.version) {
@@ -83,7 +64,7 @@ try {
     }
 
     elev.setDryRun(argv.dryrun);
-    elev.setIncrementalBuild(argv.incremental);
+    elev.setIncrementalBuild(argv.incremental, argv.initial);
     elev.setFormats(argv.formats);
 
     if (argv.serve) {

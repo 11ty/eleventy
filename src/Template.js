@@ -87,6 +87,10 @@ class Template extends TemplateContent {
     this._logger = logger;
   }
 
+  setRenderableOverride(renderableOverride) {
+    this.behavior.setRenderableOverride(renderableOverride);
+  }
+
   reset() {
     this.writeCount = 0;
   }

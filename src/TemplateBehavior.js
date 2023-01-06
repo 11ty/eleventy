@@ -12,9 +12,13 @@ class TemplateBehavior {
     this.config = config;
   }
 
+  setRenderableOverride(renderableOverride) {
+    this.renderableOverride = renderableOverride;
+  }
+
   // permalink *has* a build key or output is json/ndjson
   isRenderable() {
-    return this.render || this.isRenderForced();
+    return this.renderableOverride ?? (this.render || this.isRenderForced());
   }
 
   setOutputFormat(format) {
