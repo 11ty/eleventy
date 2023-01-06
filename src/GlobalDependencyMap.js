@@ -59,11 +59,9 @@ class GlobalDependencyMap {
         });
       }
 
+      // Potential improvement: only add the first template in the chain for a template and manage any upstream layouts by their own relationships
       for (let pageTemplate of layouts[rawLayout]) {
         this.addDependency(pageTemplate, [layout]);
-
-        // Potential improvement: only add the first template in the chain for a template and manage any upstream layouts by their own relationships
-        break;
       }
     }
   }
