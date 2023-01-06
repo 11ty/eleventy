@@ -30,8 +30,7 @@ class TemplateCache {
     }
 
     if ("getFullKey" in layoutTemplate) {
-      let fullKey = layoutTemplate.getFullKey();
-      keys.add(fullKey);
+      keys.add(layoutTemplate.getFullKey());
     }
 
     if ("getKey" in layoutTemplate) {

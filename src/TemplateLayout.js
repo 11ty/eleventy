@@ -39,7 +39,7 @@ class TemplateLayout extends TemplateContent {
   }
 
   getCacheKeys() {
-    return new Set([this.dataKeyLayoutPath, this.key]);
+    return new Set([this.dataKeyLayoutPath, this.getFullKey(), this.key]);
   }
 
   static resolveFullKey(key, inputDir) {
