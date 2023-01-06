@@ -646,6 +646,9 @@ Arguments:
      --watch
        Wait for files to change and automatically rewrite (no web server)
 
+     --ignore-initial
+       Start without a build; build when files change. Works best with watch/serve/incremental.
+
      --formats=liquid,md
        Whitelist only certain template types (default: \`*\`)
 
