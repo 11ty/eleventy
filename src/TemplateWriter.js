@@ -43,7 +43,7 @@ class TemplateWriter {
     this.isDryRun = false;
     this.writeCount = 0;
     this.skippedCount = 0;
-    this.runInitialBuild = true;
+    this.isRunInitialBuild = true;
 
     this._templatePathCache = new Map();
   }
