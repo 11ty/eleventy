@@ -628,7 +628,7 @@ ${previousContents}
   // Trigger that the file has changed
   eventBus.emit("eleventy.resourceModified", includeFilePath);
 
-  elev._setIncrementalFile(includeFilePath);
+  elev.setIncrementalFile(includeFilePath);
 
   let results3 = await elev.toJSON();
   t.is(

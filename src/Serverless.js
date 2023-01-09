@@ -22,9 +22,7 @@ class Serverless {
     }
 
     if (!this.path) {
-      throw new Error(
-        "`path` must exist in the options argument in Eleventy Serverless."
-      );
+      throw new Error("`path` must exist in the options argument in Eleventy Serverless.");
     }
 
     // ServerlessBundlerPlugin hard-codes to this (even if you used a different file name)
@@ -40,18 +38,27 @@ class Serverless {
       {
         inputDir: null, // override only, we now inject this.
         functionsDir: "functions/",
+
         matchUrlToPattern(path, urlToCompare) {
           urlToCompare = normalizeServerlessUrl(urlToCompare);
 
           let fn = match(urlToCompare, { decode: decodeURIComponent });
           return fn(path);
         },
+
         // Query String Parameters
         query: {},
-        // Inject shared collections
-        precompiledCollections: {},
+
         // Configuration callback
         config: function (eleventyConfig) {},
+
+        // Is serverless build scoped to a single template?
+        // Using `false` is more collections-friendly (you probably don’t need precompiledCollections)
+        // but is slower: it will build a data cascade for the entire project)
+        singleTemplateScope: true,
+
+        // Inject shared collections
+        precompiledCollections: {},
       },
       options
     );
@@ -60,8 +67,7 @@ class Serverless {
   }
 
   initializeEnvironmentVariables() {
-    this.serverlessEnvironmentVariableAlreadySet =
-      !!process.env.ELEVENTY_SERVERLESS;
+    this.serverlessEnvironmentVariableAlreadySet = !!process.env.ELEVENTY_SERVERLESS;
   }
 
   deleteEnvironmentVariables() {
@@ -85,16 +91,12 @@ class Serverless {
       }
     }
 
-    throw new Error(
-      `Couldn’t find the "${dir}" directory. Looked in: ${paths}`
-    );
+    throw new Error(`Couldn’t find the "${dir}" directory. Looked in: ${paths}`);
   }
 
   getContentMap() {
     let fullPath = TemplatePath.absolutePath(this.dir, this.mapFilename);
-    debug(
-      `Including content map (maps output URLs to input files) from ${fullPath}`
-    );
+    debug(`Including content map (maps output URLs to input files) from ${fullPath}`);
 
     // TODO dedicated reset method, don’t delete this every time
     return EleventyRequireAbsolute(fullPath);
@@ -155,18 +157,13 @@ class Serverless {
       process.chdir(this.dir);
     }
 
-    let inputDir =
-      this.options.input ||
-      this.options.inputDir ||
-      this.getConfigInfo().dir.input;
+    let inputDir = this.options.input || this.options.inputDir || this.getConfigInfo().dir.input;
     let configPath = path.join(this.dir, this.configFilename);
     let { pathParams, inputPath } = this.matchUrlPattern(this.path);
 
     if (!pathParams || !inputPath) {
       let err = new Error(
-        `No matching URL found for ${this.path} in ${JSON.stringify(
-          this.getContentMap()
-        )}`
+        `No matching URL found for ${this.path} in ${JSON.stringify(this.getContentMap())}`
       );
       err.httpStatusCode = 404;
       throw err;
@@ -183,16 +180,17 @@ class Serverless {
 
     this.initializeEnvironmentVariables();
 
-    let elev = new Eleventy(this.options.input || inputPath, null, {
+    let isScoped = !!this.options.singleTemplateScope;
+    let projectInput = isScoped ? this.options.input || inputPath : inputDir;
+
+    let elev = new Eleventy(projectInput, null, {
       // https://github.com/11ty/eleventy/issues/1957
       isServerless: true,
       configPath,
       inputDir,
       config: (eleventyConfig) => {
         if (Object.keys(this.options.precompiledCollections).length > 0) {
-          eleventyConfig.setPrecompiledCollections(
-            this.options.precompiledCollections
-          );
+          eleventyConfig.setPrecompiledCollections(this.options.precompiledCollections);
         }
 
         // Add the params to Global Data
@@ -208,6 +206,10 @@ class Serverless {
         }
       },
     });
+
+    if (!isScoped) {
+      elev.setIncrementalFile(this.options.input || inputPath);
+    }
 
     let json = await elev.toJSON();
 

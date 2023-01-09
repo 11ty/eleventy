@@ -184,6 +184,7 @@ class Eleventy {
     this.fileSystemSearch = new FileSystemSearch();
 
     this.isIncremental = false;
+    this.programmaticApiIncrementalFile = undefined;
     this.isRunInitialBuild = true;
   }
 
@@ -600,6 +601,23 @@ Verbose Output: ${this.verboseMode}`);
   }
 
   /**
+   * Set the file that needs to be rendered/compiled/written for an incremental build.
+   * This method is part of the programmatic API and is not used internally.
+   *
+   * @method
+   * @param {String} incrementalFile - File path (added or modified in a project)
+   */
+  setIncrementalFile(incrementalFile) {
+    if (incrementalFile) {
+      // This is used for collections-friendly serverless mode.
+      this.setIgnoreInitial(true);
+      this.setIncrementalBuild(true);
+
+      this.programmaticApiIncrementalFile = incrementalFile;
+    }
+  }
+
+  /**
    * Reads the version of Eleventy.
    *
    * @static
@@ -710,13 +728,6 @@ Arguments:
     // Note: this is a sync event!
     eventBus.emit("eleventy.resourceModified", changedFilePath);
     this.watchManager.addToPendingQueue(changedFilePath);
-  }
-
-  // Testing
-  _setIncrementalFile(incrementalFile) {
-    if (incrementalFile) {
-      this.writer.setIncrementalFile(incrementalFile);
-    }
   }
 
   _shouldResetConfig() {
@@ -1149,6 +1160,10 @@ Arguments:
         ),
         "Problem writing Eleventy templates"
       );
+    }
+
+    if (this.programmaticApiIncrementalFile) {
+      this.writer.setIncrementalFile(this.programmaticApiIncrementalFile);
     }
 
     let ret;
