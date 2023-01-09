@@ -53,8 +53,9 @@ class Serverless {
         config: function (eleventyConfig) {},
 
         // Is serverless build scoped to a single template?
-        // Using `false` is more collections-friendly (you probably don’t need precompiledCollections)
-        // but is slower: it will build a data cascade for the entire project)
+        // Use `false` to make serverless more collections-friendly (but slower!)
+        // With `false` you don’t need precompiledCollections.
+        // Works great with on-demand builders
         singleTemplateScope: true,
 
         // Inject shared collections
