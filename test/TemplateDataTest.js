@@ -136,14 +136,14 @@ test("Global Dir Directory", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./", eleventyConfig);
 
-  t.deepEqual(await dataObj.getGlobalDataGlob(), ["./_data/**/*.(json|cjs|js)"]);
+  t.deepEqual(await dataObj.getGlobalDataGlob(), ["./_data/**/*.{json,cjs,js}"]);
 });
 
 test("Global Dir Directory with Constructor Path Arg", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
 
-  t.deepEqual(await dataObj.getGlobalDataGlob(), ["./test/stubs/_data/**/*.(json|cjs|js)"]);
+  t.deepEqual(await dataObj.getGlobalDataGlob(), ["./test/stubs/_data/**/*.{json,cjs,js}"]);
 });
 
 test("getAllGlobalData() with other data files", async (t) => {
@@ -482,9 +482,7 @@ test("getTemplateDataFileGlob", async (t) => {
   let tw = new TemplateData("test/stubs", eleventyConfig);
 
   t.deepEqual(await tw.getTemplateDataFileGlob(), [
-    "./test/stubs/**/*.json",
-    "./test/stubs/**/*.11tydata.cjs",
-    "./test/stubs/**/*.11tydata.js",
+    "./test/stubs/**/*.{json,11tydata.cjs,11tydata.js}",
   ]);
 });
 

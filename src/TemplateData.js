@@ -180,25 +180,41 @@ class TemplateData {
 
   // This is used exclusively for --watch and --serve chokidar targets
   async getTemplateDataFileGlob() {
-    let dir = await this.getInputDir();
-    let paths = [
-      `${dir}/**/*.json`, // covers .11tydata.json too
-    ];
-
     let suffixes = this.getDataFileSuffixes();
+    let globSuffixesWithLeadingDot = new Set();
+    globSuffixesWithLeadingDot.add("json"); // covers .11tydata.json too
+    let globSuffixesWithoutLeadingDot = new Set();
+
+    // Typically using [ '.11tydata', '' ] suffixes to find data files
     for (let suffix of suffixes) {
-      if (suffix) {
-        // TODO this check is purely for backwards compat and I kinda feel like it shouldn’t be here
-        paths.push(`${dir}/**/*${suffix || ""}.cjs`);
-        paths.push(`${dir}/**/*${suffix || ""}.js`);
+      // TODO the `suffix` truthiness check is purely for backwards compat?
+      if (suffix && typeof suffix === "string") {
+        if (suffix.startsWith(".")) {
+          // .suffix.js
+          globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.cjs`);
+          globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.js`);
+        } else {
+          // "suffix.js" without leading dot
+          globSuffixesWithoutLeadingDot.add(`${suffix || ""}.cjs`);
+          globSuffixesWithoutLeadingDot.add(`${suffix || ""}.js`);
+        }
       }
     }
 
+    // Configuration Data Extensions e.g. yaml
     if (this.hasUserDataExtensions()) {
-      let userPaths = this.getUserDataExtensions().map(
-        (extension) => `${dir}/**/*.${extension}` // covers .11tydata.{extension} too
-      );
-      paths = userPaths.concat(paths);
+      for (let extension of this.getUserDataExtensions()) {
+        globSuffixesWithLeadingDot.add(extension); // covers .11tydata.{extension} too
+      }
+    }
+
+    let dir = await this.getInputDir();
+    let paths = [];
+    if (globSuffixesWithLeadingDot.size > 0) {
+      paths.push(`${dir}/**/*.{${Array.from(globSuffixesWithLeadingDot).join(",")}}`);
+    }
+    if (globSuffixesWithoutLeadingDot.size > 0) {
+      paths.push(`${dir}/**/*{${Array.from(globSuffixesWithoutLeadingDot).join(",")}}`);
     }
 
     return TemplatePath.addLeadingDotSlashArray(paths);
@@ -225,8 +241,8 @@ class TemplateData {
   async getGlobalDataGlob() {
     let dir = await this.getInputDir();
 
-    let extGlob = this.getGlobalDataExtensionPriorities().join("|");
-    return [this._getGlobalDataGlobByExtension(dir, "(" + extGlob + ")")];
+    let extGlob = this.getGlobalDataExtensionPriorities().join(",");
+    return [this._getGlobalDataGlobByExtension(dir, "{" + extGlob + "}")];
   }
 
   getWatchPathCache() {

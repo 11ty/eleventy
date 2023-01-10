@@ -81,7 +81,7 @@ test("Global data", async (t) => {
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   t.deepEqual(await dataObj.getGlobalDataGlob(), [
-    "./test/stubs-630/_data/**/*.(nosj|yaml|json|cjs|js)",
+    "./test/stubs-630/_data/**/*.{nosj,yaml,json,cjs,js}",
   ]);
 
   let data = await dataObj.getData();

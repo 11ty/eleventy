@@ -32,9 +32,7 @@ class EleventyExtensionMap {
       this.hasExtension(key)
     );
 
-    this.passthroughCopyKeys = this.unfilteredFormatKeys.filter(
-      (key) => !this.hasExtension(key)
-    );
+    this.passthroughCopyKeys = this.unfilteredFormatKeys.filter((key) => !this.hasExtension(key));
   }
 
   set config(cfg) {
@@ -152,16 +150,24 @@ class EleventyExtensionMap {
 
   _getGlobs(formatKeys, inputDir) {
     let dir = TemplatePath.convertToRecursiveGlobSync(inputDir);
-    let globs = [];
+    let extensions = [];
     for (let key of formatKeys) {
       if (this.hasExtension(key)) {
         for (let extension of this.getExtensionsFromKey(key)) {
-          globs.push(dir + "/*." + extension);
+          extensions.push(extension);
         }
       } else {
-        globs.push(dir + "/*." + key);
+        extensions.push(key);
       }
     }
+
+    let globs = [];
+    if (extensions.length === 1) {
+      globs.push(`${dir}/*.${extensions[0]}`);
+    } else if (extensions.length > 1) {
+      globs.push(`${dir}/*.{${extensions.join(",")}}`);
+    }
+
     return globs;
   }
 
@@ -219,9 +225,7 @@ class EleventyExtensionMap {
       if (path === extension || path.endsWith("." + extension)) {
         return path.slice(
           0,
-          path.length - 1 - extension.length < 0
-            ? 0
-            : path.length - 1 - extension.length
+          path.length - 1 - extension.length < 0 ? 0 : path.length - 1 - extension.length
         );
       }
     }

@@ -30,7 +30,7 @@ test("Output is a subdir of input", async (t) => {
   evf.init();
 
   let files = await fastglob(evf.getFileGlobs());
-  t.is(evf.getRawFiles().length, 2);
+  t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTest/**/*.{ejs,md}"]);
   t.true(files.length > 0);
 
   let { template: tmpl } = tw._createTemplate(files[0]);
@@ -531,10 +531,7 @@ test("Write Test 11ty.js", async (t) => {
   evf.init();
 
   let files = await fastglob(evf.getFileGlobs());
-  t.deepEqual(evf.getRawFiles(), [
-    "./test/stubs/writeTestJS/**/*.11ty.js",
-    "./test/stubs/writeTestJS/**/*.11ty.cjs",
-  ]);
+  t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTestJS/**/*.{11ty.js,11ty.cjs}"]);
   t.deepEqual(files, ["./test/stubs/writeTestJS/test.11ty.js"]);
 
   let { template: tmpl } = tw._createTemplate(files[0]);

@@ -80,9 +80,7 @@ test("Eleventy file watching", async (t) => {
     "./.eleventy.js",
     "./eleventy.config.js",
     "./eleventy.config.cjs",
-    "./test/stubs/**/*.json",
-    "./test/stubs/**/*.11tydata.cjs",
-    "./test/stubs/**/*.11tydata.js",
+    "./test/stubs/**/*.{json,11tydata.cjs,11tydata.js}",
     "./test/stubs/deps/dep1.js",
     "./test/stubs/deps/dep2.js",
   ]);
@@ -119,9 +117,7 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
     "./.eleventy.js",
     "./eleventy.config.js",
     "./eleventy.config.cjs",
-    "./test/stubs/**/*.json",
-    "./test/stubs/**/*.11tydata.cjs",
-    "./test/stubs/**/*.11tydata.js",
+    "./test/stubs/**/*.{json,11tydata.cjs,11tydata.js}",
   ]);
 });
 

@@ -137,7 +137,7 @@ test("Mutually exclusive Input and Output dirs", async (t) => {
   evf.init();
 
   let files = await fastglob(evf.getFileGlobs());
-  t.is(evf.getRawFiles().length, 2);
+  t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTest/**/*.{ejs,md}"]);
   t.true(files.length > 0);
   t.is(files[0], "./test/stubs/writeTest/test.md");
 });
@@ -286,9 +286,7 @@ test("Input to 'src' and empty includes dir (issue #403)", (t) => {
   evf.init();
 
   t.deepEqual(evf.getFileGlobs(), [
-    "./src/**/*.md",
-    "./src/**/*.liquid",
-    "./src/**/*.html",
+    "./src/**/*.{md,liquid,html}",
     // "!./src/_includes/**",
     // "!./src/_site/**",
     // "!./src/_data/**",
@@ -385,9 +383,7 @@ test("Glob Watcher Files with Config Passthroughs (no template formats)", async 
   evf.init();
 
   t.deepEqual(await evf.getGlobWatcherTemplateDataFiles(), [
-    "./test/stubs/**/*.json",
-    "./test/stubs/**/*.11tydata.cjs",
-    "./test/stubs/**/*.11tydata.js",
+    "./test/stubs/**/*.{json,11tydata.cjs,11tydata.js}",
   ]);
 });
 
