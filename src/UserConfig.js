@@ -774,6 +774,7 @@ class UserConfig {
   }
 
   setBrowserSyncConfig() {
+    this._attemptedBrowserSyncUse = true;
     debug(
       "The `setBrowserSyncConfig` method was removed in Eleventy 2.0.0. Use `setServerOptions` with the new Eleventy development server or the `@11ty/eleventy-browser-sync` plugin moving forward."
     );
