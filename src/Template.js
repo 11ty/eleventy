@@ -724,7 +724,7 @@ class Template extends TemplateContent {
     }
   }
 
-  async _write({ url, outputPath }, finalContent) {
+  async _write({ url, outputPath, data }, finalContent) {
     let lang = {
       start: "Writing",
       finished: "written.",
@@ -759,12 +759,18 @@ class Template extends TemplateContent {
       this.writeCount++;
       debug(`${outputPath} ${lang.finished}.`);
 
-      return {
+      let ret = {
         inputPath: this.inputPath,
         outputPath: outputPath,
         url,
         content: finalContent,
       };
+
+      if (data && this.config.dataFilterSelectors && this.config.dataFilterSelectors.size > 0) {
+        ret.data = this.retrieveDataForJsonOutput(data, this.config.dataFilterSelectors);
+      }
+
+      return ret;
     });
   }
 
