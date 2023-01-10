@@ -76,13 +76,12 @@ class FileSystemSearch {
     let normalized = TemplatePath.addLeadingDotSlash(path);
 
     for (let key in this.inputs) {
-      let { input, ignore } = this.inputs[key];
-
+      let { input, options } = this.inputs[key];
       if (
         micromatch([path], input, {
           dot: true,
           nocase: true, // insensitive
-          ignore,
+          ignore: options.ignore,
         }).length > 0
       ) {
         this.outputs[key][setOperation](normalized);
