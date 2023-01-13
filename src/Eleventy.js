@@ -390,6 +390,8 @@ class Eleventy {
 
     // eleventyServe is always available, even when not in --serve mode
     this.eleventyServe.setOutputDir(this.outputDir);
+    // TODO
+    // this.eleventyServe.setWatcherOptions(this.getChokidarConfig());
 
     this.eleventyFiles = new EleventyFiles(
       this.inputDir,
@@ -402,6 +404,12 @@ class Eleventy {
     this.eleventyFiles.setRunMode(this.runMode);
     this.eleventyFiles.extensionMap = this.extensionMap;
     this.eleventyFiles.init();
+
+    if (checkPassthroughCopyBehavior(this.config, this.runMode)) {
+      this.eleventyServe.watchPassthroughCopy(
+        this.eleventyFiles.getGlobWatcherFilesForPassthroughCopy()
+      );
+    }
 
     this.templateData = new TemplateData(this.inputDir, this.eleventyConfig);
     this.templateData.extensionMap = this.extensionMap;
@@ -825,8 +833,6 @@ Arguments:
         files: this.watchManager.getActiveQueue(),
         subtype: onlyCssChanges ? "css" : undefined,
         build: {
-          // For later?
-          // passthroughCopy: passthroughCopyResults,
           templates: templateResults
             .flat()
             .filter((entry) => !!entry)
@@ -961,21 +967,6 @@ Arguments:
     );
   }
 
-  async triggerServerReload(changedFiles) {
-    let onlyApplyingCssChanges =
-      changedFiles.filter((entry) => entry.endsWith(".css")).length === changedFiles.length;
-
-    // returns a promise
-    return this.eleventyServe.reload({
-      files: changedFiles,
-      subtype: onlyApplyingCssChanges ? "css" : undefined,
-      build: {
-        // As of right now this is only used for the passthrough copy watcher so templates are unnecessary
-        templates: [],
-      },
-    });
-  }
-
   /**
    * Start the watching of files
    *
@@ -1058,25 +1049,9 @@ Arguments:
     });
 
     watcher.on("unlink", (path) => {
+      // this.logger.forceLog(`File removed: ${path}`);
       this.fileSystemSearch.delete(path);
     });
-
-    if (checkPassthroughCopyBehavior(this.config, this.runMode)) {
-      // Separate watcher for passthrough copy, we only want to trigger a server reload for changes to these files
-      this.passthroughWatcher = chokidar.watch(
-        this.eleventyFiles.getGlobWatcherFilesForPassthroughCopy(),
-        this.getChokidarConfig()
-      );
-      this.passthroughWatcher.on("change", async (path) => {
-        this.logger.forceLog(`Passthrough copy file changed: ${path}`);
-        this.triggerServerReload([path]);
-      });
-
-      this.passthroughWatcher.on("add", async (path) => {
-        this.logger.forceLog(`Passthrough copy file added: ${path}`);
-        this.triggerServerReload([path]);
-      });
-    }
 
     process.on("SIGINT", () => this.stopWatch());
   }
@@ -1085,10 +1060,6 @@ Arguments:
     debug("Cleaning up chokidar and server instances, if they exist.");
     this.eleventyServe.close();
     this.watcher.close();
-
-    if (this.passthroughWatcher) {
-      this.passthroughWatcher.close();
-    }
 
     process.exit();
   }
