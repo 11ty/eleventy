@@ -53,10 +53,8 @@ class Template extends TemplateContent {
 
     this.linters = [];
     this.transforms = [];
-    this.templateData = templateData;
-    if (this.templateData) {
-      this.templateData.setInputDir(this.inputDir);
-    }
+
+    this.setTemplateData(templateData);
 
     this.isVerbose = true;
     this.isDryRun = false;
@@ -72,6 +70,13 @@ class Template extends TemplateContent {
     this.behavior.setOutputFormat(this.outputFormat);
 
     this.serverlessUrls = null;
+  }
+
+  setTemplateData(templateData) {
+    this.templateData = templateData;
+    if (this.templateData) {
+      this.templateData.setInputDir(this.inputDir);
+    }
   }
 
   get logger() {

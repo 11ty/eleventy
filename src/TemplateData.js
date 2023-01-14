@@ -123,12 +123,6 @@ class TemplateData {
     this.templateDirectoryData = {};
   }
 
-  async cacheData() {
-    this.clearData();
-
-    return this.getData();
-  }
-
   _getGlobalDataGlobByExtension(dir, extension) {
     return TemplateGlob.normalizePath(
       dir,

@@ -390,8 +390,16 @@ class Eleventy {
 
     // eleventyServe is always available, even when not in --serve mode
     this.eleventyServe.setOutputDir(this.outputDir);
+
     // TODO
     // this.eleventyServe.setWatcherOptions(this.getChokidarConfig());
+
+    this.templateData = new TemplateData(this.inputDir, this.eleventyConfig);
+    this.templateData.extensionMap = this.extensionMap;
+    if (this.env) {
+      this.templateData.environmentVariables = this.env;
+    }
+    this.templateData.setFileSystemSearch(this.fileSystemSearch);
 
     this.eleventyFiles = new EleventyFiles(
       this.inputDir,
@@ -403,6 +411,8 @@ class Eleventy {
     this.eleventyFiles.setInput(this.inputDir, this.input);
     this.eleventyFiles.setRunMode(this.runMode);
     this.eleventyFiles.extensionMap = this.extensionMap;
+    // This needs to be set before init or it’ll construct a new one
+    this.eleventyFiles.templateData = this.templateData;
     this.eleventyFiles.init();
 
     if (checkPassthroughCopyBehavior(this.config, this.runMode)) {
@@ -410,14 +420,6 @@ class Eleventy {
         this.eleventyFiles.getGlobWatcherFilesForPassthroughCopy()
       );
     }
-
-    this.templateData = new TemplateData(this.inputDir, this.eleventyConfig);
-    this.templateData.extensionMap = this.extensionMap;
-    if (this.env) {
-      this.templateData.environmentVariables = this.env;
-    }
-    this.templateData.setFileSystemSearch(this.fileSystemSearch);
-    this.eleventyFiles.templateData = this.templateData;
 
     this.writer = new TemplateWriter(
       this.inputDir,
@@ -459,12 +461,7 @@ Verbose Output: ${this.verboseMode}`);
 
     this.config.events.emit("eleventy.directories", dirs);
 
-    let data = this.templateData.cacheData();
-
     this.needsInit = false;
-
-    // …why does it return this
-    return data;
   }
 
   // These are all set as initial global data under eleventy.env.* (see TemplateData->environmentVariables)

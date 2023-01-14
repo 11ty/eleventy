@@ -158,6 +158,8 @@ class TemplateWriter {
     let wasCached = false;
     if (tmpl) {
       wasCached = true;
+      // TODO reset other constructor things here like inputDir/outputDir/extensionMap/
+      tmpl.setTemplateData(this.templateData);
     } else {
       tmpl = new Template(
         path,
