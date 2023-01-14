@@ -18,7 +18,7 @@ test("Local data", async (t) => {
   injectDataExtensions(dataObj);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
-  let data = await dataObj.getData();
+  let data = await dataObj.getGlobalData();
 
   // YAML GLOBAL DATA
   t.is(data.globalData3.datakey1, "datavalue3");
@@ -84,7 +84,7 @@ test("Global data", async (t) => {
     "./test/stubs-630/_data/**/*.{nosj,yaml,json,cjs,js}",
   ]);
 
-  let data = await dataObj.getData();
+  let data = await dataObj.getGlobalData();
 
   // JS GLOBAL DATA
   t.is(data.globalData0.datakey1, "datavalue0");
@@ -113,7 +113,7 @@ test("Global data merging and priority", async (t) => {
   injectDataExtensions(dataObj);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
-  let data = await dataObj.getData();
+  let data = await dataObj.getGlobalData();
 
   // TESTING GLOBAL DATA PRIORITY AND MERGING
   t.is(data.mergingGlobalData.datakey0, "js-value0");
@@ -151,7 +151,7 @@ test("Binary data files, encoding: null", async (t) => {
   ]);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
-  let data = await dataObj.getData();
+  let data = await dataObj.getGlobalData();
   t.is(data.images.dog, 43183);
 });
 
@@ -177,7 +177,7 @@ test("Binary data files, read: false", async (t) => {
   ]);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
-  let data = await dataObj.getData();
+  let data = await dataObj.getGlobalData();
   t.is(data.images.dog, "./test/stubs-2378/_data/images/dog.jpg");
 });
 
@@ -197,7 +197,7 @@ test("Binary data files, encoding: null (multiple data extensions)", async (t) =
   let dataObj = new TemplateData("./test/stubs-2378/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
-  let data = await dataObj.getData();
+  let data = await dataObj.getGlobalData();
   t.is(data.images.dog, 43183);
   t.is(data.images.dogpng, 2890);
 });

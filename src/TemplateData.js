@@ -345,7 +345,7 @@ class TemplateData {
     return globalData;
   }
 
-  async getData() {
+  async getGlobalData() {
     let rawImports = this.getRawImports();
 
     if (!this.globalData) {
@@ -416,10 +416,6 @@ class TemplateData {
       this.templateDirectoryData[templatePath] = Object.assign({}, importedData);
     }
     return this.templateDirectoryData[templatePath];
-  }
-
-  async getGlobalData() {
-    return this.getData();
   }
 
   getUserDataExtensions() {

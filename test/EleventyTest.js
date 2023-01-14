@@ -68,8 +68,11 @@ test("Eleventy file watching", async (t) => {
   elev.setFormats("njk");
 
   await elev.init();
+  let globalData = await elev.templateData.getGlobalData();
+
   await elev.eleventyFiles.getFiles();
   await elev.initWatch();
+
   t.deepEqual(await elev.getWatchedFiles(), [
     "./test/stubs/**/*.njk",
     "./test/stubs/_includes/**",
@@ -392,7 +395,7 @@ test("Can Eleventy run two executeBuilds in parallel?", async (t) => {
 
 test("Eleventy addGlobalData should run once", async (t) => {
   let count = 0;
-  let elev = new Eleventy("./test/stubs-noop/", "./test/stubs-noop/_site", {
+  let elev = new Eleventy("./test/stubs-addglobaldata/", "./test/stubs-addglobaldata/_site", {
     config: function (eleventyConfig) {
       eleventyConfig.addGlobalData("count", () => {
         count++;
@@ -403,6 +406,25 @@ test("Eleventy addGlobalData should run once", async (t) => {
 
   let results = await elev.toJSON();
   t.is(count, 1);
+});
+
+test("Eleventy addGlobalData shouldn’t run if no input templates match!", async (t) => {
+  let count = 0;
+  let elev = new Eleventy(
+    "./test/stubs-addglobaldata-noop/",
+    "./test/stubs-addglobaldata-noop/_site",
+    {
+      config: function (eleventyConfig) {
+        eleventyConfig.addGlobalData("count", () => {
+          count++;
+          return count;
+        });
+      },
+    }
+  );
+
+  let results = await elev.toJSON();
+  t.is(count, 0);
 });
 
 test("Eleventy addGlobalData can feed layouts to populate data cascade with layout data, issue #1245", async (t) => {

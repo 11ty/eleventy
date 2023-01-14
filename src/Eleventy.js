@@ -904,9 +904,9 @@ Arguments:
       return;
     }
 
-    let dataDir = this.templateData.getDataDir();
+    let dataDir = TemplatePath.stripLeadingDotSlash(this.templateData.getDataDir());
     function filterOutGlobalDataFiles(path) {
-      return !dataDir || path.indexOf(dataDir) === -1;
+      return !dataDir || !TemplatePath.stripLeadingDotSlash(path).startsWith(dataDir);
     }
 
     // Template files .11ty.js
@@ -920,10 +920,8 @@ Arguments:
     );
 
     // Deps from Global Data (that aren’t in the global data directory, everything is watched there)
-    this.watchTargets.addDependencies(
-      this.templateData.getWatchPathCache(),
-      filterOutGlobalDataFiles
-    );
+    let globalDataDeps = this.templateData.getWatchPathCache();
+    this.watchTargets.addDependencies(globalDataDeps, filterOutGlobalDataFiles);
 
     this.watchTargets.addDependencies(
       await this.eleventyFiles.getWatcherTemplateJavaScriptDataFiles()

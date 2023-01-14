@@ -160,7 +160,7 @@ test("Paginate external data file", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
-  await dataObj.cacheData();
+  await dataObj.getGlobalData();
 
   let tmpl = getNewTemplate(
     "./test/stubs/paged/paged.njk",
@@ -366,7 +366,7 @@ test("Issue 135", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
-  await dataObj.cacheData();
+  await dataObj.getGlobalData();
 
   let tmpl = getNewTemplate(
     "./test/stubs/issue-135/template.njk",
@@ -678,7 +678,7 @@ test("Pagination new v0.10.0 href/hrefs", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
-  await dataObj.cacheData();
+  await dataObj.getGlobalData();
 
   let tmpl = getNewTemplate(
     "./test/stubs/paged/paged.njk",
@@ -708,7 +708,7 @@ test("Pagination new v0.10.0 page/pages", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
-  await dataObj.cacheData();
+  await dataObj.getGlobalData();
 
   let tmpl = getNewTemplate(
     "./test/stubs/paged/paged.njk",
@@ -762,7 +762,7 @@ test("Pagination mutable global data", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs/paged-global-data-mutable/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
-  await dataObj.cacheData();
+  await dataObj.getGlobalData();
 
   let tmpl = getNewTemplate(
     "./test/stubs/paged-global-data-mutable/paged-differing-data-set.njk",

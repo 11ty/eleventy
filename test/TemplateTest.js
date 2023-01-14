@@ -369,7 +369,7 @@ test("Local template data file import (without a global data json)", async (t) =
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
-  await dataObj.cacheData();
+  await dataObj.getGlobalData();
 
   let tmpl = getNewTemplate(
     "./test/stubs/component/component.njk",
@@ -397,7 +397,7 @@ test("Local template data file import (two subdirectories deep)", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
-  await dataObj.cacheData();
+  await dataObj.getGlobalData();
 
   let tmpl = getNewTemplate(
     "./test/stubs/firstdir/seconddir/component.njk",
@@ -430,7 +430,7 @@ test("Posts inherits local JSON, layouts", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
-  await dataObj.cacheData();
+  await dataObj.getGlobalData();
 
   let tmpl = getNewTemplate("./test/stubs/posts/post1.njk", "./test/stubs/", "./dist", dataObj);
 
@@ -470,7 +470,7 @@ test("Template and folder name are the same, make sure data imports work ok", as
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
-  await dataObj.cacheData();
+  await dataObj.getGlobalData();
 
   let tmpl = getNewTemplate("./test/stubs/posts/posts.njk", "./test/stubs/", "./dist", dataObj);
 
@@ -962,7 +962,7 @@ test("Data Cascade (Deep merge)", async (t) => {
   // eleventyConfig.userConfig.setDataDeepMerge(true);
   let dataObj = new TemplateData("./test/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
-  await dataObj.cacheData();
+  await dataObj.getGlobalData();
 
   let tmpl = getNewTemplate(
     "./test/stubs/data-cascade/template.njk",
@@ -995,7 +995,7 @@ test("Data Cascade (Shallow merge)", async (t) => {
   eleventyConfig.userConfig.setDataDeepMerge(false);
   let dataObj = new TemplateData("./test/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
-  await dataObj.cacheData();
+  await dataObj.getGlobalData();
 
   let tmpl = getNewTemplate(
     "./test/stubs/data-cascade/template.njk",
@@ -1028,7 +1028,7 @@ test("Data Cascade Tag Merge (Deep merge)", async (t) => {
   // eleventyConfig.userConfig.setDataDeepMerge(true);
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
-  await dataObj.cacheData();
+  await dataObj.getGlobalData();
 
   let tmpl = getNewTemplate(
     "./test/stubs/data-cascade/template.njk",
@@ -1049,7 +1049,7 @@ test("Data Cascade Tag Merge (Deep Merge - Deduplication)", async (t) => {
   // eleventyConfig.userConfig.setDataDeepMerge(true);
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
-  await dataObj.cacheData();
+  await dataObj.getGlobalData();
 
   let tmpl = getNewTemplate(
     "./test/stubs/data-cascade/template.njk",
@@ -1070,7 +1070,7 @@ test("Data Cascade Tag Merge (Shallow merge)", async (t) => {
   eleventyConfig.userConfig.setDataDeepMerge(false);
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
-  await dataObj.cacheData();
+  await dataObj.getGlobalData();
 
   let tmpl = getNewTemplate(
     "./test/stubs/data-cascade/template.njk",
@@ -1091,7 +1091,7 @@ test('Local data inherits tags string ([tags] vs "tags") Shallow Merge', async (
   eleventyConfig.userConfig.setDataDeepMerge(false);
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
-  await dataObj.cacheData();
+  await dataObj.getGlobalData();
 
   let tmpl = getNewTemplate(
     "./test/stubs/local-data-tags/component.njk",
@@ -1112,7 +1112,7 @@ test('Local data inherits tags string ([tags] vs "tags") Deep Merge', async (t) 
   // eleventyConfig.userConfig.setDataDeepMerge(true);
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
-  await dataObj.cacheData();
+  await dataObj.getGlobalData();
 
   let tmpl = getNewTemplate(
     "./test/stubs/local-data-tags/component.njk",
