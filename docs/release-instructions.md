@@ -37,6 +37,7 @@ Unfortunate note about npm `canary` tag: if you push a 1.0.0-canary.x to `canary
 
 # Docs/Website (Main releases only)
 
+1. Maybe search for `2.0.0-canary.` or `2.0.0-beta.` in the docs copy to update to the stable release, if applicable.
 1. Check in a new `11ty-website` site with updated `package.json` version.
 1. Add version to `11ty-website` `versions.json`
 1. Commit it
