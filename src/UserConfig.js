@@ -98,7 +98,7 @@ class UserConfig {
     this.dataFilterSelectors = new Set();
 
     this.libraryAmendments = {};
-    this.serverPassthroughCopyBehavior = "passthrough";
+    this.serverPassthroughCopyBehavior = "copy"; // or "passthrough"
     this.urlTransforms = [];
 
     // Defaults in `defaultConfig.js`
