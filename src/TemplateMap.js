@@ -415,7 +415,7 @@ class TemplateMap {
           // include Sanity drafts.
 
           // We want these empty-data pagination templates to show up in the serverlessUrlMap.
-          map.template.initServerlessUrlsForEmptyPaginationTemplates(map.data.permalink);
+          await map.template.initServerlessUrlsForEmptyPaginationTemplates(map.data.permalink);
         } else {
           let counter = 0;
           for (let page of map._pages) {

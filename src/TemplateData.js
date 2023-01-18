@@ -120,6 +120,7 @@ class TemplateData {
 
   clearData() {
     this.globalData = null;
+    this.configApiGlobalData = null;
     this.templateDirectoryData = {};
   }
 
@@ -333,29 +334,37 @@ class TemplateData {
   }
 
   async getInitialGlobalData() {
-    let globalData = await this.initialGlobalData.getData();
+    if (!this.configApiGlobalData) {
+      this.configApiGlobalData = new Promise(async (resolve) => {
+        let globalData = await this.initialGlobalData.getData();
 
-    if (this.environmentVariables) {
-      if (!("env" in globalData.eleventy)) {
-        globalData.eleventy.env = {};
-      }
-      Object.assign(globalData.eleventy.env, this.environmentVariables);
+        if (this.environmentVariables) {
+          if (!("env" in globalData.eleventy)) {
+            globalData.eleventy.env = {};
+          }
+          Object.assign(globalData.eleventy.env, this.environmentVariables);
+        }
+
+        resolve(globalData);
+      });
     }
 
-    return globalData;
+    return this.configApiGlobalData;
   }
 
   async getGlobalData() {
     let rawImports = this.getRawImports();
 
     if (!this.globalData) {
-      this.configApiGlobalData = await this.getInitialGlobalData();
+      this.globalData = new Promise(async (resolve) => {
+        let configApiGlobalData = await this.getInitialGlobalData();
 
-      let globalJson = await this.getAllGlobalData();
-      let mergedGlobalData = merge(globalJson, this.configApiGlobalData);
+        let globalJson = await this.getAllGlobalData();
+        let mergedGlobalData = merge(globalJson, configApiGlobalData);
 
-      // OK: Shallow merge when combining rawImports (pkg) with global data files
-      this.globalData = Object.assign({}, mergedGlobalData, rawImports);
+        // OK: Shallow merge when combining rawImports (pkg) with global data files
+        resolve(Object.assign({}, mergedGlobalData, rawImports));
+      });
     }
 
     return this.globalData;
@@ -512,7 +521,8 @@ class TemplateData {
       // module.exports = (data) => `${data.page.filePathStem}/`; // Does not work
       // module.exports = () => ((data) => `${data.page.filePathStem}/`); // Works
       if (typeof returnValue === "function") {
-        returnValue = await returnValue(this.configApiGlobalData || {});
+        let configApiGlobalData = await this.getInitialGlobalData();
+        returnValue = await returnValue(configApiGlobalData || {});
       }
 
       dataBench.after();
@@ -654,15 +664,9 @@ class TemplateData {
     return data;
   }
 
-  getServerlessPathData() {
-    if (
-      this.configApiGlobalData &&
-      this.configApiGlobalData.eleventy &&
-      this.configApiGlobalData.eleventy.serverless &&
-      this.configApiGlobalData.eleventy.serverless.path
-    ) {
-      return this.configApiGlobalData.eleventy.serverless.path;
-    }
+  async getServerlessPathData() {
+    let configApiGlobalData = await this.getInitialGlobalData();
+    return configApiGlobalData?.eleventy?.serverless?.path;
   }
 }
 

@@ -174,7 +174,7 @@ class Template extends TemplateContent {
     return this.serverlessUrls;
   }
 
-  initServerlessUrlsForEmptyPaginationTemplates(permalinkValue) {
+  async initServerlessUrlsForEmptyPaginationTemplates(permalinkValue) {
     if (isPlainObject(permalinkValue)) {
       let buildlessPermalink = Object.assign({}, permalinkValue);
       delete buildlessPermalink.build;
@@ -185,12 +185,12 @@ class Template extends TemplateContent {
     }
   }
 
-  _getRawPermalinkInstance(permalinkValue) {
+  async _getRawPermalinkInstance(permalinkValue) {
     let perm = new TemplatePermalink(permalinkValue, this.extraOutputSubdirectory);
     perm.setUrlTransforms(this.config.urlTransforms);
 
     if (this.templateData) {
-      perm.setServerlessPathData(this.templateData.getServerlessPathData());
+      perm.setServerlessPathData(await this.templateData.getServerlessPathData());
     }
     this.behavior.setFromPermalink(perm);
     this.serverlessUrls = perm.getServerlessUrls();
