@@ -208,7 +208,7 @@ class TemplateLayout extends TemplateContent {
     } catch (e) {
       debugDev("Clearing TemplateCache after error.");
       templateCache.clear();
-      reject(e);
+      throw e;
     }
   }
 
