@@ -1,6 +1,6 @@
 const test = require("ava");
 const fs = require("fs");
-const rimraf = require("rimraf");
+const { rimrafSync } = require("rimraf");
 const fastglob = require("fast-glob");
 const path = require("path");
 const EleventyFiles = require("../src/EleventyFiles");
@@ -401,7 +401,7 @@ test("Glob Watcher Files with Passthroughs", (t) => {
 });
 
 test("Pagination and TemplateContent", async (t) => {
-  rimraf.sync("./test/stubs/pagination-templatecontent/_site/");
+  rimrafSync("./test/stubs/pagination-templatecontent/_site/");
 
   let eleventyConfig = new TemplateConfig();
   let tw = new TemplateWriter(
@@ -422,7 +422,7 @@ test("Pagination and TemplateContent", async (t) => {
 <h1>Post 2</h1>`
   );
 
-  rimraf.sync("./test/stubs/pagination-templatecontent/_site/");
+  rimrafSync("./test/stubs/pagination-templatecontent/_site/");
 });
 
 test("Custom collection returns array", async (t) => {
@@ -625,7 +625,7 @@ test.skip("JavaScript with alias", async (t) => {
 });
 
 test("Passthrough file output", async (t) => {
-  rimraf.sync("./test/stubs/template-passthrough/_site/");
+  rimrafSync("./test/stubs/template-passthrough/_site/");
 
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.passthroughCopies = {
@@ -670,5 +670,5 @@ test("Passthrough file output", async (t) => {
     t.true(fs.existsSync(path));
   }
 
-  rimraf.sync("./test/stubs/template-passthrough/_site/");
+  rimrafSync("./test/stubs/template-passthrough/_site/");
 });
