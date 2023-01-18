@@ -19,9 +19,7 @@ class EdgeHelper {
   }
 
   getOutputPath(filepath) {
-    return TemplatePath.addLeadingDotSlash(
-      path.join(this.options.functionsDir, filepath)
-    );
+    return TemplatePath.addLeadingDotSlash(path.join(this.options.functionsDir, filepath));
   }
 
   async writeDefaultEdgeFunctionFile() {
@@ -31,9 +29,7 @@ class EdgeHelper {
       let contents = await fsp.readFile(filepath, "utf8");
       let trimmed = contents.trim();
       if (
-        trimmed.startsWith(
-          `import { EleventyEdge } from "./_generated/eleventy-edge.js";`
-        ) ||
+        trimmed.startsWith(`import { EleventyEdge } from "./_generated/eleventy-edge.js";`) ||
         trimmed.startsWith(`import { EleventyEdge } from "eleventy:edge";`)
       ) {
         throw new Error(
@@ -51,10 +47,7 @@ class EdgeHelper {
 
       let contents = await fsp.readFile(defaultContentPath, "utf8");
       contents = contents.replace(/\%\%EDGE_NAME\%\%/g, this.options.name);
-      contents = contents.replace(
-        /\%\%EDGE_VERSION\%\%/g,
-        this.options.eleventyEdgeVersion
-      );
+      contents = contents.replace(/\%\%EDGE_VERSION\%\%/g, this.options.eleventyEdgeVersion);
       return fsp.writeFile(filepath, contents);
     }
   }
@@ -62,13 +55,7 @@ class EdgeHelper {
 
 let helper = new EdgeHelper();
 
-function renderAsLiquid(
-  functionName,
-  body,
-  langOverride,
-  serializedData,
-  extras = {}
-) {
+function renderAsLiquid(functionName, body, langOverride, serializedData, extras = {}) {
   // edge(serializedData)
   // edge(langOverride, serializedData)
 
@@ -118,9 +105,7 @@ function renderAsLiquid(
           // We serialize this into the response (this data isn’t written to disk, but it may be saved in a CDN cache a la ODB)
           for (let propName in serializedData) {
             extraData.push(
-              `{% assign ${propName} = ${JSON.stringify(
-                serializedData[propName]
-              )} %}`
+              `{% assign ${propName} = ${JSON.stringify(serializedData[propName])} %}`
             );
           }
         }
@@ -162,7 +147,7 @@ function EleventyEdgePlugin(eleventyConfig, opts = {}) {
       functionsDir: "./netlify/edge-functions/",
 
       // for the default Deno import
-      eleventyEdgeVersion: "2.0.1",
+      eleventyEdgeVersion: "2.0.2",
 
       // runtime compatibity check with Eleventy core version
       compatibility: ">=2",
@@ -172,7 +157,7 @@ function EleventyEdgePlugin(eleventyConfig, opts = {}) {
 
   helper.setOptions(options);
 
-  // TODO add middleware support so that we can just run on Eleventy Dev Server directly
+  // TODO add middleware support so that we can just run on Eleventy Dev Server directly (needs ESM first)
   // eleventyConfig.setServerOptions({
   //   middleware: [
   //     async (request, response, next) => {
@@ -188,17 +173,9 @@ function EleventyEdgePlugin(eleventyConfig, opts = {}) {
     });
   });
 
-  eleventyConfig.addNunjucksTag(
-    options.name,
-    function (nunjucksLib, nunjucksEnv) {
-      return rawContentNunjucksTag(
-        nunjucksLib,
-        nunjucksEnv,
-        renderAsLiquid,
-        options.name
-      );
-    }
-  );
+  eleventyConfig.addNunjucksTag(options.name, function (nunjucksLib, nunjucksEnv) {
+    return rawContentNunjucksTag(nunjucksLib, nunjucksEnv, renderAsLiquid, options.name);
+  });
 
   eleventyConfig.addLiquidTag(options.name, function (liquidEngine) {
     return rawContentLiquidTag(liquidEngine, renderAsLiquid, options.name);
@@ -218,9 +195,7 @@ function EleventyEdgePlugin(eleventyConfig, opts = {}) {
 
       let content = [];
       if (options.compatibility) {
-        content.push(
-          `"eleventy": { "compatibility": "${options.compatibility}" }`
-        );
+        content.push(`"eleventy": { "compatibility": "${options.compatibility}" }`);
       }
       content.push(helper.ids.toString());
       content.push(helper.precompiledTemplates.toString());
