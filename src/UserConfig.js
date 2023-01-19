@@ -1,12 +1,13 @@
 const chalk = require("kleur");
-const semver = require("semver");
 const { DateTime } = require("luxon");
+
 const EventEmitter = require("./Util/AsyncEventEmitter");
+const EleventyCompatibility = require("./Util/Compatibility");
 const EleventyBaseError = require("./EleventyBaseError");
 const BenchmarkManager = require("./BenchmarkManager");
 const merge = require("./Util/Merge");
+
 const debug = require("debug")("Eleventy:UserConfig");
-const pkg = require("../package.json");
 
 class UserConfigError extends EleventyBaseError {}
 
@@ -106,15 +107,12 @@ class UserConfig {
     this.dataFileDirBaseNameOverride = false;
   }
 
-  versionCheck(expected) {
-    if (
-      !semver.satisfies(pkg.version, expected, {
-        includePrerelease: true,
-      })
-    ) {
-      throw new UserConfigError(
-        `This project requires the Eleventy version to match '${expected}' but found ${pkg.version}. Use \`npm update @11ty/eleventy -g\` to upgrade the eleventy global or \`npm update @11ty/eleventy --save\` to upgrade your local project version.`
-      );
+  // compatibleRange is optional in 2.0.0-beta.2
+  versionCheck(compatibleRange) {
+    let compat = new EleventyCompatibility(compatibleRange);
+
+    if (!compat.isCompatible()) {
+      throw new UserConfigError(compat.getErrorMessage());
     }
   }
 
