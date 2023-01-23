@@ -32,6 +32,7 @@ class FileSystemSearch {
 
     if (options.ignore && Array.isArray(options.ignore)) {
       options.ignore = options.ignore.map((entry) => TemplatePath.stripLeadingDotSlash(entry));
+      debug("Glob search (%o) ignoring: %o", key, options.ignore);
     }
 
     let cacheKey = this.getCacheKey(key, globs, options);
