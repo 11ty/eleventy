@@ -78,8 +78,6 @@ class Eleventy {
      * @member {Boolean} - Running in serverless mode
      * @default false
      */
-
-    // This needs to happen before `getEnvironmentVariableValues` below.
     if ("isServerless" in options) {
       this.isServerless = !!options.isServerless;
     } else {
@@ -87,9 +85,16 @@ class Eleventy {
     }
 
     /**
+     * @member {String} - One of build, serve, or watch
+     * @default "build"
+     */
+    this.runMode = options.runMode || "build";
+
+    /**
      * @member {Object} - Initialize Eleventy environment variables
      * @default null
      */
+    // both this.isServerless and this.runMode need to be set before this
     this.env = this.getEnvironmentVariableValues();
     this.initializeEnvironmentVariables(this.env);
 
@@ -108,12 +113,6 @@ class Eleventy {
      * @default false
      */
     this.verboseModeSetViaCommandLineParam = false;
-
-    /**
-     * @member {String} - One of build, serve, or watch
-     * @default "build"
-     */
-    this.runMode = "build";
 
     /**
      * @member {Boolean} - Is Eleventy running in verbose mode?
@@ -468,6 +467,7 @@ Verbose Output: ${this.verboseMode}`);
   getEnvironmentVariableValues() {
     let values = {
       source: this.source,
+      runMode: this.runMode,
     };
     let configPath = this.eleventyConfig.getLocalProjectConfigFile();
     if (configPath) {
@@ -495,6 +495,7 @@ Verbose Output: ${this.verboseMode}`);
     debug("Setting process.env.ELEVENTY_ROOT: %o", env.root);
 
     process.env.ELEVENTY_SOURCE = env.source;
+    process.env.ELEVENTY_RUN_MODE = env.runMode;
 
     // https://github.com/11ty/eleventy/issues/1957
     // Note: when using --serve, ELEVENTY_SERVERLESS is also set in Serverless.js

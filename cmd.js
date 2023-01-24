@@ -63,6 +63,7 @@ try {
       quietMode: argv.quiet,
       configPath: argv.config,
       pathPrefix: argv.pathprefix,
+      runMode: argv.serve ? "serve" : argv.watch ? "watch" : "build",
     });
 
     // reuse ErrorHandler instance in Eleventy
@@ -77,12 +78,6 @@ try {
     elev.setIgnoreInitial(argv["ignore-initial"]);
     elev.setIncrementalBuild(argv.incremental);
     elev.setFormats(argv.formats);
-
-    if (argv.serve) {
-      elev.setRunMode("serve");
-    } else if (argv.watch) {
-      elev.setRunMode("watch");
-    }
 
     // careful, we can’t use async/await here to error properly
     // with old node versions in `please-upgrade-node` above.
