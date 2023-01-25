@@ -119,9 +119,16 @@ class EleventyWatchTargets {
     this.writer = templateWriter;
   }
 
-  clearDependencyRequireCache() {
-    for (let path of this.dependencies) {
-      deleteRequireCache(path);
+  clearRequireCacheFor(filePathArray) {
+    for (const filePath of filePathArray) {
+      deleteRequireCache(filePath);
+
+      // Any dependencies of the config file changed
+      let fileDeps = this.getDependenciesOf(filePath);
+      for (let dep of fileDeps) {
+        // Delete from require cache so that updates to the module are re-required
+        deleteRequireCache(dep);
+      }
     }
   }
 

@@ -4,8 +4,8 @@ const { match } = require("path-to-regexp");
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const Eleventy = require("./Eleventy");
-const { EleventyRequireAbsolute } = require("./Util/Require");
 const normalizeServerlessUrl = require("./Util/NormalizeServerlessUrl");
+const deleteRequireCache = require("./Util/DeleteRequireCache");
 const debug = require("debug")("Eleventy:Serverless");
 
 class Serverless {
@@ -100,7 +100,9 @@ class Serverless {
     debug(`Including content map (maps output URLs to input files) from ${fullPath}`);
 
     // TODO dedicated reset method, don’t delete this every time
-    return EleventyRequireAbsolute(fullPath);
+    deleteRequireCache(fullPath);
+
+    return require(fullPath);
   }
 
   getConfigInfo() {
@@ -108,7 +110,9 @@ class Serverless {
     debug(`Including config info file from ${fullPath}`);
 
     // TODO dedicated reset method, don’t delete this every time
-    return EleventyRequireAbsolute(fullPath);
+    deleteRequireCache(fullPath);
+
+    return require(fullPath);
   }
 
   isServerlessUrl(urlPath) {

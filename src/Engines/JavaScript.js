@@ -2,8 +2,8 @@ const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const TemplateEngine = require("./TemplateEngine");
 const EleventyBaseError = require("../EleventyBaseError");
-const deleteRequireCache = require("../Util/DeleteRequireCache");
 const getJavaScriptData = require("../Util/GetJavaScriptData");
+const eventBus = require("../EventBus");
 
 class JavaScriptTemplateNotDefined extends EleventyBaseError {}
 
@@ -13,6 +13,15 @@ class JavaScript extends TemplateEngine {
     this.instances = {};
 
     this.cacheable = false;
+
+    eventBus.on("eleventy.resourceModified", (inputPath) => {
+      inputPath = TemplatePath.addLeadingDotSlash(inputPath);
+
+      // Remove from cached instances when modified
+      if (inputPath in this.instances) {
+        delete this.instances[inputPath];
+      }
+    });
   }
 
   normalize(result) {
@@ -34,10 +43,7 @@ class JavaScript extends TemplateEngine {
     if (typeof mod === "string" || mod instanceof Buffer || mod.then) {
       return { render: () => mod };
     } else if (typeof mod === "function") {
-      if (
-        mod.prototype &&
-        ("data" in mod.prototype || "render" in mod.prototype)
-      ) {
+      if (mod.prototype && ("data" in mod.prototype || "render" in mod.prototype)) {
         if (!("render" in mod.prototype)) {
           mod.prototype.render = noop;
         }
@@ -58,7 +64,7 @@ class JavaScript extends TemplateEngine {
       return this.instances[inputPath];
     }
 
-    const mod = this._getRequire(inputPath);
+    const mod = require(TemplatePath.absolutePath(inputPath));
     let inst = this._getInstance(mod);
 
     if (inst) {
@@ -71,11 +77,6 @@ class JavaScript extends TemplateEngine {
     return inst;
   }
 
-  _getRequire(inputPath) {
-    let requirePath = TemplatePath.absolutePath(inputPath);
-    return require(requirePath);
-  }
-
   /**
    * JavaScript files defer to the module loader rather than read the files to strings
    *
@@ -83,15 +84,6 @@ class JavaScript extends TemplateEngine {
    */
   needsToReadFileContents() {
     return false;
-  }
-
-  // only remove from cache once on startup (if it already exists)
-  initRequireCache(inputPath) {
-    deleteRequireCache(inputPath);
-
-    if (inputPath in this.instances) {
-      delete this.instances[inputPath];
-    }
   }
 
   async getExtraDataFromFile(inputPath) {
@@ -137,8 +129,12 @@ class JavaScript extends TemplateEngine {
       // For normal templates, str will be falsy.
       inst = this.getInstanceFromInputPath(inputPath);
     }
+
     if (inst && "render" in inst) {
       return function (data) {
+        // TODO does this do anything meaningful for non-classes?
+        // `inst` should have a normalized `render` function from _getInstance
+
         // only blow away existing inst.page if it has a page.url
         if (!inst.page || inst.page.url) {
           inst.page = data.page;

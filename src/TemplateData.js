@@ -6,7 +6,6 @@ const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
 
 const merge = require("./Util/Merge");
 const unique = require("./Util/Unique");
-const TemplateRender = require("./TemplateRender");
 const TemplateGlob = require("./TemplateGlob");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");

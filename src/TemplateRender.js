@@ -13,9 +13,7 @@ class TemplateRenderUnknownEngineError extends EleventyBaseError {}
 class TemplateRender {
   constructor(tmplPath, inputDir, config) {
     if (!tmplPath) {
-      throw new Error(
-        `TemplateRender requires a tmplPath argument, instead of ${tmplPath}`
-      );
+      throw new Error(`TemplateRender requires a tmplPath argument, instead of ${tmplPath}`);
     }
     if (!config) {
       throw new TemplateRenderConfigError("Missing `config` argument.");
@@ -28,10 +26,7 @@ class TemplateRender {
     this.engineNameOrPath = tmplPath;
 
     this.inputDir = inputDir ? inputDir : this.config.dir.input;
-    this.includesDir = TemplatePath.join(
-      this.inputDir,
-      this.config.dir.includes
-    );
+    this.includesDir = TemplatePath.join(this.inputDir, this.config.dir.includes);
 
     this.parseMarkdownWith = this.config.markdownTemplateEngine;
     this.parseHtmlWith = this.config.htmlTemplateEngine;
@@ -60,11 +55,7 @@ class TemplateRender {
   }
 
   getEngineByName(name) {
-    let engine = this.extensionMap.engineManager.getEngine(
-      name,
-      this.getDirs(),
-      this.extensionMap
-    );
+    let engine = this.extensionMap.engineManager.getEngine(name, this.getDirs(), this.extensionMap);
     engine.config = this.config;
 
     return engine;
@@ -81,7 +72,6 @@ class TemplateRender {
     }
 
     this._engine = this.getEngineByName(this._engineName);
-    this._engine.initRequireCache(engineNameOrPath);
 
     if (this.useMarkdown === undefined) {
       this.setUseMarkdown(this._engineName === "md");
@@ -104,10 +94,7 @@ class TemplateRender {
 
   static parseEngineOverrides(engineName) {
     if (typeof (engineName || "") !== "string") {
-      throw new Error(
-        "Expected String passed to parseEngineOverrides. Received: " +
-          engineName
-      );
+      throw new Error("Expected String passed to parseEngineOverrides. Received: " + engineName);
     }
 
     let overlappingEngineWarningCount = 0;
@@ -155,9 +142,7 @@ class TemplateRender {
 
   // used for error logging and console output.
   getReadableEnginesList() {
-    return (
-      this.getReadableEnginesListDifferingFromFileExtension() || this.engineName
-    );
+    return this.getReadableEnginesListDifferingFromFileExtension() || this.engineName;
   }
 
   getReadableEnginesListDifferingFromFileExtension() {
@@ -175,11 +160,7 @@ class TemplateRender {
       }
     }
 
-    if (
-      this.engineName === "md" &&
-      this.useMarkdown &&
-      this.parseMarkdownWith
-    ) {
+    if (this.engineName === "md" && this.useMarkdown && this.parseMarkdownWith) {
       return this.parseMarkdownWith;
     }
     if (this.engineName === "html" && this.parseHtmlWith) {
@@ -206,16 +187,11 @@ class TemplateRender {
   // We pass in templateEngineOverride here because it isn’t yet applied to templateRender
   getEnginesList(engineOverride) {
     if (engineOverride) {
-      let engines =
-        TemplateRender.parseEngineOverrides(engineOverride).reverse();
+      let engines = TemplateRender.parseEngineOverrides(engineOverride).reverse();
       return engines.join(",");
     }
 
-    if (
-      this.engineName === "md" &&
-      this.useMarkdown &&
-      this.parseMarkdownWith
-    ) {
+    if (this.engineName === "md" && this.useMarkdown && this.parseMarkdownWith) {
       return `${this.parseMarkdownWith},md`;
     }
     if (this.engineName === "html" && this.parseHtmlWith) {
@@ -297,11 +273,7 @@ class TemplateRender {
         !this.useMarkdown
       );
     } else if (this.engineName === "html") {
-      return this.engine.compile(
-        str,
-        this.engineNameOrPath,
-        this.parseHtmlWith
-      );
+      return this.engine.compile(str, this.engineNameOrPath, this.parseHtmlWith);
     } else {
       return this.engine.compile(str, this.engineNameOrPath);
     }

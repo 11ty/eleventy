@@ -1,5 +1,6 @@
 const path = require("path");
 const { TemplatePath } = require("@11ty/eleventy-utils");
+const debug = require("debug")("Eleventy:DeleteRequireCache");
 
 /**
  * Removes a nodejs module from the cache.
@@ -8,6 +9,7 @@ const { TemplatePath } = require("@11ty/eleventy-utils");
  */
 function deleteRequireCacheAbsolute(absolutePath) {
   const normalizedPath = path.normalize(absolutePath);
+  debug("Deleting %o from `require` cache.", normalizedPath);
   delete require.cache[normalizedPath];
 }
 
@@ -16,5 +18,7 @@ function deleteRequireCache(localPath) {
   deleteRequireCacheAbsolute(absolutePath);
 }
 
-module.exports = deleteRequireCache; // local paths
+module.exports = deleteRequireCache; // will transform local paths to absolute
+
+// Export for testing only
 module.exports.deleteRequireCacheAbsolute = deleteRequireCacheAbsolute;

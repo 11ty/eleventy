@@ -17,7 +17,6 @@ const TemplateConfig = require("./TemplateConfig");
 const FileSystemSearch = require("./FileSystemSearch");
 
 const simplePlural = require("./Util/Pluralize");
-const deleteRequireCache = require("./Util/DeleteRequireCache");
 const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
 const debug = require("debug")("Eleventy");
 const eventBus = require("./EventBus");
@@ -286,12 +285,6 @@ class Eleventy {
     this.bench.reset();
     this.eleventyFiles.restart();
     this.extensionMap.reset();
-
-    // reload package.json values (if applicable)
-    // TODO only reset this if it changed
-    deleteRequireCache("package.json");
-
-    await this.init();
   }
 
   /**
@@ -374,7 +367,9 @@ class Eleventy {
    * @method
    * @returns {} - tbd.
    */
-  async init() {
+  async init(options = {}) {
+    options = Object.assign({ viaConfigReset: false }, options);
+
     await this.config.events.emit("eleventy.config", this.eleventyConfig);
 
     if (this.env) {
@@ -744,23 +739,18 @@ Arguments:
       return true;
     }
 
-    let returnValue = false;
-
     for (const configFilePath of configFilePaths) {
       // Any dependencies of the config file changed
       let configFileDependencies = this.watchTargets.getDependenciesOf(configFilePath);
 
       for (let dep of configFileDependencies) {
         if (this.watchManager.hasQueuedFile(dep)) {
-          // Delete from require cache so that updates to the module are re-required
-          deleteRequireCache(dep);
-
-          returnValue = true;
+          return true;
         }
       }
     }
 
-    return returnValue;
+    return false;
   }
 
   /**
@@ -780,14 +770,17 @@ Arguments:
     await this.config.events.emit("beforeWatch", queue);
     await this.config.events.emit("eleventy.beforeWatch", queue);
 
-    // reset and reload global configuration :O
-    if (this._shouldResetConfig()) {
+    // Clear `require` cache for all files that triggered the rebuild
+    this.watchTargets.clearRequireCacheFor(queue);
+
+    // reset and reload global configuration
+    let isResetConfig = this._shouldResetConfig();
+    if (isResetConfig) {
       this.resetConfig();
     }
 
     await this.restart();
-
-    this.watchTargets.clearDependencyRequireCache();
+    await this.init({ viaConfigReset: isResetConfig });
 
     let incrementalFile = this.watchManager.getIncrementalFile();
     if (incrementalFile) {
@@ -876,6 +869,7 @@ Arguments:
     this.watchManager = new EleventyWatch();
     this.watchManager.incremental = this.isIncremental;
 
+    this.watchTargets.add(["./package.json"]);
     this.watchTargets.add(this.eleventyFiles.getGlobWatcherFiles());
     this.watchTargets.add(this.eleventyFiles.getIgnoreFiles());
 

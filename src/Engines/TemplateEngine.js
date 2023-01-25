@@ -205,10 +205,6 @@ class TemplateEngine {
     return {};
   }
 
-  initRequireCache() {
-    // do nothing
-  }
-
   getCompileCacheKey(str, inputPath) {
     // Changing to use inputPath and contents, using only file contents (`str`) caused issues when two
     // different files had identical content (2.0.0-canary.16)

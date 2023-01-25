@@ -74,6 +74,7 @@ test("Eleventy file watching", async (t) => {
   await elev.initWatch();
 
   t.deepEqual(await elev.getWatchedFiles(), [
+    "./package.json",
     "./test/stubs/**/*.njk",
     "./test/stubs/_includes/**",
     "./test/stubs/_data/**",
@@ -111,6 +112,7 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
   await elev.init();
   await elev.initWatch();
   t.deepEqual(await elev.getWatchedFiles(), [
+    "./package.json",
     "./test/stubs/**/*.njk",
     "./test/stubs/_includes/**",
     "./test/stubs/_data/**",

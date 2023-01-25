@@ -10,6 +10,7 @@ const NetlifyRedirects = require("./Serverless/NetlifyRedirects");
 const { EleventyRequire } = require("../Util/Require");
 const DirContains = require("../Util/DirContains");
 const JavaScriptDependencies = require("../Util/JavaScriptDependencies");
+const deleteRequireCache = require("../Util/DeleteRequireCache");
 const debug = require("debug")("Eleventy:Serverless");
 
 // Provider specific
@@ -167,6 +168,8 @@ class BundlerHelper {
     );
 
     return async function EleventyServerlessMiddleware(req, res, next) {
+      deleteRequireCache(serverlessFilePath);
+
       let serverlessFunction = EleventyRequire(serverlessFilepath);
       let url = new URL(req.url, "http://localhost/"); // any domain will do here, we just want the searchParams
 
