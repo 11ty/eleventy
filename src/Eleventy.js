@@ -422,7 +422,10 @@ class Eleventy {
       this.templateData,
       this.eleventyConfig
     );
-    this._cache("TemplateWriter", this.writer);
+
+    if (!options.viaConfigReset) {
+      this._cache("TemplateWriter", this.writer);
+    }
 
     this.writer.setInput(this.inputDir, this.input);
     this.writer.logger = this.logger;
