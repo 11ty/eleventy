@@ -29,7 +29,9 @@
 1. Tag new version
 1. Release
    - (Canary) `npm publish --access=public --tag=canary`
+     - NOTE: that in 3.0 we need to switch this to `alpha` to avoid https://github.com/11ty/eleventy/issues/2758
    - (Beta) `npm publish --access=public --tag=beta`
+     - NOTE: When releasing a `beta`, make sure to also release a `canary` to mitigate https://github.com/11ty/eleventy/issues/2758.
    - (Main) `npm publish --access=public`
 1. (Optional) Build and commit a new the `eleventy-edge-cdn` project to generate a new Eleventy Edge lib.
 
