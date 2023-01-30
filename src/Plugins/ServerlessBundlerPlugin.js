@@ -168,7 +168,7 @@ class BundlerHelper {
     );
 
     return async function EleventyServerlessMiddleware(req, res, next) {
-      deleteRequireCache(serverlessFilePath);
+      deleteRequireCache(serverlessFilepath);
 
       let serverlessFunction = EleventyRequire(serverlessFilepath);
       let url = new URL(req.url, "http://localhost/"); // any domain will do here, we just want the searchParams
