@@ -24,7 +24,7 @@
 1. Update version in `package.json`
    - (Canary) Use `-canary.1` suffix
    - (Beta) Use `-beta.1` suffix
-1. (Beta) Run `npm run coverage`
+1. Run `npm run coverage`
 1. Check it all in and commit
 1. Tag new version
 1. Release
