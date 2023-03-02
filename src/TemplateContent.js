@@ -124,7 +124,7 @@ class TemplateContent {
       return this._frontMatter;
     } else {
       throw new Error(
-        "Unfortunately you’re using code that monkey patched some Eleventy internals and it isn’t async-friendly."
+        "Unfortunately you’re using code that monkey patched some Eleventy internals and it isn’t async-friendly. Change your code to use the async `read()` method on the template instead!"
       );
     }
   }

@@ -255,7 +255,7 @@ class Template extends TemplateContent {
     }
 
     // Override default permalink behavior. Only do this if permalink was _not_ in the data cascade
-    if (!permalink) {
+    if (!permalink && this.config.dynamicPermalinks && data.dynamicPermalink !== false) {
       let permalinkCompilation = this.engine.permalinkNeedsCompilation("");
       if (typeof permalinkCompilation === "function") {
         let ret = await this._renderFunction(permalinkCompilation, permalinkValue, this.inputPath);

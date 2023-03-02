@@ -1,7 +1,7 @@
 {
   "name": "@11ty/eleventy",
   "version": "2.0.0",
-  "description": "Transform a directory of templates into HTML.",
+  "description": "A simpler (static) site generator.",
   "publishConfig": {
     "access": "public"
   },

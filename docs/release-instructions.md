@@ -27,6 +27,7 @@
 1. Run `npm run coverage`
 1. Check it all in and commit
 1. Tag new version
+1. Wait for GitHub Actions to complete to know that the build did not fail.
 1. Release
    - (Canary) `npm publish --access=public --tag=canary`
      - NOTE: that in 3.0 we need to switch this to `alpha` to avoid https://github.com/11ty/eleventy/issues/2758

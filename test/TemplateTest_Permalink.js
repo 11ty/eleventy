@@ -109,6 +109,8 @@ test("Disable dynamic permalinks", async (t) => {
 
   t.is(await tmpl.getRawOutputPath(data), "/{{justastring}}/index.html");
   t.is(await tmpl.getOutputHref(data), "/{{justastring}}/");
+  // TODO https://github.com/11ty/eleventy-plugin-webc/issues/32
+  // t.is(data.page.url, "/{{justastring}}/")
 });
 
 test("Permalink with variables!", async (t) => {
