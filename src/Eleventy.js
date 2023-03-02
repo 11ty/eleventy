@@ -729,8 +729,16 @@ Arguments:
    * @param {String} changedFilePath - File that triggered a re-run (added or modified)
    */
   async _addFileToWatchQueue(changedFilePath) {
+    // Currently this is only for 11ty.js deps but should be extended with usesGraph
+    let usedByDependants = [];
+    if (this.watchTargets) {
+      usedByDependants = this.watchTargets.getDependantsOf(
+        TemplatePath.addLeadingDotSlash(changedFilePath)
+      );
+    }
+
     // Note: this is a sync event!
-    eventBus.emit("eleventy.resourceModified", changedFilePath);
+    eventBus.emit("eleventy.resourceModified", changedFilePath, usedByDependants);
     this.watchManager.addToPendingQueue(changedFilePath);
   }
 

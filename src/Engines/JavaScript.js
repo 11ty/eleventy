@@ -14,12 +14,13 @@ class JavaScript extends TemplateEngine {
 
     this.cacheable = false;
 
-    eventBus.on("eleventy.resourceModified", (inputPath) => {
-      inputPath = TemplatePath.addLeadingDotSlash(inputPath);
-
+    eventBus.on("eleventy.resourceModified", (inputPath, usedByDependants) => {
       // Remove from cached instances when modified
-      if (inputPath in this.instances) {
-        delete this.instances[inputPath];
+      let instancesToDelete = [TemplatePath.addLeadingDotSlash(inputPath), ...usedByDependants];
+      for (let inputPath of instancesToDelete) {
+        if (inputPath in this.instances) {
+          delete this.instances[inputPath];
+        }
       }
     });
   }

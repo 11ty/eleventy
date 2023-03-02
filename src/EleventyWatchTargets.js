@@ -57,6 +57,13 @@ class EleventyWatchTargets {
     return this.graph.dependenciesOf(parent);
   }
 
+  getDependantsOf(child) {
+    if (!this.graph.hasNode(child)) {
+      return [];
+    }
+    return this.graph.dependantsOf(child);
+  }
+
   addRaw(targets, isDependency) {
     for (let target of targets) {
       let path = TemplatePath.addLeadingDotSlash(target);
@@ -123,10 +130,14 @@ class EleventyWatchTargets {
     for (const filePath of filePathArray) {
       deleteRequireCache(filePath);
 
-      // Any dependencies of the config file changed
-      let fileDeps = this.getDependenciesOf(filePath);
-      for (let dep of fileDeps) {
-        // Delete from require cache so that updates to the module are re-required
+      // Delete from require cache so that updates to the module are re-required
+      let importsTheChangedFile = this.getDependantsOf(filePath);
+      for (let dep of importsTheChangedFile) {
+        deleteRequireCache(dep);
+      }
+
+      let isImportedInTheChangedFile = this.getDependenciesOf(filePath);
+      for (let dep of isImportedInTheChangedFile) {
         deleteRequireCache(dep);
       }
     }
