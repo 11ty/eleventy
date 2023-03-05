@@ -149,7 +149,7 @@ function EleventyEdgePlugin(eleventyConfig, opts = {}) {
       // for the default Deno import
       eleventyEdgeVersion: "2.0.2",
 
-      // runtime compatibity check with Eleventy core version
+      // runtime compatibility check with Eleventy core version
       compatibility: ">=2",
     },
     opts

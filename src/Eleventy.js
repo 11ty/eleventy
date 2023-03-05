@@ -642,7 +642,7 @@ Verbose Output: ${this.verboseMode}`);
    * Shows a help message including usage.
    *
    * @static
-   * @returns {String} - The help mesage.
+   * @returns {String} - The help message.
    */
   static getHelp() {
     return `Usage: eleventy
