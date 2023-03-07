@@ -38,7 +38,7 @@ class TemplateMap {
 
   get userConfig() {
     if (!this._userConfig) {
-      // TODO use this.config for this, need to add collections to mergable props in userconfig
+      // TODO use this.config for this, need to add collections to mergeable props in userconfig
       this._userConfig = this.eleventyConfig.userConfig;
     }
 
