@@ -333,6 +333,7 @@ class Pagination {
         let serverlessPaginationKey = this._get(this.data, this.data.pagination.serverless);
         if (this.paginationTargetType === "array") {
           currentPageIndex = parseInt(serverlessPaginationKey, 10);
+
           indeces.add(0); // first
           if (currentPageIndex > 0) {
             indeces.add(currentPageIndex - 1); // previous
@@ -344,10 +345,12 @@ class Pagination {
             indeces.add(currentPageIndex + 1); // next
           }
           indeces.add(items.length - 1); // last
+        } else if (this.paginationTargetType === "object") {
+          // TODO support pagination `resolve: values` here, right now it only works with keys (`this.shouldResolveDataToObjectValues()`)
+          currentPageIndex = items.findIndex((entry) => entry[0] === serverlessPaginationKey);
+          indeces.add(currentPageIndex); // current
         }
       }
-      // TODO serverless object pagination indeces?
-      // this.paginationTargetType === "object"
     } else {
       for (let j = 0; j <= items.length - 1; j++) {
         indeces.add(j);
@@ -370,7 +373,25 @@ class Pagination {
       Object.assign(paginationData.pagination, this.getOverrideDataPages(items, pageNumber));
 
       if (this.alias) {
-        lodashSet(paginationData, this.alias, this.getNormalizedItems(items[pageNumber]));
+        // When aliasing an object in serverless, use the object value and not the key
+        if (
+          this.paginationTargetType === "object" &&
+          this._has(this.data, this.data.pagination.serverless)
+        ) {
+          // This should maybe be the default for all object pagination, not just serverless ones?
+          let keys = this.getNormalizedItems(items[pageNumber]);
+          if (Array.isArray(keys)) {
+            lodashSet(
+              paginationData,
+              this.alias,
+              key.map((key) => this._get(this.fullDataSet, key))
+            );
+          } else {
+            lodashSet(paginationData, this.alias, this._get(this.fullDataSet, keys));
+          }
+        } else {
+          lodashSet(paginationData, this.alias, this.getNormalizedItems(items[pageNumber]));
+        }
       }
 
       // Do *not* deep merge pagination data! See https://github.com/11ty/eleventy/issues/147#issuecomment-440802454
@@ -412,14 +433,15 @@ class Pagination {
     }
 
     // we loop twice to pass in the appropriate prev/next links (already full generated now)
+    let index = 0;
     for (let pageEntry of entries) {
-      let { pageNumber } = pageEntry;
-      let linksObj = this.getOverrideDataLinks(pageNumber, items.length, links);
+      let linksObj = this.getOverrideDataLinks(index, items.length, links);
 
       Object.assign(pageEntry.data.pagination, linksObj);
 
-      let hrefsObj = this.getOverrideDataHrefs(pageNumber, items.length, hrefs);
+      let hrefsObj = this.getOverrideDataHrefs(index, items.length, hrefs);
       Object.assign(pageEntry.data.pagination, hrefsObj);
+      index++;
     }
 
     // Final output is filtered for serverless
