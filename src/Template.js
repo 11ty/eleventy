@@ -309,6 +309,7 @@ class Template extends TemplateContent {
     }
 
     return {
+      linkInstance: link,
       rawPath: link.toOutputPath(),
       href: link.toHref(),
       path: path,

@@ -6,6 +6,7 @@ const { isPlainObject } = require("@11ty/eleventy-utils");
 const EleventyBaseError = require("../EleventyBaseError");
 const { DeepCopy } = require("../Util/Merge");
 const { ProxyWrap } = require("../Util/ProxyWrap");
+let serverlessUrlFilter = require("../Filters/ServerlessUrl");
 
 class PaginationConfigError extends EleventyBaseError {}
 class PaginationError extends EleventyBaseError {}
@@ -13,9 +14,7 @@ class PaginationError extends EleventyBaseError {}
 class Pagination {
   constructor(tmpl, data, config) {
     if (!config) {
-      throw new PaginationConfigError(
-        "Expected `config` argument to Pagination class."
-      );
+      throw new PaginationConfigError("Expected `config` argument to Pagination class.");
     }
 
     this.config = config;
@@ -83,43 +82,23 @@ class Pagination {
     this.alias = data.pagination.alias;
     // TODO do we need the full data set for serverless?
     this.fullDataSet = this._get(this.data, this._getDataKey());
+    // this returns an array
+    this.target = this._resolveItems();
 
-    // truncate pagination data to one entry for serverless render
+    // truncate pagination data if user-supplied `serverlessFilter` function
     if (
       data.pagination.serverless &&
-      this._has(data, data.pagination.serverless)
+      this._has(data, data.pagination.serverless) &&
+      typeof data.pagination.serverlessFilter === "function"
     ) {
       // Warn: this doesn’t run filter/before/pagination transformations
       // Warn: `pagination.pages`, pageNumber, links, hrefs, etc
       let serverlessPaginationKey = this._get(data, data.pagination.serverless);
-
-      if (typeof data.pagination.serverlessFilter === "function") {
-        this.chunkedItems = [
-          data.pagination.serverlessFilter(
-            this.fullDataSet,
-            serverlessPaginationKey
-          ),
-        ];
-      } else {
-        this.chunkedItems = [
-          [this._get(this.fullDataSet, serverlessPaginationKey)],
-        ];
-      }
+      this.chunkedItems = [
+        data.pagination.serverlessFilter(this.fullDataSet, serverlessPaginationKey),
+      ];
     } else {
-      // this returns an array
-      this.target = this._resolveItems();
-
-      // Serverless Shortcut when key is not found in data set (probably running local build and expected a :path param in data)
-      // Only collections are relevant for templates that don’t have a permalink.build, they don’t have a templateContent and aren’t written to disk
-      if (
-        data.pagination.serverless &&
-        !data.pagination.addAllPagesToCollections
-      ) {
-        // use the first page only
-        this.chunkedItems = [this.pagedItems[0]];
-      } else {
-        this.chunkedItems = this.pagedItems;
-      }
+      this.chunkedItems = this.pagedItems;
     }
   }
 
@@ -172,7 +151,9 @@ class Pagination {
     let keys;
     if (Array.isArray(this.fullDataSet)) {
       keys = this.fullDataSet;
+      this.paginationTargetType = "array";
     } else if (isPlainObject(this.fullDataSet)) {
+      this.paginationTargetType = "object";
       if (this.shouldResolveDataToObjectValues()) {
         keys = Object.values(this.fullDataSet);
       } else {
@@ -187,10 +168,7 @@ class Pagination {
     // keys must be an array
     let result = keys.slice();
 
-    if (
-      this.data.pagination.before &&
-      typeof this.data.pagination.before === "function"
-    ) {
+    if (this.data.pagination.before && typeof this.data.pagination.before === "function") {
       // we don’t need to make a copy of this because we .slice() above to create a new copy
       let fns = {};
       if (this.config) {
@@ -218,7 +196,6 @@ class Pagination {
     }
 
     const chunks = lodashChunk(this.target, this.size);
-
     if (this.data.pagination && this.data.pagination.generatePageOnEmptyData) {
       return chunks.length ? chunks : [[]];
     } else {
@@ -242,18 +219,10 @@ class Pagination {
     return {
       // See Issue #345 for more examples
       page: {
-        previous:
-          pageNumber > 0
-            ? this.getNormalizedItems(items[pageNumber - 1])
-            : null,
-        next:
-          pageNumber < items.length - 1
-            ? this.getNormalizedItems(items[pageNumber + 1])
-            : null,
+        previous: pageNumber > 0 ? this.getNormalizedItems(items[pageNumber - 1]) : null,
+        next: pageNumber < items.length - 1 ? this.getNormalizedItems(items[pageNumber + 1]) : null,
         first: items.length ? this.getNormalizedItems(items[0]) : null,
-        last: items.length
-          ? this.getNormalizedItems(items[items.length - 1])
-          : null,
+        last: items.length ? this.getNormalizedItems(items[items.length - 1]) : null,
       },
 
       pageNumber,
@@ -267,8 +236,7 @@ class Pagination {
     obj.previousPageLink = pageNumber > 0 ? links[pageNumber - 1] : null;
     obj.previous = obj.previousPageLink;
 
-    obj.nextPageLink =
-      pageNumber < templateCount - 1 ? links[pageNumber + 1] : null;
+    obj.nextPageLink = pageNumber < templateCount - 1 ? links[pageNumber + 1] : null;
     obj.next = obj.nextPageLink;
 
     obj.firstPageLink = links.length > 0 ? links[0] : null;
@@ -285,8 +253,7 @@ class Pagination {
 
     // hrefs are better than links
     obj.previousPageHref = pageNumber > 0 ? hrefs[pageNumber - 1] : null;
-    obj.nextPageHref =
-      pageNumber < templateCount - 1 ? hrefs[pageNumber + 1] : null;
+    obj.nextPageHref = pageNumber < templateCount - 1 ? hrefs[pageNumber + 1] : null;
 
     obj.firstPageHref = hrefs.length > 0 ? hrefs[0] : null;
     obj.lastPageHref = hrefs.length > 0 ? hrefs[hrefs.length - 1] : null;
@@ -324,8 +291,7 @@ class Pagination {
 
     let hasPermalinkField = Boolean(this.data[this.config.keys.permalink]);
     let hasComputedPermalinkField = Boolean(
-      this.data.eleventyComputed &&
-        this.data.eleventyComputed[this.config.keys.permalink]
+      this.data.eleventyComputed && this.data.eleventyComputed[this.config.keys.permalink]
     );
 
     // Do *not* pass collections through DeepCopy, we’ll re-add them back in later.
@@ -357,7 +323,38 @@ class Pagination {
     // so that we don’t have the memory cost of the full template (and can reuse the parent
     // template for some things)
 
-    for (let pageNumber = 0; pageNumber < items.length; pageNumber++) {
+    let indeces = new Set();
+    let currentPageIndex;
+
+    // Serverless pagination:
+    if (this._has(this.data, "pagination.serverless")) {
+      // if the serverless data does not exist (e.g. at build-time), don’t process this template at all
+      if (this._has(this.data, this.data.pagination.serverless)) {
+        let serverlessPaginationKey = this._get(this.data, this.data.pagination.serverless);
+        if (this.paginationTargetType === "array") {
+          currentPageIndex = parseInt(serverlessPaginationKey, 10);
+          indeces.add(0); // first
+          if (currentPageIndex > 0) {
+            indeces.add(currentPageIndex - 1); // previous
+          }
+          if (currentPageIndex >= 0 && currentPageIndex <= items.length - 1) {
+            indeces.add(currentPageIndex); // current
+          }
+          if (currentPageIndex + 1 < items.length) {
+            indeces.add(currentPageIndex + 1); // next
+          }
+          indeces.add(items.length - 1); // last
+        }
+      }
+      // TODO serverless object pagination indeces?
+      // this.paginationTargetType === "object"
+    } else {
+      for (let j = 0; j <= items.length - 1; j++) {
+        indeces.add(j);
+      }
+    }
+
+    for (let pageNumber of indeces) {
       let cloned = this.template.clone();
 
       if (pageNumber > 0 && !hasPermalinkField && !hasComputedPermalinkField) {
@@ -370,25 +367,37 @@ class Pagination {
         },
         page: {},
       };
-      Object.assign(
-        paginationData.pagination,
-        this.getOverrideDataPages(items, pageNumber)
-      );
+      Object.assign(paginationData.pagination, this.getOverrideDataPages(items, pageNumber));
 
       if (this.alias) {
-        lodashSet(
-          paginationData,
-          this.alias,
-          this.getNormalizedItems(items[pageNumber])
-        );
+        lodashSet(paginationData, this.alias, this.getNormalizedItems(items[pageNumber]));
       }
 
       // Do *not* deep merge pagination data! See https://github.com/11ty/eleventy/issues/147#issuecomment-440802454
       let clonedData = ProxyWrap(paginationData, parentData);
 
-      let { rawPath, path, href } = await cloned.getOutputLocations(clonedData);
-      // TO DO subdirectory to links if the site doesn’t live at /
-      links.push("/" + rawPath);
+      let { linkInstance, rawPath, path, href } = await cloned.getOutputLocations(clonedData);
+      // TODO subdirectory to links if the site doesn’t live at /
+      if (rawPath) {
+        links.push("/" + rawPath);
+      }
+
+      if (this._has(this.data, this.data.pagination.serverless)) {
+        let keys = this.data.pagination.serverless.split(".");
+        let key = keys.pop();
+
+        let serverlessUrls = linkInstance.getServerlessUrls();
+        let validUrls = Object.values(serverlessUrls)
+          .flat()
+          .filter((entry) => entry.includes(`/:${key}/`));
+        if (validUrls.length === 0) {
+          throw new Error(
+            `Serverless pagination template has no \`permalink.${key}\` with \`/:${key}/\``
+          );
+        }
+        href = serverlessUrlFilter(validUrls[0], { [key]: pageNumber });
+      }
+
       hrefs.push(href);
 
       // page.url and page.outputPath are used to avoid another getOutputLocations call later, see Template->addComputedData
@@ -396,31 +405,27 @@ class Pagination {
       clonedData.page.outputPath = path;
 
       entries.push({
+        pageNumber,
         template: cloned,
         data: clonedData,
       });
     }
 
     // we loop twice to pass in the appropriate prev/next links (already full generated now)
-    let numberOfEntries = entries.length;
-    for (let pageNumber = 0; pageNumber < numberOfEntries; pageNumber++) {
-      let linksObj = this.getOverrideDataLinks(
-        pageNumber,
-        numberOfEntries,
-        links
-      );
+    for (let pageEntry of entries) {
+      let { pageNumber } = pageEntry;
+      let linksObj = this.getOverrideDataLinks(pageNumber, items.length, links);
 
-      Object.assign(entries[pageNumber].data.pagination, linksObj);
+      Object.assign(pageEntry.data.pagination, linksObj);
 
-      let hrefsObj = this.getOverrideDataHrefs(
-        pageNumber,
-        numberOfEntries,
-        hrefs
-      );
-      Object.assign(entries[pageNumber].data.pagination, hrefsObj);
+      let hrefsObj = this.getOverrideDataHrefs(pageNumber, items.length, hrefs);
+      Object.assign(pageEntry.data.pagination, hrefsObj);
     }
 
-    return entries;
+    // Final output is filtered for serverless
+    return entries.filter((entry) => {
+      return !currentPageIndex || entry.pageNumber === currentPageIndex;
+    });
   }
 }
 

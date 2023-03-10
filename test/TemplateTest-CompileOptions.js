@@ -41,11 +41,10 @@ test("Custom extension (.txt) with custom permalink compile function", async (t)
 
   let data = await tmpl.getData();
   t.is(await tmpl.render(data), "Sample content");
-  t.deepEqual(await tmpl.getOutputLocations(data), {
-    href: "/HAHA_THIS_ALWAYS_GOES_HERE.txt",
-    path: "dist/HAHA_THIS_ALWAYS_GOES_HERE.txt",
-    rawPath: "HAHA_THIS_ALWAYS_GOES_HERE.txt",
-  });
+  let testObj = await tmpl.getOutputLocations(data);
+  t.is(testObj.href, "/HAHA_THIS_ALWAYS_GOES_HERE.txt");
+  t.is(testObj.path, "dist/HAHA_THIS_ALWAYS_GOES_HERE.txt");
+  t.is(testObj.rawPath, "HAHA_THIS_ALWAYS_GOES_HERE.txt");
 });
 
 test("Custom extension with and compileOptions.permalink = false", async (t) => {
@@ -77,11 +76,10 @@ test("Custom extension with and compileOptions.permalink = false", async (t) => 
 
   let data = await tmpl.getData();
   t.is(await tmpl.render(data), "Sample content");
-  t.deepEqual(await tmpl.getOutputLocations(data), {
-    href: false,
-    path: false,
-    rawPath: false,
-  });
+  let testObj = await tmpl.getOutputLocations(data);
+  t.is(testObj.href, false);
+  t.is(testObj.path, false);
+  t.is(testObj.rawPath, false);
 });
 
 test("Custom extension with and opt-out of permalink compilation", async (t) => {
@@ -113,11 +111,10 @@ test("Custom extension with and opt-out of permalink compilation", async (t) => 
 
   let data = await tmpl.getData();
   t.is(await tmpl.render(data), "Sample content");
-  t.deepEqual(await tmpl.getOutputLocations(data), {
-    href: "/custom-extension.lit",
-    path: "dist/custom-extension.lit",
-    rawPath: "custom-extension.lit",
-  });
+  let testObj = await tmpl.getOutputLocations(data);
+  t.is(testObj.href, "/custom-extension.lit");
+  t.is(testObj.path, "dist/custom-extension.lit");
+  t.is(testObj.rawPath, "custom-extension.lit");
 });
 
 test("Custom extension (.txt) with custom permalink compile function but no permalink in the data cascade", async (t) => {
@@ -157,11 +154,10 @@ test("Custom extension (.txt) with custom permalink compile function but no perm
 
   let data = await tmpl.getData();
   t.is(await tmpl.render(data), "Sample content");
-  t.deepEqual(await tmpl.getOutputLocations(data), {
-    href: "/HAHA_THIS_ALWAYS_GOES_HERE.txt",
-    path: "dist/HAHA_THIS_ALWAYS_GOES_HERE.txt",
-    rawPath: "HAHA_THIS_ALWAYS_GOES_HERE.txt",
-  });
+  let testObj = await tmpl.getOutputLocations(data);
+  t.is(testObj.href, "/HAHA_THIS_ALWAYS_GOES_HERE.txt");
+  t.is(testObj.path, "dist/HAHA_THIS_ALWAYS_GOES_HERE.txt");
+  t.is(testObj.rawPath, "HAHA_THIS_ALWAYS_GOES_HERE.txt");
 });
 
 test("Custom extension (.txt) with custom permalink compile function (that returns a string not a function) but no permalink in the data cascade", async (t) => {
@@ -199,11 +195,10 @@ test("Custom extension (.txt) with custom permalink compile function (that retur
 
   let data = await tmpl.getData();
   t.is(await tmpl.render(data), "Sample content");
-  t.deepEqual(await tmpl.getOutputLocations(data), {
-    href: "/HAHA_THIS_ALWAYS_GOES_HERE.txt",
-    path: "dist/HAHA_THIS_ALWAYS_GOES_HERE.txt",
-    rawPath: "HAHA_THIS_ALWAYS_GOES_HERE.txt",
-  });
+  let testObj = await tmpl.getOutputLocations(data);
+  t.is(testObj.href, "/HAHA_THIS_ALWAYS_GOES_HERE.txt");
+  t.is(testObj.path, "dist/HAHA_THIS_ALWAYS_GOES_HERE.txt");
+  t.is(testObj.rawPath, "HAHA_THIS_ALWAYS_GOES_HERE.txt");
 });
 
 test("Custom extension (.txt) with custom permalink compile function that returns false", async (t) => {
@@ -241,11 +236,10 @@ test("Custom extension (.txt) with custom permalink compile function that return
 
   let data = await tmpl.getData();
   t.is(await tmpl.render(data), "Sample content");
-  t.deepEqual(await tmpl.getOutputLocations(data), {
-    href: false,
-    path: false,
-    rawPath: false,
-  });
+  let testObj = await tmpl.getOutputLocations(data);
+  t.is(testObj.href, false);
+  t.is(testObj.path, false);
+  t.is(testObj.rawPath, false);
 });
 
 test("Custom extension (.txt) that returns undefined from compile", async (t) => {
