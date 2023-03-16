@@ -55,6 +55,12 @@ class Eleventy {
       this.eleventyConfig.setPathPrefix(this.pathPrefix);
     }
 
+    /**
+     * @member {Object} - Options object passed to the Eleventy constructor
+     * @default {}
+     */
+    this.options = options;
+
     /* Programmatic API config */
     if (options.config && typeof options.config === "function") {
       // TODO use return object here?

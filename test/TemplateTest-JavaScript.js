@@ -1,14 +1,11 @@
 const test = require("ava");
 const semver = require("semver");
+const TemplateConfig = require("../src/TemplateConfig");
 const getNewTemplate = require("./_getNewTemplateForTests");
 const getRenderedTmpls = require("./_getRenderedTemplates");
 
 test("JavaScript template type (function)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/function.11ty.js",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/function.11ty.js", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
   t.is(await tmpl.getOutputPath(data), "./dist/function/index.html");
@@ -23,11 +20,7 @@ test("JavaScript template type (function)", async (t) => {
 });
 
 test("JavaScript template type (class with data getter)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/class-data.11ty.js",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/class-data.11ty.js", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
   t.is(await tmpl.getOutputPath(data), "./dist/class-data/index.html");
@@ -38,11 +31,7 @@ test("JavaScript template type (class with data getter)", async (t) => {
 });
 
 test("JavaScript template type (class with data method)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/class-data-fn.11ty.js",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/class-data-fn.11ty.js", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
   t.is(await tmpl.getOutputPath(data), "./dist/class-data-fn/index.html");
@@ -54,11 +43,7 @@ test("JavaScript template type (class with data method)", async (t) => {
 
 if (semver.gte(process.version, "12.4.0")) {
   test("JavaScript template type (class fields)", async (t) => {
-    let tmpl = getNewTemplate(
-      "./test/stubs/classfields-data.11ty.js",
-      "./test/stubs/",
-      "./dist"
-    );
+    let tmpl = getNewTemplate("./test/stubs/classfields-data.11ty.js", "./test/stubs/", "./dist");
 
     let data = await tmpl.getData();
     t.is(await tmpl.getOutputPath(data), "./dist/classfields-data/index.html");
@@ -77,10 +62,7 @@ test("JavaScript template type (class with shorthand data method)", async (t) =>
   );
 
   let data = await tmpl.getData();
-  t.is(
-    await tmpl.getOutputPath(data),
-    "./dist/class-data-fn-shorthand/index.html"
-  );
+  t.is(await tmpl.getOutputPath(data), "./dist/class-data-fn-shorthand/index.html");
 
   let pages = await getRenderedTmpls(tmpl, data);
   t.is(pages[0].templateContent.trim(), "<p>Ted</p>");
@@ -88,11 +70,7 @@ test("JavaScript template type (class with shorthand data method)", async (t) =>
 });
 
 test("JavaScript template type (class with async data method)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/class-async-data-fn.11ty.js",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/class-async-data-fn.11ty.js", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
   t.is(await tmpl.getOutputPath(data), "./dist/class-async-data-fn/index.html");
@@ -103,18 +81,23 @@ test("JavaScript template type (class with async data method)", async (t) => {
 });
 
 test("JavaScript template type (class with data getter and a javascriptFunction)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/class-data-filter.11ty.js",
-    "./test/stubs/",
-    "./dist"
-  );
-  tmpl.templateRender.config = {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.appendToRootConfig({
     javascriptFunctions: {
       upper: function (val) {
         return new String(val).toUpperCase();
       },
     },
-  };
+  });
+
+  let tmpl = getNewTemplate(
+    "./test/stubs/class-data-filter.11ty.js",
+    "./test/stubs/",
+    "./dist",
+    null,
+    null,
+    eleventyConfig
+  );
 
   let data = await tmpl.getData();
   t.is(await tmpl.getOutputPath(data), "./dist/class-data-filter/index.html");
@@ -124,35 +107,33 @@ test("JavaScript template type (class with data getter and a javascriptFunction)
 });
 
 test("JavaScript template type (class with data method and a javascriptFunction)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/class-data-fn-filter.11ty.js",
-    "./test/stubs/",
-    "./dist"
-  );
-  tmpl.templateRender.config = {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.appendToRootConfig({
     javascriptFunctions: {
       upper: function (val) {
         return new String(val).toUpperCase();
       },
     },
-  };
+  });
+
+  let tmpl = getNewTemplate(
+    "./test/stubs/class-data-fn-filter.11ty.js",
+    "./test/stubs/",
+    "./dist",
+    null,
+    null,
+    eleventyConfig
+  );
 
   let data = await tmpl.getData();
-  t.is(
-    await tmpl.getOutputPath(data),
-    "./dist/class-data-fn-filter/index.html"
-  );
+  t.is(await tmpl.getOutputPath(data), "./dist/class-data-fn-filter/index.html");
   let pages = await getRenderedTmpls(tmpl, data);
   t.is(pages[0].content.trim(), "<p>TED</p>");
   t.is(pages[0].templateContent.trim(), "<p>TED</p>");
 });
 
 test("JavaScript template type (class with data permalink)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/class-data-permalink.11ty.js",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/class-data-permalink.11ty.js", "./test/stubs/", "./dist");
   let data = await tmpl.getData();
   t.is(await tmpl.getOutputPath(data), "./dist/my-permalink/index.html");
 });
@@ -205,18 +186,11 @@ test("JavaScript template type (class with data permalink function using a filte
   );
 
   let data = await tmpl.getData();
-  t.is(
-    await tmpl.getOutputPath(data),
-    "./dist/my-permalink/my-super-cool-title/index.html"
-  );
+  t.is(await tmpl.getOutputPath(data), "./dist/my-permalink/my-super-cool-title/index.html");
 });
 
 test("JavaScript template type (should use the same class instance for data and render)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/oneinstance.11ty.js",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/oneinstance.11ty.js", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
   let pages = await getRenderedTmpls(tmpl, data);
@@ -228,11 +202,7 @@ test("JavaScript template type (should use the same class instance for data and 
 });
 
 test("JavaScript template type (multiple exports)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/multipleexports.11ty.js",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/multipleexports.11ty.js", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
   let pages = await getRenderedTmpls(tmpl, data);
@@ -256,11 +226,7 @@ test("JavaScript template type (multiple exports, promises)", async (t) => {
 });
 
 test("JavaScript template type (object)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/object.11ty.js",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/object.11ty.js", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
   t.is(data.name, "Ted");
@@ -271,11 +237,7 @@ test("JavaScript template type (object)", async (t) => {
 });
 
 test("JavaScript template type (object, no render method)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/object-norender.11ty.js",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/object-norender.11ty.js", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
   t.is(data.name, "Ted");
@@ -286,11 +248,7 @@ test("JavaScript template type (object, no render method)", async (t) => {
 });
 
 test("JavaScript template type (class, no render method)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/class-norender.11ty.js",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/class-norender.11ty.js", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
   t.is(data.name, "Ted");
@@ -300,11 +258,7 @@ test("JavaScript template type (class, no render method)", async (t) => {
   t.is(pages[0].content.trim(), "");
 });
 test("JavaScript template type (data returns a string)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/exports-flatdata.11ty.js",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/exports-flatdata.11ty.js", "./test/stubs/", "./dist");
 
   await t.throwsAsync(async () => {
     await tmpl.getData();

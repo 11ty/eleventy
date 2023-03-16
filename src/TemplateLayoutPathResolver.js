@@ -4,11 +4,11 @@ const { TemplatePath } = require("@11ty/eleventy-utils");
 // const debug = require("debug")("Eleventy:TemplateLayoutPathResolver");
 
 class TemplateLayoutPathResolver {
-  constructor(path, inputDir, extensionMap, config) {
-    if (!config) {
-      throw new Error("Expected `config` in TemplateLayoutPathResolver constructor");
+  constructor(path, inputDir, extensionMap, eleventyConfig) {
+    if (!eleventyConfig) {
+      throw new Error("Expected `eleventyConfig` in TemplateLayoutPathResolver constructor");
     }
-    this._config = config;
+    this.eleventyConfig = eleventyConfig;
     this.inputDir = inputDir;
     this.originalPath = path;
     this.path = path;
@@ -42,7 +42,11 @@ class TemplateLayoutPathResolver {
   }
 
   get config() {
-    return this._config;
+    if (this.eleventyConfig) {
+      return this.eleventyConfig.getConfig();
+    } else {
+      throw new Error("Missing this.eleventyConfig");
+    }
   }
 
   init() {

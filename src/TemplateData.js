@@ -71,7 +71,7 @@ class TemplateData {
 
   get extensionMap() {
     if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap([], this.config);
+      this._extensionMap = new EleventyExtensionMap([], this.eleventyConfig);
     }
     return this._extensionMap;
   }

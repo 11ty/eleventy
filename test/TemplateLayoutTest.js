@@ -12,7 +12,7 @@ function getTemplateLayoutInstance(key, inputDir, map) {
       eleventyConfig
     );
   }
-  let layout = new TemplateLayout(key, inputDir, map, eleventyConfig.getConfig());
+  let layout = new TemplateLayout(key, inputDir, map, eleventyConfig);
   return layout;
 }
 

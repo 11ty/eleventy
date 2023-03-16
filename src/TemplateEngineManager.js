@@ -2,13 +2,17 @@ const EleventyBaseError = require("./EleventyBaseError");
 class TemplateEngineManagerConfigError extends EleventyBaseError {}
 
 class TemplateEngineManager {
-  constructor(config) {
-    if (!config) {
+  constructor(eleventyConfig) {
+    if (!eleventyConfig) {
       throw new TemplateEngineManagerConfigError("Missing `config` argument.");
     }
-    this.config = config;
+    this.eleventyConfig = eleventyConfig;
 
     this.engineCache = {};
+  }
+
+  get config() {
+    return this.eleventyConfig.getConfig();
   }
 
   static isCustomEngineSimpleAlias(entry) {
@@ -74,7 +78,7 @@ class TemplateEngineManager {
   }
 
   getEngineClassByExtension(extension) {
-    // We include these as raw strings (and not more readable variables) so they’re parsed by the bundler.
+    // We include these as raw strings (and not more readable variables) so they’re parsed by the serverless bundler.
     if (extension === "ejs") {
       return require("./Engines/Ejs");
     } else if (extension === "md") {
@@ -102,9 +106,7 @@ class TemplateEngineManager {
 
   getEngine(name, dirs, extensionMap) {
     if (!this.hasEngine(name)) {
-      throw new Error(
-        `Template Engine ${name} does not exist in getEngine (dirs: ${dirs})`
-      );
+      throw new Error(`Template Engine ${name} does not exist in getEngine (dirs: ${dirs})`);
     }
 
     // TODO these cached engines should be based on extensions not name, then we can remove the error in
@@ -115,7 +117,7 @@ class TemplateEngineManager {
 
     let cls = this.getEngineClassByExtension(name);
 
-    let instance = new cls(name, dirs, this.config);
+    let instance = new cls(name, dirs, this.eleventyConfig);
     instance.extensionMap = extensionMap;
     instance.engineManager = this;
 
@@ -128,7 +130,7 @@ class TemplateEngineManager {
       instance.constructor.name !== "CustomEngine"
     ) {
       const CustomEngine = this.getEngineClassByExtension();
-      const overrideCustomEngine = new CustomEngine(name, dirs, this.config);
+      const overrideCustomEngine = new CustomEngine(name, dirs, this.eleventyConfig);
       // Keep track of the "default" engine 11ty would normally use
       // This allows the user to access the default engine in their override
       overrideCustomEngine.setDefaultEngine(instance);

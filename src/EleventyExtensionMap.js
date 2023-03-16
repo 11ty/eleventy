@@ -48,7 +48,7 @@ class EleventyExtensionMap {
 
   get engineManager() {
     if (!this._engineManager) {
-      this._engineManager = new TemplateEngineManager(this.config);
+      this._engineManager = new TemplateEngineManager(this.eleventyConfig);
     }
 
     return this._engineManager;
