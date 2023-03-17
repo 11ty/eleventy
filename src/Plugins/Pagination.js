@@ -328,28 +328,28 @@ class Pagination {
 
     // Serverless pagination:
     if (this._has(this.data, "pagination.serverless")) {
-      // if the serverless data does not exist (e.g. at build-time), don’t process this template at all
+      let serverlessPaginationKey = 0;
       if (this._has(this.data, this.data.pagination.serverless)) {
-        let serverlessPaginationKey = this._get(this.data, this.data.pagination.serverless);
-        if (this.paginationTargetType === "array") {
-          currentPageIndex = parseInt(serverlessPaginationKey, 10);
+        serverlessPaginationKey = this._get(this.data, this.data.pagination.serverless);
+      }
+      if (this.paginationTargetType === "array") {
+        currentPageIndex = parseInt(serverlessPaginationKey, 10);
 
-          indeces.add(0); // first
-          if (currentPageIndex > 0) {
-            indeces.add(currentPageIndex - 1); // previous
-          }
-          if (currentPageIndex >= 0 && currentPageIndex <= items.length - 1) {
-            indeces.add(currentPageIndex); // current
-          }
-          if (currentPageIndex + 1 < items.length) {
-            indeces.add(currentPageIndex + 1); // next
-          }
-          indeces.add(items.length - 1); // last
-        } else if (this.paginationTargetType === "object") {
-          // TODO support pagination `resolve: values` here, right now it only works with keys (`this.shouldResolveDataToObjectValues()`)
-          currentPageIndex = items.findIndex((entry) => entry[0] === serverlessPaginationKey);
+        indeces.add(0); // first
+        if (currentPageIndex > 0) {
+          indeces.add(currentPageIndex - 1); // previous
+        }
+        if (currentPageIndex >= 0 && currentPageIndex <= items.length - 1) {
           indeces.add(currentPageIndex); // current
         }
+        if (currentPageIndex + 1 < items.length) {
+          indeces.add(currentPageIndex + 1); // next
+        }
+        indeces.add(items.length - 1); // last
+      } else if (this.paginationTargetType === "object") {
+        // TODO support pagination `resolve: values` here, right now it only works with keys (`this.shouldResolveDataToObjectValues()`)
+        currentPageIndex = items.findIndex((entry) => entry[0] === serverlessPaginationKey);
+        indeces.add(currentPageIndex); // current
       }
     } else {
       for (let j = 0; j <= items.length - 1; j++) {
@@ -403,7 +403,7 @@ class Pagination {
         links.push("/" + rawPath);
       }
 
-      if (this._has(this.data, this.data.pagination.serverless)) {
+      if (this._has(this.data, "pagination.serverless")) {
         let keys = this.data.pagination.serverless.split(".");
         let key = keys.pop();
 
@@ -411,6 +411,7 @@ class Pagination {
         let validUrls = Object.values(serverlessUrls)
           .flat()
           .filter((entry) => entry.includes(`/:${key}/`));
+
         if (validUrls.length === 0) {
           throw new Error(
             `Serverless pagination template has no \`permalink.${key}\` with \`/:${key}/\``
