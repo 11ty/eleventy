@@ -328,10 +328,18 @@ class Pagination {
 
     // Serverless pagination:
     if (this._has(this.data, "pagination.serverless")) {
-      let serverlessPaginationKey = 0;
+      let serverlessPaginationKey;
+
+      if (this.paginationTargetType === "object" && this.shouldResolveDataToObjectValues()) {
+        serverlessPaginationKey = Object.keys(this.fullDataSet)[0];
+      } else {
+        serverlessPaginationKey = 0;
+      }
+
       if (this._has(this.data, this.data.pagination.serverless)) {
         serverlessPaginationKey = this._get(this.data, this.data.pagination.serverless);
       }
+
       if (this.paginationTargetType === "array") {
         currentPageIndex = parseInt(serverlessPaginationKey, 10);
 
@@ -347,8 +355,13 @@ class Pagination {
         }
         indeces.add(items.length - 1); // last
       } else if (this.paginationTargetType === "object") {
-        // TODO support pagination `resolve: values` here, right now it only works with keys (`this.shouldResolveDataToObjectValues()`)
-        currentPageIndex = items.findIndex((entry) => entry[0] === serverlessPaginationKey);
+        if (this.shouldResolveDataToObjectValues()) {
+          currentPageIndex = Object.keys(this.fullDataSet).findIndex(
+            (key) => key === serverlessPaginationKey
+          );
+        } else {
+          currentPageIndex = items.findIndex((entry) => entry[0] === serverlessPaginationKey);
+        }
         indeces.add(currentPageIndex); // current
       }
     } else {
@@ -387,7 +400,11 @@ class Pagination {
               key.map((key) => this._get(this.fullDataSet, key))
             );
           } else {
-            lodashSet(paginationData, this.alias, this._get(this.fullDataSet, keys));
+            if (this.shouldResolveDataToObjectValues()) {
+              lodashSet(paginationData, this.alias, keys);
+            } else {
+              lodashSet(paginationData, this.alias, this._get(this.fullDataSet, keys));
+            }
           }
         } else {
           lodashSet(paginationData, this.alias, this.getNormalizedItems(items[pageNumber]));
@@ -414,7 +431,7 @@ class Pagination {
 
         if (validUrls.length === 0) {
           throw new Error(
-            `Serverless pagination template has no \`permalink.${key}\` with \`/:${key}/\``
+            `Serverless pagination template (${this.data.page.inputPath}) has no \`permalink.${key}\` with \`/:${key}/\``
           );
         }
         href = serverlessUrlFilter(validUrls[0], { [key]: pageNumber });
