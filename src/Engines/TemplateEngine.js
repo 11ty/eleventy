@@ -4,6 +4,8 @@ const { TemplatePath } = require("@11ty/eleventy-utils");
 const TemplateConfig = require("../TemplateConfig");
 const EleventyExtensionMap = require("../EleventyExtensionMap");
 const EleventyBaseError = require("../EleventyBaseError");
+const EventBusUtil = require("../Util/EventBusUtil");
+
 const debug = require("debug")("Eleventy:TemplateEngine");
 
 class TemplateEngineConfigError extends EleventyBaseError {}
@@ -20,8 +22,8 @@ class TemplateEngine {
     this.inputDir = dirs.input;
     this.includesDir = dirs.includes;
 
-    this.partialsHaveBeenCached = false;
-    this.partials = [];
+    this.resetPartials();
+
     this.engineLib = null;
     this.cacheable = false;
 
@@ -88,9 +90,23 @@ class TemplateEngine {
     return this.includesDir;
   }
 
+  resetPartials() {
+    this.partialsHaveBeenCached = false;
+    this.partials = [];
+    this.partialsFiles = [];
+  }
+
   async getPartials() {
     if (!this.partialsHaveBeenCached) {
-      this.partials = await this.cachePartialFiles();
+      let ret = await this.cachePartialFiles();
+      this.partials = ret.partials;
+      this.partialsFiles = ret.files;
+
+      EventBusUtil.soloOn("eleventy.resourceModified", (path) => {
+        if ((this.partialsFiles || []).includes(path)) {
+          this.resetPartials();
+        }
+      });
     }
 
     return this.partials;
@@ -107,6 +123,8 @@ class TemplateEngine {
     this.partialsHaveBeenCached = true;
 
     let results = [];
+    let partialFiles = [];
+
     if (this.includesDir) {
       // TODO move this to use FileSystemSearch instead.
       const fastglob = require("fast-glob");
@@ -115,7 +133,6 @@ class TemplateEngine {
       bench.before();
 
       let prefix = this.includesDir + "/**/*.";
-      let partialFiles = [];
       await Promise.all(
         this.extensions.map(async function (extension) {
           partialFiles = partialFiles.concat(
@@ -162,7 +179,10 @@ class TemplateEngine {
       Object.keys(partials)
     );
 
-    return partials;
+    return {
+      files: partialFiles,
+      partials,
+    };
   }
 
   /**

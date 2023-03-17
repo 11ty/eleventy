@@ -4,18 +4,15 @@ const { TemplatePath } = require("@11ty/eleventy-utils");
 const TemplateEngine = require("./TemplateEngine");
 const EleventyErrorUtil = require("../EleventyErrorUtil");
 const EleventyShortcodeError = require("../EleventyShortcodeError");
-const eventBus = require("../EventBus");
+const EventBusUtil = require("../Util/EventBusUtil");
 
 class Nunjucks extends TemplateEngine {
   constructor(name, dirs, config) {
     super(name, dirs, config);
-    this.nunjucksEnvironmentOptions =
-      this.config.nunjucksEnvironmentOptions || {};
+    this.nunjucksEnvironmentOptions = this.config.nunjucksEnvironmentOptions || {};
 
-    this.nunjucksPrecompiledTemplates =
-      this.config.nunjucksPrecompiledTemplates || {};
-    this._usingPrecompiled =
-      Object.keys(this.nunjucksPrecompiledTemplates).length > 0;
+    this.nunjucksPrecompiledTemplates = this.config.nunjucksPrecompiledTemplates || {};
+    this._usingPrecompiled = Object.keys(this.nunjucksPrecompiledTemplates).length > 0;
 
     this.setLibrary(this.config.libraryOverrides.njk);
 
@@ -51,10 +48,7 @@ class Nunjucks extends TemplateEngine {
         TemplatePath.getWorkingDir(),
       ]);
 
-      this.njkEnv = new NunjucksLib.Environment(
-        fsLoader,
-        this.nunjucksEnvironmentOptions
-      );
+      this.njkEnv = new NunjucksLib.Environment(fsLoader, this.nunjucksEnvironmentOptions);
     }
 
     this.config.events.emit("eleventy.engine.njk", {
@@ -68,7 +62,7 @@ class Nunjucks extends TemplateEngine {
 
     // Correct, but overbroad. Better would be to evict more granularly, but
     // resolution from paths isn't straightforward.
-    eventBus.on("eleventy.resourceModified", (path) => {
+    EventBusUtil.soloOn("eleventy.resourceModified", (path) => {
       this.njkEnv.invalidateCache();
     });
 
@@ -88,10 +82,7 @@ class Nunjucks extends TemplateEngine {
     this.addAllShortcodes(this.config.nunjucksShortcodes);
     this.addAllShortcodes(this.config.nunjucksAsyncShortcodes, true);
     this.addAllPairedShortcodes(this.config.nunjucksPairedShortcodes);
-    this.addAllPairedShortcodes(
-      this.config.nunjucksAsyncPairedShortcodes,
-      true
-    );
+    this.addAllPairedShortcodes(this.config.nunjucksAsyncPairedShortcodes, true);
     this.addGlobals(this.config.nunjucksGlobals);
   }
 
@@ -208,10 +199,7 @@ class Nunjucks extends TemplateEngine {
           shortcodeFn
             .call(Nunjucks.normalizeContext(context), ...argArray)
             .then(function (returnValue) {
-              resolve(
-                null,
-                new NunjucksLib.runtime.SafeString("" + returnValue)
-              );
+              resolve(null, new NunjucksLib.runtime.SafeString("" + returnValue));
             })
             .catch(function (e) {
               resolve(
@@ -225,10 +213,7 @@ class Nunjucks extends TemplateEngine {
             });
         } else {
           try {
-            let ret = shortcodeFn.call(
-              Nunjucks.normalizeContext(context),
-              ...argArray
-            );
+            let ret = shortcodeFn.call(Nunjucks.normalizeContext(context), ...argArray);
             return new NunjucksLib.runtime.SafeString("" + ret);
           } catch (e) {
             throw new EleventyShortcodeError(
@@ -276,11 +261,7 @@ class Nunjucks extends TemplateEngine {
 
           if (isAsync) {
             shortcodeFn
-              .call(
-                Nunjucks.normalizeContext(context),
-                bodyContent,
-                ...argArray
-              )
+              .call(Nunjucks.normalizeContext(context), bodyContent, ...argArray)
               .then(function (returnValue) {
                 resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
               })
@@ -299,11 +280,7 @@ class Nunjucks extends TemplateEngine {
               resolve(
                 null,
                 new NunjucksLib.runtime.SafeString(
-                  shortcodeFn.call(
-                    Nunjucks.normalizeContext(context),
-                    bodyContent,
-                    ...argArray
-                  )
+                  shortcodeFn.call(Nunjucks.normalizeContext(context), bodyContent, ...argArray)
                 )
               );
             } catch (e) {

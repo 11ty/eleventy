@@ -3,7 +3,7 @@ const { TemplatePath } = require("@11ty/eleventy-utils");
 const TemplateEngine = require("./TemplateEngine");
 const EleventyBaseError = require("../EleventyBaseError");
 const getJavaScriptData = require("../Util/GetJavaScriptData");
-const eventBus = require("../EventBus");
+const EventBusUtil = require("../Util/EventBusUtil");
 
 class JavaScriptTemplateNotDefined extends EleventyBaseError {}
 
@@ -14,7 +14,7 @@ class JavaScript extends TemplateEngine {
 
     this.cacheable = false;
 
-    eventBus.on("eleventy.resourceModified", (inputPath, usedByDependants = []) => {
+    EventBusUtil.soloOn("eleventy.resourceModified", (inputPath, usedByDependants = []) => {
       // Remove from cached instances when modified
       let instancesToDelete = [TemplatePath.addLeadingDotSlash(inputPath), ...usedByDependants];
       for (let inputPath of instancesToDelete) {
