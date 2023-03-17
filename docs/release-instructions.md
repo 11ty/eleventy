@@ -22,25 +22,24 @@
 1. `npm audit`
 1. Make sure `npx ava` runs okay
 1. Update version in `package.json`
-   - (Canary) Use `-canary.1` suffix
+   - (Alpha) Use `-alpha.1` suffix
    - (Beta) Use `-beta.1` suffix
 1. Run `npm run coverage`
 1. Check it all in and commit
 1. Tag new version
 1. Wait for GitHub Actions to complete to know that the build did not fail.
 1. Release
-   - (Canary) `npm publish --access=public --tag=canary`
-     - NOTE: that in 3.0 we need to switch this to `alpha` to avoid https://github.com/11ty/eleventy/issues/2758
+   - (Alpha) `npm publish --access=public --tag=canary`
+     - NOTE: this was changed to `alpha` https://github.com/11ty/eleventy/issues/2758
    - (Beta) `npm publish --access=public --tag=beta`
-     - NOTE: When releasing a `beta`, make sure to also release a `canary` to mitigate https://github.com/11ty/eleventy/issues/2758.
    - (Main) `npm publish --access=public`
 1. (Optional) Build and commit a new the `eleventy-edge-cdn` project to generate a new Eleventy Edge lib.
 
-Unfortunate note about npm `canary` tag: if you push a 1.0.0-canary.x to `canary` after a `2.0.0-canary.x`, it will use the last pushed tag when you npm install from `canary` (not the highest version number)
+Unfortunate note about npm and tags (specifically `canary` here): if you push a 1.0.0-canary.x to `canary` (even though `2.0.0-canary.x` exists), it will use the last pushed tag when you npm install from `@canary` (not the highest version number)
 
 # Docs/Website (Main releases only)
 
-1. Maybe search for `2.0.0-canary.` or `2.0.0-beta.` in the docs copy to update to the stable release, if applicable.
+1. Maybe search for `-alpha.` (`-canary.`?) or `-beta.` in the docs copy to update to the stable release, if applicable.
 1. Check in a new `11ty-website` site with updated `package.json` version.
 1. Add version to `11ty-website` `versions.json`
 1. Commit it
