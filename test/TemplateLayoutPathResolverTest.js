@@ -15,7 +15,7 @@ function getResolverInstance(path, inputDir, { eleventyConfig, map } = {}) {
     );
   }
 
-  return new TemplateLayoutPathResolver(path, inputDir, map, eleventyConfig.getConfig());
+  return new TemplateLayoutPathResolver(path, inputDir, map, eleventyConfig);
 }
 
 test("Layout", (t) => {

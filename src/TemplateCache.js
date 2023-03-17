@@ -16,6 +16,11 @@ class TemplateCache {
     this.cacheByInputPath = {};
   }
 
+  // alias
+  removeAll() {
+    this.clear();
+  }
+
   size() {
     return Object.keys(this.cacheByInputPath).length;
   }
@@ -60,14 +65,14 @@ class TemplateCache {
     return this.cache[key];
   }
 
-  remove(filePath) {
-    filePath = TemplatePath.stripLeadingDotSlash(filePath);
-
-    if (!this.cacheByInputPath[filePath]) {
+  remove(layoutFilePath) {
+    layoutFilePath = TemplatePath.stripLeadingDotSlash(layoutFilePath);
+    if (!this.cacheByInputPath[layoutFilePath]) {
+      // not a layout file
       return;
     }
 
-    let layoutTemplate = this.cacheByInputPath[filePath];
+    let layoutTemplate = this.cacheByInputPath[layoutFilePath];
     layoutTemplate.resetCaches();
 
     let keys = layoutTemplate.getCacheKeys();
@@ -75,14 +80,19 @@ class TemplateCache {
       delete this.cache[key];
     }
 
-    delete this.cacheByInputPath[filePath];
+    delete this.cacheByInputPath[layoutFilePath];
   }
 }
 
 let layoutCache = new TemplateCache();
 
-eventBus.on("eleventy.resourceModified", (path) => {
-  layoutCache.remove(path);
+eventBus.on("eleventy.resourceModified", (path, usedBy, metadata = {}) => {
+  // https://github.com/11ty/eleventy-plugin-bundle/issues/10
+  if (metadata.viaConfigReset) {
+    layoutCache.removeAll();
+  } else {
+    layoutCache.remove(path);
+  }
 });
 
 // singleton

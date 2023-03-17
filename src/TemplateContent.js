@@ -27,7 +27,7 @@ class TemplateContent {
     if (!config) {
       throw new TemplateContentConfigError("Missing `config` argument to TemplateContent");
     }
-    this.config = config;
+    this.eleventyConfig = config;
 
     this.inputPath = inputPath;
 
@@ -72,7 +72,7 @@ class TemplateContent {
   /* Used by tests */
   get extensionMap() {
     if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap([], this.config);
+      this._extensionMap = new EleventyExtensionMap([], this.eleventyConfig);
     }
     return this._extensionMap;
   }
@@ -81,26 +81,33 @@ class TemplateContent {
     this._extensionMap = map;
   }
 
-  set config(config) {
+  set eleventyConfig(config) {
     this._config = config;
-  }
 
-  get config() {
     if (this._config instanceof TemplateConfig) {
-      return this._config.getConfig();
+      this._configOptions = this._config.getConfig();
+    } else {
+      throw new TemplateContentConfigError("Tried to get an TemplateConfig but none was found.");
     }
-    return this._config;
-  }
-
-  get bench() {
-    return this.config.benchmarkManager.get("Aggregate");
   }
 
   get eleventyConfig() {
     if (this._config instanceof TemplateConfig) {
       return this._config;
     }
-    throw new TemplateContentConfigError("Tried to get an eleventyConfig but none was found.");
+    throw new TemplateContentConfigError("Tried to get an TemplateConfig but none was found.");
+  }
+
+  get config() {
+    if (this._config instanceof TemplateConfig && !this._configOptions) {
+      this._configOptions = this._config.getConfig();
+    }
+
+    return this._configOptions;
+  }
+
+  get bench() {
+    return this.config.benchmarkManager.get("Aggregate");
   }
 
   get engine() {
@@ -109,7 +116,7 @@ class TemplateContent {
 
   get templateRender() {
     if (!this._templateRender) {
-      this._templateRender = new TemplateRender(this.inputPath, this.inputDir, this.config);
+      this._templateRender = new TemplateRender(this.inputPath, this.inputDir, this.eleventyConfig);
       this._templateRender.extensionMap = this.extensionMap;
     }
 

@@ -15,7 +15,7 @@ const ConsoleLogger = require("./Util/ConsoleLogger");
 const PathPrefixer = require("./Util/PathPrefixer");
 const TemplateConfig = require("./TemplateConfig");
 const FileSystemSearch = require("./FileSystemSearch");
-
+const PathNormalizer = require("./Util/PathNormalizer.js");
 const simplePlural = require("./Util/Pluralize");
 const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
 const debug = require("debug")("Eleventy");
@@ -54,6 +54,12 @@ class Eleventy {
     if (this.pathPrefix || this.pathPrefix === "") {
       this.eleventyConfig.setPathPrefix(this.pathPrefix);
     }
+
+    /**
+     * @member {Object} - Options object passed to the Eleventy constructor
+     * @default {}
+     */
+    this.options = options;
 
     /* Programmatic API config */
     if (options.config && typeof options.config === "function") {
@@ -728,7 +734,7 @@ Arguments:
    * @method
    * @param {String} changedFilePath - File that triggered a re-run (added or modified)
    */
-  async _addFileToWatchQueue(changedFilePath) {
+  async _addFileToWatchQueue(changedFilePath, isResetConfig) {
     // Currently this is only for 11ty.js deps but should be extended with usesGraph
     let usedByDependants = [];
     if (this.watchTargets) {
@@ -738,24 +744,27 @@ Arguments:
     }
 
     // Note: this is a sync event!
-    eventBus.emit("eleventy.resourceModified", changedFilePath, usedByDependants);
+    eventBus.emit("eleventy.resourceModified", changedFilePath, usedByDependants, {
+      viaConfigReset: isResetConfig,
+    });
+
     this.watchManager.addToPendingQueue(changedFilePath);
   }
 
-  _shouldResetConfig() {
-    let configFilePaths = this.eleventyConfig.getLocalProjectConfigFiles();
-    let configFilesChanged = this.watchManager.hasQueuedFiles(configFilePaths);
-
-    if (configFilesChanged) {
-      return true;
+  shouldTriggerConfigReset(changedFiles) {
+    let configFilePaths = new Set(this.eleventyConfig.getLocalProjectConfigFiles());
+    for (let filePath of changedFiles) {
+      if (configFilePaths.has(filePath)) {
+        return true;
+      }
     }
 
     for (const configFilePath of configFilePaths) {
       // Any dependencies of the config file changed
-      let configFileDependencies = this.watchTargets.getDependenciesOf(configFilePath);
+      let configFileDependencies = new Set(this.watchTargets.getDependenciesOf(configFilePath));
 
-      for (let dep of configFileDependencies) {
-        if (this.watchManager.hasQueuedFile(dep)) {
+      for (let filePath of changedFiles) {
+        if (configFileDependencies.has(filePath)) {
           return true;
         }
       }
@@ -764,13 +773,26 @@ Arguments:
     return false;
   }
 
+  // Checks the build queue to see if any configuration related files have changed
+  _shouldResetConfig(activeQueue = []) {
+    if (!activeQueue.length) {
+      return false;
+    }
+
+    return this.shouldTriggerConfigReset(
+      activeQueue.map((path) => {
+        return PathNormalizer.normalizeSeperator(TemplatePath.addLeadingDotSlash(path));
+      })
+    );
+  }
+
   /**
    * tbd.
    *
    * @private
    * @method
    */
-  async _watch() {
+  async _watch(isResetConfig = false) {
     if (this.watchManager.isBuildRunning()) {
       return;
     }
@@ -785,7 +807,6 @@ Arguments:
     this.watchTargets.clearRequireCacheFor(queue);
 
     // reset and reload global configuration
-    let isResetConfig = this._shouldResetConfig();
     if (isResetConfig) {
       this.resetConfig();
     }
@@ -1019,12 +1040,13 @@ Arguments:
     let watchRun = async (path) => {
       path = TemplatePath.normalize(path);
       try {
-        this._addFileToWatchQueue(path);
+        let isResetConfig = this._shouldResetConfig([path]);
+        this._addFileToWatchQueue(path, isResetConfig);
         clearTimeout(watchDelay);
 
         await new Promise((resolve, reject) => {
           watchDelay = setTimeout(async () => {
-            this._watch().then(resolve, reject);
+            this._watch(isResetConfig).then(resolve, reject);
           }, this.config.watchThrottleWaitTime);
         });
       } catch (e) {

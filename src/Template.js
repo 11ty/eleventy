@@ -147,7 +147,7 @@ class Template extends TemplateContent {
     return TemplateLayout.getTemplate(
       layoutKey,
       this.getInputDir(),
-      this.config,
+      this.eleventyConfig,
       this.extensionMap
     );
   }

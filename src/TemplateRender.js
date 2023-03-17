@@ -49,14 +49,14 @@ class TemplateRender {
 
   get extensionMap() {
     if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap([], this.config);
+      this._extensionMap = new EleventyExtensionMap([], this.eleventyConfig);
     }
     return this._extensionMap;
   }
 
   getEngineByName(name) {
     let engine = this.extensionMap.engineManager.getEngine(name, this.getDirs(), this.extensionMap);
-    engine.config = this.config;
+    engine.eleventyConfig = this.eleventyConfig;
 
     return engine;
   }

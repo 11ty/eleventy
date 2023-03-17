@@ -9,7 +9,7 @@ const debug = require("debug")("Eleventy:TemplateEngine");
 class TemplateEngineConfigError extends EleventyBaseError {}
 
 class TemplateEngine {
-  constructor(name, dirs, config) {
+  constructor(name, dirs, eleventyConfig) {
     this.name = name;
 
     if (!dirs) {
@@ -25,21 +25,17 @@ class TemplateEngine {
     this.engineLib = null;
     this.cacheable = false;
 
-    if (!config) {
-      throw new TemplateEngineConfigError("Missing `config` argument.");
+    if (!eleventyConfig) {
+      throw new TemplateEngineConfigError("Missing `eleventyConfig` argument.");
     }
-    this._config = config;
-  }
-
-  set config(cfg) {
-    this._config = cfg;
+    this.eleventyConfig = eleventyConfig;
   }
 
   get config() {
-    if (this._config instanceof TemplateConfig) {
-      return this._config.getConfig();
+    if (this.eleventyConfig instanceof TemplateConfig) {
+      return this.eleventyConfig.getConfig();
     }
-    return this._config;
+    throw new Error("Expecting a TemplateConfig instance.");
   }
 
   get benchmarks() {
@@ -61,7 +57,7 @@ class TemplateEngine {
 
   get extensionMap() {
     if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap([], this.config);
+      this._extensionMap = new EleventyExtensionMap([], this.eleventyConfig);
     }
     return this._extensionMap;
   }

@@ -9,15 +9,15 @@ const templateCache = require("./TemplateCache");
 const debugDev = require("debug")("Dev:Eleventy:TemplateLayout");
 
 class TemplateLayout extends TemplateContent {
-  constructor(key, inputDir, extensionMap, config) {
-    if (!config) {
-      throw new Error("Expected `config` in TemplateLayout constructor.");
+  constructor(key, inputDir, extensionMap, eleventyConfig) {
+    if (!eleventyConfig) {
+      throw new Error("Expected `eleventyConfig` in TemplateLayout constructor.");
     }
 
-    let resolver = new TemplateLayoutPathResolver(key, inputDir, extensionMap, config);
+    let resolver = new TemplateLayoutPathResolver(key, inputDir, extensionMap, eleventyConfig);
     let resolvedPath = resolver.getFullPath();
 
-    super(resolvedPath, inputDir, config);
+    super(resolvedPath, inputDir, eleventyConfig);
 
     if (!extensionMap) {
       throw new Error("Expected `extensionMap` in TemplateLayout constructor.");
@@ -46,14 +46,15 @@ class TemplateLayout extends TemplateContent {
     return TemplatePath.join(inputDir, key);
   }
 
-  static getTemplate(key, inputDir, config, extensionMap) {
+  static getTemplate(key, inputDir, eleventyConfig, extensionMap) {
+    let config = eleventyConfig.getConfig();
     if (!config.useTemplateCache) {
-      return new TemplateLayout(key, inputDir, extensionMap, config);
+      return new TemplateLayout(key, inputDir, extensionMap, eleventyConfig);
     }
 
     let fullKey = TemplateLayout.resolveFullKey(key, inputDir);
     if (!templateCache.has(fullKey)) {
-      let layout = new TemplateLayout(key, inputDir, extensionMap, config);
+      let layout = new TemplateLayout(key, inputDir, extensionMap, eleventyConfig);
 
       templateCache.add(layout);
       debugDev("Added %o to TemplateCache", key);
@@ -96,7 +97,7 @@ class TemplateLayout extends TemplateContent {
             let layout = TemplateLayout.getTemplate(
               parentLayoutKey,
               mapEntry.inputDir,
-              this.config,
+              this.eleventyConfig,
               this.extensionMap
             );
 
@@ -193,7 +194,7 @@ class TemplateLayout extends TemplateContent {
         let layoutTemplate = TemplateLayout.getTemplate(
           key,
           inputDir,
-          this.config,
+          this.eleventyConfig,
           this.extensionMap
         );
 
