@@ -362,7 +362,11 @@ class Pagination {
         } else {
           currentPageIndex = items.findIndex((entry) => entry[0] === serverlessPaginationKey);
         }
-        indeces.add(currentPageIndex); // current
+
+        // Array->findIndex returns -1 when not found
+        if (currentPageIndex !== -1) {
+          indeces.add(currentPageIndex); // current
+        }
       }
     } else {
       for (let j = 0; j <= items.length - 1; j++) {
