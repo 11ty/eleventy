@@ -715,7 +715,6 @@ Arguments:
     this.env = this.getEnvironmentVariableValues();
     this.initializeEnvironmentVariables(this.env);
 
-    // this.eleventyConfig = new TemplateConfig(null, this.options.configPath);
     this.eleventyConfig.reset();
 
     this.config = this.eleventyConfig.getConfig();
