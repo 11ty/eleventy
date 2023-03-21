@@ -4,6 +4,7 @@ const eventBus = require("../src/EventBus.js");
 const Eleventy = require("../src/Eleventy");
 const TemplateContent = require("../src/TemplateContent");
 const EleventyWatchTargets = require("../src/EleventyWatchTargets");
+const TemplateMap = require("../src/TemplateMap");
 const TemplateConfig = require("../src/TemplateConfig");
 const DateGitFirstAdded = require("../src/Util/DateGitFirstAdded.js");
 const DateGitLastUpdated = require("../src/Util/DateGitLastUpdated");
@@ -659,4 +660,36 @@ ${newContents}
   );
 
   await fsp.writeFile(includeFilePath, previousContents, { encoding: "utf8" });
+});
+
+const lodashGet = require("lodash.get");
+test("Lodash get (for pagination data target) object key with spaces, issue #2851", (t) => {
+  let data = {
+    collections: {
+      "tag with spaces": 2,
+    },
+  };
+  t.is(2, lodashGet(data, "collections['tag with spaces']"));
+
+  // wow, this works huh?
+  t.is(2, lodashGet(data, "collections.tag with spaces"));
+
+  let tm = new TemplateMap(new TemplateConfig());
+  t.is(tm.getTagTarget("collections.tag with spaces"), "tag with spaces");
+  t.is(tm.getTagTarget("collections['tag with spaces']"), "tag with spaces");
+  t.is(tm.getTagTarget('collections["tag with spaces"]'), "tag with spaces");
+});
+
+test("Eleventy tag collection with spaces in the tag name, issue #2851", async (t) => {
+  let elev = new Eleventy("./test/stubs-2851", "./test/stubs-2851/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.dataFilterSelectors.add("collections");
+    },
+  });
+  elev.setIsVerbose(false);
+
+  let result = await elev.toJSON();
+  t.deepEqual(result.length, 2);
+  t.deepEqual(result.length, result[0].data.collections.all.length);
+  t.deepEqual(result[0].data.collections["tag with spaces"].length, 1);
 });

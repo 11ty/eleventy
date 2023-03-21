@@ -77,6 +77,10 @@ class TemplateMap {
     if (str.startsWith("collections.")) {
       return str.slice("collections.".length);
     }
+    // Fixes #2851
+    if (str.startsWith("collections['") || str.startsWith('collections["')) {
+      return str.slice("collections['".length, -2);
+    }
   }
 
   /* ---
