@@ -1,5 +1,4 @@
-const lodashSet = require("lodash.set");
-const lodashGet = require("lodash.get");
+const { set: lodashSet, get: lodashGet } = require("@11ty/lodash-custom");
 const { isPlainObject } = require("@11ty/eleventy-utils");
 
 /* Calculates computed data using Proxies */

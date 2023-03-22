@@ -1,6 +1,4 @@
-const lodashChunk = require("lodash.chunk");
-const lodashGet = require("lodash.get");
-const lodashSet = require("lodash.set");
+const { set: lodashSet, get: lodashGet, chunk: lodashChunk } = require("@11ty/lodash-custom");
 const { isPlainObject } = require("@11ty/eleventy-utils");
 
 const EleventyBaseError = require("../EleventyBaseError");

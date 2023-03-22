@@ -1,5 +1,4 @@
-const lodashGet = require("lodash.get");
-const lodashSet = require("lodash.set");
+const { set: lodashSet, get: lodashGet } = require("@11ty/lodash-custom");
 
 const ComputedDataQueue = require("./ComputedDataQueue");
 const ComputedDataTemplateString = require("./ComputedDataTemplateString");
@@ -39,20 +38,13 @@ class ComputedData {
     }
   }
 
-  addTemplateString(
-    key,
-    renderFn,
-    declaredDependencies = [],
-    symbolParseFn = undefined
-  ) {
+  addTemplateString(key, renderFn, declaredDependencies = [], symbolParseFn = undefined) {
     this.add(key, renderFn, declaredDependencies, symbolParseFn);
     this.templateStringKeyLookup[key] = true;
   }
 
   async resolveVarOrder(data) {
-    let proxyByTemplateString = new ComputedDataTemplateString(
-      this.computedKeys
-    );
+    let proxyByTemplateString = new ComputedDataTemplateString(this.computedKeys);
     let proxyByProxy = new ComputedDataProxy(this.computedKeys);
 
     for (let key of this.computedKeys) {

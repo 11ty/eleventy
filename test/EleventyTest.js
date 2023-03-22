@@ -662,7 +662,7 @@ ${newContents}
   await fsp.writeFile(includeFilePath, previousContents, { encoding: "utf8" });
 });
 
-const lodashGet = require("lodash.get");
+const { get: lodashGet } = require("@11ty/lodash-custom");
 test("Lodash get (for pagination data target) object key with spaces, issue #2851", (t) => {
   let data = {
     collections: {

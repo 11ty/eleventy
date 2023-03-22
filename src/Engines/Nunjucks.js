@@ -362,7 +362,7 @@ class Nunjucks extends TemplateEngine {
     return ext;
   }
 
-  /* Outputs an Array of lodash.get selectors */
+  /* Outputs an Array of lodash get selectors */
   parseForSymbols(str) {
     const { parser, nodes } = NunjucksLib;
     let obj = parser.parse(str, this._getParseExtensions());

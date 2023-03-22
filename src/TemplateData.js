@@ -1,7 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const lodashset = require("lodash.set");
-const lodashget = require("lodash.get");
+const { set: lodashset, get: lodashget } = require("@11ty/lodash-custom");
 const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
 
 const merge = require("./Util/Merge");

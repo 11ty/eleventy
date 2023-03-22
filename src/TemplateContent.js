@@ -4,7 +4,7 @@ const util = require("util");
 const readFile = util.promisify(fs.readFile);
 const normalize = require("normalize-path");
 const matter = require("gray-matter");
-const lodashSet = require("lodash.set");
+const { set: lodashSet } = require("@11ty/lodash-custom");
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const EleventyExtensionMap = require("./EleventyExtensionMap");
