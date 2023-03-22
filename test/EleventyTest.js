@@ -693,3 +693,19 @@ test("Eleventy tag collection with spaces in the tag name, issue #2851", async (
   t.deepEqual(result.length, result[0].data.collections.all.length);
   t.deepEqual(result[0].data.collections["tag with spaces"].length, 1);
 });
+
+test("this.eleventy on JavaScript template functions, issue #2790", async (t) => {
+  t.plan(3);
+
+  let elev = new Eleventy("./test/stubs-2790", "./test/stubs-2790/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.addJavaScriptFunction("jsfunction", function () {
+        t.truthy(this.eleventy);
+        return this.eleventy.generator.split(" ")[0];
+      });
+    },
+  });
+  let result = await elev.toJSON();
+  t.deepEqual(result.length, 1);
+  t.deepEqual(result[0].content, `<p>Eleventy</p>`);
+});

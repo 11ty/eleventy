@@ -8,6 +8,10 @@ const EventBusUtil = require("../Util/EventBusUtil");
 class JavaScriptTemplateNotDefined extends EleventyBaseError {}
 
 class JavaScript extends TemplateEngine {
+  // which data keys to bind to `this` in JavaScript template functions
+  // static DATA_KEYS_TO_BIND = ["page", "eleventy"];
+  static DATA_KEYS_TO_BIND = ["page", "eleventy"];
+
   constructor(name, dirs, config) {
     super(name, dirs, config);
     this.instances = {};
@@ -50,7 +54,9 @@ class JavaScript extends TemplateEngine {
         }
         return new mod();
       } else {
-        return { render: mod };
+        return {
+          render: mod,
+        };
       }
     } else if ("data" in mod || "render" in mod) {
       if (!("render" in mod)) {
@@ -67,7 +73,6 @@ class JavaScript extends TemplateEngine {
 
     const mod = require(TemplatePath.absolutePath(inputPath));
     let inst = this._getInstance(mod);
-
     if (inst) {
       this.instances[inputPath] = inst;
     } else {
@@ -110,11 +115,10 @@ class JavaScript extends TemplateEngine {
 
   static wrapJavaScriptFunction(inst, fn) {
     return function (...args) {
-      if (inst && inst.page) {
-        this.page = inst.page;
-      }
-      if (inst && inst.eleventy) {
-        this.eleventy = inst.eleventy;
+      for (let key of JavaScript.DATA_KEYS_TO_BIND) {
+        if (inst && inst[key]) {
+          this[key] = inst[key];
+        }
       }
 
       return fn.call(this, ...args);
@@ -136,9 +140,13 @@ class JavaScript extends TemplateEngine {
         // TODO does this do anything meaningful for non-classes?
         // `inst` should have a normalized `render` function from _getInstance
 
-        // only blow away existing inst.page if it has a page.url
-        if (!inst.page || inst.page.url) {
-          inst.page = data.page;
+        for (let key of JavaScript.DATA_KEYS_TO_BIND) {
+          if (!inst[key] && data[key]) {
+            // only blow away existing inst.page if it has a page.url
+            if (key !== "page" || !inst.page || inst.page.url) {
+              inst[key] = data[key];
+            }
+          }
         }
         Object.assign(inst, this.getJavaScriptFunctions(inst));
 
