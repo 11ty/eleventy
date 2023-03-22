@@ -709,3 +709,13 @@ test("this.eleventy on JavaScript template functions, issue #2790", async (t) =>
   t.deepEqual(result.length, 1);
   t.deepEqual(result[0].content, `<p>Eleventy</p>`);
 });
+
+test("Global data JS files should only execute once, issue #2753", async (t) => {
+  let elev = new Eleventy("./test/stubs-2753", "./test/stubs-2753/_site", {
+    config: function (eleventyConfig) {},
+  });
+  let result = await elev.toJSON();
+  t.deepEqual(result.length, 2);
+  t.deepEqual(result[0].content, `1`);
+  t.deepEqual(result[0].content, `1`);
+});
