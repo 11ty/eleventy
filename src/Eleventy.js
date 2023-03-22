@@ -1171,6 +1171,7 @@ Arguments:
         outputMode: to,
         incremental: this.isIncremental,
       };
+
       await this.config.events.emit("beforeBuild", eventsArg);
       await this.config.events.emit("eleventy.before", eventsArg);
 
@@ -1203,6 +1204,7 @@ Arguments:
         ret = this.logger.closeStream(to);
       }
 
+      eventsArg.uses = this.eleventyConfig.usesGraph.map;
       await this.config.events.emit("afterBuild", eventsArg);
       await this.config.events.emit("eleventy.after", eventsArg);
     } catch (e) {
