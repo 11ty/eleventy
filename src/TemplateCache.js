@@ -90,6 +90,11 @@ eventBus.on("eleventy.resourceModified", (path, usedBy, metadata = {}) => {
   // https://github.com/11ty/eleventy-plugin-bundle/issues/10
   if (metadata.viaConfigReset) {
     layoutCache.removeAll();
+  } else if (metadata.relevantLayouts?.length) {
+    // reset the appropriate layouts relevant to the file.
+    for (let layoutPath of metadata.relevantLayouts || []) {
+      layoutCache.remove(layoutPath);
+    }
   } else {
     layoutCache.remove(path);
   }

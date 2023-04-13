@@ -746,9 +746,12 @@ Arguments:
       );
     }
 
+    let relevantLayouts = this.eleventyConfig.usesGraph.getLayoutsUsedBy(changedFilePath);
+
     // Note: this is a sync event!
     eventBus.emit("eleventy.resourceModified", changedFilePath, usedByDependants, {
       viaConfigReset: isResetConfig,
+      relevantLayouts,
     });
 
     this.watchManager.addToPendingQueue(changedFilePath);

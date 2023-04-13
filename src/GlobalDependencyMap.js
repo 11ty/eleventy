@@ -182,6 +182,23 @@ class GlobalDependencyMap {
     return templates;
   }
 
+  getLayoutsUsedBy(node) {
+    node = this.normalizeNode(node);
+
+    if (!this.map.hasNode(node)) {
+      return [];
+    }
+
+    return this.map.dependantsOf(node).filter((node) => {
+      let data = this.map.getNodeData(node);
+      // we only want layouts
+      if (data && data.type && data.type === "layout") {
+        return true;
+      }
+      return false;
+    });
+  }
+
   // Layouts are not relevant to compile cache and can be ignored
   getDependencies(node, includeLayouts = true) {
     node = this.normalizeNode(node);
