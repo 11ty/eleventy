@@ -421,6 +421,19 @@ class Eleventy {
       );
     }
 
+    // Note these directories are all project root relative
+    let dirs = {
+      input: this.inputDir,
+      data: this.templateData.getDataDir(),
+      includes: this.eleventyFiles.getIncludesDir(),
+      layouts: this.eleventyFiles.getLayoutsDir(),
+      output: this.outputDir,
+    };
+
+    // eleventy.directories in global data
+    this.templateData.setGlobalDataDirectories(dirs);
+    this.config.events.emit("eleventy.directories", dirs);
+
     this.writer = new TemplateWriter(
       this.inputDir,
       this.outputDir,
@@ -441,14 +454,6 @@ class Eleventy {
     this.writer.setRunInitialBuild(this.isRunInitialBuild);
     this.writer.setIncrementalBuild(this.isIncremental);
 
-    let dirs = {
-      input: this.inputDir,
-      data: this.templateData.getDataDir(),
-      includes: this.eleventyFiles.getIncludesDir(),
-      layouts: this.eleventyFiles.getLayoutsDir(),
-      output: this.outputDir,
-    };
-
     debug(`Directories:
 Input (Dir): ${dirs.input}
 Input (File): ${this.rawInput}
@@ -461,8 +466,6 @@ Verbose Output: ${this.verboseMode}`);
 
     this.writer.setVerboseOutput(this.verboseMode);
     this.writer.setDryRun(this.isDryRun);
-
-    this.config.events.emit("eleventy.directories", dirs);
 
     this.needsInit = false;
   }

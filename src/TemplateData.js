@@ -68,6 +68,10 @@ class TemplateData {
     this.fileSystemSearch = fileSystemSearch;
   }
 
+  setGlobalDataDirectories(dirsObject) {
+    this.directories = dirsObject;
+  }
+
   get extensionMap() {
     if (!this._extensionMap) {
       this._extensionMap = new EleventyExtensionMap([], this.eleventyConfig);
@@ -341,6 +345,13 @@ class TemplateData {
             globalData.eleventy.env = {};
           }
           Object.assign(globalData.eleventy.env, this.environmentVariables);
+        }
+
+        if (this.directories) {
+          if (!("directories" in globalData.eleventy)) {
+            globalData.eleventy.directories = {};
+          }
+          Object.assign(globalData.eleventy.directories, this.directories);
         }
 
         resolve(globalData);
