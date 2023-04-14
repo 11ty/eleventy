@@ -29,7 +29,7 @@ class GlobalDependencyMap {
     });
   }
 
-  removeAllLayoutNodes() {
+  removeLayoutNodes(normalizedLayouts) {
     let nodes = this.map.overallOrder();
     for (let node of nodes) {
       let data = this.map.getNodeData(node);
@@ -37,18 +37,22 @@ class GlobalDependencyMap {
         continue;
       }
 
-      this.map.removeNode(node);
+      // previous layout is not in the new layout map (no templates are using it)
+      if (!normalizedLayouts[node]) {
+        this.map.removeNode(node);
+      }
+      // important: if the layout map changed to have different templates (but was not removed)
+      // this is already handled by `resetNode` called via TemplateMap
     }
   }
 
   // Eleventy Layouts don’t show up in the dependency graph, so we handle those separately
   addLayoutsToMap(layouts) {
+    let normalizedLayouts = this.normalizeLayoutsObject(layouts);
     // Clear out any previous layout relationships to make way for the new ones
-    this.removeAllLayoutNodes();
+    this.removeLayoutNodes(normalizedLayouts);
 
-    for (let rawLayout in layouts) {
-      let layout = this.normalizeNode(rawLayout);
-
+    for (let layout in normalizedLayouts) {
       // We add this pre-emptively to add the `layout` data
       if (!this.map.hasNode(layout)) {
         this.map.addNode(layout, {
@@ -57,7 +61,7 @@ class GlobalDependencyMap {
       }
 
       // Potential improvement: only add the first template in the chain for a template and manage any upstream layouts by their own relationships
-      for (let pageTemplate of layouts[rawLayout]) {
+      for (let pageTemplate of normalizedLayouts[layout]) {
         this.addDependency(pageTemplate, [layout]);
       }
     }
@@ -104,6 +108,15 @@ class GlobalDependencyMap {
     return TemplatePath.stripLeadingDotSlash(
       PathNormalizer.normalizeSeperator(TemplatePath.relativePath(node))
     );
+  }
+
+  normalizeLayoutsObject(layouts) {
+    let o = {};
+    for (let rawLayout in layouts) {
+      let layout = this.normalizeNode(rawLayout);
+      o[layout] = layouts[rawLayout].map((entry) => this.normalizeNode(entry));
+    }
+    return o;
   }
 
   getDependantsFor(node) {
@@ -192,7 +205,7 @@ class GlobalDependencyMap {
     return this.map.dependantsOf(node).filter((node) => {
       let data = this.map.getNodeData(node);
       // we only want layouts
-      if (data && data.type && data.type === "layout") {
+      if (data && data.type && data.type === GlobalDependencyMap.LAYOUT_KEY) {
         return true;
       }
       return false;
@@ -215,7 +228,7 @@ class GlobalDependencyMap {
 
       // When includeLayouts is `false` we want to filter out layouts
       let data = this.map.getNodeData(node);
-      if (data && data.type && data.type === "layout") {
+      if (data && data.type && data.type === GlobalDependencyMap.LAYOUT_KEY) {
         return false;
       }
       return true;
