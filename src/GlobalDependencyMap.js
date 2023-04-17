@@ -202,14 +202,22 @@ class GlobalDependencyMap {
       return [];
     }
 
-    return this.map.dependantsOf(node).filter((node) => {
+    let layouts = [];
+
+    // include self, if layout
+    if (this.map.getNodeData(node)?.type === GlobalDependencyMap.LAYOUT_KEY) {
+      layouts.push(node);
+    }
+
+    this.map.dependantsOf(node).forEach((node) => {
       let data = this.map.getNodeData(node);
       // we only want layouts
       if (data && data.type && data.type === GlobalDependencyMap.LAYOUT_KEY) {
-        return true;
+        return layouts.push(node);
       }
-      return false;
     });
+
+    return layouts;
   }
 
   // Layouts are not relevant to compile cache and can be ignored
