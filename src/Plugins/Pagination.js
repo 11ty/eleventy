@@ -436,7 +436,23 @@ class Pagination {
             `Serverless pagination template (${this.data.page.inputPath}) has no \`permalink.${key}\` with \`/:${key}/\``
           );
         }
-        href = serverlessUrlFilter(validUrls[0], { [key]: pageNumber });
+
+        let filterData = {
+          [key]: pageNumber,
+        };
+
+        // Serverless URLs like `/blog/tags/:slug/page/:pagenumber/` need both `slug` and `pagenumber`
+        // so we attempt to resolve the extra data from the pagination chunk.
+        validUrls[0].split("/").forEach((entry) => {
+          if (entry.startsWith(":")) {
+            let urlKey = entry.slice(1);
+            if (items[pageNumber][0][urlKey]) {
+              filterData[urlKey] = items[pageNumber][0][urlKey];
+            }
+          }
+        });
+
+        href = serverlessUrlFilter(validUrls[0], filterData);
       }
 
       hrefs.push(href);
