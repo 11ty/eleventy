@@ -338,7 +338,12 @@ class Pagination {
         serverlessPaginationKey = this._get(this.data, this.data.pagination.serverless);
       }
 
-      if (this.paginationTargetType === "array") {
+      // Typically this would be a string, not an object.
+      // But, we’re supporting `serverless: "eleventy.serverless.path"` so that all of
+      // the path params get passed to serverlessFilter, e.g. `serverlessFilter: function(paginationData, { slug, pagenumber })`
+      if (isPlainObject(serverlessPaginationKey)) {
+        indeces.add(0);
+      } else if (this.paginationTargetType === "array") {
         currentPageIndex = parseInt(serverlessPaginationKey, 10);
 
         indeces.add(0); // first
@@ -395,6 +400,7 @@ class Pagination {
         ) {
           // This should maybe be the default for all object pagination, not just serverless ones?
           let keys = this.getNormalizedItems(items[pageNumber]);
+
           if (Array.isArray(keys)) {
             lodashSet(
               paginationData,
@@ -427,9 +433,11 @@ class Pagination {
         let key = keys.pop();
 
         let serverlessUrls = linkInstance.getServerlessUrls();
-        let validUrls = Object.values(serverlessUrls)
-          .flat()
-          .filter((entry) => entry.includes(`/:${key}/`));
+        let validUrls = Object.values(serverlessUrls).flat();
+
+        if (this.data.pagination.serverless !== "eleventy.serverless.path") {
+          validUrls = validUrls.filter((entry) => entry.includes(`/:${key}/`));
+        }
 
         if (validUrls.length === 0) {
           throw new Error(
@@ -437,19 +445,28 @@ class Pagination {
           );
         }
 
-        let filterData = {
-          [key]: pageNumber,
-        };
+        let filterData = {};
 
         // Serverless URLs like `/blog/tags/:slug/page/:pagenumber/` need both `slug` and `pagenumber`
         // so we attempt to resolve the extra data from the pagination chunk.
-        validUrls[0].split("/").forEach((entry) => {
-          if (entry.startsWith(":")) {
-            let urlKey = entry.slice(1);
-            if (items[pageNumber][0][urlKey]) {
-              filterData[urlKey] = items[pageNumber][0][urlKey];
+        if (clonedData.eleventy?.serverless?.path) {
+          Object.assign(filterData, clonedData.eleventy?.serverless?.path);
+        }
+
+        // get URL path information from data chunk
+        validUrls.forEach((url) => {
+          url.split("/").forEach((pathEntry) => {
+            if (pathEntry.startsWith(":")) {
+              let urlKey = pathEntry.slice(1);
+              if (
+                items[pageNumber] &&
+                items[pageNumber].length > 0 &&
+                items[pageNumber][0][urlKey]
+              ) {
+                filterData[urlKey] = items[pageNumber][0][urlKey];
+              }
             }
-          }
+          });
         });
 
         href = serverlessUrlFilter(validUrls[0], filterData);
