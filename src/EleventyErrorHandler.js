@@ -67,8 +67,7 @@ class EleventyErrorHandler {
 
       this.logger.message(
         `${errorCount > 1 ? `${index}. ` : ""}${(
-          EleventyErrorUtil.cleanMessage(ref.message) ||
-          "(No error message provided)"
+          EleventyErrorUtil.cleanMessage(ref.message) || "(No error message provided)"
         ).trim()} (via ${ref.name})`,
         type,
         chalkColor,
@@ -79,7 +78,6 @@ class EleventyErrorHandler {
         debug(`(${type} stack): ${ref.stack}`);
       } else if (!nextRef) {
         // last error in the loop
-        let prefix = "    ";
 
         // remove duplicate error messages if the stack contains the original message output above
         let stackStr = ref.stack || "";
@@ -101,12 +99,7 @@ class EleventyErrorHandler {
     }
   }
 
-  initialMessage(
-    message,
-    type = "log",
-    chalkColor = "blue",
-    forceToConsole = false
-  ) {
+  initialMessage(message, type = "log", chalkColor = "blue", forceToConsole = false) {
     if (message) {
       this.logger.message(
         message + ":" + (process.env.DEBUG ? "" : " (more in DEBUG output)"),

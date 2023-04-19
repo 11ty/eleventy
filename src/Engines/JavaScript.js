@@ -9,7 +9,6 @@ class JavaScriptTemplateNotDefined extends EleventyBaseError {}
 
 class JavaScript extends TemplateEngine {
   // which data keys to bind to `this` in JavaScript template functions
-  // static DATA_KEYS_TO_BIND = ["page", "eleventy"];
   static DATA_KEYS_TO_BIND = ["page", "eleventy"];
 
   constructor(name, dirs, config) {
