@@ -1,4 +1,7 @@
-const fs = require("fs");
+const fs = require("graceful-fs");
+const util = require("util");
+const fsStat = util.promisify(fs.stat);
+const fsExists = util.promisify(fs.exists);
 const path = require("path");
 const isGlob = require("is-glob");
 const copy = require("recursive-copy");
@@ -42,7 +45,7 @@ class TemplatePassthrough {
     return this.rawPath;
   }
 
-  getOutputPath(inputFileFromGlob) {
+  async getOutputPath(inputFileFromGlob) {
     let { inputDir, outputDir, outputPath, inputPath } = this;
 
     if (outputPath === true) {
@@ -64,7 +67,7 @@ class TemplatePassthrough {
     let fullOutputPath = TemplatePath.normalize(TemplatePath.join(outputDir, outputPath));
 
     if (
-      fs.existsSync(inputPath) &&
+      await fsExists(inputPath) &&
       !TemplatePath.isDirectorySync(inputPath) &&
       TemplatePath.isDirectorySync(fullOutputPath)
     ) {
@@ -75,9 +78,9 @@ class TemplatePassthrough {
     return fullOutputPath;
   }
 
-  getOutputPathForGlobFile(inputFileFromGlob) {
+  async getOutputPathForGlobFile(inputFileFromGlob) {
     return TemplatePath.join(
-      this.getOutputPath(),
+      await this.getOutputPath(),
       TemplatePath.getLastPathSegment(inputFileFromGlob)
     );
   }
@@ -111,12 +114,12 @@ class TemplatePassthrough {
 
   // dir is guaranteed to exist by context
   // dir may not be a directory
-  addTrailingSlashIfDirectory(dir) {
+  async addTrailingSlashIfDirectory(dir) {
     if (dir && typeof dir === "string") {
       if (dir.endsWith(path.sep)) {
         return dir;
       }
-      if (fs.statSync(dir).isDirectory()) {
+      if (await fsStat(dir).isDirectory()) {
         return `${dir}/`;
       }
     }
@@ -126,14 +129,14 @@ class TemplatePassthrough {
   // maps input paths to output paths
   async getFileMap() {
     // TODO VirtualFileSystem candidate
-    if (!isGlob(this.inputPath) && fs.existsSync(this.inputPath)) {
+    if (!isGlob(this.inputPath) && await fsExists(this.inputPath)) {
       // When inputPath is a directory, make sure it has a slash for passthrough copy aliasing
       // https://github.com/11ty/eleventy/issues/2709
-      let inputPath = this.addTrailingSlashIfDirectory(this.inputPath);
+      let inputPath = await this.addTrailingSlashIfDirectory(this.inputPath);
       return [
         {
           inputPath,
-          outputPath: this.getOutputPath(),
+          outputPath: await this.getOutputPath(),
         },
       ];
     }
@@ -144,7 +147,7 @@ class TemplatePassthrough {
     for (let inputPath of files) {
       paths.push({
         inputPath,
-        outputPath: this.getOutputPath(inputPath),
+        outputPath: await this.getOutputPath(inputPath),
       });
     }
 

@@ -1,6 +1,10 @@
 const path = require("path");
-const fs = require("fs");
-const fsp = fs.promises;
+const fs = require("graceful-fs");
+const util = require("util");
+const fsReadFile = util.promisify(fs.readFile);
+const fsExists = util.promisify(fs.exists);
+const fsWriteFile = util.promisify(fs.writeFile);
+const fsMkdir = util.promisify(fs.mkdir);
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const rawContentLiquidTag = require("./Edge/LiquidEdge.js");
@@ -25,8 +29,8 @@ class EdgeHelper {
   async writeDefaultEdgeFunctionFile() {
     let filepath = this.getOutputPath("eleventy-edge.js");
 
-    if (fs.existsSync(filepath)) {
-      let contents = await fsp.readFile(filepath, "utf8");
+    if (await fsExists(filepath)) {
+      let contents = await fsReadFile(filepath, "utf8");
       let trimmed = contents.trim();
       if (
         trimmed.startsWith(`import { EleventyEdge } from "./_generated/eleventy-edge.js";`) ||
@@ -45,10 +49,10 @@ class EdgeHelper {
         "./DefaultEdgeFunctionContent.js"
       );
 
-      let contents = await fsp.readFile(defaultContentPath, "utf8");
+      let contents = await fsReadFile(defaultContentPath, "utf8");
       contents = contents.replace(/\%\%EDGE_NAME\%\%/g, this.options.name);
       contents = contents.replace(/\%\%EDGE_VERSION\%\%/g, this.options.eleventyEdgeVersion);
-      return fsp.writeFile(filepath, contents);
+      return fsWriteFile(filepath, contents);
     }
   }
 }
@@ -189,7 +193,7 @@ function EleventyEdgePlugin(eleventyConfig, opts = {}) {
   if (!process.env.ELEVENTY_SERVERLESS) {
     // Generate app eleventy-edge-app.js file and generate default edge function (if needed)
     eleventyConfig.on("eleventy.after", async () => {
-      await fsp.mkdir(path.join(options.functionsDir, "_generated"), {
+      await fsMkdir(path.join(options.functionsDir, "_generated"), {
         recursive: true,
       });
 
@@ -201,7 +205,7 @@ function EleventyEdgePlugin(eleventyConfig, opts = {}) {
       content.push(helper.precompiledTemplates.toString());
 
       // New replacement for `eleventy:edge` and `eleventy-edge-app-data.js` imports.
-      await fsp.writeFile(
+      await fsWriteFile(
         path.join(options.functionsDir, "_generated/eleventy-edge-app.js"),
         `import { EleventyEdge } from "https://cdn.11ty.dev/edge@${
           options.eleventyEdgeVersion

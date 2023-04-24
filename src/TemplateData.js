@@ -1,4 +1,8 @@
-const fs = require("fs");
+const fs = require("graceful-fs");
+const util = require("util");
+const fsReadFile = util.promisify(fs.readFile);
+const fsExists = util.promisify(fs.exists);
+const fsStat = util.promisify(fs.stat);
 const path = require("path");
 const { set: lodashset, get: lodashget } = require("@11ty/lodash-custom");
 const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
@@ -22,10 +26,10 @@ class FSExistsCache {
   has(path) {
     return this._cache.has(path);
   }
-  exists(path) {
+  async exists(path) {
     let exists = this._cache.get(path);
     if (!this.has(path)) {
-      exists = fs.existsSync(path);
+      exists = await fsExists(path);
       this._cache.set(path, exists);
     }
     return exists;
@@ -137,7 +141,7 @@ class TemplateData {
 
   async _checkInputDir() {
     if (this.inputDirNeedsCheck) {
-      let globalPathStat = await fs.promises.stat(this.inputDir);
+      let globalPathStat = await fsStat(this.inputDir);
 
       if (!globalPathStat.isDirectory()) {
         throw new Error("Could not find data path directory: " + this.inputDir);
@@ -387,8 +391,10 @@ class TemplateData {
     }
 
     // Filter out files we know don't exist to avoid overhead for checking
-    localDataPaths = localDataPaths.filter((path) => {
-      return this._fsExistsCache.exists(path);
+    const dataPaths = await Promise.all(localDataPaths
+      .map(path => this._fsExistsCache.exists(path)));
+    localDataPaths = dataPaths.filter((exists) => {
+      return exists
     });
 
     this.config.events.emit("eleventy.dataFiles", localDataPaths);
@@ -466,7 +472,7 @@ class TemplateData {
     }
 
     try {
-      rawInput = await fs.promises.readFile(path, encoding);
+      rawInput = await fsReadFile(path, encoding);
     } catch (e) {
       // if file does not exist, return nothing
     }

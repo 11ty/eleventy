@@ -2,6 +2,7 @@ const fs = require("graceful-fs");
 const util = require("util");
 const writeFile = util.promisify(fs.writeFile);
 const mkdir = util.promisify(fs.mkdir);
+const fsStat = util.promisify(fs.stat);
 
 const os = require("os");
 const path = require("path");
@@ -898,7 +899,7 @@ class Template extends TemplateContent {
       return this._stats;
     }
 
-    this._stats = fs.promises.stat(this.inputPath);
+    this._stats = fsStat(this.inputPath);
 
     return this._stats;
   }

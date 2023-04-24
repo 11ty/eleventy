@@ -1,5 +1,7 @@
-const fs = require("fs");
-const fsp = fs.promises;
+const fs = require("graceful-fs");
+const util = require("util");
+const fsReadFile = util.promisify(fs.readFile);
+const fsExists = util.promisify(fs.exists);
 const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
 
 // TODO add a first-class Markdown component to expose this using Markdown-only syntax (will need to be synchronous for markdown-it)
@@ -49,7 +51,7 @@ async function compileFile(inputPath, { templateConfig, extensionMap, config } =
     throw new Error("Missing file path argument passed to the `renderFile` shortcode.");
   }
 
-  if (!fs.existsSync(TemplatePath.normalizeOperatingSystemFilePath(inputPath))) {
+  if (!await fsExists(TemplatePath.normalizeOperatingSystemFilePath(inputPath))) {
     throw new Error(
       "Could not find render plugin file for the `renderFile` shortcode, looking for: " + inputPath
     );
@@ -74,7 +76,7 @@ async function compileFile(inputPath, { templateConfig, extensionMap, config } =
   }
 
   // TODO we could make this work with full templates (with front matter?)
-  let content = await fsp.readFile(inputPath, "utf8");
+  let content = await fsReadFile(inputPath, "utf8");
   return tr.getCompiledTemplate(content);
 }
 
