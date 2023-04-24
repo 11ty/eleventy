@@ -67,7 +67,7 @@ class TemplatePassthrough {
     let fullOutputPath = TemplatePath.normalize(TemplatePath.join(outputDir, outputPath));
 
     if (
-      await fsExists(inputPath) &&
+      (await fsExists(inputPath)) &&
       !TemplatePath.isDirectorySync(inputPath) &&
       TemplatePath.isDirectorySync(fullOutputPath)
     ) {
@@ -119,7 +119,7 @@ class TemplatePassthrough {
       if (dir.endsWith(path.sep)) {
         return dir;
       }
-      if (await fsStat(dir).isDirectory()) {
+      if ((await fsStat(dir)).isDirectory()) {
         return `${dir}/`;
       }
     }
@@ -129,7 +129,7 @@ class TemplatePassthrough {
   // maps input paths to output paths
   async getFileMap() {
     // TODO VirtualFileSystem candidate
-    if (!isGlob(this.inputPath) && await fsExists(this.inputPath)) {
+    if (!isGlob(this.inputPath) && (await fsExists(this.inputPath))) {
       // When inputPath is a directory, make sure it has a slash for passthrough copy aliasing
       // https://github.com/11ty/eleventy/issues/2709
       let inputPath = await this.addTrailingSlashIfDirectory(this.inputPath);

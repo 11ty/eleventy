@@ -391,10 +391,17 @@ class TemplateData {
     }
 
     // Filter out files we know don't exist to avoid overhead for checking
-    const dataPaths = await Promise.all(localDataPaths
-      .map(path => this._fsExistsCache.exists(path)));
-    localDataPaths = dataPaths.filter((exists) => {
-      return exists
+    const dataPaths = await Promise.all(
+      localDataPaths.map((path) =>
+        this._fsExistsCache.exists(path).then((exists) => {
+          if (exists) return path;
+          return false;
+        })
+      )
+    );
+
+    localDataPaths = dataPaths.filter((pathOrFalse) => {
+      return pathOrFalse === false ? false : true;
     });
 
     this.config.events.emit("eleventy.dataFiles", localDataPaths);
@@ -518,7 +525,7 @@ class TemplateData {
     if (extension === "js" || extension === "cjs") {
       // JS data file or require’d JSON (no preprocessing needed)
       let localPath = TemplatePath.absolutePath(path);
-      let exists = this._fsExistsCache.exists(localPath);
+      let exists = await this._fsExistsCache.exists(localPath);
       // Make sure that relative lookups benefit from cache
       this._fsExistsCache.markExists(path, exists);
 
