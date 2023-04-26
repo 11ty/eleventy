@@ -1,6 +1,5 @@
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
-const TemplateConfig = require("./TemplateConfig");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const CustomEngine = require("./Engines/Custom.js");
@@ -18,10 +17,12 @@ class TemplateRender {
     if (!config) {
       throw new TemplateRenderConfigError("Missing `config` argument.");
     }
-    if (config instanceof TemplateConfig) {
+    if (config.constructor.name === "TemplateConfig") {
       this.eleventyConfig = config;
+      this.config = config.getConfig();
+    } else {
+      this.config = config;
     }
-    this.config = config;
 
     this.engineNameOrPath = tmplPath;
 
@@ -33,9 +34,6 @@ class TemplateRender {
   }
 
   get config() {
-    if (this._config instanceof TemplateConfig) {
-      return this._config.getConfig();
-    }
     return this._config;
   }
 
@@ -63,7 +61,7 @@ class TemplateRender {
 
   // Runs once per template
   init(engineNameOrPath) {
-    this.extensionMap.config = this.config;
+    this.extensionMap.config = this.eleventyConfig;
     this._engineName = this.extensionMap.getKey(engineNameOrPath);
     if (!this._engineName) {
       throw new TemplateRenderUnknownEngineError(

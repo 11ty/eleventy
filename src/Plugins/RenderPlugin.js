@@ -23,13 +23,16 @@ async function compile(content, templateLang, { templateConfig, extensionMap } =
     templateLang = this.page.templateSyntax;
   }
 
-  let cfg = templateConfig;
-  // templateConfig might already be a userconfig
-  if (cfg instanceof TemplateConfig) {
-    cfg = cfg.getConfig();
+  let inputDir;
+
+  // templateConfig *may* already be a userconfig
+  if (templateConfig.constructor.name === "TemplateConfig") {
+    inputDir = templateConfig.getConfig().dir.input;
+  } else {
+    inputDir = templateConfig?.dir?.input;
   }
 
-  let tr = new TemplateRender(templateLang, cfg.dir.input, templateConfig);
+  let tr = new TemplateRender(templateLang, inputDir, templateConfig);
   tr.extensionMap = extensionMap;
   tr.setEngineOverride(templateLang);
 

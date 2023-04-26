@@ -10,7 +10,6 @@ const { TemplatePath } = require("@11ty/eleventy-utils");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const TemplateData = require("./TemplateData");
 const TemplateRender = require("./TemplateRender");
-const TemplateConfig = require("./TemplateConfig");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
 const debug = require("debug")("Eleventy:TemplateContent");
@@ -84,7 +83,7 @@ class TemplateContent {
   set eleventyConfig(config) {
     this._config = config;
 
-    if (this._config instanceof TemplateConfig) {
+    if (this._config.constructor.name === "TemplateConfig") {
       this._configOptions = this._config.getConfig();
     } else {
       throw new TemplateContentConfigError("Tried to get an TemplateConfig but none was found.");
@@ -92,14 +91,14 @@ class TemplateContent {
   }
 
   get eleventyConfig() {
-    if (this._config instanceof TemplateConfig) {
+    if (this._config.constructor.name === "TemplateConfig") {
       return this._config;
     }
     throw new TemplateContentConfigError("Tried to get an TemplateConfig but none was found.");
   }
 
   get config() {
-    if (this._config instanceof TemplateConfig && !this._configOptions) {
+    if (this._config.constructor.name === "TemplateConfig" && !this._configOptions) {
       this._configOptions = this._config.getConfig();
     }
 

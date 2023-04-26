@@ -1,7 +1,6 @@
 const fs = require("fs");
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
-const TemplateConfig = require("../TemplateConfig");
 const EleventyExtensionMap = require("../EleventyExtensionMap");
 const EleventyBaseError = require("../EleventyBaseError");
 const EventBusUtil = require("../Util/EventBusUtil");
@@ -34,7 +33,7 @@ class TemplateEngine {
   }
 
   get config() {
-    if (this.eleventyConfig instanceof TemplateConfig) {
+    if (this.eleventyConfig.constructor.name === "TemplateConfig") {
       return this.eleventyConfig.getConfig();
     }
     throw new Error("Expecting a TemplateConfig instance.");

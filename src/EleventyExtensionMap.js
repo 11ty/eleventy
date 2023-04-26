@@ -1,20 +1,13 @@
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const TemplateEngineManager = require("./TemplateEngineManager");
-const TemplateConfig = require("./TemplateConfig");
 const EleventyBaseError = require("./EleventyBaseError");
 
 class EleventyExtensionMapConfigError extends EleventyBaseError {}
 
 class EleventyExtensionMap {
   constructor(formatKeys, config) {
-    if (!config) {
-      throw new EleventyExtensionMapConfigError("Missing `config` argument.");
-    }
-    if (config instanceof TemplateConfig) {
-      this.eleventyConfig = config;
-    }
-    this._config = config;
+    this.config = config;
 
     this.formatKeys = formatKeys;
 
@@ -36,14 +29,16 @@ class EleventyExtensionMap {
   }
 
   set config(cfg) {
-    this._config = cfg;
+    if (!cfg || cfg.constructor.name !== "TemplateConfig") {
+      throw new EleventyExtensionMapConfigError(
+        "Missing or invalid `config` argument (via setter)."
+      );
+    }
+    this.eleventyConfig = cfg;
   }
 
   get config() {
-    if (this._config instanceof TemplateConfig) {
-      return this._config.getConfig();
-    }
-    return this._config;
+    return this.eleventyConfig.getConfig();
   }
 
   get engineManager() {
