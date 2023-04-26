@@ -250,6 +250,10 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
         contentMaps.localeUrlsMap[url] ||
         (!url.endsWith("/") && contentMaps.localeUrlsMap[`${url}/`])
       ) {
+        if (LangUtils.getLanguageCodeFromUrl(url) === langCode) {
+          return url;
+        }
+
         for (let existingUrlObj of contentMaps.localeUrlsMap[url] ||
           contentMaps.localeUrlsMap[`${url}/`]) {
           if (Comparator.urlHasLangCode(existingUrlObj.url, langCode)) {
