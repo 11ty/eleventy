@@ -383,6 +383,8 @@ class Eleventy {
     }
 
     this.config.inputDir = this.inputDir;
+    this.config.dir.input = this.inputDir;
+    this.config.dir.output = this.outputDir;
 
     let formats = this.formatsOverride || this.config.templateFormats;
     this.extensionMap = new EleventyExtensionMap(formats, this.eleventyConfig);
