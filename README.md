@@ -47,3 +47,7 @@ npm run test
 ## Plugins
 
 See the [official docs on plugins](https://www.11ty.dev/docs/plugins/).
+
+## Forms
+
+[Eleventy Forms](https://fabform.io/for/Eleventy)
