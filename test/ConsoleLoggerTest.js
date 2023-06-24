@@ -7,7 +7,7 @@ test("Disable chalk", (t) => {
   t.is(cl.isChalkEnabled, false);
 });
 
-test("Reenable chalk", (t) => {
+test("Re-enable chalk", (t) => {
   let cl = new ConsoleLogger();
   cl.isChalkEnabled = false;
   cl.isChalkEnabled = true;
