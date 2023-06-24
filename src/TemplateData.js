@@ -310,7 +310,7 @@ class TemplateData {
       let data = await this.getDataValue(files[j], rawImports);
       let objectPathTarget = this.getObjectPathForDataFile(files[j]);
 
-      // Since we're joining directory paths and an array is not useable as an objectkey since two identical arrays are not double equal,
+      // Since we're joining directory paths and an array is not usable as an objectkey since two identical arrays are not double equal,
       // we can just join the array by a forbidden character ("/"" is chosen here, since it works on Linux, Mac and Windows).
       // If at some point this isn't enough anymore, it would be possible to just use JSON.stringify(objectPathTarget) since that
       // is guaranteed to work but is signifivcantly slower.
