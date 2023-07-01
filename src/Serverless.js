@@ -4,8 +4,8 @@ const { match } = require("path-to-regexp");
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const Eleventy = require("./Eleventy");
-const deleteRequireCache = require("./Util/DeleteRequireCache");
 const normalizeServerlessUrl = require("./Util/NormalizeServerlessUrl");
+const deleteRequireCache = require("./Util/DeleteRequireCache");
 const debug = require("debug")("Eleventy:Serverless");
 
 class Serverless {
@@ -22,9 +22,7 @@ class Serverless {
     }
 
     if (!this.path) {
-      throw new Error(
-        "`path` must exist in the options argument in Eleventy Serverless."
-      );
+      throw new Error("`path` must exist in the options argument in Eleventy Serverless.");
     }
 
     // ServerlessBundlerPlugin hard-codes to this (even if you used a different file name)
@@ -40,18 +38,28 @@ class Serverless {
       {
         inputDir: null, // override only, we now inject this.
         functionsDir: "functions/",
+
         matchUrlToPattern(path, urlToCompare) {
           urlToCompare = normalizeServerlessUrl(urlToCompare);
 
           let fn = match(urlToCompare, { decode: decodeURIComponent });
           return fn(path);
         },
+
         // Query String Parameters
         query: {},
-        // Inject shared collections
-        precompiledCollections: {},
+
         // Configuration callback
         config: function (eleventyConfig) {},
+
+        // Is serverless build scoped to a single template?
+        // Use `false` to make serverless more collections-friendly (but slower!)
+        // With `false` you don’t need precompiledCollections.
+        // Works great with on-demand builders
+        singleTemplateScope: true,
+
+        // Inject shared collections
+        precompiledCollections: {},
       },
       options
     );
@@ -60,12 +68,7 @@ class Serverless {
   }
 
   initializeEnvironmentVariables() {
-    // set and delete env variables to make it work the same on --serve
-    this.serverlessEnvironmentVariableAlreadySet =
-      !!process.env.ELEVENTY_SERVERLESS;
-    if (!this.serverlessEnvironmentVariableAlreadySet) {
-      process.env.ELEVENTY_SERVERLESS = true;
-    }
+    this.serverlessEnvironmentVariableAlreadySet = !!process.env.ELEVENTY_SERVERLESS;
   }
 
   deleteEnvironmentVariables() {
@@ -89,31 +92,27 @@ class Serverless {
       }
     }
 
-    throw new Error(
-      `Couldn’t find the "${dir}" directory. Looked in: ${paths}`
-    );
+    throw new Error(`Couldn’t find the "${dir}" directory. Looked in: ${paths}`);
   }
 
   getContentMap() {
     let fullPath = TemplatePath.absolutePath(this.dir, this.mapFilename);
-    debug(
-      `Including content map (maps output URLs to input files) from ${fullPath}`
-    );
+    debug(`Including content map (maps output URLs to input files) from ${fullPath}`);
+
     // TODO dedicated reset method, don’t delete this every time
     deleteRequireCache(fullPath);
 
-    let mapContent = require(fullPath);
-    return mapContent;
+    return require(fullPath);
   }
 
   getConfigInfo() {
     let fullPath = TemplatePath.absolutePath(this.dir, this.configInfoFilename);
     debug(`Including config info file from ${fullPath}`);
+
     // TODO dedicated reset method, don’t delete this every time
     deleteRequireCache(fullPath);
 
-    let configInfo = require(fullPath);
-    return configInfo;
+    return require(fullPath);
   }
 
   isServerlessUrl(urlPath) {
@@ -163,18 +162,13 @@ class Serverless {
       process.chdir(this.dir);
     }
 
-    let inputDir =
-      this.options.input ||
-      this.options.inputDir ||
-      this.getConfigInfo().dir.input;
+    let inputDir = this.options.input || this.options.inputDir || this.getConfigInfo().dir.input;
     let configPath = path.join(this.dir, this.configFilename);
     let { pathParams, inputPath } = this.matchUrlPattern(this.path);
 
     if (!pathParams || !inputPath) {
       let err = new Error(
-        `No matching URL found for ${this.path} in ${JSON.stringify(
-          this.getContentMap()
-        )}`
+        `No matching URL found for ${this.path} in ${JSON.stringify(this.getContentMap())}`
       );
       err.httpStatusCode = 404;
       throw err;
@@ -189,17 +183,19 @@ class Serverless {
     debug("Path params: %o", pathParams);
     debug(`Input path:  ${inputPath}`);
 
-    // TODO (@zachleat) change to use this hook: https://github.com/11ty/eleventy/issues/1957
     this.initializeEnvironmentVariables();
 
-    let elev = new Eleventy(this.options.input || inputPath, null, {
+    let isScoped = !!this.options.singleTemplateScope;
+    let projectInput = isScoped ? this.options.input || inputPath : inputDir;
+
+    let elev = new Eleventy(projectInput, null, {
+      // https://github.com/11ty/eleventy/issues/1957
+      isServerless: true,
       configPath,
       inputDir,
       config: (eleventyConfig) => {
         if (Object.keys(this.options.precompiledCollections).length > 0) {
-          eleventyConfig.setPrecompiledCollections(
-            this.options.precompiledCollections
-          );
+          eleventyConfig.setPrecompiledCollections(this.options.precompiledCollections);
         }
 
         // Add the params to Global Data
@@ -216,9 +212,13 @@ class Serverless {
       },
     });
 
+    if (!isScoped) {
+      elev.setIncrementalFile(this.options.input || inputPath);
+    }
+
     let json = await elev.toJSON();
 
-    // TODO (@zachleat)  https://github.com/11ty/eleventy/issues/1957
+    // https://github.com/11ty/eleventy/issues/1957
     this.deleteEnvironmentVariables();
 
     let filtered = [];

@@ -1,7 +1,12 @@
 const test = require("ava");
+const fsp = require("fs").promises;
+const eventBus = require("../src/EventBus.js");
 const Eleventy = require("../src/Eleventy");
+const TemplateContent = require("../src/TemplateContent");
 const EleventyWatchTargets = require("../src/EleventyWatchTargets");
+const TemplateMap = require("../src/TemplateMap");
 const TemplateConfig = require("../src/TemplateConfig");
+const DateGitFirstAdded = require("../src/Util/DateGitFirstAdded.js");
 const DateGitLastUpdated = require("../src/Util/DateGitLastUpdated");
 const normalizeNewLines = require("./Util/normalizeNewLines");
 
@@ -64,16 +69,23 @@ test("Eleventy file watching", async (t) => {
   elev.setFormats("njk");
 
   await elev.init();
+  let globalData = await elev.templateData.getGlobalData();
+
   await elev.eleventyFiles.getFiles();
   await elev.initWatch();
+
   t.deepEqual(await elev.getWatchedFiles(), [
+    "./package.json",
     "./test/stubs/**/*.njk",
     "./test/stubs/_includes/**",
     "./test/stubs/_data/**",
+    "./.gitignore",
+    "./.eleventyignore",
+    "./test/stubs/.eleventyignore",
     "./.eleventy.js",
-    "./test/stubs/**/*.json",
-    "./test/stubs/**/*.11tydata.cjs",
-    "./test/stubs/**/*.11tydata.js",
+    "./eleventy.config.js",
+    "./eleventy.config.cjs",
+    "./test/stubs/**/*.{json,11tydata.cjs,11tydata.js}",
     "./test/stubs/deps/dep1.js",
     "./test/stubs/deps/dep2.js",
   ]);
@@ -87,9 +99,7 @@ test("Eleventy file watching (don’t watch deps of passthrough copy .js files)"
   await elev.eleventyFiles.getFiles();
   await elev.initWatch();
 
-  t.deepEqual(await elev.eleventyFiles.getWatchPathCache(), [
-    "./test/stubs-1325/test.11ty.js",
-  ]);
+  t.deepEqual(await elev.eleventyFiles.getWatchPathCache(), ["./test/stubs-1325/test.11ty.js"]);
 });
 
 test("Eleventy file watching (no JS dependencies)", async (t) => {
@@ -103,13 +113,17 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
   await elev.init();
   await elev.initWatch();
   t.deepEqual(await elev.getWatchedFiles(), [
+    "./package.json",
     "./test/stubs/**/*.njk",
     "./test/stubs/_includes/**",
     "./test/stubs/_data/**",
+    "./.gitignore",
+    "./.eleventyignore",
+    "./test/stubs/.eleventyignore",
     "./.eleventy.js",
-    "./test/stubs/**/*.json",
-    "./test/stubs/**/*.11tydata.cjs",
-    "./test/stubs/**/*.11tydata.js",
+    "./eleventy.config.js",
+    "./eleventy.config.cjs",
+    "./test/stubs/**/*.{json,11tydata.cjs,11tydata.js}",
   ]);
 });
 
@@ -122,10 +136,7 @@ test("Eleventy set input/output, one file input", async (t) => {
 });
 
 test("Eleventy set input/output, one file input, deeper subdirectory", async (t) => {
-  let elev = new Eleventy(
-    "./test/stubs/subdir/index.html",
-    "./test/stubs/_site"
-  );
+  let elev = new Eleventy("./test/stubs/subdir/index.html", "./test/stubs/_site");
   elev.setInputDir("./test/stubs");
 
   t.is(elev.input, "./test/stubs/subdir/index.html");
@@ -151,13 +162,9 @@ test("Eleventy set input/output, one file input root dir without leading dot/sla
 
 test("Eleventy set input/output, one file input exitCode (script)", async (t) => {
   let previousExitCode = process.exitCode;
-  let elev = new Eleventy(
-    "./test/stubs/exitCode/failure.njk",
-    "./test/stubs/exitCode/_site",
-    {
-      source: "script",
-    }
-  );
+  let elev = new Eleventy("./test/stubs/exitCode/failure.njk", "./test/stubs/exitCode/_site", {
+    source: "script",
+  });
   elev.setIsVerbose(false);
   elev.disableLogger();
 
@@ -171,13 +178,9 @@ test("Eleventy set input/output, one file input exitCode (script)", async (t) =>
 
 test("Eleventy set input/output, one file input exitCode (cli)", async (t) => {
   let previousExitCode = process.exitCode;
-  let elev = new Eleventy(
-    "./test/stubs/exitCode/failure.njk",
-    "./test/stubs/exitCode/_site",
-    {
-      source: "cli",
-    }
-  );
+  let elev = new Eleventy("./test/stubs/exitCode/failure.njk", "./test/stubs/exitCode/_site", {
+    source: "cli",
+  });
   elev.setIsVerbose(false);
   elev.disableLogger();
 
@@ -295,12 +298,14 @@ test("Two Eleventies, two configs!!! (config used to be a global)", async (t) =>
 
   t.is(elev1.eleventyConfig, elev1.eleventyConfig);
   t.is(elev1.config, elev1.config);
+  delete elev1.config.uses;
   t.is(JSON.stringify(elev1.config), JSON.stringify(elev1.config));
 
   let elev2 = new Eleventy();
   t.not(elev1.eleventyConfig, elev2.eleventyConfig);
   elev1.config.benchmarkManager = null;
   elev2.config.benchmarkManager = null;
+  delete elev2.config.uses;
   t.is(JSON.stringify(elev1.config), JSON.stringify(elev2.config));
 });
 
@@ -393,7 +398,7 @@ test("Can Eleventy run two executeBuilds in parallel?", async (t) => {
 
 test("Eleventy addGlobalData should run once", async (t) => {
   let count = 0;
-  let elev = new Eleventy("./test/stubs-noop/", "./test/stubs-noop/_site", {
+  let elev = new Eleventy("./test/stubs-addglobaldata/", "./test/stubs-addglobaldata/_site", {
     config: function (eleventyConfig) {
       eleventyConfig.addGlobalData("count", () => {
         count++;
@@ -406,8 +411,26 @@ test("Eleventy addGlobalData should run once", async (t) => {
   t.is(count, 1);
 });
 
-test("Eleventy addGlobalData can feed layouts to populate data cascade with layout data, issue #1245", async (t) => {
+test("Eleventy addGlobalData shouldn’t run if no input templates match!", async (t) => {
   let count = 0;
+  let elev = new Eleventy(
+    "./test/stubs-addglobaldata-noop/",
+    "./test/stubs-addglobaldata-noop/_site",
+    {
+      config: function (eleventyConfig) {
+        eleventyConfig.addGlobalData("count", () => {
+          count++;
+          return count;
+        });
+      },
+    }
+  );
+
+  let results = await elev.toJSON();
+  t.is(count, 0);
+});
+
+test("Eleventy addGlobalData can feed layouts to populate data cascade with layout data, issue #1245", async (t) => {
   let elev = new Eleventy("./test/stubs-2145/", "./test/stubs-2145/_site", {
     config: function (eleventyConfig) {
       eleventyConfig.addGlobalData("layout", () => "layout.njk");
@@ -445,6 +468,11 @@ test("#142: date 'git Last Modified' populates page.date", async (t) => {
   t.is(result.content.trim(), "" + comparisonDate.getTime());
 });
 
+test("DateGitLastUpdated returns undefined on nonexistent path", (t) => {
+  t.is(DateGitLastUpdated("./test/invalid.invalid"), undefined);
+});
+
+/* This test writes to the console */
 test("#2167: Pagination with permalink: false", async (t) => {
   let elev = new Eleventy("./test/stubs-2167/", "./test/stubs-2167/_site");
   elev.setDryRun(true);
@@ -532,14 +560,7 @@ test("Liquid shortcode with multiple arguments(issue #2348)", async (t) => {
     },
   });
 
-  let arr = [
-    "layout",
-    "/mylayout",
-    "layout",
-    "/mylayout",
-    "layout",
-    "/mylayout",
-  ];
+  let arr = ["layout", "/mylayout", "layout", "/mylayout", "layout", "/mylayout"];
   let str = normalizeNewLines(`${JSON.stringify(arr)}
 ${JSON.stringify(arr)}`);
   let results = await elev.toJSON();
@@ -547,4 +568,154 @@ ${JSON.stringify(arr)}`);
   let content = results.map((entry) => entry.content).sort();
   t.is(normalizeNewLines(content[0]), str);
   t.is(normalizeNewLines(content[1]), str);
+});
+
+test("#2224: date 'git created' populates page.date", async (t) => {
+  let elev = new Eleventy("./test/stubs-2224/", "./test/stubs-2224/_site");
+
+  let results = await elev.toJSON();
+  let [result] = results;
+
+  // This doesn’t test the validity of the function, only that it populates page.date.
+  let comparisonDate = DateGitFirstAdded("./test/stubs-2224/index.njk");
+  t.is(result.content.trim(), "" + comparisonDate.getTime());
+});
+
+test("DateGitFirstAdded returns undefined on nonexistent path", async (t) => {
+  t.is(DateGitFirstAdded("./test/invalid.invalid"), undefined);
+});
+
+test("Does pathPrefix affect page URLs", async (t) => {
+  let elev = new Eleventy("./README.md", "./_site", {
+    config: function (eleventyConfig) {
+      return {
+        pathPrefix: "/testdirectory/",
+      };
+    },
+  });
+
+  let results = await elev.toJSON();
+  let [result] = results;
+  t.is(result.url, "/README/");
+});
+
+test("Improvements to custom template syntax APIs (includes a layout file) #2258", async (t) => {
+  let elev = new Eleventy("./test/stubs-2258/", "./test/stubs-2258/_site", {
+    configPath: "./test/stubs-2258/eleventy.config.js",
+  });
+
+  // Restore previous contents
+  let includeFilePath = "./test/stubs-2258/_includes/_code.scss";
+  let previousContents = `code {
+  padding: 0.25em;
+  line-height: 0;
+}`;
+  let newContents = `/* New content */`;
+
+  await fsp.writeFile(includeFilePath, previousContents, { encoding: "utf8" });
+
+  let sizes = [TemplateContent._inputCache.size, TemplateContent._compileCache.size];
+
+  let results = await elev.toJSON();
+
+  t.is(results.length, 1);
+  t.is(
+    normalizeNewLines(results[0].content),
+    `/* Banner */
+${previousContents}
+
+/* Comment */`
+  );
+
+  // Cache sizes are now one bigger
+  t.is(sizes[0] + 1, 1);
+  t.is(sizes[1] + 1, 1);
+
+  let results2 = await elev.toJSON();
+  t.is(
+    normalizeNewLines(results2[0].content),
+    `/* Banner */
+${previousContents}
+
+/* Comment */`
+  );
+
+  // Cache sizes are unchanged from last build
+  t.is(sizes[0] + 1, 1);
+  t.is(sizes[1] + 1, 1);
+
+  await fsp.writeFile(includeFilePath, newContents, { encoding: "utf8" });
+
+  // Trigger that the file has changed
+  eventBus.emit("eleventy.resourceModified", includeFilePath);
+
+  elev.setIncrementalFile(includeFilePath);
+
+  let results3 = await elev.toJSON();
+  t.is(
+    normalizeNewLines(results3[0].content),
+    `/* Banner */
+${newContents}
+/* Comment */`
+  );
+
+  await fsp.writeFile(includeFilePath, previousContents, { encoding: "utf8" });
+});
+
+const { get: lodashGet } = require("@11ty/lodash-custom");
+test("Lodash get (for pagination data target) object key with spaces, issue #2851", (t) => {
+  let data = {
+    collections: {
+      "tag with spaces": 2,
+    },
+  };
+  t.is(2, lodashGet(data, "collections['tag with spaces']"));
+
+  // wow, this works huh?
+  t.is(2, lodashGet(data, "collections.tag with spaces"));
+
+  let tm = new TemplateMap(new TemplateConfig());
+  t.is(tm.getTagTarget("collections.tag with spaces"), "tag with spaces");
+  t.is(tm.getTagTarget("collections['tag with spaces']"), "tag with spaces");
+  t.is(tm.getTagTarget('collections["tag with spaces"]'), "tag with spaces");
+});
+
+test("Eleventy tag collection with spaces in the tag name, issue #2851", async (t) => {
+  let elev = new Eleventy("./test/stubs-2851", "./test/stubs-2851/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.dataFilterSelectors.add("collections");
+    },
+  });
+  elev.setIsVerbose(false);
+
+  let result = await elev.toJSON();
+  t.deepEqual(result.length, 2);
+  t.deepEqual(result.length, result[0].data.collections.all.length);
+  t.deepEqual(result[0].data.collections["tag with spaces"].length, 1);
+});
+
+test("this.eleventy on JavaScript template functions, issue #2790", async (t) => {
+  t.plan(3);
+
+  let elev = new Eleventy("./test/stubs-2790", "./test/stubs-2790/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.addJavaScriptFunction("jsfunction", function () {
+        t.truthy(this.eleventy);
+        return this.eleventy.generator.split(" ")[0];
+      });
+    },
+  });
+  let result = await elev.toJSON();
+  t.deepEqual(result.length, 1);
+  t.deepEqual(result[0].content, `<p>Eleventy</p>`);
+});
+
+test("Global data JS files should only execute once, issue #2753", async (t) => {
+  let elev = new Eleventy("./test/stubs-2753", "./test/stubs-2753/_site", {
+    config: function (eleventyConfig) {},
+  });
+  let result = await elev.toJSON();
+  t.deepEqual(result.length, 2);
+  t.deepEqual(result[0].content, `1`);
+  t.deepEqual(result[0].content, `1`);
 });

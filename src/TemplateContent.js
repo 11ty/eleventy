@@ -4,13 +4,12 @@ const util = require("util");
 const readFile = util.promisify(fs.readFile);
 const normalize = require("normalize-path");
 const matter = require("gray-matter");
-const lodashSet = require("lodash/set");
+const { set: lodashSet } = require("@11ty/lodash-custom");
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const TemplateData = require("./TemplateData");
 const TemplateRender = require("./TemplateRender");
-const TemplateConfig = require("./TemplateConfig");
 const EleventyBaseError = require("./EleventyBaseError");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
 const debug = require("debug")("Eleventy:TemplateContent");
@@ -25,11 +24,9 @@ class TemplateContentRenderError extends EleventyBaseError {}
 class TemplateContent {
   constructor(inputPath, inputDir, config) {
     if (!config) {
-      throw new TemplateContentConfigError(
-        "Missing `config` argument to TemplateContent"
-      );
+      throw new TemplateContentConfigError("Missing `config` argument to TemplateContent");
     }
-    this.config = config;
+    this.eleventyConfig = config;
 
     this.inputPath = inputPath;
 
@@ -40,10 +37,41 @@ class TemplateContent {
     }
   }
 
+  getResetTypes(types) {
+    if (types) {
+      return Object.assign(
+        {
+          data: false,
+          read: false,
+          render: false,
+        },
+        types
+      );
+    }
+
+    return {
+      data: true,
+      read: true,
+      render: true,
+    };
+  }
+
+  // Called during an incremental build when the template instance is cached but needs to be reset because it has changed
+  resetCaches(types) {
+    types = this.getResetTypes(types);
+
+    if (types.read) {
+      delete this.readingPromise;
+      delete this.inputContent;
+      delete this.frontMatter;
+      delete this._frontMatterDataCache;
+    }
+  }
+
   /* Used by tests */
   get extensionMap() {
     if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap([], this.config);
+      this._extensionMap = new EleventyExtensionMap([], this.eleventyConfig);
     }
     return this._extensionMap;
   }
@@ -52,28 +80,33 @@ class TemplateContent {
     this._extensionMap = map;
   }
 
-  set config(config) {
+  set eleventyConfig(config) {
     this._config = config;
+
+    if (this._config.constructor.name === "TemplateConfig") {
+      this._configOptions = this._config.getConfig();
+    } else {
+      throw new TemplateContentConfigError("Tried to get an TemplateConfig but none was found.");
+    }
+  }
+
+  get eleventyConfig() {
+    if (this._config.constructor.name === "TemplateConfig") {
+      return this._config;
+    }
+    throw new TemplateContentConfigError("Tried to get an TemplateConfig but none was found.");
   }
 
   get config() {
-    if (this._config instanceof TemplateConfig) {
-      return this._config.getConfig();
+    if (this._config.constructor.name === "TemplateConfig" && !this._configOptions) {
+      this._configOptions = this._config.getConfig();
     }
-    return this._config;
+
+    return this._configOptions;
   }
 
   get bench() {
     return this.config.benchmarkManager.get("Aggregate");
-  }
-
-  get eleventyConfig() {
-    if (this._config instanceof TemplateConfig) {
-      return this._config;
-    }
-    throw new TemplateContentConfigError(
-      "Tried to get an eleventyConfig but none was found."
-    );
   }
 
   get engine() {
@@ -82,15 +115,29 @@ class TemplateContent {
 
   get templateRender() {
     if (!this._templateRender) {
-      this._templateRender = new TemplateRender(
-        this.inputPath,
-        this.inputDir,
-        this.config
-      );
+      this._templateRender = new TemplateRender(this.inputPath, this.inputDir, this.eleventyConfig);
       this._templateRender.extensionMap = this.extensionMap;
     }
 
     return this._templateRender;
+  }
+
+  // For monkey patchers
+  get frontMatter() {
+    if (this.frontMatterOverride) {
+      return this.frontMatterOverride;
+    } else if (this._frontMatter) {
+      return this._frontMatter;
+    } else {
+      throw new Error(
+        "Unfortunately you’re using code that monkey patched some Eleventy internals and it isn’t async-friendly. Change your code to use the async `read()` method on the template instead!"
+      );
+    }
+  }
+
+  // For monkey patchers
+  set frontMatter(contentOverride) {
+    this.frontMatterOverride = contentOverride;
   }
 
   getInputPath() {
@@ -102,48 +149,69 @@ class TemplateContent {
   }
 
   async read() {
-    if (this.inputContent) {
-      await this.inputContent;
-    } else {
-      this.inputContent = await this.getInputContent();
-    }
-
-    if (this.inputContent) {
-      let options = this.config.frontMatterParsingOptions || {};
-      let fm;
-      try {
-        fm = matter(this.inputContent, options);
-      } catch (e) {
-        throw new TemplateContentFrontMatterError(
-          `Having trouble reading front matter from template ${this.inputPath}`,
-          e
-        );
+    if (!this.readingPromise) {
+      if (!this.inputContent) {
+        // cache the promise
+        this.inputContent = this.getInputContent();
       }
-      if (options.excerpt && fm.excerpt) {
-        let excerptString = fm.excerpt + (options.excerpt_separator || "---");
-        if (fm.content.startsWith(excerptString + os.EOL)) {
-          // with a newline after excerpt separator
-          fm.content =
-            fm.excerpt.trim() +
-            "\n" +
-            fm.content.slice((excerptString + os.EOL).length);
-        } else if (fm.content.startsWith(excerptString)) {
-          // no newline after excerpt separator
-          fm.content = fm.excerpt + fm.content.slice(excerptString.length);
+
+      this.readingPromise = new Promise(async (resolve, reject) => {
+        try {
+          let content = await this.inputContent;
+
+          if (content) {
+            let options = this.config.frontMatterParsingOptions || {};
+            let fm;
+            try {
+              fm = matter(content, options);
+            } catch (e) {
+              throw new TemplateContentFrontMatterError(
+                `Having trouble reading front matter from template ${this.inputPath}`,
+                e
+              );
+            }
+
+            if (options.excerpt && fm.excerpt) {
+              let excerptString = fm.excerpt + (options.excerpt_separator || "---");
+              if (fm.content.startsWith(excerptString + os.EOL)) {
+                // with an os-specific newline after excerpt separator
+                fm.content =
+                  fm.excerpt.trim() + "\n" + fm.content.slice((excerptString + os.EOL).length);
+              } else if (fm.content.startsWith(excerptString + "\n")) {
+                // with a newline (\n) after excerpt separator
+                // This is necessary for some git configurations on windows
+                fm.content =
+                  fm.excerpt.trim() + "\n" + fm.content.slice((excerptString + 1).length);
+              } else if (fm.content.startsWith(excerptString)) {
+                // no newline after excerpt separator
+                fm.content = fm.excerpt + fm.content.slice(excerptString.length);
+              }
+
+              // alias, defaults to page.excerpt
+              let alias = options.excerpt_alias || "page.excerpt";
+              lodashSet(fm.data, alias, fm.excerpt);
+            }
+
+            // For monkey patchers that used `frontMatter` 🤧
+            // https://github.com/11ty/eleventy/issues/613#issuecomment-999637109
+            // https://github.com/11ty/eleventy/issues/2710#issuecomment-1373854834
+            this._frontMatter = fm;
+
+            resolve(fm);
+          } else {
+            resolve({
+              data: {},
+              content: "",
+              excerpt: "",
+            });
+          }
+        } catch (e) {
+          reject(e);
         }
-
-        // alias, defaults to page.excerpt
-        let alias = options.excerpt_alias || "page.excerpt";
-        lodashSet(fm.data, alias, fm.excerpt);
-      }
-      this.frontMatter = fm;
-    } else {
-      this.frontMatter = {
-        data: {},
-        content: "",
-        excerpt: "",
-      };
+      });
     }
+
+    return this.readingPromise;
   }
 
   static cache(path, content) {
@@ -154,7 +222,7 @@ class TemplateContent {
     return this._inputCache.get(TemplatePath.absolutePath(path));
   }
 
-  static deleteCached(path) {
+  static deleteFromInputCache(path) {
     this._inputCache.delete(TemplatePath.absolutePath(path));
   }
 
@@ -167,12 +235,16 @@ class TemplateContent {
     if (!this.engine.needsToReadFileContents()) {
       return "";
     }
+
     let templateBenchmark = this.bench.get("Template Read");
     templateBenchmark.before();
+
     let content;
+
     if (this.config.useTemplateCache) {
       content = TemplateContent.getCached(this.inputPath);
     }
+
     if (!content) {
       content = await readFile(this.inputPath, "utf8");
 
@@ -180,40 +252,42 @@ class TemplateContent {
         TemplateContent.cache(this.inputPath, content);
       }
     }
+
     templateBenchmark.after();
 
     return content;
   }
 
+  // This might only be used in tests
   async getFrontMatter() {
-    if (!this.frontMatter) {
-      await this.read();
-    }
-
-    return this.frontMatter;
+    let fm = this.frontMatterOverride ? this.frontMatterOverride : await this.read();
+    return fm;
   }
 
   async getPreRender() {
-    if (!this.frontMatter) {
-      await this.read();
-    }
+    let fm = this.frontMatterOverride ? this.frontMatterOverride : await this.read();
 
-    return this.frontMatter.content;
+    return fm.content;
   }
 
   async getFrontMatterData() {
-    if (this._frontMatterDataCache) {
-      return this._frontMatterDataCache;
+    if (!this._frontMatterDataCache) {
+      this._frontMatterDataCache = new Promise(async (resolve, reject) => {
+        try {
+          let fm = await this.read();
+
+          let extraData = await this.engine.getExtraDataFromFile(this.inputPath);
+          let data = TemplateData.mergeDeep({}, fm.data, extraData);
+
+          let cleanedData = TemplateData.cleanupData(data);
+          resolve(cleanedData);
+        } catch (e) {
+          reject(e);
+        }
+      });
     }
 
-    if (!this.frontMatter) {
-      await this.read();
-    }
-    let extraData = await this.engine.getExtraDataFromFile(this.inputPath);
-    let data = TemplateData.mergeDeep({}, this.frontMatter.data, extraData);
-    let cleanedData = TemplateData.cleanupData(data);
-    this._frontMatterDataCache = cleanedData;
-    return cleanedData;
+    return this._frontMatterDataCache;
   }
 
   async getEngineOverride() {
@@ -223,11 +297,7 @@ class TemplateContent {
 
   async setupTemplateRender(engineOverride, bypassMarkdown) {
     if (engineOverride !== undefined) {
-      debugDev(
-        "%o overriding template engine to use %o",
-        this.inputPath,
-        engineOverride
-      );
+      debugDev("%o overriding template engine to use %o", this.inputPath, engineOverride);
 
       this.templateRender.setEngineOverride(engineOverride, bypassMarkdown);
     } else {
@@ -235,18 +305,17 @@ class TemplateContent {
     }
   }
 
-  _getCompileCache(str, bypassMarkdown) {
-    let engineName = this.engine.getName() + "::" + !!bypassMarkdown;
-    let engineMap = TemplateContent._compileEngineCache.get(engineName);
-    if (!engineMap) {
-      engineMap = new Map();
-      TemplateContent._compileEngineCache.set(engineName, engineMap);
+  _getCompileCache(str) {
+    // Caches used to be bifurcated based on engine name, now they’re based on inputPath
+    let inputPathMap = TemplateContent._compileCache.get(this.inputPath);
+    if (!inputPathMap) {
+      inputPathMap = new Map();
+      TemplateContent._compileCache.set(this.inputPath, inputPathMap);
     }
 
     let cacheable = this.engine.cacheable;
-    let key = this.engine.getCompileCacheKey(str, this.inputPath);
-
-    return [cacheable, key, engineMap];
+    let { useCache, key } = this.engine.getCompileCacheKey(str, this.inputPath);
+    return [cacheable, key, inputPathMap, useCache];
   }
 
   async compile(str, bypassMarkdown, engineOverride) {
@@ -258,31 +327,21 @@ class TemplateContent {
       };
     }
 
-    debugDev(
-      "%o compile() using engine: %o",
-      this.inputPath,
-      this.templateRender.engineName
-    );
+    debugDev("%o compile() using engine: %o", this.inputPath, this.templateRender.engineName);
 
     try {
       let res;
       if (this.config.useTemplateCache) {
-        let [cacheable, key, cache] = this._getCompileCache(
-          str,
-          bypassMarkdown
-        );
-
+        let [cacheable, key, cache, useCache] = this._getCompileCache(str);
         if (cacheable && key) {
-          if (cache.has(key)) {
-            this.bench
-              .get("(count) Template Compile Cache Hit")
-              .incrementCount();
+          if (useCache && cache.has(key)) {
+            this.bench.get("(count) Template Compile Cache Hit").incrementCount();
             return cache.get(key);
           }
 
-          this.bench
-            .get("(count) Template Compile Cache Miss")
-            .incrementCount();
+          this.bench.get("(count) Template Compile Cache Miss").incrementCount();
+
+          // Compile cache is cleared when the resource is modified (below)
 
           // Compilation is async, so we eagerly cache a Promise that eventually
           // resolves to the compiled function
@@ -308,7 +367,7 @@ class TemplateContent {
       }
       return fn;
     } catch (e) {
-      let [cacheable, key, cache] = this._getCompileCache(str, bypassMarkdown);
+      let [cacheable, key, cache] = this._getCompileCache(str);
       if (cacheable && key) {
         cache.delete(key);
       }
@@ -326,8 +385,7 @@ class TemplateContent {
     // Don’t use markdown as the engine to parse for symbols
     let preprocessorEngine = this.templateRender.getPreprocessorEngine(); // TODO pass in engineOverride here
     if (preprocessorEngine && engine.getName() !== preprocessorEngine) {
-      let replacementEngine =
-        this.templateRender.getEngineByName(preprocessorEngine);
+      let replacementEngine = this.templateRender.getEngineByName(preprocessorEngine);
       if (replacementEngine) {
         engine = replacementEngine;
       }
@@ -364,11 +422,7 @@ class TemplateContent {
   async renderPermalink(permalink, data) {
     this.bench.get("(count) Render Permalink").incrementCount();
     this.bench
-      .get(
-        `(count) > Render Permalink > ${
-          this.inputPath
-        }${this._getPaginationLogSuffix(data)}`
-      )
+      .get(`(count) > Render Permalink > ${this.inputPath}${this._getPaginationLogSuffix(data)}`)
       .incrementCount();
 
     let permalinkCompilation = this.engine.permalinkNeedsCompilation(permalink);
@@ -391,11 +445,7 @@ class TemplateContent {
     }
     */
     if (permalinkCompilation && typeof permalinkCompilation === "function") {
-      permalink = await this._renderFunction(
-        permalinkCompilation,
-        permalink,
-        this.inputPath
-      );
+      permalink = await this._renderFunction(permalinkCompilation, permalink, this.inputPath);
     }
 
     // Raw permalink function (in the app code data cascade)
@@ -416,9 +466,7 @@ class TemplateContent {
       suffix.push(" (");
       if (data.pagination.pages) {
         suffix.push(
-          `${data.pagination.pages.length} page${
-            data.pagination.pages.length !== 1 ? "s" : ""
-          }`
+          `${data.pagination.pages.length} page${data.pagination.pages.length !== 1 ? "s" : ""}`
         );
       } else {
         suffix.push("Pagination");
@@ -434,18 +482,12 @@ class TemplateContent {
         return str;
       }
 
-      let fn = await this.compile(
-        str,
-        bypassMarkdown,
-        data[this.config.keys.engineOverride]
-      );
+      let fn = await this.compile(str, bypassMarkdown, data[this.config.keys.engineOverride]);
 
       if (fn === undefined) {
         return;
       } else if (typeof fn !== "function") {
-        throw new Error(
-          `The \`compile\` function did not return a function. Received ${fn}`
-        );
+        throw new Error(`The \`compile\` function did not return a function. Received ${fn}`);
       }
 
       // Benchmark
@@ -457,9 +499,7 @@ class TemplateContent {
       );
       let outputPathBenchmark;
       if (data.page && data.page.outputPath && logRenderToOutputBenchmark) {
-        outputPathBenchmark = this.bench.get(
-          `> Render to > ${data.page.outputPath}`
-        );
+        outputPathBenchmark = this.bench.get(`> Render to > ${data.page.outputPath}`);
       }
 
       templateBenchmark.before();
@@ -479,20 +519,14 @@ class TemplateContent {
         inputPathBenchmark.after();
       }
       templateBenchmark.after();
-      debugDev(
-        "%o getCompiledTemplate called, rendered content created",
-        this.inputPath
-      );
+      debugDev("%o getCompiledTemplate called, rendered content created", this.inputPath);
       return rendered;
     } catch (e) {
       if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
         throw e;
       } else {
         let engine = this.templateRender.getReadableEnginesList();
-        debug(
-          `Having trouble rendering ${engine} template ${this.inputPath}: %O`,
-          str
-        );
+        debug(`Having trouble rendering ${engine} template ${this.inputPath}: %O`, str);
         throw new TemplateContentRenderError(
           `Having trouble rendering ${engine} template ${this.inputPath}`,
           e
@@ -502,8 +536,7 @@ class TemplateContent {
   }
 
   getExtensionEntries() {
-    let extensions = this.templateRender.engine.extensionEntries;
-    return extensions;
+    return this.engine.extensionEntries;
   }
 
   isFileRelevantToThisTemplate(incrementalFile, metadata = {}) {
@@ -512,15 +545,27 @@ class TemplateContent {
       return true;
     }
 
-    let extensionEntries = this.getExtensionEntries().filter(
-      (entry) => !!entry.isIncrementalMatch
+    let hasDependencies = this.engine.hasDependencies(incrementalFile);
+
+    let isRelevant = this.engine.isFileRelevantTo(this.inputPath, incrementalFile);
+
+    debug(
+      "Test dependencies to see if %o is relevant to %o: %o",
+      this.inputPath,
+      incrementalFile,
+      isRelevant
     );
+
+    let extensionEntries = this.getExtensionEntries().filter((entry) => !!entry.isIncrementalMatch);
     if (extensionEntries.length) {
       for (let entry of extensionEntries) {
         if (
           entry.isIncrementalMatch.call(
             {
               inputPath: this.inputPath,
+              isFullTemplate: metadata.isFullTemplate,
+              isFileRelevantToInputPath: isRelevant,
+              doesFileHaveDependencies: hasDependencies,
             },
             incrementalFile
           )
@@ -531,16 +576,17 @@ class TemplateContent {
 
       return false;
     } else {
-      // This is the fallback way of determining if something is incremental (no isIncrementalMatch available)
-
       // Not great way of building all templates if this is a layout, include, JS dependency.
-      // TODO improve this for default langs
-      if (!metadata.isFullTemplate) {
+      // TODO improve this for default template syntaxes
+
+      // This is the fallback way of determining if something is incremental (no isIncrementalMatch available)
+      // This will be true if the inputPath and incrementalFile are the same
+      if (isRelevant) {
         return true;
       }
 
-      // only build if this input path is the same as the file that was changed
-      if (this.inputPath === incrementalFile) {
+      // only return true here if dependencies are not known
+      if (!hasDependencies && !metadata.isFullTemplate) {
         return true;
       }
     }
@@ -550,14 +596,22 @@ class TemplateContent {
 }
 
 TemplateContent._inputCache = new Map();
-TemplateContent._compileEngineCache = new Map();
+TemplateContent._compileCache = new Map();
 eventBus.on("eleventy.resourceModified", (path) => {
-  TemplateContent.deleteCached(path);
+  // delete from input cache
+  TemplateContent.deleteFromInputCache(path);
+
+  // delete from compile cache
+  let normalized = TemplatePath.addLeadingDotSlash(path);
+  let compileCache = TemplateContent._compileCache.get(normalized);
+  if (compileCache) {
+    compileCache.clear();
+  }
 });
 
 // Used when the configuration file reset https://github.com/11ty/eleventy/issues/2147
 eventBus.on("eleventy.compileCacheReset", (path) => {
-  TemplateContent._compileEngineCache = new Map();
+  TemplateContent._compileCache = new Map();
 });
 
 module.exports = TemplateContent;

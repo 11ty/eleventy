@@ -1,5 +1,5 @@
 const fs = require("fs");
-const fastglob = require("fast-glob");
+
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const EleventyExtensionMap = require("./EleventyExtensionMap");
@@ -30,13 +30,15 @@ class EleventyFiles {
 
     this.initConfig();
 
-    this.passthroughAll = false;
-
     this.formats = formats;
     this.eleventyIgnoreContent = false;
 
     // init has not yet been called()
     this.alreadyInit = false;
+  }
+
+  setFileSystemSearch(fileSystemSearch) {
+    this.fileSystemSearch = fileSystemSearch;
   }
 
   /* Overrides this.input and this.inputDir,
@@ -53,16 +55,10 @@ class EleventyFiles {
   }
 
   initConfig() {
-    this.includesDir = TemplatePath.join(
-      this.inputDir,
-      this.config.dir.includes
-    );
+    this.includesDir = TemplatePath.join(this.inputDir, this.config.dir.includes);
 
     if ("layouts" in this.config.dir) {
-      this.layoutsDir = TemplatePath.join(
-        this.inputDir,
-        this.config.dir.layouts
-      );
+      this.layoutsDir = TemplatePath.join(this.inputDir, this.config.dir.layouts);
     }
   }
 
@@ -118,7 +114,7 @@ class EleventyFiles {
   _setConfig(config) {
     if (!config.ignores) {
       config.ignores = new Set();
-      config.ignores.add("node_modules/**");
+      config.ignores.add("**/node_modules/**");
     }
     this.config = config;
     this.initConfig();
@@ -137,11 +133,8 @@ class EleventyFiles {
   get extensionMap() {
     // for tests
     if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap(
-        this.formats,
-        this.eleventyConfig
-      );
-      this._extensionMap.config = this.config;
+      this._extensionMap = new EleventyExtensionMap(this.formats, this.eleventyConfig);
+      this._extensionMap.config = this.eleventyConfig;
     }
     return this._extensionMap;
   }
@@ -150,16 +143,13 @@ class EleventyFiles {
     this.runMode = runMode;
   }
 
-  setPassthroughAll(passthroughAll) {
-    this.passthroughAll = !!passthroughAll;
-  }
-
   initPassthroughManager() {
     let mgr = new TemplatePassthroughManager(this.eleventyConfig);
     mgr.setInputDir(this.inputDir);
     mgr.setOutputDir(this.outputDir);
     mgr.setRunMode(this.runMode);
     mgr.extensionMap = this.extensionMap;
+    mgr.setFileSystemSearch(this.fileSystemSearch);
     this.passthroughManager = mgr;
   }
 
@@ -199,13 +189,7 @@ class EleventyFiles {
       this.config.events.emit("eleventy.ignores", this.uniqueIgnores);
     }
 
-    if (this.passthroughAll) {
-      this.normalizedTemplateGlobs = TemplateGlob.map([
-        TemplateGlob.normalizePath(this.input, "/**"),
-      ]);
-    } else {
-      this.normalizedTemplateGlobs = this.templateGlobs;
-    }
+    this.normalizedTemplateGlobs = this.templateGlobs;
   }
 
   getIgnoreGlobs() {
@@ -215,6 +199,10 @@ class EleventyFiles {
     }
     for (let ignore of this.extraIgnores) {
       uniqueIgnores.add(ignore);
+    }
+    // Placing the config ignores last here is important to the tests
+    for (let ignore of this.config.ignores) {
+      uniqueIgnores.add(TemplateGlob.normalizePath(this.localPathRoot || ".", ignore));
     }
     return Array.from(uniqueIgnores);
   }
@@ -233,9 +221,7 @@ class EleventyFiles {
       if (fs.existsSync(ignorePath) && fs.statSync(ignorePath).size > 0) {
         let ignoreContent = fs.readFileSync(ignorePath, "utf8");
 
-        ignores = ignores.concat(
-          EleventyFiles.normalizeIgnoreContent(dir, ignoreContent)
-        );
+        ignores = ignores.concat(EleventyFiles.normalizeIgnoreContent(dir, ignoreContent));
       }
     }
 
@@ -259,21 +245,15 @@ class EleventyFiles {
               ">>> When processing .gitignore/.eleventyignore, Eleventy does not currently support negative patterns but encountered one:"
             );
             debug(">>>", line);
-            debug(
-              "Follow along at https://github.com/11ty/eleventy/issues/693 to track support."
-            );
+            debug("Follow along at https://github.com/11ty/eleventy/issues/693 to track support.");
           }
 
           // empty lines or comments get filtered out
-          return (
-            line.length > 0 && line.charAt(0) !== "#" && line.charAt(0) !== "!"
-          );
+          return line.length > 0 && line.charAt(0) !== "#" && line.charAt(0) !== "!";
         })
         .map((line) => {
           let path = TemplateGlob.normalizePath(dir, "/", line);
-          path = TemplatePath.addLeadingDotSlash(
-            TemplatePath.relativePath(path)
-          );
+          path = TemplatePath.addLeadingDotSlash(TemplatePath.relativePath(path));
 
           try {
             // Note these folders must exist to get /** suffix
@@ -296,43 +276,42 @@ class EleventyFiles {
   }
 
   getIgnores() {
-    let rootDirectory = this.localPathRoot || ".";
-    let files = [];
+    let files = new Set();
 
-    for (let ignore of this.config.ignores) {
-      files = files.concat(TemplateGlob.normalizePath(rootDirectory, ignore));
+    for (let ignore of EleventyFiles.getFileIgnores(this.getIgnoreFiles())) {
+      files.add(ignore);
     }
 
-    if (this.config.useGitIgnore) {
-      files = files.concat(
-        EleventyFiles.getFileIgnores([
-          TemplatePath.join(rootDirectory, ".gitignore"),
-        ])
-      );
-    }
-
+    // testing API
     if (this.eleventyIgnoreContent !== false) {
-      files = files.concat(this.eleventyIgnoreContent);
-    } else {
-      let absoluteInputDir = TemplatePath.absolutePath(this.inputDir);
-      let eleventyIgnoreFiles = [
-        TemplatePath.join(rootDirectory, ".eleventyignore"),
-      ];
-      if (rootDirectory !== absoluteInputDir) {
-        eleventyIgnoreFiles.push(
-          TemplatePath.join(this.inputDir, ".eleventyignore")
-        );
-      }
-
-      files = files.concat(EleventyFiles.getFileIgnores(eleventyIgnoreFiles));
+      files.add(this.eleventyIgnoreContent);
     }
 
     // ignore output dir unless that would exclude all input
     if (!TemplatePath.startsWithSubPath(this.inputDir, this.outputDir)) {
-      files = files.concat(TemplateGlob.map(this.outputDir + "/**"));
+      files.add(TemplateGlob.map(this.outputDir + "/**"));
     }
 
-    return files;
+    return Array.from(files);
+  }
+
+  getIgnoreFiles() {
+    let ignoreFiles = [];
+    let rootDirectory = this.localPathRoot || ".";
+
+    if (this.config.useGitIgnore) {
+      ignoreFiles.push(TemplatePath.join(rootDirectory, ".gitignore"));
+    }
+
+    if (this.eleventyIgnoreContent === false) {
+      let absoluteInputDir = TemplatePath.absolutePath(this.inputDir);
+      ignoreFiles.push(TemplatePath.join(rootDirectory, ".eleventyignore"));
+      if (rootDirectory !== absoluteInputDir) {
+        ignoreFiles.push(TemplatePath.join(this.inputDir, ".eleventyignore"));
+      }
+    }
+
+    return ignoreFiles;
   }
 
   getIncludesDir() {
@@ -354,9 +333,7 @@ class EleventyFiles {
   getWatchPathCache() {
     // Issue #1325: make sure passthrough copy files are not included here
     if (!this.pathCache) {
-      throw new Error(
-        "Watching requires `.getFiles()` to be called first in EleventyFiles"
-      );
+      throw new Error("Watching requires `.getFiles()` to be called first in EleventyFiles");
     }
 
     // Filter out the passthrough copy paths.
@@ -369,46 +346,23 @@ class EleventyFiles {
   }
 
   _globSearch() {
-    if (this._glob) {
-      return this._glob;
-    }
-
     let globs = this.getFileGlobs();
 
     // returns a promise
     debug("Searching for: %o", globs);
-
-    this._glob = fastglob(globs, {
-      caseSensitiveMatch: false,
-      dot: true,
+    return this.fileSystemSearch.search("templates", globs, {
       ignore: this.uniqueIgnores,
     });
-
-    return this._glob;
   }
 
   async getFiles() {
-    let bench = this.aggregateBench.get("Searching the file system");
+    let bench = this.aggregateBench.get("Searching the file system (templates)");
     bench.before();
     let globResults = await this._globSearch();
     let paths = TemplatePath.addLeadingDotSlashArray(globResults);
     bench.after();
 
-    // filter individual paths in the new config-specified extension
-    // where is this used?
-    if ("extensionMap" in this.config) {
-      let extensions = this.config.extensionMap;
-      if (Array.from(extensions).filter((entry) => !!entry.filter).length) {
-        paths = paths.filter(function (path) {
-          for (let entry of extensions) {
-            if (entry.filter && path.endsWith(`.${entry.extension}`)) {
-              return entry.filter(path);
-            }
-          }
-          return true;
-        });
-      }
-    }
+    // Note 2.0.0-canary.19 removed a `filter` option for custom template syntax here that was unpublished and unused.
 
     this.pathCache = paths;
     return paths;
@@ -416,6 +370,10 @@ class EleventyFiles {
 
   // Assumption here that filePath is not a passthrough copy file
   isFullTemplateFile(paths, filePath) {
+    if (!filePath) {
+      return false;
+    }
+
     for (let path of paths) {
       if (path === filePath) {
         return true;
@@ -435,9 +393,7 @@ class EleventyFiles {
     }
 
     // Revert to old passthroughcopy copy files behavior
-    return this.validTemplateGlobs
-      .concat(this.passthroughGlobs)
-      .concat(directoryGlobs);
+    return this.validTemplateGlobs.concat(this.passthroughGlobs).concat(directoryGlobs);
   }
 
   /* For `eleventy --watch` */
@@ -455,13 +411,11 @@ class EleventyFiles {
   // TODO this isn’t great but reduces complexity avoiding using TemplateData:getLocalDataPaths for each template in the cache
   async getWatcherTemplateJavaScriptDataFiles() {
     let globs = await this.templateData.getTemplateJavaScriptDataFileGlob();
-    let bench = this.aggregateBench.get("Searching the file system");
+    let bench = this.aggregateBench.get("Searching the file system (watching)");
     bench.before();
     let results = TemplatePath.addLeadingDotSlashArray(
-      await fastglob(globs, {
+      await this.fileSystemSearch.search("js-dependencies", globs, {
         ignore: ["**/node_modules/**"],
-        caseSensitiveMatch: false,
-        dot: true,
       })
     );
     bench.after();
@@ -471,9 +425,16 @@ class EleventyFiles {
   /* Ignored by `eleventy --watch` */
   getGlobWatcherIgnores() {
     // convert to format without ! since they are passed in as a separate argument to glob watcher
-    return this.fileIgnores.map((ignore) =>
-      TemplatePath.stripLeadingDotSlash(ignore)
+    let entries = new Set(
+      this.fileIgnores.map((ignore) => TemplatePath.stripLeadingDotSlash(ignore))
     );
+
+    for (let ignore of this.config.watchIgnores) {
+      entries.add(TemplateGlob.normalizePath(this.localPathRoot || ".", ignore));
+    }
+
+    // de-duplicated
+    return Array.from(entries);
   }
 
   _getIncludesAndDataDirs() {

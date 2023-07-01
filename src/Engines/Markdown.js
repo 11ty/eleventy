@@ -18,14 +18,16 @@ class Markdown extends TemplateEngine {
 
     // Overrides a highlighter set in `markdownOptions`
     // This is separate so devs can pass in a new mdLib and still use the official eleventy plugin for markdown highlighting
-    if (this.config.markdownHighlighter) {
+    if (this.config.markdownHighlighter && typeof this.mdLib.set === "function") {
       this.mdLib.set({
         highlight: this.config.markdownHighlighter,
       });
     }
 
-    // Disable indented code blocks by default (Issue #2438)
-    this.mdLib.disable("code");
+    if (typeof this.mdLib.disable === "function") {
+      // Disable indented code blocks by default (Issue #2438)
+      this.mdLib.disable("code");
+    }
 
     this.setEngineLib(this.mdLib);
   }

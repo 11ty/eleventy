@@ -17,15 +17,7 @@ try {
   let errorHandler = new EleventyErrorHandler();
   const EleventyCommandCheckError = require("./src/EleventyCommandCheckError");
   const argv = require("minimist")(process.argv.slice(2), {
-    string: [
-      "input",
-      "output",
-      "formats",
-      "config",
-      "pathprefix",
-      "port",
-      "to",
-    ],
+    string: ["input", "output", "formats", "config", "pathprefix", "port", "to"],
     boolean: [
       "quiet",
       "version",
@@ -33,11 +25,12 @@ try {
       "dryrun",
       "help",
       "serve",
-      "passthroughall",
       "incremental",
+      "ignore-initial",
     ],
     default: {
       quiet: null,
+      "ignore-initial": false,
     },
     unknown: function (unknownArgument) {
       throw new EleventyCommandCheckError(
@@ -56,10 +49,7 @@ try {
     errorHandler.fatal(error, "Uncaught exception");
   });
   process.on("rejectionHandled", (promise) => {
-    errorHandler.warn(
-      promise,
-      "A promise rejection was handled asynchronously"
-    );
+    errorHandler.warn(promise, "A promise rejection was handled asynchronously");
   });
 
   if (argv.version) {
@@ -68,10 +58,12 @@ try {
     console.log(Eleventy.getHelp());
   } else {
     let elev = new Eleventy(argv.input, argv.output, {
+      source: "cli",
       // --quiet and --quiet=true both resolve to true
       quietMode: argv.quiet,
       configPath: argv.config,
-      source: "cli",
+      pathPrefix: argv.pathprefix,
+      runMode: argv.serve ? "serve" : argv.watch ? "watch" : "build",
     });
 
     // reuse ErrorHandler instance in Eleventy
@@ -82,17 +74,10 @@ try {
       elev.setIsVerbose(false);
     }
 
-    elev.setPathPrefix(argv.pathprefix);
     elev.setDryRun(argv.dryrun);
+    elev.setIgnoreInitial(argv["ignore-initial"]);
     elev.setIncrementalBuild(argv.incremental);
-    elev.setPassthroughAll(argv.passthroughall);
     elev.setFormats(argv.formats);
-
-    if (argv.watch) {
-      elev.setRunMode("watch");
-    } else if (argv.serve) {
-      elev.setRunMode("serve");
-    }
 
     // careful, we can’t use async/await here to error properly
     // with old node versions in `please-upgrade-node` above.

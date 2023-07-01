@@ -2,13 +2,27 @@ const EleventyBaseError = require("./EleventyBaseError");
 class TemplateEngineManagerConfigError extends EleventyBaseError {}
 
 class TemplateEngineManager {
-  constructor(config) {
-    if (!config) {
+  constructor(eleventyConfig) {
+    if (!eleventyConfig) {
       throw new TemplateEngineManagerConfigError("Missing `config` argument.");
     }
-    this.config = config;
+    this.eleventyConfig = eleventyConfig;
 
     this.engineCache = {};
+  }
+
+  get config() {
+    return this.eleventyConfig.getConfig();
+  }
+
+  static isCustomEngineSimpleAlias(entry) {
+    let keys = Object.keys(entry);
+    if (keys.length > 2) {
+      return false;
+    }
+    return !keys.some((key) => {
+      return key !== "key" && key !== "extension";
+    });
   }
 
   get keyToClassNameMap() {
@@ -26,9 +40,23 @@ class TemplateEngineManager {
         "11ty.js": "JavaScript",
       };
 
+      // Custom entries *can* overwrite default entries above
       if ("extensionMap" in this.config) {
         for (let entry of this.config.extensionMap) {
-          this._keyToClassNameMap[entry.key] = "Custom";
+          // either the key does not already exist or it is not a simple alias and is an override: https://www.11ty.dev/docs/languages/custom/#overriding-an-existing-template-language
+          if (
+            !this._keyToClassNameMap[entry.key] ||
+            !TemplateEngineManager.isCustomEngineSimpleAlias(entry)
+          ) {
+            // throw an error if you try to override a Custom engine, this is a short term error until we swap this to use the extension instead of the key to get the class
+            if (this._keyToClassNameMap[entry.key] === "Custom") {
+              throw new Error(
+                `An attempt was made to override the *already* overridden "${entry.key}" template syntax via the \`addExtension\` configuration API. A maximum of one override is currently supported. If you’re trying to add an alias to an existing syntax, make sure only the \`key\` property is present in the addExtension options object.`
+              );
+            }
+
+            this._keyToClassNameMap[entry.key] = "Custom";
+          }
         }
       }
     }
@@ -50,7 +78,7 @@ class TemplateEngineManager {
   }
 
   getEngineClassByExtension(extension) {
-    // We include these as raw strings (and not more readable variables) so they’re parsed by the bundler.
+    // We include these as raw strings (and not more readable variables) so they’re parsed by the serverless bundler.
     if (extension === "ejs") {
       return require("./Engines/Ejs");
     } else if (extension === "md") {
@@ -78,22 +106,22 @@ class TemplateEngineManager {
 
   getEngine(name, dirs, extensionMap) {
     if (!this.hasEngine(name)) {
-      throw new Error(
-        `Template Engine ${name} does not exist in getEngine (dirs: ${dirs})`
-      );
+      throw new Error(`Template Engine ${name} does not exist in getEngine (dirs: ${dirs})`);
     }
 
+    // TODO these cached engines should be based on extensions not name, then we can remove the error in
+    //  "Double override (not aliases) throws an error" test in TemplateRenderCustomTest.js
     if (this.engineCache[name]) {
       return this.engineCache[name];
     }
 
     let cls = this.getEngineClassByExtension(name);
 
-    let instance = new cls(name, dirs, this.config);
+    let instance = new cls(name, dirs, this.eleventyConfig);
     instance.extensionMap = extensionMap;
     instance.engineManager = this;
 
-    // If the user providers a "Custom" engine using addExtension,
+    // If provided a "Custom" engine using addExtension,
     // But that engine's instance is *not* custom,
     // The user must be overriding an existing engine
     // i.e. addExtension('md', { ...overrideBehavior })
@@ -102,7 +130,7 @@ class TemplateEngineManager {
       instance.constructor.name !== "CustomEngine"
     ) {
       const CustomEngine = this.getEngineClassByExtension();
-      const overrideCustomEngine = new CustomEngine(name, dirs, this.config);
+      const overrideCustomEngine = new CustomEngine(name, dirs, this.eleventyConfig);
       // Keep track of the "default" engine 11ty would normally use
       // This allows the user to access the default engine in their override
       overrideCustomEngine.setDefaultEngine(instance);

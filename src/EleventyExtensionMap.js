@@ -1,20 +1,13 @@
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const TemplateEngineManager = require("./TemplateEngineManager");
-const TemplateConfig = require("./TemplateConfig");
 const EleventyBaseError = require("./EleventyBaseError");
 
 class EleventyExtensionMapConfigError extends EleventyBaseError {}
 
 class EleventyExtensionMap {
   constructor(formatKeys, config) {
-    if (!config) {
-      throw new EleventyExtensionMapConfigError("Missing `config` argument.");
-    }
-    if (config instanceof TemplateConfig) {
-      this.eleventyConfig = config;
-    }
-    this._config = config;
+    this.config = config;
 
     this.formatKeys = formatKeys;
 
@@ -32,25 +25,25 @@ class EleventyExtensionMap {
       this.hasExtension(key)
     );
 
-    this.passthroughCopyKeys = this.unfilteredFormatKeys.filter(
-      (key) => !this.hasExtension(key)
-    );
+    this.passthroughCopyKeys = this.unfilteredFormatKeys.filter((key) => !this.hasExtension(key));
   }
 
   set config(cfg) {
-    this._config = cfg;
+    if (!cfg || cfg.constructor.name !== "TemplateConfig") {
+      throw new EleventyExtensionMapConfigError(
+        "Missing or invalid `config` argument (via setter)."
+      );
+    }
+    this.eleventyConfig = cfg;
   }
 
   get config() {
-    if (this._config instanceof TemplateConfig) {
-      return this._config.getConfig();
-    }
-    return this._config;
+    return this.eleventyConfig.getConfig();
   }
 
   get engineManager() {
     if (!this._engineManager) {
-      this._engineManager = new TemplateEngineManager(this.config);
+      this._engineManager = new TemplateEngineManager(this.eleventyConfig);
     }
 
     return this._engineManager;
@@ -152,16 +145,24 @@ class EleventyExtensionMap {
 
   _getGlobs(formatKeys, inputDir) {
     let dir = TemplatePath.convertToRecursiveGlobSync(inputDir);
-    let globs = [];
+    let extensions = [];
     for (let key of formatKeys) {
       if (this.hasExtension(key)) {
         for (let extension of this.getExtensionsFromKey(key)) {
-          globs.push(dir + "/*." + extension);
+          extensions.push(extension);
         }
       } else {
-        globs.push(dir + "/*." + key);
+        extensions.push(key);
       }
     }
+
+    let globs = [];
+    if (extensions.length === 1) {
+      globs.push(`${dir}/*.${extensions[0]}`);
+    } else if (extensions.length > 1) {
+      globs.push(`${dir}/*.{${extensions.join(",")}}`);
+    }
+
     return globs;
   }
 
@@ -219,9 +220,7 @@ class EleventyExtensionMap {
       if (path === extension || path.endsWith("." + extension)) {
         return path.slice(
           0,
-          path.length - 1 - extension.length < 0
-            ? 0
-            : path.length - 1 - extension.length
+          path.length - 1 - extension.length < 0 ? 0 : path.length - 1 - extension.length
         );
       }
     }

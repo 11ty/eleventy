@@ -51,6 +51,24 @@ test("Basic setup", async (t) => {
   t.is(c.length, 3);
 });
 
+test("sortFunctionDate", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);
+  let tmpl4 = getNewTemplateByNumber(4, eleventyConfig);
+  let tmpl5 = getNewTemplateByNumber(5, eleventyConfig);
+
+  let c = new Collection();
+  await addTemplate(c, tmpl1);
+  await addTemplate(c, tmpl4);
+  await addTemplate(c, tmpl5);
+
+  let posts = c.sort(Sortable.sortFunctionDate);
+  t.is(posts.length, 3);
+  t.deepEqual(posts[0].template, tmpl4);
+  t.deepEqual(posts[1].template, tmpl1);
+  t.deepEqual(posts[2].template, tmpl5);
+});
+
 test("sortFunctionDateInputPath", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let tmpl1 = getNewTemplateByNumber(1, eleventyConfig);

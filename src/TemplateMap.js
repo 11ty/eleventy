@@ -3,11 +3,12 @@ const { isPlainObject } = require("@11ty/eleventy-utils");
 
 const TemplateCollection = require("./TemplateCollection");
 const EleventyErrorUtil = require("./EleventyErrorUtil");
+
 const UsingCircularTemplateContentReferenceError = require("./Errors/UsingCircularTemplateContentReferenceError");
+const EleventyBaseError = require("./EleventyBaseError");
+
 const debug = require("debug")("Eleventy:TemplateMap");
 const debugDev = require("debug")("Dev:Eleventy:TemplateMap");
-
-const EleventyBaseError = require("./EleventyBaseError");
 
 class TemplateMapConfigError extends EleventyBaseError {}
 
@@ -37,7 +38,7 @@ class TemplateMap {
 
   get userConfig() {
     if (!this._userConfig) {
-      // TODO use this.config for this, need to add collections to mergable props in userconfig
+      // TODO use this.config for this, need to add collections to mergeable props in userconfig
       this._userConfig = this.eleventyConfig.userConfig;
     }
 
@@ -51,12 +52,16 @@ class TemplateMap {
     return this._config;
   }
 
-  get tagPrefix() {
+  static get tagPrefix() {
     return "___TAG___";
   }
 
   async add(template) {
-    // This is where the data is first generated for the template
+    if (!template) {
+      return;
+    }
+
+    // IMPORTANT: This is where the data is first generated for the template
     let data = await template.getData();
 
     for (let map of await template.getTemplateMapEntries(data)) {
@@ -71,6 +76,10 @@ class TemplateMap {
   getTagTarget(str) {
     if (str.startsWith("collections.")) {
       return str.slice("collections.".length);
+    }
+    // Fixes #2851
+    if (str.startsWith("collections['") || str.startsWith('collections["')) {
+      return str.slice("collections['".length, -2);
     }
   }
 
@@ -94,9 +103,46 @@ class TemplateMap {
     }
   }
 
+  addTagsToGraph(graph, inputPath, tags) {
+    if (!Array.isArray(tags)) {
+      return;
+    }
+    for (let tag of tags) {
+      let tagWithPrefix = TemplateMap.tagPrefix + tag;
+      if (!graph.hasNode(tagWithPrefix)) {
+        graph.addNode(tagWithPrefix);
+      }
+
+      // Populates to collections.tagName
+      // Dependency from tag to inputPath
+      graph.addDependency(tagWithPrefix, inputPath);
+    }
+  }
+
+  addDeclaredDependenciesToGraph(graph, inputPath, deps) {
+    if (!Array.isArray(deps)) {
+      return;
+    }
+
+    for (let tag of deps) {
+      let tagWithPrefix = TemplateMap.tagPrefix + tag;
+      if (!graph.hasNode(tagWithPrefix)) {
+        graph.addNode(tagWithPrefix);
+      }
+
+      // Dependency from inputPath to collection/tag
+      graph.addDependency(inputPath, tagWithPrefix);
+    }
+  }
+
+  // Exclude: Pagination templates consuming `collections` or `collections.all`
+  // Exclude: Pagination templates that consume config API collections
+
+  // Include: Pagination templates that don’t consume config API collections
+  // Include: Templates that don’t use Pagination
   getMappedDependencies() {
     let graph = new DependencyGraph();
-    let tagPrefix = this.tagPrefix;
+    let tagPrefix = TemplateMap.tagPrefix;
 
     graph.addNode(tagPrefix + "all");
 
@@ -125,30 +171,27 @@ class TemplateMap {
       }
 
       if (!entry.data.eleventyExcludeFromCollections) {
-        // collections.all
+        // Populates to collections.all
         graph.addDependency(tagPrefix + "all", entry.inputPath);
 
-        if (entry.data.tags) {
-          for (let tag of entry.data.tags) {
-            let tagWithPrefix = tagPrefix + tag;
-            if (!graph.hasNode(tagWithPrefix)) {
-              graph.addNode(tagWithPrefix);
-            }
-
-            // collections.tagName
-            // Dependency from tag to inputPath
-            graph.addDependency(tagWithPrefix, entry.inputPath);
-          }
-        }
+        this.addTagsToGraph(graph, entry.inputPath, entry.data.tags);
       }
+
+      this.addDeclaredDependenciesToGraph(
+        graph,
+        entry.inputPath,
+        entry.data.eleventyImport?.collections
+      );
     }
 
-    return graph.overallOrder();
+    return graph;
   }
 
+  // Exclude: Pagination templates consuming `collections` or `collections.all`
+  // Include: Pagination templates that consume config API collections
   getDelayedMappedDependencies() {
     let graph = new DependencyGraph();
-    let tagPrefix = this.tagPrefix;
+    let tagPrefix = TemplateMap.tagPrefix;
 
     graph.addNode(tagPrefix + "all");
 
@@ -157,7 +200,6 @@ class TemplateMap {
     // Add tags from named user config collections
     for (let tag of userConfigCollections) {
       graph.addNode(tagPrefix + tag);
-      // graph.addDependency( tagPrefix + tag, tagPrefix + "all" );
     }
 
     for (let entry of this.map) {
@@ -166,47 +208,39 @@ class TemplateMap {
       }
 
       let paginationTagTarget = this.getPaginationTagTarget(entry);
-      if (
-        paginationTagTarget &&
-        this.isUserConfigCollectionName(paginationTagTarget)
-      ) {
+      if (paginationTagTarget && this.isUserConfigCollectionName(paginationTagTarget)) {
         if (!graph.hasNode(entry.inputPath)) {
           graph.addNode(entry.inputPath);
         }
         graph.addDependency(entry.inputPath, tagPrefix + paginationTagTarget);
 
         if (!entry.data.eleventyExcludeFromCollections) {
-          // collections.all
+          // Populates into collections.all
           graph.addDependency(tagPrefix + "all", entry.inputPath);
 
-          if (entry.data.tags) {
-            for (let tag of entry.data.tags) {
-              let tagWithPrefix = tagPrefix + tag;
-              if (!graph.hasNode(tagWithPrefix)) {
-                graph.addNode(tagWithPrefix);
-              }
-              // collections.tagName
-              // Dependency from tag to inputPath
-              graph.addDependency(tagWithPrefix, entry.inputPath);
-            }
-          }
+          this.addTagsToGraph(graph, entry.inputPath, entry.data.tags);
         }
+
+        this.addDeclaredDependenciesToGraph(
+          graph,
+          entry.inputPath,
+          entry.data.eleventyImport?.collections
+        );
       }
     }
-    let order = graph.overallOrder();
-    return order;
+
+    return graph;
   }
 
+  // Exclude: Pagination templates consuming `collections.all`
+  // Include: Pagination templates consuming `collections`
   getPaginatedOverCollectionsMappedDependencies() {
     let graph = new DependencyGraph();
-    let tagPrefix = this.tagPrefix;
+    let tagPrefix = TemplateMap.tagPrefix;
     let allNodeAdded = false;
 
     for (let entry of this.map) {
-      if (
-        this.isPaginationOverAllCollections(entry) &&
-        !this.getPaginationTagTarget(entry)
-      ) {
+      if (this.isPaginationOverAllCollections(entry) && !this.getPaginationTagTarget(entry)) {
         if (!allNodeAdded) {
           graph.addNode(tagPrefix + "all");
           allNodeAdded = true;
@@ -219,16 +253,26 @@ class TemplateMap {
         if (!entry.data.eleventyExcludeFromCollections) {
           // collections.all
           graph.addDependency(tagPrefix + "all", entry.inputPath);
+
+          // Note that `tags` are otherwise ignored here
+          // TODO should we throw an error?
         }
+
+        this.addDeclaredDependenciesToGraph(
+          graph,
+          entry.inputPath,
+          entry.data.eleventyImport?.collections
+        );
       }
     }
 
-    return graph.overallOrder();
+    return graph;
   }
 
+  // Include: Pagination templates consuming `collections.all`
   getPaginatedOverAllCollectionMappedDependencies() {
     let graph = new DependencyGraph();
-    let tagPrefix = this.tagPrefix;
+    let tagPrefix = TemplateMap.tagPrefix;
     let allNodeAdded = false;
 
     for (let entry of this.map) {
@@ -246,21 +290,100 @@ class TemplateMap {
         }
 
         if (!entry.data.eleventyExcludeFromCollections) {
-          // collections.all
+          // Populates into collections.all
+          // This is circular!
           graph.addDependency(tagPrefix + "all", entry.inputPath);
+
+          // Note that `tags` are otherwise ignored here
+          // TODO should we throw an error?
+        }
+
+        this.addDeclaredDependenciesToGraph(
+          graph,
+          entry.inputPath,
+          entry.data.eleventyImport?.collections
+        );
+      }
+    }
+
+    return graph;
+  }
+
+  getTemplateMapDependencyGraph() {
+    return [
+      this.getMappedDependencies(),
+      this.getDelayedMappedDependencies(),
+      this.getPaginatedOverCollectionsMappedDependencies(),
+      this.getPaginatedOverAllCollectionMappedDependencies(),
+    ];
+  }
+
+  getFullTemplateMapOrder() {
+    // convert dependency graphs to ordered arrays
+    return this.getTemplateMapDependencyGraph().map((entry) => entry.overallOrder());
+  }
+
+  setupDependencyGraphChangesForIncrementalFile(incrementalFile) {
+    if (!incrementalFile) {
+      return new Set();
+    }
+
+    // Only dependents: things that consume templates that have deleted dependencies, e.g. if index.md consumes collections.post and a file removes its post tag, regenerate index.md
+    let newCollectionNames = new Set(); // collections published to
+    for (let entry of this.map) {
+      if (!entry.data.eleventyExcludeFromCollections) {
+        newCollectionNames.add("all");
+
+        if (Array.isArray(entry.data.tags)) {
+          for (let tag of entry.data.tags) {
+            newCollectionNames.add(tag);
+          }
         }
       }
     }
 
-    return graph.overallOrder();
+    let deletedCollectionNames = this.config.uses.findCollectionsRemovedFrom(
+      incrementalFile,
+      newCollectionNames
+    );
+
+    // Delete incremental from the dependency graph so we get fresh entries!
+    // This _must_ happen before any additions, the other ones are in Custom.js and GlobalDependencyMap.js (from the eleventy.layouts Event)
+    this.config.uses.resetNode(incrementalFile);
+
+    return this.config.uses.getTemplatesThatConsumeCollections(deletedCollectionNames);
+  }
+
+  // Similar to getTemplateMapDependencyGraph but adds those relationships to the global dependency graph used for incremental builds
+  addToGlobalDependencyGraph() {
+    for (let entry of this.map) {
+      let paginationTagTarget = this.getPaginationTagTarget(entry);
+      if (paginationTagTarget) {
+        this.config.uses.addDependencyConsumesCollection(entry.inputPath, paginationTagTarget);
+      }
+
+      if (!entry.data.eleventyExcludeFromCollections) {
+        this.config.uses.addDependencyPublishesToCollection(entry.inputPath, "all");
+
+        if (Array.isArray(entry.data.tags)) {
+          for (let tag of entry.data.tags) {
+            this.config.uses.addDependencyPublishesToCollection(entry.inputPath, tag);
+          }
+        }
+      }
+
+      if (Array.isArray(entry.data.eleventyImport?.collections)) {
+        for (let tag of entry.data.eleventyImport.collections) {
+          this.config.uses.addDependencyConsumesCollection(entry.inputPath, tag);
+        }
+      }
+    }
   }
 
   async setCollectionByTagName(tagName) {
     if (this.isUserConfigCollectionName(tagName)) {
       // async
-      this.collectionsData[tagName] = await this.getUserConfigCollection(
-        tagName
-      );
+      this.collectionsData[tagName] = await this.getUserConfigCollection(tagName);
     } else {
       this.collectionsData[tagName] = this.getTaggedCollection(tagName);
     }
@@ -279,7 +402,7 @@ class TemplateMap {
 
   // TODO(slightlyoff): major bottleneck
   async initDependencyMap(dependencyMap) {
-    let tagPrefix = this.tagPrefix;
+    let tagPrefix = TemplateMap.tagPrefix;
     for (let depEntry of dependencyMap) {
       if (depEntry.startsWith(tagPrefix)) {
         // is a tag (collection) entry
@@ -296,9 +419,7 @@ class TemplateMap {
           // include Sanity drafts.
 
           // We want these empty-data pagination templates to show up in the serverlessUrlMap.
-          map.template.initServerlessUrlsForEmptyPaginationTemplates(
-            map.data.permalink
-          );
+          await map.template.initServerlessUrlsForEmptyPaginationTemplates(map.data.permalink);
         } else {
           let counter = 0;
           for (let page of map._pages) {
@@ -309,8 +430,7 @@ class TemplateMap {
 
             if (
               counter === 0 ||
-              (map.data.pagination &&
-                map.data.pagination.addAllPagesToCollections)
+              (map.data.pagination && map.data.pagination.addAllPagesToCollections)
             ) {
               if (!map.data.eleventyExcludeFromCollections) {
                 // TODO do we need .template in collection entries?
@@ -332,18 +452,12 @@ class TemplateMap {
       entry.data.collections = this.collectionsData;
     }
 
-    let dependencyMap = this.getMappedDependencies();
+    let [dependencyMap, delayedDependencyMap, firstPaginatedDepMap, secondPaginatedDepMap] =
+      this.getFullTemplateMapOrder();
+
     await this.initDependencyMap(dependencyMap);
-
-    let delayedDependencyMap = this.getDelayedMappedDependencies();
     await this.initDependencyMap(delayedDependencyMap);
-
-    let firstPaginatedDepMap =
-      this.getPaginatedOverCollectionsMappedDependencies();
     await this.initDependencyMap(firstPaginatedDepMap);
-
-    let secondPaginatedDepMap =
-      this.getPaginatedOverAllCollectionMappedDependencies();
     await this.initDependencyMap(secondPaginatedDepMap);
 
     await this.resolveRemainingComputedData();
@@ -354,11 +468,17 @@ class TemplateMap {
       firstPaginatedDepMap,
       secondPaginatedDepMap
     );
-    let orderedMap = orderedPaths.map(
-      function (inputPath) {
-        return this.getMapEntryForInputPath(inputPath);
-      }.bind(this)
-    );
+
+    let orderedMap = orderedPaths.map((inputPath) => {
+      return this.getMapEntryForInputPath(inputPath);
+    });
+
+    await this.config.events.emitLazy("eleventy.contentMap", () => {
+      return {
+        inputPathToUrl: this.generateInputUrlContentMap(orderedMap),
+        urlToInputPath: this.generateUrlMap(orderedMap),
+      };
+    });
 
     await this.populateContentDataInMap(orderedMap);
 
@@ -367,10 +487,30 @@ class TemplateMap {
 
     this.checkForDuplicatePermalinks();
 
-    await this.config.events.emit(
-      "eleventy.serverlessUrlMap",
+    await this.config.events.emitLazy("eleventy.layouts", () => this.generateLayoutsMap());
+
+    await this.config.events.emitLazy("eleventy.serverlessUrlMap", () =>
       this.generateServerlessUrlMap(orderedMap)
     );
+  }
+
+  generateInputUrlContentMap(orderedMap) {
+    let entries = {};
+    for (let entry of orderedMap) {
+      entries[entry.inputPath] = entry._pages.map((entry) => entry.url);
+    }
+    return entries;
+  }
+
+  generateUrlMap(orderedMap) {
+    let entries = {};
+    for (let entry of orderedMap) {
+      for (let page of entry._pages) {
+        // duplicate urls throw an error, so we can return non array here
+        entries[page.url] = entry.inputPath;
+      }
+    }
+    return entries;
   }
 
   generateServerlessUrlMap(orderedMap) {
@@ -416,33 +556,16 @@ class TemplateMap {
     }
   }
 
-  getOrderedInputPaths(
-    dependencyMap,
-    delayedDependencyMap,
-    firstPaginatedDepMap,
-    secondPaginatedDepMap
-  ) {
+  // Filter out any tag nodes
+  getOrderedInputPaths(...maps) {
     let orderedMap = [];
-    let tagPrefix = this.tagPrefix;
+    let tagPrefix = TemplateMap.tagPrefix;
 
-    for (let dep of dependencyMap) {
-      if (!dep.startsWith(tagPrefix)) {
-        orderedMap.push(dep);
-      }
-    }
-    for (let dep of delayedDependencyMap) {
-      if (!dep.startsWith(tagPrefix)) {
-        orderedMap.push(dep);
-      }
-    }
-    for (let dep of firstPaginatedDepMap) {
-      if (!dep.startsWith(tagPrefix)) {
-        orderedMap.push(dep);
-      }
-    }
-    for (let dep of secondPaginatedDepMap) {
-      if (!dep.startsWith(tagPrefix)) {
-        orderedMap.push(dep);
+    for (let map of maps) {
+      for (let dep of map) {
+        if (!dep.startsWith(tagPrefix)) {
+          orderedMap.push(dep);
+        }
       }
     }
     return orderedMap;
@@ -454,15 +577,16 @@ class TemplateMap {
       if (!map._pages) {
         throw new Error(`Content pages not found for ${map.inputPath}`);
       }
+
       if (!map.template.behavior.isRenderable()) {
         // Note that empty pagination templates will be skipped here as not renderable
         continue;
       }
 
+      // IMPORTANT: this is where template content is rendered
       try {
         for (let pageEntry of map._pages) {
-          pageEntry.templateContent =
-            await pageEntry.template.renderWithoutLayout(pageEntry.data);
+          pageEntry.templateContent = await pageEntry.template.renderWithoutLayout(pageEntry.data);
         }
       } catch (e) {
         if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
@@ -471,16 +595,13 @@ class TemplateMap {
           throw e;
         }
       }
-      debugDev(
-        "Added this.map[...].templateContent, outputPath, et al for one map entry"
-      );
+      debugDev("Added this.map[...].templateContent, outputPath, et al for one map entry");
     }
 
     for (let map of usedTemplateContentTooEarlyMap) {
       try {
         for (let pageEntry of map._pages) {
-          pageEntry.templateContent =
-            await pageEntry.template.renderWithoutLayout(pageEntry.data);
+          pageEntry.templateContent = await pageEntry.template.renderWithoutLayout(pageEntry.data);
         }
       } catch (e) {
         if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
@@ -538,20 +659,16 @@ class TemplateMap {
   }
 
   isUserConfigCollectionName(name) {
-    let collections =
-      this.configCollections || this.userConfig.getCollections();
+    let collections = this.configCollections || this.userConfig.getCollections();
     return name && !!collections[name];
   }
 
   getUserConfigCollectionNames() {
-    return Object.keys(
-      this.configCollections || this.userConfig.getCollections()
-    );
+    return Object.keys(this.configCollections || this.userConfig.getCollections());
   }
 
   async getUserConfigCollection(name) {
-    let configCollections =
-      this.configCollections || this.userConfig.getCollections();
+    let configCollections = this.configCollections || this.userConfig.getCollections();
 
     // This works with async now
     let result = await configCollections[name](this.collection);
@@ -562,15 +679,12 @@ class TemplateMap {
 
   async _testGetUserConfigCollectionsData() {
     let collections = {};
-    let configCollections =
-      this.configCollections || this.userConfig.getCollections();
+    let configCollections = this.configCollections || this.userConfig.getCollections();
 
     for (let name in configCollections) {
       collections[name] = configCollections[name](this.collection);
 
-      debug(
-        `Collection: collections.${name} size: ${collections[name].length}`
-      );
+      debug(`Collection: collections.${name} size: ${collections[name].length}`);
     }
 
     return collections;
@@ -625,6 +739,38 @@ class TemplateMap {
     return Promise.all(promises);
   }
 
+  async generateLayoutsMap() {
+    let layouts = {};
+
+    for (let entry of this.map) {
+      for (let page of entry._pages) {
+        let tmpl = page.template;
+        let layoutKey = page.data[this.config.keys.layout];
+        if (layoutKey) {
+          let layout = tmpl.getLayout(layoutKey);
+          let layoutChain = await layout.getLayoutChain();
+          let priors = [];
+          for (let filepath of layoutChain) {
+            if (!layouts[filepath]) {
+              layouts[filepath] = new Set();
+            }
+            layouts[filepath].add(page.inputPath);
+            for (let prior of priors) {
+              layouts[filepath].add(prior);
+            }
+            priors.push(filepath);
+          }
+        }
+      }
+    }
+
+    for (let key in layouts) {
+      layouts[key] = Array.from(layouts[key]);
+    }
+
+    return layouts;
+  }
+
   checkForDuplicatePermalinks() {
     let permalinks = {};
     let warnings = {};
@@ -632,23 +778,21 @@ class TemplateMap {
       for (let page of entry._pages) {
         if (page.outputPath === false || page.url === false) {
           // do nothing (also serverless)
-        } else if (!permalinks[page.url]) {
-          permalinks[page.url] = [entry.inputPath];
+        } else if (!permalinks[page.outputPath]) {
+          permalinks[page.outputPath] = [entry.inputPath];
         } else {
-          warnings[
-            page.outputPath
-          ] = `Output conflict: multiple input files are writing to \`${
+          warnings[page.outputPath] = `Output conflict: multiple input files are writing to \`${
             page.outputPath
           }\`. Use distinct \`permalink\` values to resolve this conflict.
   1. ${entry.inputPath}
-${permalinks[page.url]
+${permalinks[page.outputPath]
   .map(function (inputPath, index) {
     return `  ${index + 2}. ${inputPath}\n`;
   })
   .join("")}
 `;
 
-          permalinks[page.url].push(entry.inputPath);
+          permalinks[page.outputPath].push(entry.inputPath);
         }
       }
     }

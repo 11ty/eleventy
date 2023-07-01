@@ -53,11 +53,11 @@ class Sortable {
     return this.sort(this.getSortFunctionDescending());
   }
 
-  setSortDescending() {
-    this.isSortAscending = false;
+  setSortDescending(isDescending = true) {
+    this.isSortAscending = !isDescending;
   }
 
-  setSortAscending(isAscending) {
+  setSortAscending(isAscending = true) {
     this.isSortAscending = isAscending;
   }
 

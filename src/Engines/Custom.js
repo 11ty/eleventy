@@ -1,5 +1,11 @@
 const TemplateEngine = require("./TemplateEngine");
 const getJavaScriptData = require("../Util/GetJavaScriptData");
+const eventBus = require("../EventBus.js");
+
+let lastModifiedFile = undefined;
+eventBus.on("eleventy.resourceModified", (path) => {
+  lastModifiedFile = path;
+});
 
 class CustomEngine extends TemplateEngine {
   constructor(name, dirs, config) {
@@ -21,6 +27,7 @@ class CustomEngine extends TemplateEngine {
 
   getExtensionMapEntry() {
     if ("extensionMap" in this.config) {
+      // Iterates over only the user config `addExtension` entries
       for (let entry of this.config.extensionMap) {
         if (entry.key.toLowerCase() === this.name.toLowerCase()) {
           return entry;
@@ -37,10 +44,24 @@ class CustomEngine extends TemplateEngine {
     this._defaultEngine = defaultEngine;
   }
 
+  /**
+   * @override
+   */
   needsToReadFileContents() {
     if ("read" in this.entry) {
       return this.entry.read;
     }
+
+    // Handle aliases to `11ty.js` templates, avoid reading files in the alias, see #2279
+    // Here, we are short circuiting fallback to defaultRenderer, does not account for compile
+    // functions that call defaultRenderer explicitly
+    if (
+      this._defaultEngine &&
+      "needsToReadFileContents" in this._defaultEngine
+    ) {
+      return this._defaultEngine.needsToReadFileContents();
+    }
+
     return true;
   }
 
@@ -68,7 +89,19 @@ class CustomEngine extends TemplateEngine {
   }
 
   async getExtraDataFromFile(inputPath) {
-    if (!("getData" in this.entry) || this.entry.getData === false) {
+    if (this.entry.getData === false) {
+      return;
+    }
+
+    if (!("getData" in this.entry)) {
+      // Handle aliases to `11ty.js` templates, use upstream default engine data fetch, see #2279
+      if (
+        this._defaultEngine &&
+        "getExtraDataFromFile" in this._defaultEngine
+      ) {
+        return this._defaultEngine.getExtraDataFromFile(inputPath);
+      }
+
       return;
     }
 
@@ -141,7 +174,6 @@ class CustomEngine extends TemplateEngine {
 
   async compile(str, inputPath, ...args) {
     await this._runningInit();
-
     let defaultRenderer;
     if (this._defaultEngine) {
       defaultRenderer = async (data) => {
@@ -162,6 +194,9 @@ class CustomEngine extends TemplateEngine {
     // TODO generalize this (look at JavaScript.js)
     let fn = this.entry.compile.bind({
       config: this.config,
+      addDependencies: (from, toArray = []) => {
+        this.config.uses.addDependency(from, toArray);
+      },
       defaultRenderer, // bind defaultRenderer to compile function
     })(str, inputPath);
 
@@ -188,7 +223,26 @@ class CustomEngine extends TemplateEngine {
     return this.entry.outputFileExtension;
   }
 
+  hasDependencies(inputPath) {
+    if (this.config.uses.getDependencies(inputPath) === false) {
+      return false;
+    }
+    return true;
+  }
+
+  isFileRelevantTo(inputPath, comparisonFile, includeLayouts) {
+    return this.config.uses.isFileRelevantTo(
+      inputPath,
+      comparisonFile,
+      includeLayouts
+    );
+  }
+
   getCompileCacheKey(str, inputPath) {
+    // Return this separately so we know whether or not to use the cached version
+    // but still return a key to cache this new render for next time
+    let useCache = !this.isFileRelevantTo(inputPath, lastModifiedFile, false);
+
     if (
       this.entry.compileOptions &&
       "getCacheKey" in this.entry.compileOptions
@@ -199,9 +253,17 @@ class CustomEngine extends TemplateEngine {
         );
       }
 
-      return this.entry.compileOptions.getCacheKey(str, inputPath);
+      return {
+        useCache,
+        key: this.entry.compileOptions.getCacheKey(str, inputPath),
+      };
     }
-    return super.getCompileCacheKey(str, inputPath);
+
+    let { key } = super.getCompileCacheKey(str, inputPath);
+    return {
+      useCache,
+      key,
+    };
   }
 
   permalinkNeedsCompilation(str) {

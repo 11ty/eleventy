@@ -7,15 +7,13 @@ const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
 const Merge = require("../Util/Merge");
 const { ProxyWrap } = require("../Util/ProxyWrap");
 const TemplateDataInitialGlobalData = require("../TemplateDataInitialGlobalData");
+const EleventyShortcodeError = require("../EleventyShortcodeError");
 const TemplateRender = require("../TemplateRender");
 const TemplateConfig = require("../TemplateConfig");
+const EleventyErrorUtil = require("../EleventyErrorUtil");
 const Liquid = require("../Engines/Liquid");
 
-async function compile(
-  content,
-  templateLang,
-  { templateConfig, extensionMap } = {}
-) {
+async function compile(content, templateLang, { templateConfig, extensionMap } = {}) {
   if (!templateConfig) {
     templateConfig = new TemplateConfig(null, false);
   }
@@ -25,8 +23,16 @@ async function compile(
     templateLang = this.page.templateSyntax;
   }
 
-  let cfg = templateConfig.getConfig();
-  let tr = new TemplateRender(templateLang, cfg.dir.input, templateConfig);
+  let inputDir;
+
+  // templateConfig *may* already be a userconfig
+  if (templateConfig.constructor.name === "TemplateConfig") {
+    inputDir = templateConfig.getConfig().dir.input;
+  } else {
+    inputDir = templateConfig?.dir?.input;
+  }
+
+  let tr = new TemplateRender(templateLang, inputDir, templateConfig);
   tr.extensionMap = extensionMap;
   tr.setEngineOverride(templateLang);
 
@@ -41,23 +47,14 @@ async function compile(
 }
 
 // No templateLang default, it should infer from the inputPath.
-async function compileFile(
-  inputPath,
-  { templateConfig, extensionMap, config } = {},
-  templateLang
-) {
+async function compileFile(inputPath, { templateConfig, extensionMap, config } = {}, templateLang) {
   if (!inputPath) {
-    throw new Error(
-      "Missing file path argument passed to the `renderFile` shortcode."
-    );
+    throw new Error("Missing file path argument passed to the `renderFile` shortcode.");
   }
 
-  if (
-    !fs.existsSync(TemplatePath.normalizeOperatingSystemFilePath(inputPath))
-  ) {
+  if (!fs.existsSync(TemplatePath.normalizeOperatingSystemFilePath(inputPath))) {
     throw new Error(
-      "Could not find render plugin file for the `renderFile` shortcode, looking for: " +
-        inputPath
+      "Could not find render plugin file for the `renderFile` shortcode, looking for: " + inputPath
     );
   }
 
@@ -88,9 +85,7 @@ async function renderShortcodeFn(fn, data) {
   if (fn === undefined) {
     return;
   } else if (typeof fn !== "function") {
-    throw new Error(
-      `The \`compile\` function did not return a function. Received ${fn}`
-    );
+    throw new Error(`The \`compile\` function did not return a function. Received ${fn}`);
   }
 
   // if the user passes a string or other literal, remap to an object.
@@ -144,33 +139,37 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 
         stream.start();
       },
-      render: async function (ctx) {
+      render: function* (ctx) {
         let normalizedContext = {};
         if (ctx) {
           if (opts.accessGlobalData) {
             // parent template data cascade
-            normalizedContext.data = ctx.environments;
+            normalizedContext.data = ctx.getAll();
           }
 
           normalizedContext.page = ctx.get(["page"]);
           normalizedContext.eleventy = ctx.get(["eleventy"]);
         }
 
-        let argArray = await Liquid.parseArguments(
-          null,
-          this.args,
-          ctx,
-          this.liquid
-        );
+        let rawArgs = Liquid.parseArguments(null, this.args);
+        let argArray = [];
+        let contextScope = ctx.getAll();
+        for (let arg of rawArgs) {
+          let b = yield liquidEngine.evalValue(arg, contextScope);
+          argArray.push(b);
+        }
 
+        // plaintext paired shortcode content
         let body = this.tokens.map((token) => token.getText()).join("");
 
-        return _renderStringShortcodeFn.call(
+        let ret = _renderStringShortcodeFn.call(
           normalizedContext,
           body,
           // templateLang, data
           ...argArray
         );
+        yield ret;
+        return ret;
       },
     };
   }
@@ -199,10 +198,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 
         // Exit when there's nothing to match
         // or when we've found the matching "endraw" block
-        while (
-          (matches = parser.tokens._extractRegex(rawBlockRegex)) &&
-          rawLevel > 0
-        ) {
+        while ((matches = parser.tokens._extractRegex(rawBlockRegex)) && rawLevel > 0) {
           const all = matches[0];
           const pre = matches[1];
           const blockName = matches[2];
@@ -253,7 +249,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
           if (e) {
             resolve(
               new EleventyShortcodeError(
-                `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+                `Error with Nunjucks paired shortcode \`${tagName}\`${EleventyErrorUtil.convertErrorToString(
                   e
                 )}`
               )
@@ -274,7 +270,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
             .catch(function (e) {
               resolve(
                 new EleventyShortcodeError(
-                  `Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+                  `Error with Nunjucks paired shortcode \`${tagName}\`${EleventyErrorUtil.convertErrorToString(
                     e
                   )}`
                 ),
@@ -330,10 +326,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
   // Render strings
   if (opts.tagName) {
     // use falsy to opt-out
-    eleventyConfig.addJavaScriptFunction(
-      opts.tagName,
-      _renderStringShortcodeFn
-    );
+    eleventyConfig.addJavaScriptFunction(opts.tagName, _renderStringShortcodeFn);
 
     eleventyConfig.addLiquidTag(opts.tagName, function (liquidEngine) {
       return liquidTemplateTag(liquidEngine, opts.tagName);
@@ -345,17 +338,9 @@ function EleventyPlugin(eleventyConfig, options = {}) {
   }
 
   // Render File
+  // use `false` to opt-out
   if (opts.tagNameFile) {
-    // use `false` to opt-out
-    eleventyConfig.addJavaScriptFunction(
-      opts.tagNameFile,
-      _renderFileShortcodeFn
-    );
-    eleventyConfig.addLiquidShortcode(opts.tagNameFile, _renderFileShortcodeFn);
-    eleventyConfig.addNunjucksAsyncShortcode(
-      opts.tagNameFile,
-      _renderFileShortcodeFn
-    );
+    eleventyConfig.addAsyncShortcode(opts.tagNameFile, _renderFileShortcodeFn);
   }
 }
 

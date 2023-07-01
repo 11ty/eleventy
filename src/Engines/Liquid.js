@@ -53,6 +53,28 @@ class Liquid extends TemplateEngine {
     return options;
   }
 
+  static wrapFilter(fn) {
+    return function (...args) {
+      if (this.context && "get" in this.context) {
+        this.page = this.context.get(["page"]);
+        this.eleventy = this.context.get(["eleventy"]);
+      }
+
+      return fn.call(this, ...args);
+    };
+  }
+
+  // Shortcodes
+  static normalizeScope(context) {
+    let obj = {};
+    if (context) {
+      obj.ctx = context;
+      obj.page = context.get(["page"]);
+      obj.eleventy = context.get(["eleventy"]);
+    }
+    return obj;
+  }
+
   addCustomTags(tags) {
     for (let name in tags) {
       this.addTag(name, tags[name]);
@@ -66,7 +88,7 @@ class Liquid extends TemplateEngine {
   }
 
   addFilter(name, filter) {
-    this.liquidLib.registerFilter(name, filter);
+    this.liquidLib.registerFilter(name, Liquid.wrapFilter(filter));
   }
 
   addTag(name, tagFn) {
@@ -93,7 +115,7 @@ class Liquid extends TemplateEngine {
     }
   }
 
-  static async parseArguments(lexer, str, scope, engine) {
+  static parseArguments(lexer, str) {
     let argArray = [];
 
     if (!lexer) {
@@ -101,9 +123,8 @@ class Liquid extends TemplateEngine {
     }
 
     if (typeof str === "string") {
-      // TODO key=value key2=value
-      // TODO JSON?
       lexer.reset(str);
+
       let arg = lexer.next();
       while (arg) {
         /*{
@@ -119,46 +140,38 @@ class Liquid extends TemplateEngine {
           // Push the promise into an array instead of awaiting it here.
           // This forces the promises to run in order with the correct scope value for each arg.
           // Otherwise they run out of order and can lead to undefined values for arguments in layout template shortcodes.
-          argArray.push(engine.evalValue(arg.value, scope));
+          // console.log( arg.value, scope, engine );
+          argArray.push(arg.value);
         }
         arg = lexer.next();
       }
     }
 
-    return await Promise.all(argArray);
-  }
-
-  static _normalizeShortcodeScope(ctx) {
-    let obj = {};
-    if (ctx) {
-      obj.page = ctx.get(["page"]);
-      obj.eleventy = ctx.get(["eleventy"]);
-    }
-    return obj;
+    return argArray;
   }
 
   addShortcode(shortcodeName, shortcodeFn) {
     let _t = this;
-    this.addTag(shortcodeName, function () {
+    this.addTag(shortcodeName, function (liquidEngine) {
       return {
-        parse: function (tagToken) {
+        parse(tagToken) {
           this.name = tagToken.name;
           this.args = tagToken.args;
         },
-        render: async function (scope) {
-          let argArray = await Liquid.parseArguments(
-            _t.argLexer,
-            this.args,
-            scope,
-            this.liquid
-          );
+        render: function* (ctx) {
+          let rawArgs = Liquid.parseArguments(_t.argLexer, this.args);
+          let argArray = [];
+          let contextScope = ctx.getAll();
+          for (let arg of rawArgs) {
+            let b = yield liquidEngine.evalValue(arg, contextScope);
+            argArray.push(b);
+          }
 
-          return Promise.resolve(
-            shortcodeFn.call(
-              Liquid._normalizeShortcodeScope(scope),
-              ...argArray
-            )
+          let ret = yield shortcodeFn.call(
+            Liquid.normalizeScope(ctx),
+            ...argArray
           );
+          return ret;
         },
       };
     });
@@ -168,7 +181,7 @@ class Liquid extends TemplateEngine {
     let _t = this;
     this.addTag(shortcodeName, function (liquidEngine) {
       return {
-        parse: function (tagToken, remainTokens) {
+        parse(tagToken, remainTokens) {
           this.name = tagToken.name;
           this.args = tagToken.args;
           this.templates = [];
@@ -183,22 +196,27 @@ class Liquid extends TemplateEngine {
 
           stream.start();
         },
-        render: function* (ctx) {
-          let argArray = yield Liquid.parseArguments(
-            _t.argLexer,
-            this.args,
-            ctx,
-            this.liquid
-          );
-          const html = yield this.liquid.renderer.renderTemplates(
+        render: function* (ctx, emitter) {
+          let rawArgs = Liquid.parseArguments(_t.argLexer, this.args);
+          let argArray = [];
+          let contextScope = ctx.getAll();
+          for (let arg of rawArgs) {
+            let b = yield liquidEngine.evalValue(arg, contextScope);
+            argArray.push(b);
+          }
+
+          const html = yield liquidEngine.renderer.renderTemplates(
             this.templates,
             ctx
           );
-          return shortcodeFn.call(
-            Liquid._normalizeShortcodeScope(ctx),
+
+          let ret = yield shortcodeFn.call(
+            Liquid.normalizeScope(ctx),
             html,
             ...argArray
           );
+          // emitter.write(ret);
+          return ret;
         },
       };
     });

@@ -1,6 +1,7 @@
 const test = require("ava");
 const fs = require("fs");
 const TemplateConfig = require("../src/TemplateConfig");
+const FileSystemSearch = require("../src/FileSystemSearch");
 const TemplateData = require("../src/TemplateData");
 let yaml = require("js-yaml");
 
@@ -15,17 +16,17 @@ test("Local data", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
   injectDataExtensions(dataObj);
-  dataObj.setDataTemplateEngine("liquid");
+  dataObj.setFileSystemSearch(new FileSystemSearch());
 
-  let data = await dataObj.getData();
+  let data = await dataObj.getGlobalData();
 
   // YAML GLOBAL DATA
   t.is(data.globalData3.datakey1, "datavalue3");
-  t.is(data.globalData3.datakey2, "@11ty/eleventy--yaml");
+  t.is(data.globalData3.datakey2, "{{pkg.name}}--yaml");
 
   // NOSJ (JSON) GLOBAL DATA
   t.is(data.globalData4.datakey1, "datavalue4");
-  t.is(data.globalData4.datakey2, "@11ty/eleventy--nosj");
+  t.is(data.globalData4.datakey2, "{{pkg.name}}--nosj");
 
   let withLocalData = await dataObj.getTemplateDirectoryData(
     "./test/stubs-630/component-yaml/component.njk"
@@ -44,9 +45,7 @@ test("Local files", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
   injectDataExtensions(dataObj);
-  let files = await dataObj.getLocalDataPaths(
-    "./test/stubs-630/component-yaml/component.njk"
-  );
+  let files = await dataObj.getLocalDataPaths("./test/stubs-630/component-yaml/component.njk");
   t.deepEqual(files, [
     "./test/stubs-630/stubs-630.yaml",
     "./test/stubs-630/stubs-630.nosj",
@@ -79,13 +78,13 @@ test("Global data", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
   injectDataExtensions(dataObj);
-  dataObj.setDataTemplateEngine("liquid");
+  dataObj.setFileSystemSearch(new FileSystemSearch());
 
   t.deepEqual(await dataObj.getGlobalDataGlob(), [
-    "./test/stubs-630/_data/**/*.(nosj|yaml|json|cjs|js)",
+    "./test/stubs-630/_data/**/*.{nosj,yaml,json,cjs,js}",
   ]);
 
-  let data = await dataObj.getData();
+  let data = await dataObj.getGlobalData();
 
   // JS GLOBAL DATA
   t.is(data.globalData0.datakey1, "datavalue0");
@@ -95,15 +94,15 @@ test("Global data", async (t) => {
 
   // JSON GLOBAL DATA
   t.is(data.globalData2.datakey1, "datavalue2");
-  t.is(data.globalData2.datakey2, "@11ty/eleventy--json");
+  t.is(data.globalData2.datakey2, "{{pkg.name}}--json");
 
   // YAML GLOBAL DATA
   t.is(data.globalData3.datakey1, "datavalue3");
-  t.is(data.globalData3.datakey2, "@11ty/eleventy--yaml");
+  t.is(data.globalData3.datakey2, "{{pkg.name}}--yaml");
 
   // NOSJ (JSON) GLOBAL DATA
   t.is(data.globalData4.datakey1, "datavalue4");
-  t.is(data.globalData4.datakey2, "@11ty/eleventy--nosj");
+  t.is(data.globalData4.datakey2, "{{pkg.name}}--nosj");
 
   t.is(data.subdir.globalDataSubdir.keyyaml, "yaml");
 });
@@ -112,8 +111,9 @@ test("Global data merging and priority", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
   injectDataExtensions(dataObj);
+  dataObj.setFileSystemSearch(new FileSystemSearch());
 
-  let data = await dataObj.getData();
+  let data = await dataObj.getGlobalData();
 
   // TESTING GLOBAL DATA PRIORITY AND MERGING
   t.is(data.mergingGlobalData.datakey0, "js-value0");
@@ -149,8 +149,9 @@ test("Binary data files, encoding: null", async (t) => {
       },
     ],
   ]);
+  dataObj.setFileSystemSearch(new FileSystemSearch());
 
-  let data = await dataObj.getData();
+  let data = await dataObj.getGlobalData();
   t.is(data.images.dog, 43183);
 });
 
@@ -174,8 +175,9 @@ test("Binary data files, read: false", async (t) => {
       },
     ],
   ]);
+  dataObj.setFileSystemSearch(new FileSystemSearch());
 
-  let data = await dataObj.getData();
+  let data = await dataObj.getGlobalData();
   t.is(data.images.dog, "./test/stubs-2378/_data/images/dog.jpg");
 });
 
@@ -193,8 +195,9 @@ test("Binary data files, encoding: null (multiple data extensions)", async (t) =
   });
 
   let dataObj = new TemplateData("./test/stubs-2378/", eleventyConfig);
+  dataObj.setFileSystemSearch(new FileSystemSearch());
 
-  let data = await dataObj.getData();
+  let data = await dataObj.getGlobalData();
   t.is(data.images.dog, 43183);
   t.is(data.images.dogpng, 2890);
 });

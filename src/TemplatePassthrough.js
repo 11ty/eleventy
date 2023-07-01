@@ -2,7 +2,6 @@ const fs = require("fs");
 const path = require("path");
 const isGlob = require("is-glob");
 const copy = require("recursive-copy");
-const fastglob = require("fast-glob");
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const EleventyBaseError = require("./EleventyBaseError");
@@ -50,10 +49,7 @@ class TemplatePassthrough {
       return TemplatePath.normalize(
         TemplatePath.join(
           outputDir,
-          TemplatePath.stripLeadingSubPath(
-            inputFileFromGlob || inputPath,
-            inputDir
-          )
+          TemplatePath.stripLeadingSubPath(inputFileFromGlob || inputPath, inputDir)
         )
       );
     }
@@ -65,9 +61,7 @@ class TemplatePassthrough {
     // Bug when copying incremental file overwriting output directory (and making it a file)
     // e.g. public/test.css -> _site
     // https://github.com/11ty/eleventy/issues/2278
-    let fullOutputPath = TemplatePath.normalize(
-      TemplatePath.join(outputDir, outputPath)
-    );
+    let fullOutputPath = TemplatePath.normalize(TemplatePath.join(outputDir, outputPath));
 
     if (
       fs.existsSync(inputPath) &&
@@ -75,9 +69,7 @@ class TemplatePassthrough {
       TemplatePath.isDirectorySync(fullOutputPath)
     ) {
       let filename = path.parse(inputPath).base;
-      return TemplatePath.normalize(
-        TemplatePath.join(fullOutputPath, filename)
-      );
+      return TemplatePath.normalize(TemplatePath.join(fullOutputPath, filename));
     }
 
     return fullOutputPath;
@@ -102,26 +94,45 @@ class TemplatePassthrough {
     this.isIncremental = isIncremental;
   }
 
+  setFileSystemSearch(fileSystemSearch) {
+    this.fileSystemSearch = fileSystemSearch;
+  }
+
   async getFiles(glob) {
     debug("Searching for: %o", glob);
-    let b = this.benchmarks.aggregate.get("Searching the file system");
+    let b = this.benchmarks.aggregate.get("Searching the file system (passthrough)");
     b.before();
     let files = TemplatePath.addLeadingDotSlashArray(
-      await fastglob(glob, {
-        caseSensitiveMatch: false,
-        dot: true,
-      })
+      await this.fileSystemSearch.search("passthrough", glob)
     );
     b.after();
     return files;
   }
 
+  // dir is guaranteed to exist by context
+  // dir may not be a directory
+  addTrailingSlashIfDirectory(dir) {
+    if (dir && typeof dir === "string") {
+      if (dir.endsWith(path.sep)) {
+        return dir;
+      }
+      if (fs.statSync(dir).isDirectory()) {
+        return `${dir}/`;
+      }
+    }
+    return dir;
+  }
+
   // maps input paths to output paths
   async getFileMap() {
+    // TODO VirtualFileSystem candidate
     if (!isGlob(this.inputPath) && fs.existsSync(this.inputPath)) {
+      // When inputPath is a directory, make sure it has a slash for passthrough copy aliasing
+      // https://github.com/11ty/eleventy/issues/2709
+      let inputPath = this.addTrailingSlashIfDirectory(this.inputPath);
       return [
         {
-          inputPath: this.inputPath,
+          inputPath,
           outputPath: this.getOutputPath(),
         },
       ];
@@ -242,10 +253,7 @@ class TemplatePassthrough {
         };
       })
       .catch((err) => {
-        throw new TemplatePassthroughError(
-          `Error copying passthrough files: ${err.message}`,
-          err
-        );
+        throw new TemplatePassthroughError(`Error copying passthrough files: ${err.message}`, err);
       });
   }
 }

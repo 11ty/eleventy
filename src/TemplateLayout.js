@@ -9,140 +9,208 @@ const templateCache = require("./TemplateCache");
 const debugDev = require("debug")("Dev:Eleventy:TemplateLayout");
 
 class TemplateLayout extends TemplateContent {
-  constructor(key, inputDir, extensionMap, config) {
-    if (!config) {
-      throw new Error("Expected `config` in TemplateLayout constructor.");
+  constructor(key, inputDir, extensionMap, eleventyConfig) {
+    if (!eleventyConfig) {
+      throw new Error("Expected `eleventyConfig` in TemplateLayout constructor.");
     }
 
-    let resolvedPath = new TemplateLayoutPathResolver(
-      key,
-      inputDir,
-      extensionMap,
-      config
-    ).getFullPath();
+    let resolver = new TemplateLayoutPathResolver(key, inputDir, extensionMap, eleventyConfig);
+    let resolvedPath = resolver.getFullPath();
 
-    super(resolvedPath, inputDir, config);
+    super(resolvedPath, inputDir, eleventyConfig);
 
     if (!extensionMap) {
       throw new Error("Expected `extensionMap` in TemplateLayout constructor.");
     }
+
     this.extensionMap = extensionMap;
+    this.key = resolver.getNormalizedLayoutKey();
     this.dataKeyLayoutPath = key;
     this.inputPath = resolvedPath;
     this.inputDir = inputDir;
+  }
+
+  getKey() {
+    return this.key;
+  }
+
+  getFullKey() {
+    return TemplateLayout.resolveFullKey(this.dataKeyLayoutPath, this.inputDir);
+  }
+
+  getCacheKeys() {
+    return new Set([this.dataKeyLayoutPath, this.getFullKey(), this.key]);
   }
 
   static resolveFullKey(key, inputDir) {
     return TemplatePath.join(inputDir, key);
   }
 
-  static getTemplate(key, inputDir, config, extensionMap) {
-    if (config.useTemplateCache) {
-      let fullKey = TemplateLayout.resolveFullKey(key, inputDir);
-      if (templateCache.has(fullKey)) {
-        debugDev("Found %o in TemplateCache", key);
-        return templateCache.get(fullKey);
-      }
-
-      let tmpl = new TemplateLayout(key, inputDir, extensionMap, config);
-      debugDev("Added %o to TemplateCache", key);
-      templateCache.add(fullKey, tmpl);
-
-      return tmpl;
-    } else {
-      return new TemplateLayout(key, inputDir, extensionMap, config);
+  static getTemplate(key, inputDir, eleventyConfig, extensionMap) {
+    let config = eleventyConfig.getConfig();
+    if (!config.useTemplateCache) {
+      return new TemplateLayout(key, inputDir, extensionMap, eleventyConfig);
     }
+
+    let fullKey = TemplateLayout.resolveFullKey(key, inputDir);
+    if (!templateCache.has(fullKey)) {
+      let layout = new TemplateLayout(key, inputDir, extensionMap, eleventyConfig);
+
+      templateCache.add(layout);
+      debugDev("Added %o to TemplateCache", key);
+
+      return layout;
+    }
+
+    return templateCache.get(fullKey);
   }
 
   async getTemplateLayoutMapEntry() {
     return {
+      // Used by `TemplateLayout.getTemplate()`
       key: this.dataKeyLayoutPath,
       inputDir: this.inputDir,
-      template: this,
+
+      // used by `this.getData()`
       frontMatterData: await this.getFrontMatterData(),
     };
   }
 
   async getTemplateLayoutMap() {
-    if (this.mapCache) {
-      return this.mapCache;
+    if (!this.cachedLayoutMap) {
+      this.cachedLayoutMap = new Promise(async (resolve, reject) => {
+        try {
+          // For both the eleventy.layouts event and cyclical layout chain checking  (e.g., a => b => c => a)
+          let layoutChain = new Set();
+          layoutChain.add(this.inputPath);
+
+          let cfgKey = this.config.keys.layout;
+          let map = [];
+          let mapEntry = await this.getTemplateLayoutMapEntry();
+
+          map.push(mapEntry);
+
+          while (mapEntry.frontMatterData && cfgKey in mapEntry.frontMatterData) {
+            // Layout of the current layout
+            let parentLayoutKey = mapEntry.frontMatterData[cfgKey];
+
+            let layout = TemplateLayout.getTemplate(
+              parentLayoutKey,
+              mapEntry.inputDir,
+              this.eleventyConfig,
+              this.extensionMap
+            );
+
+            // Abort if a circular layout chain is detected. Otherwise, we'll time out and run out of memory.
+            if (layoutChain.has(layout.inputPath)) {
+              throw new Error(
+                `Your layouts have a circular reference, starting at ${map[0].key}! The layout at ${layout.inputPath} was specified twice in this layout chain.`
+              );
+            }
+
+            // Keep track of this layout so we can detect duplicates in subsequent iterations
+            layoutChain.add(layout.inputPath);
+
+            // reassign for next loop
+            mapEntry = await layout.getTemplateLayoutMapEntry();
+
+            map.push(mapEntry);
+          }
+
+          this.layoutChain = Array.from(layoutChain);
+
+          resolve(map);
+        } catch (e) {
+          reject(e);
+        }
+      });
     }
 
-    let cfgKey = this.config.keys.layout;
-    let map = [];
-    let mapEntry = await this.getTemplateLayoutMapEntry();
-    map.push(mapEntry);
+    return this.cachedLayoutMap;
+  }
 
-    // Keep track of every layout we see so we can detect cyclical layout chains (e.g., a => b => c => a).
-    const seenLayoutKeys = new Set();
-    seenLayoutKeys.add(mapEntry.key);
-
-    while (mapEntry.frontMatterData && cfgKey in mapEntry.frontMatterData) {
-      // Layout of the current layout
-      const parentLayoutKey = mapEntry.frontMatterData[cfgKey];
-      // Abort if a circular layout chain is detected. Otherwise, we'll time out and run out of memory.
-      if (seenLayoutKeys.has(parentLayoutKey)) {
-        throw new Error(
-          `Your layouts have a circular reference, starting at ${map[0].key}! The layout ${parentLayoutKey} was specified twice in this layout chain.`
-        );
-      }
-
-      // Keep track of this layout so we can detect duplicates in subsequent iterations
-      seenLayoutKeys.add(parentLayoutKey);
-
-      let layout = TemplateLayout.getTemplate(
-        parentLayoutKey,
-        mapEntry.inputDir,
-        this.config,
-        this.extensionMap
-      );
-      mapEntry = await layout.getTemplateLayoutMapEntry();
-      map.push(mapEntry);
+  async getLayoutChain() {
+    if (!Array.isArray(this.layoutChain)) {
+      await this.getTemplateLayoutMap();
     }
 
-    this.mapCache = map;
-    return map;
+    return this.layoutChain;
   }
 
   async getData() {
-    if (this.dataCache) {
-      return this.dataCache;
+    if (!this.dataCache) {
+      this.dataCache = new Promise(async (resolve, reject) => {
+        try {
+          let map = await this.getTemplateLayoutMap();
+          let dataToMerge = [];
+          for (let j = map.length - 1; j >= 0; j--) {
+            dataToMerge.push(map[j].frontMatterData);
+          }
+
+          // Deep merge of layout front matter
+          let data = TemplateData.mergeDeep(this.config, {}, ...dataToMerge);
+          delete data[this.config.keys.layout];
+
+          resolve(data);
+        } catch (e) {
+          reject(e);
+        }
+      });
     }
 
-    let map = await this.getTemplateLayoutMap();
-    let dataToMerge = [];
-    let layoutChain = [];
-    for (let j = map.length - 1; j >= 0; j--) {
-      layoutChain.push(map[j].template.inputPath);
-      dataToMerge.push(map[j].frontMatterData);
-    }
-
-    // Deep merge of layout front matter
-    let data = TemplateData.mergeDeep(this.config, {}, ...dataToMerge);
-    delete data[this.config.keys.layout];
-
-    this.layoutChain = layoutChain.reverse();
-    this.dataCache = data;
-    return data;
+    return this.dataCache;
   }
 
-  async getCompiledLayoutFunctions(layoutMap) {
+  // Do only cache this layout’s render function and delegate the rest to the other templates.
+  async getCachedCompiledLayoutFunction() {
+    if (!this.cachedCompiledLayoutFunction) {
+      this.cachedCompiledLayoutFunction = new Promise(async (resolve, reject) => {
+        try {
+          let rawInput = await this.getPreRender();
+          let renderFunction = await this.compile(rawInput);
+          resolve(renderFunction);
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }
+
+    return this.cachedCompiledLayoutFunction;
+  }
+
+  async getCompiledLayoutFunctions() {
+    let layoutMap = await this.getTemplateLayoutMap();
     let fns = [];
+
     try {
-      for (let layoutEntry of layoutMap) {
-        fns.push(
-          await layoutEntry.template.compile(
-            await layoutEntry.template.getPreRender()
-          )
+      fns.push({
+        render: await this.getCachedCompiledLayoutFunction(),
+      });
+
+      if (layoutMap.length > 1) {
+        let [currentLayout, parentLayout] = layoutMap;
+        let { key, inputDir } = parentLayout;
+
+        let layoutTemplate = TemplateLayout.getTemplate(
+          key,
+          inputDir,
+          this.eleventyConfig,
+          this.extensionMap
         );
+
+        // The parent already includes the rest of the layout chain
+        let upstreamFns = await layoutTemplate.getCompiledLayoutFunctions();
+        for (let j = 0, k = upstreamFns.length; j < k; j++) {
+          fns.push(upstreamFns[j]);
+        }
       }
+
+      return fns;
     } catch (e) {
       debugDev("Clearing TemplateCache after error.");
       templateCache.clear();
-      return Promise.reject(e);
+      throw e;
     }
-
-    return fns;
   }
 
   static augmentDataWithContent(data, templateContent) {
@@ -151,9 +219,6 @@ class TemplateLayout extends TemplateContent {
     if (templateContent !== undefined) {
       data.content = templateContent;
       data.layoutContent = templateContent;
-
-      // deprecated
-      data._layoutContent = templateContent;
     }
 
     return data;
@@ -161,17 +226,27 @@ class TemplateLayout extends TemplateContent {
 
   // Inefficient? We want to compile all the templatelayouts into a single reusable callback?
   // Trouble: layouts may need data variables present downstream/upstream
+  // This is called from Template->renderPageEntry
   async render(data, templateContent) {
     data = TemplateLayout.augmentDataWithContent(data, templateContent);
 
-    let layoutMap = await this.getTemplateLayoutMap();
-    let fns = await this.getCompiledLayoutFunctions(layoutMap);
-    for (let fn of fns) {
-      templateContent = await fn(data);
+    let compiledFunctions = await this.getCompiledLayoutFunctions();
+
+    for (let { render } of compiledFunctions) {
+      templateContent = await render(data);
       data = TemplateLayout.augmentDataWithContent(data, templateContent);
     }
 
     return templateContent;
+  }
+
+  resetCaches(types) {
+    super.resetCaches(types);
+
+    delete this.dataCache;
+    delete this.layoutChain;
+    delete this.cachedLayoutMap;
+    delete this.cachedCompiledLayoutFunction;
   }
 }
 

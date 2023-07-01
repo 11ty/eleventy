@@ -7,8 +7,10 @@ const querystring = require("querystring");
 const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const NetlifyRedirects = require("./Serverless/NetlifyRedirects");
-const deleteRequireCache = require("../Util/DeleteRequireCache");
+const { EleventyRequire } = require("../Util/Require");
+const DirContains = require("../Util/DirContains");
 const JavaScriptDependencies = require("../Util/JavaScriptDependencies");
+const deleteRequireCache = require("../Util/DeleteRequireCache");
 const debug = require("debug")("Eleventy:Serverless");
 
 // Provider specific
@@ -66,7 +68,7 @@ class BundlerHelper {
       Object.assign(
         {
           overwrite: true,
-          dot: true,
+          dot: false,
           junk: false,
           results: false,
         },
@@ -130,9 +132,7 @@ class BundlerHelper {
     let nodeModules = JavaScriptDependencies.getDependencies(files, true);
     this.writeBundlerDependenciesFile(
       dependencyFilename,
-      nodeModules.filter(
-        (name) => this.options.excludeDependencies.indexOf(name) === -1
-      )
+      nodeModules.filter((name) => this.options.excludeDependencies.indexOf(name) === -1)
     );
 
     let localModules = JavaScriptDependencies.getDependencies(files, false);
@@ -166,10 +166,11 @@ class BundlerHelper {
     let serverlessFilepath = TemplatePath.addLeadingDotSlash(
       path.join(TemplatePath.getWorkingDir(), this.dir, "index")
     );
-    deleteRequireCache(TemplatePath.absolutePath(serverlessFilepath));
 
     return async function EleventyServerlessMiddleware(req, res, next) {
-      let serverlessFunction = require(serverlessFilepath);
+      deleteRequireCache(serverlessFilepath);
+
+      let serverlessFunction = EleventyRequire(serverlessFilepath);
       let url = new URL(req.url, "http://localhost/"); // any domain will do here, we just want the searchParams
 
       let start = new Date();
@@ -181,9 +182,7 @@ class BundlerHelper {
         // @netlify/functions builder overwrites these to {} intentionally
         // See https://github.com/netlify/functions/issues/38
         queryStringParameters: this.getSingleValueQueryParams(url.searchParams),
-        multiValueQueryStringParameters: this.getMultiValueQueryParams(
-          url.searchParams
-        ),
+        multiValueQueryStringParameters: this.getMultiValueQueryParams(url.searchParams),
       });
 
       if (result.statusCode === 404) {
@@ -225,10 +224,7 @@ class BundlerHelper {
 
       let contents = await fsp.readFile(defaultContentPath, "utf8");
       contents = contents.replace(/\%\%NAME\%\%/g, this.name);
-      contents = contents.replace(
-        /\%\%FUNCTIONS_DIR\%\%/g,
-        this.options.functionsDir
-      );
+      contents = contents.replace(/\%\%FUNCTIONS_DIR\%\%/g, this.options.functionsDir);
       return fsp.writeFile(filepath, contents);
     }
   }
@@ -259,9 +255,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
   );
 
   if (!options.name) {
-    throw new Error(
-      "Serverless addPlugin second argument options object must have a name."
-    );
+    throw new Error("Serverless addPlugin second argument options object must have a name.");
   }
 
   if (process.env.ELEVENTY_SOURCE === "cli") {
@@ -293,10 +287,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
           } else if (cp.from && cp.to) {
             promises.push(helper.recursiveCopy(cp.from, cp.to, cp.options));
           } else {
-            debug(
-              "Ignored extra copy %o (needs to be a string or a {from: '', to: ''})",
-              cp
-            );
+            debug("Ignored extra copy %o (needs to be a string or a {from: '', to: ''})", cp);
           }
         }
         await Promise.all(promises);
@@ -317,10 +308,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       }
 
       await helper.recursiveCopy(env.config, "eleventy.config.js");
-      await helper.processJavaScriptFiles(
-        [env.config],
-        "eleventy-app-config-modules.js"
-      );
+      await helper.processJavaScriptFiles([env.config], "eleventy-app-config-modules.js");
     });
 
     eleventyConfig.on("eleventy.globalDataFiles", async (fileList) => {
@@ -328,10 +316,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
         return;
       }
       // Note that originals are copied in `eleventy.directories` event below
-      await helper.processJavaScriptFiles(
-        fileList,
-        "eleventy-app-globaldata-modules.js"
-      );
+      await helper.processJavaScriptFiles(fileList, "eleventy-app-globaldata-modules.js");
     });
 
     // directory data files only
@@ -341,19 +326,22 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       }
 
       await helper.copyFileList(fileList);
-      await helper.processJavaScriptFiles(
-        fileList,
-        "eleventy-app-dirdata-modules.js"
-      );
+      await helper.processJavaScriptFiles(fileList, "eleventy-app-dirdata-modules.js");
     });
 
     eleventyConfig.on("eleventy.directories", async (dirs) => {
       let promises = [];
       if (options.copyEnabled) {
-        promises.push(helper.recursiveCopy(dirs.data));
+        promises.push(helper.recursiveCopy(dirs.input));
 
-        promises.push(helper.recursiveCopy(dirs.includes));
-        if (dirs.layouts) {
+        if (!DirContains(dirs.input, dirs.data)) {
+          promises.push(helper.recursiveCopy(dirs.data));
+        }
+        if (!DirContains(dirs.input, dirs.includes)) {
+          promises.push(helper.recursiveCopy(dirs.includes));
+        }
+        if (dirs.layouts && !DirContains(dirs.input, dirs.layouts)) {
+          // TODO avoid copy if dirs.layouts is in dirs.input
           promises.push(helper.recursiveCopy(dirs.layouts));
         }
       }
@@ -412,27 +400,15 @@ function EleventyPlugin(eleventyConfig, options = {}) {
       // This is expected to exist even if empty
       let filename = helper.getOutputPath("eleventy-serverless-map.json");
       fs.writeFileSync(filename, JSON.stringify(outputMap, null, 2));
-      debug(
-        `Eleventy Serverless (${options.name}), writing (×${mapEntryCount}): ${filename}`
-      );
+      debug(`Eleventy Serverless (${options.name}), writing (×${mapEntryCount}): ${filename}`);
       this.copyCount++;
 
       // Write redirects (even if no redirects exist for this function to handle deletes)
       if (options.copyEnabled && options.redirects) {
-        if (
-          typeof options.redirects === "string" &&
-          redirectHandlers[options.redirects]
-        ) {
+        if (typeof options.redirects === "string" && redirectHandlers[options.redirects]) {
           redirectHandlers[options.redirects](options.name, outputMap);
         } else if (typeof options.redirects === "function") {
           options.redirects(options.name, outputMap);
-        }
-      }
-
-      if (options.copyEnabled && mapEntryCount > 0) {
-        // Copy templates to bundle folder
-        for (let url in outputMap) {
-          helper.recursiveCopy(outputMap[url]);
         }
       }
     });

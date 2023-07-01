@@ -10,14 +10,7 @@ const getNewTemplateForTests = require("./_getNewTemplateForTests");
 const getRenderedTmpls = require("./_getRenderedTemplates");
 
 function getNewTemplate(filename, input, output, eleventyConfig) {
-  return getNewTemplateForTests(
-    filename,
-    input,
-    output,
-    null,
-    null,
-    eleventyConfig
-  );
+  return getNewTemplateForTests(filename, input, output, null, null, eleventyConfig);
 }
 
 function getNewTemplateByNumber(num, eleventyConfig) {
@@ -316,14 +309,8 @@ test("TemplateMap adds collections data and has page data values using .cache()"
   let map = tm.getMap();
   await tm.cache();
   t.is(map[0].data.page.url, "/templateMapCollection/test1/");
-  t.is(
-    map[0].data.page.outputPath,
-    "./test/stubs/_site/templateMapCollection/test1/index.html"
-  );
-  t.is(
-    map[0].data.page.inputPath,
-    "./test/stubs/templateMapCollection/test1.md"
-  );
+  t.is(map[0].data.page.outputPath, "./test/stubs/_site/templateMapCollection/test1/index.html");
+  t.is(map[0].data.page.inputPath, "./test/stubs/templateMapCollection/test1.md");
   t.is(map[0].data.page.fileSlug, "test1");
   t.truthy(map[0].data.page.date);
 });
@@ -339,20 +326,14 @@ test("TemplateMap adds collections data and has page data values using ._testGet
 
   let collections = await tm._testGetCollectionsData();
   t.is(collections.all[0].url, "/templateMapCollection/test1/");
-  t.is(
-    collections.all[0].outputPath,
-    "./test/stubs/_site/templateMapCollection/test1/index.html"
-  );
+  t.is(collections.all[0].outputPath, "./test/stubs/_site/templateMapCollection/test1/index.html");
 
   t.is(collections.all[0].data.page.url, "/templateMapCollection/test1/");
   t.is(
     collections.all[0].data.page.outputPath,
     "./test/stubs/_site/templateMapCollection/test1/index.html"
   );
-  t.is(
-    collections.all[0].data.page.inputPath,
-    "./test/stubs/templateMapCollection/test1.md"
-  );
+  t.is(collections.all[0].data.page.inputPath, "./test/stubs/templateMapCollection/test1.md");
   t.is(collections.all[0].data.page.fileSlug, "test1");
 });
 
@@ -380,10 +361,7 @@ test("Url should be available in user config collections API calls", async (t) =
     "./test/stubs/_site/templateMapCollection/test1/index.html"
   );
 
-  t.is(
-    collections.userCollection[0].data.page.url,
-    "/templateMapCollection/test1/"
-  );
+  t.is(collections.userCollection[0].data.page.url, "/templateMapCollection/test1/");
   t.is(
     collections.userCollection[0].data.page.outputPath,
     "./test/stubs/_site/templateMapCollection/test1/index.html"
@@ -397,15 +375,9 @@ test("Url should be available in user config collections API calls (test in call
     userCollection: function (collection) {
       let all = collection.getAll();
       t.is(all[0].url, "/templateMapCollection/test1/");
-      t.is(
-        all[0].outputPath,
-        "./test/stubs/_site/templateMapCollection/test1/index.html"
-      );
+      t.is(all[0].outputPath, "./test/stubs/_site/templateMapCollection/test1/index.html");
       t.is(all[1].url, "/templateMapCollection/test2/");
-      t.is(
-        all[1].outputPath,
-        "./test/stubs/_site/templateMapCollection/test2/index.html"
-      );
+      t.is(all[1].outputPath, "./test/stubs/_site/templateMapCollection/test2/index.html");
 
       return all;
     },
@@ -490,10 +462,7 @@ test("Should be able to paginate a user config collection (uses rendered permali
     userCollection: function (collection) {
       let all = collection.getFilteredByTag("dog");
       t.is(all[0].url, "/templateMapCollection/test1/");
-      t.is(
-        all[0].outputPath,
-        "./test/stubs/_site/templateMapCollection/test1/index.html"
-      );
+      t.is(all[0].outputPath, "./test/stubs/_site/templateMapCollection/test1/index.html");
       return all;
     },
   });
@@ -574,14 +543,8 @@ test("Should be able to paginate a user config collection (paged template is als
 
   t.truthy(collections.haha);
   t.is(collections.haha.length, 2);
-  t.is(
-    collections.haha[0].url,
-    "/templateMapCollection/paged-cfg-tagged-apply-to-all/"
-  );
-  t.is(
-    collections.haha[1].url,
-    "/templateMapCollection/paged-cfg-tagged-apply-to-all/1/"
-  );
+  t.is(collections.haha[0].url, "/templateMapCollection/paged-cfg-tagged-apply-to-all/");
+  t.is(collections.haha[1].url, "/templateMapCollection/paged-cfg-tagged-apply-to-all/1/");
 });
 
 test("Should be able to paginate a user config collection (paged template is also tagged, uses custom rendered permalink)", async (t) => {
@@ -692,10 +655,7 @@ test("Should be able to paginate a tag generated collection (and it has template
     "./test/stubs/templateMapCollection/paged-tag-dogs-templateContent.md"
   );
 
-  let templates = await getRenderedTmpls(
-    pagedMapEntry.template,
-    pagedMapEntry.data
-  );
+  let templates = await getRenderedTmpls(pagedMapEntry.template, pagedMapEntry.data);
   t.is(templates.length, 2);
   t.is(templates[0].data.pagination.pageNumber, 0);
   t.is(templates[1].data.pagination.pageNumber, 1);
@@ -739,10 +699,7 @@ test("Should be able to paginate a tag generated collection when aliased (and it
     "./test/stubs/templateMapCollection/paged-tag-dogs-templateContent-alias.md"
   );
 
-  let templates = await getRenderedTmpls(
-    pagedMapEntry.template,
-    pagedMapEntry.data
-  );
+  let templates = await getRenderedTmpls(pagedMapEntry.template, pagedMapEntry.data);
   t.is(templates.length, 1);
   t.is(templates[0].data.pagination.pageNumber, 0);
   t.is(
@@ -803,10 +760,7 @@ test("getUserConfigCollectionNames", async (t) => {
     },
   });
 
-  t.deepEqual(tm.getUserConfigCollectionNames(), [
-    "userCollection",
-    "otherUserCollection",
-  ]);
+  t.deepEqual(tm.getUserConfigCollectionNames(), ["userCollection", "otherUserCollection"]);
 });
 
 test("isUserConfigCollectionName", (t) => {
@@ -833,7 +787,7 @@ test("Dependency Map should have nodes that have no dependencies and no dependen
 
   await tm.cache();
 
-  let deps = await tm.getMappedDependencies();
+  let [deps] = tm.getFullTemplateMapOrder();
   t.true(deps.filter((dep) => dep.indexOf("test5.md") > -1).length > 0);
 
   let collections = await tm._testGetCollectionsData();
@@ -857,13 +811,9 @@ test("Dependency Map should have include orphan user config collections (in the 
 
   await tm.cache();
 
-  let deps = await tm.getMappedDependencies();
+  let [deps, delayedDeps] = tm.getFullTemplateMapOrder();
   t.true(deps.filter((dep) => dep.indexOf("userCollection") > -1).length === 0);
-
-  let delayedDeps = await tm.getDelayedMappedDependencies();
-  t.true(
-    delayedDeps.filter((dep) => dep.indexOf("userCollection") > -1).length > 0
-  );
+  t.true(delayedDeps.filter((dep) => dep.indexOf("userCollection") > -1).length > 0);
 
   let collections = await tm._testGetCollectionsData();
   t.is(collections.all.length, 2);
@@ -970,10 +920,7 @@ test("Tag pages (all pages added to collections). Allow pagination over all coll
         return entry.templateContent.trim();
       })
   );
-  t.deepEqual(
-    collectionTagPagesTemplateContents,
-    new Set(["post", "dog", "cat"])
-  );
+  t.deepEqual(collectionTagPagesTemplateContents, new Set(["post", "dog", "cat"]));
 });
 
 test("eleventyExcludeFromCollections", async (t) => {
@@ -1068,19 +1015,10 @@ test("Paginate over collections.all", async (t) => {
   );
 
   let map = tm.getMap();
-  t.is(
-    map[0].inputPath,
-    "./test/stubs/page-target-collections/paginateall.njk"
-  );
+  t.is(map[0].inputPath, "./test/stubs/page-target-collections/paginateall.njk");
   t.is(map[0]._pages.length, 2);
-  t.is(
-    map[0]._pages[0].templateContent,
-    "INPUT PATH:./test/stubs/templateMapCollection/test1.md"
-  );
-  t.is(
-    map[0]._pages[1].templateContent,
-    "INPUT PATH:./test/stubs/templateMapCollection/test2.md"
-  );
+  t.is(map[0]._pages[0].templateContent, "INPUT PATH:./test/stubs/templateMapCollection/test1.md");
+  t.is(map[0]._pages[1].templateContent, "INPUT PATH:./test/stubs/templateMapCollection/test2.md");
   t.is(map[1].inputPath, "./test/stubs/templateMapCollection/test1.md");
   t.is(map[1]._pages[0].templateContent.trim(), "<h1>Test 1</h1>");
   t.is(map[2].inputPath, "./test/stubs/templateMapCollection/test2.md");
@@ -1148,10 +1086,7 @@ test("Test a transform with a layout (via templateMap)", async (t) => {
 
   for (let entry of tm.getMap()) {
     for (let page of entry._pages) {
-      t.is(
-        await entry.template.renderPageEntry(entry, page),
-        "OVERRIDE BY A TRANSFORM"
-      );
+      t.is(await entry.template.renderPageEntry(entry, page), "OVERRIDE BY A TRANSFORM");
     }
   }
 });
@@ -1274,7 +1209,8 @@ test("TemplateMap circular references (map.templateContent) using eleventyExclud
   let map = tm.getMap();
   t.falsy(map[0].data.collections);
 
-  t.deepEqual(tm.getMappedDependencies(), [
+  let [deps] = tm.getFullTemplateMapOrder();
+  t.deepEqual(deps, [
     "./test/stubs/issue-522/template.md",
     "___TAG___all",
     "./test/stubs/issue-522/excluded.md",
@@ -1390,8 +1326,7 @@ test("serverlessUrlMap Event (with `build` and `serverless`)", async (t) => {
   eleventyConfig.userConfig.on("eleventy.serverlessUrlMap", (templateMap) => {
     t.deepEqual(templateMap, [
       {
-        inputPath:
-          "./test/stubs/permalink-build-serverless/permalink-build-serverless.md",
+        inputPath: "./test/stubs/permalink-build-serverless/permalink-build-serverless.md",
         serverless: {
           serverless: "/some-other-url/",
         },
@@ -1460,6 +1395,38 @@ test("serverlessUrlMap Event (empty pagination template with `serverless` should
     "./test/stubs/permalink-serverless-empty-pagination/permalink-serverless-empty-pagination.md",
     "./test/stubs/",
     "./test/stubs/_site",
+    eleventyConfig
+  );
+
+  await tm.add(tmpl);
+  await tm.cache();
+});
+
+test("eleventy.layouts Event", async (t) => {
+  t.plan(1);
+
+  let eleventyConfig = new TemplateConfig();
+
+  eleventyConfig.userConfig.on("eleventy.layouts", (layoutMap) => {
+    t.deepEqual(layoutMap, {
+      "./test/stubs-layouts-event/_includes/first.liquid": ["./test/stubs-layouts-event/page.md"],
+      "./test/stubs-layouts-event/_includes/second.liquid": [
+        "./test/stubs-layouts-event/page.md",
+        "./test/stubs-layouts-event/_includes/first.liquid",
+      ],
+      "./test/stubs-layouts-event/_includes/third.liquid": [
+        "./test/stubs-layouts-event/page.md",
+        "./test/stubs-layouts-event/_includes/first.liquid",
+        "./test/stubs-layouts-event/_includes/second.liquid",
+      ],
+    });
+  });
+
+  let tm = new TemplateMap(eleventyConfig);
+  let tmpl = getNewTemplate(
+    "./test/stubs-layouts-event/page.md",
+    "./test/stubs-layouts-event/",
+    "./test/stubs-layouts-event/_site",
     eleventyConfig
   );
 

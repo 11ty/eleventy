@@ -2,7 +2,8 @@ const urlFilter = require("./Filters/Url");
 const serverlessUrlFilter = require("./Filters/ServerlessUrl");
 const slugFilter = require("./Filters/Slug");
 const slugifyFilter = require("./Filters/Slugify");
-const getCollectionItem = require("./Filters/GetCollectionItem");
+const getLocaleCollectionItem = require("./Filters/GetLocaleCollectionItem");
+const getCollectionItemIndex = require("./Filters/GetCollectionItemIndex");
 
 module.exports = function (config) {
   let templateConfig = this;
@@ -10,23 +11,38 @@ module.exports = function (config) {
   config.addFilter("slug", slugFilter);
   config.addFilter("slugify", slugifyFilter);
 
-  config.addFilter("url", function (url, pathPrefixOverride) {
-    let pathPrefix = pathPrefixOverride || templateConfig.getPathPrefix();
+  // Add pathPrefix manually to a URL
+  config.addFilter("url", function addPathPrefix(url, pathPrefixOverride) {
+    let pathPrefix;
+    if (pathPrefixOverride && typeof pathPrefixOverride === "string") {
+      pathPrefix = pathPrefixOverride;
+    } else {
+      pathPrefix = templateConfig.getPathPrefix();
+    }
+
     return urlFilter.call(this, url, pathPrefix);
   });
-  config.addFilter("log", console.log);
+
+  config.addFilter("log", (input, ...messages) => {
+    console.log(input, ...messages);
+    return input;
+  });
 
   config.addFilter("serverlessUrl", serverlessUrlFilter);
 
-  config.addFilter("getCollectionItem", (collection, page) =>
-    getCollectionItem(collection, page)
-  );
-  config.addFilter("getPreviousCollectionItem", (collection, page) =>
-    getCollectionItem(collection, page, -1)
-  );
-  config.addFilter("getNextCollectionItem", (collection, page) =>
-    getCollectionItem(collection, page, 1)
-  );
+  config.addFilter("getCollectionItemIndex", function (collection, pageOverride) {
+    return getCollectionItemIndex.call(this, collection, pageOverride);
+  });
+
+  config.addFilter("getCollectionItem", function (collection, pageOverride, langCode) {
+    return getLocaleCollectionItem.call(this, config, collection, pageOverride, langCode, 0);
+  });
+  config.addFilter("getPreviousCollectionItem", function (collection, pageOverride, langCode) {
+    return getLocaleCollectionItem.call(this, config, collection, pageOverride, langCode, -1);
+  });
+  config.addFilter("getNextCollectionItem", function (collection, pageOverride, langCode) {
+    return getLocaleCollectionItem.call(this, config, collection, pageOverride, langCode, 1);
+  });
 
   return {
     templateFormats: [
@@ -45,9 +61,15 @@ module.exports = function (config) {
     pathPrefix: "/",
     markdownTemplateEngine: "liquid",
     htmlTemplateEngine: "liquid",
-    dataTemplateEngine: false, // change in 1.0
     htmlOutputSuffix: "-o",
-    jsDataFileSuffix: ".11tydata",
+
+    // Renamed from `jsDataFileSuffix` in 2.0 (and swapped to an Array)
+    // If you remove "" we won’t look for dir/dir.json or file.json
+    dataFileSuffixes: [".11tydata", ""],
+
+    // "index" will look for `directory/index.*` directory data files instead of `directory/directory.*`
+    dataFileDirBaseNameOverride: false,
+
     keys: {
       package: "pkg",
       layout: "layout",

@@ -26,16 +26,6 @@ class EleventyWatchTargets {
     return this.dependencies.has(path);
   }
 
-  _normalizeTargets(targets) {
-    if (!targets) {
-      return [];
-    } else if (Array.isArray(targets)) {
-      return targets;
-    }
-
-    return [targets];
-  }
-
   reset() {
     this.newTargets = new Set();
   }
@@ -67,6 +57,13 @@ class EleventyWatchTargets {
     return this.graph.dependenciesOf(parent);
   }
 
+  getDependantsOf(child) {
+    if (!this.graph.hasNode(child)) {
+      return [];
+    }
+    return this.graph.dependantsOf(child);
+  }
+
   addRaw(targets, isDependency) {
     for (let target of targets) {
       let path = TemplatePath.addLeadingDotSlash(target);
@@ -82,17 +79,29 @@ class EleventyWatchTargets {
     }
   }
 
+  static normalize(targets) {
+    if (!targets) {
+      return [];
+    } else if (Array.isArray(targets)) {
+      return targets;
+    }
+
+    return [targets];
+  }
+
   // add only a target
   add(targets) {
-    targets = this._normalizeTargets(targets);
-    this.addRaw(targets);
+    this.addRaw(EleventyWatchTargets.normalize(targets));
+  }
+
+  static normalizeToGlobs(targets) {
+    return EleventyWatchTargets.normalize(targets).map((entry) =>
+      TemplatePath.convertToRecursiveGlobSync(entry)
+    );
   }
 
   addAndMakeGlob(targets) {
-    targets = this._normalizeTargets(targets).map((entry) =>
-      TemplatePath.convertToRecursiveGlobSync(entry)
-    );
-    this.addRaw(targets);
+    this.addRaw(EleventyWatchTargets.normalizeToGlobs(targets));
   }
 
   // add only a target’s dependencies
@@ -101,7 +110,7 @@ class EleventyWatchTargets {
       return;
     }
 
-    targets = this._normalizeTargets(targets);
+    targets = EleventyWatchTargets.normalize(targets);
     let deps = JavaScriptDependencies.getDependencies(targets);
     if (filterCallback) {
       deps = deps.filter(filterCallback);
@@ -117,9 +126,20 @@ class EleventyWatchTargets {
     this.writer = templateWriter;
   }
 
-  clearDependencyRequireCache() {
-    for (let path of this.dependencies) {
-      deleteRequireCache(TemplatePath.absolutePath(path));
+  clearRequireCacheFor(filePathArray) {
+    for (const filePath of filePathArray) {
+      deleteRequireCache(filePath);
+
+      // Delete from require cache so that updates to the module are re-required
+      let importsTheChangedFile = this.getDependantsOf(filePath);
+      for (let dep of importsTheChangedFile) {
+        deleteRequireCache(dep);
+      }
+
+      let isImportedInTheChangedFile = this.getDependenciesOf(filePath);
+      for (let dep of isImportedInTheChangedFile) {
+        deleteRequireCache(dep);
+      }
     }
   }
 

@@ -9,9 +9,7 @@ async function writeMapEntries(mapEntries) {
   let promises = [];
   for (let entry of mapEntries) {
     if (entry.template.behavior.isWriteable()) {
-      promises.push(
-        entry.template._write(entry.outputPath, entry.templateContent)
-      );
+      promises.push(entry.template._write(entry.outputPath, entry.templateContent));
     }
   }
   return Promise.all(promises);
@@ -25,9 +23,7 @@ async function getTemplateMapEntriesWithContent(template, data) {
       entry._pages = await entry.template.getTemplates(entry.data);
       await Promise.all(
         entry._pages.map(async (page) => {
-          page.templateContent = await page.template.renderWithoutLayout(
-            page.data
-          );
+          page.templateContent = await page.template.renderWithoutLayout(page.data);
           return page;
         })
       );
@@ -61,10 +57,7 @@ test("permalink: false", async (t) => {
   // Output does not exist
   t.is(fs.existsSync("./test/stubs/_site/permalink-false/"), false);
   t.is(fs.existsSync("./test/stubs/_site/permalink-false/test/"), false);
-  t.is(
-    fs.existsSync("./test/stubs/_site/permalink-false/test/index.html"),
-    false
-  );
+  t.is(fs.existsSync("./test/stubs/_site/permalink-false/test/index.html"), false);
 });
 
 test("permalink: false inside of eleventyComputed, Issue #1754", async (t) => {
@@ -89,16 +82,8 @@ test("permalink: false inside of eleventyComputed, Issue #1754", async (t) => {
 
   // Output does not exist
   t.is(fs.existsSync("./test/stubs/_site/permalink-false-computed/"), false);
-  t.is(
-    fs.existsSync("./test/stubs/_site/permalink-false-computed/test/"),
-    false
-  );
-  t.is(
-    fs.existsSync(
-      "./test/stubs/_site/permalink-false-computed/test/index.html"
-    ),
-    false
-  );
+  t.is(fs.existsSync("./test/stubs/_site/permalink-false-computed/test/"), false);
+  t.is(fs.existsSync("./test/stubs/_site/permalink-false-computed/test/index.html"), false);
 });
 
 test("permalink: true", async (t) => {
@@ -124,35 +109,25 @@ test("Disable dynamic permalinks", async (t) => {
 
   t.is(await tmpl.getRawOutputPath(data), "/{{justastring}}/index.html");
   t.is(await tmpl.getOutputHref(data), "/{{justastring}}/");
+  // TODO https://github.com/11ty/eleventy-plugin-webc/issues/32
+  // t.is(data.page.url, "/{{justastring}}/")
 });
 
 test("Permalink with variables!", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/permalinkdata.njk",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/permalinkdata.njk", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
 
-  t.is(
-    await tmpl.getOutputPath(data),
-    "./dist/subdir/slug-candidate/index.html"
-  );
+  t.is(await tmpl.getOutputPath(data), "./dist/subdir/slug-candidate/index.html");
 });
 
 test("Permalink with variables and JS front matter!", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/permalinkdata-jsfn.njk",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/permalinkdata-jsfn.njk", "./test/stubs/", "./dist");
   let data = await tmpl.getData();
   t.is(await tmpl.getOutputPath(data), "./dist/subdir/slug/index.html");
 });
 
-// This is broken right now, permalink must use the same template language as the template
-test.skip("Use a JavaScript function for permalink in any template language", async (t) => {
+test("Use a JavaScript function for permalink in any template language", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/permalinkdata-jspermalinkfn.njk",
     "./test/stubs/",
@@ -164,11 +139,7 @@ test.skip("Use a JavaScript function for permalink in any template language", as
 });
 
 test("Permalink with dates!", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/permalinkdate.liquid",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/permalinkdate.liquid", "./test/stubs/", "./dist");
   let data = await tmpl.getData();
   t.is(await tmpl.getOutputPath(data), "./dist/2016/01/01/index.html");
 });
@@ -197,24 +168,13 @@ test("Reuse permalink in directory specific data file", async (t) => {
 });
 
 test("Using slugify filter!", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/slugify-filter/test.njk",
-    "./test/slugify-filter/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/slugify-filter/test.njk", "./test/slugify-filter/", "./dist");
   let data = await tmpl.getData();
-  t.is(
-    await tmpl.getOutputPath(data),
-    "./dist/subdir/slug-love-candidate-lyublyu/index.html"
-  );
+  t.is(await tmpl.getOutputPath(data), "./dist/subdir/slug-love-candidate-lyublyu/index.html");
 });
 
 test("Using slugify filter with comma and apostrophe", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/slugify-filter/comma.njk",
-    "./test/slugify-filter/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/slugify-filter/comma.njk", "./test/slugify-filter/", "./dist");
   let data = await tmpl.getData();
   t.is(await tmpl.getOutputPath(data), "./dist/subdir/hi-i-m-zach/index.html");
 });
@@ -257,4 +217,14 @@ test("Using slug filter with a number #854", async (t) => {
   );
   let data = await tmpl.getData();
   t.is(await tmpl.getOutputPath(data), "./dist/subdir/1/index.html");
+});
+
+test.skip("Using slugify filter with multibyte", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/slugify-filter/multibyte.njk",
+    "./test/slugify-filter/",
+    "./dist"
+  );
+  let data = await tmpl.getData();
+  t.is(await tmpl.getOutputPath(data), "./dist/subdir/test-猫/index.html");
 });

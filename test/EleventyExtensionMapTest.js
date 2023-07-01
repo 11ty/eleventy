@@ -18,8 +18,8 @@ test("Single format", (t) => {
 });
 test("Multiple formats", (t) => {
   let map = getExtensionMap(["njk", "pug"]);
-  t.deepEqual(map.getGlobs("."), ["./**/*.njk", "./**/*.pug"]);
-  t.deepEqual(map.getGlobs("src"), ["./src/**/*.njk", "./src/**/*.pug"]);
+  t.deepEqual(map.getGlobs("."), ["./**/*.{njk,pug}"]);
+  t.deepEqual(map.getGlobs("src"), ["./src/**/*.{njk,pug}"]);
 });
 
 test("Invalid keys are filtered (using passthrough copy)", (t) => {
@@ -29,7 +29,7 @@ test("Invalid keys are filtered (using passthrough copy)", (t) => {
 
 test("Keys are mapped to lower case", (t) => {
   let map = getExtensionMap(["PUG", "NJK"]);
-  t.deepEqual(map.getGlobs("."), ["./**/*.pug", "./**/*.njk"]);
+  t.deepEqual(map.getGlobs("."), ["./**/*.{pug,njk}"]);
 });
 
 test("Pruned globs", (t) => {
@@ -134,15 +134,7 @@ test("getKey", (t) => {
 });
 
 test("isFullTemplateFilePath (not a passthrough copy extension)", (t) => {
-  let map = getExtensionMap([
-    "liquid",
-    "njk",
-    "11ty.js",
-    "ejs",
-    "pug",
-    "js",
-    "css",
-  ]);
+  let map = getExtensionMap(["liquid", "njk", "11ty.js", "ejs", "pug", "js", "css"]);
   t.true(map.isFullTemplateFilePath("template.liquid"));
   t.true(map.isFullTemplateFilePath("template.njk"));
   t.true(map.isFullTemplateFilePath("template.11ty.js"));
@@ -162,16 +154,10 @@ test("getValidExtensionsForPath", (t) => {
   let map = getExtensionMap(["liquid", "njk", "11ty.js", "js"], cfg);
 
   t.deepEqual(map.getValidExtensionsForPath("template.liquid"), ["liquid"]);
-  t.deepEqual(map.getValidExtensionsForPath("template.11ty.js"), [
-    "11ty.js",
-    "js",
-  ]);
+  t.deepEqual(map.getValidExtensionsForPath("template.11ty.js"), ["11ty.js", "js"]);
   t.deepEqual(map.getValidExtensionsForPath("template.pug"), []);
   t.deepEqual(map.getValidExtensionsForPath("template.liquid.js"), ["js"]);
-  t.deepEqual(map.getValidExtensionsForPath("njk.liquid.11ty.js"), [
-    "11ty.js",
-    "js",
-  ]);
+  t.deepEqual(map.getValidExtensionsForPath("njk.liquid.11ty.js"), ["11ty.js", "js"]);
 });
 
 test("shouldSpiderJavaScriptDependencies", (t) => {

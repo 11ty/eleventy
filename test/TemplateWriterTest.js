@@ -1,6 +1,6 @@
 const test = require("ava");
 const fs = require("fs");
-const rimraf = require("rimraf");
+const { rimrafSync } = require("rimraf");
 const fastglob = require("fast-glob");
 const path = require("path");
 const EleventyFiles = require("../src/EleventyFiles");
@@ -30,17 +30,14 @@ test("Output is a subdir of input", async (t) => {
   evf.init();
 
   let files = await fastglob(evf.getFileGlobs());
-  t.is(evf.getRawFiles().length, 2);
+  t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTest/**/*.{ejs,md}"]);
   t.true(files.length > 0);
 
-  let tmpl = tw._createTemplate(files[0]);
+  let { template: tmpl } = tw._createTemplate(files[0]);
   t.is(tmpl.inputDir, "./test/stubs/writeTest");
 
   let data = await tmpl.getData();
-  t.is(
-    await tmpl.getOutputPath(data),
-    "./test/stubs/writeTest/_writeTestSite/test/index.html"
-  );
+  t.is(await tmpl.getOutputPath(data), "./test/stubs/writeTest/_writeTestSite/test/index.html");
 });
 
 test("_createTemplateMap", async (t) => {
@@ -151,14 +148,8 @@ test("__testGetCollectionsData with custom collection (ascending)", async (t) =>
   let templateMap = await tw._createTemplateMap(paths);
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.customPostsAsc.length, 2);
-  t.is(
-    path.parse(collectionsData.customPostsAsc[0].inputPath).base,
-    "test1.md"
-  );
-  t.is(
-    path.parse(collectionsData.customPostsAsc[1].inputPath).base,
-    "test2.md"
-  );
+  t.is(path.parse(collectionsData.customPostsAsc[0].inputPath).base, "test1.md");
+  t.is(path.parse(collectionsData.customPostsAsc[1].inputPath).base, "test2.md");
 });
 
 test("__testGetCollectionsData with custom collection (descending)", async (t) => {
@@ -227,19 +218,14 @@ test("Pagination with a Collection", async (t) => {
   t.is(collectionsData.tag1.length, 3);
   t.is(collectionsData.pagingtag.length, 1);
 
-  let mapEntry = templateMap.getMapEntryForInputPath(
-    "./test/stubs/paged/collection/main.njk"
-  );
+  let mapEntry = templateMap.getMapEntryForInputPath("./test/stubs/paged/collection/main.njk");
   t.truthy(mapEntry);
   t.is(mapEntry.inputPath, "./test/stubs/paged/collection/main.njk");
   t.is(mapEntry._pages.length, 2);
   t.is(mapEntry._pages[0].outputPath, "./test/stubs/_site/main/index.html");
   t.is(mapEntry._pages[1].outputPath, "./test/stubs/_site/main/1/index.html");
 
-  t.is(
-    mapEntry._pages[0].templateContent.trim(),
-    "<ol><li>/test1/</li><li>/test2/</li></ol>"
-  );
+  t.is(mapEntry._pages[0].templateContent.trim(), "<ol><li>/test1/</li><li>/test2/</li></ol>");
   t.is(mapEntry._pages[1].templateContent.trim(), "<ol><li>/test3/</li></ol>");
 });
 
@@ -263,20 +249,14 @@ test("Pagination with a Collection from another Paged Template", async (t) => {
   let map1 = templateMap.getMapEntryForInputPath(
     "./test/stubs/paged/cfg-collection-tag-cfg-collection/paged-main.njk"
   );
-  t.is(
-    map1._pages[0].templateContent.trim(),
-    "<ol><li>/test1/</li><li>/test2/</li></ol>"
-  );
+  t.is(map1._pages[0].templateContent.trim(), "<ol><li>/test1/</li><li>/test2/</li></ol>");
   t.is(map1._pages[1].templateContent.trim(), "<ol><li>/test3/</li></ol>");
 
   let map2 = templateMap.getMapEntryForInputPath(
     "./test/stubs/paged/cfg-collection-tag-cfg-collection/paged-downstream.njk"
   );
   t.is(map2._pages[0].templateContent.trim(), "<ol><li>/paged-main/</li></ol>");
-  t.is(
-    map2._pages[1].templateContent.trim(),
-    "<ol><li>/paged-main/1/</li></ol>"
-  );
+  t.is(map2._pages[1].templateContent.trim(), "<ol><li>/paged-main/1/</li></ol>");
 });
 
 test("Pagination with a Collection (apply all pages to collections)", async (t) => {
@@ -300,12 +280,9 @@ test("Pagination with a Collection (apply all pages to collections)", async (t) 
     "./test/stubs/paged/collection-apply-to-all/main.njk"
   );
   t.truthy(mapEntry);
-  t.is(
-    mapEntry.inputPath,
-    "./test/stubs/paged/collection-apply-to-all/main.njk"
-  );
+  t.is(mapEntry.inputPath, "./test/stubs/paged/collection-apply-to-all/main.njk");
 
-  let mainTmpl = tw._createTemplate(
+  let { template: mainTmpl } = tw._createTemplate(
     "./test/stubs/paged/collection-apply-to-all/main.njk"
   );
   let data = await mainTmpl.getData();
@@ -327,10 +304,7 @@ test("Pagination with a Collection (apply all pages to collections)", async (t) 
   t.is(templates[1].outputPath, "./test/stubs/_site/main/1/index.html");
 
   // test content
-  t.is(
-    templates[0].templateContent.trim(),
-    "<ol><li>/test1/</li><li>/test2/</li></ol>"
-  );
+  t.is(templates[0].templateContent.trim(), "<ol><li>/test1/</li><li>/test2/</li></ol>");
   t.is(templates[1].templateContent.trim(), "<ol><li>/test3/</li></ol>");
 });
 
@@ -356,15 +330,10 @@ test("Use a collection inside of a template", async (t) => {
   t.truthy(mapEntry);
   t.is(mapEntry.inputPath, "./test/stubs/collection-template/template.ejs");
 
-  let mainTmpl = tw._createTemplate(
-    "./test/stubs/collection-template/template.ejs"
-  );
+  let { template: mainTmpl } = tw._createTemplate("./test/stubs/collection-template/template.ejs");
   let data = await mainTmpl.getData();
   let outputPath = await mainTmpl.getOutputPath(data);
-  t.is(
-    outputPath,
-    "./test/stubs/collection-template/_site/template/index.html"
-  );
+  t.is(outputPath, "./test/stubs/collection-template/_site/template/index.html");
 
   let templates = await getRenderedTmpls(mapEntry.template, mapEntry.data);
 
@@ -396,15 +365,11 @@ test("Use a collection inside of a layout", async (t) => {
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.dog.length, 1);
 
-  let mapEntry = templateMap.getMapEntryForInputPath(
-    "./test/stubs/collection-layout/template.ejs"
-  );
+  let mapEntry = templateMap.getMapEntryForInputPath("./test/stubs/collection-layout/template.ejs");
   t.truthy(mapEntry);
   t.is(mapEntry.inputPath, "./test/stubs/collection-layout/template.ejs");
 
-  let mainTmpl = tw._createTemplate(
-    "./test/stubs/collection-layout/template.ejs"
-  );
+  let { template: mainTmpl } = tw._createTemplate("./test/stubs/collection-layout/template.ejs");
   let data = await mainTmpl.getData();
   let outputPath = await mainTmpl.getOutputPath(data);
   t.is(outputPath, "./test/stubs/collection-layout/_site/template/index.html");
@@ -436,7 +401,7 @@ test("Glob Watcher Files with Passthroughs", (t) => {
 });
 
 test("Pagination and TemplateContent", async (t) => {
-  rimraf.sync("./test/stubs/pagination-templatecontent/_site/");
+  rimrafSync("./test/stubs/pagination-templatecontent/_site/");
 
   let eleventyConfig = new TemplateConfig();
   let tw = new TemplateWriter(
@@ -450,17 +415,14 @@ test("Pagination and TemplateContent", async (t) => {
   tw.setVerboseOutput(false);
   await tw.write();
 
-  let content = fs.readFileSync(
-    "./test/stubs/pagination-templatecontent/_site/index.html",
-    "utf8"
-  );
+  let content = fs.readFileSync("./test/stubs/pagination-templatecontent/_site/index.html", "utf8");
   t.is(
     content.trim(),
     `<h1>Post 1</h1>
 <h1>Post 2</h1>`
   );
 
-  rimraf.sync("./test/stubs/pagination-templatecontent/_site/");
+  rimrafSync("./test/stubs/pagination-templatecontent/_site/");
 });
 
 test("Custom collection returns array", async (t) => {
@@ -543,9 +505,7 @@ test("fileSlug should exist in a collection", async (t) => {
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.dog.length, 1);
 
-  let mapEntry = templateMap.getMapEntryForInputPath(
-    "./test/stubs/collection-slug/template.njk"
-  );
+  let mapEntry = templateMap.getMapEntryForInputPath("./test/stubs/collection-slug/template.njk");
   t.truthy(mapEntry);
   t.is(mapEntry.inputPath, "./test/stubs/collection-slug/template.njk");
 
@@ -571,18 +531,12 @@ test("Write Test 11ty.js", async (t) => {
   evf.init();
 
   let files = await fastglob(evf.getFileGlobs());
-  t.deepEqual(evf.getRawFiles(), [
-    "./test/stubs/writeTestJS/**/*.11ty.js",
-    "./test/stubs/writeTestJS/**/*.11ty.cjs",
-  ]);
+  t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTestJS/**/*.{11ty.js,11ty.cjs}"]);
   t.deepEqual(files, ["./test/stubs/writeTestJS/test.11ty.js"]);
 
-  let tmpl = tw._createTemplate(files[0]);
+  let { template: tmpl } = tw._createTemplate(files[0]);
   let data = await tmpl.getData();
-  t.is(
-    await tmpl.getOutputPath(data),
-    "./test/stubs/_writeTestJSSite/test/index.html"
-  );
+  t.is(await tmpl.getOutputPath(data), "./test/stubs/_writeTestJSSite/test/index.html");
 });
 
 test.skip("Markdown with alias", async (t) => {
@@ -620,19 +574,13 @@ test.skip("Markdown with alias", async (t) => {
   );
   tw.setEleventyFiles(evf);
 
-  let tmpl = tw._createTemplate(files[0]);
+  let { template: tmpl } = tw._createTemplate(files[0]);
   tmpl._setExtensionMap(map);
-  t.is(
-    await tmpl.getOutputPath(),
-    "./test/stubs/_writeTestMarkdownSite/sample/index.html"
-  );
+  t.is(await tmpl.getOutputPath(), "./test/stubs/_writeTestMarkdownSite/sample/index.html");
 
-  let tmpl2 = tw._createTemplate(files[1]);
+  let { template: tmpl2 } = tw._createTemplate(files[1]);
   tmpl2._setExtensionMap(map);
-  t.is(
-    await tmpl2.getOutputPath(),
-    "./test/stubs/_writeTestMarkdownSite/sample2/index.html"
-  );
+  t.is(await tmpl2.getOutputPath(), "./test/stubs/_writeTestMarkdownSite/sample2/index.html");
 });
 
 test.skip("JavaScript with alias", async (t) => {
@@ -656,17 +604,11 @@ test.skip("JavaScript with alias", async (t) => {
   let files = await fastglob(evf.getFileGlobs());
   t.deepEqual(
     evf.getRawFiles().sort(),
-    [
-      "./test/stubs/writeTestJS/**/*.11ty.js",
-      "./test/stubs/writeTestJS/**/*.js",
-    ].sort()
+    ["./test/stubs/writeTestJS/**/*.11ty.js", "./test/stubs/writeTestJS/**/*.js"].sort()
   );
   t.deepEqual(
     files.sort(),
-    [
-      "./test/stubs/writeTestJS/sample.js",
-      "./test/stubs/writeTestJS/test.11ty.js",
-    ].sort()
+    ["./test/stubs/writeTestJS/sample.js", "./test/stubs/writeTestJS/test.11ty.js"].sort()
   );
 
   let tw = new TemplateWriter(
@@ -678,15 +620,12 @@ test.skip("JavaScript with alias", async (t) => {
   );
   tw.setEleventyFiles(evf);
 
-  let tmpl = tw._createTemplate(files[0]);
-  t.is(
-    await tmpl.getOutputPath(),
-    "./test/stubs/_writeTestJSSite/test/index.html"
-  );
+  let { template: tmpl } = tw._createTemplate(files[0]);
+  t.is(await tmpl.getOutputPath(), "./test/stubs/_writeTestJSSite/test/index.html");
 });
 
 test("Passthrough file output", async (t) => {
-  rimraf.sync("./test/stubs/template-passthrough/_site/");
+  rimrafSync("./test/stubs/template-passthrough/_site/");
 
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.passthroughCopies = {
@@ -731,5 +670,5 @@ test("Passthrough file output", async (t) => {
     t.true(fs.existsSync(path));
   }
 
-  rimraf.sync("./test/stubs/template-passthrough/_site/");
+  rimrafSync("./test/stubs/template-passthrough/_site/");
 });

@@ -30,14 +30,19 @@ function rawContentLiquidTag(liquidEngine, renderFn, tagName) {
 
       stream.start();
     },
-    render: async function (ctx) {
+    render: function* (ctx, emitter) {
       let normalizedContext = {};
       if (ctx) {
         normalizedContext.page = ctx.get(["page"]);
         normalizedContext.eleventy = ctx.get(["eleventy"]);
       }
 
-      let argArray = this.args.map((token) => evalToken(token, ctx));
+      let argArray = [];
+      for (let arg of this.args) {
+        let b = yield evalToken(arg, ctx);
+        argArray.push(b);
+      }
+
       let body = this.tokens.map((token) => token.getText()).join("");
 
       return renderFn.call(normalizedContext, tagName, body, ...argArray);

@@ -14,10 +14,9 @@ const EleventyFiles = require("./EleventyFiles");
 const ConsoleLogger = require("./Util/ConsoleLogger");
 const PathPrefixer = require("./Util/PathPrefixer");
 const TemplateConfig = require("./TemplateConfig");
-
-const templateCache = require("./TemplateCache");
+const FileSystemSearch = require("./FileSystemSearch");
+const PathNormalizer = require("./Util/PathNormalizer.js");
 const simplePlural = require("./Util/Pluralize");
-const deleteRequireCache = require("./Util/DeleteRequireCache");
 const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
 const debug = require("debug")("Eleventy");
 const eventBus = require("./EventBus");
@@ -46,6 +45,23 @@ class Eleventy {
 
     this.eleventyConfig.setLogger(this.logger);
 
+    /**
+     * @member {String} - The top level directory the site pretends to reside in
+     * @default "/"
+     */
+    this.pathPrefix = options.pathPrefix || "/";
+
+    if (this.pathPrefix || this.pathPrefix === "") {
+      this.eleventyConfig.setPathPrefix(this.pathPrefix);
+    }
+
+    /**
+     * @member {Object} - Options object passed to the Eleventy constructor
+     * @default {}
+     */
+    this.options = options;
+
+    /* Programmatic API config */
     if (options.config && typeof options.config === "function") {
       // TODO use return object here?
       options.config(this.eleventyConfig.userConfig);
@@ -64,9 +80,26 @@ class Eleventy {
     this.source = options.source || "script";
 
     /**
+     * @member {Boolean} - Running in serverless mode
+     * @default false
+     */
+    if ("isServerless" in options) {
+      this.isServerless = !!options.isServerless;
+    } else {
+      this.isServerless = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+    }
+
+    /**
+     * @member {String} - One of build, serve, or watch
+     * @default "build"
+     */
+    this.runMode = options.runMode || "build";
+
+    /**
      * @member {Object} - Initialize Eleventy environment variables
      * @default null
      */
+    // both this.isServerless and this.runMode need to be set before this
     this.env = this.getEnvironmentVariableValues();
     this.initializeEnvironmentVariables(this.env);
 
@@ -85,12 +118,6 @@ class Eleventy {
      * @default false
      */
     this.verboseModeSetViaCommandLineParam = false;
-
-    /**
-     * @member {String} - One of build, serve, or watch
-     * @default "build"
-     */
-    this.runMode = "build";
 
     /**
      * @member {Boolean} - Is Eleventy running in verbose mode?
@@ -155,8 +182,14 @@ class Eleventy {
     /** @member {Object} - tbd. */
     this.watchTargets = new EleventyWatchTargets();
     this.watchTargets.addAndMakeGlob(this.config.additionalWatchTargets);
-    this.watchTargets.watchJavaScriptDependencies =
-      this.config.watchJavaScriptDependencies;
+    this.watchTargets.watchJavaScriptDependencies = this.config.watchJavaScriptDependencies;
+
+    /** @member {Object} - tbd. */
+    this.fileSystemSearch = new FileSystemSearch();
+
+    this.isIncremental = false;
+    this.programmaticApiIncrementalFile = undefined;
+    this.isRunInitialBuild = true;
   }
 
   getNewTimestamp() {
@@ -187,13 +220,7 @@ class Eleventy {
 
   /** @type {String} */
   get outputDir() {
-    let dir = this.rawOutput || this.config.dir.output;
-    if (dir !== this._savedOutputDir) {
-      this.eleventyServe.setOutputDir(dir);
-    }
-    this._savedOutputDir = dir;
-
-    return dir;
+    return this.rawOutput || this.config.dir.output;
   }
 
   /**
@@ -218,13 +245,14 @@ class Eleventy {
   }
 
   /**
-   * Updates the passthrough mode of Eleventy.
+   * Set whether or not to do an initial build
    *
    * @method
-   * @param {Boolean} isPassthroughAll - Shall Eleventy passthrough everything?
+   * @param {Boolean} ignoreInitialBuild - Shall Eleventy ignore the default initial build before watching in watch/serve mode?
+   * @default true
    */
-  setPassthroughAll(isPassthroughAll) {
-    this.isPassthroughAll = !!isPassthroughAll;
+  setIgnoreInitial(ignoreInitialBuild) {
+    this.isRunInitialBuild = !ignoreInitialBuild;
   }
 
   /**
@@ -259,16 +287,10 @@ class Eleventy {
   async restart() {
     debug("Restarting");
     this.start = this.getNewTimestamp();
-    templateCache.clear();
+
     this.bench.reset();
     this.eleventyFiles.restart();
     this.extensionMap.reset();
-
-    // reload package.json values (if applicable)
-    // TODO only reset this if it changed
-    deleteRequireCache(TemplatePath.absolutePath("package.json"));
-
-    await this.init();
   }
 
   /**
@@ -293,9 +315,7 @@ class Eleventy {
     let slashRet = [];
 
     if (copyCount) {
-      slashRet.push(
-        `Copied ${copyCount} ${simplePlural(copyCount, "file", "files")}`
-      );
+      slashRet.push(`Copied ${copyCount} ${simplePlural(copyCount, "file", "files")}`);
     }
 
     slashRet.push(
@@ -313,14 +333,37 @@ class Eleventy {
     ret.push(`in ${time} ${simplePlural(time, "second", "seconds")}`);
 
     if (writeCount >= 10) {
-      ret.push(
-        `(${((time * 1000) / writeCount).toFixed(1)}ms each, ${versionStr})`
-      );
+      ret.push(`(${((time * 1000) / writeCount).toFixed(1)}ms each, ${versionStr})`);
     } else {
       ret.push(`(${versionStr})`);
     }
 
     return ret.join(" ");
+  }
+
+  _cache(key, inst) {
+    if (!this._privateCaches) {
+      this._privateCaches = new Map();
+    }
+
+    if (!("caches" in inst)) {
+      throw new Error("To use _cache you need a `caches` getter object");
+    }
+
+    // Restore from cache
+    if (this._privateCaches.has(key)) {
+      let c = this._privateCaches.get(key);
+      for (let cacheKey in c) {
+        inst[cacheKey] = c[cacheKey];
+      }
+    } else {
+      // Set cache
+      let c = {};
+      for (let cacheKey of inst.caches || []) {
+        c[cacheKey] = inst[cacheKey];
+      }
+      this._privateCaches.set(key, c);
+    }
   }
 
   /**
@@ -330,7 +373,9 @@ class Eleventy {
    * @method
    * @returns {} - tbd.
    */
-  async init() {
+  async init(options = {}) {
+    options = Object.assign({ viaConfigReset: false }, options);
+
     await this.config.events.emit("eleventy.config", this.eleventyConfig);
 
     if (this.env) {
@@ -343,24 +388,51 @@ class Eleventy {
     this.extensionMap = new EleventyExtensionMap(formats, this.eleventyConfig);
     await this.config.events.emit("eleventy.extensionmap", this.extensionMap);
 
-    this.eleventyFiles = new EleventyFiles(
-      this.inputDir,
-      this.outputDir,
-      formats,
-      this.eleventyConfig
-    );
-    this.eleventyFiles.setPassthroughAll(this.isPassthroughAll);
-    this.eleventyFiles.setInput(this.inputDir, this.input);
-    this.eleventyFiles.setRunMode(this.runMode);
-    this.eleventyFiles.extensionMap = this.extensionMap;
-    this.eleventyFiles.init();
+    // eleventyServe is always available, even when not in --serve mode
+    this.eleventyServe.setOutputDir(this.outputDir);
+
+    // TODO
+    // this.eleventyServe.setWatcherOptions(this.getChokidarConfig());
 
     this.templateData = new TemplateData(this.inputDir, this.eleventyConfig);
     this.templateData.extensionMap = this.extensionMap;
     if (this.env) {
       this.templateData.environmentVariables = this.env;
     }
+    this.templateData.setFileSystemSearch(this.fileSystemSearch);
+
+    this.eleventyFiles = new EleventyFiles(
+      this.inputDir,
+      this.outputDir,
+      formats,
+      this.eleventyConfig
+    );
+    this.eleventyFiles.setFileSystemSearch(this.fileSystemSearch);
+    this.eleventyFiles.setInput(this.inputDir, this.input);
+    this.eleventyFiles.setRunMode(this.runMode);
+    this.eleventyFiles.extensionMap = this.extensionMap;
+    // This needs to be set before init or it’ll construct a new one
     this.eleventyFiles.templateData = this.templateData;
+    this.eleventyFiles.init();
+
+    if (checkPassthroughCopyBehavior(this.config, this.runMode)) {
+      this.eleventyServe.watchPassthroughCopy(
+        this.eleventyFiles.getGlobWatcherFilesForPassthroughCopy()
+      );
+    }
+
+    // Note these directories are all project root relative
+    let dirs = {
+      input: this.inputDir,
+      data: this.templateData.getDataDir(),
+      includes: this.eleventyFiles.getIncludesDir(),
+      layouts: this.eleventyFiles.getLayoutsDir(),
+      output: this.outputDir,
+    };
+
+    // eleventy.directories in global data
+    this.templateData.setGlobalDataDirectories(dirs);
+    this.config.events.emit("eleventy.directories", dirs);
 
     this.writer = new TemplateWriter(
       this.inputDir,
@@ -369,18 +441,18 @@ class Eleventy {
       this.templateData,
       this.eleventyConfig
     );
+
+    if (!options.viaConfigReset) {
+      this._cache("TemplateWriter", this.writer);
+    }
+
     this.writer.setInput(this.inputDir, this.input);
     this.writer.logger = this.logger;
     this.writer.extensionMap = this.extensionMap;
     this.writer.setEleventyFiles(this.eleventyFiles);
 
-    let dirs = {
-      input: this.inputDir,
-      data: this.templateData.getDataDir(),
-      includes: this.eleventyFiles.getIncludesDir(),
-      layouts: this.eleventyFiles.getLayoutsDir(),
-      output: this.outputDir,
-    };
+    this.writer.setRunInitialBuild(this.isRunInitialBuild);
+    this.writer.setIncrementalBuild(this.isIncremental);
 
     debug(`Directories:
 Input (Dir): ${dirs.input}
@@ -395,20 +467,14 @@ Verbose Output: ${this.verboseMode}`);
     this.writer.setVerboseOutput(this.verboseMode);
     this.writer.setDryRun(this.isDryRun);
 
-    this.config.events.emit("eleventy.directories", dirs);
-
-    let data = this.templateData.cacheData();
-
     this.needsInit = false;
-
-    // …why does it return this
-    return data;
   }
 
   // These are all set as initial global data under eleventy.env.* (see TemplateData->environmentVariables)
   getEnvironmentVariableValues() {
     let values = {
       source: this.source,
+      runMode: this.runMode,
     };
     let configPath = this.eleventyConfig.getLocalProjectConfigFile();
     if (configPath) {
@@ -419,6 +485,9 @@ Verbose Output: ${this.verboseMode}`);
       let root = TemplatePath.getDirFromFilePath(absolutePathToConfig);
       values.root = root;
     }
+
+    values.source = this.source;
+    values.isServerless = this.isServerless;
 
     return values;
   }
@@ -432,13 +501,14 @@ Verbose Output: ${this.verboseMode}`);
     process.env.ELEVENTY_ROOT = env.root;
     debug("Setting process.env.ELEVENTY_ROOT: %o", env.root);
 
-    process.env.ELEVENTY_SOURCE = this.source;
+    process.env.ELEVENTY_SOURCE = env.source;
+    process.env.ELEVENTY_RUN_MODE = env.runMode;
 
-    // TODO (@zachleat) this needs to be extensible. https://github.com/11ty/eleventy/issues/1957
-    // Note: when using --serve, ELEVENTY_SERVERLESS is set manually in Serverless.js
+    // https://github.com/11ty/eleventy/issues/1957
+    // Note: when using --serve, ELEVENTY_SERVERLESS is also set in Serverless.js
 
     // Careful here, setting to false will cast to string "false" which is truthy.
-    if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    if (env.isServerless) {
       process.env.ELEVENTY_SERVERLESS = true;
       debug("Setting process.env.ELEVENTY_SERVERLESS: %o", true);
     }
@@ -544,6 +614,23 @@ Verbose Output: ${this.verboseMode}`);
   }
 
   /**
+   * Set the file that needs to be rendered/compiled/written for an incremental build.
+   * This method is part of the programmatic API and is not used internally.
+   *
+   * @method
+   * @param {String} incrementalFile - File path (added or modified in a project)
+   */
+  setIncrementalFile(incrementalFile) {
+    if (incrementalFile) {
+      // This is used for collections-friendly serverless mode.
+      this.setIgnoreInitial(true);
+      this.setIncrementalBuild(true);
+
+      this.programmaticApiIncrementalFile = incrementalFile;
+    }
+  }
+
+  /**
    * Reads the version of Eleventy.
    *
    * @static
@@ -564,7 +651,7 @@ Verbose Output: ${this.verboseMode}`);
    * Shows a help message including usage.
    *
    * @static
-   * @returns {String} - The help mesage.
+   * @returns {String} - The help message.
    */
   static getHelp() {
     return `Usage: eleventy
@@ -589,6 +676,9 @@ Arguments:
 
      --watch
        Wait for files to change and automatically rewrite (no web server)
+
+     --ignore-initial
+       Start without a build; build when files change. Works best with watch/serve/incremental.
 
      --formats=liquid,md
        Whitelist only certain template types (default: \`*\`)
@@ -632,6 +722,7 @@ Arguments:
 
     this.config = this.eleventyConfig.getConfig();
     this.eleventyServe.config = this.config;
+    this.eleventyServe.eleventyConfig = this.eleventyConfig;
 
     // only use config quietMode if --quiet not set on CLI
     if (!this.verboseModeSetViaCommandLineParam) {
@@ -646,31 +737,59 @@ Arguments:
    * @method
    * @param {String} changedFilePath - File that triggered a re-run (added or modified)
    */
-  async _addFileToWatchQueue(changedFilePath) {
-    eventBus.emit("eleventy.resourceModified", changedFilePath);
+  async _addFileToWatchQueue(changedFilePath, isResetConfig) {
+    // Currently this is only for 11ty.js deps but should be extended with usesGraph
+    let usedByDependants = [];
+    if (this.watchTargets) {
+      usedByDependants = this.watchTargets.getDependantsOf(
+        TemplatePath.addLeadingDotSlash(changedFilePath)
+      );
+    }
+
+    let relevantLayouts = this.eleventyConfig.usesGraph.getLayoutsUsedBy(changedFilePath);
+
+    // Note: this is a sync event!
+    eventBus.emit("eleventy.resourceModified", changedFilePath, usedByDependants, {
+      viaConfigReset: isResetConfig,
+      relevantLayouts,
+    });
+
     this.watchManager.addToPendingQueue(changedFilePath);
   }
 
-  _shouldResetConfig() {
-    let configFilePath = this.eleventyConfig.getLocalProjectConfigFile();
-    let configFileChanged = this.watchManager.hasQueuedFile(configFilePath);
-    if (configFileChanged) {
-      return true;
-    }
-
-    // Any dependencies of the config file changed
-    let configFileDependencies =
-      this.watchTargets.getDependenciesOf(configFilePath);
-    for (let dep of configFileDependencies) {
-      if (this.watchManager.hasQueuedFile(dep)) {
-        // Delete from require cache so that updates to the module are re-required
-        deleteRequireCache(TemplatePath.absolutePath(dep));
-
+  shouldTriggerConfigReset(changedFiles) {
+    let configFilePaths = new Set(this.eleventyConfig.getLocalProjectConfigFiles());
+    for (let filePath of changedFiles) {
+      if (configFilePaths.has(filePath)) {
         return true;
       }
     }
 
+    for (const configFilePath of configFilePaths) {
+      // Any dependencies of the config file changed
+      let configFileDependencies = new Set(this.watchTargets.getDependenciesOf(configFilePath));
+
+      for (let filePath of changedFiles) {
+        if (configFileDependencies.has(filePath)) {
+          return true;
+        }
+      }
+    }
+
     return false;
+  }
+
+  // Checks the build queue to see if any configuration related files have changed
+  _shouldResetConfig(activeQueue = []) {
+    if (!activeQueue.length) {
+      return false;
+    }
+
+    return this.shouldTriggerConfigReset(
+      activeQueue.map((path) => {
+        return PathNormalizer.normalizeSeperator(TemplatePath.addLeadingDotSlash(path));
+      })
+    );
   }
 
   /**
@@ -679,7 +798,7 @@ Arguments:
    * @private
    * @method
    */
-  async _watch() {
+  async _watch(isResetConfig = false) {
     if (this.watchManager.isBuildRunning()) {
       return;
     }
@@ -690,14 +809,16 @@ Arguments:
     await this.config.events.emit("beforeWatch", queue);
     await this.config.events.emit("eleventy.beforeWatch", queue);
 
-    // reset and reload global configuration :O
-    if (this._shouldResetConfig()) {
+    // Clear `require` cache for all files that triggered the rebuild
+    this.watchTargets.clearRequireCacheFor(queue);
+
+    // reset and reload global configuration
+    if (isResetConfig) {
       this.resetConfig();
     }
 
     await this.restart();
-
-    this.watchTargets.clearDependencyRequireCache();
+    await this.init({ viaConfigReset: isResetConfig });
 
     let incrementalFile = this.watchManager.getIncrementalFile();
     if (incrementalFile) {
@@ -727,10 +848,7 @@ Arguments:
       return (
         path.endsWith(".css") &&
         // TODO how to make this work with relative includes?
-        !TemplatePath.startsWithSubPath(
-          path,
-          this.eleventyFiles.getIncludesDir()
-        )
+        !TemplatePath.startsWithSubPath(path, this.eleventyFiles.getIncludesDir())
       );
     });
 
@@ -739,23 +857,16 @@ Arguments:
         error: writeResults.error,
       });
     } else {
-      let normalizedPathPrefix = PathPrefixer.normalizePathPrefix(
-        this.config.pathPrefix
-      );
+      let normalizedPathPrefix = PathPrefixer.normalizePathPrefix(this.config.pathPrefix);
       await this.eleventyServe.reload({
         files: this.watchManager.getActiveQueue(),
         subtype: onlyCssChanges ? "css" : undefined,
         build: {
-          // For later?
-          // passthroughCopy: passthroughCopyResults,
           templates: templateResults
             .flat()
             .filter((entry) => !!entry)
             .map((entry) => {
-              entry.url = PathPrefixer.joinUrlParts(
-                normalizedPathPrefix,
-                entry.url
-              );
+              entry.url = PathPrefixer.joinUrlParts(normalizedPathPrefix, entry.url);
               return entry;
             }),
         },
@@ -764,9 +875,12 @@ Arguments:
 
     this.watchManager.setBuildFinished();
 
-    if (this.watchManager.getPendingQueueSize() > 0) {
+    let queueSize = this.watchManager.getPendingQueueSize();
+    if (queueSize > 0) {
       this.logger.log(
-        `You saved while Eleventy was running, let’s run again. (${this.watchManager.getPendingQueueSize()} remain)`
+        `You saved while Eleventy was running, let’s run again. (${queueSize} change${
+          queueSize !== 1 ? "s" : ""
+        })`
       );
       await this._watch();
     } else {
@@ -793,15 +907,15 @@ Arguments:
     this.watchManager = new EleventyWatch();
     this.watchManager.incremental = this.isIncremental;
 
+    this.watchTargets.add(["./package.json"]);
     this.watchTargets.add(this.eleventyFiles.getGlobWatcherFiles());
+    this.watchTargets.add(this.eleventyFiles.getIgnoreFiles());
 
     // Watch the local project config file
-    this.watchTargets.add(this.eleventyConfig.getLocalProjectConfigFile());
+    this.watchTargets.add(this.eleventyConfig.getLocalProjectConfigFiles());
 
     // Template and Directory Data Files
-    this.watchTargets.add(
-      await this.eleventyFiles.getGlobWatcherTemplateDataFiles()
-    );
+    this.watchTargets.add(await this.eleventyFiles.getGlobWatcherTemplateDataFiles());
 
     let benchmark = this.watcherBench.get(
       "Watching JavaScript Dependencies (disable with `eleventyConfig.setWatchJavaScriptDependencies(false)`)"
@@ -823,9 +937,9 @@ Arguments:
       return;
     }
 
-    let dataDir = this.templateData.getDataDir();
+    let dataDir = TemplatePath.stripLeadingDotSlash(this.templateData.getDataDir());
     function filterOutGlobalDataFiles(path) {
-      return !dataDir || path.indexOf(dataDir) === -1;
+      return !dataDir || !TemplatePath.stripLeadingDotSlash(path).startsWith(dataDir);
     }
 
     // Template files .11ty.js
@@ -834,15 +948,13 @@ Arguments:
 
     // Config file dependencies
     this.watchTargets.addDependencies(
-      this.eleventyConfig.getLocalProjectConfigFile(),
+      this.eleventyConfig.getLocalProjectConfigFiles(),
       filterOutGlobalDataFiles
     );
 
     // Deps from Global Data (that aren’t in the global data directory, everything is watched there)
-    this.watchTargets.addDependencies(
-      this.templateData.getWatchPathCache(),
-      filterOutGlobalDataFiles
-    );
+    let globalDataDeps = this.templateData.getWatchPathCache();
+    this.watchTargets.addDependencies(globalDataDeps, filterOutGlobalDataFiles);
 
     this.watchTargets.addDependencies(
       await this.eleventyFiles.getWatcherTemplateJavaScriptDataFiles()
@@ -883,24 +995,8 @@ Arguments:
     );
   }
 
-  async triggerServerReload(changedFiles) {
-    let onlyApplyingCssChanges =
-      changedFiles.filter((entry) => entry.endsWith(".css")).length ===
-      changedFiles.length;
-
-    // returns a promise
-    return this.eleventyServe.reload({
-      files: changedFiles,
-      subtype: onlyApplyingCssChanges ? "css" : undefined,
-      build: {
-        // As of right now this is only used for the passthrough copy watcher so templates are unnecessary
-        templates: [],
-      },
-    });
-  }
-
   /**
-   * Start the watching of files.
+   * Start the watching of files
    *
    * @async
    * @method
@@ -948,13 +1044,15 @@ Arguments:
 
     let watchDelay;
     let watchRun = async (path) => {
+      path = TemplatePath.normalize(path);
       try {
-        this._addFileToWatchQueue(path);
+        let isResetConfig = this._shouldResetConfig([path]);
+        this._addFileToWatchQueue(path, isResetConfig);
         clearTimeout(watchDelay);
 
         await new Promise((resolve, reject) => {
           watchDelay = setTimeout(async () => {
-            this._watch().then(resolve, reject);
+            this._watch(isResetConfig).then(resolve, reject);
           }, this.config.watchThrottleWaitTime);
         });
       } catch (e) {
@@ -975,25 +1073,14 @@ Arguments:
 
     watcher.on("add", async (path) => {
       this.logger.forceLog(`File added: ${path}`);
+      this.fileSystemSearch.add(path);
       await watchRun(path);
     });
 
-    if (checkPassthroughCopyBehavior(this.config, this.runMode)) {
-      // Separate watcher for passthrough copy, we only want to trigger a server reload for changes to these files
-      this.passthroughWatcher = chokidar.watch(
-        this.eleventyFiles.getGlobWatcherFilesForPassthroughCopy(),
-        this.getChokidarConfig()
-      );
-      this.passthroughWatcher.on("change", async (path) => {
-        this.logger.forceLog(`Passthrough copy file changed: ${path}`);
-        this.triggerServerReload([path]);
-      });
-
-      this.passthroughWatcher.on("add", async (path) => {
-        this.logger.forceLog(`Passthrough copy file added: ${path}`);
-        this.triggerServerReload([path]);
-      });
-    }
+    watcher.on("unlink", (path) => {
+      // this.logger.forceLog(`File removed: ${path}`);
+      this.fileSystemSearch.delete(path);
+    });
 
     process.on("SIGINT", () => this.stopWatch());
   }
@@ -1002,10 +1089,6 @@ Arguments:
     debug("Cleaning up chokidar and server instances, if they exist.");
     this.eleventyServe.close();
     this.watcher.close();
-
-    if (this.passthroughWatcher) {
-      this.passthroughWatcher.close();
-    }
 
     process.exit();
   }
@@ -1079,6 +1162,10 @@ Arguments:
       );
     }
 
+    if (this.programmaticApiIncrementalFile) {
+      this.writer.setIncrementalFile(this.programmaticApiIncrementalFile);
+    }
+
     let ret;
     let hasError = false;
 
@@ -1088,7 +1175,9 @@ Arguments:
         dir: this.config.dir,
         runMode: this.runMode,
         outputMode: to,
+        incremental: this.isIncremental,
       };
+
       await this.config.events.emit("beforeBuild", eventsArg);
       await this.config.events.emit("eleventy.before", eventsArg);
 
@@ -1121,6 +1210,7 @@ Arguments:
         ret = this.logger.closeStream(to);
       }
 
+      eventsArg.uses = this.eleventyConfig.usesGraph.map;
       await this.config.events.emit("afterBuild", eventsArg);
       await this.config.events.emit("eleventy.after", eventsArg);
     } catch (e) {
@@ -1139,12 +1229,7 @@ Arguments:
     } finally {
       this.bench.finish();
       if (to === "fs") {
-        this.logger.message(
-          this.logFinished(),
-          "info",
-          hasError ? "red" : "green",
-          true
-        );
+        this.logger.message(this.logFinished(), "info", hasError ? "red" : "green", true);
       }
       debug("Finished writing templates.");
 
@@ -1162,3 +1247,5 @@ module.exports.EleventyServerless = require("./Serverless");
 module.exports.EleventyServerlessBundlerPlugin = require("./Plugins/ServerlessBundlerPlugin");
 module.exports.EleventyRenderPlugin = require("./Plugins/RenderPlugin");
 module.exports.EleventyEdgePlugin = require("./Plugins/EdgePlugin");
+module.exports.EleventyI18nPlugin = require("./Plugins/I18nPlugin");
+module.exports.EleventyHtmlBasePlugin = require("./Plugins/HtmlBasePlugin");

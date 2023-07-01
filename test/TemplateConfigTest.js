@@ -353,7 +353,18 @@ test("setTemplateFormats(null)", (t) => {
   templateCfg.userConfig.setTemplateFormats(null);
 
   let cfg = templateCfg.getConfig();
-  t.true(cfg.templateFormats.length > 0);
+  t.deepEqual(cfg.templateFormats.sort(), ["md", "njk"]);
+});
+
+test("setTemplateFormats(undefined)", (t) => {
+  let templateCfg = new TemplateConfig(
+    require("../src/defaultConfig.js"),
+    "./test/stubs/config.js"
+  );
+  templateCfg.userConfig.setTemplateFormats(undefined);
+
+  let cfg = templateCfg.getConfig();
+  t.deepEqual(cfg.templateFormats.sort(), ["md", "njk"]);
 });
 
 test("multiple setTemplateFormats calls", (t) => {
@@ -541,6 +552,43 @@ test("Nested .addPlugin calls. More complex order", (t) => {
       order.push("2b");
       t.deepEqual(order, ["1", "2", "3a", "3b", "2b"]);
     });
+  });
+
+  templateCfg.getConfig();
+});
+
+test(".addPlugin has access to pathPrefix", (t) => {
+  t.plan(1);
+  let templateCfg = new TemplateConfig();
+
+  templateCfg.userConfig.addPlugin(function (eleventyConfig) {
+    t.is(eleventyConfig.pathPrefix, "/");
+  });
+
+  templateCfg.getConfig();
+});
+
+test(".addPlugin has access to pathPrefix (override method)", (t) => {
+  t.plan(1);
+  let templateCfg = new TemplateConfig();
+  templateCfg.setPathPrefix("/test/");
+
+  templateCfg.userConfig.addPlugin(function (eleventyConfig) {
+    t.is(eleventyConfig.pathPrefix, "/test/");
+  });
+
+  templateCfg.getConfig();
+});
+
+test("falsy pathPrefix should fall back to default", (t) => {
+  t.plan(1);
+  let templateCfg = new TemplateConfig(
+    require("../src/defaultConfig.js"),
+    "./test/stubs/config-empty-pathprefix.js"
+  );
+
+  templateCfg.userConfig.addPlugin(function (eleventyConfig) {
+    t.is(eleventyConfig.pathPrefix, "/");
   });
 
   templateCfg.getConfig();

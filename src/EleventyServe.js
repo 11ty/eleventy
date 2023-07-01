@@ -22,13 +22,13 @@ class EleventyServe {
   constructor() {
     this.logger = new ConsoleLogger(true);
     this._initOptionsFetched = false;
+    this._aliases = undefined;
+    this._watchedFiles = new Set();
   }
 
   get config() {
     if (!this._config) {
-      throw new EleventyServeConfigError(
-        "You need to set the config property on EleventyServe."
-      );
+      throw new EleventyServeConfigError("You need to set the config property on EleventyServe.");
     }
 
     return this._config;
@@ -37,6 +37,14 @@ class EleventyServe {
   set config(config) {
     this._options = null;
     this._config = config;
+  }
+
+  setAliases(aliases) {
+    this._aliases = aliases;
+
+    if (this._server && "setAliases" in this._server) {
+      this._server.setAliases(aliases);
+    }
   }
 
   get eleventyConfig() {
@@ -51,23 +59,17 @@ class EleventyServe {
 
   set eleventyConfig(config) {
     this._eleventyConfig = config;
-    if (
-      checkPassthroughCopyBehavior(this._eleventyConfig.userConfig, "serve")
-    ) {
-      this._eleventyConfig.userConfig.events.on(
-        "eleventy.passthrough",
-        ({ map }) => {
-          // for-free passthrough copy
-          if ("setAliases" in this.server) {
-            this.server.setAliases(map);
-          }
-        }
-      );
+    if (checkPassthroughCopyBehavior(this._eleventyConfig.userConfig, "serve")) {
+      this._eleventyConfig.userConfig.events.on("eleventy.passthrough", ({ map }) => {
+        // for-free passthrough copy
+        this.setAliases(map);
+      });
     }
   }
 
-  // TODO this doesn’t seem to be used internally
-  setOutputDir(outputDir) {
+  async setOutputDir(outputDir) {
+    // TODO check if this is different and if so, restart server (if already running)
+    // This applies if you change the output directory in your config file during watch/serve
     this.outputDir = outputDir;
   }
 
@@ -83,10 +85,7 @@ class EleventyServe {
 
       // No references outside of the project node_modules are allowed
       if (!serverPath.startsWith(projectNodeModulesPath)) {
-        throw new Error(
-          "Invalid node_modules name for Eleventy server instance, received:" +
-            name
-        );
+        throw new Error("Invalid node_modules name for Eleventy server instance, received:" + name);
       }
 
       let module = require(serverPath);
@@ -97,24 +96,14 @@ class EleventyServe {
         );
       }
 
-      let serverPackageJsonPath = TemplatePath.absolutePath(
-        serverPath,
-        "package.json"
-      );
+      let serverPackageJsonPath = TemplatePath.absolutePath(serverPath, "package.json");
 
       let serverPackageJson = require(serverPackageJsonPath);
-      if (
-        serverPackageJson["11ty"] &&
-        serverPackageJson["11ty"].compatibility
-      ) {
+      if (serverPackageJson["11ty"] && serverPackageJson["11ty"].compatibility) {
         try {
-          this.eleventyConfig.userConfig.versionCheck(
-            serverPackageJson["11ty"].compatibility
-          );
+          this.eleventyConfig.userConfig.versionCheck(serverPackageJson["11ty"].compatibility);
         } catch (e) {
-          this.logger.warn(
-            `Warning: \`${name}\` Plugin Compatibility: ${e.message}`
-          );
+          this.logger.warn(`Warning: \`${name}\` Plugin Compatibility: ${e.message}`);
         }
       }
 
@@ -145,6 +134,7 @@ class EleventyServe {
 
     // TODO improve by sorting keys here
     this._savedConfigOptions = JSON.stringify(this.config.serverOptions);
+
     if (!this._initOptionsFetched && this.getSetupCallback()) {
       throw new Error(
         "Init options have not yet been fetched in the setup callback. This probably means that `init()` has not yet been called."
@@ -162,11 +152,9 @@ class EleventyServe {
     let serverModule = this.getServerModule(this.options.module);
 
     // Static method `getServer` was already checked in `getServerModule`
-    this._server = serverModule.getServer(
-      "eleventy-server",
-      this.config.dir.output,
-      this.options
-    );
+    this._server = serverModule.getServer("eleventy-server", this.outputDir, this.options);
+
+    this.setAliases(this._aliases);
 
     return this._server;
   }
@@ -183,25 +171,30 @@ class EleventyServe {
   }
 
   async init() {
-    if (!this._initOptionsFetched) {
-      this._initOptionsFetched = true;
+    if (!this._initPromise) {
+      this._initPromise = new Promise(async (resolve) => {
+        let setupCallback = this.getSetupCallback();
+        if (setupCallback) {
+          let opts = await setupCallback();
+          this._initOptionsFetched = true;
 
-      let setupCallback = this.getSetupCallback();
-      if (setupCallback) {
-        let opts = await setupCallback();
-        if (opts) {
-          merge(this.options, opts);
+          if (opts) {
+            merge(this.options, opts);
+          }
         }
-      }
+
+        resolve();
+      });
     }
+
+    return this._initPromise;
   }
 
   // Port comes in here from --port on the command line
   async serve(port) {
     this._commandLinePort = port;
-    if (!this._initOptionsFetched) {
-      await this.init();
-    }
+
+    await this.init();
 
     this.server.serve(port || this.options.port);
   }
@@ -209,6 +202,7 @@ class EleventyServe {
   async close() {
     if (this._server) {
       await this.server.close();
+
       this.server = undefined;
     }
   }
@@ -229,6 +223,21 @@ class EleventyServe {
 
     // saved --port in `serve()`
     await this.serve(this._commandLinePort);
+
+    // rewatch the saved watched files (passthrough copy)
+    if ("watchFiles" in this.server) {
+      this.server.watchFiles(this._watchedFiles);
+    }
+  }
+
+  // checkPassthroughCopyBehavior check is called upstream in Eleventy.js
+  // TODO globs are not removed from watcher
+  watchPassthroughCopy(globs) {
+    this._watchedFiles = globs;
+
+    if ("watchFiles" in this.server) {
+      this.server.watchFiles(globs);
+    }
   }
 
   // Live reload the server
@@ -238,9 +247,7 @@ class EleventyServe {
     }
 
     // Restart the server if the options have changed
-    if (
-      JSON.stringify(this.config.serverOptions) !== this._savedConfigOptions
-    ) {
+    if (JSON.stringify(this.config.serverOptions) !== this._savedConfigOptions) {
       debug("Server options changed, we’re restarting the server");
       await this.restart();
     } else {

@@ -3,21 +3,16 @@ const { TemplatePath } = require("@11ty/eleventy-utils");
 
 const TemplateEngine = require("./TemplateEngine");
 const EleventyErrorUtil = require("../EleventyErrorUtil");
-const EleventyBaseError = require("../EleventyBaseError");
-const eventBus = require("../EventBus");
-
-class EleventyShortcodeError extends EleventyBaseError {}
+const EleventyShortcodeError = require("../EleventyShortcodeError");
+const EventBusUtil = require("../Util/EventBusUtil");
 
 class Nunjucks extends TemplateEngine {
   constructor(name, dirs, config) {
     super(name, dirs, config);
-    this.nunjucksEnvironmentOptions =
-      this.config.nunjucksEnvironmentOptions || {};
+    this.nunjucksEnvironmentOptions = this.config.nunjucksEnvironmentOptions || {};
 
-    this.nunjucksPrecompiledTemplates =
-      this.config.nunjucksPrecompiledTemplates || {};
-    this._usingPrecompiled =
-      Object.keys(this.nunjucksPrecompiledTemplates).length > 0;
+    this.nunjucksPrecompiledTemplates = this.config.nunjucksPrecompiledTemplates || {};
+    this._usingPrecompiled = Object.keys(this.nunjucksPrecompiledTemplates).length > 0;
 
     this.setLibrary(this.config.libraryOverrides.njk);
 
@@ -53,10 +48,7 @@ class Nunjucks extends TemplateEngine {
         TemplatePath.getWorkingDir(),
       ]);
 
-      this.njkEnv = new NunjucksLib.Environment(
-        fsLoader,
-        this.nunjucksEnvironmentOptions
-      );
+      this.njkEnv = new NunjucksLib.Environment(fsLoader, this.nunjucksEnvironmentOptions);
     }
 
     this.config.events.emit("eleventy.engine.njk", {
@@ -70,7 +62,7 @@ class Nunjucks extends TemplateEngine {
 
     // Correct, but overbroad. Better would be to evict more granularly, but
     // resolution from paths isn't straightforward.
-    eventBus.on("eleventy.resourceModified", (path) => {
+    EventBusUtil.soloOn("eleventy.resourceModified", (path) => {
       this.njkEnv.invalidateCache();
     });
 
@@ -90,17 +82,44 @@ class Nunjucks extends TemplateEngine {
     this.addAllShortcodes(this.config.nunjucksShortcodes);
     this.addAllShortcodes(this.config.nunjucksAsyncShortcodes, true);
     this.addAllPairedShortcodes(this.config.nunjucksPairedShortcodes);
-    this.addAllPairedShortcodes(
-      this.config.nunjucksAsyncPairedShortcodes,
-      true
-    );
+    this.addAllPairedShortcodes(this.config.nunjucksAsyncPairedShortcodes, true);
     this.addGlobals(this.config.nunjucksGlobals);
   }
 
-  addFilters(helpers, isAsync) {
-    for (let name in helpers) {
-      this.njkEnv.addFilter(name, helpers[name], isAsync);
+  addFilters(filters, isAsync) {
+    for (let name in filters) {
+      this.njkEnv.addFilter(name, Nunjucks.wrapFilter(filters[name]), isAsync);
     }
+  }
+
+  static wrapFilter(fn) {
+    return function (...args) {
+      if (this.ctx && this.ctx.page) {
+        this.page = this.ctx.page;
+      }
+      if (this.ctx && this.ctx.eleventy) {
+        this.eleventy = this.ctx.eleventy;
+      }
+
+      return fn.call(this, ...args);
+    };
+  }
+
+  // Shortcodes
+  static normalizeContext(context) {
+    let obj = {};
+    if (context.ctx) {
+      obj.ctx = context.ctx;
+
+      if (context.ctx.page) {
+        obj.page = context.ctx.page;
+      }
+
+      if (context.ctx.eleventy) {
+        obj.eleventy = context.ctx.eleventy;
+      }
+    }
+    return obj;
   }
 
   addCustomTags(tags) {
@@ -144,16 +163,6 @@ class Nunjucks extends TemplateEngine {
     }
   }
 
-  static _normalizeShortcodeContext(context) {
-    let obj = {};
-    if (context.ctx && context.ctx.page) {
-      obj.ctx = context.ctx;
-      obj.page = context.ctx.page;
-      obj.eleventy = context.ctx.eleventy;
-    }
-    return obj;
-  }
-
   _getShortcodeFn(shortcodeName, shortcodeFn, isAsync = false) {
     return function ShortcodeFunction() {
       this.tags = [shortcodeName];
@@ -188,9 +197,9 @@ class Nunjucks extends TemplateEngine {
 
         if (isAsync) {
           shortcodeFn
-            .call(Nunjucks._normalizeShortcodeContext(context), ...argArray)
+            .call(Nunjucks.normalizeContext(context), ...argArray)
             .then(function (returnValue) {
-              resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
+              resolve(null, new NunjucksLib.runtime.SafeString("" + returnValue));
             })
             .catch(function (e) {
               resolve(
@@ -204,12 +213,8 @@ class Nunjucks extends TemplateEngine {
             });
         } else {
           try {
-            return new NunjucksLib.runtime.SafeString(
-              shortcodeFn.call(
-                Nunjucks._normalizeShortcodeContext(context),
-                ...argArray
-              )
-            );
+            let ret = shortcodeFn.call(Nunjucks.normalizeContext(context), ...argArray);
+            return new NunjucksLib.runtime.SafeString("" + ret);
           } catch (e) {
             throw new EleventyShortcodeError(
               `Error with Nunjucks shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
@@ -256,11 +261,7 @@ class Nunjucks extends TemplateEngine {
 
           if (isAsync) {
             shortcodeFn
-              .call(
-                Nunjucks._normalizeShortcodeContext(context),
-                bodyContent,
-                ...argArray
-              )
+              .call(Nunjucks.normalizeContext(context), bodyContent, ...argArray)
               .then(function (returnValue) {
                 resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
               })
@@ -279,11 +280,7 @@ class Nunjucks extends TemplateEngine {
               resolve(
                 null,
                 new NunjucksLib.runtime.SafeString(
-                  shortcodeFn.call(
-                    Nunjucks._normalizeShortcodeContext(context),
-                    bodyContent,
-                    ...argArray
-                  )
+                  shortcodeFn.call(Nunjucks.normalizeContext(context), bodyContent, ...argArray)
                 )
               );
             } catch (e) {
@@ -365,7 +362,7 @@ class Nunjucks extends TemplateEngine {
     return ext;
   }
 
-  /* Outputs an Array of lodash.get selectors */
+  /* Outputs an Array of lodash get selectors */
   parseForSymbols(str) {
     const { parser, nodes } = NunjucksLib;
     let obj = parser.parse(str, this._getParseExtensions());
