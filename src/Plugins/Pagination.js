@@ -321,7 +321,7 @@ class Pagination {
     // so that we don’t have the memory cost of the full template (and can reuse the parent
     // template for some things)
 
-    let indeces = new Set();
+    let indices = new Set();
     let currentPageIndex;
 
     // Serverless pagination:
@@ -342,21 +342,21 @@ class Pagination {
       // But, we’re supporting `serverless: "eleventy.serverless.path"` so that all of
       // the path params get passed to serverlessFilter, e.g. `serverlessFilter: function(paginationData, { slug, pagenumber })`
       if (isPlainObject(serverlessPaginationKey)) {
-        indeces.add(0);
+        indices.add(0);
       } else if (this.paginationTargetType === "array") {
         currentPageIndex = parseInt(serverlessPaginationKey, 10);
 
-        indeces.add(0); // first
+        indices.add(0); // first
         if (currentPageIndex > 0) {
-          indeces.add(currentPageIndex - 1); // previous
+          indices.add(currentPageIndex - 1); // previous
         }
         if (currentPageIndex >= 0 && currentPageIndex <= items.length - 1) {
-          indeces.add(currentPageIndex); // current
+          indices.add(currentPageIndex); // current
         }
         if (currentPageIndex + 1 < items.length) {
-          indeces.add(currentPageIndex + 1); // next
+          indices.add(currentPageIndex + 1); // next
         }
-        indeces.add(items.length - 1); // last
+        indices.add(items.length - 1); // last
       } else if (this.paginationTargetType === "object") {
         if (this.shouldResolveDataToObjectValues()) {
           currentPageIndex = Object.keys(this.fullDataSet).findIndex(
@@ -368,16 +368,16 @@ class Pagination {
 
         // Array->findIndex returns -1 when not found
         if (currentPageIndex !== -1) {
-          indeces.add(currentPageIndex); // current
+          indices.add(currentPageIndex); // current
         }
       }
     } else {
       for (let j = 0; j <= items.length - 1; j++) {
-        indeces.add(j);
+        indices.add(j);
       }
     }
 
-    for (let pageNumber of indeces) {
+    for (let pageNumber of indices) {
       let cloned = this.template.clone();
 
       if (pageNumber > 0 && !hasPermalinkField && !hasComputedPermalinkField) {

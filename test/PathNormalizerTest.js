@@ -2,7 +2,7 @@ const test = require("ava");
 const path = require("path");
 const PathNormalizer = require("../src/Util/PathNormalizer");
 
-test("PathNormalize Seperator", (t) => {
+test("PathNormalize Separator", (t) => {
   t.is(PathNormalizer.normalizeSeperator("."), ".");
   t.is(PathNormalizer.normalizeSeperator("a/b"), "a/b");
   t.is(
