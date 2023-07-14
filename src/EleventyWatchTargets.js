@@ -1,6 +1,8 @@
-const dependencyTree = require("@11ty/dependency-tree");
-const TemplatePath = require("./TemplatePath");
+const { TemplatePath } = require("@11ty/eleventy-utils");
+const { DepGraph } = require("dependency-graph");
+
 const deleteRequireCache = require("./Util/DeleteRequireCache");
+const JavaScriptDependencies = require("./Util/JavaScriptDependencies");
 
 class EleventyWatchTargets {
   constructor() {
@@ -8,6 +10,8 @@ class EleventyWatchTargets {
     this.dependencies = new Set();
     this.newTargets = new Set();
     this._watchJavaScriptDependencies = true;
+
+    this.graph = new DepGraph();
   }
 
   set watchJavaScriptDependencies(watch) {
@@ -22,22 +26,42 @@ class EleventyWatchTargets {
     return this.dependencies.has(path);
   }
 
-  _normalizeTargets(targets) {
-    if (!targets) {
-      return [];
-    } else if (Array.isArray(targets)) {
-      return targets;
-    }
-
-    return [targets];
-  }
-
   reset() {
     this.newTargets = new Set();
   }
 
   isWatched(target) {
     return this.targets.has(target);
+  }
+
+  addToDependencyGraph(parent, deps) {
+    if (!this.graph.hasNode(parent)) {
+      this.graph.addNode(parent);
+    }
+    for (let dep of deps) {
+      if (!this.graph.hasNode(dep)) {
+        this.graph.addNode(dep);
+      }
+      this.graph.addDependency(parent, dep);
+    }
+  }
+
+  uses(parent, dep) {
+    return this.getDependenciesOf(parent).includes(dep);
+  }
+
+  getDependenciesOf(parent) {
+    if (!this.graph.hasNode(parent)) {
+      return [];
+    }
+    return this.graph.dependenciesOf(parent);
+  }
+
+  getDependantsOf(child) {
+    if (!this.graph.hasNode(child)) {
+      return [];
+    }
+    return this.graph.dependantsOf(child);
   }
 
   addRaw(targets, isDependency) {
@@ -55,17 +79,29 @@ class EleventyWatchTargets {
     }
   }
 
+  static normalize(targets) {
+    if (!targets) {
+      return [];
+    } else if (Array.isArray(targets)) {
+      return targets;
+    }
+
+    return [targets];
+  }
+
   // add only a target
   add(targets) {
-    targets = this._normalizeTargets(targets);
-    this.addRaw(targets);
+    this.addRaw(EleventyWatchTargets.normalize(targets));
+  }
+
+  static normalizeToGlobs(targets) {
+    return EleventyWatchTargets.normalize(targets).map((entry) =>
+      TemplatePath.convertToRecursiveGlobSync(entry)
+    );
   }
 
   addAndMakeGlob(targets) {
-    targets = this._normalizeTargets(targets).map(entry =>
-      TemplatePath.convertToRecursiveGlobSync(entry)
-    );
-    this.addRaw(targets);
+    this.addRaw(EleventyWatchTargets.normalizeToGlobs(targets));
   }
 
   // add only a target’s dependencies
@@ -74,12 +110,15 @@ class EleventyWatchTargets {
       return;
     }
 
-    targets = this._normalizeTargets(targets);
-    let deps = this.getJavaScriptDependenciesFromList(targets);
+    targets = EleventyWatchTargets.normalize(targets);
+    let deps = JavaScriptDependencies.getDependencies(targets);
     if (filterCallback) {
       deps = deps.filter(filterCallback);
     }
 
+    for (let target of targets) {
+      this.addToDependencyGraph(target, deps);
+    }
     this.addRaw(deps, true);
   }
 
@@ -87,28 +126,20 @@ class EleventyWatchTargets {
     this.writer = templateWriter;
   }
 
-  getJavaScriptDependenciesFromList(files = []) {
-    let depSet = new Set();
-    files
-      .filter(file => file.endsWith(".js") || file.endsWith(".cjs")) // TODO does this need to work with aliasing? what other JS extensions will have deps?
-      .forEach(file => {
-        dependencyTree(file, { allowNotFound: true })
-          .map(dependency => {
-            return TemplatePath.addLeadingDotSlash(
-              TemplatePath.relativePath(dependency)
-            );
-          })
-          .forEach(dependency => {
-            depSet.add(dependency);
-          });
-      });
+  clearRequireCacheFor(filePathArray) {
+    for (const filePath of filePathArray) {
+      deleteRequireCache(filePath);
 
-    return Array.from(depSet);
-  }
+      // Delete from require cache so that updates to the module are re-required
+      let importsTheChangedFile = this.getDependantsOf(filePath);
+      for (let dep of importsTheChangedFile) {
+        deleteRequireCache(dep);
+      }
 
-  clearDependencyRequireCache() {
-    for (let path of this.dependencies) {
-      deleteRequireCache(TemplatePath.absolutePath(path));
+      let isImportedInTheChangedFile = this.getDependenciesOf(filePath);
+      for (let dep of isImportedInTheChangedFile) {
+        deleteRequireCache(dep);
+      }
     }
   }
 

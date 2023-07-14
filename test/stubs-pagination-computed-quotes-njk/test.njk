@@ -1,0 +1,10 @@
+---
+pagination:
+  data: "collections.posts"
+  size: 1
+quotes:
+  - The person that shared this is awesome
+eleventyComputed:
+  quote: "{{ quotes | selectRandomFromArray }}"
+---
+{{ quote }}

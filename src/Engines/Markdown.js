@@ -3,8 +3,8 @@ const TemplateEngine = require("./TemplateEngine");
 // const debug = require("debug")("Eleventy:Markdown");
 
 class Markdown extends TemplateEngine {
-  constructor(name, includesDir) {
-    super(name, includesDir);
+  constructor(name, dirs, config) {
+    super(name, dirs, config);
 
     this.markdownOptions = {};
 
@@ -18,10 +18,15 @@ class Markdown extends TemplateEngine {
 
     // Overrides a highlighter set in `markdownOptions`
     // This is separate so devs can pass in a new mdLib and still use the official eleventy plugin for markdown highlighting
-    if (this.config.markdownHighlighter) {
+    if (this.config.markdownHighlighter && typeof this.mdLib.set === "function") {
       this.mdLib.set({
         highlight: this.config.markdownHighlighter,
       });
+    }
+
+    if (typeof this.mdLib.disable === "function") {
+      // Disable indented code blocks by default (Issue #2438)
+      this.mdLib.disable("code");
     }
 
     this.setEngineLib(this.mdLib);
@@ -53,7 +58,7 @@ class Markdown extends TemplateEngine {
       if (typeof preTemplateEngine === "string") {
         engine = this.engineManager.getEngine(
           preTemplateEngine,
-          super.getIncludesDir(),
+          this.dirs,
           this.extensionMap
         );
       } else {

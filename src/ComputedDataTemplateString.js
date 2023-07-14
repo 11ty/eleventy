@@ -1,4 +1,5 @@
-const lodashSet = require("lodash/set");
+const { set: lodashSet } = require("@11ty/lodash-custom");
+
 const debug = require("debug")("Eleventy:ComputedDataTemplateString");
 
 /* Calculates computed data in Template Strings.
@@ -16,8 +17,8 @@ class ComputedDataTemplateString {
 
     // is this ¯\_(lisp)_/¯
     // must be strings that won’t be escaped by template languages
-    this.prefix = "(((((11ty(((((";
-    this.suffix = ")))))11ty)))))";
+    this.prefix = "(((11ty(((";
+    this.suffix = ")))11ty)))";
   }
 
   getProxyData() {
@@ -38,7 +39,7 @@ class ComputedDataTemplateString {
     let vars = new Set();
     let splits = output.split(this.prefix);
     for (let split of splits) {
-      let varName = split.substr(0, split.indexOf(this.suffix));
+      let varName = split.slice(0, split.indexOf(this.suffix) < 0 ? 0 : split.indexOf(this.suffix));
       if (varName) {
         vars.add(varName);
       }
@@ -55,7 +56,12 @@ class ComputedDataTemplateString {
     } catch (e) {
       debug("Computed Data first pass data resolution error: %o", e);
     }
-    return this.findVarsInOutput(output);
+
+    // page.outputPath on serverless urls returns false.
+    if (typeof output === "string") {
+      return this.findVarsInOutput(output);
+    }
+    return [];
   }
 }
 

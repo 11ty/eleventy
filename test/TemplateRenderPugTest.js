@@ -1,10 +1,16 @@
 const test = require("ava");
 const TemplateRender = require("../src/TemplateRender");
+const TemplateConfig = require("../src/TemplateConfig");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 
-function getNewTemplateRender(name, inputDir) {
-  let tr = new TemplateRender(name, inputDir);
-  tr.extensionMap = new EleventyExtensionMap();
+function getNewTemplateRender(name, inputDir, config) {
+  let eleventyConfig = config;
+  if (!eleventyConfig) {
+    eleventyConfig = new TemplateConfig();
+  }
+
+  let tr = new TemplateRender(name, inputDir, eleventyConfig);
+  tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   return tr;
 }
 
@@ -103,8 +109,11 @@ test("Pug Render Include (Relative, dot dot slash)", async (t) => {
 });
 
 test("Pug Options Overrides", async (t) => {
-  let tr = getNewTemplateRender("pug", "./test/stubs/");
-  tr.engine.setPugOptions({ testoption: "testoverride" });
+  let cfg = new TemplateConfig();
+  cfg.userConfig.setPugOptions({
+    testoption: "testoverride",
+  });
+  let tr = getNewTemplateRender("pug", "./test/stubs/", cfg);
 
   let options = tr.engine.getPugOptions();
   t.is(options.testoption, "testoverride");
@@ -126,14 +135,16 @@ test("Pug Render: with Library Override", async (t) => {
 });
 
 test("Pug Filter", async (t) => {
-  let tr = getNewTemplateRender("pug", "./test/stubs/");
-  tr.engine.setPugOptions({
+  let cfg = new TemplateConfig();
+  cfg.userConfig.setPugOptions({
     filters: {
       makeUppercase: function (text, options) {
         return text.toUpperCase();
       },
     },
   });
+
+  let tr = getNewTemplateRender("pug", "./test/stubs/", cfg);
 
   let fn = await tr.getCompiledTemplate(`p
   :makeUppercase()

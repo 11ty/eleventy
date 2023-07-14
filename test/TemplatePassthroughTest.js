@@ -1,15 +1,26 @@
 const test = require("ava");
+const TemplateConfig = require("../src/TemplateConfig");
+const FileSystemSearch = require("../src/FileSystemSearch");
 const TemplatePassthrough = require("../src/TemplatePassthrough");
 
 const getTemplatePassthrough = (path, outputDir, inputDir) => {
+  let eleventyConfig = new TemplateConfig();
+  let config = eleventyConfig.getConfig();
+
   if (typeof path === "object") {
-    return new TemplatePassthrough(path, outputDir, inputDir);
+    let p = new TemplatePassthrough(path, outputDir, inputDir, config);
+    p.setFileSystemSearch(new FileSystemSearch());
+    return p;
   }
-  return new TemplatePassthrough(
+
+  let p = new TemplatePassthrough(
     { inputPath: path, outputPath: true },
     outputDir,
-    inputDir
+    inputDir,
+    config
   );
+  p.setFileSystemSearch(new FileSystemSearch());
+  return p;
 };
 
 test("Constructor", (t) => {
@@ -48,11 +59,7 @@ test("Constructor, input directory in inputPath is stripped, duplicate directory
 });
 
 test("Constructor, input directory (object param, directory)", (t) => {
-  let pass = getTemplatePassthrough(
-    { inputPath: "src/test", outputPath: "test" },
-    "_site",
-    "src"
-  );
+  let pass = getTemplatePassthrough({ inputPath: "src/test", outputPath: "test" }, "_site", "src");
   t.is(pass.outputPath, "test");
   t.is(pass.getOutputPath(), "_site/test");
 });
@@ -117,51 +124,27 @@ test("Origin path isn’t included in output when targeting a file several level
 
 test("Full input file path and deep input path", (t) => {
   t.is(
-    getTemplatePassthrough(
-      "src/views/avatar.png",
-      "_site",
-      "src/views/"
-    ).getOutputPath(),
+    getTemplatePassthrough("src/views/avatar.png", "_site", "src/views/").getOutputPath(),
     "_site/avatar.png"
   );
   t.is(
-    getTemplatePassthrough(
-      "src/views/avatar.png",
-      "_site",
-      "src/views"
-    ).getOutputPath(),
+    getTemplatePassthrough("src/views/avatar.png", "_site", "src/views").getOutputPath(),
     "_site/avatar.png"
   );
   t.is(
-    getTemplatePassthrough(
-      "src/views/avatar.png",
-      "_site/",
-      "src/views"
-    ).getOutputPath(),
+    getTemplatePassthrough("src/views/avatar.png", "_site/", "src/views").getOutputPath(),
     "_site/avatar.png"
   );
   t.is(
-    getTemplatePassthrough(
-      "src/views/avatar.png",
-      "./_site",
-      "./src/views"
-    ).getOutputPath(),
+    getTemplatePassthrough("src/views/avatar.png", "./_site", "./src/views").getOutputPath(),
     "_site/avatar.png"
   );
   t.is(
-    getTemplatePassthrough(
-      "./src/views/avatar.png",
-      "./_site/",
-      "./src/views/"
-    ).getOutputPath(),
+    getTemplatePassthrough("./src/views/avatar.png", "./_site/", "./src/views/").getOutputPath(),
     "_site/avatar.png"
   );
   t.is(
-    getTemplatePassthrough(
-      "./src/views/avatar.png",
-      "_site",
-      "src/views/"
-    ).getOutputPath(),
+    getTemplatePassthrough("./src/views/avatar.png", "_site", "src/views/").getOutputPath(),
     "_site/avatar.png"
   );
 });
@@ -218,9 +201,7 @@ test("getFiles with glob", async (t) => {
     "_site/test/stubs/template-passthrough/static/test.js"
   );
   t.is(
-    pass.getOutputPath(
-      files.filter((entry) => entry.endsWith("test-nested.css"))[0]
-    ),
+    pass.getOutputPath(files.filter((entry) => entry.endsWith("test-nested.css"))[0]),
     "_site/test/stubs/template-passthrough/static/nested/test-nested.css"
   );
 });
@@ -230,18 +211,11 @@ test("getFiles with glob 2", async (t) => {
   t.is(pass.outputPath, true);
   const files = await pass.getFiles(inputPath);
   t.deepEqual(files, ["./test/stubs/template-passthrough/static/test.js"]);
-  t.is(
-    pass.getOutputPath(files[0]),
-    "_site/test/stubs/template-passthrough/static/test.js"
-  );
+  t.is(pass.getOutputPath(files[0]), "_site/test/stubs/template-passthrough/static/test.js");
 });
 
 test("Directory where outputPath is true", async (t) => {
-  let pass = getTemplatePassthrough(
-    { inputPath: "./static", outputPath: true },
-    "_site",
-    "_src"
-  );
+  let pass = getTemplatePassthrough({ inputPath: "./static", outputPath: true }, "_site", "_src");
   t.is(pass.outputPath, true);
   t.is(pass.getOutputPath(), "_site/static");
 });
@@ -293,3 +267,23 @@ test("Output paths match with different templatePassthrough methods", async (t) 
 //   t.truthy(pass);
 //   t.is(pass.getOutputPath(), "_site/rename.js");
 // });
+
+test("Bug with incremental file copying to a directory output, issue #2278 #1038", async (t) => {
+  let pass1 = getTemplatePassthrough(
+    { inputPath: "./test/stubs/public/test.css", outputPath: "/" },
+    "test/stubs",
+    "."
+  );
+
+  t.is(pass1.getOutputPath(), "test/stubs/test.css");
+});
+
+test("Bug with incremental dir copying to a directory output, issue #2278 #1038", async (t) => {
+  let pass1 = getTemplatePassthrough(
+    { inputPath: "./test/stubs/public/", outputPath: "/" },
+    "test/stubs",
+    "."
+  );
+
+  t.is(pass1.getOutputPath(), "test/stubs");
+});

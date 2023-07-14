@@ -1,14 +1,20 @@
 const test = require("ava");
-const TemplateRender = require("../src/TemplateRender");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 const md = require("markdown-it");
 const mdEmoji = require("markdown-it-emoji");
-const UserConfig = require("../src/UserConfig");
 const eleventySyntaxHighlightPlugin = require("@11ty/eleventy-plugin-syntaxhighlight");
 
-function getNewTemplateRender(name, inputDir) {
-  let tr = new TemplateRender(name, inputDir);
-  tr.extensionMap = new EleventyExtensionMap();
+const TemplateRender = require("../src/TemplateRender");
+const TemplateConfig = require("../src/TemplateConfig");
+const EleventyExtensionMap = require("../src/EleventyExtensionMap");
+const normalizeNewLines = require("./Util/normalizeNewLines");
+
+function getNewTemplateRender(name, inputDir, eleventyConfig) {
+  if (!eleventyConfig) {
+    eleventyConfig = new TemplateConfig();
+  }
+
+  let tr = new TemplateRender(name, inputDir, eleventyConfig);
+  tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   return tr;
 }
 
@@ -137,12 +143,11 @@ This is some code.
 
 test("Markdown Render: use prism highlighter (no language)", async (t) => {
   let tr = getNewTemplateRender("md");
-  let userConfig = new UserConfig();
+  let eleventyConfig = new TemplateConfig();
+  let userConfig = eleventyConfig.userConfig;
   userConfig.addPlugin(eleventySyntaxHighlightPlugin);
 
-  let markdownHighlight = userConfig.getMergingConfigObject()
-    .markdownHighlighter;
-
+  let markdownHighlight = eleventyConfig.getConfig().markdownHighlighter;
   let mdLib = md();
   mdLib.set({
     highlight: markdownHighlight,
@@ -161,11 +166,11 @@ This is some code.
 
 test("Markdown Render: use prism highlighter", async (t) => {
   let tr = getNewTemplateRender("md");
-  let userConfig = new UserConfig();
+  let eleventyConfig = new TemplateConfig();
+  let userConfig = eleventyConfig.userConfig;
   userConfig.addPlugin(eleventySyntaxHighlightPlugin);
 
-  let markdownHighlight = userConfig.getMergingConfigObject()
-    .markdownHighlighter;
+  let markdownHighlight = eleventyConfig.getConfig().markdownHighlighter;
 
   let mdLib = md();
   mdLib.set({
@@ -184,11 +189,11 @@ var key = "value";
 
 test("Markdown Render: use prism highlighter (no space before language)", async (t) => {
   let tr = getNewTemplateRender("md");
-  let userConfig = new UserConfig();
+  let eleventyConfig = new TemplateConfig();
+  let userConfig = eleventyConfig.userConfig;
   userConfig.addPlugin(eleventySyntaxHighlightPlugin);
 
-  let markdownHighlight = userConfig.getMergingConfigObject()
-    .markdownHighlighter;
+  let markdownHighlight = eleventyConfig.getConfig().markdownHighlighter;
 
   let mdLib = md();
   mdLib.set({
@@ -207,11 +212,11 @@ var key = "value";
 
 test("Markdown Render: use prism highlighter, line highlighting", async (t) => {
   let tr = getNewTemplateRender("md");
-  let userConfig = new UserConfig();
+  let eleventyConfig = new TemplateConfig();
+  let userConfig = eleventyConfig.userConfig;
   userConfig.addPlugin(eleventySyntaxHighlightPlugin);
 
-  let markdownHighlight = userConfig.getMergingConfigObject()
-    .markdownHighlighter;
+  let markdownHighlight = eleventyConfig.getConfig().markdownHighlighter;
 
   let mdLib = md();
   mdLib.set({
@@ -230,11 +235,11 @@ var key = "value";
 
 test("Markdown Render: use prism highlighter, line highlighting with fallback `text` language.", async (t) => {
   let tr = getNewTemplateRender("md");
-  let userConfig = new UserConfig();
+  let eleventyConfig = new TemplateConfig();
+  let userConfig = eleventyConfig.userConfig;
   userConfig.addPlugin(eleventySyntaxHighlightPlugin);
 
-  let markdownHighlight = userConfig.getMergingConfigObject()
-    .markdownHighlighter;
+  let markdownHighlight = eleventyConfig.getConfig().markdownHighlighter;
 
   let mdLib = md();
   mdLib.set({
@@ -253,9 +258,10 @@ var key = "value";
 
 test("Markdown Render: use Markdown inside of a Liquid shortcode (Issue #536)", async (t) => {
   let tr = getNewTemplateRender("md");
-
+  let eleventyConfig = new TemplateConfig();
   let cls = require("../src/Engines/Liquid");
-  let liquidEngine = new cls("liquid", tr.getIncludesDir());
+
+  let liquidEngine = new cls("liquid", tr.getDirs(), eleventyConfig);
   liquidEngine.addShortcode("testShortcode", function () {
     return "## My Other Title";
   });
@@ -277,9 +283,9 @@ test("Markdown Render: use Markdown inside of a Liquid shortcode (Issue #536)", 
 
 test("Markdown Render: use Markdown inside of a Nunjucks shortcode (Issue #536)", async (t) => {
   let tr = getNewTemplateRender("md");
-
+  let eleventyConfig = new TemplateConfig();
   let cls = require("../src/Engines/Nunjucks");
-  let nunjucksEngine = new cls("njk", tr.getIncludesDir());
+  let nunjucksEngine = new cls("njk", tr.getDirs(), eleventyConfig);
   nunjucksEngine.addShortcode("testShortcode", function () {
     return "## My Other Title";
   });
@@ -301,9 +307,9 @@ test("Markdown Render: use Markdown inside of a Nunjucks shortcode (Issue #536)"
 
 test("Markdown Render: use Markdown inside of a Liquid paired shortcode (Issue #536)", async (t) => {
   let tr = getNewTemplateRender("md");
-
+  let eleventyConfig = new TemplateConfig();
   let cls = require("../src/Engines/Liquid");
-  let liquidEngine = new cls("liquid", tr.getIncludesDir());
+  let liquidEngine = new cls("liquid", tr.getIncludesDir(), eleventyConfig);
   liquidEngine.addPairedShortcode("testShortcode", function (content) {
     return content;
   });
@@ -325,9 +331,10 @@ test("Markdown Render: use Markdown inside of a Liquid paired shortcode (Issue #
 
 test("Markdown Render: use Markdown inside of a Nunjucks paired shortcode (Issue #536)", async (t) => {
   let tr = getNewTemplateRender("md");
+  let eleventyConfig = new TemplateConfig();
 
   let cls = require("../src/Engines/Nunjucks");
-  let nunjucksEngine = new cls("njk", tr.getIncludesDir());
+  let nunjucksEngine = new cls("njk", tr.getDirs(), eleventyConfig);
   nunjucksEngine.addPairedShortcode("testShortcode", function (content) {
     return content;
   });
@@ -345,4 +352,88 @@ test("Markdown Render: use Markdown inside of a Nunjucks paired shortcode (Issue
     `<h1>My Title</h1>
 <h2>My Other Title</h2>`
   );
+});
+
+test("Markdown Render: Disable indented code blocks by default. Issue #2438", async (t) => {
+  let fn = await getNewTemplateRender("md").getCompiledTemplate(
+    "    This is a test"
+  );
+  t.is((await fn()).trim(), "<p>This is a test</p>");
+});
+
+test("Markdown Render: setLibrary does not have disabled indented code blocks either. Issue #2438", async (t) => {
+  let tr = getNewTemplateRender("md");
+
+  let mdLib = md();
+  tr.engine.setLibrary(mdLib);
+
+  let fn = await tr.getCompiledTemplate("    This is a test");
+  let content = await fn();
+  t.is(content.trim(), "<p>This is a test</p>");
+});
+
+test("Markdown Render: use amendLibrary to re-enable indented code blocks. Issue #2438", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let userConfig = eleventyConfig.userConfig;
+  userConfig.amendLibrary("md", (lib) => lib.enable("code"));
+
+  let tr = getNewTemplateRender("md", null, eleventyConfig);
+
+  let fn = await tr.getCompiledTemplate("    This is a test");
+  let content = await fn();
+  t.is(
+    normalizeNewLines(content.trim()),
+    `<pre><code>This is a test
+</code></pre>`
+  );
+});
+
+test("Markdown Render: amendLibrary works with setLibrary to re-enable indented code blocks. Issue #2438", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let userConfig = eleventyConfig.userConfig;
+  userConfig.amendLibrary("md", (lib) => lib.enable("code"));
+
+  let tr = getNewTemplateRender("md", null, eleventyConfig);
+
+  let mdLib = md();
+  tr.engine.setLibrary(mdLib);
+
+  let fn = await tr.getCompiledTemplate("    This is a test");
+  let content = await fn();
+  t.is(
+    normalizeNewLines(content.trim()),
+    `<pre><code>This is a test
+</code></pre>`
+  );
+});
+
+test("Markdown Render: multiple amendLibrary calls. Issue #2438", async (t) => {
+  t.plan(3);
+
+  let eleventyConfig = new TemplateConfig();
+  let userConfig = eleventyConfig.userConfig;
+  userConfig.amendLibrary("md", (lib) => {
+    t.true(true);
+    lib.enable("code");
+  });
+  userConfig.amendLibrary("md", (lib) => {
+    t.true(true);
+    lib.disable("code");
+  });
+
+  let tr = getNewTemplateRender("md", null, eleventyConfig);
+
+  let fn = await tr.getCompiledTemplate("    This is a test");
+  let content = await fn();
+  t.is(normalizeNewLines(content.trim()), "<p>This is a test</p>");
+});
+
+test("Markdown Render: use amendLibrary to add a Plugin", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let userConfig = eleventyConfig.userConfig;
+  userConfig.amendLibrary("md", (mdLib) => mdLib.use(mdEmoji));
+
+  let tr = getNewTemplateRender("md", null, eleventyConfig);
+  let fn = await tr.getCompiledTemplate(":)");
+  t.is((await fn()).trim(), "<p>😃</p>");
 });

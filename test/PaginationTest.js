@@ -1,34 +1,48 @@
 const test = require("ava");
-const Template = require("../src/Template");
 const TemplateData = require("../src/TemplateData");
 const Pagination = require("../src/Plugins/Pagination");
+<<<<<<< HEAD
 const templateConfig = require("../src/Config");
 
 const config = templateConfig.getConfig();
+=======
+const TemplateConfig = require("../src/TemplateConfig");
+const FileSystemSearch = require("../src/FileSystemSearch");
+
+const getNewTemplate = require("./_getNewTemplateForTests");
+const getRenderedTmpls = require("./_getRenderedTemplates");
+>>>>>>> master
 
 test("No data passed to pagination", async (t) => {
-  let tmpl = new Template(
+  let eleventyConfig = new TemplateConfig();
+  let tmpl = getNewTemplate(
     "./test/stubs/paged/notpaged.njk",
     "./test/stubs/",
-    "./dist"
+    "./dist",
+    null,
+    null,
+    eleventyConfig
   );
 
-  let paging = new Pagination();
-  paging.setTemplate(tmpl);
+  let paging = new Pagination(tmpl, {}, tmpl.config);
 
   t.is(paging.pagedItems.length, 0);
   t.is((await paging.getPageTemplates()).length, 0);
 });
 
 test("No pagination", async (t) => {
-  let tmpl = new Template(
+  let eleventyConfig = new TemplateConfig();
+  let tmpl = getNewTemplate(
     "./test/stubs/paged/notpaged.njk",
     "./test/stubs/",
-    "./dist"
+    "./dist",
+    null,
+    null,
+    eleventyConfig
   );
 
   let data = await tmpl.getData();
-  let paging = new Pagination(data);
+  let paging = new Pagination(tmpl, data, tmpl.config);
   paging.setTemplate(tmpl);
 
   t.falsy(data.pagination);
@@ -37,15 +51,59 @@ test("No pagination", async (t) => {
   t.is((await paging.getPageTemplates()).length, 0);
 });
 
-test("Pagination enabled in frontmatter", async (t) => {
-  let tmpl = new Template(
-    "./test/stubs/paged/pagedresolve.njk",
+test("Empty paged data", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let tmpl = getNewTemplate(
+    "./test/stubs/paged/paged-empty.njk",
     "./test/stubs/",
-    "./dist"
+    "./dist",
+    null,
+    null,
+    eleventyConfig
   );
 
   let data = await tmpl.getData();
-  let paging = new Pagination(data);
+  let paging = new Pagination(tmpl, data, tmpl.config);
+  paging.setTemplate(tmpl);
+
+  t.is(paging.getPageCount(), 0);
+  t.is(paging.pagedItems.length, 0);
+  t.is((await paging.getPageTemplates()).length, 0);
+});
+
+test("Empty paged data with generatePageOnEmptyData enabled", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let tmpl = getNewTemplate(
+    "./test/stubs/paged/paged-empty-pageonemptydata.njk",
+    "./test/stubs/",
+    "./dist",
+    null,
+    null,
+    eleventyConfig
+  );
+
+  let data = await tmpl.getData();
+  let paging = new Pagination(tmpl, data, tmpl.config);
+  paging.setTemplate(tmpl);
+
+  t.is(paging.getPageCount(), 1);
+  t.is(paging.pagedItems.length, 1);
+  t.is((await paging.getPageTemplates()).length, 1);
+});
+
+test("Pagination enabled in frontmatter", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let tmpl = getNewTemplate(
+    "./test/stubs/paged/pagedresolve.njk",
+    "./test/stubs/",
+    "./dist",
+    null,
+    null,
+    eleventyConfig
+  );
+
+  let data = await tmpl.getData();
+  let paging = new Pagination(tmpl, data, tmpl.config);
   paging.setTemplate(tmpl);
 
   t.truthy(data.testdata);
@@ -58,14 +116,18 @@ test("Pagination enabled in frontmatter", async (t) => {
 });
 
 test("Resolve paged data in frontmatter", async (t) => {
-  let tmpl = new Template(
+  let eleventyConfig = new TemplateConfig();
+  let tmpl = getNewTemplate(
     "./test/stubs/paged/pagedresolve.njk",
     "./test/stubs/",
-    "./dist"
+    "./dist",
+    null,
+    null,
+    eleventyConfig
   );
 
   let data = await tmpl.getData();
-  let paging = new Pagination(data);
+  let paging = new Pagination(tmpl, data, tmpl.config);
   paging.setTemplate(tmpl);
   t.is(paging._resolveItems().length, 8);
   t.is(paging.getPageCount(), 2);
@@ -73,10 +135,14 @@ test("Resolve paged data in frontmatter", async (t) => {
 });
 
 test("Paginate data in frontmatter", async (t) => {
-  let tmpl = new Template(
+  let eleventyConfig = new TemplateConfig();
+  let tmpl = getNewTemplate(
     "./test/stubs/paged/pagedinlinedata.njk",
     "./test/stubs/",
-    "./dist"
+    "./dist",
+    null,
+    null,
+    eleventyConfig
   );
 
   let data = await tmpl.getData();
@@ -97,14 +163,18 @@ test("Paginate data in frontmatter", async (t) => {
 });
 
 test("Paginate external data file", async (t) => {
-  let dataObj = new TemplateData("./test/stubs/");
-  await dataObj.cacheData();
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  dataObj.setFileSystemSearch(new FileSystemSearch());
+  await dataObj.getGlobalData();
 
-  let tmpl = new Template(
+  let tmpl = getNewTemplate(
     "./test/stubs/paged/paged.njk",
     "./test/stubs/",
     "./dist",
-    dataObj
+    dataObj,
+    null,
+    eleventyConfig
   );
 
   let data = await tmpl.getData();
@@ -136,11 +206,7 @@ test("Slugify test", (t) => {
 });
 
 test("Permalink with pagination variables", async (t) => {
-  let tmpl = new Template(
-    "./test/stubs/paged/pagedpermalink.njk",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/paged/pagedpermalink.njk", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
   let pages = await tmpl.getTemplates(data);
@@ -150,7 +216,7 @@ test("Permalink with pagination variables", async (t) => {
 });
 
 test("Permalink with pagination variables (numeric)", async (t) => {
-  let tmpl = new Template(
+  let tmpl = getNewTemplate(
     "./test/stubs/paged/pagedpermalinknumeric.njk",
     "./test/stubs/",
     "./dist"
@@ -181,7 +247,7 @@ test("Permalink with pagination variables (numeric)", async (t) => {
 });
 
 test("Permalink with pagination variables (numeric, one indexed)", async (t) => {
-  let tmpl = new Template(
+  let tmpl = getNewTemplate(
     "./test/stubs/paged/pagedpermalinknumericoneindexed.njk",
     "./test/stubs/",
     "./dist"
@@ -208,7 +274,7 @@ test("Permalink with pagination variables (numeric, one indexed)", async (t) => 
 });
 
 test("Permalink first and last page link with pagination variables (numeric)", async (t) => {
-  let tmpl = new Template(
+  let tmpl = getNewTemplate(
     "./test/stubs/paged/pagedpermalinknumeric.njk",
     "./test/stubs/",
     "./dist"
@@ -225,7 +291,7 @@ test("Permalink first and last page link with pagination variables (numeric)", a
 });
 
 test("Permalink first and last page link with pagination variables (numeric, one indexed)", async (t) => {
-  let tmpl = new Template(
+  let tmpl = getNewTemplate(
     "./test/stubs/paged/pagedpermalinknumericoneindexed.njk",
     "./test/stubs/",
     "./dist"
@@ -242,11 +308,7 @@ test("Permalink first and last page link with pagination variables (numeric, one
 });
 
 test("Alias to page data", async (t) => {
-  let tmpl = new Template(
-    "./test/stubs/paged/pagedalias.njk",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/paged/pagedalias.njk", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
   let pages = await tmpl.getTemplates(data);
@@ -259,11 +321,7 @@ test("Alias to page data", async (t) => {
 });
 
 test("Alias to page data (size 2)", async (t) => {
-  let tmpl = new Template(
-    "./test/stubs/paged/pagedaliassize2.njk",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/paged/pagedaliassize2.njk", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
   let pages = await tmpl.getTemplates(data);
@@ -276,11 +334,7 @@ test("Alias to page data (size 2)", async (t) => {
 });
 
 test("Permalink with pagination variables (and an if statement, nunjucks)", async (t) => {
-  let tmpl = new Template(
-    "./test/stubs/paged/pagedpermalinkif.njk",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/paged/pagedpermalinkif.njk", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
   let pages = await tmpl.getTemplates(data);
@@ -290,7 +344,7 @@ test("Permalink with pagination variables (and an if statement, nunjucks)", asyn
 });
 
 test("Permalink with pagination variables (and an if statement, liquid)", async (t) => {
-  let tmpl = new Template(
+  let tmpl = getNewTemplate(
     "./test/stubs/paged/pagedpermalinkif.liquid",
     "./test/stubs/",
     "./dist"
@@ -303,40 +357,37 @@ test("Permalink with pagination variables (and an if statement, liquid)", async 
   t.is(pages[1].outputPath, "./dist/paged/page-1/index.html");
 });
 
-test("Template with Pagination, getRenderedTemplates", async (t) => {
-  let tmpl = new Template(
-    "./test/stubs/paged/pagedpermalinkif.njk",
-    "./test/stubs/",
-    "./dist"
-  );
+test("Template with Pagination", async (t) => {
+  let tmpl = getNewTemplate("./test/stubs/paged/pagedpermalinkif.njk", "./test/stubs/", "./dist");
 
-  let outputPath = await tmpl.getOutputPath();
   let data = await tmpl.getData();
+  let outputPath = await tmpl.getOutputPath(data);
   t.is(outputPath, "./dist/paged/index.html");
 
-  let templates = await tmpl.getRenderedTemplates(data);
+  let templates = await getRenderedTmpls(tmpl, data);
   t.is(templates.length, 2);
 });
 
 test("Issue 135", async (t) => {
-  let dataObj = new TemplateData("./test/stubs/");
-  await dataObj.cacheData();
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  dataObj.setFileSystemSearch(new FileSystemSearch());
+  await dataObj.getGlobalData();
 
-  let tmpl = new Template(
+  let tmpl = getNewTemplate(
     "./test/stubs/issue-135/template.njk",
     "./test/stubs/",
     "./dist",
-    dataObj
+    dataObj,
+    null,
+    eleventyConfig
   );
 
   let data = await tmpl.getData();
-  let templates = await tmpl.getRenderedTemplates(data);
+  let templates = await getRenderedTmpls(tmpl, data);
   t.is(data.articles.length, 1);
   t.is(data.articles[0].title, "Do you even paginate bro?");
-  t.is(
-    await templates[0].outputPath,
-    "./dist/blog/do-you-even-paginate-bro/index.html"
-  );
+  t.is(await templates[0].outputPath, "./dist/blog/do-you-even-paginate-bro/index.html");
 
   let pages = await tmpl.getTemplates(data);
   t.is(pages.length, 1);
@@ -344,11 +395,7 @@ test("Issue 135", async (t) => {
 });
 
 test("Template with Pagination, getTemplates has page variables set", async (t) => {
-  let tmpl = new Template(
-    "./test/stubs/paged/pagedpermalinkif.njk",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/paged/pagedpermalinkif.njk", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
   let templates = await tmpl.getTemplates(data);
@@ -359,15 +406,11 @@ test("Template with Pagination, getTemplates has page variables set", async (t) 
   t.is(templates[1].data.page.outputPath, "./dist/paged/page-1/index.html");
 });
 
-test("Template with Pagination, getRenderedTemplates has page variables set", async (t) => {
-  let tmpl = new Template(
-    "./test/stubs/paged/pagedpermalinkif.njk",
-    "./test/stubs/",
-    "./dist"
-  );
+test("Template with Pagination, has page variables set", async (t) => {
+  let tmpl = getNewTemplate("./test/stubs/paged/pagedpermalinkif.njk", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
-  let pages = await tmpl.getRenderedTemplates(data);
+  let pages = await getRenderedTmpls(tmpl, data);
   t.is(pages[0].data.page.url, "/paged/");
   t.is(pages[0].data.page.outputPath, "./dist/paged/index.html");
 
@@ -376,11 +419,7 @@ test("Template with Pagination, getRenderedTemplates has page variables set", as
 });
 
 test("Page over an object (use keys)", async (t) => {
-  let tmpl = new Template(
-    "./test/stubs/paged/pagedobject.njk",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/paged/pagedobject.njk", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
   let pages = await tmpl.getTemplates(data);
@@ -400,11 +439,7 @@ test("Page over an object (use keys)", async (t) => {
 });
 
 test("Page over an object (use values)", async (t) => {
-  let tmpl = new Template(
-    "./test/stubs/paged/pagedobjectvalues.njk",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/paged/pagedobjectvalues.njk", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
   let pages = await tmpl.getTemplates(data);
@@ -424,7 +459,7 @@ test("Page over an object (use values)", async (t) => {
 });
 
 test("Page over an object (filtered, array)", async (t) => {
-  let tmpl = new Template(
+  let tmpl = getNewTemplate(
     "./test/stubs/paged/pagedobjectfilterarray.njk",
     "./test/stubs/",
     "./dist"
@@ -445,7 +480,7 @@ test("Page over an object (filtered, array)", async (t) => {
 });
 
 test("Page over an object (filtered, string)", async (t) => {
-  let tmpl = new Template(
+  let tmpl = getNewTemplate(
     "./test/stubs/paged/pagedobjectfilterstring.njk",
     "./test/stubs/",
     "./dist"
@@ -467,17 +502,17 @@ test("Page over an object (filtered, string)", async (t) => {
 });
 
 test("Pagination with deep data merge #147", async (t) => {
-  let tmpl = new Template(
+  let eleventyConfig = new TemplateConfig();
+  let tmpl = getNewTemplate(
     "./test/stubs/paged/pagedinlinedata.njk",
     "./test/stubs/",
-    "./dist"
+    "./dist",
+    null,
+    null,
+    eleventyConfig
   );
-  tmpl.config = {
-    keys: {
-      layout: "layout",
-    },
-    dataDeepMerge: true,
-  };
+  tmpl.config.keys.layout = "layout";
+  tmpl.config.deepDataMerge = true;
 
   let data = await tmpl.getData();
   let pages = await tmpl.getTemplates(data);
@@ -497,19 +532,9 @@ test("Pagination with deep data merge #147", async (t) => {
 });
 
 test("Pagination with deep data merge with alias #147", async (t) => {
-  let tmpl = new Template(
-    "./test/stubs/paged/pagedalias.njk",
-    "./test/stubs/",
-    "./dist"
-  );
-  tmpl.config = {
-    keys: {
-      layout: "layout",
-      permalink: "permalink",
-    },
-    dynamicPermalinks: true,
-    dataDeepMerge: true,
-  };
+  let tmpl = getNewTemplate("./test/stubs/paged/pagedalias.njk", "./test/stubs/", "./dist");
+  tmpl.config.dynamicPermalinks = true;
+  tmpl.config.deepDataMerge = true;
 
   let data = await tmpl.getData();
   let pages = await tmpl.getTemplates(data);
@@ -522,7 +547,7 @@ test("Pagination with deep data merge with alias #147", async (t) => {
 });
 
 test("Paginate data in frontmatter (reversed)", async (t) => {
-  let tmpl = new Template(
+  let tmpl = getNewTemplate(
     "./test/stubs/paged/pagedinlinedata-reverse.njk",
     "./test/stubs/",
     "./dist"
@@ -538,10 +563,7 @@ test("Paginate data in frontmatter (reversed)", async (t) => {
     "<ol><li>item8</li><li>item7</li><li>item6</li><li>item5</li></ol>"
   );
 
-  t.is(
-    pages[1].outputPath,
-    "./dist/paged/pagedinlinedata-reverse/1/index.html"
-  );
+  t.is(pages[1].outputPath, "./dist/paged/pagedinlinedata-reverse/1/index.html");
   t.is(
     (await pages[1].template.render(pages[1].data)).trim(),
     "<ol><li>item4</li><li>item3</li><li>item2</li><li>item1</li></ol>"
@@ -549,16 +571,22 @@ test("Paginate data in frontmatter (reversed)", async (t) => {
 });
 
 test("No circular dependency (does not throw)", (t) => {
-  new Pagination({
-    collections: {
-      tag1: [],
+  let eleventyConfig = new TemplateConfig();
+
+  new Pagination(
+    null,
+    {
+      collections: {
+        tag1: [],
+      },
+      pagination: {
+        data: "collections.tag1",
+        size: 1,
+      },
+      tags: ["tag2"],
     },
-    pagination: {
-      data: "collections.tag1",
-      size: 1,
-    },
-    tags: ["tag2"],
-  });
+    eleventyConfig
+  );
 
   t.true(true);
 });
@@ -580,7 +608,31 @@ test("Renamed tags should still work", (t) => {
 
 test("Circular dependency (pagination iterates over tag1 but also supplies pages to tag1)", (t) => {
   t.throws(() => {
-    new Pagination({
+    let eleventyConfig = new TemplateConfig();
+    new Pagination(
+      null,
+      {
+        collections: {
+          tag1: [],
+          tag2: [],
+        },
+        pagination: {
+          data: "collections.tag1",
+          size: 1,
+        },
+        tags: ["tag1"],
+      },
+      eleventyConfig
+    );
+  });
+});
+
+test("Circular dependency but should not error because it uses eleventyExcludeFromCollections", (t) => {
+  let eleventyConfig = new TemplateConfig();
+  new Pagination(
+    null,
+    {
+      eleventyExcludeFromCollections: true,
       collections: {
         tag1: [],
         tag2: [],
@@ -590,6 +642,7 @@ test("Circular dependency (pagination iterates over tag1 but also supplies pages
         size: 1,
       },
       tags: ["tag1"],
+<<<<<<< HEAD
     });
   });
 });
@@ -635,19 +688,17 @@ test("Circular dependency but should not error because it uses eleventyExcludeFr
     pagination: {
       data: "collections.tag1",
       size: 1,
+=======
+>>>>>>> master
     },
-    tags: ["tag1"],
-  });
+    eleventyConfig
+  );
 
   t.true(true);
 });
 
 test("Pagination `before` Callback", async (t) => {
-  let tmpl = new Template(
-    "./test/stubs/paged/paged-before.njk",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/paged/paged-before.njk", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
   let templates = await tmpl.getTemplates(data);
@@ -655,8 +706,20 @@ test("Pagination `before` Callback", async (t) => {
   t.deepEqual(templates[0].data.myalias, "item6");
 });
 
+test("Pagination `before` Callback with metadata", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/paged/paged-before-metadata.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let templates = await tmpl.getTemplates(data);
+  t.deepEqual(templates[0].data.pagination.items, ["item3"]);
+});
+
 test("Pagination `before` Callback with a Filter", async (t) => {
-  let tmpl = new Template(
+  let tmpl = getNewTemplate(
     "./test/stubs/paged/paged-before-filter.njk",
     "./test/stubs/",
     "./dist"
@@ -669,7 +732,7 @@ test("Pagination `before` Callback with a Filter", async (t) => {
 });
 
 test("Pagination `before` Callback with `reverse: true` (test order of operations)", async (t) => {
-  let tmpl = new Template(
+  let tmpl = getNewTemplate(
     "./test/stubs/paged/paged-before-and-reverse.njk",
     "./test/stubs/",
     "./dist"
@@ -681,14 +744,18 @@ test("Pagination `before` Callback with `reverse: true` (test order of operation
 });
 
 test("Pagination new v0.10.0 href/hrefs", async (t) => {
-  let dataObj = new TemplateData("./test/stubs/");
-  await dataObj.cacheData();
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  dataObj.setFileSystemSearch(new FileSystemSearch());
+  await dataObj.getGlobalData();
 
-  let tmpl = new Template(
+  let tmpl = getNewTemplate(
     "./test/stubs/paged/paged.njk",
     "./test/stubs/",
     "./dist",
-    dataObj
+    dataObj,
+    null,
+    eleventyConfig
   );
 
   let data = await tmpl.getData();
@@ -707,14 +774,18 @@ test("Pagination new v0.10.0 href/hrefs", async (t) => {
 });
 
 test("Pagination new v0.10.0 page/pages", async (t) => {
-  let dataObj = new TemplateData("./test/stubs/");
-  await dataObj.cacheData();
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  dataObj.setFileSystemSearch(new FileSystemSearch());
+  await dataObj.getGlobalData();
 
-  let tmpl = new Template(
+  let tmpl = getNewTemplate(
     "./test/stubs/paged/paged.njk",
     "./test/stubs/",
     "./dist",
-    dataObj
+    dataObj,
+    null,
+    eleventyConfig
   );
 
   let data = await tmpl.getData();
@@ -738,11 +809,7 @@ test("Pagination new v0.10.0 page/pages", async (t) => {
 });
 
 test("Pagination new v0.10.0 alias", async (t) => {
-  let tmpl = new Template(
-    "./test/stubs/paged/pagedalias.njk",
-    "./test/stubs/",
-    "./dist"
-  );
+  let tmpl = getNewTemplate("./test/stubs/paged/pagedalias.njk", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
   let templates = await tmpl.getTemplates(data);
@@ -752,14 +819,81 @@ test("Pagination new v0.10.0 alias", async (t) => {
 });
 
 test("Pagination make sure pageNumber is numeric for {{ pageNumber + 1 }} Issue #760", async (t) => {
-  let tmpl = new Template(
-    "./test/stubs/paged/pagedinlinedata.njk",
+  let tmpl = getNewTemplate("./test/stubs/paged/pagedinlinedata.njk", "./test/stubs/", "./dist");
+
+  let data = await tmpl.getData();
+  let templates = await tmpl.getTemplates(data);
+  t.is(templates[0].data.pagination.pageNumber, 0);
+  t.not(templates[0].data.pagination.pageNumber, "0");
+});
+
+test("Pagination mutable global data", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData("./test/stubs/paged-global-data-mutable/", eleventyConfig);
+  dataObj.setFileSystemSearch(new FileSystemSearch());
+  await dataObj.getGlobalData();
+
+  let tmpl = getNewTemplate(
+    "./test/stubs/paged-global-data-mutable/paged-differing-data-set.njk",
+    "./test/stubs/",
+    "./dist",
+    dataObj,
+    null,
+    eleventyConfig
+  );
+
+  let data = await tmpl.getData();
+  let templates = await tmpl.getTemplates(data);
+  t.is(templates.length, 3);
+  t.deepEqual(templates[0].data.pagination.items[0], {
+    key1: "item1",
+    key2: "item2",
+  });
+  t.deepEqual(templates[1].data.pagination.items[0], {
+    key3: "item3",
+    key4: "item4",
+  });
+  t.deepEqual(templates[2].data.pagination.items[0], {
+    key5: "item5",
+    key6: "item6",
+  });
+
+  t.deepEqual(templates[0].data.item, { key1: "item1", key2: "item2" });
+  t.deepEqual(templates[1].data.item, { key3: "item3", key4: "item4" });
+  t.deepEqual(templates[2].data.item, { key5: "item5", key6: "item6" });
+});
+
+test("Pagination template/dir data files run once, Issue 919", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let dataObj = new TemplateData("./test/stubs-919/", eleventyConfig);
+
+  let tmpl = getNewTemplate(
+    "./test/stubs-919/test.njk",
+    "./test/stubs-919/",
+    "./dist",
+    dataObj,
+    null,
+    eleventyConfig
+  );
+
+  let data = await tmpl.getData();
+  let templates = await tmpl.getTemplates(data);
+
+  t.is(templates.length, 3);
+  t.is(templates[0].data.test, templates[1].data.test);
+  t.is(templates[1].data.test, templates[2].data.test);
+});
+
+test("Pagination and eleventyComputed permalink, issue #1555 and #1865", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/pagination-eleventycomputed-permalink.liquid",
     "./test/stubs/",
     "./dist"
   );
 
   let data = await tmpl.getData();
   let templates = await tmpl.getTemplates(data);
-  t.is(templates[0].data.pagination.pageNumber, 0);
-  t.not(templates[0].data.pagination.pageNumber, "0");
+  t.is(templates[0].data.page.url, "/venues/first/");
+  t.is(templates[1].data.page.url, "/venues/second/");
+  t.is(templates[2].data.page.url, "/venues/third/");
 });

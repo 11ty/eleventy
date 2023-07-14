@@ -1,5 +1,4 @@
-const lodashGet = require("lodash/get");
-const lodashSet = require("lodash/set");
+const { set: lodashSet, get: lodashGet } = require("@11ty/lodash-custom");
 
 const ComputedDataQueue = require("./ComputedDataQueue");
 const ComputedDataTemplateString = require("./ComputedDataTemplateString");
@@ -8,30 +7,44 @@ const ComputedDataProxy = require("./ComputedDataProxy");
 const debug = require("debug")("Eleventy:ComputedData");
 
 class ComputedData {
-  constructor() {
+  constructor(config) {
     this.computed = {};
+    this.symbolParseFunctions = {};
     this.templateStringKeyLookup = {};
     this.computedKeys = new Set();
     this.declaredDependencies = {};
     this.queue = new ComputedDataQueue();
+    this.config = config;
   }
 
-  add(key, fn, declaredDependencies = []) {
+  add(key, renderFn, declaredDependencies = [], symbolParseFn = undefined) {
     this.computedKeys.add(key);
     this.declaredDependencies[key] = declaredDependencies;
 
-    lodashSet(this.computed, key, fn);
+    // bind config filters/JS functions
+    if (typeof renderFn === "function") {
+      let fns = {};
+      // TODO bug? no access to non-universal config things?
+      if (this.config) {
+        fns = this.config.javascriptFunctions;
+      }
+      renderFn = renderFn.bind(fns);
+    }
+
+    lodashSet(this.computed, key, renderFn);
+
+    if (symbolParseFn) {
+      lodashSet(this.symbolParseFunctions, key, symbolParseFn);
+    }
   }
 
-  addTemplateString(key, fn, declaredDependencies = []) {
-    this.add(key, fn, declaredDependencies);
+  addTemplateString(key, renderFn, declaredDependencies = [], symbolParseFn = undefined) {
+    this.add(key, renderFn, declaredDependencies, symbolParseFn);
     this.templateStringKeyLookup[key] = true;
   }
 
   async resolveVarOrder(data) {
-    let proxyByTemplateString = new ComputedDataTemplateString(
-      this.computedKeys
-    );
+    let proxyByTemplateString = new ComputedDataTemplateString(this.computedKeys);
     let proxyByProxy = new ComputedDataProxy(this.computedKeys);
 
     for (let key of this.computedKeys) {
@@ -39,13 +52,22 @@ class ComputedData {
 
       if (typeof computed !== "function") {
         // add nodes for non functions (primitives like booleans, etc)
+        // This will not handle template strings, as they are normalized to functions
         this.queue.addNode(key);
       } else {
         this.queue.uses(key, this.declaredDependencies[key]);
 
-        let isTemplateString = !!this.templateStringKeyLookup[key];
-        let proxy = isTemplateString ? proxyByTemplateString : proxyByProxy;
-        let varsUsed = await proxy.findVarsUsed(computed, data);
+        let symbolParseFn = lodashGet(this.symbolParseFunctions, key);
+        let varsUsed = [];
+        if (symbolParseFn) {
+          // use the parseForSymbols function in the TemplateEngine
+          varsUsed = symbolParseFn();
+        } else if (symbolParseFn !== false) {
+          // skip resolution is this is false (just use declaredDependencies)
+          let isTemplateString = !!this.templateStringKeyLookup[key];
+          let proxy = isTemplateString ? proxyByTemplateString : proxyByProxy;
+          varsUsed = await proxy.findVarsUsed(computed, data);
+        }
 
         debug("%o accesses %o variables", key, varsUsed);
         let filteredVarsUsed = varsUsed.filter((varUsed) => {
@@ -61,9 +83,9 @@ class ComputedData {
 
   async _setupDataEntry(data, order) {
     debug("Computed data order of execution: %o", order);
-
     for (let key of order) {
       let computed = lodashGet(this.computed, key);
+
       if (typeof computed === "function") {
         let ret = await computed(data);
         lodashSet(data, key, ret);

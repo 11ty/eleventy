@@ -2,8 +2,8 @@ const MustacheLib = require("mustache");
 const TemplateEngine = require("./TemplateEngine");
 
 class Mustache extends TemplateEngine {
-  constructor(name, includesDir) {
-    super(name, includesDir);
+  constructor(name, dirs, config) {
+    super(name, dirs, config);
 
     this.setLibrary(this.config.libraryOverrides.mustache);
   }
@@ -14,7 +14,7 @@ class Mustache extends TemplateEngine {
   }
 
   async compile(str) {
-    let partials = super.getPartials();
+    let partials = await super.getPartials();
 
     return function (data) {
       return this.render(str, data, partials).trim();

@@ -1,11 +1,15 @@
-const isPlainObject = require("lodash/isPlainObject");
+const { isPlainObject } = require("@11ty/eleventy-utils");
 const OVERRIDE_PREFIX = "override:";
 
-function getMergedItem(target, source, parentKey) {
-  // if key is prefixed with OVERRIDE_PREFIX, it just keeps the new source value (no merging)
-  if (parentKey && parentKey.indexOf(OVERRIDE_PREFIX) === 0) {
-    return source;
+function cleanKey(key, prefix) {
+  if (prefix && key.startsWith(prefix)) {
+    return key.slice(prefix.length);
   }
+  return key;
+}
+
+function getMergedItem(target, source, prefixes = {}) {
+  let { override } = prefixes;
 
   // deep copy objects to avoid sharing and to effect key renaming
   if (!target && isPlainObject(source)) {
@@ -16,39 +20,52 @@ function getMergedItem(target, source, parentKey) {
     return target.concat(source);
   } else if (isPlainObject(target)) {
     if (isPlainObject(source)) {
-      for (var key in source) {
-        let newKey = key;
-        if (key.indexOf(OVERRIDE_PREFIX) === 0) {
-          newKey = key.substr(OVERRIDE_PREFIX.length);
-        }
-        target[newKey] = getMergedItem(target[key], source[key], newKey);
+      for (let key in source) {
+        let overrideKey = cleanKey(key, override);
+
+        target[overrideKey] = getMergedItem(target[key], source[key], prefixes);
       }
     }
     return target;
-  } else {
-    // number, string, class instance, etc
-    return source;
   }
+  // number, string, class instance, etc
+  return source;
 }
+
+// The same as Merge but without override prefixes
+function DeepCopy(targetObject, ...sources) {
+  for (let source of sources) {
+    if (!source) {
+      continue;
+    }
+
+    targetObject = getMergedItem(targetObject, source);
+  }
+  return targetObject;
+}
+
 function Merge(target, ...sources) {
   // Remove override prefixes from root target.
   if (isPlainObject(target)) {
-    for (var key in target) {
+    for (let key in target) {
       if (key.indexOf(OVERRIDE_PREFIX) === 0) {
-        target[key.substr(OVERRIDE_PREFIX.length)] = target[key];
+        target[key.slice(OVERRIDE_PREFIX.length)] = target[key];
         delete target[key];
       }
     }
   }
 
-  for (var source of sources) {
+  for (let source of sources) {
     if (!source) {
       continue;
     }
-    target = getMergedItem(target, source);
+    target = getMergedItem(target, source, {
+      override: OVERRIDE_PREFIX,
+    });
   }
 
   return target;
 }
 
 module.exports = Merge;
+module.exports.DeepCopy = DeepCopy;

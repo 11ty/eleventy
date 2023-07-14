@@ -1,80 +1,72 @@
 const test = require("ava");
 const EleventyServe = require("../src/EleventyServe");
+const TemplateConfig = require("../src/TemplateConfig");
 
-test("Constructor", (t) => {
+async function getServerInstance(cfg) {
   let es = new EleventyServe();
-  t.is(es.getPathPrefix(), "/");
+  if (!cfg) {
+    cfg = new TemplateConfig().getConfig();
+  }
+  es.config = cfg;
+  await es.init();
+
+  delete es.options.logger;
+  delete es.options.module;
+
+  return es;
+}
+
+test("Constructor", async (t) => {
+  let es = await getServerInstance();
+  t.is(es.options.pathPrefix, "/");
 });
 
-test("Directories", (t) => {
-  let es = new EleventyServe();
+test("Get Options", async (t) => {
+  let es = await getServerInstance();
   es.setOutputDir("_site");
-  t.is(es.getRedirectDir("test"), "_site/test");
-  t.is(es.getRedirectFilename("test"), "_site/test/index.html");
-});
 
-test("Get Options", (t) => {
-  let es = new EleventyServe();
-  es.config = {
+  t.deepEqual(es.options, {
     pathPrefix: "/",
-  };
-  es.setOutputDir("_site");
-
-  t.deepEqual(es.getOptions(), {
-    ignore: ["node_modules"],
-    index: "index.html",
-    notify: false,
-    open: false,
     port: 8080,
-    server: {
-      baseDir: "_site",
-    },
-    watch: false,
   });
 });
 
-test("Get Options (with a pathPrefix)", (t) => {
-  let es = new EleventyServe();
-  es.config = {
+test("Get Options (with a pathPrefix)", async (t) => {
+  let cfg = new TemplateConfig().getConfig();
+  cfg.pathPrefix = "/web/";
+
+  let es = await getServerInstance(cfg);
+  es.setOutputDir("_site");
+
+  t.deepEqual(es.options, {
     pathPrefix: "/web/",
-  };
-  es.setOutputDir("_site");
-
-  t.deepEqual(es.getOptions(), {
-    ignore: ["node_modules"],
-    index: "index.html",
-    notify: false,
-    open: false,
     port: 8080,
-    server: {
-      baseDir: "_site/_eleventy_redirect",
-      routes: {
-        "/web/": "_site",
-      },
-    },
-    watch: false,
   });
 });
 
-test("Get Options (override in config)", (t) => {
-  let es = new EleventyServe();
-  es.config = {
-    pathPrefix: "/",
-    browserSyncConfig: {
-      notify: true,
-    },
-  };
+test("Get Options (override in config)", async (t) => {
+  let es = await getServerInstance();
   es.setOutputDir("_site");
 
-  t.deepEqual(es.getOptions(), {
-    ignore: ["node_modules"],
-    index: "index.html",
-    notify: true,
-    open: false,
+  t.deepEqual(es.options, {
+    pathPrefix: "/",
     port: 8080,
-    server: {
-      baseDir: "_site",
-    },
-    watch: false,
   });
+});
+
+test("Sanity test that default output is set correctly", async (t) => {
+  let es = await getServerInstance();
+  es.setOutputDir("_site");
+
+  t.is(es.server.dir, "_site");
+});
+
+// This assert should work once updating the output dir of the server works.
+test.skip("Custom output dir is set correctly", async (t) => {
+  let es = await getServerInstance();
+  es.setOutputDir("x");
+
+  t.is(es.outputDir, "x");
+
+  t.is(es.server.dir, "x");
 });

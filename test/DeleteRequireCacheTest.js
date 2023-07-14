@@ -1,6 +1,8 @@
 const test = require("ava");
 const path = require("path");
-const deleteRequireCache = require("../src/Util/DeleteRequireCache");
+const {
+  deleteRequireCacheAbsolute,
+} = require("../src/Util/DeleteRequireCache");
 const template = require("./stubs/function.11ty");
 
 test("deleteRequireCache", (t) => {
@@ -10,7 +12,7 @@ test("deleteRequireCache", (t) => {
   const posixModulePath = useForwardSlashes(modulePath);
   const windowsModulePath = useBackwardSlashes(modulePath);
 
-  deleteRequireCache(posixModulePath);
+  deleteRequireCacheAbsolute(posixModulePath);
 
   t.is(require.cache[windowsModulePath], undefined);
 });

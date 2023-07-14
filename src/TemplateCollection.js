@@ -1,7 +1,7 @@
 const multimatch = require("multimatch");
 const Sortable = require("./Util/Sortable");
 const config = require("./Config");
-const TemplatePath = require("./TemplatePath");
+const { TemplatePath } = require("@11ty/eleventy-utils");
 
 class TemplateCollection extends Sortable {
   constructor() {

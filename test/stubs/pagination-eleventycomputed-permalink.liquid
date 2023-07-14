@@ -1,0 +1,13 @@
+---
+venues:
+  - first
+  - second
+  - third
+pagination:
+  data: venues
+  size: 1
+  alias: venue
+  addAllPagesToCollections: true
+eleventyComputed:
+  permalink: "venues/{{ venue }}/"
+---

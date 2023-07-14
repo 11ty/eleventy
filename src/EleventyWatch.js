@@ -1,4 +1,5 @@
-const TemplatePath = require("./TemplatePath");
+const { TemplatePath } = require("@11ty/eleventy-utils");
+const PathNormalizer = require("./Util/PathNormalizer.js");
 
 /* Decides when to watch and in what mode to watch
  * Incremental builds don’t batch changes, they queue.
@@ -29,11 +30,11 @@ class EleventyWatch {
   }
 
   getIncrementalFile() {
-    if (!this.isActive || !this.incremental || this.activeQueue.length === 0) {
-      return false;
+    if (this.incremental) {
+      return this.activeQueue.length ? this.activeQueue[0] : false;
     }
 
-    return this.activeQueue[0];
+    return false;
   }
 
   /* Returns the changed files currently being operated on in the current `watch` build
@@ -62,13 +63,24 @@ class EleventyWatch {
 
   hasAllQueueFiles(file) {
     return (
-      this.activeQueue.length > 0 &&
-      this.activeQueue.length === this._queueMatches(file).length
+      this.activeQueue.length > 0 && this.activeQueue.length === this._queueMatches(file).length
     );
   }
 
   hasQueuedFile(file) {
-    return this._queueMatches(file).length > 0;
+    if (file) {
+      return this._queueMatches(file).length > 0;
+    }
+    return false;
+  }
+
+  hasQueuedFiles(files) {
+    for (const file of files) {
+      if (this.hasQueuedFile(file)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   get pendingQueue() {
@@ -84,7 +96,7 @@ class EleventyWatch {
 
   addToPendingQueue(path) {
     if (path) {
-      path = TemplatePath.addLeadingDotSlash(path);
+      path = PathNormalizer.normalizeSeperator(TemplatePath.addLeadingDotSlash(path));
       this.pendingQueue.push(path);
     }
   }

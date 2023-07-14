@@ -1,23 +1,21 @@
 const test = require("ava");
+const TemplateConfig = require("../src/TemplateConfig");
 const TemplateLayoutPathResolver = require("../src/TemplateLayoutPathResolver");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 
-function getResolverInstance(path, inputDir, map) {
-  if (!map) {
-    map = new EleventyExtensionMap([
-      "liquid",
-      "ejs",
-      "md",
-      "hbs",
-      "mustache",
-      "haml",
-      "pug",
-      "njk",
-      "html",
-      "11ty.js",
-    ]);
+function getResolverInstance(path, inputDir, { eleventyConfig, map } = {}) {
+  if (!eleventyConfig) {
+    eleventyConfig = new TemplateConfig();
   }
-  return new TemplateLayoutPathResolver(path, inputDir, map);
+
+  if (!map) {
+    map = new EleventyExtensionMap(
+      ["liquid", "ejs", "md", "hbs", "mustache", "haml", "pug", "njk", "html", "11ty.js"],
+      eleventyConfig
+    );
+  }
+
+  return new TemplateLayoutPathResolver(path, inputDir, map, eleventyConfig);
 }
 
 test("Layout", (t) => {
@@ -31,77 +29,122 @@ test("Layout already has extension", (t) => {
 });
 
 test("Layout (uses empty string includes folder)", (t) => {
-  let res = getResolverInstance("includesemptystring", "./test/stubs");
-  res.config = {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.appendToRootConfig({
     templateFormats: ["ejs"],
     dir: {
       includes: "",
     },
-  };
+  });
+
+  let res = getResolverInstance("includesemptystring", "./test/stubs", {
+    eleventyConfig,
+  });
 
   t.is(res.getFileName(), "includesemptystring.ejs");
 });
 
 test("Layout (uses empty string includes folder) already has extension", (t) => {
-  let res = getResolverInstance("includesemptystring.ejs", "./test/stubs");
-  res.config = {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.appendToRootConfig({
     templateFormats: ["ejs"],
     dir: {
       includes: "",
     },
-  };
+  });
+
+  let res = getResolverInstance("includesemptystring.ejs", "./test/stubs", {
+    eleventyConfig,
+  });
 
   t.is(res.getFileName(), "includesemptystring.ejs");
 });
 
 test("Layout (uses layouts folder)", (t) => {
-  let res = getResolverInstance("layoutsdefault", "./test/stubs");
-  res.config = {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.appendToRootConfig({
     templateFormats: ["ejs"],
     dir: {
       layouts: "_layouts",
       includes: "_includes",
     },
-  };
+  });
+
+  let res = getResolverInstance("layoutsdefault", "./test/stubs", {
+    eleventyConfig,
+  });
 
   t.is(res.getFileName(), "layoutsdefault.ejs");
 });
 
 test("Layout (uses layouts folder) already has extension", (t) => {
-  let res = getResolverInstance("layoutsdefault.ejs", "./test/stubs");
-  res.config = {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.appendToRootConfig({
     templateFormats: ["ejs"],
     dir: {
       layouts: "_layouts",
       includes: "_includes",
     },
-  };
+  });
+
+  let res = getResolverInstance("layoutsdefault.ejs", "./test/stubs", {
+    eleventyConfig,
+  });
 
   t.is(res.getFileName(), "layoutsdefault.ejs");
 });
 
 test("Layout (uses empty string layouts folder)", (t) => {
-  let res = getResolverInstance("layoutsemptystring", "./test/stubs");
-  res.config = {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.appendToRootConfig({
     templateFormats: ["ejs"],
     dir: {
       layouts: "",
       includes: "_includes",
     },
-  };
+  });
+
+  let res = getResolverInstance("layoutsemptystring", "./test/stubs", {
+    eleventyConfig,
+  });
 
   t.is(res.getFileName(), "layoutsemptystring.ejs");
 });
 
-test("Layout (uses empty string layouts folder) already has extension", (t) => {
-  let res = getResolverInstance("layoutsemptystring.ejs", "./test/stubs");
-  res.config = {
+test("Layout (uses empty string layouts folder) no template resolution", (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.setLayoutResolution(false);
+
+  eleventyConfig.appendToRootConfig({
     templateFormats: ["ejs"],
     dir: {
       layouts: "",
       includes: "_includes",
     },
-  };
+  });
+
+  let res = getResolverInstance("layoutsemptystring", "./test/stubs", {
+    eleventyConfig,
+  });
+
+  t.throws(() => {
+    res.getFileName();
+  });
+});
+
+test("Layout (uses empty string layouts folder) already has extension", (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.appendToRootConfig({
+    templateFormats: ["ejs"],
+    dir: {
+      layouts: "",
+      includes: "_includes",
+    },
+  });
+
+  let res = getResolverInstance("layoutsemptystring.ejs", "./test/stubs", {
+    eleventyConfig,
+  });
 
   t.is(res.getFileName(), "layoutsemptystring.ejs");
 });

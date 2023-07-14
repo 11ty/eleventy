@@ -1,0 +1,4 @@
+---
+eleventyImport:
+  collections: ["post"]
+---

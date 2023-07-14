@@ -1,59 +1,54 @@
 const test = require("ava");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
+const TemplateConfig = require("../src/TemplateConfig");
+
+function getExtensionMap(formats, config = new TemplateConfig()) {
+  let map = new EleventyExtensionMap(formats, config);
+  return map;
+}
 
 test("Empty formats", (t) => {
-  let map = new EleventyExtensionMap([]);
+  let map = getExtensionMap([]);
   t.deepEqual(map.getGlobs("."), []);
 });
 test("Single format", (t) => {
-  let map = new EleventyExtensionMap(["pug"]);
+  let map = getExtensionMap(["pug"]);
   t.deepEqual(map.getGlobs("."), ["./**/*.pug"]);
   t.deepEqual(map.getGlobs("src"), ["./src/**/*.pug"]);
 });
 test("Multiple formats", (t) => {
-  let map = new EleventyExtensionMap(["njk", "pug"]);
-  t.deepEqual(map.getGlobs("."), ["./**/*.njk", "./**/*.pug"]);
-  t.deepEqual(map.getGlobs("src"), ["./src/**/*.njk", "./src/**/*.pug"]);
-});
-
-test("Invalid keys are filtered (no passthrough copy)", (t) => {
-  let map = new EleventyExtensionMap(["lksdjfjlsk"]);
-  map.config = {
-    passthroughFileCopy: false,
-  };
-  t.deepEqual(map.getGlobs("."), []);
+  let map = getExtensionMap(["njk", "pug"]);
+  t.deepEqual(map.getGlobs("."), ["./**/*.{njk,pug}"]);
+  t.deepEqual(map.getGlobs("src"), ["./src/**/*.{njk,pug}"]);
 });
 
 test("Invalid keys are filtered (using passthrough copy)", (t) => {
-  let map = new EleventyExtensionMap(["lksdjfjlsk"]);
-  map.config = {
-    passthroughFileCopy: true,
-  };
+  let map = getExtensionMap(["lksdjfjlsk"]);
   t.deepEqual(map.getGlobs("."), ["./**/*.lksdjfjlsk"]);
 });
 
 test("Keys are mapped to lower case", (t) => {
-  let map = new EleventyExtensionMap(["PUG", "NJK"]);
-  t.deepEqual(map.getGlobs("."), ["./**/*.pug", "./**/*.njk"]);
+  let map = getExtensionMap(["PUG", "NJK"]);
+  t.deepEqual(map.getGlobs("."), ["./**/*.{pug,njk}"]);
 });
 
 test("Pruned globs", (t) => {
-  let map = new EleventyExtensionMap(["pug", "njk", "png"]);
+  let map = getExtensionMap(["pug", "njk", "png"]);
   t.deepEqual(map.getPassthroughCopyGlobs("."), ["./**/*.png"]);
 });
 
 test("Empty path for fileList", (t) => {
-  let map = new EleventyExtensionMap(["njk", "pug"]);
+  let map = getExtensionMap(["njk", "pug"]);
   t.deepEqual(map.getFileList(), []);
 });
 
 test("fileList", (t) => {
-  let map = new EleventyExtensionMap(["njk", "pug"]);
+  let map = getExtensionMap(["njk", "pug"]);
   t.deepEqual(map.getFileList("filename"), ["filename.njk", "filename.pug"]);
 });
 
 test("fileList with dir", (t) => {
-  let map = new EleventyExtensionMap(["njk", "pug"]);
+  let map = getExtensionMap(["njk", "pug"]);
   t.deepEqual(map.getFileList("filename", "_includes"), [
     "_includes/filename.njk",
     "_includes/filename.pug",
@@ -61,7 +56,7 @@ test("fileList with dir", (t) => {
 });
 
 test("fileList with dir in path", (t) => {
-  let map = new EleventyExtensionMap(["njk", "pug"]);
+  let map = getExtensionMap(["njk", "pug"]);
   t.deepEqual(map.getFileList("layouts/filename"), [
     "layouts/filename.njk",
     "layouts/filename.pug",
@@ -69,7 +64,7 @@ test("fileList with dir in path", (t) => {
 });
 
 test("fileList with dir in path and dir", (t) => {
-  let map = new EleventyExtensionMap(["njk", "pug"]);
+  let map = getExtensionMap(["njk", "pug"]);
   t.deepEqual(map.getFileList("layouts/filename", "_includes"), [
     "_includes/layouts/filename.njk",
     "_includes/layouts/filename.pug",
@@ -77,7 +72,7 @@ test("fileList with dir in path and dir", (t) => {
 });
 
 test("removeTemplateExtension", (t) => {
-  let map = new EleventyExtensionMap(["njk", "11ty.js"]);
+  let map = getExtensionMap(["njk", "11ty.js"]);
   t.is(map.removeTemplateExtension("component.njk"), "component");
   t.is(map.removeTemplateExtension("component.11ty.js"), "component");
 
@@ -87,13 +82,7 @@ test("removeTemplateExtension", (t) => {
 });
 
 test("hasEngine", (t) => {
-  let map = new EleventyExtensionMap([
-    "liquid",
-    "njk",
-    "11ty.js",
-    "ejs",
-    "pug",
-  ]);
+  let map = getExtensionMap(["liquid", "njk", "11ty.js", "ejs", "pug"]);
   t.true(map.hasEngine("default.ejs"));
   t.is(map.getKey("default.ejs"), "ejs");
   t.falsy(map.getKey());
@@ -111,7 +100,7 @@ test("hasEngine", (t) => {
 });
 
 test("hasEngine no formats passed in", (t) => {
-  let map = new EleventyExtensionMap([]);
+  let map = getExtensionMap([]);
   t.true(map.hasEngine("default.ejs"));
   t.is(map.getKey("default.ejs"), "ejs");
   t.falsy(map.getKey());
@@ -130,7 +119,7 @@ test("hasEngine no formats passed in", (t) => {
 });
 
 test("getKey", (t) => {
-  let map = new EleventyExtensionMap(["njk", "11ty.js", "md"]);
+  let map = getExtensionMap(["njk", "11ty.js", "md"]);
   t.is(map.getKey("component.njk"), "njk");
   t.is(map.getKey("component.11ty.js"), "11ty.js");
   t.is(map.getKey("11ty.js"), "11ty.js");
@@ -144,21 +133,45 @@ test("getKey", (t) => {
   t.is(map.getKey("component.js"), undefined);
 });
 
-test("isFullTemplateFilename (not a passthrough copy extension)", (t) => {
-  let map = new EleventyExtensionMap([
-    "liquid",
-    "njk",
-    "11ty.js",
-    "ejs",
-    "pug",
-    "js",
-    "css",
-  ]);
-  t.true(map.isFullTemplateFilename("template.liquid"));
-  t.true(map.isFullTemplateFilename("template.njk"));
-  t.true(map.isFullTemplateFilename("template.11ty.js"));
-  t.true(map.isFullTemplateFilename("template.ejs"));
-  t.true(map.isFullTemplateFilename("template.pug"));
-  t.false(map.isFullTemplateFilename("passthrough.js"));
-  t.false(map.isFullTemplateFilename("passthrough.css"));
+test("isFullTemplateFilePath (not a passthrough copy extension)", (t) => {
+  let map = getExtensionMap(["liquid", "njk", "11ty.js", "ejs", "pug", "js", "css"]);
+  t.true(map.isFullTemplateFilePath("template.liquid"));
+  t.true(map.isFullTemplateFilePath("template.njk"));
+  t.true(map.isFullTemplateFilePath("template.11ty.js"));
+  t.true(map.isFullTemplateFilePath("template.ejs"));
+  t.true(map.isFullTemplateFilePath("template.pug"));
+  t.false(map.isFullTemplateFilePath("passthrough.js"));
+  t.false(map.isFullTemplateFilePath("passthrough.css"));
+});
+
+test("getValidExtensionsForPath", (t) => {
+  let cfg = new TemplateConfig();
+  cfg.userConfig.extensionMap.add({
+    key: "js",
+    extension: "js",
+  });
+
+  let map = getExtensionMap(["liquid", "njk", "11ty.js", "js"], cfg);
+
+  t.deepEqual(map.getValidExtensionsForPath("template.liquid"), ["liquid"]);
+  t.deepEqual(map.getValidExtensionsForPath("template.11ty.js"), ["11ty.js", "js"]);
+  t.deepEqual(map.getValidExtensionsForPath("template.pug"), []);
+  t.deepEqual(map.getValidExtensionsForPath("template.liquid.js"), ["js"]);
+  t.deepEqual(map.getValidExtensionsForPath("njk.liquid.11ty.js"), ["11ty.js", "js"]);
+});
+
+test("shouldSpiderJavaScriptDependencies", (t) => {
+  let cfg = new TemplateConfig();
+  cfg.userConfig.extensionMap.add({
+    key: "js",
+    extension: "js",
+  });
+
+  let map = getExtensionMap(["liquid", "njk", "11ty.js", "js"], cfg);
+
+  t.deepEqual(map.shouldSpiderJavaScriptDependencies("template.liquid"), false);
+  t.deepEqual(map.shouldSpiderJavaScriptDependencies("template.njk"), false);
+  t.deepEqual(map.shouldSpiderJavaScriptDependencies("template.css"), false);
+  t.deepEqual(map.shouldSpiderJavaScriptDependencies("template.11ty.js"), true);
+  t.deepEqual(map.shouldSpiderJavaScriptDependencies("template.js"), false);
 });

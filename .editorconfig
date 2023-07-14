@@ -1,6 +1,8 @@
 root = true
 
 [*]
+#TODO
+#indent_style = tab
 indent_style = space
 indent_size = 2
 end_of_line = lf
@@ -13,3 +15,4 @@ insert_final_newline = true
 
 [/test/stubs*/**]
 insert_final_newline = unset
+trim_trailing_whitespace = false

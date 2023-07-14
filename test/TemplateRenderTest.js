@@ -1,10 +1,12 @@
 const test = require("ava");
 const TemplateRender = require("../src/TemplateRender");
+const TemplateConfig = require("../src/TemplateConfig");
 const EleventyExtensionMap = require("../src/EleventyExtensionMap");
 
 function getNewTemplateRender(name, inputDir) {
-  let tr = new TemplateRender(name, inputDir);
-  tr.extensionMap = new EleventyExtensionMap();
+  let eleventyConfig = new TemplateConfig();
+  let tr = new TemplateRender(name, inputDir, eleventyConfig);
+  tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   return tr;
 }
 
@@ -60,4 +62,9 @@ test("Parse Overrides to get Prioritized Engine List", async (t) => {
   t.throws(function () {
     TemplateRender.parseEngineOverrides("ejs,njk,html");
   });
+});
+
+test("Make sure getEnginesList returns a string", async (t) => {
+  let tr = getNewTemplateRender("liquid", "./test/stubs");
+  t.is(tr.getEnginesList("njk,md"), "njk,md");
 });

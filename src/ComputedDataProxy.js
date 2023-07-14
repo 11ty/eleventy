@@ -1,6 +1,5 @@
-const lodashSet = require("lodash/set");
-const lodashGet = require("lodash/get");
-const lodashIsPlainObject = require("lodash/isPlainObject");
+const { set: lodashSet, get: lodashGet } = require("@11ty/lodash-custom");
+const { isPlainObject } = require("@11ty/eleventy-utils");
 
 /* Calculates computed data using Proxies */
 class ComputedDataProxy {
@@ -13,11 +12,15 @@ class ComputedDataProxy {
   }
 
   isArrayOrPlainObject(data) {
-    return Array.isArray(data) || lodashIsPlainObject(data);
+    return Array.isArray(data) || isPlainObject(data);
   }
 
   getProxyData(data, keyRef) {
+    // WARNING: SIDE EFFECTS
     // Set defaults for keys not already set on parent data
+
+    // TODO should make another effort to get rid of this,
+    // See the ProxyWrap util for more proxy handlers that will likely fix this
     let undefinedValue = "__11TY_UNDEFINED__";
     if (this.computedKeys) {
       for (let key of this.computedKeys) {
@@ -97,7 +100,7 @@ class ComputedDataProxy {
   }
 
   _getProxyData(data, keyRef, parentKey = "") {
-    if (lodashIsPlainObject(data)) {
+    if (isPlainObject(data)) {
       return this._getProxyForObject(data, keyRef, parentKey);
     } else if (Array.isArray(data)) {
       return this._getProxyForArray(data, keyRef, parentKey);
