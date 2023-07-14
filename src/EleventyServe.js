@@ -6,7 +6,7 @@ const PathPrefixer = require("./Util/PathPrefixer");
 const merge = require("./Util/Merge");
 const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
 
-const debug = require("debug")("EleventyServe");
+const debug = require("debug")("Eleventy:EleventyServe");
 
 class EleventyServeConfigError extends EleventyBaseError {}
 
