@@ -1,17 +1,12 @@
 const test = require("ava");
 const TemplateData = require("../src/TemplateData");
 const Pagination = require("../src/Plugins/Pagination");
-<<<<<<< HEAD
 const templateConfig = require("../src/Config");
-
 const config = templateConfig.getConfig();
-=======
 const TemplateConfig = require("../src/TemplateConfig");
 const FileSystemSearch = require("../src/FileSystemSearch");
-
 const getNewTemplate = require("./_getNewTemplateForTests");
 const getRenderedTmpls = require("./_getRenderedTemplates");
->>>>>>> master
 
 test("No data passed to pagination", async (t) => {
   let eleventyConfig = new TemplateConfig();
@@ -642,10 +637,9 @@ test("Circular dependency but should not error because it uses eleventyExcludeFr
         size: 1,
       },
       tags: ["tag1"],
-<<<<<<< HEAD
     });
   });
-});
+
 
 test("Circular dependency (pagination iterates over tag1 but also supplies pages to tag1) 2", (t) => {
   config.keys.tags = "categories";
@@ -688,10 +682,8 @@ test("Circular dependency but should not error because it uses eleventyExcludeFr
     pagination: {
       data: "collections.tag1",
       size: 1,
-=======
->>>>>>> master
     },
-    eleventyConfig
+    eleventyConfig}
   );
 
   t.true(true);

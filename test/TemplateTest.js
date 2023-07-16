@@ -917,8 +917,6 @@ test("Front Matter Tags (Single)", async (t) => {
   let fulldata = await tmpl.getData();
   t.deepEqual(fulldata.tags, ["single-tag"]);
   t.deepEqual(fulldata.categories, "single-category");
-
-<<<<<<< HEAD
   let pages = await tmpl.getRenderedTemplates(fulldata);
   t.is(pages[0].templateContent.trim(), "Has single-tagHas single-category");
 
@@ -941,10 +939,6 @@ test("Front Matter Tags (Single)", async (t) => {
   t.is(pages[0].templateContent.trim(), "Has single-tagHas single-category");
 
   config.keys.tags = "tags";
-=======
-  let pages = await getRenderedTmpls(tmpl, fulldata);
-  t.is(pages[0].templateContent.trim(), "Has single-tag");
->>>>>>> master
 });
 
 test("Front Matter Tags (Multiple)", async (t) => {
@@ -960,7 +954,6 @@ test("Front Matter Tags (Multiple)", async (t) => {
   t.deepEqual(fulldata.tags, ["multi-tag", "multi-tag-2"]);
   t.deepEqual(fulldata.categories, ["multi-category", "multi-category-2"]);
 
-<<<<<<< HEAD
   let pages = await tmpl.getRenderedTemplates(fulldata);
   t.is(pages[0].templateContent.trim(), "Has multi-tag-2Has multi-category-2");
 
@@ -982,10 +975,6 @@ test("Front Matter Tags (Multiple)", async (t) => {
   t.is(pages[0].templateContent.trim(), "Has multi-tag-2Has multi-category-2");
 
   config.keys.tags = "tags";
-=======
-  let pages = await getRenderedTmpls(tmpl, fulldata);
-  t.is(pages[0].templateContent.trim(), "Has multi-tag-2");
->>>>>>> master
 });
 
 test("Front matter date with quotes (liquid), issue #258", async (t) => {
