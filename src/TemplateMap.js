@@ -414,12 +414,7 @@ class TemplateMap {
         map._pages = await map.template.getTemplates(map.data);
 
         if (map._pages.length === 0) {
-          // Setup serverlessUrls even if data set is 0 pages. This fixes 404 issue
-          // with full build not including Sanity drafts but serverless render does
-          // include Sanity drafts.
-
-          // We want these empty-data pagination templates to show up in the serverlessUrlMap.
-          await map.template.initServerlessUrlsForEmptyPaginationTemplates(map.data.permalink);
+          // removed serverless code path
         } else {
           let counter = 0;
           for (let page of map._pages) {
@@ -488,10 +483,6 @@ class TemplateMap {
     this.checkForDuplicatePermalinks();
 
     await this.config.events.emitLazy("eleventy.layouts", () => this.generateLayoutsMap());
-
-    await this.config.events.emitLazy("eleventy.serverlessUrlMap", () =>
-      this.generateServerlessUrlMap(orderedMap)
-    );
   }
 
   generateInputUrlContentMap(orderedMap) {
@@ -508,40 +499,6 @@ class TemplateMap {
       for (let page of entry._pages) {
         // duplicate urls throw an error, so we can return non array here
         entries[page.url] = entry.inputPath;
-      }
-    }
-    return entries;
-  }
-
-  generateServerlessUrlMap(orderedMap) {
-    let entries = [];
-    for (let entry of orderedMap) {
-      // Pagination templates with 0 pages should still populate
-      // serverlessUrls into this event. We want these to still show up
-      // in the inputPath to URL map and in the redirects.
-      if (entry._pages.length === 0) {
-        let serverless = {};
-        if (isPlainObject(entry.data.permalink)) {
-          // These are rendered in the template language!
-          Object.assign(serverless, entry.template.getServerlessUrls());
-          entries.push({
-            inputPath: entry.inputPath,
-            serverless,
-          });
-        }
-      } else {
-        for (let page of entry._pages) {
-          let serverless = {};
-          if (isPlainObject(page.data.permalink)) {
-            // These are rendered in the template language!
-            Object.assign(serverless, page.template.getServerlessUrls());
-
-            entries.push({
-              inputPath: entry.inputPath,
-              serverless,
-            });
-          }
-        }
       }
     }
     return entries;

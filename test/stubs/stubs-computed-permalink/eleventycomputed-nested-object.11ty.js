@@ -2,8 +2,9 @@ module.exports.data = {
   lang: "en",
   eleventyComputed: {
     permalink: function (data) {
+      console.log(">>>>", { data });
       return {
-        serverless: `/i18n/${data.lang}/`,
+        build: `/i18n/${data.lang}/`,
       };
     },
   },

@@ -13,7 +13,7 @@ test("Unsupported engine", async (t) => {
 test("Supported engine", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let tem = new TemplateEngineManager(eleventyConfig);
-  t.truthy(tem.hasEngine("ejs"));
+  t.truthy(tem.hasEngine("11ty.js"));
 });
 
 test("Supported custom engine", async (t) => {
@@ -69,20 +69,6 @@ test("Custom engine with custom init", async (t) => {
 
   t.is(initCount, 1, "Should have only run the init callback once");
   t.is(compileCount, 2, "Should have only run the compile callback twice");
-});
-
-test("Handlebars Helpers", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let tem = new TemplateEngineManager(eleventyConfig);
-  let engine = tem.getEngine("hbs");
-  engine.addHelpers({
-    uppercase: function (name) {
-      return name.toUpperCase();
-    },
-  });
-
-  let fn = await engine.compile("<p>{{uppercase author}}</p>");
-  t.is(await fn({ author: "zach" }), "<p>ZACH</p>");
 });
 
 test("getEngineLib", async (t) => {

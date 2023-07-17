@@ -45,17 +45,17 @@ async function _testCompleteRender(tmpl) {
 }
 
 test("getTemplateSubFolder", (t) => {
-  let tmpl = getNewTemplate("./test/stubs/template.ejs", "./test/stubs/", "./dist");
+  let tmpl = getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./dist");
   t.is(tmpl.getTemplateSubfolder(), "");
 });
 
 test("getTemplateSubFolder, output is a subdir of input", (t) => {
-  let tmpl = getNewTemplate("./test/stubs/template.ejs", "./test/stubs/", "./test/stubs/_site");
+  let tmpl = getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./test/stubs/_site");
   t.is(tmpl.getTemplateSubfolder(), "");
 });
 
 test("output path maps to an html file", async (t) => {
-  let tmpl = getNewTemplate("./test/stubs/template.ejs", "./test/stubs/", "./dist");
+  let tmpl = getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./dist");
   t.is(tmpl.parsed.dir, "./test/stubs");
   t.is(tmpl.inputDir, "./test/stubs");
   t.is(tmpl.outputDir, "./dist");
@@ -66,7 +66,7 @@ test("output path maps to an html file", async (t) => {
 });
 
 test("subfolder outputs to a subfolder", async (t) => {
-  let tmpl = getNewTemplate("./test/stubs/subfolder/subfolder.ejs", "./test/stubs/", "./dist");
+  let tmpl = getNewTemplate("./test/stubs/subfolder/subfolder.liquid", "./test/stubs/", "./dist");
   let data = await tmpl.getData();
   t.is(tmpl.parsed.dir, "./test/stubs/subfolder");
   t.is(tmpl.getTemplateSubfolder(), "subfolder");
@@ -75,7 +75,7 @@ test("subfolder outputs to a subfolder", async (t) => {
 
 test("subfolder outputs to double subfolder", async (t) => {
   let tmpl = getNewTemplate(
-    "./test/stubs/subfolder/subfolder/subfolder.ejs",
+    "./test/stubs/subfolder/subfolder/subfolder.liquid",
     "./test/stubs/",
     "./dist"
   );
@@ -105,7 +105,7 @@ test("HTML files output to the same as the input directory have a file suffix ad
 
 test("Test raw front matter from template (yaml)", async (t) => {
   // https://github.com/jonschlinkert/gray-matter/blob/master/examples/yaml.js
-  let tmpl = getNewTemplate("./test/stubs/templateFrontMatter.ejs", "./test/stubs/", "./dist");
+  let tmpl = getNewTemplate("./test/stubs/templateFrontMatter.liquid", "./test/stubs/", "./dist");
   t.truthy(await tmpl.getInputContent(), "template exists and can be opened.");
 
   t.is((await tmpl.getFrontMatter()).data.key1, "value1");
@@ -121,7 +121,11 @@ test("Test raw front matter from template (yaml)", async (t) => {
 
 test("Test raw front matter from template (json)", async (t) => {
   // https://github.com/jonschlinkert/gray-matter/blob/master/examples/json.js
-  let tmpl = getNewTemplate("./test/stubs/templateFrontMatterJson.ejs", "./test/stubs/", "./dist");
+  let tmpl = getNewTemplate(
+    "./test/stubs/templateFrontMatterJson.liquid",
+    "./test/stubs/",
+    "./dist"
+  );
 
   t.is((await tmpl.getFrontMatter()).data.key1, "value1");
   t.is((await tmpl.getFrontMatter()).data.key3, "value3");
@@ -136,7 +140,7 @@ test("Test raw front matter from template (json)", async (t) => {
 
 test("Test raw front matter from template (js)", async (t) => {
   // https://github.com/jonschlinkert/gray-matter/blob/master/examples/javascript.js
-  let tmpl = getNewTemplate("./test/stubs/templateFrontMatterJs.ejs", "./test/stubs/", "./dist");
+  let tmpl = getNewTemplate("./test/stubs/templateFrontMatterJs.njk", "./test/stubs/", "./dist");
 
   t.is((await tmpl.getFrontMatter()).data.key1, "value1");
   t.is((await tmpl.getFrontMatter()).data.key3, "value3");
@@ -150,7 +154,7 @@ test("Test raw front matter from template (js)", async (t) => {
 });
 
 test("Test that getData() works", async (t) => {
-  let tmpl = getNewTemplate("./test/stubs/templateFrontMatter.ejs", "./test/stubs/", "./dist");
+  let tmpl = getNewTemplate("./test/stubs/templateFrontMatter.liquid", "./test/stubs/", "./dist");
   let data = await tmpl.getData();
 
   t.is(data.key1, "value1");
@@ -162,7 +166,7 @@ test("One Layout (using new content var)", async (t) => {
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = getNewTemplate(
-    "./test/stubs/templateWithLayout.ejs",
+    "./test/stubs/templateWithLayoutKey.liquid",
     "./test/stubs/",
     "dist",
     dataObj,
@@ -191,7 +195,7 @@ test("One Layout (using layoutContent)", async (t) => {
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = getNewTemplate(
-    "./test/stubs/templateWithLayoutContent.ejs",
+    "./test/stubs/templateWithLayoutContent.liquid",
     "./test/stubs/",
     "dist",
     dataObj,
@@ -220,7 +224,7 @@ test("One Layout (layouts disabled)", async (t) => {
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = getNewTemplate(
-    "./test/stubs/templateWithLayoutContent.ejs",
+    "./test/stubs/templateWithLayoutContent.liquid",
     "./test/stubs/",
     "dist",
     dataObj,
@@ -272,7 +276,7 @@ test("Two Layouts", async (t) => {
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = getNewTemplate(
-    "./test/stubs/templateTwoLayouts.ejs",
+    "./test/stubs/templateTwoLayouts.liquid",
     "./test/stubs/",
     "dist",
     dataObj,
@@ -320,20 +324,20 @@ test("Liquid template with include", async (t) => {
 });
 
 test("Permalink output directory", async (t) => {
-  let tmpl = getNewTemplate("./test/stubs/permalinked.ejs", "./test/stubs/", "./dist");
+  let tmpl = getNewTemplate("./test/stubs/permalinked.liquid", "./test/stubs/", "./dist");
   let data = await tmpl.getData();
   t.is(await tmpl.getOutputPath(data), "./dist/permalinksubfolder/index.html");
 });
 
 test("Permalink output directory from layout", async (t) => {
-  let tmpl = getNewTemplate("./test/stubs/permalink-in-layout.ejs", "./test/stubs/", "./dist");
+  let tmpl = getNewTemplate("./test/stubs/permalink-in-layout.liquid", "./test/stubs/", "./dist");
   let data = await tmpl.getData();
   t.is(await tmpl.getOutputPath(data), "./dist/hello/index.html");
 });
 
 test("Permalink output directory from layout (fileslug)", async (t) => {
   let tmpl = getNewTemplate(
-    "./test/stubs/permalink-in-layout-fileslug.ejs",
+    "./test/stubs/permalink-in-layout-fileslug.liquid",
     "./test/stubs/",
     "./dist"
   );
@@ -503,7 +507,7 @@ test("Template and folder name are the same, make sure data imports work ok", as
 });
 
 test("Clone the template", async (t) => {
-  let tmpl = getNewTemplate("./test/stubs/default.ejs", "./test/stubs/", "./dist");
+  let tmpl = getNewTemplate("./test/stubs/default.liquid", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
 
@@ -516,7 +520,7 @@ test("Clone the template", async (t) => {
 });
 
 test("getRenderedData() has all the page variables", async (t) => {
-  let tmpl = getNewTemplate("./test/stubs/template.ejs", "./test/stubs/", "./dist");
+  let tmpl = getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./dist");
   let data = await getRenderedData(tmpl);
 
   t.truthy(data.page.url);
@@ -524,7 +528,7 @@ test("getRenderedData() has all the page variables", async (t) => {
   t.is(data.page.fileSlug, "template");
   t.is(data.page.filePathStem, "/template");
   t.truthy(data.page.date.getTime());
-  t.is(data.page.inputPath, "./test/stubs/template.ejs");
+  t.is(data.page.inputPath, "./test/stubs/template.liquid");
   t.is(data.page.outputPath, "./dist/template/index.html");
 });
 
@@ -563,7 +567,7 @@ test("Issue #603: page.date.toUTCString() Nunjucks", async (t) => {
 });
 
 test("getTemplates() data has all the root variables", async (t) => {
-  let tmpl = getNewTemplate("./test/stubs/template.ejs", "./test/stubs/", "./dist");
+  let tmpl = getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./dist");
   let data = await tmpl.getData();
   let templates = await tmpl.getTemplates(data);
 
@@ -571,12 +575,12 @@ test("getTemplates() data has all the root variables", async (t) => {
   t.is(templates[0].fileSlug, "template");
   t.is(templates[0].filePathStem, "/template");
   t.truthy(templates[0].date.getTime());
-  t.is(templates[0].inputPath, "./test/stubs/template.ejs");
+  t.is(templates[0].inputPath, "./test/stubs/template.liquid");
   t.is(templates[0].outputPath, "./dist/template/index.html");
 });
 
 test("getTemplates() data has all the page variables", async (t) => {
-  let tmpl = getNewTemplate("./test/stubs/template.ejs", "./test/stubs/", "./dist");
+  let tmpl = getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./dist");
   let data = await tmpl.getData();
   let templates = await tmpl.getTemplates(data);
 
@@ -584,13 +588,13 @@ test("getTemplates() data has all the page variables", async (t) => {
   t.is(templates[0].data.page.fileSlug, "template");
   t.is(templates[0].filePathStem, "/template");
   t.truthy(templates[0].data.page.date.getTime());
-  t.is(templates[0].data.page.inputPath, "./test/stubs/template.ejs");
+  t.is(templates[0].data.page.inputPath, "./test/stubs/template.liquid");
   t.is(templates[0].data.page.outputPath, "./dist/template/index.html");
 });
 
 // Warning `getRenderedTemplates()` is a test function now, so this might be a test testing the tests
 test("getRenderedTemplates() data has all the page variables", async (t) => {
-  let tmpl = getNewTemplate("./test/stubs/template.ejs", "./test/stubs/", "./dist");
+  let tmpl = getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./dist");
   let data = await tmpl.getData();
 
   let templates = await getRenderedTmpls(tmpl, data);
@@ -598,12 +602,12 @@ test("getRenderedTemplates() data has all the page variables", async (t) => {
   t.is(templates[0].data.page.fileSlug, "template");
   t.is(templates[0].filePathStem, "/template");
   t.truthy(templates[0].data.page.date.getTime());
-  t.is(templates[0].data.page.inputPath, "./test/stubs/template.ejs");
+  t.is(templates[0].data.page.inputPath, "./test/stubs/template.liquid");
   t.is(templates[0].data.page.outputPath, "./dist/template/index.html");
 });
 
 test("getRenderedData() has good slug (empty, index)", async (t) => {
-  let tmpl = getNewTemplate("./test/stubs/index.ejs", "./test/stubs/", "./dist");
+  let tmpl = getNewTemplate("./test/stubs/index.liquid", "./test/stubs/", "./dist");
   let data = await getRenderedData(tmpl);
   t.is(data.page.fileSlug, "");
   t.is(data.page.filePathStem, "/index");
@@ -616,8 +620,8 @@ test("getRenderedData() has good slug", async (t) => {
   t.is(data.page.filePathStem, "/includer");
 });
 
-test("Override base templating engine from .liquid to ejs", async (t) => {
-  let tmpl = getNewTemplate("./test/stubs/overrides/test-ejs.liquid", "./test/stubs/", "./dist");
+test("Override base templating engine from .liquid to njk", async (t) => {
+  let tmpl = getNewTemplate("./test/stubs/overrides/test-njk.liquid", "./test/stubs/", "./dist");
 
   t.is((await tmpl.render(await tmpl.getData())).trim(), "My Title");
 });
@@ -638,19 +642,19 @@ test("Override base templating engine from .liquid to md", async (t) => {
   t.is((await tmpl.render(await tmpl.getData())).trim(), "<h1>My Title</h1>");
 });
 
-test("Override base templating engine from .liquid to ejs,md", async (t) => {
+test("Override base templating engine from .liquid to njk,md", async (t) => {
   let tmpl = getNewTemplate("./test/stubs/overrides/test-multiple.md", "./test/stubs/", "./dist");
 
   t.is((await tmpl.render(await tmpl.getData())).trim(), "<h1>My Title</h1>");
 });
 
-test("Override base templating engine from .njk to ejs,md", async (t) => {
+test("Override base templating engine from .njk to liquid,md", async (t) => {
   let tmpl = getNewTemplate("./test/stubs/overrides/test-multiple2.njk", "./test/stubs/", "./dist");
 
   t.is((await tmpl.render(await tmpl.getData())).trim(), "<h1>My Title</h1>");
 });
 
-test("Override base templating engine from .html to ejs", async (t) => {
+test("Override base templating engine from .html to njk", async (t) => {
   let tmpl = getNewTemplate("./test/stubs/overrides/test.html", "./test/stubs/", "./dist");
 
   t.is((await tmpl.render(await tmpl.getData())).trim(), "<h2>My Title</h2>");
@@ -659,7 +663,7 @@ test("Override base templating engine from .html to ejs", async (t) => {
 test("Override base templating engine from .html to (nothing)", async (t) => {
   let tmpl = getNewTemplate("./test/stubs/overrides/test-empty.html", "./test/stubs/", "./dist");
 
-  t.is((await tmpl.render(await tmpl.getData())).trim(), "<h2><%= title %></h2>");
+  t.is((await tmpl.render(await tmpl.getData())).trim(), "<h2>{{ title }}</h2>");
 });
 
 test("Override base templating engine should error with bad string", async (t) => {
@@ -680,22 +684,13 @@ test("Override base templating engine to (nothing)", async (t) => {
   let tmpl = getNewTemplate("./test/stubs/overrides/test-empty.md", "./test/stubs/", "./dist");
 
   // not parsed
-  t.is((await tmpl.render(await tmpl.getData())).trim(), "# <%= title %>");
+  t.is((await tmpl.render(await tmpl.getData())).trim(), "# {{ title }}");
 });
 
-test("Override base templating engine from .ejs to njk", async (t) => {
-  let tmpl = getNewTemplate("./test/stubs/overrides/test.ejs", "./test/stubs/", "./dist");
-
-  t.is((await tmpl.render(await tmpl.getData())).trim(), "My Title");
-});
-
-test("Override base templating engine from .njk to ejs (with a layout that uses njk)", async (t) => {
+test("Override base templating engine from .njk to liquid (with a layout that uses njk)", async (t) => {
   let tmpl = getNewTemplate("./test/stubs/overrides/layout.njk", "./test/stubs/", "./dist");
 
-  t.is(
-    (await tmpl.render(await tmpl.getData())).trim(),
-    `<div id="layoutvalue"><h2>My Title</h2></div>`
-  );
+  t.is((await tmpl.render(await tmpl.getData())).trim(), `<div id="layoutvalue"><h2>8</h2></div>`);
 });
 
 test("Override base templating engine from .njk to nothing (with a layout that uses njk)", async (t) => {
@@ -709,18 +704,6 @@ test("Override base templating engine from .njk to nothing (with a layout that u
 
 test("Using a markdown source file (with a layout that uses njk), markdown shouldn’t render in layout file", async (t) => {
   let tmpl = getNewTemplate("./test/stubs/overrides/test.md", "./test/stubs/", "./dist");
-
-  t.is(
-    normalizeNewLines((await tmpl.render(await tmpl.getData())).trim()),
-    `# Layout header
-
-<div id="layoutvalue"><h1>My Title</h1>
-</div>`
-  );
-});
-
-test("Override base templating engine from .md to ejs,md (with a layout that uses njk), markdown shouldn’t render in layout file", async (t) => {
-  let tmpl = getNewTemplate("./test/stubs/overrides/test2.md", "./test/stubs/", "./dist");
 
   t.is(
     normalizeNewLines((await tmpl.render(await tmpl.getData())).trim()),
@@ -772,7 +755,7 @@ test("renderDirect on a markdown file, permalink should not render markdown (has
 test("Test a transform", async (t) => {
   t.plan(2);
 
-  let tmpl = getNewTemplate("./test/stubs/template.ejs", "./test/stubs/", "./test/stubs/_site");
+  let tmpl = getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./test/stubs/_site");
 
   tmpl.addTransform("transformName", function (content, outputPath) {
     t.true(outputPath.endsWith(".html"));
@@ -787,7 +770,7 @@ test("Test a transform", async (t) => {
 test("Test a transform (does it have this.inputPath?)", async (t) => {
   t.plan(3);
 
-  let tmpl = getNewTemplate("./test/stubs/template.ejs", "./test/stubs/", "./test/stubs/_site");
+  let tmpl = getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./test/stubs/_site");
 
   tmpl.addTransform("transformName", function (content, outputPath) {
     t.true(outputPath.endsWith(".html"));
@@ -841,7 +824,7 @@ test("Test a transform with a layout", async (t) => {
 test("Test a single asynchronous transform", async (t) => {
   t.plan(2);
 
-  let tmpl = getNewTemplate("./test/stubs/template.ejs", "./test/stubs/", "./test/stubs/_site");
+  let tmpl = getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./test/stubs/_site");
 
   tmpl.addTransform("transformName", async function (content, outputPath) {
     t.true(outputPath.endsWith("template/index.html"));
@@ -860,7 +843,7 @@ test("Test a single asynchronous transform", async (t) => {
 test("Test multiple asynchronous transforms", async (t) => {
   t.plan(3);
 
-  let tmpl = getNewTemplate("./test/stubs/template.ejs", "./test/stubs/", "./test/stubs/_site");
+  let tmpl = getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./test/stubs/_site");
 
   tmpl.addTransform("transformName", async function (content, outputPath) {
     t.true(outputPath.endsWith("template/index.html"));
@@ -1197,46 +1180,6 @@ test("Throws a Premature Template Content Error (11ty.js)", async (t) => {
   t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
 });
 
-test("Throws a Premature Template Content Error (pug)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/prematureTemplateContent/test.pug",
-    "./test/stubs/",
-    "./test/stubs/_site"
-  );
-
-  let data = await tmpl.getData();
-  let mapEntries = await tmpl.getTemplates(data);
-  let error = t.throws(() => {
-    mapEntries[0].templateContent;
-  });
-  t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
-});
-
-test("Throws a Premature Template Content Error from rendering (pug)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/prematureTemplateContent/test.pug",
-    "./test/stubs/",
-    "./test/stubs/_site"
-  );
-
-  let data = await tmpl.getData();
-  let mapEntries = await tmpl.getTemplateMapEntries(data);
-  let pageEntries = await tmpl.getTemplates({
-    page: {},
-    sample: {
-      get templateContent() {
-        throw new TemplateContentPrematureUseError(
-          "Tried to use templateContent too early (test.pug)"
-        );
-      },
-    },
-  });
-  let error = await t.throwsAsync(async () => {
-    await tmpl.renderPageEntry(mapEntries[0], pageEntries[0]);
-  });
-  t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
-});
-
 test("Throws a Premature Template Content Error (md)", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/prematureTemplateContent/test.md",
@@ -1273,91 +1216,6 @@ test("Throws a Premature Template Content Error from rendering (md)", async (t) 
   });
   let error = await t.throwsAsync(async () => {
     await tmpl.renderPageEntry(mapEntries[0], pageEntries[0]);
-  });
-  t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
-});
-
-test("Throws a Premature Template Content Error (hbs)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/prematureTemplateContent/test.hbs",
-    "./test/stubs/",
-    "./test/stubs/_site"
-  );
-
-  let data = await tmpl.getData();
-  let mapEntries = await tmpl.getTemplates(data);
-  let error = t.throws(() => {
-    mapEntries[0].templateContent;
-  });
-  t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
-});
-
-test("Throws a Premature Template Content Error from rendering (hbs)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/prematureTemplateContent/test.hbs",
-    "./test/stubs/",
-    "./test/stubs/_site"
-  );
-
-  let data = await tmpl.getData();
-  let mapEntries = await tmpl.getTemplateMapEntries(data);
-  let pageEntries = await tmpl.getTemplates({
-    page: {},
-    sample: {
-      get templateContent() {
-        throw new TemplateContentPrematureUseError(
-          "Tried to use templateContent too early (test.hbs)"
-        );
-      },
-    },
-  });
-  let error = await t.throwsAsync(async () => {
-    await tmpl.renderPageEntry(mapEntries[0], pageEntries[0]);
-  });
-  t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
-});
-
-test("Throws a Premature Template Content Error (mustache)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/prematureTemplateContent/test.mustache",
-    "./test/stubs/",
-    "./test/stubs/_site"
-  );
-
-  let data = await tmpl.getData();
-  let mapEntries = await tmpl.getTemplates(data);
-  let error = t.throws(() => {
-    mapEntries[0].templateContent;
-  });
-  t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
-});
-
-test("Throws a Premature Template Content Error (ejs)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/prematureTemplateContent/test.ejs",
-    "./test/stubs/",
-    "./test/stubs/_site"
-  );
-
-  let data = await tmpl.getData();
-  let mapEntries = await tmpl.getTemplates(data);
-  let error = t.throws(() => {
-    mapEntries[0].templateContent;
-  });
-  t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
-});
-
-test("Throws a Premature Template Content Error (haml)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/prematureTemplateContent/test.haml",
-    "./test/stubs/",
-    "./test/stubs/_site"
-  );
-
-  let data = await tmpl.getData();
-  let mapEntries = await tmpl.getTemplates(data);
-  let error = t.throws(() => {
-    mapEntries[0].templateContent;
   });
   t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
 });
@@ -1698,39 +1556,12 @@ test("permalink object with build", async (t) => {
   t.is(await tmpl.getOutputHref(data), "/url/");
 });
 
-test("permalink object without build", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/permalink-nobuild/permalink-nobuild.md",
-    "./test/stubs/",
-    "./test/stubs/_site"
-  );
-  let data = await tmpl.getData();
-  t.is(await tmpl.getRawOutputPath(data), false);
-  t.is(await tmpl.getOutputPath(data), false);
-  t.is(await tmpl.getOutputHref(data), "/url/");
-});
-
 test("permalink object _getLink", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/permalink-nobuild/permalink-nobuild.md",
     "./test/stubs/",
     "./test/stubs/_site"
   );
-
-  let link = await tmpl._getLink({
-    permalink: {
-      serverless: "/serverless/",
-    },
-  });
-  t.is(await link.toOutputPath(), false);
-  t.is(await link.toHref(), "/serverless/");
-
-  t.deepEqual(link.getServerlessUrls(), {
-    serverless: "/serverless/",
-  });
-  t.deepEqual(tmpl.getServerlessUrls(), {
-    serverless: "/serverless/",
-  });
 
   let link2 = await tmpl._getLink({
     permalink: {
@@ -1739,67 +1570,9 @@ test("permalink object _getLink", async (t) => {
   });
   t.is(await link2.toOutputPath(), "/build/index.html");
   t.is(await link2.toHref(), "/build/");
-  t.deepEqual(link2.getServerlessUrls(), {});
-  t.deepEqual(tmpl.getServerlessUrls(), {});
-
-  let link3 = await tmpl._getLink({
-    permalink: {
-      build: "/build/",
-      serverless: "/serverless/",
-    },
-  });
-  t.is(await link3.toOutputPath(), "/build/index.html");
-  t.is(await link3.toHref(), "/build/");
-  t.deepEqual(link3.getServerlessUrls(), {
-    serverless: "/serverless/",
-  });
-  t.deepEqual(tmpl.getServerlessUrls(), {
-    serverless: "/serverless/",
-  });
-
-  // template syntax
-  let link4 = await tmpl._getLink({
-    test: "a",
-    permalink: {
-      build: "/build{{ test }}/",
-      serverless: "/serverless{{ test }}/",
-    },
-  });
-  t.is(await link4.toOutputPath(), "/builda/index.html");
-  t.is(await link4.toHref(), "/builda/");
-  t.deepEqual(link4.getServerlessUrls(), {
-    serverless: "/serverlessa/",
-  });
-  t.deepEqual(tmpl.getServerlessUrls(), {
-    serverless: "/serverlessa/",
-  });
 });
 
-test("permalink object _getLink (array of serverless URLs)", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/permalink-nobuild/permalink-nobuild.md",
-    "./test/stubs/",
-    "./test/stubs/_site"
-  );
-
-  // Array of URLs is supported
-  let link4 = await tmpl._getLink({
-    permalink: {
-      serverless: ["/serverless1/", "/serverless2/"],
-    },
-  });
-  t.is(await link4.toOutputPath(), false);
-  t.is(await link4.toHref(), "/serverless1/");
-
-  t.deepEqual(link4.getServerlessUrls(), {
-    serverless: ["/serverless1/", "/serverless2/"],
-  });
-  t.deepEqual(tmpl.getServerlessUrls(), {
-    serverless: ["/serverless1/", "/serverless2/"],
-  });
-});
-
-test("permalink object _getLink (array of serverless URLs with template syntax)", async (t) => {
+test("permalink object _getLink (array of invalid, previously serverless URLs)", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/permalink-nobuild/permalink-nobuild.md",
     "./test/stubs/",
@@ -1810,72 +1583,11 @@ test("permalink object _getLink (array of serverless URLs with template syntax)"
   let link = await tmpl._getLink({
     test: "a",
     permalink: {
-      serverless: ["/serverless1{{ test }}/", "/serverless2{{ test }}/"],
+      someotherkey: [],
     },
   });
   t.is(await link.toOutputPath(), false);
-  t.is(await link.toHref(), "/serverless1a/");
-
-  t.deepEqual(link.getServerlessUrls(), {
-    serverless: ["/serverless1a/", "/serverless2a/"],
-  });
-  t.deepEqual(tmpl.getServerlessUrls(), {
-    serverless: ["/serverless1a/", "/serverless2a/"],
-  });
-});
-
-test("Do not resolve page.url from eleventy serverless data", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/permalink-build-serverless/permalink-build-serverless.md",
-    "./test/stubs/",
-    "./test/stubs/_site"
-  );
-  let fakeData = {
-    permalink: {
-      serverless: "/serverless/",
-    },
-  };
-  let outputHref = await tmpl.getOutputHref(fakeData);
-  t.is(outputHref, "/serverless/");
-
-  let outputLink = await tmpl.getRawOutputPath(fakeData);
-  t.is(outputLink, false);
-
-  let outputPath = await tmpl.getOutputPath(fakeData);
-  t.is(outputPath, false);
-
-  let { href, rawPath, path } = await tmpl.getOutputLocations(fakeData);
-  t.is(href, "/serverless/");
-  t.is(rawPath, false);
-  t.is(path, false);
-});
-
-test("Do not override page.url with serverless url", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/permalink-build-serverless/permalink-build-serverless.md",
-    "./test/stubs/",
-    "./test/stubs/_site"
-  );
-  let fakeData = {
-    permalink: {
-      build: "/build/",
-      serverless: "/serverless/",
-    },
-  };
-
-  let outputHref = await tmpl.getOutputHref(fakeData);
-  t.is(outputHref, "/build/");
-
-  let outputLink = await tmpl.getRawOutputPath(fakeData);
-  t.is(outputLink, "/build/index.html");
-
-  let outputPath = await tmpl.getOutputPath(fakeData);
-  t.is(outputPath, "./test/stubs/_site/build/index.html");
-
-  let { href, rawPath, path } = await tmpl.getOutputLocations(fakeData);
-  t.is(href, "/build/");
-  t.is(rawPath, "/build/index.html");
-  t.is(path, "./test/stubs/_site/build/index.html");
+  t.is(await link.toHref(), false);
 });
 
 test("Permalink is an object but an empty object (inherit default behavior)", async (t) => {
@@ -1901,19 +1613,6 @@ test("Permalink is an object but an empty object (inherit default behavior)", as
   t.is(path, "./test/stubs/_site/permalink-empty-object/empty-object/index.html");
 });
 
-test("permalink function returns serverless object Issue #1898", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/stubs-computed-permalink//object.11ty.js",
-    "./test/stubs/stubs-computed-permalink/",
-    "./test/stubs/stubs-computed-permalink/_site"
-  );
-  let data = await tmpl.getData();
-  let [page] = await tmpl.getTemplates(data);
-
-  t.is(page.url, "/i18n/en/");
-  t.is(page.outputPath, false);
-});
-
 test("eleventyComputed returns permalink object Issue #1898", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/stubs-computed-permalink/eleventycomputed-object.11ty.js",
@@ -1925,7 +1624,7 @@ test("eleventyComputed returns permalink object Issue #1898", async (t) => {
   let [page] = await tmpl.getTemplates(data);
 
   t.is(page.url, "/i18n/en/");
-  t.is(page.outputPath, false);
+  t.is(page.outputPath, "./test/stubs/stubs-computed-permalink/_site/i18n/en/index.html");
 });
 
 test("eleventyComputed returns nested permalink object Issue #1898", async (t) => {
@@ -1939,7 +1638,7 @@ test("eleventyComputed returns nested permalink object Issue #1898", async (t) =
   let [page] = await tmpl.getTemplates(data);
 
   t.is(page.url, "/i18n/en/");
-  t.is(page.outputPath, false);
+  t.is(page.outputPath, "./test/stubs/stubs-computed-permalink/_site/i18n/en/index.html");
 });
 
 test("eleventyComputed returns permalink object using permalink string (with replace) Issue #1898", async (t) => {
@@ -1953,7 +1652,7 @@ test("eleventyComputed returns permalink object using permalink string (with rep
   let [page] = await tmpl.getTemplates(data);
 
   t.is(page.url, "/i18n/en/");
-  t.is(page.outputPath, false);
+  t.is(page.outputPath, "./test/stubs/stubs-computed-permalink/_site/i18n/en/index.html");
 });
 
 test("page.templateSyntax works with templateEngineOverride", async (t) => {

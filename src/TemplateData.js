@@ -672,11 +672,6 @@ class TemplateData {
 
     return data;
   }
-
-  async getServerlessPathData() {
-    let configApiGlobalData = await this.getInitialGlobalData();
-    return configApiGlobalData?.eleventy?.serverless?.path;
-  }
 }
 
 module.exports = TemplateData;

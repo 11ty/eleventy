@@ -152,7 +152,6 @@ class Eleventy {
     }
 
     if (performance) {
-      // TODO this doesn’t reset in serverless mode correctly (cumulative from start of --serve/watch)
       debug("Eleventy warm up time (in ms) %o", performance.now());
     }
 
@@ -504,9 +503,6 @@ Verbose Output: ${this.verboseMode}`);
     process.env.ELEVENTY_SOURCE = env.source;
     process.env.ELEVENTY_RUN_MODE = env.runMode;
 
-    // https://github.com/11ty/eleventy/issues/1957
-    // Note: when using --serve, ELEVENTY_SERVERLESS is also set in Serverless.js
-
     // Careful here, setting to false will cast to string "false" which is truthy.
     if (env.isServerless) {
       process.env.ELEVENTY_SERVERLESS = true;
@@ -622,7 +618,7 @@ Verbose Output: ${this.verboseMode}`);
    */
   setIncrementalFile(incrementalFile) {
     if (incrementalFile) {
-      // This is used for collections-friendly serverless mode.
+      // This is also used for collections-friendly serverless mode.
       this.setIgnoreInitial(true);
       this.setIncrementalBuild(true);
 
@@ -1243,9 +1239,6 @@ Arguments:
 }
 
 module.exports = Eleventy;
-module.exports.EleventyServerless = require("./Serverless");
-module.exports.EleventyServerlessBundlerPlugin = require("./Plugins/ServerlessBundlerPlugin");
 module.exports.EleventyRenderPlugin = require("./Plugins/RenderPlugin");
-module.exports.EleventyEdgePlugin = require("./Plugins/EdgePlugin");
 module.exports.EleventyI18nPlugin = require("./Plugins/I18nPlugin");
 module.exports.EleventyHtmlBasePlugin = require("./Plugins/HtmlBasePlugin");

@@ -9,21 +9,17 @@ test("Template Config local config overrides base config", async (t) => {
   );
   let cfg = templateCfg.getConfig();
 
-  t.is(cfg.markdownTemplateEngine, "ejs");
+  t.is(cfg.markdownTemplateEngine, "njk");
   t.is(cfg.templateFormats.join(","), "md,njk");
 
   // merged, not overwritten
   t.true(Object.keys(cfg.keys).length > 1);
-  t.truthy(Object.keys(cfg.handlebarsHelpers).length);
   t.truthy(Object.keys(cfg.nunjucksFilters).length);
 
   t.is(Object.keys(cfg.transforms).length, 1);
 
   t.is(
-    cfg.transforms.prettyHtml(
-      `<html><body><div></div></body></html>`,
-      "test.html"
-    ),
+    cfg.transforms.prettyHtml(`<html><body><div></div></body></html>`, "test.html"),
     `<html>
   <body>
     <div></div>
@@ -70,26 +66,12 @@ test("Add liquid filter", (t) => {
     require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
-  templateCfg.userConfig.addLiquidFilter(
-    "myFilterName",
-    function (liquidEngine) {
-      return {};
-    }
-  );
+  templateCfg.userConfig.addLiquidFilter("myFilterName", function (liquidEngine) {
+    return {};
+  });
 
   let cfg = templateCfg.getConfig();
   t.not(Object.keys(cfg.liquidFilters).indexOf("myFilterName"), -1);
-});
-
-test("Add handlebars helper", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
-  templateCfg.userConfig.addHandlebarsHelper("myHelperName", function () {});
-
-  let cfg = templateCfg.getConfig();
-  t.not(Object.keys(cfg.handlebarsHelpers).indexOf("myHelperName"), -1);
 });
 
 test("Add nunjucks filter", (t) => {
@@ -112,7 +94,6 @@ test("Add universal filter", (t) => {
 
   let cfg = templateCfg.getConfig();
   t.not(Object.keys(cfg.liquidFilters).indexOf("myFilterName"), -1);
-  t.not(Object.keys(cfg.handlebarsHelpers).indexOf("myFilterName"), -1);
   t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
 });
 
@@ -126,18 +107,8 @@ test("Add namespaced universal filter", (t) => {
   });
 
   let cfg = templateCfg.getConfig();
-  t.not(
-    Object.keys(cfg.liquidFilters).indexOf("testNamespaceMyFilterName"),
-    -1
-  );
-  t.not(
-    Object.keys(cfg.handlebarsHelpers).indexOf("testNamespaceMyFilterName"),
-    -1
-  );
-  t.not(
-    Object.keys(cfg.nunjucksFilters).indexOf("testNamespaceMyFilterName"),
-    -1
-  );
+  t.not(Object.keys(cfg.liquidFilters).indexOf("testNamespaceMyFilterName"), -1);
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("testNamespaceMyFilterName"), -1);
 });
 
 test("Add namespaced universal filter using underscore", (t) => {
@@ -150,18 +121,8 @@ test("Add namespaced universal filter using underscore", (t) => {
   });
 
   let cfg = templateCfg.getConfig();
-  t.not(
-    Object.keys(cfg.liquidFilters).indexOf("testNamespace_myFilterName"),
-    -1
-  );
-  t.not(
-    Object.keys(cfg.handlebarsHelpers).indexOf("testNamespace_myFilterName"),
-    -1
-  );
-  t.not(
-    Object.keys(cfg.nunjucksFilters).indexOf("testNamespace_myFilterName"),
-    -1
-  );
+  t.not(Object.keys(cfg.liquidFilters).indexOf("testNamespace_myFilterName"), -1);
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("testNamespace_myFilterName"), -1);
 });
 
 test("Add namespaced plugin", (t) => {
@@ -174,18 +135,8 @@ test("Add namespaced plugin", (t) => {
   });
 
   let cfg = templateCfg.getConfig();
-  t.not(
-    Object.keys(cfg.liquidFilters).indexOf("testNamespaceMyFilterName"),
-    -1
-  );
-  t.not(
-    Object.keys(cfg.handlebarsHelpers).indexOf("testNamespaceMyFilterName"),
-    -1
-  );
-  t.not(
-    Object.keys(cfg.nunjucksFilters).indexOf("testNamespaceMyFilterName"),
-    -1
-  );
+  t.not(Object.keys(cfg.liquidFilters).indexOf("testNamespaceMyFilterName"), -1);
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("testNamespaceMyFilterName"), -1);
 });
 
 test("Add namespaced plugin using underscore", (t) => {
@@ -200,18 +151,8 @@ test("Add namespaced plugin using underscore", (t) => {
   });
 
   let cfg = templateCfg.getConfig();
-  t.not(
-    Object.keys(cfg.liquidFilters).indexOf("testNamespace_myFilterName"),
-    -1
-  );
-  t.not(
-    Object.keys(cfg.handlebarsHelpers).indexOf("testNamespace_myFilterName"),
-    -1
-  );
-  t.not(
-    Object.keys(cfg.nunjucksFilters).indexOf("testNamespace_myFilterName"),
-    -1
-  );
+  t.not(Object.keys(cfg.liquidFilters).indexOf("testNamespace_myFilterName"), -1);
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("testNamespace_myFilterName"), -1);
 });
 
 test("Empty namespace", (t) => {
@@ -306,10 +247,10 @@ test("setTemplateFormats(string)", (t) => {
     "./test/stubs/config.js"
   );
   // 0.11.0 removes dupes
-  templateCfg.userConfig.setTemplateFormats("ejs,njk, liquid, njk");
+  templateCfg.userConfig.setTemplateFormats("njk, liquid, njk");
 
   let cfg = templateCfg.getConfig();
-  t.deepEqual(cfg.templateFormats, ["ejs", "njk", "liquid"]);
+  t.deepEqual(cfg.templateFormats, ["njk", "liquid"]);
 });
 
 test("setTemplateFormats(array)", (t) => {
@@ -317,10 +258,10 @@ test("setTemplateFormats(array)", (t) => {
     require("../src/defaultConfig.js"),
     "./test/stubs/config.js"
   );
-  templateCfg.userConfig.setTemplateFormats(["ejs", "njk", "liquid"]);
+  templateCfg.userConfig.setTemplateFormats(["njk", "liquid"]);
 
   let cfg = templateCfg.getConfig();
-  t.deepEqual(cfg.templateFormats, ["ejs", "njk", "liquid"]);
+  t.deepEqual(cfg.templateFormats, ["njk", "liquid"]);
 });
 
 test("setTemplateFormats(array, size 1)", (t) => {

@@ -46,7 +46,7 @@ test("getFiles", async (t) => {
   let evf = new EleventyFiles(
     "./test/stubs/writeTest",
     "./test/stubs/_writeTestSite",
-    ["ejs", "md"],
+    ["liquid", "md"],
     eleventyConfig
   );
   evf.setFileSystemSearch(new FileSystemSearch());
@@ -60,7 +60,7 @@ test("getFiles (without 11ty.js)", async (t) => {
   let evf = new EleventyFiles(
     "./test/stubs/writeTestJS",
     "./test/stubs/_writeTestJSSite",
-    ["ejs", "md"],
+    ["liquid", "md"],
     eleventyConfig
   );
   evf.setFileSystemSearch(new FileSystemSearch());
@@ -74,7 +74,7 @@ test("getFiles (with 11ty.js)", async (t) => {
   let evf = new EleventyFiles(
     "./test/stubs/writeTestJS",
     "./test/stubs/_writeTestJSSite",
-    ["ejs", "md", "11ty.js"],
+    ["liquid", "md", "11ty.js"],
     eleventyConfig
   );
   evf.setFileSystemSearch(new FileSystemSearch());
@@ -88,7 +88,7 @@ test("getFiles (with js, treated as passthrough copy)", async (t) => {
   let evf = new EleventyFiles(
     "./test/stubs/writeTestJS",
     "./test/stubs/_writeTestJSSite",
-    ["ejs", "md", "js"],
+    ["liquid", "md", "js"],
     eleventyConfig
   );
   evf.setFileSystemSearch(new FileSystemSearch());
@@ -131,13 +131,13 @@ test("Mutually exclusive Input and Output dirs", async (t) => {
   let evf = new EleventyFiles(
     "./test/stubs/writeTest",
     "./test/stubs/_writeTestSite",
-    ["ejs", "md"],
+    ["liquid", "md"],
     eleventyConfig
   );
   evf.init();
 
   let files = await fastglob(evf.getFileGlobs());
-  t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTest/**/*.{ejs,md}"]);
+  t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTest/**/*.{liquid,md}"]);
   t.true(files.length > 0);
   t.is(files[0], "./test/stubs/writeTest/test.md");
 });
@@ -147,7 +147,7 @@ test("Single File Input (deep path)", async (t) => {
   let evf = new EleventyFiles(
     "./test/stubs/index.html",
     "./test/stubs/_site",
-    ["ejs", "md"],
+    ["liquid", "md"],
     eleventyConfig
   );
   evf.init();
@@ -217,7 +217,7 @@ test("Passed file name does not exist", (t) => {
 
 test(".eleventyignore files", async (t) => {
   let eleventyConfig = new TemplateConfig();
-  let evf = new EleventyFiles("test/stubs", "test/stubs/_site", ["ejs", "md"], eleventyConfig);
+  let evf = new EleventyFiles("test/stubs", "test/stubs/_site", ["liquid", "md"], eleventyConfig);
   evf.init();
   let ignoredFiles = await fastglob("test/stubs/ignoredFolder/*.md");
   t.is(ignoredFiles.length, 1);

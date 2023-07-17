@@ -1,6 +1,6 @@
 ---
-templateEngineOverride: ejs
+templateEngineOverride: njk
 title: My Title
 ---
 
-# <%= title %>
+# {{ title }}

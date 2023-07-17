@@ -232,13 +232,8 @@ class EleventyExtensionMap {
   get extensionToKeyMap() {
     if (!this._extensionToKeyMap) {
       this._extensionToKeyMap = {
-        ejs: "ejs",
         md: "md",
         html: "html",
-        hbs: "hbs",
-        mustache: "mustache",
-        haml: "haml",
-        pug: "pug",
         njk: "njk",
         liquid: "liquid",
         "11ty.js": "11ty.js",

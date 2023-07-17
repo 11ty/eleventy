@@ -18,21 +18,18 @@ test("Basic", (t) => {
 });
 
 test("Includes Dir", async (t) => {
-  t.is(
-    getNewTemplateRender("ejs", "./test/stubs").getIncludesDir(),
-    "test/stubs/_includes"
-  );
+  t.is(getNewTemplateRender("liquid", "./test/stubs").getIncludesDir(), "test/stubs/_includes");
 });
 
 test("Invalid override", async (t) => {
-  let tr = getNewTemplateRender("ejs", "./test/stubs");
+  let tr = getNewTemplateRender("liquid", "./test/stubs");
   t.throws(() => {
     tr.setEngineOverride("lslkdjf");
   });
 });
 
 test("Valid Override", async (t) => {
-  let tr = getNewTemplateRender("ejs", "./test/stubs");
+  let tr = getNewTemplateRender("liquid", "./test/stubs");
   tr.setEngineOverride("njk");
   t.is(tr.getEngineName(), "njk");
   t.truthy(tr.isEngine("njk"));
@@ -46,21 +43,18 @@ test("Parse Overrides to get Prioritized Engine List", async (t) => {
   t.deepEqual(TemplateRender.parseEngineOverrides("html"), []);
   t.deepEqual(TemplateRender.parseEngineOverrides("html,html"), []);
   t.deepEqual(TemplateRender.parseEngineOverrides("html,md,md"), ["md"]);
-  t.deepEqual(TemplateRender.parseEngineOverrides("ejs,md"), ["md", "ejs"]);
-  t.deepEqual(TemplateRender.parseEngineOverrides("ejs"), ["ejs"]);
+  t.deepEqual(TemplateRender.parseEngineOverrides("liquid,md"), ["md", "liquid"]);
+  t.deepEqual(TemplateRender.parseEngineOverrides("liquid"), ["liquid"]);
   t.deepEqual(TemplateRender.parseEngineOverrides("njk"), ["njk"]);
-  t.deepEqual(TemplateRender.parseEngineOverrides("ejs,html"), ["ejs"]);
-  t.deepEqual(TemplateRender.parseEngineOverrides("ejs,md,html"), [
-    "md",
-    "ejs",
-  ]);
+  t.deepEqual(TemplateRender.parseEngineOverrides("liquid,html"), ["liquid"]);
+  t.deepEqual(TemplateRender.parseEngineOverrides("liquid,md,html"), ["md", "liquid"]);
   t.deepEqual(TemplateRender.parseEngineOverrides("njk,njk"), ["njk"]);
 
   t.throws(function () {
-    TemplateRender.parseEngineOverrides("njk,ejs");
+    TemplateRender.parseEngineOverrides("njk,liquid");
   });
   t.throws(function () {
-    TemplateRender.parseEngineOverrides("ejs,njk,html");
+    TemplateRender.parseEngineOverrides("liquid,njk,html");
   });
 });
 

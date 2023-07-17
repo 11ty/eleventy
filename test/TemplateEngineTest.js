@@ -4,13 +4,10 @@ const TemplateConfig = require("../src/TemplateConfig");
 
 test("Unsupported engine", async (t) => {
   let eleventyConfig = new TemplateConfig();
-  t.is(
-    new TemplateEngine("doesnotexist", null, eleventyConfig).getName(),
-    "doesnotexist"
-  );
+  t.is(new TemplateEngine("doesnotexist", null, eleventyConfig).getName(), "doesnotexist");
 });
 
 test("Supported engine", async (t) => {
   let eleventyConfig = new TemplateConfig();
-  t.is(new TemplateEngine("ejs", null, eleventyConfig).getName(), "ejs");
+  t.is(new TemplateEngine("liquid", null, eleventyConfig).getName(), "liquid");
 });

@@ -28,13 +28,8 @@ class TemplateEngineManager {
   get keyToClassNameMap() {
     if (!this._keyToClassNameMap) {
       this._keyToClassNameMap = {
-        ejs: "Ejs",
         md: "Markdown",
         html: "Html",
-        hbs: "Handlebars",
-        mustache: "Mustache",
-        haml: "Haml",
-        pug: "Pug",
         njk: "Nunjucks",
         liquid: "Liquid",
         "11ty.js": "JavaScript",
@@ -78,21 +73,11 @@ class TemplateEngineManager {
   }
 
   getEngineClassByExtension(extension) {
-    // We include these as raw strings (and not more readable variables) so they’re parsed by the serverless bundler.
-    if (extension === "ejs") {
-      return require("./Engines/Ejs");
-    } else if (extension === "md") {
+    // We include these as raw strings (and not more readable variables) so they’re parsed by a bundler.
+    if (extension === "md") {
       return require("./Engines/Markdown");
     } else if (extension === "html") {
       return require("./Engines/Html");
-    } else if (extension === "hbs") {
-      return require("./Engines/Handlebars");
-    } else if (extension === "mustache") {
-      return require("./Engines/Mustache");
-    } else if (extension === "haml") {
-      return require("./Engines/Haml");
-    } else if (extension === "pug") {
-      return require("./Engines/Pug");
     } else if (extension === "njk") {
       return require("./Engines/Nunjucks");
     } else if (extension === "liquid") {

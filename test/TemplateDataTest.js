@@ -247,13 +247,13 @@ test("getDataValue() without template engine preprocessing", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
 
-  let data = await dataObj.getDataValue("./test/stubs/_data/testDataEjs.json", {
+  let data = await dataObj.getDataValue("./test/stubs/_data/testDataLiquid.json", {
     pkg: { name: "pkgname" },
   });
 
   t.deepEqual(data, {
     datakey1: "datavalue1",
-    datakey2: "<%= pkg.name %>",
+    datakey2: "{{ pkg.name }}",
   });
 });
 

@@ -29,22 +29,13 @@ test("Markdown Render: Parses base markdown, no data", async (t) => {
 });
 
 test("Markdown Render: Markdown should work with HTML too", async (t) => {
-  let fn = await getNewTemplateRender("md").getCompiledTemplate(
-    "<h1>My Title</h1>"
-  );
+  let fn = await getNewTemplateRender("md").getCompiledTemplate("<h1>My Title</h1>");
   t.is((await fn()).trim(), "<h1>My Title</h1>");
 });
 
 test("Markdown Render: Parses markdown using liquid engine (default, with data)", async (t) => {
   let fn = await getNewTemplateRender("md").getCompiledTemplate("# {{title}}");
   t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
-});
-
-test("Markdown Render: Parses markdown using ejs engine", async (t) => {
-  let tr = getNewTemplateRender("md");
-  tr.setMarkdownEngine("ejs");
-  let fn = await tr.getCompiledTemplate("<%=title %>");
-  t.is((await fn({ title: "My Title" })).trim(), "<p>My Title</p>");
 });
 
 test("Markdown Render: Ignore markdown, use only preprocess engine (useful for variable resolution in permalinks)", async (t) => {
@@ -75,13 +66,6 @@ test("Markdown Render: Set markdown engine to false, don’t parse (test with HT
   let fn = await tr.getCompiledTemplate("<h1>{{title}}</h1>");
 
   t.is((await fn()).trim(), "<h1>{{title}}</h1>");
-});
-
-test("Markdown Render: Pass in engine override (ejs)", async (t) => {
-  let tr = getNewTemplateRender("md");
-  tr.setMarkdownEngine("ejs");
-  let fn = await tr.getCompiledTemplate("# <%= title %>");
-  t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
 });
 
 test("Markdown Render: Pass in an override (liquid)", async (t) => {
@@ -355,9 +339,7 @@ test("Markdown Render: use Markdown inside of a Nunjucks paired shortcode (Issue
 });
 
 test("Markdown Render: Disable indented code blocks by default. Issue #2438", async (t) => {
-  let fn = await getNewTemplateRender("md").getCompiledTemplate(
-    "    This is a test"
-  );
+  let fn = await getNewTemplateRender("md").getCompiledTemplate("    This is a test");
   t.is((await fn()).trim(), "<p>This is a test</p>");
 });
 

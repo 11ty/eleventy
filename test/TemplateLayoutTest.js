@@ -7,10 +7,7 @@ function getTemplateLayoutInstance(key, inputDir, map) {
   let eleventyConfig = new TemplateConfig();
 
   if (!map) {
-    map = new EleventyExtensionMap(
-      ["liquid", "ejs", "md", "hbs", "mustache", "haml", "pug", "njk", "html", "11ty.js"],
-      eleventyConfig
-    );
+    map = new EleventyExtensionMap(["liquid", "md", "njk", "html", "11ty.js"], eleventyConfig);
   }
   let layout = new TemplateLayout(key, inputDir, map, eleventyConfig);
   return layout;

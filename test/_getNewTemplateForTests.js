@@ -12,10 +12,7 @@ module.exports = function getNewTemplate(
   eleventyConfig = new TemplateConfig()
 ) {
   if (!map) {
-    map = new EleventyExtensionMap(
-      ["liquid", "ejs", "md", "hbs", "mustache", "haml", "pug", "njk", "html", "11ty.js"],
-      eleventyConfig
-    );
+    map = new EleventyExtensionMap(["liquid", "md", "njk", "html", "11ty.js"], eleventyConfig);
   }
   if (templateData) {
     templateData.setFileSystemSearch(new FileSystemSearch());

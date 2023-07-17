@@ -4,7 +4,7 @@
 
 A simpler static site generator. An alternative to Jekyll. Written in JavaScript. Transforms a directory of templates (of varying types) into HTML.
 
-Works with HTML, Markdown, JavaScript, Liquid, Nunjucks, Handlebars, Mustache, EJS, Haml, Pug, with addons for WebC, Sass, Vue, Svelte, JSX, and many others!
+Works with HTML, Markdown, JavaScript, Liquid, Nunjucks, with addons for WebC, Sass, Vue, Svelte, JSX, and many others!
 
 ## ➡ [Documentation](https://www.11ty.dev/docs/)
 

@@ -50,13 +50,7 @@ class UserConfig {
     this.nunjucksPairedShortcodes = {};
     this.nunjucksAsyncPairedShortcodes = {};
 
-    this.handlebarsHelpers = {};
-    this.handlebarsShortcodes = {};
-    this.handlebarsPairedShortcodes = {};
-
     this.javascriptFunctions = {};
-    this.pugOptions = {};
-    this.ejsOptions = {};
     this.markdownHighlighter = null;
     this.libraryOverrides = {};
 
@@ -240,9 +234,6 @@ class UserConfig {
       }
       return ret;
     });
-
-    // TODO remove Handlebars helpers in Universal Filters. Use shortcodes instead (the Handlebars template syntax is the same).
-    this.addHandlebarsHelper(name, callback);
   }
 
   // Liquid, Nunjucks, and JS only
@@ -257,17 +248,10 @@ class UserConfig {
       let ret = await callback.call(this, ...args);
       cb(null, ret);
     });
-
-    // Note: no handlebars
   }
 
   getFilter(name) {
-    return (
-      this.javascriptFunctions[name] ||
-      this.nunjucksFilters[name] ||
-      this.liquidFilters[name] ||
-      this.handlebarsHelpers[name]
-    );
+    return this.javascriptFunctions[name] || this.nunjucksFilters[name] || this.liquidFilters[name];
   }
 
   addNunjucksTag(name, tagFn) {
@@ -476,7 +460,6 @@ class UserConfig {
   }
 
   setLibrary(engineName, libraryInstance) {
-    // Pug options are passed to `compile` and not in the library constructor so we don’t need to warn
     if (engineName === "liquid" && Object.keys(this.liquidOptions).length) {
       debug(
         "WARNING: using `eleventyConfig.setLibrary` will override any configuration set using `.setLiquidOptions` via the config API. You’ll need to pass these options to the library yourself."
@@ -500,8 +483,8 @@ class UserConfig {
     this.libraryAmendments[name].push(callback);
   }
 
-  setPugOptions(options) {
-    this.pugOptions = options;
+  setPugOptions() {
+    // no-op for backwards compat
   }
 
   setLiquidOptions(options) {
@@ -516,8 +499,8 @@ class UserConfig {
     this.nunjucksPrecompiledTemplates = templates;
   }
 
-  setEjsOptions(options) {
-    this.ejsOptions = options;
+  setEjsOptions() {
+    // no-op for backwards compat
   }
 
   setDynamicPermalinks(enabled) {
@@ -531,7 +514,7 @@ class UserConfig {
   addShortcode(name, callback) {
     // This method *requires* `async function` and will not work with `function` that returns a promise
     if (callback instanceof ComparisonAsyncFunction) {
-      this.addAsyncShortcode(name, callback); // Note: no handlebars
+      this.addAsyncShortcode(name, callback);
       return;
     }
 
@@ -539,9 +522,6 @@ class UserConfig {
     this.addLiquidShortcode(name, callback);
     this.addJavaScriptFunction(name, callback);
     this.addNunjucksShortcode(name, callback);
-
-    // Note: Handlebars is sync-only
-    this.addHandlebarsShortcode(name, callback);
   }
 
   addAsyncShortcode(name, callback) {
@@ -551,8 +531,6 @@ class UserConfig {
     this.addNunjucksAsyncShortcode(name, callback);
     this.addLiquidShortcode(name, callback);
     this.addJavaScriptFunction(name, callback);
-
-    // Note: Handlebars is not async-friendly
   }
 
   addNunjucksAsyncShortcode(name, callback) {
@@ -609,28 +587,14 @@ class UserConfig {
     );
   }
 
-  addHandlebarsShortcode(name, callback) {
-    name = this.getNamespacedName(name);
-
-    if (this.handlebarsShortcodes[name]) {
-      debug(
-        chalk.yellow(
-          "Warning, overwriting a Handlebars Shortcode with `addHandlebarsShortcode(%o)`"
-        ),
-        name
-      );
-    }
-
-    this.handlebarsShortcodes[name] = this.benchmarks.config.add(
-      `"${name}" Handlebars Shortcode`,
-      callback
-    );
+  addHandlebarsShortcode() {
+    // no-op for backwards compat
   }
 
   addPairedShortcode(name, callback) {
     // This method *requires* `async function` and will not work with `function` that returns a promise
     if (callback instanceof ComparisonAsyncFunction) {
-      this.addPairedAsyncShortcode(name, callback); // Note: no handlebars
+      this.addPairedAsyncShortcode(name, callback);
       return;
     }
 
@@ -638,9 +602,6 @@ class UserConfig {
     this.addPairedNunjucksShortcode(name, callback);
     this.addPairedLiquidShortcode(name, callback);
     this.addJavaScriptFunction(name, callback);
-
-    // Note: Handlebars is sync-only
-    this.addPairedHandlebarsShortcode(name, callback);
   }
 
   // Undocumented method as a mitigation to reduce risk of #498
@@ -649,7 +610,6 @@ class UserConfig {
     this.addPairedNunjucksAsyncShortcode(name, callback);
     this.addPairedLiquidShortcode(name, callback);
     this.addJavaScriptFunction(name, callback);
-    // Note: Handlebars is sync-only
   }
 
   addPairedNunjucksAsyncShortcode(name, callback) {
@@ -710,22 +670,8 @@ class UserConfig {
     );
   }
 
-  addPairedHandlebarsShortcode(name, callback) {
-    name = this.getNamespacedName(name);
-
-    if (this.handlebarsPairedShortcodes[name]) {
-      debug(
-        chalk.yellow(
-          "Warning, overwriting a Handlebars Paired Shortcode with `addPairedHandlebarsShortcode(%o)`"
-        ),
-        name
-      );
-    }
-
-    this.handlebarsPairedShortcodes[name] = this.benchmarks.config.add(
-      `"${name}" Handlebars Paired Shortcode`,
-      callback
-    );
+  addPairedHandlebarsShortcode() {
+    // no-op for backwards compat
   }
 
   addJavaScriptFunction(name, callback) {
@@ -893,12 +839,7 @@ class UserConfig {
       nunjucksShortcodes: this.nunjucksShortcodes,
       nunjucksAsyncPairedShortcodes: this.nunjucksAsyncPairedShortcodes,
       nunjucksPairedShortcodes: this.nunjucksPairedShortcodes,
-      handlebarsHelpers: this.handlebarsHelpers,
-      handlebarsShortcodes: this.handlebarsShortcodes,
-      handlebarsPairedShortcodes: this.handlebarsPairedShortcodes,
       javascriptFunctions: this.javascriptFunctions,
-      pugOptions: this.pugOptions,
-      ejsOptions: this.ejsOptions,
       markdownHighlighter: this.markdownHighlighter,
       libraryOverrides: this.libraryOverrides,
       dynamicPermalinks: this.dynamicPermalinks,

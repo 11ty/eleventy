@@ -6,7 +6,7 @@ const getNewTemplate = require("./_getNewTemplateForTests");
 test("Cache can save templates", (t) => {
   templateCache.clear();
 
-  let tmpl = getNewTemplate("./test/stubs/template.ejs", "./test/stubs/", "./dist");
+  let tmpl = getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./dist");
 
   templateCache.add(tmpl);
   t.is(templateCache.size(), 1);
@@ -15,7 +15,7 @@ test("Cache can save templates", (t) => {
 test("TemplateCache clear", (t) => {
   templateCache.clear();
 
-  let tmpl = getNewTemplate("./test/stubs/template.ejs", "./test/stubs/", "./dist");
+  let tmpl = getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./dist");
 
   templateCache.add(tmpl);
   t.is(templateCache.size(), 1);
@@ -26,33 +26,33 @@ test("TemplateCache clear", (t) => {
 test("TemplateCache has", (t) => {
   templateCache.clear();
 
-  let tmpl = getNewTemplate("./test/stubs/template.ejs", "./test/stubs/", "./dist");
+  let tmpl = getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./dist");
 
   templateCache.add(tmpl);
   // Only TemplateLayout is cached
-  t.is(templateCache.has("./test/stubs/template.ejs"), false);
+  t.is(templateCache.has("./test/stubs/template.liquid"), false);
 });
 
 test("TemplateCache get success", (t) => {
   templateCache.clear();
 
-  let tmpl = getNewTemplate("./test/stubs/template.ejs", "./test/stubs/", "./dist");
+  let tmpl = getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./dist");
 
   templateCache.add(tmpl);
 
   // Only TemplateLayout is cached
   t.throws(() => {
-    templateCache.get("./test/stubs/template.ejs");
+    templateCache.get("./test/stubs/template.liquid");
   });
 });
 
 test("TemplateCache get fail", (t) => {
   templateCache.clear();
 
-  let tmpl = getNewTemplate("./test/stubs/template.ejs", "./test/stubs/", "./dist");
+  let tmpl = getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./dist");
 
   templateCache.add(tmpl);
   t.throws(function () {
-    templateCache.get("./test/stubs/template298374892.ejs");
+    templateCache.get("./test/stubs/template298374892.liquid");
   });
 });

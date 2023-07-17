@@ -4,7 +4,7 @@ module.exports.data = {
   eleventyComputed: {
     permalink: function (data) {
       return {
-        serverless: data.permalink.replace("{{lang}}", "en"),
+        build: data.permalink.replace("{{lang}}", "en"),
       };
     },
   },

@@ -17,20 +17,20 @@ test("Output is a subdir of input", async (t) => {
   let tw = new TemplateWriter(
     "./test/stubs/writeTest",
     "./test/stubs/writeTest/_writeTestSite",
-    ["ejs", "md"],
+    ["liquid", "md"],
     null,
     eleventyConfig
   );
   let evf = new EleventyFiles(
     "./test/stubs/writeTest",
     "./test/stubs/writeTest/_writeTestSite",
-    ["ejs", "md"],
+    ["liquid", "md"],
     eleventyConfig
   );
   evf.init();
 
   let files = await fastglob(evf.getFileGlobs());
-  t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTest/**/*.{ejs,md}"]);
+  t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTest/**/*.{liquid,md}"]);
   t.true(files.length > 0);
 
   let { template: tmpl } = tw._createTemplate(files[0]);
@@ -45,7 +45,7 @@ test("_createTemplateMap", async (t) => {
   let tw = new TemplateWriter(
     "./test/stubs/writeTest",
     "./test/stubs/_writeTestSite",
-    ["ejs", "md"],
+    ["liquid", "md"],
     null,
     eleventyConfig
   );
@@ -66,7 +66,7 @@ test("_createTemplateMap (no leading dot slash)", async (t) => {
   let tw = new TemplateWriter(
     "test/stubs/writeTest",
     "test/stubs/_writeTestSite",
-    ["ejs", "md"],
+    ["liquid", "md"],
     null,
     eleventyConfig
   );
@@ -313,7 +313,7 @@ test("Use a collection inside of a template", async (t) => {
   let tw = new TemplateWriter(
     "./test/stubs/collection-template",
     "./test/stubs/collection-template/_site",
-    ["ejs"],
+    ["liquid"],
     null,
     eleventyConfig
   );
@@ -325,12 +325,14 @@ test("Use a collection inside of a template", async (t) => {
   t.is(collectionsData.dog.length, 1);
 
   let mapEntry = templateMap.getMapEntryForInputPath(
-    "./test/stubs/collection-template/template.ejs"
+    "./test/stubs/collection-template/template.liquid"
   );
   t.truthy(mapEntry);
-  t.is(mapEntry.inputPath, "./test/stubs/collection-template/template.ejs");
+  t.is(mapEntry.inputPath, "./test/stubs/collection-template/template.liquid");
 
-  let { template: mainTmpl } = tw._createTemplate("./test/stubs/collection-template/template.ejs");
+  let { template: mainTmpl } = tw._createTemplate(
+    "./test/stubs/collection-template/template.liquid"
+  );
   let data = await mainTmpl.getData();
   let outputPath = await mainTmpl.getOutputPath(data);
   t.is(outputPath, "./test/stubs/collection-template/_site/template/index.html");
@@ -354,7 +356,7 @@ test("Use a collection inside of a layout", async (t) => {
   let tw = new TemplateWriter(
     "./test/stubs/collection-layout",
     "./test/stubs/collection-layout/_site",
-    ["ejs"],
+    ["liquid"],
     null,
     eleventyConfig
   );
@@ -365,11 +367,13 @@ test("Use a collection inside of a layout", async (t) => {
   let collectionsData = await templateMap._testGetCollectionsData();
   t.is(collectionsData.dog.length, 1);
 
-  let mapEntry = templateMap.getMapEntryForInputPath("./test/stubs/collection-layout/template.ejs");
+  let mapEntry = templateMap.getMapEntryForInputPath(
+    "./test/stubs/collection-layout/template.liquid"
+  );
   t.truthy(mapEntry);
-  t.is(mapEntry.inputPath, "./test/stubs/collection-layout/template.ejs");
+  t.is(mapEntry.inputPath, "./test/stubs/collection-layout/template.liquid");
 
-  let { template: mainTmpl } = tw._createTemplate("./test/stubs/collection-layout/template.ejs");
+  let { template: mainTmpl } = tw._createTemplate("./test/stubs/collection-layout/template.liquid");
   let data = await mainTmpl.getData();
   let outputPath = await mainTmpl.getOutputPath(data);
   t.is(outputPath, "./test/stubs/collection-layout/_site/template/index.html");

@@ -67,8 +67,6 @@ class Template extends TemplateContent {
 
     this.behavior = new TemplateBehavior(this.config);
     this.behavior.setOutputFormat(this.outputFormat);
-
-    this.serverlessUrls = null;
   }
 
   setTemplateData(templateData) {
@@ -164,35 +162,11 @@ class Template extends TemplateContent {
     );
   }
 
-  getServerlessUrls() {
-    if (!this.serverlessUrls) {
-      throw new Error(
-        "Permalink has not yet processed. Calls to Template->getServerlessUrls not yet allowed."
-      );
-    }
-    return this.serverlessUrls;
-  }
-
-  async initServerlessUrlsForEmptyPaginationTemplates(permalinkValue) {
-    if (isPlainObject(permalinkValue)) {
-      let buildlessPermalink = Object.assign({}, permalinkValue);
-      delete buildlessPermalink.build;
-
-      if (Object.keys(buildlessPermalink).length) {
-        return this._getRawPermalinkInstance(buildlessPermalink);
-      }
-    }
-  }
-
   async _getRawPermalinkInstance(permalinkValue) {
     let perm = new TemplatePermalink(permalinkValue, this.extraOutputSubdirectory);
     perm.setUrlTransforms(this.config.urlTransforms);
 
-    if (this.templateData) {
-      perm.setServerlessPathData(await this.templateData.getServerlessPathData());
-    }
     this.behavior.setFromPermalink(perm);
-    this.serverlessUrls = perm.getServerlessUrls();
 
     return perm;
   }
@@ -677,7 +651,6 @@ class Template extends TemplateContent {
   }
 
   async getTemplates(data) {
-    // no pagination with permalink.serverless
     if (!Pagination.hasPagination(data)) {
       await this.addComputedData(data);
 
@@ -845,11 +818,7 @@ class Template extends TemplateContent {
         }
 
         if (!mapEntry.template.behavior.isRenderable()) {
-          debug(
-            "Template not written %o from %o (via serverless permalink).",
-            page.outputPath,
-            mapEntry.template.inputPath
-          );
+          debug("Template not written %o from %o.", page.outputPath, mapEntry.template.inputPath);
           return;
         }
 

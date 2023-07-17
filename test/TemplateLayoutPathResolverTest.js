@@ -9,10 +9,7 @@ function getResolverInstance(path, inputDir, { eleventyConfig, map } = {}) {
   }
 
   if (!map) {
-    map = new EleventyExtensionMap(
-      ["liquid", "ejs", "md", "hbs", "mustache", "haml", "pug", "njk", "html", "11ty.js"],
-      eleventyConfig
-    );
+    map = new EleventyExtensionMap(["liquid", "md", "njk", "html", "11ty.js"], eleventyConfig);
   }
 
   return new TemplateLayoutPathResolver(path, inputDir, map, eleventyConfig);
@@ -20,18 +17,18 @@ function getResolverInstance(path, inputDir, { eleventyConfig, map } = {}) {
 
 test("Layout", (t) => {
   let res = getResolverInstance("default", "./test/stubs");
-  t.is(res.getFileName(), "default.ejs");
+  t.is(res.getFileName(), "default.liquid");
 });
 
 test("Layout already has extension", (t) => {
-  let res = getResolverInstance("default.ejs", "./test/stubs");
-  t.is(res.getFileName(), "default.ejs");
+  let res = getResolverInstance("default.liquid", "./test/stubs");
+  t.is(res.getFileName(), "default.liquid");
 });
 
 test("Layout (uses empty string includes folder)", (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.appendToRootConfig({
-    templateFormats: ["ejs"],
+    templateFormats: ["liquid"],
     dir: {
       includes: "",
     },
@@ -41,29 +38,29 @@ test("Layout (uses empty string includes folder)", (t) => {
     eleventyConfig,
   });
 
-  t.is(res.getFileName(), "includesemptystring.ejs");
+  t.is(res.getFileName(), "includesemptystring.liquid");
 });
 
 test("Layout (uses empty string includes folder) already has extension", (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.appendToRootConfig({
-    templateFormats: ["ejs"],
+    templateFormats: ["liquid"],
     dir: {
       includes: "",
     },
   });
 
-  let res = getResolverInstance("includesemptystring.ejs", "./test/stubs", {
+  let res = getResolverInstance("includesemptystring.liquid", "./test/stubs", {
     eleventyConfig,
   });
 
-  t.is(res.getFileName(), "includesemptystring.ejs");
+  t.is(res.getFileName(), "includesemptystring.liquid");
 });
 
 test("Layout (uses layouts folder)", (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.appendToRootConfig({
-    templateFormats: ["ejs"],
+    templateFormats: ["liquid"],
     dir: {
       layouts: "_layouts",
       includes: "_includes",
@@ -74,30 +71,30 @@ test("Layout (uses layouts folder)", (t) => {
     eleventyConfig,
   });
 
-  t.is(res.getFileName(), "layoutsdefault.ejs");
+  t.is(res.getFileName(), "layoutsdefault.liquid");
 });
 
 test("Layout (uses layouts folder) already has extension", (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.appendToRootConfig({
-    templateFormats: ["ejs"],
+    templateFormats: ["liquid"],
     dir: {
       layouts: "_layouts",
       includes: "_includes",
     },
   });
 
-  let res = getResolverInstance("layoutsdefault.ejs", "./test/stubs", {
+  let res = getResolverInstance("layoutsdefault.liquid", "./test/stubs", {
     eleventyConfig,
   });
 
-  t.is(res.getFileName(), "layoutsdefault.ejs");
+  t.is(res.getFileName(), "layoutsdefault.liquid");
 });
 
 test("Layout (uses empty string layouts folder)", (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.appendToRootConfig({
-    templateFormats: ["ejs"],
+    templateFormats: ["liquid"],
     dir: {
       layouts: "",
       includes: "_includes",
@@ -108,7 +105,7 @@ test("Layout (uses empty string layouts folder)", (t) => {
     eleventyConfig,
   });
 
-  t.is(res.getFileName(), "layoutsemptystring.ejs");
+  t.is(res.getFileName(), "layoutsemptystring.liquid");
 });
 
 test("Layout (uses empty string layouts folder) no template resolution", (t) => {
@@ -116,7 +113,7 @@ test("Layout (uses empty string layouts folder) no template resolution", (t) => 
   eleventyConfig.userConfig.setLayoutResolution(false);
 
   eleventyConfig.appendToRootConfig({
-    templateFormats: ["ejs"],
+    templateFormats: ["liquid"],
     dir: {
       layouts: "",
       includes: "_includes",
@@ -135,18 +132,18 @@ test("Layout (uses empty string layouts folder) no template resolution", (t) => 
 test("Layout (uses empty string layouts folder) already has extension", (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.appendToRootConfig({
-    templateFormats: ["ejs"],
+    templateFormats: ["liquid"],
     dir: {
       layouts: "",
       includes: "_includes",
     },
   });
 
-  let res = getResolverInstance("layoutsemptystring.ejs", "./test/stubs", {
+  let res = getResolverInstance("layoutsemptystring.liquid", "./test/stubs", {
     eleventyConfig,
   });
 
-  t.is(res.getFileName(), "layoutsemptystring.ejs");
+  t.is(res.getFileName(), "layoutsemptystring.liquid");
 });
 
 test("Layout subdir", (t) => {
@@ -162,12 +159,12 @@ test("Layout subdir already has extension", (t) => {
 test("Multiple layouts exist with the same file base, pick one", (t) => {
   let res = getResolverInstance("multiple", "./test/stubs");
   // pick the first one if multiple exist.
-  t.is(res.getFileName(), "multiple.ejs");
+  t.is(res.getFileName(), "multiple.liquid");
 });
 
 test("Multiple layouts exist but we are being explicit—layout already has extension", (t) => {
-  let res = getResolverInstance("multiple.ejs", "./test/stubs");
-  t.is(res.getFileName(), "multiple.ejs");
+  let res = getResolverInstance("multiple.liquid", "./test/stubs");
+  t.is(res.getFileName(), "multiple.liquid");
 
   let res2 = getResolverInstance("multiple.md", "./test/stubs");
   t.is(res2.getFileName(), "multiple.md");
@@ -175,23 +172,23 @@ test("Multiple layouts exist but we are being explicit—layout already has exte
 
 test("Layout is aliased to a new location", (t) => {
   let tl = getResolverInstance("post", "./test/stubs");
-  tl.addLayoutAlias("post", "layouts/post.ejs");
+  tl.addLayoutAlias("post", "layouts/post.liquid");
   tl.init();
 
-  t.is(tl.getFileName(), "layouts/post.ejs");
+  t.is(tl.getFileName(), "layouts/post.liquid");
 });
 
 test("Global default with empty string alias", (t) => {
   let tl = getResolverInstance("", "./test/stubs");
-  tl.addLayoutAlias("", "layouts/post.ejs");
+  tl.addLayoutAlias("", "layouts/post.liquid");
   tl.init();
 
-  t.is(tl.getFileName(), "layouts/post.ejs");
+  t.is(tl.getFileName(), "layouts/post.liquid");
 });
 
 test("Global default with empty string alias (but no alias exists for this instance)", (t) => {
-  let tl = getResolverInstance("layout.ejs", "./test/stubs");
-  tl.addLayoutAlias("", "layouts/post.ejs");
+  let tl = getResolverInstance("layout.liquid", "./test/stubs");
+  tl.addLayoutAlias("", "layouts/post.liquid");
   tl.init();
 
   t.throws(() => {
@@ -201,7 +198,7 @@ test("Global default with empty string alias (but no alias exists for this insta
 
 test("Layout has no alias and does not exist", async (t) => {
   let tl = getResolverInstance("shouldnotexist", "./test/stubs");
-  tl.addLayoutAlias("post", "layouts/post.ejs");
+  tl.addLayoutAlias("post", "layouts/post.liquid");
   tl.init();
 
   t.throws(() => {

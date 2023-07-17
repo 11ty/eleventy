@@ -28,10 +28,4 @@ test("Issue #2250, page is available in filters", async (t) => {
   });
 
   t.is(javascript[0].content.trim(), "/javascript/");
-
-  let handlebars = results.filter((entry) => {
-    return entry.url.startsWith("/handlebars/");
-  });
-
-  t.is(handlebars[0].content.trim(), "/handlebars/");
 });
