@@ -7,7 +7,9 @@ function requireLocal(localPath) {
   return require(absolutePath);
 }
 
-async function loadContents(path, type, options = {}) {
+// Used for JSON imports, suffering from Node warning that import assertions experimental but also
+// throwing an error if you try to import() a JSON file without an import assertion.
+async function loadContents(path, options = {}) {
   let rawInput;
   let encoding = "utf8";
   if ("encoding" in options) {
@@ -25,10 +27,6 @@ async function loadContents(path, type, options = {}) {
     rawInput = rawInput.trim();
   }
 
-  if (type === "json") {
-    return JSON.parse(rawInput);
-  }
-
   return rawInput;
 }
 
@@ -37,7 +35,8 @@ async function dynamicImport(localPath, type, bypassCache = false) {
 
   if (localPath.endsWith(".json") || type === "json") {
     // https://v8.dev/features/import-assertions#dynamic-import() is still experimental in Node 20
-    return loadContents(absolutePath, "json");
+    let rawInput = await loadContents(absolutePath);
+    return JSON.parse(rawInput);
   }
 
   let target = await import(absolutePath);

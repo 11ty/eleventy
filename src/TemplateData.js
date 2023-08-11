@@ -461,7 +461,7 @@ class TemplateData {
     let rawInput;
 
     if (readFile) {
-      rawInput = await EleventyLoadContent(path, undefined, options);
+      rawInput = await EleventyLoadContent(path, options);
     }
 
     if (readFile && !rawInput) {
