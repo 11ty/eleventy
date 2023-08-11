@@ -99,7 +99,7 @@ class EleventyServe {
       let serverPackageJsonPath = TemplatePath.absolutePath(serverPath, "package.json");
 
       let serverPackageJson = require(serverPackageJsonPath);
-      if (serverPackageJson["11ty"] && serverPackageJson["11ty"].compatibility) {
+      if (serverPackageJson["11ty"]?.compatibility) {
         try {
           this.eleventyConfig.userConfig.versionCheck(serverPackageJson["11ty"].compatibility);
         } catch (e) {
