@@ -43,6 +43,8 @@ class EleventyWatch {
   getActiveQueue() {
     if (!this.isActive) {
       return [];
+    } else if (this.incremental && this.activeQueue.length === 0) {
+      return [];
     } else if (this.incremental) {
       return [this.activeQueue[0]];
     }
