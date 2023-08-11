@@ -472,7 +472,7 @@ test("getLocalDataPaths with inputDir passed in (no leading slash)", async (t) =
 test("getRawImports", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("test/stubs", eleventyConfig);
-  let data = dataObj.getRawImports();
+  let data = await dataObj.getRawImports();
 
   t.is(data.pkg.name, "@11ty/eleventy");
 });

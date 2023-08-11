@@ -9,7 +9,7 @@ const TemplateGlob = require("./TemplateGlob");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");
 const TemplateDataInitialGlobalData = require("./TemplateDataInitialGlobalData");
-const { EleventyRequire } = require("./Util/Require");
+const { EleventyImport, EleventyLoadContent } = require("./Util/Require");
 
 const debugWarn = require("debug")("Eleventy:Warnings");
 const debug = require("debug")("Eleventy:TemplateData");
@@ -104,12 +104,11 @@ class TemplateData {
       : inputDir;
   }
 
-  getRawImports() {
-    let pkgPath = TemplatePath.absolutePath("package.json");
-
+  async getRawImports() {
     try {
-      this.rawImports[this.config.keys.package] = require(pkgPath);
+      this.rawImports[this.config.keys.package] = await EleventyImport("package.json");
     } catch (e) {
+      let pkgPath = TemplatePath.absolutePath("package.json");
       debug("Could not find and/or require package.json for data preprocessing at %o", pkgPath);
     }
 
@@ -298,7 +297,6 @@ class TemplateData {
   }
 
   async getAllGlobalData() {
-    let rawImports = this.getRawImports();
     let globalData = {};
     let files = TemplatePath.addLeadingDotSlashArray(await this.getGlobalDataFiles());
 
@@ -307,7 +305,7 @@ class TemplateData {
     let dataFileConflicts = {};
 
     for (let j = 0, k = files.length; j < k; j++) {
-      let data = await this.getDataValue(files[j], rawImports);
+      let data = await this.getDataValue(files[j]);
       let objectPathTarget = this.getObjectPathForDataFile(files[j]);
 
       // Since we're joining directory paths and an array is not usable as an objectkey since two identical arrays are not double equal,
@@ -362,7 +360,7 @@ class TemplateData {
   }
 
   async getGlobalData() {
-    let rawImports = this.getRawImports();
+    let rawImports = await this.getRawImports();
 
     if (!this.globalData) {
       this.globalData = new Promise(async (resolve) => {
@@ -399,7 +397,7 @@ class TemplateData {
 
     let dataSource = {};
     for (let path of localDataPaths) {
-      let dataForPath = await this.getDataValue(path, null, true);
+      let dataForPath = await this.getDataValue(path);
       if (!isPlainObject(dataForPath)) {
         debug(
           "Warning: Template and Directory data files expect an object to be returned, instead `%o` returned `%o`",
@@ -458,33 +456,12 @@ class TemplateData {
     return this.config.dataExtensions && this.config.dataExtensions.size > 0;
   }
 
-  async _loadFileContents(path, options = {}) {
-    let rawInput;
-    let encoding = "utf8";
-    if ("encoding" in options) {
-      encoding = options.encoding;
-    }
-
-    try {
-      rawInput = await fs.promises.readFile(path, encoding);
-    } catch (e) {
-      // if file does not exist, return nothing
-    }
-
-    // Can return a buffer, string, etc
-    if (typeof rawInput === "string") {
-      return rawInput.trim();
-    }
-
-    return rawInput;
-  }
-
-  async _parseDataFile(path, rawImports, ignoreProcessing, parser, options = {}) {
+  async _parseDataFile(path, parser, options = {}) {
     let readFile = !("read" in options) || options.read === true;
     let rawInput;
 
     if (readFile) {
-      rawInput = await this._loadFileContents(path, options);
+      rawInput = await EleventyLoadContent(path, undefined, options);
     }
 
     if (readFile && !rawInput) {
@@ -506,7 +483,7 @@ class TemplateData {
 
   // ignoreProcessing = false for global data files
   // ignoreProcessing = true for local data files
-  async getDataValue(path, rawImports, ignoreProcessing) {
+  async getDataValue(path) {
     let extension = TemplatePath.getExtension(path);
 
     if (extension === "js" || extension === "cjs") {
@@ -525,7 +502,7 @@ class TemplateData {
       let dataBench = this.benchmarks.data.get(`\`${path}\``);
       dataBench.before();
 
-      let returnValue = EleventyRequire(localPath);
+      let returnValue = await EleventyImport(localPath);
       // TODO special exception for Global data `permalink.js`
       // module.exports = (data) => `${data.page.filePathStem}/`; // Does not work
       // module.exports = () => ((data) => `${data.page.filePathStem}/`); // Works
@@ -541,11 +518,11 @@ class TemplateData {
       // Other extensions
       let { parser, options } = this.getUserDataParser(extension);
 
-      return this._parseDataFile(path, rawImports, ignoreProcessing, parser, options);
+      return this._parseDataFile(path, parser, options);
     } else if (extension === "json") {
       // File to string, parse with JSON (preprocess)
       const parser = (content) => JSON.parse(content);
-      return this._parseDataFile(path, rawImports, ignoreProcessing, parser);
+      return this._parseDataFile(path, parser);
     } else {
       throw new TemplateDataParseError(
         `Could not find an appropriate data parser for ${path}. Do you need to add a plugin to your config file?`
