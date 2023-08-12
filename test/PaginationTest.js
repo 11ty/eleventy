@@ -828,3 +828,41 @@ test("Pagination and eleventyComputed permalink, issue #1555 and #1865", async (
   t.is(templates[1].data.page.url, "/venues/second/");
   t.is(templates[2].data.page.url, "/venues/third/");
 });
+
+test("Pagination with skip parameter, issue #1036", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let tmpl = getNewTemplate(
+    "./test/stubs/pagination-skip.md",
+    "./test/stubs/",
+    "./dist",
+    null,
+    null,
+    eleventyConfig
+  );
+
+  let data = await tmpl.getData();
+  let paging = new Pagination(tmpl, data, tmpl.config);
+  paging.setTemplate(tmpl);
+
+  t.truthy(data.pagination);
+  t.is(paging.getPageCount(), 2);
+  t.is(data.pagination.size, 2);
+  t.deepEqual(paging.target, ["second", "third", "fourth", "fifth"]);
+});
+
+test("Pagination with skip parameter required to be number, issue #1036", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  let tmpl = getNewTemplate(
+    "./test/stubs/pagination-skip-string.md",
+    "./test/stubs/",
+    "./dist",
+    null,
+    null,
+    eleventyConfig
+  );
+
+  let data = await tmpl.getData();
+  t.throws(() => {
+    new Pagination(tmpl, data, tmpl.config);
+  });
+});
