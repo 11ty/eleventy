@@ -39,7 +39,13 @@ async function dynamicImport(localPath, type, bypassCache = false) {
     return JSON.parse(rawInput);
   }
 
-  let target = await import(absolutePath);
+  let urlPath;
+  try {
+    urlPath = new URL(`file:${absolutePath}`).toString();
+  } catch (e) {
+    urlPath = absolutePath;
+  }
+  let target = await import(urlPath);
   return target.default;
 }
 
