@@ -92,6 +92,7 @@ try {
               .catch((e) => {
                 // Build failed but error message already displayed.
                 shouldStartServer = false;
+                errorHandler.fatal(e, "Eleventy CLI Error");
                 // A build error occurred and we aren’t going to --serve
               })
               .then(function () {
