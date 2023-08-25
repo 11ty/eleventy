@@ -92,8 +92,8 @@ try {
               .catch((e) => {
                 // Build failed but error message already displayed.
                 shouldStartServer = false;
-                errorHandler.fatal(e, "Eleventy CLI Error");
                 // A build error occurred and we aren’t going to --serve
+                errorHandler.fatal(e, "Eleventy CLI Error");
               })
               .then(function () {
                 if (shouldStartServer) {
@@ -103,6 +103,7 @@ try {
           } else if (argv.watch) {
             elev.watch().catch((e) => {
               // A build error occurred and we aren’t going to --watch
+              errorHandler.fatal(e, "Eleventy CLI Error");
             });
           } else {
             if (argv.to === "json") {
