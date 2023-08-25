@@ -187,10 +187,12 @@ class TemplateData {
       if (suffix && typeof suffix === "string") {
         if (suffix.startsWith(".")) {
           // .suffix.js
+          globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.mjs`);
           globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.cjs`);
           globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.js`);
         } else {
           // "suffix.js" without leading dot
+          globSuffixesWithoutLeadingDot.add(`${suffix || ""}.mjs`);
           globSuffixesWithoutLeadingDot.add(`${suffix || ""}.cjs`);
           globSuffixesWithoutLeadingDot.add(`${suffix || ""}.js`);
         }
@@ -246,7 +248,7 @@ class TemplateData {
   }
 
   getGlobalDataExtensionPriorities() {
-    return this.getUserDataExtensions().concat(["json", "cjs", "js"]);
+    return this.getUserDataExtensions().concat(["json", "mjs", "cjs", "js"]);
   }
 
   static calculateExtensionPriority(path, priorities) {
@@ -486,7 +488,7 @@ class TemplateData {
   async getDataValue(path) {
     let extension = TemplatePath.getExtension(path);
 
-    if (extension === "js" || extension === "cjs") {
+    if (extension === "js" || extension === "cjs" || extension === "mjs") {
       // JS data file or require’d JSON (no preprocessing needed)
       let localPath = TemplatePath.absolutePath(path);
       let exists = this._fsExistsCache.exists(localPath);
@@ -550,6 +552,7 @@ class TemplateData {
       if (suffix) {
         paths.push(base + suffix + ".js");
         paths.push(base + suffix + ".cjs");
+        paths.push(base + suffix + ".mjs");
       }
       paths.push(base + suffix + ".json"); // default: .11tydata.json
 

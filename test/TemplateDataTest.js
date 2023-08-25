@@ -136,14 +136,14 @@ test("Global Dir Directory", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./", eleventyConfig);
 
-  t.deepEqual(await dataObj.getGlobalDataGlob(), ["./_data/**/*.{json,cjs,js}"]);
+  t.deepEqual(await dataObj.getGlobalDataGlob(), ["./_data/**/*.{json,mjs,cjs,js}"]);
 });
 
 test("Global Dir Directory with Constructor Path Arg", async (t) => {
   let eleventyConfig = new TemplateConfig();
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
 
-  t.deepEqual(await dataObj.getGlobalDataGlob(), ["./test/stubs/_data/**/*.{json,cjs,js}"]);
+  t.deepEqual(await dataObj.getGlobalDataGlob(), ["./test/stubs/_data/**/*.{json,mjs,cjs,js}"]);
 });
 
 test("getAllGlobalData() with other data files", async (t) => {
@@ -265,11 +265,13 @@ test("getLocalDataPaths", async (t) => {
   t.deepEqual(paths, [
     "./test/stubs/stubs.json",
     "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.mjs",
     "./test/stubs/stubs.11tydata.cjs",
     "./test/stubs/stubs.11tydata.js",
 
     "./test/stubs/component/component.json",
     "./test/stubs/component/component.11tydata.json",
+    "./test/stubs/component/component.11tydata.mjs",
     "./test/stubs/component/component.11tydata.cjs",
     "./test/stubs/component/component.11tydata.js",
   ]);
@@ -284,15 +286,18 @@ test("getLocalDataPaths (with setDataFileBaseName #1699)", async (t) => {
 
   t.deepEqual(paths, [
     "./test/stubs/index.11tydata.json",
+    "./test/stubs/index.11tydata.mjs",
     "./test/stubs/index.11tydata.cjs",
     "./test/stubs/index.11tydata.js",
 
     "./test/stubs/component/index.11tydata.json",
+    "./test/stubs/component/index.11tydata.mjs",
     "./test/stubs/component/index.11tydata.cjs",
     "./test/stubs/component/index.11tydata.js",
 
     "./test/stubs/component/component.json",
     "./test/stubs/component/component.11tydata.json",
+    "./test/stubs/component/component.11tydata.mjs",
     "./test/stubs/component/component.11tydata.cjs",
     "./test/stubs/component/component.11tydata.js",
   ]);
@@ -317,10 +322,12 @@ test("getLocalDataPaths (with setDataFileSuffixes override #1699)", async (t) =>
 
   t.deepEqual(paths, [
     "./test/stubs/stubs.howdy.json",
+    "./test/stubs/stubs.howdy.mjs",
     "./test/stubs/stubs.howdy.cjs",
     "./test/stubs/stubs.howdy.js",
 
     "./test/stubs/component/component.howdy.json",
+    "./test/stubs/component/component.howdy.mjs",
     "./test/stubs/component/component.howdy.cjs",
     "./test/stubs/component/component.howdy.js",
   ]);
@@ -346,11 +353,13 @@ test("getLocalDataPaths (with setDataFileSuffixes override with two entries #169
   t.deepEqual(paths, [
     "./test/stubs/stubs.json",
     "./test/stubs/stubs.howdy.json",
+    "./test/stubs/stubs.howdy.mjs",
     "./test/stubs/stubs.howdy.cjs",
     "./test/stubs/stubs.howdy.js",
 
     "./test/stubs/component/component.json",
     "./test/stubs/component/component.howdy.json",
+    "./test/stubs/component/component.howdy.mjs",
     "./test/stubs/component/component.howdy.cjs",
     "./test/stubs/component/component.howdy.js",
   ]);
@@ -366,15 +375,18 @@ test("getLocalDataPaths (with setDataFileSuffixes and setDataFileBaseName #1699)
 
   t.deepEqual(paths, [
     "./test/stubs/index.howdy.json",
+    "./test/stubs/index.howdy.mjs",
     "./test/stubs/index.howdy.cjs",
     "./test/stubs/index.howdy.js",
 
     "./test/stubs/component/index.howdy.json",
+    "./test/stubs/component/index.howdy.mjs",
     "./test/stubs/component/index.howdy.cjs",
     "./test/stubs/component/index.howdy.js",
 
     "./test/stubs/component/component.json",
     "./test/stubs/component/component.howdy.json",
+    "./test/stubs/component/component.howdy.mjs",
     "./test/stubs/component/component.howdy.cjs",
     "./test/stubs/component/component.howdy.js",
   ]);
@@ -388,14 +400,17 @@ test("Deeper getLocalDataPaths", async (t) => {
   t.deepEqual(paths, [
     "./test/test.json",
     "./test/test.11tydata.json",
+    "./test/test.11tydata.mjs",
     "./test/test.11tydata.cjs",
     "./test/test.11tydata.js",
     "./test/stubs/stubs.json",
     "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.mjs",
     "./test/stubs/stubs.11tydata.cjs",
     "./test/stubs/stubs.11tydata.js",
     "./test/stubs/component/component.json",
     "./test/stubs/component/component.11tydata.json",
+    "./test/stubs/component/component.11tydata.mjs",
     "./test/stubs/component/component.11tydata.cjs",
     "./test/stubs/component/component.11tydata.js",
   ]);
@@ -409,10 +424,12 @@ test("getLocalDataPaths with an 11ty js template", async (t) => {
   t.deepEqual(paths, [
     "./test/stubs/stubs.json",
     "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.mjs",
     "./test/stubs/stubs.11tydata.cjs",
     "./test/stubs/stubs.11tydata.js",
     "./test/stubs/component/component.json",
     "./test/stubs/component/component.11tydata.json",
+    "./test/stubs/component/component.11tydata.mjs",
     "./test/stubs/component/component.11tydata.cjs",
     "./test/stubs/component/component.11tydata.js",
   ]);
@@ -426,10 +443,12 @@ test("getLocalDataPaths with inputDir passed in (trailing slash)", async (t) => 
   t.deepEqual(paths, [
     "./test/stubs/stubs.json",
     "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.mjs",
     "./test/stubs/stubs.11tydata.cjs",
     "./test/stubs/stubs.11tydata.js",
     "./test/stubs/component/component.json",
     "./test/stubs/component/component.11tydata.json",
+    "./test/stubs/component/component.11tydata.mjs",
     "./test/stubs/component/component.11tydata.cjs",
     "./test/stubs/component/component.11tydata.js",
   ]);
@@ -443,10 +462,12 @@ test("getLocalDataPaths with inputDir passed in (no trailing slash)", async (t) 
   t.deepEqual(paths, [
     "./test/stubs/stubs.json",
     "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.mjs",
     "./test/stubs/stubs.11tydata.cjs",
     "./test/stubs/stubs.11tydata.js",
     "./test/stubs/component/component.json",
     "./test/stubs/component/component.11tydata.json",
+    "./test/stubs/component/component.11tydata.mjs",
     "./test/stubs/component/component.11tydata.cjs",
     "./test/stubs/component/component.11tydata.js",
   ]);
@@ -460,10 +481,12 @@ test("getLocalDataPaths with inputDir passed in (no leading slash)", async (t) =
   t.deepEqual(paths, [
     "./test/stubs/stubs.json",
     "./test/stubs/stubs.11tydata.json",
+    "./test/stubs/stubs.11tydata.mjs",
     "./test/stubs/stubs.11tydata.cjs",
     "./test/stubs/stubs.11tydata.js",
     "./test/stubs/component/component.json",
     "./test/stubs/component/component.11tydata.json",
+    "./test/stubs/component/component.11tydata.mjs",
     "./test/stubs/component/component.11tydata.cjs",
     "./test/stubs/component/component.11tydata.js",
   ]);
@@ -482,7 +505,7 @@ test("getTemplateDataFileGlob", async (t) => {
   let tw = new TemplateData("test/stubs", eleventyConfig);
 
   t.deepEqual(await tw.getTemplateDataFileGlob(), [
-    "./test/stubs/**/*.{json,11tydata.cjs,11tydata.js}",
+    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
   ]);
 });
 
