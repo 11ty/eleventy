@@ -1,5 +1,6 @@
 const { TemplatePath } = require("@11ty/eleventy-utils");
 const { performance } = require("perf_hooks");
+const path = require("path");
 
 const pkg = require("../package.json");
 const TemplateData = require("./TemplateData");
@@ -921,6 +922,21 @@ Arguments:
     benchmark.after();
   }
 
+  get isEsm() {
+    if (this._isEsm === undefined) {
+      try {
+        // fetch from project’s package.json
+        let projectPackageJson = require(path.join(TemplatePath.getWorkingDir(), "package.json"));
+        this._isEsm = projectPackageJson?.type === "module";
+      } catch (e) {
+        debug("Could not find a project package.json for project’s ES Modules check: %O", e);
+        this._isEsm = false;
+      }
+    }
+
+    return this._isEsm;
+  }
+
   /**
    * Starts watching dependencies.
    *
@@ -938,21 +954,24 @@ Arguments:
       return !dataDir || !TemplatePath.stripLeadingDotSlash(path).startsWith(dataDir);
     }
 
+    // Lazy resolve isEsm only for --watch
+    this.watchTargets.setProjectUsingEsm(this.isEsm);
+
     // Template files .11ty.js
     let templateFiles = this.eleventyFiles.getWatchPathCache();
-    this.watchTargets.addDependencies(templateFiles);
+    await this.watchTargets.addDependencies(templateFiles);
 
     // Config file dependencies
-    this.watchTargets.addDependencies(
+    await this.watchTargets.addDependencies(
       this.eleventyConfig.getLocalProjectConfigFiles(),
       filterOutGlobalDataFiles
     );
 
     // Deps from Global Data (that aren’t in the global data directory, everything is watched there)
     let globalDataDeps = this.templateData.getWatchPathCache();
-    this.watchTargets.addDependencies(globalDataDeps, filterOutGlobalDataFiles);
+    await this.watchTargets.addDependencies(globalDataDeps, filterOutGlobalDataFiles);
 
-    this.watchTargets.addDependencies(
+    await this.watchTargets.addDependencies(
       await this.eleventyFiles.getWatcherTemplateJavaScriptDataFiles()
     );
   }

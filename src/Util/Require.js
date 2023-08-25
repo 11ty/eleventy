@@ -1,5 +1,6 @@
 const fs = require("fs");
 const { TemplatePath } = require("@11ty/eleventy-utils");
+const eventBus = require("../EventBus.js");
 
 function requireLocal(localPath) {
   let absolutePath = TemplatePath.absolutePath(localPath);
@@ -30,7 +31,12 @@ async function loadContents(path, options = {}) {
   return rawInput;
 }
 
-async function dynamicImport(localPath, type, bypassCache = false) {
+let lastModifiedPaths = new Map();
+eventBus.on("eleventy.resourceModified", (filePath) => {
+  lastModifiedPaths.set(TemplatePath.absolutePath(filePath), Date.now());
+});
+
+async function dynamicImport(localPath, type) {
   let absolutePath = TemplatePath.absolutePath(localPath);
 
   if (localPath.endsWith(".json") || type === "json") {
@@ -41,10 +47,18 @@ async function dynamicImport(localPath, type, bypassCache = false) {
 
   let urlPath;
   try {
-    urlPath = new URL(`file:${absolutePath}`).toString();
+    let u = new URL(`file:${absolutePath}`);
+
+    // Bust the import cache if this is the last modified file
+    if (lastModifiedPaths.has(absolutePath)) {
+      u.searchParams.set("_cache_bust", lastModifiedPaths.get(absolutePath));
+    }
+
+    urlPath = u.toString();
   } catch (e) {
     urlPath = absolutePath;
   }
+
   let target = await import(urlPath);
   return target.default;
 }

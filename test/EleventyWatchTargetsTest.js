@@ -34,86 +34,60 @@ test("Add and make glob", (t) => {
   t.deepEqual(targets.getTargets(), ["./test/**", "./test/b.js"]);
 });
 
-test("JavaScript get dependencies", (t) => {
-  t.deepEqual(
-    JavaScriptDependencies.getDependencies(["./test/stubs/config-deps.js"]),
-    ["./test/stubs/config-deps-upstream.js"]
-  );
+test("JavaScript get dependencies", async (t) => {
+  t.deepEqual(await JavaScriptDependencies.getDependencies(["./test/stubs/config-deps.js"]), [
+    "./test/stubs/config-deps-upstream.js",
+  ]);
 });
 
-test("JavaScript addDependencies", (t) => {
+test("JavaScript addDependencies", async (t) => {
   let targets = new EleventyWatchTargets();
-  targets.addDependencies("./test/stubs/config-deps.js");
+  await targets.addDependencies("./test/stubs/config-deps.js");
   t.deepEqual(targets.getTargets(), ["./test/stubs/config-deps-upstream.js"]);
 
-  t.true(
-    targets.uses(
-      "./test/stubs/config-deps.js",
-      "./test/stubs/config-deps-upstream.js"
-    )
-  );
-  t.false(
-    targets.uses("./test/stubs/config-deps.js", "./test/stubs/config-deps.js")
-  );
+  t.true(targets.uses("./test/stubs/config-deps.js", "./test/stubs/config-deps-upstream.js"));
+  t.false(targets.uses("./test/stubs/config-deps.js", "./test/stubs/config-deps.js"));
 });
 
-test("JavaScript addDependencies (one file has two dependencies)", (t) => {
+test("JavaScript addDependencies (one file has two dependencies)", async (t) => {
   let targets = new EleventyWatchTargets();
-  targets.addDependencies("./test/stubs/dependencies/two-deps.11ty.js");
+  await targets.addDependencies("./test/stubs/dependencies/two-deps.11ty.js");
   t.deepEqual(targets.getTargets(), [
     "./test/stubs/dependencies/dep1.js",
     "./test/stubs/dependencies/dep2.js",
   ]);
 
   t.true(
-    targets.uses(
-      "./test/stubs/dependencies/two-deps.11ty.js",
-      "./test/stubs/dependencies/dep1.js"
-    )
+    targets.uses("./test/stubs/dependencies/two-deps.11ty.js", "./test/stubs/dependencies/dep1.js")
   );
   t.true(
-    targets.uses(
-      "./test/stubs/dependencies/two-deps.11ty.js",
-      "./test/stubs/dependencies/dep2.js"
-    )
+    targets.uses("./test/stubs/dependencies/two-deps.11ty.js", "./test/stubs/dependencies/dep2.js")
   );
   t.false(
-    targets.uses(
-      "./test/stubs/dependencies/two-deps.11ty.js",
-      "./test/stubs/dependencies/dep3.js"
-    )
+    targets.uses("./test/stubs/dependencies/two-deps.11ty.js", "./test/stubs/dependencies/dep3.js")
   );
 });
 
-test("JavaScript addDependencies (skip JS deps)", (t) => {
+test("JavaScript addDependencies (skip JS deps)", async (t) => {
   let targets = new EleventyWatchTargets();
   targets.watchJavaScriptDependencies = false;
-  targets.addDependencies("./test/stubs/dependencies/two-deps.11ty.js");
+  await targets.addDependencies("./test/stubs/dependencies/two-deps.11ty.js");
   t.deepEqual(targets.getTargets(), []);
 
   t.false(
-    targets.uses(
-      "./test/stubs/dependencies/two-deps.11ty.js",
-      "./test/stubs/dependencies/dep1.js"
-    )
+    targets.uses("./test/stubs/dependencies/two-deps.11ty.js", "./test/stubs/dependencies/dep1.js")
   );
   t.false(
-    targets.uses(
-      "./test/stubs/dependencies/two-deps.11ty.js",
-      "./test/stubs/dependencies/dep2.js"
-    )
+    targets.uses("./test/stubs/dependencies/two-deps.11ty.js", "./test/stubs/dependencies/dep2.js")
   );
   t.false(
-    targets.uses(
-      "./test/stubs/dependencies/two-deps.11ty.js",
-      "./test/stubs/dependencies/dep3.js"
-    )
+    targets.uses("./test/stubs/dependencies/two-deps.11ty.js", "./test/stubs/dependencies/dep3.js")
   );
 });
 
-test("JavaScript addDependencies with a filter", (t) => {
+test("JavaScript addDependencies with a filter", async (t) => {
   let targets = new EleventyWatchTargets();
-  targets.addDependencies("./test/stubs/config-deps.js", function (path) {
+  await targets.addDependencies("./test/stubs/config-deps.js", function (path) {
     return path.indexOf("./test/stubs/") === -1;
   });
   t.deepEqual(targets.getTargets(), []);
@@ -125,35 +99,29 @@ test("JavaScript addDependencies with a filter", (t) => {
   );
 });
 
-test("add, addDependencies falsy values are filtered", (t) => {
+test("add, addDependencies falsy values are filtered", async (t) => {
   let targets = new EleventyWatchTargets();
   targets.add("");
-  targets.addDependencies("");
+  await targets.addDependencies("");
   t.deepEqual(targets.getTargets(), []);
 });
 
-test("add, addDependencies file does not exist", (t) => {
+test("add, addDependencies file does not exist", async (t) => {
   let targets = new EleventyWatchTargets();
   targets.add("./.eleventy-notfound.js"); // does not exist
-  targets.addDependencies("./.eleventy-notfound.js"); // does not exist
+  await targets.addDependencies("./.eleventy-notfound.js"); // does not exist
   t.deepEqual(targets.getTargets(), ["./.eleventy-notfound.js"]);
 });
 
 test("getNewTargetsSinceLastReset", (t) => {
   let targets = new EleventyWatchTargets();
   targets.add("./.eleventy-notfound.js"); // does not exist
-  t.deepEqual(targets.getNewTargetsSinceLastReset(), [
-    "./.eleventy-notfound.js",
-  ]);
-  t.deepEqual(targets.getNewTargetsSinceLastReset(), [
-    "./.eleventy-notfound.js",
-  ]);
+  t.deepEqual(targets.getNewTargetsSinceLastReset(), ["./.eleventy-notfound.js"]);
+  t.deepEqual(targets.getNewTargetsSinceLastReset(), ["./.eleventy-notfound.js"]);
 
   targets.reset();
   targets.add("./.eleventy-notfound2.js");
-  t.deepEqual(targets.getNewTargetsSinceLastReset(), [
-    "./.eleventy-notfound2.js",
-  ]);
+  t.deepEqual(targets.getNewTargetsSinceLastReset(), ["./.eleventy-notfound2.js"]);
 
   targets.reset();
   t.deepEqual(targets.getNewTargetsSinceLastReset(), []);

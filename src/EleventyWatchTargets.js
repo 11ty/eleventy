@@ -10,6 +10,7 @@ class EleventyWatchTargets {
     this.dependencies = new Set();
     this.newTargets = new Set();
     this._watchJavaScriptDependencies = true;
+    this.isEsm = false;
 
     this.graph = new DepGraph();
   }
@@ -20,6 +21,10 @@ class EleventyWatchTargets {
 
   get watchJavaScriptDependencies() {
     return this._watchJavaScriptDependencies;
+  }
+
+  setProjectUsingEsm(isEsmProject) {
+    this.isEsm = !!isEsmProject;
   }
 
   isJavaScriptDependency(path) {
@@ -105,13 +110,13 @@ class EleventyWatchTargets {
   }
 
   // add only a target’s dependencies
-  addDependencies(targets, filterCallback) {
+  async addDependencies(targets, filterCallback) {
     if (!this.watchJavaScriptDependencies) {
       return;
     }
 
     targets = EleventyWatchTargets.normalize(targets);
-    let deps = JavaScriptDependencies.getDependencies(targets);
+    let deps = await JavaScriptDependencies.getDependencies(targets, this.isEsm);
     if (filterCallback) {
       deps = deps.filter(filterCallback);
     }
