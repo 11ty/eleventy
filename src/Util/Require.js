@@ -61,16 +61,44 @@ async function dynamicImport(localPath, type) {
 
   let target = await import(urlPath);
 
-  // If the only export is `default`, elevate to top
-  // console.log( {target} );
-  let keys = Object.keys(target);
-  if (keys.length === 1 && "default" in target) {
+  // If the only export is `default`, elevate to top (for ESM and CJS)
+  if (Object.keys(target).length === 1 && "default" in target) {
     return target.default;
   }
 
-  // First thought, unimplemented thought (probably too much magic):
-  // if `default` export is a plain object, should we merge that to top level?
-  // Use `isPlainObject` and `DeepCopy`
+  // When using import() on a CommonJS file that exports an object sometimes it
+  // returns duplicated values in `default` key, e.g. `{ default: { key: value }, key: value }`
+
+  // A few examples:
+  // module.exports = { key: false };
+  //    returns `{ default: { key: false }, key: false }` as not expected.
+  // module.exports = { key: true };
+  // module.exports = { key: null };
+  // module.exports = { key: undefined };
+  // module.exports = { key: class {} };
+
+  // A few examples where it does not duplicate:
+  // module.exports = { key: 1 };
+  //    returns `{ default: { key: 1 } }` as expected.
+  // module.exports = { key: "value" };
+  // module.exports = { key: {} };
+  // module.exports = { key: [] };
+
+  if (type === "cjs" && "default" in target) {
+    let match = true;
+    for (let key in target) {
+      if (key === "default") {
+        continue;
+      }
+      if (target[key] !== target.default[key]) {
+        match = false;
+      }
+    }
+
+    if (match) {
+      return target.default;
+    }
+  }
 
   // Otherwise return { default: value, named: value }
   return target;

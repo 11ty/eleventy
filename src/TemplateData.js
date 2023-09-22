@@ -509,12 +509,13 @@ class TemplateData {
       let dataBench = this.benchmarks.data.get(`\`${path}\``);
       dataBench.before();
 
-      let returnValue;
+      let type = "cjs";
       if (extension === "mjs" || (extension === "js" && this.isEsm)) {
-        returnValue = await EleventyImport(localPath);
-      } else {
-        returnValue = EleventyRequire(localPath);
+        type = "esm";
       }
+
+      // We always need to use `import()`, as `require()` isn’t available in ESM.
+      let returnValue = await EleventyImport(localPath, type);
 
       // TODO special exception for Global data `permalink.js`
       // module.exports = (data) => `${data.page.filePathStem}/`; // Does not work
