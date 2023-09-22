@@ -658,7 +658,6 @@ test("ESM data file", async (t) => {
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getGlobalData();
-  console.log({ data });
   t.is(data.module.default, "es module default");
   t.is(data.module.named, "es module named");
   t.is(data.commonjs, "commonjs default");
