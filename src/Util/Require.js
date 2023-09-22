@@ -60,7 +60,20 @@ async function dynamicImport(localPath, type) {
   }
 
   let target = await import(urlPath);
-  return target.default;
+
+  // If the only export is `default`, elevate to top
+  // console.log( {target} );
+  let keys = Object.keys(target);
+  if (keys.length === 1 && "default" in target) {
+    return target.default;
+  }
+
+  // First thought, unimplemented thought (probably too much magic):
+  // if `default` export is a plain object, should we merge that to top level?
+  // Use `isPlainObject` and `DeepCopy`
+
+  // Otherwise return { default: value, named: value }
+  return target;
 }
 
 module.exports.EleventyRequire = requireLocal;

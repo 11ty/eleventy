@@ -9,7 +9,7 @@ const TemplateGlob = require("./TemplateGlob");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");
 const TemplateDataInitialGlobalData = require("./TemplateDataInitialGlobalData");
-const { EleventyImport, EleventyLoadContent } = require("./Util/Require");
+const { EleventyRequire, EleventyImport, EleventyLoadContent } = require("./Util/Require");
 
 const debugWarn = require("debug")("Eleventy:Warnings");
 const debug = require("debug")("Eleventy:TemplateData");
@@ -56,6 +56,7 @@ class TemplateData {
     this.rawImports = {};
     this.globalData = null;
     this.templateDirectoryData = {};
+    this.isEsm = false;
 
     // It's common for data files not to exist, so we avoid going to the FS to
     // re-check if they do via a quick-and-dirty cache.
@@ -70,6 +71,10 @@ class TemplateData {
 
   setGlobalDataDirectories(dirsObject) {
     this.directories = dirsObject;
+  }
+
+  setProjectUsingEsm(isEsmProject) {
+    this.isEsm = !!isEsmProject;
   }
 
   get extensionMap() {
@@ -106,7 +111,7 @@ class TemplateData {
 
   async getRawImports() {
     try {
-      this.rawImports[this.config.keys.package] = await EleventyImport("package.json");
+      this.rawImports[this.config.keys.package] = await EleventyImport("package.json", "json");
     } catch (e) {
       let pkgPath = TemplatePath.absolutePath("package.json");
       debug("Could not find and/or require package.json for data preprocessing at %o", pkgPath);
@@ -504,7 +509,13 @@ class TemplateData {
       let dataBench = this.benchmarks.data.get(`\`${path}\``);
       dataBench.before();
 
-      let returnValue = await EleventyImport(localPath);
+      let returnValue;
+      if (extension === "mjs" || (extension === "js" && this.isEsm)) {
+        returnValue = await EleventyImport(localPath);
+      } else {
+        returnValue = EleventyRequire(localPath);
+      }
+
       // TODO special exception for Global data `permalink.js`
       // module.exports = (data) => `${data.page.filePathStem}/`; // Does not work
       // module.exports = () => ((data) => `${data.page.filePathStem}/`); // Works

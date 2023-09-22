@@ -650,3 +650,16 @@ test("getGlobalData() empty json file", async (t) => {
   let data = await dataObj.getGlobalData();
   t.deepEqual(data.empty, {});
 });
+
+test("ESM data file", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+
+  let dataObj = new TemplateData("./test/stubs-data-esm/", eleventyConfig);
+  dataObj.setFileSystemSearch(new FileSystemSearch());
+
+  let data = await dataObj.getGlobalData();
+  console.log({ data });
+  t.is(data.module.default, "es module default");
+  t.is(data.module.named, "es module named");
+  t.is(data.commonjs, "commonjs default");
+});

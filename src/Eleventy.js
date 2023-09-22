@@ -395,6 +395,7 @@ class Eleventy {
     // this.eleventyServe.setWatcherOptions(this.getChokidarConfig());
 
     this.templateData = new TemplateData(this.inputDir, this.eleventyConfig);
+    this.templateData.setProjectUsingEsm(this.isEsm);
     this.templateData.extensionMap = this.extensionMap;
     if (this.env) {
       this.templateData.environmentVariables = this.env;
