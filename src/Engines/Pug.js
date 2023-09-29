@@ -35,7 +35,13 @@ class Pug extends TemplateEngine {
       options.filename = inputPath;
     }
 
-    return this.pugLib.compile(str, options);
+    const compiled = this.pugLib.compile(str, options);
+
+    if (compiled.dependencies) {
+      this.config.uses.addDependency(inputPath, compiled.dependencies);
+    }
+
+    return compiled;
   }
 }
 
