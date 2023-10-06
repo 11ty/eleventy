@@ -32,8 +32,11 @@ async function loadContents(path, options = {}) {
 }
 
 let lastModifiedPaths = new Map();
-eventBus.on("eleventy.resourceModified", (filePath) => {
-  lastModifiedPaths.set(TemplatePath.absolutePath(filePath), Date.now());
+eventBus.on("eleventy.importCacheReset", (fileQueue) => {
+  for (let filePath of fileQueue) {
+    let absolutePath = TemplatePath.absolutePath(filePath);
+    lastModifiedPaths.set(absolutePath, Date.now());
+  }
 });
 
 async function dynamicImport(localPath, type) {
@@ -48,6 +51,12 @@ async function dynamicImport(localPath, type) {
   let urlPath;
   try {
     let u = new URL(`file:${absolutePath}`);
+
+    // CJS Eleventy when using `import()` on a CJS file still adds to require.cache
+    // TODO remove this when ESM is used in Eleventy core.
+    if (absolutePath in require?.cache) {
+      delete require.cache[absolutePath];
+    }
 
     // Bust the import cache if this is the last modified file
     if (lastModifiedPaths.has(absolutePath)) {

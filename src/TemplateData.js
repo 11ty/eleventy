@@ -9,7 +9,7 @@ const TemplateGlob = require("./TemplateGlob");
 const EleventyExtensionMap = require("./EleventyExtensionMap");
 const EleventyBaseError = require("./EleventyBaseError");
 const TemplateDataInitialGlobalData = require("./TemplateDataInitialGlobalData");
-const { EleventyRequire, EleventyImport, EleventyLoadContent } = require("./Util/Require");
+const { EleventyImport, EleventyLoadContent } = require("./Util/Require");
 
 const debugWarn = require("debug")("Eleventy:Warnings");
 const debug = require("debug")("Eleventy:TemplateData");

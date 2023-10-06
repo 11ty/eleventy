@@ -1,8 +1,8 @@
 const { TemplatePath } = require("@11ty/eleventy-utils");
 const { DepGraph } = require("dependency-graph");
 
-const deleteRequireCache = require("./Util/DeleteRequireCache");
 const JavaScriptDependencies = require("./Util/JavaScriptDependencies");
+const eventBus = require("./EventBus");
 
 class EleventyWatchTargets {
   constructor() {
@@ -131,21 +131,24 @@ class EleventyWatchTargets {
     this.writer = templateWriter;
   }
 
-  clearRequireCacheFor(filePathArray) {
+  clearImportCacheFor(filePathArray) {
+    let paths = new Set();
     for (const filePath of filePathArray) {
-      deleteRequireCache(filePath);
+      paths.add(filePath);
 
       // Delete from require cache so that updates to the module are re-required
       let importsTheChangedFile = this.getDependantsOf(filePath);
       for (let dep of importsTheChangedFile) {
-        deleteRequireCache(dep);
+        paths.add(dep);
       }
 
       let isImportedInTheChangedFile = this.getDependenciesOf(filePath);
       for (let dep of isImportedInTheChangedFile) {
-        deleteRequireCache(dep);
+        paths.add(dep);
       }
     }
+
+    eventBus.emit("eleventy.importCacheReset", paths);
   }
 
   getNewTargetsSinceLastReset() {

@@ -804,11 +804,12 @@ Arguments:
     this.watchManager.setBuildRunning();
 
     let queue = this.watchManager.getActiveQueue();
+
     await this.config.events.emit("beforeWatch", queue);
     await this.config.events.emit("eleventy.beforeWatch", queue);
 
-    // Clear `require` cache for all files that triggered the rebuild
-    this.watchTargets.clearRequireCacheFor(queue);
+    // Clear `import` cache for all files that triggered the rebuild (sync event)
+    this.watchTargets.clearImportCacheFor(queue);
 
     // reset and reload global configuration
     if (isResetConfig) {
@@ -1064,6 +1065,7 @@ Arguments:
       try {
         let isResetConfig = this._shouldResetConfig([path]);
         this._addFileToWatchQueue(path, isResetConfig);
+
         clearTimeout(watchDelay);
 
         await new Promise((resolve, reject) => {
