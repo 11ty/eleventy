@@ -96,22 +96,13 @@ class Sortable {
   }
 
   static sortFunctionDate(mapA, mapB) {
-    return Sortable.sortFunctionNumericAscending(
-      mapA.date.getTime(),
-      mapB.date.getTime()
-    );
+    return Sortable.sortFunctionNumericAscending(mapA.date.getTime(), mapB.date.getTime());
   }
 
   static sortFunctionDateInputPath(mapA, mapB) {
-    let sortDate = Sortable.sortFunctionNumericAscending(
-      mapA.date.getTime(),
-      mapB.date.getTime()
-    );
+    let sortDate = Sortable.sortFunctionNumericAscending(mapA.date.getTime(), mapB.date.getTime());
     if (sortDate === 0) {
-      return Sortable.sortFunctionAlphabeticAscending(
-        mapA.inputPath,
-        mapB.inputPath
-      );
+      return Sortable.sortFunctionAlphabeticAscending(mapA.inputPath, mapB.inputPath);
     }
     return sortDate;
   }
@@ -142,4 +133,4 @@ class Sortable {
   }
 }
 
-module.exports = Sortable;
+export default Sortable;

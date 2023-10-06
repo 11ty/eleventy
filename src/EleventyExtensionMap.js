@@ -1,7 +1,7 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const TemplateEngineManager = require("./TemplateEngineManager");
-const EleventyBaseError = require("./EleventyBaseError");
+import TemplateEngineManager from "./TemplateEngineManager.js";
+import EleventyBaseError from "./EleventyBaseError.js";
 
 class EleventyExtensionMapConfigError extends EleventyBaseError {}
 
@@ -256,4 +256,4 @@ class EleventyExtensionMap {
   }
 }
 
-module.exports = EleventyExtensionMap;
+export default EleventyExtensionMap;

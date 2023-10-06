@@ -1,12 +1,13 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { TemplatePath } from "@11ty/eleventy-utils";
+import debugUtil from "debug";
 
-const TemplateLayoutPathResolver = require("./TemplateLayoutPathResolver");
-const TemplateContent = require("./TemplateContent");
-const TemplateData = require("./TemplateData");
+import TemplateLayoutPathResolver from "./TemplateLayoutPathResolver.js";
+import TemplateContent from "./TemplateContent.js";
+import TemplateData from "./TemplateData.js";
+import templateCache from "./TemplateCache.js";
 
-const templateCache = require("./TemplateCache");
-// const debug = require("debug")("Eleventy:TemplateLayout");
-const debugDev = require("debug")("Dev:Eleventy:TemplateLayout");
+// const debug = debugUtil("Eleventy:TemplateLayout");
+const debugDev = debugUtil("Dev:Eleventy:TemplateLayout");
 
 class TemplateLayout extends TemplateContent {
   constructor(key, inputDir, extensionMap, eleventyConfig) {
@@ -250,4 +251,4 @@ class TemplateLayout extends TemplateContent {
   }
 }
 
-module.exports = TemplateLayout;
+export default TemplateLayout;

@@ -1,4 +1,4 @@
-const spawn = require("cross-spawn");
+import spawn from "cross-spawn";
 
 function getGitFirstAddedTimeStamp(filePath) {
   return (
@@ -16,9 +16,9 @@ function getGitFirstAddedTimeStamp(filePath) {
 }
 
 // return a Date
-module.exports = function (inputPath) {
+export default function (inputPath) {
   let timestamp = getGitFirstAddedTimeStamp(inputPath);
   if (timestamp) {
     return new Date(timestamp);
   }
-};
+}

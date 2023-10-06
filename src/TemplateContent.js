@@ -1,20 +1,23 @@
-const os = require("os");
-const fs = require("graceful-fs");
-const util = require("util");
-const readFile = util.promisify(fs.readFile);
-const normalize = require("normalize-path");
-const matter = require("gray-matter");
-const { set: lodashSet } = require("@11ty/lodash-custom");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import os from "os";
+import fs from "graceful-fs";
+import util from "util";
+import normalize from "normalize-path";
+import matter from "gray-matter";
+import lodash from "@11ty/lodash-custom";
+import { TemplatePath } from "@11ty/eleventy-utils";
+import debugUtil from "debug";
 
-const EleventyExtensionMap = require("./EleventyExtensionMap");
-const TemplateData = require("./TemplateData");
-const TemplateRender = require("./TemplateRender");
-const EleventyBaseError = require("./EleventyBaseError");
-const EleventyErrorUtil = require("./EleventyErrorUtil");
-const debug = require("debug")("Eleventy:TemplateContent");
-const debugDev = require("debug")("Dev:Eleventy:TemplateContent");
-const eventBus = require("./EventBus");
+import EleventyExtensionMap from "./EleventyExtensionMap.js";
+import TemplateData from "./TemplateData.js";
+import TemplateRender from "./TemplateRender.js";
+import EleventyBaseError from "./EleventyBaseError.js";
+import EleventyErrorUtil from "./EleventyErrorUtil.js";
+import eventBus from "./EventBus.js";
+
+const { set: lodashSet } = lodash;
+const readFile = util.promisify(fs.readFile);
+const debug = debugUtil("Eleventy:TemplateContent");
+const debugDev = debugUtil("Dev:Eleventy:TemplateContent");
 
 class TemplateContentConfigError extends EleventyBaseError {}
 class TemplateContentFrontMatterError extends EleventyBaseError {}
@@ -614,4 +617,4 @@ eventBus.on("eleventy.compileCacheReset", (path) => {
   TemplateContent._compileCache = new Map();
 });
 
-module.exports = TemplateContent;
+export default TemplateContent;

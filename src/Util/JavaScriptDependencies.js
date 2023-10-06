@@ -1,6 +1,6 @@
-const dependencyTree = require("@11ty/dependency-tree");
-const { find } = require("@11ty/dependency-tree-esm");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import dependencyTree from "@11ty/dependency-tree";
+import { find } from "@11ty/dependency-tree-esm";
+import { TemplatePath } from "@11ty/eleventy-utils";
 
 class JavaScriptDependencies {
   static async getDependencies(inputFiles, isProjectUsingEsm) {
@@ -38,4 +38,4 @@ class JavaScriptDependencies {
   }
 }
 
-module.exports = JavaScriptDependencies;
+export default JavaScriptDependencies;

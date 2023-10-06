@@ -1,9 +1,11 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const EleventyBaseError = require("./EleventyBaseError");
-const EleventyExtensionMap = require("./EleventyExtensionMap");
-const CustomEngine = require("./Engines/Custom.js");
-// const debug = require("debug")("Eleventy:TemplateRender");
+import EleventyBaseError from "./EleventyBaseError.js";
+import EleventyExtensionMap from "./EleventyExtensionMap.js";
+import CustomEngine from "./Engines/Custom.js";
+
+// import debugUtil from "debug";
+// const debug = debugUtil("Eleventy:TemplateRender");
 
 class TemplateRenderConfigError extends EleventyBaseError {}
 class TemplateRenderUnknownEngineError extends EleventyBaseError {}
@@ -278,4 +280,4 @@ class TemplateRender {
   }
 }
 
-module.exports = TemplateRender;
+export default TemplateRender;

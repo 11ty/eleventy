@@ -1,4 +1,4 @@
-const TemplateEngine = require("./TemplateEngine");
+import TemplateEngine from "./TemplateEngine.js";
 
 class Html extends TemplateEngine {
   constructor(name, dirs, config) {
@@ -8,11 +8,7 @@ class Html extends TemplateEngine {
 
   async compile(str, inputPath, preTemplateEngine) {
     if (preTemplateEngine) {
-      let engine = this.engineManager.getEngine(
-        preTemplateEngine,
-        this.dirs,
-        this.extensionMap
-      );
+      let engine = this.engineManager.getEngine(preTemplateEngine, this.dirs, this.extensionMap);
       let fnReady = engine.compile(str, inputPath);
 
       return async function (data) {
@@ -29,4 +25,4 @@ class Html extends TemplateEngine {
   }
 }
 
-module.exports = Html;
+export default Html;

@@ -1,6 +1,6 @@
-const path = require("path");
-const normalize = require("normalize-path");
-const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
+import path from "path";
+import normalize from "normalize-path";
+import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
 class TemplatePermalink {
   // `link` with template syntax should have already been rendered in Template.js
@@ -187,4 +187,4 @@ class TemplatePermalink {
   }
 }
 
-module.exports = TemplatePermalink;
+export default TemplatePermalink;

@@ -1,8 +1,8 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
-const { DepGraph } = require("dependency-graph");
+import { TemplatePath } from "@11ty/eleventy-utils";
+import { DepGraph } from "dependency-graph";
 
-const JavaScriptDependencies = require("./Util/JavaScriptDependencies");
-const eventBus = require("./EventBus");
+import JavaScriptDependencies from "./Util/JavaScriptDependencies.js";
+import eventBus from "./EventBus.js";
 
 class EleventyWatchTargets {
   constructor() {
@@ -160,4 +160,4 @@ class EleventyWatchTargets {
   }
 }
 
-module.exports = EleventyWatchTargets;
+export default EleventyWatchTargets;

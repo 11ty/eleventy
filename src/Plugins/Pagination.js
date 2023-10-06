@@ -1,9 +1,11 @@
-const { set: lodashSet, get: lodashGet, chunk: lodashChunk } = require("@11ty/lodash-custom");
-const { isPlainObject } = require("@11ty/eleventy-utils");
+import { isPlainObject } from "@11ty/eleventy-utils";
+import lodash from "@11ty/lodash-custom";
 
-const EleventyBaseError = require("../EleventyBaseError");
-const { DeepCopy } = require("../Util/Merge");
-const { ProxyWrap } = require("../Util/ProxyWrap");
+import EleventyBaseError from "../EleventyBaseError.js";
+import { DeepCopy } from "../Util/Merge.js";
+import { ProxyWrap } from "../Util/ProxyWrap.js";
+
+const { set: lodashSet, get: lodashGet, chunk: lodashChunk } = lodash;
 
 class PaginationConfigError extends EleventyBaseError {}
 class PaginationError extends EleventyBaseError {}
@@ -366,4 +368,4 @@ class Pagination {
   }
 }
 
-module.exports = Pagination;
+export default Pagination;

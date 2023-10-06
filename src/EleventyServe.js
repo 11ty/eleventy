@@ -1,12 +1,15 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { TemplatePath } from "@11ty/eleventy-utils";
+import EleventyDevServer from "@11ty/eleventy-dev-server";
+import debugUtil from "debug";
 
-const EleventyBaseError = require("./EleventyBaseError");
-const ConsoleLogger = require("./Util/ConsoleLogger");
-const PathPrefixer = require("./Util/PathPrefixer");
-const merge = require("./Util/Merge");
-const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
+import EleventyBaseError from "./EleventyBaseError.js";
+import ConsoleLogger from "./Util/ConsoleLogger.js";
+import PathPrefixer from "./Util/PathPrefixer.js";
+import merge from "./Util/Merge.js";
+import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
+import { getModulePackageJson } from "./Util/ImportJsonSync.js";
 
-const debug = require("debug")("Eleventy:EleventyServe");
+const debug = debugUtil("Eleventy:EleventyServe");
 
 class EleventyServeConfigError extends EleventyBaseError {}
 
@@ -76,7 +79,7 @@ class EleventyServe {
   getServerModule(name) {
     try {
       if (!name || name === DEFAULT_SERVER_OPTIONS.module) {
-        return require(DEFAULT_SERVER_OPTIONS.module);
+        return EleventyDevServer;
       }
 
       // Look for peer dep in local project
@@ -96,9 +99,7 @@ class EleventyServe {
         );
       }
 
-      let serverPackageJsonPath = TemplatePath.absolutePath(serverPath, "package.json");
-
-      let serverPackageJson = require(serverPackageJsonPath);
+      let serverPackageJson = getModulePackageJson(serverPath);
       if (serverPackageJson["11ty"]?.compatibility) {
         try {
           this.eleventyConfig.userConfig.versionCheck(serverPackageJson["11ty"].compatibility);
@@ -114,7 +115,7 @@ class EleventyServe {
           e.message
       );
       debug("Eleventy server error %o", e);
-      return require(DEFAULT_SERVER_OPTIONS.module);
+      return EleventyDevServer;
     }
   }
 
@@ -256,4 +257,4 @@ class EleventyServe {
   }
 }
 
-module.exports = EleventyServe;
+export default EleventyServe;

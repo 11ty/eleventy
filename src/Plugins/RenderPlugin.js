@@ -1,17 +1,16 @@
-const fs = require("fs");
-const fsp = fs.promises;
-const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
+import { promises as fsp } from "fs";
+import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
 // TODO add a first-class Markdown component to expose this using Markdown-only syntax (will need to be synchronous for markdown-it)
 
-const Merge = require("../Util/Merge");
-const { ProxyWrap } = require("../Util/ProxyWrap");
-const TemplateDataInitialGlobalData = require("../TemplateDataInitialGlobalData");
-const EleventyShortcodeError = require("../EleventyShortcodeError");
-const TemplateRender = require("../TemplateRender");
-const TemplateConfig = require("../TemplateConfig");
-const EleventyErrorUtil = require("../EleventyErrorUtil");
-const Liquid = require("../Engines/Liquid");
+import Merge from "../Util/Merge.js";
+import { ProxyWrap } from "../Util/ProxyWrap.js";
+import TemplateDataInitialGlobalData from "../TemplateDataInitialGlobalData.js";
+import EleventyShortcodeError from "../EleventyShortcodeError.js";
+import TemplateRender from "../TemplateRender.js";
+import TemplateConfig from "../TemplateConfig.js";
+import EleventyErrorUtil from "../EleventyErrorUtil.js";
+import Liquid from "../Engines/Liquid.js";
 
 async function compile(content, templateLang, { templateConfig, extensionMap } = {}) {
   if (!templateConfig) {
@@ -348,10 +347,6 @@ function EleventyPlugin(eleventyConfig, options = {}) {
   }
 }
 
-module.exports = EleventyPlugin;
-module.exports.File = compileFile;
-module.exports.String = compile;
-
 // Will re-use the same configuration instance both at a top level and across any nested renders
 class RenderManager {
   constructor() {
@@ -407,4 +402,6 @@ class RenderManager {
   }
 }
 
-module.exports.RenderManager = RenderManager;
+export default EleventyPlugin;
+
+export { compileFile as File, compile as String, RenderManager };

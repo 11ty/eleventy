@@ -1,36 +1,36 @@
-const fs = require("graceful-fs");
-const util = require("util");
+import fs from "graceful-fs";
+import util from "util";
+import os from "os";
+import path from "path";
+import normalize from "normalize-path";
+import lodash from "@11ty/lodash-custom";
+import { DateTime } from "luxon";
+import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
+import debugUtil from "debug";
+
+import ConsoleLogger from "./Util/ConsoleLogger.js";
+import getDateFromGitLastUpdated from "./Util/DateGitLastUpdated.js";
+import getDateFromGitFirstAdded from "./Util/DateGitFirstAdded.js";
+import TemplateData from "./TemplateData.js";
+import TemplateContent from "./TemplateContent.js";
+import TemplatePermalink from "./TemplatePermalink.js";
+import TemplateLayout from "./TemplateLayout.js";
+import TemplateFileSlug from "./TemplateFileSlug.js";
+import ComputedData from "./ComputedData.js";
+import Pagination from "./Plugins/Pagination.js";
+import TemplateBehavior from "./TemplateBehavior.js";
+import TemplateContentPrematureUseError from "./Errors/TemplateContentPrematureUseError.js";
+import TemplateContentUnrenderedTemplateError from "./Errors/TemplateContentUnrenderedTemplateError.js";
+import EleventyBaseError from "./EleventyBaseError.js";
+
+const { set: lodashSet, get: lodashGet } = lodash;
 const writeFile = util.promisify(fs.writeFile);
 const mkdir = util.promisify(fs.mkdir);
 
-const os = require("os");
-const path = require("path");
-const normalize = require("normalize-path");
-const { set: lodashSet, get: lodashGet } = require("@11ty/lodash-custom");
-const { DateTime } = require("luxon");
-const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
+const debug = debugUtil("Eleventy:Template");
+const debugDev = debugUtil("Dev:Eleventy:Template");
 
-const ConsoleLogger = require("./Util/ConsoleLogger");
-const getDateFromGitLastUpdated = require("./Util/DateGitLastUpdated");
-const getDateFromGitFirstAdded = require("./Util/DateGitFirstAdded");
-
-const TemplateData = require("./TemplateData");
-const TemplateContent = require("./TemplateContent");
-const TemplatePermalink = require("./TemplatePermalink");
-const TemplateLayout = require("./TemplateLayout");
-const TemplateFileSlug = require("./TemplateFileSlug");
-const ComputedData = require("./ComputedData");
-const Pagination = require("./Plugins/Pagination");
-const TemplateBehavior = require("./TemplateBehavior");
-
-const TemplateContentPrematureUseError = require("./Errors/TemplateContentPrematureUseError");
-const TemplateContentUnrenderedTemplateError = require("./Errors/TemplateContentUnrenderedTemplateError");
-
-const EleventyBaseError = require("./EleventyBaseError");
 class EleventyTransformError extends EleventyBaseError {}
-
-const debug = require("debug")("Eleventy:Template");
-const debugDev = require("debug")("Dev:Eleventy:Template");
 
 class Template extends TemplateContent {
   constructor(templatePath, inputDir, outputDir, templateData, extensionMap, config) {
@@ -977,4 +977,4 @@ class Template extends TemplateContent {
   }
 }
 
-module.exports = Template;
+export default Template;

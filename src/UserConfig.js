@@ -1,13 +1,14 @@
-const chalk = require("kleur");
-const { DateTime } = require("luxon");
+import chalk from "kleur";
+import { DateTime } from "luxon";
+import debugUtil from "debug";
 
-const EventEmitter = require("./Util/AsyncEventEmitter");
-const EleventyCompatibility = require("./Util/Compatibility");
-const EleventyBaseError = require("./EleventyBaseError");
-const BenchmarkManager = require("./BenchmarkManager");
-const merge = require("./Util/Merge");
+import EventEmitter from "./Util/AsyncEventEmitter.js";
+import EleventyCompatibility from "./Util/Compatibility.js";
+import EleventyBaseError from "./EleventyBaseError.js";
+import BenchmarkManager from "./BenchmarkManager.js";
+import merge from "./Util/Merge.js";
 
-const debug = require("debug")("Eleventy:UserConfig");
+const debug = debugUtil("Eleventy:UserConfig");
 
 class UserConfigError extends EleventyBaseError {}
 
@@ -880,4 +881,4 @@ class UserConfig {
   }
 }
 
-module.exports = UserConfig;
+export default UserConfig;

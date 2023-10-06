@@ -1,4 +1,4 @@
-const eventBus = require("../EventBus");
+import eventBus from "../EventBus.js";
 
 class EventBusUtil {
   // Used for non-global subscriptions that will blow away the previous listener
@@ -8,4 +8,4 @@ class EventBusUtil {
   }
 }
 
-module.exports = EventBusUtil;
+export default EventBusUtil;

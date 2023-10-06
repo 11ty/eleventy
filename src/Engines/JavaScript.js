@@ -1,9 +1,10 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const TemplateEngine = require("./TemplateEngine");
-const EleventyBaseError = require("../EleventyBaseError");
-const getJavaScriptData = require("../Util/GetJavaScriptData");
-const EventBusUtil = require("../Util/EventBusUtil");
+import TemplateEngine from "./TemplateEngine.js";
+import EleventyBaseError from "../EleventyBaseError.js";
+import getJavaScriptData from "../Util/GetJavaScriptData.js";
+import EventBusUtil from "../Util/EventBusUtil.js";
+import { EleventyImport } from "./Util/Require.js";
 
 class JavaScriptTemplateNotDefined extends EleventyBaseError {}
 
@@ -65,18 +66,18 @@ class JavaScript extends TemplateEngine {
     }
   }
 
-  getInstanceFromInputPath(inputPath) {
+  async getInstanceFromInputPath(inputPath) {
     if (this.instances[inputPath]) {
       return this.instances[inputPath];
     }
 
-    const mod = require(TemplatePath.absolutePath(inputPath));
+    const mod = await EleventyImport(inputPath);
     let inst = this._getInstance(mod);
     if (inst) {
       this.instances[inputPath] = inst;
     } else {
       throw new JavaScriptTemplateNotDefined(
-        `No JavaScript template returned from ${inputPath} (did you assign to module.exports?)`
+        `No JavaScript template returned from ${inputPath}. Did you assign module.exports (CommonJS) or export (ESM)?`
       );
     }
     return inst;
@@ -92,7 +93,7 @@ class JavaScript extends TemplateEngine {
   }
 
   async getExtraDataFromFile(inputPath) {
-    let inst = this.getInstanceFromInputPath(inputPath);
+    let inst = await this.getInstanceFromInputPath(inputPath);
     return getJavaScriptData(inst, inputPath);
   }
 
@@ -131,7 +132,7 @@ class JavaScript extends TemplateEngine {
       inst = this._getInstance(str);
     } else {
       // For normal templates, str will be falsy.
-      inst = this.getInstanceFromInputPath(inputPath);
+      inst = await this.getInstanceFromInputPath(inputPath);
     }
 
     if (inst && "render" in inst) {
@@ -159,4 +160,4 @@ class JavaScript extends TemplateEngine {
   }
 }
 
-module.exports = JavaScript;
+export default JavaScript;

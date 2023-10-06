@@ -1,5 +1,7 @@
-const EventEmitter = require("./Util/AsyncEventEmitter");
-const debug = require("debug")("Eleventy:EventBus");
+import EventEmitter from "./Util/AsyncEventEmitter.js";
+import debugUtil from "debug";
+
+const debug = debugUtil("Eleventy:EventBus");
 
 /**
  * @module 11ty/eleventy/EventBus
@@ -14,4 +16,4 @@ debug("Setting up global EventBus.");
 let bus = new EventEmitter();
 bus.setMaxListeners(100);
 
-module.exports = bus;
+export default bus;

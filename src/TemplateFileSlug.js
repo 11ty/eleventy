@@ -1,5 +1,5 @@
-const path = require("path");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import path from "path";
+import { TemplatePath } from "@11ty/eleventy-utils";
 
 class TemplateFileSlug {
   constructor(inputPath, inputDir, extensionMap) {
@@ -53,4 +53,4 @@ class TemplateFileSlug {
   }
 }
 
-module.exports = TemplateFileSlug;
+export default TemplateFileSlug;

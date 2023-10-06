@@ -1,10 +1,10 @@
-const urlFilter = require("./Filters/Url");
-const slugFilter = require("./Filters/Slug");
-const slugifyFilter = require("./Filters/Slugify");
-const getLocaleCollectionItem = require("./Filters/GetLocaleCollectionItem");
-const getCollectionItemIndex = require("./Filters/GetCollectionItemIndex");
+import urlFilter from "./Filters/Url.js";
+import slugFilter from "./Filters/Slug.js";
+import slugifyFilter from "./Filters/Slugify.js";
+import getLocaleCollectionItem from "./Filters/GetLocaleCollectionItem.js";
+import getCollectionItemIndex from "./Filters/GetCollectionItemIndex.js";
 
-module.exports = function (config) {
+export default function (config) {
   let templateConfig = this;
 
   config.addFilter("slug", slugFilter);
@@ -73,4 +73,4 @@ module.exports = function (config) {
     // deprecated, use config.addNunjucksFilter
     nunjucksFilters: {},
   };
-};
+}

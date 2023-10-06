@@ -1,8 +1,10 @@
-const { DepGraph } = require("dependency-graph");
-const { TemplatePath } = require("@11ty/eleventy-utils");
-const debug = require("debug")("Eleventy:Dependencies");
+import { DepGraph } from "dependency-graph";
+import { TemplatePath } from "@11ty/eleventy-utils";
+import debugUtil from "debug";
 
-const PathNormalizer = require("./Util/PathNormalizer.js");
+import PathNormalizer from "./Util/PathNormalizer.js";
+
+const debug = debugUtil("Eleventy:Dependencies");
 
 class GlobalDependencyMap {
   // dependency-graph requires these keys to be alphabetic strings
@@ -343,4 +345,4 @@ class GlobalDependencyMap {
   }
 }
 
-module.exports = GlobalDependencyMap;
+export default GlobalDependencyMap;

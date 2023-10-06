@@ -1,26 +1,32 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
-const { performance } = require("perf_hooks");
-const path = require("path");
+import { TemplatePath } from "@11ty/eleventy-utils";
+import { performance } from "perf_hooks";
+import path from "path";
+import debugUtil from "debug";
 
-const pkg = require("../package.json");
-const TemplateData = require("./TemplateData");
-const TemplateWriter = require("./TemplateWriter");
-const EleventyExtensionMap = require("./EleventyExtensionMap");
-const EleventyErrorHandler = require("./EleventyErrorHandler");
-const EleventyBaseError = require("./EleventyBaseError");
-const EleventyServe = require("./EleventyServe");
-const EleventyWatch = require("./EleventyWatch");
-const EleventyWatchTargets = require("./EleventyWatchTargets");
-const EleventyFiles = require("./EleventyFiles");
-const ConsoleLogger = require("./Util/ConsoleLogger");
-const PathPrefixer = require("./Util/PathPrefixer");
-const TemplateConfig = require("./TemplateConfig");
-const FileSystemSearch = require("./FileSystemSearch");
-const PathNormalizer = require("./Util/PathNormalizer.js");
-const simplePlural = require("./Util/Pluralize");
-const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
-const debug = require("debug")("Eleventy");
-const eventBus = require("./EventBus");
+import TemplateData from "./TemplateData.js";
+import TemplateWriter from "./TemplateWriter.js";
+import EleventyExtensionMap from "./EleventyExtensionMap.js";
+import EleventyErrorHandler from "./EleventyErrorHandler.js";
+import EleventyBaseError from "./EleventyBaseError.js";
+import EleventyServe from "./EleventyServe.js";
+import EleventyWatch from "./EleventyWatch.js";
+import EleventyWatchTargets from "./EleventyWatchTargets.js";
+import EleventyFiles from "./EleventyFiles.js";
+import ConsoleLogger from "./Util/ConsoleLogger.js";
+import PathPrefixer from "./Util/PathPrefixer.js";
+import TemplateConfig from "./TemplateConfig.js";
+import FileSystemSearch from "./FileSystemSearch.js";
+import PathNormalizer from "./Util/PathNormalizer.js";
+import simplePlural from "./Util/Pluralize.js";
+import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
+import eventBus from "./EventBus.js";
+import { getEleventyPackageJson, getWorkingProjectPackageJson } from "./Util/ImportJsonSync.js";
+import RenderPlugin from "./Plugins/RenderPlugin.js";
+import I18nPlugin from "./Plugins/I18nPlugin.js";
+import HtmlBasePlugin from "./Plugins/HtmlBasePlugin.js";
+
+const pkg = getEleventyPackageJson();
+const debug = debugUtil("Eleventy");
 
 /**
  * @module 11ty/eleventy/Eleventy
@@ -928,7 +934,7 @@ Arguments:
     if (this._isEsm === undefined) {
       try {
         // fetch from project’s package.json
-        let projectPackageJson = require(path.join(TemplatePath.getWorkingDir(), "package.json"));
+        let projectPackageJson = getWorkingProjectPackageJson();
         this._isEsm = projectPackageJson?.type === "module";
       } catch (e) {
         debug("Could not find a project package.json for project’s ES Modules check: %O", e);
@@ -1027,7 +1033,8 @@ Arguments:
     // eslint-disable-next-line no-useless-catch
     try {
       let moduleName = "chokidar";
-      chokidar = require(moduleName);
+      let chokidarImport = await import(moduleName);
+      chokidar = chokidarImport.default;
     } catch (e) {
       throw e;
     }
@@ -1260,7 +1267,11 @@ Arguments:
   }
 }
 
-module.exports = Eleventy;
-module.exports.EleventyRenderPlugin = require("./Plugins/RenderPlugin");
-module.exports.EleventyI18nPlugin = require("./Plugins/I18nPlugin");
-module.exports.EleventyHtmlBasePlugin = require("./Plugins/HtmlBasePlugin");
+export default Eleventy;
+
+export {
+  Eleventy,
+  RenderPlugin as EleventyRenderPlugin,
+  I18nPlugin as EleventyI18nPlugin,
+  HtmlBasePlugin as EleventyHtmlBasePlugin,
+};

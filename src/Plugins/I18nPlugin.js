@@ -1,3 +1,8 @@
+import bcp47Normalize from "bcp-47-normalize";
+import iso639 from "iso-639-1";
+
+import { DeepCopy } from "../Util/Merge.js";
+
 // pathPrefix note:
 // When using `locale_url` filter with the `url` filter, `locale_url` must run first like
 // `| locale_url | url`. If you run `| url | locale_url` it won’t match correctly.
@@ -6,15 +11,10 @@
 // path prefix at the beginning? Would need a better way to know `url` has transformed a string
 // rather than just raw comparison.
 // e.g. --pathprefix=/en/ should return `/en/en/` for `/en/index.liquid`
-const { DeepCopy } = require("../Util/Merge");
-const bcp47Normalize = require("bcp-47-normalize");
-const iso639 = require("iso-639-1");
 
 class LangUtils {
   static getLanguageCodeFromInputPath(filepath) {
-    return (filepath || "")
-      .split("/")
-      .find((entry) => Comparator.isLangCode(entry));
+    return (filepath || "").split("/").find((entry) => Comparator.isLangCode(entry));
   }
 
   static getLanguageCodeFromUrl(url) {
@@ -206,88 +206,74 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
   });
 
   let contentMaps = {};
-  eleventyConfig.on(
-    "eleventy.contentMap",
-    function ({ urlToInputPath, inputPathToUrl }) {
-      let bench = benchmarkManager.get("(i18n Plugin) Setting up content map.");
-      bench.before();
-      contentMaps.inputPathToUrl = inputPathToUrl;
-      contentMaps.urlToInputPath = urlToInputPath;
+  eleventyConfig.on("eleventy.contentMap", function ({ urlToInputPath, inputPathToUrl }) {
+    let bench = benchmarkManager.get("(i18n Plugin) Setting up content map.");
+    bench.before();
+    contentMaps.inputPathToUrl = inputPathToUrl;
+    contentMaps.urlToInputPath = urlToInputPath;
 
-      contentMaps.localeUrlsMap = getLocaleUrlsMap(
-        urlToInputPath,
-        extensionMap,
-        benchmarkManager
-      );
-      bench.after();
-    }
-  );
+    contentMaps.localeUrlsMap = getLocaleUrlsMap(urlToInputPath, extensionMap, benchmarkManager);
+    bench.after();
+  });
 
   eleventyConfig.addGlobalData("eleventyComputed.page.lang", () => {
     // if addGlobalData receives a function it will execute it immediately,
     // so we return a nested function for computed data
     return (data) => {
-      return (
-        LangUtils.getLanguageCodeFromUrl(data.page.url) ||
-        options.defaultLanguage
-      );
+      return LangUtils.getLanguageCodeFromUrl(data.page.url) || options.defaultLanguage;
     };
   });
 
   // Normalize a theoretical URL based on the current page’s language
   // If a non-localized file exists, returns the URL without a language assigned
   // Fails if no file exists (localized and not localized)
-  eleventyConfig.addFilter(
-    options.filters.url,
-    function (url, langCodeOverride) {
-      let langCode =
-        langCodeOverride ||
-        LangUtils.getLanguageCodeFromUrl(this.page?.url) ||
-        options.defaultLanguage;
+  eleventyConfig.addFilter(options.filters.url, function (url, langCodeOverride) {
+    let langCode =
+      langCodeOverride ||
+      LangUtils.getLanguageCodeFromUrl(this.page?.url) ||
+      options.defaultLanguage;
 
-      // Already has a language code on it and has a relevant url with the target language code
-      if (
-        contentMaps.localeUrlsMap[url] ||
-        (!url.endsWith("/") && contentMaps.localeUrlsMap[`${url}/`])
-      ) {
-        for (let existingUrlObj of contentMaps.localeUrlsMap[url] ||
-          contentMaps.localeUrlsMap[`${url}/`]) {
-          if (Comparator.urlHasLangCode(existingUrlObj.url, langCode)) {
-            return existingUrlObj.url;
-          }
+    // Already has a language code on it and has a relevant url with the target language code
+    if (
+      contentMaps.localeUrlsMap[url] ||
+      (!url.endsWith("/") && contentMaps.localeUrlsMap[`${url}/`])
+    ) {
+      for (let existingUrlObj of contentMaps.localeUrlsMap[url] ||
+        contentMaps.localeUrlsMap[`${url}/`]) {
+        if (Comparator.urlHasLangCode(existingUrlObj.url, langCode)) {
+          return existingUrlObj.url;
         }
       }
+    }
 
-      // Needs the language code prepended to the URL
-      let prependedLangCodeUrl = `/${langCode}${url}`;
-      if (
-        contentMaps.localeUrlsMap[prependedLangCodeUrl] ||
-        (!prependedLangCodeUrl.endsWith("/") &&
-          contentMaps.localeUrlsMap[`${prependedLangCodeUrl}/`])
-      ) {
-        return prependedLangCodeUrl;
-      }
+    // Needs the language code prepended to the URL
+    let prependedLangCodeUrl = `/${langCode}${url}`;
+    if (
+      contentMaps.localeUrlsMap[prependedLangCodeUrl] ||
+      (!prependedLangCodeUrl.endsWith("/") && contentMaps.localeUrlsMap[`${prependedLangCodeUrl}/`])
+    ) {
+      return prependedLangCodeUrl;
+    }
 
-      if (
-        contentMaps.urlToInputPath[url] ||
-        (!url.endsWith("/") && contentMaps.urlToInputPath[`${url}/`])
-      ) {
-        // this is not a localized file (independent of a language code)
-        if (options.errorMode === "strict") {
-          throw new Error(
-            `Localized file for URL ${prependedLangCodeUrl} was not found in your project. A non-localized version does exist—are you sure you meant to use the \`${options.filters.url}\` filter for this? You can bypass this error using the \`errorMode\` option in the I18N plugin (current value: "${options.errorMode}").`
-          );
-        }
-      } else if (options.errorMode === "allow-fallback") {
-        // You’re linking to a localized file that doesn’t exist!
+    if (
+      contentMaps.urlToInputPath[url] ||
+      (!url.endsWith("/") && contentMaps.urlToInputPath[`${url}/`])
+    ) {
+      // this is not a localized file (independent of a language code)
+      if (options.errorMode === "strict") {
         throw new Error(
-          `Localized file for URL ${prependedLangCodeUrl} was not found in your project! You will need to add it if you want to link to it using the \`${options.filters.url}\` filter. You can bypass this error using the \`errorMode\` option in the I18N plugin (current value: "${options.errorMode}").`
+          `Localized file for URL ${prependedLangCodeUrl} was not found in your project. A non-localized version does exist—are you sure you meant to use the \`${options.filters.url}\` filter for this? You can bypass this error using the \`errorMode\` option in the I18N plugin (current value: "${options.errorMode}").`
         );
       }
-
-      return url;
+    } else if (options.errorMode === "allow-fallback") {
+      // You’re linking to a localized file that doesn’t exist!
+      throw new Error(
+        `Localized file for URL ${prependedLangCodeUrl} was not found in your project! You will need to add it if you want to link to it using the \`${options.filters.url}\` filter. You can bypass this error using the \`errorMode\` option in the I18N plugin (current value: "${options.errorMode}").`
+      );
     }
-  );
+
+    return url;
+  });
 
   // Refactor to use url
   // Find the links that are localized alternates to the inputPath argument
@@ -331,10 +317,7 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
         // // note that the permalink/slug may be different for the localized file!
         url,
         inputPath,
-        filePathStem: LangUtils.swapLanguageCode(
-          page.filePathStem,
-          languageCode
-        ),
+        filePathStem: LangUtils.swapLanguageCode(page.filePathStem, languageCode),
         // outputPath is omitted here, not necessary for GetCollectionItem.js if url is provided
         __locale_page_resolved: true,
       };
@@ -343,6 +326,6 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
   );
 }
 
-module.exports = EleventyPlugin;
-module.exports.Comparator = Comparator;
-module.exports.LangUtils = LangUtils;
+export { Comparator, LangUtils };
+
+export default EleventyPlugin;

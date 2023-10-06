@@ -1,6 +1,8 @@
-const chalk = require("kleur");
-const debug = require("debug")("Eleventy:Logger");
-const Readable = require("stream").Readable;
+import chalk from "kleur";
+import { Readable } from "stream";
+import debugUtil from "debug";
+
+const debug = debugUtil("Eleventy:Logger");
 
 /**
  * Logger implementation that logs to STDOUT.
@@ -96,4 +98,4 @@ class ConsoleLogger {
   }
 }
 
-module.exports = ConsoleLogger;
+export default ConsoleLogger;

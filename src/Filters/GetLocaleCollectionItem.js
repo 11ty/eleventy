@@ -1,4 +1,4 @@
-const getCollectionItem = require("./GetCollectionItem");
+import getCollectionItem from "./GetCollectionItem.js";
 
 // Work with I18n Plugin src/Plugins/I18nPlugin.js to retrieve root pages (not i18n pages)
 function resolveRootPage(config, pageOverride, languageCode) {
@@ -11,23 +11,13 @@ function resolveRootPage(config, pageOverride, languageCode) {
   return localeFilter.call(this, pageOverride, languageCode);
 }
 
-function getLocaleCollectionItem(
-  config,
-  collection,
-  pageOverride,
-  langCode,
-  indexModifier = 0
-) {
+function getLocaleCollectionItem(config, collection, pageOverride, langCode, indexModifier = 0) {
   if (!langCode) {
     // if page.lang exists (2.0.0-canary.14 and i18n plugin added, use page language)
     if (this.page.lang) {
       langCode = this.page.lang;
     } else {
-      return getCollectionItem(
-        collection,
-        pageOverride || this.page,
-        indexModifier
-      );
+      return getCollectionItem(collection, pageOverride || this.page, indexModifier);
     }
   }
 
@@ -39,12 +29,7 @@ function getLocaleCollectionItem(
 
   // Resolve modified root `page` back to locale `page`
   // This will return a non localized version of the page as a fallback
-  let modifiedLocalePage = resolveRootPage.call(
-    this,
-    config,
-    modifiedRootItem.data.page,
-    langCode
-  );
+  let modifiedLocalePage = resolveRootPage.call(this, config, modifiedRootItem.data.page, langCode);
   // already localized (or default language)
   if (!("__locale_page_resolved" in modifiedLocalePage)) {
     return modifiedRootItem;
@@ -59,4 +44,4 @@ function getLocaleCollectionItem(
   return getCollectionItem(all, modifiedLocalePage, 0);
 }
 
-module.exports = getLocaleCollectionItem;
+export default getLocaleCollectionItem;

@@ -1,4 +1,6 @@
-const EleventyBaseError = require("./EleventyBaseError");
+import EleventyBaseError from "./EleventyBaseError.js";
+import CustomEngine from "./Engines/Custom.js";
+
 class TemplateEngineManagerConfigError extends EleventyBaseError {}
 
 class TemplateEngineManager {
@@ -114,7 +116,6 @@ class TemplateEngineManager {
       this.getClassNameFromTemplateKey(name) === "Custom" &&
       instance.constructor.name !== "CustomEngine"
     ) {
-      const CustomEngine = this.getEngineClassByExtension();
       const overrideCustomEngine = new CustomEngine(name, dirs, this.eleventyConfig);
       // Keep track of the "default" engine 11ty would normally use
       // This allows the user to access the default engine in their override
@@ -129,4 +130,4 @@ class TemplateEngineManager {
   }
 }
 
-module.exports = TemplateEngineManager;
+export default TemplateEngineManager;

@@ -1,18 +1,17 @@
-const fs = require("fs");
-const chalk = require("kleur");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import fs from "fs";
+import chalk from "kleur";
+import { TemplatePath } from "@11ty/eleventy-utils";
+import debugUtil from "debug";
 
-const EleventyBaseError = require("./EleventyBaseError.js");
-const UserConfig = require("./UserConfig.js");
-const GlobalDependencyMap = require("./GlobalDependencyMap.js");
+import EleventyBaseError from "./EleventyBaseError.js";
+import UserConfig from "./UserConfig.js";
+import GlobalDependencyMap from "./GlobalDependencyMap.js";
+import merge from "./Util/Merge.js";
+import unique from "./Util/Unique.js";
+import eventBus from "./EventBus.js";
 
-const { EleventyRequire } = require("./Util/Require.js");
-const merge = require("./Util/Merge.js");
-const unique = require("./Util/Unique");
-const eventBus = require("./EventBus.js");
-
-const debug = require("debug")("Eleventy:TemplateConfig");
-const debugDev = require("debug")("Dev:Eleventy:TemplateConfig");
+const debug = debugUtil("Eleventy:TemplateConfig");
+const debugDev = debugUtil("Dev:Eleventy:TemplateConfig");
 
 /**
  * @module 11ty/eleventy/TemplateConfig
@@ -289,7 +288,7 @@ class TemplateConfig {
 
     if (path) {
       try {
-        localConfig = EleventyRequire(path);
+        localConfig = require(path);
         // debug( "localConfig require return value: %o", localConfig );
         if (typeof localConfig === "function") {
           localConfig = localConfig(this.userConfig);
@@ -426,4 +425,4 @@ class TemplateConfig {
   }
 }
 
-module.exports = TemplateConfig;
+export default TemplateConfig;

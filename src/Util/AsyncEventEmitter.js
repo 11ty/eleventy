@@ -1,4 +1,4 @@
-const EventEmitter = require("events");
+import EventEmitter from "events";
 
 /**
  * This class emits events asynchronously.
@@ -47,4 +47,4 @@ class AsyncEventEmitter extends EventEmitter {
   }
 }
 
-module.exports = AsyncEventEmitter;
+export default AsyncEventEmitter;

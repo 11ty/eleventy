@@ -1,9 +1,11 @@
-const moo = require("moo");
-const liquidLib = require("liquidjs");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import moo from "moo";
+import liquidLib from "liquidjs";
+import { TemplatePath } from "@11ty/eleventy-utils";
+// import debugUtil from "debug";
 
-const TemplateEngine = require("./TemplateEngine");
-// const debug = require("debug")("Eleventy:Liquid");
+import TemplateEngine from "./TemplateEngine.js";
+
+// const debug = debugUtil("Eleventy:Liquid");
 
 class Liquid extends TemplateEngine {
   static argumentLexerOptions = {
@@ -167,10 +169,7 @@ class Liquid extends TemplateEngine {
             argArray.push(b);
           }
 
-          let ret = yield shortcodeFn.call(
-            Liquid.normalizeScope(ctx),
-            ...argArray
-          );
+          let ret = yield shortcodeFn.call(Liquid.normalizeScope(ctx), ...argArray);
           return ret;
         },
       };
@@ -205,16 +204,9 @@ class Liquid extends TemplateEngine {
             argArray.push(b);
           }
 
-          const html = yield liquidEngine.renderer.renderTemplates(
-            this.templates,
-            ctx
-          );
+          const html = yield liquidEngine.renderer.renderTemplates(this.templates, ctx);
 
-          let ret = yield shortcodeFn.call(
-            Liquid.normalizeScope(ctx),
-            html,
-            ...argArray
-          );
+          let ret = yield shortcodeFn.call(Liquid.normalizeScope(ctx), html, ...argArray);
           // emitter.write(ret);
           return ret;
         },
@@ -270,4 +262,4 @@ class Liquid extends TemplateEngine {
   }
 }
 
-module.exports = Liquid;
+export default Liquid;

@@ -1,10 +1,12 @@
-const { set: lodashSet, get: lodashGet } = require("@11ty/lodash-custom");
+import lodash from "@11ty/lodash-custom";
+import debugUtil from "debug";
 
-const ComputedDataQueue = require("./ComputedDataQueue");
-const ComputedDataTemplateString = require("./ComputedDataTemplateString");
-const ComputedDataProxy = require("./ComputedDataProxy");
+import ComputedDataQueue from "./ComputedDataQueue.js";
+import ComputedDataTemplateString from "./ComputedDataTemplateString.js";
+import ComputedDataProxy from "./ComputedDataProxy.js";
 
-const debug = require("debug")("Eleventy:ComputedData");
+const { set: lodashSet, get: lodashGet } = lodash;
+const debug = debugUtil("Eleventy:ComputedData");
 
 class ComputedData {
   constructor(config) {
@@ -113,4 +115,4 @@ class ComputedData {
   }
 }
 
-module.exports = ComputedData;
+export default ComputedData;

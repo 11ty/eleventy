@@ -1,4 +1,4 @@
-const { isPlainObject } = require("@11ty/eleventy-utils");
+import { isPlainObject } from "@11ty/eleventy-utils";
 
 class TemplateBehavior {
   constructor(config) {
@@ -64,4 +64,4 @@ class TemplateBehavior {
     this.write = templatePermalink._writeToFileSystem;
   }
 }
-module.exports = TemplateBehavior;
+export default TemplateBehavior;

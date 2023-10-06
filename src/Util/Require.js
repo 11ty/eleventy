@@ -1,12 +1,6 @@
-const fs = require("fs");
-const { TemplatePath } = require("@11ty/eleventy-utils");
-const eventBus = require("../EventBus.js");
-
-function requireLocal(localPath) {
-  let absolutePath = TemplatePath.absolutePath(localPath);
-
-  return require(absolutePath);
-}
+import fs from "fs";
+import { TemplatePath } from "@11ty/eleventy-utils";
+import eventBus from "../EventBus.js";
 
 // Used for JSON imports, suffering from Node warning that import assertions experimental but also
 // throwing an error if you try to import() a JSON file without an import assertion.
@@ -113,6 +107,4 @@ async function dynamicImport(localPath, type) {
   return target;
 }
 
-module.exports.EleventyRequire = requireLocal;
-module.exports.EleventyLoadContent = loadContents;
-module.exports.EleventyImport = dynamicImport;
+export { loadContents as EleventyLoadContent, dynamicImport as EleventyImport };

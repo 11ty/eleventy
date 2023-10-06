@@ -1,6 +1,7 @@
-const multimatch = require("multimatch");
-const Sortable = require("./Util/Sortable");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import multimatch from "multimatch";
+import { TemplatePath } from "@11ty/eleventy-utils";
+
+import Sortable from "./Util/Sortable.js";
 
 class TemplateCollection extends Sortable {
   constructor() {
@@ -82,4 +83,4 @@ class TemplateCollection extends Sortable {
   }
 }
 
-module.exports = TemplateCollection;
+export default TemplateCollection;

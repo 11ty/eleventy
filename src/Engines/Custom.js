@@ -1,6 +1,6 @@
-const TemplateEngine = require("./TemplateEngine");
-const getJavaScriptData = require("../Util/GetJavaScriptData");
-const eventBus = require("../EventBus.js");
+import TemplateEngine from "./TemplateEngine.js";
+import getJavaScriptData from "../Util/GetJavaScriptData.js";
+import eventBus from "../EventBus.js";
 
 let lastModifiedFile = undefined;
 eventBus.on("eleventy.resourceModified", (path) => {
@@ -12,8 +12,7 @@ class CustomEngine extends TemplateEngine {
     super(name, dirs, config);
 
     this.entry = this.getExtensionMapEntry();
-    this.needsInit =
-      "init" in this.entry && typeof this.entry.init === "function";
+    this.needsInit = "init" in this.entry && typeof this.entry.init === "function";
 
     this._defaultEngine = undefined;
 
@@ -55,10 +54,7 @@ class CustomEngine extends TemplateEngine {
     // Handle aliases to `11ty.js` templates, avoid reading files in the alias, see #2279
     // Here, we are short circuiting fallback to defaultRenderer, does not account for compile
     // functions that call defaultRenderer explicitly
-    if (
-      this._defaultEngine &&
-      "needsToReadFileContents" in this._defaultEngine
-    ) {
+    if (this._defaultEngine && "needsToReadFileContents" in this._defaultEngine) {
       return this._defaultEngine.needsToReadFileContents();
     }
 
@@ -69,9 +65,7 @@ class CustomEngine extends TemplateEngine {
   async _runningInit() {
     if (this.needsInit) {
       if (!this._initing) {
-        this._initBench = this.benchmarks.aggregate.get(
-          `Engine (${this.name}) Init`
-        );
+        this._initBench = this.benchmarks.aggregate.get(`Engine (${this.name}) Init`);
         this._initBench.before();
         this._initing = this.entry.init.bind({
           config: this.config,
@@ -95,10 +89,7 @@ class CustomEngine extends TemplateEngine {
 
     if (!("getData" in this.entry)) {
       // Handle aliases to `11ty.js` templates, use upstream default engine data fetch, see #2279
-      if (
-        this._defaultEngine &&
-        "getExtraDataFromFile" in this._defaultEngine
-      ) {
+      if (this._defaultEngine && "getExtraDataFromFile" in this._defaultEngine) {
         return this._defaultEngine.getExtraDataFromFile(inputPath);
       }
 
@@ -135,9 +126,7 @@ class CustomEngine extends TemplateEngine {
       }
     }
 
-    let dataBench = this.benchmarks.aggregate.get(
-      `Engine (${this.name}) Get Data From File`
-    );
+    let dataBench = this.benchmarks.aggregate.get(`Engine (${this.name}) Get Data From File`);
     dataBench.before();
 
     let inst = await this.entry.getInstanceFromInputPath(inputPath);
@@ -177,11 +166,7 @@ class CustomEngine extends TemplateEngine {
     let defaultRenderer;
     if (this._defaultEngine) {
       defaultRenderer = async (data) => {
-        const render = await this._defaultEngine.compile(
-          str,
-          inputPath,
-          ...args
-        );
+        const render = await this._defaultEngine.compile(str, inputPath, ...args);
         return render(data);
       };
     }
@@ -231,11 +216,7 @@ class CustomEngine extends TemplateEngine {
   }
 
   isFileRelevantTo(inputPath, comparisonFile, includeLayouts) {
-    return this.config.uses.isFileRelevantTo(
-      inputPath,
-      comparisonFile,
-      includeLayouts
-    );
+    return this.config.uses.isFileRelevantTo(inputPath, comparisonFile, includeLayouts);
   }
 
   getCompileCacheKey(str, inputPath) {
@@ -243,10 +224,7 @@ class CustomEngine extends TemplateEngine {
     // but still return a key to cache this new render for next time
     let useCache = !this.isFileRelevantTo(inputPath, lastModifiedFile, false);
 
-    if (
-      this.entry.compileOptions &&
-      "getCacheKey" in this.entry.compileOptions
-    ) {
+    if (this.entry.compileOptions && "getCacheKey" in this.entry.compileOptions) {
       if (typeof this.entry.compileOptions.getCacheKey !== "function") {
         throw new Error(
           `\`compileOptions.getCacheKey\` must be a function in addExtension for the ${this.name} type`
@@ -285,10 +263,7 @@ class CustomEngine extends TemplateEngine {
   }
 
   static shouldSpiderJavaScriptDependencies(entry) {
-    if (
-      entry.compileOptions &&
-      "spiderJavaScriptDependencies" in entry.compileOptions
-    ) {
+    if (entry.compileOptions && "spiderJavaScriptDependencies" in entry.compileOptions) {
       return entry.compileOptions.spiderJavaScriptDependencies;
     }
 
@@ -296,4 +271,4 @@ class CustomEngine extends TemplateEngine {
   }
 }
 
-module.exports = CustomEngine;
+export default CustomEngine;

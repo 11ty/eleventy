@@ -1,6 +1,9 @@
-const ConsoleLogger = require("./Util/ConsoleLogger");
-const EleventyErrorUtil = require("./EleventyErrorUtil");
-const debug = require("debug")("Eleventy:EleventyErrorHandler");
+import debugUtil from "debug";
+
+import ConsoleLogger from "./Util/ConsoleLogger.js";
+import EleventyErrorUtil from "./EleventyErrorUtil.js";
+
+const debug = debugUtil("Eleventy:EleventyErrorHandler");
 
 class EleventyErrorHandler {
   constructor() {
@@ -111,4 +114,4 @@ class EleventyErrorHandler {
   }
 }
 
-module.exports = EleventyErrorHandler;
+export default EleventyErrorHandler;

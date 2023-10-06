@@ -1,10 +1,10 @@
-const NunjucksLib = require("nunjucks");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import NunjucksLib from "nunjucks";
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const TemplateEngine = require("./TemplateEngine");
-const EleventyErrorUtil = require("../EleventyErrorUtil");
-const EleventyShortcodeError = require("../EleventyShortcodeError");
-const EventBusUtil = require("../Util/EventBusUtil");
+import TemplateEngine from "./TemplateEngine.js";
+import EleventyErrorUtil from "../EleventyErrorUtil.js";
+import EleventyShortcodeError from "../EleventyShortcodeError.js";
+import EventBusUtil from "../Util/EventBusUtil.js";
 
 class Nunjucks extends TemplateEngine {
   constructor(name, dirs, config) {
@@ -420,4 +420,4 @@ class Nunjucks extends TemplateEngine {
   }
 }
 
-module.exports = Nunjucks;
+export default Nunjucks;

@@ -1,8 +1,8 @@
-const EleventyBaseError = require("../EleventyBaseError");
+import EleventyBaseError from "../EleventyBaseError.js";
 
 class JavaScriptInvalidDataFormatError extends EleventyBaseError {}
 
-module.exports = async function (inst, inputPath, key = "data", options = {}) {
+export default async function (inst, inputPath, key = "data", options = {}) {
   let { mixins, isObjectRequired } = Object.assign(
     {
       mixins: {},
@@ -27,4 +27,4 @@ module.exports = async function (inst, inputPath, key = "data", options = {}) {
     }
     return result;
   }
-};
+}

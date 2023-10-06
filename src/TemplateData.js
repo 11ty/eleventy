@@ -1,19 +1,21 @@
-const fs = require("fs");
-const path = require("path");
-const { set: lodashset, get: lodashget } = require("@11ty/lodash-custom");
-const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
+import fs from "fs";
+import path from "path";
+import lodash from "@11ty/lodash-custom";
+import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
+import debugUtil from "debug";
 
-const merge = require("./Util/Merge");
-const unique = require("./Util/Unique");
-const TemplateGlob = require("./TemplateGlob");
-const EleventyExtensionMap = require("./EleventyExtensionMap");
-const EleventyBaseError = require("./EleventyBaseError");
-const TemplateDataInitialGlobalData = require("./TemplateDataInitialGlobalData");
-const { EleventyImport, EleventyLoadContent } = require("./Util/Require");
+import merge from "./Util/Merge.js";
+import unique from "./Util/Unique.js";
+import TemplateGlob from "./TemplateGlob.js";
+import EleventyExtensionMap from "./EleventyExtensionMap.js";
+import EleventyBaseError from "./EleventyBaseError.js";
+import TemplateDataInitialGlobalData from "./TemplateDataInitialGlobalData.js";
+import { EleventyImport, EleventyLoadContent } from "./Util/Require.js";
 
-const debugWarn = require("debug")("Eleventy:Warnings");
-const debug = require("debug")("Eleventy:TemplateData");
-const debugDev = require("debug")("Dev:Eleventy:TemplateData");
+const { set: lodashSet, get: lodashGet } = lodash;
+const debugWarn = debugUtil("Eleventy:Warnings");
+const debug = debugUtil("Eleventy:TemplateData");
+const debugDev = debugUtil("Dev:Eleventy:TemplateData");
 
 class FSExistsCache {
   constructor() {
@@ -328,13 +330,13 @@ class TemplateData {
           `merging global data from ${files[j]} with an already existing global data file (${dataFileConflicts[objectPathTargetString]}). Overriding existing keys.`
         );
 
-        let oldData = lodashget(globalData, objectPathTarget);
+        let oldData = lodashGet(globalData, objectPathTarget);
         data = TemplateData.mergeDeep(this.config, oldData, data);
       }
 
       dataFileConflicts[objectPathTargetString] = files[j];
       debug(`Found global data file ${files[j]} and adding as: ${objectPathTarget}`);
-      lodashset(globalData, objectPathTarget, data);
+      lodashSet(globalData, objectPathTarget, data);
     }
 
     return globalData;
@@ -514,7 +516,7 @@ class TemplateData {
         type = "esm";
       }
 
-      // We always need to use `import()`, as `require()` isn’t available in ESM.
+      // We always need to use `import()`, as `require` isn’t available in ESM.
       let returnValue = await EleventyImport(localPath, type);
 
       // TODO special exception for Global data `permalink.js`
@@ -666,4 +668,4 @@ class TemplateData {
   }
 }
 
-module.exports = TemplateData;
+export default TemplateData;

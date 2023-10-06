@@ -1,18 +1,17 @@
-const fs = require("fs");
+import fs from "fs";
+import { TemplatePath } from "@11ty/eleventy-utils";
+import debugUtil from "debug";
 
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import EleventyExtensionMap from "./EleventyExtensionMap.js";
+import TemplateData from "./TemplateData.js";
+import TemplateGlob from "./TemplateGlob.js";
+import TemplatePassthroughManager from "./TemplatePassthroughManager.js";
+import EleventyBaseError from "./EleventyBaseError.js";
+import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 
-const EleventyExtensionMap = require("./EleventyExtensionMap");
-const TemplateData = require("./TemplateData");
-const TemplateGlob = require("./TemplateGlob");
-const TemplatePassthroughManager = require("./TemplatePassthroughManager");
-const EleventyBaseError = require("./EleventyBaseError");
-const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
+const debug = debugUtil("Eleventy:EleventyFiles");
 
 class EleventyFilesError extends EleventyBaseError {}
-
-const debug = require("debug")("Eleventy:EleventyFiles");
-// const debugDev = require("debug")("Dev:Eleventy:EleventyFiles");
 
 class EleventyFiles {
   constructor(input, outputDir, formats, eleventyConfig) {
@@ -460,4 +459,4 @@ class EleventyFiles {
   }
 }
 
-module.exports = EleventyFiles;
+export default EleventyFiles;

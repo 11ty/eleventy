@@ -1,8 +1,9 @@
-const fastglob = require("fast-glob");
-const micromatch = require("micromatch");
+import fastglob from "fast-glob";
+import micromatch from "micromatch";
+import { TemplatePath } from "@11ty/eleventy-utils";
+import debugUtil from "debug";
 
-const { TemplatePath } = require("@11ty/eleventy-utils");
-const debug = require("debug")("Eleventy:FastGlobManager");
+const debug = debugUtil("Eleventy:FastGlobManager");
 
 class FileSystemSearch {
   constructor() {
@@ -99,4 +100,4 @@ class FileSystemSearch {
   }
 }
 
-module.exports = FileSystemSearch;
+export default FileSystemSearch;

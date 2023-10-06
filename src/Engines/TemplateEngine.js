@@ -1,11 +1,5 @@
-const fs = require("fs");
-const { TemplatePath } = require("@11ty/eleventy-utils");
-
-const EleventyExtensionMap = require("../EleventyExtensionMap");
-const EleventyBaseError = require("../EleventyBaseError");
-const EventBusUtil = require("../Util/EventBusUtil");
-
-const debug = require("debug")("Eleventy:TemplateEngine");
+import EleventyExtensionMap from "../EleventyExtensionMap.js";
+import EleventyBaseError from "../EleventyBaseError.js";
 
 class TemplateEngineConfigError extends EleventyBaseError {}
 
@@ -174,4 +168,4 @@ class TemplateEngine {
   }
 }
 
-module.exports = TemplateEngine;
+export default TemplateEngine;
