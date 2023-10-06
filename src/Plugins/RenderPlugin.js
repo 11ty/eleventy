@@ -37,7 +37,11 @@ async function compile(content, templateLang, { templateConfig, extensionMap } =
   tr.setEngineOverride(templateLang);
 
   // TODO tie this to the class, not the extension
-  if (tr.engine.name === "11ty.js" || tr.engine.name === "11ty.cjs") {
+  if (
+    tr.engine.name === "11ty.js" ||
+    tr.engine.name === "11ty.cjs" ||
+    tr.engine.name === "11ty.mjs"
+  ) {
     throw new Error(
       "11ty.js is not yet supported as a template engine for `renderTemplate`. Use `renderFile` instead!"
     );

@@ -65,7 +65,12 @@ class TemplateConfig {
         this.projectConfigPaths = [projectConfigPath];
       }
     } else {
-      this.projectConfigPaths = [".eleventy.js", "eleventy.config.js", "eleventy.config.cjs"];
+      this.projectConfigPaths = [
+        ".eleventy.js",
+        "eleventy.config.js",
+        "eleventy.config.mjs",
+        "eleventy.config.cjs",
+      ];
     }
 
     if (customRootConfig) {
