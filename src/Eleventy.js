@@ -114,6 +114,12 @@ class Eleventy {
      * @default null
      */
     this.isRunInitialBuild = true;
+
+    /**
+     * @member {Boolean} - Has the async initialization for config run yet?
+     * @default null
+     */
+    this._hasConfigInitialized = false;
   }
 
   async initializeConfig() {
@@ -204,6 +210,8 @@ class Eleventy {
 
     /** @member {Object} - tbd. */
     this.fileSystemSearch = new FileSystemSearch();
+
+    this._hasConfigInitialized = true;
   }
 
   getNewTimestamp() {
@@ -389,9 +397,11 @@ class Eleventy {
    * @returns {} - tbd.
    */
   async init(options = {}) {
-    await this.initializeConfig();
-
     options = Object.assign({ viaConfigReset: false }, options);
+
+    if (!this._hasConfigInitialized || options.viaConfigReset) {
+      await this.initializeConfig();
+    }
 
     await this.config.events.emit("eleventy.config", this.eleventyConfig);
 

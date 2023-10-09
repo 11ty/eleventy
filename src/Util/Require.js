@@ -61,7 +61,7 @@ async function dynamicImportAbsolutePath(absolutePath, type) {
     urlPath = absolutePath;
   }
 
-  // TODO don’t forget about this option for CJS:
+  // Don’t forget about this option for CJS:
   // import { createRequire } from 'module';
   // const require = createRequire(import.meta.url);
 

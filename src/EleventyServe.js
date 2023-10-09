@@ -8,6 +8,7 @@ import PathPrefixer from "./Util/PathPrefixer.js";
 import merge from "./Util/Merge.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import { getModulePackageJson } from "./Util/ImportJsonSync.js";
+import { EleventyImport } from "./Util/Require.js";
 
 const debug = debugUtil("Eleventy:EleventyServe");
 
@@ -76,7 +77,7 @@ class EleventyServe {
     this.outputDir = outputDir;
   }
 
-  getServerModule(name) {
+  async getServerModule(name) {
     try {
       if (!name || name === DEFAULT_SERVER_OPTIONS.module) {
         return EleventyDevServer;
@@ -91,7 +92,7 @@ class EleventyServe {
         throw new Error("Invalid node_modules name for Eleventy server instance, received:" + name);
       }
 
-      let module = require(serverPath);
+      let module = await EleventyImport(serverPath);
 
       if (!("getServer" in module)) {
         throw new Error(
@@ -146,11 +147,19 @@ class EleventyServe {
   }
 
   get server() {
+    if (!this._server) {
+      throw new Error("Missing server instance. Did you call .getServerInstance?");
+    }
+
+    return this._server;
+  }
+
+  async getServerInstance() {
     if (this._server) {
       return this._server;
     }
 
-    let serverModule = this.getServerModule(this.options.module);
+    let serverModule = await this.getServerModule(this.options.module);
 
     // Static method `getServer` was already checked in `getServerModule`
     this._server = serverModule.getServer("eleventy-server", this.outputDir, this.options);
@@ -158,10 +167,6 @@ class EleventyServe {
     this.setAliases(this._aliases);
 
     return this._server;
-  }
-
-  set server(val) {
-    this._server = val;
   }
 
   getSetupCallback() {
@@ -196,15 +201,16 @@ class EleventyServe {
     this._commandLinePort = port;
 
     await this.init();
+    await this.getServerInstance();
 
     this.server.serve(port || this.options.port);
   }
 
   async close() {
     if (this._server) {
-      await this.server.close();
+      await this._server.close();
 
-      this.server = undefined;
+      this._server = undefined;
     }
   }
 
