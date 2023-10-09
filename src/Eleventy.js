@@ -399,7 +399,7 @@ class Eleventy {
   async init(options = {}) {
     options = Object.assign({ viaConfigReset: false }, options);
 
-    if (!this._hasConfigInitialized || options.viaConfigReset) {
+    if (!this._hasConfigInitialized) {
       await this.initializeConfig();
     }
 

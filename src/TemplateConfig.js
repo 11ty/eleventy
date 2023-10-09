@@ -127,7 +127,7 @@ class TemplateConfig {
   async reset() {
     debugDev("Resetting configuration: TemplateConfig and UserConfig.");
     this.userConfig.reset();
-    await this.initializeRootConfig();
+    // await this.initializeRootConfig();
     await this.forceReloadConfig();
     this.usesGraph.reset();
 

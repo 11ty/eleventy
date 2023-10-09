@@ -1,7 +1,12 @@
 import fs from "fs";
 import path from "path";
 import { TemplatePath } from "@11ty/eleventy-utils";
+import { createRequire } from "module";
+
 import eventBus from "../EventBus.js";
+
+// important to clear the require.cache in CJS projects
+const require = createRequire(import.meta.url);
 
 // Used for JSON imports, suffering from Node warning that import assertions experimental but also
 // throwing an error if you try to import() a JSON file without an import assertion.
@@ -31,6 +36,11 @@ eventBus.on("eleventy.importCacheReset", (fileQueue) => {
   for (let filePath of fileQueue) {
     let absolutePath = TemplatePath.absolutePath(filePath);
     lastModifiedPaths.set(absolutePath, Date.now());
+
+    // ESM Eleventy when using `import()` on a CJS project file still adds to require.cache
+    if (absolutePath in require?.cache) {
+      delete require.cache[absolutePath];
+    }
   }
 });
 
@@ -45,12 +55,6 @@ async function dynamicImportAbsolutePath(absolutePath, type) {
   try {
     let u = new URL(`file:${absolutePath}`);
 
-    // CJS Eleventy when using `import()` on a CJS file still adds to require.cache
-    // TODO remove this when ESM is used in Eleventy core.
-    if (absolutePath in require?.cache) {
-      delete require.cache[absolutePath];
-    }
-
     // Bust the import cache if this is the last modified file
     if (lastModifiedPaths.has(absolutePath)) {
       u.searchParams.set("_cache_bust", lastModifiedPaths.get(absolutePath));
@@ -60,10 +64,6 @@ async function dynamicImportAbsolutePath(absolutePath, type) {
   } catch (e) {
     urlPath = absolutePath;
   }
-
-  // Don’t forget about this option for CJS:
-  // import { createRequire } from 'module';
-  // const require = createRequire(import.meta.url);
 
   let target = await import(urlPath);
 
