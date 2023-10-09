@@ -40,26 +40,14 @@ const debug = debugUtil("Eleventy");
  */
 class Eleventy {
   constructor(input, output, options = {}, eleventyConfig = null) {
-    if (!eleventyConfig) {
-      this.eleventyConfig = new TemplateConfig(null, options.configPath);
-    } else {
-      this.eleventyConfig = eleventyConfig;
-      if (options.configPath) {
-        this.eleventyConfig.setProjectConfigPath(options.configPath);
-      }
-    }
+    /** @member {String} - Holds the path to the input directory. */
+    this.rawInput = input;
 
-    this.eleventyConfig.setLogger(this.logger);
+    /** @member {String} - Holds the path to the output directory. */
+    this.rawOutput = output;
 
-    /**
-     * @member {String} - The top level directory the site pretends to reside in
-     * @default "/"
-     */
-    this.pathPrefix = options.pathPrefix || "/";
-
-    if (this.pathPrefix || this.pathPrefix === "") {
-      this.eleventyConfig.setPathPrefix(this.pathPrefix);
-    }
+    /** @member {TemplateConfig} - Override the config instance (for centralized config re-use) */
+    this.eleventyConfig = eleventyConfig;
 
     /**
      * @member {Object} - Options object passed to the Eleventy constructor
@@ -67,47 +55,96 @@ class Eleventy {
      */
     this.options = options;
 
-    /* Programmatic API config */
-    if (options.config && typeof options.config === "function") {
-      // TODO use return object here?
-      options.config(this.eleventyConfig.userConfig);
-    }
+    /**
+     * @member {String} - The top level directory the site pretends to reside in
+     * @default "/"
+     */
+    this.pathPrefix = this.options.pathPrefix || "/";
 
     /**
      * @member {String} - The path to Eleventy's config file.
      * @default null
      */
-    this.configPath = options.configPath;
+    this.configPath = this.options.configPath;
 
     /**
      * @member {String} - Called via CLI (`cli`) or Programmatically (`script`)
      * @default "script"
      */
-    this.source = options.source || "script";
-
-    /**
-     * @member {Boolean} - Running in serverless mode
-     * @default false
-     */
-    if ("isServerless" in options) {
-      this.isServerless = !!options.isServerless;
-    } else {
-      this.isServerless = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
-    }
+    this.source = this.options.source || "script";
 
     /**
      * @member {String} - One of build, serve, or watch
      * @default "build"
      */
-    this.runMode = options.runMode || "build";
+    this.runMode = this.options.runMode || "build";
+
+    /**
+     * @member {Boolean} - Is Eleventy running in dry mode?
+     * @default false
+     */
+    this.isDryRun = options.dryRun ?? false;
+
+    /**
+     * @member {Boolean} - Does the init() method still need to be run (or hasn’t finished yet)
+     * @default true
+     */
+    this.needsInit = true;
+
+    /**
+     * @member {Array<String>} - Subset of template types.
+     * @default null
+     */
+    this.formatsOverride = null;
+
+    /**
+     * @member {Boolean} - Is this an incremental build? (only operates on a subset of input files)
+     * @default null
+     */
+    this.isIncremental = false;
+
+    /**
+     * @member {String} - If an incremental build, this is the file we’re operating on.
+     * @default null
+     */
+    this.programmaticApiIncrementalFile = undefined;
+
+    /**
+     * @member {Boolean} - Should we process files on first run? (The --ignore-initial feature)
+     * @default null
+     */
+    this.isRunInitialBuild = true;
+  }
+
+  async initializeConfig() {
+    if (!this.eleventyConfig) {
+      this.eleventyConfig = new TemplateConfig(null, this.options.configPath);
+    } else if (this.options.configPath) {
+      await this.eleventyConfig.setProjectConfigPath(this.options.configPath);
+    }
+
+    this.eleventyConfig.setLogger(this.logger);
+
+    if (this.pathPrefix || this.pathPrefix === "") {
+      this.eleventyConfig.setPathPrefix(this.pathPrefix);
+    }
+
+    /* Programmatic API config */
+    if (this.options.config && typeof this.options.config === "function") {
+      // TODO use return object here?
+      await this.options.config(this.eleventyConfig.userConfig);
+    }
 
     /**
      * @member {Object} - Initialize Eleventy environment variables
      * @default null
      */
-    // both this.isServerless and this.runMode need to be set before this
+    // this.runMode need to be set before this
     this.env = this.getEnvironmentVariableValues();
     this.initializeEnvironmentVariables(this.env);
+
+    // Async initialization of configuration
+    await this.eleventyConfig.init();
 
     /**
      * @member {Object} - Initialize Eleventy’s configuration, including the user config file
@@ -129,9 +166,9 @@ class Eleventy {
      * @member {Boolean} - Is Eleventy running in verbose mode?
      * @default true
      */
-    if (options.quietMode === true || options.quietMode === false) {
+    if (this.options.quietMode === true || this.options.quietMode === false) {
       // Set via --quiet
-      this.setIsVerbose(!options.quietMode);
+      this.setIsVerbose(!this.options.quietMode);
       this.verboseModeSetViaCommandLineParam = true;
     } else {
       // Fall back to configuration
@@ -139,22 +176,10 @@ class Eleventy {
     }
 
     /**
-     * @member {Boolean} - Is Eleventy running in dry mode?
-     * @default false
-     */
-    this.isDryRun = false;
-
-    /**
-     * @member {Boolean} - Does the init() method still need to be run (or hasn’t finished yet)
-     * @default true
-     */
-    this.needsInit = true;
-
-    /**
      * @member {Boolean} - Explicit input directory (usually used when input is a single file/serverless)
      */
-    if (options.inputDir) {
-      this.setInputDir(options.inputDir);
+    if (this.options.inputDir) {
+      this.setInputDir(this.options.inputDir);
     }
 
     if (performance) {
@@ -164,22 +189,10 @@ class Eleventy {
     /** @member {Number} - The timestamp of Eleventy start. */
     this.start = this.getNewTimestamp();
 
-    /**
-     * @member {Array<String>} - Subset of template types.
-     * @default null
-     */
-    this.formatsOverride = null;
-
     /** @member {Object} - tbd. */
     this.eleventyServe = new EleventyServe();
     this.eleventyServe.config = this.config;
     this.eleventyServe.eleventyConfig = this.eleventyConfig;
-
-    /** @member {String} - Holds the path to the input directory. */
-    this.rawInput = input;
-
-    /** @member {String} - Holds the path to the output directory. */
-    this.rawOutput = output;
 
     /** @member {Object} - tbd. */
     this.watchManager = new EleventyWatch();
@@ -191,10 +204,6 @@ class Eleventy {
 
     /** @member {Object} - tbd. */
     this.fileSystemSearch = new FileSystemSearch();
-
-    this.isIncremental = false;
-    this.programmaticApiIncrementalFile = undefined;
-    this.isRunInitialBuild = true;
   }
 
   getNewTimestamp() {
@@ -269,7 +278,8 @@ class Eleventy {
   setPathPrefix(pathPrefix) {
     if (pathPrefix || pathPrefix === "") {
       this.eleventyConfig.setPathPrefix(pathPrefix);
-      this.config = this.eleventyConfig.getConfig();
+      // TODO reset config
+      // this.config = this.eleventyConfig.getConfig();
     }
   }
 
@@ -379,6 +389,8 @@ class Eleventy {
    * @returns {} - tbd.
    */
   async init(options = {}) {
+    await this.initializeConfig();
+
     options = Object.assign({ viaConfigReset: false }, options);
 
     await this.config.events.emit("eleventy.config", this.eleventyConfig);
@@ -493,7 +505,7 @@ Verbose Output: ${this.verboseMode}`);
     }
 
     values.source = this.source;
-    values.isServerless = this.isServerless;
+    values.isServerless = false; // backwards compatibility
 
     return values;
   }
@@ -509,12 +521,6 @@ Verbose Output: ${this.verboseMode}`);
 
     process.env.ELEVENTY_SOURCE = env.source;
     process.env.ELEVENTY_RUN_MODE = env.runMode;
-
-    // Careful here, setting to false will cast to string "false" which is truthy.
-    if (env.isServerless) {
-      process.env.ELEVENTY_SERVERLESS = true;
-      debug("Setting process.env.ELEVENTY_SERVERLESS: %o", true);
-    }
   }
 
   /* Setter for verbose mode */
@@ -591,7 +597,7 @@ Verbose Output: ${this.verboseMode}`);
     this.verboseMode = isVerbose;
 
     // Set verbose mode in config file
-    this.eleventyConfig.verbose = this.verboseMode;
+    this.eleventyConfig.verbose = isVerbose;
   }
 
   /**
@@ -717,11 +723,11 @@ Arguments:
    *
    * @method
    */
-  resetConfig() {
+  async resetConfig() {
     this.env = this.getEnvironmentVariableValues();
     this.initializeEnvironmentVariables(this.env);
 
-    this.eleventyConfig.reset();
+    await this.eleventyConfig.reset();
 
     this.config = this.eleventyConfig.getConfig();
     this.eleventyServe.config = this.config;
@@ -818,7 +824,7 @@ Arguments:
 
     // reset and reload global configuration
     if (isResetConfig) {
-      this.resetConfig();
+      await this.resetConfig();
     }
 
     await this.restart();

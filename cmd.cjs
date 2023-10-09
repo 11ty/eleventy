@@ -68,69 +68,69 @@ const debug = require("debug")("Eleventy:cmd");
         configPath: argv.config,
         pathPrefix: argv.pathprefix,
         runMode: argv.serve ? "serve" : argv.watch ? "watch" : "build",
+        dryRun: argv.dryrun,
       });
 
       // reuse ErrorHandler instance in Eleventy
       errorHandler = elev.errorHandler;
 
-      if (argv.to === "json" || argv.to === "ndjson") {
-        // override logging output
-        elev.setIsVerbose(false);
-      }
-
-      elev.setDryRun(argv.dryrun);
-      elev.setIgnoreInitial(argv["ignore-initial"]);
-      elev.setIncrementalBuild(argv.incremental);
-      elev.setFormats(argv.formats);
-
       // careful, we can’t use async/await here to error properly
       // with old node versions in `please-upgrade-node` above.
       elev
-        .init()
-        .then(function () {
-          try {
-            if (argv.serve) {
-              let shouldStartServer = true;
-              elev
-                .watch()
-                .catch((e) => {
-                  // Build failed but error message already displayed.
-                  shouldStartServer = false;
-                  // A build error occurred and we aren’t going to --serve
-                  errorHandler.fatal(e, "Eleventy CLI Error");
-                })
-                .then(function () {
-                  if (shouldStartServer) {
-                    elev.serve(argv.port);
-                  }
-                });
-            } else if (argv.watch) {
-              elev.watch().catch((e) => {
-                // A build error occurred and we aren’t going to --watch
+      .init()
+      .then(function () {
+        if (argv.to === "json" || argv.to === "ndjson") {
+          // override logging output
+          elev.setIsVerbose(false);
+        }
+
+        elev.setIgnoreInitial(argv["ignore-initial"]);
+        elev.setIncrementalBuild(argv.incremental);
+        elev.setFormats(argv.formats);
+
+        try {
+          if (argv.serve) {
+            let shouldStartServer = true;
+            elev
+              .watch()
+              .catch((e) => {
+                // Build failed but error message already displayed.
+                shouldStartServer = false;
+                // A build error occurred and we aren’t going to --serve
                 errorHandler.fatal(e, "Eleventy CLI Error");
+              })
+              .then(function () {
+                if (shouldStartServer) {
+                  elev.serve(argv.port);
+                }
               });
+          } else if (argv.watch) {
+            elev.watch().catch((e) => {
+              // A build error occurred and we aren’t going to --watch
+              errorHandler.fatal(e, "Eleventy CLI Error");
+            });
+          } else {
+            if (argv.to === "json") {
+              elev.toJSON().then(function (result) {
+                console.log(JSON.stringify(result, null, 2));
+              });
+            } else if (argv.to === "ndjson") {
+              elev.toNDJSON().then(function (stream) {
+                stream.pipe(process.stdout);
+              });
+            } else if (!argv.to || argv.to === "fs") {
+              elev.write();
             } else {
-              if (argv.to === "json") {
-                elev.toJSON().then(function (result) {
-                  console.log(JSON.stringify(result, null, 2));
-                });
-              } else if (argv.to === "ndjson") {
-                elev.toNDJSON().then(function (stream) {
-                  stream.pipe(process.stdout);
-                });
-              } else if (!argv.to || argv.to === "fs") {
-                elev.write();
-              } else {
-                throw new EleventyCommandCheckError(
-                  `Invalid --to value: ${argv.to}. Supported values: \`fs\` (default), \`json\`, and \`ndjson\`.`
-                );
-              }
+              throw new EleventyCommandCheckError(
+                `Invalid --to value: ${argv.to}. Supported values: \`fs\` (default), \`json\`, and \`ndjson\`.`
+              );
             }
-          } catch (e) {
-            errorHandler.fatal(e, "Eleventy CLI Error");
           }
-        })
-        .catch(errorHandler.fatal.bind(errorHandler));
+        } catch (e) {
+          errorHandler.fatal(e, "Eleventy CLI Error");
+        }
+      })
+      .catch(errorHandler.fatal.bind(errorHandler));
     }
   } catch (e) {
     let errorHandler = new EleventyErrorHandler();

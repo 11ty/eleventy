@@ -1,6 +1,6 @@
 import EleventyBaseError from "./EleventyBaseError.js";
 import CustomEngine from "./Engines/Custom.js";
-import { EleventyImport } from "./Util/Require.js";
+import { EleventyImportFromEleventy } from "./Util/Require.js";
 
 class TemplateEngineManagerConfigError extends EleventyBaseError {}
 
@@ -78,15 +78,15 @@ class TemplateEngineManager {
   async getEngineClassByExtension(extension) {
     // We include these as raw strings (and not more readable variables) so they’re parsed by a bundler.
     if (extension === "md") {
-      return EleventyImport("./Engines/Markdown");
+      return EleventyImportFromEleventy("./src/Engines/Markdown.js");
     } else if (extension === "html") {
-      return EleventyImport("./Engines/Html");
+      return EleventyImportFromEleventy("./src/Engines/Html.js");
     } else if (extension === "njk") {
-      return EleventyImport("./Engines/Nunjucks");
+      return EleventyImportFromEleventy("./src/Engines/Nunjucks.js");
     } else if (extension === "liquid") {
-      return EleventyImport("./Engines/Liquid");
+      return EleventyImportFromEleventy("./src/Engines/Liquid.js");
     } else if (extension === "11ty.js") {
-      return EleventyImport("./Engines/JavaScript");
+      return EleventyImportFromEleventy("./src/Engines/JavaScript.js");
     } else {
       return CustomEngine;
     }

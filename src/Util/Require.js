@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import eventBus from "../EventBus.js";
 
@@ -33,10 +34,8 @@ eventBus.on("eleventy.importCacheReset", (fileQueue) => {
   }
 });
 
-async function dynamicImport(localPath, type) {
-  let absolutePath = TemplatePath.absolutePath(localPath);
-
-  if (localPath.endsWith(".json") || type === "json") {
+async function dynamicImportAbsolutePath(absolutePath, type) {
+  if (absolutePath.endsWith(".json") || type === "json") {
     // https://v8.dev/features/import-assertions#dynamic-import() is still experimental in Node 20
     let rawInput = await loadContents(absolutePath);
     return JSON.parse(rawInput);
@@ -61,6 +60,10 @@ async function dynamicImport(localPath, type) {
   } catch (e) {
     urlPath = absolutePath;
   }
+
+  // TODO don’t forget about this option for CJS:
+  // import { createRequire } from 'module';
+  // const require = createRequire(import.meta.url);
 
   let target = await import(urlPath);
 
@@ -107,4 +110,20 @@ async function dynamicImport(localPath, type) {
   return target;
 }
 
-export { loadContents as EleventyLoadContent, dynamicImport as EleventyImport };
+async function dynamicImportFromEleventyPackage(file) {
+  // points to files relative to the top level Eleventy directory
+  let filePath = path.resolve(import.meta.url.slice("file://".length), "../../../", file);
+  return dynamicImportAbsolutePath(filePath);
+}
+
+async function dynamicImport(localPath, type) {
+  let absolutePath = TemplatePath.absolutePath(localPath);
+  // async
+  return dynamicImportAbsolutePath(absolutePath, type);
+}
+
+export {
+  loadContents as EleventyLoadContent,
+  dynamicImport as EleventyImport,
+  dynamicImportFromEleventyPackage as EleventyImportFromEleventy,
+};

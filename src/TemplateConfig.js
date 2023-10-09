@@ -3,6 +3,7 @@ import chalk from "kleur";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
+import { EleventyImport, EleventyImportFromEleventy } from "./Util/Require.js";
 import EleventyBaseError from "./EleventyBaseError.js";
 import UserConfig from "./UserConfig.js";
 import GlobalDependencyMap from "./GlobalDependencyMap.js";
@@ -82,7 +83,6 @@ class TemplateConfig {
       this.customRootConfig = null;
     }
 
-    this.initializeRootConfig();
     this.hasConfigMerged = false;
   }
 
@@ -124,11 +124,11 @@ class TemplateConfig {
   /**
    * Resets the configuration.
    */
-  reset() {
+  async reset() {
     debugDev("Resetting configuration: TemplateConfig and UserConfig.");
     this.userConfig.reset();
-    this.initializeRootConfig();
-    this.forceReloadConfig();
+    await this.initializeRootConfig();
+    await this.forceReloadConfig();
     this.usesGraph.reset();
 
     // Clear the compile cache
@@ -145,11 +145,20 @@ class TemplateConfig {
   }
 
   /**
+   * Async-friendly init method
+   */
+  async init() {
+    await this.initializeRootConfig();
+    this.config = await this.mergeConfig();
+    this.hasConfigMerged = true;
+  }
+
+  /**
    * Force a reload of the configuration object.
    */
-  forceReloadConfig() {
+  async forceReloadConfig() {
     this.hasConfigMerged = false;
-    this.getConfig();
+    await this.init();
   }
 
   /**
@@ -159,9 +168,7 @@ class TemplateConfig {
    */
   getConfig() {
     if (!this.hasConfigMerged) {
-      debugDev("Merging via getConfig (first time)");
-      this.config = this.mergeConfig();
-      this.hasConfigMerged = true;
+      throw new Error("Invalid call to .getConfig(). Needs an .init() first.");
     }
     return this.config;
   }
@@ -171,7 +178,7 @@ class TemplateConfig {
    *
    * @param {String} path - The new config path.
    */
-  setProjectConfigPath(path) {
+  async setProjectConfigPath(path) {
     if (path !== undefined) {
       this.projectConfigPaths = [path];
     } else {
@@ -181,7 +188,7 @@ class TemplateConfig {
     if (this.hasConfigMerged) {
       // merge it again
       debugDev("Merging in getConfig again after setting the local project config path.");
-      this.forceReloadConfig();
+      await this.forceReloadConfig();
     }
   }
 
@@ -208,7 +215,7 @@ class TemplateConfig {
     }
 
     if (!this.hasConfigMerged) {
-      this.getConfig();
+      throw new Error("Config has not yet merged. Needs `init()`.");
     }
 
     return this.config.pathPrefix;
@@ -217,12 +224,15 @@ class TemplateConfig {
   /**
    * Bootstraps the config object.
    */
-  initializeRootConfig() {
-    this.rootConfig = this.customRootConfig || require("./defaultConfig.js");
+  async initializeRootConfig() {
+    this.rootConfig =
+      this.customRootConfig || (await EleventyImportFromEleventy("./src/defaultConfig.js"));
+
     if (typeof this.rootConfig === "function") {
       this.rootConfig = this.rootConfig.call(this, this.userConfig);
       // debug( "rootConfig is a function, after calling, this.userConfig is %o", this.userConfig );
     }
+
     debug("rootConfig %o", this.rootConfig);
   }
 
@@ -280,7 +290,7 @@ class TemplateConfig {
    *
    * @returns {{}} merged - The merged config file object.
    */
-  requireLocalConfigFile() {
+  async requireLocalConfigFile() {
     let localConfig = {};
     let path = this.projectConfigPaths.filter((path) => path).find((path) => fs.existsSync(path));
 
@@ -288,17 +298,11 @@ class TemplateConfig {
 
     if (path) {
       try {
-        localConfig = require(path);
+        localConfig = await EleventyImport(path);
         // debug( "localConfig require return value: %o", localConfig );
         if (typeof localConfig === "function") {
-          localConfig = localConfig(this.userConfig);
+          localConfig = await localConfig(this.userConfig);
           // debug( "localConfig is a function, after calling, this.userConfig is %o", this.userConfig );
-
-          if (typeof localConfig === "object" && typeof localConfig.then === "function") {
-            throw new EleventyConfigError(
-              `Error in your Eleventy config file '${path}': Returning a promise is not yet supported.`
-            );
-          }
         }
 
         // Still using removed `filters`? this was renamed to transforms
@@ -334,8 +338,8 @@ class TemplateConfig {
    * @param {String} projectConfigPath - Path to project config.
    * @returns {{}} merged - The merged config file.
    */
-  mergeConfig() {
-    let localConfig = this.requireLocalConfigFile();
+  async mergeConfig() {
+    let localConfig = await this.requireLocalConfigFile();
 
     // Template Formats:
     // 1. Root Config (usually defaultConfig.js)

@@ -243,7 +243,8 @@ class TemplateContent {
   }
 
   async getInputContent() {
-    if (!this.engine.needsToReadFileContents()) {
+    let tr = await this.getTemplateRender();
+    if (!tr.engine.needsToReadFileContents()) {
       return "";
     }
 
