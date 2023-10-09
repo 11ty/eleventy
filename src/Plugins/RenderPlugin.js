@@ -33,7 +33,8 @@ async function compile(content, templateLang, { templateConfig, extensionMap } =
 
   let tr = new TemplateRender(templateLang, inputDir, templateConfig);
   tr.extensionMap = extensionMap;
-  tr.setEngineOverride(templateLang);
+  await tr.init();
+  await tr.setEngineOverride(templateLang);
 
   // TODO tie this to the class, not the extension
   if (
@@ -71,8 +72,9 @@ async function compileFile(inputPath, { templateConfig, extensionMap, config } =
   let cfg = templateConfig.getConfig();
   let tr = new TemplateRender(inputPath, cfg.dir.input, templateConfig);
   tr.extensionMap = extensionMap;
+  await tr.init();
   if (templateLang) {
-    tr.setEngineOverride(templateLang);
+    await tr.setEngineOverride(templateLang);
   }
 
   if (!tr.engine.needsToReadFileContents()) {

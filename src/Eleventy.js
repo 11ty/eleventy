@@ -1,6 +1,5 @@
 import { TemplatePath } from "@11ty/eleventy-utils";
 import { performance } from "perf_hooks";
-import path from "path";
 import debugUtil from "debug";
 
 import TemplateData from "./TemplateData.js";
@@ -966,7 +965,7 @@ Arguments:
     this.watchTargets.setProjectUsingEsm(this.isEsm);
 
     // Template files .11ty.js
-    let templateFiles = this.eleventyFiles.getWatchPathCache();
+    let templateFiles = await this.eleventyFiles.getWatchPathCache();
     await this.watchTargets.addDependencies(templateFiles);
 
     // Config file dependencies
@@ -1137,7 +1136,7 @@ Arguments:
    * @returns {Promise<{}>}
    */
   async write() {
-    return this.executeBuild();
+    return this.executeBuild("fs");
   }
 
   /**

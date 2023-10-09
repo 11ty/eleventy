@@ -1,5 +1,6 @@
 import EleventyBaseError from "./EleventyBaseError.js";
 import CustomEngine from "./Engines/Custom.js";
+import { EleventyImport } from "./Util/Require.js";
 
 class TemplateEngineManagerConfigError extends EleventyBaseError {}
 
@@ -74,24 +75,24 @@ class TemplateEngineManager {
     return !!this.getClassNameFromTemplateKey(name);
   }
 
-  getEngineClassByExtension(extension) {
+  async getEngineClassByExtension(extension) {
     // We include these as raw strings (and not more readable variables) so they’re parsed by a bundler.
     if (extension === "md") {
-      return require("./Engines/Markdown");
+      return EleventyImport("./Engines/Markdown");
     } else if (extension === "html") {
-      return require("./Engines/Html");
+      return EleventyImport("./Engines/Html");
     } else if (extension === "njk") {
-      return require("./Engines/Nunjucks");
+      return EleventyImport("./Engines/Nunjucks");
     } else if (extension === "liquid") {
-      return require("./Engines/Liquid");
+      return EleventyImport("./Engines/Liquid");
     } else if (extension === "11ty.js") {
-      return require("./Engines/JavaScript");
+      return EleventyImport("./Engines/JavaScript");
     } else {
-      return require("./Engines/Custom");
+      return CustomEngine;
     }
   }
 
-  getEngine(name, dirs, extensionMap) {
+  async getEngine(name, dirs, extensionMap) {
     if (!this.hasEngine(name)) {
       throw new Error(`Template Engine ${name} does not exist in getEngine (dirs: ${dirs})`);
     }
@@ -102,8 +103,7 @@ class TemplateEngineManager {
       return this.engineCache[name];
     }
 
-    let cls = this.getEngineClassByExtension(name);
-
+    let cls = await this.getEngineClassByExtension(name);
     let instance = new cls(name, dirs, this.eleventyConfig);
     instance.extensionMap = extensionMap;
     instance.engineManager = this;

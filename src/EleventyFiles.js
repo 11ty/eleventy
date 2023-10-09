@@ -329,17 +329,17 @@ class EleventyFiles {
     return this.templateGlobs;
   }
 
-  getWatchPathCache() {
+  async getWatchPathCache() {
     // Issue #1325: make sure passthrough copy files are not included here
     if (!this.pathCache) {
       throw new Error("Watching requires `.getFiles()` to be called first in EleventyFiles");
     }
 
     // Filter out the passthrough copy paths.
-    return this.pathCache.filter((path) => {
+    return this.pathCache.filter(async (path) => {
       return (
         this.extensionMap.isFullTemplateFilePath(path) &&
-        this.extensionMap.shouldSpiderJavaScriptDependencies(path)
+        (await this.extensionMap.shouldSpiderJavaScriptDependencies(path))
       );
     });
   }

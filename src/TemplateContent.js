@@ -118,8 +118,16 @@ class TemplateContent {
 
   get templateRender() {
     if (!this._templateRender) {
+      throw new Error("TemplateRender has not yet initialized.");
+    }
+    return this._templateRender;
+  }
+
+  async getTemplateRender() {
+    if (!this._templateRender) {
       this._templateRender = new TemplateRender(this.inputPath, this.inputDir, this.eleventyConfig);
       this._templateRender.extensionMap = this.extensionMap;
+      await this._templateRender.init();
     }
 
     return this._templateRender;
@@ -298,16 +306,6 @@ class TemplateContent {
     return frontMatterData[this.config.keys.engineOverride];
   }
 
-  async setupTemplateRender(engineOverride, bypassMarkdown) {
-    if (engineOverride !== undefined) {
-      debugDev("%o overriding template engine to use %o", this.inputPath, engineOverride);
-
-      this.templateRender.setEngineOverride(engineOverride, bypassMarkdown);
-    } else {
-      this.templateRender.setUseMarkdown(!bypassMarkdown);
-    }
-  }
-
   _getCompileCache(str) {
     // Caches used to be bifurcated based on engine name, now they’re based on inputPath
     let inputPathMap = TemplateContent._compileCache.get(this.inputPath);
@@ -322,7 +320,14 @@ class TemplateContent {
   }
 
   async compile(str, bypassMarkdown, engineOverride) {
-    await this.setupTemplateRender(engineOverride, bypassMarkdown);
+    let tr = await this.getTemplateRender();
+
+    if (engineOverride !== undefined) {
+      debugDev("%o overriding template engine to use %o", this.inputPath, engineOverride);
+      await tr.setEngineOverride(engineOverride, bypassMarkdown);
+    } else {
+      tr.setUseMarkdown(!bypassMarkdown);
+    }
 
     if (bypassMarkdown && !this.engine.needsCompilation(str)) {
       return async function () {
@@ -330,7 +335,7 @@ class TemplateContent {
       };
     }
 
-    debugDev("%o compile() using engine: %o", this.inputPath, this.templateRender.engineName);
+    debugDev("%o compile() using engine: %o", this.inputPath, tr.engineName);
 
     try {
       let res;
@@ -361,7 +366,7 @@ class TemplateContent {
       let inputPathBenchmark = this.bench.get(`> Compile > ${this.inputPath}`);
       templateBenchmark.before();
       inputPathBenchmark.before();
-      let fn = await this.templateRender.getCompiledTemplate(str);
+      let fn = await tr.getCompiledTemplate(str);
       inputPathBenchmark.after();
       templateBenchmark.after();
       debugDev("%o getCompiledTemplate function created", this.inputPath);
@@ -386,7 +391,8 @@ class TemplateContent {
     let engine = this.engine;
 
     // Don’t use markdown as the engine to parse for symbols
-    let preprocessorEngine = this.templateRender.getPreprocessorEngine(); // TODO pass in engineOverride here
+    // TODO pass in engineOverride here
+    let preprocessorEngine = this.templateRender.getPreprocessorEngine();
     if (preprocessorEngine && engine.getName() !== preprocessorEngine) {
       let replacementEngine = this.templateRender.getEngineByName(preprocessorEngine);
       if (replacementEngine) {
@@ -528,7 +534,8 @@ class TemplateContent {
       if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
         throw e;
       } else {
-        let engine = this.templateRender.getReadableEnginesList();
+        let tr = await this.getTemplateRender();
+        let engine = tr.getReadableEnginesList();
         debug(`Having trouble rendering ${engine} template ${this.inputPath}: %O`, str);
         throw new TemplateContentRenderError(
           `Having trouble rendering ${engine} template ${this.inputPath}`,

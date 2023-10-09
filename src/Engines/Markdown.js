@@ -56,7 +56,11 @@ class Markdown extends TemplateEngine {
     if (preTemplateEngine) {
       let engine;
       if (typeof preTemplateEngine === "string") {
-        engine = this.engineManager.getEngine(preTemplateEngine, this.dirs, this.extensionMap);
+        engine = await this.engineManager.getEngine(
+          preTemplateEngine,
+          this.dirs,
+          this.extensionMap
+        );
       } else {
         engine = preTemplateEngine;
       }

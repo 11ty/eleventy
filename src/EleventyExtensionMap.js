@@ -112,14 +112,14 @@ class EleventyExtensionMap {
     return sorted;
   }
 
-  shouldSpiderJavaScriptDependencies(path) {
+  async shouldSpiderJavaScriptDependencies(path) {
     let extensions = this.getValidExtensionsForPath(path);
     for (let extension of extensions) {
       if (extension in this._spiderJsDepsCache) {
         return this._spiderJsDepsCache[extension];
       }
 
-      let cls = this.engineManager.getEngineClassByExtension(extension);
+      let cls = await this.engineManager.getEngineClassByExtension(extension);
       if (cls) {
         let entry = this.getCustomExtensionEntry(extension);
         let shouldSpider = cls.shouldSpiderJavaScriptDependencies(entry);
