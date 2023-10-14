@@ -1,5 +1,5 @@
-const test = require("ava");
-const getCollectionItemIndex = require("../src/Filters/GetCollectionItemIndex");
+import test from "ava";
+import getCollectionItemIndex from "../src/Filters/GetCollectionItemIndex.js";
 
 test("getCollectionItemIndex", (t) => {
   let first = {

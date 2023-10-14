@@ -1,18 +1,11 @@
-const test = require("ava");
-const TemplateMap = require("../../../src/TemplateMap");
-const TemplateConfig = require("../../../src/TemplateConfig");
+import test from "ava";
 
-const getNewTemplateForTests = require("../../_getNewTemplateForTests");
+import TemplateMap from "../../../src/TemplateMap.js";
+import TemplateConfig from "../../../src/TemplateConfig.js";
+import getNewTemplateForTests from "../../_getNewTemplateForTests.js";
 
 function getNewTemplate(filename, input, output, eleventyConfig) {
-  return getNewTemplateForTests(
-    filename,
-    input,
-    output,
-    null,
-    null,
-    eleventyConfig
-  );
+  return getNewTemplateForTests(filename, input, output, null, null, eleventyConfig);
 }
 
 test("Get ordered list of templates", async (t) => {
@@ -21,7 +14,7 @@ test("Get ordered list of templates", async (t) => {
 
   // These two templates are add-order-dependent
   await tm.add(
-    getNewTemplate(
+    await getNewTemplate(
       "./test/_issues/975/post.md",
       "./test/_issues/975/",
       "./test/_issues/975/_site",
@@ -30,7 +23,7 @@ test("Get ordered list of templates", async (t) => {
   );
 
   await tm.add(
-    getNewTemplate(
+    await getNewTemplate(
       "./test/_issues/975/another-post.md",
       "./test/_issues/975/",
       "./test/_issues/975/_site",
@@ -40,7 +33,7 @@ test("Get ordered list of templates", async (t) => {
 
   // This template should always be last
   await tm.add(
-    getNewTemplate(
+    await getNewTemplate(
       "./test/_issues/975/index.md",
       "./test/_issues/975/",
       "./test/_issues/975/_site",
@@ -62,7 +55,7 @@ test("Get ordered list of templates (reverse add)", async (t) => {
 
   // This template should always be last
   await tm.add(
-    getNewTemplate(
+    await getNewTemplate(
       "./test/_issues/975/index.md",
       "./test/_issues/975/",
       "./test/_issues/975/_site",
@@ -72,7 +65,7 @@ test("Get ordered list of templates (reverse add)", async (t) => {
 
   // These two templates are add-order-dependent
   await tm.add(
-    getNewTemplate(
+    await getNewTemplate(
       "./test/_issues/975/another-post.md",
       "./test/_issues/975/",
       "./test/_issues/975/_site",
@@ -81,7 +74,7 @@ test("Get ordered list of templates (reverse add)", async (t) => {
   );
 
   await tm.add(
-    getNewTemplate(
+    await getNewTemplate(
       "./test/_issues/975/post.md",
       "./test/_issues/975/",
       "./test/_issues/975/_site",

@@ -129,6 +129,7 @@ class Eleventy {
       await this.eleventyConfig.setProjectConfigPath(this.options.configPath);
     }
 
+    this.eleventyConfig.setProjectUsingEsm(this.isEsm);
     this.eleventyConfig.setLogger(this.logger);
 
     if (this.pathPrefix || this.pathPrefix === "") {
@@ -197,7 +198,6 @@ class Eleventy {
 
     /** @member {Object} - tbd. */
     this.eleventyServe = new EleventyServe();
-    this.eleventyServe.config = this.config;
     this.eleventyServe.eleventyConfig = this.eleventyConfig;
 
     /** @member {Object} - tbd. */

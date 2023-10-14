@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+
+// This file intentionally uses older code conventions to be as friendly
+// as possible with error messaging to folks on older runtimes.
+
 const pkg = require("./package.json");
 require("please-upgrade-node")(pkg, {
   message: function (requiredVersion) {

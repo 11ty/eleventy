@@ -1,5 +1,5 @@
-const test = require("ava");
-const DirContains = require("../src/Util/DirContains.js");
+import test from "ava";
+import DirContains from "../src/Util/DirContains.js";
 
 test("Compare to current dir", (t) => {
   t.true(DirContains(".", "."));

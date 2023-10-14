@@ -1,5 +1,5 @@
-const test = require("ava");
-const UserConfig = require("../src/UserConfig");
+import test from "ava";
+import UserConfig from "../src/UserConfig.js";
 
 test("Template Formats", (t) => {
   let userCfg = new UserConfig();

@@ -1,7 +1,8 @@
-const test = require("ava");
-const TemplateRender = require("../src/TemplateRender");
-const TemplateConfig = require("../src/TemplateConfig");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
+import test from "ava";
+
+import TemplateRender from "../src/TemplateRender.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
 function getNewTemplateRender(name, inputDir, extendedConfig) {
   let eleventyConfig = new TemplateConfig();
@@ -114,13 +115,13 @@ test("JS Render with a Class, async render", async (t) => {
 });
 
 test("JS Render using Vue", async (t) => {
-  let fn = await getNewTemplateRender("./test/stubs/vue.11ty.js").getCompiledTemplate();
+  let fn = await getNewTemplateRender("./test/stubs/vue.11ty.cjs").getCompiledTemplate();
   t.is(await fn({ name: "Zach" }), "<p>Hello Zach, this is a Vue template.</p>");
   t.is(await fn({ name: "Bill" }), "<p>Hello Bill, this is a Vue template.</p>");
 });
 
 test("JS Render using Vue (with a layout)", async (t) => {
-  let fn = await getNewTemplateRender("./test/stubs/vue-layout.11ty.js").getCompiledTemplate();
+  let fn = await getNewTemplateRender("./test/stubs/vue-layout.11ty.cjs").getCompiledTemplate();
   t.is(
     await fn({ name: "Zach" }),
     `<!doctype html>

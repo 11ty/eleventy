@@ -1,12 +1,12 @@
-const test = require("ava");
-const RenderPlugin = require("../src/Plugins/RenderPlugin");
+import test from "ava";
+
+import RenderPlugin from "../src/Plugins/RenderPlugin.js";
+import Eleventy from "../src/Eleventy.js";
+import normalizeNewLines from "./Util/normalizeNewLines.js";
+
 const RenderManager = RenderPlugin.RenderManager;
 const RenderPluginFile = RenderPlugin.File;
 const RenderPluginString = RenderPlugin.String;
-
-const Eleventy = require("../src/Eleventy");
-const normalizeNewLines = require("./Util/normalizeNewLines");
-const removeNewLines = require("./Util/removeNewLines");
 
 async function getTestOutput(input, configCallback = function () {}) {
   let elev = new Eleventy(input, "./_site/", {

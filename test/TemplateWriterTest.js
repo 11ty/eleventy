@@ -1,15 +1,15 @@
-const test = require("ava");
-const fs = require("fs");
-const { rimrafSync } = require("rimraf");
-const fastglob = require("fast-glob");
-const path = require("path");
-const EleventyFiles = require("../src/EleventyFiles");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
-const TemplateWriter = require("../src/TemplateWriter");
-const TemplateConfig = require("../src/TemplateConfig");
-const normalizeNewLines = require("./Util/normalizeNewLines");
+import test from "ava";
+import fs from "fs";
+import { rimrafSync } from "rimraf";
+import fastglob from "fast-glob";
+import path from "path";
 
-const getRenderedTmpls = require("./_getRenderedTemplates");
+import EleventyFiles from "../src/EleventyFiles.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import TemplateWriter from "../src/TemplateWriter.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import normalizeNewLines from "./Util/normalizeNewLines.js";
+import getRenderedTmpls from "./_getRenderedTemplates.js";
 
 // TODO make sure if output is a subdir of input dir that they don’t conflict.
 test("Output is a subdir of input", async (t) => {

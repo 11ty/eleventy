@@ -1,5 +1,5 @@
-const test = require("ava");
-const ComputedDataProxy = require("../src/ComputedDataProxy");
+import test from "ava";
+import ComputedDataProxy from "../src/ComputedDataProxy.js";
 
 test("Get vars used by function", async (t) => {
   let cd = new ComputedDataProxy(["key1"]);
@@ -182,10 +182,7 @@ test("findVarsUsed with a computed key (target a string not used in the output)"
     },
   };
 
-  t.deepEqual(await cdg.findVarsUsed(data.computed.key, data), [
-    "key2",
-    "key1",
-  ]);
+  t.deepEqual(await cdg.findVarsUsed(data.computed.key, data), ["key2", "key1"]);
 });
 
 test("findVarsUsed with a deep computed reference that doesn’t exist in parent data", async (t) => {
@@ -205,9 +202,7 @@ test("findVarsUsed with a deep computed reference that doesn’t exist in parent
     },
   };
 
-  t.deepEqual(await cdg.findVarsUsed(data.computed.deep.deep2, data), [
-    "deep.deep1",
-  ]);
+  t.deepEqual(await cdg.findVarsUsed(data.computed.deep.deep2, data), ["deep.deep1"]);
   t.deepEqual(await cdg.findVarsUsed(data.computed.deep.deep1, data), ["key2"]);
 });
 

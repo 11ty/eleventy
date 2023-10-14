@@ -1,5 +1,5 @@
-const test = require("ava");
-const normalizeNewLines = require("./Util/normalizeNewLines");
+import test from "ava";
+import normalizeNewLines from "./Util/normalizeNewLines.js";
 
 test("normalizeNewLines", (t) => {
   t.is(normalizeNewLines("\n"), "\n");

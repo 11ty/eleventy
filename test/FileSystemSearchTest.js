@@ -1,5 +1,5 @@
-const test = require("ava");
-const FileSystemSearch = require("../src/FileSystemSearch");
+import test from "ava";
+import FileSystemSearch from "../src/FileSystemSearch.js";
 
 test("Base", async (t) => {
   let fs = new FileSystemSearch();

@@ -1,5 +1,4 @@
 import EleventyBaseError from "./EleventyBaseError.js";
-import CustomEngine from "./Engines/Custom.js";
 import { EleventyImportFromEleventy } from "./Util/Require.js";
 
 class TemplateEngineManagerConfigError extends EleventyBaseError {}
@@ -88,8 +87,15 @@ class TemplateEngineManager {
     } else if (extension === "11ty.js") {
       return EleventyImportFromEleventy("./src/Engines/JavaScript.js");
     } else {
-      return CustomEngine;
+      return this.getCustomEngineClass();
     }
+  }
+
+  async getCustomEngineClass() {
+    if (!this._CustomEngine) {
+      this._CustomEngine = await EleventyImportFromEleventy("./src/Engines/Custom.js");
+    }
+    return this._CustomEngine;
   }
 
   async getEngine(name, dirs, extensionMap) {
@@ -116,6 +122,7 @@ class TemplateEngineManager {
       this.getClassNameFromTemplateKey(name) === "Custom" &&
       instance.constructor.name !== "CustomEngine"
     ) {
+      const CustomEngine = await this.getCustomEngineClass();
       const overrideCustomEngine = new CustomEngine(name, dirs, this.eleventyConfig);
       // Keep track of the "default" engine 11ty would normally use
       // This allows the user to access the default engine in their override

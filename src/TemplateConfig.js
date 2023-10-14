@@ -84,6 +84,7 @@ class TemplateConfig {
     }
 
     this.hasConfigMerged = false;
+    this.isEsm = false;
   }
 
   /* Setter for Logger */
@@ -121,6 +122,14 @@ class TemplateConfig {
     this._inputDir = inputDir;
   }
 
+  setProjectUsingEsm(isEsmProject) {
+    this.isEsm = !!isEsmProject;
+  }
+
+  getIsProjectUsingEsm() {
+    return this.isEsm;
+  }
+
   /**
    * Resets the configuration.
    */
@@ -147,8 +156,12 @@ class TemplateConfig {
   /**
    * Async-friendly init method
    */
-  async init() {
+  async init(overrides) {
     await this.initializeRootConfig();
+    if (overrides) {
+      this.appendToRootConfig(overrides);
+    }
+
     this.config = await this.mergeConfig();
     this.hasConfigMerged = true;
   }
@@ -298,7 +311,7 @@ class TemplateConfig {
 
     if (path) {
       try {
-        localConfig = await EleventyImport(path);
+        localConfig = await EleventyImport(path, this.isEsm ? "esm" : "cjs");
         // debug( "localConfig require return value: %o", localConfig );
         if (typeof localConfig === "function") {
           localConfig = await localConfig(this.userConfig);

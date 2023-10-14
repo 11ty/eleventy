@@ -1,8 +1,7 @@
-const test = require("ava");
-const I18nPlugin = require("../src/Plugins/I18nPlugin");
-const { Comparator, LangUtils } = I18nPlugin;
-const Eleventy = require("../src/Eleventy");
-const normalizeNewLines = require("./Util/normalizeNewLines");
+import test from "ava";
+import { Comparator, LangUtils, default as I18nPlugin } from "../src/Plugins/I18nPlugin.js";
+import Eleventy from "../src/Eleventy.js";
+import normalizeNewLines from "./Util/normalizeNewLines.js";
 
 test("Comparator.isLangCode", (t) => {
   t.is(Comparator.isLangCode(null), false);
@@ -72,14 +71,14 @@ test("contentMap Event from Eleventy", async (t) => {
         t.is(Object.keys(maps).length, 2);
         t.deepEqual(maps.urlToInputPath, {
           "/en/": "./test/stubs-i18n/en/index.liquid",
-          "/en-us/": "./test/stubs-i18n/en-us/index.11ty.js",
+          "/en-us/": "./test/stubs-i18n/en-us/index.11ty.cjs",
           "/es/": "./test/stubs-i18n/es/index.njk",
           "/non-lang-file/": "./test/stubs-i18n/non-lang-file.njk",
         });
 
         t.deepEqual(maps.inputPathToUrl, {
           "./test/stubs-i18n/en/index.liquid": ["/en/"],
-          "./test/stubs-i18n/en-us/index.11ty.js": ["/en-us/"],
+          "./test/stubs-i18n/en-us/index.11ty.cjs": ["/en-us/"],
           "./test/stubs-i18n/es/index.njk": ["/es/"],
           "./test/stubs-i18n/non-lang-file.njk": ["/non-lang-file/"],
         });
@@ -104,6 +103,7 @@ test("errorMode default", async (t) => {
       });
     },
   });
+  await elev.initializeConfig();
   elev.setIsVerbose(false);
   elev.disableLogger();
 
@@ -158,7 +158,7 @@ en`
   );
 
   t.is(
-    getContentFor(results, "/en-us/index.11ty.js"),
+    getContentFor(results, "/en-us/index.11ty.cjs"),
     `/en-us/
 /en-us/
 /en-us/

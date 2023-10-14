@@ -1,10 +1,9 @@
-const test = require("ava");
+import test from "ava";
+import { marked } from "marked";
 
-const TemplateConfig = require("../src/TemplateConfig");
-const TemplateData = require("../src/TemplateData");
-const TemplateContent = require("../src/TemplateContent");
-
-const getNewTemplate = require("./_getNewTemplateForTests");
+import TemplateConfig from "../src/TemplateConfig.js";
+import TemplateData from "../src/TemplateData.js";
+import getNewTemplate from "./_getNewTemplateForTests.js";
 
 test("Using getData: false without getInstanceFromInputPath works ok", async (t) => {
   let eleventyConfig = new TemplateConfig();
@@ -24,7 +23,7 @@ test("Using getData: false without getInstanceFromInputPath works ok", async (t)
   });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/custom-extension.txt",
     "./test/stubs/",
     "dist",
@@ -55,7 +54,7 @@ test("Using getData: true without getInstanceFromInputPath should error", async 
   });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/custom-extension.txt",
     "./test/stubs/",
     "dist",
@@ -87,7 +86,7 @@ test("Using getData: [] without getInstanceFromInputPath should error", async (t
   });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/custom-extension.txt",
     "./test/stubs/",
     "dist",
@@ -128,7 +127,7 @@ test("Using getData: true and getInstanceFromInputPath to get data from instance
   });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/custom-extension.txt",
     "./test/stubs/",
     "dist",
@@ -169,7 +168,7 @@ test("Using eleventyDataKey to get a different key data from instance", async (t
   });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/custom-extension.txt",
     "./test/stubs/",
     "dist",
@@ -193,7 +192,7 @@ test("Uses default renderer (no compile function) when you override an existing 
   });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/default.liquid",
     "./test/stubs/",
     "dist",
@@ -226,7 +225,7 @@ test("Access to default renderer when you override an existing extension", async
   });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/default.liquid",
     "./test/stubs/",
     "dist",
@@ -260,7 +259,7 @@ test("Overridden liquid gets used from a markdown template", async (t) => {
   });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/default.md",
     "./test/stubs/",
     "dist",
@@ -274,8 +273,6 @@ test("Overridden liquid gets used from a markdown template", async (t) => {
 });
 
 test("Use marked for markdown", async (t) => {
-  const { marked } = require("marked");
-
   t.plan(2);
 
   let eleventyConfig = new TemplateConfig();
@@ -296,7 +293,7 @@ test("Use marked for markdown", async (t) => {
   });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/default-no-liquid.md",
     "./test/stubs/",
     "dist",
@@ -328,7 +325,7 @@ test("Use defaultRenderer for markdown", async (t) => {
   });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/default.md",
     "./test/stubs/",
     "dist",
@@ -359,7 +356,7 @@ test("Front matter in a custom extension", async (t) => {
   });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/default-frontmatter.txt",
     "./test/stubs/",
     "dist",
@@ -393,7 +390,7 @@ test("Access to default renderer when you override an existing extension (async 
   });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/default.liquid",
     "./test/stubs/",
     "dist",
@@ -426,7 +423,7 @@ test("Access to default renderer when you override an existing extension (async 
   });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/default.liquid",
     "./test/stubs/",
     "dist",
@@ -454,7 +451,7 @@ test("Return undefined in compile to ignore #2267", async (t) => {
   });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/custom-extension.txt",
     "./test/stubs/",
     "dist",
@@ -482,7 +479,7 @@ test("Return undefined in compile to ignore (async compile function) #2350", asy
   });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/custom-extension.txt",
     "./test/stubs/",
     "dist",

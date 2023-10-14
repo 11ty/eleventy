@@ -1,12 +1,14 @@
-const test = require("ava");
-const md = require("markdown-it");
-const mdEmoji = require("markdown-it-emoji");
-const eleventySyntaxHighlightPlugin = require("@11ty/eleventy-plugin-syntaxhighlight");
+import test from "ava";
+import md from "markdown-it";
+import mdEmoji from "markdown-it-emoji";
+import eleventySyntaxHighlightPlugin from "@11ty/eleventy-plugin-syntaxhighlight";
 
-const TemplateRender = require("../src/TemplateRender");
-const TemplateConfig = require("../src/TemplateConfig");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
-const normalizeNewLines = require("./Util/normalizeNewLines");
+import TemplateRender from "../src/TemplateRender.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import Liquid from "../src/Engines/Liquid.js";
+import Nunjucks from "../src/Engines/Nunjucks.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import normalizeNewLines from "./Util/normalizeNewLines.js";
 
 function getNewTemplateRender(name, inputDir, eleventyConfig) {
   if (!eleventyConfig) {
@@ -243,9 +245,8 @@ var key = "value";
 test("Markdown Render: use Markdown inside of a Liquid shortcode (Issue #536)", async (t) => {
   let tr = getNewTemplateRender("md");
   let eleventyConfig = new TemplateConfig();
-  let cls = require("../src/Engines/Liquid");
 
-  let liquidEngine = new cls("liquid", tr.getDirs(), eleventyConfig);
+  let liquidEngine = new Liquid("liquid", tr.getDirs(), eleventyConfig);
   liquidEngine.addShortcode("testShortcode", function () {
     return "## My Other Title";
   });
@@ -268,8 +269,7 @@ test("Markdown Render: use Markdown inside of a Liquid shortcode (Issue #536)", 
 test("Markdown Render: use Markdown inside of a Nunjucks shortcode (Issue #536)", async (t) => {
   let tr = getNewTemplateRender("md");
   let eleventyConfig = new TemplateConfig();
-  let cls = require("../src/Engines/Nunjucks");
-  let nunjucksEngine = new cls("njk", tr.getDirs(), eleventyConfig);
+  let nunjucksEngine = new Nunjucks("njk", tr.getDirs(), eleventyConfig);
   nunjucksEngine.addShortcode("testShortcode", function () {
     return "## My Other Title";
   });
@@ -292,8 +292,7 @@ test("Markdown Render: use Markdown inside of a Nunjucks shortcode (Issue #536)"
 test("Markdown Render: use Markdown inside of a Liquid paired shortcode (Issue #536)", async (t) => {
   let tr = getNewTemplateRender("md");
   let eleventyConfig = new TemplateConfig();
-  let cls = require("../src/Engines/Liquid");
-  let liquidEngine = new cls("liquid", tr.getIncludesDir(), eleventyConfig);
+  let liquidEngine = new Liquid("liquid", tr.getIncludesDir(), eleventyConfig);
   liquidEngine.addPairedShortcode("testShortcode", function (content) {
     return content;
   });
@@ -317,8 +316,7 @@ test("Markdown Render: use Markdown inside of a Nunjucks paired shortcode (Issue
   let tr = getNewTemplateRender("md");
   let eleventyConfig = new TemplateConfig();
 
-  let cls = require("../src/Engines/Nunjucks");
-  let nunjucksEngine = new cls("njk", tr.getDirs(), eleventyConfig);
+  let nunjucksEngine = new Nunjucks("njk", tr.getDirs(), eleventyConfig);
   nunjucksEngine.addPairedShortcode("testShortcode", function (content) {
     return content;
   });

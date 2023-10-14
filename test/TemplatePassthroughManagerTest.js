@@ -1,9 +1,10 @@
-const test = require("ava");
-const fs = require("fs");
-const TemplatePassthroughManager = require("../src/TemplatePassthroughManager");
-const TemplateConfig = require("../src/TemplateConfig");
-const FileSystemSearch = require("../src/FileSystemSearch");
-const EleventyFiles = require("../src/EleventyFiles");
+import test from "ava";
+import fs from "fs";
+
+import TemplatePassthroughManager from "../src/TemplatePassthroughManager.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import FileSystemSearch from "../src/FileSystemSearch.js";
+import EleventyFiles from "../src/EleventyFiles.js";
 
 test("Get paths from Config", async (t) => {
   let eleventyConfig = new TemplateConfig();

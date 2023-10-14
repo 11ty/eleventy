@@ -1,9 +1,10 @@
-const test = require("ava");
-const fastglob = require("fast-glob");
-const EleventyFiles = require("../src/EleventyFiles");
-const TemplateConfig = require("../src/TemplateConfig");
-const FileSystemSearch = require("../src/FileSystemSearch");
-const TemplatePassthroughManager = require("../src/TemplatePassthroughManager");
+import test from "ava";
+import fastglob from "fast-glob";
+
+import EleventyFiles from "../src/EleventyFiles.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import FileSystemSearch from "../src/FileSystemSearch.js";
+import TemplatePassthroughManager from "../src/TemplatePassthroughManager.js";
 
 test("Dirs paths", async (t) => {
   let eleventyConfig = new TemplateConfig({
@@ -14,6 +15,7 @@ test("Dirs paths", async (t) => {
       output: "dist",
     },
   });
+  await eleventyConfig.init();
 
   let evf = new EleventyFiles("src", "dist", [], eleventyConfig);
 
@@ -32,6 +34,7 @@ test("Dirs paths (relative)", async (t) => {
       output: "dist",
     },
   });
+  await eleventyConfig.init();
 
   let evf = new EleventyFiles("src", "dist", [], eleventyConfig);
 
@@ -43,6 +46,7 @@ test("Dirs paths (relative)", async (t) => {
 
 test("getFiles", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
   let evf = new EleventyFiles(
     "./test/stubs/writeTest",
     "./test/stubs/_writeTestSite",
@@ -57,6 +61,7 @@ test("getFiles", async (t) => {
 
 test("getFiles (without 11ty.js)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
   let evf = new EleventyFiles(
     "./test/stubs/writeTestJS",
     "./test/stubs/_writeTestJSSite",
@@ -71,6 +76,7 @@ test("getFiles (without 11ty.js)", async (t) => {
 
 test("getFiles (with 11ty.js)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
   let evf = new EleventyFiles(
     "./test/stubs/writeTestJS",
     "./test/stubs/_writeTestJSSite",
@@ -85,6 +91,7 @@ test("getFiles (with 11ty.js)", async (t) => {
 
 test("getFiles (with js, treated as passthrough copy)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
   let evf = new EleventyFiles(
     "./test/stubs/writeTestJS",
     "./test/stubs/_writeTestJSSite",
@@ -106,6 +113,7 @@ test("getFiles (with js, treated as passthrough copy)", async (t) => {
 
 test("getFiles (with case insensitivity)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
   let evf = new EleventyFiles(
     "./test/stubs/writeTestJS-casesensitive",
     "./test/stubs/_writeTestJSCaseSensitiveSite",
@@ -128,6 +136,7 @@ test("getFiles (with case insensitivity)", async (t) => {
 
 test("Mutually exclusive Input and Output dirs", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
   let evf = new EleventyFiles(
     "./test/stubs/writeTest",
     "./test/stubs/_writeTestSite",
@@ -144,6 +153,7 @@ test("Mutually exclusive Input and Output dirs", async (t) => {
 
 test("Single File Input (deep path)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
   let evf = new EleventyFiles(
     "./test/stubs/index.html",
     "./test/stubs/_site",
@@ -160,6 +170,7 @@ test("Single File Input (deep path)", async (t) => {
 
 test("Single File Input (shallow path)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
   let evf = new EleventyFiles("README.md", "./test/stubs/_site", ["md"], eleventyConfig);
   evf.init();
 
@@ -174,6 +185,7 @@ test("Single File Input (shallow path)", async (t) => {
 
 test("Glob Input", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
   let evf = new EleventyFiles(
     "./test/stubs/glob-pages/!(contact.md)",
     "./test/stubs/_site",
@@ -217,6 +229,7 @@ test("Passed file name does not exist", (t) => {
 
 test(".eleventyignore files", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
   let evf = new EleventyFiles("test/stubs", "test/stubs/_site", ["liquid", "md"], eleventyConfig);
   evf.init();
   let ignoredFiles = await fastglob("test/stubs/ignoredFolder/*.md");
@@ -236,8 +249,10 @@ test(".eleventyignore files", async (t) => {
   );
 });
 
-test("getTemplateData caching", (t) => {
+test("getTemplateData caching", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let evf = new EleventyFiles("test/stubs", "test/stubs/_site", [], eleventyConfig);
   evf.init();
   let templateDataFirstCall = evf.templateData;
@@ -245,22 +260,27 @@ test("getTemplateData caching", (t) => {
   t.is(templateDataFirstCall, templateDataSecondCall);
 });
 
-test("getDataDir", (t) => {
+test("getDataDir", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let evf = new EleventyFiles(".", "_site", [], eleventyConfig);
   evf.init();
   t.is(evf.getDataDir(), "_data");
 });
 
-test("getDataDir subdir", (t) => {
+test("getDataDir subdir", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let evf = new EleventyFiles("test/stubs", "test/stubs/_site", [], eleventyConfig);
   evf.init();
   t.is(evf.getDataDir(), "test/stubs/_data");
 });
 
-test("Include and Data Dirs", (t) => {
+test("Include and Data Dirs", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
   let evf = new EleventyFiles("test/stubs", "test/stubs/_site", [], eleventyConfig);
   evf.init();
 
@@ -270,8 +290,9 @@ test("Include and Data Dirs", (t) => {
   ]);
 });
 
-test("Input to 'src' and empty includes dir (issue #403)", (t) => {
+test("Input to 'src' and empty includes dir (issue #403)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
   let evf = new EleventyFiles("src", "src/_site", ["md", "liquid", "html"], eleventyConfig);
   evf.setEleventyIgnoreContent("!./src/_includes/**");
   evf._setConfig({
@@ -295,6 +316,7 @@ test("Input to 'src' and empty includes dir (issue #403)", (t) => {
 
 test("Glob Watcher Files", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
   let evf = new EleventyFiles("test/stubs", "test/stubs/_site", ["njk"], eleventyConfig);
   evf.init();
 
@@ -307,6 +329,7 @@ test("Glob Watcher Files", async (t) => {
 
 test("Glob Watcher Files with File Extension Passthroughs", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
   let evf = new EleventyFiles("test/stubs", "test/stubs/_site", ["njk", "png"], eleventyConfig);
   evf.init();
 
@@ -320,7 +343,10 @@ test("Glob Watcher Files with File Extension Passthroughs", async (t) => {
 
 test("Glob Watcher Files with File Extension Passthroughs with Dev Server (for free passthrough copy #2456)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   eleventyConfig.userConfig.setServerPassthroughCopyBehavior("passthrough");
+  eleventyConfig.config.serverPassthroughCopyBehavior = "passthrough";
 
   let evf = new EleventyFiles("test/stubs", "test/stubs/_site", ["njk", "png"], eleventyConfig);
   evf.setRunMode("serve");
@@ -337,9 +363,15 @@ test("Glob Watcher Files with File Extension Passthroughs with Dev Server (for f
 
 test("Glob Watcher Files with Config Passthroughs (one template format)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   eleventyConfig.userConfig.passthroughCopies = {
     "test/stubs/img/": { outputPath: true },
   };
+  eleventyConfig.config.passthroughCopies = {
+    "test/stubs/img/": { outputPath: true },
+  };
+
   let evf = new EleventyFiles("test/stubs", "test/stubs/_site", ["njk"], eleventyConfig);
   evf.init();
 
@@ -358,11 +390,17 @@ test("Glob Watcher Files with Config Passthroughs (one template format)", async 
 
 test("Glob Watcher Files with Config Passthroughs (one template format) with Dev Server (for free passthrough copy #2456)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
   eleventyConfig.userConfig.setServerPassthroughCopyBehavior("passthrough");
+  eleventyConfig.config.serverPassthroughCopyBehavior = "passthrough";
 
   eleventyConfig.userConfig.passthroughCopies = {
     "test/stubs/img/": { outputPath: true },
   };
+  eleventyConfig.config.passthroughCopies = {
+    "test/stubs/img/": { outputPath: true },
+  };
+
   let evf = new EleventyFiles("test/stubs", "test/stubs/_site", ["njk"], eleventyConfig);
   evf.setRunMode("serve");
   evf.init();
@@ -383,6 +421,8 @@ test("Glob Watcher Files with Config Passthroughs (one template format) with Dev
 
 test("Glob Watcher Files with Config Passthroughs (no template formats)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let evf = new EleventyFiles("test/stubs", "test/stubs/_site", [], eleventyConfig);
   evf.init();
 

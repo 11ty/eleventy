@@ -1,9 +1,10 @@
-const test = require("ava");
-const fs = require("fs");
-const TemplateConfig = require("../src/TemplateConfig");
-const FileSystemSearch = require("../src/FileSystemSearch");
-const TemplateData = require("../src/TemplateData");
-let yaml = require("js-yaml");
+import test from "ava";
+import fs from "fs";
+import yaml from "js-yaml";
+
+import TemplateConfig from "../src/TemplateConfig.js";
+import FileSystemSearch from "../src/FileSystemSearch.js";
+import TemplateData from "../src/TemplateData.js";
 
 function injectDataExtensions(dataObj) {
   dataObj.config.dataExtensions = new Map([

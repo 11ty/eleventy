@@ -1,5 +1,6 @@
-const test = require("ava");
-const TemplatePermalink = require("../src/TemplatePermalink");
+import test from "ava";
+import TemplatePermalink from "../src/TemplatePermalink.js";
+
 const { generate } = TemplatePermalink;
 
 test("Simple straight permalink", (t) => {

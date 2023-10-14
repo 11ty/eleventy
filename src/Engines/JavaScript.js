@@ -4,7 +4,7 @@ import TemplateEngine from "./TemplateEngine.js";
 import EleventyBaseError from "../EleventyBaseError.js";
 import getJavaScriptData from "../Util/GetJavaScriptData.js";
 import EventBusUtil from "../Util/EventBusUtil.js";
-import { EleventyImport } from "./Util/Require.js";
+import { EleventyImport } from "../Util/Require.js";
 
 class JavaScriptTemplateNotDefined extends EleventyBaseError {}
 
@@ -71,7 +71,9 @@ class JavaScript extends TemplateEngine {
       return this.instances[inputPath];
     }
 
-    const mod = await EleventyImport(inputPath);
+    let isEsm = this.eleventyConfig.getIsProjectUsingEsm();
+    const mod = await EleventyImport(inputPath, isEsm ? "esm" : "cjs");
+
     let inst = this._getInstance(mod);
     if (inst) {
       this.instances[inputPath] = inst;

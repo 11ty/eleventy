@@ -31,16 +31,17 @@ class EleventyServe {
   }
 
   get config() {
-    if (!this._config) {
-      throw new EleventyServeConfigError("You need to set the config property on EleventyServe.");
+    if (!this.eleventyConfig) {
+      throw new EleventyServeConfigError(
+        "You need to set the eleventyConfig property on EleventyServe."
+      );
     }
 
-    return this._config;
+    return this.eleventyConfig.getConfig();
   }
 
   set config(config) {
-    this._options = null;
-    this._config = config;
+    throw new Error("It’s not allowed to set config on EleventyServe. Set eleventyConfig instead.");
   }
 
   setAliases(aliases) {
@@ -71,7 +72,7 @@ class EleventyServe {
     }
   }
 
-  async setOutputDir(outputDir) {
+  setOutputDir(outputDir) {
     // TODO check if this is different and if so, restart server (if already running)
     // This applies if you change the output directory in your config file during watch/serve
     this.outputDir = outputDir;
@@ -148,15 +149,15 @@ class EleventyServe {
 
   get server() {
     if (!this._server) {
-      throw new Error("Missing server instance. Did you call .getServerInstance?");
+      throw new Error("Missing server instance. Did you call .initServerInstance?");
     }
 
     return this._server;
   }
 
-  async getServerInstance() {
+  async initServerInstance() {
     if (this._server) {
-      return this._server;
+      return;
     }
 
     let serverModule = await this.getServerModule(this.options.module);
@@ -165,8 +166,6 @@ class EleventyServe {
     this._server = serverModule.getServer("eleventy-server", this.outputDir, this.options);
 
     this.setAliases(this._aliases);
-
-    return this._server;
   }
 
   getSetupCallback() {
@@ -201,7 +200,7 @@ class EleventyServe {
     this._commandLinePort = port;
 
     await this.init();
-    await this.getServerInstance();
+    await this.initServerInstance();
 
     this.server.serve(port || this.options.port);
   }

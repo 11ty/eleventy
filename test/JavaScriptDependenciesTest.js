@@ -1,9 +1,13 @@
-const test = require("ava");
-const JavaScriptDependencies = require("../src/Util/JavaScriptDependencies.js");
+import test from "ava";
+import JavaScriptDependencies from "../src/Util/JavaScriptDependencies.js";
 
 test("No node_modules", async (t) => {
-  t.deepEqual(
-    await JavaScriptDependencies.getDependencies(["./test/stubs-dependency-tree/index.js"]),
-    ["./test/stubs-dependency-tree/child.js", "./test/stubs-dependency-tree/grandchild.js"]
-  );
+  let deps = await JavaScriptDependencies.getDependencies([
+    "./test/stubs-dependency-tree/index.cjs",
+  ]);
+
+  t.deepEqual(deps, [
+    "./test/stubs-dependency-tree/child.cjs",
+    "./test/stubs-dependency-tree/grandchild.cjs",
+  ]);
 });
