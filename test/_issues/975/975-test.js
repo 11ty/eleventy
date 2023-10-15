@@ -10,6 +10,8 @@ function getNewTemplate(filename, input, output, eleventyConfig) {
 
 test("Get ordered list of templates", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let tm = new TemplateMap(eleventyConfig);
 
   // These two templates are add-order-dependent
@@ -51,6 +53,8 @@ test("Get ordered list of templates", async (t) => {
 
 test("Get ordered list of templates (reverse add)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let tm = new TemplateMap(eleventyConfig);
 
   // This template should always be last

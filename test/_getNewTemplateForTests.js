@@ -9,9 +9,12 @@ export default async function getNewTemplate(
   outputDir,
   templateData = null,
   map = null,
-  eleventyConfig = new TemplateConfig()
+  eleventyConfig = null
 ) {
-  await eleventyConfig.init();
+  if (!eleventyConfig) {
+    eleventyConfig = new TemplateConfig();
+    await eleventyConfig.init();
+  }
 
   if (!map) {
     map = new EleventyExtensionMap(["liquid", "md", "njk", "html", "11ty.js"], eleventyConfig);
@@ -19,5 +22,8 @@ export default async function getNewTemplate(
   if (templateData) {
     templateData.setFileSystemSearch(new FileSystemSearch());
   }
-  return new Template(path, inputDir, outputDir, templateData, map, eleventyConfig);
+  let tmpl = new Template(path, inputDir, outputDir, templateData, map, eleventyConfig);
+  await tmpl.getTemplateRender();
+
+  return tmpl;
 }
