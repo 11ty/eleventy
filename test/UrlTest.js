@@ -2,8 +2,10 @@ import test from "ava";
 import TemplateConfig from "../src/TemplateConfig.js";
 import url from "../src/Filters/Url.js";
 
-test("Test url filter passing in pathPrefix from config", (t) => {
+test("Test url filter passing in pathPrefix from config", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let pp = eleventyConfig.getConfig().pathPrefix;
   t.is(pp, "/");
 
@@ -11,8 +13,10 @@ test("Test url filter passing in pathPrefix from config", (t) => {
   t.is(url("/test", pp), "/test");
 });
 
-test("Test url filter without passing in pathPrefix", (t) => {
+test("Test url filter without passing in pathPrefix", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let urlFilter = eleventyConfig.userConfig.getFilter("url");
 
   t.is(urlFilter("test"), "test");

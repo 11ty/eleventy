@@ -156,6 +156,8 @@ test.skip("Permalink with dates on file name regex!", async (t) => {
 
 test("Reuse permalink in directory specific data file", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = await getNewTemplate(
     "./test/stubs/reuse-permalink/test1.liquid",

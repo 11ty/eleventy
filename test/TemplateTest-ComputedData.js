@@ -121,6 +121,8 @@ test("eleventyComputed true primitive", async (t) => {
 
 test("eleventyComputed relies on global data", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = await getNewTemplate(
     "./test/stubs/eleventyComputed/use-global-data.njk",
@@ -140,6 +142,8 @@ test("eleventyComputed relies on global data", async (t) => {
 test("eleventyComputed intermixes with global data", async (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.setDataDeepMerge(true);
+  await eleventyConfig.init();
+
   let dataObj = new TemplateData("./test/stubs-computed-global/", eleventyConfig);
 
   let tmpl = await getNewTemplate(
@@ -166,18 +170,24 @@ test("eleventyComputed intermixes with global data", async (t) => {
 });
 
 test("eleventyComputed using symbol parsing on template strings (nunjucks)", async (t) => {
-  let tmpl = await getNewTemplate(
-    "./test/stubs-computed-symbolparse/test.njk",
-    "./test/stubs-computed-symbolparse/",
-    "./test/stubs-computed-symbolparse/_site"
-  );
-  tmpl.config.nunjucksFilters.fail = function (str) {
+  let eleventyConfig = await new TemplateConfig();
+  eleventyConfig.userConfig.addNunjucksFilter("fail", function (str) {
     // Filter expects a certain String format, don’t use the (((11ty))) string hack
     if (!str || str.length !== 1) {
       throw new Error("Expect a one character string");
     }
     return `${str}`;
-  };
+  });
+  await eleventyConfig.init();
+
+  let tmpl = await getNewTemplate(
+    "./test/stubs-computed-symbolparse/test.njk",
+    "./test/stubs-computed-symbolparse/",
+    "./test/stubs-computed-symbolparse/_site",
+    null,
+    null,
+    eleventyConfig
+  );
 
   let data = await getRenderedData(tmpl);
   t.is(data.a, "a");
@@ -186,18 +196,24 @@ test("eleventyComputed using symbol parsing on template strings (nunjucks)", asy
 });
 
 test("eleventyComputed using symbol parsing on template strings (liquid)", async (t) => {
-  let tmpl = await getNewTemplate(
-    "./test/stubs-computed-symbolparse/test.liquid",
-    "./test/stubs-computed-symbolparse/",
-    "./test/stubs-computed-symbolparse/_site"
-  );
-  tmpl.config.liquidFilters.fail = function (str) {
+  let eleventyConfig = await new TemplateConfig();
+  eleventyConfig.userConfig.addLiquidFilter("fail", function (str) {
     // Filter expects a certain String format, don’t use the (((11ty))) string hack
     if (!str || str.length !== 1) {
       throw new Error("Expect a one character string: " + str);
     }
     return `${str}`;
-  };
+  });
+  await eleventyConfig.init();
+
+  let tmpl = await getNewTemplate(
+    "./test/stubs-computed-symbolparse/test.liquid",
+    "./test/stubs-computed-symbolparse/",
+    "./test/stubs-computed-symbolparse/_site",
+    null,
+    null,
+    eleventyConfig
+  );
 
   let data = await getRenderedData(tmpl);
   t.is(data.a, "a");
