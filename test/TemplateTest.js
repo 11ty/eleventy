@@ -1736,7 +1736,7 @@ test("Permalink is an object but an empty object (inherit default behavior)", as
 
 test("eleventyComputed returns permalink object Issue #1898", async (t) => {
   let tmpl = await getNewTemplate(
-    "./test/stubs/stubs-computed-permalink/eleventycomputed-object.11ty.js",
+    "./test/stubs/stubs-computed-permalink/eleventycomputed-object.11ty.cjs",
     "./test/stubs/stubs-computed-permalink/",
     "./test/stubs/stubs-computed-permalink/_site"
   );
