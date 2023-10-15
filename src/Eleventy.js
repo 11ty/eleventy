@@ -212,6 +212,10 @@ class Eleventy {
     this.fileSystemSearch = new FileSystemSearch();
 
     this._hasConfigInitialized = true;
+
+    if (this._preInitVerbose !== undefined) {
+      this.setIsVerbose(this._preInitVerbose);
+    }
   }
 
   getNewTimestamp() {
@@ -595,6 +599,11 @@ Verbose Output: ${this.verboseMode}`);
    * @param {Boolean} isVerbose - Shall Eleventy run in verbose mode?
    */
   setIsVerbose(isVerbose) {
+    if (!this._hasConfigInitialized) {
+      this._preInitVerbose = isVerbose;
+      return;
+    }
+
     // Debug mode should always run quiet (all output goes to debug logger)
     if (process.env.DEBUG) {
       isVerbose = false;

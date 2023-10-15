@@ -1,12 +1,13 @@
 import test from "ava";
 
-import RenderPlugin from "../src/Plugins/RenderPlugin.js";
+import {
+  default as RenderPlugin,
+  File as RenderPluginFile,
+  String as RenderPluginString,
+  RenderManager,
+} from "../src/Plugins/RenderPlugin.js";
 import Eleventy from "../src/Eleventy.js";
 import normalizeNewLines from "./Util/normalizeNewLines.js";
-
-const RenderManager = RenderPlugin.RenderManager;
-const RenderPluginFile = RenderPlugin.File;
-const RenderPluginString = RenderPlugin.String;
 
 async function getTestOutput(input, configCallback = function () {}) {
   let elev = new Eleventy(input, "./_site/", {
@@ -20,8 +21,6 @@ async function getTestOutput(input, configCallback = function () {}) {
 
   // Careful with this!
   // elev.disableLogger();
-
-  await elev.init();
 
   let result = await elev.toJSON();
 
@@ -50,7 +49,7 @@ test("Use liquid in nunjucks", async (t) => {
 });
 
 test("Use liquid+markdown in 11ty.js", async (t) => {
-  let html = await getTestOutputForFile("./test/stubs-render-plugin/liquid-md.11ty.js");
+  let html = await getTestOutputForFile("./test/stubs-render-plugin/liquid-md.11ty.cjs");
   t.is(
     html,
     `<h1>Markdown</h1>
@@ -61,7 +60,7 @@ test("Use liquid+markdown in 11ty.js", async (t) => {
 });
 
 test("Use nunjucks in 11ty.js", async (t) => {
-  let html = await getTestOutputForFile("./test/stubs-render-plugin/nunjucks.11ty.js");
+  let html = await getTestOutputForFile("./test/stubs-render-plugin/nunjucks.11ty.cjs");
   t.is(html, `* iHtpircsavaj`);
 });
 
@@ -108,7 +107,8 @@ test("Use 11ty.js file in njk", async (t) => {
   t.is(html, `TESTING`);
 });
 
-test("Use txt file in njk (override to 11ty.js)", async (t) => {
+// 3.0 breaking change, we can’t alias to 11ty.js any more
+test.skip("Breaking Change (3.0): Use txt file in njk (override to 11ty.js)", async (t) => {
   let html = await getTestOutputForFile("./test/stubs-render-plugin/11tyjs-file-override.njk");
   t.is(html, `TESTING`);
 });

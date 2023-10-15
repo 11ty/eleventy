@@ -1,4 +1,4 @@
-import { promises as fsp } from "fs";
+import { promises as fsp, default as fs } from "fs";
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
 // TODO add a first-class Markdown component to expose this using Markdown-only syntax (will need to be synchronous for markdown-it)
@@ -15,6 +15,7 @@ import Liquid from "../Engines/Liquid.js";
 async function compile(content, templateLang, { templateConfig, extensionMap } = {}) {
   if (!templateConfig) {
     templateConfig = new TemplateConfig(null, false);
+    await templateConfig.init();
   }
 
   // Breaking change in 2.0+, previous default was `html` and now we default to the page template syntax
@@ -33,8 +34,11 @@ async function compile(content, templateLang, { templateConfig, extensionMap } =
 
   let tr = new TemplateRender(templateLang, inputDir, templateConfig);
   tr.extensionMap = extensionMap;
-  await tr.init();
-  await tr.setEngineOverride(templateLang);
+  if (templateLang) {
+    await tr.setEngineOverride(templateLang);
+  } else {
+    await tr.init();
+  }
 
   // TODO tie this to the class, not the extension
   if (
@@ -62,19 +66,26 @@ async function compileFile(inputPath, { templateConfig, extensionMap, config } =
     );
   }
 
+  let wasTemplateConfigMissing = false;
   if (!templateConfig) {
     templateConfig = new TemplateConfig(null, false);
+    wasTemplateConfigMissing = true;
   }
   if (config && typeof config === "function") {
     await config(templateConfig.userConfig);
+  }
+  if (wasTemplateConfigMissing) {
+    await templateConfig.init();
   }
 
   let cfg = templateConfig.getConfig();
   let tr = new TemplateRender(inputPath, cfg.dir.input, templateConfig);
   tr.extensionMap = extensionMap;
-  await tr.init();
+
   if (templateLang) {
     await tr.setEngineOverride(templateLang);
+  } else {
+    await tr.init();
   }
 
   if (!tr.engine.needsToReadFileContents()) {
@@ -359,6 +370,18 @@ class RenderManager {
       templateConfig: this.templateConfig,
       accessGlobalData: true,
     });
+
+    this._hasConfigInitialized = false;
+  }
+
+  async init() {
+    if (this._hasConfigInitialized) {
+      return this._hasConfigInitialized;
+    }
+
+    this._hasConfigInitialized = this.templateConfig.init();
+    await this._hasConfigInitialized;
+    return true;
   }
 
   // `callback` is async-friendly but requires await upstream
@@ -379,12 +402,16 @@ class RenderManager {
   // because we don’t have access to the full data cascade—but
   // we still want configuration data added via `addGlobalData`
   async getData(...data) {
+    await this.init();
+
     let globalData = await this.initialGlobalData.getData();
     let merged = Merge({}, globalData, ...data);
     return merged;
   }
 
-  compile(content, templateLang, options = {}) {
+  async compile(content, templateLang, options = {}) {
+    await this.init();
+
     // Missing here: extensionMap
     options.templateConfig = this.templateConfig;
 
@@ -394,6 +421,8 @@ class RenderManager {
   }
 
   async render(fn, edgeData, buildTimeData) {
+    await this.init();
+
     let mergedData = await this.getData(edgeData);
     // Set .data for options.accessGlobalData feature
     let context = {

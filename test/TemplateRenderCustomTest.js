@@ -212,6 +212,8 @@ test("JavaScript functions should not be mutable but not *that* mutable", async 
     },
   });
 
+  await eleventyConfig.init();
+
   let tmpl = await getNewTemplate(
     "./test/stubs-custom-extension/test.js1",
     "./test/stubs-custom-extension/",
@@ -255,7 +257,7 @@ test("Simple alias to Markdown Render", async (t) => {
 });
 
 // NOTE: Breaking change in 3.0 `import` does not allow aliasing to non-.js file names
-test.skip("Simple alias to JavaScript Render", async (t) => {
+test.skip("Breaking Change (3.0): Simple alias to JavaScript Render", async (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.addExtension("11ty.custom", {
     key: "11ty.js",
@@ -268,7 +270,7 @@ test.skip("Simple alias to JavaScript Render", async (t) => {
 });
 
 // NOTE: Breaking change in 3.0 `import` does not allow aliasing to non-.js file names
-test.skip("Override to JavaScript Render", async (t) => {
+test.skip("Breaking Change (3.0): Override to JavaScript Render", async (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.addExtension("11ty.custom", {
     key: "11ty.js",
@@ -282,7 +284,7 @@ test.skip("Override to JavaScript Render", async (t) => {
 });
 
 // NOTE: Breaking change in 3.0 `import` does not allow aliasing to non-.js file names
-test.skip("Two simple aliases to JavaScript Render", async (t) => {
+test.skip("Breaking Change (3.0): Two simple aliases to JavaScript Render", async (t) => {
   t.plan(2);
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.addExtension(["11ty.custom", "11ty.possum"], {
