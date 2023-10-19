@@ -64,7 +64,7 @@ test("JS Render a function, returns a Buffer", async (t) => {
 
 test("JS Render a function (Markdown)", async (t) => {
   let tr = await getNewTemplateRender("./test/stubs/function-markdown.11ty.cjs");
-  tr.setEngineOverride("11ty.js,md");
+  await tr.setEngineOverride("11ty.js,md");
 
   let fn = await tr.getCompiledTemplate();
   t.is((await fn({ name: "Zach" })).trim(), "<h1>Zach</h1>");
@@ -291,7 +291,6 @@ test("Class has access to built in filters", async (t) => {
 test("Class has page property already and keeps it", async (t) => {
   t.plan(2);
   let tr = await getNewTemplateRender("./test/stubs/class-fns-has-page.11ty.cjs");
-
   let fn = await tr.getCompiledTemplate();
   await fn({ avaTest: t, page: { url: "/hi/" } });
 });

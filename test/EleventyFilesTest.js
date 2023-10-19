@@ -86,14 +86,14 @@ test("getFiles (with 11ty.js)", async (t) => {
   evf.setFileSystemSearch(new FileSystemSearch());
   evf.init();
 
-  t.deepEqual(await evf.getFiles(), ["./test/stubs/writeTestJS/test.11ty.js"]);
+  t.deepEqual(await evf.getFiles(), ["./test/stubs/writeTestJS/test.11ty.cjs"]);
 });
 
 test("getFiles (with js, treated as passthrough copy)", async (t) => {
   let eleventyConfig = new TemplateConfig();
   await eleventyConfig.init();
   let evf = new EleventyFiles(
-    "./test/stubs/writeTestJS",
+    "./test/stubs/writeTestJS-passthrough",
     "./test/stubs/_writeTestJSSite",
     ["liquid", "md", "js"],
     eleventyConfig
@@ -104,11 +104,14 @@ test("getFiles (with js, treated as passthrough copy)", async (t) => {
   const files = await evf.getFiles();
   t.deepEqual(
     files.sort(),
-    ["./test/stubs/writeTestJS/sample.js", "./test/stubs/writeTestJS/test.11ty.js"].sort()
+    [
+      "./test/stubs/writeTestJS-passthrough/sample.js",
+      "./test/stubs/writeTestJS-passthrough/test.11ty.js",
+    ].sort()
   );
 
-  t.false(evf.extensionMap.hasEngine("./test/stubs/writeTestJS/sample.js"));
-  t.true(evf.extensionMap.hasEngine("./test/stubs/writeTestJS/test.11ty.js"));
+  t.false(evf.extensionMap.hasEngine("./test/stubs/writeTestJS-passthrough/sample.js"));
+  t.true(evf.extensionMap.hasEngine("./test/stubs/writeTestJS-passthrough/test.11ty.js"));
 });
 
 test("getFiles (with case insensitivity)", async (t) => {

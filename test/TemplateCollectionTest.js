@@ -32,6 +32,8 @@ async function addTemplate(collection, template) {
 
 test("Basic setup", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let tmpl1 = await getNewTemplateByNumber(1, eleventyConfig);
   let tmpl2 = await getNewTemplateByNumber(2, eleventyConfig);
   let tmpl3 = await getNewTemplateByNumber(3, eleventyConfig);
@@ -46,6 +48,8 @@ test("Basic setup", async (t) => {
 
 test("sortFunctionDate", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let tmpl1 = await getNewTemplateByNumber(1, eleventyConfig);
   let tmpl4 = await getNewTemplateByNumber(4, eleventyConfig);
   let tmpl5 = await getNewTemplateByNumber(5, eleventyConfig);
@@ -64,6 +68,8 @@ test("sortFunctionDate", async (t) => {
 
 test("sortFunctionDateInputPath", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let tmpl1 = await getNewTemplateByNumber(1, eleventyConfig);
   let tmpl4 = await getNewTemplateByNumber(4, eleventyConfig);
   let tmpl5 = await getNewTemplateByNumber(5, eleventyConfig);
@@ -82,6 +88,8 @@ test("sortFunctionDateInputPath", async (t) => {
 
 test("getFilteredByTag", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let tmpl1 = await getNewTemplateByNumber(1, eleventyConfig);
   let tmpl2 = await getNewTemplateByNumber(2, eleventyConfig);
   let tmpl3 = await getNewTemplateByNumber(3, eleventyConfig);
@@ -108,6 +116,8 @@ test("getFilteredByTag", async (t) => {
 
 test("getFilteredByTag (added out of order, sorted)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let tmpl1 = await getNewTemplateByNumber(1, eleventyConfig);
   let tmpl2 = await getNewTemplateByNumber(2, eleventyConfig);
   let tmpl3 = await getNewTemplateByNumber(3, eleventyConfig);
@@ -135,6 +145,8 @@ test("getFilteredByTag (added out of order, sorted)", async (t) => {
 
 test("getFilteredByTags", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let tmpl1 = await getNewTemplateByNumber(1, eleventyConfig);
   let tmpl2 = await getNewTemplateByNumber(2, eleventyConfig);
   let tmpl3 = await getNewTemplateByNumber(3, eleventyConfig);
@@ -160,6 +172,8 @@ test("getFilteredByTags", async (t) => {
 
 test("getFilteredByTags (added out of order, sorted)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let tmpl1 = await getNewTemplateByNumber(1, eleventyConfig);
   let tmpl2 = await getNewTemplateByNumber(2, eleventyConfig);
   let tmpl3 = await getNewTemplateByNumber(3, eleventyConfig);
@@ -188,6 +202,8 @@ test("getFilteredByTags (added out of order, sorted)", async (t) => {
 
 test("getFilteredByGlob", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let tmpl1 = await getNewTemplateByNumber(1, eleventyConfig);
   let tmpl6 = await getNewTemplateByNumber(6, eleventyConfig);
   let tmpl7 = await getNewTemplateByNumber(7, eleventyConfig);
@@ -204,6 +220,8 @@ test("getFilteredByGlob", async (t) => {
 
 test("getFilteredByGlob no dash dot", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let tmpl1 = await getNewTemplateByNumber(1, eleventyConfig);
   let tmpl6 = await getNewTemplateByNumber(6, eleventyConfig);
   let tmpl7 = await getNewTemplateByNumber(7, eleventyConfig);
@@ -225,6 +243,7 @@ test("getFilteredByGlob no dash dot", async (t) => {
 
 test("partial match on tag string, issue 95", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
 
   let cat = await getNewTemplate(
     "./test/stubs/issue-95/cat.md",
@@ -271,6 +290,8 @@ test("multimatch assumptions, issue #127", async (t) => {
 
 test("Sort in place (issue #352)", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let tmpl1 = await getNewTemplateByNumber(1, eleventyConfig);
   let tmpl4 = await getNewTemplateByNumber(4, eleventyConfig);
   let tmpl5 = await getNewTemplateByNumber(5, eleventyConfig);

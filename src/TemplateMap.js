@@ -27,7 +27,6 @@ class TemplateMap {
     this.map = [];
     this.collectionsData = null;
     this.cached = false;
-    this.configCollections = null;
     this.verboseOutput = true;
     this.collection = new TemplateCollection();
   }
@@ -611,21 +610,18 @@ class TemplateMap {
     return collections;
   }
 
-  setUserConfigCollections(configCollections) {
-    return (this.configCollections = configCollections);
-  }
-
+  /* 3.0.0-alpha.1: setUserConfigCollections method removed (was only used for testing) */
   isUserConfigCollectionName(name) {
-    let collections = this.configCollections || this.userConfig.getCollections();
+    let collections = this.userConfig.getCollections();
     return name && !!collections[name];
   }
 
   getUserConfigCollectionNames() {
-    return Object.keys(this.configCollections || this.userConfig.getCollections());
+    return Object.keys(this.userConfig.getCollections());
   }
 
   async getUserConfigCollection(name) {
-    let configCollections = this.configCollections || this.userConfig.getCollections();
+    let configCollections = this.userConfig.getCollections();
 
     // This works with async now
     let result = await configCollections[name](this.collection);
@@ -636,7 +632,7 @@ class TemplateMap {
 
   async _testGetUserConfigCollectionsData() {
     let collections = {};
-    let configCollections = this.configCollections || this.userConfig.getCollections();
+    let configCollections = this.userConfig.getCollections();
 
     for (let name in configCollections) {
       collections[name] = configCollections[name](this.collection);
