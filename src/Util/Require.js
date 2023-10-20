@@ -115,10 +115,8 @@ async function dynamicImportAbsolutePath(absolutePath, type) {
 }
 
 function normalizeFilePathInEleventyPackage(file) {
-  let u = new URL(import.meta.url);
-
   // Back up from ./src/Util/Require.js
-  return path.resolve(fileURLToPath(u), "../../../", file);
+  return path.resolve(fileURLToPath(import.meta.url), "../../../", file);
 }
 
 async function dynamicImportFromEleventyPackage(file) {
