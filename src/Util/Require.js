@@ -1,5 +1,9 @@
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
+
+// https://nodejs.org/api/url.html#urlpathtofileurlpath
+// import { pathToFileURL } from "url"; // node:url
 import { TemplatePath } from "@11ty/eleventy-utils";
 import { createRequire } from "module";
 
@@ -111,16 +115,10 @@ async function dynamicImportAbsolutePath(absolutePath, type) {
 }
 
 function normalizeFilePathInEleventyPackage(file) {
-  let currentFile = import.meta.url.slice("file:///".length);
-  /* Transform:
-   * `file:///Users/` to `/Users/`, which is an absolute path on POSIX (per `path.isAbsolute`)
-   * `file:///C:/Users/` to `C:/Users/` which is an absolute path on Windows (per `path.isAbsolute`)
-   */
-  if (!path.isAbsolute(currentFile)) {
-    currentFile = "/" + currentFile;
-  }
+  let u = new URL(import.meta.url);
+
   // Back up from ./src/Util/Require.js
-  return path.resolve(currentFile, "../../../", file);
+  return path.resolve(fileURLToPath(u), "../../../", file);
 }
 
 async function dynamicImportFromEleventyPackage(file) {
