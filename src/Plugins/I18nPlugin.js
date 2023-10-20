@@ -1,4 +1,4 @@
-import bcp47Normalize from "bcp-47-normalize";
+import { bcp47Normalize } from "bcp-47-normalize";
 import iso639 from "iso-639-1";
 
 import { DeepCopy } from "../Util/Merge.js";
@@ -189,12 +189,12 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
       },
       errorMode: "strict", // allow-fallback, never
     },
-    opts
+    opts,
   );
 
   if (!options.defaultLanguage) {
     throw new Error(
-      "You must specify a `defaultLanguage` in Eleventy’s Internationalization (I18N) plugin."
+      "You must specify a `defaultLanguage` in Eleventy’s Internationalization (I18N) plugin.",
     );
   }
 
@@ -262,13 +262,13 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
       // this is not a localized file (independent of a language code)
       if (options.errorMode === "strict") {
         throw new Error(
-          `Localized file for URL ${prependedLangCodeUrl} was not found in your project. A non-localized version does exist—are you sure you meant to use the \`${options.filters.url}\` filter for this? You can bypass this error using the \`errorMode\` option in the I18N plugin (current value: "${options.errorMode}").`
+          `Localized file for URL ${prependedLangCodeUrl} was not found in your project. A non-localized version does exist—are you sure you meant to use the \`${options.filters.url}\` filter for this? You can bypass this error using the \`errorMode\` option in the I18N plugin (current value: "${options.errorMode}").`,
         );
       }
     } else if (options.errorMode === "allow-fallback") {
       // You’re linking to a localized file that doesn’t exist!
       throw new Error(
-        `Localized file for URL ${prependedLangCodeUrl} was not found in your project! You will need to add it if you want to link to it using the \`${options.filters.url}\` filter. You can bypass this error using the \`errorMode\` option in the I18N plugin (current value: "${options.errorMode}").`
+        `Localized file for URL ${prependedLangCodeUrl} was not found in your project! You will need to add it if you want to link to it using the \`${options.filters.url}\` filter. You can bypass this error using the \`errorMode\` option in the I18N plugin (current value: "${options.errorMode}").`,
       );
     }
 
@@ -322,7 +322,7 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
         __locale_page_resolved: true,
       };
       return result;
-    }
+    },
   );
 }
 

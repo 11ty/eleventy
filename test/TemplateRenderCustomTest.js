@@ -1,7 +1,7 @@
 import test from "ava";
 import { createSSRApp } from "vue";
 import { renderToString } from "@vue/server-renderer";
-import sass from "sass";
+import * as sass from "sass";
 
 import TemplateRender from "../src/TemplateRender.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
@@ -158,7 +158,7 @@ test("Custom Sass Render", async (t) => {
               } else {
                 resolve(result.css.toString("utf8"));
               }
-            }
+            },
           );
         });
       };
@@ -173,7 +173,7 @@ test("Custom Sass Render", async (t) => {
     (await fn({})).trim(),
     `p {
   color: blue;
-}`
+}`,
   );
 });
 
@@ -220,7 +220,7 @@ test("JavaScript functions should not be mutable but not *that* mutable", async 
     "dist",
     null,
     null,
-    eleventyConfig
+    eleventyConfig,
   );
   let data = await tmpl.getData();
   t.is(await tmpl.render(data), "<p>Paragraph</p>");
@@ -302,7 +302,7 @@ test.skip("Breaking Change (3.0): Two simple aliases to JavaScript Render", asyn
     "./test/stubs/string.11ty.possum",
     null,
     eleventyConfig,
-    map
+    map,
   );
   let fn2 = await tr2.getCompiledTemplate();
   t.is(await fn2({}), "<p>Possum</p>");
@@ -327,13 +327,13 @@ test("Double override (not aliases) throws an error", async (t) => {
         "./test/stubs/string.11ty.custom",
         null,
         eleventyConfig,
-        map
+        map,
       );
       await tr.getCompiledTemplate();
     },
     {
       message:
         'An attempt was made to override the *already* overridden "11ty.js" template syntax via the `addExtension` configuration API. A maximum of one override is currently supported. If you’re trying to add an alias to an existing syntax, make sure only the `key` property is present in the addExtension options object.',
-    }
+    },
   );
 });
