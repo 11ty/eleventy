@@ -1,4 +1,4 @@
-import fs from "fs";
+import fs from "node:fs";
 import chalk from "kleur";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";

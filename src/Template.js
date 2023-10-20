@@ -1,7 +1,8 @@
+import util from "node:util";
+import os from "node:os";
+import path from "node:path";
+
 import fs from "graceful-fs";
-import util from "util";
-import os from "os";
-import path from "path";
 import normalize from "normalize-path";
 import lodash from "@11ty/lodash-custom";
 import { DateTime } from "luxon";

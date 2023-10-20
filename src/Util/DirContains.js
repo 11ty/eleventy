@@ -1,4 +1,4 @@
-import path from "path";
+import path from "node:path";
 
 // Returns true if subfolder is in parent (accepts absolute or relative paths for both)
 export default function (parent, subfolder) {

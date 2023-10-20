@@ -1,5 +1,5 @@
+import { performance } from "node:perf_hooks";
 import { TemplatePath } from "@11ty/eleventy-utils";
-import { performance } from "perf_hooks";
 import debugUtil from "debug";
 
 import TemplateData from "./TemplateData.js";

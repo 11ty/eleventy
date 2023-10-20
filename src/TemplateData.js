@@ -1,5 +1,6 @@
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
+
 import lodash from "@11ty/lodash-custom";
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";

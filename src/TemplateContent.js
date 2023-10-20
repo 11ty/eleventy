@@ -1,6 +1,7 @@
-import os from "os";
+import os from "node:os";
+import util from "node:util";
+
 import fs from "graceful-fs";
-import util from "util";
 import normalize from "normalize-path";
 import matter from "gray-matter";
 import lodash from "@11ty/lodash-custom";

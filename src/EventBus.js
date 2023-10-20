@@ -1,5 +1,6 @@
-import EventEmitter from "./Util/AsyncEventEmitter.js";
 import debugUtil from "debug";
+
+import EventEmitter from "./Util/AsyncEventEmitter.js";
 
 const debug = debugUtil("Eleventy:EventBus");
 

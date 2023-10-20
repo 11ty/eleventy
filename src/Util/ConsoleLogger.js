@@ -1,5 +1,5 @@
+import { Readable } from "node:stream";
 import chalk from "kleur";
-import { Readable } from "stream";
 import debugUtil from "debug";
 
 const debug = debugUtil("Eleventy:Logger");

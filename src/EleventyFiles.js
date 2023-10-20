@@ -1,4 +1,5 @@
-import fs from "fs";
+import fs from "node:fs";
+
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 

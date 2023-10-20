@@ -1,5 +1,5 @@
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+
 import { TemplatePath } from "@11ty/eleventy-utils";
 import { normalizeFilePathInEleventyPackage } from "./Require.js";
 

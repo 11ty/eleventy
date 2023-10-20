@@ -1,7 +1,8 @@
+import { fileURLToPath } from "node:url";
+
 import { DepGraph } from "dependency-graph";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
-import { fileURLToPath } from "url";
 
 import PathNormalizer from "./Util/PathNormalizer.js";
 

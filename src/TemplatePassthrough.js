@@ -1,5 +1,6 @@
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
+
 import isGlob from "is-glob";
 import copy from "recursive-copy";
 import { TemplatePath } from "@11ty/eleventy-utils";

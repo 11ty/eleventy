@@ -1,5 +1,6 @@
+import { performance } from "node:perf_hooks";
+
 import BenchmarkGroup from "./BenchmarkGroup.js";
-import { performance } from "perf_hooks";
 
 // TODO this should not be a singleton, it belongs in the config or somewhere on the Eleventy instance.
 

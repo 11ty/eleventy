@@ -1,4 +1,4 @@
-import { promises as fsp, default as fs } from "fs";
+import { promises as fsp, default as fs } from "node:fs";
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
 // TODO add a first-class Markdown component to expose this using Markdown-only syntax (will need to be synchronous for markdown-it)

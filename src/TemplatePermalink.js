@@ -1,4 +1,4 @@
-import path from "path";
+import path from "node:path";
 import normalize from "normalize-path";
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
