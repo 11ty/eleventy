@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { TemplatePath } from "@11ty/eleventy-utils";
+import { normalizeFilePathInEleventyPackage } from "./Require.js";
 
 // async version of this in Require.js
 
@@ -38,7 +39,7 @@ function importJsonSync(filePath) {
 
 // TODO cache
 function getEleventyPackageJson() {
-  let filePath = path.resolve(import.meta.url.slice("file://".length), "../../../package.json");
+  let filePath = normalizeFilePathInEleventyPackage("package.json");
   return importJsonSync(filePath);
 }
 

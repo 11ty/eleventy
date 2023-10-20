@@ -110,9 +110,22 @@ async function dynamicImportAbsolutePath(absolutePath, type) {
   return target;
 }
 
+function normalizeFilePathInEleventyPackage(file) {
+  let currentFile = import.meta.url.slice("file:///".length);
+  /* Transform:
+   * `file:///Users/` to `/Users/`, which is an absolute path on POSIX (per `path.isAbsolute`)
+   * `file:///C:/Users/` to `C:/Users/` which is an absolute path on Windows (per `path.isAbsolute`)
+   */
+  if (!path.isAbsolute(currentFile)) {
+    currentFile = "/" + currentFile;
+  }
+  // Back up from ./src/Util/Require.js
+  return path.resolve(currentFile, "../../../", file);
+}
+
 async function dynamicImportFromEleventyPackage(file) {
   // points to files relative to the top level Eleventy directory
-  let filePath = path.resolve(import.meta.url.slice("file://".length), "../../../", file);
+  let filePath = normalizeFilePathInEleventyPackage(file);
   return dynamicImportAbsolutePath(filePath);
 }
 
@@ -126,4 +139,5 @@ export {
   loadContents as EleventyLoadContent,
   dynamicImport as EleventyImport,
   dynamicImportFromEleventyPackage as EleventyImportFromEleventy,
+  normalizeFilePathInEleventyPackage,
 };
