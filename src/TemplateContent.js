@@ -317,6 +317,12 @@ class TemplateContent {
 
     let cacheable = this.engine.cacheable;
     let { useCache, key } = this.engine.getCompileCacheKey(str, this.inputPath);
+
+    // We also tie the compile cache key to the UserConfig instance, to alleviate issues with global template cache
+    // Better to move the cache to the Eleventy instance instead, no?
+    // (This specifically failed I18nPluginTest cases with filters being cached across tests and not having access to each plugin’s options)
+    key = this.eleventyConfig.userConfig._getUniqueId() + key;
+
     return [cacheable, key, inputPathMap, useCache];
   }
 

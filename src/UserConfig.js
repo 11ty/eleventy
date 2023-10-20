@@ -17,7 +17,13 @@ const ComparisonAsyncFunction = (async () => {}).constructor;
 // API to expose configuration options in config file
 class UserConfig {
   constructor() {
+    this._uniqueId = Math.random();
     this.reset();
+  }
+
+  // Internally used in TemplateContent for cache keys
+  _getUniqueId() {
+    return this._uniqueId;
   }
 
   reset() {

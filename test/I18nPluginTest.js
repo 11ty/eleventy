@@ -94,15 +94,19 @@ function getContentFor(results, filename) {
   return normalizeNewLines(content.trim());
 }
 
-test("errorMode default", async (t) => {
+test("errorMode default (strict)", async (t) => {
   let elev = new Eleventy("./test/stubs-i18n/", "./test/stubs-i18n/_site", {
+    quietMode: true,
     config: function (eleventyConfig) {
       eleventyConfig.addPlugin(I18nPlugin, {
+        _test: "this is from errorMode default (strict)",
         defaultLanguage: "en",
         // errorMode: "allow-fallback"
       });
     },
   });
+
+  // TODO get rid of these?
   await elev.initializeConfig();
   elev.setIsVerbose(false);
   elev.disableLogger();
@@ -116,6 +120,7 @@ test("locale_url and locale_links Filters", async (t) => {
   let elev = new Eleventy("./test/stubs-i18n/", "./test/stubs-i18n/_site", {
     config: function (eleventyConfig) {
       eleventyConfig.addPlugin(I18nPlugin, {
+        _test: "this is from locale_url and locale_links Filters",
         defaultLanguage: "en",
         errorMode: "allow-fallback",
       });
