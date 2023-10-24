@@ -145,7 +145,7 @@ class UserConfig {
 
     if (typeof tagFn !== "function") {
       throw new UserConfigError(
-        `EleventyConfig.addLiquidTag expects a callback function to be passed in for ${name}: addLiquidTag(name, function(liquidEngine) { return { parse: …, render: … } })`
+        `EleventyConfig.addLiquidTag expects a callback function to be passed in for ${name}: addLiquidTag(name, function(liquidEngine) { return { parse: …, render: … } })`,
       );
     }
 
@@ -171,13 +171,13 @@ class UserConfig {
     if (this.nunjucksAsyncFilters[name]) {
       debug(
         chalk.yellow("Warning, overwriting a Nunjucks filter with `addNunjucksAsyncFilter(%o)`"),
-        name
+        name,
       );
     }
 
     this.nunjucksAsyncFilters[name] = this.benchmarks.config.add(
       `"${name}" Nunjucks Async Filter`,
-      callback
+      callback,
     );
   }
 
@@ -192,13 +192,13 @@ class UserConfig {
       if (this.nunjucksFilters[name]) {
         debug(
           chalk.yellow("Warning, overwriting a Nunjucks filter with `addNunjucksFilter(%o)`"),
-          name
+          name,
         );
       }
 
       this.nunjucksFilters[name] = this.benchmarks.config.add(
         `"${name}" Nunjucks Filter`,
-        callback
+        callback,
       );
     }
   }
@@ -209,13 +209,13 @@ class UserConfig {
     if (this.handlebarsHelpers[name]) {
       debug(
         chalk.yellow("Warning, overwriting a Handlebars helper with `addHandlebarsHelper(%o)`."),
-        name
+        name,
       );
     }
 
     this.handlebarsHelpers[name] = this.benchmarks.config.add(
       `"${name}" Handlebars Helper`,
-      callback
+      callback,
     );
   }
 
@@ -236,7 +236,7 @@ class UserConfig {
       let ret = callback.call(this, ...args);
       if (ret instanceof Promise) {
         throw new Error(
-          `Nunjucks *is* async-friendly with \`addFilter("${name}", async function() {})\` but you need to supply an \`async function\`. You returned a promise from \`addFilter("${name}", function() {})\`. Alternatively, use the \`addAsyncFilter("${name}")\` configuration API method.`
+          `Nunjucks *is* async-friendly with \`addFilter("${name}", async function() {})\` but you need to supply an \`async function\`. You returned a promise from \`addFilter("${name}", function() {})\`. Alternatively, use the \`addAsyncFilter("${name}")\` configuration API method.`,
         );
       }
       return ret;
@@ -266,7 +266,7 @@ class UserConfig {
 
     if (typeof tagFn !== "function") {
       throw new UserConfigError(
-        `EleventyConfig.addNunjucksTag expects a callback function to be passed in for ${name}: addNunjucksTag(name, function(nunjucksEngine) {})`
+        `EleventyConfig.addNunjucksTag expects a callback function to be passed in for ${name}: addNunjucksTag(name, function(nunjucksEngine) {})`,
       );
     }
 
@@ -289,14 +289,14 @@ class UserConfig {
     if (this.nunjucksGlobals[name]) {
       debug(
         chalk.yellow("Warning, overwriting a Nunjucks global with `addNunjucksGlobal(%o)`"),
-        name
+        name,
       );
     }
 
     if (typeof globalType === "function") {
       this.nunjucksGlobals[name] = this.benchmarks.config.add(
         `"${name}" Nunjucks Global`,
-        globalType
+        globalType,
       );
     } else {
       this.nunjucksGlobals[name] = globalType;
@@ -338,16 +338,18 @@ class UserConfig {
 
     if (this.collections[name]) {
       throw new UserConfigError(
-        `config.addCollection(${name}) already exists. Try a different name for your collection.`
+        `config.addCollection(${name}) already exists. Try a different name for your collection.`,
       );
     }
 
     this.collections[name] = callback;
   }
 
+  /* Async friendly in 3.0 */
   addPlugin(plugin, options) {
     if (this._pluginExecution) {
-      this._executePlugin(plugin, options);
+      // might return a promise
+      return this._executePlugin(plugin, options);
     } else {
       this.plugins.push({
         plugin,
@@ -366,42 +368,47 @@ class UserConfig {
     }
   }
 
+  // Starting in 3.0 the plugin callback might be asynchronous!
   _executePlugin(plugin, options) {
     let name = this._getPluginName(plugin);
+    let ret;
     debug(`Adding ${name || "anonymous"} plugin`);
     let pluginBenchmark = this.benchmarks.aggregate.get("Configuration addPlugin");
     if (typeof plugin === "function") {
       pluginBenchmark.before();
       this.benchmarks.config;
       let configFunction = plugin;
-      configFunction(this, options);
+      ret = configFunction(this, options);
       pluginBenchmark.after();
     } else if (plugin && plugin.configFunction) {
       pluginBenchmark.before();
+
       if (options && typeof options.init === "function") {
+        // init is not yet async-friendly but it’s also barely used
         options.init.call(this, plugin.initArguments || {});
       }
 
-      plugin.configFunction(this, options);
+      ret = plugin.configFunction(this, options);
       pluginBenchmark.after();
     } else {
       throw new UserConfigError(
-        "Invalid EleventyConfig.addPlugin signature. Should be a function or a valid Eleventy plugin object."
+        "Invalid EleventyConfig.addPlugin signature. Should be a function or a valid Eleventy plugin object.",
       );
     }
+    return ret;
   }
 
   getNamespacedName(name) {
     return this.activeNamespace + name;
   }
 
-  namespace(pluginNamespace, callback) {
+  async namespace(pluginNamespace, callback) {
     let validNamespace = pluginNamespace && typeof pluginNamespace === "string";
     if (validNamespace) {
       this.activeNamespace = pluginNamespace || "";
     }
 
-    callback();
+    await callback(this);
 
     if (validNamespace) {
       this.activeNamespace = "";
@@ -462,18 +469,18 @@ class UserConfig {
   addTemplateFormats(templateFormats) {
     this.templateFormatsAdded = this._normalizeTemplateFormats(
       templateFormats,
-      this.templateFormatsAdded
+      this.templateFormatsAdded,
     );
   }
 
   setLibrary(engineName, libraryInstance) {
     if (engineName === "liquid" && Object.keys(this.liquidOptions).length) {
       debug(
-        "WARNING: using `eleventyConfig.setLibrary` will override any configuration set using `.setLiquidOptions` via the config API. You’ll need to pass these options to the library yourself."
+        "WARNING: using `eleventyConfig.setLibrary` will override any configuration set using `.setLiquidOptions` via the config API. You’ll need to pass these options to the library yourself.",
       );
     } else if (engineName === "njk" && Object.keys(this.nunjucksEnvironmentOptions).length) {
       debug(
-        "WARNING: using `eleventyConfig.setLibrary` will override any configuration set using `.setNunjucksEnvironmentOptions` via the config API. You’ll need to pass these options to the library yourself."
+        "WARNING: using `eleventyConfig.setLibrary` will override any configuration set using `.setNunjucksEnvironmentOptions` via the config API. You’ll need to pass these options to the library yourself.",
       );
     }
 
@@ -546,15 +553,15 @@ class UserConfig {
     if (this.nunjucksAsyncShortcodes[name]) {
       debug(
         chalk.yellow(
-          "Warning, overwriting a Nunjucks Async Shortcode with `addNunjucksAsyncShortcode(%o)`"
+          "Warning, overwriting a Nunjucks Async Shortcode with `addNunjucksAsyncShortcode(%o)`",
         ),
-        name
+        name,
       );
     }
 
     this.nunjucksAsyncShortcodes[name] = this.benchmarks.config.add(
       `"${name}" Nunjucks Async Shortcode`,
-      callback
+      callback,
     );
   }
 
@@ -567,13 +574,13 @@ class UserConfig {
       if (this.nunjucksShortcodes[name]) {
         debug(
           chalk.yellow("Warning, overwriting a Nunjucks Shortcode with `addNunjucksShortcode(%o)`"),
-          name
+          name,
         );
       }
 
       this.nunjucksShortcodes[name] = this.benchmarks.config.add(
         `"${name}" Nunjucks Shortcode`,
-        callback
+        callback,
       );
     }
   }
@@ -584,13 +591,13 @@ class UserConfig {
     if (this.liquidShortcodes[name]) {
       debug(
         chalk.yellow("Warning, overwriting a Liquid Shortcode with `addLiquidShortcode(%o)`"),
-        name
+        name,
       );
     }
 
     this.liquidShortcodes[name] = this.benchmarks.config.add(
       `"${name}" Liquid Shortcode`,
-      callback
+      callback,
     );
   }
 
@@ -625,15 +632,15 @@ class UserConfig {
     if (this.nunjucksAsyncPairedShortcodes[name]) {
       debug(
         chalk.yellow(
-          "Warning, overwriting a Nunjucks Async Paired Shortcode with `addPairedNunjucksAsyncShortcode(%o)`"
+          "Warning, overwriting a Nunjucks Async Paired Shortcode with `addPairedNunjucksAsyncShortcode(%o)`",
         ),
-        name
+        name,
       );
     }
 
     this.nunjucksAsyncPairedShortcodes[name] = this.benchmarks.config.add(
       `"${name}" Nunjucks Async Paired Shortcode`,
-      callback
+      callback,
     );
   }
 
@@ -646,15 +653,15 @@ class UserConfig {
       if (this.nunjucksPairedShortcodes[name]) {
         debug(
           chalk.yellow(
-            "Warning, overwriting a Nunjucks Paired Shortcode with `addPairedNunjucksShortcode(%o)`"
+            "Warning, overwriting a Nunjucks Paired Shortcode with `addPairedNunjucksShortcode(%o)`",
           ),
-          name
+          name,
         );
       }
 
       this.nunjucksPairedShortcodes[name] = this.benchmarks.config.add(
         `"${name}" Nunjucks Paired Shortcode`,
-        callback
+        callback,
       );
     }
   }
@@ -665,15 +672,15 @@ class UserConfig {
     if (this.liquidPairedShortcodes[name]) {
       debug(
         chalk.yellow(
-          "Warning, overwriting a Liquid Paired Shortcode with `addPairedLiquidShortcode(%o)`"
+          "Warning, overwriting a Liquid Paired Shortcode with `addPairedLiquidShortcode(%o)`",
         ),
-        name
+        name,
       );
     }
 
     this.liquidPairedShortcodes[name] = this.benchmarks.config.add(
       `"${name}" Liquid Paired Shortcode`,
-      callback
+      callback,
     );
   }
 
@@ -687,15 +694,15 @@ class UserConfig {
     if (this.javascriptFunctions[name]) {
       debug(
         chalk.yellow(
-          "Warning, overwriting a JavaScript template function with `addJavaScriptFunction(%o)`"
+          "Warning, overwriting a JavaScript template function with `addJavaScriptFunction(%o)`",
         ),
-        name
+        name,
       );
     }
 
     this.javascriptFunctions[name] = this.benchmarks.config.add(
       `"${name}" JavaScript Function`,
-      callback
+      callback,
     );
   }
 
@@ -727,7 +734,7 @@ class UserConfig {
   setBrowserSyncConfig() {
     this._attemptedBrowserSyncUse = true;
     debug(
-      "The `setBrowserSyncConfig` method was removed in Eleventy 2.0.0. Use `setServerOptions` with the new Eleventy development server or the `@11ty/eleventy-browser-sync` plugin moving forward."
+      "The `setBrowserSyncConfig` method was removed in Eleventy 2.0.0. Use `setServerOptions` with the new Eleventy development server or the `@11ty/eleventy-browser-sync` plugin moving forward.",
     );
   }
 
@@ -764,8 +771,8 @@ class UserConfig {
             key: extension,
             extension: extension,
           },
-          options
-        )
+          options,
+        ),
       );
     }
   }
@@ -776,7 +783,7 @@ class UserConfig {
     if (typeof parser !== "function") {
       if (!("parser" in parser)) {
         throw new Error(
-          "Expected `parser` property in second argument object to `eleventyConfig.addDataExtension`"
+          "Expected `parser` property in second argument object to `eleventyConfig.addDataExtension`",
         );
       }
 

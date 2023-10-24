@@ -25,7 +25,7 @@ test("Template Config local config overrides base config", async (t) => {
   <body>
     <div></div>
   </body>
-</html>`
+</html>`,
   );
 });
 
@@ -518,4 +518,42 @@ test("falsy pathPrefix should fall back to default", async (t) => {
   await templateCfg.init();
 
   templateCfg.getConfig();
+});
+
+test("Add async plugin", async (t) => {
+  let templateCfg = new TemplateConfig();
+
+  await templateCfg.userConfig.addPlugin(async (eleventyConfig) => {
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        eleventyConfig.addFilter("myFilterName", function () {});
+        resolve();
+      }, 10);
+    });
+  });
+
+  await templateCfg.init();
+
+  let cfg = templateCfg.getConfig();
+  t.not(Object.keys(cfg.liquidFilters).indexOf("myFilterName"), -1);
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
+});
+
+test("Async namespace", async (t) => {
+  let templateCfg = new TemplateConfig();
+
+  await templateCfg.userConfig.namespace("testNamespace", async (eleventyConfig) => {
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        eleventyConfig.addFilter("MyFilterName", function () {});
+        resolve();
+      }, 10);
+    });
+  });
+
+  await templateCfg.init();
+
+  let cfg = templateCfg.getConfig();
+  t.not(Object.keys(cfg.liquidFilters).indexOf("testNamespaceMyFilterName"), -1);
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("testNamespaceMyFilterName"), -1);
 });

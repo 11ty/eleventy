@@ -263,7 +263,7 @@ class TemplateConfig {
    *
    * @param {Object} - the return Object from the user’s config file.
    */
-  processPlugins({ dir, pathPrefix }) {
+  async processPlugins({ dir, pathPrefix }) {
     this.userConfig.dir = dir;
     this.userConfig.pathPrefix = pathPrefix;
 
@@ -278,7 +278,7 @@ class TemplateConfig {
     for (let { plugin, options, pluginNamespace } of this.userConfig.plugins) {
       try {
         this.userConfig.activeNamespace = pluginNamespace;
-        this.userConfig._executePlugin(plugin, options);
+        await this.userConfig._executePlugin(plugin, options);
       } catch (e) {
         let name = this.userConfig._getPluginName(plugin);
         let namespaces = [storedActiveNamespace, pluginNamespace].filter((entry) => !!entry);
@@ -290,7 +290,7 @@ class TemplateConfig {
 
         throw new EleventyPluginError(
           `Error processing ${name ? `the \`${name}\`` : "a"} plugin${namespaceStr}`,
-          e
+          e,
         );
       }
     }
@@ -325,7 +325,7 @@ class TemplateConfig {
           Object.keys(localConfig.filters).length
         ) {
           throw new EleventyConfigError(
-            "The `filters` configuration option was renamed in Eleventy 0.3.3 and removed in Eleventy 1.0. Please use the `addTransform` configuration method instead. Read more: https://www.11ty.dev/docs/config/#transforms"
+            "The `filters` configuration option was renamed in Eleventy 0.3.3 and removed in Eleventy 1.0. Please use the `addTransform` configuration method instead. Read more: https://www.11ty.dev/docs/config/#transforms",
           );
         }
       } catch (err) {
@@ -335,7 +335,7 @@ class TemplateConfig {
             (err.message && err.message.includes("Cannot find module")
               ? chalk.cyan(" You may need to run `npm install`.")
               : ""),
-          err
+          err,
         );
       }
     } else {
@@ -385,7 +385,7 @@ class TemplateConfig {
     // Temporarily restore templateFormats
     mergedConfig.templateFormats = templateFormats;
 
-    this.processPlugins(mergedConfig);
+    await this.processPlugins(mergedConfig);
 
     delete mergedConfig.templateFormats;
 
