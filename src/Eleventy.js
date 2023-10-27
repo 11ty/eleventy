@@ -709,7 +709,7 @@ Arguments:
        Start without a build; build when files change. Works best with watch/serve/incremental.
 
      --formats=liquid,md
-       Whitelist only certain template types (default: \`*\`)
+       Allow only certain template types (default: \`*\`)
 
      --quiet
        Don’t print all written files (off by default)
