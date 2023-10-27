@@ -27,6 +27,7 @@ import EleventyBaseError from "./EleventyBaseError.js";
 const { set: lodashSet, get: lodashGet } = lodash;
 const writeFile = util.promisify(fs.writeFile);
 const mkdir = util.promisify(fs.mkdir);
+const fsStat = util.promisify(fs.stat);
 
 const debug = debugUtil("Eleventy:Template");
 const debugDev = debugUtil("Dev:Eleventy:Template");
@@ -868,7 +869,7 @@ class Template extends TemplateContent {
       return this._stats;
     }
 
-    this._stats = fs.promises.stat(this.inputPath);
+    this._stats = fsStat(this.inputPath);
 
     return this._stats;
   }

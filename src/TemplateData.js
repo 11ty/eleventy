@@ -1,5 +1,6 @@
-import fs from "node:fs";
+import util from "node:util";
 import path from "node:path";
+import fs from "graceful-fs";
 
 import lodash from "@11ty/lodash-custom";
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
@@ -13,6 +14,8 @@ import EleventyBaseError from "./EleventyBaseError.js";
 import TemplateDataInitialGlobalData from "./TemplateDataInitialGlobalData.js";
 import { EleventyImport, EleventyLoadContent } from "./Util/Require.js";
 
+const fsExists = util.promisify(fs.exists);
+const fsStat = util.promisify(fs.stat);
 const { set: lodashSet, get: lodashGet } = lodash;
 const debugWarn = debugUtil("Eleventy:Warnings");
 const debug = debugUtil("Eleventy:TemplateData");
@@ -25,10 +28,10 @@ class FSExistsCache {
   has(path) {
     return this._cache.has(path);
   }
-  exists(path) {
+  async exists(path) {
     let exists = this._cache.get(path);
     if (!this.has(path)) {
-      exists = fs.existsSync(path);
+      exists = await fsExists(path);
       this._cache.set(path, exists);
     }
     return exists;
@@ -144,7 +147,7 @@ class TemplateData {
 
   async _checkInputDir() {
     if (this.inputDirNeedsCheck) {
-      let globalPathStat = await fs.promises.stat(this.inputDir);
+      let globalPathStat = await fsStat(this.inputDir);
 
       if (!globalPathStat.isDirectory()) {
         throw new Error("Could not find data path directory: " + this.inputDir);
@@ -395,8 +398,17 @@ class TemplateData {
     }
 
     // Filter out files we know don't exist to avoid overhead for checking
-    localDataPaths = localDataPaths.filter((path) => {
-      return this._fsExistsCache.exists(path);
+    const dataPaths = await Promise.all(
+      localDataPaths.map((path) =>
+        this._fsExistsCache.exists(path).then((exists) => {
+          if (exists) return path;
+          return false;
+        })
+      )
+    );
+
+    localDataPaths = dataPaths.filter((pathOrFalse) => {
+      return pathOrFalse === false ? false : true;
     });
 
     this.config.events.emit("eleventy.dataFiles", localDataPaths);
@@ -499,7 +511,7 @@ class TemplateData {
     if (extension === "js" || extension === "cjs" || extension === "mjs") {
       // JS data file or require’d JSON (no preprocessing needed)
       let localPath = TemplatePath.absolutePath(path);
-      let exists = this._fsExistsCache.exists(localPath);
+      let exists = await this._fsExistsCache.exists(localPath);
       // Make sure that relative lookups benefit from cache
       this._fsExistsCache.markExists(path, exists);
 
