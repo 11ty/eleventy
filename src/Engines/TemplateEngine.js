@@ -1,11 +1,5 @@
-const fs = require("fs");
-const { TemplatePath } = require("@11ty/eleventy-utils");
-
-const EleventyExtensionMap = require("../EleventyExtensionMap");
-const EleventyBaseError = require("../EleventyBaseError");
-const EventBusUtil = require("../Util/EventBusUtil");
-
-const debug = require("debug")("Eleventy:TemplateEngine");
+import EleventyExtensionMap from "../EleventyExtensionMap.js";
+import EleventyBaseError from "../EleventyBaseError.js";
 
 class TemplateEngineConfigError extends EleventyBaseError {}
 
@@ -20,8 +14,6 @@ class TemplateEngine {
     this.dirs = dirs;
     this.inputDir = dirs.input;
     this.includesDir = dirs.includes;
-
-    this.resetPartials();
 
     this.engineLib = null;
     this.cacheable = false;
@@ -87,101 +79,6 @@ class TemplateEngine {
 
   getIncludesDir() {
     return this.includesDir;
-  }
-
-  resetPartials() {
-    this.partialsHaveBeenCached = false;
-    this.partials = [];
-    this.partialsFiles = [];
-  }
-
-  async getPartials() {
-    if (!this.partialsHaveBeenCached) {
-      let ret = await this.cachePartialFiles();
-      this.partials = ret.partials;
-      this.partialsFiles = ret.files;
-
-      EventBusUtil.soloOn("eleventy.resourceModified", (path) => {
-        if ((this.partialsFiles || []).includes(path)) {
-          this.resetPartials();
-        }
-      });
-    }
-
-    return this.partials;
-  }
-
-  /**
-   * Search for and cache partial files.
-   *
-   * This only runs if getPartials() is called, which only runs if you compile a Mustache/Handlebars template.
-   *
-   * @protected
-   */
-  async cachePartialFiles() {
-    this.partialsHaveBeenCached = true;
-
-    let results = [];
-    let partialFiles = [];
-
-    if (this.includesDir) {
-      // TODO move this to use FileSystemSearch instead.
-      const fastglob = require("fast-glob");
-
-      let bench = this.benchmarks.aggregate.get("Searching the file system (partials)");
-      bench.before();
-
-      let prefix = this.includesDir + "/**/*.";
-      await Promise.all(
-        this.extensions.map(async function (extension) {
-          partialFiles = partialFiles.concat(
-            await fastglob(prefix + extension, {
-              caseSensitiveMatch: false,
-              dot: true,
-            })
-          );
-        })
-      );
-
-      bench.after();
-
-      results = await Promise.all(
-        partialFiles.map((partialFile) => {
-          partialFile = TemplatePath.addLeadingDotSlash(partialFile);
-          let partialPath = TemplatePath.stripLeadingSubPath(partialFile, this.includesDir);
-          let partialPathNoExt = partialPath;
-          this.extensions.forEach(function (extension) {
-            partialPathNoExt = TemplatePath.removeExtension(partialPathNoExt, "." + extension);
-          });
-
-          return fs.promises
-            .readFile(partialFile, {
-              encoding: "utf8",
-            })
-            .then((content) => {
-              return {
-                content,
-                path: partialPathNoExt,
-              };
-            });
-        })
-      );
-    }
-
-    let partials = {};
-    for (let result of results) {
-      partials[result.path] = result.content;
-    }
-
-    debug(
-      `${this.includesDir}/*.{${this.extensions}} found partials for: %o`,
-      Object.keys(partials)
-    );
-
-    return {
-      files: partialFiles,
-      partials,
-    };
   }
 
   /**
@@ -271,4 +168,4 @@ class TemplateEngine {
   }
 }
 
-module.exports = TemplateEngine;
+export default TemplateEngine;

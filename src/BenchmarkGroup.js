@@ -1,6 +1,9 @@
-const ConsoleLogger = require("./Util/ConsoleLogger");
-const Benchmark = require("./Benchmark");
-const debugBenchmark = require("debug")("Eleventy:Benchmark");
+import debugUtil from "debug";
+
+import ConsoleLogger from "./Util/ConsoleLogger.js";
+import Benchmark from "./Benchmark.js";
+
+const debugBenchmark = debugUtil("Eleventy:Benchmark");
 
 class BenchmarkGroup {
   constructor() {
@@ -59,9 +62,7 @@ class BenchmarkGroup {
   setMinimumThresholdPercent(minimumThresholdPercent) {
     let val = parseInt(minimumThresholdPercent, 10);
     if (isNaN(val)) {
-      throw new Error(
-        "`setMinimumThresholdPercent` expects a number argument."
-      );
+      throw new Error("`setMinimumThresholdPercent` expects a number argument.");
     }
     this.minimumThresholdPercent = val;
   }
@@ -102,8 +103,7 @@ class BenchmarkGroup {
       let str = `Benchmark ${output.ms}ms ${output.percent}% ${output.calls}× (${label}) ${type}`;
 
       if (
-        (isAbsoluteMinimumComparison &&
-          totalForBenchmark >= this.minimumThresholdMs) ||
+        (isAbsoluteMinimumComparison && totalForBenchmark >= this.minimumThresholdMs) ||
         percent > this.minimumThresholdPercent
       ) {
         this.logger.warn(str);
@@ -121,4 +121,4 @@ class BenchmarkGroup {
   }
 }
 
-module.exports = BenchmarkGroup;
+export default BenchmarkGroup;

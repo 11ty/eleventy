@@ -1,17 +1,18 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { TemplatePath } from "@11ty/eleventy-utils";
+import debugUtil from "debug";
 
-const Template = require("./Template");
-const TemplateMap = require("./TemplateMap");
-const EleventyFiles = require("./EleventyFiles");
-const EleventyExtensionMap = require("./EleventyExtensionMap");
-const EleventyBaseError = require("./EleventyBaseError");
-const EleventyErrorHandler = require("./EleventyErrorHandler");
-const EleventyErrorUtil = require("./EleventyErrorUtil");
-const FileSystemSearch = require("./FileSystemSearch");
-const ConsoleLogger = require("./Util/ConsoleLogger");
+import Template from "./Template.js";
+import TemplateMap from "./TemplateMap.js";
+import EleventyFiles from "./EleventyFiles.js";
+import EleventyExtensionMap from "./EleventyExtensionMap.js";
+import EleventyBaseError from "./EleventyBaseError.js";
+import EleventyErrorHandler from "./EleventyErrorHandler.js";
+import EleventyErrorUtil from "./EleventyErrorUtil.js";
+import FileSystemSearch from "./FileSystemSearch.js";
+import ConsoleLogger from "./Util/ConsoleLogger.js";
 
-const debug = require("debug")("Eleventy:TemplateWriter");
-const debugDev = require("debug")("Dev:Eleventy:TemplateWriter");
+const debug = debugUtil("Eleventy:TemplateWriter");
+const debugDev = debugUtil("Dev:Eleventy:TemplateWriter");
 
 class TemplateWriterMissingConfigArgError extends EleventyBaseError {}
 class EleventyPassthroughCopyError extends EleventyBaseError {}
@@ -469,4 +470,4 @@ class TemplateWriter {
   }
 }
 
-module.exports = TemplateWriter;
+export default TemplateWriter;

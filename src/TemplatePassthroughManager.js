@@ -1,14 +1,15 @@
-const multimatch = require("multimatch");
-const isGlob = require("is-glob");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import multimatch from "multimatch";
+import isGlob from "is-glob";
+import { TemplatePath } from "@11ty/eleventy-utils";
+import debugUtil from "debug";
 
-const EleventyExtensionMap = require("./EleventyExtensionMap");
-const EleventyBaseError = require("./EleventyBaseError");
-const TemplatePassthrough = require("./TemplatePassthrough");
-const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
+import EleventyExtensionMap from "./EleventyExtensionMap.js";
+import EleventyBaseError from "./EleventyBaseError.js";
+import TemplatePassthrough from "./TemplatePassthrough.js";
+import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 
-const debug = require("debug")("Eleventy:TemplatePassthroughManager");
-const debugDev = require("debug")("Dev:Eleventy:TemplatePassthroughManager");
+const debug = debugUtil("Eleventy:TemplatePassthroughManager");
+const debugDev = debugUtil("Dev:Eleventy:TemplatePassthroughManager");
 
 class TemplatePassthroughManagerConfigError extends EleventyBaseError {}
 class TemplatePassthroughManagerCopyError extends EleventyBaseError {}
@@ -296,4 +297,4 @@ class TemplatePassthroughManager {
   }
 }
 
-module.exports = TemplatePassthroughManager;
+export default TemplatePassthroughManager;

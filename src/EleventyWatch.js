@@ -1,5 +1,6 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
-const PathNormalizer = require("./Util/PathNormalizer.js");
+import { TemplatePath } from "@11ty/eleventy-utils";
+
+import PathNormalizer from "./Util/PathNormalizer.js";
 
 /* Decides when to watch and in what mode to watch
  * Incremental builds don’t batch changes, they queue.
@@ -127,4 +128,4 @@ class EleventyWatch {
   }
 }
 
-module.exports = EleventyWatch;
+export default EleventyWatch;

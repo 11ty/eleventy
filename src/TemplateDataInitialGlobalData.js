@@ -1,6 +1,10 @@
-const pkg = require("../package.json");
-const semver = require("semver");
-const { set: lodashset } = require("@11ty/lodash-custom");
+import semver from "semver";
+import lodash from "@11ty/lodash-custom";
+
+import { getEleventyPackageJson } from "./Util/ImportJsonSync.js";
+
+const { set: lodashSet } = lodash;
+const pkg = getEleventyPackageJson();
 
 class TemplateDataInitialGlobalData {
   constructor(templateConfig) {
@@ -24,7 +28,7 @@ class TemplateDataInitialGlobalData {
           returnValue = await returnValue();
         }
 
-        lodashset(globalData, key, returnValue);
+        lodashSet(globalData, key, returnValue);
       }
     }
 
@@ -39,4 +43,4 @@ class TemplateDataInitialGlobalData {
   }
 }
 
-module.exports = TemplateDataInitialGlobalData;
+export default TemplateDataInitialGlobalData;

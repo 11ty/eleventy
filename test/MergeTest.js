@@ -1,6 +1,6 @@
-const test = require("ava");
-const Merge = require("../src/Util/Merge");
-const DeepCopy = Merge.DeepCopy;
+import test from "ava";
+
+import { default as Merge, DeepCopy } from "../src/Util/Merge.js";
 
 test("Shallow Merge", (t) => {
   t.deepEqual(Merge({}, {}), {});

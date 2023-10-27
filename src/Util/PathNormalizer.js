@@ -1,4 +1,4 @@
-const path = require("path");
+import path from "node:path";
 
 class PathNormalizer {
   static normalizeSeperator(inputPath) {
@@ -9,4 +9,4 @@ class PathNormalizer {
   }
 }
 
-module.exports = PathNormalizer;
+export default PathNormalizer;

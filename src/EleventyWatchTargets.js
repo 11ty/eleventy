@@ -1,8 +1,8 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
-const { DepGraph } = require("dependency-graph");
+import { TemplatePath } from "@11ty/eleventy-utils";
+import { DepGraph } from "dependency-graph";
 
-const deleteRequireCache = require("./Util/DeleteRequireCache");
-const JavaScriptDependencies = require("./Util/JavaScriptDependencies");
+import JavaScriptDependencies from "./Util/JavaScriptDependencies.js";
+import eventBus from "./EventBus.js";
 
 class EleventyWatchTargets {
   constructor() {
@@ -10,6 +10,7 @@ class EleventyWatchTargets {
     this.dependencies = new Set();
     this.newTargets = new Set();
     this._watchJavaScriptDependencies = true;
+    this.isEsm = false;
 
     this.graph = new DepGraph();
   }
@@ -20,6 +21,10 @@ class EleventyWatchTargets {
 
   get watchJavaScriptDependencies() {
     return this._watchJavaScriptDependencies;
+  }
+
+  setProjectUsingEsm(isEsmProject) {
+    this.isEsm = !!isEsmProject;
   }
 
   isJavaScriptDependency(path) {
@@ -105,13 +110,13 @@ class EleventyWatchTargets {
   }
 
   // add only a target’s dependencies
-  addDependencies(targets, filterCallback) {
+  async addDependencies(targets, filterCallback) {
     if (!this.watchJavaScriptDependencies) {
       return;
     }
 
     targets = EleventyWatchTargets.normalize(targets);
-    let deps = JavaScriptDependencies.getDependencies(targets);
+    let deps = await JavaScriptDependencies.getDependencies(targets, this.isEsm);
     if (filterCallback) {
       deps = deps.filter(filterCallback);
     }
@@ -126,21 +131,24 @@ class EleventyWatchTargets {
     this.writer = templateWriter;
   }
 
-  clearRequireCacheFor(filePathArray) {
+  clearImportCacheFor(filePathArray) {
+    let paths = new Set();
     for (const filePath of filePathArray) {
-      deleteRequireCache(filePath);
+      paths.add(filePath);
 
       // Delete from require cache so that updates to the module are re-required
       let importsTheChangedFile = this.getDependantsOf(filePath);
       for (let dep of importsTheChangedFile) {
-        deleteRequireCache(dep);
+        paths.add(dep);
       }
 
       let isImportedInTheChangedFile = this.getDependenciesOf(filePath);
       for (let dep of isImportedInTheChangedFile) {
-        deleteRequireCache(dep);
+        paths.add(dep);
       }
     }
+
+    eventBus.emit("eleventy.importCacheReset", paths);
   }
 
   getNewTargetsSinceLastReset() {
@@ -152,4 +160,4 @@ class EleventyWatchTargets {
   }
 }
 
-module.exports = EleventyWatchTargets;
+export default EleventyWatchTargets;

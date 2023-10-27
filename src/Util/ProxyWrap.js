@@ -1,4 +1,4 @@
-const { isPlainObject } = require("@11ty/eleventy-utils");
+import { isPlainObject } from "@11ty/eleventy-utils";
 
 function wrapObject(target, fallback) {
   return new Proxy(target, {
@@ -19,10 +19,7 @@ function wrapObject(target, fallback) {
     // Nunjucks needs this
     ownKeys(target) {
       // unique
-      let keys = new Set([
-        ...Reflect.ownKeys(target),
-        ...Reflect.ownKeys(fallback),
-      ]);
+      let keys = new Set([...Reflect.ownKeys(target), ...Reflect.ownKeys(fallback)]);
       // console.log( "handler:ownKeys", keys );
       return Array.from(keys);
     },
@@ -47,14 +44,10 @@ function wrapObject(target, fallback) {
 
 function ProxyWrap(target, fallback) {
   if (!isPlainObject(target) || !isPlainObject(fallback)) {
-    throw new Error(
-      "ProxyWrap expects objects for both the target and fallback"
-    );
+    throw new Error("ProxyWrap expects objects for both the target and fallback");
   }
   let wrapped = wrapObject(target, fallback);
   return wrapped;
 }
 
-module.exports = {
-  ProxyWrap,
-};
+export { ProxyWrap };

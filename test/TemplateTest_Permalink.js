@@ -1,9 +1,9 @@
-const test = require("ava");
-const fs = require("fs");
-const TemplateConfig = require("../src/TemplateConfig");
-const TemplateData = require("../src/TemplateData");
+import test from "ava";
+import fs from "fs";
 
-const getNewTemplate = require("./_getNewTemplateForTests");
+import TemplateConfig from "../src/TemplateConfig.js";
+import TemplateData from "../src/TemplateData.js";
+import getNewTemplate from "./_getNewTemplateForTests.js";
 
 async function writeMapEntries(mapEntries) {
   let promises = [];
@@ -33,7 +33,7 @@ async function getTemplateMapEntriesWithContent(template, data) {
 }
 
 test("permalink: false", async (t) => {
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/permalink-false/test.md",
     "./test/stubs/",
     "./test/stubs/_site"
@@ -61,7 +61,7 @@ test("permalink: false", async (t) => {
 });
 
 test("permalink: false inside of eleventyComputed, Issue #1754", async (t) => {
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/permalink-false-computed/test.md",
     "./test/stubs/",
     "./test/stubs/_site"
@@ -87,7 +87,7 @@ test("permalink: false inside of eleventyComputed, Issue #1754", async (t) => {
 });
 
 test("permalink: true", async (t) => {
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/permalink-true/permalink-true.md",
     "./test/stubs/",
     "./test/stubs/_site"
@@ -100,7 +100,7 @@ test("permalink: true", async (t) => {
 });
 
 test("Disable dynamic permalinks", async (t) => {
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/dynamic-permalink/test.njk",
     "./test/stubs/",
     "./test/stubs/_site"
@@ -114,7 +114,7 @@ test("Disable dynamic permalinks", async (t) => {
 });
 
 test("Permalink with variables!", async (t) => {
-  let tmpl = getNewTemplate("./test/stubs/permalinkdata.njk", "./test/stubs/", "./dist");
+  let tmpl = await getNewTemplate("./test/stubs/permalinkdata.njk", "./test/stubs/", "./dist");
 
   let data = await tmpl.getData();
 
@@ -122,13 +122,13 @@ test("Permalink with variables!", async (t) => {
 });
 
 test("Permalink with variables and JS front matter!", async (t) => {
-  let tmpl = getNewTemplate("./test/stubs/permalinkdata-jsfn.njk", "./test/stubs/", "./dist");
+  let tmpl = await getNewTemplate("./test/stubs/permalinkdata-jsfn.njk", "./test/stubs/", "./dist");
   let data = await tmpl.getData();
   t.is(await tmpl.getOutputPath(data), "./dist/subdir/slug/index.html");
 });
 
 test("Use a JavaScript function for permalink in any template language", async (t) => {
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/permalinkdata-jspermalinkfn.njk",
     "./test/stubs/",
     "./dist"
@@ -139,13 +139,13 @@ test("Use a JavaScript function for permalink in any template language", async (
 });
 
 test("Permalink with dates!", async (t) => {
-  let tmpl = getNewTemplate("./test/stubs/permalinkdate.liquid", "./test/stubs/", "./dist");
+  let tmpl = await getNewTemplate("./test/stubs/permalinkdate.liquid", "./test/stubs/", "./dist");
   let data = await tmpl.getData();
   t.is(await tmpl.getOutputPath(data), "./dist/2016/01/01/index.html");
 });
 
 test.skip("Permalink with dates on file name regex!", async (t) => {
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/2016-02-01-permalinkdate.liquid",
     "./test/stubs/",
     "./dist"
@@ -156,8 +156,10 @@ test.skip("Permalink with dates on file name regex!", async (t) => {
 
 test("Reuse permalink in directory specific data file", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/reuse-permalink/test1.liquid",
     "./test/stubs/",
     "./dist",
@@ -168,19 +170,27 @@ test("Reuse permalink in directory specific data file", async (t) => {
 });
 
 test("Using slugify filter!", async (t) => {
-  let tmpl = getNewTemplate("./test/slugify-filter/test.njk", "./test/slugify-filter/", "./dist");
+  let tmpl = await getNewTemplate(
+    "./test/slugify-filter/test.njk",
+    "./test/slugify-filter/",
+    "./dist"
+  );
   let data = await tmpl.getData();
   t.is(await tmpl.getOutputPath(data), "./dist/subdir/slug-love-candidate-lyublyu/index.html");
 });
 
 test("Using slugify filter with comma and apostrophe", async (t) => {
-  let tmpl = getNewTemplate("./test/slugify-filter/comma.njk", "./test/slugify-filter/", "./dist");
+  let tmpl = await getNewTemplate(
+    "./test/slugify-filter/comma.njk",
+    "./test/slugify-filter/",
+    "./dist"
+  );
   let data = await tmpl.getData();
   t.is(await tmpl.getOutputPath(data), "./dist/subdir/hi-i-m-zach/index.html");
 });
 
 test("Using slug filter with options params", async (t) => {
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/slugify-filter/slug-options.njk",
     "./test/slugify-filter/",
     "./dist"
@@ -190,7 +200,7 @@ test("Using slug filter with options params", async (t) => {
 });
 
 test("Using slugify filter with options params", async (t) => {
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/slugify-filter/slugify-options.njk",
     "./test/slugify-filter/",
     "./dist"
@@ -200,7 +210,7 @@ test("Using slugify filter with options params", async (t) => {
 });
 
 test("Using slugify filter with a number #854", async (t) => {
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/slugify-filter/slugify-number.njk",
     "./test/slugify-filter/",
     "./dist"
@@ -210,7 +220,7 @@ test("Using slugify filter with a number #854", async (t) => {
 });
 
 test("Using slug filter with a number #854", async (t) => {
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/slugify-filter/slug-number.njk",
     "./test/slugify-filter/",
     "./dist"
@@ -220,7 +230,7 @@ test("Using slug filter with a number #854", async (t) => {
 });
 
 test.skip("Using slugify filter with multibyte", async (t) => {
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/slugify-filter/multibyte.njk",
     "./test/slugify-filter/",
     "./dist"

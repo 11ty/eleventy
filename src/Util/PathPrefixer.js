@@ -1,5 +1,6 @@
-const path = require("path");
-const PathNormalizer = require("./PathNormalizer.js");
+import path from "node:path";
+
+import PathNormalizer from "./PathNormalizer.js";
 
 class PathPrefixer {
   static normalizePathPrefix(pathPrefix) {
@@ -17,4 +18,4 @@ class PathPrefixer {
   }
 }
 
-module.exports = PathPrefixer;
+export default PathPrefixer;

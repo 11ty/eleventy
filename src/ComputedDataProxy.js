@@ -1,5 +1,7 @@
-const { set: lodashSet, get: lodashGet } = require("@11ty/lodash-custom");
-const { isPlainObject } = require("@11ty/eleventy-utils");
+import lodash from "@11ty/lodash-custom";
+import { isPlainObject } from "@11ty/eleventy-utils";
+
+const { set: lodashSet, get: lodashGet } = lodash;
 
 /* Calculates computed data using Proxies */
 class ComputedDataProxy {
@@ -126,4 +128,4 @@ class ComputedDataProxy {
   }
 }
 
-module.exports = ComputedDataProxy;
+export default ComputedDataProxy;

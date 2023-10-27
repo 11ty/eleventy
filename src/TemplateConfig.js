@@ -1,18 +1,18 @@
-const fs = require("fs");
-const chalk = require("kleur");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import fs from "node:fs";
+import chalk from "kleur";
+import { TemplatePath } from "@11ty/eleventy-utils";
+import debugUtil from "debug";
 
-const EleventyBaseError = require("./EleventyBaseError.js");
-const UserConfig = require("./UserConfig.js");
-const GlobalDependencyMap = require("./GlobalDependencyMap.js");
+import { EleventyImport, EleventyImportFromEleventy } from "./Util/Require.js";
+import EleventyBaseError from "./EleventyBaseError.js";
+import UserConfig from "./UserConfig.js";
+import GlobalDependencyMap from "./GlobalDependencyMap.js";
+import merge from "./Util/Merge.js";
+import unique from "./Util/Unique.js";
+import eventBus from "./EventBus.js";
 
-const { EleventyRequire } = require("./Util/Require.js");
-const merge = require("./Util/Merge.js");
-const unique = require("./Util/Unique");
-const eventBus = require("./EventBus.js");
-
-const debug = require("debug")("Eleventy:TemplateConfig");
-const debugDev = require("debug")("Dev:Eleventy:TemplateConfig");
+const debug = debugUtil("Eleventy:TemplateConfig");
+const debugDev = debugUtil("Dev:Eleventy:TemplateConfig");
 
 /**
  * @module 11ty/eleventy/TemplateConfig
@@ -65,7 +65,12 @@ class TemplateConfig {
         this.projectConfigPaths = [projectConfigPath];
       }
     } else {
-      this.projectConfigPaths = [".eleventy.js", "eleventy.config.js", "eleventy.config.cjs"];
+      this.projectConfigPaths = [
+        ".eleventy.js",
+        "eleventy.config.js",
+        "eleventy.config.mjs",
+        "eleventy.config.cjs",
+      ];
     }
 
     if (customRootConfig) {
@@ -78,8 +83,8 @@ class TemplateConfig {
       this.customRootConfig = null;
     }
 
-    this.initializeRootConfig();
     this.hasConfigMerged = false;
+    this.isEsm = false;
   }
 
   /* Setter for Logger */
@@ -117,14 +122,22 @@ class TemplateConfig {
     this._inputDir = inputDir;
   }
 
+  setProjectUsingEsm(isEsmProject) {
+    this.isEsm = !!isEsmProject;
+  }
+
+  getIsProjectUsingEsm() {
+    return this.isEsm;
+  }
+
   /**
    * Resets the configuration.
    */
-  reset() {
+  async reset() {
     debugDev("Resetting configuration: TemplateConfig and UserConfig.");
     this.userConfig.reset();
-    this.initializeRootConfig();
-    this.forceReloadConfig();
+    // await this.initializeRootConfig();
+    await this.forceReloadConfig();
     this.usesGraph.reset();
 
     // Clear the compile cache
@@ -141,11 +154,24 @@ class TemplateConfig {
   }
 
   /**
+   * Async-friendly init method
+   */
+  async init(overrides) {
+    await this.initializeRootConfig();
+    if (overrides) {
+      this.appendToRootConfig(overrides);
+    }
+
+    this.config = await this.mergeConfig();
+    this.hasConfigMerged = true;
+  }
+
+  /**
    * Force a reload of the configuration object.
    */
-  forceReloadConfig() {
+  async forceReloadConfig() {
     this.hasConfigMerged = false;
-    this.getConfig();
+    await this.init();
   }
 
   /**
@@ -155,9 +181,7 @@ class TemplateConfig {
    */
   getConfig() {
     if (!this.hasConfigMerged) {
-      debugDev("Merging via getConfig (first time)");
-      this.config = this.mergeConfig();
-      this.hasConfigMerged = true;
+      throw new Error("Invalid call to .getConfig(). Needs an .init() first.");
     }
     return this.config;
   }
@@ -167,7 +191,7 @@ class TemplateConfig {
    *
    * @param {String} path - The new config path.
    */
-  setProjectConfigPath(path) {
+  async setProjectConfigPath(path) {
     if (path !== undefined) {
       this.projectConfigPaths = [path];
     } else {
@@ -177,7 +201,7 @@ class TemplateConfig {
     if (this.hasConfigMerged) {
       // merge it again
       debugDev("Merging in getConfig again after setting the local project config path.");
-      this.forceReloadConfig();
+      await this.forceReloadConfig();
     }
   }
 
@@ -204,7 +228,7 @@ class TemplateConfig {
     }
 
     if (!this.hasConfigMerged) {
-      this.getConfig();
+      throw new Error("Config has not yet merged. Needs `init()`.");
     }
 
     return this.config.pathPrefix;
@@ -213,12 +237,15 @@ class TemplateConfig {
   /**
    * Bootstraps the config object.
    */
-  initializeRootConfig() {
-    this.rootConfig = this.customRootConfig || require("./defaultConfig.js");
+  async initializeRootConfig() {
+    this.rootConfig =
+      this.customRootConfig || (await EleventyImportFromEleventy("./src/defaultConfig.js"));
+
     if (typeof this.rootConfig === "function") {
       this.rootConfig = this.rootConfig.call(this, this.userConfig);
       // debug( "rootConfig is a function, after calling, this.userConfig is %o", this.userConfig );
     }
+
     debug("rootConfig %o", this.rootConfig);
   }
 
@@ -236,7 +263,7 @@ class TemplateConfig {
    *
    * @param {Object} - the return Object from the user’s config file.
    */
-  processPlugins({ dir, pathPrefix }) {
+  async processPlugins({ dir, pathPrefix }) {
     this.userConfig.dir = dir;
     this.userConfig.pathPrefix = pathPrefix;
 
@@ -251,7 +278,7 @@ class TemplateConfig {
     for (let { plugin, options, pluginNamespace } of this.userConfig.plugins) {
       try {
         this.userConfig.activeNamespace = pluginNamespace;
-        this.userConfig._executePlugin(plugin, options);
+        await this.userConfig._executePlugin(plugin, options);
       } catch (e) {
         let name = this.userConfig._getPluginName(plugin);
         let namespaces = [storedActiveNamespace, pluginNamespace].filter((entry) => !!entry);
@@ -263,7 +290,7 @@ class TemplateConfig {
 
         throw new EleventyPluginError(
           `Error processing ${name ? `the \`${name}\`` : "a"} plugin${namespaceStr}`,
-          e
+          e,
         );
       }
     }
@@ -276,7 +303,7 @@ class TemplateConfig {
    *
    * @returns {{}} merged - The merged config file object.
    */
-  requireLocalConfigFile() {
+  async requireLocalConfigFile() {
     let localConfig = {};
     let path = this.projectConfigPaths.filter((path) => path).find((path) => fs.existsSync(path));
 
@@ -284,17 +311,11 @@ class TemplateConfig {
 
     if (path) {
       try {
-        localConfig = EleventyRequire(path);
+        localConfig = await EleventyImport(path, this.isEsm ? "esm" : "cjs");
         // debug( "localConfig require return value: %o", localConfig );
         if (typeof localConfig === "function") {
-          localConfig = localConfig(this.userConfig);
+          localConfig = await localConfig(this.userConfig);
           // debug( "localConfig is a function, after calling, this.userConfig is %o", this.userConfig );
-
-          if (typeof localConfig === "object" && typeof localConfig.then === "function") {
-            throw new EleventyConfigError(
-              `Error in your Eleventy config file '${path}': Returning a promise is not yet supported.`
-            );
-          }
         }
 
         // Still using removed `filters`? this was renamed to transforms
@@ -304,7 +325,7 @@ class TemplateConfig {
           Object.keys(localConfig.filters).length
         ) {
           throw new EleventyConfigError(
-            "The `filters` configuration option was renamed in Eleventy 0.3.3 and removed in Eleventy 1.0. Please use the `addTransform` configuration method instead. Read more: https://www.11ty.dev/docs/config/#transforms"
+            "The `filters` configuration option was renamed in Eleventy 0.3.3 and removed in Eleventy 1.0. Please use the `addTransform` configuration method instead. Read more: https://www.11ty.dev/docs/config/#transforms",
           );
         }
       } catch (err) {
@@ -314,7 +335,7 @@ class TemplateConfig {
             (err.message && err.message.includes("Cannot find module")
               ? chalk.cyan(" You may need to run `npm install`.")
               : ""),
-          err
+          err,
         );
       }
     } else {
@@ -330,8 +351,8 @@ class TemplateConfig {
    * @param {String} projectConfigPath - Path to project config.
    * @returns {{}} merged - The merged config file.
    */
-  mergeConfig() {
-    let localConfig = this.requireLocalConfigFile();
+  async mergeConfig() {
+    let localConfig = await this.requireLocalConfigFile();
 
     // Template Formats:
     // 1. Root Config (usually defaultConfig.js)
@@ -364,7 +385,7 @@ class TemplateConfig {
     // Temporarily restore templateFormats
     mergedConfig.templateFormats = templateFormats;
 
-    this.processPlugins(mergedConfig);
+    await this.processPlugins(mergedConfig);
 
     delete mergedConfig.templateFormats;
 
@@ -421,4 +442,4 @@ class TemplateConfig {
   }
 }
 
-module.exports = TemplateConfig;
+export default TemplateConfig;

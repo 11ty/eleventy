@@ -1,11 +1,10 @@
-const urlFilter = require("./Filters/Url");
-const serverlessUrlFilter = require("./Filters/ServerlessUrl");
-const slugFilter = require("./Filters/Slug");
-const slugifyFilter = require("./Filters/Slugify");
-const getLocaleCollectionItem = require("./Filters/GetLocaleCollectionItem");
-const getCollectionItemIndex = require("./Filters/GetCollectionItemIndex");
+import urlFilter from "./Filters/Url.js";
+import slugFilter from "./Filters/Slug.js";
+import slugifyFilter from "./Filters/Slugify.js";
+import getLocaleCollectionItem from "./Filters/GetLocaleCollectionItem.js";
+import getCollectionItemIndex from "./Filters/GetCollectionItemIndex.js";
 
-module.exports = function (config) {
+export default function (config) {
   let templateConfig = this;
 
   config.addFilter("slug", slugFilter);
@@ -28,8 +27,6 @@ module.exports = function (config) {
     return input;
   });
 
-  config.addFilter("serverlessUrl", serverlessUrlFilter);
-
   config.addFilter("getCollectionItemIndex", function (collection, pageOverride) {
     return getCollectionItemIndex.call(this, collection, pageOverride);
   });
@@ -45,18 +42,7 @@ module.exports = function (config) {
   });
 
   return {
-    templateFormats: [
-      "liquid",
-      "ejs",
-      "md",
-      "hbs",
-      "mustache",
-      "haml",
-      "pug",
-      "njk",
-      "html",
-      "11ty.js",
-    ],
+    templateFormats: ["liquid", "md", "njk", "html", "11ty.js"],
     // if your site lives in a subdirectory, change this
     pathPrefix: "/",
     markdownTemplateEngine: "liquid",
@@ -84,9 +70,7 @@ module.exports = function (config) {
       data: "_data",
       output: "_site",
     },
-    // deprecated, use config.addHandlebarsHelper
-    handlebarsHelpers: {},
     // deprecated, use config.addNunjucksFilter
     nunjucksFilters: {},
   };
-};
+}

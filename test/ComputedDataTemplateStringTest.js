@@ -1,5 +1,5 @@
-const test = require("ava");
-const ComputedDataTemplateString = require("../src/ComputedDataTemplateString");
+import test from "ava";
+import ComputedDataTemplateString from "../src/ComputedDataTemplateString.js";
 
 test("Get fake proxy data", (t) => {
   let cd = new ComputedDataTemplateString(["key1", "key2"]);
@@ -23,16 +23,10 @@ test("Get vars from output", (t) => {
   let cd = new ComputedDataTemplateString();
   t.deepEqual(cd.findVarsInOutput(""), []);
   t.deepEqual(cd.findVarsInOutput("slkdjfkljdsf"), []);
-  t.deepEqual(
-    cd.findVarsInOutput(`slkdjfkljdsf${cd.prefix}${cd.suffix}sldkjflkds`),
-    []
-  );
-  t.deepEqual(
-    cd.findVarsInOutput(
-      `slkdjfkljdsf${cd.prefix}firstVar${cd.suffix}sldkjflkds`
-    ),
-    ["firstVar"]
-  );
+  t.deepEqual(cd.findVarsInOutput(`slkdjfkljdsf${cd.prefix}${cd.suffix}sldkjflkds`), []);
+  t.deepEqual(cd.findVarsInOutput(`slkdjfkljdsf${cd.prefix}firstVar${cd.suffix}sldkjflkds`), [
+    "firstVar",
+  ]);
   t.deepEqual(
     cd.findVarsInOutput(
       `slkdjfkljdsf${cd.prefix}firstVar${cd.suffix}test${cd.prefix}firstVar${cd.suffix}sldkjflkds`

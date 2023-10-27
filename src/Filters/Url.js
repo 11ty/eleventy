@@ -1,4 +1,4 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { TemplatePath } from "@11ty/eleventy-utils";
 
 function isValidUrl(url) {
   try {
@@ -11,7 +11,7 @@ function isValidUrl(url) {
 }
 
 // Note: This filter is used in the Eleventy Navigation plugin in versions prior to 0.3.4
-module.exports = function (url, pathPrefix) {
+export default function (url, pathPrefix) {
   // work with undefined
   url = url || "";
 
@@ -40,4 +40,4 @@ module.exports = function (url, pathPrefix) {
   }
 
   return normUrl;
-};
+}

@@ -1,12 +1,16 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { TemplatePath } from "@11ty/eleventy-utils";
+import EleventyDevServer from "@11ty/eleventy-dev-server";
+import debugUtil from "debug";
 
-const EleventyBaseError = require("./EleventyBaseError");
-const ConsoleLogger = require("./Util/ConsoleLogger");
-const PathPrefixer = require("./Util/PathPrefixer");
-const merge = require("./Util/Merge");
-const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
+import EleventyBaseError from "./EleventyBaseError.js";
+import ConsoleLogger from "./Util/ConsoleLogger.js";
+import PathPrefixer from "./Util/PathPrefixer.js";
+import merge from "./Util/Merge.js";
+import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
+import { getModulePackageJson } from "./Util/ImportJsonSync.js";
+import { EleventyImport } from "./Util/Require.js";
 
-const debug = require("debug")("Eleventy:EleventyServe");
+const debug = debugUtil("Eleventy:EleventyServe");
 
 class EleventyServeConfigError extends EleventyBaseError {}
 
@@ -27,16 +31,17 @@ class EleventyServe {
   }
 
   get config() {
-    if (!this._config) {
-      throw new EleventyServeConfigError("You need to set the config property on EleventyServe.");
+    if (!this.eleventyConfig) {
+      throw new EleventyServeConfigError(
+        "You need to set the eleventyConfig property on EleventyServe."
+      );
     }
 
-    return this._config;
+    return this.eleventyConfig.getConfig();
   }
 
   set config(config) {
-    this._options = null;
-    this._config = config;
+    throw new Error("It’s not allowed to set config on EleventyServe. Set eleventyConfig instead.");
   }
 
   setAliases(aliases) {
@@ -67,16 +72,16 @@ class EleventyServe {
     }
   }
 
-  async setOutputDir(outputDir) {
+  setOutputDir(outputDir) {
     // TODO check if this is different and if so, restart server (if already running)
     // This applies if you change the output directory in your config file during watch/serve
     this.outputDir = outputDir;
   }
 
-  getServerModule(name) {
+  async getServerModule(name) {
     try {
       if (!name || name === DEFAULT_SERVER_OPTIONS.module) {
-        return require(DEFAULT_SERVER_OPTIONS.module);
+        return EleventyDevServer;
       }
 
       // Look for peer dep in local project
@@ -88,7 +93,7 @@ class EleventyServe {
         throw new Error("Invalid node_modules name for Eleventy server instance, received:" + name);
       }
 
-      let module = require(serverPath);
+      let module = await EleventyImport(serverPath);
 
       if (!("getServer" in module)) {
         throw new Error(
@@ -96,10 +101,8 @@ class EleventyServe {
         );
       }
 
-      let serverPackageJsonPath = TemplatePath.absolutePath(serverPath, "package.json");
-
-      let serverPackageJson = require(serverPackageJsonPath);
-      if (serverPackageJson["11ty"] && serverPackageJson["11ty"].compatibility) {
+      let serverPackageJson = getModulePackageJson(serverPath);
+      if (serverPackageJson["11ty"]?.compatibility) {
         try {
           this.eleventyConfig.userConfig.versionCheck(serverPackageJson["11ty"].compatibility);
         } catch (e) {
@@ -114,7 +117,7 @@ class EleventyServe {
           e.message
       );
       debug("Eleventy server error %o", e);
-      return require(DEFAULT_SERVER_OPTIONS.module);
+      return EleventyDevServer;
     }
   }
 
@@ -145,22 +148,24 @@ class EleventyServe {
   }
 
   get server() {
-    if (this._server) {
-      return this._server;
+    if (!this._server) {
+      throw new Error("Missing server instance. Did you call .initServerInstance?");
     }
 
-    let serverModule = this.getServerModule(this.options.module);
+    return this._server;
+  }
+
+  async initServerInstance() {
+    if (this._server) {
+      return;
+    }
+
+    let serverModule = await this.getServerModule(this.options.module);
 
     // Static method `getServer` was already checked in `getServerModule`
     this._server = serverModule.getServer("eleventy-server", this.outputDir, this.options);
 
     this.setAliases(this._aliases);
-
-    return this._server;
-  }
-
-  set server(val) {
-    this._server = val;
   }
 
   getSetupCallback() {
@@ -195,15 +200,16 @@ class EleventyServe {
     this._commandLinePort = port;
 
     await this.init();
+    await this.initServerInstance();
 
     this.server.serve(port || this.options.port);
   }
 
   async close() {
     if (this._server) {
-      await this.server.close();
+      await this._server.close();
 
-      this.server = undefined;
+      this._server = undefined;
     }
   }
 
@@ -256,4 +262,4 @@ class EleventyServe {
   }
 }
 
-module.exports = EleventyServe;
+export default EleventyServe;

@@ -1,24 +1,29 @@
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
-const TemplateConfig = require("../src/TemplateConfig");
-const Template = require("../src/Template");
-const FileSystemSearch = require("../src/FileSystemSearch");
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import Template from "../src/Template.js";
+import FileSystemSearch from "../src/FileSystemSearch.js";
 
-module.exports = function getNewTemplate(
+export default async function getNewTemplate(
   path,
   inputDir,
   outputDir,
   templateData = null,
   map = null,
-  eleventyConfig = new TemplateConfig()
+  eleventyConfig = null
 ) {
+  if (!eleventyConfig) {
+    eleventyConfig = new TemplateConfig();
+    await eleventyConfig.init();
+  }
+
   if (!map) {
-    map = new EleventyExtensionMap(
-      ["liquid", "ejs", "md", "hbs", "mustache", "haml", "pug", "njk", "html", "11ty.js"],
-      eleventyConfig
-    );
+    map = new EleventyExtensionMap(["liquid", "md", "njk", "html", "11ty.js"], eleventyConfig);
   }
   if (templateData) {
     templateData.setFileSystemSearch(new FileSystemSearch());
   }
-  return new Template(path, inputDir, outputDir, templateData, map, eleventyConfig);
-};
+  let tmpl = new Template(path, inputDir, outputDir, templateData, map, eleventyConfig);
+  await tmpl.getTemplateRender();
+
+  return tmpl;
+}

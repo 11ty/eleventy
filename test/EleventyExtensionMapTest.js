@@ -1,78 +1,81 @@
-const test = require("ava");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
-const TemplateConfig = require("../src/TemplateConfig");
+import test from "ava";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import TemplateConfig from "../src/TemplateConfig.js";
 
-function getExtensionMap(formats, config = new TemplateConfig()) {
+async function getExtensionMap(formats, config = new TemplateConfig()) {
+  if (config) {
+    await config.init();
+  }
   let map = new EleventyExtensionMap(formats, config);
   return map;
 }
 
-test("Empty formats", (t) => {
-  let map = getExtensionMap([]);
+test("Empty formats", async (t) => {
+  let map = await getExtensionMap([]);
   t.deepEqual(map.getGlobs("."), []);
 });
-test("Single format", (t) => {
-  let map = getExtensionMap(["pug"]);
-  t.deepEqual(map.getGlobs("."), ["./**/*.pug"]);
-  t.deepEqual(map.getGlobs("src"), ["./src/**/*.pug"]);
+test("Single format", async (t) => {
+  let map = await getExtensionMap(["liquid"]);
+  t.deepEqual(map.getGlobs("."), ["./**/*.liquid"]);
+  t.deepEqual(map.getGlobs("src"), ["./src/**/*.liquid"]);
 });
-test("Multiple formats", (t) => {
-  let map = getExtensionMap(["njk", "pug"]);
-  t.deepEqual(map.getGlobs("."), ["./**/*.{njk,pug}"]);
-  t.deepEqual(map.getGlobs("src"), ["./src/**/*.{njk,pug}"]);
+test("Multiple formats", async (t) => {
+  let map = await getExtensionMap(["njk", "liquid"]);
+  t.deepEqual(map.getGlobs("."), ["./**/*.{njk,liquid}"]);
+  t.deepEqual(map.getGlobs("src"), ["./src/**/*.{njk,liquid}"]);
 });
 
-test("Invalid keys are filtered (using passthrough copy)", (t) => {
-  let map = getExtensionMap(["lksdjfjlsk"]);
+test("Invalid keys are filtered (using passthrough copy)", async (t) => {
+  let map = await getExtensionMap(["lksdjfjlsk"]);
   t.deepEqual(map.getGlobs("."), ["./**/*.lksdjfjlsk"]);
 });
 
-test("Keys are mapped to lower case", (t) => {
-  let map = getExtensionMap(["PUG", "NJK"]);
-  t.deepEqual(map.getGlobs("."), ["./**/*.{pug,njk}"]);
+test("Keys are mapped to lower case", async (t) => {
+  let map = await getExtensionMap(["LIQUID", "PUG", "NJK"]);
+  t.deepEqual(map.getGlobs("."), ["./**/*.{liquid,pug,njk}"]);
 });
 
-test("Pruned globs", (t) => {
-  let map = getExtensionMap(["pug", "njk", "png"]);
+test("Pruned globs", async (t) => {
+  let map = await getExtensionMap(["liquid", "njk", "png"]);
   t.deepEqual(map.getPassthroughCopyGlobs("."), ["./**/*.png"]);
 });
 
-test("Empty path for fileList", (t) => {
-  let map = getExtensionMap(["njk", "pug"]);
+test("Empty path for fileList", async (t) => {
+  let map = await getExtensionMap(["njk", "liquid"]);
   t.deepEqual(map.getFileList(), []);
 });
 
-test("fileList", (t) => {
-  let map = getExtensionMap(["njk", "pug"]);
-  t.deepEqual(map.getFileList("filename"), ["filename.njk", "filename.pug"]);
+test("fileList", async (t) => {
+  let map = await getExtensionMap(["njk", "liquid"]);
+  t.deepEqual(map.getFileList("filename"), ["filename.njk", "filename.liquid"]);
 });
 
-test("fileList with dir", (t) => {
-  let map = getExtensionMap(["njk", "pug"]);
+test("fileList with dir", async (t) => {
+  let map = await getExtensionMap(["njk", "liquid"]);
   t.deepEqual(map.getFileList("filename", "_includes"), [
     "_includes/filename.njk",
-    "_includes/filename.pug",
+    "_includes/filename.liquid",
   ]);
 });
 
-test("fileList with dir in path", (t) => {
-  let map = getExtensionMap(["njk", "pug"]);
+test("fileList with dir in path", async (t) => {
+  let map = await getExtensionMap(["njk", "liquid"]);
   t.deepEqual(map.getFileList("layouts/filename"), [
     "layouts/filename.njk",
-    "layouts/filename.pug",
+    "layouts/filename.liquid",
   ]);
 });
 
-test("fileList with dir in path and dir", (t) => {
-  let map = getExtensionMap(["njk", "pug"]);
+test("fileList with dir in path and dir", async (t) => {
+  let map = await getExtensionMap(["njk", "liquid", "pug"]);
   t.deepEqual(map.getFileList("layouts/filename", "_includes"), [
     "_includes/layouts/filename.njk",
-    "_includes/layouts/filename.pug",
+    "_includes/layouts/filename.liquid",
   ]);
 });
 
-test("removeTemplateExtension", (t) => {
-  let map = getExtensionMap(["njk", "11ty.js"]);
+test("removeTemplateExtension", async (t) => {
+  let map = await getExtensionMap(["njk", "11ty.js"]);
   t.is(map.removeTemplateExtension("component.njk"), "component");
   t.is(map.removeTemplateExtension("component.11ty.js"), "component");
 
@@ -81,14 +84,14 @@ test("removeTemplateExtension", (t) => {
   t.is(map.removeTemplateExtension("component.js"), "component.js");
 });
 
-test("hasEngine", (t) => {
-  let map = getExtensionMap(["liquid", "njk", "11ty.js", "ejs", "pug"]);
-  t.true(map.hasEngine("default.ejs"));
-  t.is(map.getKey("default.ejs"), "ejs");
+test("hasEngine", async (t) => {
+  let map = await getExtensionMap(["liquid", "njk", "11ty.js"]);
+  t.true(map.hasEngine("default.liquid"));
+  t.is(map.getKey("default.liquid"), "liquid");
   t.falsy(map.getKey());
-  t.is(map.getKey("EjS"), "ejs");
-  t.true(map.hasEngine("EjS"));
-  t.true(map.hasEngine("ejs"));
+  t.is(map.getKey("LiQuid"), "liquid");
+  t.true(map.hasEngine("LiqUiD"));
+  t.true(map.hasEngine("liquid"));
   t.falsy(map.getKey("sldkjfkldsj"));
   t.false(map.hasEngine("sldkjfkldsj"));
 
@@ -99,14 +102,14 @@ test("hasEngine", (t) => {
   t.true(map.hasEngine("md"));
 });
 
-test("hasEngine no formats passed in", (t) => {
-  let map = getExtensionMap([]);
-  t.true(map.hasEngine("default.ejs"));
-  t.is(map.getKey("default.ejs"), "ejs");
+test("hasEngine no formats passed in", async (t) => {
+  let map = await getExtensionMap([]);
+  t.true(map.hasEngine("default.liquid"));
+  t.is(map.getKey("default.liquid"), "liquid");
   t.falsy(map.getKey());
-  t.is(map.getKey("EjS"), "ejs");
-  t.true(map.hasEngine("EjS"));
-  t.true(map.hasEngine("ejs"));
+  t.is(map.getKey("LiQuid"), "liquid");
+  t.true(map.hasEngine("LiqUiD"));
+  t.true(map.hasEngine("liquid"));
   t.falsy(map.getKey("sldkjfkldsj"));
   t.false(map.hasEngine("sldkjfkldsj"));
 
@@ -118,8 +121,8 @@ test("hasEngine no formats passed in", (t) => {
   t.true(map.hasEngine("md"));
 });
 
-test("getKey", (t) => {
-  let map = getExtensionMap(["njk", "11ty.js", "md"]);
+test("getKey", async (t) => {
+  let map = await getExtensionMap(["njk", "11ty.js", "md"]);
   t.is(map.getKey("component.njk"), "njk");
   t.is(map.getKey("component.11ty.js"), "11ty.js");
   t.is(map.getKey("11ty.js"), "11ty.js");
@@ -133,25 +136,26 @@ test("getKey", (t) => {
   t.is(map.getKey("component.js"), undefined);
 });
 
-test("isFullTemplateFilePath (not a passthrough copy extension)", (t) => {
-  let map = getExtensionMap(["liquid", "njk", "11ty.js", "ejs", "pug", "js", "css"]);
+test("isFullTemplateFilePath (not a passthrough copy extension)", async (t) => {
+  let map = await getExtensionMap(["liquid", "njk", "11ty.js", "js", "css"]);
   t.true(map.isFullTemplateFilePath("template.liquid"));
   t.true(map.isFullTemplateFilePath("template.njk"));
   t.true(map.isFullTemplateFilePath("template.11ty.js"));
-  t.true(map.isFullTemplateFilePath("template.ejs"));
-  t.true(map.isFullTemplateFilePath("template.pug"));
+  t.false(map.isFullTemplateFilePath("template.ejs"));
+  t.false(map.isFullTemplateFilePath("template.pug"));
   t.false(map.isFullTemplateFilePath("passthrough.js"));
   t.false(map.isFullTemplateFilePath("passthrough.css"));
 });
 
-test("getValidExtensionsForPath", (t) => {
+test("getValidExtensionsForPath", async (t) => {
   let cfg = new TemplateConfig();
   cfg.userConfig.extensionMap.add({
     key: "js",
     extension: "js",
   });
+  await cfg.init();
 
-  let map = getExtensionMap(["liquid", "njk", "11ty.js", "js"], cfg);
+  let map = await getExtensionMap(["liquid", "njk", "11ty.js", "js"], cfg);
 
   t.deepEqual(map.getValidExtensionsForPath("template.liquid"), ["liquid"]);
   t.deepEqual(map.getValidExtensionsForPath("template.11ty.js"), ["11ty.js", "js"]);
@@ -160,18 +164,19 @@ test("getValidExtensionsForPath", (t) => {
   t.deepEqual(map.getValidExtensionsForPath("njk.liquid.11ty.js"), ["11ty.js", "js"]);
 });
 
-test("shouldSpiderJavaScriptDependencies", (t) => {
+test("shouldSpiderJavaScriptDependencies", async (t) => {
   let cfg = new TemplateConfig();
   cfg.userConfig.extensionMap.add({
     key: "js",
     extension: "js",
   });
+  await cfg.init();
 
-  let map = getExtensionMap(["liquid", "njk", "11ty.js", "js"], cfg);
+  let map = await getExtensionMap(["liquid", "njk", "11ty.js", "js"], cfg);
 
-  t.deepEqual(map.shouldSpiderJavaScriptDependencies("template.liquid"), false);
-  t.deepEqual(map.shouldSpiderJavaScriptDependencies("template.njk"), false);
-  t.deepEqual(map.shouldSpiderJavaScriptDependencies("template.css"), false);
-  t.deepEqual(map.shouldSpiderJavaScriptDependencies("template.11ty.js"), true);
-  t.deepEqual(map.shouldSpiderJavaScriptDependencies("template.js"), false);
+  t.deepEqual(await map.shouldSpiderJavaScriptDependencies("template.liquid"), false);
+  t.deepEqual(await map.shouldSpiderJavaScriptDependencies("template.njk"), false);
+  t.deepEqual(await map.shouldSpiderJavaScriptDependencies("template.css"), false);
+  t.deepEqual(await map.shouldSpiderJavaScriptDependencies("template.11ty.js"), true);
+  t.deepEqual(await map.shouldSpiderJavaScriptDependencies("template.js"), false);
 });

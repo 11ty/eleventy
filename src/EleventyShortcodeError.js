@@ -1,5 +1,5 @@
-const EleventyBaseError = require("./EleventyBaseError");
+import EleventyBaseError from "./EleventyBaseError.js";
 
 class EleventyShortcodeError extends EleventyBaseError {}
 
-module.exports = EleventyShortcodeError;
+export default EleventyShortcodeError;

@@ -1,13 +1,15 @@
-const fs = require("fs");
-const path = require("path");
-const isGlob = require("is-glob");
-const copy = require("recursive-copy");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import fs from "node:fs";
+import path from "node:path";
 
-const EleventyBaseError = require("./EleventyBaseError");
-const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
+import isGlob from "is-glob";
+import copy from "recursive-copy";
+import { TemplatePath } from "@11ty/eleventy-utils";
+import debugUtil from "debug";
 
-const debug = require("debug")("Eleventy:TemplatePassthrough");
+import EleventyBaseError from "./EleventyBaseError.js";
+import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
+
+const debug = debugUtil("Eleventy:TemplatePassthrough");
 
 class TemplatePassthroughError extends EleventyBaseError {}
 
@@ -258,4 +260,4 @@ class TemplatePassthrough {
   }
 }
 
-module.exports = TemplatePassthrough;
+export default TemplatePassthrough;

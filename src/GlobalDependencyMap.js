@@ -1,16 +1,17 @@
-const { DepGraph } = require("dependency-graph");
-const { TemplatePath } = require("@11ty/eleventy-utils");
-const debug = require("debug")("Eleventy:Dependencies");
+import { fileURLToPath } from "node:url";
 
-const PathNormalizer = require("./Util/PathNormalizer.js");
+import { DepGraph } from "dependency-graph";
+import { TemplatePath } from "@11ty/eleventy-utils";
+import debugUtil from "debug";
+
+import PathNormalizer from "./Util/PathNormalizer.js";
+
+const debug = debugUtil("Eleventy:Dependencies");
 
 class GlobalDependencyMap {
   // dependency-graph requires these keys to be alphabetic strings
   static LAYOUT_KEY = "layout";
   static COLLECTION_PREFIX = "__collection:";
-
-  // URL object with a windows, with file:// already removed (from file:///C:/directory/ to /C:/directory/)
-  static WINDOWS_DRIVE_URL_PATH = /^\/\w\:\//;
 
   reset() {
     this._map = undefined;
@@ -92,10 +93,7 @@ class GlobalDependencyMap {
 
     // Fix file:///Users/ or file:///C:/ paths passed in
     if (node.startsWith("file://")) {
-      node = node.slice("file://".length);
-      if (node.match(GlobalDependencyMap.WINDOWS_DRIVE_URL_PATH)) {
-        node = node.slice(1); // take off the leading slash, /C:/ becomes C:/
-      }
+      node = fileURLToPath(node);
     }
 
     if (typeof node !== "string") {
@@ -343,4 +341,4 @@ class GlobalDependencyMap {
   }
 }
 
-module.exports = GlobalDependencyMap;
+export default GlobalDependencyMap;

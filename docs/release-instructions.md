@@ -2,12 +2,6 @@
 
 - `@iarna/toml` has a 3.0 that we have never been on but it was released the same day as the last 2.x https://github.com/BinaryMuse/toml-node/commits/master (needs more investigation)
 
-## List of dependencies that went ESM
-
-- `@sindresorhus/slugify` ESM at 2.x
-- `multimatch` is ESM at 6
-- `bcp-47-normalize` at 1.x
-
 # Release Procedure
 
 1. (Optional) Update minor dependencies in package.json
@@ -18,6 +12,7 @@
      - 0.12.x+ requires Node 10+
      - 1.x+ requires Node 12+
      - 2.x+ requires Node 14+
+     - 3.x+ requires Node 18+
 1. `rm -rf node_modules && rm -f package-lock.json && npm install`
 1. `npm audit`
 1. Make sure `npx ava` runs okay

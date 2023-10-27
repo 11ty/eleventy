@@ -1,5 +1,5 @@
 // TODO locale-friendly, see GetLocaleCollectionItem.js)
-module.exports = function getCollectionItemIndex(collection, page) {
+export default function getCollectionItemIndex(collection, page) {
   if (!page) {
     page = this.page;
   }
@@ -14,4 +14,4 @@ module.exports = function getCollectionItemIndex(collection, page) {
     }
     j++;
   }
-};
+}

@@ -1,10 +1,11 @@
-const { set: lodashSet, get: lodashGet, chunk: lodashChunk } = require("@11ty/lodash-custom");
-const { isPlainObject } = require("@11ty/eleventy-utils");
+import { isPlainObject } from "@11ty/eleventy-utils";
+import lodash from "@11ty/lodash-custom";
 
-const EleventyBaseError = require("../EleventyBaseError");
-const { DeepCopy } = require("../Util/Merge");
-const { ProxyWrap } = require("../Util/ProxyWrap");
-let serverlessUrlFilter = require("../Filters/ServerlessUrl");
+import EleventyBaseError from "../EleventyBaseError.js";
+import { DeepCopy } from "../Util/Merge.js";
+import { ProxyWrap } from "../Util/ProxyWrap.js";
+
+const { set: lodashSet, get: lodashGet, chunk: lodashChunk } = lodash;
 
 class PaginationConfigError extends EleventyBaseError {}
 class PaginationError extends EleventyBaseError {}
@@ -78,26 +79,10 @@ class Pagination {
 
     this.size = data.pagination.size;
     this.alias = data.pagination.alias;
-    // TODO do we need the full data set for serverless?
     this.fullDataSet = this._get(this.data, this._getDataKey());
     // this returns an array
     this.target = this._resolveItems();
-
-    // truncate pagination data if user-supplied `serverlessFilter` function
-    if (
-      data.pagination.serverless &&
-      this._has(data, data.pagination.serverless) &&
-      typeof data.pagination.serverlessFilter === "function"
-    ) {
-      // Warn: this doesn’t run filter/before/pagination transformations
-      // Warn: `pagination.pages`, pageNumber, links, hrefs, etc
-      let serverlessPaginationKey = this._get(data, data.pagination.serverless);
-      this.chunkedItems = [
-        data.pagination.serverlessFilter(this.fullDataSet, serverlessPaginationKey),
-      ];
-    } else {
-      this.chunkedItems = this.pagedItems;
-    }
+    this.chunkedItems = this.pagedItems;
   }
 
   setTemplate(tmpl) {
@@ -322,59 +307,8 @@ class Pagination {
     // template for some things)
 
     let indices = new Set();
-    let currentPageIndex;
-
-    // Serverless pagination:
-    if (this._has(this.data, "pagination.serverless")) {
-      let serverlessPaginationKey;
-
-      if (this.paginationTargetType === "object" && this.shouldResolveDataToObjectValues()) {
-        serverlessPaginationKey = Object.keys(this.fullDataSet)[0];
-      } else {
-        serverlessPaginationKey = 0;
-      }
-
-      if (this._has(this.data, this.data.pagination.serverless)) {
-        serverlessPaginationKey = this._get(this.data, this.data.pagination.serverless);
-      }
-
-      // Typically this would be a string, not an object.
-      // But, we’re supporting `serverless: "eleventy.serverless.path"` so that all of
-      // the path params get passed to serverlessFilter, e.g. `serverlessFilter: function(paginationData, { slug, pagenumber })`
-      if (isPlainObject(serverlessPaginationKey)) {
-        indices.add(0);
-      } else if (this.paginationTargetType === "array") {
-        currentPageIndex = parseInt(serverlessPaginationKey, 10);
-
-        indices.add(0); // first
-        if (currentPageIndex > 0) {
-          indices.add(currentPageIndex - 1); // previous
-        }
-        if (currentPageIndex >= 0 && currentPageIndex <= items.length - 1) {
-          indices.add(currentPageIndex); // current
-        }
-        if (currentPageIndex + 1 < items.length) {
-          indices.add(currentPageIndex + 1); // next
-        }
-        indices.add(items.length - 1); // last
-      } else if (this.paginationTargetType === "object") {
-        if (this.shouldResolveDataToObjectValues()) {
-          currentPageIndex = Object.keys(this.fullDataSet).findIndex(
-            (key) => key === serverlessPaginationKey
-          );
-        } else {
-          currentPageIndex = items.findIndex((entry) => entry[0] === serverlessPaginationKey);
-        }
-
-        // Array->findIndex returns -1 when not found
-        if (currentPageIndex !== -1) {
-          indices.add(currentPageIndex); // current
-        }
-      }
-    } else {
-      for (let j = 0; j <= items.length - 1; j++) {
-        indices.add(j);
-      }
+    for (let j = 0; j <= items.length - 1; j++) {
+      indices.add(j);
     }
 
     for (let pageNumber of indices) {
@@ -393,30 +327,7 @@ class Pagination {
       Object.assign(paginationData.pagination, this.getOverrideDataPages(items, pageNumber));
 
       if (this.alias) {
-        // When aliasing an object in serverless, use the object value and not the key
-        if (
-          this.paginationTargetType === "object" &&
-          this._has(this.data, this.data.pagination.serverless)
-        ) {
-          // This should maybe be the default for all object pagination, not just serverless ones?
-          let keys = this.getNormalizedItems(items[pageNumber]);
-
-          if (Array.isArray(keys)) {
-            lodashSet(
-              paginationData,
-              this.alias,
-              key.map((key) => this._get(this.fullDataSet, key))
-            );
-          } else {
-            if (this.shouldResolveDataToObjectValues()) {
-              lodashSet(paginationData, this.alias, keys);
-            } else {
-              lodashSet(paginationData, this.alias, this._get(this.fullDataSet, keys));
-            }
-          }
-        } else {
-          lodashSet(paginationData, this.alias, this.getNormalizedItems(items[pageNumber]));
-        }
+        lodashSet(paginationData, this.alias, this.getNormalizedItems(items[pageNumber]));
       }
 
       // Do *not* deep merge pagination data! See https://github.com/11ty/eleventy/issues/147#issuecomment-440802454
@@ -426,50 +337,6 @@ class Pagination {
       // TODO subdirectory to links if the site doesn’t live at /
       if (rawPath) {
         links.push("/" + rawPath);
-      }
-
-      if (this._has(this.data, "pagination.serverless")) {
-        let keys = this.data.pagination.serverless.split(".");
-        let key = keys.pop();
-
-        let serverlessUrls = linkInstance.getServerlessUrls();
-        let validUrls = Object.values(serverlessUrls).flat();
-
-        if (this.data.pagination.serverless !== "eleventy.serverless.path") {
-          validUrls = validUrls.filter((entry) => entry.includes(`/:${key}/`));
-        }
-
-        if (validUrls.length === 0) {
-          throw new Error(
-            `Serverless pagination template (${this.data.page.inputPath}) has no \`permalink.${key}\` with \`/:${key}/\``
-          );
-        }
-
-        let filterData = {};
-
-        // Serverless URLs like `/blog/tags/:slug/page/:pagenumber/` need both `slug` and `pagenumber`
-        // so we attempt to resolve the extra data from the pagination chunk.
-        if (clonedData.eleventy?.serverless?.path) {
-          Object.assign(filterData, clonedData.eleventy?.serverless?.path);
-        }
-
-        // get URL path information from data chunk
-        validUrls.forEach((url) => {
-          url.split("/").forEach((pathEntry) => {
-            if (pathEntry.startsWith(":")) {
-              let urlKey = pathEntry.slice(1);
-              if (
-                items[pageNumber] &&
-                items[pageNumber].length > 0 &&
-                items[pageNumber][0][urlKey]
-              ) {
-                filterData[urlKey] = items[pageNumber][0][urlKey];
-              }
-            }
-          });
-        });
-
-        href = serverlessUrlFilter(validUrls[0], filterData);
       }
 
       hrefs.push(href);
@@ -497,11 +364,8 @@ class Pagination {
       index++;
     }
 
-    // Final output is filtered for serverless
-    return entries.filter((entry) => {
-      return !currentPageIndex || entry.pageNumber === currentPageIndex;
-    });
+    return entries;
   }
 }
 
-module.exports = Pagination;
+export default Pagination;

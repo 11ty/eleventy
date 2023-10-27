@@ -20,4 +20,4 @@ class EleventyBaseError extends Error {
     }
   }
 }
-module.exports = EleventyBaseError;
+export default EleventyBaseError;

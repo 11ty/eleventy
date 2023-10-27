@@ -1,4 +1,4 @@
-const TemplateContentPrematureUseError = require("./Errors/TemplateContentPrematureUseError");
+import TemplateContentPrematureUseError from "./Errors/TemplateContentPrematureUseError.js";
 
 /* Hack to workaround the variety of error handling schemes in template languages */
 class EleventyErrorUtil {
@@ -14,10 +14,7 @@ class EleventyErrorUtil {
       return false;
     }
 
-    return (
-      msg.indexOf(EleventyErrorUtil.prefix) > -1 &&
-      msg.indexOf(EleventyErrorUtil.suffix) > -1
-    );
+    return msg.indexOf(EleventyErrorUtil.prefix) > -1 && msg.indexOf(EleventyErrorUtil.suffix) > -1;
   }
 
   static cleanMessage(msg) {
@@ -30,9 +27,7 @@ class EleventyErrorUtil {
 
     return msg.slice(
       0,
-      msg.indexOf(EleventyErrorUtil.prefix) < 0
-        ? 0
-        : msg.indexOf(EleventyErrorUtil.prefix)
+      msg.indexOf(EleventyErrorUtil.prefix) < 0 ? 0 : msg.indexOf(EleventyErrorUtil.prefix)
     );
   }
 
@@ -70,11 +65,10 @@ class EleventyErrorUtil {
       (e.originalError &&
         (e.originalError.name === "RenderError" ||
           e.originalError.name === "UndefinedVariableError") &&
-        e.originalError.originalError instanceof
-          TemplateContentPrematureUseError) || // Liquid
+        e.originalError.originalError instanceof TemplateContentPrematureUseError) || // Liquid
       (e.message || "").indexOf("TemplateContentPrematureUseError") > -1
     ); // Nunjucks
   }
 }
 
-module.exports = EleventyErrorUtil;
+export default EleventyErrorUtil;

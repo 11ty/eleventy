@@ -1,3 +1,3 @@
-module.exports = function Unique(arr) {
+export default function Unique(arr) {
   return Array.from(new Set(arr));
-};
+}

@@ -1,6 +1,8 @@
-const { set: lodashSet } = require("@11ty/lodash-custom");
+import lodash from "@11ty/lodash-custom";
+import debugUtil from "debug";
 
-const debug = require("debug")("Eleventy:ComputedDataTemplateString");
+const { set: lodashSet } = lodash;
+const debug = debugUtil("Eleventy:ComputedDataTemplateString");
 
 /* Calculates computed data in Template Strings.
  * Ideally we would use the Proxy approach but it doesn’t work
@@ -65,4 +67,4 @@ class ComputedDataTemplateString {
   }
 }
 
-module.exports = ComputedDataTemplateString;
+export default ComputedDataTemplateString;

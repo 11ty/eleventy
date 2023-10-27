@@ -1,19 +1,22 @@
-const fs = require("fs");
-const path = require("path");
-const { set: lodashset, get: lodashget } = require("@11ty/lodash-custom");
-const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
+import fs from "node:fs";
+import path from "node:path";
 
-const merge = require("./Util/Merge");
-const unique = require("./Util/Unique");
-const TemplateGlob = require("./TemplateGlob");
-const EleventyExtensionMap = require("./EleventyExtensionMap");
-const EleventyBaseError = require("./EleventyBaseError");
-const TemplateDataInitialGlobalData = require("./TemplateDataInitialGlobalData");
-const { EleventyRequire } = require("./Util/Require");
+import lodash from "@11ty/lodash-custom";
+import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
+import debugUtil from "debug";
 
-const debugWarn = require("debug")("Eleventy:Warnings");
-const debug = require("debug")("Eleventy:TemplateData");
-const debugDev = require("debug")("Dev:Eleventy:TemplateData");
+import merge from "./Util/Merge.js";
+import unique from "./Util/Unique.js";
+import TemplateGlob from "./TemplateGlob.js";
+import EleventyExtensionMap from "./EleventyExtensionMap.js";
+import EleventyBaseError from "./EleventyBaseError.js";
+import TemplateDataInitialGlobalData from "./TemplateDataInitialGlobalData.js";
+import { EleventyImport, EleventyLoadContent } from "./Util/Require.js";
+
+const { set: lodashSet, get: lodashGet } = lodash;
+const debugWarn = debugUtil("Eleventy:Warnings");
+const debug = debugUtil("Eleventy:TemplateData");
+const debugDev = debugUtil("Dev:Eleventy:TemplateData");
 
 class FSExistsCache {
   constructor() {
@@ -56,6 +59,7 @@ class TemplateData {
     this.rawImports = {};
     this.globalData = null;
     this.templateDirectoryData = {};
+    this.isEsm = false;
 
     // It's common for data files not to exist, so we avoid going to the FS to
     // re-check if they do via a quick-and-dirty cache.
@@ -70,6 +74,10 @@ class TemplateData {
 
   setGlobalDataDirectories(dirsObject) {
     this.directories = dirsObject;
+  }
+
+  setProjectUsingEsm(isEsmProject) {
+    this.isEsm = !!isEsmProject;
   }
 
   get extensionMap() {
@@ -104,12 +112,11 @@ class TemplateData {
       : inputDir;
   }
 
-  getRawImports() {
-    let pkgPath = TemplatePath.absolutePath("package.json");
-
+  async getRawImports() {
     try {
-      this.rawImports[this.config.keys.package] = require(pkgPath);
+      this.rawImports[this.config.keys.package] = await EleventyImport("package.json", "json");
     } catch (e) {
+      let pkgPath = TemplatePath.absolutePath("package.json");
       debug("Could not find and/or require package.json for data preprocessing at %o", pkgPath);
     }
 
@@ -188,10 +195,12 @@ class TemplateData {
       if (suffix && typeof suffix === "string") {
         if (suffix.startsWith(".")) {
           // .suffix.js
+          globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.mjs`);
           globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.cjs`);
           globSuffixesWithLeadingDot.add(`${suffix.slice(1)}.js`);
         } else {
           // "suffix.js" without leading dot
+          globSuffixesWithoutLeadingDot.add(`${suffix || ""}.mjs`);
           globSuffixesWithoutLeadingDot.add(`${suffix || ""}.cjs`);
           globSuffixesWithoutLeadingDot.add(`${suffix || ""}.js`);
         }
@@ -247,7 +256,7 @@ class TemplateData {
   }
 
   getGlobalDataExtensionPriorities() {
-    return this.getUserDataExtensions().concat(["json", "cjs", "js"]);
+    return this.getUserDataExtensions().concat(["json", "mjs", "cjs", "js"]);
   }
 
   static calculateExtensionPriority(path, priorities) {
@@ -298,7 +307,6 @@ class TemplateData {
   }
 
   async getAllGlobalData() {
-    let rawImports = this.getRawImports();
     let globalData = {};
     let files = TemplatePath.addLeadingDotSlashArray(await this.getGlobalDataFiles());
 
@@ -307,7 +315,7 @@ class TemplateData {
     let dataFileConflicts = {};
 
     for (let j = 0, k = files.length; j < k; j++) {
-      let data = await this.getDataValue(files[j], rawImports);
+      let data = await this.getDataValue(files[j]);
       let objectPathTarget = this.getObjectPathForDataFile(files[j]);
 
       // Since we're joining directory paths and an array is not usable as an objectkey since two identical arrays are not double equal,
@@ -323,13 +331,13 @@ class TemplateData {
           `merging global data from ${files[j]} with an already existing global data file (${dataFileConflicts[objectPathTargetString]}). Overriding existing keys.`
         );
 
-        let oldData = lodashget(globalData, objectPathTarget);
+        let oldData = lodashGet(globalData, objectPathTarget);
         data = TemplateData.mergeDeep(this.config, oldData, data);
       }
 
       dataFileConflicts[objectPathTargetString] = files[j];
       debug(`Found global data file ${files[j]} and adding as: ${objectPathTarget}`);
-      lodashset(globalData, objectPathTarget, data);
+      lodashSet(globalData, objectPathTarget, data);
     }
 
     return globalData;
@@ -362,7 +370,7 @@ class TemplateData {
   }
 
   async getGlobalData() {
-    let rawImports = this.getRawImports();
+    let rawImports = await this.getRawImports();
 
     if (!this.globalData) {
       this.globalData = new Promise(async (resolve) => {
@@ -399,7 +407,7 @@ class TemplateData {
 
     let dataSource = {};
     for (let path of localDataPaths) {
-      let dataForPath = await this.getDataValue(path, null, true);
+      let dataForPath = await this.getDataValue(path);
       if (!isPlainObject(dataForPath)) {
         debug(
           "Warning: Template and Directory data files expect an object to be returned, instead `%o` returned `%o`",
@@ -458,33 +466,12 @@ class TemplateData {
     return this.config.dataExtensions && this.config.dataExtensions.size > 0;
   }
 
-  async _loadFileContents(path, options = {}) {
-    let rawInput;
-    let encoding = "utf8";
-    if ("encoding" in options) {
-      encoding = options.encoding;
-    }
-
-    try {
-      rawInput = await fs.promises.readFile(path, encoding);
-    } catch (e) {
-      // if file does not exist, return nothing
-    }
-
-    // Can return a buffer, string, etc
-    if (typeof rawInput === "string") {
-      return rawInput.trim();
-    }
-
-    return rawInput;
-  }
-
-  async _parseDataFile(path, rawImports, ignoreProcessing, parser, options = {}) {
+  async _parseDataFile(path, parser, options = {}) {
     let readFile = !("read" in options) || options.read === true;
     let rawInput;
 
     if (readFile) {
-      rawInput = await this._loadFileContents(path, options);
+      rawInput = await EleventyLoadContent(path, options);
     }
 
     if (readFile && !rawInput) {
@@ -506,10 +493,10 @@ class TemplateData {
 
   // ignoreProcessing = false for global data files
   // ignoreProcessing = true for local data files
-  async getDataValue(path, rawImports, ignoreProcessing) {
+  async getDataValue(path) {
     let extension = TemplatePath.getExtension(path);
 
-    if (extension === "js" || extension === "cjs") {
+    if (extension === "js" || extension === "cjs" || extension === "mjs") {
       // JS data file or require’d JSON (no preprocessing needed)
       let localPath = TemplatePath.absolutePath(path);
       let exists = this._fsExistsCache.exists(localPath);
@@ -525,7 +512,14 @@ class TemplateData {
       let dataBench = this.benchmarks.data.get(`\`${path}\``);
       dataBench.before();
 
-      let returnValue = EleventyRequire(localPath);
+      let type = "cjs";
+      if (extension === "mjs" || (extension === "js" && this.isEsm)) {
+        type = "esm";
+      }
+
+      // We always need to use `import()`, as `require` isn’t available in ESM.
+      let returnValue = await EleventyImport(localPath, type);
+
       // TODO special exception for Global data `permalink.js`
       // module.exports = (data) => `${data.page.filePathStem}/`; // Does not work
       // module.exports = () => ((data) => `${data.page.filePathStem}/`); // Works
@@ -541,11 +535,11 @@ class TemplateData {
       // Other extensions
       let { parser, options } = this.getUserDataParser(extension);
 
-      return this._parseDataFile(path, rawImports, ignoreProcessing, parser, options);
+      return this._parseDataFile(path, parser, options);
     } else if (extension === "json") {
       // File to string, parse with JSON (preprocess)
       const parser = (content) => JSON.parse(content);
-      return this._parseDataFile(path, rawImports, ignoreProcessing, parser);
+      return this._parseDataFile(path, parser);
     } else {
       throw new TemplateDataParseError(
         `Could not find an appropriate data parser for ${path}. Do you need to add a plugin to your config file?`
@@ -573,6 +567,7 @@ class TemplateData {
       if (suffix) {
         paths.push(base + suffix + ".js");
         paths.push(base + suffix + ".cjs");
+        paths.push(base + suffix + ".mjs");
       }
       paths.push(base + suffix + ".json"); // default: .11tydata.json
 
@@ -672,11 +667,6 @@ class TemplateData {
 
     return data;
   }
-
-  async getServerlessPathData() {
-    let configApiGlobalData = await this.getInitialGlobalData();
-    return configApiGlobalData?.eleventy?.serverless?.path;
-  }
 }
 
-module.exports = TemplateData;
+export default TemplateData;

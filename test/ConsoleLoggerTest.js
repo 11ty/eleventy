@@ -1,5 +1,5 @@
-const test = require("ava");
-const ConsoleLogger = require("../src/Util/ConsoleLogger");
+import test from "ava";
+import ConsoleLogger from "../src/Util/ConsoleLogger.js";
 
 test("Disable chalk", (t) => {
   let cl = new ConsoleLogger();

@@ -1,25 +1,31 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
-const { performance } = require("perf_hooks");
+import { performance } from "node:perf_hooks";
+import { TemplatePath } from "@11ty/eleventy-utils";
+import debugUtil from "debug";
 
-const pkg = require("../package.json");
-const TemplateData = require("./TemplateData");
-const TemplateWriter = require("./TemplateWriter");
-const EleventyExtensionMap = require("./EleventyExtensionMap");
-const EleventyErrorHandler = require("./EleventyErrorHandler");
-const EleventyBaseError = require("./EleventyBaseError");
-const EleventyServe = require("./EleventyServe");
-const EleventyWatch = require("./EleventyWatch");
-const EleventyWatchTargets = require("./EleventyWatchTargets");
-const EleventyFiles = require("./EleventyFiles");
-const ConsoleLogger = require("./Util/ConsoleLogger");
-const PathPrefixer = require("./Util/PathPrefixer");
-const TemplateConfig = require("./TemplateConfig");
-const FileSystemSearch = require("./FileSystemSearch");
-const PathNormalizer = require("./Util/PathNormalizer.js");
-const simplePlural = require("./Util/Pluralize");
-const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
-const debug = require("debug")("Eleventy");
-const eventBus = require("./EventBus");
+import TemplateData from "./TemplateData.js";
+import TemplateWriter from "./TemplateWriter.js";
+import EleventyExtensionMap from "./EleventyExtensionMap.js";
+import EleventyErrorHandler from "./EleventyErrorHandler.js";
+import EleventyBaseError from "./EleventyBaseError.js";
+import EleventyServe from "./EleventyServe.js";
+import EleventyWatch from "./EleventyWatch.js";
+import EleventyWatchTargets from "./EleventyWatchTargets.js";
+import EleventyFiles from "./EleventyFiles.js";
+import ConsoleLogger from "./Util/ConsoleLogger.js";
+import PathPrefixer from "./Util/PathPrefixer.js";
+import TemplateConfig from "./TemplateConfig.js";
+import FileSystemSearch from "./FileSystemSearch.js";
+import PathNormalizer from "./Util/PathNormalizer.js";
+import simplePlural from "./Util/Pluralize.js";
+import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
+import eventBus from "./EventBus.js";
+import { getEleventyPackageJson, getWorkingProjectPackageJson } from "./Util/ImportJsonSync.js";
+import RenderPlugin from "./Plugins/RenderPlugin.js";
+import I18nPlugin from "./Plugins/I18nPlugin.js";
+import HtmlBasePlugin from "./Plugins/HtmlBasePlugin.js";
+
+const pkg = getEleventyPackageJson();
+const debug = debugUtil("Eleventy");
 
 /**
  * @module 11ty/eleventy/Eleventy
@@ -34,26 +40,14 @@ const eventBus = require("./EventBus");
  */
 class Eleventy {
   constructor(input, output, options = {}, eleventyConfig = null) {
-    if (!eleventyConfig) {
-      this.eleventyConfig = new TemplateConfig(null, options.configPath);
-    } else {
-      this.eleventyConfig = eleventyConfig;
-      if (options.configPath) {
-        this.eleventyConfig.setProjectConfigPath(options.configPath);
-      }
-    }
+    /** @member {String} - Holds the path to the input directory. */
+    this.rawInput = input;
 
-    this.eleventyConfig.setLogger(this.logger);
+    /** @member {String} - Holds the path to the output directory. */
+    this.rawOutput = output;
 
-    /**
-     * @member {String} - The top level directory the site pretends to reside in
-     * @default "/"
-     */
-    this.pathPrefix = options.pathPrefix || "/";
-
-    if (this.pathPrefix || this.pathPrefix === "") {
-      this.eleventyConfig.setPathPrefix(this.pathPrefix);
-    }
+    /** @member {TemplateConfig} - Override the config instance (for centralized config re-use) */
+    this.eleventyConfig = eleventyConfig;
 
     /**
      * @member {Object} - Options object passed to the Eleventy constructor
@@ -61,47 +55,103 @@ class Eleventy {
      */
     this.options = options;
 
-    /* Programmatic API config */
-    if (options.config && typeof options.config === "function") {
-      // TODO use return object here?
-      options.config(this.eleventyConfig.userConfig);
-    }
+    /**
+     * @member {String} - The top level directory the site pretends to reside in
+     * @default "/"
+     */
+    this.pathPrefix = this.options.pathPrefix || "/";
 
     /**
      * @member {String} - The path to Eleventy's config file.
      * @default null
      */
-    this.configPath = options.configPath;
+    this.configPath = this.options.configPath;
 
     /**
      * @member {String} - Called via CLI (`cli`) or Programmatically (`script`)
      * @default "script"
      */
-    this.source = options.source || "script";
-
-    /**
-     * @member {Boolean} - Running in serverless mode
-     * @default false
-     */
-    if ("isServerless" in options) {
-      this.isServerless = !!options.isServerless;
-    } else {
-      this.isServerless = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
-    }
+    this.source = this.options.source || "script";
 
     /**
      * @member {String} - One of build, serve, or watch
      * @default "build"
      */
-    this.runMode = options.runMode || "build";
+    this.runMode = this.options.runMode || "build";
+
+    /**
+     * @member {Boolean} - Is Eleventy running in dry mode?
+     * @default false
+     */
+    this.isDryRun = options.dryRun ?? false;
+
+    /**
+     * @member {Boolean} - Does the init() method still need to be run (or hasn’t finished yet)
+     * @default true
+     */
+    this.needsInit = true;
+
+    /**
+     * @member {Array<String>} - Subset of template types.
+     * @default null
+     */
+    this.formatsOverride = null;
+
+    /**
+     * @member {Boolean} - Is this an incremental build? (only operates on a subset of input files)
+     * @default null
+     */
+    this.isIncremental = false;
+
+    /**
+     * @member {String} - If an incremental build, this is the file we’re operating on.
+     * @default null
+     */
+    this.programmaticApiIncrementalFile = undefined;
+
+    /**
+     * @member {Boolean} - Should we process files on first run? (The --ignore-initial feature)
+     * @default null
+     */
+    this.isRunInitialBuild = true;
+
+    /**
+     * @member {Boolean} - Has the async initialization for config run yet?
+     * @default null
+     */
+    this._hasConfigInitialized = false;
+  }
+
+  async initializeConfig() {
+    if (!this.eleventyConfig) {
+      this.eleventyConfig = new TemplateConfig(null, this.options.configPath);
+    } else if (this.options.configPath) {
+      await this.eleventyConfig.setProjectConfigPath(this.options.configPath);
+    }
+
+    this.eleventyConfig.setProjectUsingEsm(this.isEsm);
+    this.eleventyConfig.setLogger(this.logger);
+
+    if (this.pathPrefix || this.pathPrefix === "") {
+      this.eleventyConfig.setPathPrefix(this.pathPrefix);
+    }
+
+    /* Programmatic API config */
+    if (this.options.config && typeof this.options.config === "function") {
+      // TODO use return object here?
+      await this.options.config(this.eleventyConfig.userConfig);
+    }
 
     /**
      * @member {Object} - Initialize Eleventy environment variables
      * @default null
      */
-    // both this.isServerless and this.runMode need to be set before this
+    // this.runMode need to be set before this
     this.env = this.getEnvironmentVariableValues();
     this.initializeEnvironmentVariables(this.env);
+
+    // Async initialization of configuration
+    await this.eleventyConfig.init();
 
     /**
      * @member {Object} - Initialize Eleventy’s configuration, including the user config file
@@ -123,9 +173,9 @@ class Eleventy {
      * @member {Boolean} - Is Eleventy running in verbose mode?
      * @default true
      */
-    if (options.quietMode === true || options.quietMode === false) {
+    if (this.options.quietMode === true || this.options.quietMode === false) {
       // Set via --quiet
-      this.setIsVerbose(!options.quietMode);
+      this.setIsVerbose(!this.options.quietMode);
       this.verboseModeSetViaCommandLineParam = true;
     } else {
       // Fall back to configuration
@@ -133,48 +183,22 @@ class Eleventy {
     }
 
     /**
-     * @member {Boolean} - Is Eleventy running in dry mode?
-     * @default false
-     */
-    this.isDryRun = false;
-
-    /**
-     * @member {Boolean} - Does the init() method still need to be run (or hasn’t finished yet)
-     * @default true
-     */
-    this.needsInit = true;
-
-    /**
      * @member {Boolean} - Explicit input directory (usually used when input is a single file/serverless)
      */
-    if (options.inputDir) {
-      this.setInputDir(options.inputDir);
+    if (this.options.inputDir) {
+      this.setInputDir(this.options.inputDir);
     }
 
     if (performance) {
-      // TODO this doesn’t reset in serverless mode correctly (cumulative from start of --serve/watch)
       debug("Eleventy warm up time (in ms) %o", performance.now());
     }
 
     /** @member {Number} - The timestamp of Eleventy start. */
     this.start = this.getNewTimestamp();
 
-    /**
-     * @member {Array<String>} - Subset of template types.
-     * @default null
-     */
-    this.formatsOverride = null;
-
     /** @member {Object} - tbd. */
     this.eleventyServe = new EleventyServe();
-    this.eleventyServe.config = this.config;
     this.eleventyServe.eleventyConfig = this.eleventyConfig;
-
-    /** @member {String} - Holds the path to the input directory. */
-    this.rawInput = input;
-
-    /** @member {String} - Holds the path to the output directory. */
-    this.rawOutput = output;
 
     /** @member {Object} - tbd. */
     this.watchManager = new EleventyWatch();
@@ -187,9 +211,11 @@ class Eleventy {
     /** @member {Object} - tbd. */
     this.fileSystemSearch = new FileSystemSearch();
 
-    this.isIncremental = false;
-    this.programmaticApiIncrementalFile = undefined;
-    this.isRunInitialBuild = true;
+    this._hasConfigInitialized = true;
+
+    if (this._preInitVerbose !== undefined) {
+      this.setIsVerbose(this._preInitVerbose);
+    }
   }
 
   getNewTimestamp() {
@@ -264,7 +290,8 @@ class Eleventy {
   setPathPrefix(pathPrefix) {
     if (pathPrefix || pathPrefix === "") {
       this.eleventyConfig.setPathPrefix(pathPrefix);
-      this.config = this.eleventyConfig.getConfig();
+      // TODO reset config
+      // this.config = this.eleventyConfig.getConfig();
     }
   }
 
@@ -376,6 +403,10 @@ class Eleventy {
   async init(options = {}) {
     options = Object.assign({ viaConfigReset: false }, options);
 
+    if (!this._hasConfigInitialized) {
+      await this.initializeConfig();
+    }
+
     await this.config.events.emit("eleventy.config", this.eleventyConfig);
 
     if (this.env) {
@@ -395,6 +426,7 @@ class Eleventy {
     // this.eleventyServe.setWatcherOptions(this.getChokidarConfig());
 
     this.templateData = new TemplateData(this.inputDir, this.eleventyConfig);
+    this.templateData.setProjectUsingEsm(this.isEsm);
     this.templateData.extensionMap = this.extensionMap;
     if (this.env) {
       this.templateData.environmentVariables = this.env;
@@ -487,7 +519,7 @@ Verbose Output: ${this.verboseMode}`);
     }
 
     values.source = this.source;
-    values.isServerless = this.isServerless;
+    values.isServerless = false; // backwards compatibility
 
     return values;
   }
@@ -503,15 +535,6 @@ Verbose Output: ${this.verboseMode}`);
 
     process.env.ELEVENTY_SOURCE = env.source;
     process.env.ELEVENTY_RUN_MODE = env.runMode;
-
-    // https://github.com/11ty/eleventy/issues/1957
-    // Note: when using --serve, ELEVENTY_SERVERLESS is also set in Serverless.js
-
-    // Careful here, setting to false will cast to string "false" which is truthy.
-    if (env.isServerless) {
-      process.env.ELEVENTY_SERVERLESS = true;
-      debug("Setting process.env.ELEVENTY_SERVERLESS: %o", true);
-    }
   }
 
   /* Setter for verbose mode */
@@ -576,6 +599,11 @@ Verbose Output: ${this.verboseMode}`);
    * @param {Boolean} isVerbose - Shall Eleventy run in verbose mode?
    */
   setIsVerbose(isVerbose) {
+    if (!this._hasConfigInitialized) {
+      this._preInitVerbose = isVerbose;
+      return;
+    }
+
     // Debug mode should always run quiet (all output goes to debug logger)
     if (process.env.DEBUG) {
       isVerbose = false;
@@ -588,7 +616,7 @@ Verbose Output: ${this.verboseMode}`);
     this.verboseMode = isVerbose;
 
     // Set verbose mode in config file
-    this.eleventyConfig.verbose = this.verboseMode;
+    this.eleventyConfig.verbose = isVerbose;
   }
 
   /**
@@ -622,7 +650,7 @@ Verbose Output: ${this.verboseMode}`);
    */
   setIncrementalFile(incrementalFile) {
     if (incrementalFile) {
-      // This is used for collections-friendly serverless mode.
+      // This is also used for collections-friendly serverless mode.
       this.setIgnoreInitial(true);
       this.setIncrementalBuild(true);
 
@@ -714,11 +742,11 @@ Arguments:
    *
    * @method
    */
-  resetConfig() {
+  async resetConfig() {
     this.env = this.getEnvironmentVariableValues();
     this.initializeEnvironmentVariables(this.env);
 
-    this.eleventyConfig.reset();
+    await this.eleventyConfig.reset();
 
     this.config = this.eleventyConfig.getConfig();
     this.eleventyServe.config = this.config;
@@ -806,15 +834,16 @@ Arguments:
     this.watchManager.setBuildRunning();
 
     let queue = this.watchManager.getActiveQueue();
+
     await this.config.events.emit("beforeWatch", queue);
     await this.config.events.emit("eleventy.beforeWatch", queue);
 
-    // Clear `require` cache for all files that triggered the rebuild
-    this.watchTargets.clearRequireCacheFor(queue);
+    // Clear `import` cache for all files that triggered the rebuild (sync event)
+    this.watchTargets.clearImportCacheFor(queue);
 
     // reset and reload global configuration
     if (isResetConfig) {
-      this.resetConfig();
+      await this.resetConfig();
     }
 
     await this.restart();
@@ -925,6 +954,21 @@ Arguments:
     benchmark.after();
   }
 
+  get isEsm() {
+    if (this._isEsm === undefined) {
+      try {
+        // fetch from project’s package.json
+        let projectPackageJson = getWorkingProjectPackageJson();
+        this._isEsm = projectPackageJson?.type === "module";
+      } catch (e) {
+        debug("Could not find a project package.json for project’s ES Modules check: %O", e);
+        this._isEsm = false;
+      }
+    }
+
+    return this._isEsm;
+  }
+
   /**
    * Starts watching dependencies.
    *
@@ -942,21 +986,24 @@ Arguments:
       return !dataDir || !TemplatePath.stripLeadingDotSlash(path).startsWith(dataDir);
     }
 
+    // Lazy resolve isEsm only for --watch
+    this.watchTargets.setProjectUsingEsm(this.isEsm);
+
     // Template files .11ty.js
-    let templateFiles = this.eleventyFiles.getWatchPathCache();
-    this.watchTargets.addDependencies(templateFiles);
+    let templateFiles = await this.eleventyFiles.getWatchPathCache();
+    await this.watchTargets.addDependencies(templateFiles);
 
     // Config file dependencies
-    this.watchTargets.addDependencies(
+    await this.watchTargets.addDependencies(
       this.eleventyConfig.getLocalProjectConfigFiles(),
       filterOutGlobalDataFiles
     );
 
     // Deps from Global Data (that aren’t in the global data directory, everything is watched there)
     let globalDataDeps = this.templateData.getWatchPathCache();
-    this.watchTargets.addDependencies(globalDataDeps, filterOutGlobalDataFiles);
+    await this.watchTargets.addDependencies(globalDataDeps, filterOutGlobalDataFiles);
 
-    this.watchTargets.addDependencies(
+    await this.watchTargets.addDependencies(
       await this.eleventyFiles.getWatcherTemplateJavaScriptDataFiles()
     );
   }
@@ -1010,7 +1057,8 @@ Arguments:
     // eslint-disable-next-line no-useless-catch
     try {
       let moduleName = "chokidar";
-      chokidar = require(moduleName);
+      let chokidarImport = await import(moduleName);
+      chokidar = chokidarImport.default;
     } catch (e) {
       throw e;
     }
@@ -1048,6 +1096,7 @@ Arguments:
       try {
         let isResetConfig = this._shouldResetConfig([path]);
         this._addFileToWatchQueue(path, isResetConfig);
+
         clearTimeout(watchDelay);
 
         await new Promise((resolve, reject) => {
@@ -1112,7 +1161,7 @@ Arguments:
    * @returns {Promise<{}>}
    */
   async write() {
-    return this.executeBuild();
+    return this.executeBuild("fs");
   }
 
   /**
@@ -1242,10 +1291,11 @@ Arguments:
   }
 }
 
-module.exports = Eleventy;
-module.exports.EleventyServerless = require("./Serverless");
-module.exports.EleventyServerlessBundlerPlugin = require("./Plugins/ServerlessBundlerPlugin");
-module.exports.EleventyRenderPlugin = require("./Plugins/RenderPlugin");
-module.exports.EleventyEdgePlugin = require("./Plugins/EdgePlugin");
-module.exports.EleventyI18nPlugin = require("./Plugins/I18nPlugin");
-module.exports.EleventyHtmlBasePlugin = require("./Plugins/HtmlBasePlugin");
+export default Eleventy;
+
+export {
+  Eleventy,
+  RenderPlugin as EleventyRenderPlugin,
+  I18nPlugin as EleventyI18nPlugin,
+  HtmlBasePlugin as EleventyHtmlBasePlugin,
+};

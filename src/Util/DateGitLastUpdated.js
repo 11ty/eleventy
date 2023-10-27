@@ -1,4 +1,4 @@
-const spawn = require("cross-spawn");
+import spawn from "cross-spawn";
 
 /* Thank you to Vuepress!
  * https://github.com/vuejs/vuepress/blob/89440ce552675859189ed4ab254ce19c4bba5447/packages/%40vuepress/plugin-last-updated/index.js
@@ -20,9 +20,9 @@ function getGitLastUpdatedTimeStamp(filePath) {
 }
 
 // return a Date
-module.exports = function (inputPath) {
+export default function (inputPath) {
   let timestamp = getGitLastUpdatedTimeStamp(inputPath);
   if (timestamp) {
     return new Date(timestamp);
   }
-};
+}

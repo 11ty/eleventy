@@ -1,21 +1,18 @@
-const test = require("ava");
-const fs = require("fs");
-const TemplateConfig = require("../src/TemplateConfig");
-const FileSystemSearch = require("../src/FileSystemSearch");
-const TemplateData = require("../src/TemplateData");
-let yaml = require("js-yaml");
+import test from "ava";
+import fs from "fs";
+import yaml from "js-yaml";
 
-function injectDataExtensions(dataObj) {
-  dataObj.config.dataExtensions = new Map([
-    ["yaml", { parser: (s) => yaml.load(s) }],
-    ["nosj", { parser: JSON.parse }],
-  ]);
-}
+import TemplateConfig from "../src/TemplateConfig.js";
+import FileSystemSearch from "../src/FileSystemSearch.js";
+import TemplateData from "../src/TemplateData.js";
 
 test("Local data", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.addDataExtension("yaml", { parser: (s) => yaml.load(s) });
+  eleventyConfig.userConfig.addDataExtension("nosj", { parser: (s) => JSON.parse(s) });
+  await eleventyConfig.init();
+
   let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
-  injectDataExtensions(dataObj);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getGlobalData();
@@ -43,8 +40,11 @@ test("Local data", async (t) => {
 
 test("Local files", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.addDataExtension("yaml", { parser: (s) => yaml.load(s) });
+  eleventyConfig.userConfig.addDataExtension("nosj", { parser: (s) => JSON.parse(s) });
+  await eleventyConfig.init();
+
   let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
-  injectDataExtensions(dataObj);
   let files = await dataObj.getLocalDataPaths("./test/stubs-630/component-yaml/component.njk");
   t.deepEqual(files, [
     "./test/stubs-630/stubs-630.yaml",
@@ -53,6 +53,7 @@ test("Local files", async (t) => {
     "./test/stubs-630/stubs-630.11tydata.yaml",
     "./test/stubs-630/stubs-630.11tydata.nosj",
     "./test/stubs-630/stubs-630.11tydata.json",
+    "./test/stubs-630/stubs-630.11tydata.mjs",
     "./test/stubs-630/stubs-630.11tydata.cjs",
     "./test/stubs-630/stubs-630.11tydata.js",
     "./test/stubs-630/component-yaml/component-yaml.yaml",
@@ -61,6 +62,7 @@ test("Local files", async (t) => {
     "./test/stubs-630/component-yaml/component-yaml.11tydata.yaml",
     "./test/stubs-630/component-yaml/component-yaml.11tydata.nosj",
     "./test/stubs-630/component-yaml/component-yaml.11tydata.json",
+    "./test/stubs-630/component-yaml/component-yaml.11tydata.mjs",
     "./test/stubs-630/component-yaml/component-yaml.11tydata.cjs",
     "./test/stubs-630/component-yaml/component-yaml.11tydata.js",
     "./test/stubs-630/component-yaml/component.yaml",
@@ -69,6 +71,7 @@ test("Local files", async (t) => {
     "./test/stubs-630/component-yaml/component.11tydata.yaml",
     "./test/stubs-630/component-yaml/component.11tydata.nosj",
     "./test/stubs-630/component-yaml/component.11tydata.json",
+    "./test/stubs-630/component-yaml/component.11tydata.mjs",
     "./test/stubs-630/component-yaml/component.11tydata.cjs",
     "./test/stubs-630/component-yaml/component.11tydata.js",
   ]);
@@ -76,12 +79,15 @@ test("Local files", async (t) => {
 
 test("Global data", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.addDataExtension("yaml", { parser: (s) => yaml.load(s) });
+  eleventyConfig.userConfig.addDataExtension("nosj", { parser: (s) => JSON.parse(s) });
+  await eleventyConfig.init();
+
   let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
-  injectDataExtensions(dataObj);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   t.deepEqual(await dataObj.getGlobalDataGlob(), [
-    "./test/stubs-630/_data/**/*.{nosj,yaml,json,cjs,js}",
+    "./test/stubs-630/_data/**/*.{nosj,yaml,json,mjs,cjs,js}",
   ]);
 
   let data = await dataObj.getGlobalData();
@@ -109,8 +115,11 @@ test("Global data", async (t) => {
 
 test("Global data merging and priority", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.addDataExtension("yaml", { parser: (s) => yaml.load(s) });
+  eleventyConfig.userConfig.addDataExtension("nosj", { parser: (s) => JSON.parse(s) });
+  await eleventyConfig.init();
+
   let dataObj = new TemplateData("./test/stubs-630/", eleventyConfig);
-  injectDataExtensions(dataObj);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getGlobalData();
@@ -133,22 +142,17 @@ test("Binary data files, encoding: null", async (t) => {
   t.plan(2);
 
   let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.addDataExtension("jpg", {
+    parser: (s) => {
+      t.true(Buffer.isBuffer(s));
+      // s is a Buffer, just return the length as a sample
+      return s.length;
+    },
+    encoding: null,
+  });
+  await eleventyConfig.init();
+
   let dataObj = new TemplateData("./test/stubs-2378/", eleventyConfig);
-  dataObj.config.dataExtensions = new Map([
-    [
-      "jpg",
-      {
-        parser: (s) => {
-          t.true(Buffer.isBuffer(s));
-          // s is a Buffer, just return the length as a sample
-          return s.length;
-        },
-        options: {
-          encoding: null,
-        },
-      },
-    ],
-  ]);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getGlobalData();
@@ -159,22 +163,17 @@ test("Binary data files, read: false", async (t) => {
   t.plan(2);
 
   let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.addDataExtension("jpg", {
+    parser: (s) => {
+      t.true(fs.existsSync(s));
+      // s is a Buffer, just return the length as a sample
+      return s;
+    },
+    read: false,
+  });
+  await eleventyConfig.init();
+
   let dataObj = new TemplateData("./test/stubs-2378/", eleventyConfig);
-  dataObj.config.dataExtensions = new Map([
-    [
-      "jpg",
-      {
-        parser: (s) => {
-          t.true(fs.existsSync(s));
-          // s is a Buffer, just return the length as a sample
-          return s;
-        },
-        options: {
-          read: false,
-        },
-      },
-    ],
-  ]);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getGlobalData();
@@ -193,6 +192,7 @@ test("Binary data files, encoding: null (multiple data extensions)", async (t) =
     },
     encoding: null,
   });
+  await eleventyConfig.init();
 
   let dataObj = new TemplateData("./test/stubs-2378/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());

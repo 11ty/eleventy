@@ -1,9 +1,10 @@
-const semver = require("semver");
-const path = require("path");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import semver from "semver";
+import debugUtil from "debug";
 
-const pkg = require("../../package.json");
-const debug = require("debug")("Eleventy:Compatibility");
+import { getEleventyPackageJson, getWorkingProjectPackageJson } from "./ImportJsonSync.js";
+
+const pkg = getEleventyPackageJson();
+const debug = debugUtil("Eleventy:Compatibility");
 
 class Compatibility {
   static NORMALIZE_PRERELEASE_REGEX = /\-canary\b/g;
@@ -23,7 +24,7 @@ class Compatibility {
 
     try {
       // fetch from project’s package.json
-      let projectPackageJson = require(path.join(TemplatePath.getWorkingDir(), "package.json"));
+      let projectPackageJson = getWorkingProjectPackageJson();
       return projectPackageJson["11ty"]?.compatibility;
     } catch (e) {
       debug("Could not find a project package.json for compatibility version check: %O", e);
@@ -50,4 +51,4 @@ class Compatibility {
   }
 }
 
-module.exports = Compatibility;
+export default Compatibility;

@@ -1,9 +1,8 @@
-const test = require("ava");
+import test from "ava";
 
-const TemplateConfig = require("../src/TemplateConfig");
-const TemplateData = require("../src/TemplateData");
-
-const getNewTemplate = require("./_getNewTemplateForTests");
+import TemplateConfig from "../src/TemplateConfig.js";
+import TemplateData from "../src/TemplateData.js";
+import getNewTemplate from "./_getNewTemplateForTests.js";
 
 test("Custom extension (.txt) with custom permalink compile function", async (t) => {
   let eleventyConfig = new TemplateConfig();
@@ -28,9 +27,10 @@ test("Custom extension (.txt) with custom permalink compile function", async (t)
       };
     },
   });
+  await eleventyConfig.init();
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/custom-extension.txt",
     "./test/stubs/",
     "dist",
@@ -63,9 +63,10 @@ test("Custom extension with and compileOptions.permalink = false", async (t) => 
       };
     },
   });
+  await eleventyConfig.init();
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/custom-extension.txt",
     "./test/stubs/",
     "dist",
@@ -98,9 +99,10 @@ test("Custom extension with and opt-out of permalink compilation", async (t) => 
       };
     },
   });
+  await eleventyConfig.init();
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/custom-extension.txt",
     "./test/stubs/",
     "dist",
@@ -141,9 +143,10 @@ test("Custom extension (.txt) with custom permalink compile function but no perm
       };
     },
   });
+  await eleventyConfig.init();
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/custom-extension-no-permalink.txt",
     "./test/stubs/",
     "dist",
@@ -182,9 +185,10 @@ test("Custom extension (.txt) with custom permalink compile function (that retur
       };
     },
   });
+  await eleventyConfig.init();
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/custom-extension-no-permalink.txt",
     "./test/stubs/",
     "dist",
@@ -223,9 +227,10 @@ test("Custom extension (.txt) with custom permalink compile function that return
       };
     },
   });
+  await eleventyConfig.init();
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/custom-extension-no-permalink.txt",
     "./test/stubs/",
     "dist",
@@ -257,9 +262,10 @@ test("Custom extension (.txt) that returns undefined from compile", async (t) =>
       };
     },
   });
+  await eleventyConfig.init();
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/custom-extension-no-permalink.txt",
     "./test/stubs/",
     "dist",

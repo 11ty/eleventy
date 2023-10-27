@@ -1,8 +1,9 @@
-const posthtml = require("posthtml");
-const urls = require("posthtml-urls");
-const urlFilter = require("../Filters/Url.js");
-const PathPrefixer = require("../Util/PathPrefixer.js");
-const { DeepCopy } = require("../Util/Merge");
+import posthtml from "posthtml";
+import urls from "posthtml-urls";
+
+import urlFilter from "../Filters/Url.js";
+import PathPrefixer from "../Util/PathPrefixer.js";
+import { DeepCopy } from "../Util/Merge.js";
 
 function isValidUrl(url) {
   try {
@@ -65,7 +66,7 @@ async function addToAllHtmlUrls(htmlContent, callback, processOptions = {}) {
   return result.html;
 }
 
-module.exports = function (eleventyConfig, defaultOptions = {}) {
+export default function (eleventyConfig, defaultOptions = {}) {
   let opts = DeepCopy(
     {
       // eleventyConfig.pathPrefix is new in Eleventy 2.0.0-canary.15
@@ -86,31 +87,26 @@ module.exports = function (eleventyConfig, defaultOptions = {}) {
   );
 
   if (opts.baseHref === undefined) {
-    throw new Error(
-      "The `base` option is required in the Eleventy HTML Base plugin."
-    );
+    throw new Error("The `base` option is required in the Eleventy HTML Base plugin.");
   }
 
   eleventyConfig.addFilter(opts.filters.pathPrefix, function (url) {
     return addPathPrefixToUrl(url, eleventyConfig.pathPrefix);
   });
 
-  eleventyConfig.addFilter(
-    opts.filters.base,
-    function (url, baseOverride, pageUrlOverride) {
-      let base = baseOverride || opts.baseHref;
+  eleventyConfig.addFilter(opts.filters.base, function (url, baseOverride, pageUrlOverride) {
+    let base = baseOverride || opts.baseHref;
 
-      // Do nothing with a default base
-      if (base === "/") {
-        return url;
-      }
-
-      return transformUrl.call(this, url, base, {
-        pathPrefix: eleventyConfig.pathPrefix,
-        pageUrl: pageUrlOverride || this.page?.url,
-      });
+    // Do nothing with a default base
+    if (base === "/") {
+      return url;
     }
-  );
+
+    return transformUrl.call(this, url, base, {
+      pathPrefix: eleventyConfig.pathPrefix,
+      pageUrl: pageUrlOverride || this.page?.url,
+    });
+  });
 
   eleventyConfig.addAsyncFilter(
     opts.filters.html,
@@ -155,6 +151,6 @@ module.exports = function (eleventyConfig, defaultOptions = {}) {
       });
     }
   }
-};
+}
 
-module.exports.applyBaseToUrl = transformUrl;
+export { transformUrl as applyBaseToUrl };

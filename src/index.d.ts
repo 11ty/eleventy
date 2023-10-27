@@ -1,3 +1,3 @@
-import UserConfig from "./UserConfig";
+import UserConfig from "./UserConfig.js";
 
 export { UserConfig };

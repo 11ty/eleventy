@@ -1,6 +1,6 @@
-const slugify = require("@sindresorhus/slugify");
+import slugify from "@sindresorhus/slugify";
 
-module.exports = function (str, options = {}) {
+export default function (str, options = {}) {
   return slugify(
     "" + str,
     Object.assign(
@@ -11,4 +11,4 @@ module.exports = function (str, options = {}) {
       options
     )
   );
-};
+}

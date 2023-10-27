@@ -1,6 +1,6 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const eventBus = require("./EventBus");
+import eventBus from "./EventBus.js";
 
 // Note: this is only used for TemplateLayout right now but could be used for more
 // Just be careful because right now the TemplateLayout cache keys are not directly mapped to paths
@@ -101,4 +101,4 @@ eventBus.on("eleventy.resourceModified", (path, usedBy, metadata = {}) => {
 });
 
 // singleton
-module.exports = layoutCache;
+export default layoutCache;

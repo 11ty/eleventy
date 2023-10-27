@@ -1,1 +1,1 @@
-module.exports = "<p>Possum</p>";
+export default "<p>Possum</p>";

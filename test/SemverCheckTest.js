@@ -1,5 +1,5 @@
-const test = require("ava");
-const semver = require("semver");
+import test from "ava";
+import semver from "semver";
 
 test("Satisfies sanity checks with beta/canary", (t) => {
   t.true(

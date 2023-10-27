@@ -1,4 +1,4 @@
-const { performance } = require("perf_hooks");
+import { performance } from "node:perf_hooks";
 
 class Benchmark {
   constructor() {
@@ -49,4 +49,4 @@ class Benchmark {
   }
 }
 
-module.exports = Benchmark;
+export default Benchmark;

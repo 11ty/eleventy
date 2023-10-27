@@ -1,14 +1,19 @@
-const test = require("ava");
-const fsp = require("fs").promises;
-const eventBus = require("../src/EventBus.js");
-const Eleventy = require("../src/Eleventy");
-const TemplateContent = require("../src/TemplateContent");
-const EleventyWatchTargets = require("../src/EleventyWatchTargets");
-const TemplateMap = require("../src/TemplateMap");
-const TemplateConfig = require("../src/TemplateConfig");
-const DateGitFirstAdded = require("../src/Util/DateGitFirstAdded.js");
-const DateGitLastUpdated = require("../src/Util/DateGitLastUpdated");
-const normalizeNewLines = require("./Util/normalizeNewLines");
+import test from "ava";
+import fs from "fs";
+import lodash from "@11ty/lodash-custom";
+
+import eventBus from "../src/EventBus.js";
+import Eleventy from "../src/Eleventy.js";
+import TemplateContent from "../src/TemplateContent.js";
+import EleventyWatchTargets from "../src/EleventyWatchTargets.js";
+import TemplateMap from "../src/TemplateMap.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import DateGitFirstAdded from "../src/Util/DateGitFirstAdded.js";
+import DateGitLastUpdated from "../src/Util/DateGitLastUpdated.js";
+import normalizeNewLines from "./Util/normalizeNewLines.js";
+
+const fsp = fs.promises;
+const lodashGet = lodash.get;
 
 test("Eleventy, defaults inherit from config", async (t) => {
   let elev = new Eleventy();
@@ -84,10 +89,11 @@ test("Eleventy file watching", async (t) => {
     "./test/stubs/.eleventyignore",
     "./.eleventy.js",
     "./eleventy.config.js",
+    "./eleventy.config.mjs",
     "./eleventy.config.cjs",
-    "./test/stubs/**/*.{json,11tydata.cjs,11tydata.js}",
-    "./test/stubs/deps/dep1.js",
-    "./test/stubs/deps/dep2.js",
+    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
+    "./test/stubs/deps/dep1.cjs",
+    "./test/stubs/deps/dep2.cjs",
   ]);
 });
 
@@ -122,8 +128,9 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
     "./test/stubs/.eleventyignore",
     "./.eleventy.js",
     "./eleventy.config.js",
+    "./eleventy.config.mjs",
     "./eleventy.config.cjs",
-    "./test/stubs/**/*.{json,11tydata.cjs,11tydata.js}",
+    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
   ]);
 });
 
@@ -599,9 +606,9 @@ test("Does pathPrefix affect page URLs", async (t) => {
   t.is(result.url, "/README/");
 });
 
-test("Improvements to custom template syntax APIs (includes a layout file) #2258", async (t) => {
+test.only("Improvements to custom template syntax APIs (includes a layout file) #2258", async (t) => {
   let elev = new Eleventy("./test/stubs-2258/", "./test/stubs-2258/_site", {
-    configPath: "./test/stubs-2258/eleventy.config.js",
+    configPath: "./test/stubs-2258/eleventy.config.cjs",
   });
 
   // Restore previous contents
@@ -662,7 +669,6 @@ ${newContents}
   await fsp.writeFile(includeFilePath, previousContents, { encoding: "utf8" });
 });
 
-const { get: lodashGet } = require("@11ty/lodash-custom");
 test("Lodash get (for pagination data target) object key with spaces, issue #2851", (t) => {
   let data = {
     collections: {

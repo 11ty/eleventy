@@ -1,7 +1,7 @@
-const fs = require("fs");
-const { TemplatePath } = require("@11ty/eleventy-utils");
-
-// const debug = require("debug")("Eleventy:TemplateLayoutPathResolver");
+import fs from "node:fs";
+import { TemplatePath } from "@11ty/eleventy-utils";
+// import debugUtil from "debug";
+// const debug = debugUtil("Eleventy:TemplateLayoutPathResolver");
 
 class TemplateLayoutPathResolver {
   constructor(path, inputDir, extensionMap, eleventyConfig) {
@@ -134,4 +134,4 @@ class TemplateLayoutPathResolver {
   }
 }
 
-module.exports = TemplateLayoutPathResolver;
+export default TemplateLayoutPathResolver;

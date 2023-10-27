@@ -1,21 +1,21 @@
-const fs = require("fs");
-const fsp = fs.promises;
-const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
+import { promises as fsp, default as fs } from "node:fs";
+import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
 // TODO add a first-class Markdown component to expose this using Markdown-only syntax (will need to be synchronous for markdown-it)
 
-const Merge = require("../Util/Merge");
-const { ProxyWrap } = require("../Util/ProxyWrap");
-const TemplateDataInitialGlobalData = require("../TemplateDataInitialGlobalData");
-const EleventyShortcodeError = require("../EleventyShortcodeError");
-const TemplateRender = require("../TemplateRender");
-const TemplateConfig = require("../TemplateConfig");
-const EleventyErrorUtil = require("../EleventyErrorUtil");
-const Liquid = require("../Engines/Liquid");
+import Merge from "../Util/Merge.js";
+import { ProxyWrap } from "../Util/ProxyWrap.js";
+import TemplateDataInitialGlobalData from "../TemplateDataInitialGlobalData.js";
+import EleventyShortcodeError from "../EleventyShortcodeError.js";
+import TemplateRender from "../TemplateRender.js";
+import TemplateConfig from "../TemplateConfig.js";
+import EleventyErrorUtil from "../EleventyErrorUtil.js";
+import Liquid from "../Engines/Liquid.js";
 
 async function compile(content, templateLang, { templateConfig, extensionMap } = {}) {
   if (!templateConfig) {
     templateConfig = new TemplateConfig(null, false);
+    await templateConfig.init();
   }
 
   // Breaking change in 2.0+, previous default was `html` and now we default to the page template syntax
@@ -34,10 +34,18 @@ async function compile(content, templateLang, { templateConfig, extensionMap } =
 
   let tr = new TemplateRender(templateLang, inputDir, templateConfig);
   tr.extensionMap = extensionMap;
-  tr.setEngineOverride(templateLang);
+  if (templateLang) {
+    await tr.setEngineOverride(templateLang);
+  } else {
+    await tr.init();
+  }
 
   // TODO tie this to the class, not the extension
-  if (tr.engine.name === "11ty.js" || tr.engine.name === "11ty.cjs") {
+  if (
+    tr.engine.name === "11ty.js" ||
+    tr.engine.name === "11ty.cjs" ||
+    tr.engine.name === "11ty.mjs"
+  ) {
     throw new Error(
       "11ty.js is not yet supported as a template engine for `renderTemplate`. Use `renderFile` instead!"
     );
@@ -58,18 +66,26 @@ async function compileFile(inputPath, { templateConfig, extensionMap, config } =
     );
   }
 
+  let wasTemplateConfigMissing = false;
   if (!templateConfig) {
     templateConfig = new TemplateConfig(null, false);
+    wasTemplateConfigMissing = true;
   }
   if (config && typeof config === "function") {
     await config(templateConfig.userConfig);
+  }
+  if (wasTemplateConfigMissing) {
+    await templateConfig.init();
   }
 
   let cfg = templateConfig.getConfig();
   let tr = new TemplateRender(inputPath, cfg.dir.input, templateConfig);
   tr.extensionMap = extensionMap;
+
   if (templateLang) {
-    tr.setEngineOverride(templateLang);
+    await tr.setEngineOverride(templateLang);
+  } else {
+    await tr.init();
   }
 
   if (!tr.engine.needsToReadFileContents()) {
@@ -344,10 +360,6 @@ function EleventyPlugin(eleventyConfig, options = {}) {
   }
 }
 
-module.exports = EleventyPlugin;
-module.exports.File = compileFile;
-module.exports.String = compile;
-
 // Will re-use the same configuration instance both at a top level and across any nested renders
 class RenderManager {
   constructor() {
@@ -358,6 +370,18 @@ class RenderManager {
       templateConfig: this.templateConfig,
       accessGlobalData: true,
     });
+
+    this._hasConfigInitialized = false;
+  }
+
+  async init() {
+    if (this._hasConfigInitialized) {
+      return this._hasConfigInitialized;
+    }
+
+    this._hasConfigInitialized = this.templateConfig.init();
+    await this._hasConfigInitialized;
+    return true;
   }
 
   // `callback` is async-friendly but requires await upstream
@@ -378,12 +402,16 @@ class RenderManager {
   // because we don’t have access to the full data cascade—but
   // we still want configuration data added via `addGlobalData`
   async getData(...data) {
+    await this.init();
+
     let globalData = await this.initialGlobalData.getData();
     let merged = Merge({}, globalData, ...data);
     return merged;
   }
 
-  compile(content, templateLang, options = {}) {
+  async compile(content, templateLang, options = {}) {
+    await this.init();
+
     // Missing here: extensionMap
     options.templateConfig = this.templateConfig;
 
@@ -393,6 +421,8 @@ class RenderManager {
   }
 
   async render(fn, edgeData, buildTimeData) {
+    await this.init();
+
     let mergedData = await this.getData(edgeData);
     // Set .data for options.accessGlobalData feature
     let context = {
@@ -403,4 +433,6 @@ class RenderManager {
   }
 }
 
-module.exports.RenderManager = RenderManager;
+export default EleventyPlugin;
+
+export { compileFile as File, compile as String, RenderManager };

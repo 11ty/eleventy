@@ -1,18 +1,18 @@
-const fs = require("fs");
+import fs from "node:fs";
 
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { TemplatePath } from "@11ty/eleventy-utils";
+import debugUtil from "debug";
 
-const EleventyExtensionMap = require("./EleventyExtensionMap");
-const TemplateData = require("./TemplateData");
-const TemplateGlob = require("./TemplateGlob");
-const TemplatePassthroughManager = require("./TemplatePassthroughManager");
-const EleventyBaseError = require("./EleventyBaseError");
-const checkPassthroughCopyBehavior = require("./Util/PassthroughCopyBehaviorCheck");
+import EleventyExtensionMap from "./EleventyExtensionMap.js";
+import TemplateData from "./TemplateData.js";
+import TemplateGlob from "./TemplateGlob.js";
+import TemplatePassthroughManager from "./TemplatePassthroughManager.js";
+import EleventyBaseError from "./EleventyBaseError.js";
+import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
+
+const debug = debugUtil("Eleventy:EleventyFiles");
 
 class EleventyFilesError extends EleventyBaseError {}
-
-const debug = require("debug")("Eleventy:EleventyFiles");
-// const debugDev = require("debug")("Dev:Eleventy:EleventyFiles");
 
 class EleventyFiles {
   constructor(input, outputDir, formats, eleventyConfig) {
@@ -330,17 +330,17 @@ class EleventyFiles {
     return this.templateGlobs;
   }
 
-  getWatchPathCache() {
+  async getWatchPathCache() {
     // Issue #1325: make sure passthrough copy files are not included here
     if (!this.pathCache) {
       throw new Error("Watching requires `.getFiles()` to be called first in EleventyFiles");
     }
 
     // Filter out the passthrough copy paths.
-    return this.pathCache.filter((path) => {
+    return this.pathCache.filter(async (path) => {
       return (
         this.extensionMap.isFullTemplateFilePath(path) &&
-        this.extensionMap.shouldSpiderJavaScriptDependencies(path)
+        (await this.extensionMap.shouldSpiderJavaScriptDependencies(path))
       );
     });
   }
@@ -460,4 +460,4 @@ class EleventyFiles {
   }
 }
 
-module.exports = EleventyFiles;
+export default EleventyFiles;

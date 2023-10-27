@@ -1,21 +1,27 @@
-const test = require("ava");
-const TemplateRender = require("../src/TemplateRender");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
-const TemplateConfig = require("../src/TemplateConfig");
-const getNewTemplate = require("./_getNewTemplateForTests");
+import test from "ava";
+import { createSSRApp } from "vue";
+import { renderToString } from "@vue/server-renderer";
+import * as sass from "sass";
 
-const { createSSRApp } = require("vue");
-const { renderToString } = require("@vue/server-renderer");
+import TemplateRender from "../src/TemplateRender.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import getNewTemplate from "./_getNewTemplateForTests.js";
 
-function getNewTemplateRender(name, inputDir, eleventyConfig, extensionMap) {
+async function getNewTemplateRender(name, inputDir, eleventyConfig, extensionMap) {
   if (!eleventyConfig) {
     eleventyConfig = new TemplateConfig();
+    await eleventyConfig.init();
   }
+
   if (!extensionMap) {
     extensionMap = new EleventyExtensionMap([], eleventyConfig);
   }
+
   let tr = new TemplateRender(name, inputDir, eleventyConfig);
   tr.extensionMap = extensionMap;
+  await tr.init();
+
   return tr;
 }
 
@@ -31,8 +37,9 @@ test("Custom plaintext Render", async (t) => {
     },
   });
 
-  let tr = getNewTemplateRender("txt", null, eleventyConfig);
+  await eleventyConfig.init();
 
+  let tr = await getNewTemplateRender("txt", null, eleventyConfig);
   let fn = await tr.getCompiledTemplate("<p>Paragraph</p>");
   t.is(await fn(), "<p>Paragraph</p>");
   t.is(await fn({}), "<p>Paragraph</p>");
@@ -50,7 +57,9 @@ test("Custom Markdown Render with `compile` override", async (t) => {
     },
   });
 
-  let tr = getNewTemplateRender("md", null, eleventyConfig);
+  await eleventyConfig.init();
+
+  let tr = await getNewTemplateRender("md", null, eleventyConfig);
 
   let fn = await tr.getCompiledTemplate("# Markdown?");
   t.is((await fn()).trim(), "<not-markdown># Markdown?</not-markdown>");
@@ -68,7 +77,9 @@ test("Custom Markdown Render without `compile` override", async (t) => {
     },
   });
 
-  let tr = getNewTemplateRender("md", null, eleventyConfig);
+  await eleventyConfig.init();
+
+  let tr = await getNewTemplateRender("md", null, eleventyConfig);
 
   let fn = await tr.getCompiledTemplate("# Header");
   t.is(initCalled, true);
@@ -89,21 +100,19 @@ test("Custom Markdown Render with `compile` override + call to default compiler"
     },
   });
 
-  let tr = getNewTemplateRender("md", null, eleventyConfig);
+  await eleventyConfig.init();
+
+  let tr = await getNewTemplateRender("md", null, eleventyConfig);
 
   let fn = await tr.getCompiledTemplate("Hey {{name}}");
   t.is((await fn()).trim(), "<custom-wrapper><p>Hey</p></custom-wrapper>");
-  t.is(
-    (await fn({ name: "Zach" })).trim(),
-    "<custom-wrapper><p>Hey Zach</p></custom-wrapper>"
-  );
+  t.is((await fn({ name: "Zach" })).trim(), "<custom-wrapper><p>Hey Zach</p></custom-wrapper>");
 });
 
 test("Custom Vue Render", async (t) => {
-  let tr = getNewTemplateRender("vue");
-
+  let eleventyConfig = new TemplateConfig();
   // addExtension() API
-  tr.eleventyConfig.userConfig.addExtension("vue", {
+  eleventyConfig.userConfig.addExtension("vue", {
     compile: function (str) {
       return async function (data) {
         const app = createSSRApp({
@@ -117,18 +126,18 @@ test("Custom Vue Render", async (t) => {
       };
     },
   });
+  await eleventyConfig.init();
 
+  let tr = await getNewTemplateRender("vue", null, eleventyConfig);
   let fn = await tr.getCompiledTemplate('<p v-html="test">Paragraph</p>');
   t.is(await fn({ test: "Hello" }), "<p>Hello</p>");
 });
 
 test("Custom Sass Render", async (t) => {
-  const sass = require("sass");
-
-  let tr = getNewTemplateRender("sass");
+  let eleventyConfig = new TemplateConfig();
 
   // addExtension() API
-  tr.eleventyConfig.userConfig.addExtension("sass", {
+  eleventyConfig.userConfig.addExtension("sass", {
     compile: function (str, inputPath) {
       // TODO declare data variables as SASS variables?
       return async function (data) {
@@ -149,19 +158,22 @@ test("Custom Sass Render", async (t) => {
               } else {
                 resolve(result.css.toString("utf8"));
               }
-            }
+            },
           );
         });
       };
     },
   });
 
+  await eleventyConfig.init();
+
+  let tr = await getNewTemplateRender("sass", null, eleventyConfig);
   let fn = await tr.getCompiledTemplate("$color: blue; p { color: $color; }");
   t.is(
     (await fn({})).trim(),
     `p {
   color: blue;
-}`
+}`,
   );
 });
 
@@ -200,13 +212,15 @@ test("JavaScript functions should not be mutable but not *that* mutable", async 
     },
   });
 
-  let tmpl = getNewTemplate(
+  await eleventyConfig.init();
+
+  let tmpl = await getNewTemplate(
     "./test/stubs-custom-extension/test.js1",
     "./test/stubs-custom-extension/",
     "dist",
     null,
     null,
-    eleventyConfig
+    eleventyConfig,
   );
   let data = await tmpl.getData();
   t.is(await tmpl.render(data), "<p>Paragraph</p>");
@@ -221,9 +235,9 @@ test("Return undefined in compile to ignore #2267", async (t) => {
       return;
     },
   });
+  await eleventyConfig.init();
 
-  let tr = getNewTemplateRender("txt", null, eleventyConfig);
-
+  let tr = await getNewTemplateRender("txt", null, eleventyConfig);
   let fn = await tr.getCompiledTemplate("<p>Paragraph</p>");
   t.is(fn, undefined);
 });
@@ -233,73 +247,69 @@ test("Simple alias to Markdown Render", async (t) => {
   eleventyConfig.userConfig.addExtension("mdx", {
     key: "md",
   });
+  await eleventyConfig.init();
 
-  let tr = getNewTemplateRender("mdx", null, eleventyConfig);
+  let tr = await getNewTemplateRender("mdx", null, eleventyConfig);
 
   let fn = await tr.getCompiledTemplate("# Header");
   t.is((await fn()).trim(), "<h1>Header</h1>");
   t.is((await fn({})).trim(), "<h1>Header</h1>");
 });
 
-test("Simple alias to JavaScript Render", async (t) => {
+// NOTE: Breaking change in 3.0 `import` does not allow aliasing to non-.js file names
+test.skip("Breaking Change (3.0): Simple alias to JavaScript Render", async (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.addExtension("11ty.custom", {
     key: "11ty.js",
   });
+  await eleventyConfig.init();
 
-  let fn = await getNewTemplateRender(
-    "./test/stubs/string.11ty.custom",
-    null,
-    eleventyConfig
-  ).getCompiledTemplate();
+  let tr = await getNewTemplateRender("./test/stubs/string.11ty.custom", null, eleventyConfig);
+  let fn = await tr.getCompiledTemplate();
   t.is(await fn({ name: "Bill" }), "<p>Zach</p>");
 });
 
-test("Override to JavaScript Render", async (t) => {
+// NOTE: Breaking change in 3.0 `import` does not allow aliasing to non-.js file names
+test.skip("Breaking Change (3.0): Override to JavaScript Render", async (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.addExtension("11ty.custom", {
     key: "11ty.js",
     init: function () {},
   });
+  await eleventyConfig.init();
 
-  let fn = await getNewTemplateRender(
-    "./test/stubs/string.11ty.custom",
-    null,
-    eleventyConfig
-  ).getCompiledTemplate();
+  let tr = await getNewTemplateRender("./test/stubs/string.11ty.custom", null, eleventyConfig);
+  let fn = await tr.getCompiledTemplate();
   t.is(await fn({ name: "Bill" }), "<p>Zach</p>");
 });
 
-test("Two simple aliases to JavaScript Render", async (t) => {
+// NOTE: Breaking change in 3.0 `import` does not allow aliasing to non-.js file names
+test.skip("Breaking Change (3.0): Two simple aliases to JavaScript Render", async (t) => {
   t.plan(2);
   let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.addExtension(["11ty.custom", "11ty.possum"], {
+    key: "11ty.js", // esm
+  });
+  await eleventyConfig.init();
+
   let map = new EleventyExtensionMap([], eleventyConfig); // reuse this
 
-  eleventyConfig.userConfig.addExtension(["11ty.custom", "11ty.possum"], {
-    key: "11ty.js",
-  });
-
-  let fn = await getNewTemplateRender(
-    "./test/stubs/string.11ty.custom",
-    null,
-    eleventyConfig,
-    map
-  ).getCompiledTemplate();
+  let tr = await getNewTemplateRender("./test/stubs/string.11ty.custom", null, eleventyConfig, map);
+  let fn = await tr.getCompiledTemplate();
   t.is(await fn({}), "<p>Zach</p>");
 
-  let fn2 = await getNewTemplateRender(
+  let tr2 = await getNewTemplateRender(
     "./test/stubs/string.11ty.possum",
     null,
     eleventyConfig,
-    map
-  ).getCompiledTemplate();
+    map,
+  );
+  let fn2 = await tr2.getCompiledTemplate();
   t.is(await fn2({}), "<p>Possum</p>");
 });
 
 test("Double override (not aliases) throws an error", async (t) => {
   let eleventyConfig = new TemplateConfig();
-  let map = new EleventyExtensionMap([], eleventyConfig); // reuse this
-
   eleventyConfig.userConfig.addExtension(["11ty.custom", "11ty.possum"], {
     key: "11ty.js",
     init: function () {
@@ -307,18 +317,23 @@ test("Double override (not aliases) throws an error", async (t) => {
     },
   });
 
+  await eleventyConfig.init();
+
+  let map = new EleventyExtensionMap([], eleventyConfig); // reuse this
+
   await t.throwsAsync(
     async () => {
-      await getNewTemplateRender(
+      let tr = await getNewTemplateRender(
         "./test/stubs/string.11ty.custom",
         null,
         eleventyConfig,
-        map
-      ).getCompiledTemplate();
+        map,
+      );
+      await tr.getCompiledTemplate();
     },
     {
       message:
         'An attempt was made to override the *already* overridden "11ty.js" template syntax via the `addExtension` configuration API. A maximum of one override is currently supported. If you’re trying to add an alias to an existing syntax, make sure only the `key` property is present in the addExtension options object.',
-    }
+    },
   );
 });

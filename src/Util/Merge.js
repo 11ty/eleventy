@@ -1,4 +1,5 @@
-const { isPlainObject } = require("@11ty/eleventy-utils");
+import { isPlainObject } from "@11ty/eleventy-utils";
+
 const OVERRIDE_PREFIX = "override:";
 
 function cleanKey(key, prefix) {
@@ -67,5 +68,5 @@ function Merge(target, ...sources) {
   return target;
 }
 
-module.exports = Merge;
-module.exports.DeepCopy = DeepCopy;
+export default Merge;
+export { DeepCopy };

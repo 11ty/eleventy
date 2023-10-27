@@ -1,36 +1,37 @@
-const fs = require("graceful-fs");
-const util = require("util");
+import util from "node:util";
+import os from "node:os";
+import path from "node:path";
+
+import fs from "graceful-fs";
+import normalize from "normalize-path";
+import lodash from "@11ty/lodash-custom";
+import { DateTime } from "luxon";
+import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
+import debugUtil from "debug";
+
+import ConsoleLogger from "./Util/ConsoleLogger.js";
+import getDateFromGitLastUpdated from "./Util/DateGitLastUpdated.js";
+import getDateFromGitFirstAdded from "./Util/DateGitFirstAdded.js";
+import TemplateData from "./TemplateData.js";
+import TemplateContent from "./TemplateContent.js";
+import TemplatePermalink from "./TemplatePermalink.js";
+import TemplateLayout from "./TemplateLayout.js";
+import TemplateFileSlug from "./TemplateFileSlug.js";
+import ComputedData from "./ComputedData.js";
+import Pagination from "./Plugins/Pagination.js";
+import TemplateBehavior from "./TemplateBehavior.js";
+import TemplateContentPrematureUseError from "./Errors/TemplateContentPrematureUseError.js";
+import TemplateContentUnrenderedTemplateError from "./Errors/TemplateContentUnrenderedTemplateError.js";
+import EleventyBaseError from "./EleventyBaseError.js";
+
+const { set: lodashSet, get: lodashGet } = lodash;
 const writeFile = util.promisify(fs.writeFile);
 const mkdir = util.promisify(fs.mkdir);
 
-const os = require("os");
-const path = require("path");
-const normalize = require("normalize-path");
-const { set: lodashSet, get: lodashGet } = require("@11ty/lodash-custom");
-const { DateTime } = require("luxon");
-const { TemplatePath, isPlainObject } = require("@11ty/eleventy-utils");
+const debug = debugUtil("Eleventy:Template");
+const debugDev = debugUtil("Dev:Eleventy:Template");
 
-const ConsoleLogger = require("./Util/ConsoleLogger");
-const getDateFromGitLastUpdated = require("./Util/DateGitLastUpdated");
-const getDateFromGitFirstAdded = require("./Util/DateGitFirstAdded");
-
-const TemplateData = require("./TemplateData");
-const TemplateContent = require("./TemplateContent");
-const TemplatePermalink = require("./TemplatePermalink");
-const TemplateLayout = require("./TemplateLayout");
-const TemplateFileSlug = require("./TemplateFileSlug");
-const ComputedData = require("./ComputedData");
-const Pagination = require("./Plugins/Pagination");
-const TemplateBehavior = require("./TemplateBehavior");
-
-const TemplateContentPrematureUseError = require("./Errors/TemplateContentPrematureUseError");
-const TemplateContentUnrenderedTemplateError = require("./Errors/TemplateContentUnrenderedTemplateError");
-
-const EleventyBaseError = require("./EleventyBaseError");
 class EleventyTransformError extends EleventyBaseError {}
-
-const debug = require("debug")("Eleventy:Template");
-const debugDev = require("debug")("Dev:Eleventy:Template");
 
 class Template extends TemplateContent {
   constructor(templatePath, inputDir, outputDir, templateData, extensionMap, config) {
@@ -67,8 +68,6 @@ class Template extends TemplateContent {
 
     this.behavior = new TemplateBehavior(this.config);
     this.behavior.setOutputFormat(this.outputFormat);
-
-    this.serverlessUrls = null;
   }
 
   setTemplateData(templateData) {
@@ -164,35 +163,11 @@ class Template extends TemplateContent {
     );
   }
 
-  getServerlessUrls() {
-    if (!this.serverlessUrls) {
-      throw new Error(
-        "Permalink has not yet processed. Calls to Template->getServerlessUrls not yet allowed."
-      );
-    }
-    return this.serverlessUrls;
-  }
-
-  async initServerlessUrlsForEmptyPaginationTemplates(permalinkValue) {
-    if (isPlainObject(permalinkValue)) {
-      let buildlessPermalink = Object.assign({}, permalinkValue);
-      delete buildlessPermalink.build;
-
-      if (Object.keys(buildlessPermalink).length) {
-        return this._getRawPermalinkInstance(buildlessPermalink);
-      }
-    }
-  }
-
   async _getRawPermalinkInstance(permalinkValue) {
     let perm = new TemplatePermalink(permalinkValue, this.extraOutputSubdirectory);
     perm.setUrlTransforms(this.config.urlTransforms);
 
-    if (this.templateData) {
-      perm.setServerlessPathData(await this.templateData.getServerlessPathData());
-    }
     this.behavior.setFromPermalink(perm);
-    this.serverlessUrls = perm.getServerlessUrls();
 
     return perm;
   }
@@ -677,7 +652,6 @@ class Template extends TemplateContent {
   }
 
   async getTemplates(data) {
-    // no pagination with permalink.serverless
     if (!Pagination.hasPagination(data)) {
       await this.addComputedData(data);
 
@@ -845,11 +819,7 @@ class Template extends TemplateContent {
         }
 
         if (!mapEntry.template.behavior.isRenderable()) {
-          debug(
-            "Template not written %o from %o (via serverless permalink).",
-            page.outputPath,
-            mapEntry.template.inputPath
-          );
+          debug("Template not written %o from %o.", page.outputPath, mapEntry.template.inputPath);
           return;
         }
 
@@ -1008,4 +978,4 @@ class Template extends TemplateContent {
   }
 }
 
-module.exports = Template;
+export default Template;

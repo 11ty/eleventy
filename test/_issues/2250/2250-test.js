@@ -1,5 +1,5 @@
-const test = require("ava");
-const Eleventy = require("../../../src/Eleventy");
+import test from "ava";
+import Eleventy from "../../../src/Eleventy.js";
 
 test("Issue #2250, page is available in filters", async (t) => {
   let elev = new Eleventy("./test/_issues/2250/", "./test/_issues/2250/_site", {
@@ -28,10 +28,4 @@ test("Issue #2250, page is available in filters", async (t) => {
   });
 
   t.is(javascript[0].content.trim(), "/javascript/");
-
-  let handlebars = results.filter((entry) => {
-    return entry.url.startsWith("/handlebars/");
-  });
-
-  t.is(handlebars[0].content.trim(), "/handlebars/");
 });

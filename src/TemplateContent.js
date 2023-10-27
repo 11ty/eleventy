@@ -1,20 +1,24 @@
-const os = require("os");
-const fs = require("graceful-fs");
-const util = require("util");
-const readFile = util.promisify(fs.readFile);
-const normalize = require("normalize-path");
-const matter = require("gray-matter");
-const { set: lodashSet } = require("@11ty/lodash-custom");
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import os from "node:os";
+import util from "node:util";
 
-const EleventyExtensionMap = require("./EleventyExtensionMap");
-const TemplateData = require("./TemplateData");
-const TemplateRender = require("./TemplateRender");
-const EleventyBaseError = require("./EleventyBaseError");
-const EleventyErrorUtil = require("./EleventyErrorUtil");
-const debug = require("debug")("Eleventy:TemplateContent");
-const debugDev = require("debug")("Dev:Eleventy:TemplateContent");
-const eventBus = require("./EventBus");
+import fs from "graceful-fs";
+import normalize from "normalize-path";
+import matter from "gray-matter";
+import lodash from "@11ty/lodash-custom";
+import { TemplatePath } from "@11ty/eleventy-utils";
+import debugUtil from "debug";
+
+import EleventyExtensionMap from "./EleventyExtensionMap.js";
+import TemplateData from "./TemplateData.js";
+import TemplateRender from "./TemplateRender.js";
+import EleventyBaseError from "./EleventyBaseError.js";
+import EleventyErrorUtil from "./EleventyErrorUtil.js";
+import eventBus from "./EventBus.js";
+
+const { set: lodashSet } = lodash;
+const readFile = util.promisify(fs.readFile);
+const debug = debugUtil("Eleventy:TemplateContent");
+const debugDev = debugUtil("Dev:Eleventy:TemplateContent");
 
 class TemplateContentConfigError extends EleventyBaseError {}
 class TemplateContentFrontMatterError extends EleventyBaseError {}
@@ -115,8 +119,16 @@ class TemplateContent {
 
   get templateRender() {
     if (!this._templateRender) {
+      throw new Error("TemplateRender has not yet initialized.");
+    }
+    return this._templateRender;
+  }
+
+  async getTemplateRender() {
+    if (!this._templateRender) {
       this._templateRender = new TemplateRender(this.inputPath, this.inputDir, this.eleventyConfig);
       this._templateRender.extensionMap = this.extensionMap;
+      await this._templateRender.init();
     }
 
     return this._templateRender;
@@ -232,7 +244,8 @@ class TemplateContent {
   }
 
   async getInputContent() {
-    if (!this.engine.needsToReadFileContents()) {
+    let tr = await this.getTemplateRender();
+    if (!tr.engine.needsToReadFileContents()) {
       return "";
     }
 
@@ -295,16 +308,6 @@ class TemplateContent {
     return frontMatterData[this.config.keys.engineOverride];
   }
 
-  async setupTemplateRender(engineOverride, bypassMarkdown) {
-    if (engineOverride !== undefined) {
-      debugDev("%o overriding template engine to use %o", this.inputPath, engineOverride);
-
-      this.templateRender.setEngineOverride(engineOverride, bypassMarkdown);
-    } else {
-      this.templateRender.setUseMarkdown(!bypassMarkdown);
-    }
-  }
-
   _getCompileCache(str) {
     // Caches used to be bifurcated based on engine name, now they’re based on inputPath
     let inputPathMap = TemplateContent._compileCache.get(this.inputPath);
@@ -315,11 +318,24 @@ class TemplateContent {
 
     let cacheable = this.engine.cacheable;
     let { useCache, key } = this.engine.getCompileCacheKey(str, this.inputPath);
+
+    // We also tie the compile cache key to the UserConfig instance, to alleviate issues with global template cache
+    // Better to move the cache to the Eleventy instance instead, no?
+    // (This specifically failed I18nPluginTest cases with filters being cached across tests and not having access to each plugin’s options)
+    key = this.eleventyConfig.userConfig._getUniqueId() + key;
+
     return [cacheable, key, inputPathMap, useCache];
   }
 
   async compile(str, bypassMarkdown, engineOverride) {
-    await this.setupTemplateRender(engineOverride, bypassMarkdown);
+    let tr = await this.getTemplateRender();
+
+    if (engineOverride !== undefined) {
+      debugDev("%o overriding template engine to use %o", this.inputPath, engineOverride);
+      await tr.setEngineOverride(engineOverride, bypassMarkdown);
+    } else {
+      tr.setUseMarkdown(!bypassMarkdown);
+    }
 
     if (bypassMarkdown && !this.engine.needsCompilation(str)) {
       return async function () {
@@ -327,7 +343,7 @@ class TemplateContent {
       };
     }
 
-    debugDev("%o compile() using engine: %o", this.inputPath, this.templateRender.engineName);
+    debugDev("%o compile() using engine: %o", this.inputPath, tr.engineName);
 
     try {
       let res;
@@ -358,7 +374,7 @@ class TemplateContent {
       let inputPathBenchmark = this.bench.get(`> Compile > ${this.inputPath}`);
       templateBenchmark.before();
       inputPathBenchmark.before();
-      let fn = await this.templateRender.getCompiledTemplate(str);
+      let fn = await tr.getCompiledTemplate(str);
       inputPathBenchmark.after();
       templateBenchmark.after();
       debugDev("%o getCompiledTemplate function created", this.inputPath);
@@ -383,7 +399,8 @@ class TemplateContent {
     let engine = this.engine;
 
     // Don’t use markdown as the engine to parse for symbols
-    let preprocessorEngine = this.templateRender.getPreprocessorEngine(); // TODO pass in engineOverride here
+    // TODO pass in engineOverride here
+    let preprocessorEngine = this.templateRender.getPreprocessorEngine();
     if (preprocessorEngine && engine.getName() !== preprocessorEngine) {
       let replacementEngine = this.templateRender.getEngineByName(preprocessorEngine);
       if (replacementEngine) {
@@ -525,7 +542,8 @@ class TemplateContent {
       if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
         throw e;
       } else {
-        let engine = this.templateRender.getReadableEnginesList();
+        let tr = await this.getTemplateRender();
+        let engine = tr.getReadableEnginesList();
         debug(`Having trouble rendering ${engine} template ${this.inputPath}: %O`, str);
         throw new TemplateContentRenderError(
           `Having trouble rendering ${engine} template ${this.inputPath}`,
@@ -614,4 +632,4 @@ eventBus.on("eleventy.compileCacheReset", (path) => {
   TemplateContent._compileCache = new Map();
 });
 
-module.exports = TemplateContent;
+export default TemplateContent;

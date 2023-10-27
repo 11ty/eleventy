@@ -1,9 +1,11 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const EleventyBaseError = require("./EleventyBaseError");
-const EleventyExtensionMap = require("./EleventyExtensionMap");
-const CustomEngine = require("./Engines/Custom.js");
-// const debug = require("debug")("Eleventy:TemplateRender");
+import EleventyBaseError from "./EleventyBaseError.js";
+import EleventyExtensionMap from "./EleventyExtensionMap.js";
+import CustomEngine from "./Engines/Custom.js";
+
+// import debugUtil from "debug";
+// const debug = debugUtil("Eleventy:TemplateRender");
 
 class TemplateRenderConfigError extends EleventyBaseError {}
 class TemplateRenderUnknownEngineError extends EleventyBaseError {}
@@ -52,24 +54,29 @@ class TemplateRender {
     return this._extensionMap;
   }
 
-  getEngineByName(name) {
-    let engine = this.extensionMap.engineManager.getEngine(name, this.getDirs(), this.extensionMap);
+  async getEngineByName(name) {
+    let engine = await this.extensionMap.engineManager.getEngine(
+      name,
+      this.getDirs(),
+      this.extensionMap
+    );
     engine.eleventyConfig = this.eleventyConfig;
 
     return engine;
   }
 
   // Runs once per template
-  init(engineNameOrPath) {
+  async init(engineNameOrPath) {
+    let name = engineNameOrPath || this.engineNameOrPath;
     this.extensionMap.config = this.eleventyConfig;
-    this._engineName = this.extensionMap.getKey(engineNameOrPath);
+    this._engineName = this.extensionMap.getKey(name);
     if (!this._engineName) {
       throw new TemplateRenderUnknownEngineError(
-        `Unknown engine for ${engineNameOrPath} (supported extensions: ${this.extensionMap.getReadableFileExtensions()})`
+        `Unknown engine for ${name} (supported extensions: ${this.extensionMap.getReadableFileExtensions()})`
       );
     }
 
-    this._engine = this.getEngineByName(this._engineName);
+    this._engine = await this.getEngineByName(this._engineName);
 
     if (this.useMarkdown === undefined) {
       this.setUseMarkdown(this._engineName === "md");
@@ -78,14 +85,14 @@ class TemplateRender {
 
   get engineName() {
     if (!this._engineName) {
-      this.init(this.engineNameOrPath);
+      throw new Error("TemplateRender needs a call to the init() method.");
     }
     return this._engineName;
   }
 
   get engine() {
     if (!this._engine) {
-      this.init(this.engineNameOrPath);
+      throw new Error("TemplateRender needs a call to the init() method.");
     }
     return this._engine;
   }
@@ -200,7 +207,7 @@ class TemplateRender {
     return this.extensionMap.getKey(this.engineNameOrPath);
   }
 
-  setEngineOverride(engineName, bypassMarkdown) {
+  async setEngineOverride(engineName, bypassMarkdown) {
     let engines = TemplateRender.parseEngineOverrides(engineName);
 
     // when overriding, Template Engines with HTML will instead use the Template Engine as primary and output HTML
@@ -208,11 +215,11 @@ class TemplateRender {
     this.setHtmlEngine(false);
 
     if (!engines.length) {
-      this.init("html");
+      await this.init("html");
       return;
     }
 
-    this.init(engines[0]);
+    await this.init(engines[0]);
 
     let usingMarkdown = engines[0] === "md" && !bypassMarkdown;
 
@@ -278,4 +285,4 @@ class TemplateRender {
   }
 }
 
-module.exports = TemplateRender;
+export default TemplateRender;

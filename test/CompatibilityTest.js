@@ -1,5 +1,5 @@
-const test = require("ava");
-const EleventyCompatibility = require("../src/Util/Compatibility");
+import test from "ava";
+import EleventyCompatibility from "../src/Util/Compatibility.js";
 
 test(".canary- to .alpha- normalization (because pre-releases are alphabetic comparisons 😭)", (t) => {
   t.is(EleventyCompatibility.normalizeIdentifier("2.0.0"), "2.0.0");
