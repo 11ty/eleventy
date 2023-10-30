@@ -4,6 +4,7 @@ import debugUtil from "debug";
 import { Merge, DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
 
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
+import EventBus from "./EventBus.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import PathPrefixer from "./Util/PathPrefixer.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
@@ -180,6 +181,10 @@ class EleventyServe {
 
 		// Static method `getServer` was already checked in `getServerModule`
 		this._server = serverModule.getServer("eleventy-server", this.outputDir, this.options);
+
+    if ("setEventBus" in this._server) {
+      this._server.setEventBus(EventBus);
+    }
 
 		this.setAliases(this._aliases);
 
