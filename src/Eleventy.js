@@ -329,7 +329,7 @@ class Eleventy {
   logFinished() {
     if (!this.writer) {
       throw new Error(
-        "Did you call Eleventy.init to create the TemplateWriter instance? Hint: you probably didn’t."
+        "Did you call Eleventy.init to create the TemplateWriter instance? Hint: you probably didn’t.",
       );
     }
 
@@ -348,7 +348,7 @@ class Eleventy {
     slashRet.push(
       `Wrote ${writeCount} ${simplePlural(writeCount, "file", "files")}${
         skippedCount ? ` (skipped ${skippedCount})` : ""
-      }`
+      }`,
     );
 
     if (slashRet.length) {
@@ -437,7 +437,7 @@ class Eleventy {
       this.inputDir,
       this.outputDir,
       formats,
-      this.eleventyConfig
+      this.eleventyConfig,
     );
     this.eleventyFiles.setFileSystemSearch(this.fileSystemSearch);
     this.eleventyFiles.setInput(this.inputDir, this.input);
@@ -449,7 +449,7 @@ class Eleventy {
 
     if (checkPassthroughCopyBehavior(this.config, this.runMode)) {
       this.eleventyServe.watchPassthroughCopy(
-        this.eleventyFiles.getGlobWatcherFilesForPassthroughCopy()
+        this.eleventyFiles.getGlobWatcherFilesForPassthroughCopy(),
       );
     }
 
@@ -471,7 +471,7 @@ class Eleventy {
       this.outputDir,
       formats,
       this.templateData,
-      this.eleventyConfig
+      this.eleventyConfig,
     );
 
     if (!options.viaConfigReset) {
@@ -749,7 +749,6 @@ Arguments:
     await this.eleventyConfig.reset();
 
     this.config = this.eleventyConfig.getConfig();
-    this.eleventyServe.config = this.config;
     this.eleventyServe.eleventyConfig = this.eleventyConfig;
 
     // only use config quietMode if --quiet not set on CLI
@@ -770,7 +769,7 @@ Arguments:
     let usedByDependants = [];
     if (this.watchTargets) {
       usedByDependants = this.watchTargets.getDependantsOf(
-        TemplatePath.addLeadingDotSlash(changedFilePath)
+        TemplatePath.addLeadingDotSlash(changedFilePath),
       );
     }
 
@@ -816,7 +815,7 @@ Arguments:
     return this.shouldTriggerConfigReset(
       activeQueue.map((path) => {
         return PathNormalizer.normalizeSeperator(TemplatePath.addLeadingDotSlash(path));
-      })
+      }),
     );
   }
 
@@ -909,7 +908,7 @@ Arguments:
       this.logger.log(
         `You saved while Eleventy was running, let’s run again. (${queueSize} change${
           queueSize !== 1 ? "s" : ""
-        })`
+        })`,
       );
       await this._watch();
     } else {
@@ -947,7 +946,7 @@ Arguments:
     this.watchTargets.add(await this.eleventyFiles.getGlobWatcherTemplateDataFiles());
 
     let benchmark = this.watcherBench.get(
-      "Watching JavaScript Dependencies (disable with `eleventyConfig.setWatchJavaScriptDependencies(false)`)"
+      "Watching JavaScript Dependencies (disable with `eleventyConfig.setWatchJavaScriptDependencies(false)`)",
     );
     benchmark.before();
     await this._initWatchDependencies();
@@ -996,7 +995,7 @@ Arguments:
     // Config file dependencies
     await this.watchTargets.addDependencies(
       this.eleventyConfig.getLocalProjectConfigFiles(),
-      filterOutGlobalDataFiles
+      filterOutGlobalDataFiles,
     );
 
     // Deps from Global Data (that aren’t in the global data directory, everything is watched there)
@@ -1004,7 +1003,7 @@ Arguments:
     await this.watchTargets.addDependencies(globalDataDeps, filterOutGlobalDataFiles);
 
     await this.watchTargets.addDependencies(
-      await this.eleventyFiles.getWatcherTemplateJavaScriptDataFiles()
+      await this.eleventyFiles.getWatcherTemplateJavaScriptDataFiles(),
     );
   }
 
@@ -1038,7 +1037,7 @@ Arguments:
           pollInterval: 25,
         },
       },
-      configOptions
+      configOptions,
     );
   }
 
@@ -1205,9 +1204,9 @@ Arguments:
     if (!this.writer) {
       this.errorHandler.fatal(
         new Error(
-          "Eleventy didn’t run init() properly and wasn’t able to create a TemplateWriter."
+          "Eleventy didn’t run init() properly and wasn’t able to create a TemplateWriter.",
         ),
-        "Problem writing Eleventy templates"
+        "Problem writing Eleventy templates",
       );
     }
 
@@ -1239,7 +1238,7 @@ Arguments:
         promise = this.writer.getJSON("ndjson");
       } else {
         throw new Error(
-          `Invalid argument for \`Eleventy->executeBuild(${to})\`, expected "json", "ndjson", or "fs".`
+          `Invalid argument for \`Eleventy->executeBuild(${to})\`, expected "json", "ndjson", or "fs".`,
         );
       }
 
