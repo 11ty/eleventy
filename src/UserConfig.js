@@ -1,12 +1,13 @@
 import chalk from "kleur";
 import { DateTime } from "luxon";
 import debugUtil from "debug";
+import { RetrieveGlobals } from "node-retrieve-globals";
 
 import EventEmitter from "./Util/AsyncEventEmitter.js";
 import EleventyCompatibility from "./Util/Compatibility.js";
 import EleventyBaseError from "./EleventyBaseError.js";
 import BenchmarkManager from "./BenchmarkManager.js";
-import merge from "./Util/Merge.js";
+import { DeepCopy } from "./Util/Merge.js";
 
 const debug = debugUtil("Eleventy:UserConfig");
 
@@ -106,6 +107,24 @@ class UserConfig {
     // Defaults in `defaultConfig.js`
     this.dataFileSuffixesOverride = false;
     this.dataFileDirBaseNameOverride = false;
+
+    this.frontMatterParsingOptions = {
+      engines: {
+        node: (frontMatterCode, { filePath }) => {
+          let vm = new RetrieveGlobals(frontMatterCode, {
+            filePath,
+            transformEsmImports: true,
+          });
+
+          let data = {}; // extra data
+          // this is async, but it’s handled in Eleventy upstream.
+          return vm.getGlobalContext(data, {
+            reuseGlobal: true,
+            dynamicImport: true,
+          });
+        },
+      },
+    };
   }
 
   // compatibleRange is optional in 2.0.0-beta.2
@@ -727,7 +746,7 @@ class UserConfig {
     if (override) {
       this.serverOptions = options;
     } else {
-      this.serverOptions = merge(this.serverOptions, options);
+      this.serverOptions = DeepCopy(this.serverOptions, options);
     }
   }
 
@@ -746,8 +765,9 @@ class UserConfig {
     this.watchThrottleWaitTime = time;
   }
 
+  // 3.0 change: this does a top level merge instead of reset.
   setFrontMatterParsingOptions(options = {}) {
-    this.frontMatterParsingOptions = options;
+    DeepCopy(this.frontMatterParsingOptions, options);
   }
 
   setQuietMode(quietMode) {
