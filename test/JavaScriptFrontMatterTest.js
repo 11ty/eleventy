@@ -11,3 +11,20 @@ test("Custom Front Matter Parsing Options (using JavaScript node-retrieve-global
 
   t.is(result[0]?.content, `<div>Hi</div><div>Bye</div>`);
 });
+
+test("Custom Front Matter Parsing Options (using JavaScript node-retrieve-globals), override project-wide front matter default.", async (t) => {
+  let elev = new Eleventy("./test/stubs/script-frontmatter/test-default.njk", "./_site", {
+    config: (eleventyConfig) => {
+      eleventyConfig.setFrontMatterParsingOptions({
+        language: "node",
+      });
+    },
+  });
+  elev.setIsVerbose(false);
+
+  let result = await elev.toJSON();
+
+  t.deepEqual(result.length, 1);
+
+  t.is(result[0]?.content, `<div>Hi</div><div>Bye</div>`);
+});

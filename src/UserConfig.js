@@ -109,6 +109,10 @@ class UserConfig {
     this.dataFileDirBaseNameOverride = false;
 
     this.frontMatterParsingOptions = {
+      // project-wide default.
+      // language: "yaml",
+
+      // supplementary engines
       engines: {
         node: (frontMatterCode, { filePath }) => {
           let vm = new RetrieveGlobals(frontMatterCode, {
