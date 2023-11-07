@@ -170,6 +170,9 @@ function getLocaleUrlsMap(urlToInputPath, extensionMap) {
       let url = entry.url;
       if (!urlMap[url]) {
         urlMap[url] = filemap[filepath].filter((entry) => {
+          if (entry.lang) {
+            return true;
+          }
           return entry.url !== url;
         });
       }
@@ -279,7 +282,9 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
   // Find the links that are localized alternates to the inputPath argument
   eleventyConfig.addFilter(options.filters.links, function (urlOverride) {
     let url = urlOverride || this.page?.url;
-    return contentMaps.localeUrlsMap[url] || [];
+    return (contentMaps.localeUrlsMap[url] || []).filter((entry) => {
+      return entry.url !== url;
+    });
   });
 
   // Returns a `page`-esque variable for the root default language page
