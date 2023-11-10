@@ -952,6 +952,8 @@ Arguments:
     benchmark.before();
     await this._initWatchDependencies();
     benchmark.after();
+
+    eventBus.on("eleventyDevServer.rebuild", async () => await this._watch());
   }
 
   get isEsm() {

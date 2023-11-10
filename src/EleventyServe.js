@@ -3,6 +3,7 @@ import EleventyDevServer from "@11ty/eleventy-dev-server";
 import debugUtil from "debug";
 
 import EleventyBaseError from "./EleventyBaseError.js";
+import EventBus from "./EventBus.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import PathPrefixer from "./Util/PathPrefixer.js";
 import merge from "./Util/Merge.js";
@@ -164,6 +165,10 @@ class EleventyServe {
 
     // Static method `getServer` was already checked in `getServerModule`
     this._server = serverModule.getServer("eleventy-server", this.outputDir, this.options);
+
+    if ("setEventBus" in this._server) {
+      this._server.setEventBus(EventBus);
+    }
 
     this.setAliases(this._aliases);
   }
