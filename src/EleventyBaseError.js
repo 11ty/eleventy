@@ -1,5 +1,6 @@
 /**
  * This class serves as basis for all Eleventy-specific errors.
+ * @ignore
  */
 class EleventyBaseError extends Error {
   /**
@@ -9,13 +10,11 @@ class EleventyBaseError extends Error {
   constructor(message, originalError) {
     super(message);
 
-    /** @type {string} - The error message to display. */
     this.name = this.constructor.name;
 
     Error.captureStackTrace(this, this.constructor);
 
     if (originalError) {
-      /** @type {Error} - The original error caught. */
       this.originalError = originalError;
     }
   }

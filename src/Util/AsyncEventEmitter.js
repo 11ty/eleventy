@@ -7,8 +7,8 @@ import EventEmitter from "node:events";
 class AsyncEventEmitter extends EventEmitter {
   /**
    * @param {string} type - The event name to emit.
-   * @param {*[]} args - Additional arguments that get passed to listeners.
-   * @returns {Promise<*[]>} - Promise resolves once all listeners were invoked
+   * @param {...*} args - Additional arguments that get passed to listeners.
+   * @returns {Promise} - Promise resolves once all listeners were invoked
    */
   async emit(type, ...args) {
     let listeners = this.listeners(type);
@@ -21,8 +21,8 @@ class AsyncEventEmitter extends EventEmitter {
 
   /**
    * @param {string} type - The event name to emit.
-   * @param {*[]} args - Additional lazy-executed function arguments that get passed to listeners.
-   * @returns {Promise<*[]>} - Promise resolves once all listeners were invoked
+   * @param {...*} args - Additional lazy-executed function arguments that get passed to listeners.
+   * @returns {Promise} - Promise resolves once all listeners were invoked
    */
   async emitLazy(type, ...args) {
     let listeners = this.listeners(type);

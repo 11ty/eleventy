@@ -34,8 +34,8 @@ const debug = debugUtil("Eleventy");
 /**
  * Runtime of eleventy.
  *
- * @param {String} input - Where to read files from.
- * @param {String} output - Where to write rendered files to.
+ * @param {String} input - Directory or filename for input/sources files.
+ * @param {String} output - Directory serving as the target for writing the output files.
  * @returns {module:11ty/eleventy/Eleventy~Eleventy}
  */
 class Eleventy {
@@ -46,7 +46,7 @@ class Eleventy {
     /** @member {String} - Holds the path to the output directory. */
     this.rawOutput = output;
 
-    /** @member {TemplateConfig} - Override the config instance (for centralized config re-use) */
+    /** @member {module:11ty/eleventy/TemplateConfig} - Override the config instance (for centralized config re-use) */
     this.eleventyConfig = eleventyConfig;
 
     /**
@@ -99,7 +99,7 @@ class Eleventy {
 
     /**
      * @member {Boolean} - Is this an incremental build? (only operates on a subset of input files)
-     * @default null
+     * @default false
      */
     this.isIncremental = false;
 
@@ -111,13 +111,14 @@ class Eleventy {
 
     /**
      * @member {Boolean} - Should we process files on first run? (The --ignore-initial feature)
-     * @default null
+     * @default true
      */
     this.isRunInitialBuild = true;
 
     /**
      * @member {Boolean} - Has the async initialization for config run yet?
-     * @default null
+     * @private
+     * @default false
      */
     this._hasConfigInitialized = false;
   }
@@ -1294,7 +1295,16 @@ export default Eleventy;
 
 export {
   Eleventy,
+  /**
+   * @type {module:11ty/eleventy/Plugins/RenderPlugin}
+   */
   RenderPlugin as EleventyRenderPlugin,
+  /**
+   * @type {module:11ty/eleventy/Plugins/I18nPlugin}
+   */
   I18nPlugin as EleventyI18nPlugin,
+  /**
+   * @type {module:11ty/eleventy/Plugins/HtmlBasePlugin}
+   */
   HtmlBasePlugin as EleventyHtmlBasePlugin,
 };

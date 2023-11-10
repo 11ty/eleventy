@@ -32,17 +32,19 @@ const debugDev = debugUtil("Dev:Eleventy:TemplateConfig");
 
 /**
  * Errors in eleventy config.
+ * @ignore
  */
 class EleventyConfigError extends EleventyBaseError {}
 
 /**
  * Errors in eleventy plugins.
+ * @ignore
  */
 class EleventyPluginError extends EleventyBaseError {}
 
 /**
  * Config for a template.
- *
+ * @ignore
  * @param {{}} customRootConfig - tbd.
  * @param {String} projectConfigPath - Path to local project config.
  */

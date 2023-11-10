@@ -15,7 +15,10 @@ class UserConfigError extends EleventyBaseError {}
 
 const ComparisonAsyncFunction = (async () => {}).constructor;
 
-// API to expose configuration options in config file
+/**
+ * API to expose configuration options in user-land configuration files
+ * @module 11ty/eleventy/UserConfig
+ */
 class UserConfig {
   constructor() {
     this._uniqueId = Math.random();

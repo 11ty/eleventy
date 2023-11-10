@@ -38,6 +38,7 @@
   ],
   "scripts": {
     "default": "npm run test",
+    "jsdoc": "rm -rf jsdoc && npx jsdoc src/* -r -d jsdoc",
     "format": "prettier . --write",
     "test": "npx ava --verbose",
     "lint-staged": "lint-staged",
@@ -80,6 +81,7 @@
     "ava": "^5.3.1",
     "husky": "^8.0.3",
     "js-yaml": "^4.1.0",
+    "jsdoc": "^4.0.2",
     "lint-staged": "^15.0.2",
     "markdown-it-emoji": "^2.0.2",
     "marked": "^9.1.5",

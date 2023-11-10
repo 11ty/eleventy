@@ -51,7 +51,7 @@ async function compile(content, templateLang, { templateConfig, extensionMap } =
     tr.engine.name === "11ty.mjs"
   ) {
     throw new Error(
-      "11ty.js is not yet supported as a template engine for `renderTemplate`. Use `renderFile` instead!"
+      "11ty.js is not yet supported as a template engine for `renderTemplate`. Use `renderFile` instead!",
     );
   }
 
@@ -66,7 +66,7 @@ async function compileFile(inputPath, { templateConfig, extensionMap, config } =
 
   if (!(await fsExists(TemplatePath.normalizeOperatingSystemFilePath(inputPath)))) {
     throw new Error(
-      "Could not find render plugin file for the `renderFile` shortcode, looking for: " + inputPath
+      "Could not find render plugin file for the `renderFile` shortcode, looking for: " + inputPath,
     );
   }
 
@@ -128,16 +128,33 @@ async function renderShortcodeFn(fn, data) {
   return fn(data);
 }
 
+/**
+ * @module 11ty/eleventy/Plugins/RenderPlugin
+ */
+
+/**
+ * A plugin to add shortcodes to render an Eleventy template
+ * string (or file) inside of another template. {@link https://www.11ty.dev/docs/plugins/render/}
+ *
+ * @since 1.0.0
+ * @param {module:11ty/eleventy/UserConfig} eleventyConfig - User-land configuration instance.
+ * @param {Object} options - Plugin options
+ */
 function EleventyPlugin(eleventyConfig, options = {}) {
-  let opts = Object.assign(
-    {
-      tagName: "renderTemplate",
-      tagNameFile: "renderFile",
-      templateConfig: null,
-      accessGlobalData: false,
-    },
-    options
-  );
+  /**
+   * @typedef {Object} options
+   * @property {string} [tagName] - The shortcode name to render a template string.
+   * @property {string} [tagNameFile] - The shortcode name to render a template file.
+   * @property {module:11ty/eleventy/TemplateConfig} [templateConfig] - Configuration object
+   * @property {boolean} [accessGlobalData] - Whether or not the template has access to the page’s data.
+   */
+  let defaultOptions = {
+    tagName: "renderTemplate",
+    tagNameFile: "renderFile",
+    templateConfig: null,
+    accessGlobalData: false,
+  };
+  let opts = Object.assign(defaultOptions, options);
 
   function liquidTemplateTag(liquidEngine, tagName) {
     // via https://github.com/harttle/liquidjs/blob/b5a22fa0910c708fe7881ef170ed44d3594e18f3/src/builtin/tags/raw.ts
@@ -186,7 +203,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
           normalizedContext,
           body,
           // templateLang, data
-          ...argArray
+          ...argArray,
         );
         yield ret;
         return ret;
@@ -210,7 +227,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
         const endTagName = "end" + tagName;
         // Look for upcoming raw blocks (ignore all other kinds of blocks)
         const rawBlockRegex = new RegExp(
-          "([\\s\\S]*?){%\\s*(" + tagName + "|" + endTagName + ")\\s*(?=%})%}"
+          "([\\s\\S]*?){%\\s*(" + tagName + "|" + endTagName + ")\\s*(?=%})%}",
         );
         let rawLevel = 1;
         let str = "";
@@ -270,9 +287,9 @@ function EleventyPlugin(eleventyConfig, options = {}) {
             resolve(
               new EleventyShortcodeError(
                 `Error with Nunjucks paired shortcode \`${tagName}\`${EleventyErrorUtil.convertErrorToString(
-                  e
-                )}`
-              )
+                  e,
+                )}`,
+              ),
             );
           }
 
@@ -281,8 +298,8 @@ function EleventyPlugin(eleventyConfig, options = {}) {
               normalizedContext,
               bodyContent,
               // templateLang, data
-              ...argArray
-            )
+              ...argArray,
+            ),
           )
             .then(function (returnValue) {
               resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
@@ -291,10 +308,10 @@ function EleventyPlugin(eleventyConfig, options = {}) {
               resolve(
                 new EleventyShortcodeError(
                   `Error with Nunjucks paired shortcode \`${tagName}\`${EleventyErrorUtil.convertErrorToString(
-                    e
-                  )}`
+                    e,
+                  )}`,
                 ),
-                null
+                null,
               );
             });
         });
@@ -337,7 +354,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
         templateConfig: opts.templateConfig || templateConfig,
         extensionMap,
       },
-      templateLang
+      templateLang,
     );
 
     return renderShortcodeFn.call(this, fn, data);

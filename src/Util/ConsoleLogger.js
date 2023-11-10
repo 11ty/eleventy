@@ -6,6 +6,7 @@ const debug = debugUtil("Eleventy:Logger");
 
 /**
  * Logger implementation that logs to STDOUT.
+ * @ignore
  */
 class ConsoleLogger {
   constructor() {
