@@ -322,9 +322,11 @@ test("Sort in place (issue #352)", async (t) => {
 
 test("getFilteredByTag with excludes", async (t) => {
   let eleventyConfig = new TemplateConfig();
-  let tmpl8 = getNewTemplateByNumber(8, eleventyConfig);
-  let tmpl9 = getNewTemplateByNumber(9, eleventyConfig);
-  let tmpl10 = getNewTemplateByNumber(10, eleventyConfig);
+  await eleventyConfig.init();
+
+  let tmpl8 = await getNewTemplateByNumber(8, eleventyConfig);
+  let tmpl9 = await getNewTemplateByNumber(9, eleventyConfig);
+  let tmpl10 = await getNewTemplateByNumber(10, eleventyConfig);
 
   let c = new Collection();
   await addTemplate(c, tmpl8);
@@ -334,8 +336,10 @@ test("getFilteredByTag with excludes", async (t) => {
   let posts = c.getFilteredByTag("post");
   t.is(posts.length, 0);
 
-  let cats = c.getFilteredByTag("office");
-  t.is(cats.length, 2);
-  t.deepEqual(cats[0].template, tmpl9);
-  t.deepEqual(cats[1].template, tmpl10);
+  let offices = c.getFilteredByTag("office");
+  offices.sort(Sortable.sortFunctionDate);
+
+  t.is(offices.length, 2);
+  t.deepEqual(offices[0].template, tmpl10);
+  t.deepEqual(offices[1].template, tmpl9);
 });
