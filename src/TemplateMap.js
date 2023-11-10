@@ -6,6 +6,7 @@ import TemplateCollection from "./TemplateCollection.js";
 import EleventyErrorUtil from "./EleventyErrorUtil.js";
 import UsingCircularTemplateContentReferenceError from "./Errors/UsingCircularTemplateContentReferenceError.js";
 import EleventyBaseError from "./EleventyBaseError.js";
+import TemplateData from "./TemplateData.js";
 
 const debug = debugUtil("Eleventy:TemplateMap");
 const debugDev = debugUtil("Dev:Eleventy:TemplateMap");
@@ -169,17 +170,13 @@ class TemplateMap {
         graph.addNode(entry.inputPath);
       }
 
-      if (!entry.data.eleventyExcludeFromCollections) {
-        // Populates to collections.all
-        graph.addDependency(tagPrefix + "all", entry.inputPath);
-
-        this.addTagsToGraph(graph, entry.inputPath, entry.data.tags);
-      }
+      let collections = TemplateData.getIncludedCollectionNames(entry.data);
+      this.addTagsToGraph(graph, entry.inputPath, collections);
 
       this.addDeclaredDependenciesToGraph(
         graph,
         entry.inputPath,
-        entry.data.eleventyImport?.collections
+        entry.data.eleventyImport?.collections,
       );
     }
 
@@ -213,17 +210,13 @@ class TemplateMap {
         }
         graph.addDependency(entry.inputPath, tagPrefix + paginationTagTarget);
 
-        if (!entry.data.eleventyExcludeFromCollections) {
-          // Populates into collections.all
-          graph.addDependency(tagPrefix + "all", entry.inputPath);
-
-          this.addTagsToGraph(graph, entry.inputPath, entry.data.tags);
-        }
+        let collections = TemplateData.getIncludedCollectionNames(entry.data);
+        this.addTagsToGraph(graph, entry.inputPath, collections);
 
         this.addDeclaredDependenciesToGraph(
           graph,
           entry.inputPath,
-          entry.data.eleventyImport?.collections
+          entry.data.eleventyImport?.collections,
         );
       }
     }
@@ -260,7 +253,7 @@ class TemplateMap {
         this.addDeclaredDependenciesToGraph(
           graph,
           entry.inputPath,
-          entry.data.eleventyImport?.collections
+          entry.data.eleventyImport?.collections,
         );
       }
     }
@@ -300,7 +293,7 @@ class TemplateMap {
         this.addDeclaredDependenciesToGraph(
           graph,
           entry.inputPath,
-          entry.data.eleventyImport?.collections
+          entry.data.eleventyImport?.collections,
         );
       }
     }
@@ -343,7 +336,7 @@ class TemplateMap {
 
     let deletedCollectionNames = this.config.uses.findCollectionsRemovedFrom(
       incrementalFile,
-      newCollectionNames
+      newCollectionNames,
     );
 
     // Delete incremental from the dependency graph so we get fresh entries!
@@ -426,7 +419,7 @@ class TemplateMap {
               counter === 0 ||
               (map.data.pagination && map.data.pagination.addAllPagesToCollections)
             ) {
-              if (!map.data.eleventyExcludeFromCollections) {
+              if (map.data.eleventyExcludeFromCollections !== true) {
                 // TODO do we need .template in collection entries?
                 this.collection.add(page);
               }
@@ -460,7 +453,7 @@ class TemplateMap {
       dependencyMap,
       delayedDependencyMap,
       firstPaginatedDepMap,
-      secondPaginatedDepMap
+      secondPaginatedDepMap,
     );
 
     let orderedMap = orderedPaths.map((inputPath) => {
@@ -562,7 +555,7 @@ class TemplateMap {
       } catch (e) {
         if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
           throw new UsingCircularTemplateContentReferenceError(
-            `${map.inputPath} contains a circular reference (using collections) to its own templateContent.`
+            `${map.inputPath} contains a circular reference (using collections) to its own templateContent.`,
           );
         } else {
           // rethrow?

@@ -4,6 +4,7 @@ import lodash from "@11ty/lodash-custom";
 import EleventyBaseError from "../EleventyBaseError.js";
 import { DeepCopy } from "../Util/Merge.js";
 import { ProxyWrap } from "../Util/ProxyWrap.js";
+import TemplateData from "../TemplateData.js";
 
 const { set: lodashSet, get: lodashGet, chunk: lodashChunk } = lodash;
 
@@ -36,23 +37,20 @@ class Pagination {
   hasPagination() {
     if (!this.data) {
       throw new Error(
-        `Missing \`setData\` call for Pagination object${this.inputPathForErrorMessages}`
+        `Missing \`setData\` call for Pagination object${this.inputPathForErrorMessages}`,
       );
     }
     return Pagination.hasPagination(this.data);
   }
 
   circularReferenceCheck(data) {
-    if (data.eleventyExcludeFromCollections) {
-      return;
-    }
-
     let key = data.pagination.data;
-    let tags = data.tags || [];
-    for (let tag of tags) {
+    let includedTags = TemplateData.getIncludedTagNames(data);
+
+    for (let tag of includedTags) {
       if (`collections.${tag}` === key) {
         throw new PaginationError(
-          `Pagination circular reference${this.inputPathForErrorMessages}, data:\`${key}\` iterates over both the \`${tag}\` tag and also supplies pages to that tag.`
+          `Pagination circular reference${this.inputPathForErrorMessages}, data:\`${key}\` iterates over both the \`${tag}\` collection and also supplies pages to that collection.`,
         );
       }
     }
@@ -68,11 +66,11 @@ class Pagination {
 
     if (!data.pagination) {
       throw new Error(
-        `Misconfigured pagination data in template front matter${this.inputPathForErrorMessages} (YAML front matter precaution: did you use tabs and not spaces for indentation?).`
+        `Misconfigured pagination data in template front matter${this.inputPathForErrorMessages} (YAML front matter precaution: did you use tabs and not spaces for indentation?).`,
       );
     } else if (!("size" in data.pagination)) {
       throw new Error(
-        `Missing pagination size in front matter data${this.inputPathForErrorMessages}`
+        `Missing pagination size in front matter data${this.inputPathForErrorMessages}`,
       );
     }
     this.circularReferenceCheck(data);
@@ -124,7 +122,7 @@ class Pagination {
     let data = lodashGet(target, key, notFoundValue);
     if (data === notFoundValue) {
       throw new Error(
-        `Could not find pagination data${this.inputPathForErrorMessages}, went looking for: ${key}`
+        `Could not find pagination data${this.inputPathForErrorMessages}, went looking for: ${key}`,
       );
     }
     return data;
@@ -144,7 +142,7 @@ class Pagination {
       }
     } else {
       throw new Error(
-        `Unexpected data found in pagination target${this.inputPathForErrorMessages}: expected an Array or an Object.`
+        `Unexpected data found in pagination target${this.inputPathForErrorMessages}: expected an Array or an Object.`,
       );
     }
 
@@ -174,7 +172,7 @@ class Pagination {
   get pagedItems() {
     if (!this.data) {
       throw new Error(
-        `Missing \`setData\` call for Pagination object${this.inputPathForErrorMessages}`
+        `Missing \`setData\` call for Pagination object${this.inputPathForErrorMessages}`,
       );
     }
 
@@ -257,7 +255,7 @@ class Pagination {
   async getPageTemplates() {
     if (!this.data) {
       throw new Error(
-        `Missing \`setData\` call for Pagination object${this.inputPathForErrorMessages}`
+        `Missing \`setData\` call for Pagination object${this.inputPathForErrorMessages}`,
       );
     }
 
@@ -274,7 +272,7 @@ class Pagination {
 
     let hasPermalinkField = Boolean(this.data[this.config.keys.permalink]);
     let hasComputedPermalinkField = Boolean(
-      this.data.eleventyComputed && this.data.eleventyComputed[this.config.keys.permalink]
+      this.data.eleventyComputed && this.data.eleventyComputed[this.config.keys.permalink],
     );
 
     // Do *not* pass collections through DeepCopy, we’ll re-add them back in later.
@@ -292,7 +290,7 @@ class Pagination {
           pages,
         },
       },
-      this.data
+      this.data,
     );
 
     // Restore skipped collections

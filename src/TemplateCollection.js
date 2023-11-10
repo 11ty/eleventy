@@ -2,6 +2,7 @@ import multimatch from "multimatch";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
 import Sortable from "./Util/Sortable.js";
+import TemplateData from "./TemplateData.js";
 
 class TemplateCollection extends Sortable {
   constructor() {
@@ -60,26 +61,24 @@ class TemplateCollection extends Sortable {
 
   getFilteredByTag(tagName) {
     return this.getAllSorted().filter((item) => {
-      if (!tagName) {
+      if (!tagName || TemplateData.getIncludedTagNames(item.data).includes(tagName)) {
         return true;
-      } else if (Array.isArray(item.data.tags)) {
-        return item.data.tags.some((tag) => tag === tagName);
       }
       return false;
     });
   }
 
   getFilteredByTags(...tags) {
-    return this.getAllSorted().filter((item) =>
-      tags.every((requiredTag) => {
-        const itemTags = item.data.tags;
+    return this.getAllSorted().filter((item) => {
+      let itemTags = TemplateData.getIncludedTagNames(item.data);
+      return tags.every((requiredTag) => {
         if (Array.isArray(itemTags)) {
           return itemTags.includes(requiredTag);
         } else {
           return itemTags === requiredTag;
         }
-      })
-    );
+      });
+    });
   }
 }
 

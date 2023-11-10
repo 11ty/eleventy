@@ -141,7 +141,7 @@ class TemplateData {
       dir,
       "/",
       this.config.dir.data !== "." ? this.config.dir.data : "",
-      `/**/*.${extension}`
+      `/**/*.${extension}`,
     );
   }
 
@@ -331,7 +331,7 @@ class TemplateData {
       // and conflict, let’s merge them.
       if (dataFileConflicts[objectPathTargetString]) {
         debugWarn(
-          `merging global data from ${files[j]} with an already existing global data file (${dataFileConflicts[objectPathTargetString]}). Overriding existing keys.`
+          `merging global data from ${files[j]} with an already existing global data file (${dataFileConflicts[objectPathTargetString]}). Overriding existing keys.`,
         );
 
         let oldData = lodashGet(globalData, objectPathTarget);
@@ -403,8 +403,8 @@ class TemplateData {
         this._fsExistsCache.exists(path).then((exists) => {
           if (exists) return path;
           return false;
-        })
-      )
+        }),
+      ),
     );
 
     localDataPaths = dataPaths.filter((pathOrFalse) => {
@@ -424,7 +424,7 @@ class TemplateData {
         debug(
           "Warning: Template and Directory data files expect an object to be returned, instead `%o` returned `%o`",
           path,
-          dataForPath
+          dataForPath,
         );
       } else {
         // clean up data for template/directory data files only.
@@ -435,7 +435,7 @@ class TemplateData {
               "Local data files have conflicting data. Overwriting '%s' with data from '%s'. Previous data location was from '%s'",
               key,
               path,
-              dataSource[key]
+              dataSource[key],
             );
           }
           dataSource[key] = path;
@@ -554,7 +554,7 @@ class TemplateData {
       return this._parseDataFile(path, parser);
     } else {
       throw new TemplateDataParseError(
-        `Could not find an appropriate data parser for ${path}. Do you need to add a plugin to your config file?`
+        `Could not find an appropriate data parser for ${path}. Do you need to add a plugin to your config file?`,
       );
     }
   }
@@ -633,7 +633,7 @@ class TemplateData {
       // if using `docs/` as input dir, looks for docs/docs.json et al
       if (inputDir) {
         let lastInputDir = TemplatePath.addLeadingDotSlash(
-          TemplatePath.join(inputDir, TemplatePath.getLastPathSegment(inputDir))
+          TemplatePath.join(inputDir, TemplatePath.getLastPathSegment(inputDir)),
         );
 
         // in root input dir, search for index.11tydata.json et al
@@ -678,6 +678,49 @@ class TemplateData {
     }
 
     return data;
+  }
+
+  static getNormalizedExcludedCollections(data) {
+    let excludes = [];
+    if ("eleventyExcludeFromCollections" in data) {
+      if (data.eleventyExcludeFromCollections !== true) {
+        if (Array.isArray(data.eleventyExcludeFromCollections)) {
+          excludes = data.eleventyExcludeFromCollections;
+        } else if (typeof data.eleventyExcludeFromCollections === "string") {
+          excludes = [data.eleventyExcludeFromCollections];
+        }
+      }
+    }
+    return {
+      excludes,
+      excludeAll: data.eleventyExcludeFromCollections === true,
+    };
+  }
+
+  static getIncludedCollectionNames(data) {
+    if ("tags" in data) {
+      let excludes = TemplateData.getNormalizedExcludedCollections(data);
+      if (excludes.excludeAll) {
+        return [];
+      } else {
+        return ["all", ...data.tags].filter((tag) => !excludes.excludes.includes(tag));
+      }
+    } else {
+      return ["all"];
+    }
+  }
+
+  static getIncludedTagNames(data) {
+    if ("tags" in data) {
+      let excludes = TemplateData.getNormalizedExcludedCollections(data);
+      if (excludes.excludeAll) {
+        return [];
+      } else {
+        return data.tags.filter((tag) => !excludes.excludes.includes(tag));
+      }
+    } else {
+      return [];
+    }
   }
 }
 
