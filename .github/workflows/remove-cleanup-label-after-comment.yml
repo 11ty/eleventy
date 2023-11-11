@@ -1,5 +1,5 @@
 name: Remove cleanup label on issues after comment
-
+# https://github.com/marketplace/actions/close-issues-after-no-reply
 on:
   issue_comment:
     types:
