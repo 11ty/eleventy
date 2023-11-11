@@ -1,3 +1,4 @@
+name: Node Unit Tests
 on:
   push:
     branches-ignore:
