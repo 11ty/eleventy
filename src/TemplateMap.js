@@ -80,6 +80,7 @@ class TemplateMap {
 			return str.slice("collections.".length);
 		}
 		// Fixes #2851
+		// eslint-disable-next-line quotes
 		if (str.startsWith("collections['") || str.startsWith('collections["')) {
 			return str.slice("collections['".length, -2);
 		}
