@@ -6,9 +6,9 @@ body:
     attributes:
       value: |
         Before opening a feature request, please search for the feature in the existing issues. 
-        
+
         ---
-        
+
         Thank you for taking the time to file a feature request. To address this feature as fast as possible, we need some information.
   - type: textarea
     id: problem

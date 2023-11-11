@@ -12,277 +12,277 @@ class TemplateRenderUnknownEngineError extends EleventyBaseError {}
 
 // works with full path names or short engine name
 class TemplateRender {
-  constructor(tmplPath, inputDir, config) {
-    if (!tmplPath) {
-      throw new Error(`TemplateRender requires a tmplPath argument, instead of ${tmplPath}`);
-    }
-    if (!config) {
-      throw new TemplateRenderConfigError("Missing `config` argument.");
-    }
-    if (config.constructor.name === "TemplateConfig") {
-      this.eleventyConfig = config;
-      this.config = config.getConfig();
-    } else {
-      this.config = config;
-    }
+	constructor(tmplPath, inputDir, config) {
+		if (!tmplPath) {
+			throw new Error(`TemplateRender requires a tmplPath argument, instead of ${tmplPath}`);
+		}
+		if (!config) {
+			throw new TemplateRenderConfigError("Missing `config` argument.");
+		}
+		if (config.constructor.name === "TemplateConfig") {
+			this.eleventyConfig = config;
+			this.config = config.getConfig();
+		} else {
+			this.config = config;
+		}
 
-    this.engineNameOrPath = tmplPath;
+		this.engineNameOrPath = tmplPath;
 
-    this.inputDir = inputDir ? inputDir : this.config.dir.input;
-    this.includesDir = TemplatePath.join(this.inputDir, this.config.dir.includes);
+		this.inputDir = inputDir ? inputDir : this.config.dir.input;
+		this.includesDir = TemplatePath.join(this.inputDir, this.config.dir.includes);
 
-    this.parseMarkdownWith = this.config.markdownTemplateEngine;
-    this.parseHtmlWith = this.config.htmlTemplateEngine;
-  }
+		this.parseMarkdownWith = this.config.markdownTemplateEngine;
+		this.parseHtmlWith = this.config.htmlTemplateEngine;
+	}
 
-  get config() {
-    return this._config;
-  }
+	get config() {
+		return this._config;
+	}
 
-  set config(config) {
-    this._config = config;
-  }
+	set config(config) {
+		this._config = config;
+	}
 
-  set extensionMap(extensionMap) {
-    this._extensionMap = extensionMap;
-  }
+	set extensionMap(extensionMap) {
+		this._extensionMap = extensionMap;
+	}
 
-  get extensionMap() {
-    if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap([], this.eleventyConfig);
-    }
-    return this._extensionMap;
-  }
+	get extensionMap() {
+		if (!this._extensionMap) {
+			this._extensionMap = new EleventyExtensionMap([], this.eleventyConfig);
+		}
+		return this._extensionMap;
+	}
 
-  async getEngineByName(name) {
-    let engine = await this.extensionMap.engineManager.getEngine(
-      name,
-      this.getDirs(),
-      this.extensionMap
-    );
-    engine.eleventyConfig = this.eleventyConfig;
+	async getEngineByName(name) {
+		let engine = await this.extensionMap.engineManager.getEngine(
+			name,
+			this.getDirs(),
+			this.extensionMap,
+		);
+		engine.eleventyConfig = this.eleventyConfig;
 
-    return engine;
-  }
+		return engine;
+	}
 
-  // Runs once per template
-  async init(engineNameOrPath) {
-    let name = engineNameOrPath || this.engineNameOrPath;
-    this.extensionMap.config = this.eleventyConfig;
-    this._engineName = this.extensionMap.getKey(name);
-    if (!this._engineName) {
-      throw new TemplateRenderUnknownEngineError(
-        `Unknown engine for ${name} (supported extensions: ${this.extensionMap.getReadableFileExtensions()})`
-      );
-    }
+	// Runs once per template
+	async init(engineNameOrPath) {
+		let name = engineNameOrPath || this.engineNameOrPath;
+		this.extensionMap.config = this.eleventyConfig;
+		this._engineName = this.extensionMap.getKey(name);
+		if (!this._engineName) {
+			throw new TemplateRenderUnknownEngineError(
+				`Unknown engine for ${name} (supported extensions: ${this.extensionMap.getReadableFileExtensions()})`,
+			);
+		}
 
-    this._engine = await this.getEngineByName(this._engineName);
+		this._engine = await this.getEngineByName(this._engineName);
 
-    if (this.useMarkdown === undefined) {
-      this.setUseMarkdown(this._engineName === "md");
-    }
-  }
+		if (this.useMarkdown === undefined) {
+			this.setUseMarkdown(this._engineName === "md");
+		}
+	}
 
-  get engineName() {
-    if (!this._engineName) {
-      throw new Error("TemplateRender needs a call to the init() method.");
-    }
-    return this._engineName;
-  }
+	get engineName() {
+		if (!this._engineName) {
+			throw new Error("TemplateRender needs a call to the init() method.");
+		}
+		return this._engineName;
+	}
 
-  get engine() {
-    if (!this._engine) {
-      throw new Error("TemplateRender needs a call to the init() method.");
-    }
-    return this._engine;
-  }
+	get engine() {
+		if (!this._engine) {
+			throw new Error("TemplateRender needs a call to the init() method.");
+		}
+		return this._engine;
+	}
 
-  static parseEngineOverrides(engineName) {
-    if (typeof (engineName || "") !== "string") {
-      throw new Error("Expected String passed to parseEngineOverrides. Received: " + engineName);
-    }
+	static parseEngineOverrides(engineName) {
+		if (typeof (engineName || "") !== "string") {
+			throw new Error("Expected String passed to parseEngineOverrides. Received: " + engineName);
+		}
 
-    let overlappingEngineWarningCount = 0;
-    let engines = [];
-    let uniqueLookup = {};
-    let usingMarkdown = false;
-    (engineName || "")
-      .split(",")
-      .map((name) => {
-        return name.toLowerCase().trim();
-      })
-      .forEach((name) => {
-        // html is assumed (treated as plaintext by the system)
-        if (!name || name === "html") {
-          return;
-        }
+		let overlappingEngineWarningCount = 0;
+		let engines = [];
+		let uniqueLookup = {};
+		let usingMarkdown = false;
+		(engineName || "")
+			.split(",")
+			.map((name) => {
+				return name.toLowerCase().trim();
+			})
+			.forEach((name) => {
+				// html is assumed (treated as plaintext by the system)
+				if (!name || name === "html") {
+					return;
+				}
 
-        if (name === "md") {
-          usingMarkdown = true;
-          return;
-        }
+				if (name === "md") {
+					usingMarkdown = true;
+					return;
+				}
 
-        if (!uniqueLookup[name]) {
-          engines.push(name);
-          uniqueLookup[name] = true;
+				if (!uniqueLookup[name]) {
+					engines.push(name);
+					uniqueLookup[name] = true;
 
-          // we already short circuit md and html types above
-          overlappingEngineWarningCount++;
-        }
-      });
+					// we already short circuit md and html types above
+					overlappingEngineWarningCount++;
+				}
+			});
 
-    if (overlappingEngineWarningCount > 1) {
-      throw new Error(
-        `Don’t mix multiple templating engines in your front matter overrides (exceptions for HTML and Markdown). You used: ${engineName}`
-      );
-    }
+		if (overlappingEngineWarningCount > 1) {
+			throw new Error(
+				`Don’t mix multiple templating engines in your front matter overrides (exceptions for HTML and Markdown). You used: ${engineName}`,
+			);
+		}
 
-    // markdown should always be first
-    if (usingMarkdown) {
-      engines.unshift("md");
-    }
+		// markdown should always be first
+		if (usingMarkdown) {
+			engines.unshift("md");
+		}
 
-    return engines;
-  }
+		return engines;
+	}
 
-  // used for error logging and console output.
-  getReadableEnginesList() {
-    return this.getReadableEnginesListDifferingFromFileExtension() || this.engineName;
-  }
+	// used for error logging and console output.
+	getReadableEnginesList() {
+		return this.getReadableEnginesListDifferingFromFileExtension() || this.engineName;
+	}
 
-  getReadableEnginesListDifferingFromFileExtension() {
-    let keyFromFilename = this.extensionMap.getKey(this.engineNameOrPath);
-    if (this.engine instanceof CustomEngine) {
-      if (
-        this.engine.entry &&
-        this.engine.entry.name &&
-        keyFromFilename !== this.engine.entry.name
-      ) {
-        return this.engine.entry.name;
-      } else {
-        // We don’t have a name for it so we return nothing so we don’t misreport (per #2386)
-        return;
-      }
-    }
+	getReadableEnginesListDifferingFromFileExtension() {
+		let keyFromFilename = this.extensionMap.getKey(this.engineNameOrPath);
+		if (this.engine instanceof CustomEngine) {
+			if (
+				this.engine.entry &&
+				this.engine.entry.name &&
+				keyFromFilename !== this.engine.entry.name
+			) {
+				return this.engine.entry.name;
+			} else {
+				// We don’t have a name for it so we return nothing so we don’t misreport (per #2386)
+				return;
+			}
+		}
 
-    if (this.engineName === "md" && this.useMarkdown && this.parseMarkdownWith) {
-      return this.parseMarkdownWith;
-    }
-    if (this.engineName === "html" && this.parseHtmlWith) {
-      return this.parseHtmlWith;
-    }
+		if (this.engineName === "md" && this.useMarkdown && this.parseMarkdownWith) {
+			return this.parseMarkdownWith;
+		}
+		if (this.engineName === "html" && this.parseHtmlWith) {
+			return this.parseHtmlWith;
+		}
 
-    // templateEngineOverride in play and template language differs from file extension
-    if (keyFromFilename !== this.engineName) {
-      return this.engineName;
-    }
-  }
+		// templateEngineOverride in play and template language differs from file extension
+		if (keyFromFilename !== this.engineName) {
+			return this.engineName;
+		}
+	}
 
-  // TODO templateEngineOverride
-  getPreprocessorEngine() {
-    if (this.engineName === "md" && this.parseMarkdownWith) {
-      return this.parseMarkdownWith;
-    }
-    if (this.engineName === "html" && this.parseHtmlWith) {
-      return this.parseHtmlWith;
-    }
-    return this.extensionMap.getKey(this.engineNameOrPath);
-  }
+	// TODO templateEngineOverride
+	getPreprocessorEngine() {
+		if (this.engineName === "md" && this.parseMarkdownWith) {
+			return this.parseMarkdownWith;
+		}
+		if (this.engineName === "html" && this.parseHtmlWith) {
+			return this.parseHtmlWith;
+		}
+		return this.extensionMap.getKey(this.engineNameOrPath);
+	}
 
-  // We pass in templateEngineOverride here because it isn’t yet applied to templateRender
-  getEnginesList(engineOverride) {
-    if (engineOverride) {
-      let engines = TemplateRender.parseEngineOverrides(engineOverride).reverse();
-      return engines.join(",");
-    }
+	// We pass in templateEngineOverride here because it isn’t yet applied to templateRender
+	getEnginesList(engineOverride) {
+		if (engineOverride) {
+			let engines = TemplateRender.parseEngineOverrides(engineOverride).reverse();
+			return engines.join(",");
+		}
 
-    if (this.engineName === "md" && this.useMarkdown && this.parseMarkdownWith) {
-      return `${this.parseMarkdownWith},md`;
-    }
-    if (this.engineName === "html" && this.parseHtmlWith) {
-      return this.parseHtmlWith;
-    }
+		if (this.engineName === "md" && this.useMarkdown && this.parseMarkdownWith) {
+			return `${this.parseMarkdownWith},md`;
+		}
+		if (this.engineName === "html" && this.parseHtmlWith) {
+			return this.parseHtmlWith;
+		}
 
-    // templateEngineOverride in play
-    return this.extensionMap.getKey(this.engineNameOrPath);
-  }
+		// templateEngineOverride in play
+		return this.extensionMap.getKey(this.engineNameOrPath);
+	}
 
-  async setEngineOverride(engineName, bypassMarkdown) {
-    let engines = TemplateRender.parseEngineOverrides(engineName);
+	async setEngineOverride(engineName, bypassMarkdown) {
+		let engines = TemplateRender.parseEngineOverrides(engineName);
 
-    // when overriding, Template Engines with HTML will instead use the Template Engine as primary and output HTML
-    // So any HTML engine usage here will never use a preprocessor templating engine.
-    this.setHtmlEngine(false);
+		// when overriding, Template Engines with HTML will instead use the Template Engine as primary and output HTML
+		// So any HTML engine usage here will never use a preprocessor templating engine.
+		this.setHtmlEngine(false);
 
-    if (!engines.length) {
-      await this.init("html");
-      return;
-    }
+		if (!engines.length) {
+			await this.init("html");
+			return;
+		}
 
-    await this.init(engines[0]);
+		await this.init(engines[0]);
 
-    let usingMarkdown = engines[0] === "md" && !bypassMarkdown;
+		let usingMarkdown = engines[0] === "md" && !bypassMarkdown;
 
-    this.setUseMarkdown(usingMarkdown);
+		this.setUseMarkdown(usingMarkdown);
 
-    if (usingMarkdown) {
-      // false means only parse markdown and not with a preprocessor template engine
-      this.setMarkdownEngine(engines.length > 1 ? engines[1] : false);
-    }
-  }
+		if (usingMarkdown) {
+			// false means only parse markdown and not with a preprocessor template engine
+			this.setMarkdownEngine(engines.length > 1 ? engines[1] : false);
+		}
+	}
 
-  getEngineName() {
-    return this.engineName;
-  }
+	getEngineName() {
+		return this.engineName;
+	}
 
-  getDirs() {
-    return {
-      input: this.inputDir,
-      includes: this.includesDir,
-    };
-  }
+	getDirs() {
+		return {
+			input: this.inputDir,
+			includes: this.includesDir,
+		};
+	}
 
-  getIncludesDir() {
-    return this.includesDir;
-  }
+	getIncludesDir() {
+		return this.includesDir;
+	}
 
-  isEngine(engine) {
-    return this.engineName === engine;
-  }
+	isEngine(engine) {
+		return this.engineName === engine;
+	}
 
-  setUseMarkdown(useMarkdown) {
-    this.useMarkdown = !!useMarkdown;
-  }
+	setUseMarkdown(useMarkdown) {
+		this.useMarkdown = !!useMarkdown;
+	}
 
-  // this is only called for templateEngineOverride
-  setMarkdownEngine(markdownEngine) {
-    this.parseMarkdownWith = markdownEngine;
-  }
+	// this is only called for templateEngineOverride
+	setMarkdownEngine(markdownEngine) {
+		this.parseMarkdownWith = markdownEngine;
+	}
 
-  // this is only called for templateEngineOverride
-  setHtmlEngine(htmlEngineName) {
-    this.parseHtmlWith = htmlEngineName;
-  }
+	// this is only called for templateEngineOverride
+	setHtmlEngine(htmlEngineName) {
+		this.parseHtmlWith = htmlEngineName;
+	}
 
-  async _testRender(str, data) {
-    return this.engine._testRender(str, data);
-  }
+	async _testRender(str, data) {
+		return this.engine._testRender(str, data);
+	}
 
-  async getCompiledTemplate(str) {
-    // TODO refactor better, move into TemplateEngine logic
-    if (this.engineName === "md") {
-      return this.engine.compile(
-        str,
-        this.engineNameOrPath,
-        this.parseMarkdownWith,
-        !this.useMarkdown
-      );
-    } else if (this.engineName === "html") {
-      return this.engine.compile(str, this.engineNameOrPath, this.parseHtmlWith);
-    } else {
-      return this.engine.compile(str, this.engineNameOrPath);
-    }
-  }
+	async getCompiledTemplate(str) {
+		// TODO refactor better, move into TemplateEngine logic
+		if (this.engineName === "md") {
+			return this.engine.compile(
+				str,
+				this.engineNameOrPath,
+				this.parseMarkdownWith,
+				!this.useMarkdown,
+			);
+		} else if (this.engineName === "html") {
+			return this.engine.compile(str, this.engineNameOrPath, this.parseHtmlWith);
+		} else {
+			return this.engine.compile(str, this.engineNameOrPath);
+		}
+	}
 }
 
 export default TemplateRender;

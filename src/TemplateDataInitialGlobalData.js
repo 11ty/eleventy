@@ -7,40 +7,40 @@ const { set: lodashSet } = lodash;
 const pkg = getEleventyPackageJson();
 
 class TemplateDataInitialGlobalData {
-  constructor(templateConfig) {
-    if (!templateConfig) {
-      throw new TemplateDataConfigError("Missing `config`.");
-    }
-    this.templateConfig = templateConfig;
-    this.config = this.templateConfig.getConfig();
-  }
+	constructor(templateConfig) {
+		if (!templateConfig) {
+			throw new TemplateDataConfigError("Missing `config`.");
+		}
+		this.templateConfig = templateConfig;
+		this.config = this.templateConfig.getConfig();
+	}
 
-  async getData() {
-    let globalData = {};
+	async getData() {
+		let globalData = {};
 
-    // via eleventyConfig.addGlobalData
-    if (this.config.globalData) {
-      let keys = Object.keys(this.config.globalData);
-      for (let key of keys) {
-        let returnValue = this.config.globalData[key];
+		// via eleventyConfig.addGlobalData
+		if (this.config.globalData) {
+			let keys = Object.keys(this.config.globalData);
+			for (let key of keys) {
+				let returnValue = this.config.globalData[key];
 
-        if (typeof returnValue === "function") {
-          returnValue = await returnValue();
-        }
+				if (typeof returnValue === "function") {
+					returnValue = await returnValue();
+				}
 
-        lodashSet(globalData, key, returnValue);
-      }
-    }
+				lodashSet(globalData, key, returnValue);
+			}
+		}
 
-    if (!("eleventy" in globalData)) {
-      globalData.eleventy = {};
-    }
-    // #2293 for meta[name=generator]
-    globalData.eleventy.version = semver.coerce(pkg.version).toString();
-    globalData.eleventy.generator = `Eleventy v${globalData.eleventy.version}`;
+		if (!("eleventy" in globalData)) {
+			globalData.eleventy = {};
+		}
+		// #2293 for meta[name=generator]
+		globalData.eleventy.version = semver.coerce(pkg.version).toString();
+		globalData.eleventy.generator = `Eleventy v${globalData.eleventy.version}`;
 
-    return globalData;
-  }
+		return globalData;
+	}
 }
 
 export default TemplateDataInitialGlobalData;

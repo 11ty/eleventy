@@ -1,4 +1,4 @@
 {
-  "arrowParens": "always",
-  "printWidth": 100
+	"arrowParens": "always",
+	"printWidth": 100
 }

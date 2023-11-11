@@ -1,9 +1,7 @@
 root = true
 
 [*]
-#TODO
-#indent_style = tab
-indent_style = space
+indent_style = tab
 indent_size = 2
 end_of_line = lf
 insert_final_newline = false
