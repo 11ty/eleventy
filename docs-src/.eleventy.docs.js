@@ -1,6 +1,10 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-module.exports = {
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+export default {
   templateFormats: ["njk"],
   dir: {
     input: "docs-src",
@@ -9,10 +13,7 @@ module.exports = {
   },
   nunjucksFilters: {
     removeDir: function (str) {
-      return TemplatePath.stripLeadingSubPath(
-        str,
-        TemplatePath.join(__dirname, "..")
-      );
+      return TemplatePath.stripLeadingSubPath(str, TemplatePath.join(__dirname, ".."));
     },
   },
 };

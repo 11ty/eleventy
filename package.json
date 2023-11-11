@@ -42,7 +42,7 @@
     "format": "prettier . --write",
     "test": "npx ava --verbose",
     "lint-staged": "lint-staged",
-    "coverage": "npx nyc ava && npx nyc report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && node cmd.cjs --config=docs-src/.eleventy.docs.js",
+    "coverage": "npx c8 ava && npx c8 report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && node cmd.cjs --config=docs-src/.eleventy.docs.js --input=docs-src/coverage.njk",
     "prepare": "husky install"
   },
   "author": {
@@ -79,13 +79,13 @@
     "@vue/server-renderer": "^3.3.8",
     "@zachleat/noop": "^1.0.3",
     "ava": "^5.3.1",
+    "c8": "^8.0.1",
     "husky": "^8.0.3",
     "js-yaml": "^4.1.0",
     "jsdoc": "^4.0.2",
     "lint-staged": "^15.0.2",
     "markdown-it-emoji": "^2.0.2",
     "marked": "^9.1.5",
-    "nyc": "^15.1.0",
     "prettier": "^3.0.3",
     "pretty": "^2.0.0",
     "rimraf": "^5.0.1",
