@@ -7,7 +7,7 @@ const pkg = getEleventyPackageJson();
 const debug = debugUtil("Eleventy:Compatibility");
 
 class Compatibility {
-	static NORMALIZE_PRERELEASE_REGEX = /\-canary\b/g;
+	static NORMALIZE_PRERELEASE_REGEX = /-canary\b/g;
 
 	constructor(compatibleRange) {
 		this.compatibleRange = Compatibility.getCompatibilityValue(compatibleRange);

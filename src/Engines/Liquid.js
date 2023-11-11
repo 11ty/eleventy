@@ -195,7 +195,7 @@ class Liquid extends TemplateEngine {
 
 					stream.start();
 				},
-				render: function* (ctx, emitter) {
+				render: function* (ctx /*, emitter*/) {
 					let rawArgs = Liquid.parseArguments(_t.argLexer, this.args);
 					let argArray = [];
 					let contextScope = ctx.getAll();

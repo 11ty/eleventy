@@ -100,12 +100,8 @@ class TemplateEngine {
 
 	async _testRender(str, data) {
 		/* TODO compile needs to pass in inputPath? */
-		try {
-			let fn = await this.compile(str);
-			return fn(data);
-		} catch (e) {
-			throw e;
-		}
+		let fn = await this.compile(str);
+		return fn(data);
 	}
 
 	// JavaScript files defer to the module loader rather than read the files to strings
@@ -138,7 +134,7 @@ class TemplateEngine {
 	}
 
 	// whether or not compile is needed or can we return the plaintext?
-	needsCompilation(str) {
+	needsCompilation(/*str*/) {
 		return true;
 	}
 

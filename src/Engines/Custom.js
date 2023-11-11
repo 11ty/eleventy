@@ -244,7 +244,7 @@ class CustomEngine extends TemplateEngine {
 		};
 	}
 
-	permalinkNeedsCompilation(str) {
+	permalinkNeedsCompilation(/*str*/) {
 		if (this.entry.compileOptions && "permalink" in this.entry.compileOptions) {
 			let p = this.entry.compileOptions.permalink;
 			if (p === "raw") {

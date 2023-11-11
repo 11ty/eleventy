@@ -40,7 +40,7 @@ eventBus.on("eleventy.importCacheReset", (fileQueue) => {
 		lastModifiedPaths.set(absolutePath, Date.now());
 
 		// ESM Eleventy when using `import()` on a CJS project file still adds to require.cache
-		if (absolutePath in require?.cache) {
+		if (absolutePath in (require?.cache || {})) {
 			delete require.cache[absolutePath];
 		}
 	}
@@ -75,11 +75,11 @@ async function dynamicImportAbsolutePath(absolutePath, type) {
 	}
 
 	// When using import() on a CommonJS file that exports an object sometimes it
-	// returns duplicated values in `default` key, e.g. `{ default: { key: value }, key: value }`
+	// returns duplicated values in `default` key, e.g. `{ default: {key: value}, key: value }`
 
 	// A few examples:
 	// module.exports = { key: false };
-	//    returns `{ default: { key: false }, key: false }` as not expected.
+	//    returns `{ default: {key: false}, key: false }` as not expected.
 	// module.exports = { key: true };
 	// module.exports = { key: null };
 	// module.exports = { key: undefined };
@@ -87,7 +87,7 @@ async function dynamicImportAbsolutePath(absolutePath, type) {
 
 	// A few examples where it does not duplicate:
 	// module.exports = { key: 1 };
-	//    returns `{ default: { key: 1 } }` as expected.
+	//    returns `{ default: {key: 1} }` as expected.
 	// module.exports = { key: "value" };
 	// module.exports = { key: {} };
 	// module.exports = { key: [] };

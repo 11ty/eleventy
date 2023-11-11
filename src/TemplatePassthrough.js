@@ -185,7 +185,7 @@ class TemplatePassthrough {
 				map[copyOp.src] = copyOp.dest;
 				this.benchmarks.aggregate.get("Passthrough Copy File").before();
 			})
-			.on(copy.events.COPY_FILE_COMPLETE, (copyOp) => {
+			.on(copy.events.COPY_FILE_COMPLETE, (/*copyOp*/) => {
 				fileCopyCount++;
 				this.benchmarks.aggregate.get("Passthrough Copy File").after();
 			})

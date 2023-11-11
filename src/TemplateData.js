@@ -430,7 +430,7 @@ class TemplateData {
 				// clean up data for template/directory data files only.
 				let cleanedDataForPath = TemplateData.cleanupData(dataForPath);
 				for (let key in cleanedDataForPath) {
-					if (dataSource.hasOwnProperty(key)) {
+					if (Object.prototype.hasOwnProperty.call(dataSource, key)) {
 						debugWarn(
 							"Local data files have conflicting data. Overwriting '%s' with data from '%s'. Previous data location was from '%s'",
 							key,

@@ -855,10 +855,10 @@ Arguments:
 		}
 
 		let writeResults = await this.write();
-		let passthroughCopyResults;
+		// let passthroughCopyResults;
 		let templateResults;
 		if (!writeResults.error) {
-			[passthroughCopyResults, ...templateResults] = writeResults;
+			[, /*passthroughCopyResults*/ ...templateResults] = writeResults;
 		}
 
 		this.writer.resetIncrementalFile();
@@ -1246,7 +1246,7 @@ Arguments:
 			ret = await promise;
 
 			// Passing the processed output to the eleventy.after event is new in 2.0
-			let [passthroughCopyResults, ...templateResults] = ret;
+			let [, /*passthroughCopyResults*/ ...templateResults] = ret;
 			if (to === "fs") {
 				eventsArg.results = templateResults.flat().filter((entry) => !!entry);
 			} else {

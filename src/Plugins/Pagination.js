@@ -331,7 +331,7 @@ class Pagination {
 			// Do *not* deep merge pagination data! See https://github.com/11ty/eleventy/issues/147#issuecomment-440802454
 			let clonedData = ProxyWrap(paginationData, parentData);
 
-			let { linkInstance, rawPath, path, href } = await cloned.getOutputLocations(clonedData);
+			let { /*linkInstance,*/ rawPath, path, href } = await cloned.getOutputLocations(clonedData);
 			// TODO subdirectory to links if the site doesn’t live at /
 			if (rawPath) {
 				links.push("/" + rawPath);

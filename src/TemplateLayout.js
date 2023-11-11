@@ -189,7 +189,7 @@ class TemplateLayout extends TemplateContent {
 			});
 
 			if (layoutMap.length > 1) {
-				let [currentLayout, parentLayout] = layoutMap;
+				let [, /*currentLayout*/ parentLayout] = layoutMap;
 				let { key, inputDir } = parentLayout;
 
 				let layoutTemplate = TemplateLayout.getTemplate(

@@ -24,7 +24,8 @@ class Nunjucks extends TemplateEngine {
 			this.njkEnv = override;
 		} else if (this._usingPrecompiled) {
 			// Precompiled templates to avoid eval!
-			function NodePrecompiledLoader() {}
+			const NodePrecompiledLoader = function () {};
+
 			NodePrecompiledLoader.prototype.getSource = (name) => {
 				// https://github.com/mozilla/nunjucks/blob/fd500902d7c88672470c87170796de52fc0f791a/nunjucks/src/precompiled-loader.js#L5
 				return {
@@ -62,7 +63,7 @@ class Nunjucks extends TemplateEngine {
 
 		// Correct, but overbroad. Better would be to evict more granularly, but
 		// resolution from paths isn't straightforward.
-		EventBusUtil.soloOn("eleventy.resourceModified", (path) => {
+		EventBusUtil.soloOn("eleventy.resourceModified", (/*path*/) => {
 			this.njkEnv.invalidateCache();
 		});
 

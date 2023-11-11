@@ -70,7 +70,7 @@ class ConsoleLogger {
 		this.outputStream.push(msg);
 	}
 
-	closeStream(to = "") {
+	closeStream() {
 		this.outputStream.push(null);
 		return this.outputStream;
 	}

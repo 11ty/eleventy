@@ -38,9 +38,10 @@
 	],
 	"scripts": {
 		"default": "npm run test",
+		"test": "npx ava --verbose",
 		"jsdoc": "rm -rf jsdoc && npx jsdoc src/* -r -d jsdoc",
 		"format": "prettier . --write",
-		"test": "npx ava --verbose",
+		"check": "eslint src",
 		"lint-staged": "lint-staged",
 		"coverage": "npx c8 ava && npx c8 report --reporter=json-summary && cp coverage/coverage-summary.json docs/_data/coverage.json && node cmd.cjs --config=docs/eleventy.coverage.js",
 		"prepare": "husky install"
@@ -80,6 +81,7 @@
 		"@zachleat/noop": "^1.0.3",
 		"ava": "^5.3.1",
 		"c8": "^8.0.1",
+		"eslint": "^8.53.0",
 		"husky": "^8.0.3",
 		"js-yaml": "^4.1.0",
 		"jsdoc": "^4.0.2",
