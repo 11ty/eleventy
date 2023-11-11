@@ -11,6 +11,9 @@ charset = utf-8
 [*.js]
 insert_final_newline = true
 
+[*.yml]
+indent_style = space
+
 [/test/stubs*/**]
 insert_final_newline = unset
 trim_trailing_whitespace = false
