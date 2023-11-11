@@ -24,7 +24,7 @@
 | `src/EventBus.js`                                          | 100%    | 100%         | 100%        | 100%       |
 | `src/FileSystemSearch.js`                                  | 100%    | 100%         | 100%        | 100%       |
 | `src/GlobalDependencyMap.js`                               | 71.22%  | 71.22%       | 69.23%      | 95.52%     |
-| `src/Template.js`                                          | 90.63%  | 90.63%       | 92.45%      | 88.02%     |
+| `src/Template.js`                                          | 90.63%  | 90.63%       | 92.45%      | 87.95%     |
 | `src/TemplateBehavior.js`                                  | 88.05%  | 88.05%       | 87.5%       | 85.71%     |
 | `src/TemplateCache.js`                                     | 79.8%   | 79.8%        | 87.5%       | 73.68%     |
 | `src/TemplateCollection.js`                                | 89.41%  | 89.41%       | 87.5%       | 86.95%     |
@@ -37,7 +37,7 @@
 | `src/TemplateGlob.js`                                      | 94.28%  | 94.28%       | 100%        | 91.66%     |
 | `src/TemplateLayout.js`                                    | 87.79%  | 87.79%       | 86.66%      | 77.5%      |
 | `src/TemplateLayoutPathResolver.js`                        | 89.05%  | 89.05%       | 84.61%      | 87.09%     |
-| `src/TemplateMap.js`                                       | 91.73%  | 91.73%       | 92.85%      | 90.8%      |
+| `src/TemplateMap.js`                                       | 91.73%  | 91.73%       | 92.85%      | 90.9%      |
 | `src/TemplatePassthrough.js`                               | 91.38%  | 91.38%       | 100%        | 88.09%     |
 | `src/TemplatePassthroughManager.js`                        | 82.33%  | 82.33%       | 100%        | 77.41%     |
 | `src/TemplatePermalink.js`                                 | 91.57%  | 91.57%       | 91.66%      | 94.36%     |

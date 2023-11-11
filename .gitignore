@@ -7,6 +7,7 @@ node_modules/
 # Ignore build tool output, e.g. code coverage
 .nyc_output/
 coverage/
+docs/_data/coverage.json
 jsdoc/
 
 # Ignore API documentation

@@ -42,7 +42,7 @@
     "format": "prettier . --write",
     "test": "npx ava --verbose",
     "lint-staged": "lint-staged",
-    "coverage": "npx c8 ava && npx c8 report --reporter=json-summary && cp coverage/coverage-summary.json docs-src/_data/coverage.json && node cmd.cjs --config=docs-src/.eleventy.docs.js --input=docs-src/coverage.njk",
+    "coverage": "npx c8 ava && npx c8 report --reporter=json-summary && cp coverage/coverage-summary.json docs/_data/coverage.json && node cmd.cjs --config=docs/eleventy.coverage.js",
     "prepare": "husky install"
   },
   "author": {
