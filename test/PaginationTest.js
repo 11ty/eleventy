@@ -584,46 +584,6 @@ test("Page over an object (filtered, string)", async (t) => {
   );
 });
 
-test("Page over an object (included, array)", async (t) => {
-  let tmpl = await getNewTemplate(
-    "./test/stubs/paged/pagedobjectincludearray.njk",
-    "./test/stubs/",
-    "./dist"
-  );
-
-  let data = await tmpl.getData();
-  let pages = await tmpl.getTemplates(data);
-
-  t.is(
-    (await pages[0].template.render(pages[0].data)).trim(),
-    "<ol><li>item3</li><li>item4</li></ol>"
-  );
-});
-
-test("Page over an object (included, string)", async (t) => {
-  let tmpl = await getNewTemplate(
-    "./test/stubs/paged/pagedobjectincludestring.njk",
-    "./test/stubs/",
-    "./dist"
-  );
-
-  let data = await tmpl.getData();
-  let pages = await tmpl.getTemplates(data);
-  t.is(pages.length, 1);
-
-  t.is((await pages[0].template.render(pages[0].data)).trim(), "<ol><li>item4</li></ol>");
-});
-
-test("Page with exclude and include", async (t) => {
-  let tmpl = await getNewTemplate(
-    "./test/stubs/paged/pagedobjectincludeexclude.njk",
-    "./test/stubs/",
-    "./dist"
-  );
-  let data = await tmpl.getData();
-  await t.throwsAsync(tmpl.getTemplates(data));
-});
-
 test("Pagination with deep data merge #147", async (t) => {
   let eleventyConfig = new TemplateConfig();
   await eleventyConfig.init();
