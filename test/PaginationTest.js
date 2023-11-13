@@ -452,6 +452,49 @@ test("Page over an object (use values)", async (t) => {
   );
 });
 
+test("Page over an object (excluded, array)", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/paged/pagedobjectexcludearray.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let pages = await tmpl.getTemplates(data);
+
+  t.is(
+    (await pages[0].template.render(pages[0].data)).trim(),
+    "<ol><li>item1</li><li>item2</li><li>item3</li><li>item5</li></ol>"
+  );
+
+  t.is(
+    (await pages[1].template.render(pages[1].data)).trim(),
+    "<ol><li>item6</li><li>item7</li><li>item8</li><li>item9</li></ol>"
+  );
+});
+
+test("Page over an object (excluded, string)", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/paged/pagedobjectexcludestring.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let pages = await tmpl.getTemplates(data);
+  t.is(pages.length, 2);
+
+  t.is(
+    (await pages[0].template.render(pages[0].data)).trim(),
+    "<ol><li>item1</li><li>item2</li><li>item3</li><li>item5</li></ol>"
+  );
+
+  t.is(
+    (await pages[1].template.render(pages[1].data)).trim(),
+    "<ol><li>item6</li><li>item7</li><li>item8</li><li>item9</li></ol>"
+  );
+});
+
 test("Page over an object (filtered, array)", async (t) => {
   let tmpl = getNewTemplate(
     "./test/stubs/paged/pagedobjectfilterarray.njk",
@@ -493,6 +536,47 @@ test("Page over an object (filtered, string)", async (t) => {
     (await pages[1].template.render(pages[1].data)).trim(),
     "<ol><li>item6</li><li>item7</li><li>item8</li><li>item9</li></ol>"
   );
+});
+
+test("Page over an object (included, array)", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/paged/pagedobjectincludearray.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let pages = await tmpl.getTemplates(data);
+
+  t.is(
+    (await pages[0].template.render(pages[0].data)).trim(),
+    "<ol><li>item3</li><li>item4</li></ol>"
+  );
+});
+
+test("Page over an object (included, string)", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/paged/pagedobjectincludestring.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let pages = await tmpl.getTemplates(data);
+  t.is(pages.length, 1);
+
+  t.is((await pages[0].template.render(pages[0].data)).trim(), "<ol><li>item4</li></ol>");
+});
+
+test("Page with exclude and include", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/paged/pagedobjectincludeexclude.njk",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  await t.throwsAsync(tmpl.getTemplates(data));
 });
 
 test("Pagination with deep data merge #147", async (t) => {
