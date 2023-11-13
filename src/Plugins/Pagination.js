@@ -99,6 +99,28 @@ class Pagination {
 	}
 
 	isFiltered(value) {
+		const hasInclude = "include" in this.data.pagination;
+		const hasExclude = "exclude" in this.data.pagination;
+		if (hasInclude && hasExclude) {
+			throw new Error("Pagination cannot have both `include` and `exclude` filters.");
+		}
+		if (hasInclude) {
+			let included = this.data.pagination.include;
+			if (Array.isArray(included)) {
+				return included.indexOf(value) === -1;
+			}
+			return included !== value;
+		}
+		if (hasExclude) {
+			let excluded = this.data.pagination.exclude;
+			if (Array.isArray(excluded)) {
+				return excluded.indexOf(value) !== -1;
+			}
+			return excluded === value;
+		}
+
+		// Let's keep this code for backwards compatibility to V2.
+		// TODO remove in 3.0
 		if ("filter" in this.data.pagination) {
 			let filtered = this.data.pagination.filter;
 			if (Array.isArray(filtered)) {
