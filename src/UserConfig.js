@@ -112,10 +112,10 @@ class UserConfig {
 		this.dataFileDirBaseNameOverride = false;
 
 		this.frontMatterParsingOptions = {
-			// project-wide default.
+			// Set a project-wide default.
 			// language: "yaml",
 
-			// supplementary engines
+			// Supplementary engines
 			engines: {
 				node: (frontMatterCode, { filePath }) => {
 					let vm = new RetrieveGlobals(frontMatterCode, {
@@ -123,7 +123,13 @@ class UserConfig {
 						transformEsmImports: true,
 					});
 
-					let data = {}; // extra data
+					let data = {
+						page: {
+							// Theoretically fileSlug and filePathStem could be added here but require extensionMap
+							inputPath: filePath,
+						},
+					};
+
 					// this is async, but it’s handled in Eleventy upstream.
 					return vm.getGlobalContext(data, {
 						reuseGlobal: true,
