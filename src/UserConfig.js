@@ -167,7 +167,7 @@ class UserConfig {
 	// This is a method for plugins, probably shouldn’t use this in projects.
 	// Projects should use `setLibrary` as documented here:
 	// https://github.com/11ty/eleventy/blob/master/docs/engines/markdown.md#use-your-own-options
-	addMarkdownHighlighter(highlightFn) {
+	setMarkdownHighlighter(highlightFn) {
 		this.markdownHighlighter = highlightFn;
 	}
 
