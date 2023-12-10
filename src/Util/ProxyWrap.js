@@ -19,10 +19,7 @@ function wrapObject(target, fallback) {
     // Nunjucks needs this
     ownKeys(target) {
       // unique
-      let keys = new Set([
-        ...Reflect.ownKeys(target),
-        ...Reflect.ownKeys(fallback),
-      ]);
+      let keys = new Set([...Reflect.ownKeys(target), ...Reflect.ownKeys(fallback)]);
       // console.log( "handler:ownKeys", keys );
       return Array.from(keys);
     },
@@ -38,18 +35,16 @@ function wrapObject(target, fallback) {
 
       return fallback[prop];
     },
-    // set(target, prop, value) {
-    //   console.log( "handler:set", prop, value );
-    //   return Reflect.set(target, prop, value);
-    // }
+    set(target, prop, value) {
+      // console.log( "handler:set", prop, value );
+      return Reflect.set(target, prop, value);
+    },
   });
 }
 
 function ProxyWrap(target, fallback) {
   if (!isPlainObject(target) || !isPlainObject(fallback)) {
-    throw new Error(
-      "ProxyWrap expects objects for both the target and fallback"
-    );
+    throw new Error("ProxyWrap expects objects for both the target and fallback");
   }
   let wrapped = wrapObject(target, fallback);
   return wrapped;

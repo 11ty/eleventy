@@ -3,6 +3,7 @@ const TemplateData = require("../src/TemplateData");
 const Pagination = require("../src/Plugins/Pagination");
 const TemplateConfig = require("../src/TemplateConfig");
 const FileSystemSearch = require("../src/FileSystemSearch");
+const Eleventy = require("../src/Eleventy");
 
 const getNewTemplate = require("./_getNewTemplateForTests");
 const getRenderedTmpls = require("./_getRenderedTemplates");
@@ -827,4 +828,36 @@ test("Pagination and eleventyComputed permalink, issue #1555 and #1865", async (
   t.is(templates[0].data.page.url, "/venues/first/");
   t.is(templates[1].data.page.url, "/venues/second/");
   t.is(templates[2].data.page.url, "/venues/third/");
+});
+
+test("Pagination and eleventyComputed data, issues #2512, #2837, #3013", async (t) => {
+  let templateLangs = ["liquid", "html", "md", "hbs", "mustache", "njk"];
+  let apostrophe = {
+    liquid: "'",
+    html: "'",
+    md: "'",
+    hbs: "&amp;#x27;",
+    mustache: "&amp;#39;",
+    njk: "&amp;#39;",
+  };
+  for (let lang of templateLangs) {
+    let msg = `lang: ${lang}`;
+    let le = lang === "md" ? "\n" : "";
+
+    let elev = new Eleventy(`./test/stubs-3013/${lang}/`, `./test/stubs-3013/${lang}/_site`, {
+      source: "cli",
+      runMode: "build",
+    });
+    await elev.init();
+    let written = await elev.toJSON();
+
+    t.is(written[0].url, "/paul-mescal/", msg);
+    t.is(written[0].content, `<title>The Effervescent adventures of Paul Mescal</title>${le}`, msg);
+    t.is(written[1].url, "/populace-and-power/", msg);
+    t.is(
+      written[1].content,
+      `<title>Populace and Power: A user${apostrophe[lang]}s guide</title>${le}`,
+      msg
+    );
+  }
 });
