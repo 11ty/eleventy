@@ -3,6 +3,7 @@ const TemplateData = require("../src/TemplateData");
 const Pagination = require("../src/Plugins/Pagination");
 const TemplateConfig = require("../src/TemplateConfig");
 const FileSystemSearch = require("../src/FileSystemSearch");
+const Eleventy = require("../src/Eleventy");
 
 const getNewTemplate = require("./_getNewTemplateForTests");
 const getRenderedTmpls = require("./_getRenderedTemplates");
@@ -830,16 +831,16 @@ test("Pagination and eleventyComputed permalink, issue #1555 and #1865", async (
 });
 
 test("Pagination and eleventyComputed data, issues #2512, #2837, #3013", async (t) => {
-  let tmpl = getNewTemplate(
-    "./test/stubs/pagination-eleventycomputed-title.liquid",
-    "./test/stubs/",
-    "./dist"
-  );
+  let elev = new Eleventy("./test/stubs-3013/", "./test/stubs-3013/_site", {
+    source: "cli",
+    runMode: "build",
+  });
 
-  let data = await tmpl.getData();
-  let templates = await tmpl.getTemplates(data);
-  console.log(templates[0].data);
-  t.is(templates[0].data.title, "website - first");
-  t.is(templates[1].data.title, "website - second");
-  t.is(templates[2].data.title, "website - third");
+  await elev.init();
+  let written = await elev.toJSON();
+
+  t.is(written[0].url, "/paul-mescal/");
+  t.is(written[0].content, "<title>The Effervescent adventures of Paul Mescal</title>");
+  t.is(written[1].url, "/populace-and-power/");
+  t.is(written[1].content, "<title>Populace and Power: A user&amp;#39;s guide</title>");
 });
