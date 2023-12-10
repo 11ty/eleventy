@@ -35,10 +35,10 @@ function wrapObject(target, fallback) {
 
       return fallback[prop];
     },
-    // set(target, prop, value) {
-    //   console.log( "handler:set", prop, value );
-    //   return Reflect.set(target, prop, value);
-    // }
+    set(target, prop, value) {
+      // console.log( "handler:set", prop, value );
+      return Reflect.set(target, prop, value);
+    },
   });
 }
 
