@@ -828,3 +828,18 @@ test("Pagination and eleventyComputed permalink, issue #1555 and #1865", async (
   t.is(templates[1].data.page.url, "/venues/second/");
   t.is(templates[2].data.page.url, "/venues/third/");
 });
+
+test("Pagination and eleventyComputed data, issues #2512, #2837, #3013", async (t) => {
+  let tmpl = getNewTemplate(
+    "./test/stubs/pagination-eleventycomputed-title.liquid",
+    "./test/stubs/",
+    "./dist"
+  );
+
+  let data = await tmpl.getData();
+  let templates = await tmpl.getTemplates(data);
+  console.log(templates[0].data);
+  t.is(templates[0].data.title, "website - first");
+  t.is(templates[1].data.title, "website - second");
+  t.is(templates[2].data.title, "website - third");
+});
