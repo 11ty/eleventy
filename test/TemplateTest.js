@@ -36,7 +36,7 @@ async function _testCompleteRender(tmpl) {
       return Promise.all(
         entry._pages.map(async (page) => {
           page.templateContent = await page.template.renderWithoutLayout(page.data);
-          return tmpl.renderPageEntry(entry, page);
+          return page.template.renderPageEntry(page);
         })
       );
     })
@@ -580,7 +580,7 @@ test("Clone the template", async (t) => {
 
   let data = await tmpl.getData();
 
-  let cloned = tmpl.clone();
+  let cloned = await tmpl.clone();
   let clonedData = await cloned.getData();
 
   t.is(await tmpl.getOutputPath(data), "./dist/default/index.html");
@@ -1292,7 +1292,7 @@ test("Throws a Premature Template Content Error from rendering (njk)", async (t)
     },
   });
   let error = await t.throwsAsync(async () => {
-    await tmpl.renderPageEntry(mapEntries[0], pageEntries[0]);
+    await tmpl.renderPageEntry(pageEntries[0]);
   });
   t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
 });
@@ -1362,7 +1362,7 @@ test("Throws a Premature Template Content Error from rendering (md)", async (t) 
     },
   });
   let error = await t.throwsAsync(async () => {
-    await tmpl.renderPageEntry(mapEntries[0], pageEntries[0]);
+    await tmpl.renderPageEntry(pageEntries[0]);
   });
   t.is(EleventyErrorUtil.isPrematureTemplateContentError(error), true);
 });

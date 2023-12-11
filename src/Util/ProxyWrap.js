@@ -1,44 +1,84 @@
+import debugUtil from "debug";
 import { isPlainObject } from "@11ty/eleventy-utils";
+
+const debug = debugUtil("Dev:Eleventy:Proxy");
 
 function wrapObject(target, fallback) {
 	return new Proxy(target, {
-		// Handlebars wants this
 		getOwnPropertyDescriptor(target, prop) {
-			// console.log( "handler:getOwnPropertyDescriptor", prop );
-			if (prop in target) {
+			if (Reflect.has(target, prop)) {
 				return Reflect.getOwnPropertyDescriptor(target, prop);
-			} else if (prop in fallback) {
-				return Reflect.getOwnPropertyDescriptor(fallback, prop);
 			}
+
+			// assume fallback is frozen
+			return {
+				value: undefined,
+				writable: true,
+				enumerable: true,
+				configurable: true,
+			};
 		},
-		// Liquid needs this
 		has(target, prop) {
-			// console.log( "handler:has", prop, (prop in target) || (prop in fallback) );
-			return prop in target || prop in fallback;
+			// debug( "handler:has", prop, Reflect.has(target, prop), Reflect.has(fallback, prop));
+			if (Reflect.has(target, prop)) {
+				return true;
+			}
+
+			return Reflect.has(fallback, prop);
 		},
-		// Nunjucks needs this
 		ownKeys(target) {
-			// unique
-			let keys = new Set([...Reflect.ownKeys(target), ...Reflect.ownKeys(fallback)]);
-			// console.log( "handler:ownKeys", keys );
-			return Array.from(keys);
+			let s = new Set();
+			for (let k of Reflect.ownKeys(target)) {
+				s.add(k);
+			}
+			if (isPlainObject(fallback)) {
+				for (let k of Reflect.ownKeys(fallback)) {
+					s.add(k);
+				}
+			}
+			return Array.from(s);
 		},
 		get(target, prop) {
-			// console.log( "handler:get", prop );
-			if (prop in target) {
-				if (isPlainObject(target[prop]) && prop in fallback) {
-					return wrapObject(target[prop], fallback[prop]);
+			debug("handler:get", prop);
+
+			let value = Reflect.get(target, prop);
+			if (Reflect.has(target, prop)) {
+				// debug( "handler:get", prop, { isProxy: util.types.isProxy(value), hasFallback: Reflect.has(fallback, prop) } );
+				if (isPlainObject(value) && Reflect.has(fallback, prop)) {
+					let ret = wrapObject(value, Reflect.get(fallback, prop));
+					debug("  handler:get (object)", prop, "found on primary ****", ret);
+					return ret;
 				}
 
-				return target[prop];
+				debug("  handler:get (not object)", prop, "found on primary ****");
+				return value;
 			}
 
-			return fallback[prop];
+			// Does not exist in primary
+			if (Reflect.has(fallback, prop)) {
+				// fallback has prop
+				let fallbackValue = Reflect.get(fallback, prop);
+
+				if (isPlainObject(fallbackValue)) {
+					debug("  > proxying (fallback has prop)", { fallback, prop, fallbackValue });
+					// set empty object on primary
+					Reflect.set(target, prop, {});
+
+					return wrapObject(Reflect.get(target, prop), fallbackValue);
+				}
+
+				debug("  > returning (fallback has prop, not object)", { prop, fallbackValue });
+				return fallbackValue;
+			}
+
+			// primary *and* fallback do _not_ have prop
+			debug("  > returning (primary and fallback missing prop)", { prop, value });
+			return value;
 		},
-		// set(target, prop, value) {
-		//   console.log( "handler:set", prop, value );
-		//   return Reflect.set(target, prop, value);
-		// }
+		set(target, prop, value) {
+			debug("handler:set", { target, prop, value });
+			return Reflect.set(target, prop, value);
+		},
 	});
 }
 

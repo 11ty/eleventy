@@ -1121,7 +1121,7 @@ test("Test a transform with a layout (via templateMap)", async (t) => {
 
   for (let entry of tm.getMap()) {
     for (let page of entry._pages) {
-      t.is(await entry.template.renderPageEntry(entry, page), "OVERRIDE BY A TRANSFORM");
+      t.is(await page.template.renderPageEntry(page), "OVERRIDE BY A TRANSFORM");
     }
   }
 });

@@ -407,14 +407,13 @@ class Template extends TemplateContent {
 		return data;
 	}
 
-	// TODO This isn’t used any more, see `renderPageEntry`
+	// TODO REMOVE THIS it’s only used in tests: see `renderPageEntry` now
 	async renderLayout(tmpl, tmplData) {
 		let layoutKey = tmplData[tmpl.config.keys.layout];
 		let layout = this.getLayout(layoutKey);
 		debug("%o is using layout %o", this.inputPath, layoutKey);
 
 		let templateContent = await super.render(await this.getPreRender(), tmplData);
-
 		return layout.render(tmplData, templateContent);
 	}
 
@@ -434,7 +433,7 @@ class Template extends TemplateContent {
 		return renderedContent;
 	}
 
-	// TODO This isn’t used any more, see `renderPageEntry`
+	// TODO REMOVE THIS it’s only used in tests: see `renderPageEntry` now
 	async render(data) {
 		debugDev("%o render()", this.inputPath);
 		if (!data) {
@@ -529,11 +528,12 @@ class Template extends TemplateContent {
 		} else if (typeof obj === "string") {
 			computedData.addTemplateString(
 				parentKey,
-				async (innerData) => {
-					return await this.renderComputedData(obj, innerData);
+				async function (innerData) {
+					return this.tmpl.renderComputedData(obj, innerData);
 				},
 				declaredDependencies,
 				this.getParseForSymbolsFunction(obj),
+				this,
 			);
 		} else {
 			// Numbers, booleans, etc
@@ -552,16 +552,22 @@ class Template extends TemplateContent {
 			// TODO Why are these using addTemplateString instead of add
 			this.computedData.addTemplateString(
 				"page.url",
-				async (data) => await this.getOutputHref(data),
+				async function (data) {
+					return this.tmpl.getOutputHref(data);
+				},
 				data.permalink ? ["permalink"] : undefined,
 				false, // skip symbol resolution
+				this,
 			);
 
 			this.computedData.addTemplateString(
 				"page.outputPath",
-				async (data) => await this.getOutputPath(data),
+				async function (data) {
+					return this.tmpl.getOutputPath(data);
+				},
 				data.permalink ? ["permalink"] : undefined,
 				false, // skip symbol resolution
+				this,
 			);
 
 			// actually add the computed data
@@ -604,7 +610,7 @@ class Template extends TemplateContent {
 
 	static augmentWithTemplateContentProperty(obj) {
 		return Object.defineProperties(obj, {
-			checkTemplateContent: {
+			needsCheck: {
 				enumerable: false,
 				writable: true,
 				value: true,
@@ -618,12 +624,12 @@ class Template extends TemplateContent {
 				enumerable: true,
 				set(content) {
 					if (content === undefined) {
-						this.checkTemplateContent = false;
+						this.needsCheck = false;
 					}
 					this._templateContent = content;
 				},
 				get() {
-					if (this.checkTemplateContent && this._templateContent === undefined) {
+					if (this.needsCheck && this._templateContent === undefined) {
 						if (this.template.behavior.isRenderable()) {
 							// should at least warn here
 							throw new TemplateContentPrematureUseError(
@@ -647,6 +653,9 @@ class Template extends TemplateContent {
 				enumerable: true,
 				get() {
 					return this.templateContent;
+				},
+				set() {
+					throw new Error("Setter not available for `content`. Use `templateContent` instead.");
 				},
 			},
 		});
@@ -678,29 +687,31 @@ class Template extends TemplateContent {
 			this.paging = new Pagination(this, data, this.config);
 
 			let pageTemplates = await this.paging.getPageTemplates();
-			return await Promise.all(
-				pageTemplates.map(async (pageEntry, pageNumber) => {
-					await pageEntry.template.addComputedData(pageEntry.data);
+			let objects = [];
+			for (let pageEntry of pageTemplates) {
+				await pageEntry.template.addComputedData(pageEntry.data);
 
-					let obj = {
-						template: pageEntry.template, // not on the docs but folks are relying on it
-						pageNumber: pageNumber,
-						data: pageEntry.data,
+				let obj = {
+					template: pageEntry.template, // not on the docs but folks are relying on it
+					pageNumber: pageEntry.pageNumber,
+					data: pageEntry.data,
 
-						page: pageEntry.data.page,
-						inputPath: this.inputPath,
-						fileSlug: this.fileSlugStr,
-						filePathStem: this.filePathStem,
-						date: pageEntry.data.page.date,
-						outputPath: pageEntry.data.page.outputPath,
-						url: pageEntry.data.page.url,
-					};
+					inputPath: this.inputPath,
+					fileSlug: this.fileSlugStr,
+					filePathStem: this.filePathStem,
 
-					obj = Template.augmentWithTemplateContentProperty(obj);
+					page: pageEntry.data.page,
+					date: pageEntry.data.page.date,
+					outputPath: pageEntry.data.page.outputPath,
+					url: pageEntry.data.page.url,
+				};
 
-					return obj;
-				}),
-			);
+				obj = Template.augmentWithTemplateContentProperty(obj);
+
+				objects.push(obj);
+			}
+
+			return objects;
 		}
 	}
 
@@ -754,27 +765,25 @@ class Template extends TemplateContent {
 		});
 	}
 
-	async renderPageEntry(mapEntry, page) {
+	async renderPageEntry(pageEntry) {
 		// cache with transforms output
-		if (this._cacheFinalContent) {
-			return this._cacheFinalContent;
+		if (pageEntry.template._cacheFinalContent) {
+			return pageEntry.template._cacheFinalContent;
 		}
 
 		let content;
-		let layoutKey = mapEntry.data[this.config.keys.layout];
+		let layoutKey = pageEntry.data[this.config.keys.layout];
 		if (layoutKey) {
-			let layout = this.getLayout(layoutKey);
-
-			content = await layout.render(page.data, page.templateContent);
+			let layout = pageEntry.template.getLayout(layoutKey);
+			content = await layout.renderPageEntry(pageEntry);
 		} else {
-			content = page.templateContent;
+			content = pageEntry.templateContent;
 		}
 
-		await this.runLinters(content, page);
-		content = await this.runTransforms(content, page);
+		await this.runLinters(content, pageEntry);
+		content = await this.runTransforms(content, pageEntry);
 
-		this._cacheFinalContent = content;
-
+		pageEntry.template._cacheFinalContent = content;
 		return content;
 	}
 
@@ -788,60 +797,64 @@ class Template extends TemplateContent {
 	}
 
 	async generateMapEntry(mapEntry, to) {
-		return Promise.all(
-			mapEntry._pages.map(async (page) => {
-				let content;
-				// Note that behavior.render is overridden when using json or ndjson output
-				if (mapEntry.template.behavior.isRenderable()) {
-					// this reuses page.templateContent, it doesn’t render it
-					content = await this.renderPageEntry(mapEntry, page);
+		let ret = [];
+		for (let page of mapEntry._pages) {
+			let content;
+
+			// Note that behavior.render is overridden when using json or ndjson output
+			if (page.template.behavior.isRenderable()) {
+				// this reuses page.templateContent, it doesn’t render it
+				content = await page.template.renderPageEntry(page);
+			}
+
+			if (to === "json" || to === "ndjson") {
+				let obj = {
+					url: page.url,
+					inputPath: page.inputPath,
+					outputPath: page.outputPath,
+					content: content,
+				};
+
+				if (this.config.dataFilterSelectors && this.config.dataFilterSelectors.size > 0) {
+					obj.data = this.retrieveDataForJsonOutput(page.data, this.config.dataFilterSelectors);
 				}
 
-				if (to === "json" || to === "ndjson") {
-					let obj = {
-						url: page.url,
-						inputPath: page.inputPath,
-						outputPath: page.outputPath,
-						content: content,
-					};
-
-					if (this.config.dataFilterSelectors && this.config.dataFilterSelectors.size > 0) {
-						obj.data = this.retrieveDataForJsonOutput(page.data, this.config.dataFilterSelectors);
-					}
-
-					if (to === "ndjson") {
-						let jsonString = JSON.stringify(obj);
-						this.logger.toStream(jsonString + os.EOL);
-						return;
-					}
-
-					// json
-					return obj;
+				if (to === "ndjson") {
+					let jsonString = JSON.stringify(obj);
+					this.logger.toStream(jsonString + os.EOL);
+					continue;
 				}
 
-				if (!mapEntry.template.behavior.isRenderable()) {
-					debug("Template not written %o from %o.", page.outputPath, mapEntry.template.inputPath);
-					return;
-				}
+				// json
+				ret.push(obj);
+				continue;
+			}
 
-				if (!mapEntry.template.behavior.isWriteable()) {
-					debug(
-						"Template not written %o from %o (via permalink: false, permalink.build: false, or a permalink object without a build property).",
-						page.outputPath,
-						mapEntry.template.inputPath,
-					);
-					return;
-				}
+			if (!page.template.behavior.isRenderable()) {
+				debug("Template not written %o from %o.", page.outputPath, page.template.inputPath);
+				continue;
+			}
 
-				// compile returned undefined
-				if (content !== undefined) {
-					return this._write(page, content);
-				}
-			}),
-		);
+			if (!page.template.behavior.isWriteable()) {
+				debug(
+					"Template not written %o from %o (via permalink: false, permalink.build: false, or a permalink object without a build property).",
+					page.outputPath,
+					page.template.inputPath,
+				);
+				continue;
+			}
+
+			// compile returned undefined
+			if (content !== undefined) {
+				ret.push(this._write(page, content));
+				continue;
+			}
+		}
+
+		return Promise.all(ret);
 	}
 
-	clone() {
+	async clone() {
 		// TODO do we need to even run the constructor here or can we simplify it even more
 		let tmpl = new Template(
 			this.inputPath,
@@ -851,6 +864,9 @@ class Template extends TemplateContent {
 			this.extensionMap,
 			this.eleventyConfig,
 		);
+
+		// We use this cheap property setter below instead
+		// await tmpl.getTemplateRender();
 
 		// preserves caches too, e.g. _frontMatterDataCache
 		for (let key in this) {

@@ -409,7 +409,7 @@ class TemplateMap {
 				map._pages = await map.template.getTemplates(map.data);
 
 				if (map._pages.length === 0) {
-					// removed serverless code path
+					// Reminder: a serverless code path was removed here.
 				} else {
 					let counter = 0;
 					for (let page of map._pages) {
@@ -679,9 +679,9 @@ class TemplateMap {
 	async resolveRemainingComputedData() {
 		let promises = [];
 		for (let entry of this.map) {
-			for (let page of entry._pages) {
-				if (this.config.keys.computed in page.data) {
-					promises.push(page.template.resolveRemainingComputedData(page.data));
+			for (let pageEntry of entry._pages) {
+				if (this.config.keys.computed in pageEntry.data) {
+					promises.push(await pageEntry.template.resolveRemainingComputedData(pageEntry.data));
 				}
 			}
 		}

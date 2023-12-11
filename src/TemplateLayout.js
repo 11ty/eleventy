@@ -214,30 +214,30 @@ class TemplateLayout extends TemplateContent {
 		}
 	}
 
-	static augmentDataWithContent(data, templateContent) {
-		data = data || {};
-
-		if (templateContent !== undefined) {
-			data.content = templateContent;
-			data.layoutContent = templateContent;
-		}
-
-		return data;
+	// 3.0: moved to renderPageEntry
+	// Now only used in tests.
+	async render(data, templateContent) {
+		return this.renderPageEntry({ data, templateContent });
 	}
 
 	// Inefficient? We want to compile all the templatelayouts into a single reusable callback?
 	// Trouble: layouts may need data variables present downstream/upstream
 	// This is called from Template->renderPageEntry
-	async render(data, templateContent) {
-		data = TemplateLayout.augmentDataWithContent(data, templateContent);
-
+	async renderPageEntry(pageEntry) {
+		let templateContent = pageEntry.templateContent;
 		let compiledFunctions = await this.getCompiledLayoutFunctions();
-
 		for (let { render } of compiledFunctions) {
+			let data = {
+				content: templateContent,
+				// TODO remove this
+				layoutContent: templateContent,
+				...pageEntry.data,
+			};
+
 			templateContent = await render(data);
-			data = TemplateLayout.augmentDataWithContent(data, templateContent);
 		}
 
+		// Don’t set `templateContent` on pageEntry because collection items should not have layout markup
 		return templateContent;
 	}
 

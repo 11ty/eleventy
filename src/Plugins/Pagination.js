@@ -4,6 +4,7 @@ import lodash from "@11ty/lodash-custom";
 import EleventyBaseError from "../EleventyBaseError.js";
 import { DeepCopy } from "../Util/Merge.js";
 import { ProxyWrap } from "../Util/ProxyWrap.js";
+import { DeepFreeze } from "../Util/DeepFreeze.js";
 import TemplateData from "../TemplateData.js";
 
 const { set: lodashSet, get: lodashGet, chunk: lodashChunk } = lodash;
@@ -300,6 +301,9 @@ class Pagination {
 			parentData.collections = collections;
 		}
 
+		// TODO this does work fine but let’s wait on enabling it.
+		// DeepFreeze(parentData, ["collections"]);
+
 		// TODO future improvement dea: use a light Template wrapper for paged template clones (PagedTemplate?)
 		// so that we don’t have the memory cost of the full template (and can reuse the parent
 		// template for some things)
@@ -310,7 +314,7 @@ class Pagination {
 		}
 
 		for (let pageNumber of indices) {
-			let cloned = this.template.clone();
+			let cloned = await this.template.clone();
 
 			if (pageNumber > 0 && !hasPermalinkField && !hasComputedPermalinkField) {
 				cloned.setExtraOutputSubdirectory(pageNumber);
@@ -330,6 +334,8 @@ class Pagination {
 
 			// Do *not* deep merge pagination data! See https://github.com/11ty/eleventy/issues/147#issuecomment-440802454
 			let clonedData = ProxyWrap(paginationData, parentData);
+			// Previous method:
+			// let clonedData = DeepCopy(paginationData, parentData);
 
 			let { /*linkInstance,*/ rawPath, path, href } = await cloned.getOutputLocations(clonedData);
 			// TODO subdirectory to links if the site doesn’t live at /

@@ -19,7 +19,7 @@ class ComputedData {
 		this.config = config;
 	}
 
-	add(key, renderFn, declaredDependencies = [], symbolParseFn = undefined) {
+	add(key, renderFn, declaredDependencies = [], symbolParseFn, templateInstance) {
 		this.computedKeys.add(key);
 		this.declaredDependencies[key] = declaredDependencies;
 
@@ -30,7 +30,10 @@ class ComputedData {
 			if (this.config) {
 				fns = this.config.javascriptFunctions;
 			}
-			renderFn = renderFn.bind(fns);
+			renderFn = renderFn.bind({
+				...fns,
+				tmpl: templateInstance,
+			});
 		}
 
 		lodashSet(this.computed, key, renderFn);
@@ -40,8 +43,8 @@ class ComputedData {
 		}
 	}
 
-	addTemplateString(key, renderFn, declaredDependencies = [], symbolParseFn = undefined) {
-		this.add(key, renderFn, declaredDependencies, symbolParseFn);
+	addTemplateString(key, renderFn, declaredDependencies = [], symbolParseFn, templateInstance) {
+		this.add(key, renderFn, declaredDependencies, symbolParseFn, templateInstance);
 		this.templateStringKeyLookup[key] = true;
 	}
 

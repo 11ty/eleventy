@@ -61,28 +61,6 @@ test("Get Front Matter Data", async (t) => {
   });
 });
 
-test("Augment data with layoutContent", async (t) => {
-  t.deepEqual(TemplateLayout.augmentDataWithContent(null, null), {
-    content: null,
-    layoutContent: null,
-  });
-
-  t.deepEqual(TemplateLayout.augmentDataWithContent(null, "Test"), {
-    content: "Test",
-    layoutContent: "Test",
-  });
-
-  t.deepEqual(TemplateLayout.augmentDataWithContent({}, "Test 2"), {
-    content: "Test 2",
-    layoutContent: "Test 2",
-  });
-
-  t.deepEqual(TemplateLayout.augmentDataWithContent({ content: "Abc" }, "Test 3"), {
-    content: "Test 3",
-    layoutContent: "Test 3",
-  });
-});
-
 test("Render Layout", async (t) => {
   let tl = await getTemplateLayoutInstance("layouts/layout-inherit-a.njk", "./test/stubs");
   t.is(
