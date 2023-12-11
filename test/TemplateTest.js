@@ -217,7 +217,7 @@ test("One Layout (using new content var)", async (t) => {
   t.is(data.keylayout, "valuelayout");
 });
 
-test("One Layout (using layoutContent)", async (t) => {
+test("One Layout (using content)", async (t) => {
   let eleventyConfig = new TemplateConfig();
   await eleventyConfig.init();
 

@@ -229,8 +229,6 @@ class TemplateLayout extends TemplateContent {
 		for (let { render } of compiledFunctions) {
 			let data = {
 				content: templateContent,
-				// TODO remove this
-				layoutContent: templateContent,
 				...pageEntry.data,
 			};
 
