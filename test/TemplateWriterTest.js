@@ -9,7 +9,7 @@ import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 import TemplateWriter from "../src/TemplateWriter.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 import normalizeNewLines from "./Util/normalizeNewLines.js";
-import getRenderedTmpls from "./_getRenderedTemplates.js";
+import { getRenderedTemplates as getRenderedTmpls } from "./_getRenderedTemplates.js";
 
 // TODO make sure if output is a subdir of input dir that they don’t conflict.
 test("Output is a subdir of input", async (t) => {

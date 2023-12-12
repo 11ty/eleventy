@@ -7,6 +7,8 @@ import TemplateRender from "../src/TemplateRender.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 import getNewTemplate from "./_getNewTemplateForTests.js";
+import { renderTemplate } from "./_getRenderedTemplates.js";
+
 
 async function getNewTemplateRender(name, inputDir, eleventyConfig, extensionMap) {
   if (!eleventyConfig) {
@@ -223,7 +225,7 @@ test("JavaScript functions should not be mutable but not *that* mutable", async 
     eleventyConfig,
   );
   let data = await tmpl.getData();
-  t.is(await tmpl.render(data), "<p>Paragraph</p>");
+  t.is(await renderTemplate(tmpl, data), "<p>Paragraph</p>");
 });
 
 test("Return undefined in compile to ignore #2267", async (t) => {

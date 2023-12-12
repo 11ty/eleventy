@@ -3,6 +3,7 @@ import test from "ava";
 import TemplateConfig from "../src/TemplateConfig.js";
 import TemplateData from "../src/TemplateData.js";
 import getNewTemplate from "./_getNewTemplateForTests.js";
+import { renderTemplate } from "./_getRenderedTemplates.js";
 
 test("Custom extension (.txt) with custom permalink compile function", async (t) => {
   let eleventyConfig = new TemplateConfig();
@@ -40,7 +41,7 @@ test("Custom extension (.txt) with custom permalink compile function", async (t)
   );
 
   let data = await tmpl.getData();
-  t.is(await tmpl.render(data), "Sample content");
+  t.is(await renderTemplate(tmpl, data), "Sample content");
   let testObj = await tmpl.getOutputLocations(data);
   t.is(testObj.href, "/HAHA_THIS_ALWAYS_GOES_HERE.txt");
   t.is(testObj.path, "dist/HAHA_THIS_ALWAYS_GOES_HERE.txt");
@@ -76,7 +77,7 @@ test("Custom extension with and compileOptions.permalink = false", async (t) => 
   );
 
   let data = await tmpl.getData();
-  t.is(await tmpl.render(data), "Sample content");
+  t.is(await renderTemplate(tmpl, data), "Sample content");
   let testObj = await tmpl.getOutputLocations(data);
   t.is(testObj.href, false);
   t.is(testObj.path, false);
@@ -112,7 +113,7 @@ test("Custom extension with and opt-out of permalink compilation", async (t) => 
   );
 
   let data = await tmpl.getData();
-  t.is(await tmpl.render(data), "Sample content");
+  t.is(await renderTemplate(tmpl, data), "Sample content");
   let testObj = await tmpl.getOutputLocations(data);
   t.is(testObj.href, "/custom-extension.lit");
   t.is(testObj.path, "dist/custom-extension.lit");
@@ -156,7 +157,7 @@ test("Custom extension (.txt) with custom permalink compile function but no perm
   );
 
   let data = await tmpl.getData();
-  t.is(await tmpl.render(data), "Sample content");
+  t.is(await renderTemplate(tmpl, data), "Sample content");
   let testObj = await tmpl.getOutputLocations(data);
   t.is(testObj.href, "/HAHA_THIS_ALWAYS_GOES_HERE.txt");
   t.is(testObj.path, "dist/HAHA_THIS_ALWAYS_GOES_HERE.txt");
@@ -198,7 +199,7 @@ test("Custom extension (.txt) with custom permalink compile function (that retur
   );
 
   let data = await tmpl.getData();
-  t.is(await tmpl.render(data), "Sample content");
+  t.is(await renderTemplate(tmpl, data), "Sample content");
   let testObj = await tmpl.getOutputLocations(data);
   t.is(testObj.href, "/HAHA_THIS_ALWAYS_GOES_HERE.txt");
   t.is(testObj.path, "dist/HAHA_THIS_ALWAYS_GOES_HERE.txt");
@@ -240,7 +241,7 @@ test("Custom extension (.txt) with custom permalink compile function that return
   );
 
   let data = await tmpl.getData();
-  t.is(await tmpl.render(data), "Sample content");
+  t.is(await renderTemplate(tmpl, data), "Sample content");
   let testObj = await tmpl.getOutputLocations(data);
   t.is(testObj.href, false);
   t.is(testObj.path, false);
@@ -275,7 +276,7 @@ test("Custom extension (.txt) that returns undefined from compile", async (t) =>
   );
 
   let data = await tmpl.getData();
-  t.is(await tmpl.render(data), undefined);
+  t.is(await renderTemplate(tmpl, data), undefined);
   let pages = await tmpl.getTemplates(data);
   for (let page of pages) {
     page.templateContent = undefined;

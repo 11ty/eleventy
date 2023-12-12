@@ -12,7 +12,7 @@ import TemplateContentPrematureUseError from "../src/Errors/TemplateContentPrema
 import normalizeNewLines from "./Util/normalizeNewLines.js";
 import eventBus from "../src/EventBus.js";
 import getNewTemplate from "./_getNewTemplateForTests.js";
-import getRenderedTmpls from "./_getRenderedTemplates.js";
+import { getRenderedTemplates as getRenderedTmpls, renderLayout, renderTemplate } from "./_getRenderedTemplates.js";
 
 const fsp = fs.promises;
 
@@ -207,7 +207,7 @@ test("One Layout (using new content var)", async (t) => {
   t.is(data[tmpl.config.keys.layout], "defaultLayout");
 
   t.is(
-    normalizeNewLines(cleanHtml(await tmpl.renderLayout(tmpl, data))),
+    normalizeNewLines(cleanHtml(await renderLayout(tmpl, data))),
     `<div id="layout">
   <p>Hello.</p>
 </div>`
@@ -237,7 +237,7 @@ test("One Layout (using content)", async (t) => {
   t.is(data[tmpl.config.keys.layout], "defaultLayoutLayoutContent");
 
   t.is(
-    normalizeNewLines(cleanHtml(await tmpl.renderLayout(tmpl, data))),
+    normalizeNewLines(cleanHtml(await renderLayout(tmpl, data))),
     `<div id="layout">
   <p>Hello.</p>
 </div>`
@@ -292,7 +292,7 @@ test("One Layout (liquid test)", async (t) => {
   t.is(data[tmpl.config.keys.layout], "layoutLiquid.liquid");
 
   t.is(
-    normalizeNewLines(cleanHtml(await tmpl.renderLayout(tmpl, data))),
+    normalizeNewLines(cleanHtml(await renderLayout(tmpl, data))),
     `<div id="layout">
   <p>Hello.</p>
 </div>`
@@ -323,7 +323,7 @@ test("Two Layouts", async (t) => {
   t.is(data.key1, "value1");
 
   t.is(
-    normalizeNewLines(cleanHtml(await tmpl.renderLayout(tmpl, data))),
+    normalizeNewLines(cleanHtml(await renderLayout(tmpl, data))),
     `<div id="layout-b">
   <div id="layout-a">
     <p>value2-a</p>
@@ -348,13 +348,13 @@ test("Liquid template", async (t) => {
     eleventyConfig
   );
 
-  t.is(await tmpl.render(await tmpl.getData()), "<p>Zach</p>");
+  t.is(await renderTemplate(tmpl, await tmpl.getData()), "<p>Zach</p>");
 });
 
 test("Liquid template with include", async (t) => {
   let tmpl = await getNewTemplate("./test/stubs/includer.liquid", "./test/stubs/", "dist");
 
-  t.is((await tmpl.render(await tmpl.getData())).trim(), "<p>This is an include.</p>");
+  t.is((await renderTemplate(tmpl, await tmpl.getData())).trim(), "<p>This is an include.</p>");
 });
 
 test("Permalink output directory", async (t) => {
@@ -438,7 +438,7 @@ test("Local template data file import (without a global data json)", async (t) =
     "./test/stubs/component/component.11tydata.js",
   ]);
   t.is(data.localdatakey1, "localdatavalue1");
-  t.is(await tmpl.render(data), "localdatavalue1");
+  t.is(await renderTemplate(tmpl, data), "localdatavalue1");
 });
 
 test("Local template data file import (two subdirectories deep)", async (t) => {
@@ -524,7 +524,7 @@ test("Posts inherits local JSON, layouts", async (t) => {
   t.is(localData.layout, "mylocallayout.njk");
 
   t.is(
-    normalizeNewLines((await tmpl.render(data)).trim()),
+    normalizeNewLines((await renderTemplate(tmpl, data)).trim()),
     `<div id="locallayout">Post1
 </div>`
   );
@@ -569,7 +569,7 @@ test("Template and folder name are the same, make sure data imports work ok", as
   t.is(localData.layout, "mylocallayout.njk");
 
   t.is(
-    normalizeNewLines((await tmpl.render(data)).trim()),
+    normalizeNewLines((await renderTemplate(tmpl, data)).trim()),
     `<div id="locallayout">Posts
 </div>`
   );
@@ -696,7 +696,7 @@ test("Override base templating engine from .liquid to njk", async (t) => {
     "./dist"
   );
 
-  t.is((await tmpl.render(await tmpl.getData())).trim(), "My Title");
+  t.is((await renderTemplate(tmpl, await tmpl.getData())).trim(), "My Title");
 });
 
 test("Override base templating engine from markdown to 11ty.js, then markdown", async (t) => {
@@ -706,7 +706,7 @@ test("Override base templating engine from markdown to 11ty.js, then markdown", 
     "./dist"
   );
 
-  t.is((await tmpl.render(await tmpl.getData())).trim(), "<h1>This is markdown</h1>");
+  t.is((await renderTemplate(tmpl, await tmpl.getData())).trim(), "<h1>This is markdown</h1>");
 });
 
 test("Override base templating engine from .liquid to md", async (t) => {
@@ -716,7 +716,7 @@ test("Override base templating engine from .liquid to md", async (t) => {
     "./dist"
   );
 
-  t.is((await tmpl.render(await tmpl.getData())).trim(), "<h1>My Title</h1>");
+  t.is((await renderTemplate(tmpl, await tmpl.getData())).trim(), "<h1>My Title</h1>");
 });
 
 test("Override base templating engine from .liquid to njk,md", async (t) => {
@@ -726,7 +726,7 @@ test("Override base templating engine from .liquid to njk,md", async (t) => {
     "./dist"
   );
 
-  t.is((await tmpl.render(await tmpl.getData())).trim(), "<h1>My Title</h1>");
+  t.is((await renderTemplate(tmpl, await tmpl.getData())).trim(), "<h1>My Title</h1>");
 });
 
 test("Override base templating engine from .njk to liquid,md", async (t) => {
@@ -736,13 +736,13 @@ test("Override base templating engine from .njk to liquid,md", async (t) => {
     "./dist"
   );
 
-  t.is((await tmpl.render(await tmpl.getData())).trim(), "<h1>My Title</h1>");
+  t.is((await renderTemplate(tmpl, await tmpl.getData())).trim(), "<h1>My Title</h1>");
 });
 
 test("Override base templating engine from .html to njk", async (t) => {
   let tmpl = await getNewTemplate("./test/stubs/overrides/test.html", "./test/stubs/", "./dist");
 
-  t.is((await tmpl.render(await tmpl.getData())).trim(), "<h2>My Title</h2>");
+  t.is((await renderTemplate(tmpl, await tmpl.getData())).trim(), "<h2>My Title</h2>");
 });
 
 test("Override base templating engine from .html to (nothing)", async (t) => {
@@ -752,7 +752,7 @@ test("Override base templating engine from .html to (nothing)", async (t) => {
     "./dist"
   );
 
-  t.is((await tmpl.render(await tmpl.getData())).trim(), "<h2>{{ title }}</h2>");
+  t.is((await renderTemplate(tmpl, await tmpl.getData())).trim(), "<h2>{{ title }}</h2>");
 });
 
 test("Override base templating engine should error with bad string", async (t) => {
@@ -763,7 +763,7 @@ test("Override base templating engine should error with bad string", async (t) =
   );
 
   await t.throwsAsync(async () => {
-    await tmpl.render(await tmpl.getData());
+    await renderTemplate(tmpl, await tmpl.getData());
   });
 });
 
@@ -774,7 +774,7 @@ test("Override base templating engine (bypasses markdown)", async (t) => {
     "./dist"
   );
 
-  t.is((await tmpl.render(await tmpl.getData())).trim(), "# My Title");
+  t.is((await renderTemplate(tmpl, await tmpl.getData())).trim(), "# My Title");
 });
 
 test("Override base templating engine to (nothing)", async (t) => {
@@ -785,13 +785,13 @@ test("Override base templating engine to (nothing)", async (t) => {
   );
 
   // not parsed
-  t.is((await tmpl.render(await tmpl.getData())).trim(), "# {{ title }}");
+  t.is((await renderTemplate(tmpl, await tmpl.getData())).trim(), "# {{ title }}");
 });
 
 test("Override base templating engine from .njk to liquid (with a layout that uses njk)", async (t) => {
   let tmpl = await getNewTemplate("./test/stubs/overrides/layout.njk", "./test/stubs/", "./dist");
 
-  t.is((await tmpl.render(await tmpl.getData())).trim(), `<div id="layoutvalue"><h2>8</h2></div>`);
+  t.is((await renderTemplate(tmpl, await tmpl.getData())).trim(), `<div id="layoutvalue"><h2>8</h2></div>`);
 });
 
 test("Override base templating engine from .njk to nothing (with a layout that uses njk)", async (t) => {
@@ -802,7 +802,7 @@ test("Override base templating engine from .njk to nothing (with a layout that u
   );
 
   t.is(
-    (await tmpl.render(await tmpl.getData())).trim(),
+    (await renderTemplate(tmpl, await tmpl.getData())).trim(),
     `<div id="layoutvalue"><h2><%= title %></h2></div>`
   );
 });
@@ -811,7 +811,7 @@ test("Using a markdown source file (with a layout that uses njk), markdown shoul
   let tmpl = await getNewTemplate("./test/stubs/overrides/test.md", "./test/stubs/", "./dist");
 
   t.is(
-    normalizeNewLines((await tmpl.render(await tmpl.getData())).trim()),
+    normalizeNewLines((await renderTemplate(tmpl, await tmpl.getData())).trim()),
     `# Layout header
 
 <div id="layoutvalue"><h1>My Title</h1>
@@ -1617,13 +1617,13 @@ test("Make sure layout cache takes new changes during watch (nunjucks)", async (
 
   let data = await tmpl.getData();
 
-  t.is((await tmpl.render(data)).trim(), '<script>alert("hi");</script>');
+  t.is((await renderTemplate(tmpl, data)).trim(), '<script>alert("hi");</script>');
 
   await fsp.writeFile(filePath, `alert("bye");`, { encoding: "utf8" });
 
   eventBus.emit("eleventy.resourceModified", filePath);
 
-  t.is((await tmpl.render(data)).trim(), '<script>alert("bye");</script>');
+  t.is((await renderTemplate(tmpl, data)).trim(), '<script>alert("bye");</script>');
 });
 
 test("Make sure layout cache takes new changes during watch (liquid)", async (t) => {
@@ -1638,13 +1638,13 @@ test("Make sure layout cache takes new changes during watch (liquid)", async (t)
 
   let data = await tmpl.getData();
 
-  t.is((await tmpl.render(data)).trim(), '<script>alert("hi");</script>');
+  t.is((await renderTemplate(tmpl, data)).trim(), '<script>alert("hi");</script>');
 
   await fsp.writeFile(filePath, `alert("bye");`, { encoding: "utf8" });
 
   eventBus.emit("eleventy.resourceModified", filePath);
 
-  t.is((await tmpl.render(data)).trim(), '<script>alert("bye");</script>');
+  t.is((await renderTemplate(tmpl, data)).trim(), '<script>alert("bye");</script>');
 });
 
 test("Add Extension via Configuration (txt file)", async (t) => {
@@ -1815,7 +1815,7 @@ test("page.templateSyntax works with templateEngineOverride", async (t) => {
     "./dist"
   );
 
-  t.is((await tmpl.render(await tmpl.getData())).trim(), "<p>njk,md</p>");
+  t.is((await renderTemplate(tmpl, await tmpl.getData())).trim(), "<p>njk,md</p>");
 });
 
 // Inspired by https://github.com/11ty/eleventy/pull/1691

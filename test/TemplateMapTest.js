@@ -7,7 +7,7 @@ import TemplateContentUnrenderedTemplateError from "../src/Errors/TemplateConten
 import normalizeNewLines from "./Util/normalizeNewLines.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 import getNewTemplateForTests from "./_getNewTemplateForTests.js";
-import getRenderedTmpls from "./_getRenderedTemplates.js";
+import { getRenderedTemplates as getRenderedTmpls, renderTemplate } from "./_getRenderedTemplates.js";
 
 function getNewTemplate(filename, input, output, eleventyConfig) {
   return getNewTemplateForTests(filename, input, output, null, null, eleventyConfig);
@@ -642,7 +642,7 @@ test("TemplateMap render and templateContent are the same (templateContent doesn
   let map = tm.getMap();
   await tm.cache();
   t.is(map[0]._pages[0].templateContent.trim(), "<p>Inherited</p>");
-  t.is((await map[0].template.render(map[0].data)).trim(), "<p>Inherited</p>");
+  t.is((await renderTemplate(map[0].template, map[0].data)).trim(), "<p>Inherited</p>");
 });
 
 test("Should be able to paginate a tag generated collection (and it has templateContent)", async (t) => {
@@ -849,7 +849,7 @@ test("Template pages should not have layouts when added to collections", async (
     eleventyConfig,
   );
   await tm.add(tmpl);
-  t.is(await tmpl.render(await tmpl.getData()), "<div>Layout Test</div>");
+  t.is(await renderTemplate(tmpl, await tmpl.getData()), "<div>Layout Test</div>");
 
   let collections = await tm._testGetCollectionsData();
   t.is(collections.all.length, 1);

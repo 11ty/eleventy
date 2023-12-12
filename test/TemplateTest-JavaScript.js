@@ -3,7 +3,7 @@ import semver from "semver";
 
 import TemplateConfig from "../src/TemplateConfig.js";
 import getNewTemplate from "./_getNewTemplateForTests.js";
-import getRenderedTmpls from "./_getRenderedTemplates.js";
+import { getRenderedTemplates as getRenderedTmpls } from "./_getRenderedTemplates.js";
 
 test("JavaScript template type (function)", async (t) => {
   let tmpl = await getNewTemplate("./test/stubs/function.11ty.cjs", "./test/stubs/", "./dist");

@@ -3,6 +3,7 @@ import test from "ava";
 import TemplateData from "../src/TemplateData.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 import getNewTemplate from "./_getNewTemplateForTests.js";
+import { renderTemplate } from "./_getRenderedTemplates.js";
 
 async function getRenderedData(tmpl, pageNumber = 0) {
   let data = await tmpl.getData();
@@ -17,7 +18,7 @@ test("eleventyComputed", async (t) => {
     "./dist"
   );
   let data = await getRenderedData(tmpl);
-  t.is((await tmpl.render(data)).trim(), "hi:value2-value1.css");
+  t.is((await renderTemplate(tmpl, data)).trim(), "hi:value2-value1.css");
 });
 
 test("eleventyComputed overrides existing value.", async (t) => {
@@ -28,7 +29,7 @@ test("eleventyComputed overrides existing value.", async (t) => {
   );
   let data = await getRenderedData(tmpl);
   t.is(data.key1, "override");
-  t.is((await tmpl.render(data)).trim(), "hi:override");
+  t.is((await renderTemplate(tmpl, data)).trim(), "hi:override");
 });
 
 test("eleventyComputed overrides existing value and reuses that upstream value", async (t) => {
@@ -39,7 +40,7 @@ test("eleventyComputed overrides existing value and reuses that upstream value",
   );
   let data = await getRenderedData(tmpl);
   t.is(data.key1, "over(value1)ride");
-  t.is((await tmpl.render(data)).trim(), "hi:over(value1)ride");
+  t.is((await renderTemplate(tmpl, data)).trim(), "hi:over(value1)ride");
 });
 
 test("eleventyComputed permalink", async (t) => {
@@ -92,7 +93,7 @@ test("eleventyComputed js front matter (function)", async (t) => {
   );
   let data = await getRenderedData(tmpl);
   t.is(data.key3, "value3-value2-value1.css");
-  t.is((await tmpl.render(data)).trim(), "hi:value2-value1.css");
+  t.is((await renderTemplate(tmpl, data)).trim(), "hi:value2-value1.css");
 });
 
 test("eleventyComputed js front matter key reuses and overrides", async (t) => {
@@ -103,7 +104,7 @@ test("eleventyComputed js front matter key reuses and overrides", async (t) => {
   );
   let data = await getRenderedData(tmpl);
   t.is(data.key1, "value2-value1");
-  t.is((await tmpl.render(data)).trim(), "hi:value2-value1");
+  t.is((await renderTemplate(tmpl, data)).trim(), "hi:value2-value1");
 });
 
 test("eleventyComputed true primitive", async (t) => {

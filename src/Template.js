@@ -407,14 +407,13 @@ class Template extends TemplateContent {
 		return data;
 	}
 
-	// TODO REMOVE THIS it’s only used in tests: see `renderPageEntry` now
-	async renderLayout(tmpl, tmplData) {
-		let layoutKey = tmplData[tmpl.config.keys.layout];
-		let layout = this.getLayout(layoutKey);
-		debug("%o is using layout %o", this.inputPath, layoutKey);
+	// Tests only
+	async render() {
+		throw new Error("Internal error: `render` was removed from Template.js");
+	}
 
-		let templateContent = await super.render(await this.getPreRender(), tmplData);
-		return layout.render(tmplData, templateContent);
+	async renderLayout() {
+		throw new Error("Internal error: `renderLayout` was removed from Template.js");
 	}
 
 	async renderDirect(str, data, bypassMarkdown) {
@@ -431,21 +430,6 @@ class Template extends TemplateContent {
 		let renderedContent = await this.renderDirect(content, data);
 		this._cacheRenderedContent = renderedContent;
 		return renderedContent;
-	}
-
-	// TODO REMOVE THIS it’s only used in tests: see `renderPageEntry` now
-	async render(data) {
-		debugDev("%o render()", this.inputPath);
-		if (!data) {
-			throw new Error("`data` needs to be passed into render()");
-		}
-
-		if (data[this.config.keys.layout]) {
-			return this.renderLayout(this, data);
-		} else {
-			debugDev("Template.render renderDirect for %o", this.inputPath);
-			return this.renderWithoutLayout(data);
-		}
 	}
 
 	addLinter(callback) {

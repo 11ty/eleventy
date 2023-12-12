@@ -6,7 +6,7 @@ import Pagination from "../src/Plugins/Pagination.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";
 import getNewTemplate from "./_getNewTemplateForTests.js";
-import getRenderedTmpls from "./_getRenderedTemplates.js";
+import { getRenderedTemplates as getRenderedTmpls, renderTemplate } from "./_getRenderedTemplates.js";
 
 test("No data passed to pagination", async (t) => {
   let eleventyConfig = new TemplateConfig();
@@ -160,13 +160,13 @@ test("Paginate data in frontmatter", async (t) => {
 
   t.is(pages[0].outputPath, "./dist/paged/pagedinlinedata/index.html");
   t.is(
-    (await pages[0].template.render(pages[0].data)).trim(),
+    (await renderTemplate(pages[0].template, pages[0].data)).trim(),
     "<ol><li>item1</li><li>item2</li><li>item3</li><li>item4</li></ol>"
   );
 
   t.is(pages[1].outputPath, "./dist/paged/pagedinlinedata/1/index.html");
   t.is(
-    (await pages[1].template.render(pages[1].data)).trim(),
+    (await renderTemplate(pages[1].template, pages[1].data)).trim(),
     "<ol><li>item5</li><li>item6</li><li>item7</li><li>item8</li></ol>"
   );
 });
@@ -198,13 +198,13 @@ test("Paginate external data file", async (t) => {
 
   t.is(pages[0].outputPath, "./dist/paged/index.html");
   t.is(
-    (await pages[0].template.render(pages[0].data)).trim(),
+    (await renderTemplate(pages[0].template, pages[0].data)).trim(),
     "<ol><li>item1</li><li>item2</li><li>item3</li><li>item4</li><li>item5</li></ol>"
   );
 
   t.is(pages[1].outputPath, "./dist/paged/1/index.html");
   t.is(
-    (await pages[1].template.render(pages[1].data)).trim(),
+    (await renderTemplate(pages[1].template, pages[1].data)).trim(),
     "<ol><li>item6</li><li>item7</li><li>item8</li></ol>"
   );
 });
@@ -330,8 +330,8 @@ test("Alias to page data", async (t) => {
   t.is(pages[0].outputPath, "./dist/pagedalias/item1/index.html");
   t.is(pages[1].outputPath, "./dist/pagedalias/item2/index.html");
 
-  t.is((await pages[0].template.render(pages[0].data)).trim(), "item1");
-  t.is((await pages[1].template.render(pages[1].data)).trim(), "item2");
+  t.is((await renderTemplate(pages[0].template, pages[0].data)).trim(), "item1");
+  t.is((await renderTemplate(pages[1].template, pages[1].data)).trim(), "item2");
 });
 
 test("Alias to page data (size 2)", async (t) => {
@@ -347,8 +347,8 @@ test("Alias to page data (size 2)", async (t) => {
   t.is(pages[0].outputPath, "./dist/pagedalias/item1/index.html");
   t.is(pages[1].outputPath, "./dist/pagedalias/item3/index.html");
 
-  t.is((await pages[0].template.render(pages[0].data)).trim(), "item1");
-  t.is((await pages[1].template.render(pages[1].data)).trim(), "item3");
+  t.is((await renderTemplate(pages[0].template, pages[0].data)).trim(), "item1");
+  t.is((await renderTemplate(pages[1].template, pages[1].data)).trim(), "item3");
 });
 
 test("Permalink with pagination variables (and an if statement, nunjucks)", async (t) => {
@@ -463,13 +463,13 @@ test("Page over an object (use keys)", async (t) => {
 
   t.is(pages[0].outputPath, "./dist/paged/pagedobject/index.html");
   t.is(
-    (await pages[0].template.render(pages[0].data)).trim(),
+    (await renderTemplate(pages[0].template, pages[0].data)).trim(),
     "<ol><li>item1</li><li>item2</li><li>item3</li><li>item4</li></ol>"
   );
 
   t.is(pages[1].outputPath, "./dist/paged/pagedobject/1/index.html");
   t.is(
-    (await pages[1].template.render(pages[1].data)).trim(),
+    (await renderTemplate(pages[1].template, pages[1].data)).trim(),
     "<ol><li>item5</li><li>item6</li><li>item7</li><li>item8</li></ol>"
   );
 });
@@ -487,13 +487,13 @@ test("Page over an object (use values)", async (t) => {
 
   t.is(pages[0].outputPath, "./dist/paged/pagedobjectvalues/index.html");
   t.is(
-    (await pages[0].template.render(pages[0].data)).trim(),
+    (await renderTemplate(pages[0].template, pages[0].data)).trim(),
     "<ol><li>itemvalue1</li><li>itemvalue2</li><li>itemvalue3</li><li>itemvalue4</li></ol>"
   );
 
   t.is(pages[1].outputPath, "./dist/paged/pagedobjectvalues/1/index.html");
   t.is(
-    (await pages[1].template.render(pages[1].data)).trim(),
+    (await renderTemplate(pages[1].template, pages[1].data)).trim(),
     "<ol><li>itemvalue5</li><li>itemvalue6</li><li>itemvalue7</li><li>itemvalue8</li></ol>"
   );
 });
@@ -509,12 +509,12 @@ test("Page over an object (filtered, array)", async (t) => {
   let pages = await tmpl.getTemplates(data);
 
   t.is(
-    (await pages[0].template.render(pages[0].data)).trim(),
+    (await renderTemplate(pages[0].template, pages[0].data)).trim(),
     "<ol><li>item1</li><li>item2</li><li>item3</li><li>item5</li></ol>"
   );
 
   t.is(
-    (await pages[1].template.render(pages[1].data)).trim(),
+    (await renderTemplate(pages[1].template, pages[1].data)).trim(),
     "<ol><li>item6</li><li>item7</li><li>item8</li><li>item9</li></ol>"
   );
 });
@@ -531,12 +531,12 @@ test("Page over an object (filtered, string)", async (t) => {
   t.is(pages.length, 2);
 
   t.is(
-    (await pages[0].template.render(pages[0].data)).trim(),
+    (await renderTemplate(pages[0].template, pages[0].data)).trim(),
     "<ol><li>item1</li><li>item2</li><li>item3</li><li>item5</li></ol>"
   );
 
   t.is(
-    (await pages[1].template.render(pages[1].data)).trim(),
+    (await renderTemplate(pages[1].template, pages[1].data)).trim(),
     "<ol><li>item6</li><li>item7</li><li>item8</li><li>item9</li></ol>"
   );
 });
@@ -562,13 +562,13 @@ test("Pagination with deep data merge #147", async (t) => {
 
   t.is(pages[0].outputPath, "./dist/paged/pagedinlinedata/index.html");
   t.is(
-    (await pages[0].template.render(pages[0].data)).trim(),
+    (await renderTemplate(pages[0].template, pages[0].data)).trim(),
     "<ol><li>item1</li><li>item2</li><li>item3</li><li>item4</li></ol>"
   );
 
   t.is(pages[1].outputPath, "./dist/paged/pagedinlinedata/1/index.html");
   t.is(
-    (await pages[1].template.render(pages[1].data)).trim(),
+    (await renderTemplate(pages[1].template, pages[1].data)).trim(),
     "<ol><li>item5</li><li>item6</li><li>item7</li><li>item8</li></ol>"
   );
 });
@@ -584,8 +584,8 @@ test("Pagination with deep data merge with alias #147", async (t) => {
   t.is(pages[0].outputPath, "./dist/pagedalias/item1/index.html");
   t.is(pages[1].outputPath, "./dist/pagedalias/item2/index.html");
 
-  t.is((await pages[0].template.render(pages[0].data)).trim(), "item1");
-  t.is((await pages[1].template.render(pages[1].data)).trim(), "item2");
+  t.is((await renderTemplate(pages[0].template, pages[0].data)).trim(), "item1");
+  t.is((await renderTemplate(pages[1].template, pages[1].data)).trim(), "item2");
 });
 
 test("Paginate data in frontmatter (reversed)", async (t) => {
@@ -601,13 +601,13 @@ test("Paginate data in frontmatter (reversed)", async (t) => {
 
   t.is(pages[0].outputPath, "./dist/paged/pagedinlinedata-reverse/index.html");
   t.is(
-    (await pages[0].template.render(pages[0].data)).trim(),
+    (await renderTemplate(pages[0].template, pages[0].data)).trim(),
     "<ol><li>item8</li><li>item7</li><li>item6</li><li>item5</li></ol>"
   );
 
   t.is(pages[1].outputPath, "./dist/paged/pagedinlinedata-reverse/1/index.html");
   t.is(
-    (await pages[1].template.render(pages[1].data)).trim(),
+    (await renderTemplate(pages[1].template, pages[1].data)).trim(),
     "<ol><li>item4</li><li>item3</li><li>item2</li><li>item1</li></ol>"
   );
 });

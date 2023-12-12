@@ -4,6 +4,7 @@ import { marked } from "marked";
 import TemplateConfig from "../src/TemplateConfig.js";
 import TemplateData from "../src/TemplateData.js";
 import getNewTemplate from "./_getNewTemplateForTests.js";
+import { renderTemplate } from "./_getRenderedTemplates.js";
 
 test("Using getData: false without getInstanceFromInputPath works ok", async (t) => {
   let eleventyConfig = new TemplateConfig();
@@ -34,7 +35,7 @@ test("Using getData: false without getInstanceFromInputPath works ok", async (t)
   );
 
   let data = await tmpl.getData();
-  t.is(await tmpl.render(data), "Sample content");
+  t.is(await renderTemplate(tmpl, data), "Sample content");
 });
 
 test("Using getData: true without getInstanceFromInputPath should error", async (t) => {
@@ -208,7 +209,7 @@ test("Uses default renderer (no compile function) when you override an existing 
   );
 
   let data = await tmpl.getData();
-  t.is(await tmpl.render(data), "hi");
+  t.is(await renderTemplate(tmpl, data), "hi");
 });
 
 test("Access to default renderer when you override an existing extension", async (t) => {
@@ -242,7 +243,7 @@ test("Access to default renderer when you override an existing extension", async
   );
 
   let data = await tmpl.getData();
-  t.is(await tmpl.render(data), "hi");
+  t.is(await renderTemplate(tmpl, data), "hi");
 });
 
 test("Overridden liquid gets used from a markdown template", async (t) => {
@@ -277,7 +278,7 @@ test("Overridden liquid gets used from a markdown template", async (t) => {
   );
 
   let data = await tmpl.getData();
-  t.is((await tmpl.render(data)).trim(), "<p>hi</p>");
+  t.is((await renderTemplate(tmpl, data)).trim(), "<p>hi</p>");
 });
 
 test("Use marked for markdown", async (t) => {
@@ -312,7 +313,7 @@ test("Use marked for markdown", async (t) => {
   );
 
   let data = await tmpl.getData();
-  t.is((await tmpl.render(data)).trim(), "<p>hi</p>");
+  t.is((await renderTemplate(tmpl, data)).trim(), "<p>hi</p>");
 });
 
 test("Use defaultRenderer for markdown", async (t) => {
@@ -345,7 +346,7 @@ test("Use defaultRenderer for markdown", async (t) => {
   );
 
   let data = await tmpl.getData();
-  t.is((await tmpl.render(data)).trim(), "<p>hi</p>");
+  t.is((await renderTemplate(tmpl, data)).trim(), "<p>hi</p>");
 });
 
 test("Front matter in a custom extension", async (t) => {
@@ -378,7 +379,7 @@ test("Front matter in a custom extension", async (t) => {
 
   let data = await tmpl.getData();
   t.is(data.frontmatter, 1);
-  t.is((await tmpl.render(data)).trim(), "hi");
+  t.is((await renderTemplate(tmpl, data)).trim(), "hi");
 });
 
 test("Access to default renderer when you override an existing extension (async compile function, arrow render function)", async (t) => {
@@ -412,7 +413,7 @@ test("Access to default renderer when you override an existing extension (async 
   );
 
   let data = await tmpl.getData();
-  t.is(await tmpl.render(data), "hi");
+  t.is(await renderTemplate(tmpl, data), "hi");
 });
 
 test("Access to default renderer when you override an existing extension (async compile function, async render function)", async (t) => {
@@ -446,7 +447,7 @@ test("Access to default renderer when you override an existing extension (async 
   );
 
   let data = await tmpl.getData();
-  t.is(await tmpl.render(data), "hi");
+  t.is(await renderTemplate(tmpl, data), "hi");
 });
 
 test("Return undefined in compile to ignore #2267", async (t) => {
@@ -475,7 +476,7 @@ test("Return undefined in compile to ignore #2267", async (t) => {
   );
 
   let data = await tmpl.getData();
-  t.is(await tmpl.render(data), undefined);
+  t.is(await renderTemplate(tmpl, data), undefined);
 });
 
 test("Return undefined in compile to ignore (async compile function) #2350", async (t) => {
@@ -504,5 +505,5 @@ test("Return undefined in compile to ignore (async compile function) #2350", asy
   );
 
   let data = await tmpl.getData();
-  t.is(await tmpl.render(data), undefined);
+  t.is(await renderTemplate(tmpl, data), undefined);
 });
