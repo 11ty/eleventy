@@ -3,6 +3,7 @@ import test from "ava";
 import TemplateConfig from "../src/TemplateConfig.js";
 import TemplateLayout from "../src/TemplateLayout.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import { renderLayoutViaLayout } from "./_getRenderedTemplates.js";
 
 async function getTemplateLayoutInstance(key, inputDir, map) {
   let eleventyConfig = new TemplateConfig();
@@ -65,7 +66,7 @@ test("Render Layout", async (t) => {
   let tl = await getTemplateLayoutInstance("layouts/layout-inherit-a.njk", "./test/stubs");
   t.is(
     (
-      await tl.render({
+      await renderLayoutViaLayout(tl, {
         inherits: "a",
         secondinherits: "b",
         thirdinherits: "c",
@@ -79,7 +80,7 @@ test("Render Layout (Pass in template content)", async (t) => {
   let tl = await getTemplateLayoutInstance("layouts/layout-inherit-a.njk", "./test/stubs");
   t.is(
     (
-      await tl.render(
+      await renderLayoutViaLayout(tl,
         { inherits: "a", secondinherits: "b", thirdinherits: "c" },
         "TEMPLATE_CONTENT"
       )
@@ -91,7 +92,7 @@ test("Render Layout (Pass in template content)", async (t) => {
 test("Render Layout (Pass in undefined template content)", async (t) => {
   let tl = await getTemplateLayoutInstance("layouts/layout-contentdump.njk", "./test/stubs");
   t.is(
-    await tl.render({ inherits: "a", secondinherits: "b", thirdinherits: "c" }, undefined),
+    await renderLayoutViaLayout(tl, { inherits: "a", secondinherits: "b", thirdinherits: "c" }, undefined),
     "this is bad a b a c"
   );
 });
@@ -99,14 +100,14 @@ test("Render Layout (Pass in undefined template content)", async (t) => {
 test("Render Layout (Pass in null template content)", async (t) => {
   let tl = await getTemplateLayoutInstance("layouts/layout-contentdump.njk", "./test/stubs");
   t.is(
-    await tl.render({ inherits: "a", secondinherits: "b", thirdinherits: "c" }, null),
+    await renderLayoutViaLayout(tl, { inherits: "a", secondinherits: "b", thirdinherits: "c" }, null),
     " a b a c"
   );
 });
 
 test("Render Layout (Pass in empty template content)", async (t) => {
   let tl = await getTemplateLayoutInstance("layouts/layout-contentdump.njk", "./test/stubs");
-  t.is(await tl.render({ inherits: "a", secondinherits: "b", thirdinherits: "c" }, ""), " a b a c");
+  t.is(await renderLayoutViaLayout(tl, { inherits: "a", secondinherits: "b", thirdinherits: "c" }, ""), " a b a c");
 });
 
 test("Cache Duplicates (use full key for cache)", async (t) => {
@@ -115,15 +116,15 @@ test("Cache Duplicates (use full key for cache)", async (t) => {
     "layout.njk",
     "./test/stubs/templateLayoutCacheDuplicates"
   );
-  t.is((await tla.render({})).trim(), "Hello A");
+  t.is((await renderLayoutViaLayout(tla, {})).trim(), "Hello A");
 
   let tlb = await getTemplateLayoutInstance(
     "layout.njk",
     "./test/stubs/templateLayoutCacheDuplicates-b"
   );
-  t.is((await tlb.render({})).trim(), "Hello B");
+  t.is((await renderLayoutViaLayout(tlb, {})).trim(), "Hello B");
 
-  t.is((await tla.render({})).trim(), "Hello A");
+  t.is((await renderLayoutViaLayout(tla, {})).trim(), "Hello A");
 });
 
 test("Throw an error if a layout references itself as the layout", async (t) => {

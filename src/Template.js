@@ -409,11 +409,11 @@ class Template extends TemplateContent {
 
 	// Tests only
 	async render() {
-		throw new Error("Internal error: `render` was removed from Template.js");
+		throw new Error("Internal error: `render` was removed from Template.js in Eleventy 3.0.");
 	}
 
 	async renderLayout() {
-		throw new Error("Internal error: `renderLayout` was removed from Template.js");
+		throw new Error("Internal error: `renderLayout` was removed from Template.js in Eleventy 3.0.");
 	}
 
 	async renderDirect(str, data, bypassMarkdown) {

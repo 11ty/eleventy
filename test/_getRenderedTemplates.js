@@ -14,7 +14,18 @@ async function renderLayout(tmpl, tmplData) {
 	let layoutKey = tmplData[tmpl.config.keys.layout];
 	let layout = tmpl.getLayout(layoutKey);
 	let content = await tmpl.renderWithoutLayout(tmplData);
-	return layout.render(tmplData, content);
+
+	return layout.renderPageEntry({
+		data: tmplData,
+		templateContent: content,
+	});
+}
+
+async function renderLayoutViaLayout(layout, tmplData, templateContent) {
+	return layout.renderPageEntry({
+		data: tmplData,
+		templateContent,
+	});
 }
 
 async function renderTemplate(tmpl, tmplData) {
@@ -31,6 +42,7 @@ async function renderTemplate(tmpl, tmplData) {
 
 export {
 	getRenderedTemplates,
+	renderLayoutViaLayout,
 	renderLayout,
 	renderTemplate,
 };

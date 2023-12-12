@@ -214,10 +214,8 @@ class TemplateLayout extends TemplateContent {
 		}
 	}
 
-	// 3.0: moved to renderPageEntry
-	// Now only used in tests.
-	async render(data, templateContent) {
-		return this.renderPageEntry({ data, templateContent });
+	async render() {
+		throw new Error("Internal error: `render` was removed from TemplateLayout.js in Eleventy 3.0.");
 	}
 
 	// Inefficient? We want to compile all the templatelayouts into a single reusable callback?
