@@ -121,7 +121,7 @@ function normalizeInputPath(inputPath, extensionMap) {
  *   '/es/test/': [ { url: '/en-us/test/' }, { url: '/en/test/' } ]
  * }
  */
-function getLocaleUrlsMap(urlToInputPath, extensionMap) {
+function getLocaleUrlsMap(urlToInputPath, extensionMap, options = {}) {
 	let filemap = {};
 	let paginationTemplateCheck = {};
 	for (let url in urlToInputPath) {
@@ -133,6 +133,12 @@ function getLocaleUrlsMap(urlToInputPath, extensionMap) {
 		}
 
 		let langCode = LangUtils.getLanguageCodeFromInputPath(originalFilepath);
+		if (!langCode) {
+			langCode = LangUtils.getLanguageCodeFromUrl(url);
+		}
+		if (!langCode) {
+			langCode = options.defaultLanguage;
+		}
 		let paginationCheckKey = `${originalFilepath}__${langCode}`;
 
 		// pagination templates should only match once per language
@@ -215,7 +221,7 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
 		contentMaps.inputPathToUrl = inputPathToUrl;
 		contentMaps.urlToInputPath = urlToInputPath;
 
-		contentMaps.localeUrlsMap = getLocaleUrlsMap(urlToInputPath, extensionMap, benchmarkManager);
+		contentMaps.localeUrlsMap = getLocaleUrlsMap(urlToInputPath, extensionMap, options);
 		bench.after();
 	});
 
