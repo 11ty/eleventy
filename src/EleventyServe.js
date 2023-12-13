@@ -166,6 +166,11 @@ class EleventyServe {
 		this._server = serverModule.getServer("eleventy-server", this.outputDir, this.options);
 
 		this.setAliases(this._aliases);
+
+		if (this._globsNeedWatching) {
+			this._server.watchFiles(this._watchedFiles);
+			this._globsNeedWatching = false;
+		}
 	}
 
 	getSetupCallback() {
@@ -241,8 +246,11 @@ class EleventyServe {
 	watchPassthroughCopy(globs) {
 		this._watchedFiles = globs;
 
-		if ("watchFiles" in this.server) {
+		if (this._server && "watchFiles" in this.server) {
 			this.server.watchFiles(globs);
+			this._globsNeedWatching = false;
+		} else {
+			this._globsNeedWatching = true;
 		}
 	}
 
