@@ -651,6 +651,7 @@ class Template extends TemplateContent {
 
 			let obj = {
 				template: this, // not on the docs but folks are relying on it
+				groupNumber: 0, // i18n plugin
 				data,
 
 				page: data.page,
@@ -678,6 +679,8 @@ class Template extends TemplateContent {
 				let obj = {
 					template: pageEntry.template, // not on the docs but folks are relying on it
 					pageNumber: pageEntry.pageNumber,
+					groupNumber: pageEntry.groupNumber || 0,
+
 					data: pageEntry.data,
 
 					inputPath: this.inputPath,

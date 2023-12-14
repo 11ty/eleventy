@@ -70,10 +70,22 @@ test("contentMap Event from Eleventy", async (t) => {
         // if future maps are added, they should be tested here
         t.is(Object.keys(maps).length, 2);
         t.deepEqual(maps.urlToInputPath, {
-          "/en/": "./test/stubs-i18n/en/index.liquid",
-          "/en-us/": "./test/stubs-i18n/en-us/index.11ty.cjs",
-          "/es/": "./test/stubs-i18n/es/index.njk",
-          "/non-lang-file/": "./test/stubs-i18n/non-lang-file.njk",
+          "/en/": {
+						inputPath: "./test/stubs-i18n/en/index.liquid",
+						groupNumber: 0
+					},
+          "/en-us/": {
+						inputPath: "./test/stubs-i18n/en-us/index.11ty.cjs",
+						groupNumber: 0,
+					},
+          "/es/": {
+						inputPath: "./test/stubs-i18n/es/index.njk",
+						groupNumber: 0
+					},
+          "/non-lang-file/": {
+						inputPath: "./test/stubs-i18n/non-lang-file.njk",
+						groupNumber: 0
+					},
         });
 
         t.deepEqual(maps.inputPathToUrl, {

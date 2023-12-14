@@ -351,6 +351,10 @@ class Pagination {
 
 			entries.push({
 				pageNumber,
+
+				// This is used by i18n Plugin to allow subgroups of nested pagination to be separate
+				groupNumber: items[pageNumber]?.[0]?.eleventyPaginationGroupNumber,
+
 				template: cloned,
 				data: clonedData,
 			});

@@ -123,11 +123,14 @@ function normalizeInputPath(inputPath, extensionMap) {
  */
 function getLocaleUrlsMap(urlToInputPath, extensionMap, options = {}) {
 	let filemap = {};
-	let paginationTemplateCheck = {};
+
 	for (let url in urlToInputPath) {
-		let originalFilepath = urlToInputPath[url];
+		// Group number comes from Pagination.js
+		let { inputPath: originalFilepath, groupNumber } = urlToInputPath[url];
 		let filepath = normalizeInputPath(originalFilepath, extensionMap);
-		let replaced = LangUtils.swapLanguageCodeNoCheck(filepath, "__11ty_i18n");
+		let replaced =
+			LangUtils.swapLanguageCodeNoCheck(filepath, "__11ty_i18n") + `_group:${groupNumber}`;
+
 		if (!filemap[replaced]) {
 			filemap[replaced] = [];
 		}
@@ -139,20 +142,15 @@ function getLocaleUrlsMap(urlToInputPath, extensionMap, options = {}) {
 		if (!langCode) {
 			langCode = options.defaultLanguage;
 		}
-		let paginationCheckKey = `${originalFilepath}__${langCode}`;
 
-		// pagination templates should only match once per language
-		if (!paginationTemplateCheck[paginationCheckKey]) {
-			if (langCode) {
-				filemap[replaced].push({
-					url,
-					lang: langCode,
-					label: iso639.getNativeName(langCode.split("-")[0]),
-				});
-			} else {
-				filemap[replaced].push({ url });
-			}
-			paginationTemplateCheck[paginationCheckKey] = true;
+		if (langCode) {
+			filemap[replaced].push({
+				url,
+				lang: langCode,
+				label: iso639.getNativeName(langCode.split("-")[0]),
+			});
+		} else {
+			filemap[replaced].push({ url });
 		}
 	}
 
