@@ -123,6 +123,9 @@ class UserConfig {
 						transformEsmImports: true,
 					});
 
+					// Future warning until vm.Module is stable:
+					// If the frontMatterCode uses `import` this uses the `experimentalModuleApi`
+					// option in node-retrieve-globals to workaround https://github.com/zachleat/node-retrieve-globals/issues/2
 					let data = {
 						page: {
 							// Theoretically fileSlug and filePathStem could be added here but require extensionMap
@@ -134,6 +137,7 @@ class UserConfig {
 					return vm.getGlobalContext(data, {
 						reuseGlobal: true,
 						dynamicImport: true,
+						// addRequire: true,
 					});
 				},
 			},
