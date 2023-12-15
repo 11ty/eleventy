@@ -120,6 +120,7 @@ class UserConfig {
 				node: (frontMatterCode, { filePath }) => {
 					let vm = new RetrieveGlobals(frontMatterCode, {
 						filePath,
+						// ignored if vm.Module is stable (or --experimental-vm-modules)
 						transformEsmImports: true,
 					});
 
