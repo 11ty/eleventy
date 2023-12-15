@@ -18,7 +18,10 @@ const lodashGet = lodash.get;
 test("Eleventy, defaults inherit from config", async (t) => {
   let elev = new Eleventy();
 
-  let config = new TemplateConfig().getConfig();
+  let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
+  let config = eleventyConfig.getConfig();
 
   t.truthy(elev.input);
   t.truthy(elev.outputDir);
@@ -38,8 +41,19 @@ test("Eleventy, get help", (t) => {
   t.truthy(elev.getHelp());
 });
 
-test("Eleventy, set is verbose", (t) => {
+test("Eleventy, set is verbose (before config init)", async (t) => {
   let elev = new Eleventy();
+  elev.setIsVerbose(true);
+
+  await elev.initializeConfig();
+
+  t.true(elev.verboseMode);
+});
+
+test("Eleventy, set is verbose (after config init)", async (t) => {
+  let elev = new Eleventy();
+
+  await elev.initializeConfig();
   elev.setIsVerbose(true);
 
   t.true(elev.verboseMode);
@@ -484,7 +498,7 @@ test("#2167: Pagination with permalink: false", async (t) => {
   let elev = new Eleventy("./test/stubs-2167/", "./test/stubs-2167/_site");
   elev.setDryRun(true);
 
-  let [passthroughCopy, pages] = await elev.write();
+  let [,pages] = await elev.write();
 
   t.is(pages.length, 5);
 
@@ -606,7 +620,7 @@ test("Does pathPrefix affect page URLs", async (t) => {
   t.is(result.url, "/README/");
 });
 
-test.only("Improvements to custom template syntax APIs (includes a layout file) #2258", async (t) => {
+test("Improvements to custom template syntax APIs (includes a layout file) #2258", async (t) => {
   let elev = new Eleventy("./test/stubs-2258/", "./test/stubs-2258/_site", {
     configPath: "./test/stubs-2258/eleventy.config.cjs",
   });

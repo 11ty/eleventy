@@ -579,7 +579,7 @@ Verbose Output: ${this.verboseMode}`);
 	}
 
 	disableLogger() {
-		this._logger.overrideLogger(false);
+		this.logger.overrideLogger(false);
 	}
 
 	/* Getter for error handler */

@@ -819,6 +819,7 @@ class Template extends TemplateContent {
 
 			if (!page.template.behavior.isRenderable()) {
 				debug("Template not written %o from %o.", page.outputPath, page.template.inputPath);
+				ret.push(undefined); // tests-behavior
 				continue;
 			}
 
@@ -828,6 +829,7 @@ class Template extends TemplateContent {
 					page.outputPath,
 					page.template.inputPath,
 				);
+				ret.push(undefined); // tests-behavior
 				continue;
 			}
 

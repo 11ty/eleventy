@@ -336,13 +336,17 @@ class EleventyFiles {
 			throw new Error("Watching requires `.getFiles()` to be called first in EleventyFiles");
 		}
 
+		let ret = [];
 		// Filter out the passthrough copy paths.
-		return this.pathCache.filter(async (path) => {
-			return (
+		for (let path of this.pathCache) {
+			if (
 				this.extensionMap.isFullTemplateFilePath(path) &&
 				(await this.extensionMap.shouldSpiderJavaScriptDependencies(path))
-			);
-		});
+			) {
+				ret.push(path);
+			}
+		}
+		return ret;
 	}
 
 	_globSearch() {

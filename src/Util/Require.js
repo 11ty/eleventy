@@ -109,7 +109,8 @@ async function dynamicImportAbsolutePath(absolutePath, type) {
 	}
 
 	// Otherwise return { default: value, named: value }
-	return target;
+	// Object.assign here so we can add things to it in JavaScript.js
+	return Object.assign({}, target);
 }
 
 function normalizeFilePathInEleventyPackage(file) {

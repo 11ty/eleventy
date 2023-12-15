@@ -1,4 +1,4 @@
 let count = 0;
-module.exports = async function () {
+export default async function () {
   return ++count;
 };
