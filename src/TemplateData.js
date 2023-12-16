@@ -698,6 +698,8 @@ class TemplateData {
 	}
 
 	static getIncludedCollectionNames(data) {
+		TemplateData.cleanupData(data);
+
 		if ("tags" in data) {
 			let excludes = TemplateData.getNormalizedExcludedCollections(data);
 			if (excludes.excludeAll) {
