@@ -21,6 +21,7 @@ test("Eleventy, defaults inherit from config", async (t) => {
   let eleventyConfig = new TemplateConfig();
   await eleventyConfig.init();
 
+	await elev.initializeConfig();
   let config = eleventyConfig.getConfig();
 
   t.truthy(elev.input);
@@ -123,15 +124,16 @@ test("Eleventy file watching (don’t watch deps of passthrough copy .js files)"
 });
 
 test("Eleventy file watching (no JS dependencies)", async (t) => {
-  let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
+  let elev = new Eleventy("./test/stubs", "./test/stubs/_site", {
+		config: eleventyConfig => {
+			eleventyConfig.setWatchJavaScriptDependencies(false);
+		}
+	});
   elev.setFormats("njk");
-
-  let wt = new EleventyWatchTargets();
-  wt.watchJavaScriptDependencies = false;
-  elev.setWatchTargets(wt);
 
   await elev.init();
   await elev.initWatch();
+
   t.deepEqual(await elev.getWatchedFiles(), [
     "./package.json",
     "./test/stubs/**/*.njk",
@@ -316,6 +318,7 @@ test("Eleventy to ndjson (returns a stream)", async (t) => {
 
 test("Two Eleventies, two configs!!! (config used to be a global)", async (t) => {
   let elev1 = new Eleventy();
+	await elev1.initializeConfig();
 
   t.is(elev1.eleventyConfig, elev1.eleventyConfig);
   t.is(elev1.config, elev1.config);
@@ -323,6 +326,7 @@ test("Two Eleventies, two configs!!! (config used to be a global)", async (t) =>
   t.is(JSON.stringify(elev1.config), JSON.stringify(elev1.config));
 
   let elev2 = new Eleventy();
+	await elev2.initializeConfig();
   t.not(elev1.eleventyConfig, elev2.eleventyConfig);
   elev1.config.benchmarkManager = null;
   elev2.config.benchmarkManager = null;
@@ -493,9 +497,9 @@ test("DateGitLastUpdated returns undefined on nonexistent path", (t) => {
   t.is(DateGitLastUpdated("./test/invalid.invalid"), undefined);
 });
 
-/* This test writes to the console */
 test("#2167: Pagination with permalink: false", async (t) => {
   let elev = new Eleventy("./test/stubs-2167/", "./test/stubs-2167/_site");
+	elev.disableLogger();
   elev.setDryRun(true);
 
   let [,pages] = await elev.write();

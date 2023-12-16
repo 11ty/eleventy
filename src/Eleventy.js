@@ -297,16 +297,6 @@ class Eleventy {
 	}
 
 	/**
-	 * Updates the watch targets.
-	 *
-	 * @method
-	 * @param {} watchTargets - The new watch targets.
-	 */
-	setWatchTargets(watchTargets) {
-		this.watchTargets = watchTargets;
-	}
-
-	/**
 	 * Restarts Eleventy.
 	 *
 	 * @async
@@ -540,21 +530,7 @@ Verbose Output: ${this.verboseMode}`);
 
 	/* Setter for verbose mode */
 	set verboseMode(value) {
-		this._isVerboseMode = !!value;
-
-		if (this.writer) {
-			this.writer.setVerboseOutput(this._isVerboseMode);
-		}
-
-		this.bench.setVerboseOutput(this._isVerboseMode);
-
-		if (this.logger) {
-			this.logger.isVerbose = this._isVerboseMode;
-		}
-
-		if (this.errorHandler) {
-			this.errorHandler.isVerbose = this._isVerboseMode;
-		}
+		this.setIsVerbose(value);
 	}
 
 	/* Getter for verbose mode */
@@ -600,6 +576,8 @@ Verbose Output: ${this.verboseMode}`);
 	 * @param {Boolean} isVerbose - Shall Eleventy run in verbose mode?
 	 */
 	setIsVerbose(isVerbose) {
+		isVerbose = !!isVerbose;
+
 		if (!this._hasConfigInitialized) {
 			this._preInitVerbose = isVerbose;
 			return;
@@ -614,7 +592,16 @@ Verbose Output: ${this.verboseMode}`);
 		}
 
 		this.bench.setVerboseOutput(isVerbose);
-		this.verboseMode = isVerbose;
+
+		this._isVerboseMode = isVerbose;
+
+		if (this.writer) {
+			this.writer.setVerboseOutput(isVerbose);
+		}
+
+		if (this.errorHandler) {
+			this.errorHandler.isVerbose = isVerbose;
+		}
 
 		// Set verbose mode in config file
 		this.eleventyConfig.verbose = isVerbose;
