@@ -79,7 +79,7 @@
 	"devDependencies": {
 		"@11ty/eleventy-plugin-syntaxhighlight": "^5.0.0",
 		"@iarna/toml": "^2.2.5",
-		"@vue/server-renderer": "^3.3.11",
+		"@vue/server-renderer": "^3.3.12",
 		"@zachleat/noop": "^1.0.3",
 		"ava": "^6.0.1",
 		"c8": "^8.0.1",
@@ -95,7 +95,7 @@
 		"pretty": "^2.0.0",
 		"rimraf": "^5.0.5",
 		"sass": "^1.69.5",
-		"vue": "^3.3.11"
+		"vue": "^3.3.12"
 	},
 	"dependencies": {
 		"@11ty/dependency-tree": "^3.0.0",
