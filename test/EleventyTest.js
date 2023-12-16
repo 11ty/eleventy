@@ -9,7 +9,7 @@ import TemplateMap from "../src/TemplateMap.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 import DateGitFirstAdded from "../src/Util/DateGitFirstAdded.js";
 import DateGitLastUpdated from "../src/Util/DateGitLastUpdated.js";
-import { normalizeNewLines, normalizeNewLinesInObject } from "./Util/normalizeNewLines.js";
+import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 
 const fsp = fs.promises;
 const lodashGet = lodash.get;
@@ -226,7 +226,7 @@ test("Eleventy to json", async (t) => {
         url: "/test/",
         inputPath: "./test/stubs--to/test.md",
         outputPath: "_site/test/index.html",
-        rawInput: "# hi\n",
+        rawInput: normalizeNewLines("# hi\n"),
         content: "<h1>hi</h1>\n",
       },
     ]
@@ -261,7 +261,7 @@ test("Eleventy to ndjson", async (t) => {
           url: "/test/",
           inputPath: "./test/stubs--to/test.md",
           outputPath: "_site/test/index.html",
-          rawInput: "# hi\n",
+          rawInput: normalizeNewLines("# hi\n"),
           content: "<h1>hi</h1>\n",
         });
       }
@@ -298,7 +298,7 @@ test("Eleventy to ndjson (returns a stream)", async (t) => {
           url: "/test/",
           inputPath: "./test/stubs--to/test.md",
           outputPath: "_site/test/index.html",
-          rawInput: "# hi\n",
+          rawInput: normalizeNewLines("# hi\n"),
           content: "<h1>hi</h1>\n",
         });
       }
@@ -364,7 +364,7 @@ test("Eleventy programmatic API without init", async (t) => {
         url: "/test/",
         inputPath: "./test/stubs--to/test.md",
         outputPath: "_site/test/index.html",
-        rawInput: "# hi\n",
+        rawInput: normalizeNewLines("# hi\n"),
         content: "<h1>hi</h1>\n",
       },
     ]
@@ -396,7 +396,7 @@ test("Can Eleventy run two executeBuilds in parallel?", async (t) => {
       url: "/test/",
       inputPath: "./test/stubs--to/test.md",
       outputPath: "_site/test/index.html",
-      rawInput: "# hi\n",
+      rawInput: normalizeNewLines("# hi\n"),
       content: "<h1>hi</h1>\n",
     },
   ];
