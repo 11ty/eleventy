@@ -20,9 +20,9 @@ import simplePlural from "./Util/Pluralize.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import eventBus from "./EventBus.js";
 import { getEleventyPackageJson, getWorkingProjectPackageJson } from "./Util/ImportJsonSync.js";
-import RenderPlugin from "./Plugins/RenderPlugin.js";
-import I18nPlugin from "./Plugins/I18nPlugin.js";
-import HtmlBasePlugin from "./Plugins/HtmlBasePlugin.js";
+import RenderPlugin, * as RenderPluginExtras from "./Plugins/RenderPlugin.js";
+import I18nPlugin, * as I18nPluginExtras from "./Plugins/I18nPlugin.js";
+import HtmlBasePlugin, * as HtmlBasePluginExtras from "./Plugins/HtmlBasePlugin.js";
 
 const pkg = getEleventyPackageJson();
 const debug = debugUtil("Eleventy");
@@ -1282,6 +1282,11 @@ Arguments:
 }
 
 export default Eleventy;
+
+// extend for exporting
+Object.assign(RenderPlugin, RenderPluginExtras);
+Object.assign(I18nPlugin, I18nPluginExtras);
+Object.assign(HtmlBasePlugin, HtmlBasePluginExtras);
 
 export {
 	Eleventy,
