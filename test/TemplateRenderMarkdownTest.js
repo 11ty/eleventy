@@ -1,6 +1,6 @@
 import test from "ava";
 import md from "markdown-it";
-import mdEmoji from "markdown-it-emoji";
+import { full as mdEmoji } from 'markdown-it-emoji'
 import eleventySyntaxHighlightPlugin from "@11ty/eleventy-plugin-syntaxhighlight";
 
 import TemplateRender from "../src/TemplateRender.js";
