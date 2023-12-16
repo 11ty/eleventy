@@ -4,7 +4,7 @@ import TemplateMap from "../src/TemplateMap.js";
 import TemplateCollection from "../src/TemplateCollection.js";
 import UsingCircularTemplateContentReferenceError from "../src/Errors/UsingCircularTemplateContentReferenceError.js";
 import TemplateContentUnrenderedTemplateError from "../src/Errors/TemplateContentUnrenderedTemplateError.js";
-import normalizeNewLines from "./Util/normalizeNewLines.js";
+import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 import getNewTemplateForTests from "./_getNewTemplateForTests.js";
 import { getRenderedTemplates as getRenderedTmpls, renderTemplate } from "./_getRenderedTemplates.js";

@@ -1,7 +1,7 @@
 import test from "ava";
 import { Comparator, LangUtils, default as I18nPlugin } from "../src/Plugins/I18nPlugin.js";
 import Eleventy from "../src/Eleventy.js";
-import normalizeNewLines from "./Util/normalizeNewLines.js";
+import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 
 test("Comparator.isLangCode", (t) => {
   t.is(Comparator.isLangCode(null), false);

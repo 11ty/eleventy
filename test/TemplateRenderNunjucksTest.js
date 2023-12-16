@@ -4,7 +4,7 @@ import Nunjucks from "nunjucks";
 import TemplateRender from "../src/TemplateRender.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
-import normalizeNewLines from "./Util/normalizeNewLines.js";
+import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 
 async function getNewTemplateRender(name, inputDir, eleventyConfig) {
   if (!eleventyConfig) {

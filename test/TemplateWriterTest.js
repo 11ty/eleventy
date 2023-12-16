@@ -8,7 +8,7 @@ import EleventyFiles from "../src/EleventyFiles.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 import TemplateWriter from "../src/TemplateWriter.js";
 import TemplateConfig from "../src/TemplateConfig.js";
-import normalizeNewLines from "./Util/normalizeNewLines.js";
+import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 import { getRenderedTemplates as getRenderedTmpls } from "./_getRenderedTemplates.js";
 
 // TODO make sure if output is a subdir of input dir that they don’t conflict.

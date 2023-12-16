@@ -9,7 +9,7 @@ import FileSystemSearch from "../src/FileSystemSearch.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 import EleventyErrorUtil from "../src/EleventyErrorUtil.js";
 import TemplateContentPrematureUseError from "../src/Errors/TemplateContentPrematureUseError.js";
-import normalizeNewLines from "./Util/normalizeNewLines.js";
+import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 import eventBus from "../src/EventBus.js";
 import getNewTemplate from "./_getNewTemplateForTests.js";
 import { getRenderedTemplates as getRenderedTmpls, renderLayout, renderTemplate } from "./_getRenderedTemplates.js";

@@ -2,7 +2,7 @@ import test from "ava";
 
 import { default as HtmlBasePlugin, applyBaseToUrl } from "../src/Plugins/HtmlBasePlugin.js";
 import Eleventy from "../src/Eleventy.js";
-import normalizeNewLines from "./Util/normalizeNewLines.js";
+import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 
 function getContentFor(results, filename) {
   let content = results.filter((entry) => entry.outputPath.endsWith(filename))[0].content;

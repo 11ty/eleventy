@@ -8,7 +8,7 @@ import TemplateConfig from "../src/TemplateConfig.js";
 import Liquid from "../src/Engines/Liquid.js";
 import Nunjucks from "../src/Engines/Nunjucks.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
-import normalizeNewLines from "./Util/normalizeNewLines.js";
+import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 
 async function getNewTemplateRender(name, inputDir, eleventyConfig) {
   if (!eleventyConfig) {
