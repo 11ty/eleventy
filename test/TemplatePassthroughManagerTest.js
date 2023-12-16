@@ -1,5 +1,6 @@
 import test from "ava";
 import fs from "fs";
+import { rimrafSync } from "rimraf";
 
 import TemplatePassthroughManager from "../src/TemplatePassthroughManager.js";
 import TemplateConfig from "../src/TemplateConfig.js";
@@ -198,5 +199,6 @@ test("Look for uniqueness on template passthrough paths #1677", async (t) => {
     await mgr.copyAll();
   });
 
-  fs.unlinkSync("test/stubs/template-passthrough-duplicates/_site/avatar.png");
+
+  rimrafSync("test/stubs/template-passthrough-duplicates/_site/");
 });

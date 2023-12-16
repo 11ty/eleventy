@@ -1,6 +1,7 @@
 import test from "ava";
 import fs from "fs";
 import lodash from "@11ty/lodash-custom";
+import { rimrafSync } from "rimraf";
 
 import eventBus from "../src/EventBus.js";
 import Eleventy from "../src/Eleventy.js";
@@ -791,4 +792,6 @@ test("Access to raw input of file (dryRun), issue #1206", async (t) => {
   t.deepEqual(results[0].rawInput, `This is the first template.`);
   t.deepEqual(results[1].content, `This is the second template.This is the first template.`);
   t.deepEqual(results[1].rawInput, `This is the second template.{{ collections.tag1[0].rawInput }}`);
+
+	rimrafSync("./test/stubs-1206/_site/");
 });
