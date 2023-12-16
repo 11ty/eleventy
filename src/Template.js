@@ -421,13 +421,13 @@ class Template extends TemplateContent {
 	}
 
 	// This is the primary render mechanism, called via TemplateMap->populateContentDataInMap
-	async renderWithoutLayout(data) {
+	async renderPageEntryWithoutLayout(pageEntry) {
 		if (this._cacheRenderedContent) {
 			return this._cacheRenderedContent;
 		}
 
-		let content = await this.getPreRender();
-		let renderedContent = await this.renderDirect(content, data);
+		let renderedContent = await this.renderDirect(pageEntry.rawInput, pageEntry.data);
+
 		this._cacheRenderedContent = renderedContent;
 		return renderedContent;
 	}
@@ -649,8 +649,11 @@ class Template extends TemplateContent {
 		if (!Pagination.hasPagination(data)) {
 			await this.addComputedData(data);
 
+			let rawInput = await this.getPreRender();
+
 			let obj = {
 				template: this, // not on the docs but folks are relying on it
+				rawInput,
 				groupNumber: 0, // i18n plugin
 				data,
 
@@ -673,11 +676,15 @@ class Template extends TemplateContent {
 
 			let pageTemplates = await this.paging.getPageTemplates();
 			let objects = [];
+
+			let rawInput = await this.getPreRender();
+
 			for (let pageEntry of pageTemplates) {
 				await pageEntry.template.addComputedData(pageEntry.data);
 
 				let obj = {
 					template: pageEntry.template, // not on the docs but folks are relying on it
+					rawInput,
 					pageNumber: pageEntry.pageNumber,
 					groupNumber: pageEntry.groupNumber || 0,
 
@@ -702,7 +709,7 @@ class Template extends TemplateContent {
 		}
 	}
 
-	async _write({ url, outputPath, data }, finalContent) {
+	async _write({ url, outputPath, data, rawInput }, finalContent) {
 		let lang = {
 			start: "Writing",
 			finished: "written.",
@@ -732,24 +739,25 @@ class Template extends TemplateContent {
 			);
 		}
 
-		return writeFile(outputPath, finalContent).then(() => {
-			templateBenchmark.after();
-			this.writeCount++;
-			debug(`${outputPath} ${lang.finished}.`);
+		await writeFile(outputPath, finalContent);
 
-			let ret = {
-				inputPath: this.inputPath,
-				outputPath: outputPath,
-				url,
-				content: finalContent,
-			};
+		templateBenchmark.after();
+		this.writeCount++;
+		debug(`${outputPath} ${lang.finished}.`);
 
-			if (data && this.config.dataFilterSelectors && this.config.dataFilterSelectors.size > 0) {
-				ret.data = this.retrieveDataForJsonOutput(data, this.config.dataFilterSelectors);
-			}
+		let ret = {
+			inputPath: this.inputPath,
+			outputPath: outputPath,
+			url,
+			content: finalContent,
+			rawInput,
+		};
 
-			return ret;
-		});
+		if (data && this.config.dataFilterSelectors && this.config.dataFilterSelectors.size > 0) {
+			ret.data = this.retrieveDataForJsonOutput(data, this.config.dataFilterSelectors);
+		}
+
+		return ret;
 	}
 
 	async renderPageEntry(pageEntry) {
@@ -785,6 +793,7 @@ class Template extends TemplateContent {
 
 	async generateMapEntry(mapEntry, to) {
 		let ret = [];
+
 		for (let page of mapEntry._pages) {
 			let content;
 
@@ -799,6 +808,7 @@ class Template extends TemplateContent {
 					url: page.url,
 					inputPath: page.inputPath,
 					outputPath: page.outputPath,
+					rawInput: page.rawInput,
 					content: content,
 				};
 
@@ -819,7 +829,6 @@ class Template extends TemplateContent {
 
 			if (!page.template.behavior.isRenderable()) {
 				debug("Template not written %o from %o.", page.outputPath, page.template.inputPath);
-				ret.push(undefined); // tests-behavior
 				continue;
 			}
 
@@ -829,14 +838,12 @@ class Template extends TemplateContent {
 					page.outputPath,
 					page.template.inputPath,
 				);
-				ret.push(undefined); // tests-behavior
 				continue;
 			}
 
 			// compile returned undefined
 			if (content !== undefined) {
 				ret.push(this._write(page, content));
-				continue;
 			}
 		}
 

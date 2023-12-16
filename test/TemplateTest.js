@@ -35,7 +35,7 @@ async function _testCompleteRender(tmpl) {
       entry._pages = await entry.template.getTemplates(entry.data);
       return Promise.all(
         entry._pages.map(async (page) => {
-          page.templateContent = await page.template.renderWithoutLayout(page.data);
+          page.templateContent = await page.template.renderPageEntryWithoutLayout(page);
           return page.template.renderPageEntry(page);
         })
       );
@@ -266,7 +266,10 @@ test("One Layout (layouts disabled)", async (t) => {
   let data = await tmpl.getData();
   t.is(data[tmpl.config.keys.layout], "defaultLayoutLayoutContent");
 
-  t.is(cleanHtml(await tmpl.renderWithoutLayout(data)), "<p>Hello.</p>");
+  t.is(cleanHtml(await tmpl.renderPageEntryWithoutLayout({
+		rawInput: await tmpl.getPreRender(),
+		data: data
+	})), "<p>Hello.</p>");
 
   t.is(data.keymain, "valuemain");
   t.is(data.keylayout, "valuelayout");

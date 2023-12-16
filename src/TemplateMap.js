@@ -541,7 +541,8 @@ class TemplateMap {
 			// IMPORTANT: this is where template content is rendered
 			try {
 				for (let pageEntry of map._pages) {
-					pageEntry.templateContent = await pageEntry.template.renderWithoutLayout(pageEntry.data);
+					pageEntry.templateContent =
+						await pageEntry.template.renderPageEntryWithoutLayout(pageEntry);
 				}
 			} catch (e) {
 				if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
@@ -556,7 +557,8 @@ class TemplateMap {
 		for (let map of usedTemplateContentTooEarlyMap) {
 			try {
 				for (let pageEntry of map._pages) {
-					pageEntry.templateContent = await pageEntry.template.renderWithoutLayout(pageEntry.data);
+					pageEntry.templateContent =
+						await pageEntry.template.renderPageEntryWithoutLayout(pageEntry);
 				}
 			} catch (e) {
 				if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {

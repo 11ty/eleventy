@@ -1234,8 +1234,11 @@ Arguments:
 
 			// Passing the processed output to the eleventy.after event is new in 2.0
 			let [, /*passthroughCopyResults*/ ...templateResults] = ret;
+
 			if (to === "fs") {
-				eventsArg.results = templateResults.flat().filter((entry) => !!entry);
+				// New in 3.0: flatten return object for return.
+				ret[1] = templateResults.flat().filter((entry) => !!entry);
+				eventsArg.results = ret[1];
 			} else {
 				eventsArg.results = templateResults.filter((entry) => !!entry);
 			}

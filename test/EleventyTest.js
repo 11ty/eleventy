@@ -5,7 +5,6 @@ import lodash from "@11ty/lodash-custom";
 import eventBus from "../src/EventBus.js";
 import Eleventy from "../src/Eleventy.js";
 import TemplateContent from "../src/TemplateContent.js";
-import EleventyWatchTargets from "../src/EleventyWatchTargets.js";
 import TemplateMap from "../src/TemplateMap.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 import DateGitFirstAdded from "../src/Util/DateGitFirstAdded.js";
@@ -21,7 +20,7 @@ test("Eleventy, defaults inherit from config", async (t) => {
   let eleventyConfig = new TemplateConfig();
   await eleventyConfig.init();
 
-	await elev.initializeConfig();
+  await elev.initializeConfig();
   let config = eleventyConfig.getConfig();
 
   t.truthy(elev.input);
@@ -125,10 +124,10 @@ test("Eleventy file watching (don’t watch deps of passthrough copy .js files)"
 
 test("Eleventy file watching (no JS dependencies)", async (t) => {
   let elev = new Eleventy("./test/stubs", "./test/stubs/_site", {
-		config: eleventyConfig => {
-			eleventyConfig.setWatchJavaScriptDependencies(false);
-		}
-	});
+    config: eleventyConfig => {
+      eleventyConfig.setWatchJavaScriptDependencies(false);
+    }
+  });
   elev.setFormats("njk");
 
   await elev.init();
@@ -227,6 +226,8 @@ test("Eleventy to json", async (t) => {
         url: "/test/",
         inputPath: "./test/stubs--to/test.md",
         outputPath: "_site/test/index.html",
+        rawInput: `# hi
+`,
         content: "<h1>hi</h1>\n",
       },
     ]
@@ -238,6 +239,7 @@ test("Eleventy to json", async (t) => {
         url: "/test2/",
         inputPath: "./test/stubs--to/test2.liquid",
         outputPath: "_site/test2/index.html",
+        rawInput: "{{ hi }}",
         content: "hello",
       },
     ]
@@ -260,6 +262,8 @@ test("Eleventy to ndjson", async (t) => {
           url: "/test/",
           inputPath: "./test/stubs--to/test.md",
           outputPath: "_site/test/index.html",
+          rawInput: `# hi
+`,
           content: "<h1>hi</h1>\n",
         });
       }
@@ -268,6 +272,7 @@ test("Eleventy to ndjson", async (t) => {
           url: "/test2/",
           inputPath: "./test/stubs--to/test2.liquid",
           outputPath: "_site/test2/index.html",
+          rawInput: `{{ hi }}`,
           content: "hello",
         });
       }
@@ -295,6 +300,8 @@ test("Eleventy to ndjson (returns a stream)", async (t) => {
           url: "/test/",
           inputPath: "./test/stubs--to/test.md",
           outputPath: "_site/test/index.html",
+          rawInput: `# hi
+`,
           content: "<h1>hi</h1>\n",
         });
       }
@@ -303,6 +310,7 @@ test("Eleventy to ndjson (returns a stream)", async (t) => {
           url: "/test2/",
           inputPath: "./test/stubs--to/test2.liquid",
           outputPath: "_site/test2/index.html",
+          rawInput: "{{ hi }}",
           content: "hello",
         });
       }
@@ -318,7 +326,7 @@ test("Eleventy to ndjson (returns a stream)", async (t) => {
 
 test("Two Eleventies, two configs!!! (config used to be a global)", async (t) => {
   let elev1 = new Eleventy();
-	await elev1.initializeConfig();
+  await elev1.initializeConfig();
 
   t.is(elev1.eleventyConfig, elev1.eleventyConfig);
   t.is(elev1.config, elev1.config);
@@ -326,7 +334,7 @@ test("Two Eleventies, two configs!!! (config used to be a global)", async (t) =>
   t.is(JSON.stringify(elev1.config), JSON.stringify(elev1.config));
 
   let elev2 = new Eleventy();
-	await elev2.initializeConfig();
+  await elev2.initializeConfig();
   t.not(elev1.eleventyConfig, elev2.eleventyConfig);
   elev1.config.benchmarkManager = null;
   elev2.config.benchmarkManager = null;
@@ -359,6 +367,8 @@ test("Eleventy programmatic API without init", async (t) => {
         url: "/test/",
         inputPath: "./test/stubs--to/test.md",
         outputPath: "_site/test/index.html",
+        rawInput: `# hi
+`,
         content: "<h1>hi</h1>\n",
       },
     ]
@@ -370,6 +380,7 @@ test("Eleventy programmatic API without init", async (t) => {
         url: "/test2/",
         inputPath: "./test/stubs--to/test2.liquid",
         outputPath: "_site/test2/index.html",
+        rawInput: `{{ hi }}`,
         content: "hello",
       },
     ]
@@ -389,6 +400,8 @@ test("Can Eleventy run two executeBuilds in parallel?", async (t) => {
       url: "/test/",
       inputPath: "./test/stubs--to/test.md",
       outputPath: "_site/test/index.html",
+      rawInput: `# hi
+`,
       content: "<h1>hi</h1>\n",
     },
   ];
@@ -398,6 +411,7 @@ test("Can Eleventy run two executeBuilds in parallel?", async (t) => {
       url: "/test2/",
       inputPath: "./test/stubs--to/test2.liquid",
       outputPath: "_site/test2/index.html",
+      rawInput: "{{ hi }}",
       content: "hello",
     },
   ];
@@ -499,17 +513,14 @@ test("DateGitLastUpdated returns undefined on nonexistent path", (t) => {
 
 test("#2167: Pagination with permalink: false", async (t) => {
   let elev = new Eleventy("./test/stubs-2167/", "./test/stubs-2167/_site");
-	elev.disableLogger();
+  elev.disableLogger();
   elev.setDryRun(true);
 
   let [,pages] = await elev.write();
+  t.is(pages.length, 0);
 
-  t.is(pages.length, 5);
-
-  for (let j = 0, k = pages.length; j < k; j++) {
-    // falsy if not writeable or is not renderable
-    t.is(pages[j], undefined);
-  }
+  let results = await elev.toJSON();
+  t.is(results.length, 5);
 });
 
 test("Pagination over collection using eleventyComputed (liquid)", async (t) => {
@@ -742,4 +753,47 @@ test("Global data JS files should only execute once, issue #2753", async (t) => 
   t.deepEqual(result.length, 2);
   t.deepEqual(result[0].content, `1`);
   t.deepEqual(result[0].content, `1`);
+});
+
+function sortResultsBy(results, key = "content") {
+  results.sort((a, b) => {
+    if(a[key] < b[key]) {
+      return -1;
+    }
+    if(b[key] < a[key]) {
+      return 1;
+    }
+    return 0;
+  });
+}
+
+test("Access to raw input of file (toJSON), issue #1206", async (t) => {
+  let elev = new Eleventy("./test/stubs-1206", "./test/stubs-1206/_site", {
+    config: function (eleventyConfig) {},
+  });
+  let results = await elev.toJSON();
+  sortResultsBy(results, "content");
+
+  t.deepEqual(results.length, 2);
+  t.deepEqual(results[0].content, `This is the first template.`);
+  t.deepEqual(results[0].rawInput, `This is the first template.`);
+  t.deepEqual(results[1].content, `This is the second template.This is the first template.`);
+  t.deepEqual(results[1].rawInput, `This is the second template.{{ collections.tag1[0].rawInput }}`);
+});
+
+// Warning: this test writes to the file system
+test("Access to raw input of file (dryRun), issue #1206", async (t) => {
+  let elev = new Eleventy("./test/stubs-1206", "./test/stubs-1206/_site", {
+    config: function (eleventyConfig) {},
+  });
+  elev.disableLogger();
+
+  let [,results] = await elev.write();
+  sortResultsBy(results, "content");
+
+  t.deepEqual(results.length, 2);
+  t.deepEqual(results[0].content, `This is the first template.`);
+  t.deepEqual(results[0].rawInput, `This is the first template.`);
+  t.deepEqual(results[1].content, `This is the second template.This is the first template.`);
+  t.deepEqual(results[1].rawInput, `This is the second template.{{ collections.tag1[0].rawInput }}`);
 });

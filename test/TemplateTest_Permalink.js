@@ -23,7 +23,7 @@ async function getTemplateMapEntriesWithContent(template, data) {
       entry._pages = await entry.template.getTemplates(entry.data);
       await Promise.all(
         entry._pages.map(async (page) => {
-          page.templateContent = await page.template.renderWithoutLayout(page.data);
+          page.templateContent = await page.template.renderPageEntryWithoutLayout(page);
           return page;
         })
       );

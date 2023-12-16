@@ -23,7 +23,10 @@ function getNewTemplateByNumber(num, eleventyConfig) {
 }
 
 async function testRenderWithoutLayouts(template, data) {
-  let ret = await template.renderWithoutLayout(data);
+  let ret = await template.renderPageEntryWithoutLayout({
+		rawInput: await template.getPreRender(),
+		data,
+	});
   return ret;
 }
 
