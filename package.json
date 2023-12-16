@@ -1,7 +1,7 @@
 {
 	"name": "@11ty/eleventy",
-	"version": "3.0.0-alpha.1",
-	"description": "A simpler (static) site generator.",
+	"version": "3.0.0-alpha.2",
+	"description": "A simpler static site generator.",
 	"publishConfig": {
 		"access": "public"
 	},
