@@ -15,8 +15,8 @@
      - 3.x+ requires Node 18+
 1. `rm -rf node_modules && rm -f package-lock.json && npm install`
 1. `npm audit`
-1. Make sure `npm run check` runs okay
-1. Make sure `npm run test` runs okay
+1. Make sure `npm run check` (eslint) runs okay
+1. Make sure `npm run test` (ava) runs okay
 1. Update version in `package.json`
    - (Alpha) Use `-alpha.1` suffix
    - (Beta) Use `-beta.1` suffix
