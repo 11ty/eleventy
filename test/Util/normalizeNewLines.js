@@ -1,16 +1,14 @@
+import os from 'node:os';
+
 function normalizeNewLines(str) {
   return str.replace(/\r\n/g, "\n");
 }
 
-function normalizeNewLinesInObject(obj) {
-	for(let key in obj) {
-		if(typeof obj[key] === "string") {
-			obj[key] = normalizeNewLines(obj[key]);
-		}
-	}
+function localizeNewLines(str) {
+  return normalizeNewLines(str).replace(/\n/g, os.EOL);
 }
 
 export {
-	normalizeNewLines,
-	normalizeNewLinesInObject,
+  normalizeNewLines,
+  localizeNewLines,
 };
