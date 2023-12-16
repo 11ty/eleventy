@@ -1,6 +1,6 @@
 # Dependency notes
 
-- `@iarna/toml` has a 3.0 that we have never been on but it was released the same day as the last 2.x https://github.com/BinaryMuse/toml-node/commits/master (needs more investigation)
+- (dev dep only) `@iarna/toml` has a 3.0 that we have never been on but it was released the same day as the last 2.x https://github.com/BinaryMuse/toml-node/commits/master (needs more investigation)
 
 # Release Procedure
 
@@ -26,7 +26,7 @@
 1. Wait for GitHub Actions to complete to know that the build did not fail.
 1. Release
    - (Alpha) `npm publish --access=public --tag=canary`
-     - NOTE: this was changed to `alpha` https://github.com/11ty/eleventy/issues/2758
+     - NOTE: the tag is `canary` but expects `-alpha.` suffixes in `package.json` version, read more: https://github.com/11ty/eleventy/issues/2758
    - (Beta) `npm publish --access=public --tag=beta`
    - (Main) `npm publish --access=public`
 1. (Optional) Build and commit a new the `eleventy-edge-cdn` project to generate a new Eleventy Edge lib.
