@@ -1283,7 +1283,7 @@ Arguments:
 
 export default Eleventy;
 
-// extend for exporting
+// extend for exporting to CJS
 Object.assign(RenderPlugin, RenderPluginExtras);
 Object.assign(I18nPlugin, I18nPluginExtras);
 Object.assign(HtmlBasePlugin, HtmlBasePluginExtras);
