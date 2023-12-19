@@ -107,14 +107,14 @@ class Pagination {
 		if (hasInclude) {
 			let included = this.data.pagination.include;
 			if (Array.isArray(included)) {
-				return included.indexOf(value) === -1;
+				return !included.includes(value);
 			}
 			return included !== value;
 		}
 		if (hasExclude) {
 			let excluded = this.data.pagination.exclude;
 			if (Array.isArray(excluded)) {
-				return excluded.indexOf(value) !== -1;
+				return excluded.includes(value);
 			}
 			return excluded === value;
 		}
