@@ -98,7 +98,7 @@ class Pagination {
 		return false;
 	}
 
-	isFiltered(value) {
+	isIncluded(value) {
 		const hasInclude = "include" in this.data.pagination;
 		const hasExclude = "exclude" in this.data.pagination;
 		if (hasInclude && hasExclude) {
@@ -107,16 +107,16 @@ class Pagination {
 		if (hasInclude) {
 			let included = this.data.pagination.include;
 			if (Array.isArray(included)) {
-				return !included.includes(value);
+				return included.includes(value);
 			}
-			return included !== value;
+			return included === value;
 		}
 		if (hasExclude) {
 			let excluded = this.data.pagination.exclude;
 			if (Array.isArray(excluded)) {
-				return excluded.includes(value);
+				return !excluded.includes(value);
 			}
-			return excluded === value;
+			return excluded !== value;
 		}
 
 		// Let's keep this code for backwards compatibility to V2.
@@ -124,10 +124,10 @@ class Pagination {
 		if ("filter" in this.data.pagination) {
 			let filtered = this.data.pagination.filter;
 			if (Array.isArray(filtered)) {
-				return filtered.indexOf(value) > -1;
+				return filtered.indexOf(value) === -1;
 			}
 
-			return filtered === value;
+			return filtered !== value;
 		}
 
 		return false;
@@ -189,7 +189,7 @@ class Pagination {
 			this.data.pagination.include ||
 			this.data.pagination.exclude
 		) {
-			result = result.filter((value) => !this.isFiltered(value));
+			result = result.filter((value) => this.isIncluded(value));
 		}
 
 		return result;
