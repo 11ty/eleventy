@@ -130,7 +130,7 @@ class Pagination {
 			return filtered !== value;
 		}
 
-		return false;
+		return true;
 	}
 
 	_has(target, key) {
