@@ -102,7 +102,7 @@ class Pagination {
 		const hasInclude = "include" in this.data.pagination;
 		const hasExclude = "exclude" in this.data.pagination;
 		if (hasInclude && hasExclude) {
-			throw new Error("Pagination cannot have both `include` and `exclude` filters.");
+			throw new Error("Pagination cannot have both `include` and `exclude` properties.");
 		}
 		if (hasInclude) {
 			let included = this.data.pagination.include;
