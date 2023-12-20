@@ -387,6 +387,8 @@ class TemplateConfig {
 		// Temporarily restore templateFormats
 		mergedConfig.templateFormats = templateFormats;
 
+		await this.userConfig.events.emit("eleventy.beforeConfig", this.userConfig);
+
 		await this.processPlugins(mergedConfig);
 
 		delete mergedConfig.templateFormats;
