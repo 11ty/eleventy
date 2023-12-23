@@ -26,7 +26,6 @@ import EleventyBaseError from "./EleventyBaseError.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 const writeFile = util.promisify(fs.writeFile);
-const mkdir = util.promisify(fs.mkdir);
 const fsStat = util.promisify(fs.stat);
 
 const debug = debugUtil("Eleventy:Template");
@@ -76,6 +75,10 @@ class Template extends TemplateContent {
 		if (this.templateData) {
 			this.templateData.setInputDir(this.inputDir);
 		}
+	}
+
+	get existsCache() {
+		return this.eleventyConfig.existsCache;
 	}
 
 	get logger() {
@@ -724,20 +727,25 @@ class Template extends TemplateContent {
 			return;
 		}
 
-		let templateBenchmark = this.bench.get("Template Write");
-		templateBenchmark.before();
+		let templateBenchmarkDir = this.bench.get("Template make parent directory");
+		templateBenchmarkDir.before();
 
-		// TODO(@zachleat) add a cache to check if this was already created
 		let templateOutputDir = path.parse(outputPath).dir;
 		if (templateOutputDir) {
-			await mkdir(templateOutputDir, { recursive: true });
+			if (!this.existsCache.exists(templateOutputDir)) {
+				fs.mkdirSync(templateOutputDir, { recursive: true });
+			}
 		}
+		templateBenchmarkDir.after();
 
 		if (!Buffer.isBuffer(finalContent) && typeof finalContent !== "string") {
 			throw new Error(
 				`The return value from the render function for the ${this.engine.name} template was not a String or Buffer. Received ${finalContent}`,
 			);
 		}
+
+		let templateBenchmark = this.bench.get("Template Write");
+		templateBenchmark.before();
 
 		await writeFile(outputPath, finalContent);
 

@@ -1,7 +1,4 @@
-import { fileURLToPath } from "node:url";
-
 import { DepGraph } from "dependency-graph";
-import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import PathNormalizer from "./Util/PathNormalizer.js";
@@ -91,21 +88,11 @@ class GlobalDependencyMap {
 			node = node.toString();
 		}
 
-		// Fix file:///Users/ or file:///C:/ paths passed in
-		if (node.startsWith("file://")) {
-			node = fileURLToPath(node);
-		}
-
 		if (typeof node !== "string") {
 			throw new Error("`addDependencies` files must be strings. Received:" + node);
 		}
 
-		// Paths should not be absolute (we convert absolute paths to relative)
-		// Paths should not have a leading dot slash
-		// Paths should always be `/` independent of OS path separator
-		return TemplatePath.stripLeadingDotSlash(
-			PathNormalizer.normalizeSeperator(TemplatePath.relativePath(node)),
-		);
+		return PathNormalizer.fullNormalization(node);
 	}
 
 	normalizeLayoutsObject(layouts) {

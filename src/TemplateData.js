@@ -14,32 +14,11 @@ import EleventyBaseError from "./EleventyBaseError.js";
 import TemplateDataInitialGlobalData from "./TemplateDataInitialGlobalData.js";
 import { EleventyImport, EleventyLoadContent } from "./Util/Require.js";
 
-const fsExists = util.promisify(fs.exists);
-const fsStat = util.promisify(fs.stat);
+const fsStatAsync = util.promisify(fs.stat);
 const { set: lodashSet, get: lodashGet } = lodash;
 const debugWarn = debugUtil("Eleventy:Warnings");
 const debug = debugUtil("Eleventy:TemplateData");
 const debugDev = debugUtil("Dev:Eleventy:TemplateData");
-
-class FSExistsCache {
-	constructor() {
-		this._cache = new Map();
-	}
-	has(path) {
-		return this._cache.has(path);
-	}
-	async exists(path) {
-		let exists = this._cache.get(path);
-		if (!this.has(path)) {
-			exists = await fsExists(path);
-			this._cache.set(path, exists);
-		}
-		return exists;
-	}
-	markExists(path, value = true) {
-		this._cache.set(path, !!value);
-	}
-}
 
 class TemplateDataConfigError extends EleventyBaseError {}
 class TemplateDataParseError extends EleventyBaseError {}
@@ -64,11 +43,13 @@ class TemplateData {
 		this.templateDirectoryData = {};
 		this.isEsm = false;
 
+		this.initialGlobalData = new TemplateDataInitialGlobalData(this.eleventyConfig);
+	}
+
+	get _fsExistsCache() {
 		// It's common for data files not to exist, so we avoid going to the FS to
 		// re-check if they do via a quick-and-dirty cache.
-		this._fsExistsCache = new FSExistsCache();
-
-		this.initialGlobalData = new TemplateDataInitialGlobalData(this.eleventyConfig);
+		return this.eleventyConfig.existsCache;
 	}
 
 	setFileSystemSearch(fileSystemSearch) {
@@ -147,7 +128,7 @@ class TemplateData {
 
 	async _checkInputDir() {
 		if (this.inputDirNeedsCheck) {
-			let globalPathStat = await fsStat(this.inputDir);
+			let globalPathStat = await fsStatAsync(this.inputDir);
 
 			if (!globalPathStat.isDirectory()) {
 				throw new Error("Could not find data path directory: " + this.inputDir);
@@ -399,12 +380,12 @@ class TemplateData {
 
 		// Filter out files we know don't exist to avoid overhead for checking
 		const dataPaths = await Promise.all(
-			localDataPaths.map((path) =>
-				this._fsExistsCache.exists(path).then((exists) => {
-					if (exists) return path;
-					return false;
-				}),
-			),
+			localDataPaths.map((path) => {
+				if (this._fsExistsCache.exists(path)) {
+					return path;
+				}
+				return false;
+			}),
 		);
 
 		localDataPaths = dataPaths.filter((pathOrFalse) => {
@@ -511,7 +492,7 @@ class TemplateData {
 		if (extension === "js" || extension === "cjs" || extension === "mjs") {
 			// JS data file or require’d JSON (no preprocessing needed)
 			let localPath = TemplatePath.absolutePath(path);
-			let exists = await this._fsExistsCache.exists(localPath);
+			let exists = this._fsExistsCache.exists(localPath);
 			// Make sure that relative lookups benefit from cache
 			this._fsExistsCache.markExists(path, exists);
 
