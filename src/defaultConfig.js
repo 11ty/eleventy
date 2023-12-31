@@ -73,6 +73,11 @@ export default function (config) {
 		return input;
 	});
 
+	config.addFilter("logAsync", async (input, ...messages) => {
+		console.log(await input, ...(await Promise.all(messages)));
+		return input;
+	});
+
 	config.addFilter("getCollectionItemIndex", function (collection, pageOverride) {
 		return getCollectionItemIndex.call(this, collection, pageOverride);
 	});
