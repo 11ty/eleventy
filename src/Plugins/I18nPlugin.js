@@ -67,37 +67,6 @@ class Comparator {
 
 		return url.split("/").some((entry) => entry === code);
 	}
-
-	// Search for same input path files with only differing locale folders
-	//    matches /en/about.html and /es/about.html
-	// Folders can exist anywhere in the hierarchy!
-	//    matches /testing/en/about.html and /testing/es/about.html
-
-	// Returns an array of the first matched language codes in the path
-	// [inputPathLangCode, inputPath2LangCode]
-	static matchLanguageFolder(inputPath, inputPath2) {
-		if (inputPath === inputPath2) {
-			return false;
-		}
-
-		let langCodes = [];
-		let s1 = inputPath.split("/");
-		let s2 = inputPath2.split("/");
-		for (let j = 0, k = s1.length; j < k; j++) {
-			if (Comparator.isLangCode(s1[j]) && Comparator.isLangCode(s2[j])) {
-				// Return the first match only
-				if (langCodes.length === 0) {
-					langCodes = [s1[j], s2[j]];
-				}
-				continue;
-			}
-			if (s1[j] !== s2[j]) {
-				return false;
-			}
-		}
-
-		return langCodes;
-	}
 }
 
 function normalizeInputPath(inputPath, extensionMap) {
@@ -205,13 +174,12 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
 		);
 	}
 
-	let benchmarkManager = eleventyConfig.benchmarkManager.get("Aggregate");
-
 	let extensionMap;
 	eleventyConfig.on("eleventy.extensionmap", (map) => {
 		extensionMap = map;
 	});
 
+	let benchmarkManager = eleventyConfig.benchmarkManager.get("Aggregate");
 	let contentMaps = {};
 	eleventyConfig.on("eleventy.contentMap", function ({ urlToInputPath, inputPathToUrl }) {
 		let bench = benchmarkManager.get("(i18n Plugin) Setting up content map.");

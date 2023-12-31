@@ -27,34 +27,6 @@ test("LangUtils.swapLanguageCode", (t) => {
   t.is(LangUtils.swapLanguageCode("/es/es/es/", "en"), "/en/es/es/"); // first only
 });
 
-test("Comparator.matchLanguageFolder", (t) => {
-  t.deepEqual(Comparator.matchLanguageFolder("/en/test.liquid", "/es/test.liquid"), ["en", "es"]);
-
-  // Note that template extensions and input directory paths are removed upstream by the plugin
-  t.deepEqual(Comparator.matchLanguageFolder("/en/test", "/es/test"), ["en", "es"]);
-  t.deepEqual(Comparator.matchLanguageFolder("/en-us/test", "/es/test"), ["en-us", "es"]);
-  t.deepEqual(Comparator.matchLanguageFolder("/es-mx/test", "/en-us/test"), ["es-mx", "en-us"]);
-  t.deepEqual(Comparator.matchLanguageFolder("en/test", "es/test"), ["en", "es"]);
-  t.deepEqual(Comparator.matchLanguageFolder("en/test", "src/test"), false);
-  t.deepEqual(Comparator.matchLanguageFolder("en/test", "xx/test"), false);
-
-  // Even though `src` is possibly valid, we only match the first one
-  t.deepEqual(Comparator.matchLanguageFolder("en/src/test", "es/src/test"), ["en", "es"]);
-
-  // invalid first
-  t.is(Comparator.matchLanguageFolder("/e/test.liquid", "/es/test.liquid"), false);
-  t.is(Comparator.matchLanguageFolder("/n/test", "/es/test"), false);
-  t.is(Comparator.matchLanguageFolder("/eus/test", "/es/test"), false);
-
-  // invalid second
-  t.is(Comparator.matchLanguageFolder("/en/test.liquid", "/e/test.liquid"), false);
-  t.is(Comparator.matchLanguageFolder("/en/test", "/e/test"), false);
-  t.is(Comparator.matchLanguageFolder("/en-us/test", "/s/test"), false);
-
-  // invalid both
-  t.deepEqual(Comparator.matchLanguageFolder("/esx/test", "/ens/test"), false);
-});
-
 test("contentMap Event from Eleventy", async (t) => {
   t.plan(4);
   let elev = new Eleventy("./test/stubs-i18n/", "./test/stubs-i18n/_site", {
@@ -98,7 +70,7 @@ test("contentMap Event from Eleventy", async (t) => {
     },
   });
 
-  let results = await elev.toJSON();
+  await elev.toJSON();
 });
 
 function getContentFor(results, filename) {
