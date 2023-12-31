@@ -390,7 +390,11 @@ class TemplateConfig {
 
 		await this.userConfig.events.emit("eleventy.beforeConfig", this.userConfig);
 
+		let benchmarkManager = this.userConfig.benchmarkManager.get("Aggregate");
+		let pluginsBench = benchmarkManager.get("Processing plugins in config");
+		pluginsBench.before();
 		await this.processPlugins(mergedConfig);
+		pluginsBench.after();
 
 		delete mergedConfig.templateFormats;
 
