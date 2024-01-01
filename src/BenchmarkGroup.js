@@ -111,9 +111,8 @@ class BenchmarkGroup {
 
 			// Opt out of logging if low count (1× or 2×) or 0ms / 1%
 			if (
-				totalForBenchmark.toFixed(0) > 1 || // more than 1ms
-				callCount > 2 || // more than 2×
-				percent > 1 // more than 1%
+				callCount > 1 || // called more than once
+				totalForBenchmark.toFixed(0) > 0 // more than 0ms
 			) {
 				debugBenchmark(str);
 			}

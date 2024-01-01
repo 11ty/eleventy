@@ -1,22 +1,32 @@
+import types from "node:util/types";
 import debugUtil from "debug";
 import { isPlainObject } from "@11ty/eleventy-utils";
 
 const debug = debugUtil("Dev:Eleventy:Proxy");
 
-function wrapObject(target, fallback) {
+function wrapObject(target, fallback, options) {
+	let { benchmarkManager } = options || {};
+	let bench;
+
+	if (benchmarkManager) {
+		bench = benchmarkManager.get("Aggregate");
+	}
+
 	return new Proxy(target, {
 		getOwnPropertyDescriptor(target, prop) {
+			// let b = bench?.get("Data cascade proxy wrap (getOwnPropertyDescriptor)")
+			// b?.before();
+
+			let ret;
+
 			if (Reflect.has(target, prop)) {
-				return Reflect.getOwnPropertyDescriptor(target, prop);
+				ret = Reflect.getOwnPropertyDescriptor(target, prop);
+			} else if (Reflect.has(fallback, prop)) {
+				ret = Reflect.getOwnPropertyDescriptor(fallback, prop);
 			}
 
-			// assume fallback is frozen
-			return {
-				value: undefined,
-				writable: true,
-				enumerable: true,
-				configurable: true,
-			};
+			// b?.after();
+			return ret;
 		},
 		has(target, prop) {
 			// debug( "handler:has", prop, Reflect.has(target, prop), Reflect.has(fallback, prop));
@@ -41,16 +51,27 @@ function wrapObject(target, fallback) {
 		get(target, prop) {
 			debug("handler:get", prop);
 
+			// let benchGet = bench?.get("Data cascade proxy wrap (get)");
+			// benchGet?.before();
+
 			let value = Reflect.get(target, prop);
+
 			if (Reflect.has(target, prop)) {
-				// debug( "handler:get", prop, { isProxy: util.types.isProxy(value), hasFallback: Reflect.has(fallback, prop) } );
+				// Already proxied
+				if (types.isProxy(value)) {
+					// benchGet?.after();
+					return value;
+				}
+
 				if (isPlainObject(value) && Reflect.has(fallback, prop)) {
 					let ret = wrapObject(value, Reflect.get(fallback, prop));
 					debug("  handler:get (object)", prop, "found on primary ****", ret);
+					// benchGet?.after();
 					return ret;
 				}
 
 				debug("  handler:get (not object)", prop, "found on primary ****");
+				// benchGet?.after();
 				return value;
 			}
 
@@ -62,17 +83,24 @@ function wrapObject(target, fallback) {
 				if (isPlainObject(fallbackValue)) {
 					debug("  > proxying (fallback has prop)", { fallback, prop, fallbackValue });
 					// set empty object on primary
-					Reflect.set(target, prop, {});
+					let emptyObject = {};
+					Reflect.set(target, prop, emptyObject);
 
-					return wrapObject(Reflect.get(target, prop), fallbackValue);
+					let ret = wrapObject(emptyObject, fallbackValue);
+					// benchGet?.after();
+					return ret;
 				}
 
 				debug("  > returning (fallback has prop, not object)", { prop, fallbackValue });
+				// benchGet?.after();
 				return fallbackValue;
 			}
 
 			// primary *and* fallback do _not_ have prop
 			debug("  > returning (primary and fallback missing prop)", { prop, value });
+
+			// benchGet?.after();
+
 			return value;
 		},
 		set(target, prop, value) {
@@ -82,12 +110,12 @@ function wrapObject(target, fallback) {
 	});
 }
 
-function ProxyWrap(target, fallback) {
+function ProxyWrap(target, fallback, options) {
 	if (!isPlainObject(target) || !isPlainObject(fallback)) {
 		throw new Error("ProxyWrap expects objects for both the target and fallback");
 	}
-	let wrapped = wrapObject(target, fallback);
-	return wrapped;
+
+	return wrapObject(target, fallback, options);
 }
 
 export { ProxyWrap };

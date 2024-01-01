@@ -179,16 +179,16 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
 		extensionMap = map;
 	});
 
-	let benchmarkManager = eleventyConfig.benchmarkManager.get("Aggregate");
+	let bench = eleventyConfig.benchmarkManager.get("Aggregate");
 	let contentMaps = {};
 	eleventyConfig.on("eleventy.contentMap", function ({ urlToInputPath, inputPathToUrl }) {
-		let bench = benchmarkManager.get("(i18n Plugin) Setting up content map.");
-		bench.before();
+		let b = bench.get("(i18n Plugin) Setting up content map.");
+		b.before();
 		contentMaps.inputPathToUrl = inputPathToUrl;
 		contentMaps.urlToInputPath = urlToInputPath;
 
 		contentMaps.localeUrlsMap = getLocaleUrlsMap(urlToInputPath, extensionMap, options);
-		bench.after();
+		b.after();
 	});
 
 	eleventyConfig.addGlobalData("eleventyComputed.page.lang", () => {
