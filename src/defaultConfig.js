@@ -68,12 +68,7 @@ export default function (config) {
 		return urlFilter.call(this, url, pathPrefix);
 	});
 
-	config.addFilter("log", (input, ...messages) => {
-		console.log(input, ...messages);
-		return input;
-	});
-
-	config.addFilter("logAsync", async (input, ...messages) => {
+	config.addFilter("log", async (input, ...messages) => {
 		console.log(await input, ...(await Promise.all(messages)));
 		return input;
 	});
