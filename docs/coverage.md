@@ -1,17 +1,17 @@
-# Code Coverage for Eleventy v3.0.0-alpha.1
+# Code Coverage for Eleventy v3.0.0-alpha.4
 
 | Filename                                                   | % Lines | % Statements | % Functions | % Branches |
 | ---------------------------------------------------------- | ------- | ------------ | ----------- | ---------- |
-| `total`                                                    | 87.54%  | 87.54%       | 88.26%      | 88.46%     |
+| `total`                                                    | 87.54%  | 87.54%       | 88.27%      | 88.56%     |
 | `cmd.cjs`                                                  | 66.89%  | 66.89%       | 0%          | 42.1%      |
 | `src/Benchmark.js`                                         | 98.07%  | 98.07%       | 100%        | 92.3%      |
-| `src/BenchmarkGroup.js`                                    | 83.87%  | 83.87%       | 60%         | 87.5%      |
+| `src/BenchmarkGroup.js`                                    | 83.73%  | 83.73%       | 60%         | 86.66%     |
 | `src/BenchmarkManager.js`                                  | 82.19%  | 82.19%       | 66.66%      | 85.71%     |
 | `src/ComputedData.js`                                      | 100%    | 100%         | 100%        | 100%       |
 | `src/ComputedDataProxy.js`                                 | 97.7%   | 97.7%        | 100%        | 94.44%     |
 | `src/ComputedDataQueue.js`                                 | 100%    | 100%         | 100%        | 100%       |
 | `src/ComputedDataTemplateString.js`                        | 95.71%  | 95.71%       | 100%        | 85.71%     |
-| `src/Eleventy.js`                                          | 75%     | 75%          | 72%         | 84.11%     |
+| `src/Eleventy.js`                                          | 75.09%  | 75.09%       | 72%         | 84.11%     |
 | `src/EleventyBaseError.js`                                 | 100%    | 100%         | 100%        | 100%       |
 | `src/EleventyErrorHandler.js`                              | 93.16%  | 93.16%       | 100%        | 75%        |
 | `src/EleventyErrorUtil.js`                                 | 100%    | 100%         | 100%        | 92.59%     |
@@ -23,21 +23,21 @@
 | `src/EleventyWatchTargets.js`                              | 83.43%  | 83.43%       | 80.95%      | 100%       |
 | `src/EventBus.js`                                          | 100%    | 100%         | 100%        | 100%       |
 | `src/FileSystemSearch.js`                                  | 100%    | 100%         | 100%        | 100%       |
-| `src/GlobalDependencyMap.js`                               | 71.22%  | 71.22%       | 69.23%      | 95.52%     |
-| `src/Template.js`                                          | 93.25%  | 93.25%       | 88.88%      | 90.35%     |
+| `src/GlobalDependencyMap.js`                               | 70.09%  | 70.09%       | 69.23%      | 95.38%     |
+| `src/Template.js`                                          | 93.31%  | 93.31%       | 89.09%      | 90.4%      |
 | `src/TemplateBehavior.js`                                  | 88.05%  | 88.05%       | 87.5%       | 85.71%     |
 | `src/TemplateCache.js`                                     | 79.8%   | 79.8%        | 87.5%       | 73.68%     |
 | `src/TemplateCollection.js`                                | 89.41%  | 89.41%       | 87.5%       | 86.95%     |
-| `src/TemplateConfig.js`                                    | 87.24%  | 87.24%       | 70.83%      | 92.75%     |
+| `src/TemplateConfig.js`                                    | 87.66%  | 87.66%       | 72%         | 92.95%     |
 | `src/TemplateContent.js`                                   | 88.22%  | 88.22%       | 89.18%      | 83.68%     |
-| `src/TemplateData.js`                                      | 94.36%  | 94.36%       | 96%         | 91.17%     |
+| `src/TemplateData.js`                                      | 94.22%  | 94.22%       | 95.74%      | 90.96%     |
 | `src/TemplateDataInitialGlobalData.js`                     | 95.91%  | 95.91%       | 100%        | 83.33%     |
 | `src/TemplateEngineManager.js`                             | 95.71%  | 95.71%       | 90%         | 95.74%     |
 | `src/TemplateFileSlug.js`                                  | 100%    | 100%         | 100%        | 100%       |
 | `src/TemplateGlob.js`                                      | 94.28%  | 94.28%       | 100%        | 91.66%     |
 | `src/TemplateLayout.js`                                    | 86.8%   | 86.8%        | 80%         | 75.67%     |
 | `src/TemplateLayoutPathResolver.js`                        | 89.05%  | 89.05%       | 84.61%      | 87.09%     |
-| `src/TemplateMap.js`                                       | 92.07%  | 92.07%       | 92.85%      | 91.57%     |
+| `src/TemplateMap.js`                                       | 92.07%  | 92.07%       | 92.85%      | 91.52%     |
 | `src/TemplatePassthrough.js`                               | 91.38%  | 91.38%       | 100%        | 88.09%     |
 | `src/TemplatePassthroughManager.js`                        | 82.33%  | 82.33%       | 100%        | 77.41%     |
 | `src/TemplatePermalink.js`                                 | 91.57%  | 91.57%       | 91.66%      | 94.36%     |
@@ -62,23 +62,24 @@
 | `src/Filters/Slugify.js`                                   | 100%    | 100%         | 100%        | 100%       |
 | `src/Filters/Url.js`                                       | 90.69%  | 90.69%       | 100%        | 94.44%     |
 | `src/Plugins/HtmlBasePlugin.js`                            | 88.46%  | 88.46%       | 100%        | 88.88%     |
-| `src/Plugins/I18nPlugin.js`                                | 83.52%  | 83.52%       | 100%        | 81.25%     |
-| `src/Plugins/Pagination.js`                                | 90.23%  | 90.23%       | 95%         | 84%        |
+| `src/Plugins/I18nPlugin.js`                                | 82.46%  | 82.46%       | 100%        | 80.55%     |
+| `src/Plugins/Pagination.js`                                | 90.31%  | 90.31%       | 95%         | 84%        |
 | `src/Plugins/RenderPlugin.js`                              | 86.71%  | 86.71%       | 84.21%      | 79.31%     |
 | `src/Util/AsyncEventEmitter.js`                            | 96%     | 96%          | 100%        | 91.66%     |
 | `src/Util/Compatibility.js`                                | 83.33%  | 83.33%       | 85.71%      | 77.77%     |
 | `src/Util/ConsoleLogger.js`                                | 100%    | 100%         | 100%        | 100%       |
 | `src/Util/DateGitFirstAdded.js`                            | 100%    | 100%         | 100%        | 100%       |
 | `src/Util/DateGitLastUpdated.js`                           | 100%    | 100%         | 100%        | 100%       |
-| `src/Util/DeepFreeze.js`                                   | 90%     | 90%          | 100%        | 80%        |
+| `src/Util/DeepFreeze.js`                                   | 30%     | 30%          | 0%          | 100%       |
 | `src/Util/DirContains.js`                                  | 100%    | 100%         | 100%        | 100%       |
 | `src/Util/EventBusUtil.js`                                 | 100%    | 100%         | 100%        | 100%       |
+| `src/Util/ExistsCache.js`                                  | 100%    | 100%         | 100%        | 100%       |
 | `src/Util/GetJavaScriptData.js`                            | 100%    | 100%         | 100%        | 100%       |
 | `src/Util/ImportJsonSync.js`                               | 90.32%  | 90.32%       | 100%        | 66.66%     |
 | `src/Util/JavaScriptDependencies.js`                       | 100%    | 100%         | 100%        | 100%       |
 | `src/Util/Merge.js`                                        | 100%    | 100%         | 100%        | 100%       |
 | `src/Util/PassthroughCopyBehaviorCheck.js`                 | 100%    | 100%         | 100%        | 100%       |
-| `src/Util/PathNormalizer.js`                               | 100%    | 100%         | 100%        | 100%       |
+| `src/Util/PathNormalizer.js`                               | 93.33%  | 93.33%       | 100%        | 86.66%     |
 | `src/Util/PathPrefixer.js`                                 | 100%    | 100%         | 100%        | 100%       |
 | `src/Util/Pluralize.js`                                    | 100%    | 100%         | 100%        | 100%       |
 | `src/Util/ProxyWrap.js`                                    | 100%    | 100%         | 100%        | 100%       |
