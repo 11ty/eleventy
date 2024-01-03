@@ -4,19 +4,9 @@ import { isPlainObject } from "@11ty/eleventy-utils";
 
 const debug = debugUtil("Dev:Eleventy:Proxy");
 
-function wrapObject(target, fallback, options) {
-	let { benchmarkManager } = options || {};
-	let bench;
-
-	if (benchmarkManager) {
-		bench = benchmarkManager.get("Aggregate");
-	}
-
+function wrapObject(target, fallback) {
 	return new Proxy(target, {
 		getOwnPropertyDescriptor(target, prop) {
-			// let b = bench?.get("Data cascade proxy wrap (getOwnPropertyDescriptor)")
-			// b?.before();
-
 			let ret;
 
 			if (Reflect.has(target, prop)) {
@@ -25,11 +15,9 @@ function wrapObject(target, fallback, options) {
 				ret = Reflect.getOwnPropertyDescriptor(fallback, prop);
 			}
 
-			// b?.after();
 			return ret;
 		},
 		has(target, prop) {
-			// debug( "handler:has", prop, Reflect.has(target, prop), Reflect.has(fallback, prop));
 			if (Reflect.has(target, prop)) {
 				return true;
 			}
@@ -51,27 +39,21 @@ function wrapObject(target, fallback, options) {
 		get(target, prop) {
 			debug("handler:get", prop);
 
-			// let benchGet = bench?.get("Data cascade proxy wrap (get)");
-			// benchGet?.before();
-
 			let value = Reflect.get(target, prop);
 
 			if (Reflect.has(target, prop)) {
 				// Already proxied
 				if (types.isProxy(value)) {
-					// benchGet?.after();
 					return value;
 				}
 
 				if (isPlainObject(value) && Reflect.has(fallback, prop)) {
 					let ret = wrapObject(value, Reflect.get(fallback, prop));
-					debug("  handler:get (object)", prop, "found on primary ****", ret);
-					// benchGet?.after();
+					debug("handler:get (primary, object)", prop);
 					return ret;
 				}
 
-				debug("  handler:get (not object)", prop, "found on primary ****");
-				// benchGet?.after();
+				debug("handler:get (primary)", prop);
 				return value;
 			}
 
@@ -81,30 +63,26 @@ function wrapObject(target, fallback, options) {
 				let fallbackValue = Reflect.get(fallback, prop);
 
 				if (isPlainObject(fallbackValue)) {
-					debug("  > proxying (fallback has prop)", { fallback, prop, fallbackValue });
+					debug("handler:get (fallback, object)", prop);
 					// set empty object on primary
 					let emptyObject = {};
 					Reflect.set(target, prop, emptyObject);
 
-					let ret = wrapObject(emptyObject, fallbackValue);
-					// benchGet?.after();
-					return ret;
+					return wrapObject(emptyObject, fallbackValue);
 				}
 
-				debug("  > returning (fallback has prop, not object)", { prop, fallbackValue });
-				// benchGet?.after();
+				debug("handler:get (fallback)", prop);
 				return fallbackValue;
 			}
 
 			// primary *and* fallback do _not_ have prop
-			debug("  > returning (primary and fallback missing prop)", { prop, value });
-
-			// benchGet?.after();
+			debug("handler:get (not on primary or fallback)", prop);
 
 			return value;
 		},
 		set(target, prop, value) {
-			debug("handler:set", { target, prop, value });
+			debug("handler:set", prop);
+
 			return Reflect.set(target, prop, value);
 		},
 	});
