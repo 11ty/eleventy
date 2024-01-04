@@ -74,6 +74,10 @@ class TemplateEngineManager {
 		return !!this.getClassNameFromTemplateKey(name);
 	}
 
+	isEngineDeprecated(name) {
+		return ["ejs", "hbs", "mustache", "haml", "pug"].includes(name) && !this.hasEngine(name);
+	}
+
 	async getEngineClassByExtension(extension) {
 		// We include these as raw strings (and not more readable variables) so they’re parsed by a bundler.
 		if (extension === "md") {
@@ -99,6 +103,16 @@ class TemplateEngineManager {
 	}
 
 	async getEngine(name, dirs, extensionMap) {
+		// Warning about engine deprecation
+		// TODO: error message needs updating once issue is closed
+		if (this.isEngineDeprecated(name)) {
+			throw new Error(
+				`Template Engine ${name} is removed in 11ty v3.0.
+If you want to vote for this engine to be re-added, vote on https://github.com/11ty/eleventy/issues/3124
+You can still add it as a custom engine: https://www.11ty.dev/docs/languages/custom/`,
+			);
+		}
+
 		if (!this.hasEngine(name)) {
 			throw new Error(`Template Engine ${name} does not exist in getEngine (dirs: ${dirs})`);
 		}
