@@ -3,6 +3,8 @@ import slugFilter from "./Filters/Slug.js";
 import slugifyFilter from "./Filters/Slugify.js";
 import getLocaleCollectionItem from "./Filters/GetLocaleCollectionItem.js";
 import getCollectionItemIndex from "./Filters/GetCollectionItemIndex.js";
+import { FilterPlugin as PathToUrlFilterPlugin } from "./Plugins/PathToUrl.js";
+import { UrlTransformer } from "./Util/UrlTransformer.js";
 
 /**
  * @module 11ty/eleventy/defaultConfig
@@ -56,7 +58,8 @@ export default function (config) {
 	config.addFilter("slug", slugFilter);
 	config.addFilter("slugify", slugifyFilter);
 
-	// Add pathPrefix manually to a URL
+	// Deprecated, use HtmlBasePlugin instead.
+	// Adds a pathPrefix manually to a URL string
 	config.addFilter("url", function addPathPrefix(url, pathPrefixOverride) {
 		let pathPrefix;
 		if (pathPrefixOverride && typeof pathPrefixOverride === "string") {
@@ -85,6 +88,17 @@ export default function (config) {
 	});
 	config.addFilter("getNextCollectionItem", function (collection, pageOverride, langCode) {
 		return getLocaleCollectionItem.call(this, config, collection, pageOverride, langCode, 1);
+	});
+
+	let ut = new UrlTransformer();
+	config.urlTransformer = ut;
+	config.addTransform("eleventy.urlTransformer", async function (content) {
+		return ut.transformContent(this.outputPath, content, this);
+	});
+
+	// Maps an input path to output URL
+	config.addPlugin(PathToUrlFilterPlugin, {
+		immediate: true,
 	});
 
 	return {

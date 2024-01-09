@@ -23,6 +23,7 @@ import { getEleventyPackageJson, getWorkingProjectPackageJson } from "./Util/Imp
 import RenderPlugin, * as RenderPluginExtras from "./Plugins/RenderPlugin.js";
 import I18nPlugin, * as I18nPluginExtras from "./Plugins/I18nPlugin.js";
 import HtmlBasePlugin, * as HtmlBasePluginExtras from "./Plugins/HtmlBasePlugin.js";
+import { TransformPlugin as PathToUrlTransformPlugin } from "./Plugins/PathToUrl.js";
 
 const pkg = getEleventyPackageJson();
 const debug = debugUtil("Eleventy");
@@ -1290,16 +1291,36 @@ Object.assign(HtmlBasePlugin, HtmlBasePluginExtras);
 
 export {
 	Eleventy,
+
 	/**
 	 * @type {module:11ty/eleventy/Plugins/RenderPlugin}
 	 */
 	RenderPlugin as EleventyRenderPlugin,
 	/**
+	 * @type {module:11ty/eleventy/Plugins/RenderPlugin}
+	 */
+	RenderPlugin,
+
+	/**
 	 * @type {module:11ty/eleventy/Plugins/I18nPlugin}
 	 */
 	I18nPlugin as EleventyI18nPlugin,
 	/**
+	 * @type {module:11ty/eleventy/Plugins/I18nPlugin}
+	 */
+	I18nPlugin,
+
+	/**
 	 * @type {module:11ty/eleventy/Plugins/HtmlBasePlugin}
 	 */
 	HtmlBasePlugin as EleventyHtmlBasePlugin,
+	/**
+	 * @type {module:11ty/eleventy/Plugins/HtmlBasePlugin}
+	 */
+	HtmlBasePlugin,
+
+	/**
+	 * @type {module:11ty/eleventy/Plugins/PathToUrlTransformPlugin}
+	 */
+	PathToUrlTransformPlugin,
 };

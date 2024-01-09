@@ -1,9 +1,7 @@
-import posthtml from "posthtml";
-import urls from "posthtml-urls";
-
 import urlFilter from "../Filters/Url.js";
 import PathPrefixer from "../Util/PathPrefixer.js";
 import { DeepCopy } from "../Util/Merge.js";
+import { UrlTransformer } from "../Util/UrlTransformer.js";
 
 function isValidUrl(url) {
 	try {
@@ -50,20 +48,7 @@ function transformUrl(url, base, opts = {}) {
 	}
 
 	// Not a full URL, nor a full base URL (call the built-in `url` filter)
-	return urlFilter.call(this, url, base);
-}
-
-async function addToAllHtmlUrls(htmlContent, callback, processOptions = {}) {
-	let modifier = posthtml().use(
-		urls({
-			eachURL: function (url) {
-				return callback(url);
-			},
-		}),
-	);
-
-	let result = await modifier.process(htmlContent, processOptions);
-	return result.html;
+	return urlFilter(url, base);
 }
 
 export default function (eleventyConfig, defaultOptions = {}) {
@@ -102,7 +87,7 @@ export default function (eleventyConfig, defaultOptions = {}) {
 			return url;
 		}
 
-		return transformUrl.call(this, url, base, {
+		return transformUrl(url, base, {
 			pathPrefix: eleventyConfig.pathPrefix,
 			pageUrl: pageUrlOverride || this.page?.url,
 		});
@@ -118,8 +103,8 @@ export default function (eleventyConfig, defaultOptions = {}) {
 				return content;
 			}
 
-			return addToAllHtmlUrls(content, (url) => {
-				return transformUrl.call(this, url.trim(), base, {
+			return UrlTransformer.transformStandalone(content, (url) => {
+				return transformUrl(url.trim(), base, {
 					pathPrefix: eleventyConfig.pathPrefix,
 					pageUrl: pageUrlOverride || this.page?.url,
 				});
@@ -129,27 +114,18 @@ export default function (eleventyConfig, defaultOptions = {}) {
 
 	// Skip the transform with a default base
 	if (opts.baseHref !== "/") {
-		let extensionMap = {};
-		for (let ext of (opts.extensions || "").split(",")) {
-			extensionMap[ext] = true;
-		}
-
-		// Skip the transform if no extensions are specified
-		if (Object.keys(extensionMap).length > 0) {
-			eleventyConfig.addTransform(opts.name, function (content) {
-				let ext = (this.outputPath || "").split(".").pop();
-				if (extensionMap[ext]) {
-					return addToAllHtmlUrls(content, (url) => {
-						return transformUrl.call(this, url.trim(), opts.baseHref, {
-							pathPrefix: eleventyConfig.pathPrefix,
-							pageUrl: this.url,
-						});
-					});
-				}
-
-				return content;
-			});
-		}
+		eleventyConfig.urlTransformer.add(
+			opts.extensions,
+			function (urlInMarkup) {
+				return transformUrl(urlInMarkup.trim(), opts.baseHref, {
+					pathPrefix: eleventyConfig.pathPrefix,
+					pageUrl: this.url,
+				});
+			},
+			{
+				priority: -1, // run last (especially after PathToUrl transform)
+			},
+		);
 	}
 }
 

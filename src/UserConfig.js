@@ -384,7 +384,7 @@ class UserConfig {
 
 	/* Async friendly in 3.0 */
 	addPlugin(plugin, options) {
-		if (this._pluginExecution) {
+		if (this._pluginExecution || options?.immediate) {
 			// might return a promise
 			return this._executePlugin(plugin, options);
 		} else {
