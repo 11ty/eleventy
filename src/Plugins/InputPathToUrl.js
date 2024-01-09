@@ -33,16 +33,16 @@ function FilterPlugin(eleventyConfig) {
 		inputDir = input;
 	});
 
-	eleventyConfig.addFilter("pathToUrl", function (filepath) {
+	eleventyConfig.addFilter("inputPathToUrl", function (filepath) {
 		if (!contentMap) {
-			throw new Error("Internal error: contentMap not available for `pathToUrl` filter.");
+			throw new Error("Internal error: contentMap not available for `inputPathToUrl` filter.");
 		}
 
 		filepath = normalizeInputPath(filepath, inputDir, contentMap);
 
 		let urls = contentMap[filepath];
 		if (!urls || urls.length === 0) {
-			throw new Error("`pathToUrl` filter could not find a matching target for " + filepath);
+			throw new Error("`inputPathToUrl` filter could not find a matching target for " + filepath);
 		}
 
 		return urls[0];
@@ -69,7 +69,7 @@ function TransformPlugin(eleventyConfig, defaultOptions = {}) {
 
 	eleventyConfig.urlTransformer.add(opts.extensions, function (filepathOrUrl) {
 		if (!contentMap) {
-			throw new Error("Internal error: contentMap not available for `pathToUrl` Transform.");
+			throw new Error("Internal error: contentMap not available for the `pathToUrl` Transform.");
 		}
 		filepathOrUrl = normalizeInputPath(filepathOrUrl, inputDir, contentMap);
 

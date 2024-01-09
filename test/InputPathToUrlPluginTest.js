@@ -1,6 +1,6 @@
 import test from "ava";
 
-import { TransformPlugin } from "../src/Plugins/PathToUrl.js";
+import { TransformPlugin } from "../src/Plugins/InputPathToUrl.js";
 import { default as HtmlBasePlugin } from "../src/Plugins/HtmlBasePlugin.js";
 import Eleventy from "../src/Eleventy.js";
 import { normalizeNewLines } from "./Util/normalizeNewLines.js";

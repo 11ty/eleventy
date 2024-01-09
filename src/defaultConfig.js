@@ -3,7 +3,7 @@ import slugFilter from "./Filters/Slug.js";
 import slugifyFilter from "./Filters/Slugify.js";
 import getLocaleCollectionItem from "./Filters/GetLocaleCollectionItem.js";
 import getCollectionItemIndex from "./Filters/GetCollectionItemIndex.js";
-import { FilterPlugin as PathToUrlFilterPlugin } from "./Plugins/PathToUrl.js";
+import { FilterPlugin as InputPathToUrlFilterPlugin } from "./Plugins/InputPathToUrl.js";
 import { UrlTransformer } from "./Util/UrlTransformer.js";
 
 /**
@@ -90,6 +90,7 @@ export default function (config) {
 		return getLocaleCollectionItem.call(this, config, collection, pageOverride, langCode, 1);
 	});
 
+	// Used for the HTML <base> and InputPathToUrl plugins
 	let ut = new UrlTransformer();
 	config.urlTransformer = ut;
 	config.addTransform("eleventy.urlTransformer", async function (content) {
@@ -97,7 +98,7 @@ export default function (config) {
 	});
 
 	// Maps an input path to output URL
-	config.addPlugin(PathToUrlFilterPlugin, {
+	config.addPlugin(InputPathToUrlFilterPlugin, {
 		immediate: true,
 	});
 
