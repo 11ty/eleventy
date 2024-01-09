@@ -2,11 +2,11 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 
 import PathNormalizer from "./Util/PathNormalizer.js";
 
-/* Decides when to watch and in what mode to watch
+/**
+ * Decides when to watch and in what mode to watch.
  * Incremental builds don’t batch changes, they queue.
  * Nonincremental builds batch.
  */
-
 class EleventyWatch {
 	constructor() {
 		this.incremental = false;
@@ -38,8 +38,9 @@ class EleventyWatch {
 		return false;
 	}
 
-	/* Returns the changed files currently being operated on in the current `watch` build
-	 * Works with or without incremental (though in incremental only one file per time will be processed)
+	/**
+	 * Works with or without incremental (though in incremental only one file per time will be processed).
+	 * @returns {Array} The changed files being operated on in the current `watch` build.
 	 */
 	getActiveQueue() {
 		if (!this.isActive) {
@@ -116,7 +117,7 @@ class EleventyWatch {
 		return this.activeQueue.length;
 	}
 
-	// returns array
+	/** @returns {Array} */
 	popNextActiveQueue() {
 		if (this.incremental) {
 			return this.pendingQueue.length ? [this.pendingQueue.shift()] : [];

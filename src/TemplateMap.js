@@ -480,6 +480,7 @@ class TemplateMap {
 		await this.config.events.emitLazy("eleventy.layouts", () => this.generateLayoutsMap());
 	}
 
+	/** @returns {Object} A mapping of `{entry.inputPath: entry.url}`. */
 	generateInputUrlContentMap(orderedMap) {
 		let entries = {};
 		for (let entry of orderedMap) {
@@ -488,6 +489,7 @@ class TemplateMap {
 		return entries;
 	}
 
+	/** @returns {Object} A mapping of `{page.url: {inputPath, groupNumber} }`. */
 	generateUrlMap(orderedMap) {
 		let entries = {};
 		for (let entry of orderedMap) {
@@ -693,6 +695,9 @@ class TemplateMap {
 		return Promise.all(promises);
 	}
 
+	/**
+	 * @returns {Object} A mapping of `{filepath: pageInputPath}`.
+	 */
 	async generateLayoutsMap() {
 		let layouts = {};
 

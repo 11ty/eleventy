@@ -16,6 +16,10 @@ class EleventyExtensionMap {
 		this._spiderJsDepsCache = {};
 	}
 
+	/**
+	 * Sets `this.unfilteredFormatKeys`, `this.validTemplateLanguageKeys`, and `this.passthroughCopyKeys`.
+	 * @param {Array} [formatKeys=[]] - A list of formats. (Will be trimmed and lower-cased.)
+	 */
 	setFormats(formatKeys = []) {
 		this.unfilteredFormatKeys = formatKeys.map(function (key) {
 			return key.trim().toLowerCase();
@@ -41,6 +45,7 @@ class EleventyExtensionMap {
 		return this.eleventyConfig.getConfig();
 	}
 
+	/** @returns {TemplateEngineManager} */
 	get engineManager() {
 		if (!this._engineManager) {
 			this._engineManager = new TemplateEngineManager(this.eleventyConfig);
@@ -53,7 +58,12 @@ class EleventyExtensionMap {
 		this.engineManager.reset();
 	}
 
-	/* Used for layout path resolution */
+	/**
+	 * Used for layout path resolution.
+	 * @param {String} path -
+	 * @param {String} dir -
+	 * @returns {Array} A list of files.
+	 */
 	getFileList(path, dir) {
 		if (!path) {
 			return [];
@@ -95,6 +105,10 @@ class EleventyExtensionMap {
 		}
 	}
 
+	/**
+	 * @param {String} path
+	 * @returns {Array<String>} A list of extensions, sorted from longest to shortest.
+	 */
 	getValidExtensionsForPath(path) {
 		let extensions = new Set();
 		for (let extension in this.extensionToKeyMap) {
@@ -112,6 +126,10 @@ class EleventyExtensionMap {
 		return sorted;
 	}
 
+	/**
+	 * @param {String} path -
+	 * @returns {Boolean}
+	 */
 	async shouldSpiderJavaScriptDependencies(path) {
 		let extensions = this.getValidExtensionsForPath(path);
 		for (let extension of extensions) {
@@ -202,6 +220,10 @@ class EleventyExtensionMap {
 		return !!this.getKey(pathOrKey);
 	}
 
+	/**
+	 * @param {String} pathOrKey - The path or key whose value to get.
+	 * @returns {*|undefined} The key whose path or extension matches `pathOrKey`.
+	 */
 	getKey(pathOrKey) {
 		pathOrKey = (pathOrKey || "").toLowerCase();
 
@@ -215,6 +237,11 @@ class EleventyExtensionMap {
 		}
 	}
 
+	/**
+	 * @param {String} path - A path to trim the extension from.
+	 * @returns {String} An extension-trimmed `path`, OR unmodified `path` if
+	 *	a matching path was not found in `this.extensionToKeyMap`.
+	 */
 	removeTemplateExtension(path) {
 		for (var extension in this.extensionToKeyMap) {
 			if (path === extension || path.endsWith("." + extension)) {
@@ -227,8 +254,7 @@ class EleventyExtensionMap {
 		return path;
 	}
 
-	// keys are file extensions
-	// values are template language keys
+	/** @returns {Object} A mapping of `{fileExtension: templateLanguageKeys}`. */
 	get extensionToKeyMap() {
 		if (!this._extensionToKeyMap) {
 			this._extensionToKeyMap = {
@@ -251,6 +277,7 @@ class EleventyExtensionMap {
 		return this._extensionToKeyMap;
 	}
 
+	/** @returns {String} A space-separated string of file extensions */
 	getReadableFileExtensions() {
 		return Object.keys(this.extensionToKeyMap).join(" ");
 	}

@@ -516,7 +516,7 @@ Verbose Output: ${this.verboseMode}`);
 	}
 
 	/**
-	 * Set process.ENV variables for use in Eleventy projects
+	 * Set `process.ENV` variables for use in Eleventy projects
 	 *
 	 * @method
 	 */
@@ -941,6 +941,7 @@ Arguments:
 		benchmark.after();
 	}
 
+	/** @returns {Boolean} */
 	get isEsm() {
 		if (this._isEsm === undefined) {
 			try {
@@ -1006,6 +1007,7 @@ Arguments:
 		return this.watchTargets.getTargets();
 	}
 
+	/** @returns {Object} */
 	getChokidarConfig() {
 		let ignores = this.eleventyFiles.getGlobWatcherIgnores();
 		debug("Ignoring watcher changes to: %o", ignores);

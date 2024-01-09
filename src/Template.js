@@ -80,7 +80,7 @@ class Template extends TemplateContent {
 	get existsCache() {
 		return this.eleventyConfig.existsCache;
 	}
-
+	/** @returns {ConsoleLogger} */
 	get logger() {
 		if (!this._logger) {
 			this._logger = new ConsoleLogger();

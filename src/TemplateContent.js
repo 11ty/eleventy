@@ -72,7 +72,8 @@ class TemplateContent {
 		}
 	}
 
-	/* Used by tests */
+	// Used by tests */
+	/** @returns {EleventyExtensionMap} */
 	get extensionMap() {
 		if (!this._extensionMap) {
 			this._extensionMap = new EleventyExtensionMap([], this.eleventyConfig);
@@ -84,6 +85,7 @@ class TemplateContent {
 		this._extensionMap = map;
 	}
 
+	/** @param {TemplateConfig} config */
 	set eleventyConfig(config) {
 		this._config = config;
 
@@ -94,6 +96,7 @@ class TemplateContent {
 		}
 	}
 
+	/** @returns {TemplateConfig} */
 	get eleventyConfig() {
 		if (this._config.constructor.name === "TemplateConfig") {
 			return this._config;
@@ -117,6 +120,7 @@ class TemplateContent {
 		return this.templateRender.engine;
 	}
 
+	/** @returns {TemplateRender} */
 	get templateRender() {
 		if (!this._templateRender) {
 			throw new Error("TemplateRender has not yet initialized.");
@@ -124,6 +128,7 @@ class TemplateContent {
 		return this._templateRender;
 	}
 
+	/** @returns {TemplateRender} */
 	async getTemplateRender() {
 		if (!this._templateRender) {
 			this._templateRender = new TemplateRender(this.inputPath, this.inputDir, this.eleventyConfig);
