@@ -70,11 +70,8 @@ test("Using the transform (and the filter too)", async (t) => {
 
 test("Using the filter", async (t) => {
   let elev = new Eleventy("./test/stubs-pathtourl/", "./test/stubs-pathtourl/_site", {
+		// FilterPlugin is available in the default config.
     configPath: false,
-    config: function (eleventyConfig) {
-			// FilterPlugin is available in the default config.
-      // eleventyConfig.addPlugin(TransformPlugin);
-    },
   });
   await elev.initializeConfig();
 
