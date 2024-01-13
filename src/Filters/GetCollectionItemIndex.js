@@ -5,7 +5,7 @@ export default function getCollectionItemIndex(collection, page) {
 	}
 
 	let j = 0;
-	for (let item of collection) {
+	for (const item of collection) {
 		if (
 			item.inputPath === page.inputPath &&
 			(item.outputPath === page.outputPath || item.url === page.url)

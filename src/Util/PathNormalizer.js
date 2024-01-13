@@ -19,11 +19,11 @@ class PathNormalizer {
 	// order is important here: the top-most directory returns first
 	// array of file and all parent directories
 	static getAllPaths(inputPath) {
-		let parts = this.getParts(inputPath);
-		let allPaths = [];
+		const parts = this.getParts(inputPath);
+		const allPaths = [];
 
 		let fullpath = "";
-		for (let part of parts) {
+		for (const part of parts) {
 			fullpath += (fullpath.length > 0 ? "/" : "") + part;
 			allPaths.push(fullpath);
 		}

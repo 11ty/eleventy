@@ -40,7 +40,7 @@ function FilterPlugin(eleventyConfig) {
 
 		filepath = normalizeInputPath(filepath, inputDir, contentMap);
 
-		let urls = contentMap[filepath];
+		const urls = contentMap[filepath];
 		if (!urls || urls.length === 0) {
 			throw new Error("`inputPathToUrl` filter could not find a matching target for " + filepath);
 		}
@@ -50,7 +50,7 @@ function FilterPlugin(eleventyConfig) {
 }
 
 function TransformPlugin(eleventyConfig, defaultOptions = {}) {
-	let opts = Object.assign(
+	const opts = Object.assign(
 		{
 			extensions: "html",
 		},
@@ -73,7 +73,7 @@ function TransformPlugin(eleventyConfig, defaultOptions = {}) {
 		}
 		filepathOrUrl = normalizeInputPath(filepathOrUrl, inputDir, contentMap);
 
-		let urls = contentMap[filepathOrUrl];
+		const urls = contentMap[filepathOrUrl];
 		if (!urls || urls.length === 0) {
 			// fallback, transforms don’t error on missing paths (though the pathToUrl filter does)
 			return filepathOrUrl;

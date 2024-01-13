@@ -325,13 +325,13 @@ class Eleventy {
 			);
 		}
 
-		let ret = [];
+		const ret = [];
 
-		let writeCount = this.writer.getWriteCount();
-		let skippedCount = this.writer.getSkippedCount();
-		let copyCount = this.writer.getCopyCount();
+		const writeCount = this.writer.getWriteCount();
+		const skippedCount = this.writer.getSkippedCount();
+		const copyCount = this.writer.getCopyCount();
 
-		let slashRet = [];
+		const slashRet = [];
 
 		if (copyCount) {
 			slashRet.push(`Copied ${copyCount} ${simplePlural(copyCount, "file", "files")}`);
@@ -347,8 +347,8 @@ class Eleventy {
 			ret.push(slashRet.join(" / "));
 		}
 
-		let versionStr = `v${pkg.version}`;
-		let time = ((this.getNewTimestamp() - this.start) / 1000).toFixed(2);
+		const versionStr = `v${pkg.version}`;
+		const time = ((this.getNewTimestamp() - this.start) / 1000).toFixed(2);
 		ret.push(`in ${time} ${simplePlural(time, "second", "seconds")}`);
 
 		if (writeCount >= 10) {
@@ -371,14 +371,14 @@ class Eleventy {
 
 		// Restore from cache
 		if (this._privateCaches.has(key)) {
-			let c = this._privateCaches.get(key);
-			for (let cacheKey in c) {
+			const c = this._privateCaches.get(key);
+			for (const cacheKey in c) {
 				inst[cacheKey] = c[cacheKey];
 			}
 		} else {
 			// Set cache
-			let c = {};
-			for (let cacheKey of inst.caches || []) {
+			const c = {};
+			for (const cacheKey of inst.caches || []) {
 				c[cacheKey] = inst[cacheKey];
 			}
 			this._privateCaches.set(key, c);
@@ -407,7 +407,7 @@ class Eleventy {
 
 		this.config.inputDir = this.inputDir;
 
-		let formats = this.formatsOverride || this.config.templateFormats;
+		const formats = this.formatsOverride || this.config.templateFormats;
 		this.extensionMap = new EleventyExtensionMap(formats, this.eleventyConfig);
 		await this.config.events.emit("eleventy.extensionmap", this.extensionMap);
 
@@ -446,7 +446,7 @@ class Eleventy {
 		}
 
 		// Note these directories are all project root relative
-		let dirs = {
+		const dirs = {
 			input: this.inputDir,
 			data: this.templateData.getDataDir(),
 			includes: this.eleventyFiles.getIncludesDir(),
@@ -496,17 +496,17 @@ Verbose Output: ${this.verboseMode}`);
 
 	// These are all set as initial global data under eleventy.env.* (see TemplateData->environmentVariables)
 	getEnvironmentVariableValues() {
-		let values = {
+		const values = {
 			source: this.source,
 			runMode: this.runMode,
 		};
-		let configPath = this.eleventyConfig.getLocalProjectConfigFile();
+		const configPath = this.eleventyConfig.getLocalProjectConfigFile();
 		if (configPath) {
-			let absolutePathToConfig = TemplatePath.absolutePath(configPath);
+			const absolutePathToConfig = TemplatePath.absolutePath(configPath);
 			values.config = absolutePathToConfig;
 
 			// TODO(zachleat): if config is not in root (e.g. using --config=)
-			let root = TemplatePath.getDirFromFilePath(absolutePathToConfig);
+			const root = TemplatePath.getDirFromFilePath(absolutePathToConfig);
 			values.root = root;
 		}
 
@@ -762,7 +762,7 @@ Arguments:
 			);
 		}
 
-		let relevantLayouts = this.eleventyConfig.usesGraph.getLayoutsUsedBy(changedFilePath);
+		const relevantLayouts = this.eleventyConfig.usesGraph.getLayoutsUsedBy(changedFilePath);
 
 		// Note: this is a sync event!
 		eventBus.emit("eleventy.resourceModified", changedFilePath, usedByDependants, {
@@ -774,8 +774,8 @@ Arguments:
 	}
 
 	shouldTriggerConfigReset(changedFiles) {
-		let configFilePaths = new Set(this.eleventyConfig.getLocalProjectConfigFiles());
-		for (let filePath of changedFiles) {
+		const configFilePaths = new Set(this.eleventyConfig.getLocalProjectConfigFiles());
+		for (const filePath of changedFiles) {
 			if (configFilePaths.has(filePath)) {
 				return true;
 			}
@@ -783,9 +783,9 @@ Arguments:
 
 		for (const configFilePath of configFilePaths) {
 			// Any dependencies of the config file changed
-			let configFileDependencies = new Set(this.watchTargets.getDependenciesOf(configFilePath));
+			const configFileDependencies = new Set(this.watchTargets.getDependenciesOf(configFilePath));
 
-			for (let filePath of changedFiles) {
+			for (const filePath of changedFiles) {
 				if (configFileDependencies.has(filePath)) {
 					return true;
 				}
@@ -821,7 +821,7 @@ Arguments:
 
 		this.watchManager.setBuildRunning();
 
-		let queue = this.watchManager.getActiveQueue();
+		const queue = this.watchManager.getActiveQueue();
 
 		await this.config.events.emit("beforeWatch", queue);
 		await this.config.events.emit("eleventy.beforeWatch", queue);
@@ -837,12 +837,12 @@ Arguments:
 		await this.restart();
 		await this.init({ viaConfigReset: isResetConfig });
 
-		let incrementalFile = this.watchManager.getIncrementalFile();
+		const incrementalFile = this.watchManager.getIncrementalFile();
 		if (incrementalFile) {
 			this.writer.setIncrementalFile(incrementalFile);
 		}
 
-		let writeResults = await this.write();
+		const writeResults = await this.write();
 		// let passthroughCopyResults;
 		let templateResults;
 		if (!writeResults.error) {
@@ -861,7 +861,7 @@ Arguments:
 		// Is a CSS input file and is not in the includes folder
 		// TODO check output path file extension of this template (not input path)
 		// TODO add additional API for this, maybe a config callback?
-		let onlyCssChanges = this.watchManager.hasAllQueueFiles((path) => {
+		const onlyCssChanges = this.watchManager.hasAllQueueFiles((path) => {
 			return (
 				path.endsWith(".css") &&
 				// TODO how to make this work with relative includes?
@@ -874,7 +874,7 @@ Arguments:
 				error: writeResults.error,
 			});
 		} else {
-			let normalizedPathPrefix = PathPrefixer.normalizePathPrefix(this.config.pathPrefix);
+			const normalizedPathPrefix = PathPrefixer.normalizePathPrefix(this.config.pathPrefix);
 			await this.eleventyServe.reload({
 				files: this.watchManager.getActiveQueue(),
 				subtype: onlyCssChanges ? "css" : undefined,
@@ -892,7 +892,7 @@ Arguments:
 
 		this.watchManager.setBuildFinished();
 
-		let queueSize = this.watchManager.getPendingQueueSize();
+		const queueSize = this.watchManager.getPendingQueueSize();
 		if (queueSize > 0) {
 			this.logger.log(
 				`You saved while Eleventy was running, let’s run again. (${queueSize} change${
@@ -934,7 +934,7 @@ Arguments:
 		// Template and Directory Data Files
 		this.watchTargets.add(await this.eleventyFiles.getGlobWatcherTemplateDataFiles());
 
-		let benchmark = this.watcherBench.get(
+		const benchmark = this.watcherBench.get(
 			"Watching JavaScript Dependencies (disable with `eleventyConfig.setWatchJavaScriptDependencies(false)`)",
 		);
 		benchmark.before();
@@ -946,7 +946,7 @@ Arguments:
 		if (this._isEsm === undefined) {
 			try {
 				// fetch from project’s package.json
-				let projectPackageJson = getWorkingProjectPackageJson();
+				const projectPackageJson = getWorkingProjectPackageJson();
 				this._isEsm = projectPackageJson?.type === "module";
 			} catch (e) {
 				debug("Could not find a project package.json for project’s ES Modules check: %O", e);
@@ -969,7 +969,7 @@ Arguments:
 			return;
 		}
 
-		let dataDir = TemplatePath.stripLeadingDotSlash(this.templateData.getDataDir());
+		const dataDir = TemplatePath.stripLeadingDotSlash(this.templateData.getDataDir());
 		function filterOutGlobalDataFiles(path) {
 			return !dataDir || !TemplatePath.stripLeadingDotSlash(path).startsWith(dataDir);
 		}
@@ -978,7 +978,7 @@ Arguments:
 		this.watchTargets.setProjectUsingEsm(this.isEsm);
 
 		// Template files .11ty.js
-		let templateFiles = await this.eleventyFiles.getWatchPathCache();
+		const templateFiles = await this.eleventyFiles.getWatchPathCache();
 		await this.watchTargets.addDependencies(templateFiles);
 
 		// Config file dependencies
@@ -988,7 +988,7 @@ Arguments:
 		);
 
 		// Deps from Global Data (that aren’t in the global data directory, everything is watched there)
-		let globalDataDeps = this.templateData.getWatchPathCache();
+		const globalDataDeps = this.templateData.getWatchPathCache();
 		await this.watchTargets.addDependencies(globalDataDeps, filterOutGlobalDataFiles);
 
 		await this.watchTargets.addDependencies(
@@ -1008,10 +1008,10 @@ Arguments:
 	}
 
 	getChokidarConfig() {
-		let ignores = this.eleventyFiles.getGlobWatcherIgnores();
+		const ignores = this.eleventyFiles.getGlobWatcherIgnores();
 		debug("Ignoring watcher changes to: %o", ignores);
 
-		let configOptions = this.config.chokidarConfig;
+		const configOptions = this.config.chokidarConfig;
 
 		// can’t override these yet
 		// TODO maybe if array, merge the array?
@@ -1044,8 +1044,8 @@ Arguments:
 		let chokidar;
 		// eslint-disable-next-line no-useless-catch
 		try {
-			let moduleName = "chokidar";
-			let chokidarImport = await import(moduleName);
+			const moduleName = "chokidar";
+			const chokidarImport = await import(moduleName);
 			chokidar = chokidarImport.default;
 		} catch (e) {
 			throw e;
@@ -1053,22 +1053,22 @@ Arguments:
 
 		// Note that watching indirectly depends on this for fetching dependencies from JS files
 		// See: TemplateWriter:pathCache and EleventyWatchTargets
-		let result = await this.write();
+		const result = await this.write();
 		if (result.error) {
 			// initial build failed—quit watch early
 			return Promise.reject(result.error);
 		}
 
-		let initWatchBench = this.watcherBench.get("Start up --watch");
+		const initWatchBench = this.watcherBench.get("Start up --watch");
 		initWatchBench.before();
 
 		await this.initWatch();
 
 		// TODO improve unwatching if JS dependencies are removed (or files are deleted)
-		let rawFiles = await this.getWatchedFiles();
+		const rawFiles = await this.getWatchedFiles();
 		debug("Watching for changes to: %o", rawFiles);
 
-		let watcher = chokidar.watch(rawFiles, this.getChokidarConfig());
+		const watcher = chokidar.watch(rawFiles, this.getChokidarConfig());
 
 		initWatchBench.after();
 
@@ -1079,10 +1079,10 @@ Arguments:
 		this.watcher = watcher;
 
 		let watchDelay;
-		let watchRun = async (path) => {
+		const watchRun = async (path) => {
 			path = TemplatePath.normalize(path);
 			try {
-				let isResetConfig = this._shouldResetConfig([path]);
+				const isResetConfig = this._shouldResetConfig([path]);
 				this._addFileToWatchQueue(path, isResetConfig);
 
 				clearTimeout(watchDelay);
@@ -1207,7 +1207,7 @@ Arguments:
 		let hasError = false;
 
 		try {
-			let eventsArg = {
+			const eventsArg = {
 				inputDir: this.config.inputDir,
 				dir: this.config.dir,
 				runMode: this.runMode,
@@ -1234,7 +1234,7 @@ Arguments:
 			ret = await promise;
 
 			// Passing the processed output to the eleventy.after event is new in 2.0
-			let [, /*passthroughCopyResults*/ ...templateResults] = ret;
+			const [, /*passthroughCopyResults*/ ...templateResults] = ret;
 
 			if (to === "fs") {
 				// New in 3.0: flatten return object for return.

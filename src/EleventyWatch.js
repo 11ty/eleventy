@@ -122,7 +122,7 @@ class EleventyWatch {
 			return this.pendingQueue.length ? [this.pendingQueue.shift()] : [];
 		}
 
-		let ret = this.pendingQueue.slice();
+		const ret = this.pendingQueue.slice();
 		this.pendingQueue = [];
 		return ret;
 	}

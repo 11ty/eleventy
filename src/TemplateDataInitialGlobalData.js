@@ -19,12 +19,12 @@ class TemplateDataInitialGlobalData {
 	}
 
 	async getData() {
-		let globalData = {};
+		const globalData = {};
 
 		// via eleventyConfig.addGlobalData
 		if (this.config.globalData) {
-			let keys = Object.keys(this.config.globalData);
-			for (let key of keys) {
+			const keys = Object.keys(this.config.globalData);
+			for (const key of keys) {
 				let returnValue = this.config.globalData[key];
 
 				if (typeof returnValue === "function") {

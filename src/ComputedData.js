@@ -49,11 +49,11 @@ class ComputedData {
 	}
 
 	async resolveVarOrder(data) {
-		let proxyByTemplateString = new ComputedDataTemplateString(this.computedKeys);
-		let proxyByProxy = new ComputedDataProxy(this.computedKeys);
+		const proxyByTemplateString = new ComputedDataTemplateString(this.computedKeys);
+		const proxyByProxy = new ComputedDataProxy(this.computedKeys);
 
-		for (let key of this.computedKeys) {
-			let computed = lodashGet(this.computed, key);
+		for (const key of this.computedKeys) {
+			const computed = lodashGet(this.computed, key);
 
 			if (typeof computed !== "function") {
 				// add nodes for non functions (primitives like booleans, etc)
@@ -62,20 +62,20 @@ class ComputedData {
 			} else {
 				this.queue.uses(key, this.declaredDependencies[key]);
 
-				let symbolParseFn = lodashGet(this.symbolParseFunctions, key);
+				const symbolParseFn = lodashGet(this.symbolParseFunctions, key);
 				let varsUsed = [];
 				if (symbolParseFn) {
 					// use the parseForSymbols function in the TemplateEngine
 					varsUsed = symbolParseFn();
 				} else if (symbolParseFn !== false) {
 					// skip resolution is this is false (just use declaredDependencies)
-					let isTemplateString = !!this.templateStringKeyLookup[key];
-					let proxy = isTemplateString ? proxyByTemplateString : proxyByProxy;
+					const isTemplateString = !!this.templateStringKeyLookup[key];
+					const proxy = isTemplateString ? proxyByTemplateString : proxyByProxy;
 					varsUsed = await proxy.findVarsUsed(computed, data);
 				}
 
 				debug("%o accesses %o variables", key, varsUsed);
-				let filteredVarsUsed = varsUsed.filter((varUsed) => {
+				const filteredVarsUsed = varsUsed.filter((varUsed) => {
 					return (
 						(varUsed !== key && this.computedKeys.has(varUsed)) ||
 						varUsed.startsWith("collections.")
@@ -88,11 +88,11 @@ class ComputedData {
 
 	async _setupDataEntry(data, order) {
 		debug("Computed data order of execution: %o", order);
-		for (let key of order) {
-			let computed = lodashGet(this.computed, key);
+		for (const key of order) {
+			const computed = lodashGet(this.computed, key);
 
 			if (typeof computed === "function") {
-				let ret = await computed(data);
+				const ret = await computed(data);
 				lodashSet(data, key, ret);
 			} else if (computed !== undefined) {
 				lodashSet(data, key, computed);

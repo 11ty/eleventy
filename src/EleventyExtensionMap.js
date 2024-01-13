@@ -59,7 +59,7 @@ class EleventyExtensionMap {
 			return [];
 		}
 
-		let files = [];
+		const files = [];
 		this.validTemplateLanguageKeys.forEach(
 			function (key) {
 				this.getExtensionsFromKey(key).forEach(function (extension) {
@@ -75,7 +75,7 @@ class EleventyExtensionMap {
 	// on paths found from the file system glob search.
 	// TODO: Method name might just need to be renamed to something more accurate.
 	isFullTemplateFilePath(path) {
-		for (let extension of this.validTemplateLanguageKeys) {
+		for (const extension of this.validTemplateLanguageKeys) {
 			if (path.endsWith(`.${extension}`)) {
 				return true;
 			}
@@ -88,7 +88,7 @@ class EleventyExtensionMap {
 			return;
 		}
 
-		for (let entry of this.config.extensionMap) {
+		for (const entry of this.config.extensionMap) {
 			if (entry.extension === extension) {
 				return entry;
 			}
@@ -96,8 +96,8 @@ class EleventyExtensionMap {
 	}
 
 	getValidExtensionsForPath(path) {
-		let extensions = new Set();
-		for (let extension in this.extensionToKeyMap) {
+		const extensions = new Set();
+		for (const extension in this.extensionToKeyMap) {
 			if (path.endsWith(`.${extension}`)) {
 				extensions.add(extension);
 			}
@@ -105,7 +105,7 @@ class EleventyExtensionMap {
 
 		// if multiple extensions are valid, sort from longest to shortest
 		// e.g. .11ty.js and .js
-		let sorted = Array.from(extensions)
+		const sorted = Array.from(extensions)
 			.filter((extension) => this.validTemplateLanguageKeys.includes(extension))
 			.sort((a, b) => b.length - a.length);
 
@@ -113,16 +113,16 @@ class EleventyExtensionMap {
 	}
 
 	async shouldSpiderJavaScriptDependencies(path) {
-		let extensions = this.getValidExtensionsForPath(path);
-		for (let extension of extensions) {
+		const extensions = this.getValidExtensionsForPath(path);
+		for (const extension of extensions) {
 			if (extension in this._spiderJsDepsCache) {
 				return this._spiderJsDepsCache[extension];
 			}
 
-			let cls = await this.engineManager.getEngineClassByExtension(extension);
+			const cls = await this.engineManager.getEngineClassByExtension(extension);
 			if (cls) {
-				let entry = this.getCustomExtensionEntry(extension);
-				let shouldSpider = cls.shouldSpiderJavaScriptDependencies(entry);
+				const entry = this.getCustomExtensionEntry(extension);
+				const shouldSpider = cls.shouldSpiderJavaScriptDependencies(entry);
 				this._spiderJsDepsCache[extension] = shouldSpider;
 				return shouldSpider;
 			}
@@ -144,11 +144,11 @@ class EleventyExtensionMap {
 	}
 
 	_getGlobs(formatKeys, inputDir) {
-		let dir = TemplatePath.convertToRecursiveGlobSync(inputDir);
-		let extensions = [];
-		for (let key of formatKeys) {
+		const dir = TemplatePath.convertToRecursiveGlobSync(inputDir);
+		const extensions = [];
+		for (const key of formatKeys) {
 			if (this.hasExtension(key)) {
-				for (let extension of this.getExtensionsFromKey(key)) {
+				for (const extension of this.getExtensionsFromKey(key)) {
 					extensions.push(extension);
 				}
 			} else {
@@ -156,7 +156,7 @@ class EleventyExtensionMap {
 			}
 		}
 
-		let globs = [];
+		const globs = [];
 		if (extensions.length === 1) {
 			globs.push(`${dir}/*.${extensions[0]}`);
 		} else if (extensions.length > 1) {
@@ -176,7 +176,7 @@ class EleventyExtensionMap {
 	}
 
 	getExtensionsFromKey(key) {
-		let extensions = [];
+		const extensions = [];
 		for (var extension in this.extensionToKeyMap) {
 			if (this.extensionToKeyMap[extension] === key) {
 				extensions.push(extension);
@@ -187,9 +187,9 @@ class EleventyExtensionMap {
 
 	// Only `addExtension` configuration API extensions
 	getExtensionEntriesFromKey(key) {
-		let entries = [];
+		const entries = [];
 		if ("extensionMap" in this.config) {
-			for (let entry of this.config.extensionMap) {
+			for (const entry of this.config.extensionMap) {
 				if (entry.key === key) {
 					entries.push(entry);
 				}
@@ -206,7 +206,7 @@ class EleventyExtensionMap {
 		pathOrKey = (pathOrKey || "").toLowerCase();
 
 		for (var extension in this.extensionToKeyMap) {
-			let key = this.extensionToKeyMap[extension];
+			const key = this.extensionToKeyMap[extension];
 			if (pathOrKey === extension) {
 				return key;
 			} else if (pathOrKey.endsWith("." + extension)) {
@@ -242,7 +242,7 @@ class EleventyExtensionMap {
 			};
 
 			if ("extensionMap" in this.config) {
-				for (let entry of this.config.extensionMap) {
+				for (const entry of this.config.extensionMap) {
 					this._extensionToKeyMap[entry.extension] = entry.key;
 				}
 			}

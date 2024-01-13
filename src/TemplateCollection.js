@@ -36,7 +36,7 @@ class TemplateCollection extends Sortable {
 	getFilteredByGlob(globs) {
 		globs = this.getGlobs(globs);
 
-		let key = globs.join("::");
+		const key = globs.join("::");
 		if (!this._dirty) {
 			// Try to find a pre-sorted list and clone it.
 			if (this._filteredByGlobsCache.has(key)) {
@@ -47,7 +47,7 @@ class TemplateCollection extends Sortable {
 			this._filteredByGlobsCache = new Map();
 		}
 
-		let filtered = this.getAllSorted().filter((item) => {
+		const filtered = this.getAllSorted().filter((item) => {
 			if (multimatch([item.inputPath], globs).length) {
 				return true;
 			}
@@ -70,7 +70,7 @@ class TemplateCollection extends Sortable {
 
 	getFilteredByTags(...tags) {
 		return this.getAllSorted().filter((item) => {
-			let itemTags = TemplateData.getIncludedTagNames(item.data);
+			const itemTags = TemplateData.getIncludedTagNames(item.data);
 			return tags.every((requiredTag) => {
 				if (Array.isArray(itemTags)) {
 					return itemTags.includes(requiredTag);

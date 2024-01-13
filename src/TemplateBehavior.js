@@ -38,16 +38,16 @@ class TemplateBehavior {
 		// render is false *only* if `build` key does not exist in permalink objects (both in data and eleventyComputed)
 		// (note that permalink: false means it won’t write but will still render)
 
-		let keys = new Set();
+		const keys = new Set();
 		if (isPlainObject(data.permalink)) {
-			for (let key of Object.keys(data.permalink)) {
+			for (const key of Object.keys(data.permalink)) {
 				keys.add(key);
 			}
 		}
 
-		let computedKey = this.config.keys.computed;
+		const computedKey = this.config.keys.computed;
 		if (computedKey in data && isPlainObject(data[computedKey].permalink)) {
-			for (let key of Object.keys(data[computedKey].permalink)) {
+			for (const key of Object.keys(data[computedKey].permalink)) {
 				keys.add(key);
 			}
 		}

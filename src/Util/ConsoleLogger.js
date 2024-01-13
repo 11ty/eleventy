@@ -89,7 +89,7 @@ class ConsoleLogger {
 		} else if (this._logger !== false) {
 			message = `[11ty] ${message.split("\n").join("\n[11ty] ")}`;
 
-			let logger = this._logger || console;
+			const logger = this._logger || console;
 			if (chalkColor && this.isChalkEnabled) {
 				logger[type](chalk[chalkColor](message));
 			} else {

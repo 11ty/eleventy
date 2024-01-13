@@ -55,7 +55,7 @@ class TemplateRender {
 	}
 
 	async getEngineByName(name) {
-		let engine = await this.extensionMap.engineManager.getEngine(
+		const engine = await this.extensionMap.engineManager.getEngine(
 			name,
 			this.getDirs(),
 			this.extensionMap,
@@ -67,7 +67,7 @@ class TemplateRender {
 
 	// Runs once per template
 	async init(engineNameOrPath) {
-		let name = engineNameOrPath || this.engineNameOrPath;
+		const name = engineNameOrPath || this.engineNameOrPath;
 		this.extensionMap.config = this.eleventyConfig;
 		this._engineName = this.extensionMap.getKey(name);
 		if (!this._engineName) {
@@ -103,8 +103,8 @@ class TemplateRender {
 		}
 
 		let overlappingEngineWarningCount = 0;
-		let engines = [];
-		let uniqueLookup = {};
+		const engines = [];
+		const uniqueLookup = {};
 		let usingMarkdown = false;
 		(engineName || "")
 			.split(",")
@@ -151,7 +151,7 @@ class TemplateRender {
 	}
 
 	getReadableEnginesListDifferingFromFileExtension() {
-		let keyFromFilename = this.extensionMap.getKey(this.engineNameOrPath);
+		const keyFromFilename = this.extensionMap.getKey(this.engineNameOrPath);
 		if (this.engine instanceof CustomEngine) {
 			if (
 				this.engine.entry &&
@@ -192,7 +192,7 @@ class TemplateRender {
 	// We pass in templateEngineOverride here because it isn’t yet applied to templateRender
 	getEnginesList(engineOverride) {
 		if (engineOverride) {
-			let engines = TemplateRender.parseEngineOverrides(engineOverride).reverse();
+			const engines = TemplateRender.parseEngineOverrides(engineOverride).reverse();
 			return engines.join(",");
 		}
 
@@ -208,7 +208,7 @@ class TemplateRender {
 	}
 
 	async setEngineOverride(engineName, bypassMarkdown) {
-		let engines = TemplateRender.parseEngineOverrides(engineName);
+		const engines = TemplateRender.parseEngineOverrides(engineName);
 
 		// when overriding, Template Engines with HTML will instead use the Template Engine as primary and output HTML
 		// So any HTML engine usage here will never use a preprocessor templating engine.
@@ -221,7 +221,7 @@ class TemplateRender {
 
 		await this.init(engines[0]);
 
-		let usingMarkdown = engines[0] === "md" && !bypassMarkdown;
+		const usingMarkdown = engines[0] === "md" && !bypassMarkdown;
 
 		this.setUseMarkdown(usingMarkdown);
 

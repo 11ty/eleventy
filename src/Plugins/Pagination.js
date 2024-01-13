@@ -45,10 +45,10 @@ class Pagination {
 	}
 
 	circularReferenceCheck(data) {
-		let key = data.pagination.data;
-		let includedTags = TemplateData.getIncludedTagNames(data);
+		const key = data.pagination.data;
+		const includedTags = TemplateData.getIncludedTagNames(data);
 
-		for (let tag of includedTags) {
+		for (const tag of includedTags) {
 			if (`collections.${tag}` === key) {
 				throw new PaginationError(
 					`Pagination circular reference${this.inputPathForErrorMessages}, data:\`${key}\` iterates over both the \`${tag}\` collection and also supplies pages to that collection.`,
@@ -101,7 +101,7 @@ class Pagination {
 
 	isFiltered(value) {
 		if ("filter" in this.data.pagination) {
-			let filtered = this.data.pagination.filter;
+			const filtered = this.data.pagination.filter;
 			if (Array.isArray(filtered)) {
 				return filtered.indexOf(value) > -1;
 			}
@@ -113,14 +113,14 @@ class Pagination {
 	}
 
 	_has(target, key) {
-		let notFoundValue = "__NOT_FOUND_ERROR__";
-		let data = lodashGet(target, key, notFoundValue);
+		const notFoundValue = "__NOT_FOUND_ERROR__";
+		const data = lodashGet(target, key, notFoundValue);
 		return data !== notFoundValue;
 	}
 
 	_get(target, key) {
-		let notFoundValue = "__NOT_FOUND_ERROR__";
-		let data = lodashGet(target, key, notFoundValue);
+		const notFoundValue = "__NOT_FOUND_ERROR__";
+		const data = lodashGet(target, key, notFoundValue);
 		if (data === notFoundValue) {
 			throw new Error(
 				`Could not find pagination data${this.inputPathForErrorMessages}, went looking for: ${key}`,
@@ -212,7 +212,7 @@ class Pagination {
 	}
 
 	getOverrideDataLinks(pageNumber, templateCount, links) {
-		let obj = {};
+		const obj = {};
 
 		// links are okay but hrefs are better
 		obj.previousPageLink = pageNumber > 0 ? links[pageNumber - 1] : null;
@@ -231,7 +231,7 @@ class Pagination {
 	}
 
 	getOverrideDataHrefs(pageNumber, templateCount, hrefs) {
-		let obj = {};
+		const obj = {};
 
 		// hrefs are better than links
 		obj.previousPageHref = pageNumber > 0 ? hrefs[pageNumber - 1] : null;
@@ -264,25 +264,25 @@ class Pagination {
 			return [];
 		}
 
-		let entries = [];
-		let items = this.chunkedItems;
-		let pages = this.size === 1 ? items.map((entry) => entry[0]) : items;
+		const entries = [];
+		const items = this.chunkedItems;
+		const pages = this.size === 1 ? items.map((entry) => entry[0]) : items;
 
-		let links = [];
-		let hrefs = [];
+		const links = [];
+		const hrefs = [];
 
-		let hasPermalinkField = Boolean(this.data[this.config.keys.permalink]);
-		let hasComputedPermalinkField = Boolean(
+		const hasPermalinkField = Boolean(this.data[this.config.keys.permalink]);
+		const hasComputedPermalinkField = Boolean(
 			this.data.eleventyComputed && this.data.eleventyComputed[this.config.keys.permalink],
 		);
 
 		// Do *not* pass collections through DeepCopy, we’ll re-add them back in later.
-		let collections = this.data.collections;
+		const collections = this.data.collections;
 		if (collections) {
 			delete this.data.collections;
 		}
 
-		let parentData = DeepCopy(
+		const parentData = DeepCopy(
 			{
 				pagination: {
 					data: this.data.pagination.data,
@@ -308,19 +308,19 @@ class Pagination {
 		// so that we don’t have the memory cost of the full template (and can reuse the parent
 		// template for some things)
 
-		let indices = new Set();
+		const indices = new Set();
 		for (let j = 0; j <= items.length - 1; j++) {
 			indices.add(j);
 		}
 
-		for (let pageNumber of indices) {
-			let cloned = await this.template.clone();
+		for (const pageNumber of indices) {
+			const cloned = await this.template.clone();
 
 			if (pageNumber > 0 && !hasPermalinkField && !hasComputedPermalinkField) {
 				cloned.setExtraOutputSubdirectory(pageNumber);
 			}
 
-			let paginationData = {
+			const paginationData = {
 				pagination: {
 					items: items[pageNumber],
 				},
@@ -333,14 +333,14 @@ class Pagination {
 			}
 
 			// Do *not* deep merge pagination data! See https://github.com/11ty/eleventy/issues/147#issuecomment-440802454
-			let clonedData = ProxyWrap(paginationData, parentData, {
+			const clonedData = ProxyWrap(paginationData, parentData, {
 				benchmarkManager: this.config.benchmarkManager,
 			});
 
 			// Previous method:
 			// let clonedData = DeepCopy(paginationData, parentData);
 
-			let { /*linkInstance,*/ rawPath, path, href } = await cloned.getOutputLocations(clonedData);
+			const { /*linkInstance,*/ rawPath, path, href } = await cloned.getOutputLocations(clonedData);
 			// TODO subdirectory to links if the site doesn’t live at /
 			if (rawPath) {
 				links.push("/" + rawPath);
@@ -365,12 +365,12 @@ class Pagination {
 
 		// we loop twice to pass in the appropriate prev/next links (already full generated now)
 		let index = 0;
-		for (let pageEntry of entries) {
-			let linksObj = this.getOverrideDataLinks(index, items.length, links);
+		for (const pageEntry of entries) {
+			const linksObj = this.getOverrideDataLinks(index, items.length, links);
 
 			Object.assign(pageEntry.data.pagination, linksObj);
 
-			let hrefsObj = this.getOverrideDataHrefs(index, items.length, hrefs);
+			const hrefsObj = this.getOverrideDataHrefs(index, items.length, hrefs);
 			Object.assign(pageEntry.data.pagination, hrefsObj);
 			index++;
 		}

@@ -27,7 +27,7 @@ class CustomEngine extends TemplateEngine {
 	getExtensionMapEntry() {
 		if ("extensionMap" in this.config) {
 			// Iterates over only the user config `addExtension` entries
-			for (let entry of this.config.extensionMap) {
+			for (const entry of this.config.extensionMap) {
 				if (entry.key.toLowerCase() === this.name.toLowerCase()) {
 					return entry;
 				}
@@ -99,11 +99,11 @@ class CustomEngine extends TemplateEngine {
 		await this._runningInit();
 
 		if (typeof this.entry.getData === "function") {
-			let dataBench = this.benchmarks.aggregate.get(
+			const dataBench = this.benchmarks.aggregate.get(
 				`Engine (${this.name}) Get Data From File (Function)`,
 			);
 			dataBench.before();
-			let data = this.entry.getData(inputPath);
+			const data = this.entry.getData(inputPath);
 			dataBench.after();
 			return data;
 		}
@@ -121,15 +121,15 @@ class CustomEngine extends TemplateEngine {
 		if (this.entry.getData === true) {
 			keys.add("data");
 		} else if (Array.isArray(this.entry.getData)) {
-			for (let key of this.entry.getData) {
+			for (const key of this.entry.getData) {
 				keys.add(key);
 			}
 		}
 
-		let dataBench = this.benchmarks.aggregate.get(`Engine (${this.name}) Get Data From File`);
+		const dataBench = this.benchmarks.aggregate.get(`Engine (${this.name}) Get Data From File`);
 		dataBench.before();
 
-		let inst = await this.entry.getInstanceFromInputPath(inputPath);
+		const inst = await this.entry.getInstanceFromInputPath(inputPath);
 		// override keys set at the plugin level in the individual template
 		if (inst.eleventyDataKey) {
 			keys = new Set(inst.eleventyDataKey);
@@ -141,8 +141,8 @@ class CustomEngine extends TemplateEngine {
 			mixins = Object.assign({}, this.config.javascriptFunctions);
 		}
 
-		let promises = [];
-		for (let key of keys) {
+		const promises = [];
+		for (const key of keys) {
 			promises.push(
 				getJavaScriptData(inst, inputPath, key, {
 					mixins,
@@ -151,9 +151,9 @@ class CustomEngine extends TemplateEngine {
 			);
 		}
 
-		let results = await Promise.all(promises);
-		let data = {};
-		for (let result of results) {
+		const results = await Promise.all(promises);
+		const data = {};
+		for (const result of results) {
 			Object.assign(data, result);
 		}
 		dataBench.after();
@@ -177,7 +177,7 @@ class CustomEngine extends TemplateEngine {
 		}
 
 		// TODO generalize this (look at JavaScript.js)
-		let fn = this.entry.compile.bind({
+		const fn = this.entry.compile.bind({
 			config: this.config,
 			addDependencies: (from, toArray = []) => {
 				this.config.uses.addDependency(from, toArray);
@@ -222,7 +222,7 @@ class CustomEngine extends TemplateEngine {
 	getCompileCacheKey(str, inputPath) {
 		// Return this separately so we know whether or not to use the cached version
 		// but still return a key to cache this new render for next time
-		let useCache = !this.isFileRelevantTo(inputPath, lastModifiedFile, false);
+		const useCache = !this.isFileRelevantTo(inputPath, lastModifiedFile, false);
 
 		if (this.entry.compileOptions && "getCacheKey" in this.entry.compileOptions) {
 			if (typeof this.entry.compileOptions.getCacheKey !== "function") {
@@ -237,7 +237,7 @@ class CustomEngine extends TemplateEngine {
 			};
 		}
 
-		let { key } = super.getCompileCacheKey(str, inputPath);
+		const { key } = super.getCompileCacheKey(str, inputPath);
 		return {
 			useCache,
 			key,
@@ -246,7 +246,7 @@ class CustomEngine extends TemplateEngine {
 
 	permalinkNeedsCompilation(/*str*/) {
 		if (this.entry.compileOptions && "permalink" in this.entry.compileOptions) {
-			let p = this.entry.compileOptions.permalink;
+			const p = this.entry.compileOptions.permalink;
 			if (p === "raw") {
 				return false;
 			}

@@ -102,9 +102,9 @@ class TemplateConfig {
 	 * @returns {String} - The normalised local project config file path.
 	 */
 	getLocalProjectConfigFile() {
-		let configFiles = this.getLocalProjectConfigFiles();
+		const configFiles = this.getLocalProjectConfigFiles();
 		// Add the configFiles[0] in case of a test, where no file exists on the file system
-		let configFile = configFiles.find((path) => path && fs.existsSync(path)) || configFiles[0];
+		const configFile = configFiles.find((path) => path && fs.existsSync(path)) || configFiles[0];
 		if (configFile) {
 			return configFile;
 		}
@@ -277,14 +277,14 @@ class TemplateConfig {
 		// for Nested addPlugin calls, Issue #1925
 		this.userConfig._enablePluginExecution();
 
-		let storedActiveNamespace = this.userConfig.activeNamespace;
-		for (let { plugin, options, pluginNamespace } of this.userConfig.plugins) {
+		const storedActiveNamespace = this.userConfig.activeNamespace;
+		for (const { plugin, options, pluginNamespace } of this.userConfig.plugins) {
 			try {
 				this.userConfig.activeNamespace = pluginNamespace;
 				await this.userConfig._executePlugin(plugin, options);
 			} catch (e) {
-				let name = this.userConfig._getPluginName(plugin);
-				let namespaces = [storedActiveNamespace, pluginNamespace].filter((entry) => !!entry);
+				const name = this.userConfig._getPluginName(plugin);
+				const namespaces = [storedActiveNamespace, pluginNamespace].filter((entry) => !!entry);
 
 				let namespaceStr = "";
 				if (namespaces.length) {
@@ -308,7 +308,7 @@ class TemplateConfig {
 	 */
 	async requireLocalConfigFile() {
 		let localConfig = {};
-		let path = this.projectConfigPaths.filter((path) => path).find((path) => fs.existsSync(path));
+		const path = this.projectConfigPaths.filter((path) => path).find((path) => fs.existsSync(path));
 
 		debug(`Merging config with ${path}`);
 
@@ -355,7 +355,7 @@ class TemplateConfig {
 	 * @returns {{}} merged - The merged config file.
 	 */
 	async mergeConfig() {
-		let localConfig = await this.requireLocalConfigFile();
+		const localConfig = await this.requireLocalConfigFile();
 
 		// Template Formats:
 		// 1. Root Config (usually defaultConfig.js)
@@ -367,7 +367,7 @@ class TemplateConfig {
 			delete localConfig.templateFormats;
 		}
 
-		let mergedConfig = merge({}, this.rootConfig, localConfig);
+		const mergedConfig = merge({}, this.rootConfig, localConfig);
 
 		// Setup a few properties for plugins:
 
@@ -390,15 +390,15 @@ class TemplateConfig {
 
 		await this.userConfig.events.emit("eleventy.beforeConfig", this.userConfig);
 
-		let benchmarkManager = this.userConfig.benchmarkManager.get("Aggregate");
-		let pluginsBench = benchmarkManager.get("Processing plugins in config");
+		const benchmarkManager = this.userConfig.benchmarkManager.get("Aggregate");
+		const pluginsBench = benchmarkManager.get("Processing plugins in config");
 		pluginsBench.before();
 		await this.processPlugins(mergedConfig);
 		pluginsBench.after();
 
 		delete mergedConfig.templateFormats;
 
-		let eleventyConfigApiMergingObject = this.userConfig.getMergingConfigObject();
+		const eleventyConfigApiMergingObject = this.userConfig.getMergingConfigObject();
 
 		// `templateFormats` is an override via `setTemplateFormats`
 		// `templateFormatsAdded` is additive via `addTemplateFormats`
@@ -407,7 +407,7 @@ class TemplateConfig {
 			delete eleventyConfigApiMergingObject.templateFormats;
 		}
 
-		let templateFormatsAdded = eleventyConfigApiMergingObject.templateFormatsAdded || [];
+		const templateFormatsAdded = eleventyConfigApiMergingObject.templateFormatsAdded || [];
 		delete eleventyConfigApiMergingObject.templateFormatsAdded;
 
 		templateFormats = unique([...templateFormats, ...templateFormatsAdded]);

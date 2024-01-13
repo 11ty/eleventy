@@ -88,7 +88,7 @@ class TemplateEngine {
 		this.engineLib = engineLib;
 
 		// Run engine amendments (via issue #2438)
-		for (let amendment of this.config.libraryAmendments[this.name] || []) {
+		for (const amendment of this.config.libraryAmendments[this.name] || []) {
 			// TODO it’d be nice if this were async friendly
 			amendment(engineLib);
 		}
@@ -100,7 +100,7 @@ class TemplateEngine {
 
 	async _testRender(str, data) {
 		/* TODO compile needs to pass in inputPath? */
-		let fn = await this.compile(str);
+		const fn = await this.compile(str);
 		return fn(data);
 	}
 

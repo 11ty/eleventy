@@ -17,7 +17,7 @@ function getGitFirstAddedTimeStamp(filePath) {
 
 // return a Date
 export default function (inputPath) {
-	let timestamp = getGitFirstAddedTimeStamp(inputPath);
+	const timestamp = getGitFirstAddedTimeStamp(inputPath);
 	if (timestamp) {
 		return new Date(timestamp);
 	}

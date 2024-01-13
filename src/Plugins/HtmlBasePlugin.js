@@ -29,7 +29,7 @@ function addPathPrefixToUrl(url, pathPrefix, base) {
 
 // pathprefix is only used when overrideBase is a full URL
 function transformUrl(url, base, opts = {}) {
-	let { pathPrefix, pageUrl } = opts;
+	const { pathPrefix, pageUrl } = opts;
 
 	// full URL, return as-is
 	if (isValidUrl(url)) {
@@ -52,7 +52,7 @@ function transformUrl(url, base, opts = {}) {
 }
 
 export default function (eleventyConfig, defaultOptions = {}) {
-	let opts = DeepCopy(
+	const opts = DeepCopy(
 		{
 			// eleventyConfig.pathPrefix is new in Eleventy 2.0.0-canary.15
 			// `base` can be a directory (for path prefix transformations)
@@ -80,7 +80,7 @@ export default function (eleventyConfig, defaultOptions = {}) {
 	});
 
 	eleventyConfig.addFilter(opts.filters.base, function (url, baseOverride, pageUrlOverride) {
-		let base = baseOverride || opts.baseHref;
+		const base = baseOverride || opts.baseHref;
 
 		// Do nothing with a default base
 		if (base === "/") {
@@ -96,7 +96,7 @@ export default function (eleventyConfig, defaultOptions = {}) {
 	eleventyConfig.addAsyncFilter(
 		opts.filters.html,
 		function (content, baseOverride, pageUrlOverride) {
-			let base = baseOverride || opts.baseHref;
+			const base = baseOverride || opts.baseHref;
 
 			// Do nothing with a default base
 			if (base === "/") {

@@ -43,7 +43,7 @@ class EleventyWatchTargets {
 		if (!this.graph.hasNode(parent)) {
 			this.graph.addNode(parent);
 		}
-		for (let dep of deps) {
+		for (const dep of deps) {
 			if (!this.graph.hasNode(dep)) {
 				this.graph.addNode(dep);
 			}
@@ -70,8 +70,8 @@ class EleventyWatchTargets {
 	}
 
 	addRaw(targets, isDependency) {
-		for (let target of targets) {
-			let path = TemplatePath.addLeadingDotSlash(target);
+		for (const target of targets) {
+			const path = TemplatePath.addLeadingDotSlash(target);
 			if (!this.isWatched(path)) {
 				this.newTargets.add(path);
 			}
@@ -121,7 +121,7 @@ class EleventyWatchTargets {
 			deps = deps.filter(filterCallback);
 		}
 
-		for (let target of targets) {
+		for (const target of targets) {
 			this.addToDependencyGraph(target, deps);
 		}
 		this.addRaw(deps, true);
@@ -132,18 +132,18 @@ class EleventyWatchTargets {
 	}
 
 	clearImportCacheFor(filePathArray) {
-		let paths = new Set();
+		const paths = new Set();
 		for (const filePath of filePathArray) {
 			paths.add(filePath);
 
 			// Delete from require cache so that updates to the module are re-required
-			let importsTheChangedFile = this.getDependantsOf(filePath);
-			for (let dep of importsTheChangedFile) {
+			const importsTheChangedFile = this.getDependantsOf(filePath);
+			for (const dep of importsTheChangedFile) {
 				paths.add(dep);
 			}
 
-			let isImportedInTheChangedFile = this.getDependenciesOf(filePath);
-			for (let dep of isImportedInTheChangedFile) {
+			const isImportedInTheChangedFile = this.getDependenciesOf(filePath);
+			for (const dep of isImportedInTheChangedFile) {
 				paths.add(dep);
 			}
 		}

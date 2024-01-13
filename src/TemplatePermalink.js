@@ -5,7 +5,7 @@ import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 class TemplatePermalink {
 	// `link` with template syntax should have already been rendered in Template.js
 	constructor(link, extraSubdir) {
-		let isLinkAnObject = isPlainObject(link);
+		const isLinkAnObject = isPlainObject(link);
 
 		this._isRendered = true;
 		this._writeToFileSystem = true;
@@ -18,7 +18,7 @@ class TemplatePermalink {
 			}
 
 			// find the first string key
-			for (let key in link) {
+			for (const key in link) {
 				if (typeof key !== "string") {
 					continue;
 				}
@@ -74,8 +74,8 @@ class TemplatePermalink {
 			return false;
 		}
 
-		let cleanLink = this._addDefaultLinkFilename(this.buildLink);
-		let parsed = path.parse(cleanLink);
+		const cleanLink = this._addDefaultLinkFilename(this.buildLink);
+		const parsed = path.parse(cleanLink);
 
 		return TemplatePath.join(parsed.dir, this.extraPaginationSubdir, parsed.base);
 	}
@@ -90,11 +90,11 @@ class TemplatePermalink {
 	}
 
 	static normalizePathToUrl(original) {
-		let compare = original || "";
+		const compare = original || "";
 
-		let needleHtml = "/index.html";
-		let needleBareTrailingSlash = "/index/";
-		let needleBare = "/index";
+		const needleHtml = "/index.html";
+		const needleBareTrailingSlash = "/index/";
+		const needleBare = "/index";
 		if (compare.endsWith(needleHtml)) {
 			return compare.slice(0, compare.length - needleHtml.length) + "/";
 		} else if (compare.endsWith(needleBareTrailingSlash)) {
@@ -117,11 +117,11 @@ class TemplatePermalink {
 			return false;
 		}
 
-		let transformedLink = this.toOutputPath();
+		const transformedLink = this.toOutputPath();
 		let original = (transformedLink.charAt(0) !== "/" ? "/" : "") + transformedLink;
 
-		let normalized = TemplatePermalink.normalizePathToUrl(original) || "";
-		for (let transform of this.urlTransforms) {
+		const normalized = TemplatePermalink.normalizePathToUrl(original) || "";
+		for (const transform of this.urlTransforms) {
 			original =
 				transform({
 					url: normalized,
@@ -137,7 +137,7 @@ class TemplatePermalink {
 			return false;
 		}
 
-		let uri = this.toOutputPath();
+		const uri = this.toOutputPath();
 
 		if (uri === false) {
 			return false;
@@ -151,7 +151,7 @@ class TemplatePermalink {
 			return false;
 		}
 
-		let uri = this.toOutputPath();
+		const uri = this.toOutputPath();
 
 		if (uri === false) {
 			return false;
@@ -161,7 +161,7 @@ class TemplatePermalink {
 	}
 
 	static _hasDuplicateFolder(dir, base) {
-		let folders = dir.split("/");
+		const folders = dir.split("/");
 		if (!folders[folders.length - 1]) {
 			folders.pop();
 		}
@@ -171,7 +171,7 @@ class TemplatePermalink {
 	static generate(dir, filenameNoExt, extraSubdir, suffix, fileExtension = "html") {
 		let path;
 		if (fileExtension === "html") {
-			let hasDupeFolder = TemplatePermalink._hasDuplicateFolder(dir, filenameNoExt);
+			const hasDupeFolder = TemplatePermalink._hasDuplicateFolder(dir, filenameNoExt);
 
 			path =
 				(dir ? dir + "/" : "") +

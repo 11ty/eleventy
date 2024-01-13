@@ -15,8 +15,8 @@ class TemplateLayout extends TemplateContent {
 			throw new Error("Expected `eleventyConfig` in TemplateLayout constructor.");
 		}
 
-		let resolver = new TemplateLayoutPathResolver(key, inputDir, extensionMap, eleventyConfig);
-		let resolvedPath = resolver.getFullPath();
+		const resolver = new TemplateLayoutPathResolver(key, inputDir, extensionMap, eleventyConfig);
+		const resolvedPath = resolver.getFullPath();
 
 		super(resolvedPath, inputDir, eleventyConfig);
 
@@ -48,14 +48,14 @@ class TemplateLayout extends TemplateContent {
 	}
 
 	static getTemplate(key, inputDir, eleventyConfig, extensionMap) {
-		let config = eleventyConfig.getConfig();
+		const config = eleventyConfig.getConfig();
 		if (!config.useTemplateCache) {
 			return new TemplateLayout(key, inputDir, extensionMap, eleventyConfig);
 		}
 
-		let fullKey = TemplateLayout.resolveFullKey(key, inputDir);
+		const fullKey = TemplateLayout.resolveFullKey(key, inputDir);
 		if (!templateCache.has(fullKey)) {
-			let layout = new TemplateLayout(key, inputDir, extensionMap, eleventyConfig);
+			const layout = new TemplateLayout(key, inputDir, extensionMap, eleventyConfig);
 
 			templateCache.add(layout);
 			debugDev("Added %o to TemplateCache", key);
@@ -82,20 +82,20 @@ class TemplateLayout extends TemplateContent {
 			this.cachedLayoutMap = new Promise(async (resolve, reject) => {
 				try {
 					// For both the eleventy.layouts event and cyclical layout chain checking  (e.g., a => b => c => a)
-					let layoutChain = new Set();
+					const layoutChain = new Set();
 					layoutChain.add(this.inputPath);
 
-					let cfgKey = this.config.keys.layout;
-					let map = [];
+					const cfgKey = this.config.keys.layout;
+					const map = [];
 					let mapEntry = await this.getTemplateLayoutMapEntry();
 
 					map.push(mapEntry);
 
 					while (mapEntry.frontMatterData && cfgKey in mapEntry.frontMatterData) {
 						// Layout of the current layout
-						let parentLayoutKey = mapEntry.frontMatterData[cfgKey];
+						const parentLayoutKey = mapEntry.frontMatterData[cfgKey];
 
-						let layout = TemplateLayout.getTemplate(
+						const layout = TemplateLayout.getTemplate(
 							parentLayoutKey,
 							mapEntry.inputDir,
 							this.eleventyConfig,
@@ -142,14 +142,14 @@ class TemplateLayout extends TemplateContent {
 		if (!this.dataCache) {
 			this.dataCache = new Promise(async (resolve, reject) => {
 				try {
-					let map = await this.getTemplateLayoutMap();
-					let dataToMerge = [];
+					const map = await this.getTemplateLayoutMap();
+					const dataToMerge = [];
 					for (let j = map.length - 1; j >= 0; j--) {
 						dataToMerge.push(map[j].frontMatterData);
 					}
 
 					// Deep merge of layout front matter
-					let data = TemplateData.mergeDeep(this.config, {}, ...dataToMerge);
+					const data = TemplateData.mergeDeep(this.config, {}, ...dataToMerge);
 					delete data[this.config.keys.layout];
 
 					resolve(data);
@@ -167,8 +167,8 @@ class TemplateLayout extends TemplateContent {
 		if (!this.cachedCompiledLayoutFunction) {
 			this.cachedCompiledLayoutFunction = new Promise(async (resolve, reject) => {
 				try {
-					let rawInput = await this.getPreRender();
-					let renderFunction = await this.compile(rawInput);
+					const rawInput = await this.getPreRender();
+					const renderFunction = await this.compile(rawInput);
 					resolve(renderFunction);
 				} catch (e) {
 					reject(e);
@@ -180,8 +180,8 @@ class TemplateLayout extends TemplateContent {
 	}
 
 	async getCompiledLayoutFunctions() {
-		let layoutMap = await this.getTemplateLayoutMap();
-		let fns = [];
+		const layoutMap = await this.getTemplateLayoutMap();
+		const fns = [];
 
 		try {
 			fns.push({
@@ -189,10 +189,10 @@ class TemplateLayout extends TemplateContent {
 			});
 
 			if (layoutMap.length > 1) {
-				let [, /*currentLayout*/ parentLayout] = layoutMap;
-				let { key, inputDir } = parentLayout;
+				const [, /*currentLayout*/ parentLayout] = layoutMap;
+				const { key, inputDir } = parentLayout;
 
-				let layoutTemplate = TemplateLayout.getTemplate(
+				const layoutTemplate = TemplateLayout.getTemplate(
 					key,
 					inputDir,
 					this.eleventyConfig,
@@ -200,7 +200,7 @@ class TemplateLayout extends TemplateContent {
 				);
 
 				// The parent already includes the rest of the layout chain
-				let upstreamFns = await layoutTemplate.getCompiledLayoutFunctions();
+				const upstreamFns = await layoutTemplate.getCompiledLayoutFunctions();
 				for (let j = 0, k = upstreamFns.length; j < k; j++) {
 					fns.push(upstreamFns[j]);
 				}
@@ -223,9 +223,9 @@ class TemplateLayout extends TemplateContent {
 	// This is called from Template->renderPageEntry
 	async renderPageEntry(pageEntry) {
 		let templateContent = pageEntry.templateContent;
-		let compiledFunctions = await this.getCompiledLayoutFunctions();
-		for (let { render } of compiledFunctions) {
-			let data = {
+		const compiledFunctions = await this.getCompiledLayoutFunctions();
+		for (const { render } of compiledFunctions) {
+			const data = {
 				content: templateContent,
 				...pageEntry.data,
 			};

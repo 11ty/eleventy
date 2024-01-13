@@ -92,13 +92,13 @@ class EleventyFiles {
 	}
 
 	get passthroughGlobs() {
-		let paths = new Set();
+		const paths = new Set();
 		// stuff added in addPassthroughCopy()
-		for (let path of this.passthroughManager.getConfigPathGlobs()) {
+		for (const path of this.passthroughManager.getConfigPathGlobs()) {
 			paths.add(path);
 		}
 		// non-template language extensions
-		for (let path of this.extensionMap.getPassthroughCopyGlobs(this.inputDir)) {
+		for (const path of this.extensionMap.getPassthroughCopyGlobs(this.inputDir)) {
 			paths.add(path);
 		}
 		return Array.from(paths);
@@ -144,7 +144,7 @@ class EleventyFiles {
 	}
 
 	initPassthroughManager() {
-		let mgr = new TemplatePassthroughManager(this.eleventyConfig);
+		const mgr = new TemplatePassthroughManager(this.eleventyConfig);
 		mgr.setInputDir(this.inputDir);
 		mgr.setOutputDir(this.outputDir);
 		mgr.setRunMode(this.runMode);
@@ -174,7 +174,7 @@ class EleventyFiles {
 	}
 
 	getDataDir() {
-		let data = this.templateData;
+		const data = this.templateData;
 
 		return data.getDataDir();
 	}
@@ -193,15 +193,15 @@ class EleventyFiles {
 	}
 
 	getIgnoreGlobs() {
-		let uniqueIgnores = new Set();
-		for (let ignore of this.fileIgnores) {
+		const uniqueIgnores = new Set();
+		for (const ignore of this.fileIgnores) {
 			uniqueIgnores.add(ignore);
 		}
-		for (let ignore of this.extraIgnores) {
+		for (const ignore of this.extraIgnores) {
 			uniqueIgnores.add(ignore);
 		}
 		// Placing the config ignores last here is important to the tests
-		for (let ignore of this.config.ignores) {
+		for (const ignore of this.config.ignores) {
 			uniqueIgnores.add(TemplateGlob.normalizePath(this.localPathRoot || ".", ignore));
 		}
 		return Array.from(uniqueIgnores);
@@ -216,10 +216,10 @@ class EleventyFiles {
 		for (let ignorePath of ignoreFiles) {
 			ignorePath = TemplatePath.normalize(ignorePath);
 
-			let dir = TemplatePath.getDirFromFilePath(ignorePath);
+			const dir = TemplatePath.getDirFromFilePath(ignorePath);
 
 			if (fs.existsSync(ignorePath) && fs.statSync(ignorePath).size > 0) {
-				let ignoreContent = fs.readFileSync(ignorePath, "utf8");
+				const ignoreContent = fs.readFileSync(ignorePath, "utf8");
 
 				ignores = ignores.concat(EleventyFiles.normalizeIgnoreContent(dir, ignoreContent));
 			}
@@ -257,7 +257,7 @@ class EleventyFiles {
 
 					try {
 						// Note these folders must exist to get /** suffix
-						let stat = fs.statSync(path);
+						const stat = fs.statSync(path);
 						if (stat.isDirectory()) {
 							return path + "/**";
 						}
@@ -276,9 +276,9 @@ class EleventyFiles {
 	}
 
 	getIgnores() {
-		let files = new Set();
+		const files = new Set();
 
-		for (let ignore of EleventyFiles.getFileIgnores(this.getIgnoreFiles())) {
+		for (const ignore of EleventyFiles.getFileIgnores(this.getIgnoreFiles())) {
 			files.add(ignore);
 		}
 
@@ -296,15 +296,15 @@ class EleventyFiles {
 	}
 
 	getIgnoreFiles() {
-		let ignoreFiles = [];
-		let rootDirectory = this.localPathRoot || ".";
+		const ignoreFiles = [];
+		const rootDirectory = this.localPathRoot || ".";
 
 		if (this.config.useGitIgnore) {
 			ignoreFiles.push(TemplatePath.join(rootDirectory, ".gitignore"));
 		}
 
 		if (this.eleventyIgnoreContent === false) {
-			let absoluteInputDir = TemplatePath.absolutePath(this.inputDir);
+			const absoluteInputDir = TemplatePath.absolutePath(this.inputDir);
 			ignoreFiles.push(TemplatePath.join(rootDirectory, ".eleventyignore"));
 			if (rootDirectory !== absoluteInputDir) {
 				ignoreFiles.push(TemplatePath.join(this.inputDir, ".eleventyignore"));
@@ -336,9 +336,9 @@ class EleventyFiles {
 			throw new Error("Watching requires `.getFiles()` to be called first in EleventyFiles");
 		}
 
-		let ret = [];
+		const ret = [];
 		// Filter out the passthrough copy paths.
-		for (let path of this.pathCache) {
+		for (const path of this.pathCache) {
 			if (
 				this.extensionMap.isFullTemplateFilePath(path) &&
 				(await this.extensionMap.shouldSpiderJavaScriptDependencies(path))
@@ -350,7 +350,7 @@ class EleventyFiles {
 	}
 
 	_globSearch() {
-		let globs = this.getFileGlobs();
+		const globs = this.getFileGlobs();
 
 		// returns a promise
 		debug("Searching for: %o", globs);
@@ -360,10 +360,10 @@ class EleventyFiles {
 	}
 
 	async getFiles() {
-		let bench = this.aggregateBench.get("Searching the file system (templates)");
+		const bench = this.aggregateBench.get("Searching the file system (templates)");
 		bench.before();
-		let globResults = await this._globSearch();
-		let paths = TemplatePath.addLeadingDotSlashArray(globResults);
+		const globResults = await this._globSearch();
+		const paths = TemplatePath.addLeadingDotSlashArray(globResults);
 		bench.after();
 
 		// Note 2.0.0-canary.19 removed a `filter` option for custom template syntax here that was unpublished and unused.
@@ -378,7 +378,7 @@ class EleventyFiles {
 			return false;
 		}
 
-		for (let path of paths) {
+		for (const path of paths) {
 			if (path === filePath) {
 				return true;
 			}
@@ -390,7 +390,7 @@ class EleventyFiles {
 	/* For `eleventy --watch` */
 	getGlobWatcherFiles() {
 		// TODO improvement: tie the includes and data to specific file extensions (currently using `**`)
-		let directoryGlobs = this._getIncludesAndDataDirs();
+		const directoryGlobs = this._getIncludesAndDataDirs();
 
 		if (checkPassthroughCopyBehavior(this.config, this.runMode)) {
 			return this.validTemplateGlobs.concat(directoryGlobs);
@@ -407,17 +407,17 @@ class EleventyFiles {
 
 	/* For `eleventy --watch` */
 	async getGlobWatcherTemplateDataFiles() {
-		let templateData = this.templateData;
+		const templateData = this.templateData;
 		return await templateData.getTemplateDataFileGlob();
 	}
 
 	/* For `eleventy --watch` */
 	// TODO this isn’t great but reduces complexity avoiding using TemplateData:getLocalDataPaths for each template in the cache
 	async getWatcherTemplateJavaScriptDataFiles() {
-		let globs = await this.templateData.getTemplateJavaScriptDataFileGlob();
-		let bench = this.aggregateBench.get("Searching the file system (watching)");
+		const globs = await this.templateData.getTemplateJavaScriptDataFileGlob();
+		const bench = this.aggregateBench.get("Searching the file system (watching)");
 		bench.before();
-		let results = TemplatePath.addLeadingDotSlashArray(
+		const results = TemplatePath.addLeadingDotSlashArray(
 			await this.fileSystemSearch.search("js-dependencies", globs, {
 				ignore: ["**/node_modules/**"],
 			}),
@@ -429,11 +429,11 @@ class EleventyFiles {
 	/* Ignored by `eleventy --watch` */
 	getGlobWatcherIgnores() {
 		// convert to format without ! since they are passed in as a separate argument to glob watcher
-		let entries = new Set(
+		const entries = new Set(
 			this.fileIgnores.map((ignore) => TemplatePath.stripLeadingDotSlash(ignore)),
 		);
 
-		for (let ignore of this.config.watchIgnores) {
+		for (const ignore of this.config.watchIgnores) {
 			entries.add(TemplateGlob.normalizePath(this.localPathRoot || ".", ignore));
 		}
 
@@ -456,7 +456,7 @@ class EleventyFiles {
 		}
 
 		if (this.config.dir.data && this.config.dir.data !== ".") {
-			let dataDir = this.getDataDir();
+			const dataDir = this.getDataDir();
 			files = files.concat(TemplateGlob.map(dataDir + "/**"));
 		}
 

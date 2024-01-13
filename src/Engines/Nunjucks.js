@@ -44,7 +44,7 @@ class Nunjucks extends TemplateEngine {
 				this.nunjucksEnvironmentOptions,
 			);
 		} else {
-			let fsLoader = new NunjucksLib.FileSystemLoader([
+			const fsLoader = new NunjucksLib.FileSystemLoader([
 				super.getIncludesDir(),
 				TemplatePath.getWorkingDir(),
 			]);
@@ -88,7 +88,7 @@ class Nunjucks extends TemplateEngine {
 	}
 
 	addFilters(filters, isAsync) {
-		for (let name in filters) {
+		for (const name in filters) {
 			this.njkEnv.addFilter(name, Nunjucks.wrapFilter(filters[name]), isAsync);
 		}
 	}
@@ -108,7 +108,7 @@ class Nunjucks extends TemplateEngine {
 
 	// Shortcodes
 	static normalizeContext(context) {
-		let obj = {};
+		const obj = {};
 		if (context.ctx) {
 			obj.ctx = context.ctx;
 
@@ -124,7 +124,7 @@ class Nunjucks extends TemplateEngine {
 	}
 
 	addCustomTags(tags) {
-		for (let name in tags) {
+		for (const name in tags) {
 			this.addTag(name, tags[name]);
 		}
 	}
@@ -143,7 +143,7 @@ class Nunjucks extends TemplateEngine {
 	}
 
 	addGlobals(globals) {
-		for (let name in globals) {
+		for (const name in globals) {
 			this.addGlobal(name, globals[name]);
 		}
 	}
@@ -153,13 +153,13 @@ class Nunjucks extends TemplateEngine {
 	}
 
 	addAllShortcodes(shortcodes, isAsync = false) {
-		for (let name in shortcodes) {
+		for (const name in shortcodes) {
 			this.addShortcode(name, shortcodes[name], isAsync);
 		}
 	}
 
 	addAllPairedShortcodes(shortcodes, isAsync = false) {
-		for (let name in shortcodes) {
+		for (const name in shortcodes) {
 			this.addPairedShortcode(name, shortcodes[name], isAsync);
 		}
 	}
@@ -169,10 +169,8 @@ class Nunjucks extends TemplateEngine {
 			this.tags = [shortcodeName];
 
 			this.parse = function (parser, nodes) {
-				let args;
-				let tok = parser.nextToken();
-
-				args = parser.parseSignature(true, true);
+				const tok = parser.nextToken();
+				const args = parser.parseSignature(true, true);
 
 				// Nunjucks bug with non-paired custom tags bug still exists even
 				// though this issue is closed. Works fine for paired.
@@ -194,7 +192,7 @@ class Nunjucks extends TemplateEngine {
 					resolve = args.pop();
 				}
 
-				let [context, ...argArray] = args;
+				const [context, ...argArray] = args;
 
 				if (isAsync) {
 					shortcodeFn
@@ -214,7 +212,7 @@ class Nunjucks extends TemplateEngine {
 						});
 				} else {
 					try {
-						let ret = shortcodeFn.call(Nunjucks.normalizeContext(context), ...argArray);
+						const ret = shortcodeFn.call(Nunjucks.normalizeContext(context), ...argArray);
 						return new NunjucksLib.runtime.SafeString("" + ret);
 					} catch (e) {
 						throw new EleventyShortcodeError(
@@ -245,9 +243,9 @@ class Nunjucks extends TemplateEngine {
 			};
 
 			this.run = function (...args) {
-				let resolve = args.pop();
-				let body = args.pop();
-				let [context, ...argArray] = args;
+				const resolve = args.pop();
+				const body = args.pop();
+				const [context, ...argArray] = args;
 
 				body(function (e, bodyContent) {
 					if (e) {
@@ -300,12 +298,12 @@ class Nunjucks extends TemplateEngine {
 	}
 
 	addShortcode(shortcodeName, shortcodeFn, isAsync = false) {
-		let fn = this._getShortcodeFn(shortcodeName, shortcodeFn, isAsync);
+		const fn = this._getShortcodeFn(shortcodeName, shortcodeFn, isAsync);
 		this.njkEnv.addExtension(shortcodeName, new fn());
 	}
 
 	addPairedShortcode(shortcodeName, shortcodeFn, isAsync = false) {
-		let fn = this._getPairedShortcodeFn(shortcodeName, shortcodeFn, isAsync);
+		const fn = this._getPairedShortcodeFn(shortcodeName, shortcodeFn, isAsync);
 		this.njkEnv.addExtension(shortcodeName, new fn());
 	}
 
@@ -319,10 +317,10 @@ class Nunjucks extends TemplateEngine {
 	needsCompilation(str) {
 		// Defend against syntax customisations:
 		//    https://mozilla.github.io/nunjucks/api.html#customizing-syntax
-		let optsTags = this.njkEnv.opts.tags || {};
-		let blockStart = optsTags.blockStart || "{%";
-		let variableStart = optsTags.variableStart || "{{";
-		let commentStart = optsTags.variableStart || "{#";
+		const optsTags = this.njkEnv.opts.tags || {};
+		const blockStart = optsTags.blockStart || "{%";
+		const variableStart = optsTags.variableStart || "{{";
+		const commentStart = optsTags.variableStart || "{#";
 
 		return (
 			str.indexOf(blockStart) !== -1 ||
@@ -337,25 +335,25 @@ class Nunjucks extends TemplateEngine {
 		}
 
 		// add extensions so the parser knows about our custom tags/blocks
-		let ext = [];
-		for (let name in this.config.nunjucksTags) {
-			let fn = this._getShortcodeFn(name, () => {});
+		const ext = [];
+		for (const name in this.config.nunjucksTags) {
+			const fn = this._getShortcodeFn(name, () => {});
 			ext.push(new fn());
 		}
-		for (let name in this.config.nunjucksShortcodes) {
-			let fn = this._getShortcodeFn(name, () => {});
+		for (const name in this.config.nunjucksShortcodes) {
+			const fn = this._getShortcodeFn(name, () => {});
 			ext.push(new fn());
 		}
-		for (let name in this.config.nunjucksAsyncShortcodes) {
-			let fn = this._getShortcodeFn(name, () => {}, true);
+		for (const name in this.config.nunjucksAsyncShortcodes) {
+			const fn = this._getShortcodeFn(name, () => {}, true);
 			ext.push(new fn());
 		}
-		for (let name in this.config.nunjucksPairedShortcodes) {
-			let fn = this._getPairedShortcodeFn(name, () => {});
+		for (const name in this.config.nunjucksPairedShortcodes) {
+			const fn = this._getPairedShortcodeFn(name, () => {});
 			ext.push(new fn());
 		}
-		for (let name in this.config.nunjucksAsyncPairedShortcodes) {
-			let fn = this._getPairedShortcodeFn(name, () => {}, true);
+		for (const name in this.config.nunjucksAsyncPairedShortcodes) {
+			const fn = this._getPairedShortcodeFn(name, () => {}, true);
 			ext.push(new fn());
 		}
 
@@ -366,13 +364,13 @@ class Nunjucks extends TemplateEngine {
 	/* Outputs an Array of lodash get selectors */
 	parseForSymbols(str) {
 		const { parser, nodes } = NunjucksLib;
-		let obj = parser.parse(str, this._getParseExtensions());
-		let linesplit = str.split("\n");
-		let values = obj.findAll(nodes.Value);
-		let symbols = obj.findAll(nodes.Symbol).map((entry) => {
-			let name = [entry.value];
+		const obj = parser.parse(str, this._getParseExtensions());
+		const linesplit = str.split("\n");
+		const values = obj.findAll(nodes.Value);
+		const symbols = obj.findAll(nodes.Symbol).map((entry) => {
+			const name = [entry.value];
 			let nestedIndex = -1;
-			for (let val of values) {
+			for (const val of values) {
 				if (nestedIndex > -1) {
 					/* deep.object.syntax */
 					if (linesplit[val.lineno].charAt(nestedIndex) === ".") {
@@ -392,7 +390,7 @@ class Nunjucks extends TemplateEngine {
 			return name.join(".");
 		});
 
-		let uniqueSymbols = Array.from(new Set(symbols));
+		const uniqueSymbols = Array.from(new Set(symbols));
 		return uniqueSymbols;
 	}
 

@@ -18,7 +18,7 @@ class TemplateEngineManager {
 	}
 
 	static isCustomEngineSimpleAlias(entry) {
-		let keys = Object.keys(entry);
+		const keys = Object.keys(entry);
 		if (keys.length > 2) {
 			return false;
 		}
@@ -39,7 +39,7 @@ class TemplateEngineManager {
 
 			// Custom entries *can* overwrite default entries above
 			if ("extensionMap" in this.config) {
-				for (let entry of this.config.extensionMap) {
+				for (const entry of this.config.extensionMap) {
 					// either the key does not already exist or it is not a simple alias and is an override: https://www.11ty.dev/docs/languages/custom/#overriding-an-existing-template-language
 					if (
 						!this._keyToClassNameMap[entry.key] ||
@@ -65,7 +65,7 @@ class TemplateEngineManager {
 	}
 
 	getClassNameFromTemplateKey(key) {
-		let keys = this.keyToClassNameMap;
+		const keys = this.keyToClassNameMap;
 
 		return keys[key];
 	}
@@ -109,7 +109,7 @@ class TemplateEngineManager {
 			return this.engineCache[name];
 		}
 
-		let cls = await this.getEngineClassByExtension(name);
+		const cls = await this.getEngineClassByExtension(name);
 		let instance = new cls(name, dirs, this.eleventyConfig);
 		instance.extensionMap = extensionMap;
 		instance.engineManager = this;

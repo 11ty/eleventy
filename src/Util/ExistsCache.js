@@ -21,8 +21,8 @@ class ExistsCache {
 			return false;
 		}
 
-		let allPaths = PathNormalizer.getAllPaths(path).filter((entry) => entry !== path);
-		for (let parentPath of allPaths) {
+		const allPaths = PathNormalizer.getAllPaths(path).filter((entry) => entry !== path);
+		for (const parentPath of allPaths) {
 			if (this._cache.has(parentPath)) {
 				if (this._cache.get(parentPath) === false) {
 					return true; // we know this parent doesn’t exist
@@ -64,8 +64,8 @@ class ExistsCache {
 			return;
 		}
 
-		let paths = PathNormalizer.getAllPaths(path);
-		for (let fullpath of paths) {
+		const paths = PathNormalizer.getAllPaths(path);
+		for (const fullpath of paths) {
 			this.markExists(fullpath, true, true);
 		}
 	}

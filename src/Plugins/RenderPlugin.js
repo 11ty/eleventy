@@ -36,7 +36,7 @@ async function compile(content, templateLang, { templateConfig, extensionMap } =
 		inputDir = templateConfig?.dir?.input;
 	}
 
-	let tr = new TemplateRender(templateLang, inputDir, templateConfig);
+	const tr = new TemplateRender(templateLang, inputDir, templateConfig);
 	tr.extensionMap = extensionMap;
 	if (templateLang) {
 		await tr.setEngineOverride(templateLang);
@@ -82,8 +82,8 @@ async function compileFile(inputPath, { templateConfig, extensionMap, config } =
 		await templateConfig.init();
 	}
 
-	let cfg = templateConfig.getConfig();
-	let tr = new TemplateRender(inputPath, cfg.dir.input, templateConfig);
+	const cfg = templateConfig.getConfig();
+	const tr = new TemplateRender(inputPath, cfg.dir.input, templateConfig);
 	tr.extensionMap = extensionMap;
 
 	if (templateLang) {
@@ -97,7 +97,7 @@ async function compileFile(inputPath, { templateConfig, extensionMap, config } =
 	}
 
 	// TODO we could make this work with full templates (with front matter?)
-	let content = await fsReadFile(inputPath, "utf8");
+	const content = await fsReadFile(inputPath, "utf8");
 	return tr.getCompiledTemplate(content);
 }
 
@@ -148,13 +148,13 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 	 * @property {module:11ty/eleventy/TemplateConfig} [templateConfig] - Configuration object
 	 * @property {boolean} [accessGlobalData] - Whether or not the template has access to the page’s data.
 	 */
-	let defaultOptions = {
+	const defaultOptions = {
 		tagName: "renderTemplate",
 		tagNameFile: "renderFile",
 		templateConfig: null,
 		accessGlobalData: false,
 	};
-	let opts = Object.assign(defaultOptions, options);
+	const opts = Object.assign(defaultOptions, options);
 
 	function liquidTemplateTag(liquidEngine, tagName) {
 		// via https://github.com/harttle/liquidjs/blob/b5a22fa0910c708fe7881ef170ed44d3594e18f3/src/builtin/tags/raw.ts
@@ -177,7 +177,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 				stream.start();
 			},
 			render: function* (ctx) {
-				let normalizedContext = {};
+				const normalizedContext = {};
 				if (ctx) {
 					if (opts.accessGlobalData) {
 						// parent template data cascade
@@ -188,18 +188,18 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 					normalizedContext.eleventy = ctx.get(["eleventy"]);
 				}
 
-				let rawArgs = Liquid.parseArguments(null, this.args);
-				let argArray = [];
-				let contextScope = ctx.getAll();
-				for (let arg of rawArgs) {
-					let b = yield liquidEngine.evalValue(arg, contextScope);
+				const rawArgs = Liquid.parseArguments(null, this.args);
+				const argArray = [];
+				const contextScope = ctx.getAll();
+				for (const arg of rawArgs) {
+					const b = yield liquidEngine.evalValue(arg, contextScope);
 					argArray.push(b);
 				}
 
 				// plaintext paired shortcode content
-				let body = this.tokens.map((token) => token.getText()).join("");
+				const body = this.tokens.map((token) => token.getText()).join("");
 
-				let ret = _renderStringShortcodeFn.call(
+				const ret = _renderStringShortcodeFn.call(
 					normalizedContext,
 					body,
 					// templateLang, data
@@ -258,18 +258,18 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 					}
 				}
 
-				let body = new nodes.Output(begun.lineno, begun.colno, [
+				const body = new nodes.Output(begun.lineno, begun.colno, [
 					new nodes.TemplateData(begun.lineno, begun.colno, str),
 				]);
 				return new nodes.CallExtensionAsync(this, "run", args, [body]);
 			};
 
 			this.run = function (...args) {
-				let resolve = args.pop();
-				let body = args.pop();
-				let [context, ...argArray] = args;
+				const resolve = args.pop();
+				const body = args.pop();
+				const [context, ...argArray] = args;
 
-				let normalizedContext = {};
+				const normalizedContext = {};
 				if (context.ctx && context.ctx.page) {
 					normalizedContext.ctx = context.ctx;
 
@@ -338,7 +338,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 			templateLang = false;
 		}
 
-		let fn = await compile.call(this, content, templateLang, {
+		const fn = await compile.call(this, content, templateLang, {
 			templateConfig: opts.templateConfig || templateConfig,
 			extensionMap,
 		});
@@ -347,7 +347,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 	}
 
 	async function _renderFileShortcodeFn(inputPath, data = {}, templateLang) {
-		let fn = await compileFile.call(
+		const fn = await compileFile.call(
 			this,
 			inputPath,
 			{
@@ -425,8 +425,8 @@ class RenderManager {
 	async getData(...data) {
 		await this.init();
 
-		let globalData = await this.initialGlobalData.getData();
-		let merged = Merge({}, globalData, ...data);
+		const globalData = await this.initialGlobalData.getData();
+		const merged = Merge({}, globalData, ...data);
 		return merged;
 	}
 
@@ -444,9 +444,9 @@ class RenderManager {
 	async render(fn, edgeData, buildTimeData) {
 		await this.init();
 
-		let mergedData = await this.getData(edgeData);
+		const mergedData = await this.getData(edgeData);
 		// Set .data for options.accessGlobalData feature
-		let context = {
+		const context = {
 			data: mergedData,
 		};
 

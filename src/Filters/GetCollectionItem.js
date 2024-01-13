@@ -1,7 +1,7 @@
 export default function getCollectionItem(collection, page, modifier = 0) {
 	let j = 0;
 	let index;
-	for (let item of collection) {
+	for (const item of collection) {
 		if (
 			item.inputPath === page.inputPath &&
 			(item.outputPath === page.outputPath || item.url === page.url)

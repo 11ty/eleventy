@@ -28,11 +28,11 @@ class BenchmarkGroup {
 
 	// TODO use addAsync everywhere instead
 	add(type, callback) {
-		let benchmark = (this.benchmarks[type] = new Benchmark());
+		const benchmark = (this.benchmarks[type] = new Benchmark());
 
 		return function (...args) {
 			benchmark.before();
-			let ret = callback.call(this, ...args);
+			const ret = callback.call(this, ...args);
 			benchmark.after();
 			return ret;
 		};
@@ -52,7 +52,7 @@ class BenchmarkGroup {
 	// }
 
 	setMinimumThresholdMs(minimumThresholdMs) {
-		let val = parseInt(minimumThresholdMs, 10);
+		const val = parseInt(minimumThresholdMs, 10);
 		if (isNaN(val)) {
 			throw new Error("`setMinimumThresholdMs` expects a number argument.");
 		}
@@ -60,7 +60,7 @@ class BenchmarkGroup {
 	}
 
 	setMinimumThresholdPercent(minimumThresholdPercent) {
-		let val = parseInt(minimumThresholdPercent, 10);
+		const val = parseInt(minimumThresholdPercent, 10);
 		if (isNaN(val)) {
 			throw new Error("`setMinimumThresholdPercent` expects a number argument.");
 		}
@@ -83,24 +83,24 @@ class BenchmarkGroup {
 			return num;
 		}
 
-		let prefix = new Array(length + 1).join(" ");
+		const prefix = new Array(length + 1).join(" ");
 		return (prefix + num).substr(-1 * length);
 	}
 
 	finish(label, totalTimeSpent) {
 		for (var type in this.benchmarks) {
-			let bench = this.benchmarks[type];
-			let isAbsoluteMinimumComparison = this.minimumThresholdMs > 0;
-			let totalForBenchmark = bench.getTotal();
-			let percent = Math.round((totalForBenchmark * 100) / totalTimeSpent);
-			let callCount = bench.getTimesCalled();
+			const bench = this.benchmarks[type];
+			const isAbsoluteMinimumComparison = this.minimumThresholdMs > 0;
+			const totalForBenchmark = bench.getTotal();
+			const percent = Math.round((totalForBenchmark * 100) / totalTimeSpent);
+			const callCount = bench.getTimesCalled();
 
-			let output = {
+			const output = {
 				ms: this.padNumber(totalForBenchmark.toFixed(0), 6),
 				percent: this.padNumber(percent, 3),
 				calls: this.padNumber(callCount, 5),
 			};
-			let str = `Benchmark ${output.ms}ms ${output.percent}% ${output.calls}× (${label}) ${type}`;
+			const str = `Benchmark ${output.ms}ms ${output.percent}% ${output.calls}× (${label}) ${type}`;
 
 			if (
 				(isAbsoluteMinimumComparison && totalForBenchmark >= this.minimumThresholdMs) ||

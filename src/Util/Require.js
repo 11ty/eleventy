@@ -33,10 +33,10 @@ async function loadContents(path, options = {}) {
 	return rawInput;
 }
 
-let lastModifiedPaths = new Map();
+const lastModifiedPaths = new Map();
 eventBus.on("eleventy.importCacheReset", (fileQueue) => {
-	for (let filePath of fileQueue) {
-		let absolutePath = TemplatePath.absolutePath(filePath);
+	for (const filePath of fileQueue) {
+		const absolutePath = TemplatePath.absolutePath(filePath);
 		lastModifiedPaths.set(absolutePath, Date.now());
 
 		// ESM Eleventy when using `import()` on a CJS project file still adds to require.cache
@@ -49,13 +49,13 @@ eventBus.on("eleventy.importCacheReset", (fileQueue) => {
 async function dynamicImportAbsolutePath(absolutePath, type) {
 	if (absolutePath.endsWith(".json") || type === "json") {
 		// https://v8.dev/features/import-assertions#dynamic-import() is still experimental in Node 20
-		let rawInput = await loadContents(absolutePath);
+		const rawInput = await loadContents(absolutePath);
 		return JSON.parse(rawInput);
 	}
 
 	let urlPath;
 	try {
-		let u = new URL(`file:${absolutePath}`);
+		const u = new URL(`file:${absolutePath}`);
 
 		// Bust the import cache if this is the last modified file
 		if (lastModifiedPaths.has(absolutePath)) {
@@ -67,7 +67,7 @@ async function dynamicImportAbsolutePath(absolutePath, type) {
 		urlPath = absolutePath;
 	}
 
-	let target = await import(urlPath);
+	const target = await import(urlPath);
 
 	// If the only export is `default`, elevate to top (for ESM and CJS)
 	if (Object.keys(target).length === 1 && "default" in target) {
@@ -94,7 +94,7 @@ async function dynamicImportAbsolutePath(absolutePath, type) {
 
 	if (type === "cjs" && "default" in target) {
 		let match = true;
-		for (let key in target) {
+		for (const key in target) {
 			if (key === "default") {
 				continue;
 			}
@@ -120,12 +120,12 @@ function normalizeFilePathInEleventyPackage(file) {
 
 async function dynamicImportFromEleventyPackage(file) {
 	// points to files relative to the top level Eleventy directory
-	let filePath = normalizeFilePathInEleventyPackage(file);
+	const filePath = normalizeFilePathInEleventyPackage(file);
 	return dynamicImportAbsolutePath(filePath);
 }
 
 async function dynamicImport(localPath, type) {
-	let absolutePath = TemplatePath.absolutePath(localPath);
+	const absolutePath = TemplatePath.absolutePath(localPath);
 	// async
 	return dynamicImportAbsolutePath(absolutePath, type);
 }

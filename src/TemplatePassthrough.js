@@ -49,7 +49,7 @@ class TemplatePassthrough {
 	}
 
 	async getOutputPath(inputFileFromGlob) {
-		let { inputDir, outputDir, outputPath, inputPath } = this;
+		const { inputDir, outputDir, outputPath, inputPath } = this;
 
 		if (outputPath === true) {
 			return TemplatePath.normalize(
@@ -67,14 +67,14 @@ class TemplatePassthrough {
 		// Bug when copying incremental file overwriting output directory (and making it a file)
 		// e.g. public/test.css -> _site
 		// https://github.com/11ty/eleventy/issues/2278
-		let fullOutputPath = TemplatePath.normalize(TemplatePath.join(outputDir, outputPath));
+		const fullOutputPath = TemplatePath.normalize(TemplatePath.join(outputDir, outputPath));
 
 		if (
 			(await fsExists(inputPath)) &&
 			!TemplatePath.isDirectorySync(inputPath) &&
 			TemplatePath.isDirectorySync(fullOutputPath)
 		) {
-			let filename = path.parse(inputPath).base;
+			const filename = path.parse(inputPath).base;
 			return TemplatePath.normalize(TemplatePath.join(fullOutputPath, filename));
 		}
 
@@ -106,9 +106,9 @@ class TemplatePassthrough {
 
 	async getFiles(glob) {
 		debug("Searching for: %o", glob);
-		let b = this.benchmarks.aggregate.get("Searching the file system (passthrough)");
+		const b = this.benchmarks.aggregate.get("Searching the file system (passthrough)");
 		b.before();
-		let files = TemplatePath.addLeadingDotSlashArray(
+		const files = TemplatePath.addLeadingDotSlashArray(
 			await this.fileSystemSearch.search("passthrough", glob),
 		);
 		b.after();
@@ -135,7 +135,7 @@ class TemplatePassthrough {
 		if (!isGlob(this.inputPath) && (await fsExists(this.inputPath))) {
 			// When inputPath is a directory, make sure it has a slash for passthrough copy aliasing
 			// https://github.com/11ty/eleventy/issues/2709
-			let inputPath = await this.addTrailingSlashIfDirectory(this.inputPath);
+			const inputPath = await this.addTrailingSlashIfDirectory(this.inputPath);
 			return [
 				{
 					inputPath,
@@ -144,10 +144,10 @@ class TemplatePassthrough {
 			];
 		}
 
-		let paths = [];
+		const paths = [];
 		// If not directory or file, attempt to get globs
-		let files = await this.getFiles(this.inputPath);
-		for (let inputPath of files) {
+		const files = await this.getFiles(this.inputPath);
+		for (const inputPath of files) {
 			paths.push({
 				inputPath,
 				outputPath: await this.getOutputPath(inputPath),
@@ -176,7 +176,7 @@ class TemplatePassthrough {
 		}
 
 		let fileCopyCount = 0;
-		let map = {};
+		const map = {};
 		// returns a promise
 		return copy(src, dest, copyOptions)
 			.on(copy.events.COPY_FILE_START, (copyOp) => {
@@ -206,11 +206,11 @@ class TemplatePassthrough {
 		}
 
 		debug("Copying %o", this.inputPath);
-		let fileMap = await this.getFileMap();
+		const fileMap = await this.getFileMap();
 
 		// default options for recursive-copy
 		// see https://www.npmjs.com/package/recursive-copy#arguments
-		let copyOptionsDefault = {
+		const copyOptionsDefault = {
 			overwrite: true, // overwrite output. fails when input is directory (mkdir) and output is file
 			dot: true, // copy dotfiles
 			junk: false, // copy cache files like Thumbs.db
@@ -223,12 +223,12 @@ class TemplatePassthrough {
 			// e.g. `{ filePaths: [ './img/coolkid.jpg' ], relativePaths: [ '' ] }`
 		};
 
-		let copyOptions = Object.assign(copyOptionsDefault, this.copyOptions);
+		const copyOptions = Object.assign(copyOptionsDefault, this.copyOptions);
 
-		let promises = fileMap.map((entry) => {
+		const promises = fileMap.map((entry) => {
 			// For-free passthrough copy
 			if (checkPassthroughCopyBehavior(this.config, this.runMode)) {
-				let aliasMap = {};
+				const aliasMap = {};
 				aliasMap[entry.inputPath] = entry.outputPath;
 
 				return Promise.resolve({
@@ -246,9 +246,9 @@ class TemplatePassthrough {
 			.then((results) => {
 				// collate the count and input/output map results from the array.
 				let count = 0;
-				let map = {};
+				const map = {};
 
-				for (let result of results) {
+				for (const result of results) {
 					count += result.count;
 					Object.assign(map, result.map);
 				}

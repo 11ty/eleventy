@@ -63,7 +63,7 @@ class BenchmarkManager {
 	}
 
 	finish() {
-		let totalTimeSpentBenchmarking = this.getNewTimestamp() - this.start;
+		const totalTimeSpentBenchmarking = this.getNewTimestamp() - this.start;
 		for (var j in this.benchmarkGroups) {
 			this.benchmarkGroups[j].finish(j, totalTimeSpentBenchmarking);
 		}

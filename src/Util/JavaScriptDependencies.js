@@ -4,32 +4,32 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 
 class JavaScriptDependencies {
 	static async getDependencies(inputFiles, isProjectUsingEsm) {
-		let depSet = new Set();
+		const depSet = new Set();
 
 		// TODO does this need to work with aliasing? what other JS extensions will have deps?
-		let commonJsFiles = inputFiles.filter(
+		const commonJsFiles = inputFiles.filter(
 			(file) => (!isProjectUsingEsm && file.endsWith(".js")) || file.endsWith(".cjs"),
 		);
 
-		for (let file of commonJsFiles) {
-			let modules = dependencyTree(file, {
+		for (const file of commonJsFiles) {
+			const modules = dependencyTree(file, {
 				nodeModuleNames: "exclude",
 				allowNotFound: true,
 			}).map((dependency) => {
 				return TemplatePath.addLeadingDotSlash(TemplatePath.relativePath(dependency));
 			});
 
-			for (let dep of modules) {
+			for (const dep of modules) {
 				depSet.add(dep);
 			}
 		}
 
-		let esmFiles = inputFiles.filter(
+		const esmFiles = inputFiles.filter(
 			(file) => (isProjectUsingEsm && file.endsWith(".js")) || file.endsWith(".mjs"),
 		);
-		for (let file of esmFiles) {
-			let modules = await find(file);
-			for (let dep of modules) {
+		for (const file of esmFiles) {
+			const modules = await find(file);
+			for (const dep of modules) {
 				depSet.add(dep);
 			}
 		}

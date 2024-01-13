@@ -73,10 +73,10 @@ class TemplatePassthroughManager {
 	}
 
 	getConfigPaths() {
-		let paths = [];
-		let pathsRaw = this.config.passthroughCopies || {};
+		const paths = [];
+		const pathsRaw = this.config.passthroughCopies || {};
 		debug("`addPassthroughCopy` config API paths: %o", pathsRaw);
-		for (let [inputPath, { outputPath, copyOptions }] of Object.entries(pathsRaw)) {
+		for (const [inputPath, { outputPath, copyOptions }] of Object.entries(pathsRaw)) {
 			paths.push(this._normalizePaths(inputPath, outputPath, copyOptions));
 		}
 		debug("`addPassthroughCopy` config API normalized paths: %o", paths);
@@ -90,8 +90,8 @@ class TemplatePassthroughManager {
 	}
 
 	getNonTemplatePaths(paths) {
-		let matches = [];
-		for (let path of paths) {
+		const matches = [];
+		for (const path of paths) {
 			if (!this.extensionMap.hasEngine(path)) {
 				matches.push(path);
 			}
@@ -109,7 +109,7 @@ class TemplatePassthroughManager {
 	}
 
 	getTemplatePassthroughForPath(path, isIncremental = false) {
-		let inst = new TemplatePassthrough(path, this.outputDir, this.inputDir, this.config);
+		const inst = new TemplatePassthrough(path, this.outputDir, this.inputDir, this.config);
 
 		inst.setFileSystemSearch(this.fileSystemSearch);
 		inst.setIsIncremental(isIncremental);
@@ -126,7 +126,7 @@ class TemplatePassthroughManager {
 			);
 		}
 
-		let { inputPath } = pass.getPath();
+		const { inputPath } = pass.getPath();
 
 		// TODO https://github.com/11ty/eleventy/issues/2452
 		// De-dupe both the input and output paired together to avoid the case
@@ -142,8 +142,8 @@ class TemplatePassthroughManager {
 		return pass
 			.write()
 			.then(({ count, map }) => {
-				for (let src in map) {
-					let dest = map[src];
+				for (const src in map) {
+					const dest = map[src];
 					if (this.conflictMap[dest]) {
 						if (src !== this.conflictMap[dest]) {
 							throw new TemplatePassthroughManagerCopyError(
@@ -194,13 +194,13 @@ class TemplatePassthroughManager {
 
 	isPassthroughCopyFile(paths, changedFile) {
 		// passthrough copy by non-matching engine extension (via templateFormats)
-		for (let path of paths) {
+		for (const path of paths) {
 			if (path === changedFile && !this.extensionMap.hasEngine(path)) {
 				return true;
 			}
 		}
 
-		for (let path of this.getConfigPaths()) {
+		for (const path of this.getConfigPaths()) {
 			if (TemplatePath.startsWithSubPath(changedFile, path.inputPath)) {
 				return path;
 			}
@@ -218,7 +218,7 @@ class TemplatePassthroughManager {
 
 	getAllNormalizedPaths(paths) {
 		if (this.incrementalFile) {
-			let isPassthrough = this.isPassthroughCopyFile(paths, this.incrementalFile);
+			const isPassthrough = this.isPassthroughCopyFile(paths, this.incrementalFile);
 
 			if (isPassthrough) {
 				if (isPassthrough.outputPath) {
@@ -234,17 +234,17 @@ class TemplatePassthroughManager {
 			}
 		}
 
-		let normalizedPaths = this.getConfigPaths();
+		const normalizedPaths = this.getConfigPaths();
 		if (debug.enabled) {
-			for (let path of normalizedPaths) {
+			for (const path of normalizedPaths) {
 				debug("TemplatePassthrough copying from config: %o", path);
 			}
 		}
 
 		if (paths && paths.length) {
-			let passthroughPaths = this.getNonTemplatePaths(paths);
-			for (let path of passthroughPaths) {
-				let normalizedPath = this._normalizePaths(path);
+			const passthroughPaths = this.getNonTemplatePaths(paths);
+			for (const path of passthroughPaths) {
+				const normalizedPath = this._normalizePaths(path);
 
 				debug(
 					`TemplatePassthrough copying from non-matching file extension: ${normalizedPath.inputPath}`,
@@ -260,10 +260,10 @@ class TemplatePassthroughManager {
 	// keys: output
 	// values: input
 	getAliasesFromPassthroughResults(result) {
-		let entries = {};
-		for (let entry of result) {
-			for (let src in entry.map) {
-				let dest = TemplatePath.stripLeadingSubPath(entry.map[src], this.outputDir);
+		const entries = {};
+		for (const entry of result) {
+			for (const src in entry.map) {
+				const dest = TemplatePath.stripLeadingSubPath(entry.map[src], this.outputDir);
 				entries["/" + dest] = src;
 			}
 		}
@@ -275,18 +275,18 @@ class TemplatePassthroughManager {
 	// write times in a significant way.
 	async copyAll(templateExtensionPaths) {
 		debug("TemplatePassthrough copy started.");
-		let normalizedPaths = this.getAllNormalizedPaths(templateExtensionPaths);
+		const normalizedPaths = this.getAllNormalizedPaths(templateExtensionPaths);
 
-		let passthroughs = normalizedPaths.map((path) => {
+		const passthroughs = normalizedPaths.map((path) => {
 			// if incrementalFile is set but it isn’t a passthrough copy, normalizedPaths will be an empty array
-			let isIncremental = !!this.incrementalFile;
+			const isIncremental = !!this.incrementalFile;
 
 			return this.getTemplatePassthroughForPath(path, isIncremental);
 		});
 
-		let promises = passthroughs.map((pass) => this.copyPassthrough(pass));
+		const promises = passthroughs.map((pass) => this.copyPassthrough(pass));
 		return Promise.all(promises).then(async (results) => {
-			let aliases = this.getAliasesFromPassthroughResults(results);
+			const aliases = this.getAliasesFromPassthroughResults(results);
 			await this.config.events.emit("eleventy.passthrough", {
 				map: aliases,
 			});

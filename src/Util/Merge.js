@@ -10,7 +10,7 @@ function cleanKey(key, prefix) {
 }
 
 function getMergedItem(target, source, prefixes = {}) {
-	let { override } = prefixes;
+	const { override } = prefixes;
 
 	// deep copy objects to avoid sharing and to effect key renaming
 	if (!target && isPlainObject(source)) {
@@ -21,8 +21,8 @@ function getMergedItem(target, source, prefixes = {}) {
 		return target.concat(source);
 	} else if (isPlainObject(target)) {
 		if (isPlainObject(source)) {
-			for (let key in source) {
-				let overrideKey = cleanKey(key, override);
+			for (const key in source) {
+				const overrideKey = cleanKey(key, override);
 
 				target[overrideKey] = getMergedItem(target[key], source[key], prefixes);
 			}
@@ -35,7 +35,7 @@ function getMergedItem(target, source, prefixes = {}) {
 
 // The same as Merge but without override prefixes
 function DeepCopy(targetObject, ...sources) {
-	for (let source of sources) {
+	for (const source of sources) {
 		if (!source) {
 			continue;
 		}
@@ -48,7 +48,7 @@ function DeepCopy(targetObject, ...sources) {
 function Merge(target, ...sources) {
 	// Remove override prefixes from root target.
 	if (isPlainObject(target)) {
-		for (let key in target) {
+		for (const key in target) {
 			if (key.indexOf(OVERRIDE_PREFIX) === 0) {
 				target[key.slice(OVERRIDE_PREFIX.length)] = target[key];
 				delete target[key];
@@ -56,7 +56,7 @@ function Merge(target, ...sources) {
 		}
 	}
 
-	for (let source of sources) {
+	for (const source of sources) {
 		if (!source) {
 			continue;
 		}

@@ -85,15 +85,15 @@ class EleventyServe {
 			}
 
 			// Look for peer dep in local project
-			let projectNodeModulesPath = TemplatePath.absolutePath("./node_modules/");
-			let serverPath = TemplatePath.absolutePath(projectNodeModulesPath, name);
+			const projectNodeModulesPath = TemplatePath.absolutePath("./node_modules/");
+			const serverPath = TemplatePath.absolutePath(projectNodeModulesPath, name);
 
 			// No references outside of the project node_modules are allowed
 			if (!serverPath.startsWith(projectNodeModulesPath)) {
 				throw new Error("Invalid node_modules name for Eleventy server instance, received:" + name);
 			}
 
-			let module = await EleventyImport(serverPath);
+			const module = await EleventyImport(serverPath);
 
 			if (!("getServer" in module)) {
 				throw new Error(
@@ -101,7 +101,7 @@ class EleventyServe {
 				);
 			}
 
-			let serverPackageJson = getModulePackageJson(serverPath);
+			const serverPackageJson = getModulePackageJson(serverPath);
 			if (serverPackageJson["11ty"]?.compatibility) {
 				try {
 					this.eleventyConfig.userConfig.versionCheck(serverPackageJson["11ty"].compatibility);
@@ -160,7 +160,7 @@ class EleventyServe {
 			return;
 		}
 
-		let serverModule = await this.getServerModule(this.options.module);
+		const serverModule = await this.getServerModule(this.options.module);
 
 		// Static method `getServer` was already checked in `getServerModule`
 		this._server = serverModule.getServer("eleventy-server", this.outputDir, this.options);
@@ -174,7 +174,7 @@ class EleventyServe {
 	}
 
 	getSetupCallback() {
-		let setupCallback = this.config.serverOptions.setup;
+		const setupCallback = this.config.serverOptions.setup;
 		if (setupCallback && typeof setupCallback === "function") {
 			return setupCallback;
 		}
@@ -183,9 +183,9 @@ class EleventyServe {
 	async init() {
 		if (!this._initPromise) {
 			this._initPromise = new Promise(async (resolve) => {
-				let setupCallback = this.getSetupCallback();
+				const setupCallback = this.getSetupCallback();
 				if (setupCallback) {
-					let opts = await setupCallback();
+					const opts = await setupCallback();
 					this._initOptionsFetched = true;
 
 					if (opts) {
