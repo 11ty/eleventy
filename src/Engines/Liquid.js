@@ -176,6 +176,14 @@ class Liquid extends TemplateEngine {
 		});
 	}
 
+	/**
+	 * @param {String} shortcodeName
+	 * @param {Function} shortcodeFn
+	 *
+	 * @listens 'template'
+	 * @listens 'tag:end'
+	 * @listens 'end'
+	 */
 	addPairedShortcode(shortcodeName, shortcodeFn) {
 		let _t = this;
 		this.addTag(shortcodeName, function (liquidEngine) {

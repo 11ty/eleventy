@@ -1043,6 +1043,9 @@ Arguments:
 	 *
 	 * @async
 	 * @method
+	 * @listens 'change'
+	 * @listens 'add'
+	 * @listens 'unlink'
 	 */
 	async watch() {
 		this.watcherBench.setMinimumThresholdMs(500);

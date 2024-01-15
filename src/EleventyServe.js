@@ -62,6 +62,10 @@ class EleventyServe {
 		return this._eleventyConfig;
 	}
 
+	/**
+	 * @type {EleventyConfig}
+	 * @listens 'eleventy.passthrough'
+	 */
 	set eleventyConfig(config) {
 		this._eleventyConfig = config;
 		if (checkPassthroughCopyBehavior(this._eleventyConfig.userConfig, "serve")) {
