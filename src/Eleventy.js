@@ -389,6 +389,10 @@ class Eleventy {
 	 *
 	 * @async
 	 * @method
+	 * @fires 'eleventy.config'
+	 * @fires 'eleventy.env'
+	 * @fires 'eleventy.extensionmap'
+	 * @fires 'eleventy.directories'
 	 * @returns {} - tbd.
 	 */
 	async init(options = {}) {
@@ -750,6 +754,7 @@ Arguments:
 	 *
 	 * @private
 	 * @method
+	 * @fires 'eleventy.resourceModified'
 	 * @param {String} changedFilePath - File that triggered a re-run (added or modified)
 	 */
 	async _addFileToWatchQueue(changedFilePath, isResetConfig) {
@@ -812,6 +817,8 @@ Arguments:
 	 *
 	 * @private
 	 * @method
+	 * @fires 'beforeWatch'
+	 * @fires 'eleventy.beforeWatch'
 	 */
 	async _watch(isResetConfig = false) {
 		if (this.watchManager.isBuildRunning()) {
@@ -1180,6 +1187,8 @@ Arguments:
 	 *
 	 * @async
 	 * @method
+	 * @fires 'afterBuild'
+	 * @fires 'eleventy.after'
 	 * @returns {Promise<{}>} ret - tbd.
 	 */
 	async executeBuild(to = "fs") {

@@ -135,6 +135,7 @@ class TemplateConfig {
 
 	/**
 	 * Resets the configuration.
+	 * @fires 'eleventy.compileCacheReset'
 	 */
 	async reset() {
 		debugDev("Resetting configuration: TemplateConfig and UserConfig.");
@@ -353,6 +354,8 @@ class TemplateConfig {
 	 *
 	 * @param {String} projectConfigPath - Path to project config.
 	 * @returns {{}} merged - The merged config file.
+	 *
+	 * @fires 'eleventy.beforeConfig'
 	 */
 	async mergeConfig() {
 		let localConfig = await this.requireLocalConfigFile();

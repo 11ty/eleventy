@@ -19,6 +19,11 @@ class Nunjucks extends TemplateEngine {
 		this.cacheable = true;
 	}
 
+	/**
+	 * @private
+	 * @param {*} override
+	 * @fires 'eleventy.engine.njk'
+	 */
 	_setEnv(override) {
 		if (override) {
 			this.njkEnv = override;
