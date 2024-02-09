@@ -1,7 +1,7 @@
 import urlFilter from "../Filters/Url.js";
 import PathPrefixer from "../Util/PathPrefixer.js";
 import { DeepCopy } from "../Util/Merge.js";
-import { UrlTransformer } from "../Util/UrlTransformer.js";
+import { HtmlTransformer } from "../Util/HtmlTransformer.js";
 
 function isValidUrl(url) {
 	try {
@@ -103,7 +103,7 @@ export default function (eleventyConfig, defaultOptions = {}) {
 				return content;
 			}
 
-			return UrlTransformer.transformStandalone(content, (url) => {
+			return HtmlTransformer.transformStandalone(content, (url) => {
 				return transformUrl(url.trim(), base, {
 					pathPrefix: eleventyConfig.pathPrefix,
 					pageUrl: pageUrlOverride || this.page?.url,
@@ -114,7 +114,7 @@ export default function (eleventyConfig, defaultOptions = {}) {
 
 	// Skip the transform with a default base
 	if (opts.baseHref !== "/") {
-		eleventyConfig.urlTransformer.add(
+		eleventyConfig.htmlTransformer.add(
 			opts.extensions,
 			function (urlInMarkup) {
 				return transformUrl(urlInMarkup.trim(), opts.baseHref, {
