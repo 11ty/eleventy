@@ -771,9 +771,9 @@ test("Access to raw input of file (toJSON), issue #1206", async (t) => {
   sortResultsBy(results, "content");
 
   t.deepEqual(results.length, 2);
-  t.deepEqual(results[0].content, `This is the first template.`);
-  t.deepEqual(results[0].rawInput, `This is the first template.`);
-  t.deepEqual(results[1].content, `This is the second template.This is the first template.`);
+  t.deepEqual(results[0].content, `This is the first template.This is the first template.{{ page.rawInput }}`);
+  t.deepEqual(results[0].rawInput, `This is the first template.{{ page.rawInput }}`);
+  t.deepEqual(results[1].content, `This is the second template.This is the first template.{{ page.rawInput }}`);
   t.deepEqual(results[1].rawInput, `This is the second template.{{ collections.tag1[0].rawInput }}`);
 });
 
@@ -788,9 +788,9 @@ test("Access to raw input of file (dryRun), issue #1206", async (t) => {
   sortResultsBy(results, "content");
 
   t.deepEqual(results.length, 2);
-  t.deepEqual(results[0].content, `This is the first template.`);
-  t.deepEqual(results[0].rawInput, `This is the first template.`);
-  t.deepEqual(results[1].content, `This is the second template.This is the first template.`);
+  t.deepEqual(results[0].content, `This is the first template.This is the first template.{{ page.rawInput }}`);
+  t.deepEqual(results[0].rawInput, `This is the first template.{{ page.rawInput }}`);
+  t.deepEqual(results[1].content, `This is the second template.This is the first template.{{ page.rawInput }}`);
   t.deepEqual(results[1].rawInput, `This is the second template.{{ collections.tag1[0].rawInput }}`);
 
 	rimrafSync("./test/stubs-1206/_site/");

@@ -649,10 +649,13 @@ class Template extends TemplateContent {
 	}
 
 	async getTemplates(data) {
+		let rawInput = await this.getPreRender();
+
+		// https://github.com/11ty/eleventy/issues/1206
+		data.page.rawInput = rawInput;
+
 		if (!Pagination.hasPagination(data)) {
 			await this.addComputedData(data);
-
-			let rawInput = await this.getPreRender();
 
 			let obj = {
 				template: this, // not on the docs but folks are relying on it
@@ -679,8 +682,6 @@ class Template extends TemplateContent {
 
 			let pageTemplates = await this.paging.getPageTemplates();
 			let objects = [];
-
-			let rawInput = await this.getPreRender();
 
 			for (let pageEntry of pageTemplates) {
 				await pageEntry.template.addComputedData(pageEntry.data);
