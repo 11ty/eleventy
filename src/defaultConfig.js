@@ -4,7 +4,7 @@ import slugifyFilter from "./Filters/Slugify.js";
 import getLocaleCollectionItem from "./Filters/GetLocaleCollectionItem.js";
 import getCollectionItemIndex from "./Filters/GetCollectionItemIndex.js";
 import { FilterPlugin as InputPathToUrlFilterPlugin } from "./Plugins/InputPathToUrl.js";
-import { UrlTransformer } from "./Util/UrlTransformer.js";
+import { HtmlTransformer } from "./Util/HtmlTransformer.js";
 
 /**
  * @module 11ty/eleventy/defaultConfig
@@ -90,16 +90,16 @@ export default function (config) {
 		return getLocaleCollectionItem.call(this, config, collection, pageOverride, langCode, 1);
 	});
 
-	// Used for the HTML <base> and InputPathToUrl plugins
-	let ut = new UrlTransformer();
-	config.urlTransformer = ut;
-	config.addTransform("eleventy.urlTransformer", async function (content) {
-		return ut.transformContent(this.outputPath, content, this);
-	});
-
-	// Maps an input path to output URL
+	// Filter: Maps an input path to output URL
 	config.addPlugin(InputPathToUrlFilterPlugin, {
 		immediate: true,
+	});
+
+	// Used for the HTML <base> and InputPathToUrl plugins
+	let ut = new HtmlTransformer();
+	config.htmlTransformer = ut;
+	config.addTransform("eleventy.htmlTransformer", async function (content) {
+		return ut.transformContent(this.outputPath, content, this);
 	});
 
 	return {
