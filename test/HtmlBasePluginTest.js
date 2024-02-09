@@ -520,7 +520,7 @@ test("Base plugin with permalink: false, #2602", async (t) => {
   );
 });
 
-test("Using the HTML base plugin with pathPrefix: /test/ and case sensitive attributes", async (t) => {
+test("Using the HTML base plugin with pathPrefix: /test/ and transformed attributes are *not* case sensitive", async (t) => {
   let elev = new Eleventy("./test/stubs-base-case-sens/", "./test/stubs-base-case-sens/_site", {
     pathPrefix: "/test/",
 
@@ -549,10 +549,10 @@ test("Using the HTML base plugin with pathPrefix: /test/ and case sensitive attr
 <style>div { background-image: url(test.jpg); }</style>
 <style>div { background-image: url(/test/test.jpg); }</style>
 <link rel="stylesheet" href="/test/test.css">
-<script SrC="/test/test.js"></script>
+<script SrC="/test.js"></script>
 </head>
 <body>
-<a hreF="/test/">Home</a>
+<a hreF="/">Home</a>
 <a HrEf="subdir/">Test</a>
 <a href="../subdir/">Test</a>
 </body>

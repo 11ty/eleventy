@@ -1,10 +1,27 @@
-import { parseHTML } from "linkedom";
-import { UrlModifier } from "./UrlModifier.js";
+import posthtml from "posthtml";
+import urls from "posthtml-urls";
 
 class HtmlTransformer {
 	constructor() {
 		// order is important
 		this.callbacks = {};
+		this.posthtmlProcessOptions = {};
+	}
+
+	// context is important as it is used in html base plugin for page specific URL
+	getPosthtmlInstance(extension, context = {}) {
+		return posthtml().use(
+			urls({
+				eachURL: (url) => {
+					// and: attrName, tagName
+					for (let { fn: callback } of this.getCallbacks(extension)) {
+						url = callback.call(context, url);
+					}
+
+					return url;
+				},
+			}),
+		);
 	}
 
 	add(extensions, callback, options = {}) {
@@ -38,6 +55,10 @@ class HtmlTransformer {
 		}
 	}
 
+	setPosthtmlProcessOptions(options) {
+		Object.assign(this.posthtmlProcessOptions, options);
+	}
+
 	getFileExtension(filepath) {
 		return (filepath || "").split(".").pop();
 	}
@@ -50,15 +71,17 @@ class HtmlTransformer {
 		return this.callbacks[extension] || [];
 	}
 
-	static async transformStandalone(content, singleCallback) {
-		let { document } = parseHTML(content);
-		let nodes = UrlModifier.findNodes(document);
+	static async transformStandalone(content, callback, posthtmlProcessOptions = {}) {
+		let modifier = posthtml().use(
+			urls({
+				eachURL: (url) => {
+					return callback(url);
+				},
+			}),
+		);
 
-		UrlModifier.modifyNodes(nodes, (url /*, node */) => {
-			return singleCallback(url);
-		});
-
-		return document.toString();
+		let result = await modifier.process(content, posthtmlProcessOptions);
+		return result.html;
 	}
 
 	/* filepath is a template’s outputPath */
@@ -68,39 +91,11 @@ class HtmlTransformer {
 			return content;
 		}
 
-		let { document } = parseHTML(content);
-
-		// TODO eleventy-img wrapper.
-		// let images = document.querySelectorAll("img");
-		// let picture = document.createElement("picture");
-		// for(let img of images) {
-		// 	console.log( img.matches("body img") );
-		// 	let p = picture.cloneNode();
-		// 	img.replaceWith(p);
-		// 	p.appendChild(img);
-		// }
-
-		let nodes = UrlModifier.findNodes(document);
-		UrlModifier.modifyNodes(nodes, (url /*, node */) => {
-			// and: attrName, tagName
-			for (let { fn: callback } of this.getCallbacks(extension)) {
-				// context is important as it is used in html base plugin for page specific URL
-				url = callback.call(context, url);
-			}
-
-			return url;
-		});
-
-		let html = document.toString();
-
-		// linkedom always transforms to uppercase doctype <!DOCTYPE
-		// Not sure if this should stay or not? It does fix our failing tests
-		let lowercaseDoctype = "<!doctype ";
-		if (content.startsWith(lowercaseDoctype)) {
-			return lowercaseDoctype + html.slice(lowercaseDoctype.length);
-		}
-
-		return html;
+		let result = await this.getPosthtmlInstance(extension, context).process(
+			content,
+			this.posthtmlProcessOptions,
+		);
+		return result.html;
 	}
 }
 
