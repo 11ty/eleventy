@@ -103,6 +103,7 @@
 		"@11ty/eleventy-dev-server": "^1.0.4",
 		"@11ty/eleventy-utils": "^1.0.2",
 		"@11ty/lodash-custom": "^4.17.21",
+		"@11ty/posthtml-urls": "^1.0.0",
 		"@sindresorhus/slugify": "^2.2.1",
 		"bcp-47-normalize": "^2.3.0",
 		"chokidar": "^3.6.0",
@@ -127,7 +128,6 @@
 		"nunjucks": "^3.2.4",
 		"please-upgrade-node": "^3.2.0",
 		"posthtml": "^0.16.6",
-		"posthtml-urls": "^1.0.0",
 		"recursive-copy": "^2.0.14",
 		"semver": "^7.6.0",
 		"slugify": "^1.6.6"

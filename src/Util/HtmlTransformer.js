@@ -1,5 +1,5 @@
 import posthtml from "posthtml";
-import urls from "posthtml-urls";
+import urls from "@11ty/posthtml-urls";
 
 class HtmlTransformer {
 	constructor() {
