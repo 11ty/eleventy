@@ -23,7 +23,7 @@ import { getEleventyPackageJson, getWorkingProjectPackageJson } from "./Util/Imp
 import RenderPlugin, * as RenderPluginExtras from "./Plugins/RenderPlugin.js";
 import I18nPlugin, * as I18nPluginExtras from "./Plugins/I18nPlugin.js";
 import HtmlBasePlugin, * as HtmlBasePluginExtras from "./Plugins/HtmlBasePlugin.js";
-import { TransformPlugin as PathToUrlTransformPlugin } from "./Plugins/InputPathToUrl.js";
+import { TransformPlugin as InputPathToUrlTransformPlugin } from "./Plugins/InputPathToUrl.js";
 
 const pkg = getEleventyPackageJson();
 const debug = debugUtil("Eleventy");
@@ -1320,7 +1320,7 @@ export {
 	HtmlBasePlugin,
 
 	/**
-	 * @type {module:11ty/eleventy/Plugins/PathToUrlTransformPlugin}
+	 * @type {module:11ty/eleventy/Plugins/InputPathToUrlTransformPlugin}
 	 */
-	PathToUrlTransformPlugin,
+	InputPathToUrlTransformPlugin,
 };

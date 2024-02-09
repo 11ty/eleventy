@@ -67,7 +67,7 @@ function TransformPlugin(eleventyConfig, defaultOptions = {}) {
 		inputDir = input;
 	});
 
-	eleventyConfig.htmlTransformer.add(opts.extensions, function (filepathOrUrl) {
+	eleventyConfig.htmlTransformer.addUrlTransform(opts.extensions, function (filepathOrUrl) {
 		if (!contentMap) {
 			throw new Error("Internal error: contentMap not available for the `pathToUrl` Transform.");
 		}

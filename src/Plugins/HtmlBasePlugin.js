@@ -114,7 +114,7 @@ export default function (eleventyConfig, defaultOptions = {}) {
 
 	// Skip the transform with a default base
 	if (opts.baseHref !== "/") {
-		eleventyConfig.htmlTransformer.add(
+		eleventyConfig.htmlTransformer.addUrlTransform(
 			opts.extensions,
 			function (urlInMarkup) {
 				return transformUrl(urlInMarkup.trim(), opts.baseHref, {
