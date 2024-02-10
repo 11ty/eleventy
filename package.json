@@ -73,7 +73,7 @@
 		]
 	},
 	"devDependencies": {
-		"@11ty/eleventy-img": "^4.0.0",
+		"@11ty/eleventy-img": "^4.0.1",
 		"@11ty/eleventy-plugin-syntaxhighlight": "^5.0.0",
 		"@iarna/toml": "^2.2.5",
 		"@vue/server-renderer": "^3.4.18",

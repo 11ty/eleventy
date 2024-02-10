@@ -1,1 +1,0 @@
-<img src="./possum.png" alt="it’s a possum">
