@@ -60,3 +60,21 @@ test("Default image transform with an ignored image", async (t) => {
   let [result] = await elev.toJSON();
 	t.deepEqual(normalizeNewLines(result.content), `<img src="./possum.png" alt="it’s a possum" loading="eager">`);
 });
+
+test("Missing alt", async (t) => {
+  let elev = new Eleventy("./test/stubs-img-transform/missing-alt.md", "./test/stubs-img-transform/_site", {
+    config: eleventyConfig => {
+      eleventyConfig.addPlugin(eleventyImageTransformPlugin, {
+				extensions: "html",
+				dryRun: true,
+				formats: ["auto"],
+			});
+    }
+  });
+	elev.setIsVerbose(false);
+  elev.disableLogger();
+
+	await t.throwsAsync(async () => {
+		await elev.toJSON();
+	});
+});
