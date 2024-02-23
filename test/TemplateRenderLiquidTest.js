@@ -5,11 +5,12 @@ import TemplateRender from "../src/TemplateRender.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
-async function getNewTemplateRender(name, inputDir, userConfig = {}) {
+async function getNewTemplateRender(name, inputDir, userConfig = {}, configCallback) {
   let eleventyConfig = new TemplateConfig();
   for (let key in userConfig) {
     eleventyConfig.userConfig[key] = userConfig[key];
   }
+  configCallback?.(eleventyConfig)
   await eleventyConfig.init();
 
   let tr = new TemplateRender(name, inputDir, eleventyConfig);
@@ -1025,3 +1026,32 @@ test("Liquid Parse for Symbols", async (t) => {
 
   t.deepEqual(engine.parseForSymbols("{{ collections.mine | test }}>"), ["collections.mine"]);
 });
+
+test("Issue 1541: global data in rendered templates passed through liquidOptions", async (t) => {
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/", {
+    liquidOptions: {
+      globals: {globalVariable: "Hello world"}
+    },
+  });
+  let fn = await tr.getCompiledTemplate(`<p>{% render "globals" %}</p>`);
+  t.is(await fn(), "<p>Hello world</p>");
+});
+
+test("Issue 1541: global data in rendered templates passed through addGlobalData", async (t) => {
+  let tr = await getNewTemplateRender("liquid", "./test/stubs/", null, eleventyConfig => {
+    eleventyConfig.userConfig.addGlobalData('globalVariable', 'Hello world');
+  });
+  let fn = await tr.getCompiledTemplate(`<p>{% render "globals" %}</p>`);
+  t.is(await fn(), "<p>Hello world</p>");
+});
+
+
+
+// test("Liquid Render Scope Leak", async (t) => {
+//   let tr1 = await getNewTemplateRender("liquid", "./test/stubs/");
+//   t.is(tr1.getEngineName(), "liquid");
+
+//   let tr2 = await getNewTemplateRender("liquid", "./test/stubs/");
+//   let fn = await tr2.getCompiledTemplate("<p>{% render 'scopeleak' %}{{ test }}</p>");
+//   t.is(await fn({ test: 1 }), "<p>21</p>");
+// });

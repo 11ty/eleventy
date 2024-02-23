@@ -109,6 +109,10 @@ class TemplateEngine {
 		return true;
 	}
 
+	needsGlobals(){
+		return false;
+	}
+
 	getExtraDataFromFile() {
 		return {};
 	}
