@@ -2,7 +2,7 @@ import { isPlainObject } from "@11ty/eleventy-utils";
 import TemplateConfig from "../src/TemplateConfig.js";
 import ProjectDirectories from "../src/Util/ProjectDirectories.js";
 
-async function getTemplateConfigInstance(configObj, dirs, configObjOverride = undefined) {
+async function getTemplateConfigInstance(configObj, dirs, configObjOverride = undefined, configCallback = undefined) {
 	let eleventyConfig;
 	if(configObj instanceof TemplateConfig) {
 		eleventyConfig = configObj;
@@ -24,6 +24,8 @@ async function getTemplateConfigInstance(configObj, dirs, configObjOverride = un
 	}
 
 	eleventyConfig.setDirectories(dirs);
+
+	configCallback?.(eleventyConfig);
 
 	await eleventyConfig.init(configObjOverride || configObj); // overrides
 

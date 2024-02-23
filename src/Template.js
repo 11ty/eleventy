@@ -356,6 +356,12 @@ class Template extends TemplateContent {
 		debugDev("%o getData mergedData", this.inputPath);
 
 		this._dataCache = mergedData;
+		if(this.templateRender.engine.needsGlobals()){
+			if(typeof this.templateRender.engine.addGlobals != 'function'){
+				throw new Error("Internal error: the engine's `.needsGlobals()` method returned `true`, but it does not have an `.addGlobals()` method");
+			}
+			this.templateRender.engine.addGlobals(globalData)
+		}
 		return mergedData;
 	}
 
