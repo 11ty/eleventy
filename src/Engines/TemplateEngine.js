@@ -109,7 +109,7 @@ class TemplateEngine {
 		return true;
 	}
 
-	needsGlobals(){
+	needsGlobals() {
 		return false;
 	}
 
