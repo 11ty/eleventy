@@ -25,7 +25,6 @@ class Liquid extends TemplateEngine {
 		this.setLibrary(this.config.libraryOverrides.liquid);
 
 		this.argLexer = moo.compile(Liquid.argumentLexerOptions);
-
 		this.cacheable = true;
 	}
 
@@ -293,6 +292,7 @@ class Liquid extends TemplateEngine {
 
 		return async function (data) {
 			let tmpl = await tmplReady;
+
 			return engine.render(tmpl, data, options);
 		};
 	}

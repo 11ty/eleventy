@@ -1057,14 +1057,3 @@ test("Issue 1541: global data in rendered templates passed through addGlobalData
   let fn = await tr.getCompiledTemplate(`<p>{% render "globals" %}</p>`);
   t.is(await fn(), "<p>Hello world</p>");
 });
-
-
-
-// test("Liquid Render Scope Leak", async (t) => {
-//   let tr1 = await getNewTemplateRender("liquid", "./test/stubs/");
-//   t.is(tr1.getEngineName(), "liquid");
-
-//   let tr2 = await getNewTemplateRender("liquid", "./test/stubs/");
-//   let fn = await tr2.getCompiledTemplate("<p>{% render 'scopeleak' %}{{ test }}</p>");
-//   t.is(await fn({ test: 1 }), "<p>21</p>");
-// });
