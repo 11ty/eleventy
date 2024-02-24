@@ -635,7 +635,7 @@ eventBus.on("eleventy.resourceModified", (path) => {
 });
 
 /**
- * @event 'eleventy.compileCacheReset' - Used when the configuration file reset https://github.com/11ty/eleventy/issues/2147
+ * @listens 'eleventy.compileCacheReset' - Used when the configuration file reset https://github.com/11ty/eleventy/issues/2147
  */
 eventBus.on("eleventy.compileCacheReset", (/*path*/) => {
 	TemplateContent._compileCache = new Map();

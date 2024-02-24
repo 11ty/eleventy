@@ -24,7 +24,17 @@ import RenderPlugin, * as RenderPluginExtras from "./Plugins/RenderPlugin.js";
 import I18nPlugin, * as I18nPluginExtras from "./Plugins/I18nPlugin.js";
 import HtmlBasePlugin, * as HtmlBasePluginExtras from "./Plugins/HtmlBasePlugin.js";
 
+/**
+ *
+ *
+ * @type {*}
+ */
 const pkg = getEleventyPackageJson();
+/**
+ *
+ *
+ * @type {*}
+ */
 const debug = debugUtil("Eleventy");
 
 /**
@@ -39,6 +49,15 @@ const debug = debugUtil("Eleventy");
  * @returns {module:11ty/eleventy/Eleventy~Eleventy}
  */
 class Eleventy {
+	/**
+	 * Creates an instance of Eleventy.
+	 *
+	 * @constructor
+	 * @param {*} input
+	 * @param {*} output
+	 * @param {{}} [options={\}]
+	 * @param {*\} [eleventyConfig=null]
+	 */
 	constructor(input, output, options = {}, eleventyConfig = null) {
 		/** @member {String} - Holds the path to the input directory. */
 		this.rawInput = input;
@@ -538,6 +557,9 @@ Verbose Output: ${this.verboseMode}`);
 	}
 
 	/* Getter for verbose mode */
+	/**
+	 * @type {Boolean}
+	 */
 	get verboseMode() {
 		return this._isVerboseMode;
 	}
@@ -553,6 +575,9 @@ Verbose Output: ${this.verboseMode}`);
 	}
 
 	/* Setter for Logger */
+	/**
+	 * @param {ConsoleLogger}
+	 */
 	set logger(logger) {
 		this.eleventyConfig.setLogger(logger);
 		this._logger = logger;
@@ -800,6 +825,12 @@ Arguments:
 	}
 
 	// Checks the build queue to see if any configuration related files have changed
+	/**
+	 *
+	 *
+	 * @param {{}} [activeQueue=[]]
+	 * @returns {boolean\}
+	 */
 	_shouldResetConfig(activeQueue = []) {
 		if (!activeQueue.length) {
 			return false;
@@ -1133,6 +1164,9 @@ Arguments:
 		process.on("SIGINT", () => this.stopWatch());
 	}
 
+	/**
+	 *
+	 */
 	stopWatch() {
 		debug("Cleaning up chokidar and server instances, if they exist.");
 		this.eleventyServe.close();
