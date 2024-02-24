@@ -155,6 +155,14 @@ function getLocaleUrlsMap(urlToInputPath, extensionMap, options = {}) {
 	return urlMap;
 }
 
+/**
+ *
+ * @param {*} eleventyConfig
+ * @param {*} opts
+ *
+ * @listens 'eleventy.extensionmap'
+ * @listens 'eleventy.contentMap'
+ */
 function EleventyPlugin(eleventyConfig, opts = {}) {
 	let options = DeepCopy(
 		{

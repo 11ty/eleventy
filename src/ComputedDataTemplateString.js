@@ -4,12 +4,13 @@ import debugUtil from "debug";
 const { set: lodashSet } = lodash;
 const debug = debugUtil("Eleventy:ComputedDataTemplateString");
 
-/* Calculates computed data in Template Strings.
- * Ideally we would use the Proxy approach but it doesn’t work
- * in some template languages that visit all available data even if
- * it isn’t used in the template (Nunjucks)
+/**
+ * Calculates computed data in Template Strings.
  */
 class ComputedDataTemplateString {
+	// Ideally, we would use the Proxy approach but it doesn’t work
+	// in some template languages that visit all available data, even if
+	// it isn’t used in the template (Nunjucks)
 	constructor(computedKeys) {
 		if (Array.isArray(computedKeys)) {
 			this.computedKeys = new Set(computedKeys);
@@ -49,6 +50,7 @@ class ComputedDataTemplateString {
 		return Array.from(vars);
 	}
 
+	/** @returns {Array|false} */
 	async findVarsUsed(fn) {
 		let proxyData = this.getProxyData();
 		let output;

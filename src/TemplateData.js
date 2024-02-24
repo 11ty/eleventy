@@ -290,6 +290,10 @@ class TemplateData {
 		return folders;
 	}
 
+	/**
+	 * @fires 'eleventy.globalDataFiles'
+	 * @returns {Object} Global
+	 */
 	async getAllGlobalData() {
 		let globalData = {};
 		let files = TemplatePath.addLeadingDotSlashArray(await this.getGlobalDataFiles());
@@ -372,6 +376,13 @@ class TemplateData {
 	}
 
 	/* Template and Directory data files */
+
+	/**
+	 * @param {Array<String>} localDataPaths
+	 * @returns {Object} local data
+	 *
+	 * @fires 'eleventy.dataFiles'
+	 */
 	async combineLocalData(localDataPaths) {
 		let localData = {};
 		if (!Array.isArray(localDataPaths)) {

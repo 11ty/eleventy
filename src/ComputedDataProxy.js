@@ -3,7 +3,7 @@ import { isPlainObject } from "@11ty/eleventy-utils";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 
-/* Calculates computed data using Proxies */
+/** Calculates computed data using Proxies */
 class ComputedDataProxy {
 	constructor(computedKeys) {
 		if (Array.isArray(computedKeys)) {
@@ -13,14 +13,20 @@ class ComputedDataProxy {
 		}
 	}
 
+	/** @returns {Boolean} */
 	isArrayOrPlainObject(data) {
 		return Array.isArray(data) || isPlainObject(data);
 	}
 
+	/**
+	 * **WARNING: SIDE EFFECTS!** Set defaults for keys not already
+	 * set on parent data.
+	 *
+	 * @param {*} data		-
+	 * @param {*} keyRef	-
+	 * @returns {Proxy} Allows access to `data`, but provides fallback values.
+	 */
 	getProxyData(data, keyRef) {
-		// WARNING: SIDE EFFECTS
-		// Set defaults for keys not already set on parent data
-
 		// TODO should make another effort to get rid of this,
 		// See the ProxyWrap util for more proxy handlers that will likely fix this
 		let undefinedValue = "__11TY_UNDEFINED__";
@@ -112,6 +118,14 @@ class ComputedDataProxy {
 		return data;
 	}
 
+	/**
+	 * Runs `data` through a proxy, processes it with `fn`, and returns
+	 * a list of unique results.
+	 *
+	 * @param {Function} fn - Called on proxy-processed `data`.
+	 * @param {*} [data={}] - Data processed to find variables used.
+	 * @returns {Array<String>} A list of unique variables used.
+	 */
 	async findVarsUsed(fn, data = {}) {
 		let keyRef = new Set();
 

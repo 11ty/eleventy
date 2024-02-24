@@ -49,8 +49,12 @@ class TemplateWriter {
 		this._templatePathCache = new Map();
 	}
 
-	/* Overrides this.input and this.inputDir
-	 * Useful when input is a file and inputDir is not its direct parent */
+	/**
+	 * Overrides `this.input` and `this.inputDir`.
+	 * Useful when `input` is a file and `inputDir` is not its direct parent.
+	 * @param {String} inputDir - input directory
+	 * @param {String} input - template source
+	 */
 	setInput(inputDir, input) {
 		this.inputDir = inputDir;
 		this.input = input;
@@ -64,7 +68,7 @@ class TemplateWriter {
 		this._templateFormats = value;
 	}
 
-	/* Getter for error handler */
+	/** @returns {EleventyErrorHandler}	*/
 	get errorHandler() {
 		if (!this._errorHandler) {
 			this._errorHandler = new EleventyErrorHandler();
@@ -75,7 +79,7 @@ class TemplateWriter {
 		return this._errorHandler;
 	}
 
-	/* Getter for Logger */
+	/** @returns {ConsoleLogger} */
 	get logger() {
 		if (!this._logger) {
 			this._logger = new ConsoleLogger();
@@ -85,7 +89,7 @@ class TemplateWriter {
 		return this._logger;
 	}
 
-	/* Setter for Logger */
+	/** @param {ConsoleLogger|Object} logger */
 	set logger(logger) {
 		this._logger = logger;
 	}
@@ -95,6 +99,7 @@ class TemplateWriter {
 		this.config = config;
 	}
 
+	/** Resets `writeCount` and `skippedCount` to 0. */
 	restart() {
 		this.writeCount = 0;
 		this.skippedCount = 0;
@@ -105,6 +110,7 @@ class TemplateWriter {
 		this._extensionMap = extensionMap;
 	}
 
+	/** @returns {EleventyExtensionMap} */
 	get extensionMap() {
 		if (!this._extensionMap) {
 			this._extensionMap = new EleventyExtensionMap(this.templateFormats, this.eleventyConfig);
@@ -120,6 +126,7 @@ class TemplateWriter {
 		this._eleventyFiles = eleventyFiles;
 	}
 
+	/** @returns {EleventyFiles} */
 	get eleventyFiles() {
 		// usually Eleventy.js will setEleventyFiles with the EleventyFiles manager
 		if (!this._eleventyFiles) {
@@ -412,8 +419,10 @@ class TemplateWriter {
 		});
 	}
 
-	// Passthrough copy not supported in JSON output.
-	// --incremental not supported in JSON output.
+	/**
+	 * **NOTE:** Passthrough copy not supported in JSON output.
+	 * `--incremental` not supported in JSON output.
+	 */
 	async getJSON(to = "json") {
 		let paths = await this._getAllPaths();
 		let promises = await this.generateTemplates(paths, to);
@@ -465,6 +474,7 @@ class TemplateWriter {
 		return this.skippedCount;
 	}
 
+	/** @returns {Array} Returns a 1-length list of the string `"_templatePathCache"`. */
 	get caches() {
 		return ["_templatePathCache"];
 	}

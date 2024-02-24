@@ -49,7 +49,12 @@ class EleventyErrorUtil {
 		return obj;
 	}
 
-	// pass an error through a random template engine’s error handling unscathed
+	/**
+	 * Pass an error through a random template engine’s error handling unscathed
+	 * @param {Error} error
+	 * @returns {String} A JSON-stringified `error`, wrapped in
+	 * 					`EleventyErrorUtil.prefix` and `EleventyErrorUtil.suffix`.
+	 */
 	static convertErrorToString(error) {
 		return (
 			EleventyErrorUtil.prefix +
@@ -58,6 +63,7 @@ class EleventyErrorUtil {
 		);
 	}
 
+	/** @param {Error} e */
 	static isPrematureTemplateContentError(e) {
 		// TODO the rest of the template engines
 		return (

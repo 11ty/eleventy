@@ -179,6 +179,9 @@ class EleventyFiles {
 		return data.getDataDir();
 	}
 
+	/**
+	 * @fires 'eleventy.ignores'
+	 */
 	setupGlobs() {
 		this.fileIgnores = this.getIgnores();
 		this.extraIgnores = this._getIncludesAndDataDirs();

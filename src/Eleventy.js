@@ -25,7 +25,17 @@ import I18nPlugin, * as I18nPluginExtras from "./Plugins/I18nPlugin.js";
 import HtmlBasePlugin, * as HtmlBasePluginExtras from "./Plugins/HtmlBasePlugin.js";
 import { TransformPlugin as InputPathToUrlTransformPlugin } from "./Plugins/InputPathToUrl.js";
 
+/**
+ *
+ *
+ * @type {*}
+ */
 const pkg = getEleventyPackageJson();
+/**
+ *
+ *
+ * @type {*}
+ */
 const debug = debugUtil("Eleventy");
 
 /**
@@ -40,6 +50,15 @@ const debug = debugUtil("Eleventy");
  * @returns {module:11ty/eleventy/Eleventy~Eleventy}
  */
 class Eleventy {
+	/**
+	 * Creates an instance of Eleventy.
+	 *
+	 * @constructor
+	 * @param {*} input
+	 * @param {*} output
+	 * @param {{}} [options={\}]
+	 * @param {*\} [eleventyConfig=null]
+	 */
 	constructor(input, output, options = {}, eleventyConfig = null) {
 		/** @member {String} - Holds the path to the input directory. */
 		this.rawInput = input;
@@ -390,6 +409,10 @@ class Eleventy {
 	 *
 	 * @async
 	 * @method
+	 * @fires 'eleventy.config'
+	 * @fires 'eleventy.env'
+	 * @fires 'eleventy.extensionmap'
+	 * @fires 'eleventy.directories'
 	 * @returns {} - tbd.
 	 */
 	async init(options = {}) {
@@ -517,7 +540,7 @@ Verbose Output: ${this.verboseMode}`);
 	}
 
 	/**
-	 * Set process.ENV variables for use in Eleventy projects
+	 * Set `process.ENV` variables for use in Eleventy projects
 	 *
 	 * @method
 	 */
@@ -535,6 +558,9 @@ Verbose Output: ${this.verboseMode}`);
 	}
 
 	/* Getter for verbose mode */
+	/**
+	 * @type {Boolean}
+	 */
 	get verboseMode() {
 		return this._isVerboseMode;
 	}
@@ -550,6 +576,9 @@ Verbose Output: ${this.verboseMode}`);
 	}
 
 	/* Setter for Logger */
+	/**
+	 * @param {ConsoleLogger}
+	 */
 	set logger(logger) {
 		this.eleventyConfig.setLogger(logger);
 		this._logger = logger;
@@ -751,6 +780,7 @@ Arguments:
 	 *
 	 * @private
 	 * @method
+	 * @fires 'eleventy.resourceModified'
 	 * @param {String} changedFilePath - File that triggered a re-run (added or modified)
 	 */
 	async _addFileToWatchQueue(changedFilePath, isResetConfig) {
@@ -796,6 +826,12 @@ Arguments:
 	}
 
 	// Checks the build queue to see if any configuration related files have changed
+	/**
+	 *
+	 *
+	 * @param {{}} [activeQueue=[]]
+	 * @returns {boolean\}
+	 */
 	_shouldResetConfig(activeQueue = []) {
 		if (!activeQueue.length) {
 			return false;
@@ -813,6 +849,8 @@ Arguments:
 	 *
 	 * @private
 	 * @method
+	 * @fires 'beforeWatch'
+	 * @fires 'eleventy.beforeWatch'
 	 */
 	async _watch(isResetConfig = false) {
 		if (this.watchManager.isBuildRunning()) {
@@ -942,6 +980,7 @@ Arguments:
 		benchmark.after();
 	}
 
+	/** @returns {Boolean} */
 	get isEsm() {
 		if (this._isEsm === undefined) {
 			try {
@@ -1007,6 +1046,7 @@ Arguments:
 		return this.watchTargets.getTargets();
 	}
 
+	/** @returns {Object} */
 	getChokidarConfig() {
 		let ignores = this.eleventyFiles.getGlobWatcherIgnores();
 		debug("Ignoring watcher changes to: %o", ignores);
@@ -1035,6 +1075,9 @@ Arguments:
 	 *
 	 * @async
 	 * @method
+	 * @listens 'change'
+	 * @listens 'add'
+	 * @listens 'unlink'
 	 */
 	async watch() {
 		this.watcherBench.setMinimumThresholdMs(500);
@@ -1122,6 +1165,9 @@ Arguments:
 		process.on("SIGINT", () => this.stopWatch());
 	}
 
+	/**
+	 *
+	 */
 	stopWatch() {
 		debug("Cleaning up chokidar and server instances, if they exist.");
 		this.eleventyServe.close();
@@ -1179,6 +1225,8 @@ Arguments:
 	 *
 	 * @async
 	 * @method
+	 * @fires 'afterBuild'
+	 * @fires 'eleventy.after'
 	 * @returns {Promise<{}>} ret - tbd.
 	 */
 	async executeBuild(to = "fs") {
