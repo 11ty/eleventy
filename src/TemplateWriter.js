@@ -149,7 +149,7 @@ class TemplateWriter {
 			return false;
 		}
 
-		let passthroughManager = this.eleventyFiles.getPassthroughManager();
+		const passthroughManager = this.eleventyFiles.getPassthroughManager();
 		return passthroughManager.isPassthroughCopyFile(paths, this.incrementalFile);
 	}
 
@@ -182,15 +182,15 @@ class TemplateWriter {
 			 *   return pretty(str, { ocd: true });
 			 * }
 			 */
-			for (let transformName in this.config.transforms) {
-				let transform = this.config.transforms[transformName];
+			for (const transformName in this.config.transforms) {
+				const transform = this.config.transforms[transformName];
 				if (typeof transform === "function") {
 					tmpl.addTransform(transformName, transform);
 				}
 			}
 
-			for (let linterName in this.config.linters) {
-				let linter = this.config.linters[linterName];
+			for (const linterName in this.config.linters) {
+				const linter = this.config.linters[linterName];
 				if (typeof linter === "function") {
 					tmpl.addLinter(linter);
 				}
@@ -208,20 +208,20 @@ class TemplateWriter {
 	}
 
 	async _addToTemplateMap(paths, to = "fs") {
-		let promises = [];
+		const promises = [];
 
-		let isIncrementalFileAFullTemplate = this.eleventyFiles.isFullTemplateFile(
+		const isIncrementalFileAFullTemplate = this.eleventyFiles.isFullTemplateFile(
 			paths,
 			this.incrementalFile,
 		);
-		let isIncrementalFileAPassthroughCopy = this._isIncrementalFileAPassthroughCopy(paths);
+		const isIncrementalFileAPassthroughCopy = this._isIncrementalFileAPassthroughCopy(paths);
 
 		let relevantToDeletions = new Set();
 
 		// Update the data cascade and the global dependency map for the one incremental template before everything else (only full templates)
 		if (isIncrementalFileAFullTemplate && this.incrementalFile) {
-			let path = this.incrementalFile;
-			let { template: tmpl, wasCached } = this._createTemplate(path, to);
+			const path = this.incrementalFile;
+			const { template: tmpl, wasCached } = this._createTemplate(path, to);
 			if (wasCached) {
 				tmpl.resetCaches(); // reset internal caches on the cached template instance
 			}
@@ -231,7 +231,7 @@ class TemplateWriter {
 				tmpl.setRenderableOverride(undefined); // reset to render enabled
 			}
 
-			let p = this.templateMap.add(tmpl);
+			const p = this.templateMap.add(tmpl);
 			promises.push(p);
 			await p;
 			debug(`${path} adding to template map.`);
@@ -244,7 +244,7 @@ class TemplateWriter {
 			this.templateMap.addToGlobalDependencyGraph();
 		}
 
-		for (let path of paths) {
+		for (const path of paths) {
 			if (!this.extensionMap.hasEngine(path)) {
 				continue;
 			}
@@ -259,7 +259,7 @@ class TemplateWriter {
 				continue;
 			}
 
-			let { template: tmpl, wasCached } = this._createTemplate(path, to);
+			const { template: tmpl, wasCached } = this._createTemplate(path, to);
 
 			if (!this.incrementalFile) {
 				// Render overrides are only used when `--ignore-initial` is in play and an initial build is not run
@@ -275,7 +275,7 @@ class TemplateWriter {
 					tmpl.resetCaches();
 				}
 			} else {
-				let isTemplateRelevantToDeletedCollections = relevantToDeletions.has(
+				const isTemplateRelevantToDeletedCollections = relevantToDeletions.has(
 					TemplatePath.stripLeadingDotSlash(tmpl.inputPath),
 				);
 
@@ -335,7 +335,7 @@ class TemplateWriter {
 	}
 
 	async _generateTemplate(mapEntry, to) {
-		let tmpl = mapEntry.template;
+		const tmpl = mapEntry.template;
 
 		return tmpl.generateMapEntry(mapEntry, to).then((pages) => {
 			this.writeCount += tmpl.getWriteCount();
@@ -344,7 +344,7 @@ class TemplateWriter {
 	}
 
 	async writePassthroughCopy(templateExtensionPaths) {
-		let passthroughManager = this.eleventyFiles.getPassthroughManager();
+		const passthroughManager = this.eleventyFiles.getPassthroughManager();
 		passthroughManager.setIncrementalFile(this.incrementalFile);
 
 		return passthroughManager.copyAll(templateExtensionPaths).catch((e) => {
@@ -354,7 +354,7 @@ class TemplateWriter {
 	}
 
 	async generateTemplates(paths, to = "fs") {
-		let promises = [];
+		const promises = [];
 
 		// console.time("generateTemplates:_createTemplateMap");
 		// TODO optimize await here
@@ -362,8 +362,8 @@ class TemplateWriter {
 		// console.timeEnd("generateTemplates:_createTemplateMap");
 		debug("Template map created.");
 
-		let usedTemplateContentTooEarlyMap = [];
-		for (let mapEntry of this.templateMap.getMap()) {
+		const usedTemplateContentTooEarlyMap = [];
+		for (const mapEntry of this.templateMap.getMap()) {
 			promises.push(
 				this._generateTemplate(mapEntry, to).catch(function (e) {
 					// Premature templateContent in layout render, this also happens in
@@ -382,7 +382,7 @@ class TemplateWriter {
 			);
 		}
 
-		for (let mapEntry of usedTemplateContentTooEarlyMap) {
+		for (const mapEntry of usedTemplateContentTooEarlyMap) {
 			promises.push(
 				this._generateTemplate(mapEntry, to).catch(function (e) {
 					return Promise.reject(
@@ -399,8 +399,8 @@ class TemplateWriter {
 	}
 
 	async write() {
-		let paths = await this._getAllPaths();
-		let promises = [];
+		const paths = await this._getAllPaths();
+		const promises = [];
 
 		// The ordering here is important to destructuring in Eleventy->_watch
 		promises.push(this.writePassthroughCopy(paths));
@@ -415,12 +415,12 @@ class TemplateWriter {
 	// Passthrough copy not supported in JSON output.
 	// --incremental not supported in JSON output.
 	async getJSON(to = "json") {
-		let paths = await this._getAllPaths();
-		let promises = await this.generateTemplates(paths, to);
+		const paths = await this._getAllPaths();
+		const promises = await this.generateTemplates(paths, to);
 
 		return Promise.all(promises)
 			.then((results) => {
-				let flat = results.flat();
+				const flat = results.flat();
 				return flat;
 			})
 			.catch((e) => {

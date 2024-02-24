@@ -33,19 +33,19 @@ function importJsonSync(filePath) {
 		throw new Error(`importJsonSync expects a .json file extension (received: ${filePath})`);
 	}
 
-	let rawInput = loadContentsSync(filePath);
+	const rawInput = loadContentsSync(filePath);
 	return JSON.parse(rawInput);
 }
 
 // TODO cache
 function getEleventyPackageJson() {
-	let filePath = normalizeFilePathInEleventyPackage("package.json");
+	const filePath = normalizeFilePathInEleventyPackage("package.json");
 	return importJsonSync(filePath);
 }
 
 // TODO cache
 function getModulePackageJson(dir) {
-	let filePath = TemplatePath.absolutePath(dir, "package.json");
+	const filePath = TemplatePath.absolutePath(dir, "package.json");
 	return importJsonSync(filePath);
 }
 

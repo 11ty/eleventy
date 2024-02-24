@@ -25,12 +25,12 @@ function wrapObject(target, fallback) {
 			return Reflect.has(fallback, prop);
 		},
 		ownKeys(target) {
-			let s = new Set();
-			for (let k of Reflect.ownKeys(target)) {
+			const s = new Set();
+			for (const k of Reflect.ownKeys(target)) {
 				s.add(k);
 			}
 			if (isPlainObject(fallback)) {
-				for (let k of Reflect.ownKeys(fallback)) {
+				for (const k of Reflect.ownKeys(fallback)) {
 					s.add(k);
 				}
 			}
@@ -39,7 +39,7 @@ function wrapObject(target, fallback) {
 		get(target, prop) {
 			debug("handler:get", prop);
 
-			let value = Reflect.get(target, prop);
+			const value = Reflect.get(target, prop);
 
 			if (Reflect.has(target, prop)) {
 				// Already proxied
@@ -48,7 +48,7 @@ function wrapObject(target, fallback) {
 				}
 
 				if (isPlainObject(value) && Reflect.has(fallback, prop)) {
-					let ret = wrapObject(value, Reflect.get(fallback, prop));
+					const ret = wrapObject(value, Reflect.get(fallback, prop));
 					debug("handler:get (primary, object)", prop);
 					return ret;
 				}
@@ -60,12 +60,12 @@ function wrapObject(target, fallback) {
 			// Does not exist in primary
 			if (Reflect.has(fallback, prop)) {
 				// fallback has prop
-				let fallbackValue = Reflect.get(fallback, prop);
+				const fallbackValue = Reflect.get(fallback, prop);
 
 				if (isPlainObject(fallbackValue)) {
 					debug("handler:get (fallback, object)", prop);
 					// set empty object on primary
-					let emptyObject = {};
+					const emptyObject = {};
 					Reflect.set(target, prop, emptyObject);
 
 					return wrapObject(emptyObject, fallbackValue);

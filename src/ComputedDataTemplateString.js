@@ -24,12 +24,12 @@ class ComputedDataTemplateString {
 	}
 
 	getProxyData() {
-		let proxyData = {};
+		const proxyData = {};
 
 		// use these special strings as a workaround to check the rendered output
 		// can’t use proxies here as some template languages trigger proxy for all
 		// keys in data
-		for (let key of this.computedKeys) {
+		for (const key of this.computedKeys) {
 			// TODO don’t allow to set eleventyComputed.page? other disallowed computed things?
 			lodashSet(proxyData, key, this.prefix + key + this.suffix);
 		}
@@ -38,10 +38,13 @@ class ComputedDataTemplateString {
 	}
 
 	findVarsInOutput(output = "") {
-		let vars = new Set();
-		let splits = output.split(this.prefix);
-		for (let split of splits) {
-			let varName = split.slice(0, split.indexOf(this.suffix) < 0 ? 0 : split.indexOf(this.suffix));
+		const vars = new Set();
+		const splits = output.split(this.prefix);
+		for (const split of splits) {
+			const varName = split.slice(
+				0,
+				split.indexOf(this.suffix) < 0 ? 0 : split.indexOf(this.suffix),
+			);
 			if (varName) {
 				vars.add(varName);
 			}
@@ -50,7 +53,7 @@ class ComputedDataTemplateString {
 	}
 
 	async findVarsUsed(fn) {
-		let proxyData = this.getProxyData();
+		const proxyData = this.getProxyData();
 		let output;
 		// Mitigation for #1061, errors with filters in the first pass shouldn’t fail the whole thing.
 		try {

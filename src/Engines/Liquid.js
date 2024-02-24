@@ -41,7 +41,7 @@ class Liquid extends TemplateEngine {
 	}
 
 	getLiquidOptions() {
-		let defaults = {
+		const defaults = {
 			root: [this.dirs.includes, this.dirs.input], // supplemented in compile with inputPath below
 			extname: ".liquid",
 			strictFilters: true,
@@ -49,7 +49,7 @@ class Liquid extends TemplateEngine {
 			// cache: true,
 		};
 
-		let options = Object.assign(defaults, this.liquidOptions || {});
+		const options = Object.assign(defaults, this.liquidOptions || {});
 		// debug("Liquid constructor options: %o", options);
 
 		return options;
@@ -68,7 +68,7 @@ class Liquid extends TemplateEngine {
 
 	// Shortcodes
 	static normalizeScope(context) {
-		let obj = {};
+		const obj = {};
 		if (context) {
 			obj.ctx = context;
 			obj.page = context.get(["page"]);
@@ -78,13 +78,13 @@ class Liquid extends TemplateEngine {
 	}
 
 	addCustomTags(tags) {
-		for (let name in tags) {
+		for (const name in tags) {
 			this.addTag(name, tags[name]);
 		}
 	}
 
 	addFilters(filters) {
-		for (let name in filters) {
+		for (const name in filters) {
 			this.addFilter(name, filters[name]);
 		}
 	}
@@ -106,19 +106,19 @@ class Liquid extends TemplateEngine {
 	}
 
 	addAllShortcodes(shortcodes) {
-		for (let name in shortcodes) {
+		for (const name in shortcodes) {
 			this.addShortcode(name, shortcodes[name]);
 		}
 	}
 
 	addAllPairedShortcodes(shortcodes) {
-		for (let name in shortcodes) {
+		for (const name in shortcodes) {
 			this.addPairedShortcode(name, shortcodes[name]);
 		}
 	}
 
 	static parseArguments(lexer, str) {
-		let argArray = [];
+		const argArray = [];
 
 		if (!lexer) {
 			lexer = moo.compile(Liquid.argumentLexerOptions);
@@ -153,7 +153,7 @@ class Liquid extends TemplateEngine {
 	}
 
 	addShortcode(shortcodeName, shortcodeFn) {
-		let _t = this;
+		const _t = this;
 		this.addTag(shortcodeName, function (liquidEngine) {
 			return {
 				parse(tagToken) {
@@ -161,15 +161,15 @@ class Liquid extends TemplateEngine {
 					this.args = tagToken.args;
 				},
 				render: function* (ctx) {
-					let rawArgs = Liquid.parseArguments(_t.argLexer, this.args);
-					let argArray = [];
-					let contextScope = ctx.getAll();
-					for (let arg of rawArgs) {
-						let b = yield liquidEngine.evalValue(arg, contextScope);
+					const rawArgs = Liquid.parseArguments(_t.argLexer, this.args);
+					const argArray = [];
+					const contextScope = ctx.getAll();
+					for (const arg of rawArgs) {
+						const b = yield liquidEngine.evalValue(arg, contextScope);
 						argArray.push(b);
 					}
 
-					let ret = yield shortcodeFn.call(Liquid.normalizeScope(ctx), ...argArray);
+					const ret = yield shortcodeFn.call(Liquid.normalizeScope(ctx), ...argArray);
 					return ret;
 				},
 			};
@@ -177,7 +177,7 @@ class Liquid extends TemplateEngine {
 	}
 
 	addPairedShortcode(shortcodeName, shortcodeFn) {
-		let _t = this;
+		const _t = this;
 		this.addTag(shortcodeName, function (liquidEngine) {
 			return {
 				parse(tagToken, remainTokens) {
@@ -196,17 +196,17 @@ class Liquid extends TemplateEngine {
 					stream.start();
 				},
 				render: function* (ctx /*, emitter*/) {
-					let rawArgs = Liquid.parseArguments(_t.argLexer, this.args);
-					let argArray = [];
-					let contextScope = ctx.getAll();
-					for (let arg of rawArgs) {
-						let b = yield liquidEngine.evalValue(arg, contextScope);
+					const rawArgs = Liquid.parseArguments(_t.argLexer, this.args);
+					const argArray = [];
+					const contextScope = ctx.getAll();
+					for (const arg of rawArgs) {
+						const b = yield liquidEngine.evalValue(arg, contextScope);
 						argArray.push(b);
 					}
 
 					const html = yield liquidEngine.renderer.renderTemplates(this.templates, ctx);
 
-					let ret = yield shortcodeFn.call(Liquid.normalizeScope(ctx), html, ...argArray);
+					const ret = yield shortcodeFn.call(Liquid.normalizeScope(ctx), html, ...argArray);
 					// emitter.write(ret);
 					return ret;
 				},
@@ -215,9 +215,9 @@ class Liquid extends TemplateEngine {
 	}
 
 	parseForSymbols(str) {
-		let tokenizer = new liquidLib.Tokenizer(str);
-		let tokens = tokenizer.readTopLevelTokens();
-		let symbols = tokens
+		const tokenizer = new liquidLib.Tokenizer(str);
+		const tokens = tokenizer.readTopLevelTokens();
+		const symbols = tokens
 			.filter((token) => token.kind === liquidLib.TokenKind.Output)
 			.map((token) => {
 				// manually remove filters 😅
@@ -234,7 +234,7 @@ class Liquid extends TemplateEngine {
 	}
 
 	needsCompilation(str) {
-		let options = this.liquidLib.options;
+		const options = this.liquidLib.options;
 
 		return (
 			str.indexOf(options.tagDelimiterLeft) !== -1 ||
@@ -243,11 +243,11 @@ class Liquid extends TemplateEngine {
 	}
 
 	async compile(str, inputPath) {
-		let engine = this.liquidLib;
-		let tmplReady = engine.parse(str, inputPath);
+		const engine = this.liquidLib;
+		const tmplReady = engine.parse(str, inputPath);
 
 		// Required for relative includes
-		let options = {};
+		const options = {};
 		if (!inputPath || inputPath === "liquid" || inputPath === "md") {
 			// do nothing
 		} else {
@@ -255,7 +255,7 @@ class Liquid extends TemplateEngine {
 		}
 
 		return async function (data) {
-			let tmpl = await tmplReady;
+			const tmpl = await tmplReady;
 
 			return engine.render(tmpl, data, options);
 		};

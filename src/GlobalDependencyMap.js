@@ -28,9 +28,9 @@ class GlobalDependencyMap {
 	}
 
 	removeLayoutNodes(normalizedLayouts) {
-		let nodes = this.map.overallOrder();
-		for (let node of nodes) {
-			let data = this.map.getNodeData(node);
+		const nodes = this.map.overallOrder();
+		for (const node of nodes) {
+			const data = this.map.getNodeData(node);
 			if (!data || !data.type || data.type !== GlobalDependencyMap.LAYOUT_KEY) {
 				continue;
 			}
@@ -46,11 +46,11 @@ class GlobalDependencyMap {
 
 	// Eleventy Layouts don’t show up in the dependency graph, so we handle those separately
 	addLayoutsToMap(layouts) {
-		let normalizedLayouts = this.normalizeLayoutsObject(layouts);
+		const normalizedLayouts = this.normalizeLayoutsObject(layouts);
 		// Clear out any previous layout relationships to make way for the new ones
 		this.removeLayoutNodes(normalizedLayouts);
 
-		for (let layout in normalizedLayouts) {
+		for (const layout in normalizedLayouts) {
 			// We add this pre-emptively to add the `layout` data
 			if (!this.map.hasNode(layout)) {
 				this.map.addNode(layout, {
@@ -59,7 +59,7 @@ class GlobalDependencyMap {
 			}
 
 			// Potential improvement: only add the first template in the chain for a template and manage any upstream layouts by their own relationships
-			for (let pageTemplate of normalizedLayouts[layout]) {
+			for (const pageTemplate of normalizedLayouts[layout]) {
 				this.addDependency(pageTemplate, [layout]);
 			}
 		}
@@ -96,9 +96,9 @@ class GlobalDependencyMap {
 	}
 
 	normalizeLayoutsObject(layouts) {
-		let o = {};
-		for (let rawLayout in layouts) {
-			let layout = this.normalizeNode(rawLayout);
+		const o = {};
+		for (const rawLayout in layouts) {
+			const layout = this.normalizeNode(rawLayout);
 			o[layout] = layouts[rawLayout].map((entry) => this.normalizeNode(entry));
 		}
 		return o;
@@ -128,7 +128,7 @@ class GlobalDependencyMap {
 			return new Set();
 		}
 
-		let prevDeps = this.getDependantsFor(node)
+		const prevDeps = this.getDependantsFor(node)
 			.filter((entry) => {
 				return entry.startsWith(GlobalDependencyMap.COLLECTION_PREFIX);
 			})
@@ -136,9 +136,9 @@ class GlobalDependencyMap {
 				return GlobalDependencyMap.getEntryFromCollectionKey(entry);
 			});
 
-		let prevDepsSet = new Set(prevDeps);
-		let deleted = new Set();
-		for (let dep of prevDepsSet) {
+		const prevDepsSet = new Set(prevDeps);
+		const deleted = new Set();
+		for (const dep of prevDepsSet) {
 			if (!collectionNames.has(dep)) {
 				deleted.add(dep);
 			}
@@ -159,19 +159,19 @@ class GlobalDependencyMap {
 		//   this.map.removeDependency(dep, node);
 		// }
 
-		for (let dep of this.map.directDependenciesOf(node)) {
+		for (const dep of this.map.directDependenciesOf(node)) {
 			this.map.removeDependency(node, dep);
 		}
 	}
 
 	getTemplatesThatConsumeCollections(collectionNames) {
-		let templates = new Set();
-		for (let name of collectionNames) {
-			let collectionName = GlobalDependencyMap.getCollectionKeyForEntry(name);
+		const templates = new Set();
+		for (const name of collectionNames) {
+			const collectionName = GlobalDependencyMap.getCollectionKeyForEntry(name);
 			if (!this.map.hasNode(collectionName)) {
 				continue;
 			}
-			for (let node of this.map.dependantsOf(collectionName)) {
+			for (const node of this.map.dependantsOf(collectionName)) {
 				if (!node.startsWith(GlobalDependencyMap.COLLECTION_PREFIX)) {
 					templates.add(node);
 				}
@@ -187,7 +187,7 @@ class GlobalDependencyMap {
 			return [];
 		}
 
-		let layouts = [];
+		const layouts = [];
 
 		// include self, if layout
 		if (this.map.getNodeData(node)?.type === GlobalDependencyMap.LAYOUT_KEY) {
@@ -195,7 +195,7 @@ class GlobalDependencyMap {
 		}
 
 		this.map.dependantsOf(node).forEach((node) => {
-			let data = this.map.getNodeData(node);
+			const data = this.map.getNodeData(node);
 			// we only want layouts
 			if (data && data.type && data.type === GlobalDependencyMap.LAYOUT_KEY) {
 				return layouts.push(node);
@@ -220,7 +220,7 @@ class GlobalDependencyMap {
 			}
 
 			// When includeLayouts is `false` we want to filter out layouts
-			let data = this.map.getNodeData(node);
+			const data = this.map.getNodeData(node);
 			if (data && data.type && data.type === GlobalDependencyMap.LAYOUT_KEY) {
 				return false;
 			}
@@ -238,7 +238,7 @@ class GlobalDependencyMap {
 
 		// debug("%o depends on %o", from, toArray);
 
-		for (let to of toArray) {
+		for (const to of toArray) {
 			if (!this.map.hasNode(to)) {
 				this.map.addNode(to);
 			}
@@ -264,13 +264,13 @@ class GlobalDependencyMap {
 	}
 
 	addDependencyConsumesCollection(from, collectionName) {
-		let nodeName = this.normalizeNode(from);
+		const nodeName = this.normalizeNode(from);
 		debug("%o depends on collection: %o", nodeName, collectionName);
 		this._addDependency(nodeName, [GlobalDependencyMap.getCollectionKeyForEntry(collectionName)]);
 	}
 
 	addDependencyPublishesToCollection(from, collectionName) {
-		let normalizedFrom = this.normalizeNode(from);
+		const normalizedFrom = this.normalizeNode(from);
 		this._addDependency(GlobalDependencyMap.getCollectionKeyForEntry(collectionName), [
 			normalizedFrom,
 		]);
@@ -280,7 +280,7 @@ class GlobalDependencyMap {
 	hasDependency(from, to, includeLayouts) {
 		to = this.normalizeNode(to);
 
-		let deps = this.getDependencies(from, includeLayouts); // normalizes `from`
+		const deps = this.getDependencies(from, includeLayouts); // normalizes `from`
 
 		if (!deps) {
 			return false;
@@ -317,11 +317,11 @@ class GlobalDependencyMap {
 	}
 
 	restore(persisted) {
-		let obj = JSON.parse(persisted);
-		let graph = new DepGraph({ circular: true });
+		const obj = JSON.parse(persisted);
+		const graph = new DepGraph({ circular: true });
 
 		// https://github.com/jriecken/dependency-graph/issues/44
-		for (let key in obj) {
+		for (const key in obj) {
 			graph[key] = obj[key];
 		}
 		this.map = graph;

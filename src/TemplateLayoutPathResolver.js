@@ -63,7 +63,7 @@ class TemplateLayoutPathResolver {
 			this.path = this.aliases[this.path];
 		}
 
-		let useLayoutResolution = this.config.layoutResolution;
+		const useLayoutResolution = this.config.layoutResolution;
 
 		this.pathAlreadyHasExtension = this.dir + "/" + this.path;
 
@@ -107,7 +107,7 @@ class TemplateLayoutPathResolver {
 			);
 		}
 
-		for (let filename of this.extensionMap.getFileList(this.path)) {
+		for (const filename of this.extensionMap.getFileList(this.path)) {
 			// TODO async
 			if (fs.existsSync(this.dir + "/" + filename)) {
 				return filename;

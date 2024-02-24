@@ -24,7 +24,7 @@ class Compatibility {
 
 		try {
 			// fetch from project’s package.json
-			let projectPackageJson = getWorkingProjectPackageJson();
+			const projectPackageJson = getWorkingProjectPackageJson();
 			return projectPackageJson["11ty"]?.compatibility;
 		} catch (e) {
 			debug("Could not find a project package.json for compatibility version check: %O", e);

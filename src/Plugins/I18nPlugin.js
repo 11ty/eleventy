@@ -18,7 +18,7 @@ class LangUtils {
 	}
 
 	static getLanguageCodeFromUrl(url) {
-		let s = (url || "").split("/");
+		const s = (url || "").split("/");
 		return s.length > 0 && Comparator.isLangCode(s[1]) ? s[1] : "";
 	}
 
@@ -50,7 +50,7 @@ class Comparator {
 	// https://en.wikipedia.org/wiki/IETF_language_tag#Relation_to_other_standards
 	// Requires a ISO-639-1 language code at the start (2 characters before the first -)
 	static isLangCode(code) {
-		let [s] = (code || "").split("-");
+		const [s] = (code || "").split("-");
 		if (!iso639.validate(s)) {
 			return false;
 		}
@@ -91,13 +91,13 @@ function normalizeInputPath(inputPath, extensionMap) {
  * }
  */
 function getLocaleUrlsMap(urlToInputPath, extensionMap, options = {}) {
-	let filemap = {};
+	const filemap = {};
 
-	for (let url in urlToInputPath) {
+	for (const url in urlToInputPath) {
 		// Group number comes from Pagination.js
-		let { inputPath: originalFilepath, groupNumber } = urlToInputPath[url];
-		let filepath = normalizeInputPath(originalFilepath, extensionMap);
-		let replaced =
+		const { inputPath: originalFilepath, groupNumber } = urlToInputPath[url];
+		const filepath = normalizeInputPath(originalFilepath, extensionMap);
+		const replaced =
 			LangUtils.swapLanguageCodeNoCheck(filepath, "__11ty_i18n") + `_group:${groupNumber}`;
 
 		if (!filemap[replaced]) {
@@ -124,7 +124,7 @@ function getLocaleUrlsMap(urlToInputPath, extensionMap, options = {}) {
 	}
 
 	// Default sorted by lang code
-	for (let key in filemap) {
+	for (const key in filemap) {
 		filemap[key].sort(function (a, b) {
 			if (a.lang < b.lang) {
 				return -1;
@@ -137,10 +137,10 @@ function getLocaleUrlsMap(urlToInputPath, extensionMap, options = {}) {
 	}
 
 	// map of input paths => array of localized urls
-	let urlMap = {};
-	for (let filepath in filemap) {
-		for (let entry of filemap[filepath]) {
-			let url = entry.url;
+	const urlMap = {};
+	for (const filepath in filemap) {
+		for (const entry of filemap[filepath]) {
+			const url = entry.url;
 			if (!urlMap[url]) {
 				urlMap[url] = filemap[filepath].filter((entry) => {
 					if (entry.lang) {
@@ -156,7 +156,7 @@ function getLocaleUrlsMap(urlToInputPath, extensionMap, options = {}) {
 }
 
 function EleventyPlugin(eleventyConfig, opts = {}) {
-	let options = DeepCopy(
+	const options = DeepCopy(
 		{
 			defaultLanguage: "",
 			filters: {
@@ -179,10 +179,10 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
 		extensionMap = map;
 	});
 
-	let bench = eleventyConfig.benchmarkManager.get("Aggregate");
-	let contentMaps = {};
+	const bench = eleventyConfig.benchmarkManager.get("Aggregate");
+	const contentMaps = {};
 	eleventyConfig.on("eleventy.contentMap", function ({ urlToInputPath, inputPathToUrl }) {
-		let b = bench.get("(i18n Plugin) Setting up content map.");
+		const b = bench.get("(i18n Plugin) Setting up content map.");
 		b.before();
 		contentMaps.inputPathToUrl = inputPathToUrl;
 		contentMaps.urlToInputPath = urlToInputPath;
@@ -203,7 +203,7 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
 	// If a non-localized file exists, returns the URL without a language assigned
 	// Fails if no file exists (localized and not localized)
 	eleventyConfig.addFilter(options.filters.url, function (url, langCodeOverride) {
-		let langCode =
+		const langCode =
 			langCodeOverride ||
 			LangUtils.getLanguageCodeFromUrl(this.page?.url) ||
 			options.defaultLanguage;
@@ -213,7 +213,7 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
 			contentMaps.localeUrlsMap[url] ||
 			(!url.endsWith("/") && contentMaps.localeUrlsMap[`${url}/`])
 		) {
-			for (let existingUrlObj of contentMaps.localeUrlsMap[url] ||
+			for (const existingUrlObj of contentMaps.localeUrlsMap[url] ||
 				contentMaps.localeUrlsMap[`${url}/`]) {
 				if (Comparator.urlHasLangCode(existingUrlObj.url, langCode)) {
 					return existingUrlObj.url;
@@ -222,7 +222,7 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
 		}
 
 		// Needs the language code prepended to the URL
-		let prependedLangCodeUrl = `/${langCode}${url}`;
+		const prependedLangCodeUrl = `/${langCode}${url}`;
 		if (
 			contentMaps.localeUrlsMap[prependedLangCodeUrl] ||
 			(!prependedLangCodeUrl.endsWith("/") && contentMaps.localeUrlsMap[`${prependedLangCodeUrl}/`])
@@ -253,7 +253,7 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
 	// Refactor to use url
 	// Find the links that are localized alternates to the inputPath argument
 	eleventyConfig.addFilter(options.filters.links, function (urlOverride) {
-		let url = urlOverride || this.page?.url;
+		const url = urlOverride || this.page?.url;
 		return (contentMaps.localeUrlsMap[url] || []).filter((entry) => {
 			return entry.url !== url;
 		});
@@ -269,17 +269,17 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
 				languageCode = options.defaultLanguage;
 			}
 
-			let page = pageOverride || this.page;
+			const page = pageOverride || this.page;
 			let url; // new url
 			if (contentMaps.localeUrlsMap[page.url]) {
-				for (let entry of contentMaps.localeUrlsMap[page.url]) {
+				for (const entry of contentMaps.localeUrlsMap[page.url]) {
 					if (entry.lang === languageCode) {
 						url = entry.url;
 					}
 				}
 			}
 
-			let inputPath = LangUtils.swapLanguageCode(page.inputPath, languageCode);
+			const inputPath = LangUtils.swapLanguageCode(page.inputPath, languageCode);
 
 			if (
 				!url ||
@@ -290,7 +290,7 @@ function EleventyPlugin(eleventyConfig, opts = {}) {
 				return page;
 			}
 
-			let result = {
+			const result = {
 				// // note that the permalink/slug may be different for the localized file!
 				url,
 				inputPath,

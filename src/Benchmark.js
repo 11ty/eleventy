@@ -34,7 +34,7 @@ class Benchmark {
 			throw new Error("You called Benchmark after() without a before().");
 		}
 
-		let before = this.beforeTimers.pop();
+		const before = this.beforeTimers.pop();
 		if (!this.beforeTimers.length) {
 			this.timeSpent += this.getNewTimestamp() - before;
 		}

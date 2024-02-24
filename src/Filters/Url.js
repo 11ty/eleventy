@@ -25,10 +25,10 @@ export default function (url, pathPrefix) {
 		throw new Error("pathPrefix (String) is required in the `url` filter.");
 	}
 
-	let normUrl = TemplatePath.normalizeUrlPath(url);
-	let normRootDir = TemplatePath.normalizeUrlPath("/", pathPrefix);
-	let normFull = TemplatePath.normalizeUrlPath("/", pathPrefix, url);
-	let isRootDirTrailingSlash =
+	const normUrl = TemplatePath.normalizeUrlPath(url);
+	const normRootDir = TemplatePath.normalizeUrlPath("/", pathPrefix);
+	const normFull = TemplatePath.normalizeUrlPath("/", pathPrefix, url);
+	const isRootDirTrailingSlash =
 		normRootDir.length && normRootDir.charAt(normRootDir.length - 1) === "/";
 
 	// minor difference with straight `normalize`, "" resolves to root dir and not "."

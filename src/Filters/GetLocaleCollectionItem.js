@@ -2,7 +2,7 @@ import getCollectionItem from "./GetCollectionItem.js";
 
 // Work with I18n Plugin src/Plugins/I18nPlugin.js to retrieve root pages (not i18n pages)
 function resolveRootPage(config, pageOverride, languageCode) {
-	let localeFilter = config.getFilter("locale_page");
+	const localeFilter = config.getFilter("locale_page");
 	if (!localeFilter || typeof localeFilter !== "function") {
 		return pageOverride;
 	}
@@ -21,22 +21,27 @@ function getLocaleCollectionItem(config, collection, pageOverride, langCode, ind
 		}
 	}
 
-	let rootPage = resolveRootPage.call(this, config, pageOverride); // implied current page, default language
-	let modifiedRootItem = getCollectionItem(collection, rootPage, indexModifier);
+	const rootPage = resolveRootPage.call(this, config, pageOverride); // implied current page, default language
+	const modifiedRootItem = getCollectionItem(collection, rootPage, indexModifier);
 	if (!modifiedRootItem) {
 		return; // no root item exists for the previous/next page
 	}
 
 	// Resolve modified root `page` back to locale `page`
 	// This will return a non localized version of the page as a fallback
-	let modifiedLocalePage = resolveRootPage.call(this, config, modifiedRootItem.data.page, langCode);
+	const modifiedLocalePage = resolveRootPage.call(
+		this,
+		config,
+		modifiedRootItem.data.page,
+		langCode,
+	);
 	// already localized (or default language)
 	if (!("__locale_page_resolved" in modifiedLocalePage)) {
 		return modifiedRootItem;
 	}
 
 	// find the modified locale `page` again in `collections.all`
-	let all =
+	const all =
 		this.collections?.all ||
 		this.ctx?.collections?.all ||
 		this.context?.environments?.collections?.all ||

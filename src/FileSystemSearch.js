@@ -36,7 +36,7 @@ class FileSystemSearch {
 			debug("Glob search (%o) ignoring: %o", key, options.ignore);
 		}
 
-		let cacheKey = this.getCacheKey(key, globs, options);
+		const cacheKey = this.getCacheKey(key, globs, options);
 
 		// Only after the promise has resolved
 		if (this.outputs[cacheKey]) {
@@ -75,10 +75,10 @@ class FileSystemSearch {
 	_modify(path, setOperation) {
 		path = TemplatePath.stripLeadingDotSlash(path);
 
-		let normalized = TemplatePath.addLeadingDotSlash(path);
+		const normalized = TemplatePath.addLeadingDotSlash(path);
 
-		for (let key in this.inputs) {
-			let { input, options } = this.inputs[key];
+		for (const key in this.inputs) {
+			const { input, options } = this.inputs[key];
 			if (
 				micromatch([path], input, {
 					dot: true,

@@ -77,7 +77,7 @@ class UserConfig {
 
 		this.useGitIgnore = true;
 
-		let defaultIgnores = new Set();
+		const defaultIgnores = new Set();
 		defaultIgnores.add("**/node_modules/**");
 		defaultIgnores.add(".git/**");
 		this.ignores = new Set(defaultIgnores);
@@ -118,7 +118,7 @@ class UserConfig {
 			// Supplementary engines
 			engines: {
 				node: (frontMatterCode, { filePath }) => {
-					let vm = new RetrieveGlobals(frontMatterCode, {
+					const vm = new RetrieveGlobals(frontMatterCode, {
 						filePath,
 						// ignored if vm.Module is stable (or --experimental-vm-modules)
 						transformEsmImports: true,
@@ -127,7 +127,7 @@ class UserConfig {
 					// Future warning until vm.Module is stable:
 					// If the frontMatterCode uses `import` this uses the `experimentalModuleApi`
 					// option in node-retrieve-globals to workaround https://github.com/zachleat/node-retrieve-globals/issues/2
-					let data = {
+					const data = {
 						page: {
 							// Theoretically fileSlug and filePathStem could be added here but require extensionMap
 							inputPath: filePath,
@@ -147,7 +147,7 @@ class UserConfig {
 
 	// compatibleRange is optional in 2.0.0-beta.2
 	versionCheck(compatibleRange) {
-		let compat = new EleventyCompatibility(compatibleRange);
+		const compat = new EleventyCompatibility(compatibleRange);
 
 		if (!compat.isCompatible()) {
 			throw new UserConfigError(compat.getErrorMessage());
@@ -270,7 +270,7 @@ class UserConfig {
 		this.addJavaScriptFunction(name, callback);
 
 		this.addNunjucksFilter(name, function (...args) {
-			let ret = callback.call(this, ...args);
+			const ret = callback.call(this, ...args);
 			if (ret instanceof Promise) {
 				throw new Error(
 					`Nunjucks *is* async-friendly with \`addFilter("${name}", async function() {})\` but you need to supply an \`async function\`. You returned a promise from \`addFilter("${name}", function() {})\`. Alternatively, use the \`addAsyncFilter("${name}")\` configuration API method.`,
@@ -288,8 +288,8 @@ class UserConfig {
 		this.addLiquidFilter(name, callback);
 		this.addJavaScriptFunction(name, callback);
 		this.addNunjucksAsyncFilter(name, async function (...args) {
-			let cb = args.pop();
-			let ret = await callback.call(this, ...args);
+			const cb = args.pop();
+			const ret = await callback.call(this, ...args);
 			cb(null, ret);
 		});
 	}
@@ -407,14 +407,14 @@ class UserConfig {
 
 	// Starting in 3.0 the plugin callback might be asynchronous!
 	_executePlugin(plugin, options) {
-		let name = this._getPluginName(plugin);
+		const name = this._getPluginName(plugin);
 		let ret;
 		debug(`Adding ${name || "anonymous"} plugin`);
-		let pluginBenchmark = this.benchmarks.aggregate.get("Configuration addPlugin");
+		const pluginBenchmark = this.benchmarks.aggregate.get("Configuration addPlugin");
 		if (typeof plugin === "function") {
 			pluginBenchmark.before();
 			this.benchmarks.config;
-			let configFunction = plugin;
+			const configFunction = plugin;
 			ret = configFunction(this, options);
 			pluginBenchmark.after();
 		} else if (plugin && plugin.configFunction) {
@@ -440,7 +440,7 @@ class UserConfig {
 	}
 
 	async namespace(pluginNamespace, callback) {
-		let validNamespace = pluginNamespace && typeof pluginNamespace === "string";
+		const validNamespace = pluginNamespace && typeof pluginNamespace === "string";
 		if (validNamespace) {
 			this.activeNamespace = pluginNamespace || "";
 		}
@@ -468,7 +468,7 @@ class UserConfig {
 		if (typeof fileOrDir === "string") {
 			this.passthroughCopies[fileOrDir] = { outputPath: true, copyOptions };
 		} else {
-			for (let [inputPath, outputPath] of Object.entries(fileOrDir)) {
+			for (const [inputPath, outputPath] of Object.entries(fileOrDir)) {
 				this.passthroughCopies[inputPath] = { outputPath, copyOptions };
 			}
 		}
@@ -486,12 +486,12 @@ class UserConfig {
 		if (Array.isArray(templateFormats)) {
 			set = new Set(templateFormats.map((format) => format.trim()));
 		} else if (typeof templateFormats === "string") {
-			for (let format of templateFormats.split(",")) {
+			for (const format of templateFormats.split(",")) {
 				set.add(format.trim());
 			}
 		}
 
-		for (let format of existingValues || []) {
+		for (const format of existingValues || []) {
 			set.add(format);
 		}
 
@@ -526,7 +526,7 @@ class UserConfig {
 
 	/* These callbacks run on both libraryOverrides and default library instances */
 	amendLibrary(engineName, callback) {
-		let name = engineName.toLowerCase();
+		const name = engineName.toLowerCase();
 		if (!this.libraryAmendments[name]) {
 			this.libraryAmendments[name] = [];
 		}
@@ -802,7 +802,7 @@ class UserConfig {
 			extensions = [fileExtension];
 		}
 
-		for (let extension of extensions) {
+		for (const extension of extensions) {
 			this.extensionMap.add(
 				Object.assign(
 					{
@@ -829,8 +829,8 @@ class UserConfig {
 			parser = options.parser;
 		}
 
-		let extensions = extensionList.split(",").map((s) => s.trim());
-		for (let extension of extensions) {
+		const extensions = extensionList.split(",").map((s) => s.trim());
+		for (const extension of extensions) {
 			this.dataExtensions.set(extension, {
 				extension,
 				parser,
@@ -866,7 +866,7 @@ class UserConfig {
 	}
 
 	getMergingConfigObject() {
-		let obj = {
+		const obj = {
 			templateFormats: this.templateFormats,
 			templateFormatsAdded: this.templateFormatsAdded,
 			// filters removed in 1.0 (use addTransform instead)

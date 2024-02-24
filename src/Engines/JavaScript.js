@@ -20,8 +20,8 @@ class JavaScript extends TemplateEngine {
 
 		EventBusUtil.soloOn("eleventy.resourceModified", (inputPath, usedByDependants = []) => {
 			// Remove from cached instances when modified
-			let instancesToDelete = [TemplatePath.addLeadingDotSlash(inputPath), ...usedByDependants];
-			for (let inputPath of instancesToDelete) {
+			const instancesToDelete = [TemplatePath.addLeadingDotSlash(inputPath), ...usedByDependants];
+			for (const inputPath of instancesToDelete) {
 				if (inputPath in this.instances) {
 					delete this.instances[inputPath];
 				}
@@ -41,7 +41,7 @@ class JavaScript extends TemplateEngine {
 	// Function, Class
 	// Object
 	_getInstance(mod) {
-		let noop = function () {
+		const noop = function () {
 			return "";
 		};
 
@@ -71,10 +71,10 @@ class JavaScript extends TemplateEngine {
 			return this.instances[inputPath];
 		}
 
-		let isEsm = this.eleventyConfig.getIsProjectUsingEsm();
+		const isEsm = this.eleventyConfig.getIsProjectUsingEsm();
 		const mod = await EleventyImport(inputPath, isEsm ? "esm" : "cjs");
 
-		let inst = this._getInstance(mod);
+		const inst = this._getInstance(mod);
 		if (inst) {
 			this.instances[inputPath] = inst;
 		} else {
@@ -95,15 +95,15 @@ class JavaScript extends TemplateEngine {
 	}
 
 	async getExtraDataFromFile(inputPath) {
-		let inst = await this.getInstanceFromInputPath(inputPath);
+		const inst = await this.getInstanceFromInputPath(inputPath);
 		return getJavaScriptData(inst, inputPath);
 	}
 
 	getJavaScriptFunctions(inst) {
-		let fns = {};
-		let configFns = this.config.javascriptFunctions;
+		const fns = {};
+		const configFns = this.config.javascriptFunctions;
 
-		for (let key in configFns) {
+		for (const key in configFns) {
 			// prefer pre-existing `page` javascriptFunction, if one exists
 			if (key === "page") {
 				// do nothing
@@ -117,7 +117,7 @@ class JavaScript extends TemplateEngine {
 
 	static wrapJavaScriptFunction(inst, fn) {
 		return function (...args) {
-			for (let key of JavaScript.DATA_KEYS_TO_BIND) {
+			for (const key of JavaScript.DATA_KEYS_TO_BIND) {
 				if (inst && inst[key]) {
 					this[key] = inst[key];
 				}
@@ -142,7 +142,7 @@ class JavaScript extends TemplateEngine {
 				// TODO does this do anything meaningful for non-classes?
 				// `inst` should have a normalized `render` function from _getInstance
 
-				for (let key of JavaScript.DATA_KEYS_TO_BIND) {
+				for (const key of JavaScript.DATA_KEYS_TO_BIND) {
 					if (!inst[key] && data[key]) {
 						// only blow away existing inst.page if it has a page.url
 						if (key !== "page" || !inst.page || inst.page.url) {

@@ -23,16 +23,16 @@ class ComputedDataProxy {
 
 		// TODO should make another effort to get rid of this,
 		// See the ProxyWrap util for more proxy handlers that will likely fix this
-		let undefinedValue = "__11TY_UNDEFINED__";
+		const undefinedValue = "__11TY_UNDEFINED__";
 		if (this.computedKeys) {
-			for (let key of this.computedKeys) {
+			for (const key of this.computedKeys) {
 				if (lodashGet(data, key, undefinedValue) === undefinedValue) {
 					lodashSet(data, key, "");
 				}
 			}
 		}
 
-		let proxyData = this._getProxyData(data, keyRef);
+		const proxyData = this._getProxyData(data, keyRef);
 		return proxyData;
 	}
 
@@ -45,7 +45,7 @@ class ComputedDataProxy {
 						return obj[key];
 					}
 
-					let newKey = `${parentKey ? `${parentKey}.` : ""}${key}`;
+					const newKey = `${parentKey ? `${parentKey}.` : ""}${key}`;
 
 					// Issue #1137
 					// Special case for Collections, always return an Array for collection keys
@@ -66,7 +66,7 @@ class ComputedDataProxy {
 						);
 					}
 
-					let newData = this._getProxyData(dataObj[key], keyRef, newKey);
+					const newData = this._getProxyData(dataObj[key], keyRef, newKey);
 					if (!this.isArrayOrPlainObject(newData)) {
 						keyRef.add(newKey);
 					}
@@ -91,8 +91,8 @@ class ComputedDataProxy {
 					return;
 				}
 
-				let newKey = `${parentKey}[${key}]`;
-				let newData = this._getProxyData(dataArr[key], keyRef, newKey);
+				const newKey = `${parentKey}[${key}]`;
+				const newData = this._getProxyData(dataArr[key], keyRef, newKey);
 				if (!this.isArrayOrPlainObject(newData)) {
 					keyRef.add(newKey);
 				}
@@ -113,10 +113,10 @@ class ComputedDataProxy {
 	}
 
 	async findVarsUsed(fn, data = {}) {
-		let keyRef = new Set();
+		const keyRef = new Set();
 
 		// careful, logging proxyData will mess with test results!
-		let proxyData = this.getProxyData(data, keyRef);
+		const proxyData = this.getProxyData(data, keyRef);
 
 		// squelch console logs for this fake proxy data pass 😅
 		// let savedLog = console.log;

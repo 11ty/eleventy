@@ -26,7 +26,7 @@ class Sortable {
 		if (!sortFunction) {
 			sortFunction = this.getSortFunction();
 		} else if (typeof sortFunction === "string") {
-			let key = sortFunction;
+			const key = sortFunction;
 			let name;
 			if (key in this.sortFunctionStringMap) {
 				name = this.sortFunctionStringMap[key];
@@ -100,7 +100,10 @@ class Sortable {
 	}
 
 	static sortFunctionDateInputPath(mapA, mapB) {
-		let sortDate = Sortable.sortFunctionNumericAscending(mapA.date.getTime(), mapB.date.getTime());
+		const sortDate = Sortable.sortFunctionNumericAscending(
+			mapA.date.getTime(),
+			mapB.date.getTime(),
+		);
 		if (sortDate === 0) {
 			return Sortable.sortFunctionAlphabeticAscending(mapA.inputPath, mapB.inputPath);
 		}

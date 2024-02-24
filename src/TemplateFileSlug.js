@@ -10,7 +10,7 @@ class TemplateFileSlug {
 		this.inputPath = inputPath;
 		this.cleanInputPath = inputPath.replace(/^.\//, "");
 
-		let dirs = this.cleanInputPath.split("/");
+		const dirs = this.cleanInputPath.split("/");
 		this.dirs = dirs;
 		this.dirs.pop();
 
@@ -24,13 +24,13 @@ class TemplateFileSlug {
 	}
 
 	_getRawSlug() {
-		let slug = this.filenameNoExt;
+		const slug = this.filenameNoExt;
 		return this._stripDateFromSlug(slug);
 	}
 
 	/** Removes dates in the format of YYYY-MM-DD from a given slug string candidate. */
 	_stripDateFromSlug(slug) {
-		let reg = slug.match(/\d{4}-\d{2}-\d{2}-(.*)/);
+		const reg = slug.match(/\d{4}-\d{2}-\d{2}-(.*)/);
 		if (reg) {
 			return reg[1];
 		}
@@ -39,13 +39,13 @@ class TemplateFileSlug {
 
 	// `page.fileSlug` see https://www.11ty.dev/docs/data-eleventy-supplied/#page-variable
 	getSlug() {
-		let rawSlug = this._getRawSlug();
+		const rawSlug = this._getRawSlug();
 
 		if (rawSlug === "index") {
 			if (!this.dirs.length) {
 				return "";
 			}
-			let lastDir = this.dirs[this.dirs.length - 1];
+			const lastDir = this.dirs[this.dirs.length - 1];
 			return this._stripDateFromSlug(lastDir);
 		}
 

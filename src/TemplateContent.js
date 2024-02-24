@@ -169,10 +169,10 @@ class TemplateContent {
 
 			this.readingPromise = new Promise(async (resolve, reject) => {
 				try {
-					let content = await this.inputContent;
+					const content = await this.inputContent;
 
 					if (content) {
-						let options = this.config.frontMatterParsingOptions || {};
+						const options = this.config.frontMatterParsingOptions || {};
 						let fm;
 						try {
 							// Added in 3.0, passed along to front matter engines
@@ -186,7 +186,7 @@ class TemplateContent {
 						}
 
 						if (options.excerpt && fm.excerpt) {
-							let excerptString = fm.excerpt + (options.excerpt_separator || "---");
+							const excerptString = fm.excerpt + (options.excerpt_separator || "---");
 							if (fm.content.startsWith(excerptString + os.EOL)) {
 								// with an os-specific newline after excerpt separator
 								fm.content =
@@ -202,7 +202,7 @@ class TemplateContent {
 							}
 
 							// alias, defaults to page.excerpt
-							let alias = options.excerpt_alias || "page.excerpt";
+							const alias = options.excerpt_alias || "page.excerpt";
 							lodashSet(fm.data, alias, fm.excerpt);
 						}
 
@@ -246,12 +246,12 @@ class TemplateContent {
 	}
 
 	async getInputContent() {
-		let tr = await this.getTemplateRender();
+		const tr = await this.getTemplateRender();
 		if (!tr.engine.needsToReadFileContents()) {
 			return "";
 		}
 
-		let templateBenchmark = this.bench.get("Template Read");
+		const templateBenchmark = this.bench.get("Template Read");
 		templateBenchmark.before();
 
 		let content;
@@ -275,12 +275,12 @@ class TemplateContent {
 
 	// This might only be used in tests
 	async getFrontMatter() {
-		let fm = this.frontMatterOverride ? this.frontMatterOverride : await this.read();
+		const fm = this.frontMatterOverride ? this.frontMatterOverride : await this.read();
 		return fm;
 	}
 
 	async getPreRender() {
-		let fm = this.frontMatterOverride ? this.frontMatterOverride : await this.read();
+		const fm = this.frontMatterOverride ? this.frontMatterOverride : await this.read();
 
 		return fm.content;
 	}
@@ -289,12 +289,12 @@ class TemplateContent {
 		if (!this._frontMatterDataCache) {
 			this._frontMatterDataCache = new Promise(async (resolve, reject) => {
 				try {
-					let fm = await this.read();
+					const fm = await this.read();
 
-					let extraData = await this.engine.getExtraDataFromFile(this.inputPath);
-					let data = TemplateData.mergeDeep({}, fm.data, extraData);
+					const extraData = await this.engine.getExtraDataFromFile(this.inputPath);
+					const data = TemplateData.mergeDeep({}, fm.data, extraData);
 
-					let cleanedData = TemplateData.cleanupData(data);
+					const cleanedData = TemplateData.cleanupData(data);
 					resolve(cleanedData);
 				} catch (e) {
 					reject(e);
@@ -306,7 +306,7 @@ class TemplateContent {
 	}
 
 	async getEngineOverride() {
-		let frontMatterData = await this.getFrontMatterData();
+		const frontMatterData = await this.getFrontMatterData();
 		return frontMatterData[this.config.keys.engineOverride];
 	}
 
@@ -318,9 +318,10 @@ class TemplateContent {
 			TemplateContent._compileCache.set(this.inputPath, inputPathMap);
 		}
 
-		let cacheable = this.engine.cacheable;
-		let { useCache, key } = this.engine.getCompileCacheKey(str, this.inputPath);
-
+		const cacheable = this.engine.cacheable;
+		const cCacheKey = this.engine.getCompileCacheKey(str, this.inputPath);
+		const { useCache } = cCacheKey;
+		let { key } = cCacheKey;
 		// We also tie the compile cache key to the UserConfig instance, to alleviate issues with global template cache
 		// Better to move the cache to the Eleventy instance instead, no?
 		// (This specifically failed I18nPluginTest cases with filters being cached across tests and not having access to each plugin’s options)
@@ -330,7 +331,7 @@ class TemplateContent {
 	}
 
 	async compile(str, bypassMarkdown, engineOverride) {
-		let tr = await this.getTemplateRender();
+		const tr = await this.getTemplateRender();
 
 		if (engineOverride !== undefined) {
 			debugDev("%o overriding template engine to use %o", this.inputPath, engineOverride);
@@ -350,7 +351,7 @@ class TemplateContent {
 		try {
 			let res;
 			if (this.config.useTemplateCache) {
-				let [cacheable, key, cache, useCache] = this._getCompileCache(str);
+				const [cacheable, key, cache, useCache] = this._getCompileCache(str);
 				if (cacheable && key) {
 					if (useCache && cache.has(key)) {
 						this.bench.get("(count) Template Compile Cache Hit").incrementCount();
@@ -372,11 +373,11 @@ class TemplateContent {
 				}
 			}
 
-			let templateBenchmark = this.bench.get("Template Compile");
-			let inputPathBenchmark = this.bench.get(`> Compile > ${this.inputPath}`);
+			const templateBenchmark = this.bench.get("Template Compile");
+			const inputPathBenchmark = this.bench.get(`> Compile > ${this.inputPath}`);
 			templateBenchmark.before();
 			inputPathBenchmark.before();
-			let fn = await tr.getCompiledTemplate(str);
+			const fn = await tr.getCompiledTemplate(str);
 			inputPathBenchmark.after();
 			templateBenchmark.after();
 			debugDev("%o getCompiledTemplate function created", this.inputPath);
@@ -385,7 +386,7 @@ class TemplateContent {
 			}
 			return fn;
 		} catch (e) {
-			let [cacheable, key, cache] = this._getCompileCache(str);
+			const [cacheable, key, cache] = this._getCompileCache(str);
 			if (cacheable && key) {
 				cache.delete(key);
 			}
@@ -402,9 +403,9 @@ class TemplateContent {
 
 		// Don’t use markdown as the engine to parse for symbols
 		// TODO pass in engineOverride here
-		let preprocessorEngine = this.templateRender.getPreprocessorEngine();
+		const preprocessorEngine = this.templateRender.getPreprocessorEngine();
 		if (preprocessorEngine && engine.getName() !== preprocessorEngine) {
-			let replacementEngine = this.templateRender.getEngineByName(preprocessorEngine);
+			const replacementEngine = this.templateRender.getEngineByName(preprocessorEngine);
 			if (replacementEngine) {
 				engine = replacementEngine;
 			}
@@ -419,8 +420,8 @@ class TemplateContent {
 
 	// used by computed data or for permalink functions
 	async _renderFunction(fn, ...args) {
-		let mixins = Object.assign({}, this.config.javascriptFunctions);
-		let result = await fn.call(mixins, ...args);
+		const mixins = Object.assign({}, this.config.javascriptFunctions);
+		const result = await fn.call(mixins, ...args);
 
 		// normalize Buffer away if returned from permalink
 		if (Buffer.isBuffer(result)) {
@@ -444,7 +445,7 @@ class TemplateContent {
 			.get(`(count) > Render Permalink > ${this.inputPath}${this._getPaginationLogSuffix(data)}`)
 			.incrementCount();
 
-		let permalinkCompilation = this.engine.permalinkNeedsCompilation(permalink);
+		const permalinkCompilation = this.engine.permalinkNeedsCompilation(permalink);
 
 		// No string compilation:
 		//    ({ compileOptions: { permalink: "raw" }})
@@ -480,7 +481,7 @@ class TemplateContent {
 	}
 
 	_getPaginationLogSuffix(data) {
-		let suffix = [];
+		const suffix = [];
 		if ("pagination" in data) {
 			suffix.push(" (");
 			if (data.pagination.pages) {
@@ -501,7 +502,7 @@ class TemplateContent {
 				return str;
 			}
 
-			let fn = await this.compile(str, bypassMarkdown, data[this.config.keys.engineOverride]);
+			const fn = await this.compile(str, bypassMarkdown, data[this.config.keys.engineOverride]);
 
 			if (fn === undefined) {
 				return;
@@ -510,10 +511,10 @@ class TemplateContent {
 			}
 
 			// Benchmark
-			let templateBenchmark = this.bench.get("Render");
+			const templateBenchmark = this.bench.get("Render");
 			// Skip benchmark for each individual pagination entry (very busy output)
-			let logRenderToOutputBenchmark = "pagination" in data;
-			let inputPathBenchmark = this.bench.get(
+			const logRenderToOutputBenchmark = "pagination" in data;
+			const inputPathBenchmark = this.bench.get(
 				`> Render > ${this.inputPath}${this._getPaginationLogSuffix(data)}`,
 			);
 			let outputPathBenchmark;
@@ -529,7 +530,7 @@ class TemplateContent {
 				outputPathBenchmark.before();
 			}
 
-			let rendered = await fn(data);
+			const rendered = await fn(data);
 
 			if (outputPathBenchmark) {
 				outputPathBenchmark.after();
@@ -544,8 +545,8 @@ class TemplateContent {
 			if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
 				throw e;
 			} else {
-				let tr = await this.getTemplateRender();
-				let engine = tr.getReadableEnginesList();
+				const tr = await this.getTemplateRender();
+				const engine = tr.getReadableEnginesList();
 				debug(`Having trouble rendering ${engine} template ${this.inputPath}: %O`, str);
 				throw new TemplateContentRenderError(
 					`Having trouble rendering ${engine} template ${this.inputPath}`,
@@ -565,9 +566,9 @@ class TemplateContent {
 			return true;
 		}
 
-		let hasDependencies = this.engine.hasDependencies(incrementalFile);
+		const hasDependencies = this.engine.hasDependencies(incrementalFile);
 
-		let isRelevant = this.engine.isFileRelevantTo(this.inputPath, incrementalFile);
+		const isRelevant = this.engine.isFileRelevantTo(this.inputPath, incrementalFile);
 
 		debug(
 			"Test dependencies to see if %o is relevant to %o: %o",
@@ -576,9 +577,11 @@ class TemplateContent {
 			isRelevant,
 		);
 
-		let extensionEntries = this.getExtensionEntries().filter((entry) => !!entry.isIncrementalMatch);
+		const extensionEntries = this.getExtensionEntries().filter(
+			(entry) => !!entry.isIncrementalMatch,
+		);
 		if (extensionEntries.length) {
-			for (let entry of extensionEntries) {
+			for (const entry of extensionEntries) {
 				if (
 					entry.isIncrementalMatch.call(
 						{
@@ -622,8 +625,8 @@ eventBus.on("eleventy.resourceModified", (path) => {
 	TemplateContent.deleteFromInputCache(path);
 
 	// delete from compile cache
-	let normalized = TemplatePath.addLeadingDotSlash(path);
-	let compileCache = TemplateContent._compileCache.get(normalized);
+	const normalized = TemplatePath.addLeadingDotSlash(path);
+	const compileCache = TemplateContent._compileCache.get(normalized);
 	if (compileCache) {
 		compileCache.clear();
 	}

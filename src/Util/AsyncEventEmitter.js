@@ -11,7 +11,7 @@ class AsyncEventEmitter extends EventEmitter {
 	 * @returns {Promise} - Promise resolves once all listeners were invoked
 	 */
 	async emit(type, ...args) {
-		let listeners = this.listeners(type);
+		const listeners = this.listeners(type);
 		if (listeners.length === 0) {
 			return [];
 		}
@@ -25,13 +25,13 @@ class AsyncEventEmitter extends EventEmitter {
 	 * @returns {Promise} - Promise resolves once all listeners were invoked
 	 */
 	async emitLazy(type, ...args) {
-		let listeners = this.listeners(type);
+		const listeners = this.listeners(type);
 		if (listeners.length === 0) {
 			return [];
 		}
 
-		let argsMap = [];
-		for (let arg of args) {
+		const argsMap = [];
+		for (const arg of args) {
 			if (typeof arg === "function") {
 				let r = arg();
 				if (r instanceof Promise) {

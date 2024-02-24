@@ -8,15 +8,15 @@ class Html extends TemplateEngine {
 
 	async compile(str, inputPath, preTemplateEngine) {
 		if (preTemplateEngine) {
-			let engine = await this.engineManager.getEngine(
+			const engine = await this.engineManager.getEngine(
 				preTemplateEngine,
 				this.dirs,
 				this.extensionMap,
 			);
-			let fnReady = engine.compile(str, inputPath);
+			const fnReady = engine.compile(str, inputPath);
 
 			return async function (data) {
-				let fn = await fnReady;
+				const fn = await fnReady;
 
 				return fn(data);
 			};

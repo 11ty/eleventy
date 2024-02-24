@@ -42,7 +42,7 @@ class ComputedDataQueue {
 			graph.addNode(name);
 		}
 
-		for (let varUsed of varsUsed) {
+		for (const varUsed of varsUsed) {
 			if (!graph.hasNode(varUsed)) {
 				graph.addNode(varUsed);
 			}
@@ -55,7 +55,7 @@ class ComputedDataQueue {
 	}
 
 	markComputed(varsComputed = []) {
-		for (let varComputed of varsComputed) {
+		for (const varComputed of varsComputed) {
 			this.graph.removeNode(varComputed);
 		}
 	}

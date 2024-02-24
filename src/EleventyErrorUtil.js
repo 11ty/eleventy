@@ -39,12 +39,12 @@ class EleventyErrorUtil {
 			return error;
 		}
 
-		let msg = error.message;
-		let objectString = msg.substring(
+		const msg = error.message;
+		const objectString = msg.substring(
 			msg.indexOf(EleventyErrorUtil.prefix) + EleventyErrorUtil.prefix.length,
 			msg.lastIndexOf(EleventyErrorUtil.suffix),
 		);
-		let obj = JSON.parse(objectString);
+		const obj = JSON.parse(objectString);
 		obj.name = error.name;
 		return obj;
 	}

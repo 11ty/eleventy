@@ -26,7 +26,7 @@ class TemplateCache {
 	}
 
 	add(layoutTemplate) {
-		let keys = new Set();
+		const keys = new Set();
 
 		if (typeof layoutTemplate === "string") {
 			throw new Error(
@@ -44,12 +44,12 @@ class TemplateCache {
 			keys.add(layoutTemplate.getKey());
 		}
 
-		for (let key of keys) {
+		for (const key of keys) {
 			this.cache[key] = layoutTemplate;
 		}
 
 		// also the full template input path for use with eleventy --serve/--watch e.g. `_includes/default.liquid` (see `remove` below)
-		let fullPath = TemplatePath.stripLeadingDotSlash(layoutTemplate.inputPath);
+		const fullPath = TemplatePath.stripLeadingDotSlash(layoutTemplate.inputPath);
 		this.cacheByInputPath[fullPath] = layoutTemplate;
 	}
 
@@ -72,11 +72,11 @@ class TemplateCache {
 			return;
 		}
 
-		let layoutTemplate = this.cacheByInputPath[layoutFilePath];
+		const layoutTemplate = this.cacheByInputPath[layoutFilePath];
 		layoutTemplate.resetCaches();
 
-		let keys = layoutTemplate.getCacheKeys();
-		for (let key of keys) {
+		const keys = layoutTemplate.getCacheKeys();
+		for (const key of keys) {
 			delete this.cache[key];
 		}
 
@@ -84,7 +84,7 @@ class TemplateCache {
 	}
 }
 
-let layoutCache = new TemplateCache();
+const layoutCache = new TemplateCache();
 
 eventBus.on("eleventy.resourceModified", (path, usedBy, metadata = {}) => {
 	// https://github.com/11ty/eleventy-plugin-bundle/issues/10
@@ -92,7 +92,7 @@ eventBus.on("eleventy.resourceModified", (path, usedBy, metadata = {}) => {
 		layoutCache.removeAll();
 	} else if (metadata.relevantLayouts?.length) {
 		// reset the appropriate layouts relevant to the file.
-		for (let layoutPath of metadata.relevantLayouts || []) {
+		for (const layoutPath of metadata.relevantLayouts || []) {
 			layoutCache.remove(layoutPath);
 		}
 	} else {

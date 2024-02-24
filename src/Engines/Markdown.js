@@ -51,7 +51,7 @@ class Markdown extends TemplateEngine {
 	}
 
 	async compile(str, inputPath, preTemplateEngine, bypassMarkdown) {
-		let mdlib = this.mdLib;
+		const mdlib = this.mdLib;
 
 		if (preTemplateEngine) {
 			let engine;
@@ -65,18 +65,18 @@ class Markdown extends TemplateEngine {
 				engine = preTemplateEngine;
 			}
 
-			let fnReady = engine.compile(str, inputPath);
+			const fnReady = engine.compile(str, inputPath);
 
 			if (bypassMarkdown) {
 				return async function (data) {
-					let fn = await fnReady;
+					const fn = await fnReady;
 					return fn(data);
 				};
 			} else {
 				return async function (data) {
-					let fn = await fnReady;
-					let preTemplateEngineRender = await fn(data);
-					let finishedRender = mdlib.render(preTemplateEngineRender, data);
+					const fn = await fnReady;
+					const preTemplateEngineRender = await fn(data);
+					const finishedRender = mdlib.render(preTemplateEngineRender, data);
 					return finishedRender;
 				};
 			}
