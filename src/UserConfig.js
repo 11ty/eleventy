@@ -5,7 +5,7 @@ import { RetrieveGlobals } from "node-retrieve-globals";
 
 import EventEmitter from "./Util/AsyncEventEmitter.js";
 import EleventyCompatibility from "./Util/Compatibility.js";
-import EleventyBaseError from "./EleventyBaseError.js";
+import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import BenchmarkManager from "./BenchmarkManager.js";
 import { DeepCopy } from "./Util/Merge.js";
 

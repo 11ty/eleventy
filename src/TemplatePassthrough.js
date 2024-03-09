@@ -7,7 +7,7 @@ import copy from "recursive-copy";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
-import EleventyBaseError from "./EleventyBaseError.js";
+import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 
 const fsStat = util.promisify(fs.stat);

@@ -10,7 +10,7 @@ import merge from "./Util/Merge.js";
 import unique from "./Util/Unique.js";
 import TemplateGlob from "./TemplateGlob.js";
 import EleventyExtensionMap from "./EleventyExtensionMap.js";
-import EleventyBaseError from "./EleventyBaseError.js";
+import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import TemplateDataInitialGlobalData from "./TemplateDataInitialGlobalData.js";
 import { EleventyImport, EleventyLoadContent } from "./Util/Require.js";
 

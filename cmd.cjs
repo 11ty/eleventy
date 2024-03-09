@@ -19,8 +19,8 @@ require("please-upgrade-node")(pkg, {
 const debug = require("debug")("Eleventy:cmd");
 
 (async function () {
-	const { default: EleventyErrorHandler } = await import("./src/EleventyErrorHandler.js");
-	const { default: EleventyBaseError } = await import("./src/EleventyBaseError.js");
+	const { default: EleventyErrorHandler } = await import("./src/Errors/EleventyErrorHandler.js");
+	const { default: EleventyBaseError } = await import("./src/Errors/EleventyBaseError.js");
 
 	class EleventyCommandCheckError extends EleventyBaseError {}
 

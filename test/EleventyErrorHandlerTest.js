@@ -1,5 +1,5 @@
 import test from "ava";
-import EleventyErrorHandler from "../src/EleventyErrorHandler.js";
+import EleventyErrorHandler from "../src/Errors/EleventyErrorHandler.js";
 
 test("Log a warning, warning", (t) => {
   let errorHandler = new EleventyErrorHandler();

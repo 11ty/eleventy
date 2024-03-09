@@ -1,7 +1,7 @@
 import { TemplatePath } from "@11ty/eleventy-utils";
 
 import TemplateEngineManager from "./TemplateEngineManager.js";
-import EleventyBaseError from "./EleventyBaseError.js";
+import EleventyBaseError from "./Errors/EleventyBaseError.js";
 
 class EleventyExtensionMapConfigError extends EleventyBaseError {}
 

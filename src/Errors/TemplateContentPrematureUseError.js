@@ -1,4 +1,4 @@
-import EleventyBaseError from "../EleventyBaseError.js";
+import EleventyBaseError from "./EleventyBaseError.js";
 
 class TemplateContentPrematureUseError extends EleventyBaseError {}
 

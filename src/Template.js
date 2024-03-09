@@ -22,7 +22,7 @@ import Pagination from "./Plugins/Pagination.js";
 import TemplateBehavior from "./TemplateBehavior.js";
 import TemplateContentPrematureUseError from "./Errors/TemplateContentPrematureUseError.js";
 import TemplateContentUnrenderedTemplateError from "./Errors/TemplateContentUnrenderedTemplateError.js";
-import EleventyBaseError from "./EleventyBaseError.js";
+import EleventyBaseError from "./Errors/EleventyBaseError.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 const writeFile = util.promisify(fs.writeFile);

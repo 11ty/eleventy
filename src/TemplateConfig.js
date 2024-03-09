@@ -4,7 +4,7 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import { EleventyImport, EleventyImportFromEleventy } from "./Util/Require.js";
-import EleventyBaseError from "./EleventyBaseError.js";
+import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import UserConfig from "./UserConfig.js";
 import GlobalDependencyMap from "./GlobalDependencyMap.js";
 import ExistsCache from "./Util/ExistsCache.js";

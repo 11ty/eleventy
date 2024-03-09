@@ -1,6 +1,6 @@
 import debugUtil from "debug";
 
-import ConsoleLogger from "./Util/ConsoleLogger.js";
+import ConsoleLogger from "../Util/ConsoleLogger.js";
 import EleventyErrorUtil from "./EleventyErrorUtil.js";
 
 const debug = debugUtil("Eleventy:EleventyErrorHandler");

@@ -10,10 +10,10 @@ const fsExists = util.promisify(fs.exists);
 import Merge from "../Util/Merge.js";
 import { ProxyWrap } from "../Util/ProxyWrap.js";
 import TemplateDataInitialGlobalData from "../TemplateDataInitialGlobalData.js";
-import EleventyShortcodeError from "../EleventyShortcodeError.js";
+import EleventyShortcodeError from "../Errors/EleventyShortcodeError.js";
 import TemplateRender from "../TemplateRender.js";
 import TemplateConfig from "../TemplateConfig.js";
-import EleventyErrorUtil from "../EleventyErrorUtil.js";
+import EleventyErrorUtil from "../Errors/EleventyErrorUtil.js";
 import Liquid from "../Engines/Liquid.js";
 
 async function compile(content, templateLang, { templateConfig, extensionMap } = {}) {

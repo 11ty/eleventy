@@ -2,7 +2,7 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 import EleventyDevServer from "@11ty/eleventy-dev-server";
 import debugUtil from "debug";
 
-import EleventyBaseError from "./EleventyBaseError.js";
+import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import PathPrefixer from "./Util/PathPrefixer.js";
 import merge from "./Util/Merge.js";
