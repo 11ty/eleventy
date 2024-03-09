@@ -1,6 +1,6 @@
 import test from "ava";
 
-import TemplateData from "../src/TemplateData.js";
+import TemplateData from "../src/Data/TemplateData.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 import getNewTemplate from "./_getNewTemplateForTests.js";
 import { renderTemplate } from "./_getRenderedTemplates.js";

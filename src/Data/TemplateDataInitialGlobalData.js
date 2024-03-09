@@ -1,8 +1,8 @@
 import semver from "semver";
 import lodash from "@11ty/lodash-custom";
 
-import EleventyBaseError from "./Errors/EleventyBaseError.js";
-import { getEleventyPackageJson } from "./Util/ImportJsonSync.js";
+import EleventyBaseError from "../Errors/EleventyBaseError.js";
+import { getEleventyPackageJson } from "../Util/ImportJsonSync.js";
 
 const { set: lodashSet } = lodash;
 const pkg = getEleventyPackageJson();

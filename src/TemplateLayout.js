@@ -3,7 +3,7 @@ import debugUtil from "debug";
 
 import TemplateLayoutPathResolver from "./TemplateLayoutPathResolver.js";
 import TemplateContent from "./TemplateContent.js";
-import TemplateData from "./TemplateData.js";
+import TemplateData from "./Data/TemplateData.js";
 import templateCache from "./TemplateCache.js";
 
 // const debug = debugUtil("Eleventy:TemplateLayout");

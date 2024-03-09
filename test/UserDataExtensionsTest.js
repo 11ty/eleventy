@@ -4,7 +4,7 @@ import yaml from "js-yaml";
 
 import TemplateConfig from "../src/TemplateConfig.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";
-import TemplateData from "../src/TemplateData.js";
+import TemplateData from "../src/Data/TemplateData.js";
 
 test("Local data", async (t) => {
   let eleventyConfig = new TemplateConfig();

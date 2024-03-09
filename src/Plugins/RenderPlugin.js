@@ -9,7 +9,7 @@ const fsExists = util.promisify(fs.exists);
 
 import Merge from "../Util/Merge.js";
 import { ProxyWrap } from "../Util/ProxyWrap.js";
-import TemplateDataInitialGlobalData from "../TemplateDataInitialGlobalData.js";
+import TemplateDataInitialGlobalData from "../Data/TemplateDataInitialGlobalData.js";
 import EleventyShortcodeError from "../Errors/EleventyShortcodeError.js";
 import TemplateRender from "../TemplateRender.js";
 import TemplateConfig from "../TemplateConfig.js";

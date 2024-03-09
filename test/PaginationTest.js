@@ -1,7 +1,7 @@
 import test from "ava";
 import slugify from "slugify";
 
-import TemplateData from "../src/TemplateData.js";
+import TemplateData from "../src/Data/TemplateData.js";
 import Pagination from "../src/Plugins/Pagination.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";

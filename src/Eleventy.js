@@ -2,7 +2,7 @@ import { performance } from "node:perf_hooks";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
-import TemplateData from "./TemplateData.js";
+import TemplateData from "./Data/TemplateData.js";
 import TemplateWriter from "./TemplateWriter.js";
 import EleventyExtensionMap from "./EleventyExtensionMap.js";
 import EleventyErrorHandler from "./Errors/EleventyErrorHandler.js";

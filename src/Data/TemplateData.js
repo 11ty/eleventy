@@ -6,13 +6,13 @@ import lodash from "@11ty/lodash-custom";
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
-import merge from "./Util/Merge.js";
-import unique from "./Util/Unique.js";
-import TemplateGlob from "./TemplateGlob.js";
-import EleventyExtensionMap from "./EleventyExtensionMap.js";
-import EleventyBaseError from "./Errors/EleventyBaseError.js";
+import merge from "../Util/Merge.js";
+import unique from "../Util/Unique.js";
+import TemplateGlob from "../TemplateGlob.js";
+import EleventyExtensionMap from "../EleventyExtensionMap.js";
+import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import TemplateDataInitialGlobalData from "./TemplateDataInitialGlobalData.js";
-import { EleventyImport, EleventyLoadContent } from "./Util/Require.js";
+import { EleventyImport, EleventyLoadContent } from "../Util/Require.js";
 
 const fsStatAsync = util.promisify(fs.stat);
 const { set: lodashSet, get: lodashGet } = lodash;

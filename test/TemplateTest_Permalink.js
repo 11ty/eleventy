@@ -2,7 +2,7 @@ import test from "ava";
 import fs from "fs";
 
 import TemplateConfig from "../src/TemplateConfig.js";
-import TemplateData from "../src/TemplateData.js";
+import TemplateData from "../src/Data/TemplateData.js";
 import getNewTemplate from "./_getNewTemplateForTests.js";
 
 async function writeMapEntries(mapEntries) {

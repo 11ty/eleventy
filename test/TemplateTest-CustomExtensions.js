@@ -2,7 +2,7 @@ import test from "ava";
 import { marked } from "marked";
 
 import TemplateConfig from "../src/TemplateConfig.js";
-import TemplateData from "../src/TemplateData.js";
+import TemplateData from "../src/Data/TemplateData.js";
 import getNewTemplate from "./_getNewTemplateForTests.js";
 import { renderTemplate } from "./_getRenderedTemplates.js";
 
