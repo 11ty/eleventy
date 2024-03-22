@@ -118,10 +118,15 @@ class TemplateContent {
 	}
 
 	get templateRender() {
-		if (!this._templateRender) {
-			throw new Error("TemplateRender has not yet initialized.");
+		if (!this.hasTemplateRender()) {
+			throw new Error(`\`templateRender\` has not yet initialized on ${this.inputPath}`);
 		}
+
 		return this._templateRender;
+	}
+
+	hasTemplateRender() {
+		return !!this._templateRender;
 	}
 
 	async getTemplateRender() {
@@ -228,6 +233,8 @@ class TemplateContent {
 		return this.readingPromise;
 	}
 
+	/* Incremental builds cache the Template instances (in TemplateWriter) but
+	 * these template specific caches are important for Pagination */
 	static cache(path, content) {
 		this._inputCache.set(TemplatePath.absolutePath(path), content);
 	}

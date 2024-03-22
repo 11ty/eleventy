@@ -220,8 +220,7 @@ class TemplateWriter {
 
 		// Update the data cascade and the global dependency map for the one incremental template before everything else (only full templates)
 		if (isIncrementalFileAFullTemplate && this.incrementalFile) {
-			let path = this.incrementalFile;
-			let { template: tmpl, wasCached } = this._createTemplate(path, to);
+			let { template: tmpl, wasCached } = this._createTemplate(this.incrementalFile, to);
 			if (wasCached) {
 				tmpl.resetCaches(); // reset internal caches on the cached template instance
 			}
@@ -234,7 +233,7 @@ class TemplateWriter {
 			let p = this.templateMap.add(tmpl);
 			promises.push(p);
 			await p;
-			debug(`${path} adding to template map.`);
+			debug(`${this.incrementalFile} adding to template map.`);
 
 			// establish new relationships for this template
 			relevantToDeletions = this.templateMap.setupDependencyGraphChangesForIncrementalFile(
@@ -275,9 +274,16 @@ class TemplateWriter {
 					tmpl.resetCaches();
 				}
 			} else {
+				// Incremental build (this.incrementalFile is non-empty)
 				let isTemplateRelevantToDeletedCollections = relevantToDeletions.has(
 					TemplatePath.stripLeadingDotSlash(tmpl.inputPath),
 				);
+
+				// If incremental build and config is updated, we need to fetch template render instances
+				// asynchronously (no cache exists for these). Issue #3170
+				if (!wasCached && !tmpl.hasTemplateRender()) {
+					await tmpl.getTemplateRender();
+				}
 
 				if (
 					isTemplateRelevantToDeletedCollections ||

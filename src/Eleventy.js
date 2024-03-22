@@ -467,6 +467,7 @@ class Eleventy {
 		);
 
 		if (!options.viaConfigReset) {
+			// set or restore cache
 			this._cache("TemplateWriter", this.writer);
 		}
 
