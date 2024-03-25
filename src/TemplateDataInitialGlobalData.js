@@ -41,6 +41,7 @@ class TemplateDataInitialGlobalData {
 		// #2293 for meta[name=generator]
 		globalData.eleventy.version = semver.coerce(pkg.version).toString();
 		globalData.eleventy.generator = `Eleventy v${globalData.eleventy.version}`;
+		globalData.eleventy.config = this.config;
 
 		return globalData;
 	}
