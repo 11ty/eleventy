@@ -2,8 +2,8 @@ import NunjucksLib from "nunjucks";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
 import TemplateEngine from "./TemplateEngine.js";
-import EleventyErrorUtil from "../EleventyErrorUtil.js";
-import EleventyShortcodeError from "../EleventyShortcodeError.js";
+import EleventyErrorUtil from "../Errors/EleventyErrorUtil.js";
+import EleventyShortcodeError from "../Errors/EleventyShortcodeError.js";
 import EventBusUtil from "../Util/EventBusUtil.js";
 
 class Nunjucks extends TemplateEngine {

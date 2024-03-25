@@ -4,10 +4,10 @@ import pretty from "pretty";
 import TOML from "@iarna/toml";
 
 import TemplateConfig from "../src/TemplateConfig.js";
-import TemplateData from "../src/TemplateData.js";
+import TemplateData from "../src/Data/TemplateData.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
-import EleventyErrorUtil from "../src/EleventyErrorUtil.js";
+import EleventyErrorUtil from "../src/Errors/EleventyErrorUtil.js";
 import TemplateContentPrematureUseError from "../src/Errors/TemplateContentPrematureUseError.js";
 import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 import eventBus from "../src/EventBus.js";

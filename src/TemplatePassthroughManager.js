@@ -4,7 +4,7 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import EleventyExtensionMap from "./EleventyExtensionMap.js";
-import EleventyBaseError from "./EleventyBaseError.js";
+import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import TemplatePassthrough from "./TemplatePassthrough.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 

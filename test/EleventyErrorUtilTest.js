@@ -1,5 +1,5 @@
 import test from "ava";
-import EleventyErrorUtil from "../src/EleventyErrorUtil.js";
+import EleventyErrorUtil from "../src/Errors/EleventyErrorUtil.js";
 
 const SAMPLE_ERROR = new Error("Nothing to see here");
 

@@ -1,6 +1,6 @@
 import test from "ava";
 
-import TemplateEngineManager from "../src/TemplateEngineManager.js";
+import TemplateEngineManager from "../src/Engines/TemplateEngineManager.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 
 test("Unsupported engine", async (t) => {

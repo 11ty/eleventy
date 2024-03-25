@@ -1,4 +1,4 @@
-import EleventyBaseError from "../EleventyBaseError.js";
+import EleventyBaseError from "../Errors/EleventyBaseError.js";
 
 class JavaScriptInvalidDataFormatError extends EleventyBaseError {}
 

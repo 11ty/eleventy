@@ -1,7 +1,7 @@
 import test from "ava";
 
 import TemplateConfig from "../src/TemplateConfig.js";
-import TemplateData from "../src/TemplateData.js";
+import TemplateData from "../src/Data/TemplateData.js";
 import TemplateMap from "../src/TemplateMap.js";
 import getNewTemplate from "./_getNewTemplateForTests.js";
 

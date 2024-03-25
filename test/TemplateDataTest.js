@@ -2,7 +2,7 @@ import test from "ava";
 import semver from "semver";
 import { createRequire } from "module";
 
-import TemplateData from "../src/TemplateData.js";
+import TemplateData from "../src/Data/TemplateData.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";
 

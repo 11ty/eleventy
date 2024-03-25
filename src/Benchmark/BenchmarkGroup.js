@@ -1,6 +1,6 @@
 import debugUtil from "debug";
 
-import ConsoleLogger from "./Util/ConsoleLogger.js";
+import ConsoleLogger from "../Util/ConsoleLogger.js";
 import Benchmark from "./Benchmark.js";
 
 const debugBenchmark = debugUtil("Eleventy:Benchmark");

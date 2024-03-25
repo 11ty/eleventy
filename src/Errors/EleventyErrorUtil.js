@@ -1,4 +1,4 @@
-import TemplateContentPrematureUseError from "./Errors/TemplateContentPrematureUseError.js";
+import TemplateContentPrematureUseError from "./TemplateContentPrematureUseError.js";
 
 /* Hack to workaround the variety of error handling schemes in template languages */
 class EleventyErrorUtil {

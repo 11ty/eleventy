@@ -5,10 +5,10 @@ import { isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import TemplateCollection from "./TemplateCollection.js";
-import EleventyErrorUtil from "./EleventyErrorUtil.js";
+import EleventyErrorUtil from "./Errors/EleventyErrorUtil.js";
 import UsingCircularTemplateContentReferenceError from "./Errors/UsingCircularTemplateContentReferenceError.js";
-import EleventyBaseError from "./EleventyBaseError.js";
-import TemplateData from "./TemplateData.js";
+import EleventyBaseError from "./Errors/EleventyBaseError.js";
+import TemplateData from "./Data/TemplateData.js";
 
 const debug = debugUtil("Eleventy:TemplateMap");
 const debugDev = debugUtil("Dev:Eleventy:TemplateMap");

@@ -1,7 +1,7 @@
 import test from "ava";
 
 import TemplateConfig from "../src/TemplateConfig.js";
-import TemplateData from "../src/TemplateData.js";
+import TemplateData from "../src/Data/TemplateData.js";
 import getNewTemplate from "./_getNewTemplateForTests.js";
 
 // Prior to and including 0.10.0 this mismatched the documentation)! (Issue #915)

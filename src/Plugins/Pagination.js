@@ -1,11 +1,11 @@
 import { isPlainObject } from "@11ty/eleventy-utils";
 import lodash from "@11ty/lodash-custom";
 
-import EleventyBaseError from "../EleventyBaseError.js";
+import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import { DeepCopy } from "../Util/Merge.js";
 import { ProxyWrap } from "../Util/ProxyWrap.js";
 // import { DeepFreeze } from "../Util/DeepFreeze.js";
-import TemplateData from "../TemplateData.js";
+import TemplateData from "../Data/TemplateData.js";
 
 const { set: lodashSet, get: lodashGet, chunk: lodashChunk } = lodash;
 

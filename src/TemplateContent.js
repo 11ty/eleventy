@@ -9,10 +9,10 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import EleventyExtensionMap from "./EleventyExtensionMap.js";
-import TemplateData from "./TemplateData.js";
+import TemplateData from "./Data/TemplateData.js";
 import TemplateRender from "./TemplateRender.js";
-import EleventyBaseError from "./EleventyBaseError.js";
-import EleventyErrorUtil from "./EleventyErrorUtil.js";
+import EleventyBaseError from "./Errors/EleventyBaseError.js";
+import EleventyErrorUtil from "./Errors/EleventyErrorUtil.js";
 import eventBus from "./EventBus.js";
 
 const { set: lodashSet } = lodash;
