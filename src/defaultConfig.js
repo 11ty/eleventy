@@ -71,8 +71,8 @@ export default function (config) {
 		return urlFilter.call(this, url, pathPrefix);
 	});
 
-	config.addFilter("log", (input, ...messages) => {
-		console.log(input, ...messages);
+	config.addFilter("log", async (input, ...messages) => {
+		console.log(await input, ...(await Promise.all(messages)));
 		return input;
 	});
 
