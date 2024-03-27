@@ -41,7 +41,8 @@ function transformUrl(url, base, opts = {}) {
 	if (isValidUrl(base)) {
 		// convert relative paths to absolute path first using pageUrl
 		if (pageUrl && !url.startsWith("/")) {
-			url = new URL(url, `http://example.com${pageUrl}`).pathname;
+			let urlObj = new URL(url, `http://example.com${pageUrl}`);
+			url = urlObj.pathname + (urlObj.hash || "");
 		}
 
 		return addPathPrefixToUrl(url, pathPrefix, base);
