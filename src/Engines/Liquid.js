@@ -58,8 +58,14 @@ class Liquid extends TemplateEngine {
 	static wrapFilter(fn) {
 		return function (...args) {
 			if (this.context && "get" in this.context) {
-				this.page = this.context.get(["page"]);
-				this.eleventy = this.context.get(["eleventy"]);
+				const exposedProperties = ["page", "eleventy"];
+				for (const property of exposedProperties) {
+					Object.defineProperty(this, property, {
+						configurable: true,
+						enumerable: true,
+						get: () => this.context.get([property]),
+					});
+				}
 			}
 
 			return fn.call(this, ...args);
@@ -130,14 +136,14 @@ class Liquid extends TemplateEngine {
 			let arg = lexer.next();
 			while (arg) {
 				/*{
-          type: 'doubleQuoteString',
-          value: '"test 2"',
-          text: '"test 2"',
-          toString: [Function: tokenToString],
-          offset: 0,
-          lineBreaks: 0,
-          line: 1,
-          col: 1 }*/
+					type: 'doubleQuoteString',
+					value: '"test 2"',
+					text: '"test 2"',
+					toString: [Function: tokenToString],
+					offset: 0,
+					lineBreaks: 0,
+					line: 1,
+					col: 1 }*/
 				if (arg.type.indexOf("ignore:") === -1) {
 					// Push the promise into an array instead of awaiting it here.
 					// This forces the promises to run in order with the correct scope value for each arg.

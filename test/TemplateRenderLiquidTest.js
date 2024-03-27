@@ -211,6 +211,19 @@ test("Liquid Async Filter", async (t) => {
   t.is((await fn()).trim(), "HItest");
 });
 
+test("Issue 3206: Strict variables and custom filters in includes", async (t) => {
+  let tr = await getNewTemplateRender("liquid", "test/stubs", {
+    liquidOptions: {
+      strictVariables: true
+    }
+  });
+  tr.engine.addFilter("makeItFoo", function () {
+    return "foo";
+  });
+  let fn = await tr.getCompiledTemplate(`<p>{% render "custom-filter", name: "Zach" %}</p>`);
+  t.is((await fn()), "<p>foo</p>");
+});
+
 test("Liquid Custom Tag prefixWithZach", async (t) => {
   let tr = await getNewTemplateRender("liquid", "./test/stubs/");
   tr.engine.addTag("prefixWithZach", function (liquidEngine) {
