@@ -68,6 +68,20 @@ myKey3: myValueFm
   t.deepEqual(results[0].rawInput, `# {{ myKey1 }}{{ myKey2 }}{{ myKey3 }}`);
 });
 
+test("Virtual template conflicts with file on file system, issue #1612", async (t) => {
+  let elev = new Eleventy("./test/stubs/stubs-virtual-conflict", "./test/stubs/stubs-virtual-conflict/_site", {
+    config: function (eleventyConfig) {
+			eleventyConfig.addTemplate("./test/stubs/stubs-virtual-conflict/virtual.md", `# Virtual template`)
+		},
+  });
+
+  let results = await elev.toJSON();
+
+  t.deepEqual(results.length, 1);
+  t.deepEqual(results[0].content.trim(), `<h1>Virtual template</h1>`);
+  t.deepEqual(results[0].rawInput, `# Virtual template`);
+});
+
 
 // Warning: this test writes to the file system
 test("Virtual template writes to file system, issue #1612", async (t) => {

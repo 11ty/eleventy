@@ -371,7 +371,9 @@ class EleventyFiles {
 		// Support for virtual templates added in 3.0
 		if (this.config.virtualTemplates && isPlainObject(this.config.virtualTemplates)) {
 			let virtualTemplates = Object.keys(this.config.virtualTemplates);
-			paths = paths.concat(virtualTemplates);
+
+			// Remove duplicates, virtual templates will override things on the file system!
+			paths = Array.from(new Set(paths.concat(virtualTemplates)));
 		}
 
 		this.pathCache = paths;
