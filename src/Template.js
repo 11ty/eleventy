@@ -929,29 +929,31 @@ class Template extends TemplateContent {
 			}
 
 			// special strings
-			if (data.date.toLowerCase() === "git last modified") {
-				let d = getDateFromGitLastUpdated(this.inputPath);
-				if (d) {
-					return d;
-				}
+			if (!this.isVirtualTemplate()) {
+				if (data.date.toLowerCase() === "git last modified") {
+					let d = getDateFromGitLastUpdated(this.inputPath);
+					if (d) {
+						return d;
+					}
 
-				// return now if this file is not yet available in `git`
-				return new Date();
-			}
-			if (data.date.toLowerCase() === "last modified") {
-				return this._getDateInstance("ctimeMs");
-			}
-			if (data.date.toLowerCase() === "git created") {
-				let d = getDateFromGitFirstAdded(this.inputPath);
-				if (d) {
-					return d;
+					// return now if this file is not yet available in `git`
+					return new Date();
 				}
+				if (data.date.toLowerCase() === "last modified") {
+					return this._getDateInstance("ctimeMs");
+				}
+				if (data.date.toLowerCase() === "git created") {
+					let d = getDateFromGitFirstAdded(this.inputPath);
+					if (d) {
+						return d;
+					}
 
-				// return now if this file is not yet available in `git`
-				return new Date();
-			}
-			if (data.date.toLowerCase() === "created") {
-				return this._getDateInstance("birthtimeMs");
+					// return now if this file is not yet available in `git`
+					return new Date();
+				}
+				if (data.date.toLowerCase() === "created") {
+					return this._getDateInstance("birthtimeMs");
+				}
 			}
 
 			// try to parse with Luxon
@@ -976,6 +978,11 @@ class Template extends TemplateContent {
 					dateObj,
 				);
 				return dateObj;
+			}
+
+			// No date was specified.
+			if (this.isVirtualTemplate()) {
+				return new Date();
 			}
 
 			return this._getDateInstance("birthtimeMs");

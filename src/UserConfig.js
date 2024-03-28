@@ -143,6 +143,8 @@ class UserConfig {
 				},
 			},
 		};
+
+		this.virtualTemplates = {};
 	}
 
 	// compatibleRange is optional in 2.0.0-beta.2
@@ -865,6 +867,14 @@ class UserConfig {
 		this.dataFileDirBaseNameOverride = baseName;
 	}
 
+	addTemplate(virtualInputPath, content, data) {
+		this.virtualTemplates[virtualInputPath] = {
+			inputPath: virtualInputPath,
+			data,
+			content,
+		};
+	}
+
 	getMergingConfigObject() {
 		let obj = {
 			templateFormats: this.templateFormats,
@@ -917,6 +927,7 @@ class UserConfig {
 			libraryAmendments: this.libraryAmendments,
 			serverPassthroughCopyBehavior: this.serverPassthroughCopyBehavior,
 			urlTransforms: this.urlTransforms,
+			virtualTemplates: this.virtualTemplates,
 		};
 
 		if (Array.isArray(this.dataFileSuffixesOverride)) {

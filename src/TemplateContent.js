@@ -165,6 +165,14 @@ class TemplateContent {
 		return this.inputDir;
 	}
 
+	isVirtualTemplate() {
+		return !!this.config.virtualTemplates[this.inputPath];
+	}
+
+	getVirtualTemplateDefinition() {
+		return this.config.virtualTemplates[this.inputPath];
+	}
+
 	async read() {
 		if (!this.readingPromise) {
 			if (!this.inputContent) {
@@ -176,7 +184,7 @@ class TemplateContent {
 				try {
 					let content = await this.inputContent;
 
-					if (content) {
+					if (content || content === "") {
 						let options = this.config.frontMatterParsingOptions || {};
 						let fm;
 						try {
@@ -258,6 +266,11 @@ class TemplateContent {
 			return "";
 		}
 
+		if (this.isVirtualTemplate()) {
+			let { content } = this.getVirtualTemplateDefinition();
+			return content;
+		}
+
 		let templateBenchmark = this.bench.get("Template Read");
 		templateBenchmark.before();
 
@@ -267,7 +280,7 @@ class TemplateContent {
 			content = TemplateContent.getCached(this.inputPath);
 		}
 
-		if (!content) {
+		if (!content && content !== "") {
 			content = await readFile(this.inputPath, "utf8");
 
 			if (this.config.useTemplateCache) {
@@ -299,7 +312,13 @@ class TemplateContent {
 					let fm = await this.read();
 
 					let extraData = await this.engine.getExtraDataFromFile(this.inputPath);
-					let data = TemplateData.mergeDeep({}, fm.data, extraData);
+
+					let virtualTemplateData = null;
+					if (this.isVirtualTemplate()) {
+						virtualTemplateData = this.getVirtualTemplateDefinition().data;
+					}
+
+					let data = TemplateData.mergeDeep({}, fm.data, extraData, virtualTemplateData);
 
 					let cleanedData = TemplateData.cleanupData(data);
 					resolve(cleanedData);

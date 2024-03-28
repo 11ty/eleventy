@@ -1,6 +1,6 @@
 import fs from "node:fs";
 
-import { TemplatePath } from "@11ty/eleventy-utils";
+import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import EleventyExtensionMap from "./EleventyExtensionMap.js";
@@ -367,6 +367,12 @@ class EleventyFiles {
 		bench.after();
 
 		// Note 2.0.0-canary.19 removed a `filter` option for custom template syntax here that was unpublished and unused.
+
+		// Support for virtual templates added in 3.0
+		if (this.config.virtualTemplates && isPlainObject(this.config.virtualTemplates)) {
+			let virtualTemplates = Object.keys(this.config.virtualTemplates);
+			paths = paths.concat(virtualTemplates);
+		}
 
 		this.pathCache = paths;
 		return paths;
