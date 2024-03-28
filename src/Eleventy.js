@@ -711,7 +711,7 @@ Arguments:
        Change all url template filters to use this subdirectory.
 
      --dryrun
-       Don’t write any files. Useful with \`DEBUG=Eleventy* npx eleventy\`
+       Don’t write any files. Useful in DEBUG mode, for example: \`DEBUG=Eleventy* npx @11ty/eleventy --dryrun\`
 
      --to=json
      --to=ndjson
