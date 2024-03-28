@@ -3,6 +3,7 @@ import fs from "fs";
 import { rimrafSync } from "rimraf";
 
 import Eleventy from "../src/Eleventy.js";
+import DuplicatePermalinkOutputError from "../src/Errors/DuplicatePermalinkOutputError.js";
 
 test("Virtual templates, issue #1612", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
@@ -74,14 +75,30 @@ test("Virtual template conflicts with file on file system, issue #1612", async (
 			eleventyConfig.addTemplate("./test/stubs/stubs-virtual-conflict/virtual.md", `# Virtual template`)
 		},
   });
+	elev.disableLogger();
 
-  let results = await elev.toJSON();
-
-  t.deepEqual(results.length, 1);
-  t.deepEqual(results[0].content.trim(), `<h1>Virtual template</h1>`);
-  t.deepEqual(results[0].rawInput, `# Virtual template`);
+  await t.throwsAsync(elev.toJSON(), {
+		message: `A virtual template had the same path as a file on the file system at "./test/stubs/stubs-virtual-conflict/virtual.md"`
+	});
 });
 
+test("Virtual templates try to output to the same file, issue #1612", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
+    config: function (eleventyConfig) {
+			eleventyConfig.addTemplate("./test/stubs-virtual-nowrite/virtual-one.md", "", {
+				permalink: "/output.html"
+			})
+			eleventyConfig.addTemplate("./test/stubs-virtual-nowrite/virtual-two.md", "", {
+				permalink: "/output.html"
+			})
+		},
+  });
+	elev.disableLogger();
+
+  await t.throwsAsync(elev.toJSON(), {
+		instanceOf: DuplicatePermalinkOutputError,
+	});
+});
 
 // Warning: this test writes to the file system
 test("Virtual template writes to file system, issue #1612", async (t) => {

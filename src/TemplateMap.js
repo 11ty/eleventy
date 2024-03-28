@@ -8,18 +8,13 @@ import TemplateCollection from "./TemplateCollection.js";
 import EleventyErrorUtil from "./Errors/EleventyErrorUtil.js";
 import UsingCircularTemplateContentReferenceError from "./Errors/UsingCircularTemplateContentReferenceError.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
+import DuplicatePermalinkOutputError from "./Errors/DuplicatePermalinkOutputError.js";
 import TemplateData from "./Data/TemplateData.js";
 
 const debug = debugUtil("Eleventy:TemplateMap");
 const debugDev = debugUtil("Dev:Eleventy:TemplateMap");
 
 class TemplateMapConfigError extends EleventyBaseError {}
-
-class DuplicatePermalinkOutputError extends EleventyBaseError {
-	get removeDuplicateErrorStringFromOutput() {
-		return true;
-	}
-}
 
 class TemplateMap {
 	constructor(eleventyConfig) {

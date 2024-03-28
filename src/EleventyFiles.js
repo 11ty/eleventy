@@ -372,8 +372,19 @@ class EleventyFiles {
 		if (this.config.virtualTemplates && isPlainObject(this.config.virtualTemplates)) {
 			let virtualTemplates = Object.keys(this.config.virtualTemplates);
 
-			// Remove duplicates, virtual templates will override things on the file system!
-			paths = Array.from(new Set(paths.concat(virtualTemplates)));
+			paths = paths.concat(virtualTemplates);
+			// Virtual templates can not live at the same place as files on the file system!
+			if (paths.length !== new Set(paths).size) {
+				let conflicts = {};
+				for (let path of paths) {
+					if (conflicts[path]) {
+						throw new Error(
+							`A virtual template had the same path as a file on the file system at "${path}"`,
+						);
+					}
+					conflicts[path] = true;
+				}
+			}
 		}
 
 		this.pathCache = paths;
