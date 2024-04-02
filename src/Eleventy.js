@@ -523,6 +523,8 @@ Verbose Output: ${this.verboseMode}`);
 	 * @method
 	 */
 	initializeEnvironmentVariables(env) {
+		process.env.ELEVENTY_VERSION = Eleventy.getVersion();
+
 		process.env.ELEVENTY_ROOT = env.root;
 		debug("Setting process.env.ELEVENTY_ROOT: %o", env.root);
 
