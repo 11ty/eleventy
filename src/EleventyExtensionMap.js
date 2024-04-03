@@ -187,15 +187,16 @@ class EleventyExtensionMap {
 
 	// Only `addExtension` configuration API extensions
 	getExtensionEntriesFromKey(key) {
-		let entries = [];
-		if ("extensionMap" in this.config) {
+		if (this.config?.extensionMap) {
+			let entries = [];
 			for (let entry of this.config.extensionMap) {
 				if (entry.key === key) {
 					entries.push(entry);
+					return entries;
 				}
 			}
 		}
-		return entries;
+		return [];
 	}
 
 	hasEngine(pathOrKey) {
@@ -235,7 +236,7 @@ class EleventyExtensionMap {
 				"11ty.mjs": "11ty.js",
 			};
 
-			if ("extensionMap" in this.config) {
+			if (this.config?.extensionMap) {
 				for (let entry of this.config.extensionMap) {
 					this._extensionToKeyMap[entry.extension] = entry.key;
 				}
