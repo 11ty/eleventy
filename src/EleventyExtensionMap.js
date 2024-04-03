@@ -17,9 +17,7 @@ class EleventyExtensionMap {
 	}
 
 	setFormats(formatKeys = []) {
-		this.unfilteredFormatKeys = formatKeys.map(function (key) {
-			return key.trim().toLowerCase();
-		});
+		this.unfilteredFormatKeys = formatKeys.map((key) => key.trim().toLowerCase());
 
 		this.validTemplateLanguageKeys = this.unfilteredFormatKeys.filter((key) =>
 			this.hasExtension(key),

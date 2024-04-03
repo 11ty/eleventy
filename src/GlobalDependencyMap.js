@@ -129,12 +129,8 @@ class GlobalDependencyMap {
 		}
 
 		let prevDeps = this.getDependantsFor(node)
-			.filter((entry) => {
-				return entry.startsWith(GlobalDependencyMap.COLLECTION_PREFIX);
-			})
-			.map((entry) => {
-				return GlobalDependencyMap.getEntryFromCollectionKey(entry);
-			});
+			.filter((entry) => entry.startsWith(GlobalDependencyMap.COLLECTION_PREFIX))
+			.map((entry) => GlobalDependencyMap.getEntryFromCollectionKey(entry));
 
 		let prevDepsSet = new Set(prevDeps);
 		let deleted = new Set();

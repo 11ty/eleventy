@@ -100,9 +100,7 @@ class EleventyWatchTargets {
 	}
 
 	static normalizeToGlobs(targets) {
-		return EleventyWatchTargets.normalize(targets).map((entry) =>
-			TemplatePath.convertToRecursiveGlobSync(entry),
-		);
+		return EleventyWatchTargets.normalize(targets).map(TemplatePath.convertToRecursiveGlobSync);
 	}
 
 	addAndMakeGlob(targets) {

@@ -215,9 +215,7 @@ class EleventyFiles {
 		if (ignoreContent) {
 			ignores = ignoreContent
 				.split("\n")
-				.map((line) => {
-					return line.trim();
-				})
+				.map((line) => line.trim())
 				.filter((line) => {
 					if (line.charAt(0) === "!") {
 						debug(
