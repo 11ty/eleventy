@@ -97,9 +97,9 @@ class GlobalDependencyMap {
 
 	normalizeLayoutsObject(layouts) {
 		let o = {};
-		for (let rawLayout in layouts) {
+		for (let [rawLayout, entry] of Object.entries(layouts)) {
 			let layout = this.normalizeNode(rawLayout);
-			o[layout] = layouts[rawLayout].map((entry) => this.normalizeNode(entry));
+			o[layout] = entry.map((entry) => this.normalizeNode(entry));
 		}
 		return o;
 	}

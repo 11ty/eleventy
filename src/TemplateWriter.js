@@ -168,15 +168,13 @@ class TemplateWriter {
 			 *   return pretty(str, { ocd: true });
 			 * }
 			 */
-			for (let transformName in this.config.transforms) {
-				let transform = this.config.transforms[transformName];
+			for (let [transformName, transform] of Object.entries(this.config.transforms)) {
 				if (typeof transform === "function") {
 					tmpl.addTransform(transformName, transform);
 				}
 			}
 
-			for (let linterName in this.config.linters) {
-				let linter = this.config.linters[linterName];
+			for (let linter of Object.values(this.config.linters)) {
 				if (typeof linter === "function") {
 					tmpl.addLinter(linter);
 				}

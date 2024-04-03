@@ -177,8 +177,8 @@ class EleventyExtensionMap {
 
 	getExtensionsFromKey(key) {
 		let extensions = [];
-		for (var extension in this.extensionToKeyMap) {
-			if (this.extensionToKeyMap[extension] === key) {
+		for (let [extension, entry] of Object.entries(this.extensionToKeyMap)) {
+			if (entry === key) {
 				extensions.push(extension);
 			}
 		}
@@ -205,23 +205,17 @@ class EleventyExtensionMap {
 	getKey(pathOrKey) {
 		pathOrKey = (pathOrKey || "").toLowerCase();
 
-		for (var extension in this.extensionToKeyMap) {
-			let key = this.extensionToKeyMap[extension];
-			if (pathOrKey === extension) {
-				return key;
-			} else if (pathOrKey.endsWith("." + extension)) {
+		for (let [extension, key] of Object.entries(this.extensionToKeyMap)) {
+			if (pathOrKey === extension || pathOrKey.endsWith(`.${extension}`)) {
 				return key;
 			}
 		}
 	}
 
 	removeTemplateExtension(path) {
-		for (var extension in this.extensionToKeyMap) {
-			if (path === extension || path.endsWith("." + extension)) {
-				return path.slice(
-					0,
-					path.length - 1 - extension.length < 0 ? 0 : path.length - 1 - extension.length,
-				);
+		for (let extension in this.extensionToKeyMap) {
+			if (path === extension || path.endsWith(`.${extension}`)) {
+				return path.slice(0, Math.max(0, path.length - 1 - extension.length));
 			}
 		}
 		return path;

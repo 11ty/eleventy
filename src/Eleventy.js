@@ -390,14 +390,14 @@ class Eleventy {
 		// Restore from cache
 		if (this._privateCaches.has(key)) {
 			let c = this._privateCaches.get(key);
-			for (let cacheKey in c) {
-				inst[cacheKey] = c[cacheKey];
+			for (let [cacheKey, cacheValue] of Object.entries(c)) {
+				inst[cacheKey] = cacheValue;
 			}
 		} else {
 			// Set cache
 			let c = {};
-			for (let cacheKey of inst.caches || []) {
-				c[cacheKey] = inst[cacheKey];
+			for (let [cacheKey, cacheValue] of Object.entries(inst.caches || [])) {
+				c[cacheKey] = cacheValue;
 			}
 			this._privateCaches.set(key, c);
 		}

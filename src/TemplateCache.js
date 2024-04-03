@@ -73,8 +73,7 @@ class TemplateCache {
 		let layoutTemplate = this.cacheByInputPath[layoutFilePath];
 		layoutTemplate.resetCaches();
 
-		let keys = layoutTemplate.getCacheKeys();
-		for (let key of keys) {
+		for (let key of layoutTemplate.getCacheKeys()) {
 			delete this.cache[key];
 		}
 
