@@ -8,7 +8,7 @@ const debugBenchmark = debugUtil("Eleventy:Benchmark");
 class BenchmarkGroup {
 	constructor() {
 		this.benchmarks = {};
-		// Warning: aggregate benchmarks automatically default to false via BenchmarkManager->getBenchmarkGroup
+		// Warning: aggregate benchmarks automatically default to false via `BenchmarkManager.getBenchmarkGroup()`
 		this.isVerbose = true;
 		this.logger = new ConsoleLogger(this.isVerbose);
 		this.minimumThresholdMs = 0;
@@ -21,8 +21,8 @@ class BenchmarkGroup {
 	}
 
 	reset() {
-		for (var type in this.benchmarks) {
-			this.benchmarks[type].reset();
+		for (let bench of Object.values(this.benchmarks)) {
+			bench.reset();
 		}
 	}
 
@@ -88,8 +88,7 @@ class BenchmarkGroup {
 	}
 
 	finish(label, totalTimeSpent) {
-		for (var type in this.benchmarks) {
-			let bench = this.benchmarks[type];
+		for (let [type, bench] of Object.entries(this.benchmarks)) {
 			let isAbsoluteMinimumComparison = this.minimumThresholdMs > 0;
 			let totalForBenchmark = bench.getTotal();
 			let percent = Math.round((totalForBenchmark * 100) / totalTimeSpent);

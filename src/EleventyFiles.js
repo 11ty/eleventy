@@ -203,12 +203,9 @@ class EleventyFiles {
 		}
 
 		let ignores = [];
-		for (let ignorePath of ignoreFiles) {
-			ignorePath = TemplatePath.normalize(ignorePath);
-
-			let dir = TemplatePath.getDirFromFilePath(ignorePath);
-
+		for (let ignorePath of ignoreFiles.map(TemplatePath.normalize)) {
 			if (fs.existsSync(ignorePath) && fs.statSync(ignorePath).size > 0) {
+				let dir = TemplatePath.getDirFromFilePath(ignorePath);
 				let ignoreContent = fs.readFileSync(ignorePath, "utf8");
 
 				ignores = ignores.concat(EleventyFiles.normalizeIgnoreContent(dir, ignoreContent));
