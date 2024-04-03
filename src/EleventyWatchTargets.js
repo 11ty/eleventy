@@ -132,21 +132,16 @@ class EleventyWatchTargets {
 	}
 
 	clearImportCacheFor(filePathArray) {
-		let paths = new Set();
-		for (const filePath of filePathArray) {
-			paths.add(filePath);
+		let paths = new Set([
+			...filePathArray,
 
-			// Delete from require cache so that updates to the module are re-required
-			let importsTheChangedFile = this.getDependantsOf(filePath);
-			for (let dep of importsTheChangedFile) {
-				paths.add(dep);
-			}
+			//	Imports changed the file
+			//	(Delete from require cache so that updates to the module are re-required)
+			...filePathArray.map((filePath) => this.getDependantsOf(filePath)),
 
-			let isImportedInTheChangedFile = this.getDependenciesOf(filePath);
-			for (let dep of isImportedInTheChangedFile) {
-				paths.add(dep);
-			}
-		}
+			//	Imported in the changed file
+			...filePathArray.map((filePath) => this.getDependenciesOf(filePath)),
+		]);
 
 		eventBus.emit("eleventy.importCacheReset", paths);
 	}

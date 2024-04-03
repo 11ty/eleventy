@@ -774,20 +774,15 @@ Arguments:
 
 	shouldTriggerConfigReset(changedFiles) {
 		let configFilePaths = new Set(this.eleventyConfig.getLocalProjectConfigFiles());
-		for (let filePath of changedFiles) {
-			if (configFilePaths.has(filePath)) {
-				return true;
-			}
+		if (changedFiles.intersection(configFilePaths).size > 0) {
+			return true;
 		}
 
 		for (const configFilePath of configFilePaths) {
 			// Any dependencies of the config file changed
 			let configFileDependencies = new Set(this.watchTargets.getDependenciesOf(configFilePath));
-
-			for (let filePath of changedFiles) {
-				if (configFileDependencies.has(filePath)) {
-					return true;
-				}
+			if (changedFiles.intersection(configFileDependencies).size > 0) {
+				return true;
 			}
 		}
 
@@ -799,12 +794,10 @@ Arguments:
 		if (!activeQueue.length) {
 			return false;
 		}
-
-		return this.shouldTriggerConfigReset(
-			activeQueue.map((path) => {
-				return PathNormalizer.normalizeSeperator(TemplatePath.addLeadingDotSlash(path));
-			}),
+		activeQueue = new Set(
+			activeQueue.map(TemplatePath.addLeadingDotSlash).map(PathNormalizer.normalizeSeperator),
 		);
+		return this.shouldTriggerConfigReset(activeQueue);
 	}
 
 	/**
