@@ -95,6 +95,11 @@ class TemplateConfig {
 		this.logger = logger;
 	}
 
+	/* Setter for Directories instance */
+	setDirectories(directories) {
+		this.directories = directories;
+	}
+
 	/**
 	 * Normalises local project config file path.
 	 *

@@ -166,11 +166,14 @@ class TemplateContent {
 	}
 
 	isVirtualTemplate() {
-		return !!this.config.virtualTemplates[this.inputPath];
+		let def = this.getVirtualTemplateDefinition();
+		return !!def;
 	}
 
 	getVirtualTemplateDefinition() {
-		return this.config.virtualTemplates[this.inputPath];
+		let inputDirRelativeInputPath =
+			this.eleventyConfig.directories.getInputPathRelativeToInputDirectory(this.inputPath);
+		return this.config.virtualTemplates[inputDirRelativeInputPath];
 	}
 
 	async read() {
@@ -266,8 +269,9 @@ class TemplateContent {
 			return "";
 		}
 
-		if (this.isVirtualTemplate()) {
-			let { content } = this.getVirtualTemplateDefinition();
+		let virtualTemplateDefinition = this.getVirtualTemplateDefinition();
+		if (virtualTemplateDefinition) {
+			let { content } = virtualTemplateDefinition;
 			return content;
 		}
 
@@ -313,9 +317,10 @@ class TemplateContent {
 
 					let extraData = await this.engine.getExtraDataFromFile(this.inputPath);
 
-					let virtualTemplateData = null;
-					if (this.isVirtualTemplate()) {
-						virtualTemplateData = this.getVirtualTemplateDefinition().data;
+					let virtualTemplateDefinition = this.getVirtualTemplateDefinition();
+					let virtualTemplateData;
+					if (virtualTemplateDefinition) {
+						virtualTemplateData = virtualTemplateDefinition.data;
 					}
 
 					let data = TemplateData.mergeDeep({}, fm.data, extraData, virtualTemplateData);

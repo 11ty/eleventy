@@ -15,7 +15,9 @@ import ConsoleLogger from "./Util/ConsoleLogger.js";
 import PathPrefixer from "./Util/PathPrefixer.js";
 import TemplateConfig from "./TemplateConfig.js";
 import FileSystemSearch from "./FileSystemSearch.js";
+import ProjectDirectories from "./Util/ProjectDirectories.js";
 import PathNormalizer from "./Util/PathNormalizer.js";
+
 import simplePlural from "./Util/Pluralize.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import eventBus from "./EventBus.js";
@@ -41,10 +43,10 @@ const debug = debugUtil("Eleventy");
  */
 class Eleventy {
 	constructor(input, output, options = {}, eleventyConfig = null) {
-		/** @member {String} - Holds the path to the input directory. */
+		/** @member {String} - Holds the path to the input (might be a file or folder) */
 		this.rawInput = input;
 
-		/** @member {String} - Holds the path to the output directory. */
+		/** @member {String} - Holds the path to the output directory */
 		this.rawOutput = output;
 
 		/** @member {module:11ty/eleventy/TemplateConfig} - Override the config instance (for centralized config re-use) */
@@ -55,6 +57,11 @@ class Eleventy {
 		 * @default {}
 		 */
 		this.options = options;
+
+		/** @member {module:11ty/eleventy/Util/ProjectDirectories} */
+		this.directories = new ProjectDirectories();
+		this.directories.setInput(input, this.options.inputDir);
+		this.directories.setOutput(output);
 
 		/**
 		 * @member {String} - The top level directory the site pretends to reside in
@@ -133,6 +140,7 @@ class Eleventy {
 
 		this.eleventyConfig.setProjectUsingEsm(this.isEsm);
 		this.eleventyConfig.setLogger(this.logger);
+		this.eleventyConfig.setDirectories(this.directories);
 
 		if (this.pathPrefix || this.pathPrefix === "") {
 			this.eleventyConfig.setPathPrefix(this.pathPrefix);
@@ -159,6 +167,7 @@ class Eleventy {
 		 * @member {Object} - Initialize Eleventy’s configuration, including the user config file
 		 */
 		this.config = this.eleventyConfig.getConfig();
+		// this.directories.
 
 		/**
 		 * @member {Object} - Singleton BenchmarkManager instance
@@ -182,13 +191,6 @@ class Eleventy {
 		} else {
 			// Fall back to configuration
 			this.setIsVerbose(!this.config.quietMode);
-		}
-
-		/**
-		 * @member {Boolean} - Explicit input directory (usually used when input is a single file/serverless)
-		 */
-		if (this.options.inputDir) {
-			this.setInputDir(this.options.inputDir);
 		}
 
 		if (performance) {
@@ -229,26 +231,22 @@ class Eleventy {
 
 	/** @type {String} */
 	get input() {
-		return this.rawInput || this.config.dir.input;
+		return this.directories.input || this.config.dir.input;
 	}
 
 	/** @type {String} */
 	get inputDir() {
-		if (this._inputDir) {
-			// set manually via setter
-			return this._inputDir;
-		}
-
-		return TemplatePath.getDir(this.input);
+		return this.directories.input;
 	}
 
+	// Not used internally but maintained for backwards compat.
 	setInputDir(dir) {
-		this._inputDir = dir;
+		this.directories.setInputDir(dir);
 	}
 
 	/** @type {String} */
 	get outputDir() {
-		return this.rawOutput || this.config.dir.output;
+		return this.directories.output || this.config.dir.output;
 	}
 
 	/**

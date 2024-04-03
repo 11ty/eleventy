@@ -104,7 +104,7 @@ export default function (config) {
 
 	return {
 		templateFormats: ["liquid", "md", "njk", "html", "11ty.js"],
-		// if your site lives in a subdirectory, change this
+		// if your site deploys to a subdirectory, change this
 		pathPrefix: "/",
 		markdownTemplateEngine: "liquid",
 		htmlTemplateEngine: "liquid",

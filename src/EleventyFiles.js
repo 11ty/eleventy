@@ -15,7 +15,7 @@ const debug = debugUtil("Eleventy:EleventyFiles");
 class EleventyFilesError extends EleventyBaseError {}
 
 class EleventyFiles {
-	constructor(input, outputDir, formats, eleventyConfig) {
+	constructor(inputDir, outputDir, formats, eleventyConfig) {
 		if (!eleventyConfig) {
 			throw new EleventyFilesError("Missing `eleventyConfig`` argument.");
 		}
@@ -24,8 +24,8 @@ class EleventyFiles {
 		this.config = eleventyConfig.getConfig();
 		this.aggregateBench = this.config.benchmarkManager.get("Aggregate");
 
-		this.input = input;
-		this.inputDir = TemplatePath.getDir(this.input);
+		this.rawInput = inputDir;
+		this.inputDir = inputDir;
 		this.outputDir = outputDir;
 
 		this.initConfig();
@@ -45,7 +45,7 @@ class EleventyFiles {
 	 * Useful when input is a file and inputDir is not its direct parent */
 	setInput(inputDir, input) {
 		this.inputDir = inputDir;
-		this.input = input;
+		this.rawinput = input;
 
 		this.initConfig();
 
@@ -66,11 +66,11 @@ class EleventyFiles {
 		this.alreadyInit = true;
 
 		// Input is a directory
-		if (this.input === this.inputDir) {
+		if (this.rawInput === this.inputDir) {
 			this.templateGlobs = this.extensionMap.getGlobs(this.inputDir);
 		} else {
 			// input is not a directory
-			this.templateGlobs = TemplateGlob.map([this.input]);
+			this.templateGlobs = TemplateGlob.map([this.rawInput]);
 		}
 
 		this.initPassthroughManager();
@@ -81,7 +81,7 @@ class EleventyFiles {
 		if (!this._validTemplateGlobs) {
 			let globs;
 			// Input is a directory
-			if (this.input === this.inputDir) {
+			if (this.rawInput === this.inputDir) {
 				globs = this.extensionMap.getValidGlobs(this.inputDir);
 			} else {
 				globs = this.templateGlobs;
@@ -359,6 +359,33 @@ class EleventyFiles {
 		});
 	}
 
+	getPathsWithVirtualTemplates(paths) {
+		// Support for virtual templates added in 3.0
+		if (this.config.virtualTemplates && isPlainObject(this.config.virtualTemplates)) {
+			let virtualTemplates = Object.keys(this.config.virtualTemplates).map((path) => {
+				return this.eleventyConfig.directories.getInputPath(path);
+			});
+
+			paths = paths.concat(virtualTemplates);
+
+			// Virtual templates can not live at the same place as files on the file system!
+			if (paths.length !== new Set(paths).size) {
+				let conflicts = {};
+				for (let path of paths) {
+					if (conflicts[path]) {
+						throw new Error(
+							`A virtual template had the same path as a file on the file system: "${path}"`,
+						);
+					}
+
+					conflicts[path] = true;
+				}
+			}
+		}
+
+		return paths;
+	}
+
 	async getFiles() {
 		let bench = this.aggregateBench.get("Searching the file system (templates)");
 		bench.before();
@@ -368,24 +395,7 @@ class EleventyFiles {
 
 		// Note 2.0.0-canary.19 removed a `filter` option for custom template syntax here that was unpublished and unused.
 
-		// Support for virtual templates added in 3.0
-		if (this.config.virtualTemplates && isPlainObject(this.config.virtualTemplates)) {
-			let virtualTemplates = Object.keys(this.config.virtualTemplates);
-
-			paths = paths.concat(virtualTemplates);
-			// Virtual templates can not live at the same place as files on the file system!
-			if (paths.length !== new Set(paths).size) {
-				let conflicts = {};
-				for (let path of paths) {
-					if (conflicts[path]) {
-						throw new Error(
-							`A virtual template had the same path as a file on the file system at "${path}"`,
-						);
-					}
-					conflicts[path] = true;
-				}
-			}
-		}
+		paths = this.getPathsWithVirtualTemplates(paths);
 
 		this.pathCache = paths;
 		return paths;
