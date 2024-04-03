@@ -395,14 +395,7 @@ class EleventyFiles {
 		if (!filePath) {
 			return false;
 		}
-
-		for (let path of paths) {
-			if (path === filePath) {
-				return true;
-			}
-		}
-
-		return false;
+		return paths.includes(filePath);
 	}
 
 	/* For `eleventy --watch` */
