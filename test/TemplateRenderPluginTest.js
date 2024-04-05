@@ -7,6 +7,7 @@ import {
   RenderManager,
 } from "../src/Plugins/RenderPlugin.js";
 import Eleventy from "../src/Eleventy.js";
+
 import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 
 async function getTestOutput(input, configCallback = function () {}) {

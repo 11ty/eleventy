@@ -34,6 +34,7 @@ class TemplateContent {
 
 		this.inputPath = inputPath;
 
+		// TODO directorynorm
 		if (inputDir) {
 			this.inputDir = normalize(inputDir);
 		} else {

@@ -1,16 +1,20 @@
 import test from "ava";
 
 import TemplateMap from "../../../src/TemplateMap.js";
-import TemplateConfig from "../../../src/TemplateConfig.js";
 import getNewTemplateForTests from "../../_getNewTemplateForTests.js";
+import { getTemplateConfigInstance } from "../../_testHelpers.js";
 
 function getNewTemplate(filename, input, output, eleventyConfig) {
   return getNewTemplateForTests(filename, input, output, null, null, eleventyConfig);
 }
 
 test("Get ordered list of templates", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+		dir: {
+			input: "test/_issues/975/",
+			output: "test/_issues/975/_site",
+		}
+	});
 
   let tm = new TemplateMap(eleventyConfig);
 
@@ -52,8 +56,12 @@ test("Get ordered list of templates", async (t) => {
 });
 
 test("Get ordered list of templates (reverse add)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+	let eleventyConfig = await getTemplateConfigInstance({
+		dir: {
+			input: "test/_issues/975/",
+			output: "test/_issues/975/_site",
+		}
+	});
 
   let tm = new TemplateMap(eleventyConfig);
 

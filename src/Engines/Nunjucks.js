@@ -44,10 +44,12 @@ class Nunjucks extends TemplateEngine {
 				this.nunjucksEnvironmentOptions,
 			);
 		} else {
-			let fsLoader = new NunjucksLib.FileSystemLoader([
-				super.getIncludesDir(),
-				TemplatePath.getWorkingDir(),
-			]);
+			let paths = new Set();
+			paths.add(super.getIncludesDir());
+			paths.add(TemplatePath.getWorkingDir());
+
+			// Filter out undefined paths
+			let fsLoader = new NunjucksLib.FileSystemLoader(Array.from(paths).filter((entry) => entry));
 
 			this.njkEnv = new NunjucksLib.Environment(fsLoader, this.nunjucksEnvironmentOptions);
 		}

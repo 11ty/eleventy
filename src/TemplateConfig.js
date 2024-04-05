@@ -100,6 +100,11 @@ class TemplateConfig {
 		this.directories = directories;
 	}
 
+	/* Backwards compat */
+	get inputDir() {
+		return this.directories.input;
+	}
+
 	/**
 	 * Normalises local project config file path.
 	 *
@@ -120,14 +125,6 @@ class TemplateConfig {
 			return TemplatePath.addLeadingDotSlashArray(this.projectConfigPaths.filter((path) => path));
 		}
 		return [];
-	}
-
-	get inputDir() {
-		return this._inputDir;
-	}
-
-	set inputDir(inputDir) {
-		this._inputDir = inputDir;
 	}
 
 	setProjectUsingEsm(isEsmProject) {
@@ -326,16 +323,7 @@ class TemplateConfig {
 					// debug( "localConfig is a function, after calling, this.userConfig is %o", this.userConfig );
 				}
 
-				// Still using removed `filters`? this was renamed to transforms
-				if (
-					localConfig &&
-					localConfig.filters !== undefined &&
-					Object.keys(localConfig.filters).length
-				) {
-					throw new EleventyConfigError(
-						"The `filters` configuration option was renamed in Eleventy 0.3.3 and removed in Eleventy 1.0. Please use the `addTransform` configuration method instead. Read more: https://www.11ty.dev/docs/config/#transforms",
-					);
-				}
+				// Removed a check for `filters` in 3.0.0-alpha.6 (now using addTransform instead) https://www.11ty.dev/docs/config/#transforms
 			} catch (err) {
 				// TODO the error message here is bad and I feel bad (needs more accurate info)
 				throw new EleventyConfigError(
@@ -384,6 +372,11 @@ class TemplateConfig {
 		// Returning a falsy value (e.g. "") from user config should reset to the default value.
 		if (!mergedConfig.pathPrefix) {
 			mergedConfig.pathPrefix = this.rootConfig.pathPrefix;
+		}
+
+		// Add the ProjectDirectories instance to the user accessible config.
+		if (this.directories) {
+			mergedConfig.directories = this.directories.getUserspaceInstance();
 		}
 
 		// Delay processing plugins until after the result of localConfig is returned

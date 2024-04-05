@@ -1,12 +1,16 @@
 import test from "ava";
 
 import TemplateRender from "../src/TemplateRender.js";
-import TemplateConfig from "../src/TemplateConfig.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
+import { getTemplateConfigInstance } from "./_testHelpers.js";
+
 async function getNewTemplateRender(name, inputDir, extendedConfig) {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init(extendedConfig);
+  let eleventyConfig = await getTemplateConfigInstance({
+		dir: {
+			input: inputDir
+		}
+	}, null, extendedConfig);
 
   let tr = new TemplateRender(name, inputDir, eleventyConfig);
   tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);

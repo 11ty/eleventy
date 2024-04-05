@@ -3,25 +3,31 @@ import ProjectDirectories from "../src/Util/ProjectDirectories.js";
 
 test("Implied input", t => {
 	let d = new ProjectDirectories();
+
 	t.is(d.input, "./");
+	t.is(d.inputFile, undefined);
 });
 
 test("Input matches", t => {
 	let d = new ProjectDirectories();
 	d.setInput("./test/");
+
 	t.is(d.input, "./test/");
+	t.is(d.inputFile, undefined);
 });
 
 test("Normalized input (has trailing slash)", t => {
 	let d = new ProjectDirectories();
 	d.setInput("test/");
 	t.is(d.input, "./test/");
+	t.is(d.inputFile, undefined);
 });
 
 test("Normalized input (no trailing slash)", t => {
 	let d = new ProjectDirectories();
 	d.setInput("test");
 	t.is(d.input, "./test/");
+	t.is(d.inputFile, undefined);
 });
 
 test("Input must exist", t => {
@@ -33,27 +39,22 @@ test("Input as file", t => {
 	let d = new ProjectDirectories();
 	d.setInput("test/stubs/index.html");
 	t.is(d.input, "./test/stubs/");
+	t.is(d.inputFile, "./test/stubs/index.html");
 });
 
 test("Input as file (deep)", t => {
 	let d = new ProjectDirectories();
 	d.setInput("test/stubs/img/stub.md");
 	t.is(d.input, "./test/stubs/img/");
+	t.is(d.inputFile, "./test/stubs/img/stub.md");
 });
 
 test("Input as file (deep with inputDir)", t => {
 	let d = new ProjectDirectories();
 	d.setInput("test/stubs/img/stub.md", "test/stubs");
 	t.is(d.input, "./test/stubs/");
+	t.is(d.inputFile, "./test/stubs/img/stub.md");
 });
-
-test("Input as file (separate inputDir)", t => {
-	let d = new ProjectDirectories();
-	d.setInput("test/stubs/img/stub.md");
-	d.setInputDir("test/stubs");
-	t.is(d.input, "./test/stubs/");
-});
-
 
 test("Data directory, implied input and default data", t => {
 	let d = new ProjectDirectories();
@@ -80,9 +81,9 @@ test("Data directory matches, explicit input and data (order reversed)", t => {
 	t.is(d.data, "./test/mydata/");
 });
 
-test("Layouts/includes, implied", t => {
+test("includes implied, layouts are not", t => {
 	let d = new ProjectDirectories();
-	t.is(d.layouts, "./_layouts/");
+	t.is(d.layouts, undefined);
 	t.is(d.includes, "./_includes/");
 });
 
@@ -123,3 +124,113 @@ test("Project file paths", t => {
 	t.is(d.getProjectPath("eleventy.config.js"), "./eleventy.config.js");
 	t.is(d.getProjectPath("./eleventy.config.js"), "./eleventy.config.js");
 });
+
+test("Input could be a glob!", t => {
+	let d = new ProjectDirectories();
+	d.setInput("./test/*.md");
+	t.is(d.input, "./test/");
+	t.is(d.inputFile, undefined);
+});
+
+
+test("Setting values via config object", t => {
+	let d = new ProjectDirectories();
+
+	d.setViaConfigObject({
+		input: "test/stubs",
+		output: "dist",
+	});
+
+	t.is(d.input, "./test/stubs/");
+	t.is(d.inputFile, undefined);
+	t.is(d.output, "./dist/");
+	t.is(d.data, "./test/stubs/_data/");
+	t.is(d.includes, "./test/stubs/_includes/");
+	t.is(d.layouts, undefined);
+});
+
+test("Setting values via config object (input relative dirs)", t => {
+	let d = new ProjectDirectories();
+	d.setViaConfigObject({
+		input: "test/stubs",
+		data: "globaldata",
+		layouts: "mylayouts",
+		includes: "components",
+	});
+
+	t.is(d.input, "./test/stubs/");
+	t.is(d.inputFile, undefined);
+	t.is(d.output, "./_site/");
+	t.is(d.data, "./test/stubs/globaldata/");
+	t.is(d.includes, "./test/stubs/components/");
+	t.is(d.layouts, "./test/stubs/mylayouts/");
+});
+
+test("Setting values via config object (empty string/false value)", t => {
+	let d = new ProjectDirectories();
+	d.setViaConfigObject({
+		input: "test/stubs",
+		output: "_site",
+		data: false, // falsy supported for output, data, includes, and layouts (uses input dir)
+		includes: "",
+		// layouts will be undefined when excluded here
+	});
+
+	t.is(d.input, "./test/stubs/");
+	t.is(d.inputFile, undefined);
+	t.is(d.output, "./_site/");
+	t.is(d.data, "./test/stubs/");
+	t.is(d.includes, "./test/stubs/");
+	t.is(d.layouts, undefined);
+});
+
+test("Setting values via config object (layouts is set but falsy)", t => {
+	let d = new ProjectDirectories();
+	d.setViaConfigObject({
+		input: "test/stubs",
+		output: "_site",
+		layouts: "", // falsy supported for output, data, includes, and layouts (uses input dir)
+	});
+
+	t.is(d.input, "./test/stubs/");
+	t.is(d.inputFile, undefined);
+	t.is(d.output, "./_site/");
+	t.is(d.data, "./test/stubs/_data/");
+	t.is(d.includes, "./test/stubs/_includes/");
+	t.is(d.layouts, "./test/stubs/");
+});
+
+test("Setting values via config object (output is falsy)", t => {
+	let d = new ProjectDirectories();
+	d.setViaConfigObject({
+		input: "test/stubs",
+		output: "",
+	});
+
+	t.is(d.input, "./test/stubs/");
+	t.is(d.inputFile, undefined);
+	t.is(d.output, "./");
+	t.is(d.data, "./test/stubs/_data/");
+	t.is(d.includes, "./test/stubs/_includes/");
+	t.is(d.layouts, undefined);
+});
+
+test("Setting values via config object (dots)", t => {
+	let d = new ProjectDirectories();
+	d.setViaConfigObject({
+		input: "test/stubs",
+		output: ".",
+		includes: ".",
+		layouts: ".",
+		data: ".",
+	});
+
+	t.is(d.input, "./test/stubs/");
+	t.is(d.inputFile, undefined);
+	t.is(d.output, "./");
+	t.is(d.data, "./test/stubs/");
+	t.is(d.includes, "./test/stubs/");
+	t.is(d.includes, "./test/stubs/");
+});
+
+

@@ -4,16 +4,20 @@ import { full as mdEmoji } from 'markdown-it-emoji'
 import eleventySyntaxHighlightPlugin from "@11ty/eleventy-plugin-syntaxhighlight";
 
 import TemplateRender from "../src/TemplateRender.js";
-import TemplateConfig from "../src/TemplateConfig.js";
 import Liquid from "../src/Engines/Liquid.js";
 import Nunjucks from "../src/Engines/Nunjucks.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+
 import { normalizeNewLines } from "./Util/normalizeNewLines.js";
+import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
 
 async function getNewTemplateRender(name, inputDir, eleventyConfig) {
   if (!eleventyConfig) {
-    eleventyConfig = new TemplateConfig();
-    await eleventyConfig.init();
+    eleventyConfig = await getTemplateConfigInstance({
+      dir: {
+        input: inputDir
+      }
+    });
   }
 
   let tr = new TemplateRender(name, inputDir, eleventyConfig);
@@ -137,10 +141,12 @@ This is some code.
 });
 
 test("Markdown Render: use prism highlighter (no language)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let userConfig = eleventyConfig.userConfig;
-  userConfig.addPlugin(eleventySyntaxHighlightPlugin);
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      cfg.addPlugin(eleventySyntaxHighlightPlugin);
+    }
+  );
 
   let tr = await getNewTemplateRender("md", null, eleventyConfig);
 
@@ -162,10 +168,12 @@ This is some code.
 });
 
 test("Markdown Render: use prism highlighter", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let userConfig = eleventyConfig.userConfig;
-  userConfig.addPlugin(eleventySyntaxHighlightPlugin);
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      cfg.addPlugin(eleventySyntaxHighlightPlugin);
+    }
+  );
 
   let tr = await getNewTemplateRender("md");
 
@@ -187,10 +195,12 @@ var key = "value";
 });
 
 test("Markdown Render: use prism highlighter (no space before language)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let userConfig = eleventyConfig.userConfig;
-  userConfig.addPlugin(eleventySyntaxHighlightPlugin);
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      cfg.addPlugin(eleventySyntaxHighlightPlugin);
+    }
+  );
 
   let tr = await getNewTemplateRender("md", null, eleventyConfig);
 
@@ -212,10 +222,12 @@ var key = "value";
 });
 
 test("Markdown Render: use prism highlighter, line highlighting", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let userConfig = eleventyConfig.userConfig;
-  userConfig.addPlugin(eleventySyntaxHighlightPlugin);
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      cfg.addPlugin(eleventySyntaxHighlightPlugin);
+    }
+  );
 
   let tr = await getNewTemplateRender("md", null, eleventyConfig);
   let markdownHighlight = eleventyConfig.getConfig().markdownHighlighter;
@@ -236,11 +248,12 @@ var key = "value";
 });
 
 test("Markdown Render: use prism highlighter, line highlighting with fallback `text` language.", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let userConfig = eleventyConfig.userConfig;
-  userConfig.addPlugin(eleventySyntaxHighlightPlugin);
-
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      cfg.addPlugin(eleventySyntaxHighlightPlugin);
+    }
+  );
 
   let tr = await getNewTemplateRender("md", null, eleventyConfig);
 
@@ -263,8 +276,7 @@ var key = "value";
 });
 
 test("Markdown Render: use Markdown inside of a Liquid shortcode (Issue #536)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance();
 
   let tr = await getNewTemplateRender("md", null, eleventyConfig);
 
@@ -289,9 +301,7 @@ test("Markdown Render: use Markdown inside of a Liquid shortcode (Issue #536)", 
 });
 
 test("Markdown Render: use Markdown inside of a Nunjucks shortcode (Issue #536)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
-
+  let eleventyConfig = await getTemplateConfigInstance();
   let tr = await getNewTemplateRender("md", null, eleventyConfig);
   let nunjucksEngine = new Nunjucks("njk", tr.getDirs(), eleventyConfig);
   nunjucksEngine.addShortcode("testShortcode", function () {
@@ -314,9 +324,7 @@ test("Markdown Render: use Markdown inside of a Nunjucks shortcode (Issue #536)"
 });
 
 test("Markdown Render: use Markdown inside of a Liquid paired shortcode (Issue #536)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
-
+  let eleventyConfig = await getTemplateConfigInstance();
   let tr = await getNewTemplateRender("md", null, eleventyConfig);
 
   let liquidEngine = new Liquid("liquid", tr.getIncludesDir(), eleventyConfig);
@@ -340,9 +348,7 @@ test("Markdown Render: use Markdown inside of a Liquid paired shortcode (Issue #
 });
 
 test("Markdown Render: use Markdown inside of a Nunjucks paired shortcode (Issue #536)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
-
+  let eleventyConfig = await getTemplateConfigInstance();
   let tr = await getNewTemplateRender("md", null, eleventyConfig);
 
   let nunjucksEngine = new Nunjucks("njk", tr.getDirs(), eleventyConfig);
@@ -383,10 +389,12 @@ test("Markdown Render: setLibrary does not have disabled indented code blocks ei
 });
 
 test("Markdown Render: use amendLibrary to re-enable indented code blocks. Issue #2438", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let userConfig = eleventyConfig.userConfig;
-  userConfig.amendLibrary("md", (lib) => lib.enable("code"));
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      cfg.amendLibrary("md", (lib) => lib.enable("code"));
+    }
+  );
 
   let tr = await getNewTemplateRender("md", null, eleventyConfig);
 
@@ -400,10 +408,12 @@ test("Markdown Render: use amendLibrary to re-enable indented code blocks. Issue
 });
 
 test("Markdown Render: amendLibrary works with setLibrary to re-enable indented code blocks. Issue #2438", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let userConfig = eleventyConfig.userConfig;
-  userConfig.amendLibrary("md", (lib) => lib.enable("code"));
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      cfg.amendLibrary("md", (lib) => lib.enable("code"));
+    }
+  );
 
   let tr = await getNewTemplateRender("md", null, eleventyConfig);
 
@@ -422,17 +432,19 @@ test("Markdown Render: amendLibrary works with setLibrary to re-enable indented 
 test("Markdown Render: multiple amendLibrary calls. Issue #2438", async (t) => {
   t.plan(3);
 
-  let eleventyConfig = new TemplateConfig();
-  let userConfig = eleventyConfig.userConfig;
-  userConfig.amendLibrary("md", (lib) => {
-    t.true(true);
-    lib.enable("code");
-  });
-  userConfig.amendLibrary("md", (lib) => {
-    t.true(true);
-    lib.disable("code");
-  });
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      cfg.amendLibrary("md", (lib) => {
+        t.true(true);
+        lib.enable("code");
+      });
+      cfg.amendLibrary("md", (lib) => {
+        t.true(true);
+        lib.disable("code");
+      });
+    }
+  );
 
   let tr = await getNewTemplateRender("md", null, eleventyConfig);
 
@@ -442,10 +454,12 @@ test("Markdown Render: multiple amendLibrary calls. Issue #2438", async (t) => {
 });
 
 test("Markdown Render: use amendLibrary to add a Plugin", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let userConfig = eleventyConfig.userConfig;
-  userConfig.amendLibrary("md", (mdLib) => mdLib.use(mdEmoji));
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      cfg.amendLibrary("md", (mdLib) => mdLib.use(mdEmoji));
+    }
+  );
 
   let tr = await getNewTemplateRender("md", null, eleventyConfig);
   let fn = await tr.getCompiledTemplate(":)");

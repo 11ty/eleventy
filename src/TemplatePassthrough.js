@@ -9,8 +9,8 @@ import debugUtil from "debug";
 
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
+import ProjectDirectories from "./Util/ProjectDirectories.js";
 
-const fsStat = util.promisify(fs.stat);
 const fsExists = util.promisify(fs.exists);
 
 const debug = debugUtil("Eleventy:TemplatePassthrough");
@@ -18,6 +18,9 @@ const debug = debugUtil("Eleventy:TemplatePassthrough");
 class TemplatePassthroughError extends EleventyBaseError {}
 
 class TemplatePassthrough {
+	#isExistsCache = {};
+	#isDirectoryCache = {};
+
 	constructor(path, outputDir, inputDir, config) {
 		if (!config) {
 			throw new TemplatePassthroughError("Missing `config`.");
@@ -30,7 +33,10 @@ class TemplatePassthrough {
 		this.rawPath = path;
 
 		// inputPath is relative to the root of your project and not your Eleventy input directory.
-		this.inputPath = path.inputPath;
+		// TODO normalize these with forward slashes
+		this.inputPath = this.normalizeDirectory(path.inputPath);
+		this.isInputPathGlob = isGlob(this.inputPath);
+
 		// inputDir is only used when stripping from output path in `getOutputPath`
 		this.inputDir = inputDir;
 
@@ -52,6 +58,17 @@ class TemplatePassthrough {
 		let { inputDir, outputDir, outputPath, inputPath } = this;
 
 		if (outputPath === true) {
+			// no explicit target, implied target
+			if (this.isDirectory(inputPath)) {
+				let inputRelativePath = TemplatePath.stripLeadingSubPath(
+					inputFileFromGlob || inputPath,
+					inputDir,
+				);
+				return ProjectDirectories.normalizeDirectory(
+					TemplatePath.join(outputDir, inputRelativePath),
+				);
+			}
+
 			return TemplatePath.normalize(
 				TemplatePath.join(
 					outputDir,
@@ -64,15 +81,21 @@ class TemplatePassthrough {
 			return this.getOutputPathForGlobFile(inputFileFromGlob);
 		}
 
+		// Has explicit target
+
 		// Bug when copying incremental file overwriting output directory (and making it a file)
 		// e.g. public/test.css -> _site
 		// https://github.com/11ty/eleventy/issues/2278
 		let fullOutputPath = TemplatePath.normalize(TemplatePath.join(outputDir, outputPath));
+		if (outputPath === "" || this.isDirectory(inputPath)) {
+			fullOutputPath = ProjectDirectories.normalizeDirectory(fullOutputPath);
+		}
 
 		if (
+			!this.isInputPathGlob &&
 			(await fsExists(inputPath)) &&
-			!TemplatePath.isDirectorySync(inputPath) &&
-			TemplatePath.isDirectorySync(fullOutputPath)
+			!this.isDirectory(inputPath) &&
+			this.isDirectory(fullOutputPath)
 		) {
 			let filename = path.parse(inputPath).base;
 			return TemplatePath.normalize(TemplatePath.join(fullOutputPath, filename));
@@ -115,30 +138,54 @@ class TemplatePassthrough {
 		return files;
 	}
 
+	isExists(dir) {
+		if (this.#isExistsCache[dir] === undefined) {
+			this.#isExistsCache[dir] = fs.existsSync(dir);
+		}
+		return this.#isExistsCache[dir];
+	}
+
+	isDirectory(dir) {
+		if (this.#isDirectoryCache[dir] === undefined) {
+			if (isGlob(this.inputPath)) {
+				this.#isDirectoryCache[dir] = false;
+			} else if (!this.isExists(dir)) {
+				this.#isDirectoryCache[dir] = false;
+			} else if (fs.statSync(dir).isDirectory()) {
+				this.#isDirectoryCache[dir] = true;
+			} else {
+				this.#isDirectoryCache[dir] = false;
+			}
+		}
+
+		return this.#isDirectoryCache[dir];
+	}
+
 	// dir is guaranteed to exist by context
 	// dir may not be a directory
-	async addTrailingSlashIfDirectory(dir) {
+	normalizeDirectory(dir) {
 		if (dir && typeof dir === "string") {
-			if (dir.endsWith(path.sep)) {
+			if (dir.endsWith(path.sep) || dir.endsWith("/")) {
 				return dir;
 			}
-			if ((await fsStat(dir)).isDirectory()) {
+
+			// When inputPath is a directory, make sure it has a slash for passthrough copy aliasing
+			// https://github.com/11ty/eleventy/issues/2709
+			if (this.isDirectory(dir)) {
 				return `${dir}/`;
 			}
 		}
+
 		return dir;
 	}
 
 	// maps input paths to output paths
 	async getFileMap() {
 		// TODO VirtualFileSystem candidate
-		if (!isGlob(this.inputPath) && (await fsExists(this.inputPath))) {
-			// When inputPath is a directory, make sure it has a slash for passthrough copy aliasing
-			// https://github.com/11ty/eleventy/issues/2709
-			let inputPath = await this.addTrailingSlashIfDirectory(this.inputPath);
+		if (!isGlob(this.inputPath) && this.isExists(this.inputPath)) {
 			return [
 				{
-					inputPath,
+					inputPath: this.inputPath,
 					outputPath: await this.getOutputPath(),
 				},
 			];
@@ -147,10 +194,10 @@ class TemplatePassthrough {
 		let paths = [];
 		// If not directory or file, attempt to get globs
 		let files = await this.getFiles(this.inputPath);
-		for (let inputPath of files) {
+		for (let filePathFromGlob of files) {
 			paths.push({
-				inputPath,
-				outputPath: await this.getOutputPath(inputPath),
+				inputPath: filePathFromGlob,
+				outputPath: await this.getOutputPath(filePathFromGlob),
 			});
 		}
 

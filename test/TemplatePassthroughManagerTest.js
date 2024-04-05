@@ -7,6 +7,8 @@ import TemplateConfig from "../src/TemplateConfig.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";
 import EleventyFiles from "../src/EleventyFiles.js";
 
+import { getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
+
 test("Get paths from Config", async (t) => {
   let eleventyConfig = new TemplateConfig();
   eleventyConfig.userConfig.passthroughCopies = {
@@ -177,13 +179,17 @@ test("getAllNormalizedPaths with globs", async (t) => {
 
 test("Look for uniqueness on template passthrough paths #1677", async (t) => {
   let formats = [];
-  let eleventyConfig = new TemplateConfig();
-  eleventyConfig.userConfig.passthroughCopies = {
-    "./test/stubs/template-passthrough-duplicates/**/*.png": {
-      outputPath: "./",
-    },
-  };
-  await eleventyConfig.init();
+
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+		input: "test/stubs/template-passthrough-duplicates",
+		output: "test/stubs/template-passthrough-duplicates/_site"
+	}, function(cfg) {
+		cfg.passthroughCopies = {
+			"./test/stubs/template-passthrough-duplicates/**/*.png": {
+				outputPath: "./",
+			},
+		};
+	});
 
   let files = new EleventyFiles(
     "test/stubs/template-passthrough-duplicates",
@@ -198,7 +204,6 @@ test("Look for uniqueness on template passthrough paths #1677", async (t) => {
   await t.throwsAsync(async function () {
     await mgr.copyAll();
   });
-
 
   rimrafSync("test/stubs/template-passthrough-duplicates/_site/");
 });

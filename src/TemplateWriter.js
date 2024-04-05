@@ -20,6 +20,7 @@ class EleventyTemplateError extends EleventyBaseError {}
 
 class TemplateWriter {
 	constructor(
+		// TODO directorynorm
 		inputPath,
 		outputDir,
 		templateFormats, // TODO remove this, see `get eleventyFiles` first
@@ -33,10 +34,6 @@ class TemplateWriter {
 		this.config = eleventyConfig.getConfig();
 		this.userConfig = eleventyConfig.userConfig;
 
-		this.input = inputPath;
-		this.inputDir = TemplatePath.getDir(inputPath);
-		this.outputDir = outputDir;
-
 		this.templateFormats = templateFormats;
 
 		this.templateData = templateData;
@@ -49,11 +46,16 @@ class TemplateWriter {
 		this._templatePathCache = new Map();
 	}
 
-	/* Overrides this.input and this.inputDir
-	 * Useful when input is a file and inputDir is not its direct parent */
-	setInput(inputDir, input) {
-		this.inputDir = inputDir;
-		this.input = input;
+	get dirs() {
+		return this.eleventyConfig.directories;
+	}
+
+	get inputDir() {
+		return this.dirs.input;
+	}
+
+	get outputDir() {
+		return this.dirs.output;
 	}
 
 	get templateFormats() {
@@ -131,7 +133,6 @@ class TemplateWriter {
 				this.eleventyConfig,
 			);
 
-			this._eleventyFiles.setInput(this.inputDir, this.input);
 			this._eleventyFiles.setFileSystemSearch(new FileSystemSearch());
 			this._eleventyFiles.init();
 		}

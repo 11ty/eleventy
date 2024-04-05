@@ -3,7 +3,6 @@ import fs from "fs";
 import pretty from "pretty";
 import TOML from "@iarna/toml";
 
-import TemplateConfig from "../src/TemplateConfig.js";
 import TemplateData from "../src/Data/TemplateData.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
@@ -11,8 +10,10 @@ import EleventyErrorUtil from "../src/Errors/EleventyErrorUtil.js";
 import TemplateContentPrematureUseError from "../src/Errors/TemplateContentPrematureUseError.js";
 import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 import eventBus from "../src/EventBus.js";
+
 import getNewTemplate from "./_getNewTemplateForTests.js";
 import { getRenderedTemplates as getRenderedTmpls, renderLayout, renderTemplate } from "./_getRenderedTemplates.js";
+import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
 
 const fsp = fs.promises;
 
@@ -188,8 +189,12 @@ test("Test that getData() works", async (t) => {
 });
 
 test("One Layout (using new content var)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "test/stubs",
+      output: "dist"
+    }
+  });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = await getNewTemplate(
@@ -218,8 +223,12 @@ test("One Layout (using new content var)", async (t) => {
 });
 
 test("One Layout (using content)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "test/stubs",
+      output: "dist"
+    }
+  });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = await getNewTemplate(
@@ -248,8 +257,12 @@ test("One Layout (using content)", async (t) => {
 });
 
 test("One Layout (layouts disabled)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "test/stubs",
+      output: "dist"
+    }
+  });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = await getNewTemplate(
@@ -267,17 +280,21 @@ test("One Layout (layouts disabled)", async (t) => {
   t.is(data[tmpl.config.keys.layout], "defaultLayoutLayoutContent");
 
   t.is(cleanHtml(await tmpl.renderPageEntryWithoutLayout({
-		rawInput: await tmpl.getPreRender(),
-		data: data
-	})), "<p>Hello.</p>");
+    rawInput: await tmpl.getPreRender(),
+    data: data
+  })), "<p>Hello.</p>");
 
   t.is(data.keymain, "valuemain");
   t.is(data.keylayout, "valuelayout");
 });
 
 test("One Layout (liquid test)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "test/stubs",
+      output: "dist"
+    }
+  });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = await getNewTemplate(
@@ -306,8 +323,12 @@ test("One Layout (liquid test)", async (t) => {
 });
 
 test("Two Layouts", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "test/stubs",
+      output: "dist"
+    }
+  });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = await getNewTemplate(
@@ -338,8 +359,12 @@ test("Two Layouts", async (t) => {
 });
 
 test("Liquid template", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "test/stubs",
+      output: "dist"
+    }
+  });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = await getNewTemplate(
@@ -387,8 +412,12 @@ test("Permalink output directory from layout (fileslug)", async (t) => {
 });
 
 test("Layout from template-data-file that has a permalink (fileslug) Issue #121", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "test/stubs",
+      output: "dist"
+    }
+  });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = await getNewTemplate(
@@ -413,8 +442,12 @@ test("Fileslug in an 11ty.js template Issue #588", async (t) => {
 });
 
 test("Local template data file import (without a global data json)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "test/stubs",
+      output: "dist"
+    }
+  });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
@@ -445,8 +478,12 @@ test("Local template data file import (without a global data json)", async (t) =
 });
 
 test("Local template data file import (two subdirectories deep)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "test/stubs",
+      output: "dist"
+    }
+  });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
@@ -484,8 +521,12 @@ test("Local template data file import (two subdirectories deep)", async (t) => {
 });
 
 test("Posts inherits local JSON, layouts", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "test/stubs",
+      output: "dist"
+    }
+  });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
@@ -534,8 +575,12 @@ test("Posts inherits local JSON, layouts", async (t) => {
 });
 
 test("Template and folder name are the same, make sure data imports work ok", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "test/stubs",
+      output: "dist"
+    }
+  });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
@@ -1076,10 +1121,13 @@ test("Front matter date with quotes (njk), issue #258", async (t) => {
 });
 
 test("Data Cascade (Deep merge)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  // Default changed in 1.0
-  // eleventyConfig.userConfig.setDataDeepMerge(true);
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test",
+    output: "dist"
+  }, function(cfg) {
+    // Default changed in 1.0
+    // cfg.setDataDeepMerge(true);
+  });
 
   let dataObj = new TemplateData("./test/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
@@ -1087,7 +1135,7 @@ test("Data Cascade (Deep merge)", async (t) => {
 
   let tmpl = await getNewTemplate(
     "./test/stubs/data-cascade/template.njk",
-    "./test/stubs/",
+    "./test/",
     "./dist",
     dataObj,
     null,
@@ -1111,10 +1159,13 @@ test("Data Cascade (Deep merge)", async (t) => {
 });
 
 test("Data Cascade (Shallow merge)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  // Default changed in 1.0
-  eleventyConfig.userConfig.setDataDeepMerge(false);
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test",
+    output: "dist",
+  }, function(cfg) {
+    // Default changed in 1.0
+    cfg.setDataDeepMerge(false);
+  });
 
   let dataObj = new TemplateData("./test/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
@@ -1122,7 +1173,7 @@ test("Data Cascade (Shallow merge)", async (t) => {
 
   let tmpl = await getNewTemplate(
     "./test/stubs/data-cascade/template.njk",
-    "./test/stubs/",
+    "./test/",
     "./dist",
     dataObj,
     null,
@@ -1146,10 +1197,13 @@ test("Data Cascade (Shallow merge)", async (t) => {
 });
 
 test("Data Cascade Tag Merge (Deep merge)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  // Default changed in 1.0
-  // eleventyConfig.userConfig.setDataDeepMerge(true);
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs",
+    output: "dist"
+  }, function(cfg) {
+    // Default changed in 1.0
+    // cfg.setDataDeepMerge(true);
+  });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
@@ -1169,10 +1223,13 @@ test("Data Cascade Tag Merge (Deep merge)", async (t) => {
 });
 
 test("Data Cascade Tag Merge (Deep Merge - Deduplication)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  // Default changed in 1.0
-  // eleventyConfig.userConfig.setDataDeepMerge(true);
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs",
+    output: "dist"
+  }, function(cfg) {
+    // Default changed in 1.0
+    // cfg.setDataDeepMerge(true);
+  });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
@@ -1192,10 +1249,13 @@ test("Data Cascade Tag Merge (Deep Merge - Deduplication)", async (t) => {
 });
 
 test("Data Cascade Tag Merge (Shallow merge)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  // Default changed in 1.0
-  eleventyConfig.userConfig.setDataDeepMerge(false);
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs",
+    output: "dist"
+  }, function(cfg) {
+    // Default changed in 1.0
+    cfg.setDataDeepMerge(false);
+  });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
@@ -1215,10 +1275,13 @@ test("Data Cascade Tag Merge (Shallow merge)", async (t) => {
 });
 
 test('Local data inherits tags string ([tags] vs "tags") Shallow Merge', async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  // Default changed in 1.0
-  eleventyConfig.userConfig.setDataDeepMerge(false);
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs",
+    output: "dist"
+  }, function(cfg) {
+    // Default changed in 1.0
+    cfg.setDataDeepMerge(false);
+  });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
@@ -1238,11 +1301,14 @@ test('Local data inherits tags string ([tags] vs "tags") Shallow Merge', async (
 });
 
 test('Local data inherits tags string ([tags] vs "tags") Deep Merge', async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs",
+    output: "dist"
+  }, function(cfg) {
+    // Default changed in 1.0
+    // cfg.setDataDeepMerge(true);
+  });
 
-  // Default changed in 1.0
-  // eleventyConfig.userConfig.setDataDeepMerge(true);
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
@@ -1584,8 +1650,13 @@ test("Get Layout Chain", async (t) => {
 });
 
 test("Engine Singletons", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "test/stubs/engine-singletons",
+      output: "dist"
+    }
+  });
+
   let map = new EleventyExtensionMap(["njk"], eleventyConfig);
   let tmpl1 = await getNewTemplate(
     "./test/stubs/engine-singletons/first.njk",
@@ -1651,20 +1722,23 @@ test("Make sure layout cache takes new changes during watch (liquid)", async (t)
 });
 
 test("Add Extension via Configuration (txt file)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  eleventyConfig.userConfig.addExtension("txt", {
-    isIncrementalMatch: function (incrementalFilePath) {
-      // do some kind of check
-      return this.inputPath === incrementalFilePath;
-    },
-    compile: function (str, inputPath) {
-      // plaintext
-      return function (data) {
-        return str;
-      };
-    },
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs",
+    output: "dist"
+  }, function(cfg) {
+    cfg.addExtension("txt", {
+      isIncrementalMatch: function (incrementalFilePath) {
+        // do some kind of check
+        return this.inputPath === incrementalFilePath;
+      },
+      compile: function (str, inputPath) {
+        // plaintext
+        return function (data) {
+          return str;
+        };
+      },
+    });
   });
-  await eleventyConfig.init();
 
   let map = new EleventyExtensionMap([], eleventyConfig);
   let tmpl = await getNewTemplate(
@@ -1823,11 +1897,14 @@ test("page.templateSyntax works with templateEngineOverride", async (t) => {
 
 // Inspired by https://github.com/11ty/eleventy/pull/1691
 test("Error messaging, returning literals (not objects) from custom data extension", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  eleventyConfig.userConfig.addDataExtension("txt", {
-    parser: (s) => s,
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs-1691",
+    output: "dist"
+  }, function(cfg) {
+    cfg.addDataExtension("txt", {
+      parser: (s) => s,
+    });
   });
-  await eleventyConfig.init();
 
   let dataObj = new TemplateData("./test/stubs-1691/", eleventyConfig);
 

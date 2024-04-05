@@ -12,6 +12,7 @@ class TemplateRenderUnknownEngineError extends EleventyBaseError {}
 
 // works with full path names or short engine name
 class TemplateRender {
+	// TODO directorynorm
 	constructor(tmplPath, inputDir, config) {
 		if (!tmplPath) {
 			throw new Error(`TemplateRender requires a tmplPath argument, instead of ${tmplPath}`);
@@ -23,16 +24,30 @@ class TemplateRender {
 			this.eleventyConfig = config;
 			this.config = config.getConfig();
 		} else {
-			this.config = config;
+			throw new Error("Third argument to TemplateRender must be a TemplateConfig instance.");
 		}
 
 		this.engineNameOrPath = tmplPath;
 
-		this.inputDir = inputDir ? inputDir : this.config.dir.input;
-		this.includesDir = TemplatePath.join(this.inputDir, this.config.dir.includes);
-
 		this.parseMarkdownWith = this.config.markdownTemplateEngine;
 		this.parseHtmlWith = this.config.htmlTemplateEngine;
+	}
+
+	get dirs() {
+		return this.eleventyConfig.directories;
+	}
+
+	get inputDir() {
+		return this.dirs.input;
+	}
+
+	get includesDir() {
+		return this.dirs.includes;
+	}
+
+	/* Backwards compat */
+	getIncludesDir() {
+		return this.includesDir;
 	}
 
 	get config() {
@@ -236,14 +251,14 @@ class TemplateRender {
 	}
 
 	getDirs() {
+		if (!this.dirs) {
+			return {};
+		}
+
 		return {
 			input: this.inputDir,
 			includes: this.includesDir,
 		};
-	}
-
-	getIncludesDir() {
-		return this.includesDir;
 	}
 
 	isEngine(engine) {

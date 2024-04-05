@@ -7,18 +7,13 @@ import TemplateConfig from "../src/TemplateConfig.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";
 import getNewTemplate from "./_getNewTemplateForTests.js";
 import { getRenderedTemplates as getRenderedTmpls, renderTemplate } from "./_getRenderedTemplates.js";
+import { getTemplateConfigInstance } from "./_testHelpers.js";
 
 test("No data passed to pagination", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
-
   let tmpl = await getNewTemplate(
     "./test/stubs/paged/notpaged.njk",
     "./test/stubs/",
     "./dist",
-    null,
-    null,
-    eleventyConfig
   );
 
   let paging = new Pagination(tmpl, {}, tmpl.config);
@@ -28,16 +23,10 @@ test("No data passed to pagination", async (t) => {
 });
 
 test("No pagination", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
-
   let tmpl = await getNewTemplate(
     "./test/stubs/paged/notpaged.njk",
     "./test/stubs/",
     "./dist",
-    null,
-    null,
-    eleventyConfig
   );
 
   let data = await tmpl.getData();
@@ -51,16 +40,10 @@ test("No pagination", async (t) => {
 });
 
 test("Empty paged data", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
-
   let tmpl = await getNewTemplate(
     "./test/stubs/paged/paged-empty.njk",
     "./test/stubs/",
     "./dist",
-    null,
-    null,
-    eleventyConfig
   );
 
   let data = await tmpl.getData();
@@ -73,16 +56,10 @@ test("Empty paged data", async (t) => {
 });
 
 test("Empty paged data with generatePageOnEmptyData enabled", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
-
   let tmpl = await getNewTemplate(
     "./test/stubs/paged/paged-empty-pageonemptydata.njk",
     "./test/stubs/",
     "./dist",
-    null,
-    null,
-    eleventyConfig
   );
 
   let data = await tmpl.getData();
@@ -95,16 +72,10 @@ test("Empty paged data with generatePageOnEmptyData enabled", async (t) => {
 });
 
 test("Pagination enabled in frontmatter", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
-
   let tmpl = await getNewTemplate(
     "./test/stubs/paged/pagedresolve.njk",
     "./test/stubs/",
     "./dist",
-    null,
-    null,
-    eleventyConfig
   );
 
   let data = await tmpl.getData();
@@ -121,16 +92,10 @@ test("Pagination enabled in frontmatter", async (t) => {
 });
 
 test("Resolve paged data in frontmatter", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
-
   let tmpl = await getNewTemplate(
     "./test/stubs/paged/pagedresolve.njk",
     "./test/stubs/",
     "./dist",
-    null,
-    null,
-    eleventyConfig
   );
 
   let data = await tmpl.getData();
@@ -142,16 +107,10 @@ test("Resolve paged data in frontmatter", async (t) => {
 });
 
 test("Paginate data in frontmatter", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
-
   let tmpl = await getNewTemplate(
     "./test/stubs/paged/pagedinlinedata.njk",
     "./test/stubs/",
     "./dist",
-    null,
-    null,
-    eleventyConfig
   );
 
   let data = await tmpl.getData();
@@ -172,8 +131,12 @@ test("Paginate data in frontmatter", async (t) => {
 });
 
 test("Paginate external data file", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "test/stubs",
+      output: "dist",
+    }
+  });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
@@ -395,8 +358,12 @@ test("Template with Pagination", async (t) => {
 });
 
 test("Issue 135", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "test/stubs",
+      output: "dist",
+    }
+  });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
@@ -542,8 +509,12 @@ test("Page over an object (filtered, string)", async (t) => {
 });
 
 test("Pagination with deep data merge #147", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "test/stubs",
+      output: "dist",
+    }
+  });
 
   let tmpl = await getNewTemplate(
     "./test/stubs/paged/pagedinlinedata.njk",
@@ -613,8 +584,7 @@ test("Paginate data in frontmatter (reversed)", async (t) => {
 });
 
 test("No circular dependency (does not throw)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance();
 
   new Pagination(
     null,
@@ -636,8 +606,7 @@ test("No circular dependency (does not throw)", async (t) => {
 
 test("Circular dependency (pagination iterates over tag1 but also supplies pages to tag1)", async (t) => {
   await t.throwsAsync(async () => {
-    let eleventyConfig = new TemplateConfig();
-    await eleventyConfig.init();
+    let eleventyConfig = await getTemplateConfigInstance();
 
     new Pagination(
       null,
@@ -658,8 +627,7 @@ test("Circular dependency (pagination iterates over tag1 but also supplies pages
 });
 
 test("Circular dependency but should not error because it uses eleventyExcludeFromCollections", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance();
 
   new Pagination(
     null,
@@ -728,8 +696,12 @@ test("Pagination `before` Callback with `reverse: true` (test order of operation
 });
 
 test("Pagination new v0.10.0 href/hrefs", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "test/stubs",
+      output: "dist",
+    }
+  });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
@@ -760,8 +732,12 @@ test("Pagination new v0.10.0 href/hrefs", async (t) => {
 });
 
 test("Pagination new v0.10.0 page/pages", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "test/stubs",
+      output: "dist",
+    }
+  });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
@@ -820,16 +796,20 @@ test("Pagination make sure pageNumber is numeric for {{ pageNumber + 1 }} Issue 
 });
 
 test("Pagination mutable global data", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "test/stubs/paged-global-data-mutable/",
+      output: "dist",
+    }
+  });
 
-  let dataObj = new TemplateData("./test/stubs/paged-global-data-mutable/", eleventyConfig);
+  let dataObj = new TemplateData(undefined, eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
   let tmpl = await getNewTemplate(
     "./test/stubs/paged-global-data-mutable/paged-differing-data-set.njk",
-    "./test/stubs/",
+    "./test/stubs/paged-global-data-mutable/",
     "./dist",
     dataObj,
     null,
@@ -858,8 +838,12 @@ test("Pagination mutable global data", async (t) => {
 });
 
 test("Pagination template/dir data files run once, Issue 919", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "test/stubs-919",
+      output: "dist",
+    }
+  });
 
   let dataObj = new TemplateData("./test/stubs-919/", eleventyConfig);
 

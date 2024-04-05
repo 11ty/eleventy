@@ -12,6 +12,7 @@ class TemplateEngine {
 		}
 
 		this.dirs = dirs;
+
 		this.inputDir = dirs.input;
 		this.includesDir = dirs.includes;
 

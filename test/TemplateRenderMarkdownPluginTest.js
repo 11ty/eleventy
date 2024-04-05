@@ -2,12 +2,12 @@ import test from "ava";
 import md from "markdown-it";
 
 import TemplateRender from "../src/TemplateRender.js";
-import TemplateConfig from "../src/TemplateConfig.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
+import { getTemplateConfigInstance } from "./_testHelpers.js";
+
 async function getNewTemplateRender(name, inputDir) {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance();
 
   let tr = new TemplateRender(name, inputDir, eleventyConfig);
   tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);

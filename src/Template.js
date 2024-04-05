@@ -72,9 +72,6 @@ class Template extends TemplateContent {
 
 	setTemplateData(templateData) {
 		this.templateData = templateData;
-		if (this.templateData) {
-			this.templateData.setInputDir(this.inputDir);
-		}
 	}
 
 	get existsCache() {

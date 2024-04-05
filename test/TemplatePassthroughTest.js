@@ -290,5 +290,5 @@ test("Bug with incremental dir copying to a directory output, issue #2278 #1038"
     "."
   );
 
-  t.is(await pass1.getOutputPath(), "test/stubs");
+  t.is(await pass1.getOutputPath(), "./test/stubs/");
 });

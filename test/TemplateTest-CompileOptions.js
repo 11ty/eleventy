@@ -1,34 +1,38 @@
 import test from "ava";
 
-import TemplateConfig from "../src/TemplateConfig.js";
 import TemplateData from "../src/Data/TemplateData.js";
+
 import getNewTemplate from "./_getNewTemplateForTests.js";
 import { renderTemplate } from "./_getRenderedTemplates.js";
+import { getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
 
 test("Custom extension (.txt) with custom permalink compile function", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  eleventyConfig.userConfig.extensionMap.add({
-    extension: "txt",
-    key: "txt",
-    compileOptions: {
-      cache: false,
-      // pass in your own custom permalink function.
-      permalink: async function (permalinkString, inputPath) {
-        t.is(permalinkString, "custom-extension.lit");
-        t.is(inputPath, "./test/stubs/custom-extension.txt");
-        return async function () {
-          return "HAHA_THIS_ALWAYS_GOES_HERE.txt";
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs",
+    output: "dist",
+  }, function(cfg) {
+    cfg.extensionMap.add({
+      extension: "txt",
+      key: "txt",
+      compileOptions: {
+        cache: false,
+        // pass in your own custom permalink function.
+        permalink: async function (permalinkString, inputPath) {
+          t.is(permalinkString, "custom-extension.lit");
+          t.is(inputPath, "./test/stubs/custom-extension.txt");
+          return async function () {
+            return "HAHA_THIS_ALWAYS_GOES_HERE.txt";
+          };
+        },
+      },
+      compile: function (str, inputPath) {
+        // plaintext
+        return function (data) {
+          return str;
         };
       },
-    },
-    compile: function (str, inputPath) {
-      // plaintext
-      return function (data) {
-        return str;
-      };
-    },
+    });
   });
-  await eleventyConfig.init();
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = await getNewTemplate(
@@ -49,22 +53,25 @@ test("Custom extension (.txt) with custom permalink compile function", async (t)
 });
 
 test("Custom extension with and compileOptions.permalink = false", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  eleventyConfig.userConfig.extensionMap.add({
-    extension: "txt",
-    key: "txt",
-    compileOptions: {
-      cache: false,
-      permalink: false,
-    },
-    compile: function (str, inputPath) {
-      // plaintext
-      return function (data) {
-        return str;
-      };
-    },
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs",
+    output: "dist",
+  }, function(cfg) {
+    cfg.extensionMap.add({
+      extension: "txt",
+      key: "txt",
+      compileOptions: {
+        cache: false,
+        permalink: false,
+      },
+      compile: function (str, inputPath) {
+        // plaintext
+        return function (data) {
+          return str;
+        };
+      },
+    });
   });
-  await eleventyConfig.init();
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = await getNewTemplate(
@@ -85,22 +92,25 @@ test("Custom extension with and compileOptions.permalink = false", async (t) => 
 });
 
 test("Custom extension with and opt-out of permalink compilation", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  eleventyConfig.userConfig.extensionMap.add({
-    extension: "txt",
-    key: "txt",
-    compileOptions: {
-      cache: false,
-      permalink: "raw",
-    },
-    compile: function (str, inputPath) {
-      // plaintext
-      return function (data) {
-        return str;
-      };
-    },
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs",
+    output: "dist",
+  }, function(cfg) {
+    cfg.extensionMap.add({
+      extension: "txt",
+      key: "txt",
+      compileOptions: {
+        cache: false,
+        permalink: "raw",
+      },
+      compile: function (str, inputPath) {
+        // plaintext
+        return function (data) {
+          return str;
+        };
+      },
+    });
   });
-  await eleventyConfig.init();
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = await getNewTemplate(
@@ -121,30 +131,33 @@ test("Custom extension with and opt-out of permalink compilation", async (t) => 
 });
 
 test("Custom extension (.txt) with custom permalink compile function but no permalink in the data cascade", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  eleventyConfig.userConfig.extensionMap.add({
-    extension: "txt",
-    key: "txt",
-    compileOptions: {
-      cache: false,
-      // pass in your own custom permalink function.
-      permalink: async function (permalinkString, inputPath) {
-        t.is(permalinkString, undefined);
-        t.is(inputPath, "./test/stubs/custom-extension-no-permalink.txt");
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs",
+    output: "dist",
+  }, function(cfg) {
+    cfg.extensionMap.add({
+      extension: "txt",
+      key: "txt",
+      compileOptions: {
+        cache: false,
+        // pass in your own custom permalink function.
+        permalink: async function (permalinkString, inputPath) {
+          t.is(permalinkString, undefined);
+          t.is(inputPath, "./test/stubs/custom-extension-no-permalink.txt");
 
-        return async function () {
-          return "HAHA_THIS_ALWAYS_GOES_HERE.txt";
+          return async function () {
+            return "HAHA_THIS_ALWAYS_GOES_HERE.txt";
+          };
+        },
+      },
+      compile: function (str, inputPath) {
+        // plaintext
+        return function (data) {
+          return str;
         };
       },
-    },
-    compile: function (str, inputPath) {
-      // plaintext
-      return function (data) {
-        return str;
-      };
-    },
+    });
   });
-  await eleventyConfig.init();
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = await getNewTemplate(
@@ -165,28 +178,31 @@ test("Custom extension (.txt) with custom permalink compile function but no perm
 });
 
 test("Custom extension (.txt) with custom permalink compile function (that returns a string not a function) but no permalink in the data cascade", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  eleventyConfig.userConfig.extensionMap.add({
-    extension: "txt",
-    key: "txt",
-    compileOptions: {
-      cache: false,
-      permalink: async function (permalinkString, inputPath) {
-        t.is(permalinkString, undefined);
-        t.is(inputPath, "./test/stubs/custom-extension-no-permalink.txt");
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs",
+    output: "dist",
+  }, function(cfg) {
+    cfg.extensionMap.add({
+      extension: "txt",
+      key: "txt",
+      compileOptions: {
+        cache: false,
+        permalink: async function (permalinkString, inputPath) {
+          t.is(permalinkString, undefined);
+          t.is(inputPath, "./test/stubs/custom-extension-no-permalink.txt");
 
-        // unique part of this test: this is a string, not a function
-        return "HAHA_THIS_ALWAYS_GOES_HERE.txt";
+          // unique part of this test: this is a string, not a function
+          return "HAHA_THIS_ALWAYS_GOES_HERE.txt";
+        },
       },
-    },
-    compile: function (str, inputPath) {
-      // plaintext
-      return function (data) {
-        return str;
-      };
-    },
+      compile: function (str, inputPath) {
+        // plaintext
+        return function (data) {
+          return str;
+        };
+      },
+    });
   });
-  await eleventyConfig.init();
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = await getNewTemplate(
@@ -207,28 +223,31 @@ test("Custom extension (.txt) with custom permalink compile function (that retur
 });
 
 test("Custom extension (.txt) with custom permalink compile function that returns false", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  eleventyConfig.userConfig.extensionMap.add({
-    extension: "txt",
-    key: "txt",
-    compileOptions: {
-      cache: false,
-      permalink: async function (permalinkString, inputPath) {
-        t.is(permalinkString, undefined);
-        t.is(inputPath, "./test/stubs/custom-extension-no-permalink.txt");
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs",
+    output: "dist",
+  }, function(cfg) {
+    cfg.extensionMap.add({
+      extension: "txt",
+      key: "txt",
+      compileOptions: {
+        cache: false,
+        permalink: async function (permalinkString, inputPath) {
+          t.is(permalinkString, undefined);
+          t.is(inputPath, "./test/stubs/custom-extension-no-permalink.txt");
 
-        // unique part of this test: this returns false
-        return false;
+          // unique part of this test: this returns false
+          return false;
+        },
       },
-    },
-    compile: function (str, inputPath) {
-      // plaintext
-      return function (data) {
-        return str;
-      };
-    },
+      compile: function (str, inputPath) {
+        // plaintext
+        return function (data) {
+          return str;
+        };
+      },
+    });
   });
-  await eleventyConfig.init();
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = await getNewTemplate(
@@ -249,21 +268,24 @@ test("Custom extension (.txt) with custom permalink compile function that return
 });
 
 test("Custom extension (.txt) that returns undefined from compile", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  eleventyConfig.userConfig.extensionMap.add({
-    extension: "txt",
-    key: "txt",
-    compileOptions: {
-      cache: false,
-    },
-    compile: function (str, inputPath) {
-      t.is(str, "Sample content");
-      return function (data) {
-        return undefined;
-      };
-    },
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs",
+    output: "dist",
+  }, function(cfg) {
+    cfg.extensionMap.add({
+      extension: "txt",
+      key: "txt",
+      compileOptions: {
+        cache: false,
+      },
+      compile: function (str, inputPath) {
+        t.is(str, "Sample content");
+        return function (data) {
+          return undefined;
+        };
+      },
+    });
   });
-  await eleventyConfig.init();
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = await getNewTemplate(

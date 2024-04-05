@@ -42,6 +42,8 @@ const debug = debugUtil("Eleventy");
  * @returns {module:11ty/eleventy/Eleventy~Eleventy}
  */
 class Eleventy {
+	#directories;
+
 	constructor(input, output, options = {}, eleventyConfig = null) {
 		/** @member {String} - Holds the path to the input (might be a file or folder) */
 		this.rawInput = input;
@@ -57,11 +59,6 @@ class Eleventy {
 		 * @default {}
 		 */
 		this.options = options;
-
-		/** @member {module:11ty/eleventy/Util/ProjectDirectories} */
-		this.directories = new ProjectDirectories();
-		this.directories.setInput(input, this.options.inputDir);
-		this.directories.setOutput(output);
 
 		/**
 		 * @member {String} - The top level directory the site pretends to reside in
@@ -229,9 +226,25 @@ class Eleventy {
 		return new Date().getTime();
 	}
 
+	/** @member {module:11ty/eleventy/Util/ProjectDirectories} */
+	get directories() {
+		if (!this.#directories) {
+			this.#directories = new ProjectDirectories();
+			this.#directories.setInput(this.rawInput, this.options.inputDir);
+			this.#directories.setOutput(this.rawOutput);
+		}
+
+		return this.#directories;
+	}
+
 	/** @type {String} */
 	get input() {
-		return this.directories.input || this.config.dir.input;
+		return this.directories.inputFile || this.directories.input || this.config.dir.input;
+	}
+
+	/** @type {String} */
+	get inputFile() {
+		return this.directories.inputFile;
 	}
 
 	/** @type {String} */
@@ -239,9 +252,11 @@ class Eleventy {
 		return this.directories.input;
 	}
 
-	// Not used internally but maintained for backwards compat.
-	setInputDir(dir) {
-		this.directories.setInputDir(dir);
+	// Not used internally, removed in 3.0.
+	setInputDir() {
+		throw new Error(
+			"Eleventy->setInputDir was removed in 3.0. Use the inputDir option to the constructor",
+		);
 	}
 
 	/** @type {String} */
@@ -403,8 +418,6 @@ class Eleventy {
 			await this.config.events.emit("eleventy.env", this.env);
 		}
 
-		this.config.inputDir = this.inputDir;
-
 		let formats = this.formatsOverride || this.config.templateFormats;
 		this.extensionMap = new EleventyExtensionMap(formats, this.eleventyConfig);
 		await this.config.events.emit("eleventy.extensionmap", this.extensionMap);
@@ -430,7 +443,6 @@ class Eleventy {
 			this.eleventyConfig,
 		);
 		this.eleventyFiles.setFileSystemSearch(this.fileSystemSearch);
-		this.eleventyFiles.setInput(this.inputDir, this.input);
 		this.eleventyFiles.setRunMode(this.runMode);
 		this.eleventyFiles.extensionMap = this.extensionMap;
 		// This needs to be set before init or it’ll construct a new one
@@ -444,6 +456,7 @@ class Eleventy {
 		}
 
 		// Note these directories are all project root relative
+		// TODO directorynorm
 		let dirs = {
 			input: this.inputDir,
 			data: this.templateData.getDataDir(),
@@ -469,7 +482,6 @@ class Eleventy {
 			this._cache("TemplateWriter", this.writer);
 		}
 
-		this.writer.setInput(this.inputDir, this.input);
 		this.writer.logger = this.logger;
 		this.writer.extensionMap = this.extensionMap;
 		this.writer.setEleventyFiles(this.eleventyFiles);
@@ -477,6 +489,7 @@ class Eleventy {
 		this.writer.setRunInitialBuild(this.isRunInitialBuild);
 		this.writer.setIncrementalBuild(this.isIncremental);
 
+		// TODO directorynorm
 		debug(`Directories:
 Input (Dir): ${dirs.input}
 Input (File): ${this.rawInput}

@@ -1,9 +1,10 @@
 import test from "ava";
 
 import TemplateData from "../src/Data/TemplateData.js";
-import TemplateConfig from "../src/TemplateConfig.js";
+
 import getNewTemplate from "./_getNewTemplateForTests.js";
 import { renderTemplate } from "./_getRenderedTemplates.js";
+import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
 
 async function getRenderedData(tmpl, pageNumber = 0) {
   let data = await tmpl.getData();
@@ -121,8 +122,12 @@ test("eleventyComputed true primitive", async (t) => {
 });
 
 test("eleventyComputed relies on global data", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "test/stubs",
+      output: "dist",
+    }
+  });
 
   let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
   let tmpl = await getNewTemplate(
@@ -141,9 +146,12 @@ test("eleventyComputed relies on global data", async (t) => {
 });
 
 test("eleventyComputed intermixes with global data", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  eleventyConfig.userConfig.setDataDeepMerge(true);
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs-computed-global",
+    output: "dist",
+  }, function(cfg) {
+    cfg.setDataDeepMerge(true);
+  });
 
   let dataObj = new TemplateData("./test/stubs-computed-global/", eleventyConfig);
 
@@ -171,15 +179,18 @@ test("eleventyComputed intermixes with global data", async (t) => {
 });
 
 test("eleventyComputed using symbol parsing on template strings (nunjucks)", async (t) => {
-  let eleventyConfig = await new TemplateConfig();
-  eleventyConfig.userConfig.addNunjucksFilter("fail", function (str) {
-    // Filter expects a certain String format, don’t use the (((11ty))) string hack
-    if (!str || str.length !== 1) {
-      throw new Error("Expect a one character string");
-    }
-    return `${str}`;
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs-computed-symbolparse",
+    output: "dist",
+  }, function(cfg) {
+    cfg.addNunjucksFilter("fail", function (str) {
+      // Filter expects a certain String format, don’t use the (((11ty))) string hack
+      if (!str || str.length !== 1) {
+        throw new Error("Expect a one character string");
+      }
+      return `${str}`;
+    });
   });
-  await eleventyConfig.init();
 
   let tmpl = await getNewTemplate(
     "./test/stubs-computed-symbolparse/test.njk",
@@ -197,15 +208,18 @@ test("eleventyComputed using symbol parsing on template strings (nunjucks)", asy
 });
 
 test("eleventyComputed using symbol parsing on template strings (liquid)", async (t) => {
-  let eleventyConfig = await new TemplateConfig();
-  eleventyConfig.userConfig.addLiquidFilter("fail", function (str) {
-    // Filter expects a certain String format, don’t use the (((11ty))) string hack
-    if (!str || str.length !== 1) {
-      throw new Error("Expect a one character string: " + str);
-    }
-    return `${str}`;
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs-computed-symbolparse",
+    output: "dist",
+  }, function(cfg) {
+    cfg.addLiquidFilter("fail", function (str) {
+      // Filter expects a certain String format, don’t use the (((11ty))) string hack
+      if (!str || str.length !== 1) {
+        throw new Error("Expect a one character string: " + str);
+      }
+      return `${str}`;
+    });
   });
-  await eleventyConfig.init();
 
   let tmpl = await getNewTemplate(
     "./test/stubs-computed-symbolparse/test.liquid",
