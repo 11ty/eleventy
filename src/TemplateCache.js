@@ -26,18 +26,16 @@ class TemplateCache {
 	}
 
 	add(layoutTemplate) {
-		let keys = new Set();
-
 		if (typeof layoutTemplate === "string") {
 			throw new Error(
 				"Invalid argument type passed to TemplateCache->add(). Should be a TemplateLayout.",
 			);
 		}
 
+		let keys = new Set();
 		if ("getFullKey" in layoutTemplate) {
 			keys.add(layoutTemplate.getFullKey());
 		}
-
 		if ("getKey" in layoutTemplate) {
 			// if `key` was an alias, also set to the pathed layout value too
 			// e.g. `layout: "default"` and `layout: "default.liquid"` will both map to the same template.
