@@ -48,7 +48,7 @@ test("Custom extension (.txt) with custom permalink compile function", async (t)
   t.is(await renderTemplate(tmpl, data), "Sample content");
   let testObj = await tmpl.getOutputLocations(data);
   t.is(testObj.href, "/HAHA_THIS_ALWAYS_GOES_HERE.txt");
-  t.is(testObj.path, "dist/HAHA_THIS_ALWAYS_GOES_HERE.txt");
+  t.is(testObj.path, "./dist/HAHA_THIS_ALWAYS_GOES_HERE.txt");
   t.is(testObj.rawPath, "HAHA_THIS_ALWAYS_GOES_HERE.txt");
 });
 
@@ -126,7 +126,7 @@ test("Custom extension with and opt-out of permalink compilation", async (t) => 
   t.is(await renderTemplate(tmpl, data), "Sample content");
   let testObj = await tmpl.getOutputLocations(data);
   t.is(testObj.href, "/custom-extension.lit");
-  t.is(testObj.path, "dist/custom-extension.lit");
+  t.is(testObj.path, "./dist/custom-extension.lit");
   t.is(testObj.rawPath, "custom-extension.lit");
 });
 
@@ -173,7 +173,7 @@ test("Custom extension (.txt) with custom permalink compile function but no perm
   t.is(await renderTemplate(tmpl, data), "Sample content");
   let testObj = await tmpl.getOutputLocations(data);
   t.is(testObj.href, "/HAHA_THIS_ALWAYS_GOES_HERE.txt");
-  t.is(testObj.path, "dist/HAHA_THIS_ALWAYS_GOES_HERE.txt");
+  t.is(testObj.path, "./dist/HAHA_THIS_ALWAYS_GOES_HERE.txt");
   t.is(testObj.rawPath, "HAHA_THIS_ALWAYS_GOES_HERE.txt");
 });
 
@@ -218,7 +218,7 @@ test("Custom extension (.txt) with custom permalink compile function (that retur
   t.is(await renderTemplate(tmpl, data), "Sample content");
   let testObj = await tmpl.getOutputLocations(data);
   t.is(testObj.href, "/HAHA_THIS_ALWAYS_GOES_HERE.txt");
-  t.is(testObj.path, "dist/HAHA_THIS_ALWAYS_GOES_HERE.txt");
+  t.is(testObj.path, "./dist/HAHA_THIS_ALWAYS_GOES_HERE.txt");
   t.is(testObj.rawPath, "HAHA_THIS_ALWAYS_GOES_HERE.txt");
 });
 

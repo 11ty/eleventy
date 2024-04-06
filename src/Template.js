@@ -3,7 +3,6 @@ import os from "node:os";
 import path from "node:path";
 
 import fs from "graceful-fs";
-import normalize from "normalize-path";
 import lodash from "@11ty/lodash-custom";
 import { DateTime } from "luxon";
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
@@ -34,6 +33,7 @@ const debugDev = debugUtil("Dev:Eleventy:Template");
 class EleventyTransformError extends EleventyBaseError {}
 
 class Template extends TemplateContent {
+	// TODO directorynorm
 	constructor(templatePath, inputDir, outputDir, templateData, extensionMap, config) {
 		debugDev("new Template(%o)", templatePath);
 		super(templatePath, inputDir, config);
@@ -42,12 +42,6 @@ class Template extends TemplateContent {
 
 		// for pagination
 		this.extraOutputSubdirectory = "";
-
-		if (outputDir) {
-			this.outputDir = normalize(outputDir);
-		} else {
-			this.outputDir = false;
-		}
 
 		this.extensionMap = extensionMap;
 

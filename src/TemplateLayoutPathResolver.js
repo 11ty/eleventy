@@ -4,13 +4,12 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 // const debug = debugUtil("Eleventy:TemplateLayoutPathResolver");
 
 class TemplateLayoutPathResolver {
-	// TODO directorynorm
-	constructor(path, inputDir, extensionMap, eleventyConfig) {
+	constructor(path, extensionMap, eleventyConfig) {
 		if (!eleventyConfig) {
 			throw new Error("Expected `eleventyConfig` in TemplateLayoutPathResolver constructor");
 		}
+
 		this.eleventyConfig = eleventyConfig;
-		this.inputDir = inputDir;
 		this.originalPath = path;
 		this.path = path;
 		this.aliases = {};
@@ -22,23 +21,30 @@ class TemplateLayoutPathResolver {
 		this.init();
 	}
 
-	setAliases() {
-		this.aliases = Object.assign({}, this.config.layoutAliases, this.aliases);
-	}
-
-	set inputDir(dir) {
-		this._inputDir = dir;
-		this.dir = this.getLayoutsDir();
+	get dirs() {
+		return this.eleventyConfig.directories;
 	}
 
 	get inputDir() {
-		return this._inputDir;
+		return this.dirs.input;
+	}
+
+	get layoutsDir() {
+		return this.dirs.layouts || this.dirs.includes;
+	}
+
+	/* Backwards compat */
+	getLayoutsDir() {
+		return this.layoutsDir;
+	}
+
+	setAliases() {
+		this.aliases = Object.assign({}, this.config.layoutAliases, this.aliases);
 	}
 
 	// for testing
 	set config(cfg) {
 		this._config = cfg;
-		this.dir = this.getLayoutsDir();
 		this.init();
 	}
 
@@ -66,14 +72,16 @@ class TemplateLayoutPathResolver {
 
 		let useLayoutResolution = this.config.layoutResolution;
 
-		this.pathAlreadyHasExtension = this.dir + "/" + this.path;
+		this.pathAlreadyHasExtension = TemplatePath.join(this.layoutsDir, this.path);
 
 		if (this.path.split(".").length > 0 && fs.existsSync(this.pathAlreadyHasExtension)) {
 			this.filename = this.path;
 			this.fullPath = TemplatePath.addLeadingDotSlash(this.pathAlreadyHasExtension);
 		} else if (useLayoutResolution) {
 			this.filename = this.findFileName();
-			this.fullPath = TemplatePath.addLeadingDotSlash(this.dir + "/" + this.filename);
+			this.fullPath = TemplatePath.addLeadingDotSlash(
+				TemplatePath.join(this.layoutsDir, this.filename || ""),
+			);
 		}
 	}
 
@@ -84,7 +92,7 @@ class TemplateLayoutPathResolver {
 	getFileName() {
 		if (!this.filename) {
 			throw new Error(
-				`You’re trying to use a layout that does not exist: ${this.originalPath} (${this.filename})`,
+				`You’re trying to use a layout that does not exist: ${this.originalPath}${this.filename ? ` (${this.filename})` : ""}`,
 			);
 		}
 
@@ -94,7 +102,7 @@ class TemplateLayoutPathResolver {
 	getFullPath() {
 		if (!this.filename) {
 			throw new Error(
-				`You’re trying to use a layout that does not exist: ${this.originalPath} (${this.filename})`,
+				`You’re trying to use a layout that does not exist: ${this.originalPath}${this.filename ? ` (${this.filename})` : ""}`,
 			);
 		}
 
@@ -102,37 +110,25 @@ class TemplateLayoutPathResolver {
 	}
 
 	findFileName() {
-		if (!fs.existsSync(this.dir)) {
+		if (!fs.existsSync(this.layoutsDir)) {
 			throw Error(
-				"TemplateLayoutPathResolver directory does not exist for " + this.path + ": " + this.dir,
+				"TemplateLayoutPathResolver directory does not exist for " +
+					this.path +
+					": " +
+					this.layoutsDir,
 			);
 		}
 
 		for (let filename of this.extensionMap.getFileList(this.path)) {
 			// TODO async
-			if (fs.existsSync(this.dir + "/" + filename)) {
+			if (fs.existsSync(TemplatePath.join(this.layoutsDir, filename))) {
 				return filename;
 			}
 		}
 	}
 
-	// TODO directorynorm
-	getLayoutsDir() {
-		let layoutsDir;
-		if ("layouts" in this.config.dir) {
-			layoutsDir = this.config.dir.layouts;
-		} else if ("includes" in this.config.dir) {
-			layoutsDir = this.config.dir.includes;
-		} else {
-			// Should this have a default?
-			layoutsDir = "_includes";
-		}
-
-		return TemplatePath.join(this.inputDir, layoutsDir);
-	}
-
 	getNormalizedLayoutKey() {
-		return TemplatePath.stripLeadingSubPath(this.fullPath, this.getLayoutsDir());
+		return TemplatePath.stripLeadingSubPath(this.fullPath, this.layoutsDir);
 	}
 }
 

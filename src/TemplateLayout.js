@@ -16,7 +16,7 @@ class TemplateLayout extends TemplateContent {
 			throw new Error("Expected `eleventyConfig` in TemplateLayout constructor.");
 		}
 
-		let resolver = new TemplateLayoutPathResolver(key, inputDir, extensionMap, eleventyConfig);
+		let resolver = new TemplateLayoutPathResolver(key, extensionMap, eleventyConfig);
 		let resolvedPath = resolver.getFullPath();
 
 		super(resolvedPath, inputDir, eleventyConfig);
@@ -29,7 +29,6 @@ class TemplateLayout extends TemplateContent {
 		this.key = resolver.getNormalizedLayoutKey();
 		this.dataKeyLayoutPath = key;
 		this.inputPath = resolvedPath;
-		this.inputDir = inputDir;
 	}
 
 	getKey() {

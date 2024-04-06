@@ -2,7 +2,6 @@ import os from "node:os";
 import util from "node:util";
 
 import fs from "graceful-fs";
-import normalize from "normalize-path";
 import matter from "gray-matter";
 import lodash from "@11ty/lodash-custom";
 import { TemplatePath } from "@11ty/eleventy-utils";
@@ -26,6 +25,7 @@ class TemplateContentCompileError extends EleventyBaseError {}
 class TemplateContentRenderError extends EleventyBaseError {}
 
 class TemplateContent {
+	// TODO directorynorm
 	constructor(inputPath, inputDir, config) {
 		if (!config) {
 			throw new TemplateContentConfigError("Missing `config` argument to TemplateContent");
@@ -33,13 +33,18 @@ class TemplateContent {
 		this.eleventyConfig = config;
 
 		this.inputPath = inputPath;
+	}
 
-		// TODO directorynorm
-		if (inputDir) {
-			this.inputDir = normalize(inputDir);
-		} else {
-			this.inputDir = false;
-		}
+	get dirs() {
+		return this.eleventyConfig.directories;
+	}
+
+	get inputDir() {
+		return this.dirs.input;
+	}
+
+	get outputDir() {
+		return this.dirs.output;
 	}
 
 	getResetTypes(types) {

@@ -63,9 +63,8 @@ test("getTemplateSubFolder, output is a subdir of input", async (t) => {
 
 test("output path maps to an html file", async (t) => {
   let tmpl = await getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./dist");
-  t.is(tmpl.parsed.dir, "./test/stubs");
-  t.is(tmpl.inputDir, "./test/stubs");
-  t.is(tmpl.outputDir, "./dist");
+  t.is(tmpl.inputDir, "./test/stubs/");
+  t.is(tmpl.outputDir, "./dist/");
   t.is(tmpl.getTemplateSubfolder(), "");
 
   let data = await tmpl.getData();

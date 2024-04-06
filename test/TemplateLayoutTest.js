@@ -7,7 +7,11 @@ import { renderLayoutViaLayout } from "./_getRenderedTemplates.js";
 import { getTemplateConfigInstance } from "./_testHelpers.js";
 
 async function getTemplateLayoutInstance(key, inputDir, map) {
-  let eleventyConfig = await getTemplateConfigInstance();
+  let eleventyConfig = await getTemplateConfigInstance({
+		dir: {
+			input: inputDir,
+		}
+	});
 
   if (!map) {
     map = new EleventyExtensionMap(["liquid", "md", "njk", "html", "11ty.js"], eleventyConfig);

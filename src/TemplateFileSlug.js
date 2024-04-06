@@ -2,7 +2,6 @@ import path from "node:path";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
 class TemplateFileSlug {
-	// TODO directorynorm
 	constructor(inputPath, extensionMap, eleventyConfig) {
 		let inputDir = eleventyConfig.directories.input;
 		if (inputDir) {
