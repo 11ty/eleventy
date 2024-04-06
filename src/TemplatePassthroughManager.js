@@ -42,13 +42,25 @@ class TemplatePassthroughManager {
 		return this._extensionMap;
 	}
 
-	setOutputDir(outputDir) {
-		this.outputDir = outputDir;
+	get dirs() {
+		return this.eleventyConfig.directories;
 	}
 
-	setInputDir(inputDir) {
-		this.inputDir = inputDir;
+	get inputDir() {
+		return this.dirs.input;
 	}
+
+	get outputDir() {
+		return this.dirs.output;
+	}
+
+	// setOutputDir(outputDir) {
+	// 	this.outputDir = outputDir;
+	// }
+
+	// setInputDir(inputDir) {
+	// 	this.inputDir = inputDir;
+	// }
 
 	setDryRun(isDryRun) {
 		this.isDryRun = !!isDryRun;

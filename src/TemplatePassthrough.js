@@ -91,6 +91,7 @@ class TemplatePassthrough {
 			fullOutputPath = ProjectDirectories.normalizeDirectory(fullOutputPath);
 		}
 
+		// TODO room for improvement here:
 		if (
 			!this.isInputPathGlob &&
 			(await fsExists(inputPath)) &&

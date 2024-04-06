@@ -163,7 +163,7 @@ test("Reuse permalink in directory specific data file", async (t) => {
 		}
 	});
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let tmpl = await getNewTemplate(
     "./test/stubs/reuse-permalink/test1.liquid",
     "./test/stubs/",

@@ -142,9 +142,6 @@ class EleventyFiles {
 
 	initPassthroughManager() {
 		let mgr = new TemplatePassthroughManager(this.eleventyConfig);
-		// TODO directorynorm (low)
-		mgr.setInputDir(this.inputDir);
-		mgr.setOutputDir(this.outputDir);
 		mgr.setRunMode(this.runMode);
 		mgr.extensionMap = this.extensionMap;
 		mgr.setFileSystemSearch(this.fileSystemSearch);
@@ -166,8 +163,7 @@ class EleventyFiles {
 
 	get templateData() {
 		if (!this._templateData) {
-			// TODO directorynorm (low)
-			this._templateData = new TemplateData(this.inputDir, this.eleventyConfig);
+			this._templateData = new TemplateData(this.eleventyConfig);
 		}
 
 		return this._templateData;
@@ -308,12 +304,12 @@ class EleventyFiles {
 		return Array.from(ignoreFiles);
 	}
 
-	// TODO directorynorm (low)
+	/* Backwards compat */
 	getIncludesDir() {
 		return this.includesDir;
 	}
 
-	// TODO directorynorm (low)
+	/* Backwards compat */
 	getLayoutsDir() {
 		return this.layoutsDir;
 	}

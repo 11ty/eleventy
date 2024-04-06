@@ -129,7 +129,7 @@ test("eleventyComputed relies on global data", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let tmpl = await getNewTemplate(
     "./test/stubs/eleventyComputed/use-global-data.njk",
     "./test/stubs/",
@@ -153,7 +153,7 @@ test("eleventyComputed intermixes with global data", async (t) => {
     cfg.setDataDeepMerge(true);
   });
 
-  let dataObj = new TemplateData("./test/stubs-computed-global/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
 
   let tmpl = await getNewTemplate(
     "./test/stubs-computed-global/intermix.njk",

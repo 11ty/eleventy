@@ -14,7 +14,7 @@ test("Layout front matter does not override template data files", async (t) => {
 		}
 	});
 
-  let dataObj = new TemplateData("./test/stubs-data-cascade/layout-data-files/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let tmpl = await getNewTemplate(
     "./test/stubs-data-cascade/layout-data-files/test.njk",
     "./test/stubs-data-cascade/layout-data-files/",
@@ -36,7 +36,7 @@ test("Layout front matter should not override global data (sanity check, Issue 9
 		}
 	});
 
-  let dataObj = new TemplateData("./test/stubs-data-cascade/global-versus-layout/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let tmpl = await getNewTemplate(
     "./test/stubs-data-cascade/global-versus-layout/test.njk",
     "./test/stubs-data-cascade/global-versus-layout/",
@@ -58,10 +58,7 @@ test("Template data files should be more specific in data cascade than Layout fr
 		}
 	});
 
-  let dataObj = new TemplateData(
-    "./test/stubs-data-cascade/layout-versus-tmpldatafile/",
-    eleventyConfig
-  );
+  let dataObj = new TemplateData(eleventyConfig);
   let tmpl = await getNewTemplate(
     "./test/stubs-data-cascade/layout-versus-tmpldatafile/test.njk",
     "./test/stubs-data-cascade/layout-versus-tmpldatafile/",
@@ -83,10 +80,7 @@ test("Directory data files should be more specific in data cascade than Layout f
 		}
 	});
 
-  let dataObj = new TemplateData(
-    "./test/stubs-data-cascade/layout-versus-dirdatafile/src/",
-    eleventyConfig
-  );
+  let dataObj = new TemplateData(eleventyConfig);
   let tmpl = await getNewTemplate(
     "./test/stubs-data-cascade/layout-versus-dirdatafile/src/test.njk",
     "./test/stubs-data-cascade/layout-versus-dirdatafile/src/",

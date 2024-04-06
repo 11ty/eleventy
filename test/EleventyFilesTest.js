@@ -7,7 +7,7 @@ import FileSystemSearch from "../src/FileSystemSearch.js";
 import TemplatePassthroughManager from "../src/TemplatePassthroughManager.js";
 import ProjectDirectories from "../src/Util/ProjectDirectories.js";
 
-import { getTemplateConfigInstance } from "./_testHelpers.js";
+import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
 
 test("Dirs paths", async (t) => {
   let eleventyConfig = await getTemplateConfigInstance({
@@ -428,25 +428,20 @@ test("Glob Watcher Files with File Extension Passthroughs with Dev Server (for f
 });
 
 test("Glob Watcher Files with Config Passthroughs (one template format)", async (t) => {
-  let eleventyConfig = await getTemplateConfigInstance({
-    dir: {
-      input: "test/stubs"
-    }
-  });
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs",
+    output: "test/stubs/_site"
+  }, function(cfg) {
+		cfg.passthroughCopies = {
+			"test/stubs/img/": { outputPath: true },
+		};
+	});
 
-  eleventyConfig.userConfig.passthroughCopies = {
-    "test/stubs/img/": { outputPath: true },
-  };
-  eleventyConfig.config.passthroughCopies = {
-    "test/stubs/img/": { outputPath: true },
-  };
 
   let evf = new EleventyFiles("test/stubs", undefined, ["njk"], eleventyConfig);
   evf.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
-  mgr.setInputDir("test/stubs");
-  mgr.setOutputDir("test/stubs/_site");
   evf.setPassthroughManager(mgr);
 
   t.deepEqual(evf.getGlobWatcherFiles(), [
@@ -458,29 +453,21 @@ test("Glob Watcher Files with Config Passthroughs (one template format)", async 
 });
 
 test("Glob Watcher Files with Config Passthroughs (one template format) with Dev Server (for free passthrough copy #2456)", async (t) => {
-  let eleventyConfig = await getTemplateConfigInstance({
-    dir: {
-      input: "test/stubs"
-    }
-  });
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs"
+  }, function(cfg) {
+		cfg.setServerPassthroughCopyBehavior("passthrough");
 
-  eleventyConfig.userConfig.setServerPassthroughCopyBehavior("passthrough");
-  eleventyConfig.config.serverPassthroughCopyBehavior = "passthrough";
-
-  eleventyConfig.userConfig.passthroughCopies = {
-    "test/stubs/img/": { outputPath: true },
-  };
-  eleventyConfig.config.passthroughCopies = {
-    "test/stubs/img/": { outputPath: true },
-  };
+		cfg.passthroughCopies = {
+			"test/stubs/img/": { outputPath: true },
+		};
+	});
 
   let evf = new EleventyFiles("test/stubs", undefined, ["njk"], eleventyConfig);
   evf.setRunMode("serve");
   evf.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
-  mgr.setInputDir("test/stubs");
-  mgr.setOutputDir("test/stubs/_site");
   evf.setPassthroughManager(mgr);
 
   t.deepEqual(evf.getGlobWatcherFiles(), [

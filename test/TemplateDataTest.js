@@ -27,7 +27,7 @@ test("Create", async (t) => {
     }
   })
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getGlobalData();
@@ -43,7 +43,7 @@ test("getGlobalData()", async (t) => {
   });
 
   let config = eleventyConfig.getConfig();
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   t.is(dataObj.getGlobalData().toString(), "[object Promise]");
@@ -69,7 +69,7 @@ test("getGlobalData() use default processing (false)", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getGlobalData();
@@ -83,7 +83,7 @@ test("Data dir does not exist", async (t) => {
         input: "test/thisdirectorydoesnotexist"
       }
     });
-    let dataObj = new TemplateData("./test/thisdirectorydoesnotexist", eleventyConfig);
+    let dataObj = new TemplateData(eleventyConfig);
     await dataObj.getGlobalData();
   }, {
     message: "The `input` parameter (directory or file path) must exist on the file system (unless detected as a glob by the `is-glob` package)"
@@ -97,7 +97,7 @@ test("Add local data", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getGlobalData();
@@ -124,7 +124,7 @@ test("Get local data async JS", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let withLocalData = await testGetLocalData(dataObj, "./test/stubs/component-async/component.njk");
@@ -141,7 +141,7 @@ test("addLocalData() doesn’t exist but doesn’t fail (template file does exis
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getGlobalData();
@@ -164,7 +164,7 @@ test("addLocalData() doesn’t exist but doesn’t fail (template file does not 
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getGlobalData();
@@ -186,7 +186,7 @@ test("Global Dir Directory", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
 
   t.deepEqual(await dataObj.getGlobalDataGlob(), ["./_data/**/*.{json,mjs,cjs,js}"]);
 });
@@ -198,7 +198,7 @@ test("Global Dir Directory with Constructor Path Arg", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
 
   t.deepEqual(await dataObj.getGlobalDataGlob(), ["./test/stubs/_data/**/*.{json,mjs,cjs,js}"]);
 });
@@ -210,7 +210,7 @@ test("getAllGlobalData() with other data files", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getGlobalData();
@@ -242,7 +242,7 @@ test("getAllGlobalData() with js object data file", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getGlobalData();
@@ -265,7 +265,7 @@ test("getAllGlobalData() with js function data file", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getGlobalData();
@@ -290,7 +290,7 @@ test("getAllGlobalData() with config globalData", async (t) => {
     cfg.addGlobalData("example3", "static");
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getGlobalData();
@@ -307,7 +307,7 @@ test("getAllGlobalData() with common js function data file", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getGlobalData();
@@ -330,7 +330,7 @@ test("getDataValue() without template engine preprocessing", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
 
   let data = await dataObj.getDataValue("./test/stubs/_data/testDataLiquid.json", {
     pkg: { name: "pkgname" },
@@ -349,7 +349,7 @@ test("getLocalDataPaths", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
   t.deepEqual(paths, [
@@ -374,7 +374,7 @@ test("getLocalDataPaths (with setDataFileBaseName #1699)", async (t) => {
     cfg.setDataFileBaseName("index");
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
   t.deepEqual(paths, [
@@ -403,7 +403,7 @@ test("getLocalDataPaths (with empty setDataFileSuffixes #1699)", async (t) => {
     cfg.setDataFileSuffixes([]);
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
   t.deepEqual(paths, []);
@@ -416,7 +416,7 @@ test("getLocalDataPaths (with setDataFileSuffixes override #1699)", async (t) =>
     cfg.setDataFileSuffixes([".howdy"]);
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
   t.deepEqual(paths, [
@@ -440,7 +440,7 @@ test("getLocalDataPaths (with setDataFileSuffixes empty string override #1699)",
   });
 
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
   t.deepEqual(paths, ["./test/stubs/stubs.json", "./test/stubs/component/component.json"]);
@@ -454,7 +454,7 @@ test("getLocalDataPaths (with setDataFileSuffixes override with two entries #169
   });
 
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
   t.deepEqual(paths, [
@@ -480,7 +480,7 @@ test("getLocalDataPaths (with setDataFileSuffixes and setDataFileBaseName #1699)
     cfg.setDataFileSuffixes([".howdy", ""]);
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
   t.deepEqual(paths, [
@@ -505,7 +505,7 @@ test("getLocalDataPaths (with setDataFileSuffixes and setDataFileBaseName #1699)
 test("Deeper getLocalDataPaths", async (t) => {
   let eleventyConfig = await getTemplateConfigInstance();
 
-  let dataObj = new TemplateData("./", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
   t.deepEqual(paths, [
@@ -534,7 +534,7 @@ test("getLocalDataPaths with an 11ty js template", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.11ty.js");
 
   t.deepEqual(paths, [
@@ -558,7 +558,7 @@ test("getLocalDataPaths with inputDir passed in (trailing slash)", async (t) => 
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
   t.deepEqual(paths, [
@@ -582,7 +582,7 @@ test("getLocalDataPaths with inputDir passed in (no trailing slash)", async (t) 
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
   t.deepEqual(paths, [
@@ -606,7 +606,7 @@ test("getLocalDataPaths with inputDir passed in (no leading slash)", async (t) =
     }
   });
 
-  let dataObj = new TemplateData("test/stubs", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
   t.deepEqual(paths, [
@@ -630,7 +630,7 @@ test("getRawImports", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("test/stubs", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let data = await dataObj.getRawImports();
 
   t.is(data.pkg.name, "@11ty/eleventy");
@@ -643,7 +643,7 @@ test("getTemplateDataFileGlob", async (t) => {
     }
   });
 
-  let tw = new TemplateData("test/stubs", eleventyConfig);
+  let tw = new TemplateData(eleventyConfig);
 
   t.deepEqual(await tw.getTemplateDataFileGlob(), [
     "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
@@ -683,7 +683,7 @@ test("Parent directory for data (Issue #337)", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs-337/src/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getGlobalData();
@@ -700,7 +700,7 @@ test("Dots in datafile path (Issue #1242)", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs-1242/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getGlobalData();
@@ -726,7 +726,7 @@ test("addGlobalData values", async (t) => {
     cfg.addGlobalData("myAsync", async () => Promise.resolve("promise-value"));
   });
 
-  let dataObj = new TemplateData("./test/stubs-global-data-config-api/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   let data = await dataObj.getGlobalData();
 
@@ -747,7 +747,7 @@ test("addGlobalData should execute once.", async (t) => {
     });
   });
 
-  let dataObj = new TemplateData("./test/stubs-global-data-config-api/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getGlobalData();
@@ -764,7 +764,7 @@ test("addGlobalData complex key", async (t) => {
     cfg.addGlobalData("deep.nested.two", () => "second");
   });
 
-  let dataObj = new TemplateData("./test/stubs-global-data-config-api-nested/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   let data = await dataObj.getGlobalData();
 
@@ -781,7 +781,7 @@ test("eleventy.version and eleventy.generator returned from data", async (t) => 
     cfg.addGlobalData("deep.nested.two", () => "second");
   });
 
-  let dataObj = new TemplateData("./test/stubs-empty/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   let data = await dataObj.getGlobalData();
 
@@ -801,7 +801,7 @@ test("getGlobalData() empty json file", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs-empty-json-data/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
 
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
@@ -816,7 +816,7 @@ test("ESM data file", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs-data-esm/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
   let data = await dataObj.getGlobalData();

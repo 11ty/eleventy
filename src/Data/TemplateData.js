@@ -22,7 +22,7 @@ class TemplateDataParseError extends EleventyBaseError {}
 
 class TemplateData {
 	// TODO directorynorm
-	constructor(inputDir, eleventyConfig) {
+	constructor(eleventyConfig) {
 		if (!eleventyConfig) {
 			throw new TemplateDataConfigError("Missing `config`.");
 		}

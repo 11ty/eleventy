@@ -196,7 +196,7 @@ test("One Layout (using new content var)", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let tmpl = await getNewTemplate(
     "./test/stubs/templateWithLayoutKey.liquid",
     "./test/stubs/",
@@ -230,7 +230,7 @@ test("One Layout (using content)", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let tmpl = await getNewTemplate(
     "./test/stubs/templateWithLayoutContent.liquid",
     "./test/stubs/",
@@ -264,7 +264,7 @@ test("One Layout (layouts disabled)", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let tmpl = await getNewTemplate(
     "./test/stubs/templateWithLayoutContent.liquid",
     "./test/stubs/",
@@ -296,7 +296,7 @@ test("One Layout (liquid test)", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let tmpl = await getNewTemplate(
     "./test/stubs/templateWithLayout.liquid",
     "./test/stubs/",
@@ -330,7 +330,7 @@ test("Two Layouts", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let tmpl = await getNewTemplate(
     "./test/stubs/templateTwoLayouts.liquid",
     "./test/stubs/",
@@ -366,7 +366,7 @@ test("Liquid template", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let tmpl = await getNewTemplate(
     "./test/stubs/formatTest.liquid",
     "./test/stubs/",
@@ -419,7 +419,7 @@ test("Layout from template-data-file that has a permalink (fileslug) Issue #121"
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let tmpl = await getNewTemplate(
     "./test/stubs/permalink-data-layout/test.njk",
     "./test/stubs/",
@@ -449,7 +449,7 @@ test("Local template data file import (without a global data json)", async (t) =
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -485,7 +485,7 @@ test("Local template data file import (two subdirectories deep)", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -528,7 +528,7 @@ test("Posts inherits local JSON, layouts", async (t) => {
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -582,7 +582,7 @@ test("Template and folder name are the same, make sure data imports work ok", as
     }
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -1129,7 +1129,7 @@ test("Data Cascade (Deep merge)", async (t) => {
     // cfg.setDataDeepMerge(true);
   });
 
-  let dataObj = new TemplateData("./test/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -1167,7 +1167,7 @@ test("Data Cascade (Shallow merge)", async (t) => {
     cfg.setDataDeepMerge(false);
   });
 
-  let dataObj = new TemplateData("./test/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -1205,7 +1205,7 @@ test("Data Cascade Tag Merge (Deep merge)", async (t) => {
     // cfg.setDataDeepMerge(true);
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -1231,7 +1231,7 @@ test("Data Cascade Tag Merge (Deep Merge - Deduplication)", async (t) => {
     // cfg.setDataDeepMerge(true);
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -1257,7 +1257,7 @@ test("Data Cascade Tag Merge (Shallow merge)", async (t) => {
     cfg.setDataDeepMerge(false);
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -1283,7 +1283,7 @@ test('Local data inherits tags string ([tags] vs "tags") Shallow Merge', async (
     cfg.setDataDeepMerge(false);
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -1309,7 +1309,7 @@ test('Local data inherits tags string ([tags] vs "tags") Deep Merge', async (t) 
     // cfg.setDataDeepMerge(true);
   });
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -1906,7 +1906,7 @@ test("Error messaging, returning literals (not objects) from custom data extensi
     });
   });
 
-  let dataObj = new TemplateData("./test/stubs-1691/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
 
   let tmpl = await getNewTemplate(
     "./test/stubs-1691/template.njk",
