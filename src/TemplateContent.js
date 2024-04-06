@@ -132,7 +132,7 @@ class TemplateContent {
 
 	async getTemplateRender() {
 		if (!this._templateRender) {
-			this._templateRender = new TemplateRender(this.inputPath, this.inputDir, this.eleventyConfig);
+			this._templateRender = new TemplateRender(this.inputPath, this.eleventyConfig);
 			this._templateRender.extensionMap = this.extensionMap;
 			await this._templateRender.init();
 		}

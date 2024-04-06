@@ -12,7 +12,7 @@ async function getNewTemplateRender(name, inputDir, extendedConfig) {
 		}
 	}, null, extendedConfig);
 
-  let tr = new TemplateRender(name, inputDir, eleventyConfig);
+  let tr = new TemplateRender(name, eleventyConfig);
   tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   await tr.init();
 

@@ -27,16 +27,7 @@ async function compile(content, templateLang, { templateConfig, extensionMap } =
 		templateLang = this.page.templateSyntax;
 	}
 
-	let inputDir;
-
-	// templateConfig *may* already be a userconfig
-	if (templateConfig.constructor.name === "TemplateConfig") {
-		inputDir = templateConfig.getConfig().dir.input;
-	} else {
-		inputDir = templateConfig?.dir?.input;
-	}
-
-	let tr = new TemplateRender(templateLang, inputDir, templateConfig);
+	let tr = new TemplateRender(templateLang, templateConfig);
 	tr.extensionMap = extensionMap;
 	if (templateLang) {
 		await tr.setEngineOverride(templateLang);
@@ -82,8 +73,7 @@ async function compileFile(inputPath, { templateConfig, extensionMap, config } =
 		await templateConfig.init();
 	}
 
-	let cfg = templateConfig.getConfig();
-	let tr = new TemplateRender(inputPath, cfg.dir.input, templateConfig);
+	let tr = new TemplateRender(inputPath, templateConfig);
 	tr.extensionMap = extensionMap;
 
 	if (templateLang) {

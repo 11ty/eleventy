@@ -12,8 +12,7 @@ class TemplateRenderUnknownEngineError extends EleventyBaseError {}
 
 // works with full path names or short engine name
 class TemplateRender {
-	// TODO directorynorm
-	constructor(tmplPath, inputDir, config) {
+	constructor(tmplPath, config) {
 		if (!tmplPath) {
 			throw new Error(`TemplateRender requires a tmplPath argument, instead of ${tmplPath}`);
 		}
