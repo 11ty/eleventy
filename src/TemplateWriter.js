@@ -20,9 +20,6 @@ class EleventyTemplateError extends EleventyBaseError {}
 
 class TemplateWriter {
 	constructor(
-		// TODO directorynorm
-		inputPath,
-		outputDir,
 		templateFormats, // TODO remove this, see `get eleventyFiles` first
 		templateData,
 		eleventyConfig,

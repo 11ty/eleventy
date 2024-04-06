@@ -469,13 +469,7 @@ class Eleventy {
 		this.templateData.setGlobalDataDirectories(dirs);
 		this.config.events.emit("eleventy.directories", dirs);
 
-		this.writer = new TemplateWriter(
-			this.inputDir,
-			this.outputDir,
-			formats,
-			this.templateData,
-			this.eleventyConfig,
-		);
+		this.writer = new TemplateWriter(formats, this.templateData, this.eleventyConfig);
 
 		if (!options.viaConfigReset) {
 			// set or restore cache
