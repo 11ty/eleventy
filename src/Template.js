@@ -60,7 +60,7 @@ class Template extends TemplateContent {
 		this.isDryRun = false;
 		this.writeCount = 0;
 
-		this.fileSlug = new TemplateFileSlug(this.inputPath, this.inputDir, this.extensionMap);
+		this.fileSlug = new TemplateFileSlug(this.inputPath, this.extensionMap, this.eleventyConfig);
 		this.fileSlugStr = this.fileSlug.getSlug();
 		this.filePathStem = this.fileSlug.getFullPathWithoutExtension();
 

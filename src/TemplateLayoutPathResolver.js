@@ -4,6 +4,7 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 // const debug = debugUtil("Eleventy:TemplateLayoutPathResolver");
 
 class TemplateLayoutPathResolver {
+	// TODO directorynorm
 	constructor(path, inputDir, extensionMap, eleventyConfig) {
 		if (!eleventyConfig) {
 			throw new Error("Expected `eleventyConfig` in TemplateLayoutPathResolver constructor");
@@ -115,6 +116,7 @@ class TemplateLayoutPathResolver {
 		}
 	}
 
+	// TODO directorynorm
 	getLayoutsDir() {
 		let layoutsDir;
 		if ("layouts" in this.config.dir) {

@@ -21,6 +21,7 @@ class TemplatePassthrough {
 	#isExistsCache = {};
 	#isDirectoryCache = {};
 
+	// TODO directorynorm
 	constructor(path, outputDir, inputDir, config) {
 		if (!config) {
 			throw new TemplatePassthroughError("Missing `config`.");

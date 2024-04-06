@@ -54,14 +54,6 @@ class TemplatePassthroughManager {
 		return this.dirs.output;
 	}
 
-	// setOutputDir(outputDir) {
-	// 	this.outputDir = outputDir;
-	// }
-
-	// setInputDir(inputDir) {
-	// 	this.inputDir = inputDir;
-	// }
-
 	setDryRun(isDryRun) {
 		this.isDryRun = !!isDryRun;
 	}
@@ -121,6 +113,7 @@ class TemplatePassthroughManager {
 	}
 
 	getTemplatePassthroughForPath(path, isIncremental = false) {
+		// TODO directorynorm
 		let inst = new TemplatePassthrough(path, this.outputDir, this.inputDir, this.config);
 
 		inst.setFileSystemSearch(this.fileSystemSearch);
