@@ -123,12 +123,7 @@ class TemplateWriter {
 		// usually Eleventy.js will setEleventyFiles with the EleventyFiles manager
 		if (!this._eleventyFiles) {
 			// if not, we can create one (used only by tests)
-			this._eleventyFiles = new EleventyFiles(
-				this.inputDir,
-				this.outputDir,
-				this.templateFormats,
-				this.eleventyConfig,
-			);
+			this._eleventyFiles = new EleventyFiles(this.templateFormats, this.eleventyConfig);
 
 			this._eleventyFiles.setFileSystemSearch(new FileSystemSearch());
 			this._eleventyFiles.init();

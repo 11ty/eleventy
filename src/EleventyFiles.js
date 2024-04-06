@@ -15,8 +15,7 @@ const debug = debugUtil("Eleventy:EleventyFiles");
 class EleventyFilesError extends EleventyBaseError {}
 
 class EleventyFiles {
-	// TODO directorynorm
-	constructor(inputDir, outputDir, formats, eleventyConfig) {
+	constructor(formats, eleventyConfig) {
 		if (!eleventyConfig) {
 			throw new EleventyFilesError("Missing `eleventyConfig`` argument.");
 		}

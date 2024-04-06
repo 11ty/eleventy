@@ -191,12 +191,7 @@ test("Look for uniqueness on template passthrough paths #1677", async (t) => {
 		};
 	});
 
-  let files = new EleventyFiles(
-    "test/stubs/template-passthrough-duplicates",
-    "test/stubs/template-passthrough-duplicates/_site",
-    formats,
-    eleventyConfig
-  );
+  let files = new EleventyFiles(formats, eleventyConfig);
   files.setFileSystemSearch(new FileSystemSearch());
   files.init();
 

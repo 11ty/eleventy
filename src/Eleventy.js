@@ -436,12 +436,7 @@ class Eleventy {
 		}
 		this.templateData.setFileSystemSearch(this.fileSystemSearch);
 
-		this.eleventyFiles = new EleventyFiles(
-			this.inputDir,
-			this.outputDir,
-			formats,
-			this.eleventyConfig,
-		);
+		this.eleventyFiles = new EleventyFiles(formats, this.eleventyConfig);
 		this.eleventyFiles.setFileSystemSearch(this.fileSystemSearch);
 		this.eleventyFiles.setRunMode(this.runMode);
 		this.eleventyFiles.extensionMap = this.extensionMap;

@@ -16,7 +16,7 @@ test("Get ignores (no .eleventyignore no .gitignore)", async (t) => {
     }
   });
 
-  let evf = new EleventyFiles("test/stubs/ignore1", "test/stubs/ignore1/_site", [], eleventyConfig);
+  let evf = new EleventyFiles([], eleventyConfig);
   evf.init();
 
   evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
@@ -40,7 +40,7 @@ test("Get ignores (no .eleventyignore)", async (t) => {
     }
   });
 
-  let evf = new EleventyFiles("test/stubs/ignore2", "test/stubs/ignore2/_site", [], eleventyConfig);
+  let evf = new EleventyFiles([], eleventyConfig);
   evf.init();
   evf._setLocalPathRoot("./test/stubs/ignorelocalrootgitignore");
 
@@ -64,7 +64,7 @@ test("Get ignores (no .eleventyignore, using setUseGitIgnore(false))", async (t)
     eleventyConfig.setUseGitIgnore(false);
   });
 
-  let evf = new EleventyFiles("test/stubs/ignore2", "test/stubs/ignore2/_site", [], eleventyConfig);
+  let evf = new EleventyFiles([], eleventyConfig);
   evf.init();
 
   evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
@@ -88,7 +88,7 @@ test("Get ignores (no .gitignore)", async (t) => {
     }
   });
 
-  let evf = new EleventyFiles("test/stubs/ignore3", "test/stubs/ignore3/_site", [], eleventyConfig);
+  let evf = new EleventyFiles([], eleventyConfig);
   evf.init();
   evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
 
@@ -113,7 +113,7 @@ test("Get ignores (project .eleventyignore and root .gitignore)", async (t) => {
     }
   });
 
-  let evf = new EleventyFiles("test/stubs/ignore4", "test/stubs/ignore4/_site", [], eleventyConfig);
+  let evf = new EleventyFiles([], eleventyConfig);
   evf.init();
   evf._setLocalPathRoot("./test/stubs/ignorelocalrootgitignore");
 
@@ -139,7 +139,7 @@ test("Get ignores (project .eleventyignore and root .gitignore, using setUseGitI
     eleventyConfig.setUseGitIgnore(false);
   });
 
-  let evf = new EleventyFiles("test/stubs/ignore4", "test/stubs/ignore4/_site", [], eleventyConfig);
+  let evf = new EleventyFiles([], eleventyConfig);
   evf.init();
 
   evf._setLocalPathRoot("./test/stubs/ignorelocalrootgitignore");
@@ -165,7 +165,7 @@ test("Get ignores (no .eleventyignore  .gitignore exists but empty)", async (t) 
     }
   });
 
-  let evf = new EleventyFiles("test/stubs/ignore5", "test/stubs/ignore5/_site", [], eleventyConfig);
+  let evf = new EleventyFiles([], eleventyConfig);
   evf.init();
 
   evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
@@ -189,7 +189,7 @@ test("Get ignores (both .eleventyignore and .gitignore exists, but .gitignore is
     }
   });
 
-  let evf = new EleventyFiles("test/stubs/ignore6", "test/stubs/ignore6/_site", [], eleventyConfig);
+  let evf = new EleventyFiles([], eleventyConfig);
   evf.init();
   evf._setLocalPathRoot("./test/stubs/ignorelocalroot");
 
@@ -216,7 +216,7 @@ test("Bad expected output, this indicates a bug upstream in a dependency.  Input
     eleventyConfig.setUseGitIgnore(false);
   });
 
-  let evf = new EleventyFiles("test/stubs-403", "test/stubs-403/_site", ["liquid"], eleventyConfig);
+  let evf = new EleventyFiles(["liquid"], eleventyConfig);
   evf.setEleventyIgnoreContent("!" + TemplatePath.absolutePath("test/stubs-403/_includes") + "/**");
 
   evf.setFileSystemSearch(new FileSystemSearch());
@@ -239,7 +239,7 @@ test("Workaround for Bad expected output, this indicates a bug upstream in a dep
     eleventyConfig.setUseGitIgnore(false);
   });
 
-  let evf = new EleventyFiles("test/stubs-403", "test/stubs-403/_site", ["liquid"], eleventyConfig);
+  let evf = new EleventyFiles(["liquid"], eleventyConfig);
   evf.setEleventyIgnoreContent("!./test/stubs-403/_includes/**");
   evf.setFileSystemSearch(new FileSystemSearch());
   evf.init();
@@ -257,7 +257,7 @@ test("Issue #403: all .eleventyignores should be relative paths not absolute pat
     eleventyConfig.setUseGitIgnore(false);
   });
 
-  let evf = new EleventyFiles("test/stubs-403", "test/stubs-403/_site", ["liquid"], eleventyConfig);
+  let evf = new EleventyFiles(["liquid"], eleventyConfig);
   evf.init();
 
   let globs = await evf.getFileGlobs();
@@ -277,7 +277,7 @@ test("Same input and output directories, issues #186 and #1129", async (t) => {
     eleventyConfig.setUseGitIgnore(false);
   });
 
-  let evf = new EleventyFiles("test/stubs/", undefined, [], eleventyConfig);
+  let evf = new EleventyFiles([], eleventyConfig);
   evf.init();
 
   t.deepEqual(
@@ -295,7 +295,7 @@ test("Single input file is in the output directory, issues #186", async (t) => {
     eleventyConfig.setUseGitIgnore(false);
   });
 
-  let evf = new EleventyFiles("test/stubs/test.njk", undefined, ["njk"], eleventyConfig);
+  let evf = new EleventyFiles(["njk"], eleventyConfig);
 
   evf.init();
   t.deepEqual(
@@ -312,12 +312,7 @@ test("De-duplicated ignores", async (t) => {
     }
   });
 
-  let evf = new EleventyFiles(
-    "test/stubs/ignore-dedupe",
-    undefined,
-    [],
-    eleventyConfig
-  );
+  let evf = new EleventyFiles([], eleventyConfig);
   evf.init();
 
   evf._setLocalPathRoot("./test/stubs/ignore-dedupe");

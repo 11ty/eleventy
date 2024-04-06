@@ -26,12 +26,7 @@ test("Output is a subdir of input", async (t) => {
     null,
     eleventyConfig,
   );
-  let evf = new EleventyFiles(
-    "./test/stubs/writeTest",
-    "./test/stubs/writeTest/_writeTestSite",
-    ["liquid", "md"],
-    eleventyConfig,
-  );
+  let evf = new EleventyFiles(["liquid", "md"], eleventyConfig);
   evf.init();
 
   let files = await fastglob(evf.getFileGlobs());
@@ -612,8 +607,6 @@ test("Write Test 11ty.js", async (t) => {
     eleventyConfig,
   );
   let evf = new EleventyFiles(
-    "./test/stubs/writeTestJS",
-    "./test/stubs/_writeTestJSSite",
     ["11ty.js"],
     eleventyConfig,
   );
@@ -644,8 +637,6 @@ test.skip("Markdown with alias", async (t) => {
   };
 
   let evf = new EleventyFiles(
-    "./test/stubs/writeTestMarkdown",
-    "./test/stubs/_writeTestMarkdownSite",
     ["md"],
     eleventyConfig,
   );
@@ -692,8 +683,6 @@ test.skip("JavaScript with alias", async (t) => {
   };
 
   let evf = new EleventyFiles(
-    "./test/stubs/writeTestJS",
-    "./test/stubs/_writeTestJSSite",
     ["11ty.js"],
     eleventyConfig,
   );
