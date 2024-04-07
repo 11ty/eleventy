@@ -1,26 +1,27 @@
 import test from "ava";
 
-import TemplateConfig from "../src/TemplateConfig.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";
 import TemplatePassthrough from "../src/TemplatePassthrough.js";
 
-async function getTemplatePassthrough(path, outputDir, inputDir) {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+import { getTemplateConfigInstance } from "./_testHelpers.js";
 
-  let config = eleventyConfig.getConfig();
+async function getTemplatePassthrough(path, outputDir, inputDir) {
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: inputDir,
+      output: outputDir,
+    }
+  });
 
   if (typeof path === "object") {
-    let p = new TemplatePassthrough(path, outputDir, inputDir, config);
+    let p = new TemplatePassthrough(path, eleventyConfig);
     p.setFileSystemSearch(new FileSystemSearch());
     return p;
   }
 
   let p = new TemplatePassthrough(
     { inputPath: path, outputPath: true },
-    outputDir,
-    inputDir,
-    config
+    eleventyConfig
   );
   p.setFileSystemSearch(new FileSystemSearch());
   return p;
@@ -93,59 +94,59 @@ test("Constructor Dry Run", async (t) => {
 });
 
 test("Origin path isn’t included in output when targeting a directory", async (t) => {
-  let pass = await getTemplatePassthrough("img", "_site", "_src");
+  let pass = await getTemplatePassthrough("img", "_site", "test/stubs");
   t.is(pass.outputPath, true);
   t.is(await pass.getOutputPath(), "_site/img");
 });
 
 test("Origin path isn’t included in output when targeting a directory several levels deep", async (t) => {
-  let pass = await getTemplatePassthrough("img", "_site", "_src/subdir");
+  let pass = await getTemplatePassthrough("img", "_site", "test/stubs/subdir");
   t.is(pass.outputPath, true);
   t.is(await pass.getOutputPath(), "_site/img");
 });
 
 test("Target directory’s subdirectory structure is retained", async (t) => {
-  let pass = await getTemplatePassthrough("subdir/img", "_site", "_src");
+  let pass = await getTemplatePassthrough("subdir/img", "_site", "test/stubs");
   t.is(pass.outputPath, true);
   t.is(await pass.getOutputPath(), "_site/subdir/img");
 
   let pass2 = await getTemplatePassthrough(
     { inputPath: "subdir/img", outputPath: "subdir/img" },
     "_site",
-    "_src"
+    "test/stubs"
   );
   t.is(await pass2.getOutputPath(), "_site/subdir/img");
 });
 
 test("Origin path isn’t included in output when targeting a file", async (t) => {
-  let pass = await getTemplatePassthrough("avatar.png", "_site", "_src");
+  let pass = await getTemplatePassthrough("avatar.png", "_site", "test/stubs");
   t.is(pass.outputPath, true);
   t.is(await pass.getOutputPath(), "_site/avatar.png");
 });
 
 test("Origin path isn’t included in output when targeting a file several levels deep", async (t) => {
-  let pass = await getTemplatePassthrough("avatar.png", "_site", "_src/subdir/img");
+  let pass = await getTemplatePassthrough("avatar.png", "_site", "test/stubs/subdir/img");
   t.is(pass.outputPath, true);
   t.is(await pass.getOutputPath(), "_site/avatar.png");
 });
 
 test("Full input file path and deep input path", async (t) => {
-  let tp = await getTemplatePassthrough("src/views/avatar.png", "_site", "src/views/");
+  let tp = await getTemplatePassthrough("test/views/avatar.png", "_site", "test/views/");
   t.is(await tp.getOutputPath(), "_site/avatar.png");
 
-  let tp2 = await getTemplatePassthrough("src/views/avatar.png", "_site", "src/views");
+  let tp2 = await getTemplatePassthrough("test/views/avatar.png", "_site", "test/views");
   t.is(await tp2.getOutputPath(), "_site/avatar.png");
 
-  let tp3 = await getTemplatePassthrough("src/views/avatar.png", "_site/", "src/views");
+  let tp3 = await getTemplatePassthrough("test/views/avatar.png", "_site/", "test/views");
   t.is(await tp3.getOutputPath(), "_site/avatar.png");
 
-  let tp4 = await getTemplatePassthrough("src/views/avatar.png", "./_site", "./src/views");
+  let tp4 = await getTemplatePassthrough("test/views/avatar.png", "./_site", "./test/views");
   t.is(await tp4.getOutputPath(), "_site/avatar.png");
 
-  let tp5 = await getTemplatePassthrough("./src/views/avatar.png", "./_site/", "./src/views/");
+  let tp5 = await getTemplatePassthrough("./test/views/avatar.png", "./_site/", "./test/views/");
   t.is(await tp5.getOutputPath(), "_site/avatar.png");
 
-  let tp6 = await getTemplatePassthrough("./src/views/avatar.png", "_site", "src/views/");
+  let tp6 = await getTemplatePassthrough("./test/views/avatar.png", "_site", "test/views/");
   t.is(await tp6.getOutputPath(), "_site/avatar.png");
 });
 
@@ -156,14 +157,14 @@ test(".htaccess", async (t) => {
 });
 
 test(".htaccess with input dir", async (t) => {
-  let pass = await getTemplatePassthrough(".htaccess", "_site", "_src");
+  let pass = await getTemplatePassthrough(".htaccess", "_site", "test/stubs");
   t.is(pass.outputPath, true);
   t.is(await pass.getOutputPath(), "_site/.htaccess");
 });
 
 test("getFiles where not glob and file does not exist", async (t) => {
   const inputPath = ".htaccess";
-  let pass = await getTemplatePassthrough(inputPath, "_site", "_src");
+  let pass = await getTemplatePassthrough(inputPath, "_site", "test/stubs");
   t.is(pass.outputPath, true);
   const files = await pass.getFiles(inputPath);
   t.deepEqual(files, []);
@@ -171,7 +172,7 @@ test("getFiles where not glob and file does not exist", async (t) => {
 
 test("getFiles where not glob and directory does not exist", async (t) => {
   const inputPath = "./test/stubs/template-passthrough/static/not-exists/";
-  let pass = await getTemplatePassthrough(inputPath, "_site", "_src");
+  let pass = await getTemplatePassthrough(inputPath, "_site", "test/stubs");
   t.is(pass.outputPath, true);
   const files = await pass.getFiles(inputPath);
   t.deepEqual(files, []);
@@ -179,7 +180,7 @@ test("getFiles where not glob and directory does not exist", async (t) => {
 
 test("getFiles with glob", async (t) => {
   const inputPath = "./test/stubs/template-passthrough/static/**";
-  let pass = await getTemplatePassthrough(inputPath, "_site", "_src");
+  let pass = await getTemplatePassthrough(inputPath, "_site", "test/views");
   t.is(pass.outputPath, true);
 
   const files = await pass.getFiles(inputPath);
@@ -207,7 +208,7 @@ test("getFiles with glob", async (t) => {
 });
 test("getFiles with glob 2", async (t) => {
   const inputPath = "./test/stubs/template-passthrough/static/**/*.js";
-  let pass = await getTemplatePassthrough(inputPath, "_site", "_src");
+  let pass = await getTemplatePassthrough(inputPath, "_site", "test/views");
   t.is(pass.outputPath, true);
   const files = await pass.getFiles(inputPath);
   t.deepEqual(files, ["./test/stubs/template-passthrough/static/test.js"]);
@@ -218,7 +219,7 @@ test("Directory where outputPath is true", async (t) => {
   let pass = await getTemplatePassthrough(
     { inputPath: "./static", outputPath: true },
     "_site",
-    "_src"
+    "test/stubs"
   );
   t.is(pass.outputPath, true);
   t.is(await pass.getOutputPath(), "_site/static");
@@ -228,7 +229,7 @@ test("Nested directory where outputPath is remapped", async (t) => {
   let pass = await getTemplatePassthrough(
     { inputPath: "./static/nested", outputPath: "./test" },
     "_site",
-    "_src"
+    "test/stubs"
   );
   t.is(pass.outputPath, "./test");
   t.is(await pass.getOutputPath(), "_site/test");
@@ -242,7 +243,7 @@ test("Glob pattern", async (t) => {
       outputPath: "./directory/",
     },
     "_site",
-    "_src"
+    "test/stubs"
   );
   t.is(pass.outputPath, "./directory/");
   t.is(await pass.getOutputPath(globResolvedPath), "_site/directory/test.js");
@@ -252,7 +253,7 @@ test("Output paths match with different templatePassthrough methods", async (t) 
   let pass1 = await getTemplatePassthrough(
     { inputPath: "./static/nested", outputPath: "./test" },
     "_site",
-    "_src"
+    "test/stubs"
   );
 
   let pass2 = await getTemplatePassthrough("avatar.png", "_site/test", ".");
@@ -267,7 +268,7 @@ test("Output paths match with different templatePassthrough methods", async (t) 
 //       outputPath: "./rename.js"
 //     },
 //     "_site",
-//     "_src"
+//     "test/stubs"
 //   );
 //   t.truthy(pass);
 //   t.is(await pass.getOutputPath(), "_site/rename.js");

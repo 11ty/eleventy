@@ -21,12 +21,14 @@ class TemplatePassthrough {
 	#isExistsCache = {};
 	#isDirectoryCache = {};
 
-	// TODO directorynorm
-	constructor(path, outputDir, inputDir, config) {
-		if (!config) {
-			throw new TemplatePassthroughError("Missing `config`.");
+	constructor(path, eleventyConfig) {
+		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
+			throw new TemplatePassthroughError(
+				"Missing `eleventyConfig` or was not an instance of `TemplateConfig`.",
+			);
 		}
-		this.config = config;
+		this.eleventyConfig = eleventyConfig;
+
 		this.benchmarks = {
 			aggregate: this.config.benchmarkManager.get("Aggregate"),
 		};
@@ -38,16 +40,29 @@ class TemplatePassthrough {
 		this.inputPath = this.normalizeDirectory(path.inputPath);
 		this.isInputPathGlob = isGlob(this.inputPath);
 
-		// inputDir is only used when stripping from output path in `getOutputPath`
-		this.inputDir = inputDir;
-
 		this.outputPath = path.outputPath;
-		this.outputDir = outputDir;
 
 		this.copyOptions = path.copyOptions; // custom options for recursive-copy
 
 		this.isDryRun = false;
 		this.isIncremental = false;
+	}
+
+	get config() {
+		return this.eleventyConfig.getConfig();
+	}
+
+	get dirs() {
+		return this.eleventyConfig.directories;
+	}
+
+	// inputDir is used when stripping from output path in `getOutputPath`
+	get inputDir() {
+		return this.dirs.input;
+	}
+
+	get outputDir() {
+		return this.dirs.output;
 	}
 
 	/* { inputPath, outputPath } though outputPath is *not* the full path: just the output directory */

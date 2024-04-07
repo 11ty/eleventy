@@ -86,7 +86,7 @@ test("Data dir does not exist", async (t) => {
     let dataObj = new TemplateData(eleventyConfig);
     await dataObj.getGlobalData();
   }, {
-    message: "The `input` parameter (directory or file path) must exist on the file system (unless detected as a glob by the `is-glob` package)"
+    message: "The \"test/thisdirectorydoesnotexist\" `input` parameter (directory or file path) must exist on the file system (unless detected as a glob by the `is-glob` package)"
   });
 });
 
@@ -188,7 +188,7 @@ test("Global Dir Directory", async (t) => {
 
   let dataObj = new TemplateData(eleventyConfig);
 
-  t.deepEqual(await dataObj.getGlobalDataGlob(), ["./_data/**/*.{json,mjs,cjs,js}"]);
+  t.deepEqual(dataObj.getGlobalDataGlob(), ["./_data/**/*.{json,mjs,cjs,js}"]);
 });
 
 test("Global Dir Directory with Constructor Path Arg", async (t) => {
@@ -200,7 +200,7 @@ test("Global Dir Directory with Constructor Path Arg", async (t) => {
 
   let dataObj = new TemplateData(eleventyConfig);
 
-  t.deepEqual(await dataObj.getGlobalDataGlob(), ["./test/stubs/_data/**/*.{json,mjs,cjs,js}"]);
+  t.deepEqual(dataObj.getGlobalDataGlob(), ["./test/stubs/_data/**/*.{json,mjs,cjs,js}"]);
 });
 
 test("getAllGlobalData() with other data files", async (t) => {

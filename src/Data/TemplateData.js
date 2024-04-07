@@ -188,8 +188,7 @@ class TemplateData {
 
 	// For spidering dependencies
 	// TODO Can we reuse getTemplateDataFileGlob instead? Maybe just filter off the .json files before scanning for dependencies
-	// TODO directorynorm: remove async?
-	async getTemplateJavaScriptDataFileGlob() {
+	getTemplateJavaScriptDataFileGlob() {
 		let paths = [];
 		let suffixes = this.getDataFileSuffixes();
 		for (let suffix of suffixes) {
@@ -203,8 +202,7 @@ class TemplateData {
 		return TemplatePath.addLeadingDotSlashArray(paths);
 	}
 
-	// TODO directorynorm: remove async?
-	async getGlobalDataGlob() {
+	getGlobalDataGlob() {
 		let extGlob = this.getGlobalDataExtensionPriorities().join(",");
 		return [this._getGlobalDataGlobByExtension("{" + extGlob + "}")];
 	}
@@ -232,7 +230,7 @@ class TemplateData {
 
 		let fsBench = this.benchmarks.aggregate.get("Searching the file system (data)");
 		fsBench.before();
-		let globs = await this.getGlobalDataGlob();
+		let globs = this.getGlobalDataGlob();
 		let paths = await this.fileSystemSearch.search("global-data", globs);
 		fsBench.after();
 

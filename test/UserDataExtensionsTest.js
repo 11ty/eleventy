@@ -103,7 +103,7 @@ test("Global data", async (t) => {
   let dataObj = new TemplateData(eleventyConfig);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
-  t.deepEqual(await dataObj.getGlobalDataGlob(), [
+  t.deepEqual(dataObj.getGlobalDataGlob(), [
     "./test/stubs-630/_data/**/*.{nosj,yaml,json,mjs,cjs,js}",
   ]);
 

@@ -435,7 +435,7 @@ class EleventyFiles {
 	/* For `eleventy --watch` */
 	// TODO this isn’t great but reduces complexity avoiding using TemplateData:getLocalDataPaths for each template in the cache
 	async getWatcherTemplateJavaScriptDataFiles() {
-		let globs = await this.templateData.getTemplateJavaScriptDataFileGlob();
+		let globs = this.templateData.getTemplateJavaScriptDataFileGlob();
 		let bench = this.aggregateBench.get("Searching the file system (watching)");
 		bench.before();
 		let results = TemplatePath.addLeadingDotSlashArray(

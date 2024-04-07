@@ -137,7 +137,7 @@ class ProjectDirectories {
 			} else {
 				if (!isGlob(dirOrFile)) {
 					throw new Error(
-						"The `input` parameter (directory or file path) must exist on the file system (unless detected as a glob by the `is-glob` package)",
+						`The "${dirOrFile}" \`input\` parameter (directory or file path) must exist on the file system (unless detected as a glob by the \`is-glob\` package)`,
 					);
 				}
 

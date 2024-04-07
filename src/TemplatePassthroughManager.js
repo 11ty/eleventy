@@ -16,8 +16,8 @@ class TemplatePassthroughManagerCopyError extends EleventyBaseError {}
 
 class TemplatePassthroughManager {
 	constructor(eleventyConfig) {
-		if (!eleventyConfig) {
-			throw new TemplatePassthroughManagerConfigError("Missing `config` argument.");
+		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
+			throw new TemplatePassthroughManagerConfigError("Missing or invalid `config` argument.");
 		}
 		this.eleventyConfig = eleventyConfig;
 		this.config = eleventyConfig.getConfig();
@@ -113,8 +113,7 @@ class TemplatePassthroughManager {
 	}
 
 	getTemplatePassthroughForPath(path, isIncremental = false) {
-		// TODO directorynorm
-		let inst = new TemplatePassthrough(path, this.outputDir, this.inputDir, this.config);
+		let inst = new TemplatePassthrough(path, this.eleventyConfig);
 
 		inst.setFileSystemSearch(this.fileSystemSearch);
 		inst.setIsIncremental(isIncremental);
