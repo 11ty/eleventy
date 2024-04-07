@@ -376,7 +376,9 @@ class TemplateConfig {
 
 		// Add the ProjectDirectories instance to the user accessible config.
 		if (this.directories) {
-			mergedConfig.directories = this.directories.getUserspaceInstance();
+			let dirs = this.directories.getUserspaceInstance();
+			mergedConfig.directories = dirs;
+			this.userConfig.directories = dirs;
 		}
 
 		// Delay processing plugins until after the result of localConfig is returned

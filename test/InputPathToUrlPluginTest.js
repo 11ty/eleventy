@@ -51,8 +51,6 @@ test("Using the transform (and the filter too)", async (t) => {
     },
   });
 
-  await elev.initializeConfig();
-
   elev.setIsVerbose(false);
   elev.disableLogger();
 
@@ -73,7 +71,6 @@ test("Using the filter", async (t) => {
 		// FilterPlugin is available in the default config.
     configPath: false,
   });
-  await elev.initializeConfig();
 
   elev.setIsVerbose(false);
   elev.disableLogger();
@@ -98,7 +95,6 @@ test("Using the transform and the base plugin", async (t) => {
       eleventyConfig.addPlugin(HtmlBasePlugin);
     },
   });
-  await elev.initializeConfig();
 
   elev.setIsVerbose(false);
   elev.disableLogger();
@@ -123,7 +119,6 @@ test("Using the transform and the base plugin, reverse order", async (t) => {
 			eleventyConfig.addPlugin(TransformPlugin);
     },
   });
-  await elev.initializeConfig();
 
   elev.setIsVerbose(false);
   elev.disableLogger();

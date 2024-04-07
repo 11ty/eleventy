@@ -7,10 +7,10 @@ import { getTemplateConfigInstance } from "./_testHelpers.js";
 
 async function getNewTemplateRender(name, inputDir) {
   let eleventyConfig = await getTemplateConfigInstance({
-		dir: {
-			input: inputDir
-		}
-	});
+    dir: {
+      input: inputDir
+    }
+  });
 
   let tr = new TemplateRender(name, eleventyConfig);
   tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);

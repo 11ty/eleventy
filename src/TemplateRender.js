@@ -1,5 +1,3 @@
-import { TemplatePath } from "@11ty/eleventy-utils";
-
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import EleventyExtensionMap from "./EleventyExtensionMap.js";
 import CustomEngine from "./Engines/Custom.js";
