@@ -12,8 +12,8 @@ class JavaScript extends TemplateEngine {
 	// which data keys to bind to `this` in JavaScript template functions
 	static DATA_KEYS_TO_BIND = ["page", "eleventy"];
 
-	constructor(name, dirs, config) {
-		super(name, dirs, config);
+	constructor(name, eleventyConfig) {
+		super(name, eleventyConfig);
 		this.instances = {};
 
 		this.cacheable = false;

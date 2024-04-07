@@ -1211,6 +1211,7 @@ Arguments:
 
 		try {
 			let eventsArg = {
+				// TODO directorynorm
 				inputDir: this.config.inputDir,
 				dir: this.config.dir,
 				runMode: this.runMode,

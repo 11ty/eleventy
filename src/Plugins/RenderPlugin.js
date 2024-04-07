@@ -12,6 +12,7 @@ import { ProxyWrap } from "../Util/ProxyWrap.js";
 import TemplateDataInitialGlobalData from "../Data/TemplateDataInitialGlobalData.js";
 import EleventyShortcodeError from "../Errors/EleventyShortcodeError.js";
 import TemplateRender from "../TemplateRender.js";
+import ProjectDirectories from "../Util/ProjectDirectories.js";
 import TemplateConfig from "../TemplateConfig.js";
 import EleventyErrorUtil from "../Errors/EleventyErrorUtil.js";
 import Liquid from "../Engines/Liquid.js";
@@ -19,6 +20,7 @@ import Liquid from "../Engines/Liquid.js";
 async function compile(content, templateLang, { templateConfig, extensionMap } = {}) {
 	if (!templateConfig) {
 		templateConfig = new TemplateConfig(null, false);
+		templateConfig.setDirectories(new ProjectDirectories());
 		await templateConfig.init();
 	}
 
@@ -64,6 +66,7 @@ async function compileFile(inputPath, { templateConfig, extensionMap, config } =
 	let wasTemplateConfigMissing = false;
 	if (!templateConfig) {
 		templateConfig = new TemplateConfig(null, false);
+		templateConfig.setDirectories(new ProjectDirectories());
 		wasTemplateConfigMissing = true;
 	}
 	if (config && typeof config === "function") {
@@ -375,6 +378,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 class RenderManager {
 	constructor() {
 		this.templateConfig = new TemplateConfig(null, false);
+		this.templateConfig.setDirectories(new ProjectDirectories());
 
 		// This is the only plugin running on the Edge
 		this.templateConfig.userConfig.addPlugin(EleventyPlugin, {

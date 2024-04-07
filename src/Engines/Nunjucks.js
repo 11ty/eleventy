@@ -7,8 +7,9 @@ import EleventyShortcodeError from "../Errors/EleventyShortcodeError.js";
 import EventBusUtil from "../Util/EventBusUtil.js";
 
 class Nunjucks extends TemplateEngine {
-	constructor(name, dirs, config) {
-		super(name, dirs, config);
+	constructor(name, eleventyConfig) {
+		super(name, eleventyConfig);
+
 		this.nunjucksEnvironmentOptions = this.config.nunjucksEnvironmentOptions || {};
 
 		this.nunjucksPrecompiledTemplates = this.config.nunjucksPrecompiledTemplates || {};

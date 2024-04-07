@@ -69,11 +69,7 @@ class TemplateRender {
 	}
 
 	async getEngineByName(name) {
-		let engine = await this.extensionMap.engineManager.getEngine(
-			name,
-			this.getDirs(),
-			this.extensionMap,
-		);
+		let engine = await this.extensionMap.engineManager.getEngine(name, this.extensionMap);
 		engine.eleventyConfig = this.eleventyConfig;
 
 		return engine;
@@ -247,17 +243,6 @@ class TemplateRender {
 
 	getEngineName() {
 		return this.engineName;
-	}
-
-	getDirs() {
-		if (!this.dirs) {
-			return {};
-		}
-
-		return {
-			input: this.inputDir,
-			includes: this.includesDir,
-		};
 	}
 
 	isEngine(engine) {

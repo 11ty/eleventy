@@ -16,8 +16,8 @@ class Liquid extends TemplateEngine {
 		"ignore:whitespace": /[, \t]+/, // includes comma separator
 	};
 
-	constructor(name, dirs, config) {
-		super(name, dirs, config);
+	constructor(name, eleventyConfig) {
+		super(name, eleventyConfig);
 
 		this.liquidOptions = this.config.liquidOptions || {};
 

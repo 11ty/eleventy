@@ -280,7 +280,7 @@ test("Markdown Render: use Markdown inside of a Liquid shortcode (Issue #536)", 
 
   let tr = await getNewTemplateRender("md", null, eleventyConfig);
 
-  let liquidEngine = new Liquid("liquid", tr.getDirs(), eleventyConfig);
+  let liquidEngine = new Liquid("liquid", eleventyConfig);
   liquidEngine.addShortcode("testShortcode", function () {
     return "## My Other Title";
   });
@@ -303,7 +303,7 @@ test("Markdown Render: use Markdown inside of a Liquid shortcode (Issue #536)", 
 test("Markdown Render: use Markdown inside of a Nunjucks shortcode (Issue #536)", async (t) => {
   let eleventyConfig = await getTemplateConfigInstance();
   let tr = await getNewTemplateRender("md", null, eleventyConfig);
-  let nunjucksEngine = new Nunjucks("njk", tr.getDirs(), eleventyConfig);
+  let nunjucksEngine = new Nunjucks("njk", eleventyConfig);
   nunjucksEngine.addShortcode("testShortcode", function () {
     return "## My Other Title";
   });
@@ -327,7 +327,7 @@ test("Markdown Render: use Markdown inside of a Liquid paired shortcode (Issue #
   let eleventyConfig = await getTemplateConfigInstance();
   let tr = await getNewTemplateRender("md", null, eleventyConfig);
 
-  let liquidEngine = new Liquid("liquid", tr.getIncludesDir(), eleventyConfig);
+  let liquidEngine = new Liquid("liquid", eleventyConfig);
   liquidEngine.addPairedShortcode("testShortcode", function (content) {
     return content;
   });
@@ -351,7 +351,7 @@ test("Markdown Render: use Markdown inside of a Nunjucks paired shortcode (Issue
   let eleventyConfig = await getTemplateConfigInstance();
   let tr = await getNewTemplateRender("md", null, eleventyConfig);
 
-  let nunjucksEngine = new Nunjucks("njk", tr.getDirs(), eleventyConfig);
+  let nunjucksEngine = new Nunjucks("njk", eleventyConfig);
   nunjucksEngine.addPairedShortcode("testShortcode", function (content) {
     return content;
   });

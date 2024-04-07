@@ -4,17 +4,8 @@ import EleventyBaseError from "../Errors/EleventyBaseError.js";
 class TemplateEngineConfigError extends EleventyBaseError {}
 
 class TemplateEngine {
-	constructor(name, dirs, eleventyConfig) {
+	constructor(name, eleventyConfig) {
 		this.name = name;
-
-		if (!dirs) {
-			dirs = {};
-		}
-
-		this.dirs = dirs;
-
-		this.inputDir = dirs.input;
-		this.includesDir = dirs.includes;
 
 		this.engineLib = null;
 		this.cacheable = false;
@@ -25,11 +16,24 @@ class TemplateEngine {
 		this.eleventyConfig = eleventyConfig;
 	}
 
+	get dirs() {
+		return this.eleventyConfig.directories;
+	}
+
+	get inputDir() {
+		return this.dirs.input;
+	}
+
+	get includesDir() {
+		return this.dirs.includes;
+	}
+
 	get config() {
-		if (this.eleventyConfig.constructor.name === "TemplateConfig") {
-			return this.eleventyConfig.getConfig();
+		if (this.eleventyConfig.constructor.name !== "TemplateConfig") {
+			throw new Error("Expecting a TemplateConfig instance.");
 		}
-		throw new Error("Expecting a TemplateConfig instance.");
+
+		return this.eleventyConfig.getConfig();
 	}
 
 	get benchmarks() {
@@ -78,6 +82,7 @@ class TemplateEngine {
 		return this.name;
 	}
 
+	// Backwards compat
 	getIncludesDir() {
 		return this.includesDir;
 	}

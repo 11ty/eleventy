@@ -3,8 +3,8 @@ import markdownIt from "markdown-it";
 import TemplateEngine from "./TemplateEngine.js";
 
 class Markdown extends TemplateEngine {
-	constructor(name, dirs, config) {
-		super(name, dirs, config);
+	constructor(name, eleventyConfig) {
+		super(name, eleventyConfig);
 
 		this.markdownOptions = {};
 
@@ -56,11 +56,7 @@ class Markdown extends TemplateEngine {
 		if (preTemplateEngine) {
 			let engine;
 			if (typeof preTemplateEngine === "string") {
-				engine = await this.engineManager.getEngine(
-					preTemplateEngine,
-					this.dirs,
-					this.extensionMap,
-				);
+				engine = await this.engineManager.getEngine(preTemplateEngine, this.extensionMap);
 			} else {
 				engine = preTemplateEngine;
 			}
