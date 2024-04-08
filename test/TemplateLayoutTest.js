@@ -1,18 +1,22 @@
 import test from "ava";
 
-import TemplateConfig from "../src/TemplateConfig.js";
 import TemplateLayout from "../src/TemplateLayout.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+
 import { renderLayoutViaLayout } from "./_getRenderedTemplates.js";
+import { getTemplateConfigInstance } from "./_testHelpers.js";
 
 async function getTemplateLayoutInstance(key, inputDir, map) {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+  let eleventyConfig = await getTemplateConfigInstance({
+		dir: {
+			input: inputDir,
+		}
+	});
 
   if (!map) {
     map = new EleventyExtensionMap(["liquid", "md", "njk", "html", "11ty.js"], eleventyConfig);
   }
-  let layout = new TemplateLayout(key, inputDir, map, eleventyConfig);
+  let layout = new TemplateLayout(key, map, eleventyConfig);
   return layout;
 }
 

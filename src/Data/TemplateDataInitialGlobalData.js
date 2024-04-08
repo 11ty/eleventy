@@ -11,8 +11,8 @@ class TemplateDataConfigError extends EleventyBaseError {}
 
 class TemplateDataInitialGlobalData {
 	constructor(templateConfig) {
-		if (!templateConfig) {
-			throw new TemplateDataConfigError("Missing `config`.");
+		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
+			throw new TemplateDataConfigError("Missing or invalid `templateConfig` (via Render plugin).");
 		}
 		this.templateConfig = templateConfig;
 		this.config = this.templateConfig.getConfig();

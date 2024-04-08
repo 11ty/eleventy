@@ -2,7 +2,8 @@ import path from "node:path";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
 class TemplateFileSlug {
-	constructor(inputPath, inputDir, extensionMap) {
+	constructor(inputPath, extensionMap, eleventyConfig) {
+		let inputDir = eleventyConfig.directories.input;
 		if (inputDir) {
 			inputPath = TemplatePath.stripLeadingSubPath(inputPath, inputDir);
 		}

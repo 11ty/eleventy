@@ -5,8 +5,8 @@ class TemplateEngineManagerConfigError extends EleventyBaseError {}
 
 class TemplateEngineManager {
 	constructor(eleventyConfig) {
-		if (!eleventyConfig) {
-			throw new TemplateEngineManagerConfigError("Missing `config` argument.");
+		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
+			throw new TemplateEngineManagerConfigError("Missing or invalid `config` argument.");
 		}
 		this.eleventyConfig = eleventyConfig;
 
@@ -98,9 +98,9 @@ class TemplateEngineManager {
 		return this._CustomEngine;
 	}
 
-	async getEngine(name, dirs, extensionMap) {
+	async getEngine(name, extensionMap) {
 		if (!this.hasEngine(name)) {
-			throw new Error(`Template Engine ${name} does not exist in getEngine (dirs: ${dirs})`);
+			throw new Error(`Template Engine ${name} does not exist in getEngine()`);
 		}
 
 		// TODO these cached engines should be based on extensions not name, then we can remove the error in
@@ -110,7 +110,7 @@ class TemplateEngineManager {
 		}
 
 		let cls = await this.getEngineClassByExtension(name);
-		let instance = new cls(name, dirs, this.eleventyConfig);
+		let instance = new cls(name, this.eleventyConfig);
 		instance.extensionMap = extensionMap;
 		instance.engineManager = this;
 
@@ -123,7 +123,7 @@ class TemplateEngineManager {
 			instance.constructor.name !== "CustomEngine"
 		) {
 			let CustomEngine = await this.getCustomEngineClass();
-			let overrideCustomEngine = new CustomEngine(name, dirs, this.eleventyConfig);
+			let overrideCustomEngine = new CustomEngine(name, this.eleventyConfig);
 			// Keep track of the "default" engine 11ty would normally use
 			// This allows the user to access the default engine in their override
 			overrideCustomEngine.setDefaultEngine(instance);

@@ -26,8 +26,10 @@ test("Eleventy, defaults inherit from config", async (t) => {
 
   t.truthy(elev.input);
   t.truthy(elev.outputDir);
-  t.is(elev.input, config.dir.input);
-  t.is(elev.outputDir, config.dir.output);
+  t.is(config.dir.input, ".");
+  t.is(elev.input, "./");
+  t.is(config.dir.output, "_site");
+  t.is(elev.outputDir, "./_site/");
 });
 
 test("Eleventy, get version", (t) => {
@@ -63,8 +65,8 @@ test("Eleventy, set is verbose (after config init)", async (t) => {
 test("Eleventy set input/output", async (t) => {
   let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
 
-  t.is(elev.input, "./test/stubs");
-  t.is(elev.outputDir, "./test/stubs/_site");
+  t.is(elev.input, "./test/stubs/");
+  t.is(elev.outputDir, "./test/stubs/_site/");
 
   await elev.init();
   t.truthy(elev.templateData);
@@ -154,33 +156,37 @@ test("Eleventy set input/output, one file input", async (t) => {
   let elev = new Eleventy("./test/stubs/index.html", "./test/stubs/_site");
 
   t.is(elev.input, "./test/stubs/index.html");
-  t.is(elev.inputDir, "./test/stubs");
-  t.is(elev.outputDir, "./test/stubs/_site");
+  t.is(elev.inputFile, "./test/stubs/index.html");
+  t.is(elev.inputDir, "./test/stubs/");
+  t.is(elev.outputDir, "./test/stubs/_site/");
 });
 
 test("Eleventy set input/output, one file input, deeper subdirectory", async (t) => {
-  let elev = new Eleventy("./test/stubs/subdir/index.html", "./test/stubs/_site");
-  elev.setInputDir("./test/stubs");
+  let elev = new Eleventy("./test/stubs/subdir/index.html", "./test/stubs/_site", {
+		inputDir: "./test/stubs"
+	});
 
   t.is(elev.input, "./test/stubs/subdir/index.html");
-  t.is(elev.inputDir, "./test/stubs");
-  t.is(elev.outputDir, "./test/stubs/_site");
+  t.is(elev.inputFile, "./test/stubs/subdir/index.html");
+  t.is(elev.inputDir, "./test/stubs/");
+  t.is(elev.outputDir, "./test/stubs/_site/");
 });
 
 test("Eleventy set input/output, one file input root dir", async (t) => {
   let elev = new Eleventy("./README.md", "./test/stubs/_site");
 
   t.is(elev.input, "./README.md");
-  t.is(elev.inputDir, ".");
-  t.is(elev.outputDir, "./test/stubs/_site");
+  t.is(elev.inputFile, "./README.md");
+  t.is(elev.inputDir, "./");
+  t.is(elev.outputDir, "./test/stubs/_site/");
 });
 
 test("Eleventy set input/output, one file input root dir without leading dot/slash", async (t) => {
   let elev = new Eleventy("README.md", "./test/stubs/_site");
 
-  t.is(elev.input, "README.md");
-  t.is(elev.inputDir, ".");
-  t.is(elev.outputDir, "./test/stubs/_site");
+  t.is(elev.input, "./README.md");
+  t.is(elev.inputDir, "./");
+  t.is(elev.outputDir, "./test/stubs/_site/");
 });
 
 test("Eleventy set input/output, one file input exitCode (script)", async (t) => {
@@ -226,7 +232,7 @@ test("Eleventy to json", async (t) => {
       {
         url: "/test/",
         inputPath: "./test/stubs--to/test.md",
-        outputPath: "_site/test/index.html",
+        outputPath: "./_site/test/index.html",
         rawInput: localizeNewLines("# hi\n"),
         content: "<h1>hi</h1>\n",
       },
@@ -238,7 +244,7 @@ test("Eleventy to json", async (t) => {
       {
         url: "/test2/",
         inputPath: "./test/stubs--to/test2.liquid",
-        outputPath: "_site/test2/index.html",
+        outputPath: "./_site/test2/index.html",
         rawInput: "{{ hi }}",
         content: "hello",
       },
@@ -261,7 +267,7 @@ test("Eleventy to ndjson", async (t) => {
         t.deepEqual(jsonObj, {
           url: "/test/",
           inputPath: "./test/stubs--to/test.md",
-          outputPath: "_site/test/index.html",
+          outputPath: "./_site/test/index.html",
           rawInput: localizeNewLines("# hi\n"),
           content: "<h1>hi</h1>\n",
         });
@@ -270,7 +276,7 @@ test("Eleventy to ndjson", async (t) => {
         t.deepEqual(jsonObj, {
           url: "/test2/",
           inputPath: "./test/stubs--to/test2.liquid",
-          outputPath: "_site/test2/index.html",
+          outputPath: "./_site/test2/index.html",
           rawInput: `{{ hi }}`,
           content: "hello",
         });
@@ -298,7 +304,7 @@ test("Eleventy to ndjson (returns a stream)", async (t) => {
         t.deepEqual(jsonObj, {
           url: "/test/",
           inputPath: "./test/stubs--to/test.md",
-          outputPath: "_site/test/index.html",
+          outputPath: "./_site/test/index.html",
           rawInput: localizeNewLines("# hi\n"),
           content: "<h1>hi</h1>\n",
         });
@@ -307,7 +313,7 @@ test("Eleventy to ndjson (returns a stream)", async (t) => {
         t.deepEqual(jsonObj, {
           url: "/test2/",
           inputPath: "./test/stubs--to/test2.liquid",
-          outputPath: "_site/test2/index.html",
+          outputPath: "./_site/test2/index.html",
           rawInput: "{{ hi }}",
           content: "hello",
         });
@@ -364,7 +370,7 @@ test("Eleventy programmatic API without init", async (t) => {
       {
         url: "/test/",
         inputPath: "./test/stubs--to/test.md",
-        outputPath: "_site/test/index.html",
+        outputPath: "./_site/test/index.html",
         rawInput: localizeNewLines("# hi\n"),
         content: "<h1>hi</h1>\n",
       },
@@ -376,7 +382,7 @@ test("Eleventy programmatic API without init", async (t) => {
       {
         url: "/test2/",
         inputPath: "./test/stubs--to/test2.liquid",
-        outputPath: "_site/test2/index.html",
+        outputPath: "./_site/test2/index.html",
         rawInput: `{{ hi }}`,
         content: "hello",
       },
@@ -396,7 +402,7 @@ test("Can Eleventy run two executeBuilds in parallel?", async (t) => {
     {
       url: "/test/",
       inputPath: "./test/stubs--to/test.md",
-      outputPath: "_site/test/index.html",
+      outputPath: "./_site/test/index.html",
       rawInput: localizeNewLines("# hi\n"),
       content: "<h1>hi</h1>\n",
     },
@@ -406,7 +412,7 @@ test("Can Eleventy run two executeBuilds in parallel?", async (t) => {
     {
       url: "/test2/",
       inputPath: "./test/stubs--to/test2.liquid",
-      outputPath: "_site/test2/index.html",
+      outputPath: "./_site/test2/index.html",
       rawInput: "{{ hi }}",
       content: "hello",
     },
@@ -794,4 +800,24 @@ test("Access to raw input of file (dryRun), issue #1206", async (t) => {
   t.deepEqual(results[1].rawInput, `This is the second template.{{ collections.tag1[0].rawInput }}`);
 
 	rimrafSync("./test/stubs-1206/_site/");
+});
+
+test("eleventy.before and eleventy.after Event Arguments, directories", async (t) => {
+  t.plan(6);
+  let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.on("eleventy.before", arg => {
+        t.is(arg.inputDir, "./test/noop/");
+        t.is(arg.directories.input, "./test/noop/");
+        t.is(arg.directories.includes, "./test/noop/_includes/");
+      })
+      eleventyConfig.on("eleventy.after", arg => {
+        t.is(arg.inputDir, "./test/noop/");
+        t.is(arg.directories.input, "./test/noop/");
+        t.is(arg.directories.includes, "./test/noop/_includes/");
+      })
+    },
+  });
+
+  let results = await elev.toJSON();
 });

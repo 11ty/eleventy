@@ -16,8 +16,8 @@ class TemplatePassthroughManagerCopyError extends EleventyBaseError {}
 
 class TemplatePassthroughManager {
 	constructor(eleventyConfig) {
-		if (!eleventyConfig) {
-			throw new TemplatePassthroughManagerConfigError("Missing `config` argument.");
+		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
+			throw new TemplatePassthroughManagerConfigError("Missing or invalid `config` argument.");
 		}
 		this.eleventyConfig = eleventyConfig;
 		this.config = eleventyConfig.getConfig();
@@ -42,12 +42,16 @@ class TemplatePassthroughManager {
 		return this._extensionMap;
 	}
 
-	setOutputDir(outputDir) {
-		this.outputDir = outputDir;
+	get dirs() {
+		return this.eleventyConfig.directories;
 	}
 
-	setInputDir(inputDir) {
-		this.inputDir = inputDir;
+	get inputDir() {
+		return this.dirs.input;
+	}
+
+	get outputDir() {
+		return this.dirs.output;
 	}
 
 	setDryRun(isDryRun) {
@@ -109,7 +113,7 @@ class TemplatePassthroughManager {
 	}
 
 	getTemplatePassthroughForPath(path, isIncremental = false) {
-		let inst = new TemplatePassthrough(path, this.outputDir, this.inputDir, this.config);
+		let inst = new TemplatePassthrough(path, this.eleventyConfig);
 
 		inst.setFileSystemSearch(this.fileSystemSearch);
 		inst.setIsIncremental(isIncremental);

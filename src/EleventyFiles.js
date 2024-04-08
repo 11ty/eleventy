@@ -15,7 +15,7 @@ const debug = debugUtil("Eleventy:EleventyFiles");
 class EleventyFilesError extends EleventyBaseError {}
 
 class EleventyFiles {
-	constructor(input, outputDir, formats, eleventyConfig) {
+	constructor(formats, eleventyConfig) {
 		if (!eleventyConfig) {
 			throw new EleventyFilesError("Missing `eleventyConfig`` argument.");
 		}
@@ -24,53 +24,49 @@ class EleventyFiles {
 		this.config = eleventyConfig.getConfig();
 		this.aggregateBench = this.config.benchmarkManager.get("Aggregate");
 
-		this.input = input;
-		this.inputDir = TemplatePath.getDir(this.input);
-		this.outputDir = outputDir;
-
-		this.initConfig();
-
 		this.formats = formats;
 		this.eleventyIgnoreContent = false;
+	}
 
-		// init has not yet been called()
-		this.alreadyInit = false;
+	get dirs() {
+		return this.eleventyConfig.directories;
+	}
+
+	get inputDir() {
+		return this.dirs.input;
+	}
+
+	get outputDir() {
+		return this.dirs.output;
+	}
+
+	get includesDir() {
+		return this.dirs.includes;
+	}
+
+	get layoutsDir() {
+		return this.dirs.layouts;
+	}
+
+	get dataDir() {
+		return this.dirs.data;
+	}
+
+	// Backwards compat
+	getDataDir() {
+		return this.dataDir;
 	}
 
 	setFileSystemSearch(fileSystemSearch) {
 		this.fileSystemSearch = fileSystemSearch;
 	}
 
-	/* Overrides this.input and this.inputDir,
-	 * Useful when input is a file and inputDir is not its direct parent */
-	setInput(inputDir, input) {
-		this.inputDir = inputDir;
-		this.input = input;
-
-		this.initConfig();
-
-		if (this.alreadyInit) {
-			this.init();
-		}
-	}
-
-	initConfig() {
-		this.includesDir = TemplatePath.join(this.inputDir, this.config.dir.includes);
-
-		if ("layouts" in this.config.dir) {
-			this.layoutsDir = TemplatePath.join(this.inputDir, this.config.dir.layouts);
-		}
-	}
-
 	init() {
-		this.alreadyInit = true;
-
-		// Input is a directory
-		if (this.input === this.inputDir) {
-			this.templateGlobs = this.extensionMap.getGlobs(this.inputDir);
+		if (this.dirs.inputFile || this.dirs.inputGlob) {
+			this.templateGlobs = TemplateGlob.map([this.dirs.inputFile || this.dirs.inputGlob]);
 		} else {
-			// input is not a directory
-			this.templateGlobs = TemplateGlob.map([this.input]);
+			// Input is a directory
+			this.templateGlobs = this.extensionMap.getGlobs(this.inputDir);
 		}
 
 		this.initPassthroughManager();
@@ -80,11 +76,12 @@ class EleventyFiles {
 	get validTemplateGlobs() {
 		if (!this._validTemplateGlobs) {
 			let globs;
-			// Input is a directory
-			if (this.input === this.inputDir) {
-				globs = this.extensionMap.getValidGlobs(this.inputDir);
-			} else {
+			// Input is a file
+			if (this.inputFile) {
 				globs = this.templateGlobs;
+			} else {
+				// input is a directory
+				globs = this.extensionMap.getValidGlobs(this.inputDir);
 			}
 			this._validTemplateGlobs = globs;
 		}
@@ -116,8 +113,8 @@ class EleventyFiles {
 			config.ignores = new Set();
 			config.ignores.add("**/node_modules/**");
 		}
+
 		this.config = config;
-		this.initConfig();
 	}
 
 	/* Set command root for local project paths */
@@ -145,8 +142,6 @@ class EleventyFiles {
 
 	initPassthroughManager() {
 		let mgr = new TemplatePassthroughManager(this.eleventyConfig);
-		mgr.setInputDir(this.inputDir);
-		mgr.setOutputDir(this.outputDir);
 		mgr.setRunMode(this.runMode);
 		mgr.extensionMap = this.extensionMap;
 		mgr.setFileSystemSearch(this.fileSystemSearch);
@@ -168,15 +163,10 @@ class EleventyFiles {
 
 	get templateData() {
 		if (!this._templateData) {
-			this._templateData = new TemplateData(this.inputDir, this.eleventyConfig);
+			this._templateData = new TemplateData(this.eleventyConfig);
 		}
+
 		return this._templateData;
-	}
-
-	getDataDir() {
-		let data = this.templateData;
-
-		return data.getDataDir();
 	}
 
 	setupGlobs() {
@@ -296,28 +286,30 @@ class EleventyFiles {
 	}
 
 	getIgnoreFiles() {
-		let ignoreFiles = [];
+		let ignoreFiles = new Set();
 		let rootDirectory = this.localPathRoot || ".";
 
 		if (this.config.useGitIgnore) {
-			ignoreFiles.push(TemplatePath.join(rootDirectory, ".gitignore"));
+			ignoreFiles.add(TemplatePath.join(rootDirectory, ".gitignore"));
 		}
 
 		if (this.eleventyIgnoreContent === false) {
 			let absoluteInputDir = TemplatePath.absolutePath(this.inputDir);
-			ignoreFiles.push(TemplatePath.join(rootDirectory, ".eleventyignore"));
+			ignoreFiles.add(TemplatePath.join(rootDirectory, ".eleventyignore"));
 			if (rootDirectory !== absoluteInputDir) {
-				ignoreFiles.push(TemplatePath.join(this.inputDir, ".eleventyignore"));
+				ignoreFiles.add(TemplatePath.join(this.inputDir, ".eleventyignore"));
 			}
 		}
 
-		return ignoreFiles;
+		return Array.from(ignoreFiles);
 	}
 
+	/* Backwards compat */
 	getIncludesDir() {
 		return this.includesDir;
 	}
 
+	/* Backwards compat */
 	getLayoutsDir() {
 		return this.layoutsDir;
 	}
@@ -359,6 +351,33 @@ class EleventyFiles {
 		});
 	}
 
+	getPathsWithVirtualTemplates(paths) {
+		// Support for virtual templates added in 3.0
+		if (this.config.virtualTemplates && isPlainObject(this.config.virtualTemplates)) {
+			let virtualTemplates = Object.keys(this.config.virtualTemplates).map((path) => {
+				return this.dirs.getInputPath(path);
+			});
+
+			paths = paths.concat(virtualTemplates);
+
+			// Virtual templates can not live at the same place as files on the file system!
+			if (paths.length !== new Set(paths).size) {
+				let conflicts = {};
+				for (let path of paths) {
+					if (conflicts[path]) {
+						throw new Error(
+							`A virtual template had the same path as a file on the file system: "${path}"`,
+						);
+					}
+
+					conflicts[path] = true;
+				}
+			}
+		}
+
+		return paths;
+	}
+
 	async getFiles() {
 		let bench = this.aggregateBench.get("Searching the file system (templates)");
 		bench.before();
@@ -368,24 +387,7 @@ class EleventyFiles {
 
 		// Note 2.0.0-canary.19 removed a `filter` option for custom template syntax here that was unpublished and unused.
 
-		// Support for virtual templates added in 3.0
-		if (this.config.virtualTemplates && isPlainObject(this.config.virtualTemplates)) {
-			let virtualTemplates = Object.keys(this.config.virtualTemplates);
-
-			paths = paths.concat(virtualTemplates);
-			// Virtual templates can not live at the same place as files on the file system!
-			if (paths.length !== new Set(paths).size) {
-				let conflicts = {};
-				for (let path of paths) {
-					if (conflicts[path]) {
-						throw new Error(
-							`A virtual template had the same path as a file on the file system at "${path}"`,
-						);
-					}
-					conflicts[path] = true;
-				}
-			}
-		}
+		paths = this.getPathsWithVirtualTemplates(paths);
 
 		this.pathCache = paths;
 		return paths;
@@ -433,7 +435,7 @@ class EleventyFiles {
 	/* For `eleventy --watch` */
 	// TODO this isn’t great but reduces complexity avoiding using TemplateData:getLocalDataPaths for each template in the cache
 	async getWatcherTemplateJavaScriptDataFiles() {
-		let globs = await this.templateData.getTemplateJavaScriptDataFileGlob();
+		let globs = this.templateData.getTemplateJavaScriptDataFileGlob();
 		let bench = this.aggregateBench.get("Searching the file system (watching)");
 		bench.before();
 		let results = TemplatePath.addLeadingDotSlashArray(
@@ -461,25 +463,21 @@ class EleventyFiles {
 	}
 
 	_getIncludesAndDataDirs() {
-		let files = [];
-		// we want this to fail on "" because we don’t want to ignore the
-		// entire input directory when using ""
-		if (this.config.dir.includes) {
-			files = files.concat(TemplateGlob.map(this.includesDir + "/**"));
+		let rawPaths = new Set();
+		rawPaths.add(this.includesDir);
+		if (this.layoutsDir) {
+			rawPaths.add(this.layoutsDir);
 		}
+		rawPaths.add(this.dataDir);
 
-		// we want this to fail on "" because we don’t want to ignore the
-		// entire input directory when using ""
-		if (this.config.dir.layouts) {
-			files = files.concat(TemplateGlob.map(this.layoutsDir + "/**"));
-		}
-
-		if (this.config.dir.data && this.config.dir.data !== ".") {
-			let dataDir = this.getDataDir();
-			files = files.concat(TemplateGlob.map(dataDir + "/**"));
-		}
-
-		return files;
+		return Array.from(rawPaths)
+			.filter((entry) => {
+				// never ignore the input directory (even if config file returns "" for these)
+				return entry && entry !== this.inputDir;
+			})
+			.map((entry) => {
+				return TemplateGlob.map(entry + "**");
+			});
 	}
 }
 

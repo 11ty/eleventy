@@ -15,7 +15,9 @@ import ConsoleLogger from "./Util/ConsoleLogger.js";
 import PathPrefixer from "./Util/PathPrefixer.js";
 import TemplateConfig from "./TemplateConfig.js";
 import FileSystemSearch from "./FileSystemSearch.js";
+import ProjectDirectories from "./Util/ProjectDirectories.js";
 import PathNormalizer from "./Util/PathNormalizer.js";
+
 import simplePlural from "./Util/Pluralize.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import eventBus from "./EventBus.js";
@@ -40,11 +42,13 @@ const debug = debugUtil("Eleventy");
  * @returns {module:11ty/eleventy/Eleventy~Eleventy}
  */
 class Eleventy {
+	#directories;
+
 	constructor(input, output, options = {}, eleventyConfig = null) {
-		/** @member {String} - Holds the path to the input directory. */
+		/** @member {String} - Holds the path to the input (might be a file or folder) */
 		this.rawInput = input;
 
-		/** @member {String} - Holds the path to the output directory. */
+		/** @member {String} - Holds the path to the output directory */
 		this.rawOutput = output;
 
 		/** @member {module:11ty/eleventy/TemplateConfig} - Override the config instance (for centralized config re-use) */
@@ -133,6 +137,7 @@ class Eleventy {
 
 		this.eleventyConfig.setProjectUsingEsm(this.isEsm);
 		this.eleventyConfig.setLogger(this.logger);
+		this.eleventyConfig.setDirectories(this.directories);
 
 		if (this.pathPrefix || this.pathPrefix === "") {
 			this.eleventyConfig.setPathPrefix(this.pathPrefix);
@@ -159,6 +164,7 @@ class Eleventy {
 		 * @member {Object} - Initialize Eleventy’s configuration, including the user config file
 		 */
 		this.config = this.eleventyConfig.getConfig();
+		// this.directories.
 
 		/**
 		 * @member {Object} - Singleton BenchmarkManager instance
@@ -182,13 +188,6 @@ class Eleventy {
 		} else {
 			// Fall back to configuration
 			this.setIsVerbose(!this.config.quietMode);
-		}
-
-		/**
-		 * @member {Boolean} - Explicit input directory (usually used when input is a single file/serverless)
-		 */
-		if (this.options.inputDir) {
-			this.setInputDir(this.options.inputDir);
 		}
 
 		if (performance) {
@@ -227,28 +226,42 @@ class Eleventy {
 		return new Date().getTime();
 	}
 
+	/** @member {module:11ty/eleventy/Util/ProjectDirectories} */
+	get directories() {
+		if (!this.#directories) {
+			this.#directories = new ProjectDirectories();
+			this.#directories.setInput(this.rawInput, this.options.inputDir);
+			this.#directories.setOutput(this.rawOutput);
+		}
+
+		return this.#directories;
+	}
+
 	/** @type {String} */
 	get input() {
-		return this.rawInput || this.config.dir.input;
+		return this.directories.inputFile || this.directories.input || this.config.dir.input;
+	}
+
+	/** @type {String} */
+	get inputFile() {
+		return this.directories.inputFile;
 	}
 
 	/** @type {String} */
 	get inputDir() {
-		if (this._inputDir) {
-			// set manually via setter
-			return this._inputDir;
-		}
-
-		return TemplatePath.getDir(this.input);
+		return this.directories.input;
 	}
 
-	setInputDir(dir) {
-		this._inputDir = dir;
+	// Not used internally, removed in 3.0.
+	setInputDir() {
+		throw new Error(
+			"Eleventy->setInputDir was removed in 3.0. Use the inputDir option to the constructor",
+		);
 	}
 
 	/** @type {String} */
 	get outputDir() {
-		return this.rawOutput || this.config.dir.output;
+		return this.directories.output || this.config.dir.output;
 	}
 
 	/**
@@ -405,8 +418,6 @@ class Eleventy {
 			await this.config.events.emit("eleventy.env", this.env);
 		}
 
-		this.config.inputDir = this.inputDir;
-
 		let formats = this.formatsOverride || this.config.templateFormats;
 		this.extensionMap = new EleventyExtensionMap(formats, this.eleventyConfig);
 		await this.config.events.emit("eleventy.extensionmap", this.extensionMap);
@@ -417,7 +428,7 @@ class Eleventy {
 		// TODO
 		// this.eleventyServe.setWatcherOptions(this.getChokidarConfig());
 
-		this.templateData = new TemplateData(this.inputDir, this.eleventyConfig);
+		this.templateData = new TemplateData(this.eleventyConfig);
 		this.templateData.setProjectUsingEsm(this.isEsm);
 		this.templateData.extensionMap = this.extensionMap;
 		if (this.env) {
@@ -425,14 +436,8 @@ class Eleventy {
 		}
 		this.templateData.setFileSystemSearch(this.fileSystemSearch);
 
-		this.eleventyFiles = new EleventyFiles(
-			this.inputDir,
-			this.outputDir,
-			formats,
-			this.eleventyConfig,
-		);
+		this.eleventyFiles = new EleventyFiles(formats, this.eleventyConfig);
 		this.eleventyFiles.setFileSystemSearch(this.fileSystemSearch);
-		this.eleventyFiles.setInput(this.inputDir, this.input);
 		this.eleventyFiles.setRunMode(this.runMode);
 		this.eleventyFiles.extensionMap = this.extensionMap;
 		// This needs to be set before init or it’ll construct a new one
@@ -446,32 +451,15 @@ class Eleventy {
 		}
 
 		// Note these directories are all project root relative
-		let dirs = {
-			input: this.inputDir,
-			data: this.templateData.getDataDir(),
-			includes: this.eleventyFiles.getIncludesDir(),
-			layouts: this.eleventyFiles.getLayoutsDir(),
-			output: this.outputDir,
-		};
+		this.config.events.emit("eleventy.directories", this.directories.getUserspaceInstance());
 
-		// eleventy.directories in global data
-		this.templateData.setGlobalDataDirectories(dirs);
-		this.config.events.emit("eleventy.directories", dirs);
-
-		this.writer = new TemplateWriter(
-			this.inputDir,
-			this.outputDir,
-			formats,
-			this.templateData,
-			this.eleventyConfig,
-		);
+		this.writer = new TemplateWriter(formats, this.templateData, this.eleventyConfig);
 
 		if (!options.viaConfigReset) {
 			// set or restore cache
 			this._cache("TemplateWriter", this.writer);
 		}
 
-		this.writer.setInput(this.inputDir, this.input);
 		this.writer.logger = this.logger;
 		this.writer.extensionMap = this.extensionMap;
 		this.writer.setEleventyFiles(this.eleventyFiles);
@@ -479,15 +467,18 @@ class Eleventy {
 		this.writer.setRunInitialBuild(this.isRunInitialBuild);
 		this.writer.setIncrementalBuild(this.isIncremental);
 
-		debug(`Directories:
-Input (Dir): ${dirs.input}
-Input (File): ${this.rawInput}
-Data: ${dirs.data}
-Includes: ${dirs.includes}
-Layouts: ${dirs.layouts}
-Output: ${dirs.output}
+		let debugStr = `Directories:
+  Input:
+    Directory: ${this.directories.input}
+    File: ${this.directories.inputFile || false}
+    Glob: ${this.directories.inputGlob || false}
+  Data: ${this.directories.data}
+  Includes: ${this.directories.includes}
+  Layouts: ${this.directories.layouts || false}
+  Output: ${this.directories.output}
 Template Formats: ${formats.join(",")}
-Verbose Output: ${this.verboseMode}`);
+Verbose Output: ${this.verboseMode}`;
+		debug(debugStr);
 
 		this.writer.setVerboseOutput(this.verboseMode);
 		this.writer.setDryRun(this.isDryRun);
@@ -1210,9 +1201,16 @@ Arguments:
 		let hasError = false;
 
 		try {
+			let directories = this.directories.getUserspaceInstance();
 			let eventsArg = {
-				inputDir: this.config.inputDir,
+				directories,
+
+				// v3.0.0-alpha.6, changed to use `directories` instead (this was only used by serverless plugin)
+				inputDir: directories.input,
+
+				// Deprecated (not normalized) use `directories` instead.
 				dir: this.config.dir,
+
 				runMode: this.runMode,
 				outputMode: to,
 				incremental: this.isIncremental,

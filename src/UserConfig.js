@@ -2,6 +2,7 @@ import chalk from "kleur";
 import { DateTime } from "luxon";
 import debugUtil from "debug";
 import { RetrieveGlobals } from "node-retrieve-globals";
+import { TemplatePath } from "@11ty/eleventy-utils";
 
 import EventEmitter from "./Util/AsyncEventEmitter.js";
 import EleventyCompatibility from "./Util/Compatibility.js";
@@ -868,6 +869,11 @@ class UserConfig {
 	}
 
 	addTemplate(virtualInputPath, content, data) {
+		// Lookups keys must be normalized
+		virtualInputPath = TemplatePath.stripLeadingDotSlash(
+			TemplatePath.standardizeFilePath(virtualInputPath),
+		);
+
 		this.virtualTemplates[virtualInputPath] = {
 			inputPath: virtualInputPath,
 			data,
@@ -928,6 +934,7 @@ class UserConfig {
 			serverPassthroughCopyBehavior: this.serverPassthroughCopyBehavior,
 			urlTransforms: this.urlTransforms,
 			virtualTemplates: this.virtualTemplates,
+			// `directories` is merged manually prior to plugin processing
 		};
 
 		if (Array.isArray(this.dataFileSuffixesOverride)) {

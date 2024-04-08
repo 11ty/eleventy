@@ -2,17 +2,18 @@ import test from "ava";
 import { Liquid, Drop } from "liquidjs";
 
 import TemplateRender from "../src/TemplateRender.js";
-import TemplateConfig from "../src/TemplateConfig.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
-async function getNewTemplateRender(name, inputDir, userConfig = {}) {
-  let eleventyConfig = new TemplateConfig();
-  for (let key in userConfig) {
-    eleventyConfig.userConfig[key] = userConfig[key];
-  }
-  await eleventyConfig.init();
+import { getTemplateConfigInstance } from "./_testHelpers.js";
 
-  let tr = new TemplateRender(name, inputDir, eleventyConfig);
+async function getNewTemplateRender(name, inputDir, userConfig = {}) {
+	let eleventyConfig = await getTemplateConfigInstance({
+		dir: {
+			input: inputDir
+		}
+	}, null, userConfig);
+
+  let tr = new TemplateRender(name, eleventyConfig);
   tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   await tr.init();
   return tr;

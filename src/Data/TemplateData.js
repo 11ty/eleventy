@@ -1,6 +1,4 @@
-import util from "node:util";
 import path from "node:path";
-import fs from "graceful-fs";
 
 import lodash from "@11ty/lodash-custom";
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
@@ -14,7 +12,6 @@ import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import TemplateDataInitialGlobalData from "./TemplateDataInitialGlobalData.js";
 import { EleventyImport, EleventyLoadContent } from "../Util/Require.js";
 
-const fsStatAsync = util.promisify(fs.stat);
 const { set: lodashSet, get: lodashGet } = lodash;
 const debugWarn = debugUtil("Eleventy:Warnings");
 const debug = debugUtil("Eleventy:TemplateData");
@@ -24,19 +21,17 @@ class TemplateDataConfigError extends EleventyBaseError {}
 class TemplateDataParseError extends EleventyBaseError {}
 
 class TemplateData {
-	constructor(inputDir, eleventyConfig) {
+	constructor(eleventyConfig) {
 		if (!eleventyConfig) {
 			throw new TemplateDataConfigError("Missing `config`.");
 		}
 		this.eleventyConfig = eleventyConfig;
 		this.config = this.eleventyConfig.getConfig();
+
 		this.benchmarks = {
 			data: this.config.benchmarkManager.get("Data"),
 			aggregate: this.config.benchmarkManager.get("Aggregate"),
 		};
-
-		this.inputDirNeedsCheck = false;
-		this.setInputDir(inputDir);
 
 		this.rawImports = {};
 		this.globalData = null;
@@ -44,6 +39,28 @@ class TemplateData {
 		this.isEsm = false;
 
 		this.initialGlobalData = new TemplateDataInitialGlobalData(this.eleventyConfig);
+	}
+
+	get dirs() {
+		return this.eleventyConfig.directories;
+	}
+
+	get inputDir() {
+		return this.dirs.input;
+	}
+
+	// if this was set but `falsy` we would fallback to inputDir
+	get dataDir() {
+		return this.dirs.data;
+	}
+
+	// This was async in 2.0 and prior but doesn’t need to be any more.
+	getInputDir() {
+		return this.dirs.input;
+	}
+
+	getDataDir() {
+		return this.dataDir;
 	}
 
 	get _fsExistsCache() {
@@ -54,10 +71,6 @@ class TemplateData {
 
 	setFileSystemSearch(fileSystemSearch) {
 		this.fileSystemSearch = fileSystemSearch;
-	}
-
-	setGlobalDataDirectories(dirsObject) {
-		this.directories = dirsObject;
 	}
 
 	setProjectUsingEsm(isEsmProject) {
@@ -88,14 +101,6 @@ class TemplateData {
 		this.config = config;
 	}
 
-	setInputDir(inputDir) {
-		this.inputDirNeedsCheck = true;
-		this.inputDir = inputDir;
-		this.dataDir = this.config.dir.data
-			? TemplatePath.join(inputDir, this.config.dir.data)
-			: inputDir;
-	}
-
 	async getRawImports() {
 		try {
 			this.rawImports[this.config.keys.package] = await EleventyImport("package.json", "json");
@@ -107,46 +112,14 @@ class TemplateData {
 		return this.rawImports;
 	}
 
-	getDataDir() {
-		return this.dataDir;
-	}
-
 	clearData() {
 		this.globalData = null;
 		this.configApiGlobalData = null;
 		this.templateDirectoryData = {};
 	}
 
-	_getGlobalDataGlobByExtension(dir, extension) {
-		return TemplateGlob.normalizePath(
-			dir,
-			"/",
-			this.config.dir.data !== "." ? this.config.dir.data : "",
-			`/**/*.${extension}`,
-		);
-	}
-
-	async _checkInputDir() {
-		if (this.inputDirNeedsCheck) {
-			let globalPathStat = await fsStatAsync(this.inputDir);
-
-			if (!globalPathStat.isDirectory()) {
-				throw new Error("Could not find data path directory: " + this.inputDir);
-			}
-
-			this.inputDirNeedsCheck = false;
-		}
-	}
-
-	async getInputDir() {
-		let dir = ".";
-
-		if (this.inputDir) {
-			await this._checkInputDir();
-			dir = this.inputDir;
-		}
-
-		return dir;
+	_getGlobalDataGlobByExtension(extension) {
+		return TemplateGlob.normalizePath(this.dataDir, `/**/*.${extension}`);
 	}
 
 	// This is a backwards compatibility helper with the old `jsDataFileSuffix` configuration API
@@ -198,13 +171,12 @@ class TemplateData {
 			}
 		}
 
-		let dir = await this.getInputDir();
 		let paths = [];
 		if (globSuffixesWithLeadingDot.size > 0) {
-			paths.push(`${dir}/**/*.{${Array.from(globSuffixesWithLeadingDot).join(",")}}`);
+			paths.push(`${this.inputDir}**/*.{${Array.from(globSuffixesWithLeadingDot).join(",")}}`);
 		}
 		if (globSuffixesWithoutLeadingDot.size > 0) {
-			paths.push(`${dir}/**/*{${Array.from(globSuffixesWithoutLeadingDot).join(",")}}`);
+			paths.push(`${this.inputDir}**/*{${Array.from(globSuffixesWithoutLeadingDot).join(",")}}`);
 		}
 
 		return TemplatePath.addLeadingDotSlashArray(paths);
@@ -212,27 +184,23 @@ class TemplateData {
 
 	// For spidering dependencies
 	// TODO Can we reuse getTemplateDataFileGlob instead? Maybe just filter off the .json files before scanning for dependencies
-	async getTemplateJavaScriptDataFileGlob() {
-		let dir = await this.getInputDir();
-
+	getTemplateJavaScriptDataFileGlob() {
 		let paths = [];
 		let suffixes = this.getDataFileSuffixes();
 		for (let suffix of suffixes) {
 			if (suffix) {
 				// TODO this check is purely for backwards compat and I kinda feel like it shouldn’t be here
-				// paths.push(`${dir}/**/*${suffix || ""}.cjs`); // Same as above
-				paths.push(`${dir}/**/*${suffix || ""}.js`);
+				// paths.push(`${this.inputDir}/**/*${suffix || ""}.cjs`); // Same as above
+				paths.push(`${this.inputDir}**/*${suffix || ""}.js`);
 			}
 		}
 
 		return TemplatePath.addLeadingDotSlashArray(paths);
 	}
 
-	async getGlobalDataGlob() {
-		let dir = await this.getInputDir();
-
+	getGlobalDataGlob() {
 		let extGlob = this.getGlobalDataExtensionPriorities().join(",");
-		return [this._getGlobalDataGlobByExtension(dir, "{" + extGlob + "}")];
+		return [this._getGlobalDataGlobByExtension("{" + extGlob + "}")];
 	}
 
 	getWatchPathCache() {
@@ -258,7 +226,7 @@ class TemplateData {
 
 		let fsBench = this.benchmarks.aggregate.get("Searching the file system (data)");
 		fsBench.before();
-		let globs = await this.getGlobalDataGlob();
+		let globs = this.getGlobalDataGlob();
 		let paths = await this.fileSystemSearch.search("global-data", globs);
 		fsBench.after();
 
@@ -339,11 +307,11 @@ class TemplateData {
 					Object.assign(globalData.eleventy.env, this.environmentVariables);
 				}
 
-				if (this.directories) {
+				if (this.dirs) {
 					if (!("directories" in globalData.eleventy)) {
 						globalData.eleventy.directories = {};
 					}
-					Object.assign(globalData.eleventy.directories, this.directories);
+					Object.assign(globalData.eleventy.directories, this.dirs.getUserspaceInstance());
 				}
 
 				resolve(globalData);
@@ -572,7 +540,7 @@ class TemplateData {
 	async getLocalDataPaths(templatePath) {
 		let paths = [];
 		let parsed = path.parse(templatePath);
-		let inputDir = TemplatePath.addLeadingDotSlash(TemplatePath.normalize(this.inputDir));
+		let inputDir = this.inputDir;
 
 		debugDev("getLocalDataPaths(%o)", templatePath);
 		debugDev("parsed.dir: %o", parsed.dir);

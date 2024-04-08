@@ -3,7 +3,6 @@ import os from "node:os";
 import path from "node:path";
 
 import fs from "graceful-fs";
-import normalize from "normalize-path";
 import lodash from "@11ty/lodash-custom";
 import { DateTime } from "luxon";
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
@@ -34,20 +33,14 @@ const debugDev = debugUtil("Dev:Eleventy:Template");
 class EleventyTransformError extends EleventyBaseError {}
 
 class Template extends TemplateContent {
-	constructor(templatePath, inputDir, outputDir, templateData, extensionMap, config) {
+	constructor(templatePath, templateData, extensionMap, config) {
 		debugDev("new Template(%o)", templatePath);
-		super(templatePath, inputDir, config);
+		super(templatePath, config);
 
 		this.parsed = path.parse(templatePath);
 
 		// for pagination
 		this.extraOutputSubdirectory = "";
-
-		if (outputDir) {
-			this.outputDir = normalize(outputDir);
-		} else {
-			this.outputDir = false;
-		}
 
 		this.extensionMap = extensionMap;
 
@@ -60,7 +53,7 @@ class Template extends TemplateContent {
 		this.isDryRun = false;
 		this.writeCount = 0;
 
-		this.fileSlug = new TemplateFileSlug(this.inputPath, this.inputDir, this.extensionMap);
+		this.fileSlug = new TemplateFileSlug(this.inputPath, this.extensionMap, this.eleventyConfig);
 		this.fileSlugStr = this.fileSlug.getSlug();
 		this.filePathStem = this.fileSlug.getFullPathWithoutExtension();
 
@@ -72,9 +65,6 @@ class Template extends TemplateContent {
 
 	setTemplateData(templateData) {
 		this.templateData = templateData;
-		if (this.templateData) {
-			this.templateData.setInputDir(this.inputDir);
-		}
 	}
 
 	get existsCache() {
@@ -146,12 +136,7 @@ class Template extends TemplateContent {
 
 	getLayout(layoutKey) {
 		// already cached downstream in TemplateLayout -> TemplateCache
-		return TemplateLayout.getTemplate(
-			layoutKey,
-			this.getInputDir(),
-			this.eleventyConfig,
-			this.extensionMap,
-		);
+		return TemplateLayout.getTemplate(layoutKey, this.eleventyConfig, this.extensionMap);
 	}
 
 	get baseFile() {
@@ -863,8 +848,6 @@ class Template extends TemplateContent {
 		// TODO do we need to even run the constructor here or can we simplify it even more
 		let tmpl = new Template(
 			this.inputPath,
-			this.inputDir,
-			this.outputDir,
 			this.templateData,
 			this.extensionMap,
 			this.eleventyConfig,

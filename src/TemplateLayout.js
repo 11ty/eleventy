@@ -10,15 +10,15 @@ import templateCache from "./TemplateCache.js";
 const debugDev = debugUtil("Dev:Eleventy:TemplateLayout");
 
 class TemplateLayout extends TemplateContent {
-	constructor(key, inputDir, extensionMap, eleventyConfig) {
-		if (!eleventyConfig) {
+	constructor(key, extensionMap, eleventyConfig) {
+		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
 			throw new Error("Expected `eleventyConfig` in TemplateLayout constructor.");
 		}
 
-		let resolver = new TemplateLayoutPathResolver(key, inputDir, extensionMap, eleventyConfig);
+		let resolver = new TemplateLayoutPathResolver(key, extensionMap, eleventyConfig);
 		let resolvedPath = resolver.getFullPath();
 
-		super(resolvedPath, inputDir, eleventyConfig);
+		super(resolvedPath, eleventyConfig);
 
 		if (!extensionMap) {
 			throw new Error("Expected `extensionMap` in TemplateLayout constructor.");
@@ -28,7 +28,6 @@ class TemplateLayout extends TemplateContent {
 		this.key = resolver.getNormalizedLayoutKey();
 		this.dataKeyLayoutPath = key;
 		this.inputPath = resolvedPath;
-		this.inputDir = inputDir;
 	}
 
 	getKey() {
@@ -47,15 +46,16 @@ class TemplateLayout extends TemplateContent {
 		return TemplatePath.join(inputDir, key);
 	}
 
-	static getTemplate(key, inputDir, eleventyConfig, extensionMap) {
+	static getTemplate(key, eleventyConfig, extensionMap) {
 		let config = eleventyConfig.getConfig();
 		if (!config.useTemplateCache) {
-			return new TemplateLayout(key, inputDir, extensionMap, eleventyConfig);
+			return new TemplateLayout(key, extensionMap, eleventyConfig);
 		}
 
+		let inputDir = eleventyConfig.directories.input;
 		let fullKey = TemplateLayout.resolveFullKey(key, inputDir);
 		if (!templateCache.has(fullKey)) {
-			let layout = new TemplateLayout(key, inputDir, extensionMap, eleventyConfig);
+			let layout = new TemplateLayout(key, extensionMap, eleventyConfig);
 
 			templateCache.add(layout);
 			debugDev("Added %o to TemplateCache", key);
@@ -70,7 +70,6 @@ class TemplateLayout extends TemplateContent {
 		return {
 			// Used by `TemplateLayout.getTemplate()`
 			key: this.dataKeyLayoutPath,
-			inputDir: this.inputDir,
 
 			// used by `this.getData()`
 			frontMatterData: await this.getFrontMatterData(),
@@ -97,7 +96,6 @@ class TemplateLayout extends TemplateContent {
 
 						let layout = TemplateLayout.getTemplate(
 							parentLayoutKey,
-							mapEntry.inputDir,
 							this.eleventyConfig,
 							this.extensionMap,
 						);
@@ -190,11 +188,10 @@ class TemplateLayout extends TemplateContent {
 
 			if (layoutMap.length > 1) {
 				let [, /*currentLayout*/ parentLayout] = layoutMap;
-				let { key, inputDir } = parentLayout;
+				let { key } = parentLayout;
 
 				let layoutTemplate = TemplateLayout.getTemplate(
 					key,
-					inputDir,
 					this.eleventyConfig,
 					this.extensionMap,
 				);

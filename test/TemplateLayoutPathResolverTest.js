@@ -1,20 +1,24 @@
 import test from "ava";
 
-import TemplateConfig from "../src/TemplateConfig.js";
 import TemplateLayoutPathResolver from "../src/TemplateLayoutPathResolver.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
+import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
+
 async function getResolverInstance(path, inputDir, { eleventyConfig, map } = {}) {
   if (!eleventyConfig) {
-    eleventyConfig = new TemplateConfig();
-    await eleventyConfig.init();
+    eleventyConfig = await getTemplateConfigInstance({
+      dir: {
+        input: inputDir
+      }
+    });
   }
 
   if (!map) {
     map = new EleventyExtensionMap(["liquid", "md", "njk", "html", "11ty.js"], eleventyConfig);
   }
 
-  return new TemplateLayoutPathResolver(path, inputDir, map, eleventyConfig);
+  return new TemplateLayoutPathResolver(path, map, eleventyConfig);
 }
 
 test("Layout", async (t) => {
@@ -28,12 +32,12 @@ test("Layout already has extension", async (t) => {
 });
 
 test("Layout (uses empty string includes folder)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init({
+  let eleventyConfig = await getTemplateConfigInstance({
     templateFormats: ["liquid"],
     dir: {
-      includes: "",
-    },
+      input: "test/stubs",
+      includes: ""
+    }
   });
 
   let res = await getResolverInstance("includesemptystring", "./test/stubs", {
@@ -44,12 +48,12 @@ test("Layout (uses empty string includes folder)", async (t) => {
 });
 
 test("Layout (uses empty string includes folder) already has extension", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init({
+  let eleventyConfig = await getTemplateConfigInstance({
     templateFormats: ["liquid"],
     dir: {
-      includes: "",
-    },
+      input: "test/stubs",
+      includes: ""
+    }
   });
 
   let res = await getResolverInstance("includesemptystring.liquid", "./test/stubs", {
@@ -60,13 +64,13 @@ test("Layout (uses empty string includes folder) already has extension", async (
 });
 
 test("Layout (uses layouts folder)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init({
+  let eleventyConfig = await getTemplateConfigInstance({
     templateFormats: ["liquid"],
     dir: {
+      input: "test/stubs",
       layouts: "_layouts",
       includes: "_includes",
-    },
+    }
   });
 
   let res = await getResolverInstance("layoutsdefault", "./test/stubs", {
@@ -77,13 +81,12 @@ test("Layout (uses layouts folder)", async (t) => {
 });
 
 test("Layout (uses layouts folder) already has extension", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init({
+  let eleventyConfig = await getTemplateConfigInstance({
     templateFormats: ["liquid"],
     dir: {
+      input: "test/stubs",
       layouts: "_layouts",
-      includes: "_includes",
-    },
+    }
   });
 
   let res = await getResolverInstance("layoutsdefault.liquid", "./test/stubs", {
@@ -94,13 +97,12 @@ test("Layout (uses layouts folder) already has extension", async (t) => {
 });
 
 test("Layout (uses empty string layouts folder)", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init({
+  let eleventyConfig = await getTemplateConfigInstance({
     templateFormats: ["liquid"],
     dir: {
+      input: "test/stubs",
       layouts: "",
-      includes: "_includes",
-    },
+    }
   });
 
   let res = await getResolverInstance("layoutsemptystring", "./test/stubs", {
@@ -111,15 +113,11 @@ test("Layout (uses empty string layouts folder)", async (t) => {
 });
 
 test("Layout (uses empty string layouts folder) no template resolution", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  eleventyConfig.userConfig.setLayoutResolution(false);
-
-  await eleventyConfig.init({
-    templateFormats: ["liquid"],
-    dir: {
-      layouts: "",
-      includes: "_includes",
-    },
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs",
+    layouts: ""
+  }, function(cfg) {
+    cfg.setLayoutResolution(false);
   });
 
   let res = await getResolverInstance("layoutsemptystring", "./test/stubs", {
@@ -128,17 +126,18 @@ test("Layout (uses empty string layouts folder) no template resolution", async (
 
   t.throws(() => {
     res.getFileName();
+  }, {
+    message: `You’re trying to use a layout that does not exist: layoutsemptystring`
   });
 });
 
 test("Layout (uses empty string layouts folder) already has extension", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init({
+  let eleventyConfig = await getTemplateConfigInstance({
     templateFormats: ["liquid"],
     dir: {
+      input: "test/stubs",
       layouts: "",
-      includes: "_includes",
-    },
+    }
   });
 
   let res = await getResolverInstance("layoutsemptystring.liquid", "./test/stubs", {

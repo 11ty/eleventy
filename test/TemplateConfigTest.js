@@ -4,6 +4,8 @@ import md from "markdown-it";
 import TemplateConfig from "../src/TemplateConfig.js";
 import defaultConfig from "../src/defaultConfig.js";
 
+import { getTemplateConfigInstance } from "./_testHelpers.js";
+
 test("Template Config local config overrides base config", async (t) => {
   let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   await templateCfg.init();
@@ -556,4 +558,32 @@ test("Async namespace", async (t) => {
   let cfg = templateCfg.getConfig();
   t.not(Object.keys(cfg.liquidFilters).indexOf("testNamespaceMyFilterName"), -1);
   t.not(Object.keys(cfg.nunjucksFilters).indexOf("testNamespaceMyFilterName"), -1);
+});
+
+test("ProjectDirectories instance exists in user accessible config", async (t) => {
+	let eleventyConfig = await getTemplateConfigInstance();
+  let cfg = eleventyConfig.getConfig();
+
+  t.truthy(cfg.directories);
+  t.is(cfg.directories.input, "./");
+  t.is(cfg.directories.data, "./_data/");
+  t.is(cfg.directories.includes, "./_includes/");
+  t.is(cfg.directories.layouts, undefined);
+  t.is(cfg.directories.output, "./_site/");
+
+	t.throws(() => {
+		cfg.directories.input = "should not work";
+	});
+	t.throws(() => {
+		cfg.directories.data = "should not work";
+	});
+	t.throws(() => {
+		cfg.directories.includes = "should not work";
+	});
+	t.throws(() => {
+		cfg.directories.layouts = "should not work";
+	});
+	t.throws(() => {
+		cfg.directories.output = "should not work";
+	});
 });

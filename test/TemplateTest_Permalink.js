@@ -1,9 +1,10 @@
 import test from "ava";
 import fs from "fs";
 
-import TemplateConfig from "../src/TemplateConfig.js";
 import TemplateData from "../src/Data/TemplateData.js";
 import getNewTemplate from "./_getNewTemplateForTests.js";
+
+import { getTemplateConfigInstance } from "./_testHelpers.js";
 
 async function writeMapEntries(mapEntries) {
   let promises = [];
@@ -155,10 +156,14 @@ test.skip("Permalink with dates on file name regex!", async (t) => {
 });
 
 test("Reuse permalink in directory specific data file", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+	let eleventyConfig = await getTemplateConfigInstance({
+		dir: {
+			input: "test/stubs",
+			output: "dist"
+		}
+	});
 
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
+  let dataObj = new TemplateData(eleventyConfig);
   let tmpl = await getNewTemplate(
     "./test/stubs/reuse-permalink/test1.liquid",
     "./test/stubs/",

@@ -8,8 +8,8 @@ eventBus.on("eleventy.resourceModified", (path) => {
 });
 
 class CustomEngine extends TemplateEngine {
-	constructor(name, dirs, config) {
-		super(name, dirs, config);
+	constructor(name, eleventyConfig) {
+		super(name, eleventyConfig);
 
 		this.entry = this.getExtensionMapEntry();
 		this.needsInit = "init" in this.entry && typeof this.entry.init === "function";

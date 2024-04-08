@@ -1,14 +1,18 @@
 import test from "ava";
 
 import TemplateRender from "../src/TemplateRender.js";
-import TemplateConfig from "../src/TemplateConfig.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
-async function getNewTemplateRender(name, inputDir) {
-  let eleventyConfig = new TemplateConfig();
-  await eleventyConfig.init();
+import { getTemplateConfigInstance } from "./_testHelpers.js";
 
-  let tr = new TemplateRender(name, inputDir, eleventyConfig);
+async function getNewTemplateRender(name, inputDir) {
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: inputDir
+    }
+  });
+
+  let tr = new TemplateRender(name, eleventyConfig);
   tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
   await tr.init();
   return tr;
@@ -23,7 +27,7 @@ test("Basic", async (t) => {
 
 test("Includes Dir", async (t) => {
   let tr = await getNewTemplateRender("liquid", "./test/stubs");
-  t.is(tr.getIncludesDir(), "test/stubs/_includes");
+  t.is(tr.getIncludesDir(), "./test/stubs/_includes/");
 });
 
 test("Invalid override", async (t) => {

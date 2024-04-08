@@ -20,8 +20,6 @@ class EleventyTemplateError extends EleventyBaseError {}
 
 class TemplateWriter {
 	constructor(
-		inputPath,
-		outputDir,
 		templateFormats, // TODO remove this, see `get eleventyFiles` first
 		templateData,
 		eleventyConfig,
@@ -32,10 +30,6 @@ class TemplateWriter {
 		this.eleventyConfig = eleventyConfig;
 		this.config = eleventyConfig.getConfig();
 		this.userConfig = eleventyConfig.userConfig;
-
-		this.input = inputPath;
-		this.inputDir = TemplatePath.getDir(inputPath);
-		this.outputDir = outputDir;
 
 		this.templateFormats = templateFormats;
 
@@ -49,11 +43,16 @@ class TemplateWriter {
 		this._templatePathCache = new Map();
 	}
 
-	/* Overrides this.input and this.inputDir
-	 * Useful when input is a file and inputDir is not its direct parent */
-	setInput(inputDir, input) {
-		this.inputDir = inputDir;
-		this.input = input;
+	get dirs() {
+		return this.eleventyConfig.directories;
+	}
+
+	get inputDir() {
+		return this.dirs.input;
+	}
+
+	get outputDir() {
+		return this.dirs.output;
 	}
 
 	get templateFormats() {
@@ -124,14 +123,8 @@ class TemplateWriter {
 		// usually Eleventy.js will setEleventyFiles with the EleventyFiles manager
 		if (!this._eleventyFiles) {
 			// if not, we can create one (used only by tests)
-			this._eleventyFiles = new EleventyFiles(
-				this.inputDir,
-				this.outputDir,
-				this.templateFormats,
-				this.eleventyConfig,
-			);
+			this._eleventyFiles = new EleventyFiles(this.templateFormats, this.eleventyConfig);
 
-			this._eleventyFiles.setInput(this.inputDir, this.input);
 			this._eleventyFiles.setFileSystemSearch(new FileSystemSearch());
 			this._eleventyFiles.init();
 		}
@@ -162,14 +155,7 @@ class TemplateWriter {
 			// TODO reset other constructor things here like inputDir/outputDir/extensionMap/
 			tmpl.setTemplateData(this.templateData);
 		} else {
-			tmpl = new Template(
-				path,
-				this.inputDir,
-				this.outputDir,
-				this.templateData,
-				this.extensionMap,
-				this.eleventyConfig,
-			);
+			tmpl = new Template(path, this.templateData, this.extensionMap, this.eleventyConfig);
 
 			tmpl.setOutputFormat(to);
 

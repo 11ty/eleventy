@@ -2,7 +2,6 @@ import os from "node:os";
 import util from "node:util";
 
 import fs from "graceful-fs";
-import normalize from "normalize-path";
 import matter from "gray-matter";
 import lodash from "@11ty/lodash-custom";
 import { TemplatePath } from "@11ty/eleventy-utils";
@@ -26,19 +25,26 @@ class TemplateContentCompileError extends EleventyBaseError {}
 class TemplateContentRenderError extends EleventyBaseError {}
 
 class TemplateContent {
-	constructor(inputPath, inputDir, config) {
-		if (!config) {
-			throw new TemplateContentConfigError("Missing `config` argument to TemplateContent");
+	constructor(inputPath, templateConfig) {
+		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
+			throw new TemplateContentConfigError(
+				"Missing or invalid `templateConfig` argument to TemplateContent",
+			);
 		}
-		this.eleventyConfig = config;
-
+		this.eleventyConfig = templateConfig;
 		this.inputPath = inputPath;
+	}
 
-		if (inputDir) {
-			this.inputDir = normalize(inputDir);
-		} else {
-			this.inputDir = false;
-		}
+	get dirs() {
+		return this.eleventyConfig.directories;
+	}
+
+	get inputDir() {
+		return this.dirs.input;
+	}
+
+	get outputDir() {
+		return this.dirs.output;
 	}
 
 	getResetTypes(types) {
@@ -131,7 +137,7 @@ class TemplateContent {
 
 	async getTemplateRender() {
 		if (!this._templateRender) {
-			this._templateRender = new TemplateRender(this.inputPath, this.inputDir, this.eleventyConfig);
+			this._templateRender = new TemplateRender(this.inputPath, this.eleventyConfig);
 			this._templateRender.extensionMap = this.extensionMap;
 			await this._templateRender.init();
 		}
@@ -166,11 +172,14 @@ class TemplateContent {
 	}
 
 	isVirtualTemplate() {
-		return !!this.config.virtualTemplates[this.inputPath];
+		let def = this.getVirtualTemplateDefinition();
+		return !!def;
 	}
 
 	getVirtualTemplateDefinition() {
-		return this.config.virtualTemplates[this.inputPath];
+		let inputDirRelativeInputPath =
+			this.eleventyConfig.directories.getInputPathRelativeToInputDirectory(this.inputPath);
+		return this.config.virtualTemplates[inputDirRelativeInputPath];
 	}
 
 	async read() {
@@ -266,8 +275,9 @@ class TemplateContent {
 			return "";
 		}
 
-		if (this.isVirtualTemplate()) {
-			let { content } = this.getVirtualTemplateDefinition();
+		let virtualTemplateDefinition = this.getVirtualTemplateDefinition();
+		if (virtualTemplateDefinition) {
+			let { content } = virtualTemplateDefinition;
 			return content;
 		}
 
@@ -313,9 +323,10 @@ class TemplateContent {
 
 					let extraData = await this.engine.getExtraDataFromFile(this.inputPath);
 
-					let virtualTemplateData = null;
-					if (this.isVirtualTemplate()) {
-						virtualTemplateData = this.getVirtualTemplateDefinition().data;
+					let virtualTemplateDefinition = this.getVirtualTemplateDefinition();
+					let virtualTemplateData;
+					if (virtualTemplateDefinition) {
+						virtualTemplateData = virtualTemplateDefinition.data;
 					}
 
 					let data = TemplateData.mergeDeep({}, fm.data, extraData, virtualTemplateData);

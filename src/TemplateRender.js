@@ -1,5 +1,3 @@
-import { TemplatePath } from "@11ty/eleventy-utils";
-
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import EleventyExtensionMap from "./EleventyExtensionMap.js";
 import CustomEngine from "./Engines/Custom.js";
@@ -12,7 +10,7 @@ class TemplateRenderUnknownEngineError extends EleventyBaseError {}
 
 // works with full path names or short engine name
 class TemplateRender {
-	constructor(tmplPath, inputDir, config) {
+	constructor(tmplPath, config) {
 		if (!tmplPath) {
 			throw new Error(`TemplateRender requires a tmplPath argument, instead of ${tmplPath}`);
 		}
@@ -23,16 +21,30 @@ class TemplateRender {
 			this.eleventyConfig = config;
 			this.config = config.getConfig();
 		} else {
-			this.config = config;
+			throw new Error("Third argument to TemplateRender must be a TemplateConfig instance.");
 		}
 
 		this.engineNameOrPath = tmplPath;
 
-		this.inputDir = inputDir ? inputDir : this.config.dir.input;
-		this.includesDir = TemplatePath.join(this.inputDir, this.config.dir.includes);
-
 		this.parseMarkdownWith = this.config.markdownTemplateEngine;
 		this.parseHtmlWith = this.config.htmlTemplateEngine;
+	}
+
+	get dirs() {
+		return this.eleventyConfig.directories;
+	}
+
+	get inputDir() {
+		return this.dirs.input;
+	}
+
+	get includesDir() {
+		return this.dirs.includes;
+	}
+
+	/* Backwards compat */
+	getIncludesDir() {
+		return this.includesDir;
 	}
 
 	get config() {
@@ -55,11 +67,7 @@ class TemplateRender {
 	}
 
 	async getEngineByName(name) {
-		let engine = await this.extensionMap.engineManager.getEngine(
-			name,
-			this.getDirs(),
-			this.extensionMap,
-		);
+		let engine = await this.extensionMap.engineManager.getEngine(name, this.extensionMap);
 		engine.eleventyConfig = this.eleventyConfig;
 
 		return engine;
@@ -233,17 +241,6 @@ class TemplateRender {
 
 	getEngineName() {
 		return this.engineName;
-	}
-
-	getDirs() {
-		return {
-			input: this.inputDir,
-			includes: this.includesDir,
-		};
-	}
-
-	getIncludesDir() {
-		return this.includesDir;
 	}
 
 	isEngine(engine) {

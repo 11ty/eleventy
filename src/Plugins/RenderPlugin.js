@@ -12,6 +12,7 @@ import { ProxyWrap } from "../Util/ProxyWrap.js";
 import TemplateDataInitialGlobalData from "../Data/TemplateDataInitialGlobalData.js";
 import EleventyShortcodeError from "../Errors/EleventyShortcodeError.js";
 import TemplateRender from "../TemplateRender.js";
+import ProjectDirectories from "../Util/ProjectDirectories.js";
 import TemplateConfig from "../TemplateConfig.js";
 import EleventyErrorUtil from "../Errors/EleventyErrorUtil.js";
 import Liquid from "../Engines/Liquid.js";
@@ -19,6 +20,7 @@ import Liquid from "../Engines/Liquid.js";
 async function compile(content, templateLang, { templateConfig, extensionMap } = {}) {
 	if (!templateConfig) {
 		templateConfig = new TemplateConfig(null, false);
+		templateConfig.setDirectories(new ProjectDirectories());
 		await templateConfig.init();
 	}
 
@@ -27,16 +29,7 @@ async function compile(content, templateLang, { templateConfig, extensionMap } =
 		templateLang = this.page.templateSyntax;
 	}
 
-	let inputDir;
-
-	// templateConfig *may* already be a userconfig
-	if (templateConfig.constructor.name === "TemplateConfig") {
-		inputDir = templateConfig.getConfig().dir.input;
-	} else {
-		inputDir = templateConfig?.dir?.input;
-	}
-
-	let tr = new TemplateRender(templateLang, inputDir, templateConfig);
+	let tr = new TemplateRender(templateLang, templateConfig);
 	tr.extensionMap = extensionMap;
 	if (templateLang) {
 		await tr.setEngineOverride(templateLang);
@@ -73,6 +66,7 @@ async function compileFile(inputPath, { templateConfig, extensionMap, config } =
 	let wasTemplateConfigMissing = false;
 	if (!templateConfig) {
 		templateConfig = new TemplateConfig(null, false);
+		templateConfig.setDirectories(new ProjectDirectories());
 		wasTemplateConfigMissing = true;
 	}
 	if (config && typeof config === "function") {
@@ -82,8 +76,7 @@ async function compileFile(inputPath, { templateConfig, extensionMap, config } =
 		await templateConfig.init();
 	}
 
-	let cfg = templateConfig.getConfig();
-	let tr = new TemplateRender(inputPath, cfg.dir.input, templateConfig);
+	let tr = new TemplateRender(inputPath, templateConfig);
 	tr.extensionMap = extensionMap;
 
 	if (templateLang) {
@@ -385,6 +378,7 @@ function EleventyPlugin(eleventyConfig, options = {}) {
 class RenderManager {
 	constructor() {
 		this.templateConfig = new TemplateConfig(null, false);
+		this.templateConfig.setDirectories(new ProjectDirectories());
 
 		// This is the only plugin running on the Edge
 		this.templateConfig.userConfig.addPlugin(EleventyPlugin, {
