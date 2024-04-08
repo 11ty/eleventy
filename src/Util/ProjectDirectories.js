@@ -262,6 +262,9 @@ class ProjectDirectories {
 			get inputFile() {
 				return d.inputFile;
 			},
+			get inputGlob() {
+				return d.inputGlob;
+			},
 			get data() {
 				return d.data;
 			},

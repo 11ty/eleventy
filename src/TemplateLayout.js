@@ -12,7 +12,7 @@ const debugDev = debugUtil("Dev:Eleventy:TemplateLayout");
 class TemplateLayout extends TemplateContent {
 	// TODO directorynorm
 	constructor(key, inputDir, extensionMap, eleventyConfig) {
-		if (!eleventyConfig) {
+		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
 			throw new Error("Expected `eleventyConfig` in TemplateLayout constructor.");
 		}
 

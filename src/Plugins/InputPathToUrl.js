@@ -1,6 +1,5 @@
 import { TemplatePath } from "@11ty/eleventy-utils";
 
-// TODO directorynorm
 function normalizeInputPath(inputPath, inputDir, contentMap) {
 	// inputDir is optional at the beginning of the developer supplied-path
 

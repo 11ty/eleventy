@@ -98,6 +98,7 @@ class TemplateConfig {
 	/* Setter for Directories instance */
 	setDirectories(directories) {
 		this.directories = directories;
+		this.userConfig.directories = directories.getUserspaceInstance();
 	}
 
 	/* Backwards compat */
@@ -374,11 +375,10 @@ class TemplateConfig {
 			mergedConfig.pathPrefix = this.rootConfig.pathPrefix;
 		}
 
-		// Add the ProjectDirectories instance to the user accessible config.
+		// This is not set in UserConfig.js so that getters aren’t converted to strings
+		// We want to error if someone attempts to use a setter there.
 		if (this.directories) {
-			let dirs = this.directories.getUserspaceInstance();
-			mergedConfig.directories = dirs;
-			this.userConfig.directories = dirs;
+			mergedConfig.directories = this.directories.getUserspaceInstance();
 		}
 
 		// Delay processing plugins until after the result of localConfig is returned

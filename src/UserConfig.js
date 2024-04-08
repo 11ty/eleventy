@@ -934,6 +934,7 @@ class UserConfig {
 			serverPassthroughCopyBehavior: this.serverPassthroughCopyBehavior,
 			urlTransforms: this.urlTransforms,
 			virtualTemplates: this.virtualTemplates,
+			// `directories` is merged manually prior to plugin processing
 		};
 
 		if (Array.isArray(this.dataFileSuffixesOverride)) {
