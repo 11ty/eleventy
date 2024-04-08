@@ -73,10 +73,6 @@ class TemplateData {
 		this.fileSystemSearch = fileSystemSearch;
 	}
 
-	setGlobalDataDirectories(dirsObject) {
-		this.directories = dirsObject;
-	}
-
 	setProjectUsingEsm(isEsmProject) {
 		this.isEsm = !!isEsmProject;
 	}
@@ -311,11 +307,11 @@ class TemplateData {
 					Object.assign(globalData.eleventy.env, this.environmentVariables);
 				}
 
-				if (this.directories) {
+				if (this.dirs) {
 					if (!("directories" in globalData.eleventy)) {
 						globalData.eleventy.directories = {};
 					}
-					Object.assign(globalData.eleventy.directories, this.directories);
+					Object.assign(globalData.eleventy.directories, this.dirs.getUserspaceInstance());
 				}
 
 				resolve(globalData);

@@ -451,18 +451,7 @@ class Eleventy {
 		}
 
 		// Note these directories are all project root relative
-		// TODO directorynorm
-		let dirs = {
-			input: this.inputDir,
-			data: this.templateData.getDataDir(),
-			includes: this.eleventyFiles.getIncludesDir(),
-			layouts: this.eleventyFiles.getLayoutsDir(),
-			output: this.outputDir,
-		};
-
-		// eleventy.directories in global data
-		this.templateData.setGlobalDataDirectories(dirs);
-		this.config.events.emit("eleventy.directories", dirs);
+		this.config.events.emit("eleventy.directories", this.directories.getUserspaceInstance());
 
 		this.writer = new TemplateWriter(formats, this.templateData, this.eleventyConfig);
 
@@ -478,16 +467,18 @@ class Eleventy {
 		this.writer.setRunInitialBuild(this.isRunInitialBuild);
 		this.writer.setIncrementalBuild(this.isIncremental);
 
-		// TODO directorynorm
-		debug(`Directories:
-Input (Dir): ${dirs.input}
-Input (File): ${this.rawInput}
-Data: ${dirs.data}
-Includes: ${dirs.includes}
-Layouts: ${dirs.layouts}
-Output: ${dirs.output}
+		let debugStr = `Directories:
+  Input:
+    Directory: ${this.directories.input}
+    File: ${this.directories.inputFile || false}
+    Glob: ${this.directories.inputGlob || false}
+  Data: ${this.directories.data}
+  Includes: ${this.directories.includes}
+  Layouts: ${this.directories.layouts || false}
+  Output: ${this.directories.output}
 Template Formats: ${formats.join(",")}
-Verbose Output: ${this.verboseMode}`);
+Verbose Output: ${this.verboseMode}`;
+		debug(debugStr);
 
 		this.writer.setVerboseOutput(this.verboseMode);
 		this.writer.setDryRun(this.isDryRun);
@@ -1211,9 +1202,18 @@ Arguments:
 
 		try {
 			let eventsArg = {
-				// TODO directorynorm
-				inputDir: this.config.inputDir,
+				directories: this.directories.getUserspaceInstance(),
+
+				// Deprecated (not normalized), use `directories` instead.
+				get inputDir() {
+					throw new Error(
+						"The `inputDir` property in the `eleventy.before` and `eleventy.after` events has been removed. Use `directories.input` instead.",
+					);
+				},
+
+				// Deprecated (not normalized) use `directories` instead.
 				dir: this.config.dir,
+
 				runMode: this.runMode,
 				outputMode: to,
 				incremental: this.isIncremental,
