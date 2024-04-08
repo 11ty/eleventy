@@ -802,46 +802,17 @@ test("Access to raw input of file (dryRun), issue #1206", async (t) => {
 	rimrafSync("./test/stubs-1206/_site/");
 });
 
-test("eleventy.before Event Arguments, inputDir throws error", async (t) => {
-  let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.on("eleventy.before", arg => {
-        arg.inputDir;
-      })
-    },
-  });
-  elev.disableLogger();
-
-  await t.throwsAsync(() => elev.toJSON(), {
-    message: "The `inputDir` property in the `eleventy.before` and `eleventy.after` events has been removed. Use `directories.input` instead."
-  });
-});
-
-test("eleventy.after Event Arguments, inputDir throws error", async (t) => {
-  let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.on("eleventy.after", arg => {
-        arg.inputDir;
-      })
-    },
-  });
-  elev.disableLogger();
-
-  await t.throwsAsync(() => elev.toJSON(), {
-    message: "The `inputDir` property in the `eleventy.before` and `eleventy.after` events has been removed. Use `directories.input` instead."
-  });
-});
-
-
 test("eleventy.before and eleventy.after Event Arguments, directories", async (t) => {
-  t.plan(4);
+  t.plan(6);
   let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
     config: function (eleventyConfig) {
       eleventyConfig.on("eleventy.before", arg => {
+        t.is(arg.inputDir, "./test/noop/");
         t.is(arg.directories.input, "./test/noop/");
         t.is(arg.directories.includes, "./test/noop/_includes/");
       })
       eleventyConfig.on("eleventy.after", arg => {
+        t.is(arg.inputDir, "./test/noop/");
         t.is(arg.directories.input, "./test/noop/");
         t.is(arg.directories.includes, "./test/noop/_includes/");
       })

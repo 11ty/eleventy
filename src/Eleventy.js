@@ -1201,15 +1201,12 @@ Arguments:
 		let hasError = false;
 
 		try {
+			let directories = this.directories.getUserspaceInstance();
 			let eventsArg = {
-				directories: this.directories.getUserspaceInstance(),
+				directories,
 
-				// Deprecated (not normalized), use `directories` instead.
-				get inputDir() {
-					throw new Error(
-						"The `inputDir` property in the `eleventy.before` and `eleventy.after` events has been removed. Use `directories.input` instead.",
-					);
-				},
+				// v3.0.0-alpha.6, changed to use `directories` instead (this was only used by serverless plugin)
+				inputDir: directories.input,
 
 				// Deprecated (not normalized) use `directories` instead.
 				dir: this.config.dir,
