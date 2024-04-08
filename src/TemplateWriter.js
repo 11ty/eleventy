@@ -155,14 +155,7 @@ class TemplateWriter {
 			// TODO reset other constructor things here like inputDir/outputDir/extensionMap/
 			tmpl.setTemplateData(this.templateData);
 		} else {
-			tmpl = new Template(
-				path,
-				this.inputDir,
-				this.outputDir,
-				this.templateData,
-				this.extensionMap,
-				this.eleventyConfig,
-			);
+			tmpl = new Template(path, this.templateData, this.extensionMap, this.eleventyConfig);
 
 			tmpl.setOutputFormat(to);
 

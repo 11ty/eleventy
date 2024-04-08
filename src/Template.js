@@ -33,10 +33,9 @@ const debugDev = debugUtil("Dev:Eleventy:Template");
 class EleventyTransformError extends EleventyBaseError {}
 
 class Template extends TemplateContent {
-	// TODO directorynorm
-	constructor(templatePath, inputDir, outputDir, templateData, extensionMap, config) {
+	constructor(templatePath, templateData, extensionMap, config) {
 		debugDev("new Template(%o)", templatePath);
-		super(templatePath, inputDir, config);
+		super(templatePath, config);
 
 		this.parsed = path.parse(templatePath);
 
@@ -137,12 +136,7 @@ class Template extends TemplateContent {
 
 	getLayout(layoutKey) {
 		// already cached downstream in TemplateLayout -> TemplateCache
-		return TemplateLayout.getTemplate(
-			layoutKey,
-			this.getInputDir(),
-			this.eleventyConfig,
-			this.extensionMap,
-		);
+		return TemplateLayout.getTemplate(layoutKey, this.eleventyConfig, this.extensionMap);
 	}
 
 	get baseFile() {
@@ -854,8 +848,6 @@ class Template extends TemplateContent {
 		// TODO do we need to even run the constructor here or can we simplify it even more
 		let tmpl = new Template(
 			this.inputPath,
-			this.inputDir,
-			this.outputDir,
 			this.templateData,
 			this.extensionMap,
 			this.eleventyConfig,

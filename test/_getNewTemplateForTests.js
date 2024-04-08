@@ -27,7 +27,7 @@ export default async function getNewTemplate(
   if (templateData) {
     templateData.setFileSystemSearch(new FileSystemSearch());
   }
-  let tmpl = new Template(path, inputDir, outputDir, templateData, map, eleventyConfig);
+  let tmpl = new Template(path, templateData, map, eleventyConfig);
 
   await tmpl.getTemplateRender();
 

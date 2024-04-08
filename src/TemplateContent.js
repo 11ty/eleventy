@@ -25,13 +25,13 @@ class TemplateContentCompileError extends EleventyBaseError {}
 class TemplateContentRenderError extends EleventyBaseError {}
 
 class TemplateContent {
-	// TODO directorynorm
-	constructor(inputPath, inputDir, config) {
-		if (!config) {
-			throw new TemplateContentConfigError("Missing `config` argument to TemplateContent");
+	constructor(inputPath, templateConfig) {
+		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
+			throw new TemplateContentConfigError(
+				"Missing or invalid `templateConfig` argument to TemplateContent",
+			);
 		}
-		this.eleventyConfig = config;
-
+		this.eleventyConfig = templateConfig;
 		this.inputPath = inputPath;
 	}
 
