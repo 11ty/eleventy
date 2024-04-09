@@ -90,7 +90,7 @@ class EleventyExtensionMap {
 
 	getValidExtensionsForPath(path) {
 		let extensions = new Set(
-			Array.from(Object.keys(this.extensionToKeyMap)).filter((extension) =>
+			[...Object.keys(this.extensionToKeyMap)].filter((extension) =>
 				path.endsWith(`.${extension}`),
 			),
 		);
