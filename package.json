@@ -44,7 +44,7 @@
 		"check": "eslint src",
 		"lint-staged": "lint-staged",
 		"coverage": "npx c8 ava && npx c8 report --reporter=json-summary && cp coverage/coverage-summary.json docs/_data/coverage.json && node cmd.cjs --config=docs/eleventy.coverage.js",
-		"prepare": "husky install"
+		"prepare": "husky"
 	},
 	"author": "Zach Leatherman <zachleatherman@gmail.com> (https://zachleat.com/)",
 	"repository": {
@@ -80,9 +80,9 @@
 		"@zachleat/noop": "^1.0.3",
 		"ava": "^6.1.2",
 		"c8": "^9.1.0",
-		"eslint": "^8.56.0",
+		"eslint": "^8.57.0",
 		"eslint-config-prettier": "^9.1.0",
-		"husky": "^8.0.3",
+		"husky": "^9.0.11",
 		"js-yaml": "^4.1.0",
 		"jsdoc": "^4.0.2",
 		"lint-staged": "^15.2.2",
