@@ -351,6 +351,10 @@ class TemplateConfig {
 	async mergeConfig() {
 		let localConfig = await this.requireLocalConfigFile();
 
+		if (this.directories) {
+			this.directories.setViaConfigObject(this.userConfig.directoryAssignments);
+		}
+
 		// Template Formats:
 		// 1. Root Config (usually defaultConfig.js)
 		// 2. Local Config return object (project .eleventy.js)

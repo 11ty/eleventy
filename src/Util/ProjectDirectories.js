@@ -16,7 +16,6 @@ class ProjectDirectories {
 	};
 
 	#dirs = {};
-	#configDefined = {};
 
 	inputFile = undefined;
 	inputGlob = undefined;
@@ -44,15 +43,7 @@ class ProjectDirectories {
 		return path + "/";
 	}
 
-	isDefinedViaConfig(key) {
-		return !!this.#configDefined[key];
-	}
-
 	setViaConfigObject(configDirs = {}) {
-		for (let key in configDirs) {
-			this.#configDefined[key] = true;
-		}
-
 		// input must come last
 		let inputChanged = false;
 		if (

@@ -821,3 +821,94 @@ test("eleventy.before and eleventy.after Event Arguments, directories", async (t
 
   let results = await elev.toJSON();
 });
+
+test("setInputDirectory config method #1503", async (t) => {
+  t.plan(5);
+  let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.setInputDirectory("./test/noop2/");
+
+      eleventyConfig.on("eleventy.before", arg => {
+        t.is(arg.directories.input, "./test/noop2/");
+        t.is(arg.directories.includes, "./test/noop2/_includes/");
+        t.is(arg.directories.data, "./test/noop2/_data/");
+        t.is(arg.directories.layouts, undefined);
+        t.is(arg.directories.output, "./test/noop/_site/");
+      })
+    },
+  });
+
+  let results = await elev.toJSON();
+});
+
+test("setIncludesDirectory config method #1503", async (t) => {
+  t.plan(5);
+  let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.setIncludesDirectory("myincludes");
+
+      eleventyConfig.on("eleventy.before", arg => {
+        t.is(arg.directories.input, "./test/noop/");
+        t.is(arg.directories.includes, "./test/noop/myincludes/");
+        t.is(arg.directories.data, "./test/noop/_data/");
+        t.is(arg.directories.layouts, undefined);
+        t.is(arg.directories.output, "./test/noop/_site/");
+      })
+    },
+  });
+
+  let results = await elev.toJSON();
+});
+
+test("setDataDirectory config method #1503", async (t) => {
+  t.plan(5);
+  let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.setDataDirectory("data");
+
+      eleventyConfig.on("eleventy.before", arg => {
+        t.is(arg.directories.input, "./test/noop/");
+        t.is(arg.directories.includes, "./test/noop/_includes/");
+        t.is(arg.directories.data, "./test/noop/data/");
+        t.is(arg.directories.layouts, undefined);
+        t.is(arg.directories.output, "./test/noop/_site/");
+      })
+    },
+  });
+
+  let results = await elev.toJSON();
+});
+
+test("setLayoutsDirectory config method #1503", async (t) => {
+  t.plan(5);
+  let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.setLayoutsDirectory("layouts");
+
+      eleventyConfig.on("eleventy.before", arg => {
+        t.is(arg.directories.input, "./test/noop/");
+        t.is(arg.directories.includes, "./test/noop/_includes/");
+        t.is(arg.directories.data, "./test/noop/_data/");
+        t.is(arg.directories.layouts, "./test/noop/layouts/");
+        t.is(arg.directories.output, "./test/noop/_site/");
+      })
+    },
+  });
+
+  let results = await elev.toJSON();
+});
+
+test("setInputDirectory config method #1503 in a plugin throws error", async (t) => {
+  let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.addPlugin(() => {
+        eleventyConfig.setInputDirectory("./test/noop2/");
+      });
+    },
+  });
+
+  await t.throwsAsync(() => elev.toJSON(), {
+    // The `set*Directory` configuration API methods are not yet allowed in plugins.
+    message: "Error processing a plugin",
+  });
+});

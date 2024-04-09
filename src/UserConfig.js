@@ -21,6 +21,8 @@ const ComparisonAsyncFunction = (async () => {}).constructor;
  * @module 11ty/eleventy/UserConfig
  */
 class UserConfig {
+	#pluginExecution = false;
+
 	constructor() {
 		this._uniqueId = Math.random();
 		this.reset();
@@ -40,6 +42,8 @@ class UserConfig {
 			config: this.benchmarkManager.get("Configuration"),
 			aggregate: this.benchmarkManager.get("Aggregate"),
 		};
+
+		this.directoryAssignments = {};
 
 		this.collections = {};
 		this.precompiledCollections = {};
@@ -99,7 +103,6 @@ class UserConfig {
 		this.quietMode = false;
 
 		this.plugins = [];
-		this._pluginExecution = false;
 
 		this.useTemplateCache = true;
 		this.dataFilterSelectors = new Set();
@@ -169,7 +172,12 @@ class UserConfig {
 
 	// Internal method
 	_enablePluginExecution() {
-		this._pluginExecution = true;
+		this.#pluginExecution = true;
+	}
+
+	/* Config is executed in two stages and plugins are the second stage—are we in the plugins stage? */
+	isPluginExecution() {
+		return this.#pluginExecution;
 	}
 
 	// This is a method for plugins, probably shouldn’t use this in projects.
@@ -387,7 +395,7 @@ class UserConfig {
 
 	/* Async friendly in 3.0 */
 	addPlugin(plugin, options) {
-		if (this._pluginExecution || options?.immediate) {
+		if (this.isPluginExecution() || options?.immediate) {
 			// might return a promise
 			return this._executePlugin(plugin, options);
 		} else {
@@ -881,6 +889,35 @@ class UserConfig {
 		};
 	}
 
+	#setDirectory(key, dir) {
+		if (this.isPluginExecution()) {
+			throw new Error(
+				"The `set*Directory` configuration API methods are not yet allowed in plugins.",
+			);
+		}
+		this.directoryAssignments[key] = dir;
+	}
+
+	setInputDirectory(dir) {
+		this.#setDirectory("input", dir);
+	}
+
+	setOutputDirectory(dir) {
+		this.#setDirectory("output", dir);
+	}
+
+	setDataDirectory(dir) {
+		this.#setDirectory("data", dir);
+	}
+
+	setIncludesDirectory(dir) {
+		this.#setDirectory("includes", dir);
+	}
+
+	setLayoutsDirectory(dir) {
+		this.#setDirectory("layouts", dir);
+	}
+
 	getMergingConfigObject() {
 		let obj = {
 			templateFormats: this.templateFormats,
@@ -934,7 +971,7 @@ class UserConfig {
 			serverPassthroughCopyBehavior: this.serverPassthroughCopyBehavior,
 			urlTransforms: this.urlTransforms,
 			virtualTemplates: this.virtualTemplates,
-			// `directories` is merged manually prior to plugin processing
+			// `directories` and `directoryAssignments` are merged manually prior to plugin processing
 		};
 
 		if (Array.isArray(this.dataFileSuffixesOverride)) {
