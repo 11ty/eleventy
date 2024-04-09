@@ -774,15 +774,19 @@ Arguments:
 
 	shouldTriggerConfigReset(changedFiles) {
 		let configFilePaths = new Set(this.eleventyConfig.getLocalProjectConfigFiles());
-		if (changedFiles.intersection(configFilePaths).size > 0) {
-			return true;
-		}
-
-		for (const configFilePath of configFilePaths) {
-			// Any dependencies of the config file changed
-			let configFileDependencies = new Set(this.watchTargets.getDependenciesOf(configFilePath));
-			if (changedFiles.intersection(configFileDependencies).size > 0) {
+		//	Has the config file itself changed?
+		for (let filePath of changedFiles) {
+			if (configFilePaths.has(filePath)) {
 				return true;
+			}
+		}
+		//	Has the config file’s depdendencies changed?
+		for (const configFilePath of configFilePaths) {
+			let configFileDependencies = new Set(this.watchTargets.getDependenciesOf(configFilePath));
+			for (let filePath of changedFiles) {
+				if (configFileDependencies.has(filePath)) {
+					return true;
+				}
 			}
 		}
 
