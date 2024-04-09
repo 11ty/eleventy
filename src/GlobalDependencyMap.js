@@ -313,7 +313,18 @@ class GlobalDependencyMap {
 	}
 
 	stringify() {
-		return JSON.stringify(this.map);
+		return JSON.stringify(this.map, function replacer(key, value) {
+			// Serialize internal Map objects.
+			if (value instanceof Map) {
+				let obj = {};
+				for (let [k, v] of value) {
+					obj[k] = v;
+				}
+				return obj;
+			}
+
+			return value;
+		});
 	}
 
 	restore(persisted) {
@@ -321,8 +332,13 @@ class GlobalDependencyMap {
 		let graph = new DepGraph({ circular: true });
 
 		// https://github.com/jriecken/dependency-graph/issues/44
+		// Restore top level serialized Map objects (in stringify above)
 		for (let key in obj) {
-			graph[key] = obj[key];
+			let map = graph[key];
+			for (let k in obj[key]) {
+				let v = obj[key][k];
+				map.set(k, v);
+			}
 		}
 		this.map = graph;
 	}
