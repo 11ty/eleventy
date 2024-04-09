@@ -104,10 +104,10 @@ class TemplateEngineManager {
 
 	async getEngine(name, extensionMap) {
 		// Warning about engine deprecation
-		// TODO: error message needs updating once issue is closed
+		// TODO v3.0 error message needs updating before stable release
 		if (this.isEngineDeprecated(name)) {
 			throw new Error(
-				`Per our community survey, the "${name}" template syntax was removed from core in 11ty v3.0. Read more https://github.com/11ty/eleventy/issues/3124 including our plans to expose these as official plugins (outside of core). You can implement these yourself using https://www.11ty.dev/docs/languages/custom/`,
+				`Per the 11ty community survey, the "${name}" template syntax was removed from core in v3.0. You can read more https://github.com/11ty/eleventy/issues/3124 including plans to offer some of these as official plugins (outside of core). You can implement these yourself using https://www.11ty.dev/docs/languages/custom/`,
 			);
 		}
 
