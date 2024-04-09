@@ -36,6 +36,9 @@ test("Using the filter directly", async (t) => {
   t.is(applyBaseToUrl("subdir/", "/pathprefix/"), "subdir/");
   t.is(applyBaseToUrl("../subdir/", "/pathprefix/"), "../subdir/");
   t.is(applyBaseToUrl("./subdir/", "/pathprefix/"), "subdir/");
+  t.is(applyBaseToUrl("#anchor", "/pathprefix/"), "#anchor");
+  t.is(applyBaseToUrl("/test/#anchor", "/pathprefix/"), "/pathprefix/test/#anchor");
+  t.is(applyBaseToUrl("/test/?param=value", "/pathprefix/"), "/pathprefix/test/?param=value");
   t.is(applyBaseToUrl("http://url.com/", "/pathprefix/"), "http://url.com/");
   t.is(applyBaseToUrl("http://url.com/test/", "/pathprefix/"), "http://url.com/test/");
 
@@ -47,6 +50,9 @@ test("Using the filter directly", async (t) => {
   t.is(applyBaseToUrl("./subdir/", "http://example.com/"), "http://example.com/subdir/");
   t.is(applyBaseToUrl("http://url.com/", "http://example.com/"), "http://url.com/");
   t.is(applyBaseToUrl("http://url.com/test/", "http://example.com/"), "http://url.com/test/");
+  t.is(applyBaseToUrl("#anchor", "http://example.com/"), "http://example.com/#anchor");
+	t.is(applyBaseToUrl("/test/#anchor", "http://example.com/"), "http://example.com/test/#anchor");
+	t.is(applyBaseToUrl("/test/?param=value#anchor", "http://example.com/"), "http://example.com/test/?param=value#anchor");
 
   // with a URL base with extra subdirectory
   t.is(applyBaseToUrl("/", "http://example.com/ignored/"), "http://example.com/");
