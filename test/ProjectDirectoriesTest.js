@@ -233,4 +233,59 @@ test("Setting values via config object (dots)", t => {
 	t.is(d.includes, "./test/stubs/");
 });
 
+test("CLI values should override all others (both)", t => {
+	let d = new ProjectDirectories();
+	d.setInput("src");
+	d.setOutput("dist");
+	d.freeze();
 
+	d.setViaConfigObject({
+		input: "test/stubs",
+		includes: "myincludes",
+	});
+
+	t.is(d.input, "./src/");
+	t.is(d.inputFile, undefined);
+	t.is(d.output, "./dist/");
+	t.is(d.data, "./src/_data/");
+	t.is(d.includes, "./src/myincludes/");
+	t.is(d.layouts, undefined);
+});
+
+test("CLI values should override all others (just input)", t => {
+	let d = new ProjectDirectories();
+	d.setInput("src");
+	d.freeze();
+
+	d.setViaConfigObject({
+		input: "test/stubs",
+		includes: "myincludes", // always okay, not a CLI param
+		output: "dist",
+	});
+
+	t.is(d.input, "./src/");
+	t.is(d.inputFile, undefined);
+	t.is(d.output, "./dist/");
+	t.is(d.data, "./src/_data/");
+	t.is(d.includes, "./src/myincludes/");
+	t.is(d.layouts, undefined);
+});
+
+test("CLI values should override all others (just output)", t => {
+	let d = new ProjectDirectories();
+	d.setOutput("dist");
+	d.freeze();
+
+	d.setViaConfigObject({
+		input: "test/stubs",
+		includes: "myincludes", // always okay, not a CLI param
+		output: "someotherdir",
+	});
+
+	t.is(d.input, "./test/stubs/");
+	t.is(d.inputFile, undefined);
+	t.is(d.output, "./dist/");
+	t.is(d.data, "./test/stubs/_data/");
+	t.is(d.includes, "./test/stubs/myincludes/");
+	t.is(d.layouts, undefined);
+});

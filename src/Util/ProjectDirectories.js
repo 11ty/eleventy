@@ -5,6 +5,9 @@ import isGlob from "is-glob";
 
 /* Directories internally should always use *nix forward slashes */
 class ProjectDirectories {
+	// no updates allowed, input/output set via CLI
+	#frozen = false;
+
 	#raw = {};
 
 	#defaults = {
@@ -41,6 +44,11 @@ class ProjectDirectories {
 			return path;
 		}
 		return path + "/";
+	}
+
+	// If input/output are set via CLI, they take precedence over all other configuration values.
+	freeze() {
+		this.#frozen = true;
 	}
 
 	setViaConfigObject(configDirs = {}) {
@@ -108,6 +116,11 @@ class ProjectDirectories {
 
 	/* Relative to project root, must exist */
 	#setInputRaw(dirOrFile, inputDir = undefined) {
+		// is frozen and was defined previously
+		if (this.#frozen && this.#raw.input !== undefined) {
+			return;
+		}
+
 		this.#raw.input = dirOrFile;
 
 		if (!dirOrFile) {
@@ -195,6 +208,11 @@ class ProjectDirectories {
 
 	/* Relative to project root */
 	setOutput(dir) {
+		// is frozen and was defined previously
+		if (this.#frozen && this.#raw.output !== undefined) {
+			return;
+		}
+
 		if (dir !== undefined) {
 			this.#raw.output = dir;
 			this.#dirs.output = ProjectDirectories.normalizeDirectory(dir || "");

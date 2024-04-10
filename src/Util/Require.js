@@ -46,7 +46,7 @@ eventBus.on("eleventy.importCacheReset", (fileQueue) => {
 	}
 });
 
-async function dynamicImportAbsolutePath(absolutePath, type) {
+async function dynamicImportAbsolutePath(absolutePath, type, returnRaw = false) {
 	if (absolutePath.endsWith(".json") || type === "json") {
 		// https://v8.dev/features/import-assertions#dynamic-import() is still experimental in Node 20
 		let rawInput = await loadContents(absolutePath);
@@ -68,6 +68,10 @@ async function dynamicImportAbsolutePath(absolutePath, type) {
 	}
 
 	let target = await import(urlPath);
+
+	if (returnRaw) {
+		return target;
+	}
 
 	// If the only export is `default`, elevate to top (for ESM and CJS)
 	if (Object.keys(target).length === 1 && "default" in target) {
@@ -114,14 +118,14 @@ async function dynamicImportAbsolutePath(absolutePath, type) {
 }
 
 function normalizeFilePathInEleventyPackage(file) {
-	// Back up from ./src/Util/Require.js
+	// Back up relative paths from ./src/Util/Require.js
 	return path.resolve(fileURLToPath(import.meta.url), "../../../", file);
 }
 
 async function dynamicImportFromEleventyPackage(file) {
 	// points to files relative to the top level Eleventy directory
 	let filePath = normalizeFilePathInEleventyPackage(file);
-	return dynamicImportAbsolutePath(filePath);
+	return dynamicImportAbsolutePath(filePath, "esm");
 }
 
 async function dynamicImport(localPath, type) {
@@ -130,9 +134,25 @@ async function dynamicImport(localPath, type) {
 	return dynamicImportAbsolutePath(absolutePath, type);
 }
 
+/* Used to import default Eleventy configuration file, raw means we don’t normalize away the `default` export */
+async function dynamicImportRawFromEleventyPackage(file) {
+	// points to files relative to the top level Eleventy directory
+	let filePath = normalizeFilePathInEleventyPackage(file);
+	return dynamicImportAbsolutePath(filePath, "esm", true);
+}
+
+/* Used to import project configuration files, raw means we don’t normalize away the `default` export */
+async function dynamicImportRaw(localPath, type) {
+	let absolutePath = TemplatePath.absolutePath(localPath);
+	// async
+	return dynamicImportAbsolutePath(absolutePath, type, true);
+}
+
 export {
 	loadContents as EleventyLoadContent,
 	dynamicImport as EleventyImport,
+	dynamicImportRaw as EleventyImportRaw,
 	dynamicImportFromEleventyPackage as EleventyImportFromEleventy,
+	dynamicImportRawFromEleventyPackage as EleventyImportRawFromEleventy,
 	normalizeFilePathInEleventyPackage,
 };

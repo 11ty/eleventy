@@ -912,3 +912,39 @@ test("setInputDirectory config method #1503 in a plugin throws error", async (t)
     message: "Error processing a plugin",
   });
 });
+
+test("Eleventy directories export (ESM)", async (t) => {
+  t.plan(5);
+  let elev = new Eleventy("test/stubs/cfg-directories-export", null, {
+    configPath: "./test/stubs/cfg-directories-export/eleventy.config.js",
+    config: function (eleventyConfig) {
+      eleventyConfig.on("eleventy.after", arg => {
+        t.is(arg.directories.input, "./src/");
+        t.is(arg.directories.includes, "./src/myincludes/");
+        t.is(arg.directories.data, "./src/mydata/");
+        t.is(arg.directories.layouts, undefined);
+        t.is(arg.directories.output, "./dist/");
+      })
+    },
+  });
+
+  let result = await elev.toJSON();
+});
+
+test("Eleventy directories export (CommonJS)", async (t) => {
+  t.plan(5);
+  let elev = new Eleventy("test/stubs/cfg-directories-export-cjs", null, {
+    configPath: "./test/stubs/cfg-directories-export-cjs/eleventy.config.cjs",
+    config: function (eleventyConfig) {
+      eleventyConfig.on("eleventy.after", arg => {
+        t.is(arg.directories.input, "./src/");
+        t.is(arg.directories.includes, "./src/myincludes2/");
+        t.is(arg.directories.data, "./src/mydata2/");
+        t.is(arg.directories.layouts, undefined);
+        t.is(arg.directories.output, "./dist2/");
+      })
+    },
+  });
+
+  let result = await elev.toJSON();
+});

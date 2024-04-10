@@ -125,6 +125,7 @@ export default function (config) {
 			engineOverride: "templateEngineOverride",
 			computed: "eleventyComputed",
 		},
+		// Downstream folks should use `export const directories = {}` instead.
 		dir: {
 			input: ".",
 			includes: "_includes",

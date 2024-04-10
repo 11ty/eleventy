@@ -3,7 +3,7 @@ import chalk from "kleur";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
-import { EleventyImport, EleventyImportFromEleventy } from "./Util/Require.js";
+import { EleventyImportRaw, EleventyImportRawFromEleventy } from "./Util/Require.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import UserConfig from "./UserConfig.js";
 import GlobalDependencyMap from "./GlobalDependencyMap.js";
@@ -244,8 +244,11 @@ class TemplateConfig {
 	 * Bootstraps the config object.
 	 */
 	async initializeRootConfig() {
-		this.rootConfig =
-			this.customRootConfig || (await EleventyImportFromEleventy("./src/defaultConfig.js"));
+		this.rootConfig = this.customRootConfig;
+		if (!this.rootConfig) {
+			let { default: cfg } = await EleventyImportRawFromEleventy("./src/defaultConfig.js");
+			this.rootConfig = cfg;
+		}
 
 		if (typeof this.rootConfig === "function") {
 			this.rootConfig = this.rootConfig.call(this, this.userConfig);
@@ -311,13 +314,23 @@ class TemplateConfig {
 	 */
 	async requireLocalConfigFile() {
 		let localConfig = {};
+		// TODO option to set config root dir
 		let path = this.projectConfigPaths.filter((path) => path).find((path) => fs.existsSync(path));
 
-		debug(`Merging config with ${path}`);
-
+		debug(`Merging default config with ${path}`);
 		if (path) {
 			try {
-				localConfig = await EleventyImport(path, this.isEsm ? "esm" : "cjs");
+				let { default: cfg, directories } = await EleventyImportRaw(
+					path,
+					this.isEsm ? "esm" : "cjs",
+				);
+				localConfig = cfg;
+
+				if (this.directories && Object.keys(directories || {}).length > 0) {
+					debug("Setting directories via `directories` export from config file: %o", directories);
+					this.directories.setViaConfigObject(directories);
+				}
+
 				// debug( "localConfig require return value: %o", localConfig );
 				if (typeof localConfig === "function") {
 					localConfig = await localConfig(this.userConfig);
@@ -352,7 +365,20 @@ class TemplateConfig {
 		let localConfig = await this.requireLocalConfigFile();
 
 		if (this.directories) {
-			this.directories.setViaConfigObject(this.userConfig.directoryAssignments);
+			if (Object.keys(this.userConfig.directoryAssignments || {}).length > 0) {
+				debug(
+					"Setting directories via set*Directory configuration APIs %o",
+					this.userConfig.directoryAssignments,
+				);
+				this.directories.setViaConfigObject(this.userConfig.directoryAssignments);
+			}
+			if (localConfig && Object.keys(localConfig?.dir || {}).length > 0) {
+				debug(
+					"Setting directories via `dir` object return from configuration file: %o",
+					localConfig.dir,
+				);
+				this.directories.setViaConfigObject(localConfig.dir);
+			}
 		}
 
 		// Template Formats:
@@ -419,7 +445,7 @@ class TemplateConfig {
 		merge(mergedConfig, eleventyConfigApiMergingObject);
 
 		// Apply overrides, currently only pathPrefix uses this I think!
-		debug("overrides: %o", this.overrides);
+		debug("Configuration overrides: %o", this.overrides);
 		merge(mergedConfig, this.overrides);
 
 		// Restore templateFormats

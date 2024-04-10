@@ -97,7 +97,7 @@ class TemplateEngineManager {
 
 	async getCustomEngineClass() {
 		if (!this._CustomEngine) {
-			this._CustomEngine = await EleventyImportFromEleventy("./src/Engines/Custom.js");
+			this._CustomEngine = EleventyImportFromEleventy("./src/Engines/Custom.js");
 		}
 		return this._CustomEngine;
 	}

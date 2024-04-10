@@ -145,6 +145,7 @@ class Eleventy {
 
 		/* Programmatic API config */
 		if (this.options.config && typeof this.options.config === "function") {
+			debug("Running options.config configuration callback (passed to Eleventy constructor)");
 			// TODO use return object here?
 			await this.options.config(this.eleventyConfig.userConfig);
 		}
@@ -191,7 +192,7 @@ class Eleventy {
 		}
 
 		if (performance) {
-			debug("Eleventy warm up time (in ms) %o", performance.now());
+			debug("Eleventy warm up time: %o (ms)", performance.now());
 		}
 
 		/** @member {Number} - The timestamp of Eleventy start. */
@@ -232,6 +233,10 @@ class Eleventy {
 			this.#directories = new ProjectDirectories();
 			this.#directories.setInput(this.rawInput, this.options.inputDir);
 			this.#directories.setOutput(this.rawOutput);
+
+			if (this.source == "cli" && (this.rawInput !== undefined || this.rawOutput !== undefined)) {
+				this.#directories.freeze();
+			}
 		}
 
 		return this.#directories;
@@ -1275,8 +1280,8 @@ Arguments:
 			debug("Finished writing templates.");
 
 			debug(`
-      Getting frustrated? Have a suggestion/feature request/feedback?
-      I want to hear it! Open an issue: https://github.com/11ty/eleventy/issues/new`);
+Have a suggestion/feature request/feedback? Feeling frustrated? I want to hear it!
+Open an issue: https://github.com/11ty/eleventy/issues/new`);
 		}
 
 		return ret;
