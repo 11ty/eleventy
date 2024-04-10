@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import chalk from "kleur";
-import { TemplatePath } from "@11ty/eleventy-utils";
+import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import { EleventyImportRaw, EleventyImportRawFromEleventy } from "./Util/Require.js";
@@ -164,6 +164,7 @@ class TemplateConfig {
 	 */
 	async init(overrides) {
 		await this.initializeRootConfig();
+
 		if (overrides) {
 			this.appendToRootConfig(overrides);
 		}
@@ -251,11 +252,11 @@ class TemplateConfig {
 		}
 
 		if (typeof this.rootConfig === "function") {
+			// Not yet using async in defaultConfig.js
 			this.rootConfig = this.rootConfig.call(this, this.userConfig);
-			// debug( "rootConfig is a function, after calling, this.userConfig is %o", this.userConfig );
 		}
 
-		debug("rootConfig %o", this.rootConfig);
+		debug("Default Eleventy config %o", this.rootConfig);
 	}
 
 	/*
@@ -314,27 +315,32 @@ class TemplateConfig {
 	 */
 	async requireLocalConfigFile() {
 		let localConfig = {};
-		// TODO option to set config root dir
+		let exportedConfig = {};
+
 		let path = this.projectConfigPaths.filter((path) => path).find((path) => fs.existsSync(path));
 
 		debug(`Merging default config with ${path}`);
 		if (path) {
 			try {
-				let { default: cfg, directories } = await EleventyImportRaw(
-					path,
-					this.isEsm ? "esm" : "cjs",
-				);
-				localConfig = cfg;
+				let { default: configDefaultReturn, config: exportedConfigObject } =
+					await EleventyImportRaw(path, this.isEsm ? "esm" : "cjs");
 
-				if (this.directories && Object.keys(directories || {}).length > 0) {
-					debug("Setting directories via `directories` export from config file: %o", directories);
-					this.directories.setViaConfigObject(directories);
+				exportedConfig = exportedConfigObject || {};
+
+				if (this.directories && Object.keys(exportedConfigObject?.dir || {}).length > 0) {
+					debug(
+						"Setting directories via `config.dir` export from config file: %o",
+						exportedConfigObject.dir,
+					);
+					this.directories.setViaConfigObject(exportedConfigObject.dir);
 				}
 
-				// debug( "localConfig require return value: %o", localConfig );
-				if (typeof localConfig === "function") {
-					localConfig = await localConfig(this.userConfig);
-					// debug( "localConfig is a function, after calling, this.userConfig is %o", this.userConfig );
+				// TODO (config) sync `exportedConfigObject` to the rest of `userConfig` (e.g. templateFormats)
+
+				if (typeof configDefaultReturn === "function") {
+					localConfig = await configDefaultReturn(this.userConfig);
+				} else {
+					localConfig = configDefaultReturn;
 				}
 
 				// Removed a check for `filters` in 3.0.0-alpha.6 (now using addTransform instead) https://www.11ty.dev/docs/config/#transforms
@@ -349,10 +355,16 @@ class TemplateConfig {
 				);
 			}
 		} else {
-			debug("Eleventy local project config file not found, skipping.");
+			debug(
+				"Project config file not found (not an error—skipping). Looked in: %o",
+				this.projectConfigPaths,
+			);
 		}
 
-		return localConfig;
+		return {
+			localConfig,
+			exportedConfig,
+		};
 	}
 
 	/**
@@ -362,7 +374,12 @@ class TemplateConfig {
 	 * @returns {{}} merged - The merged config file.
 	 */
 	async mergeConfig() {
-		let localConfig = await this.requireLocalConfigFile();
+		let { localConfig, exportedConfig } = await this.requireLocalConfigFile();
+
+		// Merge `export const config = {}` with `return {}` in config callback
+		if (isPlainObject(exportedConfig)) {
+			localConfig = merge(localConfig || {}, exportedConfig);
+		}
 
 		if (this.directories) {
 			if (Object.keys(this.userConfig.directoryAssignments || {}).length > 0) {
@@ -372,6 +389,7 @@ class TemplateConfig {
 				);
 				this.directories.setViaConfigObject(this.userConfig.directoryAssignments);
 			}
+
 			if (localConfig && Object.keys(localConfig?.dir || {}).length > 0) {
 				debug(
 					"Setting directories via `dir` object return from configuration file: %o",
@@ -453,7 +471,11 @@ class TemplateConfig {
 
 		debug("Current configuration: %o", mergedConfig);
 
-		this.afterConfigMergeActions(mergedConfig);
+		// Add to the merged config too
+		mergedConfig.uses = this.usesGraph;
+
+		// this is used for the layouts event
+		this.usesGraph.setConfig(mergedConfig);
 
 		return mergedConfig;
 	}
@@ -463,14 +485,6 @@ class TemplateConfig {
 			this._usesGraph = new GlobalDependencyMap();
 		}
 		return this._usesGraph;
-	}
-
-	afterConfigMergeActions(eleventyConfig) {
-		// Add to the merged config too
-		eleventyConfig.uses = this.usesGraph;
-
-		// this is used for the layouts event
-		this.usesGraph.setConfig(eleventyConfig);
 	}
 
 	get uses() {

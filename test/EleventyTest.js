@@ -913,7 +913,7 @@ test("setInputDirectory config method #1503 in a plugin throws error", async (t)
   });
 });
 
-test("Eleventy directories export (ESM)", async (t) => {
+test("Eleventy config export (ESM)", async (t) => {
   t.plan(5);
   let elev = new Eleventy("test/stubs/cfg-directories-export", null, {
     configPath: "./test/stubs/cfg-directories-export/eleventy.config.js",
@@ -931,7 +931,7 @@ test("Eleventy directories export (ESM)", async (t) => {
   let result = await elev.toJSON();
 });
 
-test("Eleventy directories export (CommonJS)", async (t) => {
+test("Eleventy config export (CommonJS)", async (t) => {
   t.plan(5);
   let elev = new Eleventy("test/stubs/cfg-directories-export-cjs", null, {
     configPath: "./test/stubs/cfg-directories-export-cjs/eleventy.config.cjs",

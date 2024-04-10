@@ -125,6 +125,7 @@ export default function (config) {
 			engineOverride: "templateEngineOverride",
 			computed: "eleventyComputed",
 		},
+
 		// Deprecated, define using `export const directories = {}` instead.
 		// Reference values using `eleventyConfig.directories` instead.
 		dir: {
@@ -135,6 +136,7 @@ export default function (config) {
 			data: "_data",
 			output: "_site",
 		},
+
 		// deprecated, use config.addNunjucksFilter
 		nunjucksFilters: {},
 	};
