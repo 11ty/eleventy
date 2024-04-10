@@ -5,18 +5,18 @@ import isGlob from "is-glob";
 
 /* Directories internally should always use *nix forward slashes */
 class ProjectDirectories {
-	// no updates allowed, input/output set via CLI
-	#frozen = false;
-
-	#raw = {};
-
-	#defaults = {
+	static defaults = {
 		input: "./",
 		data: "./_data/", // Relative to input directory
 		includes: "./_includes/", // Relative to input directory
 		layouts: "./_layouts/", // Relative to input directory
 		output: "./_site/",
 	};
+
+	// no updates allowed, input/output set via CLI
+	#frozen = false;
+
+	#raw = {};
 
 	#dirs = {};
 
@@ -105,12 +105,12 @@ class ProjectDirectories {
 
 	updateInputDependencies() {
 		// raw first, fall back to Eleventy defaults if not yet set
-		this.setData(this.#raw.data ?? this.#defaults.data);
-		this.setIncludes(this.#raw.includes ?? this.#defaults.includes);
+		this.setData(this.#raw.data ?? ProjectDirectories.defaults.data);
+		this.setIncludes(this.#raw.includes ?? ProjectDirectories.defaults.includes);
 
 		// Should not include this if not explicitly opted-in
 		if (this.#raw.layouts !== undefined) {
-			this.setLayouts(this.#raw.layouts ?? this.#defaults.layouts);
+			this.setLayouts(this.#raw.layouts ?? ProjectDirectories.defaults.layouts);
 		}
 	}
 
@@ -220,15 +220,15 @@ class ProjectDirectories {
 	}
 
 	get input() {
-		return this.#dirs.input || this.#defaults.input;
+		return this.#dirs.input || ProjectDirectories.defaults.input;
 	}
 
 	get data() {
-		return this.#dirs.data || this.#defaults.data;
+		return this.#dirs.data || ProjectDirectories.defaults.data;
 	}
 
 	get includes() {
-		return this.#dirs.includes || this.#defaults.includes;
+		return this.#dirs.includes || ProjectDirectories.defaults.includes;
 	}
 
 	get layouts() {
@@ -237,7 +237,7 @@ class ProjectDirectories {
 	}
 
 	get output() {
-		return this.#dirs.output || this.#defaults.output;
+		return this.#dirs.output || ProjectDirectories.defaults.output;
 	}
 
 	// for a hypothetical template file

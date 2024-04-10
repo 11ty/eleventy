@@ -125,8 +125,11 @@ export default function (config) {
 			engineOverride: "templateEngineOverride",
 			computed: "eleventyComputed",
 		},
-		// Downstream folks should use `export const directories = {}` instead.
+		// Deprecated, define using `export const directories = {}` instead.
+		// Reference values using `eleventyConfig.directories` instead.
 		dir: {
+			// These values here aren’t used internally either (except by a few tests), instead we’re using `ProjectDirectories.defaults`.
+			// These are kept in place for backwards compat with `eleventyConfig.dir` references in project config code and plugins.
 			input: ".",
 			includes: "_includes",
 			data: "_data",
