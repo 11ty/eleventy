@@ -798,10 +798,11 @@ Arguments:
 		if (!activeQueue.length) {
 			return false;
 		}
-		activeQueue = new Set(
-			activeQueue.map(TemplatePath.addLeadingDotSlash).map(PathNormalizer.normalizeSeperator),
+		return this.shouldTriggerConfigReset(
+			activeQueue.map((path) => {
+				return PathNormalizer.normalizeSeperator(TemplatePath.addLeadingDotSlash(path));
+			}),
 		);
-		return this.shouldTriggerConfigReset(activeQueue);
 	}
 
 	/**
