@@ -90,9 +90,7 @@ class EleventyExtensionMap {
 
 	getValidExtensionsForPath(path) {
 		let extensions = new Set(
-			[...Object.keys(this.extensionToKeyMap)].filter((extension) =>
-				path.endsWith(`.${extension}`),
-			),
+			Object.keys(this.extensionToKeyMap).filter((extension) => path.endsWith(`.${extension}`)),
 		);
 
 		// if multiple extensions are valid, sort from longest to shortest
