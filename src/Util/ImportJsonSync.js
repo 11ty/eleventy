@@ -1,57 +1,57 @@
 import fs from "node:fs";
+import { createRequire } from "node:module";
+import path from "node:path";
+import debugUtil from "debug";
 
 import { TemplatePath } from "@11ty/eleventy-utils";
+
 import { normalizeFilePathInEleventyPackage } from "./Require.js";
 
-// async version of this in Require.js
+const debug = debugUtil("Eleventy:ImportJsonSync");
+const require = createRequire(import.meta.url);
 
-// Used for JSON imports, suffering from Node warning that import assertions experimental but also
-// throwing an error if you try to import() a JSON file without an import assertion.
-function loadContentsSync(path, options = {}) {
-	let rawInput;
-	let encoding = "utf8";
-	if ("encoding" in options) {
-		encoding = options.encoding;
-	}
-
-	try {
-		rawInput = fs.readFileSync(path, encoding);
-	} catch (e) {
-		// if file does not exist, return nothing
-	}
-
-	// Can return a buffer, string, etc
-	if (typeof rawInput === "string") {
-		rawInput = rawInput.trim();
-	}
-
-	return rawInput;
-}
-
-function importJsonSync(filePath) {
+function importJsonSync(filePath, lookInParentDirs = false) {
 	if (!filePath.endsWith(".json")) {
 		throw new Error(`importJsonSync expects a .json file extension (received: ${filePath})`);
 	}
 
-	let rawInput = loadContentsSync(filePath);
-	return JSON.parse(rawInput);
+	try {
+		// `package.json` searches look in parent dirs:
+		// https://docs.npmjs.com/cli/v7/configuring-npm/folders#more-information
+		if (lookInParentDirs) {
+			let filename = path.parse(filePath).base;
+			let allDirs = TemplatePath.getAllDirs(filePath).slice(1);
+			for (let dir of allDirs) {
+				let newPath = TemplatePath.join(dir, filename);
+				if (fs.existsSync(newPath)) {
+					filePath = newPath;
+					debug("Found %o searching parent directories at: %o", filename, filePath);
+					break;
+				}
+			}
+		}
+
+		// TODO clear require.cache when these files change
+		return require(filePath);
+	} catch (e) {
+		debug("Attempted to import %o, received this error: %o", filePath, e);
+		// if file does not exist, return nothing
+	}
 }
 
-// TODO cache
 function getEleventyPackageJson() {
 	let filePath = normalizeFilePathInEleventyPackage("package.json");
 	return importJsonSync(filePath);
 }
 
-// TODO cache
 function getModulePackageJson(dir) {
 	let filePath = TemplatePath.absolutePath(dir, "package.json");
 	return importJsonSync(filePath);
 }
 
-// TODO cache
 function getWorkingProjectPackageJson() {
-	return getModulePackageJson(TemplatePath.getWorkingDir());
+	let filePath = TemplatePath.absolutePath(TemplatePath.getWorkingDir(), "package.json");
+	return importJsonSync(filePath, true);
 }
 
 export {

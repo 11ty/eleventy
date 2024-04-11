@@ -125,12 +125,15 @@ function normalizeFilePathInEleventyPackage(file) {
 async function dynamicImportFromEleventyPackage(file) {
 	// points to files relative to the top level Eleventy directory
 	let filePath = normalizeFilePathInEleventyPackage(file);
+
+	// Returns promise
 	return dynamicImportAbsolutePath(filePath, "esm");
 }
 
 async function dynamicImport(localPath, type) {
 	let absolutePath = TemplatePath.absolutePath(localPath);
-	// async
+
+	// Returns promise
 	return dynamicImportAbsolutePath(absolutePath, type);
 }
 
@@ -138,13 +141,16 @@ async function dynamicImport(localPath, type) {
 async function dynamicImportRawFromEleventyPackage(file) {
 	// points to files relative to the top level Eleventy directory
 	let filePath = normalizeFilePathInEleventyPackage(file);
+
+	// Returns promise
 	return dynamicImportAbsolutePath(filePath, "esm", true);
 }
 
 /* Used to import project configuration files, raw means we don’t normalize away the `default` export */
 async function dynamicImportRaw(localPath, type) {
 	let absolutePath = TemplatePath.absolutePath(localPath);
-	// async
+
+	// Returns promise
 	return dynamicImportAbsolutePath(absolutePath, type, true);
 }
 

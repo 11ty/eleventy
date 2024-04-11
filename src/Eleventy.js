@@ -365,14 +365,13 @@ class Eleventy {
 			ret.push(slashRet.join(" / "));
 		}
 
-		let versionStr = `v${pkg.version}`;
 		let time = ((this.getNewTimestamp() - this.start) / 1000).toFixed(2);
 		ret.push(`in ${time} ${simplePlural(time, "second", "seconds")}`);
 
 		if (writeCount >= 10) {
-			ret.push(`(${((time * 1000) / writeCount).toFixed(1)}ms each, ${versionStr})`);
+			ret.push(`(${((time * 1000) / writeCount).toFixed(1)}ms each, v${pkg.version})`);
 		} else {
-			ret.push(`(${versionStr})`);
+			ret.push(`(v${pkg.version})`);
 		}
 
 		return ret.join(" ");

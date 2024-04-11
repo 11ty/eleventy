@@ -6,6 +6,7 @@ import { getEleventyPackageJson, getWorkingProjectPackageJson } from "./ImportJs
 const pkg = getEleventyPackageJson();
 const debug = debugUtil("Eleventy:Compatibility");
 
+// Used in user config versionCheck method.
 class Compatibility {
 	static NORMALIZE_PRERELEASE_REGEX = /-canary\b/g;
 
