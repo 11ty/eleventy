@@ -166,6 +166,39 @@ test("Setting values via config object (input relative dirs)", t => {
 	t.is(d.layouts, "./test/stubs/mylayouts/");
 });
 
+test("Setting values via config object (input relative dirs, parent dirs)", t => {
+	let d = new ProjectDirectories();
+	d.setViaConfigObject({
+		input: "test/stubs",
+		data: "../globaldata",
+		includes: "../components",
+	});
+
+	t.is(d.input, "./test/stubs/");
+	t.is(d.inputFile, undefined);
+	t.is(d.output, "./_site/");
+	t.is(d.data, "./test/globaldata/");
+	t.is(d.includes, "./test/components/");
+	t.is(d.layouts, undefined);
+});
+
+test("Setting values via config object (eleventy-base-blog example)", t => {
+	let d = new ProjectDirectories();
+	d.setViaConfigObject({
+		input: "src",
+		includes: "../_includes",
+		data: "../_data",
+		output: "_site"
+	});
+
+	t.is(d.input, "./src/");
+	t.is(d.inputFile, undefined);
+	t.is(d.output, "./_site/");
+	t.is(d.data, "./_data/");
+	t.is(d.includes, "./_includes/");
+	t.is(d.layouts, undefined);
+});
+
 test("Setting values via config object (empty string/false value)", t => {
 	let d = new ProjectDirectories();
 	d.setViaConfigObject({

@@ -70,8 +70,10 @@ class ProjectDirectories {
 		}
 
 		// Input relative directory, if falsy or an empty string, inputDir is used!
+		// Always set if input changed, e.g. input is `src` and data is `../_data` (resulting in `./_data`) we still want to set data to this new value
 		if (configDirs.data !== undefined) {
 			if (
+				inputChanged ||
 				this.normalizeDirectoryPathRelativeToInputDirectory(configDirs.data || "") !== this.data
 			) {
 				this.setData(configDirs.data);
@@ -81,8 +83,9 @@ class ProjectDirectories {
 		// Input relative directory, if falsy or an empty string, inputDir is used!
 		if (configDirs.includes !== undefined) {
 			if (
+				inputChanged ||
 				this.normalizeDirectoryPathRelativeToInputDirectory(configDirs.includes || "") !==
-				this.includes
+					this.includes
 			) {
 				this.setIncludes(configDirs.includes);
 			}
@@ -91,8 +94,9 @@ class ProjectDirectories {
 		// Input relative directory, if falsy or an empty string, inputDir is used!
 		if (configDirs.layouts !== undefined) {
 			if (
+				inputChanged ||
 				this.normalizeDirectoryPathRelativeToInputDirectory(configDirs.layouts || "") !==
-				this.layouts
+					this.layouts
 			) {
 				this.setLayouts(configDirs.layouts);
 			}
