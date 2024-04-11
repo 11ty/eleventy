@@ -42,7 +42,8 @@ const debug = debugUtil("Eleventy");
  * @returns {module:11ty/eleventy/Eleventy~Eleventy}
  */
 class Eleventy {
-	#directories;
+	#directories; /* ProjectDirectories instance */
+	#projectPackageJson; /* userspace package.json file contents */
 
 	constructor(input, output, options = {}, eleventyConfig = null) {
 		/** @member {String} - Holds the path to the input (might be a file or folder) */
@@ -940,12 +941,18 @@ Arguments:
 		benchmark.after();
 	}
 
+	// fetch from project’s package.json
+	get projectPackageJson() {
+		if (!this.#projectPackageJson) {
+			this.#projectPackageJson = getWorkingProjectPackageJson();
+		}
+		return this.#projectPackageJson;
+	}
+
 	get isEsm() {
 		if (this._isEsm === undefined) {
 			try {
-				// fetch from project’s package.json
-				let projectPackageJson = getWorkingProjectPackageJson();
-				this._isEsm = projectPackageJson?.type === "module";
+				this._isEsm = this.projectPackageJson?.type === "module";
 			} catch (e) {
 				debug("Could not find a project package.json for project’s ES Modules check: %O", e);
 				this._isEsm = false;
