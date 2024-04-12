@@ -19,6 +19,7 @@ class Liquid extends TemplateEngine {
 	constructor(name, eleventyConfig) {
 		super(name, eleventyConfig);
 
+		this.globalsReference = this.config.globalData;
 		this.liquidOptions = this.config.liquidOptions || {};
 
 		this.setLibrary(this.config.libraryOverrides.liquid);
@@ -50,9 +51,28 @@ class Liquid extends TemplateEngine {
 		};
 
 		let options = Object.assign(defaults, this.liquidOptions || {});
+
+		this.mergeGlobalData();
+		options.globals = this.globalsReference;
 		// debug("Liquid constructor options: %o", options);
 
 		return options;
+	}
+
+	mergeGlobalData() {
+		for (let name in this.config.liquidOptions.globals) {
+			if (name in this.config.globalData) continue;
+			this.config.globalData[name] = this.config.liquidOptions.globals[name];
+		}
+	}
+
+	/**
+	 * Liquid needs to receive globals in order for {% render %} to have access to them
+	 *
+	 * @override
+	 **/
+	needsGlobals() {
+		return true;
 	}
 
 	static wrapFilter(fn) {
@@ -109,6 +129,16 @@ class Liquid extends TemplateEngine {
 			);
 		}
 		this.liquidLib.registerTag(name, tagObj);
+	}
+
+	addGlobals(globals) {
+		for (let [name, value] of Object.entries(globals)) {
+			this.addGlobal(name, value);
+		}
+	}
+
+	addGlobal(name, value) {
+		this.globalsReference[name] = value;
 	}
 
 	addAllShortcodes(shortcodes) {
