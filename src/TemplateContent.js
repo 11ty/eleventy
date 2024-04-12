@@ -329,7 +329,7 @@ class TemplateContent {
 						virtualTemplateData = virtualTemplateDefinition.data;
 					}
 
-					let data = TemplateData.mergeDeep({}, fm.data, extraData, virtualTemplateData);
+					let data = TemplateData.mergeDeep(false, fm.data, extraData, virtualTemplateData);
 
 					let cleanedData = TemplateData.cleanupData(data);
 					resolve(cleanedData);

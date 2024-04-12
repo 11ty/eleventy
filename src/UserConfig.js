@@ -149,6 +149,8 @@ class UserConfig {
 		};
 
 		this.virtualTemplates = {};
+
+		this.freezeReservedData = true;
 	}
 
 	// compatibleRange is optional in 2.0.0-beta.2
@@ -918,6 +920,11 @@ class UserConfig {
 		this.#setDirectory("layouts", dir);
 	}
 
+	// Some data keywords in Eleventy are reserved, throw an error if an application tries to set these.
+	setFreezeReservedData(bool) {
+		this.freezeReservedData = !!bool;
+	}
+
 	getMergingConfigObject() {
 		let obj = {
 			templateFormats: this.templateFormats,
@@ -972,6 +979,7 @@ class UserConfig {
 			urlTransforms: this.urlTransforms,
 			virtualTemplates: this.virtualTemplates,
 			// `directories` and `directoryAssignments` are merged manually prior to plugin processing
+			freezeReservedData: this.freezeReservedData,
 		};
 
 		if (Array.isArray(this.dataFileSuffixesOverride)) {

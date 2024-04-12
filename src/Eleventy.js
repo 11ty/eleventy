@@ -497,6 +497,7 @@ Verbose Output: ${this.verboseMode}`;
 			source: this.source,
 			runMode: this.runMode,
 		};
+
 		let configPath = this.eleventyConfig.getLocalProjectConfigFile();
 		if (configPath) {
 			let absolutePathToConfig = TemplatePath.absolutePath(configPath);
@@ -508,7 +509,12 @@ Verbose Output: ${this.verboseMode}`;
 		}
 
 		values.source = this.source;
-		values.isServerless = false; // backwards compatibility
+
+		// Backwards compatibility
+		Object.defineProperty(values, "isServerless", {
+			enumerable: false,
+			value: false,
+		});
 
 		return values;
 	}
@@ -519,6 +525,9 @@ Verbose Output: ${this.verboseMode}`;
 	 * @method
 	 */
 	initializeEnvironmentVariables(env) {
+		// Recognize that global data `eleventy.version` is coerced to remove prerelease tags
+		// and this is the raw version (3.0.0 versus 3.0.0-alpha.6).
+		// `eleventy.env.version` does not yet exist (unnecessary)
 		process.env.ELEVENTY_VERSION = Eleventy.getVersion();
 
 		process.env.ELEVENTY_ROOT = env.root;

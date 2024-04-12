@@ -343,20 +343,31 @@ class Template extends TemplateContent {
 			debugDev("%o getData merged layout chain front matter", this.inputPath);
 		}
 
-		let mergedData = TemplateData.mergeDeep(
-			this.config,
-			{},
-			globalData,
-			mergedLayoutData,
-			localData,
-			frontMatterData,
-		);
-		mergedData = await this.addPageDate(mergedData);
-		mergedData = this.addPageData(mergedData);
-		debugDev("%o getData mergedData", this.inputPath);
+		try {
+			let mergedData = TemplateData.mergeDeep(
+				this.config.dataDeepMerge,
+				{},
+				globalData,
+				mergedLayoutData,
+				localData,
+				frontMatterData,
+			);
 
-		this._dataCache = mergedData;
-		return mergedData;
+			mergedData = await this.addPageDate(mergedData);
+			mergedData = this.addPageData(mergedData);
+			debugDev("%o getData mergedData", this.inputPath);
+
+			this._dataCache = mergedData;
+			return mergedData;
+		} catch (e) {
+			if (e instanceof TypeError) {
+				throw new EleventyBaseError(
+					"Error with reserved data in Eleventy. Use `eleventyConfig.setFreezeReservedData(false)` or remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, `content`, `page`, `collections`). Read more: https://www.11ty.dev/docs/data-eleventy-supplied/",
+					e,
+				);
+			}
+			throw e;
+		}
 	}
 
 	async addPageDate(data) {

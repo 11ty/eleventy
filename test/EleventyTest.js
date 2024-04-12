@@ -948,3 +948,25 @@ test("Eleventy config export (CommonJS)", async (t) => {
 
   let result = await elev.toJSON();
 });
+
+test("Eleventy setting reserved data throws error (eleventy)", async (t) => {
+  let elev = new Eleventy("./test/stubs-reserved-data/");
+  elev.disableLogger();
+
+  let e = await t.throwsAsync(() => elev.toJSON(), {
+    message: 'Error with reserved data in Eleventy. Use `eleventyConfig.setFreezeReservedData(false)` or remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, `content`, `page`, `collections`). Read more: https://www.11ty.dev/docs/data-eleventy-supplied/'
+  });
+
+  t.is(e.originalError.toString(), "TypeError: Cannot add property key1, object is not extensible");
+});
+
+test("Eleventy setting reserved data throws error (pkg)", async (t) => {
+  let elev = new Eleventy("./test/stubs-reserved-data-pkg/");
+  elev.disableLogger();
+
+  let e = await t.throwsAsync(() => elev.toJSON(), {
+    message: 'Error with reserved data in Eleventy. Use `eleventyConfig.setFreezeReservedData(false)` or remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, `content`, `page`, `collections`). Read more: https://www.11ty.dev/docs/data-eleventy-supplied/'
+  });
+
+  t.is(e.originalError.toString(), "TypeError: Cannot add property myOwn, object is not extensible");
+});
