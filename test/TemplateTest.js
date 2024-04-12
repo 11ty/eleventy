@@ -126,8 +126,8 @@ test("Test raw front matter from template (yaml)", async (t) => {
   );
   t.truthy(await tmpl.getInputContent(), "template exists and can be opened.");
 
-  t.is((await tmpl.getFrontMatter()).data.key1, "value1");
-  t.is((await tmpl.getFrontMatter()).data.key3, "value3");
+  t.is((await tmpl._testGetFrontMatter()).data.key1, "value1");
+  t.is((await tmpl._testGetFrontMatter()).data.key3, "value3");
 
   let data = await tmpl.getData();
   t.is(data.key1, "value1");
@@ -145,8 +145,8 @@ test("Test raw front matter from template (json)", async (t) => {
     "./dist"
   );
 
-  t.is((await tmpl.getFrontMatter()).data.key1, "value1");
-  t.is((await tmpl.getFrontMatter()).data.key3, "value3");
+  t.is((await tmpl._testGetFrontMatter()).data.key1, "value1");
+  t.is((await tmpl._testGetFrontMatter()).data.key3, "value3");
 
   let data = await tmpl.getData();
   t.is(data.key1, "value1");
@@ -164,8 +164,8 @@ test("Test raw front matter from template (js)", async (t) => {
     "./dist"
   );
 
-  t.is((await tmpl.getFrontMatter()).data.key1, "value1");
-  t.is((await tmpl.getFrontMatter()).data.key3, "value3");
+  t.is((await tmpl._testGetFrontMatter()).data.key1, "value1");
+  t.is((await tmpl._testGetFrontMatter()).data.key3, "value3");
 
   let data = await tmpl.getData();
   t.is(data.key1, "value1");
@@ -205,7 +205,7 @@ test("One Layout (using new content var)", async (t) => {
     eleventyConfig
   );
 
-  t.is((await tmpl.getFrontMatter()).data[tmpl.config.keys.layout], "defaultLayout");
+  t.is((await tmpl._testGetFrontMatter()).data[tmpl.config.keys.layout], "defaultLayout");
 
   let data = await tmpl.getData();
   t.is(data[tmpl.config.keys.layout], "defaultLayout");
@@ -239,7 +239,7 @@ test("One Layout (using content)", async (t) => {
     eleventyConfig
   );
 
-  t.is((await tmpl.getFrontMatter()).data[tmpl.config.keys.layout], "defaultLayoutLayoutContent");
+  t.is((await tmpl._testGetFrontMatter()).data[tmpl.config.keys.layout], "defaultLayoutLayoutContent");
 
   let data = await tmpl.getData();
   t.is(data[tmpl.config.keys.layout], "defaultLayoutLayoutContent");
@@ -273,7 +273,7 @@ test("One Layout (layouts disabled)", async (t) => {
     eleventyConfig
   );
 
-  t.is((await tmpl.getFrontMatter()).data[tmpl.config.keys.layout], "defaultLayoutLayoutContent");
+  t.is((await tmpl._testGetFrontMatter()).data[tmpl.config.keys.layout], "defaultLayoutLayoutContent");
 
   let data = await tmpl.getData();
   t.is(data[tmpl.config.keys.layout], "defaultLayoutLayoutContent");
@@ -305,7 +305,7 @@ test("One Layout (liquid test)", async (t) => {
     eleventyConfig
   );
 
-  t.is((await tmpl.getFrontMatter()).data[tmpl.config.keys.layout], "layoutLiquid.liquid");
+  t.is((await tmpl._testGetFrontMatter()).data[tmpl.config.keys.layout], "layoutLiquid.liquid");
 
   let data = await tmpl.getData();
   t.is(data[tmpl.config.keys.layout], "layoutLiquid.liquid");
@@ -339,7 +339,7 @@ test("Two Layouts", async (t) => {
     eleventyConfig
   );
 
-  t.is((await tmpl.getFrontMatter()).data[tmpl.config.keys.layout], "layout-a");
+  t.is((await tmpl._testGetFrontMatter()).data[tmpl.config.keys.layout], "layout-a");
 
   let data = await tmpl.getData();
   t.is(data[tmpl.config.keys.layout], "layout-a");
@@ -1065,7 +1065,7 @@ test("Front Matter Tags (Single)", async (t) => {
     "./test/stubs/",
     "dist"
   );
-  let frontmatter = await tmpl.getFrontMatterData();
+  let { data: frontmatter } = await tmpl.getFrontMatterData();
   t.deepEqual(frontmatter.tags, ["single-tag"]);
 
   let fulldata = await tmpl.getData();
@@ -1081,7 +1081,7 @@ test("Front Matter Tags (Multiple)", async (t) => {
     "./test/stubs/",
     "dist"
   );
-  let frontmatter = await tmpl.getFrontMatterData();
+  let { data: frontmatter } = await tmpl.getFrontMatterData();
   t.deepEqual(frontmatter.tags, ["multi-tag", "multi-tag-2"]);
 
   let fulldata = await tmpl.getData();
@@ -1459,9 +1459,9 @@ test("Custom Front Matter Parsing Options", async (t) => {
     excerpt: true,
   };
 
-  let frontmatter = await tmpl.getFrontMatter();
+  let frontmatter = await tmpl._testGetFrontMatter();
+
   t.is(frontmatter.data.front, "hello");
-  t.is(frontmatter.data.page.excerpt.trim(), "This is an excerpt.");
 
   t.is(frontmatter.excerpt.trim(), "This is an excerpt.");
   t.is(
@@ -1485,9 +1485,9 @@ test("Custom Front Matter Parsing Options (using alias)", async (t) => {
     excerpt_alias: "my_excerpt",
   };
 
-  let frontmatter = await tmpl.getFrontMatter();
+  let frontmatter = await tmpl._testGetFrontMatter();
   t.is(frontmatter.data.front, "hello");
-  t.is(frontmatter.data.my_excerpt.trim(), "This is an excerpt.");
+
   t.is(
     normalizeNewLines(frontmatter.content.trim()),
     `This is an excerpt.
@@ -1508,9 +1508,8 @@ test("Custom Front Matter Parsing Options (no newline before excerpt separator)"
     excerpt: true,
   };
 
-  let frontmatter = await tmpl.getFrontMatter();
+  let frontmatter = await tmpl._testGetFrontMatter();
   t.is(frontmatter.data.front, "hello");
-  t.is(frontmatter.data.page.excerpt.trim(), "This is an excerpt.");
 
   t.is(frontmatter.excerpt.trim(), "This is an excerpt.");
   t.is(
@@ -1533,7 +1532,7 @@ test("Custom Front Matter Parsing Options (no newline after excerpt separator)",
     excerpt: true,
   };
 
-  let frontmatter = await tmpl.getFrontMatter();
+  let frontmatter = await tmpl._testGetFrontMatter();
   t.is(
     normalizeNewLines(frontmatter.content.trim()),
     `This is an excerpt.
@@ -1551,7 +1550,7 @@ test("Custom Front Matter Parsing Options (no newlines before or after excerpt s
     excerpt: true,
   };
 
-  let frontmatter = await tmpl.getFrontMatter();
+  let frontmatter = await tmpl._testGetFrontMatter();
   t.is(frontmatter.content.trim(), "This is an excerpt.This is content.");
 });
 
@@ -1566,9 +1565,8 @@ test("Custom Front Matter Parsing Options (html comment separator)", async (t) =
     excerpt_separator: "<!-- excerpt -->",
   };
 
-  let frontmatter = await tmpl.getFrontMatter();
+  let frontmatter = await tmpl._testGetFrontMatter();
   t.is(frontmatter.data.front, "hello");
-  t.is(frontmatter.data.page.excerpt.trim(), "This is an excerpt.");
 
   t.is(frontmatter.excerpt.trim(), "This is an excerpt.");
   t.is(
@@ -1576,6 +1574,9 @@ test("Custom Front Matter Parsing Options (html comment separator)", async (t) =
     `This is an excerpt.
 This is content.`
   );
+
+  let fulldata = await tmpl.getData();
+  t.is(fulldata.page.excerpt.trim(), "This is an excerpt.");
 });
 
 test("Custom Front Matter Parsing Options (using TOML)", async (t) => {
@@ -1591,7 +1592,7 @@ test("Custom Front Matter Parsing Options (using TOML)", async (t) => {
     },
   };
 
-  let frontmatter = await tmpl.getFrontMatter();
+  let frontmatter = await tmpl._testGetFrontMatter();
   t.deepEqual(frontmatter.data, {
     front: "hello",
   });

@@ -67,12 +67,13 @@ class TemplateLayout extends TemplateContent {
 	}
 
 	async getTemplateLayoutMapEntry() {
+		let { data: frontMatterData } = await this.getFrontMatterData();
 		return {
 			// Used by `TemplateLayout.getTemplate()`
 			key: this.dataKeyLayoutPath,
 
 			// used by `this.getData()`
-			frontMatterData: await this.getFrontMatterData(),
+			frontMatterData,
 		};
 	}
 

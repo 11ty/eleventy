@@ -129,7 +129,7 @@ class Eleventy {
 		this._hasConfigInitialized = false;
 	}
 
-	async initializeConfig() {
+	async initializeConfig(initOverrides) {
 		if (!this.eleventyConfig) {
 			this.eleventyConfig = new TemplateConfig(null, this.options.configPath);
 		} else if (this.options.configPath) {
@@ -160,7 +160,7 @@ class Eleventy {
 		this.initializeEnvironmentVariables(this.env);
 
 		// Async initialization of configuration
-		await this.eleventyConfig.init();
+		await this.eleventyConfig.init(initOverrides);
 
 		/**
 		 * @member {Object} - Initialize Eleventy’s configuration, including the user config file
@@ -428,6 +428,7 @@ class Eleventy {
 		await this.config.events.emit("eleventy.extensionmap", this.extensionMap);
 
 		// eleventyServe is always available, even when not in --serve mode
+		// TODO directorynorm
 		this.eleventyServe.setOutputDir(this.outputDir);
 
 		// TODO

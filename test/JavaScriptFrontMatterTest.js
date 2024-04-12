@@ -3,7 +3,7 @@ import Eleventy from "../src/Eleventy.js";
 
 test("Custom Front Matter Parsing Options (using JavaScript node-retrieve-globals)", async (t) => {
   let elev = new Eleventy("./test/stubs/script-frontmatter/test.njk", "./_site");
-  elev.setIsVerbose(false);
+  elev.disableLogger();
 
   let result = await elev.toJSON();
 
@@ -20,7 +20,7 @@ test("Custom Front Matter Parsing Options (using JavaScript node-retrieve-global
       });
     },
   });
-  elev.setIsVerbose(false);
+  elev.disableLogger();
 
   let result = await elev.toJSON();
 

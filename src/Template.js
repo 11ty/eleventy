@@ -22,6 +22,7 @@ import TemplateBehavior from "./TemplateBehavior.js";
 import TemplateContentPrematureUseError from "./Errors/TemplateContentPrematureUseError.js";
 import TemplateContentUnrenderedTemplateError from "./Errors/TemplateContentUnrenderedTemplateError.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
+import ReservedData from "./Util/ReservedData.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 const writeFile = util.promisify(fs.writeFile);
@@ -31,6 +32,7 @@ const debug = debugUtil("Eleventy:Template");
 const debugDev = debugUtil("Dev:Eleventy:Template");
 
 class EleventyTransformError extends EleventyBaseError {}
+class EleventyReservedDataError extends TypeError {}
 
 class Template extends TemplateContent {
 	constructor(templatePath, templateData, extensionMap, config) {
@@ -253,7 +255,8 @@ class Template extends TemplateContent {
 	async usePermalinkRoot() {
 		if (this._usePermalinkRoot === undefined) {
 			// TODO this only works with immediate front matter and not data files
-			this._usePermalinkRoot = (await this.getFrontMatterData())[this.config.keys.permalinkRoot];
+			let { data } = await this.getFrontMatterData();
+			this._usePermalinkRoot = data[this.config.keys.permalinkRoot];
 		}
 
 		return this._usePermalinkRoot;
@@ -305,7 +308,8 @@ class Template extends TemplateContent {
 	}
 
 	async _testGetAllLayoutFrontMatterData() {
-		let frontMatterData = await this.getFrontMatterData();
+		let { data: frontMatterData } = await this.getFrontMatterData();
+
 		if (frontMatterData[this.config.keys.layout]) {
 			let layout = this.getLayout(frontMatterData[this.config.keys.layout]);
 			return await layout.getData();
@@ -328,7 +332,7 @@ class Template extends TemplateContent {
 			debugDev("%o getData getTemplateDirectoryData and getGlobalData", this.inputPath);
 		}
 
-		let frontMatterData = await this.getFrontMatterData();
+		let { data: frontMatterData, excerpt } = await this.getFrontMatterData();
 		let layoutKey =
 			frontMatterData[this.config.keys.layout] ||
 			localData[this.config.keys.layout] ||
@@ -353,16 +357,32 @@ class Template extends TemplateContent {
 				frontMatterData,
 			);
 
+			let reserved = this.config.freezeReservedData ? ReservedData.getReservedKeys(mergedData) : [];
+			if (reserved.length > 0) {
+				let e = new EleventyReservedDataError(
+					`Cannot override reserved Eleventy properties: ${reserved.join(", ")}`,
+				);
+				e.reservedNames = reserved;
+				throw e;
+			}
+
+			this.addExcerpt(mergedData, excerpt);
 			mergedData = await this.addPageDate(mergedData);
 			mergedData = this.addPageData(mergedData);
 			debugDev("%o getData mergedData", this.inputPath);
 
 			this._dataCache = mergedData;
+
 			return mergedData;
 		} catch (e) {
-			if (e instanceof TypeError) {
+			if (
+				e instanceof EleventyReservedDataError ||
+				(e instanceof TypeError &&
+					e.message.startsWith("Cannot add property") &&
+					e.message.endsWith("not extensible"))
+			) {
 				throw new EleventyBaseError(
-					"Error with reserved data in Eleventy. Use `eleventyConfig.setFreezeReservedData(false)` or remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, `content`, `page`, `collections`). Read more: https://www.11ty.dev/docs/data-eleventy-supplied/",
+					`You attempted to set one of Eleventy’s reserved data property names${e.reservedNames ? `: ${e.reservedNames.join(", ")}` : ""}. You can opt-out of this behavior with \`eleventyConfig.setFreezeReservedData(false)\` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. \`eleventy\`, \`pkg\`, and others). Learn more: https://www.11ty.dev/docs/data-eleventy-supplied/`,
 					e,
 				);
 			}
