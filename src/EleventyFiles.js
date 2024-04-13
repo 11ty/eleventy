@@ -347,7 +347,7 @@ class EleventyFiles {
 
 			paths = paths.concat(virtualTemplates);
 
-			// Virtual templates can not live at the same place as files on the file system!
+			// Virtual templates cannot live at the same place as files on the file system!
 			if (paths.length !== new Set(paths).size) {
 				let conflicts = {};
 				for (let path of paths) {
@@ -398,7 +398,7 @@ class EleventyFiles {
 		}
 
 		// Revert to old passthroughcopy copy files behavior
-		return this.validTemplateGlobs.concat(this.passthroughGlobs).concat(directoryGlobs);
+		return this.validTemplateGlobs.concat(this.passthroughGlobs, directoryGlobs);
 	}
 
 	/* For `eleventy --watch` */
