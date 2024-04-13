@@ -159,7 +159,7 @@ class EleventyExtensionMap {
 	}
 
 	hasExtension(key) {
-		return [...Object.values(this.extensionToKeyMap)].includes(key);
+		return Object.values(this.extensionToKeyMap).includes(key);
 	}
 
 	getExtensionsFromKey(key) {
