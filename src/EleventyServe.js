@@ -72,6 +72,7 @@ class EleventyServe {
 		}
 	}
 
+	// TODO directorynorm
 	setOutputDir(outputDir) {
 		// TODO check if this is different and if so, restart server (if already running)
 		// This applies if you change the output directory in your config file during watch/serve

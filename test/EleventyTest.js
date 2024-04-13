@@ -948,3 +948,147 @@ test("Eleventy config export (CommonJS)", async (t) => {
 
   let result = await elev.toJSON();
 });
+
+test("Eleventy setting reserved data throws error (eleventy)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.html", `---
+eleventy:
+  key1: NOOOOO
+---`);
+    }
+  });
+  elev.disableLogger();
+
+  let e = await t.throwsAsync(() => elev.toJSON(), {
+    message: 'You attempted to set one of Eleventy’s reserved data property names. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://www.11ty.dev/docs/data-eleventy-supplied/'
+  });
+
+  t.is(e.originalError.toString(), "TypeError: Cannot add property key1, object is not extensible");
+});
+
+test("Eleventy setting reserved data throws error (pkg)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.html", `---
+pkg:
+  myOwn: OVERRIDE
+---`);
+    }
+  });
+  elev.disableLogger();
+
+  let e = await t.throwsAsync(() => elev.toJSON(), {
+    message: 'You attempted to set one of Eleventy’s reserved data property names. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://www.11ty.dev/docs/data-eleventy-supplied/'
+  });
+
+  t.is(e.originalError.toString(), "TypeError: Cannot add property myOwn, object is not extensible");
+});
+
+test("Eleventy setting reserved data throws error (page)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.html", `---
+page: "My page value"
+---`)
+    }
+  });
+  elev.disableLogger();
+
+  let e = await t.throwsAsync(() => elev.toJSON(), {
+    message: 'You attempted to set one of Eleventy’s reserved data property names: page. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://www.11ty.dev/docs/data-eleventy-supplied/'
+  });
+
+  t.is(e.originalError.toString(), "TypeError: Cannot override reserved Eleventy properties: page");
+});
+
+test("Eleventy setting reserved data throws error (content)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.html", `---
+content: "My page value"
+---`)
+    }
+  });
+  elev.disableLogger();
+
+  let e = await t.throwsAsync(() => elev.toJSON(), {
+    message: 'You attempted to set one of Eleventy’s reserved data property names: content. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://www.11ty.dev/docs/data-eleventy-supplied/'
+  });
+
+  t.is(e.originalError.toString(), "TypeError: Cannot override reserved Eleventy properties: content");
+});
+
+test("Eleventy setting reserved data throws error (collections)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.html", `---
+collections: []
+---`)
+    }
+  });
+  elev.disableLogger();
+
+  let e = await t.throwsAsync(() => elev.toJSON(), {
+    message: 'You attempted to set one of Eleventy’s reserved data property names: collections. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://www.11ty.dev/docs/data-eleventy-supplied/'
+  });
+
+  t.is(e.originalError.toString(), "TypeError: Cannot override reserved Eleventy properties: collections");
+});
+
+test("Eleventy setting pkg data is okay when pkg is remapped to parkour", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.html", `---
+pkg:
+  myOwn: OVERRIDE
+---`);
+    }
+  });
+  elev.disableLogger();
+
+  await elev.initializeConfig({
+    keys: {
+      package: "parkour"
+    }
+  });
+
+  // Remap successful
+  t.is(elev.eleventyConfig.config.keys.package, "parkour");
+
+  let [result] = await elev.toJSON();
+  t.deepEqual(result, {
+    content: "",
+    inputPath: "./test/stubs-virtual/index.html",
+    outputPath: "./_site/index.html",
+    rawInput: "",
+    url: "/"
+  });
+});
+
+test("Eleventy setting reserved data throws error (pkg remapped to parkour)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.html", `---
+parkour:
+  myOwn: OVERRIDE
+---`);
+    }
+  });
+  elev.disableLogger();
+
+  await elev.initializeConfig({
+    keys: {
+      package: "parkour"
+    }
+  });
+
+  // Remap successful
+  t.is(elev.eleventyConfig.config.keys.package, "parkour");
+
+  let e = await t.throwsAsync(() => elev.toJSON(), {
+    message: 'You attempted to set one of Eleventy’s reserved data property names. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://www.11ty.dev/docs/data-eleventy-supplied/'
+  });
+
+  t.is(e.originalError.toString(), "TypeError: Cannot add property myOwn, object is not extensible");
+});

@@ -22,6 +22,7 @@ import TemplateBehavior from "./TemplateBehavior.js";
 import TemplateContentPrematureUseError from "./Errors/TemplateContentPrematureUseError.js";
 import TemplateContentUnrenderedTemplateError from "./Errors/TemplateContentUnrenderedTemplateError.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
+import ReservedData from "./Util/ReservedData.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 const writeFile = util.promisify(fs.writeFile);
@@ -253,7 +254,8 @@ class Template extends TemplateContent {
 	async usePermalinkRoot() {
 		if (this._usePermalinkRoot === undefined) {
 			// TODO this only works with immediate front matter and not data files
-			this._usePermalinkRoot = (await this.getFrontMatterData())[this.config.keys.permalinkRoot];
+			let { data } = await this.getFrontMatterData();
+			this._usePermalinkRoot = data[this.config.keys.permalinkRoot];
 		}
 
 		return this._usePermalinkRoot;
@@ -305,7 +307,8 @@ class Template extends TemplateContent {
 	}
 
 	async _testGetAllLayoutFrontMatterData() {
-		let frontMatterData = await this.getFrontMatterData();
+		let { data: frontMatterData } = await this.getFrontMatterData();
+
 		if (frontMatterData[this.config.keys.layout]) {
 			let layout = this.getLayout(frontMatterData[this.config.keys.layout]);
 			return await layout.getData();
@@ -328,7 +331,7 @@ class Template extends TemplateContent {
 			debugDev("%o getData getTemplateDirectoryData and getGlobalData", this.inputPath);
 		}
 
-		let frontMatterData = await this.getFrontMatterData();
+		let { data: frontMatterData } = await this.getFrontMatterData();
 		let layoutKey =
 			frontMatterData[this.config.keys.layout] ||
 			localData[this.config.keys.layout] ||
@@ -343,47 +346,52 @@ class Template extends TemplateContent {
 			debugDev("%o getData merged layout chain front matter", this.inputPath);
 		}
 
-		let mergedData = TemplateData.mergeDeep(
-			this.config,
-			{},
-			globalData,
-			mergedLayoutData,
-			localData,
-			frontMatterData,
-		);
-		mergedData = await this.addPageDate(mergedData);
-		mergedData = this.addPageData(mergedData);
-		debugDev("%o getData mergedData", this.inputPath);
+		try {
+			let mergedData = TemplateData.mergeDeep(
+				this.config.dataDeepMerge,
+				{},
+				globalData,
+				mergedLayoutData,
+				localData,
+				frontMatterData,
+			);
 
-		this._dataCache = mergedData;
-		return mergedData;
+			if (this.config.freezeReservedData) {
+				ReservedData.check(mergedData);
+			}
+
+			await this.addPage(mergedData);
+
+			debugDev("%o getData mergedData", this.inputPath);
+
+			this._dataCache = mergedData;
+
+			return mergedData;
+		} catch (e) {
+			if (
+				ReservedData.isReservedDataError(e) ||
+				(e instanceof TypeError &&
+					e.message.startsWith("Cannot add property") &&
+					e.message.endsWith("not extensible"))
+			) {
+				throw new EleventyBaseError(
+					`You attempted to set one of Eleventy’s reserved data property names${e.reservedNames ? `: ${e.reservedNames.join(", ")}` : ""}. You can opt-out of this behavior with \`eleventyConfig.setFreezeReservedData(false)\` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. \`eleventy\`, \`pkg\`, and others). Learn more: https://www.11ty.dev/docs/data-eleventy-supplied/`,
+					e,
+				);
+			}
+			throw e;
+		}
 	}
 
-	async addPageDate(data) {
+	async addPage(data) {
 		if (!("page" in data)) {
 			data.page = {};
 		}
 
 		let newDate = await this.getMappedDate(data);
 
-		if ("page" in data && "date" in data.page) {
-			debug(
-				"Warning: data.page.date is in use (%o) will be overwritten with: %o",
-				data.page.date,
-				newDate,
-			);
-		}
-
+		// Make sure to keep these keys synchronized in src/Util/ReservedData.js
 		data.page.date = newDate;
-
-		return data;
-	}
-
-	addPageData(data) {
-		if (!("page" in data)) {
-			data.page = {};
-		}
-
 		data.page.inputPath = this.inputPath;
 		data.page.fileSlug = this.fileSlugStr;
 		data.page.filePathStem = this.filePathStem;
@@ -391,8 +399,10 @@ class Template extends TemplateContent {
 		data.page.templateSyntax = this.templateRender.getEnginesList(
 			data[this.config.keys.engineOverride],
 		);
-
-		return data;
+		// data.page.url
+		// data.page.outputPath
+		// data.page.excerpt from gray-matter and Front Matter
+		// data.page.lang from I18nPlugin
 	}
 
 	// Tests only
@@ -541,6 +551,11 @@ class Template extends TemplateContent {
 				false, // skip symbol resolution
 				this,
 			);
+
+			// Check for reserved properties in computed data
+			if (this.config.freezeReservedData) {
+				ReservedData.check(data[this.config.keys.computed]);
+			}
 
 			// actually add the computed data
 			this._addComputedEntry(this.computedData, data[this.config.keys.computed]);

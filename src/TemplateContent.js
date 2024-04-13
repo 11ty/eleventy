@@ -149,8 +149,6 @@ class TemplateContent {
 	get frontMatter() {
 		if (this.frontMatterOverride) {
 			return this.frontMatterOverride;
-		} else if (this._frontMatter) {
-			return this._frontMatter;
 		} else {
 			throw new Error(
 				"Unfortunately you’re using code that monkey patched some Eleventy internals and it isn’t async-friendly. Change your code to use the async `read()` method on the template instead!",
@@ -231,7 +229,7 @@ class TemplateContent {
 						// For monkey patchers that used `frontMatter` 🤧
 						// https://github.com/11ty/eleventy/issues/613#issuecomment-999637109
 						// https://github.com/11ty/eleventy/issues/2710#issuecomment-1373854834
-						this._frontMatter = fm;
+						// Removed this._frontMatter monkey patcher help in 3.0.0-alpha.7
 
 						resolve(fm);
 					} else {
@@ -303,9 +301,9 @@ class TemplateContent {
 		return content;
 	}
 
-	// This might only be used in tests
-	async getFrontMatter() {
+	async _testGetFrontMatter() {
 		let fm = this.frontMatterOverride ? this.frontMatterOverride : await this.read();
+
 		return fm;
 	}
 
@@ -321,6 +319,11 @@ class TemplateContent {
 				try {
 					let fm = await this.read();
 
+					// gray-matter isn’t async-friendly but can return a promise from custom front matter
+					if (fm.data instanceof Promise) {
+						fm.data = await fm.data;
+					}
+
 					let extraData = await this.engine.getExtraDataFromFile(this.inputPath);
 
 					let virtualTemplateDefinition = this.getVirtualTemplateDefinition();
@@ -329,10 +332,13 @@ class TemplateContent {
 						virtualTemplateData = virtualTemplateDefinition.data;
 					}
 
-					let data = TemplateData.mergeDeep({}, fm.data, extraData, virtualTemplateData);
-
+					let data = TemplateData.mergeDeep(false, fm.data, extraData, virtualTemplateData);
 					let cleanedData = TemplateData.cleanupData(data);
-					resolve(cleanedData);
+
+					resolve({
+						data: cleanedData,
+						excerpt: fm.excerpt,
+					});
 				} catch (e) {
 					reject(e);
 				}
@@ -343,7 +349,7 @@ class TemplateContent {
 	}
 
 	async getEngineOverride() {
-		let frontMatterData = await this.getFrontMatterData();
+		let { data: frontMatterData } = await this.getFrontMatterData();
 		return frontMatterData[this.config.keys.engineOverride];
 	}
 

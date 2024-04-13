@@ -239,3 +239,64 @@ test("DeepCopy", (t) => {
     a: { "override:b": [3, 4] },
   });
 });
+
+test("String does not overrides parent key with object", (t) => {
+  t.deepEqual(Merge({
+    eleventy: {
+      key1: "a"
+    }
+  }, {
+    // this is ignored
+    eleventy: "string"
+  }), {
+    eleventy: {
+      key1: "a"
+    }
+  });
+});
+
+
+test("Merge with frozen target object fails", (t) => {
+  t.throws(() => {
+    Merge({
+      eleventy: Object.freeze({
+        key1: "a"
+      })
+    }, {
+      eleventy: {
+        key2: "b"
+      }
+    });
+  });
+});
+
+test("Merge with frozen source object (1 level deep) succeeds", (t) => {
+  t.deepEqual(Merge({
+  }, {
+    eleventy: Object.freeze({
+      key2: "b"
+    })
+  }), {
+    eleventy: {
+      key2: "b",
+    }
+  });
+});
+
+
+test("Merge with frozen source object (1 level deep, mixed) succeeds", (t) => {
+  t.deepEqual(Merge({
+    eleventy: {
+      key1: "a"
+    }
+  }, {
+    eleventy: Object.freeze({
+      key2: "b"
+    })
+  }), {
+    eleventy: {
+      key1: "a",
+      key2: "b",
+    }
+  });
+});

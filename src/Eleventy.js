@@ -129,7 +129,7 @@ class Eleventy {
 		this._hasConfigInitialized = false;
 	}
 
-	async initializeConfig() {
+	async initializeConfig(initOverrides) {
 		if (!this.eleventyConfig) {
 			this.eleventyConfig = new TemplateConfig(null, this.options.configPath);
 		} else if (this.options.configPath) {
@@ -160,7 +160,7 @@ class Eleventy {
 		this.initializeEnvironmentVariables(this.env);
 
 		// Async initialization of configuration
-		await this.eleventyConfig.init();
+		await this.eleventyConfig.init(initOverrides);
 
 		/**
 		 * @member {Object} - Initialize Eleventy’s configuration, including the user config file
@@ -428,6 +428,7 @@ class Eleventy {
 		await this.config.events.emit("eleventy.extensionmap", this.extensionMap);
 
 		// eleventyServe is always available, even when not in --serve mode
+		// TODO directorynorm
 		this.eleventyServe.setOutputDir(this.outputDir);
 
 		// TODO
@@ -497,6 +498,7 @@ Verbose Output: ${this.verboseMode}`;
 			source: this.source,
 			runMode: this.runMode,
 		};
+
 		let configPath = this.eleventyConfig.getLocalProjectConfigFile();
 		if (configPath) {
 			let absolutePathToConfig = TemplatePath.absolutePath(configPath);
@@ -508,7 +510,12 @@ Verbose Output: ${this.verboseMode}`;
 		}
 
 		values.source = this.source;
-		values.isServerless = false; // backwards compatibility
+
+		// Backwards compatibility
+		Object.defineProperty(values, "isServerless", {
+			enumerable: false,
+			value: false,
+		});
 
 		return values;
 	}
@@ -519,6 +526,9 @@ Verbose Output: ${this.verboseMode}`;
 	 * @method
 	 */
 	initializeEnvironmentVariables(env) {
+		// Recognize that global data `eleventy.version` is coerced to remove prerelease tags
+		// and this is the raw version (3.0.0 versus 3.0.0-alpha.6).
+		// `eleventy.env.version` does not yet exist (unnecessary)
 		process.env.ELEVENTY_VERSION = Eleventy.getVersion();
 
 		process.env.ELEVENTY_ROOT = env.root;

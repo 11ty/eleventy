@@ -10,7 +10,13 @@ import TemplateGlob from "../TemplateGlob.js";
 import EleventyExtensionMap from "../EleventyExtensionMap.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import TemplateDataInitialGlobalData from "./TemplateDataInitialGlobalData.js";
-import { EleventyImport, EleventyLoadContent } from "../Util/Require.js";
+import { getEleventyPackageJson } from "../Util/ImportJsonSync.js";
+import {
+	EleventyImport,
+	EleventyLoadContent,
+	normalizeFilePathInEleventyPackage,
+} from "../Util/Require.js";
+import { DeepFreeze } from "../Util/DeepFreeze.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 const debugWarn = debugUtil("Eleventy:Warnings");
@@ -101,11 +107,16 @@ class TemplateData {
 		this.config = config;
 	}
 
-	async getRawImports() {
+	getRawImports() {
 		try {
-			this.rawImports[this.config.keys.package] = await EleventyImport("package.json", "json");
+			let pkgJson = getEleventyPackageJson();
+			this.rawImports[this.config.keys.package] = pkgJson;
+
+			if (this.config.freezeReservedData) {
+				DeepFreeze(this.rawImports);
+			}
 		} catch (e) {
-			let pkgPath = TemplatePath.absolutePath("package.json");
+			let pkgPath = normalizeFilePathInEleventyPackage("package.json");
 			debug("Could not find and/or require package.json for data preprocessing at %o", pkgPath);
 		}
 
@@ -284,7 +295,7 @@ class TemplateData {
 				);
 
 				let oldData = lodashGet(globalData, objectPathTarget);
-				data = TemplateData.mergeDeep(this.config, oldData, data);
+				data = TemplateData.mergeDeep(this.config.dataDeepMerge, oldData, data);
 			}
 
 			dataFileConflicts[objectPathTargetString] = files[j];
@@ -304,6 +315,7 @@ class TemplateData {
 					if (!("env" in globalData.eleventy)) {
 						globalData.eleventy.env = {};
 					}
+
 					Object.assign(globalData.eleventy.env, this.environmentVariables);
 				}
 
@@ -311,7 +323,13 @@ class TemplateData {
 					if (!("directories" in globalData.eleventy)) {
 						globalData.eleventy.directories = {};
 					}
+
 					Object.assign(globalData.eleventy.directories, this.dirs.getUserspaceInstance());
+				}
+
+				// Reserved
+				if (this.config.freezeReservedData) {
+					DeepFreeze(globalData.eleventy);
 				}
 
 				resolve(globalData);
@@ -322,7 +340,7 @@ class TemplateData {
 	}
 
 	async getGlobalData() {
-		let rawImports = await this.getRawImports();
+		let rawImports = this.getRawImports();
 
 		if (!this.globalData) {
 			this.globalData = new Promise(async (resolve) => {
@@ -389,7 +407,7 @@ class TemplateData {
 					}
 					dataSource[key] = path;
 				}
-				TemplateData.mergeDeep(this.config, localData, cleanedDataForPath);
+				TemplateData.mergeDeep(this.config.dataDeepMerge, localData, cleanedDataForPath);
 			}
 		}
 		return localData;
@@ -602,11 +620,11 @@ class TemplateData {
 		return unique(paths).reverse();
 	}
 
-	static mergeDeep(config, target, ...source) {
-		if (config.dataDeepMerge) {
-			return TemplateData.merge(target, ...source);
-		} else {
+	static mergeDeep(deepMerge, target, ...source) {
+		if (!deepMerge && deepMerge !== undefined) {
 			return Object.assign(target, ...source);
+		} else {
+			return TemplateData.merge(target, ...source);
 		}
 	}
 

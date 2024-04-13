@@ -67,12 +67,13 @@ class TemplateLayout extends TemplateContent {
 	}
 
 	async getTemplateLayoutMapEntry() {
+		let { data: frontMatterData } = await this.getFrontMatterData();
 		return {
 			// Used by `TemplateLayout.getTemplate()`
 			key: this.dataKeyLayoutPath,
 
 			// used by `this.getData()`
-			frontMatterData: await this.getFrontMatterData(),
+			frontMatterData,
 		};
 	}
 
@@ -147,7 +148,7 @@ class TemplateLayout extends TemplateContent {
 					}
 
 					// Deep merge of layout front matter
-					let data = TemplateData.mergeDeep(this.config, {}, ...dataToMerge);
+					let data = TemplateData.mergeDeep(this.config.dataDeepMerge, {}, ...dataToMerge);
 					delete data[this.config.keys.layout];
 
 					resolve(data);
