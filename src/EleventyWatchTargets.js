@@ -70,16 +70,15 @@ class EleventyWatchTargets {
 	}
 
 	addRaw(targets, isDependency) {
-		for (let target of targets) {
-			let path = TemplatePath.addLeadingDotSlash(target);
-			if (!this.isWatched(path)) {
-				this.newTargets.add(path);
+		for (let targetPath of targets.map(TemplatePath.addLeadingDotSlash)) {
+			if (!this.isWatched(targetPath)) {
+				this.newTargets.add(targetPath);
 			}
 
-			this.targets.add(path);
+			this.targets.add(targetPath);
 
 			if (isDependency) {
-				this.dependencies.add(path);
+				this.dependencies.add(targetPath);
 			}
 		}
 	}
