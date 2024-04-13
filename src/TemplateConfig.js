@@ -291,7 +291,7 @@ class TemplateConfig {
 				await this.userConfig._executePlugin(plugin, options);
 			} catch (e) {
 				let name = this.userConfig._getPluginName(plugin);
-				let namespaces = [storedActiveNamespace, pluginNamespace].filter((entry) => !!entry);
+				let namespaces = [storedActiveNamespace, pluginNamespace].filter(Boolean);
 
 				let namespaceStr = "";
 				if (namespaces.length) {

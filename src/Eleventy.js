@@ -880,7 +880,7 @@ Arguments:
 				build: {
 					templates: templateResults
 						.flat()
-						.filter((entry) => !!entry)
+						.filter(Boolean)
 						.map((entry) => {
 							entry.url = PathPrefixer.joinUrlParts(normalizedPathPrefix, entry.url);
 							return entry;
@@ -1250,10 +1250,10 @@ Arguments:
 
 			if (to === "fs") {
 				// New in 3.0: flatten return object for return.
-				ret[1] = templateResults.flat().filter((entry) => !!entry);
+				ret[1] = templateResults.flat().filter(Boolean);
 				eventsArg.results = ret[1];
 			} else {
-				eventsArg.results = templateResults.filter((entry) => !!entry);
+				eventsArg.results = templateResults.filter(Boolean);
 			}
 
 			if (to === "ndjson") {
