@@ -32,7 +32,6 @@ const debug = debugUtil("Eleventy:Template");
 const debugDev = debugUtil("Dev:Eleventy:Template");
 
 class EleventyTransformError extends EleventyBaseError {}
-class EleventyReservedDataError extends TypeError {}
 
 class Template extends TemplateContent {
 	constructor(templatePath, templateData, extensionMap, config) {
@@ -332,7 +331,7 @@ class Template extends TemplateContent {
 			debugDev("%o getData getTemplateDirectoryData and getGlobalData", this.inputPath);
 		}
 
-		let { data: frontMatterData, excerpt } = await this.getFrontMatterData();
+		let { data: frontMatterData } = await this.getFrontMatterData();
 		let layoutKey =
 			frontMatterData[this.config.keys.layout] ||
 			localData[this.config.keys.layout] ||
@@ -357,18 +356,12 @@ class Template extends TemplateContent {
 				frontMatterData,
 			);
 
-			let reserved = this.config.freezeReservedData ? ReservedData.getReservedKeys(mergedData) : [];
-			if (reserved.length > 0) {
-				let e = new EleventyReservedDataError(
-					`Cannot override reserved Eleventy properties: ${reserved.join(", ")}`,
-				);
-				e.reservedNames = reserved;
-				throw e;
+			if (this.config.freezeReservedData) {
+				ReservedData.check(mergedData);
 			}
 
-			this.addExcerpt(mergedData, excerpt);
-			mergedData = await this.addPageDate(mergedData);
-			mergedData = this.addPageData(mergedData);
+			await this.addPage(mergedData);
+
 			debugDev("%o getData mergedData", this.inputPath);
 
 			this._dataCache = mergedData;
@@ -376,7 +369,7 @@ class Template extends TemplateContent {
 			return mergedData;
 		} catch (e) {
 			if (
-				e instanceof EleventyReservedDataError ||
+				ReservedData.isReservedDataError(e) ||
 				(e instanceof TypeError &&
 					e.message.startsWith("Cannot add property") &&
 					e.message.endsWith("not extensible"))
@@ -390,31 +383,14 @@ class Template extends TemplateContent {
 		}
 	}
 
-	async addPageDate(data) {
+	async addPage(data) {
 		if (!("page" in data)) {
 			data.page = {};
 		}
 
 		let newDate = await this.getMappedDate(data);
 
-		if ("page" in data && "date" in data.page) {
-			debug(
-				"Warning: data.page.date is in use (%o) will be overwritten with: %o",
-				data.page.date,
-				newDate,
-			);
-		}
-
 		data.page.date = newDate;
-
-		return data;
-	}
-
-	addPageData(data) {
-		if (!("page" in data)) {
-			data.page = {};
-		}
-
 		data.page.inputPath = this.inputPath;
 		data.page.fileSlug = this.fileSlugStr;
 		data.page.filePathStem = this.filePathStem;
@@ -422,8 +398,10 @@ class Template extends TemplateContent {
 		data.page.templateSyntax = this.templateRender.getEnginesList(
 			data[this.config.keys.engineOverride],
 		);
-
-		return data;
+		// data.page.url
+		// data.page.outputPath
+		// data.page.excerpt from gray-matter and Front Matter
+		// data.page.lang from I18nPlugin
 	}
 
 	// Tests only
@@ -572,6 +550,11 @@ class Template extends TemplateContent {
 				false, // skip symbol resolution
 				this,
 			);
+
+			// Check for reserved properties in computed data
+			if (this.config.freezeReservedData) {
+				ReservedData.check(data[this.config.keys.computed]);
+			}
 
 			// actually add the computed data
 			this._addComputedEntry(this.computedData, data[this.config.keys.computed]);

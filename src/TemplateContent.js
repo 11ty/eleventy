@@ -180,16 +180,6 @@ class TemplateContent {
 		return this.config.virtualTemplates[inputDirRelativeInputPath];
 	}
 
-	addExcerpt(data, excerpt) {
-		if (!data || !excerpt) {
-			return;
-		}
-
-		// alias, defaults to page.excerpt
-		let alias = this.config.frontMatterParsingOptions?.excerpt_alias || "page.excerpt";
-		lodashSet(data, alias, excerpt);
-	}
-
 	async read() {
 		if (!this.readingPromise) {
 			if (!this.inputContent) {
@@ -232,8 +222,8 @@ class TemplateContent {
 							}
 
 							// alias, defaults to page.excerpt
-							// let alias = options.excerpt_alias || "page.excerpt";
-							// lodashSet(fm.data, alias, fm.excerpt);
+							let alias = options.excerpt_alias || "page.excerpt";
+							lodashSet(fm.data, alias, fm.excerpt);
 						}
 
 						// For monkey patchers that used `frontMatter` 🤧
