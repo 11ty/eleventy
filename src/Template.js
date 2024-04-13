@@ -390,6 +390,7 @@ class Template extends TemplateContent {
 
 		let newDate = await this.getMappedDate(data);
 
+		// Make sure to keep these keys synchronized in src/Util/ReservedData.js
 		data.page.date = newDate;
 		data.page.inputPath = this.inputPath;
 		data.page.fileSlug = this.fileSlugStr;
