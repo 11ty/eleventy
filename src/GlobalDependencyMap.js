@@ -165,18 +165,14 @@ class GlobalDependencyMap {
 	}
 
 	getTemplatesThatConsumeCollections(collectionNames) {
-		let templates = new Set();
-		for (let name of collectionNames) {
-			let collectionName = GlobalDependencyMap.getCollectionKeyForEntry(name);
-			if (!this.map.hasNode(collectionName)) {
-				continue;
-			}
-			for (let node of this.map.dependantsOf(collectionName)) {
-				if (!node.startsWith(GlobalDependencyMap.COLLECTION_PREFIX)) {
-					templates.add(node);
-				}
-			}
-		}
+		let templates = new Set(
+			collectionNames
+				.map(GlobalDependencyMap.getCollectionKeyForEntry)
+				.filter((collectionName) => this.map.hasNode(collectionName))
+				.map((collectionName) => this.map.getdependantsOf(collectionName))
+				.filter((node) => !node.startsWith(GlobalDependencyMap.COLLECTION_PREFIX)),
+		);
+
 		return templates;
 	}
 

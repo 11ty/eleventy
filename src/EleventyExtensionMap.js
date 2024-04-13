@@ -91,12 +91,11 @@ class EleventyExtensionMap {
 	}
 
 	getValidExtensionsForPath(path) {
-		let extensions = new Set();
-		for (let extension in this.extensionToKeyMap) {
-			if (path.endsWith(`.${extension}`)) {
-				extensions.add(extension);
-			}
-		}
+		let extensions = new Set(
+			Object.keys(this.extensionToKeyMap).filter((extension) =>
+				path.endsWith(`.${extension}`),
+			),
+		);
 
 		// if multiple extensions are valid, sort from longest to shortest
 		// e.g. .11ty.js and .js
