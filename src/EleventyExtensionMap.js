@@ -58,13 +58,11 @@ class EleventyExtensionMap {
 		}
 
 		let files = [];
-		this.validTemplateLanguageKeys.forEach(
-			function (key) {
-				this.getExtensionsFromKey(key).forEach(function (extension) {
-					files.push((dir ? dir + "/" : "") + path + "." + extension);
-				});
-			}.bind(this),
-		);
+		this.validTemplateLanguageKeys.forEach((key) => {
+			this.getExtensionsFromKey(key).forEach((extension) => {
+				files.push((dir ? dir + "/" : "") + path + "." + extension);
+			});
+		});
 
 		return files;
 	}
@@ -90,9 +88,7 @@ class EleventyExtensionMap {
 
 	getValidExtensionsForPath(path) {
 		let extensions = new Set(
-			Object.keys(this.extensionToKeyMap).filter((extension) =>
-				path.endsWith(`.${extension}`),
-			),
+			Object.keys(this.extensionToKeyMap).filter((extension) => path.endsWith(`.${extension}`)),
 		);
 
 		// if multiple extensions are valid, sort from longest to shortest
