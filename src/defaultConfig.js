@@ -31,7 +31,7 @@ import { HtmlTransformer } from "./Util/HtmlTransformer.js";
  * @property {string} [htmlOutputSuffix='-o']
  * @property {string} [jsDataFileSuffix='.11tydata'] - File suffix for jsData files.
  * @property {Object} keys
- * @property {string} [keys.package='pkg']
+ * @property {string} [keys.package='pkg'] - Global data property for package.json data
  * @property {string} [keys.layout='layout']
  * @property {string} [keys.permalink='permalink']
  * @property {string} [keys.permalinkRoot='permalinkBypassOutputDir']
@@ -118,7 +118,7 @@ export default function (config) {
 		dataFileDirBaseNameOverride: false,
 
 		keys: {
-			package: "pkg",
+			package: "pkg", // supports `false`
 			layout: "layout",
 			permalink: "permalink",
 			permalinkRoot: "permalinkBypassOutputDir",
