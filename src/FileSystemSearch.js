@@ -31,7 +31,7 @@ class FileSystemSearch {
 		// Strip leading slashes from everything!
 		globs = globs.map(TemplatePath.stripLeadingDotSlash);
 
-		if (options.ignore && Array.isArray(options.ignore)) {
+		if (Array.isArray(options?.ignore)) {
 			options.ignore = options.ignore.map(TemplatePath.stripLeadingDotSlash);
 			debug("Glob search (%o) ignoring: %o", key, options.ignore);
 		}
