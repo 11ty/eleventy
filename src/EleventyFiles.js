@@ -454,9 +454,7 @@ class EleventyFiles {
 				// never ignore the input directory (even if config file returns "" for these)
 				return entry && entry !== this.inputDir;
 			})
-			.map((entry) => {
-				return TemplateGlob.map(entry + "**");
-			});
+			.map((entry) => TemplateGlob.map(entry + "**"));
 	}
 }
 
