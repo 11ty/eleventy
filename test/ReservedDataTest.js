@@ -1,5 +1,5 @@
 import test from "ava";
-import ReservedData from "../src/Util/ReservedData.js";
+import ReservedData from "../src/Data/ReservedData.js";
 
 test("No reserved Keys", t => {
   t.deepEqual(ReservedData.getReservedKeys({ key: {} }).sort(), []);

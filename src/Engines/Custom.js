@@ -1,5 +1,5 @@
 import TemplateEngine from "./TemplateEngine.js";
-import getJavaScriptData from "../Util/GetJavaScriptData.js";
+import getJavaScriptData from "../Data/GetJavaScriptData.js";
 import eventBus from "../EventBus.js";
 
 let lastModifiedFile = undefined;

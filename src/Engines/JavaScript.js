@@ -2,7 +2,7 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 
 import TemplateEngine from "./TemplateEngine.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
-import getJavaScriptData from "../Util/GetJavaScriptData.js";
+import getJavaScriptData from "../Data/GetJavaScriptData.js";
 import EventBusUtil from "../Util/EventBusUtil.js";
 import { EleventyImport } from "../Util/Require.js";
 

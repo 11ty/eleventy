@@ -22,7 +22,7 @@ import TemplateBehavior from "./TemplateBehavior.js";
 import TemplateContentPrematureUseError from "./Errors/TemplateContentPrematureUseError.js";
 import TemplateContentUnrenderedTemplateError from "./Errors/TemplateContentUnrenderedTemplateError.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
-import ReservedData from "./Util/ReservedData.js";
+import ReservedData from "./Data/ReservedData.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 const writeFile = util.promisify(fs.writeFile);
