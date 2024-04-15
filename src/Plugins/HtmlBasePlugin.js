@@ -1,6 +1,6 @@
 import urlFilter from "../Filters/Url.js";
 import PathPrefixer from "../Util/PathPrefixer.js";
-import { DeepCopy } from "../Util/Merge.js";
+import { DeepCopy } from "../Util/Objects/Merge.js";
 import { HtmlTransformer } from "../Util/HtmlTransformer.js";
 
 function isValidUrl(url) {

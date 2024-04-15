@@ -7,8 +7,8 @@ const fsExists = util.promisify(fs.exists);
 
 // TODO add a first-class Markdown component to expose this using Markdown-only syntax (will need to be synchronous for markdown-it)
 
-import Merge from "../Util/Merge.js";
-import { ProxyWrap } from "../Util/ProxyWrap.js";
+import Merge from "../Util/Objects/Merge.js";
+import { ProxyWrap } from "../Util/Objects/ProxyWrap.js";
 import TemplateDataInitialGlobalData from "../Data/TemplateDataInitialGlobalData.js";
 import EleventyShortcodeError from "../Errors/EleventyShortcodeError.js";
 import TemplateRender from "../TemplateRender.js";

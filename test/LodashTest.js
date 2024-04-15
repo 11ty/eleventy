@@ -1,7 +1,7 @@
 import test from "ava";
 import lodash from "@11ty/lodash-custom";
-import { ProxyWrap } from "../src/Util/ProxyWrap.js";
-import { DeepFreeze } from "../src/Util/DeepFreeze.js";
+import { ProxyWrap } from "../src/Util/Objects/ProxyWrap.js";
+import { DeepFreeze } from "../src/Util/Objects/DeepFreeze.js";
 
 const { set: lodashSet } = lodash;
 

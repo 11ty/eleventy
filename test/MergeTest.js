@@ -1,6 +1,6 @@
 import test from "ava";
 
-import { default as Merge, DeepCopy } from "../src/Util/Merge.js";
+import { default as Merge, DeepCopy } from "../src/Util/Objects/Merge.js";
 
 test("Shallow Merge", (t) => {
   t.deepEqual(Merge({}, {}), {});

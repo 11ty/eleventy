@@ -8,8 +8,8 @@ import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import UserConfig from "./UserConfig.js";
 import GlobalDependencyMap from "./GlobalDependencyMap.js";
 import ExistsCache from "./Util/ExistsCache.js";
-import merge from "./Util/Merge.js";
-import unique from "./Util/Unique.js";
+import merge from "./Util/Objects/Merge.js";
+import unique from "./Util/Objects/Unique.js";
 import eventBus from "./EventBus.js";
 
 const debug = debugUtil("Eleventy:TemplateConfig");

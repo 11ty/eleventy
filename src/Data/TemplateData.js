@@ -4,8 +4,8 @@ import lodash from "@11ty/lodash-custom";
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
-import merge from "../Util/Merge.js";
-import unique from "../Util/Unique.js";
+import merge from "../Util/Objects/Merge.js";
+import unique from "../Util/Objects/Unique.js";
 import TemplateGlob from "../TemplateGlob.js";
 import EleventyExtensionMap from "../EleventyExtensionMap.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
@@ -16,7 +16,7 @@ import {
 	EleventyLoadContent,
 	normalizeFilePathInEleventyPackage,
 } from "../Util/Require.js";
-import { DeepFreeze } from "../Util/DeepFreeze.js";
+import { DeepFreeze } from "../Util/Objects/DeepFreeze.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 const debugWarn = debugUtil("Eleventy:Warnings");
