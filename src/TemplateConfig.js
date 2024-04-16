@@ -9,7 +9,6 @@ import UserConfig from "./UserConfig.js";
 import GlobalDependencyMap from "./GlobalDependencyMap.js";
 import ExistsCache from "./Util/ExistsCache.js";
 import merge from "./Util/Merge.js";
-import unique from "./Util/Unique.js";
 import eventBus from "./EventBus.js";
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
 
