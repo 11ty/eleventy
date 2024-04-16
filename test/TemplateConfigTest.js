@@ -282,7 +282,7 @@ test("setTemplateFormats(null)", async (t) => {
   await templateCfg.init();
 
   let cfg = templateCfg.getConfig();
-  t.deepEqual(cfg.templateFormats.sort(), ["md", "njk"]);
+  t.deepEqual([...cfg.templateFormats].sort(), ["md", "njk"]);
 });
 
 test("setTemplateFormats(undefined)", async (t) => {
@@ -292,7 +292,7 @@ test("setTemplateFormats(undefined)", async (t) => {
   await templateCfg.init();
 
   let cfg = templateCfg.getConfig();
-  t.deepEqual(cfg.templateFormats.sort(), ["md", "njk"]);
+  t.deepEqual([...cfg.templateFormats].sort(), ["md", "njk"]);
 });
 
 test("multiple setTemplateFormats calls", async (t) => {

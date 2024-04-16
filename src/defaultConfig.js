@@ -118,6 +118,7 @@ export default function (config) {
 		dataFileDirBaseNameOverride: false,
 
 		keys: {
+			// TODO breaking: use `false` by default
 			package: "pkg", // supports `false`
 			layout: "layout",
 			permalink: "permalink",

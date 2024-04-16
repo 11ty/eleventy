@@ -26,6 +26,7 @@ import RenderPlugin, * as RenderPluginExtras from "./Plugins/RenderPlugin.js";
 import I18nPlugin, * as I18nPluginExtras from "./Plugins/I18nPlugin.js";
 import HtmlBasePlugin, * as HtmlBasePluginExtras from "./Plugins/HtmlBasePlugin.js";
 import { TransformPlugin as InputPathToUrlTransformPlugin } from "./Plugins/InputPathToUrl.js";
+import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
 
 const pkg = getEleventyPackageJson();
 const debug = debugUtil("Eleventy");
@@ -42,8 +43,9 @@ const debug = debugUtil("Eleventy");
  * @returns {module:11ty/eleventy/Eleventy~Eleventy}
  */
 class Eleventy {
-	#directories; /* ProjectDirectories instance */
 	#projectPackageJson; /* userspace package.json file contents */
+	#directories; /* ProjectDirectories instance */
+	#templateFormats; /* ProjectTemplateFormats instance */
 
 	constructor(input, output, options = {}, eleventyConfig = null) {
 		/** @member {String} - Holds the path to the input (might be a file or folder) */
@@ -98,12 +100,6 @@ class Eleventy {
 		this.needsInit = true;
 
 		/**
-		 * @member {Array<String>} - Subset of template types.
-		 * @default null
-		 */
-		this.formatsOverride = null;
-
-		/**
 		 * @member {Boolean} - Is this an incremental build? (only operates on a subset of input files)
 		 * @default false
 		 */
@@ -139,6 +135,7 @@ class Eleventy {
 		this.eleventyConfig.setProjectUsingEsm(this.isEsm);
 		this.eleventyConfig.setLogger(this.logger);
 		this.eleventyConfig.setDirectories(this.directories);
+		this.eleventyConfig.setTemplateFormats(this.templateFormats);
 
 		if (this.pathPrefix || this.pathPrefix === "") {
 			this.eleventyConfig.setPathPrefix(this.pathPrefix);
@@ -423,8 +420,10 @@ class Eleventy {
 			await this.config.events.emit("eleventy.env", this.env);
 		}
 
-		let formats = this.formatsOverride || this.config.templateFormats;
-		this.extensionMap = new EleventyExtensionMap(formats, this.eleventyConfig);
+		let formats = this.templateFormats.getTemplateFormats();
+
+		this.extensionMap = new EleventyExtensionMap(this.eleventyConfig);
+		this.extensionMap.setFormats(formats);
 		await this.config.events.emit("eleventy.extensionmap", this.extensionMap);
 
 		// eleventyServe is always available, even when not in --serve mode
@@ -617,6 +616,15 @@ Verbose Output: ${this.verboseMode}`;
 		this.eleventyConfig.verbose = isVerbose;
 	}
 
+	get templateFormats() {
+		if (!this.#templateFormats) {
+			let tf = new ProjectTemplateFormats();
+			this.#templateFormats = tf;
+		}
+
+		return this.#templateFormats;
+	}
+
 	/**
 	 * Updates the template formats of Eleventy.
 	 *
@@ -624,9 +632,7 @@ Verbose Output: ${this.verboseMode}`;
 	 * @param {String} formats - The new template formats.
 	 */
 	setFormats(formats) {
-		if (formats && formats !== "*") {
-			this.formatsOverride = formats.split(",");
-		}
+		this.templateFormats.setViaCommandLine(formats);
 	}
 
 	/**

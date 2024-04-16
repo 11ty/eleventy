@@ -80,6 +80,9 @@ const debug = require("debug")("Eleventy:cmd");
 			// reuse ErrorHandler instance in Eleventy
 			errorHandler = elev.errorHandler;
 
+			// Before init
+			elev.setFormats(argv.formats);
+
 			// careful, we can’t use async/await here to error properly
 			// with old node versions in `please-upgrade-node` above.
 			elev
@@ -92,7 +95,6 @@ const debug = require("debug")("Eleventy:cmd");
 
 					elev.setIgnoreInitial(argv["ignore-initial"]);
 					elev.setIncrementalBuild(argv.incremental);
-					elev.setFormats(argv.formats);
 
 					try {
 						if (argv.serve) {

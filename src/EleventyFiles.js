@@ -130,7 +130,8 @@ class EleventyFiles {
 	get extensionMap() {
 		// for tests
 		if (!this._extensionMap) {
-			this._extensionMap = new EleventyExtensionMap(this.formats, this.eleventyConfig);
+			this._extensionMap = new EleventyExtensionMap(this.eleventyConfig);
+			this._extensionMap.setFormats(this.formats);
 			this._extensionMap.config = this.eleventyConfig;
 		}
 		return this._extensionMap;

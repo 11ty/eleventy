@@ -629,7 +629,8 @@ test.skip("Markdown with alias", async (t) => {
     }
   });
 
-  let map = new EleventyExtensionMap(["md"], eleventyConfig);
+  let map = new EleventyExtensionMap(eleventyConfig);
+  map.setFormats(["md"]);
   map.config = {
     templateExtensionAliases: {
       markdown: "md",
@@ -675,7 +676,8 @@ test.skip("JavaScript with alias", async (t) => {
     }
   });
 
-  let map = new EleventyExtensionMap(["11ty.js"], eleventyConfig);
+  let map = new EleventyExtensionMap(eleventyConfig);
+  map.setFormats(["11ty.js"]);
   map.config = {
     templateExtensionAliases: {
       js: "11ty.js",

@@ -1655,7 +1655,8 @@ test("Engine Singletons", async (t) => {
     }
   });
 
-  let map = new EleventyExtensionMap(["njk"], eleventyConfig);
+  let map = new EleventyExtensionMap(eleventyConfig);
+  map.setFormats(["njk"]);
   let tmpl1 = await getNewTemplate(
     "./test/stubs/engine-singletons/first.njk",
     "./test/stubs/engine-singletons/",
@@ -1738,7 +1739,8 @@ test("Add Extension via Configuration (txt file)", async (t) => {
     });
   });
 
-  let map = new EleventyExtensionMap([], eleventyConfig);
+  let map = new EleventyExtensionMap(eleventyConfig);
+  map.setFormats([]);
   let tmpl = await getNewTemplate(
     "./test/stubs/default.txt",
     "./test/stubs/",
