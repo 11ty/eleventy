@@ -4,29 +4,29 @@ import UserConfig from "../src/UserConfig.js";
 test("Template Formats", (t) => {
   let userCfg = new UserConfig();
 
-  t.falsy(userCfg.getMergingConfigObject().templateFormats);
+  t.falsy(userCfg.templateFormats);
 
   userCfg.setTemplateFormats("njk,liquid");
-  t.deepEqual(userCfg.getMergingConfigObject().templateFormats, ["njk", "liquid"]);
+  t.deepEqual(userCfg.templateFormats, "njk,liquid");
 
   // setting multiple times takes the last one
   userCfg.setTemplateFormats("njk,liquid,pug");
   userCfg.setTemplateFormats("njk,liquid");
-  t.deepEqual(userCfg.getMergingConfigObject().templateFormats, ["njk", "liquid"]);
+  t.deepEqual(userCfg.templateFormats, "njk,liquid");
 });
 
 test("Template Formats (Arrays)", (t) => {
   let userCfg = new UserConfig();
 
-  t.falsy(userCfg.getMergingConfigObject().templateFormats);
+  t.falsy(userCfg.templateFormats);
 
   userCfg.setTemplateFormats(["njk", "liquid"]);
-  t.deepEqual(userCfg.getMergingConfigObject().templateFormats, ["njk", "liquid"]);
+  t.deepEqual(userCfg.templateFormats, ["njk", "liquid"]);
 
   // setting multiple times takes the last one
   userCfg.setTemplateFormats(["njk", "liquid", "pug"]);
   userCfg.setTemplateFormats(["njk", "liquid"]);
-  t.deepEqual(userCfg.getMergingConfigObject().templateFormats, ["njk", "liquid"]);
+  t.deepEqual(userCfg.templateFormats, ["njk", "liquid"]);
 });
 
 // more in TemplateConfigTest.js
@@ -144,7 +144,7 @@ test("Set manual Pass-through File Copy (glob patterns)", (t) => {
 test("Set Template Formats (string)", (t) => {
   let userCfg = new UserConfig();
   userCfg.setTemplateFormats("njk, liquid");
-  t.deepEqual(userCfg.templateFormats, ["njk", "liquid"]);
+  t.deepEqual(userCfg.templateFormats, "njk, liquid");
 });
 
 test("Set Template Formats (array)", (t) => {
@@ -156,13 +156,13 @@ test("Set Template Formats (array)", (t) => {
 test("Set Template Formats (js passthrough copy)", (t) => {
   let userCfg = new UserConfig();
   userCfg.setTemplateFormats("njk, liquid, js");
-  t.deepEqual(userCfg.templateFormats, ["njk", "liquid", "js"]);
+  t.deepEqual(userCfg.templateFormats, "njk, liquid, js");
 });
 
 test("Set Template Formats (11ty.js)", (t) => {
   let userCfg = new UserConfig();
   userCfg.setTemplateFormats("njk, liquid, 11ty.js");
-  t.deepEqual(userCfg.templateFormats, ["njk", "liquid", "11ty.js"]);
+  t.deepEqual(userCfg.templateFormats, "njk, liquid, 11ty.js");
 });
 
 test("Add Template Formats", (t) => {

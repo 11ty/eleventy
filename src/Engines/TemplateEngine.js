@@ -55,7 +55,8 @@ class TemplateEngine {
 
 	get extensionMap() {
 		if (!this._extensionMap) {
-			this._extensionMap = new EleventyExtensionMap([], this.eleventyConfig);
+			this._extensionMap = new EleventyExtensionMap(this.eleventyConfig);
+			this._extensionMap.setFormats([]);
 		}
 		return this._extensionMap;
 	}

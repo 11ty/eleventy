@@ -1066,6 +1066,37 @@ pkg:
   });
 });
 
+test("Eleventy setting pkg data is okay when keys.package is false", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.html", `---
+pkg:
+  myOwn: OVERRIDE
+---
+{{ pkg.myOwn }}`);
+    }
+  });
+  elev.disableLogger();
+
+  await elev.initializeConfig({
+    keys: {
+      package: false
+    }
+  });
+
+  // Remap successful
+  t.is(elev.eleventyConfig.config.keys.package, false);
+
+  let [result] = await elev.toJSON();
+  t.deepEqual(result, {
+    content: "OVERRIDE",
+    inputPath: "./test/stubs-virtual/index.html",
+    outputPath: "./_site/index.html",
+    rawInput: "{{ pkg.myOwn }}",
+    url: "/"
+  });
+});
+
 test("Eleventy setting reserved data throws error (pkg remapped to parkour)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
     config: eleventyConfig => {

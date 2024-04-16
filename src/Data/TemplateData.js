@@ -1,4 +1,5 @@
 import path from "node:path";
+import semver from "semver";
 
 import lodash from "@11ty/lodash-custom";
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
@@ -10,15 +11,12 @@ import TemplateGlob from "../TemplateGlob.js";
 import EleventyExtensionMap from "../EleventyExtensionMap.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import TemplateDataInitialGlobalData from "./TemplateDataInitialGlobalData.js";
-import { getEleventyPackageJson } from "../Util/ImportJsonSync.js";
-import {
-	EleventyImport,
-	EleventyLoadContent,
-	normalizeFilePathInEleventyPackage,
-} from "../Util/Require.js";
+import { getEleventyPackageJson, getWorkingProjectPackageJson } from "../Util/ImportJsonSync.js";
+import { EleventyImport, EleventyLoadContent } from "../Util/Require.js";
 import { DeepFreeze } from "../Util/DeepFreeze.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
+
 const debugWarn = debugUtil("Eleventy:Warnings");
 const debug = debugUtil("Eleventy:TemplateData");
 const debugDev = debugUtil("Dev:Eleventy:TemplateData");
@@ -85,7 +83,8 @@ class TemplateData {
 
 	get extensionMap() {
 		if (!this._extensionMap) {
-			this._extensionMap = new EleventyExtensionMap([], this.eleventyConfig);
+			this._extensionMap = new EleventyExtensionMap(this.eleventyConfig);
+			this._extensionMap.setFormats([]);
 		}
 		return this._extensionMap;
 	}
@@ -108,16 +107,24 @@ class TemplateData {
 	}
 
 	getRawImports() {
+		if (!this.config.keys.package) {
+			debug(
+				"Opted-out of package.json assignment for global data with falsy value for `keys.package` configuration.",
+			);
+			return this.rawImports;
+		} else if (Object.keys(this.rawImports).length > 0) {
+			return this.rawImports;
+		}
+
 		try {
-			let pkgJson = getEleventyPackageJson();
+			let pkgJson = getWorkingProjectPackageJson();
 			this.rawImports[this.config.keys.package] = pkgJson;
 
 			if (this.config.freezeReservedData) {
 				DeepFreeze(this.rawImports);
 			}
 		} catch (e) {
-			let pkgPath = normalizeFilePathInEleventyPackage("package.json");
-			debug("Could not find and/or require package.json for data preprocessing at %o", pkgPath);
+			debug("Could not find or require package.json import for global data.");
 		}
 
 		return this.rawImports;
@@ -310,6 +317,15 @@ class TemplateData {
 		if (!this.configApiGlobalData) {
 			this.configApiGlobalData = new Promise(async (resolve) => {
 				let globalData = await this.initialGlobalData.getData();
+
+				if (!("eleventy" in globalData)) {
+					globalData.eleventy = {};
+				}
+
+				// #2293 for meta[name=generator]
+				const pkg = getEleventyPackageJson();
+				globalData.eleventy.version = semver.coerce(pkg.version).toString();
+				globalData.eleventy.generator = `Eleventy v${globalData.eleventy.version}`;
 
 				if (this.environmentVariables) {
 					if (!("env" in globalData.eleventy)) {

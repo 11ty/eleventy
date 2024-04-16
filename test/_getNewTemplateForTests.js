@@ -22,7 +22,8 @@ export default async function getNewTemplate(
   }
 
   if (!map) {
-    map = new EleventyExtensionMap(["liquid", "md", "njk", "html", "11ty.js"], eleventyConfig);
+    map = new EleventyExtensionMap(eleventyConfig);
+    map.setFormats(["liquid", "md", "njk", "html", "11ty.js"])
   }
   if (templateData) {
     templateData.setFileSystemSearch(new FileSystemSearch());

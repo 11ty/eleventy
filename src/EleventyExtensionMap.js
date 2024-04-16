@@ -6,17 +6,16 @@ import EleventyBaseError from "./Errors/EleventyBaseError.js";
 class EleventyExtensionMapConfigError extends EleventyBaseError {}
 
 class EleventyExtensionMap {
-	constructor(formatKeys, config) {
+	constructor(config) {
 		this.config = config;
-
-		this.formatKeys = formatKeys;
-
-		this.setFormats(formatKeys);
 
 		this._spiderJsDepsCache = {};
 	}
 
 	setFormats(formatKeys = []) {
+		// raw
+		this.formatKeys = formatKeys;
+
 		this.unfilteredFormatKeys = formatKeys.map(function (key) {
 			return key.trim().toLowerCase();
 		});
@@ -249,6 +248,10 @@ class EleventyExtensionMap {
 		}
 
 		return this._extensionToKeyMap;
+	}
+
+	getAllTemplateKeys() {
+		return Object.keys(this.extensionToKeyMap);
 	}
 
 	getReadableFileExtensions() {

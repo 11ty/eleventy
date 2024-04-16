@@ -12,7 +12,8 @@ async function getNewSlugInstance(path, inputDir) {
     }
   });
 
-  let extensionMap = new EleventyExtensionMap([], eleventyConfig);
+  let extensionMap = new EleventyExtensionMap(eleventyConfig);
+  extensionMap.setFormats([]);
   let fs = new TemplateFileSlug(path, extensionMap, eleventyConfig);
   return fs;
 }

@@ -17,7 +17,8 @@ async function getNewTemplateRender(name, inputDir, eleventyConfig) {
   }
 
   let tr = new TemplateRender(name, eleventyConfig);
-  tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
+  tr.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  tr.extensionMap.setFormats([]);
   await tr.init();
   return tr;
 }

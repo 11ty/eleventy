@@ -48,6 +48,7 @@ class UserConfig {
 		this.collections = {};
 		this.precompiledCollections = {};
 		this.templateFormats = undefined;
+		this.templateFormatsAdded = [];
 
 		this.liquidOptions = {};
 		this.liquidTags = {};
@@ -489,38 +490,17 @@ class UserConfig {
 		return this;
 	}
 
-	_normalizeTemplateFormats(templateFormats, existingValues) {
-		// setTemplateFormats(null) should return null
-		if (templateFormats === null || templateFormats === undefined) {
-			return null;
-		}
-
-		let set = new Set();
-		if (Array.isArray(templateFormats)) {
-			set = new Set(templateFormats.map((format) => format.trim()));
-		} else if (typeof templateFormats === "string") {
-			for (let format of templateFormats.split(",")) {
-				set.add(format.trim());
-			}
-		}
-
-		for (let format of existingValues || []) {
-			set.add(format);
-		}
-
-		return Array.from(set);
+	_normalizeTemplateFormats() {
+		throw new Error("The internal _normalizeTemplateFormats() method was removed in Eleventy 3.0");
 	}
 
 	setTemplateFormats(templateFormats) {
-		this.templateFormats = this._normalizeTemplateFormats(templateFormats);
+		this.templateFormats = templateFormats;
 	}
 
 	// additive, usually for plugins
 	addTemplateFormats(templateFormats) {
-		this.templateFormatsAdded = this._normalizeTemplateFormats(
-			templateFormats,
-			this.templateFormatsAdded,
-		);
+		this.templateFormatsAdded.push(templateFormats);
 	}
 
 	setLibrary(engineName, libraryInstance) {
@@ -927,8 +907,6 @@ class UserConfig {
 
 	getMergingConfigObject() {
 		let obj = {
-			templateFormats: this.templateFormats,
-			templateFormatsAdded: this.templateFormatsAdded,
 			// filters removed in 1.0 (use addTransform instead)
 			transforms: this.transforms,
 			linters: this.linters,

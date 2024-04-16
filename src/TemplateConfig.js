@@ -9,8 +9,8 @@ import UserConfig from "./UserConfig.js";
 import GlobalDependencyMap from "./GlobalDependencyMap.js";
 import ExistsCache from "./Util/ExistsCache.js";
 import merge from "./Util/Merge.js";
-import unique from "./Util/Unique.js";
 import eventBus from "./EventBus.js";
+import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
 
 const debug = debugUtil("Eleventy:TemplateConfig");
 const debugDev = debugUtil("Dev:Eleventy:TemplateConfig");
@@ -50,6 +50,8 @@ class EleventyPluginError extends EleventyBaseError {}
  * @param {String} projectConfigPath - Path to local project config.
  */
 class TemplateConfig {
+	#templateFormats;
+
 	constructor(customRootConfig, projectConfigPath) {
 		this.userConfig = new UserConfig();
 
@@ -99,6 +101,18 @@ class TemplateConfig {
 	setDirectories(directories) {
 		this.directories = directories;
 		this.userConfig.directories = directories.getUserspaceInstance();
+	}
+
+	/* Setter for TemplateFormats instance */
+	setTemplateFormats(templateFormats) {
+		this.#templateFormats = templateFormats;
+	}
+
+	get templateFormats() {
+		if (!this.#templateFormats) {
+			this.#templateFormats = new ProjectTemplateFormats();
+		}
+		return this.#templateFormats;
 	}
 
 	/* Backwards compat */
@@ -335,8 +349,6 @@ class TemplateConfig {
 					this.directories.setViaConfigObject(exportedConfigObject.dir);
 				}
 
-				// TODO (config) sync `exportedConfigObject` to the rest of `userConfig` (e.g. templateFormats)
-
 				if (typeof configDefaultReturn === "function") {
 					localConfig = await configDefaultReturn(this.userConfig);
 				} else {
@@ -399,19 +411,27 @@ class TemplateConfig {
 			}
 		}
 
-		// Template Formats:
-		// 1. Root Config (usually defaultConfig.js)
-		// 2. Local Config return object (project .eleventy.js)
-		// 3.
-		let templateFormats = this.rootConfig.templateFormats || [];
-		if (localConfig && localConfig.templateFormats) {
-			templateFormats = localConfig.templateFormats;
-			delete localConfig.templateFormats;
+		// `templateFormats` is an override via `setTemplateFormats`
+		if (this.userConfig && this.userConfig.templateFormats) {
+			this.templateFormats.setViaConfig(this.userConfig.templateFormats);
+		} else if (localConfig?.templateFormats || this.rootConfig?.templateFormats) {
+			// Local project config or defaultConfig.js
+			this.templateFormats.setViaConfig(
+				localConfig.templateFormats || this.rootConfig?.templateFormats,
+			);
+		}
+
+		// `templateFormatsAdded` is additive via `addTemplateFormats`
+		if (this.userConfig && this.userConfig.templateFormatsAdded) {
+			this.templateFormats.addViaConfig(this.userConfig.templateFormatsAdded);
 		}
 
 		let mergedConfig = merge({}, this.rootConfig, localConfig);
 
 		// Setup a few properties for plugins:
+
+		// Set frozen templateFormats
+		mergedConfig.templateFormats = Object.freeze(this.templateFormats.getTemplateFormats());
 
 		// Setup pathPrefix set via command line for plugin consumption
 		if (this.overrides.pathPrefix) {
@@ -433,9 +453,6 @@ class TemplateConfig {
 		// But BEFORE the rest of the config options are merged
 		// this way we can pass directories and other template information to plugins
 
-		// Temporarily restore templateFormats
-		mergedConfig.templateFormats = templateFormats;
-
 		await this.userConfig.events.emit("eleventy.beforeConfig", this.userConfig);
 
 		let benchmarkManager = this.userConfig.benchmarkManager.get("Aggregate");
@@ -444,30 +461,17 @@ class TemplateConfig {
 		await this.processPlugins(mergedConfig);
 		pluginsBench.after();
 
-		delete mergedConfig.templateFormats;
-
 		let eleventyConfigApiMergingObject = this.userConfig.getMergingConfigObject();
 
-		// `templateFormats` is an override via `setTemplateFormats`
-		// `templateFormatsAdded` is additive via `addTemplateFormats`
-		if (eleventyConfigApiMergingObject && eleventyConfigApiMergingObject.templateFormats) {
-			templateFormats = eleventyConfigApiMergingObject.templateFormats;
-			delete eleventyConfigApiMergingObject.templateFormats;
+		if ("templateFormats" in eleventyConfigApiMergingObject) {
+			throw new Error(
+				"Internal error: templateFormats should not return from `getMergingConfigObject`",
+			);
 		}
 
-		let templateFormatsAdded = eleventyConfigApiMergingObject.templateFormatsAdded || [];
-		delete eleventyConfigApiMergingObject.templateFormatsAdded;
-
-		templateFormats = unique([...templateFormats, ...templateFormatsAdded]);
-
-		merge(mergedConfig, eleventyConfigApiMergingObject);
-
-		// Apply overrides, currently only pathPrefix uses this I think!
+		// Overrides are only used by pathPrefix
 		debug("Configuration overrides: %o", this.overrides);
-		merge(mergedConfig, this.overrides);
-
-		// Restore templateFormats
-		mergedConfig.templateFormats = templateFormats;
+		merge(mergedConfig, eleventyConfigApiMergingObject, this.overrides);
 
 		debug("Current configuration: %o", mergedConfig);
 

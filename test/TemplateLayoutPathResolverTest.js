@@ -15,7 +15,8 @@ async function getResolverInstance(path, inputDir, { eleventyConfig, map } = {})
   }
 
   if (!map) {
-    map = new EleventyExtensionMap(["liquid", "md", "njk", "html", "11ty.js"], eleventyConfig);
+    map = new EleventyExtensionMap(eleventyConfig);
+    map.setFormats(["liquid", "md", "njk", "html", "11ty.js"]);
   }
 
   return new TemplateLayoutPathResolver(path, map, eleventyConfig);

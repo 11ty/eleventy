@@ -6,7 +6,8 @@ async function getExtensionMap(formats, config = new TemplateConfig()) {
   if (config) {
     await config.init();
   }
-  let map = new EleventyExtensionMap(formats, config);
+  let map = new EleventyExtensionMap(config);
+  map.setFormats(formats);
   return map;
 }
 

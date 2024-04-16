@@ -106,7 +106,8 @@ class TemplateWriter {
 
 	get extensionMap() {
 		if (!this._extensionMap) {
-			this._extensionMap = new EleventyExtensionMap(this.templateFormats, this.eleventyConfig);
+			this._extensionMap = new EleventyExtensionMap(this.eleventyConfig);
+			this._extensionMap.setFormats(this.templateFormats);
 		}
 		return this._extensionMap;
 	}

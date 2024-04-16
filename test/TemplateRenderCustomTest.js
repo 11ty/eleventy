@@ -17,7 +17,8 @@ async function getNewTemplateRender(name, inputDir, eleventyConfig, extensionMap
   }
 
   if (!extensionMap) {
-    extensionMap = new EleventyExtensionMap([], eleventyConfig);
+    extensionMap = new EleventyExtensionMap(eleventyConfig);
+    extensionMap.setFormats([]);
   }
 
   let tr = new TemplateRender(name, eleventyConfig);
@@ -318,7 +319,8 @@ test.skip("Breaking Change (3.0): Two simple aliases to JavaScript Render", asyn
     }
   );
 
-  let map = new EleventyExtensionMap([], eleventyConfig); // reuse this
+  let map = new EleventyExtensionMap(eleventyConfig); // reuse this
+  map.setFormats([]);
 
   let tr = await getNewTemplateRender("./test/stubs/string.11ty.custom", null, eleventyConfig, map);
   let fn = await tr.getCompiledTemplate();
@@ -347,7 +349,8 @@ test("Double override (not aliases) throws an error", async (t) => {
     }
   );
 
-  let map = new EleventyExtensionMap([], eleventyConfig); // reuse this
+  let map = new EleventyExtensionMap(eleventyConfig); // reuse this
+  map.setFormats([]);
 
   await t.throwsAsync(
     async () => {
