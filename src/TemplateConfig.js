@@ -9,7 +9,6 @@ import UserConfig from "./UserConfig.js";
 import GlobalDependencyMap from "./GlobalDependencyMap.js";
 import ExistsCache from "./Util/ExistsCache.js";
 import merge from "./Util/Merge.js";
-import unique from "./Util/Unique.js";
 import eventBus from "./EventBus.js";
 
 const debug = debugUtil("Eleventy:TemplateConfig");
@@ -122,8 +121,8 @@ class TemplateConfig {
 	}
 
 	getLocalProjectConfigFiles() {
-		if (this.projectConfigPaths && this.projectConfigPaths.length > 0) {
-			return TemplatePath.addLeadingDotSlashArray(this.projectConfigPaths.filter((path) => path));
+		if (this?.projectConfigPaths?.length > 0) {
+			return TemplatePath.addLeadingDotSlashArray(this.projectConfigPaths.filter(Boolean));
 		}
 		return [];
 	}
@@ -291,7 +290,7 @@ class TemplateConfig {
 				await this.userConfig._executePlugin(plugin, options);
 			} catch (e) {
 				let name = this.userConfig._getPluginName(plugin);
-				let namespaces = [storedActiveNamespace, pluginNamespace].filter((entry) => !!entry);
+				let namespaces = [storedActiveNamespace, pluginNamespace].filter(Boolean);
 
 				let namespaceStr = "";
 				if (namespaces.length) {
@@ -348,7 +347,7 @@ class TemplateConfig {
 				// TODO the error message here is bad and I feel bad (needs more accurate info)
 				throw new EleventyConfigError(
 					`Error in your Eleventy config file '${path}'.` +
-						(err.message && err.message.includes("Cannot find module")
+						(err?.message.includes("Cannot find module")
 							? chalk.cyan(" You may need to run `npm install`.")
 							: ""),
 					err,
@@ -458,7 +457,7 @@ class TemplateConfig {
 		let templateFormatsAdded = eleventyConfigApiMergingObject.templateFormatsAdded || [];
 		delete eleventyConfigApiMergingObject.templateFormatsAdded;
 
-		templateFormats = unique([...templateFormats, ...templateFormatsAdded]);
+		templateFormats = new Set([...templateFormats, ...templateFormatsAdded]);
 
 		merge(mergedConfig, eleventyConfigApiMergingObject);
 
@@ -467,7 +466,7 @@ class TemplateConfig {
 		merge(mergedConfig, this.overrides);
 
 		// Restore templateFormats
-		mergedConfig.templateFormats = templateFormats;
+		mergedConfig.templateFormats = [...templateFormats];
 
 		debug("Current configuration: %o", mergedConfig);
 

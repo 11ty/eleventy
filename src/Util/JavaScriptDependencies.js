@@ -15,9 +15,9 @@ class JavaScriptDependencies {
 			let modules = dependencyTree(file, {
 				nodeModuleNames: "exclude",
 				allowNotFound: true,
-			}).map((dependency) => {
-				return TemplatePath.addLeadingDotSlash(TemplatePath.relativePath(dependency));
-			});
+			})
+				.map(TemplatePath.relativePath)
+				.map(TemplatePath.addLeadingDotSlash);
 
 			for (let dep of modules) {
 				depSet.add(dep);

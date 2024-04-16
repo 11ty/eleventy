@@ -5,7 +5,7 @@ import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import merge from "../Util/Merge.js";
-import unique from "../Util/Unique.js";
+import unique from "../Util/Unique.js"
 import TemplateGlob from "../TemplateGlob.js";
 import EleventyExtensionMap from "../EleventyExtensionMap.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";

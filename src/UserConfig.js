@@ -82,9 +82,7 @@ class UserConfig {
 
 		this.useGitIgnore = true;
 
-		let defaultIgnores = new Set();
-		defaultIgnores.add("**/node_modules/**");
-		defaultIgnores.add(".git/**");
+		let defaultIgnores = new Set(["**/node_modules/**", ".git/**"]);
 		this.ignores = new Set(defaultIgnores);
 		this.watchIgnores = new Set(defaultIgnores);
 

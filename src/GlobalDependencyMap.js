@@ -97,9 +97,9 @@ class GlobalDependencyMap {
 
 	normalizeLayoutsObject(layouts) {
 		let o = {};
-		for (let rawLayout in layouts) {
+		for (let [rawLayout, entry] of Object.entries(layouts)) {
 			let layout = this.normalizeNode(rawLayout);
-			o[layout] = layouts[rawLayout].map((entry) => this.normalizeNode(entry));
+			o[layout] = entry.map((entry) => this.normalizeNode(entry));
 		}
 		return o;
 	}
@@ -129,12 +129,8 @@ class GlobalDependencyMap {
 		}
 
 		let prevDeps = this.getDependantsFor(node)
-			.filter((entry) => {
-				return entry.startsWith(GlobalDependencyMap.COLLECTION_PREFIX);
-			})
-			.map((entry) => {
-				return GlobalDependencyMap.getEntryFromCollectionKey(entry);
-			});
+			.filter((entry) => entry.startsWith(GlobalDependencyMap.COLLECTION_PREFIX))
+			.map(GlobalDependencyMap.getEntryFromCollectionKey);
 
 		let prevDepsSet = new Set(prevDeps);
 		let deleted = new Set();
@@ -165,18 +161,14 @@ class GlobalDependencyMap {
 	}
 
 	getTemplatesThatConsumeCollections(collectionNames) {
-		let templates = new Set();
-		for (let name of collectionNames) {
-			let collectionName = GlobalDependencyMap.getCollectionKeyForEntry(name);
-			if (!this.map.hasNode(collectionName)) {
-				continue;
-			}
-			for (let node of this.map.dependantsOf(collectionName)) {
-				if (!node.startsWith(GlobalDependencyMap.COLLECTION_PREFIX)) {
-					templates.add(node);
-				}
-			}
-		}
+		let templates = new Set(
+			collectionNames
+				.map(GlobalDependencyMap.getCollectionKeyForEntry)
+				.filter((collectionName) => this.map.hasNode(collectionName))
+				.map((collectionName) => this.map.getdependantsOf(collectionName))
+				.filter((node) => !node.startsWith(GlobalDependencyMap.COLLECTION_PREFIX)),
+		);
+
 		return templates;
 	}
 
@@ -197,7 +189,7 @@ class GlobalDependencyMap {
 		this.map.dependantsOf(node).forEach((node) => {
 			let data = this.map.getNodeData(node);
 			// we only want layouts
-			if (data && data.type && data.type === GlobalDependencyMap.LAYOUT_KEY) {
+			if (data?.type === GlobalDependencyMap.LAYOUT_KEY) {
 				return layouts.push(node);
 			}
 		});
@@ -221,7 +213,7 @@ class GlobalDependencyMap {
 
 			// When includeLayouts is `false` we want to filter out layouts
 			let data = this.map.getNodeData(node);
-			if (data && data.type && data.type === GlobalDependencyMap.LAYOUT_KEY) {
+			if (data?.type === GlobalDependencyMap.LAYOUT_KEY) {
 				return false;
 			}
 			return true;

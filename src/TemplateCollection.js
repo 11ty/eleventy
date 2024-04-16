@@ -28,9 +28,7 @@ class TemplateCollection extends Sortable {
 			globs = [globs];
 		}
 
-		globs = globs.map((glob) => TemplatePath.addLeadingDotSlash(glob));
-
-		return globs;
+		return globs.map(TemplatePath.addLeadingDotSlash);
 	}
 
 	getFilteredByGlob(globs) {
