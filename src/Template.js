@@ -22,7 +22,7 @@ import TemplateBehavior from "./TemplateBehavior.js";
 import TemplateContentPrematureUseError from "./Errors/TemplateContentPrematureUseError.js";
 import TemplateContentUnrenderedTemplateError from "./Errors/TemplateContentUnrenderedTemplateError.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
-import ReservedData from "./Util/ReservedData.js";
+import ReservedData from "./Data/ReservedData.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 const writeFile = util.promisify(fs.writeFile);
@@ -390,7 +390,7 @@ class Template extends TemplateContent {
 
 		let newDate = await this.getMappedDate(data);
 
-		// Make sure to keep these keys synchronized in src/Util/ReservedData.js
+		// Make sure to keep these keys synchronized in src/Data/ReservedData.js
 		data.page.date = newDate;
 		data.page.inputPath = this.inputPath;
 		data.page.fileSlug = this.fileSlugStr;
