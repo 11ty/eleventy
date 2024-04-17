@@ -6,7 +6,7 @@ import debugUtil from "debug";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import PathPrefixer from "./Util/PathPrefixer.js";
-import merge, { DeepCopy } from "./Util/Merge.js";
+import merge, { DeepCopy } from "./Util/Objects/Merge.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import { getModulePackageJson } from "./Util/ImportJsonSync.js";
 import { EleventyImport } from "./Util/Require.js";

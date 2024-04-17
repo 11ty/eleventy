@@ -2,7 +2,7 @@ import test from "ava";
 import multimatch from "multimatch";
 
 import Collection from "../src/TemplateCollection.js";
-import Sortable from "../src/Util/Sortable.js";
+import Sortable from "../src/Util/Objects/Sortable.js";
 
 import getNewTemplateForTests from "../test/_getNewTemplateForTests.js";
 import { getTemplateConfigInstance } from "./_testHelpers.js";

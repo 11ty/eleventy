@@ -2,9 +2,9 @@ import { isPlainObject } from "@11ty/eleventy-utils";
 import lodash from "@11ty/lodash-custom";
 
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
-import { DeepCopy } from "../Util/Merge.js";
-import { ProxyWrap } from "../Util/ProxyWrap.js";
-// import { DeepFreeze } from "../Util/DeepFreeze.js";
+import { DeepCopy } from "../Util/Objects/Merge.js";
+import { ProxyWrap } from "../Util/Objects/ProxyWrap.js";
+// import { DeepFreeze } from "../Util/Objects/DeepFreeze.js";
 import TemplateData from "../Data/TemplateData.js";
 
 const { set: lodashSet, get: lodashGet, chunk: lodashChunk } = lodash;
