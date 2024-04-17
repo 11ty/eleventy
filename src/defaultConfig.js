@@ -125,6 +125,7 @@ export default function (config) {
 			permalinkRoot: "permalinkBypassOutputDir",
 			engineOverride: "templateEngineOverride",
 			computed: "eleventyComputed",
+			dataSchema: "eleventyDataSchema",
 		},
 
 		// Deprecated, define using `export const directories = {}` instead.

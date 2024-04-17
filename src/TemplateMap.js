@@ -15,6 +15,7 @@ const debug = debugUtil("Eleventy:TemplateMap");
 const debugDev = debugUtil("Dev:Eleventy:TemplateMap");
 
 class TemplateMapConfigError extends EleventyBaseError {}
+class EleventyDataSchemaError extends EleventyBaseError {}
 
 class TemplateMap {
 	constructor(eleventyConfig) {
@@ -408,6 +409,18 @@ class TemplateMap {
 				} else {
 					let counter = 0;
 					for (let page of map._pages) {
+						// Data Schema callback #879
+						if (typeof page.data[this.config.keys.dataSchema] === "function") {
+							try {
+								await page.data[this.config.keys.dataSchema](page.data);
+							} catch (e) {
+								throw new EleventyDataSchemaError(
+									`Error in the data schema for: ${map.inputPath} (via \`eleventyDataSchema\`)`,
+									e,
+								);
+							}
+						}
+
 						// Copy outputPath to map entry
 						if (!map.outputPath) {
 							map.outputPath = page.outputPath;

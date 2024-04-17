@@ -1123,3 +1123,53 @@ parkour:
 
   t.is(e.originalError.toString(), "TypeError: Cannot add property myOwn, object is not extensible");
 });
+
+test("Eleventy data schema (success) #879", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index1.html", "", {
+        draft: true,
+        eleventyDataSchema: function(data) {
+          if(typeof data.draft !== "boolean") {
+            throw new Error("Invalid data type for draft.");
+          }
+        }
+      });
+
+      eleventyConfig.addTemplate("index2.html", "", {
+        draft: true,
+        eleventyDataSchema: function(data) {
+          if(typeof data.draft !== "boolean") {
+            throw new Error("Invalid data type for draft.");
+          }
+        }
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(results.length, 2);
+});
+
+test("Eleventy data schema (fails) #879", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index1.html", "", {
+        draft: 1,
+        eleventyDataSchema: function(data) {
+          if(typeof data.draft !== "boolean") {
+            throw new Error("Invalid data type for draft.");
+          }
+        }
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let e = await t.throwsAsync(() => elev.toJSON(), {
+    message: 'Error in the data schema for: ./test/stubs-virtual/index1.html (via `eleventyDataSchema`)'
+  });
+
+  t.is(e.originalError.toString(), "Error: Invalid data type for draft.");
+});
