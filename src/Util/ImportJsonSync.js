@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import { createRequire } from "node:module";
-import path from "node:path";
 import debugUtil from "debug";
 
 import { TemplatePath } from "@11ty/eleventy-utils";
@@ -10,27 +9,25 @@ import { normalizeFilePathInEleventyPackage } from "./Require.js";
 const debug = debugUtil("Eleventy:ImportJsonSync");
 const require = createRequire(import.meta.url);
 
-function importJsonSync(filePath, lookInParentDirs = false) {
+function findFileInParentDirs(dir, filename) {
+	// `package.json` searches look in parent dirs:
+	// https://docs.npmjs.com/cli/v7/configuring-npm/folders#more-information
+	let allDirs = TemplatePath.getAllDirs(dir);
+	for (let dir of allDirs) {
+		let newPath = TemplatePath.join(dir, filename);
+		if (fs.existsSync(newPath)) {
+			debug("Found %o searching parent directories at: %o", filename, dir);
+			return importJsonSync(newPath);
+		}
+	}
+}
+
+function importJsonSync(filePath) {
 	if (!filePath.endsWith(".json")) {
 		throw new Error(`importJsonSync expects a .json file extension (received: ${filePath})`);
 	}
 
 	try {
-		// `package.json` searches look in parent dirs:
-		// https://docs.npmjs.com/cli/v7/configuring-npm/folders#more-information
-		if (lookInParentDirs) {
-			let filename = path.parse(filePath).base;
-			let allDirs = TemplatePath.getAllDirs(filePath).slice(1);
-			for (let dir of allDirs) {
-				let newPath = TemplatePath.join(dir, filename);
-				if (fs.existsSync(newPath)) {
-					filePath = newPath;
-					debug("Found %o searching parent directories at: %o", filename, filePath);
-					break;
-				}
-			}
-		}
-
 		// TODO clear require.cache when these files change
 		return require(filePath);
 	} catch (e) {
@@ -45,17 +42,17 @@ function getEleventyPackageJson() {
 }
 
 function getModulePackageJson(dir) {
-	let filePath = TemplatePath.absolutePath(dir, "package.json");
-	return importJsonSync(filePath);
+	return findFileInParentDirs(TemplatePath.absolutePath(dir), "package.json");
 }
 
 function getWorkingProjectPackageJson() {
-	let filePath = TemplatePath.absolutePath(TemplatePath.getWorkingDir(), "package.json");
-	return importJsonSync(filePath, true);
+	let dir = TemplatePath.absolutePath(TemplatePath.getWorkingDir());
+	return findFileInParentDirs(dir, "package.json");
 }
 
 export {
 	importJsonSync,
+	findFileInParentDirs,
 	getEleventyPackageJson,
 	getModulePackageJson,
 	getWorkingProjectPackageJson,

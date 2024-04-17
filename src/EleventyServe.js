@@ -88,10 +88,25 @@ class EleventyServe {
 			// Look for peer dep in local project
 			let projectNodeModulesPath = TemplatePath.absolutePath("./node_modules/");
 			let serverPath = TemplatePath.absolutePath(projectNodeModulesPath, name);
-
 			// No references outside of the project node_modules are allowed
 			if (!serverPath.startsWith(projectNodeModulesPath)) {
 				throw new Error("Invalid node_modules name for Eleventy server instance, received:" + name);
+			}
+
+			let serverPackageJson = getModulePackageJson(serverPath);
+			// Normalize with `main` entry from
+			if (TemplatePath.isDirectorySync(serverPath)) {
+				if (serverPackageJson.main) {
+					serverPath = TemplatePath.absolutePath(
+						projectNodeModulesPath,
+						name,
+						serverPackageJson.main,
+					);
+				} else {
+					throw new Error(
+						`Eleventy server ${name} is missing a \`main\` entry in its package.json file. Traversed up from ${serverPath}.`,
+					);
+				}
 			}
 
 			let module = await EleventyImport(serverPath);
@@ -102,7 +117,6 @@ class EleventyServe {
 				);
 			}
 
-			let serverPackageJson = getModulePackageJson(serverPath);
 			if (serverPackageJson["11ty"]?.compatibility) {
 				try {
 					this.eleventyConfig.userConfig.versionCheck(serverPackageJson["11ty"].compatibility);
