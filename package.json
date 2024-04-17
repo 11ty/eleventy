@@ -92,7 +92,9 @@
 		"pretty": "^2.0.0",
 		"rimraf": "^5.0.5",
 		"sass": "^1.74.1",
-		"vue": "^3.4.21"
+		"vue": "^3.4.21",
+		"zod": "^3.22.4",
+		"zod-validation-error": "^3.1.0"
 	},
 	"dependencies": {
 		"@11ty/dependency-tree": "^3.0.0",

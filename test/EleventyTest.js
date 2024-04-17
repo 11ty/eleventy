@@ -2,6 +2,8 @@ import test from "ava";
 import fs from "fs";
 import lodash from "@11ty/lodash-custom";
 import { rimrafSync } from "rimraf";
+import { z } from "zod";
+import { fromZodError } from 'zod-validation-error';
 
 import eventBus from "../src/EventBus.js";
 import Eleventy from "../src/Eleventy.js";
@@ -1172,4 +1174,30 @@ test("Eleventy data schema (fails) #879", async (t) => {
   });
 
   t.is(e.originalError.toString(), "Error: Invalid data type for draft.");
+});
+
+test("Eleventy data schema (fails, using zod) #879", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index1.html", "", {
+        draft: 1,
+        eleventyDataSchema: function(data) {
+          let result = z.object({
+            draft: z.boolean().or(z.undefined()),
+          }).safeParse(data);
+
+          if(result.error) {
+            throw fromZodError(result.error);
+          }
+        }
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let e = await t.throwsAsync(() => elev.toJSON(), {
+    message: 'Error in the data schema for: ./test/stubs-virtual/index1.html (via `eleventyDataSchema`)'
+  });
+
+  t.is(e.originalError.toString(), 'Validation error: Expected boolean, received number at "draft", or Expected undefined, received number at "draft"');
 });
