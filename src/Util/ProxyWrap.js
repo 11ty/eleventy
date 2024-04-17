@@ -88,12 +88,12 @@ function wrapObject(target, fallback) {
 	});
 }
 
-function ProxyWrap(target, fallback, options) {
+function ProxyWrap(target, fallback) {
 	if (!isPlainObject(target) || !isPlainObject(fallback)) {
 		throw new Error("ProxyWrap expects objects for both the target and fallback");
 	}
 
-	return wrapObject(target, fallback, options);
+	return wrapObject(target, fallback);
 }
 
 export { ProxyWrap };

@@ -333,9 +333,7 @@ class Pagination {
 			}
 
 			// Do *not* deep merge pagination data! See https://github.com/11ty/eleventy/issues/147#issuecomment-440802454
-			let clonedData = ProxyWrap(paginationData, parentData, {
-				benchmarkManager: this.config.benchmarkManager,
-			});
+			let clonedData = ProxyWrap(paginationData, parentData);
 
 			// Previous method:
 			// let clonedData = DeepCopy(paginationData, parentData);
