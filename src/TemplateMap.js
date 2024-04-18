@@ -409,18 +409,6 @@ class TemplateMap {
 				} else {
 					let counter = 0;
 					for (let page of map._pages) {
-						// Data Schema callback #879
-						if (typeof page.data[this.config.keys.dataSchema] === "function") {
-							try {
-								await page.data[this.config.keys.dataSchema](page.data);
-							} catch (e) {
-								throw new EleventyDataSchemaError(
-									`Error in the data schema for: ${map.inputPath} (via \`eleventyDataSchema\`)`,
-									e,
-								);
-							}
-						}
-
 						// Copy outputPath to map entry
 						if (!map.outputPath) {
 							map.outputPath = page.outputPath;
@@ -478,6 +466,7 @@ class TemplateMap {
 			};
 		});
 
+		await this.runDataSchemas(orderedMap);
 		await this.populateContentDataInMap(orderedMap);
 
 		this.populateCollectionsWithContent();
@@ -532,6 +521,28 @@ class TemplateMap {
 			}
 		}
 		return orderedMap;
+	}
+
+	async runDataSchemas(orderedMap) {
+		for (let map of orderedMap) {
+			if (!map._pages) {
+				continue;
+			}
+
+			for (let pageEntry of map._pages) {
+				// Data Schema callback #879
+				if (typeof pageEntry.data[this.config.keys.dataSchema] === "function") {
+					try {
+						await pageEntry.data[this.config.keys.dataSchema](pageEntry.data);
+					} catch (e) {
+						throw new EleventyDataSchemaError(
+							`Error in the data schema for: ${map.inputPath} (via \`eleventyDataSchema\`)`,
+							e,
+						);
+					}
+				}
+			}
+		}
 	}
 
 	async populateContentDataInMap(orderedMap) {

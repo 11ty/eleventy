@@ -1201,3 +1201,24 @@ test("Eleventy data schema (fails, using zod) #879", async (t) => {
 
   t.is(e.originalError.toString(), 'Validation error: Expected boolean, received number at "draft", or Expected undefined, received number at "draft"');
 });
+
+test("Eleventy data schema has access to custom collections created via API #879", async (t) => {
+  t.plan(2);
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addCollection("userCollection", function (collection) {
+        return collection.getAll();
+      });
+
+      eleventyConfig.addTemplate("index1.html", "", {
+        eleventyDataSchema: function(data) {
+          t.is(data.collections.userCollection.length, 1);
+        }
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+});
