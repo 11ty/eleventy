@@ -97,6 +97,8 @@ export default function (config) {
 
 	// Used for the HTML <base> and InputPathToUrl plugins
 	let ut = new HtmlTransformer();
+	ut.setUserConfig(config);
+
 	config.htmlTransformer = ut;
 	config.addTransform("eleventy.htmlTransformer", async function (content) {
 		return ut.transformContent(this.outputPath, content, this);

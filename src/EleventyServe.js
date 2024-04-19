@@ -1,3 +1,4 @@
+import assert from "node:assert";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import EleventyDevServer from "@11ty/eleventy-dev-server";
 import debugUtil from "debug";
@@ -5,7 +6,7 @@ import debugUtil from "debug";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import PathPrefixer from "./Util/PathPrefixer.js";
-import merge from "./Util/Merge.js";
+import merge, { DeepCopy } from "./Util/Merge.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import { getModulePackageJson } from "./Util/ImportJsonSync.js";
 import { EleventyImport } from "./Util/Require.js";
@@ -150,8 +151,7 @@ class EleventyServe {
 			this.config.serverOptions,
 		);
 
-		// TODO improve by sorting keys here
-		this._savedConfigOptions = JSON.stringify(this.config.serverOptions);
+		this._savedConfigOptions = DeepCopy({}, this.config.serverOptions);
 
 		if (!this._initOptionsFetched && this.getSetupCallback()) {
 			throw new Error(
@@ -245,6 +245,9 @@ class EleventyServe {
 	// We don’t want to use a native `restart` method (e.g. restart() in Vite) so that
 	// we can correctly handle a `module` property change (changing the server type)
 	async restart() {
+		// Blow away cached options
+		delete this._options;
+
 		await this.close();
 
 		// saved --port in `serve()`
@@ -269,6 +272,15 @@ class EleventyServe {
 		}
 	}
 
+	hasOptionsChanged() {
+		try {
+			assert.deepStrictEqual(this.config.serverOptions, this._savedConfigOptions);
+			return false;
+		} catch (e) {}
+
+		return true;
+	}
+
 	// Live reload the server
 	async reload(reloadEvent = {}) {
 		if (!this._server) {
@@ -276,7 +288,7 @@ class EleventyServe {
 		}
 
 		// Restart the server if the options have changed
-		if (JSON.stringify(this.config.serverOptions) !== this._savedConfigOptions) {
+		if (this.hasOptionsChanged()) {
 			debug("Server options changed, we’re restarting the server");
 			await this.restart();
 		} else {

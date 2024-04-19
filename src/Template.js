@@ -716,7 +716,7 @@ class Template extends TemplateContent {
 	async _write({ url, outputPath, data, rawInput }, finalContent) {
 		let lang = {
 			start: "Writing",
-			finished: "written.",
+			finished: "written",
 		};
 
 		if (!this.isDryRun) {

@@ -10,6 +10,13 @@ class HtmlTransformer {
 		this.plugins = [];
 	}
 
+	get aggregateBench() {
+		if (!this.userConfig) {
+			throw new Error("Internal error: Missing `userConfig` in HtmlTransformer.");
+		}
+		return this.userConfig.benchmarkManager.get("Aggregate");
+	}
+
 	setUserConfig(config) {
 		this.userConfig = config;
 	}
@@ -118,10 +125,13 @@ class HtmlTransformer {
 			return content;
 		}
 
+		let bench = this.aggregateBench.get(`Transforming \`${extension}\` with posthtml`);
+		bench.before();
 		let callbacks = this.getCallbacks(extension);
 		let plugins = this.getPlugins(extension);
 		let posthtmlInstance = HtmlTransformer._getPosthtmlInstance(callbacks, plugins, context);
 		let result = await posthtmlInstance.process(content, this.posthtmlProcessOptions);
+		bench.after();
 		return result.html;
 	}
 }
