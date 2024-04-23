@@ -276,9 +276,9 @@ class EleventyServe {
 		try {
 			assert.deepStrictEqual(this.config.serverOptions, this._savedConfigOptions);
 			return false;
-		} catch (e) {}
-
-		return true;
+		} catch (e) {
+			return true;
+		}
 	}
 
 	// Live reload the server
