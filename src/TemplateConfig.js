@@ -464,6 +464,7 @@ class TemplateConfig {
 		// Template formats added via plugins
 		if (this.userConfig && this.userConfig.templateFormatsAdded) {
 			this.templateFormats.addViaConfig(this.userConfig.templateFormatsAdded);
+			mergedConfig.templateFormats = Object.freeze(this.templateFormats.getTemplateFormats());
 		}
 
 		let eleventyConfigApiMergingObject = this.userConfig.getMergingConfigObject();

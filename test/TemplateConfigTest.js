@@ -316,6 +316,19 @@ test("addTemplateFormats()", async (t) => {
   t.deepEqual(cfg.templateFormats, ["md", "njk", "vue"]);
 });
 
+test("addTemplateFormats() via Plugin", async (t) => {
+  let templateCfg = new TemplateConfig();
+  templateCfg.userConfig.addTemplateFormats("pug");
+  templateCfg.userConfig.addPlugin(cfg => {
+    cfg.addTemplateFormats("webc");
+  });
+  await templateCfg.init();
+
+  let cfg = templateCfg.getConfig();
+  t.deepEqual(cfg.templateFormats, ["liquid", "md", "njk", "html", "11ty.js", "pug", "webc"]);
+});
+
+
 test("both setTemplateFormats and addTemplateFormats", async (t) => {
   // Template Formats can come from three places
   // defaultConfig.js config API (not used yet)
