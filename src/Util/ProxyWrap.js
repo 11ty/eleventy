@@ -5,6 +5,10 @@ import { isPlainObject } from "@11ty/eleventy-utils";
 const debug = debugUtil("Dev:Eleventy:Proxy");
 
 function wrapObject(target, fallback) {
+	if (Object.isFrozen(target)) {
+		return target;
+	}
+
 	return new Proxy(target, {
 		getOwnPropertyDescriptor(target, prop) {
 			let ret;
@@ -48,6 +52,10 @@ function wrapObject(target, fallback) {
 				}
 
 				if (isPlainObject(value) && Reflect.has(fallback, prop)) {
+					if (Object.isFrozen(value)) {
+						return value;
+					}
+
 					let ret = wrapObject(value, Reflect.get(fallback, prop));
 					debug("handler:get (primary, object)", prop);
 					return ret;
@@ -67,6 +75,10 @@ function wrapObject(target, fallback) {
 					// set empty object on primary
 					let emptyObject = {};
 					Reflect.set(target, prop, emptyObject);
+
+					if (Object.isFrozen(fallbackValue)) {
+						return fallbackValue;
+					}
 
 					return wrapObject(emptyObject, fallbackValue);
 				}

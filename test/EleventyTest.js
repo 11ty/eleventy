@@ -987,6 +987,27 @@ pkg:
   t.is(e.originalError.toString(), "TypeError: Cannot add property myOwn, object is not extensible");
 });
 
+test("Eleventy pagination works okay with reserved data throws (eleventy) Issue #3262", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.html", `---
+pagination:
+  data: "test"
+  size: 1
+test:
+  - a
+  - b
+  - c
+---
+{{ eleventy.generator }}`);
+    }
+  });
+  elev.disableLogger();
+
+  let result = await elev.toJSON();
+  t.is(result.length, 3);
+});
+
 test("Eleventy setting reserved data throws error (page)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
     config: eleventyConfig => {
