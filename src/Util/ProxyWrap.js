@@ -71,14 +71,14 @@ function wrapObject(target, fallback) {
 				let fallbackValue = Reflect.get(fallback, prop);
 
 				if (isPlainObject(fallbackValue)) {
+					if (Object.isFrozen(fallbackValue)) {
+						return fallbackValue;
+					}
+
 					debug("handler:get (fallback, object)", prop);
 					// set empty object on primary
 					let emptyObject = {};
 					Reflect.set(target, prop, emptyObject);
-
-					if (Object.isFrozen(fallbackValue)) {
-						return fallbackValue;
-					}
 
 					return wrapObject(emptyObject, fallbackValue);
 				}
