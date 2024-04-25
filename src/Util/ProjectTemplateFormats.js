@@ -25,7 +25,7 @@ class ProjectTemplateFormats {
 
 	#normalize(formats) {
 		if (Array.isArray(formats)) {
-			return formats.map((entry) => entry.trim());
+			formats = "" + formats.join(",");
 		}
 
 		if (typeof formats !== "string") {

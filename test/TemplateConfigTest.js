@@ -345,6 +345,18 @@ test("both setTemplateFormats and addTemplateFormats", async (t) => {
   t.deepEqual(cfg.templateFormats, ["pug", "vue"]);
 });
 
+test("addTemplateFormats() Array", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
+  templateCfg.userConfig.addTemplateFormats("vue2");
+  templateCfg.userConfig.addTemplateFormats(["vue"]);
+  templateCfg.userConfig.addTemplateFormats(["text", "txt"]);
+  await templateCfg.init();
+
+  let cfg = templateCfg.getConfig();
+  // should have ALL of the original defaults
+  t.deepEqual(cfg.templateFormats, ["md", "njk", "vue2", "vue", "text", "txt"]);
+});
+
 test("libraryOverrides", async (t) => {
   let mdLib = md();
   let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
