@@ -278,8 +278,12 @@ class EleventyFiles {
 			files.add(this.eleventyIgnoreContent);
 		}
 
-		// ignore output dir unless that would exclude all input
-		if (!TemplatePath.startsWithSubPath(this.inputDir, this.outputDir)) {
+		// ignore output dir (unless this excludes all input)
+		// input: . and output: . (skip)
+		// input: ./content and output . (skip)
+		// input: . and output: ./_site (add)
+		if (!this.inputDir.startsWith(this.outputDir)) {
+			// both are already normalized in 3.0
 			files.add(TemplateGlob.map(this.outputDir + "/**"));
 		}
 
