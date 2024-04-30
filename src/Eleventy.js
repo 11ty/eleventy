@@ -1,5 +1,6 @@
 import { performance } from "node:perf_hooks";
 import { TemplatePath } from "@11ty/eleventy-utils";
+import BundlePlugin from "@11ty/eleventy-plugin-bundle";
 import debugUtil from "debug";
 
 import TemplateData from "./Data/TemplateData.js";
@@ -1323,7 +1324,7 @@ export {
 	/**
 	 * @type {module:11ty/eleventy/Plugins/RenderPlugin}
 	 */
-	RenderPlugin as EleventyRenderPlugin,
+	RenderPlugin as EleventyRenderPlugin, // legacy name
 	/**
 	 * @type {module:11ty/eleventy/Plugins/RenderPlugin}
 	 */
@@ -1332,7 +1333,7 @@ export {
 	/**
 	 * @type {module:11ty/eleventy/Plugins/I18nPlugin}
 	 */
-	I18nPlugin as EleventyI18nPlugin,
+	I18nPlugin as EleventyI18nPlugin, // legacy name
 	/**
 	 * @type {module:11ty/eleventy/Plugins/I18nPlugin}
 	 */
@@ -1341,7 +1342,7 @@ export {
 	/**
 	 * @type {module:11ty/eleventy/Plugins/HtmlBasePlugin}
 	 */
-	HtmlBasePlugin as EleventyHtmlBasePlugin,
+	HtmlBasePlugin as EleventyHtmlBasePlugin, // legacy name
 	/**
 	 * @type {module:11ty/eleventy/Plugins/HtmlBasePlugin}
 	 */
@@ -1351,4 +1352,9 @@ export {
 	 * @type {module:11ty/eleventy/Plugins/InputPathToUrlTransformPlugin}
 	 */
 	InputPathToUrlTransformPlugin,
+
+	/**
+	 * @type {module:11ty/eleventy-plugin-bundle}
+	 */
+	BundlePlugin,
 };

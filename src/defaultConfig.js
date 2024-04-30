@@ -1,3 +1,5 @@
+import bundlePlugin from "@11ty/eleventy-plugin-bundle";
+
 import urlFilter from "./Filters/Url.js";
 import slugFilter from "./Filters/Slug.js";
 import slugifyFilter from "./Filters/Slugify.js";
@@ -54,6 +56,11 @@ import { HtmlTransformer } from "./Util/HtmlTransformer.js";
  */
 export default function (config) {
 	let templateConfig = this;
+
+	config.addPlugin(bundlePlugin, {
+		bundles: false, // no default bundles included—must be opt-in.
+		immediate: true,
+	});
 
 	config.addFilter("slug", slugFilter);
 	config.addFilter("slugify", slugifyFilter);
