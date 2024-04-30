@@ -34,6 +34,21 @@ test("Eleventy, defaults inherit from config", async (t) => {
   t.is(elev.outputDir, "./_site/");
 });
 
+test.only("Eleventy, null output directory should default to _site", async (t) => {
+  let elev = new Eleventy(".", null);
+
+  let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
+  await elev.initializeConfig();
+  let config = eleventyConfig.getConfig();
+
+  t.is(config.dir.input, ".");
+  t.is(elev.input, "./");
+  t.is(config.dir.output, "_site");
+  t.is(elev.outputDir, "./_site/");
+});
+
 test("Eleventy, get version", (t) => {
   let elev = new Eleventy();
 

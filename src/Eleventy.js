@@ -49,10 +49,10 @@ class Eleventy {
 
 	constructor(input, output, options = {}, eleventyConfig = null) {
 		/** @member {String} - Holds the path to the input (might be a file or folder) */
-		this.rawInput = input;
+		this.rawInput = input || undefined;
 
 		/** @member {String} - Holds the path to the output directory */
-		this.rawOutput = output;
+		this.rawOutput = output || undefined;
 
 		/** @member {module:11ty/eleventy/TemplateConfig} - Override the config instance (for centralized config re-use) */
 		this.eleventyConfig = eleventyConfig;
