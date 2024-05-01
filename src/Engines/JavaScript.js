@@ -1,4 +1,4 @@
-import { TemplatePath } from "@11ty/eleventy-utils";
+import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
 import TemplateEngine from "./TemplateEngine.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
@@ -12,8 +12,8 @@ class JavaScript extends TemplateEngine {
 	// which data keys to bind to `this` in JavaScript template functions
 	static DATA_KEYS_TO_BIND = ["page", "eleventy"];
 
-	constructor(name, eleventyConfig) {
-		super(name, eleventyConfig);
+	constructor(name, templateConfig) {
+		super(name, templateConfig);
 		this.instances = {};
 
 		this.cacheable = false;
@@ -127,6 +127,45 @@ class JavaScript extends TemplateEngine {
 		};
 	}
 
+	addExportsToBundles(inst, url) {
+		let cfg = this.eleventyConfig.userConfig;
+		if (!("getBundleManagers" in cfg)) {
+			return;
+		}
+
+		let managers = cfg.getBundleManagers();
+		for (let name in managers) {
+			let mgr = managers[name];
+			let key = mgr.getBundleExportKey();
+			if (!key) {
+				continue;
+			}
+
+			if (typeof inst[key] === "string") {
+				// export const css = ``;
+				mgr.addToPage(url, inst[key]);
+			} else if (isPlainObject(inst[key])) {
+				if (typeof inst[key][name] === "string") {
+					// Object with bundle names:
+					// export const bundle = {
+					//   css: ``
+					// };
+					mgr.addToPage(url, inst[key][name]);
+				} else if (isPlainObject(inst[key][name])) {
+					// Object with bucket names:
+					// export const bundle = {
+					//   css: {
+					//     default: ``
+					//   }
+					// };
+					for (let bucketName in inst[key][name]) {
+						mgr.addToPage(url, inst[key][name][bucketName], bucketName);
+					}
+				}
+			}
+		}
+	}
+
 	async compile(str, inputPath) {
 		let inst;
 		if (str) {
@@ -141,6 +180,11 @@ class JavaScript extends TemplateEngine {
 			return function (data) {
 				// TODO does this do anything meaningful for non-classes?
 				// `inst` should have a normalized `render` function from _getInstance
+
+				// Map exports to bundles
+				if (data.page?.url) {
+					this.addExportsToBundles(inst, data.page.url);
+				}
 
 				for (let key of JavaScript.DATA_KEYS_TO_BIND) {
 					if (!inst[key] && data[key]) {
