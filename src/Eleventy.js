@@ -28,6 +28,7 @@ import I18nPlugin, * as I18nPluginExtras from "./Plugins/I18nPlugin.js";
 import HtmlBasePlugin, * as HtmlBasePluginExtras from "./Plugins/HtmlBasePlugin.js";
 import { TransformPlugin as InputPathToUrlTransformPlugin } from "./Plugins/InputPathToUrl.js";
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
+import EventBusUtil from "./Util/EventBusUtil.js";
 
 const pkg = getEleventyPackageJson();
 const debug = debugUtil("Eleventy");
@@ -760,6 +761,8 @@ Arguments:
 		if (!this.verboseModeSetViaCommandLineParam) {
 			this.setIsVerbose(!this.config.quietMode);
 		}
+
+		EventBusUtil.resetForConfig();
 	}
 
 	/**
@@ -780,7 +783,9 @@ Arguments:
 
 		let relevantLayouts = this.eleventyConfig.usesGraph.getLayoutsUsedBy(changedFilePath);
 
-		// Note: this is a sync event!
+		// Note: these are sync events!
+		// `templateModified` is an alias for resourceModified but all listeners for this are cleared out when the config is reset.
+		eventBus.emit("eleventy.templateModified", changedFilePath, usedByDependants);
 		eventBus.emit("eleventy.resourceModified", changedFilePath, usedByDependants, {
 			viaConfigReset: isResetConfig,
 			relevantLayouts,

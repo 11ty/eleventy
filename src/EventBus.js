@@ -18,4 +18,6 @@ debug("Setting up global EventBus.");
 let bus = new EventEmitter();
 bus.setMaxListeners(100);
 
+debug("EventBus max listener count: %o", bus.getMaxListeners());
+
 export default bus;

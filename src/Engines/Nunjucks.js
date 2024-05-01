@@ -66,7 +66,7 @@ class Nunjucks extends TemplateEngine {
 
 		// Correct, but overbroad. Better would be to evict more granularly, but
 		// resolution from paths isn't straightforward.
-		EventBusUtil.soloOn("eleventy.resourceModified", (/*path*/) => {
+		EventBusUtil.soloOn("eleventy.templateModified", (/*path*/) => {
 			this.njkEnv.invalidateCache();
 		});
 

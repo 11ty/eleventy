@@ -1694,6 +1694,7 @@ test("Make sure layout cache takes new changes during watch (nunjucks)", async (
 
   await fsp.writeFile(filePath, `alert("bye");`, { encoding: "utf8" });
 
+  eventBus.emit("eleventy.templateModified", filePath);
   eventBus.emit("eleventy.resourceModified", filePath);
 
   t.is((await renderTemplate(tmpl, data)).trim(), '<script>alert("bye");</script>');

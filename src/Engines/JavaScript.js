@@ -17,8 +17,7 @@ class JavaScript extends TemplateEngine {
 		this.instances = {};
 
 		this.cacheable = false;
-
-		EventBusUtil.soloOn("eleventy.resourceModified", (inputPath, usedByDependants = []) => {
+		EventBusUtil.soloOn("eleventy.templateModified", (inputPath, usedByDependants = []) => {
 			// Remove from cached instances when modified
 			let instancesToDelete = [TemplatePath.addLeadingDotSlash(inputPath), ...usedByDependants];
 			for (let inputPath of instancesToDelete) {
