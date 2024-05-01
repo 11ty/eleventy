@@ -1,5 +1,8 @@
+import debugUtil from "debug";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import { EleventyImportFromEleventy } from "../Util/Require.js";
+
+const debug = debugUtil("Eleventy:TemplateEngineManager");
 
 class TemplateEngineManagerConfigError extends EleventyBaseError {}
 
@@ -11,6 +14,7 @@ class TemplateEngineManager {
 		this.eleventyConfig = eleventyConfig;
 
 		this.engineCache = {};
+		this.importCache = {};
 	}
 
 	get config() {
@@ -79,20 +83,30 @@ class TemplateEngineManager {
 	}
 
 	async getEngineClassByExtension(extension) {
+		if (this.importCache[extension]) {
+			return this.importCache[extension];
+		}
+
+		let promise;
+
 		// We include these as raw strings (and not more readable variables) so they’re parsed by a bundler.
 		if (extension === "md") {
-			return EleventyImportFromEleventy("./src/Engines/Markdown.js");
+			promise = EleventyImportFromEleventy("./src/Engines/Markdown.js");
 		} else if (extension === "html") {
-			return EleventyImportFromEleventy("./src/Engines/Html.js");
+			promise = EleventyImportFromEleventy("./src/Engines/Html.js");
 		} else if (extension === "njk") {
-			return EleventyImportFromEleventy("./src/Engines/Nunjucks.js");
+			promise = EleventyImportFromEleventy("./src/Engines/Nunjucks.js");
 		} else if (extension === "liquid") {
-			return EleventyImportFromEleventy("./src/Engines/Liquid.js");
+			promise = EleventyImportFromEleventy("./src/Engines/Liquid.js");
 		} else if (extension === "11ty.js") {
-			return EleventyImportFromEleventy("./src/Engines/JavaScript.js");
+			promise = EleventyImportFromEleventy("./src/Engines/JavaScript.js");
 		} else {
-			return this.getCustomEngineClass();
+			promise = this.getCustomEngineClass();
 		}
+
+		this.importCache[extension] = promise;
+
+		return promise;
 	}
 
 	async getCustomEngineClass() {
@@ -117,35 +131,38 @@ class TemplateEngineManager {
 
 		// TODO these cached engines should be based on extensions not name, then we can remove the error in
 		//  "Double override (not aliases) throws an error" test in TemplateRenderCustomTest.js
-		if (this.engineCache[name]) {
-			return this.engineCache[name];
+		if (!this.engineCache[name]) {
+			debug("Engine cache miss %o (should only happen once per type)", name);
+
+			// Make sure cache key is based on name and not path
+			// Custom class is used for all plugins, cache once per plugin
+			this.engineCache[name] = new Promise(async (resolve) => {
+				let cls = await this.getEngineClassByExtension(name);
+				let instance = new cls(name, this.eleventyConfig);
+				instance.extensionMap = extensionMap;
+				instance.engineManager = this;
+
+				// If provided a "Custom" engine using addExtension,
+				// But that engine's instance is *not* custom,
+				// The user must be overriding an existing engine
+				// i.e. addExtension('md', { ...overrideBehavior })
+				if (
+					this.getClassNameFromTemplateKey(name) === "Custom" &&
+					instance.constructor.name !== "CustomEngine"
+				) {
+					let CustomEngine = await this.getCustomEngineClass();
+					let overrideCustomEngine = new CustomEngine(name, this.eleventyConfig);
+					// Keep track of the "default" engine 11ty would normally use
+					// This allows the user to access the default engine in their override
+					overrideCustomEngine.setDefaultEngine(instance);
+					instance = overrideCustomEngine;
+				}
+
+				resolve(instance);
+			});
 		}
 
-		let cls = await this.getEngineClassByExtension(name);
-		let instance = new cls(name, this.eleventyConfig);
-		instance.extensionMap = extensionMap;
-		instance.engineManager = this;
-
-		// If provided a "Custom" engine using addExtension,
-		// But that engine's instance is *not* custom,
-		// The user must be overriding an existing engine
-		// i.e. addExtension('md', { ...overrideBehavior })
-		if (
-			this.getClassNameFromTemplateKey(name) === "Custom" &&
-			instance.constructor.name !== "CustomEngine"
-		) {
-			let CustomEngine = await this.getCustomEngineClass();
-			let overrideCustomEngine = new CustomEngine(name, this.eleventyConfig);
-			// Keep track of the "default" engine 11ty would normally use
-			// This allows the user to access the default engine in their override
-			overrideCustomEngine.setDefaultEngine(instance);
-			instance = overrideCustomEngine;
-		}
-
-		// Make sure cache key is based on name and not path
-		// Custom class is used for all plugins, cache once per plugin
-		this.engineCache[name] = instance;
-		return instance;
+		return this.engineCache[name];
 	}
 }
 
