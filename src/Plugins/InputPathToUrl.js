@@ -22,6 +22,16 @@ function normalizeInputPath(inputPath, inputDir, contentMap) {
 	return inputPath;
 }
 
+function splitFilePath(filepath) {
+	let hash = "";
+	let splitUrl = filepath.split("#");
+	if (splitUrl.length > 1) {
+		hash = "#" + splitUrl[1];
+		filepath = splitUrl[0];
+	}
+	return [hash, filepath];
+}
+
 function FilterPlugin(eleventyConfig) {
 	let contentMap;
 	eleventyConfig.on("eleventy.contentMap", function ({ inputPathToUrl }) {
@@ -34,6 +44,8 @@ function FilterPlugin(eleventyConfig) {
 		}
 
 		let inputDir = eleventyConfig.directories.input;
+		let hash = "";
+		[hash, filepath] = splitFilePath(filepath);
 		filepath = normalizeInputPath(filepath, inputDir, contentMap);
 
 		let urls = contentMap[filepath];
@@ -41,7 +53,7 @@ function FilterPlugin(eleventyConfig) {
 			throw new Error("`inputPathToUrl` filter could not find a matching target for " + filepath);
 		}
 
-		return urls[0];
+		return `${urls[0]}${hash}`;
 	});
 }
 
@@ -63,15 +75,18 @@ function TransformPlugin(eleventyConfig, defaultOptions = {}) {
 			throw new Error("Internal error: contentMap not available for the `pathToUrl` Transform.");
 		}
 		let inputDir = eleventyConfig.directories.input;
+
+		let hash = "";
+		[hash, filepathOrUrl] = splitFilePath(filepathOrUrl);
 		filepathOrUrl = normalizeInputPath(filepathOrUrl, inputDir, contentMap);
 
 		let urls = contentMap[filepathOrUrl];
 		if (!urls || urls.length === 0) {
 			// fallback, transforms don’t error on missing paths (though the pathToUrl filter does)
-			return filepathOrUrl;
+			return `${filepathOrUrl}${hash}`;
 		}
 
-		return urls[0];
+		return `${urls[0]}${hash}`;
 	});
 }
 

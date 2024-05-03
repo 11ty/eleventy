@@ -18,6 +18,7 @@ const OUTPUT_HTML_STD = `<!doctype html>
 <body>
 <a href="/">Home</a>
 <a href="/tmpl/">Test</a>
+<a href="/tmpl/#anchor">Anchor</a>
 </body>
 </html>`;
 
@@ -34,6 +35,7 @@ const OUTPUT_HTML_BASE = `<!doctype html>
 <body>
 <a href="/gh-pages/">Home</a>
 <a href="/gh-pages/tmpl/">Test</a>
+<a href="/gh-pages/tmpl/#anchor">Anchor</a>
 </body>
 </html>`;
 
