@@ -241,17 +241,18 @@ class TemplatePassthrough {
 
 		let fileCopyCount = 0;
 		let map = {};
+		let b = this.benchmarks.aggregate.get("Passthrough Copy File");
 		// returns a promise
 		return copy(src, dest, copyOptions)
 			.on(copy.events.COPY_FILE_START, (copyOp) => {
 				// Access to individual files at `copyOp.src`
 				debug("Copying individual file %o", copyOp.src);
 				map[copyOp.src] = copyOp.dest;
-				this.benchmarks.aggregate.get("Passthrough Copy File").before();
+				b.before();
 			})
 			.on(copy.events.COPY_FILE_COMPLETE, (/*copyOp*/) => {
 				fileCopyCount++;
-				this.benchmarks.aggregate.get("Passthrough Copy File").after();
+				b.after();
 			})
 			.then(() => {
 				return {
