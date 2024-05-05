@@ -3,6 +3,8 @@
 import { DepGraph as DependencyGraph } from "dependency-graph";
 import { isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
+import os from "node:os";
+import pMap from "p-map";
 
 import TemplateCollection from "./TemplateCollection.js";
 import EleventyErrorUtil from "./Errors/EleventyErrorUtil.js";
@@ -547,31 +549,35 @@ class TemplateMap {
 
 	async populateContentDataInMap(orderedMap) {
 		let usedTemplateContentTooEarlyMap = [];
-		for (let map of orderedMap) {
-			if (!map._pages) {
-				throw new Error(`Content pages not found for ${map.inputPath}`);
-			}
+		await pMap(
+			orderedMap.filter((map) => {
+				if (!map._pages) {
+					throw new Error(`Content pages not found for ${map.inputPath}`);
+				}
 
-			if (!map.template.behavior.isRenderable()) {
 				// Note that empty pagination templates will be skipped here as not renderable
-				continue;
-			}
-
-			// IMPORTANT: this is where template content is rendered
-			try {
-				for (let pageEntry of map._pages) {
-					pageEntry.templateContent =
-						await pageEntry.template.renderPageEntryWithoutLayout(pageEntry);
-				}
-			} catch (e) {
-				if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
-					usedTemplateContentTooEarlyMap.push(map);
-				} else {
-					throw e;
-				}
-			}
-			debugDev("Added this.map[...].templateContent, outputPath, et al for one map entry");
-		}
+				return map.template.behavior.isRenderable();
+			}),
+			(map) =>
+				new Promise(async function (resolve, reject) {
+					// IMPORTANT: this is where template content is rendered
+					try {
+						for (let pageEntry of map._pages) {
+							pageEntry.templateContent =
+								await pageEntry.template.renderPageEntryWithoutLayout(pageEntry);
+						}
+					} catch (e) {
+						if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
+							usedTemplateContentTooEarlyMap.push(map);
+						} else {
+							reject(e);
+						}
+					}
+					debugDev("Added this.map[...].templateContent, outputPath, et al for one map entry");
+					resolve();
+				}),
+			{ concurrency: os.availableParallelism() },
+		);
 
 		for (let map of usedTemplateContentTooEarlyMap) {
 			try {
