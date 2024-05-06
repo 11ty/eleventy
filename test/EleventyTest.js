@@ -1,5 +1,5 @@
 import test from "ava";
-import fs from "fs";
+import fs from "node:fs";
 import lodash from "@11ty/lodash-custom";
 import { rimrafSync } from "rimraf";
 import { z } from "zod";
@@ -34,7 +34,7 @@ test("Eleventy, defaults inherit from config", async (t) => {
   t.is(elev.outputDir, "./_site/");
 });
 
-test.only("Eleventy, null output directory should default to _site", async (t) => {
+test("Eleventy, null output directory should default to _site", async (t) => {
   let elev = new Eleventy(".", null);
 
   let eleventyConfig = new TemplateConfig();

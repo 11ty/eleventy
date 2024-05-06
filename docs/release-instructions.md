@@ -29,7 +29,6 @@
      - NOTE: the tag is `canary` but expects `-alpha.` suffixes in `package.json` version, read more: https://github.com/11ty/eleventy/issues/2758
    - (Beta) `npm publish --access=public --tag=beta`
    - (Main) `npm publish --access=public`
-1. (Optional) Build and commit a new the `eleventy-edge-cdn` project to generate a new Eleventy Edge lib.
 
 Unfortunate note about npm and tags (specifically `canary` here): if you push a 1.0.0-canary.x to `canary` (even though `2.0.0-canary.x` exists), it will use the last pushed tag when you npm install from `@canary` (not the highest version number)
 
