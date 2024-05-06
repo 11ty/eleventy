@@ -1,5 +1,6 @@
 import test from "ava";
 import fs from "node:fs";
+import path from "node:path";
 import lodash from "@11ty/lodash-custom";
 import { rimrafSync } from "rimraf";
 import { z } from "zod";
@@ -928,6 +929,21 @@ test("setInputDirectory config method #1503 in a plugin throws error", async (t)
     // The `set*Directory` configuration API methods are not yet allowed in plugins.
     message: "Error processing a plugin",
   });
+});
+
+test("Accepts absolute paths for input and output", async (t) => {
+  let input = path.resolve("./test/noop/");
+  let output = path.resolve("./test/noop/_site");
+  let elev = new Eleventy(input, output);
+
+  let results = await elev.toJSON();
+
+  // trailing slashes are expected
+  t.is(elev.directories.input, path.resolve("./test/noop/") + path.sep);
+  t.is(elev.directories.includes, path.resolve("./test/noop/_includes/") + path.sep);
+  t.is(elev.directories.data, path.resolve("./test/noop/_data/") + path.sep);
+  t.is(elev.directories.layouts, undefined);
+  t.is(elev.directories.output, path.resolve("./test/noop/_site/") + path.sep);
 });
 
 test("Eleventy config export (ESM)", async (t) => {
