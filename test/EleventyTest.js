@@ -13,6 +13,7 @@ import TemplateMap from "../src/TemplateMap.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 import DateGitFirstAdded from "../src/Util/DateGitFirstAdded.js";
 import DateGitLastUpdated from "../src/Util/DateGitLastUpdated.js";
+import PathNormalizer from "../src/Util/PathNormalizer.js";
 import { normalizeNewLines, localizeNewLines } from "./Util/normalizeNewLines.js";
 
 const fsp = fs.promises;
@@ -939,11 +940,11 @@ test("Accepts absolute paths for input and output", async (t) => {
   let results = await elev.toJSON();
 
   // trailing slashes are expected
-  t.is(elev.directories.input, path.resolve("./test/noop/") + path.sep);
-  t.is(elev.directories.includes, path.resolve("./test/noop/_includes/") + path.sep);
-  t.is(elev.directories.data, path.resolve("./test/noop/_data/") + path.sep);
+  t.is(PathNormalizer.normalizeSeperator(elev.directories.input), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/") + path.sep));
+  t.is(PathNormalizer.normalizeSeperator(elev.directories.includes), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/_includes/") + path.sep));
+  t.is(PathNormalizer.normalizeSeperator(elev.directories.data), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/_data/") + path.sep));
   t.is(elev.directories.layouts, undefined);
-  t.is(elev.directories.output, path.resolve("./test/noop/_site/") + path.sep);
+  t.is(PathNormalizer.normalizeSeperator(elev.directories.output), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/_site/") + path.sep));
 });
 
 test("Eleventy config export (ESM)", async (t) => {
