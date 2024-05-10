@@ -852,9 +852,10 @@ Arguments:
 
 		// reset and reload global configuration
 		if (isResetConfig) {
-			await this.resetConfig();
 			// important: run this before config resets otherwise the handlers will disappear.
 			await this.config.events.emit("eleventy.reset");
+
+			await this.resetConfig();
 		}
 
 		await this.restart();
