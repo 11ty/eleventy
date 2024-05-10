@@ -45,6 +45,15 @@ class ConsoleLogger {
 		this.message(msg);
 	}
 
+	/** @param {string} prefix */
+	/** @param {string} message */
+	/** @param {string} type */
+	/** @param {string} color */
+	/** @param {boolean} force */
+	logWithOptions({ message, type, prefix, color, force }) {
+		this.message(message, type, color, force, prefix);
+	}
+
 	/** @param {string} msg */
 	forceLog(msg) {
 		this.message(msg, undefined, undefined, true);
@@ -83,11 +92,11 @@ class ConsoleLogger {
 	 * @param {boolean} [chalkColor=false] - Use coloured log output?
 	 * @param {boolean} [forceToConsole=false] - Enforce a log on console instead of specified target.
 	 */
-	message(message, type = "log", chalkColor = false, forceToConsole = false) {
+	message(message, type = "log", chalkColor = false, forceToConsole = false, prefix = "[11ty]") {
 		if (!forceToConsole && (!this.isVerbose || process.env.DEBUG)) {
 			debug(message);
 		} else if (this._logger !== false) {
-			message = `[11ty] ${message.split("\n").join("\n[11ty] ")}`;
+			message = `${chalk.gray(prefix)} ${message.split("\n").join(`\n${chalk.gray(prefix)} `)}`;
 
 			let logger = this._logger || console;
 			if (chalkColor && this.isChalkEnabled) {

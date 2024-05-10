@@ -1303,7 +1303,12 @@ Arguments:
 		} finally {
 			this.bench.finish();
 			if (to === "fs") {
-				this.logger.message(this.logFinished(), "info", hasError ? "red" : "green", true);
+				this.logger.logWithOptions({
+					message: this.logFinished(),
+					type: "info",
+					color: hasError ? "red" : "green",
+					force: true,
+				});
 			}
 			debug("Finished writing templates.");
 
