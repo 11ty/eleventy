@@ -1,5 +1,6 @@
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import { isPlainObject } from "@11ty/eleventy-utils";
+import { FilePathUtil } from "./FilePathUtil.js";
 
 class EleventyTransformError extends EleventyBaseError {}
 
@@ -37,6 +38,17 @@ class TransformsUtil {
 
 	static async runAll(content, pageData, transforms = {}, outputPathFileExtensionOverride = false) {
 		let { inputPath, outputPath, url } = pageData;
+
+		if (
+			outputPathFileExtensionOverride &&
+			FilePathUtil.isMatchingExtension(outputPath, outputPathFileExtensionOverride)
+		) {
+			return Promise.reject(
+				Error(
+					`It’s unlikely that you want to run transforms manually on ${outputPath} (via the \`renderTransforms\` filter). The transforms will already execute on this file automatically and double-processing content will lead to unexpected output.`,
+				),
+			);
+		}
 
 		if (!isPlainObject(transforms)) {
 			throw new Error("Object of transforms expected as third parameter.");

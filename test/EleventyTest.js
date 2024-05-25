@@ -1353,5 +1353,5 @@ test("Eleventy transforms filter (throw error if attempt to double process conte
     message: 'Having trouble rendering liquid template ./test/stubs-virtual/feed.liquid'
   });
 
-  t.is(e.originalError.toString(), 'RenderError: It’s unlikely that you want to use the `renderTransforms` filter on ./_site/feed.xml. The transforms will already execute on this file automatically and double-processing content will likely lead to unexpected output., file:./test/stubs-virtual/feed.liquid, line:1, col:1');
+  t.is(e.originalError.toString(), 'RenderError: It’s unlikely that you want to run transforms manually on ./_site/feed.xml (via the `renderTransforms` filter). The transforms will already execute on this file automatically and double-processing content will lead to unexpected output., file:./test/stubs-virtual/feed.liquid, line:1, col:1');
 });

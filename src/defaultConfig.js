@@ -8,7 +8,6 @@ import getCollectionItemIndex from "./Filters/GetCollectionItemIndex.js";
 import { FilterPlugin as InputPathToUrlFilterPlugin } from "./Plugins/InputPathToUrl.js";
 import { HtmlTransformer } from "./Util/HtmlTransformer.js";
 import TransformsUtil from "./Util/TransformsUtil.js";
-import { FilePathUtil } from "./Util/FilePathUtil.js";
 
 /**
  * @module 11ty/eleventy/defaultConfig
@@ -102,14 +101,6 @@ export default function (config) {
 	config.addFilter(
 		"renderTransforms",
 		async function transformsFilter(content, outputPathFileExtensionOverride = "html") {
-			if (FilePathUtil.isMatchingExtension(this.page.outputPath, outputPathFileExtensionOverride)) {
-				return Promise.reject(
-					Error(
-						`It’s unlikely that you want to use the \`renderTransforms\` filter on ${this.page.outputPath}. The transforms will already execute on this file automatically and double-processing content will likely lead to unexpected output.`,
-					),
-				);
-			}
-
 			return TransformsUtil.runAll(
 				content,
 				this.page,
