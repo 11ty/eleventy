@@ -1,5 +1,6 @@
 import posthtml from "posthtml";
 import urls from "@11ty/posthtml-urls";
+import { FilePathUtil } from "./FilePathUtil.js";
 
 class HtmlTransformer {
 	constructor() {
@@ -96,10 +97,6 @@ class HtmlTransformer {
 		Object.assign(this.posthtmlProcessOptions, options);
 	}
 
-	getFileExtension(filepath) {
-		return (filepath || "").split(".").pop();
-	}
-
 	isTransformable(extension) {
 		return !!this.callbacks[extension] || !!this.plugins[extension];
 	}
@@ -120,7 +117,7 @@ class HtmlTransformer {
 
 	/* filepath is a template’s outputPath */
 	async transformContent(filepath, content, context) {
-		let extension = this.getFileExtension(filepath);
+		let extension = FilePathUtil.getFileExtension(filepath);
 		if (!this.isTransformable(extension)) {
 			return content;
 		}

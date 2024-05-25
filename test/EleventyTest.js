@@ -7,7 +7,7 @@ import { z } from "zod";
 import { fromZodError } from 'zod-validation-error';
 
 import eventBus from "../src/EventBus.js";
-import Eleventy from "../src/Eleventy.js";
+import Eleventy, { HtmlBasePlugin } from "../src/Eleventy.js";
 import TemplateContent from "../src/TemplateContent.js";
 import TemplateMap from "../src/TemplateMap.js";
 import TemplateConfig from "../src/TemplateConfig.js";
@@ -1274,4 +1274,84 @@ test("Eleventy data schema has access to custom collections created via API #879
 
   let results = await elev.toJSON();
   t.is(results.length, 1);
+});
+
+test("Eleventy transforms filter (implicit)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    pathPrefix: "hi",
+    config: eleventyConfig => {
+      eleventyConfig.addPlugin(HtmlBasePlugin);
+
+      eleventyConfig.addTemplate("index.html", `<img src="/test.png" alt="abc">`);
+      eleventyConfig.addTemplate("feed.njk", `{{ '<img src="/test.png" alt="abc">' | renderTransforms | safe }}`, {
+        permalink: "feed.xml"
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(results.length, 2);
+
+  t.is(results.filter(({inputPath}) => inputPath.endsWith("index.html"))[0].content, `<img src="/hi/test.png" alt="abc">`);
+  t.is(results.filter(({inputPath}) => inputPath.endsWith("feed.njk"))[0].content, `<img src="/hi/test.png" alt="abc">`);
+});
+
+test("Eleventy transforms filter (explicit)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    pathPrefix: "hi",
+    config: eleventyConfig => {
+      eleventyConfig.addPlugin(HtmlBasePlugin);
+
+      eleventyConfig.addTemplate("index.html", `<img src="/test.png" alt="abc">`);
+      eleventyConfig.addTemplate("feed.njk", `{{ '<img src="/test.png" alt="abc">' | renderTransforms('html') | safe }}`, {
+        permalink: "feed.xml"
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(results.length, 2);
+
+  t.is(results.filter(({inputPath}) => inputPath.endsWith("index.html"))[0].content, `<img src="/hi/test.png" alt="abc">`);
+  t.is(results.filter(({inputPath}) => inputPath.endsWith("feed.njk"))[0].content, `<img src="/hi/test.png" alt="abc">`);
+});
+
+test("Eleventy transforms filter (override output extension)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    pathPrefix: "hi",
+    config: eleventyConfig => {
+      eleventyConfig.addPlugin(HtmlBasePlugin);
+
+      eleventyConfig.addTemplate("index.html", `<img src="/test.png" alt="abc">`);
+      eleventyConfig.addTemplate("feed.njk", `{{ '<img src="/test.png" alt="abc">' | renderTransforms('txt') | safe }}`, {
+        permalink: "feed.xml"
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(results.length, 2);
+
+  t.is(results.filter(({inputPath}) => inputPath.endsWith("index.html"))[0].content, `<img src="/hi/test.png" alt="abc">`);
+  t.is(results.filter(({inputPath}) => inputPath.endsWith("feed.njk"))[0].content, `<img src="/test.png" alt="abc">`);
+});
+
+test("Eleventy transforms filter (throw error if attempt to double process content)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("feed.liquid", `{{ '<img src="/test.png" alt="abc">' | renderTransforms: 'xml' }}`, {
+        permalink: "feed.xml"
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let e = await t.throwsAsync(() => elev.toJSON(), {
+    message: 'Having trouble rendering liquid template ./test/stubs-virtual/feed.liquid'
+  });
+
+  t.is(e.originalError.toString(), 'RenderError: It’s unlikely that you want to use the `renderTransforms` filter on ./_site/feed.xml. The transforms will already execute on this file automatically and double-processing content will likely lead to unexpected output., file:./test/stubs-virtual/feed.liquid, line:1, col:1');
 });

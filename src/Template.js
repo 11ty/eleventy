@@ -23,6 +23,7 @@ import TemplateContentPrematureUseError from "./Errors/TemplateContentPrematureU
 import TemplateContentUnrenderedTemplateError from "./Errors/TemplateContentUnrenderedTemplateError.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import ReservedData from "./Util/ReservedData.js";
+import TransformsUtil from "./Util/TransformsUtil.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 const writeFile = util.promisify(fs.writeFile);
@@ -30,8 +31,6 @@ const fsStat = util.promisify(fs.stat);
 
 const debug = debugUtil("Eleventy:Template");
 const debugDev = debugUtil("Dev:Eleventy:Template");
-
-class EleventyTransformError extends EleventyBaseError {}
 
 class Template extends TemplateContent {
 	constructor(templatePath, templateData, extensionMap, config) {
@@ -461,37 +460,8 @@ class Template extends TemplateContent {
 		});
 	}
 
-	async runTransforms(str, page) {
-		let { inputPath, outputPath, url } = page;
-		let pageData = page.data.page;
-
-		for (let { callback, name } of this.transforms) {
-			try {
-				let hadStrBefore = !!str;
-				str = await callback.call(
-					{
-						inputPath,
-						outputPath,
-						url,
-						page: pageData,
-					},
-					str,
-					outputPath,
-				);
-				if (hadStrBefore && !str) {
-					this.logger.warn(
-						`Warning: Transform \`${name}\` returned empty when writing ${outputPath} from ${inputPath}.`,
-					);
-				}
-			} catch (e) {
-				throw new EleventyTransformError(
-					`Transform \`${name}\` encountered an error when transforming ${inputPath}.`,
-					e,
-				);
-			}
-		}
-
-		return str;
+	async runTransforms(str, pageEntry) {
+		return TransformsUtil.runAll(str, pageEntry.data.page, this.transforms);
 	}
 
 	_addComputedEntry(computedData, obj, parentKey, declaredDependencies) {

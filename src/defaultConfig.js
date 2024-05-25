@@ -7,6 +7,8 @@ import getLocaleCollectionItem from "./Filters/GetLocaleCollectionItem.js";
 import getCollectionItemIndex from "./Filters/GetCollectionItemIndex.js";
 import { FilterPlugin as InputPathToUrlFilterPlugin } from "./Plugins/InputPathToUrl.js";
 import { HtmlTransformer } from "./Util/HtmlTransformer.js";
+import TransformsUtil from "./Util/TransformsUtil.js";
+import { FilePathUtil } from "./Util/FilePathUtil.js";
 
 /**
  * @module 11ty/eleventy/defaultConfig
@@ -67,7 +69,7 @@ export default function (config) {
 
 	// Deprecated, use HtmlBasePlugin instead.
 	// Adds a pathPrefix manually to a URL string
-	config.addFilter("url", function addPathPrefix(url, pathPrefixOverride) {
+	config.addFilter("url", function addPathPrefixFilter(url, pathPrefixOverride) {
 		let pathPrefix;
 		if (pathPrefixOverride && typeof pathPrefixOverride === "string") {
 			pathPrefix = pathPrefixOverride;
@@ -86,7 +88,6 @@ export default function (config) {
 	config.addFilter("getCollectionItemIndex", function (collection, pageOverride) {
 		return getCollectionItemIndex.call(this, collection, pageOverride);
 	});
-
 	config.addFilter("getCollectionItem", function (collection, pageOverride, langCode) {
 		return getLocaleCollectionItem.call(this, config, collection, pageOverride, langCode, 0);
 	});
@@ -96,6 +97,27 @@ export default function (config) {
 	config.addFilter("getNextCollectionItem", function (collection, pageOverride, langCode) {
 		return getLocaleCollectionItem.call(this, config, collection, pageOverride, langCode, 1);
 	});
+
+	// Process arbitrary content with transforms
+	config.addFilter(
+		"renderTransforms",
+		async function transformsFilter(content, outputPathFileExtensionOverride = "html") {
+			if (FilePathUtil.isMatchingExtension(this.page.outputPath, outputPathFileExtensionOverride)) {
+				return Promise.reject(
+					Error(
+						`It’s unlikely that you want to use the \`renderTransforms\` filter on ${this.page.outputPath}. The transforms will already execute on this file automatically and double-processing content will likely lead to unexpected output.`,
+					),
+				);
+			}
+
+			return TransformsUtil.runAll(
+				content,
+				this.page,
+				config.transforms,
+				outputPathFileExtensionOverride,
+			);
+		},
+	);
 
 	// Filter: Maps an input path to output URL
 	config.addPlugin(InputPathToUrlFilterPlugin, {
