@@ -169,12 +169,7 @@ class TemplateWriter {
 			 *   return pretty(str, { ocd: true });
 			 * }
 			 */
-			for (let transformName in this.config.transforms) {
-				let transform = this.config.transforms[transformName];
-				if (typeof transform === "function") {
-					tmpl.addTransform(transformName, transform);
-				}
-			}
+			tmpl.setTransforms(this.config.transforms);
 
 			for (let linterName in this.config.linters) {
 				let linter = this.config.linters[linterName];

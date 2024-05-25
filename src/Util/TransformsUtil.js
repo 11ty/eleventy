@@ -1,4 +1,5 @@
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
+import { isPlainObject } from "@11ty/eleventy-utils";
 
 class EleventyTransformError extends EleventyBaseError {}
 
@@ -34,18 +35,14 @@ class TransformsUtil {
 		return splits.join(".") + `.${outputPathFileExtensionOverride}`;
 	}
 
-	static async runAll(
-		content,
-		pageData,
-		transformsArray = [],
-		outputPathFileExtensionOverride = false,
-	) {
+	static async runAll(content, pageData, transforms = {}, outputPathFileExtensionOverride = false) {
 		let { inputPath, outputPath, url } = pageData;
 
-		if (!Array.isArray(transformsArray)) {
-			transformsArray = this.changeTransformsToArray(transformsArray);
+		if (!isPlainObject(transforms)) {
+			throw new Error("Object of transforms expected as third parameter.");
 		}
 
+		let transformsArray = this.changeTransformsToArray(transforms);
 		let outputPathOverride = this.overrideOutputPath(outputPath, outputPathFileExtensionOverride);
 		let pageDataOverride = Object.assign({}, pageData, {
 			outputPath: outputPathOverride,

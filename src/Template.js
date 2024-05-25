@@ -45,7 +45,7 @@ class Template extends TemplateContent {
 		this.extensionMap = extensionMap;
 
 		this.linters = [];
-		this.transforms = [];
+		this.transforms = {};
 
 		this.setTemplateData(templateData);
 
@@ -453,11 +453,11 @@ class Template extends TemplateContent {
 		}
 	}
 
-	addTransform(name, callback) {
-		this.transforms.push({
-			name,
-			callback,
-		});
+	setTransforms(transforms) {
+		if (!isPlainObject(transforms)) {
+			throw new Error("Object expected in setTransforms");
+		}
+		this.transforms = transforms;
 	}
 
 	async runTransforms(str, pageEntry) {

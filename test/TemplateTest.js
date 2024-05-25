@@ -917,9 +917,11 @@ test("Test a transform", async (t) => {
     "./test/stubs/_site"
   );
 
-  tmpl.addTransform("transformName", function (content, outputPath) {
-    t.true(outputPath.endsWith(".html"));
-    return "OVERRIDE BY A TRANSFORM";
+  tmpl.setTransforms({
+    transformName: function (content, outputPath) {
+      t.true(outputPath.endsWith(".html"));
+      return "OVERRIDE BY A TRANSFORM";
+    }
   });
 
   let renders = await _testCompleteRender(tmpl);
@@ -936,10 +938,12 @@ test("Test a transform (does it have this.inputPath?)", async (t) => {
     "./test/stubs/_site"
   );
 
-  tmpl.addTransform("transformName", function (content, outputPath) {
-    t.true(outputPath.endsWith(".html"));
-    t.true(!!this.inputPath);
-    return "OVERRIDE BY A TRANSFORM";
+  tmpl.setTransforms({
+    transformName: function (content, outputPath) {
+      t.true(outputPath.endsWith(".html"));
+      t.true(!!this.inputPath);
+      return "OVERRIDE BY A TRANSFORM";
+    }
   });
 
   let renders = await _testCompleteRender(tmpl);
@@ -955,11 +959,13 @@ test("Test a transform with pages", async (t) => {
     "./test/stubs/_site"
   );
 
-  tmpl.addTransform("transformName", function (content, outputPath) {
-    // should run twice, one for each page
-    t.true(content.length > 0);
-    t.true(outputPath.endsWith(".html"));
-    return "OVERRIDE BY A TRANSFORM";
+  tmpl.setTransforms({
+    transformName: function (content, outputPath) {
+      // should run twice, one for each page
+      t.true(content.length > 0);
+      t.true(outputPath.endsWith(".html"));
+      return "OVERRIDE BY A TRANSFORM";
+    }
   });
 
   let renders = await _testCompleteRender(tmpl);
@@ -975,10 +981,12 @@ test("Test a transform with a layout", async (t) => {
     "./test/stubs-475/_site"
   );
 
-  tmpl.addTransform("transformName", function (content, outputPath) {
-    t.is(content, "<html><body>This is content.</body></html>");
-    t.true(outputPath.endsWith(".html"));
-    return "OVERRIDE BY A TRANSFORM";
+  tmpl.setTransforms({
+    transformName: function (content, outputPath) {
+      t.is(content, "<html><body>This is content.</body></html>");
+      t.true(outputPath.endsWith(".html"));
+      return "OVERRIDE BY A TRANSFORM";
+    }
   });
 
   let renders = await _testCompleteRender(tmpl);
@@ -994,14 +1002,16 @@ test("Test a single asynchronous transform", async (t) => {
     "./test/stubs/_site"
   );
 
-  tmpl.addTransform("transformName", async function (content, outputPath) {
-    t.true(outputPath.endsWith("template/index.html"));
+  tmpl.setTransforms({
+    transformName: async function (content, outputPath) {
+      t.true(outputPath.endsWith("template/index.html"));
 
-    return new Promise((resolve) => {
-      setTimeout(function (str, outputPath) {
-        resolve("OVERRIDE BY A TRANSFORM");
-      }, 50);
-    });
+      return new Promise((resolve) => {
+        setTimeout(function (str, outputPath) {
+          resolve("OVERRIDE BY A TRANSFORM");
+        }, 50);
+      });
+    }
   });
 
   let renders = await _testCompleteRender(tmpl);
@@ -1017,25 +1027,26 @@ test("Test multiple asynchronous transforms", async (t) => {
     "./test/stubs/_site"
   );
 
-  tmpl.addTransform("transformName", async function (content, outputPath) {
-    t.true(outputPath.endsWith("template/index.html"));
+  tmpl.setTransforms({
+    transformName1: async function (content, outputPath) {
+      t.true(outputPath.endsWith("template/index.html"));
 
-    return new Promise((resolve, reject) => {
-      setTimeout(function (str, outputPath) {
-        resolve("lowercase transform");
-      }, 50);
-    });
-  });
+      return new Promise((resolve, reject) => {
+        setTimeout(function (str, outputPath) {
+          resolve("lowercase transform");
+        }, 50);
+      });
+    },
+    // uppercase
+    transformName2: async function (str, outputPath) {
+      t.true(outputPath.endsWith("template/index.html"));
 
-  // uppercase
-  tmpl.addTransform("transformName", async function (str, outputPath) {
-    t.true(outputPath.endsWith("template/index.html"));
-
-    return new Promise((resolve, reject) => {
-      setTimeout(function () {
-        resolve(str.toUpperCase());
-      }, 50);
-    });
+      return new Promise((resolve, reject) => {
+        setTimeout(function () {
+          resolve(str.toUpperCase());
+        }, 50);
+      });
+    }
   });
 
   let renders = await _testCompleteRender(tmpl);
