@@ -21,14 +21,25 @@ class TemplateEngineManager {
 		return this.eleventyConfig.getConfig();
 	}
 
-	static isCustomEngineSimpleAlias(entry) {
-		let keys = Object.keys(entry);
-		if (keys.length > 2) {
+	static isAlias(entry) {
+		if (entry.aliasKey) {
+			return true;
+		}
+
+		return entry.key !== entry.extension;
+	}
+
+	static isSimpleAlias(entry) {
+		if (!this.isAlias(entry)) {
 			return false;
 		}
-		return !keys.some((key) => {
-			return key !== "key" && key !== "extension";
-		});
+
+		// has keys other than key, extension, and aliasKey
+		return (
+			Object.keys(entry).some((key) => {
+				return key !== "key" && key !== "extension" && key !== "aliasKey";
+			}) === false
+		);
 	}
 
 	get keyToClassNameMap() {
@@ -45,22 +56,38 @@ class TemplateEngineManager {
 			if ("extensionMap" in this.config) {
 				for (let entry of this.config.extensionMap) {
 					// either the key does not already exist or it is not a simple alias and is an override: https://www.11ty.dev/docs/languages/custom/#overriding-an-existing-template-language
-					if (
-						!this._keyToClassNameMap[entry.key] ||
-						!TemplateEngineManager.isCustomEngineSimpleAlias(entry)
-					) {
-						// throw an error if you try to override a Custom engine, this is a short term error until we swap this to use the extension instead of the key to get the class
-						if (this._keyToClassNameMap[entry.key] === "Custom") {
+					let existingTarget = this._keyToClassNameMap[entry.key];
+					let isAlias = TemplateEngineManager.isAlias(entry);
+
+					// throw an error if you try to override a Custom engine, this is a short term error until we swap this to use the extension instead of the key to get the class
+					if (existingTarget) {
+						if (existingTarget === "Custom") {
 							throw new Error(
-								`An attempt was made to override the *already* overridden "${entry.key}" template syntax via the \`addExtension\` configuration API. A maximum of one override is currently supported. If you’re trying to add an alias to an existing syntax, make sure only the \`key\` property is present in the addExtension options object.`,
+								`An attempt was made to override the *already* custom template syntax "${entry.key}" (via the \`addExtension\` configuration API). A maximum of one override is currently supported.`,
 							);
 						}
+					} else if (isAlias) {
+						throw new Error(
+							`An attempt to alias ${entry.aliasKey} to ${entry.key} was made, but ${entry.key} is not a recognized template syntax.`,
+						);
+					}
 
+					if (isAlias) {
+						// only `key` and `extension`, not `compile` or other options
+						if (!TemplateEngineManager.isSimpleAlias(entry)) {
+							this._keyToClassNameMap[entry.aliasKey] = "Custom";
+						} else {
+							this._keyToClassNameMap[entry.aliasKey] = this._keyToClassNameMap[entry.key];
+						}
+					} else {
+						// not an alias, so `key` and `extension` are the same here.
+						// *can* override a built-in extension!
 						this._keyToClassNameMap[entry.key] = "Custom";
 					}
 				}
 			}
 		}
+
 		return this._keyToClassNameMap;
 	}
 
@@ -69,9 +96,7 @@ class TemplateEngineManager {
 	}
 
 	getClassNameFromTemplateKey(key) {
-		let keys = this.keyToClassNameMap;
-
-		return keys[key];
+		return this.keyToClassNameMap[key];
 	}
 
 	hasEngine(name) {
@@ -133,7 +158,6 @@ class TemplateEngineManager {
 		//  "Double override (not aliases) throws an error" test in TemplateRenderCustomTest.js
 		if (!this.engineCache[name]) {
 			debug("Engine cache miss %o (should only happen once per type)", name);
-
 			// Make sure cache key is based on name and not path
 			// Custom class is used for all plugins, cache once per plugin
 			this.engineCache[name] = new Promise(async (resolve) => {
@@ -142,20 +166,29 @@ class TemplateEngineManager {
 				instance.extensionMap = extensionMap;
 				instance.engineManager = this;
 
-				// If provided a "Custom" engine using addExtension,
-				// But that engine's instance is *not* custom,
-				// The user must be overriding an existing engine
-				// i.e. addExtension('md', { ...overrideBehavior })
-				if (
-					this.getClassNameFromTemplateKey(name) === "Custom" &&
-					instance.constructor.name !== "CustomEngine"
-				) {
+				let extensionEntry = extensionMap.getExtensionEntry(name);
+				// Override a built-in extension (md => md)
+				// If provided a "Custom" engine using addExtension, but that engine's instance is *not* custom,
+				// The user must be overriding a built-in engine i.e. addExtension('md', { ...overrideBehavior })
+				let className = this.getClassNameFromTemplateKey(name);
+
+				if (className === "Custom" && instance.constructor.name !== "CustomEngine") {
 					let CustomEngine = await this.getCustomEngineClass();
 					let overrideCustomEngine = new CustomEngine(name, this.eleventyConfig);
+
 					// Keep track of the "default" engine 11ty would normally use
 					// This allows the user to access the default engine in their override
 					overrideCustomEngine.setDefaultEngine(instance);
+
 					instance = overrideCustomEngine;
+					// Alias to a built-in extension (11ty.tsx => 11ty.js)
+				} else if (
+					instance.constructor.name === "CustomEngine" &&
+					TemplateEngineManager.isAlias(extensionEntry)
+				) {
+					// add defaultRenderer for complex aliases with their own compile functions.
+					let originalEngineInstance = await this.getEngine(extensionEntry.key, extensionMap);
+					instance.setDefaultEngine(originalEngineInstance);
 				}
 
 				resolve(instance);

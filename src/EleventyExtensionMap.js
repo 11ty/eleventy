@@ -166,8 +166,8 @@ class EleventyExtensionMap {
 	}
 
 	hasExtension(key) {
-		for (var extension in this.extensionToKeyMap) {
-			if (this.extensionToKeyMap[extension] === key) {
+		for (let extension in this.extensionToKeyMap) {
+			if (this.extensionToKeyMap[extension].key === key) {
 				return true;
 			}
 		}
@@ -175,26 +175,26 @@ class EleventyExtensionMap {
 	}
 
 	getExtensionsFromKey(key) {
-		let extensions = [];
-		for (var extension in this.extensionToKeyMap) {
-			if (this.extensionToKeyMap[extension] === key) {
-				extensions.push(extension);
+		let extensions = new Set();
+		for (let extension in this.extensionToKeyMap) {
+			if (this.extensionToKeyMap[extension].key === key) {
+				extensions.add(extension);
 			}
 		}
-		return extensions;
+		return Array.from(extensions);
 	}
 
 	// Only `addExtension` configuration API extensions
 	getExtensionEntriesFromKey(key) {
-		let entries = [];
+		let entries = new Set();
 		if ("extensionMap" in this.config) {
 			for (let entry of this.config.extensionMap) {
 				if (entry.key === key) {
-					entries.push(entry);
+					entries.add(entry);
 				}
 			}
 		}
-		return entries;
+		return Array.from(entries);
 	}
 
 	hasEngine(pathOrKey) {
@@ -203,19 +203,25 @@ class EleventyExtensionMap {
 
 	getKey(pathOrKey) {
 		pathOrKey = (pathOrKey || "").toLowerCase();
-
-		for (var extension in this.extensionToKeyMap) {
-			let key = this.extensionToKeyMap[extension];
-			if (pathOrKey === extension) {
-				return key;
-			} else if (pathOrKey.endsWith("." + extension)) {
+		for (let extension in this.extensionToKeyMap) {
+			if (pathOrKey === extension || pathOrKey.endsWith("." + extension)) {
+				let key = this.extensionToKeyMap[extension].key;
 				return key;
 			}
 		}
 	}
 
+	getExtensionEntry(pathOrKey) {
+		pathOrKey = (pathOrKey || "").toLowerCase();
+		for (let extension in this.extensionToKeyMap) {
+			if (pathOrKey === extension || pathOrKey.endsWith("." + extension)) {
+				return this.extensionToKeyMap[extension];
+			}
+		}
+	}
+
 	removeTemplateExtension(path) {
-		for (var extension in this.extensionToKeyMap) {
+		for (let extension in this.extensionToKeyMap) {
 			if (path === extension || path.endsWith("." + extension)) {
 				return path.slice(
 					0,
@@ -231,27 +237,24 @@ class EleventyExtensionMap {
 	get extensionToKeyMap() {
 		if (!this._extensionToKeyMap) {
 			this._extensionToKeyMap = {
-				md: "md",
-				html: "html",
-				njk: "njk",
-				liquid: "liquid",
-				"11ty.js": "11ty.js",
-				"11ty.cjs": "11ty.js",
-				"11ty.mjs": "11ty.js",
+				md: { key: "md", extension: "md" },
+				html: { key: "html", extension: "html" },
+				njk: { key: "njk", extension: "njk" },
+				liquid: { key: "liquid", extension: "liquid" },
+				"11ty.js": { key: "11ty.js", extension: "11ty.js" },
+				"11ty.cjs": { key: "11ty.js", extension: "11ty.cjs" },
+				"11ty.mjs": { key: "11ty.js", extension: "11ty.mjs" },
 			};
 
 			if ("extensionMap" in this.config) {
 				for (let entry of this.config.extensionMap) {
-					this._extensionToKeyMap[entry.extension] = entry.key;
+					// extension and key are only different when aliasing.
+					this._extensionToKeyMap[entry.extension] = entry;
 				}
 			}
 		}
 
 		return this._extensionToKeyMap;
-	}
-
-	getAllTemplateKeys() {
-		return Object.keys(this.extensionToKeyMap);
 	}
 
 	getReadableFileExtensions() {

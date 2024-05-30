@@ -16,12 +16,12 @@ class Html extends TemplateEngine {
 
 				return fn(data);
 			};
-		} else {
-			return function () {
-				// do nothing with data if parseHtmlWith is falsy
-				return str;
-			};
 		}
+
+		return function () {
+			// do nothing with data if parseHtmlWith is falsy
+			return str;
+		};
 	}
 }
 

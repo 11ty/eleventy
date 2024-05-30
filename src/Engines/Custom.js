@@ -26,9 +26,11 @@ class CustomEngine extends TemplateEngine {
 
 	getExtensionMapEntry() {
 		if ("extensionMap" in this.config) {
+			let name = this.name.toLowerCase();
 			// Iterates over only the user config `addExtension` entries
 			for (let entry of this.config.extensionMap) {
-				if (entry.key.toLowerCase() === this.name.toLowerCase()) {
+				let entryKey = (entry.aliasKey || entry.key || "").toLowerCase();
+				if (entryKey === name) {
 					return entry;
 				}
 			}

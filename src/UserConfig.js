@@ -796,15 +796,20 @@ class UserConfig {
 		}
 
 		for (let extension of extensions) {
-			this.extensionMap.add(
-				Object.assign(
-					{
-						key: extension,
-						extension: extension,
-					},
-					options,
-				),
+			let extensionOptions = Object.assign(
+				{
+					// Might be overridden for aliasing in options.key
+					key: extension,
+					extension: extension,
+				},
+				options,
 			);
+
+			if (extensionOptions.key !== extensionOptions.extension) {
+				extensionOptions.aliasKey = extensionOptions.extension;
+			}
+
+			this.extensionMap.add(extensionOptions);
 		}
 	}
 

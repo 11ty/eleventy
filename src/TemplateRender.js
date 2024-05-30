@@ -78,7 +78,10 @@ class TemplateRender {
 	async init(engineNameOrPath) {
 		let name = engineNameOrPath || this.engineNameOrPath;
 		this.extensionMap.config = this.eleventyConfig;
-		this._engineName = this.extensionMap.getKey(name);
+
+		let extensionEntry = this.extensionMap.getExtensionEntry(name);
+		this._engineName = extensionEntry.aliasKey || extensionEntry.key;
+
 		if (!this._engineName) {
 			throw new TemplateRenderUnknownEngineError(
 				`Unknown engine for ${name} (supported extensions: ${this.extensionMap.getReadableFileExtensions()})`,

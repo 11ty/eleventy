@@ -340,8 +340,14 @@ test("Double override (not aliases) throws an error", async (t) => {
   let eleventyConfig = await getTemplateConfigInstanceCustomCallback(
     {},
     function(cfg) {
-      cfg.addExtension(["11ty.custom", "11ty.possum"], {
-        key: "11ty.js",
+      cfg.addExtension(["possum"], {
+        init: function () {
+          t.true(true);
+        },
+      });
+
+      cfg.addExtension(["11ty.custom"], {
+        key: "possum",
         init: function () {
           t.true(true);
         },
@@ -364,7 +370,7 @@ test("Double override (not aliases) throws an error", async (t) => {
     },
     {
       message:
-        'An attempt was made to override the *already* overridden "11ty.js" template syntax via the `addExtension` configuration API. A maximum of one override is currently supported. If you’re trying to add an alias to an existing syntax, make sure only the `key` property is present in the addExtension options object.',
+        'An attempt was made to override the *already* custom template syntax "possum" (via the `addExtension` configuration API). A maximum of one override is currently supported.',
     },
   );
 });
