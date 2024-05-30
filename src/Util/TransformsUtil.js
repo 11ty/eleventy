@@ -1,6 +1,9 @@
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import { isPlainObject } from "@11ty/eleventy-utils";
 import { FilePathUtil } from "./FilePathUtil.js";
+import debugUtil from "debug";
+
+const debug = debugUtil("Eleventy:Transforms");
 
 class EleventyTransformError extends EleventyBaseError {}
 
@@ -61,6 +64,8 @@ class TransformsUtil {
 		});
 
 		for (let { callback, name } of transformsArray) {
+			debug("Running %o transform on %o: %o", name, inputPath, outputPath);
+
 			try {
 				let hadContentBefore = !!content;
 
