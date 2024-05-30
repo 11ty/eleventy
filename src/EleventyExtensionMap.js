@@ -144,25 +144,28 @@ class EleventyExtensionMap {
 
 	_getGlobs(formatKeys, inputDir) {
 		let dir = TemplatePath.convertToRecursiveGlobSync(inputDir);
-		let extensions = [];
+		let extensions = new Set();
+
 		for (let key of formatKeys) {
 			if (this.hasExtension(key)) {
 				for (let extension of this.getExtensionsFromKey(key)) {
-					extensions.push(extension);
+					extensions.add(extension);
 				}
 			} else {
-				extensions.push(key);
+				extensions.add(key);
 			}
 		}
 
-		let globs = [];
-		if (extensions.length === 1) {
-			globs.push(`${dir}/*.${extensions[0]}`);
-		} else if (extensions.length > 1) {
-			globs.push(`${dir}/*.{${extensions.join(",")}}`);
+		if (extensions.size === 1) {
+			return [`${dir}/*.${Array.from(extensions)[0]}`];
+		} else if (extensions.size > 1) {
+			return [
+				// extra curly brackets /*.{cjs,txt}
+				`${dir}/*.{${Array.from(extensions).join(",")}}`,
+			];
 		}
 
-		return globs;
+		return [];
 	}
 
 	hasExtension(key) {
@@ -177,7 +180,13 @@ class EleventyExtensionMap {
 	getExtensionsFromKey(key) {
 		let extensions = new Set();
 		for (let extension in this.extensionToKeyMap) {
-			if (this.extensionToKeyMap[extension].key === key) {
+			if (this.extensionToKeyMap[extension].aliasKey) {
+				// only add aliased extension if explicitly referenced in formats
+				// overrides will not have an aliasKey (md => md)
+				if (this.extensionToKeyMap[extension].aliasKey === key) {
+					extensions.add(extension);
+				}
+			} else if (this.extensionToKeyMap[extension].key === key) {
 				extensions.add(extension);
 			}
 		}
