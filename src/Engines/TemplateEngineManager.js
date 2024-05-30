@@ -59,14 +59,7 @@ class TemplateEngineManager {
 					let existingTarget = this._keyToClassNameMap[entry.key];
 					let isAlias = TemplateEngineManager.isAlias(entry);
 
-					// throw an error if you try to override a Custom engine, this is a short term error until we swap this to use the extension instead of the key to get the class
-					if (existingTarget) {
-						if (existingTarget === "Custom") {
-							throw new Error(
-								`An attempt was made to override the *already* custom template syntax "${entry.key}" (via the \`addExtension\` configuration API). A maximum of one override is currently supported.`,
-							);
-						}
-					} else if (isAlias) {
+					if (!existingTarget && isAlias) {
 						throw new Error(
 							`An attempt to alias ${entry.aliasKey} to ${entry.key} was made, but ${entry.key} is not a recognized template syntax.`,
 						);

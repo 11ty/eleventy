@@ -336,14 +336,91 @@ test.skip("Breaking Change (3.0): Two simple aliases to JavaScript Render", asyn
   t.is(await fn2({}), "<p>Possum</p>");
 });
 
-test("Double override (not aliases) throws an error", async (t) => {
+test("Double override (one simple alias to custom) works fine", async (t) => {
+  t.plan(3);
+
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      cfg.addExtension(["11ty.possum"], {
+        init: function () {
+          t.true(true);
+        },
+        compile: function(content, inputPath) {
+          t.true(true);
+          return (data) => "Appended " + content;
+        }
+      });
+
+      cfg.addExtension(["customhtml"], {
+        key: "11ty.possum",
+      });
+    }
+  );
+
+  let map = new EleventyExtensionMap(eleventyConfig); // reuse this
+  // map.setFormats(["11ty.possum", "11ty.custom"]);
+  map.setFormats(["customhtml"]);
+
+  let tr = await getNewTemplateRender(
+    "customhtml",
+    null,
+    eleventyConfig,
+    map,
+  );
+
+  let fn = await tr.getCompiledTemplate("Template content");
+  t.is(await fn({}), "Appended Template content");
+});
+
+
+test("Double override (two simple aliases)", async (t) => {
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      cfg.addExtension(["11ty.possum"], {
+        key: "html",
+      });
+
+      cfg.addExtension(["customhtml"], {
+        key: "11ty.possum",
+      });
+    }
+  );
+
+  let map = new EleventyExtensionMap(eleventyConfig); // reuse this
+  // map.setFormats(["11ty.possum", "11ty.custom"]);
+  map.setFormats(["customhtml"]);
+
+  let tr = await getNewTemplateRender(
+    "customhtml",
+    null,
+    eleventyConfig,
+    map,
+  );
+
+  let fn = await tr.getCompiledTemplate("Template content");
+  t.is(await fn({}), "Template content");
+});
+
+test("Double override (two complex aliases) is supported as of 3.0", async (t) => {
+  t.plan(5);
+
   let eleventyConfig = await getTemplateConfigInstanceCustomCallback(
     {},
     function(cfg) {
       cfg.addExtension(["possum"], {
+        key: "html",
         init: function () {
           t.true(true);
         },
+        compile: function() {
+          t.true(true);
+          return async function(data) {
+            const result = await this.defaultRenderer(data);
+            return `possum|${result}`;
+          };
+        }
       });
 
       cfg.addExtension(["11ty.custom"], {
@@ -351,26 +428,27 @@ test("Double override (not aliases) throws an error", async (t) => {
         init: function () {
           t.true(true);
         },
+        compile: function() {
+          t.true(true);
+          return async function(data) {
+            const result = await this.defaultRenderer(data);
+            return `11ty.custom|${result}`;
+          };
+        }
       });
     }
   );
 
   let map = new EleventyExtensionMap(eleventyConfig); // reuse this
-  map.setFormats([]);
+  map.setFormats(["possum", "11ty.custom"]);
 
-  await t.throwsAsync(
-    async () => {
-      let tr = await getNewTemplateRender(
-        "./test/stubs/string.11ty.custom",
-        null,
-        eleventyConfig,
-        map,
-      );
-      await tr.getCompiledTemplate();
-    },
-    {
-      message:
-        'An attempt was made to override the *already* custom template syntax "possum" (via the `addExtension` configuration API). A maximum of one override is currently supported.',
-    },
+  let tr = await getNewTemplateRender(
+    "11ty.custom",
+    null,
+    eleventyConfig,
+    map,
   );
+
+  let fn = await tr.getCompiledTemplate("Template content");
+  t.is(await fn({}), "11ty.custom|possum|Template content");
 });

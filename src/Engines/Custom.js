@@ -165,17 +165,23 @@ class CustomEngine extends TemplateEngine {
 
 	async compile(str, inputPath, ...args) {
 		await this._runningInit();
-		let defaultRenderer;
+		let defaultCompilationFn;
 		if (this._defaultEngine) {
-			defaultRenderer = async (data) => {
-				const render = await this._defaultEngine.compile(str, inputPath, ...args);
-				return render(data);
+			defaultCompilationFn = async (data) => {
+				const fn = await this._defaultEngine.compile(str, inputPath, ...args);
+				return fn(data);
 			};
 		}
 
 		// Fall back to default compiler if the user does not provide their own
-		if (!this.entry.compile && defaultRenderer) {
-			return defaultRenderer;
+		if (!this.entry.compile) {
+			if (defaultCompilationFn) {
+				return defaultCompilationFn;
+			} else {
+				throw new Error(
+					`Missing \`compile\` property for custom template syntax definition eleventyConfig.addExtension("${this.name}"). This is not necessary when aliasing to an existing template syntax.`,
+				);
+			}
 		}
 
 		// TODO generalize this (look at JavaScript.js)
@@ -184,7 +190,7 @@ class CustomEngine extends TemplateEngine {
 			addDependencies: (from, toArray = []) => {
 				this.config.uses.addDependency(from, toArray);
 			},
-			defaultRenderer, // bind defaultRenderer to compile function
+			defaultRenderer: defaultCompilationFn, // bind defaultRenderer to compile function
 		})(str, inputPath);
 
 		// Support `undefined` to skip compile/render
@@ -194,12 +200,16 @@ class CustomEngine extends TemplateEngine {
 				// Promise, wait to bind
 				return fn.then((fn) => {
 					if (typeof fn === "function") {
-						return fn.bind({ defaultRenderer });
+						return fn.bind({
+							defaultRenderer: defaultCompilationFn,
+						});
 					}
 					return fn;
 				});
 			} else if ("bind" in fn && typeof fn.bind === "function") {
-				return fn.bind({ defaultRenderer });
+				return fn.bind({
+					defaultRenderer: defaultCompilationFn,
+				});
 			}
 		}
 
