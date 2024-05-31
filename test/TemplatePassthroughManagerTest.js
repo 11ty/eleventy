@@ -6,6 +6,7 @@ import TemplatePassthroughManager from "../src/TemplatePassthroughManager.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";
 import EleventyFiles from "../src/EleventyFiles.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
 import { getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
 
@@ -82,6 +83,8 @@ test("Get file paths (filter out real templates)", async (t) => {
   await eleventyConfig.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
+  mgr.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  mgr.extensionMap.setFormats(["njk"]);
 
   t.deepEqual(mgr.getNonTemplatePaths(["test.njk"]), []);
 });
@@ -91,6 +94,8 @@ test("Get file paths (filter out real templates), multiple", async (t) => {
   await eleventyConfig.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
+  mgr.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  mgr.extensionMap.setFormats(["njk"]);
 
   t.deepEqual(mgr.getNonTemplatePaths(["test.njk", "test.png"]), ["test.png"]);
 });
@@ -100,6 +105,8 @@ test("Get file paths with a js file (filter out real templates), multiple", asyn
   await eleventyConfig.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
+  mgr.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  mgr.extensionMap.setFormats(["njk"]);
 
   t.deepEqual(mgr.getNonTemplatePaths(["test.njk", "test.js"]), ["test.js"]);
 });
@@ -181,15 +188,15 @@ test("Look for uniqueness on template passthrough paths #1677", async (t) => {
   let formats = [];
 
   let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
-		input: "test/stubs/template-passthrough-duplicates",
-		output: "test/stubs/template-passthrough-duplicates/_site"
-	}, function(cfg) {
-		cfg.passthroughCopies = {
-			"./test/stubs/template-passthrough-duplicates/**/*.png": {
-				outputPath: "./",
-			},
-		};
-	});
+    input: "test/stubs/template-passthrough-duplicates",
+    output: "test/stubs/template-passthrough-duplicates/_site"
+  }, function(cfg) {
+    cfg.passthroughCopies = {
+      "./test/stubs/template-passthrough-duplicates/**/*.png": {
+        outputPath: "./",
+      },
+    };
+  });
 
   let files = new EleventyFiles(formats, eleventyConfig);
   files.setFileSystemSearch(new FileSystemSearch());

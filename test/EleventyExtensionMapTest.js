@@ -99,27 +99,24 @@ test("hasEngine", async (t) => {
   t.is(map.getKey("11ty.js"), "11ty.js");
   t.true(map.hasEngine("11ty.js"));
 
-  t.is(map.getKey("md"), "md");
-  t.true(map.hasEngine("md"));
+  t.falsy(map.getKey("md"));
+  t.false(map.hasEngine("md"));
 });
 
 test("hasEngine no formats passed in", async (t) => {
   let map = await getExtensionMap([]);
-  t.true(map.hasEngine("default.liquid"));
-  t.is(map.getKey("default.liquid"), "liquid");
+  t.false(map.hasEngine("default.liquid"));
+  t.falsy(map.getKey("default.liquid"));
   t.falsy(map.getKey());
-  t.is(map.getKey("LiQuid"), "liquid");
-  t.true(map.hasEngine("LiqUiD"));
-  t.true(map.hasEngine("liquid"));
+  t.falsy(map.getKey("LiQuid"));
+  t.false(map.hasEngine("LiqUiD"));
+  t.false(map.hasEngine("liquid"));
   t.falsy(map.getKey("sldkjfkldsj"));
   t.false(map.hasEngine("sldkjfkldsj"));
-
-  // should return keys for engines that exist but are not filtered
-  t.is(map.getKey("11ty.js"), "11ty.js");
-  t.true(map.hasEngine("11ty.js"));
-
-  t.is(map.getKey("md"), "md");
-  t.true(map.hasEngine("md"));
+  t.falsy(map.getKey("11ty.js"));
+  t.false(map.hasEngine("11ty.js"));
+  t.falsy(map.getKey("md"));
+  t.false(map.hasEngine("md"));
 });
 
 test("getKey", async (t) => {

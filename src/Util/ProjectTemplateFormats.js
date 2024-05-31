@@ -5,7 +5,6 @@ class ProjectTemplateFormats {
 	#useAll = {};
 	#raw = {};
 
-	#allFormats = [];
 	#values = {}; // Set objects
 
 	static union(...sets) {

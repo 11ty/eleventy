@@ -94,7 +94,7 @@ test("getFiles (with js, treated as passthrough copy)", async (t) => {
     }
   });
 
-  let evf = new EleventyFiles(["liquid", "md", "js"], eleventyConfig);
+  let evf = new EleventyFiles(["liquid", "md", "js", "11ty.js"], eleventyConfig);
   evf.setFileSystemSearch(new FileSystemSearch());
   evf.init();
 
@@ -118,7 +118,7 @@ test("getFiles (with case insensitivity)", async (t) => {
     }
   });
 
-  let evf = new EleventyFiles(["JS"], eleventyConfig);
+  let evf = new EleventyFiles(["11ty.js", "JS"], eleventyConfig);
   evf.setFileSystemSearch(new FileSystemSearch());
   evf.init();
 

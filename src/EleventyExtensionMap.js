@@ -170,10 +170,14 @@ class EleventyExtensionMap {
 
 	hasExtension(key) {
 		for (let extension in this.extensionToKeyMap) {
-			if (this.extensionToKeyMap[extension].key === key) {
+			if (
+				this.extensionToKeyMap[extension].key === key ||
+				this.extensionToKeyMap[extension].aliasKey === key
+			) {
 				return true;
 			}
 		}
+
 		return false;
 	}
 
@@ -190,6 +194,7 @@ class EleventyExtensionMap {
 				extensions.add(extension);
 			}
 		}
+
 		return Array.from(extensions);
 	}
 
@@ -206,6 +211,7 @@ class EleventyExtensionMap {
 		return Array.from(entries);
 	}
 
+	// Determines whether a path is a passthrough copy file or a template (via TemplateWriter)
 	hasEngine(pathOrKey) {
 		return !!this.getKey(pathOrKey);
 	}
@@ -214,8 +220,12 @@ class EleventyExtensionMap {
 		pathOrKey = (pathOrKey || "").toLowerCase();
 		for (let extension in this.extensionToKeyMap) {
 			if (pathOrKey === extension || pathOrKey.endsWith("." + extension)) {
-				let key = this.extensionToKeyMap[extension].key;
-				return key;
+				let key =
+					this.extensionToKeyMap[extension].aliasKey || this.extensionToKeyMap[extension].key;
+				// must be a valid format key passed (e.g. via --formats)
+				if (this.validTemplateLanguageKeys.includes(key)) {
+					return key;
+				}
 			}
 		}
 	}
