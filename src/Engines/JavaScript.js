@@ -39,6 +39,7 @@ class JavaScript extends TemplateEngine {
 	// String, Buffer, Promise
 	// Function, Class
 	// Object
+	// Module
 	_getInstance(mod) {
 		let noop = function () {
 			return "";
@@ -57,9 +58,17 @@ class JavaScript extends TemplateEngine {
 					render: mod,
 				};
 			}
-		} else if ("data" in mod || "render" in mod) {
+		} else if (
+			"data" in mod ||
+			"render" in mod ||
+			("default" in mod && this.eleventyConfig.getIsProjectUsingEsm())
+		) {
 			if (!("render" in mod)) {
-				mod.render = noop;
+				if ("default" in mod) {
+					mod.render = mod.default;
+				} else {
+					mod.render = noop;
+				}
 			}
 			return mod;
 		}
@@ -176,7 +185,7 @@ class JavaScript extends TemplateEngine {
 		}
 
 		if (inst && "render" in inst) {
-			return function (data) {
+			return function (data = {}) {
 				// TODO does this do anything meaningful for non-classes?
 				// `inst` should have a normalized `render` function from _getInstance
 
@@ -193,6 +202,7 @@ class JavaScript extends TemplateEngine {
 						}
 					}
 				}
+
 				Object.assign(inst, this.getJavaScriptFunctions(inst));
 
 				return this.normalize(inst.render.call(inst, data));

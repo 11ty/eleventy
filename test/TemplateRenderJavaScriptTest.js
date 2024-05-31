@@ -12,6 +12,8 @@ async function getNewTemplateRender(name, inputDir, extendedConfig) {
 		}
 	}, null, extendedConfig);
 
+  eleventyConfig.setProjectUsingEsm(true);
+
   let tr = new TemplateRender(name, eleventyConfig);
   tr.extensionMap = new EleventyExtensionMap(eleventyConfig);
   tr.extensionMap.setFormats([]);
@@ -298,4 +300,10 @@ test("Class has page property already and keeps it", async (t) => {
   let tr = await getNewTemplateRender("./test/stubs/class-fns-has-page.11ty.cjs");
   let fn = await tr.getCompiledTemplate();
   await fn({ avaTest: t, page: { url: "/hi/" } });
+});
+
+test("Class has default export and another one too, issue #3288", async (t) => {
+  let tr = await getNewTemplateRender("./test/stubs/default-export-and-others.11ty.js");
+  let fn = await tr.getCompiledTemplate();
+  t.is(await fn(), "<h1>hello</h1>")
 });
