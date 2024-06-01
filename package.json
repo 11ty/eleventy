@@ -38,7 +38,9 @@
 	],
 	"scripts": {
 		"default": "npm run test",
-		"test": "node --test test-node/*.js && npx ava --verbose",
+		"test": "npm run test:node && npm run test:ava",
+		"test:ava": "npx ava --verbose",
+		"test:node": "node --test \"test-node/*.js\"",
 		"jsdoc": "rm -rf jsdoc && npx jsdoc src/* -r -d jsdoc",
 		"format": "prettier . --write",
 		"check": "eslint src",
