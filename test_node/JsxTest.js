@@ -34,7 +34,7 @@ test("Eleventy with JSX", async () => {
 	assert.strictEqual(results[0].content, `<div>hello world 1</div>`);
 });
 
-test("Eleventy no formats", async (t) => {
+test("Eleventy no formats", async () => {
 	let elev = new Eleventy("./test/stubs-fancyjs/", undefined, {
 		config: (eleventyConfig) => {
 			eleventyConfig.addExtension(["11ty.jsx", "11ty.ts", "11ty.tsx"], {
@@ -54,7 +54,7 @@ test("Eleventy no formats", async (t) => {
 	assert.strictEqual(results.length, 0);
 });
 
-test("Eleventy JSX --formats=11ty.tsx", async (t) => {
+test("Eleventy JSX --formats=11ty.tsx", async () => {
 	let elev = new Eleventy("./test/stubs-fancyjs/", undefined, {
 		config: (eleventyConfig) => {
 			eleventyConfig.addExtension(["11ty.jsx", "11ty.ts", "11ty.tsx"], {
@@ -76,7 +76,7 @@ test("Eleventy JSX --formats=11ty.tsx", async (t) => {
 	assert.strictEqual(results[0].content, `<div>hello world 1</div>`);
 });
 
-test("Eleventy JSX --formats=tsx", async (t) => {
+test("Eleventy JSX --formats=tsx", async () => {
 	let elev = new Eleventy("./test/stubs-fancyjs/", undefined, {
 		config: (eleventyConfig) => {
 			eleventyConfig.addExtension(["11ty.jsx", "11ty.ts", "11ty.tsx"], {
