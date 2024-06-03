@@ -26,7 +26,6 @@ test("Eleventy with JSX", async () => {
 			});
 		},
 	});
-	elev.disableLogger();
 	elev.setFormats("11ty.tsx");
 
 	let results = await elev.toJSON();
@@ -35,79 +34,64 @@ test("Eleventy with JSX", async () => {
 	assert.strictEqual(results[0].content, `<div>hello world 1</div>`);
 });
 
-// test("Eleventy no formats", async (t) => {
-//   const unregister = register();
+test("Eleventy no formats", async (t) => {
+	let elev = new Eleventy("./test/stubs-fancyjs/", undefined, {
+		config: (eleventyConfig) => {
+			eleventyConfig.addExtension(["11ty.jsx", "11ty.ts", "11ty.tsx"], {
+				key: "11ty.js",
+				compile: function () {
+					return async function (data) {
+						let content = await this.defaultRenderer(data);
+						return renderToStaticMarkup(content);
+					};
+				},
+			});
+		},
+	});
+	// elev.setFormats("")
 
-//   let elev = new Eleventy("./test/stubs-fancyjs/", undefined, {
-//     config: eleventyConfig => {
-//       eleventyConfig.addExtension(["11ty.jsx", "11ty.ts", "11ty.tsx"], {
-//         key: "11ty.js",
-//         compile: function() {
-//           return async function(data) {
-//             let content = await this.defaultRenderer(data);
-//             return renderToStaticMarkup(content);
-//           };
-//         }
-//       });
-//     }
-//   });
-//   elev.disableLogger();
-//   // elev.setFormats("")
+	let results = await elev.toJSON();
+	assert.strictEqual(results.length, 0);
+});
 
-//   let results = await elev.toJSON();
-//   t.is(results.length, 0);
+test("Eleventy JSX --formats=11ty.tsx", async (t) => {
+	let elev = new Eleventy("./test/stubs-fancyjs/", undefined, {
+		config: (eleventyConfig) => {
+			eleventyConfig.addExtension(["11ty.jsx", "11ty.ts", "11ty.tsx"], {
+				key: "11ty.js",
+				compile: function () {
+					return async function (data) {
+						let content = await this.defaultRenderer(data);
+						return renderToStaticMarkup(content);
+					};
+				},
+			});
+		},
+	});
+	elev.setFormats("11ty.tsx");
 
-//   unregister();
-// });
+	let results = await elev.toJSON();
+	assert.strictEqual(results.length, 1);
 
-// test("Eleventy JSX --formats=11ty.tsx", async (t) => {
-//   const unregister = register();
+	assert.strictEqual(results[0].content, `<div>hello world 1</div>`);
+});
 
-//   let elev = new Eleventy("./test/stubs-fancyjs/", undefined, {
-//     config: eleventyConfig => {
-//       eleventyConfig.addExtension(["11ty.jsx", "11ty.ts", "11ty.tsx"], {
-//         key: "11ty.js",
-//         compile: function() {
-//           return async function(data) {
-//             let content = await this.defaultRenderer(data);
-//             return renderToStaticMarkup(content);
-//           };
-//         }
-//       });
-//     }
-//   });
-//   elev.disableLogger();
-//   elev.setFormats("11ty.tsx")
+test("Eleventy JSX --formats=tsx", async (t) => {
+	let elev = new Eleventy("./test/stubs-fancyjs/", undefined, {
+		config: (eleventyConfig) => {
+			eleventyConfig.addExtension(["11ty.jsx", "11ty.ts", "11ty.tsx"], {
+				key: "11ty.js",
+				compile: function () {
+					return async function (data) {
+						let content = await this.defaultRenderer(data);
+						return renderToStaticMarkup(content);
+					};
+				},
+			});
+		},
+	});
+	elev.setFormats("tsx"); // should not pick up 11ty.tsx
 
-//   let results = await elev.toJSON();
-//   t.is(results.length, 1);
-
-//   t.is(results[0].content, `<div>hello world 1</div>`);
-
-//   unregister();
-// });
-
-// test("Eleventy JSX --formats=tsx", async (t) => {
-//   const unregister = register();
-
-//   let elev = new Eleventy("./test/stubs-fancyjs/", undefined, {
-//     config: eleventyConfig => {
-//       eleventyConfig.addExtension(["11ty.jsx", "11ty.ts", "11ty.tsx"], {
-//         key: "11ty.js",
-//         compile: function() {
-//           return async function(data) {
-//             let content = await this.defaultRenderer(data);
-//             return renderToStaticMarkup(content);
-//           };
-//         }
-//       });
-//     }
-//   });
-//   elev.disableLogger();
-//   elev.setFormats("tsx"); // should not pick up 11ty.tsx
-
-//   let results = await elev.toJSON();
-//   t.is(results.length, 0); // Should have no results!!
-
-//   unregister();
-// });
+	let results = await elev.toJSON();
+	assert.strictEqual(results.length, 0); // Should have no results!!
+});

@@ -168,8 +168,8 @@ class CustomEngine extends TemplateEngine {
 		let defaultCompilationFn;
 		if (this._defaultEngine) {
 			defaultCompilationFn = async (data) => {
-				const fn = await this._defaultEngine.compile(str, inputPath, ...args);
-				return fn(data);
+				const renderFn = await this._defaultEngine.compile(str, inputPath, ...args);
+				return renderFn(data);
 			};
 		}
 
