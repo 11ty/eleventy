@@ -91,6 +91,7 @@ class UserConfig {
 
 		this.dataDeepMerge = true;
 		this.extensionMap = new Set();
+		this.extensionConflictMap = {};
 		this.watchJavaScriptDependencies = true;
 		this.additionalWatchTargets = [];
 		this.serverOptions = {};
@@ -787,6 +788,7 @@ class UserConfig {
 
 	addExtension(fileExtension, options = {}) {
 		let extensions;
+
 		// Array support added in 2.0.0-canary.19
 		if (Array.isArray(fileExtension)) {
 			extensions = fileExtension;
@@ -796,6 +798,13 @@ class UserConfig {
 		}
 
 		for (let extension of extensions) {
+			if (this.extensionConflictMap[extension]) {
+				throw new Error(
+					`An attempt was made to override the "${extension}" template syntax twice (via the \`addExtension\` configuration API). A maximum of one override is currently supported.`,
+				);
+			}
+			this.extensionConflictMap[extension] = true;
+
 			let extensionOptions = Object.assign(
 				{
 					// Might be overridden for aliasing in options.key

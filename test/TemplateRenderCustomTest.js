@@ -452,3 +452,30 @@ test("Double override (two complex aliases) is supported as of 3.0", async (t) =
   let fn = await tr.getCompiledTemplate("Template content");
   t.is(await fn({}), "11ty.custom|possum|Template content");
 });
+
+test("Double override (not aliases) throws an error", async (t) => {
+  await t.throwsAsync(
+    async () => {
+      await getTemplateConfigInstanceCustomCallback(
+        {},
+        function(cfg) {
+          cfg.addExtension(["md"], {
+            compile: function (inputContent, inputPath) {
+              return () => inputContent;
+            },
+          });
+
+          cfg.addExtension(["md"], {
+            compile: function (inputContent, inputPath) {
+              return () => inputContent;
+            },
+          });
+        }
+      );
+    },
+    {
+      message:
+        'An attempt was made to override the "md" template syntax twice (via the `addExtension` configuration API). A maximum of one override is currently supported.',
+    },
+  );
+});
