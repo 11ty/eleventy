@@ -9,15 +9,18 @@ import { normalizeFilePathInEleventyPackage } from "./Require.js";
 const debug = debugUtil("Eleventy:ImportJsonSync");
 const require = createRequire(import.meta.url);
 
-function findFileInParentDirs(dir, filename) {
+function findFilePathInParentDirs(dir, filename) {
 	// `package.json` searches look in parent dirs:
 	// https://docs.npmjs.com/cli/v7/configuring-npm/folders#more-information
-	let allDirs = TemplatePath.getAllDirs(dir);
+	// Fixes issue #3178, limited to working dir paths only
+	let workingDir = TemplatePath.getWorkingDir();
+	let allDirs = TemplatePath.getAllDirs(dir).filter((entry) => entry.startsWith(workingDir));
+
 	for (let dir of allDirs) {
 		let newPath = TemplatePath.join(dir, filename);
 		if (fs.existsSync(newPath)) {
 			debug("Found %o searching parent directories at: %o", filename, dir);
-			return importJsonSync(newPath);
+			return newPath;
 		}
 	}
 }
@@ -42,17 +45,19 @@ function getEleventyPackageJson() {
 }
 
 function getModulePackageJson(dir) {
-	return findFileInParentDirs(TemplatePath.absolutePath(dir), "package.json");
+	let filePath = findFilePathInParentDirs(TemplatePath.absolutePath(dir), "package.json");
+	return importJsonSync(filePath);
 }
 
 function getWorkingProjectPackageJson() {
 	let dir = TemplatePath.absolutePath(TemplatePath.getWorkingDir());
-	return findFileInParentDirs(dir, "package.json");
+	let filePath = findFilePathInParentDirs(dir, "package.json");
+	return importJsonSync(filePath);
 }
 
 export {
 	importJsonSync,
-	findFileInParentDirs,
+	findFilePathInParentDirs,
 	getEleventyPackageJson,
 	getModulePackageJson,
 	getWorkingProjectPackageJson,
