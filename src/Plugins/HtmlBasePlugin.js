@@ -52,7 +52,7 @@ function transformUrl(url, base, opts = {}) {
 	return urlFilter(url, base);
 }
 
-export default function (eleventyConfig, defaultOptions = {}) {
+function eleventyHtmlBasePlugin(eleventyConfig, defaultOptions = {}) {
 	let opts = DeepCopy(
 		{
 			// eleventyConfig.pathPrefix is new in Eleventy 2.0.0-canary.15
@@ -80,6 +80,7 @@ export default function (eleventyConfig, defaultOptions = {}) {
 		return addPathPrefixToUrl(url, eleventyConfig.pathPrefix);
 	});
 
+	// Apply to one URL
 	eleventyConfig.addFilter(opts.filters.base, function (url, baseOverride, pageUrlOverride) {
 		let base = baseOverride || opts.baseHref;
 
@@ -94,6 +95,7 @@ export default function (eleventyConfig, defaultOptions = {}) {
 		});
 	});
 
+	// Apply to a block of HTML
 	eleventyConfig.addAsyncFilter(
 		opts.filters.html,
 		function (content, baseOverride, pageUrlOverride) {
@@ -115,10 +117,12 @@ export default function (eleventyConfig, defaultOptions = {}) {
 
 	// Skip the transform with a default base
 	if (opts.baseHref !== "/") {
+		// Apply to all HTML output in your project
 		eleventyConfig.htmlTransformer.addUrlTransform(
 			opts.extensions,
 			function (urlInMarkup) {
-				return transformUrl(urlInMarkup.trim(), opts.baseHref, {
+				// baseHref override is via renderTransforms filter for adding the absolute URL (e.g. https://example.com/pathPrefix/) for RSS/Atom/JSON feeds
+				return transformUrl(urlInMarkup.trim(), this.baseHref || opts.baseHref, {
 					pathPrefix: eleventyConfig.pathPrefix,
 					pageUrl: this.url,
 				});
@@ -130,4 +134,9 @@ export default function (eleventyConfig, defaultOptions = {}) {
 	}
 }
 
+Object.defineProperty(eleventyHtmlBasePlugin, "eleventyPackage", {
+	value: "@11ty/eleventy/html-base-plugin",
+});
+
+export default eleventyHtmlBasePlugin;
 export { transformUrl as applyBaseToUrl };

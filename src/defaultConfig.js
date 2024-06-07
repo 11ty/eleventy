@@ -63,6 +63,11 @@ export default function (config) {
 		immediate: true,
 	});
 
+	// Filter: Maps an input path to output URL
+	config.addPlugin(InputPathToUrlFilterPlugin, {
+		immediate: true,
+	});
+
 	config.addFilter("slug", slugFilter);
 	config.addFilter("slugify", slugifyFilter);
 
@@ -100,27 +105,22 @@ export default function (config) {
 	// Process arbitrary content with transforms
 	config.addFilter(
 		"renderTransforms",
-		async function transformsFilter(content, outputPathFileExtensionOverride = "html") {
+		async function transformsFilter(content, pageEntryOverride, baseHrefOverride) {
 			return TransformsUtil.runAll(
 				content,
-				this.page,
+				pageEntryOverride || this.page,
 				config.transforms,
-				outputPathFileExtensionOverride,
+				baseHrefOverride,
 			);
 		},
 	);
 
-	// Filter: Maps an input path to output URL
-	config.addPlugin(InputPathToUrlFilterPlugin, {
-		immediate: true,
-	});
-
-	// Used for the HTML <base> and InputPathToUrl plugins
+	// Used for the HTML <base>, InputPathToUrl, Image transform plugins
 	let ut = new HtmlTransformer();
 	ut.setUserConfig(config);
 
 	config.htmlTransformer = ut;
-	config.addTransform("eleventy.htmlTransformer", async function (content) {
+	config.addTransform("@11ty/eleventy/html-transformer", async function (content) {
 		return ut.transformContent(this.outputPath, content, this);
 	});
 

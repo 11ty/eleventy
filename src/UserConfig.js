@@ -411,11 +411,19 @@ class UserConfig {
 		}
 	}
 
+	hasPlugin(name) {
+		return this.plugins.some((entry) => this._getPluginName(entry.plugin) === name);
+	}
+
 	// Using Function.name https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name#examples
 	_getPluginName(plugin) {
+		if (plugin?.eleventyPackage) {
+			return plugin.eleventyPackage;
+		}
 		if (typeof plugin === "function") {
 			return plugin.name;
-		} else if (plugin.configFunction && typeof plugin.configFunction === "function") {
+		}
+		if (plugin?.configFunction && typeof plugin.configFunction === "function") {
 			return plugin.configFunction.name;
 		}
 	}
@@ -426,6 +434,7 @@ class UserConfig {
 		let ret;
 		debug(`Adding ${name || "anonymous"} plugin`);
 		let pluginBenchmark = this.benchmarks.aggregate.get("Configuration addPlugin");
+
 		if (typeof plugin === "function") {
 			pluginBenchmark.before();
 			this.benchmarks.config;

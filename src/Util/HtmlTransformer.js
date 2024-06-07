@@ -115,9 +115,8 @@ class HtmlTransformer {
 		return result.html;
 	}
 
-	/* filepath is a template’s outputPath */
-	async transformContent(filepath, content, context) {
-		let extension = FilePathUtil.getFileExtension(filepath);
+	async transformContent(outputPath, content, context) {
+		let extension = FilePathUtil.getFileExtension(outputPath);
 		if (!this.isTransformable(extension)) {
 			return content;
 		}
