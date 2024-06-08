@@ -45,6 +45,7 @@ const debug = debugUtil("Eleventy");
  * @returns {module:11ty/eleventy/Eleventy~Eleventy}
  */
 class Eleventy {
+	#logger; /* Console output */
 	#projectPackageJson; /* userspace package.json file contents */
 	#directories; /* ProjectDirectories instance */
 	#templateFormats; /* ProjectTemplateFormats instance */
@@ -551,18 +552,18 @@ Verbose Output: ${this.verboseMode}`;
 
 	/* Getter for Logger */
 	get logger() {
-		if (!this._logger) {
-			this._logger = new ConsoleLogger();
-			this._logger.isVerbose = this.verboseMode;
+		if (!this.#logger) {
+			this.#logger = new ConsoleLogger();
+			this.#logger.isVerbose = this.verboseMode;
 		}
 
-		return this._logger;
+		return this.#logger;
 	}
 
 	/* Setter for Logger */
 	set logger(logger) {
 		this.eleventyConfig.setLogger(logger);
-		this._logger = logger;
+		this.#logger = logger;
 	}
 
 	disableLogger() {
