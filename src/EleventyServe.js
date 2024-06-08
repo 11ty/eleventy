@@ -1,12 +1,11 @@
 import assert from "node:assert";
-import { TemplatePath } from "@11ty/eleventy-utils";
+import { Merge, DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
 import EleventyDevServer from "@11ty/eleventy-dev-server";
 import debugUtil from "debug";
 
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import PathPrefixer from "./Util/PathPrefixer.js";
-import merge, { DeepCopy } from "./Util/Merge.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import { getModulePackageJson } from "./Util/ImportJsonSync.js";
 import { EleventyImport } from "./Util/Require.js";
@@ -204,7 +203,7 @@ class EleventyServe {
 					this._initOptionsFetched = true;
 
 					if (opts) {
-						merge(this.options, opts);
+						Merge(this.options, opts);
 					}
 				}
 

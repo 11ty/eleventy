@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import chalk from "kleur";
-import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
+import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import { EleventyImportRaw, EleventyImportRawFromEleventy } from "./Util/Require.js";
@@ -8,7 +8,6 @@ import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import UserConfig from "./UserConfig.js";
 import GlobalDependencyMap from "./GlobalDependencyMap.js";
 import ExistsCache from "./Util/ExistsCache.js";
-import merge from "./Util/Merge.js";
 import eventBus from "./EventBus.js";
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
 
@@ -390,7 +389,7 @@ class TemplateConfig {
 
 		// Merge `export const config = {}` with `return {}` in config callback
 		if (isPlainObject(exportedConfig)) {
-			localConfig = merge(localConfig || {}, exportedConfig);
+			localConfig = Merge(localConfig || {}, exportedConfig);
 		}
 
 		if (this.directories) {
@@ -426,7 +425,7 @@ class TemplateConfig {
 			this.templateFormats.addViaConfig(this.userConfig.templateFormatsAdded);
 		}
 
-		let mergedConfig = merge({}, this.rootConfig, localConfig);
+		let mergedConfig = Merge({}, this.rootConfig, localConfig);
 
 		// Setup a few properties for plugins:
 
@@ -477,7 +476,7 @@ class TemplateConfig {
 
 		// Overrides are only used by pathPrefix
 		debug("Configuration overrides: %o", this.overrides);
-		merge(mergedConfig, eleventyConfigApiMergingObject, this.overrides);
+		Merge(mergedConfig, eleventyConfigApiMergingObject, this.overrides);
 
 		debug("Current configuration: %o", mergedConfig);
 

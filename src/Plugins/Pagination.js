@@ -1,8 +1,8 @@
 import { isPlainObject } from "@11ty/eleventy-utils";
 import lodash from "@11ty/lodash-custom";
+import { DeepCopy } from "@11ty/eleventy-utils";
 
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
-import { DeepCopy } from "../Util/Merge.js";
 import { ProxyWrap } from "../Util/ProxyWrap.js";
 // import { DeepFreeze } from "../Util/DeepFreeze.js";
 import TemplateData from "../Data/TemplateData.js";

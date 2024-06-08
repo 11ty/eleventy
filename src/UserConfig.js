@@ -2,13 +2,12 @@ import chalk from "kleur";
 import { DateTime } from "luxon";
 import debugUtil from "debug";
 import { RetrieveGlobals } from "node-retrieve-globals";
-import { TemplatePath } from "@11ty/eleventy-utils";
+import { DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
 
 import EventEmitter from "./Util/AsyncEventEmitter.js";
 import EleventyCompatibility from "./Util/Compatibility.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import BenchmarkManager from "./Benchmark/BenchmarkManager.js";
-import { DeepCopy } from "./Util/Merge.js";
 
 const debug = debugUtil("Eleventy:UserConfig");
 

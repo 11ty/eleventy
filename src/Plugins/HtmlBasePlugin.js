@@ -1,6 +1,6 @@
+import { DeepCopy } from "@11ty/eleventy-utils";
 import urlFilter from "../Filters/Url.js";
 import PathPrefixer from "../Util/PathPrefixer.js";
-import { DeepCopy } from "../Util/Merge.js";
 import { HtmlTransformer } from "../Util/HtmlTransformer.js";
 
 function isValidUrl(url) {

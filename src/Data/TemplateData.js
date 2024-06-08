@@ -2,10 +2,9 @@ import path from "node:path";
 import semver from "semver";
 
 import lodash from "@11ty/lodash-custom";
-import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
+import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
-import merge from "../Util/Merge.js";
 import unique from "../Util/Unique.js";
 import TemplateGlob from "../TemplateGlob.js";
 import EleventyExtensionMap from "../EleventyExtensionMap.js";
@@ -363,7 +362,7 @@ class TemplateData {
 				let configApiGlobalData = await this.getInitialGlobalData();
 
 				let globalJson = await this.getAllGlobalData();
-				let mergedGlobalData = merge(globalJson, configApiGlobalData);
+				let mergedGlobalData = Merge(globalJson, configApiGlobalData);
 
 				// OK: Shallow merge when combining rawImports (pkg) with global data files
 				resolve(Object.assign({}, mergedGlobalData, rawImports));
@@ -645,7 +644,7 @@ class TemplateData {
 	}
 
 	static merge(target, ...source) {
-		return merge(target, ...source);
+		return Merge(target, ...source);
 	}
 
 	static cleanupData(data) {

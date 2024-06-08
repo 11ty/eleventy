@@ -1,7 +1,6 @@
 import { bcp47Normalize } from "bcp-47-normalize";
 import iso639 from "iso-639-1";
-
-import { DeepCopy } from "../Util/Merge.js";
+import { DeepCopy } from "@11ty/eleventy-utils";
 
 // pathPrefix note:
 // When using `locale_url` filter with the `url` filter, `locale_url` must run first like

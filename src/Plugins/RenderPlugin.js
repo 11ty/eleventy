@@ -1,13 +1,12 @@
 import util from "node:util";
 import fs from "graceful-fs";
-import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
+import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
 const fsReadFile = util.promisify(fs.readFile);
 const fsExists = util.promisify(fs.exists);
 
 // TODO add a first-class Markdown component to expose this using Markdown-only syntax (will need to be synchronous for markdown-it)
 
-import Merge from "../Util/Merge.js";
 import { ProxyWrap } from "../Util/ProxyWrap.js";
 import TemplateDataInitialGlobalData from "../Data/TemplateDataInitialGlobalData.js";
 import EleventyShortcodeError from "../Errors/EleventyShortcodeError.js";
