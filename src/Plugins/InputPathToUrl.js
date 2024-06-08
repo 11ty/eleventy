@@ -75,4 +75,16 @@ function TransformPlugin(eleventyConfig, defaultOptions = {}) {
 	});
 }
 
+Object.defineProperty(TransformPlugin, "eleventyPackage", {
+	value: "@11ty/eleventy/inputpath-to-url-plugin",
+});
+
+Object.defineProperty(TransformPlugin, "eleventyPluginOptions", {
+	value: {
+		unique: true,
+	},
+});
+
+export default TransformPlugin;
+
 export { FilterPlugin, TransformPlugin };

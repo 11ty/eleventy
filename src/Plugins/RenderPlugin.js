@@ -132,7 +132,7 @@ async function renderShortcodeFn(fn, data) {
  * @param {module:11ty/eleventy/UserConfig} eleventyConfig - User-land configuration instance.
  * @param {Object} options - Plugin options
  */
-function EleventyPlugin(eleventyConfig, options = {}) {
+function eleventyRenderPlugin(eleventyConfig, options = {}) {
 	/**
 	 * @typedef {Object} options
 	 * @property {string} [tagName] - The shortcode name to render a template string.
@@ -380,7 +380,7 @@ class RenderManager {
 		this.templateConfig.setDirectories(new ProjectDirectories());
 
 		// This is the only plugin running on the Edge
-		this.templateConfig.userConfig.addPlugin(EleventyPlugin, {
+		this.templateConfig.userConfig.addPlugin(eleventyRenderPlugin, {
 			templateConfig: this.templateConfig,
 			accessGlobalData: true,
 		});
@@ -447,6 +447,16 @@ class RenderManager {
 	}
 }
 
-export default EleventyPlugin;
+Object.defineProperty(eleventyRenderPlugin, "eleventyPackage", {
+	value: "@11ty/eleventy/render-plugin",
+});
+
+Object.defineProperty(eleventyRenderPlugin, "eleventyPluginOptions", {
+	value: {
+		unique: true,
+	},
+});
+
+export default eleventyRenderPlugin;
 
 export { compileFile as File, compile as String, RenderManager };

@@ -565,3 +565,44 @@ test("Using the HTML base plugin with pathPrefix: /test/ and transformed attribu
 </html>`
   );
 });
+
+test("HTML base plugin only adds once (unique)", async (t) => {
+  t.plan(2);
+  let elev = new Eleventy("./test/stubs-base/", "./test/stubs-base/_site", {
+    configPath: false,
+    config: function (eleventyConfig) {
+      // Runs before defaultConfig.js
+      t.is(eleventyConfig.plugins.length, 0);
+      eleventyConfig.addPlugin(HtmlBasePlugin);
+      eleventyConfig.addPlugin(HtmlBasePlugin);
+      eleventyConfig.addPlugin(HtmlBasePlugin);
+      eleventyConfig.addPlugin(HtmlBasePlugin);
+      t.is(eleventyConfig.plugins.length, 1);
+    },
+  });
+  await elev.init();
+});
+
+test("HTML base plugin can resolve by name", async (t) => {
+  t.plan(2);
+  let elev = new Eleventy("./test/stubs-base/", "./test/stubs-base/_site", {
+    configPath: false,
+    config: async function (eleventyConfig) {
+      // Runs before defaultConfig.js
+      t.is(eleventyConfig.plugins.length, 0);
+
+      let plugin = await eleventyConfig.resolvePlugin("@11ty/eleventy/html-base-plugin");
+      eleventyConfig.addPlugin(plugin);
+
+      // does not add duplicate
+      eleventyConfig.addPlugin(plugin);
+
+      // does not add duplicate even with a different reference
+      eleventyConfig.addPlugin(HtmlBasePlugin);
+      eleventyConfig.addPlugin(HtmlBasePlugin);
+
+      t.is(eleventyConfig.plugins.length, 1);
+    },
+  });
+  await elev.init();
+});

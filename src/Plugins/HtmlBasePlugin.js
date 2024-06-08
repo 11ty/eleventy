@@ -138,5 +138,11 @@ Object.defineProperty(eleventyHtmlBasePlugin, "eleventyPackage", {
 	value: "@11ty/eleventy/html-base-plugin",
 });
 
+Object.defineProperty(eleventyHtmlBasePlugin, "eleventyPluginOptions", {
+	value: {
+		unique: true,
+	},
+});
+
 export default eleventyHtmlBasePlugin;
 export { transformUrl as applyBaseToUrl };

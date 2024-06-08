@@ -397,7 +397,11 @@ class UserConfig {
 	}
 
 	/* Async friendly in 3.0 */
-	addPlugin(plugin, options) {
+	addPlugin(plugin, options = {}) {
+		if (plugin?.eleventyPluginOptions?.unique && this.hasPlugin(plugin)) {
+			return;
+		}
+
 		if (this.isPluginExecution() || options?.immediate) {
 			// might return a promise
 			return this._executePlugin(plugin, options);
@@ -410,8 +414,26 @@ class UserConfig {
 		}
 	}
 
-	hasPlugin(name) {
-		return this.plugins.some((entry) => this._getPluginName(entry.plugin) === name);
+	async resolvePlugin(name) {
+		let filenameLookup = {
+			"@11ty/eleventy/html-base-plugin": "./Plugins/HtmlBasePlugin.js",
+			"@11ty/eleventy/i18n-plugin": "./Plugins/I18nPlugin.js",
+			"@11ty/eleventy/render-plugin": "./Plugins/RenderPlugin.js",
+			"@11ty/eleventy/inputpath-to-url-plugin": "./Plugins/InputPathToUrl.js",
+		};
+		if (!filenameLookup[name]) {
+			throw new Error(`Invalid name "${name}" passed to resolvePlugin.`);
+		}
+		// TODO add support for any npm package name.
+		let plugin = await import(filenameLookup[name]);
+		return plugin.default;
+	}
+
+	hasPlugin(plugin) {
+		if (typeof plugin !== "string") {
+			plugin = this._getPluginName(plugin);
+		}
+		return this.plugins.some((entry) => this._getPluginName(entry.plugin) === plugin);
 	}
 
 	// Using Function.name https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name#examples
