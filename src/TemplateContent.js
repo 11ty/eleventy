@@ -661,6 +661,8 @@ class TemplateContent {
 
 TemplateContent._inputCache = new Map();
 TemplateContent._compileCache = new Map();
+
+/** @listens "eleventy.resourceModified" */
 eventBus.on("eleventy.resourceModified", (path) => {
 	// delete from input cache
 	TemplateContent.deleteFromInputCache(path);
@@ -673,7 +675,12 @@ eventBus.on("eleventy.resourceModified", (path) => {
 	}
 });
 
-// Used when the configuration file reset https://github.com/11ty/eleventy/issues/2147
+/**
+ * Used when the configuration file reset.
+ * @see https://github.com/11ty/eleventy/issues/2147
+ *
+ * @listens "eleventy.compileCacheReset"
+ */
 eventBus.on("eleventy.compileCacheReset", (/*path*/) => {
 	TemplateContent._compileCache = new Map();
 });

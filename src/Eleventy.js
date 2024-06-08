@@ -406,9 +406,14 @@ class Eleventy {
 	/**
 	 * Starts Eleventy.
 	 *
+	 * @fires "eleventy.config"
+	 * @fires "eleventy.env"
+	 * @fires "eleventy.extensionmap"
+	 * @fires "eleventy.directories"
+	 *
 	 * @async
-	 * @method
-	 * @returns {} - tbd.
+	 * @param {object} [options={}]
+	 * @void
 	 */
 	async init(options = {}) {
 		options = Object.assign({ viaConfigReset: false }, options);
@@ -769,6 +774,9 @@ Arguments:
 	/**
 	 * tbd.
 	 *
+	 * @fires "eleventy.templateModified"
+	 * @fires "eleventy.resourceModified"
+	 *
 	 * @private
 	 * @method
 	 * @param {String} changedFilePath - File that triggered a re-run (added or modified)
@@ -832,6 +840,9 @@ Arguments:
 
 	/**
 	 * tbd.
+	 *
+	 * @fires "eleventy.beforeWatch"
+	 * @fires "eleventy.reset"
 	 *
 	 * @private
 	 * @method
@@ -1064,6 +1075,10 @@ Arguments:
 	/**
 	 * Start the watching of files
 	 *
+	 * @listens "change"
+	 * @listens "add"
+	 * @listens "unlink"
+	 *
 	 * @async
 	 * @method
 	 */
@@ -1207,6 +1222,9 @@ Arguments:
 
 	/**
 	 * tbd.
+	 *
+	 * @fires "eleventy.before"
+	 * @fires "eleventy.after"
 	 *
 	 * @async
 	 * @method

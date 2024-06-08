@@ -278,6 +278,7 @@ class TemplatePassthroughManager {
 	// Performance note: these can actually take a fair bit of time, but aren’t a
 	// bottleneck to eleventy. The copies are performed asynchronously and don’t affect eleventy
 	// write times in a significant way.
+	/** @fires "eleventy.passthrough" */
 	async copyAll(templateExtensionPaths) {
 		debug("TemplatePassthrough copy started.");
 		let normalizedPaths = this.getAllNormalizedPaths(templateExtensionPaths);

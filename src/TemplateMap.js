@@ -430,6 +430,10 @@ class TemplateMap {
 		}
 	}
 
+	/**
+	 * @fires "eleventy.contentMap"
+	 * @fires "eleventy.layouts"
+	 */
 	async cache() {
 		debug("Caching collections objects.");
 		this.collectionsData = {};

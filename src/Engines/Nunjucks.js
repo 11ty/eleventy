@@ -20,6 +20,9 @@ class Nunjucks extends TemplateEngine {
 		this.cacheable = true;
 	}
 
+	/**
+	 * @fires "eleventy.engine.njk"
+	 */
 	_setEnv(override) {
 		if (override) {
 			this.njkEnv = override;
@@ -61,6 +64,9 @@ class Nunjucks extends TemplateEngine {
 		});
 	}
 
+	/**
+	 * @listens "eleventy.resourceModified"
+	 */
 	setLibrary(override) {
 		this._setEnv(override);
 

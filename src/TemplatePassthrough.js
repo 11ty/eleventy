@@ -221,10 +221,14 @@ class TemplatePassthrough {
 		return paths;
 	}
 
-	/* Types:
+	/**
+	 * Types:
 	 * 1. via glob, individual files found
 	 * 2. directory, triggers an event for each file
 	 * 3. individual file
+	 *
+	 * @listens copy.events.COPY_FILE_START
+	 * @listens copy.events.COPY_FILE_COMPLETE
 	 */
 	async copy(src, dest, copyOptions) {
 		if (

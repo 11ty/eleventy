@@ -22,6 +22,9 @@ function normalizeInputPath(inputPath, inputDir, contentMap) {
 	return inputPath;
 }
 
+/**
+ * @listens "eleventy.contentMap"
+ */
 function FilterPlugin(eleventyConfig) {
 	let contentMap;
 	eleventyConfig.on("eleventy.contentMap", function ({ inputPathToUrl }) {
@@ -45,6 +48,9 @@ function FilterPlugin(eleventyConfig) {
 	});
 }
 
+/**
+ * @listens "eleventy.contentMap"
+ */
 function TransformPlugin(eleventyConfig, defaultOptions = {}) {
 	let opts = Object.assign(
 		{
