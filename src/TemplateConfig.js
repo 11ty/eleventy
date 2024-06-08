@@ -151,6 +151,7 @@ class TemplateConfig {
 
 	/**
 	 * Resets the configuration.
+	 * @fires "eleventy.compileCacheReset"
 	 */
 	async reset() {
 		debugDev("Resetting configuration: TemplateConfig and UserConfig.");
@@ -380,6 +381,8 @@ class TemplateConfig {
 
 	/**
 	 * Merges different config files together.
+	 *
+	 * @fires "eleventy.beforeConfig"
 	 *
 	 * @param {String} projectConfigPath - Path to project config.
 	 * @returns {{}} merged - The merged config file.

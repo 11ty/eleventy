@@ -3,6 +3,8 @@ import getJavaScriptData from "../Util/GetJavaScriptData.js";
 import eventBus from "../EventBus.js";
 
 let lastModifiedFile = undefined;
+
+/** @listens "eleventy.resourceModified" */
 eventBus.on("eleventy.resourceModified", (path) => {
 	lastModifiedFile = path;
 });

@@ -131,6 +131,11 @@ class EleventyWatchTargets {
 		this.writer = templateWriter;
 	}
 
+	/**
+	 * @fires "eleventy.importCacheReset"
+	 *
+	 * @param {string[]} filePathArray
+	 */
 	clearImportCacheFor(filePathArray) {
 		let paths = new Set();
 		for (const filePath of filePathArray) {

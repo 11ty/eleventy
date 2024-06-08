@@ -86,6 +86,7 @@ class TemplateCache {
 
 let layoutCache = new TemplateCache();
 
+/** @listens "eleventy.resourceModified" */
 eventBus.on("eleventy.resourceModified", (path, usedBy, metadata = {}) => {
 	// https://github.com/11ty/eleventy-plugin-bundle/issues/10
 	if (metadata.viaConfigReset) {

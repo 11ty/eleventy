@@ -14,6 +14,9 @@ class GlobalDependencyMap {
 		this._map = undefined;
 	}
 
+	/**
+	 * @listens "eleventy.layouts" (once)
+	 */
 	setConfig(config) {
 		if (this.config) {
 			return;

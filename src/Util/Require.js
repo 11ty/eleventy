@@ -34,6 +34,8 @@ async function loadContents(path, options = {}) {
 }
 
 let lastModifiedPaths = new Map();
+
+/** @listens "eleventy.importCacheReset" */
 eventBus.on("eleventy.importCacheReset", (fileQueue) => {
 	for (let filePath of fileQueue) {
 		let absolutePath = TemplatePath.absolutePath(filePath);

@@ -129,8 +129,12 @@ async function renderShortcodeFn(fn, data) {
  * string (or file) inside of another template. {@link https://www.11ty.dev/docs/plugins/render/}
  *
  * @since 1.0.0
+ *
  * @param {module:11ty/eleventy/UserConfig} eleventyConfig - User-land configuration instance.
  * @param {Object} options - Plugin options
+ *
+ * @listens "eleventy.config"
+ * @listens "eleventy.extensionmap"
  */
 function EleventyPlugin(eleventyConfig, options = {}) {
 	/**
