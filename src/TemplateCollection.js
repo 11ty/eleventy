@@ -1,7 +1,7 @@
 import multimatch from "multimatch";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
-import Sortable from "./Util/Sortable.js";
+import Sortable from "./Util/Objects/Sortable.js";
 import TemplateData from "./Data/TemplateData.js";
 
 class TemplateCollection extends Sortable {

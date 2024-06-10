@@ -1,5 +1,5 @@
 import test from "ava";
-import { ProxyWrap } from "../src/Util/ProxyWrap.js";
+import { ProxyWrap } from "../src/Util/Objects/ProxyWrap.js";
 
 test("Basic wrap", (t) => {
   let test = ProxyWrap({}, { a: 1 });

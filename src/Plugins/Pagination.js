@@ -3,8 +3,8 @@ import lodash from "@11ty/lodash-custom";
 import { DeepCopy } from "@11ty/eleventy-utils";
 
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
-import { ProxyWrap } from "../Util/ProxyWrap.js";
-// import { DeepFreeze } from "../Util/DeepFreeze.js";
+import { ProxyWrap } from "../Util/Objects/ProxyWrap.js";
+// import { DeepFreeze } from "../Util/Objects/DeepFreeze.js";
 import TemplateData from "../Data/TemplateData.js";
 
 const { set: lodashSet, get: lodashGet, chunk: lodashChunk } = lodash;
