@@ -690,9 +690,10 @@ class Template extends TemplateContent {
 		};
 
 		if (!this.isDryRun) {
+			let isVirtual = this.isVirtualTemplate();
 			let engineList = this.templateRender.getReadableEnginesListDifferingFromFileExtension();
 			this.logger.log(
-				`${lang.start} ${outputPath} from ${this.inputPath}${engineList ? ` (${engineList})` : ""}`,
+				`${lang.start} ${outputPath} from ${this.inputPath}${isVirtual ? " (virtual)" : ""}${engineList ? ` (${engineList})` : ""}`,
 			);
 		} else if (this.isDryRun) {
 			return;
