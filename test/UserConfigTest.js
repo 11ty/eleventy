@@ -174,3 +174,17 @@ test("Add Template Formats", (t) => {
 
   t.deepEqual(userCfg.templateFormatsAdded.sort(), ["11ty.js", "liquid", "njk", "webc"]);
 });
+
+test("Resolve plugin", async (t) => {
+  let userConfig = new UserConfig();
+  let plugin = await userConfig.resolvePlugin("@11ty/eleventy/html-base-plugin");
+  t.truthy(typeof plugin === "function")
+});
+
+test("Resolve plugin (invalid)", async (t) => {
+  let userConfig = new UserConfig();
+  let e = await t.throwsAsync(async() => {
+    await userConfig.resolvePlugin("@11ty/eleventy/does-not-exist");
+  });
+  t.truthy(e.message.startsWith(`Invalid name "@11ty/eleventy/does-not-exist" passed to resolvePlugin.`));
+});
