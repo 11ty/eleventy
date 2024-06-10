@@ -40,7 +40,8 @@ function parseFilePath(filepath) {
 			hash: '#anchor'
 		} */
 
-		let u = new URL(filepath, "file:");
+		// Note that `node:url` -> pathToFileURL creates an absolute path, which we don’t want
+		let u = new URL(`file:${filepath}`);
 		return [
 			// hash includes # sign
 			u.search + u.hash,
