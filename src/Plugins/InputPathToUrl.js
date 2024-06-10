@@ -1,4 +1,5 @@
 import { TemplatePath } from "@11ty/eleventy-utils";
+import isValidUrl from "../Util/ValidUrl.js";
 
 function normalizeInputPath(inputPath, inputDir, contentMap) {
 	// inputDir is optional at the beginning of the developer supplied-path
@@ -22,19 +23,31 @@ function normalizeInputPath(inputPath, inputDir, contentMap) {
 	return inputPath;
 }
 
-function parseFilePathForHashSupport(filepath) {
+function parseFilePath(filepath) {
 	try {
+		/* u: URL {
+			href: 'file:///tmpl.njk#anchor',
+			origin: 'null',
+			protocol: 'file:',
+			username: '',
+			password: '',
+			host: '',
+			hostname: '',
+			port: '',
+			pathname: '/tmpl.njk',
+			search: '',
+			searchParams: URLSearchParams {},
+			hash: '#anchor'
+		} */
+
 		let u = new URL(filepath, "file:");
-		return {
+		return [
 			// hash includes # sign
-			hash: u.hash,
-			pathname: u.pathname,
-		};
+			u.search + u.hash,
+			u.pathname,
+		];
 	} catch (e) {
-		return {
-			hash: "",
-			pathname: filepath,
-		};
+		return ["", filepath];
 	}
 }
 
@@ -49,16 +62,21 @@ function FilterPlugin(eleventyConfig) {
 			throw new Error("Internal error: contentMap not available for `inputPathToUrl` filter.");
 		}
 
-		let inputDir = eleventyConfig.directories.input;
-		let { hash, pathname } = parseFilePathForHashSupport(filepath);
-		pathname = normalizeInputPath(pathname, inputDir, contentMap);
+		if (isValidUrl(filepath)) {
+			return filepath;
+		}
 
-		let urls = contentMap[pathname];
+		let inputDir = eleventyConfig.directories.input;
+		let suffix = "";
+		[suffix, filepath] = parseFilePath(filepath);
+		filepath = normalizeInputPath(filepath, inputDir, contentMap);
+
+		let urls = contentMap[filepath];
 		if (!urls || urls.length === 0) {
 			throw new Error("`inputPathToUrl` filter could not find a matching target for " + filepath);
 		}
 
-		return `${urls[0]}${hash}`;
+		return `${urls[0]}${suffix}`;
 	});
 }
 
@@ -79,18 +97,23 @@ function TransformPlugin(eleventyConfig, defaultOptions = {}) {
 		if (!contentMap) {
 			throw new Error("Internal error: contentMap not available for the `pathToUrl` Transform.");
 		}
-		let inputDir = eleventyConfig.directories.input;
-
-		let { hash, pathname } = parseFilePathForHashSupport(filepathOrUrl);
-		pathname = normalizeInputPath(pathname, inputDir, contentMap);
-
-		let urls = contentMap[pathname];
-		if (!urls || urls.length === 0) {
-			// fallback, transforms don’t error on missing paths (though the pathToUrl filter does)
-			return `${pathname}${hash}`;
+		if (isValidUrl(filepathOrUrl)) {
+			return filepathOrUrl;
 		}
 
-		return `${urls[0]}${hash}`;
+		let inputDir = eleventyConfig.directories.input;
+
+		let suffix = "";
+		[suffix, filepathOrUrl] = parseFilePath(filepathOrUrl);
+		filepathOrUrl = normalizeInputPath(filepathOrUrl, inputDir, contentMap);
+
+		let urls = contentMap[filepathOrUrl];
+		if (!urls || urls.length === 0) {
+			// fallback, transforms don’t error on missing paths (though the pathToUrl filter does)
+			return `${filepathOrUrl}${suffix}`;
+		}
+
+		return `${urls[0]}${suffix}`;
 	});
 }
 
