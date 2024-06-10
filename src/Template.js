@@ -26,7 +26,6 @@ import ReservedData from "./Util/ReservedData.js";
 import TransformsUtil from "./Util/TransformsUtil.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
-const writeFile = util.promisify(fs.writeFile);
 const fsStat = util.promisify(fs.stat);
 
 const debug = debugUtil("Eleventy:Template");
@@ -719,7 +718,9 @@ class Template extends TemplateContent {
 		let templateBenchmark = this.bench.get("Template Write");
 		templateBenchmark.before();
 
-		await writeFile(outputPath, finalContent);
+		// Note: This deliberately uses the synchronous version to avoid
+		// unbounded concurrency: https://github.com/11ty/eleventy/issues/3271
+		fs.writeFileSync(outputPath, finalContent);
 
 		templateBenchmark.after();
 		this.writeCount++;
