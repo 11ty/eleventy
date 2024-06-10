@@ -55,7 +55,7 @@ async function dynamicImportAbsolutePath(absolutePath, type, returnRaw = false) 
 
 	let urlPath;
 	try {
-		let u = new URL(absolutePath, "file:");
+		let u = new URL(`file:${absolutePath}`);
 
 		// Bust the import cache if this is the last modified file
 		if (lastModifiedPaths.has(absolutePath)) {
