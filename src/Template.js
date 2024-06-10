@@ -733,7 +733,7 @@ class Template extends TemplateContent {
 			rawInput,
 		};
 
-		if (data && this.config.dataFilterSelectors?.size > 0) {
+		if (data && this.config?.dataFilterSelectors?.size > 0) {
 			ret.data = this.retrieveDataForJsonOutput(data, this.config.dataFilterSelectors);
 		}
 
