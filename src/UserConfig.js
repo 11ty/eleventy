@@ -399,6 +399,7 @@ class UserConfig {
 	/* Async friendly in 3.0 */
 	addPlugin(plugin, options = {}) {
 		if (plugin?.eleventyPluginOptions?.unique && this.hasPlugin(plugin)) {
+			debug("Skipping duplicate unique addPlugin for %o", this.plugin);
 			return;
 		}
 
@@ -422,18 +423,23 @@ class UserConfig {
 			"@11ty/eleventy/inputpath-to-url-plugin": "./Plugins/InputPathToUrl.js",
 		};
 		if (!filenameLookup[name]) {
-			throw new Error(`Invalid name "${name}" passed to resolvePlugin.`);
+			throw new Error(
+				`Invalid name "${name}" passed to resolvePlugin. Valid options: ${Object.keys(filenameLookup).join(", ")}`,
+			);
 		}
-		// TODO add support for any npm package name.
+		// Future improvement: add support for any npm package name?
 		let plugin = await import(filenameLookup[name]);
 		return plugin.default;
 	}
 
 	hasPlugin(plugin) {
-		if (typeof plugin !== "string") {
-			plugin = this._getPluginName(plugin);
+		let pluginName;
+		if (typeof plugin === "string") {
+			pluginName = plugin;
+		} else {
+			pluginName = this._getPluginName(plugin);
 		}
-		return this.plugins.some((entry) => this._getPluginName(entry.plugin) === plugin);
+		return this.plugins.some((entry) => this._getPluginName(entry.plugin) === pluginName);
 	}
 
 	// Using Function.name https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name#examples
