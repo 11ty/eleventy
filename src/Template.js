@@ -733,7 +733,7 @@ class Template extends TemplateContent {
 			rawInput,
 		};
 
-		if (data && this.config.dataFilterSelectors && this.config.dataFilterSelectors.size > 0) {
+		if (data && this.config.dataFilterSelectors?.size > 0) {
 			ret.data = this.retrieveDataForJsonOutput(data, this.config.dataFilterSelectors);
 		}
 
@@ -792,7 +792,7 @@ class Template extends TemplateContent {
 					content: content,
 				};
 
-				if (this.config.dataFilterSelectors && this.config.dataFilterSelectors.size > 0) {
+				if (this.config?.dataFilterSelectors?.size > 0) {
 					obj.data = this.retrieveDataForJsonOutput(page.data, this.config.dataFilterSelectors);
 				}
 

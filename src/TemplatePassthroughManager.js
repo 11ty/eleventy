@@ -246,7 +246,7 @@ class TemplatePassthroughManager {
 			}
 		}
 
-		if (paths && paths.length) {
+		if (paths?.length) {
 			let passthroughPaths = this.getNonTemplatePaths(paths);
 			for (let path of passthroughPaths) {
 				let normalizedPath = this._normalizePaths(path);

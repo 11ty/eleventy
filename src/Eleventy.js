@@ -390,14 +390,14 @@ class Eleventy {
 		// Restore from cache
 		if (this._privateCaches.has(key)) {
 			let c = this._privateCaches.get(key);
-			for (let cacheKey in c) {
-				inst[cacheKey] = c[cacheKey];
+			for (let [cacheKey, cacheValue] of Object.entries(c)) {
+				inst[cacheKey] = cacheValue;
 			}
 		} else {
 			// Set cache
 			let c = {};
-			for (let cacheKey of inst.caches || []) {
-				c[cacheKey] = inst[cacheKey];
+			for (let [cacheKey, cacheValue] of Object.entries(inst.caches || [])) {
+				c[cacheKey] = cacheValue;
 			}
 			this._privateCaches.set(key, c);
 		}
@@ -906,7 +906,7 @@ Arguments:
 				build: {
 					templates: templateResults
 						.flat()
-						.filter((entry) => !!entry)
+						.filter(Boolean)
 						.map((entry) => {
 							entry.url = PathPrefixer.joinUrlParts(normalizedPathPrefix, entry.url);
 							return entry;
@@ -1276,10 +1276,10 @@ Arguments:
 
 			if (to === "fs") {
 				// New in 3.0: flatten return object for return.
-				ret[1] = templateResults.flat().filter((entry) => !!entry);
+				ret[1] = templateResults.flat().filter(Boolean);
 				eventsArg.results = ret[1];
 			} else {
-				eventsArg.results = templateResults.filter((entry) => !!entry);
+				eventsArg.results = templateResults.filter(Boolean);
 			}
 
 			if (to === "ndjson") {

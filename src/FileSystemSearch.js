@@ -29,10 +29,10 @@ class FileSystemSearch {
 		}
 
 		// Strip leading slashes from everything!
-		globs = globs.map((entry) => TemplatePath.stripLeadingDotSlash(entry));
+		globs = globs.map(TemplatePath.stripLeadingDotSlash);
 
-		if (options.ignore && Array.isArray(options.ignore)) {
-			options.ignore = options.ignore.map((entry) => TemplatePath.stripLeadingDotSlash(entry));
+		if (Array.isArray(options?.ignore)) {
+			options.ignore = options.ignore.map(TemplatePath.stripLeadingDotSlash);
 			debug("Glob search (%o) ignoring: %o", key, options.ignore);
 		}
 
@@ -61,9 +61,7 @@ class FileSystemSearch {
 					options,
 				),
 			).then((results) => {
-				this.outputs[cacheKey] = new Set(
-					results.map((entry) => TemplatePath.addLeadingDotSlash(entry)),
-				);
+				this.outputs[cacheKey] = new Set(results.map(TemplatePath.addLeadingDotSlash));
 				return Array.from(this.outputs[cacheKey]);
 			});
 		}

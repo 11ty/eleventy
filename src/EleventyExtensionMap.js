@@ -13,12 +13,7 @@ class EleventyExtensionMap {
 	}
 
 	setFormats(formatKeys = []) {
-		// raw
-		this.formatKeys = formatKeys;
-
-		this.unfilteredFormatKeys = formatKeys.map(function (key) {
-			return key.trim().toLowerCase();
-		});
+		this.unfilteredFormatKeys = formatKeys.map((key) => key.trim().toLowerCase());
 
 		this.validTemplateLanguageKeys = this.unfilteredFormatKeys.filter((key) =>
 			this.hasExtension(key),
@@ -59,13 +54,11 @@ class EleventyExtensionMap {
 		}
 
 		let files = [];
-		this.validTemplateLanguageKeys.forEach(
-			function (key) {
-				this.getExtensionsFromKey(key).forEach(function (extension) {
-					files.push((dir ? dir + "/" : "") + path + "." + extension);
-				});
-			}.bind(this),
-		);
+		this.validTemplateLanguageKeys.forEach((key) => {
+			this.getExtensionsFromKey(key).forEach((extension) => {
+				files.push((dir ? dir + "/" : "") + path + "." + extension);
+			});
+		});
 
 		return files;
 	}
@@ -74,12 +67,7 @@ class EleventyExtensionMap {
 	// on paths found from the file system glob search.
 	// TODO: Method name might just need to be renamed to something more accurate.
 	isFullTemplateFilePath(path) {
-		for (let extension of this.validTemplateLanguageKeys) {
-			if (path.endsWith(`.${extension}`)) {
-				return true;
-			}
-		}
-		return false;
+		return this.validTemplateLanguageKeys.some((extension) => path.endsWith(`.${extension}`));
 	}
 
 	getCustomExtensionEntry(extension) {
@@ -95,12 +83,9 @@ class EleventyExtensionMap {
 	}
 
 	getValidExtensionsForPath(path) {
-		let extensions = new Set();
-		for (let extension in this.extensionToKeyMap) {
-			if (path.endsWith(`.${extension}`)) {
-				extensions.add(extension);
-			}
-		}
+		let extensions = new Set(
+			Object.keys(this.extensionToKeyMap).filter((extension) => path.endsWith(`.${extension}`)),
+		);
 
 		// if multiple extensions are valid, sort from longest to shortest
 		// e.g. .11ty.js and .js
@@ -183,14 +168,14 @@ class EleventyExtensionMap {
 
 	getExtensionsFromKey(key) {
 		let extensions = new Set();
-		for (let extension in this.extensionToKeyMap) {
-			if (this.extensionToKeyMap[extension].aliasKey) {
+		for (let [extension, entry] of Object.entries(this.extensionToKeyMap)) {
+			if (entry.aliasKey) {
 				// only add aliased extension if explicitly referenced in formats
 				// overrides will not have an aliasKey (md => md)
-				if (this.extensionToKeyMap[extension].aliasKey === key) {
+				if (entry.aliasKey === key) {
 					extensions.add(extension);
 				}
-			} else if (this.extensionToKeyMap[extension].key === key) {
+			} else if (entry.key === key) {
 				extensions.add(extension);
 			}
 		}
@@ -232,20 +217,17 @@ class EleventyExtensionMap {
 
 	getExtensionEntry(pathOrKey) {
 		pathOrKey = (pathOrKey || "").toLowerCase();
-		for (let extension in this.extensionToKeyMap) {
-			if (pathOrKey === extension || pathOrKey.endsWith("." + extension)) {
-				return this.extensionToKeyMap[extension];
+		for (let [extension, key] of Object.entries(this.extensionToKeyMap)) {
+			if (pathOrKey === extension || pathOrKey.endsWith(`.${extension}`)) {
+				return key;
 			}
 		}
 	}
 
 	removeTemplateExtension(path) {
 		for (let extension in this.extensionToKeyMap) {
-			if (path === extension || path.endsWith("." + extension)) {
-				return path.slice(
-					0,
-					path.length - 1 - extension.length < 0 ? 0 : path.length - 1 - extension.length,
-				);
+			if (path === extension || path.endsWith(`.${extension}`)) {
+				return path.slice(0, Math.max(0, path.length - 1 - extension.length));
 			}
 		}
 		return path;
@@ -265,7 +247,7 @@ class EleventyExtensionMap {
 				"11ty.mjs": { key: "11ty.js", extension: "11ty.mjs" },
 			};
 
-			if ("extensionMap" in this.config) {
+			if (this.config?.extensionMap) {
 				for (let entry of this.config.extensionMap) {
 					// extension and key are only different when aliasing.
 					this._extensionToKeyMap[entry.extension] = entry;

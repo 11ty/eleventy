@@ -171,8 +171,7 @@ class TemplateWriter {
 			 */
 			tmpl.setTransforms(this.config.transforms);
 
-			for (let linterName in this.config.linters) {
-				let linter = this.config.linters[linterName];
+			for (let linter of Object.values(this.config.linters)) {
 				if (typeof linter === "function") {
 					tmpl.addLinter(linter);
 				}

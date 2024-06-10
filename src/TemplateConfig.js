@@ -135,8 +135,8 @@ class TemplateConfig {
 	}
 
 	getLocalProjectConfigFiles() {
-		if (this.projectConfigPaths && this.projectConfigPaths.length > 0) {
-			return TemplatePath.addLeadingDotSlashArray(this.projectConfigPaths.filter((path) => path));
+		if (this?.projectConfigPaths?.length > 0) {
+			return TemplatePath.addLeadingDotSlashArray(this.projectConfigPaths.filter(Boolean));
 		}
 		return [];
 	}
@@ -304,7 +304,7 @@ class TemplateConfig {
 				await this.userConfig._executePlugin(plugin, options);
 			} catch (e) {
 				let name = this.userConfig._getPluginName(plugin);
-				let namespaces = [storedActiveNamespace, pluginNamespace].filter((entry) => !!entry);
+				let namespaces = [storedActiveNamespace, pluginNamespace].filter(Boolean);
 
 				let namespaceStr = "";
 				if (namespaces.length) {
@@ -359,7 +359,7 @@ class TemplateConfig {
 				// TODO the error message here is bad and I feel bad (needs more accurate info)
 				throw new EleventyConfigError(
 					`Error in your Eleventy config file '${path}'.` +
-						(err.message && err.message.includes("Cannot find module")
+						(err?.message.includes("Cannot find module")
 							? chalk.cyan(" You may need to run `npm install`.")
 							: ""),
 					err,

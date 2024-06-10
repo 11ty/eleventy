@@ -2,14 +2,13 @@ import { isPlainObject } from "@11ty/eleventy-utils";
 
 class TemplateBehavior {
 	constructor(config) {
-		this.render = true;
-		this.write = true;
-		this.outputFormat = null;
-
 		if (!config) {
 			throw new Error("Missing config argument in TemplateBehavior");
 		}
 		this.config = config;
+		this.render = true;
+		this.write = true;
+		this.outputFormat = null;
 	}
 
 	setRenderableOverride(renderableOverride) {

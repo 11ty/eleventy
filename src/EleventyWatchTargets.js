@@ -70,16 +70,15 @@ class EleventyWatchTargets {
 	}
 
 	addRaw(targets, isDependency) {
-		for (let target of targets) {
-			let path = TemplatePath.addLeadingDotSlash(target);
-			if (!this.isWatched(path)) {
-				this.newTargets.add(path);
+		for (let targetPath of targets.map(TemplatePath.addLeadingDotSlash)) {
+			if (!this.isWatched(targetPath)) {
+				this.newTargets.add(targetPath);
 			}
 
-			this.targets.add(path);
+			this.targets.add(targetPath);
 
 			if (isDependency) {
-				this.dependencies.add(path);
+				this.dependencies.add(targetPath);
 			}
 		}
 	}
@@ -100,9 +99,7 @@ class EleventyWatchTargets {
 	}
 
 	static normalizeToGlobs(targets) {
-		return EleventyWatchTargets.normalize(targets).map((entry) =>
-			TemplatePath.convertToRecursiveGlobSync(entry),
-		);
+		return EleventyWatchTargets.normalize(targets).map(TemplatePath.convertToRecursiveGlobSync);
 	}
 
 	addAndMakeGlob(targets) {
@@ -132,21 +129,16 @@ class EleventyWatchTargets {
 	}
 
 	clearImportCacheFor(filePathArray) {
-		let paths = new Set();
-		for (const filePath of filePathArray) {
-			paths.add(filePath);
+		let paths = new Set([
+			...filePathArray,
 
-			// Delete from require cache so that updates to the module are re-required
-			let importsTheChangedFile = this.getDependantsOf(filePath);
-			for (let dep of importsTheChangedFile) {
-				paths.add(dep);
-			}
+			//	Imports changed the file
+			//	(Delete from require cache so that updates to the module are re-required)
+			...filePathArray.map((filePath) => this.getDependantsOf(filePath)),
 
-			let isImportedInTheChangedFile = this.getDependenciesOf(filePath);
-			for (let dep of isImportedInTheChangedFile) {
-				paths.add(dep);
-			}
-		}
+			//	Imported in the changed file
+			...filePathArray.map((filePath) => this.getDependenciesOf(filePath)),
+		]);
 
 		eventBus.emit("eleventy.importCacheReset", paths);
 	}
