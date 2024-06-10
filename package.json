@@ -9,7 +9,7 @@
 	"type": "module",
 	"types": "src/index.d.ts",
 	"bin": {
-		"eleventy": "./cmd.cjs"
+		"eleventy": "cmd.cjs"
 	},
 	"license": "MIT",
 	"engines": {
