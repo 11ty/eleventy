@@ -1,17 +1,11 @@
-const test = require("ava");
-const ComputedDataQueue = require("../src/ComputedDataQueue");
+import test from "ava";
+import ComputedDataQueue from "../src/Data/ComputedDataQueue.js";
 
 test("Standard uses", (t) => {
   let queue = new ComputedDataQueue();
   queue.uses("permalink", ["var1", "var2"]);
   queue.uses("collections.all", ["var2", "var3"]);
-  t.deepEqual(queue.getOrder(), [
-    "var1",
-    "var2",
-    "permalink",
-    "var3",
-    "collections.all",
-  ]);
+  t.deepEqual(queue.getOrder(), ["var1", "var2", "permalink", "var3", "collections.all"]);
 });
 
 test("What does permalink use", (t) => {
@@ -69,10 +63,5 @@ test("Permalink uses a collection (not yet supported in Eleventy)", (t) => {
 
   // After we process these
   queue.markComputed(["permalink", ...varsUsedByPermalink]);
-  t.deepEqual(queue.getOrder(), [
-    "var3",
-    "collections.all",
-    "test",
-    "unrelated",
-  ]);
+  t.deepEqual(queue.getOrder(), ["var3", "collections.all", "test", "unrelated"]);
 });

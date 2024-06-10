@@ -1,16 +1,25 @@
-const test = require("ava");
-const TemplateRender = require("../src/TemplateRender");
-const TemplateConfig = require("../src/TemplateConfig");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
-const normalizeNewLines = require("./Util/normalizeNewLines");
+import test from "ava";
+import Nunjucks from "nunjucks";
 
-function getNewTemplateRender(name, inputDir, eleventyConfig) {
+import TemplateRender from "../src/TemplateRender.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+
+import { normalizeNewLines } from "./Util/normalizeNewLines.js";
+import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
+
+async function getNewTemplateRender(name, inputDir, eleventyConfig) {
   if (!eleventyConfig) {
-    eleventyConfig = new TemplateConfig();
+    eleventyConfig = await getTemplateConfigInstance({
+      dir: {
+        input: inputDir
+      }
+    });
   }
 
-  let tr = new TemplateRender(name, inputDir, eleventyConfig);
-  tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
+  let tr = new TemplateRender(name, eleventyConfig);
+  tr.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  tr.extensionMap.setFormats([]);
+  await tr.init();
   return tr;
 }
 
@@ -23,87 +32,79 @@ async function getPromise(resolveTo) {
 }
 
 // Nunjucks
-test("Nunjucks", (t) => {
-  t.is(getNewTemplateRender("njk").getEngineName(), "njk");
+test("Nunjucks", async (t) => {
+  let tr = await getNewTemplateRender("njk");
+  t.is(tr.getEngineName(), "njk");
 });
 
 test("Nunjucks Render", async (t) => {
-  let fn = await getNewTemplateRender("njk").getCompiledTemplate(
-    "<p>{{ name }}</p>"
-  );
+  let tr = await getNewTemplateRender("njk");
+  let fn = await tr.getCompiledTemplate("<p>{{ name }}</p>");
   t.is(await fn({ name: "Zach" }), "<p>Zach</p>");
 });
 
 test("Nunjucks Render Addition", async (t) => {
-  let fn = await getNewTemplateRender("njk").getCompiledTemplate(
-    "<p>{{ number + 1 }}</p>"
-  );
+  let tr = await getNewTemplateRender("njk");
+  let fn = await tr.getCompiledTemplate("<p>{{ number + 1 }}</p>");
   t.is(await fn({ number: 1 }), "<p>2</p>");
 });
 
 test("Nunjucks Render Extends", async (t) => {
-  let fn = await getNewTemplateRender("njk", "test/stubs").getCompiledTemplate(
+  let tr = await getNewTemplateRender("njk", "test/stubs");
+  let fn = await tr.getCompiledTemplate(
     "{% extends 'base.njk' %}{% block content %}This is a child.{% endblock %}"
   );
   t.is(await fn(), "<p>This is a child.</p>");
 });
 
 test("Nunjucks Render Relative Extends", async (t) => {
-  let fn = await getNewTemplateRender(
+  let tr = await getNewTemplateRender(
     "./test/stubs/njk-relative/dir/does_not_exist_and_thats_ok.njk",
     "test/stubs"
-  ).getCompiledTemplate(
+  );
+  let fn = await tr.getCompiledTemplate(
     "{% extends '../dir/base.njk' %}{% block content %}This is a child.{% endblock %}"
   );
   t.is(await fn(), "<p>This is a child.</p>");
 });
 
 test("Nunjucks Render Include", async (t) => {
-  let fn = await getNewTemplateRender("njk", "test/stubs").getCompiledTemplate(
-    "<p>{% include 'included.njk' %}</p>"
-  );
+  let tr = await getNewTemplateRender("njk", "test/stubs");
+  let fn = await tr.getCompiledTemplate("<p>{% include 'included.njk' %}</p>");
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
 test("Nunjucks Render Include (different extension)", async (t) => {
-  let fn = await getNewTemplateRender("njk", "test/stubs").getCompiledTemplate(
-    "<p>{% include 'included.nunj' %}</p>"
-  );
+  let tr = await getNewTemplateRender("njk", "test/stubs");
+  let fn = await tr.getCompiledTemplate("<p>{% include 'included.nunj' %}</p>");
   t.is(await fn(), "<p>Nunjabusiness</p>");
 });
 
 test("Nunjucks Render Include (different extension, subdir)", async (t) => {
-  let fn = await getNewTemplateRender("njk", "test/stubs").getCompiledTemplate(
-    "<p>{% include 'subfolder/included.nunj' %}</p>"
-  );
+  let tr = await getNewTemplateRender("njk", "test/stubs");
+  let fn = await tr.getCompiledTemplate("<p>{% include 'subfolder/included.nunj' %}</p>");
   t.is(await fn(), "<p>Nunjabusiness2</p>");
 });
 
 test("Nunjucks Render Relative Include Issue #190", async (t) => {
-  let tr = getNewTemplateRender(
+  let tr = await getNewTemplateRender(
     "./test/stubs/njk-relative/does_not_exist_and_thats_ok.njk",
     "./test/stubs"
   );
-  let fn = await tr.getCompiledTemplate(
-    "<p>{% include './dir/included.njk' %}</p>"
-  );
+  let fn = await tr.getCompiledTemplate("<p>{% include './dir/included.njk' %}</p>");
   t.is(await fn(), "<p>HELLO FROM THE OTHER SIDE.</p>");
 });
 
 test("Nunjucks Render Relative Include (using ..) Issue #190", async (t) => {
-  let tr = getNewTemplateRender(
+  let tr = await getNewTemplateRender(
     "./test/stubs/njk-relative/dir/does_not_exist_and_thats_ok.njk",
     "./test/stubs"
   );
-  let fn = await tr.getCompiledTemplate(
-    "<p>{% include '../dir/included.njk' %}</p>"
-  );
+  let fn = await tr.getCompiledTemplate("<p>{% include '../dir/included.njk' %}</p>");
   t.is(await fn(), "<p>HELLO FROM THE OTHER SIDE.</p>");
 
   // should look in _includes too, related to Issue #633
-  let fn2a = await tr.getCompiledTemplate(
-    "<p>{% include 'included-relative.njk' %}</p>"
-  );
+  let fn2a = await tr.getCompiledTemplate("<p>{% include 'included-relative.njk' %}</p>");
   t.is(await fn2a(), "<p>akdlsjafkljdskl</p>");
 
   // should look in _includes too Issue #633
@@ -114,13 +115,11 @@ test("Nunjucks Render Relative Include (using ..) Issue #190", async (t) => {
 });
 
 test("Nunjucks Render Relative Include (using current dir) Issue #190", async (t) => {
-  let tr = getNewTemplateRender(
+  let tr = await getNewTemplateRender(
     "./test/stubs/njk-relative/dir/does_not_exist_and_thats_ok.njk",
     "./test/stubs"
   );
-  let fn = await tr.getCompiledTemplate(
-    "<p>{% include './included.njk' %}</p>"
-  );
+  let fn = await tr.getCompiledTemplate("<p>{% include './included.njk' %}</p>");
   t.is(await fn(), "<p>HELLO FROM THE OTHER SIDE.</p>");
 
   // This fails because ./ doesn’t look in _includes (this is good)
@@ -131,7 +130,7 @@ test("Nunjucks Render Relative Include (using current dir) Issue #190", async (t
 });
 
 test("Nunjucks Render Relative Include (ambiguous path, file exists in _includes and in current dir) Issue #190", async (t) => {
-  let tr = getNewTemplateRender(
+  let tr = await getNewTemplateRender(
     "./test/stubs/njk-relative/dir/does_not_exist_and_thats_ok.njk",
     "./test/stubs"
   );
@@ -151,7 +150,7 @@ test("Nunjucks Render Relative Include (ambiguous path, file exists in _includes
 });
 
 test("Nunjucks Async Filter", async (t) => {
-  let tr = getNewTemplateRender("njk", "test/stubs");
+  let tr = await getNewTemplateRender("njk", "test/stubs");
   let engine = tr.engine;
   engine.addFilters(
     {
@@ -168,21 +167,19 @@ test("Nunjucks Async Filter", async (t) => {
 });
 
 test("Nunjucks Render set with a filter", async (t) => {
-  let tr = getNewTemplateRender("njk", "test/stubs");
+  let tr = await getNewTemplateRender("njk", "test/stubs");
   let engine = tr.engine;
   engine.addFilters({
     uppercase: function (str) {
       return str.toUpperCase();
     },
   });
-  let fn = await tr.getCompiledTemplate(
-    `{% set test = "hi" | uppercase %}{{ test }}`
-  );
+  let fn = await tr.getCompiledTemplate(`{% set test = "hi" | uppercase %}{{ test }}`);
   t.is((await fn()).trim(), `HI`);
 });
 
 test("Nunjucks Render Include a JS file (Issue 398)", async (t) => {
-  let tr = getNewTemplateRender("njk", "test/stubs");
+  let tr = await getNewTemplateRender("njk", "test/stubs");
   let engine = tr.engine;
   engine.addFilters({
     jsmin: function (str) {
@@ -196,62 +193,59 @@ test("Nunjucks Render Include a JS file (Issue 398)", async (t) => {
 });
 
 test("Nunjucks Render Include Subfolder", async (t) => {
-  let fn = await getNewTemplateRender("njk", "test/stubs").getCompiledTemplate(
-    "<p>{% include 'subfolder/included.html' %}</p>"
-  );
+  let tr = await getNewTemplateRender("njk", "test/stubs");
+  let fn = await tr.getCompiledTemplate("<p>{% include 'subfolder/included.html' %}</p>");
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
 test("Nunjucks Render Include Double Quotes", async (t) => {
-  let fn = await getNewTemplateRender("njk", "test/stubs").getCompiledTemplate(
-    `<p>{% include "included.njk" %}</p>`
-  );
+  let tr = await getNewTemplateRender("njk", "test/stubs");
+  let fn = await tr.getCompiledTemplate(`<p>{% include "included.njk" %}</p>`);
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
 test("Nunjucks Render Include Subfolder Double Quotes", async (t) => {
-  let fn = await getNewTemplateRender("njk", "test/stubs").getCompiledTemplate(
-    `<p>{% include "subfolder/included.html" %}</p>`
-  );
+  let tr = await getNewTemplateRender("njk", "test/stubs");
+  let fn = await tr.getCompiledTemplate(`<p>{% include "subfolder/included.html" %}</p>`);
   t.is(await fn(), "<p>This is an include.</p>");
 });
 
 test("Nunjucks Render Imports", async (t) => {
-  let fn = await getNewTemplateRender("njk", "test/stubs").getCompiledTemplate(
+  let tr = await getNewTemplateRender("njk", "test/stubs");
+  let fn = await tr.getCompiledTemplate(
     "{% import 'imports.njk' as forms %}<div>{{ forms.label('Name') }}</div>"
   );
   t.is(await fn(), "<div><label>Name</label></div>");
 });
 
 test("Nunjucks Render Relative Imports", async (t) => {
-  let fn = await getNewTemplateRender(
+  let tr = await getNewTemplateRender(
     "./test/stubs/njk-relative/dir/does_not_exist_and_thats_ok.njk",
     "test/stubs"
-  ).getCompiledTemplate(
+  );
+  let fn = await tr.getCompiledTemplate(
     "{% import '../dir/imports.njk' as forms %}<div>{{ forms.label('Name') }}</div>"
   );
   t.is(await fn(), "<div><label>Name</label></div>");
 });
 
 test("Nunjucks Render Imports From", async (t) => {
-  let fn = await getNewTemplateRender("njk", "test/stubs").getCompiledTemplate(
+  let tr = await getNewTemplateRender("njk", "test/stubs");
+  let fn = await tr.getCompiledTemplate(
     "{% from 'imports.njk' import label %}<div>{{ label('Name') }}</div>"
   );
   t.is(await fn(), "<div><label>Name</label></div>");
 });
 
 test("Nunjucks getEngineLib", async (t) => {
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   t.truthy(tr.engine.getEngineLib());
 });
 
 test("Nunjucks Render: with Library Override", async (t) => {
-  let tr = getNewTemplateRender("njk");
+  let tr = await getNewTemplateRender("njk");
 
-  let lib = require("nunjucks");
-  let env = new lib.Environment(
-    new lib.FileSystemLoader("./test/stubs/_includes/")
-  );
+  let env = new Nunjucks.Environment(new Nunjucks.FileSystemLoader("./test/stubs/_includes/"));
   tr.engine.setLibrary(env);
 
   let fn = await tr.getCompiledTemplate("<p>{{ name }}</p>");
@@ -259,33 +253,29 @@ test("Nunjucks Render: with Library Override", async (t) => {
 });
 
 test("Nunjucks Render with getGlobals Issue #567", async (t) => {
-  let tr = getNewTemplateRender("njk");
+  let tr = await getNewTemplateRender("njk");
   let env = tr.engine.getEngineLib();
   env.addGlobal("getGlobals", function () {
     return this.getVariables();
   });
 
-  let fn = await tr.getCompiledTemplate(
-    "<p>{{ getGlobals()['my-global-name'] }}</p>"
-  );
+  let fn = await tr.getCompiledTemplate("<p>{{ getGlobals()['my-global-name'] }}</p>");
   t.is(await fn({ "my-global-name": "Zach" }), "<p>Zach</p>");
 });
 
 test("Nunjucks Render with getVarFromString Filter Issue #567", async (t) => {
-  let tr = getNewTemplateRender("njk");
+  let tr = await getNewTemplateRender("njk");
   let env = tr.engine.getEngineLib();
   env.addFilter("getVarFromString", function (varName) {
     return this.getVariables()[varName];
   });
 
-  let fn = await tr.getCompiledTemplate(
-    "<p>{{ 'my-global-name' | getVarFromString }}</p>"
-  );
+  let fn = await tr.getCompiledTemplate("<p>{{ 'my-global-name' | getVarFromString }}</p>");
   t.is(await fn({ "my-global-name": "Zach" }), "<p>Zach</p>");
 });
 
 test("Nunjucks Shortcode without args", async (t) => {
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function () {
     return "Zach";
   });
@@ -296,7 +286,7 @@ test("Nunjucks Shortcode without args", async (t) => {
 test("Nunjucks Shortcode", async (t) => {
   t.plan(3);
 
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function (str) {
     // Data in context
     t.is(this.page.url, "/hi/");
@@ -320,7 +310,7 @@ test("Nunjucks Shortcode", async (t) => {
 test("Nunjucks Async Shortcode", async (t) => {
   t.plan(2);
 
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode(
     "postfixWithZach",
     function (str) {
@@ -350,7 +340,7 @@ test("Nunjucks Async Shortcode", async (t) => {
 test("Nunjucks Async function Shortcode", async (t) => {
   t.plan(2);
 
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode(
     "postfixWithZach",
     async function (str) {
@@ -374,13 +364,11 @@ test("Nunjucks Async function Shortcode", async (t) => {
 });
 
 test("Nunjucks Async function Shortcode (with sync function, error throwing)", async (t) => {
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode(
     "postfixWithZach",
     function (str) {
-      throw new Error(
-        "Nunjucks Async function Shortcode (with sync function, error throwing)"
-      );
+      throw new Error("Nunjucks Async function Shortcode (with sync function, error throwing)");
     },
     true
   );
@@ -396,13 +384,11 @@ test("Nunjucks Async function Shortcode (with sync function, error throwing)", a
 });
 
 test("Nunjucks Async function Shortcode (with async function, error throwing)", async (t) => {
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode(
     "postfixWithZachError",
     async function (str) {
-      throw new Error(
-        "Nunjucks Async function Shortcode (with async function, error throwing)"
-      );
+      throw new Error("Nunjucks Async function Shortcode (with async function, error throwing)");
     },
     true
   );
@@ -418,7 +404,7 @@ test("Nunjucks Async function Shortcode (with async function, error throwing)", 
 });
 
 test("Nunjucks Async function paired Shortcode (with sync function, error throwing)", async (t) => {
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode(
     "postfixWithZachError",
     function (str) {
@@ -430,10 +416,9 @@ test("Nunjucks Async function paired Shortcode (with sync function, error throwi
   );
 
   let error = await t.throwsAsync(async () => {
-    await tr._testRender(
-      "{% postfixWithZachError name %}hi{% endpostfixWithZachError %}",
-      { name: "test" }
-    );
+    await tr._testRender("{% postfixWithZachError name %}hi{% endpostfixWithZachError %}", {
+      name: "test",
+    });
   });
   t.true(
     error.message.indexOf(
@@ -443,7 +428,7 @@ test("Nunjucks Async function paired Shortcode (with sync function, error throwi
 });
 
 test("Nunjucks Async function paired Shortcode (with async function, error throwing)", async (t) => {
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode(
     "postfixWithZachError",
     async function (str) {
@@ -455,10 +440,9 @@ test("Nunjucks Async function paired Shortcode (with async function, error throw
   );
 
   let error = await t.throwsAsync(async () => {
-    await tr._testRender(
-      "{% postfixWithZachError name %}hi{% endpostfixWithZachError %}",
-      { name: "test" }
-    );
+    await tr._testRender("{% postfixWithZachError name %}hi{% endpostfixWithZachError %}", {
+      name: "test",
+    });
   });
   t.true(
     error.message.indexOf(
@@ -470,7 +454,7 @@ test("Nunjucks Async function paired Shortcode (with async function, error throw
 test("Nunjucks Shortcode Safe Output", async (t) => {
   t.plan(2);
 
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function (str) {
     // Data in context
     t.is(this.page.url, "/hi/");
@@ -490,7 +474,7 @@ test("Nunjucks Shortcode Safe Output", async (t) => {
 });
 
 test("Nunjucks Shortcode return non-string value", async (t) => {
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("getYear", function () {
     return 2022;
   });
@@ -501,7 +485,7 @@ test("Nunjucks Shortcode return non-string value", async (t) => {
 test("Nunjucks Paired Shortcode", async (t) => {
   t.plan(2);
 
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode("postfixWithZach", function (content, str) {
     // Data in context
     t.is(this.page.url, "/hi/");
@@ -510,15 +494,12 @@ test("Nunjucks Paired Shortcode", async (t) => {
   });
 
   t.is(
-    await tr._testRender(
-      "{% postfixWithZach name %}Content{% endpostfixWithZach %}",
-      {
-        name: "test",
-        page: {
-          url: "/hi/",
-        },
-      }
-    ),
+    await tr._testRender("{% postfixWithZach name %}Content{% endpostfixWithZach %}", {
+      name: "test",
+      page: {
+        url: "/hi/",
+      },
+    }),
     "testContentZach"
   );
 });
@@ -526,7 +507,7 @@ test("Nunjucks Paired Shortcode", async (t) => {
 test("Nunjucks Async Paired Shortcode", async (t) => {
   t.plan(2);
 
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode(
     "postfixWithZach",
     function (content, str) {
@@ -543,15 +524,12 @@ test("Nunjucks Async Paired Shortcode", async (t) => {
   );
 
   t.is(
-    await tr._testRender(
-      "{% postfixWithZach name %}Content{% endpostfixWithZach %}",
-      {
-        name: "test",
-        page: {
-          url: "/hi/",
-        },
-      }
-    ),
+    await tr._testRender("{% postfixWithZach name %}Content{% endpostfixWithZach %}", {
+      name: "test",
+      page: {
+        url: "/hi/",
+      },
+    }),
     "testContentZach"
   );
 });
@@ -559,7 +537,7 @@ test("Nunjucks Async Paired Shortcode", async (t) => {
 test("Nunjucks Nested Async Paired Shortcode", async (t) => {
   t.plan(3);
 
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode(
     "postfixWithZach",
     function (content, str) {
@@ -591,7 +569,7 @@ test("Nunjucks Nested Async Paired Shortcode", async (t) => {
 });
 
 test("Nunjucks Paired Shortcode without args", async (t) => {
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode("postfixWithZach", function (content) {
     // Data in context
     t.is(this.page.url, "/hi/");
@@ -600,15 +578,12 @@ test("Nunjucks Paired Shortcode without args", async (t) => {
   });
 
   t.is(
-    await tr._testRender(
-      "{% postfixWithZach %}Content{% endpostfixWithZach %}",
-      {
-        name: "test",
-        page: {
-          url: "/hi/",
-        },
-      }
-    ),
+    await tr._testRender("{% postfixWithZach %}Content{% endpostfixWithZach %}", {
+      name: "test",
+      page: {
+        url: "/hi/",
+      },
+    }),
     "ContentZach"
   );
 });
@@ -616,7 +591,7 @@ test("Nunjucks Paired Shortcode without args", async (t) => {
 test("Nunjucks Paired Shortcode with Tag Inside", async (t) => {
   t.plan(2);
 
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode("postfixWithZach", function (content, str) {
     // Data in context
     t.is(this.page.url, "/hi/");
@@ -642,7 +617,7 @@ test("Nunjucks Paired Shortcode with Tag Inside", async (t) => {
 test("Nunjucks Nested Paired Shortcode", async (t) => {
   t.plan(3);
 
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode("postfixWithZach", function (content, str) {
     // Data in context
     t.is(this.page.url, "/hi/");
@@ -668,7 +643,7 @@ test("Nunjucks Nested Paired Shortcode", async (t) => {
 test("Nunjucks Shortcode Multiple Args", async (t) => {
   t.plan(2);
 
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function (str, str2) {
     // Data in context
     t.is(this.page.url, "/hi/");
@@ -689,7 +664,7 @@ test("Nunjucks Shortcode Multiple Args", async (t) => {
 });
 
 test("Nunjucks Shortcode Multiple Args (Comma is required)", async (t) => {
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function (str, str2) {
     return str + str2 + "Zach";
   });
@@ -705,7 +680,7 @@ test("Nunjucks Shortcode Multiple Args (Comma is required)", async (t) => {
 test("Nunjucks Shortcode Named Args", async (t) => {
   t.plan(2);
 
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function (arg) {
     // Data in context
     t.is(this.page.url, "/hi/");
@@ -728,7 +703,7 @@ test("Nunjucks Shortcode Named Args", async (t) => {
 test("Nunjucks Shortcode Named Args (Reverse Order)", async (t) => {
   t.plan(2);
 
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function (arg) {
     // Data in context
     t.is(this.page.url, "/hi/");
@@ -751,7 +726,7 @@ test("Nunjucks Shortcode Named Args (Reverse Order)", async (t) => {
 test("Nunjucks Shortcode Named Args (JS notation)", async (t) => {
   t.plan(2);
 
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode("postfixWithZach", function (arg) {
     // Data in context
     t.is(this.page.url, "/hi/");
@@ -772,7 +747,7 @@ test("Nunjucks Shortcode Named Args (JS notation)", async (t) => {
 });
 
 test("Nunjucks Test if statements on arrays (Issue #524)", async (t) => {
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
 
   t.is(
     await tr._testRender("{% if 'first' in tags %}Success.{% endif %}", {
@@ -782,22 +757,16 @@ test("Nunjucks Test if statements on arrays (Issue #524)", async (t) => {
   );
 
   t.is(
-    await tr._testRender(
-      "{% if 'sdfsdfs' in tags %}{% else %}Success.{% endif %}",
-      {
-        tags: ["first", "second"],
-      }
-    ),
+    await tr._testRender("{% if 'sdfsdfs' in tags %}{% else %}Success.{% endif %}", {
+      tags: ["first", "second"],
+    }),
     "Success."
   );
 
   t.is(
-    await tr._testRender(
-      "{% if false %}{% elseif 'first' in tags %}Success.{% endif %}",
-      {
-        tags: ["first", "second"],
-      }
-    ),
+    await tr._testRender("{% if false %}{% elseif 'first' in tags %}Success.{% endif %}", {
+      tags: ["first", "second"],
+    }),
     "Success."
   );
 
@@ -809,29 +778,23 @@ test("Nunjucks Test if statements on arrays (Issue #524)", async (t) => {
   );
 
   t.is(
-    await tr._testRender(
-      "{% if tags.includes('dsds') %}{% else %}Success.{% endif %}",
-      {
-        tags: ["first", "second"],
-      }
-    ),
+    await tr._testRender("{% if tags.includes('dsds') %}{% else %}Success.{% endif %}", {
+      tags: ["first", "second"],
+    }),
     "Success."
   );
 
   t.is(
-    await tr._testRender(
-      "{% if false %}{% elseif tags.includes('first') %}Success.{% endif %}",
-      {
-        tags: ["first", "second"],
-      }
-    ),
+    await tr._testRender("{% if false %}{% elseif tags.includes('first') %}Success.{% endif %}", {
+      tags: ["first", "second"],
+    }),
     "Success."
   );
 });
 
 test("Issue 611: Run a function", async (t) => {
   // This does not work in Liquid
-  let tr = getNewTemplateRender("njk", "./test/stubs/");
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
 
   t.is(
     await tr._testRender("{{ test() }}", {
@@ -844,7 +807,7 @@ test("Issue 611: Run a function", async (t) => {
 });
 
 test("Nunjucks bypass compilation", async (t) => {
-  let tr = getNewTemplateRender("njk");
+  let tr = await getNewTemplateRender("njk");
 
   t.is(tr.engine.needsCompilation("<p>{{ me }}</p>"), true);
   t.is(tr.engine.needsCompilation("<p>{% tag %}{% endtag %}</p>"), true);
@@ -852,7 +815,7 @@ test("Nunjucks bypass compilation", async (t) => {
 });
 
 test("Nunjucks Parse for Symbols", async (t) => {
-  let tr = getNewTemplateRender("njk");
+  let tr = await getNewTemplateRender("njk");
   let engine = tr.engine;
 
   t.deepEqual(engine.parseForSymbols("<p>{{ name }}</p>"), ["name"]);
@@ -860,21 +823,13 @@ test("Nunjucks Parse for Symbols", async (t) => {
     "eleventy.deep.nested",
   ]);
   t.deepEqual(engine.parseForSymbols("<p>{{ a }} {{ b }}</p>"), ["a", "b"]);
-  t.deepEqual(
-    engine.parseForSymbols("<p>{% if true %}{{ c }}{% endif %}</p>"),
-    ["c"]
-  );
-  t.deepEqual(
-    engine.parseForSymbols("<p>{% if false %}{{ c }}{% endif %}</p>"),
-    ["c"]
-  );
+  t.deepEqual(engine.parseForSymbols("<p>{% if true %}{{ c }}{% endif %}</p>"), ["c"]);
+  t.deepEqual(engine.parseForSymbols("<p>{% if false %}{{ c }}{% endif %}</p>"), ["c"]);
   t.deepEqual(engine.parseForSymbols("{{ collections.all[0] }}>"), [
     // Note that the Liquid parser returns collections.all[0]
     "collections.all",
   ]);
-  t.deepEqual(engine.parseForSymbols("{{ collections.mine }}>"), [
-    "collections.mine",
-  ]);
+  t.deepEqual(engine.parseForSymbols("{{ collections.mine }}>"), ["collections.mine"]);
 
   t.deepEqual(engine.parseForSymbols("{{ collections.mine | test }}>"), [
     // TODO not ideal to have `test` in here?
@@ -884,7 +839,7 @@ test("Nunjucks Parse for Symbols", async (t) => {
 });
 
 test("Nunjucks Parse for Symbols with custom block", async (t) => {
-  let tr = getNewTemplateRender("njk");
+  let tr = await getNewTemplateRender("njk");
   let engine = tr.engine;
   engine.config.nunjucksShortcodes.test = function () {};
 
@@ -892,22 +847,30 @@ test("Nunjucks Parse for Symbols with custom block", async (t) => {
 });
 
 test("Use addNunjucksGlobal with function", async (t) => {
-  let templateConfig = new TemplateConfig();
-  templateConfig.userConfig.addNunjucksGlobal("fortytwo", function () {
-    return 42;
-  });
+  let templateConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      cfg.addNunjucksGlobal("fortytwo", function () {
+        return 42;
+      });
+    }
+  );
 
-  let tr = getNewTemplateRender("njk", null, templateConfig);
+  let tr = await getNewTemplateRender("njk", null, templateConfig);
 
   let fn = await tr.getCompiledTemplate("<p>{{ fortytwo() }}</p>");
   t.is(await fn(), "<p>42</p>");
 });
 
 test("Use addNunjucksGlobal with literal", async (t) => {
-  let templateConfig = new TemplateConfig();
-  templateConfig.userConfig.addNunjucksGlobal("fortytwo", 42);
+  let templateConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      cfg.addNunjucksGlobal("fortytwo", 42);
+    }
+  );
 
-  let tr = getNewTemplateRender("njk", null, templateConfig);
+  let tr = await getNewTemplateRender("njk", null, templateConfig);
 
   let fn = await tr.getCompiledTemplate("<p>{{ fortytwo }}</p>");
   t.is(await fn(), "<p>42</p>");
@@ -915,22 +878,30 @@ test("Use addNunjucksGlobal with literal", async (t) => {
 
 // Async not supported here
 test.skip("Use addNunjucksGlobal with async function", async (t) => {
-  let templateConfig = new TemplateConfig();
-  templateConfig.userConfig.addNunjucksGlobal("fortytwo", getPromise(42));
+  let templateConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      cfg.addNunjucksGlobal("fortytwo", getPromise(42));
+    }
+  );
 
-  let tr = getNewTemplateRender("njk", null, templateConfig);
+  let tr = await getNewTemplateRender("njk", null, templateConfig);
 
   let fn = await tr.getCompiledTemplate("<p>{{ fortytwo() }}</p>");
   t.is(await fn(), "<p>42</p>");
 });
 
 test("Use config driven Nunjucks Environment Options (throws on undefined variable)", async (t) => {
-  let templateConfig = new TemplateConfig();
-  templateConfig.userConfig.setNunjucksEnvironmentOptions({
-    throwOnUndefined: true,
-  });
+  let templateConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      cfg.setNunjucksEnvironmentOptions({
+        throwOnUndefined: true,
+      });
+    }
+  );
 
-  let tr = getNewTemplateRender("njk", null, templateConfig);
+  let tr = await getNewTemplateRender("njk", null, templateConfig);
 
   let fn = await tr.getCompiledTemplate("<p>   {{ test }}</p>");
   await t.throwsAsync(async () => {
@@ -939,12 +910,16 @@ test("Use config driven Nunjucks Environment Options (throws on undefined variab
 });
 
 test("Use config driven Nunjucks Environment Options (autoescape)", async (t) => {
-  let templateConfig = new TemplateConfig();
-  templateConfig.userConfig.setNunjucksEnvironmentOptions({
-    autoescape: false,
-  });
+  let templateConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      cfg.setNunjucksEnvironmentOptions({
+        autoescape: false,
+      });
+    }
+  );
 
-  let tr = getNewTemplateRender("njk", null, templateConfig);
+  let tr = await getNewTemplateRender("njk", null, templateConfig);
 
   let fn = await tr.getCompiledTemplate("<p>{{ test }}</p>");
   t.is(
@@ -956,19 +931,18 @@ test("Use config driven Nunjucks Environment Options (autoescape)", async (t) =>
 });
 
 test("Nunjucks Shortcode in a loop (everything is sync)", async (t) => {
-  let templateConfig = new TemplateConfig();
-  templateConfig.userConfig.addNunjucksShortcode(
-    "genericshortcode",
-    function (str) {
-      return str;
+  let templateConfig = await getTemplateConfigInstanceCustomCallback(
+    {
+      input: "test/stubs-njk-async/"
+    },
+    function(cfg) {
+      cfg.addNunjucksShortcode("genericshortcode", function (str) {
+        return str;
+      });
     }
   );
 
-  let tr = getNewTemplateRender(
-    "njk",
-    "./test/stubs-njk-async/",
-    templateConfig
-  );
+  let tr = await getNewTemplateRender("njk", "./test/stubs-njk-async/", templateConfig);
 
   let fn = await tr.getCompiledTemplate(
     "{% for item in list %}{% include 'loop.njk' %}{% endfor %}"
@@ -984,19 +958,18 @@ test("Nunjucks Shortcode in a loop (everything is sync)", async (t) => {
 
 // TODO!
 test.skip("Weird issue with number arguments in a loop (not parsing literals properly?)", async (t) => {
-  let templateConfig = new TemplateConfig();
-  templateConfig.userConfig.addNunjucksShortcode(
-    "genericshortcode",
-    function (str) {
-      return str;
+  let templateConfig = await getTemplateConfigInstanceCustomCallback(
+    {
+      input: "test/stubs-njk-async/"
+    },
+    function(cfg) {
+      cfg.addNunjucksShortcode("genericshortcode", function (str) {
+        return str;
+      });
     }
   );
 
-  let tr = getNewTemplateRender(
-    "njk",
-    "./test/stubs-njk-async/",
-    templateConfig
-  );
+  let tr = await getNewTemplateRender("njk", "./test/stubs-njk-async/", templateConfig);
   let fn = await tr.getCompiledTemplate(
     "{% for item in list %}{{item}}-{% genericshortcode item %}{% endfor %}"
   );
@@ -1012,54 +985,57 @@ test.skip("Weird issue with number arguments in a loop (not parsing literals pro
 test("Use a precompiled Nunjucks template", async (t) => {
   // custom loader object
 
-  let templateConfig = new TemplateConfig();
-  templateConfig.userConfig.setNunjucksPrecompiledTemplates({
-    "RenderDirect:BQAPaWxMHTxOqfCSB_bEoWTvtWt-obPbnZTUznRl9LA": (function () {
-      function root(env, context, frame, runtime, cb) {
-        var lineno = 0;
-        var colno = 0;
-        var output = "";
-        try {
-          var parentTemplate = null;
-          var t_1;
-          t_1 = 34;
-          frame.set("nunjucksVar", t_1, true);
-          if (frame.topLevel) {
-            context.setVariable("nunjucksVar", t_1);
+  let templateConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      cfg.setNunjucksPrecompiledTemplates({
+        "RenderDirect:BQAPaWxMHTxOqfCSB_bEoWTvtWt-obPbnZTUznRl9LA": (function () {
+          function root(env, context, frame, runtime, cb) {
+            var lineno = 0;
+            var colno = 0;
+            var output = "";
+            try {
+              var parentTemplate = null;
+              var t_1;
+              t_1 = 34;
+              frame.set("nunjucksVar", t_1, true);
+              if (frame.topLevel) {
+                context.setVariable("nunjucksVar", t_1);
+              }
+              if (frame.topLevel) {
+                context.addExport("nunjucksVar", t_1);
+              }
+              output += runtime.suppressValue(
+                runtime.contextOrFrameLookup(context, frame, "hi"),
+                env.opts.autoescape
+              );
+              output += "\n";
+              output += runtime.suppressValue(
+                runtime.contextOrFrameLookup(context, frame, "nunjucksVar"),
+                env.opts.autoescape
+              );
+              if (parentTemplate) {
+                parentTemplate.rootRenderFunc(env, context, frame, runtime, cb);
+              } else {
+                cb(null, output);
+              }
+            } catch (e) {
+              cb(runtime.handleError(e, lineno, colno));
+            }
           }
-          if (frame.topLevel) {
-            context.addExport("nunjucksVar", t_1);
-          }
-          output += runtime.suppressValue(
-            runtime.contextOrFrameLookup(context, frame, "hi"),
-            env.opts.autoescape
-          );
-          output += "\n";
-          output += runtime.suppressValue(
-            runtime.contextOrFrameLookup(context, frame, "nunjucksVar"),
-            env.opts.autoescape
-          );
-          if (parentTemplate) {
-            parentTemplate.rootRenderFunc(env, context, frame, runtime, cb);
-          } else {
-            cb(null, output);
-          }
-        } catch (e) {
-          cb(runtime.handleError(e, lineno, colno));
-        }
-      }
-      return {
-        root: root,
-      };
-    })(),
-  });
+          return {
+            root: root,
+          };
+        })(),
+      });
+    }
+  );
+  await templateConfig.init();
 
-  let tr = getNewTemplateRender("njk", null, templateConfig);
+  let tr = await getNewTemplateRender("njk", null, templateConfig);
 
   // Just pass a unique key in here if you’re using precompiled templates via config.
-  let fn = await tr.getCompiledTemplate(
-    "RenderDirect:BQAPaWxMHTxOqfCSB_bEoWTvtWt-obPbnZTUznRl9LA"
-  );
+  let fn = await tr.getCompiledTemplate("RenderDirect:BQAPaWxMHTxOqfCSB_bEoWTvtWt-obPbnZTUznRl9LA");
   t.is(
     normalizeNewLines(
       await fn({
@@ -1072,75 +1048,92 @@ test("Use a precompiled Nunjucks template", async (t) => {
 });
 
 test("Make sure addFilter is async-friendly for Nunjucks", async (t) => {
-  let templateConfig = new TemplateConfig();
-  // requires async function
-  templateConfig.userConfig.addFilter("fortytwo", async function (val, val2) {
-    return getPromise(val + val2);
-  });
+  let templateConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      // requires async function
+      cfg.addFilter("fortytwo", async function (val, val2) {
+        return getPromise(val + val2);
+      });
+    }
+  );
 
-  let tr = getNewTemplateRender("njk", null, templateConfig);
+  let tr = await getNewTemplateRender("njk", null, templateConfig);
 
   let fn = await tr.getCompiledTemplate("<p>{{ 10 | fortytwo(2) }}</p>");
   t.is(await fn(), "<p>12</p>");
 });
 
 test("Throw an error when you return a promise in addFilter for Nunjucks", async (t) => {
-  let templateConfig = new TemplateConfig();
-  // requires async function
-  templateConfig.userConfig.addFilter("fortytwo", function () {
-    return getPromise(42);
-  });
+  let templateConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      // requires async function
+      cfg.addFilter("fortytwo", function () {
+        return getPromise(42);
+      });
+    }
+  );
 
-  let tr = getNewTemplateRender("njk", null, templateConfig);
+  let tr = await getNewTemplateRender("njk", null, templateConfig);
   let fn = await tr.getCompiledTemplate("<p>{{ 'hi' | fortytwo }}</p>");
   await t.throwsAsync(fn);
 });
 
 test("addAsyncFilter for Nunjucks", async (t) => {
-  let templateConfig = new TemplateConfig();
-  // works without async function (can return promise)
-  templateConfig.userConfig.addAsyncFilter("fortytwo", function (val, val2) {
-    return getPromise(val + val2);
-  });
+  let templateConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      // works without async function (can return promise)
+      cfg.addAsyncFilter("fortytwo", function (val, val2) {
+        return getPromise(val + val2);
+      });
+    }
+  );
 
-  let tr = getNewTemplateRender("njk", null, templateConfig);
+  let tr = await getNewTemplateRender("njk", null, templateConfig);
 
   let fn = await tr.getCompiledTemplate("<p>{{ 10 | fortytwo(2) }}</p>");
   t.is(await fn(), "<p>12</p>");
 });
 
 test("Asynchronous filters (via addNunjucksFilter) for Nunjucks", async (t) => {
-  let templateConfig = new TemplateConfig();
-  // works without async function (can return promise)
-  templateConfig.userConfig.addNunjucksFilter(
-    "fortytwo",
-    function (value1, value2, callback) {
-      setTimeout(function () {
-        callback(null, value1 + value2);
-      }, 100);
-    },
-    true
+  let templateConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      // works without async function (can return promise)
+      cfg.addNunjucksFilter(
+        "fortytwo",
+        function (value1, value2, callback) {
+          setTimeout(function () {
+            callback(null, value1 + value2);
+          }, 100);
+        },
+        true
+      );
+    }
   );
 
-  let tr = getNewTemplateRender("njk", null, templateConfig);
+  let tr = await getNewTemplateRender("njk", null, templateConfig);
 
   let fn = await tr.getCompiledTemplate("<p>{{ 10 | fortytwo(2) }}</p>");
   t.is(await fn(), "<p>12</p>");
 });
 
 test("Asynchronous filters (via addNunjucksAsyncFilter) for Nunjucks", async (t) => {
-  let templateConfig = new TemplateConfig();
-  // works without async function (can return promise)
-  templateConfig.userConfig.addNunjucksAsyncFilter(
-    "fortytwo",
-    function (value1, value2, callback) {
-      setTimeout(function () {
-        callback(null, value1 + value2);
-      }, 100);
+  let templateConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      // works without async function (can return promise)
+      cfg.addNunjucksAsyncFilter("fortytwo", function (value1, value2, callback) {
+        setTimeout(function () {
+          callback(null, value1 + value2);
+        }, 100);
+      });
     }
   );
 
-  let tr = getNewTemplateRender("njk", null, templateConfig);
+  let tr = await getNewTemplateRender("njk", null, templateConfig);
 
   let fn = await tr.getCompiledTemplate("<p>{{ 10 | fortytwo(2) }}</p>");
   t.is(await fn(), "<p>12</p>");

@@ -1,5 +1,5 @@
-const dep2 = require("../deps/dep2");
+import dep2 from "../deps/dep2.cjs";
 
-module.exports = {
-  localdatakeyfromjs: "howdydoody"
+export default {
+  localdatakeyfromjs: "howdydoody",
 };

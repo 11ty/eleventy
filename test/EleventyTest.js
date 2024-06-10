@@ -1,24 +1,54 @@
-const test = require("ava");
-const fsp = require("fs").promises;
-const eventBus = require("../src/EventBus.js");
-const Eleventy = require("../src/Eleventy");
-const TemplateContent = require("../src/TemplateContent");
-const EleventyWatchTargets = require("../src/EleventyWatchTargets");
-const TemplateMap = require("../src/TemplateMap");
-const TemplateConfig = require("../src/TemplateConfig");
-const DateGitFirstAdded = require("../src/Util/DateGitFirstAdded.js");
-const DateGitLastUpdated = require("../src/Util/DateGitLastUpdated");
-const normalizeNewLines = require("./Util/normalizeNewLines");
+import test from "ava";
+import fs from "node:fs";
+import path from "node:path";
+import lodash from "@11ty/lodash-custom";
+import { rimrafSync } from "rimraf";
+import { z } from "zod";
+import { fromZodError } from 'zod-validation-error';
+
+import eventBus from "../src/EventBus.js";
+import Eleventy, { HtmlBasePlugin } from "../src/Eleventy.js";
+import TemplateContent from "../src/TemplateContent.js";
+import TemplateMap from "../src/TemplateMap.js";
+import TemplateConfig from "../src/TemplateConfig.js";
+import DateGitFirstAdded from "../src/Util/DateGitFirstAdded.js";
+import DateGitLastUpdated from "../src/Util/DateGitLastUpdated.js";
+import PathNormalizer from "../src/Util/PathNormalizer.js";
+import { normalizeNewLines, localizeNewLines } from "./Util/normalizeNewLines.js";
+
+const fsp = fs.promises;
+const lodashGet = lodash.get;
 
 test("Eleventy, defaults inherit from config", async (t) => {
   let elev = new Eleventy();
 
-  let config = new TemplateConfig().getConfig();
+  let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
+  await elev.initializeConfig();
+  let config = eleventyConfig.getConfig();
 
   t.truthy(elev.input);
   t.truthy(elev.outputDir);
-  t.is(elev.input, config.dir.input);
-  t.is(elev.outputDir, config.dir.output);
+  t.is(config.dir.input, ".");
+  t.is(elev.input, "./");
+  t.is(config.dir.output, "_site");
+  t.is(elev.outputDir, "./_site/");
+});
+
+test("Eleventy, null output directory should default to _site", async (t) => {
+  let elev = new Eleventy(".", null);
+
+  let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
+  await elev.initializeConfig();
+  let config = eleventyConfig.getConfig();
+
+  t.is(config.dir.input, ".");
+  t.is(elev.input, "./");
+  t.is(config.dir.output, "_site");
+  t.is(elev.outputDir, "./_site/");
 });
 
 test("Eleventy, get version", (t) => {
@@ -33,8 +63,19 @@ test("Eleventy, get help", (t) => {
   t.truthy(elev.getHelp());
 });
 
-test("Eleventy, set is verbose", (t) => {
+test("Eleventy, set is verbose (before config init)", async (t) => {
   let elev = new Eleventy();
+  elev.setIsVerbose(true);
+
+  await elev.initializeConfig();
+
+  t.true(elev.verboseMode);
+});
+
+test("Eleventy, set is verbose (after config init)", async (t) => {
+  let elev = new Eleventy();
+
+  await elev.initializeConfig();
   elev.setIsVerbose(true);
 
   t.true(elev.verboseMode);
@@ -43,8 +84,8 @@ test("Eleventy, set is verbose", (t) => {
 test("Eleventy set input/output", async (t) => {
   let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
 
-  t.is(elev.input, "./test/stubs");
-  t.is(elev.outputDir, "./test/stubs/_site");
+  t.is(elev.input, "./test/stubs/");
+  t.is(elev.outputDir, "./test/stubs/_site/");
 
   await elev.init();
   t.truthy(elev.templateData);
@@ -84,10 +125,11 @@ test("Eleventy file watching", async (t) => {
     "./test/stubs/.eleventyignore",
     "./.eleventy.js",
     "./eleventy.config.js",
+    "./eleventy.config.mjs",
     "./eleventy.config.cjs",
-    "./test/stubs/**/*.{json,11tydata.cjs,11tydata.js}",
-    "./test/stubs/deps/dep1.js",
-    "./test/stubs/deps/dep2.js",
+    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
+    "./test/stubs/deps/dep1.cjs",
+    "./test/stubs/deps/dep2.cjs",
   ]);
 });
 
@@ -103,15 +145,16 @@ test("Eleventy file watching (don’t watch deps of passthrough copy .js files)"
 });
 
 test("Eleventy file watching (no JS dependencies)", async (t) => {
-  let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
+  let elev = new Eleventy("./test/stubs", "./test/stubs/_site", {
+    config: eleventyConfig => {
+      eleventyConfig.setWatchJavaScriptDependencies(false);
+    }
+  });
   elev.setFormats("njk");
-
-  let wt = new EleventyWatchTargets();
-  wt.watchJavaScriptDependencies = false;
-  elev.setWatchTargets(wt);
 
   await elev.init();
   await elev.initWatch();
+
   t.deepEqual(await elev.getWatchedFiles(), [
     "./package.json",
     "./test/stubs/**/*.njk",
@@ -122,8 +165,9 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
     "./test/stubs/.eleventyignore",
     "./.eleventy.js",
     "./eleventy.config.js",
+    "./eleventy.config.mjs",
     "./eleventy.config.cjs",
-    "./test/stubs/**/*.{json,11tydata.cjs,11tydata.js}",
+    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
   ]);
 });
 
@@ -131,33 +175,37 @@ test("Eleventy set input/output, one file input", async (t) => {
   let elev = new Eleventy("./test/stubs/index.html", "./test/stubs/_site");
 
   t.is(elev.input, "./test/stubs/index.html");
-  t.is(elev.inputDir, "./test/stubs");
-  t.is(elev.outputDir, "./test/stubs/_site");
+  t.is(elev.inputFile, "./test/stubs/index.html");
+  t.is(elev.inputDir, "./test/stubs/");
+  t.is(elev.outputDir, "./test/stubs/_site/");
 });
 
 test("Eleventy set input/output, one file input, deeper subdirectory", async (t) => {
-  let elev = new Eleventy("./test/stubs/subdir/index.html", "./test/stubs/_site");
-  elev.setInputDir("./test/stubs");
+  let elev = new Eleventy("./test/stubs/subdir/index.html", "./test/stubs/_site", {
+		inputDir: "./test/stubs"
+	});
 
   t.is(elev.input, "./test/stubs/subdir/index.html");
-  t.is(elev.inputDir, "./test/stubs");
-  t.is(elev.outputDir, "./test/stubs/_site");
+  t.is(elev.inputFile, "./test/stubs/subdir/index.html");
+  t.is(elev.inputDir, "./test/stubs/");
+  t.is(elev.outputDir, "./test/stubs/_site/");
 });
 
 test("Eleventy set input/output, one file input root dir", async (t) => {
   let elev = new Eleventy("./README.md", "./test/stubs/_site");
 
   t.is(elev.input, "./README.md");
-  t.is(elev.inputDir, ".");
-  t.is(elev.outputDir, "./test/stubs/_site");
+  t.is(elev.inputFile, "./README.md");
+  t.is(elev.inputDir, "./");
+  t.is(elev.outputDir, "./test/stubs/_site/");
 });
 
 test("Eleventy set input/output, one file input root dir without leading dot/slash", async (t) => {
   let elev = new Eleventy("README.md", "./test/stubs/_site");
 
-  t.is(elev.input, "README.md");
-  t.is(elev.inputDir, ".");
-  t.is(elev.outputDir, "./test/stubs/_site");
+  t.is(elev.input, "./README.md");
+  t.is(elev.inputDir, "./");
+  t.is(elev.outputDir, "./test/stubs/_site/");
 });
 
 test("Eleventy set input/output, one file input exitCode (script)", async (t) => {
@@ -203,7 +251,8 @@ test("Eleventy to json", async (t) => {
       {
         url: "/test/",
         inputPath: "./test/stubs--to/test.md",
-        outputPath: "_site/test/index.html",
+        outputPath: "./_site/test/index.html",
+        rawInput: localizeNewLines("# hi\n"),
         content: "<h1>hi</h1>\n",
       },
     ]
@@ -214,7 +263,8 @@ test("Eleventy to json", async (t) => {
       {
         url: "/test2/",
         inputPath: "./test/stubs--to/test2.liquid",
-        outputPath: "_site/test2/index.html",
+        outputPath: "./_site/test2/index.html",
+        rawInput: "{{ hi }}",
         content: "hello",
       },
     ]
@@ -236,7 +286,8 @@ test("Eleventy to ndjson", async (t) => {
         t.deepEqual(jsonObj, {
           url: "/test/",
           inputPath: "./test/stubs--to/test.md",
-          outputPath: "_site/test/index.html",
+          outputPath: "./_site/test/index.html",
+          rawInput: localizeNewLines("# hi\n"),
           content: "<h1>hi</h1>\n",
         });
       }
@@ -244,7 +295,8 @@ test("Eleventy to ndjson", async (t) => {
         t.deepEqual(jsonObj, {
           url: "/test2/",
           inputPath: "./test/stubs--to/test2.liquid",
-          outputPath: "_site/test2/index.html",
+          outputPath: "./_site/test2/index.html",
+          rawInput: `{{ hi }}`,
           content: "hello",
         });
       }
@@ -271,7 +323,8 @@ test("Eleventy to ndjson (returns a stream)", async (t) => {
         t.deepEqual(jsonObj, {
           url: "/test/",
           inputPath: "./test/stubs--to/test.md",
-          outputPath: "_site/test/index.html",
+          outputPath: "./_site/test/index.html",
+          rawInput: localizeNewLines("# hi\n"),
           content: "<h1>hi</h1>\n",
         });
       }
@@ -279,7 +332,8 @@ test("Eleventy to ndjson (returns a stream)", async (t) => {
         t.deepEqual(jsonObj, {
           url: "/test2/",
           inputPath: "./test/stubs--to/test2.liquid",
-          outputPath: "_site/test2/index.html",
+          outputPath: "./_site/test2/index.html",
+          rawInput: "{{ hi }}",
           content: "hello",
         });
       }
@@ -295,6 +349,7 @@ test("Eleventy to ndjson (returns a stream)", async (t) => {
 
 test("Two Eleventies, two configs!!! (config used to be a global)", async (t) => {
   let elev1 = new Eleventy();
+  await elev1.initializeConfig();
 
   t.is(elev1.eleventyConfig, elev1.eleventyConfig);
   t.is(elev1.config, elev1.config);
@@ -302,6 +357,7 @@ test("Two Eleventies, two configs!!! (config used to be a global)", async (t) =>
   t.is(JSON.stringify(elev1.config), JSON.stringify(elev1.config));
 
   let elev2 = new Eleventy();
+  await elev2.initializeConfig();
   t.not(elev1.eleventyConfig, elev2.eleventyConfig);
   elev1.config.benchmarkManager = null;
   elev2.config.benchmarkManager = null;
@@ -333,7 +389,8 @@ test("Eleventy programmatic API without init", async (t) => {
       {
         url: "/test/",
         inputPath: "./test/stubs--to/test.md",
-        outputPath: "_site/test/index.html",
+        outputPath: "./_site/test/index.html",
+        rawInput: localizeNewLines("# hi\n"),
         content: "<h1>hi</h1>\n",
       },
     ]
@@ -344,7 +401,8 @@ test("Eleventy programmatic API without init", async (t) => {
       {
         url: "/test2/",
         inputPath: "./test/stubs--to/test2.liquid",
-        outputPath: "_site/test2/index.html",
+        outputPath: "./_site/test2/index.html",
+        rawInput: `{{ hi }}`,
         content: "hello",
       },
     ]
@@ -363,7 +421,8 @@ test("Can Eleventy run two executeBuilds in parallel?", async (t) => {
     {
       url: "/test/",
       inputPath: "./test/stubs--to/test.md",
-      outputPath: "_site/test/index.html",
+      outputPath: "./_site/test/index.html",
+      rawInput: localizeNewLines("# hi\n"),
       content: "<h1>hi</h1>\n",
     },
   ];
@@ -372,7 +431,8 @@ test("Can Eleventy run two executeBuilds in parallel?", async (t) => {
     {
       url: "/test2/",
       inputPath: "./test/stubs--to/test2.liquid",
-      outputPath: "_site/test2/index.html",
+      outputPath: "./_site/test2/index.html",
+      rawInput: "{{ hi }}",
       content: "hello",
     },
   ];
@@ -472,19 +532,16 @@ test("DateGitLastUpdated returns undefined on nonexistent path", (t) => {
   t.is(DateGitLastUpdated("./test/invalid.invalid"), undefined);
 });
 
-/* This test writes to the console */
 test("#2167: Pagination with permalink: false", async (t) => {
   let elev = new Eleventy("./test/stubs-2167/", "./test/stubs-2167/_site");
+  elev.disableLogger();
   elev.setDryRun(true);
 
-  let [passthroughCopy, pages] = await elev.write();
+  let [,pages] = await elev.write();
+  t.is(pages.length, 0);
 
-  t.is(pages.length, 5);
-
-  for (let j = 0, k = pages.length; j < k; j++) {
-    // falsy if not writeable or is not renderable
-    t.is(pages[j], undefined);
-  }
+  let results = await elev.toJSON();
+  t.is(results.length, 5);
 });
 
 test("Pagination over collection using eleventyComputed (liquid)", async (t) => {
@@ -601,7 +658,7 @@ test("Does pathPrefix affect page URLs", async (t) => {
 
 test("Improvements to custom template syntax APIs (includes a layout file) #2258", async (t) => {
   let elev = new Eleventy("./test/stubs-2258/", "./test/stubs-2258/_site", {
-    configPath: "./test/stubs-2258/eleventy.config.js",
+    configPath: "./test/stubs-2258/eleventy.config.cjs",
   });
 
   // Restore previous contents
@@ -662,7 +719,6 @@ ${newContents}
   await fsp.writeFile(includeFilePath, previousContents, { encoding: "utf8" });
 });
 
-const { get: lodashGet } = require("@11ty/lodash-custom");
 test("Lodash get (for pagination data target) object key with spaces, issue #2851", (t) => {
   let data = {
     collections: {
@@ -718,4 +774,525 @@ test("Global data JS files should only execute once, issue #2753", async (t) => 
   t.deepEqual(result.length, 2);
   t.deepEqual(result[0].content, `1`);
   t.deepEqual(result[0].content, `1`);
+});
+
+function sortResultsBy(results, key = "content") {
+  results.sort((a, b) => {
+    if(a[key] < b[key]) {
+      return -1;
+    }
+    if(b[key] < a[key]) {
+      return 1;
+    }
+    return 0;
+  });
+}
+
+test("Access to raw input of file (toJSON), issue #1206", async (t) => {
+  let elev = new Eleventy("./test/stubs-1206", "./test/stubs-1206/_site", {
+    config: function (eleventyConfig) {},
+  });
+  let results = await elev.toJSON();
+  sortResultsBy(results, "content");
+
+  t.deepEqual(results.length, 2);
+  t.deepEqual(results[0].content, `This is the first template.This is the first template.{{ page.rawInput }}`);
+  t.deepEqual(results[0].rawInput, `This is the first template.{{ page.rawInput }}`);
+  t.deepEqual(results[1].content, `This is the second template.This is the first template.{{ page.rawInput }}`);
+  t.deepEqual(results[1].rawInput, `This is the second template.{{ collections.tag1[0].rawInput }}`);
+});
+
+// Warning: this test writes to the file system
+test("Access to raw input of file (dryRun), issue #1206", async (t) => {
+  let elev = new Eleventy("./test/stubs-1206", "./test/stubs-1206/_site", {
+    config: function (eleventyConfig) {},
+  });
+  elev.disableLogger();
+
+  let [,results] = await elev.write();
+  sortResultsBy(results, "content");
+
+  t.deepEqual(results.length, 2);
+  t.deepEqual(results[0].content, `This is the first template.This is the first template.{{ page.rawInput }}`);
+  t.deepEqual(results[0].rawInput, `This is the first template.{{ page.rawInput }}`);
+  t.deepEqual(results[1].content, `This is the second template.This is the first template.{{ page.rawInput }}`);
+  t.deepEqual(results[1].rawInput, `This is the second template.{{ collections.tag1[0].rawInput }}`);
+
+	rimrafSync("./test/stubs-1206/_site/");
+});
+
+test("eleventy.before and eleventy.after Event Arguments, directories", async (t) => {
+  t.plan(6);
+  let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.on("eleventy.before", arg => {
+        t.is(arg.inputDir, "./test/noop/");
+        t.is(arg.directories.input, "./test/noop/");
+        t.is(arg.directories.includes, "./test/noop/_includes/");
+      })
+      eleventyConfig.on("eleventy.after", arg => {
+        t.is(arg.inputDir, "./test/noop/");
+        t.is(arg.directories.input, "./test/noop/");
+        t.is(arg.directories.includes, "./test/noop/_includes/");
+      })
+    },
+  });
+
+  let results = await elev.toJSON();
+});
+
+test("setInputDirectory config method #1503", async (t) => {
+  t.plan(5);
+  let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.setInputDirectory("./test/noop2/");
+
+      eleventyConfig.on("eleventy.before", arg => {
+        t.is(arg.directories.input, "./test/noop2/");
+        t.is(arg.directories.includes, "./test/noop2/_includes/");
+        t.is(arg.directories.data, "./test/noop2/_data/");
+        t.is(arg.directories.layouts, undefined);
+        t.is(arg.directories.output, "./test/noop/_site/");
+      })
+    },
+  });
+
+  let results = await elev.toJSON();
+});
+
+test("setIncludesDirectory config method #1503", async (t) => {
+  t.plan(5);
+  let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.setIncludesDirectory("myincludes");
+
+      eleventyConfig.on("eleventy.before", arg => {
+        t.is(arg.directories.input, "./test/noop/");
+        t.is(arg.directories.includes, "./test/noop/myincludes/");
+        t.is(arg.directories.data, "./test/noop/_data/");
+        t.is(arg.directories.layouts, undefined);
+        t.is(arg.directories.output, "./test/noop/_site/");
+      })
+    },
+  });
+
+  let results = await elev.toJSON();
+});
+
+test("setDataDirectory config method #1503", async (t) => {
+  t.plan(5);
+  let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.setDataDirectory("data");
+
+      eleventyConfig.on("eleventy.before", arg => {
+        t.is(arg.directories.input, "./test/noop/");
+        t.is(arg.directories.includes, "./test/noop/_includes/");
+        t.is(arg.directories.data, "./test/noop/data/");
+        t.is(arg.directories.layouts, undefined);
+        t.is(arg.directories.output, "./test/noop/_site/");
+      })
+    },
+  });
+
+  let results = await elev.toJSON();
+});
+
+test("setLayoutsDirectory config method #1503", async (t) => {
+  t.plan(5);
+  let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.setLayoutsDirectory("layouts");
+
+      eleventyConfig.on("eleventy.before", arg => {
+        t.is(arg.directories.input, "./test/noop/");
+        t.is(arg.directories.includes, "./test/noop/_includes/");
+        t.is(arg.directories.data, "./test/noop/_data/");
+        t.is(arg.directories.layouts, "./test/noop/layouts/");
+        t.is(arg.directories.output, "./test/noop/_site/");
+      })
+    },
+  });
+
+  let results = await elev.toJSON();
+});
+
+test("setInputDirectory config method #1503 in a plugin throws error", async (t) => {
+  let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.addPlugin(() => {
+        eleventyConfig.setInputDirectory("./test/noop2/");
+      });
+    },
+  });
+
+  await t.throwsAsync(() => elev.toJSON(), {
+    // The `set*Directory` configuration API methods are not yet allowed in plugins.
+    message: "Error processing a plugin",
+  });
+});
+
+test("Accepts absolute paths for input and output", async (t) => {
+  let input = path.resolve("./test/noop/");
+  let output = path.resolve("./test/noop/_site");
+  let elev = new Eleventy(input, output);
+
+  let results = await elev.toJSON();
+
+  // trailing slashes are expected
+  t.is(PathNormalizer.normalizeSeperator(elev.directories.input), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/") + path.sep));
+  t.is(PathNormalizer.normalizeSeperator(elev.directories.includes), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/_includes/") + path.sep));
+  t.is(PathNormalizer.normalizeSeperator(elev.directories.data), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/_data/") + path.sep));
+  t.is(elev.directories.layouts, undefined);
+  t.is(PathNormalizer.normalizeSeperator(elev.directories.output), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/_site/") + path.sep));
+});
+
+test("Eleventy config export (ESM)", async (t) => {
+  t.plan(5);
+  let elev = new Eleventy("test/stubs/cfg-directories-export", null, {
+    configPath: "./test/stubs/cfg-directories-export/eleventy.config.js",
+    config: function (eleventyConfig) {
+      eleventyConfig.on("eleventy.after", arg => {
+        t.is(arg.directories.input, "./src/");
+        t.is(arg.directories.includes, "./src/myincludes/");
+        t.is(arg.directories.data, "./src/mydata/");
+        t.is(arg.directories.layouts, undefined);
+        t.is(arg.directories.output, "./dist/");
+      })
+    },
+  });
+
+  let result = await elev.toJSON();
+});
+
+test("Eleventy config export (CommonJS)", async (t) => {
+  t.plan(5);
+  let elev = new Eleventy("test/stubs/cfg-directories-export-cjs", null, {
+    configPath: "./test/stubs/cfg-directories-export-cjs/eleventy.config.cjs",
+    config: function (eleventyConfig) {
+      eleventyConfig.on("eleventy.after", arg => {
+        t.is(arg.directories.input, "./src/");
+        t.is(arg.directories.includes, "./src/myincludes2/");
+        t.is(arg.directories.data, "./src/mydata2/");
+        t.is(arg.directories.layouts, undefined);
+        t.is(arg.directories.output, "./dist2/");
+      })
+    },
+  });
+
+  let result = await elev.toJSON();
+});
+
+test("Eleventy setting reserved data throws error (eleventy)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.html", `---
+eleventy:
+  key1: NOOOOO
+---`);
+    }
+  });
+  elev.disableLogger();
+
+  let e = await t.throwsAsync(() => elev.toJSON(), {
+    message: 'You attempted to set one of Eleventy’s reserved data property names. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://www.11ty.dev/docs/data-eleventy-supplied/'
+  });
+
+  t.is(e.originalError.toString(), "TypeError: Cannot add property key1, object is not extensible");
+});
+
+test("Eleventy setting reserved data throws error (pkg)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.html", `---
+pkg:
+  myOwn: OVERRIDE
+---`);
+    }
+  });
+  elev.disableLogger();
+
+  let e = await t.throwsAsync(() => elev.toJSON(), {
+    message: 'You attempted to set one of Eleventy’s reserved data property names. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://www.11ty.dev/docs/data-eleventy-supplied/'
+  });
+
+  t.is(e.originalError.toString(), "TypeError: Cannot add property myOwn, object is not extensible");
+});
+
+test("Eleventy pagination works okay with reserved data throws (eleventy) Issue #3262", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.html", `---
+pagination:
+  data: "test"
+  size: 1
+test:
+  - a
+  - b
+  - c
+---
+{{ eleventy.generator }}`);
+    }
+  });
+  elev.disableLogger();
+
+  let result = await elev.toJSON();
+  t.is(result.length, 3);
+});
+
+test("Eleventy setting reserved data throws error (page)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.html", `---
+page: "My page value"
+---`)
+    }
+  });
+  elev.disableLogger();
+
+  let e = await t.throwsAsync(() => elev.toJSON(), {
+    message: 'You attempted to set one of Eleventy’s reserved data property names: page. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://www.11ty.dev/docs/data-eleventy-supplied/'
+  });
+
+  t.is(e.originalError.toString(), "TypeError: Cannot override reserved Eleventy properties: page");
+});
+
+test("Eleventy setting reserved data throws error (content)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.html", `---
+content: "My page value"
+---`)
+    }
+  });
+  elev.disableLogger();
+
+  let e = await t.throwsAsync(() => elev.toJSON(), {
+    message: 'You attempted to set one of Eleventy’s reserved data property names: content. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://www.11ty.dev/docs/data-eleventy-supplied/'
+  });
+
+  t.is(e.originalError.toString(), "TypeError: Cannot override reserved Eleventy properties: content");
+});
+
+test("Eleventy setting reserved data throws error (collections)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.html", `---
+collections: []
+---`)
+    }
+  });
+  elev.disableLogger();
+
+  let e = await t.throwsAsync(() => elev.toJSON(), {
+    message: 'You attempted to set one of Eleventy’s reserved data property names: collections. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://www.11ty.dev/docs/data-eleventy-supplied/'
+  });
+
+  t.is(e.originalError.toString(), "TypeError: Cannot override reserved Eleventy properties: collections");
+});
+
+test("Eleventy setting pkg data is okay when pkg is remapped to parkour", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.html", `---
+pkg:
+  myOwn: OVERRIDE
+---`);
+    }
+  });
+  elev.disableLogger();
+
+  await elev.initializeConfig({
+    keys: {
+      package: "parkour"
+    }
+  });
+
+  // Remap successful
+  t.is(elev.eleventyConfig.config.keys.package, "parkour");
+
+  let [result] = await elev.toJSON();
+  t.deepEqual(result, {
+    content: "",
+    inputPath: "./test/stubs-virtual/index.html",
+    outputPath: "./_site/index.html",
+    rawInput: "",
+    url: "/"
+  });
+});
+
+test("Eleventy setting pkg data is okay when keys.package is false", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.html", `---
+pkg:
+  myOwn: OVERRIDE
+---
+{{ pkg.myOwn }}`);
+    }
+  });
+  elev.disableLogger();
+
+  await elev.initializeConfig({
+    keys: {
+      package: false
+    }
+  });
+
+  // Remap successful
+  t.is(elev.eleventyConfig.config.keys.package, false);
+
+  let [result] = await elev.toJSON();
+  t.deepEqual(result, {
+    content: "OVERRIDE",
+    inputPath: "./test/stubs-virtual/index.html",
+    outputPath: "./_site/index.html",
+    rawInput: "{{ pkg.myOwn }}",
+    url: "/"
+  });
+});
+
+test("Eleventy setting reserved data throws error (pkg remapped to parkour)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.html", `---
+parkour:
+  myOwn: OVERRIDE
+---`);
+    }
+  });
+  elev.disableLogger();
+
+  await elev.initializeConfig({
+    keys: {
+      package: "parkour"
+    }
+  });
+
+  // Remap successful
+  t.is(elev.eleventyConfig.config.keys.package, "parkour");
+
+  let e = await t.throwsAsync(() => elev.toJSON(), {
+    message: 'You attempted to set one of Eleventy’s reserved data property names. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://www.11ty.dev/docs/data-eleventy-supplied/'
+  });
+
+  t.is(e.originalError.toString(), "TypeError: Cannot add property myOwn, object is not extensible");
+});
+
+test("Eleventy data schema (success) #879", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index1.html", "", {
+        draft: true,
+        eleventyDataSchema: function(data) {
+          if(typeof data.draft !== "boolean") {
+            throw new Error("Invalid data type for draft.");
+          }
+        }
+      });
+
+      eleventyConfig.addTemplate("index2.html", "", {
+        draft: true,
+        eleventyDataSchema: function(data) {
+          if(typeof data.draft !== "boolean") {
+            throw new Error("Invalid data type for draft.");
+          }
+        }
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(results.length, 2);
+});
+
+test("Eleventy data schema (fails) #879", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index1.html", "", {
+        draft: 1,
+        eleventyDataSchema: function(data) {
+          if(typeof data.draft !== "boolean") {
+            throw new Error("Invalid data type for draft.");
+          }
+        }
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let e = await t.throwsAsync(() => elev.toJSON(), {
+    message: 'Error in the data schema for: ./test/stubs-virtual/index1.html (via `eleventyDataSchema`)'
+  });
+
+  t.is(e.originalError.toString(), "Error: Invalid data type for draft.");
+});
+
+test("Eleventy data schema (fails, using zod) #879", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index1.html", "", {
+        draft: 1,
+        eleventyDataSchema: function(data) {
+          let result = z.object({
+            draft: z.boolean().or(z.undefined()),
+          }).safeParse(data);
+
+          if(result.error) {
+            throw fromZodError(result.error);
+          }
+        }
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let e = await t.throwsAsync(() => elev.toJSON(), {
+    message: 'Error in the data schema for: ./test/stubs-virtual/index1.html (via `eleventyDataSchema`)'
+  });
+
+  t.is(e.originalError.toString(), 'Validation error: Expected boolean, received number at "draft", or Expected undefined, received number at "draft"');
+});
+
+test("Eleventy data schema has access to custom collections created via API #879", async (t) => {
+  t.plan(2);
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addCollection("userCollection", function (collection) {
+        return collection.getAll();
+      });
+
+      eleventyConfig.addTemplate("index1.html", "", {
+        eleventyDataSchema: function(data) {
+          t.is(data.collections.userCollection.length, 1);
+        }
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+});
+
+test("Eleventy transforms filter (using collections and page override data)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    pathPrefix: "hi",
+    config: eleventyConfig => {
+      eleventyConfig.addPlugin(HtmlBasePlugin);
+
+      eleventyConfig.addTemplate("index.html", `<img src="/test.png" alt="abc">`, { tags: "posts" });
+      eleventyConfig.addTemplate("feed.njk", `{% for post in collections.posts %}{{ post.content | renderTransforms(post.page) | safe }}{% endfor %}`, {
+        permalink: "feed.xml"
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(results.length, 2);
+
+  t.is(results.filter(({inputPath}) => inputPath.endsWith("index.html"))[0].content, `<img src="/hi/test.png" alt="abc">`);
+  t.is(results.filter(({inputPath}) => inputPath.endsWith("feed.njk"))[0].content, `<img src="/hi/test.png" alt="abc">`);
 });

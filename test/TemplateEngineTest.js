@@ -1,16 +1,16 @@
-const test = require("ava");
-const TemplateEngine = require("../src/Engines/TemplateEngine");
-const TemplateConfig = require("../src/TemplateConfig");
+import test from "ava";
+
+import TemplateEngine from "../src/Engines/TemplateEngine.js";
+
+import { getTemplateConfigInstance } from "./_testHelpers.js"
 
 test("Unsupported engine", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  t.is(
-    new TemplateEngine("doesnotexist", null, eleventyConfig).getName(),
-    "doesnotexist"
-  );
+  let eleventyConfig = await getTemplateConfigInstance();
+  let engine = new TemplateEngine("doesnotexist", eleventyConfig);
+  t.is(engine.getName(), "doesnotexist");
 });
 
 test("Supported engine", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  t.is(new TemplateEngine("ejs", null, eleventyConfig).getName(), "ejs");
+  let eleventyConfig = await getTemplateConfigInstance();
+  t.is(new TemplateEngine("liquid", eleventyConfig).getName(), "liquid");
 });

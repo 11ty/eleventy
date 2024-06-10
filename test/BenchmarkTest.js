@@ -1,5 +1,5 @@
-const test = require("ava");
-const Benchmark = require("../src/Benchmark");
+import test from "ava";
+import Benchmark from "../src/Benchmark/Benchmark.js";
 
 test("Standard Benchmark", async (t) => {
   await new Promise((resolve) => {

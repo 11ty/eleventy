@@ -1,7 +1,10 @@
-const test = require("ava");
-const TemplateData = require("../src/TemplateData");
-const getNewTemplate = require("./_getNewTemplateForTests");
-const TemplateConfig = require("../src/TemplateConfig");
+import test from "ava";
+
+import TemplateData from "../src/Data/TemplateData.js";
+
+import getNewTemplate from "./_getNewTemplateForTests.js";
+import { renderTemplate } from "./_getRenderedTemplates.js";
+import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
 
 async function getRenderedData(tmpl, pageNumber = 0) {
   let data = await tmpl.getData();
@@ -10,39 +13,39 @@ async function getRenderedData(tmpl, pageNumber = 0) {
 }
 
 test("eleventyComputed", async (t) => {
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/eleventyComputed/first.njk",
     "./test/stubs/",
     "./dist"
   );
   let data = await getRenderedData(tmpl);
-  t.is((await tmpl.render(data)).trim(), "hi:value2-value1.css");
+  t.is((await renderTemplate(tmpl, data)).trim(), "hi:value2-value1.css");
 });
 
 test("eleventyComputed overrides existing value.", async (t) => {
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/eleventyComputed/override.njk",
     "./test/stubs/",
     "./dist"
   );
   let data = await getRenderedData(tmpl);
   t.is(data.key1, "override");
-  t.is((await tmpl.render(data)).trim(), "hi:override");
+  t.is((await renderTemplate(tmpl, data)).trim(), "hi:override");
 });
 
 test("eleventyComputed overrides existing value and reuses that upstream value", async (t) => {
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/eleventyComputed/override-reuse.njk",
     "./test/stubs/",
     "./dist"
   );
   let data = await getRenderedData(tmpl);
   t.is(data.key1, "over(value1)ride");
-  t.is((await tmpl.render(data)).trim(), "hi:over(value1)ride");
+  t.is((await renderTemplate(tmpl, data)).trim(), "hi:over(value1)ride");
 });
 
 test("eleventyComputed permalink", async (t) => {
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/eleventyComputed/permalink.njk",
     "./test/stubs/",
     "./dist"
@@ -58,7 +61,7 @@ test("eleventyComputed permalink", async (t) => {
 });
 
 test("eleventyComputed simple permalink", async (t) => {
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/eleventyComputed/permalink-simple.njk",
     "./test/stubs/",
     "./dist"
@@ -71,7 +74,7 @@ test("eleventyComputed simple permalink", async (t) => {
 });
 
 test("eleventyComputed permalink using slug", async (t) => {
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/eleventyComputed/permalink-slug.njk",
     "./test/stubs/",
     "./dist"
@@ -84,29 +87,29 @@ test("eleventyComputed permalink using slug", async (t) => {
 });
 
 test("eleventyComputed js front matter (function)", async (t) => {
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/eleventyComputed/second.njk",
     "./test/stubs/",
     "./dist"
   );
   let data = await getRenderedData(tmpl);
   t.is(data.key3, "value3-value2-value1.css");
-  t.is((await tmpl.render(data)).trim(), "hi:value2-value1.css");
+  t.is((await renderTemplate(tmpl, data)).trim(), "hi:value2-value1.css");
 });
 
 test("eleventyComputed js front matter key reuses and overrides", async (t) => {
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/eleventyComputed/third.njk",
     "./test/stubs/",
     "./dist"
   );
   let data = await getRenderedData(tmpl);
   t.is(data.key1, "value2-value1");
-  t.is((await tmpl.render(data)).trim(), "hi:value2-value1");
+  t.is((await renderTemplate(tmpl, data)).trim(), "hi:value2-value1");
 });
 
 test("eleventyComputed true primitive", async (t) => {
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs/eleventyComputed/true.njk",
     "./test/stubs/",
     "./dist"
@@ -119,9 +122,15 @@ test("eleventyComputed true primitive", async (t) => {
 });
 
 test("eleventyComputed relies on global data", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  let dataObj = new TemplateData("./test/stubs/", eleventyConfig);
-  let tmpl = getNewTemplate(
+  let eleventyConfig = await getTemplateConfigInstance({
+    dir: {
+      input: "test/stubs",
+      output: "dist",
+    }
+  });
+
+  let dataObj = new TemplateData(eleventyConfig);
+  let tmpl = await getNewTemplate(
     "./test/stubs/eleventyComputed/use-global-data.njk",
     "./test/stubs/",
     "./dist",
@@ -137,14 +146,16 @@ test("eleventyComputed relies on global data", async (t) => {
 });
 
 test("eleventyComputed intermixes with global data", async (t) => {
-  let eleventyConfig = new TemplateConfig();
-  eleventyConfig.userConfig.setDataDeepMerge(true);
-  let dataObj = new TemplateData(
-    "./test/stubs-computed-global/",
-    eleventyConfig
-  );
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs-computed-global",
+    output: "dist",
+  }, function(cfg) {
+    cfg.setDataDeepMerge(true);
+  });
 
-  let tmpl = getNewTemplate(
+  let dataObj = new TemplateData(eleventyConfig);
+
+  let tmpl = await getNewTemplate(
     "./test/stubs-computed-global/intermix.njk",
     "./test/stubs-computed-global/",
     "./dist",
@@ -168,18 +179,27 @@ test("eleventyComputed intermixes with global data", async (t) => {
 });
 
 test("eleventyComputed using symbol parsing on template strings (nunjucks)", async (t) => {
-  let tmpl = getNewTemplate(
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs-computed-symbolparse",
+    output: "dist",
+  }, function(cfg) {
+    cfg.addNunjucksFilter("fail", function (str) {
+      // Filter expects a certain String format, don’t use the (((11ty))) string hack
+      if (!str || str.length !== 1) {
+        throw new Error("Expect a one character string");
+      }
+      return `${str}`;
+    });
+  });
+
+  let tmpl = await getNewTemplate(
     "./test/stubs-computed-symbolparse/test.njk",
     "./test/stubs-computed-symbolparse/",
-    "./test/stubs-computed-symbolparse/_site"
+    "./test/stubs-computed-symbolparse/_site",
+    null,
+    null,
+    eleventyConfig
   );
-  tmpl.config.nunjucksFilters.fail = function (str) {
-    // Filter expects a certain String format, don’t use the (((11ty))) string hack
-    if (!str || str.length !== 1) {
-      throw new Error("Expect a one character string");
-    }
-    return `${str}`;
-  };
 
   let data = await getRenderedData(tmpl);
   t.is(data.a, "a");
@@ -188,18 +208,27 @@ test("eleventyComputed using symbol parsing on template strings (nunjucks)", asy
 });
 
 test("eleventyComputed using symbol parsing on template strings (liquid)", async (t) => {
-  let tmpl = getNewTemplate(
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs-computed-symbolparse",
+    output: "dist",
+  }, function(cfg) {
+    cfg.addLiquidFilter("fail", function (str) {
+      // Filter expects a certain String format, don’t use the (((11ty))) string hack
+      if (!str || str.length !== 1) {
+        throw new Error("Expect a one character string: " + str);
+      }
+      return `${str}`;
+    });
+  });
+
+  let tmpl = await getNewTemplate(
     "./test/stubs-computed-symbolparse/test.liquid",
     "./test/stubs-computed-symbolparse/",
-    "./test/stubs-computed-symbolparse/_site"
+    "./test/stubs-computed-symbolparse/_site",
+    null,
+    null,
+    eleventyConfig
   );
-  tmpl.config.liquidFilters.fail = function (str) {
-    // Filter expects a certain String format, don’t use the (((11ty))) string hack
-    if (!str || str.length !== 1) {
-      throw new Error("Expect a one character string: " + str);
-    }
-    return `${str}`;
-  };
 
   let data = await getRenderedData(tmpl);
   t.is(data.a, "a");
@@ -208,7 +237,7 @@ test("eleventyComputed using symbol parsing on template strings (liquid)", async
 });
 
 test("eleventyComputed render strings in arrays", async (t) => {
-  let tmpl = getNewTemplate(
+  let tmpl = await getNewTemplate(
     "./test/stubs-computed-array/test.liquid",
     "./test/stubs-computed-array/",
     "./test/stubs-computed-array/_site"

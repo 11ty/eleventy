@@ -1,6 +1,6 @@
-const test = require("ava");
-const ComputedData = require("../src/ComputedData");
-const TemplateConfig = require("../src/TemplateConfig");
+import test from "ava";
+import ComputedData from "../src/Data/ComputedData.js";
+import TemplateConfig from "../src/TemplateConfig.js";
 
 test("Basic get/set", async (t) => {
   let cd = new ComputedData();
@@ -330,13 +330,7 @@ test("Get var order", async (t) => {
   };
 
   await cd.resolveVarOrder(data);
-  t.deepEqual(cd.queue.getOrder(), [
-    "collections.all",
-    "key1",
-    "collections.dog",
-    "key2",
-    "key0",
-  ]);
+  t.deepEqual(cd.queue.getOrder(), ["collections.all", "key1", "collections.dog", "key2", "key0"]);
 });
 
 test("Get var order and process it in two stages", async (t) => {
@@ -397,6 +391,8 @@ test("Get var order and process it in two stages", async (t) => {
 
 test("Use JavaScript functions (filters) in computed data functions", async (t) => {
   let eleventyCfg = new TemplateConfig();
+  await eleventyCfg.init();
+
   let cfg = eleventyCfg.getConfig();
   cfg.javascriptFunctions.alwaysBlue = function (str) {
     return str + " is blue";

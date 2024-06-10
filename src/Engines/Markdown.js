@@ -1,97 +1,93 @@
-const markdownIt = require("markdown-it");
-const TemplateEngine = require("./TemplateEngine");
-// const debug = require("debug")("Eleventy:Markdown");
+import markdownIt from "markdown-it";
+
+import TemplateEngine from "./TemplateEngine.js";
 
 class Markdown extends TemplateEngine {
-  constructor(name, dirs, config) {
-    super(name, dirs, config);
+	constructor(name, eleventyConfig) {
+		super(name, eleventyConfig);
 
-    this.markdownOptions = {};
+		this.markdownOptions = {};
 
-    this.setLibrary(this.config.libraryOverrides.md);
+		this.setLibrary(this.config.libraryOverrides.md);
 
-    this.cacheable = true;
-  }
+		this.cacheable = true;
+	}
 
-  setLibrary(mdLib) {
-    this.mdLib = mdLib || markdownIt(this.getMarkdownOptions());
+	setLibrary(mdLib) {
+		this.mdLib = mdLib || markdownIt(this.getMarkdownOptions());
 
-    // Overrides a highlighter set in `markdownOptions`
-    // This is separate so devs can pass in a new mdLib and still use the official eleventy plugin for markdown highlighting
-    if (this.config.markdownHighlighter && typeof this.mdLib.set === "function") {
-      this.mdLib.set({
-        highlight: this.config.markdownHighlighter,
-      });
-    }
+		// Overrides a highlighter set in `markdownOptions`
+		// This is separate so devs can pass in a new mdLib and still use the official eleventy plugin for markdown highlighting
+		if (this.config.markdownHighlighter && typeof this.mdLib.set === "function") {
+			this.mdLib.set({
+				highlight: this.config.markdownHighlighter,
+			});
+		}
 
-    if (typeof this.mdLib.disable === "function") {
-      // Disable indented code blocks by default (Issue #2438)
-      this.mdLib.disable("code");
-    }
+		if (typeof this.mdLib.disable === "function") {
+			// Disable indented code blocks by default (Issue #2438)
+			this.mdLib.disable("code");
+		}
 
-    this.setEngineLib(this.mdLib);
-  }
+		this.setEngineLib(this.mdLib);
+	}
 
-  setMarkdownOptions(options) {
-    this.markdownOptions = options;
-  }
+	setMarkdownOptions(options) {
+		this.markdownOptions = options;
+	}
 
-  getMarkdownOptions() {
-    // work with "mode" presets https://github.com/markdown-it/markdown-it#init-with-presets-and-options
-    if (typeof this.markdownOptions === "string") {
-      return this.markdownOptions;
-    }
+	getMarkdownOptions() {
+		// work with "mode" presets https://github.com/markdown-it/markdown-it#init-with-presets-and-options
+		if (typeof this.markdownOptions === "string") {
+			return this.markdownOptions;
+		}
 
-    return Object.assign(
-      {
-        html: true,
-      },
-      this.markdownOptions || {}
-    );
-  }
+		return Object.assign(
+			{
+				html: true,
+			},
+			this.markdownOptions || {},
+		);
+	}
 
-  async compile(str, inputPath, preTemplateEngine, bypassMarkdown) {
-    let mdlib = this.mdLib;
+	async compile(str, inputPath, preTemplateEngine, bypassMarkdown) {
+		let mdlib = this.mdLib;
 
-    if (preTemplateEngine) {
-      let engine;
-      if (typeof preTemplateEngine === "string") {
-        engine = this.engineManager.getEngine(
-          preTemplateEngine,
-          this.dirs,
-          this.extensionMap
-        );
-      } else {
-        engine = preTemplateEngine;
-      }
+		if (preTemplateEngine) {
+			let engine;
+			if (typeof preTemplateEngine === "string") {
+				engine = await this.engineManager.getEngine(preTemplateEngine, this.extensionMap);
+			} else {
+				engine = preTemplateEngine;
+			}
 
-      let fnReady = engine.compile(str, inputPath);
+			let fnReady = engine.compile(str, inputPath);
 
-      if (bypassMarkdown) {
-        return async function (data) {
-          let fn = await fnReady;
-          return fn(data);
-        };
-      } else {
-        return async function (data) {
-          let fn = await fnReady;
-          let preTemplateEngineRender = await fn(data);
-          let finishedRender = mdlib.render(preTemplateEngineRender, data);
-          return finishedRender;
-        };
-      }
-    } else {
-      if (bypassMarkdown) {
-        return function () {
-          return str;
-        };
-      } else {
-        return function (data) {
-          return mdlib.render(str, data);
-        };
-      }
-    }
-  }
+			if (bypassMarkdown) {
+				return async function (data) {
+					let fn = await fnReady;
+					return fn(data);
+				};
+			} else {
+				return async function (data) {
+					let fn = await fnReady;
+					let preTemplateEngineRender = await fn(data);
+					let finishedRender = mdlib.render(preTemplateEngineRender, data);
+					return finishedRender;
+				};
+			}
+		} else {
+			if (bypassMarkdown) {
+				return function () {
+					return str;
+				};
+			} else {
+				return function (data) {
+					return mdlib.render(str, data);
+				};
+			}
+		}
+	}
 }
 
-module.exports = Markdown;
+export default Markdown;

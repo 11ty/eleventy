@@ -1,32 +1,28 @@
-const TemplateEngine = require("./TemplateEngine");
+import TemplateEngine from "./TemplateEngine.js";
 
 class Html extends TemplateEngine {
-  constructor(name, dirs, config) {
-    super(name, dirs, config);
-    this.cacheable = true;
-  }
+	constructor(name, eleventyConfig) {
+		super(name, eleventyConfig);
+		this.cacheable = true;
+	}
 
-  async compile(str, inputPath, preTemplateEngine) {
-    if (preTemplateEngine) {
-      let engine = this.engineManager.getEngine(
-        preTemplateEngine,
-        this.dirs,
-        this.extensionMap
-      );
-      let fnReady = engine.compile(str, inputPath);
+	async compile(str, inputPath, preTemplateEngine) {
+		if (preTemplateEngine) {
+			let engine = await this.engineManager.getEngine(preTemplateEngine, this.extensionMap);
+			let fnReady = engine.compile(str, inputPath);
 
-      return async function (data) {
-        let fn = await fnReady;
+			return async function (data) {
+				let fn = await fnReady;
 
-        return fn(data);
-      };
-    } else {
-      return function () {
-        // do nothing with data if parseHtmlWith is falsy
-        return str;
-      };
-    }
-  }
+				return fn(data);
+			};
+		}
+
+		return function () {
+			// do nothing with data if parseHtmlWith is falsy
+			return str;
+		};
+	}
 }
 
-module.exports = Html;
+export default Html;

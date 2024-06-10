@@ -1,5 +1,7 @@
+jsdoc
 docs
 docs-src
 test
+test-node
 coverage
 .*

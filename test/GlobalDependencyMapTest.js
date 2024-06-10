@@ -1,5 +1,5 @@
-const test = require("ava");
-const GlobalDependencyMap = require("../src/GlobalDependencyMap.js");
+import test from "ava";
+import GlobalDependencyMap from "../src/GlobalDependencyMap.js";
 
 test("Test map", (t) => {
   let map = new GlobalDependencyMap();

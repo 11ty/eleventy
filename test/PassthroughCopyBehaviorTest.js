@@ -1,5 +1,5 @@
-const test = require("ava");
-const checkPassthroughCopyBehavior = require("../src/Util/PassthroughCopyBehaviorCheck");
+import test from "ava";
+import checkPassthroughCopyBehavior from "../src/Util/PassthroughCopyBehaviorCheck.js";
 
 test("Standard use", (t) => {
   t.is(

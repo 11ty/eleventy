@@ -1,263 +1,284 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
+import { TemplatePath } from "@11ty/eleventy-utils";
 
-const TemplateEngineManager = require("./TemplateEngineManager");
-const EleventyBaseError = require("./EleventyBaseError");
+import TemplateEngineManager from "./Engines/TemplateEngineManager.js";
+import EleventyBaseError from "./Errors/EleventyBaseError.js";
 
 class EleventyExtensionMapConfigError extends EleventyBaseError {}
 
 class EleventyExtensionMap {
-  constructor(formatKeys, config) {
-    this.config = config;
+	constructor(config) {
+		this.config = config;
 
-    this.formatKeys = formatKeys;
+		this._spiderJsDepsCache = {};
+	}
 
-    this.setFormats(formatKeys);
+	setFormats(formatKeys = []) {
+		// raw
+		this.formatKeys = formatKeys;
 
-    this._spiderJsDepsCache = {};
-  }
+		this.unfilteredFormatKeys = formatKeys.map(function (key) {
+			return key.trim().toLowerCase();
+		});
 
-  setFormats(formatKeys = []) {
-    this.unfilteredFormatKeys = formatKeys.map(function (key) {
-      return key.trim().toLowerCase();
-    });
+		this.validTemplateLanguageKeys = this.unfilteredFormatKeys.filter((key) =>
+			this.hasExtension(key),
+		);
 
-    this.validTemplateLanguageKeys = this.unfilteredFormatKeys.filter((key) =>
-      this.hasExtension(key)
-    );
+		this.passthroughCopyKeys = this.unfilteredFormatKeys.filter((key) => !this.hasExtension(key));
+	}
 
-    this.passthroughCopyKeys = this.unfilteredFormatKeys.filter((key) => !this.hasExtension(key));
-  }
+	set config(cfg) {
+		if (!cfg || cfg.constructor.name !== "TemplateConfig") {
+			throw new EleventyExtensionMapConfigError(
+				"Missing or invalid `config` argument (via setter).",
+			);
+		}
+		this.eleventyConfig = cfg;
+	}
 
-  set config(cfg) {
-    if (!cfg || cfg.constructor.name !== "TemplateConfig") {
-      throw new EleventyExtensionMapConfigError(
-        "Missing or invalid `config` argument (via setter)."
-      );
-    }
-    this.eleventyConfig = cfg;
-  }
+	get config() {
+		return this.eleventyConfig.getConfig();
+	}
 
-  get config() {
-    return this.eleventyConfig.getConfig();
-  }
+	get engineManager() {
+		if (!this._engineManager) {
+			this._engineManager = new TemplateEngineManager(this.eleventyConfig);
+		}
 
-  get engineManager() {
-    if (!this._engineManager) {
-      this._engineManager = new TemplateEngineManager(this.eleventyConfig);
-    }
+		return this._engineManager;
+	}
 
-    return this._engineManager;
-  }
+	reset() {
+		this.engineManager.reset();
+	}
 
-  reset() {
-    this.engineManager.reset();
-  }
+	/* Used for layout path resolution */
+	getFileList(path, dir) {
+		if (!path) {
+			return [];
+		}
 
-  /* Used for layout path resolution */
-  getFileList(path, dir) {
-    if (!path) {
-      return [];
-    }
+		let files = [];
+		this.validTemplateLanguageKeys.forEach(
+			function (key) {
+				this.getExtensionsFromKey(key).forEach(function (extension) {
+					files.push((dir ? dir + "/" : "") + path + "." + extension);
+				});
+			}.bind(this),
+		);
 
-    let files = [];
-    this.validTemplateLanguageKeys.forEach(
-      function (key) {
-        this.getExtensionsFromKey(key).forEach(function (extension) {
-          files.push((dir ? dir + "/" : "") + path + "." + extension);
-        });
-      }.bind(this)
-    );
+		return files;
+	}
 
-    return files;
-  }
+	// Warning: this would false positive on an include, but is only used
+	// on paths found from the file system glob search.
+	// TODO: Method name might just need to be renamed to something more accurate.
+	isFullTemplateFilePath(path) {
+		for (let extension of this.validTemplateLanguageKeys) {
+			if (path.endsWith(`.${extension}`)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-  // Warning: this would false positive on an include, but is only used
-  // on paths found from the file system glob search.
-  // TODO: Method name might just need to be renamed to something more accurate.
-  isFullTemplateFilePath(path) {
-    for (let extension of this.validTemplateLanguageKeys) {
-      if (path.endsWith(`.${extension}`)) {
-        return true;
-      }
-    }
-    return false;
-  }
+	getCustomExtensionEntry(extension) {
+		if (!this.config.extensionMap) {
+			return;
+		}
 
-  getCustomExtensionEntry(extension) {
-    if (!this.config.extensionMap) {
-      return;
-    }
+		for (let entry of this.config.extensionMap) {
+			if (entry.extension === extension) {
+				return entry;
+			}
+		}
+	}
 
-    for (let entry of this.config.extensionMap) {
-      if (entry.extension === extension) {
-        return entry;
-      }
-    }
-  }
+	getValidExtensionsForPath(path) {
+		let extensions = new Set();
+		for (let extension in this.extensionToKeyMap) {
+			if (path.endsWith(`.${extension}`)) {
+				extensions.add(extension);
+			}
+		}
 
-  getValidExtensionsForPath(path) {
-    let extensions = new Set();
-    for (let extension in this.extensionToKeyMap) {
-      if (path.endsWith(`.${extension}`)) {
-        extensions.add(extension);
-      }
-    }
+		// if multiple extensions are valid, sort from longest to shortest
+		// e.g. .11ty.js and .js
+		let sorted = Array.from(extensions)
+			.filter((extension) => this.validTemplateLanguageKeys.includes(extension))
+			.sort((a, b) => b.length - a.length);
 
-    // if multiple extensions are valid, sort from longest to shortest
-    // e.g. .11ty.js and .js
-    let sorted = Array.from(extensions)
-      .filter((extension) => this.validTemplateLanguageKeys.includes(extension))
-      .sort((a, b) => b.length - a.length);
+		return sorted;
+	}
 
-    return sorted;
-  }
+	async shouldSpiderJavaScriptDependencies(path) {
+		let extensions = this.getValidExtensionsForPath(path);
+		for (let extension of extensions) {
+			if (extension in this._spiderJsDepsCache) {
+				return this._spiderJsDepsCache[extension];
+			}
 
-  shouldSpiderJavaScriptDependencies(path) {
-    let extensions = this.getValidExtensionsForPath(path);
-    for (let extension of extensions) {
-      if (extension in this._spiderJsDepsCache) {
-        return this._spiderJsDepsCache[extension];
-      }
+			let cls = await this.engineManager.getEngineClassByExtension(extension);
+			if (cls) {
+				let entry = this.getCustomExtensionEntry(extension);
+				let shouldSpider = cls.shouldSpiderJavaScriptDependencies(entry);
+				this._spiderJsDepsCache[extension] = shouldSpider;
+				return shouldSpider;
+			}
+		}
 
-      let cls = this.engineManager.getEngineClassByExtension(extension);
-      if (cls) {
-        let entry = this.getCustomExtensionEntry(extension);
-        let shouldSpider = cls.shouldSpiderJavaScriptDependencies(entry);
-        this._spiderJsDepsCache[extension] = shouldSpider;
-        return shouldSpider;
-      }
-    }
+		return false;
+	}
 
-    return false;
-  }
+	getPassthroughCopyGlobs(inputDir) {
+		return this._getGlobs(this.passthroughCopyKeys, inputDir);
+	}
 
-  getPassthroughCopyGlobs(inputDir) {
-    return this._getGlobs(this.passthroughCopyKeys, inputDir);
-  }
+	getValidGlobs(inputDir) {
+		return this._getGlobs(this.validTemplateLanguageKeys, inputDir);
+	}
 
-  getValidGlobs(inputDir) {
-    return this._getGlobs(this.validTemplateLanguageKeys, inputDir);
-  }
+	getGlobs(inputDir) {
+		return this._getGlobs(this.unfilteredFormatKeys, inputDir);
+	}
 
-  getGlobs(inputDir) {
-    return this._getGlobs(this.unfilteredFormatKeys, inputDir);
-  }
+	_getGlobs(formatKeys, inputDir) {
+		let dir = TemplatePath.convertToRecursiveGlobSync(inputDir);
+		let extensions = new Set();
 
-  _getGlobs(formatKeys, inputDir) {
-    let dir = TemplatePath.convertToRecursiveGlobSync(inputDir);
-    let extensions = [];
-    for (let key of formatKeys) {
-      if (this.hasExtension(key)) {
-        for (let extension of this.getExtensionsFromKey(key)) {
-          extensions.push(extension);
-        }
-      } else {
-        extensions.push(key);
-      }
-    }
+		for (let key of formatKeys) {
+			if (this.hasExtension(key)) {
+				for (let extension of this.getExtensionsFromKey(key)) {
+					extensions.add(extension);
+				}
+			} else {
+				extensions.add(key);
+			}
+		}
 
-    let globs = [];
-    if (extensions.length === 1) {
-      globs.push(`${dir}/*.${extensions[0]}`);
-    } else if (extensions.length > 1) {
-      globs.push(`${dir}/*.{${extensions.join(",")}}`);
-    }
+		if (extensions.size === 1) {
+			return [`${dir}/*.${Array.from(extensions)[0]}`];
+		} else if (extensions.size > 1) {
+			return [
+				// extra curly brackets /*.{cjs,txt}
+				`${dir}/*.{${Array.from(extensions).join(",")}}`,
+			];
+		}
 
-    return globs;
-  }
+		return [];
+	}
 
-  hasExtension(key) {
-    for (var extension in this.extensionToKeyMap) {
-      if (this.extensionToKeyMap[extension] === key) {
-        return true;
-      }
-    }
-    return false;
-  }
+	hasExtension(key) {
+		for (let extension in this.extensionToKeyMap) {
+			if (
+				this.extensionToKeyMap[extension].key === key ||
+				this.extensionToKeyMap[extension].aliasKey === key
+			) {
+				return true;
+			}
+		}
 
-  getExtensionsFromKey(key) {
-    let extensions = [];
-    for (var extension in this.extensionToKeyMap) {
-      if (this.extensionToKeyMap[extension] === key) {
-        extensions.push(extension);
-      }
-    }
-    return extensions;
-  }
+		return false;
+	}
 
-  // Only `addExtension` configuration API extensions
-  getExtensionEntriesFromKey(key) {
-    let entries = [];
-    if ("extensionMap" in this.config) {
-      for (let entry of this.config.extensionMap) {
-        if (entry.key === key) {
-          entries.push(entry);
-        }
-      }
-    }
-    return entries;
-  }
+	getExtensionsFromKey(key) {
+		let extensions = new Set();
+		for (let extension in this.extensionToKeyMap) {
+			if (this.extensionToKeyMap[extension].aliasKey) {
+				// only add aliased extension if explicitly referenced in formats
+				// overrides will not have an aliasKey (md => md)
+				if (this.extensionToKeyMap[extension].aliasKey === key) {
+					extensions.add(extension);
+				}
+			} else if (this.extensionToKeyMap[extension].key === key) {
+				extensions.add(extension);
+			}
+		}
 
-  hasEngine(pathOrKey) {
-    return !!this.getKey(pathOrKey);
-  }
+		return Array.from(extensions);
+	}
 
-  getKey(pathOrKey) {
-    pathOrKey = (pathOrKey || "").toLowerCase();
+	// Only `addExtension` configuration API extensions
+	getExtensionEntriesFromKey(key) {
+		let entries = new Set();
+		if ("extensionMap" in this.config) {
+			for (let entry of this.config.extensionMap) {
+				if (entry.key === key) {
+					entries.add(entry);
+				}
+			}
+		}
+		return Array.from(entries);
+	}
 
-    for (var extension in this.extensionToKeyMap) {
-      let key = this.extensionToKeyMap[extension];
-      if (pathOrKey === extension) {
-        return key;
-      } else if (pathOrKey.endsWith("." + extension)) {
-        return key;
-      }
-    }
-  }
+	// Determines whether a path is a passthrough copy file or a template (via TemplateWriter)
+	hasEngine(pathOrKey) {
+		return !!this.getKey(pathOrKey);
+	}
 
-  removeTemplateExtension(path) {
-    for (var extension in this.extensionToKeyMap) {
-      if (path === extension || path.endsWith("." + extension)) {
-        return path.slice(
-          0,
-          path.length - 1 - extension.length < 0 ? 0 : path.length - 1 - extension.length
-        );
-      }
-    }
-    return path;
-  }
+	getKey(pathOrKey) {
+		pathOrKey = (pathOrKey || "").toLowerCase();
+		for (let extension in this.extensionToKeyMap) {
+			if (pathOrKey === extension || pathOrKey.endsWith("." + extension)) {
+				let key =
+					this.extensionToKeyMap[extension].aliasKey || this.extensionToKeyMap[extension].key;
+				// must be a valid format key passed (e.g. via --formats)
+				if (this.validTemplateLanguageKeys.includes(key)) {
+					return key;
+				}
+			}
+		}
+	}
 
-  // keys are file extensions
-  // values are template language keys
-  get extensionToKeyMap() {
-    if (!this._extensionToKeyMap) {
-      this._extensionToKeyMap = {
-        ejs: "ejs",
-        md: "md",
-        html: "html",
-        hbs: "hbs",
-        mustache: "mustache",
-        haml: "haml",
-        pug: "pug",
-        njk: "njk",
-        liquid: "liquid",
-        "11ty.js": "11ty.js",
-        "11ty.cjs": "11ty.js",
-      };
+	getExtensionEntry(pathOrKey) {
+		pathOrKey = (pathOrKey || "").toLowerCase();
+		for (let extension in this.extensionToKeyMap) {
+			if (pathOrKey === extension || pathOrKey.endsWith("." + extension)) {
+				return this.extensionToKeyMap[extension];
+			}
+		}
+	}
 
-      if ("extensionMap" in this.config) {
-        for (let entry of this.config.extensionMap) {
-          this._extensionToKeyMap[entry.extension] = entry.key;
-        }
-      }
-    }
+	removeTemplateExtension(path) {
+		for (let extension in this.extensionToKeyMap) {
+			if (path === extension || path.endsWith("." + extension)) {
+				return path.slice(
+					0,
+					path.length - 1 - extension.length < 0 ? 0 : path.length - 1 - extension.length,
+				);
+			}
+		}
+		return path;
+	}
 
-    return this._extensionToKeyMap;
-  }
+	// keys are file extensions
+	// values are template language keys
+	get extensionToKeyMap() {
+		if (!this._extensionToKeyMap) {
+			this._extensionToKeyMap = {
+				md: { key: "md", extension: "md" },
+				html: { key: "html", extension: "html" },
+				njk: { key: "njk", extension: "njk" },
+				liquid: { key: "liquid", extension: "liquid" },
+				"11ty.js": { key: "11ty.js", extension: "11ty.js" },
+				"11ty.cjs": { key: "11ty.js", extension: "11ty.cjs" },
+				"11ty.mjs": { key: "11ty.js", extension: "11ty.mjs" },
+			};
 
-  getReadableFileExtensions() {
-    return Object.keys(this.extensionToKeyMap).join(" ");
-  }
+			if ("extensionMap" in this.config) {
+				for (let entry of this.config.extensionMap) {
+					// extension and key are only different when aliasing.
+					this._extensionToKeyMap[entry.extension] = entry;
+				}
+			}
+		}
+
+		return this._extensionToKeyMap;
+	}
+
+	getReadableFileExtensions() {
+		return Object.keys(this.extensionToKeyMap).join(" ");
+	}
 }
 
-module.exports = EleventyExtensionMap;
+export default EleventyExtensionMap;

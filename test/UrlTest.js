@@ -1,9 +1,11 @@
-const test = require("ava");
-const TemplateConfig = require("../src/TemplateConfig.js");
-const url = require("../src/Filters/Url.js");
+import test from "ava";
+import TemplateConfig from "../src/TemplateConfig.js";
+import url from "../src/Filters/Url.js";
 
-test("Test url filter passing in pathPrefix from config", (t) => {
+test("Test url filter passing in pathPrefix from config", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let pp = eleventyConfig.getConfig().pathPrefix;
   t.is(pp, "/");
 
@@ -11,8 +13,10 @@ test("Test url filter passing in pathPrefix from config", (t) => {
   t.is(url("/test", pp), "/test");
 });
 
-test("Test url filter without passing in pathPrefix", (t) => {
+test("Test url filter without passing in pathPrefix", async (t) => {
   let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
   let urlFilter = eleventyConfig.userConfig.getFilter("url");
 
   t.is(urlFilter("test"), "test");
@@ -23,18 +27,12 @@ test("Test url filter with passthrough urls", (t) => {
   // via https://gist.github.com/mxpv/034933deeebb26b62f14
   t.is(url("http://foo.com/blah_blah", ""), "http://foo.com/blah_blah");
   t.is(url("http://foo.com/blah_blah/", ""), "http://foo.com/blah_blah/");
-  t.is(
-    url("http://foo.com/blah_blah_(wikipedia)", ""),
-    "http://foo.com/blah_blah_(wikipedia)"
-  );
+  t.is(url("http://foo.com/blah_blah_(wikipedia)", ""), "http://foo.com/blah_blah_(wikipedia)");
   t.is(
     url("http://foo.com/blah_blah_(wikipedia)_(again)", ""),
     "http://foo.com/blah_blah_(wikipedia)_(again)"
   );
-  t.is(
-    url("http://www.example.com/wpstyle/?p=364", ""),
-    "http://www.example.com/wpstyle/?p=364"
-  );
+  t.is(url("http://www.example.com/wpstyle/?p=364", ""), "http://www.example.com/wpstyle/?p=364");
   t.is(
     url("https://www.example.com/foo/?bar=baz&inga=42&quux", ""),
     "https://www.example.com/foo/?bar=baz&inga=42&quux"
@@ -49,28 +47,13 @@ test("Test url filter with passthrough urls", (t) => {
   );
   t.is(url("http://userid@example.com", ""), "http://userid@example.com");
   t.is(url("http://userid@example.com/", ""), "http://userid@example.com/");
-  t.is(
-    url("http://userid@example.com:8080", ""),
-    "http://userid@example.com:8080"
-  );
-  t.is(
-    url("http://userid@example.com:8080/", ""),
-    "http://userid@example.com:8080/"
-  );
-  t.is(
-    url("http://userid:password@example.com", ""),
-    "http://userid:password@example.com"
-  );
-  t.is(
-    url("http://userid:password@example.com/", ""),
-    "http://userid:password@example.com/"
-  );
+  t.is(url("http://userid@example.com:8080", ""), "http://userid@example.com:8080");
+  t.is(url("http://userid@example.com:8080/", ""), "http://userid@example.com:8080/");
+  t.is(url("http://userid:password@example.com", ""), "http://userid:password@example.com");
+  t.is(url("http://userid:password@example.com/", ""), "http://userid:password@example.com/");
   t.is(url("http://142.42.1.1/", ""), "http://142.42.1.1/");
   t.is(url("http://142.42.1.1:8080/", ""), "http://142.42.1.1:8080/");
-  t.is(
-    url("http://foo.com/blah_(wikipedia)#cite-1", ""),
-    "http://foo.com/blah_(wikipedia)#cite-1"
-  );
+  t.is(url("http://foo.com/blah_(wikipedia)#cite-1", ""), "http://foo.com/blah_(wikipedia)#cite-1");
   t.is(
     url("http://foo.com/blah_(wikipedia)_blah#cite-1", ""),
     "http://foo.com/blah_(wikipedia)_blah#cite-1"
@@ -101,10 +84,7 @@ test("Test url filter with passthrough urls", (t) => {
   t.is(url("http://➡.ws/䨹", ""), "http://➡.ws/䨹");
   t.is(url("http://⌘.ws", ""), "http://⌘.ws");
   t.is(url("http://⌘.ws/", ""), "http://⌘.ws/");
-  t.is(
-    url("http://foo.com/unicode_(✪)_in_parens", ""),
-    "http://foo.com/unicode_(✪)_in_parens"
-  );
+  t.is(url("http://foo.com/unicode_(✪)_in_parens", ""), "http://foo.com/unicode_(✪)_in_parens");
   t.is(url("http://☺.damowmow.com/", ""), "http://☺.damowmow.com/");
   t.is(url("http://مثال.إختبار", ""), "http://مثال.إختبار");
   t.is(url("http://例子.测试", ""), "http://例子.测试");

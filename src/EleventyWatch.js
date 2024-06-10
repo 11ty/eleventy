@@ -1,5 +1,6 @@
-const { TemplatePath } = require("@11ty/eleventy-utils");
-const PathNormalizer = require("./Util/PathNormalizer.js");
+import { TemplatePath } from "@11ty/eleventy-utils";
+
+import PathNormalizer from "./Util/PathNormalizer.js";
 
 /* Decides when to watch and in what mode to watch
  * Incremental builds don’t batch changes, they queue.
@@ -7,124 +8,124 @@ const PathNormalizer = require("./Util/PathNormalizer.js");
  */
 
 class EleventyWatch {
-  constructor() {
-    this.incremental = false;
-    this.isActive = false;
-    this.activeQueue = [];
-  }
+	constructor() {
+		this.incremental = false;
+		this.isActive = false;
+		this.activeQueue = [];
+	}
 
-  isBuildRunning() {
-    return this.isActive;
-  }
+	isBuildRunning() {
+		return this.isActive;
+	}
 
-  setBuildRunning() {
-    this.isActive = true;
+	setBuildRunning() {
+		this.isActive = true;
 
-    // pop waiting queue into the active queue
-    this.activeQueue = this.popNextActiveQueue();
-  }
+		// pop waiting queue into the active queue
+		this.activeQueue = this.popNextActiveQueue();
+	}
 
-  setBuildFinished() {
-    this.isActive = false;
-    this.activeQueue = [];
-  }
+	setBuildFinished() {
+		this.isActive = false;
+		this.activeQueue = [];
+	}
 
-  getIncrementalFile() {
-    if (this.incremental) {
-      return this.activeQueue.length ? this.activeQueue[0] : false;
-    }
+	getIncrementalFile() {
+		if (this.incremental) {
+			return this.activeQueue.length ? this.activeQueue[0] : false;
+		}
 
-    return false;
-  }
+		return false;
+	}
 
-  /* Returns the changed files currently being operated on in the current `watch` build
-   * Works with or without incremental (though in incremental only one file per time will be processed)
-   */
-  getActiveQueue() {
-    if (!this.isActive) {
-      return [];
-    } else if (this.incremental && this.activeQueue.length === 0) {
-      return [];
-    } else if (this.incremental) {
-      return [this.activeQueue[0]];
-    }
+	/* Returns the changed files currently being operated on in the current `watch` build
+	 * Works with or without incremental (though in incremental only one file per time will be processed)
+	 */
+	getActiveQueue() {
+		if (!this.isActive) {
+			return [];
+		} else if (this.incremental && this.activeQueue.length === 0) {
+			return [];
+		} else if (this.incremental) {
+			return [this.activeQueue[0]];
+		}
 
-    return this.activeQueue;
-  }
+		return this.activeQueue;
+	}
 
-  _queueMatches(file) {
-    let filterCallback;
-    if (typeof file === "function") {
-      filterCallback = file;
-    } else {
-      filterCallback = (path) => path === file;
-    }
+	_queueMatches(file) {
+		let filterCallback;
+		if (typeof file === "function") {
+			filterCallback = file;
+		} else {
+			filterCallback = (path) => path === file;
+		}
 
-    return this.activeQueue.filter(filterCallback);
-  }
+		return this.activeQueue.filter(filterCallback);
+	}
 
-  hasAllQueueFiles(file) {
-    return (
-      this.activeQueue.length > 0 && this.activeQueue.length === this._queueMatches(file).length
-    );
-  }
+	hasAllQueueFiles(file) {
+		return (
+			this.activeQueue.length > 0 && this.activeQueue.length === this._queueMatches(file).length
+		);
+	}
 
-  hasQueuedFile(file) {
-    if (file) {
-      return this._queueMatches(file).length > 0;
-    }
-    return false;
-  }
+	hasQueuedFile(file) {
+		if (file) {
+			return this._queueMatches(file).length > 0;
+		}
+		return false;
+	}
 
-  hasQueuedFiles(files) {
-    for (const file of files) {
-      if (this.hasQueuedFile(file)) {
-        return true;
-      }
-    }
-    return false;
-  }
+	hasQueuedFiles(files) {
+		for (const file of files) {
+			if (this.hasQueuedFile(file)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-  get pendingQueue() {
-    if (!this._queue) {
-      this._queue = [];
-    }
-    return this._queue;
-  }
+	get pendingQueue() {
+		if (!this._queue) {
+			this._queue = [];
+		}
+		return this._queue;
+	}
 
-  set pendingQueue(value) {
-    this._queue = value;
-  }
+	set pendingQueue(value) {
+		this._queue = value;
+	}
 
-  addToPendingQueue(path) {
-    if (path) {
-      path = PathNormalizer.normalizeSeperator(TemplatePath.addLeadingDotSlash(path));
-      this.pendingQueue.push(path);
-    }
-  }
+	addToPendingQueue(path) {
+		if (path) {
+			path = PathNormalizer.normalizeSeperator(TemplatePath.addLeadingDotSlash(path));
+			this.pendingQueue.push(path);
+		}
+	}
 
-  getPendingQueueSize() {
-    return this.pendingQueue.length;
-  }
+	getPendingQueueSize() {
+		return this.pendingQueue.length;
+	}
 
-  getPendingQueue() {
-    return this.pendingQueue;
-  }
+	getPendingQueue() {
+		return this.pendingQueue;
+	}
 
-  getActiveQueueSize() {
-    return this.activeQueue.length;
-  }
+	getActiveQueueSize() {
+		return this.activeQueue.length;
+	}
 
-  // returns array
-  popNextActiveQueue() {
-    if (this.incremental) {
-      return this.pendingQueue.length ? [this.pendingQueue.shift()] : [];
-    }
+	// returns array
+	popNextActiveQueue() {
+		if (this.incremental) {
+			return this.pendingQueue.length ? [this.pendingQueue.shift()] : [];
+		}
 
-    let ret = this.pendingQueue.slice();
-    this.pendingQueue = [];
-    return ret;
-  }
+		let ret = this.pendingQueue.slice();
+		this.pendingQueue = [];
+		return ret;
+	}
 }
 
-module.exports = EleventyWatch;
+export default EleventyWatch;

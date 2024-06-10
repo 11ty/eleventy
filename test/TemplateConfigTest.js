@@ -1,170 +1,128 @@
-const test = require("ava");
-const md = require("markdown-it");
-const TemplateConfig = require("../src/TemplateConfig");
+import test from "ava";
+import md from "markdown-it";
+
+import TemplateConfig from "../src/TemplateConfig.js";
+import defaultConfig from "../src/defaultConfig.js";
+
+import { getTemplateConfigInstance } from "./_testHelpers.js";
 
 test("Template Config local config overrides base config", async (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
+  await templateCfg.init();
+
   let cfg = templateCfg.getConfig();
 
-  t.is(cfg.markdownTemplateEngine, "ejs");
+  t.is(cfg.markdownTemplateEngine, "njk");
   t.is(cfg.templateFormats.join(","), "md,njk");
 
   // merged, not overwritten
   t.true(Object.keys(cfg.keys).length > 1);
-  t.truthy(Object.keys(cfg.handlebarsHelpers).length);
   t.truthy(Object.keys(cfg.nunjucksFilters).length);
 
-  t.is(Object.keys(cfg.transforms).length, 1);
+  t.is(Object.keys(cfg.transforms).length, 3);
 
   t.is(
-    cfg.transforms.prettyHtml(
-      `<html><body><div></div></body></html>`,
-      "test.html"
-    ),
+    cfg.transforms.prettyHtml(`<html><body><div></div></body></html>`, "test.html"),
     `<html>
   <body>
     <div></div>
   </body>
-</html>`
+</html>`,
   );
 });
 
-test("Add liquid tag", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test("Add liquid tag", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.addLiquidTag("myTagName", function () {});
+
+  await templateCfg.init();
+
   let cfg = templateCfg.getConfig();
   t.not(Object.keys(cfg.liquidTags).indexOf("myTagName"), -1);
 });
 
-test("Add nunjucks tag", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test("Add nunjucks tag", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.addNunjucksTag("myNunjucksTag", function () {});
+
+  await templateCfg.init();
+
   let cfg = templateCfg.getConfig();
   t.not(Object.keys(cfg.nunjucksTags).indexOf("myNunjucksTag"), -1);
 });
 
-test("Add nunjucks global", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test("Add nunjucks global", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.addNunjucksGlobal("myNunjucksGlobal1", function () {});
   templateCfg.userConfig.addNunjucksGlobal("myNunjucksGlobal2", 42);
+
+  await templateCfg.init();
 
   let cfg = templateCfg.getConfig();
   t.not(Object.keys(cfg.nunjucksGlobals).indexOf("myNunjucksGlobal1"), -1);
   t.not(Object.keys(cfg.nunjucksGlobals).indexOf("myNunjucksGlobal2"), -1);
 });
 
-test("Add liquid filter", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
-  templateCfg.userConfig.addLiquidFilter(
-    "myFilterName",
-    function (liquidEngine) {
-      return {};
-    }
-  );
+test("Add liquid filter", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
+  templateCfg.userConfig.addLiquidFilter("myFilterName", function (liquidEngine) {
+    return {};
+  });
+
+  await templateCfg.init();
 
   let cfg = templateCfg.getConfig();
   t.not(Object.keys(cfg.liquidFilters).indexOf("myFilterName"), -1);
 });
 
-test("Add handlebars helper", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
-  templateCfg.userConfig.addHandlebarsHelper("myHelperName", function () {});
-
-  let cfg = templateCfg.getConfig();
-  t.not(Object.keys(cfg.handlebarsHelpers).indexOf("myHelperName"), -1);
-});
-
-test("Add nunjucks filter", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test("Add nunjucks filter", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.addNunjucksFilter("myFilterName", function () {});
 
+  await templateCfg.init();
+
   let cfg = templateCfg.getConfig();
   t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
 });
 
-test("Add universal filter", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test("Add universal filter", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.addFilter("myFilterName", function () {});
+
+  await templateCfg.init();
 
   let cfg = templateCfg.getConfig();
   t.not(Object.keys(cfg.liquidFilters).indexOf("myFilterName"), -1);
-  t.not(Object.keys(cfg.handlebarsHelpers).indexOf("myFilterName"), -1);
   t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
 });
 
-test("Add namespaced universal filter", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test("Add namespaced universal filter", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.namespace("testNamespace", function () {
     templateCfg.userConfig.addFilter("MyFilterName", function () {});
   });
 
+  await templateCfg.init();
+
   let cfg = templateCfg.getConfig();
-  t.not(
-    Object.keys(cfg.liquidFilters).indexOf("testNamespaceMyFilterName"),
-    -1
-  );
-  t.not(
-    Object.keys(cfg.handlebarsHelpers).indexOf("testNamespaceMyFilterName"),
-    -1
-  );
-  t.not(
-    Object.keys(cfg.nunjucksFilters).indexOf("testNamespaceMyFilterName"),
-    -1
-  );
+  t.not(Object.keys(cfg.liquidFilters).indexOf("testNamespaceMyFilterName"), -1);
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("testNamespaceMyFilterName"), -1);
 });
 
-test("Add namespaced universal filter using underscore", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test("Add namespaced universal filter using underscore", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.namespace("testNamespace_", function () {
     templateCfg.userConfig.addFilter("myFilterName", function () {});
   });
 
+  await templateCfg.init();
+
   let cfg = templateCfg.getConfig();
-  t.not(
-    Object.keys(cfg.liquidFilters).indexOf("testNamespace_myFilterName"),
-    -1
-  );
-  t.not(
-    Object.keys(cfg.handlebarsHelpers).indexOf("testNamespace_myFilterName"),
-    -1
-  );
-  t.not(
-    Object.keys(cfg.nunjucksFilters).indexOf("testNamespace_myFilterName"),
-    -1
-  );
+  t.not(Object.keys(cfg.liquidFilters).indexOf("testNamespace_myFilterName"), -1);
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("testNamespace_myFilterName"), -1);
 });
 
-test("Add namespaced plugin", (t) => {
+test("Add namespaced plugin", async (t) => {
   let templateCfg = new TemplateConfig();
 
   templateCfg.userConfig.namespace("testNamespace", function () {
@@ -173,65 +131,42 @@ test("Add namespaced plugin", (t) => {
     });
   });
 
+  await templateCfg.init();
+
   let cfg = templateCfg.getConfig();
-  t.not(
-    Object.keys(cfg.liquidFilters).indexOf("testNamespaceMyFilterName"),
-    -1
-  );
-  t.not(
-    Object.keys(cfg.handlebarsHelpers).indexOf("testNamespaceMyFilterName"),
-    -1
-  );
-  t.not(
-    Object.keys(cfg.nunjucksFilters).indexOf("testNamespaceMyFilterName"),
-    -1
-  );
+  t.not(Object.keys(cfg.liquidFilters).indexOf("testNamespaceMyFilterName"), -1);
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("testNamespaceMyFilterName"), -1);
 });
 
-test("Add namespaced plugin using underscore", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test("Add namespaced plugin using underscore", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.namespace("testNamespace_", function () {
     templateCfg.userConfig.addPlugin(function (config) {
       config.addFilter("myFilterName", function () {});
     });
   });
 
+  await templateCfg.init();
+
   let cfg = templateCfg.getConfig();
-  t.not(
-    Object.keys(cfg.liquidFilters).indexOf("testNamespace_myFilterName"),
-    -1
-  );
-  t.not(
-    Object.keys(cfg.handlebarsHelpers).indexOf("testNamespace_myFilterName"),
-    -1
-  );
-  t.not(
-    Object.keys(cfg.nunjucksFilters).indexOf("testNamespace_myFilterName"),
-    -1
-  );
+  t.not(Object.keys(cfg.liquidFilters).indexOf("testNamespace_myFilterName"), -1);
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("testNamespace_myFilterName"), -1);
 });
 
-test("Empty namespace", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test("Empty namespace", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.namespace("", function () {
     templateCfg.userConfig.addNunjucksFilter("myFilterName", function () {});
   });
+
+  await templateCfg.init();
 
   let cfg = templateCfg.getConfig();
   t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
 });
 
-test("Nested Empty Inner namespace", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test("Nested Empty Inner namespace", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
 
   templateCfg.userConfig.namespace("testNs", function () {
     templateCfg.userConfig.namespace("", function () {
@@ -239,20 +174,21 @@ test("Nested Empty Inner namespace", (t) => {
     });
   });
 
+  await templateCfg.init();
+
   let cfg = templateCfg.getConfig();
   t.not(Object.keys(cfg.nunjucksFilters).indexOf("testNsmyFilterName"), -1);
 });
 
-test("Nested Empty Outer namespace", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test("Nested Empty Outer namespace", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.namespace("", function () {
     templateCfg.userConfig.namespace("testNs", function () {
       templateCfg.userConfig.addNunjucksFilter("myFilterName", function () {});
     });
   });
+
+  await templateCfg.init();
 
   let cfg = templateCfg.getConfig();
   t.not(Object.keys(cfg.nunjucksFilters).indexOf("testNsmyFilterName"), -1);
@@ -261,24 +197,20 @@ test("Nested Empty Outer namespace", (t) => {
 // important for backwards compatibility with old
 // `module.exports = function (eleventyConfig, pluginNamespace) {`
 // plugin code
-test("Non-string namespaces are ignored", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test("Non-string namespaces are ignored", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.namespace(["lkdsjflksd"], function () {
     templateCfg.userConfig.addNunjucksFilter("myFilterName", function () {});
   });
+
+  await templateCfg.init();
 
   let cfg = templateCfg.getConfig();
   t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
 });
 
-test(".addPlugin oddity: I don’t think pluginNamespace was ever passed in here, but we don’t want this to break", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test(".addPlugin oddity: I don’t think pluginNamespace was ever passed in here, but we don’t want this to break", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
 
   templateCfg.userConfig.addPlugin(function (eleventyConfig, pluginNamespace) {
     eleventyConfig.namespace(pluginNamespace, () => {
@@ -286,136 +218,150 @@ test(".addPlugin oddity: I don’t think pluginNamespace was ever passed in here
     });
   });
 
+  await templateCfg.init();
+
   let cfg = templateCfg.getConfig();
   t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
 });
 
-test("Test url universal filter with custom pathPrefix (no slash)", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test("Test url universal filter with custom pathPrefix (no slash)", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.setPathPrefix("/testdirectory/");
+
+  await templateCfg.init();
+
   let cfg = templateCfg.getConfig();
   t.is(cfg.pathPrefix, "/testdirectory/");
 });
 
-test("setTemplateFormats(string)", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test("setTemplateFormats(string)", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   // 0.11.0 removes dupes
-  templateCfg.userConfig.setTemplateFormats("ejs,njk, liquid, njk");
+  templateCfg.userConfig.setTemplateFormats("njk, liquid, njk");
+
+  await templateCfg.init();
 
   let cfg = templateCfg.getConfig();
-  t.deepEqual(cfg.templateFormats, ["ejs", "njk", "liquid"]);
+  t.deepEqual(cfg.templateFormats, ["njk", "liquid"]);
 });
 
-test("setTemplateFormats(array)", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
-  templateCfg.userConfig.setTemplateFormats(["ejs", "njk", "liquid"]);
+test("setTemplateFormats(array)", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
+  templateCfg.userConfig.setTemplateFormats(["njk", "liquid"]);
+
+  await templateCfg.init();
 
   let cfg = templateCfg.getConfig();
-  t.deepEqual(cfg.templateFormats, ["ejs", "njk", "liquid"]);
+  t.deepEqual(cfg.templateFormats, ["njk", "liquid"]);
 });
 
-test("setTemplateFormats(array, size 1)", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test("setTemplateFormats(array, size 1)", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.setTemplateFormats(["liquid"]);
+
+  await templateCfg.init();
 
   let cfg = templateCfg.getConfig();
   t.deepEqual(cfg.templateFormats, ["liquid"]);
 });
 
-test("setTemplateFormats(empty array)", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test("setTemplateFormats(empty array)", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.setTemplateFormats([]);
+
+  await templateCfg.init();
 
   let cfg = templateCfg.getConfig();
   t.deepEqual(cfg.templateFormats, []);
 });
 
-test("setTemplateFormats(null)", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test("setTemplateFormats(null)", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.setTemplateFormats(null);
 
+  await templateCfg.init();
+
   let cfg = templateCfg.getConfig();
-  t.deepEqual(cfg.templateFormats.sort(), ["md", "njk"]);
+  t.deepEqual([...cfg.templateFormats].sort(), ["md", "njk"]);
 });
 
-test("setTemplateFormats(undefined)", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test("setTemplateFormats(undefined)", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.setTemplateFormats(undefined);
 
+  await templateCfg.init();
+
   let cfg = templateCfg.getConfig();
-  t.deepEqual(cfg.templateFormats.sort(), ["md", "njk"]);
+  t.deepEqual([...cfg.templateFormats].sort(), ["md", "njk"]);
 });
 
-test("multiple setTemplateFormats calls", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test("multiple setTemplateFormats calls", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.setTemplateFormats("njk");
   templateCfg.userConfig.setTemplateFormats("pug");
+
+  await templateCfg.init();
 
   let cfg = templateCfg.getConfig();
   t.deepEqual(cfg.templateFormats, ["pug"]);
 });
 
-test("addTemplateFormats()", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test("addTemplateFormats()", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.addTemplateFormats("vue");
+  await templateCfg.init();
 
   let cfg = templateCfg.getConfig();
   // should have ALL of the original defaults
   t.deepEqual(cfg.templateFormats, ["md", "njk", "vue"]);
 });
 
-test("both setTemplateFormats and addTemplateFormats", (t) => {
+test("addTemplateFormats() via Plugin", async (t) => {
+  let templateCfg = new TemplateConfig();
+  templateCfg.userConfig.addTemplateFormats("pug");
+  templateCfg.userConfig.addPlugin(cfg => {
+    cfg.addTemplateFormats("webc");
+  });
+  await templateCfg.init();
+
+  let cfg = templateCfg.getConfig();
+  t.deepEqual(cfg.templateFormats, ["liquid", "md", "njk", "html", "11ty.js", "pug", "webc"]);
+});
+
+
+test("both setTemplateFormats and addTemplateFormats", async (t) => {
   // Template Formats can come from three places
   // defaultConfig.js config API (not used yet)
   // defaultConfig.js config return object
   // project config file config API
   // project config file config return object
 
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.addTemplateFormats("vue");
   templateCfg.userConfig.setTemplateFormats("pug");
+  await templateCfg.init();
 
   let cfg = templateCfg.getConfig();
   t.deepEqual(cfg.templateFormats, ["pug", "vue"]);
 });
 
-test("libraryOverrides", (t) => {
+test("addTemplateFormats() Array", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
+  templateCfg.userConfig.addTemplateFormats("vue2");
+  templateCfg.userConfig.addTemplateFormats(["vue"]);
+  templateCfg.userConfig.addTemplateFormats(["text", "txt"]);
+  await templateCfg.init();
+
+  let cfg = templateCfg.getConfig();
+  // should have ALL of the original defaults
+  t.deepEqual(cfg.templateFormats, ["md", "njk", "vue2", "vue", "text", "txt"]);
+});
+
+test("libraryOverrides", async (t) => {
   let mdLib = md();
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.setLibrary("md", mdLib);
+  await templateCfg.init();
 
   let cfg = templateCfg.getConfig();
   t.falsy(cfg.libraryOverrides.ldkja);
@@ -424,50 +370,46 @@ test("libraryOverrides", (t) => {
   t.deepEqual(mdLib, cfg.libraryOverrides.md);
 });
 
-test("addGlobalData", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test("addGlobalData", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.addGlobalData("function", () => new Date());
+
+  await templateCfg.init();
 
   let cfg = templateCfg.getConfig();
   t.not(Object.keys(cfg.globalData).indexOf("function"), -1);
 });
 
-test("Properly throws error on missing module #182", (t) => {
-  t.throws(function () {
-    let templateCfg = new TemplateConfig(
-      require("../src/defaultConfig.js"),
-      "./test/stubs/broken-config.js"
-    );
+test("Properly throws error on missing module #182", async (t) => {
+  await t.throwsAsync(async () => {
+    let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/broken-config.cjs");
+
+    await templateCfg.init();
 
     templateCfg.getConfig();
   });
 });
 
-test("Properly throws error when config returns a Promise", (t) => {
-  t.throws(function () {
-    let templateCfg = new TemplateConfig(
-      require("../src/defaultConfig.js"),
-      "./test/stubs/config-promise.js"
-    );
+test("Properly throws error when config returns a Promise", async (t) => {
+  await t.throwsAsync(async () => {
+    let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config-promise.js");
+    await templateCfg.init();
+
     templateCfg.getConfig();
   });
 });
 
-test(".addWatchTarget adds a watch target", (t) => {
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config.js"
-  );
+test(".addWatchTarget adds a watch target", async (t) => {
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.addWatchTarget("/testdirectory/");
+
+  await templateCfg.init();
 
   let cfg = templateCfg.getConfig();
   t.deepEqual(cfg.additionalWatchTargets, ["/testdirectory/"]);
 });
 
-test("Nested .addPlugin calls", (t) => {
+test("Nested .addPlugin calls", async (t) => {
   t.plan(2);
   let templateCfg = new TemplateConfig();
 
@@ -479,10 +421,12 @@ test("Nested .addPlugin calls", (t) => {
     });
   });
 
+  await templateCfg.init();
+
   templateCfg.getConfig();
 });
 
-test("Nested .addPlugin calls (×3)", (t) => {
+test("Nested .addPlugin calls (×3)", async (t) => {
   t.plan(3);
   let templateCfg = new TemplateConfig();
 
@@ -498,10 +442,12 @@ test("Nested .addPlugin calls (×3)", (t) => {
     });
   });
 
+  await templateCfg.init();
+
   templateCfg.getConfig();
 });
 
-test("Nested .addPlugin calls order", (t) => {
+test("Nested .addPlugin calls order", async (t) => {
   t.plan(3);
   let templateCfg = new TemplateConfig();
   let order = [];
@@ -521,10 +467,12 @@ test("Nested .addPlugin calls order", (t) => {
     });
   });
 
+  await templateCfg.init();
+
   templateCfg.getConfig();
 });
 
-test("Nested .addPlugin calls. More complex order", (t) => {
+test("Nested .addPlugin calls. More complex order", async (t) => {
   t.plan(5);
   let templateCfg = new TemplateConfig();
   let order = [];
@@ -554,10 +502,12 @@ test("Nested .addPlugin calls. More complex order", (t) => {
     });
   });
 
+  await templateCfg.init();
+
   templateCfg.getConfig();
 });
 
-test(".addPlugin has access to pathPrefix", (t) => {
+test(".addPlugin has access to pathPrefix", async (t) => {
   t.plan(1);
   let templateCfg = new TemplateConfig();
 
@@ -565,10 +515,12 @@ test(".addPlugin has access to pathPrefix", (t) => {
     t.is(eleventyConfig.pathPrefix, "/");
   });
 
+  await templateCfg.init();
+
   templateCfg.getConfig();
 });
 
-test(".addPlugin has access to pathPrefix (override method)", (t) => {
+test(".addPlugin has access to pathPrefix (override method)", async (t) => {
   t.plan(1);
   let templateCfg = new TemplateConfig();
   templateCfg.setPathPrefix("/test/");
@@ -577,19 +529,86 @@ test(".addPlugin has access to pathPrefix (override method)", (t) => {
     t.is(eleventyConfig.pathPrefix, "/test/");
   });
 
+  await templateCfg.init();
+
   templateCfg.getConfig();
 });
 
-test("falsy pathPrefix should fall back to default", (t) => {
+test("falsy pathPrefix should fall back to default", async (t) => {
   t.plan(1);
-  let templateCfg = new TemplateConfig(
-    require("../src/defaultConfig.js"),
-    "./test/stubs/config-empty-pathprefix.js"
-  );
+  let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config-empty-pathprefix.cjs");
 
   templateCfg.userConfig.addPlugin(function (eleventyConfig) {
     t.is(eleventyConfig.pathPrefix, "/");
   });
 
+  await templateCfg.init();
+
   templateCfg.getConfig();
+});
+
+test("Add async plugin", async (t) => {
+  let templateCfg = new TemplateConfig();
+
+  await templateCfg.userConfig.addPlugin(async (eleventyConfig) => {
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        eleventyConfig.addFilter("myFilterName", function () {});
+        resolve();
+      }, 10);
+    });
+  });
+
+  await templateCfg.init();
+
+  let cfg = templateCfg.getConfig();
+  t.not(Object.keys(cfg.liquidFilters).indexOf("myFilterName"), -1);
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
+});
+
+test("Async namespace", async (t) => {
+  let templateCfg = new TemplateConfig();
+
+  await templateCfg.userConfig.namespace("testNamespace", async (eleventyConfig) => {
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        eleventyConfig.addFilter("MyFilterName", function () {});
+        resolve();
+      }, 10);
+    });
+  });
+
+  await templateCfg.init();
+
+  let cfg = templateCfg.getConfig();
+  t.not(Object.keys(cfg.liquidFilters).indexOf("testNamespaceMyFilterName"), -1);
+  t.not(Object.keys(cfg.nunjucksFilters).indexOf("testNamespaceMyFilterName"), -1);
+});
+
+test("ProjectDirectories instance exists in user accessible config", async (t) => {
+	let eleventyConfig = await getTemplateConfigInstance();
+  let cfg = eleventyConfig.getConfig();
+
+  t.truthy(cfg.directories);
+  t.is(cfg.directories.input, "./");
+  t.is(cfg.directories.data, "./_data/");
+  t.is(cfg.directories.includes, "./_includes/");
+  t.is(cfg.directories.layouts, undefined);
+  t.is(cfg.directories.output, "./_site/");
+
+	t.throws(() => {
+		cfg.directories.input = "should not work";
+	});
+	t.throws(() => {
+		cfg.directories.data = "should not work";
+	});
+	t.throws(() => {
+		cfg.directories.includes = "should not work";
+	});
+	t.throws(() => {
+		cfg.directories.layouts = "should not work";
+	});
+	t.throws(() => {
+		cfg.directories.output = "should not work";
+	});
 });

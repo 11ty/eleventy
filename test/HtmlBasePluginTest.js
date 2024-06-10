@@ -1,17 +1,15 @@
-const test = require("ava");
-const HtmlBasePlugin = require("../src/Plugins/HtmlBasePlugin");
-const Eleventy = require("../src/Eleventy");
-const normalizeNewLines = require("./Util/normalizeNewLines");
+import test from "ava";
+
+import { default as HtmlBasePlugin, applyBaseToUrl } from "../src/Plugins/HtmlBasePlugin.js";
+import Eleventy from "../src/Eleventy.js";
+import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 
 function getContentFor(results, filename) {
-  let content = results.filter((entry) =>
-    entry.outputPath.endsWith(filename)
-  )[0].content;
+  let content = results.filter((entry) => entry.outputPath.endsWith(filename))[0].content;
   return normalizeNewLines(content.trim());
 }
 
 test("Using the filter directly", async (t) => {
-  let { applyBaseToUrl } = HtmlBasePlugin;
   // url, base, pathprefix
 
   // default pathprefix
@@ -21,10 +19,7 @@ test("Using the filter directly", async (t) => {
   t.is(applyBaseToUrl("../subdir/", "/"), "../subdir/");
   t.is(applyBaseToUrl("./subdir/", "/"), "subdir/");
   t.is(applyBaseToUrl("http://example.com/", "/"), "http://example.com/");
-  t.is(
-    applyBaseToUrl("http://example.com/test/", "/"),
-    "http://example.com/test/"
-  );
+  t.is(applyBaseToUrl("http://example.com/test/", "/"), "http://example.com/test/");
 
   // relative url pathprefix is ignored
   t.is(applyBaseToUrl("/", "../"), "/");
@@ -33,10 +28,7 @@ test("Using the filter directly", async (t) => {
   t.is(applyBaseToUrl("../subdir/", "../"), "../subdir/");
   t.is(applyBaseToUrl("./subdir/", "../"), "subdir/");
   t.is(applyBaseToUrl("http://example.com/", "../"), "http://example.com/");
-  t.is(
-    applyBaseToUrl("http://example.com/test/", "../"),
-    "http://example.com/test/"
-  );
+  t.is(applyBaseToUrl("http://example.com/test/", "../"), "http://example.com/test/");
 
   // with a pathprefix
   t.is(applyBaseToUrl("/", "/pathprefix/"), "/pathprefix/");
@@ -44,74 +36,38 @@ test("Using the filter directly", async (t) => {
   t.is(applyBaseToUrl("subdir/", "/pathprefix/"), "subdir/");
   t.is(applyBaseToUrl("../subdir/", "/pathprefix/"), "../subdir/");
   t.is(applyBaseToUrl("./subdir/", "/pathprefix/"), "subdir/");
+  t.is(applyBaseToUrl("#anchor", "/pathprefix/"), "#anchor");
+  t.is(applyBaseToUrl("/test/#anchor", "/pathprefix/"), "/pathprefix/test/#anchor");
+  t.is(applyBaseToUrl("/test/?param=value", "/pathprefix/"), "/pathprefix/test/?param=value");
   t.is(applyBaseToUrl("http://url.com/", "/pathprefix/"), "http://url.com/");
-  t.is(
-    applyBaseToUrl("http://url.com/test/", "/pathprefix/"),
-    "http://url.com/test/"
-  );
+  t.is(applyBaseToUrl("http://url.com/test/", "/pathprefix/"), "http://url.com/test/");
 
   // with a URL base
   t.is(applyBaseToUrl("/", "http://example.com/"), "http://example.com/");
-  t.is(
-    applyBaseToUrl("/test/", "http://example.com/"),
-    "http://example.com/test/"
-  );
-  t.is(
-    applyBaseToUrl("subdir/", "http://example.com/"),
-    "http://example.com/subdir/"
-  );
-  t.is(
-    applyBaseToUrl("../subdir/", "http://example.com/"),
-    "http://example.com/subdir/"
-  );
-  t.is(
-    applyBaseToUrl("./subdir/", "http://example.com/"),
-    "http://example.com/subdir/"
-  );
-  t.is(
-    applyBaseToUrl("http://url.com/", "http://example.com/"),
-    "http://url.com/"
-  );
-  t.is(
-    applyBaseToUrl("http://url.com/test/", "http://example.com/"),
-    "http://url.com/test/"
-  );
+  t.is(applyBaseToUrl("/test/", "http://example.com/"), "http://example.com/test/");
+  t.is(applyBaseToUrl("subdir/", "http://example.com/"), "http://example.com/subdir/");
+  t.is(applyBaseToUrl("../subdir/", "http://example.com/"), "http://example.com/subdir/");
+  t.is(applyBaseToUrl("./subdir/", "http://example.com/"), "http://example.com/subdir/");
+  t.is(applyBaseToUrl("http://url.com/", "http://example.com/"), "http://url.com/");
+  t.is(applyBaseToUrl("http://url.com/test/", "http://example.com/"), "http://url.com/test/");
+  t.is(applyBaseToUrl("#anchor", "http://example.com/"), "http://example.com/#anchor");
+	t.is(applyBaseToUrl("/test/#anchor", "http://example.com/"), "http://example.com/test/#anchor");
+	t.is(applyBaseToUrl("/test/?param=value#anchor", "http://example.com/"), "http://example.com/test/?param=value#anchor");
 
   // with a URL base with extra subdirectory
-  t.is(
-    applyBaseToUrl("/", "http://example.com/ignored/"),
-    "http://example.com/"
-  );
-  t.is(
-    applyBaseToUrl("/test/", "http://example.com/ignored/"),
-    "http://example.com/test/"
-  );
-  t.is(
-    applyBaseToUrl("subdir/", "http://example.com/deep/"),
-    "http://example.com/deep/subdir/"
-  );
-  t.is(
-    applyBaseToUrl("../subdir/", "http://example.com/deep/"),
-    "http://example.com/subdir/"
-  );
-  t.is(
-    applyBaseToUrl("./subdir/", "http://example.com/deep/"),
-    "http://example.com/deep/subdir/"
-  );
-  t.is(
-    applyBaseToUrl("http://url.com/", "http://example.com/ignored/"),
-    "http://url.com/"
-  );
+  t.is(applyBaseToUrl("/", "http://example.com/ignored/"), "http://example.com/");
+  t.is(applyBaseToUrl("/test/", "http://example.com/ignored/"), "http://example.com/test/");
+  t.is(applyBaseToUrl("subdir/", "http://example.com/deep/"), "http://example.com/deep/subdir/");
+  t.is(applyBaseToUrl("../subdir/", "http://example.com/deep/"), "http://example.com/subdir/");
+  t.is(applyBaseToUrl("./subdir/", "http://example.com/deep/"), "http://example.com/deep/subdir/");
+  t.is(applyBaseToUrl("http://url.com/", "http://example.com/ignored/"), "http://url.com/");
   t.is(
     applyBaseToUrl("http://url.com/test/", "http://example.com/ignored/"),
     "http://url.com/test/"
   );
 
   // with a URL base and root pathprefix
-  t.is(
-    applyBaseToUrl("/", "http://example.com/", { pathPrefix: "/" }),
-    "http://example.com/"
-  );
+  t.is(applyBaseToUrl("/", "http://example.com/", { pathPrefix: "/" }), "http://example.com/");
   t.is(
     applyBaseToUrl("/test/", "http://example.com/", { pathPrefix: "/" }),
     "http://example.com/test/"
@@ -295,6 +251,8 @@ test("Using the HTML base plugin (default values)", async (t) => {
       eleventyConfig.addPlugin(HtmlBasePlugin);
     },
   });
+  await elev.initializeConfig();
+
   elev.setIsVerbose(false);
   elev.disableLogger();
 
@@ -332,6 +290,9 @@ test("Using the HTML base plugin with pathPrefix: /test/", async (t) => {
       eleventyConfig.addPlugin(HtmlBasePlugin);
     },
   });
+
+  await elev.initializeConfig();
+
   elev.setIsVerbose(false);
   elev.disableLogger();
 
@@ -372,6 +333,8 @@ test("Using the HTML base plugin with pathPrefix: /test/ and base: http://exampl
     },
   });
 
+  await elev.initializeConfig();
+
   elev.setIsVerbose(false);
   elev.disableLogger();
 
@@ -409,6 +372,8 @@ test("Using the HTML base plugin strips extra path in full URL base (default pat
       });
     },
   });
+
+  await elev.initializeConfig();
 
   elev.setIsVerbose(false);
   elev.disableLogger();
@@ -450,6 +415,8 @@ test("Using the HTML base plugin strips extra path in full URL base (pathPrefix:
     },
   });
 
+  await elev.initializeConfig();
+
   elev.setIsVerbose(false);
   elev.disableLogger();
 
@@ -490,6 +457,8 @@ test("Opt out of the transform with falsy extensions list", async (t) => {
     },
   });
 
+  await elev.initializeConfig();
+
   elev.setIsVerbose(false);
   elev.disableLogger();
 
@@ -528,6 +497,8 @@ test("Base plugin with permalink: false, #2602", async (t) => {
     },
   });
 
+  await elev.initializeConfig();
+
   elev.setIsVerbose(false);
   elev.disableLogger();
 
@@ -553,4 +524,85 @@ test("Base plugin with permalink: false, #2602", async (t) => {
 </body>
 </html>`
   );
+});
+
+test("Using the HTML base plugin with pathPrefix: /test/ and transformed attributes are *not* case sensitive", async (t) => {
+  let elev = new Eleventy("./test/stubs-base-case-sens/", "./test/stubs-base-case-sens/_site", {
+    pathPrefix: "/test/",
+
+    configPath: false,
+    config: function (eleventyConfig) {
+      eleventyConfig.setUseTemplateCache(false);
+      eleventyConfig.addPlugin(HtmlBasePlugin);
+    },
+  });
+
+  await elev.initializeConfig();
+
+  elev.setIsVerbose(false);
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(
+    getContentFor(results, "/deep/index.html"),
+    `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<title></title>
+<style>div { background-image: url(test.jpg); }</style>
+<style>div { background-image: url(/test/test.jpg); }</style>
+<link rel="stylesheet" href="/test/test.css">
+<script SrC="/test.js"></script>
+</head>
+<body>
+<a hreF="/">Home</a>
+<a HrEf="subdir/">Test</a>
+<a href="../subdir/">Test</a>
+</body>
+</html>`
+  );
+});
+
+test("HTML base plugin only adds once (unique)", async (t) => {
+  t.plan(2);
+  let elev = new Eleventy("./test/stubs-base/", "./test/stubs-base/_site", {
+    configPath: false,
+    config: function (eleventyConfig) {
+      // Runs before defaultConfig.js
+      t.is(eleventyConfig.plugins.length, 0);
+      eleventyConfig.addPlugin(HtmlBasePlugin);
+      eleventyConfig.addPlugin(HtmlBasePlugin);
+      eleventyConfig.addPlugin(HtmlBasePlugin);
+      eleventyConfig.addPlugin(HtmlBasePlugin);
+      t.is(eleventyConfig.plugins.length, 1);
+    },
+  });
+  await elev.init();
+});
+
+test("HTML base plugin can resolve by name", async (t) => {
+  t.plan(2);
+  let elev = new Eleventy("./test/stubs-base/", "./test/stubs-base/_site", {
+    configPath: false,
+    config: async function (eleventyConfig) {
+      // Runs before defaultConfig.js
+      t.is(eleventyConfig.plugins.length, 0);
+
+      let plugin = await eleventyConfig.resolvePlugin("@11ty/eleventy/html-base-plugin");
+      eleventyConfig.addPlugin(plugin);
+
+      // does not add duplicate
+      eleventyConfig.addPlugin(plugin);
+
+      // does not add duplicate even with a different reference
+      eleventyConfig.addPlugin(HtmlBasePlugin);
+      eleventyConfig.addPlugin(HtmlBasePlugin);
+
+      t.is(eleventyConfig.plugins.length, 1);
+    },
+  });
+  await elev.init();
 });

@@ -1,21 +1,21 @@
-const test = require("ava");
-const templateCache = require("../src/TemplateCache");
+import test from "ava";
 
-const getNewTemplate = require("./_getNewTemplateForTests");
+import templateCache from "../src/TemplateCache.js";
+import getNewTemplate from "./_getNewTemplateForTests.js";
 
-test("Cache can save templates", (t) => {
+test("Cache can save templates", async (t) => {
   templateCache.clear();
 
-  let tmpl = getNewTemplate("./test/stubs/template.ejs", "./test/stubs/", "./dist");
+  let tmpl = await getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./dist");
 
   templateCache.add(tmpl);
   t.is(templateCache.size(), 1);
 });
 
-test("TemplateCache clear", (t) => {
+test("TemplateCache clear", async (t) => {
   templateCache.clear();
 
-  let tmpl = getNewTemplate("./test/stubs/template.ejs", "./test/stubs/", "./dist");
+  let tmpl = await getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./dist");
 
   templateCache.add(tmpl);
   t.is(templateCache.size(), 1);
@@ -23,36 +23,36 @@ test("TemplateCache clear", (t) => {
   t.is(templateCache.size(), 0);
 });
 
-test("TemplateCache has", (t) => {
+test("TemplateCache has", async (t) => {
   templateCache.clear();
 
-  let tmpl = getNewTemplate("./test/stubs/template.ejs", "./test/stubs/", "./dist");
+  let tmpl = await getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./dist");
 
   templateCache.add(tmpl);
   // Only TemplateLayout is cached
-  t.is(templateCache.has("./test/stubs/template.ejs"), false);
+  t.is(templateCache.has("./test/stubs/template.liquid"), false);
 });
 
-test("TemplateCache get success", (t) => {
+test("TemplateCache get success", async (t) => {
   templateCache.clear();
 
-  let tmpl = getNewTemplate("./test/stubs/template.ejs", "./test/stubs/", "./dist");
+  let tmpl = await getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./dist");
 
   templateCache.add(tmpl);
 
   // Only TemplateLayout is cached
   t.throws(() => {
-    templateCache.get("./test/stubs/template.ejs");
+    templateCache.get("./test/stubs/template.liquid");
   });
 });
 
-test("TemplateCache get fail", (t) => {
+test("TemplateCache get fail", async (t) => {
   templateCache.clear();
 
-  let tmpl = getNewTemplate("./test/stubs/template.ejs", "./test/stubs/", "./dist");
+  let tmpl = await getNewTemplate("./test/stubs/template.liquid", "./test/stubs/", "./dist");
 
   templateCache.add(tmpl);
   t.throws(function () {
-    templateCache.get("./test/stubs/template298374892.ejs");
+    templateCache.get("./test/stubs/template298374892.liquid");
   });
 });

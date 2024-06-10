@@ -1,5 +1,5 @@
-const test = require("ava");
-const EleventyWatch = require("../src/EleventyWatch");
+import test from "ava";
+import EleventyWatch from "../src/EleventyWatch.js";
 
 test("Standard", (t) => {
   let watch = new EleventyWatch();

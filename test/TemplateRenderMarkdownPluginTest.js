@@ -1,13 +1,18 @@
-const test = require("ava");
-const TemplateRender = require("../src/TemplateRender");
-const TemplateConfig = require("../src/TemplateConfig");
-const EleventyExtensionMap = require("../src/EleventyExtensionMap");
-const md = require("markdown-it");
+import test from "ava";
+import md from "markdown-it";
 
-function getNewTemplateRender(name, inputDir) {
-  let eleventyConfig = new TemplateConfig();
-  let tr = new TemplateRender(name, inputDir, eleventyConfig);
-  tr.extensionMap = new EleventyExtensionMap([], eleventyConfig);
+import TemplateRender from "../src/TemplateRender.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+
+import { getTemplateConfigInstance } from "./_testHelpers.js";
+
+async function getNewTemplateRender(name, inputDir) {
+  let eleventyConfig = await getTemplateConfigInstance();
+
+  let tr = new TemplateRender(name, eleventyConfig);
+  tr.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  tr.extensionMap.setFormats([]);
+  await tr.init();
   return tr;
 }
 
@@ -25,7 +30,7 @@ const createTestMarkdownPlugin = () => {
 };
 
 test("Markdown Render: with HTML prerender, sends context data to the markdown library", async (t) => {
-  let tr = getNewTemplateRender("md");
+  let tr = await getNewTemplateRender("md");
 
   const plugin = createTestMarkdownPlugin();
   let mdLib = md().use(plugin);
@@ -40,7 +45,7 @@ test("Markdown Render: with HTML prerender, sends context data to the markdown l
 });
 
 test("Markdown Render: without HTML prerender, sends context data to the markdown library", async (t) => {
-  let tr = getNewTemplateRender("md");
+  let tr = await getNewTemplateRender("md");
 
   const plugin = createTestMarkdownPlugin();
   let mdLib = md().use(plugin);
@@ -56,7 +61,7 @@ test("Markdown Render: without HTML prerender, sends context data to the markdow
 });
 
 test("Markdown Render: renderer that only implements the render function", async (t) => {
-  let tr = getNewTemplateRender("md");
+  let tr = await getNewTemplateRender("md");
   tr.engine.setLibrary({
     render: (content) => {
       const [_, text, href] = content.match(/\[(.*)\]\((.*)\)/);

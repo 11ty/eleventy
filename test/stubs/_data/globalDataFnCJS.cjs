@@ -1,4 +1,4 @@
-const dep1 = require("../deps/dep1");
+const dep1 = require("../deps/dep1.cjs");
 
 module.exports = function() {
   return {

@@ -1,12 +1,6 @@
 # Dependency notes
 
-- `@iarna/toml` has a 3.0 that we have never been on but it was released the same day as the last 2.x https://github.com/BinaryMuse/toml-node/commits/master (needs more investigation)
-
-## List of dependencies that went ESM
-
-- `@sindresorhus/slugify` ESM at 2.x
-- `multimatch` is ESM at 6
-- `bcp-47-normalize` at 1.x
+- (dev dep only) `@iarna/toml` has a 3.0 that we have never been on but it was released the same day as the last 2.x https://github.com/BinaryMuse/toml-node/commits/master (needs more investigation)
 
 # Release Procedure
 
@@ -18,9 +12,11 @@
      - 0.12.x+ requires Node 10+
      - 1.x+ requires Node 12+
      - 2.x+ requires Node 14+
+     - 3.x+ requires Node 18+
 1. `rm -rf node_modules && rm -f package-lock.json && npm install`
 1. `npm audit`
-1. Make sure `npx ava` runs okay
+1. Make sure `npm run check` (eslint) runs okay
+1. Make sure `npm run test` (ava) runs okay
 1. Update version in `package.json`
    - (Alpha) Use `-alpha.1` suffix
    - (Beta) Use `-beta.1` suffix
@@ -30,10 +26,9 @@
 1. Wait for GitHub Actions to complete to know that the build did not fail.
 1. Release
    - (Alpha) `npm publish --access=public --tag=canary`
-     - NOTE: this was changed to `alpha` https://github.com/11ty/eleventy/issues/2758
+     - NOTE: the tag is `canary` but expects `-alpha.` suffixes in `package.json` version, read more: https://github.com/11ty/eleventy/issues/2758
    - (Beta) `npm publish --access=public --tag=beta`
    - (Main) `npm publish --access=public`
-1. (Optional) Build and commit a new the `eleventy-edge-cdn` project to generate a new Eleventy Edge lib.
 
 Unfortunate note about npm and tags (specifically `canary` here): if you push a 1.0.0-canary.x to `canary` (even though `2.0.0-canary.x` exists), it will use the last pushed tag when you npm install from `@canary` (not the highest version number)
 

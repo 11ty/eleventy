@@ -1,6 +1,7 @@
-const test = require("ava");
-const { DateTime } = require("luxon");
-const Sortable = require("../src/Util/Sortable");
+import test from "ava";
+import { DateTime } from "luxon";
+
+import Sortable from "../src/Util/Objects/Sortable.js";
 
 test("get Sort Function", (t) => {
   let s = new Sortable();

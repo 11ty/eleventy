@@ -1,14 +1,14 @@
-const slugify = require("@sindresorhus/slugify");
+import slugify from "@sindresorhus/slugify";
 
-module.exports = function (str, options = {}) {
-  return slugify(
-    "" + str,
-    Object.assign(
-      {
-        // lowercase: true, // default
-        decamelize: false,
-      },
-      options
-    )
-  );
-};
+export default function (str, options = {}) {
+	return slugify(
+		"" + str,
+		Object.assign(
+			{
+				// lowercase: true, // default
+				decamelize: false,
+			},
+			options,
+		),
+	);
+}
