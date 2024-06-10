@@ -899,7 +899,6 @@ test("Pagination and eleventyComputed data, issues #2512, #2837, #3013", async (
     });
     await elev.init();
     let written = await elev.toJSON();
-    console.log( {lang, written} );
 
     t.is(written[0].url, "/paul-mescal/", msg);
     t.is(written[0].content, `<title>The Effervescent adventures of Paul Mescal</title>${le}`, msg);
