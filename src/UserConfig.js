@@ -913,6 +913,12 @@ class UserConfig {
 		virtualInputPath = TemplatePath.stripLeadingDotSlash(
 			TemplatePath.standardizeFilePath(virtualInputPath),
 		);
+		if (this.virtualTemplates[virtualInputPath]) {
+			throw new Error(
+				"Virtual template conflict: you can’t add multiple virtual templates that have the same inputPath: " +
+					virtualInputPath,
+			);
+		}
 
 		this.virtualTemplates[virtualInputPath] = {
 			inputPath: virtualInputPath,

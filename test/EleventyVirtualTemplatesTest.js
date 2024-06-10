@@ -118,3 +118,18 @@ test("Virtual template writes to file system, issue #1612", async (t) => {
 
 	rimrafSync("./test/stubs-virtual/_site/");
 });
+
+test("Virtual templates conflict", async (t) => {
+	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
+		config: function (eleventyConfig) {
+			eleventyConfig.addTemplate("virtual.md", `# Hello`);
+			eleventyConfig.addTemplate("virtual.md", `# Hello`);
+		},
+	});
+
+	let e = await t.throwsAsync(async () => {
+    await elev.toJSON();
+	});
+
+	t.is(e.message, "Virtual template conflict: you can’t add multiple virtual templates that have the same inputPath: virtual.md");
+});
