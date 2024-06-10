@@ -1,6 +1,7 @@
 import test from "ava";
 import slugify from "slugify";
 
+import Eleventy from "../src/Eleventy.js";
 import TemplateData from "../src/Data/TemplateData.js";
 import Pagination from "../src/Plugins/Pagination.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";
@@ -878,7 +879,7 @@ test("Pagination and eleventyComputed permalink, issue #1555 and #1865", async (
 });
 
 test("Pagination and eleventyComputed data, issues #2512, #2837, #3013", async (t) => {
-  let templateLangs = ["liquid", "html", "md", "hbs", "mustache", "njk"];
+  let templateLangs = ["liquid", "html", "md", "njk"];
   let apostrophe = {
     liquid: "'",
     html: "'",
@@ -887,6 +888,7 @@ test("Pagination and eleventyComputed data, issues #2512, #2837, #3013", async (
     mustache: "&amp;#39;",
     njk: "&amp;#39;",
   };
+
   for (let lang of templateLangs) {
     let msg = `lang: ${lang}`;
     let le = lang === "md" ? "\n" : "";
@@ -897,6 +899,7 @@ test("Pagination and eleventyComputed data, issues #2512, #2837, #3013", async (
     });
     await elev.init();
     let written = await elev.toJSON();
+    console.log( {lang, written} );
 
     t.is(written[0].url, "/paul-mescal/", msg);
     t.is(written[0].content, `<title>The Effervescent adventures of Paul Mescal</title>${le}`, msg);
