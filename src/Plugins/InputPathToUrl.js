@@ -22,14 +22,20 @@ function normalizeInputPath(inputPath, inputDir, contentMap) {
 	return inputPath;
 }
 
-function splitFilePath(filepath) {
-	let hash = "";
-	let splitUrl = filepath.split("#");
-	if (splitUrl.length > 1) {
-		hash = "#" + splitUrl[1];
-		filepath = splitUrl[0];
+function parseFilePathForHashSupport(filepath) {
+	try {
+		let u = new URL(filepath, "file:");
+		return {
+			// hash includes # sign
+			hash: u.hash,
+			pathname: u.pathname,
+		};
+	} catch (e) {
+		return {
+			hash: "",
+			pathname: filepath,
+		};
 	}
-	return [hash, filepath];
 }
 
 function FilterPlugin(eleventyConfig) {
@@ -44,11 +50,10 @@ function FilterPlugin(eleventyConfig) {
 		}
 
 		let inputDir = eleventyConfig.directories.input;
-		let hash = "";
-		[hash, filepath] = splitFilePath(filepath);
-		filepath = normalizeInputPath(filepath, inputDir, contentMap);
+		let { hash, pathname } = parseFilePathForHashSupport(filepath);
+		pathname = normalizeInputPath(pathname, inputDir, contentMap);
 
-		let urls = contentMap[filepath];
+		let urls = contentMap[pathname];
 		if (!urls || urls.length === 0) {
 			throw new Error("`inputPathToUrl` filter could not find a matching target for " + filepath);
 		}
@@ -76,14 +81,13 @@ function TransformPlugin(eleventyConfig, defaultOptions = {}) {
 		}
 		let inputDir = eleventyConfig.directories.input;
 
-		let hash = "";
-		[hash, filepathOrUrl] = splitFilePath(filepathOrUrl);
-		filepathOrUrl = normalizeInputPath(filepathOrUrl, inputDir, contentMap);
+		let { hash, pathname } = parseFilePathForHashSupport(filepathOrUrl);
+		pathname = normalizeInputPath(pathname, inputDir, contentMap);
 
-		let urls = contentMap[filepathOrUrl];
+		let urls = contentMap[pathname];
 		if (!urls || urls.length === 0) {
 			// fallback, transforms don’t error on missing paths (though the pathToUrl filter does)
-			return `${filepathOrUrl}${hash}`;
+			return `${pathname}${hash}`;
 		}
 
 		return `${urls[0]}${hash}`;
