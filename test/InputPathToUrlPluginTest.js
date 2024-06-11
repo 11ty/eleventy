@@ -19,6 +19,8 @@ const OUTPUT_HTML_STD = `<!doctype html>
 <a href="/">Home</a>
 <a href="/tmpl/">Test</a>
 <a href="/tmpl/#anchor">Anchor</a>
+<a href="#anchor">Anchor</a>
+<a href="?search=1">Search</a>
 </body>
 </html>`;
 
@@ -36,6 +38,8 @@ const OUTPUT_HTML_BASE = `<!doctype html>
 <a href="/gh-pages/">Home</a>
 <a href="/gh-pages/tmpl/">Test</a>
 <a href="/gh-pages/tmpl/#anchor">Anchor</a>
+<a href="#anchor">Anchor</a>
+<a href="?search=1">Search</a>
 </body>
 </html>`;
 

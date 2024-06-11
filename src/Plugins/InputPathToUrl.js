@@ -1,3 +1,4 @@
+import path from "node:path";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import isValidUrl from "../Util/ValidUrl.js";
 
@@ -40,10 +41,15 @@ function parseFilePath(filepath) {
 			hash: '#anchor'
 		} */
 
+		// URL(`file:#anchor`) gives back a pathname of `/`
+		if (filepath.startsWith("#") || filepath.startsWith("?")) {
+			return ["", filepath];
+		}
+
 		// Note that `node:url` -> pathToFileURL creates an absolute path, which we don’t want
 		let u = new URL(`file:${filepath}`);
 		return [
-			// hash includes # sign
+			// search includes ?, hash includes #
 			u.search + u.hash,
 			u.pathname,
 		];
