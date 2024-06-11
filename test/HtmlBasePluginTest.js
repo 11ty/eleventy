@@ -274,6 +274,7 @@ test("Using the HTML base plugin (default values)", async (t) => {
 <body>
 <a href="/">Home</a>
 <a href="subdir/">Test</a>
+<a href="./subdir/">Test</a>
 <a href="../subdir/">Test</a>
 </body>
 </html>`
@@ -313,6 +314,7 @@ test("Using the HTML base plugin with pathPrefix: /test/", async (t) => {
 </head>
 <body>
 <a href="/test/">Home</a>
+<a href="subdir/">Test</a>
 <a href="subdir/">Test</a>
 <a href="../subdir/">Test</a>
 </body>
@@ -356,6 +358,7 @@ test("Using the HTML base plugin with pathPrefix: /test/ and base: http://exampl
 <body>
 <a href="http://example.com/test/">Home</a>
 <a href="http://example.com/test/deep/subdir/">Test</a>
+<a href="http://example.com/test/deep/subdir/">Test</a>
 <a href="http://example.com/test/subdir/">Test</a>
 </body>
 </html>`
@@ -395,6 +398,7 @@ test("Using the HTML base plugin strips extra path in full URL base (default pat
 </head>
 <body>
 <a href="http://example.com/">Home</a>
+<a href="http://example.com/deep/subdir/">Test</a>
 <a href="http://example.com/deep/subdir/">Test</a>
 <a href="http://example.com/subdir/">Test</a>
 </body>
@@ -438,6 +442,7 @@ test("Using the HTML base plugin strips extra path in full URL base (pathPrefix:
 <body>
 <a href="http://example.com/test/">Home</a>
 <a href="http://example.com/test/deep/subdir/">Test</a>
+<a href="http://example.com/test/deep/subdir/">Test</a>
 <a href="http://example.com/test/subdir/">Test</a>
 </body>
 </html>`
@@ -480,6 +485,7 @@ test("Opt out of the transform with falsy extensions list", async (t) => {
 <body>
 <a href="/">Home</a>
 <a href="subdir/">Test</a>
+<a href="./subdir/">Test</a>
 <a href="../subdir/">Test</a>
 </body>
 </html>`

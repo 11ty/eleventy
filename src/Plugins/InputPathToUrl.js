@@ -1,4 +1,3 @@
-import path from "node:path";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import isValidUrl from "../Util/ValidUrl.js";
 
@@ -41,17 +40,16 @@ function parseFilePath(filepath) {
 			hash: '#anchor'
 		} */
 
-		// URL(`file:#anchor`) gives back a pathname of `/`
-		if (filepath.startsWith("#") || filepath.startsWith("?")) {
-			return ["", filepath];
-		}
-
 		// Note that `node:url` -> pathToFileURL creates an absolute path, which we don’t want
+		// URL(`file:#anchor`) gives back a pathname of `/`
 		let u = new URL(`file:${filepath}`);
+		filepath = filepath.replace(u.search, "");
+		filepath = filepath.replace(u.hash, "");
+
 		return [
 			// search includes ?, hash includes #
 			u.search + u.hash,
-			u.pathname,
+			filepath,
 		];
 	} catch (e) {
 		return ["", filepath];
@@ -115,7 +113,7 @@ function TransformPlugin(eleventyConfig, defaultOptions = {}) {
 		filepathOrUrl = normalizeInputPath(filepathOrUrl, inputDir, contentMap);
 
 		let urls = contentMap[filepathOrUrl];
-		if (!urls || urls.length === 0) {
+		if (!filepathOrUrl || !urls || urls.length === 0) {
 			// fallback, transforms don’t error on missing paths (though the pathToUrl filter does)
 			return `${filepathOrUrl}${suffix}`;
 		}
