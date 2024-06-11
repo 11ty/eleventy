@@ -4,7 +4,8 @@ import path from "node:path";
 import lodash from "@11ty/lodash-custom";
 import { rimrafSync } from "rimraf";
 import { z } from "zod";
-import { fromZodError } from 'zod-validation-error';
+import { fromZodError } from "zod-validation-error";
+import { marked } from "marked";
 
 import eventBus from "../src/EventBus.js";
 import Eleventy, { HtmlBasePlugin } from "../src/Eleventy.js";
@@ -1295,4 +1296,23 @@ test("Eleventy transforms filter (using collections and page override data)", as
 
   t.is(results.filter(({inputPath}) => inputPath.endsWith("index.html"))[0].content, `<img src="/hi/test.png" alt="abc">`);
   t.is(results.filter(({inputPath}) => inputPath.endsWith("feed.njk"))[0].content, `<img src="/hi/test.png" alt="abc">`);
+});
+
+test("Custom Markdown Render with permalink, Issue #2780", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addExtension("md", {
+        compile: str => {
+          return data => marked.parse(str);
+        }
+      });
+
+      eleventyConfig.addTemplate("template.md", `# Markdown?`, { permalink: "/permalink.html" });
+    }
+  });
+
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+  t.is(results[0].url, `/permalink.html`);
+  t.is(results[0].content.trim(), `<h1>Markdown?</h1>`);
 });

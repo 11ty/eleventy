@@ -17,7 +17,7 @@ class CustomEngine extends TemplateEngine {
 		this._defaultEngine = undefined;
 
 		// Enable cacheability for this template
-		if (this.entry.compileOptions && "cache" in this.entry.compileOptions) {
+		if (this.entry?.compileOptions?.cache) {
 			this.cacheable = this.entry.compileOptions.cache;
 		} else if (this.needsToReadFileContents()) {
 			this.cacheable = true;
@@ -271,7 +271,8 @@ class CustomEngine extends TemplateEngine {
 			return this.entry.compileOptions.permalink;
 		}
 
-		return true;
+		// Breaking: default changed from `true` to `false` in 3.0.0-alpha.13
+		return false;
 	}
 
 	static shouldSpiderJavaScriptDependencies(entry) {
