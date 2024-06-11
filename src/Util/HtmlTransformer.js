@@ -79,6 +79,7 @@ class HtmlTransformer {
 			target[ext].push({
 				fn: value, // callback or plugin
 				priority: options.priority,
+				enabled: options.enabled || (() => true),
 			});
 
 			target[ext].sort(HtmlTransformer.prioritySort);
@@ -97,12 +98,20 @@ class HtmlTransformer {
 		Object.assign(this.posthtmlProcessOptions, options);
 	}
 
-	isTransformable(extension) {
-		return !!this.callbacks[extension] || !!this.plugins[extension];
+	isTransformable(extension, context) {
+		return (
+			this.getCallbacks(extension, context).length > 0 || this.getPlugins(extension).length > 0
+		);
 	}
 
-	getCallbacks(extension) {
-		return this.callbacks[extension] || [];
+	getCallbacks(extension, context) {
+		let callbacks = this.callbacks[extension] || [];
+		return callbacks.filter(({ enabled }) => {
+			if (!enabled || typeof enabled !== "function") {
+				return true;
+			}
+			return enabled(context);
+		});
 	}
 
 	getPlugins(extension) {
@@ -110,20 +119,25 @@ class HtmlTransformer {
 	}
 
 	static async transformStandalone(content, callback, posthtmlProcessOptions = {}) {
-		let posthtmlInstance = this._getPosthtmlInstance([{ fn: callback }]);
+		let posthtmlInstance = this._getPosthtmlInstance([
+			{
+				fn: callback,
+				enabled: () => true,
+			},
+		]);
 		let result = await posthtmlInstance.process(content, posthtmlProcessOptions);
 		return result.html;
 	}
 
 	async transformContent(outputPath, content, context) {
 		let extension = FilePathUtil.getFileExtension(outputPath);
-		if (!this.isTransformable(extension)) {
+		if (!this.isTransformable(extension, context)) {
 			return content;
 		}
 
 		let bench = this.aggregateBench.get(`Transforming \`${extension}\` with posthtml`);
 		bench.before();
-		let callbacks = this.getCallbacks(extension);
+		let callbacks = this.getCallbacks(extension, context);
 		let plugins = this.getPlugins(extension);
 		let posthtmlInstance = HtmlTransformer._getPosthtmlInstance(callbacks, plugins, context);
 		let result = await posthtmlInstance.process(content, this.posthtmlProcessOptions);

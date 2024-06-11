@@ -107,23 +107,24 @@ function eleventyHtmlBasePlugin(eleventyConfig, defaultOptions = {}) {
 		},
 	);
 
-	// Skip the transform with a default base
-	if (opts.baseHref !== "/") {
-		// Apply to all HTML output in your project
-		eleventyConfig.htmlTransformer.addUrlTransform(
-			opts.extensions,
-			function (urlInMarkup) {
-				// baseHref override is via renderTransforms filter for adding the absolute URL (e.g. https://example.com/pathPrefix/) for RSS/Atom/JSON feeds
-				return transformUrl(urlInMarkup.trim(), this.baseHref || opts.baseHref, {
-					pathPrefix: eleventyConfig.pathPrefix,
-					pageUrl: this.url,
-				});
+	// Apply to all HTML output in your project
+	eleventyConfig.htmlTransformer.addUrlTransform(
+		opts.extensions,
+		function (urlInMarkup) {
+			// baseHref override is via renderTransforms filter for adding the absolute URL (e.g. https://example.com/pathPrefix/) for RSS/Atom/JSON feeds
+			return transformUrl(urlInMarkup.trim(), this.baseHref || opts.baseHref, {
+				pathPrefix: eleventyConfig.pathPrefix,
+				pageUrl: this.url,
+			});
+		},
+		{
+			priority: -1, // run last (especially after PathToUrl transform)
+			enabled: function (context) {
+				// Enabled when pathPrefix is non-default or via renderTransforms
+				return context.baseHref || opts.baseHref !== "/";
 			},
-			{
-				priority: -1, // run last (especially after PathToUrl transform)
-			},
-		);
-	}
+		},
+	);
 }
 
 Object.defineProperty(eleventyHtmlBasePlugin, "eleventyPackage", {
