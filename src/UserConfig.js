@@ -398,8 +398,9 @@ class UserConfig {
 
 	/* Async friendly in 3.0 */
 	addPlugin(plugin, options = {}) {
+		// First addPlugin of a unique plugin wins
 		if (plugin?.eleventyPluginOptions?.unique && this.hasPlugin(plugin)) {
-			debug("Skipping duplicate unique addPlugin for %o", this.plugin);
+			debug("Skipping duplicate unique addPlugin for %o", this._getPluginName(plugin));
 			return;
 		}
 
@@ -459,7 +460,7 @@ class UserConfig {
 	_executePlugin(plugin, options) {
 		let name = this._getPluginName(plugin);
 		let ret;
-		debug(`Adding ${name || "anonymous"} plugin`);
+		debug(`Adding %o plugin`, name || "anonymous");
 		let pluginBenchmark = this.benchmarks.aggregate.get("Configuration addPlugin");
 
 		if (typeof plugin === "function") {
