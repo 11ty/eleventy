@@ -54,26 +54,28 @@ function eleventyHtmlBasePlugin(eleventyConfig, defaultOptions = {}) {
 
 			extensions: "html",
 
-			name: "htmlBaseWithPathPrefix",
-			filters: {
-				base: "htmlBaseUrl",
-				html: "transformWithHtmlBase",
-				pathPrefix: "addPathPrefixToFullUrl",
-			},
+			// `filters` option to rename filters was removed in 3.0.0-alpha.13
+			// Renaming these would cause issues in other plugins (e.g. RSS)
 		},
 		defaultOptions,
 	);
 
-	if (opts.baseHref === undefined) {
-		throw new Error("The `base` option is required in the Eleventy HTML Base plugin.");
+	if (opts.filters !== undefined) {
+		throw new Error(
+			"The `filters` option in the HTML Base plugin was removed to prevent future cross-plugin compatibility issues.",
+		);
 	}
 
-	eleventyConfig.addFilter(opts.filters.pathPrefix, function (url) {
+	if (opts.baseHref === undefined) {
+		throw new Error("The `base` option is required in the HTML Base plugin.");
+	}
+
+	eleventyConfig.addFilter("addPathPrefixToFullUrl", function (url) {
 		return addPathPrefixToUrl(url, eleventyConfig.pathPrefix);
 	});
 
 	// Apply to one URL
-	eleventyConfig.addFilter(opts.filters.base, function (url, baseOverride, pageUrlOverride) {
+	eleventyConfig.addFilter("htmlBaseUrl", function (url, baseOverride, pageUrlOverride) {
 		let base = baseOverride || opts.baseHref;
 
 		// Do nothing with a default base
@@ -89,7 +91,7 @@ function eleventyHtmlBasePlugin(eleventyConfig, defaultOptions = {}) {
 
 	// Apply to a block of HTML
 	eleventyConfig.addAsyncFilter(
-		opts.filters.html,
+		"transformWithHtmlBase",
 		function (content, baseOverride, pageUrlOverride) {
 			let base = baseOverride || opts.baseHref;
 
