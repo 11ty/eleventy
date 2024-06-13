@@ -20,9 +20,6 @@ const debug = require("debug")("Eleventy:cmd");
 
 (async function () {
 	const { default: EleventyErrorHandler } = await import("./src/Errors/EleventyErrorHandler.js");
-	const { default: EleventyBaseError } = await import("./src/Errors/EleventyBaseError.js");
-
-	class EleventyCommandCheckError extends EleventyBaseError {}
 
 	try {
 		let errorHandler = new EleventyErrorHandler();
@@ -43,7 +40,7 @@ const debug = require("debug")("Eleventy:cmd");
 				"ignore-initial": false,
 			},
 			unknown: function (unknownArgument) {
-				throw new EleventyCommandCheckError(
+				throw new Error(
 					`We don’t know what '${unknownArgument}' is. Use --help to see the list of supported commands.`,
 				);
 			},
@@ -129,7 +126,7 @@ const debug = require("debug")("Eleventy:cmd");
 							} else if (!argv.to || argv.to === "fs") {
 								elev.write();
 							} else {
-								throw new EleventyCommandCheckError(
+								throw new Error(
 									`Invalid --to value: ${argv.to}. Supported values: \`fs\` (default), \`json\`, and \`ndjson\`.`,
 								);
 							}
