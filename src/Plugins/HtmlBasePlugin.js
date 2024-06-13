@@ -53,13 +53,12 @@ function eleventyHtmlBasePlugin(eleventyConfig, defaultOptions = {}) {
 			baseHref: eleventyConfig.pathPrefix,
 
 			extensions: "html",
-
-			// `filters` option to rename filters was removed in 3.0.0-alpha.13
-			// Renaming these would cause issues in other plugins (e.g. RSS)
 		},
 		defaultOptions,
 	);
 
+	// `filters` option to rename filters was removed in 3.0.0-alpha.13
+	// Renaming these would cause issues in other plugins (e.g. RSS)
 	if (opts.filters !== undefined) {
 		throw new Error(
 			"The `filters` option in the HTML Base plugin was removed to prevent future cross-plugin compatibility issues.",
