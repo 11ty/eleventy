@@ -1,11 +1,11 @@
 import os from "node:os";
-import util from "node:util";
 
 import fs from "graceful-fs";
 import matter from "gray-matter";
 import lodash from "@11ty/lodash-custom";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
+import chardet from "chardet";
 
 import EleventyExtensionMap from "./EleventyExtensionMap.js";
 import TemplateData from "./Data/TemplateData.js";
@@ -15,8 +15,8 @@ import EleventyErrorUtil from "./Errors/EleventyErrorUtil.js";
 import eventBus from "./EventBus.js";
 
 const { set: lodashSet } = lodash;
-const readFile = util.promisify(fs.readFile);
 const debug = debugUtil("Eleventy:TemplateContent");
+const debugDiagnostic = debugUtil("Eleventy:Diagnostics");
 const debugDev = debugUtil("Dev:Eleventy:TemplateContent");
 
 class TemplateContentConfigError extends EleventyBaseError {}
@@ -290,7 +290,25 @@ class TemplateContent {
 		}
 
 		if (!content && content !== "") {
-			content = await readFile(this.inputPath, "utf8");
+			let contentBuffer = fs.readFileSync(this.inputPath);
+
+			if (process.env.DEBUG) {
+				// Warning: this is slow!!
+				let encoding = chardet.detect(contentBuffer);
+
+				if (encoding.startsWith("UTF-16")) {
+					debug("Warning: %o encoding detected on %o.", encoding, this.inputPath);
+					debugDiagnostic(
+						"%o encoding detected on %o. Please re-save as UTF-8.",
+						encoding,
+						this.inputPath,
+					);
+				} else {
+					debug("%o encoding detected on %o.", encoding, this.inputPath);
+				}
+			}
+
+			content = contentBuffer.toString("utf8");
 
 			if (this.config.useTemplateCache) {
 				TemplateContent.cache(this.inputPath, content);

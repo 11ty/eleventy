@@ -14,7 +14,7 @@ const require = createRequire(import.meta.url);
 // throwing an error if you try to import() a JSON file without an import assertion.
 async function loadContents(path, options = {}) {
 	let rawInput;
-	let encoding = "utf8";
+	let encoding = "utf8"; // JSON is utf8
 	if ("encoding" in options) {
 		encoding = options.encoding;
 	}
