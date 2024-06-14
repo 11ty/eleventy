@@ -122,8 +122,18 @@ function TransformPlugin(eleventyConfig, defaultOptions = {}) {
 	});
 }
 
+Object.defineProperty(FilterPlugin, "eleventyPackage", {
+	value: "@11ty/eleventy/inputpath-to-url-filter-plugin",
+});
+
+Object.defineProperty(FilterPlugin, "eleventyPluginOptions", {
+	value: {
+		unique: true,
+	},
+});
+
 Object.defineProperty(TransformPlugin, "eleventyPackage", {
-	value: "@11ty/eleventy/inputpath-to-url-plugin",
+	value: "@11ty/eleventy/inputpath-to-url-transform-plugin",
 });
 
 Object.defineProperty(TransformPlugin, "eleventyPluginOptions", {
