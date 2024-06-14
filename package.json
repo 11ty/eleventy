@@ -113,6 +113,7 @@
 		"@11ty/posthtml-urls": "^1.0.0",
 		"@sindresorhus/slugify": "^2.2.1",
 		"bcp-47-normalize": "^2.3.0",
+		"chardet": "^2.0.0",
 		"chokidar": "^3.6.0",
 		"cross-spawn": "^7.0.3",
 		"debug": "^4.3.5",
