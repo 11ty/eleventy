@@ -1,6 +1,7 @@
 import test from "ava";
 import fs from "fs";
 import { rimrafSync } from "rimraf";
+import { feedPlugin } from "@11ty/eleventy-plugin-rss";
 
 import Eleventy from "../src/Eleventy.js";
 import DuplicatePermalinkOutputError from "../src/Errors/DuplicatePermalinkOutputError.js";
@@ -132,4 +133,28 @@ test("Virtual templates conflict", async (t) => {
 	});
 
 	t.is(e.message, "Virtual template conflict: you can’t add multiple virtual templates that have the same inputPath: virtual.md");
+});
+
+// https://github.com/11ty/eleventy-plugin-rss/issues/50
+test("RSS virtual templates plugin", async (t) => {
+	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
+		config: function (eleventyConfig) {
+			eleventyConfig.addTemplate("virtual.md", `# Hello`, { tag: "posts" })
+
+      eleventyConfig.addPlugin(feedPlugin, {
+        type: "atom", // or "rss", "json"
+        outputPath: "/feed.xml",
+        collection: {
+          name: "posts", // iterate over `collections.posts`
+          limit: 10,     // 0 means no limit
+        },
+      });
+		},
+	});
+
+	let results = await elev.toJSON();
+
+	t.deepEqual(results.length, 2);
+  let [ feed ] = results.filter(entry => entry.outputPath.endsWith(".xml"));
+	t.truthy(feed.content.startsWith(`<?xml version="1.0" encoding="utf-8"?>`));
 });

@@ -77,6 +77,7 @@
 	},
 	"devDependencies": {
 		"@11ty/eleventy-img": "^5.0.0-beta.1",
+		"@11ty/eleventy-plugin-rss": "^2.0.1",
 		"@11ty/eleventy-plugin-syntaxhighlight": "^5.0.0",
 		"@iarna/toml": "^2.2.5",
 		"@mdx-js/node-loader": "^3.0.1",
