@@ -4,6 +4,11 @@ import debugUtil from "debug";
 import { RetrieveGlobals } from "node-retrieve-globals";
 import { DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
 
+import HtmlBasePlugin from "./Plugins/HtmlBasePlugin.js";
+import RenderPlugin from "./Plugins/RenderPlugin.js";
+import InputPathToUrlPlugin from "./Plugins/InputPathToUrl.js";
+// import I18nPlugin from "./Plugins/I18nPlugin.js";
+
 import EventEmitter from "./Util/AsyncEventEmitter.js";
 import EleventyCompatibility from "./Util/Compatibility.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
@@ -405,7 +410,7 @@ class UserConfig {
 		}
 
 		if (this.isPluginExecution() || options?.immediate) {
-			// might return a promise
+			// this might return a promise
 			return this._executePlugin(plugin, options);
 		} else {
 			this.plugins.push({
@@ -418,19 +423,30 @@ class UserConfig {
 
 	async resolvePlugin(name) {
 		let filenameLookup = {
-			"@11ty/eleventy/html-base-plugin": "./Plugins/HtmlBasePlugin.js",
+			"@11ty/eleventy/html-base-plugin": HtmlBasePlugin,
+			"@11ty/eleventy/render-plugin": RenderPlugin,
+			"@11ty/eleventy/inputpath-to-url-plugin": InputPathToUrlPlugin,
+
+			// requires async (`await resolvePlugin("@11ty/eleventy/i18n-plugin")`)
+			// to avoid preloading i18n dependencies.
+			// see https://github.com/11ty/eleventy-plugin-rss/issues/52
 			"@11ty/eleventy/i18n-plugin": "./Plugins/I18nPlugin.js",
-			"@11ty/eleventy/render-plugin": "./Plugins/RenderPlugin.js",
-			"@11ty/eleventy/inputpath-to-url-plugin": "./Plugins/InputPathToUrl.js",
 		};
+
 		if (!filenameLookup[name]) {
 			throw new Error(
 				`Invalid name "${name}" passed to resolvePlugin. Valid options: ${Object.keys(filenameLookup).join(", ")}`,
 			);
 		}
+
 		// Future improvement: add support for any npm package name?
-		let plugin = await import(filenameLookup[name]);
-		return plugin.default;
+		if (typeof filenameLookup[name] === "string") {
+			// returns promise
+			return import(filenameLookup[name]).then((plugin) => plugin.default);
+		}
+
+		// return reference
+		return filenameLookup[name];
 	}
 
 	hasPlugin(plugin) {

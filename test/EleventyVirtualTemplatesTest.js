@@ -129,7 +129,7 @@ test("Virtual templates conflict", async (t) => {
 	});
 
 	let e = await t.throwsAsync(async () => {
-    await elev.toJSON();
+		await elev.toJSON();
 	});
 
 	t.is(e.message, "Virtual template conflict: you can’t add multiple virtual templates that have the same inputPath: virtual.md");
@@ -141,20 +141,20 @@ test("RSS virtual templates plugin", async (t) => {
 		config: function (eleventyConfig) {
 			eleventyConfig.addTemplate("virtual.md", `# Hello`, { tag: "posts" })
 
-      eleventyConfig.addPlugin(feedPlugin, {
-        type: "atom", // or "rss", "json"
-        outputPath: "/feed.xml",
-        collection: {
-          name: "posts", // iterate over `collections.posts`
-          limit: 10,     // 0 means no limit
-        },
-      });
+			eleventyConfig.addPlugin(feedPlugin, {
+				type: "atom", // or "rss", "json"
+				outputPath: "/feed.xml",
+				collection: {
+					name: "posts", // iterate over `collections.posts`
+					limit: 10,     // 0 means no limit
+				},
+			});
 		},
 	});
 
 	let results = await elev.toJSON();
 
 	t.deepEqual(results.length, 2);
-  let [ feed ] = results.filter(entry => entry.outputPath.endsWith(".xml"));
+	let [ feed ] = results.filter(entry => entry.outputPath.endsWith(".xml"));
 	t.truthy(feed.content.startsWith(`<?xml version="1.0" encoding="utf-8"?>`));
 });
