@@ -104,7 +104,7 @@ test("HTML files output to the same as the input directory have a file suffix ad
 test("HTML files output to the same as the input directory have a file suffix added (only if index, this _is_ index).", async (t) => {
   let tmpl = await getNewTemplate("./test/stubs/index.html", "./test/stubs", "./test/stubs");
   let data = await tmpl.getData();
-  t.is(await tmpl.getOutputPath(data), "./test/stubs/index-o.html");
+  t.is(await tmpl.getOutputPath(data), "./test/stubs/index.html");
 });
 
 test("HTML files output to the same as the input directory have a file suffix added (only if index, this _is_ index, subfolder).", async (t) => {
@@ -114,7 +114,7 @@ test("HTML files output to the same as the input directory have a file suffix ad
     "./test/stubs"
   );
   let data = await tmpl.getData();
-  t.is(await tmpl.getOutputPath(data), "./test/stubs/subfolder/index-o.html");
+  t.is(await tmpl.getOutputPath(data), "./test/stubs/subfolder/index.html");
 });
 
 test("Test raw front matter from template (yaml)", async (t) => {

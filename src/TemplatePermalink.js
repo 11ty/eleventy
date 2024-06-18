@@ -168,7 +168,7 @@ class TemplatePermalink {
 		return folders[folders.length - 1] === base;
 	}
 
-	static generate(dir, filenameNoExt, extraSubdir, suffix, fileExtension = "html") {
+	static generate(dir, filenameNoExt, extraSubdir, fileExtension = "html") {
 		let path;
 		if (fileExtension === "html") {
 			let hasDupeFolder = TemplatePermalink._hasDuplicateFolder(dir, filenameNoExt);
@@ -177,10 +177,9 @@ class TemplatePermalink {
 				(dir ? dir + "/" : "") +
 				(filenameNoExt !== "index" && !hasDupeFolder ? filenameNoExt + "/" : "") +
 				"index" +
-				(suffix || "") +
 				".html";
 		} else {
-			path = (dir ? dir + "/" : "") + filenameNoExt + (suffix || "") + "." + fileExtension;
+			path = (dir ? dir + "/" : "") + filenameNoExt + "." + fileExtension;
 		}
 
 		return new TemplatePermalink(path, extraSubdir);

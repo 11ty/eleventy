@@ -31,7 +31,6 @@ import TransformsUtil from "./Util/TransformsUtil.js";
  * @property {string} [markdownTemplateEngine='liquid'] - Template engine to process markdown files with.
  * @property {string} [htmlTemplateEngine='liquid'] - Template engine to process html files with.
  * @property {boolean} [dataTemplateEngine=false] - Changed in v1.0
- * @property {string} [htmlOutputSuffix='-o']
  * @property {string} [jsDataFileSuffix='.11tydata'] - File suffix for jsData files.
  * @property {Object} keys
  * @property {string} [keys.package='pkg'] - Global data property for package.json data
@@ -130,7 +129,6 @@ export default function (config) {
 		pathPrefix: "/",
 		markdownTemplateEngine: "liquid",
 		htmlTemplateEngine: "liquid",
-		htmlOutputSuffix: "-o",
 
 		// Renamed from `jsDataFileSuffix` in 2.0 (and swapped to an Array)
 		// If you remove "" we won’t look for dir/dir.json or file.json

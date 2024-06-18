@@ -142,15 +142,6 @@ class Template extends TemplateContent {
 		return this.extensionMap.removeTemplateExtension(this.parsed.base);
 	}
 
-	get htmlIOException() {
-		// HTML output can’t overwrite the HTML input file.
-		return (
-			this.inputDir === this.outputDir &&
-			this.templateRender.isEngine("html") &&
-			this.baseFile === "index"
-		);
-	}
-
 	async _getRawPermalinkInstance(permalinkValue) {
 		let perm = new TemplatePermalink(permalinkValue, this.extraOutputSubdirectory);
 		perm.setUrlTransforms(this.config.urlTransforms);
@@ -242,7 +233,6 @@ class Template extends TemplateContent {
 			this.getTemplateSubfolder(),
 			this.baseFile,
 			this.extraOutputSubdirectory,
-			this.htmlIOException ? this.config.htmlOutputSuffix : "",
 			this.engine.defaultTemplateFileExtension,
 		);
 		p.setUrlTransforms(this.config.urlTransforms);
@@ -259,7 +249,6 @@ class Template extends TemplateContent {
 		return this._usePermalinkRoot;
 	}
 
-	// TODO instead of htmlIOException, do a global search to check if output path = input path and then add extra suffix
 	async getOutputLocations(data) {
 		this.bench.get("(count) getOutputLocations").incrementCount();
 		let link = await this._getLink(data);

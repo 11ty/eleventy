@@ -1316,3 +1316,32 @@ test("Custom Markdown Render with permalink, Issue #2780", async (t) => {
   t.is(results[0].url, `/permalink.html`);
   t.is(results[0].content.trim(), `<h1>Markdown?</h1>`);
 });
+
+test("Test input/output conflicts (input overwrites output), Issue #3327", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/", {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("test.html", `# Markdown`, { permalink: "test.html" });
+    }
+  });
+  elev.disableLogger();
+
+  let e = await t.throwsAsync(async () => {
+    await elev.toJSON();
+  });
+  t.true(e.toString().startsWith("DuplicatePermalinkOutputError:"));
+});
+
+test("Test input/output conflicts (output overwrites another input), Issue #3327", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/", {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("test.html", `# Markdown`);
+      eleventyConfig.addTemplate("index.html", `# Markdown`, { permalink: "test.html" });
+    }
+  });
+  elev.disableLogger();
+
+  let e = await t.throwsAsync(async () => {
+    await elev.toJSON();
+  });
+  t.true(e.toString().startsWith("DuplicatePermalinkOutputError:"));
+});

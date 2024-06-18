@@ -745,18 +745,33 @@ class TemplateMap {
 	}
 
 	checkForDuplicatePermalinks() {
+		let inputs = {};
 		let permalinks = {};
 		let warnings = {};
 		for (let entry of this.map) {
 			for (let page of entry._pages) {
 				if (page.outputPath === false || page.url === false) {
 					// do nothing (also serverless)
-				} else if (!permalinks[page.outputPath]) {
-					permalinks[page.outputPath] = [entry.inputPath];
 				} else {
-					warnings[page.outputPath] = `Output conflict: multiple input files are writing to \`${
-						page.outputPath
-					}\`. Use distinct \`permalink\` values to resolve this conflict.
+					// Make sure output doesn’t overwrite input (e.g. --input=. --output=.)
+					// Related to https://github.com/11ty/eleventy/issues/3327
+					if (page.outputPath === page.inputPath) {
+						throw new DuplicatePermalinkOutputError(
+							`The template at "${page.inputPath}" attempted to overwrite itself.`,
+						);
+					} else if (inputs[page.outputPath]) {
+						throw new DuplicatePermalinkOutputError(
+							`The template at "${page.inputPath}" attempted to overwrite an existing template at "${page.outputPath}".`,
+						);
+					}
+					inputs[page.inputPath] = true;
+
+					if (!permalinks[page.outputPath]) {
+						permalinks[page.outputPath] = [entry.inputPath];
+					} else {
+						warnings[page.outputPath] = `Output conflict: multiple input files are writing to \`${
+							page.outputPath
+						}\`. Use distinct \`permalink\` values to resolve this conflict.
   1. ${entry.inputPath}
 ${permalinks[page.outputPath]
 	.map(function (inputPath, index) {
@@ -764,8 +779,8 @@ ${permalinks[page.outputPath]
 	})
 	.join("")}
 `;
-
-					permalinks[page.outputPath].push(entry.inputPath);
+						permalinks[page.outputPath].push(entry.inputPath);
+					}
 				}
 			}
 		}
