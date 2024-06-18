@@ -26,6 +26,7 @@ const ComparisonAsyncFunction = (async () => {}).constructor;
  */
 class UserConfig {
 	#pluginExecution = false;
+	#quietModeLocked = false;
 
 	constructor() {
 		this._uniqueId = Math.random();
@@ -835,7 +836,22 @@ class UserConfig {
 		DeepCopy(this.frontMatterParsingOptions, options);
 	}
 
+	/* Internal method for CLI --quiet */
+	_setQuietModeOverride(quietMode) {
+		this.setQuietMode(quietMode);
+		this.#quietModeLocked = true;
+	}
+
 	setQuietMode(quietMode) {
+		if (this.#quietModeLocked) {
+			debug(
+				"Attempt to `setQuietMode(%o)` ignored, --quiet command line argument override in place.",
+				!!quietMode,
+			);
+			// override via CLI takes precedence
+			return;
+		}
+
 		this.quietMode = !!quietMode;
 	}
 

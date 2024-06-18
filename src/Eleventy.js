@@ -50,6 +50,17 @@ class Eleventy {
 	#directories; /* ProjectDirectories instance */
 	#templateFormats; /* ProjectTemplateFormats instance */
 
+	#verboseOverride;
+	#isVerboseMode; // Boolean
+	#preInitVerbose;
+
+	/**
+	 * @member {Boolean} - Has the async initialization for config run yet?
+	 * @private
+	 * @default false
+	 */
+	#hasConfigInitialized = false;
+
 	constructor(input, output, options = {}, eleventyConfig = null) {
 		/** @member {String} - Holds the path to the input (might be a file or folder) */
 		this.rawInput = input || undefined;
@@ -119,13 +130,6 @@ class Eleventy {
 		 * @default true
 		 */
 		this.isRunInitialBuild = true;
-
-		/**
-		 * @member {Boolean} - Has the async initialization for config run yet?
-		 * @private
-		 * @default false
-		 */
-		this._hasConfigInitialized = false;
 	}
 
 	async initializeConfig(initOverrides) {
@@ -142,6 +146,18 @@ class Eleventy {
 
 		if (this.pathPrefix || this.pathPrefix === "") {
 			this.eleventyConfig.setPathPrefix(this.pathPrefix);
+		}
+
+		// Debug mode should always run quiet (all output goes to debug logger)
+		if (process.env.DEBUG) {
+			this.#verboseOverride = false;
+		} else if (this.options.quietMode === true || this.options.quietMode === false) {
+			this.#verboseOverride = !this.options.quietMode;
+		}
+
+		// Moved before config merges: https://github.com/11ty/eleventy/issues/3316
+		if (this.#verboseOverride === true || this.#verboseOverride === false) {
+			this.eleventyConfig.userConfig._setQuietModeOverride(!this.#verboseOverride);
 		}
 
 		/* Programmatic API config */
@@ -173,25 +189,6 @@ class Eleventy {
 		 */
 		this.bench = this.config.benchmarkManager;
 
-		/**
-		 * @member {Boolean} - Was verbose mode overwritten?
-		 * @default false
-		 */
-		this.verboseModeSetViaCommandLineParam = false;
-
-		/**
-		 * @member {Boolean} - Is Eleventy running in verbose mode?
-		 * @default true
-		 */
-		if (this.options.quietMode === true || this.options.quietMode === false) {
-			// Set via --quiet
-			this.setIsVerbose(!this.options.quietMode);
-			this.verboseModeSetViaCommandLineParam = true;
-		} else {
-			// Fall back to configuration
-			this.setIsVerbose(!this.config.quietMode);
-		}
-
 		if (performance) {
 			debug("Eleventy warm up time: %o (ms)", performance.now());
 		}
@@ -214,11 +211,13 @@ class Eleventy {
 		/** @member {Object} - tbd. */
 		this.fileSystemSearch = new FileSystemSearch();
 
-		this._hasConfigInitialized = true;
+		this.#hasConfigInitialized = true;
 
-		if (this._preInitVerbose !== undefined) {
-			this.setIsVerbose(this._preInitVerbose);
-		}
+		/**
+		 * @member {Boolean} - Is Eleventy running in verbose mode?
+		 * @default true
+		 */
+		this.setIsVerbose(this.#preInitVerbose ?? !this.config.quietMode);
 	}
 
 	getNewTimestamp() {
@@ -413,7 +412,7 @@ class Eleventy {
 	async init(options = {}) {
 		options = Object.assign({ viaConfigReset: false }, options);
 
-		if (!this._hasConfigInitialized) {
+		if (!this.#hasConfigInitialized) {
 			await this.initializeConfig();
 		}
 
@@ -547,7 +546,7 @@ Verbose Output: ${this.verboseMode}`;
 
 	/* Getter for verbose mode */
 	get verboseMode() {
-		return this._isVerboseMode;
+		return this.#isVerboseMode;
 	}
 
 	/* Getter for Logger */
@@ -588,24 +587,21 @@ Verbose Output: ${this.verboseMode}`;
 	 * @param {Boolean} isVerbose - Shall Eleventy run in verbose mode?
 	 */
 	setIsVerbose(isVerbose) {
-		isVerbose = !!isVerbose;
-
-		if (!this._hasConfigInitialized) {
-			this._preInitVerbose = isVerbose;
+		if (!this.#hasConfigInitialized) {
+			this.#preInitVerbose = !!isVerbose;
 			return;
 		}
 
-		// Debug mode should always run quiet (all output goes to debug logger)
-		if (process.env.DEBUG) {
-			isVerbose = false;
-		}
+		// always defer to --quiet if override happened
+		isVerbose = this.#verboseOverride ?? !!isVerbose;
+
+		this.#isVerboseMode = isVerbose;
+
 		if (this.logger) {
 			this.logger.isVerbose = isVerbose;
 		}
 
 		this.bench.setVerboseOutput(isVerbose);
-
-		this._isVerboseMode = isVerbose;
 
 		if (this.writer) {
 			this.writer.setVerboseOutput(isVerbose);
@@ -758,10 +754,7 @@ Arguments:
 		this.config = this.eleventyConfig.getConfig();
 		this.eleventyServe.eleventyConfig = this.eleventyConfig;
 
-		// only use config quietMode if --quiet not set on CLI
-		if (!this.verboseModeSetViaCommandLineParam) {
-			this.setIsVerbose(!this.config.quietMode);
-		}
+		this.setIsVerbose(!this.config.quietMode);
 
 		EventBusUtil.resetForConfig();
 	}
