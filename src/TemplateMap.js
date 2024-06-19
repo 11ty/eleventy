@@ -410,19 +410,28 @@ class TemplateMap {
 					let counter = 0;
 					for (let page of map._pages) {
 						// Copy outputPath to map entry
-						if (!map.outputPath) {
+						// This is no longer used internally, just for backwards compatibility
+						// Error added in v3 for https://github.com/11ty/eleventy/issues/3183
+						if (map.data.pagination) {
+							if (!Object.prototype.hasOwnProperty.call(map, "outputPath")) {
+								Object.defineProperty(map, "outputPath", {
+									get() {
+										throw new Error(
+											"Internal error: `.outputPath` on a paginated map entry is not consistent. Use `_pages[…].outputPath` instead.",
+										);
+									},
+								});
+							}
+						} else if (!map.outputPath) {
 							map.outputPath = page.outputPath;
 						}
 
-						if (
-							counter === 0 ||
-							(map.data.pagination && map.data.pagination.addAllPagesToCollections)
-						) {
+						if (counter === 0 || map.data.pagination?.addAllPagesToCollections) {
 							if (map.data.eleventyExcludeFromCollections !== true) {
-								// TODO do we need .template in collection entries?
 								this.collection.add(page);
 							}
 						}
+
 						counter++;
 					}
 				}

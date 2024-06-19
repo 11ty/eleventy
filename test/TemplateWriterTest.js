@@ -332,7 +332,6 @@ test("Pagination with a Collection (apply all pages to collections)", async (t) 
   let data = await mainTmpl.getData();
   let outputPath = await mainTmpl.getOutputPath(data);
   t.is(outputPath, "./test/stubs/_site/main/index.html");
-  t.is(mapEntry.outputPath, "./test/stubs/_site/main/index.html");
 
   let templates = await getRenderedTmpls(mapEntry.template, mapEntry.data);
   t.is(templates.length, 2);
