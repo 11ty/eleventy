@@ -51,15 +51,19 @@ class EleventyErrorHandler {
 		this.log(e, "error", undefined, true);
 	}
 
-	//https://nodejs.org/api/process.html
-	log(e, type = "log", chalkColor = "", forceToConsole = false) {
-		let errorCount = 0;
+	static getTotalErrorCount(e) {
+		let totalErrorCount = 0;
 		let errorCountRef = e;
 		while (errorCountRef) {
-			errorCount++;
+			totalErrorCount++;
 			errorCountRef = errorCountRef.originalError;
 		}
+		return totalErrorCount;
+	}
 
+	//https://nodejs.org/api/process.html
+	log(e, type = "log", chalkColor = "", forceToConsole = false) {
+		let totalErrorCount = EleventyErrorHandler.getTotalErrorCount(e);
 		let ref = e;
 		let index = 1;
 		while (ref) {
@@ -67,9 +71,8 @@ class EleventyErrorHandler {
 			if (!nextRef && EleventyErrorUtil.hasEmbeddedError(ref.message)) {
 				nextRef = EleventyErrorUtil.deconvertErrorToObject(ref);
 			}
-
 			this.logger.message(
-				`${errorCount > 1 ? `${index}. ` : ""}${(
+				`${totalErrorCount > 1 ? `${index}. ` : ""}${(
 					EleventyErrorUtil.cleanMessage(ref.message) || "(No error message provided)"
 				).trim()} (via ${ref.name})`,
 				type,

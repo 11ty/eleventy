@@ -55,19 +55,19 @@ class Liquid extends TemplateEngine {
 		return options;
 	}
 
-	static wrapFilter(fn) {
+	static wrapFilter(name, fn) {
 		return function (...args) {
 			if (this.context && "get" in this.context) {
-				const exposedProperties = ["page", "eleventy"];
-				for (const property of exposedProperties) {
-					Object.defineProperty(this, property, {
+				for (let propertyName of ["page", "eleventy"]) {
+					Object.defineProperty(this, propertyName, {
 						configurable: true,
 						enumerable: true,
-						get: () => this.context.get([property]),
+						get: () => this.context.get([propertyName]),
 					});
 				}
 			}
 
+			// We *don’t* wrap this in an EleventyFilterError because Liquid has a better error message with line/column information in the template
 			return fn.call(this, ...args);
 		};
 	}
@@ -96,7 +96,7 @@ class Liquid extends TemplateEngine {
 	}
 
 	addFilter(name, filter) {
-		this.liquidLib.registerFilter(name, Liquid.wrapFilter(filter));
+		this.liquidLib.registerFilter(name, Liquid.wrapFilter(name, filter));
 	}
 
 	addTag(name, tagFn) {

@@ -3,8 +3,11 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 
 import TemplateEngine from "./TemplateEngine.js";
 import EleventyErrorUtil from "../Errors/EleventyErrorUtil.js";
+import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import EleventyShortcodeError from "../Errors/EleventyShortcodeError.js";
 import EventBusUtil from "../Util/EventBusUtil.js";
+
+class EleventyFilterError extends EleventyBaseError {}
 
 class Nunjucks extends TemplateEngine {
 	constructor(name, eleventyConfig) {
@@ -50,7 +53,7 @@ class Nunjucks extends TemplateEngine {
 			paths.add(TemplatePath.getWorkingDir());
 
 			// Filter out undefined paths
-			let fsLoader = new NunjucksLib.FileSystemLoader(Array.from(paths).filter((entry) => entry));
+			let fsLoader = new NunjucksLib.FileSystemLoader(Array.from(paths).filter(Boolean));
 
 			this.njkEnv = new NunjucksLib.Environment(fsLoader, this.nunjucksEnvironmentOptions);
 		}
@@ -92,11 +95,11 @@ class Nunjucks extends TemplateEngine {
 
 	addFilters(filters, isAsync) {
 		for (let name in filters) {
-			this.njkEnv.addFilter(name, Nunjucks.wrapFilter(filters[name]), isAsync);
+			this.njkEnv.addFilter(name, Nunjucks.wrapFilter(name, filters[name]), isAsync);
 		}
 	}
 
-	static wrapFilter(fn) {
+	static wrapFilter(name, fn) {
 		return function (...args) {
 			if (this.ctx && this.ctx.page) {
 				this.page = this.ctx.page;
@@ -105,7 +108,14 @@ class Nunjucks extends TemplateEngine {
 				this.eleventy = this.ctx.eleventy;
 			}
 
-			return fn.call(this, ...args);
+			try {
+				return fn.call(this, ...args);
+			} catch (e) {
+				throw new EleventyFilterError(
+					`Error in Nunjucks filter \`${name}\`${this.page ? ` (${this.page.inputPath})` : ""}${EleventyErrorUtil.convertErrorToString(e)}`,
+					e,
+				);
+			}
 		};
 	}
 
@@ -402,12 +412,13 @@ class Nunjucks extends TemplateEngine {
 	async compile(str, inputPath) {
 		let tmpl;
 
+		// *All* templates are precompiled to avoid runtime eval
 		if (this._usingPrecompiled) {
 			tmpl = this.njkEnv.getTemplate(str, true);
 		} else if (!inputPath || inputPath === "njk" || inputPath === "md") {
-			tmpl = new NunjucksLib.Template(str, this.njkEnv, null, true);
+			tmpl = new NunjucksLib.Template(str, this.njkEnv, null, false);
 		} else {
-			tmpl = new NunjucksLib.Template(str, this.njkEnv, inputPath, true);
+			tmpl = new NunjucksLib.Template(str, this.njkEnv, inputPath, false);
 		}
 
 		return async function (data) {

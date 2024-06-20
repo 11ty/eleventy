@@ -14,21 +14,19 @@ class EleventyErrorUtil {
 			return false;
 		}
 
-		return msg.indexOf(EleventyErrorUtil.prefix) > -1 && msg.indexOf(EleventyErrorUtil.suffix) > -1;
+		return msg.includes(EleventyErrorUtil.prefix) && msg.includes(EleventyErrorUtil.suffix);
 	}
 
 	static cleanMessage(msg) {
 		if (!msg) {
 			return "";
 		}
+
 		if (!EleventyErrorUtil.hasEmbeddedError(msg)) {
 			return "" + msg;
 		}
 
-		return msg.slice(
-			0,
-			msg.indexOf(EleventyErrorUtil.prefix) < 0 ? 0 : msg.indexOf(EleventyErrorUtil.prefix),
-		);
+		return msg.slice(0, Math.max(0, msg.indexOf(EleventyErrorUtil.prefix)));
 	}
 
 	static deconvertErrorToObject(error) {
