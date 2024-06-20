@@ -25,9 +25,11 @@ if ("register" in module) {
 // important to clear the require.cache in CJS projects
 const require = module.createRequire(import.meta.url);
 
+const requestPromiseCache = new Map();
+
 // Used for JSON imports, suffering from Node warning that import assertions experimental but also
 // throwing an error if you try to import() a JSON file without an import assertion.
-async function loadContents(path, options = {}) {
+function loadContents(path, options = {}) {
 	let rawInput;
 	let encoding = "utf8"; // JSON is utf8
 	if ("encoding" in options) {
@@ -35,7 +37,7 @@ async function loadContents(path, options = {}) {
 	}
 
 	try {
-		rawInput = await fs.promises.readFile(path, encoding);
+		rawInput = fs.readFileSync(path, encoding);
 	} catch (e) {
 		// if file does not exist, return nothing
 	}
@@ -70,7 +72,7 @@ eventBus.on("eleventy.importCacheReset", (fileQueue) => {
 async function dynamicImportAbsolutePath(absolutePath, type, returnRaw = false) {
 	if (absolutePath.endsWith(".json") || type === "json") {
 		// https://v8.dev/features/import-assertions#dynamic-import() is still experimental in Node 20
-		let rawInput = await loadContents(absolutePath);
+		let rawInput = loadContents(absolutePath);
 		return JSON.parse(rawInput);
 	}
 
@@ -88,54 +90,62 @@ async function dynamicImportAbsolutePath(absolutePath, type, returnRaw = false) 
 		urlPath = absolutePath;
 	}
 
-	let target = await import(urlPath);
+	let promise;
+	if (requestPromiseCache.has(urlPath)) {
+		promise = requestPromiseCache.get(urlPath);
+	} else {
+		promise = import(urlPath);
+		requestPromiseCache.set(urlPath, promise);
+	}
 
 	if (returnRaw) {
-		return target;
+		return promise;
 	}
 
-	// If the only export is `default`, elevate to top (for ESM and CJS)
-	if (Object.keys(target).length === 1 && "default" in target) {
-		return target.default;
-	}
-
-	// When using import() on a CommonJS file that exports an object sometimes it
-	// returns duplicated values in `default` key, e.g. `{ default: {key: value}, key: value }`
-
-	// A few examples:
-	// module.exports = { key: false };
-	//    returns `{ default: {key: false}, key: false }` as not expected.
-	// module.exports = { key: true };
-	// module.exports = { key: null };
-	// module.exports = { key: undefined };
-	// module.exports = { key: class {} };
-
-	// A few examples where it does not duplicate:
-	// module.exports = { key: 1 };
-	//    returns `{ default: {key: 1} }` as expected.
-	// module.exports = { key: "value" };
-	// module.exports = { key: {} };
-	// module.exports = { key: [] };
-
-	if (type === "cjs" && "default" in target) {
-		let match = true;
-		for (let key in target) {
-			if (key === "default") {
-				continue;
-			}
-			if (target[key] !== target.default[key]) {
-				match = false;
-			}
-		}
-
-		if (match) {
+	return promise.then((target) => {
+		// If the only export is `default`, elevate to top (for ESM and CJS)
+		if (Object.keys(target).length === 1 && "default" in target) {
 			return target.default;
 		}
-	}
 
-	// Otherwise return { default: value, named: value }
-	// Object.assign here so we can add things to it in JavaScript.js
-	return Object.assign({}, target);
+		// When using import() on a CommonJS file that exports an object sometimes it
+		// returns duplicated values in `default` key, e.g. `{ default: {key: value}, key: value }`
+
+		// A few examples:
+		// module.exports = { key: false };
+		//    returns `{ default: {key: false}, key: false }` as not expected.
+		// module.exports = { key: true };
+		// module.exports = { key: null };
+		// module.exports = { key: undefined };
+		// module.exports = { key: class {} };
+
+		// A few examples where it does not duplicate:
+		// module.exports = { key: 1 };
+		//    returns `{ default: {key: 1} }` as expected.
+		// module.exports = { key: "value" };
+		// module.exports = { key: {} };
+		// module.exports = { key: [] };
+
+		if (type === "cjs" && "default" in target) {
+			let match = true;
+			for (let key in target) {
+				if (key === "default") {
+					continue;
+				}
+				if (target[key] !== target.default[key]) {
+					match = false;
+				}
+			}
+
+			if (match) {
+				return target.default;
+			}
+		}
+
+		// Otherwise return { default: value, named: value }
+		// Object.assign here so we can add things to it in JavaScript.js
+		return Object.assign({}, target);
+	});
 }
 
 function normalizeFilePathInEleventyPackage(file) {

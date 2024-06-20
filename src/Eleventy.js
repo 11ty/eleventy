@@ -287,7 +287,10 @@ class Eleventy {
 	 */
 	setIncrementalBuild(isIncremental) {
 		this.isIncremental = !!isIncremental;
-		this.watchManager.incremental = !!isIncremental;
+
+		if (this.watchManager) {
+			this.watchManager.incremental = !!isIncremental;
+		}
 	}
 
 	/**
@@ -299,6 +302,10 @@ class Eleventy {
 	 */
 	setIgnoreInitial(ignoreInitialBuild) {
 		this.isRunInitialBuild = !ignoreInitialBuild;
+
+		if (this.writer) {
+			this.writer.setRunInitialBuild(this.isRunInitialBuild);
+		}
 	}
 
 	/**
@@ -657,7 +664,7 @@ Verbose Output: ${this.verboseMode}`;
 			this.setIgnoreInitial(true);
 			this.setIncrementalBuild(true);
 
-			this.programmaticApiIncrementalFile = incrementalFile;
+			this.programmaticApiIncrementalFile = TemplatePath.addLeadingDotSlash(incrementalFile);
 		}
 	}
 

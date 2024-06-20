@@ -24,7 +24,7 @@ const debug = require("debug")("Eleventy:cmd");
 	try {
 		let errorHandler = new EleventyErrorHandler();
 		const argv = require("minimist")(process.argv.slice(2), {
-			string: ["input", "output", "formats", "config", "pathprefix", "port", "to"],
+			string: ["input", "output", "formats", "config", "pathprefix", "port", "to", "incremental"],
 			boolean: [
 				"quiet",
 				"version",
@@ -32,7 +32,6 @@ const debug = require("debug")("Eleventy:cmd");
 				"dryrun",
 				"help",
 				"serve",
-				"incremental",
 				"ignore-initial",
 			],
 			default: {
@@ -90,8 +89,14 @@ const debug = require("debug")("Eleventy:cmd");
 						elev.setIsVerbose(false);
 					}
 
+					// Only relevant for watch/serve
 					elev.setIgnoreInitial(argv["ignore-initial"]);
-					elev.setIncrementalBuild(argv.incremental);
+
+					if(argv.incremental) {
+						elev.setIncrementalFile(argv.incremental);
+					} else if(argv.incremental !== undefined) {
+						elev.setIncrementalBuild(argv.incremental);
+					}
 
 					try {
 						if (argv.serve) {

@@ -465,7 +465,7 @@ class TemplateData {
 		let rawInput;
 
 		if (readFile) {
-			rawInput = await EleventyLoadContent(path, options);
+			rawInput = EleventyLoadContent(path, options);
 		}
 
 		if (readFile && !rawInput) {
@@ -524,6 +524,7 @@ class TemplateData {
 
 			dataBench.after();
 			aggregateDataBench.after();
+
 			return returnValue;
 		} else if (this.isUserDataExtension(extension)) {
 			// Other extensions
