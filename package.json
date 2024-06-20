@@ -40,7 +40,7 @@
 	"scripts": {
 		"default": "npm run test",
 		"test": "npm run test:node && npm run test:ava",
-		"test:ava": "cross-env ELEVENTY_SKIP_ESM_RESOLVER=1 npx ava --verbose",
+		"test:ava": "npx ava --verbose --timeout 20s",
 		"test:node": "node --test test_node/tests.js",
 		"jsdoc": "rm -rf jsdoc && npx jsdoc src/* -r -d jsdoc",
 		"format": "prettier . --write",
