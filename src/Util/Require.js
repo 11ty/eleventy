@@ -13,10 +13,7 @@ const { port1, port2 } = new MessageChannel();
 // ESM Cache Buster is an enhancement that works in Node 18.19+
 // https://nodejs.org/docs/latest/api/module.html#moduleregisterspecifier-parenturl-options
 // Fixes https://github.com/11ty/eleventy/issues/3270
-
-// Temporary: ELEVENTY_SKIP_ESM_RESOLVER for test suite only to workaround incompatibility
-// with Ava’s worker threads (timed out on Node 22 Ubuntu)
-if ("register" in module && !process.env.ELEVENTY_SKIP_ESM_RESOLVER) {
+if ("register" in module) {
 	module.register("./EsmResolver.js", import.meta.url, {
 		data: {
 			port: port2,
@@ -59,7 +56,7 @@ eventBus.on("eleventy.importCacheReset", (fileQueue) => {
 		lastModifiedPaths.set(absolutePath, newDate);
 
 		// post to EsmResolver worker thread
-		if (!process.env.ELEVENTY_SKIP_ESM_RESOLVER && port1) {
+		if (port1) {
 			port1.postMessage({ path: absolutePath, newDate });
 		}
 
