@@ -95,7 +95,7 @@ const debug = require("debug")("Eleventy:cmd");
 					if(argv.incremental) {
 						elev.setIncrementalFile(argv.incremental);
 					} else if(argv.incremental !== undefined) {
-						elev.setIncrementalBuild(argv.incremental);
+						elev.setIncrementalBuild(argv.incremental === "" || argv.incremental);
 					}
 
 					try {

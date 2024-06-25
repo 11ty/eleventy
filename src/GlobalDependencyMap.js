@@ -1,5 +1,6 @@
 import { DepGraph } from "dependency-graph";
 import debugUtil from "debug";
+import { TemplatePath } from "@11ty/eleventy-utils";
 
 import PathNormalizer from "./Util/PathNormalizer.js";
 
@@ -25,6 +26,20 @@ class GlobalDependencyMap {
 		this.config.events.once("eleventy.layouts", (layouts) => {
 			this.addLayoutsToMap(layouts);
 		});
+	}
+
+	filterOutLayouts(nodes = []) {
+		return nodes.filter((node) => {
+			let data = this.map.getNodeData(node);
+			if (data?.type === GlobalDependencyMap.LAYOUT_KEY) {
+				return false;
+			}
+			return true;
+		});
+	}
+
+	filterOutCollections(nodes = []) {
+		return nodes.filter((node) => !node.startsWith(GlobalDependencyMap.COLLECTION_PREFIX));
 	}
 
 	removeLayoutNodes(normalizedLayouts) {
@@ -54,6 +69,10 @@ class GlobalDependencyMap {
 			// We add this pre-emptively to add the `layout` data
 			if (!this.map.hasNode(layout)) {
 				this.map.addNode(layout, {
+					type: GlobalDependencyMap.LAYOUT_KEY,
+				});
+			} else {
+				this.map.setNodeData(layout, {
 					type: GlobalDependencyMap.LAYOUT_KEY,
 				});
 			}
@@ -173,7 +192,10 @@ class GlobalDependencyMap {
 			}
 			for (let node of this.map.dependantsOf(collectionName)) {
 				if (!node.startsWith(GlobalDependencyMap.COLLECTION_PREFIX)) {
-					templates.add(node);
+					let data = this.map.getNodeData(node);
+					if (!data || !data.type || data.type != GlobalDependencyMap.LAYOUT_KEY) {
+						templates.add(node);
+					}
 				}
 			}
 		}
@@ -203,6 +225,35 @@ class GlobalDependencyMap {
 		});
 
 		return layouts;
+	}
+
+	// In order
+	// Does not include original templatePaths (unless *they* are second-order relevant)
+	getTemplatesRelevantToTemplateList(templatePaths) {
+		let overallOrder = this.map.overallOrder();
+		overallOrder = this.filterOutLayouts(overallOrder);
+		overallOrder = this.filterOutCollections(overallOrder);
+
+		let relevantLookup = {};
+		for (let inputPath of templatePaths) {
+			inputPath = TemplatePath.stripLeadingDotSlash(inputPath);
+
+			let deps = this.getDependencies(inputPath, false);
+
+			if (Array.isArray(deps)) {
+				let paths = this.filterOutCollections(deps);
+				for (let node of paths) {
+					relevantLookup[node] = true;
+				}
+			}
+		}
+
+		return overallOrder.filter((node) => {
+			if (relevantLookup[node]) {
+				return true;
+			}
+			return false;
+		});
 	}
 
 	// Layouts are not relevant to compile cache and can be ignored

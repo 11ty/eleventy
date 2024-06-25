@@ -59,10 +59,10 @@ class TemplateMap {
 			return;
 		}
 
-		// IMPORTANT: This is where the data is first generated for the template
 		let data = await template.getData();
+		let entries = await template.getTemplateMapEntries(data);
 
-		for (let map of await template.getTemplateMapEntries(data)) {
+		for (let map of entries) {
 			this.map.push(map);
 		}
 	}
@@ -314,60 +314,32 @@ class TemplateMap {
 		return this.getTemplateMapDependencyGraph().map((entry) => entry.overallOrder());
 	}
 
-	setupDependencyGraphChangesForIncrementalFile(incrementalFile) {
-		if (!incrementalFile) {
-			return new Set();
+	#addEntryToGlobalDependencyGraph(entry) {
+		let paginationTagTarget = this.getPaginationTagTarget(entry);
+		if (paginationTagTarget) {
+			this.config.uses.addDependencyConsumesCollection(entry.inputPath, paginationTagTarget);
 		}
 
-		// Only dependents: things that consume templates that have deleted dependencies, e.g. if index.md consumes collections.post and a file removes its post tag, regenerate index.md
-		let newCollectionNames = new Set(); // collections published to
-		for (let entry of this.map) {
-			if (!entry.data.eleventyExcludeFromCollections) {
-				newCollectionNames.add("all");
+		if (!entry.data.eleventyExcludeFromCollections) {
+			this.config.uses.addDependencyPublishesToCollection(entry.inputPath, "all");
 
-				if (Array.isArray(entry.data.tags)) {
-					for (let tag of entry.data.tags) {
-						newCollectionNames.add(tag);
-					}
+			if (Array.isArray(entry.data.tags)) {
+				for (let tag of entry.data.tags) {
+					this.config.uses.addDependencyPublishesToCollection(entry.inputPath, tag);
 				}
 			}
 		}
 
-		let deletedCollectionNames = this.config.uses.findCollectionsRemovedFrom(
-			incrementalFile,
-			newCollectionNames,
-		);
-
-		// Delete incremental from the dependency graph so we get fresh entries!
-		// This _must_ happen before any additions, the other ones are in Custom.js and GlobalDependencyMap.js (from the eleventy.layouts Event)
-		this.config.uses.resetNode(incrementalFile);
-
-		return this.config.uses.getTemplatesThatConsumeCollections(deletedCollectionNames);
+		if (Array.isArray(entry.data.eleventyImport?.collections)) {
+			for (let tag of entry.data.eleventyImport.collections) {
+				this.config.uses.addDependencyConsumesCollection(entry.inputPath, tag);
+			}
+		}
 	}
 
-	// Similar to getTemplateMapDependencyGraph but adds those relationships to the global dependency graph used for incremental builds
-	addToGlobalDependencyGraph() {
+	addAllToGlobalDependencyGraph() {
 		for (let entry of this.map) {
-			let paginationTagTarget = this.getPaginationTagTarget(entry);
-			if (paginationTagTarget) {
-				this.config.uses.addDependencyConsumesCollection(entry.inputPath, paginationTagTarget);
-			}
-
-			if (!entry.data.eleventyExcludeFromCollections) {
-				this.config.uses.addDependencyPublishesToCollection(entry.inputPath, "all");
-
-				if (Array.isArray(entry.data.tags)) {
-					for (let tag of entry.data.tags) {
-						this.config.uses.addDependencyPublishesToCollection(entry.inputPath, tag);
-					}
-				}
-			}
-
-			if (Array.isArray(entry.data.eleventyImport?.collections)) {
-				for (let tag of entry.data.eleventyImport.collections) {
-					this.config.uses.addDependencyConsumesCollection(entry.inputPath, tag);
-				}
-			}
+			this.#addEntryToGlobalDependencyGraph(entry);
 		}
 	}
 
@@ -556,14 +528,13 @@ class TemplateMap {
 
 	async populateContentDataInMap(orderedMap) {
 		let usedTemplateContentTooEarlyMap = [];
-		for (let map of orderedMap) {
-			if (!map._pages) {
-				throw new Error(`Content pages not found for ${map.inputPath}`);
-			}
 
-			if (!map.template.behavior.isRenderable()) {
-				// Note that empty pagination templates will be skipped here as not renderable
-				continue;
+		// Note that empty pagination templates will be skipped here as not renderable
+		let filteredMap = orderedMap.filter((entry) => entry.template.isRenderable());
+
+		for (let map of filteredMap) {
+			if (!map._pages) {
+				throw new Error(`Internal error: _pages not found for ${map.inputPath}`);
 			}
 
 			// IMPORTANT: this is where template content is rendered
@@ -575,6 +546,11 @@ class TemplateMap {
 			} catch (e) {
 				if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
 					usedTemplateContentTooEarlyMap.push(map);
+
+					// Reset cached render promise
+					for (let pageEntry of map._pages) {
+						pageEntry.template.resetCaches({ render: true });
+					}
 				} else {
 					throw e;
 				}

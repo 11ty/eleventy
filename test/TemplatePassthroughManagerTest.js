@@ -32,6 +32,10 @@ test("isPassthroughCopyFile", async (t) => {
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
 
+  t.false(mgr.isPassthroughCopyFile([]));
+  t.false(mgr.isPassthroughCopyFile([], ""));
+  t.false(mgr.isPassthroughCopyFile([], null));
+
   t.truthy(mgr.isPassthroughCopyFile([], "./img/test.png"));
   t.deepEqual(mgr.isPassthroughCopyFile([], "./img/test.png"), {
     inputPath: "./img",

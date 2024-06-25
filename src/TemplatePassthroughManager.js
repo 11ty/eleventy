@@ -198,6 +198,10 @@ class TemplatePassthroughManager {
 	}
 
 	isPassthroughCopyFile(paths, changedFile) {
+		if (!changedFile) {
+			return false;
+		}
+
 		// passthrough copy by non-matching engine extension (via templateFormats)
 		for (let path of paths) {
 			if (path === changedFile && !this.extensionMap.hasEngine(path)) {

@@ -83,11 +83,27 @@ class Template extends TemplateContent {
 		this._logger = logger;
 	}
 
+	isRenderable() {
+		return this.behavior.isRenderable();
+	}
+
+	isRenderableDisabled() {
+		return this.behavior.isRenderableDisabled();
+	}
+
+	isRenderableOptional() {
+		// A template that is lazily rendered once if used by a second order dependency of another template dependency.
+		// e.g. You change firstpost.md, which is used by feed.xml, but secondpost.md (also used by feed.xml)
+		// has not yet rendered and needs to be rendered once to populate the cache.
+		return this.behavior.isRenderableOptional();
+	}
+
 	setRenderableOverride(renderableOverride) {
 		this.behavior.setRenderableOverride(renderableOverride);
 	}
 
 	reset() {
+		this.renderCount = 0;
 		this.writeCount = 0;
 	}
 
@@ -101,7 +117,7 @@ class Template extends TemplateContent {
 		}
 
 		if (types.render) {
-			delete this._cacheRenderedContent;
+			delete this._cacheRenderedPromise;
 			delete this._cacheFinalContent;
 		}
 	}
@@ -116,9 +132,9 @@ class Template extends TemplateContent {
 		this.logger.isVerbose = isVerbose;
 	}
 
-	setDryRunViaIncremental() {
-		this.isDryRun = true;
-		this.isIncremental = true;
+	setDryRunViaIncremental(isIncremental) {
+		this.isDryRun = isIncremental;
+		this.isIncremental = isIncremental;
 	}
 
 	setDryRun(isDryRun) {
@@ -407,14 +423,12 @@ class Template extends TemplateContent {
 
 	// This is the primary render mechanism, called via TemplateMap->populateContentDataInMap
 	async renderPageEntryWithoutLayout(pageEntry) {
-		if (this._cacheRenderedContent) {
-			return this._cacheRenderedContent;
+		if (!this._cacheRenderedPromise) {
+			this._cacheRenderedPromise = this.renderDirect(pageEntry.rawInput, pageEntry.data);
+			this.renderCount++;
 		}
 
-		let renderedContent = await this.renderDirect(pageEntry.rawInput, pageEntry.data);
-
-		this._cacheRenderedContent = renderedContent;
-		return renderedContent;
+		return this._cacheRenderedPromise;
 	}
 
 	addLinter(callback) {
@@ -575,7 +589,7 @@ class Template extends TemplateContent {
 				},
 				get() {
 					if (this.needsCheck && this._templateContent === undefined) {
-						if (this.template.behavior.isRenderable()) {
+						if (this.template.isRenderable()) {
 							// should at least warn here
 							throw new TemplateContentPrematureUseError(
 								`Tried to use templateContent too early on ${this.inputPath}${
@@ -584,7 +598,7 @@ class Template extends TemplateContent {
 							);
 						} else {
 							throw new TemplateContentUnrenderedTemplateError(
-								`Tried to use templateContent on unrendered template. You need a valid permalink (or permalink object) to use templateContent on ${
+								`Tried to use templateContent on unrendered template: ${
 									this.inputPath
 								}${this.pageNumber ? ` (page ${this.pageNumber})` : ""}`,
 							);
@@ -749,6 +763,7 @@ class Template extends TemplateContent {
 		content = await this.runTransforms(content, pageEntry);
 
 		pageEntry.template._cacheFinalContent = content;
+
 		return content;
 	}
 
@@ -842,6 +857,10 @@ class Template extends TemplateContent {
 
 	getWriteCount() {
 		return this.writeCount;
+	}
+
+	getRenderCount() {
+		return this.renderCount;
 	}
 
 	async getInputFileStat() {

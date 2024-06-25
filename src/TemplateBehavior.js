@@ -1,6 +1,8 @@
 import { isPlainObject } from "@11ty/eleventy-utils";
 
 class TemplateBehavior {
+	#isRenderOptional;
+
 	constructor(config) {
 		this.render = true;
 		this.write = true;
@@ -12,8 +14,24 @@ class TemplateBehavior {
 		this.config = config;
 	}
 
+	// Render override set to false
+	isRenderableDisabled() {
+		return this.renderableOverride === false;
+	}
+
+	isRenderableOptional() {
+		return this.#isRenderOptional;
+	}
+
+	// undefined (fallback), true, false
 	setRenderableOverride(renderableOverride) {
-		this.renderableOverride = renderableOverride;
+		if (renderableOverride === "optional") {
+			this.#isRenderOptional = true;
+			this.renderableOverride = undefined;
+		} else {
+			this.#isRenderOptional = false;
+			this.renderableOverride = renderableOverride;
+		}
 	}
 
 	// permalink *has* a build key or output is json/ndjson

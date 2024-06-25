@@ -291,6 +291,9 @@ class Eleventy {
 		if (this.watchManager) {
 			this.watchManager.incremental = !!isIncremental;
 		}
+		if (this.writer) {
+			this.writer.setIncrementalBuild(this.isIncremental);
+		}
 	}
 
 	/**
@@ -352,6 +355,8 @@ class Eleventy {
 
 		let ret = [];
 
+		// files that render (costly) but do not write to disk
+		// let renderCount = this.writer.getRenderCount();
 		let writeCount = this.writer.getWriteCount();
 		let skippedCount = this.writer.getSkippedCount();
 		let copyCount = this.writer.getCopyCount();
@@ -653,19 +658,29 @@ Verbose Output: ${this.verboseMode}`;
 
 	/**
 	 * Set the file that needs to be rendered/compiled/written for an incremental build.
-	 * This method is part of the programmatic API and is not used internally.
+	 * This method is also wired up to the CLI --incremental=incrementalFile
 	 *
 	 * @method
 	 * @param {String} incrementalFile - File path (added or modified in a project)
 	 */
 	setIncrementalFile(incrementalFile) {
 		if (incrementalFile) {
-			// This is also used for collections-friendly serverless mode.
-			this.setIgnoreInitial(true);
+			// This used to also setIgnoreInitial(true) but was changed in 3.0.0-alpha.14
 			this.setIncrementalBuild(true);
 
 			this.programmaticApiIncrementalFile = TemplatePath.addLeadingDotSlash(incrementalFile);
 		}
+	}
+
+	unsetIncrementalFile() {
+		// only applies to initial build, no re-runs (--watch/--serve)
+		if (this.programmaticApiIncrementalFile) {
+			// this.setIgnoreInitial(false);
+			this.programmaticApiIncrementalFile = undefined;
+		}
+
+		// reset back to false
+		this.setIgnoreInitial(false);
 	}
 
 	/**
@@ -862,19 +877,12 @@ Arguments:
 		await this.restart();
 		await this.init({ viaConfigReset: isResetConfig });
 
-		let incrementalFile = this.watchManager.getIncrementalFile();
-		if (incrementalFile) {
-			this.writer.setIncrementalFile(incrementalFile);
-		}
-
 		let writeResults = await this.write();
 		// let passthroughCopyResults;
 		let templateResults;
 		if (!writeResults.error) {
 			[, /*passthroughCopyResults*/ ...templateResults] = writeResults;
 		}
-
-		this.writer.resetIncrementalFile();
 
 		this.watchTargets.reset();
 
@@ -1230,8 +1238,10 @@ Arguments:
 			);
 		}
 
-		if (this.programmaticApiIncrementalFile) {
-			this.writer.setIncrementalFile(this.programmaticApiIncrementalFile);
+		let incrementalFile =
+			this.programmaticApiIncrementalFile || this.watchManager?.getIncrementalFile();
+		if (incrementalFile) {
+			this.writer.setIncrementalFile(incrementalFile);
 		}
 
 		let ret;
@@ -1287,6 +1297,9 @@ Arguments:
 				// TODO this might output the ndjson rows only after all the templates have been written to the stream?
 				ret = this.logger.closeStream(to);
 			}
+
+			this.unsetIncrementalFile();
+			this.writer.resetIncrementalFile();
 
 			eventsArg.uses = this.eleventyConfig.usesGraph.map;
 			await this.config.events.emit("afterBuild", eventsArg);

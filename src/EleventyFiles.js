@@ -404,6 +404,23 @@ class EleventyFiles {
 		return paths;
 	}
 
+	getFileShape(paths, filePath) {
+		if (!filePath) {
+			return;
+		}
+		if (this.isPassthroughCopyFile(paths, filePath)) {
+			return "copy";
+		}
+		if (this.isFullTemplateFile(paths, filePath)) {
+			return "template";
+		}
+		// include/layout/unknown
+	}
+
+	isPassthroughCopyFile(paths, filePath) {
+		return this.passthroughManager.isPassthroughCopyFile(paths, filePath);
+	}
+
 	// Assumption here that filePath is not a passthrough copy file
 	isFullTemplateFile(paths, filePath) {
 		if (!filePath) {
