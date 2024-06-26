@@ -651,6 +651,24 @@ class TemplateData {
 		return Merge(target, ...source);
 	}
 
+	/* Like cleanupData() but does not mutate */
+	static getCleanedTagsImmutable(data) {
+		let tags = [];
+
+		if (isPlainObject(data) && data.tags) {
+			if (typeof data.tags === "string") {
+				tags = (data.tags || "").split(",");
+			} else if (Array.isArray(data.tags)) {
+				tags = data.tags;
+			}
+
+			// Deduplicate tags
+			return [...new Set(tags)];
+		}
+
+		return tags;
+	}
+
 	static cleanupData(data) {
 		if (isPlainObject(data) && "tags" in data) {
 			if (typeof data.tags === "string") {
@@ -668,30 +686,32 @@ class TemplateData {
 
 	static getNormalizedExcludedCollections(data) {
 		let excludes = [];
-		if ("eleventyExcludeFromCollections" in data) {
-			if (data.eleventyExcludeFromCollections !== true) {
-				if (Array.isArray(data.eleventyExcludeFromCollections)) {
-					excludes = data.eleventyExcludeFromCollections;
-				} else if (typeof data.eleventyExcludeFromCollections === "string") {
-					excludes = [data.eleventyExcludeFromCollections];
-				}
+		let key = "eleventyExcludeFromCollections";
+
+		if (data?.[key] !== true) {
+			if (Array.isArray(data[key])) {
+				excludes = data[key];
+			} else if (typeof data[key] === "string") {
+				excludes = (data[key] || "").split(",");
 			}
 		}
+
 		return {
 			excludes,
-			excludeAll: data.eleventyExcludeFromCollections === true,
+			excludeAll: data?.eleventyExcludeFromCollections === true,
 		};
 	}
 
+	/* Same as getIncludedTagNames() but may also include "all" */
 	static getIncludedCollectionNames(data) {
-		TemplateData.cleanupData(data);
+		let tags = TemplateData.getCleanedTagsImmutable(data);
 
-		if ("tags" in data) {
-			let excludes = TemplateData.getNormalizedExcludedCollections(data);
-			if (excludes.excludeAll) {
+		if (tags.length > 0) {
+			let { excludes, excludeAll } = TemplateData.getNormalizedExcludedCollections(data);
+			if (excludeAll) {
 				return [];
 			} else {
-				return ["all", ...data.tags].filter((tag) => !excludes.excludes.includes(tag));
+				return ["all", ...tags].filter((tag) => !excludes.includes(tag));
 			}
 		} else {
 			return ["all"];
@@ -699,12 +719,14 @@ class TemplateData {
 	}
 
 	static getIncludedTagNames(data) {
-		if ("tags" in data) {
-			let excludes = TemplateData.getNormalizedExcludedCollections(data);
-			if (excludes.excludeAll) {
+		let tags = TemplateData.getCleanedTagsImmutable(data);
+
+		if (tags.length > 0) {
+			let { excludes, excludeAll } = TemplateData.getNormalizedExcludedCollections(data);
+			if (excludeAll) {
 				return [];
 			} else {
-				return data.tags.filter((tag) => !excludes.excludes.includes(tag));
+				return tags.filter((tag) => !excludes.includes(tag));
 			}
 		} else {
 			return [];

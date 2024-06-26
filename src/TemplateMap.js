@@ -241,12 +241,12 @@ class TemplateMap {
 					graph.addNode(entry.inputPath);
 				}
 
-				if (!entry.data.eleventyExcludeFromCollections) {
+				let collectionNames = TemplateData.getIncludedCollectionNames(entry.data);
+				if (collectionNames.includes("all")) {
 					// collections.all
 					graph.addDependency(tagPrefix + "all", entry.inputPath);
 
 					// Note that `tags` are otherwise ignored here
-					// TODO should we throw an error?
 				}
 
 				this.addDeclaredDependenciesToGraph(
@@ -280,13 +280,13 @@ class TemplateMap {
 					graph.addNode(entry.inputPath);
 				}
 
-				if (!entry.data.eleventyExcludeFromCollections) {
+				let collectionNames = TemplateData.getIncludedCollectionNames(entry.data);
+				if (collectionNames.includes("all")) {
 					// Populates into collections.all
 					// This is circular!
 					graph.addDependency(tagPrefix + "all", entry.inputPath);
 
 					// Note that `tags` are otherwise ignored here
-					// TODO should we throw an error?
 				}
 
 				this.addDeclaredDependenciesToGraph(
@@ -320,14 +320,9 @@ class TemplateMap {
 			this.config.uses.addDependencyConsumesCollection(entry.inputPath, paginationTagTarget);
 		}
 
-		if (!entry.data.eleventyExcludeFromCollections) {
-			this.config.uses.addDependencyPublishesToCollection(entry.inputPath, "all");
-
-			if (Array.isArray(entry.data.tags)) {
-				for (let tag of entry.data.tags) {
-					this.config.uses.addDependencyPublishesToCollection(entry.inputPath, tag);
-				}
-			}
+		let collectionNames = TemplateData.getIncludedCollectionNames(entry.data);
+		for (let name of collectionNames) {
+			this.config.uses.addDependencyPublishesToCollection(entry.inputPath, name);
 		}
 
 		if (Array.isArray(entry.data.eleventyImport?.collections)) {
@@ -400,6 +395,7 @@ class TemplateMap {
 
 						if (counter === 0 || map.data.pagination?.addAllPagesToCollections) {
 							if (map.data.eleventyExcludeFromCollections !== true) {
+								// is in *some* collections
 								this.collection.add(page);
 							}
 						}
