@@ -118,7 +118,7 @@ class Template extends TemplateContent {
 
 		if (types.render) {
 			delete this._cacheRenderedPromise;
-			delete this._cacheFinalContent;
+			delete this._cacheRenderedTransformsAndLayoutsPromise;
 		}
 	}
 
@@ -744,12 +744,7 @@ class Template extends TemplateContent {
 		return ret;
 	}
 
-	async renderPageEntry(pageEntry) {
-		// cache with transforms output
-		if (pageEntry.template._cacheFinalContent) {
-			return pageEntry.template._cacheFinalContent;
-		}
-
+	async #renderPageEntryWithLayoutsAndTransforms(pageEntry) {
 		let content;
 		let layoutKey = pageEntry.data[this.config.keys.layout];
 		if (layoutKey) {
@@ -760,11 +755,20 @@ class Template extends TemplateContent {
 		}
 
 		await this.runLinters(content, pageEntry);
+
 		content = await this.runTransforms(content, pageEntry);
 
-		pageEntry.template._cacheFinalContent = content;
-
 		return content;
+	}
+
+	async renderPageEntry(pageEntry) {
+		// cache with transforms output
+		if (!pageEntry.template._cacheRenderedTransformsAndLayoutsPromise) {
+			pageEntry.template._cacheRenderedTransformsAndLayoutsPromise =
+				this.#renderPageEntryWithLayoutsAndTransforms(pageEntry);
+		}
+
+		return pageEntry.template._cacheRenderedTransformsAndLayoutsPromise;
 	}
 
 	retrieveDataForJsonOutput(data, selectors) {
