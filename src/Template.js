@@ -319,11 +319,7 @@ class Template extends TemplateContent {
 		return {};
 	}
 
-	async getData() {
-		if (this._dataCache) {
-			return this._dataCache;
-		}
-
+	async #getData() {
 		debugDev("%o getData", this.inputPath);
 		let localData = {};
 		let globalData = {};
@@ -335,18 +331,21 @@ class Template extends TemplateContent {
 		}
 
 		let { data: frontMatterData } = await this.getFrontMatterData();
-		let layoutKey =
-			frontMatterData[this.config.keys.layout] ||
-			localData[this.config.keys.layout] ||
-			globalData[this.config.keys.layout];
 
-		// Layout front matter data
 		let mergedLayoutData = {};
-		if (layoutKey) {
-			let layout = this.getLayout(layoutKey);
+		if (this.engine.useLayouts()) {
+			let layoutKey =
+				frontMatterData[this.config.keys.layout] ||
+				localData[this.config.keys.layout] ||
+				globalData[this.config.keys.layout];
 
-			mergedLayoutData = await layout.getData();
-			debugDev("%o getData merged layout chain front matter", this.inputPath);
+			// Layout front matter data
+			if (layoutKey) {
+				let layout = this.getLayout(layoutKey);
+
+				mergedLayoutData = await layout.getData();
+				debugDev("%o getData merged layout chain front matter", this.inputPath);
+			}
 		}
 
 		try {
@@ -367,8 +366,6 @@ class Template extends TemplateContent {
 
 			debugDev("%o getData mergedData", this.inputPath);
 
-			this._dataCache = mergedData;
-
 			return mergedData;
 		} catch (e) {
 			if (
@@ -382,8 +379,16 @@ class Template extends TemplateContent {
 					e,
 				);
 			}
+
 			throw e;
 		}
+	}
+
+	async getData() {
+		if (!this._dataCache) {
+			this._dataCache = this.#getData();
+		}
+		return this._dataCache;
 	}
 
 	async addPage(data) {
@@ -410,11 +415,12 @@ class Template extends TemplateContent {
 
 	// Tests only
 	async render() {
-		throw new Error("Internal error: `render` was removed from Template.js in Eleventy 3.0.");
+		throw new Error("Internal error: `Template->render` was removed in Eleventy 3.0.");
 	}
 
+	// Tests only
 	async renderLayout() {
-		throw new Error("Internal error: `renderLayout` was removed from Template.js in Eleventy 3.0.");
+		throw new Error("Internal error: `Template->renderLayout` was removed in Eleventy 3.0.");
 	}
 
 	async renderDirect(str, data, bypassMarkdown) {
@@ -747,7 +753,7 @@ class Template extends TemplateContent {
 	async #renderPageEntryWithLayoutsAndTransforms(pageEntry) {
 		let content;
 		let layoutKey = pageEntry.data[this.config.keys.layout];
-		if (layoutKey) {
+		if (this.engine.useLayouts() && layoutKey) {
 			let layout = pageEntry.template.getLayout(layoutKey);
 			content = await layout.renderPageEntry(pageEntry);
 		} else {

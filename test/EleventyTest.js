@@ -720,6 +720,24 @@ ${newContents}
   await fsp.writeFile(includeFilePath, previousContents, { encoding: "utf8" });
 });
 
+
+test("`useLayouts: false` custom engine property #2830", async (t) => {
+  let elev = new Eleventy("./test/stubs-2258-2830-skip-layouts/", "./test/stubs-2258-2830-skip-layouts/_site", {
+    configPath: "./test/stubs-2258-2830-skip-layouts/eleventy.config.cjs",
+  });
+
+  let results = await elev.toJSON();
+
+  t.is(results.length, 1);
+  t.is(
+    normalizeNewLines(results[0].content),
+    `code {
+  padding: 0.25em;
+  line-height: 0;
+}`
+  );
+});
+
 test("Lodash get (for pagination data target) object key with spaces, issue #2851", (t) => {
   let data = {
     collections: {

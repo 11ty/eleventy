@@ -217,7 +217,13 @@ class CustomEngine extends TemplateEngine {
 	}
 
 	get defaultTemplateFileExtension() {
-		return this.entry.outputFileExtension;
+		return this.entry.outputFileExtension ?? "html";
+	}
+
+	// Whether or not to wrap in Eleventy layouts
+	useLayouts() {
+		// TODO future change fallback to `this.defaultTemplateFileExtension === "html"`
+		return this.entry.useLayouts ?? true;
 	}
 
 	hasDependencies(inputPath) {

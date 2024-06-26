@@ -5,6 +5,8 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addTemplateFormats("scss");
 
   eleventyConfig.addExtension("scss", {
+    useLayouts: false,
+
     outputFileExtension: "css", // optional, default: "html"
 
     compile: function (inputContent, inputPath) {
@@ -19,8 +21,6 @@ module.exports = function (eleventyConfig) {
       let result = sass.compileString(inputContent, {
         loadPaths: dirs,
       });
-
-      this.addDependencies(inputPath, result.loadedUrls);
 
       return (data) => {
         return result.css;

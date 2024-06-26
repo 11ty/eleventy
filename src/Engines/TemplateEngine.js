@@ -136,6 +136,11 @@ class TemplateEngine {
 		return "html";
 	}
 
+	// Whether or not to wrap in Eleventy layouts
+	useLayouts() {
+		return true;
+	}
+
 	permalinkNeedsCompilation(str) {
 		return this.needsCompilation(str);
 	}
