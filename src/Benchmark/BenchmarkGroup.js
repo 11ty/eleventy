@@ -11,7 +11,7 @@ class BenchmarkGroup {
 		// Warning: aggregate benchmarks automatically default to false via BenchmarkManager->getBenchmarkGroup
 		this.isVerbose = true;
 		this.logger = new ConsoleLogger(this.isVerbose);
-		this.minimumThresholdMs = 0;
+		this.minimumThresholdMs = 50;
 		this.minimumThresholdPercent = 8;
 	}
 
@@ -84,7 +84,7 @@ class BenchmarkGroup {
 		}
 
 		let prefix = new Array(length + 1).join(" ");
-		return (prefix + num).substr(-1 * length);
+		return (prefix + num).slice(-1 * length);
 	}
 
 	finish(label, totalTimeSpent) {
@@ -103,7 +103,8 @@ class BenchmarkGroup {
 			let str = `Benchmark ${output.ms}ms ${output.percent}% ${output.calls}× (${label}) ${type}`;
 
 			if (
-				(isAbsoluteMinimumComparison && totalForBenchmark >= this.minimumThresholdMs) ||
+				isAbsoluteMinimumComparison &&
+				totalForBenchmark >= this.minimumThresholdMs &&
 				percent > this.minimumThresholdPercent
 			) {
 				this.logger.warn(str);
