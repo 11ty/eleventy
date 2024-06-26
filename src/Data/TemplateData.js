@@ -312,61 +312,64 @@ class TemplateData {
 		return globalData;
 	}
 
+	async #getInitialGlobalData() {
+		let globalData = await this.initialGlobalData.getData();
+
+		if (!("eleventy" in globalData)) {
+			globalData.eleventy = {};
+		}
+
+		// #2293 for meta[name=generator]
+		const pkg = getEleventyPackageJson();
+		globalData.eleventy.version = semver.coerce(pkg.version).toString();
+		globalData.eleventy.generator = `Eleventy v${globalData.eleventy.version}`;
+
+		if (this.environmentVariables) {
+			if (!("env" in globalData.eleventy)) {
+				globalData.eleventy.env = {};
+			}
+
+			Object.assign(globalData.eleventy.env, this.environmentVariables);
+		}
+
+		if (this.dirs) {
+			if (!("directories" in globalData.eleventy)) {
+				globalData.eleventy.directories = {};
+			}
+
+			Object.assign(globalData.eleventy.directories, this.dirs.getUserspaceInstance());
+		}
+
+		// Reserved
+		if (this.config.freezeReservedData) {
+			DeepFreeze(globalData.eleventy);
+		}
+
+		return globalData;
+	}
+
 	async getInitialGlobalData() {
 		if (!this.configApiGlobalData) {
-			this.configApiGlobalData = new Promise(async (resolve) => {
-				let globalData = await this.initialGlobalData.getData();
-
-				if (!("eleventy" in globalData)) {
-					globalData.eleventy = {};
-				}
-
-				// #2293 for meta[name=generator]
-				const pkg = getEleventyPackageJson();
-				globalData.eleventy.version = semver.coerce(pkg.version).toString();
-				globalData.eleventy.generator = `Eleventy v${globalData.eleventy.version}`;
-
-				if (this.environmentVariables) {
-					if (!("env" in globalData.eleventy)) {
-						globalData.eleventy.env = {};
-					}
-
-					Object.assign(globalData.eleventy.env, this.environmentVariables);
-				}
-
-				if (this.dirs) {
-					if (!("directories" in globalData.eleventy)) {
-						globalData.eleventy.directories = {};
-					}
-
-					Object.assign(globalData.eleventy.directories, this.dirs.getUserspaceInstance());
-				}
-
-				// Reserved
-				if (this.config.freezeReservedData) {
-					DeepFreeze(globalData.eleventy);
-				}
-
-				resolve(globalData);
-			});
+			this.configApiGlobalData = this.#getInitialGlobalData();
 		}
 
 		return this.configApiGlobalData;
 	}
 
-	async getGlobalData() {
+	async #getGlobalData() {
 		let rawImports = this.getRawImports();
+		let configApiGlobalData = await this.getInitialGlobalData();
 
+		let globalJson = await this.getAllGlobalData();
+		let mergedGlobalData = Merge(globalJson, configApiGlobalData);
+
+		// OK: Shallow merge when combining rawImports (pkg) with global data files
+		return Object.assign({}, mergedGlobalData, rawImports);
+	}
+
+	async getGlobalData() {
 		if (!this.globalData) {
-			this.globalData = new Promise(async (resolve) => {
-				let configApiGlobalData = await this.getInitialGlobalData();
-
-				let globalJson = await this.getAllGlobalData();
-				let mergedGlobalData = Merge(globalJson, configApiGlobalData);
-
-				// OK: Shallow merge when combining rawImports (pkg) with global data files
-				resolve(Object.assign({}, mergedGlobalData, rawImports));
-			});
+			this.globalData = this.#getGlobalData();
 		}
 
 		return this.globalData;

@@ -194,21 +194,21 @@ class EleventyServe {
 		}
 	}
 
+	async #init() {
+		let setupCallback = this.getSetupCallback();
+		if (setupCallback) {
+			let opts = await setupCallback();
+			this._initOptionsFetched = true;
+
+			if (opts) {
+				Merge(this.options, opts);
+			}
+		}
+	}
+
 	async init() {
 		if (!this._initPromise) {
-			this._initPromise = new Promise(async (resolve) => {
-				let setupCallback = this.getSetupCallback();
-				if (setupCallback) {
-					let opts = await setupCallback();
-					this._initOptionsFetched = true;
-
-					if (opts) {
-						Merge(this.options, opts);
-					}
-				}
-
-				resolve();
-			});
+			this._initPromise = this.#init();
 		}
 
 		return this._initPromise;

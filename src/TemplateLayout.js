@@ -77,53 +77,51 @@ class TemplateLayout extends TemplateContent {
 		};
 	}
 
+	async #getTemplateLayoutMap() {
+		// For both the eleventy.layouts event and cyclical layout chain checking  (e.g., a => b => c => a)
+		let layoutChain = new Set();
+		layoutChain.add(this.inputPath);
+
+		let cfgKey = this.config.keys.layout;
+		let map = [];
+		let mapEntry = await this.getTemplateLayoutMapEntry();
+
+		map.push(mapEntry);
+
+		while (mapEntry.frontMatterData && cfgKey in mapEntry.frontMatterData) {
+			// Layout of the current layout
+			let parentLayoutKey = mapEntry.frontMatterData[cfgKey];
+
+			let layout = TemplateLayout.getTemplate(
+				parentLayoutKey,
+				this.eleventyConfig,
+				this.extensionMap,
+			);
+
+			// Abort if a circular layout chain is detected. Otherwise, we'll time out and run out of memory.
+			if (layoutChain.has(layout.inputPath)) {
+				throw new Error(
+					`Your layouts have a circular reference, starting at ${map[0].key}! The layout at ${layout.inputPath} was specified twice in this layout chain.`,
+				);
+			}
+
+			// Keep track of this layout so we can detect duplicates in subsequent iterations
+			layoutChain.add(layout.inputPath);
+
+			// reassign for next loop
+			mapEntry = await layout.getTemplateLayoutMapEntry();
+
+			map.push(mapEntry);
+		}
+
+		this.layoutChain = Array.from(layoutChain);
+
+		return map;
+	}
+
 	async getTemplateLayoutMap() {
 		if (!this.cachedLayoutMap) {
-			this.cachedLayoutMap = new Promise(async (resolve, reject) => {
-				try {
-					// For both the eleventy.layouts event and cyclical layout chain checking  (e.g., a => b => c => a)
-					let layoutChain = new Set();
-					layoutChain.add(this.inputPath);
-
-					let cfgKey = this.config.keys.layout;
-					let map = [];
-					let mapEntry = await this.getTemplateLayoutMapEntry();
-
-					map.push(mapEntry);
-
-					while (mapEntry.frontMatterData && cfgKey in mapEntry.frontMatterData) {
-						// Layout of the current layout
-						let parentLayoutKey = mapEntry.frontMatterData[cfgKey];
-
-						let layout = TemplateLayout.getTemplate(
-							parentLayoutKey,
-							this.eleventyConfig,
-							this.extensionMap,
-						);
-
-						// Abort if a circular layout chain is detected. Otherwise, we'll time out and run out of memory.
-						if (layoutChain.has(layout.inputPath)) {
-							throw new Error(
-								`Your layouts have a circular reference, starting at ${map[0].key}! The layout at ${layout.inputPath} was specified twice in this layout chain.`,
-							);
-						}
-
-						// Keep track of this layout so we can detect duplicates in subsequent iterations
-						layoutChain.add(layout.inputPath);
-
-						// reassign for next loop
-						mapEntry = await layout.getTemplateLayoutMapEntry();
-
-						map.push(mapEntry);
-					}
-
-					this.layoutChain = Array.from(layoutChain);
-
-					resolve(map);
-				} catch (e) {
-					reject(e);
-				}
-			});
+			this.cachedLayoutMap = this.#getTemplateLayoutMap();
 		}
 
 		return this.cachedLayoutMap;
@@ -137,42 +135,38 @@ class TemplateLayout extends TemplateContent {
 		return this.layoutChain;
 	}
 
+	async #getData() {
+		let map = await this.getTemplateLayoutMap();
+		let dataToMerge = [];
+		for (let j = map.length - 1; j >= 0; j--) {
+			dataToMerge.push(map[j].frontMatterData);
+		}
+
+		// Deep merge of layout front matter
+		let data = TemplateData.mergeDeep(this.config.dataDeepMerge, {}, ...dataToMerge);
+		delete data[this.config.keys.layout];
+
+		return data;
+	}
+
 	async getData() {
 		if (!this.dataCache) {
-			this.dataCache = new Promise(async (resolve, reject) => {
-				try {
-					let map = await this.getTemplateLayoutMap();
-					let dataToMerge = [];
-					for (let j = map.length - 1; j >= 0; j--) {
-						dataToMerge.push(map[j].frontMatterData);
-					}
-
-					// Deep merge of layout front matter
-					let data = TemplateData.mergeDeep(this.config.dataDeepMerge, {}, ...dataToMerge);
-					delete data[this.config.keys.layout];
-
-					resolve(data);
-				} catch (e) {
-					reject(e);
-				}
-			});
+			this.dataCache = this.#getData();
 		}
 
 		return this.dataCache;
 	}
 
+	async #getCachedCompiledLayoutFunction() {
+		let rawInput = await this.getPreRender();
+		let renderFunction = await this.compile(rawInput);
+		return renderFunction;
+	}
+
 	// Do only cache this layout’s render function and delegate the rest to the other templates.
 	async getCachedCompiledLayoutFunction() {
 		if (!this.cachedCompiledLayoutFunction) {
-			this.cachedCompiledLayoutFunction = new Promise(async (resolve, reject) => {
-				try {
-					let rawInput = await this.getPreRender();
-					let renderFunction = await this.compile(rawInput);
-					resolve(renderFunction);
-				} catch (e) {
-					reject(e);
-				}
-			});
+			this.cachedCompiledLayoutFunction = this.#getCachedCompiledLayoutFunction();
 		}
 
 		return this.cachedCompiledLayoutFunction;

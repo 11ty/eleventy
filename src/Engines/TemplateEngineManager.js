@@ -134,6 +134,41 @@ class TemplateEngineManager {
 		return this._CustomEngine;
 	}
 
+	async #getEngine(name, extensionMap) {
+		let cls = await this.getEngineClassByExtension(name);
+		let instance = new cls(name, this.eleventyConfig);
+		instance.extensionMap = extensionMap;
+		instance.engineManager = this;
+
+		let extensionEntry = extensionMap.getExtensionEntry(name);
+
+		// Override a built-in extension (md => md)
+		// If provided a "Custom" engine using addExtension, but that engine's instance is *not* custom,
+		// The user must be overriding a built-in engine i.e. addExtension('md', { ...overrideBehavior })
+		let className = this.getClassNameFromTemplateKey(name);
+
+		if (className === "Custom" && instance.constructor.name !== "CustomEngine") {
+			let CustomEngine = await this.getCustomEngineClass();
+			let overrideCustomEngine = new CustomEngine(name, this.eleventyConfig);
+
+			// Keep track of the "default" engine 11ty would normally use
+			// This allows the user to access the default engine in their override
+			overrideCustomEngine.setDefaultEngine(instance);
+
+			instance = overrideCustomEngine;
+			// Alias to a built-in extension (11ty.tsx => 11ty.js)
+		} else if (
+			instance.constructor.name === "CustomEngine" &&
+			TemplateEngineManager.isAlias(extensionEntry)
+		) {
+			// add defaultRenderer for complex aliases with their own compile functions.
+			let originalEngineInstance = await this.getEngine(extensionEntry.key, extensionMap);
+			instance.setDefaultEngine(originalEngineInstance);
+		}
+
+		return instance;
+	}
+
 	async getEngine(name, extensionMap) {
 		// Warning about engine deprecation
 		// TODO v3.0 error message needs updating before stable release
@@ -153,39 +188,7 @@ class TemplateEngineManager {
 			debug("Engine cache miss %o (should only happen once per type)", name);
 			// Make sure cache key is based on name and not path
 			// Custom class is used for all plugins, cache once per plugin
-			this.engineCache[name] = new Promise(async (resolve) => {
-				let cls = await this.getEngineClassByExtension(name);
-				let instance = new cls(name, this.eleventyConfig);
-				instance.extensionMap = extensionMap;
-				instance.engineManager = this;
-
-				let extensionEntry = extensionMap.getExtensionEntry(name);
-				// Override a built-in extension (md => md)
-				// If provided a "Custom" engine using addExtension, but that engine's instance is *not* custom,
-				// The user must be overriding a built-in engine i.e. addExtension('md', { ...overrideBehavior })
-				let className = this.getClassNameFromTemplateKey(name);
-
-				if (className === "Custom" && instance.constructor.name !== "CustomEngine") {
-					let CustomEngine = await this.getCustomEngineClass();
-					let overrideCustomEngine = new CustomEngine(name, this.eleventyConfig);
-
-					// Keep track of the "default" engine 11ty would normally use
-					// This allows the user to access the default engine in their override
-					overrideCustomEngine.setDefaultEngine(instance);
-
-					instance = overrideCustomEngine;
-					// Alias to a built-in extension (11ty.tsx => 11ty.js)
-				} else if (
-					instance.constructor.name === "CustomEngine" &&
-					TemplateEngineManager.isAlias(extensionEntry)
-				) {
-					// add defaultRenderer for complex aliases with their own compile functions.
-					let originalEngineInstance = await this.getEngine(extensionEntry.key, extensionMap);
-					instance.setDefaultEngine(originalEngineInstance);
-				}
-
-				resolve(instance);
-			});
+			this.engineCache[name] = this.#getEngine(name, extensionMap);
 		}
 
 		return this.engineCache[name];

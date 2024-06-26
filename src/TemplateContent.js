@@ -181,6 +181,57 @@ class TemplateContent {
 		return this.config.virtualTemplates[inputDirRelativeInputPath];
 	}
 
+	async #read() {
+		let content = await this.inputContent;
+
+		if (content || content === "") {
+			let options = this.config.frontMatterParsingOptions || {};
+			let fm;
+			try {
+				// Added in 3.0, passed along to front matter engines
+				options.filePath = this.inputPath;
+				fm = matter(content, options);
+			} catch (e) {
+				throw new TemplateContentFrontMatterError(
+					`Having trouble reading front matter from template ${this.inputPath}`,
+					e,
+				);
+			}
+
+			if (options.excerpt && fm.excerpt) {
+				let excerptString = fm.excerpt + (options.excerpt_separator || "---");
+				if (fm.content.startsWith(excerptString + os.EOL)) {
+					// with an os-specific newline after excerpt separator
+					fm.content = fm.excerpt.trim() + "\n" + fm.content.slice((excerptString + os.EOL).length);
+				} else if (fm.content.startsWith(excerptString + "\n")) {
+					// with a newline (\n) after excerpt separator
+					// This is necessary for some git configurations on windows
+					fm.content = fm.excerpt.trim() + "\n" + fm.content.slice((excerptString + 1).length);
+				} else if (fm.content.startsWith(excerptString)) {
+					// no newline after excerpt separator
+					fm.content = fm.excerpt + fm.content.slice(excerptString.length);
+				}
+
+				// alias, defaults to page.excerpt
+				let alias = options.excerpt_alias || "page.excerpt";
+				lodashSet(fm.data, alias, fm.excerpt);
+			}
+
+			// For monkey patchers that used `frontMatter` 🤧
+			// https://github.com/11ty/eleventy/issues/613#issuecomment-999637109
+			// https://github.com/11ty/eleventy/issues/2710#issuecomment-1373854834
+			// Removed this._frontMatter monkey patcher help in 3.0.0-alpha.7
+
+			return fm;
+		} else {
+			return {
+				data: {},
+				content: "",
+				excerpt: "",
+			};
+		}
+	}
+
 	async read() {
 		if (!this.readingPromise) {
 			if (!this.inputContent) {
@@ -188,62 +239,7 @@ class TemplateContent {
 				this.inputContent = this.getInputContent();
 			}
 
-			this.readingPromise = new Promise(async (resolve, reject) => {
-				try {
-					let content = await this.inputContent;
-
-					if (content || content === "") {
-						let options = this.config.frontMatterParsingOptions || {};
-						let fm;
-						try {
-							// Added in 3.0, passed along to front matter engines
-							options.filePath = this.inputPath;
-							fm = matter(content, options);
-						} catch (e) {
-							throw new TemplateContentFrontMatterError(
-								`Having trouble reading front matter from template ${this.inputPath}`,
-								e,
-							);
-						}
-
-						if (options.excerpt && fm.excerpt) {
-							let excerptString = fm.excerpt + (options.excerpt_separator || "---");
-							if (fm.content.startsWith(excerptString + os.EOL)) {
-								// with an os-specific newline after excerpt separator
-								fm.content =
-									fm.excerpt.trim() + "\n" + fm.content.slice((excerptString + os.EOL).length);
-							} else if (fm.content.startsWith(excerptString + "\n")) {
-								// with a newline (\n) after excerpt separator
-								// This is necessary for some git configurations on windows
-								fm.content =
-									fm.excerpt.trim() + "\n" + fm.content.slice((excerptString + 1).length);
-							} else if (fm.content.startsWith(excerptString)) {
-								// no newline after excerpt separator
-								fm.content = fm.excerpt + fm.content.slice(excerptString.length);
-							}
-
-							// alias, defaults to page.excerpt
-							let alias = options.excerpt_alias || "page.excerpt";
-							lodashSet(fm.data, alias, fm.excerpt);
-						}
-
-						// For monkey patchers that used `frontMatter` 🤧
-						// https://github.com/11ty/eleventy/issues/613#issuecomment-999637109
-						// https://github.com/11ty/eleventy/issues/2710#issuecomment-1373854834
-						// Removed this._frontMatter monkey patcher help in 3.0.0-alpha.7
-
-						resolve(fm);
-					} else {
-						resolve({
-							data: {},
-							content: "",
-							excerpt: "",
-						});
-					}
-				} catch (e) {
-					reject(e);
-				}
-			});
+			this.readingPromise = this.#read();
 		}
 
 		return this.readingPromise;
@@ -332,36 +328,34 @@ class TemplateContent {
 		return fm.content;
 	}
 
+	async #getFrontMatterData() {
+		let fm = await this.read();
+
+		// gray-matter isn’t async-friendly but can return a promise from custom front matter
+		if (fm.data instanceof Promise) {
+			fm.data = await fm.data;
+		}
+
+		let extraData = await this.engine.getExtraDataFromFile(this.inputPath);
+
+		let virtualTemplateDefinition = this.getVirtualTemplateDefinition();
+		let virtualTemplateData;
+		if (virtualTemplateDefinition) {
+			virtualTemplateData = virtualTemplateDefinition.data;
+		}
+
+		let data = TemplateData.mergeDeep(false, fm.data, extraData, virtualTemplateData);
+		let cleanedData = TemplateData.cleanupData(data);
+
+		return {
+			data: cleanedData,
+			excerpt: fm.excerpt,
+		};
+	}
+
 	async getFrontMatterData() {
 		if (!this._frontMatterDataCache) {
-			this._frontMatterDataCache = new Promise(async (resolve, reject) => {
-				try {
-					let fm = await this.read();
-
-					// gray-matter isn’t async-friendly but can return a promise from custom front matter
-					if (fm.data instanceof Promise) {
-						fm.data = await fm.data;
-					}
-
-					let extraData = await this.engine.getExtraDataFromFile(this.inputPath);
-
-					let virtualTemplateDefinition = this.getVirtualTemplateDefinition();
-					let virtualTemplateData;
-					if (virtualTemplateDefinition) {
-						virtualTemplateData = virtualTemplateDefinition.data;
-					}
-
-					let data = TemplateData.mergeDeep(false, fm.data, extraData, virtualTemplateData);
-					let cleanedData = TemplateData.cleanupData(data);
-
-					resolve({
-						data: cleanedData,
-						excerpt: fm.excerpt,
-					});
-				} catch (e) {
-					reject(e);
-				}
-			});
+			this._frontMatterDataCache = this.#getFrontMatterData();
 		}
 
 		return this._frontMatterDataCache;
