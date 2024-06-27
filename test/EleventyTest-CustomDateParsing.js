@@ -115,7 +115,7 @@ test("Custom date parsing callback (return explicit false), Issue #867", async (
   elev.disableLogger();
 
   let [result] = await elev.toJSON();
-  t.deepEqual(result.data.page.date, undefined);
+  t.deepEqual(result.data.page.date, new Date(Date.UTC(2003,0,1,12)));
 });
 
 test("Custom date parsing callbacks (two, last wins, return string), Issue #867", async (t) => {

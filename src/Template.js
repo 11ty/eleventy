@@ -924,10 +924,7 @@ class Template extends TemplateContent {
 				dateValue,
 			);
 
-			if (ret === false) {
-				// Skip out, no date will be assigned to this template!
-				return false;
-			} else if (ret) {
+			if (ret) {
 				debug("getMappedDate: date value override via `addDateParsing` callback to %o", ret);
 				dateValue = ret;
 			}
