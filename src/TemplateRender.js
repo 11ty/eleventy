@@ -1,5 +1,6 @@
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import EleventyExtensionMap from "./EleventyExtensionMap.js";
+import TemplateEngineManager from "./Engines/TemplateEngineManager.js";
 import CustomEngine from "./Engines/Custom.js";
 
 // import debugUtil from "debug";
@@ -80,7 +81,11 @@ class TemplateRender {
 		this.extensionMap.config = this.eleventyConfig;
 
 		let extensionEntry = this.extensionMap.getExtensionEntry(name);
-		this._engineName = extensionEntry?.aliasKey || extensionEntry?.key;
+		let engineName = extensionEntry?.aliasKey || extensionEntry?.key;
+		if (TemplateEngineManager.isSimpleAlias(extensionEntry)) {
+			engineName = extensionEntry?.key;
+		}
+		this._engineName = engineName;
 
 		if (!extensionEntry || !this._engineName) {
 			throw new TemplateRenderUnknownEngineError(

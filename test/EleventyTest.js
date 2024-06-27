@@ -1335,6 +1335,24 @@ test("Custom Markdown Render with permalink, Issue #2780", async (t) => {
   t.is(results[0].content.trim(), `<h1>Markdown?</h1>`);
 });
 
+test("Custom Markdown Render with permalink, Issue #2780 #3339", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplateFormats("markdown");
+      eleventyConfig.addExtension("markdown", {
+        key: "md"
+      });
+
+      eleventyConfig.addTemplate("filename-hi.markdown", `# Markdown?`, { permalink: "/{{ page.fileSlug }}.html" });
+    }
+  });
+
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+  t.is(results[0].url, `/filename-hi.html`);
+  t.is(results[0].content.trim(), `<h1>Markdown?</h1>`);
+});
+
 test("Test input/output conflicts (input overwrites output), Issue #3327", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/", {
     config: eleventyConfig => {
