@@ -399,7 +399,10 @@ class Template extends TemplateContent {
 		let newDate = await this.getMappedDate(data);
 
 		// Make sure to keep these keys synchronized in src/Util/ReservedData.js
-		data.page.date = newDate;
+		// Skip date assignment if custom date is falsy.
+		if (newDate) {
+			data.page.date = newDate;
+		}
 		data.page.inputPath = this.inputPath;
 		data.page.fileSlug = this.fileSlugStr;
 		data.page.filePathStem = this.filePathStem;
@@ -908,17 +911,31 @@ class Template extends TemplateContent {
 	}
 
 	async getMappedDate(data) {
-		if ("date" in data && data.date) {
+		let dateValue = data?.date;
+
+		// These can return a Date object, or a string.
+		for (let fn of this.config.customDateParsing) {
+			let ret = fn(dateValue);
+			if (ret === false) {
+				// Skip out, no date will be assigned to this template!
+				return false;
+			} else if (ret) {
+				debug("getMappedDate: date value override via `addDateParsing` callback to %o", ret);
+				dateValue = ret;
+			}
+		}
+
+		if (dateValue) {
 			debug("getMappedDate: using a date in the data for %o of %o", this.inputPath, data.date);
-			if (data.date instanceof Date) {
+			if (dateValue instanceof Date) {
 				// YAML does its own date parsing
-				debug("getMappedDate: YAML parsed it: %o", data.date);
-				return data.date;
+				debug("getMappedDate: found Date instance (maybe from YAML): %o", dateValue);
+				return dateValue;
 			}
 
 			// special strings
 			if (!this.isVirtualTemplate()) {
-				if (data.date.toLowerCase() === "git last modified") {
+				if (dateValue.toLowerCase() === "git last modified") {
 					let d = getDateFromGitLastUpdated(this.inputPath);
 					if (d) {
 						return d;
@@ -927,10 +944,10 @@ class Template extends TemplateContent {
 					// return now if this file is not yet available in `git`
 					return new Date();
 				}
-				if (data.date.toLowerCase() === "last modified") {
+				if (dateValue.toLowerCase() === "last modified") {
 					return this._getDateInstance("ctimeMs");
 				}
-				if (data.date.toLowerCase() === "git created") {
+				if (dateValue.toLowerCase() === "git created") {
 					let d = getDateFromGitFirstAdded(this.inputPath);
 					if (d) {
 						return d;
@@ -939,42 +956,45 @@ class Template extends TemplateContent {
 					// return now if this file is not yet available in `git`
 					return new Date();
 				}
-				if (data.date.toLowerCase() === "created") {
+				if (dateValue.toLowerCase() === "created") {
 					return this._getDateInstance("birthtimeMs");
 				}
 			}
 
 			// try to parse with Luxon
-			let date = DateTime.fromISO(data.date, { zone: "utc" });
+			let date = DateTime.fromISO(dateValue, { zone: "utc" });
 			if (!date.isValid) {
-				throw new Error(`date front matter value (${data.date}) is invalid for ${this.inputPath}`);
+				throw new Error(
+					`Data cascade value for \`date\` (${dateValue}) is invalid for ${this.inputPath}`,
+				);
 			}
-			debug("getMappedDate: Luxon parsed %o: %o and %o", data.date, date, date.toJSDate());
+			debug("getMappedDate: Luxon parsed %o: %o and %o", dateValue, date, date.toJSDate());
 
 			return date.toJSDate();
-		} else {
-			let filepathRegex = this.inputPath.match(/(\d{4}-\d{2}-\d{2})/);
-			if (filepathRegex !== null) {
-				// if multiple are found in the path, use the first one for the date
-				let dateObj = DateTime.fromISO(filepathRegex[1], {
-					zone: "utc",
-				}).toJSDate();
-				debug(
-					"getMappedDate: using filename regex time for %o of %o: %o",
-					this.inputPath,
-					filepathRegex[1],
-					dateObj,
-				);
-				return dateObj;
-			}
-
-			// No date was specified.
-			if (this.isVirtualTemplate()) {
-				return new Date();
-			}
-
-			return this._getDateInstance("birthtimeMs");
 		}
+
+		// No Date supplied in the Data Cascade, try to find the date in the file name
+		let filepathRegex = this.inputPath.match(/(\d{4}-\d{2}-\d{2})/);
+		if (filepathRegex !== null) {
+			// if multiple are found in the path, use the first one for the date
+			let dateObj = DateTime.fromISO(filepathRegex[1], {
+				zone: "utc",
+			}).toJSDate();
+			debug(
+				"getMappedDate: using filename regex time for %o of %o: %o",
+				this.inputPath,
+				filepathRegex[1],
+				dateObj,
+			);
+			return dateObj;
+		}
+
+		// No Date supplied in the Data Cascade
+		if (this.isVirtualTemplate()) {
+			return new Date();
+		}
+
+		return this._getDateInstance("birthtimeMs");
 	}
 
 	// Important reminder: Template data is first generated in TemplateMap

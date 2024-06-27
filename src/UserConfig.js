@@ -131,6 +131,7 @@ class UserConfig {
 			// Supplementary engines
 			engines: {
 				yaml: yaml.load.bind(yaml),
+
 				node: (frontMatterCode, { filePath }) => {
 					let vm = new RetrieveGlobals(frontMatterCode, {
 						filePath,
@@ -161,6 +162,8 @@ class UserConfig {
 		this.virtualTemplates = {};
 
 		this.freezeReservedData = true;
+
+		this.customDateParsingCallbacks = new Set();
 	}
 
 	// compatibleRange is optional in 2.0.0-beta.2
@@ -997,6 +1000,14 @@ class UserConfig {
 		this.freezeReservedData = !!bool;
 	}
 
+	addDateParsing(callback) {
+		if (typeof callback === "function") {
+			this.customDateParsingCallbacks.add(callback);
+		} else {
+			throw new Error("addDateParsing expects a function argument.");
+		}
+	}
+
 	getMergingConfigObject() {
 		let obj = {
 			// filters removed in 1.0 (use addTransform instead)
@@ -1050,6 +1061,7 @@ class UserConfig {
 			virtualTemplates: this.virtualTemplates,
 			// `directories` and `directoryAssignments` are merged manually prior to plugin processing
 			freezeReservedData: this.freezeReservedData,
+			customDateParsing: this.customDateParsingCallbacks,
 		};
 
 		if (Array.isArray(this.dataFileSuffixesOverride)) {

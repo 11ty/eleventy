@@ -1456,7 +1456,7 @@ test("Issue 413 weird date format", async (t) => {
   await t.throwsAsync(async function () {
     await tmpl.getData();
   }, {
-    message: "date front matter value (2019-03-13 20:18:42 +0000) is invalid for ./test/stubs-413/date-frontmatter.md"
+    message: "Data cascade value for `date` (2019-03-13 20:18:42 +0000) is invalid for ./test/stubs-413/date-frontmatter.md"
   });
 });
 
