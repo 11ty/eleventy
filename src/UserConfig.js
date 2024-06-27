@@ -1,5 +1,7 @@
 import chalk from "kleur";
 import { DateTime } from "luxon";
+import yaml from "js-yaml";
+
 import debugUtil from "debug";
 import { RetrieveGlobals } from "node-retrieve-globals";
 import { DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
@@ -128,6 +130,7 @@ class UserConfig {
 
 			// Supplementary engines
 			engines: {
+				yaml: yaml.load.bind(yaml),
 				node: (frontMatterCode, { filePath }) => {
 					let vm = new RetrieveGlobals(frontMatterCode, {
 						filePath,

@@ -502,7 +502,7 @@ class Template extends TemplateContent {
 	}
 
 	async addComputedData(data) {
-		if (this.config.keys.computed in data) {
+		if (isPlainObject(data?.[this.config.keys.computed])) {
 			this.computedData = new ComputedData(this.config);
 
 			// Note that `permalink` is only a thing that gets consumed—it does not go directly into generated data

@@ -23,6 +23,10 @@ class ReservedData {
 
 	// Check in the data cascade for reserved data properties.
 	static getReservedKeys(data) {
+		if (!data) {
+			return [];
+		}
+
 		let keys = this.properties.filter((key) => {
 			return key in data;
 		});
