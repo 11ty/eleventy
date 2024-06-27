@@ -1,15 +1,16 @@
 import test from "ava";
 import Eleventy from "../src/Eleventy.js";
 
-test("Custom date parsing callback (one, return string), Issue #867", async (t) => {
-  t.plan(2);
+test("Custom date parsing callback (return string), Issue #867", async (t) => {
+  t.plan(3);
 
   let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("test.html", `# Markdown`);
       eleventyConfig.dataFilterSelectors.add("page.date");
 
-      eleventyConfig.addDateParsing((dateValue) => {
+      eleventyConfig.addDateParsing(function(dateValue) {
+        t.truthy(this.page.inputPath);
         t.is(dateValue, undefined);
         return "2001-01-01T12:00:00Z";
       });
@@ -21,15 +22,16 @@ test("Custom date parsing callback (one, return string), Issue #867", async (t) 
   t.deepEqual(result.data.page.date, new Date(Date.UTC(2001,0,1,12)));
 });
 
-test("Custom date parsing callback (one, return Date), Issue #867", async (t) => {
-  t.plan(2);
+test("Custom date parsing callback (return Date), Issue #867", async (t) => {
+  t.plan(3);
 
   let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("test.html", `# Markdown`);
       eleventyConfig.dataFilterSelectors.add("page.date");
 
-      eleventyConfig.addDateParsing((dateValue) => {
+      eleventyConfig.addDateParsing(function(dateValue) {
+        t.truthy(this.page.inputPath);
         t.is(dateValue, undefined);
         return new Date(Date.UTC(2001,0,1,12));
       });
@@ -41,8 +43,8 @@ test("Custom date parsing callback (one, return Date), Issue #867", async (t) =>
   t.deepEqual(result.data.page.date, new Date(Date.UTC(2001,0,1,12)));
 });
 
-test("Custom date parsing callback (one, using date from data cascade, return string), Issue #867", async (t) => {
-  t.plan(2);
+test("Custom date parsing callback (using date from data cascade, return string), Issue #867", async (t) => {
+  t.plan(3);
 
   let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/", {
     config: eleventyConfig => {
@@ -51,7 +53,8 @@ test("Custom date parsing callback (one, using date from data cascade, return st
       });
       eleventyConfig.dataFilterSelectors.add("page.date");
 
-      eleventyConfig.addDateParsing((dateValue) => {
+      eleventyConfig.addDateParsing(function (dateValue) {
+        t.truthy(this.page.inputPath);
         t.true(dateValue instanceof Date);
         return "2001-01-01T12:00:00Z";
       });
@@ -64,7 +67,7 @@ test("Custom date parsing callback (one, using date from data cascade, return st
 });
 
 test("Custom date parsing callback (two, return undefined/falsy), Issue #867", async (t) => {
-  t.plan(3);
+  t.plan(5);
 
   let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/", {
     config: eleventyConfig => {
@@ -73,12 +76,14 @@ test("Custom date parsing callback (two, return undefined/falsy), Issue #867", a
       });
       eleventyConfig.dataFilterSelectors.add("page.date");
 
-      eleventyConfig.addDateParsing((dateValue) => {
+      eleventyConfig.addDateParsing(function (dateValue) {
+        t.truthy(this.page.inputPath);
         t.deepEqual(dateValue, new Date(Date.UTC(2003,0,1,12)));
         // return nothing
       });
 
-      eleventyConfig.addDateParsing((dateValue) => {
+      eleventyConfig.addDateParsing(function (dateValue) {
+        t.truthy(this.page.inputPath);
         t.deepEqual(dateValue, new Date(Date.UTC(2003,0,1,12)));
         // return nothing
       });
@@ -90,8 +95,8 @@ test("Custom date parsing callback (two, return undefined/falsy), Issue #867", a
   t.deepEqual(result.data.page.date, new Date(Date.UTC(2003,0,1,12)));
 });
 
-test("Custom date parsing callback (two, return explicit false), Issue #867", async (t) => {
-  t.plan(1);
+test("Custom date parsing callback (return explicit false), Issue #867", async (t) => {
+  t.plan(2);
 
   let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/", {
     config: eleventyConfig => {
@@ -100,7 +105,8 @@ test("Custom date parsing callback (two, return explicit false), Issue #867", as
       });
       eleventyConfig.dataFilterSelectors.add("page.date");
 
-      eleventyConfig.addDateParsing((dateValue) => {
+      eleventyConfig.addDateParsing(function (dateValue) {
+        t.truthy(this.page.inputPath);
         return false;
       });
     }
@@ -113,19 +119,21 @@ test("Custom date parsing callback (two, return explicit false), Issue #867", as
 });
 
 test("Custom date parsing callbacks (two, last wins, return string), Issue #867", async (t) => {
-  t.plan(3);
+  t.plan(5);
 
   let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/", {
     config: eleventyConfig => {
       eleventyConfig.addTemplate("test.html", `# Markdown`);
       eleventyConfig.dataFilterSelectors.add("page.date");
 
-      eleventyConfig.addDateParsing((dateValue) => {
+      eleventyConfig.addDateParsing(function (dateValue) {
+        t.truthy(this.page.inputPath);
         t.is(dateValue, undefined);
         return "2010-01-01T12:00:00Z";
       });
 
-      eleventyConfig.addDateParsing((dateValue) => {
+      eleventyConfig.addDateParsing(function (dateValue) {
+        t.truthy(this.page.inputPath);
         t.is(dateValue, "2010-01-01T12:00:00Z");
         return "2001-01-01T12:00:00Z";
       });

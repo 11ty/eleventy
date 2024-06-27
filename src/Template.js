@@ -396,13 +396,7 @@ class Template extends TemplateContent {
 			data.page = {};
 		}
 
-		let newDate = await this.getMappedDate(data);
-
 		// Make sure to keep these keys synchronized in src/Util/ReservedData.js
-		// Skip date assignment if custom date is falsy.
-		if (newDate) {
-			data.page.date = newDate;
-		}
 		data.page.inputPath = this.inputPath;
 		data.page.fileSlug = this.fileSlugStr;
 		data.page.filePathStem = this.filePathStem;
@@ -410,6 +404,13 @@ class Template extends TemplateContent {
 		data.page.templateSyntax = this.templateRender.getEnginesList(
 			data[this.config.keys.engineOverride],
 		);
+
+		let newDate = await this.getMappedDate(data);
+		// Skip date assignment if custom date is falsy.
+		if (newDate) {
+			data.page.date = newDate;
+		}
+
 		// data.page.url
 		// data.page.outputPath
 		// data.page.excerpt from gray-matter and Front Matter
@@ -914,8 +915,15 @@ class Template extends TemplateContent {
 		let dateValue = data?.date;
 
 		// These can return a Date object, or a string.
+		// Already type checked to be functions in UserConfig
 		for (let fn of this.config.customDateParsing) {
-			let ret = fn(dateValue);
+			let ret = fn.call(
+				{
+					page: data.page,
+				},
+				dateValue,
+			);
+
 			if (ret === false) {
 				// Skip out, no date will be assigned to this template!
 				return false;
