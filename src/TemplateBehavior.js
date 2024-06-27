@@ -64,7 +64,7 @@ class TemplateBehavior {
 		}
 
 		let computedKey = this.config.keys.computed;
-		if (computedKey in data && isPlainObject(data[computedKey].permalink)) {
+		if (computedKey in data && isPlainObject(data[computedKey]?.permalink)) {
 			for (let key of Object.keys(data[computedKey].permalink)) {
 				keys.add(key);
 			}
