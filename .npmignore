@@ -2,6 +2,6 @@ jsdoc
 docs
 docs-src
 test
-test-node
+test_node
 coverage
 .*
