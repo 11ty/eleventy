@@ -11,6 +11,9 @@ class TemplateLayoutPathResolver {
 
 		this.eleventyConfig = eleventyConfig;
 		this.originalPath = path;
+		this.originalDisplayPath =
+			TemplatePath.join(this.layoutsDir, this.originalPath) +
+			` (via \`layout: ${this.originalPath}\`)`; // for error messaging
 		this.path = path;
 		this.aliases = {};
 		this.extensionMap = extensionMap;
@@ -59,14 +62,8 @@ class TemplateLayoutPathResolver {
 	init() {
 		// we might be able to move this into the constructor?
 		this.aliases = Object.assign({}, this.config.layoutAliases, this.aliases);
-		// debug("Current layout aliases: %o", this.aliases);
 
-		if (this.path in this.aliases) {
-			// debug(
-			//   "Substituting layout: %o maps to %o",
-			//   this.path,
-			//   this.aliases[this.path]
-			// );
+		if (this.aliases[this.path]) {
 			this.path = this.aliases[this.path];
 		}
 
@@ -92,7 +89,7 @@ class TemplateLayoutPathResolver {
 	getFileName() {
 		if (!this.filename) {
 			throw new Error(
-				`You’re trying to use a layout that does not exist: ${this.originalPath}${this.filename ? ` (${this.filename})` : ""}`,
+				`You’re trying to use a layout that does not exist: ${this.originalDisplayPath}`,
 			);
 		}
 
@@ -102,7 +99,7 @@ class TemplateLayoutPathResolver {
 	getFullPath() {
 		if (!this.filename) {
 			throw new Error(
-				`You’re trying to use a layout that does not exist: ${this.originalPath}${this.filename ? ` (${this.filename})` : ""}`,
+				`You’re trying to use a layout that does not exist: ${this.originalDisplayPath}`,
 			);
 		}
 
@@ -110,15 +107,6 @@ class TemplateLayoutPathResolver {
 	}
 
 	findFileName() {
-		if (!fs.existsSync(this.layoutsDir)) {
-			throw Error(
-				"TemplateLayoutPathResolver directory does not exist for " +
-					this.path +
-					": " +
-					this.layoutsDir,
-			);
-		}
-
 		for (let filename of this.extensionMap.getFileList(this.path)) {
 			// TODO async
 			if (fs.existsSync(TemplatePath.join(this.layoutsDir, filename))) {

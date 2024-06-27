@@ -128,7 +128,7 @@ test("Layout (uses empty string layouts folder) no template resolution", async (
   t.throws(() => {
     res.getFileName();
   }, {
-    message: `You’re trying to use a layout that does not exist: layoutsemptystring`
+    message: `You’re trying to use a layout that does not exist: test/stubs/layoutsemptystring (via \`layout: layoutsemptystring\`)`
   });
 });
 
