@@ -36,6 +36,7 @@ date: 2019-08-31 23:59:56 America/New_York
 
       eleventyConfig.addDateParsing(function(dateValue) {
         t.is(dateValue, "2019-08-31 23:59:56 America/New_York");
+        // returns DateTime instance from Luxon
         return DateTime.fromFormat(dateValue, "yyyy-MM-dd hh:mm:ss z");
       });
     }
