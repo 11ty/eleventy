@@ -1,5 +1,3 @@
-/* eslint-disable indent */
-
 import { DepGraph as DependencyGraph } from "dependency-graph";
 import { isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
@@ -76,7 +74,6 @@ class TemplateMap {
 			return str.slice("collections.".length);
 		}
 		// Fixes #2851
-		// eslint-disable-next-line quotes
 		if (str.startsWith("collections['") || str.startsWith('collections["')) {
 			return str.slice("collections['".length, -2);
 		}
