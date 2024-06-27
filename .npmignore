@@ -4,4 +4,5 @@ docs-src
 test
 test_node
 coverage
+eslint.config.js
 .*
