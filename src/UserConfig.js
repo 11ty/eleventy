@@ -422,14 +422,14 @@ class UserConfig {
 		}
 	}
 
-	async resolvePlugin(name) {
+	resolvePlugin(name) {
 		let filenameLookup = {
 			"@11ty/eleventy/html-base-plugin": HtmlBasePlugin,
 			"@11ty/eleventy/render-plugin": RenderPlugin,
 			"@11ty/eleventy/inputpath-to-url-plugin": InputPathToUrlPlugin,
 
-			// requires async (`await resolvePlugin("@11ty/eleventy/i18n-plugin")`)
-			// to avoid preloading i18n dependencies.
+			// Async plugins:
+			// requires e.g. `await resolvePlugin("@11ty/eleventy/i18n-plugin")` to avoid preloading i18n dependencies.
 			// see https://github.com/11ty/eleventy-plugin-rss/issues/52
 			"@11ty/eleventy/i18n-plugin": "./Plugins/I18nPlugin.js",
 		};
