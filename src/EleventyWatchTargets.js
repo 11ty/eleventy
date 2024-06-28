@@ -5,22 +5,16 @@ import JavaScriptDependencies from "./Util/JavaScriptDependencies.js";
 import eventBus from "./EventBus.js";
 
 class EleventyWatchTargets {
-	constructor() {
+	#templateConfig;
+
+	constructor(templateConfig) {
 		this.targets = new Set();
 		this.dependencies = new Set();
 		this.newTargets = new Set();
-		this._watchJavaScriptDependencies = true;
 		this.isEsm = false;
 
 		this.graph = new DepGraph();
-	}
-
-	set watchJavaScriptDependencies(watch) {
-		this._watchJavaScriptDependencies = !!watch;
-	}
-
-	get watchJavaScriptDependencies() {
-		return this._watchJavaScriptDependencies;
+		this.#templateConfig = templateConfig;
 	}
 
 	setProjectUsingEsm(isEsmProject) {
@@ -111,7 +105,7 @@ class EleventyWatchTargets {
 
 	// add only a target’s dependencies
 	async addDependencies(targets, filterCallback) {
-		if (!this.watchJavaScriptDependencies) {
+		if (this.#templateConfig && !this.#templateConfig.shouldSpiderJavaScriptDependencies()) {
 			return;
 		}
 
@@ -145,6 +139,13 @@ class EleventyWatchTargets {
 			let isImportedInTheChangedFile = this.getDependenciesOf(filePath);
 			for (let dep of isImportedInTheChangedFile) {
 				paths.add(dep);
+			}
+
+			// Use GlobalDependencyMap
+			if (this.#templateConfig) {
+				for (let dep of this.#templateConfig.usesGraph.getDependantsFor(filePath)) {
+					paths.add(dep);
+				}
 			}
 		}
 

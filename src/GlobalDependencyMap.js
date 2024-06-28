@@ -2,6 +2,7 @@ import { DepGraph } from "dependency-graph";
 import debugUtil from "debug";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
+import JavaScriptDependencies from "./Util/JavaScriptDependencies.js";
 import PathNormalizer from "./Util/PathNormalizer.js";
 
 const debug = debugUtil("Eleventy:Dependencies");
@@ -11,8 +12,18 @@ class GlobalDependencyMap {
 	static LAYOUT_KEY = "layout";
 	static COLLECTION_PREFIX = "__collection:";
 
+	#templateConfig;
+
 	reset() {
 		this._map = undefined;
+	}
+
+	setIsEsm(isEsm) {
+		this.isEsm = isEsm;
+	}
+
+	setTemplateConfig(templateConfig) {
+		this.#templateConfig = templateConfig;
 	}
 
 	setConfig(config) {
@@ -23,8 +34,8 @@ class GlobalDependencyMap {
 		this.config = config;
 
 		// These have leading dot slashes, but so do the paths from Eleventy
-		this.config.events.once("eleventy.layouts", (layouts) => {
-			this.addLayoutsToMap(layouts);
+		this.config.events.once("eleventy.layouts", async (layouts) => {
+			await this.addLayoutsToMap(layouts);
 		});
 	}
 
@@ -60,8 +71,9 @@ class GlobalDependencyMap {
 	}
 
 	// Eleventy Layouts don’t show up in the dependency graph, so we handle those separately
-	addLayoutsToMap(layouts) {
+	async addLayoutsToMap(layouts) {
 		let normalizedLayouts = this.normalizeLayoutsObject(layouts);
+
 		// Clear out any previous layout relationships to make way for the new ones
 		this.removeLayoutNodes(normalizedLayouts);
 
@@ -80,6 +92,11 @@ class GlobalDependencyMap {
 			// Potential improvement: only add the first template in the chain for a template and manage any upstream layouts by their own relationships
 			for (let pageTemplate of normalizedLayouts[layout]) {
 				this.addDependency(pageTemplate, [layout]);
+			}
+
+			if (this.#templateConfig?.shouldSpiderJavaScriptDependencies()) {
+				let deps = await JavaScriptDependencies.getDependencies([layout], this.isEsm);
+				this.addDependency(layout, deps);
 			}
 		}
 	}

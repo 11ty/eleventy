@@ -50,6 +50,7 @@ class EleventyPluginError extends EleventyBaseError {}
  */
 class TemplateConfig {
 	#templateFormats;
+	#runMode;
 
 	constructor(customRootConfig, projectConfigPath) {
 		this.userConfig = new UserConfig();
@@ -119,6 +120,18 @@ class TemplateConfig {
 		return this.directories.input;
 	}
 
+	setRunMode(runMode) {
+		this.#runMode = runMode;
+	}
+
+	shouldSpiderJavaScriptDependencies() {
+		// not for a standard build
+		return (
+			(this.#runMode === "watch" || this.#runMode === "serve") &&
+			this.userConfig.watchJavaScriptDependencies
+		);
+	}
+
 	/**
 	 * Normalises local project config file path.
 	 *
@@ -143,6 +156,7 @@ class TemplateConfig {
 
 	setProjectUsingEsm(isEsmProject) {
 		this.isEsm = !!isEsmProject;
+		this.usesGraph.setIsEsm(isEsmProject);
 	}
 
 	getIsProjectUsingEsm() {
@@ -492,6 +506,8 @@ class TemplateConfig {
 	get usesGraph() {
 		if (!this._usesGraph) {
 			this._usesGraph = new GlobalDependencyMap();
+			this._usesGraph.setIsEsm(this.isEsm);
+			this._usesGraph.setTemplateConfig(this);
 		}
 		return this._usesGraph;
 	}

@@ -1,5 +1,6 @@
 import test from "ava";
 
+import TemplateConfig from "../src/TemplateConfig.js";
 import EleventyWatchTargets from "../src/EleventyWatchTargets.js";
 import JavaScriptDependencies from "../src/Util/JavaScriptDependencies.js";
 
@@ -89,7 +90,8 @@ test("JavaScript addDependencies (one file has two dependencies)", async (t) => 
 });
 
 test("JavaScript addDependencies (skip JS deps)", async (t) => {
-  let targets = new EleventyWatchTargets();
+  let templateConfig = new TemplateConfig();
+  let targets = new EleventyWatchTargets(templateConfig);
   targets.setProjectUsingEsm(true);
   targets.watchJavaScriptDependencies = false;
   await targets.addDependencies("./test/stubs/dependencies/two-deps.11ty.cjs");

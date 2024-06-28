@@ -17,7 +17,9 @@ export async function resolve(specifier, context, nextResolve) {
 		// Not a relative import and not a file import
 		// Or from node_modules (perhaps better to check if the specifier is in the project directory instead)
 		if (
-			(!specifier.startsWith("./") && !specifier.startsWith("file:")) ||
+			(!specifier.startsWith("../") &&
+				!specifier.startsWith("./") &&
+				!specifier.startsWith("file:")) ||
 			context.parentURL.includes("/node_modules/")
 		) {
 			return nextResolve(specifier);

@@ -17,9 +17,14 @@ class JavaScript extends TemplateEngine {
 		this.instances = {};
 
 		this.cacheable = false;
-		EventBusUtil.soloOn("eleventy.templateModified", (inputPath, usedByDependants = []) => {
+		EventBusUtil.soloOn("eleventy.templateModified", (inputPath, metadata = {}) => {
+			let { usedByDependants, relevantLayouts } = metadata;
 			// Remove from cached instances when modified
-			let instancesToDelete = [TemplatePath.addLeadingDotSlash(inputPath), ...usedByDependants];
+			let instancesToDelete = [
+				inputPath,
+				...(usedByDependants || []),
+				...(relevantLayouts || []),
+			].map((entry) => TemplatePath.addLeadingDotSlash(entry));
 			for (let inputPath of instancesToDelete) {
 				if (inputPath in this.instances) {
 					delete this.instances[inputPath];
@@ -74,11 +79,7 @@ class JavaScript extends TemplateEngine {
 		}
 	}
 
-	async getInstanceFromInputPath(inputPath) {
-		if (this.instances[inputPath]) {
-			return this.instances[inputPath];
-		}
-
+	async #getInstanceFromInputPath(inputPath) {
 		let isEsm = this.eleventyConfig.getIsProjectUsingEsm();
 		const mod = await EleventyImport(inputPath, isEsm ? "esm" : "cjs");
 
@@ -91,6 +92,14 @@ class JavaScript extends TemplateEngine {
 			);
 		}
 		return inst;
+	}
+
+	async getInstanceFromInputPath(inputPath) {
+		if (!this.instances[inputPath]) {
+			this.instances[inputPath] = this.#getInstanceFromInputPath(inputPath);
+		}
+
+		return this.instances[inputPath];
 	}
 
 	/**

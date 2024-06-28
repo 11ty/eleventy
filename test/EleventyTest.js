@@ -107,7 +107,9 @@ test("Eleventy process.ENV", async (t) => {
 });
 
 test("Eleventy file watching", async (t) => {
-  let elev = new Eleventy("./test/stubs", "./test/stubs/_site");
+  let elev = new Eleventy("./test/stubs", "./test/stubs/_site", {
+    runMode: "watch" // required to spider deps
+  });
   elev.setFormats("njk");
 
   await elev.init();

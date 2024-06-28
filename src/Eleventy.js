@@ -139,6 +139,7 @@ class Eleventy {
 			await this.eleventyConfig.setProjectConfigPath(this.options.configPath);
 		}
 
+		this.eleventyConfig.setRunMode(this.runMode);
 		this.eleventyConfig.setProjectUsingEsm(this.isEsm);
 		this.eleventyConfig.setLogger(this.logger);
 		this.eleventyConfig.setDirectories(this.directories);
@@ -204,9 +205,8 @@ class Eleventy {
 		this.watchManager = new EleventyWatch();
 
 		/** @member {Object} - tbd. */
-		this.watchTargets = new EleventyWatchTargets();
+		this.watchTargets = new EleventyWatchTargets(this.eleventyConfig);
 		this.watchTargets.addAndMakeGlob(this.config.additionalWatchTargets);
-		this.watchTargets.watchJavaScriptDependencies = this.config.watchJavaScriptDependencies;
 
 		/** @member {Object} - tbd. */
 		this.fileSystemSearch = new FileSystemSearch();
@@ -801,7 +801,10 @@ Arguments:
 
 		// Note: these are sync events!
 		// `templateModified` is an alias for resourceModified but all listeners for this are cleared out when the config is reset.
-		eventBus.emit("eleventy.templateModified", changedFilePath, usedByDependants);
+		eventBus.emit("eleventy.templateModified", changedFilePath, {
+			usedByDependants,
+			relevantLayouts,
+		});
 		eventBus.emit("eleventy.resourceModified", changedFilePath, usedByDependants, {
 			viaConfigReset: isResetConfig,
 			relevantLayouts,
@@ -1004,7 +1007,7 @@ Arguments:
 	 * @method
 	 */
 	async _initWatchDependencies() {
-		if (!this.watchTargets.watchJavaScriptDependencies) {
+		if (!this.eleventyConfig.shouldSpiderJavaScriptDependencies()) {
 			return;
 		}
 
