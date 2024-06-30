@@ -258,7 +258,7 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 				let [context, ...argArray] = args;
 
 				let normalizedContext = {};
-				if (context.ctx && context.ctx.page) {
+				if (context.ctx?.page) {
 					normalizedContext.ctx = context.ctx;
 
 					// TODO .data

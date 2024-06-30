@@ -85,7 +85,7 @@ class TemplateMap {
 	 * ---
 	 */
 	isPaginationOverAllCollections(entry) {
-		if (entry.data.pagination && entry.data.pagination.data) {
+		if (entry.data.pagination?.data) {
 			return (
 				entry.data.pagination.data === "collections" ||
 				entry.data.pagination.data === "collections.all"
@@ -94,7 +94,7 @@ class TemplateMap {
 	}
 
 	getPaginationTagTarget(entry) {
-		if (entry.data.pagination && entry.data.pagination.data) {
+		if (entry.data.pagination?.data) {
 			return this.getTagTarget(entry.data.pagination.data);
 		}
 	}
@@ -344,7 +344,7 @@ class TemplateMap {
 		}
 
 		let precompiled = this.config.precompiledCollections;
-		if (precompiled && precompiled[tagName]) {
+		if (precompiled?.[tagName]) {
 			if (
 				tagName === "all" ||
 				!Array.isArray(this.collectionsData[tagName]) ||

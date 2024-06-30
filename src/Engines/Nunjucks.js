@@ -101,10 +101,10 @@ class Nunjucks extends TemplateEngine {
 
 	static wrapFilter(name, fn) {
 		return function (...args) {
-			if (this.ctx && this.ctx.page) {
+			if (this.ctx?.page) {
 				this.page = this.ctx.page;
 			}
-			if (this.ctx && this.ctx.eleventy) {
+			if (this.ctx?.eleventy) {
 				this.eleventy = this.ctx.eleventy;
 			}
 

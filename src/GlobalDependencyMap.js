@@ -236,7 +236,7 @@ class GlobalDependencyMap {
 		this.map.dependantsOf(node).forEach((node) => {
 			let data = this.map.getNodeData(node);
 			// we only want layouts
-			if (data && data.type && data.type === GlobalDependencyMap.LAYOUT_KEY) {
+			if (data?.type === GlobalDependencyMap.LAYOUT_KEY) {
 				return layouts.push(node);
 			}
 		});
@@ -289,7 +289,7 @@ class GlobalDependencyMap {
 
 			// When includeLayouts is `false` we want to filter out layouts
 			let data = this.map.getNodeData(node);
-			if (data && data.type && data.type === GlobalDependencyMap.LAYOUT_KEY) {
+			if (data?.type === GlobalDependencyMap.LAYOUT_KEY) {
 				return false;
 			}
 			return true;
