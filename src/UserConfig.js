@@ -411,7 +411,7 @@ class UserConfig {
 
 		this.addPairedNunjucksShortcode(name, callback);
 		this.addPairedLiquidShortcode(name, callback);
-		this.addJavaScriptShortcode(name, callback);
+		this.addPairedJavaScriptShortcode(name, callback);
 	}
 
 	// Related: #498
@@ -426,7 +426,7 @@ class UserConfig {
 
 		this.addPairedNunjucksAsyncShortcode(name, callback);
 		this.addPairedLiquidShortcode(name, callback);
-		this.addJavaScriptShortcode(name, callback);
+		this.addPairedJavaScriptShortcode(name, callback);
 	}
 
 	addPairedNunjucksAsyncShortcode(name, callback) {
