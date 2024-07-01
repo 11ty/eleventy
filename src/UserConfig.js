@@ -79,15 +79,16 @@ class UserConfig {
 			tags: {},
 			globals: {},
 			shortcodes: {},
-			asyncShortcodes: {},
 			pairedShortcodes: {},
+			asyncShortcodes: {},
 			asyncPairedShortcodes: {},
 		};
 
 		this.javascript = {
 			functions: {},
-			shortcodes: {},
 			filters: {},
+			shortcodes: {},
+			pairedShortcodes: {},
 		};
 
 		this.markdownHighlighter = null;
@@ -469,6 +470,19 @@ class UserConfig {
 			callback,
 			"JavaScript Shortcode",
 			"addJavaScriptShortcode",
+		);
+
+		// Backwards compat for a time before `addJavaScriptShortcode` existed.
+		this.addJavaScriptFunction(name, callback);
+	}
+
+	addPairedJavaScriptShortcode(name, callback) {
+		this.#add(
+			this.javascript.pairedShortcodes,
+			name,
+			callback,
+			"JavaScript Paired Shortcode",
+			"addPairedJavaScriptShortcode",
 		);
 
 		// Backwards compat for a time before `addJavaScriptShortcode` existed.
@@ -1046,6 +1060,7 @@ class UserConfig {
 			// 11ty.js
 			javascriptFunctions: this.javascript.functions, // filters and shortcodes, combined
 			javascriptShortcodes: this.javascript.shortcodes,
+			javascriptPairedShortcodes: this.javascript.pairedShortcodes,
 			javascriptFilters: this.javascript.filters,
 
 			// Markdown
