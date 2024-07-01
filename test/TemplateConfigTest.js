@@ -612,3 +612,45 @@ test("ProjectDirectories instance exists in user accessible config", async (t) =
 		cfg.directories.output = "should not work";
 	});
 });
+
+test("Test getters #3310", async (t) => {
+  let templateCfg = new TemplateConfig();
+  let userCfg = templateCfg.userConfig;
+
+  userCfg.addShortcode("myShortcode", function () {});
+  userCfg.addShortcode("myAsyncShortcode", async function () {});
+
+  userCfg.addPairedShortcode("myPairedShortcode", function () {});
+  userCfg.addPairedShortcode("myPairedAsyncShortcode", async function () {});
+
+  userCfg.addFilter("myFilter", function () {});
+  userCfg.addFilter("myAsyncFilter", async function () {});
+  userCfg.addPlugin(function (eleventyConfig) {
+    eleventyConfig.addFilter("myPluginFilter", function () {});
+  });
+
+  await templateCfg.init();
+
+  let filterNames = Object.keys(userCfg.getFilters());
+  t.true(filterNames.includes("myFilter"));
+  t.true(filterNames.includes("myAsyncFilter"));
+  t.true(filterNames.includes("myPluginFilter"));
+
+  t.truthy(userCfg.getFilter("myFilter"));
+  t.truthy(userCfg.getFilter("myAsyncFilter"));
+  t.truthy(userCfg.getFilter("myPluginFilter"));
+
+  let shortcodeNames = Object.keys(userCfg.getShortcodes());
+  t.true(shortcodeNames.includes("myShortcode"));
+  t.true(shortcodeNames.includes("myAsyncShortcode"));
+
+  t.truthy(userCfg.getShortcode("myShortcode"));
+  t.truthy(userCfg.getShortcode("myAsyncShortcode"));
+
+  let pairedShortcodeNames = Object.keys(userCfg.getPairedShortcodes());
+  t.true(pairedShortcodeNames.includes("myPairedShortcode"));
+  t.true(pairedShortcodeNames.includes("myPairedAsyncShortcode"));
+
+  t.truthy(userCfg.getPairedShortcode("myPairedShortcode"));
+  t.truthy(userCfg.getPairedShortcode("myPairedAsyncShortcode"));
+});
