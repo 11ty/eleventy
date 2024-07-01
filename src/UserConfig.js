@@ -247,6 +247,10 @@ class UserConfig {
 			debug(`Adding new ${description} "%o" via \`%o(%o)\``, name, fnName, originalName);
 		}
 
+		if (typeof callback !== "function") {
+			throw new Error(`Invalid definition for "${name}" ${description}.`);
+		}
+
 		target[name] = this.benchmarks.config.add(`"${name}" ${description}`, callback);
 	}
 

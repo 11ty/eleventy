@@ -210,21 +210,37 @@ class Nunjucks extends TemplateEngine {
 				let [context, ...argArray] = args;
 
 				if (isAsync) {
-					shortcodeFn
-						.call(Nunjucks.normalizeContext(context), ...argArray)
-						.then(function (returnValue) {
-							resolve(null, new NunjucksLib.runtime.SafeString("" + returnValue));
-						})
-						.catch(function (e) {
-							resolve(
-								new EleventyShortcodeError(
-									`Error with Nunjucks shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
-										e,
-									)}`,
-								),
-								null,
+					try {
+						let ret = shortcodeFn.call(Nunjucks.normalizeContext(context), ...argArray);
+
+						// #3286 error messaging when the shortcode is not a promise
+						if (!ret?.then) {
+							throw new EleventyShortcodeError(
+								`Error with Nunjucks shortcode \`${shortcodeName}\`: it was defined as asynchronous but was actually synchronous. This is important for Nunjucks.`,
 							);
-						});
+						}
+
+						ret
+							.then(function (returnValue) {
+								resolve(null, new NunjucksLib.runtime.SafeString("" + returnValue));
+							})
+							.catch(function (e) {
+								resolve(
+									new EleventyShortcodeError(
+										`Error with Nunjucks shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+											e,
+										)}`,
+									),
+									null,
+								);
+							});
+					} catch (e) {
+						throw new EleventyShortcodeError(
+							`Error with Nunjucks shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
+								e,
+							)}`,
+						);
+					}
 				} else {
 					try {
 						let ret = shortcodeFn.call(Nunjucks.normalizeContext(context), ...argArray);
