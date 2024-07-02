@@ -258,10 +258,10 @@ class ProjectDirectories {
 	}
 
 	// for a hypothetical template file
-	getInputPath(filePath) {
+	getInputPath(filePathRelativeToInputDir) {
 		// TODO change ~/ to project root dir
 		return TemplatePath.addLeadingDotSlash(
-			TemplatePath.join(this.input, TemplatePath.standardizeFilePath(filePath)),
+			TemplatePath.join(this.input, TemplatePath.standardizeFilePath(filePathRelativeToInputDir)),
 		);
 	}
 
@@ -274,9 +274,13 @@ class ProjectDirectories {
 		return TemplatePath.stripLeadingSubPath(filePathRelativeToInputDir, inputDir);
 	}
 
-	getLayoutPath(filePath) {
+	// for a hypothetical Eleventy layout file
+	getLayoutPath(filePathRelativeToLayoutDir) {
 		return TemplatePath.addLeadingDotSlash(
-			TemplatePath.join(this.layouts || this.includes, TemplatePath.standardizeFilePath(filePath)),
+			TemplatePath.join(
+				this.layouts || this.includes,
+				TemplatePath.standardizeFilePath(filePathRelativeToLayoutDir),
+			),
 		);
 	}
 

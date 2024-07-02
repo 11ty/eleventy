@@ -162,10 +162,12 @@ test("RSS virtual templates plugin", async (t) => {
 test("Virtual templates as layouts, issue #2307", async (t) => {
 	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
 		config: function (eleventyConfig) {
-      eleventyConfig.addTemplate("virtual.md", `# Hello`, {
-        layout: "virtual.html"
-      });
-			eleventyConfig.addTemplate("_includes/virtual.html", `<!-- Layout -->{{ content }}`)
+			eleventyConfig.addTemplate("virtual.md", `# Hello`, {
+				layout: "virtual.html"
+			});
+
+			let layoutPath = eleventyConfig.directories.getLayoutPathRelativeToInputDirectory("virtual.html");
+			eleventyConfig.addTemplate(layoutPath, `<!-- Layout -->{{ content }}`);
 		},
 	});
 
