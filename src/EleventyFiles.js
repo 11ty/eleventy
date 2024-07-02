@@ -176,7 +176,7 @@ class EleventyFiles {
 		this.uniqueIgnores = this.getIgnoreGlobs();
 
 		// Conditional added for tests that don’t have a config
-		if (this.config && this.config.events) {
+		if (this.config?.events) {
 			this.config.events.emit("eleventy.ignores", this.uniqueIgnores);
 		}
 

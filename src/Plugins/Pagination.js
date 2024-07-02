@@ -178,7 +178,7 @@ class Pagination {
 		}
 
 		const chunks = lodashChunk(this.target, this.size);
-		if (this.data.pagination && this.data.pagination.generatePageOnEmptyData) {
+		if (this.data.pagination?.generatePageOnEmptyData) {
 			return chunks.length ? chunks : [[]];
 		} else {
 			return chunks;

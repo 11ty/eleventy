@@ -148,7 +148,7 @@ class TemplateConfig {
 	}
 
 	getLocalProjectConfigFiles() {
-		if (this.projectConfigPaths && this.projectConfigPaths.length > 0) {
+		if (this.projectConfigPaths?.length > 0) {
 			return TemplatePath.addLeadingDotSlashArray(this.projectConfigPaths.filter((path) => path));
 		}
 		return [];
@@ -425,7 +425,7 @@ class TemplateConfig {
 		}
 
 		// `templateFormats` is an override via `setTemplateFormats`
-		if (this.userConfig && this.userConfig.templateFormats) {
+		if (this.userConfig?.templateFormats) {
 			this.templateFormats.setViaConfig(this.userConfig.templateFormats);
 		} else if (localConfig?.templateFormats || this.rootConfig?.templateFormats) {
 			// Local project config or defaultConfig.js
@@ -435,7 +435,7 @@ class TemplateConfig {
 		}
 
 		// `templateFormatsAdded` is additive via `addTemplateFormats`
-		if (this.userConfig && this.userConfig.templateFormatsAdded) {
+		if (this.userConfig?.templateFormatsAdded) {
 			this.templateFormats.addViaConfig(this.userConfig.templateFormatsAdded);
 		}
 
@@ -475,7 +475,7 @@ class TemplateConfig {
 		pluginsBench.after();
 
 		// Template formats added via plugins
-		if (this.userConfig && this.userConfig.templateFormatsAdded) {
+		if (this.userConfig?.templateFormatsAdded) {
 			this.templateFormats.addViaConfig(this.userConfig.templateFormatsAdded);
 			mergedConfig.templateFormats = Object.freeze(this.templateFormats.getTemplateFormats());
 		}
