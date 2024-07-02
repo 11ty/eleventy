@@ -23,6 +23,7 @@ import simplePlural from "./Util/Pluralize.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import eventBus from "./EventBus.js";
 import { getEleventyPackageJson, getWorkingProjectPackageJson } from "./Util/ImportJsonSync.js";
+import { EleventyImport } from "./Util/Require.js";
 import RenderPlugin, * as RenderPluginExtras from "./Plugins/RenderPlugin.js";
 import I18nPlugin, * as I18nPluginExtras from "./Plugins/I18nPlugin.js";
 import HtmlBasePlugin, * as HtmlBasePluginExtras from "./Plugins/HtmlBasePlugin.js";
@@ -160,6 +161,8 @@ class Eleventy {
 		if (this.#verboseOverride === true || this.#verboseOverride === false) {
 			this.eleventyConfig.userConfig._setQuietModeOverride(!this.#verboseOverride);
 		}
+
+		this.eleventyConfig.userConfig.directories = this.directories;
 
 		/* Programmatic API config */
 		if (this.options.config && typeof this.options.config === "function") {
@@ -1350,6 +1353,7 @@ Object.assign(HtmlBasePlugin, HtmlBasePluginExtras);
 
 export {
 	Eleventy,
+	EleventyImport as ImportFile,
 
 	/**
 	 * @type {module:11ty/eleventy/Plugins/RenderPlugin}
