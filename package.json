@@ -108,7 +108,7 @@
 		"zod-validation-error": "^3.3.0"
 	},
 	"dependencies": {
-		"@11ty/dependency-tree": "^3.0.0",
+		"@11ty/dependency-tree": "^3.0.1",
 		"@11ty/dependency-tree-esm": "^1.0.0",
 		"@11ty/eleventy-dev-server": "^2.0.1",
 		"@11ty/eleventy-plugin-bundle": "^2.0.2",
