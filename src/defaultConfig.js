@@ -8,6 +8,7 @@ import getCollectionItemIndex from "./Filters/GetCollectionItemIndex.js";
 import { FilterPlugin as InputPathToUrlFilterPlugin } from "./Plugins/InputPathToUrl.js";
 import { HtmlTransformer } from "./Util/HtmlTransformer.js";
 import TransformsUtil from "./Util/TransformsUtil.js";
+import MemoizeUtil from "./Util/MemoizeFunction.js";
 
 /**
  * @module 11ty/eleventy/defaultConfig
@@ -67,8 +68,8 @@ export default function (config) {
 		immediate: true,
 	});
 
-	config.addFilter("slug", slugFilter);
-	config.addFilter("slugify", slugifyFilter);
+	config.addFilter("slug", MemoizeUtil(slugFilter));
+	config.addFilter("slugify", MemoizeUtil(slugifyFilter));
 
 	// Deprecated, use HtmlBasePlugin instead.
 	// Adds a pathPrefix manually to a URL string

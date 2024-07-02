@@ -1,5 +1,6 @@
 import test from "ava";
 import UserConfig from "../src/UserConfig.js";
+import memoize from "../src/Util/MemoizeFunction.js";
 
 test("Template Formats", (t) => {
   let userCfg = new UserConfig();
@@ -187,4 +188,77 @@ test("Resolve plugin (invalid)", async (t) => {
     await userConfig.resolvePlugin("@11ty/eleventy/does-not-exist");
   });
   t.truthy(e.message.startsWith(`Invalid name "@11ty/eleventy/does-not-exist" passed to resolvePlugin.`));
+});
+
+test("Memoize filters (control)", (t) => {
+  let userCfg = new UserConfig();
+  let count = 0;
+  userCfg.addFilter("increment", (num) => {
+    count += num;
+  });
+
+  let increment = userCfg.getFilter("increment");
+  increment(3);
+
+  t.is(count, 3);
+
+  increment(3);
+  t.is(count, 6);
+});
+
+test("Memoize filters (memoized)", (t) => {
+  let userCfg = new UserConfig();
+  let count = 0;
+  userCfg.addFilter("increment", memoize((num) => {
+    count += num;
+  }));
+
+  let increment = userCfg.getFilter("increment");
+
+  increment(1);
+  increment(1);
+  increment(1);
+  t.is(count, 1);
+
+  increment(2);
+  increment(2);
+  increment(2);
+  t.is(count, 3);
+
+  increment(3);
+  increment(3);
+  increment(3);
+  increment(3);
+  t.is(count, 6);
+});
+
+test("Memoize async filters (memoized)", async (t) => {
+  let userCfg = new UserConfig();
+  let count = 0;
+
+  userCfg.addFilter("increment", memoize(async (num) => {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        count += num;
+        resolve(count);
+      }, 50);
+    });
+  }));
+
+  let increment = userCfg.getFilter("increment");
+  await increment(1);
+  await increment(1);
+  await increment(1);
+  t.is(count, 1);
+
+  await increment(2);
+  await increment(2);
+  await increment(2);
+  t.is(count, 3);
+
+  await increment(3);
+  await increment(3);
+  await increment(3);
+  await increment(3);
+  t.is(count, 6);
 });

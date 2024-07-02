@@ -233,25 +233,31 @@ class UserConfig {
 	/*
 	 * Private utilities
 	 */
-	#add(target, originalName, callback, description, fnName) {
+	#add(target, originalName, callback, options) {
+		let { description, functionName } = options;
+
+		if (typeof callback !== "function") {
+			throw new Error(`Invalid definition for "${name}" ${description}.`);
+		}
+
 		let name = this.getNamespacedName(originalName);
 
 		if (target[name]) {
 			debug(
 				chalk.yellow(`Warning, overwriting previous ${description} "%o" via \`%o(%o)\``),
 				name,
-				fnName,
+				functionName,
 				originalName,
 			);
 		} else {
-			debug(`Adding new ${description} "%o" via \`%o(%o)\``, name, fnName, originalName);
+			debug(`Adding new ${description} "%o" via \`%o(%o)\``, name, functionName, originalName);
 		}
 
-		if (typeof callback !== "function") {
-			throw new Error(`Invalid definition for "${name}" ${description}.`);
-		}
+		target[name] = this.#decorateCallback(`"${name}" ${description}`, callback, options);
+	}
 
-		target[name] = this.benchmarks.config.add(`"${name}" ${description}`, callback);
+	#decorateCallback(type, callback) {
+		return this.benchmarks.config.add(type, callback);
 	}
 
 	/*
@@ -270,17 +276,17 @@ class UserConfig {
 	 */
 
 	addLiquidFilter(name, callback) {
-		this.#add(this.liquid.filters, name, callback, "Liquid Filter", "addLiquidFilter");
+		this.#add(this.liquid.filters, name, callback, {
+			description: "Liquid Filter",
+			functionName: "addLiquidFilter",
+		});
 	}
 
 	addNunjucksAsyncFilter(name, callback) {
-		this.#add(
-			this.nunjucks.asyncFilters,
-			name,
-			callback,
-			"Nunjucks Filter",
-			"addNunjucksAsyncFilter",
-		);
+		this.#add(this.nunjucks.asyncFilters, name, callback, {
+			description: "Nunjucks Filter",
+			functionName: "addNunjucksAsyncFilter",
+		});
 	}
 
 	// Support the nunjucks style syntax for asynchronous filter add
@@ -289,12 +295,18 @@ class UserConfig {
 			// namespacing happens downstream
 			this.addNunjucksAsyncFilter(name, callback);
 		} else {
-			this.#add(this.nunjucks.filters, name, callback, "Nunjucks Filter", "addNunjucksFilter");
+			this.#add(this.nunjucks.filters, name, callback, {
+				description: "Nunjucks Filter",
+				functionName: "addNunjucksFilter",
+			});
 		}
 	}
 
 	addJavaScriptFilter(name, callback) {
-		this.#add(this.javascript.filters, name, callback, "JavaScript Filter", "addJavaScriptFilter");
+		this.#add(this.javascript.filters, name, callback, {
+			description: "JavaScript Filter",
+			functionName: "addJavaScriptFilter",
+		});
 
 		// Backwards compat for a time before `addJavaScriptFilter` existed.
 		this.addJavaScriptFunction(name, callback);
@@ -307,12 +319,16 @@ class UserConfig {
 			return;
 		}
 
-		this.#add(this.universal.filters, name, callback, "Universal Filter", "addFilter");
-
 		// namespacing happens downstream
+		this.#add(this.universal.filters, name, callback, {
+			description: "Universal Filter",
+			functionName: "addFilter",
+		});
+
 		this.addLiquidFilter(name, callback);
 		this.addJavaScriptFilter(name, callback);
 		this.addNunjucksFilter(name, function (...args) {
+			// Note that `callback` is already a function as the `#add` method throws an error if not.
 			let ret = callback.call(this, ...args);
 			if (ret instanceof Promise) {
 				throw new Error(
@@ -325,13 +341,17 @@ class UserConfig {
 
 	// Liquid, Nunjucks, and JS only
 	addAsyncFilter(name, callback) {
-		this.#add(this.universal.filters, name, callback, "Universal Filter", "addAsyncFilter");
-
 		// namespacing happens downstream
+		this.#add(this.universal.filters, name, callback, {
+			description: "Universal Filter",
+			functionName: "addAsyncFilter",
+		});
+
 		this.addLiquidFilter(name, callback);
 		this.addJavaScriptFilter(name, callback);
 		this.addNunjucksAsyncFilter(name, async function (...args) {
 			let cb = args.pop();
+			// Note that `callback` is already a function as the `#add` method throws an error if not.
 			let ret = await callback.call(this, ...args);
 			cb(null, ret);
 		});
@@ -348,7 +368,10 @@ class UserConfig {
 			return;
 		}
 
-		this.#add(this.universal.shortcodes, name, callback, "Universal Shortcode", "addShortcode");
+		this.#add(this.universal.shortcodes, name, callback, {
+			description: "Universal Shortcode",
+			functionName: "addShortcode",
+		});
 
 		this.addLiquidShortcode(name, callback);
 		this.addJavaScriptShortcode(name, callback);
@@ -356,13 +379,10 @@ class UserConfig {
 	}
 
 	addAsyncShortcode(name, callback) {
-		this.#add(
-			this.universal.shortcodes,
-			name,
-			callback,
-			"Universal Shortcode",
-			"addAsyncShortcode",
-		);
+		this.#add(this.universal.shortcodes, name, callback, {
+			description: "Universal Shortcode",
+			functionName: "addAsyncShortcode",
+		});
 
 		// Related: #498
 		this.addNunjucksAsyncShortcode(name, callback);
@@ -371,31 +391,28 @@ class UserConfig {
 	}
 
 	addNunjucksAsyncShortcode(name, callback) {
-		this.#add(
-			this.nunjucks.asyncShortcodes,
-			name,
-			callback,
-			"Nunjucks Async Shortcode",
-			"addNunjucksAsyncShortcode",
-		);
+		this.#add(this.nunjucks.asyncShortcodes, name, callback, {
+			description: "Nunjucks Async Shortcode",
+			functionName: "addNunjucksAsyncShortcode",
+		});
 	}
 
 	addNunjucksShortcode(name, callback, isAsync = false) {
 		if (isAsync) {
 			this.addNunjucksAsyncShortcode(name, callback);
 		} else {
-			this.#add(
-				this.nunjucks.shortcodes,
-				name,
-				callback,
-				"Nunjucks Shortcode",
-				"addNunjucksShortcode",
-			);
+			this.#add(this.nunjucks.shortcodes, name, callback, {
+				description: "Nunjucks Shortcode",
+				functionName: "addNunjucksShortcode",
+			});
 		}
 	}
 
 	addLiquidShortcode(name, callback) {
-		this.#add(this.liquid.shortcodes, name, callback, "Liquid Shortcode", "addLiquidShortcode");
+		this.#add(this.liquid.shortcodes, name, callback, {
+			description: "Liquid Shortcode",
+			functionName: "addLiquidShortcode",
+		});
 	}
 
 	addPairedShortcode(name, callback) {
@@ -405,13 +422,10 @@ class UserConfig {
 			return;
 		}
 
-		this.#add(
-			this.universal.pairedShortcodes,
-			name,
-			callback,
-			"Universal Paired Shortcode",
-			"addPairedShortcode",
-		);
+		this.#add(this.universal.pairedShortcodes, name, callback, {
+			description: "Universal Paired Shortcode",
+			functionName: "addPairedShortcode",
+		});
 
 		this.addPairedNunjucksShortcode(name, callback);
 		this.addPairedLiquidShortcode(name, callback);
@@ -420,13 +434,10 @@ class UserConfig {
 
 	// Related: #498
 	addPairedAsyncShortcode(name, callback) {
-		this.#add(
-			this.universal.pairedShortcodes,
-			name,
-			callback,
-			"Universal Paired Async Shortcode",
-			"addPairedAsyncShortcode",
-		);
+		this.#add(this.universal.pairedShortcodes, name, callback, {
+			description: "Universal Paired Async Shortcode",
+			functionName: "addPairedAsyncShortcode",
+		});
 
 		this.addPairedNunjucksAsyncShortcode(name, callback);
 		this.addPairedLiquidShortcode(name, callback);
@@ -434,60 +445,45 @@ class UserConfig {
 	}
 
 	addPairedNunjucksAsyncShortcode(name, callback) {
-		this.#add(
-			this.nunjucks.asyncPairedShortcodes,
-			name,
-			callback,
-			"Nunjucks Async Paired Shortcode",
-			"addPairedNunjucksAsyncShortcode",
-		);
+		this.#add(this.nunjucks.asyncPairedShortcodes, name, callback, {
+			description: "Nunjucks Async Paired Shortcode",
+			functionName: "addPairedNunjucksAsyncShortcode",
+		});
 	}
 
 	addPairedNunjucksShortcode(name, callback, isAsync = false) {
 		if (isAsync) {
 			this.addPairedNunjucksAsyncShortcode(name, callback);
 		} else {
-			this.#add(
-				this.nunjucks.pairedShortcodes,
-				name,
-				callback,
-				"Nunjucks Paired Shortcode",
-				"addPairedNunjucksShortcode",
-			);
+			this.#add(this.nunjucks.pairedShortcodes, name, callback, {
+				description: "Nunjucks Paired Shortcode",
+				functionName: "addPairedNunjucksShortcode",
+			});
 		}
 	}
 
 	addPairedLiquidShortcode(name, callback) {
-		this.#add(
-			this.liquid.pairedShortcodes,
-			name,
-			callback,
-			"Liquid Paired Shortcode",
-			"addPairedLiquidShortcode",
-		);
+		this.#add(this.liquid.pairedShortcodes, name, callback, {
+			description: "Liquid Paired Shortcode",
+			functionName: "addPairedLiquidShortcode",
+		});
 	}
 
 	addJavaScriptShortcode(name, callback) {
-		this.#add(
-			this.javascript.shortcodes,
-			name,
-			callback,
-			"JavaScript Shortcode",
-			"addJavaScriptShortcode",
-		);
+		this.#add(this.javascript.shortcodes, name, callback, {
+			description: "JavaScript Shortcode",
+			functionName: "addJavaScriptShortcode",
+		});
 
 		// Backwards compat for a time before `addJavaScriptShortcode` existed.
 		this.addJavaScriptFunction(name, callback);
 	}
 
 	addPairedJavaScriptShortcode(name, callback) {
-		this.#add(
-			this.javascript.pairedShortcodes,
-			name,
-			callback,
-			"JavaScript Paired Shortcode",
-			"addPairedJavaScriptShortcode",
-		);
+		this.#add(this.javascript.pairedShortcodes, name, callback, {
+			description: "JavaScript Paired Shortcode",
+			functionName: "addPairedJavaScriptShortcode",
+		});
 
 		// Backwards compat for a time before `addJavaScriptShortcode` existed.
 		this.addJavaScriptFunction(name, callback);
@@ -495,13 +491,10 @@ class UserConfig {
 
 	// Both Filters and shortcodes feed into this
 	addJavaScriptFunction(name, callback) {
-		this.#add(
-			this.javascript.functions,
-			name,
-			callback,
-			"JavaScript Function",
-			"addJavaScriptFunction",
-		);
+		this.#add(this.javascript.functions, name, callback, {
+			description: "JavaScript Function",
+			functionName: "addJavaScriptFunction",
+		});
 	}
 
 	/*
@@ -516,7 +509,10 @@ class UserConfig {
 			);
 		}
 
-		this.#add(this.liquid.tags, name, tagFn, "Liquid Custom Tag", "addLiquidTag");
+		this.#add(this.liquid.tags, name, tagFn, {
+			description: "Liquid Custom Tag",
+			functionName: "addLiquidTag",
+		});
 	}
 
 	addNunjucksTag(name, tagFn) {
@@ -526,7 +522,10 @@ class UserConfig {
 			);
 		}
 
-		this.#add(this.nunjucks.tags, name, tagFn, "Nunjucks Custom Tag", "addNunjucksTag");
+		this.#add(this.nunjucks.tags, name, tagFn, {
+			description: "Nunjucks Custom Tag",
+			functionName: "addNunjucksTag",
+		});
 	}
 
 	/*
@@ -977,10 +976,7 @@ class UserConfig {
 		}
 
 		if (typeof globalType === "function") {
-			this.nunjucks.globals[name] = this.benchmarks.config.add(
-				`"${name}" Nunjucks Global`,
-				globalType,
-			);
+			this.nunjucks.globals[name] = this.#decorateCallback(`"${name}" Nunjucks Global`, globalType);
 		} else {
 			this.nunjucks.globals[name] = globalType;
 		}
@@ -989,13 +985,13 @@ class UserConfig {
 	addTransform(name, callback) {
 		name = this.getNamespacedName(name);
 
-		this.transforms[name] = this.benchmarks.config.add(`"${name}" Transform`, callback);
+		this.transforms[name] = this.#decorateCallback(`"${name}" Transform`, callback);
 	}
 
 	addLinter(name, callback) {
 		name = this.getNamespacedName(name);
 
-		this.linters[name] = this.benchmarks.config.add(`"${name}" Linter`, callback);
+		this.linters[name] = this.#decorateCallback(`"${name}" Linter`, callback);
 	}
 
 	addLayoutAlias(from, to) {

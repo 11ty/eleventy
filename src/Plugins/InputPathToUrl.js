@@ -1,5 +1,6 @@
 import { TemplatePath } from "@11ty/eleventy-utils";
 import isValidUrl from "../Util/ValidUrl.js";
+import memoize from "../Util/MemoizeFunction.js";
 
 function normalizeInputPath(inputPath, inputDir, contentMap) {
 	// inputDir is optional at the beginning of the developer supplied-path
@@ -62,27 +63,30 @@ function FilterPlugin(eleventyConfig) {
 		contentMap = inputPathToUrl;
 	});
 
-	eleventyConfig.addFilter("inputPathToUrl", function (filepath) {
-		if (!contentMap) {
-			throw new Error("Internal error: contentMap not available for `inputPathToUrl` filter.");
-		}
+	eleventyConfig.addFilter(
+		"inputPathToUrl",
+		memoize(function (filepath) {
+			if (!contentMap) {
+				throw new Error("Internal error: contentMap not available for `inputPathToUrl` filter.");
+			}
 
-		if (isValidUrl(filepath)) {
-			return filepath;
-		}
+			if (isValidUrl(filepath)) {
+				return filepath;
+			}
 
-		let inputDir = eleventyConfig.directories.input;
-		let suffix = "";
-		[suffix, filepath] = parseFilePath(filepath);
-		filepath = normalizeInputPath(filepath, inputDir, contentMap);
+			let inputDir = eleventyConfig.directories.input;
+			let suffix = "";
+			[suffix, filepath] = parseFilePath(filepath);
+			filepath = normalizeInputPath(filepath, inputDir, contentMap);
 
-		let urls = contentMap[filepath];
-		if (!urls || urls.length === 0) {
-			throw new Error("`inputPathToUrl` filter could not find a matching target for " + filepath);
-		}
+			let urls = contentMap[filepath];
+			if (!urls || urls.length === 0) {
+				throw new Error("`inputPathToUrl` filter could not find a matching target for " + filepath);
+			}
 
-		return `${urls[0]}${suffix}`;
-	});
+			return `${urls[0]}${suffix}`;
+		}),
+	);
 }
 
 function TransformPlugin(eleventyConfig, defaultOptions = {}) {
