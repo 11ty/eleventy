@@ -244,6 +244,19 @@ class ProjectDirectories {
 		return this.#dirs.output || ProjectDirectories.defaults.output;
 	}
 
+	isTemplateFile(filePath) {
+		let inputPath = this.getInputPath(filePath);
+		if (this.layouts && inputPath.startsWith(this.layouts)) {
+			return false;
+		}
+
+		if (inputPath.startsWith(this.includes)) {
+			return false;
+		}
+
+		return inputPath.startsWith(this.input);
+	}
+
 	// for a hypothetical template file
 	getInputPath(filePath) {
 		// TODO change ~/ to project root dir
@@ -253,9 +266,27 @@ class ProjectDirectories {
 	}
 
 	// Inverse of getInputPath
-	getInputPathRelativeToInputDirectory(filePath) {
+	// Removes input dir from path
+	getInputPathRelativeToInputDirectory(filePathRelativeToInputDir) {
 		let inputDir = TemplatePath.addLeadingDotSlash(TemplatePath.join(this.input));
-		return TemplatePath.stripLeadingSubPath(filePath, inputDir);
+
+		// No leading dot slash
+		return TemplatePath.stripLeadingSubPath(filePathRelativeToInputDir, inputDir);
+	}
+
+	getLayoutPath(filePath) {
+		return TemplatePath.addLeadingDotSlash(
+			TemplatePath.join(this.layouts || this.includes, TemplatePath.standardizeFilePath(filePath)),
+		);
+	}
+
+	// Removes layout dir from path
+	getLayoutPathRelativeToInputDirectory(filePathRelativeToLayoutDir) {
+		let layoutPath = this.getLayoutPath(filePathRelativeToLayoutDir);
+		let inputDir = TemplatePath.addLeadingDotSlash(TemplatePath.join(this.input));
+
+		// No leading dot slash
+		return TemplatePath.stripLeadingSubPath(layoutPath, inputDir);
 	}
 
 	getProjectPath(filePath) {

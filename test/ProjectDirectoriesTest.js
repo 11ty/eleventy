@@ -113,10 +113,12 @@ test("Content/template/input paths", t => {
 	let d = new ProjectDirectories();
 	t.is(d.getInputPath("test.md"), "./test.md");
 	t.is(d.getInputPath("./test.md"), "./test.md");
+	t.is(d.getLayoutPath("./layout.html"), "./_includes/layout.html");
 
 	d.setInput("test");
 	t.is(d.getInputPath("test.md"), "./test/test.md");
 	t.is(d.getInputPath("./test.md"), "./test/test.md");
+	t.is(d.getLayoutPath("./layout.html"), "./test/_includes/layout.html");
 });
 
 test("Project file paths", t => {
@@ -321,4 +323,27 @@ test("CLI values should override all others (just output)", t => {
 	t.is(d.data, "./test/stubs/_data/");
 	t.is(d.includes, "./test/stubs/myincludes/");
 	t.is(d.layouts, undefined);
+});
+
+test("getLayoutPath (layouts dir)", t => {
+	let d = new ProjectDirectories();
+	d.setViaConfigObject({
+		input: "test/stubs",
+		layouts: "mylayouts",
+		includes: "components",
+	});
+
+	t.is(d.getLayoutPath("layout.html"), "./test/stubs/mylayouts/layout.html");
+	t.is(d.getLayoutPathRelativeToInputDirectory("layout.html"), "mylayouts/layout.html");
+});
+
+test("getLayoutPath (includes dir)", t => {
+	let d = new ProjectDirectories();
+	d.setViaConfigObject({
+		input: "test/stubs",
+		includes: "components",
+	});
+
+	t.is(d.getLayoutPath("layout.html"), "./test/stubs/components/layout.html");
+	t.is(d.getLayoutPathRelativeToInputDirectory("layout.html"), "components/layout.html");
 });

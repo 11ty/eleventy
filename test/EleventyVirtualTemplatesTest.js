@@ -158,3 +158,20 @@ test("RSS virtual templates plugin", async (t) => {
 	let [ feed ] = results.filter(entry => entry.outputPath.endsWith(".xml"));
 	t.truthy(feed.content.startsWith(`<?xml version="1.0" encoding="utf-8"?>`));
 });
+
+test("Virtual templates as layouts, issue #2307", async (t) => {
+	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
+		config: function (eleventyConfig) {
+      eleventyConfig.addTemplate("virtual.md", `# Hello`, {
+        layout: "virtual.html"
+      });
+			eleventyConfig.addTemplate("_includes/virtual.html", `<!-- Layout -->{{ content }}`)
+		},
+	});
+
+	let results = await elev.toJSON();
+
+	t.deepEqual(results.length, 1);
+	t.deepEqual(results[0].content.trim(), `<!-- Layout --><h1>Hello</h1>`);
+	t.deepEqual(results[0].rawInput, `# Hello`);
+});

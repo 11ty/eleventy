@@ -359,15 +359,20 @@ class EleventyFiles {
 	getPathsWithVirtualTemplates(paths) {
 		// Support for virtual templates added in 3.0
 		if (this.config.virtualTemplates && isPlainObject(this.config.virtualTemplates)) {
-			let virtualTemplates = Object.keys(this.config.virtualTemplates).map((path) => {
-				let fullVirtualPath = this.dirs.getInputPath(path);
-				if (!this.extensionMap.getKey(fullVirtualPath)) {
-					this.eleventyConfig.logger.warn(
-						`The virtual template at ${fullVirtualPath} is using a template format that’s not valid for your project. Your project is using: "${this.formats}". Read more about formats: https://www.11ty.dev/docs/config/#template-formats`,
-					);
-				}
-				return fullVirtualPath;
-			});
+			let virtualTemplates = Object.keys(this.config.virtualTemplates)
+				.filter((path) => {
+					// Filter out includes/layouts
+					return this.dirs.isTemplateFile(path);
+				})
+				.map((path) => {
+					let fullVirtualPath = this.dirs.getInputPath(path);
+					if (!this.extensionMap.getKey(fullVirtualPath)) {
+						this.eleventyConfig.logger.warn(
+							`The virtual template at ${fullVirtualPath} is using a template format that’s not valid for your project. Your project is using: "${this.formats}". Read more about formats: https://www.11ty.dev/docs/config/#template-formats`,
+						);
+					}
+					return fullVirtualPath;
+				});
 
 			paths = paths.concat(virtualTemplates);
 

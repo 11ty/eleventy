@@ -14,6 +14,7 @@ class TemplateLayoutPathResolver {
 		this.originalDisplayPath =
 			TemplatePath.join(this.layoutsDir, this.originalPath) +
 			` (via \`layout: ${this.originalPath}\`)`; // for error messaging
+
 		this.path = path;
 		this.aliases = {};
 		this.extensionMap = extensionMap;
@@ -22,6 +23,12 @@ class TemplateLayoutPathResolver {
 		}
 
 		this.init();
+	}
+
+	getVirtualTemplate(layoutPath) {
+		let inputDirRelativePath =
+			this.eleventyConfig.directories.getLayoutPathRelativeToInputDirectory(layoutPath);
+		return this.config.virtualTemplates[inputDirRelativePath];
 	}
 
 	get dirs() {
@@ -59,6 +66,17 @@ class TemplateLayoutPathResolver {
 		}
 	}
 
+	exists(layoutPath) {
+		if (this.getVirtualTemplate(layoutPath)) {
+			return true;
+		}
+		let fullPath = this.eleventyConfig.directories.getLayoutPath(layoutPath);
+		if (fs.existsSync(fullPath)) {
+			return true;
+		}
+		return false;
+	}
+
 	init() {
 		// we might be able to move this into the constructor?
 		this.aliases = Object.assign({}, this.config.layoutAliases, this.aliases);
@@ -69,16 +87,12 @@ class TemplateLayoutPathResolver {
 
 		let useLayoutResolution = this.config.layoutResolution;
 
-		this.pathAlreadyHasExtension = TemplatePath.join(this.layoutsDir, this.path);
-
-		if (this.path.split(".").length > 0 && fs.existsSync(this.pathAlreadyHasExtension)) {
+		if (this.path.split(".").length > 0 && this.exists(this.path)) {
 			this.filename = this.path;
-			this.fullPath = TemplatePath.addLeadingDotSlash(this.pathAlreadyHasExtension);
+			this.fullPath = this.eleventyConfig.directories.getLayoutPath(this.path);
 		} else if (useLayoutResolution) {
 			this.filename = this.findFileName();
-			this.fullPath = TemplatePath.addLeadingDotSlash(
-				TemplatePath.join(this.layoutsDir, this.filename || ""),
-			);
+			this.fullPath = this.eleventyConfig.directories.getLayoutPath(this.filename || "");
 		}
 	}
 
@@ -108,8 +122,7 @@ class TemplateLayoutPathResolver {
 
 	findFileName() {
 		for (let filename of this.extensionMap.getFileList(this.path)) {
-			// TODO async
-			if (fs.existsSync(TemplatePath.join(this.layoutsDir, filename))) {
+			if (this.exists(filename)) {
 				return filename;
 			}
 		}
