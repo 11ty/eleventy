@@ -28,3 +28,14 @@ test("Custom Front Matter Parsing Options (using JavaScript node-retrieve-global
 
   t.is(result[0]?.content, `<div>Hi</div><div>Bye</div>`);
 });
+
+test("Custom Front Matter Parsing Options (using backwards-compatible `js` instead of node-retrieve-globals)", async (t) => {
+  let elev = new Eleventy("./test/stubs/script-frontmatter/test-js.njk", "./_site");
+  elev.disableLogger();
+
+  let result = await elev.toJSON();
+
+  t.deepEqual(result.length, 1);
+
+  t.is(result[0]?.content, `<div>HELLO!</div>`);
+});

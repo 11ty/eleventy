@@ -1,9 +1,9 @@
 import chalk from "kleur";
 import { DateTime } from "luxon";
 import yaml from "js-yaml";
+import matter from "gray-matter";
 
 import debugUtil from "debug";
-import { RetrieveGlobals } from "node-retrieve-globals";
 import { DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
 
 import HtmlBasePlugin from "./Plugins/HtmlBasePlugin.js";
@@ -15,6 +15,7 @@ import EventEmitter from "./Util/AsyncEventEmitter.js";
 import EleventyCompatibility from "./Util/Compatibility.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import BenchmarkManager from "./Benchmark/BenchmarkManager.js";
+import JavaScriptFrontMatter from "./Engines/FrontMatter/JavaScript.js";
 
 const debug = debugUtil("Eleventy:UserConfig");
 
@@ -148,30 +149,15 @@ class UserConfig {
 			engines: {
 				yaml: yaml.load.bind(yaml),
 
-				node: (frontMatterCode, { filePath }) => {
-					let vm = new RetrieveGlobals(frontMatterCode, {
-						filePath,
-						// ignored if vm.Module is stable (or --experimental-vm-modules)
-						transformEsmImports: true,
-					});
+				// Backwards compatible with `js` object front matter
+				// https://github.com/11ty/eleventy/issues/2819
+				javascript: JavaScriptFrontMatter,
 
-					// Future warning until vm.Module is stable:
-					// If the frontMatterCode uses `import` this uses the `experimentalModuleApi`
-					// option in node-retrieve-globals to workaround https://github.com/zachleat/node-retrieve-globals/issues/2
-					let data = {
-						page: {
-							// Theoretically fileSlug and filePathStem could be added here but require extensionMap
-							inputPath: filePath,
-						},
-					};
+				// Needed for fallback behavior in the new `javascript` engine
+				jsLegacy: matter.engines.javascript,
 
-					// this is async, but it’s handled in Eleventy upstream.
-					return vm.getGlobalContext(data, {
-						reuseGlobal: true,
-						dynamicImport: true,
-						// addRequire: true,
-					});
-				},
+				// for compatibility
+				node: JavaScriptFrontMatter,
 			},
 		};
 
