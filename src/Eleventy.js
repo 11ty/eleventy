@@ -1,3 +1,4 @@
+import chalk from "kleur";
 import { performance } from "node:perf_hooks";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import BundlePlugin from "@11ty/eleventy-plugin-bundle";
@@ -131,6 +132,12 @@ class Eleventy {
 		 * @default true
 		 */
 		this.isRunInitialBuild = true;
+
+		/**
+		 * @member {Number} - Number of builds run on this instance.
+		 * @default 0
+		 */
+		this.buildCount = 0;
 	}
 
 	async initializeConfig(initOverrides) {
@@ -367,23 +374,24 @@ class Eleventy {
 		let slashRet = [];
 
 		if (copyCount) {
-			slashRet.push(`Copied ${copyCount} ${simplePlural(copyCount, "file", "files")}`);
+			slashRet.push(`Copied ${chalk.bold(copyCount)}`);
 		}
 
 		slashRet.push(
-			`Wrote ${writeCount} ${simplePlural(writeCount, "file", "files")}${
+			`Wrote ${chalk.bold(writeCount)} ${simplePlural(writeCount, "file", "files")}${
 				skippedCount ? ` (skipped ${skippedCount})` : ""
 			}`,
 		);
 
 		if (slashRet.length) {
-			ret.push(slashRet.join(" / "));
+			ret.push(slashRet.join(" "));
 		}
 
 		let time = ((this.getNewTimestamp() - this.start) / 1000).toFixed(2);
-		ret.push(`in ${time} ${simplePlural(time, "second", "seconds")}`);
+		ret.push(`in ${chalk.bold(time)} ${simplePlural(time, "second", "seconds")}`);
 
-		if (writeCount >= 10) {
+		// More than 1 second total, show estimate of per-template time
+		if (time >= 1) {
 			ret.push(`(${((time * 1000) / writeCount).toFixed(1)}ms each, v${pkg.version})`);
 		} else {
 			ret.push(`(v${pkg.version})`);
@@ -1310,6 +1318,8 @@ Arguments:
 			eventsArg.uses = this.eleventyConfig.usesGraph.map;
 			await this.config.events.emit("afterBuild", eventsArg);
 			await this.config.events.emit("eleventy.after", eventsArg);
+
+			this.buildCount++;
 		} catch (e) {
 			hasError = true;
 			ret = {
