@@ -387,9 +387,10 @@ class TemplateWriter {
 					if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
 						usedTemplateContentTooEarlyMap.push(mapEntry);
 					} else {
+						let outputPaths = `"${mapEntry._pages.map((page) => page.outputPath).join(`", "`)}"`;
 						return Promise.reject(
 							new EleventyTemplateError(
-								`Having trouble writing to "${mapEntry.outputPath}" from "${mapEntry.inputPath}"`,
+								`Having trouble writing to ${outputPaths} from "${mapEntry.inputPath}"`,
 								e,
 							),
 						);
