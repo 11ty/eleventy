@@ -28,6 +28,7 @@ export default [
 			"no-async-promise-executor": "warn",
 			"no-prototype-builtins": "warn",
 			"no-unused-vars": "warn",
+			"space-unary-ops": "error",
 		},
 	},
 ];
