@@ -273,7 +273,7 @@ class TemplatePassthroughManager {
 		for (let entry of result) {
 			for (let src in entry.map) {
 				let dest = TemplatePath.stripLeadingSubPath(entry.map[src], this.outputDir);
-				entries["/" + dest] = src;
+				entries["/" + encodeURI(dest)] = src;
 			}
 		}
 		return entries;
