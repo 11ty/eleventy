@@ -903,6 +903,10 @@ class UserConfig {
 		};
 	}
 
+	isVirtualTemplate(virtualInputPath) {
+		return Boolean(this.virtualTemplates[virtualInputPath]);
+	}
+
 	#setDirectory(key, dir) {
 		if (this.isPluginExecution()) {
 			throw new Error(

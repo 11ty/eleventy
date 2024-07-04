@@ -80,8 +80,15 @@ class JavaScript extends TemplateEngine {
 	}
 
 	async #getInstanceFromInputPath(inputPath) {
-		let isEsm = this.eleventyConfig.getIsProjectUsingEsm();
-		const mod = await EleventyImport(inputPath, isEsm ? "esm" : "cjs");
+		let mod;
+		let relativeInputPath =
+			this.eleventyConfig.directories.getInputPathRelativeToInputDirectory(inputPath);
+		if (this.eleventyConfig.userConfig.isVirtualTemplate(relativeInputPath)) {
+			mod = this.eleventyConfig.userConfig.virtualTemplates[relativeInputPath].content;
+		} else {
+			let isEsm = this.eleventyConfig.getIsProjectUsingEsm();
+			mod = await EleventyImport(inputPath, isEsm ? "esm" : "cjs");
+		}
 
 		let inst = this._getInstance(mod);
 		if (inst) {

@@ -177,3 +177,46 @@ test("Virtual templates as layouts, issue #2307", async (t) => {
 	t.deepEqual(results[0].content.trim(), `<!-- Layout --><h1>Hello</h1>`);
 	t.deepEqual(results[0].rawInput, `# Hello`);
 });
+
+test("11ty.js Virtual Templates (object), issue #3347", async (t) => {
+  let templateDefinition = {
+    data: () => {
+      return { var: 2 };
+    },
+    render: function(data) {
+      return `this is a test ${data.var}.`;
+    }
+  };
+
+	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
+		config: function (eleventyConfig) {
+			eleventyConfig.addTemplate("virtual.11ty.js", templateDefinition);
+    }
+	});
+
+	let results = await elev.toJSON();
+
+	t.deepEqual(results.length, 1);
+	t.deepEqual(results[0].content.trim(), `this is a test 2.`);
+  // TODO support rawInput on 11ty.js?
+	// t.deepEqual(results[0].rawInput, templateDefinition);
+});
+
+test("11ty.js Virtual Templates (function), issue #3347", async (t) => {
+  let templateDefinition = function(data) {
+    return `this is a test ${data.page.url}.`;
+  };
+
+	let elev = new Eleventy("./test/stubs-virtual-nowrite", "./test/stubs-virtual-nowrite/_site", {
+		config: function (eleventyConfig) {
+			eleventyConfig.addTemplate("virtual.11ty.js", templateDefinition);
+    }
+	});
+
+	let results = await elev.toJSON();
+
+	t.deepEqual(results.length, 1);
+	t.deepEqual(results[0].content.trim(), `this is a test /virtual/.`);
+  // TODO support rawInput on 11ty.js?
+	// t.deepEqual(results[0].rawInput, templateDefinition);
+});
