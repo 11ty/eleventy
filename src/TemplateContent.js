@@ -573,7 +573,7 @@ class TemplateContent {
 				`> Render > ${this.inputPath}${this._getPaginationLogSuffix(data)}`,
 			);
 			let outputPathBenchmark;
-			if (data.page && data.page.outputPath && logRenderToOutputBenchmark) {
+			if (data.page?.outputPath && logRenderToOutputBenchmark) {
 				outputPathBenchmark = this.bench.get(`> Render to > ${data.page.outputPath}`);
 			}
 

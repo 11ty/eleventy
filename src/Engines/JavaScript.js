@@ -142,7 +142,7 @@ class JavaScript extends TemplateEngine {
 	static wrapJavaScriptFunction(inst, fn) {
 		return function (...args) {
 			for (let key of JavaScript.DATA_KEYS_TO_BIND) {
-				if (inst && inst[key]) {
+				if (inst?.[key]) {
 					this[key] = inst[key];
 				}
 			}

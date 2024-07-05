@@ -612,7 +612,7 @@ class UserConfig {
 			let configFunction = plugin;
 			ret = configFunction(this, options);
 			pluginBenchmark.after();
-		} else if (plugin && plugin.configFunction) {
+		} else if (plugin?.configFunction) {
 			pluginBenchmark.before();
 
 			if (options && typeof options.init === "function") {
