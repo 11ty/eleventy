@@ -1402,3 +1402,7 @@ export {
 	 */
 	BundlePlugin,
 };
+
+/**
+ * @typedef {import('./UserConfig.js').default} UserConfig
+ */
