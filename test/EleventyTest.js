@@ -1383,3 +1383,29 @@ test("Test input/output conflicts (output overwrites another input), Issue #3327
   });
   t.true(e.toString().startsWith("DuplicatePermalinkOutputError:"));
 });
+
+test("Eleventy data schema has access to custom collections created via API #613 #3345", async (t) => {
+
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addCollection("userCollection", async function (collection) {
+        let c = collection.getFilteredByTag("posts");
+        for(let item of c) {
+          const frontMatter = await item.template.read();
+          frontMatter.content = `lol\n${frontMatter.content}`;
+          item.template.frontMatter = frontMatter;
+        }
+        return c;
+      });
+
+      eleventyConfig.addTemplate("home.html", "{% for post in collections.userCollection %}{{ post.content }}{% endfor %}");
+      eleventyConfig.addTemplate("post.html", "test", { tags: "posts" });
+    }
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  let [home] = results.filter(item => item.url.endsWith("/home/"));
+  t.truthy(home);
+  t.is(home.content, "test");
+});
