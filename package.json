@@ -7,7 +7,6 @@
 	},
 	"main": "src/Eleventy.js",
 	"type": "module",
-	"types": "src/index.d.ts",
 	"bin": {
 		"eleventy": "cmd.cjs"
 	},
