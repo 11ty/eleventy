@@ -307,8 +307,8 @@ class TemplatePassthrough {
 		});
 
 		// IMPORTANT: this returns an array of promises, does not await for promise to finish
-		return Promise.all(promises)
-			.then((results) => {
+		return Promise.all(promises).then(
+			(results) => {
 				// collate the count and input/output map results from the array.
 				let count = 0;
 				let map = {};
@@ -322,10 +322,11 @@ class TemplatePassthrough {
 					count,
 					map,
 				};
-			})
-			.catch((err) => {
+			},
+			(err) => {
 				throw new TemplatePassthroughError(`Error copying passthrough files: ${err.message}`, err);
-			});
+			},
+		);
 	}
 }
 

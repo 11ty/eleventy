@@ -83,7 +83,7 @@ const debug = require("debug")("Eleventy:cmd");
 			// with old node versions in `please-upgrade-node` above.
 			elev
 				.init()
-				.then(function () {
+				.then(() => {
 					if (argv.to === "json" || argv.to === "ndjson") {
 						// override logging output
 						elev.setIsVerbose(false);
@@ -103,16 +103,15 @@ const debug = require("debug")("Eleventy:cmd");
 							let shouldStartServer = true;
 							elev
 								.watch()
-								.catch((e) => {
+								.then(() => {
+									if (shouldStartServer) {
+										elev.serve(argv.port);
+									}
+								}, (e) => {
 									// Build failed but error message already displayed.
 									shouldStartServer = false;
 									// A build error occurred and we aren’t going to --serve
 									errorHandler.fatal(e, "Eleventy CLI Error");
-								})
-								.then(function () {
-									if (shouldStartServer) {
-										elev.serve(argv.port);
-									}
 								});
 						} else if (argv.watch) {
 							elev.watch().catch((e) => {
@@ -139,8 +138,7 @@ const debug = require("debug")("Eleventy:cmd");
 					} catch (e) {
 						errorHandler.fatal(e, "Eleventy CLI Error");
 					}
-				})
-				.catch(errorHandler.fatal.bind(errorHandler));
+				}, errorHandler.fatal.bind(errorHandler));
 		}
 	} catch (e) {
 		let errorHandler = new EleventyErrorHandler();

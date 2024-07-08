@@ -288,11 +288,11 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 							// templateLang, data
 							...argArray,
 						),
-					)
-						.then(function (returnValue) {
+					).then(
+						function (returnValue) {
 							resolve(null, new NunjucksLib.runtime.SafeString(returnValue));
-						})
-						.catch(function (e) {
+						},
+						function (e) {
 							resolve(
 								new EleventyShortcodeError(
 									`Error with Nunjucks paired shortcode \`${tagName}\`${EleventyErrorUtil.convertErrorToString(
@@ -301,7 +301,8 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 								),
 								null,
 							);
-						});
+						},
+					);
 				});
 			};
 		})();

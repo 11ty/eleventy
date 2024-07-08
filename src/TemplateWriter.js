@@ -435,15 +435,16 @@ class TemplateWriter {
 		let paths = await this._getAllPaths();
 		let promises = await this.generateTemplates(paths, to);
 
-		return Promise.all(promises)
-			.then((results) => {
+		return Promise.all(promises).then(
+			(results) => {
 				let flat = results.flat();
 				return flat;
-			})
-			.catch((e) => {
+			},
+			(e) => {
 				this.errorHandler.error(e, "Error generating templates");
 				throw e;
-			});
+			},
+		);
 	}
 
 	setVerboseOutput(isVerbose) {

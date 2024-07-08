@@ -144,9 +144,8 @@ class TemplatePassthroughManager {
 
 		// Eventually we’ll want to move all of this to use Node’s fs.cp, which is experimental and only on Node 16+
 
-		return pass
-			.write()
-			.then(({ count, map }) => {
+		return pass.write().then(
+			({ count, map }) => {
 				for (let src in map) {
 					let dest = map[src];
 					if (this.conflictMap[dest]) {
@@ -189,12 +188,13 @@ class TemplatePassthroughManager {
 					count,
 					map,
 				};
-			})
-			.catch(function (e) {
+			},
+			function (e) {
 				return Promise.reject(
 					new TemplatePassthroughManagerCopyError(`Having trouble copying '${inputPath}'`, e),
 				);
-			});
+			},
+		);
 	}
 
 	isPassthroughCopyFile(paths, changedFile) {
