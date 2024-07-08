@@ -5,13 +5,11 @@ import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import getJavaScriptData from "../Util/GetJavaScriptData.js";
 import EventBusUtil from "../Util/EventBusUtil.js";
 import { EleventyImport } from "../Util/Require.js";
+import { augmentFunction, augmentObject } from "./Util/ContextAugmenter.js";
 
 class JavaScriptTemplateNotDefined extends EleventyBaseError {}
 
 class JavaScript extends TemplateEngine {
-	// which data keys to bind to `this` in JavaScript template functions
-	static DATA_KEYS_TO_BIND = ["page", "eleventy"];
-
 	constructor(name, templateConfig) {
 		super(name, templateConfig);
 		this.instances = {};
@@ -129,26 +127,19 @@ class JavaScript extends TemplateEngine {
 
 		for (let key in configFns) {
 			// prefer pre-existing `page` javascriptFunction, if one exists
-			if (key === "page") {
-				// do nothing
-			} else {
-				// note: wrapping creates a new function
-				fns[key] = JavaScript.wrapJavaScriptFunction(inst, configFns[key]);
-			}
+			fns[key] = augmentFunction(configFns[key], {
+				source: inst,
+				overwrite: false,
+			});
 		}
 		return fns;
 	}
 
+	// Backwards compat
 	static wrapJavaScriptFunction(inst, fn) {
-		return function (...args) {
-			for (let key of JavaScript.DATA_KEYS_TO_BIND) {
-				if (inst?.[key]) {
-					this[key] = inst[key];
-				}
-			}
-
-			return fn.call(this, ...args);
-		};
+		return augmentFunction(fn, {
+			source: inst,
+		});
 	}
 
 	addExportsToBundles(inst, url) {
@@ -210,14 +201,10 @@ class JavaScript extends TemplateEngine {
 					this.addExportsToBundles(inst, data.page.url);
 				}
 
-				for (let key of JavaScript.DATA_KEYS_TO_BIND) {
-					if (!inst[key] && data[key]) {
-						// only blow away existing inst.page if it has a page.url
-						if (key !== "page" || !inst.page || inst.page.url) {
-							inst[key] = data[key];
-						}
-					}
-				}
+				augmentObject(inst, {
+					source: data,
+					overwrite: false,
+				});
 
 				Object.assign(inst, this.getJavaScriptFunctions(inst));
 

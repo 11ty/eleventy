@@ -4,6 +4,7 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 // import debugUtil from "debug";
 
 import TemplateEngine from "./TemplateEngine.js";
+import { augmentObject } from "./Util/ContextAugmenter.js";
 
 // const debug = debugUtil("Eleventy:Liquid");
 
@@ -57,14 +58,13 @@ class Liquid extends TemplateEngine {
 
 	static wrapFilter(name, fn) {
 		return function (...args) {
-			if (this.context && "get" in this.context) {
-				for (let propertyName of ["page", "eleventy"]) {
-					Object.defineProperty(this, propertyName, {
-						configurable: true,
-						enumerable: true,
-						get: () => this.context.get([propertyName]),
-					});
-				}
+			// Set this.eleventy and this.page
+			if (typeof this.context?.get === "function") {
+				augmentObject(this, {
+					source: this.context,
+					getter: (key, context) => context.get([key]),
+					lazy: this.context.strictVariables,
+				});
 			}
 
 			// We *don’t* wrap this in an EleventyFilterError because Liquid has a better error message with line/column information in the template
@@ -76,10 +76,16 @@ class Liquid extends TemplateEngine {
 	static normalizeScope(context) {
 		let obj = {};
 		if (context) {
-			obj.ctx = context;
-			obj.page = context.get(["page"]);
-			obj.eleventy = context.get(["eleventy"]);
+			obj.ctx = context; // Full context available on `ctx`
+
+			// Set this.eleventy and this.page
+			augmentObject(obj, {
+				source: context,
+				getter: (key, context) => context.get([key]),
+				lazy: context.strictVariables,
+			});
 		}
+
 		return obj;
 	}
 

@@ -16,6 +16,7 @@ import EleventyCompatibility from "./Util/Compatibility.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import BenchmarkManager from "./Benchmark/BenchmarkManager.js";
 import JavaScriptFrontMatter from "./Engines/FrontMatter/JavaScript.js";
+import { augmentFunction } from "./Engines/Util/ContextAugmenter.js";
 
 const debug = debugUtil("Eleventy:UserConfig");
 
@@ -1016,6 +1017,17 @@ class UserConfig {
 		}
 
 		this.collections[name] = callback;
+	}
+
+	augmentFunctionContext(fn, options) {
+		let t = typeof fn;
+		if (t !== "function") {
+			throw new UserConfigError(
+				"Invalid type passed to `augmentFunctionContext`—function was expected and received: " + t,
+			);
+		}
+
+		return augmentFunction(fn, options);
 	}
 
 	getMergingConfigObject() {

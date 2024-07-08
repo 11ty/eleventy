@@ -6,8 +6,7 @@ import EleventyErrorUtil from "../Errors/EleventyErrorUtil.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import EleventyShortcodeError from "../Errors/EleventyShortcodeError.js";
 import EventBusUtil from "../Util/EventBusUtil.js";
-
-class EleventyFilterError extends EleventyBaseError {}
+import { augmentObject } from "./Util/ContextAugmenter.js";
 
 class Nunjucks extends TemplateEngine {
 	constructor(name, eleventyConfig) {
@@ -101,18 +100,16 @@ class Nunjucks extends TemplateEngine {
 
 	static wrapFilter(name, fn) {
 		return function (...args) {
-			if (this.ctx?.page) {
-				this.page = this.ctx.page;
-			}
-			if (this.ctx?.eleventy) {
-				this.eleventy = this.ctx.eleventy;
-			}
-
 			try {
+				augmentObject(this, {
+					source: this.ctx,
+					lazy: false, // context.env?.opts.throwOnUndefined,
+				});
+
 				return fn.call(this, ...args);
 			} catch (e) {
-				throw new EleventyFilterError(
-					`Error in Nunjucks filter \`${name}\`${this.page ? ` (${this.page.inputPath})` : ""}${EleventyErrorUtil.convertErrorToString(e)}`,
+				throw new EleventyBaseError(
+					`Error in Nunjucks Filter \`${name}\`${this.page ? ` (${this.page.inputPath})` : ""}${EleventyErrorUtil.convertErrorToString(e)}`,
 					e,
 				);
 			}
@@ -124,14 +121,12 @@ class Nunjucks extends TemplateEngine {
 		let obj = {};
 		if (context.ctx) {
 			obj.ctx = context.ctx;
+			obj.env = context.env;
 
-			if (context.ctx.page) {
-				obj.page = context.ctx.page;
-			}
-
-			if (context.ctx.eleventy) {
-				obj.eleventy = context.ctx.eleventy;
-			}
+			augmentObject(obj, {
+				source: context.ctx,
+				lazy: false, // context.env?.opts.throwOnUndefined,
+			});
 		}
 		return obj;
 	}

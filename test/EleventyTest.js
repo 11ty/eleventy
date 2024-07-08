@@ -6,6 +6,7 @@ import { rimrafSync } from "rimraf";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { marked } from "marked";
+import nunjucks from "nunjucks";
 
 import eventBus from "../src/EventBus.js";
 import Eleventy, { HtmlBasePlugin } from "../src/Eleventy.js";
@@ -1408,4 +1409,92 @@ test("Eleventy data schema has access to custom collections created via API #613
   let [home] = results.filter(item => item.url.endsWith("/home/"));
   t.truthy(home);
   t.is(home.content, "test");
+});
+
+test("Custom Nunjucks syntax has shortcode with access to `this`, Issue #3310", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addShortcode("customized", function(argString) {
+        return `${this.page.url}:${argString}:Custom Shortcode`;
+      });
+
+      let njkEnv = new nunjucks.Environment();
+
+      function CustomExtension() {
+        this.tags = ['customized'];
+
+        this.parse = function(parser, nodes, lexer) {
+          let args;
+          let tok = parser.nextToken();
+          args = parser.parseSignature(true, true);
+          parser.advanceAfterBlockEnd(tok.value);
+          return new nodes.CallExtension(this, "run", args);
+        };
+
+        this.run = function(context, argString) {
+          let fn = eleventyConfig.augmentFunctionContext(
+            eleventyConfig.getShortcode("customized"),
+            {
+              source: context.ctx,
+              // lazy: false,
+              // getter: (key, context) => context?.[key];
+              // overwrite: true,
+            }
+          );
+
+          return fn(argString);
+        };
+      }
+
+      njkEnv.addExtension('CustomExtension', new CustomExtension());
+
+      eleventyConfig.addTemplateFormats("njknew");
+
+      eleventyConfig.addExtension("njknew", {
+        compile: (str, inputPath) => {
+          let tmpl = new nunjucks.Template(str, njkEnv, inputPath, false);
+          return function(data) {
+            return new Promise(function (resolve, reject) {
+              tmpl.render(data, function (err, res) {
+                if (err) {
+                  reject(err);
+                } else {
+                  resolve(res);
+                }
+              });
+            });
+          }
+        }
+      });
+
+      eleventyConfig.addTemplate("template.njknew", `<h1>{{ hello }}:{% customized "passed in" %}</h1>`, {
+        hello: "goodbye"
+      });
+    }
+  });
+
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+  t.is(results[0].content.trim(), `<h1>goodbye:/template/:passed in:Custom Shortcode</h1>`);
+});
+
+test("Related to issue 3206: Does Nunjucks throwOnUndefined variables require normalizeContext to be a lazy get", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addShortcode("customized", function(argString) {
+        return `${this.page.url}:Custom Shortcode`;
+      });
+
+      eleventyConfig.setNunjucksEnvironmentOptions({
+        throwOnUndefined: true,
+      });
+
+      eleventyConfig.addTemplate("index.html", `HELLO{% customized %}:{{ page.url }}`);
+    }
+  });
+
+
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+  t.is(results[0].content.trim(), `HELLO/:Custom Shortcode:/`);
 });
