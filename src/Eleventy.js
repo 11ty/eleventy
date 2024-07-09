@@ -391,7 +391,7 @@ class Eleventy {
 		ret.push(`in ${chalk.bold(time)} ${simplePlural(time, "second", "seconds")}`);
 
 		// More than 1 second total, show estimate of per-template time
-		if (time >= 1) {
+		if (time >= 1 && writeCount > 0) {
 			ret.push(`(${((time * 1000) / writeCount).toFixed(1)}ms each, v${pkg.version})`);
 		} else {
 			ret.push(`(v${pkg.version})`);
