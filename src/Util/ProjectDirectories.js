@@ -327,6 +327,18 @@ class ProjectDirectories {
 			},
 		};
 	}
+
+	toString() {
+		return {
+			input: this.input,
+			inputFile: this.inputFile,
+			inputGlob: this.inputGlob,
+			data: this.data,
+			includes: this.includes,
+			layouts: this.layouts,
+			output: this.output,
+		};
+	}
 }
 
 export default ProjectDirectories;
