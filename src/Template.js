@@ -211,7 +211,7 @@ class Template extends TemplateContent {
 				let results = await Promise.all(promises);
 
 				permalinkValue = {};
-				for (let j = 0, k = keys.length; j < k; j++) {
+				for (let j = 0; j < keys.length; j++) {
 					let key = keys[j];
 					permalinkValue[key] = results[j];
 					debug(

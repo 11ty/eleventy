@@ -193,7 +193,7 @@ class TemplateLayout extends TemplateContent {
 
 				// The parent already includes the rest of the layout chain
 				let upstreamFns = await layoutTemplate.getCompiledLayoutFunctions();
-				for (let j = 0, k = upstreamFns.length; j < k; j++) {
+				for (let j = 0; j < upstreamFns.length; j++) {
 					fns.push(upstreamFns[j]);
 				}
 			}

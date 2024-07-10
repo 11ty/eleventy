@@ -98,8 +98,7 @@ class BenchmarkGroup {
 	}
 
 	finish(label, totalTimeSpent) {
-		for (var type in this.benchmarks) {
-			let bench = this.benchmarks[type];
+		for (let [type, bench] of Object.entries(this.benchmarks)) {
 			let isAbsoluteMinimumComparison = this.minimumThresholdMs > 0;
 			let totalForBenchmark = bench.getTotal();
 			let percent = Math.round((totalForBenchmark * 100) / totalTimeSpent);

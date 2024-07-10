@@ -29,10 +29,7 @@ function wrapObject(target, fallback) {
 			return Reflect.has(fallback, prop);
 		},
 		ownKeys(target) {
-			let s = new Set();
-			for (let k of Reflect.ownKeys(target)) {
-				s.add(k);
-			}
+			let s = new Set(Reflect.ownKeys(target));
 			if (isPlainObject(fallback)) {
 				for (let k of Reflect.ownKeys(fallback)) {
 					s.add(k);

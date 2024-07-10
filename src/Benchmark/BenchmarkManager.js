@@ -14,8 +14,8 @@ class BenchmarkManager {
 	reset() {
 		this.start = this.getNewTimestamp();
 
-		for (var j in this.benchmarkGroups) {
-			this.benchmarkGroups[j].reset();
+		for (let group of Object.keys(this.benchmarkGroups)) {
+			this.benchmarkGroups[group].reset();
 		}
 	}
 
@@ -64,8 +64,8 @@ class BenchmarkManager {
 
 	finish() {
 		let totalTimeSpentBenchmarking = this.getNewTimestamp() - this.start;
-		for (var j in this.benchmarkGroups) {
-			this.benchmarkGroups[j].finish(j, totalTimeSpentBenchmarking);
+		for (let group of Object.keys(this.benchmarkGroups)) {
+			this.benchmarkGroups[group].finish(group, totalTimeSpentBenchmarking);
 		}
 	}
 }

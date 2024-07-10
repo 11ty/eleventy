@@ -95,13 +95,9 @@ class TemplatePassthroughManager {
 	}
 
 	getNonTemplatePaths(paths) {
-		let matches = [];
-		for (let path of paths) {
-			if (!this.extensionMap.hasEngine(path)) {
-				matches.push(path);
-			}
-		}
-
+		let matches = paths.filter((path) => {
+			return !this.extensionMap.hasEngine(path);
+		});
 		return matches;
 	}
 
