@@ -1493,7 +1493,6 @@ test("Related to issue 3206: Does Nunjucks throwOnUndefined variables require no
     }
   });
 
-
   let results = await elev.toJSON();
   t.is(results.length, 1);
   t.is(results[0].content.trim(), `HELLO/:Custom Shortcode:/`);
@@ -1512,4 +1511,19 @@ test("#727: Error messaging when trying to use a missing layout", async (t) => {
   await t.throwsAsync(() => elev.toJSON(), {
     message: `Problem creating an Eleventy Layout for the "./test/stubs-virtual/index.html" template file.`
   });
+});
+
+test("#1419: Shortcode in a permalink", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addShortcode("shortcode", () => "url-slug");
+      eleventyConfig.addTemplate("index.njk", "", {
+        permalink: "/{% shortcode %}/",
+      });
+    }
+  });
+
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+  t.is(results[0].url, `/url-slug/`);
 });
