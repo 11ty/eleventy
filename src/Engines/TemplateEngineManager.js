@@ -96,7 +96,7 @@ class TemplateEngineManager {
 		return !!this.getClassNameFromTemplateKey(name);
 	}
 
-	isEngineDeprecated(name) {
+	isEngineRemovedFromCore(name) {
 		return ["ejs", "hbs", "mustache", "haml", "pug"].includes(name) && !this.hasEngine(name);
 	}
 
@@ -171,10 +171,9 @@ class TemplateEngineManager {
 
 	async getEngine(name, extensionMap) {
 		// Warning about engine deprecation
-		// TODO v3.0 error message needs updating before stable release
-		if (this.isEngineDeprecated(name)) {
+		if (this.isEngineRemovedFromCore(name)) {
 			throw new Error(
-				`Per the 11ty community survey, the "${name}" template syntax was removed from core in v3.0. You can read more https://github.com/11ty/eleventy/issues/3124 including plans to offer some of these as official plugins (outside of core). You can implement these yourself using https://www.11ty.dev/docs/languages/custom/`,
+				`Per the 11ty Community Survey (2023), the "${name}" template language was moved from core to an officially supported plugin in v3.0. These plugins live here: https://github.com/11ty/eleventy-plugin-template-languages and are documented on their respective template language docs at https://www.11ty.dev/docs/languages/ You are also empowered to implement *any* template language yourself using https://www.11ty.dev/docs/languages/custom/`,
 			);
 		}
 
