@@ -1138,3 +1138,14 @@ test("Asynchronous filters (via addNunjucksAsyncFilter) for Nunjucks", async (t)
   let fn = await tr.getCompiledTemplate("<p>{{ 10 | fortytwo(2) }}</p>");
   t.is(await fn(), "<p>12</p>");
 });
+
+test("Nunjucks Shortcode with this.env #3175", async (t) => {
+  t.plan(2);
+  let tr = await getNewTemplateRender("njk", "./test/stubs/");
+  tr.engine.addShortcode("postfixWithZach", function () {
+    t.truthy(this.env);
+    return "Zach";
+  });
+
+  t.is(await tr._testRender("{% postfixWithZach %}", {}), "Zach");
+});
