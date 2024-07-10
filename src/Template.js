@@ -151,7 +151,14 @@ class Template extends TemplateContent {
 
 	getLayout(layoutKey) {
 		// already cached downstream in TemplateLayout -> TemplateCache
-		return TemplateLayout.getTemplate(layoutKey, this.eleventyConfig, this.extensionMap);
+		try {
+			return TemplateLayout.getTemplate(layoutKey, this.eleventyConfig, this.extensionMap);
+		} catch (e) {
+			throw new EleventyBaseError(
+				`Problem creating an Eleventy Layout for the "${this.inputPath}" template file.`,
+				e,
+			);
+		}
 	}
 
 	get baseFile() {

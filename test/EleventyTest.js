@@ -1498,3 +1498,18 @@ test("Related to issue 3206: Does Nunjucks throwOnUndefined variables require no
   t.is(results.length, 1);
   t.is(results[0].content.trim(), `HELLO/:Custom Shortcode:/`);
 });
+
+test("#727: Error messaging when trying to use a missing layout", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.html", `HELLO {{ page.url }}`, {
+        layout: "does-not-exist.html",
+      });
+    }
+  });
+  elev.disableLogger();
+
+  await t.throwsAsync(() => elev.toJSON(), {
+    message: `Problem creating an Eleventy Layout for the "./test/stubs-virtual/index.html" template file.`
+  });
+});

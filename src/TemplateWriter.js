@@ -442,7 +442,7 @@ class TemplateWriter {
 			},
 			(e) => {
 				this.errorHandler.error(e, "Error generating templates");
-				throw e;
+				return Promise.reject(e);
 			},
 		);
 	}
