@@ -11,6 +11,8 @@ import RenderPlugin from "./Plugins/RenderPlugin.js";
 import InputPathToUrlPlugin from "./Plugins/InputPathToUrl.js";
 // import I18nPlugin from "./Plugins/I18nPlugin.js";
 
+import isAsyncFunction from "./Util/IsAsyncFunction.js";
+import objectFilter from "./Util/Objects/ObjectFilter.js";
 import EventEmitter from "./Util/AsyncEventEmitter.js";
 import EleventyCompatibility from "./Util/Compatibility.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
@@ -21,8 +23,6 @@ import { augmentFunction } from "./Engines/Util/ContextAugmenter.js";
 const debug = debugUtil("Eleventy:UserConfig");
 
 class UserConfigError extends EleventyBaseError {}
-
-const ComparisonAsyncFunction = (async () => {}).constructor;
 
 /**
  * API to expose configuration options in user-land configuration files
@@ -197,7 +197,14 @@ class UserConfig {
 		return this.universal.filters[name];
 	}
 
-	getFilters() {
+	getFilters(options = {}) {
+		if (options.type) {
+			return objectFilter(
+				this.universal.filters,
+				(entry) => entry.__eleventyInternal?.type === options.type,
+			);
+		}
+
 		return this.universal.filters;
 	}
 
@@ -205,7 +212,14 @@ class UserConfig {
 		return this.universal.shortcodes[name];
 	}
 
-	getShortcodes() {
+	getShortcodes(options = {}) {
+		if (options.type) {
+			return objectFilter(
+				this.universal.shortcodes,
+				(entry) => entry.__eleventyInternal?.type === options.type,
+			);
+		}
+
 		return this.universal.shortcodes;
 	}
 
@@ -213,7 +227,13 @@ class UserConfig {
 		return this.universal.pairedShortcodes[name];
 	}
 
-	getPairedShortcodes() {
+	getPairedShortcodes(options = {}) {
+		if (options.type) {
+			return objectFilter(
+				this.universal.pairedShortcodes,
+				(entry) => entry.__eleventyInternal?.type === options.type,
+			);
+		}
 		return this.universal.pairedShortcodes;
 	}
 
@@ -301,7 +321,7 @@ class UserConfig {
 
 	addFilter(name, callback) {
 		// This method *requires* `async function` and will not work with `function` that returns a promise
-		if (callback instanceof ComparisonAsyncFunction) {
+		if (isAsyncFunction(callback)) {
 			this.addAsyncFilter(name, callback);
 			return;
 		}
@@ -350,7 +370,7 @@ class UserConfig {
 
 	addShortcode(name, callback) {
 		// This method *requires* `async function` and will not work with `function` that returns a promise
-		if (callback instanceof ComparisonAsyncFunction) {
+		if (isAsyncFunction(callback)) {
 			this.addAsyncShortcode(name, callback);
 			return;
 		}
@@ -404,7 +424,7 @@ class UserConfig {
 
 	addPairedShortcode(name, callback) {
 		// This method *requires* `async function` and will not work with `function` that returns a promise
-		if (callback instanceof ComparisonAsyncFunction) {
+		if (isAsyncFunction(callback)) {
 			this.addPairedAsyncShortcode(name, callback);
 			return;
 		}

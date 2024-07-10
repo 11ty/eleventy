@@ -1,6 +1,7 @@
 import debugUtil from "debug";
 
 import ConsoleLogger from "../Util/ConsoleLogger.js";
+import isAsyncFunction from "../Util/IsAsyncFunction.js";
 import Benchmark from "./Benchmark.js";
 
 const debugBenchmark = debugUtil("Eleventy:Benchmark");
@@ -30,12 +31,21 @@ class BenchmarkGroup {
 	add(type, callback) {
 		let benchmark = (this.benchmarks[type] = new Benchmark());
 
-		return function (...args) {
+		let fn = function (...args) {
 			benchmark.before();
 			let ret = callback.call(this, ...args);
 			benchmark.after();
 			return ret;
 		};
+
+		Object.defineProperty(fn, "__eleventyInternal", {
+			value: {
+				type: isAsyncFunction(callback) ? "async" : "sync",
+				callback,
+			},
+		});
+
+		return fn;
 	}
 
 	// callback must return a promise

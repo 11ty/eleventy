@@ -636,6 +636,16 @@ test("Test getters #3310", async (t) => {
   t.true(filterNames.includes("myAsyncFilter"));
   t.true(filterNames.includes("myPluginFilter"));
 
+  let filterNamesSync = Object.keys(userCfg.getFilters({ type: "sync" }));
+  t.true(filterNamesSync.includes("myFilter"));
+  t.false(filterNamesSync.includes("myAsyncFilter"));
+  t.true(filterNamesSync.includes("myPluginFilter"));
+
+  let filterNamesAsync = Object.keys(userCfg.getFilters({ type: "async" }));
+  t.false(filterNamesAsync.includes("myFilter"));
+  t.true(filterNamesAsync.includes("myAsyncFilter"));
+  t.false(filterNamesAsync.includes("myPluginFilter"));
+
   t.truthy(userCfg.getFilter("myFilter"));
   t.truthy(userCfg.getFilter("myAsyncFilter"));
   t.truthy(userCfg.getFilter("myPluginFilter"));
@@ -644,12 +654,28 @@ test("Test getters #3310", async (t) => {
   t.true(shortcodeNames.includes("myShortcode"));
   t.true(shortcodeNames.includes("myAsyncShortcode"));
 
+  let shortcodeNamesSync = Object.keys(userCfg.getShortcodes({ type: "sync" }));
+  t.true(shortcodeNamesSync.includes("myShortcode"));
+  t.false(shortcodeNamesSync.includes("myAsyncShortcode"));
+
+  let shortcodeNamesAsync = Object.keys(userCfg.getShortcodes({ type: "async" }));
+  t.false(shortcodeNamesAsync.includes("myShortcode"));
+  t.true(shortcodeNamesAsync.includes("myAsyncShortcode"));
+
   t.truthy(userCfg.getShortcode("myShortcode"));
   t.truthy(userCfg.getShortcode("myAsyncShortcode"));
 
   let pairedShortcodeNames = Object.keys(userCfg.getPairedShortcodes());
   t.true(pairedShortcodeNames.includes("myPairedShortcode"));
   t.true(pairedShortcodeNames.includes("myPairedAsyncShortcode"));
+
+  let pairedShortcodeNamesSync = Object.keys(userCfg.getPairedShortcodes({ type: "sync" }));
+  t.true(pairedShortcodeNamesSync.includes("myPairedShortcode"));
+  t.false(pairedShortcodeNamesSync.includes("myPairedAsyncShortcode"));
+
+  let pairedShortcodeNamesAsync = Object.keys(userCfg.getPairedShortcodes({ type: "async" }));
+  t.false(pairedShortcodeNamesAsync.includes("myPairedShortcode"));
+  t.true(pairedShortcodeNamesAsync.includes("myPairedAsyncShortcode"));
 
   t.truthy(userCfg.getPairedShortcode("myPairedShortcode"));
   t.truthy(userCfg.getPairedShortcode("myPairedAsyncShortcode"));
