@@ -1151,7 +1151,7 @@ Arguments:
 					this.watchManager.setBuildFinished();
 				} else {
 					this.errorHandler.fatal(e, "Eleventy fatal watch error");
-					this.stopWatch();
+					await this.stopWatch();
 				}
 			}
 		};
@@ -1172,15 +1172,21 @@ Arguments:
 			this.fileSystemSearch.delete(path);
 		});
 
-		process.on("SIGINT", () => this.stopWatch());
+		process.on("SIGINT", async () => await this.stopWatch());
 	}
 
-	stopWatch() {
-		debug("Cleaning up chokidar and server instances, if they exist.");
-		this.eleventyServe.close();
-		this.watcher.close();
+	async stopWatch() {
+		// Prevent multiple invocations.
+		if (this?._isStopping) {
+			return;
+		}
+		this._isStopping = true;
 
-		process.exit();
+		debug("Cleaning up chokidar and server instances, if they exist.");
+		await this.eleventyServe.close();
+		await this.watcher.close();
+
+		process.exitCode = 0;
 	}
 
 	/**
