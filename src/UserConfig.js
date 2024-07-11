@@ -102,6 +102,8 @@ class UserConfig {
 
 		this.linters = {};
 		this.transforms = {};
+		this.preprocessors = {};
+
 		this.activeNamespace = "";
 		this.DateTime = DateTime;
 		this.dynamicPermalinks = true;
@@ -542,6 +544,11 @@ class UserConfig {
 	// Internal method
 	_enablePluginExecution() {
 		this.#pluginExecution = true;
+	}
+
+	// Internal method
+	_disablePluginExecution() {
+		this.#pluginExecution = false;
 	}
 
 	/* Config is executed in two stages and plugins are the second stage—are we in the plugins stage? */
@@ -999,6 +1006,15 @@ class UserConfig {
 		this.transforms[name] = this.#decorateCallback(`"${name}" Transform`, callback);
 	}
 
+	addPreprocessor(name, fileExtensions, callback) {
+		name = this.getNamespacedName(name);
+
+		this.preprocessors[name] = {
+			filter: fileExtensions,
+			callback: this.#decorateCallback(`"${name}" Preprocessor`, callback),
+		};
+	}
+
 	addLinter(name, callback) {
 		name = this.getNamespacedName(name);
 
@@ -1055,6 +1071,7 @@ class UserConfig {
 			// filters removed in 1.0 (use addTransform instead)
 			transforms: this.transforms,
 			linters: this.linters,
+			preprocessors: this.preprocessors,
 			globalData: this.globalData,
 			layoutAliases: this.layoutAliases,
 			layoutResolution: this.layoutResolution,

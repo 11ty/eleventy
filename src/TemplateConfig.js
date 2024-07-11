@@ -333,6 +333,8 @@ class TemplateConfig {
 		}
 
 		this.userConfig.activeNamespace = storedActiveNamespace;
+
+		this.userConfig._disablePluginExecution();
 	}
 
 	/**

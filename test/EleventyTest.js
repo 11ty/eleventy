@@ -1527,3 +1527,23 @@ test("#1419: Shortcode in a permalink", async (t) => {
   t.is(results.length, 1);
   t.is(results[0].url, `/url-slug/`);
 });
+
+test("#188: Content preprocessing", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addPreprocessor("drafts", ".njk", (data, content) => {
+        if(data.draft) {
+          return false;
+        }
+        return `Hello ${content}`;
+      });
+
+      eleventyConfig.addTemplate("index.njk", "Before");
+      eleventyConfig.addTemplate("draft.njk", "Before", { draft: true });
+    }
+  });
+
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+  t.is(results[0].content, `Hello Before`);
+});
