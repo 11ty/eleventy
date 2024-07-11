@@ -48,30 +48,37 @@ class JavaScript extends TemplateEngine {
 			return "";
 		};
 
+		let originalModData = mod?.data;
+
+		if (typeof mod === "object" && mod.default && this.eleventyConfig.getIsProjectUsingEsm()) {
+			mod = mod.default;
+		}
+
 		if (typeof mod === "string" || mod instanceof Buffer || mod.then) {
 			return { render: () => mod };
 		} else if (typeof mod === "function") {
-			if (mod.prototype && ("data" in mod.prototype || "render" in mod.prototype)) {
+			if (mod.prototype?.data || mod.prototype?.render) {
 				if (!("render" in mod.prototype)) {
 					mod.prototype.render = noop;
 				}
+
+				if (!("data" in mod.prototype) && !mod.data && originalModData) {
+					mod.prototype.data = originalModData;
+				}
+
 				return new mod();
 			} else {
 				return {
+					...(originalModData ? { data: originalModData } : undefined),
 					render: mod,
 				};
 			}
-		} else if (
-			"data" in mod ||
-			"render" in mod ||
-			("default" in mod && this.eleventyConfig.getIsProjectUsingEsm())
-		) {
-			if (!("render" in mod)) {
-				if ("default" in mod) {
-					mod.render = mod.default;
-				} else {
-					mod.render = noop;
-				}
+		} else if ("data" in mod || "render" in mod) {
+			if (!mod.render) {
+				mod.render = noop;
+			}
+			if (!mod.data && originalModData) {
+				mod.data = originalModData;
 			}
 			return mod;
 		}
@@ -191,7 +198,7 @@ class JavaScript extends TemplateEngine {
 			inst = await this.getInstanceFromInputPath(inputPath);
 		}
 
-		if (inst && "render" in inst) {
+		if (inst?.render) {
 			return function (data = {}) {
 				// TODO does this do anything meaningful for non-classes?
 				// `inst` should have a normalized `render` function from _getInstance

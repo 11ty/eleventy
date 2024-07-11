@@ -1,6 +1,7 @@
 import test from "ava";
 
 import TemplateRender from "../src/TemplateRender.js";
+import Eleventy from "../src/Eleventy.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
 import { getTemplateConfigInstance } from "./_testHelpers.js";
@@ -302,8 +303,29 @@ test("Class has page property already and keeps it", async (t) => {
   await fn({ avaTest: t, page: { url: "/hi/" } });
 });
 
-test("Class has default export and another one too, issue #3288", async (t) => {
+test("File has default function export and another one too, issue #3288", async (t) => {
   let tr = await getNewTemplateRender("./test/stubs/default-export-and-others.11ty.js");
   let fn = await tr.getCompiledTemplate();
   t.is(await fn(), "<h1>hello</h1>")
+});
+
+test("File has default class export and another one too, issue #3359", async (t) => {
+  let elev = new Eleventy("./test/stubs/default-class-export-and-others.11ty.js", "");
+  let results = await elev.toJSON();
+
+  t.is(results[0].content, "<div>hello</div>")
+});
+
+test("File has default function export and another one for data too, issue #3359", async (t) => {
+  let elev = new Eleventy("./test/stubs/default-function-export-and-named-data.11ty.js", "");
+  let results = await elev.toJSON();
+
+  t.is(results[0].content, "<h1>Hello World</h1>")
+});
+
+test("File has default function export and another one for data too, issue #3359 (CommonJS)", async (t) => {
+  let elev = new Eleventy("./test/stubs/default-function-export-and-named-data.11ty.cjs", "");
+  let results = await elev.toJSON();
+
+  t.is(results[0].content, "<h1>Hello World</h1>")
 });
