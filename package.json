@@ -114,6 +114,7 @@
 		"@11ty/eleventy-utils": "^1.0.3",
 		"@11ty/lodash-custom": "^4.17.21",
 		"@11ty/posthtml-urls": "^1.0.0",
+		"@11ty/recursive-copy": "^3.0.0",
 		"@sindresorhus/slugify": "^2.2.1",
 		"bcp-47-normalize": "^2.3.0",
 		"chardet": "^2.0.0",
@@ -140,7 +141,6 @@
 		"nunjucks": "^3.2.4",
 		"please-upgrade-node": "^3.2.0",
 		"posthtml": "^0.16.6",
-		"recursive-copy": "^2.0.14",
 		"semver": "^7.6.2",
 		"slugify": "^1.6.6"
 	}

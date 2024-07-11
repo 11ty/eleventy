@@ -3,7 +3,7 @@ import path from "node:path";
 import fs from "graceful-fs";
 
 import isGlob from "is-glob";
-import copy from "recursive-copy";
+import copy from "@11ty/recursive-copy";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
