@@ -1158,12 +1158,20 @@ Arguments:
 		};
 
 		watcher.on("change", async (path) => {
-			this.logger.forceLog(`File changed: ${path}`);
+			// Emulated passthrough copy logs from the server
+			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
+				this.logger.forceLog(`File changed: ${path}`);
+			}
+
 			await watchRun(path);
 		});
 
 		watcher.on("add", async (path) => {
-			this.logger.forceLog(`File added: ${path}`);
+			// Emulated passthrough copy logs from the server
+			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
+				this.logger.forceLog(`File added: ${path}`);
+			}
+
 			this.fileSystemSearch.add(path);
 			await watchRun(path);
 		});
