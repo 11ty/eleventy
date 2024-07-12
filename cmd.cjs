@@ -99,8 +99,9 @@ const debug = require("debug")("Eleventy:cmd");
 					}
 
 					try {
-						if (argv.serve) {
-							let shouldStartServer = true;
+						if (argv.serve || argv.watch) {
+							let shouldStartServer = argv.serve;
+
 							elev
 								.watch()
 								.then(() => {
@@ -113,10 +114,11 @@ const debug = require("debug")("Eleventy:cmd");
 									// A build error occurred and we aren’t going to --serve
 									errorHandler.fatal(e, "Eleventy CLI Error");
 								});
-						} else if (argv.watch) {
-							elev.watch().catch((e) => {
-								// A build error occurred and we aren’t going to --watch
-								errorHandler.fatal(e, "Eleventy CLI Error");
+
+							process.on("SIGINT", async () => {
+								// stops the server too
+								await elev.stopWatch();
+								process.exit();
 							});
 						} else {
 							if (argv.to === "json") {
