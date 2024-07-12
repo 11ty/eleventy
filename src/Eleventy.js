@@ -29,6 +29,7 @@ import RenderPlugin, * as RenderPluginExtras from "./Plugins/RenderPlugin.js";
 import I18nPlugin, * as I18nPluginExtras from "./Plugins/I18nPlugin.js";
 import HtmlBasePlugin, * as HtmlBasePluginExtras from "./Plugins/HtmlBasePlugin.js";
 import { TransformPlugin as InputPathToUrlTransformPlugin } from "./Plugins/InputPathToUrl.js";
+import { IdAttributePlugin } from "./Plugins/IdAttributePlugin.js";
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
 import EventBusUtil from "./Util/EventBusUtil.js";
 
@@ -1403,6 +1404,11 @@ export {
 	 * @type {module:11ty/eleventy-plugin-bundle}
 	 */
 	BundlePlugin,
+
+	/**
+	 * @type {module:11ty/eleventy/Plugins/IdAttributePlugin}
+	 */
+	IdAttributePlugin,
 };
 
 /**

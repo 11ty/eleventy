@@ -37,8 +37,8 @@ class HtmlTransformer {
 		let inst = posthtml();
 
 		// already sorted by priority when added
-		for (let { fn: plugin } of plugins) {
-			inst.use(plugin(context));
+		for (let { fn: plugin, options } of plugins) {
+			inst.use(plugin(Object.assign({}, context, options)));
 		}
 
 		// Run the built-ins last
@@ -61,7 +61,7 @@ class HtmlTransformer {
 		return inst;
 	}
 
-	_add(extensions, key, value, options = {}) {
+	_add(extensions, addType, value, options = {}) {
 		options = Object.assign(
 			{
 				priority: 0,
@@ -71,7 +71,7 @@ class HtmlTransformer {
 
 		let extensionsArray = (extensions || "").split(",");
 		for (let ext of extensionsArray) {
-			let target = this[key];
+			let target = this[addType];
 			if (!target[ext]) {
 				target[ext] = [];
 			}
@@ -80,6 +80,7 @@ class HtmlTransformer {
 				fn: value, // callback or plugin
 				priority: options.priority,
 				enabled: options.enabled || (() => true),
+				options: options.pluginOptions,
 			});
 
 			target[ext].sort(HtmlTransformer.prioritySort);
