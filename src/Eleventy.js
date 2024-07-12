@@ -1171,8 +1171,6 @@ Arguments:
 			// this.logger.forceLog(`File removed: ${path}`);
 			this.fileSystemSearch.delete(path);
 		});
-
-		process.on("SIGINT", async () => await this.stopWatch());
 	}
 
 	async stopWatch() {
@@ -1185,8 +1183,6 @@ Arguments:
 		debug("Cleaning up chokidar and server instances, if they exist.");
 		await this.eleventyServe.close();
 		await this.watcher.close();
-
-		process.exitCode = 0;
 	}
 
 	/**
