@@ -7,6 +7,7 @@ import lodash from "@11ty/lodash-custom";
 import { DateTime } from "luxon";
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
+import chalk from "kleur";
 
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import getDateFromGitLastUpdated from "./Util/DateGitLastUpdated.js";
@@ -780,8 +781,9 @@ class Template extends TemplateContent {
 		if (!this.isDryRun) {
 			let isVirtual = this.isVirtualTemplate();
 			let engineList = this.templateRender.getReadableEnginesListDifferingFromFileExtension();
+			let suffix = `${isVirtual ? " (virtual)" : ""}${engineList ? ` (${engineList})` : ""}`;
 			this.logger.log(
-				`${lang.start} ${outputPath} from ${this.inputPath}${isVirtual ? " (virtual)" : ""}${engineList ? ` (${engineList})` : ""}`,
+				`${lang.start} ${outputPath} ${chalk.gray(`from ${this.inputPath}${suffix}`)}`,
 			);
 		} else if (this.isDryRun) {
 			return;
