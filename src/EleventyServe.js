@@ -1,7 +1,8 @@
 import assert from "node:assert";
+
+import debugUtil from "debug";
 import { Merge, DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
 import EleventyDevServer from "@11ty/eleventy-dev-server";
-import debugUtil from "debug";
 
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
@@ -9,6 +10,7 @@ import PathPrefixer from "./Util/PathPrefixer.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import { getModulePackageJson } from "./Util/ImportJsonSync.js";
 import { EleventyImport } from "./Util/Require.js";
+import { isGlobMatch } from "./Util/GlobMatcher.js";
 
 const debug = debugUtil("Eleventy:EleventyServe");
 
@@ -269,6 +271,10 @@ class EleventyServe {
 		} else {
 			this._globsNeedWatching = true;
 		}
+	}
+
+	isEmulatedPassthroughCopyMatch(filepath) {
+		return isGlobMatch(filepath, this._watchedFiles);
 	}
 
 	hasOptionsChanged() {

@@ -1,4 +1,3 @@
-import multimatch from "multimatch";
 import isGlob from "is-glob";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
@@ -7,6 +6,7 @@ import EleventyExtensionMap from "./EleventyExtensionMap.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import TemplatePassthrough from "./TemplatePassthrough.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
+import { isGlobMatch } from "./Util/GlobMatcher.js";
 
 const debug = debugUtil("Eleventy:TemplatePassthroughManager");
 const debugDev = debugUtil("Dev:Eleventy:TemplatePassthroughManager");
@@ -213,11 +213,7 @@ class TemplatePassthroughManager {
 			if (TemplatePath.startsWithSubPath(changedFile, path.inputPath)) {
 				return path;
 			}
-			if (
-				changedFile &&
-				isGlob(path.inputPath) &&
-				multimatch([changedFile], [path.inputPath]).length
-			) {
+			if (changedFile && isGlob(path.inputPath) && isGlobMatch(changedFile, [path.inputPath])) {
 				return path;
 			}
 		}

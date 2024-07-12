@@ -135,7 +135,6 @@
 		"micromatch": "^4.0.7",
 		"minimist": "^1.2.8",
 		"moo": "^0.5.2",
-		"multimatch": "^7.0.0",
 		"node-retrieve-globals": "^6.0.0",
 		"normalize-path": "^3.0.0",
 		"nunjucks": "^3.2.4",
