@@ -196,7 +196,8 @@ class UserConfig {
 	 * Universal getters
 	 */
 	getFilter(name) {
-		return this.universal.filters[name];
+		// JavaScript functions are included here for backwards compatibility https://github.com/11ty/eleventy/issues/3365
+		return this.universal.filters[name] || this.javascript.functions[name];
 	}
 
 	getFilters(options = {}) {

@@ -262,3 +262,11 @@ test("Memoize async filters (memoized)", async (t) => {
   await increment(3);
   t.is(count, 6);
 });
+
+// JavaScript functions are included here for backwards compatibility https://github.com/11ty/eleventy/issues/3365
+test("addJavaScriptFunction feeds into `getFilter` #3365", (t) => {
+  let userCfg = new UserConfig();
+  userCfg.addJavaScriptFunction("increment", num => num++);
+
+  t.is(typeof userCfg.getFilter("increment"), "function");
+});
