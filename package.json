@@ -123,6 +123,7 @@
 		"debug": "^4.3.5",
 		"dependency-graph": "^1.0.0",
 		"fast-glob": "^3.3.2",
+		"filesize": "^10.1.4",
 		"graceful-fs": "^4.2.11",
 		"gray-matter": "^4.0.3",
 		"is-glob": "^4.0.3",

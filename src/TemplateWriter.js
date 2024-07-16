@@ -12,7 +12,6 @@ import FileSystemSearch from "./FileSystemSearch.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 
 const debug = debugUtil("Eleventy:TemplateWriter");
-const debugDev = debugUtil("Dev:Eleventy:TemplateWriter");
 
 class TemplateWriterMissingConfigArgError extends EleventyBaseError {}
 class EleventyPassthroughCopyError extends EleventyBaseError {}
@@ -101,7 +100,6 @@ class TemplateWriter {
 		this.writeCount = 0;
 		this.renderCount = 0;
 		this.skippedCount = 0;
-		debugDev("Resetting counts to 0");
 	}
 
 	set extensionMap(extensionMap) {
@@ -345,7 +343,6 @@ class TemplateWriter {
 		await this._addToTemplateMap(paths, to);
 		await this.templateMap.cache();
 
-		debugDev("TemplateMap cache complete.");
 		return this.templateMap;
 	}
 
@@ -473,6 +470,10 @@ class TemplateWriter {
 
 	getCopyCount() {
 		return this.eleventyFiles.getPassthroughManager().getCopyCount();
+	}
+
+	getCopySize() {
+		return this.eleventyFiles.getPassthroughManager().getCopySize();
 	}
 
 	getRenderCount() {

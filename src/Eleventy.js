@@ -3,6 +3,7 @@ import { performance } from "node:perf_hooks";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import BundlePlugin from "@11ty/eleventy-plugin-bundle";
 import debugUtil from "debug";
+import { filesize } from "filesize";
 
 import TemplateData from "./Data/TemplateData.js";
 import TemplateWriter from "./TemplateWriter.js";
@@ -375,6 +376,7 @@ class Eleventy {
 		let slashRet = [];
 
 		if (copyCount) {
+			debug("Total passthrough copy aggregate size: %o", filesize(this.writer.getCopySize()));
 			slashRet.push(`Copied ${chalk.bold(copyCount)}`);
 		}
 

@@ -68,8 +68,9 @@ export default function (config) {
 		immediate: true,
 	});
 
-	config.addFilter("slug", MemoizeUtil(slugFilter));
-	config.addFilter("slugify", MemoizeUtil(slugifyFilter));
+	let memoizeBench = config.benchmarkManager.get("Configuration");
+	config.addFilter("slug", MemoizeUtil(slugFilter, { name: "slug", bench: memoizeBench }));
+	config.addFilter("slugify", MemoizeUtil(slugifyFilter, { name: "slugify", bench: memoizeBench }));
 
 	// Deprecated, use HtmlBasePlugin instead.
 	// Adds a pathPrefix manually to a URL string

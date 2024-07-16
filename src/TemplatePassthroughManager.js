@@ -26,6 +26,7 @@ class TemplatePassthroughManager {
 
 	reset() {
 		this.count = 0;
+		this.size = 0;
 		this.conflictMap = {};
 		this.incrementalFile = null;
 		debug("Resetting counts to 0");
@@ -109,6 +110,10 @@ class TemplatePassthroughManager {
 		return this.count;
 	}
 
+	getCopySize() {
+		return this.size;
+	}
+
 	setFileSystemSearch(fileSystemSearch) {
 		this.fileSystemSearch = fileSystemSearch;
 	}
@@ -145,7 +150,7 @@ class TemplatePassthroughManager {
 		// Eventually we’ll want to move all of this to use Node’s fs.cp, which is experimental and only on Node 16+
 
 		return pass.write().then(
-			({ count, map }) => {
+			({ size, count, map }) => {
 				for (let src in map) {
 					let dest = map[src];
 					if (this.conflictMap[dest]) {
@@ -178,7 +183,8 @@ class TemplatePassthroughManager {
 				} else {
 					if (count) {
 						this.count += count;
-						debug("Copied %o (%d files)", inputPath, count || 0);
+						this.size += size;
+						debug("Copied %o (%d files, %d size)", inputPath, count || 0, size || 0);
 					} else {
 						debug("Skipped copying %o (emulated passthrough copy)", inputPath);
 					}
@@ -296,7 +302,7 @@ class TemplatePassthroughManager {
 				map: aliases,
 			});
 
-			debug(`TemplatePassthrough copy finished. Current count: ${this.count}`);
+			debug(`TemplatePassthrough copy finished. Current count: ${this.count} (size: ${this.size})`);
 			return results;
 		});
 	}

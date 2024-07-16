@@ -385,7 +385,9 @@ class TemplateContent {
 		return [cacheable, key, inputPathMap, useCache];
 	}
 
-	async compile(str, bypassMarkdown, engineOverride) {
+	async compile(str, options = {}) {
+		let { type, bypassMarkdown, engineOverride } = options;
+
 		let tr = await this.getTemplateRender();
 
 		if (engineOverride !== undefined) {
@@ -396,7 +398,7 @@ class TemplateContent {
 		}
 
 		if (bypassMarkdown && !this.engine.needsCompilation(str)) {
-			return async function () {
+			return function () {
 				return str;
 			};
 		}
@@ -428,8 +430,9 @@ class TemplateContent {
 				}
 			}
 
-			let templateBenchmark = this.bench.get("Template Compile");
-			let inputPathBenchmark = this.bench.get(`> Compile > ${this.inputPath}`);
+			let typeStr = type ? ` ${type}` : "";
+			let templateBenchmark = this.bench.get(`Template Compile${typeStr}`);
+			let inputPathBenchmark = this.bench.get(`> Compile${typeStr} > ${this.inputPath}`);
 			templateBenchmark.before();
 			inputPathBenchmark.before();
 			let fn = await tr.getCompiledTemplate(str);
@@ -491,15 +494,13 @@ class TemplateContent {
 			return this._renderFunction(str, data);
 		}
 
-		return this._render(str, data, true);
+		return this._render(str, data, {
+			type: "Computed Data",
+			bypassMarkdown: true,
+		});
 	}
 
 	async renderPermalink(permalink, data) {
-		this.bench.get("(count) Render Permalink").incrementCount();
-		this.bench
-			.get(`(count) > Render Permalink > ${this.inputPath}${this._getPaginationLogSuffix(data)}`)
-			.incrementCount();
-
 		let permalinkCompilation = this.engine.permalinkNeedsCompilation(permalink);
 
 		// No string compilation:
@@ -528,11 +529,17 @@ class TemplateContent {
 			return this._renderFunction(permalink, data);
 		}
 
-		return this._render(permalink, data, true);
+		return this._render(permalink, data, {
+			type: "Permalink",
+			bypassMarkdown: true,
+		});
 	}
 
 	async render(str, data, bypassMarkdown) {
-		return this._render(str, data, bypassMarkdown);
+		return this._render(str, data, {
+			bypassMarkdown,
+			type: "",
+		});
 	}
 
 	_getPaginationLogSuffix(data) {
@@ -551,13 +558,19 @@ class TemplateContent {
 		return suffix.join("");
 	}
 
-	async _render(str, data, bypassMarkdown) {
+	async _render(str, data, options = {}) {
+		let { bypassMarkdown, type } = options;
+
 		try {
 			if (bypassMarkdown && !this.engine.needsCompilation(str)) {
 				return str;
 			}
 
-			let fn = await this.compile(str, bypassMarkdown, data[this.config.keys.engineOverride]);
+			let fn = await this.compile(str, {
+				bypassMarkdown,
+				engineOverride: data[this.config.keys.engineOverride],
+				type,
+			});
 
 			if (fn === undefined) {
 				return;
@@ -567,29 +580,17 @@ class TemplateContent {
 
 			// Benchmark
 			let templateBenchmark = this.bench.get("Render");
-			// Skip benchmark for each individual pagination entry (very busy output)
-			let logRenderToOutputBenchmark = "pagination" in data;
 			let inputPathBenchmark = this.bench.get(
-				`> Render > ${this.inputPath}${this._getPaginationLogSuffix(data)}`,
+				`> Render${type ? ` ${type}` : ""} > ${this.inputPath}${this._getPaginationLogSuffix(data)}`,
 			);
-			let outputPathBenchmark;
-			if (data.page?.outputPath && logRenderToOutputBenchmark) {
-				outputPathBenchmark = this.bench.get(`> Render to > ${data.page.outputPath}`);
-			}
 
 			templateBenchmark.before();
 			if (inputPathBenchmark) {
 				inputPathBenchmark.before();
 			}
-			if (outputPathBenchmark) {
-				outputPathBenchmark.before();
-			}
 
 			let rendered = await fn(data);
 
-			if (outputPathBenchmark) {
-				outputPathBenchmark.after();
-			}
 			if (inputPathBenchmark) {
 				inputPathBenchmark.after();
 			}
