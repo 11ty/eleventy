@@ -654,6 +654,14 @@ class Template extends TemplateContent {
 				);
 			}
 
+			filters = filters.map((extension) => {
+				if (extension.startsWith(".")) {
+					return extension;
+				}
+
+				return `.${extension}`;
+			});
+
 			if (!filters.some((extension) => extension === "*" || inputPath.endsWith(extension))) {
 				// skip
 				continue;
