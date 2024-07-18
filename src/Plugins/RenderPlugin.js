@@ -139,6 +139,7 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 	let defaultOptions = {
 		tagName: "renderTemplate",
 		tagNameFile: "renderFile",
+		filterName: "renderContent",
 		templateConfig: null,
 		accessGlobalData: false,
 	};
@@ -361,6 +362,11 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 		eleventyConfig.addNunjucksTag(opts.tagName, function (nunjucksLib) {
 			return nunjucksTemplateTag(nunjucksLib, opts.tagName);
 		});
+	}
+
+	// Filter for rendering strings
+	if (opts.filterName) {
+		eleventyConfig.addAsyncFilter(opts.filterName, _renderStringShortcodeFn);
 	}
 
 	// Render File
