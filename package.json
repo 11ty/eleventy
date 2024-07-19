@@ -39,8 +39,8 @@
 	"scripts": {
 		"default": "npm run test",
 		"test": "npm run test:node && npm run test:ava",
-		"test:ava": "cross-env ELEVENTY_SKIP_ESM_RESOLVER=true ava --verbose --timeout 20s",
-		"test:node": "cross-env ELEVENTY_SKIP_ESM_RESOLVER=true node --test test_node/tests.js",
+		"test:ava": "ava --verbose --timeout 20s",
+		"test:node": "node --test test_node/tests.js",
 		"jsdoc": "rm -rf jsdoc && npx jsdoc src/* -r -d jsdoc",
 		"format": "prettier . --write",
 		"check": "eslint src",
