@@ -388,9 +388,12 @@ class RenderManager {
 		if (this._hasConfigInitialized) {
 			return this._hasConfigInitialized;
 		}
-
+		if (this.templateConfig.hasInitialized()) {
+			return true;
+		}
 		this._hasConfigInitialized = this.templateConfig.init();
 		await this._hasConfigInitialized;
+
 		return true;
 	}
 

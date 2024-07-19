@@ -186,6 +186,10 @@ class TemplateConfig {
 		// nothing yet
 	}
 
+	hasInitialized() {
+		return this.hasConfigMerged;
+	}
+
 	/**
 	 * Async-friendly init method
 	 */
