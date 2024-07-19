@@ -1193,7 +1193,7 @@ Arguments:
 
 		debug("Cleaning up chokidar and server instances, if they exist.");
 		await this.eleventyServe.close();
-		await this.watcher.close();
+		await this.watcher?.close();
 	}
 
 	/**
