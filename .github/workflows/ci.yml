@@ -17,8 +17,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-          # cache: npm
-      - run: npm install --no-package-lock
+          cache: npm
+      - run: npm install
       - run: npm test
 env:
   YARN_GPG: no
