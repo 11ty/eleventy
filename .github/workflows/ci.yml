@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           # cache: npm
-      - run: npm install
-      - run: npm run test:ava
+      - run: npm install --no-package-lock
+      - run: npm test
 env:
   YARN_GPG: no
