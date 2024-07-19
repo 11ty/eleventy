@@ -599,14 +599,16 @@ class TemplateContent {
 			return rendered;
 		} catch (e) {
 			if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
-				throw e;
+				return Promise.reject(e);
 			} else {
 				let tr = await this.getTemplateRender();
 				let engine = tr.getReadableEnginesList();
 				debug(`Having trouble rendering ${engine} template ${this.inputPath}: %O`, str);
-				throw new TemplateContentRenderError(
-					`Having trouble rendering ${engine} template ${this.inputPath}`,
-					e,
+				return Promise.reject(
+					new TemplateContentRenderError(
+						`Having trouble rendering ${engine} template ${this.inputPath}`,
+						e,
+					),
 				);
 			}
 		}

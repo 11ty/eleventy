@@ -2,17 +2,17 @@ import NunjucksLib from "nunjucks";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
 import TemplateEngine from "./TemplateEngine.js";
-import EleventyErrorUtil from "../Errors/EleventyErrorUtil.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
-import EleventyShortcodeError from "../Errors/EleventyShortcodeError.js";
 import EventBusUtil from "../Util/EventBusUtil.js";
 import { augmentObject } from "./Util/ContextAugmenter.js";
+
+class EleventyNunjucksError extends EleventyBaseError {}
 
 class Nunjucks extends TemplateEngine {
 	constructor(name, eleventyConfig) {
 		super(name, eleventyConfig);
 
-		this.nunjucksEnvironmentOptions = this.config.nunjucksEnvironmentOptions || {};
+		this.nunjucksEnvironmentOptions = this.config.nunjucksEnvironmentOptions || { dev: true };
 
 		this.nunjucksPrecompiledTemplates = this.config.nunjucksPrecompiledTemplates || {};
 		this._usingPrecompiled = Object.keys(this.nunjucksPrecompiledTemplates).length > 0;
@@ -108,8 +108,8 @@ class Nunjucks extends TemplateEngine {
 
 				return fn.call(this, ...args);
 			} catch (e) {
-				throw new EleventyBaseError(
-					`Error in Nunjucks Filter \`${name}\`${this.page ? ` (${this.page.inputPath})` : ""}${EleventyErrorUtil.convertErrorToString(e)}`,
+				throw new EleventyNunjucksError(
+					`Error in Nunjucks Filter \`${name}\`${this.page ? ` (${this.page.inputPath})` : ""}`,
 					e,
 				);
 			}
@@ -210,7 +210,7 @@ class Nunjucks extends TemplateEngine {
 					// #3286 error messaging when the shortcode is not a promise
 					if (!ret?.then) {
 						resolve(
-							new EleventyShortcodeError(
+							new EleventyNunjucksError(
 								`Error with Nunjucks shortcode \`${shortcodeName}\`: it was defined as asynchronous but was actually synchronous. This is important for Nunjucks.`,
 							),
 						);
@@ -222,11 +222,7 @@ class Nunjucks extends TemplateEngine {
 						},
 						function (e) {
 							resolve(
-								new EleventyShortcodeError(
-									`Error with Nunjucks shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
-										e,
-									)}`,
-								),
+								new EleventyNunjucksError(`Error with Nunjucks shortcode \`${shortcodeName}\``, e),
 							);
 						},
 					);
@@ -235,10 +231,9 @@ class Nunjucks extends TemplateEngine {
 						let ret = shortcodeFn.call(Nunjucks.normalizeContext(context), ...argArray);
 						return new NunjucksLib.runtime.SafeString("" + ret);
 					} catch (e) {
-						throw new EleventyShortcodeError(
-							`Error with Nunjucks shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
-								e,
-							)}`,
+						throw new EleventyNunjucksError(
+							`Error with Nunjucks shortcode \`${shortcodeName}\``,
+							e,
 						);
 					}
 				}
@@ -270,10 +265,9 @@ class Nunjucks extends TemplateEngine {
 				body(function (e, bodyContent) {
 					if (e) {
 						resolve(
-							new EleventyShortcodeError(
-								`Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
-									e,
-								)}`,
+							new EleventyNunjucksError(
+								`Error with Nunjucks paired shortcode \`${shortcodeName}\``,
+								e,
 							),
 						);
 					}
@@ -287,7 +281,7 @@ class Nunjucks extends TemplateEngine {
 
 						// #3286 error messaging when the shortcode is not a promise
 						if (!ret?.then) {
-							throw new EleventyShortcodeError(
+							throw new EleventyNunjucksError(
 								`Error with Nunjucks shortcode \`${shortcodeName}\`: it was defined as asynchronous but was actually synchronous. This is important for Nunjucks.`,
 							);
 						}
@@ -298,12 +292,10 @@ class Nunjucks extends TemplateEngine {
 							},
 							function (e) {
 								resolve(
-									new EleventyShortcodeError(
-										`Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
-											e,
-										)}`,
+									new EleventyNunjucksError(
+										`Error with Nunjucks paired shortcode \`${shortcodeName}\``,
+										e,
 									),
-									null,
 								);
 							},
 						);
@@ -317,10 +309,9 @@ class Nunjucks extends TemplateEngine {
 							);
 						} catch (e) {
 							resolve(
-								new EleventyShortcodeError(
-									`Error with Nunjucks paired shortcode \`${shortcodeName}\`${EleventyErrorUtil.convertErrorToString(
-										e,
-									)}`,
+								new EleventyNunjucksError(
+									`Error with Nunjucks paired shortcode \`${shortcodeName}\``,
+									e,
 								),
 							);
 						}

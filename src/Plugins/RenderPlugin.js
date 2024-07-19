@@ -5,12 +5,13 @@ import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
 import { ProxyWrap } from "../Util/Objects/ProxyWrap.js";
 import TemplateDataInitialGlobalData from "../Data/TemplateDataInitialGlobalData.js";
-import EleventyShortcodeError from "../Errors/EleventyShortcodeError.js";
+import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import TemplateRender from "../TemplateRender.js";
 import ProjectDirectories from "../Util/ProjectDirectories.js";
 import TemplateConfig from "../TemplateConfig.js";
-import EleventyErrorUtil from "../Errors/EleventyErrorUtil.js";
 import Liquid from "../Engines/Liquid.js";
+
+class EleventyNunjucksError extends EleventyBaseError {}
 
 async function compile(content, templateLang, { templateConfig, extensionMap } = {}) {
 	if (!templateConfig) {
@@ -274,11 +275,7 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 				body(function (e, bodyContent) {
 					if (e) {
 						resolve(
-							new EleventyShortcodeError(
-								`Error with Nunjucks paired shortcode \`${tagName}\`${EleventyErrorUtil.convertErrorToString(
-									e,
-								)}`,
-							),
+							new EleventyNunjucksError(`Error with Nunjucks paired shortcode \`${tagName}\``, e),
 						);
 					}
 
@@ -295,11 +292,7 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 						},
 						function (e) {
 							resolve(
-								new EleventyShortcodeError(
-									`Error with Nunjucks paired shortcode \`${tagName}\`${EleventyErrorUtil.convertErrorToString(
-										e,
-									)}`,
-								),
+								new EleventyNunjucksError(`Error with Nunjucks paired shortcode \`${tagName}\``, e),
 								null,
 							);
 						},

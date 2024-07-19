@@ -1,3 +1,4 @@
+import util from "node:util";
 import debugUtil from "debug";
 
 import ConsoleLogger from "../Util/ConsoleLogger.js";
@@ -63,11 +64,21 @@ class EleventyErrorHandler {
 
 	//https://nodejs.org/api/process.html
 	log(e, type = "log", chalkColor = "", forceToConsole = false) {
+		if (process.env.DEBUG) {
+			debug("Full error object: %o", util.inspect(e, { showHidden: false, depth: null }));
+		}
+
 		let totalErrorCount = EleventyErrorHandler.getTotalErrorCount(e);
 		let ref = e;
 		let index = 1;
 		while (ref) {
 			let nextRef = ref.originalError;
+
+			// Nunjucks wraps errors and puts the original in error.cause
+			if (nextRef?.cause?.originalError) {
+				nextRef = nextRef.cause.originalError;
+			}
+
 			if (!nextRef && EleventyErrorUtil.hasEmbeddedError(ref.message)) {
 				nextRef = EleventyErrorUtil.deconvertErrorToObject(ref);
 			}

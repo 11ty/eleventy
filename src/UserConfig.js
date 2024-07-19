@@ -74,7 +74,8 @@ class UserConfig {
 		};
 
 		this.nunjucks = {
-			environmentOptions: {},
+			// `dev: true` gives us better error messaging
+			environmentOptions: { dev: true },
 			precompiledTemplates: {},
 			filters: {},
 			asyncFilters: {},
