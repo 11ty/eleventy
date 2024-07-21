@@ -1,5 +1,5 @@
 import moo from "moo";
-import liquidLib from "liquidjs";
+import liquidLib, { Tokenizer, evalToken } from "liquidjs";
 import { TemplatePath } from "@11ty/eleventy-utils";
 // import debugUtil from "debug";
 
@@ -170,15 +170,31 @@ class Liquid extends TemplateEngine {
 			return {
 				parse(tagToken) {
 					this.name = tagToken.name;
-					this.args = tagToken.args;
+					if (_t.config.liquidParameterParsing === "builtin") {
+						let tokenizer = new Tokenizer(tagToken.args);
+						this.orderedArgs = [];
+						while (!tokenizer.end()) {
+							this.orderedArgs.push(tokenizer.readValue());
+						}
+						// note that Liquid does have a Hash class for name-based argument parsing but offers no easy to support both modes in one class
+					} else {
+						this.legacyArgs = tagToken.args;
+					}
 				},
 				render: function* (ctx) {
-					let rawArgs = Liquid.parseArguments(_t.argLexer, this.args);
 					let argArray = [];
-					let contextScope = ctx.getAll();
-					for (let arg of rawArgs) {
-						let b = yield liquidEngine.evalValue(arg, contextScope);
-						argArray.push(b);
+
+					if (this.legacyArgs) {
+						let rawArgs = Liquid.parseArguments(_t.argLexer, this.legacyArgs);
+						for (let arg of rawArgs) {
+							let b = yield liquidEngine.evalValue(arg, ctx);
+							argArray.push(b);
+						}
+					} else if (this.orderedArgs) {
+						for (let arg of this.orderedArgs) {
+							let b = yield evalToken(arg, ctx);
+							argArray.push(b);
+						}
 					}
 
 					let ret = yield shortcodeFn.call(Liquid.normalizeScope(ctx), ...argArray);
@@ -194,7 +210,18 @@ class Liquid extends TemplateEngine {
 			return {
 				parse(tagToken, remainTokens) {
 					this.name = tagToken.name;
-					this.args = tagToken.args;
+
+					if (_t.config.liquidParameterParsing === "builtin") {
+						let tokenizer = new Tokenizer(tagToken.args);
+						this.orderedArgs = [];
+						while (!tokenizer.end()) {
+							this.orderedArgs.push(tokenizer.readValue());
+						}
+						// note that Liquid does have a Hash class for name-based argument parsing but offers no easy to support both modes in one class
+					} else {
+						this.legacyArgs = tagToken.args;
+					}
+
 					this.templates = [];
 
 					var stream = liquidEngine.parser
@@ -208,18 +235,24 @@ class Liquid extends TemplateEngine {
 					stream.start();
 				},
 				render: function* (ctx /*, emitter*/) {
-					let rawArgs = Liquid.parseArguments(_t.argLexer, this.args);
 					let argArray = [];
-					let contextScope = ctx.getAll();
-					for (let arg of rawArgs) {
-						let b = yield liquidEngine.evalValue(arg, contextScope);
-						argArray.push(b);
+					if (this.legacyArgs) {
+						let rawArgs = Liquid.parseArguments(_t.argLexer, this.legacyArgs);
+						for (let arg of rawArgs) {
+							let b = yield liquidEngine.evalValue(arg, ctx);
+							argArray.push(b);
+						}
+					} else if (this.orderedArgs) {
+						for (let arg of this.orderedArgs) {
+							let b = yield evalToken(arg, ctx);
+							argArray.push(b);
+						}
 					}
 
 					const html = yield liquidEngine.renderer.renderTemplates(this.templates, ctx);
 
 					let ret = yield shortcodeFn.call(Liquid.normalizeScope(ctx), html, ...argArray);
-					// emitter.write(ret);
+
 					return ret;
 				},
 			};

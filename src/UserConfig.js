@@ -31,6 +31,7 @@ class UserConfigError extends EleventyBaseError {}
 class UserConfig {
 	#pluginExecution = false;
 	#quietModeLocked = false;
+	#dataDeepMergeModified = false;
 
 	constructor() {
 		this._uniqueId = Math.random();
@@ -71,6 +72,7 @@ class UserConfig {
 			filters: {},
 			shortcodes: {},
 			pairedShortcodes: {},
+			parameterParsing: "legacy", // or builtin
 		};
 
 		this.nunjucks = {
@@ -748,6 +750,15 @@ class UserConfig {
 		this.liquid.options = options;
 	}
 
+	setLiquidParameterParsing(behavior) {
+		if (behavior !== "legacy" && behavior !== "builtin") {
+			throw new Error(
+				`Invalid argument passed to \`setLiquidParameterParsing\`. Expected one of "legacy" or "builtin".`,
+			);
+		}
+		this.liquid.parameterParsing = behavior;
+	}
+
 	setNunjucksEnvironmentOptions(options) {
 		this.nunjucks.environmentOptions = options;
 	}
@@ -765,12 +776,13 @@ class UserConfig {
 	}
 
 	setDataDeepMerge(deepMerge) {
-		this._dataDeepMergeModified = true;
+		this.#dataDeepMergeModified = true;
 		this.dataDeepMerge = !!deepMerge;
 	}
 
+	// Used by the Upgrade Helper Plugin
 	isDataDeepMergeModified() {
-		return this._dataDeepMergeModified;
+		return this.#dataDeepMergeModified;
 	}
 
 	addWatchTarget(additionalWatchTargets) {
@@ -902,6 +914,7 @@ class UserConfig {
 		this.serverPassthroughCopyBehavior = behavior;
 	}
 
+	// Url transforms change page.url and work good with server side content-negotiation (e.g. i18n plugin)
 	addUrlTransform(callback) {
 		this.urlTransforms.push(callback);
 	}
@@ -1085,6 +1098,7 @@ class UserConfig {
 			liquidFilters: this.liquid.filters,
 			liquidShortcodes: this.liquid.shortcodes,
 			liquidPairedShortcodes: this.liquid.pairedShortcodes,
+			liquidParameterParsing: this.liquid.parameterParsing,
 
 			// Nunjucks
 			nunjucksEnvironmentOptions: this.nunjucks.environmentOptions,
