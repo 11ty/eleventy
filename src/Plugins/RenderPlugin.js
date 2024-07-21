@@ -1,5 +1,6 @@
 import fs from "graceful-fs";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
+import { Tokenizer, evalToken } from "liquidjs";
 
 // TODO add a first-class Markdown component to expose this using Markdown-only syntax (will need to be synchronous for markdown-it)
 
@@ -151,7 +152,18 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 		return {
 			parse: function (tagToken, remainTokens) {
 				this.name = tagToken.name;
-				this.args = tagToken.args;
+
+				if (eleventyConfig.liquid.parameterParsing === "builtin") {
+					let tokenizer = new Tokenizer(tagToken.args);
+					this.orderedArgs = [];
+					while (!tokenizer.end()) {
+						this.orderedArgs.push(tokenizer.readValue());
+					}
+					// note that Liquid does have a Hash class for name-based argument parsing but offers no easy to support both modes in one class
+				} else {
+					this.legacyArgs = tagToken.args;
+				}
+
 				this.tokens = [];
 
 				var stream = liquidEngine.parser
@@ -178,12 +190,18 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 					normalizedContext.eleventy = ctx.get(["eleventy"]);
 				}
 
-				let rawArgs = Liquid.parseArguments(null, this.args);
 				let argArray = [];
-				let contextScope = ctx.getAll();
-				for (let arg of rawArgs) {
-					let b = yield liquidEngine.evalValue(arg, contextScope);
-					argArray.push(b);
+				if (this.legacyArgs) {
+					let rawArgs = Liquid.parseArguments(null, this.legacyArgs);
+					for (let arg of rawArgs) {
+						let b = yield liquidEngine.evalValue(arg, ctx);
+						argArray.push(b);
+					}
+				} else if (this.orderedArgs) {
+					for (let arg of this.orderedArgs) {
+						let b = yield evalToken(arg, ctx);
+						argArray.push(b);
+					}
 				}
 
 				// plaintext paired shortcode content
