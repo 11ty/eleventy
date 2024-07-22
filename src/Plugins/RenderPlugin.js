@@ -1,6 +1,6 @@
 import fs from "graceful-fs";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
-import { Tokenizer, evalToken } from "liquidjs";
+import { evalToken } from "liquidjs";
 
 // TODO add a first-class Markdown component to expose this using Markdown-only syntax (will need to be synchronous for markdown-it)
 
@@ -154,11 +154,7 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 				this.name = tagToken.name;
 
 				if (eleventyConfig.liquid.parameterParsing === "builtin") {
-					let tokenizer = new Tokenizer(tagToken.args);
-					this.orderedArgs = [];
-					while (!tokenizer.end()) {
-						this.orderedArgs.push(tokenizer.readValue());
-					}
+					this.orderedArgs = Liquid.parseArgumentsBuiltin(tagToken.args);
 					// note that Liquid does have a Hash class for name-based argument parsing but offers no easy to support both modes in one class
 				} else {
 					this.legacyArgs = tagToken.args;

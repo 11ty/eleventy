@@ -164,6 +164,24 @@ class Liquid extends TemplateEngine {
 		return argArray;
 	}
 
+	static parseArgumentsBuiltin(args) {
+		let tokenizer = new Tokenizer(args);
+		let parsedArgs = [];
+
+		let value = tokenizer.readValue();
+		while (value) {
+			parsedArgs.push(value);
+			tokenizer.skipBlank();
+			if (tokenizer.peek() === ",") {
+				tokenizer.advance();
+			}
+			value = tokenizer.readValue();
+		}
+		tokenizer.end();
+
+		return parsedArgs;
+	}
+
 	addShortcode(shortcodeName, shortcodeFn) {
 		let _t = this;
 		this.addTag(shortcodeName, function (liquidEngine) {
@@ -171,11 +189,7 @@ class Liquid extends TemplateEngine {
 				parse(tagToken) {
 					this.name = tagToken.name;
 					if (_t.config.liquidParameterParsing === "builtin") {
-						let tokenizer = new Tokenizer(tagToken.args);
-						this.orderedArgs = [];
-						while (!tokenizer.end()) {
-							this.orderedArgs.push(tokenizer.readValue());
-						}
+						this.orderedArgs = Liquid.parseArgumentsBuiltin(tagToken.args);
 						// note that Liquid does have a Hash class for name-based argument parsing but offers no easy to support both modes in one class
 					} else {
 						this.legacyArgs = tagToken.args;
@@ -212,11 +226,7 @@ class Liquid extends TemplateEngine {
 					this.name = tagToken.name;
 
 					if (_t.config.liquidParameterParsing === "builtin") {
-						let tokenizer = new Tokenizer(tagToken.args);
-						this.orderedArgs = [];
-						while (!tokenizer.end()) {
-							this.orderedArgs.push(tokenizer.readValue());
-						}
+						this.orderedArgs = Liquid.parseArgumentsBuiltin(tagToken.args);
 						// note that Liquid does have a Hash class for name-based argument parsing but offers no easy to support both modes in one class
 					} else {
 						this.legacyArgs = tagToken.args;

@@ -307,7 +307,7 @@ test.skip("Use liquid in njk (access to all global data)", async (t) => {
   t.is(html, `globalHi`);
 });
 
-test("Render front matter via renderTemplate (njk)", async (t) => {
+test("renderContent filter #3369 #3370 via renderTemplate (njk)", async (t) => {
   let html = await getTestOutputForFile("./test/stubs-render-plugin/nunjucks-frontmatter.njk", (eleventyConfig) => {
     eleventyConfig.addShortcode("test", () => "test content")
   });

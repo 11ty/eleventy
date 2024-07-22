@@ -1042,7 +1042,7 @@ test("Liquid Parse for Symbols", async (t) => {
   t.deepEqual(engine.parseForSymbols("{{ collections.mine | test }}>"), ["collections.mine"]);
 });
 
-test("Eleventy shortcode uses new built-in Liquid argument parsing behavior", async (t) => {
+test("Eleventy shortcode uses new built-in Liquid argument parsing behavior (spaces)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
     config: eleventyConfig => {
       eleventyConfig.setLiquidParameterParsing("builtin");
@@ -1061,7 +1061,45 @@ test("Eleventy shortcode uses new built-in Liquid argument parsing behavior", as
   t.deepEqual(result.content, "[123,456]");
 });
 
-test("Eleventy paired shortcode uses new built-in Liquid argument parsing behavior", async (t) => {
+test("Eleventy shortcode uses new built-in Liquid argument parsing behavior (commas)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.setLiquidParameterParsing("builtin");
+      eleventyConfig.addShortcode("test", (...args) => {
+        return JSON.stringify(args);
+      })
+      eleventyConfig.addTemplate("index.liquid", `{% test abc, def %}`, {
+        abc: 123,
+        def: 456
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let [result] = await elev.toJSON();
+  t.deepEqual(result.content, "[123,456]");
+});
+
+test("Eleventy shortcode uses new built-in Liquid argument parsing behavior (commas, no spaces)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.setLiquidParameterParsing("builtin");
+      eleventyConfig.addShortcode("test", (...args) => {
+        return JSON.stringify(args);
+      })
+      eleventyConfig.addTemplate("index.liquid", `{% test abc,def %}`, {
+        abc: 123,
+        def: 456
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let [result] = await elev.toJSON();
+  t.deepEqual(result.content, "[123,456]");
+});
+
+test("Eleventy paired shortcode uses new built-in Liquid argument parsing behavior (spaces)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
     config: eleventyConfig => {
       eleventyConfig.setLiquidParameterParsing("builtin");
@@ -1069,6 +1107,44 @@ test("Eleventy paired shortcode uses new built-in Liquid argument parsing behavi
         return JSON.stringify(args);
       })
       eleventyConfig.addTemplate("index.liquid", `{% test abc def %}hi{% endtest %}`, {
+        abc: 123,
+        def: 456
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let [result] = await elev.toJSON();
+  t.deepEqual(result.content, `["hi",123,456]`);
+});
+
+test("Eleventy paired shortcode uses new built-in Liquid argument parsing behavior (commas)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.setLiquidParameterParsing("builtin");
+      eleventyConfig.addPairedShortcode("test", (...args) => {
+        return JSON.stringify(args);
+      })
+      eleventyConfig.addTemplate("index.liquid", `{% test abc, def %}hi{% endtest %}`, {
+        abc: 123,
+        def: 456
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let [result] = await elev.toJSON();
+  t.deepEqual(result.content, `["hi",123,456]`);
+});
+
+test("Eleventy paired shortcode uses new built-in Liquid argument parsing behavior (commas, no spaces)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.setLiquidParameterParsing("builtin");
+      eleventyConfig.addPairedShortcode("test", (...args) => {
+        return JSON.stringify(args);
+      })
+      eleventyConfig.addTemplate("index.liquid", `{% test abc,def %}hi{% endtest %}`, {
         abc: 123,
         def: 456
       });
