@@ -1,12 +1,13 @@
 import test from "ava";
 import semver from "semver";
-import { eleventyImageTransformPlugin } from "@11ty/eleventy-img";
 
 import Eleventy from "../src/Eleventy.js";
 import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 
 // Only run in Node 18 or newer
 if(semver.gte(semver.coerce(process.version).version, "18.0.0")) {
+  const { eleventyImageTransformPlugin } = await import("@11ty/eleventy-img");
+
   test("Default image transform with a single image", async (t) => {
     let elev = new Eleventy("./test/stubs-img-transform/single.md", "./test/stubs-img-transform/_site", {
       config: eleventyConfig => {
