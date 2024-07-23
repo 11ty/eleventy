@@ -1610,7 +1610,7 @@ test("#188: Content preprocessing (array, dot in file extension)", async (t) => 
 });
 
 
-test("#3733: Throw an error when explicit config path is not found.", async (t) => {
+test("#3373: Throw an error when explicit config path is not found.", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
     configPath: "this-file-is-not-found.js"
   });
