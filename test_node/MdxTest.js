@@ -3,12 +3,14 @@
 // See https://github.com/nodejs/node/issues/47747
 import test from "node:test";
 import assert from "node:assert";
-import { register } from "node:module";
+import module from "node:module";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import Eleventy from "../src/Eleventy.js";
 
-register("@mdx-js/node-loader", import.meta.url);
+if (module.register) {
+	module.register("@mdx-js/node-loader", import.meta.url);
+}
 
 test("Eleventy with MDX", async () => {
 	let elev = new Eleventy("./test/stubs-fancyjs/test.mdx", undefined, {
