@@ -12,7 +12,7 @@
      - 0.12.x+ requires Node 10+
      - 1.x+ requires Node 12+
      - 2.x+ requires Node 14+
-     - 3.x+ requires Node 18+
+     - 3.x+ requires Node 16+
 1. `rm -rf node_modules && rm -f package-lock.json && npm install`
 1. `npm audit`
 1. Make sure `npm run check` (eslint) runs okay
