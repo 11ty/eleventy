@@ -51,6 +51,7 @@ class EleventyPluginError extends EleventyBaseError {}
 class TemplateConfig {
 	#templateFormats;
 	#runMode;
+	#configManuallyDefined = false;
 
 	constructor(customRootConfig, projectConfigPath) {
 		this.userConfig = new UserConfig();
@@ -63,6 +64,8 @@ class TemplateConfig {
 		 * @default .eleventy.js
 		 */
 		if (projectConfigPath !== undefined) {
+			this.#configManuallyDefined = true;
+
 			if (!projectConfigPath) {
 				// falsy skips config files
 				this.projectConfigPaths = [];
@@ -230,6 +233,8 @@ class TemplateConfig {
 	 * @param {String} path - The new config path.
 	 */
 	async setProjectConfigPath(path) {
+		this.#configManuallyDefined = true;
+
 		if (path !== undefined) {
 			this.projectConfigPaths = [path];
 		} else {
@@ -351,6 +356,12 @@ class TemplateConfig {
 		let exportedConfig = {};
 
 		let path = this.projectConfigPaths.filter((path) => path).find((path) => fs.existsSync(path));
+
+		if (this.projectConfigPaths.length > 0 && this.#configManuallyDefined && !path) {
+			throw new EleventyConfigError(
+				"A configuration file was specified but not found: " + this.projectConfigPaths.join(", "),
+			);
+		}
 
 		debug(`Merging default config with ${path}`);
 		if (path) {

@@ -82,18 +82,6 @@ class Eleventy {
 		this.options = options;
 
 		/**
-		 * @member {String} - The top level directory the site pretends to reside in
-		 * @default "/"
-		 */
-		this.pathPrefix = this.options.pathPrefix || "/";
-
-		/**
-		 * @member {String} - The path to Eleventy's config file.
-		 * @default null
-		 */
-		this.configPath = this.options.configPath;
-
-		/**
 		 * @member {String} - Called via CLI (`cli`) or Programmatically (`script`)
 		 * @default "script"
 		 */
@@ -109,7 +97,7 @@ class Eleventy {
 		 * @member {Boolean} - Is Eleventy running in dry mode?
 		 * @default false
 		 */
-		this.isDryRun = options.dryRun ?? false;
+		this.isDryRun = this.options.dryRun ?? false;
 
 		/**
 		 * @member {Boolean} - Does the init() method still need to be run (or hasn’t finished yet)
@@ -142,11 +130,27 @@ class Eleventy {
 		this.buildCount = 0;
 	}
 
+	/**
+	 * @member {String} - The path to Eleventy's config file.
+	 * @default null
+	 */
+	get configPath() {
+		return this.options.configPath;
+	}
+
+	/**
+	 * @member {String} - The top level directory the site pretends to reside in
+	 * @default "/"
+	 */
+	get pathPrefix() {
+		return this.options.pathPrefix || "/";
+	}
+
 	async initializeConfig(initOverrides) {
 		if (!this.eleventyConfig) {
-			this.eleventyConfig = new TemplateConfig(null, this.options.configPath);
-		} else if (this.options.configPath) {
-			await this.eleventyConfig.setProjectConfigPath(this.options.configPath);
+			this.eleventyConfig = new TemplateConfig(null, this.configPath);
+		} else if (this.configPath) {
+			await this.eleventyConfig.setProjectConfigPath(this.configPath);
 		}
 
 		this.eleventyConfig.setRunMode(this.runMode);
