@@ -27,6 +27,7 @@ if(!canRequireModules()) {
 	throw error;
 }
 
+// If require(ESM) works fine via --experimental-require-module or newer Node.js defaults, export it for use in CommonJS.
 module.exports = (async function() {
 	return await import("@11ty/eleventy");
 })();

@@ -9,7 +9,7 @@
 	"main": "src/Eleventy.js",
 	"exports": {
 		"import": "./src/Eleventy.js",
-		"require": "./src/EleventyCommonJsRequireError.cjs"
+		"require": "./src/EleventyCommonJs.cjs"
 	},
 	"bin": {
 		"eleventy": "cmd.cjs"
