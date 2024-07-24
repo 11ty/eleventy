@@ -6,7 +6,7 @@ import TemplateMap from "./TemplateMap.js";
 import EleventyFiles from "./EleventyFiles.js";
 import EleventyExtensionMap from "./EleventyExtensionMap.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
-import EleventyErrorHandler from "./Errors/EleventyErrorHandler.js";
+import { EleventyErrorHandler } from "./Errors/EleventyErrorHandler.js";
 import EleventyErrorUtil from "./Errors/EleventyErrorUtil.js";
 import FileSystemSearch from "./FileSystemSearch.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
