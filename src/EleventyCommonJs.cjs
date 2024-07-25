@@ -14,7 +14,7 @@ function canRequireModules() {
 }
 
 if(!canRequireModules()) {
-	let error = new Error(`Eleventy cannot be loaded via \`require("@11ty/eleventy")\` in 3.0 and newer. Instead, you have a few options:
+	let error = new Error(`\`require("@11ty/eleventy")\` is incompatible with Eleventy v3 and this version of Node. You have a few options:
    1. (Easiest) Change the \`require\` to use a dynamic import inside of an asynchronous CommonJS configuration
       callback, for example:
 
