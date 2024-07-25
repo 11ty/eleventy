@@ -23,7 +23,6 @@ const debug = require("debug")("Eleventy:cmd");
 	const { EleventyErrorHandler } = await import("./src/Errors/EleventyErrorHandler.js");
 
 	try {
-		let errorHandler = new EleventyErrorHandler();
 		const argv = minimist(process.argv.slice(2), {
 			string: ["input", "output", "formats", "config", "pathprefix", "port", "to", "incremental", "loader"],
 			boolean: [
