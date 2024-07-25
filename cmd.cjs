@@ -24,7 +24,7 @@ const debug = require("debug")("Eleventy:cmd");
 
 	try {
 		const argv = minimist(process.argv.slice(2), {
-			string: ["input", "output", "formats", "config", "pathprefix", "port", "to", "incremental"],
+			string: ["input", "output", "formats", "config", "pathprefix", "port", "to", "incremental", "loader"],
 			boolean: [
 				"quiet",
 				"version",
@@ -73,6 +73,7 @@ const debug = require("debug")("Eleventy:cmd");
 				pathPrefix: argv.pathprefix,
 				runMode: argv.serve ? "serve" : argv.watch ? "watch" : "build",
 				dryRun: argv.dryrun,
+				loader: argv.loader,
 			});
 
 			// reuse ErrorHandler instance in Eleventy
