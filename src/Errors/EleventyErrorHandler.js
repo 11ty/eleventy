@@ -45,6 +45,18 @@ class EleventyErrorHandler {
 		process.exitCode = 1;
 	}
 
+	once(type, e, msg) {
+		if (e.__errorAlreadyLogged) {
+			return;
+		}
+
+		this[type || "error"](e, msg);
+
+		Object.defineProperty(e, "__errorAlreadyLogged", {
+			value: true,
+		});
+	}
+
 	error(e, msg) {
 		if (msg) {
 			this.initialMessage(msg, "error", "red", true);
@@ -69,6 +81,10 @@ class EleventyErrorHandler {
 		}
 
 		let showStack = true;
+		if (e.skipOriginalStack) {
+			showStack = false;
+		}
+
 		let totalErrorCount = EleventyErrorHandler.getTotalErrorCount(e);
 		let ref = e;
 		let index = 1;
@@ -127,12 +143,7 @@ class EleventyErrorHandler {
 
 	initialMessage(message, type = "log", chalkColor = "blue", forceToConsole = false) {
 		if (message) {
-			this.logger.message(
-				message + ":" + (process.env.DEBUG ? "" : " (more in DEBUG output)"),
-				type,
-				chalkColor,
-				forceToConsole,
-			);
+			this.logger.message(message + ":", type, chalkColor, forceToConsole);
 		}
 	}
 }

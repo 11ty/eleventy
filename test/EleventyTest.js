@@ -236,7 +236,9 @@ test("Eleventy set input/output, one file input exitCode (cli)", async (t) => {
   elev.setIsVerbose(false);
   elev.disableLogger();
 
-  await elev.write();
+  let e = await t.throwsAsync(() => elev.write());
+
+  t.is(e.message, "Having trouble rendering njk template ./test/stubs/exitCode/failure.njk");
 
   t.is(process.exitCode, 1);
 

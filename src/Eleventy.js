@@ -1,9 +1,10 @@
 import chalk from "kleur";
 import { performance } from "node:perf_hooks";
-import { TemplatePath } from "@11ty/eleventy-utils";
-import BundlePlugin from "@11ty/eleventy-plugin-bundle";
 import debugUtil from "debug";
 import { filesize } from "filesize";
+
+import { TemplatePath } from "@11ty/eleventy-utils";
+import BundlePlugin from "@11ty/eleventy-plugin-bundle";
 
 import TemplateData from "./Data/TemplateData.js";
 import TemplateWriter from "./TemplateWriter.js";
@@ -57,12 +58,6 @@ class Eleventy {
 	#verboseOverride;
 	#isVerboseMode; // Boolean
 	#preInitVerbose;
-
-	/**
-	 * @member {Boolean} - Has the async initialization for config run yet?
-	 * @private
-	 * @default false
-	 */
 	#hasConfigInitialized = false;
 
 	constructor(input, output, options = {}, eleventyConfig = null) {
@@ -394,8 +389,10 @@ class Eleventy {
 			ret.push(slashRet.join(" "));
 		}
 
-		let time = ((this.getNewTimestamp() - this.start) / 1000).toFixed(2);
-		ret.push(`in ${chalk.bold(time)} ${simplePlural(time, "second", "seconds")}`);
+		let time = (this.getNewTimestamp() - this.start) / 1000;
+		ret.push(
+			`in ${chalk.bold(time.toFixed(2))} ${simplePlural(time.toFixed(2), "second", "seconds")}`,
+		);
 
 		// More than 1 second total, show estimate of per-template time
 		if (time >= 1 && writeCount > 0) {
@@ -437,7 +434,6 @@ class Eleventy {
 	 *
 	 * @async
 	 * @method
-	 * @returns {} - tbd.
 	 */
 	async init(options = {}) {
 		options = Object.assign({ viaConfigReset: false }, options);
@@ -898,36 +894,27 @@ Arguments:
 		await this.restart();
 		await this.init({ viaConfigReset: isResetConfig });
 
-		let writeResults = await this.write();
-		// let passthroughCopyResults;
-		let templateResults;
-		if (!writeResults.error) {
-			[, /*passthroughCopyResults*/ ...templateResults] = writeResults;
-		}
+		try {
+			let [, /*passthroughCopyResults*/ templateResults] = await this.write();
 
-		this.watchTargets.reset();
+			this.watchTargets.reset();
 
-		await this._initWatchDependencies();
+			await this._initWatchDependencies();
 
-		// Add new deps to chokidar
-		this.watcher.add(this.watchTargets.getNewTargetsSinceLastReset());
+			// Add new deps to chokidar
+			this.watcher.add(this.watchTargets.getNewTargetsSinceLastReset());
 
-		// Is a CSS input file and is not in the includes folder
-		// TODO check output path file extension of this template (not input path)
-		// TODO add additional API for this, maybe a config callback?
-		let onlyCssChanges = this.watchManager.hasAllQueueFiles((path) => {
-			return (
-				path.endsWith(".css") &&
-				// TODO how to make this work with relative includes?
-				!TemplatePath.startsWithSubPath(path, this.eleventyFiles.getIncludesDir())
-			);
-		});
-
-		if (writeResults.error) {
-			this.eleventyServe.sendError({
-				error: writeResults.error,
+			// Is a CSS input file and is not in the includes folder
+			// TODO check output path file extension of this template (not input path)
+			// TODO add additional API for this, maybe a config callback?
+			let onlyCssChanges = this.watchManager.hasAllQueueFiles((path) => {
+				return (
+					path.endsWith(".css") &&
+					// TODO how to make this work with relative includes?
+					!TemplatePath.startsWithSubPath(path, this.eleventyFiles.getIncludesDir())
+				);
 			});
-		} else {
+
 			let normalizedPathPrefix = PathPrefixer.normalizePathPrefix(this.config.pathPrefix);
 			await this.eleventyServe.reload({
 				files: this.watchManager.getActiveQueue(),
@@ -941,6 +928,10 @@ Arguments:
 							return entry;
 						}),
 				},
+			});
+		} catch (error) {
+			this.eleventyServe.sendError({
+				error,
 			});
 		}
 
@@ -960,9 +951,7 @@ Arguments:
 	}
 
 	/**
-	 * tbd.
-	 *
-	 * @returns {} - tbd.
+	 * @returns {module:11ty/eleventy/src/Benchmark/BenchmarkGroup~BenchmarkGroup}
 	 */
 	get watcherBench() {
 		return this.bench.get("Watcher");
@@ -1061,7 +1050,7 @@ Arguments:
 	 *
 	 * @async
 	 * @method
-	 * @returns {} targets - The watched files.
+	 * @returns {Promise<Array>} targets - The watched files.
 	 */
 	async getWatchedFiles() {
 		return this.watchTargets.getTargets();
@@ -1113,11 +1102,7 @@ Arguments:
 
 		// Note that watching indirectly depends on this for fetching dependencies from JS files
 		// See: TemplateWriter:pathCache and EleventyWatchTargets
-		let result = await this.write();
-		if (result.error) {
-			// initial build failed—quit watch early
-			return Promise.reject(result.error);
-		}
+		await this.write();
 
 		let initWatchBench = this.watcherBench.get("Start up --watch");
 		initWatchBench.before();
@@ -1216,7 +1201,7 @@ Arguments:
 	 *
 	 * @async
 	 * @method
-	 * @returns {Promise<{}>}
+	 * @returns {Promise<{Array}>}
 	 */
 	async write() {
 		return this.executeBuild("fs");
@@ -1227,7 +1212,7 @@ Arguments:
 	 *
 	 * @async
 	 * @method
-	 * @returns {Promise<{}>}
+	 * @returns {Promise<{Array}>}
 	 */
 	async toJSON() {
 		return this.executeBuild("json");
@@ -1249,7 +1234,7 @@ Arguments:
 	 *
 	 * @async
 	 * @method
-	 * @returns {Promise<{}>} ret - tbd.
+	 * @returns {Promise<{Array,ReadableStream}>} ret - tbd.
 	 */
 	async executeBuild(to = "fs") {
 		if (this.needsInit) {
@@ -1261,11 +1246,8 @@ Arguments:
 		}
 
 		if (!this.writer) {
-			this.errorHandler.fatal(
-				new Error(
-					"Eleventy didn’t run init() properly and wasn’t able to create a TemplateWriter.",
-				),
-				"Problem writing Eleventy templates",
+			throw new Error(
+				"Internal error: Eleventy didn’t run init() properly and wasn’t able to create a TemplateWriter.",
 			);
 		}
 
@@ -1275,7 +1257,7 @@ Arguments:
 			this.writer.setIncrementalFile(incrementalFile);
 		}
 
-		let ret;
+		let returnObj;
 		let hasError = false;
 
 		try {
@@ -1310,23 +1292,21 @@ Arguments:
 				);
 			}
 
-			ret = await promise;
+			let resolved = await promise;
 
-			// Passing the processed output to the eleventy.after event is new in 2.0
-			let [, /*passthroughCopyResults*/ ...templateResults] = ret;
-
-			if (to === "fs") {
-				// New in 3.0: flatten return object for return.
-				ret[1] = templateResults.flat().filter((entry) => !!entry);
-				eventsArg.results = ret[1];
-			} else {
-				eventsArg.results = templateResults.filter((entry) => !!entry);
-			}
+			// Passing the processed output to the eleventy.after event (2.0+)
+			eventsArg.results = resolved.templates;
 
 			if (to === "ndjson") {
 				// return a stream
-				// TODO this might output the ndjson rows only after all the templates have been written to the stream?
-				ret = this.logger.closeStream(to);
+				// TODO this outputs all ndjson rows after all the templates have been written to the stream
+				returnObj = this.logger.closeStream(to);
+			} else if (to === "json") {
+				// Backwards compat
+				returnObj = resolved.templates;
+			} else {
+				// Backwards compat
+				returnObj = [resolved.passthroughCopy, resolved.templates];
 			}
 
 			this.unsetIncrementalFile();
@@ -1337,21 +1317,18 @@ Arguments:
 			await this.config.events.emit("eleventy.after", eventsArg);
 
 			this.buildCount++;
-		} catch (e) {
+		} catch (error) {
 			hasError = true;
-			ret = {
-				error: e,
-			};
 
-			// Issue #2405
-			if (this.source === "script") {
-				this.errorHandler.error(e, "Problem writing Eleventy templates");
-				throw e;
-			} else {
-				this.errorHandler.fatal(e, "Problem writing Eleventy templates");
-			}
+			// Issue #2405: Don’t change the exit code for programmatic scripts
+			let errorSeverity = this.source === "script" ? "error" : "fatal";
+			this.errorHandler.once(errorSeverity, error, "Problem writing Eleventy templates");
+
+			// TODO ndjson should stream the error but https://github.com/11ty/eleventy/issues/3382
+			throw error;
 		} finally {
 			this.bench.finish();
+
 			if (to === "fs") {
 				this.logger.logWithOptions({
 					message: this.logFinished(),
@@ -1360,14 +1337,15 @@ Arguments:
 					force: true,
 				});
 			}
-			debug("Finished writing templates.");
+
+			debug("Finished.");
 
 			debug(`
 Have a suggestion/feature request/feedback? Feeling frustrated? I want to hear it!
 Open an issue: https://github.com/11ty/eleventy/issues/new`);
 		}
 
-		return ret;
+		return returnObj;
 	}
 }
 

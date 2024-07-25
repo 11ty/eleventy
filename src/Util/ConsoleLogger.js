@@ -13,7 +13,9 @@ class ConsoleLogger {
 		/** @private */
 		this._isVerbose = true;
 		/** @type {Readable} */
-		this.outputStream = Readable();
+		this.outputStream = new Readable({
+			read(size) {},
+		});
 	}
 
 	get isVerbose() {
