@@ -5,8 +5,12 @@
 	"publishConfig": {
 		"access": "public"
 	},
-	"main": "src/Eleventy.js",
 	"type": "module",
+	"main": "src/Eleventy.js",
+	"exports": {
+		"import": "./src/Eleventy.js",
+		"require": "./src/EleventyCommonJs.cjs"
+	},
 	"bin": {
 		"eleventy": "cmd.cjs"
 	},

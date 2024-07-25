@@ -8,7 +8,7 @@ import { filesize } from "filesize";
 import TemplateData from "./Data/TemplateData.js";
 import TemplateWriter from "./TemplateWriter.js";
 import EleventyExtensionMap from "./EleventyExtensionMap.js";
-import EleventyErrorHandler from "./Errors/EleventyErrorHandler.js";
+import { EleventyErrorHandler } from "./Errors/EleventyErrorHandler.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import EleventyServe from "./EleventyServe.js";
 import EleventyWatch from "./EleventyWatch.js";
@@ -1395,9 +1395,28 @@ Object.assign(RenderPlugin, RenderPluginExtras);
 Object.assign(I18nPlugin, I18nPluginExtras);
 Object.assign(HtmlBasePlugin, HtmlBasePluginExtras);
 
+// Removed plugins
+
+const EleventyServerlessBundlerPlugin = function () {
+	throw new Error(
+		"Following feedback from our Community Survey, low interest in this plugin prompted its removal from Eleventy core in 3.0 as we refocus on static sites. Learn more: https://www.11ty.dev/docs/plugins/serverless/",
+	);
+};
+
+const EleventyEdgePlugin = function () {
+	throw new Error(
+		"Following feedback from our Community Survey, low interest in this plugin prompted its removal from Eleventy core in 3.0 as we refocus on static sites. Learn more: https://www.11ty.dev/docs/plugins/edge/",
+	);
+};
+
 export {
 	Eleventy,
 	EleventyImport as ImportFile,
+
+	// Error messages for removed plugins
+	EleventyServerlessBundlerPlugin as EleventyServerless,
+	EleventyServerlessBundlerPlugin,
+	EleventyEdgePlugin,
 
 	/**
 	 * @type {module:11ty/eleventy/Plugins/RenderPlugin}

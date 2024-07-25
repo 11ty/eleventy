@@ -16,14 +16,15 @@ require("please-upgrade-node")(pkg, {
 	},
 });
 
+const minimist = require("minimist");
 const debug = require("debug")("Eleventy:cmd");
 
 (async function () {
-	const { default: EleventyErrorHandler } = await import("./src/Errors/EleventyErrorHandler.js");
+	const { EleventyErrorHandler } = await import("./src/Errors/EleventyErrorHandler.js");
 
 	try {
 		let errorHandler = new EleventyErrorHandler();
-		const argv = require("minimist")(process.argv.slice(2), {
+		const argv = minimist(process.argv.slice(2), {
 			string: ["input", "output", "formats", "config", "pathprefix", "port", "to", "incremental", "loader"],
 			boolean: [
 				"quiet",
@@ -48,14 +49,16 @@ const debug = require("debug")("Eleventy:cmd");
 		debug("command: eleventy %o", argv);
 		const { Eleventy } = await import("./src/Eleventy.js");
 
+		let ErrorHandler = new EleventyErrorHandler();
+
 		process.on("unhandledRejection", (error, promise) => {
-			errorHandler.fatal(error, "Unhandled rejection in promise");
+			ErrorHandler.fatal(error, "Unhandled rejection in promise");
 		});
 		process.on("uncaughtException", (error) => {
-			errorHandler.fatal(error, "Uncaught exception");
+			ErrorHandler.fatal(error, "Uncaught exception");
 		});
 		process.on("rejectionHandled", (promise) => {
-			errorHandler.warn(promise, "A promise rejection was handled asynchronously");
+			ErrorHandler.warn(promise, "A promise rejection was handled asynchronously");
 		});
 
 		if (argv.version) {
@@ -75,7 +78,7 @@ const debug = require("debug")("Eleventy:cmd");
 			});
 
 			// reuse ErrorHandler instance in Eleventy
-			errorHandler = elev.errorHandler;
+			ErrorHandler = elev.errorHandler;
 
 			// Before init
 			elev.setFormats(argv.formats);
@@ -113,7 +116,7 @@ const debug = require("debug")("Eleventy:cmd");
 									// Build failed but error message already displayed.
 									shouldStartServer = false;
 									// A build error occurred and we aren’t going to --serve
-									errorHandler.fatal(e, "Eleventy CLI Error");
+									ErrorHandler.fatal(e, "Eleventy CLI Error");
 								});
 
 							process.on("SIGINT", async () => {
@@ -139,12 +142,12 @@ const debug = require("debug")("Eleventy:cmd");
 							}
 						}
 					} catch (e) {
-						errorHandler.fatal(e, "Eleventy CLI Error");
+						ErrorHandler.fatal(e, "Eleventy CLI Error");
 					}
-				}, errorHandler.fatal.bind(errorHandler));
+				}, ErrorHandler.fatal.bind(ErrorHandler));
 		}
 	} catch (e) {
-		let errorHandler = new EleventyErrorHandler();
-		errorHandler.fatal(e, "Eleventy CLI Fatal Error");
+		let ErrorHandler = new EleventyErrorHandler();
+		ErrorHandler.fatal(e, "Eleventy CLI Fatal Error");
 	}
 })();

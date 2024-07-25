@@ -44,6 +44,10 @@ class ProjectTemplateFormats {
 		return final;
 	}
 
+	isWildcard() {
+		return this.#isUseAll.cli || this.#isUseAll.config || false;
+	}
+
 	#isUseAll(rawFormats) {
 		if (rawFormats === "") {
 			return false;

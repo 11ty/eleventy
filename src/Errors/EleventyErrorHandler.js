@@ -68,6 +68,7 @@ class EleventyErrorHandler {
 			debug("Full error object: %o", util.inspect(e, { showHidden: false, depth: null }));
 		}
 
+		let showStack = true;
 		let totalErrorCount = EleventyErrorHandler.getTotalErrorCount(e);
 		let ref = e;
 		let index = 1;
@@ -82,10 +83,15 @@ class EleventyErrorHandler {
 			if (!nextRef && EleventyErrorUtil.hasEmbeddedError(ref.message)) {
 				nextRef = EleventyErrorUtil.deconvertErrorToObject(ref);
 			}
+
+			if (nextRef?.skipOriginalStack) {
+				showStack = false;
+			}
+
 			this.logger.message(
 				`${totalErrorCount > 1 ? `${index}. ` : ""}${(
 					EleventyErrorUtil.cleanMessage(ref.message) || "(No error message provided)"
-				).trim()} (via ${ref.name})`,
+				).trim()}${ref.name !== "Error" ? ` (via ${ref.name})` : ""}`,
 				type,
 				chalkColor,
 				forceToConsole,
@@ -104,12 +110,15 @@ class EleventyErrorHandler {
 						"(Repeated output has been truncated…)",
 					);
 				}
-				this.logger.message(
-					"\nOriginal error stack trace: " + stackStr,
-					type,
-					chalkColor,
-					forceToConsole,
-				);
+
+				if (showStack) {
+					this.logger.message(
+						"\nOriginal error stack trace: " + stackStr,
+						type,
+						chalkColor,
+						forceToConsole,
+					);
+				}
 			}
 			ref = nextRef;
 			index++;
@@ -128,4 +137,4 @@ class EleventyErrorHandler {
 	}
 }
 
-export default EleventyErrorHandler;
+export { EleventyErrorHandler };
