@@ -350,21 +350,15 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 		return renderShortcodeFn.call(this, fn, data);
 	}
 
+	/** @this {object} */
 	async function _renderFileShortcodeFn(inputPath, data = {}, templateLang) {
 		let options = {
 			templateConfig: opts.templateConfig || templateConfig,
 			extensionMap,
 		};
 
-		let fn = await compileFile.call(
-			// @ts-expect-error
-			this,
-			inputPath,
-			options,
-			templateLang,
-		);
+		let fn = await compileFile.call(this, inputPath, options, templateLang);
 
-		// @ts-expect-error
 		return renderShortcodeFn.call(this, fn, data);
 	}
 

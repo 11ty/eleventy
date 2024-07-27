@@ -211,7 +211,7 @@ class UserConfig {
 				javascript: JavaScriptFrontMatter,
 
 				// Needed for fallback behavior in the new `javascript` engine
-				// @ts-expect-error
+				// @ts-ignore
 				jsLegacy: matter.engines.javascript,
 
 				node: function () {
@@ -396,17 +396,20 @@ class UserConfig {
 
 		this.addLiquidFilter(name, callback);
 		this.addJavaScriptFilter(name, callback);
-		this.addNunjucksFilter(name, function (...args) {
-			// Note that `callback` is already a function as the `#add` method throws an error if not.
-			// @ts-expect-error
-			let ret = callback.call(this, ...args);
-			if (ret instanceof Promise) {
-				throw new Error(
-					`Nunjucks *is* async-friendly with \`addFilter("${name}", async function() {})\` but you need to supply an \`async function\`. You returned a promise from \`addFilter("${name}", function() {})\`. Alternatively, use the \`addAsyncFilter("${name}")\` configuration API method.`,
-				);
-			}
-			return ret;
-		});
+		this.addNunjucksFilter(
+			name,
+			/** @this {any} */
+			function (...args) {
+				// Note that `callback` is already a function as the `#add` method throws an error if not.
+				let ret = callback.call(this, ...args);
+				if (ret instanceof Promise) {
+					throw new Error(
+						`Nunjucks *is* async-friendly with \`addFilter("${name}", async function() {})\` but you need to supply an \`async function\`. You returned a promise from \`addFilter("${name}", function() {})\`. Alternatively, use the \`addAsyncFilter("${name}")\` configuration API method.`,
+					);
+				}
+				return ret;
+			},
+		);
 	}
 
 	// Liquid, Nunjucks, and JS only
@@ -419,13 +422,16 @@ class UserConfig {
 
 		this.addLiquidFilter(name, callback);
 		this.addJavaScriptFilter(name, callback);
-		this.addNunjucksAsyncFilter(name, async function (...args) {
-			let cb = args.pop();
-			// Note that `callback` is already a function as the `#add` method throws an error if not.
-			// @ts-expect-error
-			let ret = await callback.call(this, ...args);
-			cb(null, ret);
-		});
+		this.addNunjucksAsyncFilter(
+			name,
+			/** @this {any} */
+			async function (...args) {
+				let cb = args.pop();
+				// Note that `callback` is already a function as the `#add` method throws an error if not.
+				let ret = await callback.call(this, ...args);
+				cb(null, ret);
+			},
+		);
 	}
 
 	/*

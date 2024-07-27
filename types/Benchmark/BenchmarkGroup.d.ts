@@ -8,7 +8,7 @@ declare class BenchmarkGroup {
     setIsVerbose(isVerbose: any): void;
     reset(): void;
     add(type: any, callback: any): {
-        (...args: any[]): any;
+        (this: any, ...args: any[]): any;
         readonly __eleventyInternal: {
             type: string;
             callback: any;

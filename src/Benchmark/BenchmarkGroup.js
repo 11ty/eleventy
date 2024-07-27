@@ -31,9 +31,9 @@ class BenchmarkGroup {
 	add(type, callback) {
 		let benchmark = (this.benchmarks[type] = new Benchmark());
 
+		/** @this {any} */
 		let fn = function (...args) {
 			benchmark.before();
-			// @ts-expect-error
 			let ret = callback.call(this, ...args);
 			benchmark.after();
 			return ret;
