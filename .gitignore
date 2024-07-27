@@ -8,7 +8,6 @@ node_modules/
 .nyc_output/
 coverage/
 docs/_data/coverage.json
-jsdoc/
 
 # Ignore API documentation
 api-docs/

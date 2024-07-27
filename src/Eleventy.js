@@ -96,69 +96,90 @@ class Eleventy {
 	 * @param {TemplateConfig} [eleventyConfig]
 	 */
 	constructor(input, output, options = {}, eleventyConfig = null) {
-		/** @type {string|undefined} - Holds the path to the input (might be a file or folder) */
+		/**
+		 * @type {string|undefined}
+		 * @description Holds the path to the input (might be a file or folder)
+		 */
 		this.rawInput = input || undefined;
 
-		/** @type {string|undefined} - Holds the path to the output directory */
+		/**
+		 * @type {string|undefined}
+		 * @description holds the path to the output directory
+		 */
 		this.rawOutput = output || undefined;
 
-		/** @type {module:11ty/eleventy/TemplateConfig} - Override the config instance (for centralized config re-use) */
+		/**
+		 * @type {module:11ty/eleventy/TemplateConfig}
+		 * @description Override the config instance (for centralized config re-use)
+		 */
 		this.eleventyConfig = eleventyConfig;
 
 		/**
-		 * @type {EleventyOptions} - Options object passed to the Eleventy constructor
+		 * @type {EleventyOptions}
+		 * @description Options object passed to the Eleventy constructor
 		 * @default {}
 		 */
 		this.options = options;
 
 		/**
-		 * @type {'cli'|'script'} - Called via CLI (`cli`) or Programmatically (`script`)
+		 * @type {'cli'|'script'}
+		 * @description Called via CLI (`cli`) or Programmatically (`script`)
 		 * @default "script"
 		 */
 		this.source = options.source || "script";
 
 		/**
-		 * @type {string} - One of build, serve, or watch
+		 * @type {string}
+		 * @description One of build, serve, or watch
 		 * @default "build"
 		 */
 		this.runMode = options.runMode || "build";
 
 		/**
-		 * @type {boolean} - Is Eleventy running in dry mode?
+		 * @type {boolean}
+		 * @description Is Eleventy running in dry mode?
 		 * @default false
 		 */
 		this.isDryRun = options.dryRun ?? false;
 
 		/**
-		 * @type {boolean} - Is this an incremental build? (only operates on a subset of input files)
+		 * @type {boolean}
+		 * @description Is this an incremental build? (only operates on a subset of input files)
 		 * @default false
 		 */
 		this.isIncremental = false;
 
 		/**
-		 * @type {string|undefined} - If an incremental build, this is the file we’re operating on.
+		 * @type {string|undefined}
+		 * @description If an incremental build, this is the file we’re operating on.
 		 * @default null
 		 */
 		this.programmaticApiIncrementalFile = undefined;
 
 		/**
-		 * @type {boolean} - Should we process files on first run? (The --ignore-initial feature)
+		 * @type {boolean}
+		 * @description Should we process files on first run? (The --ignore-initial feature)
 		 * @default true
 		 */
 		this.isRunInitialBuild = true;
 
 		/**
-		 * @type {Number} - Number of builds run on this instance.
+		 * @type {Number}
+		 * @description Number of builds run on this instance.
 		 * @default 0
 		 */
 		this.buildCount = 0;
 
-		/** @type {Number} - The timestamp of Eleventy start. */
+		/**
+		 * @type {Number}
+		 * @description The timestamp of Eleventy start.
+		 */
 		this.start = this.getNewTimestamp();
 	}
 
 	/**
-	 * @type {string|undefined} - An override of Eleventy's default config file paths
+	 * @type {string|undefined}
+	 * @description An override of Eleventy's default config file paths
 	 * @default undefined
 	 */
 	get configPath() {
@@ -166,7 +187,8 @@ class Eleventy {
 	}
 
 	/**
-	 * @type {string} - The top level directory the site pretends to reside in
+	 * @type {string}
+	 * @description The top level directory the site pretends to reside in
 	 * @default "/"
 	 */
 	get pathPrefix() {
@@ -212,7 +234,8 @@ class Eleventy {
 		}
 
 		/**
-		 * @type {object} - Initialize Eleventy environment variables
+		 * @type {object}
+		 * @description Initialize Eleventy environment variables
 		 * @default null
 		 */
 		// this.runMode need to be set before this
@@ -223,13 +246,15 @@ class Eleventy {
 		await this.eleventyConfig.init(initOverrides);
 
 		/**
-		 * @type {object} - Initialize Eleventy’s configuration, including the user config file
+		 * @type {object}
+		 * @description Initialize Eleventy’s configuration, including the user config file
 		 */
 		this.config = this.eleventyConfig.getConfig();
 		// this.directories.
 
 		/**
-		 * @type {object} - Singleton BenchmarkManager instance
+		 * @type {object}
+		 * @description Singleton BenchmarkManager instance
 		 */
 		this.bench = this.config.benchmarkManager;
 
@@ -237,18 +262,18 @@ class Eleventy {
 			debug("Eleventy warm up time: %o (ms)", performance.now());
 		}
 
-		/** @type {object} - tbd. */
+		/** @type {object} */
 		this.eleventyServe = new EleventyServe();
 		this.eleventyServe.eleventyConfig = this.eleventyConfig;
 
-		/** @type {object} - tbd. */
+		/** @type {object} */
 		this.watchManager = new EleventyWatch();
 
-		/** @type {object} - tbd. */
+		/** @type {object} */
 		this.watchTargets = new EleventyWatchTargets(this.eleventyConfig);
 		this.watchTargets.addAndMakeGlob(this.config.additionalWatchTargets);
 
-		/** @type {object} - tbd. */
+		/** @type {object} */
 		this.fileSystemSearch = new FileSystemSearch();
 
 		this.#hasConfigInitialized = true;

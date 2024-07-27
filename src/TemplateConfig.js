@@ -50,11 +50,12 @@ class TemplateConfig {
 	#userConfig = new UserConfig();
 
 	constructor(customRootConfig, projectConfigPath) {
-		/** @type {object} - tbd. */
+		/** @type {object} */
 		this.overrides = {};
 
 		/**
-		 * @type {String} - Path to local project config.
+		 * @type {String}
+		 * @description Path to local project config.
 		 * @default .eleventy.js
 		 */
 		if (projectConfigPath !== undefined) {
@@ -77,7 +78,8 @@ class TemplateConfig {
 
 		if (customRootConfig) {
 			/**
-			 * @type {object} - Custom root config.
+			 * @type {object}
+			 * @description Custom root config.
 			 */
 			this.customRootConfig = customRootConfig;
 			debug("Warning: Using custom root config!");
