@@ -47,9 +47,8 @@
 		"test:ava": "ava --verbose --timeout 20s",
 		"test:node": "node --test test_node/tests.js",
 		"format": "prettier . --write",
-		"check": "npm run check:eslint && npm run check:typescript",
-		"check:typescript": "tsc",
-		"check:eslint": "eslint src",
+		"check": "npm run check:eslint",
+		"emit-types": "tsc",
 		"lint-staged": "lint-staged",
 		"coverage": "npx c8 ava && npx c8 report --reporter=json-summary && cp coverage/coverage-summary.json docs/_data/coverage.json && node cmd.cjs --config=docs/eleventy.coverage.js",
 		"prepare": "husky"

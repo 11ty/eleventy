@@ -16,11 +16,12 @@ export type module = {
  */
 declare class TemplateConfig {
     constructor(customRootConfig: any, projectConfigPath: any);
-    /** @type {object} - tbd. */
+    /** @type {object} */
     overrides: object;
     projectConfigPaths: any[];
     /**
-     * @type {object} - Custom root config.
+     * @type {object}
+     * @description Custom root config.
      */
     customRootConfig: object;
     hasConfigMerged: boolean;
