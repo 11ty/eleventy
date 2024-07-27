@@ -8,6 +8,7 @@ function augmentFunction(fn, options = {}) {
 		);
 	}
 
+	/** @this {object} */
 	return function (...args) {
 		let context = augmentObject(this || {}, options);
 		return fn.call(context, ...args);
@@ -41,7 +42,7 @@ function augmentObject(targetObject, options = {}) {
 
 			// lazy getter important for Liquid strictVariables support
 			Object.defineProperty(targetObject, key, {
-				writeable: true,
+				writable: true,
 				configurable: true,
 				enumerable: true,
 				value,

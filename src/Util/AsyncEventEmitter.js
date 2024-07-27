@@ -1,15 +1,21 @@
-import EventEmitter from "node:events";
+import { EventEmitter } from "node:events";
 
 /**
  * This class emits events asynchronously.
  * It can be used for time measurements during a build.
  */
 class AsyncEventEmitter extends EventEmitter {
+	// TypeScript slop
+	constructor(...args) {
+		super(...args);
+	}
+
 	/**
 	 * @param {string} type - The event name to emit.
 	 * @param {...*} args - Additional arguments that get passed to listeners.
 	 * @returns {Promise} - Promise resolves once all listeners were invoked
 	 */
+	/** @ts-expect-error */
 	async emit(type, ...args) {
 		let listeners = this.listeners(type);
 		if (listeners.length === 0) {

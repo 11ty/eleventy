@@ -74,23 +74,30 @@ function eleventyHtmlBasePlugin(eleventyConfig, defaultOptions = {}) {
 	});
 
 	// Apply to one URL
-	eleventyConfig.addFilter("htmlBaseUrl", function (url, baseOverride, pageUrlOverride) {
-		let base = baseOverride || opts.baseHref;
+	eleventyConfig.addFilter(
+		"htmlBaseUrl",
 
-		// Do nothing with a default base
-		if (base === "/") {
-			return url;
-		}
+		/** @this {object} */
+		function (url, baseOverride, pageUrlOverride) {
+			let base = baseOverride || opts.baseHref;
 
-		return transformUrl(url, base, {
-			pathPrefix: eleventyConfig.pathPrefix,
-			pageUrl: pageUrlOverride || this.page?.url,
-		});
-	});
+			// Do nothing with a default base
+			if (base === "/") {
+				return url;
+			}
+
+			return transformUrl(url, base, {
+				pathPrefix: eleventyConfig.pathPrefix,
+				pageUrl: pageUrlOverride || this.page?.url,
+			});
+		},
+	);
 
 	// Apply to a block of HTML
 	eleventyConfig.addAsyncFilter(
 		"transformWithHtmlBase",
+
+		/** @this {object} */
 		function (content, baseOverride, pageUrlOverride) {
 			let base = baseOverride || opts.baseHref;
 
@@ -111,6 +118,8 @@ function eleventyHtmlBasePlugin(eleventyConfig, defaultOptions = {}) {
 	// Apply to all HTML output in your project
 	eleventyConfig.htmlTransformer.addUrlTransform(
 		opts.extensions,
+
+		/** @this {object} */
 		function (urlInMarkup) {
 			// baseHref override is via renderTransforms filter for adding the absolute URL (e.g. https://example.com/pathPrefix/) for RSS/Atom/JSON feeds
 			return transformUrl(urlInMarkup.trim(), this.baseHref || opts.baseHref, {
