@@ -120,11 +120,11 @@ declare class UserConfig {
     _disablePluginExecution(): void;
     isPluginExecution(): boolean;
     /**
-        * @typedef {function|Promise<function>|object} PluginDefinition
-        * @property {Function} [configFunction]
-        * @property {string} [eleventyPackage]
-        * @property {object} [eleventyPluginOptions={}]
-        * @property {boolean} [eleventyPluginOptions.unique]
+     * @typedef {function|Promise<function>|object} PluginDefinition
+     * @property {Function} [configFunction]
+     * @property {string} [eleventyPackage]
+     * @property {object} [eleventyPluginOptions={}]
+     * @property {boolean} [eleventyPluginOptions.unique]
      */
     /**
      * addPlugin: async friendly in 3.0

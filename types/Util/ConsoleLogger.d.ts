@@ -25,7 +25,7 @@ declare class ConsoleLogger {
      * @property {string=} color
      * @property {boolean=} force
      * @param {LogOptions} options
-    */
+     */
     logWithOptions({ message, type, prefix, color, force }: {
         message: string;
         prefix?: string | undefined;

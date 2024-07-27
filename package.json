@@ -48,8 +48,9 @@
 		"test:node": "node --test test_node/tests.js",
 		"jsdoc": "rm -rf jsdoc && npx jsdoc src/* -r -d jsdoc",
 		"format": "prettier . --write",
-		"check-ts": "tsc",
-		"check-es": "eslint src",
+		"check": "npm run check:eslint && npm run check:typescript",
+		"check:typescript": "tsc",
+		"check:eslint": "eslint src",
 		"lint-staged": "lint-staged",
 		"coverage": "npx c8 ava && npx c8 report --reporter=json-summary && cp coverage/coverage-summary.json docs/_data/coverage.json && node cmd.cjs --config=docs/eleventy.coverage.js",
 		"prepare": "husky"
