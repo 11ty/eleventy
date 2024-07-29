@@ -13,7 +13,7 @@ class ConsoleLogger {
 	#isVerbose = true;
 	/** @type {boolean} */
 	#isChalkEnabled = true;
-	/** @type {object|undefined} */
+	/** @type {object|boolean|undefined} */
 	#logger;
 
 	constructor() {
@@ -111,14 +111,13 @@ class ConsoleLogger {
 	) {
 		if (!forceToConsole && (!this.isVerbose || process.env.DEBUG)) {
 			debug(message);
-		} else if (this.logger !== false) {
+		} else if (this.#logger !== false) {
 			message = `${chalk.gray(prefix)} ${message.split("\n").join(`\n${chalk.gray(prefix)} `)}`;
 
-			let logger = this.logger;
 			if (chalkColor && this.isChalkEnabled) {
-				logger[type](chalk[chalkColor](message));
+				this.logger[type](chalk[chalkColor](message));
 			} else {
-				logger[type](message);
+				this.logger[type](message);
 			}
 		}
 	}

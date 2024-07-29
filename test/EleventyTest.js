@@ -217,7 +217,6 @@ test("Eleventy set input/output, one file input exitCode (script)", async (t) =>
   let elev = new Eleventy("./test/stubs/exitCode/failure.njk", "./test/stubs/exitCode/_site", {
     source: "script",
   });
-  elev.setIsVerbose(false);
   elev.disableLogger();
 
   await t.throwsAsync(async () => {
@@ -233,7 +232,6 @@ test("Eleventy set input/output, one file input exitCode (cli)", async (t) => {
   let elev = new Eleventy("./test/stubs/exitCode/failure.njk", "./test/stubs/exitCode/_site", {
     source: "cli",
   });
-  elev.setIsVerbose(false);
   elev.disableLogger();
 
   let e = await t.throwsAsync(() => elev.write());

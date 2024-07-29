@@ -250,7 +250,6 @@ class Eleventy {
 		 * @description Initialize Eleventy’s configuration, including the user config file
 		 */
 		this.config = this.eleventyConfig.getConfig();
-		// this.directories.
 
 		/**
 		 * @type {object}
