@@ -6,8 +6,7 @@
 		"access": "public"
 	},
 	"type": "module",
-	"main": "src/Eleventy.js",
-	"types": "types/types.d.ts",
+	"main": "./src/Eleventy.js",
 	"exports": {
 		"import": "./src/Eleventy.js",
 		"require": "./src/EleventyCommonJs.cjs"
