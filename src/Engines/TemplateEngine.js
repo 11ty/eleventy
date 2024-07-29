@@ -106,7 +106,7 @@ class TemplateEngine {
 	}
 
 	async _testRender(str, data) {
-		/* TODO compile needs to pass in inputPath? */
+		// @ts-ignore
 		let fn = await this.compile(str);
 		return fn(data);
 	}
@@ -141,12 +141,13 @@ class TemplateEngine {
 		return true;
 	}
 
+	/** @returns {boolean|undefined} */
 	permalinkNeedsCompilation(str) {
-		return this.needsCompilation(str);
+		return this.needsCompilation();
 	}
 
 	// whether or not compile is needed or can we return the plaintext?
-	needsCompilation(/*str*/) {
+	needsCompilation(str) {
 		return true;
 	}
 

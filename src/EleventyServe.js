@@ -26,7 +26,7 @@ const DEFAULT_SERVER_OPTIONS = {
 
 class EleventyServe {
 	constructor() {
-		this.logger = new ConsoleLogger(true);
+		this.logger = new ConsoleLogger();
 		this._initOptionsFetched = false;
 		this._aliases = undefined;
 		this._watchedFiles = new Set();

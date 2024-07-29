@@ -20,14 +20,8 @@ const debugDev = debugUtil("Dev:Eleventy:TemplateConfig");
 
 /**
  * Config as used by the template.
- * @typedef {Object} module:11ty/eleventy/TemplateConfig~TemplateConfig~config
- * @property {String=} pathPrefix - The path prefix.
- */
-
-/**
- * Object holding override information for the template config.
- * @typedef {Object} module:11ty/eleventy/TemplateConfig~TemplateConfig~override
- * @property {String=} pathPrefix - The path prefix.
+ * @typedef {object} module:11ty/eleventy/TemplateConfig~TemplateConfig~config
+ * @property {String} [pathPrefix] - The path prefix.
  */
 
 /**
@@ -52,15 +46,16 @@ class TemplateConfig {
 	#templateFormats;
 	#runMode;
 	#configManuallyDefined = false;
+	/** @type {UserConfig} */
+	#userConfig = new UserConfig();
 
 	constructor(customRootConfig, projectConfigPath) {
-		this.userConfig = new UserConfig();
-
-		/** @member {module:11ty/eleventy/TemplateConfig~TemplateConfig~override} - tbd. */
+		/** @type {object} */
 		this.overrides = {};
 
 		/**
-		 * @member {String} - Path to local project config.
+		 * @type {String}
+		 * @description Path to local project config.
 		 * @default .eleventy.js
 		 */
 		if (projectConfigPath !== undefined) {
@@ -83,7 +78,8 @@ class TemplateConfig {
 
 		if (customRootConfig) {
 			/**
-			 * @member {?{}} - Custom root config.
+			 * @type {object}
+			 * @description Custom root config.
 			 */
 			this.customRootConfig = customRootConfig;
 			debug("Warning: Using custom root config!");
@@ -93,6 +89,14 @@ class TemplateConfig {
 
 		this.hasConfigMerged = false;
 		this.isEsm = false;
+	}
+
+	get userConfig() {
+		return this.#userConfig;
+	}
+
+	get aggregateBenchmark() {
+		return this.userConfig.benchmarks.aggregate;
 	}
 
 	/* Setter for Logger */
@@ -139,7 +143,7 @@ class TemplateConfig {
 	 * Normalises local project config file path.
 	 *
 	 * @method
-	 * @returns {String} - The normalised local project config file path.
+	 * @returns {String|undefined} - The normalised local project config file path.
 	 */
 	getLocalProjectConfigFile() {
 		let configFiles = this.getLocalProjectConfigFiles();
@@ -224,6 +228,7 @@ class TemplateConfig {
 		if (!this.hasConfigMerged) {
 			throw new Error("Invalid call to .getConfig(). Needs an .init() first.");
 		}
+
 		return this.config;
 	}
 
@@ -274,7 +279,7 @@ class TemplateConfig {
 			throw new Error("Config has not yet merged. Needs `init()`.");
 		}
 
-		return this.config.pathPrefix;
+		return this.config?.pathPrefix;
 	}
 
 	/**
@@ -298,7 +303,7 @@ class TemplateConfig {
 	/*
 	 * Add additional overrides to the root config object, used for testing
 	 *
-	 * @param {Object} - a subset of the return Object from the user’s config file.
+	 * @param {object} - a subset of the return Object from the user’s config file.
 	 */
 	appendToRootConfig(obj) {
 		Object.assign(this.rootConfig, obj);
@@ -307,7 +312,7 @@ class TemplateConfig {
 	/*
 	 * Process the userland plugins from the Config
 	 *
-	 * @param {Object} - the return Object from the user’s config file.
+	 * @param {object} - the return Object from the user’s config file.
 	 */
 	async processPlugins({ dir, pathPrefix }) {
 		this.userConfig.dir = dir;
@@ -349,7 +354,7 @@ class TemplateConfig {
 	/**
 	 * Fetches and executes the local configuration file
 	 *
-	 * @returns {{}} merged - The merged config file object.
+	 * @returns {Promise<object>} merged - The merged config file object.
 	 */
 	async requireLocalConfigFile() {
 		let localConfig = {};
@@ -387,13 +392,14 @@ class TemplateConfig {
 
 				// Removed a check for `filters` in 3.0.0-alpha.6 (now using addTransform instead) https://www.11ty.dev/docs/config/#transforms
 			} catch (err) {
+				let isModuleError =
+					err instanceof Error && (err?.message || "").includes("Cannot find module");
+
 				// TODO the error message here is bad and I feel bad (needs more accurate info)
 				return Promise.reject(
 					new EleventyConfigError(
 						`Error in your Eleventy config file '${path}'.` +
-							(err.message && err.message.includes("Cannot find module")
-								? chalk.cyan(" You may need to run `npm install`.")
-								: ""),
+							(isModuleError ? chalk.cyan(" You may need to run `npm install`.") : ""),
 						err,
 					),
 				);
@@ -414,8 +420,7 @@ class TemplateConfig {
 	/**
 	 * Merges different config files together.
 	 *
-	 * @param {String} projectConfigPath - Path to project config.
-	 * @returns {{}} merged - The merged config file.
+	 * @returns {Promise<object>} merged - The merged config file.
 	 */
 	async mergeConfig() {
 		let { localConfig, exportedConfig } = await this.requireLocalConfigFile();
@@ -487,8 +492,7 @@ class TemplateConfig {
 
 		await this.userConfig.events.emit("eleventy.beforeConfig", this.userConfig);
 
-		let benchmarkManager = this.userConfig.benchmarkManager.get("Aggregate");
-		let pluginsBench = benchmarkManager.get("Processing plugins in config");
+		let pluginsBench = this.aggregateBenchmark.get("Processing plugins in config");
 		pluginsBench.before();
 		await this.processPlugins(mergedConfig);
 		pluginsBench.after();

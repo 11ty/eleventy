@@ -4,7 +4,6 @@ import { FilePathUtil } from "./FilePathUtil.js";
 
 class HtmlTransformer {
 	constructor() {
-		this.validExtensions;
 		// execution order is important (not order of addition/object key order)
 		this.callbacks = {};
 		this.posthtmlProcessOptions = {};
