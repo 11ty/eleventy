@@ -5,6 +5,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: startsWith(github.event.release.name, 'Pre-release:') && github.event.release.isPrerelease
     permissions:
       contents: read
       id-token: write
