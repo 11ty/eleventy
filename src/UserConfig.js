@@ -216,7 +216,7 @@ class UserConfig {
 
 				node: function () {
 					throw new Error(
-						"The `node` front matter type was a 3.0.0-alpha.x only feature, removed for stable release. Rename to `javascript` instead!",
+						"The `node` front matter type was a 3.0.0-alpha.x only feature, removed for stable release. Rename to `js` or `javascript` instead!",
 					);
 				},
 			},
