@@ -128,9 +128,8 @@ const debug = require("debug")("Eleventy:cmd");
 						});
 
 					process.on("SIGINT", async () => {
-						// stops the server too
 						await elev.stopWatch();
-						process.exit();
+						process.exitCode = 0;
 					});
 				} else {
 					if (!argv.to || argv.to === "fs") {
