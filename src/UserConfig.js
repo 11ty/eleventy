@@ -4,7 +4,7 @@ import yaml from "js-yaml";
 import matter from "gray-matter";
 import debugUtil from "debug";
 
-import { DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
+import { DeepCopy, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
 import HtmlBasePlugin from "./Plugins/HtmlBasePlugin.js";
 import RenderPlugin from "./Plugins/RenderPlugin.js";
@@ -1073,9 +1073,19 @@ class UserConfig {
 		}
 	}
 
+	// 3.0.0-alpha.18 started merging conflicts here (when possible), issue #3389
 	addGlobalData(name, data) {
 		name = this.getNamespacedName(name);
-		this.globalData[name] = data;
+		if (this.globalData[name]) {
+			if (isPlainObject(this.globalData[name]) && isPlainObject(data)) {
+				DeepCopy(this.globalData[name], data);
+			} else {
+				debug("Warning: overwriting a previous value set with addGlobalData(%o)", name);
+				this.globalData[name] = data;
+			}
+		} else {
+			this.globalData[name] = data;
+		}
 		return this;
 	}
 

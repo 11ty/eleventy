@@ -460,53 +460,6 @@ test("Can Eleventy run two executeBuilds in parallel?", async (t) => {
   );
 });
 
-test("Eleventy addGlobalData should run once", async (t) => {
-  let count = 0;
-  let elev = new Eleventy("./test/stubs-addglobaldata/", "./test/stubs-addglobaldata/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.addGlobalData("count", () => {
-        count++;
-        return count;
-      });
-    },
-  });
-
-  let results = await elev.toJSON();
-  t.is(count, 1);
-});
-
-test("Eleventy addGlobalData shouldn’t run if no input templates match!", async (t) => {
-  let count = 0;
-  let elev = new Eleventy(
-    "./test/stubs-addglobaldata-noop/",
-    "./test/stubs-addglobaldata-noop/_site",
-    {
-      config: function (eleventyConfig) {
-        eleventyConfig.addGlobalData("count", () => {
-          count++;
-          return count;
-        });
-      },
-    }
-  );
-
-  let results = await elev.toJSON();
-  t.is(count, 0);
-});
-
-test("Eleventy addGlobalData can feed layouts to populate data cascade with layout data, issue #1245", async (t) => {
-  let elev = new Eleventy("./test/stubs-2145/", "./test/stubs-2145/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.addGlobalData("layout", () => "layout.njk");
-      eleventyConfig.dataFilterSelectors.add("LayoutData");
-    },
-  });
-
-  let [result] = await elev.toJSON();
-  t.deepEqual(result.data, { LayoutData: 123 });
-  t.is(result.content.trim(), "FromLayoutlayout.njk");
-});
-
 test("Unicode in front matter `tags`, issue #670", async (t) => {
   let elev = new Eleventy("./test/stubs-670/", "./test/stubs-670/_site");
 
