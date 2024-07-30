@@ -525,7 +525,6 @@ test("Pagination with deep data merge #147", async (t) => {
     eleventyConfig
   );
   tmpl.config.keys.layout = "layout";
-  tmpl.config.deepDataMerge = true;
 
   let data = await tmpl.getData();
   let pages = await tmpl.getTemplates(data);
@@ -547,7 +546,6 @@ test("Pagination with deep data merge #147", async (t) => {
 test("Pagination with deep data merge with alias #147", async (t) => {
   let tmpl = await getNewTemplate("./test/stubs/paged/pagedalias.njk", "./test/stubs/", "./dist");
   tmpl.config.dynamicPermalinks = true;
-  tmpl.config.deepDataMerge = true;
 
   let data = await tmpl.getData();
   let pages = await tmpl.getTemplates(data);
