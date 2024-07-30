@@ -134,7 +134,9 @@ const debug = require("debug")("Eleventy:cmd");
 					});
 				} else {
 					if (!argv.to || argv.to === "fs") {
-						elev.write();
+						elev.write().catch(error => {
+							ErrorHandler.once("fatal", error, "Eleventy Error (FS CLI)");
+						});
 					} else if (argv.to === "json") {
 						elev.toJSON().then(function (result) {
 							console.log(JSON.stringify(result, null, 2));
