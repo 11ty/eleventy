@@ -1,9 +1,10 @@
 {
 	"name": "@11ty/eleventy",
-	"version": "3.0.0-alpha.17",
+	"version": "3.0.0-alpha.18",
 	"description": "A simpler static site generator.",
 	"publishConfig": {
-		"access": "public"
+		"access": "public",
+		"provenance": true
 	},
 	"type": "module",
 	"main": "./src/Eleventy.js",
@@ -50,7 +51,8 @@
 		"check-types": "tsc",
 		"lint-staged": "lint-staged",
 		"coverage": "npx c8 ava && npx c8 report --reporter=json-summary && cp coverage/coverage-summary.json docs/_data/coverage.json && node cmd.cjs --config=docs/eleventy.coverage.js",
-		"prepare": "husky"
+		"prepare": "husky",
+		"release-canary": "npm publish --tag=canary"
 	},
 	"author": "Zach Leatherman <zachleatherman@gmail.com> (https://zachleat.com/)",
 	"repository": {
