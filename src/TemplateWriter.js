@@ -6,7 +6,7 @@ import TemplateMap from "./TemplateMap.js";
 import EleventyFiles from "./EleventyFiles.js";
 import EleventyExtensionMap from "./EleventyExtensionMap.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
-import EleventyErrorHandler from "./Errors/EleventyErrorHandler.js";
+import { EleventyErrorHandler } from "./Errors/EleventyErrorHandler.js";
 import EleventyErrorUtil from "./Errors/EleventyErrorUtil.js";
 import FileSystemSearch from "./FileSystemSearch.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
@@ -421,9 +421,18 @@ class TemplateWriter {
 
 		promises.push(...(await this.generateTemplates(paths)));
 
-		return Promise.all(promises).catch((e) => {
-			return Promise.reject(e);
-		});
+		return Promise.all(promises).then(
+			([passthroughCopyResults, ...templateResults]) => {
+				return {
+					passthroughCopy: passthroughCopyResults,
+					// New in 3.0: flatten and filter out falsy templates
+					templates: templateResults.flat().filter(Boolean),
+				};
+			},
+			(e) => {
+				return Promise.reject(e);
+			},
+		);
 	}
 
 	// Passthrough copy not supported in JSON output.
@@ -433,12 +442,13 @@ class TemplateWriter {
 		let promises = await this.generateTemplates(paths, to);
 
 		return Promise.all(promises).then(
-			(results) => {
-				let flat = results.flat();
-				return flat;
+			(templateResults) => {
+				return {
+					// New in 3.0: flatten and filter out falsy templates
+					templates: templateResults.flat().filter(Boolean),
+				};
 			},
 			(e) => {
-				this.errorHandler.error(e, "Error generating templates");
 				return Promise.reject(e);
 			},
 		);

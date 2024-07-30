@@ -45,6 +45,18 @@ class EleventyErrorHandler {
 		process.exitCode = 1;
 	}
 
+	once(type, e, msg) {
+		if (e.__errorAlreadyLogged) {
+			return;
+		}
+
+		this[type || "error"](e, msg);
+
+		Object.defineProperty(e, "__errorAlreadyLogged", {
+			value: true,
+		});
+	}
+
 	error(e, msg) {
 		if (msg) {
 			this.initialMessage(msg, "error", "red", true);
@@ -68,6 +80,11 @@ class EleventyErrorHandler {
 			debug("Full error object: %o", util.inspect(e, { showHidden: false, depth: null }));
 		}
 
+		let showStack = true;
+		if (e.skipOriginalStack) {
+			showStack = false;
+		}
+
 		let totalErrorCount = EleventyErrorHandler.getTotalErrorCount(e);
 		let ref = e;
 		let index = 1;
@@ -82,10 +99,15 @@ class EleventyErrorHandler {
 			if (!nextRef && EleventyErrorUtil.hasEmbeddedError(ref.message)) {
 				nextRef = EleventyErrorUtil.deconvertErrorToObject(ref);
 			}
+
+			if (nextRef?.skipOriginalStack) {
+				showStack = false;
+			}
+
 			this.logger.message(
 				`${totalErrorCount > 1 ? `${index}. ` : ""}${(
 					EleventyErrorUtil.cleanMessage(ref.message) || "(No error message provided)"
-				).trim()} (via ${ref.name})`,
+				).trim()}${ref.name !== "Error" ? ` (via ${ref.name})` : ""}`,
 				type,
 				chalkColor,
 				forceToConsole,
@@ -104,12 +126,15 @@ class EleventyErrorHandler {
 						"(Repeated output has been truncated…)",
 					);
 				}
-				this.logger.message(
-					"\nOriginal error stack trace: " + stackStr,
-					type,
-					chalkColor,
-					forceToConsole,
-				);
+
+				if (showStack) {
+					this.logger.message(
+						"\nOriginal error stack trace: " + stackStr,
+						type,
+						chalkColor,
+						forceToConsole,
+					);
+				}
 			}
 			ref = nextRef;
 			index++;
@@ -118,14 +143,9 @@ class EleventyErrorHandler {
 
 	initialMessage(message, type = "log", chalkColor = "blue", forceToConsole = false) {
 		if (message) {
-			this.logger.message(
-				message + ":" + (process.env.DEBUG ? "" : " (more in DEBUG output)"),
-				type,
-				chalkColor,
-				forceToConsole,
-			);
+			this.logger.message(message + ":", type, chalkColor, forceToConsole);
 		}
 	}
 }
 
-export default EleventyErrorHandler;
+export { EleventyErrorHandler };

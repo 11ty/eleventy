@@ -5,8 +5,12 @@
 	"publishConfig": {
 		"access": "public"
 	},
-	"main": "src/Eleventy.js",
 	"type": "module",
+	"main": "./src/Eleventy.js",
+	"exports": {
+		"import": "./src/Eleventy.js",
+		"require": "./src/EleventyCommonJs.cjs"
+	},
 	"bin": {
 		"eleventy": "cmd.cjs"
 	},
@@ -41,9 +45,9 @@
 		"test": "npm run test:node && npm run test:ava",
 		"test:ava": "ava --verbose --timeout 20s",
 		"test:node": "node --test test_node/tests.js",
-		"jsdoc": "rm -rf jsdoc && npx jsdoc src/* -r -d jsdoc",
 		"format": "prettier . --write",
 		"check": "eslint src",
+		"check-types": "tsc",
 		"lint-staged": "lint-staged",
 		"coverage": "npx c8 ava && npx c8 report --reporter=json-summary && cp coverage/coverage-summary.json docs/_data/coverage.json && node cmd.cjs --config=docs/eleventy.coverage.js",
 		"prepare": "husky"
@@ -82,6 +86,7 @@
 		"@eslint/js": "^9.7.0",
 		"@iarna/toml": "^2.2.5",
 		"@mdx-js/node-loader": "^3.0.1",
+		"@types/node": "^20.14.12",
 		"@vue/server-renderer": "^3.4.31",
 		"@zachleat/noop": "^1.0.3",
 		"ava": "^6.1.3",
@@ -91,7 +96,6 @@
 		"eslint-config-prettier": "^9.1.0",
 		"globals": "^15.8.0",
 		"husky": "^9.0.11",
-		"jsdoc": "^4.0.3",
 		"lint-staged": "^15.2.7",
 		"markdown-it-emoji": "^3.0.0",
 		"marked": "^13.0.2",
@@ -102,6 +106,7 @@
 		"rimraf": "^6.0.1",
 		"sass": "^1.77.8",
 		"tsx": "^4.16.2",
+		"typescript": "^5.5.4",
 		"vue": "^3.4.31",
 		"zod": "^3.23.8",
 		"zod-validation-error": "^3.3.0"

@@ -2,7 +2,16 @@ import { performance } from "node:perf_hooks";
 
 class Benchmark {
 	constructor() {
-		this.reset();
+		// TypeScript slop
+		this.timeSpent = 0;
+		this.timesCalled = 0;
+		this.beforeTimers = [];
+	}
+
+	reset() {
+		this.timeSpent = 0;
+		this.timesCalled = 0;
+		this.beforeTimers = [];
 	}
 
 	getNewTimestamp() {
@@ -10,12 +19,6 @@ class Benchmark {
 			return performance.now();
 		}
 		return new Date().getTime();
-	}
-
-	reset() {
-		this.timeSpent = 0;
-		this.timesCalled = 0;
-		this.beforeTimers = [];
 	}
 
 	incrementCount() {

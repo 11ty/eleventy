@@ -6,38 +6,44 @@ const debug = debugUtil("Eleventy:Logger");
 
 /**
  * Logger implementation that logs to STDOUT.
- * @ignore
+ * @typedef {'error'|'log'|'warn'|'info'} LogType
  */
 class ConsoleLogger {
+	/** @type {boolean} */
+	#isVerbose = true;
+	/** @type {boolean} */
+	#isChalkEnabled = true;
+	/** @type {object|boolean|undefined} */
+	#logger;
+
 	constructor() {
-		/** @private */
-		this._isVerbose = true;
-		/** @type {Readable} */
-		this.outputStream = Readable();
+		this.outputStream = new Readable({
+			read() {},
+		});
 	}
 
 	get isVerbose() {
-		return this._isVerbose;
+		return this.#isVerbose;
 	}
 
 	set isVerbose(verbose) {
-		this._isVerbose = !!verbose;
+		this.#isVerbose = !!verbose;
 	}
 
-	/** @returns {boolean} */
 	get isChalkEnabled() {
-		if (this._isChalkEnabled !== undefined) {
-			return this._isChalkEnabled;
-		}
-		return true;
+		return this.#isChalkEnabled;
 	}
 
 	set isChalkEnabled(enabled) {
-		this._isChalkEnabled = !!enabled;
+		this.#isChalkEnabled = !!enabled;
 	}
 
 	overrideLogger(logger) {
-		this._logger = logger;
+		this.#logger = logger;
+	}
+
+	get logger() {
+		return this.#logger || console;
 	}
 
 	/** @param {string} msg */
@@ -45,11 +51,15 @@ class ConsoleLogger {
 		this.message(msg);
 	}
 
-	/** @param {string} prefix */
-	/** @param {string} message */
-	/** @param {string} type */
-	/** @param {string} color */
-	/** @param {boolean} force */
+	/**
+	 * @typedef LogOptions
+	 * @property {string} message
+	 * @property {string=} prefix
+	 * @property {LogType=} type
+	 * @property {string=} color
+	 * @property {boolean=} force
+	 * @param {LogOptions} options
+	 */
 	logWithOptions({ message, type, prefix, color, force }) {
 		this.message(message, type, color, force, prefix);
 	}
@@ -88,21 +98,26 @@ class ConsoleLogger {
 	 * Formats the message to log.
 	 *
 	 * @param {string} message - The raw message to log.
-	 * @param {'log'|'warn'|'error'} [type='log'] - The error level to log.
-	 * @param {boolean} [chalkColor=false] - Use coloured log output?
+	 * @param {LogType} [type='log'] - The error level to log.
+	 * @param {string|undefined} [chalkColor=undefined] - Color name or falsy to disable
 	 * @param {boolean} [forceToConsole=false] - Enforce a log on console instead of specified target.
 	 */
-	message(message, type = "log", chalkColor = false, forceToConsole = false, prefix = "[11ty]") {
+	message(
+		message,
+		type = "log",
+		chalkColor = undefined,
+		forceToConsole = false,
+		prefix = "[11ty]",
+	) {
 		if (!forceToConsole && (!this.isVerbose || process.env.DEBUG)) {
 			debug(message);
-		} else if (this._logger !== false) {
+		} else if (this.#logger !== false) {
 			message = `${chalk.gray(prefix)} ${message.split("\n").join(`\n${chalk.gray(prefix)} `)}`;
 
-			let logger = this._logger || console;
 			if (chalkColor && this.isChalkEnabled) {
-				logger[type](chalk[chalkColor](message));
+				this.logger[type](chalk[chalkColor](message));
 			} else {
-				logger[type](message);
+				this.logger[type](message);
 			}
 		}
 	}

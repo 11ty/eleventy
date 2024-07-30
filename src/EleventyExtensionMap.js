@@ -8,8 +8,10 @@ class EleventyExtensionMapConfigError extends EleventyBaseError {}
 class EleventyExtensionMap {
 	constructor(config) {
 		this.config = config;
-
 		this._spiderJsDepsCache = {};
+
+		/** @type {Array} */
+		this.validTemplateLanguageKeys;
 	}
 
 	setFormats(formatKeys = []) {
@@ -59,13 +61,11 @@ class EleventyExtensionMap {
 		}
 
 		let files = [];
-		this.validTemplateLanguageKeys.forEach(
-			function (key) {
-				this.getExtensionsFromKey(key).forEach(function (extension) {
-					files.push((dir ? dir + "/" : "") + path + "." + extension);
-				});
-			}.bind(this),
-		);
+		this.validTemplateLanguageKeys.forEach((key) => {
+			this.getExtensionsFromKey(key).forEach(function (extension) {
+				files.push((dir ? dir + "/" : "") + path + "." + extension);
+			});
+		});
 
 		return files;
 	}

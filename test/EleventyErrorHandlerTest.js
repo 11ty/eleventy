@@ -1,5 +1,5 @@
 import test from "ava";
-import EleventyErrorHandler from "../src/Errors/EleventyErrorHandler.js";
+import { EleventyErrorHandler } from "../src/Errors/EleventyErrorHandler.js";
 
 test("Log a warning, warning", (t) => {
   let errorHandler = new EleventyErrorHandler();
@@ -20,7 +20,7 @@ test("Log a warning, warning", (t) => {
   };
   errorHandler.warn(new Error("Test warning"), "Hello");
 
-  let expected = "Hello: (more in DEBUG output)";
+  let expected = "Hello:";
   t.is(output.join("\n").slice(0, expected.length), expected);
 });
 
@@ -45,8 +45,8 @@ test("Log a warning, error", (t) => {
 
   errorHandler.error(new Error("Test error"), "It’s me");
 
-  let expected = `It’s me: (more in DEBUG output)
-Test error (via Error)
+  let expected = `It’s me:
+Test error
 
 Original error stack trace: Error: Test error`;
   t.is(output.join("\n").slice(0, expected.length), expected);
