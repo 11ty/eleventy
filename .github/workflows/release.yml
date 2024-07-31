@@ -1,0 +1,23 @@
+name: Publish Release to npm
+on:
+  release:
+    types: [published]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm install
+      - run: npm test
+      - if: ${{ github.event.release.tag_name != '' && env.NPM_PUBLISH_TAG != '' }}
+        run: npm publish --provenance --access=public --tag=${{ env.NPM_PUBLISH_TAG }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_PUBLISH_TAG: ${{ contains(github.event.release.tag_name, '-beta.') && 'beta' || contains(github.event.release.tag_name, '-alpha.') && 'canary' || 'latest' }}
