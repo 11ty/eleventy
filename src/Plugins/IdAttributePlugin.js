@@ -1,4 +1,5 @@
 import matchHelper from "posthtml-match-helper";
+import { decodeHTML } from "entities";
 
 import slugifyFilter from "../Filters/Slugify.js";
 import MemoizeUtil from "../Util/MemoizeFunction.js";
@@ -28,6 +29,7 @@ function IdAttributePlugin(eleventyConfig, options = {}) {
 	if (!options.selector) {
 		options.selector = "h1,h2,h3,h4,h5,h6";
 	}
+	options.decodeEntities = options.decodeEntities ?? true;
 
 	eleventyConfig.htmlTransformer.addPosthtmlPlugin(
 		"html",
@@ -39,7 +41,11 @@ function IdAttributePlugin(eleventyConfig, options = {}) {
 				tree.match(matchHelper(options.selector), function (node) {
 					if (!node.attrs?.id && node.content) {
 						node.attrs = node.attrs || {};
-						let id = options.slugify(getTextNodeContent(node));
+						let textContent = getTextNodeContent(node);
+						if (options.decodeEntities) {
+							textContent = decodeHTML(textContent);
+						}
+						let id = options.slugify(textContent);
 						if (conflictCheck[id]) {
 							conflictCheck[id]++;
 							id = `${id}-${conflictCheck[id]}`;
