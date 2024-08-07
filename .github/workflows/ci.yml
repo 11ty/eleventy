@@ -1,8 +1,5 @@
 name: Node Unit Tests
-on:
-  push:
-    branches-ignore:
-      - "gh-pages"
+on: [push, pull_request]
 jobs:
   build:
     runs-on: ${{ matrix.os }}
