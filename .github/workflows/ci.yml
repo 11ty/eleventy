@@ -1,5 +1,6 @@
 name: Node Unit Tests
 on: [push, pull_request]
+permissions: read-all
 jobs:
   build:
     runs-on: ${{ matrix.os }}
