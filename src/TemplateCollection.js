@@ -1,8 +1,8 @@
-import multimatch from "multimatch";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
-import Sortable from "./Util/Objects/Sortable.js";
 import TemplateData from "./Data/TemplateData.js";
+import Sortable from "./Util/Objects/Sortable.js";
+import { isGlobMatch } from "./Util/GlobMatcher.js";
 
 class TemplateCollection extends Sortable {
 	constructor() {
@@ -48,11 +48,7 @@ class TemplateCollection extends Sortable {
 		}
 
 		let filtered = this.getAllSorted().filter((item) => {
-			if (multimatch([item.inputPath], globs).length) {
-				return true;
-			}
-
-			return false;
+			return isGlobMatch(item.inputPath, globs);
 		});
 		this._dirty = false;
 		this._filteredByGlobsCache.set(key, [...filtered]);

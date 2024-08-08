@@ -7,6 +7,7 @@ import lodash from "@11ty/lodash-custom";
 import { DateTime } from "luxon";
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
+import chalk from "kleur";
 
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import getDateFromGitLastUpdated from "./Util/DateGitLastUpdated.js";
@@ -637,8 +638,85 @@ class Template extends TemplateContent {
 		});
 	}
 
+	static async runPreprocessors(inputPath, content, data, preprocessors) {
+		let skippedVia = false;
+		for (let [name, preprocessor] of Object.entries(preprocessors)) {
+			let { filter, callback } = preprocessor;
+
+			let filters;
+			if (Array.isArray(filter)) {
+				filters = filter;
+			} else if (typeof filter === "string") {
+				filters = filter.split(",");
+			} else {
+				throw new Error(
+					`Expected file extensions passed to "${name}" content preprocessor to be a string or array. Received: ${filter}`,
+				);
+			}
+
+			filters = filters.map((extension) => {
+				if (extension.startsWith(".")) {
+					return extension;
+				}
+
+				return `.${extension}`;
+			});
+
+			if (!filters.some((extension) => extension === "*" || inputPath.endsWith(extension))) {
+				// skip
+				continue;
+			}
+
+			try {
+				let ret = await callback.call(
+					{
+						inputPath,
+					},
+					data,
+					content,
+				);
+
+				// Returning explicit false is the same as ignoring the template
+				if (ret === false) {
+					skippedVia = name;
+					continue;
+				}
+
+				// Different from transforms: returning falsy (not false) here does nothing (skips the preprocessor)
+				if (ret) {
+					content = ret;
+				}
+			} catch (e) {
+				throw new EleventyBaseError(
+					`Preprocessor \`${name}\` encountered an error when transforming ${inputPath}.`,
+					e,
+				);
+			}
+		}
+
+		return {
+			skippedVia,
+			content,
+		};
+	}
+
 	async getTemplates(data) {
-		let rawInput = await this.getPreRender();
+		let content = await this.getPreRender();
+		let { skippedVia, content: rawInput } = await Template.runPreprocessors(
+			this.inputPath,
+			content,
+			data,
+			this.config.preprocessors,
+		);
+
+		if (skippedVia) {
+			debug(
+				"Skipping %o, the %o preprocessor returned an explicit `false`",
+				this.inputPath,
+				skippedVia,
+			);
+			return [];
+		}
 
 		// https://github.com/11ty/eleventy/issues/1206
 		data.page.rawInput = rawInput;
@@ -711,8 +789,9 @@ class Template extends TemplateContent {
 		if (!this.isDryRun) {
 			let isVirtual = this.isVirtualTemplate();
 			let engineList = this.templateRender.getReadableEnginesListDifferingFromFileExtension();
+			let suffix = `${isVirtual ? " (virtual)" : ""}${engineList ? ` (${engineList})` : ""}`;
 			this.logger.log(
-				`${lang.start} ${outputPath} from ${this.inputPath}${isVirtual ? " (virtual)" : ""}${engineList ? ` (${engineList})` : ""}`,
+				`${lang.start} ${outputPath} ${chalk.gray(`from ${this.inputPath}${suffix}`)}`,
 			);
 		} else if (this.isDryRun) {
 			return;

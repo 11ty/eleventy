@@ -240,6 +240,7 @@ class TemplatePassthrough {
 		}
 
 		let fileCopyCount = 0;
+		let fileSizeCount = 0;
 		let map = {};
 		let b = this.benchmarks.aggregate.get("Passthrough Copy File");
 		// returns a promise
@@ -250,13 +251,15 @@ class TemplatePassthrough {
 				map[copyOp.src] = copyOp.dest;
 				b.before();
 			})
-			.on(copy.events.COPY_FILE_COMPLETE, (/*copyOp*/) => {
+			.on(copy.events.COPY_FILE_COMPLETE, (copyOp) => {
 				fileCopyCount++;
+				fileSizeCount += copyOp.stats.size;
 				b.after();
 			})
 			.then(() => {
 				return {
 					count: fileCopyCount,
+					size: fileSizeCount,
 					map,
 				};
 			});
@@ -311,15 +314,18 @@ class TemplatePassthrough {
 			(results) => {
 				// collate the count and input/output map results from the array.
 				let count = 0;
+				let size = 0;
 				let map = {};
 
 				for (let result of results) {
 					count += result.count;
+					size += result.size;
 					Object.assign(map, result.map);
 				}
 
 				return {
 					count,
+					size,
 					map,
 				};
 			},

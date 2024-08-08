@@ -13,8 +13,10 @@ const { port1, port2 } = new MessageChannel();
 // ESM Cache Buster is an enhancement that works in Node 18.19+
 // https://nodejs.org/docs/latest/api/module.html#moduleregisterspecifier-parenturl-options
 // Fixes https://github.com/11ty/eleventy/issues/3270
-if ("register" in module) {
+// ENV variable for https://github.com/11ty/eleventy/issues/3371
+if ("register" in module && !process?.env?.ELEVENTY_SKIP_ESM_RESOLVER) {
 	module.register("./EsmResolver.js", import.meta.url, {
+		parentURL: import.meta.url,
 		data: {
 			port: port2,
 		},
@@ -29,14 +31,20 @@ const requestPromiseCache = new Map();
 
 // Used for JSON imports, suffering from Node warning that import assertions experimental but also
 // throwing an error if you try to import() a JSON file without an import assertion.
+/**
+ *
+ * @returns {string|undefined}
+ */
 function loadContents(path, options = {}) {
 	let rawInput;
+	/** @type {string} */
 	let encoding = "utf8"; // JSON is utf8
-	if ("encoding" in options) {
+	if (options?.encoding || options?.encoding === null) {
 		encoding = options.encoding;
 	}
 
 	try {
+		// @ts-expect-error This is an error in the upstream types
 		rawInput = fs.readFileSync(path, encoding);
 	} catch (e) {
 		// if file does not exist, return nothing
@@ -73,6 +81,9 @@ async function dynamicImportAbsolutePath(absolutePath, type, returnRaw = false) 
 	if (absolutePath.endsWith(".json") || type === "json") {
 		// https://v8.dev/features/import-assertions#dynamic-import() is still experimental in Node 20
 		let rawInput = loadContents(absolutePath);
+		if (!rawInput) {
+			return;
+		}
 		return JSON.parse(rawInput);
 	}
 

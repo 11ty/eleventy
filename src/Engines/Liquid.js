@@ -1,5 +1,5 @@
 import moo from "moo";
-import liquidLib from "liquidjs";
+import liquidLib, { Tokenizer, evalToken } from "liquidjs";
 import { TemplatePath } from "@11ty/eleventy-utils";
 // import debugUtil from "debug";
 
@@ -57,12 +57,16 @@ class Liquid extends TemplateEngine {
 	}
 
 	static wrapFilter(name, fn) {
+		/**
+		 * @this {object}
+		 */
 		return function (...args) {
 			// Set this.eleventy and this.page
 			if (typeof this.context?.get === "function") {
 				augmentObject(this, {
 					source: this.context,
 					getter: (key, context) => context.get([key]),
+
 					lazy: this.context.strictVariables,
 				});
 			}
@@ -164,21 +168,51 @@ class Liquid extends TemplateEngine {
 		return argArray;
 	}
 
+	static parseArgumentsBuiltin(args) {
+		let tokenizer = new Tokenizer(args);
+		let parsedArgs = [];
+
+		let value = tokenizer.readValue();
+		while (value) {
+			parsedArgs.push(value);
+			tokenizer.skipBlank();
+			if (tokenizer.peek() === ",") {
+				tokenizer.advance();
+			}
+			value = tokenizer.readValue();
+		}
+		tokenizer.end();
+
+		return parsedArgs;
+	}
+
 	addShortcode(shortcodeName, shortcodeFn) {
 		let _t = this;
 		this.addTag(shortcodeName, function (liquidEngine) {
 			return {
 				parse(tagToken) {
 					this.name = tagToken.name;
-					this.args = tagToken.args;
+					if (_t.config.liquidParameterParsing === "builtin") {
+						this.orderedArgs = Liquid.parseArgumentsBuiltin(tagToken.args);
+						// note that Liquid does have a Hash class for name-based argument parsing but offers no easy to support both modes in one class
+					} else {
+						this.legacyArgs = tagToken.args;
+					}
 				},
 				render: function* (ctx) {
-					let rawArgs = Liquid.parseArguments(_t.argLexer, this.args);
 					let argArray = [];
-					let contextScope = ctx.getAll();
-					for (let arg of rawArgs) {
-						let b = yield liquidEngine.evalValue(arg, contextScope);
-						argArray.push(b);
+
+					if (this.legacyArgs) {
+						let rawArgs = Liquid.parseArguments(_t.argLexer, this.legacyArgs);
+						for (let arg of rawArgs) {
+							let b = yield liquidEngine.evalValue(arg, ctx);
+							argArray.push(b);
+						}
+					} else if (this.orderedArgs) {
+						for (let arg of this.orderedArgs) {
+							let b = yield evalToken(arg, ctx);
+							argArray.push(b);
+						}
 					}
 
 					let ret = yield shortcodeFn.call(Liquid.normalizeScope(ctx), ...argArray);
@@ -194,7 +228,14 @@ class Liquid extends TemplateEngine {
 			return {
 				parse(tagToken, remainTokens) {
 					this.name = tagToken.name;
-					this.args = tagToken.args;
+
+					if (_t.config.liquidParameterParsing === "builtin") {
+						this.orderedArgs = Liquid.parseArgumentsBuiltin(tagToken.args);
+						// note that Liquid does have a Hash class for name-based argument parsing but offers no easy to support both modes in one class
+					} else {
+						this.legacyArgs = tagToken.args;
+					}
+
 					this.templates = [];
 
 					var stream = liquidEngine.parser
@@ -208,18 +249,24 @@ class Liquid extends TemplateEngine {
 					stream.start();
 				},
 				render: function* (ctx /*, emitter*/) {
-					let rawArgs = Liquid.parseArguments(_t.argLexer, this.args);
 					let argArray = [];
-					let contextScope = ctx.getAll();
-					for (let arg of rawArgs) {
-						let b = yield liquidEngine.evalValue(arg, contextScope);
-						argArray.push(b);
+					if (this.legacyArgs) {
+						let rawArgs = Liquid.parseArguments(_t.argLexer, this.legacyArgs);
+						for (let arg of rawArgs) {
+							let b = yield liquidEngine.evalValue(arg, ctx);
+							argArray.push(b);
+						}
+					} else if (this.orderedArgs) {
+						for (let arg of this.orderedArgs) {
+							let b = yield evalToken(arg, ctx);
+							argArray.push(b);
+						}
 					}
 
 					const html = yield liquidEngine.renderer.renderTemplates(this.templates, ctx);
 
 					let ret = yield shortcodeFn.call(Liquid.normalizeScope(ctx), html, ...argArray);
-					// emitter.write(ret);
+
 					return ret;
 				},
 			};
@@ -228,6 +275,7 @@ class Liquid extends TemplateEngine {
 
 	parseForSymbols(str) {
 		let tokenizer = new liquidLib.Tokenizer(str);
+		/** @type {Array} */
 		let tokens = tokenizer.readTopLevelTokens();
 		let symbols = tokens
 			.filter((token) => token.kind === liquidLib.TokenKind.Output)
@@ -239,6 +287,7 @@ class Liquid extends TemplateEngine {
 	}
 
 	// Don’t return a boolean if permalink is a function (see TemplateContent->renderPermalink)
+	/** @returns {boolean|undefined} */
 	permalinkNeedsCompilation(str) {
 		if (typeof str === "string") {
 			return this.needsCompilation(str);

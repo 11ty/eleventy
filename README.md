@@ -4,7 +4,7 @@
 
 A simpler static site generator. An alternative to Jekyll. Written in JavaScript. Transforms a directory of templates (of varying types) into HTML.
 
-Works with HTML, Markdown, JavaScript, Liquid, Nunjucks, with addons for WebC, Sass, Vue, Svelte, JSX, and many others!
+Works with HTML, Markdown, JavaScript, Liquid, Nunjucks, with addons for WebC, Sass, Vue, Svelte, TypeScript, JSX, and many others!
 
 ## ➡ [Documentation](https://www.11ty.dev/docs/)
 
@@ -33,7 +33,7 @@ npm run test
 
 - We use the [ava JavaScript test runner](https://github.com/avajs/ava) ([Assertions documentation](https://github.com/avajs/ava/blob/master/docs/03-assertions.md))
 - ℹ️ To keep tests fast, thou shalt try to avoid writing files in tests.
-- [Continuous Integration on GitHub Actions](https://github.com/11ty/eleventy/actions?query=workflow%3A.github%2Fworkflows%2Fci.yml)
+- [Continuous Integration on GitHub Actions](https://github.com/11ty/eleventy/actions/workflows/ci.yml)
 - [Code Coverage Statistics](https://github.com/11ty/eleventy/blob/master/docs/coverage.md)
 - [Benchmark for Performance Regressions](https://github.com/11ty/eleventy-benchmark)
 

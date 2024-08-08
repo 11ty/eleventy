@@ -306,3 +306,10 @@ test.skip("Use liquid in njk (access to all global data)", async (t) => {
   let html = await getTestOutputForFile("./test/stubs-render-plugin/liquid-global.njk");
   t.is(html, `globalHi`);
 });
+
+test("renderContent filter #3369 #3370 via renderTemplate (njk)", async (t) => {
+  let html = await getTestOutputForFile("./test/stubs-render-plugin/nunjucks-frontmatter.njk", (eleventyConfig) => {
+    eleventyConfig.addShortcode("test", () => "test content")
+  });
+  t.is(html, "test content");
+});

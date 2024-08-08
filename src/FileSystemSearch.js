@@ -1,7 +1,8 @@
 import fastglob from "fast-glob";
-import micromatch from "micromatch";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
+
+import { isGlobMatch } from "./Util/GlobMatcher.js";
 
 const debug = debugUtil("Eleventy:FastGlobManager");
 
@@ -80,11 +81,9 @@ class FileSystemSearch {
 		for (let key in this.inputs) {
 			let { input, options } = this.inputs[key];
 			if (
-				micromatch([path], input, {
-					dot: true,
-					nocase: true, // insensitive
+				isGlobMatch(path, input, {
 					ignore: options.ignore,
-				}).length > 0
+				})
 			) {
 				this.outputs[key][setOperation](normalized);
 			}

@@ -1,4 +1,3 @@
-import multimatch from "multimatch";
 import isGlob from "is-glob";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
@@ -7,6 +6,7 @@ import EleventyExtensionMap from "./EleventyExtensionMap.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import TemplatePassthrough from "./TemplatePassthrough.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
+import { isGlobMatch } from "./Util/GlobMatcher.js";
 
 const debug = debugUtil("Eleventy:TemplatePassthroughManager");
 const debugDev = debugUtil("Dev:Eleventy:TemplatePassthroughManager");
@@ -26,6 +26,7 @@ class TemplatePassthroughManager {
 
 	reset() {
 		this.count = 0;
+		this.size = 0;
 		this.conflictMap = {};
 		this.incrementalFile = null;
 		debug("Resetting counts to 0");
@@ -105,6 +106,10 @@ class TemplatePassthroughManager {
 		return this.count;
 	}
 
+	getCopySize() {
+		return this.size;
+	}
+
 	setFileSystemSearch(fileSystemSearch) {
 		this.fileSystemSearch = fileSystemSearch;
 	}
@@ -141,7 +146,7 @@ class TemplatePassthroughManager {
 		// Eventually we’ll want to move all of this to use Node’s fs.cp, which is experimental and only on Node 16+
 
 		return pass.write().then(
-			({ count, map }) => {
+			({ size, count, map }) => {
 				for (let src in map) {
 					let dest = map[src];
 					if (this.conflictMap[dest]) {
@@ -174,7 +179,8 @@ class TemplatePassthroughManager {
 				} else {
 					if (count) {
 						this.count += count;
-						debug("Copied %o (%d files)", inputPath, count || 0);
+						this.size += size;
+						debug("Copied %o (%d files, %d size)", inputPath, count || 0, size || 0);
 					} else {
 						debug("Skipped copying %o (emulated passthrough copy)", inputPath);
 					}
@@ -209,11 +215,7 @@ class TemplatePassthroughManager {
 			if (TemplatePath.startsWithSubPath(changedFile, path.inputPath)) {
 				return path;
 			}
-			if (
-				changedFile &&
-				isGlob(path.inputPath) &&
-				multimatch([changedFile], [path.inputPath]).length
-			) {
+			if (changedFile && isGlob(path.inputPath) && isGlobMatch(changedFile, [path.inputPath])) {
 				return path;
 			}
 		}
@@ -296,7 +298,7 @@ class TemplatePassthroughManager {
 				map: aliases,
 			});
 
-			debug(`TemplatePassthrough copy finished. Current count: ${this.count}`);
+			debug(`TemplatePassthrough copy finished. Current count: ${this.count} (size: ${this.size})`);
 			return results;
 		});
 	}

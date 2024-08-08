@@ -11,7 +11,7 @@ class BenchmarkGroup {
 		this.benchmarks = {};
 		// Warning: aggregate benchmarks automatically default to false via BenchmarkManager->getBenchmarkGroup
 		this.isVerbose = true;
-		this.logger = new ConsoleLogger(this.isVerbose);
+		this.logger = new ConsoleLogger();
 		this.minimumThresholdMs = 50;
 		this.minimumThresholdPercent = 8;
 	}
@@ -31,6 +31,7 @@ class BenchmarkGroup {
 	add(type, callback) {
 		let benchmark = (this.benchmarks[type] = new Benchmark());
 
+		/** @this {any} */
 		let fn = function (...args) {
 			benchmark.before();
 			let ret = callback.call(this, ...args);

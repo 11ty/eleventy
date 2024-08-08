@@ -1,18 +1,23 @@
 import fs from "graceful-fs";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
+import { evalToken } from "liquidjs";
 
 // TODO add a first-class Markdown component to expose this using Markdown-only syntax (will need to be synchronous for markdown-it)
 
 import { ProxyWrap } from "../Util/Objects/ProxyWrap.js";
 import TemplateDataInitialGlobalData from "../Data/TemplateDataInitialGlobalData.js";
-import EleventyShortcodeError from "../Errors/EleventyShortcodeError.js";
+import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import TemplateRender from "../TemplateRender.js";
 import ProjectDirectories from "../Util/ProjectDirectories.js";
 import TemplateConfig from "../TemplateConfig.js";
-import EleventyErrorUtil from "../Errors/EleventyErrorUtil.js";
 import Liquid from "../Engines/Liquid.js";
 
-async function compile(content, templateLang, { templateConfig, extensionMap } = {}) {
+class EleventyNunjucksError extends EleventyBaseError {}
+
+/** @this {object} */
+async function compile(content, templateLang, options = {}) {
+	let { templateConfig, extensionMap } = options;
+
 	if (!templateConfig) {
 		templateConfig = new TemplateConfig(null, false);
 		templateConfig.setDirectories(new ProjectDirectories());
@@ -47,7 +52,8 @@ async function compile(content, templateLang, { templateConfig, extensionMap } =
 }
 
 // No templateLang default, it should infer from the inputPath.
-async function compileFile(inputPath, { templateConfig, extensionMap, config } = {}, templateLang) {
+async function compileFile(inputPath, options = {}, templateLang) {
+	let { templateConfig, extensionMap, config } = options;
 	if (!inputPath) {
 		throw new Error("Missing file path argument passed to the `renderFile` shortcode.");
 	}
@@ -89,6 +95,7 @@ async function compileFile(inputPath, { templateConfig, extensionMap, config } =
 	return tr.getCompiledTemplate(content);
 }
 
+/** @this {object} */
 async function renderShortcodeFn(fn, data) {
 	if (fn === undefined) {
 		return;
@@ -106,6 +113,7 @@ async function renderShortcodeFn(fn, data) {
 	if ("data" in this && isPlainObject(this.data)) {
 		// when options.accessGlobalData is true, this allows the global data
 		// to be accessed inside of the shortcode as a fallback
+
 		data = ProxyWrap(data, this.data);
 	} else {
 		// save `page` and `eleventy` for reuse
@@ -126,11 +134,11 @@ async function renderShortcodeFn(fn, data) {
  *
  * @since 1.0.0
  * @param {module:11ty/eleventy/UserConfig} eleventyConfig - User-land configuration instance.
- * @param {Object} options - Plugin options
+ * @param {object} options - Plugin options
  */
 function eleventyRenderPlugin(eleventyConfig, options = {}) {
 	/**
-	 * @typedef {Object} options
+	 * @typedef {object} options
 	 * @property {string} [tagName] - The shortcode name to render a template string.
 	 * @property {string} [tagNameFile] - The shortcode name to render a template file.
 	 * @property {module:11ty/eleventy/TemplateConfig} [templateConfig] - Configuration object
@@ -139,6 +147,7 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 	let defaultOptions = {
 		tagName: "renderTemplate",
 		tagNameFile: "renderFile",
+		filterName: "renderContent",
 		templateConfig: null,
 		accessGlobalData: false,
 	};
@@ -149,7 +158,14 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 		return {
 			parse: function (tagToken, remainTokens) {
 				this.name = tagToken.name;
-				this.args = tagToken.args;
+
+				if (eleventyConfig.liquid.parameterParsing === "builtin") {
+					this.orderedArgs = Liquid.parseArgumentsBuiltin(tagToken.args);
+					// note that Liquid does have a Hash class for name-based argument parsing but offers no easy to support both modes in one class
+				} else {
+					this.legacyArgs = tagToken.args;
+				}
+
 				this.tokens = [];
 
 				var stream = liquidEngine.parser
@@ -176,12 +192,18 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 					normalizedContext.eleventy = ctx.get(["eleventy"]);
 				}
 
-				let rawArgs = Liquid.parseArguments(null, this.args);
 				let argArray = [];
-				let contextScope = ctx.getAll();
-				for (let arg of rawArgs) {
-					let b = yield liquidEngine.evalValue(arg, contextScope);
-					argArray.push(b);
+				if (this.legacyArgs) {
+					let rawArgs = Liquid.parseArguments(null, this.legacyArgs);
+					for (let arg of rawArgs) {
+						let b = yield liquidEngine.evalValue(arg, ctx);
+						argArray.push(b);
+					}
+				} else if (this.orderedArgs) {
+					for (let arg of this.orderedArgs) {
+						let b = yield evalToken(arg, ctx);
+						argArray.push(b);
+					}
 				}
 
 				// plaintext paired shortcode content
@@ -273,11 +295,7 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 				body(function (e, bodyContent) {
 					if (e) {
 						resolve(
-							new EleventyShortcodeError(
-								`Error with Nunjucks paired shortcode \`${tagName}\`${EleventyErrorUtil.convertErrorToString(
-									e,
-								)}`,
-							),
+							new EleventyNunjucksError(`Error with Nunjucks paired shortcode \`${tagName}\``, e),
 						);
 					}
 
@@ -294,11 +312,7 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 						},
 						function (e) {
 							resolve(
-								new EleventyShortcodeError(
-									`Error with Nunjucks paired shortcode \`${tagName}\`${EleventyErrorUtil.convertErrorToString(
-										e,
-									)}`,
-								),
+								new EleventyNunjucksError(`Error with Nunjucks paired shortcode \`${tagName}\``, e),
 								null,
 							);
 						},
@@ -320,6 +334,7 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 		extensionMap = map;
 	});
 
+	/** @this {object} */
 	async function _renderStringShortcodeFn(content, templateLang, data = {}) {
 		// Default is fn(content, templateLang, data) but we want to support fn(content, data) too
 		if (typeof templateLang !== "string") {
@@ -335,16 +350,14 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 		return renderShortcodeFn.call(this, fn, data);
 	}
 
+	/** @this {object} */
 	async function _renderFileShortcodeFn(inputPath, data = {}, templateLang) {
-		let fn = await compileFile.call(
-			this,
-			inputPath,
-			{
-				templateConfig: opts.templateConfig || templateConfig,
-				extensionMap,
-			},
-			templateLang,
-		);
+		let options = {
+			templateConfig: opts.templateConfig || templateConfig,
+			extensionMap,
+		};
+
+		let fn = await compileFile.call(this, inputPath, options, templateLang);
 
 		return renderShortcodeFn.call(this, fn, data);
 	}
@@ -363,6 +376,11 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 		});
 	}
 
+	// Filter for rendering strings
+	if (opts.filterName) {
+		eleventyConfig.addAsyncFilter(opts.filterName, _renderStringShortcodeFn);
+	}
+
 	// Render File
 	// use `false` to opt-out
 	if (opts.tagNameFile) {
@@ -372,6 +390,9 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 
 // Will re-use the same configuration instance both at a top level and across any nested renders
 class RenderManager {
+	/** @type {Promise|undefined} */
+	#hasConfigInitialized;
+
 	constructor() {
 		this.templateConfig = new TemplateConfig(null, false);
 		this.templateConfig.setDirectories(new ProjectDirectories());
@@ -381,17 +402,18 @@ class RenderManager {
 			templateConfig: this.templateConfig,
 			accessGlobalData: true,
 		});
-
-		this._hasConfigInitialized = false;
 	}
 
 	async init() {
-		if (this._hasConfigInitialized) {
-			return this._hasConfigInitialized;
+		if (this.#hasConfigInitialized) {
+			return this.#hasConfigInitialized;
 		}
+		if (this.templateConfig.hasInitialized()) {
+			return true;
+		}
+		this.#hasConfigInitialized = this.templateConfig.init();
+		await this.#hasConfigInitialized;
 
-		this._hasConfigInitialized = this.templateConfig.init();
-		await this._hasConfigInitialized;
 		return true;
 	}
 

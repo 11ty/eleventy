@@ -313,7 +313,7 @@ test("Nunjucks Async Shortcode", async (t) => {
   let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode(
     "postfixWithZach",
-    function (str) {
+    async function (str) {
       // Data in context
       t.is(this.page.url, "/hi/");
 
@@ -363,32 +363,43 @@ test("Nunjucks Async function Shortcode", async (t) => {
   );
 });
 
-test("Nunjucks Async function Shortcode (with sync function, error throwing)", async (t) => {
+test("Nunjucks sync function Shortcode (error throwing)", async (t) => {
   let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode(
     "postfixWithZach",
     function (str) {
-      throw new Error("Nunjucks Async function Shortcode (with sync function, error throwing)");
+      throw new Error("Nunjucks sync function Shortcode (error throwing)");
     },
-    true
+    false
   );
 
   let error = await t.throwsAsync(async () => {
     await tr._testRender("{% postfixWithZach name %}", { name: "test" });
   });
+
   t.true(
     error.message.indexOf(
-      "Nunjucks Async function Shortcode (with sync function, error throwing)"
+      "EleventyNunjucksError: Error with Nunjucks shortcode `postfixWithZach`"
     ) > -1
+  );
+  t.true(
+    error.cause.message.startsWith(
+      "Error with Nunjucks shortcode `postfixWithZach`"
+    )
+  );
+  t.true(
+    error.cause.originalError.message.startsWith(
+      "Nunjucks sync function Shortcode (error throwing)"
+    )
   );
 });
 
-test("Nunjucks Async function Shortcode (with async function, error throwing)", async (t) => {
+test("Nunjucks Async function Shortcode (error throwing)", async (t) => {
   let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addShortcode(
     "postfixWithZachError",
     async function (str) {
-      throw new Error("Nunjucks Async function Shortcode (with async function, error throwing)");
+      throw new Error("Nunjucks Async function Shortcode (error throwing)");
     },
     true
   );
@@ -398,21 +409,31 @@ test("Nunjucks Async function Shortcode (with async function, error throwing)", 
   });
   t.true(
     error.message.indexOf(
-      "Nunjucks Async function Shortcode (with async function, error throwing)"
+      "EleventyNunjucksError: Error with Nunjucks shortcode `postfixWithZachError`"
     ) > -1
+  );
+  t.true(
+    error.cause.message.startsWith(
+      "Error with Nunjucks shortcode `postfixWithZachError`"
+    )
+  );
+  t.true(
+    error.cause.originalError.message.startsWith(
+      "Nunjucks Async function Shortcode (error throwing)"
+    )
   );
 });
 
-test("Nunjucks Async function paired Shortcode (with sync function, error throwing)", async (t) => {
+test("Nunjucks sync function paired Shortcode (error throwing)", async (t) => {
   let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode(
     "postfixWithZachError",
     function (str) {
       throw new Error(
-        "Nunjucks Async function paired Shortcode (with sync function, error throwing)"
+        "Nunjucks sync function paired Shortcode (error throwing)"
       );
     },
-    true
+    false
   );
 
   let error = await t.throwsAsync(async () => {
@@ -420,20 +441,31 @@ test("Nunjucks Async function paired Shortcode (with sync function, error throwi
       name: "test",
     });
   });
+
   t.true(
     error.message.indexOf(
-      "Nunjucks Async function paired Shortcode (with sync function, error throwing)"
+      "EleventyNunjucksError: Error with Nunjucks paired shortcode `postfixWithZachError`"
     ) > -1
+  );
+  t.true(
+    error.cause.message.startsWith(
+      "Error with Nunjucks paired shortcode `postfixWithZachError`"
+    )
+  );
+  t.true(
+    error.cause.originalError.message.startsWith(
+      "Nunjucks sync function paired Shortcode (error throwing)"
+    )
   );
 });
 
-test("Nunjucks Async function paired Shortcode (with async function, error throwing)", async (t) => {
+test("Nunjucks Async function paired Shortcode (error throwing)", async (t) => {
   let tr = await getNewTemplateRender("njk", "./test/stubs/");
   tr.engine.addPairedShortcode(
     "postfixWithZachError",
     async function (str) {
       throw new Error(
-        "Nunjucks Async function paired Shortcode (with async function, error throwing)"
+        "Nunjucks Async function paired Shortcode (error throwing)"
       );
     },
     true
@@ -444,10 +476,21 @@ test("Nunjucks Async function paired Shortcode (with async function, error throw
       name: "test",
     });
   });
+
   t.true(
     error.message.indexOf(
-      "Nunjucks Async function paired Shortcode (with async function, error throwing)"
+      "EleventyNunjucksError: Error with Nunjucks paired shortcode `postfixWithZachError`"
     ) > -1
+  );
+  t.true(
+    error.cause.message.startsWith(
+      "Error with Nunjucks paired shortcode `postfixWithZachError`"
+    )
+  );
+  t.true(
+    error.cause.originalError.message.startsWith(
+      "Nunjucks Async function paired Shortcode (error throwing)"
+    )
   );
 });
 

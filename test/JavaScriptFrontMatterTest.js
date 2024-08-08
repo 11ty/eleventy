@@ -16,7 +16,7 @@ test("Custom Front Matter Parsing Options (using JavaScript node-retrieve-global
   let elev = new Eleventy("./test/stubs/script-frontmatter/test-default.njk", "./_site", {
     config: (eleventyConfig) => {
       eleventyConfig.setFrontMatterParsingOptions({
-        language: "node",
+        language: "js",
       });
     },
   });

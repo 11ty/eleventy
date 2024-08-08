@@ -1,6 +1,6 @@
 import test from "ava";
-import multimatch from "multimatch";
 
+import { isGlobMatch } from "../src/Util/GlobMatcher.js";
 import Collection from "../src/TemplateCollection.js";
 import Sortable from "../src/Util/Objects/Sortable.js";
 
@@ -257,26 +257,27 @@ test("partial match on tag string, issue 95", async (t) => {
   t.is(posts.length, 1);
 });
 
-test("multimatch assumptions, issue #127", async (t) => {
-  t.deepEqual(
-    multimatch(["src/bookmarks/test.md"], "**/+(bookmarks|posts|screencasts)/**/!(index)*.md"),
-    ["src/bookmarks/test.md"],
+// Swapped to micromatch in 3.0.0-alpha.17
+test("micromatch assumptions, issue #127", async (t) => {
+  function isMatch(filepath, globs) {
+    return isGlobMatch(filepath, globs);
+  }
+  t.true(
+    isMatch("src/bookmarks/test.md", ["**/+(bookmarks|posts|screencasts)/**/!(index)*.md"]),
   );
-  t.deepEqual(
-    multimatch(["./src/bookmarks/test.md"], "./**/+(bookmarks|posts|screencasts)/**/!(index)*.md"),
-    ["./src/bookmarks/test.md"],
+
+  t.true(
+    isMatch("./src/bookmarks/test.md", ["./**/+(bookmarks|posts|screencasts)/**/!(index)*.md"]),
   );
 
   let c = new Collection();
   let globs = c.getGlobs("**/+(bookmarks|posts|screencasts)/**/!(index)*.md");
   t.deepEqual(globs, ["./**/+(bookmarks|posts|screencasts)/**/!(index)*.md"]);
 
-  t.deepEqual(multimatch(["./src/bookmarks/test.md"], globs), ["./src/bookmarks/test.md"]);
-  t.deepEqual(multimatch(["./src/bookmarks/index.md"], globs), []);
-  t.deepEqual(multimatch(["./src/bookmarks/index2.md"], globs), []);
-  t.deepEqual(multimatch(["./src/_content/bookmarks/2018-03-27-git-message.md"], globs), [
-    "./src/_content/bookmarks/2018-03-27-git-message.md",
-  ]);
+  t.true(isMatch("./src/bookmarks/test.md", globs));
+  t.false(isMatch("./src/bookmarks/index.md", globs));
+  t.false(isMatch("./src/bookmarks/index2.md", globs));
+  t.true(isMatch("./src/_content/bookmarks/2018-03-27-git-message.md", globs));
 });
 
 test("Sort in place (issue #352)", async (t) => {

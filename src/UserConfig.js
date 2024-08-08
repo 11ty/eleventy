@@ -2,18 +2,17 @@ import chalk from "kleur";
 import { DateTime } from "luxon";
 import yaml from "js-yaml";
 import matter from "gray-matter";
-
 import debugUtil from "debug";
-import { DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
+
+import { DeepCopy, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
 import HtmlBasePlugin from "./Plugins/HtmlBasePlugin.js";
 import RenderPlugin from "./Plugins/RenderPlugin.js";
 import InputPathToUrlPlugin from "./Plugins/InputPathToUrl.js";
-// import I18nPlugin from "./Plugins/I18nPlugin.js";
 
 import isAsyncFunction from "./Util/IsAsyncFunction.js";
 import objectFilter from "./Util/Objects/ObjectFilter.js";
-import EventEmitter from "./Util/AsyncEventEmitter.js";
+import AsyncEventEmitter from "./Util/AsyncEventEmitter.js";
 import EleventyCompatibility from "./Util/Compatibility.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import BenchmarkManager from "./Benchmark/BenchmarkManager.js";
@@ -25,56 +24,96 @@ const debug = debugUtil("Eleventy:UserConfig");
 class UserConfigError extends EleventyBaseError {}
 
 /**
- * API to expose configuration options in user-land configuration files
+ * Eleventy’s user-land Configuration API
  * @module 11ty/eleventy/UserConfig
  */
 class UserConfig {
+	/** @type {boolean} */
 	#pluginExecution = false;
+	/** @type {boolean} */
 	#quietModeLocked = false;
+	/** @type {boolean} */
+	#dataDeepMergeModified = false;
+	/** @type {number|undefined} */
+	#uniqueId;
 
 	constructor() {
-		this._uniqueId = Math.random();
+		// These are completely unnecessary lines to satisfy TypeScript
+		this.plugins = [];
+		this.templateFormatsAdded = [];
+		this.additionalWatchTargets = [];
+		this.extensionMap = new Set();
+		this.dataExtensions = new Map();
+		this.urlTransforms = [];
+		this.customDateParsingCallbacks = new Set();
+		this.ignores = new Set();
+		this.events = new AsyncEventEmitter();
+
+		/** @type {object} */
+		this.directories = {};
+		/** @type {undefined} */
+		this.logger;
+		/** @type {string} */
+		this.dir;
+		/** @type {string} */
+		this.pathPrefix;
+
 		this.reset();
+		this.#uniqueId = Math.random();
 	}
 
 	// Internally used in TemplateContent for cache keys
 	_getUniqueId() {
-		return this._uniqueId;
+		return this.#uniqueId;
 	}
 
 	reset() {
 		debug("Resetting EleventyConfig to initial values.");
-		this.events = new EventEmitter();
 
+		/** @type {AsyncEventEmitter} */
+		this.events = new AsyncEventEmitter();
+
+		/** @type {BenchmarkManager} */
 		this.benchmarkManager = new BenchmarkManager();
+
+		/** @type {object} */
 		this.benchmarks = {
+			/** @type {import('./Benchmark/BenchmarkGroup.js')} */
 			config: this.benchmarkManager.get("Configuration"),
+			/** @type {import('./Benchmark/BenchmarkGroup.js')} */
 			aggregate: this.benchmarkManager.get("Aggregate"),
 		};
 
+		/** @type {object} */
 		this.directoryAssignments = {};
-
+		/** @type {object} */
 		this.collections = {};
+		/** @type {object} */
 		this.precompiledCollections = {};
 		this.templateFormats = undefined;
 		this.templateFormatsAdded = [];
 
+		/** @type {object} */
 		this.universal = {
 			filters: {},
 			shortcodes: {},
 			pairedShortcodes: {},
 		};
 
+		/** @type {object} */
 		this.liquid = {
 			options: {},
 			tags: {},
 			filters: {},
 			shortcodes: {},
 			pairedShortcodes: {},
+			parameterParsing: "legacy", // or builtin
 		};
 
+		/** @type {object} */
 		this.nunjucks = {
-			environmentOptions: {},
+			// `dev: true` gives us better error messaging
+			environmentOptions: { dev: true },
 			precompiledTemplates: {},
 			filters: {},
 			asyncFilters: {},
@@ -86,6 +125,7 @@ class UserConfig {
 			asyncPairedShortcodes: {},
 		};
 
+		/** @type {object} */
 		this.javascript = {
 			functions: {},
 			filters: {},
@@ -94,14 +134,24 @@ class UserConfig {
 		};
 
 		this.markdownHighlighter = null;
+
+		/** @type {object} */
 		this.libraryOverrides = {};
 
+		/** @type {object} */
 		this.passthroughCopies = {};
+
+		/** @type {object} */
 		this.layoutAliases = {};
 		this.layoutResolution = true; // extension-less layout files
 
+		/** @type {object} */
 		this.linters = {};
+		/** @type {object} */
 		this.transforms = {};
+		/** @type {object} */
+		this.preprocessors = {};
+
 		this.activeNamespace = "";
 		this.DateTime = DateTime;
 		this.dynamicPermalinks = true;
@@ -116,11 +166,15 @@ class UserConfig {
 
 		this.dataDeepMerge = true;
 		this.extensionMap = new Set();
+		/** @type {object} */
 		this.extensionConflictMap = {};
 		this.watchJavaScriptDependencies = true;
 		this.additionalWatchTargets = [];
+		/** @type {object} */
 		this.serverOptions = {};
+		/** @type {object} */
 		this.globalData = {};
+		/** @type {object} */
 		this.chokidarConfig = {};
 		this.watchThrottleWaitTime = 0; //ms
 
@@ -134,6 +188,7 @@ class UserConfig {
 		this.useTemplateCache = true;
 		this.dataFilterSelectors = new Set();
 
+		/** @type {object} */
 		this.libraryAmendments = {};
 		this.serverPassthroughCopyBehavior = "copy"; // or "passthrough"
 		this.urlTransforms = [];
@@ -142,6 +197,7 @@ class UserConfig {
 		this.dataFileSuffixesOverride = false;
 		this.dataFileDirBaseNameOverride = false;
 
+		/** @type {object} */
 		this.frontMatterParsingOptions = {
 			// Set a project-wide default.
 			// language: "yaml",
@@ -155,13 +211,18 @@ class UserConfig {
 				javascript: JavaScriptFrontMatter,
 
 				// Needed for fallback behavior in the new `javascript` engine
+				// @ts-ignore
 				jsLegacy: matter.engines.javascript,
 
-				// for compatibility
-				node: JavaScriptFrontMatter,
+				node: function () {
+					throw new Error(
+						"The `node` front matter type was a 3.0.0-alpha.x only feature, removed for stable release. Rename to `js` or `javascript` instead!",
+					);
+				},
 			},
 		};
 
+		/** @type {object} */
 		this.virtualTemplates = {};
 		this.freezeReservedData = true;
 		this.customDateParsingCallbacks = new Set();
@@ -194,7 +255,8 @@ class UserConfig {
 	 * Universal getters
 	 */
 	getFilter(name) {
-		return this.universal.filters[name];
+		// JavaScript functions are included here for backwards compatibility https://github.com/11ty/eleventy/issues/3365
+		return this.universal.filters[name] || this.javascript.functions[name];
 	}
 
 	getFilters(options = {}) {
@@ -244,7 +306,7 @@ class UserConfig {
 		let { description, functionName } = options;
 
 		if (typeof callback !== "function") {
-			throw new Error(`Invalid definition for "${name}" ${description}.`);
+			throw new Error(`Invalid definition for "${originalName}" ${description}.`);
 		}
 
 		let name = this.getNamespacedName(originalName);
@@ -260,7 +322,7 @@ class UserConfig {
 			debug(`Adding new ${description} "%o" via \`%o(%o)\``, name, functionName, originalName);
 		}
 
-		target[name] = this.#decorateCallback(`"${name}" ${description}`, callback, options);
+		target[name] = this.#decorateCallback(`"${name}" ${description}`, callback);
 	}
 
 	#decorateCallback(type, callback) {
@@ -334,16 +396,20 @@ class UserConfig {
 
 		this.addLiquidFilter(name, callback);
 		this.addJavaScriptFilter(name, callback);
-		this.addNunjucksFilter(name, function (...args) {
-			// Note that `callback` is already a function as the `#add` method throws an error if not.
-			let ret = callback.call(this, ...args);
-			if (ret instanceof Promise) {
-				throw new Error(
-					`Nunjucks *is* async-friendly with \`addFilter("${name}", async function() {})\` but you need to supply an \`async function\`. You returned a promise from \`addFilter("${name}", function() {})\`. Alternatively, use the \`addAsyncFilter("${name}")\` configuration API method.`,
-				);
-			}
-			return ret;
-		});
+		this.addNunjucksFilter(
+			name,
+			/** @this {any} */
+			function (...args) {
+				// Note that `callback` is already a function as the `#add` method throws an error if not.
+				let ret = callback.call(this, ...args);
+				if (ret instanceof Promise) {
+					throw new Error(
+						`Nunjucks *is* async-friendly with \`addFilter("${name}", async function() {})\` but you need to supply an \`async function\`. You returned a promise from \`addFilter("${name}", function() {})\`. Alternatively, use the \`addAsyncFilter("${name}")\` configuration API method.`,
+					);
+				}
+				return ret;
+			},
+		);
 	}
 
 	// Liquid, Nunjucks, and JS only
@@ -356,12 +422,16 @@ class UserConfig {
 
 		this.addLiquidFilter(name, callback);
 		this.addJavaScriptFilter(name, callback);
-		this.addNunjucksAsyncFilter(name, async function (...args) {
-			let cb = args.pop();
-			// Note that `callback` is already a function as the `#add` method throws an error if not.
-			let ret = await callback.call(this, ...args);
-			cb(null, ret);
-		});
+		this.addNunjucksAsyncFilter(
+			name,
+			/** @this {any} */
+			async function (...args) {
+				let cb = args.pop();
+				// Note that `callback` is already a function as the `#add` method throws an error if not.
+				let ret = await callback.call(this, ...args);
+				cb(null, ret);
+			},
+		);
 	}
 
 	/*
@@ -544,12 +614,29 @@ class UserConfig {
 		this.#pluginExecution = true;
 	}
 
+	// Internal method
+	_disablePluginExecution() {
+		this.#pluginExecution = false;
+	}
+
 	/* Config is executed in two stages and plugins are the second stage—are we in the plugins stage? */
 	isPluginExecution() {
 		return this.#pluginExecution;
 	}
 
-	/* Async friendly in 3.0 */
+	/**
+	 * @typedef {function|Promise<function>|object} PluginDefinition
+	 * @property {Function} [configFunction]
+	 * @property {string} [eleventyPackage]
+	 * @property {object} [eleventyPluginOptions={}]
+	 * @property {boolean} [eleventyPluginOptions.unique]
+	 */
+
+	/**
+	 * addPlugin: async friendly in 3.0
+	 *
+	 * @param {PluginDefinition} plugin
+	 */
 	addPlugin(plugin, options = {}) {
 		// First addPlugin of a unique plugin wins
 		if (plugin?.eleventyPluginOptions?.unique && this.hasPlugin(plugin)) {
@@ -569,6 +656,7 @@ class UserConfig {
 		}
 	}
 
+	/** @param {string} name */
 	resolvePlugin(name) {
 		let filenameLookup = {
 			"@11ty/eleventy/html-base-plugin": HtmlBasePlugin,
@@ -597,6 +685,7 @@ class UserConfig {
 		return filenameLookup[name];
 	}
 
+	/** @param {string|PluginDefinition} plugin */
 	hasPlugin(plugin) {
 		let pluginName;
 		if (typeof plugin === "string") {
@@ -604,10 +693,12 @@ class UserConfig {
 		} else {
 			pluginName = this._getPluginName(plugin);
 		}
+
 		return this.plugins.some((entry) => this._getPluginName(entry.plugin) === pluginName);
 	}
 
 	// Using Function.name https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name#examples
+	/** @param {PluginDefinition} plugin */
 	_getPluginName(plugin) {
 		if (plugin?.eleventyPackage) {
 			return plugin.eleventyPackage;
@@ -651,6 +742,7 @@ class UserConfig {
 		return ret;
 	}
 
+	/** @param {string} name */
 	getNamespacedName(name) {
 		return this.activeNamespace + name;
 	}
@@ -678,7 +770,6 @@ class UserConfig {
 	 * see https://www.npmjs.com/package/recursive-copy#arguments
 	 * default options are defined in TemplatePassthrough copyOptionsDefault
 	 * @returns {any} a reference to the `EleventyConfig` object.
-	 * @memberof EleventyConfig
 	 */
 	addPassthroughCopy(fileOrDir, copyOptions = {}) {
 		if (typeof fileOrDir === "string") {
@@ -739,6 +830,15 @@ class UserConfig {
 		this.liquid.options = options;
 	}
 
+	setLiquidParameterParsing(behavior) {
+		if (behavior !== "legacy" && behavior !== "builtin") {
+			throw new Error(
+				`Invalid argument passed to \`setLiquidParameterParsing\`. Expected one of "legacy" or "builtin".`,
+			);
+		}
+		this.liquid.parameterParsing = behavior;
+	}
+
 	setNunjucksEnvironmentOptions(options) {
 		this.nunjucks.environmentOptions = options;
 	}
@@ -756,12 +856,13 @@ class UserConfig {
 	}
 
 	setDataDeepMerge(deepMerge) {
-		this._dataDeepMergeModified = true;
+		this.#dataDeepMergeModified = true;
 		this.dataDeepMerge = !!deepMerge;
 	}
 
+	// Used by the Upgrade Helper Plugin
 	isDataDeepMergeModified() {
-		return this._dataDeepMergeModified;
+		return this.#dataDeepMergeModified;
 	}
 
 	addWatchTarget(additionalWatchTargets) {
@@ -838,6 +939,7 @@ class UserConfig {
 			}
 			this.extensionConflictMap[extension] = true;
 
+			/** @type {object} */
 			let extensionOptions = Object.assign(
 				{
 					// Might be overridden for aliasing in options.key
@@ -893,6 +995,7 @@ class UserConfig {
 		this.serverPassthroughCopyBehavior = behavior;
 	}
 
+	// Url transforms change page.url and work good with server side content-negotiation (e.g. i18n plugin)
 	addUrlTransform(callback) {
 		this.urlTransforms.push(callback);
 	}
@@ -970,9 +1073,19 @@ class UserConfig {
 		}
 	}
 
+	// 3.0.0-alpha.18 started merging conflicts here (when possible), issue #3389
 	addGlobalData(name, data) {
 		name = this.getNamespacedName(name);
-		this.globalData[name] = data;
+		if (this.globalData[name]) {
+			if (isPlainObject(this.globalData[name]) && isPlainObject(data)) {
+				DeepCopy(this.globalData[name], data);
+			} else {
+				debug("Warning: overwriting a previous value set with addGlobalData(%o)", name);
+				this.globalData[name] = data;
+			}
+		} else {
+			this.globalData[name] = data;
+		}
 		return this;
 	}
 
@@ -997,6 +1110,15 @@ class UserConfig {
 		name = this.getNamespacedName(name);
 
 		this.transforms[name] = this.#decorateCallback(`"${name}" Transform`, callback);
+	}
+
+	addPreprocessor(name, fileExtensions, callback) {
+		name = this.getNamespacedName(name);
+
+		this.preprocessors[name] = {
+			filter: fileExtensions,
+			callback: this.#decorateCallback(`"${name}" Preprocessor`, callback),
+		};
 	}
 
 	addLinter(name, callback) {
@@ -1055,6 +1177,7 @@ class UserConfig {
 			// filters removed in 1.0 (use addTransform instead)
 			transforms: this.transforms,
 			linters: this.linters,
+			preprocessors: this.preprocessors,
 			globalData: this.globalData,
 			layoutAliases: this.layoutAliases,
 			layoutResolution: this.layoutResolution,
@@ -1066,6 +1189,7 @@ class UserConfig {
 			liquidFilters: this.liquid.filters,
 			liquidShortcodes: this.liquid.shortcodes,
 			liquidPairedShortcodes: this.liquid.pairedShortcodes,
+			liquidParameterParsing: this.liquid.parameterParsing,
 
 			// Nunjucks
 			nunjucksEnvironmentOptions: this.nunjucks.environmentOptions,
