@@ -2,6 +2,7 @@ name: Publish Release to npm
 on:
   release:
     types: [published]
+permissions: read-all
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,7 +16,7 @@ jobs:
           node-version: "20"
           registry-url: 'https://registry.npmjs.org'
       - run: npm install
-      - run: npm run test
+      - run: npm test
       - if: ${{ github.event.release.tag_name != '' && env.NPM_PUBLISH_TAG != '' }}
         run: npm publish --provenance --access=public --tag=${{ env.NPM_PUBLISH_TAG }}
         env:
