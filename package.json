@@ -99,7 +99,7 @@
 		"husky": "^9.1.4",
 		"lint-staged": "^15.2.7",
 		"markdown-it-emoji": "^3.0.0",
-		"marked": "^13.0.3",
+		"marked": "^14.0.0",
 		"prettier": "^3.3.3",
 		"pretty": "^2.0.0",
 		"react": "^18.3.1",
