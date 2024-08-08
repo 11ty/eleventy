@@ -7,7 +7,7 @@ class HtmlTransformer {
 		// execution order is important (not order of addition/object key order)
 		this.callbacks = {};
 		this.posthtmlProcessOptions = {};
-		this.plugins = [];
+		this.plugins = {};
 	}
 
 	get aggregateBench() {
