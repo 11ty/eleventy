@@ -15,7 +15,7 @@ jobs:
           node-version: "20"
           registry-url: 'https://registry.npmjs.org'
       - run: npm install
-      - run: npm test
+      - run: npm run test
       - if: ${{ github.event.release.tag_name != '' && env.NPM_PUBLISH_TAG != '' }}
         run: npm publish --provenance --access=public --tag=${{ env.NPM_PUBLISH_TAG }}
         env:
