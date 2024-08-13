@@ -24,6 +24,7 @@ class TemplateDataInitialGlobalData {
 			for (let key of keys) {
 				let returnValue = this.config.globalData[key];
 
+				// This section is problematic when used with eleventyComputed #3389
 				if (typeof returnValue === "function") {
 					returnValue = await returnValue();
 				}

@@ -14,7 +14,10 @@ import Liquid from "../Engines/Liquid.js";
 
 class EleventyNunjucksError extends EleventyBaseError {}
 
-async function compile(content, templateLang, { templateConfig, extensionMap } = {}) {
+/** @this {object} */
+async function compile(content, templateLang, options = {}) {
+	let { templateConfig, extensionMap } = options;
+
 	if (!templateConfig) {
 		templateConfig = new TemplateConfig(null, false);
 		templateConfig.setDirectories(new ProjectDirectories());
@@ -49,7 +52,8 @@ async function compile(content, templateLang, { templateConfig, extensionMap } =
 }
 
 // No templateLang default, it should infer from the inputPath.
-async function compileFile(inputPath, { templateConfig, extensionMap, config } = {}, templateLang) {
+async function compileFile(inputPath, options = {}, templateLang) {
+	let { templateConfig, extensionMap, config } = options;
 	if (!inputPath) {
 		throw new Error("Missing file path argument passed to the `renderFile` shortcode.");
 	}
@@ -91,6 +95,7 @@ async function compileFile(inputPath, { templateConfig, extensionMap, config } =
 	return tr.getCompiledTemplate(content);
 }
 
+/** @this {object} */
 async function renderShortcodeFn(fn, data) {
 	if (fn === undefined) {
 		return;
@@ -108,6 +113,7 @@ async function renderShortcodeFn(fn, data) {
 	if ("data" in this && isPlainObject(this.data)) {
 		// when options.accessGlobalData is true, this allows the global data
 		// to be accessed inside of the shortcode as a fallback
+
 		data = ProxyWrap(data, this.data);
 	} else {
 		// save `page` and `eleventy` for reuse
@@ -128,11 +134,11 @@ async function renderShortcodeFn(fn, data) {
  *
  * @since 1.0.0
  * @param {module:11ty/eleventy/UserConfig} eleventyConfig - User-land configuration instance.
- * @param {Object} options - Plugin options
+ * @param {object} options - Plugin options
  */
 function eleventyRenderPlugin(eleventyConfig, options = {}) {
 	/**
-	 * @typedef {Object} options
+	 * @typedef {object} options
 	 * @property {string} [tagName] - The shortcode name to render a template string.
 	 * @property {string} [tagNameFile] - The shortcode name to render a template file.
 	 * @property {module:11ty/eleventy/TemplateConfig} [templateConfig] - Configuration object
@@ -328,6 +334,7 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 		extensionMap = map;
 	});
 
+	/** @this {object} */
 	async function _renderStringShortcodeFn(content, templateLang, data = {}) {
 		// Default is fn(content, templateLang, data) but we want to support fn(content, data) too
 		if (typeof templateLang !== "string") {
@@ -343,16 +350,14 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 		return renderShortcodeFn.call(this, fn, data);
 	}
 
+	/** @this {object} */
 	async function _renderFileShortcodeFn(inputPath, data = {}, templateLang) {
-		let fn = await compileFile.call(
-			this,
-			inputPath,
-			{
-				templateConfig: opts.templateConfig || templateConfig,
-				extensionMap,
-			},
-			templateLang,
-		);
+		let options = {
+			templateConfig: opts.templateConfig || templateConfig,
+			extensionMap,
+		};
+
+		let fn = await compileFile.call(this, inputPath, options, templateLang);
 
 		return renderShortcodeFn.call(this, fn, data);
 	}
@@ -385,6 +390,9 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 
 // Will re-use the same configuration instance both at a top level and across any nested renders
 class RenderManager {
+	/** @type {Promise|undefined} */
+	#hasConfigInitialized;
+
 	constructor() {
 		this.templateConfig = new TemplateConfig(null, false);
 		this.templateConfig.setDirectories(new ProjectDirectories());
@@ -394,19 +402,17 @@ class RenderManager {
 			templateConfig: this.templateConfig,
 			accessGlobalData: true,
 		});
-
-		this._hasConfigInitialized = false;
 	}
 
 	async init() {
-		if (this._hasConfigInitialized) {
-			return this._hasConfigInitialized;
+		if (this.#hasConfigInitialized) {
+			return this.#hasConfigInitialized;
 		}
 		if (this.templateConfig.hasInitialized()) {
 			return true;
 		}
-		this._hasConfigInitialized = this.templateConfig.init();
-		await this._hasConfigInitialized;
+		this.#hasConfigInitialized = this.templateConfig.init();
+		await this.#hasConfigInitialized;
 
 		return true;
 	}

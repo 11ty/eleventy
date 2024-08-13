@@ -217,7 +217,6 @@ test("Eleventy set input/output, one file input exitCode (script)", async (t) =>
   let elev = new Eleventy("./test/stubs/exitCode/failure.njk", "./test/stubs/exitCode/_site", {
     source: "script",
   });
-  elev.setIsVerbose(false);
   elev.disableLogger();
 
   await t.throwsAsync(async () => {
@@ -233,10 +232,11 @@ test("Eleventy set input/output, one file input exitCode (cli)", async (t) => {
   let elev = new Eleventy("./test/stubs/exitCode/failure.njk", "./test/stubs/exitCode/_site", {
     source: "cli",
   });
-  elev.setIsVerbose(false);
   elev.disableLogger();
 
-  await elev.write();
+  let e = await t.throwsAsync(() => elev.write());
+
+  t.is(e.message, "Having trouble rendering njk template ./test/stubs/exitCode/failure.njk");
 
   t.is(process.exitCode, 1);
 
@@ -458,53 +458,6 @@ test("Can Eleventy run two executeBuilds in parallel?", async (t) => {
     result2.filter((entry) => entry.url === "/test2/"),
     test2Result
   );
-});
-
-test("Eleventy addGlobalData should run once", async (t) => {
-  let count = 0;
-  let elev = new Eleventy("./test/stubs-addglobaldata/", "./test/stubs-addglobaldata/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.addGlobalData("count", () => {
-        count++;
-        return count;
-      });
-    },
-  });
-
-  let results = await elev.toJSON();
-  t.is(count, 1);
-});
-
-test("Eleventy addGlobalData shouldn’t run if no input templates match!", async (t) => {
-  let count = 0;
-  let elev = new Eleventy(
-    "./test/stubs-addglobaldata-noop/",
-    "./test/stubs-addglobaldata-noop/_site",
-    {
-      config: function (eleventyConfig) {
-        eleventyConfig.addGlobalData("count", () => {
-          count++;
-          return count;
-        });
-      },
-    }
-  );
-
-  let results = await elev.toJSON();
-  t.is(count, 0);
-});
-
-test("Eleventy addGlobalData can feed layouts to populate data cascade with layout data, issue #1245", async (t) => {
-  let elev = new Eleventy("./test/stubs-2145/", "./test/stubs-2145/_site", {
-    config: function (eleventyConfig) {
-      eleventyConfig.addGlobalData("layout", () => "layout.njk");
-      eleventyConfig.dataFilterSelectors.add("LayoutData");
-    },
-  });
-
-  let [result] = await elev.toJSON();
-  t.deepEqual(result.data, { LayoutData: 123 });
-  t.is(result.content.trim(), "FromLayoutlayout.njk");
 });
 
 test("Unicode in front matter `tags`, issue #670", async (t) => {

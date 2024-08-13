@@ -57,12 +57,16 @@ class Liquid extends TemplateEngine {
 	}
 
 	static wrapFilter(name, fn) {
+		/**
+		 * @this {object}
+		 */
 		return function (...args) {
 			// Set this.eleventy and this.page
 			if (typeof this.context?.get === "function") {
 				augmentObject(this, {
 					source: this.context,
 					getter: (key, context) => context.get([key]),
+
 					lazy: this.context.strictVariables,
 				});
 			}
@@ -271,6 +275,7 @@ class Liquid extends TemplateEngine {
 
 	parseForSymbols(str) {
 		let tokenizer = new liquidLib.Tokenizer(str);
+		/** @type {Array} */
 		let tokens = tokenizer.readTopLevelTokens();
 		let symbols = tokens
 			.filter((token) => token.kind === liquidLib.TokenKind.Output)
@@ -282,6 +287,7 @@ class Liquid extends TemplateEngine {
 	}
 
 	// Don’t return a boolean if permalink is a function (see TemplateContent->renderPermalink)
+	/** @returns {boolean|undefined} */
 	permalinkNeedsCompilation(str) {
 		if (typeof str === "string") {
 			return this.needsCompilation(str);

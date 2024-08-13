@@ -22,6 +22,13 @@ const debug = require("debug")("Eleventy:cmd");
 (async function () {
 	const { EleventyErrorHandler } = await import("./src/Errors/EleventyErrorHandler.js");
 
+	class SimpleError extends Error {
+		constructor(...args) {
+			super(...args);
+			this.skipOriginalStack = true;
+		}
+	}
+
 	try {
 		const argv = minimist(process.argv.slice(2), {
 			string: ["input", "output", "formats", "config", "pathprefix", "port", "to", "incremental", "loader"],
@@ -37,6 +44,7 @@ const debug = require("debug")("Eleventy:cmd");
 			default: {
 				quiet: null,
 				"ignore-initial": false,
+				"to": "fs",
 			},
 			unknown: function (unknownArgument) {
 				throw new Error(
@@ -62,91 +70,96 @@ const debug = require("debug")("Eleventy:cmd");
 
 		if (argv.version) {
 			console.log(Eleventy.getVersion());
+			return;
 		} else if (argv.help) {
 			console.log(Eleventy.getHelp());
-		} else {
-			let elev = new Eleventy(argv.input, argv.output, {
-				source: "cli",
-				// --quiet and --quiet=true both resolve to true
-				quietMode: argv.quiet,
-				configPath: argv.config,
-				pathPrefix: argv.pathprefix,
-				runMode: argv.serve ? "serve" : argv.watch ? "watch" : "build",
-				dryRun: argv.dryrun,
-				loader: argv.loader,
-			});
-
-			// reuse ErrorHandler instance in Eleventy
-			ErrorHandler = elev.errorHandler;
-
-			// Before init
-			elev.setFormats(argv.formats);
-
-			// careful, we can’t use async/await here to error properly
-			// with old node versions in `please-upgrade-node` above.
-			elev
-				.init()
-				.then(() => {
-					if (argv.to === "json" || argv.to === "ndjson") {
-						// override logging output
-						elev.setIsVerbose(false);
-					}
-
-					// Only relevant for watch/serve
-					elev.setIgnoreInitial(argv["ignore-initial"]);
-
-					if(argv.incremental) {
-						elev.setIncrementalFile(argv.incremental);
-					} else if(argv.incremental !== undefined) {
-						elev.setIncrementalBuild(argv.incremental === "" || argv.incremental);
-					}
-
-					try {
-						if (argv.serve || argv.watch) {
-							let shouldStartServer = argv.serve;
-
-							elev
-								.watch()
-								.then(() => {
-									if (shouldStartServer) {
-										elev.serve(argv.port);
-									}
-								}, (e) => {
-									// Build failed but error message already displayed.
-									shouldStartServer = false;
-									// A build error occurred and we aren’t going to --serve
-									ErrorHandler.fatal(e, "Eleventy CLI Error");
-								});
-
-							process.on("SIGINT", async () => {
-								// stops the server too
-								await elev.stopWatch();
-								process.exit();
-							});
-						} else {
-							if (argv.to === "json") {
-								elev.toJSON().then(function (result) {
-									console.log(JSON.stringify(result, null, 2));
-								});
-							} else if (argv.to === "ndjson") {
-								elev.toNDJSON().then(function (stream) {
-									stream.pipe(process.stdout);
-								});
-							} else if (!argv.to || argv.to === "fs") {
-								elev.write();
-							} else {
-								throw new Error(
-									`Invalid --to value: ${argv.to}. Supported values: \`fs\` (default), \`json\`, and \`ndjson\`.`,
-								);
-							}
-						}
-					} catch (e) {
-						ErrorHandler.fatal(e, "Eleventy CLI Error");
-					}
-				}, ErrorHandler.fatal.bind(ErrorHandler));
+			return;
 		}
-	} catch (e) {
+
+		let elev = new Eleventy(argv.input, argv.output, {
+			source: "cli",
+			// --quiet and --quiet=true both resolve to true
+			quietMode: argv.quiet,
+			configPath: argv.config,
+			pathPrefix: argv.pathprefix,
+			runMode: argv.serve ? "serve" : argv.watch ? "watch" : "build",
+			dryRun: argv.dryrun,
+      loader: argv.loader,
+		});
+
+		// reuse ErrorHandler instance in Eleventy
+		ErrorHandler = elev.errorHandler;
+
+		// Before init
+		elev.setFormats(argv.formats);
+
+		// careful, we can’t use async/await here to error properly
+		// with old node versions in `please-upgrade-node` above.
+		elev
+			.init()
+			.then(() => {
+				if (argv.to === "json" || argv.to === "ndjson") {
+					// override logging output
+					elev.setIsVerbose(false);
+				}
+
+				// Only relevant for watch/serve
+				elev.setIgnoreInitial(argv["ignore-initial"]);
+
+				if(argv.incremental) {
+					elev.setIncrementalFile(argv.incremental);
+				} else if(argv.incremental !== undefined) {
+					elev.setIncrementalBuild(argv.incremental === "" || argv.incremental);
+				}
+
+				if (argv.serve || argv.watch) {
+					if(argv.to === "json" || argv.to === "ndjson") {
+						throw new SimpleError("--to=json and --to=ndjson are not compatible with --serve or --watch.");
+					}
+
+					elev
+						.watch()
+						.then(() => {
+							if (argv.serve) {
+								elev.serve(argv.port);
+							}
+						}, error => {
+							// A build error occurred and we aren’t going to --serve
+							ErrorHandler.once("error", error, "Eleventy Error (Watch CLI)");
+						});
+
+					process.on("SIGINT", async () => {
+						await elev.stopWatch();
+						process.exitCode = 0;
+					});
+				} else {
+					if (!argv.to || argv.to === "fs") {
+						elev.write().catch(error => {
+							ErrorHandler.once("fatal", error, "Eleventy Error (FS CLI)");
+						});
+					} else if (argv.to === "json") {
+						elev.toJSON().then(function (result) {
+							console.log(JSON.stringify(result, null, 2));
+						}, error => {
+							ErrorHandler.once("fatal", error, "Eleventy Error (JSON CLI)");
+						});
+					} else if (argv.to === "ndjson") {
+						elev.toNDJSON().then(function (stream) {
+							stream.pipe(process.stdout);
+						}, error => {
+							ErrorHandler.once("fatal", error, "Eleventy Error (JSON CLI)");
+						});
+					} else {
+						throw new SimpleError(
+							`Invalid --to value: ${argv.to}. Supported values: \`fs\` (default), \`json\`, and \`ndjson\`.`,
+						);
+					}
+				}
+			}).catch(error => {
+				ErrorHandler.fatal(error, "Eleventy Error (CLI)");
+			});
+	} catch (error) {
 		let ErrorHandler = new EleventyErrorHandler();
-		ErrorHandler.fatal(e, "Eleventy CLI Fatal Error");
+		ErrorHandler.fatal(error, "Eleventy Fatal Error (CLI)");
 	}
 })();
