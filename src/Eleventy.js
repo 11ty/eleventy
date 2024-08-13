@@ -176,8 +176,8 @@ class Eleventy {
 		 */
 		this.loader = this.options.loader ?? "auto";
 
-    /**
-     * @type {Number}
+		/**
+		 * @type {Number}
 		 * @description The timestamp of Eleventy start.
 		 */
 		this.start = this.getNewTimestamp();
