@@ -84,7 +84,7 @@ const debug = require("debug")("Eleventy:cmd");
 			pathPrefix: argv.pathprefix,
 			runMode: argv.serve ? "serve" : argv.watch ? "watch" : "build",
 			dryRun: argv.dryrun,
-      loader: argv.loader,
+			loader: argv.loader,
 		});
 
 		// reuse ErrorHandler instance in Eleventy
