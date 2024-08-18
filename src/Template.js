@@ -655,7 +655,7 @@ class Template extends TemplateContent {
 			}
 
 			filters = filters.map((extension) => {
-				if (extension.startsWith(".")) {
+				if (extension.startsWith(".") || extension === "*") {
 					return extension;
 				}
 
