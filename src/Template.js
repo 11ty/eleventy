@@ -115,6 +115,8 @@ class Template extends TemplateContent {
 
 		if (types.data) {
 			delete this._dataCache;
+			// delete this._usePermalinkRoot;
+			// delete this._stats;
 		}
 
 		if (types.render) {
@@ -264,6 +266,7 @@ class Template extends TemplateContent {
 	}
 
 	async usePermalinkRoot() {
+		// @cachedproperty
 		if (this._usePermalinkRoot === undefined) {
 			// TODO this only works with immediate front matter and not data files
 			let { data } = await this.getFrontMatterData();
@@ -394,8 +397,10 @@ class Template extends TemplateContent {
 
 	async getData() {
 		if (!this._dataCache) {
+			// @cachedproperty
 			this._dataCache = this.#getData();
 		}
+
 		return this._dataCache;
 	}
 
@@ -441,6 +446,7 @@ class Template extends TemplateContent {
 
 	// This is the primary render mechanism, called via TemplateMap->populateContentDataInMap
 	async renderPageEntryWithoutLayout(pageEntry) {
+		// @cachedproperty
 		if (!this._cacheRenderedPromise) {
 			this._cacheRenderedPromise = this.renderDirect(pageEntry.rawInput, pageEntry.data);
 			this.renderCount++;
@@ -858,7 +864,7 @@ class Template extends TemplateContent {
 	}
 
 	async renderPageEntry(pageEntry) {
-		// cache with transforms output
+		// @cachedproperty
 		if (!pageEntry.template._cacheRenderedTransformsAndLayoutsPromise) {
 			pageEntry.template._cacheRenderedTransformsAndLayoutsPromise =
 				this.#renderPageEntryWithLayoutsAndTransforms(pageEntry);
@@ -964,6 +970,7 @@ class Template extends TemplateContent {
 	}
 
 	async getInputFileStat() {
+		// @cachedproperty
 		if (this._stats) {
 			return this._stats;
 		}

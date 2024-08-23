@@ -182,6 +182,7 @@ class TemplateWriter {
 		};
 	}
 
+	// incrementalFileShape is `template` or `copy` (for passthrough file copy)
 	async _addToTemplateMapIncrementalBuild(incrementalFileShape, paths, to = "fs") {
 		// Render overrides are only used when `--ignore-initial` is in play and an initial build is not run
 		let ignoreInitialBuild = !this.isRunInitialBuild;
@@ -196,6 +197,11 @@ class TemplateWriter {
 			// that was tested as no longer needed (Issue #3170).
 
 			templates.push(tmpl);
+
+			// This must happen before data is generated for the incremental file only
+			if (incrementalFileShape === "template" && tmpl.inputPath === this.incrementalFile) {
+				tmpl.resetCaches();
+			}
 
 			// IMPORTANT: This is where the data is first generated for the template
 			promises.push(this.templateMap.add(tmpl));
@@ -254,8 +260,7 @@ class TemplateWriter {
 		// Order of templates does not matter here, they’re reordered later based on dependencies in TemplateMap.js
 		for (let tmpl of templates) {
 			if (incrementalFileShape === "template" && tmpl.inputPath === this.incrementalFile) {
-				tmpl.resetCaches();
-
+				// Cache is reset above (to invalidate data cache at the right time)
 				tmpl.setDryRunViaIncremental(false);
 			} else if (!tmpl.isRenderableDisabled() && !tmpl.isRenderableOptional()) {
 				// Related to the template but not the template (reset the render cache, not the read cache)

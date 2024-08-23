@@ -73,7 +73,6 @@ class TemplateContent {
 		if (types.read) {
 			delete this.readingPromise;
 			delete this.inputContent;
-			delete this.frontMatter;
 			delete this._frontMatterDataCache;
 		}
 	}
@@ -235,10 +234,11 @@ class TemplateContent {
 	async read() {
 		if (!this.readingPromise) {
 			if (!this.inputContent) {
-				// cache the promise
+				// @cachedproperty
 				this.inputContent = this.getInputContent();
 			}
 
+			// @cachedproperty
 			this.readingPromise = this.#read();
 		}
 
@@ -355,6 +355,7 @@ class TemplateContent {
 
 	async getFrontMatterData() {
 		if (!this._frontMatterDataCache) {
+			// @cachedproperty
 			this._frontMatterDataCache = this.#getFrontMatterData();
 		}
 
