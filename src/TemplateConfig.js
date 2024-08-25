@@ -115,6 +115,10 @@ class TemplateConfig {
 		this.#templateFormats = templateFormats;
 	}
 
+	setEventEmitterMode(mode) {
+		this.userConfig.events.setHandlerMode(mode);
+	}
+
 	get templateFormats() {
 		if (!this.#templateFormats) {
 			this.#templateFormats = new ProjectTemplateFormats();
