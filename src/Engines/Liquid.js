@@ -1,5 +1,5 @@
 import moo from "moo";
-import liquidLib, { Tokenizer, evalToken } from "liquidjs";
+import { Tokenizer, TokenKind, evalToken, Liquid as LiquidJs } from "liquidjs";
 import { TemplatePath } from "@11ty/eleventy-utils";
 // import debugUtil from "debug";
 
@@ -30,7 +30,7 @@ class Liquid extends TemplateEngine {
 
 	setLibrary(override) {
 		// warning, the include syntax supported here does not exactly match what Jekyll uses.
-		this.liquidLib = override || new liquidLib.Liquid(this.getLiquidOptions());
+		this.liquidLib = override || new LiquidJs(this.getLiquidOptions());
 		this.setEngineLib(this.liquidLib);
 
 		this.addFilters(this.config.liquidFilters);
@@ -274,11 +274,11 @@ class Liquid extends TemplateEngine {
 	}
 
 	parseForSymbols(str) {
-		let tokenizer = new liquidLib.Tokenizer(str);
+		let tokenizer = new Tokenizer(str);
 		/** @type {Array} */
 		let tokens = tokenizer.readTopLevelTokens();
 		let symbols = tokens
-			.filter((token) => token.kind === liquidLib.TokenKind.Output)
+			.filter((token) => token.kind === TokenKind.Output)
 			.map((token) => {
 				// manually remove filters 😅
 				return token.content.split("|").map((entry) => entry.trim())[0];
