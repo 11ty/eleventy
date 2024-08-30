@@ -247,6 +247,10 @@ class UserConfig {
 		return this.events.on(eventName, callback);
 	}
 
+	once(eventName, callback) {
+		return this.events.once(eventName, callback);
+	}
+
 	emit(eventName, ...args) {
 		return this.events.emit(eventName, ...args);
 	}
