@@ -8,7 +8,7 @@ import FileSystemSearch from "../src/FileSystemSearch.js";
 import EleventyFiles from "../src/EleventyFiles.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
-import { getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
+import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
 
 test("Get paths from Config", async (t) => {
   let eleventyConfig = new TemplateConfig();
@@ -186,6 +186,24 @@ test("getAllNormalizedPaths with globs", async (t) => {
     { inputPath: "./img/**", outputPath: "", copyOptions: {} },
     { inputPath: "./img/*.js", outputPath: "", copyOptions: {} },
   ]);
+});
+
+test("getAliasesFromPassthroughResults with Unicode filenames", async (t) => {
+  let eleventyConfig = await getTemplateConfigInstance();
+
+  let mgr = new TemplatePassthroughManager(eleventyConfig);
+  let results = [
+    { map: { "./path/file": "_site/path/file" } },
+    { map: { "./测试.用例/⌘": "_site/测试.用例/⌘" } },
+    { map: { "./path/测试.用例": "_site/path/测试.用例" } },
+    { map: { "./测试.用例/file": "_site/测试.用例/file" } },
+  ]
+  t.deepEqual(mgr.getAliasesFromPassthroughResults(results), {
+    "/path/file": "./path/file",
+    "/%E6%B5%8B%E8%AF%95.%E7%94%A8%E4%BE%8B/%E2%8C%98": "./测试.用例/⌘",
+    "/path/%E6%B5%8B%E8%AF%95.%E7%94%A8%E4%BE%8B": "./path/测试.用例",
+    "/%E6%B5%8B%E8%AF%95.%E7%94%A8%E4%BE%8B/file": "./测试.用例/file",
+  });
 });
 
 test("Look for uniqueness on template passthrough paths #1677", async (t) => {
