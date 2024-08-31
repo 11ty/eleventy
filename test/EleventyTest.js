@@ -816,15 +816,15 @@ test("eleventy.before and eleventy.after Event Arguments, directories", async (t
   let results = await elev.toJSON();
 });
 
-test("eleventy.after fires sequentially with the eventEmitterMode='sequential' option", async (t) => {
+test("eleventy.after fires sequentially setting eventEmitterMode 'sequential'", async (t) => {
   let reachFirst;
   const firstReached = new Promise(resolve => reachFirst = resolve)
   let next;
   const firstResult = new Promise(resolve => next = resolve)
   let secondCalled = false;
   let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
-    eventEmitterMode: 'sequential',
     config: function (eleventyConfig) {
+      eleventyConfig.setEventEmitterMode('sequential')
       eleventyConfig.on("eleventy.after", arg => {
         reachFirst()
         return firstResult;

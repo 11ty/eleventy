@@ -143,13 +143,6 @@ class Eleventy {
 		this.isDryRun = options.dryRun ?? false;
 
 		/**
-		 * @type {string}
-		 * @description Run event handlers "sequential" or "parallel".
-		 * @default "parallel"
-		 */
-		this.eventEmitterMode = options.eventEmitterMode || "parallel";
-
-		/**
 		 * @type {boolean}
 		 * @description Is this an incremental build? (only operates on a subset of input files)
 		 * @default false
@@ -214,7 +207,6 @@ class Eleventy {
 		this.eleventyConfig.setLogger(this.logger);
 		this.eleventyConfig.setDirectories(this.directories);
 		this.eleventyConfig.setTemplateFormats(this.templateFormats);
-		this.eleventyConfig.setEventEmitterMode(this.eventEmitterMode);
 
 		if (this.pathPrefix || this.pathPrefix === "") {
 			this.eleventyConfig.setPathPrefix(this.pathPrefix);
