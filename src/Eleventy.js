@@ -171,6 +171,12 @@ class Eleventy {
 		this.buildCount = 0;
 
 		/**
+		 * @member {String} - Force ESM or CJS mode instead of detecting from package.json. Either cjs, esm, or auto.
+		 * @default "auto"
+		 */
+		this.loader = this.options.loader ?? "auto";
+
+		/**
 		 * @type {Number}
 		 * @description The timestamp of Eleventy start.
 		 */
@@ -796,6 +802,9 @@ Arguments:
      --dryrun
        Don’t write any files. Useful in DEBUG mode, for example: \`DEBUG=Eleventy* npx @11ty/eleventy --dryrun\`
 
+     --loader
+       Set to "esm" to force ESM mode, "cjs" to force CommonJS mode, or "auto" (default) to infer it from package.json.
+
      --to=json
      --to=ndjson
        Change the output to JSON or NDJSON (default: \`fs\`)
@@ -1019,15 +1028,23 @@ Arguments:
 	}
 
 	get isEsm() {
-		if (this.#isEsm === undefined) {
+		if (this.#isEsm !== undefined) {
+			return this.#isEsm;
+		}
+		if (this.loader == "esm") {
+			this.#isEsm = true;
+		} else if (this.loader == "cjs") {
+			this.#isEsm = false;
+		} else if (this.loader == "auto") {
 			try {
 				this.#isEsm = this.projectPackageJson?.type === "module";
 			} catch (e) {
 				debug("Could not find a project package.json for project’s ES Modules check: %O", e);
 				this.#isEsm = false;
 			}
+		} else {
+			throw new Error("The 'loader' option must be one of 'esm', 'cjs', or 'auto'");
 		}
-
 		return this.#isEsm;
 	}
 

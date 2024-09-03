@@ -1516,3 +1516,19 @@ test("#3373: Throw an error when explicit config path is not found.", async (t) 
   let e = await t.throwsAsync(() => elev.toJSON());
   t.is(e.message, "A configuration file was specified but not found: this-file-is-not-found.js");
 });
+
+test("Eleventy loader can force ESM mode", async (t) => {
+  let elev = new Eleventy("./README.md", "./_site", {
+    loader: "esm",
+  });
+
+  t.is(elev.isEsm, true);
+});
+
+test("Eleventy loader can force CommonJS mode", async (t) => {
+  let elev = new Eleventy("./README.md", "./_site", {
+    loader: "cjs",
+  });
+
+  t.is(elev.isEsm, false);
+});
