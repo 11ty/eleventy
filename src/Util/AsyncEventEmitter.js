@@ -5,6 +5,8 @@ import { EventEmitter } from "node:events";
  * It can be used for time measurements during a build.
  */
 class AsyncEventEmitter extends EventEmitter {
+	#handlerMode = "parallel";
+
 	// TypeScript slop
 	constructor(...args) {
 		super(...args);
@@ -22,7 +24,20 @@ class AsyncEventEmitter extends EventEmitter {
 			return [];
 		}
 
-		return Promise.all(listeners.map((listener) => listener.apply(this, args)));
+		if (this.#handlerMode == "sequential") {
+			const result = [];
+			for (const listener of listeners) {
+				const returnValue = await listener.apply(this, args);
+				result.push(returnValue);
+			}
+			return result;
+		} else {
+			return Promise.all(
+				listeners.map((listener) => {
+					return listener.apply(this, args);
+				}),
+			);
+		}
 	}
 
 	/**
@@ -50,6 +65,10 @@ class AsyncEventEmitter extends EventEmitter {
 		}
 
 		return this.emit.call(this, type, ...argsMap);
+	}
+
+	setHandlerMode(mode) {
+		this.#handlerMode = mode;
 	}
 }
 

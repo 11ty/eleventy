@@ -255,6 +255,10 @@ class UserConfig {
 		return this.events.emit(eventName, ...args);
 	}
 
+	setEventEmitterMode(mode) {
+		this.events.setHandlerMode(mode);
+	}
+
 	/*
 	 * Universal getters
 	 */

@@ -816,6 +816,33 @@ test("eleventy.before and eleventy.after Event Arguments, directories", async (t
   let results = await elev.toJSON();
 });
 
+test("eleventy.after fires sequentially setting eventEmitterMode 'sequential'", async (t) => {
+  let reachFirst;
+  const firstReached = new Promise(resolve => reachFirst = resolve)
+  let next;
+  const firstResult = new Promise(resolve => next = resolve)
+  let secondCalled = false;
+  let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.setEventEmitterMode('sequential')
+      eleventyConfig.on("eleventy.after", arg => {
+        reachFirst()
+        return firstResult;
+      })
+      eleventyConfig.on("eleventy.after", arg => {
+        secondCalled = true;
+      })
+    },
+  });
+  const resultPromise = elev.toJSON();
+  await firstReached;
+  t.is(secondCalled, false)
+  next()
+  await 'microtask'
+  t.is(secondCalled, true)
+  await resultPromise;
+})
+
 test("setInputDirectory config method #1503", async (t) => {
   t.plan(5);
   let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
