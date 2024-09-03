@@ -1,27 +1,47 @@
+import path from "node:path";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import isValidUrl from "../Util/ValidUrl.js";
-import memoize from "../Util/MemoizeFunction.js";
 
-function normalizeInputPath(inputPath, inputDir, contentMap) {
-	// inputDir is optional at the beginning of the developer supplied-path
-
-	let normalized;
-	// Input directory already on the input path
-	if (TemplatePath.join(inputPath).startsWith(TemplatePath.join(inputDir))) {
-		normalized = inputPath;
-	} else {
-		normalized = TemplatePath.join(inputDir, inputPath);
-	}
-
-	normalized = TemplatePath.addLeadingDotSlash(normalized);
+function getValidPath(contentMap, testPath) {
+	let normalized = TemplatePath.addLeadingDotSlash(testPath);
 
 	// it must exist in the content map to be valid
 	if (contentMap[normalized]) {
 		return normalized;
 	}
+}
+
+function normalizeInputPath(targetInputPath, inputDir, sourceInputPath, contentMap) {
+	// inputDir is optional at the beginning of the developer supplied-path
+
+	// Input directory already on the input path
+	if (TemplatePath.join(targetInputPath).startsWith(TemplatePath.join(inputDir))) {
+		let absolutePath = getValidPath(contentMap, targetInputPath);
+		if (absolutePath) {
+			return absolutePath;
+		}
+	}
+
+	// Relative to project input directory
+	let relativeToInputDir = getValidPath(contentMap, TemplatePath.join(inputDir, targetInputPath));
+	if (relativeToInputDir) {
+		return relativeToInputDir;
+	}
+
+	if (targetInputPath && !path.isAbsolute(targetInputPath)) {
+		// Relative to source file’s input path
+		let sourceInputDir = TemplatePath.getDirFromFilePath(sourceInputPath);
+		let relativeToSourceFile = getValidPath(
+			contentMap,
+			TemplatePath.join(sourceInputDir, targetInputPath),
+		);
+		if (relativeToSourceFile) {
+			return relativeToSourceFile;
+		}
+	}
 
 	// the transform may have sent in a URL so we just return it as-is
-	return inputPath;
+	return targetInputPath;
 }
 
 function parseFilePath(filepath) {
@@ -63,30 +83,30 @@ function FilterPlugin(eleventyConfig) {
 		contentMap = inputPathToUrl;
 	});
 
-	eleventyConfig.addFilter(
-		"inputPathToUrl",
-		memoize(function (filepath) {
-			if (!contentMap) {
-				throw new Error("Internal error: contentMap not available for `inputPathToUrl` filter.");
-			}
+	eleventyConfig.addFilter("inputPathToUrl", function (targetFilePath) {
+		if (!contentMap) {
+			throw new Error("Internal error: contentMap not available for `inputPathToUrl` filter.");
+		}
 
-			if (isValidUrl(filepath)) {
-				return filepath;
-			}
+		if (isValidUrl(targetFilePath)) {
+			return targetFilePath;
+		}
 
-			let inputDir = eleventyConfig.directories.input;
-			let suffix = "";
-			[suffix, filepath] = parseFilePath(filepath);
-			filepath = normalizeInputPath(filepath, inputDir, contentMap);
+		let inputDir = eleventyConfig.directories.input;
+		let suffix = "";
+		[suffix, targetFilePath] = parseFilePath(targetFilePath);
+		// @ts-ignore
+		targetFilePath = normalizeInputPath(targetFilePath, inputDir, this.page.inputPath, contentMap);
 
-			let urls = contentMap[filepath];
-			if (!urls || urls.length === 0) {
-				throw new Error("`inputPathToUrl` filter could not find a matching target for " + filepath);
-			}
+		let urls = contentMap[targetFilePath];
+		if (!urls || urls.length === 0) {
+			throw new Error(
+				"`inputPathToUrl` filter could not find a matching target for " + targetFilePath,
+			);
+		}
 
-			return `${urls[0]}${suffix}`;
-		}),
-	);
+		return `${urls[0]}${suffix}`;
+	});
 }
 
 function TransformPlugin(eleventyConfig, defaultOptions = {}) {
@@ -102,24 +122,30 @@ function TransformPlugin(eleventyConfig, defaultOptions = {}) {
 		contentMap = inputPathToUrl;
 	});
 
-	eleventyConfig.htmlTransformer.addUrlTransform(opts.extensions, function (filepathOrUrl) {
+	eleventyConfig.htmlTransformer.addUrlTransform(opts.extensions, function (targetFilepathOrUrl) {
 		if (!contentMap) {
 			throw new Error("Internal error: contentMap not available for the `pathToUrl` Transform.");
 		}
-		if (isValidUrl(filepathOrUrl)) {
-			return filepathOrUrl;
+		if (isValidUrl(targetFilepathOrUrl)) {
+			return targetFilepathOrUrl;
 		}
 
 		let inputDir = eleventyConfig.directories.input;
 
 		let suffix = "";
-		[suffix, filepathOrUrl] = parseFilePath(filepathOrUrl);
-		filepathOrUrl = normalizeInputPath(filepathOrUrl, inputDir, contentMap);
+		[suffix, targetFilepathOrUrl] = parseFilePath(targetFilepathOrUrl);
+		// @ts-ignore
+		targetFilepathOrUrl = normalizeInputPath(
+			targetFilepathOrUrl,
+			inputDir,
+			this.page.inputPath,
+			contentMap,
+		);
 
-		let urls = contentMap[filepathOrUrl];
-		if (!filepathOrUrl || !urls || urls.length === 0) {
+		let urls = contentMap[targetFilepathOrUrl];
+		if (!targetFilepathOrUrl || !urls || urls.length === 0) {
 			// fallback, transforms don’t error on missing paths (though the pathToUrl filter does)
-			return `${filepathOrUrl}${suffix}`;
+			return `${targetFilepathOrUrl}${suffix}`;
 		}
 
 		return `${urls[0]}${suffix}`;
