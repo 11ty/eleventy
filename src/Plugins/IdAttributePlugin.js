@@ -27,25 +27,37 @@ function IdAttributePlugin(eleventyConfig, options = {}) {
 		options.slugify = MemoizeUtil(slugifyFilter);
 	}
 	if (!options.selector) {
-		options.selector = "h1,h2,h3,h4,h5,h6";
+		options.selector = "[id],h1,h2,h3,h4,h5,h6";
 	}
 	options.decodeEntities = options.decodeEntities ?? true;
 
 	eleventyConfig.htmlTransformer.addPosthtmlPlugin(
 		"html",
-		function (/*pluginOptions = {}*/) {
+		function (pluginOptions = {}) {
+			if (typeof options.filter === "function") {
+				if (options.filter(pluginOptions) === false) {
+					return function () {};
+				}
+			}
+
 			return function (tree) {
 				// One per page
 				let conflictCheck = {};
 
 				tree.match(matchHelper(options.selector), function (node) {
-					if (!node.attrs?.id && node.content) {
+					let id;
+					if (node.attrs?.id) {
+						id = node.attrs?.id;
+					} else if (!node.attrs?.id && node.content) {
 						node.attrs = node.attrs || {};
 						let textContent = getTextNodeContent(node);
 						if (options.decodeEntities) {
 							textContent = decodeHTML(textContent);
 						}
-						let id = options.slugify(textContent);
+						id = options.slugify(textContent);
+					}
+
+					if (id) {
 						if (conflictCheck[id]) {
 							conflictCheck[id]++;
 							id = `${id}-${conflictCheck[id]}`;
