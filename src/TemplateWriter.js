@@ -142,7 +142,6 @@ class TemplateWriter {
 
 	_createTemplate(path, to = "fs") {
 		let tmpl = this._templatePathCache.get(path);
-
 		let wasCached = false;
 		if (tmpl) {
 			wasCached = true;
@@ -233,8 +232,13 @@ class TemplateWriter {
 					isFullTemplate: incrementalFileShape === "template",
 				})
 			) {
+				// changed file is used by template
+				// template uses the changed file
 				tmpl.setRenderableOverride(undefined); // unset, probably render
 				secondOrderRelevantLookup[tmpl.inputPath] = true;
+			} else if (this.config.uses.isFileUsedBy(this.incrementalFile, tmpl.inputPath)) {
+				// changed file uses this template
+				tmpl.setRenderableOverride("optional");
 			} else {
 				// For incremental, always disable render on irrelevant templates
 				tmpl.setRenderableOverride(false); // disable render

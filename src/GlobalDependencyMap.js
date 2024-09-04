@@ -373,10 +373,19 @@ class GlobalDependencyMap {
 		}
 
 		// The file that changed is a dependency of the template
+		// comparisonFile is used by fullTemplateInputPath
 		if (this.hasDependency(fullTemplateInputPath, comparisonFile, includeLayouts)) {
 			return true;
 		}
 
+		return false;
+	}
+
+	isFileUsedBy(parent, child, includeLayouts) {
+		if (this.hasDependency(parent, child, includeLayouts)) {
+			// child is used by parent
+			return true;
+		}
 		return false;
 	}
 

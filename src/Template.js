@@ -889,7 +889,7 @@ class Template extends TemplateContent {
 			let content;
 
 			// Note that behavior.render is overridden when using json or ndjson output
-			if (page.template.behavior.isRenderable()) {
+			if (page.template.isRenderable()) {
 				// this reuses page.templateContent, it doesn’t render it
 				content = await page.template.renderPageEntry(page);
 			}
@@ -918,7 +918,7 @@ class Template extends TemplateContent {
 				continue;
 			}
 
-			if (!page.template.behavior.isRenderable()) {
+			if (!page.template.isRenderable()) {
 				debug("Template not written %o from %o.", page.outputPath, page.template.inputPath);
 				continue;
 			}
