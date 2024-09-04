@@ -30,6 +30,7 @@ function IdAttributePlugin(eleventyConfig, options = {}) {
 		options.selector = "[id],h1,h2,h3,h4,h5,h6";
 	}
 	options.decodeEntities = options.decodeEntities ?? true;
+	options.checkDuplicates = options.checkDuplicates ?? "error";
 
 	eleventyConfig.htmlTransformer.addPosthtmlPlugin(
 		"html",
@@ -43,21 +44,40 @@ function IdAttributePlugin(eleventyConfig, options = {}) {
 			return function (tree) {
 				// One per page
 				let conflictCheck = {};
+				// Cache heading nodes for conflict resolution
+				let headingNodes = {};
 
 				tree.match(matchHelper(options.selector), function (node) {
-					let id;
 					if (node.attrs?.id) {
-						id = node.attrs?.id;
+						let id = node.attrs?.id;
+						if (conflictCheck[id]) {
+							conflictCheck[id]++;
+							if (headingNodes[id]) {
+								// Rename conflicting assigned heading id
+								let newId = `${id}-${conflictCheck[id]}`;
+								headingNodes[newId] = headingNodes[id];
+								headingNodes[newId].attrs.id = newId;
+								delete headingNodes[id];
+							} else if (options.checkDuplicates === "error") {
+								// Existing `id` conflicts with assigned heading id, throw error
+								throw new Error(
+									"Duplicate `id` attribute (" +
+										id +
+										") in markup on " +
+										pluginOptions.page.inputPath,
+								);
+							}
+						} else {
+							conflictCheck[id] = 1;
+						}
 					} else if (!node.attrs?.id && node.content) {
 						node.attrs = node.attrs || {};
 						let textContent = getTextNodeContent(node);
 						if (options.decodeEntities) {
 							textContent = decodeHTML(textContent);
 						}
-						id = options.slugify(textContent);
-					}
+						let id = options.slugify(textContent);
 
-					if (id) {
 						if (conflictCheck[id]) {
 							conflictCheck[id]++;
 							id = `${id}-${conflictCheck[id]}`;
@@ -65,6 +85,7 @@ function IdAttributePlugin(eleventyConfig, options = {}) {
 							conflictCheck[id] = 1;
 						}
 
+						headingNodes[id] = node;
 						node.attrs.id = id;
 					}
 

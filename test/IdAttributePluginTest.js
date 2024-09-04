@@ -52,7 +52,7 @@ test("Issue #3424, id attribute conflicts (id attribute supplied last)", async (
   });
 
   let results = await elev.toJSON();
-	t.is(results[0].content.trim(), `<h1 id="testing">Testing</h1><div id="testing-2"></div>`);
+	t.is(results[0].content.trim(), `<h1 id="testing-2">Testing</h1><div id="testing"></div>`);
 });
 
 test("Issue #3424, id attribute conflicts (hard coded id conflicts)", async (t) => {
@@ -65,7 +65,46 @@ test("Issue #3424, id attribute conflicts (hard coded id conflicts)", async (t) 
   });
 
   let results = await elev.toJSON();
-	t.is(results[0].content.trim(), `<h1 id="testing">Testing</h1><h1 id="testing-2">Testing</h1>`);
+	t.is(results[0].content.trim(), `<h1 id="testing-2">Testing</h1><h1 id="testing">Testing</h1>`);
+});
+
+test("Issue #3424, id attribute conflicts (three deep, hard coded id conflicts)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.addPlugin(IdAttributePlugin);
+
+      eleventyConfig.addTemplate("test.html", `<h1>Testing</h1><h1>Testing</h1><h1 id="testing">Testing</h1>`, {});
+    },
+  });
+
+  let results = await elev.toJSON();
+	t.is(results[0].content.trim(), `<h1 id="testing-3">Testing</h1><h1 id="testing-2">Testing</h1><h1 id="testing">Testing</h1>`);
+});
+
+test("Issue #3424, id attribute conflicts (four deep, hard coded id conflicts)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.addPlugin(IdAttributePlugin);
+
+      eleventyConfig.addTemplate("test.html", `<h1>Testing</h1><h1>Testing</h1><h1>Testing</h1><h1 id="testing">Testing</h1>`, {});
+    },
+  });
+
+  let results = await elev.toJSON();
+	t.is(results[0].content.trim(), `<h1 id="testing-4">Testing</h1><h1 id="testing-2">Testing</h1><h1 id="testing-3">Testing</h1><h1 id="testing">Testing</h1>`);
+});
+
+test("Issue #3424, id attribute conflicts (five deep, hard coded id conflicts)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.addPlugin(IdAttributePlugin);
+
+      eleventyConfig.addTemplate("test.html", `<h1>Testing</h1><h1>Testing</h1><h1>Testing</h1><h1>Testing</h1><h1 id="testing">Testing</h1>`, {});
+    },
+  });
+
+  let results = await elev.toJSON();
+	t.is(results[0].content.trim(), `<h1 id="testing-5">Testing</h1><h1 id="testing-2">Testing</h1><h1 id="testing-3">Testing</h1><h1 id="testing-4">Testing</h1><h1 id="testing">Testing</h1>`);
 });
 
 test("Issue #3424, id attribute conflicts (two hard coded id conflicts)", async (t) => {
@@ -76,9 +115,10 @@ test("Issue #3424, id attribute conflicts (two hard coded id conflicts)", async 
       eleventyConfig.addTemplate("test.html", `<h1 id="testing">Testing</h1><h1 id="testing">Testing</h1>`, {});
     },
   });
+  elev.disableLogger();
 
-  let results = await elev.toJSON();
-	t.is(results[0].content.trim(), `<h1 id="testing">Testing</h1><h1 id="testing-2">Testing</h1>`);
+  let e = await t.throwsAsync(() => elev.toJSON());
+  t.is(e.originalError.originalError.toString(), "Error: Duplicate `id` attribute (testing) in markup on ./test/stubs-virtual/test.html");
 });
 
 test("Issue #3424, filter callback skips", async (t) => {
@@ -93,12 +133,13 @@ test("Issue #3424, filter callback skips", async (t) => {
         }
       });
 
-      eleventyConfig.addTemplate("test.html", `<h1 id="testing">Testing</h1><h1 id="testing">Testing</h1>`, {});
+      eleventyConfig.addTemplate("test.html", `<h1>Testing</h1><h1 id="testing">Testing</h1>`, {});
       eleventyConfig.addTemplate("test-skipped.html", `<h1 id="testing">Testing</h1><h1 id="testing">Testing</h1>`, {});
     },
   });
+  elev.disableLogger();
 
   let results = await elev.toJSON();
-	t.is(results[0].content.trim(), `<h1 id="testing">Testing</h1><h1 id="testing-2">Testing</h1>`);
+	t.is(results[0].content.trim(), `<h1 id="testing-2">Testing</h1><h1 id="testing">Testing</h1>`);
 	t.is(results[1].content.trim(), `<h1 id="testing">Testing</h1><h1 id="testing">Testing</h1>`);
 });

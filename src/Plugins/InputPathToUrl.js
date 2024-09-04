@@ -134,10 +134,10 @@ function TransformPlugin(eleventyConfig, defaultOptions = {}) {
 
 		let suffix = "";
 		[suffix, targetFilepathOrUrl] = parseFilePath(targetFilepathOrUrl);
-		// @ts-ignore
 		targetFilepathOrUrl = normalizeInputPath(
 			targetFilepathOrUrl,
 			inputDir,
+			// @ts-ignore
 			this.page.inputPath,
 			contentMap,
 		);
