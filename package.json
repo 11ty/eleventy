@@ -126,7 +126,7 @@
 		"chardet": "^2.0.0",
 		"chokidar": "^3.6.0",
 		"cross-spawn": "^7.0.3",
-		"debug": "^4.3.6",
+		"debug": "^4.3.7",
 		"dependency-graph": "^1.0.0",
 		"entities": "^5.0.0",
 		"fast-glob": "^3.3.2",
