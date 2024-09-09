@@ -87,7 +87,7 @@
 		"@eslint/js": "^9.9.1",
 		"@iarna/toml": "^2.2.5",
 		"@mdx-js/node-loader": "^3.0.1",
-		"@types/node": "^22.5.2",
+		"@types/node": "^22.5.4",
 		"@vue/server-renderer": "^3.5.0",
 		"@zachleat/noop": "^1.0.4",
 		"ava": "^6.1.3",
