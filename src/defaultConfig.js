@@ -107,12 +107,10 @@ export default function (config) {
 	config.addFilter(
 		"renderTransforms",
 		async function transformsFilter(content, pageEntryOverride, baseHrefOverride) {
-			return TransformsUtil.runAll(
-				content,
-				pageEntryOverride || this.page,
-				config.transforms,
+			return TransformsUtil.runAll(content, pageEntryOverride || this.page, config.transforms, {
 				baseHrefOverride,
-			);
+				logger: config.logger,
+			});
 		},
 	);
 

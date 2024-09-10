@@ -487,7 +487,9 @@ class Template extends TemplateContent {
 	}
 
 	async runTransforms(str, pageEntry) {
-		return TransformsUtil.runAll(str, pageEntry.data.page, this.transforms);
+		return TransformsUtil.runAll(str, pageEntry.data.page, this.transforms, {
+			logger: this.logger,
+		});
 	}
 
 	_addComputedEntry(computedData, obj, parentKey, declaredDependencies) {

@@ -102,6 +102,7 @@ class TemplateConfig {
 	/* Setter for Logger */
 	setLogger(logger) {
 		this.logger = logger;
+		this.userConfig.logger = this.logger;
 	}
 
 	/* Setter for Directories instance */
@@ -317,10 +318,6 @@ class TemplateConfig {
 	async processPlugins({ dir, pathPrefix }) {
 		this.userConfig.dir = dir;
 		this.userConfig.pathPrefix = pathPrefix;
-
-		if (this.logger) {
-			this.userConfig.logger = this.logger;
-		}
 
 		// for Nested addPlugin calls, Issue #1925
 		this.userConfig._enablePluginExecution();

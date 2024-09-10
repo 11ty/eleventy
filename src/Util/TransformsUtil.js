@@ -18,7 +18,8 @@ class TransformsUtil {
 		return transforms;
 	}
 
-	static async runAll(content, pageData, transforms = {}, baseHrefOverride) {
+	static async runAll(content, pageData, transforms = {}, options = {}) {
+		let { baseHrefOverride, logger } = options;
 		let { inputPath, outputPath, url } = pageData;
 
 		if (!isPlainObject(transforms)) {
@@ -46,7 +47,11 @@ class TransformsUtil {
 				);
 
 				if (hadContentBefore && !content) {
-					this.logger.warn(
+					if (!logger || !logger.warn) {
+						throw new Error("Internal error: missing `logger` instance.");
+					}
+
+					logger.warn(
 						`Warning: Transform \`${name}\` returned empty when writing ${outputPath} from ${inputPath}.`,
 					);
 				}
