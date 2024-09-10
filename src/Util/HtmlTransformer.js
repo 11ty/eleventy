@@ -115,7 +115,13 @@ class HtmlTransformer {
 	}
 
 	getPlugins(extension) {
-		return this.plugins[extension] || [];
+		let plugins = this.plugins[extension] || [];
+		return plugins.filter(({ enabled }) => {
+			if (!enabled || typeof enabled !== "function") {
+				return true;
+			}
+			return enabled();
+		});
 	}
 
 	static async transformStandalone(content, callback, posthtmlProcessOptions = {}) {
