@@ -3,6 +3,9 @@ import urls from "@11ty/posthtml-urls";
 import { FilePathUtil } from "./FilePathUtil.js";
 
 class HtmlTransformer {
+	// feature test for Eleventy Bundle Plugin
+	static SUPPORTS_PLUGINS_ENABLED_CALLBACK = true;
+
 	constructor() {
 		// execution order is important (not order of addition/object key order)
 		this.callbacks = {};
