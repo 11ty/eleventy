@@ -115,7 +115,7 @@
 	"dependencies": {
 		"@11ty/dependency-tree": "^3.0.1",
 		"@11ty/dependency-tree-esm": "^1.0.0",
-		"@11ty/eleventy-dev-server": "^2.0.3",
+		"@11ty/eleventy-dev-server": "^2.0.4",
 		"@11ty/eleventy-plugin-bundle": "^2.0.2",
 		"@11ty/eleventy-utils": "^1.0.3",
 		"@11ty/lodash-custom": "^4.17.21",
@@ -130,7 +130,7 @@
 		"dependency-graph": "^1.0.0",
 		"entities": "^5.0.0",
 		"fast-glob": "^3.3.2",
-		"filesize": "^10.1.4",
+		"filesize": "^10.1.6",
 		"graceful-fs": "^4.2.11",
 		"gray-matter": "^4.0.3",
 		"is-glob": "^4.0.3",
