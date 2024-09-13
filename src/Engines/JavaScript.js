@@ -123,6 +123,15 @@ class JavaScript extends TemplateEngine {
 		return false;
 	}
 
+	/**
+	 * Use the module loader directly
+	 *
+	 * @override
+	 */
+	useJavaScriptImport() {
+		return true;
+	}
+
 	async getExtraDataFromFile(inputPath) {
 		let inst = await this.getInstanceFromInputPath(inputPath);
 		return getJavaScriptData(inst, inputPath);

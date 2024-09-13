@@ -111,6 +111,10 @@ class TemplateEngine {
 		return fn(data);
 	}
 
+	useJavaScriptImport() {
+		return false;
+	}
+
 	// JavaScript files defer to the module loader rather than read the files to strings
 	needsToReadFileContents() {
 		return true;

@@ -184,6 +184,13 @@ class TemplateContent {
 		let content = await this.inputContent;
 
 		if (content || content === "") {
+			if (this.engine.useJavaScriptImport()) {
+				return {
+					data: {},
+					content,
+				};
+			}
+
 			let options = this.config.frontMatterParsingOptions || {};
 			let fm;
 			try {
@@ -266,6 +273,14 @@ class TemplateContent {
 
 	async getInputContent() {
 		let tr = await this.getTemplateRender();
+
+		if (
+			tr.engine.useJavaScriptImport() &&
+			typeof tr.engine.getInstanceFromInputPath === "function"
+		) {
+			return tr.engine.getInstanceFromInputPath(this.inputPath);
+		}
+
 		if (!tr.engine.needsToReadFileContents()) {
 			return "";
 		}
