@@ -58,6 +58,13 @@ import MemoizeUtil from "./Util/MemoizeFunction.js";
 export default function (config) {
 	let templateConfig = this;
 
+	// Used for the HTML <base>, InputPathToUrl, Image transform plugins
+	let ut = new HtmlTransformer();
+	ut.setUserConfig(config);
+
+	// This needs to be assigned before bundlePlugin is added below.
+	config.htmlTransformer = ut;
+
 	config.addPlugin(bundlePlugin, {
 		bundles: false, // no default bundles included—must be opt-in.
 		immediate: true,
@@ -114,11 +121,7 @@ export default function (config) {
 		},
 	);
 
-	// Used for the HTML <base>, InputPathToUrl, Image transform plugins
-	let ut = new HtmlTransformer();
-	ut.setUserConfig(config);
-
-	config.htmlTransformer = ut;
+	// Run the `htmlTransformer` transform
 	config.addTransform("@11ty/eleventy/html-transformer", async function (content) {
 		return ut.transformContent(this.outputPath, content, this);
 	});
