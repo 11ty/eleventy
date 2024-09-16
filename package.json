@@ -110,7 +110,7 @@
 		"typescript": "^5.5.4",
 		"vue": "^3.5.0",
 		"zod": "^3.23.8",
-		"zod-validation-error": "^3.3.1"
+		"zod-validation-error": "^3.4.0"
 	},
 	"dependencies": {
 		"@11ty/dependency-tree": "^3.0.1",
