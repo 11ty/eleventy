@@ -1,5 +1,5 @@
 import { DepGraph as DependencyGraph } from "dependency-graph";
-import { isPlainObject } from "@11ty/eleventy-utils";
+import { isPlainObject, TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import TemplateCollection from "./TemplateCollection.js";
@@ -447,6 +447,7 @@ class TemplateMap {
 		this.cached = true;
 
 		this.checkForDuplicatePermalinks();
+		this.checkForMissingFileExtensions();
 
 		await this.config.events.emitLazy("eleventy.layouts", () => this.generateLayoutsMap());
 	}
@@ -570,19 +571,6 @@ class TemplateMap {
 		}
 	}
 
-	_testGetAllTags() {
-		let allTags = {};
-		for (let map of this.map) {
-			let tags = map.data.tags;
-			if (Array.isArray(tags)) {
-				for (let tag of tags) {
-					allTags[tag] = true;
-				}
-			}
-		}
-		return Object.keys(allTags);
-	}
-
 	getTaggedCollection(tag) {
 		let result;
 		if (!tag || tag === "all") {
@@ -593,19 +581,6 @@ class TemplateMap {
 		debug(`Collection: collections.${tag || "all"} size: ${result.length}`);
 
 		return result;
-	}
-
-	async _testGetTaggedCollectionsData() {
-		let collections = {};
-		collections.all = this.collection.getAllSorted();
-		debug(`Collection: collections.all size: ${collections.all.length}`);
-
-		let tags = this._testGetAllTags();
-		for (let tag of tags) {
-			collections[tag] = this.collection.getFilteredByTag(tag);
-			debug(`Collection: collections.${tag} size: ${collections[tag].length}`);
-		}
-		return collections;
 	}
 
 	/* 3.0.0-alpha.1: setUserConfigCollections method removed (was only used for testing) */
@@ -626,30 +601,6 @@ class TemplateMap {
 
 		debug(`Collection: collections.${name} size: ${result.length}`);
 		return result;
-	}
-
-	async _testGetUserConfigCollectionsData() {
-		let collections = {};
-		let configCollections = this.userConfig.getCollections();
-
-		for (let name in configCollections) {
-			collections[name] = configCollections[name](this.collection);
-
-			debug(`Collection: collections.${name} size: ${collections[name].length}`);
-		}
-
-		return collections;
-	}
-
-	async _testGetAllCollectionsData() {
-		let collections = {};
-		let taggedCollections = await this._testGetTaggedCollectionsData();
-		Object.assign(collections, taggedCollections);
-
-		let userConfigCollections = await this._testGetUserConfigCollectionsData();
-		Object.assign(collections, userConfigCollections);
-
-		return collections;
 	}
 
 	populateCollectionsWithContent() {
@@ -722,52 +673,135 @@ class TemplateMap {
 		return layouts;
 	}
 
+	#onEachPage(callback) {
+		for (let template of this.map) {
+			for (let page of template._pages) {
+				callback(page, template);
+			}
+		}
+	}
+
 	checkForDuplicatePermalinks() {
 		let inputs = {};
 		let permalinks = {};
 		let warnings = {};
-		for (let entry of this.map) {
-			for (let page of entry._pages) {
-				if (page.outputPath === false || page.url === false) {
-					// do nothing (also serverless)
-				} else {
-					// Make sure output doesn’t overwrite input (e.g. --input=. --output=.)
-					// Related to https://github.com/11ty/eleventy/issues/3327
-					if (page.outputPath === page.inputPath) {
-						throw new DuplicatePermalinkOutputError(
-							`The template at "${page.inputPath}" attempted to overwrite itself.`,
-						);
-					} else if (inputs[page.outputPath]) {
-						throw new DuplicatePermalinkOutputError(
-							`The template at "${page.inputPath}" attempted to overwrite an existing template at "${page.outputPath}".`,
-						);
-					}
-					inputs[page.inputPath] = true;
+		this.#onEachPage((page, template) => {
+			if (page.outputPath === false || page.url === false) {
+				// do nothing (also serverless)
+			} else {
+				// Make sure output doesn’t overwrite input (e.g. --input=. --output=.)
+				// Related to https://github.com/11ty/eleventy/issues/3327
+				if (page.outputPath === page.inputPath) {
+					throw new DuplicatePermalinkOutputError(
+						`The template at "${page.inputPath}" attempted to overwrite itself.`,
+					);
+				} else if (inputs[page.outputPath]) {
+					throw new DuplicatePermalinkOutputError(
+						`The template at "${page.inputPath}" attempted to overwrite an existing template at "${page.outputPath}".`,
+					);
+				}
+				inputs[page.inputPath] = true;
 
-					if (!permalinks[page.outputPath]) {
-						permalinks[page.outputPath] = [entry.inputPath];
-					} else {
-						warnings[page.outputPath] = `Output conflict: multiple input files are writing to \`${
-							page.outputPath
-						}\`. Use distinct \`permalink\` values to resolve this conflict.
-  1. ${entry.inputPath}
+				if (!permalinks[page.outputPath]) {
+					permalinks[page.outputPath] = [template.inputPath];
+				} else {
+					warnings[page.outputPath] = `Output conflict: multiple input files are writing to \`${
+						page.outputPath
+					}\`. Use distinct \`permalink\` values to resolve this conflict.
+  1. ${template.inputPath}
 ${permalinks[page.outputPath]
 	.map(function (inputPath, index) {
 		return `  ${index + 2}. ${inputPath}\n`;
 	})
 	.join("")}
 `;
-						permalinks[page.outputPath].push(entry.inputPath);
-					}
+					permalinks[page.outputPath].push(template.inputPath);
 				}
 			}
-		}
+		});
 
 		let warningList = Object.values(warnings);
 		if (warningList.length) {
 			// throw one at a time
 			throw new DuplicatePermalinkOutputError(warningList[0]);
 		}
+	}
+
+	checkForMissingFileExtensions() {
+		// disabled in config
+		if (this.userConfig?.errorReporting?.allowMissingExtensions === true) {
+			return;
+		}
+
+		this.#onEachPage((page) => {
+			if (page.outputPath === false || page.url === false) {
+				// do nothing (also serverless)
+			} else {
+				if (TemplatePath.getExtension(page.outputPath) === "") {
+					let e =
+						new Error(`The template at '${page.inputPath}' attempted to write to '${page.outputPath}'${page.data.permalink ? ` (via \`permalink\` value: '${page.data.permalink}')` : ""}, which is a target on the file system that does not include a file extension.
+
+You *probably* want to add a \`.html\` file extension to your permalink, so that most hosts will know how to correctly serve this file to web browsers. Without a file extension, this file may not be reliably deployed without additional hosting configuration (it won’t have a mime type) and may also cause local development issues if you later attempt to write to a subdirectory of the same name.
+
+Learn more: https://www.zachleat.com/web/trailing-slash/
+
+This is usually but not *always* an error so if you’d like to disable this error message, use \`eleventyConfig.configureErrorReporting({ allowMissingExtensions: true });\``);
+					e.skipOriginalStack = true;
+					throw e;
+				}
+			}
+		});
+	}
+
+	// TODO move these into TemplateMapTest.js
+	_testGetAllTags() {
+		let allTags = {};
+		for (let map of this.map) {
+			let tags = map.data.tags;
+			if (Array.isArray(tags)) {
+				for (let tag of tags) {
+					allTags[tag] = true;
+				}
+			}
+		}
+		return Object.keys(allTags);
+	}
+
+	async _testGetUserConfigCollectionsData() {
+		let collections = {};
+		let configCollections = this.userConfig.getCollections();
+
+		for (let name in configCollections) {
+			collections[name] = configCollections[name](this.collection);
+
+			debug(`Collection: collections.${name} size: ${collections[name].length}`);
+		}
+
+		return collections;
+	}
+
+	async _testGetTaggedCollectionsData() {
+		let collections = {};
+		collections.all = this.collection.getAllSorted();
+		debug(`Collection: collections.all size: ${collections.all.length}`);
+
+		let tags = this._testGetAllTags();
+		for (let tag of tags) {
+			collections[tag] = this.collection.getFilteredByTag(tag);
+			debug(`Collection: collections.${tag} size: ${collections[tag].length}`);
+		}
+		return collections;
+	}
+
+	async _testGetAllCollectionsData() {
+		let collections = {};
+		let taggedCollections = await this._testGetTaggedCollectionsData();
+		Object.assign(collections, taggedCollections);
+
+		let userConfigCollections = await this._testGetUserConfigCollectionsData();
+		Object.assign(collections, userConfigCollections);
+
+		return collections;
 	}
 
 	async _testGetCollectionsData() {
