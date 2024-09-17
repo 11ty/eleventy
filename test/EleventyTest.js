@@ -1556,10 +1556,21 @@ This is usually but not *always* an error so if you’d like to disable this err
 
 test("Truthy outputPath without a file extension error message is disabled, issue #3399", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
-    quietMode: true,
     config: function (eleventyConfig) {
       eleventyConfig.configureErrorReporting({ allowMissingExtensions: true });
       eleventyConfig.addTemplate("index.html", "", { permalink: "foo" })
+    },
+  });
+  elev.disableLogger();
+
+ let results = await elev.toJSON();
+ t.is(results.length, 1);
+});
+
+test("permalink: false outputPath new error message won’t throw an error, issue #3399", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: function (eleventyConfig) {
+      eleventyConfig.addTemplate("index.html", "", { permalink: false })
     },
   });
   elev.disableLogger();
