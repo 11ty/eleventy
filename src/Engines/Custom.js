@@ -45,6 +45,49 @@ class CustomEngine extends TemplateEngine {
 		this._defaultEngine = defaultEngine;
 	}
 
+	async getInstanceFromInputPath(inputPath) {
+		if (
+			"getInstanceFromInputPath" in this.entry &&
+			typeof this.entry.getInstanceFromInputPath === "function"
+		) {
+			// returns Promise
+			return this.entry.getInstanceFromInputPath(inputPath);
+		}
+
+		// aliased upstream type
+		if (
+			this._defaultEngine &&
+			"getInstanceFromInputPath" in this._defaultEngine &&
+			typeof this._defaultEngine.getInstanceFromInputPath === "function"
+		) {
+			// returns Promise
+			return this._defaultEngine.getInstanceFromInputPath(inputPath);
+		}
+
+		return false;
+	}
+
+	/**
+	 * Whether to use the module loader directly
+	 *
+	 * @override
+	 */
+	useJavaScriptImport() {
+		if ("useJavaScriptImport" in this.entry) {
+			return this.entry.useJavaScriptImport;
+		}
+
+		if (
+			this._defaultEngine &&
+			"useJavaScriptImport" in this._defaultEngine &&
+			typeof this._defaultEngine.useJavaScriptImport === "function"
+		) {
+			return this._defaultEngine.useJavaScriptImport();
+		}
+
+		return false;
+	}
+
 	/**
 	 * @override
 	 */
@@ -110,15 +153,6 @@ class CustomEngine extends TemplateEngine {
 			return data;
 		}
 
-		// if getData is not false or a function then `getInstanceFromInputPath` must exist
-		if (!("getInstanceFromInputPath" in this.entry)) {
-			return Promise.reject(
-				new Error(
-					`getInstanceFromInputPath callback missing from ${this.name} template engine plugin.`,
-				),
-			);
-		}
-
 		let keys = new Set();
 		if (this.entry.getData === true) {
 			keys.add("data");
@@ -131,7 +165,18 @@ class CustomEngine extends TemplateEngine {
 		let dataBench = this.benchmarks.aggregate.get(`Engine (${this.name}) Get Data From File`);
 		dataBench.before();
 
-		let inst = await this.entry.getInstanceFromInputPath(inputPath);
+		let inst = await this.getInstanceFromInputPath(inputPath);
+
+		if (inst === false) {
+			dataBench.after();
+
+			return Promise.reject(
+				new Error(
+					`\`getInstanceFromInputPath\` callback missing from '${this.name}' template engine plugin. It is required when \`getData\` is in use. You can set \`getData: false\` to opt-out of this.`,
+				),
+			);
+		}
+
 		// override keys set at the plugin level in the individual template
 		if (inst.eleventyDataKey) {
 			keys = new Set(inst.eleventyDataKey);

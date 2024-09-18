@@ -74,7 +74,7 @@ test("Using getData: true without getInstanceFromInputPath should error", async 
   await t.throwsAsync(async () => {
     await tmpl.getData();
   }, {
-    message: "getInstanceFromInputPath callback missing from txt template engine plugin."
+    message: "`getInstanceFromInputPath` callback missing from \'txt\' template engine plugin. It is required when `getData` is in use. You can set `getData: false` to opt-out of this."
   });
 });
 
@@ -111,7 +111,7 @@ test("Using getData: [] without getInstanceFromInputPath should error", async (t
   await t.throwsAsync(async () => {
     await tmpl.getData();
   }, {
-    message: "getInstanceFromInputPath callback missing from txt template engine plugin."
+    message: "`getInstanceFromInputPath` callback missing from \'txt\' template engine plugin. It is required when `getData` is in use. You can set `getData: false` to opt-out of this."
   });
 });
 
