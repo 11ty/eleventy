@@ -57,6 +57,8 @@ class UserConfig {
 		this.dir;
 		/** @type {string} */
 		this.pathPrefix;
+		/** @type {object} */
+		this.errorReporting = {};
 
 		this.reset();
 		this.#uniqueId = Math.random();
@@ -226,6 +228,9 @@ class UserConfig {
 		this.virtualTemplates = {};
 		this.freezeReservedData = true;
 		this.customDateParsingCallbacks = new Set();
+
+		/** @type {object} */
+		this.errorReporting = {};
 	}
 
 	// compatibleRange is optional in 2.0.0-beta.2
@@ -1148,6 +1153,11 @@ class UserConfig {
 		this.layoutResolution = true;
 	}
 
+	configureErrorReporting(options = {}) {
+		// allowMissingExtensions: true
+		Object.assign(this.errorReporting, options);
+	}
+
 	/*
 	 * Collections
 	 */
@@ -1248,6 +1258,7 @@ class UserConfig {
 			// `directories` and `directoryAssignments` are merged manually prior to plugin processing
 			freezeReservedData: this.freezeReservedData,
 			customDateParsing: this.customDateParsingCallbacks,
+			errorReporting: this.errorReporting,
 		};
 
 		if (Array.isArray(this.dataFileSuffixesOverride)) {
