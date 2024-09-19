@@ -274,6 +274,12 @@ class TemplateContent {
 	async getInputContent() {
 		let tr = await this.getTemplateRender();
 
+		let virtualTemplateDefinition = this.getVirtualTemplateDefinition();
+		if (virtualTemplateDefinition) {
+			let { content } = virtualTemplateDefinition;
+			return content;
+		}
+
 		if (
 			tr.engine.useJavaScriptImport() &&
 			typeof tr.engine.getInstanceFromInputPath === "function"
@@ -283,12 +289,6 @@ class TemplateContent {
 
 		if (!tr.engine.needsToReadFileContents()) {
 			return "";
-		}
-
-		let virtualTemplateDefinition = this.getVirtualTemplateDefinition();
-		if (virtualTemplateDefinition) {
-			let { content } = virtualTemplateDefinition;
-			return content;
 		}
 
 		let templateBenchmark = this.bench.get("Template Read");

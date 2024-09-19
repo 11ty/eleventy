@@ -109,8 +109,8 @@ test("addPreprocessor with 11ty.js, Issue #3433", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
     config: eleventyConfig => {
       eleventyConfig.addPreprocessor("testing", "11ty.js", (data, content) => {
-        t.is( typeof content.render, "function" );
-        t.is(content.render(), "Hello!");
+        t.is( typeof content, "function" );
+        t.is(content(), "Hello!");
 
         return {
           render: function() {
@@ -119,7 +119,7 @@ test("addPreprocessor with 11ty.js, Issue #3433", async (t) => {
         };
       });
 
-      eleventyConfig.addTemplate("template.11ty.js", function render() {
+      eleventyConfig.addTemplate("template.11ty.js", function() {
         return "Hello!"
       });
     }
@@ -143,8 +143,8 @@ test("addPreprocessor and addExtension, Issue #3433", async (t) => {
       });
 
       eleventyConfig.addPreprocessor("testing", "11ty.test", (data, content) => {
-        t.is( typeof content.render, "function" );
-        t.is(content.render(), "Hello!");
+        t.is( typeof content, "function" );
+        t.is(content(), "Hello!");
 
         return {
           render: function() {
@@ -153,7 +153,7 @@ test("addPreprocessor and addExtension, Issue #3433", async (t) => {
         };
       });
 
-      eleventyConfig.addTemplate("template.11ty.test", function render() {
+      eleventyConfig.addTemplate("template.11ty.test", function() {
         return "Hello!"
       });
     }
@@ -179,8 +179,8 @@ test("addPreprocessor and addExtension with custom `compile` (defaultRenderer), 
       });
 
       eleventyConfig.addPreprocessor("testing", "11ty.test", (data, content) => {
-        t.is( typeof content.render, "function" );
-        t.is(content.render(), "Hello!");
+        t.is( typeof content, "function" );
+        t.is(content(), "Hello!");
 
         return {
           render: function() {
@@ -189,7 +189,7 @@ test("addPreprocessor and addExtension with custom `compile` (defaultRenderer), 
         };
       });
 
-      eleventyConfig.addTemplate("template.11ty.test", function render() {
+      eleventyConfig.addTemplate("template.11ty.test", function() {
         return "Hello!"
       });
     }
@@ -217,8 +217,8 @@ test("addPreprocessor and addExtension with custom `compile` (re-use render func
       });
 
       eleventyConfig.addPreprocessor("testing", "11ty.test", (data, content) => {
-        t.is( typeof content.render, "function" );
-        t.is(content.render(), "Hello!");
+        t.is( typeof content, "function" );
+        t.is(content(), "Hello!");
 
         return {
           render: function() {
@@ -227,7 +227,7 @@ test("addPreprocessor and addExtension with custom `compile` (re-use render func
         };
       });
 
-      eleventyConfig.addTemplate("template.11ty.test", function render() {
+      eleventyConfig.addTemplate("template.11ty.test", function() {
         return "Hello!"
       });
     }
@@ -260,8 +260,8 @@ test("addPreprocessor and addExtension with custom `compile` (new render functio
 
       eleventyConfig.addPreprocessor("testing", "11ty.test", (data, content) => {
         // check template content directly
-        t.is( typeof content.render, "function" );
-        t.is(content.render(), "Original template content");
+        t.is( typeof content, "function" );
+        t.is(content(), "Original template content");
 
         return {
           render: function() {
@@ -270,7 +270,7 @@ test("addPreprocessor and addExtension with custom `compile` (new render functio
         };
       });
 
-      eleventyConfig.addTemplate("template.11ty.test", function render() {
+      eleventyConfig.addTemplate("template.11ty.test", function() {
         return "Original template content"
       });
     }
