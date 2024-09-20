@@ -176,7 +176,9 @@ class Liquid extends TemplateEngine {
 			let value = tokenizer.readHash() ?? tokenizer.readValue();
 			// readHash() treats unmarked identifiers as hash keys with undefined
 			// values, but we want to parse them as positional arguments instead.
-			return value?.kind === 64 && value.value === undefined ? value.name : value;
+			if (value?.kind !== TokenKind.Hash) return value;
+			let hash = /** @type {import("liquidjs/dist/tokens/hash-token.d.ts").HashToken} */ (value);
+			return hash.value === undefined ? hash.name : hash;
 		}
 
 		let value = readValue();
@@ -193,11 +195,11 @@ class Liquid extends TemplateEngine {
 		return parsedArgs;
 	}
 
-	static *evalArguments(tag, ctx) {
+	*evalArguments(liquidEngine, tag, ctx) {
 		let argArray = [];
 		let namedArgs = {};
 		if (tag.legacyArgs) {
-			let rawArgs = Liquid.parseArguments(_t.argLexer, tag.legacyArgs);
+			let rawArgs = Liquid.parseArguments(this.argLexer, tag.legacyArgs);
 			for (let arg of rawArgs) {
 				let b = yield liquidEngine.evalValue(arg, ctx);
 				argArray.push(b);
@@ -237,7 +239,7 @@ class Liquid extends TemplateEngine {
 					}
 				},
 				render: function* (ctx) {
-					let argArray = yield* Liquid.evalArguments(this, ctx);
+					let argArray = yield* _t.evalArguments(liquidEngine, this, ctx);
 					let ret = yield shortcodeFn.call(Liquid.normalizeScope(ctx), ...argArray);
 					return ret;
 				},
@@ -272,7 +274,7 @@ class Liquid extends TemplateEngine {
 					stream.start();
 				},
 				render: function* (ctx /*, emitter*/) {
-					let argArray = yield* Liquid.evalArguments(this, ctx);
+					let argArray = yield* _t.evalArguments(liquidEngine, this, ctx);
 
 					const html = yield liquidEngine.renderer.renderTemplates(this.templates, ctx);
 
