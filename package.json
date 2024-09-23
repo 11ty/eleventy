@@ -84,7 +84,7 @@
 		"@11ty/eleventy-plugin-rss": "^2.0.2",
 		"@11ty/eleventy-plugin-syntaxhighlight": "^5.0.0",
 		"@eslint/eslintrc": "^3.1.0",
-		"@eslint/js": "^9.10.0",
+		"@eslint/js": "^9.11.0",
 		"@iarna/toml": "^2.2.5",
 		"@mdx-js/node-loader": "^3.0.1",
 		"@types/node": "^22.5.5",
