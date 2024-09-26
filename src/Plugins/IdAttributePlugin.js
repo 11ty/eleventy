@@ -5,6 +5,10 @@ import slugifyFilter from "../Filters/Slugify.js";
 import MemoizeUtil from "../Util/MemoizeFunction.js";
 
 function getTextNodeContent(node) {
+	if (node.attrs?.["eleventy:id-ignore"] === "") {
+		delete node.attrs["eleventy:id-ignore"];
+		return "";
+	}
 	if (!node.content) {
 		return "";
 	}

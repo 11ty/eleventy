@@ -16,6 +16,19 @@ test("Using the IdAttribute plugin #3356", async (t) => {
 	t.is(results[0].content, `<h1 id="this-is-a-heading">This is a heading</h1><h2 id="already">This is another heading</h2><h2 id="this-is-another-heading">This is another heading</h2><h3 id="this-is-another-heading-2">This is another heading</h3>`);
 });
 
+test("Using the IdAttribute plugin, ignore attribute #3356", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.addPlugin(IdAttributePlugin);
+
+      eleventyConfig.addTemplate("test.njk", `<h1>This is a heading</h1><h2 id="already">This is another heading</h2><h2>This is another heading</h2><h3>This is another <span eleventy:id-ignore>heading</span></h3>`, {});
+    },
+  });
+
+  let results = await elev.toJSON();
+	t.is(results[0].content, `<h1 id="this-is-a-heading">This is a heading</h1><h2 id="already">This is another heading</h2><h2 id="this-is-another-heading">This is another heading</h2><h3 id="this-is-another">This is another <span>heading</span></h3>`);
+});
+
 test("Using the IdAttribute plugin with escaped quoted text", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/_site", {
     config: function (eleventyConfig) {
