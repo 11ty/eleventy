@@ -749,7 +749,7 @@ You *probably* want to add a file extension to your permalink so that hosts will
 
 Learn more: https://www.zachleat.com/web/trailing-slash/
 
-This is usually but not *always* an error so if you’d like to disable this error message, use \`eleventyConfig.configureErrorReporting({ allowMissingExtensions: true });\``);
+This is usually but not *always* an error so if you’d like to disable this error message, add \`eleventyAllowMissingExtension: true\` somewhere in the data cascade for this template or use \`eleventyConfig.configureErrorReporting({ allowMissingExtensions: true });\` to disable this feature globally.`);
 					e.skipOriginalStack = true;
 					throw e;
 				}
