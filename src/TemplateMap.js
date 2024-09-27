@@ -734,14 +734,18 @@ ${permalinks[page.outputPath]
 		}
 
 		this.#onEachPage((page) => {
-			if (page.outputPath === false || page.url === false) {
+			if (
+				page.outputPath === false ||
+				page.url === false ||
+				page.data.eleventyAllowMissingExtension
+			) {
 				// do nothing (also serverless)
 			} else {
 				if (TemplatePath.getExtension(page.outputPath) === "") {
 					let e =
 						new Error(`The template at '${page.inputPath}' attempted to write to '${page.outputPath}'${page.data.permalink ? ` (via \`permalink\` value: '${page.data.permalink}')` : ""}, which is a target on the file system that does not include a file extension.
 
-You *probably* want to add a \`.html\` file extension to your permalink, so that most hosts will know how to correctly serve this file to web browsers. Without a file extension, this file may not be reliably deployed without additional hosting configuration (it won’t have a mime type) and may also cause local development issues if you later attempt to write to a subdirectory of the same name.
+You *probably* want to add a file extension to your permalink so that hosts will know how to correctly serve this file to web browsers. Without a file extension, this file may not be reliably deployed without additional hosting configuration (it won’t have a mime type) and may also cause local development issues if you later attempt to write to a subdirectory of the same name.
 
 Learn more: https://www.zachleat.com/web/trailing-slash/
 

@@ -1546,12 +1546,26 @@ test("Truthy outputPath without a file extension now throws an error, issue #339
     // The `set*Directory` configuration API methods are not yet allowed in plugins.
     message: `The template at './test/stubs-virtual/index.html' attempted to write to './_site/foo' (via \`permalink\` value: 'foo'), which is a target on the file system that does not include a file extension.
 
-You *probably* want to add a \`.html\` file extension to your permalink, so that most hosts will know how to correctly serve this file to web browsers. Without a file extension, this file may not be reliably deployed without additional hosting configuration (it won’t have a mime type) and may also cause local development issues if you later attempt to write to a subdirectory of the same name.
+You *probably* want to add a file extension to your permalink so that hosts will know how to correctly serve this file to web browsers. Without a file extension, this file may not be reliably deployed without additional hosting configuration (it won’t have a mime type) and may also cause local development issues if you later attempt to write to a subdirectory of the same name.
 
 Learn more: https://www.zachleat.com/web/trailing-slash/
 
 This is usually but not *always* an error so if you’d like to disable this error message, use \`eleventyConfig.configureErrorReporting({ allowMissingExtensions: true });\``
   });
+});
+
+test("Truthy outputPath without a file extension can be ignored, issue #3399", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: function (eleventyConfig) {
+      // eleventyConfig.configureErrorReporting({ allowMissingExtensions: true });
+      eleventyConfig.addTemplate("index.html", "", { permalink: "foo", eleventyAllowMissingExtension: true })
+    },
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+  t.is(results[0].url, "/foo");
 });
 
 test("Truthy outputPath without a file extension error message is disabled, issue #3399", async (t) => {
