@@ -784,6 +784,12 @@ Arguments:
      --watch
        Wait for files to change and automatically rewrite (no web server)
 
+     --incremental
+       Only build the files that have changed. Best with watch/serve.
+
+     --incremental=filename.md
+       Does not require watch/serve. Run an incremental build targeting a single file.
+
      --ignore-initial
        Start without a build; build when files change. Works best with watch/serve/incremental.
 
