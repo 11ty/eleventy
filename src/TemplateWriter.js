@@ -145,6 +145,9 @@ class TemplateWriter {
 		let wasCached = false;
 		if (tmpl) {
 			wasCached = true;
+			// Update config for https://github.com/11ty/eleventy/issues/3468
+			tmpl.eleventyConfig = this.eleventyConfig;
+
 			// TODO reset other constructor things here like inputDir/outputDir/extensionMap/
 			tmpl.setTemplateData(this.templateData);
 		} else {

@@ -21,6 +21,7 @@ import TemplateConfig from "./TemplateConfig.js";
 import FileSystemSearch from "./FileSystemSearch.js";
 import ProjectDirectories from "./Util/ProjectDirectories.js";
 import PathNormalizer from "./Util/PathNormalizer.js";
+import { isGlobMatch } from "./Util/GlobMatcher.js";
 
 import simplePlural from "./Util/Pluralize.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
@@ -858,7 +859,6 @@ Arguments:
 		}
 
 		let relevantLayouts = this.eleventyConfig.usesGraph.getLayoutsUsedBy(changedFilePath);
-
 		// Note: these are sync events!
 		// `templateModified` is an alias for resourceModified but all listeners for this are cleared out when the config is reset.
 		eventBus.emit("eleventy.templateModified", changedFilePath, {
@@ -875,8 +875,14 @@ Arguments:
 
 	shouldTriggerConfigReset(changedFiles) {
 		let configFilePaths = new Set(this.eleventyConfig.getLocalProjectConfigFiles());
+		let resetConfigGlobs = EleventyWatchTargets.normalizeToGlobs(
+			Array.from(this.eleventyConfig.userConfig.watchTargetsConfigReset),
+		);
 		for (let filePath of changedFiles) {
 			if (configFilePaths.has(filePath)) {
+				return true;
+			}
+			if (isGlobMatch(filePath, resetConfigGlobs)) {
 				return true;
 			}
 		}

@@ -42,6 +42,7 @@ class UserConfig {
 		this.plugins = [];
 		this.templateFormatsAdded = [];
 		this.additionalWatchTargets = [];
+		this.watchTargetsConfigReset = new Set();
 		this.extensionMap = new Set();
 		this.dataExtensions = new Map();
 		this.urlTransforms = [];
@@ -172,6 +173,7 @@ class UserConfig {
 		this.extensionConflictMap = {};
 		this.watchJavaScriptDependencies = true;
 		this.additionalWatchTargets = [];
+		this.watchTargetsConfigReset = new Set();
 		/** @type {object} */
 		this.serverOptions = {};
 		/** @type {object} */
@@ -878,7 +880,12 @@ class UserConfig {
 		return this.#dataDeepMergeModified;
 	}
 
-	addWatchTarget(additionalWatchTargets) {
+	addWatchTarget(additionalWatchTargets, options = {}) {
+		// Reset the config when the target path changes
+		if (options.resetConfig) {
+			this.watchTargetsConfigReset.add(additionalWatchTargets);
+		}
+
 		this.additionalWatchTargets.push(additionalWatchTargets);
 	}
 
@@ -1238,6 +1245,7 @@ class UserConfig {
 			dataDeepMerge: this.dataDeepMerge,
 			watchJavaScriptDependencies: this.watchJavaScriptDependencies,
 			additionalWatchTargets: this.additionalWatchTargets,
+			watchTargetsConfigReset: this.watchTargetsConfigReset,
 			serverOptions: this.serverOptions,
 			chokidarConfig: this.chokidarConfig,
 			watchThrottleWaitTime: this.watchThrottleWaitTime,
