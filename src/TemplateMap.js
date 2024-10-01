@@ -15,6 +15,12 @@ const debugDev = debugUtil("Dev:Eleventy:TemplateMap");
 class TemplateMapConfigError extends EleventyBaseError {}
 class EleventyDataSchemaError extends EleventyBaseError {}
 
+// These template URL filenames are allowed to exclude file extensions
+const EXTENSIONLESS_URL_ALLOWLIST = [
+	"/_redirects", // Netlify specific
+	"/.htaccess", // Apache
+];
+
 class TemplateMap {
 	constructor(eleventyConfig) {
 		if (!eleventyConfig) {
@@ -737,16 +743,10 @@ ${permalinks[page.outputPath]
 			if (
 				page.outputPath === false ||
 				page.url === false ||
-				page.data.eleventyAllowMissingExtension
+				page.data.eleventyAllowMissingExtension ||
+				EXTENSIONLESS_URL_ALLOWLIST.some((url) => page.url.endsWith(url))
 			) {
 				// do nothing (also serverless)
-			} else if (
-				[
-					"/_redirects", // Netlify specific
-					"/.htaccess", // Apache
-				].some((url) => page.url.endsWith(url))
-			) {
-				// do nothing
 			} else {
 				if (TemplatePath.getExtension(page.outputPath) === "") {
 					let e =
