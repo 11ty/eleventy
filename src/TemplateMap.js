@@ -740,6 +740,13 @@ ${permalinks[page.outputPath]
 				page.data.eleventyAllowMissingExtension
 			) {
 				// do nothing (also serverless)
+			} else if (
+				[
+					"/_redirects", // Netlify specific
+					"/.htaccess", // Apache
+				].some((url) => page.url.endsWith(url))
+			) {
+				// do nothing
 			} else {
 				if (TemplatePath.getExtension(page.outputPath) === "") {
 					let e =
@@ -747,7 +754,7 @@ ${permalinks[page.outputPath]
 
 You *probably* want to add a file extension to your permalink so that hosts will know how to correctly serve this file to web browsers. Without a file extension, this file may not be reliably deployed without additional hosting configuration (it won’t have a mime type) and may also cause local development issues if you later attempt to write to a subdirectory of the same name.
 
-Learn more: https://www.zachleat.com/web/trailing-slash/
+Learn more: https://v3.11ty.dev/docs/permalinks/#trailing-slashes
 
 This is usually but not *always* an error so if you’d like to disable this error message, add \`eleventyAllowMissingExtension: true\` somewhere in the data cascade for this template or use \`eleventyConfig.configureErrorReporting({ allowMissingExtensions: true });\` to disable this feature globally.`);
 					e.skipOriginalStack = true;

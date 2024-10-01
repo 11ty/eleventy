@@ -1548,7 +1548,7 @@ test("Truthy outputPath without a file extension now throws an error, issue #339
 
 You *probably* want to add a file extension to your permalink so that hosts will know how to correctly serve this file to web browsers. Without a file extension, this file may not be reliably deployed without additional hosting configuration (it won’t have a mime type) and may also cause local development issues if you later attempt to write to a subdirectory of the same name.
 
-Learn more: https://www.zachleat.com/web/trailing-slash/
+Learn more: https://v3.11ty.dev/docs/permalinks/#trailing-slashes
 
 This is usually but not *always* an error so if you’d like to disable this error message, add \`eleventyAllowMissingExtension: true\` somewhere in the data cascade for this template or use \`eleventyConfig.configureErrorReporting({ allowMissingExtensions: true });\` to disable this feature globally.`
   });
@@ -1566,6 +1566,20 @@ test("Truthy outputPath without a file extension can be ignored, issue #3399", a
   let results = await elev.toJSON();
   t.is(results.length, 1);
   t.is(results[0].url, "/foo");
+});
+
+
+test("Allow list for some file types without a file extension, issue #3399", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: function (eleventyConfig) {
+      eleventyConfig.addTemplate("index.html", "", { permalink: "/test/_redirects" })
+    },
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+  t.is(results[0].url, "/test/_redirects");
 });
 
 test("Truthy outputPath without a file extension error message is disabled, issue #3399", async (t) => {
