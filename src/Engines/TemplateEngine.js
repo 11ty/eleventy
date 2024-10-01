@@ -164,7 +164,7 @@ class TemplateEngine {
 		throw new Error("compile() must be implemented by engine");
 	}
 
-	// See https://www.11ty.dev/docs/watch-serve/#watch-javascript-dependencies
+	// See https://v3.11ty.dev/docs/watch-serve/#watch-javascript-dependencies
 	static shouldSpiderJavaScriptDependencies() {
 		return false;
 	}

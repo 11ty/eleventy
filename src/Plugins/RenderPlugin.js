@@ -130,7 +130,7 @@ async function renderShortcodeFn(fn, data) {
 
 /**
  * A plugin to add shortcodes to render an Eleventy template
- * string (or file) inside of another template. {@link https://www.11ty.dev/docs/plugins/render/}
+ * string (or file) inside of another template. {@link https://v3.11ty.dev/docs/plugins/render/}
  *
  * @since 1.0.0
  * @param {module:11ty/eleventy/UserConfig} eleventyConfig - User-land configuration instance.

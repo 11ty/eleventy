@@ -1403,13 +1403,13 @@ Object.assign(HtmlBasePlugin, HtmlBasePluginExtras);
 
 const EleventyServerlessBundlerPlugin = function () {
 	throw new Error(
-		"Following feedback from our Community Survey, low interest in this plugin prompted its removal from Eleventy core in 3.0 as we refocus on static sites. Learn more: https://www.11ty.dev/docs/plugins/serverless/",
+		"Following feedback from our Community Survey, low interest in this plugin prompted its removal from Eleventy core in 3.0 as we refocus on static sites. Learn more: https://v3.11ty.dev/docs/plugins/serverless/",
 	);
 };
 
 const EleventyEdgePlugin = function () {
 	throw new Error(
-		"Following feedback from our Community Survey, low interest in this plugin prompted its removal from Eleventy core in 3.0 as we refocus on static sites. Learn more: https://www.11ty.dev/docs/plugins/edge/",
+		"Following feedback from our Community Survey, low interest in this plugin prompted its removal from Eleventy core in 3.0 as we refocus on static sites. Learn more: https://v3.11ty.dev/docs/plugins/edge/",
 	);
 };
 

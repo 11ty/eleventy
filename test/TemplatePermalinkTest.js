@@ -173,7 +173,7 @@ test("Permalink generate apache content negotiation #761", (t) => {
     },
   ]);
   t.is(tp1.toHref(), "/");
-  // best paired with https://www.11ty.dev/docs/data-eleventy-supplied/#filepathstem for index.es.html
+  // best paired with https://v3.11ty.dev/docs/data-eleventy-supplied/#filepathstem for index.es.html
   t.is(tp1.toOutputPath(), "index.es/index.html");
 });
 
@@ -197,7 +197,7 @@ test("Permalink generate apache content negotiation with subdirectory #761", (t)
   ]);
 
   t.is(tp1.toHref(), "/test/");
-  // best paired with https://www.11ty.dev/docs/data-eleventy-supplied/#filepathstem for test/index.es.html
+  // best paired with https://v3.11ty.dev/docs/data-eleventy-supplied/#filepathstem for test/index.es.html
   t.is(tp1.toOutputPath(), "test/index.es/index.html");
 });
 
@@ -220,7 +220,7 @@ test("Permalink generate with urlTransforms #761", (t) => {
   ]);
 
   t.is(tp.toHref(), "/permalinksubfolder/");
-  // best paired with https://www.11ty.dev/docs/data-eleventy-supplied/#filepathstem for permalinksubfolder/index.es.html
+  // best paired with https://v3.11ty.dev/docs/data-eleventy-supplied/#filepathstem for permalinksubfolder/index.es.html
   t.is(tp.toOutputPath(), "permalinksubfolder/index.es/index.html");
 });
 
@@ -235,7 +235,7 @@ test("Permalink generate with urlTransforms (skip via undefined) #761", (t) => {
   ]);
 
   t.is(tp.toHref(), "/permalinksubfolder/index.es/");
-  // best paired with https://www.11ty.dev/docs/data-eleventy-supplied/#filepathstem for permalinksubfolder/index.es.html
+  // best paired with https://v3.11ty.dev/docs/data-eleventy-supplied/#filepathstem for permalinksubfolder/index.es.html
   t.is(tp.toOutputPath(), "permalinksubfolder/index.es/index.html");
 });
 
@@ -252,7 +252,7 @@ test("Permalink generate with 2 urlTransforms #761", (t) => {
   ]);
 
   t.is(tp.toHref(), "/def/");
-  // best paired with https://www.11ty.dev/docs/data-eleventy-supplied/#filepathstem for permalinksubfolder/index.es.html
+  // best paired with https://v3.11ty.dev/docs/data-eleventy-supplied/#filepathstem for permalinksubfolder/index.es.html
   t.is(tp.toOutputPath(), "permalinksubfolder/index.es/index.html");
 });
 
@@ -266,7 +266,7 @@ test("Permalink generate with urlTransforms returns index.html #761", (t) => {
   ]);
 
   t.is(tp.toHref(), "/abc/");
-  // best paired with https://www.11ty.dev/docs/data-eleventy-supplied/#filepathstem for permalinksubfolder/index.es.html
+  // best paired with https://v3.11ty.dev/docs/data-eleventy-supplied/#filepathstem for permalinksubfolder/index.es.html
   t.is(tp.toOutputPath(), "permalinksubfolder/index.es/index.html");
 });
 

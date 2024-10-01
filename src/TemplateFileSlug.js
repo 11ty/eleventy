@@ -19,7 +19,7 @@ class TemplateFileSlug {
 		this.filenameNoExt = extensionMap.removeTemplateExtension(this.parsed.base);
 	}
 
-	// `page.filePathStem` see https://www.11ty.dev/docs/data-eleventy-supplied/#page-variable
+	// `page.filePathStem` see https://v3.11ty.dev/docs/data-eleventy-supplied/#page-variable
 	getFullPathWithoutExtension() {
 		return "/" + TemplatePath.join(...this.dirs, this._getRawSlug());
 	}
@@ -38,7 +38,7 @@ class TemplateFileSlug {
 		return slug;
 	}
 
-	// `page.fileSlug` see https://www.11ty.dev/docs/data-eleventy-supplied/#page-variable
+	// `page.fileSlug` see https://v3.11ty.dev/docs/data-eleventy-supplied/#page-variable
 	getSlug() {
 		let rawSlug = this._getRawSlug();
 

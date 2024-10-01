@@ -55,7 +55,7 @@ class TemplateEngineManager {
 			// Custom entries *can* overwrite default entries above
 			if ("extensionMap" in this.config) {
 				for (let entry of this.config.extensionMap) {
-					// either the key does not already exist or it is not a simple alias and is an override: https://www.11ty.dev/docs/languages/custom/#overriding-an-existing-template-language
+					// either the key does not already exist or it is not a simple alias and is an override: https://v3.11ty.dev/docs/languages/custom/#overriding-an-existing-template-language
 					let existingTarget = this._keyToClassNameMap[entry.key];
 					let isAlias = TemplateEngineManager.isAlias(entry);
 
@@ -173,7 +173,7 @@ class TemplateEngineManager {
 		// Warning about engine deprecation
 		if (this.isEngineRemovedFromCore(name)) {
 			throw new Error(
-				`Per the 11ty Community Survey (2023), the "${name}" template language was moved from core to an officially supported plugin in v3.0. These plugins live here: https://github.com/11ty/eleventy-plugin-template-languages and are documented on their respective template language docs at https://www.11ty.dev/docs/languages/ You are also empowered to implement *any* template language yourself using https://www.11ty.dev/docs/languages/custom/`,
+				`Per the 11ty Community Survey (2023), the "${name}" template language was moved from core to an officially supported plugin in v3.0. These plugins live here: https://github.com/11ty/eleventy-plugin-template-languages and are documented on their respective template language docs at https://v3.11ty.dev/docs/languages/ You are also empowered to implement *any* template language yourself using https://v3.11ty.dev/docs/languages/custom/`,
 			);
 		}
 

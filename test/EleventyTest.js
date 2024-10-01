@@ -997,7 +997,7 @@ eleventy:
   elev.disableLogger();
 
   let e = await t.throwsAsync(() => elev.toJSON(), {
-    message: 'You attempted to set one of Eleventy’s reserved data property names. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://www.11ty.dev/docs/data-eleventy-supplied/'
+    message: 'You attempted to set one of Eleventy’s reserved data property names. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://v3.11ty.dev/docs/data-eleventy-supplied/'
   });
 
   t.is(e.originalError.toString(), "TypeError: Cannot add property key1, object is not extensible");
@@ -1015,7 +1015,7 @@ pkg:
   elev.disableLogger();
 
   let e = await t.throwsAsync(() => elev.toJSON(), {
-    message: 'You attempted to set one of Eleventy’s reserved data property names. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://www.11ty.dev/docs/data-eleventy-supplied/'
+    message: 'You attempted to set one of Eleventy’s reserved data property names. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://v3.11ty.dev/docs/data-eleventy-supplied/'
   });
 
   t.is(e.originalError.toString(), "TypeError: Cannot add property myOwn, object is not extensible");
@@ -1053,7 +1053,7 @@ page: "My page value"
   elev.disableLogger();
 
   let e = await t.throwsAsync(() => elev.toJSON(), {
-    message: 'You attempted to set one of Eleventy’s reserved data property names: page. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://www.11ty.dev/docs/data-eleventy-supplied/'
+    message: 'You attempted to set one of Eleventy’s reserved data property names: page. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://v3.11ty.dev/docs/data-eleventy-supplied/'
   });
 
   t.is(e.originalError.toString(), "TypeError: Cannot override reserved Eleventy properties: page");
@@ -1070,7 +1070,7 @@ content: "My page value"
   elev.disableLogger();
 
   let e = await t.throwsAsync(() => elev.toJSON(), {
-    message: 'You attempted to set one of Eleventy’s reserved data property names: content. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://www.11ty.dev/docs/data-eleventy-supplied/'
+    message: 'You attempted to set one of Eleventy’s reserved data property names: content. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://v3.11ty.dev/docs/data-eleventy-supplied/'
   });
 
   t.is(e.originalError.toString(), "TypeError: Cannot override reserved Eleventy properties: content");
@@ -1087,7 +1087,7 @@ collections: []
   elev.disableLogger();
 
   let e = await t.throwsAsync(() => elev.toJSON(), {
-    message: 'You attempted to set one of Eleventy’s reserved data property names: collections. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://www.11ty.dev/docs/data-eleventy-supplied/'
+    message: 'You attempted to set one of Eleventy’s reserved data property names: collections. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://v3.11ty.dev/docs/data-eleventy-supplied/'
   });
 
   t.is(e.originalError.toString(), "TypeError: Cannot override reserved Eleventy properties: collections");
@@ -1175,7 +1175,7 @@ parkour:
   t.is(elev.eleventyConfig.config.keys.package, "parkour");
 
   let e = await t.throwsAsync(() => elev.toJSON(), {
-    message: 'You attempted to set one of Eleventy’s reserved data property names. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://www.11ty.dev/docs/data-eleventy-supplied/'
+    message: 'You attempted to set one of Eleventy’s reserved data property names. You can opt-out of this behavior with `eleventyConfig.setFreezeReservedData(false)` or rename/remove the property in your data cascade that conflicts with Eleventy’s reserved property names (e.g. `eleventy`, `pkg`, and others). Learn more: https://v3.11ty.dev/docs/data-eleventy-supplied/'
   });
 
   t.is(e.originalError.toString(), "TypeError: Cannot add property myOwn, object is not extensible");

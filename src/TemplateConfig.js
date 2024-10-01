@@ -387,7 +387,7 @@ class TemplateConfig {
 					localConfig = configDefaultReturn;
 				}
 
-				// Removed a check for `filters` in 3.0.0-alpha.6 (now using addTransform instead) https://www.11ty.dev/docs/config/#transforms
+				// Removed a check for `filters` in 3.0.0-alpha.6 (now using addTransform instead) https://v3.11ty.dev/docs/config/#transforms
 			} catch (err) {
 				let isModuleError =
 					err instanceof Error && (err?.message || "").includes("Cannot find module");
