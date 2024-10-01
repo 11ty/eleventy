@@ -19,6 +19,7 @@ class EleventyDataSchemaError extends EleventyBaseError {}
 const EXTENSIONLESS_URL_ALLOWLIST = [
 	"/_redirects", // Netlify specific
 	"/.htaccess", // Apache
+	"/_headers", // Cloudflare
 ];
 
 class TemplateMap {
