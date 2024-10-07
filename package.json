@@ -80,7 +80,7 @@
 		]
 	},
 	"devDependencies": {
-		"@11ty/eleventy-img": "5.0.0-beta.10",
+		"@11ty/eleventy-img": "5.0.0",
 		"@11ty/eleventy-plugin-rss": "^2.0.2",
 		"@11ty/eleventy-plugin-syntaxhighlight": "^5.0.0",
 		"@eslint/eslintrc": "^3.1.0",
