@@ -1217,9 +1217,14 @@ Arguments:
 			await watchRun(path);
 		});
 
-		watcher.on("unlink", (path) => {
-			// this.logger.forceLog(`File removed: ${path}`);
+		watcher.on("unlink", async (path) => {
+			// Emulated passthrough copy logs from the server
+			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
+				this.logger.forceLog(`File removed: ${path}`);
+			}
+
 			this.fileSystemSearch.delete(path);
+			await watchRun(path);
 		});
 	}
 
