@@ -9,7 +9,7 @@ class ExistsCache {
 	}
 
 	setDirectoryCheck(check) {
-		this.cacheDirectories = !!check;
+		this.shouldCacheDirectories = !!check;
 	}
 
 	get size() {
@@ -17,7 +17,7 @@ class ExistsCache {
 	}
 
 	parentsDoNotExist(path) {
-		if (!this.cacheDirectories) {
+		if (!this.shouldCacheDirectories) {
 			return false;
 		}
 
@@ -31,7 +31,7 @@ class ExistsCache {
 		}
 
 		// if you’ve made it here: we don’t know if the parents exist or not
-		return false;
+		return undefined;
 	}
 
 	has(path) {
@@ -41,17 +41,19 @@ class ExistsCache {
 	exists(path) {
 		path = PathNormalizer.fullNormalization(path);
 
-		let exists = this._cache.get(path);
 		if (this.parentsDoNotExist(path)) {
-			// we don’t need to check if a parent directory does not exist
-			exists = false;
-		} else if (!this.has(path)) {
-			exists = fs.existsSync(path);
-			this.markExistsWithParentDirectories(path, exists);
+			// we don’t need to check if we already know the parent directories do not exist
+			return false;
+		} else if (!this._cache.has(path)) {
+			let exists = fs.existsSync(path);
 			this.lookupCount++;
+
+			this.markExistsWithParentDirectories(path, exists);
+
+			return exists;
 		}
 
-		return exists;
+		return this._cache.get(path);
 	}
 
 	// if a file exists, we can mark the parent directories as existing also
@@ -59,11 +61,13 @@ class ExistsCache {
 	markExistsWithParentDirectories(path, exists = true) {
 		path = PathNormalizer.fullNormalization(path);
 
-		if (!this.cacheDirectories || !exists) {
+		if (!this.shouldCacheDirectories || !exists) {
+			// does not exist: only mark path
 			this.markExists(path, false, true);
 			return;
 		}
 
+		// exists: mark path and parents
 		let paths = PathNormalizer.getAllPaths(path);
 		for (let fullpath of paths) {
 			this.markExists(fullpath, true, true);
