@@ -1,6 +1,6 @@
 {
 	"name": "@11ty/eleventy",
-	"version": "3.0.0",
+	"version": "3.0.1-alpha.1",
 	"description": "A simpler static site generator.",
 	"publishConfig": {
 		"access": "public",
@@ -117,7 +117,7 @@
 		"@11ty/dependency-tree-esm": "^1.0.0",
 		"@11ty/eleventy-dev-server": "^2.0.4",
 		"@11ty/eleventy-plugin-bundle": "^3.0.0",
-		"@11ty/eleventy-utils": "^1.0.3",
+		"@11ty/eleventy-utils": "2.0.0-alpha.2",
 		"@11ty/lodash-custom": "^4.17.21",
 		"@11ty/posthtml-urls": "^1.0.0",
 		"@11ty/recursive-copy": "^3.0.0",
@@ -144,7 +144,6 @@
 		"minimist": "^1.2.8",
 		"moo": "^0.5.2",
 		"node-retrieve-globals": "^6.0.0",
-		"normalize-path": "^3.0.0",
 		"nunjucks": "^3.2.4",
 		"please-upgrade-node": "^3.2.0",
 		"posthtml": "^0.16.6",
