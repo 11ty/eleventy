@@ -71,7 +71,7 @@ class TemplateLayoutPathResolver {
 			return true;
 		}
 		let fullPath = this.eleventyConfig.directories.getLayoutPath(layoutPath);
-		if (fs.existsSync(fullPath)) {
+		if (this.eleventyConfig.existsCache.exists(fullPath)) {
 			return true;
 		}
 		return false;

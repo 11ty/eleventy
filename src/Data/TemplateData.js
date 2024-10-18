@@ -66,10 +66,10 @@ class TemplateData {
 		return this.dataDir;
 	}
 
-	get _fsExistsCache() {
+	exists(pathname) {
 		// It's common for data files not to exist, so we avoid going to the FS to
 		// re-check if they do via a quick-and-dirty cache.
-		return this.eleventyConfig.existsCache;
+		return this.eleventyConfig.existsCache.exists(pathname);
 	}
 
 	setFileSystemSearch(fileSystemSearch) {
@@ -385,7 +385,7 @@ class TemplateData {
 		// Filter out files we know don't exist to avoid overhead for checking
 		const dataPaths = await Promise.all(
 			localDataPaths.map((path) => {
-				if (this._fsExistsCache.exists(path)) {
+				if (this.exists(path)) {
 					return path;
 				}
 				return false;
@@ -495,7 +495,7 @@ class TemplateData {
 
 		if (extension === "js" || extension === "cjs" || extension === "mjs") {
 			// JS data file or require’d JSON (no preprocessing needed)
-			if (!this._fsExistsCache.exists(path)) {
+			if (!this.exists(path)) {
 				return {};
 			}
 

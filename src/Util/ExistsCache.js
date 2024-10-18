@@ -1,4 +1,4 @@
-import fs from "graceful-fs";
+import fs from "node:fs";
 
 // Checks both files and directories
 class ExistsCache {
@@ -15,7 +15,7 @@ class ExistsCache {
 		return this._cache.has(path);
 	}
 
-	// Relative paths (to root directory) expected
+	// Relative paths (to root directory) expected (but not enforced due to perf costs)
 	exists(path) {
 		if (!this._cache.has(path)) {
 			let exists = fs.existsSync(path);

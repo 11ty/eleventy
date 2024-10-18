@@ -58,12 +58,6 @@ async function compileFile(inputPath, options = {}, templateLang) {
 		throw new Error("Missing file path argument passed to the `renderFile` shortcode.");
 	}
 
-	if (!fs.existsSync(TemplatePath.normalizeOperatingSystemFilePath(inputPath))) {
-		throw new Error(
-			"Could not find render plugin file for the `renderFile` shortcode, looking for: " + inputPath,
-		);
-	}
-
 	let wasTemplateConfigMissing = false;
 	if (!templateConfig) {
 		templateConfig = new TemplateConfig(null, false);
@@ -75,6 +69,14 @@ async function compileFile(inputPath, options = {}, templateLang) {
 	}
 	if (wasTemplateConfigMissing) {
 		await templateConfig.init();
+	}
+
+	let normalizedPath = TemplatePath.normalizeOperatingSystemFilePath(inputPath);
+	// Prefer the exists cache, if it’s available
+	if (!templateConfig.existsCache.exists(normalizedPath)) {
+		throw new Error(
+			"Could not find render plugin file for the `renderFile` shortcode, looking for: " + inputPath,
+		);
 	}
 
 	let tr = new TemplateRender(inputPath, templateConfig);
