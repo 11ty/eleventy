@@ -7,7 +7,6 @@ import { EleventyImportRaw, EleventyImportRawFromEleventy } from "./Util/Require
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import UserConfig from "./UserConfig.js";
 import GlobalDependencyMap from "./GlobalDependencyMap.js";
-import ExistsCache from "./Util/ExistsCache.js";
 import eventBus from "./EventBus.js";
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
 
@@ -537,14 +536,6 @@ class TemplateConfig {
 			throw new Error("The Eleventy Global Dependency Graph has not yet been initialized.");
 		}
 		return this.usesGraph;
-	}
-
-	get existsCache() {
-		if (!this._existsCache) {
-			this._existsCache = new ExistsCache();
-			this._existsCache.setDirectoryCheck(true);
-		}
-		return this._existsCache;
 	}
 }
 

@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import semver from "semver";
 
@@ -64,12 +65,6 @@ class TemplateData {
 
 	getDataDir() {
 		return this.dataDir;
-	}
-
-	get _fsExistsCache() {
-		// It's common for data files not to exist, so we avoid going to the FS to
-		// re-check if they do via a quick-and-dirty cache.
-		return this.eleventyConfig.existsCache;
 	}
 
 	setFileSystemSearch(fileSystemSearch) {
@@ -385,7 +380,7 @@ class TemplateData {
 		// Filter out files we know don't exist to avoid overhead for checking
 		const dataPaths = await Promise.all(
 			localDataPaths.map((path) => {
-				if (this._fsExistsCache.exists(path)) {
+				if (fs.existsSync(path)) {
 					return path;
 				}
 				return false;
@@ -496,9 +491,7 @@ class TemplateData {
 		if (extension === "js" || extension === "cjs" || extension === "mjs") {
 			// JS data file or require’d JSON (no preprocessing needed)
 			let localPath = TemplatePath.absolutePath(path);
-			let exists = this._fsExistsCache.exists(localPath);
-			// Make sure that relative lookups benefit from cache
-			this._fsExistsCache.markExists(path, exists);
+			let exists = fs.existsSync(localPath);
 
 			if (!exists) {
 				return {};
