@@ -542,7 +542,6 @@ class TemplateConfig {
 	get existsCache() {
 		if (!this._existsCache) {
 			this._existsCache = new ExistsCache();
-			this._existsCache.setDirectoryCheck(true);
 		}
 		return this._existsCache;
 	}
