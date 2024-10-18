@@ -60,6 +60,8 @@ class UserConfig {
 		this.pathPrefix;
 		/** @type {object} */
 		this.errorReporting = {};
+		/** @type {object} */
+		this.templateHandling = {};
 
 		this.reset();
 		this.#uniqueId = Math.random();
@@ -233,6 +235,8 @@ class UserConfig {
 
 		/** @type {object} */
 		this.errorReporting = {};
+		/** @type {object} */
+		this.templateHandling = {};
 	}
 
 	// compatibleRange is optional in 2.0.0-beta.2
@@ -1165,6 +1169,11 @@ class UserConfig {
 		Object.assign(this.errorReporting, options);
 	}
 
+	configureTemplateHandling(options = {}) {
+		// writeMode: "sync" // "async"
+		Object.assign(this.templateHandling, options);
+	}
+
 	/*
 	 * Collections
 	 */
@@ -1267,6 +1276,7 @@ class UserConfig {
 			freezeReservedData: this.freezeReservedData,
 			customDateParsing: this.customDateParsingCallbacks,
 			errorReporting: this.errorReporting,
+			templateHandling: this.templateHandling,
 		};
 
 		if (Array.isArray(this.dataFileSuffixesOverride)) {

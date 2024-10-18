@@ -130,6 +130,7 @@ test("eleventyComputed relies on global data", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/eleventyComputed/use-global-data.njk",
     "./test/stubs/",
@@ -154,6 +155,7 @@ test("eleventyComputed intermixes with global data", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
 
   let tmpl = await getNewTemplate(
     "./test/stubs-computed-global/intermix.njk",
