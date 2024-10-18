@@ -12,18 +12,25 @@ class FileSystemManager {
 		this.eleventyConfig = eleventyConfig;
 	}
 
+	get cache() {
+		return this.eleventyConfig.existsCache;
+	}
+
 	async createDirectoryForFile(filePath) {
 		let dir = path.parse(filePath).dir;
-		if (!dir) {
+		if (!dir || this.cache.exists(dir)) {
 			return;
 		}
 
-		return mkdir(dir, { recursive: true });
+		return mkdir(dir, { recursive: true }).then((result) => {
+			this.cache.markExistsWithParentDirectories(dir);
+			return result;
+		});
 	}
 
 	createDirectoryForFileSync(filePath) {
 		let dir = path.parse(filePath).dir;
-		if (!dir) {
+		if (!dir || this.cache.exists(dir)) {
 			return;
 		}
 

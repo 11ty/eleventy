@@ -18,6 +18,7 @@ const debug = debugUtil("Eleventy:TemplatePassthrough");
 class TemplatePassthroughError extends EleventyBaseError {}
 
 class TemplatePassthrough {
+	#isExistsCache = {};
 	#isDirectoryCache = {};
 
 	constructor(path, eleventyConfig) {
@@ -155,7 +156,10 @@ class TemplatePassthrough {
 	}
 
 	isExists(dir) {
-		return fs.existsSync(dir);
+		if (this.#isExistsCache[dir] === undefined) {
+			this.#isExistsCache[dir] = fs.existsSync(dir);
+		}
+		return this.#isExistsCache[dir];
 	}
 
 	isDirectory(dir) {
