@@ -208,7 +208,7 @@ class JavaScript extends TemplateEngine {
 		}
 
 		if (inst?.render) {
-			return function (data = {}) {
+			return (data = {}) => {
 				// TODO does this do anything meaningful for non-classes?
 				// `inst` should have a normalized `render` function from _getInstance
 
@@ -225,7 +225,7 @@ class JavaScript extends TemplateEngine {
 				Object.assign(inst, this.getJavaScriptFunctions(inst));
 
 				return this.normalize(inst.render.call(inst, data));
-			}.bind(this);
+			};
 		}
 	}
 
