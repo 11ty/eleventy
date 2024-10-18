@@ -77,6 +77,7 @@ eventBus.on("eleventy.importCacheReset", (fileQueue) => {
 	}
 });
 
+// raw means we don’t normalize away the `default` export
 async function dynamicImportAbsolutePath(absolutePath, type, returnRaw = false) {
 	if (absolutePath.endsWith(".json") || type === "json") {
 		// https://v8.dev/features/import-assertions#dynamic-import() is still experimental in Node 20
@@ -85,6 +86,15 @@ async function dynamicImportAbsolutePath(absolutePath, type, returnRaw = false) 
 			return;
 		}
 		return JSON.parse(rawInput);
+	}
+
+	if (!returnRaw) {
+		if (
+			(type === "cjs" && absolutePath.endsWith(".js")) ||
+			(type === "esm" && absolutePath.endsWith(".cjs"))
+		) {
+			return require(absolutePath);
+		}
 	}
 
 	let urlPath;
