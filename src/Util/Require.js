@@ -88,6 +88,7 @@ async function dynamicImportAbsolutePath(absolutePath, type, returnRaw = false) 
 		return JSON.parse(rawInput);
 	}
 
+	// returnRaw expects `{ default }`
 	if (!returnRaw) {
 		if (
 			(type === "cjs" && absolutePath.endsWith(".js")) ||
