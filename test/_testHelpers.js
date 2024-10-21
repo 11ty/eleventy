@@ -15,6 +15,8 @@ async function getTemplateConfigInstance(configObj, dirs, configObjOverride = un
 		eleventyConfig = new TemplateConfig();
 	}
 
+	eleventyConfig.setProjectUsingEsm(true);
+
 	if(!(dirs instanceof ProjectDirectories)) {
 		dirs = new ProjectDirectories();
 		if(isPlainObject(configObj) && !configObj.dir) {
