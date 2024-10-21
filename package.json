@@ -86,7 +86,7 @@
 		"@eslint/eslintrc": "^3.1.0",
 		"@eslint/js": "^9.11.1",
 		"@iarna/toml": "^2.2.5",
-		"@mdx-js/node-loader": "^3.0.1",
+		"@mdx-js/node-loader": "^3.1.0",
 		"@types/node": "^22.7.5",
 		"@vue/server-renderer": "^3.5.12",
 		"@zachleat/noop": "^1.0.4",
