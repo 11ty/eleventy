@@ -47,11 +47,10 @@ class HtmlTransformer {
 		if (callbacks.length > 0) {
 			inst.use(
 				urls({
-					eachURL: (url) => {
-						// and: attrName, tagName
+					eachURL: (url, attrName, tagName) => {
 						for (let { fn: callback } of callbacks) {
 							// already sorted by priority when added
-							url = callback.call(context, url);
+							url = callback.call(context, url, { attribute: attrName, tag: tagName });
 						}
 
 						return url;
