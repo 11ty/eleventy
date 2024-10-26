@@ -1,24 +1,28 @@
-const test = require("ava");
-const TemplateEngineManager = require("../src/TemplateEngineManager");
-const templateConfig = require("../src/Config");
-const config = templateConfig.getConfig();
+import test from "ava";
+
+import TemplateEngineManager from "../src/Engines/TemplateEngineManager.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import TemplateConfig from "../src/TemplateConfig.js";
 
 test("Unsupported engine", async (t) => {
-  t.throws(() => {
-    let tem = new TemplateEngineManager();
-    tem.getEngine("doesnotexist");
+  await t.throwsAsync(async () => {
+    let eleventyConfig = new TemplateConfig();
+    let tem = new TemplateEngineManager(eleventyConfig);
+    await tem.getEngine("doesnotexist");
   });
 });
 
 test("Supported engine", async (t) => {
-  let tem = new TemplateEngineManager();
-  t.truthy(tem.hasEngine("ejs"));
+  let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+
+  let tem = new TemplateEngineManager(eleventyConfig);
+  t.truthy(tem.hasEngine("11ty.js"));
 });
 
 test("Supported custom engine", async (t) => {
-  let tem = new TemplateEngineManager();
-  tem.config = Object.assign({}, config);
-  tem.config.extensionMap.add({
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.extensionMap.add({
     extension: "txt",
     key: "txt",
     compile: function (str, inputPath) {
@@ -28,9 +32,14 @@ test("Supported custom engine", async (t) => {
       };
     },
   });
+  await eleventyConfig.init();
+
+  let extensionMap = new EleventyExtensionMap(eleventyConfig);
+
+  let tem = new TemplateEngineManager(eleventyConfig);
 
   t.truthy(tem.hasEngine("txt"));
-  let engine = tem.getEngine("txt");
+  let engine = await tem.getEngine("txt", extensionMap);
   let fn = await engine.compile("<p>This is plaintext</p>");
   t.is(await fn({ author: "zach" }), "<p>This is plaintext</p>");
 });
@@ -38,9 +47,8 @@ test("Supported custom engine", async (t) => {
 test("Custom engine with custom init", async (t) => {
   let initCount = 0;
   let compileCount = 0;
-  let tem = new TemplateEngineManager();
-  tem.config = Object.assign({}, config);
-  tem.config.extensionMap.add({
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.extensionMap.add({
     extension: "custom1",
     key: "custom1",
     init: async function () {
@@ -52,13 +60,19 @@ test("Custom engine with custom init", async (t) => {
       return () => str;
     },
   });
+  await eleventyConfig.init();
+
+  let extensionMap = new EleventyExtensionMap(eleventyConfig);
+
+  // let config = eleventyConfig.getConfig();
+  let tem = new TemplateEngineManager(eleventyConfig);
 
   t.truthy(tem.hasEngine("custom1"));
-  let engine = tem.getEngine("custom1");
+  let engine = await tem.getEngine("custom1", extensionMap);
   let fn = await engine.compile("<p>This is plaintext</p>");
   t.is(await fn({}), "<p>This is plaintext</p>");
 
-  let engine2 = tem.getEngine("custom1");
+  let engine2 = await tem.getEngine("custom1");
   t.is(engine, engine2);
 
   let fn2 = await engine2.compile("<p>This is plaintext</p>");
@@ -68,20 +82,12 @@ test("Custom engine with custom init", async (t) => {
   t.is(compileCount, 2, "Should have only run the compile callback twice");
 });
 
-test("Handlebars Helpers", async (t) => {
-  let tem = new TemplateEngineManager();
-  let engine = tem.getEngine("hbs");
-  engine.addHelpers({
-    uppercase: function (name) {
-      return name.toUpperCase();
-    },
-  });
-
-  let fn = await engine.compile("<p>{{uppercase author}}</p>");
-  t.is(await fn({ author: "zach" }), "<p>ZACH</p>");
-});
-
 test("getEngineLib", async (t) => {
-  let tem = new TemplateEngineManager();
-  t.truthy(tem.getEngine("md").getEngineLib());
+  let eleventyConfig = new TemplateConfig();
+  await eleventyConfig.init();
+  let extensionMap = new EleventyExtensionMap(eleventyConfig);
+
+  let tem = new TemplateEngineManager(eleventyConfig);
+  let engine = await tem.getEngine("md", extensionMap);
+  t.truthy(engine.getEngineLib());
 });

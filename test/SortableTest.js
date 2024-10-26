@@ -1,6 +1,7 @@
-const test = require("ava");
-const { DateTime } = require("luxon");
-const Sortable = require("../src/Util/Sortable");
+import test from "ava";
+import { DateTime } from "luxon";
+
+import Sortable from "../src/Util/Objects/Sortable.js";
 
 test("get Sort Function", (t) => {
   let s = new Sortable();
@@ -162,22 +163,6 @@ test("Date Descending", (t) => {
   t.deepEqual(s.sort(), [date3, date2, date1]);
 });
 
-test("Alphabetic Ascending (str sort arg)", (t) => {
-  let s = new Sortable();
-  s.add("a");
-  s.add("z");
-  s.add("m");
-  t.deepEqual(s.sort("ascending"), ["a", "m", "z"]);
-});
-
-test("Alphabetic Descending (str sort arg)", (t) => {
-  let s = new Sortable();
-  s.add("a");
-  s.add("z");
-  s.add("m");
-  t.deepEqual(s.sort("descending"), ["z", "m", "a"]);
-});
-
 test("Alphabetic Ascending (short str sort arg)", (t) => {
   let s = new Sortable();
   s.add("a");
@@ -192,4 +177,51 @@ test("Alphabetic Descending (short str sort arg)", (t) => {
   s.add("z");
   s.add("m");
   t.deepEqual(s.sort("Z-A"), ["z", "m", "a"]);
+});
+
+test("Invalid Sort Function Name", (t) => {
+  let s = new Sortable();
+  t.throws(() => s.sort("INVALID SORT STRING"));
+});
+
+test("Ascending / Descending Sorting Setters (asc, no param)", (t) => {
+  let s = new Sortable();
+  s.isSortAscending = false;
+  s.setSortAscending();
+  t.is(s.isSortAscending, true);
+});
+
+test("Ascending / Descending Sorting Setters (desc, no param)", (t) => {
+  let s = new Sortable();
+  s.isSortAscending = true;
+  s.setSortDescending();
+  t.is(s.isSortAscending, false);
+});
+
+test("Ascending / Descending Sorting Setters (asc, true)", (t) => {
+  let s = new Sortable();
+  s.isSortAscending = false;
+  s.setSortAscending(true);
+  t.is(s.isSortAscending, true);
+});
+
+test("Ascending / Descending Sorting Setters (asc, false)", (t) => {
+  let s = new Sortable();
+  s.isSortAscending = true;
+  s.setSortAscending(false);
+  t.is(s.isSortAscending, false);
+});
+
+test("Ascending / Descending Sorting Setters (desc, true)", (t) => {
+  let s = new Sortable();
+  s.isSortAscending = true;
+  s.setSortDescending(true);
+  t.is(s.isSortAscending, false);
+});
+
+test("Ascending / Descending Sorting Setters (desc, false)", (t) => {
+  let s = new Sortable();
+  s.isSortAscending = false;
+  s.setSortDescending(false);
+  t.is(s.isSortAscending, true);
 });

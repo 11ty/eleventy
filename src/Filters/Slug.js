@@ -1,8 +1,14 @@
-const slugify = require("slugify");
+import slugify from "slugify";
 
-module.exports = function(str) {
-  return slugify(str, {
-    replacement: "-",
-    lower: true
-  });
-};
+export default function (str, options = {}) {
+	return slugify(
+		"" + str,
+		Object.assign(
+			{
+				replacement: "-",
+				lower: true,
+			},
+			options,
+		),
+	);
+}

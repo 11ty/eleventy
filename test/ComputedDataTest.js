@@ -1,5 +1,6 @@
-const test = require("ava");
-const ComputedData = require("../src/ComputedData");
+import test from "ava";
+import ComputedData from "../src/Data/ComputedData.js";
+import TemplateConfig from "../src/TemplateConfig.js";
 
 test("Basic get/set", async (t) => {
   let cd = new ComputedData();
@@ -329,13 +330,7 @@ test("Get var order", async (t) => {
   };
 
   await cd.resolveVarOrder(data);
-  t.deepEqual(cd.queue.getOrder(), [
-    "collections.all",
-    "key1",
-    "collections.dog",
-    "key2",
-    "key0",
-  ]);
+  t.deepEqual(cd.queue.getOrder(), ["collections.all", "key1", "collections.dog", "key2", "key0"]);
 });
 
 test("Get var order and process it in two stages", async (t) => {
@@ -392,4 +387,24 @@ test("Get var order and process it in two stages", async (t) => {
   });
 
   // t.deepEqual(cd.queue.getOrder(), ["collections.all", "key1", "collections.dog", "key2", "key0"]);
+});
+
+test("Use JavaScript functions (filters) in computed data functions", async (t) => {
+  let eleventyCfg = new TemplateConfig();
+  await eleventyCfg.init();
+
+  let cfg = eleventyCfg.getConfig();
+  cfg.javascriptFunctions.alwaysBlue = function (str) {
+    return str + " is blue";
+  };
+  let cd = new ComputedData(cfg);
+
+  cd.add("key1", function (data) {
+    return this.alwaysBlue("this is a test");
+  });
+
+  let data = {};
+  await cd.setupData(data);
+
+  t.is(data.key1, "this is a test is blue");
 });

@@ -1,124 +1,164 @@
-const dependencyTree = require("@11ty/dependency-tree");
-const TemplatePath = require("./TemplatePath");
-const deleteRequireCache = require("./Util/DeleteRequireCache");
+import { TemplatePath } from "@11ty/eleventy-utils";
+import { DepGraph } from "dependency-graph";
+
+import JavaScriptDependencies from "./Util/JavaScriptDependencies.js";
+import eventBus from "./EventBus.js";
 
 class EleventyWatchTargets {
-  constructor() {
-    this.targets = new Set();
-    this.dependencies = new Set();
-    this.newTargets = new Set();
-    this._watchJavaScriptDependencies = true;
-  }
+	#templateConfig;
 
-  set watchJavaScriptDependencies(watch) {
-    this._watchJavaScriptDependencies = !!watch;
-  }
+	constructor(templateConfig) {
+		this.targets = new Set();
+		this.dependencies = new Set();
+		this.newTargets = new Set();
+		this.isEsm = false;
 
-  get watchJavaScriptDependencies() {
-    return this._watchJavaScriptDependencies;
-  }
+		this.graph = new DepGraph();
+		this.#templateConfig = templateConfig;
+	}
 
-  isJavaScriptDependency(path) {
-    return this.dependencies.has(path);
-  }
+	setProjectUsingEsm(isEsmProject) {
+		this.isEsm = !!isEsmProject;
+	}
 
-  _normalizeTargets(targets) {
-    if (!targets) {
-      return [];
-    } else if (Array.isArray(targets)) {
-      return targets;
-    }
+	isJavaScriptDependency(path) {
+		return this.dependencies.has(path);
+	}
 
-    return [targets];
-  }
+	reset() {
+		this.newTargets = new Set();
+	}
 
-  reset() {
-    this.newTargets = new Set();
-  }
+	isWatched(target) {
+		return this.targets.has(target);
+	}
 
-  isWatched(target) {
-    return this.targets.has(target);
-  }
+	addToDependencyGraph(parent, deps) {
+		if (!this.graph.hasNode(parent)) {
+			this.graph.addNode(parent);
+		}
+		for (let dep of deps) {
+			if (!this.graph.hasNode(dep)) {
+				this.graph.addNode(dep);
+			}
+			this.graph.addDependency(parent, dep);
+		}
+	}
 
-  addRaw(targets, isDependency) {
-    for (let target of targets) {
-      let path = TemplatePath.addLeadingDotSlash(target);
-      if (!this.isWatched(path)) {
-        this.newTargets.add(path);
-      }
+	uses(parent, dep) {
+		return this.getDependenciesOf(parent).includes(dep);
+	}
 
-      this.targets.add(path);
+	getDependenciesOf(parent) {
+		if (!this.graph.hasNode(parent)) {
+			return [];
+		}
+		return this.graph.dependenciesOf(parent);
+	}
 
-      if (isDependency) {
-        this.dependencies.add(path);
-      }
-    }
-  }
+	getDependantsOf(child) {
+		if (!this.graph.hasNode(child)) {
+			return [];
+		}
+		return this.graph.dependantsOf(child);
+	}
 
-  // add only a target
-  add(targets) {
-    targets = this._normalizeTargets(targets);
-    this.addRaw(targets);
-  }
+	addRaw(targets, isDependency) {
+		for (let target of targets) {
+			let path = TemplatePath.addLeadingDotSlash(target);
+			if (!this.isWatched(path)) {
+				this.newTargets.add(path);
+			}
 
-  addAndMakeGlob(targets) {
-    targets = this._normalizeTargets(targets).map(entry =>
-      TemplatePath.convertToRecursiveGlobSync(entry)
-    );
-    this.addRaw(targets);
-  }
+			this.targets.add(path);
 
-  // add only a target’s dependencies
-  addDependencies(targets, filterCallback) {
-    if (!this.watchJavaScriptDependencies) {
-      return;
-    }
+			if (isDependency) {
+				this.dependencies.add(path);
+			}
+		}
+	}
 
-    targets = this._normalizeTargets(targets);
-    let deps = this.getJavaScriptDependenciesFromList(targets);
-    if (filterCallback) {
-      deps = deps.filter(filterCallback);
-    }
+	static normalize(targets) {
+		if (!targets) {
+			return [];
+		} else if (Array.isArray(targets)) {
+			return targets;
+		}
 
-    this.addRaw(deps, true);
-  }
+		return [targets];
+	}
 
-  setWriter(templateWriter) {
-    this.writer = templateWriter;
-  }
+	// add only a target
+	add(targets) {
+		this.addRaw(EleventyWatchTargets.normalize(targets));
+	}
 
-  getJavaScriptDependenciesFromList(files = []) {
-    let depSet = new Set();
-    files
-      .filter(file => file.endsWith(".js") || file.endsWith(".cjs")) // TODO does this need to work with aliasing? what other JS extensions will have deps?
-      .forEach(file => {
-        dependencyTree(file, { allowNotFound: true })
-          .map(dependency => {
-            return TemplatePath.addLeadingDotSlash(
-              TemplatePath.relativePath(dependency)
-            );
-          })
-          .forEach(dependency => {
-            depSet.add(dependency);
-          });
-      });
+	static normalizeToGlobs(targets) {
+		return EleventyWatchTargets.normalize(targets).map((entry) =>
+			TemplatePath.convertToRecursiveGlobSync(entry),
+		);
+	}
 
-    return Array.from(depSet);
-  }
+	addAndMakeGlob(targets) {
+		this.addRaw(EleventyWatchTargets.normalizeToGlobs(targets));
+	}
 
-  clearDependencyRequireCache() {
-    for (let path of this.dependencies) {
-      deleteRequireCache(TemplatePath.absolutePath(path));
-    }
-  }
+	// add only a target’s dependencies
+	async addDependencies(targets, filterCallback) {
+		if (this.#templateConfig && !this.#templateConfig.shouldSpiderJavaScriptDependencies()) {
+			return;
+		}
 
-  getNewTargetsSinceLastReset() {
-    return Array.from(this.newTargets);
-  }
+		targets = EleventyWatchTargets.normalize(targets);
+		let deps = await JavaScriptDependencies.getDependencies(targets, this.isEsm);
+		if (filterCallback) {
+			deps = deps.filter(filterCallback);
+		}
 
-  getTargets() {
-    return Array.from(this.targets);
-  }
+		for (let target of targets) {
+			this.addToDependencyGraph(target, deps);
+		}
+		this.addRaw(deps, true);
+	}
+
+	setWriter(templateWriter) {
+		this.writer = templateWriter;
+	}
+
+	clearImportCacheFor(filePathArray) {
+		let paths = new Set();
+		for (const filePath of filePathArray) {
+			paths.add(filePath);
+
+			// Delete from require cache so that updates to the module are re-required
+			let importsTheChangedFile = this.getDependantsOf(filePath);
+			for (let dep of importsTheChangedFile) {
+				paths.add(dep);
+			}
+
+			let isImportedInTheChangedFile = this.getDependenciesOf(filePath);
+			for (let dep of isImportedInTheChangedFile) {
+				paths.add(dep);
+			}
+
+			// Use GlobalDependencyMap
+			if (this.#templateConfig) {
+				for (let dep of this.#templateConfig.usesGraph.getDependantsFor(filePath)) {
+					paths.add(dep);
+				}
+			}
+		}
+
+		eventBus.emit("eleventy.importCacheReset", paths);
+	}
+
+	getNewTargetsSinceLastReset() {
+		return Array.from(this.newTargets);
+	}
+
+	getTargets() {
+		return Array.from(this.targets);
+	}
 }
 
-module.exports = EleventyWatchTargets;
+export default EleventyWatchTargets;

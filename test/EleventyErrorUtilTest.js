@@ -1,14 +1,10 @@
-const test = require("ava");
-const EleventyErrorUtil = require("../src/EleventyErrorUtil");
+import test from "ava";
+import EleventyErrorUtil from "../src/Errors/EleventyErrorUtil.js";
 
 const SAMPLE_ERROR = new Error("Nothing to see here");
 
-const {
-  cleanMessage,
-  hasEmbeddedError,
-  convertErrorToString,
-  deconvertErrorToObject,
-} = EleventyErrorUtil;
+const { cleanMessage, hasEmbeddedError, convertErrorToString, deconvertErrorToObject } =
+  EleventyErrorUtil;
 
 test("hasEmbeddedError()", (t) => {
   t.false(hasEmbeddedError(""));

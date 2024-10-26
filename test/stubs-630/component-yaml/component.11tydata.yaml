@@ -1,5 +1,5 @@
 yamlKey2: "yaml2"
 yamlKey3: "yaml3"
-jsonKey1: "overriden"
-jsKey1: "overriden"
-nosjKey1: "overriden"
+jsonKey1: "overridden"
+jsKey1: "overridden"
+nosjKey1: "overridden"

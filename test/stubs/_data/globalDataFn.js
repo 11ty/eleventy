@@ -1,7 +1,7 @@
-const dep1 = require("../deps/dep1");
+import dep1 from "../deps/dep1.cjs";
 
-module.exports = function() {
+export default function () {
   return {
-    datakeyfromjsfn: "howdy"
+    datakeyfromjsfn: "howdy",
   };
-};
+}

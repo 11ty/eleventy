@@ -1,0 +1,63 @@
+name: I’m having trouble with Eleventy
+description: Have a problem? It might be a bug! Create a report to help us improve.
+labels: [needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening a bug report, please search for the behavior in the existing issues. 
+
+        ---
+
+        Thank you for taking the time to file a bug report. To address this bug as fast as possible, we need some information.
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      description: Which operating system do you use?
+      placeholder: macOS Big Sur 11.5.2
+    validations:
+      required: true
+  - type: input
+    id: eleventy
+    attributes:
+      label: Eleventy
+      description: Which version of Eleventy do you use?
+      placeholder: eleventy --version or npx @11ty/eleventy --version
+    validations:
+      required: true
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction steps
+      description: Steps to reproduce the behavior.
+      value: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See an error
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+  - type: input
+    id: repro-url
+    attributes:
+      label: Reproduction URL
+      description: "Optional: The URL to the **public** repository for the reproduction. _[parser:url]_"
+      placeholder: e.g. https://github.com/zachleat/zachleat.com
+    validations:
+      required: false
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: "Optional: If applicable, add screenshots to help explain your problem."

@@ -1,180 +1,305 @@
-const fs = require("fs-extra");
-const path = require("path");
+import assert from "node:assert";
 
-const TemplatePath = require("./TemplatePath");
-const config = require("./Config");
-const debug = require("debug")("EleventyServe");
+import debugUtil from "debug";
+import { Merge, DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
+import EleventyDevServer from "@11ty/eleventy-dev-server";
+
+import EleventyBaseError from "./Errors/EleventyBaseError.js";
+import ConsoleLogger from "./Util/ConsoleLogger.js";
+import PathPrefixer from "./Util/PathPrefixer.js";
+import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
+import { getModulePackageJson } from "./Util/ImportJsonSync.js";
+import { EleventyImport } from "./Util/Require.js";
+import { isGlobMatch } from "./Util/GlobMatcher.js";
+
+const debug = debugUtil("Eleventy:EleventyServe");
+
+class EleventyServeConfigError extends EleventyBaseError {}
+
+const DEFAULT_SERVER_OPTIONS = {
+	module: "@11ty/eleventy-dev-server",
+	port: 8080,
+	// pathPrefix: "/",
+	// setup: function() {},
+	// logger: { info: function() {}, error: function() {} }
+};
 
 class EleventyServe {
-  constructor() {}
+	constructor() {
+		this.logger = new ConsoleLogger();
+		this._initOptionsFetched = false;
+		this._aliases = undefined;
+		this._watchedFiles = new Set();
+	}
 
-  get config() {
-    return this.configOverride || config.getConfig();
-  }
-  set config(config) {
-    this.configOverride = config;
-  }
+	get config() {
+		if (!this.eleventyConfig) {
+			throw new EleventyServeConfigError(
+				"You need to set the eleventyConfig property on EleventyServe.",
+			);
+		}
 
-  setOutputDir(outputDir) {
-    this.outputDir = outputDir;
-  }
+		return this.eleventyConfig.getConfig();
+	}
 
-  getPathPrefix() {
-    let cfgPrefix = this.config.pathPrefix;
-    if (cfgPrefix) {
-      // add leading / (for browsersync), see #1454
-      // path.join uses \\ for Windows so we split and rejoin
-      return path.join("/", cfgPrefix).split(path.sep).join("/");
-    }
-    return "/";
-  }
+	set config(config) {
+		throw new Error("It’s not allowed to set config on EleventyServe. Set eleventyConfig instead.");
+	}
 
-  getRedirectDir(dirName) {
-    return TemplatePath.join(this.outputDir, dirName);
-  }
-  getRedirectDirOverride() {
-    // has a pathPrefix, add a /index.html template to redirect to /pathPrefix/
-    if (this.getPathPrefix() !== "/") {
-      return "_eleventy_redirect";
-    }
-  }
+	setAliases(aliases) {
+		this._aliases = aliases;
 
-  getRedirectFilename(dirName) {
-    return TemplatePath.join(this.getRedirectDir(dirName), "index.html");
-  }
+		if (this._server && "setAliases" in this._server) {
+			this._server.setAliases(aliases);
+		}
+	}
 
-  getOptions(port) {
-    let pathPrefix = this.getPathPrefix();
+	get eleventyConfig() {
+		if (!this._eleventyConfig) {
+			throw new EleventyServeConfigError(
+				"You need to set the eleventyConfig property on EleventyServe.",
+			);
+		}
 
-    // TODO customize this in Configuration API?
-    let serverConfig = {
-      baseDir: this.outputDir,
-    };
+		return this._eleventyConfig;
+	}
 
-    let redirectDirName = this.getRedirectDirOverride();
-    // has a pathPrefix, add a /index.html template to redirect to /pathPrefix/
-    if (redirectDirName) {
-      serverConfig.baseDir = this.getRedirectDir(redirectDirName);
-      serverConfig.routes = {};
-      serverConfig.routes[pathPrefix] = this.outputDir;
+	set eleventyConfig(config) {
+		this._eleventyConfig = config;
+		if (checkPassthroughCopyBehavior(this._eleventyConfig.userConfig, "serve")) {
+			this._eleventyConfig.userConfig.events.on("eleventy.passthrough", ({ map }) => {
+				// for-free passthrough copy
+				this.setAliases(map);
+			});
+		}
+	}
 
-      // if has a savedPathPrefix, use the /savedPathPrefix/index.html template to redirect to /pathPrefix/
-      if (this.savedPathPrefix) {
-        serverConfig.routes[this.savedPathPrefix] = TemplatePath.join(
-          this.outputDir,
-          this.savedPathPrefix
-        );
-      }
-    }
+	// TODO directorynorm
+	setOutputDir(outputDir) {
+		// TODO check if this is different and if so, restart server (if already running)
+		// This applies if you change the output directory in your config file during watch/serve
+		this.outputDir = outputDir;
+	}
 
-    return Object.assign(
-      {
-        server: serverConfig,
-        port: port || 8080,
-        ignore: ["node_modules"],
-        watch: false,
-        open: false,
-        notify: false,
-        ui: false, // Default changed in 1.0
-        ghostMode: false, // Default changed in 1.0
-        index: "index.html",
-      },
-      this.config.browserSyncConfig
-    );
-  }
+	async getServerModule(name) {
+		try {
+			if (!name || name === DEFAULT_SERVER_OPTIONS.module) {
+				return EleventyDevServer;
+			}
 
-  cleanupRedirect(dirName) {
-    if (dirName && dirName !== "/") {
-      let savedPathFilename = this.getRedirectFilename(dirName);
+			// Look for peer dep in local project
+			let projectNodeModulesPath = TemplatePath.absolutePath("./node_modules/");
+			let serverPath = TemplatePath.absolutePath(projectNodeModulesPath, name);
+			// No references outside of the project node_modules are allowed
+			if (!serverPath.startsWith(projectNodeModulesPath)) {
+				throw new Error("Invalid node_modules name for Eleventy server instance, received:" + name);
+			}
 
-      setTimeout(function () {
-        if (!fs.existsSync(savedPathFilename)) {
-          debug(`Cleanup redirect: Could not find ${savedPathFilename}`);
-          return;
-        }
+			let serverPackageJson = getModulePackageJson(serverPath);
+			// Normalize with `main` entry from
+			if (TemplatePath.isDirectorySync(serverPath)) {
+				if (serverPackageJson.main) {
+					serverPath = TemplatePath.absolutePath(
+						projectNodeModulesPath,
+						name,
+						serverPackageJson.main,
+					);
+				} else {
+					throw new Error(
+						`Eleventy server ${name} is missing a \`main\` entry in its package.json file. Traversed up from ${serverPath}.`,
+					);
+				}
+			}
 
-        let savedPathContent = fs.readFileSync(savedPathFilename, "utf-8");
-        if (
-          savedPathContent.indexOf("Browsersync pathPrefix Redirect") === -1
-        ) {
-          debug(
-            `Cleanup redirect: Found ${savedPathFilename} but it wasn’t an eleventy redirect.`
-          );
-          return;
-        }
+			let module = await EleventyImport(serverPath);
 
-        fs.unlink(savedPathFilename, (err) => {
-          if (!err) {
-            debug(`Cleanup redirect: Deleted ${savedPathFilename}`);
-          }
-        });
-      }, 2000);
-    }
-  }
+			if (!("getServer" in module)) {
+				throw new Error(
+					`Eleventy server module requires a \`getServer\` static method. Could not find one on module: \`${name}\``,
+				);
+			}
 
-  serveRedirect(dirName) {
-    fs.outputFile(
-      this.getRedirectFilename(dirName),
-      `<!doctype html>
-  <meta http-equiv="refresh" content="0; url=${this.config.pathPrefix}">
-  <title>Browsersync pathPrefix Redirect</title>
-  <a href="${this.config.pathPrefix}">Go to ${this.config.pathPrefix}</a>`
-    );
-  }
+			if (serverPackageJson["11ty"]?.compatibility) {
+				try {
+					this.eleventyConfig.userConfig.versionCheck(serverPackageJson["11ty"].compatibility);
+				} catch (e) {
+					this.logger.warn(`Warning: \`${name}\` Plugin Compatibility: ${e.message}`);
+				}
+			}
 
-  serve(port) {
-    // only load on serve—this is pretty expensive
-    const browserSync = require("browser-sync");
-    this.server = browserSync.create("eleventy-server");
+			return module;
+		} catch (e) {
+			this.logger.error(
+				"There was an error with your custom Eleventy server. We’re using the default server instead.\n" +
+					e.message,
+			);
+			debug("Eleventy server error %o", e);
+			return EleventyDevServer;
+		}
+	}
 
-    let pathPrefix = this.getPathPrefix();
+	get options() {
+		if (this._options) {
+			return this._options;
+		}
 
-    if (this.savedPathPrefix && pathPrefix !== this.savedPathPrefix) {
-      let redirectFilename = this.getRedirectFilename(this.savedPathPrefix);
-      if (!fs.existsSync(redirectFilename)) {
-        debug(
-          `Redirecting BrowserSync from ${this.savedPathPrefix} to ${pathPrefix}`
-        );
-        this.serveRedirect(this.savedPathPrefix);
-      } else {
-        debug(
-          `Config updated with a new pathPrefix. Tried to set up a transparent redirect but found a template already existing at ${redirectFilename}. You’ll have to navigate manually.`
-        );
-      }
-    }
+		this._options = Object.assign(
+			{
+				pathPrefix: PathPrefixer.normalizePathPrefix(this.config.pathPrefix),
+				logger: this.logger,
+			},
+			DEFAULT_SERVER_OPTIONS,
+			this.config.serverOptions,
+		);
 
-    let redirectDirName = this.getRedirectDirOverride();
-    // has a pathPrefix, add a /index.html template to redirect to /pathPrefix/
-    if (redirectDirName) {
-      this.serveRedirect(redirectDirName);
-    }
+		this._savedConfigOptions = DeepCopy({}, this.config.serverOptions);
 
-    this.cleanupRedirect(this.savedPathPrefix);
+		if (!this._initOptionsFetched && this.getSetupCallback()) {
+			throw new Error(
+				"Init options have not yet been fetched in the setup callback. This probably means that `init()` has not yet been called.",
+			);
+		}
 
-    let options = this.getOptions(port);
-    this.server.init(options);
+		return this._options;
+	}
 
-    // this needs to happen after `.getOptions`
-    this.savedPathPrefix = pathPrefix;
-  }
+	get server() {
+		if (!this._server) {
+			throw new Error("Missing server instance. Did you call .initServerInstance?");
+		}
 
-  close() {
-    if (this.server) {
-      this.server.exit();
-    }
-  }
+		return this._server;
+	}
 
-  /* filesToReload is optional */
-  reload(filesToReload) {
-    if (this.server) {
-      if (this.getPathPrefix() !== this.savedPathPrefix) {
-        this.server.exit();
-        this.serve();
-      } else {
-        this.server.reload(filesToReload);
-      }
-    }
-  }
+	async initServerInstance() {
+		if (this._server) {
+			return;
+		}
+
+		let serverModule = await this.getServerModule(this.options.module);
+
+		// Static method `getServer` was already checked in `getServerModule`
+		this._server = serverModule.getServer("eleventy-server", this.outputDir, this.options);
+
+		this.setAliases(this._aliases);
+
+		if (this._globsNeedWatching) {
+			this._server.watchFiles(this._watchedFiles);
+			this._globsNeedWatching = false;
+		}
+	}
+
+	getSetupCallback() {
+		let setupCallback = this.config.serverOptions.setup;
+		if (setupCallback && typeof setupCallback === "function") {
+			return setupCallback;
+		}
+	}
+
+	async #init() {
+		let setupCallback = this.getSetupCallback();
+		if (setupCallback) {
+			let opts = await setupCallback();
+			this._initOptionsFetched = true;
+
+			if (opts) {
+				Merge(this.options, opts);
+			}
+		}
+	}
+
+	async init() {
+		if (!this._initPromise) {
+			this._initPromise = this.#init();
+		}
+
+		return this._initPromise;
+	}
+
+	// Port comes in here from --port on the command line
+	async serve(port) {
+		this._commandLinePort = port;
+
+		await this.init();
+		await this.initServerInstance();
+
+		this.server.serve(port || this.options.port);
+	}
+
+	async close() {
+		if (this._server) {
+			await this._server.close();
+
+			this._server = undefined;
+		}
+	}
+
+	async sendError({ error }) {
+		if (this._server) {
+			await this.server.sendError({
+				error,
+			});
+		}
+	}
+
+	// Restart the server entirely
+	// We don’t want to use a native `restart` method (e.g. restart() in Vite) so that
+	// we can correctly handle a `module` property change (changing the server type)
+	async restart() {
+		// Blow away cached options
+		delete this._options;
+
+		await this.close();
+
+		// saved --port in `serve()`
+		await this.serve(this._commandLinePort);
+
+		// rewatch the saved watched files (passthrough copy)
+		if ("watchFiles" in this.server) {
+			this.server.watchFiles(this._watchedFiles);
+		}
+	}
+
+	// checkPassthroughCopyBehavior check is called upstream in Eleventy.js
+	// TODO globs are not removed from watcher
+	watchPassthroughCopy(globs) {
+		this._watchedFiles = globs;
+
+		if (this._server && "watchFiles" in this.server) {
+			this.server.watchFiles(globs);
+			this._globsNeedWatching = false;
+		} else {
+			this._globsNeedWatching = true;
+		}
+	}
+
+	isEmulatedPassthroughCopyMatch(filepath) {
+		return isGlobMatch(filepath, this._watchedFiles);
+	}
+
+	hasOptionsChanged() {
+		try {
+			assert.deepStrictEqual(this.config.serverOptions, this._savedConfigOptions);
+			return false;
+		} catch (e) {
+			return true;
+		}
+	}
+
+	// Live reload the server
+	async reload(reloadEvent = {}) {
+		if (!this._server) {
+			return;
+		}
+
+		// Restart the server if the options have changed
+		if (this.hasOptionsChanged()) {
+			debug("Server options changed, we’re restarting the server");
+			await this.restart();
+		} else {
+			await this.server.reload(reloadEvent);
+		}
+	}
 }
 
-module.exports = EleventyServe;
+export default EleventyServe;

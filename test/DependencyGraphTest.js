@@ -1,7 +1,7 @@
-const test = require("ava");
+import test from "ava";
+import { DepGraph as DependencyGraph } from "dependency-graph";
 
 test("Dependency graph nodes don’t require dependencies", async (t) => {
-  const DependencyGraph = require("dependency-graph").DepGraph;
   let graph = new DependencyGraph();
 
   graph.addNode("all");
@@ -15,16 +15,10 @@ test("Dependency graph nodes don’t require dependencies", async (t) => {
   t.not(graph.overallOrder().indexOf("template-c"), -1);
 
   // in order of addition
-  t.deepEqual(graph.overallOrder(), [
-    "all",
-    "template-a",
-    "template-b",
-    "template-c",
-  ]);
+  t.deepEqual(graph.overallOrder(), ["all", "template-a", "template-b", "template-c"]);
 });
 
 test("Dependency graph assumptions", async (t) => {
-  const DependencyGraph = require("dependency-graph").DepGraph;
   let graph = new DependencyGraph();
 
   graph.addNode("all");
@@ -43,4 +37,23 @@ test("Dependency graph assumptions", async (t) => {
     "all",
     "userCollection",
   ]);
+});
+
+test("Do dependencies get removed when nodes are deleted?", async (t) => {
+  let graph = new DependencyGraph();
+
+  graph.addNode("template-a");
+  graph.addNode("template-b");
+  graph.addDependency("template-a", "template-b");
+  t.deepEqual(graph.overallOrder(), ["template-b", "template-a"]);
+
+  t.deepEqual(graph.dependenciesOf("template-a"), ["template-b"]);
+
+  graph.removeNode("template-b");
+  t.deepEqual(graph.dependenciesOf("template-a"), []);
+
+  graph.addNode("template-b");
+  t.deepEqual(graph.dependenciesOf("template-a"), []);
+
+  t.deepEqual(graph.overallOrder(), ["template-a", "template-b"]);
 });

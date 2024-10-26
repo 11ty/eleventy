@@ -1,156 +1,184 @@
-const fastglob = require("fast-glob");
-const fs = require("fs-extra");
-const TemplatePath = require("../TemplatePath");
-const EleventyExtensionMap = require("../EleventyExtensionMap");
-const debug = require("debug")("Eleventy:TemplateEngine");
-const aggregateBench = require("../BenchmarkManager").get("Aggregate");
+import EleventyExtensionMap from "../EleventyExtensionMap.js";
+import EleventyBaseError from "../Errors/EleventyBaseError.js";
+
+class TemplateEngineConfigError extends EleventyBaseError {}
 
 class TemplateEngine {
-  constructor(name, includesDir) {
-    this.name = name;
-    this.includesDir = includesDir;
-    this.partialsHaveBeenCached = false;
-    this.partials = [];
-    this.engineLib = null;
-    this.cacheable = false;
-  }
+	constructor(name, eleventyConfig) {
+		this.name = name;
 
-  get config() {
-    if (!this._config) {
-      this._config = require("../Config").getConfig();
-    }
-    return this._config;
-  }
+		this.engineLib = null;
+		this.cacheable = false;
 
-  set config(config) {
-    this._config = config;
-  }
+		if (!eleventyConfig) {
+			throw new TemplateEngineConfigError("Missing `eleventyConfig` argument.");
+		}
+		this.eleventyConfig = eleventyConfig;
+	}
 
-  get engineManager() {
-    return this._engineManager;
-  }
+	get dirs() {
+		return this.eleventyConfig.directories;
+	}
 
-  set engineManager(manager) {
-    this._engineManager = manager;
-  }
+	get inputDir() {
+		return this.dirs.input;
+	}
 
-  get extensionMap() {
-    if (!this._extensionMap) {
-      this._extensionMap = new EleventyExtensionMap();
-      // this._extensionMap.config = this.config;
-    }
-    return this._extensionMap;
-  }
+	get includesDir() {
+		return this.dirs.includes;
+	}
 
-  set extensionMap(map) {
-    this._extensionMap = map;
-  }
+	get config() {
+		if (this.eleventyConfig.constructor.name !== "TemplateConfig") {
+			throw new Error("Expecting a TemplateConfig instance.");
+		}
 
-  get extensions() {
-    if (!this._extensions) {
-      this._extensions = this.extensionMap.getExtensionsFromKey(this.name);
-    }
-    return this._extensions;
-  }
+		return this.eleventyConfig.getConfig();
+	}
 
-  getName() {
-    return this.name;
-  }
+	get benchmarks() {
+		if (!this._benchmarks) {
+			this._benchmarks = {
+				aggregate: this.config.benchmarkManager.get("Aggregate"),
+			};
+		}
+		return this._benchmarks;
+	}
 
-  getIncludesDir() {
-    return this.includesDir;
-  }
+	get engineManager() {
+		return this._engineManager;
+	}
 
-  // TODO make async
-  getPartials() {
-    if (!this.partialsHaveBeenCached) {
-      this.partials = this.cachePartialFiles();
-    }
+	set engineManager(manager) {
+		this._engineManager = manager;
+	}
 
-    return this.partials;
-  }
+	get extensionMap() {
+		if (!this._extensionMap) {
+			this._extensionMap = new EleventyExtensionMap(this.eleventyConfig);
+			this._extensionMap.setFormats([]);
+		}
+		return this._extensionMap;
+	}
 
-  // TODO make async
-  cachePartialFiles() {
-    // This only runs if getPartials() is called, which is only for Mustache/Handlebars
-    this.partialsHaveBeenCached = true;
-    let partials = {};
-    let prefix = this.includesDir + "/**/*.";
-    // TODO: reuse mustache partials in handlebars?
-    let partialFiles = [];
-    if (this.includesDir) {
-      let bench = aggregateBench.get("Searching the file system");
-      bench.before();
-      this.extensions.forEach(function (extension) {
-        partialFiles = partialFiles.concat(
-          fastglob.sync(prefix + extension, {
-            caseSensitiveMatch: false,
-            dot: true,
-          })
-        );
-      });
-      bench.after();
-    }
+	set extensionMap(map) {
+		this._extensionMap = map;
+	}
 
-    partialFiles = TemplatePath.addLeadingDotSlashArray(partialFiles);
+	get extensions() {
+		if (!this._extensions) {
+			this._extensions = this.extensionMap.getExtensionsFromKey(this.name);
+		}
+		return this._extensions;
+	}
 
-    for (let j = 0, k = partialFiles.length; j < k; j++) {
-      let partialPath = TemplatePath.stripLeadingSubPath(
-        partialFiles[j],
-        this.includesDir
-      );
-      let partialPathNoExt = partialPath;
-      this.extensions.forEach(function (extension) {
-        partialPathNoExt = TemplatePath.removeExtension(
-          partialPathNoExt,
-          "." + extension
-        );
-      });
-      partials[partialPathNoExt] = fs.readFileSync(partialFiles[j], "utf-8");
-    }
+	get extensionEntries() {
+		if (!this._extensionEntries) {
+			this._extensionEntries = this.extensionMap.getExtensionEntriesFromKey(this.name);
+		}
+		return this._extensionEntries;
+	}
 
-    debug(
-      `${this.includesDir}/*.{${this.extensions}} found partials for: %o`,
-      Object.keys(partials)
-    );
+	getName() {
+		return this.name;
+	}
 
-    return partials;
-  }
+	// Backwards compat
+	getIncludesDir() {
+		return this.includesDir;
+	}
 
-  setEngineLib(engineLib) {
-    this.engineLib = engineLib;
-  }
+	/**
+	 * @protected
+	 */
+	setEngineLib(engineLib) {
+		this.engineLib = engineLib;
 
-  getEngineLib() {
-    return this.engineLib;
-  }
+		// Run engine amendments (via issue #2438)
+		for (let amendment of this.config.libraryAmendments[this.name] || []) {
+			// TODO it’d be nice if this were async friendly
+			amendment(engineLib);
+		}
+	}
 
-  async _testRender(str, data) {
-    /* TODO compile needs to pass in inputPath? */
-    try {
-      let fn = await this.compile(str);
-      return fn(data);
-    } catch (e) {
-      throw e;
-    }
-  }
+	getEngineLib() {
+		return this.engineLib;
+	}
 
-  // JavaScript files defer to the module loader rather than read the files to strings
-  needsToReadFileContents() {
-    return true;
-  }
+	async _testRender(str, data) {
+		// @ts-ignore
+		let fn = await this.compile(str);
+		return fn(data);
+	}
 
-  getExtraDataFromFile() {
-    return {};
-  }
+	useJavaScriptImport() {
+		return false;
+	}
 
-  initRequireCache() {
-    // do nothing
-  }
+	// JavaScript files defer to the module loader rather than read the files to strings
+	needsToReadFileContents() {
+		return true;
+	}
 
-  get defaultTemplateFileExtension() {
-    return "html";
-  }
+	getExtraDataFromFile() {
+		return {};
+	}
+
+	getCompileCacheKey(str, inputPath) {
+		// Changing to use inputPath and contents, using only file contents (`str`) caused issues when two
+		// different files had identical content (2.0.0-canary.16)
+
+		// Caches are now segmented based on inputPath so using inputPath here is superfluous (2.0.0-canary.19)
+		// But we do want a non-falsy value here even if `str` is an empty string.
+		return {
+			useCache: true,
+			key: inputPath + str,
+		};
+	}
+
+	get defaultTemplateFileExtension() {
+		return "html";
+	}
+
+	// Whether or not to wrap in Eleventy layouts
+	useLayouts() {
+		return true;
+	}
+
+	/** @returns {boolean|undefined} */
+	permalinkNeedsCompilation(str) {
+		return this.needsCompilation();
+	}
+
+	// whether or not compile is needed or can we return the plaintext?
+	needsCompilation(str) {
+		return true;
+	}
+
+	/**
+	 * Make sure compile is implemented downstream.
+	 * @abstract
+	 * @return {Promise}
+	 */
+	async compile() {
+		throw new Error("compile() must be implemented by engine");
+	}
+
+	// See https://v3.11ty.dev/docs/watch-serve/#watch-javascript-dependencies
+	static shouldSpiderJavaScriptDependencies() {
+		return false;
+	}
+
+	hasDependencies(inputPath) {
+		if (this.config.uses.getDependencies(inputPath) === false) {
+			return false;
+		}
+		return true;
+	}
+
+	isFileRelevantTo(inputPath, comparisonFile) {
+		return this.config.uses.isFileRelevantTo(inputPath, comparisonFile);
+	}
 }
 
-module.exports = TemplateEngine;
+export default TemplateEngine;

@@ -1,7 +1,8 @@
-const test = require("ava");
-const fastglob = require("fast-glob");
-const TemplatePath = require("../src/TemplatePath");
-const TemplateGlob = require("../src/TemplateGlob");
+import test from "ava";
+import fastglob from "fast-glob";
+import { TemplatePath } from "@11ty/eleventy-utils";
+
+import TemplateGlob from "../src/TemplateGlob.js";
 
 test("TemplatePath assumptions", (t) => {
   t.is(TemplatePath.normalize("ignoredFolder"), "ignoredFolder");
@@ -39,14 +40,8 @@ test("Normalize with globstar and star and file extension", (t) => {
 });
 
 test("NormalizePath with globstar and star and file extension", (t) => {
-  t.deepEqual(
-    TemplateGlob.normalizePath("views", "/", "**/*.json"),
-    "./views/**/*.json"
-  );
-  t.deepEqual(
-    TemplateGlob.normalizePath("./views", "/", "**/*.json"),
-    "./views/**/*.json"
-  );
+  t.deepEqual(TemplateGlob.normalizePath("views", "/", "**/*.json"), "./views/**/*.json");
+  t.deepEqual(TemplateGlob.normalizePath("./views", "/", "**/*.json"), "./views/**/*.json");
 });
 
 test("NormalizePath with globstar and star and file extension (errors)", (t) => {
@@ -118,10 +113,7 @@ test("fastglob assumptions", async (t) => {
   ]);
   t.is(glob3.length, 0);
 
-  let glob4 = await fastglob([
-    "./test/stubs/ignoredFolder/*.md",
-    "!./test/stubs/ignoredFolder/**",
-  ]);
+  let glob4 = await fastglob(["./test/stubs/ignoredFolder/*.md", "!./test/stubs/ignoredFolder/**"]);
   t.is(glob4.length, 0);
 
   let glob5 = await fastglob([
