@@ -139,6 +139,7 @@ test("Paginate external data file", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -366,6 +367,7 @@ test("Issue 135", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -702,6 +704,7 @@ test("Pagination new v0.10.0 href/hrefs", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -738,6 +741,7 @@ test("Pagination new v0.10.0 page/pages", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -802,6 +806,7 @@ test("Pagination mutable global data", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -844,6 +849,7 @@ test("Pagination template/dir data files run once, Issue 919", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
 
   let tmpl = await getNewTemplate(
     "./test/stubs-919/test.njk",
