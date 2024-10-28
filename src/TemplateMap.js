@@ -585,7 +585,10 @@ class TemplateMap {
 		} else {
 			result = this.collection.getFilteredByTag(tag);
 		}
-		debug(`Collection: collections.${tag || "all"} size: ${result.length}`);
+
+		// May not return an array (can be anything)
+		// https://www.11ty.dev/docs/collections-api/#return-values
+		debug(`Collection: collections.${tag || "all"} size: ${result?.length}`);
 
 		return result;
 	}
@@ -606,7 +609,9 @@ class TemplateMap {
 		// This works with async now
 		let result = await configCollections[name](this.collection);
 
-		debug(`Collection: collections.${name} size: ${result.length}`);
+		// May not return an array (can be anything)
+		// https://www.11ty.dev/docs/collections-api/#return-values
+		debug(`Collection: collections.${name} size: ${result?.length}`);
 		return result;
 	}
 
