@@ -367,7 +367,7 @@ class EleventyFiles {
 				.map((path) => {
 					let fullVirtualPath = this.dirs.getInputPath(path);
 					if (!this.extensionMap.getKey(fullVirtualPath)) {
-						this.eleventyConfig.logger.warn(
+						throw new Error(
 							`The virtual template at ${fullVirtualPath} is using a template format that’s not valid for your project. Your project is using: "${this.formats}". Read more about formats: https://v3.11ty.dev/docs/config/#template-formats`,
 						);
 					}
