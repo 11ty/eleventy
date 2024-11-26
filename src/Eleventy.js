@@ -42,9 +42,6 @@ const debug = debugUtil("Eleventy");
 /**
  * Eleventy’s programmatic API
  * @module 11ty/eleventy/Eleventy
- *
- * This line is required for IDE autocomplete in config files
- * @typedef {import('./UserConfig.js').default} UserConfig
  */
 
 class Eleventy {
