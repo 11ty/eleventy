@@ -9,12 +9,12 @@ import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js
 import { isGlobMatch } from "./Util/GlobMatcher.js";
 
 const debug = debugUtil("Eleventy:TemplatePassthroughManager");
-const debugDev = debugUtil("Dev:Eleventy:TemplatePassthroughManager");
 
 class TemplatePassthroughManagerConfigError extends EleventyBaseError {}
 class TemplatePassthroughManagerCopyError extends EleventyBaseError {}
 
 class TemplatePassthroughManager {
+	#isDryRun = false;
 	constructor(eleventyConfig) {
 		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
 			throw new TemplatePassthroughManagerConfigError("Missing or invalid `config` argument.");
@@ -57,7 +57,7 @@ class TemplatePassthroughManager {
 	}
 
 	setDryRun(isDryRun) {
-		this.isDryRun = !!isDryRun;
+		this.#isDryRun = Boolean(isDryRun);
 	}
 
 	setRunMode(runMode) {
@@ -123,7 +123,7 @@ class TemplatePassthroughManager {
 
 		inst.setFileSystemSearch(this.fileSystemSearch);
 		inst.setIsIncremental(isIncremental);
-		inst.setDryRun(this.isDryRun);
+		inst.setDryRun(this.#isDryRun);
 		inst.setRunMode(this.runMode);
 
 		return inst;
@@ -155,8 +155,9 @@ class TemplatePassthroughManager {
 					let dest = map[src];
 					if (this.conflictMap[dest]) {
 						if (src !== this.conflictMap[dest]) {
+							let paths = [src, this.conflictMap[dest]].sort();
 							throw new TemplatePassthroughManagerCopyError(
-								`Multiple passthrough copy files are trying to write to the same output file (${dest}). ${src} and ${this.conflictMap[dest]}`,
+								`Multiple passthrough copy files are trying to write to the same output file (${dest}). ${paths.join(" and ")}`,
 							);
 						} else {
 							// Multiple entries from the same source
@@ -168,8 +169,6 @@ class TemplatePassthroughManager {
 							);
 						}
 					}
-
-					debugDev("Adding %o to passthrough copy conflict map, from %o", dest, src);
 
 					this.conflictMap[dest] = src;
 				}

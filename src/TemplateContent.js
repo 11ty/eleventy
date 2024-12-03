@@ -552,9 +552,10 @@ class TemplateContent {
 	}
 
 	async render(str, data, bypassMarkdown) {
+		// TODO start here with atomic transforms (run on individiual content files, not full output files)?
 		return this._render(str, data, {
+			type: "Content",
 			bypassMarkdown,
-			type: "",
 		});
 	}
 

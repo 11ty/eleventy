@@ -19,6 +19,7 @@ class EleventyTemplateError extends EleventyBaseError {}
 
 class TemplateWriter {
 	#eleventyFiles;
+	#errorHandler;
 
 	constructor(
 		templateFormats, // TODO remove this, see `get eleventyFiles` first
@@ -67,13 +68,13 @@ class TemplateWriter {
 
 	/* Getter for error handler */
 	get errorHandler() {
-		if (!this._errorHandler) {
-			this._errorHandler = new EleventyErrorHandler();
-			this._errorHandler.isVerbose = this.verboseMode;
-			this._errorHandler.logger = this.logger;
+		if (!this.#errorHandler) {
+			this.#errorHandler = new EleventyErrorHandler();
+			this.#errorHandler.isVerbose = this.verboseMode;
+			this.#errorHandler.logger = this.logger;
 		}
 
-		return this._errorHandler;
+		return this.#errorHandler;
 	}
 
 	/* Getter for Logger */
@@ -115,10 +116,6 @@ class TemplateWriter {
 	}
 
 	setEleventyFiles(eleventyFiles) {
-		this.#eleventyFiles = eleventyFiles;
-	}
-
-	set eleventyFiles(eleventyFiles) {
 		this.#eleventyFiles = eleventyFiles;
 	}
 
@@ -369,10 +366,9 @@ class TemplateWriter {
 	}
 
 	async writePassthroughCopy(templateExtensionPaths) {
-		let passthroughManager = this.eleventyFiles.getPassthroughManager();
-		passthroughManager.setIncrementalFile(this.incrementalFile);
+		let p = this.eleventyFiles.writePassthroughCopy(templateExtensionPaths, this.incrementalFile);
 
-		return passthroughManager.copyAll(templateExtensionPaths).catch((e) => {
+		return p.catch((e) => {
 			this.errorHandler.warn(e, "Error with passthrough copy");
 			return Promise.reject(new EleventyPassthroughCopyError("Having trouble copying", e));
 		});
@@ -474,7 +470,7 @@ class TemplateWriter {
 	setDryRun(isDryRun) {
 		this.isDryRun = !!isDryRun;
 
-		this.eleventyFiles.getPassthroughManager().setDryRun(this.isDryRun);
+		this.eleventyFiles.setDryRun(this.isDryRun);
 	}
 
 	setRunInitialBuild(runInitialBuild) {
@@ -490,24 +486,14 @@ class TemplateWriter {
 		this.incrementalFile = null;
 	}
 
-	getCopyCount() {
-		return this.eleventyFiles.getPassthroughManager().getCopyCount();
-	}
-
-	getCopySize() {
-		return this.eleventyFiles.getPassthroughManager().getCopySize();
-	}
-
-	getRenderCount() {
-		return this.renderCount;
-	}
-
-	getWriteCount() {
-		return this.writeCount;
-	}
-
-	getSkippedCount() {
-		return this.skippedCount;
+	getMetadata() {
+		return {
+			// copyCount, copySize
+			...this.eleventyFiles.getMetadata(),
+			skipCount: this.skippedCount,
+			writeCount: this.writeCount,
+			renderCount: this.renderCount,
+		};
 	}
 
 	get caches() {

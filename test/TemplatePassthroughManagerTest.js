@@ -210,11 +210,11 @@ test("Look for uniqueness on template passthrough paths #1677", async (t) => {
   let formats = [];
 
   let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
-    input: "test/stubs/template-passthrough-duplicates",
+    input: "test/stubs/template-passthrough-duplicates/",
     output: "test/stubs/template-passthrough-duplicates/_site"
   }, function(cfg) {
     cfg.passthroughCopies = {
-      "./test/stubs/template-passthrough-duplicates/**/*.png": {
+      "./test/stubs/template-passthrough-duplicates/input/**/*.png": {
         outputPath: "./",
       },
     };
@@ -224,9 +224,10 @@ test("Look for uniqueness on template passthrough paths #1677", async (t) => {
   files.setFileSystemSearch(new FileSystemSearch());
   files.init();
 
-  let mgr = files.getPassthroughManager();
   await t.throwsAsync(async function () {
-    await mgr.copyAll();
+    await files.writePassthroughCopy();
+  }, {
+    message: `Multiple passthrough copy files are trying to write to the same output file (test/stubs/template-passthrough-duplicates/_site/avatar.png). test/stubs/template-passthrough-duplicates/input/avatar.png and test/stubs/template-passthrough-duplicates/input/src/views/avatar.png`
   });
 
   rimrafSync("test/stubs/template-passthrough-duplicates/_site/");

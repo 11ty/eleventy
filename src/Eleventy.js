@@ -414,22 +414,24 @@ class Eleventy {
 
 		let ret = [];
 
-		// files that render (costly) but do not write to disk
-		// let renderCount = this.writer.getRenderCount();
-		let writeCount = this.writer.getWriteCount();
-		let skippedCount = this.writer.getSkippedCount();
-		let copyCount = this.writer.getCopyCount();
+		let {
+			copyCount,
+			copySize,
+			skipCount,
+			writeCount,
+			// renderCount, // files that render (costly) but do not write to disk
+		} = this.writer.getMetadata();
 
 		let slashRet = [];
 
 		if (copyCount) {
-			debug("Total passthrough copy aggregate size: %o", filesize(this.writer.getCopySize()));
+			debug("Total passthrough copy aggregate size: %o", filesize(copySize));
 			slashRet.push(`Copied ${chalk.bold(copyCount)}`);
 		}
 
 		slashRet.push(
 			`Wrote ${chalk.bold(writeCount)} ${simplePlural(writeCount, "file", "files")}${
-				skippedCount ? ` (skipped ${skippedCount})` : ""
+				skipCount ? ` (skipped ${skipCount})` : ""
 			}`,
 		);
 

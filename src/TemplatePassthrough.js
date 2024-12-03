@@ -18,15 +18,13 @@ const debug = debugUtil("Eleventy:TemplatePassthrough");
 class TemplatePassthroughError extends EleventyBaseError {}
 
 class TemplatePassthrough {
-	#isDirectoryCache = {};
-
-	constructor(path, eleventyConfig) {
-		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
-			throw new TemplatePassthroughError(
-				"Missing `eleventyConfig` or was not an instance of `TemplateConfig`.",
+	constructor(path, templateConfig) {
+		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
+			throw new Error(
+				"Internal error: Missing `templateConfig` or was not an instance of `TemplateConfig`.",
 			);
 		}
-		this.eleventyConfig = eleventyConfig;
+		this.templateConfig = templateConfig;
 
 		this.benchmarks = {
 			aggregate: this.config.benchmarkManager.get("Aggregate"),
@@ -48,11 +46,11 @@ class TemplatePassthrough {
 	}
 
 	get config() {
-		return this.eleventyConfig.getConfig();
+		return this.templateConfig.getConfig();
 	}
 
 	get dirs() {
-		return this.eleventyConfig.directories;
+		return this.templateConfig.directories;
 	}
 
 	// inputDir is used when stripping from output path in `getOutputPath`
@@ -155,23 +153,15 @@ class TemplatePassthrough {
 	}
 
 	isExists(dir) {
-		return this.eleventyConfig.existsCache.exists(dir);
+		return this.templateConfig.existsCache.exists(dir);
 	}
 
 	isDirectory(dir) {
-		if (this.#isDirectoryCache[dir] === undefined) {
-			if (isGlob(this.inputPath)) {
-				this.#isDirectoryCache[dir] = false;
-			} else if (!this.isExists(dir)) {
-				this.#isDirectoryCache[dir] = false;
-			} else if (fs.statSync(dir).isDirectory()) {
-				this.#isDirectoryCache[dir] = true;
-			} else {
-				this.#isDirectoryCache[dir] = false;
-			}
+		if (this.isInputPathGlob) {
+			return false;
 		}
 
-		return this.#isDirectoryCache[dir];
+		return this.templateConfig.existsCache.isDirectory(dir);
 	}
 
 	// dir is guaranteed to exist by context

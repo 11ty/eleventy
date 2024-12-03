@@ -73,6 +73,17 @@ class EleventyFiles {
 		this.setupGlobs();
 	}
 
+	setDryRun(dryRun) {
+		this.passthroughManager.setDryRun(dryRun);
+	}
+
+	getMetadata() {
+		return {
+			copyCount: this.passthroughManager.getCopyCount(),
+			copySize: this.passthroughManager.getCopySize(),
+		};
+	}
+
 	get validTemplateGlobs() {
 		if (!this._validTemplateGlobs) {
 			let globs;
@@ -147,10 +158,6 @@ class EleventyFiles {
 		mgr.extensionMap = this.extensionMap;
 		mgr.setFileSystemSearch(this.fileSystemSearch);
 		this.passthroughManager = mgr;
-	}
-
-	getPassthroughManager() {
-		return this.passthroughManager;
 	}
 
 	setPassthroughManager(mgr) {
@@ -511,6 +518,12 @@ class EleventyFiles {
 			.map((entry) => {
 				return TemplateGlob.map(entry + "**");
 			});
+	}
+
+	writePassthroughCopy(templateExtensionPaths, incrementalFile) {
+		this.passthroughManager.setIncrementalFile(incrementalFile);
+
+		return this.passthroughManager.copyAll(templateExtensionPaths);
 	}
 }
 

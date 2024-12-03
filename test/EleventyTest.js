@@ -377,7 +377,7 @@ test("Config propagates to other instances correctly", async (t) => {
 
   t.is(elev.extensionMap.eleventyConfig, elev.eleventyConfig);
   t.is(elev.eleventyFiles.eleventyConfig, elev.eleventyConfig);
-  t.is(elev.templateData.eleventyConfig, elev.eleventyConfig);
+  t.is(elev.templateData.templateConfig, elev.eleventyConfig);
   t.is(elev.writer.eleventyConfig, elev.eleventyConfig);
 });
 

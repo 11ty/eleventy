@@ -8,12 +8,17 @@ const mkdir = util.promisify(gracefulFs.mkdir);
 const writeFile = util.promisify(gracefulFs.writeFile);
 
 class FileSystemManager {
-	constructor(eleventyConfig) {
-		this.eleventyConfig = eleventyConfig;
+	constructor(templateConfig) {
+		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
+			throw new Error(
+				"Internal error: Missing `templateConfig` or was not an instance of `TemplateConfig`.",
+			);
+		}
+		this.templateConfig = templateConfig;
 	}
 
 	exists(pathname) {
-		return this.eleventyConfig.existsCache.exists(pathname);
+		return this.templateConfig.existsCache.exists(pathname);
 	}
 
 	async createDirectoryForFile(filePath) {

@@ -82,6 +82,7 @@ class EleventyErrorHandler {
 
 		let showStack = true;
 		if (e.skipOriginalStack) {
+			// Don’t show the full error stack trace
 			showStack = false;
 		}
 
