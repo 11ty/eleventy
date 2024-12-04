@@ -19,6 +19,7 @@ class EleventyTemplateError extends EleventyBaseError {}
 
 class TemplateWriter {
 	#eleventyFiles;
+	#passthroughManager;
 	#errorHandler;
 
 	constructor(
@@ -113,6 +114,10 @@ class TemplateWriter {
 			this._extensionMap.setFormats(this.templateFormats);
 		}
 		return this._extensionMap;
+	}
+
+	setPassthroughManager(mgr) {
+		this.#passthroughManager = mgr;
 	}
 
 	setEleventyFiles(eleventyFiles) {
@@ -366,7 +371,10 @@ class TemplateWriter {
 	}
 
 	async writePassthroughCopy(templateExtensionPaths) {
-		let p = this.eleventyFiles.writePassthroughCopy(templateExtensionPaths, this.incrementalFile);
+		if (!this.#passthroughManager) {
+			throw new Error("Internal error: Missing `passthroughManager` instance.");
+		}
+		let p = this.#passthroughManager.copyAll(templateExtensionPaths);
 
 		return p.catch((e) => {
 			this.errorHandler.warn(e, "Error with passthrough copy");
@@ -430,7 +438,10 @@ class TemplateWriter {
 		promises.push(...(await this.generateTemplates(paths)));
 
 		return Promise.all(promises).then(
-			([passthroughCopyResults, ...templateResults]) => {
+			async ([passthroughCopyResults, ...templateResults]) => {
+				// TODO wait for afterBuildCopy to finish
+				// console.log( "AFTER??", passthroughCopyResults );
+
 				return {
 					passthroughCopy: passthroughCopyResults,
 					// New in 3.0: flatten and filter out falsy templates
@@ -468,9 +479,7 @@ class TemplateWriter {
 	}
 
 	setDryRun(isDryRun) {
-		this.isDryRun = !!isDryRun;
-
-		this.eleventyFiles.setDryRun(this.isDryRun);
+		this.isDryRun = Boolean(isDryRun);
 	}
 
 	setRunInitialBuild(runInitialBuild) {
@@ -481,15 +490,17 @@ class TemplateWriter {
 	}
 	setIncrementalFile(incrementalFile) {
 		this.incrementalFile = incrementalFile;
+		this.#passthroughManager.setIncrementalFile(incrementalFile);
 	}
 	resetIncrementalFile() {
 		this.incrementalFile = null;
+		this.#passthroughManager.resetIncrementalFile();
 	}
 
 	getMetadata() {
 		return {
 			// copyCount, copySize
-			...this.eleventyFiles.getMetadata(),
+			...(this.#passthroughManager?.getMetadata() || {}),
 			skipCount: this.skippedCount,
 			writeCount: this.writeCount,
 			renderCount: this.renderCount,

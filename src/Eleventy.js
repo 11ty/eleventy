@@ -35,6 +35,7 @@ import { TransformPlugin as InputPathToUrlTransformPlugin } from "./Plugins/Inpu
 import { IdAttributePlugin } from "./Plugins/IdAttributePlugin.js";
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
 import EventBusUtil from "./Util/EventBusUtil.js";
+import TemplatePassthroughManager from "./TemplatePassthroughManager.js";
 
 const pkg = getEleventyPackageJson();
 const debug = debugUtil("Eleventy");
@@ -396,6 +397,7 @@ class Eleventy {
 		this.start = this.getNewTimestamp();
 
 		this.bench.reset();
+		this.passthroughManager.reset();
 		this.eleventyFiles.restart();
 		this.extensionMap.reset();
 	}
@@ -512,7 +514,14 @@ class Eleventy {
 		}
 		this.templateData.setFileSystemSearch(this.fileSystemSearch);
 
+		// TODO swap this to getters
+		this.passthroughManager = new TemplatePassthroughManager(this.eleventyConfig);
+		this.passthroughManager.setRunMode(this.runMode);
+		this.passthroughManager.extensionMap = this.extensionMap;
+		this.passthroughManager.setFileSystemSearch(this.fileSystemSearch);
+
 		this.eleventyFiles = new EleventyFiles(formats, this.eleventyConfig);
+		this.eleventyFiles.setPassthroughManager(this.passthroughManager);
 		this.eleventyFiles.setFileSystemSearch(this.fileSystemSearch);
 		this.eleventyFiles.setRunMode(this.runMode);
 		this.eleventyFiles.extensionMap = this.extensionMap;
@@ -539,7 +548,7 @@ class Eleventy {
 		this.writer.logger = this.logger;
 		this.writer.extensionMap = this.extensionMap;
 		this.writer.setEleventyFiles(this.eleventyFiles);
-
+		this.writer.setPassthroughManager(this.passthroughManager);
 		this.writer.setRunInitialBuild(this.isRunInitialBuild);
 		this.writer.setIncrementalBuild(this.isIncremental);
 

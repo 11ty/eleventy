@@ -15,12 +15,14 @@ class TemplatePassthroughManagerCopyError extends EleventyBaseError {}
 
 class TemplatePassthroughManager {
 	#isDryRun = false;
-	constructor(eleventyConfig) {
-		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
+
+	constructor(templateConfig) {
+		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
 			throw new TemplatePassthroughManagerConfigError("Missing or invalid `config` argument.");
 		}
-		this.eleventyConfig = eleventyConfig;
-		this.config = eleventyConfig.getConfig();
+
+		this.templateConfig = templateConfig;
+		this.config = templateConfig.getConfig();
 		this.reset();
 	}
 
@@ -28,7 +30,7 @@ class TemplatePassthroughManager {
 		this.count = 0;
 		this.size = 0;
 		this.conflictMap = {};
-		this.incrementalFile = null;
+		this.incrementalFile;
 		debug("Resetting counts to 0");
 	}
 
@@ -38,22 +40,18 @@ class TemplatePassthroughManager {
 
 	get extensionMap() {
 		if (!this._extensionMap) {
-			this._extensionMap = new EleventyExtensionMap(this.eleventyConfig);
+			this._extensionMap = new EleventyExtensionMap(this.templateConfig);
 			this._extensionMap.setFormats([]);
 		}
 		return this._extensionMap;
 	}
 
-	get dirs() {
-		return this.eleventyConfig.directories;
-	}
-
 	get inputDir() {
-		return this.dirs.input;
+		return this.templateConfig.directories.input;
 	}
 
 	get outputDir() {
-		return this.dirs.output;
+		return this.templateConfig.directories.output;
 	}
 
 	setDryRun(isDryRun) {
@@ -68,6 +66,10 @@ class TemplatePassthroughManager {
 		if (path) {
 			this.incrementalFile = path;
 		}
+	}
+
+	resetIncrementalFile() {
+		this.incrementalFile = undefined;
 	}
 
 	_normalizePaths(path, outputPath, copyOptions = {}) {
@@ -114,15 +116,21 @@ class TemplatePassthroughManager {
 		return this.size;
 	}
 
+	getMetadata() {
+		return {
+			copyCount: this.getCopyCount(),
+			copySize: this.getCopySize(),
+		};
+	}
+
 	setFileSystemSearch(fileSystemSearch) {
 		this.fileSystemSearch = fileSystemSearch;
 	}
 
-	getTemplatePassthroughForPath(path, isIncremental = false) {
-		let inst = new TemplatePassthrough(path, this.eleventyConfig);
+	getTemplatePassthroughForPath(path) {
+		let inst = new TemplatePassthrough(path, this.templateConfig);
 
 		inst.setFileSystemSearch(this.fileSystemSearch);
-		inst.setIsIncremental(isIncremental);
 		inst.setDryRun(this.#isDryRun);
 		inst.setRunMode(this.runMode);
 
@@ -287,12 +295,7 @@ class TemplatePassthroughManager {
 		debug("TemplatePassthrough copy started.");
 		let normalizedPaths = this.getAllNormalizedPaths(templateExtensionPaths);
 
-		let passthroughs = normalizedPaths.map((path) => {
-			// if incrementalFile is set but it isn’t a passthrough copy, normalizedPaths will be an empty array
-			let isIncremental = !!this.incrementalFile;
-
-			return this.getTemplatePassthroughForPath(path, isIncremental);
-		});
+		let passthroughs = normalizedPaths.map((path) => this.getTemplatePassthroughForPath(path));
 
 		let promises = passthroughs.map((pass) => this.copyPassthrough(pass));
 		return Promise.all(promises).then(async (results) => {
