@@ -128,7 +128,6 @@ class EleventyFiles {
 		if (!this._extensionMap) {
 			this._extensionMap = new EleventyExtensionMap(this.templateConfig);
 			this._extensionMap.setFormats(this.formats);
-			this._extensionMap.config = this.templateConfig;
 		}
 		return this._extensionMap;
 	}
