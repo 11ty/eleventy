@@ -12,6 +12,15 @@ class AsyncEventEmitter extends EventEmitter {
 		super(...args);
 	}
 
+	reset() {
+		// `eleventy#` event type listeners are removed at the start of each build (singletons)
+		for (let type of this.eventNames()) {
+			if (typeof type === "string" && type.startsWith("eleventy#")) {
+				this.removeAllListeners(type);
+			}
+		}
+	}
+
 	/**
 	 * @param {string} type - The event name to emit.
 	 * @param {...*} args - Additional arguments that get passed to listeners.

@@ -490,6 +490,8 @@ class Eleventy {
 
 		if (!this.#hasConfigInitialized) {
 			await this.initializeConfig();
+		} else {
+			this.config.events.reset();
 		}
 
 		await this.config.events.emit("eleventy.config", this.eleventyConfig);
