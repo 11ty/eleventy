@@ -14,6 +14,8 @@ import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import EleventyErrorUtil from "./Errors/EleventyErrorUtil.js";
 import eventBus from "./EventBus.js";
 
+import { withResolvers } from "./Util/PromiseUtil.js";
+
 const { set: lodashSet } = lodash;
 const debug = debugUtil("Eleventy:TemplateContent");
 const debugDiagnostic = debugUtil("Eleventy:Diagnostics");
@@ -437,12 +439,10 @@ class TemplateContent {
 
 					// Compilation is async, so we eagerly cache a Promise that eventually
 					// resolves to the compiled function
-					cache.set(
-						key,
-						new Promise((resolve) => {
-							res = resolve;
-						}),
-					);
+					let withRes = withResolvers();
+					res = withRes.resolve;
+
+					cache.set(key, withRes.promise);
 				}
 			}
 
@@ -552,7 +552,6 @@ class TemplateContent {
 	}
 
 	async render(str, data, bypassMarkdown) {
-		// TODO start here with atomic transforms (run on individiual content files, not full output files)?
 		return this._render(str, data, {
 			type: "Content",
 			bypassMarkdown,

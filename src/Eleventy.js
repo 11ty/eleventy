@@ -3,6 +3,7 @@ import { performance } from "node:perf_hooks";
 import debugUtil from "debug";
 import { filesize } from "filesize";
 
+/* Eleventy Deps */
 import { TemplatePath } from "@11ty/eleventy-utils";
 import BundlePlugin from "@11ty/eleventy-plugin-bundle";
 
@@ -15,27 +16,31 @@ import EleventyServe from "./EleventyServe.js";
 import EleventyWatch from "./EleventyWatch.js";
 import EleventyWatchTargets from "./EleventyWatchTargets.js";
 import EleventyFiles from "./EleventyFiles.js";
-import ConsoleLogger from "./Util/ConsoleLogger.js";
-import PathPrefixer from "./Util/PathPrefixer.js";
+import TemplatePassthroughManager from "./TemplatePassthroughManager.js";
 import TemplateConfig from "./TemplateConfig.js";
 import FileSystemSearch from "./FileSystemSearch.js";
+
+/* Utils */
+import ConsoleLogger from "./Util/ConsoleLogger.js";
+import PathPrefixer from "./Util/PathPrefixer.js";
 import ProjectDirectories from "./Util/ProjectDirectories.js";
 import PathNormalizer from "./Util/PathNormalizer.js";
 import { isGlobMatch } from "./Util/GlobMatcher.js";
-
 import simplePlural from "./Util/Pluralize.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import eventBus from "./EventBus.js";
 import { getEleventyPackageJson, getWorkingProjectPackageJson } from "./Util/ImportJsonSync.js";
 import { EleventyImport } from "./Util/Require.js";
+import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
+import EventBusUtil from "./Util/EventBusUtil.js";
+import { withResolvers } from "./Util/PromiseUtil.js";
+
+/* Plugins */
 import RenderPlugin, * as RenderPluginExtras from "./Plugins/RenderPlugin.js";
 import I18nPlugin, * as I18nPluginExtras from "./Plugins/I18nPlugin.js";
 import HtmlBasePlugin, * as HtmlBasePluginExtras from "./Plugins/HtmlBasePlugin.js";
 import { TransformPlugin as InputPathToUrlTransformPlugin } from "./Plugins/InputPathToUrl.js";
 import { IdAttributePlugin } from "./Plugins/IdAttributePlugin.js";
-import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
-import EventBusUtil from "./Util/EventBusUtil.js";
-import TemplatePassthroughManager from "./TemplatePassthroughManager.js";
 
 const pkg = getEleventyPackageJson();
 const debug = debugUtil("Eleventy");
@@ -1193,11 +1198,13 @@ Arguments:
 
 				clearTimeout(watchDelay);
 
-				await new Promise((resolve, reject) => {
-					watchDelay = setTimeout(async () => {
-						this.#watch(isResetConfig).then(resolve, reject);
-					}, this.config.watchThrottleWaitTime);
-				});
+				let { promise, resolve, reject } = withResolvers();
+
+				watchDelay = setTimeout(async () => {
+					this.#watch(isResetConfig).then(resolve, reject);
+				}, this.config.watchThrottleWaitTime);
+
+				await promise;
 			} catch (e) {
 				if (e instanceof EleventyBaseError) {
 					this.errorHandler.error(e, "Eleventy watch error");
