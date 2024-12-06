@@ -98,7 +98,7 @@ class AutoCopy {
 		}
 	}
 
-	getRelativeToFilePath(ref, contextFilePath) {
+	getFilePathRelativeToProjectRoot(ref, contextFilePath) {
 		let dir = TemplatePath.getDirFromFilePath(contextFilePath);
 		return TemplatePath.join(dir, ref);
 	}
@@ -110,7 +110,7 @@ class AutoCopy {
 		}
 
 		// Relative to source file’s input path
-		let source = this.getRelativeToFilePath(fileRef, tmplInputPath);
+		let source = this.getFilePathRelativeToProjectRoot(fileRef, tmplInputPath);
 		if (!this.isCopyableTarget(source)) {
 			return;
 		}
@@ -133,7 +133,7 @@ class AutoCopy {
 			source = alias;
 		}
 
-		let target = this.getRelativeToFilePath(fileRef, tmplOutputPath);
+		let target = this.getFilePathRelativeToProjectRoot(fileRef, tmplOutputPath);
 
 		// We use a Set here to allow passthrough copy manager to properly error on conflicts upstream
 		// Only errors when different inputs write to the same output
