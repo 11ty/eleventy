@@ -65,6 +65,10 @@ export default function (config) {
 	// This needs to be assigned before bundlePlugin is added below.
 	config.htmlTransformer = ut;
 
+	config.exists = (filePath) => {
+		return this.existsCache.exists(filePath);
+	};
+
 	config.addPlugin(bundlePlugin, {
 		bundles: false, // no default bundles included—must be opt-in.
 		immediate: true,

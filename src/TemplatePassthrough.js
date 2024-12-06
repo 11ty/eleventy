@@ -18,20 +18,18 @@ class TemplatePassthrough {
 	#isInputPathGlob;
 	#benchmarks;
 	#isAlreadyNormalized = false;
+	#projectDirCheck = false;
 
-	// paths already guaranteed (probably from the autocopy plugin)
-	static normalizedFactory(inputPath, outputPath, opts = {}) {
+	// paths already guaranteed from the autocopy plugin
+	static factory(inputPath, outputPath, opts = {}) {
 		let p = new TemplatePassthrough(
 			{
 				inputPath,
 				outputPath,
+				copyOptions: opts.copyOptions,
 			},
 			opts.templateConfig,
 		);
-
-		if (opts.normalized) {
-			p.setIsAlreadyNormalized(true);
-		}
 
 		return p;
 	}
@@ -69,6 +67,10 @@ class TemplatePassthrough {
 		return this.templateConfig.getConfig();
 	}
 
+	get directories() {
+		return this.templateConfig.directories;
+	}
+
 	// inputDir is used when stripping from output path in `getOutputPath`
 	get inputDir() {
 		return this.templateConfig.directories.input;
@@ -78,8 +80,13 @@ class TemplatePassthrough {
 		return this.templateConfig.directories.output;
 	}
 
+	// Skips `getFiles()` normalization
 	setIsAlreadyNormalized(isNormalized) {
 		this.#isAlreadyNormalized = Boolean(isNormalized);
+	}
+
+	setCheckSourceDirectory(check) {
+		this.#projectDirCheck = Boolean(check);
 	}
 
 	/* { inputPath, outputPath } though outputPath is *not* the full path: just the output directory */
@@ -239,11 +246,15 @@ class TemplatePassthrough {
 	 * 3. individual file
 	 */
 	async copy(src, dest, copyOptions) {
-		if (
-			!TemplatePath.stripLeadingDotSlash(dest).startsWith(
-				TemplatePath.stripLeadingDotSlash(this.outputDir),
-			)
-		) {
+		if (this.#projectDirCheck && !this.directories.isFileInProjectFolder(src)) {
+			return Promise.reject(
+				new TemplatePassthroughError(
+					"Source file is not in the project directory. Check your passthrough paths.",
+				),
+			);
+		}
+
+		if (!this.directories.isFileInOutputFolder(dest)) {
 			return Promise.reject(
 				new TemplatePassthroughError(
 					"Destination is not in the site output directory. Check your passthrough paths.",
@@ -255,6 +266,7 @@ class TemplatePassthrough {
 		let fileSizeCount = 0;
 		let map = {};
 		let b = this.benchmarks.aggregate.get("Passthrough Copy File");
+
 		// returns a promise
 		return copy(src, dest, copyOptions)
 			.on(copy.events.COPY_FILE_START, (copyOp) => {
@@ -268,13 +280,28 @@ class TemplatePassthrough {
 				fileSizeCount += copyOp.stats.size;
 				b.after();
 			})
-			.then(() => {
-				return {
-					count: fileCopyCount,
-					size: fileSizeCount,
-					map,
-				};
-			});
+			.then(
+				() => {
+					return {
+						count: fileCopyCount,
+						size: fileSizeCount,
+						map,
+					};
+				},
+				(error) => {
+					if (copyOptions.overwrite === false && error.code === "EEXIST") {
+						// just ignore if the output already exists and overwrite: false
+						debug("Overwrite error ignored: %O", error);
+						return {
+							count: 0,
+							size: 0,
+							map,
+						};
+					}
+
+					return Promise.reject(error);
+				},
+			);
 	}
 
 	async write() {

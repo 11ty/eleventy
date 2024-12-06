@@ -40,6 +40,7 @@ import RenderPlugin, * as RenderPluginExtras from "./Plugins/RenderPlugin.js";
 import I18nPlugin, * as I18nPluginExtras from "./Plugins/I18nPlugin.js";
 import HtmlBasePlugin, * as HtmlBasePluginExtras from "./Plugins/HtmlBasePlugin.js";
 import { TransformPlugin as InputPathToUrlTransformPlugin } from "./Plugins/InputPathToUrl.js";
+import { AutoCopyPlugin } from "./Plugins/AutoCopyPlugin.js";
 import { IdAttributePlugin } from "./Plugins/IdAttributePlugin.js";
 
 const pkg = getEleventyPackageJson();
@@ -521,9 +522,9 @@ class Eleventy {
 		}
 		this.templateData.setFileSystemSearch(this.fileSystemSearch);
 
-		// TODO swap this to getters
 		this.passthroughManager = new TemplatePassthroughManager(this.eleventyConfig);
 		this.passthroughManager.setRunMode(this.runMode);
+		this.passthroughManager.setDryRun(this.isDryRun);
 		this.passthroughManager.extensionMap = this.extensionMap;
 		this.passthroughManager.setFileSystemSearch(this.fileSystemSearch);
 
@@ -1489,4 +1490,9 @@ export {
 	 * @type {module:11ty/eleventy/Plugins/IdAttributePlugin}
 	 */
 	IdAttributePlugin,
+
+	/**
+	 * @type {module:11ty/eleventy/Plugins/AutoCopyPlugin}
+	 */
+	AutoCopyPlugin,
 };
