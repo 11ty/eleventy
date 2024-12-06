@@ -93,7 +93,7 @@ class EleventyErrorHandler {
 
 			// Unwrap cause from error and assign it to what Eleventy expects
 			if (nextRef?.cause) {
-				nextRef.originalError = nextRef.cause?.originalError || nextRef?.cause;
+				nextRef.originalError = nextRef.cause?.originalError ?? nextRef?.cause;
 			}
 
 			if (!nextRef && EleventyErrorUtil.hasEmbeddedError(ref.message)) {
