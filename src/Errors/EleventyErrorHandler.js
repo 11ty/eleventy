@@ -1,4 +1,3 @@
-import util from "node:util";
 import debugUtil from "debug";
 
 import ConsoleLogger from "../Util/ConsoleLogger.js";
@@ -77,7 +76,7 @@ class EleventyErrorHandler {
 	//https://nodejs.org/api/process.html
 	log(e, type = "log", chalkColor = "", forceToConsole = false) {
 		if (process.env.DEBUG) {
-			debug("Full error object: %o", util.inspect(e, { showHidden: false, depth: null }));
+			debug("Full error object: %O", e);
 		}
 
 		let showStack = true;
