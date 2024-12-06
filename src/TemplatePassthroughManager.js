@@ -165,7 +165,7 @@ class TemplatePassthroughManager {
 						if (src !== this.conflictMap[dest]) {
 							let paths = [src, this.conflictMap[dest]].sort();
 							throw new TemplatePassthroughManagerCopyError(
-								`Multiple passthrough copy files are trying to write to the same output file (${dest}). ${paths.join(" and ")}`,
+								`Multiple passthrough copy files are trying to write to the same output file (${TemplatePath.standardizeFilePath(dest)}). ${paths.map((p) => TemplatePath.standardizeFilePath(p)).join(" and ")}`,
 							);
 						} else {
 							// Multiple entries from the same source

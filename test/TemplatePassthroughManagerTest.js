@@ -233,7 +233,7 @@ test("Look for uniqueness on template passthrough paths #1677", async (t) => {
   await t.throwsAsync(async function () {
     await passthroughManager.copyAll();
   }, {
-    message: `Multiple passthrough copy files are trying to write to the same output file (test/stubs/template-passthrough-duplicates/_site/avatar.png). test/stubs/template-passthrough-duplicates/input/avatar.png and test/stubs/template-passthrough-duplicates/input/src/views/avatar.png`
+    message: `Multiple passthrough copy files are trying to write to the same output file (./test/stubs/template-passthrough-duplicates/_site/avatar.png). ./test/stubs/template-passthrough-duplicates/input/avatar.png and ./test/stubs/template-passthrough-duplicates/input/src/views/avatar.png`
   });
 
   rimrafSync("test/stubs/template-passthrough-duplicates/_site/");
