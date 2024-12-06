@@ -299,6 +299,14 @@ class ProjectDirectories {
 		);
 	}
 
+	isFileInProjectFolder(filePath) {
+		return TemplatePath.absolutePath(filePath).startsWith(TemplatePath.getWorkingDir());
+	}
+
+	isFileInOutputFolder(filePath) {
+		return TemplatePath.absolutePath(filePath).startsWith(TemplatePath.absolutePath(this.output));
+	}
+
 	// Access the data without being able to set the data.
 	getUserspaceInstance() {
 		let d = this;

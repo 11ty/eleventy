@@ -325,10 +325,11 @@ class TemplatePassthroughManager {
 
 		let passthrough = TemplatePassthrough.factory(source, target, {
 			templateConfig: this.templateConfig,
-			normalized: true,
 			copyOptions,
 		});
 
+		passthrough.setCheckSourceDirectory(true);
+		passthrough.setIsAlreadyNormalized(true);
 		passthrough.setRunMode(this.runMode);
 		passthrough.setDryRun(this.#isDryRun);
 
