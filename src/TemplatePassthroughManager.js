@@ -7,22 +7,39 @@ import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import TemplatePassthrough from "./TemplatePassthrough.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import { isGlobMatch } from "./Util/GlobMatcher.js";
+import { withResolvers } from "./Util/PromiseUtil.js";
 
 const debug = debugUtil("Eleventy:TemplatePassthroughManager");
 
-class TemplatePassthroughManagerConfigError extends EleventyBaseError {}
 class TemplatePassthroughManagerCopyError extends EleventyBaseError {}
 
 class TemplatePassthroughManager {
 	#isDryRun = false;
+	#afterBuild;
+	#queue = new Map();
 
 	constructor(templateConfig) {
 		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
-			throw new TemplatePassthroughManagerConfigError("Missing or invalid `config` argument.");
+			throw new Error("Internal error: Missing or invalid `templateConfig` argument.");
 		}
 
 		this.templateConfig = templateConfig;
 		this.config = templateConfig.getConfig();
+
+		// eleventy# event listeners are removed on each build
+		this.config.events.on("eleventy#copy", ({ source, target, options }) => {
+			this.enqueueCopy(source, target, options);
+		});
+
+		this.config.events.on("eleventy#beforerender", () => {
+			this.#afterBuild = withResolvers();
+		});
+
+		this.config.events.on("eleventy#render", () => {
+			let { resolve } = this.#afterBuild;
+			resolve();
+		});
+
 		this.reset();
 	}
 
@@ -31,7 +48,8 @@ class TemplatePassthroughManager {
 		this.size = 0;
 		this.conflictMap = {};
 		this.incrementalFile;
-		debug("Resetting counts to 0");
+
+		this.#queue = new Map();
 	}
 
 	set extensionMap(extensionMap) {
@@ -288,9 +306,35 @@ class TemplatePassthroughManager {
 		return entries;
 	}
 
-	// Performance note: these can actually take a fair bit of time, but aren’t a
-	// bottleneck to eleventy. The copies are performed asynchronously and don’t affect eleventy
-	// write times in a significant way.
+	async #waitForTemplatesRendered() {
+		if (!this.#afterBuild) {
+			return Promise.resolve(); // immediately resolve
+		}
+
+		let { promise } = this.#afterBuild;
+		return promise;
+	}
+
+	enqueueCopy(source, target, copyOptions) {
+		let key = `${source}=>${target}`;
+
+		// light de-dupe the same source/target combo (might be in the same file, might be viaTransforms)
+		if (this.#queue.has(key)) {
+			return;
+		}
+
+		let passthrough = TemplatePassthrough.factory(source, target, {
+			templateConfig: this.templateConfig,
+			normalized: true,
+			copyOptions,
+		});
+
+		passthrough.setRunMode(this.runMode);
+		passthrough.setDryRun(this.#isDryRun);
+
+		this.#queue.set(key, this.copyPassthrough(passthrough));
+	}
+
 	async copyAll(templateExtensionPaths) {
 		debug("TemplatePassthrough copy started.");
 		let normalizedPaths = this.getAllNormalizedPaths(templateExtensionPaths);
@@ -298,6 +342,13 @@ class TemplatePassthroughManager {
 		let passthroughs = normalizedPaths.map((path) => this.getTemplatePassthroughForPath(path));
 
 		let promises = passthroughs.map((pass) => this.copyPassthrough(pass));
+
+		await this.#waitForTemplatesRendered();
+
+		for (let [key, afterBuildCopyPromises] of this.#queue) {
+			promises.push(afterBuildCopyPromises);
+		}
+
 		return Promise.all(promises).then(async (results) => {
 			let aliases = this.getAliasesFromPassthroughResults(results);
 			await this.config.events.emit("eleventy.passthrough", {

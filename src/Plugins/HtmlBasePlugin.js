@@ -137,7 +137,7 @@ function eleventyHtmlBasePlugin(eleventyConfig, defaultOptions = {}) {
 			});
 		},
 		{
-			priority: -1, // run last (especially after PathToUrl transform)
+			priority: -2, // priority is descending, so this runs last (especially after AutoCopy and InputPathToUrl transform)
 			enabled: function (context) {
 				// Enabled when pathPrefix is non-default or via renderTransforms
 				return Boolean(context.baseHref) || opts.baseHref !== "/";

@@ -15,6 +15,7 @@ function isGlobMatch(filepath, globs = [], options = undefined) {
 		options,
 	);
 
+	// globs: string or array of strings
 	return micromatch.isMatch(inputPath, globs, opts);
 }
 

@@ -79,7 +79,7 @@ class HtmlTransformer {
 
 			target[ext].push({
 				fn: value, // callback or plugin
-				priority: options.priority,
+				priority: options.priority, // sorted in descending order
 				enabled: options.enabled || (() => true),
 				options: options.pluginOptions,
 			});

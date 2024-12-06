@@ -429,18 +429,20 @@ class TemplateWriter {
 
 	async write() {
 		let paths = await this._getAllPaths();
-		let promises = [];
 
-		// The ordering here is important to destructuring in Eleventy->_watch
-		promises.push(this.writePassthroughCopy(paths));
+		// This must happen before writePassthroughCopy
+		this.templateConfig.userConfig.emit("eleventy#beforerender");
 
-		promises.push(...(await this.generateTemplates(paths)));
+		let aggregatePassthroughCopyPromise = this.writePassthroughCopy(paths);
 
-		return Promise.all(promises).then(
-			async ([passthroughCopyResults, ...templateResults]) => {
-				// TODO wait for afterBuildCopy to finish
-				// console.log( "AFTER??", passthroughCopyResults );
+		let templatesPromise = Promise.all(await this.generateTemplates(paths)).then((results) => {
+			this.templateConfig.userConfig.emit("eleventy#render");
 
+			return results;
+		});
+
+		return Promise.all([aggregatePassthroughCopyPromise, templatesPromise]).then(
+			async ([passthroughCopyResults, templateResults]) => {
 				return {
 					passthroughCopy: passthroughCopyResults,
 					// New in 3.0: flatten and filter out falsy templates

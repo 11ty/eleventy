@@ -19,12 +19,13 @@ class TemplatePassthrough {
 	#benchmarks;
 	#isAlreadyNormalized = false;
 
-	// paths already guaranteed (probably from the autocopy plugin)
-	static normalizedFactory(inputPath, outputPath, opts = {}) {
+	// paths already guaranteed from the autocopy plugin
+	static factory(inputPath, outputPath, opts = {}) {
 		let p = new TemplatePassthrough(
 			{
 				inputPath,
 				outputPath,
+				copyOptions: opts.copyOptions,
 			},
 			opts.templateConfig,
 		);
@@ -78,6 +79,7 @@ class TemplatePassthrough {
 		return this.templateConfig.directories.output;
 	}
 
+	// Skips `getFiles()` normalization
 	setIsAlreadyNormalized(isNormalized) {
 		this.#isAlreadyNormalized = Boolean(isNormalized);
 	}
@@ -255,6 +257,7 @@ class TemplatePassthrough {
 		let fileSizeCount = 0;
 		let map = {};
 		let b = this.benchmarks.aggregate.get("Passthrough Copy File");
+
 		// returns a promise
 		return copy(src, dest, copyOptions)
 			.on(copy.events.COPY_FILE_START, (copyOp) => {
@@ -268,13 +271,28 @@ class TemplatePassthrough {
 				fileSizeCount += copyOp.stats.size;
 				b.after();
 			})
-			.then(() => {
-				return {
-					count: fileCopyCount,
-					size: fileSizeCount,
-					map,
-				};
-			});
+			.then(
+				() => {
+					return {
+						count: fileCopyCount,
+						size: fileSizeCount,
+						map,
+					};
+				},
+				(error) => {
+					if (copyOptions.overwrite === false && error.code === "EEXIST") {
+						// just ignore if the output already exists and overwrite: false
+						debug("Overwrite error ignored: %O", error);
+						return {
+							count: 0,
+							size: 0,
+							map,
+						};
+					}
+
+					return Promise.reject(error);
+				},
+			);
 	}
 
 	async write() {
