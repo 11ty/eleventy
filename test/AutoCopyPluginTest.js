@@ -1,6 +1,7 @@
 import test from "ava";
 import fs from "node:fs";
 import { rimrafSync } from "rimraf";
+import { TemplatePath } from "@11ty/eleventy-utils";
 
 import { AutoCopyPlugin } from "../src/Plugins/AutoCopyPlugin.js";
 import { TransformPlugin as InputPathToUrlTransformPlugin } from "../src/Plugins/InputPathToUrl.js";
@@ -18,7 +19,7 @@ test("Basic usage", async (t) => {
 			eleventyConfig.on("eleventy.passthrough", copyMap => {
 				t.deepEqual(copyMap, {
 					map: {
-						"/test/possum.png": "test/stubs-autocopy/possum.png"
+						"/test/possum.png": TemplatePath.normalizeOperatingSystemFilePath("test/stubs-autocopy/possum.png")
 					}
 				})
 			});
@@ -45,7 +46,7 @@ test("Basic usage", async (t) => {
 	t.deepEqual(copy[0], {
 		count: 1,
 		map: {
-			"test/stubs-autocopy/possum.png": "test/stubs-autocopy/_site-basica/test/possum.png",
+			"test/stubs-autocopy/possum.png": TemplatePath.normalizeOperatingSystemFilePath("test/stubs-autocopy/_site-basica/test/possum.png"),
 		}
 	});
 
@@ -68,7 +69,7 @@ test("More complex image path (parent dir)", async (t) => {
 			eleventyConfig.on("eleventy.passthrough", copyMap => {
 				t.deepEqual(copyMap, {
 					map: {
-						"/stubs-img-transform/possum.png": "test/stubs-img-transform/possum.png"
+						"/stubs-img-transform/possum.png": TemplatePath.normalizeOperatingSystemFilePath("test/stubs-img-transform/possum.png")
 					}
 				})
 			});
@@ -96,7 +97,7 @@ test("More complex image path (parent dir)", async (t) => {
 		count: 1,
 		map: {
 			// test/stubs-autocopy/test.njk => "../stubs-img-transform/possum.png"
-			"test/stubs-img-transform/possum.png": "test/stubs-autocopy/_site-basicb/stubs-img-transform/possum.png",
+			"test/stubs-img-transform/possum.png": TemplatePath.normalizeOperatingSystemFilePath("test/stubs-autocopy/_site-basicb/stubs-img-transform/possum.png"),
 		}
 	});
 
@@ -322,7 +323,7 @@ test("Use with HtmlBasePlugin usage", async (t) => {
 			eleventyConfig.on("eleventy.passthrough", copyMap => {
 				t.deepEqual(copyMap, {
 					map: {
-						"/test/possum.png": "test/stubs-autocopy/possum.png"
+						"/test/possum.png": TemplatePath.normalizeOperatingSystemFilePath("test/stubs-autocopy/possum.png")
 					}
 				})
 			});
@@ -349,7 +350,7 @@ test("Use with HtmlBasePlugin usage", async (t) => {
 	t.deepEqual(copy[0], {
 		count: 1,
 		map: {
-			"test/stubs-autocopy/possum.png": "test/stubs-autocopy/_site8a/test/possum.png",
+			"test/stubs-autocopy/possum.png": TemplatePath.normalizeOperatingSystemFilePath("test/stubs-autocopy/_site8a/test/possum.png"),
 		}
 	});
 
@@ -414,8 +415,8 @@ test("Multiple addPlugin calls (use both globs)", async (t) => {
 			eleventyConfig.on("eleventy.passthrough", copyMap => {
 				t.deepEqual(copyMap, {
 					map: {
-						"/test/possum.jpg": "test/stubs-autocopy/possum.jpg",
-						"/test/possum.png": "test/stubs-autocopy/possum.png",
+						"/test/possum.jpg": TemplatePath.normalizeOperatingSystemFilePath("test/stubs-autocopy/possum.jpg"),
+						"/test/possum.png": TemplatePath.normalizeOperatingSystemFilePath("test/stubs-autocopy/possum.png"),
 					}
 				})
 			});
@@ -442,13 +443,13 @@ test("Multiple addPlugin calls (use both globs)", async (t) => {
 	t.deepEqual(copy[0], {
 		count: 1,
 		map: {
-			"test/stubs-autocopy/possum.png": "test/stubs-autocopy/_site9/test/possum.png",
+			"test/stubs-autocopy/possum.png": TemplatePath.normalizeOperatingSystemFilePath("test/stubs-autocopy/_site9/test/possum.png"),
 		}
 	});
 	t.deepEqual(copy[1], {
 		count: 1,
 		map: {
-			"test/stubs-autocopy/possum.jpg": "test/stubs-autocopy/_site9/test/possum.jpg",
+			"test/stubs-autocopy/possum.jpg": TemplatePath.normalizeOperatingSystemFilePath("test/stubs-autocopy/_site9/test/possum.jpg"),
 		}
 	});
 
@@ -472,8 +473,8 @@ test("Array of globs", async (t) => {
 			eleventyConfig.on("eleventy.passthrough", copyMap => {
 				t.deepEqual(copyMap, {
 					map: {
-						"/test/possum.jpg": "test/stubs-autocopy/possum.jpg",
-						"/test/possum.png": "test/stubs-autocopy/possum.png",
+						"/test/possum.jpg": TemplatePath.normalizeOperatingSystemFilePath("test/stubs-autocopy/possum.jpg"),
+						"/test/possum.png": TemplatePath.normalizeOperatingSystemFilePath("test/stubs-autocopy/possum.png"),
 					}
 				})
 			});
@@ -500,13 +501,13 @@ test("Array of globs", async (t) => {
 	t.deepEqual(copy[0], {
 		count: 1,
 		map: {
-			"test/stubs-autocopy/possum.png": "test/stubs-autocopy/_site10/test/possum.png",
+			"test/stubs-autocopy/possum.png": TemplatePath.normalizeOperatingSystemFilePath("test/stubs-autocopy/_site10/test/possum.png"),
 		}
 	});
 	t.deepEqual(copy[1], {
 		count: 1,
 		map: {
-			"test/stubs-autocopy/possum.jpg": "test/stubs-autocopy/_site10/test/possum.jpg",
+			"test/stubs-autocopy/possum.jpg": TemplatePath.normalizeOperatingSystemFilePath("test/stubs-autocopy/_site10/test/possum.jpg"),
 		}
 	});
 
