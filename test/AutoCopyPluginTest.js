@@ -574,7 +574,7 @@ test("Input -> output remapping not yet supported (throws error)", async (t) => 
 	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site12", {
 		configPath: false,
 		config: function (eleventyConfig) {
-      // not yet supported
+			// not yet supported
 			eleventyConfig.addPassthroughCopy({"**/*.png": "yo"}, {
 				mode: "auto"
 			});
