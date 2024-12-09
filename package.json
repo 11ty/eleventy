@@ -9,8 +9,13 @@
 	"type": "module",
 	"main": "./src/Eleventy.js",
 	"exports": {
-		"import": "./src/Eleventy.js",
-		"require": "./src/EleventyCommonJs.cjs"
+		".": {
+			"import": "./src/Eleventy.js",
+			"require": "./src/EleventyCommonJs.cjs"
+		},
+		"./UserConfig": {
+			"types": "./src/UserConfig.js"
+		}
 	},
 	"bin": {
 		"eleventy": "cmd.cjs"
