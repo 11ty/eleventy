@@ -119,7 +119,7 @@
 	},
 	"dependencies": {
 		"@11ty/dependency-tree": "^3.0.1",
-		"@11ty/dependency-tree-esm": "^1.0.0",
+		"@11ty/dependency-tree-esm": "^1.0.1",
 		"@11ty/eleventy-dev-server": "^2.0.4",
 		"@11ty/eleventy-plugin-bundle": "^3.0.0",
 		"@11ty/eleventy-utils": "2.0.0-alpha.2",
