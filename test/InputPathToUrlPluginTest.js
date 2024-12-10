@@ -172,3 +172,21 @@ test("Issue #3417 Using the transform with relative path (no dot slash)", async 
     `<a href="/source/target/">Target</a>`
   );
 });
+
+test("Issue #3581 #build-cost-🧰", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/_site", {
+    configPath: false,
+    config: function (eleventyConfig) {
+      eleventyConfig.addPlugin(TransformPlugin);
+
+      eleventyConfig.addTemplate("source/test.njk", `<a href="#built-cost-🧰">Target</a>`)
+    },
+  });
+
+  let results = await elev.toJSON();
+
+  t.is(
+    getContentFor(results, "/source/test/index.html"),
+    `<a href="#built-cost-🧰">Target</a>`
+  );
+});

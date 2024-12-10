@@ -45,6 +45,10 @@ function normalizeInputPath(targetInputPath, inputDir, sourceInputPath, contentM
 }
 
 function parseFilePath(filepath) {
+	if (filepath.startsWith("#") || filepath.startsWith("?")) {
+		return [filepath, ""];
+	}
+
 	try {
 		/* u: URL {
 			href: 'file:///tmpl.njk#anchor',
@@ -95,8 +99,15 @@ function FilterPlugin(eleventyConfig) {
 		let inputDir = eleventyConfig.directories.input;
 		let suffix = "";
 		[suffix, targetFilePath] = parseFilePath(targetFilePath);
-		// @ts-ignore
-		targetFilePath = normalizeInputPath(targetFilePath, inputDir, this.page.inputPath, contentMap);
+		if (targetFilePath) {
+			// @ts-ignore
+			targetFilePath = normalizeInputPath(
+				targetFilePath,
+				inputDir,
+				this.page.inputPath,
+				contentMap,
+			);
+		}
 
 		let urls = contentMap[targetFilePath];
 		if (!urls || urls.length === 0) {
@@ -134,13 +145,15 @@ function TransformPlugin(eleventyConfig, defaultOptions = {}) {
 
 		let suffix = "";
 		[suffix, targetFilepathOrUrl] = parseFilePath(targetFilepathOrUrl);
-		targetFilepathOrUrl = normalizeInputPath(
-			targetFilepathOrUrl,
-			inputDir,
-			// @ts-ignore
-			this.page.inputPath,
-			contentMap,
-		);
+		if (targetFilepathOrUrl) {
+			targetFilepathOrUrl = normalizeInputPath(
+				targetFilepathOrUrl,
+				inputDir,
+				// @ts-ignore
+				this.page.inputPath,
+				contentMap,
+			);
+		}
 
 		let urls = contentMap[targetFilepathOrUrl];
 		if (!targetFilepathOrUrl || !urls || urls.length === 0) {
