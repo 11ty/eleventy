@@ -100,10 +100,10 @@ function FilterPlugin(eleventyConfig) {
 		let suffix = "";
 		[suffix, targetFilePath] = parseFilePath(targetFilePath);
 		if (targetFilePath) {
-			// @ts-ignore
 			targetFilePath = normalizeInputPath(
 				targetFilePath,
 				inputDir,
+				// @ts-ignore
 				this.page.inputPath,
 				contentMap,
 			);
