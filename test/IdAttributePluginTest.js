@@ -131,7 +131,7 @@ test("Issue #3424, id attribute conflicts (two hard coded id conflicts)", async 
   elev.disableLogger();
 
   let e = await t.throwsAsync(() => elev.toJSON());
-  t.is(e.originalError.originalError.toString(), "Error: Duplicate `id` attribute (testing) in markup on ./test/stubs-virtual/test.html");
+  t.is(e.originalError.originalError.toString(), `Error: You have more than one HTML \`id\` attribute using the same value (id="testing") in your template (./test/stubs-virtual/test.html). You can disable this error in the IdAttribute plugin with the \`checkDuplicates: false\` option.`);
 });
 
 test("Issue #3424, filter callback skips", async (t) => {
