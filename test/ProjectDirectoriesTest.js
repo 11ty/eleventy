@@ -347,3 +347,26 @@ test("getLayoutPath (includes dir)", t => {
 	t.is(d.getLayoutPath("layout.html"), "./test/stubs/components/layout.html");
 	t.is(d.getLayoutPathRelativeToInputDirectory("layout.html"), "components/layout.html");
 });
+
+test("isFileIn*Folder", t => {
+	let d = new ProjectDirectories();
+
+	t.is(d.isFileInProjectFolder("test.njk"), true);
+	t.is(d.isFileInProjectFolder("../test.njk"), false);
+
+	t.is(d.isFileInOutputFolder("test.njk"), false);
+	t.is(d.isFileInOutputFolder("../test.njk"), false);
+	t.is(d.isFileInOutputFolder("../_site/test.html"), false);
+	t.is(d.isFileInOutputFolder("_site/test.html"), true);
+});
+
+test("isFileInOutputFolder (change output folder)", t => {
+	let d = new ProjectDirectories();
+	d.setOutput("yolo")
+
+	t.is(d.isFileInOutputFolder("test.njk"), false);
+	t.is(d.isFileInOutputFolder("../test.njk"), false);
+	t.is(d.isFileInOutputFolder("_site/test.html"), false);
+	t.is(d.isFileInOutputFolder("../_site/test.html"), false);
+	t.is(d.isFileInOutputFolder("yolo/test.html"), true);
+});

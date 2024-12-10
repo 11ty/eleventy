@@ -518,9 +518,9 @@ class Eleventy {
 		}
 		this.templateData.setFileSystemSearch(this.fileSystemSearch);
 
-		// TODO swap this to getters
 		this.passthroughManager = new TemplatePassthroughManager(this.eleventyConfig);
 		this.passthroughManager.setRunMode(this.runMode);
+		this.passthroughManager.setDryRun(this.isDryRun);
 		this.passthroughManager.extensionMap = this.extensionMap;
 		this.passthroughManager.setFileSystemSearch(this.fileSystemSearch);
 

@@ -145,6 +145,7 @@ class UserConfig {
 
 		/** @type {object} */
 		this.passthroughCopies = {};
+		this.autoCopies = new Set();
 
 		/** @type {object} */
 		this.layoutAliases = {};
@@ -791,7 +792,17 @@ class UserConfig {
 	 * @returns {any} a reference to the `EleventyConfig` object.
 	 */
 	addPassthroughCopy(fileOrDir, copyOptions = {}) {
-		if (typeof fileOrDir === "string") {
+		if (copyOptions.mode === "auto") {
+			if (isPlainObject(fileOrDir)) {
+				throw new Error(
+					"mode: 'auto' does not yet support input -> output (objects) mapping. Please pass a string glob or an Array of string globs!",
+				);
+			}
+			this.autoCopies?.add({
+				match: fileOrDir,
+				...copyOptions,
+			});
+		} else if (typeof fileOrDir === "string") {
 			this.passthroughCopies[fileOrDir] = { outputPath: true, copyOptions };
 		} else {
 			for (let [inputPath, outputPath] of Object.entries(fileOrDir)) {
@@ -1215,6 +1226,7 @@ class UserConfig {
 			globalData: this.globalData,
 			layoutAliases: this.layoutAliases,
 			layoutResolution: this.layoutResolution,
+			autoCopies: this.autoCopies,
 			passthroughCopies: this.passthroughCopies,
 
 			// Liquid

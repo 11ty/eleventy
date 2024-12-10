@@ -9,6 +9,7 @@ import { FilterPlugin as InputPathToUrlFilterPlugin } from "./Plugins/InputPathT
 import { HtmlTransformer } from "./Util/HtmlTransformer.js";
 import TransformsUtil from "./Util/TransformsUtil.js";
 import MemoizeUtil from "./Util/MemoizeFunction.js";
+import { AutoCopyPlugin } from "./Plugins/AutoCopyPlugin.js";
 
 /**
  * @module 11ty/eleventy/defaultConfig
@@ -64,6 +65,10 @@ export default function (config) {
 
 	// This needs to be assigned before bundlePlugin is added below.
 	config.htmlTransformer = ut;
+
+	config.exists = (filePath) => {
+		return this.existsCache.exists(filePath);
+	};
 
 	config.addPlugin(bundlePlugin, {
 		bundles: false, // no default bundles included—must be opt-in.
@@ -125,6 +130,9 @@ export default function (config) {
 	config.addTransform("@11ty/eleventy/html-transformer", async function (content) {
 		return ut.transformContent(this.outputPath, content, this);
 	});
+
+	// Requires user configuration, so must run as second-stage
+	config.addPlugin(AutoCopyPlugin);
 
 	return {
 		templateFormats: ["liquid", "md", "njk", "html", "11ty.js"],
