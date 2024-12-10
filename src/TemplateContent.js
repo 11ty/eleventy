@@ -525,10 +525,9 @@ class TemplateContent {
 		//    ({ compileOptions: { permalink: false }})
 		//    ({ compileOptions: { permalink: () => false }})
 		//    ({ compileOptions: { permalink: () => (() = > false) }})
-		if (permalinkCompilation === false) {
+		if (permalinkCompilation === false && typeof permalink !== "function") {
 			return permalink;
 		}
-
 		/* Custom `compile` function for permalinks, usage:
     permalink: function(permalinkString, inputPath) {
       return async function(data) {
