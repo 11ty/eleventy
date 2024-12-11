@@ -3,7 +3,8 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 import isValidUrl from "../Util/ValidUrl.js";
 
 function getValidPath(contentMap, testPath) {
-	let normalized = TemplatePath.addLeadingDotSlash(testPath);
+	// if the path is coming from Markdown, it may be encoded
+	let normalized = TemplatePath.addLeadingDotSlash(decodeURIComponent(testPath));
 
 	// it must exist in the content map to be valid
 	if (contentMap[normalized]) {
@@ -68,8 +69,8 @@ function parseFilePath(filepath) {
 		// Note that `node:url` -> pathToFileURL creates an absolute path, which we don’t want
 		// URL(`file:#anchor`) gives back a pathname of `/`
 		let u = new URL(`file:${filepath}`);
-		filepath = filepath.replace(u.search, "");
-		filepath = filepath.replace(u.hash, "");
+		filepath = filepath.replace(u.search, ""); // includes ?
+		filepath = filepath.replace(u.hash, ""); // includes #
 
 		return [
 			// search includes ?, hash includes #
