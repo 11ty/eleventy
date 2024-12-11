@@ -375,10 +375,11 @@ test("Config propagates to other instances correctly", async (t) => {
 
   t.is(elev.eleventyServe.config, elev.config);
 
-  t.is(elev.extensionMap.eleventyConfig, elev.eleventyConfig);
-  t.is(elev.eleventyFiles.eleventyConfig, elev.eleventyConfig);
-  t.is(elev.templateData.eleventyConfig, elev.eleventyConfig);
-  t.is(elev.writer.eleventyConfig, elev.eleventyConfig);
+  t.is(elev.extensionMap.templateConfig, elev.eleventyConfig);
+  t.is(elev.passthroughManager.templateConfig, elev.eleventyConfig);
+  t.is(elev.eleventyFiles.templateConfig, elev.eleventyConfig);
+  t.is(elev.templateData.templateConfig, elev.eleventyConfig);
+  t.is(elev.writer.templateConfig, elev.eleventyConfig);
 });
 
 test("Eleventy programmatic API without init", async (t) => {

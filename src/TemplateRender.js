@@ -78,7 +78,7 @@ class TemplateRender {
 	// Runs once per template
 	async init(engineNameOrPath) {
 		let name = engineNameOrPath || this.engineNameOrPath;
-		this.extensionMap.config = this.eleventyConfig;
+		this.extensionMap.setTemplateConfig(this.eleventyConfig);
 
 		let extensionEntry = this.extensionMap.getExtensionEntry(name);
 		let engineName = extensionEntry?.aliasKey || extensionEntry?.key;

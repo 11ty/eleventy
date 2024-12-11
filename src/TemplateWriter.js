@@ -19,18 +19,20 @@ class EleventyTemplateError extends EleventyBaseError {}
 
 class TemplateWriter {
 	#eleventyFiles;
+	#passthroughManager;
+	#errorHandler;
 
 	constructor(
 		templateFormats, // TODO remove this, see `get eleventyFiles` first
 		templateData,
-		eleventyConfig,
+		templateConfig,
 	) {
-		if (!eleventyConfig) {
+		if (!templateConfig) {
 			throw new TemplateWriterMissingConfigArgError("Missing config argument.");
 		}
-		this.eleventyConfig = eleventyConfig;
-		this.config = eleventyConfig.getConfig();
-		this.userConfig = eleventyConfig.userConfig;
+		this.templateConfig = templateConfig;
+		this.config = templateConfig.getConfig();
+		this.userConfig = templateConfig.userConfig;
 
 		this.templateFormats = templateFormats;
 
@@ -46,7 +48,7 @@ class TemplateWriter {
 	}
 
 	get dirs() {
-		return this.eleventyConfig.directories;
+		return this.templateConfig.directories;
 	}
 
 	get inputDir() {
@@ -67,13 +69,13 @@ class TemplateWriter {
 
 	/* Getter for error handler */
 	get errorHandler() {
-		if (!this._errorHandler) {
-			this._errorHandler = new EleventyErrorHandler();
-			this._errorHandler.isVerbose = this.verboseMode;
-			this._errorHandler.logger = this.logger;
+		if (!this.#errorHandler) {
+			this.#errorHandler = new EleventyErrorHandler();
+			this.#errorHandler.isVerbose = this.verboseMode;
+			this.#errorHandler.logger = this.logger;
 		}
 
-		return this._errorHandler;
+		return this.#errorHandler;
 	}
 
 	/* Getter for Logger */
@@ -108,17 +110,17 @@ class TemplateWriter {
 
 	get extensionMap() {
 		if (!this._extensionMap) {
-			this._extensionMap = new EleventyExtensionMap(this.eleventyConfig);
+			this._extensionMap = new EleventyExtensionMap(this.templateConfig);
 			this._extensionMap.setFormats(this.templateFormats);
 		}
 		return this._extensionMap;
 	}
 
-	setEleventyFiles(eleventyFiles) {
-		this.#eleventyFiles = eleventyFiles;
+	setPassthroughManager(mgr) {
+		this.#passthroughManager = mgr;
 	}
 
-	set eleventyFiles(eleventyFiles) {
+	setEleventyFiles(eleventyFiles) {
 		this.#eleventyFiles = eleventyFiles;
 	}
 
@@ -126,7 +128,7 @@ class TemplateWriter {
 		// usually Eleventy.js will setEleventyFiles with the EleventyFiles manager
 		if (!this.#eleventyFiles) {
 			// if not, we can create one (used only by tests)
-			this.#eleventyFiles = new EleventyFiles(this.templateFormats, this.eleventyConfig);
+			this.#eleventyFiles = new EleventyFiles(this.templateFormats, this.templateConfig);
 
 			this.#eleventyFiles.setFileSystemSearch(new FileSystemSearch());
 			this.#eleventyFiles.init();
@@ -146,12 +148,12 @@ class TemplateWriter {
 		if (tmpl) {
 			wasCached = true;
 			// Update config for https://github.com/11ty/eleventy/issues/3468
-			tmpl.eleventyConfig = this.eleventyConfig;
+			tmpl.eleventyConfig = this.templateConfig;
 
 			// TODO reset other constructor things here like inputDir/outputDir/extensionMap/
 			tmpl.setTemplateData(this.templateData);
 		} else {
-			tmpl = new Template(path, this.templateData, this.extensionMap, this.eleventyConfig);
+			tmpl = new Template(path, this.templateData, this.extensionMap, this.templateConfig);
 
 			tmpl.setOutputFormat(to);
 
@@ -350,7 +352,7 @@ class TemplateWriter {
 	}
 
 	async _createTemplateMap(paths, to) {
-		this.templateMap = new TemplateMap(this.eleventyConfig);
+		this.templateMap = new TemplateMap(this.templateConfig);
 
 		await this._addToTemplateMap(paths, to);
 		await this.templateMap.cache();
@@ -369,10 +371,11 @@ class TemplateWriter {
 	}
 
 	async writePassthroughCopy(templateExtensionPaths) {
-		let passthroughManager = this.eleventyFiles.getPassthroughManager();
-		passthroughManager.setIncrementalFile(this.incrementalFile);
+		if (!this.#passthroughManager) {
+			throw new Error("Internal error: Missing `passthroughManager` instance.");
+		}
 
-		return passthroughManager.copyAll(templateExtensionPaths).catch((e) => {
+		return this.#passthroughManager.copyAll(templateExtensionPaths).catch((e) => {
 			this.errorHandler.warn(e, "Error with passthrough copy");
 			return Promise.reject(new EleventyPassthroughCopyError("Having trouble copying", e));
 		});
@@ -434,7 +437,10 @@ class TemplateWriter {
 		promises.push(...(await this.generateTemplates(paths)));
 
 		return Promise.all(promises).then(
-			([passthroughCopyResults, ...templateResults]) => {
+			async ([passthroughCopyResults, ...templateResults]) => {
+				// TODO wait for afterBuildCopy to finish
+				// console.log( "AFTER??", passthroughCopyResults );
+
 				return {
 					passthroughCopy: passthroughCopyResults,
 					// New in 3.0: flatten and filter out falsy templates
@@ -472,9 +478,7 @@ class TemplateWriter {
 	}
 
 	setDryRun(isDryRun) {
-		this.isDryRun = !!isDryRun;
-
-		this.eleventyFiles.getPassthroughManager().setDryRun(this.isDryRun);
+		this.isDryRun = Boolean(isDryRun);
 	}
 
 	setRunInitialBuild(runInitialBuild) {
@@ -485,29 +489,21 @@ class TemplateWriter {
 	}
 	setIncrementalFile(incrementalFile) {
 		this.incrementalFile = incrementalFile;
+		this.#passthroughManager.setIncrementalFile(incrementalFile);
 	}
 	resetIncrementalFile() {
 		this.incrementalFile = null;
+		this.#passthroughManager.resetIncrementalFile();
 	}
 
-	getCopyCount() {
-		return this.eleventyFiles.getPassthroughManager().getCopyCount();
-	}
-
-	getCopySize() {
-		return this.eleventyFiles.getPassthroughManager().getCopySize();
-	}
-
-	getRenderCount() {
-		return this.renderCount;
-	}
-
-	getWriteCount() {
-		return this.writeCount;
-	}
-
-	getSkippedCount() {
-		return this.skippedCount;
+	getMetadata() {
+		return {
+			// copyCount, copySize
+			...(this.#passthroughManager?.getMetadata() || {}),
+			skipCount: this.skippedCount,
+			writeCount: this.writeCount,
+			renderCount: this.renderCount,
+		};
 	}
 
 	get caches() {

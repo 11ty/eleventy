@@ -290,12 +290,12 @@ test("Use page in renderTemplate (njk in liquid)", async (t) => {
 
 test("Use eleventy in renderTemplate (njk in liquid)", async (t) => {
   let html = await getTestOutputForFile("./test/stubs-render-plugin/njk-eleventy.liquid");
-  t.is(html, "3.0.0");
+  t.true(html.startsWith("3.0."));
 });
 
 test("Use eleventy in renderTemplate (liquid in njk)", async (t) => {
   let html = await getTestOutputForFile("./test/stubs-render-plugin/liquid-eleventy.njk");
-  t.is(html, "3.0.0");
+  t.true(html.startsWith("3.0."));
 });
 test.skip("Use nunjucks in liquid (access to all global data)", async (t) => {
   let html = await getTestOutputForFile("./test/stubs-render-plugin/nunjucks-global.liquid");

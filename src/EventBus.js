@@ -16,7 +16,7 @@ debug("Setting up global EventBus.");
  * @type {module:11ty/eleventy/Util/AsyncEventEmitter~AsyncEventEmitter}
  */
 let bus = new EventEmitter();
-bus.setMaxListeners(100);
+bus.setMaxListeners(100); // defaults to 10
 
 debug("EventBus max listener count: %o", bus.getMaxListeners());
 

@@ -82,6 +82,7 @@ class EleventyErrorHandler {
 
 		let showStack = true;
 		if (e.skipOriginalStack) {
+			// Don’t show the full error stack trace
 			showStack = false;
 		}
 
@@ -91,9 +92,9 @@ class EleventyErrorHandler {
 		while (ref) {
 			let nextRef = ref.originalError;
 
-			// Nunjucks wraps errors and puts the original in error.cause
-			if (nextRef?.cause?.originalError) {
-				nextRef = nextRef.cause.originalError;
+			// Unwrap cause from error and assign it to what Eleventy expects
+			if (nextRef?.cause) {
+				nextRef.originalError = nextRef.cause?.originalError ?? nextRef?.cause;
 			}
 
 			if (!nextRef && EleventyErrorUtil.hasEmbeddedError(ref.message)) {

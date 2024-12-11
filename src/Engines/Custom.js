@@ -323,6 +323,7 @@ class CustomEngine extends TemplateEngine {
 		}
 
 		// Breaking: default changed from `true` to `false` in 3.0.0-alpha.13
+		// Note: `false` is the same as "raw" here.
 		return false;
 	}
 

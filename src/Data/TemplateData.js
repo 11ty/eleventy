@@ -20,16 +20,18 @@ const debugWarn = debugUtil("Eleventy:Warnings");
 const debug = debugUtil("Eleventy:TemplateData");
 const debugDev = debugUtil("Dev:Eleventy:TemplateData");
 
-class TemplateDataConfigError extends EleventyBaseError {}
 class TemplateDataParseError extends EleventyBaseError {}
 
 class TemplateData {
-	constructor(eleventyConfig) {
-		if (!eleventyConfig) {
-			throw new TemplateDataConfigError("Missing `config`.");
+	constructor(templateConfig) {
+		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
+			throw new Error(
+				"Internal error: Missing `templateConfig` or was not an instance of `TemplateConfig`.",
+			);
 		}
-		this.eleventyConfig = eleventyConfig;
-		this.config = this.eleventyConfig.getConfig();
+
+		this.templateConfig = templateConfig;
+		this.config = this.templateConfig.getConfig();
 
 		this.benchmarks = {
 			data: this.config.benchmarkManager.get("Data"),
@@ -41,11 +43,11 @@ class TemplateData {
 		this.templateDirectoryData = {};
 		this.isEsm = false;
 
-		this.initialGlobalData = new TemplateDataInitialGlobalData(this.eleventyConfig);
+		this.initialGlobalData = new TemplateDataInitialGlobalData(this.templateConfig);
 	}
 
 	get dirs() {
-		return this.eleventyConfig.directories;
+		return this.templateConfig.directories;
 	}
 
 	get inputDir() {
@@ -66,10 +68,10 @@ class TemplateData {
 		return this.dataDir;
 	}
 
-	get _fsExistsCache() {
+	exists(pathname) {
 		// It's common for data files not to exist, so we avoid going to the FS to
 		// re-check if they do via a quick-and-dirty cache.
-		return this.eleventyConfig.existsCache;
+		return this.templateConfig.existsCache.exists(pathname);
 	}
 
 	setFileSystemSearch(fileSystemSearch) {
@@ -82,7 +84,7 @@ class TemplateData {
 
 	get extensionMap() {
 		if (!this._extensionMap) {
-			this._extensionMap = new EleventyExtensionMap(this.eleventyConfig);
+			this._extensionMap = new EleventyExtensionMap(this.templateConfig);
 			this._extensionMap.setFormats([]);
 		}
 		return this._extensionMap;
@@ -385,7 +387,7 @@ class TemplateData {
 		// Filter out files we know don't exist to avoid overhead for checking
 		const dataPaths = await Promise.all(
 			localDataPaths.map((path) => {
-				if (this._fsExistsCache.exists(path)) {
+				if (this.exists(path)) {
 					return path;
 				}
 				return false;
@@ -495,12 +497,7 @@ class TemplateData {
 
 		if (extension === "js" || extension === "cjs" || extension === "mjs") {
 			// JS data file or require’d JSON (no preprocessing needed)
-			let localPath = TemplatePath.absolutePath(path);
-			let exists = this._fsExistsCache.exists(localPath);
-			// Make sure that relative lookups benefit from cache
-			this._fsExistsCache.markExists(path, exists);
-
-			if (!exists) {
+			if (!this.exists(path)) {
 				return {};
 			}
 
@@ -515,7 +512,7 @@ class TemplateData {
 			}
 
 			// We always need to use `import()`, as `require` isn’t available in ESM.
-			let returnValue = await EleventyImport(localPath, type);
+			let returnValue = await EleventyImport(path, type);
 
 			// TODO special exception for Global data `permalink.js`
 			// module.exports = (data) => `${data.page.filePathStem}/`; // Does not work

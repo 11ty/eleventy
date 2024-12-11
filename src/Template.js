@@ -1,8 +1,8 @@
 import util from "node:util";
 import os from "node:os";
 import path from "node:path";
+import fs from "node:fs";
 
-import fs from "graceful-fs";
 import lodash from "@11ty/lodash-custom";
 import { DateTime } from "luxon";
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
@@ -25,6 +25,7 @@ import TemplateContentUnrenderedTemplateError from "./Errors/TemplateContentUnre
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import ReservedData from "./Util/ReservedData.js";
 import TransformsUtil from "./Util/TransformsUtil.js";
+import { FileSystemManager } from "./Util/FileSystemManager.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 const fsStat = util.promisify(fs.stat);
@@ -33,6 +34,8 @@ const debug = debugUtil("Eleventy:Template");
 const debugDev = debugUtil("Dev:Eleventy:Template");
 
 class Template extends TemplateContent {
+	#fsManager;
+
 	constructor(templatePath, templateData, extensionMap, config) {
 		debugDev("new Template(%o)", templatePath);
 		super(templatePath, config);
@@ -67,8 +70,11 @@ class Template extends TemplateContent {
 		this.templateData = templateData;
 	}
 
-	get existsCache() {
-		return this.eleventyConfig.existsCache;
+	get fsManager() {
+		if (!this.#fsManager) {
+			this.#fsManager = new FileSystemManager(this.eleventyConfig);
+		}
+		return this.#fsManager;
 	}
 
 	get logger() {
@@ -808,12 +814,12 @@ class Template extends TemplateContent {
 		let templateBenchmarkDir = this.bench.get("Template make parent directory");
 		templateBenchmarkDir.before();
 
-		let templateOutputDir = path.parse(outputPath).dir;
-		if (templateOutputDir) {
-			if (!this.existsCache.exists(templateOutputDir)) {
-				fs.mkdirSync(templateOutputDir, { recursive: true });
-			}
+		if (this.eleventyConfig.templateHandling?.writeMode === "async") {
+			await this.fsManager.createDirectoryForFile(outputPath);
+		} else {
+			this.fsManager.createDirectoryForFileSync(outputPath);
 		}
+
 		templateBenchmarkDir.after();
 
 		if (!Buffer.isBuffer(finalContent) && typeof finalContent !== "string") {
@@ -825,9 +831,11 @@ class Template extends TemplateContent {
 		let templateBenchmark = this.bench.get("Template Write");
 		templateBenchmark.before();
 
-		// Note: This deliberately uses the synchronous version to avoid
-		// unbounded concurrency: https://github.com/11ty/eleventy/issues/3271
-		fs.writeFileSync(outputPath, finalContent);
+		if (this.eleventyConfig.templateHandling?.writeMode === "async") {
+			await this.fsManager.writeFile(outputPath, finalContent);
+		} else {
+			this.fsManager.writeFileSync(outputPath, finalContent);
+		}
 
 		templateBenchmark.after();
 		this.writeCount++;

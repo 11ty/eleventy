@@ -4,12 +4,12 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 // const debug = debugUtil("Eleventy:TemplateLayoutPathResolver");
 
 class TemplateLayoutPathResolver {
-	constructor(path, extensionMap, eleventyConfig) {
-		if (!eleventyConfig) {
-			throw new Error("Expected `eleventyConfig` in TemplateLayoutPathResolver constructor");
+	constructor(path, extensionMap, templateConfig) {
+		if (!templateConfig) {
+			throw new Error("Expected `templateConfig` in TemplateLayoutPathResolver constructor");
 		}
 
-		this.eleventyConfig = eleventyConfig;
+		this.templateConfig = templateConfig;
 		this.originalPath = path;
 		this.originalDisplayPath =
 			TemplatePath.join(this.layoutsDir, this.originalPath) +
@@ -27,12 +27,12 @@ class TemplateLayoutPathResolver {
 
 	getVirtualTemplate(layoutPath) {
 		let inputDirRelativePath =
-			this.eleventyConfig.directories.getLayoutPathRelativeToInputDirectory(layoutPath);
+			this.templateConfig.directories.getLayoutPathRelativeToInputDirectory(layoutPath);
 		return this.config.virtualTemplates[inputDirRelativePath];
 	}
 
 	get dirs() {
-		return this.eleventyConfig.directories;
+		return this.templateConfig.directories;
 	}
 
 	get inputDir() {
@@ -59,19 +59,19 @@ class TemplateLayoutPathResolver {
 	}
 
 	get config() {
-		if (this.eleventyConfig) {
-			return this.eleventyConfig.getConfig();
-		} else {
-			throw new Error("Missing this.eleventyConfig");
+		if (!this.templateConfig) {
+			throw new Error("Internal error: Missing this.templateConfig");
 		}
+
+		return this.templateConfig.getConfig();
 	}
 
 	exists(layoutPath) {
 		if (this.getVirtualTemplate(layoutPath)) {
 			return true;
 		}
-		let fullPath = this.eleventyConfig.directories.getLayoutPath(layoutPath);
-		if (fs.existsSync(fullPath)) {
+		let fullPath = this.templateConfig.directories.getLayoutPath(layoutPath);
+		if (this.templateConfig.existsCache.exists(fullPath)) {
 			return true;
 		}
 		return false;
@@ -89,10 +89,10 @@ class TemplateLayoutPathResolver {
 
 		if (this.path.split(".").length > 0 && this.exists(this.path)) {
 			this.filename = this.path;
-			this.fullPath = this.eleventyConfig.directories.getLayoutPath(this.path);
+			this.fullPath = this.templateConfig.directories.getLayoutPath(this.path);
 		} else if (useLayoutResolution) {
 			this.filename = this.findFileName();
-			this.fullPath = this.eleventyConfig.directories.getLayoutPath(this.filename || "");
+			this.fullPath = this.templateConfig.directories.getLayoutPath(this.filename || "");
 		}
 	}
 

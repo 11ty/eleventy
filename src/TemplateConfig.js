@@ -48,6 +48,8 @@ class TemplateConfig {
 	#configManuallyDefined = false;
 	/** @type {UserConfig} */
 	#userConfig = new UserConfig();
+	#existsCache = new ExistsCache();
+	#usesGraph;
 
 	constructor(customRootConfig, projectConfigPath) {
 		/** @type {object} */
@@ -524,12 +526,12 @@ class TemplateConfig {
 	}
 
 	get usesGraph() {
-		if (!this._usesGraph) {
-			this._usesGraph = new GlobalDependencyMap();
-			this._usesGraph.setIsEsm(this.isEsm);
-			this._usesGraph.setTemplateConfig(this);
+		if (!this.#usesGraph) {
+			this.#usesGraph = new GlobalDependencyMap();
+			this.#usesGraph.setIsEsm(this.isEsm);
+			this.#usesGraph.setTemplateConfig(this);
 		}
-		return this._usesGraph;
+		return this.#usesGraph;
 	}
 
 	get uses() {
@@ -540,11 +542,7 @@ class TemplateConfig {
 	}
 
 	get existsCache() {
-		if (!this._existsCache) {
-			this._existsCache = new ExistsCache();
-			this._existsCache.setDirectoryCheck(true);
-		}
-		return this._existsCache;
+		return this.#existsCache;
 	}
 }
 
