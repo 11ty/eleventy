@@ -592,8 +592,30 @@ test("Input -> output remapping not yet supported (throws error)", async (t) => 
 	await t.throwsAsync(async () => {
 		await elev.write();
 	}, {
-		message: `mode: \'html-relative\' does not yet support passthrough copy objects (input -> output mapping). Use a string glob or an Array of string globs.`
+		message: `mode: 'html-relative' does not yet support passthrough copy objects (input -> output mapping). Use a string glob or an Array of string globs.`
 	});
 
 	t.is(fs.existsSync("test/stubs-autocopy/_site12/test/index.html"), false);
+});
+
+test("Invalid copy mode throws error", async (t) => {
+	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site13", {
+		configPath: false,
+		config: function (eleventyConfig) {
+			// not yet supported
+			eleventyConfig.addPassthroughCopy({"**/*.png": "yo"}, {
+				mode: "throw-an-error"
+			});
+		},
+	});
+
+	elev.disableLogger();
+
+	await t.throwsAsync(async () => {
+		await elev.write();
+	}, {
+		message: `Invalid \`mode\` option for \`addPassthroughCopy\`. Received: 'throw-an-error'`
+	});
+
+	t.is(fs.existsSync("test/stubs-autocopy/_site13/test/index.html"), false);
 });

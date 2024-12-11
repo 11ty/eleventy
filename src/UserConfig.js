@@ -792,7 +792,12 @@ class UserConfig {
 	 * @returns {any} a reference to the `EleventyConfig` object.
 	 */
 	addPassthroughCopy(fileOrDir, copyOptions = {}) {
-		if (copyOptions.mode === "html-relative") {
+		if (copyOptions.mode) {
+			if (copyOptions.mode !== "html-relative") {
+				throw new Error(
+					"Invalid `mode` option for `addPassthroughCopy`. Received: '" + copyOptions.mode + "'",
+				);
+			}
 			if (isPlainObject(fileOrDir)) {
 				throw new Error(
 					"mode: 'html-relative' does not yet support passthrough copy objects (input -> output mapping). Use a string glob or an Array of string globs.",
