@@ -12,7 +12,7 @@ import TemplateData from "./Data/TemplateData.js";
 const debug = debugUtil("Eleventy:TemplateMap");
 const debugDev = debugUtil("Dev:Eleventy:TemplateMap");
 
-class TemplateMapConfigError extends EleventyBaseError {}
+class EleventyMapPagesError extends EleventyBaseError {}
 class EleventyDataSchemaError extends EleventyBaseError {}
 
 // These template URL filenames are allowed to exclude file extensions
@@ -25,7 +25,7 @@ const EXTENSIONLESS_URL_ALLOWLIST = [
 class TemplateMap {
 	constructor(eleventyConfig) {
 		if (!eleventyConfig) {
-			throw new TemplateMapConfigError("Missing config argument.");
+			throw new Error("Missing config argument.");
 		}
 		this.eleventyConfig = eleventyConfig;
 		this.map = [];
@@ -373,7 +373,14 @@ class TemplateMap {
 			} else {
 				// is a template entry
 				let map = this.getMapEntryForInputPath(depEntry);
-				map._pages = await map.template.getTemplates(map.data);
+				try {
+					map._pages = await map.template.getTemplates(map.data);
+				} catch (e) {
+					throw new EleventyMapPagesError(
+						"Error generating template page(s) for " + map.inputPath + ".",
+						e,
+					);
+				}
 
 				if (map._pages.length === 0) {
 					// Reminder: a serverless code path was removed here.
