@@ -1,3 +1,4 @@
+import util from "node:util";
 import debugUtil from "debug";
 
 import ConsoleLogger from "../Util/ConsoleLogger.js";
