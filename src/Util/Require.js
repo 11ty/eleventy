@@ -154,6 +154,9 @@ async function dynamicImportAbsolutePath(absolutePath, type, returnRaw = false) 
 				if (key === "default") {
 					continue;
 				}
+				if (key === "module.exports") {
+					continue;
+				}
 				if (target[key] !== target.default[key]) {
 					match = false;
 				}

@@ -65,10 +65,11 @@ function IdAttributePlugin(eleventyConfig, options = {}) {
 							} else if (options.checkDuplicates === "error") {
 								// Existing `id` conflicts with assigned heading id, throw error
 								throw new Error(
-									"Duplicate `id` attribute (" +
+									'You have more than one HTML `id` attribute using the same value (id="' +
 										id +
-										") in markup on " +
-										pluginOptions.page.inputPath,
+										'") in your template (' +
+										pluginOptions.page.inputPath +
+										"). You can disable this error in the IdAttribute plugin with the `checkDuplicates: false` option.",
 								);
 							}
 						} else {
