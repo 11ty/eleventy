@@ -1,6 +1,4 @@
-import util from "node:util";
 import path from "node:path";
-import fs from "graceful-fs";
 
 import isGlob from "is-glob";
 import copy from "@11ty/recursive-copy";
@@ -11,57 +9,77 @@ import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import ProjectDirectories from "./Util/ProjectDirectories.js";
 
-const fsExists = util.promisify(fs.exists);
-
 const debug = debugUtil("Eleventy:TemplatePassthrough");
 
 class TemplatePassthroughError extends EleventyBaseError {}
 
 class TemplatePassthrough {
-	#isDirectoryCache = {};
+	isDryRun = false;
+	#isInputPathGlob;
+	#benchmarks;
+	#isAlreadyNormalized = false;
 
-	constructor(path, eleventyConfig) {
-		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
-			throw new TemplatePassthroughError(
-				"Missing `eleventyConfig` or was not an instance of `TemplateConfig`.",
+	// paths already guaranteed (probably from the autocopy plugin)
+	static normalizedFactory(inputPath, outputPath, opts = {}) {
+		let p = new TemplatePassthrough(
+			{
+				inputPath,
+				outputPath,
+			},
+			opts.templateConfig,
+		);
+
+		if (opts.normalized) {
+			p.setIsAlreadyNormalized(true);
+		}
+
+		return p;
+	}
+
+	constructor(path, templateConfig) {
+		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
+			throw new Error(
+				"Internal error: Missing `templateConfig` or was not an instance of `TemplateConfig`.",
 			);
 		}
-		this.eleventyConfig = eleventyConfig;
-
-		this.benchmarks = {
-			aggregate: this.config.benchmarkManager.get("Aggregate"),
-		};
+		this.templateConfig = templateConfig;
 
 		this.rawPath = path;
 
 		// inputPath is relative to the root of your project and not your Eleventy input directory.
 		// TODO normalize these with forward slashes
-		this.inputPath = this.normalizeDirectory(path.inputPath);
-		this.isInputPathGlob = isGlob(this.inputPath);
+		this.inputPath = this.normalizeIfDirectory(path.inputPath);
+		this.#isInputPathGlob = isGlob(this.inputPath);
 
 		this.outputPath = path.outputPath;
-
 		this.copyOptions = path.copyOptions; // custom options for recursive-copy
+	}
 
-		this.isDryRun = false;
-		this.isIncremental = false;
+	get benchmarks() {
+		if (!this.#benchmarks) {
+			this.#benchmarks = {
+				aggregate: this.config.benchmarkManager.get("Aggregate"),
+			};
+		}
+
+		return this.#benchmarks;
 	}
 
 	get config() {
-		return this.eleventyConfig.getConfig();
-	}
-
-	get dirs() {
-		return this.eleventyConfig.directories;
+		return this.templateConfig.getConfig();
 	}
 
 	// inputDir is used when stripping from output path in `getOutputPath`
 	get inputDir() {
-		return this.dirs.input;
+		return this.templateConfig.directories.input;
 	}
 
 	get outputDir() {
-		return this.dirs.output;
+		return this.templateConfig.directories.output;
+	}
+
+	setIsAlreadyNormalized(isNormalized) {
+		this.#isAlreadyNormalized = Boolean(isNormalized);
 	}
 
 	/* { inputPath, outputPath } though outputPath is *not* the full path: just the output directory */
@@ -108,8 +126,8 @@ class TemplatePassthrough {
 
 		// TODO room for improvement here:
 		if (
-			!this.isInputPathGlob &&
-			(await fsExists(inputPath)) &&
+			!this.#isInputPathGlob &&
+			this.isExists(inputPath) &&
 			!this.isDirectory(inputPath) &&
 			this.isDirectory(fullOutputPath)
 		) {
@@ -128,15 +146,11 @@ class TemplatePassthrough {
 	}
 
 	setDryRun(isDryRun) {
-		this.isDryRun = !!isDryRun;
+		this.isDryRun = Boolean(isDryRun);
 	}
 
 	setRunMode(runMode) {
 		this.runMode = runMode;
-	}
-
-	setIsIncremental(isIncremental) {
-		this.isIncremental = isIncremental;
 	}
 
 	setFileSystemSearch(fileSystemSearch) {
@@ -147,6 +161,11 @@ class TemplatePassthrough {
 		debug("Searching for: %o", glob);
 		let b = this.benchmarks.aggregate.get("Searching the file system (passthrough)");
 		b.before();
+
+		if (!this.fileSystemSearch) {
+			throw new Error("Internal error: Missing `fileSystemSearch` property.");
+		}
+
 		let files = TemplatePath.addLeadingDotSlashArray(
 			await this.fileSystemSearch.search("passthrough", glob),
 		);
@@ -154,46 +173,43 @@ class TemplatePassthrough {
 		return files;
 	}
 
-	isExists(dir) {
-		return this.eleventyConfig.existsCache.exists(dir);
+	isExists(filePath) {
+		return this.templateConfig.existsCache.exists(filePath);
 	}
 
-	isDirectory(dir) {
-		if (this.#isDirectoryCache[dir] === undefined) {
-			if (isGlob(this.inputPath)) {
-				this.#isDirectoryCache[dir] = false;
-			} else if (!this.isExists(dir)) {
-				this.#isDirectoryCache[dir] = false;
-			} else if (fs.statSync(dir).isDirectory()) {
-				this.#isDirectoryCache[dir] = true;
-			} else {
-				this.#isDirectoryCache[dir] = false;
-			}
-		}
-
-		return this.#isDirectoryCache[dir];
+	isDirectory(filePath) {
+		return this.templateConfig.existsCache.isDirectory(filePath);
 	}
 
 	// dir is guaranteed to exist by context
 	// dir may not be a directory
-	normalizeDirectory(dir) {
-		if (dir && typeof dir === "string") {
-			if (dir.endsWith(path.sep) || dir.endsWith("/")) {
-				return dir;
+	normalizeIfDirectory(input) {
+		if (typeof input === "string") {
+			if (input.endsWith(path.sep) || input.endsWith("/")) {
+				return input;
 			}
 
 			// When inputPath is a directory, make sure it has a slash for passthrough copy aliasing
 			// https://github.com/11ty/eleventy/issues/2709
-			if (this.isDirectory(dir)) {
-				return `${dir}/`;
+			if (this.isDirectory(input)) {
+				return `${input}/`;
 			}
 		}
 
-		return dir;
+		return input;
 	}
 
 	// maps input paths to output paths
 	async getFileMap() {
+		if (this.#isAlreadyNormalized) {
+			return [
+				{
+					inputPath: this.inputPath,
+					outputPath: this.outputPath,
+				},
+			];
+		}
+
 		// TODO VirtualFileSystem candidate
 		if (!isGlob(this.inputPath) && this.isExists(this.inputPath)) {
 			return [

@@ -7,7 +7,7 @@ import FileSystemSearch from "../src/FileSystemSearch.js";
 import TemplatePassthroughManager from "../src/TemplatePassthroughManager.js";
 import ProjectDirectories from "../src/Util/ProjectDirectories.js";
 
-import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
+import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback, getEleventyFilesInstance } from "./_testHelpers.js";
 
 test("Dirs paths", async (t) => {
   let eleventyConfig = await getTemplateConfigInstance({
@@ -19,7 +19,7 @@ test("Dirs paths", async (t) => {
     }
   });
 
-  let evf = new EleventyFiles([], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance([], eleventyConfig);
 
   t.deepEqual(evf.inputDir, "./src/");
   t.deepEqual(evf.includesDir, "./src/includes/");
@@ -37,7 +37,7 @@ test("Dirs paths (relative)", async (t) => {
     },
   });
 
-  let evf = new EleventyFiles([], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance([], eleventyConfig);
 
   t.deepEqual(evf.inputDir, "./src/");
   t.deepEqual(evf.includesDir, "./includes/");
@@ -52,9 +52,7 @@ test("getFiles", async (t) => {
     }
   });
 
-  let evf = new EleventyFiles(["liquid", "md"], eleventyConfig);
-  evf.setFileSystemSearch(new FileSystemSearch());
-  evf.init();
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["liquid", "md"], eleventyConfig);
 
   t.deepEqual(await evf.getFiles(), ["./test/stubs/writeTest/test.md"]);
 });
@@ -66,9 +64,7 @@ test("getFiles (without 11ty.js)", async (t) => {
     }
   });
 
-  let evf = new EleventyFiles(["liquid", "md"], eleventyConfig);
-  evf.setFileSystemSearch(new FileSystemSearch());
-  evf.init();
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["liquid", "md"], eleventyConfig);
 
   t.deepEqual(await evf.getFiles(), []);
 });
@@ -80,9 +76,7 @@ test("getFiles (with 11ty.js)", async (t) => {
     }
   });
 
-  let evf = new EleventyFiles(["liquid", "md", "11ty.js"], eleventyConfig);
-  evf.setFileSystemSearch(new FileSystemSearch());
-  evf.init();
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["liquid", "md", "11ty.js"], eleventyConfig);
 
   t.deepEqual(await evf.getFiles(), ["./test/stubs/writeTestJS/test.11ty.cjs"]);
 });
@@ -94,9 +88,7 @@ test("getFiles (with js, treated as passthrough copy)", async (t) => {
     }
   });
 
-  let evf = new EleventyFiles(["liquid", "md", "js", "11ty.js"], eleventyConfig);
-  evf.setFileSystemSearch(new FileSystemSearch());
-  evf.init();
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["liquid", "md", "js", "11ty.js"], eleventyConfig);
 
   const files = await evf.getFiles();
   t.deepEqual(
@@ -118,9 +110,7 @@ test("getFiles (with case insensitivity)", async (t) => {
     }
   });
 
-  let evf = new EleventyFiles(["11ty.js", "JS"], eleventyConfig);
-  evf.setFileSystemSearch(new FileSystemSearch());
-  evf.init();
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["11ty.js", "JS"], eleventyConfig);
 
   t.deepEqual(
     (await evf.getFiles()).sort(),
@@ -140,8 +130,7 @@ test("Mutually exclusive Input and Output dirs", async (t) => {
     }
   });
 
-  let evf = new EleventyFiles(["liquid", "md"], eleventyConfig);
-  evf.init();
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["liquid", "md"], eleventyConfig);
 
   let files = await fastglob(evf.getFileGlobs());
   t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTest/**/*.{liquid,md}"]);
@@ -156,8 +145,7 @@ test("Single File Input (deep path)", async (t) => {
     }
   });
 
-  let evf = new EleventyFiles(["liquid", "md"], eleventyConfig);
-  evf.init();
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["liquid", "md"], eleventyConfig);
 
   let files = await fastglob(evf.getFileGlobs());
   t.is(evf.getRawFiles().length, 1);
@@ -172,8 +160,7 @@ test("Single File Input (shallow path)", async (t) => {
     }
   });
 
-  let evf = new EleventyFiles(["md"], eleventyConfig);
-  evf.init();
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["md"], eleventyConfig);
 
   let globs = evf.getFileGlobs(); //.filter((path) => path !== "./README.md");
   let files = await fastglob(globs, {
@@ -190,8 +177,7 @@ test("Glob Input", async (t) => {
       input: "./test/stubs/glob-pages/!(contact.md)",
     }
   });
-  let evf = new EleventyFiles(["md"], eleventyConfig);
-  evf.init();
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["md"], eleventyConfig);
 
   let globs = evf.getFileGlobs();
   let files = await fastglob(globs);
@@ -232,8 +218,8 @@ test(".eleventyignore files", async (t) => {
       input: "test/stubs"
     }
   });
-  let evf = new EleventyFiles(["liquid", "md"], eleventyConfig);
-  evf.init();
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["liquid", "md"], eleventyConfig);
+
   let ignoredFiles = await fastglob("test/stubs/ignoredFolder/*.md");
   t.is(ignoredFiles.length, 1);
 
@@ -258,7 +244,7 @@ test("getTemplateData caching", async (t) => {
     }
   });
 
-  let evf = new EleventyFiles([], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance([], eleventyConfig);
   evf.init();
   let templateDataFirstCall = evf.templateData;
   let templateDataSecondCall = evf.templateData;
@@ -272,7 +258,7 @@ test("getDataDir", async (t) => {
     }
   });
 
-  let evf = new EleventyFiles([], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance([], eleventyConfig);
   evf.init();
   t.is(evf.getDataDir(), "./_data/");
 });
@@ -284,7 +270,7 @@ test("getDataDir subdir", async (t) => {
     }
   });
 
-  let evf = new EleventyFiles([], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance([], eleventyConfig);
   evf.init();
   t.is(evf.getDataDir(), "./test/stubs/_data/");
 });
@@ -295,7 +281,7 @@ test("Include and Data Dirs", async (t) => {
       input: "test/stubs"
     }
   });
-  let evf = new EleventyFiles([], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance([], eleventyConfig);
   evf.init();
 
   t.deepEqual(evf._getIncludesAndDataDirs(), [
@@ -310,8 +296,8 @@ test("Input to 'src' and empty includes dir (issue #403)", async (t) => {
       input: "src"
     }
   });
-  let evf = new EleventyFiles(["md", "liquid", "html"], eleventyConfig);
-  evf.setEleventyIgnoreContent("!./src/_includes/**");
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["md", "liquid", "html"], eleventyConfig);
+  evf._setEleventyIgnoreContent("!./src/_includes/**");
   evf._setConfig({
     useGitIgnore: false,
     dir: {
@@ -321,7 +307,7 @@ test("Input to 'src' and empty includes dir (issue #403)", async (t) => {
       data: "_data",
     },
   });
-  evf.init();
+  evf.init(); // duplicate init
 
   t.deepEqual(evf.getFileGlobs(), [
     "./src/**/*.{md,liquid,html}",
@@ -337,8 +323,8 @@ test("Glob Watcher Files", async (t) => {
       input: "test/stubs"
     }
   });
-  let evf = new EleventyFiles(["njk"], eleventyConfig);
-  evf.init();
+
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["njk"], eleventyConfig);
 
   t.deepEqual(evf.getGlobWatcherFiles(), [
     "./test/stubs/**/*.njk",
@@ -353,8 +339,7 @@ test("Glob Watcher Files with File Extension Passthroughs", async (t) => {
       input: "test/stubs"
     }
   });
-  let evf = new EleventyFiles(["njk", "png"], eleventyConfig);
-  evf.init();
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["njk", "png"], eleventyConfig);
 
   t.deepEqual(evf.getGlobWatcherFiles(), [
     "./test/stubs/**/*.njk",
@@ -374,9 +359,9 @@ test("Glob Watcher Files with File Extension Passthroughs with Dev Server (for f
   eleventyConfig.userConfig.setServerPassthroughCopyBehavior("passthrough");
   eleventyConfig.config.serverPassthroughCopyBehavior = "passthrough";
 
-  let evf = new EleventyFiles(["njk", "png"], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["njk", "png"], eleventyConfig);
   evf.setRunMode("serve");
-  evf.init();
+  evf.init(); // duplicate init
 
   t.deepEqual(evf.getGlobWatcherFiles(), [
     "./test/stubs/**/*.njk",
@@ -398,11 +383,7 @@ test("Glob Watcher Files with Config Passthroughs (one template format)", async 
 	});
 
 
-  let evf = new EleventyFiles(["njk"], eleventyConfig);
-  evf.init();
-
-  let mgr = new TemplatePassthroughManager(eleventyConfig);
-  evf.setPassthroughManager(mgr);
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["njk"], eleventyConfig);
 
   t.deepEqual(evf.getGlobWatcherFiles(), [
     "./test/stubs/**/*.njk",
@@ -423,9 +404,9 @@ test("Glob Watcher Files with Config Passthroughs (one template format) with Dev
 		};
 	});
 
-  let evf = new EleventyFiles(["njk"], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance(["njk"], eleventyConfig);
   evf.setRunMode("serve");
-  evf.init();
+  evf.init(); // duplicate init
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
   evf.setPassthroughManager(mgr);
@@ -447,7 +428,7 @@ test("Glob Watcher Files with Config Passthroughs (no template formats)", async 
   });
   let eleventyConfig = await getTemplateConfigInstance(templateConfig, projectDirs);
 
-  let evf = new EleventyFiles([], eleventyConfig);
+  let { eleventyFiles: evf } = getEleventyFilesInstance([], eleventyConfig);
   evf.init();
 
   t.deepEqual(await evf.getGlobWatcherTemplateDataFiles(), [

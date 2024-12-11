@@ -5,6 +5,7 @@ import TemplateEngine from "./TemplateEngine.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import EventBusUtil from "../Util/EventBusUtil.js";
 import { augmentObject } from "./Util/ContextAugmenter.js";
+import { withResolvers } from "../Util/PromiseUtil.js";
 
 class EleventyNunjucksError extends EleventyBaseError {}
 
@@ -431,15 +432,17 @@ class Nunjucks extends TemplateEngine {
 		}
 
 		return function (data) {
-			return new Promise(function (resolve, reject) {
-				tmpl.render(data, function (err, res) {
-					if (err) {
-						reject(err);
-					} else {
-						resolve(res);
-					}
-				});
+			let { promise, resolve, reject } = withResolvers();
+
+			tmpl.render(data, (error, result) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve(result);
+				}
 			});
+
+			return promise;
 		};
 	}
 }

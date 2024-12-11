@@ -86,6 +86,12 @@ test("Constructor, input directory, path missing input directory", async (t) => 
   t.is(await pass2.getOutputPath(), "_site/avatar.png");
 });
 
+test("Constructor not Dry Run", async (t) => {
+  let pass = await getTemplatePassthrough("avatar.png", "_site", ".");
+  t.is(pass.outputPath, true);
+  t.is(pass.isDryRun, false);
+});
+
 test("Constructor Dry Run", async (t) => {
   let pass = await getTemplatePassthrough("avatar.png", "_site", ".");
   pass.setDryRun(true);

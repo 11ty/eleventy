@@ -9,8 +9,13 @@
 	"type": "module",
 	"main": "./src/Eleventy.js",
 	"exports": {
-		"import": "./src/Eleventy.js",
-		"require": "./src/EleventyCommonJs.cjs"
+		".": {
+			"import": "./src/Eleventy.js",
+			"require": "./src/EleventyCommonJs.cjs"
+		},
+		"./UserConfig": {
+			"types": "./src/UserConfig.js"
+		}
 	},
 	"bin": {
 		"eleventy": "cmd.cjs"
@@ -84,7 +89,7 @@
 		"@11ty/eleventy-plugin-rss": "^2.0.2",
 		"@11ty/eleventy-plugin-syntaxhighlight": "^5.0.0",
 		"@eslint/eslintrc": "^3.1.0",
-		"@eslint/js": "^9.13.0",
+		"@eslint/js": "^9.16.0",
 		"@iarna/toml": "^2.2.5",
 		"@mdx-js/node-loader": "^3.1.0",
 		"@types/node": "^22.8.1",
@@ -93,7 +98,7 @@
 		"ava": "^6.2.0",
 		"c8": "^10.1.2",
 		"cross-env": "^7.0.3",
-		"eslint": "^9.13.0",
+		"eslint": "^9.16.0",
 		"eslint-config-prettier": "^9.1.0",
 		"globals": "^15.11.0",
 		"husky": "^9.1.6",
@@ -114,7 +119,7 @@
 	},
 	"dependencies": {
 		"@11ty/dependency-tree": "^3.0.1",
-		"@11ty/dependency-tree-esm": "^1.0.0",
+		"@11ty/dependency-tree-esm": "^1.0.1",
 		"@11ty/eleventy-dev-server": "^2.0.4",
 		"@11ty/eleventy-plugin-bundle": "^3.0.0",
 		"@11ty/eleventy-utils": "2.0.0-alpha.2",
@@ -125,7 +130,7 @@
 		"bcp-47-normalize": "^2.3.0",
 		"chardet": "^2.0.0",
 		"chokidar": "^3.6.0",
-		"cross-spawn": "^7.0.3",
+		"cross-spawn": "^7.0.6",
 		"debug": "^4.3.7",
 		"dependency-graph": "^1.0.0",
 		"entities": "^5.0.0",

@@ -2,35 +2,52 @@ import fs from "node:fs";
 
 // Checks both files and directories
 class ExistsCache {
+	#exists = new Map();
+	#dirs = new Map();
+
 	constructor() {
-		this._cache = new Map();
 		this.lookupCount = 0;
 	}
 
 	get size() {
-		return this._cache.size;
+		return this.#exists.size;
 	}
 
 	has(path) {
-		return this._cache.has(path);
+		return this.#exists.has(path);
 	}
 
 	// Relative paths (to root directory) expected (but not enforced due to perf costs)
 	exists(path) {
-		if (!this._cache.has(path)) {
+		if (!this.#exists.has(path)) {
 			let exists = fs.existsSync(path);
 			this.lookupCount++;
 
-			this.markExists(path, exists);
+			// mark for next time
+			this.#exists.set(path, Boolean(exists));
 
 			return exists;
 		}
 
-		return this._cache.get(path);
+		return this.#exists.get(path);
 	}
 
-	markExists(path, exists = true) {
-		this._cache.set(path, !!exists);
+	isDirectory(path) {
+		if (!this.exists(path)) {
+			return false;
+		}
+
+		if (!this.#dirs.has(path)) {
+			let isDir = fs.statSync(path).isDirectory();
+			this.lookupCount++;
+
+			// mark for next time
+			this.#dirs.set(path, isDir);
+
+			return isDir;
+		}
+
+		return this.#dirs.get(path);
 	}
 }
 

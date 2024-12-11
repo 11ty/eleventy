@@ -6,22 +6,18 @@ import debugUtil from "debug";
 import EleventyExtensionMap from "./EleventyExtensionMap.js";
 import TemplateData from "./Data/TemplateData.js";
 import TemplateGlob from "./TemplateGlob.js";
-import TemplatePassthroughManager from "./TemplatePassthroughManager.js";
-import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 
 const debug = debugUtil("Eleventy:EleventyFiles");
 
-class EleventyFilesError extends EleventyBaseError {}
-
 class EleventyFiles {
-	constructor(formats, eleventyConfig) {
-		if (!eleventyConfig) {
-			throw new EleventyFilesError("Missing `eleventyConfig`` argument.");
+	constructor(formats, templateConfig) {
+		if (!templateConfig) {
+			throw new Error("Internal error: Missing `templateConfig`` argument.");
 		}
 
-		this.eleventyConfig = eleventyConfig;
-		this.config = eleventyConfig.getConfig();
+		this.templateConfig = templateConfig;
+		this.config = templateConfig.getConfig();
 		this.aggregateBench = this.config.benchmarkManager.get("Aggregate");
 
 		this.formats = formats;
@@ -29,7 +25,7 @@ class EleventyFiles {
 	}
 
 	get dirs() {
-		return this.eleventyConfig.directories;
+		return this.templateConfig.directories;
 	}
 
 	get inputDir() {
@@ -69,7 +65,6 @@ class EleventyFiles {
 			this.templateGlobs = this.extensionMap.getGlobs(this.inputDir);
 		}
 
-		this.initPassthroughManager();
 		this.setupGlobs();
 	}
 
@@ -102,7 +97,6 @@ class EleventyFiles {
 	}
 
 	restart() {
-		this.passthroughManager.reset();
 		this.setupGlobs();
 		this._glob = null;
 	}
@@ -115,6 +109,8 @@ class EleventyFiles {
 		}
 
 		this.config = config;
+
+		this.init();
 	}
 
 	/* Set command root for local project paths */
@@ -130,9 +126,8 @@ class EleventyFiles {
 	get extensionMap() {
 		// for tests
 		if (!this._extensionMap) {
-			this._extensionMap = new EleventyExtensionMap(this.eleventyConfig);
+			this._extensionMap = new EleventyExtensionMap(this.templateConfig);
 			this._extensionMap.setFormats(this.formats);
-			this._extensionMap.config = this.eleventyConfig;
 		}
 		return this._extensionMap;
 	}
@@ -141,20 +136,7 @@ class EleventyFiles {
 		this.runMode = runMode;
 	}
 
-	initPassthroughManager() {
-		let mgr = new TemplatePassthroughManager(this.eleventyConfig);
-		mgr.setRunMode(this.runMode);
-		mgr.extensionMap = this.extensionMap;
-		mgr.setFileSystemSearch(this.fileSystemSearch);
-		this.passthroughManager = mgr;
-	}
-
-	getPassthroughManager() {
-		return this.passthroughManager;
-	}
-
 	setPassthroughManager(mgr) {
-		mgr.extensionMap = this.extensionMap;
 		this.passthroughManager = mgr;
 	}
 
@@ -164,7 +146,7 @@ class EleventyFiles {
 
 	get templateData() {
 		if (!this._templateData) {
-			this._templateData = new TemplateData(this.eleventyConfig);
+			this._templateData = new TemplateData(this.templateConfig);
 		}
 
 		return this._templateData;
@@ -262,7 +244,8 @@ class EleventyFiles {
 		return ignores;
 	}
 
-	setEleventyIgnoreContent(content) {
+	/* Tests only */
+	_setEleventyIgnoreContent(content) {
 		this.eleventyIgnoreContent = content;
 	}
 
@@ -367,7 +350,7 @@ class EleventyFiles {
 				.map((path) => {
 					let fullVirtualPath = this.dirs.getInputPath(path);
 					if (!this.extensionMap.getKey(fullVirtualPath)) {
-						this.eleventyConfig.logger.warn(
+						this.templateConfig.logger.warn(
 							`The virtual template at ${fullVirtualPath} is using a template format that’s not valid for your project. Your project is using: "${this.formats}". Read more about formats: https://v3.11ty.dev/docs/config/#template-formats`,
 						);
 					}

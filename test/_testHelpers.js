@@ -1,6 +1,11 @@
 import { isPlainObject } from "@11ty/eleventy-utils";
 import TemplateConfig from "../src/TemplateConfig.js";
 import ProjectDirectories from "../src/Util/ProjectDirectories.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import TemplatePassthroughManager from "../src/TemplatePassthroughManager.js";
+import EleventyFiles from "../src/EleventyFiles.js";
+import FileSystemSearch from "../src/FileSystemSearch.js";
+import TemplateWriter from "../src/TemplateWriter.js";
 
 async function getTemplateConfigInstance(configObj, dirs, configObjOverride = undefined) {
 	let eleventyConfig;
@@ -46,7 +51,49 @@ async function getTemplateConfigInstanceCustomCallback(dirObject, configCallback
 	return eleventyConfig;
 }
 
+function getTemplateWriterInstance(formats, templateConfig) {
+  let { eleventyFiles, passthroughManager } = getEleventyFilesInstance(formats, templateConfig);
+  let templateWriter = new TemplateWriter(
+    formats,
+    null,
+    templateConfig,
+  );
+  templateWriter.setEleventyFiles(eleventyFiles);
+  templateWriter.setPassthroughManager(passthroughManager);
+
+  return {
+    templateWriter,
+    eleventyFiles,
+    passthroughManager,
+  }
+}
+
+function getEleventyFilesInstance(formats, templateConfig) {
+	let map = new EleventyExtensionMap(templateConfig);
+	map.setFormats(formats);
+
+  let fss = new FileSystemSearch();
+	let mgr = new TemplatePassthroughManager(templateConfig);
+
+	mgr.extensionMap = map;
+	mgr.setFileSystemSearch(fss);
+
+	let files = new EleventyFiles(formats, templateConfig);
+	files.setPassthroughManager(mgr);
+	files.setFileSystemSearch(fss);
+	files.extensionMap = map;
+	// files.templateData = this.templateData;
+	files.init();
+
+  return {
+    eleventyFiles: files,
+    passthroughManager: mgr,
+  };
+}
+
 export {
 	getTemplateConfigInstance,
 	getTemplateConfigInstanceCustomCallback,
+	getEleventyFilesInstance,
+  getTemplateWriterInstance,
 };
