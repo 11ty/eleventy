@@ -145,7 +145,7 @@ class UserConfig {
 
 		/** @type {object} */
 		this.passthroughCopies = {};
-		this.autoCopies = new Set();
+		this.passthroughCopiesHtmlRelative = new Set();
 
 		/** @type {object} */
 		this.layoutAliases = {};
@@ -792,13 +792,14 @@ class UserConfig {
 	 * @returns {any} a reference to the `EleventyConfig` object.
 	 */
 	addPassthroughCopy(fileOrDir, copyOptions = {}) {
-		if (copyOptions.mode === "auto") {
+		if (copyOptions.mode === "html-relative") {
 			if (isPlainObject(fileOrDir)) {
 				throw new Error(
-					"mode: 'auto' does not yet support input -> output (objects) mapping. Please pass a string glob or an Array of string globs!",
+					"mode: 'html-relative' does not yet support passthrough copy objects (input -> output mapping). Use a string glob or an Array of string globs.",
 				);
 			}
-			this.autoCopies?.add({
+
+			this.passthroughCopiesHtmlRelative?.add({
 				match: fileOrDir,
 				...copyOptions,
 			});
@@ -1226,7 +1227,7 @@ class UserConfig {
 			globalData: this.globalData,
 			layoutAliases: this.layoutAliases,
 			layoutResolution: this.layoutResolution,
-			autoCopies: this.autoCopies,
+			passthroughCopiesHtmlRelative: this.passthroughCopiesHtmlRelative,
 			passthroughCopies: this.passthroughCopies,
 
 			// Liquid

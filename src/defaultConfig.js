@@ -9,7 +9,7 @@ import { FilterPlugin as InputPathToUrlFilterPlugin } from "./Plugins/InputPathT
 import { HtmlTransformer } from "./Util/HtmlTransformer.js";
 import TransformsUtil from "./Util/TransformsUtil.js";
 import MemoizeUtil from "./Util/MemoizeFunction.js";
-import { AutoCopyPlugin } from "./Plugins/AutoCopyPlugin.js";
+import { HtmlRelativeCopyPlugin } from "./Plugins/HtmlRelativeCopyPlugin.js";
 
 /**
  * @module 11ty/eleventy/defaultConfig
@@ -132,7 +132,7 @@ export default function (config) {
 	});
 
 	// Requires user configuration, so must run as second-stage
-	config.addPlugin(AutoCopyPlugin);
+	config.addPlugin(HtmlRelativeCopyPlugin);
 
 	return {
 		templateFormats: ["liquid", "md", "njk", "html", "11ty.js"],

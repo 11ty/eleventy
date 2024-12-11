@@ -12,7 +12,7 @@ test("Basic usage", async (t) => {
 		configPath: false,
 		config: function (eleventyConfig) {
 			eleventyConfig.addPassthroughCopy("**/*.png", {
-				mode: "auto"
+				mode: "html-relative"
 			})
 
 			eleventyConfig.on("eleventy.passthrough", copyMap => {
@@ -62,7 +62,7 @@ test("More complex image path (parent dir)", async (t) => {
 		configPath: false,
 		config: function (eleventyConfig) {
 			eleventyConfig.addPassthroughCopy("**/*.png", {
-				mode: "auto"
+				mode: "html-relative"
 			})
 
 			eleventyConfig.on("eleventy.passthrough", copyMap => {
@@ -113,7 +113,7 @@ test("No matches", async (t) => {
 		configPath: false,
 		config: function (eleventyConfig) {
 			eleventyConfig.addPassthroughCopy("**/*.jpeg", {
-				mode: "auto"
+				mode: "html-relative"
 			})
 
 			eleventyConfig.on("eleventy.passthrough", copyMap => {
@@ -144,7 +144,7 @@ test("Match but does not exist (throws error)", async (t) => {
 		configPath: false,
 		config: function (eleventyConfig) {
 			eleventyConfig.addPassthroughCopy("**/*.png", {
-				mode: "auto"
+				mode: "html-relative"
 			});
 
 			eleventyConfig.on("eleventy.passthrough", copyMap => {
@@ -171,7 +171,7 @@ test("Match but does not exist (no error, using `failOnError: false`)", async (t
 		configPath: false,
 		config: function (eleventyConfig) {
 			eleventyConfig.addPassthroughCopy("**/*.png", {
-				mode: "auto",
+				mode: "html-relative",
 				failOnError: false,
 			})
 
@@ -204,7 +204,7 @@ test("Copying dotfiles are not allowed", async (t) => {
 		config: function (eleventyConfig) {
 			// WARNING: don’t do this
 			eleventyConfig.addPassthroughCopy("**/*", {
-				mode: "auto",
+				mode: "html-relative",
 				copyOptions: {
 					// debug: true,
 				}
@@ -241,7 +241,7 @@ test("Using with InputPathToUrl plugin", async (t) => {
 		config: function (eleventyConfig) {
 			// order of addPlugin shouldn’t matter here
 			eleventyConfig.addPassthroughCopy("**/*.{html,njk}", {
-				mode: "auto"
+				mode: "html-relative"
 			});
 
 			eleventyConfig.addPlugin(InputPathToUrlTransformPlugin);
@@ -280,7 +280,7 @@ test("Using with InputPathToUrl plugin (reverse addPlugin order)", async (t) => 
 			eleventyConfig.addPlugin(InputPathToUrlTransformPlugin);
 
 			eleventyConfig.addPassthroughCopy("**/*.{html,njk}", {
-				mode: "auto"
+				mode: "html-relative"
 			});
 
 			eleventyConfig.on("eleventy.passthrough", copyMap => {
@@ -315,7 +315,7 @@ test("Use with HtmlBasePlugin usage", async (t) => {
 		config: function (eleventyConfig) {
 			eleventyConfig.addPlugin(HtmlBasePlugin);
 			eleventyConfig.addPassthroughCopy("**/*.png", {
-				mode: "auto"
+				mode: "html-relative"
 			});
 
 			eleventyConfig.on("eleventy.passthrough", copyMap => {
@@ -367,7 +367,7 @@ test("Using with InputPathToUrl plugin and HtmlBasePlugin", async (t) => {
 		config: function (eleventyConfig) {
 			// order of addPlugin shouldn’t matter here
 			eleventyConfig.addPassthroughCopy("**/*.{html,njk}", {
-				mode: "auto"
+				mode: "html-relative"
 			});
 
 			eleventyConfig.addPlugin(InputPathToUrlTransformPlugin);
@@ -404,10 +404,10 @@ test("Multiple addPlugin calls (use both globs)", async (t) => {
 		configPath: false,
 		config: function (eleventyConfig) {
 			eleventyConfig.addPassthroughCopy("**/*.jpg", {
-				mode: "auto"
+				mode: "html-relative"
 			});
 			eleventyConfig.addPassthroughCopy("**/*.png", {
-				mode: "auto"
+				mode: "html-relative"
 			});
 
 			eleventyConfig.on("eleventy.passthrough", copyMap => {
@@ -465,7 +465,7 @@ test("Array of globs", async (t) => {
 		configPath: false,
 		config: function (eleventyConfig) {
 			eleventyConfig.addPassthroughCopy(["**/*.jpg", "**/*.png"], {
-				mode: "auto"
+				mode: "html-relative"
 			});
 
 			eleventyConfig.on("eleventy.passthrough", copyMap => {
@@ -526,7 +526,7 @@ test("overwrite: false", async (t) => {
 		configPath: false,
 		config: function (eleventyConfig) {
 			eleventyConfig.addPassthroughCopy("**/*.png", {
-				mode: "auto",
+				mode: "html-relative",
 				copyOptions: {
 					overwrite: false,
 				}
@@ -576,7 +576,7 @@ test("Input -> output remapping not yet supported (throws error)", async (t) => 
 		config: function (eleventyConfig) {
 			// not yet supported
 			eleventyConfig.addPassthroughCopy({"**/*.png": "yo"}, {
-				mode: "auto"
+				mode: "html-relative"
 			});
 
 			eleventyConfig.on("eleventy.passthrough", copyMap => {
@@ -592,7 +592,7 @@ test("Input -> output remapping not yet supported (throws error)", async (t) => 
 	await t.throwsAsync(async () => {
 		await elev.write();
 	}, {
-		message: `mode: 'auto' does not yet support input -> output (objects) mapping. Please pass a string glob or an Array of string globs!`
+		message: `mode: \'html-relative\' does not yet support passthrough copy objects (input -> output mapping). Use a string glob or an Array of string globs.`
 	});
 
 	t.is(fs.existsSync("test/stubs-autocopy/_site12/test/index.html"), false);

@@ -1,9 +1,9 @@
 import path from "node:path";
 import { TemplatePath } from "@11ty/eleventy-utils";
-import isValidUrl from "../Util/ValidUrl.js";
-import { isGlobMatch } from "../Util/GlobMatcher.js";
+import isValidUrl from "./ValidUrl.js";
+import { isGlobMatch } from "./GlobMatcher.js";
 
-class AutoCopy {
+class HtmlRelativeCopy {
 	#userConfig;
 	#matchingGlobs = new Set();
 	#matchingGlobsArray;
@@ -121,7 +121,7 @@ class AutoCopy {
 			if (!alias) {
 				if (this.#failOnError) {
 					throw new Error(
-						"Missing input file for auto-passthrough file copy: " +
+						"Missing input file for `html-relative` Passthrough Copy file: " +
 							TemplatePath.absolutePath(source),
 					);
 				}
@@ -146,4 +146,4 @@ class AutoCopy {
 	}
 }
 
-export { AutoCopy };
+export { HtmlRelativeCopy };
