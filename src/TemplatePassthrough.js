@@ -1,6 +1,7 @@
 import path from "node:path";
 
 import isGlob from "is-glob";
+import { filesize } from "filesize";
 import copy from "@11ty/recursive-copy";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
@@ -271,13 +272,17 @@ class TemplatePassthrough {
 		return copy(src, dest, copyOptions)
 			.on(copy.events.COPY_FILE_START, (copyOp) => {
 				// Access to individual files at `copyOp.src`
-				debug("Copying individual file %o", copyOp.src);
 				map[copyOp.src] = copyOp.dest;
 				b.before();
 			})
 			.on(copy.events.COPY_FILE_COMPLETE, (copyOp) => {
 				fileCopyCount++;
 				fileSizeCount += copyOp.stats.size;
+				if (copyOp.stats.size > 5000000) {
+					debug(`Copied %o (⚠️ large) file from %o`, filesize(copyOp.stats.size), copyOp.src);
+				} else {
+					debug(`Copied %o file from %o`, filesize(copyOp.stats.size), copyOp.src);
+				}
 				b.after();
 			})
 			.then(
