@@ -76,7 +76,7 @@ class EleventyErrorHandler {
 	//https://nodejs.org/api/process.html
 	log(e, type = "log", chalkColor = "", forceToConsole = false) {
 		if (process.env.DEBUG) {
-			debug("Full error object: %O", e);
+			debug("Full error object: %o", util.inspect(e, { showHidden: false, depth: null }));
 		}
 
 		let showStack = true;
