@@ -191,7 +191,7 @@ test("Issue #3581 #build-cost-🧰", async (t) => {
   );
 });
 
-test("Issue #3583 Markdown diacritics", async (t) => {
+test("Issue #3583 Markdown diacritics (no plugin)", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/_site", {
     configPath: false,
     config: function (eleventyConfig) {
@@ -242,5 +242,28 @@ test("Issue #3583 Diacritics Markdown raw", async (t) => {
   t.is(
     getContentFor(results, "/test/index.html"),
     `<p><a href="/hypothèse/">Target</a></p>`
+  );
+});
+
+test("Issue #3583 #3559 Markdown spaces", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/_site", {
+    configPath: false,
+    config: function (eleventyConfig) {
+      eleventyConfig.addPlugin(TransformPlugin);
+
+      // eleventyConfig.addFilter("encode_uri_component", encodeURIComponent);
+
+      eleventyConfig.addTemplate("test.md", `[Target](<target 1.md>)`)
+      eleventyConfig.addTemplate("target 1.md", "lol", {
+        permalink: "/{{ page.fileSlug | slugify }}/"
+      })
+    },
+  });
+
+  let results = await elev.toJSON();
+
+  t.is(
+    getContentFor(results, "/test/index.html"),
+    `<p><a href="/target-1/">Target</a></p>`
   );
 });
