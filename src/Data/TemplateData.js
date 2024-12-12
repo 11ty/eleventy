@@ -385,17 +385,8 @@ class TemplateData {
 		}
 
 		// Filter out files we know don't exist to avoid overhead for checking
-		const dataPaths = await Promise.all(
-			localDataPaths.map((path) => {
-				if (this.exists(path)) {
-					return path;
-				}
-				return false;
-			}),
-		);
-
-		localDataPaths = dataPaths.filter((pathOrFalse) => {
-			return pathOrFalse === false ? false : true;
+		localDataPaths = localDataPaths.filter((path) => {
+			return this.exists(path);
 		});
 
 		this.config.events.emit("eleventy.dataFiles", localDataPaths);

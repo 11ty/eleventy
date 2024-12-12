@@ -660,7 +660,7 @@ class TemplateMap {
 		for (let entry of this.map) {
 			for (let pageEntry of entry._pages) {
 				if (this.config.keys.computed in pageEntry.data) {
-					promises.push(await pageEntry.template.resolveRemainingComputedData(pageEntry.data));
+					promises.push(pageEntry.template.resolveRemainingComputedData(pageEntry.data));
 				}
 			}
 		}

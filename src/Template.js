@@ -595,7 +595,7 @@ class Template extends TemplateContent {
 		// If it doesn’t exist, computed data is not used for this template
 		if (this.computedData) {
 			debug("Second round of computed data for %o", this.inputPath);
-			await this.computedData.processRemainingData(data);
+			return this.computedData.processRemainingData(data);
 		}
 	}
 
