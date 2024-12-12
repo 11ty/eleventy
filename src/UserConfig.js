@@ -1,3 +1,4 @@
+import os from "node:os";
 import chalk from "kleur";
 import { DateTime } from "luxon";
 import yaml from "js-yaml";
@@ -36,6 +37,8 @@ class UserConfig {
 	#dataDeepMergeModified = false;
 	/** @type {number|undefined} */
 	#uniqueId;
+	/** @type {number} */
+	#concurrency = os.availableParallelism();
 
 	constructor() {
 		// These are completely unnecessary lines to satisfy TypeScript
@@ -238,6 +241,8 @@ class UserConfig {
 		this.errorReporting = {};
 		/** @type {object} */
 		this.templateHandling = {};
+
+		this.#concurrency = os.availableParallelism();
 	}
 
 	// compatibleRange is optional in 2.0.0-beta.2
@@ -1221,6 +1226,18 @@ class UserConfig {
 		}
 
 		return augmentFunction(fn, options);
+	}
+
+	setConcurrency(number) {
+		if (typeof number !== "number") {
+			throw new UserConfigError("Argument passed to `setConcurrency` must be a number.");
+		}
+
+		this.#concurrency = number;
+	}
+
+	getConcurrency() {
+		return this.#concurrency;
 	}
 
 	getMergingConfigObject() {

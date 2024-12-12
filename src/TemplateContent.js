@@ -19,7 +19,6 @@ const { set: lodashSet } = lodash;
 const debug = debugUtil("Eleventy:TemplateContent");
 const debugDev = debugUtil("Dev:Eleventy:TemplateContent");
 
-class TemplateContentConfigError extends EleventyBaseError {}
 class TemplateContentFrontMatterError extends EleventyBaseError {}
 class TemplateContentCompileError extends EleventyBaseError {}
 class TemplateContentRenderError extends EleventyBaseError {}
@@ -27,9 +26,7 @@ class TemplateContentRenderError extends EleventyBaseError {}
 class TemplateContent {
 	constructor(inputPath, templateConfig) {
 		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
-			throw new TemplateContentConfigError(
-				"Missing or invalid `templateConfig` argument to TemplateContent",
-			);
+			throw new Error("Missing or invalid `templateConfig` argument");
 		}
 		this.eleventyConfig = templateConfig;
 		this.inputPath = inputPath;
@@ -96,7 +93,7 @@ class TemplateContent {
 		if (this._config.constructor.name === "TemplateConfig") {
 			this._configOptions = this._config.getConfig();
 		} else {
-			throw new TemplateContentConfigError("Tried to get an TemplateConfig but none was found.");
+			throw new Error("Tried to get an TemplateConfig but none was found.");
 		}
 	}
 
@@ -104,7 +101,7 @@ class TemplateContent {
 		if (this._config.constructor.name === "TemplateConfig") {
 			return this._config;
 		}
-		throw new TemplateContentConfigError("Tried to get an TemplateConfig but none was found.");
+		throw new Error("Tried to get an TemplateConfig but none was found.");
 	}
 
 	get config() {

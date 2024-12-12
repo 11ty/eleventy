@@ -1,7 +1,6 @@
 import { DepGraph as DependencyGraph } from "dependency-graph";
 import { isPlainObject, TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
-import os from "node:os";
 import pMap from "p-map";
 
 import TemplateCollection from "./TemplateCollection.js";
@@ -26,8 +25,8 @@ const EXTENSIONLESS_URL_ALLOWLIST = [
 
 class TemplateMap {
 	constructor(eleventyConfig) {
-		if (!eleventyConfig) {
-			throw new Error("Missing config argument.");
+		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
+			throw new Error("Missing or invalid `eleventyConfig` argument.");
 		}
 		this.eleventyConfig = eleventyConfig;
 		this.map = [];
@@ -569,7 +568,9 @@ class TemplateMap {
 				}
 				debugDev("Added this.map[...].templateContent, outputPath, et al for one map entry");
 			},
-			{ concurrency: os.availableParallelism() },
+			{
+				concurrency: this.userConfig.getConcurrency(),
+			},
 		);
 
 		for (let map of usedTemplateContentTooEarlyMap) {
