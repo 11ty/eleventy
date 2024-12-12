@@ -245,6 +245,22 @@ test("Issue #3583 Diacritics Markdown raw", async (t) => {
   );
 });
 
+test("Issue #3583 #3559 Markdown link with spaces (no plugin)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/_site", {
+    configPath: false,
+    config: function (eleventyConfig) {
+      eleventyConfig.addTemplate("test.md", `[Target](</target 1/>)`)
+    },
+  });
+
+  let results = await elev.toJSON();
+
+  t.is(
+    getContentFor(results, "/test/index.html"),
+    `<p><a href="/target%201/">Target</a></p>`
+  );
+});
+
 test("Issue #3583 #3559 Markdown spaces", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", "./test/stubs-virtual/_site", {
     configPath: false,
