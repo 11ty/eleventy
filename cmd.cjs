@@ -125,7 +125,7 @@ const debug = require("debug")("Eleventy:cmd");
 							}
 						}, error => {
 							// A build error occurred and we aren’t going to --serve
-							ErrorHandler.once("error", error, "Eleventy Error (Watch CLI)");
+							ErrorHandler.once("error", error, "Eleventy Error (watch CLI)");
 						});
 
 					process.on("SIGINT", async () => {
@@ -135,19 +135,19 @@ const debug = require("debug")("Eleventy:cmd");
 				} else {
 					if (!argv.to || argv.to === "fs") {
 						elev.write().catch(error => {
-							ErrorHandler.once("fatal", error, "Eleventy Error (FS CLI)");
+							ErrorHandler.once("fatal", error, "Eleventy Error (fs CLI)");
 						});
 					} else if (argv.to === "json") {
 						elev.toJSON().then(function (result) {
 							console.log(JSON.stringify(result, null, 2));
 						}, error => {
-							ErrorHandler.once("fatal", error, "Eleventy Error (JSON CLI)");
+							ErrorHandler.once("fatal", error, "Eleventy Error (json CLI)");
 						});
 					} else if (argv.to === "ndjson") {
 						elev.toNDJSON().then(function (stream) {
 							stream.pipe(process.stdout);
 						}, error => {
-							ErrorHandler.once("fatal", error, "Eleventy Error (JSON CLI)");
+							ErrorHandler.once("fatal", error, "Eleventy Error (ndjson CLI)");
 						});
 					} else {
 						throw new SimpleError(
@@ -156,7 +156,7 @@ const debug = require("debug")("Eleventy:cmd");
 					}
 				}
 			}).catch(error => {
-				ErrorHandler.fatal(error, "Eleventy Error (CLI)");
+				ErrorHandler.fatal(error, "Eleventy Error (CLI initialization)");
 			});
 	} catch (error) {
 		let ErrorHandler = new EleventyErrorHandler();

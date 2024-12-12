@@ -117,15 +117,11 @@ class TemplateData {
 			return this.rawImports;
 		}
 
-		try {
-			let pkgJson = getWorkingProjectPackageJson();
-			this.rawImports[this.config.keys.package] = pkgJson;
+		let pkgJson = getWorkingProjectPackageJson();
+		this.rawImports[this.config.keys.package] = pkgJson;
 
-			if (this.config.freezeReservedData) {
-				DeepFreeze(this.rawImports);
-			}
-		} catch (e) {
-			debug("Could not find or require package.json import for global data.");
+		if (this.config.freezeReservedData) {
+			DeepFreeze(this.rawImports);
 		}
 
 		return this.rawImports;

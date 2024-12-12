@@ -1063,12 +1063,7 @@ Arguments:
 		} else if (this.loader == "cjs") {
 			this.#isEsm = false;
 		} else if (this.loader == "auto") {
-			try {
-				this.#isEsm = this.projectPackageJson?.type === "module";
-			} catch (e) {
-				debug("Could not find a project package.json for project’s ES Modules check: %O", e);
-				this.#isEsm = false;
-			}
+			this.#isEsm = this.projectPackageJson?.type === "module";
 		} else {
 			throw new Error("The 'loader' option must be one of 'esm', 'cjs', or 'auto'");
 		}

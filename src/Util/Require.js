@@ -6,7 +6,10 @@ import { MessageChannel } from "node:worker_threads";
 
 import { TemplatePath } from "@11ty/eleventy-utils";
 
+import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import eventBus from "../EventBus.js";
+
+class EleventyImportError extends EleventyBaseError {}
 
 const { port1, port2 } = new MessageChannel();
 
@@ -29,6 +32,10 @@ const require = module.createRequire(import.meta.url);
 
 const requestPromiseCache = new Map();
 
+function getImportErrorMessage(filePath, type) {
+	return `There was a problem importing '${path.relative(".", filePath)}' via ${type}`;
+}
+
 // Used for JSON imports, suffering from Node warning that import assertions experimental but also
 // throwing an error if you try to import() a JSON file without an import assertion.
 /**
@@ -46,8 +53,14 @@ function loadContents(path, options = {}) {
 	try {
 		// @ts-expect-error This is an error in the upstream types
 		rawInput = fs.readFileSync(path, encoding);
-	} catch (e) {
-		// if file does not exist, return nothing
+	} catch (error) {
+		// @ts-expect-error Temporary
+		if (error?.code === "ENOENT") {
+			// if file does not exist, return nothing
+			return;
+		}
+
+		throw error;
 	}
 
 	// Can return a buffer, string, etc
@@ -79,24 +92,26 @@ eventBus.on("eleventy.importCacheReset", (fileQueue) => {
 
 // raw means we don’t normalize away the `default` export
 async function dynamicImportAbsolutePath(absolutePath, type, returnRaw = false) {
+	// Short circuit for JSON files (that are optional and can be empty)
 	if (absolutePath.endsWith(".json") || type === "json") {
-		// https://v8.dev/features/import-assertions#dynamic-import() is still experimental in Node 20
-		let rawInput = loadContents(absolutePath);
-		if (!rawInput) {
-			return;
+		try {
+			// https://v8.dev/features/import-assertions#dynamic-import() is still experimental in Node 20
+			let rawInput = loadContents(absolutePath);
+			if (!rawInput) {
+				// should not error when file exists but is _empty_
+				return;
+			}
+			return JSON.parse(rawInput);
+		} catch (e) {
+			return Promise.reject(
+				new EleventyImportError(getImportErrorMessage(absolutePath, "fs.readFile(json)"), e),
+			);
 		}
-		return JSON.parse(rawInput);
 	}
 
-	// returnRaw expects `{ default }`
-	if (!returnRaw) {
-		if (
-			(type === "cjs" && absolutePath.endsWith(".js")) ||
-			(type === "esm" && absolutePath.endsWith(".cjs"))
-		) {
-			return require(absolutePath);
-		}
-	}
+	// Removed a `require` short circuit from this piece originally added
+	// in https://github.com/11ty/eleventy/pull/3493 Was a bit faster but
+	// error messaging was worse for require(esm)
 
 	let urlPath;
 	try {
@@ -120,57 +135,64 @@ async function dynamicImportAbsolutePath(absolutePath, type, returnRaw = false) 
 		requestPromiseCache.set(urlPath, promise);
 	}
 
-	if (returnRaw) {
-		return promise;
-	}
-
-	return promise.then((target) => {
-		// If the only export is `default`, elevate to top (for ESM and CJS)
-		if (Object.keys(target).length === 1 && "default" in target) {
-			return target.default;
-		}
-
-		// When using import() on a CommonJS file that exports an object sometimes it
-		// returns duplicated values in `default` key, e.g. `{ default: {key: value}, key: value }`
-
-		// A few examples:
-		// module.exports = { key: false };
-		//    returns `{ default: {key: false}, key: false }` as not expected.
-		// module.exports = { key: true };
-		// module.exports = { key: null };
-		// module.exports = { key: undefined };
-		// module.exports = { key: class {} };
-
-		// A few examples where it does not duplicate:
-		// module.exports = { key: 1 };
-		//    returns `{ default: {key: 1} }` as expected.
-		// module.exports = { key: "value" };
-		// module.exports = { key: {} };
-		// module.exports = { key: [] };
-
-		if (type === "cjs" && "default" in target) {
-			let match = true;
-			for (let key in target) {
-				if (key === "default") {
-					continue;
-				}
-				if (key === "module.exports") {
-					continue;
-				}
-				if (target[key] !== target.default[key]) {
-					match = false;
-				}
+	return promise.then(
+		(target) => {
+			if (returnRaw) {
+				return target;
 			}
 
-			if (match) {
+			// If the only export is `default`, elevate to top (for ESM and CJS)
+			if (Object.keys(target).length === 1 && "default" in target) {
 				return target.default;
 			}
-		}
 
-		// Otherwise return { default: value, named: value }
-		// Object.assign here so we can add things to it in JavaScript.js
-		return Object.assign({}, target);
-	});
+			// When using import() on a CommonJS file that exports an object sometimes it
+			// returns duplicated values in `default` key, e.g. `{ default: {key: value}, key: value }`
+
+			// A few examples:
+			// module.exports = { key: false };
+			//    returns `{ default: {key: false}, key: false }` as not expected.
+			// module.exports = { key: true };
+			// module.exports = { key: null };
+			// module.exports = { key: undefined };
+			// module.exports = { key: class {} };
+
+			// A few examples where it does not duplicate:
+			// module.exports = { key: 1 };
+			//    returns `{ default: {key: 1} }` as expected.
+			// module.exports = { key: "value" };
+			// module.exports = { key: {} };
+			// module.exports = { key: [] };
+
+			if (type === "cjs" && "default" in target) {
+				let match = true;
+				for (let key in target) {
+					if (key === "default") {
+						continue;
+					}
+					if (key === "module.exports") {
+						continue;
+					}
+					if (target[key] !== target.default[key]) {
+						match = false;
+					}
+				}
+
+				if (match) {
+					return target.default;
+				}
+			}
+
+			// Otherwise return { default: value, named: value }
+			// Object.assign here so we can add things to it in JavaScript.js
+			return Object.assign({}, target);
+		},
+		(error) => {
+			return Promise.reject(
+				new EleventyImportError(getImportErrorMessage(absolutePath, `import(${type})`), error),
+			);
+		},
+	);
 }
 
 function normalizeFilePathInEleventyPackage(file) {
@@ -202,7 +224,7 @@ async function dynamicImportRawFromEleventyPackage(file) {
 	return dynamicImportAbsolutePath(filePath, "esm", true);
 }
 
-/* Used to import project configuration files, raw means we don’t normalize away the `default` export */
+/* Used to import app configuration files, raw means we don’t normalize away the `default` export */
 async function dynamicImportRaw(localPath, type) {
 	let absolutePath = TemplatePath.absolutePath(localPath);
 
