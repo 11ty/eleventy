@@ -449,7 +449,7 @@ class Eleventy {
 		);
 
 		// More than 1 second total, show estimate of per-template time
-		if (time >= 1 && writeCount > 0) {
+		if (time >= 1 && writeCount > 1) {
 			ret.push(`(${((time * 1000) / writeCount).toFixed(1)}ms each, v${pkg.version})`);
 		} else {
 			ret.push(`(v${pkg.version})`);
