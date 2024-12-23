@@ -132,7 +132,7 @@
 		"cross-spawn": "^7.0.6",
 		"debug": "^4.4.0",
 		"dependency-graph": "^1.0.0",
-		"entities": "^5.0.0",
+		"entities": "^6.0.0",
 		"fast-glob": "^3.3.2",
 		"filesize": "^10.1.6",
 		"graceful-fs": "^4.2.11",
