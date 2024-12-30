@@ -38,7 +38,8 @@ class UserConfig {
 	/** @type {number|undefined} */
 	#uniqueId;
 	/** @type {number} */
-	#concurrency = os.availableParallelism();
+	#concurrency = 1;
+	// Before using os.availableParallelism(); see https://github.com/11ty/eleventy/issues/3596
 
 	constructor() {
 		// These are completely unnecessary lines to satisfy TypeScript
