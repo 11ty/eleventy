@@ -104,7 +104,7 @@
 		"husky": "^9.1.7",
 		"lint-staged": "^15.2.11",
 		"markdown-it-emoji": "^3.0.0",
-		"marked": "^15.0.4",
+		"marked": "^15.0.6",
 		"prettier": "^3.4.2",
 		"pretty": "^2.0.0",
 		"react": "^19.0.0",
