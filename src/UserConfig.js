@@ -243,7 +243,8 @@ class UserConfig {
 		/** @type {object} */
 		this.templateHandling = {};
 
-		this.#concurrency = os.availableParallelism();
+		// Before using os.availableParallelism(); see https://github.com/11ty/eleventy/issues/3596
+		this.#concurrency = 1;
 	}
 
 	// compatibleRange is optional in 2.0.0-beta.2
