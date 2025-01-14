@@ -444,6 +444,12 @@ class TemplateMap {
 			secondPaginatedDepMap,
 		);
 
+		debug(
+			"Rendering templates in order (%o concurrency): %O",
+			this.userConfig.getConcurrency(),
+			orderedPaths,
+		);
+
 		let orderedMap = orderedPaths.map((inputPath) => {
 			return this.getMapEntryForInputPath(inputPath);
 		});
