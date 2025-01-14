@@ -133,7 +133,7 @@
 		"debug": "^4.4.0",
 		"dependency-graph": "^1.0.0",
 		"entities": "^6.0.0",
-		"fast-glob": "3.3.2",
+		"fast-glob": "^3.3.3",
 		"filesize": "^10.1.6",
 		"graceful-fs": "^4.2.11",
 		"gray-matter": "^4.0.3",

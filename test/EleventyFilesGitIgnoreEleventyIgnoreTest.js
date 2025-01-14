@@ -193,7 +193,7 @@ test("Get ignores (both .eleventyignore and .gitignore exists, but .gitignore is
   ]);
 });
 
-test("Bad expected output, this indicates a bug upstream in a dependency.  Input to 'src' and empty includes dir (issue #403, full paths in eleventyignore)", async (t) => {
+test("Bad expected output, this indicates a bug upstream in a dependency (update, was fixed in fast-glob@3.3.3).  Input to 'src' and empty includes dir (issue #403, full paths in eleventyignore)", async (t) => {
 	let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
 		input: "test/stubs-403",
 		output: "_site",
@@ -209,8 +209,9 @@ test("Bad expected output, this indicates a bug upstream in a dependency.  Input
 
   t.deepEqual(await evf.getFiles(), [
     "./test/stubs-403/template.liquid",
+    // UPDATE: this was fixed in fast-glob@3.3.3
     // This should be excluded from this list but is not because the ignore content used an absolutePath above.
-    "./test/stubs-403/_includes/include.liquid",
+    // "./test/stubs-403/_includes/include.liquid",
   ]);
 });
 
