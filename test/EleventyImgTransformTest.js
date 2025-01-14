@@ -19,7 +19,7 @@ test("Default image transform with a single image", async (t) => {
   });
 
   let [result] = await elev.toJSON();
-	t.deepEqual(normalizeNewLines(result.content), `<img loading="eager" decoding="async" src="/single/IdthKOzqFA-350.png" alt="it’s a possum" width="350" height="685">`);
+	t.deepEqual(normalizeNewLines(result.content), `<img src="/single/IdthKOzqFA-350.png" alt="it’s a possum" loading="eager" decoding="async" width="350" height="685">`);
 });
 
 test("Default image transform with multiple images", async (t) => {
@@ -38,8 +38,8 @@ test("Default image transform with multiple images", async (t) => {
   });
 
   let [result] = await elev.toJSON();
-	t.deepEqual(normalizeNewLines(result.content), `<img loading="eager" decoding="async" src="/multiple/IdthKOzqFA-350.png" alt="it’s a possum" width="350" height="685">
-<img loading="lazy" decoding="async" src="/multiple/IdthKOzqFA-350.png" alt="it’s a possum" width="350" height="685">`);
+	t.deepEqual(normalizeNewLines(result.content), `<img src="/multiple/IdthKOzqFA-350.png" alt="it’s a possum" loading="eager" decoding="async" width="350" height="685">
+<img src="/multiple/IdthKOzqFA-350.png" alt="it’s a possum" loading="lazy" decoding="async" width="350" height="685">`);
 });
 
 test("Default image transform with an ignored image", async (t) => {
