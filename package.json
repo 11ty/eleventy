@@ -86,7 +86,7 @@
 	},
 	"devDependencies": {
 		"@11ty/eleventy-img": "^6.0.0",
-		"@11ty/eleventy-plugin-rss": "^2.0.2",
+		"@11ty/eleventy-plugin-rss": "^2.0.3",
 		"@11ty/eleventy-plugin-syntaxhighlight": "^5.0.0",
 		"@eslint/eslintrc": "^3.2.0",
 		"@eslint/js": "^9.18.0",
@@ -124,7 +124,7 @@
 		"@11ty/eleventy-plugin-bundle": "^3.0.0",
 		"@11ty/eleventy-utils": "^2.0.0",
 		"@11ty/lodash-custom": "^4.17.21",
-		"@11ty/posthtml-urls": "^1.0.0",
+		"@11ty/posthtml-urls": "^1.0.1",
 		"@11ty/recursive-copy": "^3.0.1",
 		"@sindresorhus/slugify": "^2.2.1",
 		"bcp-47-normalize": "^2.3.0",
