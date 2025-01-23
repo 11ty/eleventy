@@ -329,14 +329,14 @@ class EleventyFiles {
 		return ret;
 	}
 
-	_globSearch() {
+	async _globSearch() {
 		let globs = this.getFileGlobs();
 
 		// returns a promise
 		debug("Searching for: %o", globs);
-		return this.fileSystemSearch.search("templates", globs, {
+		return (await this.fileSystemSearch.search("templates", globs, {
 			ignore: this.uniqueIgnores,
-		});
+		})).map(i => i.replace(/\\/g, '/'));
 	}
 
 	getPathsWithVirtualTemplates(paths) {
