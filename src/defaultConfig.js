@@ -70,6 +70,7 @@ export default function (config) {
 		return this.existsCache.exists(filePath);
 	};
 
+	// Remember: the transform added here runs before the `htmlTransformer` transform
 	config.addPlugin(bundlePlugin, {
 		bundles: false, // no default bundles included—must be opt-in.
 		immediate: true,
@@ -128,6 +129,7 @@ export default function (config) {
 
 	// Run the `htmlTransformer` transform
 	config.addTransform("@11ty/eleventy/html-transformer", async function (content) {
+		// Runs **AFTER** the bundle plugin transform (except: delayed bundles)
 		return ut.transformContent(this.outputPath, content, this);
 	});
 

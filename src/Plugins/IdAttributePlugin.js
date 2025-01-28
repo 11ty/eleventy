@@ -4,6 +4,8 @@ import { decodeHTML } from "entities";
 import slugifyFilter from "../Filters/Slugify.js";
 import MemoizeUtil from "../Util/MemoizeFunction.js";
 
+const POSTHTML_PLUGIN_NAME = "11ty/eleventy/id-attribute";
+
 function getTextNodeContent(node) {
 	if (node.attrs?.["eleventy:id-ignore"] === "") {
 		delete node.attrs["eleventy:id-ignore"];
@@ -38,7 +40,7 @@ function IdAttributePlugin(eleventyConfig, options = {}) {
 
 	eleventyConfig.htmlTransformer.addPosthtmlPlugin(
 		"html",
-		function (pluginOptions = {}) {
+		function idAttributePosthtmlPlugin(pluginOptions = {}) {
 			if (typeof options.filter === "function") {
 				if (options.filter(pluginOptions) === false) {
 					return function () {};
@@ -97,7 +99,11 @@ function IdAttributePlugin(eleventyConfig, options = {}) {
 					return node;
 				});
 			};
-		} /* , {} // pluginOptions */,
+		},
+		{
+			// pluginOptions
+			name: POSTHTML_PLUGIN_NAME,
+		},
 	);
 }
 
