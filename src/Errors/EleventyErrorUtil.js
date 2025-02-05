@@ -60,12 +60,11 @@ class EleventyErrorUtil {
 		// TODO the rest of the template engines
 		return (
 			e instanceof TemplateContentPrematureUseError ||
-			(e.originalError &&
-				(e.originalError.name === "RenderError" ||
-					e.originalError.name === "UndefinedVariableError") &&
-				e.originalError.originalError instanceof TemplateContentPrematureUseError) || // Liquid
-			(e.message || "").indexOf("TemplateContentPrematureUseError") > -1
-		); // Nunjucks
+			((e?.originalError?.name === "RenderError" ||
+				e?.originalError?.name === "UndefinedVariableError") &&
+				e?.originalError?.originalError instanceof TemplateContentPrematureUseError) || // Liquid
+			e?.message?.includes("TemplateContentPrematureUseError") // Nunjucks
+		);
 	}
 }
 
