@@ -60,9 +60,7 @@ class EleventyErrorUtil {
 		// TODO the rest of the template engines
 		return (
 			e instanceof TemplateContentPrematureUseError ||
-			((e?.originalError?.name === "RenderError" ||
-				e?.originalError?.name === "UndefinedVariableError") &&
-				e?.originalError?.originalError instanceof TemplateContentPrematureUseError) || // Liquid
+			e?.originalError?.originalError instanceof TemplateContentPrematureUseError || // Liquid
 			e?.message?.includes("TemplateContentPrematureUseError") // Nunjucks
 		);
 	}
