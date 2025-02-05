@@ -60,6 +60,7 @@ class EleventyErrorUtil {
 		// TODO the rest of the template engines
 		return (
 			e instanceof TemplateContentPrematureUseError ||
+			e?.cause instanceof TemplateContentPrematureUseError || // Custom (per Node-convention)
 			e?.originalError?.originalError instanceof TemplateContentPrematureUseError || // Liquid
 			e?.message?.includes("TemplateContentPrematureUseError") // Nunjucks
 		);
