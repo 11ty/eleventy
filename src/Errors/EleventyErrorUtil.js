@@ -61,7 +61,7 @@ class EleventyErrorUtil {
 		return (
 			e instanceof TemplateContentPrematureUseError ||
 			e?.cause instanceof TemplateContentPrematureUseError || // Custom (per Node-convention)
-			e?.originalError?.originalError instanceof TemplateContentPrematureUseError || // Liquid
+			["RenderError", "UndefinedVariableError"].includes(e?.originalError?.name) && e?.originalError?.originalError instanceof TemplateContentPrematureUseError || // Liquid
 			e?.message?.includes("TemplateContentPrematureUseError") // Nunjucks
 		);
 	}
