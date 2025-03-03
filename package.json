@@ -118,8 +118,8 @@
 		"zod-validation-error": "^3.4.0"
 	},
 	"dependencies": {
-		"@11ty/dependency-tree": "^3.0.1",
-		"@11ty/dependency-tree-esm": "^1.0.2",
+		"@11ty/dependency-tree": "^4.0.0",
+		"@11ty/dependency-tree-esm": "^2.0.0",
 		"@11ty/eleventy-dev-server": "^2.0.6",
 		"@11ty/eleventy-plugin-bundle": "^3.0.1",
 		"@11ty/eleventy-utils": "^2.0.1",
