@@ -63,7 +63,7 @@ class FileSystemSearch {
 				),
 			).then((results) => {
 				this.outputs[cacheKey] = new Set(
-					results.map((entry) => TemplatePath.addLeadingDotSlash(entry)),
+					results.map((entry) => TemplatePath.standardizeFilePath(entry)),
 				);
 				return Array.from(this.outputs[cacheKey]);
 			});
