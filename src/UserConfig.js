@@ -1,4 +1,3 @@
-import os from "node:os";
 import chalk from "kleur";
 import { DateTime } from "luxon";
 import yaml from "js-yaml";
