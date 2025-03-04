@@ -157,6 +157,8 @@
 		"slugify": "^1.6.6"
 	},
 	"overrides": {
-		"js-yaml": "$js-yaml"
+		"gray-matter": {
+			"js-yaml": "$js-yaml"
+		}
 	}
 }
