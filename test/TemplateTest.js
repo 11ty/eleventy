@@ -1479,14 +1479,19 @@ test("Issue 413 weird date format", async (t) => {
 });
 
 test("Custom Front Matter Parsing Options", async (t) => {
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({}, function(cfg) {
+    cfg.setFrontMatterParsingOptions({
+      excerpt: true,
+    })
+  });
   let tmpl = await getNewTemplate(
     "./test/stubs/custom-frontmatter/template.njk",
     "./test/stubs/",
-    "./dist"
+    "./dist",
+    undefined,
+    undefined,
+    eleventyConfig,
   );
-  tmpl.config.frontMatterParsingOptions = {
-    excerpt: true,
-  };
 
   let frontmatter = await tmpl._testGetFrontMatter();
 
@@ -1504,15 +1509,21 @@ This is content.`
 });
 
 test("Custom Front Matter Parsing Options (using alias)", async (t) => {
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({}, function(cfg) {
+    cfg.setFrontMatterParsingOptions({
+      excerpt: true,
+      excerpt_alias: "my_excerpt",
+    })
+  });
+
   let tmpl = await getNewTemplate(
     "./test/stubs/custom-frontmatter/template.njk",
     "./test/stubs/",
-    "./dist"
+    "./dist",
+    undefined,
+    undefined,
+    eleventyConfig,
   );
-  tmpl.config.frontMatterParsingOptions = {
-    excerpt: true,
-    excerpt_alias: "my_excerpt",
-  };
 
   let frontmatter = await tmpl._testGetFrontMatter();
   t.is(frontmatter.data.front, "hello");
@@ -1528,14 +1539,19 @@ This is content.`
 });
 
 test("Custom Front Matter Parsing Options (no newline before excerpt separator)", async (t) => {
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({}, function(cfg) {
+    cfg.setFrontMatterParsingOptions({
+      excerpt: true,
+    })
+  });
   let tmpl = await getNewTemplate(
     "./test/stubs/custom-frontmatter/template-newline1.njk",
     "./test/stubs/",
-    "./dist"
+    "./dist",
+    undefined,
+    undefined,
+    eleventyConfig,
   );
-  tmpl.config.frontMatterParsingOptions = {
-    excerpt: true,
-  };
 
   let frontmatter = await tmpl._testGetFrontMatter();
   t.is(frontmatter.data.front, "hello");
@@ -1552,14 +1568,19 @@ This is content.`
 });
 
 test("Custom Front Matter Parsing Options (no newline after excerpt separator)", async (t) => {
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({}, function(cfg) {
+    cfg.setFrontMatterParsingOptions({
+      excerpt: true,
+    })
+  });
   let tmpl = await getNewTemplate(
     "./test/stubs/custom-frontmatter/template-newline3.njk",
     "./test/stubs/",
-    "./dist"
+    "./dist",
+    undefined,
+    undefined,
+    eleventyConfig,
   );
-  tmpl.config.frontMatterParsingOptions = {
-    excerpt: true,
-  };
 
   let frontmatter = await tmpl._testGetFrontMatter();
   t.is(
@@ -1570,29 +1591,40 @@ This is content.`
 });
 
 test("Custom Front Matter Parsing Options (no newlines before or after excerpt separator)", async (t) => {
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({}, function(cfg) {
+    cfg.setFrontMatterParsingOptions({
+      excerpt: true,
+    })
+  });
+
   let tmpl = await getNewTemplate(
     "./test/stubs/custom-frontmatter/template-newline2.njk",
     "./test/stubs/",
-    "./dist"
+    "./dist",
+    undefined,
+    undefined,
+    eleventyConfig
   );
-  tmpl.config.frontMatterParsingOptions = {
-    excerpt: true,
-  };
 
   let frontmatter = await tmpl._testGetFrontMatter();
   t.is(frontmatter.content.trim(), "This is an excerpt.This is content.");
 });
 
 test("Custom Front Matter Parsing Options (html comment separator)", async (t) => {
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({}, function(cfg) {
+    cfg.setFrontMatterParsingOptions({
+      excerpt: true,
+      excerpt_separator: "<!-- excerpt -->",
+    })
+  });
   let tmpl = await getNewTemplate(
     "./test/stubs/custom-frontmatter/template-excerpt-comment.njk",
     "./test/stubs/",
-    "./dist"
+    "./dist",
+    undefined,
+    undefined,
+    eleventyConfig
   );
-  tmpl.config.frontMatterParsingOptions = {
-    excerpt: true,
-    excerpt_separator: "<!-- excerpt -->",
-  };
 
   let frontmatter = await tmpl._testGetFrontMatter();
   t.is(frontmatter.data.front, "hello");
