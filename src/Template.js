@@ -1035,7 +1035,7 @@ class Template extends TemplateContent {
 
 		if (dateValue) {
 			debug("getMappedDate: using a date in the data for %o of %o", this.inputPath, data.date);
-			if (dateValue instanceof DateTime) {
+			if (dateValue?.constructor?.name === "DateTime") {
 				// YAML does its own date parsing
 				debug("getMappedDate: found DateTime instance: %o", dateValue);
 				return dateValue.toJSDate();
