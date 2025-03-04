@@ -155,5 +155,10 @@
 		"posthtml-match-helper": "^2.0.3",
 		"semver": "^7.7.1",
 		"slugify": "^1.6.6"
+	},
+	"overrides": {
+		"gray-matter": {
+			"js-yaml": "^4"
+		}
 	}
 }
