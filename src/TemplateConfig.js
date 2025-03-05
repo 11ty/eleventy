@@ -365,6 +365,8 @@ class TemplateConfig {
 			throw new EleventyConfigError(
 				"A configuration file was specified but not found: " + this.projectConfigPaths.join(", "),
 			);
+		} else if (!this.#configManuallyDefined && !path) {
+			this.logger?.warn("No Eleventy configuration file found. Using the default configuration.");
 		}
 
 		debug(`Merging default config with ${path}`);
