@@ -316,7 +316,27 @@ class TemplateMap {
 
 	getFullTemplateMapOrder() {
 		// convert dependency graphs to ordered arrays
-		return this.getTemplateMapDependencyGraph().map((entry) => entry.overallOrder());
+		let visitedTags = new Set();
+		let templateEntryEncountered = false;
+		let order = this.getTemplateMapDependencyGraph().map((graph) => {
+			return graph.overallOrder().filter((entry) => {
+				if (entry.startsWith(TemplateMap.tagPrefix)) {
+					// already visited
+					if (visitedTags.has(entry) && !templateEntryEncountered) {
+						return false;
+					}
+
+					visitedTags.add(entry);
+					templateEntryEncountered = false;
+				} else {
+					templateEntryEncountered = true;
+				}
+
+				return true;
+			});
+		});
+
+		return order;
 	}
 
 	#addEntryToGlobalDependencyGraph(entry) {
