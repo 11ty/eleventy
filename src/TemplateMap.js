@@ -147,8 +147,7 @@ class TemplateMap {
 	getMappedDependencies() {
 		let graph = new DependencyGraph();
 		let tagPrefix = TemplateMap.tagPrefix;
-
-		graph.addNode(tagPrefix + "all");
+		let allNodeAdded = false;
 
 		for (let entry of this.map) {
 			if (this.isPaginationOverAllCollections(entry)) {
@@ -174,13 +173,21 @@ class TemplateMap {
 				graph.addNode(entry.inputPath);
 			}
 
-			let collections = TemplateData.getIncludedCollectionNames(entry.data);
-			this.addTagsToGraph(graph, entry.inputPath, collections);
+			let collectionNames = TemplateData.getIncludedCollectionNames(entry.data);
+			if (collectionNames.includes("all") && !allNodeAdded) {
+				graph.addNode(tagPrefix + "all");
+				allNodeAdded = true;
+			}
+
+			this.addTagsToGraph(graph, entry.inputPath, collectionNames);
 
 			this.addDeclaredDependenciesToGraph(
 				graph,
 				entry.inputPath,
-				entry.data.eleventyImport?.collections,
+				// no user collections here yet
+				entry.data.eleventyImport?.collections.filter((tagName) => {
+					return !this.isUserConfigCollectionName(tagName);
+				}),
 			);
 		}
 
@@ -192,8 +199,7 @@ class TemplateMap {
 	getDelayedMappedDependencies() {
 		let graph = new DependencyGraph();
 		let tagPrefix = TemplateMap.tagPrefix;
-
-		graph.addNode(tagPrefix + "all");
+		let allNodeAdded = false;
 
 		let userConfigCollections = this.getUserConfigCollectionNames();
 
@@ -214,13 +220,20 @@ class TemplateMap {
 				}
 				graph.addDependency(entry.inputPath, tagPrefix + paginationTagTarget);
 
-				let collections = TemplateData.getIncludedCollectionNames(entry.data);
-				this.addTagsToGraph(graph, entry.inputPath, collections);
+				let collectionNames = TemplateData.getIncludedCollectionNames(entry.data);
+				if (collectionNames.includes("all") && !allNodeAdded) {
+					graph.addNode(tagPrefix + "all");
+					allNodeAdded = true;
+				}
+
+				this.addTagsToGraph(graph, entry.inputPath, collectionNames);
 
 				this.addDeclaredDependenciesToGraph(
 					graph,
 					entry.inputPath,
-					entry.data.eleventyImport?.collections,
+					entry.data.eleventyImport?.collections.filter((tagName) => {
+						return this.isUserConfigCollectionName(tagName);
+					}),
 				);
 			}
 		}
@@ -237,17 +250,17 @@ class TemplateMap {
 
 		for (let entry of this.map) {
 			if (this.isPaginationOverAllCollections(entry) && !this.getPaginationTagTarget(entry)) {
-				if (!allNodeAdded) {
-					graph.addNode(tagPrefix + "all");
-					allNodeAdded = true;
-				}
-
 				if (!graph.hasNode(entry.inputPath)) {
 					graph.addNode(entry.inputPath);
 				}
 
 				let collectionNames = TemplateData.getIncludedCollectionNames(entry.data);
 				if (collectionNames.includes("all")) {
+					if (!allNodeAdded) {
+						graph.addNode(tagPrefix + "all");
+						allNodeAdded = true;
+					}
+
 					// collections.all
 					graph.addDependency(tagPrefix + "all", entry.inputPath);
 
@@ -276,17 +289,17 @@ class TemplateMap {
 				this.isPaginationOverAllCollections(entry) &&
 				this.getPaginationTagTarget(entry) === "all"
 			) {
-				if (!allNodeAdded) {
-					graph.addNode(tagPrefix + "all");
-					allNodeAdded = true;
-				}
-
 				if (!graph.hasNode(entry.inputPath)) {
 					graph.addNode(entry.inputPath);
 				}
 
 				let collectionNames = TemplateData.getIncludedCollectionNames(entry.data);
 				if (collectionNames.includes("all")) {
+					if (!allNodeAdded) {
+						graph.addNode(tagPrefix + "all");
+						allNodeAdded = true;
+					}
+
 					// Populates into collections.all
 					// This is circular!
 					graph.addDependency(tagPrefix + "all", entry.inputPath);
@@ -316,27 +329,10 @@ class TemplateMap {
 
 	getFullTemplateMapOrder() {
 		// convert dependency graphs to ordered arrays
-		let visitedTags = new Set();
-		let templateEntryEncountered = false;
-		let order = this.getTemplateMapDependencyGraph().map((graph) => {
-			return graph.overallOrder().filter((entry) => {
-				if (entry.startsWith(TemplateMap.tagPrefix)) {
-					// already visited
-					if (visitedTags.has(entry) && !templateEntryEncountered) {
-						return false;
-					}
-
-					visitedTags.add(entry);
-					templateEntryEncountered = false;
-				} else {
-					templateEntryEncountered = true;
-				}
-
-				return true;
-			});
+		return this.getTemplateMapDependencyGraph().map((graph) => {
+			// TODO Filter out duplicate tags (e.g. `all`) across the 4 stages that aren’t rendering a new template inbetween
+			return graph.overallOrder();
 		});
-
-		return order;
 	}
 
 	#addEntryToGlobalDependencyGraph(entry) {
