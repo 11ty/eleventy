@@ -214,28 +214,34 @@ class TemplateMap {
 			}
 
 			let paginationTagTarget = this.getPaginationTagTarget(entry);
-			if (paginationTagTarget && this.isUserConfigCollectionName(paginationTagTarget)) {
-				if (!graph.hasNode(entry.inputPath)) {
-					graph.addNode(entry.inputPath);
-				}
-				graph.addDependency(entry.inputPath, tagPrefix + paginationTagTarget);
-
-				let collectionNames = TemplateData.getIncludedCollectionNames(entry.data);
-				if (collectionNames.includes("all") && !allNodeAdded) {
-					graph.addNode(tagPrefix + "all");
-					allNodeAdded = true;
-				}
-
-				this.addTagsToGraph(graph, entry.inputPath, collectionNames);
-
-				this.addDeclaredDependenciesToGraph(
-					graph,
-					entry.inputPath,
-					entry.data.eleventyImport?.collections.filter((tagName) => {
-						return this.isUserConfigCollectionName(tagName);
-					}),
-				);
+			if (!paginationTagTarget || !this.isUserConfigCollectionName(paginationTagTarget)) {
+				continue;
 			}
+
+			if (!graph.hasNode(entry.inputPath)) {
+				graph.addNode(entry.inputPath);
+			}
+
+			graph.addDependency(entry.inputPath, tagPrefix + paginationTagTarget);
+
+			let collectionNames = TemplateData.getIncludedCollectionNames(entry.data);
+			if (collectionNames.includes("all") && !allNodeAdded) {
+				graph.addNode(tagPrefix + "all");
+				allNodeAdded = true;
+			}
+
+			this.addTagsToGraph(graph, entry.inputPath, collectionNames);
+
+			// A bigger idea here is to make all Collection API additions “virtual” tags and make everything go through that mechanism!
+			// For now: Implied tags via Collection API tags are added later
+
+			this.addDeclaredDependenciesToGraph(
+				graph,
+				entry.inputPath,
+				entry.data.eleventyImport?.collections.filter((tagName) => {
+					return this.isUserConfigCollectionName(tagName);
+				}),
+			);
 		}
 
 		return graph;
@@ -249,30 +255,32 @@ class TemplateMap {
 		let allNodeAdded = false;
 
 		for (let entry of this.map) {
-			if (this.isPaginationOverAllCollections(entry) && !this.getPaginationTagTarget(entry)) {
-				if (!graph.hasNode(entry.inputPath)) {
-					graph.addNode(entry.inputPath);
-				}
-
-				let collectionNames = TemplateData.getIncludedCollectionNames(entry.data);
-				if (collectionNames.includes("all")) {
-					if (!allNodeAdded) {
-						graph.addNode(tagPrefix + "all");
-						allNodeAdded = true;
-					}
-
-					// collections.all
-					graph.addDependency(tagPrefix + "all", entry.inputPath);
-
-					// Note that `tags` are otherwise ignored here
-				}
-
-				this.addDeclaredDependenciesToGraph(
-					graph,
-					entry.inputPath,
-					entry.data.eleventyImport?.collections,
-				);
+			if (!this.isPaginationOverAllCollections(entry) || this.getPaginationTagTarget(entry)) {
+				continue;
 			}
+
+			if (!graph.hasNode(entry.inputPath)) {
+				graph.addNode(entry.inputPath);
+			}
+
+			let collectionNames = TemplateData.getIncludedCollectionNames(entry.data);
+			if (collectionNames.includes("all")) {
+				if (!allNodeAdded) {
+					graph.addNode(tagPrefix + "all");
+					allNodeAdded = true;
+				}
+
+				// collections.all
+				graph.addDependency(tagPrefix + "all", entry.inputPath);
+
+				// Note that `tags` are otherwise ignored here
+			}
+
+			this.addDeclaredDependenciesToGraph(
+				graph,
+				entry.inputPath,
+				entry.data.eleventyImport?.collections,
+			);
 		}
 
 		return graph;
@@ -341,6 +349,7 @@ class TemplateMap {
 			this.config.uses.addDependencyConsumesCollection(entry.inputPath, paginationTagTarget);
 		}
 
+		// TODO it’d be nice to set the dependency relationship for addCollection here
 		let collectionNames = TemplateData.getIncludedCollectionNames(entry.data);
 		for (let name of collectionNames) {
 			this.config.uses.addDependencyPublishesToCollection(entry.inputPath, name);
@@ -522,17 +531,9 @@ class TemplateMap {
 
 	// Filter out any tag nodes
 	getOrderedInputPaths(...maps) {
-		let orderedMap = [];
 		let tagPrefix = TemplateMap.tagPrefix;
 
-		for (let map of maps) {
-			for (let dep of map) {
-				if (!dep.startsWith(tagPrefix)) {
-					orderedMap.push(dep);
-				}
-			}
-		}
-		return orderedMap;
+		return maps.flat().filter((dep) => !dep.startsWith(tagPrefix));
 	}
 
 	async runDataSchemas(orderedMap) {

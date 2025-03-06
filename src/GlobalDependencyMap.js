@@ -389,6 +389,10 @@ class GlobalDependencyMap {
 		return false;
 	}
 
+	order() {
+		return this.map.overallOrder();
+	}
+
 	stringify() {
 		return JSON.stringify(this.map, function replacer(key, value) {
 			// Serialize internal Map objects.
