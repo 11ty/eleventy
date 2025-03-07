@@ -337,18 +337,18 @@ class TemplateWriter {
 			return true;
 		});
 
-		// Full Build
-		if (!this.incrementalFile) {
-			let ret = await this._addToTemplateMapFullBuild(paths, to);
-
-			// write new template relationships to the global dependency graph for next time
-			this.templateMap.addAllToGlobalDependencyGraph();
-
-			return ret;
+		if (this.incrementalFile) {
+			// Top level async to get at the promises returned.
+			return await this._addToTemplateMapIncrementalBuild(incrementalFileShape, paths, to);
 		}
 
-		// Top level async to get at the promises returned.
-		return await this._addToTemplateMapIncrementalBuild(incrementalFileShape, paths, to);
+		// Full Build
+		let ret = await this._addToTemplateMapFullBuild(paths, to);
+
+		// write new template relationships to the global dependency graph for next time
+		this.templateMap.addAllToGlobalDependencyGraph();
+
+		return ret;
 	}
 
 	async _createTemplateMap(paths, to) {

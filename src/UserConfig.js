@@ -1303,6 +1303,7 @@ class UserConfig {
 			plugins: this.plugins,
 			useTemplateCache: this.useTemplateCache,
 			precompiledCollections: this.precompiledCollections,
+			collectionApiNames: Object.keys(this.collections),
 			dataFilterSelectors: this.dataFilterSelectors,
 			libraryAmendments: this.libraryAmendments,
 			serverPassthroughCopyBehavior: this.serverPassthroughCopyBehavior,
