@@ -1,4 +1,4 @@
-import isGlob from "is-glob";
+import { isDynamicPattern } from "tinyglobby";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
@@ -244,7 +244,11 @@ class TemplatePassthroughManager {
 			if (TemplatePath.startsWithSubPath(changedFile, path.inputPath)) {
 				return path;
 			}
-			if (changedFile && isGlob(path.inputPath) && isGlobMatch(changedFile, [path.inputPath])) {
+			if (
+				changedFile &&
+				isDynamicPattern(path.inputPath) &&
+				isGlobMatch(changedFile, [path.inputPath])
+			) {
 				return path;
 			}
 		}

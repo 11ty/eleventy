@@ -1,5 +1,5 @@
 import test from "ava";
-import fastglob from "fast-glob";
+import { glob as tg } from 'tinyglobby';
 import { TemplatePath } from "@11ty/eleventy-utils";
 
 import TemplateGlob from "../src/TemplateGlob.js";
@@ -70,7 +70,7 @@ test("Normalize array argument", (t) => {
 });
 
 test("matuzo project issue with fastglob assumptions", async (t) => {
-  let dotslashincludes = await fastglob(
+  let dotslashincludes = await tg(
     TemplateGlob.map([
       "./test/stubs/globby/**/*.html",
       "!./test/stubs/globby/_includes/**/*",
@@ -85,7 +85,7 @@ test("matuzo project issue with fastglob assumptions", async (t) => {
     0
   );
 
-  let globincludes = await fastglob(
+  let globincludes = await tg(
     TemplateGlob.map([
       "test/stubs/globby/**/*.html",
       "!./test/stubs/globby/_includes/**/*",
@@ -100,23 +100,24 @@ test("matuzo project issue with fastglob assumptions", async (t) => {
   );
 });
 
+// `fast-glob` isn't used any more, but the test can stay as a sanity check.
 test("fastglob assumptions", async (t) => {
-  let glob = await fastglob("test/stubs/ignoredFolder/**");
+  let glob = await tg("test/stubs/ignoredFolder/**");
   t.is(glob.length, 1);
 
-  let glob2 = await fastglob("test/stubs/ignoredFolder/**/*");
+  let glob2 = await tg("test/stubs/ignoredFolder/**/*");
   t.is(glob2.length, 1);
 
-  let glob3 = await fastglob([
+  let glob3 = await tg([
     "./test/stubs/ignoredFolder/**/*.md",
     "!./test/stubs/ignoredFolder/**",
   ]);
   t.is(glob3.length, 0);
 
-  let glob4 = await fastglob(["./test/stubs/ignoredFolder/*.md", "!./test/stubs/ignoredFolder/**"]);
+  let glob4 = await tg(["./test/stubs/ignoredFolder/*.md", "!./test/stubs/ignoredFolder/**"]);
   t.is(glob4.length, 0);
 
-  let glob5 = await fastglob([
+  let glob5 = await tg([
     "./test/stubs/ignoredFolder/ignored.md",
     "!./test/stubs/ignoredFolder/**",
   ]);
