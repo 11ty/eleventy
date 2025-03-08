@@ -682,16 +682,12 @@ class TemplateData {
 	static getIncludedCollectionNames(data) {
 		let tags = TemplateData.getCleanedTagsImmutable(data);
 
-		if (tags.length > 0) {
-			let { excludes, excludeAll } = TemplateData.getNormalizedExcludedCollections(data);
-			if (excludeAll) {
-				return [];
-			}
-
-			return ["all", ...tags].filter((tag) => !excludes.includes(tag));
+		let { excludes, excludeAll } = TemplateData.getNormalizedExcludedCollections(data);
+		if (excludeAll) {
+			return [];
 		}
 
-		return ["all"];
+		return ["all", ...tags].filter((tag) => !excludes.includes(tag));
 	}
 
 	static getIncludedTagNames(data) {
