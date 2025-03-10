@@ -92,7 +92,9 @@ class JavaScript extends TemplateEngine {
 			mod = this.eleventyConfig.userConfig.virtualTemplates[relativeInputPath].content;
 		} else {
 			let isEsm = this.eleventyConfig.getIsProjectUsingEsm();
-			mod = await EleventyImport(inputPath, isEsm ? "esm" : "cjs");
+			mod = await EleventyImport(inputPath, isEsm ? "esm" : "cjs", {
+				cacheBust: !this.config.useTemplateCache,
+			});
 		}
 
 		let inst = this._getInstance(mod);
