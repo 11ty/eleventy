@@ -11,7 +11,6 @@ import TemplateData from "./Data/TemplateData.js";
 import GlobalDependencyMap from "./GlobalDependencyMap.js";
 
 const debug = debugUtil("Eleventy:TemplateMap");
-const debugDev = debugUtil("Dev:Eleventy:TemplateMap");
 
 class EleventyMapPagesError extends EleventyBaseError {}
 class EleventyDataSchemaError extends EleventyBaseError {}
@@ -236,7 +235,6 @@ class TemplateMap {
 			this.addAllToGlobalDependencyGraph();
 		}
 
-		debug("Caching collections objects.");
 		this.collectionsData = {};
 
 		for (let entry of this.map) {
@@ -373,7 +371,6 @@ class TemplateMap {
 						throw e;
 					}
 				}
-				debugDev("Added this.map[...].templateContent, outputPath, et al for one map entry");
 			},
 			{
 				concurrency: this.userConfig.getConcurrency(),

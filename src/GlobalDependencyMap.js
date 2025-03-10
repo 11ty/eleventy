@@ -60,6 +60,7 @@ class GlobalDependencyMap {
 		});
 	}
 
+	// For Testing
 	setCollectionApiNames(names = []) {
 		this.userConfigurationCollectionApiNames = names;
 	}
@@ -424,6 +425,8 @@ class GlobalDependencyMap {
 	addDependencyPublishesToCollection(from, collectionName) {
 		let normalizedFrom = this.normalizeNode(from);
 		let key = GlobalDependencyMap.getCollectionKeyForEntry(collectionName);
+
+		// Exception for things that publish to collections.all
 		if (
 			collectionName === GlobalDependencyMap.SPECIAL_ALL_COLLECTION_NAME &&
 			this.isConfigurationApiConsumer(normalizedFrom)
@@ -431,6 +434,14 @@ class GlobalDependencyMap {
 			// Do nothing, this relationship is already implied and adding again will mess up the order
 		} else {
 			this.#addDependency(key, [normalizedFrom]);
+		}
+
+		// Tagged collections should be calculated before [keys]
+		if (!this.isUserConfigCollectionName(collectionName)) {
+			let keysKey = GlobalDependencyMap.getCollectionKeyForEntry(
+				GlobalDependencyMap.SPECIAL_KEYS_COLLECTION_NAME,
+			);
+			this.#addDependency(keysKey, [key]);
 		}
 	}
 
@@ -486,9 +497,16 @@ class GlobalDependencyMap {
 		let allKey = GlobalDependencyMap.getCollectionKeyForEntry(
 			GlobalDependencyMap.SPECIAL_ALL_COLLECTION_NAME,
 		);
+
 		if (order[order.length - 1] !== allKey) {
 			order.push(allKey);
 		}
+
+		// Remove duplicates when they are unnecessary
+		if (order.slice(-3).join(",") === "__collection:all,__collection:[keys],__collection:all") {
+			order = order.slice(0, -2); // keep the last __collection:all
+		}
+
 		return order;
 	}
 
