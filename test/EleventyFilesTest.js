@@ -1,5 +1,5 @@
 import test from "ava";
-import fastglob from "fast-glob";
+import { glob } from "tinyglobby";
 
 import EleventyFiles from "../src/EleventyFiles.js";
 import TemplateConfig from "../src/TemplateConfig.js";
@@ -132,10 +132,10 @@ test("Mutually exclusive Input and Output dirs", async (t) => {
 
   let { eleventyFiles: evf } = getEleventyFilesInstance(["liquid", "md"], eleventyConfig);
 
-  let files = await fastglob(evf.getFileGlobs());
+  let files = await glob(evf.getFileGlobs());
   t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTest/**/*.{liquid,md}"]);
   t.true(files.length > 0);
-  t.is(files[0], "./test/stubs/writeTest/test.md");
+  t.is(files[0], "test/stubs/writeTest/test.md");
 });
 
 test("Single File Input (deep path)", async (t) => {
@@ -147,10 +147,10 @@ test("Single File Input (deep path)", async (t) => {
 
   let { eleventyFiles: evf } = getEleventyFilesInstance(["liquid", "md"], eleventyConfig);
 
-  let files = await fastglob(evf.getFileGlobs());
+  let files = await glob(evf.getFileGlobs());
   t.is(evf.getRawFiles().length, 1);
   t.is(files.length, 1);
-  t.is(files[0], "./test/stubs/index.html");
+  t.is(files[0], "test/stubs/index.html");
 });
 
 test("Single File Input (shallow path)", async (t) => {
@@ -163,12 +163,12 @@ test("Single File Input (shallow path)", async (t) => {
   let { eleventyFiles: evf } = getEleventyFilesInstance(["md"], eleventyConfig);
 
   let globs = evf.getFileGlobs(); //.filter((path) => path !== "./README.md");
-  let files = await fastglob(globs, {
+  let files = await glob(globs, {
     ignore: evf.getIgnoreGlobs(),
   });
   t.is(evf.getRawFiles().length, 1);
   t.is(files.length, 1);
-  t.is(files[0], "./README.md");
+  t.is(files[0], "README.md");
 });
 
 test("Glob Input", async (t) => {
@@ -180,11 +180,11 @@ test("Glob Input", async (t) => {
   let { eleventyFiles: evf } = getEleventyFilesInstance(["md"], eleventyConfig);
 
   let globs = evf.getFileGlobs();
-  let files = await fastglob(globs);
+  let files = await glob(globs);
 
   t.is(files.length, 2);
-  t.is(files[0], "./test/stubs/glob-pages/about.md");
-  t.is(files[1], "./test/stubs/glob-pages/home.md");
+  t.is(files[0], "test/stubs/glob-pages/about.md");
+  t.is(files[1], "test/stubs/glob-pages/home.md");
 });
 
 test(".eleventyignore parsing", (t) => {
@@ -220,10 +220,10 @@ test(".eleventyignore files", async (t) => {
   });
   let { eleventyFiles: evf } = getEleventyFilesInstance(["liquid", "md"], eleventyConfig);
 
-  let ignoredFiles = await fastglob("test/stubs/ignoredFolder/*.md");
+  let ignoredFiles = await glob("test/stubs/ignoredFolder/*.md");
   t.is(ignoredFiles.length, 1);
 
-  let files = await fastglob(evf.getFileGlobs(), {
+  let files = await glob(evf.getFileGlobs(), {
     ignore: evf.getIgnoreGlobs(),
   });
 
