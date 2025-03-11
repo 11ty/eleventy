@@ -861,3 +861,67 @@ test("ESM data file", async (t) => {
   t.is(data.module.named, "es module named");
   t.is(data.commonjs, "commonjs default");
 });
+
+test("Test collection names from data (empty assigned)", async (t) => {
+  t.deepEqual(TemplateData.getIncludedCollectionNames({
+    tags: [],
+  }), ["all"]);
+
+  t.deepEqual(TemplateData.getIncludedCollectionNames({
+    tags: [],
+    eleventyExcludeFromCollections: true
+  }), []);
+
+  t.deepEqual(TemplateData.getIncludedCollectionNames({
+    tags: [],
+    eleventyExcludeFromCollections: ["one"]
+  }), ["all"]);
+});
+
+test("Test collection names from data (tags assigned)", async (t) => {
+  t.deepEqual(TemplateData.getIncludedCollectionNames({
+    tags: ["one", "two"],
+  }), ["all", "one", "two"]);
+
+  t.deepEqual(TemplateData.getIncludedCollectionNames({
+    tags: ["one", "two"],
+    eleventyExcludeFromCollections: true,
+  }), []);
+
+  t.deepEqual(TemplateData.getIncludedCollectionNames({
+    tags: ["one", "two"],
+    eleventyExcludeFromCollections: ["one"],
+  }), ["all", "two"]);
+});
+
+test("Test tag names from data (empty assigned)", async (t) => {
+  t.deepEqual(TemplateData.getIncludedTagNames({
+    tags: [],
+  }), []);
+
+  t.deepEqual(TemplateData.getIncludedTagNames({
+    tags: [],
+    eleventyExcludeFromCollections: true
+  }), []);
+
+  t.deepEqual(TemplateData.getIncludedTagNames({
+    tags: [],
+    eleventyExcludeFromCollections: ["one"]
+  }), []);
+});
+
+test("Test tag names from data (tags assigned)", async (t) => {
+  t.deepEqual(TemplateData.getIncludedTagNames({
+    tags: ["one", "two"],
+  }), ["one", "two"]);
+
+  t.deepEqual(TemplateData.getIncludedTagNames({
+    tags: ["one", "two"],
+    eleventyExcludeFromCollections: true,
+  }), []);
+
+  t.deepEqual(TemplateData.getIncludedTagNames({
+    tags: ["one", "two"],
+    eleventyExcludeFromCollections: ["one"],
+  }), ["two"]);
+});

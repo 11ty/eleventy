@@ -47,7 +47,9 @@ test("Get ordered list of templates", async (t) => {
     )
   );
 
-  let order = tm.getOrderedInputPaths(...tm.getFullTemplateMapOrder());
+  await tm.cache();
+
+  let order = tm.getOrderedInputPaths(tm.getTemplateOrder());
   t.deepEqual(order, [
     "./test/_issues/975/post.md",
     "./test/_issues/975/another-post.md",
@@ -94,7 +96,9 @@ test("Get ordered list of templates (reverse add)", async (t) => {
     )
   );
 
-  let order = tm.getOrderedInputPaths(...tm.getFullTemplateMapOrder());
+  await tm.cache();
+
+  let order = tm.getOrderedInputPaths(tm.getTemplateOrder());
   t.deepEqual(order, [
     "./test/_issues/975/another-post.md",
     "./test/_issues/975/post.md",

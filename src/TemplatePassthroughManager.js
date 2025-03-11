@@ -256,13 +256,13 @@ class TemplatePassthroughManager {
 		return false;
 	}
 
-	getAllNormalizedPaths(paths) {
+	getAllNormalizedPaths(paths = []) {
 		if (this.incrementalFile) {
 			let isPassthrough = this.isPassthroughCopyFile(paths, this.incrementalFile);
 
 			if (isPassthrough) {
 				if (isPassthrough.outputPath) {
-					return [this._normalizePaths(this.incrementalFile, isPassthrough.outputPath)];
+					return [isPassthrough];
 				}
 
 				return [this._normalizePaths(this.incrementalFile)];

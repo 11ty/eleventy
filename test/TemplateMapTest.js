@@ -874,7 +874,7 @@ test("Dependency Map should have nodes that have no dependencies and no dependen
 
   await tm.cache();
 
-  let [deps] = tm.getFullTemplateMapOrder();
+  let deps = tm.getTemplateOrder();
   t.true(deps.filter((dep) => dep.indexOf("test5.md") > -1).length > 0);
 
   let collections = await tm._testGetCollectionsData();
@@ -900,9 +900,8 @@ test("Dependency Map should have include orphan user config collections (in the 
 
   await tm.cache();
 
-  let [deps, delayedDeps] = tm.getFullTemplateMapOrder();
-  t.true(deps.filter((dep) => dep.indexOf("userCollection") > -1).length === 0);
-  t.true(delayedDeps.filter((dep) => dep.indexOf("userCollection") > -1).length > 0);
+  let deps = tm.getTemplateOrder();
+  t.true(deps.filter((dep) => dep.includes("userCollection")).length > 0);
 
   let collections = await tm._testGetCollectionsData();
   t.is(collections.all.length, 2);
@@ -1330,14 +1329,15 @@ test("TemplateMap circular references (map.templateContent) using eleventyExclud
   let map = tm.getMap();
   t.falsy(map[0].data.collections);
 
-  let [deps] = tm.getFullTemplateMapOrder();
+  await tm.cache();
+
+  let deps = tm.getTemplateOrder();
   t.deepEqual(deps, [
     "./test/stubs/issue-522/excluded.md",
     "./test/stubs/issue-522/template.md",
-    "___TAG___all",
+    "__collection:all",
   ]);
 
-  await tm.cache();
   t.is(tm.getMap().length, 2);
 
   let collections = await tm._testGetCollectionsData();

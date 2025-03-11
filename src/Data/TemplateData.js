@@ -655,14 +655,7 @@ class TemplateData {
 
 	static cleanupData(data) {
 		if (isPlainObject(data) && "tags" in data) {
-			if (typeof data.tags === "string") {
-				data.tags = data.tags ? [data.tags] : [];
-			} else if (data.tags === null) {
-				data.tags = [];
-			}
-
-			// Deduplicate tags
-			data.tags = [...new Set(data.tags)];
+			data.tags = this.getCleanedTagsImmutable(data);
 		}
 
 		return data;
@@ -686,35 +679,19 @@ class TemplateData {
 		};
 	}
 
-	/* Same as getIncludedTagNames() but may also include "all" */
 	static getIncludedCollectionNames(data) {
 		let tags = TemplateData.getCleanedTagsImmutable(data);
 
-		if (tags.length > 0) {
-			let { excludes, excludeAll } = TemplateData.getNormalizedExcludedCollections(data);
-			if (excludeAll) {
-				return [];
-			} else {
-				return ["all", ...tags].filter((tag) => !excludes.includes(tag));
-			}
-		} else {
-			return ["all"];
+		let { excludes, excludeAll } = TemplateData.getNormalizedExcludedCollections(data);
+		if (excludeAll) {
+			return [];
 		}
+
+		return ["all", ...tags].filter((tag) => !excludes.includes(tag));
 	}
 
 	static getIncludedTagNames(data) {
-		let tags = TemplateData.getCleanedTagsImmutable(data);
-
-		if (tags.length > 0) {
-			let { excludes, excludeAll } = TemplateData.getNormalizedExcludedCollections(data);
-			if (excludeAll) {
-				return [];
-			} else {
-				return tags.filter((tag) => !excludes.includes(tag));
-			}
-		} else {
-			return [];
-		}
+		return this.getIncludedCollectionNames(data).filter((tagName) => tagName !== "all");
 	}
 }
 
