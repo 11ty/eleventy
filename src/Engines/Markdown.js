@@ -2,7 +2,7 @@ import markdownIt from "markdown-it";
 
 import TemplateEngine from "./TemplateEngine.js";
 
-class Markdown extends TemplateEngine {
+export default class Markdown extends TemplateEngine {
 	constructor(name, eleventyConfig) {
 		super(name, eleventyConfig);
 
@@ -89,5 +89,3 @@ class Markdown extends TemplateEngine {
 		}
 	}
 }
-
-export default Markdown;

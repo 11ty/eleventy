@@ -1,6 +1,5 @@
 import debugUtil from "debug";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
-import { EleventyImportFromEleventy } from "../Util/Require.js";
 
 const debug = debugUtil("Eleventy:TemplateEngineManager");
 
@@ -109,15 +108,15 @@ class TemplateEngineManager {
 
 		// We include these as raw strings (and not more readable variables) so they’re parsed by a bundler.
 		if (extension === "md") {
-			promise = EleventyImportFromEleventy("./src/Engines/Markdown.js");
+			promise = import("./Markdown.js").then((mod) => mod.default);
 		} else if (extension === "html") {
-			promise = EleventyImportFromEleventy("./src/Engines/Html.js");
+			promise = import("./Html.js").then((mod) => mod.default);
 		} else if (extension === "njk") {
-			promise = EleventyImportFromEleventy("./src/Engines/Nunjucks.js");
+			promise = import("./Nunjucks.js").then((mod) => mod.default);
 		} else if (extension === "liquid") {
-			promise = EleventyImportFromEleventy("./src/Engines/Liquid.js");
+			promise = import("./Liquid.js").then((mod) => mod.default);
 		} else if (extension === "11ty.js") {
-			promise = EleventyImportFromEleventy("./src/Engines/JavaScript.js");
+			promise = import("./JavaScript.js").then((mod) => mod.default);
 		} else {
 			promise = this.getCustomEngineClass();
 		}
@@ -129,7 +128,7 @@ class TemplateEngineManager {
 
 	async getCustomEngineClass() {
 		if (!this._CustomEngine) {
-			this._CustomEngine = EleventyImportFromEleventy("./src/Engines/Custom.js");
+			this._CustomEngine = import("./Custom.js").then((mod) => mod.default);
 		}
 		return this._CustomEngine;
 	}
