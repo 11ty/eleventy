@@ -423,7 +423,7 @@ class Eleventy {
 			copySize,
 			skipCount,
 			writeCount,
-			// renderCount, // files that render (costly) but do not write to disk
+			// renderCount, // files that render (costly) but may not write to disk
 		} = this.writer.getMetadata();
 
 		let slashRet = [];
@@ -438,6 +438,10 @@ class Eleventy {
 				skipCount ? ` (skipped ${skipCount})` : ""
 			}`,
 		);
+
+		// slashRet.push(
+		// 	`${renderCount} rendered`
+		// )
 
 		if (slashRet.length) {
 			ret.push(slashRet.join(" "));
