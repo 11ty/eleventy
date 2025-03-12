@@ -76,7 +76,7 @@ class FileSystemSearch {
 	_modify(path, setOperation) {
 		path = TemplatePath.stripLeadingDotSlash(path);
 
-		let normalized = TemplatePath.addLeadingDotSlash(path);
+		let normalized = TemplatePath.standardizeFilePath(path);
 
 		for (let key in this.inputs) {
 			let { input, options } = this.inputs[key];

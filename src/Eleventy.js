@@ -1213,7 +1213,7 @@ Arguments:
 		watcher.on("change", async (path) => {
 			// Emulated passthrough copy logs from the server
 			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
-				this.logger.forceLog(`File changed: ${path}`);
+				this.logger.forceLog(`File changed: ${TemplatePath.standardizeFilePath(path)}`);
 			}
 
 			await watchRun(path);
@@ -1222,7 +1222,7 @@ Arguments:
 		watcher.on("add", async (path) => {
 			// Emulated passthrough copy logs from the server
 			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
-				this.logger.forceLog(`File added: ${path}`);
+				this.logger.forceLog(`File added: ${TemplatePath.standardizeFilePath(path)}`);
 			}
 
 			this.fileSystemSearch.add(path);
@@ -1230,7 +1230,7 @@ Arguments:
 		});
 
 		watcher.on("unlink", (path) => {
-			// this.logger.forceLog(`File removed: ${path}`);
+			this.logger.forceLog(`File deleted: ${TemplatePath.standardizeFilePath(path)}`);
 			this.fileSystemSearch.delete(path);
 		});
 	}
