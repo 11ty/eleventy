@@ -513,7 +513,7 @@ class TemplateMap {
 
 	checkForDuplicatePermalinks() {
 		let inputs = {};
-		let permalinks = {};
+		let outputPaths = {};
 		let warnings = {};
 		this.#onEachPage((page, template) => {
 			if (page.outputPath === false || page.url === false) {
@@ -532,20 +532,20 @@ class TemplateMap {
 				}
 				inputs[page.inputPath] = true;
 
-				if (!permalinks[page.outputPath]) {
-					permalinks[page.outputPath] = [template.inputPath];
+				if (!outputPaths[page.outputPath]) {
+					outputPaths[page.outputPath] = [template.inputPath];
 				} else {
 					warnings[page.outputPath] = `Output conflict: multiple input files are writing to \`${
 						page.outputPath
 					}\`. Use distinct \`permalink\` values to resolve this conflict.
   1. ${template.inputPath}
-${permalinks[page.outputPath]
+${outputPaths[page.outputPath]
 	.map(function (inputPath, index) {
 		return `  ${index + 2}. ${inputPath}\n`;
 	})
 	.join("")}
 `;
-					permalinks[page.outputPath].push(template.inputPath);
+					outputPaths[page.outputPath].push(template.inputPath);
 				}
 			}
 		});
