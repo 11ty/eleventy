@@ -250,7 +250,9 @@ export {
 	loadContents as EleventyLoadContent,
 	dynamicImport as EleventyImport,
 	dynamicImportRaw as EleventyImportRaw,
+	normalizeFilePathInEleventyPackage,
+
+	// no longer used in core
 	dynamicImportFromEleventyPackage as EleventyImportFromEleventy,
 	dynamicImportRawFromEleventyPackage as EleventyImportRawFromEleventy,
-	normalizeFilePathInEleventyPackage,
 };
