@@ -7,6 +7,7 @@ import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { marked } from "marked";
 import nunjucks from "nunjucks";
+import * as sass from "sass";
 
 import eventBus from "../src/EventBus.js";
 import Eleventy, { HtmlBasePlugin } from "../src/Eleventy.js";
@@ -1606,5 +1607,60 @@ test("permalink: false outputPath new error message won’t throw an error, issu
 
  let results = await elev.toJSON();
  t.is(results.length, 1);
+});
+
+test("permalink on custom template lang, issue #3619", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: function (eleventyConfig) {
+      eleventyConfig.addGlobalData("permalink", () => {
+        return (data) =>
+          `/rewrite/${data.page.filePathStem}.${data.page.outputFileExtension}`;
+      });
+
+      eleventyConfig.addTemplateFormats("scss");
+
+      eleventyConfig.addExtension("scss", {
+        outputFileExtension: "css",
+        compileOptions: {
+    			permalink(inputContent, inputPath) {
+    				return (data) => {
+    					return `/testing/${data.permalink(data)}`;
+    				}
+    			}
+    		},
+        compile: function (str, inputPath) {
+          // TODO declare data variables as SASS variables?
+          return async function (data) {
+            return new Promise(function (resolve, reject) {
+              sass.render(
+                {
+                  data: str,
+                  outFile: "test_this_is_to_not_write_a_file.css",
+                },
+                function (error, result) {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(result.css.toString("utf8"));
+                  }
+                },
+              );
+            });
+          };
+        },
+      });
+
+      eleventyConfig.addTemplate("index.scss", `html {
+  color: red;
+}`)
+    },
+  });
+  elev.disableLogger();
+
+ let results = await elev.toJSON();
+ t.is(results[0].url, "/testing/rewrite/index.css");
+ t.is(results[0].content, `html {
+  color: red;
+}`);
 });
 
