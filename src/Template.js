@@ -733,7 +733,9 @@ class Template extends TemplateContent {
 		}
 
 		// https://github.com/11ty/eleventy/issues/1206
-		data.page.rawInput = rawInput;
+		data.page.rawInput = JSON.parse(
+			JSON.stringify(rawInput, (_, v) => (typeof v === "function" ? v.toString() : v)),
+		);
 
 		if (!Pagination.hasPagination(data)) {
 			await this.addComputedData(data);
