@@ -257,7 +257,8 @@ test("partial match on tag string, issue 95", async (t) => {
   t.is(posts.length, 1);
 });
 
-// Swapped to micromatch in 3.0.0-alpha.17
+// Swapped to `micromatch` in 3.0.0-alpha.17, and later to `picomatch`.
+// The test can stay as a sanity check.
 test("micromatch assumptions, issue #127", async (t) => {
   function isMatch(filepath, globs) {
     return isGlobMatch(filepath, globs);
