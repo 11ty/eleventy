@@ -41,6 +41,15 @@ class TemplatePermalink {
 				);
 			}
 		} else if (buildLink) {
+			if (typeof buildLink !== "string") {
+				let stringToString = "toString" in buildLink ? `:\n\n${buildLink.toString()}` : "";
+				throw new Error(
+					"Expected permalink value to be a string. Received `" +
+						typeof buildLink +
+						"`" +
+						stringToString,
+				);
+			}
 			this.buildLink = buildLink;
 		}
 

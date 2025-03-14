@@ -50,17 +50,24 @@ export default class Markdown extends TemplateEngine {
 		);
 	}
 
+	// TODO use preTemplateEngine to help inform this
+	// needsCompilation() {
+	// 	return super.needsCompilation();
+	// }
+
+	async #getPreEngine(preTemplateEngine) {
+		if (typeof preTemplateEngine === "string") {
+			return this.engineManager.getEngine(preTemplateEngine, this.extensionMap);
+		}
+
+		return preTemplateEngine;
+	}
+
 	async compile(str, inputPath, preTemplateEngine, bypassMarkdown) {
 		let mdlib = this.mdLib;
 
 		if (preTemplateEngine) {
-			let engine;
-			if (typeof preTemplateEngine === "string") {
-				engine = await this.engineManager.getEngine(preTemplateEngine, this.extensionMap);
-			} else {
-				engine = preTemplateEngine;
-			}
-
+			let engine = await this.#getPreEngine(preTemplateEngine);
 			let fnReady = engine.compile(str, inputPath);
 
 			if (bypassMarkdown) {
