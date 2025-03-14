@@ -21,6 +21,7 @@ const DEFAULT_SERVER_OPTIONS = {
 	port: 8080,
 	// pathPrefix: "/",
 	// setup: function() {},
+	// ready: function(server) {},
 	// logger: { info: function() {}, error: function() {} }
 };
 

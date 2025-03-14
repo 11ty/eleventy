@@ -960,7 +960,7 @@ Arguments:
 		await this.init({ viaConfigReset: isResetConfig });
 
 		try {
-			let [, /*passthroughCopyResults*/ templateResults] = await this.write();
+			let [passthroughCopyResults, templateResults] = await this.write();
 
 			this.watchTargets.reset();
 
@@ -980,11 +980,29 @@ Arguments:
 				);
 			});
 
+			let files = this.watchManager.getActiveQueue();
+
+			// Maps passthrough copy files to output URLs for CSS live reload
+			let stylesheetUrls = new Set();
+			for (let entry of passthroughCopyResults) {
+				for (let filepath in entry.map) {
+					if (
+						filepath.endsWith(".css") &&
+						files.includes(TemplatePath.addLeadingDotSlash(filepath))
+					) {
+						stylesheetUrls.add(
+							"/" + TemplatePath.stripLeadingSubPath(entry.map[filepath], this.outputDir),
+						);
+					}
+				}
+			}
+
 			let normalizedPathPrefix = PathPrefixer.normalizePathPrefix(this.config.pathPrefix);
 			await this.eleventyServe.reload({
-				files: this.watchManager.getActiveQueue(),
+				files,
 				subtype: onlyCssChanges ? "css" : undefined,
 				build: {
+					stylesheets: Array.from(stylesheetUrls),
 					templates: templateResults
 						.flat()
 						.filter((entry) => !!entry)
