@@ -1242,13 +1242,15 @@ Arguments:
 	async stopWatch() {
 		// Prevent multiple invocations.
 		if (this.#isStopping) {
-			return;
+			return this.#isStopping;
 		}
-		this.#isStopping = true;
 
 		debug("Cleaning up chokidar and server instances, if they exist.");
-		await this.eleventyServe.close();
-		await this.watcher?.close();
+		this.#isStopping = Promise.all([this.eleventyServe.close(), this.watcher?.close()]).then(() => {
+			this.#isStopping = false;
+		});
+
+		return this.#isStopping;
 	}
 
 	/**
@@ -1386,7 +1388,7 @@ Arguments:
 		} catch (error) {
 			hasError = true;
 
-			// Issue #2405: Don’t change the exit code for programmatic scripts
+			// Issue #2405: Don’t change the exitCode for programmatic scripts
 			let errorSeverity = this.source === "script" ? "error" : "fatal";
 			this.errorHandler.once(errorSeverity, error, "Problem writing Eleventy templates");
 

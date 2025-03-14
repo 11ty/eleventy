@@ -224,6 +224,19 @@ class EleventyServe {
 		await this.initServerInstance();
 
 		this.server.serve(port || this.options.port);
+
+		if (typeof this.config.serverOptions?.ready === "function") {
+			if (typeof this.server.ready === "function") {
+				// Dev Server 2.0.7+
+				// wait for ready promise to resolve before triggering ready callback
+				await this.server.ready();
+				await this.config.serverOptions?.ready(this.server);
+			} else {
+				throw new Error(
+					"The `ready` option in Eleventy’s `setServerOptions` method requires a `ready` function on the Dev Server instance. If you’re using Eleventy Dev Server, you will need Dev Server 2.0.7+ or newer to use this feature.",
+				);
+			}
+		}
 	}
 
 	async close() {
