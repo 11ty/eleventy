@@ -91,7 +91,16 @@ eventBus.on("eleventy.importCacheReset", (fileQueue) => {
 });
 
 // raw means we don’t normalize away the `default` export
-async function dynamicImportAbsolutePath(absolutePath, type, returnRaw = false) {
+async function dynamicImportAbsolutePath(absolutePath, options = {}) {
+	let { type, returnRaw, cacheBust } = Object.assign(
+		{
+			type: undefined,
+			returnRaw: false,
+			cacheBust: false, // force cache bust
+		},
+		options,
+	);
+
 	// Short circuit for JSON files (that are optional and can be empty)
 	if (absolutePath.endsWith(".json") || type === "json") {
 		try {
@@ -117,8 +126,12 @@ async function dynamicImportAbsolutePath(absolutePath, type, returnRaw = false) 
 	try {
 		let u = new URL(`file:${absolutePath}`);
 
-		// Bust the import cache if this is the last modified file
-		if (lastModifiedPaths.has(absolutePath)) {
+		// Bust the import cache if this is the last modified file (or cache busting is forced)
+		if (cacheBust) {
+			lastModifiedPaths.set(absolutePath, Date.now());
+		}
+
+		if (cacheBust || lastModifiedPaths.has(absolutePath)) {
 			u.searchParams.set("_cache_bust", lastModifiedPaths.get(absolutePath));
 		}
 
@@ -205,14 +218,15 @@ async function dynamicImportFromEleventyPackage(file) {
 	let filePath = normalizeFilePathInEleventyPackage(file);
 
 	// Returns promise
-	return dynamicImportAbsolutePath(filePath, "esm");
+	return dynamicImportAbsolutePath(filePath, { type: "esm" });
 }
 
-async function dynamicImport(localPath, type) {
+async function dynamicImport(localPath, type, options = {}) {
 	let absolutePath = TemplatePath.absolutePath(localPath);
+	options.type = type;
 
 	// Returns promise
-	return dynamicImportAbsolutePath(absolutePath, type);
+	return dynamicImportAbsolutePath(absolutePath, options);
 }
 
 /* Used to import default Eleventy configuration file, raw means we don’t normalize away the `default` export */
@@ -221,7 +235,7 @@ async function dynamicImportRawFromEleventyPackage(file) {
 	let filePath = normalizeFilePathInEleventyPackage(file);
 
 	// Returns promise
-	return dynamicImportAbsolutePath(filePath, "esm", true);
+	return dynamicImportAbsolutePath(filePath, { type: "esm", returnRaw: true });
 }
 
 /* Used to import app configuration files, raw means we don’t normalize away the `default` export */
@@ -229,14 +243,16 @@ async function dynamicImportRaw(localPath, type) {
 	let absolutePath = TemplatePath.absolutePath(localPath);
 
 	// Returns promise
-	return dynamicImportAbsolutePath(absolutePath, type, true);
+	return dynamicImportAbsolutePath(absolutePath, { type, returnRaw: true });
 }
 
 export {
 	loadContents as EleventyLoadContent,
 	dynamicImport as EleventyImport,
 	dynamicImportRaw as EleventyImportRaw,
+	normalizeFilePathInEleventyPackage,
+
+	// no longer used in core
 	dynamicImportFromEleventyPackage as EleventyImportFromEleventy,
 	dynamicImportRawFromEleventyPackage as EleventyImportRawFromEleventy,
-	normalizeFilePathInEleventyPackage,
 };

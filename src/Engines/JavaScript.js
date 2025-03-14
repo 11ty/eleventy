@@ -9,7 +9,7 @@ import { augmentFunction, augmentObject } from "./Util/ContextAugmenter.js";
 
 class JavaScriptTemplateNotDefined extends EleventyBaseError {}
 
-class JavaScript extends TemplateEngine {
+export default class JavaScript extends TemplateEngine {
 	constructor(name, templateConfig) {
 		super(name, templateConfig);
 		this.instances = {};
@@ -92,7 +92,9 @@ class JavaScript extends TemplateEngine {
 			mod = this.eleventyConfig.userConfig.virtualTemplates[relativeInputPath].content;
 		} else {
 			let isEsm = this.eleventyConfig.getIsProjectUsingEsm();
-			mod = await EleventyImport(inputPath, isEsm ? "esm" : "cjs");
+			mod = await EleventyImport(inputPath, isEsm ? "esm" : "cjs", {
+				cacheBust: !this.config.useTemplateCache,
+			});
 		}
 
 		let inst = this._getInstance(mod);
@@ -233,5 +235,3 @@ class JavaScript extends TemplateEngine {
 		return true;
 	}
 }
-
-export default JavaScript;

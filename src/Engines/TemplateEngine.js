@@ -3,7 +3,7 @@ import EleventyBaseError from "../Errors/EleventyBaseError.js";
 
 class TemplateEngineConfigError extends EleventyBaseError {}
 
-class TemplateEngine {
+export default class TemplateEngine {
 	constructor(name, eleventyConfig) {
 		this.name = name;
 
@@ -180,5 +180,3 @@ class TemplateEngine {
 		return this.config.uses.isFileRelevantTo(inputPath, comparisonFile);
 	}
 }
-
-export default TemplateEngine;

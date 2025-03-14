@@ -507,13 +507,14 @@ class TemplateContent {
 		if (permalinkCompilation === false && typeof permalink !== "function") {
 			return permalink;
 		}
+
 		/* Custom `compile` function for permalinks, usage:
-    permalink: function(permalinkString, inputPath) {
-      return async function(data) {
-        return "THIS IS MY RENDERED PERMALINK";
-      }
-    }
-    */
+		permalink: function(permalinkString, inputPath) {
+			return async function(data) {
+				return "THIS IS MY RENDERED PERMALINK";
+			}
+		}
+		*/
 		if (permalinkCompilation && typeof permalinkCompilation === "function") {
 			permalink = await this._renderFunction(permalinkCompilation, permalink, this.inputPath);
 		}

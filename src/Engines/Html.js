@@ -1,6 +1,6 @@
 import TemplateEngine from "./TemplateEngine.js";
 
-class Html extends TemplateEngine {
+export default class Html extends TemplateEngine {
 	constructor(name, eleventyConfig) {
 		super(name, eleventyConfig);
 		this.cacheable = true;
@@ -24,5 +24,3 @@ class Html extends TemplateEngine {
 		};
 	}
 }
-
-export default Html;

@@ -8,7 +8,7 @@ import { augmentObject } from "./Util/ContextAugmenter.js";
 
 // const debug = debugUtil("Eleventy:Liquid");
 
-class Liquid extends TemplateEngine {
+export default class Liquid extends TemplateEngine {
 	static argumentLexerOptions = {
 		number: /[0-9]+\.*[0-9]*/,
 		doubleQuoteString: /"(?:\\["\\]|[^\n"\\])*"/,
@@ -322,5 +322,3 @@ class Liquid extends TemplateEngine {
 		};
 	}
 }
-
-export default Liquid;

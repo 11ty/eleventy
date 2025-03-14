@@ -66,13 +66,9 @@ class TemplateCollection extends Sortable {
 
 	getFilteredByTags(...tags) {
 		return this.getAllSorted().filter((item) => {
-			let itemTags = TemplateData.getIncludedTagNames(item.data);
+			let itemTags = new Set(TemplateData.getIncludedTagNames(item.data));
 			return tags.every((requiredTag) => {
-				if (Array.isArray(itemTags)) {
-					return itemTags.includes(requiredTag);
-				} else {
-					return itemTags === requiredTag;
-				}
+				return itemTags.has(requiredTag);
 			});
 		});
 	}

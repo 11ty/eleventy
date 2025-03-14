@@ -423,7 +423,7 @@ class Eleventy {
 			copySize,
 			skipCount,
 			writeCount,
-			// renderCount, // files that render (costly) but do not write to disk
+			// renderCount, // files that render (costly) but may not write to disk
 		} = this.writer.getMetadata();
 
 		let slashRet = [];
@@ -438,6 +438,10 @@ class Eleventy {
 				skipCount ? ` (skipped ${skipCount})` : ""
 			}`,
 		);
+
+		// slashRet.push(
+		// 	`${renderCount} rendered`
+		// )
 
 		if (slashRet.length) {
 			ret.push(slashRet.join(" "));
@@ -956,7 +960,7 @@ Arguments:
 		await this.init({ viaConfigReset: isResetConfig });
 
 		try {
-			let [, /*passthroughCopyResults*/ templateResults] = await this.write();
+			let [passthroughCopyResults, templateResults] = await this.write();
 
 			this.watchTargets.reset();
 
@@ -976,11 +980,29 @@ Arguments:
 				);
 			});
 
+			let files = this.watchManager.getActiveQueue();
+
+			// Maps passthrough copy files to output URLs for CSS live reload
+			let stylesheetUrls = new Set();
+			for (let entry of passthroughCopyResults) {
+				for (let filepath in entry.map) {
+					if (
+						filepath.endsWith(".css") &&
+						files.includes(TemplatePath.addLeadingDotSlash(filepath))
+					) {
+						stylesheetUrls.add(
+							"/" + TemplatePath.stripLeadingSubPath(entry.map[filepath], this.outputDir),
+						);
+					}
+				}
+			}
+
 			let normalizedPathPrefix = PathPrefixer.normalizePathPrefix(this.config.pathPrefix);
 			await this.eleventyServe.reload({
-				files: this.watchManager.getActiveQueue(),
+				files,
 				subtype: onlyCssChanges ? "css" : undefined,
 				build: {
+					stylesheets: Array.from(stylesheetUrls),
 					templates: templateResults
 						.flat()
 						.filter((entry) => !!entry)
@@ -1213,7 +1235,7 @@ Arguments:
 		watcher.on("change", async (path) => {
 			// Emulated passthrough copy logs from the server
 			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
-				this.logger.forceLog(`File changed: ${path}`);
+				this.logger.forceLog(`File changed: ${TemplatePath.standardizeFilePath(path)}`);
 			}
 
 			await watchRun(path);
@@ -1222,7 +1244,7 @@ Arguments:
 		watcher.on("add", async (path) => {
 			// Emulated passthrough copy logs from the server
 			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
-				this.logger.forceLog(`File added: ${path}`);
+				this.logger.forceLog(`File added: ${TemplatePath.standardizeFilePath(path)}`);
 			}
 
 			this.fileSystemSearch.add(path);
@@ -1230,7 +1252,7 @@ Arguments:
 		});
 
 		watcher.on("unlink", (path) => {
-			// this.logger.forceLog(`File removed: ${path}`);
+			this.logger.forceLog(`File deleted: ${TemplatePath.standardizeFilePath(path)}`);
 			this.fileSystemSearch.delete(path);
 		});
 	}
@@ -1238,13 +1260,15 @@ Arguments:
 	async stopWatch() {
 		// Prevent multiple invocations.
 		if (this.#isStopping) {
-			return;
+			return this.#isStopping;
 		}
-		this.#isStopping = true;
 
 		debug("Cleaning up chokidar and server instances, if they exist.");
-		await this.eleventyServe.close();
-		await this.watcher?.close();
+		this.#isStopping = Promise.all([this.eleventyServe.close(), this.watcher?.close()]).then(() => {
+			this.#isStopping = false;
+		});
+
+		return this.#isStopping;
 	}
 
 	/**
@@ -1382,7 +1406,7 @@ Arguments:
 		} catch (error) {
 			hasError = true;
 
-			// Issue #2405: Don’t change the exit code for programmatic scripts
+			// Issue #2405: Don’t change the exitCode for programmatic scripts
 			let errorSeverity = this.source === "script" ? "error" : "fatal";
 			this.errorHandler.once(errorSeverity, error, "Problem writing Eleventy templates");
 
