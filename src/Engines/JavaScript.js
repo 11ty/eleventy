@@ -9,7 +9,7 @@ import { augmentFunction, augmentObject } from "./Util/ContextAugmenter.js";
 
 class JavaScriptTemplateNotDefined extends EleventyBaseError {}
 
-class JavaScript extends TemplateEngine {
+export default class JavaScript extends TemplateEngine {
 	constructor(name, templateConfig) {
 		super(name, templateConfig);
 		this.instances = {};
@@ -235,5 +235,3 @@ class JavaScript extends TemplateEngine {
 		return true;
 	}
 }
-
-export default JavaScript;

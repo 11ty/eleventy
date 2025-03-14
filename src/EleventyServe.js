@@ -2,7 +2,6 @@ import assert from "node:assert";
 
 import debugUtil from "debug";
 import { Merge, DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
-import EleventyDevServer from "@11ty/eleventy-dev-server";
 
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
@@ -21,6 +20,7 @@ const DEFAULT_SERVER_OPTIONS = {
 	port: 8080,
 	// pathPrefix: "/",
 	// setup: function() {},
+	// ready: function(server) {},
 	// logger: { info: function() {}, error: function() {} }
 };
 
@@ -84,7 +84,7 @@ class EleventyServe {
 	async getServerModule(name) {
 		try {
 			if (!name || name === DEFAULT_SERVER_OPTIONS.module) {
-				return EleventyDevServer;
+				return import("@11ty/eleventy-dev-server").then(i=>i.default)
 			}
 
 			// Look for peer dep in local project
@@ -134,7 +134,7 @@ class EleventyServe {
 					e.message,
 			);
 			debug("Eleventy server error %o", e);
-			return EleventyDevServer;
+			return import("@11ty/eleventy-dev-server").then(i=>i.default)
 		}
 	}
 
@@ -224,6 +224,19 @@ class EleventyServe {
 		await this.initServerInstance();
 
 		this.server.serve(port || this.options.port);
+
+		if (typeof this.config.serverOptions?.ready === "function") {
+			if (typeof this.server.ready === "function") {
+				// Dev Server 2.0.7+
+				// wait for ready promise to resolve before triggering ready callback
+				await this.server.ready();
+				await this.config.serverOptions?.ready(this.server);
+			} else {
+				throw new Error(
+					"The `ready` option in Eleventy’s `setServerOptions` method requires a `ready` function on the Dev Server instance. If you’re using Eleventy Dev Server, you will need Dev Server 2.0.7+ or newer to use this feature.",
+				);
+			}
+		}
 	}
 
 	async close() {

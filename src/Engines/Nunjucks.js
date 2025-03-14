@@ -9,7 +9,7 @@ import { withResolvers } from "../Util/PromiseUtil.js";
 
 class EleventyNunjucksError extends EleventyBaseError {}
 
-class Nunjucks extends TemplateEngine {
+export default class Nunjucks extends TemplateEngine {
 	constructor(name, eleventyConfig) {
 		super(name, eleventyConfig);
 
@@ -446,5 +446,3 @@ class Nunjucks extends TemplateEngine {
 		};
 	}
 }
-
-export default Nunjucks;
