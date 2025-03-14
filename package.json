@@ -100,7 +100,7 @@
 		"cross-env": "^7.0.3",
 		"eslint": "^9.22.0",
 		"eslint-config-prettier": "^10.0.1",
-		"globals": "^15.14.0",
+		"globals": "^16.0.0",
 		"husky": "^9.1.7",
 		"lint-staged": "^15.4.3",
 		"markdown-it-emoji": "^3.0.0",
