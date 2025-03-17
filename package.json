@@ -102,7 +102,7 @@
 		"eslint-config-prettier": "^10.1.1",
 		"globals": "^16.0.0",
 		"husky": "^9.1.7",
-		"lint-staged": "^15.4.3",
+		"lint-staged": "^15.5.0",
 		"markdown-it-emoji": "^3.0.0",
 		"marked": "^15.0.6",
 		"prettier": "^3.4.2",
