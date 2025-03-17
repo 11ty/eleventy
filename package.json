@@ -112,7 +112,7 @@
 		"rimraf": "^6.0.1",
 		"sass": "^1.83.4",
 		"tsx": "^4.19.3",
-		"typescript": "^5.7.3",
+		"typescript": "^5.8.2",
 		"vue": "^3.5.13",
 		"zod": "^3.24.2",
 		"zod-validation-error": "^3.4.0"
