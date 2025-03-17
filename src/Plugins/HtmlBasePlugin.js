@@ -73,7 +73,7 @@ function eleventyHtmlBasePlugin(eleventyConfig, defaultOptions = {}) {
 	}
 
 	if (opts.baseHref === undefined) {
-		throw new Error("The `base` option is required in the HTML Base plugin.");
+		throw new Error("The `baseHref` option is required in the HTML Base plugin.");
 	}
 
 	eleventyConfig.addFilter("addPathPrefixToFullUrl", function (url) {
