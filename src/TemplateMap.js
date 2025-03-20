@@ -340,72 +340,72 @@ class TemplateMap {
 	}
 
 	async populateContentDataInMap(orderedMap) {
-    let usedTemplateContentTooEarlyMap = [];
+		let usedTemplateContentTooEarlyMap = [];
 
-    // Note that empty pagination templates will be skipped here as not renderable
-    let filteredMap = orderedMap.filter((entry) => entry.template.isRenderable());
+		// Note that empty pagination templates will be skipped here as not renderable
+		let filteredMap = orderedMap.filter((entry) => entry.template.isRenderable());
 
-    // Get concurrency level from user config
-    const concurrency = this.userConfig.getConcurrency();
+		// Get concurrency level from user config
+		const concurrency = this.userConfig.getConcurrency();
 
-    // Process the templates in chunks to limit concurrency
-    // This replaces the functionality of p-map's concurrency option
-    for (let i = 0; i < filteredMap.length; i += concurrency) {
-        // Create a chunk of tasks that will run in parallel
-        const chunk = filteredMap.slice(i, i + concurrency);
+		// Process the templates in chunks to limit concurrency
+		// This replaces the functionality of p-map's concurrency option
+		for (let i = 0; i < filteredMap.length; i += concurrency) {
+			// Create a chunk of tasks that will run in parallel
+			const chunk = filteredMap.slice(i, i + concurrency);
 
-        // Run the chunk of tasks in parallel
-        await Promise.all(
-            chunk.map(async (map) => {
-                if (!map._pages) {
-                    throw new Error(`Internal error: _pages not found for ${map.inputPath}`);
-                }
+			// Run the chunk of tasks in parallel
+			await Promise.all(
+				chunk.map(async (map) => {
+					if (!map._pages) {
+						throw new Error(`Internal error: _pages not found for ${map.inputPath}`);
+					}
 
-                // IMPORTANT: this is where template content is rendered
-                try {
-                    for (let pageEntry of map._pages) {
-                        pageEntry.templateContent =
-                            await pageEntry.template.renderPageEntryWithoutLayout(pageEntry);
-                    }
-                } catch (e) {
-                    if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
-                        // Add to list of templates that need to be processed again
-                        usedTemplateContentTooEarlyMap.push(map);
+					// IMPORTANT: this is where template content is rendered
+					try {
+						for (let pageEntry of map._pages) {
+							pageEntry.templateContent =
+								await pageEntry.template.renderPageEntryWithoutLayout(pageEntry);
+						}
+					} catch (e) {
+						if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
+							// Add to list of templates that need to be processed again
+							usedTemplateContentTooEarlyMap.push(map);
 
-                        // Reset cached render promise
-                        for (let pageEntry of map._pages) {
-                            pageEntry.template.resetCaches({ render: true });
-                        }
-                    } else {
-                        throw e;
-                    }
-                }
-            })
-        );
-    }
+							// Reset cached render promise
+							for (let pageEntry of map._pages) {
+								pageEntry.template.resetCaches({ render: true });
+							}
+						} else {
+							throw e;
+						}
+					}
+				}),
+			);
+		}
 
-    // Process templates that had premature template content errors
-    // This is the second pass for templates that couldn't be rendered in the first pass
-    for (let map of usedTemplateContentTooEarlyMap) {
-        try {
-            for (let pageEntry of map._pages) {
-                pageEntry.templateContent =
-                    await pageEntry.template.renderPageEntryWithoutLayout(pageEntry);
-            }
-        } catch (e) {
-            if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
-                // If we still have template content errors after the second pass,
-                // it's likely a circular reference
-                throw new UsingCircularTemplateContentReferenceError(
-                    `${map.inputPath} contains a circular reference (using collections) to its own templateContent.`,
-                );
-            } else {
-                // rethrow?
-                throw e;
-            }
-        }
-    }
-}
+		// Process templates that had premature template content errors
+		// This is the second pass for templates that couldn't be rendered in the first pass
+		for (let map of usedTemplateContentTooEarlyMap) {
+			try {
+				for (let pageEntry of map._pages) {
+					pageEntry.templateContent =
+						await pageEntry.template.renderPageEntryWithoutLayout(pageEntry);
+				}
+			} catch (e) {
+				if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
+					// If we still have template content errors after the second pass,
+					// it's likely a circular reference
+					throw new UsingCircularTemplateContentReferenceError(
+						`${map.inputPath} contains a circular reference (using collections) to its own templateContent.`,
+					);
+				} else {
+					// rethrow?
+					throw e;
+				}
+			}
+		}
+	}
 
 	getTaggedCollection(tag) {
 		let result;
