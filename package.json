@@ -54,7 +54,7 @@
 		"format": "prettier . --write",
 		"check": "eslint src",
 		"check-types": "tsc",
-		"lint-staged": "lint-staged",
+		"nano-staged": "nano-staged",
 		"coverage": "npx c8 ava && npx c8 report --reporter=json-summary && cp coverage/coverage-summary.json docs/_data/coverage.json && node cmd.cjs --config=docs/eleventy.coverage.js",
 		"prepare": "simple-git-hooks"
 	},
@@ -85,7 +85,7 @@
 		]
 	},
 	"simple-git-hooks": {
-		"pre-commit": "npm test && npm run lint-staged",
+		"pre-commit": "npm test && npm run nano-staged",
 		"pre-push": "npm test"
 	},
 	"devDependencies": {
