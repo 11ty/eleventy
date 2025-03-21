@@ -1,11 +1,6 @@
 import path from "node:path";
 import fs from "node:fs";
-
-import gracefulFs from "graceful-fs";
-import util from "node:util";
-
-const mkdir = util.promisify(gracefulFs.mkdir);
-const writeFile = util.promisify(gracefulFs.writeFile);
+import { mkdir, writeFile } from "node:fs/promises";
 
 class FileSystemManager {
 	constructor(templateConfig) {

@@ -1,6 +1,6 @@
 import os from "node:os";
 
-import fs from "graceful-fs";
+import fs from "node:fs";
 import matter from "gray-matter";
 import lodash from "@11ty/lodash-custom";
 import { TemplatePath } from "@11ty/eleventy-utils";
