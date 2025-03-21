@@ -1,9 +1,6 @@
 import path from "node:path";
 import fs from "node:fs";
-import util from "node:util";
-
-const mkdir = util.promisify(fs.mkdir);
-const writeFile = util.promisify(fs.writeFile);
+import { mkdir, writeFile } from "node:fs/promises";
 
 class FileSystemManager {
 	constructor(templateConfig) {
