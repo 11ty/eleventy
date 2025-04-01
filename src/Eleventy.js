@@ -1000,7 +1000,9 @@ Arguments:
 				.flat()
 				.filter((entry) => Boolean(entry))
 				.map((entry) => {
+					// only `url`, `inputPath`, and `content` are used: https://github.com/11ty/eleventy-dev-server/blob/1c658605f75224fdc76f68aebe7a412eeb4f1bc9/client/reload-client.js#L140
 					entry.url = PathPrefixer.joinUrlParts(normalizedPathPrefix, entry.url);
+					delete entry.rawInput; // Issue #3481
 					return entry;
 				});
 
