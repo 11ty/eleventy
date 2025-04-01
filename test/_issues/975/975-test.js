@@ -37,7 +37,7 @@ test("Get ordered list of templates", async (t) => {
     )
   );
 
-  // This template should always be last
+  // This template should be last
   await tm.add(
     await getNewTemplate(
       "./test/_issues/975/index.md",
@@ -49,11 +49,13 @@ test("Get ordered list of templates", async (t) => {
 
   await tm.cache();
 
-  let order = tm.getOrderedInputPaths(tm.getTemplateOrder());
+  let order = tm.getTemplateOrder();
   t.deepEqual(order, [
     "./test/_issues/975/post.md",
     "./test/_issues/975/another-post.md",
+    "__collection:post",
     "./test/_issues/975/index.md",
+    "__collection:all",
   ]);
 });
 
@@ -67,7 +69,7 @@ test("Get ordered list of templates (reverse add)", async (t) => {
 
   let tm = new TemplateMap(eleventyConfig);
 
-  // This template should always be last
+  // This template is now first
   await tm.add(
     await getNewTemplate(
       "./test/_issues/975/index.md",
@@ -98,10 +100,12 @@ test("Get ordered list of templates (reverse add)", async (t) => {
 
   await tm.cache();
 
-  let order = tm.getOrderedInputPaths(tm.getTemplateOrder());
+  let order = tm.getTemplateOrder();
   t.deepEqual(order, [
     "./test/_issues/975/another-post.md",
     "./test/_issues/975/post.md",
+    "__collection:post",
     "./test/_issues/975/index.md",
+    "__collection:all",
   ]);
 });

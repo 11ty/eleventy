@@ -179,9 +179,10 @@ class TemplateConfig {
 	async reset() {
 		debugDev("Resetting configuration: TemplateConfig and UserConfig.");
 		this.userConfig.reset();
+		this.usesGraph.reset(); // needs to be before forceReloadConfig #3711
+
 		// await this.initializeRootConfig();
 		await this.forceReloadConfig();
-		this.usesGraph.reset();
 
 		// Clear the compile cache
 		eventBus.emit("eleventy.compileCacheReset");

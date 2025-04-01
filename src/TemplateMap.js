@@ -242,18 +242,17 @@ class TemplateMap {
 		}
 
 		let fullTemplateOrder = this.getTemplateOrder();
+		debug(
+			"Rendering templates in order (%o concurrency): %O",
+			this.userConfig.getConcurrency(),
+			fullTemplateOrder,
+		);
 
 		await this.initDependencyMap(fullTemplateOrder);
 
 		await this.resolveRemainingComputedData();
 
-		let orderedPaths = this.getOrderedInputPaths(fullTemplateOrder);
-
-		debug(
-			"Rendering templates in order (%o concurrency): %O",
-			this.userConfig.getConcurrency(),
-			orderedPaths,
-		);
+		let orderedPaths = this.#removeTagsFromTemplateOrder(fullTemplateOrder);
 
 		let orderedMap = orderedPaths.map((inputPath) => {
 			return this.getMapEntryForInputPath(inputPath);
@@ -313,9 +312,8 @@ class TemplateMap {
 		}
 	}
 
-	// Filter out any tag nodes
-	getOrderedInputPaths(...maps) {
-		return maps.flat().filter((dep) => !GlobalDependencyMap.isTag(dep));
+	#removeTagsFromTemplateOrder(maps) {
+		return maps.filter((dep) => !GlobalDependencyMap.isTag(dep));
 	}
 
 	async runDataSchemas(orderedMap) {
