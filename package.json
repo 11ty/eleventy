@@ -148,6 +148,7 @@
 		"luxon": "^3.6.1",
 		"markdown-it": "^14.1.0",
 		"micromatch": "^4.0.8",
+		"minimist": "^1.2.8",
 		"moo": "^0.5.2",
 		"node-retrieve-globals": "^6.0.0",
 		"nunjucks": "^3.2.4",

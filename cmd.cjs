@@ -16,7 +16,7 @@ require("please-upgrade-node")(pkg, {
 	},
 });
 
-const { parseArgs } = require("node:util");
+const minimist = require("minimist");
 const debug = require("debug")("Eleventy:cmd");
 
 (async function () {
@@ -30,32 +30,27 @@ const debug = require("debug")("Eleventy:cmd");
 	}
 
 	try {
-		const options = {
-			options: {
-				input: { type: "string" },
-				output: { type: "string" },
-				formats: { type: "string" },
-				config: { type: "string" },
-				pathprefix: { type: "string" },
-				port: { type: "string" },
-				to: { type: "string", default: "fs" },
-				incremental: { type: "string" },
-				loader: { type: "string" },
-				quiet: { type: "boolean" },
-				version: { type: "boolean" },
-				watch: { type: "boolean" },
-				dryrun: { type: "boolean" },
-				help: { type: "boolean" },
-				serve: { type: "boolean" },
-				"ignore-initial": { type: "boolean", default: false },
+		const argv = minimist(process.argv.slice(2), {
+			string: ["input", "output", "formats", "config", "pathprefix", "port", "to", "incremental", "loader"],
+			boolean: [
+				"quiet",
+				"version",
+				"watch",
+				"dryrun",
+				"help",
+				"serve",
+				"ignore-initial",
+			],
+			default: {
+				quiet: null,
+				"ignore-initial": false,
+				"to": "fs",
 			},
-		};
-
-		const { values: argv } = parseArgs({
-			args: process.argv.slice(2),
-			options: options.options,
-			strict: true,
-			allowPositionals: false,
+			unknown: function (unknownArgument) {
+				throw new Error(
+					`We don’t know what '${unknownArgument}' is. Use --help to see the list of supported commands.`,
+				);
+			},
 		});
 
 		debug("command: eleventy %o", argv);
@@ -98,7 +93,7 @@ const debug = require("debug")("Eleventy:cmd");
 		// Before init
 		elev.setFormats(argv.formats);
 
-		// careful, we can't use async/await here to error properly
+		// careful, we can’t use async/await here to error properly
 		// with old node versions in `please-upgrade-node` above.
 		elev
 			.init()
@@ -111,30 +106,27 @@ const debug = require("debug")("Eleventy:cmd");
 				// Only relevant for watch/serve
 				elev.setIgnoreInitial(argv["ignore-initial"]);
 
-				if (argv.incremental) {
+				if(argv.incremental) {
 					elev.setIncrementalFile(argv.incremental);
-				} else if (argv.incremental !== undefined) {
+				} else if(argv.incremental !== undefined) {
 					elev.setIncrementalBuild(argv.incremental === "" || argv.incremental);
 				}
 
 				if (argv.serve || argv.watch) {
-					if (argv.to === "json" || argv.to === "ndjson") {
-						throw new SimpleError(
-							"--to=json and --to=ndjson are not compatible with --serve or --watch.",
-						);
+					if(argv.to === "json" || argv.to === "ndjson") {
+						throw new SimpleError("--to=json and --to=ndjson are not compatible with --serve or --watch.");
 					}
 
-					elev.watch().then(
-						() => {
+					elev
+						.watch()
+						.then(() => {
 							if (argv.serve) {
 								elev.serve(argv.port);
 							}
-						},
-						(error) => {
-							// A build error occurred and we aren't going to --serve
+						}, error => {
+							// A build error occurred and we aren’t going to --serve
 							ErrorHandler.once("error", error, "Eleventy Error (watch CLI)");
-						},
-					);
+						});
 
 					process.on("SIGINT", async () => {
 						await elev.stopWatch();
@@ -142,35 +134,28 @@ const debug = require("debug")("Eleventy:cmd");
 					});
 				} else {
 					if (!argv.to || argv.to === "fs") {
-						elev.write().catch((error) => {
+						elev.write().catch(error => {
 							ErrorHandler.once("fatal", error, "Eleventy Error (fs CLI)");
 						});
 					} else if (argv.to === "json") {
-						elev.toJSON().then(
-							function (result) {
-								console.log(JSON.stringify(result, null, 2));
-							},
-							(error) => {
-								ErrorHandler.once("fatal", error, "Eleventy Error (json CLI)");
-							},
-						);
+						elev.toJSON().then(function (result) {
+							console.log(JSON.stringify(result, null, 2));
+						}, error => {
+							ErrorHandler.once("fatal", error, "Eleventy Error (json CLI)");
+						});
 					} else if (argv.to === "ndjson") {
-						elev.toNDJSON().then(
-							function (stream) {
-								stream.pipe(process.stdout);
-							},
-							(error) => {
-								ErrorHandler.once("fatal", error, "Eleventy Error (ndjson CLI)");
-							},
-						);
+						elev.toNDJSON().then(function (stream) {
+							stream.pipe(process.stdout);
+						}, error => {
+							ErrorHandler.once("fatal", error, "Eleventy Error (ndjson CLI)");
+						});
 					} else {
 						throw new SimpleError(
 							`Invalid --to value: ${argv.to}. Supported values: \`fs\` (default), \`json\`, and \`ndjson\`.`,
 						);
 					}
 				}
-			})
-			.catch((error) => {
+			}).catch(error => {
 				ErrorHandler.fatal(error, "Eleventy Error (CLI initialization)");
 			});
 	} catch (error) {
