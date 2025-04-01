@@ -33,6 +33,7 @@ class GlobalDependencyMap {
 	}
 
 	reset() {
+		this.config = undefined;
 		this._map = undefined;
 	}
 
@@ -393,6 +394,7 @@ class GlobalDependencyMap {
 		return this.map.getNodeData(nodeName)?.consumes === GlobalDependencyMap.CONFIGAPI_DATA_KEY;
 	}
 
+	// via Pagination or eleventyImport
 	addDependencyConsumesCollection(from, collectionName) {
 		let nodeName = this.normalizeNode(from);
 		debug("%o depends on collection: %o", nodeName, collectionName);
@@ -422,6 +424,7 @@ class GlobalDependencyMap {
 		}
 	}
 
+	// via *tagged* collections (minus eleventyExcludeFromCollections)
 	addDependencyPublishesToCollection(from, collectionName) {
 		let normalizedFrom = this.normalizeNode(from);
 		let key = GlobalDependencyMap.getCollectionKeyForEntry(collectionName);

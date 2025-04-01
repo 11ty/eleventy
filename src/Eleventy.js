@@ -487,8 +487,7 @@ class Eleventy {
 	 * Starts Eleventy.
 	 */
 	async init(options = {}) {
-		options = Object.assign({ viaConfigReset: false }, options);
-
+		let { viaConfigReset } = Object.assign({ viaConfigReset: false }, options);
 		if (!this.#hasConfigInitialized) {
 			await this.initializeConfig();
 		} else {
@@ -548,7 +547,7 @@ class Eleventy {
 
 		this.writer = new TemplateWriter(formats, this.templateData, this.eleventyConfig);
 
-		if (!options.viaConfigReset) {
+		if (!viaConfigReset) {
 			// set or restore cache
 			this.#cache("TemplateWriter", this.writer);
 		}
@@ -853,7 +852,6 @@ Arguments:
 	async resetConfig() {
 		this.env = this.getEnvironmentVariableValues();
 		this.initializeEnvironmentVariables(this.env);
-
 		await this.eleventyConfig.reset();
 
 		this.config = this.eleventyConfig.getConfig();
@@ -998,18 +996,20 @@ Arguments:
 			}
 
 			let normalizedPathPrefix = PathPrefixer.normalizePathPrefix(this.config.pathPrefix);
+			let matchingTemplates = templateResults
+				.flat()
+				.filter((entry) => Boolean(entry))
+				.map((entry) => {
+					entry.url = PathPrefixer.joinUrlParts(normalizedPathPrefix, entry.url);
+					return entry;
+				});
+
 			await this.eleventyServe.reload({
 				files,
 				subtype: onlyCssChanges ? "css" : undefined,
 				build: {
 					stylesheets: Array.from(stylesheetUrls),
-					templates: templateResults
-						.flat()
-						.filter((entry) => !!entry)
-						.map((entry) => {
-							entry.url = PathPrefixer.joinUrlParts(normalizedPathPrefix, entry.url);
-							return entry;
-						}),
+					templates: matchingTemplates,
 				},
 			});
 		} catch (error) {

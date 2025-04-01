@@ -881,7 +881,7 @@ test("Dependency Map should have nodes that have no dependencies and no dependen
   t.is(collections.all.length, 2);
 });
 
-test("Dependency Map should have include orphan user config collections (in the correct order)", async (t) => {
+test("Dependency Map should have include orphan user config collections (in the correct order) #3711", async (t) => {
   let eleventyConfig = await getTemplateConfigInstanceCustomCallback(
     {},
     function(cfg) {
@@ -901,11 +901,56 @@ test("Dependency Map should have include orphan user config collections (in the 
   await tm.cache();
 
   let deps = tm.getTemplateOrder();
-  t.true(deps.filter((dep) => dep.includes("userCollection")).length > 0);
+  t.deepEqual(deps,  [
+    './test/stubs/templateMapCollection/test1.md',
+    './test/stubs/templateMapCollection/test5.md',
+    '__collection:all',
+    '__collection:userCollection',
+    '__collection:post',
+    '__collection:dog',
+    '__collection:[keys]',
+    '__collection:all'
+  ]);
 
   let collections = await tm._testGetCollectionsData();
   t.is(collections.all.length, 2);
   t.is(collections.userCollection.length, 2);
+});
+
+test("Dependency Map should have include orphan user config collections, mapped by user collection api to tag #3711", async (t) => {
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      cfg.addCollection("userCollection", function (collection) {
+        return collection.getFilteredByTag("post");
+      });
+    }
+  );
+
+  let tmpl1 = await getNewTemplateByNumber(1, eleventyConfig);
+  let tmpl5 = await getNewTemplateByNumber(5, eleventyConfig);
+
+  let tm = new TemplateMap(eleventyConfig);
+  await tm.add(tmpl1);
+  await tm.add(tmpl5);
+
+  await tm.cache();
+
+  let deps = tm.getTemplateOrder();
+  t.deepEqual(deps,  [
+    './test/stubs/templateMapCollection/test1.md',
+    './test/stubs/templateMapCollection/test5.md',
+    '__collection:all',
+    '__collection:userCollection',
+    '__collection:post',
+    '__collection:dog',
+    '__collection:[keys]',
+    '__collection:all'
+  ]);
+
+  let collections = await tm._testGetCollectionsData();
+  t.is(collections.all.length, 2);
+  t.is(collections.userCollection.length, 1);
 });
 
 test("Template pages should not have layouts when added to collections", async (t) => {
