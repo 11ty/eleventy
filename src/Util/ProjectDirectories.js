@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { TemplatePath } from "@11ty/eleventy-utils";
-import isGlob from "is-glob";
+import { isDynamicPattern } from "tinyglobby";
 
 /* Directories internally should always use *nix forward slashes */
 class ProjectDirectories {
@@ -143,9 +143,9 @@ class ProjectDirectories {
 			if (inputExists) {
 				this.inputFile = ProjectDirectories.normalizePath(dirOrFile);
 			} else {
-				if (!isGlob(dirOrFile)) {
+				if (!isDynamicPattern(dirOrFile)) {
 					throw new Error(
-						`The "${dirOrFile}" \`input\` parameter (directory or file path) must exist on the file system (unless detected as a glob by the \`is-glob\` package)`,
+						`The "${dirOrFile}" \`input\` parameter (directory or file path) must exist on the file system (unless detected as a glob by the \`tinyglobby\` package)`,
 					);
 				}
 
