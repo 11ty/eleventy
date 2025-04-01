@@ -198,8 +198,9 @@ test("11ty.js Virtual Templates (object), issue #3347", async (t) => {
 
 	t.deepEqual(results.length, 1);
 	t.deepEqual(results[0].content.trim(), `this is a test 2.`);
-  // TODO support rawInput on 11ty.js?
-	// t.deepEqual(results[0].rawInput, templateDefinition);
+	// TODO support rawInput on 11ty.js? Issue #3348
+	// t.deepEqual(results[0].rawInput.data, templateDefinition.data);
+	// t.deepEqual(results[0].rawInput.render, templateDefinition.render);
 });
 
 test("11ty.js Virtual Templates (function), issue #3347", async (t) => {

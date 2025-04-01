@@ -487,8 +487,7 @@ class Eleventy {
 	 * Starts Eleventy.
 	 */
 	async init(options = {}) {
-		options = Object.assign({ viaConfigReset: false }, options);
-
+		let { viaConfigReset } = Object.assign({ viaConfigReset: false }, options);
 		if (!this.#hasConfigInitialized) {
 			await this.initializeConfig();
 		} else {
@@ -548,7 +547,7 @@ class Eleventy {
 
 		this.writer = new TemplateWriter(formats, this.templateData, this.eleventyConfig);
 
-		if (!options.viaConfigReset) {
+		if (!viaConfigReset) {
 			// set or restore cache
 			this.#cache("TemplateWriter", this.writer);
 		}
@@ -853,7 +852,6 @@ Arguments:
 	async resetConfig() {
 		this.env = this.getEnvironmentVariableValues();
 		this.initializeEnvironmentVariables(this.env);
-
 		await this.eleventyConfig.reset();
 
 		this.config = this.eleventyConfig.getConfig();
@@ -960,7 +958,7 @@ Arguments:
 		await this.init({ viaConfigReset: isResetConfig });
 
 		try {
-			let [, /*passthroughCopyResults*/ templateResults] = await this.write();
+			let [passthroughCopyResults, templateResults] = await this.write();
 
 			this.watchTargets.reset();
 
@@ -980,18 +978,40 @@ Arguments:
 				);
 			});
 
+			let files = this.watchManager.getActiveQueue();
+
+			// Maps passthrough copy files to output URLs for CSS live reload
+			let stylesheetUrls = new Set();
+			for (let entry of passthroughCopyResults) {
+				for (let filepath in entry.map) {
+					if (
+						filepath.endsWith(".css") &&
+						files.includes(TemplatePath.addLeadingDotSlash(filepath))
+					) {
+						stylesheetUrls.add(
+							"/" + TemplatePath.stripLeadingSubPath(entry.map[filepath], this.outputDir),
+						);
+					}
+				}
+			}
+
 			let normalizedPathPrefix = PathPrefixer.normalizePathPrefix(this.config.pathPrefix);
+			let matchingTemplates = templateResults
+				.flat()
+				.filter((entry) => Boolean(entry))
+				.map((entry) => {
+					// only `url`, `inputPath`, and `content` are used: https://github.com/11ty/eleventy-dev-server/blob/1c658605f75224fdc76f68aebe7a412eeb4f1bc9/client/reload-client.js#L140
+					entry.url = PathPrefixer.joinUrlParts(normalizedPathPrefix, entry.url);
+					delete entry.rawInput; // Issue #3481
+					return entry;
+				});
+
 			await this.eleventyServe.reload({
-				files: this.watchManager.getActiveQueue(),
+				files,
 				subtype: onlyCssChanges ? "css" : undefined,
 				build: {
-					templates: templateResults
-						.flat()
-						.filter((entry) => !!entry)
-						.map((entry) => {
-							entry.url = PathPrefixer.joinUrlParts(normalizedPathPrefix, entry.url);
-							return entry;
-						}),
+					stylesheets: Array.from(stylesheetUrls),
+					templates: matchingTemplates,
 				},
 			});
 		} catch (error) {
@@ -1242,13 +1262,15 @@ Arguments:
 	async stopWatch() {
 		// Prevent multiple invocations.
 		if (this.#isStopping) {
-			return;
+			return this.#isStopping;
 		}
-		this.#isStopping = true;
 
 		debug("Cleaning up chokidar and server instances, if they exist.");
-		await this.eleventyServe.close();
-		await this.watcher?.close();
+		this.#isStopping = Promise.all([this.eleventyServe.close(), this.watcher?.close()]).then(() => {
+			this.#isStopping = false;
+		});
+
+		return this.#isStopping;
 	}
 
 	/**
@@ -1386,7 +1408,7 @@ Arguments:
 		} catch (error) {
 			hasError = true;
 
-			// Issue #2405: Don’t change the exit code for programmatic scripts
+			// Issue #2405: Don’t change the exitCode for programmatic scripts
 			let errorSeverity = this.source === "script" ? "error" : "fatal";
 			this.errorHandler.once(errorSeverity, error, "Problem writing Eleventy templates");
 

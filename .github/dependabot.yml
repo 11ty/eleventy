@@ -12,3 +12,4 @@ updates:
     labels:
       - "dependency-updates"
     versioning-strategy: increase
+    dependency-type: production
