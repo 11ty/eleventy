@@ -19,6 +19,7 @@ import EleventyFiles from "./EleventyFiles.js";
 import TemplatePassthroughManager from "./TemplatePassthroughManager.js";
 import TemplateConfig from "./TemplateConfig.js";
 import FileSystemSearch from "./FileSystemSearch.js";
+import TemplateEngineManager from "./Engines/TemplateEngineManager.js";
 
 /* Utils */
 import ConsoleLogger from "./Util/ConsoleLogger.js";
@@ -32,7 +33,6 @@ import eventBus from "./EventBus.js";
 import { getEleventyPackageJson, getWorkingProjectPackageJson } from "./Util/ImportJsonSync.js";
 import { EleventyImport } from "./Util/Require.js";
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
-import EventBusUtil from "./Util/EventBusUtil.js";
 import { withResolvers } from "./Util/PromiseUtil.js";
 
 /* Plugins */
@@ -395,13 +395,13 @@ class Eleventy {
 	 * Restarts Eleventy.
 	 */
 	async restart() {
-		debug("Restarting");
+		debug("Restarting.");
 		this.start = this.getNewTimestamp();
 
+		this.extensionMap.reset();
 		this.bench.reset();
 		this.passthroughManager.reset();
 		this.eleventyFiles.restart();
-		this.extensionMap.reset();
 	}
 
 	/**
@@ -491,6 +491,7 @@ class Eleventy {
 		if (!this.#hasConfigInitialized) {
 			await this.initializeConfig();
 		} else {
+			// Note: Global event bus is different from user config event bus
 			this.config.events.reset();
 		}
 
@@ -501,9 +502,10 @@ class Eleventy {
 		}
 
 		let formats = this.templateFormats.getTemplateFormats();
-
+		let engineManager = new TemplateEngineManager(this.eleventyConfig);
 		this.extensionMap = new EleventyExtensionMap(this.eleventyConfig);
 		this.extensionMap.setFormats(formats);
+		this.extensionMap.engineManager = engineManager;
 		await this.config.events.emit("eleventy.extensionmap", this.extensionMap);
 
 		// eleventyServe is always available, even when not in --serve mode
@@ -858,8 +860,6 @@ Arguments:
 		this.eleventyServe.eleventyConfig = this.eleventyConfig;
 
 		this.setIsVerbose(!this.config.quietMode);
-
-		EventBusUtil.resetForConfig();
 	}
 
 	/**
@@ -876,16 +876,20 @@ Arguments:
 		}
 
 		let relevantLayouts = this.eleventyConfig.usesGraph.getLayoutsUsedBy(changedFilePath);
-		// Note: these are sync events!
-		// `templateModified` is an alias for resourceModified but all listeners for this are cleared out when the config is reset.
+
+		// `eleventy.templateModified` is no longer used internally, remove in a future major version.
 		eventBus.emit("eleventy.templateModified", changedFilePath, {
 			usedByDependants,
 			relevantLayouts,
 		});
+
+		// These listeners are *global*, not cleared even on config reset
 		eventBus.emit("eleventy.resourceModified", changedFilePath, usedByDependants, {
 			viaConfigReset: isResetConfig,
 			relevantLayouts,
 		});
+
+		this.config.events.emit("eleventy#templateModified", changedFilePath);
 
 		this.watchManager.addToPendingQueue(changedFilePath);
 	}
@@ -1329,8 +1333,11 @@ Arguments:
 			if (!this.#initPromise) {
 				this.#initPromise = this.init();
 			}
-			await this.#initPromise;
-			this.#needsInit = false;
+			await this.#initPromise.then(() => {
+				// #needsInit also set to false at the end of `init()`
+				this.#needsInit = false;
+				this.#initPromise = undefined;
+			});
 		}
 
 		if (!this.writer) {

@@ -6,6 +6,7 @@ import TemplateRender from "../src/TemplateRender.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
 import { getTemplateConfigInstance } from "./_testHelpers.js";
+import TemplateEngineManager from "../src/Engines/TemplateEngineManager.js";
 
 async function getNewTemplateRender(name, inputDir, userConfig = {}) {
 	let eleventyConfig = await getTemplateConfigInstance({
@@ -16,6 +17,7 @@ async function getNewTemplateRender(name, inputDir, userConfig = {}) {
 
   let tr = new TemplateRender(name, eleventyConfig);
   tr.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  tr.extensionMap.engineManager = new TemplateEngineManager(eleventyConfig);
   tr.extensionMap.setFormats([]);
   await tr.init();
   return tr;

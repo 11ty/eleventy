@@ -18,6 +18,9 @@ class TemplateCache {
 
 	// alias
 	removeAll() {
+		for (let layoutFilePath in this.cacheByInputPath) {
+			this.remove(layoutFilePath);
+		}
 		this.clear();
 	}
 
@@ -86,18 +89,9 @@ class TemplateCache {
 
 let layoutCache = new TemplateCache();
 
-eventBus.on("eleventy.resourceModified", (path, usedBy, metadata = {}) => {
+eventBus.on("eleventy.resourceModified", () => {
 	// https://github.com/11ty/eleventy-plugin-bundle/issues/10
-	if (metadata.viaConfigReset) {
-		layoutCache.removeAll();
-	} else if (metadata.relevantLayouts?.length) {
-		// reset the appropriate layouts relevant to the file.
-		for (let layoutPath of metadata.relevantLayouts || []) {
-			layoutCache.remove(layoutPath);
-		}
-	} else {
-		layoutCache.remove(path);
-	}
+	layoutCache.removeAll();
 });
 
 // singleton

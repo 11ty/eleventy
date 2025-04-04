@@ -1,5 +1,6 @@
 import test from "ava";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import TemplateEngineManager from "../src/Engines/TemplateEngineManager.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 
 async function getExtensionMap(formats, config = new TemplateConfig()) {
@@ -8,6 +9,7 @@ async function getExtensionMap(formats, config = new TemplateConfig()) {
   }
   let map = new EleventyExtensionMap(config);
   map.setFormats(formats);
+  map.engineManager = new TemplateEngineManager(config);
   return map;
 }
 

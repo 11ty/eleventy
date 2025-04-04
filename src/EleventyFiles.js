@@ -3,7 +3,6 @@ import fs from "node:fs";
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
-import EleventyExtensionMap from "./EleventyExtensionMap.js";
 import TemplateData from "./Data/TemplateData.js";
 import TemplateGlob from "./TemplateGlob.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
@@ -11,6 +10,8 @@ import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js
 const debug = debugUtil("Eleventy:EleventyFiles");
 
 class EleventyFiles {
+	#extensionMap;
+
 	constructor(formats, templateConfig) {
 		if (!templateConfig) {
 			throw new Error("Internal error: Missing `templateConfig`` argument.");
@@ -120,16 +121,15 @@ class EleventyFiles {
 	}
 
 	set extensionMap(extensionMap) {
-		this._extensionMap = extensionMap;
+		this.#extensionMap = extensionMap;
 	}
 
 	get extensionMap() {
 		// for tests
-		if (!this._extensionMap) {
-			this._extensionMap = new EleventyExtensionMap(this.templateConfig);
-			this._extensionMap.setFormats(this.formats);
+		if (!this.#extensionMap) {
+			throw new Error("Internal error: missing `extensionMap` in EleventyFiles.");
 		}
-		return this._extensionMap;
+		return this.#extensionMap;
 	}
 
 	setRunMode(runMode) {

@@ -7,6 +7,7 @@ import FileSystemSearch from "../src/FileSystemSearch.js";
 import TemplateData from "../src/Data/TemplateData.js";
 
 import { getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
 test("Local data", async (t) => {
   let eleventyConfig = await getTemplateConfigInstanceCustomCallback(
@@ -20,6 +21,7 @@ test("Local data", async (t) => {
   );
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
@@ -58,6 +60,7 @@ test("Local files", async (t) => {
   );
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   let files = await dataObj.getLocalDataPaths("./test/stubs-630/component-yaml/component.njk");
   t.deepEqual(files, [
@@ -103,6 +106,7 @@ test("Global data", async (t) => {
   );
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
@@ -145,6 +149,7 @@ test("Global data merging and priority", async (t) => {
   );
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
@@ -184,6 +189,7 @@ test("Binary data files, encoding: null", async (t) => {
   );
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
@@ -211,6 +217,7 @@ test("Binary data files, read: false", async (t) => {
   );
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
@@ -238,6 +245,7 @@ test("Binary data files, encoding: null (multiple data extensions)", async (t) =
   );
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 

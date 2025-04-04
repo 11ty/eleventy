@@ -6,6 +6,7 @@ import TemplatePassthroughManager from "../src/TemplatePassthroughManager.js";
 import EleventyFiles from "../src/EleventyFiles.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";
 import TemplateWriter from "../src/TemplateWriter.js";
+import TemplateEngineManager from "../src/Engines/TemplateEngineManager.js";
 
 async function getTemplateConfigInstance(configObj, dirs, configObjOverride = undefined) {
 	let eleventyConfig;
@@ -58,6 +59,14 @@ function getTemplateWriterInstance(formats, templateConfig) {
     null,
     templateConfig,
   );
+
+  let engineManager = new TemplateEngineManager(templateConfig);
+  let map = new EleventyExtensionMap(templateConfig);
+  map.engineManager = engineManager;
+  map.setFormats(formats);
+
+  templateWriter.extensionMap = map;
+
   templateWriter.setEleventyFiles(eleventyFiles);
   templateWriter.setPassthroughManager(passthroughManager);
 

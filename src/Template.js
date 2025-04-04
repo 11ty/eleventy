@@ -34,6 +34,7 @@ const debug = debugUtil("Eleventy:Template");
 const debugDev = debugUtil("Dev:Eleventy:Template");
 
 class Template extends TemplateContent {
+	#logger;
 	#fsManager;
 
 	constructor(templatePath, templateData, extensionMap, config) {
@@ -46,11 +47,11 @@ class Template extends TemplateContent {
 		this.extraOutputSubdirectory = "";
 
 		this.extensionMap = extensionMap;
+		this.templateData = templateData;
+		this.#initFileSlug();
 
 		this.linters = [];
 		this.transforms = {};
-
-		this.setTemplateData(templateData);
 
 		this.isVerbose = true;
 		this.isDryRun = false;
@@ -66,8 +67,19 @@ class Template extends TemplateContent {
 		this.behavior.setOutputFormat(this.outputFormat);
 	}
 
-	setTemplateData(templateData) {
+	#initFileSlug() {
+		this.fileSlug = new TemplateFileSlug(this.inputPath, this.extensionMap, this.eleventyConfig);
+		this.fileSlugStr = this.fileSlug.getSlug();
+		this.filePathStem = this.fileSlug.getFullPathWithoutExtension();
+	}
+
+	/* mimic constructor arg order */
+	resetCachedTemplate({ templateData, extensionMap, eleventyConfig }) {
+		super.resetCachedTemplate({ eleventyConfig });
 		this.templateData = templateData;
+		this.extensionMap = extensionMap;
+		// this.#fsManager = undefined;
+		this.#initFileSlug();
 	}
 
 	get fsManager() {
@@ -78,16 +90,16 @@ class Template extends TemplateContent {
 	}
 
 	get logger() {
-		if (!this._logger) {
-			this._logger = new ConsoleLogger();
-			this._logger.isVerbose = this.isVerbose;
+		if (!this.#logger) {
+			this.#logger = new ConsoleLogger();
+			this.#logger.isVerbose = this.isVerbose;
 		}
-		return this._logger;
+		return this.#logger;
 	}
 
 	/* Setter for Logger */
 	set logger(logger) {
-		this._logger = logger;
+		this.#logger = logger;
 	}
 
 	isRenderable() {
@@ -185,7 +197,7 @@ class Template extends TemplateContent {
 
 	async _getLink(data) {
 		if (!data) {
-			throw new Error("data argument missing in Template->_getLink");
+			throw new Error("Internal error: data argument missing in Template->_getLink");
 		}
 
 		let permalink = data[this.config.keys.permalink];
@@ -241,7 +253,8 @@ class Template extends TemplateContent {
 
 		// Override default permalink behavior. Only do this if permalink was _not_ in the data cascade
 		if (!permalink && this.config.dynamicPermalinks && data.dynamicPermalink !== false) {
-			let permalinkCompilation = this.engine.permalinkNeedsCompilation("");
+			let tr = await this.getTemplateRender();
+			let permalinkCompilation = tr.engine.permalinkNeedsCompilation("");
 			if (typeof permalinkCompilation === "function") {
 				let ret = await this._renderFunction(permalinkCompilation, permalinkValue, this.inputPath);
 				if (ret !== undefined) {
@@ -350,7 +363,8 @@ class Template extends TemplateContent {
 		let { data: frontMatterData } = await this.getFrontMatterData();
 
 		let mergedLayoutData = {};
-		if (this.engine.useLayouts()) {
+		let tr = await this.getTemplateRender();
+		if (tr.engine.useLayouts()) {
 			let layoutKey =
 				frontMatterData[this.config.keys.layout] ||
 				localData[this.config.keys.layout] ||
@@ -459,6 +473,17 @@ class Template extends TemplateContent {
 		}
 
 		return this._cacheRenderedPromise;
+	}
+
+	setLinters(linters) {
+		if (!isPlainObject(linters)) {
+			throw new Error("Object expected in setLinters");
+		}
+		// this acts as a reset
+		this.linters = [];
+		for (let linter of Object.values(linters).filter((l) => typeof l === "function")) {
+			this.addLinter(linter);
+		}
 	}
 
 	addLinter(callback) {
@@ -869,7 +894,6 @@ class Template extends TemplateContent {
 		await this.runLinters(content, pageEntry);
 
 		content = await this.runTransforms(content, pageEntry);
-
 		return content;
 	}
 
@@ -964,6 +988,7 @@ class Template extends TemplateContent {
 		// await tmpl.getTemplateRender();
 
 		// preserves caches too, e.g. _frontMatterDataCache
+		// Does not yet include .computedData
 		for (let key in this) {
 			tmpl[key] = this[key];
 		}
@@ -981,11 +1006,9 @@ class Template extends TemplateContent {
 
 	async getInputFileStat() {
 		// @cachedproperty
-		if (this._stats) {
-			return this._stats;
+		if (!this._stats) {
+			this._stats = fsStat(this.inputPath);
 		}
-
-		this._stats = fsStat(this.inputPath);
 
 		return this._stats;
 	}

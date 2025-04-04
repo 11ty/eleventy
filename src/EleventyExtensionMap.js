@@ -1,8 +1,8 @@
 import { TemplatePath } from "@11ty/eleventy-utils";
 
-import TemplateEngineManager from "./Engines/TemplateEngineManager.js";
-
 class EleventyExtensionMap {
+	#engineManager;
+
 	constructor(config) {
 		this.setTemplateConfig(config);
 		this._spiderJsDepsCache = {};
@@ -39,15 +39,19 @@ class EleventyExtensionMap {
 	}
 
 	get engineManager() {
-		if (!this._engineManager) {
-			this._engineManager = new TemplateEngineManager(this.templateConfig);
+		if (!this.#engineManager) {
+			throw new Error("Internal error: Missing `#engineManager` in EleventyExtensionMap.");
 		}
 
-		return this._engineManager;
+		return this.#engineManager;
+	}
+
+	set engineManager(mgr) {
+		this.#engineManager = mgr;
 	}
 
 	reset() {
-		this.engineManager.reset();
+		this.#engineManager.reset();
 	}
 
 	/* Used for layout path resolution */
