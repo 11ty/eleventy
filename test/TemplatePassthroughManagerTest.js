@@ -31,6 +31,7 @@ test("isPassthroughCopyFile", async (t) => {
   await eleventyConfig.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
+  mgr.extensionMap = new EleventyExtensionMap(eleventyConfig);
 
   t.false(mgr.isPassthroughCopyFile([]));
   t.false(mgr.isPassthroughCopyFile([], ""));
@@ -78,6 +79,7 @@ test("Get file paths", async (t) => {
   await eleventyConfig.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
+  mgr.extensionMap = new EleventyExtensionMap(eleventyConfig);
 
   t.deepEqual(mgr.getNonTemplatePaths(["test.png"]), ["test.png"]);
 });
@@ -121,6 +123,7 @@ test("Get file paths (one image path)", async (t) => {
   await eleventyConfig.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
+  mgr.extensionMap = new EleventyExtensionMap(eleventyConfig);
 
   t.deepEqual(mgr.getNonTemplatePaths(["test.png"]), ["test.png"]);
 });

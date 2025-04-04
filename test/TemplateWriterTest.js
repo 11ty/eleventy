@@ -5,7 +5,6 @@ import fastglob from "fast-glob";
 import path from "path";
 
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
-import TemplateWriter from "../src/TemplateWriter.js";
 
 import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 import { getRenderedTemplates as getRenderedTmpls } from "./_getRenderedTemplates.js";
@@ -113,9 +112,8 @@ test("Collection of files sorted by date", async (t) => {
     }
   });
 
-  let tw = new TemplateWriter(
+  let { templateWriter: tw } = getTemplateWriterInstance(
     ["md"],
-    null,
     eleventyConfig,
   );
 

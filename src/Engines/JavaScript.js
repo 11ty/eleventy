@@ -3,7 +3,6 @@ import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import TemplateEngine from "./TemplateEngine.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import getJavaScriptData from "../Util/GetJavaScriptData.js";
-import EventBusUtil from "../Util/EventBusUtil.js";
 import { EleventyImport } from "../Util/Require.js";
 import { augmentFunction, augmentObject } from "./Util/ContextAugmenter.js";
 
@@ -15,7 +14,8 @@ export default class JavaScript extends TemplateEngine {
 		this.instances = {};
 
 		this.cacheable = false;
-		EventBusUtil.soloOn("eleventy.templateModified", (inputPath, metadata = {}) => {
+
+		this.config.events.on("eleventy#templateModified", (inputPath, metadata = {}) => {
 			let { usedByDependants, relevantLayouts } = metadata;
 			// Remove from cached instances when modified
 			let instancesToDelete = [

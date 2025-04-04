@@ -47,11 +47,11 @@ class Template extends TemplateContent {
 		this.extraOutputSubdirectory = "";
 
 		this.extensionMap = extensionMap;
+		this.templateData = templateData;
+		this.#initFileSlug();
 
 		this.linters = [];
 		this.transforms = {};
-
-		this.setTemplateData(templateData);
 
 		this.isVerbose = true;
 		this.isDryRun = false;
@@ -67,8 +67,19 @@ class Template extends TemplateContent {
 		this.behavior.setOutputFormat(this.outputFormat);
 	}
 
-	setTemplateData(templateData) {
+	#initFileSlug() {
+		this.fileSlug = new TemplateFileSlug(this.inputPath, this.extensionMap, this.eleventyConfig);
+		this.fileSlugStr = this.fileSlug.getSlug();
+		this.filePathStem = this.fileSlug.getFullPathWithoutExtension();
+	}
+
+	/* mimic constructor arg order */
+	resetCachedTemplate({ templateData, extensionMap, eleventyConfig }) {
+		super.resetCachedTemplate({ eleventyConfig });
 		this.templateData = templateData;
+		this.extensionMap = extensionMap;
+		// this.#fsManager = undefined;
+		this.#initFileSlug();
 	}
 
 	get fsManager() {
@@ -242,7 +253,8 @@ class Template extends TemplateContent {
 
 		// Override default permalink behavior. Only do this if permalink was _not_ in the data cascade
 		if (!permalink && this.config.dynamicPermalinks && data.dynamicPermalink !== false) {
-			let permalinkCompilation = this.engine.permalinkNeedsCompilation("");
+			let tr = await this.getTemplateRender();
+			let permalinkCompilation = tr.engine.permalinkNeedsCompilation("");
 			if (typeof permalinkCompilation === "function") {
 				let ret = await this._renderFunction(permalinkCompilation, permalinkValue, this.inputPath);
 				if (ret !== undefined) {
@@ -351,7 +363,8 @@ class Template extends TemplateContent {
 		let { data: frontMatterData } = await this.getFrontMatterData();
 
 		let mergedLayoutData = {};
-		if (this.engine.useLayouts()) {
+		let tr = await this.getTemplateRender();
+		if (tr.engine.useLayouts()) {
 			let layoutKey =
 				frontMatterData[this.config.keys.layout] ||
 				localData[this.config.keys.layout] ||
@@ -468,7 +481,7 @@ class Template extends TemplateContent {
 		}
 		// this acts as a reset
 		this.linters = [];
-		for (let linter of Object.values(linters).filter(l => typeof l === "function")) {
+		for (let linter of Object.values(linters).filter((l) => typeof l === "function")) {
 			this.addLinter(linter);
 		}
 	}

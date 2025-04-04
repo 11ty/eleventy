@@ -5,31 +5,31 @@ import CustomEngine from "./Engines/Custom.js";
 // import debugUtil from "debug";
 // const debug = debugUtil("Eleventy:TemplateRender");
 
-class TemplateRenderConfigError extends EleventyBaseError {}
 class TemplateRenderUnknownEngineError extends EleventyBaseError {}
 
 // works with full path names or short engine name
 class TemplateRender {
 	#extensionMap;
+	#config;
 
 	constructor(tmplPath, config) {
 		if (!tmplPath) {
 			throw new Error(`TemplateRender requires a tmplPath argument, instead of ${tmplPath}`);
 		}
-		if (!config) {
-			throw new TemplateRenderConfigError("Missing `config` argument.");
-		}
-		if (config.constructor.name === "TemplateConfig") {
-			this.eleventyConfig = config;
-			this.config = config.getConfig();
-		} else {
-			throw new Error("Third argument to TemplateRender must be a TemplateConfig instance.");
-		}
+		this.#setConfig(config);
 
 		this.engineNameOrPath = tmplPath;
-
 		this.parseMarkdownWith = this.config.markdownTemplateEngine;
 		this.parseHtmlWith = this.config.htmlTemplateEngine;
+	}
+
+	#setConfig(config) {
+		if (config?.constructor?.name !== "TemplateConfig") {
+			throw new Error("TemplateRender must receive a TemplateConfig instance.");
+		}
+
+		this.eleventyConfig = config;
+		this.config = config.getConfig();
 	}
 
 	get dirs() {
@@ -50,11 +50,11 @@ class TemplateRender {
 	}
 
 	get config() {
-		return this._config;
+		return this.#config;
 	}
 
 	set config(config) {
-		this._config = config;
+		this.#config = config;
 	}
 
 	set extensionMap(extensionMap) {

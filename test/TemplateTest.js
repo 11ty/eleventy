@@ -14,6 +14,7 @@ import eventBus from "../src/EventBus.js";
 import getNewTemplate from "./_getNewTemplateForTests.js";
 import { getRenderedTemplates as getRenderedTmpls, renderLayout, renderTemplate } from "./_getRenderedTemplates.js";
 import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
+import TemplateEngineManager from "../src/Engines/TemplateEngineManager.js";
 
 const fsp = fs.promises;
 
@@ -196,6 +197,7 @@ test("One Layout (using new content var)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/templateWithLayoutKey.liquid",
@@ -231,6 +233,7 @@ test("One Layout (using content)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/templateWithLayoutContent.liquid",
@@ -266,6 +269,7 @@ test("One Layout (layouts disabled)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/templateWithLayoutContent.liquid",
@@ -299,6 +303,7 @@ test("One Layout (liquid test)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/templateWithLayout.liquid",
@@ -334,6 +339,7 @@ test("Two Layouts", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/templateTwoLayouts.liquid",
@@ -371,6 +377,7 @@ test("Liquid template", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/formatTest.liquid",
@@ -425,6 +432,7 @@ test("Layout from template-data-file that has a permalink (fileslug) Issue #121"
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/permalink-data-layout/test.njk",
@@ -456,6 +464,7 @@ test("Local template data file import (without a global data json)", async (t) =
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
@@ -493,6 +502,7 @@ test("Local template data file import (two subdirectories deep)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
@@ -537,6 +547,7 @@ test("Posts inherits local JSON, layouts", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
@@ -592,6 +603,7 @@ test("Template and folder name are the same, make sure data imports work ok", as
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
@@ -1151,6 +1163,7 @@ test("Data Cascade (Deep merge)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
@@ -1190,6 +1203,7 @@ test("Data Cascade (Shallow merge)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
@@ -1229,6 +1243,7 @@ test("Data Cascade Tag Merge (Deep merge)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
@@ -1256,6 +1271,7 @@ test("Data Cascade Tag Merge (Deep Merge - Deduplication)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
@@ -1283,6 +1299,7 @@ test("Data Cascade Tag Merge (Shallow merge)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
@@ -1310,6 +1327,7 @@ test('Local data inherits tags string ([tags] vs "tags") Shallow Merge', async (
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
@@ -1337,6 +1355,7 @@ test('Local data inherits tags string ([tags] vs "tags") Deep Merge', async (t) 
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
@@ -1717,6 +1736,7 @@ test("Engine Singletons", async (t) => {
   });
 
   let map = new EleventyExtensionMap(eleventyConfig);
+  map.engineManager = new TemplateEngineManager(eleventyConfig);
   map.setFormats(["njk"]);
   let tmpl1 = await getNewTemplate(
     "./test/stubs/engine-singletons/first.njk",
@@ -1755,8 +1775,7 @@ test("Make sure layout cache takes new changes during watch (nunjucks)", async (
 
   await fsp.writeFile(filePath, `alert("bye");`, { encoding: "utf8" });
 
-  eventBus.emit("eleventy.templateModified", filePath);
-  eventBus.emit("eleventy.resourceModified", filePath);
+  tmpl.config.events.emit("eleventy#templateModified", filePath);
 
   t.is((await renderTemplate(tmpl, data)).trim(), '<script>alert("bye");</script>');
 });
@@ -1802,6 +1821,7 @@ test("Add Extension via Configuration (txt file)", async (t) => {
   });
 
   let map = new EleventyExtensionMap(eleventyConfig);
+  map.engineManager = new TemplateEngineManager(eleventyConfig);
   map.setFormats([]);
   let tmpl = await getNewTemplate(
     "./test/stubs/default.txt",
@@ -1969,6 +1989,7 @@ test("Error messaging, returning literals (not objects) from custom data extensi
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
 
   let tmpl = await getNewTemplate(

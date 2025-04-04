@@ -80,6 +80,7 @@ class UserConfig {
 
 		/** @type {EventEmitter} */
 		this.events = new EventEmitter();
+		this.events.setMaxListeners(25); // defaults to 10
 
 		/** @type {BenchmarkManager} */
 		this.benchmarkManager = new BenchmarkManager();

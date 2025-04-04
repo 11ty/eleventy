@@ -23,6 +23,7 @@ class TemplateContentCompileError extends EleventyBaseError {}
 class TemplateContentRenderError extends EleventyBaseError {}
 
 class TemplateContent {
+	#config;
 	#templateRender;
 	#extensionMap;
 	#configOptions;
@@ -33,6 +34,10 @@ class TemplateContent {
 		}
 		this.eleventyConfig = templateConfig;
 		this.inputPath = inputPath;
+	}
+
+	resetCachedTemplate({ eleventyConfig }) {
+		this.eleventyConfig = eleventyConfig;
 	}
 
 	get dirs() {
@@ -75,11 +80,14 @@ class TemplateContent {
 			delete this.inputContent;
 			delete this._frontMatterDataCache;
 		}
+		if (types.render) {
+			this.#templateRender = undefined;
+		}
 	}
 
 	get extensionMap() {
 		if (!this.#extensionMap) {
-			throw new Error("Internal error: Missing `extensionMap` in TemplateContent.")
+			throw new Error("Internal error: Missing `extensionMap` in TemplateContent.");
 		}
 		return this.#extensionMap;
 	}
@@ -89,25 +97,25 @@ class TemplateContent {
 	}
 
 	set eleventyConfig(config) {
-		this._config = config;
+		this.#config = config;
 
-		if (this._config.constructor.name === "TemplateConfig") {
-			this.#configOptions = this._config.getConfig();
+		if (this.#config.constructor.name === "TemplateConfig") {
+			this.#configOptions = this.#config.getConfig();
 		} else {
 			throw new Error("Tried to get an TemplateConfig but none was found.");
 		}
 	}
 
 	get eleventyConfig() {
-		if (this._config.constructor.name === "TemplateConfig") {
-			return this._config;
+		if (this.#config.constructor.name === "TemplateConfig") {
+			return this.#config;
 		}
 		throw new Error("Tried to get an TemplateConfig but none was found.");
 	}
 
 	get config() {
-		if (this._config.constructor.name === "TemplateConfig" && !this.#configOptions) {
-			this.#configOptions = this._config.getConfig();
+		if (this.#config.constructor.name === "TemplateConfig" && !this.#configOptions) {
+			this.#configOptions = this.#config.getConfig();
 		}
 
 		return this.#configOptions;
@@ -118,7 +126,7 @@ class TemplateContent {
 	}
 
 	get engine() {
-		return this.#templateRender?.engine;
+		return this.templateRender.engine;
 	}
 
 	get templateRender() {
@@ -185,7 +193,8 @@ class TemplateContent {
 		let content = await this.inputContent;
 
 		if (content || content === "") {
-			if (this.engine.useJavaScriptImport()) {
+			let tr = await this.getTemplateRender();
+			if (tr.engine.useJavaScriptImport()) {
 				return {
 					data: {},
 					content,
@@ -336,7 +345,8 @@ class TemplateContent {
 			fm.data = await fm.data;
 		}
 
-		let extraData = await this.engine.getExtraDataFromFile(this.inputPath);
+		let tr = await this.getTemplateRender();
+		let extraData = await tr.engine.getExtraDataFromFile(this.inputPath);
 
 		let virtualTemplateDefinition = this.getVirtualTemplateDefinition();
 		let virtualTemplateData;
@@ -363,13 +373,14 @@ class TemplateContent {
 	}
 
 	async getEngineOverride() {
-		return this.getFrontMatterData().then(data => {
+		return this.getFrontMatterData().then((data) => {
 			return data[this.config.keys.engineOverride];
 		});
 	}
 
 	_getCompileCache(str) {
 		// Caches used to be bifurcated based on engine name, now they’re based on inputPath
+		// TODO does `cacheable` need to help inform whether a cache is used here?
 		let inputPathMap = TemplateContent._compileCache.get(this.inputPath);
 		if (!inputPathMap) {
 			inputPathMap = new Map();
@@ -499,7 +510,8 @@ class TemplateContent {
 	}
 
 	async renderPermalink(permalink, data) {
-		let permalinkCompilation = this.engine.permalinkNeedsCompilation(permalink);
+		let tr = await this.getTemplateRender();
+		let permalinkCompilation = tr.engine.permalinkNeedsCompilation(permalink);
 
 		// No string compilation:
 		//    ({ compileOptions: { permalink: "raw" }})

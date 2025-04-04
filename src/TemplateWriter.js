@@ -148,10 +148,12 @@ class TemplateWriter {
 		if (tmpl) {
 			wasCached = true;
 			// Update config for https://github.com/11ty/eleventy/issues/3468
-			tmpl.eleventyConfig = this.templateConfig;
-
-			// TODO reset other constructor things here like inputDir/outputDir/extensionMap/
-			tmpl.setTemplateData(this.templateData);
+			// TODO reset other constructor things here like inputDir/outputDir
+			tmpl.resetCachedTemplate({
+				templateData: this.templateData,
+				extensionMap: this.extensionMap,
+				eleventyConfig: this.templateConfig,
+			});
 		} else {
 			tmpl = new Template(path, this.templateData, this.extensionMap, this.templateConfig);
 			tmpl.setOutputFormat(to);
@@ -278,7 +280,7 @@ class TemplateWriter {
 		}
 	}
 
-	_addToTemplateMapFullBuild(paths, to = "fs") {
+	async _addToTemplateMapFullBuild(paths, to = "fs") {
 		if (this.incrementalFile) {
 			return [];
 		}
@@ -287,7 +289,6 @@ class TemplateWriter {
 		let promises = [];
 		for (let path of paths) {
 			let { template: tmpl, wasCached } = this._createTemplate(path, to);
-
 			// Render overrides are only used when `--ignore-initial` is in play and an initial build is not run
 			if (ignoreInitialBuild) {
 				tmpl.setRenderableOverride(false); // disable render
@@ -341,6 +342,9 @@ class TemplateWriter {
 
 		await this._addToTemplateMap(paths, to);
 		await this.templateMap.cache();
+
+		// Return is used by tests
+		return this.templateMap;
 	}
 
 	async _generateTemplate(mapEntry, to) {

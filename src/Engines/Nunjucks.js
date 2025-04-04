@@ -1,11 +1,13 @@
 import NunjucksLib from "nunjucks";
+import debugUtil from "debug";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
 import TemplateEngine from "./TemplateEngine.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
-import EventBusUtil from "../Util/EventBusUtil.js";
 import { augmentObject } from "./Util/ContextAugmenter.js";
 import { withResolvers } from "../Util/PromiseUtil.js";
+
+const debug = debugUtil("Eleventy:Nunjucks");
 
 class EleventyNunjucksError extends EleventyBaseError {}
 
@@ -20,10 +22,20 @@ export default class Nunjucks extends TemplateEngine {
 
 		this.setLibrary(this.config.libraryOverrides.njk);
 
-		this.cacheable = true;
+		// v3.1.0-alpha.1 we’ve moved to use Nunjucks’ internal cache instead of Eleventy’s
+		// this.cacheable = false;
 	}
 
-	_setEnv(override) {
+	#getFileSystemDirs() {
+		let paths = new Set();
+		paths.add(super.getIncludesDir());
+		paths.add(TemplatePath.getWorkingDir());
+
+		// Filter out undefined paths
+		return Array.from(paths).filter(Boolean);
+	}
+
+	#setEnv(override) {
 		if (override) {
 			this.njkEnv = override;
 		} else if (this._usingPrecompiled) {
@@ -48,13 +60,7 @@ export default class Nunjucks extends TemplateEngine {
 				this.nunjucksEnvironmentOptions,
 			);
 		} else {
-			let paths = new Set();
-			paths.add(super.getIncludesDir());
-			paths.add(TemplatePath.getWorkingDir());
-
-			// Filter out undefined paths
-			let fsLoader = new NunjucksLib.FileSystemLoader(Array.from(paths).filter(Boolean));
-
+			let fsLoader = new NunjucksLib.FileSystemLoader(this.#getFileSystemDirs());
 			this.njkEnv = new NunjucksLib.Environment(fsLoader, this.nunjucksEnvironmentOptions);
 		}
 
@@ -65,12 +71,29 @@ export default class Nunjucks extends TemplateEngine {
 	}
 
 	setLibrary(override) {
-		this._setEnv(override);
+		this.#setEnv(override);
 
-		// Correct, but overbroad. Better would be to evict more granularly, but
-		// resolution from paths isn't straightforward.
-		EventBusUtil.soloOn("eleventy.templateModified", (/*path*/) => {
-			this.njkEnv.invalidateCache();
+		// Note that a new Nunjucks engine instance is created for subsequent builds
+		// Eleventy Nunjucks is set to `cacheable` false above to opt out of Eleventy cache
+		this.config.events.on("eleventy#templateModified", (templatePath) => {
+			// NunjucksEnvironment:
+			// loader.pathToNames: {'ABSOLUTE_PATH/src/_includes/components/possum-home.css': 'components/possum-home.css'}
+			// loader.cache: { 'components/possum-home.css': [Template] }
+			let absTmplPath = TemplatePath.absolutePath(templatePath);
+			for (let loader of this.njkEnv.loaders) {
+				let nunjucksName = loader.pathsToNames[absTmplPath];
+				if (nunjucksName) {
+					debug(
+						"Match found in Nunjucks cache via templateModified for %o, clearing this entry",
+						templatePath,
+					);
+					delete loader.pathsToNames[absTmplPath];
+					delete loader.cache[nunjucksName];
+				}
+			}
+
+			// Behavior prior to v3.1.0-alpha.1:
+			// this.njkEnv.invalidateCache();
 		});
 
 		this.setEngineLib(this.njkEnv);
