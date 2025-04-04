@@ -79,7 +79,10 @@ export default class Nunjucks extends TemplateEngine {
 			// NunjucksEnvironment:
 			// loader.pathToNames: {'ABSOLUTE_PATH/src/_includes/components/possum-home.css': 'components/possum-home.css'}
 			// loader.cache: { 'components/possum-home.css': [Template] }
-			let absTmplPath = TemplatePath.absolutePath(templatePath);
+			// Nunjucks stores these as Operating System native paths
+			let absTmplPath = TemplatePath.normalizeOperatingSystemFilePath(
+				TemplatePath.absolutePath(templatePath),
+			);
 			for (let loader of this.njkEnv.loaders) {
 				let nunjucksName = loader.pathsToNames[absTmplPath];
 				if (nunjucksName) {
