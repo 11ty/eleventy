@@ -19,6 +19,7 @@ import EleventyFiles from "./EleventyFiles.js";
 import TemplatePassthroughManager from "./TemplatePassthroughManager.js";
 import TemplateConfig from "./TemplateConfig.js";
 import FileSystemSearch from "./FileSystemSearch.js";
+import TemplateEngineManager from "./Engines/TemplateEngineManager.js";
 
 /* Utils */
 import ConsoleLogger from "./Util/ConsoleLogger.js";
@@ -501,9 +502,10 @@ class Eleventy {
 		}
 
 		let formats = this.templateFormats.getTemplateFormats();
-
+		let engineManager = new TemplateEngineManager(this.eleventyConfig);
 		this.extensionMap = new EleventyExtensionMap(this.eleventyConfig);
 		this.extensionMap.setFormats(formats);
+		this.extensionMap.engineManager = engineManager;
 		await this.config.events.emit("eleventy.extensionmap", this.extensionMap);
 
 		// eleventyServe is always available, even when not in --serve mode

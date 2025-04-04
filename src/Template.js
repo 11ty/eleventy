@@ -34,6 +34,7 @@ const debug = debugUtil("Eleventy:Template");
 const debugDev = debugUtil("Dev:Eleventy:Template");
 
 class Template extends TemplateContent {
+	#logger;
 	#fsManager;
 
 	constructor(templatePath, templateData, extensionMap, config) {
@@ -78,16 +79,16 @@ class Template extends TemplateContent {
 	}
 
 	get logger() {
-		if (!this._logger) {
-			this._logger = new ConsoleLogger();
-			this._logger.isVerbose = this.isVerbose;
+		if (!this.#logger) {
+			this.#logger = new ConsoleLogger();
+			this.#logger.isVerbose = this.isVerbose;
 		}
-		return this._logger;
+		return this.#logger;
 	}
 
 	/* Setter for Logger */
 	set logger(logger) {
-		this._logger = logger;
+		this.#logger = logger;
 	}
 
 	isRenderable() {
@@ -185,7 +186,7 @@ class Template extends TemplateContent {
 
 	async _getLink(data) {
 		if (!data) {
-			throw new Error("data argument missing in Template->_getLink");
+			throw new Error("Internal error: data argument missing in Template->_getLink");
 		}
 
 		let permalink = data[this.config.keys.permalink];
@@ -459,6 +460,17 @@ class Template extends TemplateContent {
 		}
 
 		return this._cacheRenderedPromise;
+	}
+
+	setLinters(linters) {
+		if (!isPlainObject(linters)) {
+			throw new Error("Object expected in setLinters");
+		}
+		// this acts as a reset
+		this.linters = [];
+		for (let linter of Object.values(linters).filter(l => typeof l === "function")) {
+			this.addLinter(linter);
+		}
 	}
 
 	addLinter(callback) {
@@ -869,7 +881,6 @@ class Template extends TemplateContent {
 		await this.runLinters(content, pageEntry);
 
 		content = await this.runTransforms(content, pageEntry);
-
 		return content;
 	}
 
@@ -964,6 +975,7 @@ class Template extends TemplateContent {
 		// await tmpl.getTemplateRender();
 
 		// preserves caches too, e.g. _frontMatterDataCache
+		// Does not yet include .computedData
 		for (let key in this) {
 			tmpl[key] = this[key];
 		}
@@ -981,11 +993,9 @@ class Template extends TemplateContent {
 
 	async getInputFileStat() {
 		// @cachedproperty
-		if (this._stats) {
-			return this._stats;
+		if (!this._stats) {
+			this._stats = fsStat(this.inputPath);
 		}
-
-		this._stats = fsStat(this.inputPath);
 
 		return this._stats;
 	}

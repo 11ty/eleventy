@@ -6,7 +6,6 @@ import lodash from "@11ty/lodash-custom";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
-import EleventyExtensionMap from "./EleventyExtensionMap.js";
 import TemplateData from "./Data/TemplateData.js";
 import TemplateRender from "./TemplateRender.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
@@ -24,6 +23,10 @@ class TemplateContentCompileError extends EleventyBaseError {}
 class TemplateContentRenderError extends EleventyBaseError {}
 
 class TemplateContent {
+	#templateRender;
+	#extensionMap;
+	#configOptions;
+
 	constructor(inputPath, templateConfig) {
 		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
 			throw new Error("Missing or invalid `templateConfig` argument");
@@ -74,24 +77,22 @@ class TemplateContent {
 		}
 	}
 
-	/* Used by tests */
 	get extensionMap() {
-		if (!this._extensionMap) {
-			this._extensionMap = new EleventyExtensionMap(this.eleventyConfig);
-			this._extensionMap.setFormats([]);
+		if (!this.#extensionMap) {
+			throw new Error("Internal error: Missing `extensionMap` in TemplateContent.")
 		}
-		return this._extensionMap;
+		return this.#extensionMap;
 	}
 
 	set extensionMap(map) {
-		this._extensionMap = map;
+		this.#extensionMap = map;
 	}
 
 	set eleventyConfig(config) {
 		this._config = config;
 
 		if (this._config.constructor.name === "TemplateConfig") {
-			this._configOptions = this._config.getConfig();
+			this.#configOptions = this._config.getConfig();
 		} else {
 			throw new Error("Tried to get an TemplateConfig but none was found.");
 		}
@@ -105,11 +106,11 @@ class TemplateContent {
 	}
 
 	get config() {
-		if (this._config.constructor.name === "TemplateConfig" && !this._configOptions) {
-			this._configOptions = this._config.getConfig();
+		if (this._config.constructor.name === "TemplateConfig" && !this.#configOptions) {
+			this.#configOptions = this._config.getConfig();
 		}
 
-		return this._configOptions;
+		return this.#configOptions;
 	}
 
 	get bench() {
@@ -117,7 +118,7 @@ class TemplateContent {
 	}
 
 	get engine() {
-		return this.templateRender.engine;
+		return this.#templateRender?.engine;
 	}
 
 	get templateRender() {
@@ -125,21 +126,24 @@ class TemplateContent {
 			throw new Error(`\`templateRender\` has not yet initialized on ${this.inputPath}`);
 		}
 
-		return this._templateRender;
+		return this.#templateRender;
 	}
 
 	hasTemplateRender() {
-		return !!this._templateRender;
+		return !!this.#templateRender;
 	}
 
 	async getTemplateRender() {
-		if (!this._templateRender) {
-			this._templateRender = new TemplateRender(this.inputPath, this.eleventyConfig);
-			this._templateRender.extensionMap = this.extensionMap;
-			await this._templateRender.init();
+		if (!this.#templateRender) {
+			this.#templateRender = new TemplateRender(this.inputPath, this.eleventyConfig);
+			this.#templateRender.extensionMap = this.extensionMap;
+
+			return this.#templateRender.init().then(() => {
+				return this.#templateRender;
+			});
 		}
 
-		return this._templateRender;
+		return this.#templateRender;
 	}
 
 	// For monkey patchers
@@ -359,8 +363,9 @@ class TemplateContent {
 	}
 
 	async getEngineOverride() {
-		let { data: frontMatterData } = await this.getFrontMatterData();
-		return frontMatterData[this.config.keys.engineOverride];
+		return this.getFrontMatterData().then(data => {
+			return data[this.config.keys.engineOverride];
+		});
 	}
 
 	_getCompileCache(str) {
@@ -386,14 +391,12 @@ class TemplateContent {
 		let { type, bypassMarkdown, engineOverride } = options;
 
 		let tr = await this.getTemplateRender();
-
 		if (engineOverride !== undefined) {
 			debugDev("%o overriding template engine to use %o", this.inputPath, engineOverride);
 			await tr.setEngineOverride(engineOverride, bypassMarkdown);
 		} else {
 			tr.setUseMarkdown(!bypassMarkdown);
 		}
-
 		if (bypassMarkdown && !this.engine.needsCompilation(str)) {
 			return function () {
 				return str;
@@ -684,7 +687,7 @@ eventBus.on("eleventy.resourceModified", (path) => {
 });
 
 // Used when the configuration file reset https://github.com/11ty/eleventy/issues/2147
-eventBus.on("eleventy.compileCacheReset", (/*path*/) => {
+eventBus.on("eleventy.compileCacheReset", () => {
 	TemplateContent._compileCache = new Map();
 });
 

@@ -7,7 +7,6 @@ import debugUtil from "debug";
 
 import unique from "../Util/Objects/Unique.js";
 import TemplateGlob from "../TemplateGlob.js";
-import EleventyExtensionMap from "../EleventyExtensionMap.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import TemplateDataInitialGlobalData from "./TemplateDataInitialGlobalData.js";
 import { getEleventyPackageJson, getWorkingProjectPackageJson } from "../Util/ImportJsonSync.js";
@@ -84,8 +83,7 @@ class TemplateData {
 
 	get extensionMap() {
 		if (!this._extensionMap) {
-			this._extensionMap = new EleventyExtensionMap(this.templateConfig);
-			this._extensionMap.setFormats([]);
+			throw new Error("Internal error: missing `extensionMap` in TemplateData.");
 		}
 		return this._extensionMap;
 	}

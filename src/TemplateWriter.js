@@ -4,7 +4,6 @@ import debugUtil from "debug";
 import Template from "./Template.js";
 import TemplateMap from "./TemplateMap.js";
 import EleventyFiles from "./EleventyFiles.js";
-import EleventyExtensionMap from "./EleventyExtensionMap.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import { EleventyErrorHandler } from "./Errors/EleventyErrorHandler.js";
 import EleventyErrorUtil from "./Errors/EleventyErrorUtil.js";
@@ -21,6 +20,7 @@ class TemplateWriter {
 	#eleventyFiles;
 	#passthroughManager;
 	#errorHandler;
+	#extensionMap;
 
 	constructor(
 		templateFormats, // TODO remove this, see `get eleventyFiles` first
@@ -105,15 +105,14 @@ class TemplateWriter {
 	}
 
 	set extensionMap(extensionMap) {
-		this._extensionMap = extensionMap;
+		this.#extensionMap = extensionMap;
 	}
 
 	get extensionMap() {
-		if (!this._extensionMap) {
-			this._extensionMap = new EleventyExtensionMap(this.templateConfig);
-			this._extensionMap.setFormats(this.templateFormats);
+		if (!this.#extensionMap) {
+			throw new Error("Internal error: missing `extensionMap` in TemplateWriter.");
 		}
-		return this._extensionMap;
+		return this.#extensionMap;
 	}
 
 	setPassthroughManager(mgr) {
@@ -145,6 +144,7 @@ class TemplateWriter {
 	_createTemplate(path, to = "fs") {
 		let tmpl = this._templatePathCache.get(path);
 		let wasCached = false;
+
 		if (tmpl) {
 			wasCached = true;
 			// Update config for https://github.com/11ty/eleventy/issues/3468
@@ -154,28 +154,13 @@ class TemplateWriter {
 			tmpl.setTemplateData(this.templateData);
 		} else {
 			tmpl = new Template(path, this.templateData, this.extensionMap, this.templateConfig);
-
 			tmpl.setOutputFormat(to);
-
 			tmpl.logger = this.logger;
 			this._templatePathCache.set(path, tmpl);
-
-			/*
-			 * Sample filter: arg str, return pretty HTML string
-			 * function(str) {
-			 *   return pretty(str, { ocd: true });
-			 * }
-			 */
-			tmpl.setTransforms(this.config.transforms);
-
-			for (let linterName in this.config.linters) {
-				let linter = this.config.linters[linterName];
-				if (typeof linter === "function") {
-					tmpl.addLinter(linter);
-				}
-			}
 		}
 
+		tmpl.setTransforms(this.config.transforms);
+		tmpl.setLinters(this.config.linters);
 		tmpl.setDryRun(this.isDryRun);
 		tmpl.setIsVerbose(this.isVerbose);
 		tmpl.reset();
@@ -356,8 +341,6 @@ class TemplateWriter {
 
 		await this._addToTemplateMap(paths, to);
 		await this.templateMap.cache();
-
-		return this.templateMap;
 	}
 
 	async _generateTemplate(mapEntry, to) {

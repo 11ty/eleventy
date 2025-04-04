@@ -2,7 +2,10 @@ import { EventEmitter } from "node:events";
 
 /**
  * This class emits events asynchronously.
- * It can be used for time measurements during a build.
+ *
+ * Note that Eleventy has two separate event emitter instances it uses:
+ * 1. a userland one (UserConfig.js)
+ * 2. a global one for internals (EventBus.js)
  */
 class AsyncEventEmitter extends EventEmitter {
 	#handlerMode = "parallel";
@@ -19,6 +22,7 @@ class AsyncEventEmitter extends EventEmitter {
 				this.removeAllListeners(type);
 			}
 		}
+
 	}
 
 	/**

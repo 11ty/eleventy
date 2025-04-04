@@ -1,5 +1,4 @@
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
-import EleventyExtensionMap from "./EleventyExtensionMap.js";
 import TemplateEngineManager from "./Engines/TemplateEngineManager.js";
 import CustomEngine from "./Engines/Custom.js";
 
@@ -11,6 +10,8 @@ class TemplateRenderUnknownEngineError extends EleventyBaseError {}
 
 // works with full path names or short engine name
 class TemplateRender {
+	#extensionMap;
+
 	constructor(tmplPath, config) {
 		if (!tmplPath) {
 			throw new Error(`TemplateRender requires a tmplPath argument, instead of ${tmplPath}`);
@@ -57,22 +58,19 @@ class TemplateRender {
 	}
 
 	set extensionMap(extensionMap) {
-		this._extensionMap = extensionMap;
+		this.#extensionMap = extensionMap;
 	}
 
 	get extensionMap() {
-		if (!this._extensionMap) {
-			this._extensionMap = new EleventyExtensionMap(this.eleventyConfig);
-			this._extensionMap.setFormats([]);
+		if (!this.#extensionMap) {
+			throw new Error("Internal error: missing `extensionMap` in TemplateRender.");
 		}
-		return this._extensionMap;
+		return this.#extensionMap;
 	}
 
 	async getEngineByName(name) {
-		let engine = await this.extensionMap.engineManager.getEngine(name, this.extensionMap);
-		engine.eleventyConfig = this.eleventyConfig;
-
-		return engine;
+		// WARNING: eleventyConfig assignment removed here
+		return this.extensionMap.engineManager.getEngine(name, this.extensionMap);
 	}
 
 	// Runs once per template

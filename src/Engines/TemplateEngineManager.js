@@ -3,12 +3,10 @@ import EleventyBaseError from "../Errors/EleventyBaseError.js";
 
 const debug = debugUtil("Eleventy:TemplateEngineManager");
 
-class TemplateEngineManagerConfigError extends EleventyBaseError {}
-
 class TemplateEngineManager {
 	constructor(eleventyConfig) {
 		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
-			throw new TemplateEngineManagerConfigError("Missing or invalid `config` argument.");
+			throw new EleventyBaseError("Missing or invalid `config` argument.");
 		}
 		this.eleventyConfig = eleventyConfig;
 
@@ -95,10 +93,6 @@ class TemplateEngineManager {
 		return !!this.getClassNameFromTemplateKey(name);
 	}
 
-	isEngineRemovedFromCore(name) {
-		return ["ejs", "hbs", "mustache", "haml", "pug"].includes(name) && !this.hasEngine(name);
-	}
-
 	async getEngineClassByExtension(extension) {
 		if (this.importCache[extension]) {
 			return this.importCache[extension];
@@ -168,8 +162,12 @@ class TemplateEngineManager {
 		return instance;
 	}
 
+	isEngineRemovedFromCore(name) {
+		return ["ejs", "hbs", "mustache", "haml", "pug"].includes(name) && !this.hasEngine(name);
+	}
+
 	async getEngine(name, extensionMap) {
-		// Warning about engine deprecation
+		// Bundled engine deprecation
 		if (this.isEngineRemovedFromCore(name)) {
 			throw new Error(
 				`Per the 11ty Community Survey (2023), the "${name}" template language was moved from core to an officially supported plugin in v3.0. These plugins live here: https://github.com/11ty/eleventy-plugin-template-languages and are documented on their respective template language docs at https://v3.11ty.dev/docs/languages/ You are also empowered to implement *any* template language yourself using https://v3.11ty.dev/docs/languages/custom/`,
@@ -179,11 +177,10 @@ class TemplateEngineManager {
 		if (!this.hasEngine(name)) {
 			throw new Error(`Template Engine ${name} does not exist in getEngine()`);
 		}
-
 		// TODO these cached engines should be based on extensions not name, then we can remove the error in
 		//  "Double override (not aliases) throws an error" test in TemplateRenderCustomTest.js
 		if (!this.engineCache[name]) {
-			debug("Engine cache miss %o (should only happen once per type)", name);
+			debug("Engine cache miss %o (should only happen once per engine type)", name);
 			// Make sure cache key is based on name and not path
 			// Custom class is used for all plugins, cache once per plugin
 			this.engineCache[name] = this.#getEngine(name, extensionMap);

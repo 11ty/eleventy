@@ -12,7 +12,7 @@ import InputPathToUrlPlugin from "./Plugins/InputPathToUrl.js";
 
 import isAsyncFunction from "./Util/IsAsyncFunction.js";
 import objectFilter from "./Util/Objects/ObjectFilter.js";
-import AsyncEventEmitter from "./Util/AsyncEventEmitter.js";
+import EventEmitter from "./Util/AsyncEventEmitter.js";
 import EleventyCompatibility from "./Util/Compatibility.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import BenchmarkManager from "./Benchmark/BenchmarkManager.js";
@@ -51,7 +51,7 @@ class UserConfig {
 		this.urlTransforms = [];
 		this.customDateParsingCallbacks = new Set();
 		this.ignores = new Set();
-		this.events = new AsyncEventEmitter();
+		this.events = new EventEmitter();
 
 		/** @type {object} */
 		this.directories = {};
@@ -78,8 +78,8 @@ class UserConfig {
 	reset() {
 		debug("Resetting EleventyConfig to initial values.");
 
-		/** @type {AsyncEventEmitter} */
-		this.events = new AsyncEventEmitter();
+		/** @type {EventEmitter} */
+		this.events = new EventEmitter();
 
 		/** @type {BenchmarkManager} */
 		this.benchmarkManager = new BenchmarkManager();
