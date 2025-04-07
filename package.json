@@ -116,7 +116,7 @@
 		"sass": "^1.86.1",
 		"simple-git-hooks": "^2.11.1",
 		"tsx": "^4.19.3",
-		"typescript": "^5.8.2",
+		"typescript": "^5.8.3",
 		"vue": "^3.5.13",
 		"zod": "^3.24.2",
 		"zod-validation-error": "^3.4.0"
