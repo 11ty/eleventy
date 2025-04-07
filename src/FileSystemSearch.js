@@ -4,7 +4,7 @@ import debugUtil from "debug";
 
 import { isGlobMatch } from "./Util/GlobMatcher.js";
 
-const debug = debugUtil("Eleventy:FastGlobManager");
+const debug = debugUtil("Eleventy:FileSystemSearch");
 
 class FileSystemSearch {
 	constructor() {
