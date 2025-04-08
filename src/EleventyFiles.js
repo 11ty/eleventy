@@ -85,15 +85,14 @@ class EleventyFiles {
 	}
 
 	get passthroughGlobs() {
-		let paths = new Set();
-		// stuff added in addPassthroughCopy()
-		for (let path of this.passthroughManager.getConfigPathGlobs()) {
-			paths.add(path);
-		}
-		// non-template language extensions
-		for (let path of this.extensionMap.getPassthroughCopyGlobs(this.inputDir)) {
-			paths.add(path);
-		}
+		let paths = new Set(
+			// stuff added in addPassthroughCopy()
+			this.passthroughManager.getConfigPathGlobs()
+			.concat(
+				// non-template language extensions
+				this.extensionMap.getPassthroughCopyGlobs(this.inputDir)
+			)
+		);
 		return Array.from(paths);
 	}
 
@@ -166,13 +165,10 @@ class EleventyFiles {
 	}
 
 	getIgnoreGlobs() {
-		let uniqueIgnores = new Set();
-		for (let ignore of this.fileIgnores) {
-			uniqueIgnores.add(ignore);
-		}
-		for (let ignore of this.extraIgnores) {
-			uniqueIgnores.add(ignore);
-		}
+		let uniqueIgnores = new Set(
+			this.fileIgnores
+			.concat(this.extraIgnores),
+		);
 		// Placing the config ignores last here is important to the tests
 		for (let ignore of this.config.ignores) {
 			uniqueIgnores.add(TemplateGlob.normalizePath(this.localPathRoot || ".", ignore));
@@ -250,11 +246,9 @@ class EleventyFiles {
 	}
 
 	getIgnores() {
-		let files = new Set();
-
-		for (let ignore of EleventyFiles.getFileIgnores(this.getIgnoreFiles())) {
-			files.add(ignore);
-		}
+		let files = new Set(
+			EleventyFiles.getFileIgnores(this.getIgnoreFiles())
+		);
 
 		// testing API
 		if (this.eleventyIgnoreContent !== false) {
@@ -414,14 +408,7 @@ class EleventyFiles {
 		if (!filePath) {
 			return false;
 		}
-
-		for (let path of paths) {
-			if (path === filePath) {
-				return true;
-			}
-		}
-
-		return false;
+		return paths.some((path) => path === filePath)
 	}
 
 	/* For `eleventy --watch` */
