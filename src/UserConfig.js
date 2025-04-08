@@ -437,16 +437,6 @@ class UserConfig {
 		);
 	}
 
-	addJavaScriptFilter(name, callback) {
-		this.#add(this.javascript.filters, name, callback, {
-			description: "JavaScript Filter",
-			functionName: "addJavaScriptFilter",
-		});
-
-		// Backwards compat for a time before `addJavaScriptFilter` existed.
-		this.addJavaScriptFunction(name, callback);
-	}
-
 	/**
 	 *
 	 * @param {*} name - The name of the filter
@@ -468,8 +458,6 @@ class UserConfig {
 			langs: options?.langs,
 			async,
 		});
-
-		this.addJavaScriptFilter(name, callback);
 	}
 
 	/**
@@ -501,7 +489,6 @@ class UserConfig {
 		});
 
 		this.addLiquidShortcode(name, callback);
-		this.addJavaScriptShortcode(name, callback);
 		this.addNunjucksShortcode(name, callback);
 	}
 
@@ -514,7 +501,6 @@ class UserConfig {
 		// Related: #498
 		this.addNunjucksAsyncShortcode(name, callback);
 		this.addLiquidShortcode(name, callback);
-		this.addJavaScriptShortcode(name, callback);
 	}
 
 	addNunjucksAsyncShortcode(name, callback) {
@@ -556,7 +542,6 @@ class UserConfig {
 
 		this.addPairedNunjucksShortcode(name, callback);
 		this.addPairedLiquidShortcode(name, callback);
-		this.addPairedJavaScriptShortcode(name, callback);
 	}
 
 	// Related: #498
@@ -568,7 +553,6 @@ class UserConfig {
 
 		this.addPairedNunjucksAsyncShortcode(name, callback);
 		this.addPairedLiquidShortcode(name, callback);
-		this.addPairedJavaScriptShortcode(name, callback);
 	}
 
 	addPairedNunjucksAsyncShortcode(name, callback) {
@@ -594,26 +578,6 @@ class UserConfig {
 			description: "Liquid Paired Shortcode",
 			functionName: "addPairedLiquidShortcode",
 		});
-	}
-
-	addJavaScriptShortcode(name, callback) {
-		this.#add(this.javascript.shortcodes, name, callback, {
-			description: "JavaScript Shortcode",
-			functionName: "addJavaScriptShortcode",
-		});
-
-		// Backwards compat for a time before `addJavaScriptShortcode` existed.
-		this.addJavaScriptFunction(name, callback);
-	}
-
-	addPairedJavaScriptShortcode(name, callback) {
-		this.#add(this.javascript.pairedShortcodes, name, callback, {
-			description: "JavaScript Paired Shortcode",
-			functionName: "addPairedJavaScriptShortcode",
-		});
-
-		// Backwards compat for a time before `addJavaScriptShortcode` existed.
-		this.addJavaScriptFunction(name, callback);
 	}
 
 	// Both Filters and shortcodes feed into this
@@ -1296,9 +1260,6 @@ class UserConfig {
 
 			// 11ty.js
 			javascriptFunctions: this.javascript.functions, // filters and shortcodes, combined
-			javascriptShortcodes: this.javascript.shortcodes,
-			javascriptPairedShortcodes: this.javascript.pairedShortcodes,
-			javascriptFilters: this.javascript.filters,
 
 			// Markdown
 			markdownHighlighter: this.markdownHighlighter,
