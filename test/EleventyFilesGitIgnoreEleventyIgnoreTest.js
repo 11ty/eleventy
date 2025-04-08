@@ -204,7 +204,7 @@ test("Bad expected output, this indicates a bug upstream in a dependency (update
   });
 
   let { eleventyFiles: evf } = getEleventyFilesInstance(["liquid"], eleventyConfig);
-  evf._setEleventyIgnoreContent("!" + TemplatePath.absolutePath("test/stubs-403/_includes") + "/**");
+  evf._setEleventyIgnoreContent(TemplatePath.absolutePath("test/stubs-403/_includes") + "/**");
   evf.init(); // duplicate init
 
   t.deepEqual(await evf.getFiles(), [
@@ -226,7 +226,7 @@ test("Workaround for Bad expected output, this indicates a bug upstream in a dep
   });
 
   let { eleventyFiles: evf } = getEleventyFilesInstance(["liquid"], eleventyConfig);
-  evf._setEleventyIgnoreContent("!./test/stubs-403/_includes/**");
+  evf._setEleventyIgnoreContent("./test/stubs-403/_includes/**");
   evf.init(); // duplicate init
 
   t.deepEqual(await evf.getFiles(), ["./test/stubs-403/template.liquid"]);
