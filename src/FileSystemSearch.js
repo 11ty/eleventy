@@ -1,10 +1,10 @@
-import fastglob from "fast-glob";
+import { glob } from "tinyglobby";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import { isGlobMatch } from "./Util/GlobMatcher.js";
 
-const debug = debugUtil("Eleventy:FastGlobManager");
+const debug = debugUtil("Eleventy:FileSystemSearch");
 
 class FileSystemSearch {
 	constructor() {
@@ -52,7 +52,7 @@ class FileSystemSearch {
 
 			this.count++;
 
-			this.promises[cacheKey] = fastglob(
+			this.promises[cacheKey] = glob(
 				globs,
 				Object.assign(
 					{

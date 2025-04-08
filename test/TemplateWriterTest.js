@@ -1,7 +1,7 @@
 import test from "ava";
 import fs from "fs";
 import { rimrafSync } from "rimraf";
-import fastglob from "fast-glob";
+import { glob } from "tinyglobby";
 import path from "path";
 
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
@@ -21,7 +21,7 @@ test("Output is a subdir of input", async (t) => {
 
   let { templateWriter: tw, eleventyFiles: evf } = getTemplateWriterInstance(["liquid", "md"], eleventyConfig);
 
-  let files = await fastglob(evf.getFileGlobs());
+  let files = await glob(evf.getFileGlobs());
   t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTest/**/*.{liquid,md}"]);
   t.true(files.length > 0);
 
@@ -510,9 +510,9 @@ test("Write Test 11ty.js", async (t) => {
 
   let { templateWriter: tw, eleventyFiles: evf } = getTemplateWriterInstance(["11ty.js"], eleventyConfig);
 
-  let files = await fastglob(evf.getFileGlobs());
+  let files = await glob(evf.getFileGlobs());
   t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTestJS/**/*.{11ty.js,11ty.cjs,11ty.mjs}"]);
-  t.deepEqual(files, ["./test/stubs/writeTestJS/test.11ty.cjs"]);
+  t.deepEqual(files, ["test/stubs/writeTestJS/test.11ty.cjs"]);
 
   let { template: tmpl } = tw._createTemplate(files[0]);
   let data = await tmpl.getData();
@@ -539,7 +539,7 @@ test.skip("Markdown with alias", async (t) => {
   evf._setExtensionMap(map);
   evf.init();
 
-  let files = await fastglob(evf.getFileGlobs());
+  let files = await glob(evf.getFileGlobs());
   t.deepEqual(evf.getRawFiles(), [
     "./test/stubs/writeTestMarkdown/**/*.md",
     "./test/stubs/writeTestMarkdown/**/*.markdown",
@@ -577,7 +577,7 @@ test.skip("JavaScript with alias", async (t) => {
   evf._setExtensionMap(map);
   evf.init();
 
-  let files = await fastglob(evf.getFileGlobs());
+  let files = await glob(evf.getFileGlobs());
   t.deepEqual(
     evf.getRawFiles().sort(),
     ["./test/stubs/writeTestJS/**/*.11ty.js", "./test/stubs/writeTestJS/**/*.js"].sort(),

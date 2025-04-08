@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import isGlob from "is-glob";
+import { isDynamicPattern } from "tinyglobby";
 import { filesize } from "filesize";
 import copy from "@11ty/recursive-copy";
 import { TemplatePath } from "@11ty/eleventy-utils";
@@ -48,7 +48,7 @@ class TemplatePassthrough {
 		// inputPath is relative to the root of your project and not your Eleventy input directory.
 		// TODO normalize these with forward slashes
 		this.inputPath = this.normalizeIfDirectory(path.inputPath);
-		this.#isInputPathGlob = isGlob(this.inputPath);
+		this.#isInputPathGlob = isDynamicPattern(this.inputPath);
 
 		this.outputPath = path.outputPath;
 		this.copyOptions = path.copyOptions; // custom options for recursive-copy
@@ -219,7 +219,7 @@ class TemplatePassthrough {
 		}
 
 		// TODO VirtualFileSystem candidate
-		if (!isGlob(this.inputPath) && this.isExists(this.inputPath)) {
+		if (!isDynamicPattern(this.inputPath) && this.isExists(this.inputPath)) {
 			return [
 				{
 					inputPath: this.inputPath,

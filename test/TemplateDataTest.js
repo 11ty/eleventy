@@ -91,7 +91,7 @@ test("Data dir does not exist", async (t) => {
     dataObj.setProjectUsingEsm(true);
     await dataObj.getGlobalData();
   }, {
-    message: "The \"test/thisdirectorydoesnotexist\" `input` parameter (directory or file path) must exist on the file system (unless detected as a glob by the `is-glob` package)"
+    message: "The \"test/thisdirectorydoesnotexist\" `input` parameter (directory or file path) must exist on the file system (unless detected as a glob by the `tinyglobby` package)"
   });
 });
 
