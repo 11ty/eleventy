@@ -287,14 +287,23 @@ class UserConfig {
 	}
 
 	getFilters(options = {}) {
+		let working = this.universal.filters;
 		if (options.type) {
-			return objectFilter(
+			working = objectFilter(
 				this.universal.filters,
 				(entry) => entry.__eleventyInternal?.type === options.type,
 			);
 		}
+		if (options.lang) {
+			working = objectFilter(
+				working,
+				(entry) =>
+					entry.__eleventyInternal?.langs?.includes(options.lang) ||
+					entry.__eleventyInternal?.langs === undefined,
+			);
+		}
 
-		return this.universal.filters;
+		return working;
 	}
 
 	getShortcode(name) {
@@ -349,11 +358,15 @@ class UserConfig {
 			debug(`Adding new ${description} "%o" via \`%o(%o)\``, name, functionName, originalName);
 		}
 
-		target[name] = this.#decorateCallback(`"${name}" ${description}`, callback);
+		target[name] = this.#decorateCallback(
+			`"${name}" ${description}`,
+			callback,
+			options,
+		);
 	}
 
-	#decorateCallback(type, callback) {
-		return this.benchmarks.config.add(type, callback);
+	#decorateCallback(type, callback, misc) {
+		return this.benchmarks.config.add(type, callback, misc);
 	}
 
 	/*
@@ -378,24 +391,40 @@ class UserConfig {
 		});
 	}
 
+	/**
+	 * @deprecated Use {@link addFilter} instead, with options.langs set to ["njk"] if you wish it to be scoped.
+	 */
 	addNunjucksAsyncFilter(name, callback) {
-		this.#add(this.nunjucks.asyncFilters, name, callback, {
-			description: "Nunjucks Filter",
-			functionName: "addNunjucksAsyncFilter",
+		this.logger.warn(
+			'`addNunjucksAsyncFilter` is deprecated and will be removed in a future release.\
+			 Pass an async function to `addFilter` instead, with options.lang set to ["njk"] if you wish it to be scoped.',
+		);
+		this.addFilter(name, callback, {
+			langs: ["njk"],
+			async: true,
 		});
 	}
 
 	// Support the nunjucks style syntax for asynchronous filter add
+	/**
+	 * @deprecated Use {@link addFilter} instead, with options.langs set to ["njk"] if you wish it to be scoped.
+	 */
 	addNunjucksFilter(name, callback, isAsync = false) {
 		if (isAsync) {
-			// namespacing happens downstream
 			this.addNunjucksAsyncFilter(name, callback);
-		} else {
-			this.#add(this.nunjucks.filters, name, callback, {
-				description: "Nunjucks Filter",
-				functionName: "addNunjucksFilter",
-			});
+			return;
 		}
+		this.logger.warn(
+			'`addNunjucksFilter` is deprecated and will be removed in a future release.\
+			 Use `addFilter` instead, with options.langs set to ["njk"] if you wish it to be scoped.',
+		);
+		this.addFilter(
+			name,
+			callback,
+			{
+				langs: ["njk"],
+			},
+		);
 	}
 
 	addJavaScriptFilter(name, callback) {
@@ -408,57 +437,38 @@ class UserConfig {
 		this.addJavaScriptFunction(name, callback);
 	}
 
-	addFilter(name, callback) {
-		// This method *requires* `async function` and will not work with `function` that returns a promise
-		if (isAsyncFunction(callback)) {
-			this.addAsyncFilter(name, callback);
-			return;
-		}
+	/**
+	 *
+	 * @param {*} name - The name of the filter
+	 * @param {*} callback - The filter function
+	 * @param {{
+	 * 	langs?: string[],
+	 * 	async?: boolean
+	 * }} [options] - Options for the filter
+	 * If `async` is undefined, it attempt to be determined.
+	 * @returns
+	 */
+	addFilter(name, callback, options) {
+		const async = options?.async || isAsyncFunction(callback);
 
 		// namespacing happens downstream
 		this.#add(this.universal.filters, name, callback, {
 			description: "Universal Filter",
 			functionName: "addFilter",
+			langs: options?.langs,
+			async,
 		});
 
 		this.addLiquidFilter(name, callback);
 		this.addJavaScriptFilter(name, callback);
-		this.addNunjucksFilter(
-			name,
-			/** @this {any} */
-			function (...args) {
-				// Note that `callback` is already a function as the `#add` method throws an error if not.
-				let ret = callback.call(this, ...args);
-				if (ret instanceof Promise) {
-					throw new Error(
-						`Nunjucks *is* async-friendly with \`addFilter("${name}", async function() {})\` but you need to supply an \`async function\`. You returned a promise from \`addFilter("${name}", function() {})\`. Alternatively, use the \`addAsyncFilter("${name}")\` configuration API method.`,
-					);
-				}
-				return ret;
-			},
-		);
 	}
 
 	// Liquid, Nunjucks, and JS only
+	/**
+	 * @deprecated Pass an async function to `addFilter` instead.
+	 */
 	addAsyncFilter(name, callback) {
-		// namespacing happens downstream
-		this.#add(this.universal.filters, name, callback, {
-			description: "Universal Filter",
-			functionName: "addAsyncFilter",
-		});
-
-		this.addLiquidFilter(name, callback);
-		this.addJavaScriptFilter(name, callback);
-		this.addNunjucksAsyncFilter(
-			name,
-			/** @this {any} */
-			async function (...args) {
-				let cb = args.pop();
-				// Note that `callback` is already a function as the `#add` method throws an error if not.
-				let ret = await callback.call(this, ...args);
-				cb(null, ret);
-			},
-		);
+		this.addFilter(name, callback);
 	}
 
 	/*
@@ -1265,8 +1275,6 @@ class UserConfig {
 			// Nunjucks
 			nunjucksEnvironmentOptions: this.nunjucks.environmentOptions,
 			nunjucksPrecompiledTemplates: this.nunjucks.precompiledTemplates,
-			nunjucksFilters: this.nunjucks.filters,
-			nunjucksAsyncFilters: this.nunjucks.asyncFilters,
 			nunjucksTags: this.nunjucks.tags,
 			nunjucksGlobals: this.nunjucks.globals,
 			nunjucksAsyncShortcodes: this.nunjucks.asyncShortcodes,
