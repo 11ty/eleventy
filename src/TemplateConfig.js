@@ -3,7 +3,7 @@ import chalk from "kleur";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
-import { EleventyImportRaw, EleventyImportRawFromEleventy } from "./Util/Require.js";
+import { EleventyImportRaw } from "./Util/Require.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import UserConfig from "./UserConfig.js";
 import GlobalDependencyMap from "./GlobalDependencyMap.js";
@@ -48,6 +48,8 @@ class TemplateConfig {
 	#configManuallyDefined = false;
 	/** @type {UserConfig} */
 	#userConfig = new UserConfig();
+	#existsCache = new ExistsCache();
+	#usesGraph;
 
 	constructor(customRootConfig, projectConfigPath) {
 		/** @type {object} */
@@ -177,9 +179,10 @@ class TemplateConfig {
 	async reset() {
 		debugDev("Resetting configuration: TemplateConfig and UserConfig.");
 		this.userConfig.reset();
+		this.usesGraph.reset(); // needs to be before forceReloadConfig #3711
+
 		// await this.initializeRootConfig();
 		await this.forceReloadConfig();
-		this.usesGraph.reset();
 
 		// Clear the compile cache
 		eventBus.emit("eleventy.compileCacheReset");
@@ -289,7 +292,7 @@ class TemplateConfig {
 	async initializeRootConfig() {
 		this.rootConfig = this.customRootConfig;
 		if (!this.rootConfig) {
-			let { default: cfg } = await EleventyImportRawFromEleventy("./src/defaultConfig.js");
+			let { default: cfg } = await import("./defaultConfig.js");
 			this.rootConfig = cfg;
 		}
 
@@ -524,12 +527,12 @@ class TemplateConfig {
 	}
 
 	get usesGraph() {
-		if (!this._usesGraph) {
-			this._usesGraph = new GlobalDependencyMap();
-			this._usesGraph.setIsEsm(this.isEsm);
-			this._usesGraph.setTemplateConfig(this);
+		if (!this.#usesGraph) {
+			this.#usesGraph = new GlobalDependencyMap();
+			this.#usesGraph.setIsEsm(this.isEsm);
+			this.#usesGraph.setTemplateConfig(this);
 		}
-		return this._usesGraph;
+		return this.#usesGraph;
 	}
 
 	get uses() {
@@ -540,11 +543,7 @@ class TemplateConfig {
 	}
 
 	get existsCache() {
-		if (!this._existsCache) {
-			this._existsCache = new ExistsCache();
-			this._existsCache.setDirectoryCheck(true);
-		}
-		return this._existsCache;
+		return this.#existsCache;
 	}
 }
 

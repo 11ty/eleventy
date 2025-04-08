@@ -12,7 +12,7 @@ import InputPathToUrlPlugin from "./Plugins/InputPathToUrl.js";
 
 import isAsyncFunction from "./Util/IsAsyncFunction.js";
 import objectFilter from "./Util/Objects/ObjectFilter.js";
-import AsyncEventEmitter from "./Util/AsyncEventEmitter.js";
+import EventEmitter from "./Util/AsyncEventEmitter.js";
 import EleventyCompatibility from "./Util/Compatibility.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import BenchmarkManager from "./Benchmark/BenchmarkManager.js";
@@ -36,6 +36,9 @@ class UserConfig {
 	#dataDeepMergeModified = false;
 	/** @type {number|undefined} */
 	#uniqueId;
+	/** @type {number} */
+	#concurrency = 1;
+	// Before using os.availableParallelism(); see https://github.com/11ty/eleventy/issues/3596
 
 	constructor() {
 		// These are completely unnecessary lines to satisfy TypeScript
@@ -48,7 +51,7 @@ class UserConfig {
 		this.urlTransforms = [];
 		this.customDateParsingCallbacks = new Set();
 		this.ignores = new Set();
-		this.events = new AsyncEventEmitter();
+		this.events = new EventEmitter();
 
 		/** @type {object} */
 		this.directories = {};
@@ -60,6 +63,8 @@ class UserConfig {
 		this.pathPrefix;
 		/** @type {object} */
 		this.errorReporting = {};
+		/** @type {object} */
+		this.templateHandling = {};
 
 		this.reset();
 		this.#uniqueId = Math.random();
@@ -73,8 +78,9 @@ class UserConfig {
 	reset() {
 		debug("Resetting EleventyConfig to initial values.");
 
-		/** @type {AsyncEventEmitter} */
-		this.events = new AsyncEventEmitter();
+		/** @type {EventEmitter} */
+		this.events = new EventEmitter();
+		this.events.setMaxListeners(25); // defaults to 10
 
 		/** @type {BenchmarkManager} */
 		this.benchmarkManager = new BenchmarkManager();
@@ -143,6 +149,7 @@ class UserConfig {
 
 		/** @type {object} */
 		this.passthroughCopies = {};
+		this.passthroughCopiesHtmlRelative = new Set();
 
 		/** @type {object} */
 		this.layoutAliases = {};
@@ -233,6 +240,11 @@ class UserConfig {
 
 		/** @type {object} */
 		this.errorReporting = {};
+		/** @type {object} */
+		this.templateHandling = {};
+
+		// Before using os.availableParallelism(); see https://github.com/11ty/eleventy/issues/3596
+		this.#concurrency = 1;
 	}
 
 	// compatibleRange is optional in 2.0.0-beta.2
@@ -787,7 +799,23 @@ class UserConfig {
 	 * @returns {any} a reference to the `EleventyConfig` object.
 	 */
 	addPassthroughCopy(fileOrDir, copyOptions = {}) {
-		if (typeof fileOrDir === "string") {
+		if (copyOptions.mode) {
+			if (copyOptions.mode !== "html-relative") {
+				throw new Error(
+					"Invalid `mode` option for `addPassthroughCopy`. Received: '" + copyOptions.mode + "'",
+				);
+			}
+			if (isPlainObject(fileOrDir)) {
+				throw new Error(
+					"mode: 'html-relative' does not yet support passthrough copy objects (input -> output mapping). Use a string glob or an Array of string globs.",
+				);
+			}
+
+			this.passthroughCopiesHtmlRelative?.add({
+				match: fileOrDir,
+				...copyOptions,
+			});
+		} else if (typeof fileOrDir === "string") {
 			this.passthroughCopies[fileOrDir] = { outputPath: true, copyOptions };
 		} else {
 			for (let [inputPath, outputPath] of Object.entries(fileOrDir)) {
@@ -1165,6 +1193,11 @@ class UserConfig {
 		Object.assign(this.errorReporting, options);
 	}
 
+	configureTemplateHandling(options = {}) {
+		// writeMode: "sync" // "async"
+		Object.assign(this.templateHandling, options);
+	}
+
 	/*
 	 * Collections
 	 */
@@ -1197,6 +1230,18 @@ class UserConfig {
 		return augmentFunction(fn, options);
 	}
 
+	setConcurrency(number) {
+		if (typeof number !== "number") {
+			throw new UserConfigError("Argument passed to `setConcurrency` must be a number.");
+		}
+
+		this.#concurrency = number;
+	}
+
+	getConcurrency() {
+		return this.#concurrency;
+	}
+
 	getMergingConfigObject() {
 		let obj = {
 			// filters removed in 1.0 (use addTransform instead)
@@ -1206,6 +1251,7 @@ class UserConfig {
 			globalData: this.globalData,
 			layoutAliases: this.layoutAliases,
 			layoutResolution: this.layoutResolution,
+			passthroughCopiesHtmlRelative: this.passthroughCopiesHtmlRelative,
 			passthroughCopies: this.passthroughCopies,
 
 			// Liquid
@@ -1258,6 +1304,7 @@ class UserConfig {
 			plugins: this.plugins,
 			useTemplateCache: this.useTemplateCache,
 			precompiledCollections: this.precompiledCollections,
+			collectionApiNames: Object.keys(this.collections),
 			dataFilterSelectors: this.dataFilterSelectors,
 			libraryAmendments: this.libraryAmendments,
 			serverPassthroughCopyBehavior: this.serverPassthroughCopyBehavior,
@@ -1267,6 +1314,7 @@ class UserConfig {
 			freezeReservedData: this.freezeReservedData,
 			customDateParsing: this.customDateParsingCallbacks,
 			errorReporting: this.errorReporting,
+			templateHandling: this.templateHandling,
 		};
 
 		if (Array.isArray(this.dataFileSuffixesOverride)) {

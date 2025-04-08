@@ -28,12 +28,13 @@ class ComputedData {
 			let fns = {};
 			// TODO bug? no access to non-universal config things?
 			if (this.config) {
-				fns = this.config.javascriptFunctions;
+				fns = {
+					...this.config.javascriptFunctions,
+				};
 			}
-			renderFn = renderFn.bind({
-				...fns,
-				tmpl: templateInstance,
-			});
+			fns.tmpl = templateInstance;
+
+			renderFn = renderFn.bind(fns);
 		}
 
 		lodashSet(this.computed, key, renderFn);

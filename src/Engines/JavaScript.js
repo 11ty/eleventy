@@ -3,19 +3,19 @@ import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import TemplateEngine from "./TemplateEngine.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import getJavaScriptData from "../Util/GetJavaScriptData.js";
-import EventBusUtil from "../Util/EventBusUtil.js";
 import { EleventyImport } from "../Util/Require.js";
 import { augmentFunction, augmentObject } from "./Util/ContextAugmenter.js";
 
 class JavaScriptTemplateNotDefined extends EleventyBaseError {}
 
-class JavaScript extends TemplateEngine {
+export default class JavaScript extends TemplateEngine {
 	constructor(name, templateConfig) {
 		super(name, templateConfig);
 		this.instances = {};
 
 		this.cacheable = false;
-		EventBusUtil.soloOn("eleventy.templateModified", (inputPath, metadata = {}) => {
+
+		this.config.events.on("eleventy#templateModified", (inputPath, metadata = {}) => {
 			let { usedByDependants, relevantLayouts } = metadata;
 			// Remove from cached instances when modified
 			let instancesToDelete = [
@@ -92,7 +92,9 @@ class JavaScript extends TemplateEngine {
 			mod = this.eleventyConfig.userConfig.virtualTemplates[relativeInputPath].content;
 		} else {
 			let isEsm = this.eleventyConfig.getIsProjectUsingEsm();
-			mod = await EleventyImport(inputPath, isEsm ? "esm" : "cjs");
+			mod = await EleventyImport(inputPath, isEsm ? "esm" : "cjs", {
+				cacheBust: !this.config.useTemplateCache,
+			});
 		}
 
 		let inst = this._getInstance(mod);
@@ -208,7 +210,7 @@ class JavaScript extends TemplateEngine {
 		}
 
 		if (inst?.render) {
-			return function (data = {}) {
+			return (data = {}) => {
 				// TODO does this do anything meaningful for non-classes?
 				// `inst` should have a normalized `render` function from _getInstance
 
@@ -225,7 +227,7 @@ class JavaScript extends TemplateEngine {
 				Object.assign(inst, this.getJavaScriptFunctions(inst));
 
 				return this.normalize(inst.render.call(inst, data));
-			}.bind(this);
+			};
 		}
 	}
 
@@ -233,5 +235,3 @@ class JavaScript extends TemplateEngine {
 		return true;
 	}
 }
-
-export default JavaScript;

@@ -4,6 +4,8 @@ import { decodeHTML } from "entities";
 import slugifyFilter from "../Filters/Slugify.js";
 import MemoizeUtil from "../Util/MemoizeFunction.js";
 
+const POSTHTML_PLUGIN_NAME = "11ty/eleventy/id-attribute";
+
 function getTextNodeContent(node) {
 	if (node.attrs?.["eleventy:id-ignore"] === "") {
 		delete node.attrs["eleventy:id-ignore"];
@@ -38,7 +40,7 @@ function IdAttributePlugin(eleventyConfig, options = {}) {
 
 	eleventyConfig.htmlTransformer.addPosthtmlPlugin(
 		"html",
-		function (pluginOptions = {}) {
+		function idAttributePosthtmlPlugin(pluginOptions = {}) {
 			if (typeof options.filter === "function") {
 				if (options.filter(pluginOptions) === false) {
 					return function () {};
@@ -65,10 +67,11 @@ function IdAttributePlugin(eleventyConfig, options = {}) {
 							} else if (options.checkDuplicates === "error") {
 								// Existing `id` conflicts with assigned heading id, throw error
 								throw new Error(
-									"Duplicate `id` attribute (" +
+									'You have more than one HTML `id` attribute using the same value (id="' +
 										id +
-										") in markup on " +
-										pluginOptions.page.inputPath,
+										'") in your template (' +
+										pluginOptions.page.inputPath +
+										"). You can disable this error in the IdAttribute plugin with the `checkDuplicates: false` option.",
 								);
 							}
 						} else {
@@ -96,7 +99,11 @@ function IdAttributePlugin(eleventyConfig, options = {}) {
 					return node;
 				});
 			};
-		} /* , {} // pluginOptions */,
+		},
+		{
+			// pluginOptions
+			name: POSTHTML_PLUGIN_NAME,
+		},
 	);
 }
 

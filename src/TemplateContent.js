@@ -1,38 +1,43 @@
 import os from "node:os";
 
-import fs from "graceful-fs";
+import fs from "node:fs";
 import matter from "gray-matter";
 import lodash from "@11ty/lodash-custom";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
-import chardet from "chardet";
 
-import EleventyExtensionMap from "./EleventyExtensionMap.js";
 import TemplateData from "./Data/TemplateData.js";
 import TemplateRender from "./TemplateRender.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import EleventyErrorUtil from "./Errors/EleventyErrorUtil.js";
 import eventBus from "./EventBus.js";
 
+import { withResolvers } from "./Util/PromiseUtil.js";
+
 const { set: lodashSet } = lodash;
 const debug = debugUtil("Eleventy:TemplateContent");
-const debugDiagnostic = debugUtil("Eleventy:Diagnostics");
 const debugDev = debugUtil("Dev:Eleventy:TemplateContent");
 
-class TemplateContentConfigError extends EleventyBaseError {}
 class TemplateContentFrontMatterError extends EleventyBaseError {}
 class TemplateContentCompileError extends EleventyBaseError {}
 class TemplateContentRenderError extends EleventyBaseError {}
 
 class TemplateContent {
+	#config;
+	#templateRender;
+	#extensionMap;
+	#configOptions;
+
 	constructor(inputPath, templateConfig) {
 		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
-			throw new TemplateContentConfigError(
-				"Missing or invalid `templateConfig` argument to TemplateContent",
-			);
+			throw new Error("Missing or invalid `templateConfig` argument");
 		}
 		this.eleventyConfig = templateConfig;
 		this.inputPath = inputPath;
+	}
+
+	resetCachedTemplate({ eleventyConfig }) {
+		this.eleventyConfig = eleventyConfig;
 	}
 
 	get dirs() {
@@ -75,44 +80,45 @@ class TemplateContent {
 			delete this.inputContent;
 			delete this._frontMatterDataCache;
 		}
+		if (types.render) {
+			this.#templateRender = undefined;
+		}
 	}
 
-	/* Used by tests */
 	get extensionMap() {
-		if (!this._extensionMap) {
-			this._extensionMap = new EleventyExtensionMap(this.eleventyConfig);
-			this._extensionMap.setFormats([]);
+		if (!this.#extensionMap) {
+			throw new Error("Internal error: Missing `extensionMap` in TemplateContent.");
 		}
-		return this._extensionMap;
+		return this.#extensionMap;
 	}
 
 	set extensionMap(map) {
-		this._extensionMap = map;
+		this.#extensionMap = map;
 	}
 
 	set eleventyConfig(config) {
-		this._config = config;
+		this.#config = config;
 
-		if (this._config.constructor.name === "TemplateConfig") {
-			this._configOptions = this._config.getConfig();
+		if (this.#config.constructor.name === "TemplateConfig") {
+			this.#configOptions = this.#config.getConfig();
 		} else {
-			throw new TemplateContentConfigError("Tried to get an TemplateConfig but none was found.");
+			throw new Error("Tried to get an TemplateConfig but none was found.");
 		}
 	}
 
 	get eleventyConfig() {
-		if (this._config.constructor.name === "TemplateConfig") {
-			return this._config;
+		if (this.#config.constructor.name === "TemplateConfig") {
+			return this.#config;
 		}
-		throw new TemplateContentConfigError("Tried to get an TemplateConfig but none was found.");
+		throw new Error("Tried to get an TemplateConfig but none was found.");
 	}
 
 	get config() {
-		if (this._config.constructor.name === "TemplateConfig" && !this._configOptions) {
-			this._configOptions = this._config.getConfig();
+		if (this.#config.constructor.name === "TemplateConfig" && !this.#configOptions) {
+			this.#configOptions = this.#config.getConfig();
 		}
 
-		return this._configOptions;
+		return this.#configOptions;
 	}
 
 	get bench() {
@@ -128,21 +134,24 @@ class TemplateContent {
 			throw new Error(`\`templateRender\` has not yet initialized on ${this.inputPath}`);
 		}
 
-		return this._templateRender;
+		return this.#templateRender;
 	}
 
 	hasTemplateRender() {
-		return !!this._templateRender;
+		return !!this.#templateRender;
 	}
 
 	async getTemplateRender() {
-		if (!this._templateRender) {
-			this._templateRender = new TemplateRender(this.inputPath, this.eleventyConfig);
-			this._templateRender.extensionMap = this.extensionMap;
-			await this._templateRender.init();
+		if (!this.#templateRender) {
+			this.#templateRender = new TemplateRender(this.inputPath, this.eleventyConfig);
+			this.#templateRender.extensionMap = this.extensionMap;
+
+			return this.#templateRender.init().then(() => {
+				return this.#templateRender;
+			});
 		}
 
-		return this._templateRender;
+		return this.#templateRender;
 	}
 
 	// For monkey patchers
@@ -184,7 +193,8 @@ class TemplateContent {
 		let content = await this.inputContent;
 
 		if (content || content === "") {
-			if (this.engine.useJavaScriptImport()) {
+			let tr = await this.getTemplateRender();
+			if (tr.engine.useJavaScriptImport()) {
 				return {
 					data: {},
 					content,
@@ -303,22 +313,6 @@ class TemplateContent {
 		if (!content && content !== "") {
 			let contentBuffer = fs.readFileSync(this.inputPath);
 
-			if (process.env.DEBUG) {
-				// Warning: this is slow!!
-				let encoding = chardet.detect(contentBuffer);
-
-				if (encoding.startsWith("UTF-16")) {
-					debug("Warning: %o encoding detected on %o.", encoding, this.inputPath);
-					debugDiagnostic(
-						"%o encoding detected on %o. Please re-save as UTF-8.",
-						encoding,
-						this.inputPath,
-					);
-				} else {
-					debug("%o encoding detected on %o.", encoding, this.inputPath);
-				}
-			}
-
 			content = contentBuffer.toString("utf8");
 
 			if (this.config.useTemplateCache) {
@@ -351,7 +345,8 @@ class TemplateContent {
 			fm.data = await fm.data;
 		}
 
-		let extraData = await this.engine.getExtraDataFromFile(this.inputPath);
+		let tr = await this.getTemplateRender();
+		let extraData = await tr.engine.getExtraDataFromFile(this.inputPath);
 
 		let virtualTemplateDefinition = this.getVirtualTemplateDefinition();
 		let virtualTemplateData;
@@ -378,12 +373,14 @@ class TemplateContent {
 	}
 
 	async getEngineOverride() {
-		let { data: frontMatterData } = await this.getFrontMatterData();
-		return frontMatterData[this.config.keys.engineOverride];
+		return this.getFrontMatterData().then((data) => {
+			return data[this.config.keys.engineOverride];
+		});
 	}
 
 	_getCompileCache(str) {
 		// Caches used to be bifurcated based on engine name, now they’re based on inputPath
+		// TODO does `cacheable` need to help inform whether a cache is used here?
 		let inputPathMap = TemplateContent._compileCache.get(this.inputPath);
 		if (!inputPathMap) {
 			inputPathMap = new Map();
@@ -405,14 +402,12 @@ class TemplateContent {
 		let { type, bypassMarkdown, engineOverride } = options;
 
 		let tr = await this.getTemplateRender();
-
 		if (engineOverride !== undefined) {
 			debugDev("%o overriding template engine to use %o", this.inputPath, engineOverride);
 			await tr.setEngineOverride(engineOverride, bypassMarkdown);
 		} else {
 			tr.setUseMarkdown(!bypassMarkdown);
 		}
-
 		if (bypassMarkdown && !this.engine.needsCompilation(str)) {
 			return function () {
 				return str;
@@ -437,12 +432,10 @@ class TemplateContent {
 
 					// Compilation is async, so we eagerly cache a Promise that eventually
 					// resolves to the compiled function
-					cache.set(
-						key,
-						new Promise((resolve) => {
-							res = resolve;
-						}),
-					);
+					let withRes = withResolvers();
+					res = withRes.resolve;
+
+					cache.set(key, withRes.promise);
 				}
 			}
 
@@ -517,7 +510,8 @@ class TemplateContent {
 	}
 
 	async renderPermalink(permalink, data) {
-		let permalinkCompilation = this.engine.permalinkNeedsCompilation(permalink);
+		let tr = await this.getTemplateRender();
+		let permalinkCompilation = tr.engine.permalinkNeedsCompilation(permalink);
 
 		// No string compilation:
 		//    ({ compileOptions: { permalink: "raw" }})
@@ -525,17 +519,17 @@ class TemplateContent {
 		//    ({ compileOptions: { permalink: false }})
 		//    ({ compileOptions: { permalink: () => false }})
 		//    ({ compileOptions: { permalink: () => (() = > false) }})
-		if (permalinkCompilation === false) {
+		if (permalinkCompilation === false && typeof permalink !== "function") {
 			return permalink;
 		}
 
 		/* Custom `compile` function for permalinks, usage:
-    permalink: function(permalinkString, inputPath) {
-      return async function(data) {
-        return "THIS IS MY RENDERED PERMALINK";
-      }
-    }
-    */
+		permalink: function(permalinkString, inputPath) {
+			return async function(data) {
+				return "THIS IS MY RENDERED PERMALINK";
+			}
+		}
+		*/
 		if (permalinkCompilation && typeof permalinkCompilation === "function") {
 			permalink = await this._renderFunction(permalinkCompilation, permalink, this.inputPath);
 		}
@@ -553,8 +547,8 @@ class TemplateContent {
 
 	async render(str, data, bypassMarkdown) {
 		return this._render(str, data, {
+			type: "Content",
 			bypassMarkdown,
-			type: "",
 		});
 	}
 
@@ -705,7 +699,7 @@ eventBus.on("eleventy.resourceModified", (path) => {
 });
 
 // Used when the configuration file reset https://github.com/11ty/eleventy/issues/2147
-eventBus.on("eleventy.compileCacheReset", (/*path*/) => {
+eventBus.on("eleventy.compileCacheReset", () => {
 	TemplateContent._compileCache = new Map();
 });
 

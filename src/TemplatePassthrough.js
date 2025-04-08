@@ -1,8 +1,7 @@
-import util from "node:util";
 import path from "node:path";
-import fs from "graceful-fs";
 
-import isGlob from "is-glob";
+import { isDynamicPattern } from "tinyglobby";
+import { filesize } from "filesize";
 import copy from "@11ty/recursive-copy";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
@@ -11,58 +10,84 @@ import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import ProjectDirectories from "./Util/ProjectDirectories.js";
 
-const fsExists = util.promisify(fs.exists);
-
 const debug = debugUtil("Eleventy:TemplatePassthrough");
 
 class TemplatePassthroughError extends EleventyBaseError {}
 
 class TemplatePassthrough {
-	#isExistsCache = {};
-	#isDirectoryCache = {};
+	isDryRun = false;
+	#isInputPathGlob;
+	#benchmarks;
+	#isAlreadyNormalized = false;
+	#projectDirCheck = false;
 
-	constructor(path, eleventyConfig) {
-		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
-			throw new TemplatePassthroughError(
-				"Missing `eleventyConfig` or was not an instance of `TemplateConfig`.",
+	// paths already guaranteed from the autocopy plugin
+	static factory(inputPath, outputPath, opts = {}) {
+		let p = new TemplatePassthrough(
+			{
+				inputPath,
+				outputPath,
+				copyOptions: opts.copyOptions,
+			},
+			opts.templateConfig,
+		);
+
+		return p;
+	}
+
+	constructor(path, templateConfig) {
+		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
+			throw new Error(
+				"Internal error: Missing `templateConfig` or was not an instance of `TemplateConfig`.",
 			);
 		}
-		this.eleventyConfig = eleventyConfig;
-
-		this.benchmarks = {
-			aggregate: this.config.benchmarkManager.get("Aggregate"),
-		};
+		this.templateConfig = templateConfig;
 
 		this.rawPath = path;
 
 		// inputPath is relative to the root of your project and not your Eleventy input directory.
 		// TODO normalize these with forward slashes
-		this.inputPath = this.normalizeDirectory(path.inputPath);
-		this.isInputPathGlob = isGlob(this.inputPath);
+		this.inputPath = this.normalizeIfDirectory(path.inputPath);
+		this.#isInputPathGlob = isDynamicPattern(this.inputPath);
 
 		this.outputPath = path.outputPath;
-
 		this.copyOptions = path.copyOptions; // custom options for recursive-copy
+	}
 
-		this.isDryRun = false;
-		this.isIncremental = false;
+	get benchmarks() {
+		if (!this.#benchmarks) {
+			this.#benchmarks = {
+				aggregate: this.config.benchmarkManager.get("Aggregate"),
+			};
+		}
+
+		return this.#benchmarks;
 	}
 
 	get config() {
-		return this.eleventyConfig.getConfig();
+		return this.templateConfig.getConfig();
 	}
 
-	get dirs() {
-		return this.eleventyConfig.directories;
+	get directories() {
+		return this.templateConfig.directories;
 	}
 
 	// inputDir is used when stripping from output path in `getOutputPath`
 	get inputDir() {
-		return this.dirs.input;
+		return this.templateConfig.directories.input;
 	}
 
 	get outputDir() {
-		return this.dirs.output;
+		return this.templateConfig.directories.output;
+	}
+
+	// Skips `getFiles()` normalization
+	setIsAlreadyNormalized(isNormalized) {
+		this.#isAlreadyNormalized = Boolean(isNormalized);
+	}
+
+	setCheckSourceDirectory(check) {
+		this.#projectDirCheck = Boolean(check);
 	}
 
 	/* { inputPath, outputPath } though outputPath is *not* the full path: just the output directory */
@@ -109,8 +134,8 @@ class TemplatePassthrough {
 
 		// TODO room for improvement here:
 		if (
-			!this.isInputPathGlob &&
-			(await fsExists(inputPath)) &&
+			!this.#isInputPathGlob &&
+			this.isExists(inputPath) &&
 			!this.isDirectory(inputPath) &&
 			this.isDirectory(fullOutputPath)
 		) {
@@ -129,15 +154,11 @@ class TemplatePassthrough {
 	}
 
 	setDryRun(isDryRun) {
-		this.isDryRun = !!isDryRun;
+		this.isDryRun = Boolean(isDryRun);
 	}
 
 	setRunMode(runMode) {
 		this.runMode = runMode;
-	}
-
-	setIsIncremental(isIncremental) {
-		this.isIncremental = isIncremental;
 	}
 
 	setFileSystemSearch(fileSystemSearch) {
@@ -148,6 +169,11 @@ class TemplatePassthrough {
 		debug("Searching for: %o", glob);
 		let b = this.benchmarks.aggregate.get("Searching the file system (passthrough)");
 		b.before();
+
+		if (!this.fileSystemSearch) {
+			throw new Error("Internal error: Missing `fileSystemSearch` property.");
+		}
+
 		let files = TemplatePath.addLeadingDotSlashArray(
 			await this.fileSystemSearch.search("passthrough", glob),
 		);
@@ -155,51 +181,45 @@ class TemplatePassthrough {
 		return files;
 	}
 
-	isExists(dir) {
-		if (this.#isExistsCache[dir] === undefined) {
-			this.#isExistsCache[dir] = fs.existsSync(dir);
-		}
-		return this.#isExistsCache[dir];
+	isExists(filePath) {
+		return this.templateConfig.existsCache.exists(filePath);
 	}
 
-	isDirectory(dir) {
-		if (this.#isDirectoryCache[dir] === undefined) {
-			if (isGlob(this.inputPath)) {
-				this.#isDirectoryCache[dir] = false;
-			} else if (!this.isExists(dir)) {
-				this.#isDirectoryCache[dir] = false;
-			} else if (fs.statSync(dir).isDirectory()) {
-				this.#isDirectoryCache[dir] = true;
-			} else {
-				this.#isDirectoryCache[dir] = false;
-			}
-		}
-
-		return this.#isDirectoryCache[dir];
+	isDirectory(filePath) {
+		return this.templateConfig.existsCache.isDirectory(filePath);
 	}
 
 	// dir is guaranteed to exist by context
 	// dir may not be a directory
-	normalizeDirectory(dir) {
-		if (dir && typeof dir === "string") {
-			if (dir.endsWith(path.sep) || dir.endsWith("/")) {
-				return dir;
+	normalizeIfDirectory(input) {
+		if (typeof input === "string") {
+			if (input.endsWith(path.sep) || input.endsWith("/")) {
+				return input;
 			}
 
 			// When inputPath is a directory, make sure it has a slash for passthrough copy aliasing
 			// https://github.com/11ty/eleventy/issues/2709
-			if (this.isDirectory(dir)) {
-				return `${dir}/`;
+			if (this.isDirectory(input)) {
+				return `${input}/`;
 			}
 		}
 
-		return dir;
+		return input;
 	}
 
 	// maps input paths to output paths
 	async getFileMap() {
+		if (this.#isAlreadyNormalized) {
+			return [
+				{
+					inputPath: this.inputPath,
+					outputPath: this.outputPath,
+				},
+			];
+		}
+
 		// TODO VirtualFileSystem candidate
-		if (!isGlob(this.inputPath) && this.isExists(this.inputPath)) {
+		if (!isDynamicPattern(this.inputPath) && this.isExists(this.inputPath)) {
 			return [
 				{
 					inputPath: this.inputPath,
@@ -227,11 +247,15 @@ class TemplatePassthrough {
 	 * 3. individual file
 	 */
 	async copy(src, dest, copyOptions) {
-		if (
-			!TemplatePath.stripLeadingDotSlash(dest).startsWith(
-				TemplatePath.stripLeadingDotSlash(this.outputDir),
-			)
-		) {
+		if (this.#projectDirCheck && !this.directories.isFileInProjectFolder(src)) {
+			return Promise.reject(
+				new TemplatePassthroughError(
+					"Source file is not in the project directory. Check your passthrough paths.",
+				),
+			);
+		}
+
+		if (!this.directories.isFileInOutputFolder(dest)) {
 			return Promise.reject(
 				new TemplatePassthroughError(
 					"Destination is not in the site output directory. Check your passthrough paths.",
@@ -243,26 +267,46 @@ class TemplatePassthrough {
 		let fileSizeCount = 0;
 		let map = {};
 		let b = this.benchmarks.aggregate.get("Passthrough Copy File");
+
 		// returns a promise
 		return copy(src, dest, copyOptions)
 			.on(copy.events.COPY_FILE_START, (copyOp) => {
 				// Access to individual files at `copyOp.src`
-				debug("Copying individual file %o", copyOp.src);
 				map[copyOp.src] = copyOp.dest;
 				b.before();
 			})
 			.on(copy.events.COPY_FILE_COMPLETE, (copyOp) => {
 				fileCopyCount++;
 				fileSizeCount += copyOp.stats.size;
+				if (copyOp.stats.size > 5000000) {
+					debug(`Copied %o (⚠️ large) file from %o`, filesize(copyOp.stats.size), copyOp.src);
+				} else {
+					debug(`Copied %o file from %o`, filesize(copyOp.stats.size), copyOp.src);
+				}
 				b.after();
 			})
-			.then(() => {
-				return {
-					count: fileCopyCount,
-					size: fileSizeCount,
-					map,
-				};
-			});
+			.then(
+				() => {
+					return {
+						count: fileCopyCount,
+						size: fileSizeCount,
+						map,
+					};
+				},
+				(error) => {
+					if (copyOptions.overwrite === false && error.code === "EEXIST") {
+						// just ignore if the output already exists and overwrite: false
+						debug("Overwrite error ignored: %O", error);
+						return {
+							count: 0,
+							size: 0,
+							map,
+						};
+					}
+
+					return Promise.reject(error);
+				},
+			);
 	}
 
 	async write() {

@@ -3,6 +3,7 @@ import Nunjucks from "nunjucks";
 
 import TemplateRender from "../src/TemplateRender.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import TemplateEngineManager from "../src/Engines/TemplateEngineManager.js";
 
 import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
@@ -18,6 +19,7 @@ async function getNewTemplateRender(name, inputDir, eleventyConfig) {
 
   let tr = new TemplateRender(name, eleventyConfig);
   tr.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  tr.extensionMap.engineManager = new TemplateEngineManager(eleventyConfig);
   tr.extensionMap.setFormats([]);
   await tr.init();
   return tr;

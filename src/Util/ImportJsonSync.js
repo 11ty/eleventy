@@ -26,17 +26,11 @@ function findFilePathInParentDirs(dir, filename) {
 }
 
 function importJsonSync(filePath) {
-	if (!filePath.endsWith(".json")) {
+	if (!filePath || !filePath.endsWith(".json")) {
 		throw new Error(`importJsonSync expects a .json file extension (received: ${filePath})`);
 	}
 
-	try {
-		// TODO clear require.cache when these files change
-		return require(filePath);
-	} catch (e) {
-		debug("Attempted to import %o, received this error: %o", filePath, e);
-		// if file does not exist, return nothing
-	}
+	return require(filePath);
 }
 
 function getEleventyPackageJson() {
@@ -46,12 +40,24 @@ function getEleventyPackageJson() {
 
 function getModulePackageJson(dir) {
 	let filePath = findFilePathInParentDirs(TemplatePath.absolutePath(dir), "package.json");
+
+	// optional!
+	if (!filePath) {
+		return {};
+	}
+
 	return importJsonSync(filePath);
 }
 
 function getWorkingProjectPackageJson() {
 	let dir = TemplatePath.absolutePath(TemplatePath.getWorkingDir());
 	let filePath = findFilePathInParentDirs(dir, "package.json");
+
+	// optional!
+	if (!filePath) {
+		return {};
+	}
+
 	return importJsonSync(filePath);
 }
 

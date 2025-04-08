@@ -5,6 +5,7 @@ import TemplateMap from "../src/TemplateMap.js";
 
 import getNewTemplate from "./_getNewTemplateForTests.js";
 import { getTemplateConfigInstance } from "./_testHelpers.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
 test("Computed data can see tag generated collections", async (t) => {
   let eleventyConfig = await getTemplateConfigInstance({
@@ -16,6 +17,7 @@ test("Computed data can see tag generated collections", async (t) => {
   let tm = new TemplateMap(eleventyConfig);
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   let tmpl = await getNewTemplate(
     "./test/stubs-computed-collections/collections.njk",
     "./test/stubs-computed-collections/",
@@ -28,6 +30,7 @@ test("Computed data can see tag generated collections", async (t) => {
   await tm.add(tmpl);
 
   let dataObj2 = new TemplateData(eleventyConfig);
+  dataObj2.extensionMap = new EleventyExtensionMap(eleventyConfig);
   let tmpl2 = await getNewTemplate(
     "./test/stubs-computed-collections/dog.njk",
     "./test/stubs-computed-collections/",
@@ -66,6 +69,7 @@ test("Computed data can see paginated data, Issue #1138", async (t) => {
   let tm = new TemplateMap(eleventyConfig);
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   let tmpl = await getNewTemplate(
     "./test/stubs-computed-pagination/paginated.njk",
     "./test/stubs-computed-pagination/",
@@ -78,6 +82,7 @@ test("Computed data can see paginated data, Issue #1138", async (t) => {
   await tm.add(tmpl);
 
   let dataObj2 = new TemplateData(eleventyConfig);
+  dataObj2.extensionMap = new EleventyExtensionMap(eleventyConfig);
   let tmpl2 = await getNewTemplate(
     "./test/stubs-computed-pagination/child.11ty.cjs",
     "./test/stubs-computed-pagination/",
@@ -129,6 +134,7 @@ test("Computed data in directory data file consumes data file data, Issue #1137"
   let tm = new TemplateMap(eleventyConfig);
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   let tmpl = await getNewTemplate(
     "./test/stubs-computed-dirdata/dir/first.11ty.cjs",
     "./test/stubs-computed-dirdata/",
@@ -141,6 +147,7 @@ test("Computed data in directory data file consumes data file data, Issue #1137"
   await tm.add(tmpl);
 
   let dataObj2 = new TemplateData(eleventyConfig);
+  dataObj2.extensionMap = new EleventyExtensionMap(eleventyConfig);
   let tmpl2 = await getNewTemplate(
     "./test/stubs-computed-dirdata/dir/second.11ty.cjs",
     "./test/stubs-computed-dirdata/",
@@ -171,6 +178,7 @@ test("Computed data can filter collections (and other array methods)", async (t)
   let tm = new TemplateMap(eleventyConfig);
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   let tmpl = await getNewTemplate(
     "./test/stubs-computed-collections-filter/collections.njk",
     "./test/stubs-computed-collections-filter/",
@@ -183,6 +191,7 @@ test("Computed data can filter collections (and other array methods)", async (t)
   await tm.add(tmpl);
 
   let dataObj2 = new TemplateData(eleventyConfig);
+  dataObj2.extensionMap = new EleventyExtensionMap(eleventyConfig);
   let tmpl2 = await getNewTemplate(
     "./test/stubs-computed-collections-filter/dog.njk",
     "./test/stubs-computed-collections-filter/",

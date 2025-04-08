@@ -1,6 +1,9 @@
+import { createRequire } from "node:module";
 import test from "ava";
 import { DateTime } from "luxon";
 import Eleventy from "../src/Eleventy.js";
+
+const require = createRequire(import.meta.url);
 
 test("Custom date parsing callback (return string), Issue #867", async (t) => {
   t.plan(3);
@@ -161,6 +164,27 @@ test("Custom date parsing callbacks (two, last wins, return string), Issue #867"
         t.truthy(this.page.inputPath);
         t.is(dateValue, "2010-01-01T12:00:00Z");
         return "2001-01-01T12:00:00Z";
+      });
+    }
+  });
+  elev.disableLogger();
+
+  let [result] = await elev.toJSON();
+  t.deepEqual(result.data.page.date, new Date(Date.UTC(2001,0,1,12)));
+});
+
+// https://github.com/11ty/eleventy/issues/3674
+test("instanceof DateTime issue, Issue #3674", async (t) => {
+  const { DateTime } = require("luxon");
+
+  // this test *requires* a non-virtual template to repro
+  let elev = new Eleventy("./test/stubs/index.html", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("test.html", `# Markdown`);
+      eleventyConfig.dataFilterSelectors.add("page.date");
+
+      eleventyConfig.addDateParsing(function (dateValue) {
+        return DateTime.fromISO("2001-01-01T12:00:00Z");
       });
     }
   });

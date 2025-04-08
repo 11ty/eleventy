@@ -11,10 +11,29 @@ class GlobalDependencyMap {
 	// dependency-graph requires these keys to be alphabetic strings
 	static LAYOUT_KEY = "layout";
 	static COLLECTION_PREFIX = "__collection:";
+	static CONFIGAPI_DATA_KEY = "[configapi]";
+
+	static SPECIAL_ALL_COLLECTION_NAME = "all";
+	static SPECIAL_KEYS_COLLECTION_NAME = "[keys]";
 
 	#templateConfig;
 
+	static isTag(entry) {
+		return entry.startsWith(this.COLLECTION_PREFIX);
+	}
+
+	static getTagName(entry) {
+		if (this.isTag(entry)) {
+			return entry.slice(this.COLLECTION_PREFIX.length);
+		}
+	}
+
+	static getCollectionKeyForEntry(entry) {
+		return `${GlobalDependencyMap.COLLECTION_PREFIX}${entry}`;
+	}
+
 	reset() {
+		this.config = undefined;
 		this._map = undefined;
 	}
 
@@ -33,10 +52,33 @@ class GlobalDependencyMap {
 
 		this.config = config;
 
+		this.userConfigurationCollectionApiNames = config.collectionApiNames || [];
+		this.addCollectionApiNames(this.userConfigurationCollectionApiNames);
+
 		// These have leading dot slashes, but so do the paths from Eleventy
 		this.config.events.once("eleventy.layouts", async (layouts) => {
 			await this.addLayoutsToMap(layouts);
 		});
+	}
+
+	// For Testing
+	setCollectionApiNames(names = []) {
+		this.userConfigurationCollectionApiNames = names;
+	}
+
+	addCollectionApiNames(names = []) {
+		if (!names || names.length === 0) {
+			return;
+		}
+
+		// Collection API keys add an implicit dependency on the `all` collection
+		let allKey = GlobalDependencyMap.getCollectionKeyForEntry(
+			GlobalDependencyMap.SPECIAL_ALL_COLLECTION_NAME,
+		);
+		for (let name of names) {
+			let collectionKey = GlobalDependencyMap.getCollectionKeyForEntry(name);
+			this.addDependency(collectionKey, [allKey]);
+		}
 	}
 
 	filterOutLayouts(nodes = []) {
@@ -51,6 +93,16 @@ class GlobalDependencyMap {
 
 	filterOutCollections(nodes = []) {
 		return nodes.filter((node) => !node.startsWith(GlobalDependencyMap.COLLECTION_PREFIX));
+	}
+
+	static removeLayoutNodes(graph, nodeList) {
+		return nodeList.filter((node) => {
+			let data = graph.getNodeData(node);
+			if (data?.type === GlobalDependencyMap.LAYOUT_KEY) {
+				return false;
+			}
+			return true;
+		});
 	}
 
 	removeLayoutNodes(normalizedLayouts) {
@@ -165,12 +217,8 @@ class GlobalDependencyMap {
 		}
 
 		let prevDeps = this.getDependantsFor(node)
-			.filter((entry) => {
-				return entry.startsWith(GlobalDependencyMap.COLLECTION_PREFIX);
-			})
-			.map((entry) => {
-				return GlobalDependencyMap.getEntryFromCollectionKey(entry);
-			});
+			.map((entry) => GlobalDependencyMap.getTagName(entry))
+			.filter(Boolean);
 
 		let prevDepsSet = new Set(prevDeps);
 		let deleted = new Set();
@@ -282,23 +330,29 @@ class GlobalDependencyMap {
 			return false;
 		}
 
-		return this.map.dependenciesOf(node).filter((node) => {
-			if (includeLayouts) {
-				return true;
-			}
+		if (includeLayouts) {
+			return this.map.dependenciesOf(node).filter(Boolean);
+		}
 
-			// When includeLayouts is `false` we want to filter out layouts
-			let data = this.map.getNodeData(node);
-			if (data?.type === GlobalDependencyMap.LAYOUT_KEY) {
-				return false;
-			}
-			return true;
-		});
+		return GlobalDependencyMap.removeLayoutNodes(this.map, this.map.dependenciesOf(node));
+	}
+
+	#addNode(name, type) {
+		if (this.map.hasNode(name)) {
+			return;
+		}
+		if (type) {
+			this.map.addNode(name, {
+				type,
+			});
+		} else {
+			this.map.addNode(name);
+		}
 	}
 
 	// node arguments are already normalized
-	_addDependency(from, toArray = []) {
-		this.map.addNode(from);
+	#addDependency(from, toArray = []) {
+		this.#addNode(from);
 
 		if (!Array.isArray(toArray)) {
 			throw new Error("Second argument to `addDependency` must be an Array.");
@@ -307,9 +361,7 @@ class GlobalDependencyMap {
 		// debug("%o depends on %o", from, toArray);
 
 		for (let to of toArray) {
-			if (!this.map.hasNode(to)) {
-				this.map.addNode(to);
-			}
+			this.#addNode(to);
 			if (from !== to) {
 				this.map.addDependency(from, to);
 			}
@@ -317,31 +369,83 @@ class GlobalDependencyMap {
 	}
 
 	addDependency(from, toArray = []) {
-		this._addDependency(
+		this.#addDependency(
 			this.normalizeNode(from),
 			toArray.map((to) => this.normalizeNode(to)),
 		);
 	}
 
-	static getEntryFromCollectionKey(entry) {
-		return entry.slice(GlobalDependencyMap.COLLECTION_PREFIX.length);
+	isUserConfigCollectionName(name) {
+		return this.userConfigurationCollectionApiNames.includes(name);
 	}
 
-	static getCollectionKeyForEntry(entry) {
-		return `${GlobalDependencyMap.COLLECTION_PREFIX}${entry}`;
+	#mergeNodeData(name, newData) {
+		if (this.map.hasNode(name)) {
+			this.map.setNodeData(name, Object.assign(this.map.getNodeData(name), newData));
+		} else {
+			this.map.setNodeData(name, newData);
+		}
 	}
 
+	isConfigurationApiConsumer(nodeName) {
+		if (!this.map.hasNode(nodeName)) {
+			return false;
+		}
+		return this.map.getNodeData(nodeName)?.consumes === GlobalDependencyMap.CONFIGAPI_DATA_KEY;
+	}
+
+	// via Pagination or eleventyImport
 	addDependencyConsumesCollection(from, collectionName) {
 		let nodeName = this.normalizeNode(from);
 		debug("%o depends on collection: %o", nodeName, collectionName);
-		this._addDependency(nodeName, [GlobalDependencyMap.getCollectionKeyForEntry(collectionName)]);
+		let collectionKey = GlobalDependencyMap.getCollectionKeyForEntry(collectionName);
+		this.#addDependency(nodeName, [collectionKey]);
+
+		if (this.isUserConfigCollectionName(collectionName)) {
+			this.#mergeNodeData(nodeName, {
+				consumes: GlobalDependencyMap.CONFIGAPI_DATA_KEY,
+			});
+		}
+
+		let allKey = GlobalDependencyMap.getCollectionKeyForEntry(
+			GlobalDependencyMap.SPECIAL_ALL_COLLECTION_NAME,
+		);
+		// implied collectionName => all
+		if (collectionName === GlobalDependencyMap.SPECIAL_KEYS_COLLECTION_NAME) {
+			this.#addDependency(collectionKey, [allKey]);
+			// implied all => [keys]
+		} else if (collectionName === GlobalDependencyMap.SPECIAL_ALL_COLLECTION_NAME) {
+			let keysKey = GlobalDependencyMap.getCollectionKeyForEntry(
+				GlobalDependencyMap.SPECIAL_KEYS_COLLECTION_NAME,
+			);
+			this.#addDependency(collectionKey, [keysKey]);
+		} else if (this.isUserConfigCollectionName(collectionName)) {
+			this.#addDependency(collectionKey, [allKey]);
+		}
 	}
 
+	// via *tagged* collections (minus eleventyExcludeFromCollections)
 	addDependencyPublishesToCollection(from, collectionName) {
 		let normalizedFrom = this.normalizeNode(from);
-		this._addDependency(GlobalDependencyMap.getCollectionKeyForEntry(collectionName), [
-			normalizedFrom,
-		]);
+		let key = GlobalDependencyMap.getCollectionKeyForEntry(collectionName);
+
+		// Exception for things that publish to collections.all
+		if (
+			collectionName === GlobalDependencyMap.SPECIAL_ALL_COLLECTION_NAME &&
+			this.isConfigurationApiConsumer(normalizedFrom)
+		) {
+			// Do nothing, this relationship is already implied and adding again will mess up the order
+		} else {
+			this.#addDependency(key, [normalizedFrom]);
+		}
+
+		// Tagged collections should be calculated before [keys]
+		if (!this.isUserConfigCollectionName(collectionName)) {
+			let keysKey = GlobalDependencyMap.getCollectionKeyForEntry(
+				GlobalDependencyMap.SPECIAL_KEYS_COLLECTION_NAME,
+			);
+			this.#addDependency(keysKey, [key]);
+		}
 	}
 
 	// Layouts are not relevant to compile cache and can be ignored
@@ -387,6 +491,26 @@ class GlobalDependencyMap {
 			return true;
 		}
 		return false;
+	}
+
+	getTemplateOrder() {
+		let order = this.map.overallOrder();
+		// add another collections.all entry (if not already the last one)
+		// TODO we might be able to make this check better and avoid checks if the list ends with irrelevant collections
+		let allKey = GlobalDependencyMap.getCollectionKeyForEntry(
+			GlobalDependencyMap.SPECIAL_ALL_COLLECTION_NAME,
+		);
+
+		if (order[order.length - 1] !== allKey) {
+			order.push(allKey);
+		}
+
+		// Remove duplicates when they are unnecessary
+		if (order.slice(-3).join(",") === "__collection:all,__collection:[keys],__collection:all") {
+			order = order.slice(0, -2); // keep the last __collection:all
+		}
+
+		return order;
 	}
 
 	stringify() {

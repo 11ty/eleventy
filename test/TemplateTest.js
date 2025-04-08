@@ -14,6 +14,7 @@ import eventBus from "../src/EventBus.js";
 import getNewTemplate from "./_getNewTemplateForTests.js";
 import { getRenderedTemplates as getRenderedTmpls, renderLayout, renderTemplate } from "./_getRenderedTemplates.js";
 import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
+import TemplateEngineManager from "../src/Engines/TemplateEngineManager.js";
 
 const fsp = fs.promises;
 
@@ -196,6 +197,8 @@ test("One Layout (using new content var)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/templateWithLayoutKey.liquid",
     "./test/stubs/",
@@ -230,6 +233,8 @@ test("One Layout (using content)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/templateWithLayoutContent.liquid",
     "./test/stubs/",
@@ -264,6 +269,8 @@ test("One Layout (layouts disabled)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/templateWithLayoutContent.liquid",
     "./test/stubs/",
@@ -296,6 +303,8 @@ test("One Layout (liquid test)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/templateWithLayout.liquid",
     "./test/stubs/",
@@ -330,6 +339,8 @@ test("Two Layouts", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/templateTwoLayouts.liquid",
     "./test/stubs/",
@@ -366,6 +377,8 @@ test("Liquid template", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/formatTest.liquid",
     "./test/stubs/",
@@ -419,6 +432,8 @@ test("Layout from template-data-file that has a permalink (fileslug) Issue #121"
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/permalink-data-layout/test.njk",
     "./test/stubs/",
@@ -449,6 +464,8 @@ test("Local template data file import (without a global data json)", async (t) =
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -485,6 +502,8 @@ test("Local template data file import (two subdirectories deep)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -528,6 +547,8 @@ test("Posts inherits local JSON, layouts", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -582,6 +603,8 @@ test("Template and folder name are the same, make sure data imports work ok", as
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -1140,6 +1163,8 @@ test("Data Cascade (Deep merge)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -1178,6 +1203,8 @@ test("Data Cascade (Shallow merge)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -1216,6 +1243,8 @@ test("Data Cascade Tag Merge (Deep merge)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -1242,6 +1271,8 @@ test("Data Cascade Tag Merge (Deep Merge - Deduplication)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -1268,6 +1299,8 @@ test("Data Cascade Tag Merge (Shallow merge)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -1294,6 +1327,8 @@ test('Local data inherits tags string ([tags] vs "tags") Shallow Merge', async (
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -1320,6 +1355,8 @@ test('Local data inherits tags string ([tags] vs "tags") Deep Merge', async (t) 
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -1461,14 +1498,19 @@ test("Issue 413 weird date format", async (t) => {
 });
 
 test("Custom Front Matter Parsing Options", async (t) => {
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({}, function(cfg) {
+    cfg.setFrontMatterParsingOptions({
+      excerpt: true,
+    })
+  });
   let tmpl = await getNewTemplate(
     "./test/stubs/custom-frontmatter/template.njk",
     "./test/stubs/",
-    "./dist"
+    "./dist",
+    undefined,
+    undefined,
+    eleventyConfig,
   );
-  tmpl.config.frontMatterParsingOptions = {
-    excerpt: true,
-  };
 
   let frontmatter = await tmpl._testGetFrontMatter();
 
@@ -1486,15 +1528,21 @@ This is content.`
 });
 
 test("Custom Front Matter Parsing Options (using alias)", async (t) => {
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({}, function(cfg) {
+    cfg.setFrontMatterParsingOptions({
+      excerpt: true,
+      excerpt_alias: "my_excerpt",
+    })
+  });
+
   let tmpl = await getNewTemplate(
     "./test/stubs/custom-frontmatter/template.njk",
     "./test/stubs/",
-    "./dist"
+    "./dist",
+    undefined,
+    undefined,
+    eleventyConfig,
   );
-  tmpl.config.frontMatterParsingOptions = {
-    excerpt: true,
-    excerpt_alias: "my_excerpt",
-  };
 
   let frontmatter = await tmpl._testGetFrontMatter();
   t.is(frontmatter.data.front, "hello");
@@ -1510,14 +1558,19 @@ This is content.`
 });
 
 test("Custom Front Matter Parsing Options (no newline before excerpt separator)", async (t) => {
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({}, function(cfg) {
+    cfg.setFrontMatterParsingOptions({
+      excerpt: true,
+    })
+  });
   let tmpl = await getNewTemplate(
     "./test/stubs/custom-frontmatter/template-newline1.njk",
     "./test/stubs/",
-    "./dist"
+    "./dist",
+    undefined,
+    undefined,
+    eleventyConfig,
   );
-  tmpl.config.frontMatterParsingOptions = {
-    excerpt: true,
-  };
 
   let frontmatter = await tmpl._testGetFrontMatter();
   t.is(frontmatter.data.front, "hello");
@@ -1534,14 +1587,19 @@ This is content.`
 });
 
 test("Custom Front Matter Parsing Options (no newline after excerpt separator)", async (t) => {
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({}, function(cfg) {
+    cfg.setFrontMatterParsingOptions({
+      excerpt: true,
+    })
+  });
   let tmpl = await getNewTemplate(
     "./test/stubs/custom-frontmatter/template-newline3.njk",
     "./test/stubs/",
-    "./dist"
+    "./dist",
+    undefined,
+    undefined,
+    eleventyConfig,
   );
-  tmpl.config.frontMatterParsingOptions = {
-    excerpt: true,
-  };
 
   let frontmatter = await tmpl._testGetFrontMatter();
   t.is(
@@ -1552,29 +1610,40 @@ This is content.`
 });
 
 test("Custom Front Matter Parsing Options (no newlines before or after excerpt separator)", async (t) => {
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({}, function(cfg) {
+    cfg.setFrontMatterParsingOptions({
+      excerpt: true,
+    })
+  });
+
   let tmpl = await getNewTemplate(
     "./test/stubs/custom-frontmatter/template-newline2.njk",
     "./test/stubs/",
-    "./dist"
+    "./dist",
+    undefined,
+    undefined,
+    eleventyConfig
   );
-  tmpl.config.frontMatterParsingOptions = {
-    excerpt: true,
-  };
 
   let frontmatter = await tmpl._testGetFrontMatter();
   t.is(frontmatter.content.trim(), "This is an excerpt.This is content.");
 });
 
 test("Custom Front Matter Parsing Options (html comment separator)", async (t) => {
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({}, function(cfg) {
+    cfg.setFrontMatterParsingOptions({
+      excerpt: true,
+      excerpt_separator: "<!-- excerpt -->",
+    })
+  });
   let tmpl = await getNewTemplate(
     "./test/stubs/custom-frontmatter/template-excerpt-comment.njk",
     "./test/stubs/",
-    "./dist"
+    "./dist",
+    undefined,
+    undefined,
+    eleventyConfig
   );
-  tmpl.config.frontMatterParsingOptions = {
-    excerpt: true,
-    excerpt_separator: "<!-- excerpt -->",
-  };
 
   let frontmatter = await tmpl._testGetFrontMatter();
   t.is(frontmatter.data.front, "hello");
@@ -1667,6 +1736,7 @@ test("Engine Singletons", async (t) => {
   });
 
   let map = new EleventyExtensionMap(eleventyConfig);
+  map.engineManager = new TemplateEngineManager(eleventyConfig);
   map.setFormats(["njk"]);
   let tmpl1 = await getNewTemplate(
     "./test/stubs/engine-singletons/first.njk",
@@ -1705,8 +1775,7 @@ test("Make sure layout cache takes new changes during watch (nunjucks)", async (
 
   await fsp.writeFile(filePath, `alert("bye");`, { encoding: "utf8" });
 
-  eventBus.emit("eleventy.templateModified", filePath);
-  eventBus.emit("eleventy.resourceModified", filePath);
+  tmpl.config.events.emit("eleventy#templateModified", filePath);
 
   t.is((await renderTemplate(tmpl, data)).trim(), '<script>alert("bye");</script>');
 });
@@ -1752,6 +1821,7 @@ test("Add Extension via Configuration (txt file)", async (t) => {
   });
 
   let map = new EleventyExtensionMap(eleventyConfig);
+  map.engineManager = new TemplateEngineManager(eleventyConfig);
   map.setFormats([]);
   let tmpl = await getNewTemplate(
     "./test/stubs/default.txt",
@@ -1919,6 +1989,8 @@ test("Error messaging, returning literals (not objects) from custom data extensi
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
 
   let tmpl = await getNewTemplate(
     "./test/stubs-1691/template.njk",

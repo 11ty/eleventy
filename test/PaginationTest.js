@@ -5,6 +5,7 @@ import Eleventy from "../src/Eleventy.js";
 import TemplateData from "../src/Data/TemplateData.js";
 import Pagination from "../src/Plugins/Pagination.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 import getNewTemplate from "./_getNewTemplateForTests.js";
 import { getRenderedTemplates as getRenderedTmpls, renderTemplate } from "./_getRenderedTemplates.js";
 import { getTemplateConfigInstance } from "./_testHelpers.js";
@@ -139,6 +140,8 @@ test("Paginate external data file", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -366,6 +369,8 @@ test("Issue 135", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -702,6 +707,8 @@ test("Pagination new v0.10.0 href/hrefs", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -738,6 +745,8 @@ test("Pagination new v0.10.0 page/pages", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -802,6 +811,8 @@ test("Pagination mutable global data", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
   await dataObj.getGlobalData();
 
@@ -844,6 +855,8 @@ test("Pagination template/dir data files run once, Issue 919", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
 
   let tmpl = await getNewTemplate(
     "./test/stubs-919/test.njk",
@@ -871,6 +884,7 @@ test("Pagination and eleventyComputed permalink, issue #1555 and #1865", async (
 
   let data = await tmpl.getData();
   let templates = await tmpl.getTemplates(data);
+
   t.is(templates[0].data.page.url, "/venues/first/");
   t.is(templates[1].data.page.url, "/venues/second/");
   t.is(templates[2].data.page.url, "/venues/third/");

@@ -21,7 +21,14 @@ function addPathPrefixToUrl(url, pathPrefix, base) {
 
 // pathprefix is only used when overrideBase is a full URL
 function transformUrl(url, base, opts = {}) {
-	let { pathPrefix, pageUrl } = opts;
+	let { pathPrefix, pageUrl, htmlContext } = opts;
+
+	// Warning, this will not work with HtmlTransformer, as we’ll receive "false" (string) here instead of `false` (boolean)
+	if (url === false) {
+		throw new Error(
+			`Invalid url transformed in the HTML \`<base>\` plugin.${url === false ? ` Did you attempt to link to a \`permalink: false\` page?` : ""} Received: ${url}`,
+		);
+	}
 
 	// full URL, return as-is
 	if (isValidUrl(url)) {
@@ -66,7 +73,7 @@ function eleventyHtmlBasePlugin(eleventyConfig, defaultOptions = {}) {
 	}
 
 	if (opts.baseHref === undefined) {
-		throw new Error("The `base` option is required in the HTML Base plugin.");
+		throw new Error("The `baseHref` option is required in the HTML Base plugin.");
 	}
 
 	eleventyConfig.addFilter("addPathPrefixToFullUrl", function (url) {
@@ -106,10 +113,11 @@ function eleventyHtmlBasePlugin(eleventyConfig, defaultOptions = {}) {
 				return content;
 			}
 
-			return HtmlTransformer.transformStandalone(content, (url) => {
+			return HtmlTransformer.transformStandalone(content, (url, htmlContext) => {
 				return transformUrl(url.trim(), base, {
 					pathPrefix: eleventyConfig.pathPrefix,
 					pageUrl: pageUrlOverride || this.page?.url,
+					htmlContext,
 				});
 			});
 		},
@@ -120,18 +128,19 @@ function eleventyHtmlBasePlugin(eleventyConfig, defaultOptions = {}) {
 		opts.extensions,
 
 		/** @this {object} */
-		function (urlInMarkup) {
+		function (urlInMarkup, htmlContext) {
 			// baseHref override is via renderTransforms filter for adding the absolute URL (e.g. https://example.com/pathPrefix/) for RSS/Atom/JSON feeds
 			return transformUrl(urlInMarkup.trim(), this.baseHref || opts.baseHref, {
 				pathPrefix: eleventyConfig.pathPrefix,
 				pageUrl: this.url,
+				htmlContext,
 			});
 		},
 		{
-			priority: -1, // run last (especially after PathToUrl transform)
+			priority: -2, // priority is descending, so this runs last (especially after AutoCopy and InputPathToUrl transform)
 			enabled: function (context) {
 				// Enabled when pathPrefix is non-default or via renderTransforms
-				return context.baseHref || opts.baseHref !== "/";
+				return Boolean(context.baseHref) || opts.baseHref !== "/";
 			},
 		},
 	);

@@ -7,7 +7,6 @@ import debugUtil from "debug";
 
 import unique from "../Util/Objects/Unique.js";
 import TemplateGlob from "../TemplateGlob.js";
-import EleventyExtensionMap from "../EleventyExtensionMap.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import TemplateDataInitialGlobalData from "./TemplateDataInitialGlobalData.js";
 import { getEleventyPackageJson, getWorkingProjectPackageJson } from "../Util/ImportJsonSync.js";
@@ -20,16 +19,18 @@ const debugWarn = debugUtil("Eleventy:Warnings");
 const debug = debugUtil("Eleventy:TemplateData");
 const debugDev = debugUtil("Dev:Eleventy:TemplateData");
 
-class TemplateDataConfigError extends EleventyBaseError {}
 class TemplateDataParseError extends EleventyBaseError {}
 
 class TemplateData {
-	constructor(eleventyConfig) {
-		if (!eleventyConfig) {
-			throw new TemplateDataConfigError("Missing `config`.");
+	constructor(templateConfig) {
+		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
+			throw new Error(
+				"Internal error: Missing `templateConfig` or was not an instance of `TemplateConfig`.",
+			);
 		}
-		this.eleventyConfig = eleventyConfig;
-		this.config = this.eleventyConfig.getConfig();
+
+		this.templateConfig = templateConfig;
+		this.config = this.templateConfig.getConfig();
 
 		this.benchmarks = {
 			data: this.config.benchmarkManager.get("Data"),
@@ -41,11 +42,11 @@ class TemplateData {
 		this.templateDirectoryData = {};
 		this.isEsm = false;
 
-		this.initialGlobalData = new TemplateDataInitialGlobalData(this.eleventyConfig);
+		this.initialGlobalData = new TemplateDataInitialGlobalData(this.templateConfig);
 	}
 
 	get dirs() {
-		return this.eleventyConfig.directories;
+		return this.templateConfig.directories;
 	}
 
 	get inputDir() {
@@ -66,10 +67,10 @@ class TemplateData {
 		return this.dataDir;
 	}
 
-	get _fsExistsCache() {
+	exists(pathname) {
 		// It's common for data files not to exist, so we avoid going to the FS to
 		// re-check if they do via a quick-and-dirty cache.
-		return this.eleventyConfig.existsCache;
+		return this.templateConfig.existsCache.exists(pathname);
 	}
 
 	setFileSystemSearch(fileSystemSearch) {
@@ -82,8 +83,7 @@ class TemplateData {
 
 	get extensionMap() {
 		if (!this._extensionMap) {
-			this._extensionMap = new EleventyExtensionMap(this.eleventyConfig);
-			this._extensionMap.setFormats([]);
+			throw new Error("Internal error: missing `extensionMap` in TemplateData.");
 		}
 		return this._extensionMap;
 	}
@@ -115,15 +115,11 @@ class TemplateData {
 			return this.rawImports;
 		}
 
-		try {
-			let pkgJson = getWorkingProjectPackageJson();
-			this.rawImports[this.config.keys.package] = pkgJson;
+		let pkgJson = getWorkingProjectPackageJson();
+		this.rawImports[this.config.keys.package] = pkgJson;
 
-			if (this.config.freezeReservedData) {
-				DeepFreeze(this.rawImports);
-			}
-		} catch (e) {
-			debug("Could not find or require package.json import for global data.");
+		if (this.config.freezeReservedData) {
+			DeepFreeze(this.rawImports);
 		}
 
 		return this.rawImports;
@@ -383,17 +379,8 @@ class TemplateData {
 		}
 
 		// Filter out files we know don't exist to avoid overhead for checking
-		const dataPaths = await Promise.all(
-			localDataPaths.map((path) => {
-				if (this._fsExistsCache.exists(path)) {
-					return path;
-				}
-				return false;
-			}),
-		);
-
-		localDataPaths = dataPaths.filter((pathOrFalse) => {
-			return pathOrFalse === false ? false : true;
+		localDataPaths = localDataPaths.filter((path) => {
+			return this.exists(path);
 		});
 
 		this.config.events.emit("eleventy.dataFiles", localDataPaths);
@@ -495,12 +482,7 @@ class TemplateData {
 
 		if (extension === "js" || extension === "cjs" || extension === "mjs") {
 			// JS data file or require’d JSON (no preprocessing needed)
-			let localPath = TemplatePath.absolutePath(path);
-			let exists = this._fsExistsCache.exists(localPath);
-			// Make sure that relative lookups benefit from cache
-			this._fsExistsCache.markExists(path, exists);
-
-			if (!exists) {
+			if (!this.exists(path)) {
 				return {};
 			}
 
@@ -515,7 +497,7 @@ class TemplateData {
 			}
 
 			// We always need to use `import()`, as `require` isn’t available in ESM.
-			let returnValue = await EleventyImport(localPath, type);
+			let returnValue = await EleventyImport(path, type);
 
 			// TODO special exception for Global data `permalink.js`
 			// module.exports = (data) => `${data.page.filePathStem}/`; // Does not work
@@ -671,14 +653,7 @@ class TemplateData {
 
 	static cleanupData(data) {
 		if (isPlainObject(data) && "tags" in data) {
-			if (typeof data.tags === "string") {
-				data.tags = data.tags ? [data.tags] : [];
-			} else if (data.tags === null) {
-				data.tags = [];
-			}
-
-			// Deduplicate tags
-			data.tags = [...new Set(data.tags)];
+			data.tags = this.getCleanedTagsImmutable(data);
 		}
 
 		return data;
@@ -702,35 +677,19 @@ class TemplateData {
 		};
 	}
 
-	/* Same as getIncludedTagNames() but may also include "all" */
 	static getIncludedCollectionNames(data) {
 		let tags = TemplateData.getCleanedTagsImmutable(data);
 
-		if (tags.length > 0) {
-			let { excludes, excludeAll } = TemplateData.getNormalizedExcludedCollections(data);
-			if (excludeAll) {
-				return [];
-			} else {
-				return ["all", ...tags].filter((tag) => !excludes.includes(tag));
-			}
-		} else {
-			return ["all"];
+		let { excludes, excludeAll } = TemplateData.getNormalizedExcludedCollections(data);
+		if (excludeAll) {
+			return [];
 		}
+
+		return ["all", ...tags].filter((tag) => !excludes.includes(tag));
 	}
 
 	static getIncludedTagNames(data) {
-		let tags = TemplateData.getCleanedTagsImmutable(data);
-
-		if (tags.length > 0) {
-			let { excludes, excludeAll } = TemplateData.getNormalizedExcludedCollections(data);
-			if (excludeAll) {
-				return [];
-			} else {
-				return tags.filter((tag) => !excludes.includes(tag));
-			}
-		} else {
-			return [];
-		}
+		return this.getIncludedCollectionNames(data).filter((tagName) => tagName !== "all");
 	}
 }
 

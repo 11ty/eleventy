@@ -159,8 +159,7 @@ class TemplateLayout extends TemplateContent {
 
 	async #getCachedCompiledLayoutFunction() {
 		let rawInput = await this.getPreRender();
-		let renderFunction = await this.compile(rawInput);
-		return renderFunction;
+		return this.compile(rawInput);
 	}
 
 	// Do only cache this layout’s render function and delegate the rest to the other templates.

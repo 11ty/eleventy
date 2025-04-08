@@ -2,6 +2,7 @@ import test from "ava";
 import { marked } from "marked";
 
 import TemplateData from "../src/Data/TemplateData.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
 import getNewTemplate from "./_getNewTemplateForTests.js";
 import { renderTemplate } from "./_getRenderedTemplates.js";
@@ -28,6 +29,8 @@ test("Using getData: false without getInstanceFromInputPath works ok", async (t)
   })
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/custom-extension.txt",
     "./test/stubs/",
@@ -62,6 +65,8 @@ test("Using getData: true without getInstanceFromInputPath should error", async 
   })
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/custom-extension.txt",
     "./test/stubs/",
@@ -99,6 +104,8 @@ test("Using getData: [] without getInstanceFromInputPath should error", async (t
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/custom-extension.txt",
     "./test/stubs/",
@@ -145,6 +152,8 @@ test("Using getData: true and getInstanceFromInputPath to get data from instance
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/custom-extension.txt",
     "./test/stubs/",
@@ -189,6 +198,8 @@ test("Using eleventyDataKey to get a different key data from instance", async (t
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/custom-extension.txt",
     "./test/stubs/",
@@ -216,6 +227,8 @@ test("Uses default renderer (no compile function) when you override an existing 
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/default.liquid",
     "./test/stubs/",
@@ -252,6 +265,8 @@ test("Access to default renderer when you override an existing extension", async
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/default.liquid",
     "./test/stubs/",
@@ -289,6 +304,8 @@ test("Overridden liquid gets used from a markdown template", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/default.md",
     "./test/stubs/",
@@ -326,6 +343,8 @@ test("Use marked for markdown", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/default-no-liquid.md",
     "./test/stubs/",
@@ -361,6 +380,8 @@ test("Use defaultRenderer for markdown", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/default.md",
     "./test/stubs/",
@@ -395,6 +416,8 @@ test("Front matter in a custom extension", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/default-frontmatter.txt",
     "./test/stubs/",
@@ -432,6 +455,8 @@ test("Access to default renderer when you override an existing extension (async 
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/default.liquid",
     "./test/stubs/",
@@ -468,6 +493,8 @@ test("Access to default renderer when you override an existing extension (async 
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/default.liquid",
     "./test/stubs/",
@@ -499,6 +526,8 @@ test("Return undefined in compile to ignore #2267", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/custom-extension.txt",
     "./test/stubs/",
@@ -530,6 +559,8 @@ test("Return undefined in compile to ignore (async compile function) #2350", asy
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
+  dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/custom-extension.txt",
     "./test/stubs/",

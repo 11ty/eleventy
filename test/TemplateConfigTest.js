@@ -19,7 +19,7 @@ test("Template Config local config overrides base config", async (t) => {
   t.true(Object.keys(cfg.keys).length > 1);
   t.truthy(Object.keys(cfg.nunjucksFilters).length);
 
-  t.is(Object.keys(cfg.transforms).length, 3);
+  t.is(Object.keys(cfg.transforms).length, 4);
 
   t.is(
     cfg.transforms.prettyHtml(`<html><body><div></div></body></html>`, "test.html"),

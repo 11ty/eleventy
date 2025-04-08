@@ -2,9 +2,13 @@ import posthtml from "posthtml";
 import urls from "@11ty/posthtml-urls";
 import { FilePathUtil } from "./FilePathUtil.js";
 
+import { arrayDelete } from "./ArrayUtil.js";
+
 class HtmlTransformer {
 	// feature test for Eleventy Bundle Plugin
 	static SUPPORTS_PLUGINS_ENABLED_CALLBACK = true;
+
+	static TYPES = ["callbacks", "plugins"];
 
 	constructor() {
 		// execution order is important (not order of addition/object key order)
@@ -47,11 +51,10 @@ class HtmlTransformer {
 		if (callbacks.length > 0) {
 			inst.use(
 				urls({
-					eachURL: (url) => {
-						// and: attrName, tagName
+					eachURL: (url, attrName, tagName) => {
 						for (let { fn: callback } of callbacks) {
 							// already sorted by priority when added
-							url = callback.call(context, url);
+							url = callback.call(context, url, { attribute: attrName, tag: tagName });
 						}
 
 						return url;
@@ -79,8 +82,10 @@ class HtmlTransformer {
 			}
 
 			target[ext].push({
+				// *could* fallback to function name, `value.name`
+				name: options.name, // for `remove` and debugging
 				fn: value, // callback or plugin
-				priority: options.priority,
+				priority: options.priority, // sorted in descending order
 				enabled: options.enabled || (() => true),
 				options: options.pluginOptions,
 			});
@@ -91,6 +96,15 @@ class HtmlTransformer {
 
 	addPosthtmlPlugin(extensions, plugin, options = {}) {
 		this._add(extensions, "plugins", plugin, options);
+	}
+
+	// match can be a plugin function or a filter callback(plugin => true);
+	remove(extensions, match) {
+		for (let removeType of HtmlTransformer.TYPES) {
+			for (let ext of (extensions || "").split(",")) {
+				this[removeType][ext] = arrayDelete(this[removeType][ext], match);
+			}
+		}
 	}
 
 	addUrlTransform(extensions, callback, options = {}) {

@@ -5,10 +5,10 @@ import { rimrafSync } from "rimraf";
 import TemplatePassthroughManager from "../src/TemplatePassthroughManager.js";
 import TemplateConfig from "../src/TemplateConfig.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";
-import EleventyFiles from "../src/EleventyFiles.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import ProjectDirectories from "../src/Util/ProjectDirectories.js";
 
-import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
+import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback, getEleventyFilesInstance } from "./_testHelpers.js";
 
 test("Get paths from Config", async (t) => {
   let eleventyConfig = new TemplateConfig();
@@ -31,6 +31,7 @@ test("isPassthroughCopyFile", async (t) => {
   await eleventyConfig.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
+  mgr.extensionMap = new EleventyExtensionMap(eleventyConfig);
 
   t.false(mgr.isPassthroughCopyFile([]));
   t.false(mgr.isPassthroughCopyFile([], ""));
@@ -78,6 +79,7 @@ test("Get file paths", async (t) => {
   await eleventyConfig.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
+  mgr.extensionMap = new EleventyExtensionMap(eleventyConfig);
 
   t.deepEqual(mgr.getNonTemplatePaths(["test.png"]), ["test.png"]);
 });
@@ -121,12 +123,18 @@ test("Get file paths (one image path)", async (t) => {
   await eleventyConfig.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
+  mgr.extensionMap = new EleventyExtensionMap(eleventyConfig);
 
   t.deepEqual(mgr.getNonTemplatePaths(["test.png"]), ["test.png"]);
 });
 
 test("Naughty paths outside of project dir", async (t) => {
+  let dirs = new ProjectDirectories();
+	dirs.setInput("./test/stubs/template-passthrough2/");
+	dirs.setOutput("./test/stubs/template-passthrough2/_site/");
+
   let eleventyConfig = new TemplateConfig();
+  eleventyConfig.setDirectories(dirs);
   eleventyConfig.userConfig.passthroughCopies = {
     "../static": { outputPath: true },
     "../*": { outputPath: "./" },
@@ -137,12 +145,15 @@ test("Naughty paths outside of project dir", async (t) => {
   await eleventyConfig.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
+  mgr.setFileSystemSearch(new FileSystemSearch());
 
   await t.throwsAsync(async function () {
     for (let path of mgr.getConfigPaths()) {
       let pass = mgr.getTemplatePassthroughForPath(path);
       await mgr.copyPassthrough(pass);
     }
+  }, {
+    message: `Having trouble copying './test/stubs/template-passthrough2/static/*.js'`
   });
 
   const output = [
@@ -210,24 +221,35 @@ test("Look for uniqueness on template passthrough paths #1677", async (t) => {
   let formats = [];
 
   let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
-    input: "test/stubs/template-passthrough-duplicates",
+    input: "test/stubs/template-passthrough-duplicates/",
     output: "test/stubs/template-passthrough-duplicates/_site"
   }, function(cfg) {
     cfg.passthroughCopies = {
-      "./test/stubs/template-passthrough-duplicates/**/*.png": {
+      "./test/stubs/template-passthrough-duplicates/input/**/*.png": {
         outputPath: "./",
       },
     };
   });
 
-  let files = new EleventyFiles(formats, eleventyConfig);
-  files.setFileSystemSearch(new FileSystemSearch());
-  files.init();
+  let { passthroughManager } = getEleventyFilesInstance(formats, eleventyConfig);
 
-  let mgr = files.getPassthroughManager();
   await t.throwsAsync(async function () {
-    await mgr.copyAll();
+    await passthroughManager.copyAll();
+  }, {
+    message: `Multiple passthrough copy files are trying to write to the same output file (./test/stubs/template-passthrough-duplicates/_site/avatar.png). ./test/stubs/template-passthrough-duplicates/input/avatar.png and ./test/stubs/template-passthrough-duplicates/input/src/views/avatar.png`
   });
 
   rimrafSync("test/stubs/template-passthrough-duplicates/_site/");
+});
+
+test("Incremental passthrough, issue #3285", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.addPassthroughCopy({ './test/stubs-3285/src/scripts': 'scripts' });
+  await eleventyConfig.init();
+
+  let mgr = new TemplatePassthroughManager(eleventyConfig);
+  mgr.setIncrementalFile("./test/stubs-3285/src/scripts/hello-world.js");
+  t.deepEqual(mgr.getAllNormalizedPaths([]), [
+    { copyOptions: {}, inputPath: "./test/stubs-3285/src/scripts", outputPath: "scripts" },
+  ]);
 });

@@ -70,3 +70,19 @@ test("Stringify/restore", (t) => {
   t.true(map.isFileRelevantTo("test.njk", "_includes/include.njk"));
   t.false(map.isFileRelevantTo("_includes/include.njk", "test.njk"));
 });
+
+test("Collection API", (t) => {
+  let map = new GlobalDependencyMap();
+
+  map.setCollectionApiNames(["articles"]);
+  map.addDependencyPublishesToCollection("test.njk", "all");
+  map.addDependencyPublishesToCollection("feed.njk", "all");
+  map.addDependencyConsumesCollection("feed.njk", "articles");
+
+  t.deepEqual(map.getTemplateOrder(), [
+    "test.njk",
+    "__collection:articles",
+    "feed.njk",
+    "__collection:all",
+  ]);
+});

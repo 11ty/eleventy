@@ -1,9 +1,12 @@
-import EleventyExtensionMap from "../EleventyExtensionMap.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 
 class TemplateEngineConfigError extends EleventyBaseError {}
 
-class TemplateEngine {
+export default class TemplateEngine {
+	#extensionMap;
+	#engineManager;
+	#benchmarks;
+
 	constructor(name, eleventyConfig) {
 		this.name = name;
 
@@ -37,32 +40,31 @@ class TemplateEngine {
 	}
 
 	get benchmarks() {
-		if (!this._benchmarks) {
-			this._benchmarks = {
+		if (!this.#benchmarks) {
+			this.#benchmarks = {
 				aggregate: this.config.benchmarkManager.get("Aggregate"),
 			};
 		}
-		return this._benchmarks;
+		return this.#benchmarks;
 	}
 
 	get engineManager() {
-		return this._engineManager;
+		return this.#engineManager;
 	}
 
 	set engineManager(manager) {
-		this._engineManager = manager;
+		this.#engineManager = manager;
 	}
 
 	get extensionMap() {
-		if (!this._extensionMap) {
-			this._extensionMap = new EleventyExtensionMap(this.eleventyConfig);
-			this._extensionMap.setFormats([]);
+		if (!this.#extensionMap) {
+			throw new Error("Internal error: missing `extensionMap` in TemplateEngine.");
 		}
-		return this._extensionMap;
+		return this.#extensionMap;
 	}
 
 	set extensionMap(map) {
-		this._extensionMap = map;
+		this.#extensionMap = map;
 	}
 
 	get extensions() {
@@ -180,5 +182,3 @@ class TemplateEngine {
 		return this.config.uses.isFileRelevantTo(inputPath, comparisonFile);
 	}
 }
-
-export default TemplateEngine;

@@ -1,8 +1,8 @@
 import util from "node:util";
 import os from "node:os";
 import path from "node:path";
+import fs from "node:fs";
 
-import fs from "graceful-fs";
 import lodash from "@11ty/lodash-custom";
 import { DateTime } from "luxon";
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
@@ -25,6 +25,7 @@ import TemplateContentUnrenderedTemplateError from "./Errors/TemplateContentUnre
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import ReservedData from "./Util/ReservedData.js";
 import TransformsUtil from "./Util/TransformsUtil.js";
+import { FileSystemManager } from "./Util/FileSystemManager.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 const fsStat = util.promisify(fs.stat);
@@ -33,6 +34,9 @@ const debug = debugUtil("Eleventy:Template");
 const debugDev = debugUtil("Dev:Eleventy:Template");
 
 class Template extends TemplateContent {
+	#logger;
+	#fsManager;
+
 	constructor(templatePath, templateData, extensionMap, config) {
 		debugDev("new Template(%o)", templatePath);
 		super(templatePath, config);
@@ -43,11 +47,11 @@ class Template extends TemplateContent {
 		this.extraOutputSubdirectory = "";
 
 		this.extensionMap = extensionMap;
+		this.templateData = templateData;
+		this.#initFileSlug();
 
 		this.linters = [];
 		this.transforms = {};
-
-		this.setTemplateData(templateData);
 
 		this.isVerbose = true;
 		this.isDryRun = false;
@@ -63,25 +67,39 @@ class Template extends TemplateContent {
 		this.behavior.setOutputFormat(this.outputFormat);
 	}
 
-	setTemplateData(templateData) {
-		this.templateData = templateData;
+	#initFileSlug() {
+		this.fileSlug = new TemplateFileSlug(this.inputPath, this.extensionMap, this.eleventyConfig);
+		this.fileSlugStr = this.fileSlug.getSlug();
+		this.filePathStem = this.fileSlug.getFullPathWithoutExtension();
 	}
 
-	get existsCache() {
-		return this.eleventyConfig.existsCache;
+	/* mimic constructor arg order */
+	resetCachedTemplate({ templateData, extensionMap, eleventyConfig }) {
+		super.resetCachedTemplate({ eleventyConfig });
+		this.templateData = templateData;
+		this.extensionMap = extensionMap;
+		// this.#fsManager = undefined;
+		this.#initFileSlug();
+	}
+
+	get fsManager() {
+		if (!this.#fsManager) {
+			this.#fsManager = new FileSystemManager(this.eleventyConfig);
+		}
+		return this.#fsManager;
 	}
 
 	get logger() {
-		if (!this._logger) {
-			this._logger = new ConsoleLogger();
-			this._logger.isVerbose = this.isVerbose;
+		if (!this.#logger) {
+			this.#logger = new ConsoleLogger();
+			this.#logger.isVerbose = this.isVerbose;
 		}
-		return this._logger;
+		return this.#logger;
 	}
 
 	/* Setter for Logger */
 	set logger(logger) {
-		this._logger = logger;
+		this.#logger = logger;
 	}
 
 	isRenderable() {
@@ -179,7 +197,7 @@ class Template extends TemplateContent {
 
 	async _getLink(data) {
 		if (!data) {
-			throw new Error("data argument missing in Template->_getLink");
+			throw new Error("Internal error: data argument missing in Template->_getLink");
 		}
 
 		let permalink = data[this.config.keys.permalink];
@@ -235,7 +253,8 @@ class Template extends TemplateContent {
 
 		// Override default permalink behavior. Only do this if permalink was _not_ in the data cascade
 		if (!permalink && this.config.dynamicPermalinks && data.dynamicPermalink !== false) {
-			let permalinkCompilation = this.engine.permalinkNeedsCompilation("");
+			let tr = await this.getTemplateRender();
+			let permalinkCompilation = tr.engine.permalinkNeedsCompilation("");
 			if (typeof permalinkCompilation === "function") {
 				let ret = await this._renderFunction(permalinkCompilation, permalinkValue, this.inputPath);
 				if (ret !== undefined) {
@@ -344,7 +363,8 @@ class Template extends TemplateContent {
 		let { data: frontMatterData } = await this.getFrontMatterData();
 
 		let mergedLayoutData = {};
-		if (this.engine.useLayouts()) {
+		let tr = await this.getTemplateRender();
+		if (tr.engine.useLayouts()) {
 			let layoutKey =
 				frontMatterData[this.config.keys.layout] ||
 				localData[this.config.keys.layout] ||
@@ -453,6 +473,17 @@ class Template extends TemplateContent {
 		}
 
 		return this._cacheRenderedPromise;
+	}
+
+	setLinters(linters) {
+		if (!isPlainObject(linters)) {
+			throw new Error("Object expected in setLinters");
+		}
+		// this acts as a reset
+		this.linters = [];
+		for (let linter of Object.values(linters).filter((l) => typeof l === "function")) {
+			this.addLinter(linter);
+		}
 	}
 
 	addLinter(callback) {
@@ -589,7 +620,7 @@ class Template extends TemplateContent {
 		// If it doesn’t exist, computed data is not used for this template
 		if (this.computedData) {
 			debug("Second round of computed data for %o", this.inputPath);
-			await this.computedData.processRemainingData(data);
+			return this.computedData.processRemainingData(data);
 		}
 	}
 
@@ -808,12 +839,12 @@ class Template extends TemplateContent {
 		let templateBenchmarkDir = this.bench.get("Template make parent directory");
 		templateBenchmarkDir.before();
 
-		let templateOutputDir = path.parse(outputPath).dir;
-		if (templateOutputDir) {
-			if (!this.existsCache.exists(templateOutputDir)) {
-				fs.mkdirSync(templateOutputDir, { recursive: true });
-			}
+		if (this.eleventyConfig.templateHandling?.writeMode === "async") {
+			await this.fsManager.createDirectoryForFile(outputPath);
+		} else {
+			this.fsManager.createDirectoryForFileSync(outputPath);
 		}
+
 		templateBenchmarkDir.after();
 
 		if (!Buffer.isBuffer(finalContent) && typeof finalContent !== "string") {
@@ -825,9 +856,11 @@ class Template extends TemplateContent {
 		let templateBenchmark = this.bench.get("Template Write");
 		templateBenchmark.before();
 
-		// Note: This deliberately uses the synchronous version to avoid
-		// unbounded concurrency: https://github.com/11ty/eleventy/issues/3271
-		fs.writeFileSync(outputPath, finalContent);
+		if (this.eleventyConfig.templateHandling?.writeMode === "async") {
+			await this.fsManager.writeFile(outputPath, finalContent);
+		} else {
+			this.fsManager.writeFileSync(outputPath, finalContent);
+		}
 
 		templateBenchmark.after();
 		this.writeCount++;
@@ -861,7 +894,6 @@ class Template extends TemplateContent {
 		await this.runLinters(content, pageEntry);
 
 		content = await this.runTransforms(content, pageEntry);
-
 		return content;
 	}
 
@@ -956,6 +988,7 @@ class Template extends TemplateContent {
 		// await tmpl.getTemplateRender();
 
 		// preserves caches too, e.g. _frontMatterDataCache
+		// Does not yet include .computedData
 		for (let key in this) {
 			tmpl[key] = this[key];
 		}
@@ -973,11 +1006,9 @@ class Template extends TemplateContent {
 
 	async getInputFileStat() {
 		// @cachedproperty
-		if (this._stats) {
-			return this._stats;
+		if (!this._stats) {
+			this._stats = fsStat(this.inputPath);
 		}
-
-		this._stats = fsStat(this.inputPath);
 
 		return this._stats;
 	}
@@ -1027,7 +1058,7 @@ class Template extends TemplateContent {
 
 		if (dateValue) {
 			debug("getMappedDate: using a date in the data for %o of %o", this.inputPath, data.date);
-			if (dateValue instanceof DateTime) {
+			if (dateValue?.constructor?.name === "DateTime") {
 				// YAML does its own date parsing
 				debug("getMappedDate: found DateTime instance: %o", dateValue);
 				return dateValue.toJSDate();

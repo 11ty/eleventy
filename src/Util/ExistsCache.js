@@ -1,81 +1,53 @@
-import fs from "graceful-fs";
-import PathNormalizer from "./PathNormalizer.js";
+import fs from "node:fs";
 
 // Checks both files and directories
 class ExistsCache {
+	#exists = new Map();
+	#dirs = new Map();
+
 	constructor() {
-		this._cache = new Map();
 		this.lookupCount = 0;
 	}
 
-	setDirectoryCheck(check) {
-		this.cacheDirectories = !!check;
-	}
-
 	get size() {
-		return this._cache.size;
-	}
-
-	parentsDoNotExist(path) {
-		if (!this.cacheDirectories) {
-			return false;
-		}
-
-		let allPaths = PathNormalizer.getAllPaths(path).filter((entry) => entry !== path);
-		for (let parentPath of allPaths) {
-			if (this._cache.has(parentPath)) {
-				if (this._cache.get(parentPath) === false) {
-					return true; // we know this parent doesn’t exist
-				}
-			}
-		}
-
-		// if you’ve made it here: we don’t know if the parents exist or not
-		return false;
+		return this.#exists.size;
 	}
 
 	has(path) {
-		return this._cache.has(path);
+		return this.#exists.has(path);
 	}
 
+	// Relative paths (to root directory) expected (but not enforced due to perf costs)
 	exists(path) {
-		path = PathNormalizer.fullNormalization(path);
-
-		let exists = this._cache.get(path);
-		if (this.parentsDoNotExist(path)) {
-			// we don’t need to check if a parent directory does not exist
-			exists = false;
-		} else if (!this.has(path)) {
-			exists = fs.existsSync(path);
-			this.markExistsWithParentDirectories(path, exists);
+		if (!this.#exists.has(path)) {
+			let exists = fs.existsSync(path);
 			this.lookupCount++;
+
+			// mark for next time
+			this.#exists.set(path, Boolean(exists));
+
+			return exists;
 		}
 
-		return exists;
+		return this.#exists.get(path);
 	}
 
-	// if a file exists, we can mark the parent directories as existing also
-	// if a file does not exist, we don’t know if the parent directories exist or not (yet)
-	markExistsWithParentDirectories(path, exists = true) {
-		path = PathNormalizer.fullNormalization(path);
-
-		if (!this.cacheDirectories || !exists) {
-			this.markExists(path, false, true);
-			return;
+	isDirectory(path) {
+		if (!this.exists(path)) {
+			return false;
 		}
 
-		let paths = PathNormalizer.getAllPaths(path);
-		for (let fullpath of paths) {
-			this.markExists(fullpath, true, true);
-		}
-	}
+		if (!this.#dirs.has(path)) {
+			let isDir = fs.statSync(path).isDirectory();
+			this.lookupCount++;
 
-	markExists(path, exists = true, alreadyNormalized = false) {
-		if (!alreadyNormalized) {
-			path = PathNormalizer.fullNormalization(path);
+			// mark for next time
+			this.#dirs.set(path, isDir);
+
+			return isDir;
 		}
 
-		this._cache.set(path, !!exists);
+		return this.#dirs.get(path);
 	}
 }
 

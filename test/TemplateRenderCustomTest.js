@@ -9,6 +9,7 @@ import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 import getNewTemplate from "./_getNewTemplateForTests.js";
 import { renderTemplate } from "./_getRenderedTemplates.js";
 import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
+import TemplateEngineManager from "../src/Engines/TemplateEngineManager.js";
 
 
 async function getNewTemplateRender(name, inputDir, eleventyConfig, extensionMap) {
@@ -16,10 +17,14 @@ async function getNewTemplateRender(name, inputDir, eleventyConfig, extensionMap
     eleventyConfig = await getTemplateConfigInstance();
   }
 
+
   if (!extensionMap) {
     extensionMap = new EleventyExtensionMap(eleventyConfig);
     extensionMap.setFormats([]);
   }
+
+  let mgr = new TemplateEngineManager(eleventyConfig);
+  extensionMap.engineManager = mgr;
 
   let tr = new TemplateRender(name, eleventyConfig);
   tr.extensionMap = extensionMap;

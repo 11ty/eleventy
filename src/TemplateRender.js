@@ -1,34 +1,35 @@
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
-import EleventyExtensionMap from "./EleventyExtensionMap.js";
 import TemplateEngineManager from "./Engines/TemplateEngineManager.js";
 import CustomEngine from "./Engines/Custom.js";
 
 // import debugUtil from "debug";
 // const debug = debugUtil("Eleventy:TemplateRender");
 
-class TemplateRenderConfigError extends EleventyBaseError {}
 class TemplateRenderUnknownEngineError extends EleventyBaseError {}
 
 // works with full path names or short engine name
 class TemplateRender {
+	#extensionMap;
+	#config;
+
 	constructor(tmplPath, config) {
 		if (!tmplPath) {
 			throw new Error(`TemplateRender requires a tmplPath argument, instead of ${tmplPath}`);
 		}
-		if (!config) {
-			throw new TemplateRenderConfigError("Missing `config` argument.");
-		}
-		if (config.constructor.name === "TemplateConfig") {
-			this.eleventyConfig = config;
-			this.config = config.getConfig();
-		} else {
-			throw new Error("Third argument to TemplateRender must be a TemplateConfig instance.");
-		}
+		this.#setConfig(config);
 
 		this.engineNameOrPath = tmplPath;
-
 		this.parseMarkdownWith = this.config.markdownTemplateEngine;
 		this.parseHtmlWith = this.config.htmlTemplateEngine;
+	}
+
+	#setConfig(config) {
+		if (config?.constructor?.name !== "TemplateConfig") {
+			throw new Error("TemplateRender must receive a TemplateConfig instance.");
+		}
+
+		this.eleventyConfig = config;
+		this.config = config.getConfig();
 	}
 
 	get dirs() {
@@ -49,36 +50,33 @@ class TemplateRender {
 	}
 
 	get config() {
-		return this._config;
+		return this.#config;
 	}
 
 	set config(config) {
-		this._config = config;
+		this.#config = config;
 	}
 
 	set extensionMap(extensionMap) {
-		this._extensionMap = extensionMap;
+		this.#extensionMap = extensionMap;
 	}
 
 	get extensionMap() {
-		if (!this._extensionMap) {
-			this._extensionMap = new EleventyExtensionMap(this.eleventyConfig);
-			this._extensionMap.setFormats([]);
+		if (!this.#extensionMap) {
+			throw new Error("Internal error: missing `extensionMap` in TemplateRender.");
 		}
-		return this._extensionMap;
+		return this.#extensionMap;
 	}
 
 	async getEngineByName(name) {
-		let engine = await this.extensionMap.engineManager.getEngine(name, this.extensionMap);
-		engine.eleventyConfig = this.eleventyConfig;
-
-		return engine;
+		// WARNING: eleventyConfig assignment removed here
+		return this.extensionMap.engineManager.getEngine(name, this.extensionMap);
 	}
 
 	// Runs once per template
 	async init(engineNameOrPath) {
 		let name = engineNameOrPath || this.engineNameOrPath;
-		this.extensionMap.config = this.eleventyConfig;
+		this.extensionMap.setTemplateConfig(this.eleventyConfig);
 
 		let extensionEntry = this.extensionMap.getExtensionEntry(name);
 		let engineName = extensionEntry?.aliasKey || extensionEntry?.key;

@@ -1,10 +1,8 @@
 import semver from "semver";
-import debugUtil from "debug";
 
 import { getEleventyPackageJson, getWorkingProjectPackageJson } from "./ImportJsonSync.js";
 
 const pkg = getEleventyPackageJson();
-const debug = debugUtil("Eleventy:Compatibility");
 
 // Used in user config versionCheck method.
 class Compatibility {
@@ -23,13 +21,10 @@ class Compatibility {
 			return compatibleRange;
 		}
 
-		try {
-			// fetch from project’s package.json
-			let projectPackageJson = getWorkingProjectPackageJson();
+		// fetch from project’s package.json
+		let projectPackageJson = getWorkingProjectPackageJson();
+		if (projectPackageJson["11ty"]?.compatibility) {
 			return projectPackageJson["11ty"]?.compatibility;
-		} catch (e) {
-			debug("Could not find a project package.json for compatibility version check: %O", e);
-			return; // do nothing, no compatibility information to check
 		}
 	}
 

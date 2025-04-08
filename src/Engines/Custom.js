@@ -7,7 +7,7 @@ eventBus.on("eleventy.resourceModified", (path) => {
 	lastModifiedFile = path;
 });
 
-class CustomEngine extends TemplateEngine {
+export default class CustomEngine extends TemplateEngine {
 	constructor(name, eleventyConfig) {
 		super(name, eleventyConfig);
 
@@ -323,6 +323,7 @@ class CustomEngine extends TemplateEngine {
 		}
 
 		// Breaking: default changed from `true` to `false` in 3.0.0-alpha.13
+		// Note: `false` is the same as "raw" here.
 		return false;
 	}
 
@@ -334,5 +335,3 @@ class CustomEngine extends TemplateEngine {
 		return false;
 	}
 }
-
-export default CustomEngine;

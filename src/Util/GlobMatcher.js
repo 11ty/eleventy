@@ -1,4 +1,4 @@
-import micromatch from "micromatch";
+import picomatch from "picomatch";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
 function isGlobMatch(filepath, globs = [], options = undefined) {
@@ -15,7 +15,8 @@ function isGlobMatch(filepath, globs = [], options = undefined) {
 		options,
 	);
 
-	return micromatch.isMatch(inputPath, globs, opts);
+	// globs: string or array of strings
+	return picomatch.isMatch(inputPath, globs, opts);
 }
 
 export { isGlobMatch };

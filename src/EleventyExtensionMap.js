@@ -1,13 +1,10 @@
 import { TemplatePath } from "@11ty/eleventy-utils";
 
-import TemplateEngineManager from "./Engines/TemplateEngineManager.js";
-import EleventyBaseError from "./Errors/EleventyBaseError.js";
-
-class EleventyExtensionMapConfigError extends EleventyBaseError {}
-
 class EleventyExtensionMap {
+	#engineManager;
+
 	constructor(config) {
-		this.config = config;
+		this.setTemplateConfig(config);
 		this._spiderJsDepsCache = {};
 
 		/** @type {Array} */
@@ -29,29 +26,32 @@ class EleventyExtensionMap {
 		this.passthroughCopyKeys = this.unfilteredFormatKeys.filter((key) => !this.hasExtension(key));
 	}
 
-	set config(cfg) {
-		if (!cfg || cfg.constructor.name !== "TemplateConfig") {
-			throw new EleventyExtensionMapConfigError(
-				"Missing or invalid `config` argument (via setter).",
-			);
+	setTemplateConfig(config) {
+		if (!config || config.constructor.name !== "TemplateConfig") {
+			throw new Error("Internal error: Missing or invalid `config` argument.");
 		}
-		this.eleventyConfig = cfg;
+
+		this.templateConfig = config;
 	}
 
 	get config() {
-		return this.eleventyConfig.getConfig();
+		return this.templateConfig.getConfig();
 	}
 
 	get engineManager() {
-		if (!this._engineManager) {
-			this._engineManager = new TemplateEngineManager(this.eleventyConfig);
+		if (!this.#engineManager) {
+			throw new Error("Internal error: Missing `#engineManager` in EleventyExtensionMap.");
 		}
 
-		return this._engineManager;
+		return this.#engineManager;
+	}
+
+	set engineManager(mgr) {
+		this.#engineManager = mgr;
 	}
 
 	reset() {
-		this.engineManager.reset();
+		this.#engineManager.reset();
 	}
 
 	/* Used for layout path resolution */

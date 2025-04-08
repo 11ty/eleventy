@@ -1,4 +1,4 @@
-import fs from "graceful-fs";
+import fs from "node:fs";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import { evalToken } from "liquidjs";
 
@@ -10,6 +10,8 @@ import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import TemplateRender from "../TemplateRender.js";
 import ProjectDirectories from "../Util/ProjectDirectories.js";
 import TemplateConfig from "../TemplateConfig.js";
+import EleventyExtensionMap from "../EleventyExtensionMap.js";
+import TemplateEngineManager from "../Engines/TemplateEngineManager.js";
 import Liquid from "../Engines/Liquid.js";
 
 class EleventyNunjucksError extends EleventyBaseError {}
@@ -17,6 +19,7 @@ class EleventyNunjucksError extends EleventyBaseError {}
 /** @this {object} */
 async function compile(content, templateLang, options = {}) {
 	let { templateConfig, extensionMap } = options;
+	let strictMode = options.strictMode ?? false;
 
 	if (!templateConfig) {
 		templateConfig = new TemplateConfig(null, false);
@@ -29,8 +32,16 @@ async function compile(content, templateLang, options = {}) {
 		templateLang = this.page.templateSyntax;
 	}
 
+	if (!extensionMap) {
+		if (strictMode) {
+			throw new Error("Internal error: missing `extensionMap` in RenderPlugin->compile.");
+		}
+		extensionMap = new EleventyExtensionMap(templateConfig);
+		extensionMap.engineManager = new TemplateEngineManager(templateConfig);
+	}
 	let tr = new TemplateRender(templateLang, templateConfig);
 	tr.extensionMap = extensionMap;
+
 	if (templateLang) {
 		await tr.setEngineOverride(templateLang);
 	} else {
@@ -54,14 +65,9 @@ async function compile(content, templateLang, options = {}) {
 // No templateLang default, it should infer from the inputPath.
 async function compileFile(inputPath, options = {}, templateLang) {
 	let { templateConfig, extensionMap, config } = options;
+	let strictMode = options.strictMode ?? false;
 	if (!inputPath) {
 		throw new Error("Missing file path argument passed to the `renderFile` shortcode.");
-	}
-
-	if (!fs.existsSync(TemplatePath.normalizeOperatingSystemFilePath(inputPath))) {
-		throw new Error(
-			"Could not find render plugin file for the `renderFile` shortcode, looking for: " + inputPath,
-		);
 	}
 
 	let wasTemplateConfigMissing = false;
@@ -77,6 +83,22 @@ async function compileFile(inputPath, options = {}, templateLang) {
 		await templateConfig.init();
 	}
 
+	let normalizedPath = TemplatePath.normalizeOperatingSystemFilePath(inputPath);
+	// Prefer the exists cache, if it’s available
+	if (!templateConfig.existsCache.exists(normalizedPath)) {
+		throw new Error(
+			"Could not find render plugin file for the `renderFile` shortcode, looking for: " + inputPath,
+		);
+	}
+
+	if (!extensionMap) {
+		if (strictMode) {
+			throw new Error("Internal error: missing `extensionMap` in RenderPlugin->compileFile.");
+		}
+
+		extensionMap = new EleventyExtensionMap(templateConfig);
+		extensionMap.engineManager = new TemplateEngineManager(templateConfig);
+	}
 	let tr = new TemplateRender(inputPath, templateConfig);
 	tr.extensionMap = extensionMap;
 
@@ -137,6 +159,16 @@ async function renderShortcodeFn(fn, data) {
  * @param {object} options - Plugin options
  */
 function eleventyRenderPlugin(eleventyConfig, options = {}) {
+	let templateConfig;
+	eleventyConfig.on("eleventy.config", (tmplConfigInstance) => {
+		templateConfig = tmplConfigInstance;
+	});
+
+	let extensionMap;
+	eleventyConfig.on("eleventy.extensionmap", (map) => {
+		extensionMap = map;
+	});
+
 	/**
 	 * @typedef {object} options
 	 * @property {string} [tagName] - The shortcode name to render a template string.
@@ -322,18 +354,6 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 		})();
 	}
 
-	// This will only work on 1.0.0-beta.5+ but is only necessary if you want to reuse your config inside of template shortcodes.
-	// Just rendering raw templates (without filters, shortcodes, etc. from your config) will work fine on old versions.
-	let templateConfig;
-	eleventyConfig.on("eleventy.config", (cfg) => {
-		templateConfig = cfg;
-	});
-
-	let extensionMap;
-	eleventyConfig.on("eleventy.extensionmap", (map) => {
-		extensionMap = map;
-	});
-
 	/** @this {object} */
 	async function _renderStringShortcodeFn(content, templateLang, data = {}) {
 		// Default is fn(content, templateLang, data) but we want to support fn(content, data) too
@@ -392,6 +412,7 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 class RenderManager {
 	/** @type {Promise|undefined} */
 	#hasConfigInitialized;
+	#extensionMap;
 
 	constructor() {
 		this.templateConfig = new TemplateConfig(null, false);
@@ -402,6 +423,9 @@ class RenderManager {
 			templateConfig: this.templateConfig,
 			accessGlobalData: true,
 		});
+
+		this.#extensionMap = new EleventyExtensionMap(this.templateConfig);
+		this.#extensionMap.engineManager = new TemplateEngineManager(this.templateConfig);
 	}
 
 	async init() {
@@ -445,8 +469,9 @@ class RenderManager {
 	async compile(content, templateLang, options = {}) {
 		await this.init();
 
-		// Missing here: extensionMap
 		options.templateConfig = this.templateConfig;
+		options.extensionMap = this.#extensionMap;
+		options.strictMode = true;
 
 		// We don’t need `compile.call(this)` here because the Edge always uses "liquid" as the template lang (instead of relying on this.page.templateSyntax)
 		// returns promise

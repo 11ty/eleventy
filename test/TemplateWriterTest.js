@@ -1,16 +1,14 @@
 import test from "ava";
 import fs from "fs";
 import { rimrafSync } from "rimraf";
-import fastglob from "fast-glob";
+import { glob } from "tinyglobby";
 import path from "path";
 
-import EleventyFiles from "../src/EleventyFiles.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
-import TemplateWriter from "../src/TemplateWriter.js";
 
 import { normalizeNewLines } from "./Util/normalizeNewLines.js";
 import { getRenderedTemplates as getRenderedTmpls } from "./_getRenderedTemplates.js";
-import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
+import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback, getTemplateWriterInstance } from "./_testHelpers.js";
 
 // TODO make sure if output is a subdir of input dir that they don’t conflict.
 test("Output is a subdir of input", async (t) => {
@@ -21,15 +19,9 @@ test("Output is a subdir of input", async (t) => {
     }
   });
 
-  let tw = new TemplateWriter(
-    ["liquid", "md"],
-    null,
-    eleventyConfig,
-  );
-  let evf = new EleventyFiles(["liquid", "md"], eleventyConfig);
-  evf.init();
+  let { templateWriter: tw, eleventyFiles: evf } = getTemplateWriterInstance(["liquid", "md"], eleventyConfig);
 
-  let files = await fastglob(evf.getFileGlobs());
+  let files = await glob(evf.getFileGlobs());
   t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTest/**/*.{liquid,md}"]);
   t.true(files.length > 0);
 
@@ -48,11 +40,7 @@ test("_createTemplateMap", async (t) => {
     }
   });
 
-  let tw = new TemplateWriter(
-    ["liquid", "md"],
-    null,
-    eleventyConfig,
-  );
+  let { templateWriter: tw } = getTemplateWriterInstance(["liquid", "md"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
   t.true(paths.length > 0);
@@ -73,11 +61,7 @@ test("_createTemplateMap (no leading dot slash)", async (t) => {
     }
   });
 
-  let tw = new TemplateWriter(
-    ["liquid", "md"],
-    null,
-    eleventyConfig,
-  );
+  let { templateWriter: tw } = getTemplateWriterInstance(["liquid", "md"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
   t.true(paths.length > 0);
@@ -92,11 +76,7 @@ test("_testGetCollectionsData", async (t) => {
     }
   });
 
-  let tw = new TemplateWriter(
-    ["md"],
-    null,
-    eleventyConfig,
-  );
+  let { templateWriter: tw } = getTemplateWriterInstance(["md"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
@@ -115,11 +95,7 @@ test("_testGetAllTags", async (t) => {
     }
   });
 
-  let tw = new TemplateWriter(
-    ["md"],
-    null,
-    eleventyConfig,
-  );
+  let { templateWriter: tw } = getTemplateWriterInstance(["md"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
@@ -136,9 +112,8 @@ test("Collection of files sorted by date", async (t) => {
     }
   });
 
-  let tw = new TemplateWriter(
+  let { templateWriter: tw } = getTemplateWriterInstance(
     ["md"],
-    null,
     eleventyConfig,
   );
 
@@ -149,25 +124,18 @@ test("Collection of files sorted by date", async (t) => {
 });
 
 test("__testGetCollectionsData with custom collection (ascending)", async (t) => {
-  let eleventyConfig = await getTemplateConfigInstance({
-    dir: {
-      input: "test/stubs/collection2",
-      output: "test/stubs/_site"
-    }
-  });
-
-  let tw = new TemplateWriter(
-    ["md"],
-    null,
-    eleventyConfig,
-  );
-
-  tw.userConfig.addCollection("customPostsAsc", function (collection) {
-    return collection.getFilteredByTag("post").sort(function (a, b) {
-      return a.date - b.date;
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs/collection2",
+    output: "test/stubs/_site"
+  }, function(config) {
+    config.addCollection("customPostsAsc", function (collection) {
+      return collection.getFilteredByTag("post").sort(function (a, b) {
+        return a.date - b.date;
+      });
     });
   });
 
+  let { templateWriter: tw } = getTemplateWriterInstance(["md"], eleventyConfig);
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
   let collectionsData = await templateMap._testGetCollectionsData();
@@ -177,53 +145,44 @@ test("__testGetCollectionsData with custom collection (ascending)", async (t) =>
 });
 
 test("__testGetCollectionsData with custom collection (descending)", async (t) => {
-  let eleventyConfig = await getTemplateConfigInstance({
-    dir: {
-      input: "test/stubs/collection2",
-      output: "test/stubs/_site"
-    }
-  });
-
-  let tw = new TemplateWriter(
-    ["md"],
-    null,
-    eleventyConfig,
-  );
-
-  tw.userConfig.addCollection("customPosts", function (collection) {
-    return collection.getFilteredByTag("post").sort(function (a, b) {
-      return b.date - a.date;
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs/collection2",
+    output: "test/stubs/_site"
+  }, function(eleventyConfig) {
+    eleventyConfig.addCollection("customPosts", function (collection) {
+      return collection.getFilteredByTag("post").sort(function (a, b) {
+        return b.date - a.date;
+      });
     });
   });
+
+
+  let { templateWriter: tw } = getTemplateWriterInstance(["md"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
   let collectionsData = await templateMap._testGetCollectionsData();
+
   t.is(collectionsData.customPosts.length, 2);
   t.is(path.parse(collectionsData.customPosts[0].inputPath).base, "test2.md");
   t.is(path.parse(collectionsData.customPosts[1].inputPath).base, "test1.md");
 });
 
 test("__testGetCollectionsData with custom collection (filter only to markdown input)", async (t) => {
-  let eleventyConfig = await getTemplateConfigInstance({
-    dir: {
-      input: "test/stubs/collection2",
-      output: "test/stubs/_site"
-    }
-  });
-
-  let tw = new TemplateWriter(
-    ["md"],
-    null,
-    eleventyConfig,
-  );
-
-  tw.userConfig.addCollection("onlyMarkdown", function (collection) {
-    return collection.getAllSorted().filter(function (item) {
-      let extension = item.inputPath.split(".").pop();
-      return extension === "md";
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs/collection2",
+    output: "test/stubs/_site"
+  }, function(config) {
+    config.addCollection("onlyMarkdown", function (collection) {
+      return collection.getAllSorted().filter(function (item) {
+        let extension = item.inputPath.split(".").pop();
+        return extension === "md";
+      });
     });
   });
+
+  let { templateWriter: tw } = getTemplateWriterInstance(["md"], eleventyConfig);
+
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
@@ -241,11 +200,7 @@ test("Pagination with a Collection", async (t) => {
     }
   });
 
-  let tw = new TemplateWriter(
-    ["njk"],
-    null,
-    eleventyConfig,
-  );
+  let { templateWriter: tw } = getTemplateWriterInstance(["njk"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
@@ -273,11 +228,7 @@ test("Pagination with a Collection from another Paged Template", async (t) => {
     }
   });
 
-  let tw = new TemplateWriter(
-    ["njk"],
-    null,
-    eleventyConfig,
-  );
+  let { templateWriter: tw } = getTemplateWriterInstance(["njk"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
@@ -307,11 +258,7 @@ test("Pagination with a Collection (apply all pages to collections)", async (t) 
     }
   });
 
-  let tw = new TemplateWriter(
-    ["njk"],
-    null,
-    eleventyConfig,
-  );
+  let { templateWriter: tw } = getTemplateWriterInstance(["njk"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
@@ -359,11 +306,7 @@ test("Use a collection inside of a template", async (t) => {
     }
   });
 
-  let tw = new TemplateWriter(
-    ["liquid"],
-    null,
-    eleventyConfig,
-  );
+  let { templateWriter: tw } = getTemplateWriterInstance(["liquid"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
@@ -406,11 +349,7 @@ test("Use a collection inside of a layout", async (t) => {
     }
   });
 
-  let tw = new TemplateWriter(
-    ["liquid"],
-    null,
-    eleventyConfig,
-  );
+  let { templateWriter: tw } = getTemplateWriterInstance(["liquid"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
@@ -451,11 +390,8 @@ test("Glob Watcher Files with Passthroughs", async (t) => {
     }
   });
 
-  let tw = new TemplateWriter(
-    ["njk", "png"],
-    null,
-    eleventyConfig,
-  );
+  let { templateWriter: tw } = getTemplateWriterInstance(["njk", "png"], eleventyConfig);
+
   t.deepEqual(tw.eleventyFiles.passthroughGlobs, ["./test/stubs/**/*.png"]);
 });
 
@@ -469,11 +405,7 @@ test("Pagination and TemplateContent", async (t) => {
     }
   });
 
-  let tw = new TemplateWriter(
-    ["njk", "md"],
-    null,
-    eleventyConfig,
-  );
+  let { templateWriter: tw } = getTemplateWriterInstance(["njk", "md"], eleventyConfig);
 
   tw.setVerboseOutput(false);
   await tw.write();
@@ -489,24 +421,18 @@ test("Pagination and TemplateContent", async (t) => {
 });
 
 test("Custom collection returns array", async (t) => {
-  let eleventyConfig = await getTemplateConfigInstance({
-    dir: {
-      input: "test/stubs/collection2",
-      output: "test/stubs/_site"
-    }
-  });
-
-  let tw = new TemplateWriter(
-    ["md"],
-    null,
-    eleventyConfig,
-  );
-
-  tw.userConfig.addCollection("returnAllInputPaths", function (collection) {
-    return collection.getAllSorted().map(function (item) {
-      return item.inputPath;
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs/collection2",
+    output: "test/stubs/_site"
+  }, function(config) {
+    config.addCollection("returnAllInputPaths", function (collection) {
+      return collection.getAllSorted().map(function (item) {
+        return item.inputPath;
+      });
     });
   });
+
+  let { templateWriter: tw } = getTemplateWriterInstance(["md"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
@@ -517,23 +443,16 @@ test("Custom collection returns array", async (t) => {
 });
 
 test("Custom collection returns a string", async (t) => {
-  let eleventyConfig = await getTemplateConfigInstance({
-    dir: {
-      input: "test/stubs/collection2",
-      output: "test/stubs/_site"
-    }
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs/collection2",
+    output: "test/stubs/_site"
+  }, function(config) {
+    config.addCollection("returnATestString", function () {
+      return "test";
+    });
   });
 
-  let tw = new TemplateWriter(
-    ["md"],
-    null,
-    eleventyConfig,
-  );
-
-  tw.userConfig.addCollection("returnATestString", function () {
-    return "test";
-  });
-
+  let { templateWriter: tw } = getTemplateWriterInstance(["md"], eleventyConfig);
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
   let collectionsData = await templateMap._testGetCollectionsData();
@@ -541,23 +460,16 @@ test("Custom collection returns a string", async (t) => {
 });
 
 test("Custom collection returns an object", async (t) => {
-  let eleventyConfig = await getTemplateConfigInstance({
-    dir: {
-      input: "test/stubs/collection2",
-      output: "test/stubs/_site"
-    }
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback({
+    input: "test/stubs/collection2",
+    output: "test/stubs/_site"
+  }, function(config) {
+    config.addCollection("returnATestObject", function () {
+      return { test: "value" };
+    });
   });
 
-  let tw = new TemplateWriter(
-    ["md"],
-    null,
-    eleventyConfig,
-  );
-
-  tw.userConfig.addCollection("returnATestObject", function () {
-    return { test: "value" };
-  });
-
+  let { templateWriter: tw } = getTemplateWriterInstance(["md"], eleventyConfig);
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
   let collectionsData = await templateMap._testGetCollectionsData();
@@ -572,11 +484,7 @@ test("fileSlug should exist in a collection", async (t) => {
     }
   });
 
-  let tw = new TemplateWriter(
-    ["njk"],
-    null,
-    eleventyConfig,
-  );
+  let { templateWriter: tw } = getTemplateWriterInstance(["njk"], eleventyConfig);
 
   let paths = await tw._getAllPaths();
   let templateMap = await tw._createTemplateMap(paths);
@@ -600,20 +508,11 @@ test("Write Test 11ty.js", async (t) => {
     }
   });
 
-  let tw = new TemplateWriter(
-    ["11ty.js"],
-    null,
-    eleventyConfig,
-  );
-  let evf = new EleventyFiles(
-    ["11ty.js"],
-    eleventyConfig,
-  );
-  evf.init();
+  let { templateWriter: tw, eleventyFiles: evf } = getTemplateWriterInstance(["11ty.js"], eleventyConfig);
 
-  let files = await fastglob(evf.getFileGlobs());
+  let files = await glob(evf.getFileGlobs());
   t.deepEqual(evf.getRawFiles(), ["./test/stubs/writeTestJS/**/*.{11ty.js,11ty.cjs,11ty.mjs}"]);
-  t.deepEqual(files, ["./test/stubs/writeTestJS/test.11ty.cjs"]);
+  t.deepEqual(files, ["test/stubs/writeTestJS/test.11ty.cjs"]);
 
   let { template: tmpl } = tw._createTemplate(files[0]);
   let data = await tmpl.getData();
@@ -636,27 +535,17 @@ test.skip("Markdown with alias", async (t) => {
     },
   };
 
-  let evf = new EleventyFiles(
-    ["md"],
-    eleventyConfig,
-  );
+  let { templateWriter: tw, eleventyFiles: evf } = getTemplateWriterInstance(["md"], eleventyConfig);
   evf._setExtensionMap(map);
   evf.init();
 
-  let files = await fastglob(evf.getFileGlobs());
+  let files = await glob(evf.getFileGlobs());
   t.deepEqual(evf.getRawFiles(), [
     "./test/stubs/writeTestMarkdown/**/*.md",
     "./test/stubs/writeTestMarkdown/**/*.markdown",
   ]);
   t.true(files.indexOf("./test/stubs/writeTestMarkdown/sample.md") > -1);
   t.true(files.indexOf("./test/stubs/writeTestMarkdown/sample2.markdown") > -1);
-
-  let tw = new TemplateWriter(
-    ["md"],
-    null,
-    eleventyConfig,
-  );
-  tw.setEleventyFiles(evf);
 
   let { template: tmpl } = tw._createTemplate(files[0]);
   tmpl._setExtensionMap(map);
@@ -683,14 +572,12 @@ test.skip("JavaScript with alias", async (t) => {
     },
   };
 
-  let evf = new EleventyFiles(
-    ["11ty.js"],
-    eleventyConfig,
-  );
+  let { templateWriter: tw, eleventyFiles: evf } = getTemplateWriterInstance(["11ty.js"], eleventyConfig);
+
   evf._setExtensionMap(map);
   evf.init();
 
-  let files = await fastglob(evf.getFileGlobs());
+  let files = await glob(evf.getFileGlobs());
   t.deepEqual(
     evf.getRawFiles().sort(),
     ["./test/stubs/writeTestJS/**/*.11ty.js", "./test/stubs/writeTestJS/**/*.js"].sort(),
@@ -699,13 +586,6 @@ test.skip("JavaScript with alias", async (t) => {
     files.sort(),
     ["./test/stubs/writeTestJS/sample.js", "./test/stubs/writeTestJS/test.11ty.js"].sort(),
   );
-
-  let tw = new TemplateWriter(
-    ["11ty.js"],
-    null,
-    eleventyConfig,
-  );
-  tw.setEleventyFiles(evf);
 
   let { template: tmpl } = tw._createTemplate(files[0]);
   t.is(await tmpl.getOutputPath(), "./test/stubs/_writeTestJSSite/test/index.html");
@@ -745,11 +625,7 @@ test("Passthrough file output", async (t) => {
     // };
   });
 
-  let tw = new TemplateWriter(
-    ["njk", "md"],
-    null,
-    eleventyConfig,
-  );
+  let { templateWriter: tw } = getTemplateWriterInstance(["njk", "md"], eleventyConfig);
 
   await tw.write();
 

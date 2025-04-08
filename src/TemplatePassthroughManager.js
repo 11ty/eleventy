@@ -1,26 +1,45 @@
-import isGlob from "is-glob";
+import { isDynamicPattern } from "tinyglobby";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
-import EleventyExtensionMap from "./EleventyExtensionMap.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import TemplatePassthrough from "./TemplatePassthrough.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import { isGlobMatch } from "./Util/GlobMatcher.js";
+import { withResolvers } from "./Util/PromiseUtil.js";
 
 const debug = debugUtil("Eleventy:TemplatePassthroughManager");
-const debugDev = debugUtil("Dev:Eleventy:TemplatePassthroughManager");
 
-class TemplatePassthroughManagerConfigError extends EleventyBaseError {}
 class TemplatePassthroughManagerCopyError extends EleventyBaseError {}
 
 class TemplatePassthroughManager {
-	constructor(eleventyConfig) {
-		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
-			throw new TemplatePassthroughManagerConfigError("Missing or invalid `config` argument.");
+	#isDryRun = false;
+	#afterBuild;
+	#queue = new Map();
+	#extensionMap;
+
+	constructor(templateConfig) {
+		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
+			throw new Error("Internal error: Missing or invalid `templateConfig` argument.");
 		}
-		this.eleventyConfig = eleventyConfig;
-		this.config = eleventyConfig.getConfig();
+
+		this.templateConfig = templateConfig;
+		this.config = templateConfig.getConfig();
+
+		// eleventy# event listeners are removed on each build
+		this.config.events.on("eleventy#copy", ({ source, target, options }) => {
+			this.enqueueCopy(source, target, options);
+		});
+
+		this.config.events.on("eleventy#beforerender", () => {
+			this.#afterBuild = withResolvers();
+		});
+
+		this.config.events.on("eleventy#render", () => {
+			let { resolve } = this.#afterBuild;
+			resolve();
+		});
+
 		this.reset();
 	}
 
@@ -28,36 +47,32 @@ class TemplatePassthroughManager {
 		this.count = 0;
 		this.size = 0;
 		this.conflictMap = {};
-		this.incrementalFile = null;
-		debug("Resetting counts to 0");
+		this.incrementalFile;
+
+		this.#queue = new Map();
 	}
 
 	set extensionMap(extensionMap) {
-		this._extensionMap = extensionMap;
+		this.#extensionMap = extensionMap;
 	}
 
 	get extensionMap() {
-		if (!this._extensionMap) {
-			this._extensionMap = new EleventyExtensionMap(this.eleventyConfig);
-			this._extensionMap.setFormats([]);
+		if (!this.#extensionMap) {
+			throw new Error("Internal error: missing `extensionMap` in TemplatePassthroughManager.");
 		}
-		return this._extensionMap;
-	}
-
-	get dirs() {
-		return this.eleventyConfig.directories;
+		return this.#extensionMap;
 	}
 
 	get inputDir() {
-		return this.dirs.input;
+		return this.templateConfig.directories.input;
 	}
 
 	get outputDir() {
-		return this.dirs.output;
+		return this.templateConfig.directories.output;
 	}
 
 	setDryRun(isDryRun) {
-		this.isDryRun = !!isDryRun;
+		this.#isDryRun = Boolean(isDryRun);
 	}
 
 	setRunMode(runMode) {
@@ -68,6 +83,10 @@ class TemplatePassthroughManager {
 		if (path) {
 			this.incrementalFile = path;
 		}
+	}
+
+	resetIncrementalFile() {
+		this.incrementalFile = undefined;
 	}
 
 	_normalizePaths(path, outputPath, copyOptions = {}) {
@@ -114,16 +133,22 @@ class TemplatePassthroughManager {
 		return this.size;
 	}
 
+	getMetadata() {
+		return {
+			copyCount: this.getCopyCount(),
+			copySize: this.getCopySize(),
+		};
+	}
+
 	setFileSystemSearch(fileSystemSearch) {
 		this.fileSystemSearch = fileSystemSearch;
 	}
 
-	getTemplatePassthroughForPath(path, isIncremental = false) {
-		let inst = new TemplatePassthrough(path, this.eleventyConfig);
+	getTemplatePassthroughForPath(path) {
+		let inst = new TemplatePassthrough(path, this.templateConfig);
 
 		inst.setFileSystemSearch(this.fileSystemSearch);
-		inst.setIsIncremental(isIncremental);
-		inst.setDryRun(this.isDryRun);
+		inst.setDryRun(this.#isDryRun);
 		inst.setRunMode(this.runMode);
 
 		return inst;
@@ -155,8 +180,9 @@ class TemplatePassthroughManager {
 					let dest = map[src];
 					if (this.conflictMap[dest]) {
 						if (src !== this.conflictMap[dest]) {
+							let paths = [src, this.conflictMap[dest]].sort();
 							throw new TemplatePassthroughManagerCopyError(
-								`Multiple passthrough copy files are trying to write to the same output file (${dest}). ${src} and ${this.conflictMap[dest]}`,
+								`Multiple passthrough copy files are trying to write to the same output file (${TemplatePath.standardizeFilePath(dest)}). ${paths.map((p) => TemplatePath.standardizeFilePath(p)).join(" and ")}`,
 							);
 						} else {
 							// Multiple entries from the same source
@@ -168,8 +194,6 @@ class TemplatePassthroughManager {
 							);
 						}
 					}
-
-					debugDev("Adding %o to passthrough copy conflict map, from %o", dest, src);
 
 					this.conflictMap[dest] = src;
 				}
@@ -219,7 +243,11 @@ class TemplatePassthroughManager {
 			if (TemplatePath.startsWithSubPath(changedFile, path.inputPath)) {
 				return path;
 			}
-			if (changedFile && isGlob(path.inputPath) && isGlobMatch(changedFile, [path.inputPath])) {
+			if (
+				changedFile &&
+				isDynamicPattern(path.inputPath) &&
+				isGlobMatch(changedFile, [path.inputPath])
+			) {
 				return path;
 			}
 		}
@@ -227,13 +255,13 @@ class TemplatePassthroughManager {
 		return false;
 	}
 
-	getAllNormalizedPaths(paths) {
+	getAllNormalizedPaths(paths = []) {
 		if (this.incrementalFile) {
 			let isPassthrough = this.isPassthroughCopyFile(paths, this.incrementalFile);
 
 			if (isPassthrough) {
 				if (isPassthrough.outputPath) {
-					return [this._normalizePaths(this.incrementalFile, isPassthrough.outputPath)];
+					return [isPassthrough];
 				}
 
 				return [this._normalizePaths(this.incrementalFile)];
@@ -281,21 +309,50 @@ class TemplatePassthroughManager {
 		return entries;
 	}
 
-	// Performance note: these can actually take a fair bit of time, but aren’t a
-	// bottleneck to eleventy. The copies are performed asynchronously and don’t affect eleventy
-	// write times in a significant way.
+	async #waitForTemplatesRendered() {
+		if (!this.#afterBuild) {
+			return Promise.resolve(); // immediately resolve
+		}
+
+		let { promise } = this.#afterBuild;
+		return promise;
+	}
+
+	enqueueCopy(source, target, copyOptions) {
+		let key = `${source}=>${target}`;
+
+		// light de-dupe the same source/target combo (might be in the same file, might be viaTransforms)
+		if (this.#queue.has(key)) {
+			return;
+		}
+
+		let passthrough = TemplatePassthrough.factory(source, target, {
+			templateConfig: this.templateConfig,
+			copyOptions,
+		});
+
+		passthrough.setCheckSourceDirectory(true);
+		passthrough.setIsAlreadyNormalized(true);
+		passthrough.setRunMode(this.runMode);
+		passthrough.setDryRun(this.#isDryRun);
+
+		this.#queue.set(key, this.copyPassthrough(passthrough));
+	}
+
 	async copyAll(templateExtensionPaths) {
 		debug("TemplatePassthrough copy started.");
 		let normalizedPaths = this.getAllNormalizedPaths(templateExtensionPaths);
 
-		let passthroughs = normalizedPaths.map((path) => {
-			// if incrementalFile is set but it isn’t a passthrough copy, normalizedPaths will be an empty array
-			let isIncremental = !!this.incrementalFile;
-
-			return this.getTemplatePassthroughForPath(path, isIncremental);
-		});
+		let passthroughs = normalizedPaths.map((path) => this.getTemplatePassthroughForPath(path));
 
 		let promises = passthroughs.map((pass) => this.copyPassthrough(pass));
+
+		await this.#waitForTemplatesRendered();
+
+		for (let [key, afterBuildCopyPromises] of this.#queue) {
+			promises.push(afterBuildCopyPromises);
+		}
+
 		return Promise.all(promises).then(async (results) => {
 			let aliases = this.getAliasesFromPassthroughResults(results);
 			await this.config.events.emit("eleventy.passthrough", {

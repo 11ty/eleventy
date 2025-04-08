@@ -1,5 +1,4 @@
 import path from "node:path";
-import normalize from "normalize-path";
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
 class TemplatePermalink {
@@ -42,6 +41,15 @@ class TemplatePermalink {
 				);
 			}
 		} else if (buildLink) {
+			if (typeof buildLink !== "string") {
+				let stringToString = "toString" in buildLink ? `:\n\n${buildLink.toString()}` : "";
+				throw new Error(
+					"Expected permalink value to be a string. Received `" +
+						typeof buildLink +
+						"`" +
+						stringToString,
+				);
+			}
 			this.buildLink = buildLink;
 		}
 
@@ -143,7 +151,7 @@ class TemplatePermalink {
 			return false;
 		}
 
-		return normalize(outputDir + "/" + uri);
+		return TemplatePath.addLeadingDotSlash(TemplatePath.normalize(outputDir + "/" + uri));
 	}
 
 	toPathFromRoot() {
@@ -157,7 +165,7 @@ class TemplatePermalink {
 			return false;
 		}
 
-		return normalize(uri);
+		return TemplatePath.addLeadingDotSlash(TemplatePath.normalize(uri));
 	}
 
 	static _hasDuplicateFolder(dir, base) {

@@ -1,10 +1,10 @@
-import fastglob from "fast-glob";
+import { glob } from "tinyglobby";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import { isGlobMatch } from "./Util/GlobMatcher.js";
 
-const debug = debugUtil("Eleventy:FastGlobManager");
+const debug = debugUtil("Eleventy:FileSystemSearch");
 
 class FileSystemSearch {
 	constructor() {
@@ -52,7 +52,7 @@ class FileSystemSearch {
 
 			this.count++;
 
-			this.promises[cacheKey] = fastglob(
+			this.promises[cacheKey] = glob(
 				globs,
 				Object.assign(
 					{
@@ -63,7 +63,7 @@ class FileSystemSearch {
 				),
 			).then((results) => {
 				this.outputs[cacheKey] = new Set(
-					results.map((entry) => TemplatePath.addLeadingDotSlash(entry)),
+					results.map((entry) => TemplatePath.standardizeFilePath(entry)),
 				);
 				return Array.from(this.outputs[cacheKey]);
 			});
@@ -76,7 +76,7 @@ class FileSystemSearch {
 	_modify(path, setOperation) {
 		path = TemplatePath.stripLeadingDotSlash(path);
 
-		let normalized = TemplatePath.addLeadingDotSlash(path);
+		let normalized = TemplatePath.standardizeFilePath(path);
 
 		for (let key in this.inputs) {
 			let { input, options } = this.inputs[key];
