@@ -26,6 +26,11 @@ export default class Liquid extends TemplateEngine {
 
 		this.argLexer = moo.compile(Liquid.argumentLexerOptions);
 		this.cacheable = true;
+
+		this.filters = eleventyConfig.getFilters({
+			lang: "liquid",
+			async: false,
+		});
 	}
 
 	setLibrary(override) {
@@ -33,7 +38,7 @@ export default class Liquid extends TemplateEngine {
 		this.liquidLib = override || new LiquidJs(this.getLiquidOptions());
 		this.setEngineLib(this.liquidLib);
 
-		this.addFilters(this.config.liquidFilters);
+		this.addFilters(this.filters);
 
 		// TODO these all go to the same place (addTag), add warnings for overwrites
 		this.addCustomTags(this.config.liquidTags);

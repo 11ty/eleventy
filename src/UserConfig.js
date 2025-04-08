@@ -384,11 +384,21 @@ class UserConfig {
 	 * Filters
 	 */
 
+	/**
+	 * @deprecated Use {@link addFilter} instead, with options.langs set to ["liquid"] if you wish it to be scoped.
+	 */
 	addLiquidFilter(name, callback) {
-		this.#add(this.liquid.filters, name, callback, {
-			description: "Liquid Filter",
-			functionName: "addLiquidFilter",
-		});
+		this.logger.warn(
+			'`addLiquidFilter` is deprecated and will be removed in a future release.\
+			 Use `addFilter` instead, with options.lang set to ["liquid"] if you wish it to be scoped.',
+		);
+		this.addFilter(
+			name,
+			callback,
+			{
+				langs: ["liquid"],
+			},
+		);
 	}
 
 	/**
@@ -459,16 +469,19 @@ class UserConfig {
 			async,
 		});
 
-		this.addLiquidFilter(name, callback);
 		this.addJavaScriptFilter(name, callback);
 	}
 
-	// Liquid, Nunjucks, and JS only
 	/**
-	 * @deprecated Pass an async function to `addFilter` instead.
+	 * Perhaps this should be deprecated.
+	 * addAsyncFilter("...", function() {return Promise}) and
+	 * addFilter("...", function() {return Promise}, {async: true})
+	 * are the same.
 	 */
 	addAsyncFilter(name, callback) {
-		this.addFilter(name, callback);
+		this.addFilter(name, callback, {
+			async: true,
+		});
 	}
 
 	/*
@@ -1267,7 +1280,6 @@ class UserConfig {
 			// Liquid
 			liquidOptions: this.liquid.options,
 			liquidTags: this.liquid.tags,
-			liquidFilters: this.liquid.filters,
 			liquidShortcodes: this.liquid.shortcodes,
 			liquidPairedShortcodes: this.liquid.pairedShortcodes,
 			liquidParameterParsing: this.liquid.parameterParsing,
