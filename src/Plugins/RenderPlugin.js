@@ -1,4 +1,4 @@
-import fs from "graceful-fs";
+import fs from "node:fs";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import { evalToken } from "liquidjs";
 

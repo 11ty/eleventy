@@ -54,9 +54,9 @@
 		"format": "prettier . --write",
 		"check": "eslint src",
 		"check-types": "tsc",
-		"lint-staged": "lint-staged",
+		"nano-staged": "nano-staged",
 		"coverage": "npx c8 ava && npx c8 report --reporter=json-summary && cp coverage/coverage-summary.json docs/_data/coverage.json && node cmd.cjs --config=docs/eleventy.coverage.js",
-		"prepare": "husky"
+		"prepare": "simple-git-hooks"
 	},
 	"author": "Zach Leatherman <zachleatherman@gmail.com> (https://zachleat.com/)",
 	"repository": {
@@ -79,10 +79,14 @@
 			]
 		}
 	},
-	"lint-staged": {
+	"nano-staged": {
 		"*.{js,css,md}": [
 			"prettier --write"
 		]
+	},
+	"simple-git-hooks": {
+		"pre-commit": "npm test && npm run nano-staged",
+		"pre-push": "npm test"
 	},
 	"devDependencies": {
 		"@11ty/eleventy-img": "^6.0.1",
@@ -101,16 +105,16 @@
 		"eslint": "^9.23.0",
 		"eslint-config-prettier": "^10.1.1",
 		"globals": "^16.0.0",
-		"husky": "^9.1.7",
-		"lint-staged": "^15.5.0",
 		"markdown-it-emoji": "^3.0.0",
 		"marked": "^15.0.7",
+		"nano-staged": "^0.8.0",
 		"prettier": "^3.5.3",
 		"pretty": "^2.0.0",
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0",
 		"rimraf": "^6.0.1",
 		"sass": "^1.86.1",
+		"simple-git-hooks": "^2.11.1",
 		"tsx": "^4.19.3",
 		"typescript": "^5.8.2",
 		"vue": "^3.5.13",
@@ -134,7 +138,6 @@
 		"dependency-graph": "^1.0.0",
 		"entities": "^6.0.0",
 		"filesize": "^10.1.6",
-		"graceful-fs": "^4.2.11",
 		"gray-matter": "^4.0.3",
 		"iso-639-1": "^3.1.5",
 		"js-yaml": "^4.1.0",
@@ -146,7 +149,6 @@
 		"moo": "^0.5.2",
 		"node-retrieve-globals": "^6.0.0",
 		"nunjucks": "^3.2.4",
-		"p-map": "^7.0.3",
 		"picomatch": "^4.0.2",
 		"please-upgrade-node": "^3.2.0",
 		"posthtml": "^0.16.6",
