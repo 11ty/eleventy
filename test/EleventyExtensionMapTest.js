@@ -122,13 +122,13 @@ test("hasEngine no formats passed in", async (t) => {
 });
 
 test("getKey", async (t) => {
-  let map = await getExtensionMap(["njk", "11ty.js", "md"]);
+  let map = await getExtensionMap(["njk", "11ty.js", "md","liquid"]);
   t.is(map.getKey("component.njk"), "njk");
   t.is(map.getKey("component.11ty.js"), "11ty.js");
   t.is(map.getKey("11ty.js"), "11ty.js");
   t.is(map.getKey(".11ty.js"), "11ty.js");
 
-  t.is(map.getKey("sample.md"), "md");
+  t.deepEqual(map.getKey("sample.md"), ["liquid","md"]);
 
   t.is(map.getKey(""), undefined);
   t.is(map.getKey("js"), undefined);

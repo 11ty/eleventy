@@ -161,7 +161,7 @@ class EleventyExtensionMap {
 		} else if (extensions.size > 1) {
 			return [
 				// extra curly brackets /*.{cjs,txt}
-				`${dir}/*.{${Array.from(extensions).join(",")}}`,
+				`${dir}/*.{${Array.from(extensions).sort().join(",")}}`,
 			];
 		}
 
@@ -172,7 +172,8 @@ class EleventyExtensionMap {
 		for (let extension in this.extensionToKeyMap) {
 			if (
 				this.extensionToKeyMap[extension].key === key ||
-				this.extensionToKeyMap[extension].aliasKey === key
+				this.extensionToKeyMap[extension].aliasKey === key ||
+				(Array.isArray(this.extensionToKeyMap[extension].key) && this.extensionToKeyMap[extension].key.slice(-1)[0] === key)
 			) {
 				return true;
 			}
@@ -190,7 +191,7 @@ class EleventyExtensionMap {
 				if (this.extensionToKeyMap[extension].aliasKey === key) {
 					extensions.add(extension);
 				}
-			} else if (this.extensionToKeyMap[extension].key === key) {
+			} else if (this.extensionToKeyMap[extension].key === key || this.extensionToKeyMap[extension].key.includes(key)) {
 				extensions.add(extension);
 			}
 		}
@@ -223,6 +224,11 @@ class EleventyExtensionMap {
 				let key =
 					this.extensionToKeyMap[extension].aliasKey || this.extensionToKeyMap[extension].key;
 				// must be a valid format key passed (e.g. via --formats)
+				if (Array.isArray(key)) {
+					if (key.every((k) => this.validTemplateLanguageKeys.includes(k))) {
+						return key;
+					}
+				}
 				if (this.validTemplateLanguageKeys.includes(key)) {
 					return key;
 				}
@@ -256,8 +262,8 @@ class EleventyExtensionMap {
 	get extensionToKeyMap() {
 		if (!this._extensionToKeyMap) {
 			this._extensionToKeyMap = {
-				md: { key: "md", extension: "md" },
-				html: { key: "html", extension: "html" },
+				md: { key: ["liquid","md"], extension: "md" },
+				html: { key: ["liquid","html"], extension: "html" },
 				njk: { key: "njk", extension: "njk" },
 				liquid: { key: "liquid", extension: "liquid" },
 				"11ty.js": { key: "11ty.js", extension: "11ty.js" },

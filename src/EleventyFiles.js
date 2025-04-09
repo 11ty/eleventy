@@ -49,11 +49,6 @@ class EleventyFiles {
 		return this.dirs.data;
 	}
 
-	// Backwards compat
-	getDataDir() {
-		return this.dataDir;
-	}
-
 	setFileSystemSearch(fileSystemSearch) {
 		this.fileSystemSearch = fileSystemSearch;
 	}
@@ -62,7 +57,6 @@ class EleventyFiles {
 		if (this.dirs.inputFile || this.dirs.inputGlob) {
 			this.templateGlobs = TemplateGlob.map([this.dirs.inputFile || this.dirs.inputGlob]);
 		} else {
-			// Input is a directory
 			this.templateGlobs = this.extensionMap.getGlobs(this.inputDir);
 		}
 
@@ -290,16 +284,6 @@ class EleventyFiles {
 		}
 
 		return Array.from(ignoreFiles);
-	}
-
-	/* Backwards compat */
-	getIncludesDir() {
-		return this.includesDir;
-	}
-
-	/* Backwards compat */
-	getLayoutsDir() {
-		return this.layoutsDir;
 	}
 
 	getFileGlobs() {

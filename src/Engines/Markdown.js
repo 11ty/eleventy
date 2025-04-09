@@ -16,14 +16,6 @@ export default class Markdown extends TemplateEngine {
 	setLibrary(mdLib) {
 		this.mdLib = mdLib || markdownIt(this.getMarkdownOptions());
 
-		// Overrides a highlighter set in `markdownOptions`
-		// This is separate so devs can pass in a new mdLib and still use the official eleventy plugin for markdown highlighting
-		if (this.config.markdownHighlighter && typeof this.mdLib.set === "function") {
-			this.mdLib.set({
-				highlight: this.config.markdownHighlighter,
-			});
-		}
-
 		if (typeof this.mdLib.disable === "function") {
 			// Disable indented code blocks by default (Issue #2438)
 			this.mdLib.disable("code");
@@ -63,36 +55,10 @@ export default class Markdown extends TemplateEngine {
 		return preTemplateEngine;
 	}
 
-	async compile(str, inputPath, preTemplateEngine, bypassMarkdown) {
+	async compile(str, inputPath) {
 		let mdlib = this.mdLib;
-
-		if (preTemplateEngine) {
-			let engine = await this.#getPreEngine(preTemplateEngine);
-			let fnReady = engine.compile(str, inputPath);
-
-			if (bypassMarkdown) {
-				return async function (data) {
-					let fn = await fnReady;
-					return fn(data);
-				};
-			} else {
-				return async function (data) {
-					let fn = await fnReady;
-					let preTemplateEngineRender = await fn(data);
-					let finishedRender = mdlib.render(preTemplateEngineRender, data);
-					return finishedRender;
-				};
-			}
-		} else {
-			if (bypassMarkdown) {
-				return function () {
-					return str;
-				};
-			} else {
-				return function (data) {
-					return mdlib.render(str, data);
-				};
-			}
-		}
+		return function (data) {
+			return mdlib.render(str, data);
+		};
 	}
 }

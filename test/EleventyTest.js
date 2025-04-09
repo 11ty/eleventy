@@ -1305,6 +1305,7 @@ test("Custom Markdown Render with permalink, Issue #2780", async (t) => {
   let elev = new Eleventy("./test/stubs-virtual/", undefined, {
     config: eleventyConfig => {
       eleventyConfig.addExtension("md", {
+        key: ["liquid", "md"],
         compile: str => {
           return data => marked.parse(str);
         }
@@ -1325,7 +1326,7 @@ test("Custom Markdown Render with permalink, Issue #2780 #3339", async (t) => {
     config: eleventyConfig => {
       eleventyConfig.addTemplateFormats("markdown");
       eleventyConfig.addExtension("markdown", {
-        key: "md"
+        key: ["njk","md"]
       });
 
       eleventyConfig.addTemplate("filename-hi.markdown", `# Markdown?`, { permalink: "/{{ page.fileSlug }}.html" });
@@ -1578,8 +1579,8 @@ test("Allow list for some file types without a file extension, issue #3399", asy
     },
   });
   elev.disableLogger();
-
   let results = await elev.toJSON();
+  console.log(results)
   t.is(results.length, 1);
   t.is(results[0].url, "/test/_redirects");
 });

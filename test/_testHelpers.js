@@ -80,7 +80,6 @@ function getTemplateWriterInstance(formats, templateConfig) {
 function getEleventyFilesInstance(formats, templateConfig) {
 	let map = new EleventyExtensionMap(templateConfig);
 	map.setFormats(formats);
-
   let fss = new FileSystemSearch();
 	let mgr = new TemplatePassthroughManager(templateConfig);
 

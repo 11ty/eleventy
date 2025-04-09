@@ -2,6 +2,7 @@ import fs from "node:fs";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import { evalToken } from "liquidjs";
 
+// TODO(boehs) in some cases we're vibing with tr.engines[0] and I haven't bothered to check if there could be cases where tr.engines.length > 1
 // TODO add a first-class Markdown component to expose this using Markdown-only syntax (will need to be synchronous for markdown-it)
 
 import { ProxyWrap } from "../Util/Objects/ProxyWrap.js";
@@ -42,17 +43,11 @@ async function compile(content, templateLang, options = {}) {
 	let tr = new TemplateRender(templateLang, templateConfig);
 	tr.extensionMap = extensionMap;
 
-	if (templateLang) {
-		await tr.setEngineOverride(templateLang);
-	} else {
-		await tr.init();
-	}
+	await tr.init(templateLang);
 
 	// TODO tie this to the class, not the extension
 	if (
-		tr.engine.name === "11ty.js" ||
-		tr.engine.name === "11ty.cjs" ||
-		tr.engine.name === "11ty.mjs"
+		tr.engineNames.includes('11ty.js')
 	) {
 		throw new Error(
 			"11ty.js is not yet supported as a template engine for `renderTemplate`. Use `renderFile` instead!",
@@ -102,13 +97,9 @@ async function compileFile(inputPath, options = {}, templateLang) {
 	let tr = new TemplateRender(inputPath, templateConfig);
 	tr.extensionMap = extensionMap;
 
-	if (templateLang) {
-		await tr.setEngineOverride(templateLang);
-	} else {
-		await tr.init();
-	}
+	tr.init(templateLang);
 
-	if (!tr.engine.needsToReadFileContents()) {
+	if (!tr.engines[0].needsToReadFileContents()) {
 		return tr.getCompiledTemplate(null);
 	}
 

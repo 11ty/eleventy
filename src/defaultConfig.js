@@ -46,8 +46,6 @@ import { HtmlRelativeCopyPlugin } from "./Plugins/HtmlRelativeCopyPlugin.js";
  * @property {string} [dir.includes='_includes']
  * @property {string} [dir.data='_data']
  * @property {string} [dir.output='_site']
- * @deprecated handlebarsHelpers
- * @deprecated nunjucksFilters
  */
 
 /**
@@ -171,8 +169,5 @@ export default function (config) {
 			data: "_data",
 			output: "_site",
 		},
-
-		// deprecated, use config.addNunjucksFilter
-		nunjucksFilters: {},
 	};
 }

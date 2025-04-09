@@ -28,7 +28,7 @@ class BenchmarkGroup {
 	}
 
 	// TODO use addAsync everywhere instead
-	add(type, callback) {
+	add(type, callback, misc = {}) {
 		let benchmark = (this.benchmarks[type] = new Benchmark());
 
 		/** @this {any} */
@@ -43,6 +43,7 @@ class BenchmarkGroup {
 			value: {
 				type: isAsyncFunction(callback) ? "async" : "sync",
 				callback,
+				...misc,
 			},
 		});
 
@@ -73,7 +74,9 @@ class BenchmarkGroup {
 	setMinimumThresholdPercent(minimumThresholdPercent) {
 		let val = parseInt(minimumThresholdPercent, 10);
 		if (isNaN(val)) {
-			throw new Error("`setMinimumThresholdPercent` expects a number argument.");
+			throw new Error(
+				"`setMinimumThresholdPercent` expects a number argument.",
+			);
 		}
 		this.minimumThresholdPercent = val;
 	}

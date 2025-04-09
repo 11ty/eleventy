@@ -252,9 +252,10 @@ class Template extends TemplateContent {
 		}
 
 		// Override default permalink behavior. Only do this if permalink was _not_ in the data cascade
+		// TODO: Taking the first engine should be fine because if there is a preprocessor it will be first but doublecheck
 		if (!permalink && this.config.dynamicPermalinks && data.dynamicPermalink !== false) {
 			let tr = await this.getTemplateRender();
-			let permalinkCompilation = tr.engine.permalinkNeedsCompilation("");
+			let permalinkCompilation = tr.engines[0].permalinkNeedsCompilation("");
 			if (typeof permalinkCompilation === "function") {
 				let ret = await this._renderFunction(permalinkCompilation, permalinkValue, this.inputPath);
 				if (ret !== undefined) {
@@ -278,7 +279,7 @@ class Template extends TemplateContent {
 			this.getTemplateSubfolder(),
 			this.baseFile,
 			this.extraOutputSubdirectory,
-			this.engine.defaultTemplateFileExtension,
+			this.engines.slice(-1)[0].defaultTemplateFileExtension,
 		);
 		p.setUrlTransforms(this.config.urlTransforms);
 		return p;
@@ -364,7 +365,8 @@ class Template extends TemplateContent {
 
 		let mergedLayoutData = {};
 		let tr = await this.getTemplateRender();
-		if (tr.engine.useLayouts()) {
+		// last engine gets to choose the layout
+		if (tr.engines.slice(-1)[0].useLayouts()) {
 			let layoutKey =
 				frontMatterData[this.config.keys.layout] ||
 				localData[this.config.keys.layout] ||
@@ -433,7 +435,8 @@ class Template extends TemplateContent {
 		data.page.inputPath = this.inputPath;
 		data.page.fileSlug = this.fileSlugStr;
 		data.page.filePathStem = this.filePathStem;
-		data.page.outputFileExtension = this.engine.defaultTemplateFileExtension;
+		// the last engine gets to set the output file extension, as it is the last to run
+		data.page.outputFileExtension = this.engines.slice(-1)[0].defaultTemplateFileExtension;
 		data.page.templateSyntax = this.templateRender.getEnginesList(
 			data[this.config.keys.engineOverride],
 		);
@@ -460,8 +463,8 @@ class Template extends TemplateContent {
 		throw new Error("Internal error: `Template->renderLayout` was removed in Eleventy 3.0.");
 	}
 
-	async renderDirect(str, data, bypassMarkdown) {
-		return super.render(str, data, bypassMarkdown);
+	async renderDirect(str, data) {
+		return super.render(str, data);
 	}
 
 	// This is the primary render mechanism, called via TemplateMap->populateContentDataInMap
@@ -827,7 +830,7 @@ class Template extends TemplateContent {
 
 		if (!this.isDryRun) {
 			let isVirtual = this.isVirtualTemplate();
-			let engineList = this.templateRender.getReadableEnginesListDifferingFromFileExtension();
+			let engineList = this.templateRender.getReadableEnginesList();
 			let suffix = `${isVirtual ? " (virtual)" : ""}${engineList ? ` (${engineList})` : ""}`;
 			this.logger.log(
 				`${lang.start} ${outputPath} ${chalk.gray(`from ${this.inputPath}${suffix}`)}`,
@@ -884,7 +887,7 @@ class Template extends TemplateContent {
 	async #renderPageEntryWithLayoutsAndTransforms(pageEntry) {
 		let content;
 		let layoutKey = pageEntry.data[this.config.keys.layout];
-		if (this.engine.useLayouts() && layoutKey) {
+		if (this.engines.slice(-1)[0].useLayouts() && layoutKey) {
 			let layout = pageEntry.template.getLayout(layoutKey);
 			content = await layout.renderPageEntry(pageEntry);
 		} else {

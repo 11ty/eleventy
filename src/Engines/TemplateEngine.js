@@ -85,11 +85,6 @@ export default class TemplateEngine {
 		return this.name;
 	}
 
-	// Backwards compat
-	getIncludesDir() {
-		return this.includesDir;
-	}
-
 	/**
 	 * @protected
 	 */
@@ -113,6 +108,10 @@ export default class TemplateEngine {
 		return fn(data);
 	}
 
+	/**
+	 *
+	 * @see {@link https://www.11ty.dev/docs/languages/custom/#use-java-script-import}
+	 */
 	useJavaScriptImport() {
 		return false;
 	}
@@ -162,7 +161,7 @@ export default class TemplateEngine {
 	 * @abstract
 	 * @return {Promise}
 	 */
-	async compile() {
+	async compile(str,inputPath) {
 		throw new Error("compile() must be implemented by engine");
 	}
 

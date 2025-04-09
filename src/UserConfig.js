@@ -137,12 +137,7 @@ class UserConfig {
 		/** @type {object} */
 		this.javascript = {
 			functions: {},
-			filters: {},
-			shortcodes: {},
-			pairedShortcodes: {},
 		};
-
-		this.markdownHighlighter = null;
 
 		/** @type {object} */
 		this.libraryOverrides = {};
@@ -287,14 +282,23 @@ class UserConfig {
 	}
 
 	getFilters(options = {}) {
+		let working = this.universal.filters;
 		if (options.type) {
-			return objectFilter(
+			working = objectFilter(
 				this.universal.filters,
 				(entry) => entry.__eleventyInternal?.type === options.type,
 			);
 		}
+		if (options.lang) {
+			working = objectFilter(
+				working,
+				(entry) =>
+					entry.__eleventyInternal?.langs?.includes(options.lang) ||
+					entry.__eleventyInternal?.langs === undefined,
+			);
+		}
 
-		return this.universal.filters;
+		return working;
 	}
 
 	getShortcode(name) {
@@ -349,116 +353,126 @@ class UserConfig {
 			debug(`Adding new ${description} "%o" via \`%o(%o)\``, name, functionName, originalName);
 		}
 
-		target[name] = this.#decorateCallback(`"${name}" ${description}`, callback);
+		target[name] = this.#decorateCallback(
+			`"${name}" ${description}`,
+			callback,
+			options,
+		);
 	}
 
-	#decorateCallback(type, callback) {
-		return this.benchmarks.config.add(type, callback);
+	#decorateCallback(type, callback, misc) {
+		return this.benchmarks.config.add(type, callback, misc);
 	}
 
 	/*
 	 * Markdown
 	 */
 
-	// This is a method for plugins, probably shouldn’t use this in projects.
-	// Projects should use `setLibrary` as documented here:
-	// https://github.com/11ty/eleventy/blob/master/docs/engines/markdown.md#use-your-own-options
+
+	/**
+	 * @deprecated Use {@link amendLibrary} with mdlib.set instead.
+	 */
 	addMarkdownHighlighter(highlightFn) {
-		this.markdownHighlighter = highlightFn;
+		this.logger.warn(
+			"`addMarkdownHighlighter` is deprecated and will be removed in a future release. Use `amendLibrary` with `mdlib.set` instead.",
+		);
+		this.amendLibrary("mdlib", (mdlib) => {
+			mdlib.set({
+				highlight: highlightFn,
+			});
+		})
 	}
 
 	/*
 	 * Filters
 	 */
 
+	/**
+	 * @deprecated Use {@link addFilter} instead, with options.langs set to ["liquid"] if you wish it to be scoped.
+	 */
 	addLiquidFilter(name, callback) {
-		this.#add(this.liquid.filters, name, callback, {
-			description: "Liquid Filter",
-			functionName: "addLiquidFilter",
-		});
+		this.logger.warn(
+			'`addLiquidFilter` is deprecated and will be removed in a future release.\
+			 Use `addFilter` instead, with options.lang set to ["liquid"] if you wish it to be scoped.',
+		);
+		this.addFilter(
+			name,
+			callback,
+			{
+				langs: ["liquid"],
+			},
+		);
 	}
 
+	/**
+	 * @deprecated Use {@link addFilter} instead, with options.langs set to ["njk"] if you wish it to be scoped.
+	 */
 	addNunjucksAsyncFilter(name, callback) {
-		this.#add(this.nunjucks.asyncFilters, name, callback, {
-			description: "Nunjucks Filter",
-			functionName: "addNunjucksAsyncFilter",
+		this.logger.warn(
+			'`addNunjucksAsyncFilter` is deprecated and will be removed in a future release.\
+			 Pass an async function to `addFilter` instead, with options.lang set to ["njk"] if you wish it to be scoped.',
+		);
+		this.addFilter(name, callback, {
+			langs: ["njk"],
+			async: true,
 		});
 	}
 
 	// Support the nunjucks style syntax for asynchronous filter add
+	/**
+	 * @deprecated Use {@link addFilter} instead, with options.langs set to ["njk"] if you wish it to be scoped.
+	 */
 	addNunjucksFilter(name, callback, isAsync = false) {
 		if (isAsync) {
-			// namespacing happens downstream
 			this.addNunjucksAsyncFilter(name, callback);
-		} else {
-			this.#add(this.nunjucks.filters, name, callback, {
-				description: "Nunjucks Filter",
-				functionName: "addNunjucksFilter",
-			});
-		}
-	}
-
-	addJavaScriptFilter(name, callback) {
-		this.#add(this.javascript.filters, name, callback, {
-			description: "JavaScript Filter",
-			functionName: "addJavaScriptFilter",
-		});
-
-		// Backwards compat for a time before `addJavaScriptFilter` existed.
-		this.addJavaScriptFunction(name, callback);
-	}
-
-	addFilter(name, callback) {
-		// This method *requires* `async function` and will not work with `function` that returns a promise
-		if (isAsyncFunction(callback)) {
-			this.addAsyncFilter(name, callback);
 			return;
 		}
+		this.logger.warn(
+			'`addNunjucksFilter` is deprecated and will be removed in a future release.\
+			 Use `addFilter` instead, with options.langs set to ["njk"] if you wish it to be scoped.',
+		);
+		this.addFilter(
+			name,
+			callback,
+			{
+				langs: ["njk"],
+			},
+		);
+	}
+
+	/**
+	 *
+	 * @param {*} name - The name of the filter
+	 * @param {*} callback - The filter function
+	 * @param {{
+	 * 	langs?: string[],
+	 * 	async?: boolean
+	 * }} [options] - Options for the filter
+	 * If `async` is undefined, it will be inferred, possibly incorrectly.
+	 * @returns
+	 */
+	addFilter(name, callback, options) {
+		const async = options?.async || isAsyncFunction(callback);
 
 		// namespacing happens downstream
 		this.#add(this.universal.filters, name, callback, {
 			description: "Universal Filter",
 			functionName: "addFilter",
+			langs: options?.langs,
+			async,
 		});
-
-		this.addLiquidFilter(name, callback);
-		this.addJavaScriptFilter(name, callback);
-		this.addNunjucksFilter(
-			name,
-			/** @this {any} */
-			function (...args) {
-				// Note that `callback` is already a function as the `#add` method throws an error if not.
-				let ret = callback.call(this, ...args);
-				if (ret instanceof Promise) {
-					throw new Error(
-						`Nunjucks *is* async-friendly with \`addFilter("${name}", async function() {})\` but you need to supply an \`async function\`. You returned a promise from \`addFilter("${name}", function() {})\`. Alternatively, use the \`addAsyncFilter("${name}")\` configuration API method.`,
-					);
-				}
-				return ret;
-			},
-		);
 	}
 
-	// Liquid, Nunjucks, and JS only
+	/**
+	 * Perhaps this should be deprecated.
+	 * addAsyncFilter("...", function() {return Promise}) and
+	 * addFilter("...", function() {return Promise}, {async: true})
+	 * are the same.
+	 */
 	addAsyncFilter(name, callback) {
-		// namespacing happens downstream
-		this.#add(this.universal.filters, name, callback, {
-			description: "Universal Filter",
-			functionName: "addAsyncFilter",
+		this.addFilter(name, callback, {
+			async: true,
 		});
-
-		this.addLiquidFilter(name, callback);
-		this.addJavaScriptFilter(name, callback);
-		this.addNunjucksAsyncFilter(
-			name,
-			/** @this {any} */
-			async function (...args) {
-				let cb = args.pop();
-				// Note that `callback` is already a function as the `#add` method throws an error if not.
-				let ret = await callback.call(this, ...args);
-				cb(null, ret);
-			},
-		);
 	}
 
 	/*
@@ -478,7 +492,6 @@ class UserConfig {
 		});
 
 		this.addLiquidShortcode(name, callback);
-		this.addJavaScriptShortcode(name, callback);
 		this.addNunjucksShortcode(name, callback);
 	}
 
@@ -491,7 +504,6 @@ class UserConfig {
 		// Related: #498
 		this.addNunjucksAsyncShortcode(name, callback);
 		this.addLiquidShortcode(name, callback);
-		this.addJavaScriptShortcode(name, callback);
 	}
 
 	addNunjucksAsyncShortcode(name, callback) {
@@ -533,7 +545,6 @@ class UserConfig {
 
 		this.addPairedNunjucksShortcode(name, callback);
 		this.addPairedLiquidShortcode(name, callback);
-		this.addPairedJavaScriptShortcode(name, callback);
 	}
 
 	// Related: #498
@@ -545,7 +556,6 @@ class UserConfig {
 
 		this.addPairedNunjucksAsyncShortcode(name, callback);
 		this.addPairedLiquidShortcode(name, callback);
-		this.addPairedJavaScriptShortcode(name, callback);
 	}
 
 	addPairedNunjucksAsyncShortcode(name, callback) {
@@ -571,26 +581,6 @@ class UserConfig {
 			description: "Liquid Paired Shortcode",
 			functionName: "addPairedLiquidShortcode",
 		});
-	}
-
-	addJavaScriptShortcode(name, callback) {
-		this.#add(this.javascript.shortcodes, name, callback, {
-			description: "JavaScript Shortcode",
-			functionName: "addJavaScriptShortcode",
-		});
-
-		// Backwards compat for a time before `addJavaScriptShortcode` existed.
-		this.addJavaScriptFunction(name, callback);
-	}
-
-	addPairedJavaScriptShortcode(name, callback) {
-		this.#add(this.javascript.pairedShortcodes, name, callback, {
-			description: "JavaScript Paired Shortcode",
-			functionName: "addPairedJavaScriptShortcode",
-		});
-
-		// Backwards compat for a time before `addJavaScriptShortcode` existed.
-		this.addJavaScriptFunction(name, callback);
 	}
 
 	// Both Filters and shortcodes feed into this
@@ -1254,10 +1244,27 @@ class UserConfig {
 			passthroughCopiesHtmlRelative: this.passthroughCopiesHtmlRelative,
 			passthroughCopies: this.passthroughCopies,
 
+			// Unfortunately this must still exist because nunjucks and liquid are not yet plugins
+			__theCodeCriesInPain: {
+				nunjucks: {
+					asyncFilters: this.getFilters({
+						lang: "njk",
+						async: true,
+					}),
+					filters: this.getFilters({
+						lang: "njk",
+					}),
+				},
+				liquid: {
+					filters: this.getFilters({
+						lang: "liquid",
+					}),
+				}
+			},
+
 			// Liquid
 			liquidOptions: this.liquid.options,
 			liquidTags: this.liquid.tags,
-			liquidFilters: this.liquid.filters,
 			liquidShortcodes: this.liquid.shortcodes,
 			liquidPairedShortcodes: this.liquid.pairedShortcodes,
 			liquidParameterParsing: this.liquid.parameterParsing,
@@ -1265,8 +1272,6 @@ class UserConfig {
 			// Nunjucks
 			nunjucksEnvironmentOptions: this.nunjucks.environmentOptions,
 			nunjucksPrecompiledTemplates: this.nunjucks.precompiledTemplates,
-			nunjucksFilters: this.nunjucks.filters,
-			nunjucksAsyncFilters: this.nunjucks.asyncFilters,
 			nunjucksTags: this.nunjucks.tags,
 			nunjucksGlobals: this.nunjucks.globals,
 			nunjucksAsyncShortcodes: this.nunjucks.asyncShortcodes,
@@ -1276,12 +1281,6 @@ class UserConfig {
 
 			// 11ty.js
 			javascriptFunctions: this.javascript.functions, // filters and shortcodes, combined
-			javascriptShortcodes: this.javascript.shortcodes,
-			javascriptPairedShortcodes: this.javascript.pairedShortcodes,
-			javascriptFilters: this.javascript.filters,
-
-			// Markdown
-			markdownHighlighter: this.markdownHighlighter,
 
 			libraryOverrides: this.libraryOverrides,
 			dynamicPermalinks: this.dynamicPermalinks,

@@ -6,6 +6,7 @@ import TemplateEngine from "./TemplateEngine.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import { augmentObject } from "./Util/ContextAugmenter.js";
 import { withResolvers } from "../Util/PromiseUtil.js";
+import isAsyncFunction from "../Util/IsAsyncFunction.js";
 
 const debug = debugUtil("Eleventy:Nunjucks");
 
@@ -21,6 +22,8 @@ export default class Nunjucks extends TemplateEngine {
 		this._usingPrecompiled = Object.keys(this.nunjucksPrecompiledTemplates).length > 0;
 
 		this.setLibrary(this.config.libraryOverrides.njk);
+		this.asyncFilters = eleventyConfig.config.__theCodeCriesInPain.nunjucks.asyncFilters || {};
+		this.filters = eleventyConfig.config.__theCodeCriesInPain.nunjucks.filters
 
 		// v3.1.0-alpha.1 we’ve moved to use Nunjucks’ internal cache instead of Eleventy’s
 		// this.cacheable = false;
@@ -28,7 +31,7 @@ export default class Nunjucks extends TemplateEngine {
 
 	#getFileSystemDirs() {
 		let paths = new Set();
-		paths.add(super.getIncludesDir());
+		paths.add(super.includesDir);
 		paths.add(TemplatePath.getWorkingDir());
 
 		// Filter out undefined paths
@@ -100,9 +103,8 @@ export default class Nunjucks extends TemplateEngine {
 		});
 
 		this.setEngineLib(this.njkEnv);
-
-		this.addFilters(this.config.nunjucksFilters);
-		this.addFilters(this.config.nunjucksAsyncFilters, true);
+		this.addFilters(this.filters);
+		this.addFilters(this.asyncFilters, true);
 
 		// TODO these all go to the same place (addTag), add warnings for overwrites
 		// TODO(zachleat): variableName should work with quotes or without quotes (same as {% set %})
@@ -121,7 +123,35 @@ export default class Nunjucks extends TemplateEngine {
 
 	addFilters(filters, isAsync) {
 		for (let name in filters) {
-			this.njkEnv.addFilter(name, Nunjucks.wrapFilter(name, filters[name]), isAsync);
+			let callback = filters[name];
+			if (!isAsync) {
+				/** @this {any} */
+				callback = function (...args) {
+					// Note that `callback` is already a function as the `#add` method throws an error if not.
+					let ret = callback.call(this, ...args);
+					if (ret instanceof Promise) {
+						throw new Error(
+							`Nunjucks *is* async-friendly with \`addFilter("${name}", async function() {})\` but you need to supply an \`async function\`. You returned a promise from \`addFilter("${name}", function() {})\`. Alternatively, use the \`addAsyncFilter("${name}")\` configuration API method.`,
+						);
+					}
+					return ret;
+				}
+			}
+			else if (isAsyncFunction(callback)) {
+				// we need to wrap the async function in a nunjucks compatible callback
+				/** @this {any} */
+				callback = async function (...args) {
+					let cb = args.pop();
+					// Note that `callback` is already a function as the `#add` method throws an error if not.
+					let ret = await callback.call(this, ...args);
+					cb(null, ret);
+				}
+			}
+			this.njkEnv.addFilter(
+				name,
+				Nunjucks.wrapFilter(name, callback),
+				isAsync,
+			);
 		}
 	}
 
