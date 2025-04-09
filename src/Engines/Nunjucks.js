@@ -37,7 +37,7 @@ export default class Nunjucks extends TemplateEngine {
 
 	#getFileSystemDirs() {
 		let paths = new Set();
-		paths.add(super.getIncludesDir());
+		paths.add(super.includesDir);
 		paths.add(TemplatePath.getWorkingDir());
 
 		// Filter out undefined paths

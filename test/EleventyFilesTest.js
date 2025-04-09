@@ -23,7 +23,7 @@ test("Dirs paths", async (t) => {
 
   t.deepEqual(evf.inputDir, "./src/");
   t.deepEqual(evf.includesDir, "./src/includes/");
-  t.deepEqual(evf.getDataDir(), "./src/data/");
+  t.deepEqual(evf.dataDir, "./src/data/");
   t.deepEqual(evf.outputDir, "./dist/");
 });
 
@@ -41,7 +41,7 @@ test("Dirs paths (relative)", async (t) => {
 
   t.deepEqual(evf.inputDir, "./src/");
   t.deepEqual(evf.includesDir, "./includes/");
-  t.deepEqual(evf.getDataDir(), "./data/");
+  t.deepEqual(evf.dataDir, "./data/");
   t.deepEqual(evf.outputDir, "./dist/");
 });
 
@@ -260,7 +260,7 @@ test("getDataDir", async (t) => {
 
   let { eleventyFiles: evf } = getEleventyFilesInstance([], eleventyConfig);
   evf.init();
-  t.is(evf.getDataDir(), "./_data/");
+  t.is(evf.dataDir, "./_data/");
 });
 
 test("getDataDir subdir", async (t) => {
@@ -272,7 +272,7 @@ test("getDataDir subdir", async (t) => {
 
   let { eleventyFiles: evf } = getEleventyFilesInstance([], eleventyConfig);
   evf.init();
-  t.is(evf.getDataDir(), "./test/stubs/_data/");
+  t.is(evf.dataDir, "./test/stubs/_data/");
 });
 
 test("Include and Data Dirs", async (t) => {

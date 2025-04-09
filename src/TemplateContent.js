@@ -174,10 +174,6 @@ class TemplateContent {
 		return this.inputPath;
 	}
 
-	getInputDir() {
-		return this.inputDir;
-	}
-
 	isVirtualTemplate() {
 		let def = this.getVirtualTemplateDefinition();
 		return !!def;

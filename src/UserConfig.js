@@ -445,7 +445,7 @@ class UserConfig {
 	 * 	langs?: string[],
 	 * 	async?: boolean
 	 * }} [options] - Options for the filter
-	 * If `async` is undefined, it attempt to be determined.
+	 * If `async` is undefined, it will be inferred, possibly incorrectly.
 	 * @returns
 	 */
 	addFilter(name, callback, options) {
