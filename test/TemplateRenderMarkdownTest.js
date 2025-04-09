@@ -25,14 +25,14 @@ async function getNewTemplateRender(name, inputDir, eleventyConfig) {
   tr.extensionMap = new EleventyExtensionMap(eleventyConfig);
   tr.extensionMap.engineManager = new TemplateEngineManager(eleventyConfig);
   tr.extensionMap.setFormats([]);
-  await tr.init();
+  await tr.init(name);
   return tr;
 }
 
 // Markdown
 test("Markdown", async (t) => {
   let tr = await getNewTemplateRender("md");
-  t.is(tr.getEngineName(), "md");
+  t.is(tr.engineNames[0], "md");
 });
 
 test("Markdown Render: Parses base markdown, no data", async (t) => {
@@ -53,40 +53,34 @@ test("Markdown Render: Parses markdown using liquid engine (default, with data)"
   t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
 });
 
-test("Markdown Render: Ignore markdown, use only preprocess engine (useful for variable resolution in permalinks)", async (t) => {
-  let tr = await getNewTemplateRender("md");
-  tr.setUseMarkdown(false);
+test("Ignore markdown, use only preprocess engine (useful for variable resolution in permalinks)", async (t) => {
+  let tr = await getNewTemplateRender("liquid");
 
   let fn = await tr.getCompiledTemplate("{{title}}");
   t.is((await fn({ title: "My Title" })).trim(), "My Title");
 });
 
-test("Markdown Render: Skip markdown and preprocess engine (issue #466)", async (t) => {
-  let tr = await getNewTemplateRender("md");
-  tr.setMarkdownEngine(false);
-  tr.setUseMarkdown(false);
+test("Skip markdown and preprocess engine (issue #466)", async (t) => {
+  let tr = await getNewTemplateRender("html");
   let fn = await tr.getCompiledTemplate("404.html");
   t.is((await fn({ title: "My Title" })).trim(), "404.html");
 });
 
 test("Markdown Render: Set markdown engine to false, don’t parse", async (t) => {
   let tr = await getNewTemplateRender("md");
-  tr.setMarkdownEngine(false);
   let fn = await tr.getCompiledTemplate("# {{title}}");
   t.is((await fn()).trim(), "<h1>{{title}}</h1>");
 });
 
 test("Markdown Render: Set markdown engine to false, don’t parse (test with HTML input)", async (t) => {
   let tr = await getNewTemplateRender("md");
-  tr.setMarkdownEngine(false);
   let fn = await tr.getCompiledTemplate("<h1>{{title}}</h1>");
 
   t.is((await fn()).trim(), "<h1>{{title}}</h1>");
 });
 
 test("Markdown Render: Pass in an override (liquid)", async (t) => {
-  let tr = await getNewTemplateRender("md");
-  tr.setMarkdownEngine("liquid");
+  let tr = await getNewTemplateRender("liquid,md");
   let fn = await tr.getCompiledTemplate("# {{title}}");
 
   t.is((await fn({ title: "My Title" })).trim(), "<h1>My Title</h1>");
@@ -108,7 +102,7 @@ test("Markdown Render: with Library Override", async (t) => {
   let tr = await getNewTemplateRender("md");
 
   let mdLib = md();
-  tr.engine.setLibrary(mdLib);
+  tr.engines[0].setLibrary(mdLib);
   t.is(mdLib.render(":)").trim(), "<p>:)</p>");
 
   let fn = await tr.getCompiledTemplate(":)");
@@ -158,7 +152,7 @@ test("Markdown Render: use prism highlighter (no language)", async (t) => {
   mdLib.set({
     highlight: markdownHighlight,
   });
-  tr.engine.setLibrary(mdLib);
+  tr.engines[0].setLibrary(mdLib);
 
   let fn = await tr.getCompiledTemplate(`\`\`\`
 This is some code.
@@ -328,13 +322,12 @@ test("Markdown Render: use Markdown inside of a Nunjucks shortcode (Issue #536)"
 
 test("Markdown Render: use Markdown inside of a Liquid paired shortcode (Issue #536)", async (t) => {
   let eleventyConfig = await getTemplateConfigInstance();
-  let tr = await getNewTemplateRender("md", null, eleventyConfig);
+  let tr = await getNewTemplateRender("liquid,md", null, eleventyConfig);
 
   let liquidEngine = new Liquid("liquid", eleventyConfig);
   liquidEngine.addPairedShortcode("testShortcode", function (content) {
     return content;
   });
-  tr.setMarkdownEngine(liquidEngine);
 
   let fn = await tr.getCompiledTemplate(`# {{title}}
 {% testShortcode %}## My Other Title{% endtestShortcode %}`);
@@ -352,13 +345,12 @@ test("Markdown Render: use Markdown inside of a Liquid paired shortcode (Issue #
 
 test("Markdown Render: use Markdown inside of a Nunjucks paired shortcode (Issue #536)", async (t) => {
   let eleventyConfig = await getTemplateConfigInstance();
-  let tr = await getNewTemplateRender("md", null, eleventyConfig);
+  let tr = await getNewTemplateRender("njk,md", null, eleventyConfig);
 
   let nunjucksEngine = new Nunjucks("njk", eleventyConfig);
   nunjucksEngine.addPairedShortcode("testShortcode", function (content) {
     return content;
   });
-  tr.setMarkdownEngine(nunjucksEngine);
 
   let fn = await tr.getCompiledTemplate(`# {{title}}
 {% testShortcode %}## My Other Title{% endtestShortcode %}`);
@@ -384,7 +376,7 @@ test("Markdown Render: setLibrary does not have disabled indented code blocks ei
   let tr = await getNewTemplateRender("md");
 
   let mdLib = md();
-  tr.engine.setLibrary(mdLib);
+  tr.engines[0].setLibrary(mdLib);
 
   let fn = await tr.getCompiledTemplate("    This is a test");
   let content = await fn();
@@ -421,7 +413,7 @@ test("Markdown Render: amendLibrary works with setLibrary to re-enable indented 
   let tr = await getNewTemplateRender("md", null, eleventyConfig);
 
   let mdLib = md();
-  tr.engine.setLibrary(mdLib);
+  tr.engines[0].setLibrary(mdLib);
 
   let fn = await tr.getCompiledTemplate("    This is a test");
   let content = await fn();

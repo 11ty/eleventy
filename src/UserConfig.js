@@ -137,12 +137,7 @@ class UserConfig {
 		/** @type {object} */
 		this.javascript = {
 			functions: {},
-			filters: {},
-			shortcodes: {},
-			pairedShortcodes: {},
 		};
-
-		this.markdownHighlighter = null;
 
 		/** @type {object} */
 		this.libraryOverrides = {};
@@ -373,11 +368,19 @@ class UserConfig {
 	 * Markdown
 	 */
 
-	// This is a method for plugins, probably shouldn’t use this in projects.
-	// Projects should use `setLibrary` as documented here:
-	// https://github.com/11ty/eleventy/blob/master/docs/engines/markdown.md#use-your-own-options
+
+	/**
+	 * @deprecated Use {@link amendLibrary} with mdlib.set instead.
+	 */
 	addMarkdownHighlighter(highlightFn) {
-		this.markdownHighlighter = highlightFn;
+		this.logger.warn(
+			"`addMarkdownHighlighter` is deprecated and will be removed in a future release. Use `amendLibrary` with `mdlib.set` instead.",
+		);
+		this.amendLibrary("mdlib", (mdlib) => {
+			mdlib.set({
+				highlight: highlightFn,
+			});
+		})
 	}
 
 	/*
@@ -1260,9 +1263,6 @@ class UserConfig {
 
 			// 11ty.js
 			javascriptFunctions: this.javascript.functions, // filters and shortcodes, combined
-
-			// Markdown
-			markdownHighlighter: this.markdownHighlighter,
 
 			libraryOverrides: this.libraryOverrides,
 			dynamicPermalinks: this.dynamicPermalinks,
