@@ -157,7 +157,7 @@ export default class TemplateEngine {
 	 * @abstract
 	 * @return {Promise}
 	 */
-	async compile() {
+	async compile(str,inputPath) {
 		throw new Error("compile() must be implemented by engine");
 	}
 

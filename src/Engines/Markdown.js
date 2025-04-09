@@ -63,36 +63,10 @@ export default class Markdown extends TemplateEngine {
 		return preTemplateEngine;
 	}
 
-	async compile(str, inputPath, preTemplateEngine, bypassMarkdown) {
+	async compile(str, inputPath) {
 		let mdlib = this.mdLib;
-
-		if (preTemplateEngine) {
-			let engine = await this.#getPreEngine(preTemplateEngine);
-			let fnReady = engine.compile(str, inputPath);
-
-			if (bypassMarkdown) {
-				return async function (data) {
-					let fn = await fnReady;
-					return fn(data);
-				};
-			} else {
-				return async function (data) {
-					let fn = await fnReady;
-					let preTemplateEngineRender = await fn(data);
-					let finishedRender = mdlib.render(preTemplateEngineRender, data);
-					return finishedRender;
-				};
-			}
-		} else {
-			if (bypassMarkdown) {
-				return function () {
-					return str;
-				};
-			} else {
-				return function (data) {
-					return mdlib.render(str, data);
-				};
-			}
-		}
+		return function (data) {
+			return mdlib.render(str, data);
+		};
 	}
 }

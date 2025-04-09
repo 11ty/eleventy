@@ -827,7 +827,7 @@ class Template extends TemplateContent {
 
 		if (!this.isDryRun) {
 			let isVirtual = this.isVirtualTemplate();
-			let engineList = this.templateRender.getReadableEnginesListDifferingFromFileExtension();
+			let engineList = this.templateRender.getReadableEnginesList();
 			let suffix = `${isVirtual ? " (virtual)" : ""}${engineList ? ` (${engineList})` : ""}`;
 			this.logger.log(
 				`${lang.start} ${outputPath} ${chalk.gray(`from ${this.inputPath}${suffix}`)}`,

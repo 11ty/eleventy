@@ -24,6 +24,9 @@ class TemplateContentRenderError extends EleventyBaseError {}
 
 class TemplateContent {
 	#config;
+	/**
+	 * @type {TemplateRender}
+	 */
 	#templateRender;
 	#extensionMap;
 	#configOptions;
