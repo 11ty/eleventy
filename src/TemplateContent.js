@@ -349,7 +349,7 @@ class TemplateContent {
 		let extraData = TemplateData.mergeDeep(
 			true,
 			...(await Promise.all(
-				tr.engines.map(async (engine) => await engine.getExtraDataFromFile() || {})
+				tr.engines.map(async (engine) => await engine.getExtraDataFromFile(this.inputPath) || {})
 			)),
 			{}
 		);

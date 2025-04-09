@@ -137,6 +137,9 @@ class TemplateRender {
 	 * @param {string} engineNameOrPath
 	 */
 	async init(engineNameOrPath) {
+		if (!engineNameOrPath) {
+			engineNameOrPath = this.engineNameOrPath;
+		}
 		// if it doesn't include a comma, it may be a path or an engine name like 'md'
 		// it is possible that once resolved it resolves to multiple, like 'njk', 'md' because of an override
 		if (!engineNameOrPath.includes(",")) {
@@ -148,15 +151,15 @@ class TemplateRender {
 
 			if (typeof engineName === 'string') {
 				this.#engineNames = [engineName];
+			} else {
+				this.#engineNames = engineName;
 			}
-			this.#engineNames = engineName;
-			// @ts-expect-error
-			this.#engines = this.engineNames.map((engineName) => {
+			this.#engines = await Promise.all(this.engineNames.map(async (engineName) => {
 				if (!engineName) {
 					throw new TemplateRenderUnknownEngineError(`Template engine name not found for ${engineName}`);
 				}
-				return this.getEngineByName(engineName)
-			});
+				return await this.getEngineByName(engineName)
+			}))
 			return
 		}
 		const overrides = TemplateRender.parseEngineOverrides(engineNameOrPath);

@@ -27,10 +27,7 @@ export default class Liquid extends TemplateEngine {
 		this.argLexer = moo.compile(Liquid.argumentLexerOptions);
 		this.cacheable = true;
 
-		this.filters = eleventyConfig.getFilters({
-			lang: "liquid",
-			async: false,
-		});
+		this.filters = eleventyConfig.config.__theCodeCriesInPain.liquid.filters
 	}
 
 	setLibrary(override) {

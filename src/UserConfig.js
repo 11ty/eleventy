@@ -1244,6 +1244,24 @@ class UserConfig {
 			passthroughCopiesHtmlRelative: this.passthroughCopiesHtmlRelative,
 			passthroughCopies: this.passthroughCopies,
 
+			// Unfortunately this must still exist because nunjucks and liquid are not yet plugins
+			__theCodeCriesInPain: {
+				nunjucks: {
+					asyncFilters: this.getFilters({
+						lang: "njk",
+						async: true,
+					}),
+					filters: this.getFilters({
+						lang: "njk",
+					}),
+				},
+				liquid: {
+					filters: this.getFilters({
+						lang: "liquid",
+					}),
+				}
+			},
+
 			// Liquid
 			liquidOptions: this.liquid.options,
 			liquidTags: this.liquid.tags,

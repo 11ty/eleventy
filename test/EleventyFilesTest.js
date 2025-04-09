@@ -310,7 +310,7 @@ test("Input to 'src' and empty includes dir (issue #403)", async (t) => {
   evf.init(); // duplicate init
 
   t.deepEqual(evf.getFileGlobs(), [
-    "./src/**/*.{md,liquid,html}",
+    "./src/**/*.{html,liquid,md}",
     // "!./src/_includes/**",
     // "!./src/_site/**",
     // "!./src/_data/**",

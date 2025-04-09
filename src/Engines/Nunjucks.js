@@ -22,14 +22,8 @@ export default class Nunjucks extends TemplateEngine {
 		this._usingPrecompiled = Object.keys(this.nunjucksPrecompiledTemplates).length > 0;
 
 		this.setLibrary(this.config.libraryOverrides.njk);
-		this.asyncFilters = eleventyConfig.getFilters({
-			lang: "njk",
-			async: true,
-		});
-		this.filters = eleventyConfig.getFilters({
-			lang: "njk",
-			async: false,
-		});
+		this.asyncFilters = eleventyConfig.config.__theCodeCriesInPain.nunjucks.asyncFilters || {};
+		this.filters = eleventyConfig.config.__theCodeCriesInPain.nunjucks.filters
 
 		// v3.1.0-alpha.1 we’ve moved to use Nunjucks’ internal cache instead of Eleventy’s
 		// this.cacheable = false;
