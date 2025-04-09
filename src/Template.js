@@ -252,9 +252,10 @@ class Template extends TemplateContent {
 		}
 
 		// Override default permalink behavior. Only do this if permalink was _not_ in the data cascade
+		// TODO: Taking the first engine should be fine because if there is a preprocessor it will be first but doublecheck
 		if (!permalink && this.config.dynamicPermalinks && data.dynamicPermalink !== false) {
 			let tr = await this.getTemplateRender();
-			let permalinkCompilation = tr.engine.permalinkNeedsCompilation("");
+			let permalinkCompilation = tr.engines[0].permalinkNeedsCompilation("");
 			if (typeof permalinkCompilation === "function") {
 				let ret = await this._renderFunction(permalinkCompilation, permalinkValue, this.inputPath);
 				if (ret !== undefined) {
@@ -364,7 +365,8 @@ class Template extends TemplateContent {
 
 		let mergedLayoutData = {};
 		let tr = await this.getTemplateRender();
-		if (tr.engine.useLayouts()) {
+		// if any engine opts out of layouts, skip the layout data merge
+		if (!tr.engines.find(e => e.useLayouts() !== true)) {
 			let layoutKey =
 				frontMatterData[this.config.keys.layout] ||
 				localData[this.config.keys.layout] ||

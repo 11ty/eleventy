@@ -128,8 +128,8 @@ class TemplateContent {
 		return this.config.benchmarkManager.get("Aggregate");
 	}
 
-	get engine() {
-		return this.templateRender.engine;
+	get engines() {
+		return this.templateRender.engines;
 	}
 
 	get templateRender() {
@@ -193,7 +193,7 @@ class TemplateContent {
 
 		if (content || content === "") {
 			let tr = await this.getTemplateRender();
-			if (tr.engine.useJavaScriptImport()) {
+			if (tr.engines.every(e=>e.useJavaScriptImport())) {
 				return {
 					data: {},
 					content,
@@ -289,6 +289,7 @@ class TemplateContent {
 			return content;
 		}
 
+		// TODO(boehs): leaving as is because idk
 		if (
 			tr.engine.useJavaScriptImport() &&
 			typeof tr.engine.getInstanceFromInputPath === "function"
@@ -296,7 +297,7 @@ class TemplateContent {
 			return tr.engine.getInstanceFromInputPath(this.inputPath);
 		}
 
-		if (!tr.engine.needsToReadFileContents()) {
+		if (!tr.engines.find((engine) => engine.needsToReadFileContents())) {
 			return "";
 		}
 
@@ -345,7 +346,13 @@ class TemplateContent {
 		}
 
 		let tr = await this.getTemplateRender();
-		let extraData = await tr.engine.getExtraDataFromFile(this.inputPath);
+		let extraData = TemplateData.mergeDeep(
+			true,
+			...(await Promise.all(
+				tr.engines.map(async (engine) => await engine.getExtraDataFromFile() || {})
+			)),
+			{}
+		);
 
 		let virtualTemplateDefinition = this.getVirtualTemplateDefinition();
 		let virtualTemplateData;
@@ -377,7 +384,7 @@ class TemplateContent {
 		});
 	}
 
-	_getCompileCache(str) {
+	_getCompileCache(str,idx) {
 		// Caches used to be bifurcated based on engine name, now they’re based on inputPath
 		// TODO does `cacheable` need to help inform whether a cache is used here?
 		let inputPathMap = TemplateContent._compileCache.get(this.inputPath);
@@ -386,8 +393,8 @@ class TemplateContent {
 			TemplateContent._compileCache.set(this.inputPath, inputPathMap);
 		}
 
-		let cacheable = this.engine.cacheable;
-		let { useCache, key } = this.engine.getCompileCacheKey(str, this.inputPath);
+		let cacheable = this.engines[idx].cacheable;
+		let { useCache, key } = this.engines[idx].getCompileCacheKey(str, this.inputPath);
 
 		// We also tie the compile cache key to the UserConfig instance, to alleviate issues with global template cache
 		// Better to move the cache to the Eleventy instance instead, no?
@@ -398,27 +405,25 @@ class TemplateContent {
 	}
 
 	async compile(str, options = {}) {
-		let { type, bypassMarkdown, engineOverride } = options;
+		// bypassMarkdown is deprecated
+		let { type, engineOverride } = options;
 
 		let tr = await this.getTemplateRender();
 		if (engineOverride !== undefined) {
 			debugDev("%o overriding template engine to use %o", this.inputPath, engineOverride);
-			await tr.setEngineOverride(engineOverride, bypassMarkdown);
-		} else {
-			tr.setUseMarkdown(!bypassMarkdown);
+			await tr.init(engineOverride);
 		}
-		if (bypassMarkdown && !this.engine.needsCompilation(str)) {
-			return function () {
-				return str;
-			};
+		if (!this.engines.every((engine) => engine.needsCompilation(str))) {
+			return () => str;
 		}
 
-		debugDev("%o compile() using engine: %o", this.inputPath, tr.engineName);
+		debugDev("%o compile() using engine: %o", this.inputPath, tr.getReadableEnginesList());
 
 		try {
 			let res;
 			if (this.config.useTemplateCache) {
-				let [cacheable, key, cache, useCache] = this._getCompileCache(str);
+				// TODO(boehs): hardcoded to primary
+				let [cacheable, key, cache, useCache] = this._getCompileCache(str,0);
 				if (cacheable && key) {
 					if (useCache && cache.has(key)) {
 						this.bench.get("(count) Template Compile Cache Hit").incrementCount();
@@ -452,7 +457,7 @@ class TemplateContent {
 			}
 			return fn;
 		} catch (e) {
-			let [cacheable, key, cache] = this._getCompileCache(str);
+			let [cacheable, key, cache] = this._getCompileCache(str,0);
 			if (cacheable && key) {
 				cache.delete(key);
 			}
@@ -465,22 +470,25 @@ class TemplateContent {
 	}
 
 	getParseForSymbolsFunction(str) {
-		let engine = this.engine;
-
-		// Don’t use markdown as the engine to parse for symbols
-		// TODO pass in engineOverride here
-		let preprocessorEngine = this.templateRender.getPreprocessorEngine();
-		if (preprocessorEngine && engine.getName() !== preprocessorEngine) {
-			let replacementEngine = this.templateRender.getEngineByName(preprocessorEngine);
-			if (replacementEngine) {
-				engine = replacementEngine;
+		const waiting = []
+		for (const engine of this.engines) {
+			if ("parseForSymbols" in engine) {
+				waiting.push(() => {
+					// @ts-ignore
+					engine.parseForSymbols(str);
+				})
 			}
 		}
-
-		if ("parseForSymbols" in engine) {
-			return () => {
-				return engine.parseForSymbols(str);
-			};
+		return () => {
+			const set = new Set();
+			for (const fn of waiting) {
+				const symbols = fn();
+				if (Array.isArray(symbols)) {
+					// biome-ignore lint/complexity/noForEach: <explanation>
+					symbols.forEach((symbol) => set.add(symbol));
+				}
+			}
+			return Array.from(set);
 		}
 	}
 
@@ -510,7 +518,7 @@ class TemplateContent {
 
 	async renderPermalink(permalink, data) {
 		let tr = await this.getTemplateRender();
-		let permalinkCompilation = tr.engine.permalinkNeedsCompilation(permalink);
+		let permalinkCompilation = tr.engines.some(e => e.permalinkNeedsCompilation(permalink));
 
 		// No string compilation:
 		//    ({ compileOptions: { permalink: "raw" }})
@@ -518,7 +526,7 @@ class TemplateContent {
 		//    ({ compileOptions: { permalink: false }})
 		//    ({ compileOptions: { permalink: () => false }})
 		//    ({ compileOptions: { permalink: () => (() = > false) }})
-		if (permalinkCompilation === false && typeof permalink !== "function") {
+		if (permalinkCompilation === undefined && typeof permalink !== "function") {
 			return permalink;
 		}
 
@@ -568,15 +576,14 @@ class TemplateContent {
 	}
 
 	async _render(str, data, options = {}) {
-		let { bypassMarkdown, type } = options;
+		let { type } = options;
 
 		try {
-			if (bypassMarkdown && !this.engine.needsCompilation(str)) {
+			if (!this.engines.every((engine) => engine.needsCompilation(str))) {
 				return str;
 			}
 
 			let fn = await this.compile(str, {
-				bypassMarkdown,
 				engineOverride: data[this.config.keys.engineOverride],
 				type,
 			});
@@ -609,22 +616,27 @@ class TemplateContent {
 		} catch (e) {
 			if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
 				return Promise.reject(e);
-			} else {
-				let tr = await this.getTemplateRender();
-				let engine = tr.getReadableEnginesList();
-				debug(`Having trouble rendering ${engine} template ${this.inputPath}: %O`, str);
-				return Promise.reject(
-					new TemplateContentRenderError(
-						`Having trouble rendering ${engine} template ${this.inputPath}`,
-						e,
-					),
-				);
 			}
+			let tr = await this.getTemplateRender();
+			let engine = tr.getReadableEnginesList();
+			debug(`Having trouble rendering ${engine} template ${this.inputPath}: %O`, str);
+			return Promise.reject(
+				new TemplateContentRenderError(
+					`Having trouble rendering ${engine} template ${this.inputPath}`,
+					e,
+				),
+			);
 		}
 	}
 
 	getExtensionEntries() {
-		return this.engine.extensionEntries;
+		const set = new Set();
+		for (const engine of this.engines) {
+			for (const entry of engine.extensionEntries) {
+				set.add(entry);
+			}
+		}
+		return Array.from(set);
 	}
 
 	isFileRelevantToThisTemplate(incrementalFile, metadata = {}) {
@@ -633,9 +645,9 @@ class TemplateContent {
 			return true;
 		}
 
-		let hasDependencies = this.engine.hasDependencies(incrementalFile);
-
-		let isRelevant = this.engine.isFileRelevantTo(this.inputPath, incrementalFile);
+		// TODO(boehs): verify this works
+		let hasDependencies = this.engines.some(e => e.hasDependencies(incrementalFile))
+		let isRelevant = this.engines.some(e => e.isFileRelevantTo(this.inputPath, incrementalFile));
 
 		debug(
 			"Test dependencies to see if %o is relevant to %o: %o",

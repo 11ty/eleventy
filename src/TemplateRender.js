@@ -12,7 +12,12 @@
  * - isEngine: reimplement in test
  * - setMarkdownEngine & setHtmlEngine & setUseMarkdown
  *
+ * In some cases, code elsewhere in 11ty assumes there is a single engine. While this is generally not desirable,
+ * sometimes there is not a better option, like for permalinks. Thus, in this case, the first engine is the "primary engine"
  */
+
+import debugUtil from "debug";
+const debug = debugUtil("Eleventy:TemplateRender");
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 
 // import debugUtil from "debug";
@@ -68,6 +73,28 @@ class TemplateRender {
 
 	get config() {
 		return this.#config;
+	}
+
+	/**
+	 * @deprecated get engines[0] instead
+	 */
+	get engine() {
+		debug("engine getter was called");
+		if (!this.#engines) {
+			throw new Error("Internal error: missing `engines` in TemplateRender.");
+		}
+		return this.#engines[0];
+	}
+
+	/**
+	 * @deprecated get engineNames[0] instead
+	 */
+	get engineName() {
+		debug("engineName getter was called");
+		if (!this.#engineNames) {
+			throw new Error("Internal error: missing `engineNames` in TemplateRender.");
+		}
+		return this.#engineNames[0];
 	}
 
 	set config(config) {

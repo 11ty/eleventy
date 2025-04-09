@@ -108,6 +108,10 @@ export default class TemplateEngine {
 		return fn(data);
 	}
 
+	/**
+	 *
+	 * @see {@link https://www.11ty.dev/docs/languages/custom/#use-java-script-import}
+	 */
 	useJavaScriptImport() {
 		return false;
 	}
