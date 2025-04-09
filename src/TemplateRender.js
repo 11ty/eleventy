@@ -221,10 +221,9 @@ class TemplateRender {
 	async getCompiledTemplate(str) {
 		const compiledFunctions = await Promise.all(
 			this.engines.map(async (engine) => {
-				return await engine.compile(str);
+				return await engine.compile(str,this.engineNameOrPath);
 			})
 		);
-
 		return async function recursiveRender(data) {
 			let result = str;
 			for (const compileFn of compiledFunctions) {

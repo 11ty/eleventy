@@ -149,7 +149,7 @@ class TemplateContent {
 			this.#templateRender = new TemplateRender(this.inputPath, this.eleventyConfig);
 			this.#templateRender.extensionMap = this.extensionMap;
 
-			return this.#templateRender.init().then(() => {
+			return this.#templateRender.init(this.inputPath).then(() => {
 				return this.#templateRender;
 			});
 		}
@@ -405,7 +405,6 @@ class TemplateContent {
 	}
 
 	async compile(str, options = {}) {
-		// bypassMarkdown is deprecated
 		let { type, engineOverride } = options;
 
 		let tr = await this.getTemplateRender();
@@ -413,13 +412,13 @@ class TemplateContent {
 			debugDev("%o overriding template engine to use %o", this.inputPath, engineOverride);
 			await tr.init(engineOverride);
 		}
-		if (!this.engines.every((engine) => engine.needsCompilation(str))) {
+		if (this.engines.every((engine) => !engine.needsCompilation(str))) {
 			return () => str;
 		}
 
 		debugDev("%o compile() using engine: %o", this.inputPath, tr.getReadableEnginesList());
 
-		try {
+		//try {
 			let res;
 			if (this.config.useTemplateCache) {
 				// TODO(boehs): hardcoded to primary
@@ -456,7 +455,7 @@ class TemplateContent {
 				res(fn);
 			}
 			return fn;
-		} catch (e) {
+		/*} catch (e) {
 			let [cacheable, key, cache] = this._getCompileCache(str,0);
 			if (cacheable && key) {
 				cache.delete(key);
@@ -466,7 +465,7 @@ class TemplateContent {
 				`Having trouble compiling template ${this.inputPath}`,
 				e,
 			);
-		}
+		}*/
 	}
 
 	getParseForSymbolsFunction(str) {
@@ -512,13 +511,13 @@ class TemplateContent {
 
 		return this._render(str, data, {
 			type: "Computed Data",
-			bypassMarkdown: true,
 		});
 	}
 
 	async renderPermalink(permalink, data) {
 		let tr = await this.getTemplateRender();
 		let permalinkCompilation = tr.engines.some(e => e.permalinkNeedsCompilation(permalink));
+		await tr.init(tr.engineNames[0])
 
 		// No string compilation:
 		//    ({ compileOptions: { permalink: "raw" }})
@@ -548,14 +547,12 @@ class TemplateContent {
 
 		return this._render(permalink, data, {
 			type: "Permalink",
-			bypassMarkdown: true,
 		});
 	}
 
-	async render(str, data, bypassMarkdown) {
+	async render(str, data) {
 		return this._render(str, data, {
 			type: "Content",
-			bypassMarkdown,
 		});
 	}
 
@@ -578,8 +575,8 @@ class TemplateContent {
 	async _render(str, data, options = {}) {
 		let { type } = options;
 
-		try {
-			if (!this.engines.every((engine) => engine.needsCompilation(str))) {
+		//try {
+			if (this.engines.every((engine) => !engine.needsCompilation(str))) {
 				return str;
 			}
 
@@ -613,7 +610,7 @@ class TemplateContent {
 			templateBenchmark.after();
 			debugDev("%o getCompiledTemplate called, rendered content created", this.inputPath);
 			return rendered;
-		} catch (e) {
+		/*} catch (e) {
 			if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
 				return Promise.reject(e);
 			}
@@ -626,7 +623,7 @@ class TemplateContent {
 					e,
 				),
 			);
-		}
+		}*/
 	}
 
 	getExtensionEntries() {
