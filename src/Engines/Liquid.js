@@ -274,6 +274,10 @@ export default class Liquid extends TemplateEngine {
 	}
 
 	parseForSymbols(str) {
+		if(!str) {
+			return [];
+		}
+
 		let tokenizer = new Tokenizer(str);
 		/** @type {Array} */
 		let tokens = tokenizer.readTopLevelTokens();

@@ -480,7 +480,13 @@ class TemplateContent {
 
 		if ("parseForSymbols" in engine) {
 			return () => {
-				return engine.parseForSymbols(str);
+				if(Array.isArray(str)) {
+					return str.filter(entry => typeof entry === "string").map(entry => engine.parseForSymbols(entry)).flat();
+				}
+				if(typeof str === "string") {
+					return engine.parseForSymbols(str);
+				}
+				return [];
 			};
 		}
 	}

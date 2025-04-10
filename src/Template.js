@@ -527,7 +527,21 @@ class Template extends TemplateContent {
 		// this check must come before isPlainObject
 		if (typeof obj === "function") {
 			computedData.add(parentKey, obj, declaredDependencies);
-		} else if (Array.isArray(obj) || isPlainObject(obj)) {
+		} else if(Array.isArray(obj)) {
+			// Arrays are treated as one entry in the dependency graph now
+			computedData.addTemplateString(parentKey,
+				async function(innerData) {
+					return Promise.all(obj.map(entry => {
+						if(typeof entry === "string") {
+							return this.tmpl.renderComputedData(entry, innerData);
+						}
+						return entry;
+					}));
+				},
+				declaredDependencies,
+				this.getParseForSymbolsFunction(obj),
+				this);
+		} else if(isPlainObject(obj)) {
 			for (let key in obj) {
 				let keys = [];
 				if (parentKey) {

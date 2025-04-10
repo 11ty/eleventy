@@ -414,8 +414,14 @@ export default class Nunjucks extends TemplateEngine {
 
 	/* Outputs an Array of lodash get selectors */
 	parseForSymbols(str) {
+		if(!str) {
+			return [];
+		}
 		const { parser, nodes } = NunjucksLib;
 		let obj = parser.parse(str, this._getParseExtensions());
+		if(!obj) {
+			return [];
+		}
 		let linesplit = str.split("\n");
 		let values = obj.findAll(nodes.Value);
 		let symbols = obj.findAll(nodes.Symbol).map((entry) => {
