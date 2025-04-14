@@ -89,7 +89,7 @@
 		"pre-push": "npm test"
 	},
 	"devDependencies": {
-		"@11ty/eleventy-img": "^6.0.1",
+		"@11ty/eleventy-img": "^6.0.2",
 		"@11ty/eleventy-plugin-rss": "^2.0.3",
 		"@11ty/eleventy-plugin-syntaxhighlight": "^5.0.0",
 		"@eslint/eslintrc": "^3.3.1",
