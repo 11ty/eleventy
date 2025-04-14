@@ -103,7 +103,7 @@
 		"c8": "^10.1.3",
 		"cross-env": "^7.0.3",
 		"eslint": "^9.23.0",
-		"eslint-config-prettier": "^10.1.1",
+		"eslint-config-prettier": "^10.1.2",
 		"globals": "^16.0.0",
 		"markdown-it-emoji": "^3.0.0",
 		"marked": "^15.0.7",
