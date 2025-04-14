@@ -17,7 +17,7 @@ export default class CustomEngine extends TemplateEngine {
 		this._defaultEngine = undefined;
 
 		// Enable cacheability for this template
-		if (this.entry?.compileOptions?.cache) {
+		if (this.entry?.compileOptions?.cache !== undefined) {
 			this.cacheable = this.entry.compileOptions.cache;
 		} else if (this.needsToReadFileContents()) {
 			this.cacheable = true;

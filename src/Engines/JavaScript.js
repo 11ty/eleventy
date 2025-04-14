@@ -92,8 +92,9 @@ export default class JavaScript extends TemplateEngine {
 			mod = this.eleventyConfig.userConfig.virtualTemplates[relativeInputPath].content;
 		} else {
 			let isEsm = this.eleventyConfig.getIsProjectUsingEsm();
+			let cacheBust = !this.cacheable || !this.config.useTemplateCache;
 			mod = await EleventyImport(inputPath, isEsm ? "esm" : "cjs", {
-				cacheBust: !this.config.useTemplateCache,
+				cacheBust,
 			});
 		}
 
