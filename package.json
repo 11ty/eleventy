@@ -106,7 +106,7 @@
 		"eslint-config-prettier": "^10.1.1",
 		"globals": "^16.0.0",
 		"markdown-it-emoji": "^3.0.0",
-		"marked": "^15.0.7",
+		"marked": "^15.0.8",
 		"nano-staged": "^0.8.0",
 		"prettier": "^3.5.3",
 		"pretty": "^2.0.0",
