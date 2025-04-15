@@ -5,8 +5,6 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 import TemplateEngine from "./TemplateEngine.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import { augmentObject } from "./Util/ContextAugmenter.js";
-import { withResolvers } from "../Util/PromiseUtil.js";
-import isAsyncFunction from "../Util/IsAsyncFunction.js";
 
 const debug = debugUtil("Eleventy:Nunjucks");
 
@@ -21,15 +19,10 @@ export default class Nunjucks extends TemplateEngine {
 		this.nunjucksPrecompiledTemplates = this.config.nunjucksPrecompiledTemplates || {};
 		this._usingPrecompiled = Object.keys(this.nunjucksPrecompiledTemplates).length > 0;
 
+		this.asyncFilters = eleventyConfig.config.__theCodeCriesInPain.nunjucks.asyncFilters || {};
+		this.filters = eleventyConfig.config.__theCodeCriesInPain.nunjucks.filters
+
 		this.setLibrary(this.config.libraryOverrides.njk);
-		this.asyncFilters = eleventyConfig.getFilters({
-			lang: "njk",
-			async: true,
-		});
-		this.filters = eleventyConfig.getFilters({
-			lang: "njk",
-			async: false,
-		});
 
 		// v3.1.0-alpha.1 we’ve moved to use Nunjucks’ internal cache instead of Eleventy’s
 		// this.cacheable = false;
@@ -134,7 +127,7 @@ export default class Nunjucks extends TemplateEngine {
 				/** @this {any} */
 				callback = function (...args) {
 					// Note that `callback` is already a function as the `#add` method throws an error if not.
-					let ret = callback.call(this, ...args);
+					let ret = filters[name].call(this, ...args);
 					if (ret instanceof Promise) {
 						throw new Error(
 							`Nunjucks *is* async-friendly with \`addFilter("${name}", async function() {})\` but you need to supply an \`async function\`. You returned a promise from \`addFilter("${name}", function() {})\`. Alternatively, use the \`addAsyncFilter("${name}")\` configuration API method.`,
@@ -143,13 +136,13 @@ export default class Nunjucks extends TemplateEngine {
 					return ret;
 				}
 			}
-			else if (isAsyncFunction(callback)) {
+			else if (isAsync) {
 				// we need to wrap the async function in a nunjucks compatible callback
 				/** @this {any} */
 				callback = async function (...args) {
 					let cb = args.pop();
 					// Note that `callback` is already a function as the `#add` method throws an error if not.
-					let ret = await callback.call(this, ...args);
+					let ret = await filters[name].call(this, ...args);
 					cb(null, ret);
 				}
 			}
@@ -168,7 +161,6 @@ export default class Nunjucks extends TemplateEngine {
 					source: this.ctx,
 					lazy: false, // context.env?.opts.throwOnUndefined,
 				});
-
 				return fn.call(this, ...args);
 			} catch (e) {
 				throw new EleventyNunjucksError(
@@ -494,17 +486,15 @@ export default class Nunjucks extends TemplateEngine {
 		}
 
 		return function (data) {
-			let { promise, resolve, reject } = withResolvers();
-
-			tmpl.render(data, (error, result) => {
-				if (error) {
-					reject(error);
-				} else {
-					resolve(result);
-				}
+			return new Promise((resolve, reject) => {
+				tmpl.render(data, (error, result) => {
+					if (error) {
+						reject(error);
+					} else {
+						resolve(result);
+					}
+				})
 			});
-
-			return promise;
 		};
 	}
 }

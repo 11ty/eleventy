@@ -137,12 +137,7 @@ class UserConfig {
 		/** @type {object} */
 		this.javascript = {
 			functions: {},
-			filters: {},
-			shortcodes: {},
-			pairedShortcodes: {},
 		};
-
-		this.markdownHighlighter = null;
 
 		/** @type {object} */
 		this.libraryOverrides = {};
@@ -288,10 +283,10 @@ class UserConfig {
 
 	getFilters(options = {}) {
 		let working = this.universal.filters;
-		if (options.type) {
+		if (options.async) {
 			working = objectFilter(
 				this.universal.filters,
-				(entry) => entry.__eleventyInternal?.type === options.type,
+				(entry) => entry.__eleventyInternal?.async === options.async,
 			);
 		}
 		if (options.lang) {
@@ -373,11 +368,19 @@ class UserConfig {
 	 * Markdown
 	 */
 
-	// This is a method for plugins, probably shouldn’t use this in projects.
-	// Projects should use `setLibrary` as documented here:
-	// https://github.com/11ty/eleventy/blob/master/docs/engines/markdown.md#use-your-own-options
+
+	/**
+	 * @deprecated Use {@link amendLibrary} with mdlib.set instead.
+	 */
 	addMarkdownHighlighter(highlightFn) {
-		this.markdownHighlighter = highlightFn;
+		this.logger.warn(
+			"`addMarkdownHighlighter` is deprecated and will be removed in a future release. Use `amendLibrary` with `mdlib.set` instead.",
+		);
+		this.amendLibrary("mdlib", (mdlib) => {
+			mdlib.set({
+				highlight: highlightFn,
+			});
+		})
 	}
 
 	/*
@@ -1241,6 +1244,26 @@ class UserConfig {
 			passthroughCopiesHtmlRelative: this.passthroughCopiesHtmlRelative,
 			passthroughCopies: this.passthroughCopies,
 
+			// Unfortunately this must still exist because nunjucks and liquid are not yet plugins
+			__theCodeCriesInPain: {
+				nunjucks: {
+					asyncFilters: this.getFilters({
+						lang: "njk",
+						async: true,
+					}),
+					filters: this.getFilters({
+						lang: "njk",
+						async: false,
+					}),
+				},
+				liquid: {
+					filters: this.getFilters({
+						lang: "liquid",
+						async: false,
+					}),
+				}
+			},
+
 			// Liquid
 			liquidOptions: this.liquid.options,
 			liquidTags: this.liquid.tags,
@@ -1260,9 +1283,6 @@ class UserConfig {
 
 			// 11ty.js
 			javascriptFunctions: this.javascript.functions, // filters and shortcodes, combined
-
-			// Markdown
-			markdownHighlighter: this.markdownHighlighter,
 
 			libraryOverrides: this.libraryOverrides,
 			dynamicPermalinks: this.dynamicPermalinks,
