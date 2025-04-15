@@ -1,34 +1,34 @@
 import globals from "globals";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import js from "@eslint/js";
-import { FlatCompat } from "@eslint/eslintrc";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
-	baseDirectory: __dirname,
-	recommendedConfig: js.configs.recommended,
-	allConfig: js.configs.all,
-});
+import pluginJs from "@eslint/js";
+import stylisticJs from "@stylistic/eslint-plugin-js";
+import prettier from "eslint-config-prettier";
 
 export default [
-	...compat.extends("eslint:recommended", "prettier"),
-	{
-		languageOptions: {
-			globals: {
-				...globals.node,
-			},
-
-			ecmaVersion: "latest",
-			sourceType: "module",
-		},
-
-		rules: {
-			"no-async-promise-executor": "warn",
-			"no-prototype-builtins": "warn",
-			"no-unused-vars": "warn",
-			"space-unary-ops": "error",
-		},
-	},
+  {
+    name: "11ty/setup/js",
+    ...pluginJs.configs.recommended,
+  },
+  {
+    name: "11ty/rules/project-specific",
+    plugins: {
+      "@stylistic/js": stylisticJs,
+    },
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+      ecmaVersion: "latest",
+      sourceType: "module",
+    },
+    rules: {
+      "no-async-promise-executor": "warn",
+      "no-prototype-builtins": "warn",
+      "no-unused-vars": "warn",
+      "@stylistic/js/space-unary-ops": "error",
+    },
+  },
+  {
+    name: "11ty/setup/prettier",
+    ...prettier,
+  },
 ];
