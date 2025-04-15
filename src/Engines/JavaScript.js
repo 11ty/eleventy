@@ -14,6 +14,7 @@ export default class JavaScript extends TemplateEngine {
 		this.instances = {};
 
 		this.cacheable = false;
+		this.filters = templateConfig.config.__theCodeCriesInPain.javascript;
 
 		this.config.events.on("eleventy#templateModified", (inputPath, metadata = {}) => {
 			let { usedByDependants, relevantLayouts } = metadata;
@@ -141,7 +142,7 @@ export default class JavaScript extends TemplateEngine {
 
 	getJavaScriptFunctions(inst) {
 		let fns = {};
-		let configFns = this.config.javascriptFunctions;
+		let configFns = this.filters;
 
 		for (let key in configFns) {
 			// prefer pre-existing `page` javascriptFunction, if one exists

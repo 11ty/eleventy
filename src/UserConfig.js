@@ -18,6 +18,7 @@ import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import BenchmarkManager from "./Benchmark/BenchmarkManager.js";
 import JavaScriptFrontMatter from "./Engines/FrontMatter/JavaScript.js";
 import { augmentFunction } from "./Engines/Util/ContextAugmenter.js";
+import ConsoleLogger from "./Util/ConsoleLogger.js";
 
 const debug = debugUtil("Eleventy:UserConfig");
 
@@ -39,6 +40,7 @@ class UserConfig {
 	/** @type {number} */
 	#concurrency = 1;
 	// Before using os.availableParallelism(); see https://github.com/11ty/eleventy/issues/3596
+	#logger;
 
 	constructor() {
 		// These are completely unnecessary lines to satisfy TypeScript
@@ -56,7 +58,6 @@ class UserConfig {
 		/** @type {object} */
 		this.directories = {};
 		/** @type {undefined} */
-		this.logger;
 		/** @type {string} */
 		this.dir;
 		/** @type {string} */
@@ -73,6 +74,18 @@ class UserConfig {
 	// Internally used in TemplateContent for cache keys
 	_getUniqueId() {
 		return this.#uniqueId;
+	}
+
+	get logger() {
+		if (!this.#logger) {
+			this.#logger = new ConsoleLogger();
+		}
+		return this.#logger;
+	}
+
+	/* Setter for Logger */
+	set logger(logger) {
+		this.#logger = logger;
 	}
 
 	reset() {
@@ -376,7 +389,7 @@ class UserConfig {
 		this.logger.warn(
 			"`addMarkdownHighlighter` is deprecated and will be removed in a future release. Use `amendLibrary` with `mdlib.set` instead.",
 		);
-		this.amendLibrary("mdlib", (mdlib) => {
+		this.amendLibrary("md", (mdlib) => {
 			mdlib.set({
 				highlight: highlightFn,
 			});
@@ -583,11 +596,16 @@ class UserConfig {
 		});
 	}
 
-	// Both Filters and shortcodes feed into this
+	/**
+	 * @deprecated Use {@link addFilter} with options.langs set to ["11ty.js"] if you wish it to be scoped.
+	 */
 	addJavaScriptFunction(name, callback) {
-		this.#add(this.javascript.functions, name, callback, {
-			description: "JavaScript Function",
-			functionName: "addJavaScriptFunction",
+		this.logger.warn(
+			'`addJavaScriptFunction` is deprecated and will be removed in a future release.\
+			 Use `addFilter` instead, with options.lang set to ["11ty.js"] if you wish it to be scoped.',
+		);
+		this.addFilter(name, callback, {
+			langs: ["11ty.js"],
 		});
 	}
 
@@ -1243,8 +1261,10 @@ class UserConfig {
 			layoutResolution: this.layoutResolution,
 			passthroughCopiesHtmlRelative: this.passthroughCopiesHtmlRelative,
 			passthroughCopies: this.passthroughCopies,
+			filters: this.getFilters(),
 
 			// Unfortunately this must still exist because nunjucks and liquid are not yet plugins
+			// This will happen in my next pr
 			__theCodeCriesInPain: {
 				nunjucks: {
 					asyncFilters: this.getFilters({
@@ -1259,9 +1279,11 @@ class UserConfig {
 				liquid: {
 					filters: this.getFilters({
 						lang: "liquid",
-						async: false,
 					}),
-				}
+				},
+				javascript: this.getFilters({
+					lang: "11ty.js",
+				}),
 			},
 
 			// Liquid

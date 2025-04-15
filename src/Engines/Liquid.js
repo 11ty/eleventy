@@ -22,24 +22,19 @@ export default class Liquid extends TemplateEngine {
 
 		this.liquidOptions = this.config.liquidOptions || {};
 
+		this.filters = eleventyConfig.config.__theCodeCriesInPain.liquid.filters
+
 		this.setLibrary(this.config.libraryOverrides.liquid);
 
 		this.argLexer = moo.compile(Liquid.argumentLexerOptions);
 		this.cacheable = true;
-
-		this.filters = eleventyConfig.getFilters({
-			lang: "liquid",
-			async: false,
-		});
 	}
 
 	setLibrary(override) {
 		// warning, the include syntax supported here does not exactly match what Jekyll uses.
 		this.liquidLib = override || new LiquidJs(this.getLiquidOptions());
 		this.setEngineLib(this.liquidLib);
-
 		this.addFilters(this.filters);
-
 		// TODO these all go to the same place (addTag), add warnings for overwrites
 		this.addCustomTags(this.config.liquidTags);
 		this.addAllShortcodes(this.config.liquidShortcodes);

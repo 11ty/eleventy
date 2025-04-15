@@ -92,8 +92,7 @@ test("Add universal filter", async (t) => {
   await templateCfg.init();
 
   let cfg = templateCfg.getConfig();
-  t.not(Object.keys(cfg.liquidFilters).indexOf("myFilterName"), -1);
-  t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
+  t.not(Object.keys(cfg.filters).indexOf("myFilterName"), -1);
 });
 
 test("Add namespaced universal filter", async (t) => {
@@ -149,20 +148,19 @@ test("Add namespaced plugin using underscore", async (t) => {
   await templateCfg.init();
 
   let cfg = templateCfg.getConfig();
-  t.not(Object.keys(cfg.liquidFilters).indexOf("testNamespace_myFilterName"), -1);
-  t.not(Object.keys(cfg.nunjucksFilters).indexOf("testNamespace_myFilterName"), -1);
+  t.not(Object.keys(cfg.filters).indexOf("testNamespace_myFilterName"), -1);
 });
 
 test("Empty namespace", async (t) => {
   let templateCfg = new TemplateConfig(defaultConfig, "./test/stubs/config.cjs");
   templateCfg.userConfig.namespace("", function () {
-    templateCfg.userConfig.addNunjucksFilter("myFilterName", function () {});
+    templateCfg.userConfig.addFilter("myFilterName", function () {});
   });
 
   await templateCfg.init();
 
   let cfg = templateCfg.getConfig();
-  t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
+  t.not(Object.keys(cfg.filters).indexOf("myFilterName"), -1);
 });
 
 test("Nested Empty Inner namespace", async (t) => {
@@ -563,7 +561,6 @@ test("Add async plugin", async (t) => {
 
   let cfg = templateCfg.getConfig();
   t.not(Object.keys(cfg.liquidFilters).indexOf("myFilterName"), -1);
-  t.not(Object.keys(cfg.nunjucksFilters).indexOf("myFilterName"), -1);
 });
 
 test("Async namespace", async (t) => {
