@@ -56,7 +56,8 @@
 		"check-types": "tsc",
 		"nano-staged": "nano-staged",
 		"coverage": "npx c8 ava && npx c8 report --reporter=json-summary && cp coverage/coverage-summary.json docs/_data/coverage.json && node cmd.cjs --config=docs/eleventy.coverage.js",
-		"prepare": "simple-git-hooks"
+		"prepare": "simple-git-hooks",
+		"knip": "knip"
 	},
 	"author": "Zach Leatherman <zachleatherman@gmail.com> (https://zachleat.com/)",
 	"repository": {
@@ -105,6 +106,7 @@
 		"eslint": "^9.24.0",
 		"eslint-config-prettier": "^10.1.2",
 		"globals": "^16.0.0",
+		"knip": "^5.50.4",
 		"markdown-it-emoji": "^3.0.0",
 		"marked": "^15.0.8",
 		"nano-staged": "^0.8.0",
