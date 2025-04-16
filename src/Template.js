@@ -527,21 +527,25 @@ class Template extends TemplateContent {
 		// this check must come before isPlainObject
 		if (typeof obj === "function") {
 			computedData.add(parentKey, obj, declaredDependencies);
-		} else if(Array.isArray(obj)) {
+		} else if (Array.isArray(obj)) {
 			// Arrays are treated as one entry in the dependency graph now
-			computedData.addTemplateString(parentKey,
-				async function(innerData) {
-					return Promise.all(obj.map(entry => {
-						if(typeof entry === "string") {
-							return this.tmpl.renderComputedData(entry, innerData);
-						}
-						return entry;
-					}));
+			computedData.addTemplateString(
+				parentKey,
+				async function (innerData) {
+					return Promise.all(
+						obj.map((entry) => {
+							if (typeof entry === "string") {
+								return this.tmpl.renderComputedData(entry, innerData);
+							}
+							return entry;
+						}),
+					);
 				},
 				declaredDependencies,
 				this.getParseForSymbolsFunction(obj),
-				this);
-		} else if(isPlainObject(obj)) {
+				this,
+			);
+		} else if (isPlainObject(obj)) {
 			for (let key in obj) {
 				let keys = [];
 				if (parentKey) {
@@ -840,12 +844,15 @@ class Template extends TemplateContent {
 		};
 
 		if (!this.isDryRun) {
-			let isVirtual = this.isVirtualTemplate();
-			let engineList = this.templateRender.getReadableEnginesListDifferingFromFileExtension();
-			let suffix = `${isVirtual ? " (virtual)" : ""}${engineList ? ` (${engineList})` : ""}`;
-			this.logger.log(
-				`${lang.start} ${outputPath} ${chalk.gray(`from ${this.inputPath}${suffix}`)}`,
-			);
+			if (this.logger.isLoggingEnabled()) {
+				let isVirtual = this.isVirtualTemplate();
+				let tr = await this.getTemplateRender();
+				let engineList = tr.getReadableEnginesListDifferingFromFileExtension();
+				let suffix = `${isVirtual ? " (virtual)" : ""}${engineList ? ` (${engineList})` : ""}`;
+				this.logger.log(
+					`${lang.start} ${outputPath} ${chalk.gray(`from ${this.inputPath}${suffix}`)}`,
+				);
+			}
 		} else if (this.isDryRun) {
 			return;
 		}
