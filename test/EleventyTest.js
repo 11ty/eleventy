@@ -1733,3 +1733,51 @@ test("sass docs on 11ty.dev, issue #408", async (t) => {
 
 /* Comment */`);
 });
+
+test("Use a date object for `date`, issue #3022", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: function (eleventyConfig) {
+      eleventyConfig.dataFilterSelectors.add("page.date");
+      eleventyConfig.addTemplate("index.html", "", { date: new Date() })
+    },
+  });
+  elev.disableLogger();
+
+ let results = await elev.toJSON();
+ t.is(results.length, 1);
+ t.truthy(results[0].data.page.date instanceof Date);
+});
+
+test("Use a date object for `date` (js object front matter), issue #3022", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: function (eleventyConfig) {
+      eleventyConfig.dataFilterSelectors.add("page.date");
+      eleventyConfig.addTemplate("index.html", `---js
+{
+  date: new Date(),
+}
+---`);
+    },
+  });
+  elev.disableLogger();
+
+ let results = await elev.toJSON();
+ t.is(results.length, 1);
+ t.truthy(results[0].data.page.date instanceof Date);
+});
+
+test("Use a date object for `date` (js front matter), issue #3022", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: function (eleventyConfig) {
+      eleventyConfig.dataFilterSelectors.add("page.date");
+      eleventyConfig.addTemplate("index.html", `---js
+let date = new Date();
+---`);
+    },
+  });
+  elev.disableLogger();
+
+ let results = await elev.toJSON();
+ t.is(results.length, 1);
+ t.truthy(results[0].data.page.date instanceof Date);
+});
