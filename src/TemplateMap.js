@@ -149,6 +149,16 @@ class TemplateMap {
 
 	// TODO(slightlyoff): major bottleneck
 	async initDependencyMap(dependencyMap) {
+		// Temporary workaround for `templateRender` sync references
+		let inputPathSet = new Set(dependencyMap);
+		await Promise.all(
+			this.map.map(({ inputPath, template }) => {
+				if (inputPathSet.has(inputPath)) {
+					return template.getTemplateRender();
+				}
+			}),
+		);
+
 		for (let depEntry of dependencyMap) {
 			if (GlobalDependencyMap.isTag(depEntry)) {
 				let tagName = GlobalDependencyMap.getTagName(depEntry);
