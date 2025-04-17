@@ -354,11 +354,15 @@ class TemplateContent {
 			virtualTemplateData = virtualTemplateDefinition.data;
 		}
 
-		let data = TemplateData.mergeDeep(false, fm.data, extraData, virtualTemplateData);
-		let cleanedData = TemplateData.cleanupData(data);
+		let data = Object.assign(fm.data, extraData, virtualTemplateData);
+
+		TemplateData.cleanupData(data, {
+			file: this.inputPath,
+			isVirtualTemplate: Boolean(virtualTemplateData),
+		});
 
 		return {
-			data: cleanedData,
+			data,
 			excerpt: fm.excerpt,
 		};
 	}
@@ -480,10 +484,13 @@ class TemplateContent {
 
 		if ("parseForSymbols" in engine) {
 			return () => {
-				if(Array.isArray(str)) {
-					return str.filter(entry => typeof entry === "string").map(entry => engine.parseForSymbols(entry)).flat();
+				if (Array.isArray(str)) {
+					return str
+						.filter((entry) => typeof entry === "string")
+						.map((entry) => engine.parseForSymbols(entry))
+						.flat();
 				}
-				if(typeof str === "string") {
+				if (typeof str === "string") {
 					return engine.parseForSymbols(str);
 				}
 				return [];

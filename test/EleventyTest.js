@@ -1664,3 +1664,18 @@ test("permalink on custom template lang, issue #3619", async (t) => {
 }`);
 });
 
+test("Template data throws error when tags is not an Array or String #1791", async (t) => {
+  let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.addTemplate("index.html", "", {
+        tags: {"one": 1, "two": 2}
+      });
+    },
+  });
+  elev.disableLogger();
+
+  await t.throwsAsync(() => elev.toJSON(), {
+    // The `set*Directory` configuration API methods are not yet allowed in plugins.
+    message: "String or Array expected for `tags` in virtual template: ./test/noop/index.html. Received: { one: 1, two: 2 }",
+  });
+});

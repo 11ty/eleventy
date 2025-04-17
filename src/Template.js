@@ -775,6 +775,7 @@ class Template extends TemplateContent {
 			return [];
 		}
 
+		// Raw Input *includes* preprocessor modifications
 		// https://github.com/11ty/eleventy/issues/1206
 		data.page.rawInput = rawInput;
 

@@ -1,4 +1,5 @@
 import path from "node:path";
+import util from "node:util";
 import semver from "semver";
 
 import lodash from "@11ty/lodash-custom";
@@ -400,7 +401,9 @@ class TemplateData {
 				);
 			} else {
 				// clean up data for template/directory data files only.
-				let cleanedDataForPath = TemplateData.cleanupData(dataForPath);
+				let cleanedDataForPath = TemplateData.cleanupData(dataForPath, {
+					file: path,
+				});
 				for (let key in cleanedDataForPath) {
 					if (Object.prototype.hasOwnProperty.call(dataSource, key)) {
 						debugWarn(
@@ -423,7 +426,7 @@ class TemplateData {
 			let localDataPaths = await this.getLocalDataPaths(templatePath);
 			let importedData = await this.combineLocalData(localDataPaths);
 
-			this.templateDirectoryData[templatePath] = Object.assign({}, importedData);
+			this.templateDirectoryData[templatePath] = importedData;
 		}
 		return this.templateDirectoryData[templatePath];
 	}
@@ -634,7 +637,7 @@ class TemplateData {
 	}
 
 	/* Like cleanupData() but does not mutate */
-	static getCleanedTagsImmutable(data) {
+	static getCleanedTagsImmutable(data, options = {}) {
 		let tags = [];
 
 		if (isPlainObject(data) && data.tags) {
@@ -642,6 +645,10 @@ class TemplateData {
 				tags = (data.tags || "").split(",");
 			} else if (Array.isArray(data.tags)) {
 				tags = data.tags;
+			} else if (data.tags) {
+				throw new Error(
+					`String or Array expected for \`tags\`${options.file ? ` in ${options.isVirtualTemplate ? "virtual " : ""}template: ${options.file}` : ""}. Received: ${util.inspect(data.tags)}`,
+				);
 			}
 
 			// Deduplicate tags
@@ -651,9 +658,9 @@ class TemplateData {
 		return tags;
 	}
 
-	static cleanupData(data) {
+	static cleanupData(data, options = {}) {
 		if (isPlainObject(data) && "tags" in data) {
-			data.tags = this.getCleanedTagsImmutable(data);
+			data.tags = this.getCleanedTagsImmutable(data, options);
 		}
 
 		return data;
