@@ -170,6 +170,15 @@ class Template extends TemplateContent {
 		return TemplatePath.stripLeadingSubPath(this.parsed.dir, this.inputDir);
 	}
 
+	templateUsesLayouts(pageData) {
+		if (this.hasTemplateRender()) {
+			return pageData?.[this.config.keys.layout] && this.templateRender.engine.useLayouts();
+		}
+
+		// If `layout` prop is set, default to true when engine is unknown
+		return Boolean(pageData?.[this.config.keys.layout]);
+	}
+
 	getLayout(layoutKey) {
 		// already cached downstream in TemplateLayout -> TemplateCache
 		try {

@@ -1679,3 +1679,57 @@ test("Template data throws error when tags is not an Array or String #1791", asy
     message: "String or Array expected for `tags` in virtual template: ./test/noop/index.html. Received: { one: 1, two: 2 }",
   });
 });
+
+test("sass docs on 11ty.dev, issue #408", async (t) => {
+  let elev = new Eleventy("./test/stubs-408-sass/", undefined, {
+    config: function (eleventyConfig) {
+      eleventyConfig.addTemplateFormats("scss");
+
+      eleventyConfig.addExtension("scss", {
+        outputFileExtension: "css",
+
+        // opt-out of Eleventy Layouts
+        useLayouts: false,
+
+        compile: async function (inputContent, inputPath) {
+          let parsed = path.parse(inputPath);
+          if(parsed.name.startsWith("_")) {
+            return;
+          }
+
+          let result = sass.compileString(inputContent, {
+            loadPaths: [
+              parsed.dir || ".",
+              this.config.dir.includes
+            ]
+          });
+
+          this.addDependencies(inputPath, result.loadedUrls);
+
+          return async (data) => {
+            return result.css;
+          };
+        },
+      });
+    },
+  });
+  elev.disableLogger();
+
+   let results = await elev.toJSON();
+   results.sort((a, b) => {
+    return a.inputPath - b.inputPath;
+   });
+
+   t.is(results.length, 2);
+   t.is(results[0].url, "/_code.css");
+   t.is(results[0].content, undefined);
+   t.is(results[1].url, "/style.css");
+   t.is(
+    normalizeNewLines(results[1].content),
+    `code {
+  padding: 0.25em;
+  line-height: 0;
+}
+
+/* Comment */`);
+});

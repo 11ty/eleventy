@@ -486,8 +486,8 @@ class TemplateMap {
 		for (let entry of this.map) {
 			for (let page of entry._pages) {
 				let tmpl = page.template;
-				let layoutKey = page.data[this.config.keys.layout];
-				if (layoutKey) {
+				if (tmpl.templateUsesLayouts(page.data)) {
+					let layoutKey = page.data[this.config.keys.layout];
 					let layout = tmpl.getLayout(layoutKey);
 					let layoutChain = await layout.getLayoutChain();
 					let priors = [];
