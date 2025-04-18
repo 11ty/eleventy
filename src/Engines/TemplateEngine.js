@@ -85,11 +85,6 @@ export default class TemplateEngine {
 		return this.name;
 	}
 
-	// Backwards compat
-	getIncludesDir() {
-		return this.includesDir;
-	}
-
 	/**
 	 * @protected
 	 */

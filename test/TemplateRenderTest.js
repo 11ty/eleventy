@@ -30,7 +30,7 @@ test("Basic", async (t) => {
 
 test("Includes Dir", async (t) => {
   let tr = await getNewTemplateRender("liquid", "./test/stubs");
-  t.is(tr.getIncludesDir(), "./test/stubs/_includes/");
+  t.is(tr.includesDir, "./test/stubs/_includes/");
 });
 
 test("Invalid override", async (t) => {

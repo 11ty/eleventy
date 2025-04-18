@@ -49,11 +49,6 @@ class EleventyFiles {
 		return this.dirs.data;
 	}
 
-	// Backwards compat
-	getDataDir() {
-		return this.dataDir;
-	}
-
 	setFileSystemSearch(fileSystemSearch) {
 		this.fileSystemSearch = fileSystemSearch;
 	}
@@ -290,16 +285,6 @@ class EleventyFiles {
 		}
 
 		return Array.from(ignoreFiles);
-	}
-
-	/* Backwards compat */
-	getIncludesDir() {
-		return this.includesDir;
-	}
-
-	/* Backwards compat */
-	getLayoutsDir() {
-		return this.layoutsDir;
 	}
 
 	getFileGlobs() {
