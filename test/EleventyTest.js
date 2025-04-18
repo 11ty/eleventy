@@ -1717,7 +1717,7 @@ test("sass docs on 11ty.dev, issue #408", async (t) => {
 
    let results = await elev.toJSON();
    results.sort((a, b) => {
-    return a.inputPath - b.inputPath;
+    return a.inputPath > b.inputPath;
    });
 
    t.is(results.length, 2);
