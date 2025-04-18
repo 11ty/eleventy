@@ -149,14 +149,16 @@ class TemplateMap {
 
 	// TODO(slightlyoff): major bottleneck
 	async initDependencyMap(dependencyMap) {
-		// Temporary workaround for `templateRender` sync references
+		// Temporary workaround for async constructor work in templates
 		let inputPathSet = new Set(dependencyMap);
 		await Promise.all(
-			this.map.map(({ inputPath, template }) => {
-				if (inputPathSet.has(inputPath)) {
-					return template.getTemplateRender();
-				}
-			}),
+			this.map
+				.filter(({ inputPath }) => {
+					return inputPathSet.has(inputPath);
+				})
+				.map(({ template }) => {
+					return template.asyncTemplateInitialization();
+				}),
 		);
 
 		for (let depEntry of dependencyMap) {

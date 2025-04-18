@@ -36,6 +36,12 @@ class TemplateContent {
 		this.inputPath = inputPath;
 	}
 
+	async asyncTemplateInitialization() {
+		if (!this.hasTemplateRender()) {
+			await this.getTemplateRender();
+		}
+	}
+
 	resetCachedTemplate({ eleventyConfig }) {
 		this.eleventyConfig = eleventyConfig;
 	}
