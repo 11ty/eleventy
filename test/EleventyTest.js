@@ -1716,16 +1716,16 @@ test("sass docs on 11ty.dev, issue #408", async (t) => {
   elev.disableLogger();
 
    let results = await elev.toJSON();
-   results.sort((a, b) => {
-    return a.inputPath > b.inputPath;
-   });
-
    t.is(results.length, 2);
-   t.is(results[0].url, "/_code.css");
-   t.is(results[0].content, undefined);
-   t.is(results[1].url, "/style.css");
+
+   let code = results.filter(entry => entry.inputPath.endsWith("_code.scss"))[0];
+   t.is(code.url, "/_code.css");
+   t.is(code.content, undefined);
+
+   let main = results.filter(entry => entry.inputPath.endsWith("style.scss"))[0];
+   t.is(main.url, "/style.css");
    t.is(
-    normalizeNewLines(results[1].content),
+    normalizeNewLines(main.content),
     `code {
   padding: 0.25em;
   line-height: 0;
