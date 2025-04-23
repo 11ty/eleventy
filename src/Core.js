@@ -1,5 +1,4 @@
 import chalk from "kleur";
-import { performance } from "node:perf_hooks";
 import debugUtil from "debug";
 import { filesize } from "filesize";
 
