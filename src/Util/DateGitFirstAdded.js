@@ -1,23 +1,22 @@
-import spawn from "cross-spawn";
+import { spawnAsync } from "./SpawnAsync.js";
 
-function getGitFirstAddedTimeStamp(filePath) {
-	return (
-		parseInt(
-			spawn
-				.sync(
-					"git",
-					// Formats https://www.git-scm.com/docs/git-log#_pretty_formats
-					// %at author date, UNIX timestamp
-					["log", "--diff-filter=A", "--follow", "-1", "--format=%at", filePath],
-				)
-				.stdout.toString("utf-8"),
-		) * 1000
-	);
+async function getGitFirstAddedTimeStamp(filePath) {
+	try {
+		let timestamp = await spawnAsync(
+			"git",
+			// Formats https://www.git-scm.com/docs/git-log#_pretty_formats
+			// %at author date, UNIX timestamp
+			["log", "--diff-filter=A", "--follow", "-1", "--format=%at", filePath],
+		);
+		return parseInt(timestamp, 10) * 1000;
+	} catch (e) {
+		// do nothing
+	}
 }
 
 // return a Date
-export default function (inputPath) {
-	let timestamp = getGitFirstAddedTimeStamp(inputPath);
+export default async function (inputPath) {
+	let timestamp = await getGitFirstAddedTimeStamp(inputPath);
 	if (timestamp) {
 		return new Date(timestamp);
 	}

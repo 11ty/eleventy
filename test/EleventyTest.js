@@ -483,12 +483,12 @@ test("#142: date 'git Last Modified' populates page.date", async (t) => {
   let [result] = results;
 
   // This doesn’t test the validity of the function, only that it populates page.date.
-  let comparisonDate = DateGitLastUpdated("./test/stubs-142/index.njk");
+  let comparisonDate = await DateGitLastUpdated("./test/stubs-142/index.njk");
   t.is(result.content.trim(), "" + comparisonDate.getTime());
 });
 
-test("DateGitLastUpdated returns undefined on nonexistent path", (t) => {
-  t.is(DateGitLastUpdated("./test/invalid.invalid"), undefined);
+test("DateGitLastUpdated returns undefined on nonexistent path", async (t) => {
+  t.is(await DateGitLastUpdated("./test/invalid.invalid"), undefined);
 });
 
 test("#2167: Pagination with permalink: false", async (t) => {
@@ -593,12 +593,12 @@ test("#2224: date 'git created' populates page.date", async (t) => {
   let [result] = results;
 
   // This doesn’t test the validity of the function, only that it populates page.date.
-  let comparisonDate = DateGitFirstAdded("./test/stubs-2224/index.njk");
+  let comparisonDate = await DateGitFirstAdded("./test/stubs-2224/index.njk");
   t.is(result.content.trim(), "" + comparisonDate.getTime());
 });
 
 test("DateGitFirstAdded returns undefined on nonexistent path", async (t) => {
-  t.is(DateGitFirstAdded("./test/invalid.invalid"), undefined);
+  t.is(await DateGitFirstAdded("./test/invalid.invalid"), undefined);
 });
 
 test("Does pathPrefix affect page URLs", async (t) => {

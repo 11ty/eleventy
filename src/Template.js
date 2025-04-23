@@ -1104,7 +1104,7 @@ class Template extends TemplateContent {
 			// special strings
 			if (!this.isVirtualTemplate()) {
 				if (dateValue.toLowerCase() === "git last modified") {
-					let d = getDateFromGitLastUpdated(this.inputPath);
+					let d = await getDateFromGitLastUpdated(this.inputPath);
 					if (d) {
 						return d;
 					}
@@ -1116,7 +1116,7 @@ class Template extends TemplateContent {
 					return this._getDateInstance("ctimeMs");
 				}
 				if (dateValue.toLowerCase() === "git created") {
-					let d = getDateFromGitFirstAdded(this.inputPath);
+					let d = await getDateFromGitFirstAdded(this.inputPath);
 					if (d) {
 						return d;
 					}
