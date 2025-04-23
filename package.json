@@ -13,6 +13,7 @@
 			"import": "./src/Eleventy.js",
 			"require": "./src/EleventyCommonJs.cjs"
 		},
+		"./core": "./src/Core.js",
 		"./UserConfig": {
 			"types": "./src/UserConfig.js"
 		}

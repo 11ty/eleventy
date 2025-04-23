@@ -55,7 +55,7 @@ async function exec() {
 		});
 
 		debug("command: eleventy %o", argv);
-		const { Eleventy } = await import("./src/Eleventy.js");
+		const { Core: Eleventy } = await import("./src/Core.js");
 
 		let ErrorHandler = new EleventyErrorHandler();
 
