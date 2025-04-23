@@ -1,27 +1,22 @@
-import spawn from "cross-spawn";
+import { spawnAsync } from "./SpawnAsync.js";
 
-/* Thank you to Vuepress!
- * https://github.com/vuejs/vuepress/blob/89440ce552675859189ed4ab254ce19c4bba5447/packages/%40vuepress/plugin-last-updated/index.js
- * MIT licensed: https://github.com/vuejs/vuepress/blob/89440ce552675859189ed4ab254ce19c4bba5447/LICENSE
- */
-function getGitLastUpdatedTimeStamp(filePath) {
-	return (
-		parseInt(
-			spawn
-				.sync(
-					"git",
-					// Formats https://www.git-scm.com/docs/git-log#_pretty_formats
-					// %at author date, UNIX timestamp
-					["log", "-1", "--format=%at", filePath],
-				)
-				.stdout.toString("utf-8"),
-		) * 1000
-	);
+async function getGitLastUpdatedTimeStamp(filePath) {
+	try {
+		let timestamp = await spawnAsync(
+			"git",
+			// Formats https://www.git-scm.com/docs/git-log#_pretty_formats
+			// %at author date, UNIX timestamp
+			["log", "-1", "--format=%at", filePath],
+		);
+		return parseInt(timestamp, 10) * 1000;
+	} catch (e) {
+		// do nothing
+	}
 }
 
 // return a Date
-export default function (inputPath) {
-	let timestamp = getGitLastUpdatedTimeStamp(inputPath);
+export default async function (inputPath) {
+	let timestamp = await getGitLastUpdatedTimeStamp(inputPath);
 	if (timestamp) {
 		return new Date(timestamp);
 	}
