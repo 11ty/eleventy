@@ -1,8 +1,9 @@
-import types from "node:util/types";
 import debugUtil from "debug";
 import { isPlainObject } from "@11ty/eleventy-utils";
 
 const debug = debugUtil("Dev:Eleventy:Proxy");
+
+const ProxySymbol = Symbol.for("11ty.ProxySymbol");
 
 function wrapObject(target, fallback) {
 	if (Object.isFrozen(target)) {
@@ -42,12 +43,15 @@ function wrapObject(target, fallback) {
 		},
 		get(target, prop) {
 			debug("handler:get", prop);
+			if (prop === ProxySymbol) {
+				return true;
+			}
 
 			let value = Reflect.get(target, prop);
 
 			if (Reflect.has(target, prop)) {
-				// Already proxied
-				if (types.isProxy(value)) {
+				// Careful: swapped from node:util/types->isProxy test here
+				if (Reflect.get(target, ProxySymbol)) {
 					return value;
 				}
 
