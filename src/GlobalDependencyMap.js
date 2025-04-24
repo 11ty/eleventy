@@ -2,7 +2,7 @@ import { DepGraph } from "dependency-graph";
 import debugUtil from "debug";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
-import JavaScriptDependencies from "./Util/JavaScriptDependencies.js";
+import JavaScriptDependencies from "./Adapters/JavaScriptDependencies.js";
 import PathNormalizer from "./Util/PathNormalizer.js";
 
 const debug = debugUtil("Eleventy:Dependencies");
