@@ -1,11 +1,10 @@
-import os from "node:os";
-
 import fs from "node:fs";
 import matter from "gray-matter";
 import lodash from "@11ty/lodash-custom";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
+import { EOL } from "./Adapters/Util/NewLine.js";
 import TemplateData from "./Data/TemplateData.js";
 import TemplateRender from "./TemplateRender.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
@@ -222,9 +221,9 @@ class TemplateContent {
 
 			if (options.excerpt && fm.excerpt) {
 				let excerptString = fm.excerpt + (options.excerpt_separator || "---");
-				if (fm.content.startsWith(excerptString + os.EOL)) {
+				if (fm.content.startsWith(excerptString + EOL)) {
 					// with an os-specific newline after excerpt separator
-					fm.content = fm.excerpt.trim() + "\n" + fm.content.slice((excerptString + os.EOL).length);
+					fm.content = fm.excerpt.trim() + "\n" + fm.content.slice((excerptString + EOL).length);
 				} else if (fm.content.startsWith(excerptString + "\n")) {
 					// with a newline (\n) after excerpt separator
 					// This is necessary for some git configurations on windows

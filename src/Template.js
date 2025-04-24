@@ -1,5 +1,4 @@
 import util from "node:util";
-import os from "node:os";
 import path from "node:path";
 import fs from "node:fs";
 
@@ -9,6 +8,7 @@ import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 import chalk from "kleur";
 
+import { EOL } from "./Adapters/Util/NewLine.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import getDateFromGitLastUpdated from "./Util/DateGitLastUpdated.js";
 import getDateFromGitFirstAdded from "./Util/DateGitFirstAdded.js";
@@ -974,7 +974,7 @@ class Template extends TemplateContent {
 
 				if (to === "ndjson") {
 					let jsonString = JSON.stringify(obj);
-					this.logger.toStream(jsonString + os.EOL);
+					this.logger.toStream(jsonString + EOL);
 					continue;
 				}
 
