@@ -870,11 +870,7 @@ class Template extends TemplateContent {
 		let templateBenchmarkDir = this.bench.get("Template make parent directory");
 		templateBenchmarkDir.before();
 
-		if (this.eleventyConfig.templateHandling?.writeMode === "async") {
-			await this.fsManager.createDirectoryForFile(outputPath);
-		} else {
-			this.fsManager.createDirectoryForFileSync(outputPath);
-		}
+		this.fsManager.createDirectoryForFileSync(outputPath);
 
 		templateBenchmarkDir.after();
 
@@ -887,11 +883,7 @@ class Template extends TemplateContent {
 		let templateBenchmark = this.bench.get("Template Write");
 		templateBenchmark.before();
 
-		if (this.eleventyConfig.templateHandling?.writeMode === "async") {
-			await this.fsManager.writeFile(outputPath, finalContent);
-		} else {
-			this.fsManager.writeFileSync(outputPath, finalContent);
-		}
+		this.fsManager.writeFileSync(outputPath, finalContent);
 
 		templateBenchmark.after();
 		this.writeCount++;

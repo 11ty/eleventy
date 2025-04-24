@@ -63,8 +63,6 @@ class UserConfig {
 		this.pathPrefix;
 		/** @type {object} */
 		this.errorReporting = {};
-		/** @type {object} */
-		this.templateHandling = {};
 
 		this.reset();
 		this.#uniqueId = Math.random();
@@ -240,8 +238,6 @@ class UserConfig {
 
 		/** @type {object} */
 		this.errorReporting = {};
-		/** @type {object} */
-		this.templateHandling = {};
 
 		// Before using os.availableParallelism(); see https://github.com/11ty/eleventy/issues/3596
 		this.#concurrency = 1;
@@ -1194,8 +1190,7 @@ class UserConfig {
 	}
 
 	configureTemplateHandling(options = {}) {
-		// writeMode: "sync" // "async"
-		Object.assign(this.templateHandling, options);
+		throw new Error("Internal configuration API method `configureTemplateHandling` was removed.");
 	}
 
 	/*
@@ -1314,7 +1309,6 @@ class UserConfig {
 			freezeReservedData: this.freezeReservedData,
 			customDateParsing: this.customDateParsingCallbacks,
 			errorReporting: this.errorReporting,
-			templateHandling: this.templateHandling,
 		};
 
 		if (Array.isArray(this.dataFileSuffixesOverride)) {

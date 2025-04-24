@@ -1,6 +1,5 @@
 import path from "node:path";
 import fs from "node:fs";
-import { mkdir, writeFile } from "node:fs/promises";
 
 class FileSystemManager {
 	constructor(templateConfig) {
@@ -16,15 +15,6 @@ class FileSystemManager {
 		return this.templateConfig.existsCache.exists(pathname);
 	}
 
-	async createDirectoryForFile(filePath) {
-		let dir = path.parse(filePath).dir;
-		if (!dir || this.exists(dir)) {
-			return;
-		}
-
-		return mkdir(dir, { recursive: true });
-	}
-
 	createDirectoryForFileSync(filePath) {
 		let dir = path.parse(filePath).dir;
 		if (!dir || this.exists(dir)) {
@@ -32,10 +22,6 @@ class FileSystemManager {
 		}
 
 		fs.mkdirSync(dir, { recursive: true });
-	}
-
-	async writeFile(filePath, content) {
-		return writeFile(filePath, content);
 	}
 
 	writeFileSync(filePath, content) {
