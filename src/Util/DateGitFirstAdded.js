@@ -1,4 +1,4 @@
-import { spawnAsync } from "../Adapters/Node/SpawnAsync.js";
+import { spawnAsync } from "../Adapters/Util/SpawnAsync.js";
 
 async function getGitFirstAddedTimeStamp(filePath) {
 	try {

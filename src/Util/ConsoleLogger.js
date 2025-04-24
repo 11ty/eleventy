@@ -1,4 +1,4 @@
-import { getReadableStream } from "../Adapters/Node/Stream.js";
+import { getReadableStream } from "../Adapters/Util/streams.js";
 import chalk from "kleur";
 import debugUtil from "debug";
 

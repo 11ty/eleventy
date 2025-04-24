@@ -1,34 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import module from "node:module";
-import { MessageChannel } from "node:worker_threads";
-
 import { TemplatePath } from "@11ty/eleventy-utils";
 
+import { clearRequireCache } from "../Adapters/Util/clearRequireCache.js";
+import { port1 } from "../Adapters/Util/getEsmResolverPort.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import eventBus from "../EventBus.js";
 
 class EleventyImportError extends EleventyBaseError {}
-
-const { port1, port2 } = new MessageChannel();
-
-// ESM Cache Buster is an enhancement that works in Node 18.19+
-// https://nodejs.org/docs/latest/api/module.html#moduleregisterspecifier-parenturl-options
-// Fixes https://github.com/11ty/eleventy/issues/3270
-// ENV variable for https://github.com/11ty/eleventy/issues/3371
-if ("register" in module && !process?.env?.ELEVENTY_SKIP_ESM_RESOLVER) {
-	module.register("./EsmResolver.js", import.meta.url, {
-		parentURL: import.meta.url,
-		data: {
-			port: port2,
-		},
-		transferList: [port2],
-	});
-}
-
-// important to clear the require.cache in CJS projects
-const require = module.createRequire(import.meta.url);
 
 const requestPromiseCache = new Map();
 
@@ -83,10 +63,7 @@ eventBus.on("eleventy.importCacheReset", (fileQueue) => {
 			port1.postMessage({ path: absolutePath, newDate });
 		}
 
-		// ESM Eleventy when using `import()` on a CJS project file still adds to require.cache
-		if (absolutePath in (require?.cache || {})) {
-			delete require.cache[absolutePath];
-		}
+		clearRequireCache(absolutePath);
 	}
 });
 

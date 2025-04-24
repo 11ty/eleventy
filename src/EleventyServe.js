@@ -1,7 +1,9 @@
 import debugUtil from "debug";
 import { Merge, DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
 
-import { getDevServer } from "./Adapters/Node/getDevServer.js";
+import { getDevServer } from "./Adapters/getDevServer.js";
+import { deepEqual } from "./Adapters/Util/Assert.js";
+
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import PathPrefixer from "./Util/PathPrefixer.js";
@@ -9,7 +11,6 @@ import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js
 import { getModulePackageJson } from "./Util/ImportJsonSync.js";
 import { EleventyImport } from "./Util/Require.js";
 import { isGlobMatch } from "./Util/GlobMatcher.js";
-import { deepEqual } from "./Adapters/Node/Assert.js";
 
 const debug = debugUtil("Eleventy:EleventyServe");
 
