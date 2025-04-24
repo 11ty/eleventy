@@ -1,4 +1,4 @@
-import fs from "node:fs";
+import { existsSync } from "node:fs";
 import chalk from "kleur";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
@@ -151,7 +151,7 @@ class TemplateConfig {
 	getLocalProjectConfigFile() {
 		let configFiles = this.getLocalProjectConfigFiles();
 		// Add the configFiles[0] in case of a test, where no file exists on the file system
-		let configFile = configFiles.find((path) => path && fs.existsSync(path)) || configFiles[0];
+		let configFile = configFiles.find((path) => path && existsSync(path)) || configFiles[0];
 		if (configFile) {
 			return configFile;
 		}
@@ -360,7 +360,7 @@ class TemplateConfig {
 		let localConfig = {};
 		let exportedConfig = {};
 
-		let path = this.projectConfigPaths.filter((path) => path).find((path) => fs.existsSync(path));
+		let path = this.projectConfigPaths.filter((path) => path).find((path) => existsSync(path));
 
 		if (this.projectConfigPaths.length > 0 && this.#configManuallyDefined && !path) {
 			throw new EleventyConfigError(

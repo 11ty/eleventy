@@ -1,5 +1,6 @@
 import path from "node:path";
 import fs from "node:fs";
+const { stat } = fs.promises;
 
 import lodash from "@11ty/lodash-custom";
 import { DateTime } from "luxon";
@@ -1028,7 +1029,7 @@ class Template extends TemplateContent {
 	async getInputFileStat() {
 		// @cachedproperty
 		if (!this._stats) {
-			this._stats = fs.promises.stat(this.inputPath);
+			this._stats = stat(this.inputPath);
 		}
 
 		return this._stats;

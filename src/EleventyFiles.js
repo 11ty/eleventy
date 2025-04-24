@@ -1,4 +1,4 @@
-import fs from "node:fs";
+import { existsSync, statSync, readFileSync } from "node:fs";
 
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
@@ -191,8 +191,8 @@ class EleventyFiles {
 
 			let dir = TemplatePath.getDirFromFilePath(ignorePath);
 
-			if (fs.existsSync(ignorePath) && fs.statSync(ignorePath).size > 0) {
-				let ignoreContent = fs.readFileSync(ignorePath, "utf8");
+			if (existsSync(ignorePath) && statSync(ignorePath).size > 0) {
+				let ignoreContent = readFileSync(ignorePath, "utf8");
 
 				ignores = ignores.concat(EleventyFiles.normalizeIgnoreContent(dir, ignoreContent));
 			}
@@ -230,7 +230,7 @@ class EleventyFiles {
 
 					try {
 						// Note these folders must exist to get /** suffix
-						let stat = fs.statSync(path);
+						let stat = statSync(path);
 						if (stat.isDirectory()) {
 							return path + "/**";
 						}

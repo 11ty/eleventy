@@ -1,4 +1,4 @@
-import fs from "node:fs";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
@@ -31,7 +31,7 @@ function loadContents(path, options = {}) {
 
 	try {
 		// @ts-expect-error This is an error in the upstream types
-		rawInput = fs.readFileSync(path, encoding);
+		rawInput = readFileSync(path, encoding);
 	} catch (error) {
 		// @ts-expect-error Temporary
 		if (error?.code === "ENOENT") {

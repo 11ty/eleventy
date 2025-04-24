@@ -1,4 +1,4 @@
-import fs from "node:fs";
+import { readFileSync } from "node:fs";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import { evalToken } from "liquidjs";
 
@@ -113,7 +113,7 @@ async function compileFile(inputPath, options = {}, templateLang) {
 	}
 
 	// TODO we could make this work with full templates (with front matter?)
-	let content = fs.readFileSync(inputPath, "utf8");
+	let content = readFileSync(inputPath, "utf8");
 	return tr.getCompiledTemplate(content);
 }
 

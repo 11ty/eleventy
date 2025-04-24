@@ -1,4 +1,4 @@
-import fs from "node:fs";
+import { existsSync } from "node:fs";
 import debugUtil from "debug";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
@@ -15,7 +15,7 @@ function findFilePathInParentDirs(dir, filename) {
 
 	for (let dir of allDirs) {
 		let newPath = TemplatePath.join(dir, filename);
-		if (fs.existsSync(newPath)) {
+		if (existsSync(newPath)) {
 			debug("Found %o searching parent directories at: %o", filename, dir);
 			return newPath;
 		}

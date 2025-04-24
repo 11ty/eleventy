@@ -1,5 +1,5 @@
 import path from "node:path";
-import fs from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 
 class FileSystemManager {
 	constructor(templateConfig) {
@@ -21,13 +21,13 @@ class FileSystemManager {
 			return;
 		}
 
-		fs.mkdirSync(dir, { recursive: true });
+		mkdirSync(dir, { recursive: true });
 	}
 
 	writeFileSync(filePath, content) {
 		// Note: This deliberately uses the synchronous version to avoid
 		// unbounded concurrency: https://github.com/11ty/eleventy/issues/3271
-		fs.writeFileSync(filePath, content);
+		writeFileSync(filePath, content);
 	}
 }
 

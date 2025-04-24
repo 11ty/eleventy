@@ -1,4 +1,4 @@
-import fs from "node:fs";
+import { readFileSync } from "node:fs";
 import matter from "gray-matter";
 import lodash from "@11ty/lodash-custom";
 import { TemplatePath } from "@11ty/eleventy-utils";
@@ -316,7 +316,7 @@ class TemplateContent {
 		}
 
 		if (!content && content !== "") {
-			let contentBuffer = fs.readFileSync(this.inputPath);
+			let contentBuffer = readFileSync(this.inputPath);
 
 			content = contentBuffer.toString("utf8");
 
