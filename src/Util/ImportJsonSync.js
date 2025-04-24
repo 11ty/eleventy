@@ -1,13 +1,10 @@
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import debugUtil from "debug";
-
 import { TemplatePath } from "@11ty/eleventy-utils";
 
-import { normalizeFilePathInEleventyPackage } from "./Require.js";
+import { importJsonSync } from "../Adapters/Util/require.js";
 
 const debug = debugUtil("Eleventy:ImportJsonSync");
-const require = createRequire(import.meta.url);
 
 function findFilePathInParentDirs(dir, filename) {
 	// `package.json` searches look in parent dirs:
@@ -25,23 +22,16 @@ function findFilePathInParentDirs(dir, filename) {
 	}
 }
 
-function importJsonSync(filePath) {
-	if (!filePath || !filePath.endsWith(".json")) {
-		throw new Error(`importJsonSync expects a .json file extension (received: ${filePath})`);
-	}
-
-	return require(filePath);
-}
-
 function getEleventyPackageJson() {
-	let filePath = normalizeFilePathInEleventyPackage("package.json");
-	return importJsonSync(filePath);
+	// awkward but this needs to be relative to /Adapters/Util/require.js
+	return importJsonSync("../../../package.json");
 }
 
+// Used by EleventyServe.js for custom servers only
 function getModulePackageJson(dir) {
 	let filePath = findFilePathInParentDirs(TemplatePath.absolutePath(dir), "package.json");
 
-	// optional!
+	// Fails nicely
 	if (!filePath) {
 		return {};
 	}
@@ -53,7 +43,7 @@ function getWorkingProjectPackageJson() {
 	let dir = TemplatePath.absolutePath(TemplatePath.getWorkingDir());
 	let filePath = findFilePathInParentDirs(dir, "package.json");
 
-	// optional!
+	// Fails nicely
 	if (!filePath) {
 		return {};
 	}
@@ -63,8 +53,10 @@ function getWorkingProjectPackageJson() {
 
 export {
 	importJsonSync,
-	findFilePathInParentDirs,
 	getEleventyPackageJson,
 	getModulePackageJson,
 	getWorkingProjectPackageJson,
+
+	// Testing
+	findFilePathInParentDirs,
 };

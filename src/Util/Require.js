@@ -1,9 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
-import { clearRequireCache } from "../Adapters/Util/clearRequireCache.js";
+import { clearRequireCache } from "../Adapters/Util/require.js";
 import { port1 } from "../Adapters/Util/getEsmResolverPort.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import eventBus from "../EventBus.js";
@@ -185,34 +184,12 @@ async function dynamicImportAbsolutePath(absolutePath, options = {}) {
 	);
 }
 
-function normalizeFilePathInEleventyPackage(file) {
-	// Back up relative paths from ./src/Util/Require.js
-	return path.resolve(fileURLToPath(import.meta.url), "../../../", file);
-}
-
-async function dynamicImportFromEleventyPackage(file) {
-	// points to files relative to the top level Eleventy directory
-	let filePath = normalizeFilePathInEleventyPackage(file);
-
-	// Returns promise
-	return dynamicImportAbsolutePath(filePath, { type: "esm" });
-}
-
 async function dynamicImport(localPath, type, options = {}) {
 	let absolutePath = TemplatePath.absolutePath(localPath);
 	options.type = type;
 
 	// Returns promise
 	return dynamicImportAbsolutePath(absolutePath, options);
-}
-
-/* Used to import default Eleventy configuration file, raw means we don’t normalize away the `default` export */
-async function dynamicImportRawFromEleventyPackage(file) {
-	// points to files relative to the top level Eleventy directory
-	let filePath = normalizeFilePathInEleventyPackage(file);
-
-	// Returns promise
-	return dynamicImportAbsolutePath(filePath, { type: "esm", returnRaw: true });
 }
 
 /* Used to import app configuration files, raw means we don’t normalize away the `default` export */
@@ -227,9 +204,4 @@ export {
 	loadContents as EleventyLoadContent,
 	dynamicImport as EleventyImport,
 	dynamicImportRaw as EleventyImportRaw,
-	normalizeFilePathInEleventyPackage,
-
-	// no longer used in core
-	dynamicImportFromEleventyPackage as EleventyImportFromEleventy,
-	dynamicImportRawFromEleventyPackage as EleventyImportRawFromEleventy,
 };
