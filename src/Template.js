@@ -1,4 +1,3 @@
-import util from "node:util";
 import path from "node:path";
 import fs from "node:fs";
 
@@ -28,7 +27,6 @@ import TransformsUtil from "./Util/TransformsUtil.js";
 import { FileSystemManager } from "./Util/FileSystemManager.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
-const fsStat = util.promisify(fs.stat);
 
 const debug = debugUtil("Eleventy:Template");
 const debugDev = debugUtil("Dev:Eleventy:Template");
@@ -1030,7 +1028,7 @@ class Template extends TemplateContent {
 	async getInputFileStat() {
 		// @cachedproperty
 		if (!this._stats) {
-			this._stats = fsStat(this.inputPath);
+			this._stats = fs.promises.stat(this.inputPath);
 		}
 
 		return this._stats;

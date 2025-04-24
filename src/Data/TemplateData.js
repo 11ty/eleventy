@@ -1,11 +1,11 @@
 import path from "node:path";
-import util from "node:util";
 import semver from "semver";
 
 import lodash from "@11ty/lodash-custom";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
+import { inspect } from "../Adapters/Util/inspect.js";
 import unique from "../Util/Objects/Unique.js";
 import TemplateGlob from "../TemplateGlob.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
@@ -647,7 +647,7 @@ class TemplateData {
 				tags = data.tags;
 			} else if (data.tags) {
 				throw new Error(
-					`String or Array expected for \`tags\`${options.file ? ` in ${options.isVirtualTemplate ? "virtual " : ""}template: ${options.file}` : ""}. Received: ${util.inspect(data.tags)}`,
+					`String or Array expected for \`tags\`${options.file ? ` in ${options.isVirtualTemplate ? "virtual " : ""}template: ${options.file}` : ""}. Received: ${inspect(data.tags)}`,
 				);
 			}
 
