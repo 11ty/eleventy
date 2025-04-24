@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { withResolvers } from "./PromiseUtil.js";
+import { withResolvers } from "../../Util/PromiseUtil.js";
 
 export function spawnAsync(command, args) {
 	let { promise, resolve, reject } = withResolvers();

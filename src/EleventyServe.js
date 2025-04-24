@@ -1,6 +1,7 @@
 import debugUtil from "debug";
 import { Merge, DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
 
+import { getDevServer } from "./Adapters/Node/getDevServer.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import PathPrefixer from "./Util/PathPrefixer.js";
@@ -83,7 +84,7 @@ class EleventyServe {
 	async getServerModule(name) {
 		try {
 			if (!name || name === DEFAULT_SERVER_OPTIONS.module) {
-				return import("@11ty/eleventy-dev-server").then((i) => i.default);
+				return getDevServer();
 			}
 
 			// Look for peer dep in local project
@@ -133,7 +134,7 @@ class EleventyServe {
 					e.message,
 			);
 			debug("Eleventy server error %o", e);
-			return import("@11ty/eleventy-dev-server").then((i) => i.default);
+			return getDevServer();
 		}
 	}
 
