@@ -8,7 +8,7 @@ import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 import chalk from "kleur";
 
-import { EOL } from "./Adapters/Util/NewLine.js";
+import { EOL } from "./Adapters/Util/newline.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import getDateFromGitLastUpdated from "./Util/DateGitLastUpdated.js";
 import getDateFromGitFirstAdded from "./Util/DateGitFirstAdded.js";

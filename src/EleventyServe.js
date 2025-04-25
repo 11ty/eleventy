@@ -2,7 +2,7 @@ import debugUtil from "debug";
 import { Merge, DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
 
 import { getDevServer } from "./Adapters/getDevServer.js";
-import { deepEqual } from "./Adapters/Util/Assert.js";
+import { deepEqual } from "./Adapters/Util/assert.js";
 
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
