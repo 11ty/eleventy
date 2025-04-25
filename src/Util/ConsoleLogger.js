@@ -1,4 +1,4 @@
-import { getReadableStream } from "../Adapters/Util/streams.js";
+import { Readable } from "node:stream";
 import chalk from "kleur";
 import debugUtil from "debug";
 
@@ -17,7 +17,9 @@ class ConsoleLogger {
 	#logger;
 
 	constructor() {
-		this.outputStream = getReadableStream();
+		this.outputStream = new Readable({
+			read() {},
+		});
 	}
 
 	isLoggingEnabled() {

@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import debugUtil from "debug";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
-import { importJsonSync } from "../Adapters/Util/require.js";
+import { importJsonSync, eleventyPackageJson } from "../Adapters/Util/require.js";
 
 const debug = debugUtil("Eleventy:ImportJsonSync");
 
@@ -23,8 +23,7 @@ function findFilePathInParentDirs(dir, filename) {
 }
 
 function getEleventyPackageJson() {
-	// awkward but this needs to be relative to /Adapters/Util/require.js
-	return importJsonSync("../../../package.json");
+	return eleventyPackageJson;
 }
 
 // Used by EleventyServe.js for custom servers only
