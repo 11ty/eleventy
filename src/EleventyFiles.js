@@ -191,10 +191,11 @@ class EleventyFiles {
 
 			let dir = TemplatePath.getDirFromFilePath(ignorePath);
 
-			if (existsSync(ignorePath) && statSync(ignorePath).size > 0) {
+			if (existsSync(ignorePath)) {
 				let ignoreContent = readFileSync(ignorePath, "utf8");
-
-				ignores = ignores.concat(EleventyFiles.normalizeIgnoreContent(dir, ignoreContent));
+				if (ignoreContent) {
+					ignores = ignores.concat(EleventyFiles.normalizeIgnoreContent(dir, ignoreContent));
+				}
 			}
 		}
 

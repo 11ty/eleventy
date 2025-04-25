@@ -1,6 +1,5 @@
 import path from "node:path";
-import fs from "node:fs";
-const { stat } = fs.promises;
+import { statSync } from "node:fs";
 
 import lodash from "@11ty/lodash-custom";
 import { DateTime } from "luxon";
@@ -35,6 +34,7 @@ const debugDev = debugUtil("Dev:Eleventy:Template");
 class Template extends TemplateContent {
 	#logger;
 	#fsManager;
+	#stats;
 
 	constructor(templatePath, templateData, extensionMap, config) {
 		debugDev("new Template(%o)", templatePath);
@@ -133,7 +133,7 @@ class Template extends TemplateContent {
 		if (types.data) {
 			delete this._dataCache;
 			// delete this._usePermalinkRoot;
-			// delete this._stats;
+			// delete this.#stats;
 		}
 
 		if (types.render) {
@@ -1026,17 +1026,17 @@ class Template extends TemplateContent {
 		return this.renderCount;
 	}
 
-	async getInputFileStat() {
+	getInputFileStat() {
 		// @cachedproperty
-		if (!this._stats) {
-			this._stats = stat(this.inputPath);
+		if (!this.#stats) {
+			this.#stats = statSync(this.inputPath);
 		}
 
-		return this._stats;
+		return this.#stats;
 	}
 
 	async _getDateInstance(key = "birthtimeMs") {
-		let stat = await this.getInputFileStat();
+		let stat = this.getInputFileStat();
 
 		// Issue 1823: https://github.com/11ty/eleventy/issues/1823
 		// return current Date in a Lambda
