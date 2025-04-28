@@ -112,7 +112,7 @@
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0",
 		"rimraf": "^6.0.1",
-		"sass": "^1.86.3",
+		"sass": "^1.87.0",
 		"simple-git-hooks": "^2.12.1",
 		"tsx": "^4.19.3",
 		"typescript": "^5.8.3",
