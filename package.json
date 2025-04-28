@@ -125,7 +125,7 @@
 		"@11ty/dependency-tree-esm": "^2.0.0",
 		"@11ty/eleventy-dev-server": "^2.0.8",
 		"@11ty/eleventy-plugin-bundle": "^3.0.4",
-		"@11ty/eleventy-utils": "^2.0.1",
+		"@11ty/eleventy-utils": "^2.0.2",
 		"@11ty/lodash-custom": "^4.17.21",
 		"@11ty/posthtml-urls": "^1.0.1",
 		"@11ty/recursive-copy": "^4.0.1",
