@@ -44,11 +44,6 @@ class TemplateRender {
 		return this.dirs.includes;
 	}
 
-	/* Backwards compat */
-	getIncludesDir() {
-		return this.includesDir;
-	}
-
 	get config() {
 		return this.#config;
 	}
