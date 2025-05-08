@@ -91,6 +91,7 @@ class TemplateConfig {
 
 		this.hasConfigMerged = false;
 		this.isEsm = false;
+		this.configExists = false;
 	}
 
 	get userConfig() {
@@ -150,11 +151,10 @@ class TemplateConfig {
 	 */
 	getLocalProjectConfigFile() {
 		let configFiles = this.getLocalProjectConfigFiles();
+		let configFile = configFiles.find((path) => path && fs.existsSync(path));
+		this.configExists = Boolean(configFile);
 		// Add the configFiles[0] in case of a test, where no file exists on the file system
-		let configFile = configFiles.find((path) => path && fs.existsSync(path)) || configFiles[0];
-		if (configFile) {
-			return configFile;
-		}
+		return configFile || configFiles[0] || undefined;
 	}
 
 	getLocalProjectConfigFiles() {
