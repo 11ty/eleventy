@@ -1,7 +1,12 @@
-import NunjucksLib from "nunjucks";
 import debugUtil from "debug";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
+import {
+	NunjucksLib,
+	Environment,
+	FileSystemLoader,
+	Template,
+} from "../Adapters/Engines/Nunjucks.js";
 import TemplateEngine from "./TemplateEngine.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import { augmentObject } from "./Util/ContextAugmenter.js";
@@ -55,13 +60,11 @@ export default class Nunjucks extends TemplateEngine {
 				};
 			};
 
-			this.njkEnv = new NunjucksLib.Environment(
-				new NodePrecompiledLoader(),
-				this.nunjucksEnvironmentOptions,
-			);
+			this.njkEnv = new Environment(new NodePrecompiledLoader(), this.nunjucksEnvironmentOptions);
 		} else {
-			let fsLoader = new NunjucksLib.FileSystemLoader(this.#getFileSystemDirs());
-			this.njkEnv = new NunjucksLib.Environment(fsLoader, this.nunjucksEnvironmentOptions);
+			let loaders = [];
+			loaders.push(new FileSystemLoader(this.#getFileSystemDirs()));
+			this.njkEnv = new Environment(loaders, this.nunjucksEnvironmentOptions);
 		}
 
 		this.config.events.emit("eleventy.engine.njk", {
@@ -414,12 +417,12 @@ export default class Nunjucks extends TemplateEngine {
 
 	/* Outputs an Array of lodash get selectors */
 	parseForSymbols(str) {
-		if(!str) {
+		if (!str) {
 			return [];
 		}
 		const { parser, nodes } = NunjucksLib;
 		let obj = parser.parse(str, this._getParseExtensions());
-		if(!obj) {
+		if (!obj) {
 			return [];
 		}
 		let linesplit = str.split("\n");
@@ -458,9 +461,11 @@ export default class Nunjucks extends TemplateEngine {
 		if (this._usingPrecompiled) {
 			tmpl = this.njkEnv.getTemplate(str, true);
 		} else if (!inputPath || inputPath === "njk" || inputPath === "md") {
-			tmpl = new NunjucksLib.Template(str, this.njkEnv, null, false);
+			// Template(content, environment, path, eagerCompile)
+			tmpl = new Template(str, this.njkEnv, null, false);
 		} else {
-			tmpl = new NunjucksLib.Template(str, this.njkEnv, inputPath, false);
+			// Template(content, environment, path, eagerCompile)
+			tmpl = new Template(str, this.njkEnv, inputPath, false);
 		}
 
 		return function (data) {
