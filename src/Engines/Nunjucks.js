@@ -64,6 +64,13 @@ export default class Nunjucks extends TemplateEngine {
 		} else {
 			let loaders = [];
 			loaders.push(new FileSystemLoader(this.#getFileSystemDirs()));
+
+			// These need to come after FileSystemLoader
+			for (let loaderOptions of this.config.nunjucksLoaders) {
+				let loader = NunjucksLib.Loader.extend(loaderOptions);
+				loaders.push(new loader());
+			}
+
 			this.njkEnv = new Environment(loaders, this.nunjucksEnvironmentOptions);
 		}
 

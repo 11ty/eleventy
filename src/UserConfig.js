@@ -122,6 +122,7 @@ class UserConfig {
 			// `dev: true` gives us better error messaging
 			environmentOptions: { dev: true },
 			precompiledTemplates: {},
+			loaders: [],
 			filters: {},
 			asyncFilters: {},
 			tags: {},
@@ -720,6 +721,13 @@ class UserConfig {
 		return this.plugins.some((entry) => this._getPluginName(entry.plugin) === pluginName);
 	}
 
+	addNunjucksLoader(options) {
+		if (!isPlainObject(options)) {
+			throw new Error("addNunjucksLoader expects an object literal argument.");
+		}
+		this.nunjucks.loaders.push(options);
+	}
+
 	// Using Function.name https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name#examples
 	/** @param {PluginDefinition} plugin */
 	_getPluginName(plugin) {
@@ -1259,6 +1267,7 @@ class UserConfig {
 
 			// Nunjucks
 			nunjucksEnvironmentOptions: this.nunjucks.environmentOptions,
+			nunjucksLoaders: this.nunjucks.loaders,
 			nunjucksPrecompiledTemplates: this.nunjucks.precompiledTemplates,
 			nunjucksFilters: this.nunjucks.filters,
 			nunjucksAsyncFilters: this.nunjucks.asyncFilters,
