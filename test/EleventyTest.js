@@ -1593,8 +1593,8 @@ test("Truthy outputPath without a file extension error message is disabled, issu
   });
   elev.disableLogger();
 
- let results = await elev.toJSON();
- t.is(results.length, 1);
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
 });
 
 test("permalink: false outputPath new error message won’t throw an error, issue #3399", async (t) => {
@@ -1605,8 +1605,8 @@ test("permalink: false outputPath new error message won’t throw an error, issu
   });
   elev.disableLogger();
 
- let results = await elev.toJSON();
- t.is(results.length, 1);
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
 });
 
 test("permalink on custom template lang, issue #3619", async (t) => {
@@ -1657,9 +1657,9 @@ test("permalink on custom template lang, issue #3619", async (t) => {
   });
   elev.disableLogger();
 
- let results = await elev.toJSON();
- t.is(results[0].url, "/testing/rewrite/index.css");
- t.is(results[0].content, `html {
+  let results = await elev.toJSON();
+  t.is(results[0].url, "/testing/rewrite/index.css");
+  t.is(results[0].content, `html {
   color: red;
 }`);
 });
@@ -1761,9 +1761,9 @@ test("Use a date object for `date` (js object front matter), issue #3022", async
   });
   elev.disableLogger();
 
- let results = await elev.toJSON();
- t.is(results.length, 1);
- t.truthy(results[0].data.page.date instanceof Date);
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+  t.truthy(results[0].data.page.date instanceof Date);
 });
 
 test("Use a date object for `date` (js front matter), issue #3022", async (t) => {
@@ -1777,7 +1777,7 @@ let date = new Date();
   });
   elev.disableLogger();
 
- let results = await elev.toJSON();
- t.is(results.length, 1);
- t.truthy(results[0].data.page.date instanceof Date);
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+  t.truthy(results[0].data.page.date instanceof Date);
 });
