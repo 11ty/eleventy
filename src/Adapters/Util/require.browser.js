@@ -4,9 +4,8 @@ import eleventyPackageJson from "../../../package.json" with { type: "json" };
 // We *could* prune everything but `name`, `version`, and `type` here but esbuild will still bundle the entire package.json
 export { eleventyPackageJson };
 
-export function clearRequireCache(absolutePath) {
-	// no-op
-}
+// noop
+export function clearRequireCache(absolutePath) {}
 
 export function importJsonSync(path) {
 	// should not be a no-op

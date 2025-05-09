@@ -1,0 +1,23 @@
+// import { parseCode, walkCode, importFromString } from "import-module-string";
+import { importFromString } from "import-module-string";
+
+import { fileURLToPath } from "./url.browser.js";
+import { EleventyLoadContent } from "../../Util/Require.js";
+
+export default function importer(relPath) {
+	let filePath = fileURLToPath(relPath);
+
+	// `import-module-string` can now `import()` so we avoid needing to esbuild these
+	let code = EleventyLoadContent(filePath);
+	return importFromString(code, { implicitExports: false, filePath, adapter: "fs" });
+
+	// Alternative approach saved for posterity (and could be used to warn about modules needing to be Import Mapped):
+	// 	let ast = parseCode(code);
+	// 	let { imports } = walkCode(ast);
+	// 	if(imports.size === 0) {
+	// 		return importFromString(code, { ast, filePath });
+	// 	}
+	// 	// This file needs to be esbuild-ed
+	// 	return import(filePath);
+	// }
+}

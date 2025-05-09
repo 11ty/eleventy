@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
+import importer from "../Adapters/Util/importer.js";
 import { clearRequireCache } from "../Adapters/Util/require.js";
 import { port1 } from "../Adapters/Util/getEsmResolverPort.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
@@ -120,7 +121,7 @@ async function dynamicImportAbsolutePath(absolutePath, options = {}) {
 	if (requestPromiseCache.has(urlPath)) {
 		promise = requestPromiseCache.get(urlPath);
 	} else {
-		promise = import(urlPath);
+		promise = importer(urlPath);
 		requestPromiseCache.set(urlPath, promise);
 	}
 

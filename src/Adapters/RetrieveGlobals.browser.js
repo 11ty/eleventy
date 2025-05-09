@@ -1,5 +1,13 @@
+import { importFromString } from "import-module-string";
+
 export async function RetrieveGlobals(code, filePath) {
-	throw new Error(
-		"The `js` front matter type (using node-retrieve-globals for arbitrary JavaScript) is not yet supported in browser. Try using a JavaScript object {} instead!",
-	);
+	let data = {
+		page: {
+			// Theoretically fileSlug and filePathStem could be added here but require extensionMap
+			inputPath: filePath,
+		},
+	};
+
+	// Do *not* error when imports are found because they might be mapped via an Import Map.
+	return importFromString(code, { data, filePath, adapter: "fs" });
 }
