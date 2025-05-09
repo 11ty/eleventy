@@ -414,6 +414,23 @@ class TemplateWriter {
 		return promises;
 	}
 
+	// Similiar to `write()` but skips passthrough copy
+	async writeTemplates() {
+		let paths = await this._getAllPaths();
+
+		return Promise.all(await this.generateTemplates(paths)).then(
+			(templateResults) => {
+				return {
+					// New in 3.0: flatten and filter out falsy templates
+					templates: templateResults.flat().filter(Boolean),
+				};
+			},
+			(e) => {
+				return Promise.reject(e);
+			},
+		);
+	}
+
 	async write() {
 		let paths = await this._getAllPaths();
 

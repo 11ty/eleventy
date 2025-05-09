@@ -826,6 +826,9 @@ Arguments:
      --to=ndjson
        Change the output to JSON or NDJSON (default: \`fs\`)
 
+     --to=fs:templates
+       Writes templates, skips passthrough copy
+
      --help`;
 	}
 
@@ -1290,6 +1293,18 @@ Arguments:
 	}
 
 	/**
+	 * Writes templates to the file system.
+	 *
+	 * @async
+	 * @method
+	 * @param {String} subtype - (optional) or "fs:templates" (skips passthrough copy)
+	 * @returns {Promise<{Array}>}
+	 */
+	async writeOnly(subtype) {
+		return this.executeBuild(subtype || "fs:templates");
+	}
+
+	/**
 	 * Renders templates to a JSON object.
 	 *
 	 * @async
@@ -1344,6 +1359,11 @@ Arguments:
 
 		let returnObj;
 		let hasError = false;
+		let outputMode = to;
+		// normalize fs:templates or fs:copy to `fs`
+		if (outputMode.includes(":")) {
+			outputMode = outputMode.split(":").shift();
+		}
 
 		try {
 			let directories = this.directories.getUserspaceInstance();
@@ -1357,7 +1377,7 @@ Arguments:
 				dir: this.config.dir,
 
 				runMode: this.runMode,
-				outputMode: to,
+				outputMode,
 				incremental: this.isIncremental,
 			};
 
@@ -1367,13 +1387,15 @@ Arguments:
 			let promise;
 			if (to === "fs") {
 				promise = this.writer.write();
+			} else if (to === "fs:templates") {
+				promise = this.writer.writeTemplates();
 			} else if (to === "json") {
 				promise = this.writer.getJSON("json");
 			} else if (to === "ndjson") {
 				promise = this.writer.getJSON("ndjson");
 			} else {
 				throw new Error(
-					`Invalid argument for \`Eleventy->executeBuild(${to})\`, expected "json", "ndjson", or "fs".`,
+					`Invalid argument for \`Eleventy->executeBuild(${to})\`, expected "json", "ndjson", "fs", or "fs:templates".`,
 				);
 			}
 
@@ -1386,7 +1408,7 @@ Arguments:
 				// return a stream
 				// TODO this outputs all ndjson rows after all the templates have been written to the stream
 				returnObj = this.logger.closeStream();
-			} else if (to === "json") {
+			} else if (to === "json" || to === "fs:templates") {
 				// Backwards compat
 				returnObj = resolved.templates;
 			} else {
@@ -1409,12 +1431,11 @@ Arguments:
 			let errorSeverity = this.source === "script" ? "error" : "fatal";
 			this.errorHandler.once(errorSeverity, error, "Problem writing Eleventy templates");
 
-			// TODO ndjson should stream the error but https://github.com/11ty/eleventy/issues/3382
 			throw error;
 		} finally {
 			this.bench.finish();
 
-			if (to === "fs") {
+			if (outputMode === "fs") {
 				this.logger.logWithOptions({
 					message: this.logFinished(),
 					color: hasError ? "red" : "green",
