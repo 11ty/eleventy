@@ -3,6 +3,7 @@ import chalk from "kleur";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
+import getDefaultConfig from "./Adapters/getDefaultConfig.js";
 import { EleventyImportRaw } from "./Util/Require.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import UserConfig from "./UserConfig.js";
@@ -292,8 +293,7 @@ class TemplateConfig {
 	async initializeRootConfig() {
 		this.rootConfig = this.customRootConfig;
 		if (!this.rootConfig) {
-			let { default: cfg } = await import("./defaultConfig.js");
-			this.rootConfig = cfg;
+			this.rootConfig = await getDefaultConfig();
 		}
 
 		if (typeof this.rootConfig === "function") {
