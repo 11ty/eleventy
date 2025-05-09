@@ -213,7 +213,7 @@ export default class Nunjucks extends TemplateEngine {
 				// though this issue is closed. Works fine for paired.
 				// https://github.com/mozilla/nunjucks/issues/158
 				if (args.children.length === 0) {
-					args.addChild(new nodes.Literal(0, 0, ""));
+					args.addChild(new nodes.Literal(0, 0, undefined));
 				}
 
 				parser.advanceAfterBlockEnd(tok.value);
