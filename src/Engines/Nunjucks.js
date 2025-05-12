@@ -6,7 +6,7 @@ import {
 	Environment,
 	FileSystemLoader,
 	Template,
-} from "../Adapters/Engines/Nunjucks.js";
+} from "../Adapters/Engines/Libraries/Nunjucks.js";
 import TemplateEngine from "./TemplateEngine.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import { augmentObject } from "./Util/ContextAugmenter.js";

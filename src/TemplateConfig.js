@@ -463,6 +463,16 @@ class TemplateConfig {
 			this.templateFormats.addViaConfig(this.userConfig.templateFormatsAdded);
 		}
 
+		// prefer Configuration API methods over return object
+		if (this.userConfig?.htmlTemplateEngine !== undefined) {
+			localConfig.htmlTemplateEngine = this.userConfig?.htmlTemplateEngine;
+		}
+
+		// prefer Configuration API methods over return object
+		if (this.userConfig?.markdownTemplateEngine !== undefined) {
+			localConfig.markdownTemplateEngine = this.userConfig?.markdownTemplateEngine;
+		}
+
 		let mergedConfig = Merge({}, this.rootConfig, localConfig);
 
 		// Setup a few properties for plugins:

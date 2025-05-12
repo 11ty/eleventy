@@ -43,6 +43,7 @@ class UserConfig {
 		this.additionalWatchTargets = [];
 		this.watchTargetsConfigReset = new Set();
 		this.extensionMap = new Set();
+		this.extensionMapClasses = {};
 		this.dataExtensions = new Map();
 		this.urlTransforms = [];
 		this.customDateParsingCallbacks = new Set();
@@ -171,6 +172,7 @@ class UserConfig {
 
 		this.dataDeepMerge = true;
 		this.extensionMap = new Set();
+		this.extensionMapClasses = {};
 		/** @type {object} */
 		this.extensionConflictMap = {};
 		this.watchJavaScriptDependencies = true;
@@ -953,6 +955,17 @@ class UserConfig {
 		this.quietMode = !!quietMode;
 	}
 
+	addEngine(fileExtension, classInstance) {
+		if (Object.getPrototypeOf(classInstance).name !== "TemplateEngine") {
+			throw new Error(
+				"Instance of TemplateEngine expected. If you’re trying to create a custom template engine, please use the eleventyConfig.addExtension API.",
+			);
+		}
+
+		// TODO check for conflicts
+		this.extensionMapClasses[fileExtension] = classInstance;
+	}
+
 	addExtension(fileExtension, options = {}) {
 		let extensions;
 
@@ -1283,6 +1296,7 @@ class UserConfig {
 			frontMatterParsingOptions: this.frontMatterParsingOptions,
 			dataExtensions: this.dataExtensions,
 			extensionMap: this.extensionMap,
+			extensionMapClasses: this.extensionMapClasses,
 			quietMode: this.quietMode,
 			events: this.events,
 			benchmarkManager: this.benchmarkManager,
@@ -1310,12 +1324,7 @@ class UserConfig {
 			obj.dataFileDirBaseNameOverride = this.dataFileDirBaseNameOverride;
 		}
 
-		if (this.htmlTemplateEngine) {
-			obj.htmlTemplateEngine = this.htmlTemplateEngine;
-		}
-		if (this.markdownTemplateEngine) {
-			obj.markdownTemplateEngine = this.markdownTemplateEngine;
-		}
+		// htmlTemplateEngine and markdownTemplateEngine are merged manually in TemplateConfig for config() ordering
 
 		return obj;
 	}
