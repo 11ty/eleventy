@@ -1,5 +1,4 @@
 import chalk from "kleur";
-import { DateTime } from "luxon";
 import matter from "@11ty/gray-matter";
 import debugUtil from "debug";
 
@@ -10,6 +9,7 @@ import HtmlBasePlugin from "./Plugins/HtmlBasePlugin.js";
 import RenderPlugin from "./Plugins/RenderPlugin.js";
 import InputPathToUrlPlugin from "./Plugins/InputPathToUrl.js";
 
+import { DateTime } from "./Adapters/luxonDatetime.js";
 import isAsyncFunction from "./Util/IsAsyncFunction.js";
 import objectFilter from "./Util/Objects/ObjectFilter.js";
 import EventEmitter from "./Util/AsyncEventEmitter.js";

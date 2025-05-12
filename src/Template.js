@@ -2,11 +2,11 @@ import path from "node:path";
 import { statSync } from "node:fs";
 
 import lodash from "@11ty/lodash-custom";
-import { DateTime } from "luxon";
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 import chalk from "kleur";
 
+import { fromISOtoDateUTC } from "./Adapters/luxonDatetime.js";
 import { EOL } from "./Adapters/Util/newline.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import getDateFromGitLastUpdated from "./Util/DateGitLastUpdated.js";
@@ -1121,24 +1121,14 @@ class Template extends TemplateContent {
 			}
 
 			// try to parse with Luxon
-			let date = DateTime.fromISO(dateValue, { zone: "utc" });
-			if (!date.isValid) {
-				throw new Error(
-					`Data cascade value for \`date\` (${dateValue}) is invalid for ${this.inputPath}`,
-				);
-			}
-			debug("getMappedDate: Luxon parsed %o: %o and %o", dateValue, date, date.toJSDate());
-
-			return date.toJSDate();
+			return fromISOtoDateUTC(dateValue, this.inputPath);
 		}
 
 		// No Date supplied in the Data Cascade, try to find the date in the file name
 		let filepathRegex = this.inputPath.match(/(\d{4}-\d{2}-\d{2})/);
 		if (filepathRegex !== null) {
 			// if multiple are found in the path, use the first one for the date
-			let dateObj = DateTime.fromISO(filepathRegex[1], {
-				zone: "utc",
-			}).toJSDate();
+			let dateObj = fromISOtoDateUTC(filepathRegex[1], this.inputPath);
 			debug(
 				"getMappedDate: using filename regex time for %o of %o: %o",
 				this.inputPath,
