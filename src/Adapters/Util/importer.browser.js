@@ -1,4 +1,3 @@
-// import { parseCode, walkCode, importFromString } from "import-module-string";
 import { importFromString } from "import-module-string";
 
 import { fileURLToPath } from "./url.browser.js";
@@ -11,6 +10,7 @@ export default function importer(relPath) {
 	let code = EleventyLoadContent(filePath);
 	return importFromString(code, { implicitExports: false, filePath, adapter: "fs" });
 
+	// import { parseCode, walkCode, importFromString } from "import-module-string";
 	// Alternative approach saved for posterity (and could be used to warn about modules needing to be Import Mapped):
 	// 	let ast = parseCode(code);
 	// 	let { imports } = walkCode(ast);
