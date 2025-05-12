@@ -1,6 +1,11 @@
 export async function RetrieveGlobals(code, filePath) {
-	// TODO we could probably use a super streamlined version of import-module-string here that doesn’t support imports!
-	throw new Error(
-		"Arbitrary js not supported in this Eleventy reduced core bundle. This feature is available in the larger bundle.",
-	);
+	let target = `data:text/javascript;charset=utf-8,${encodeURIComponent(code)}`;
+	return import(target).then((result) => {
+		if (Object.keys(result).length === 0) {
+			console.warn(
+				`Arbitrary JavaScript front matter expects the use of \`export\` in-browser! (${filePath})`,
+			);
+		}
+		return result;
+	});
 }
