@@ -1,6 +1,5 @@
 import path from "node:path";
-import semver from "semver";
-
+import { coerce } from "../Adapters/Util/semver.js";
 import lodash from "@11ty/lodash-custom";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
@@ -321,7 +320,7 @@ class TemplateData {
 
 		// #2293 for meta[name=generator]
 		const pkg = getEleventyPackageJson();
-		globalData.eleventy.version = semver.coerce(pkg.version).toString();
+		globalData.eleventy.version = coerce(pkg.version).toString();
 		globalData.eleventy.generator = `Eleventy v${globalData.eleventy.version}`;
 
 		if (this.environmentVariables) {
