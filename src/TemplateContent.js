@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import matter from "gray-matter";
+import matter from "@11ty/gray-matter";
 import lodash from "@11ty/lodash-custom";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";

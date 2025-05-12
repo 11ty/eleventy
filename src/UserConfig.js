@@ -1,11 +1,11 @@
 import chalk from "kleur";
 import { DateTime } from "luxon";
-import yaml from "js-yaml";
-import matter from "gray-matter";
+import matter from "@11ty/gray-matter";
 import debugUtil from "debug";
 
 import { DeepCopy, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
+// HERE
 import HtmlBasePlugin from "./Plugins/HtmlBasePlugin.js";
 import RenderPlugin from "./Plugins/RenderPlugin.js";
 import InputPathToUrlPlugin from "./Plugins/InputPathToUrl.js";
@@ -214,7 +214,8 @@ class UserConfig {
 
 			// Supplementary engines
 			engines: {
-				yaml: yaml.load.bind(yaml),
+				// Moved to a fork of gray-matter to modernize to js-yaml@4 internally
+				// yaml: yaml.load.bind(yaml),
 
 				// Backwards compatible with `js` object front matter
 				// https://github.com/11ty/eleventy/issues/2819
