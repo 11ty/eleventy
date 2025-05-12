@@ -3,7 +3,7 @@ import chalk from "kleur";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
-import getDefaultConfig from "./Adapters/getDefaultConfig.js";
+import getDefaultConfig from "./Adapters/Configuration/getDefaultConfig.js";
 import { EleventyImportRaw } from "./Util/Require.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import UserConfig from "./UserConfig.js";

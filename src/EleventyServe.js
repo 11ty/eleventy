@@ -1,7 +1,6 @@
 import debugUtil from "debug";
 import { Merge, DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
 
-import { getDevServer } from "./Adapters/getDevServer.js";
 import { deepEqual } from "./Adapters/Util/assert.js";
 
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
@@ -82,10 +81,16 @@ class EleventyServe {
 		this.outputDir = outputDir;
 	}
 
+	static getDevServer() {
+		// This happens on demand for performance purposes when not used by builds
+		// https://github.com/11ty/eleventy/pull/3689
+		return import("@11ty/eleventy-dev-server").then((i) => i.default);
+	}
+
 	async getServerModule(name) {
 		try {
 			if (!name || name === DEFAULT_SERVER_OPTIONS.module) {
-				return getDevServer();
+				return EleventyServe.getDevServer();
 			}
 
 			// Look for peer dep in local project
@@ -135,7 +140,7 @@ class EleventyServe {
 					e.message,
 			);
 			debug("Eleventy server error %o", e);
-			return getDevServer();
+			return EleventyServe.getDevServer();
 		}
 	}
 

@@ -7,7 +7,7 @@ import getLocaleCollectionItem from "./Filters/GetLocaleCollectionItem.js";
 import getCollectionItemIndex from "./Filters/GetCollectionItemIndex.js";
 import { FilterPlugin as InputPathToUrlFilterPlugin } from "./Plugins/InputPathToUrl.js";
 
-import { getHtmlTransformer } from "./Adapters/getHtmlTransformer.js";
+import { getHtmlTransformer } from "./Adapters/Configuration/getHtmlTransformer.js";
 import TransformsUtil from "./Util/TransformsUtil.js";
 import MemoizeUtil from "./Util/MemoizeFunction.js";
 import { HtmlRelativeCopyPlugin } from "./Plugins/HtmlRelativeCopyPlugin.js";

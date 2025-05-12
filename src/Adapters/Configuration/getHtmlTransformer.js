@@ -1,4 +1,4 @@
-import { HtmlTransformer } from "../Util/HtmlTransformer.js";
+import { HtmlTransformer } from "../../Util/HtmlTransformer.js";
 
 export function getHtmlTransformer(templateConfig) {
 	let ut = new HtmlTransformer();

@@ -1,4 +1,4 @@
-import defaultConfig from "../defaultConfig.js";
+import defaultConfig from "../../defaultConfig.js";
 
 export default async function () {
 	return defaultConfig;
