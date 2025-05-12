@@ -241,7 +241,10 @@ class TemplateData {
 		let fsBench = this.benchmarks.aggregate.get("Searching the file system (data)");
 		fsBench.before();
 		let globs = this.getGlobalDataGlob();
-		let paths = await this.fileSystemSearch.search("global-data", globs);
+		let paths = [];
+		if (this.fileSystemSearch) {
+			paths = await this.fileSystemSearch.search("global-data", globs);
+		}
 		fsBench.after();
 
 		// sort paths according to extension priorities

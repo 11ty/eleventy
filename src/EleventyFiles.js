@@ -340,44 +340,6 @@ class EleventyFiles {
 		});
 	}
 
-	getPathsWithVirtualTemplates(paths) {
-		// Support for virtual templates added in 3.0
-		if (this.config.virtualTemplates && isPlainObject(this.config.virtualTemplates)) {
-			let virtualTemplates = Object.keys(this.config.virtualTemplates)
-				.filter((path) => {
-					// Filter out includes/layouts
-					return this.dirs.isTemplateFile(path);
-				})
-				.map((path) => {
-					let fullVirtualPath = this.dirs.getInputPath(path);
-					if (!this.extensionMap.getKey(fullVirtualPath)) {
-						this.templateConfig.logger.warn(
-							`The virtual template at ${fullVirtualPath} is using a template format that’s not valid for your project. Your project is using: "${this.formats}". Read more about formats: https://v3.11ty.dev/docs/config/#template-formats`,
-						);
-					}
-					return fullVirtualPath;
-				});
-
-			paths = paths.concat(virtualTemplates);
-
-			// Virtual templates can not live at the same place as files on the file system!
-			if (paths.length !== new Set(paths).size) {
-				let conflicts = {};
-				for (let path of paths) {
-					if (conflicts[path]) {
-						throw new Error(
-							`A virtual template had the same path as a file on the file system: "${path}"`,
-						);
-					}
-
-					conflicts[path] = true;
-				}
-			}
-		}
-
-		return paths;
-	}
-
 	async getFiles() {
 		let bench = this.aggregateBench.get("Searching the file system (templates)");
 		bench.before();
@@ -386,10 +348,8 @@ class EleventyFiles {
 		bench.after();
 
 		// Note 2.0.0-canary.19 removed a `filter` option for custom template syntax here that was unpublished and unused.
-
-		paths = this.getPathsWithVirtualTemplates(paths);
-
 		this.pathCache = paths;
+
 		return paths;
 	}
 

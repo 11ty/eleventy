@@ -1,13 +1,11 @@
-import { TemplatePath } from "@11ty/eleventy-utils";
+import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import Template from "./Template.js";
 import TemplateMap from "./TemplateMap.js";
-import EleventyFiles from "./EleventyFiles.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import { EleventyErrorHandler } from "./Errors/EleventyErrorHandler.js";
 import EleventyErrorUtil from "./Errors/EleventyErrorUtil.js";
-import FileSystemSearch from "./FileSystemSearch.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 
 const debug = debugUtil("Eleventy:TemplateWriter");
@@ -23,7 +21,7 @@ class TemplateWriter {
 	#extensionMap;
 
 	constructor(
-		templateFormats, // TODO remove this, see `get eleventyFiles` first
+		templateFormats, // TODO remove this in favor of this.#eleventyFiles
 		templateData,
 		templateConfig,
 	) {
@@ -123,22 +121,58 @@ class TemplateWriter {
 		this.#eleventyFiles = eleventyFiles;
 	}
 
-	get eleventyFiles() {
-		// usually Eleventy.js will setEleventyFiles with the EleventyFiles manager
-		if (!this.#eleventyFiles) {
-			// if not, we can create one (used only by tests)
-			this.#eleventyFiles = new EleventyFiles(this.templateFormats, this.templateConfig);
+	// Tests
+	getPassthroughGlobs() {
+		return this.#eleventyFiles?.passthroughGlobs;
+	}
 
-			this.#eleventyFiles.setFileSystemSearch(new FileSystemSearch());
-			this.#eleventyFiles.init();
+	getPathsWithVirtualTemplates(paths) {
+		// Support for virtual templates added in 3.0
+		if (this.config.virtualTemplates && isPlainObject(this.config.virtualTemplates)) {
+			let virtualTemplates = Object.keys(this.config.virtualTemplates)
+				.filter((path) => {
+					// Filter out includes/layouts
+					return this.dirs.isTemplateFile(path);
+				})
+				.map((path) => {
+					let fullVirtualPath = this.dirs.getInputPath(path);
+					if (!this.extensionMap.getKey(fullVirtualPath)) {
+						this.templateConfig.logger.warn(
+							`The virtual template at ${fullVirtualPath} is using a template format that’s not valid for your project. Your project is using: "${this.formats}". Read more about formats: https://v3.11ty.dev/docs/config/#template-formats`,
+						);
+					}
+					return fullVirtualPath;
+				});
+
+			paths = paths.concat(virtualTemplates);
+
+			// Virtual templates can not live at the same place as files on the file system!
+			if (paths.length !== new Set(paths).size) {
+				let conflicts = {};
+				for (let path of paths) {
+					if (conflicts[path]) {
+						throw new Error(
+							`A virtual template had the same path as a file on the file system: "${path}"`,
+						);
+					}
+
+					conflicts[path] = true;
+				}
+			}
 		}
 
-		return this.#eleventyFiles;
+		return paths;
 	}
 
 	async _getAllPaths() {
+		if (!this.#eleventyFiles) {
+			return this.getPathsWithVirtualTemplates([]);
+		}
+
 		// this is now cached upstream by FileSystemSearch
-		return this.eleventyFiles.getFiles();
+		let paths = await this.#eleventyFiles.getFiles();
+		paths = this.getPathsWithVirtualTemplates(paths);
+		return paths;
 	}
 
 	_createTemplate(path, to = "fs") {
@@ -307,8 +341,17 @@ class TemplateWriter {
 		return Promise.all(promises);
 	}
 
+	getFileShape(paths, incrementalFile) {
+		// WARNING: This is leaky—if Core is being used instead of Eleventy we are assuming everything is a template (not passthrough copy)
+		if (!this.#eleventyFiles) {
+			return "template";
+		}
+
+		return this.#eleventyFiles.getFileShape(paths, incrementalFile);
+	}
+
 	async _addToTemplateMap(paths, to = "fs") {
-		let incrementalFileShape = this.eleventyFiles.getFileShape(paths, this.incrementalFile);
+		let incrementalFileShape = this.getFileShape(paths, this.incrementalFile);
 
 		// Filter out passthrough copy files
 		paths = paths.filter((path) => {
@@ -495,11 +538,11 @@ class TemplateWriter {
 	}
 	setIncrementalFile(incrementalFile) {
 		this.incrementalFile = incrementalFile;
-		this.#passthroughManager.setIncrementalFile(incrementalFile);
+		this.#passthroughManager?.setIncrementalFile(incrementalFile);
 	}
 	resetIncrementalFile() {
 		this.incrementalFile = null;
-		this.#passthroughManager.resetIncrementalFile();
+		this.#passthroughManager?.resetIncrementalFile();
 	}
 
 	getMetadata() {
