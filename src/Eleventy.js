@@ -20,7 +20,7 @@ import { getEleventyPackageJson } from "./Util/ImportJsonSync.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import PathPrefixer from "./Util/PathPrefixer.js";
 import PathNormalizer from "./Util/PathNormalizer.js";
-import { isGlobMatch } from "./Util/GlobMatcher.js";
+import { isGlobMatch } from "./Adapters/Util/GlobMatcher.js";
 import eventBus from "./EventBus.js";
 import { withResolvers } from "./Util/PromiseUtil.js";
 

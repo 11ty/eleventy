@@ -17,7 +17,7 @@ import PathPrefixer from "./Util/PathPrefixer.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import { getModulePackageJson } from "./Util/ImportJsonSync.js";
 import { EleventyImport } from "./Util/Require.js";
-import { isGlobMatch } from "./Util/GlobMatcher.js";
+import { isGlobMatch } from "./Adapters/Util/GlobMatcher.js";
 
 const debug = debugUtil("Eleventy:EleventyServe");
 

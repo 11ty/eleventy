@@ -135,10 +135,10 @@ export default function (config) {
 			// Runs **AFTER** the bundle plugin transform (except: delayed bundles)
 			return ut.transformContent(this.outputPath, content, this);
 		});
-	}
 
-	// Requires user configuration, so must run as second-stage
-	config.addPlugin(HtmlRelativeCopyPlugin);
+		// Requires user configuration, so must run as second-stage
+		config.addPlugin(HtmlRelativeCopyPlugin);
+	}
 
 	return {
 		templateFormats: ["liquid", "md", "njk", "html", "11ty.js"],

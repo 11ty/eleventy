@@ -4,7 +4,7 @@ import debugUtil from "debug";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import TemplatePassthrough from "./TemplatePassthrough.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
-import { isGlobMatch, isDynamicPattern } from "./Util/GlobMatcher.js";
+import { isGlobMatch, isDynamicPattern } from "./Adapters/Util/GlobMatcher.js";
 import { withResolvers } from "./Util/PromiseUtil.js";
 
 const debug = debugUtil("Eleventy:TemplatePassthroughManager");

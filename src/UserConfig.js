@@ -958,7 +958,7 @@ class UserConfig {
 	addEngine(fileExtension, classInstance) {
 		if (Object.getPrototypeOf(classInstance).name !== "TemplateEngine") {
 			throw new Error(
-				"Instance of TemplateEngine expected. If you’re trying to create a custom template engine, please use the eleventyConfig.addExtension API.",
+				`Instance of TemplateEngine expected. Received: ${Object.getPrototypeOf(classInstance).name} If you’re trying to create a custom template engine, please use the eleventyConfig.addExtension API.`,
 			);
 		}
 
