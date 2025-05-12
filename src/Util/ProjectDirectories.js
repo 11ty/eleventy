@@ -1,7 +1,7 @@
 import { existsSync, statSync } from "node:fs";
 import path from "node:path";
 import { TemplatePath } from "@11ty/eleventy-utils";
-import { isDynamicPattern } from "tinyglobby";
+import { isDynamicPattern } from "./GlobMatcher.js";
 
 /* Directories internally should always use *nix forward slashes */
 class ProjectDirectories {
