@@ -361,6 +361,14 @@ class UserConfig {
 		this.markdownHighlighter = highlightFn;
 	}
 
+	setMarkdownTemplateEngine(engineName) {
+		this.markdownTemplateEngine = engineName;
+	}
+
+	setHtmlTemplateEngine(engineName) {
+		this.htmlTemplateEngine = engineName;
+	}
+
 	/*
 	 * Filters
 	 */
@@ -1300,6 +1308,13 @@ class UserConfig {
 
 		if (this.dataFileDirBaseNameOverride) {
 			obj.dataFileDirBaseNameOverride = this.dataFileDirBaseNameOverride;
+		}
+
+		if (this.htmlTemplateEngine) {
+			obj.htmlTemplateEngine = this.htmlTemplateEngine;
+		}
+		if (this.markdownTemplateEngine) {
+			obj.markdownTemplateEngine = this.markdownTemplateEngine;
 		}
 
 		return obj;
