@@ -1,7 +1,15 @@
+import assert from "node:assert";
 import debugUtil from "debug";
 import { Merge, DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
 
-import { deepEqual } from "./Adapters/Util/assert.js";
+function deepEqual(actual, expected) {
+	try {
+		assert.deepStrictEqual(actual, expected);
+		return false;
+	} catch (e) {
+		return true;
+	}
+}
 
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
