@@ -1,6 +1,5 @@
 import bundlePlugin from "@11ty/eleventy-plugin-bundle";
 
-import { getHtmlTransformer } from "./Adapters/getHtmlTransformer.js";
 import urlFilter from "./Filters/Url.js";
 import slugFilter from "./Filters/Slug.js";
 import slugifyFilter from "./Filters/Slugify.js";
@@ -8,6 +7,7 @@ import getLocaleCollectionItem from "./Filters/GetLocaleCollectionItem.js";
 import getCollectionItemIndex from "./Filters/GetCollectionItemIndex.js";
 import { FilterPlugin as InputPathToUrlFilterPlugin } from "./Plugins/InputPathToUrl.js";
 
+import { getHtmlTransformer } from "./Adapters/getHtmlTransformer.js";
 import TransformsUtil from "./Util/TransformsUtil.js";
 import MemoizeUtil from "./Util/MemoizeFunction.js";
 import { HtmlRelativeCopyPlugin } from "./Plugins/HtmlRelativeCopyPlugin.js";
@@ -62,6 +62,8 @@ export default function (config) {
 
 	// Used for the HTML <base>, InputPathToUrl, Image transform plugins
 	let ut = getHtmlTransformer(config);
+
+	const USING_HTML_TRANSFORMER = ut && Object.keys(ut).length > 0;
 
 	// This needs to be assigned before bundlePlugin is added below.
 	config.htmlTransformer = ut;
@@ -128,7 +130,7 @@ export default function (config) {
 	);
 
 	// Run the `htmlTransformer` transform
-	if (ut && Object.keys(ut).length > 0) {
+	if (USING_HTML_TRANSFORMER) {
 		config.addTransform("@11ty/eleventy/html-transformer", async function (content) {
 			// Runs **AFTER** the bundle plugin transform (except: delayed bundles)
 			return ut.transformContent(this.outputPath, content, this);
