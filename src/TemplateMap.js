@@ -311,16 +311,17 @@ class TemplateMap {
 	}
 
 	hasMapEntryForInputPath(inputPath) {
-		return this.map.some((entry) => entry.inputPath === inputPath);
+		return Boolean(this.getMapEntryForInputPath(inputPath));
 	}
 
 	// TODO(slightlyoff): hot inner loop?
 	getMapEntryForInputPath(inputPath) {
-		for (let map of this.map) {
-			if (map.inputPath === inputPath) {
-				return map;
+		let absoluteInputPath = TemplatePath.absolutePath(inputPath);
+		return this.map.find((entry) => {
+			if (entry.inputPath === inputPath || entry.inputPath === absoluteInputPath) {
+				return entry;
 			}
-		}
+		});
 	}
 
 	#removeTagsFromTemplateOrder(maps) {

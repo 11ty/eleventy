@@ -1,6 +1,6 @@
 {
 	"name": "@11ty/eleventy",
-	"version": "3.1.0-beta.1",
+	"version": "3.1.0",
 	"description": "A simpler static site generator.",
 	"publishConfig": {
 		"access": "public",
@@ -155,7 +155,7 @@
 		"please-upgrade-node": "^3.2.0",
 		"posthtml": "^0.16.6",
 		"posthtml-match-helper": "^2.0.3",
-		"semver": "^7.7.1",
+		"semver": "^7.7.2",
 		"slugify": "^1.6.6",
 		"tinyglobby": "^0.2.13"
 	}
