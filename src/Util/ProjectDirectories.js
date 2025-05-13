@@ -132,6 +132,11 @@ class ProjectDirectories {
 			return;
 		}
 
+		// Normalize absolute paths to relative, #3805
+		// if(path.isAbsolute(dirOrFile)) {
+		// 	dirOrFile = path.relative(".", dirOrFile);
+		// }
+
 		// Input has to exist (assumed glob if it does not exist)
 		let inputExists = fs.existsSync(dirOrFile);
 		let inputExistsAndIsDirectory = inputExists && fs.statSync(dirOrFile).isDirectory();
