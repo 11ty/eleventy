@@ -158,14 +158,16 @@ test("JS Render with a function", async (t) => {
   t.plan(8);
 
   let tr = await getNewTemplateRender("./test/stubs/function-filter.11ty.cjs", undefined, {
-    javascriptFunctions: {
-      upper: function (val) {
-        t.is(this.page.url, "/hi/");
-        // sanity check to make sure data didn’t propagate
-        t.not(this.name, "Zach");
-        t.not(this.name, "Bill");
-        return new String(val).toUpperCase();
-      },
+    __theCodeCriesInPain: {
+      javascript: {
+        upper: function (val) {
+          t.is(this.page.url, "/hi/");
+          // sanity check to make sure data didn’t propagate
+          t.not(this.name, "Zach");
+          t.not(this.name, "Bill");
+          return new String(val).toUpperCase();
+        },
+      }
     },
   });
 
@@ -178,13 +180,15 @@ test("JS Render with a function and async filter", async (t) => {
   t.plan(4);
 
   let tr = await getNewTemplateRender("./test/stubs/function-async-filter.11ty.cjs", undefined, {
-    javascriptFunctions: {
-      upper: function (val) {
-        return new Promise((resolve) => {
-          t.is(this.page.url, "/hi/");
-          resolve(new String(val).toUpperCase());
-        });
-      },
+    __theCodeCriesInPain: {
+      javascript: {
+        upper: function (val) {
+          return new Promise((resolve) => {
+            t.is(this.page.url, "/hi/");
+            resolve(new String(val).toUpperCase());
+          });
+        },
+      }
     },
   });
 
@@ -196,12 +200,14 @@ test("JS Render with a function and async filter", async (t) => {
 test("JS Render with a function prototype", async (t) => {
   t.plan(4);
   let tr = await getNewTemplateRender("./test/stubs/function-prototype.11ty.cjs", undefined, {
-    javascriptFunctions: {
-      upper: function (val) {
-        t.is(this.page.url, "/hi/");
-        return new String(val).toUpperCase();
+    __theCodeCriesInPain: {
+      javascript: {
+        upper: function (val) {
+          t.is(this.page.url, "/hi/");
+          return new String(val).toUpperCase();
+        },
       },
-    },
+    }
   });
 
   let fn = await tr.getCompiledTemplate();
@@ -213,11 +219,13 @@ test("JS Class Render with a function", async (t) => {
   t.plan(4);
 
   let tr = await getNewTemplateRender("./test/stubs/class-filter.11ty.cjs", undefined, {
-    javascriptFunctions: {
-      upper: function (val) {
-        t.is(this.page.url, "/hi/");
-        return new String(val).toUpperCase();
-      },
+    __theCodeCriesInPain: {
+      javascript: {
+        upper: function (val) {
+          t.is(this.page.url, "/hi/");
+          return new String(val).toUpperCase();
+        },
+      }
     },
   });
 
@@ -230,11 +238,13 @@ test("JS Class Async Render with a function", async (t) => {
   t.plan(4);
 
   let tr = await getNewTemplateRender("./test/stubs/class-async-filter.11ty.cjs", undefined, {
-    javascriptFunctions: {
-      upper: function (val) {
-        t.is(this.page.url, "/hi/");
-        return new String(val).toUpperCase();
-      },
+    __theCodeCriesInPain: {
+      javascript: {
+        upper: function (val) {
+          t.is(this.page.url, "/hi/");
+          return new String(val).toUpperCase();
+        },
+      }
     },
   });
 
@@ -246,10 +256,12 @@ test("JS Class Async Render with a function", async (t) => {
 
 test("JS Class Async Render with a function (sync function, throws error)", async (t) => {
   let tr = await getNewTemplateRender("./test/stubs/function-throws.11ty.cjs", undefined, {
-    javascriptFunctions: {
-      upper: function (val) {
-        throw new Error("JS Class Async Render with a function (sync function, throws error)");
-      },
+    __theCodeCriesInPain: {
+      javascript: {
+        upper: function (val) {
+          throw new Error("JS Class Async Render with a function (sync function, throws error)");
+        },
+      }
     },
   });
 
@@ -265,10 +277,12 @@ test("JS Class Async Render with a function (sync function, throws error)", asyn
 
 test("JS Class Async Render with a function (async function, throws error)", async (t) => {
   let tr = await getNewTemplateRender("./test/stubs/function-throws-async.11ty.cjs", undefined, {
-    javascriptFunctions: {
-      upper: async function (val) {
-        throw new Error("JS Class Async Render with a function (async function, throws error)");
-      },
+    __theCodeCriesInPain: {
+      javascript: {
+        upper: async function (val) {
+          throw new Error("JS Class Async Render with a function (async function, throws error)");
+        },
+      }
     },
   });
 

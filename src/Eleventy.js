@@ -978,7 +978,7 @@ Arguments:
 				return (
 					path.endsWith(".css") &&
 					// TODO how to make this work with relative includes?
-					!TemplatePath.startsWithSubPath(path, this.eleventyFiles.getIncludesDir())
+					!TemplatePath.startsWithSubPath(path, this.eleventyFiles?.includesDir)
 				);
 			});
 
@@ -1106,7 +1106,7 @@ Arguments:
 			return;
 		}
 
-		let dataDir = TemplatePath.stripLeadingDotSlash(this.templateData.getDataDir());
+		let dataDir = TemplatePath.stripLeadingDotSlash(this.templateData?.dataDir);
 		function filterOutGlobalDataFiles(path) {
 			return !dataDir || !TemplatePath.stripLeadingDotSlash(path).startsWith(dataDir);
 		}

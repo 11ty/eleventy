@@ -151,14 +151,7 @@ test("Markdown Render: use prism highlighter (no language)", async (t) => {
     }
   );
 
-  let tr = await getNewTemplateRender("md", null, eleventyConfig);
-
-  let markdownHighlight = eleventyConfig.getConfig().markdownHighlighter;
-  let mdLib = md();
-  mdLib.set({
-    highlight: markdownHighlight,
-  });
-  tr.engine.setLibrary(mdLib);
+  let tr = await getNewTemplateRender("md",undefined,eleventyConfig);
 
   let fn = await tr.getCompiledTemplate(`\`\`\`
 This is some code.
@@ -178,15 +171,7 @@ test("Markdown Render: use prism highlighter", async (t) => {
     }
   );
 
-  let tr = await getNewTemplateRender("md");
-
-  let markdownHighlight = eleventyConfig.getConfig().markdownHighlighter;
-
-  let mdLib = md();
-  mdLib.set({
-    highlight: markdownHighlight,
-  });
-  tr.engine.setLibrary(mdLib);
+  let tr = await getNewTemplateRender("md",undefined,eleventyConfig);
 
   let fn = await tr.getCompiledTemplate(`\`\`\` js
 var key = "value";
@@ -207,14 +192,6 @@ test("Markdown Render: use prism highlighter (no space before language)", async 
 
   let tr = await getNewTemplateRender("md", null, eleventyConfig);
 
-  let markdownHighlight = eleventyConfig.getConfig().markdownHighlighter;
-
-  let mdLib = md();
-  mdLib.set({
-    highlight: markdownHighlight,
-  });
-  tr.engine.setLibrary(mdLib);
-
   let fn = await tr.getCompiledTemplate(`\`\`\`js
 var key = "value";
 \`\`\``);
@@ -233,13 +210,6 @@ test("Markdown Render: use prism highlighter, line highlighting", async (t) => {
   );
 
   let tr = await getNewTemplateRender("md", null, eleventyConfig);
-  let markdownHighlight = eleventyConfig.getConfig().markdownHighlighter;
-
-  let mdLib = md();
-  mdLib.set({
-    highlight: markdownHighlight,
-  });
-  tr.engine.setLibrary(mdLib);
 
   let fn = await tr.getCompiledTemplate(`\`\`\`js/0
 var key = "value";
@@ -259,15 +229,6 @@ test("Markdown Render: use prism highlighter, line highlighting with fallback `t
   );
 
   let tr = await getNewTemplateRender("md", null, eleventyConfig);
-
-  let cfg = eleventyConfig.getConfig();
-  let markdownHighlight = cfg.markdownHighlighter;
-
-  let mdLib = md();
-  mdLib.set({
-    highlight: markdownHighlight,
-  });
-  tr.engine.setLibrary(mdLib);
 
   let fn = await tr.getCompiledTemplate(`\`\`\` text/0
 var key = "value";

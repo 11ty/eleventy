@@ -59,15 +59,6 @@ class TemplateData {
 		return this.dirs.data;
 	}
 
-	// This was async in 2.0 and prior but doesn’t need to be any more.
-	getInputDir() {
-		return this.dirs.input;
-	}
-
-	getDataDir() {
-		return this.dataDir;
-	}
-
 	exists(pathname) {
 		// It's common for data files not to exist, so we avoid going to the FS to
 		// re-check if they do via a quick-and-dirty cache.

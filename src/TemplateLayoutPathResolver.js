@@ -1,4 +1,3 @@
-import fs from "node:fs";
 import { TemplatePath } from "@11ty/eleventy-utils";
 // import debugUtil from "debug";
 // const debug = debugUtil("Eleventy:TemplateLayoutPathResolver");
@@ -41,11 +40,6 @@ class TemplateLayoutPathResolver {
 
 	get layoutsDir() {
 		return this.dirs.layouts || this.dirs.includes;
-	}
-
-	/* Backwards compat */
-	getLayoutsDir() {
-		return this.layoutsDir;
 	}
 
 	setAliases() {

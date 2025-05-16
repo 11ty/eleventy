@@ -1,4 +1,5 @@
 function myFunction({ name }) {
+  console.log("myFunction called",this);
   return `<p>${this.upper(name)}${myFunction.staticMethod()}</p>`;
 }
 
