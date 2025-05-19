@@ -1,10 +1,10 @@
-# Code Coverage for Eleventy v3.1.0-beta.1
+# Code Coverage for Eleventy v3.1.0
 
 | Filename                                                   | % Lines | % Statements | % Functions | % Branches |
 | ---------------------------------------------------------- | ------- | ------------ | ----------- | ---------- |
-| `total`                                                    | 88.86%  | 88.86%       | 89.02%      | 89.12%     |
+| `total`                                                    | 88.86%  | 88.86%       | 89.03%      | 89.06%     |
 | `cmd.cjs`                                                  | 67.74%  | 67.74%       | 25%         | 60%        |
-| `src/Eleventy.js`                                          | 76.33%  | 76.33%       | 71.66%      | 88.43%     |
+| `src/Eleventy.js`                                          | 76.26%  | 76.26%       | 71.66%      | 86.98%     |
 | `src/EleventyExtensionMap.js`                              | 96.47%  | 96.47%       | 92.3%       | 94.25%     |
 | `src/EleventyFiles.js`                                     | 92.2%   | 92.2%        | 91.3%       | 90.29%     |
 | `src/EleventyServe.js`                                     | 50%     | 50%          | 59.09%      | 58.06%     |
@@ -99,6 +99,7 @@
 | `src/Util/Require.js`                                      | 77.9%   | 77.9%        | 75%         | 86.11%     |
 | `src/Util/ReservedData.js`                                 | 97.1%   | 97.1%        | 100%        | 92.85%     |
 | `src/Util/SetUnion.js`                                     | 100%    | 100%         | 100%        | 100%       |
+| `src/Util/SpawnAsync.js`                                   | 96%     | 96%          | 100%        | 83.33%     |
 | `src/Util/TransformsUtil.js`                               | 94.28%  | 94.28%       | 100%        | 83.33%     |
 | `src/Util/ValidUrl.js`                                     | 100%    | 100%         | 100%        | 100%       |
 | `src/Util/Objects/DeepFreeze.js`                           | 90%     | 90%          | 100%        | 80%        |

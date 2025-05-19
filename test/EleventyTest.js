@@ -951,6 +951,28 @@ test("Accepts absolute paths for input and output", async (t) => {
   t.is(PathNormalizer.normalizeSeperator(elev.directories.output), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/_site/") + path.sep));
 });
 
+test("Accepts absolute paths urls for input and output, results output #3805", async (t) => {
+  let input = path.resolve("./test/stubs-absolute/test.md");
+  let output = path.resolve("./test/stubs-absolute/_site");
+  let elev = new Eleventy(input, output);
+
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+});
+
+test("Accepts absolute paths urls for input and output and a virtual template, results output #3805", async (t) => {
+  let input = path.resolve("./test/noop/");
+  let output = path.resolve("./test/noop/_site");
+  let elev = new Eleventy(input, output, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.md", `# Title`)
+    }
+  });
+
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+});
+
 test("Eleventy config export (ESM)", async (t) => {
   t.plan(5);
   let elev = new Eleventy("test/stubs/cfg-directories-export", null, {
