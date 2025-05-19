@@ -122,6 +122,9 @@ class TemplateMap {
 	addAllToGlobalDependencyGraph() {
 		this.#dependencyMapInitialized = true;
 
+		// Should come before individual entry additions
+		this.config.uses.initializeUserConfigurationApiCollections();
+
 		for (let entry of this.map) {
 			this.#addEntryToGlobalDependencyGraph(entry);
 		}

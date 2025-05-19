@@ -17,6 +17,7 @@ class GlobalDependencyMap {
 	static SPECIAL_KEYS_COLLECTION_NAME = "[keys]";
 
 	#templateConfig;
+	#cachedUserConfigurationCollectionApiNames;
 
 	static isTag(entry) {
 		return entry.startsWith(this.COLLECTION_PREFIX);
@@ -33,7 +34,6 @@ class GlobalDependencyMap {
 	}
 
 	reset() {
-		this.config = undefined;
 		this._map = undefined;
 	}
 
@@ -43,27 +43,27 @@ class GlobalDependencyMap {
 
 	setTemplateConfig(templateConfig) {
 		this.#templateConfig = templateConfig;
-	}
-
-	setConfig(config) {
-		if (this.config) {
-			return;
-		}
-
-		this.config = config;
-
-		this.userConfigurationCollectionApiNames = config.collectionApiNames || [];
-		this.addCollectionApiNames(this.userConfigurationCollectionApiNames);
 
 		// These have leading dot slashes, but so do the paths from Eleventy
-		this.config.events.once("eleventy.layouts", async (layouts) => {
+		this.#templateConfig.userConfig.events.once("eleventy.layouts", async (layouts) => {
 			await this.addLayoutsToMap(layouts);
 		});
 	}
 
+	get userConfigurationCollectionApiNames() {
+		if (this.#cachedUserConfigurationCollectionApiNames) {
+			return this.#cachedUserConfigurationCollectionApiNames;
+		}
+		return Object.keys(this.#templateConfig.userConfig.getCollections()) || [];
+	}
+
+	initializeUserConfigurationApiCollections() {
+		this.addCollectionApiNames(this.userConfigurationCollectionApiNames);
+	}
+
 	// For Testing
 	setCollectionApiNames(names = []) {
-		this.userConfigurationCollectionApiNames = names;
+		this.#cachedUserConfigurationCollectionApiNames = names;
 	}
 
 	addCollectionApiNames(names = []) {
@@ -251,11 +251,11 @@ class GlobalDependencyMap {
 	getTemplatesThatConsumeCollections(collectionNames) {
 		let templates = new Set();
 		for (let name of collectionNames) {
-			let collectionName = GlobalDependencyMap.getCollectionKeyForEntry(name);
-			if (!this.map.hasNode(collectionName)) {
+			let collectionKey = GlobalDependencyMap.getCollectionKeyForEntry(name);
+			if (!this.map.hasNode(collectionKey)) {
 				continue;
 			}
-			for (let node of this.map.dependantsOf(collectionName)) {
+			for (let node of this.map.dependantsOf(collectionKey)) {
 				if (!node.startsWith(GlobalDependencyMap.COLLECTION_PREFIX)) {
 					let data = this.map.getNodeData(node);
 					if (!data || !data.type || data.type != GlobalDependencyMap.LAYOUT_KEY) {
