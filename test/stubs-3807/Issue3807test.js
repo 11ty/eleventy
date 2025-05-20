@@ -64,4 +64,5 @@ test("#3807 Nunjucks cacheable should be reused when Nunjucks is the preprocesso
   }
 
   fs.writeFileSync("test/stubs-3807/_layouts/base.html", ORIGINAL_CONTENT, "utf8");
+  fs.rmSync("test/stubs-3807/_site", { recursive: true });
 });
