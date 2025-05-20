@@ -194,13 +194,14 @@ class TemplateRender {
 	}
 
 	// TODO templateEngineOverride
-	getPreprocessorEngine() {
+	getPreprocessorEngineName() {
 		if (this.engineName === "md" && this.parseMarkdownWith) {
 			return this.parseMarkdownWith;
 		}
 		if (this.engineName === "html" && this.parseHtmlWith) {
 			return this.parseHtmlWith;
 		}
+		// TODO do we need this?
 		return this.extensionMap.getKey(this.engineNameOrPath);
 	}
 
