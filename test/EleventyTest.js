@@ -19,7 +19,6 @@ import DateGitLastUpdated from "../src/Util/DateGitLastUpdated.js";
 import PathNormalizer from "../src/Util/PathNormalizer.js";
 import { normalizeNewLines, localizeNewLines } from "./Util/normalizeNewLines.js";
 
-const fsp = fs.promises;
 const lodashGet = lodash.get;
 
 test("Eleventy, defaults inherit from config", async (t) => {
@@ -628,7 +627,7 @@ test("Improvements to custom template syntax APIs (includes a layout file) #2258
 }`;
   let newContents = `/* New content */`;
 
-  await fsp.writeFile(includeFilePath, previousContents, { encoding: "utf8" });
+  fs.writeFileSync(includeFilePath, previousContents, "utf8");
 
   let sizes = [TemplateContent._inputCache.size, TemplateContent._compileCache.size];
 
@@ -660,7 +659,7 @@ ${previousContents}
   t.is(sizes[0] + 1, 1);
   t.is(sizes[1] + 1, 1);
 
-  await fsp.writeFile(includeFilePath, newContents, { encoding: "utf8" });
+  fs.writeFileSync(includeFilePath, newContents, "utf8");
 
   // Trigger that the file has changed
   eventBus.emit("eleventy.resourceModified", includeFilePath);
@@ -675,7 +674,7 @@ ${newContents}
 /* Comment */`
   );
 
-  await fsp.writeFile(includeFilePath, previousContents, { encoding: "utf8" });
+  fs.writeFileSync(includeFilePath, previousContents, "utf8");
 });
 
 
