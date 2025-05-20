@@ -104,6 +104,7 @@
 		"eslint": "^9.24.0",
 		"eslint-config-prettier": "^10.1.2",
 		"globals": "^16.0.0",
+		"markdown-it-abbr": "^2.0.0",
 		"markdown-it-emoji": "^3.0.0",
 		"marked": "^15.0.8",
 		"nano-staged": "^0.8.0",
