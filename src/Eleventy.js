@@ -1178,7 +1178,15 @@ Arguments:
 		this.watcherBench.reset();
 
 		// We use a string module name and try/catch here to hide this from the zisi and esbuild serverless bundlers
-		let chokidar = await import("chokidar").then((mod) => mod.default);
+		let chokidar;
+		// eslint-disable-next-line no-useless-catch
+		try {
+			let moduleName = "chokidar";
+			let chokidarImport = await import(moduleName);
+			chokidar = chokidarImport.default;
+		} catch (e) {
+			throw e;
+		}
 
 		// Note that watching indirectly depends on this for fetching dependencies from JS files
 		// See: TemplateWriter:pathCache and EleventyWatchTargets
