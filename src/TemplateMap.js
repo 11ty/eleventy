@@ -160,6 +160,7 @@ class TemplateMap {
 					return inputPathSet.has(inputPath);
 				})
 				.map(({ template }) => {
+					// This also happens for layouts in TemplateContent->compile
 					return template.asyncTemplateInitialization();
 				}),
 		);

@@ -1178,15 +1178,7 @@ Arguments:
 		this.watcherBench.reset();
 
 		// We use a string module name and try/catch here to hide this from the zisi and esbuild serverless bundlers
-		let chokidar;
-		// eslint-disable-next-line no-useless-catch
-		try {
-			let moduleName = "chokidar";
-			let chokidarImport = await import(moduleName);
-			chokidar = chokidarImport.default;
-		} catch (e) {
-			throw e;
-		}
+		let chokidar = await import("chokidar").then((mod) => mod.default);
 
 		// Note that watching indirectly depends on this for fetching dependencies from JS files
 		// See: TemplateWriter:pathCache and EleventyWatchTargets
@@ -1236,6 +1228,8 @@ Arguments:
 					await this.stopWatch();
 				}
 			}
+
+			this.config.events.emit("eleventy.afterwatch");
 		};
 
 		watcher.on("change", async (path) => {
@@ -1260,6 +1254,11 @@ Arguments:
 		watcher.on("unlink", (path) => {
 			this.logger.forceLog(`File deleted: ${TemplatePath.standardizeFilePath(path)}`);
 			this.fileSystemSearch.delete(path);
+		});
+
+		// wait for chokidar to be ready.
+		await new Promise((resolve) => {
+			watcher.on("ready", () => resolve());
 		});
 	}
 
