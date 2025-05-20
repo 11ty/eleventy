@@ -1,9 +1,9 @@
-import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
+import { isPlainObject } from "@11ty/eleventy-utils";
 
-import TemplateEngine from "./TemplateEngine.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import getJavaScriptData from "../Util/GetJavaScriptData.js";
 import { EleventyImport } from "../Util/Require.js";
+import TemplateEngine from "./TemplateEngine.js";
 import { augmentFunction, augmentObject } from "./Util/ContextAugmenter.js";
 
 class JavaScriptTemplateNotDefined extends EleventyBaseError {}
@@ -11,24 +11,7 @@ class JavaScriptTemplateNotDefined extends EleventyBaseError {}
 export default class JavaScript extends TemplateEngine {
 	constructor(name, templateConfig) {
 		super(name, templateConfig);
-		this.instances = {};
-
 		this.cacheable = false;
-
-		this.config.events.on("eleventy#templateModified", (inputPath, metadata = {}) => {
-			let { usedByDependants, relevantLayouts } = metadata;
-			// Remove from cached instances when modified
-			let instancesToDelete = [
-				inputPath,
-				...(usedByDependants || []),
-				...(relevantLayouts || []),
-			].map((entry) => TemplatePath.addLeadingDotSlash(entry));
-			for (let inputPath of instancesToDelete) {
-				if (inputPath in this.instances) {
-					delete this.instances[inputPath];
-				}
-			}
-		});
 	}
 
 	normalize(result) {
@@ -99,9 +82,7 @@ export default class JavaScript extends TemplateEngine {
 		}
 
 		let inst = this._getInstance(mod);
-		if (inst) {
-			this.instances[inputPath] = inst;
-		} else {
+		if (!inst) {
 			throw new JavaScriptTemplateNotDefined(
 				`No JavaScript template returned from ${inputPath}. Did you assign module.exports (CommonJS) or export (ESM)?`,
 			);
@@ -110,11 +91,7 @@ export default class JavaScript extends TemplateEngine {
 	}
 
 	async getInstanceFromInputPath(inputPath) {
-		if (!this.instances[inputPath]) {
-			this.instances[inputPath] = this.#getInstanceFromInputPath(inputPath);
-		}
-
-		return this.instances[inputPath];
+		return this.#getInstanceFromInputPath(inputPath);
 	}
 
 	/**
@@ -201,35 +178,29 @@ export default class JavaScript extends TemplateEngine {
 	}
 
 	async compile(str, inputPath) {
-		let inst;
-		if (str) {
-			// When str has a value, it's being used for permalinks in data
-			inst = this._getInstance(str);
-		} else {
-			// For normal templates, str will be falsy.
-			inst = await this.getInstanceFromInputPath(inputPath);
-		}
+		return async (data = {}) => {
+			// TODO does this do anything meaningful for non-classes?
+			// `inst` should have a normalized `render` function from _getInstance
 
-		if (inst?.render) {
-			return (data = {}) => {
-				// TODO does this do anything meaningful for non-classes?
-				// `inst` should have a normalized `render` function from _getInstance
+			const inst = await this.getInstanceFromInputPath(inputPath);
+			if (!inst?.render) {
+				return;
+			}
 
-				// Map exports to bundles
-				if (data.page?.url) {
-					this.addExportsToBundles(inst, data.page.url);
-				}
+			// Map exports to bundles
+			if (data.page?.url) {
+				this.addExportsToBundles(inst, data.page.url);
+			}
 
-				augmentObject(inst, {
-					source: data,
-					overwrite: false,
-				});
+			augmentObject(inst, {
+				source: data,
+				overwrite: false,
+			});
 
-				Object.assign(inst, this.getJavaScriptFunctions(inst));
+			Object.assign(inst, this.getJavaScriptFunctions(inst));
 
-				return this.normalize(inst.render.call(inst, data));
-			};
-		}
+			return this.normalize(inst.render.call(inst, data));
+		};
 	}
 
 	static shouldSpiderJavaScriptDependencies() {
