@@ -212,8 +212,11 @@ export default class Nunjucks extends TemplateEngine {
 				// Nunjucks bug with non-paired custom tags bug still exists even
 				// though this issue is closed. Works fine for paired.
 				// https://github.com/mozilla/nunjucks/issues/158
+				// https://github.com/11ty/eleventy/issues/372
 				if (args.children.length === 0) {
-					args.addChild(new nodes.Literal(0, 0, ""));
+					// Changed from an empty string to an empty NodeList
+					// https://github.com/11ty/eleventy/issues/3788
+					args.addChild(new nodes.NodeList());
 				}
 
 				parser.advanceAfterBlockEnd(tok.value);
