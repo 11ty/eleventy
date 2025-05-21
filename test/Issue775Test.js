@@ -6,8 +6,8 @@ test("#775 Using data cascade in Collection API", async (t) => {
 		config(eleventyConfig) {
 			eleventyConfig.addCollection("apic", collectionApi => {
 				return collectionApi.getFilteredByTag("posts").filter(entry => {
-          return entry.data.keep;
-        });
+					return entry.data.keep;
+				});
 			})
 			eleventyConfig.addTemplate("post1.md", `# Header`, { tags: "posts", keep: true });
 			eleventyConfig.addTemplate("post2.md", `# Header`, { tags: "posts" });
