@@ -209,7 +209,9 @@ class Template extends TemplateContent {
 			throw new Error("Internal error: data argument missing in Template->_getLink");
 		}
 
-		let permalink = data[this.config.keys.permalink];
+		let permalink =
+			data[this.config.keys.permalink] ??
+			data?.[this.config.keys.computed]?.[this.config.keys.permalink];
 		let permalinkValue;
 
 		// `permalink: false` means render but no file system write, e.g. use in collections only)
