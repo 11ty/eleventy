@@ -452,13 +452,17 @@ class Eleventy {
 			`in ${chalk.bold(time.toFixed(2))} ${simplePlural(time.toFixed(2), "second", "seconds")}`,
 		);
 
+		let info = "";
 		// More than 1 second total, show estimate of per-template time
 		if (time >= 1 && writeCount > 1) {
-			ret.push(`(${((time * 1000) / writeCount).toFixed(1)}ms each, v${pkg.version})`);
-		} else {
-			ret.push(`(v${pkg.version})`);
+			info += `${((time * 1000) / writeCount).toFixed(1)}ms each, `;
+		}
+		info += `v${pkg.version}`;
+		if (!this.eleventyConfig.configExists) {
+			info += " - no configuration file";
 		}
 
+		ret.push(`(${info})`);
 		return ret.join(" ");
 	}
 
