@@ -874,14 +874,14 @@ test("Dependency Map should have nodes that have no dependencies and no dependen
 
   await tm.cache();
 
-  let [deps] = tm.getFullTemplateMapOrder();
+  let deps = tm.getTemplateOrder();
   t.true(deps.filter((dep) => dep.indexOf("test5.md") > -1).length > 0);
 
   let collections = await tm._testGetCollectionsData();
   t.is(collections.all.length, 2);
 });
 
-test("Dependency Map should have include orphan user config collections (in the correct order)", async (t) => {
+test("Dependency Map should have include orphan user config collections (in the correct order) #3711", async (t) => {
   let eleventyConfig = await getTemplateConfigInstanceCustomCallback(
     {},
     function(cfg) {
@@ -900,13 +900,57 @@ test("Dependency Map should have include orphan user config collections (in the 
 
   await tm.cache();
 
-  let [deps, delayedDeps] = tm.getFullTemplateMapOrder();
-  t.true(deps.filter((dep) => dep.indexOf("userCollection") > -1).length === 0);
-  t.true(delayedDeps.filter((dep) => dep.indexOf("userCollection") > -1).length > 0);
+  let deps = tm.getTemplateOrder();
+  t.deepEqual(deps,  [
+    './test/stubs/templateMapCollection/test1.md',
+    './test/stubs/templateMapCollection/test5.md',
+    '__collection:all',
+    '__collection:userCollection',
+    '__collection:post',
+    '__collection:dog',
+    '__collection:[keys]',
+    '__collection:all'
+  ]);
 
   let collections = await tm._testGetCollectionsData();
   t.is(collections.all.length, 2);
   t.is(collections.userCollection.length, 2);
+});
+
+test("Dependency Map should have include orphan user config collections, mapped by user collection api to tag #3711", async (t) => {
+  let eleventyConfig = await getTemplateConfigInstanceCustomCallback(
+    {},
+    function(cfg) {
+      cfg.addCollection("userCollection", function (collection) {
+        return collection.getFilteredByTag("post");
+      });
+    }
+  );
+
+  let tmpl1 = await getNewTemplateByNumber(1, eleventyConfig);
+  let tmpl5 = await getNewTemplateByNumber(5, eleventyConfig);
+
+  let tm = new TemplateMap(eleventyConfig);
+  await tm.add(tmpl1);
+  await tm.add(tmpl5);
+
+  await tm.cache();
+
+  let deps = tm.getTemplateOrder();
+  t.deepEqual(deps,  [
+    './test/stubs/templateMapCollection/test1.md',
+    './test/stubs/templateMapCollection/test5.md',
+    '__collection:all',
+    '__collection:userCollection',
+    '__collection:post',
+    '__collection:dog',
+    '__collection:[keys]',
+    '__collection:all'
+  ]);
+
+  let collections = await tm._testGetCollectionsData();
+  t.is(collections.all.length, 2);
+  t.is(collections.userCollection.length, 1);
 });
 
 test("Template pages should not have layouts when added to collections", async (t) => {
@@ -1330,14 +1374,15 @@ test("TemplateMap circular references (map.templateContent) using eleventyExclud
   let map = tm.getMap();
   t.falsy(map[0].data.collections);
 
-  let [deps] = tm.getFullTemplateMapOrder();
+  await tm.cache();
+
+  let deps = tm.getTemplateOrder();
   t.deepEqual(deps, [
     "./test/stubs/issue-522/excluded.md",
     "./test/stubs/issue-522/template.md",
-    "___TAG___all",
+    "__collection:all",
   ]);
 
-  await tm.cache();
   t.is(tm.getMap().length, 2);
 
   let collections = await tm._testGetCollectionsData();

@@ -4,7 +4,6 @@ import debugUtil from "debug";
 import Template from "./Template.js";
 import TemplateMap from "./TemplateMap.js";
 import EleventyFiles from "./EleventyFiles.js";
-import EleventyExtensionMap from "./EleventyExtensionMap.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import { EleventyErrorHandler } from "./Errors/EleventyErrorHandler.js";
 import EleventyErrorUtil from "./Errors/EleventyErrorUtil.js";
@@ -21,6 +20,7 @@ class TemplateWriter {
 	#eleventyFiles;
 	#passthroughManager;
 	#errorHandler;
+	#extensionMap;
 
 	constructor(
 		templateFormats, // TODO remove this, see `get eleventyFiles` first
@@ -105,15 +105,14 @@ class TemplateWriter {
 	}
 
 	set extensionMap(extensionMap) {
-		this._extensionMap = extensionMap;
+		this.#extensionMap = extensionMap;
 	}
 
 	get extensionMap() {
-		if (!this._extensionMap) {
-			this._extensionMap = new EleventyExtensionMap(this.templateConfig);
-			this._extensionMap.setFormats(this.templateFormats);
+		if (!this.#extensionMap) {
+			throw new Error("Internal error: missing `extensionMap` in TemplateWriter.");
 		}
-		return this._extensionMap;
+		return this.#extensionMap;
 	}
 
 	setPassthroughManager(mgr) {
@@ -145,37 +144,25 @@ class TemplateWriter {
 	_createTemplate(path, to = "fs") {
 		let tmpl = this._templatePathCache.get(path);
 		let wasCached = false;
+
 		if (tmpl) {
 			wasCached = true;
 			// Update config for https://github.com/11ty/eleventy/issues/3468
-			tmpl.eleventyConfig = this.templateConfig;
-
-			// TODO reset other constructor things here like inputDir/outputDir/extensionMap/
-			tmpl.setTemplateData(this.templateData);
+			// TODO reset other constructor things here like inputDir/outputDir
+			tmpl.resetCachedTemplate({
+				templateData: this.templateData,
+				extensionMap: this.extensionMap,
+				eleventyConfig: this.templateConfig,
+			});
 		} else {
 			tmpl = new Template(path, this.templateData, this.extensionMap, this.templateConfig);
-
 			tmpl.setOutputFormat(to);
-
 			tmpl.logger = this.logger;
 			this._templatePathCache.set(path, tmpl);
-
-			/*
-			 * Sample filter: arg str, return pretty HTML string
-			 * function(str) {
-			 *   return pretty(str, { ocd: true });
-			 * }
-			 */
-			tmpl.setTransforms(this.config.transforms);
-
-			for (let linterName in this.config.linters) {
-				let linter = this.config.linters[linterName];
-				if (typeof linter === "function") {
-					tmpl.addLinter(linter);
-				}
-			}
 		}
 
+		tmpl.setTransforms(this.config.transforms);
+		tmpl.setLinters(this.config.linters);
 		tmpl.setDryRun(this.isDryRun);
 		tmpl.setIsVerbose(this.isVerbose);
 		tmpl.reset();
@@ -293,7 +280,7 @@ class TemplateWriter {
 		}
 	}
 
-	_addToTemplateMapFullBuild(paths, to = "fs") {
+	async _addToTemplateMapFullBuild(paths, to = "fs") {
 		if (this.incrementalFile) {
 			return [];
 		}
@@ -302,7 +289,6 @@ class TemplateWriter {
 		let promises = [];
 		for (let path of paths) {
 			let { template: tmpl, wasCached } = this._createTemplate(path, to);
-
 			// Render overrides are only used when `--ignore-initial` is in play and an initial build is not run
 			if (ignoreInitialBuild) {
 				tmpl.setRenderableOverride(false); // disable render
@@ -337,18 +323,18 @@ class TemplateWriter {
 			return true;
 		});
 
-		// Full Build
-		if (!this.incrementalFile) {
-			let ret = await this._addToTemplateMapFullBuild(paths, to);
-
-			// write new template relationships to the global dependency graph for next time
-			this.templateMap.addAllToGlobalDependencyGraph();
-
-			return ret;
+		if (this.incrementalFile) {
+			// Top level async to get at the promises returned.
+			return await this._addToTemplateMapIncrementalBuild(incrementalFileShape, paths, to);
 		}
 
-		// Top level async to get at the promises returned.
-		return await this._addToTemplateMapIncrementalBuild(incrementalFileShape, paths, to);
+		// Full Build
+		let ret = await this._addToTemplateMapFullBuild(paths, to);
+
+		// write new template relationships to the global dependency graph for next time
+		this.templateMap.addAllToGlobalDependencyGraph();
+
+		return ret;
 	}
 
 	async _createTemplateMap(paths, to) {
@@ -357,6 +343,7 @@ class TemplateWriter {
 		await this._addToTemplateMap(paths, to);
 		await this.templateMap.cache();
 
+		// Return is used by tests
 		return this.templateMap;
 	}
 

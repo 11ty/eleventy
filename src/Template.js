@@ -34,6 +34,7 @@ const debug = debugUtil("Eleventy:Template");
 const debugDev = debugUtil("Dev:Eleventy:Template");
 
 class Template extends TemplateContent {
+	#logger;
 	#fsManager;
 
 	constructor(templatePath, templateData, extensionMap, config) {
@@ -46,11 +47,11 @@ class Template extends TemplateContent {
 		this.extraOutputSubdirectory = "";
 
 		this.extensionMap = extensionMap;
+		this.templateData = templateData;
+		this.#initFileSlug();
 
 		this.linters = [];
 		this.transforms = {};
-
-		this.setTemplateData(templateData);
 
 		this.isVerbose = true;
 		this.isDryRun = false;
@@ -66,8 +67,19 @@ class Template extends TemplateContent {
 		this.behavior.setOutputFormat(this.outputFormat);
 	}
 
-	setTemplateData(templateData) {
+	#initFileSlug() {
+		this.fileSlug = new TemplateFileSlug(this.inputPath, this.extensionMap, this.eleventyConfig);
+		this.fileSlugStr = this.fileSlug.getSlug();
+		this.filePathStem = this.fileSlug.getFullPathWithoutExtension();
+	}
+
+	/* mimic constructor arg order */
+	resetCachedTemplate({ templateData, extensionMap, eleventyConfig }) {
+		super.resetCachedTemplate({ eleventyConfig });
 		this.templateData = templateData;
+		this.extensionMap = extensionMap;
+		// this.#fsManager = undefined;
+		this.#initFileSlug();
 	}
 
 	get fsManager() {
@@ -78,16 +90,16 @@ class Template extends TemplateContent {
 	}
 
 	get logger() {
-		if (!this._logger) {
-			this._logger = new ConsoleLogger();
-			this._logger.isVerbose = this.isVerbose;
+		if (!this.#logger) {
+			this.#logger = new ConsoleLogger();
+			this.#logger.isVerbose = this.isVerbose;
 		}
-		return this._logger;
+		return this.#logger;
 	}
 
 	/* Setter for Logger */
 	set logger(logger) {
-		this._logger = logger;
+		this.#logger = logger;
 	}
 
 	isRenderable() {
@@ -158,6 +170,15 @@ class Template extends TemplateContent {
 		return TemplatePath.stripLeadingSubPath(this.parsed.dir, this.inputDir);
 	}
 
+	templateUsesLayouts(pageData) {
+		if (this.hasTemplateRender()) {
+			return pageData?.[this.config.keys.layout] && this.templateRender.engine.useLayouts();
+		}
+
+		// If `layout` prop is set, default to true when engine is unknown
+		return Boolean(pageData?.[this.config.keys.layout]);
+	}
+
 	getLayout(layoutKey) {
 		// already cached downstream in TemplateLayout -> TemplateCache
 		try {
@@ -185,10 +206,12 @@ class Template extends TemplateContent {
 
 	async _getLink(data) {
 		if (!data) {
-			throw new Error("data argument missing in Template->_getLink");
+			throw new Error("Internal error: data argument missing in Template->_getLink");
 		}
 
-		let permalink = data[this.config.keys.permalink];
+		let permalink =
+			data[this.config.keys.permalink] ??
+			data?.[this.config.keys.computed]?.[this.config.keys.permalink];
 		let permalinkValue;
 
 		// `permalink: false` means render but no file system write, e.g. use in collections only)
@@ -241,7 +264,8 @@ class Template extends TemplateContent {
 
 		// Override default permalink behavior. Only do this if permalink was _not_ in the data cascade
 		if (!permalink && this.config.dynamicPermalinks && data.dynamicPermalink !== false) {
-			let permalinkCompilation = this.engine.permalinkNeedsCompilation("");
+			let tr = await this.getTemplateRender();
+			let permalinkCompilation = tr.engine.permalinkNeedsCompilation("");
 			if (typeof permalinkCompilation === "function") {
 				let ret = await this._renderFunction(permalinkCompilation, permalinkValue, this.inputPath);
 				if (ret !== undefined) {
@@ -350,7 +374,8 @@ class Template extends TemplateContent {
 		let { data: frontMatterData } = await this.getFrontMatterData();
 
 		let mergedLayoutData = {};
-		if (this.engine.useLayouts()) {
+		let tr = await this.getTemplateRender();
+		if (tr.engine.useLayouts()) {
 			let layoutKey =
 				frontMatterData[this.config.keys.layout] ||
 				localData[this.config.keys.layout] ||
@@ -461,6 +486,17 @@ class Template extends TemplateContent {
 		return this._cacheRenderedPromise;
 	}
 
+	setLinters(linters) {
+		if (!isPlainObject(linters)) {
+			throw new Error("Object expected in setLinters");
+		}
+		// this acts as a reset
+		this.linters = [];
+		for (let linter of Object.values(linters).filter((l) => typeof l === "function")) {
+			this.addLinter(linter);
+		}
+	}
+
 	addLinter(callback) {
 		this.linters.push(callback);
 	}
@@ -502,7 +538,25 @@ class Template extends TemplateContent {
 		// this check must come before isPlainObject
 		if (typeof obj === "function") {
 			computedData.add(parentKey, obj, declaredDependencies);
-		} else if (Array.isArray(obj) || isPlainObject(obj)) {
+		} else if (Array.isArray(obj)) {
+			// Arrays are treated as one entry in the dependency graph now
+			computedData.addTemplateString(
+				parentKey,
+				async function (innerData) {
+					return Promise.all(
+						obj.map((entry) => {
+							if (typeof entry === "string") {
+								return this.tmpl.renderComputedData(entry, innerData);
+							}
+							return entry;
+						}),
+					);
+				},
+				declaredDependencies,
+				this.getParseForSymbolsFunction(obj),
+				this,
+			);
+		} else if (isPlainObject(obj)) {
 			for (let key in obj) {
 				let keys = [];
 				if (parentKey) {
@@ -732,6 +786,7 @@ class Template extends TemplateContent {
 			return [];
 		}
 
+		// Raw Input *includes* preprocessor modifications
 		// https://github.com/11ty/eleventy/issues/1206
 		data.page.rawInput = rawInput;
 
@@ -801,12 +856,15 @@ class Template extends TemplateContent {
 		};
 
 		if (!this.isDryRun) {
-			let isVirtual = this.isVirtualTemplate();
-			let engineList = this.templateRender.getReadableEnginesListDifferingFromFileExtension();
-			let suffix = `${isVirtual ? " (virtual)" : ""}${engineList ? ` (${engineList})` : ""}`;
-			this.logger.log(
-				`${lang.start} ${outputPath} ${chalk.gray(`from ${this.inputPath}${suffix}`)}`,
-			);
+			if (this.logger.isLoggingEnabled()) {
+				let isVirtual = this.isVirtualTemplate();
+				let tr = await this.getTemplateRender();
+				let engineList = tr.getReadableEnginesListDifferingFromFileExtension();
+				let suffix = `${isVirtual ? " (virtual)" : ""}${engineList ? ` (${engineList})` : ""}`;
+				this.logger.log(
+					`${lang.start} ${outputPath} ${chalk.gray(`from ${this.inputPath}${suffix}`)}`,
+				);
+			}
 		} else if (this.isDryRun) {
 			return;
 		}
@@ -869,7 +927,6 @@ class Template extends TemplateContent {
 		await this.runLinters(content, pageEntry);
 
 		content = await this.runTransforms(content, pageEntry);
-
 		return content;
 	}
 
@@ -964,6 +1021,7 @@ class Template extends TemplateContent {
 		// await tmpl.getTemplateRender();
 
 		// preserves caches too, e.g. _frontMatterDataCache
+		// Does not yet include .computedData
 		for (let key in this) {
 			tmpl[key] = this[key];
 		}
@@ -981,11 +1039,9 @@ class Template extends TemplateContent {
 
 	async getInputFileStat() {
 		// @cachedproperty
-		if (this._stats) {
-			return this._stats;
+		if (!this._stats) {
+			this._stats = fsStat(this.inputPath);
 		}
-
-		this._stats = fsStat(this.inputPath);
 
 		return this._stats;
 	}
@@ -1050,7 +1106,7 @@ class Template extends TemplateContent {
 			// special strings
 			if (!this.isVirtualTemplate()) {
 				if (dateValue.toLowerCase() === "git last modified") {
-					let d = getDateFromGitLastUpdated(this.inputPath);
+					let d = await getDateFromGitLastUpdated(this.inputPath);
 					if (d) {
 						return d;
 					}
@@ -1062,7 +1118,7 @@ class Template extends TemplateContent {
 					return this._getDateInstance("ctimeMs");
 				}
 				if (dateValue.toLowerCase() === "git created") {
-					let d = getDateFromGitFirstAdded(this.inputPath);
+					let d = await getDateFromGitFirstAdded(this.inputPath);
 					if (d) {
 						return d;
 					}

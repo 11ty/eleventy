@@ -271,10 +271,9 @@ class Pagination {
 		let links = [];
 		let hrefs = [];
 
-		let hasPermalinkField = Boolean(this.data[this.config.keys.permalink]);
-		let hasComputedPermalinkField = Boolean(
-			this.data.eleventyComputed && this.data.eleventyComputed[this.config.keys.permalink],
-		);
+		let hasPermalinkField =
+			Boolean(this.data[this.config.keys.permalink]) ||
+			Boolean(this.data.eleventyComputed?.[this.config.keys.permalink]);
 
 		// Do *not* pass collections through DeepCopy, we’ll re-add them back in later.
 		let collections = this.data.collections;
@@ -316,7 +315,7 @@ class Pagination {
 		for (let pageNumber of indices) {
 			let cloned = await this.template.clone();
 
-			if (pageNumber > 0 && !hasPermalinkField && !hasComputedPermalinkField) {
+			if (pageNumber > 0 && !hasPermalinkField) {
 				cloned.setExtraOutputSubdirectory(pageNumber);
 			}
 

@@ -4,6 +4,7 @@ import { createRequire } from "module";
 
 import TemplateData from "../src/Data/TemplateData.js";
 import FileSystemSearch from "../src/FileSystemSearch.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
 import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
 
@@ -90,7 +91,7 @@ test("Data dir does not exist", async (t) => {
     dataObj.setProjectUsingEsm(true);
     await dataObj.getGlobalData();
   }, {
-    message: "The \"test/thisdirectorydoesnotexist\" `input` parameter (directory or file path) must exist on the file system (unless detected as a glob by the `is-glob` package)"
+    message: "The \"test/thisdirectorydoesnotexist\" `input` parameter (directory or file path) must exist on the file system (unless detected as a glob by the `tinyglobby` package)"
   });
 });
 
@@ -102,6 +103,7 @@ test("Add local data", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
@@ -130,6 +132,7 @@ test("Get local data async JS", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
@@ -148,6 +151,7 @@ test("addLocalData() doesn’t exist but doesn’t fail (template file does exis
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
@@ -172,6 +176,7 @@ test("addLocalData() doesn’t exist but doesn’t fail (template file does not 
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   dataObj.setFileSystemSearch(new FileSystemSearch());
 
@@ -366,6 +371,7 @@ test("getLocalDataPaths", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
@@ -392,6 +398,7 @@ test("getLocalDataPaths (with setDataFileBaseName #1699)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
@@ -422,6 +429,7 @@ test("getLocalDataPaths (with empty setDataFileSuffixes #1699)", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
@@ -436,6 +444,7 @@ test("getLocalDataPaths (with setDataFileSuffixes override #1699)", async (t) =>
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
@@ -461,6 +470,7 @@ test("getLocalDataPaths (with setDataFileSuffixes empty string override #1699)",
 
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
@@ -476,6 +486,7 @@ test("getLocalDataPaths (with setDataFileSuffixes override with two entries #169
 
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
@@ -503,6 +514,7 @@ test("getLocalDataPaths (with setDataFileSuffixes and setDataFileBaseName #1699)
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
@@ -529,6 +541,7 @@ test("Deeper getLocalDataPaths", async (t) => {
   let eleventyConfig = await getTemplateConfigInstance();
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
@@ -559,6 +572,7 @@ test("getLocalDataPaths with an 11ty js template", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.11ty.js");
 
@@ -584,6 +598,7 @@ test("getLocalDataPaths with inputDir passed in (trailing slash)", async (t) => 
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
@@ -609,6 +624,7 @@ test("getLocalDataPaths with inputDir passed in (no trailing slash)", async (t) 
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
@@ -634,6 +650,7 @@ test("getLocalDataPaths with inputDir passed in (no leading slash)", async (t) =
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   let paths = await dataObj.getLocalDataPaths("./test/stubs/component/component.liquid");
 
@@ -860,4 +877,68 @@ test("ESM data file", async (t) => {
   t.is(data.module.default, "es module default");
   t.is(data.module.named, "es module named");
   t.is(data.commonjs, "commonjs default");
+});
+
+test("Test collection names from data (empty assigned)", async (t) => {
+  t.deepEqual(TemplateData.getIncludedCollectionNames({
+    tags: [],
+  }), ["all"]);
+
+  t.deepEqual(TemplateData.getIncludedCollectionNames({
+    tags: [],
+    eleventyExcludeFromCollections: true
+  }), []);
+
+  t.deepEqual(TemplateData.getIncludedCollectionNames({
+    tags: [],
+    eleventyExcludeFromCollections: ["one"]
+  }), ["all"]);
+});
+
+test("Test collection names from data (tags assigned)", async (t) => {
+  t.deepEqual(TemplateData.getIncludedCollectionNames({
+    tags: ["one", "two"],
+  }), ["all", "one", "two"]);
+
+  t.deepEqual(TemplateData.getIncludedCollectionNames({
+    tags: ["one", "two"],
+    eleventyExcludeFromCollections: true,
+  }), []);
+
+  t.deepEqual(TemplateData.getIncludedCollectionNames({
+    tags: ["one", "two"],
+    eleventyExcludeFromCollections: ["one"],
+  }), ["all", "two"]);
+});
+
+test("Test tag names from data (empty assigned)", async (t) => {
+  t.deepEqual(TemplateData.getIncludedTagNames({
+    tags: [],
+  }), []);
+
+  t.deepEqual(TemplateData.getIncludedTagNames({
+    tags: [],
+    eleventyExcludeFromCollections: true
+  }), []);
+
+  t.deepEqual(TemplateData.getIncludedTagNames({
+    tags: [],
+    eleventyExcludeFromCollections: ["one"]
+  }), []);
+});
+
+test("Test tag names from data (tags assigned)", async (t) => {
+  t.deepEqual(TemplateData.getIncludedTagNames({
+    tags: ["one", "two"],
+  }), ["one", "two"]);
+
+  t.deepEqual(TemplateData.getIncludedTagNames({
+    tags: ["one", "two"],
+    eleventyExcludeFromCollections: true,
+  }), []);
+
+  t.deepEqual(TemplateData.getIncludedTagNames({
+    tags: ["one", "two"],
+    eleventyExcludeFromCollections: ["one"],
+  }), ["two"]);
 });

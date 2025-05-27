@@ -3,7 +3,7 @@ import chalk from "kleur";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
-import { EleventyImportRaw, EleventyImportRawFromEleventy } from "./Util/Require.js";
+import { EleventyImportRaw } from "./Util/Require.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import UserConfig from "./UserConfig.js";
 import GlobalDependencyMap from "./GlobalDependencyMap.js";
@@ -179,9 +179,10 @@ class TemplateConfig {
 	async reset() {
 		debugDev("Resetting configuration: TemplateConfig and UserConfig.");
 		this.userConfig.reset();
+		this.usesGraph.reset(); // needs to be before forceReloadConfig #3711
+
 		// await this.initializeRootConfig();
 		await this.forceReloadConfig();
-		this.usesGraph.reset();
 
 		// Clear the compile cache
 		eventBus.emit("eleventy.compileCacheReset");
@@ -291,7 +292,7 @@ class TemplateConfig {
 	async initializeRootConfig() {
 		this.rootConfig = this.customRootConfig;
 		if (!this.rootConfig) {
-			let { default: cfg } = await EleventyImportRawFromEleventy("./src/defaultConfig.js");
+			let { default: cfg } = await import("./defaultConfig.js");
 			this.rootConfig = cfg;
 		}
 
@@ -518,9 +519,6 @@ class TemplateConfig {
 
 		// Add to the merged config too
 		mergedConfig.uses = this.usesGraph;
-
-		// this is used for the layouts event
-		this.usesGraph.setConfig(mergedConfig);
 
 		return mergedConfig;
 	}

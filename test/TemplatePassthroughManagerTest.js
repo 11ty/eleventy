@@ -31,6 +31,7 @@ test("isPassthroughCopyFile", async (t) => {
   await eleventyConfig.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
+  mgr.extensionMap = new EleventyExtensionMap(eleventyConfig);
 
   t.false(mgr.isPassthroughCopyFile([]));
   t.false(mgr.isPassthroughCopyFile([], ""));
@@ -78,6 +79,7 @@ test("Get file paths", async (t) => {
   await eleventyConfig.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
+  mgr.extensionMap = new EleventyExtensionMap(eleventyConfig);
 
   t.deepEqual(mgr.getNonTemplatePaths(["test.png"]), ["test.png"]);
 });
@@ -121,6 +123,7 @@ test("Get file paths (one image path)", async (t) => {
   await eleventyConfig.init();
 
   let mgr = new TemplatePassthroughManager(eleventyConfig);
+  mgr.extensionMap = new EleventyExtensionMap(eleventyConfig);
 
   t.deepEqual(mgr.getNonTemplatePaths(["test.png"]), ["test.png"]);
 });
@@ -237,4 +240,16 @@ test("Look for uniqueness on template passthrough paths #1677", async (t) => {
   });
 
   rimrafSync("test/stubs/template-passthrough-duplicates/_site/");
+});
+
+test("Incremental passthrough, issue #3285", async (t) => {
+  let eleventyConfig = new TemplateConfig();
+  eleventyConfig.userConfig.addPassthroughCopy({ './test/stubs-3285/src/scripts': 'scripts' });
+  await eleventyConfig.init();
+
+  let mgr = new TemplatePassthroughManager(eleventyConfig);
+  mgr.setIncrementalFile("./test/stubs-3285/src/scripts/hello-world.js");
+  t.deepEqual(mgr.getAllNormalizedPaths([]), [
+    { copyOptions: {}, inputPath: "./test/stubs-3285/src/scripts", outputPath: "scripts" },
+  ]);
 });

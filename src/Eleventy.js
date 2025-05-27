@@ -19,6 +19,7 @@ import EleventyFiles from "./EleventyFiles.js";
 import TemplatePassthroughManager from "./TemplatePassthroughManager.js";
 import TemplateConfig from "./TemplateConfig.js";
 import FileSystemSearch from "./FileSystemSearch.js";
+import TemplateEngineManager from "./Engines/TemplateEngineManager.js";
 
 /* Utils */
 import ConsoleLogger from "./Util/ConsoleLogger.js";
@@ -32,7 +33,6 @@ import eventBus from "./EventBus.js";
 import { getEleventyPackageJson, getWorkingProjectPackageJson } from "./Util/ImportJsonSync.js";
 import { EleventyImport } from "./Util/Require.js";
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
-import EventBusUtil from "./Util/EventBusUtil.js";
 import { withResolvers } from "./Util/PromiseUtil.js";
 
 /* Plugins */
@@ -395,13 +395,13 @@ class Eleventy {
 	 * Restarts Eleventy.
 	 */
 	async restart() {
-		debug("Restarting");
+		debug("Restarting.");
 		this.start = this.getNewTimestamp();
 
+		this.extensionMap.reset();
 		this.bench.reset();
 		this.passthroughManager.reset();
 		this.eleventyFiles.restart();
-		this.extensionMap.reset();
 	}
 
 	/**
@@ -423,7 +423,7 @@ class Eleventy {
 			copySize,
 			skipCount,
 			writeCount,
-			// renderCount, // files that render (costly) but do not write to disk
+			// renderCount, // files that render (costly) but may not write to disk
 		} = this.writer.getMetadata();
 
 		let slashRet = [];
@@ -438,6 +438,10 @@ class Eleventy {
 				skipCount ? ` (skipped ${skipCount})` : ""
 			}`,
 		);
+
+		// slashRet.push(
+		// 	`${renderCount} rendered`
+		// )
 
 		if (slashRet.length) {
 			ret.push(slashRet.join(" "));
@@ -483,11 +487,11 @@ class Eleventy {
 	 * Starts Eleventy.
 	 */
 	async init(options = {}) {
-		options = Object.assign({ viaConfigReset: false }, options);
-
+		let { viaConfigReset } = Object.assign({ viaConfigReset: false }, options);
 		if (!this.#hasConfigInitialized) {
 			await this.initializeConfig();
 		} else {
+			// Note: Global event bus is different from user config event bus
 			this.config.events.reset();
 		}
 
@@ -498,9 +502,10 @@ class Eleventy {
 		}
 
 		let formats = this.templateFormats.getTemplateFormats();
-
+		let engineManager = new TemplateEngineManager(this.eleventyConfig);
 		this.extensionMap = new EleventyExtensionMap(this.eleventyConfig);
 		this.extensionMap.setFormats(formats);
+		this.extensionMap.engineManager = engineManager;
 		await this.config.events.emit("eleventy.extensionmap", this.extensionMap);
 
 		// eleventyServe is always available, even when not in --serve mode
@@ -544,7 +549,7 @@ class Eleventy {
 
 		this.writer = new TemplateWriter(formats, this.templateData, this.eleventyConfig);
 
-		if (!options.viaConfigReset) {
+		if (!viaConfigReset) {
 			// set or restore cache
 			this.#cache("TemplateWriter", this.writer);
 		}
@@ -849,15 +854,12 @@ Arguments:
 	async resetConfig() {
 		this.env = this.getEnvironmentVariableValues();
 		this.initializeEnvironmentVariables(this.env);
-
 		await this.eleventyConfig.reset();
 
 		this.config = this.eleventyConfig.getConfig();
 		this.eleventyServe.eleventyConfig = this.eleventyConfig;
 
 		this.setIsVerbose(!this.config.quietMode);
-
-		EventBusUtil.resetForConfig();
 	}
 
 	/**
@@ -874,16 +876,20 @@ Arguments:
 		}
 
 		let relevantLayouts = this.eleventyConfig.usesGraph.getLayoutsUsedBy(changedFilePath);
-		// Note: these are sync events!
-		// `templateModified` is an alias for resourceModified but all listeners for this are cleared out when the config is reset.
+
+		// `eleventy.templateModified` is no longer used internally, remove in a future major version.
 		eventBus.emit("eleventy.templateModified", changedFilePath, {
 			usedByDependants,
 			relevantLayouts,
 		});
+
+		// These listeners are *global*, not cleared even on config reset
 		eventBus.emit("eleventy.resourceModified", changedFilePath, usedByDependants, {
 			viaConfigReset: isResetConfig,
 			relevantLayouts,
 		});
+
+		this.config.events.emit("eleventy#templateModified", changedFilePath);
 
 		this.watchManager.addToPendingQueue(changedFilePath);
 	}
@@ -956,7 +962,7 @@ Arguments:
 		await this.init({ viaConfigReset: isResetConfig });
 
 		try {
-			let [, /*passthroughCopyResults*/ templateResults] = await this.write();
+			let [passthroughCopyResults, templateResults] = await this.write();
 
 			this.watchTargets.reset();
 
@@ -976,18 +982,40 @@ Arguments:
 				);
 			});
 
+			let files = this.watchManager.getActiveQueue();
+
+			// Maps passthrough copy files to output URLs for CSS live reload
+			let stylesheetUrls = new Set();
+			for (let entry of passthroughCopyResults) {
+				for (let filepath in entry.map) {
+					if (
+						filepath.endsWith(".css") &&
+						files.includes(TemplatePath.addLeadingDotSlash(filepath))
+					) {
+						stylesheetUrls.add(
+							"/" + TemplatePath.stripLeadingSubPath(entry.map[filepath], this.outputDir),
+						);
+					}
+				}
+			}
+
 			let normalizedPathPrefix = PathPrefixer.normalizePathPrefix(this.config.pathPrefix);
+			let matchingTemplates = templateResults
+				.flat()
+				.filter((entry) => Boolean(entry))
+				.map((entry) => {
+					// only `url`, `inputPath`, and `content` are used: https://github.com/11ty/eleventy-dev-server/blob/1c658605f75224fdc76f68aebe7a412eeb4f1bc9/client/reload-client.js#L140
+					entry.url = PathPrefixer.joinUrlParts(normalizedPathPrefix, entry.url);
+					delete entry.rawInput; // Issue #3481
+					return entry;
+				});
+
 			await this.eleventyServe.reload({
-				files: this.watchManager.getActiveQueue(),
+				files,
 				subtype: onlyCssChanges ? "css" : undefined,
 				build: {
-					templates: templateResults
-						.flat()
-						.filter((entry) => !!entry)
-						.map((entry) => {
-							entry.url = PathPrefixer.joinUrlParts(normalizedPathPrefix, entry.url);
-							return entry;
-						}),
+					stylesheets: Array.from(stylesheetUrls),
+					templates: matchingTemplates,
 				},
 			});
 		} catch (error) {
@@ -1208,12 +1236,14 @@ Arguments:
 					await this.stopWatch();
 				}
 			}
+
+			this.config.events.emit("eleventy.afterwatch");
 		};
 
 		watcher.on("change", async (path) => {
 			// Emulated passthrough copy logs from the server
 			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
-				this.logger.forceLog(`File changed: ${path}`);
+				this.logger.forceLog(`File changed: ${TemplatePath.standardizeFilePath(path)}`);
 			}
 
 			await watchRun(path);
@@ -1222,7 +1252,7 @@ Arguments:
 		watcher.on("add", async (path) => {
 			// Emulated passthrough copy logs from the server
 			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
-				this.logger.forceLog(`File added: ${path}`);
+				this.logger.forceLog(`File added: ${TemplatePath.standardizeFilePath(path)}`);
 			}
 
 			this.fileSystemSearch.add(path);
@@ -1230,21 +1260,28 @@ Arguments:
 		});
 
 		watcher.on("unlink", (path) => {
-			// this.logger.forceLog(`File removed: ${path}`);
+			this.logger.forceLog(`File deleted: ${TemplatePath.standardizeFilePath(path)}`);
 			this.fileSystemSearch.delete(path);
+		});
+
+		// wait for chokidar to be ready.
+		await new Promise((resolve) => {
+			watcher.on("ready", () => resolve());
 		});
 	}
 
 	async stopWatch() {
 		// Prevent multiple invocations.
 		if (this.#isStopping) {
-			return;
+			return this.#isStopping;
 		}
-		this.#isStopping = true;
 
 		debug("Cleaning up chokidar and server instances, if they exist.");
-		await this.eleventyServe.close();
-		await this.watcher?.close();
+		this.#isStopping = Promise.all([this.eleventyServe.close(), this.watcher?.close()]).then(() => {
+			this.#isStopping = false;
+		});
+
+		return this.#isStopping;
 	}
 
 	/**
@@ -1303,8 +1340,11 @@ Arguments:
 			if (!this.#initPromise) {
 				this.#initPromise = this.init();
 			}
-			await this.#initPromise;
-			this.#needsInit = false;
+			await this.#initPromise.then(() => {
+				// #needsInit also set to false at the end of `init()`
+				this.#needsInit = false;
+				this.#initPromise = undefined;
+			});
 		}
 
 		if (!this.writer) {
@@ -1382,7 +1422,7 @@ Arguments:
 		} catch (error) {
 			hasError = true;
 
-			// Issue #2405: Don’t change the exit code for programmatic scripts
+			// Issue #2405: Don’t change the exitCode for programmatic scripts
 			let errorSeverity = this.source === "script" ? "error" : "fatal";
 			this.errorHandler.once(errorSeverity, error, "Problem writing Eleventy templates");
 

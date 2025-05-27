@@ -1,10 +1,12 @@
 import test from "ava";
 
+import Eleventy from "../src/Eleventy.js";
 import TemplateData from "../src/Data/TemplateData.js";
 
 import getNewTemplate from "./_getNewTemplateForTests.js";
 import { renderTemplate } from "./_getRenderedTemplates.js";
 import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
 async function getRenderedData(tmpl, pageNumber = 0) {
   let data = await tmpl.getData();
@@ -130,6 +132,7 @@ test("eleventyComputed relies on global data", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
   let tmpl = await getNewTemplate(
     "./test/stubs/eleventyComputed/use-global-data.njk",
@@ -155,6 +158,7 @@ test("eleventyComputed intermixes with global data", async (t) => {
   });
 
   let dataObj = new TemplateData(eleventyConfig);
+  dataObj.extensionMap = new EleventyExtensionMap(eleventyConfig);
   dataObj.setProjectUsingEsm(true);
 
   let tmpl = await getNewTemplate(
@@ -248,4 +252,98 @@ test("eleventyComputed render strings in arrays", async (t) => {
   let data = await getRenderedData(tmpl);
   t.deepEqual(data.array, ["static value", "test"]);
   t.is(data.notArray, "test");
+});
+
+test("Issue #3728 Computed data with arrays of different sizes, arrays are treated as a single unit", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.njk", `---js
+const arr = [1,2,3,4,5];
+const eleventyComputed = {
+  arr: ["a", "b", "c"]
+}
+---
+{{ arr }}`);
+    }
+  });
+  elev.disableLogger();
+
+  let result = await elev.toJSON();
+  t.is(result.length, 1);
+  t.is(result[0].content, `a,b,c`);
+});
+
+test("Issue #3827 with Computed data with arrays and layouts (×2 eleventyComputed)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.setUseTemplateCache(false);
+      eleventyConfig.addTemplate("_includes/base.njk", `---js
+const eleventyComputed = {
+  arr: ["base", "base2"]
+};
+---
+{{ content | safe }}`);
+
+      eleventyConfig.addTemplate("page1.njk", `---js
+const layout = "base.njk";
+---
+{{ arr }}`);
+
+    eleventyConfig.addTemplate("page2.njk", `---js
+const layout = "base.njk";
+const eleventyComputed = {
+  arr: ["override", "override2"]
+}
+---
+{{ arr }}`);
+    }
+  });
+
+  elev.disableLogger();
+
+  let result = await elev.toJSON();
+  result.sort((a, b) => {
+    return a.inputPath - b.inputPath;
+  });
+
+  t.is(result.length, 2);
+  t.is(result[0].content, `base,base2`);
+  // A merge happened here because it was eleventyComputed -> eleventyComputed array merge before computed data
+  t.is(result[1].content, `base,base2,override,override2`);
+});
+
+test("Issue #3728 with Computed data with arrays and layouts (×1 eleventyComputed)", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("_includes/base.njk", `---js
+const arr = ["base", 1];
+---
+{{ content | safe }}`);
+
+      eleventyConfig.addTemplate("page1.njk", `---js
+const layout = "base.njk";
+---
+{{ arr }}`);
+
+    eleventyConfig.addTemplate("page2.njk", `---js
+const layout = "base.njk";
+const eleventyComputed = {
+  arr: ["override", 2]
+}
+---
+{{ arr }}`);
+    }
+  });
+
+  elev.disableLogger();
+
+  let result = await elev.toJSON();
+  result.sort((a, b) => {
+    return a.inputPath - b.inputPath;
+  });
+
+  t.is(result.length, 2);
+
+  t.is(result[0].content, `base,1`);
+  t.is(result[1].content, `override,2`);
 });

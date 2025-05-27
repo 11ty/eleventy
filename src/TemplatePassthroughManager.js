@@ -1,8 +1,7 @@
-import isGlob from "is-glob";
+import { isDynamicPattern } from "tinyglobby";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
-import EleventyExtensionMap from "./EleventyExtensionMap.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import TemplatePassthrough from "./TemplatePassthrough.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
@@ -17,6 +16,7 @@ class TemplatePassthroughManager {
 	#isDryRun = false;
 	#afterBuild;
 	#queue = new Map();
+	#extensionMap;
 
 	constructor(templateConfig) {
 		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
@@ -53,15 +53,14 @@ class TemplatePassthroughManager {
 	}
 
 	set extensionMap(extensionMap) {
-		this._extensionMap = extensionMap;
+		this.#extensionMap = extensionMap;
 	}
 
 	get extensionMap() {
-		if (!this._extensionMap) {
-			this._extensionMap = new EleventyExtensionMap(this.templateConfig);
-			this._extensionMap.setFormats([]);
+		if (!this.#extensionMap) {
+			throw new Error("Internal error: missing `extensionMap` in TemplatePassthroughManager.");
 		}
-		return this._extensionMap;
+		return this.#extensionMap;
 	}
 
 	get inputDir() {
@@ -244,7 +243,11 @@ class TemplatePassthroughManager {
 			if (TemplatePath.startsWithSubPath(changedFile, path.inputPath)) {
 				return path;
 			}
-			if (changedFile && isGlob(path.inputPath) && isGlobMatch(changedFile, [path.inputPath])) {
+			if (
+				changedFile &&
+				isDynamicPattern(path.inputPath) &&
+				isGlobMatch(changedFile, [path.inputPath])
+			) {
 				return path;
 			}
 		}
@@ -252,13 +255,13 @@ class TemplatePassthroughManager {
 		return false;
 	}
 
-	getAllNormalizedPaths(paths) {
+	getAllNormalizedPaths(paths = []) {
 		if (this.incrementalFile) {
 			let isPassthrough = this.isPassthroughCopyFile(paths, this.incrementalFile);
 
 			if (isPassthrough) {
 				if (isPassthrough.outputPath) {
-					return [this._normalizePaths(this.incrementalFile, isPassthrough.outputPath)];
+					return [isPassthrough];
 				}
 
 				return [this._normalizePaths(this.incrementalFile)];

@@ -2,6 +2,7 @@ import test from "ava";
 
 import TemplateLayout from "../src/TemplateLayout.js";
 import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import TemplateEngineManager from "../src/Engines/TemplateEngineManager.js";
 
 import { renderLayoutViaLayout } from "./_getRenderedTemplates.js";
 import { getTemplateConfigInstance } from "./_testHelpers.js";
@@ -13,9 +14,11 @@ async function getTemplateLayoutInstance(key, inputDir, map) {
 		}
 	});
 
+  let mgr = new TemplateEngineManager(eleventyConfig);
   if (!map) {
     map = new EleventyExtensionMap(eleventyConfig);
     map.setFormats(["liquid", "md", "njk", "html", "11ty.js"]);
+    map.engineManager = mgr;
   }
   let layout = new TemplateLayout(key, map, eleventyConfig);
   return layout;

@@ -1,4 +1,5 @@
 import path from "node:path";
+import util from "node:util";
 import semver from "semver";
 
 import lodash from "@11ty/lodash-custom";
@@ -7,7 +8,6 @@ import debugUtil from "debug";
 
 import unique from "../Util/Objects/Unique.js";
 import TemplateGlob from "../TemplateGlob.js";
-import EleventyExtensionMap from "../EleventyExtensionMap.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import TemplateDataInitialGlobalData from "./TemplateDataInitialGlobalData.js";
 import { getEleventyPackageJson, getWorkingProjectPackageJson } from "../Util/ImportJsonSync.js";
@@ -84,8 +84,7 @@ class TemplateData {
 
 	get extensionMap() {
 		if (!this._extensionMap) {
-			this._extensionMap = new EleventyExtensionMap(this.templateConfig);
-			this._extensionMap.setFormats([]);
+			throw new Error("Internal error: missing `extensionMap` in TemplateData.");
 		}
 		return this._extensionMap;
 	}
@@ -402,7 +401,9 @@ class TemplateData {
 				);
 			} else {
 				// clean up data for template/directory data files only.
-				let cleanedDataForPath = TemplateData.cleanupData(dataForPath);
+				let cleanedDataForPath = TemplateData.cleanupData(dataForPath, {
+					file: path,
+				});
 				for (let key in cleanedDataForPath) {
 					if (Object.prototype.hasOwnProperty.call(dataSource, key)) {
 						debugWarn(
@@ -425,7 +426,7 @@ class TemplateData {
 			let localDataPaths = await this.getLocalDataPaths(templatePath);
 			let importedData = await this.combineLocalData(localDataPaths);
 
-			this.templateDirectoryData[templatePath] = Object.assign({}, importedData);
+			this.templateDirectoryData[templatePath] = importedData;
 		}
 		return this.templateDirectoryData[templatePath];
 	}
@@ -636,7 +637,7 @@ class TemplateData {
 	}
 
 	/* Like cleanupData() but does not mutate */
-	static getCleanedTagsImmutable(data) {
+	static getCleanedTagsImmutable(data, options = {}) {
 		let tags = [];
 
 		if (isPlainObject(data) && data.tags) {
@@ -644,6 +645,10 @@ class TemplateData {
 				tags = (data.tags || "").split(",");
 			} else if (Array.isArray(data.tags)) {
 				tags = data.tags;
+			} else if (data.tags) {
+				throw new Error(
+					`String or Array expected for \`tags\`${options.file ? ` in ${options.isVirtualTemplate ? "virtual " : ""}template: ${options.file}` : ""}. Received: ${util.inspect(data.tags)}`,
+				);
 			}
 
 			// Deduplicate tags
@@ -653,16 +658,9 @@ class TemplateData {
 		return tags;
 	}
 
-	static cleanupData(data) {
+	static cleanupData(data, options = {}) {
 		if (isPlainObject(data) && "tags" in data) {
-			if (typeof data.tags === "string") {
-				data.tags = data.tags ? [data.tags] : [];
-			} else if (data.tags === null) {
-				data.tags = [];
-			}
-
-			// Deduplicate tags
-			data.tags = [...new Set(data.tags)];
+			data.tags = this.getCleanedTagsImmutable(data, options);
 		}
 
 		return data;
@@ -686,35 +684,19 @@ class TemplateData {
 		};
 	}
 
-	/* Same as getIncludedTagNames() but may also include "all" */
 	static getIncludedCollectionNames(data) {
 		let tags = TemplateData.getCleanedTagsImmutable(data);
 
-		if (tags.length > 0) {
-			let { excludes, excludeAll } = TemplateData.getNormalizedExcludedCollections(data);
-			if (excludeAll) {
-				return [];
-			} else {
-				return ["all", ...tags].filter((tag) => !excludes.includes(tag));
-			}
-		} else {
-			return ["all"];
+		let { excludes, excludeAll } = TemplateData.getNormalizedExcludedCollections(data);
+		if (excludeAll) {
+			return [];
 		}
+
+		return ["all", ...tags].filter((tag) => !excludes.includes(tag));
 	}
 
 	static getIncludedTagNames(data) {
-		let tags = TemplateData.getCleanedTagsImmutable(data);
-
-		if (tags.length > 0) {
-			let { excludes, excludeAll } = TemplateData.getNormalizedExcludedCollections(data);
-			if (excludeAll) {
-				return [];
-			} else {
-				return tags.filter((tag) => !excludes.includes(tag));
-			}
-		} else {
-			return [];
-		}
+		return this.getIncludedCollectionNames(data).filter((tagName) => tagName !== "all");
 	}
 }
 

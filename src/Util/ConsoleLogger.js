@@ -22,6 +22,13 @@ class ConsoleLogger {
 		});
 	}
 
+	isLoggingEnabled() {
+		if (!this.isVerbose || process.env.DEBUG) {
+			return true;
+		}
+		return this.#logger !== false;
+	}
+
 	get isVerbose() {
 		return this.#isVerbose;
 	}

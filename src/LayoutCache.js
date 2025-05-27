@@ -5,7 +5,7 @@ import eventBus from "./EventBus.js";
 // Note: this is only used for TemplateLayout right now but could be used for more
 // Just be careful because right now the TemplateLayout cache keys are not directly mapped to paths
 // So you may get collisions if you use this for other things.
-class TemplateCache {
+class LayoutCache {
 	constructor() {
 		this.cache = {};
 		this.cacheByInputPath = {};
@@ -18,6 +18,9 @@ class TemplateCache {
 
 	// alias
 	removeAll() {
+		for (let layoutFilePath in this.cacheByInputPath) {
+			this.remove(layoutFilePath);
+		}
 		this.clear();
 	}
 
@@ -30,7 +33,7 @@ class TemplateCache {
 
 		if (typeof layoutTemplate === "string") {
 			throw new Error(
-				"Invalid argument type passed to TemplateCache->add(). Should be a TemplateLayout.",
+				"Invalid argument type passed to LayoutCache->add(). Should be a TemplateLayout.",
 			);
 		}
 
@@ -59,7 +62,7 @@ class TemplateCache {
 
 	get(key) {
 		if (!this.has(key)) {
-			throw new Error(`Could not find ${key} in TemplateCache.`);
+			throw new Error(`Could not find ${key} in LayoutCache.`);
 		}
 
 		return this.cache[key];
@@ -84,20 +87,11 @@ class TemplateCache {
 	}
 }
 
-let layoutCache = new TemplateCache();
+let layoutCache = new LayoutCache();
 
-eventBus.on("eleventy.resourceModified", (path, usedBy, metadata = {}) => {
+eventBus.on("eleventy.resourceModified", () => {
 	// https://github.com/11ty/eleventy-plugin-bundle/issues/10
-	if (metadata.viaConfigReset) {
-		layoutCache.removeAll();
-	} else if (metadata.relevantLayouts?.length) {
-		// reset the appropriate layouts relevant to the file.
-		for (let layoutPath of metadata.relevantLayouts || []) {
-			layoutCache.remove(layoutPath);
-		}
-	} else {
-		layoutCache.remove(path);
-	}
+	layoutCache.removeAll();
 });
 
 // singleton

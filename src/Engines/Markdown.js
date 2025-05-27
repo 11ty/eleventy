@@ -2,7 +2,7 @@ import markdownIt from "markdown-it";
 
 import TemplateEngine from "./TemplateEngine.js";
 
-class Markdown extends TemplateEngine {
+export default class Markdown extends TemplateEngine {
 	constructor(name, eleventyConfig) {
 		super(name, eleventyConfig);
 
@@ -29,7 +29,7 @@ class Markdown extends TemplateEngine {
 			this.mdLib.disable("code");
 		}
 
-		this.setEngineLib(this.mdLib);
+		this.setEngineLib(this.mdLib, Boolean(this.config.libraryOverrides.md));
 	}
 
 	setMarkdownOptions(options) {
@@ -50,17 +50,24 @@ class Markdown extends TemplateEngine {
 		);
 	}
 
+	// TODO use preTemplateEngine to help inform this
+	// needsCompilation() {
+	// 	return super.needsCompilation();
+	// }
+
+	async #getPreEngine(preTemplateEngine) {
+		if (typeof preTemplateEngine === "string") {
+			return this.engineManager.getEngine(preTemplateEngine, this.extensionMap);
+		}
+
+		return preTemplateEngine;
+	}
+
 	async compile(str, inputPath, preTemplateEngine, bypassMarkdown) {
 		let mdlib = this.mdLib;
 
 		if (preTemplateEngine) {
-			let engine;
-			if (typeof preTemplateEngine === "string") {
-				engine = await this.engineManager.getEngine(preTemplateEngine, this.extensionMap);
-			} else {
-				engine = preTemplateEngine;
-			}
-
+			let engine = await this.#getPreEngine(preTemplateEngine);
 			let fnReady = engine.compile(str, inputPath);
 
 			if (bypassMarkdown) {
@@ -89,5 +96,3 @@ class Markdown extends TemplateEngine {
 		}
 	}
 }
-
-export default Markdown;

@@ -8,7 +8,7 @@ import { augmentObject } from "./Util/ContextAugmenter.js";
 
 // const debug = debugUtil("Eleventy:Liquid");
 
-class Liquid extends TemplateEngine {
+export default class Liquid extends TemplateEngine {
 	static argumentLexerOptions = {
 		number: /[0-9]+\.*[0-9]*/,
 		doubleQuoteString: /"(?:\\["\\]|[^\n"\\])*"/,
@@ -31,7 +31,7 @@ class Liquid extends TemplateEngine {
 	setLibrary(override) {
 		// warning, the include syntax supported here does not exactly match what Jekyll uses.
 		this.liquidLib = override || new LiquidJs(this.getLiquidOptions());
-		this.setEngineLib(this.liquidLib);
+		this.setEngineLib(this.liquidLib, Boolean(this.config.libraryOverrides.liquid));
 
 		this.addFilters(this.config.liquidFilters);
 
@@ -274,6 +274,10 @@ class Liquid extends TemplateEngine {
 	}
 
 	parseForSymbols(str) {
+		if (!str) {
+			return [];
+		}
+
 		let tokenizer = new Tokenizer(str);
 		/** @type {Array} */
 		let tokens = tokenizer.readTopLevelTokens();
@@ -322,5 +326,3 @@ class Liquid extends TemplateEngine {
 		};
 	}
 }
-
-export default Liquid;
