@@ -91,8 +91,15 @@ export class TemplateDepGraph extends DependencyGraph {
 	}
 
 	overallOrder() {
-		return super.overallOrder().filter((entry) => {
+		let filtered = super.overallOrder().filter((entry) => {
 			return !entry.startsWith("[") && !entry.endsWith("]");
 		});
+
+		// Add another collections.all entry (if not already the last one)
+		if (filtered[filtered.length - 1] !== `${COLLECTION_PREFIX}all`) {
+			filtered.push(`${COLLECTION_PREFIX}all`);
+		}
+
+		return filtered;
 	}
 }

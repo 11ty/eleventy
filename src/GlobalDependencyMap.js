@@ -421,17 +421,6 @@ class GlobalDependencyMap {
 			order.push(entry);
 		}
 
-		// add another collections.all entry (if not already the last one)
-		// TODO move this upwards into templatedepgraph
-		if (order[order.length - 1] !== "__collection:all") {
-			order.push("__collection:all");
-		}
-
-		// Remove duplicates when they are unnecessary
-		if (order.slice(-3).join(",") === "__collection:all,__collection:[keys],__collection:all") {
-			order = order.slice(0, -2); // keep the last __collection:all
-		}
-
 		return order;
 	}
 

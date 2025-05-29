@@ -36,5 +36,6 @@ test("Using new Template DepGraph", async (t) => {
     "template-paginated-collections.njk",
     "__collection:all",
     "template-paginated-over-all.njk",
+    "__collection:all",
   ]);
 });
