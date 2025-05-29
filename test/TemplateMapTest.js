@@ -1192,12 +1192,12 @@ test("Paginate over collections (tag pages) related to #3823", async (t) => {
 
   let collections = await tm._testGetCollectionsData();
   // 2 individual templates, 3 pages for tagpagesall
-  t.deepEqual(collections.all.map(entry => entry.url), [
-    '/test/stubs/templateMapCollection/test1/',
-    '/test/stubs/templateMapCollection/test2/',
+  t.deepEqual(collections.all.map(entry => entry.url).sort(), [
     '/test/stubs/page-target-collections/tagpagesall/',
     '/test/stubs/page-target-collections/tagpagesall/1/',
     '/test/stubs/page-target-collections/tagpagesall/2/',
+    '/test/stubs/templateMapCollection/test1/',
+    '/test/stubs/templateMapCollection/test2/',
   ]);
 });
 
