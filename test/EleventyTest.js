@@ -472,7 +472,7 @@ test("Unicode in front matter `tags`, issue #670", async (t) => {
     return 1;
   });
 
-  t.is(results[0].content.trim(), "2,all,Cañon City,");
+  t.is(results[0].content.trim(), "2,Cañon City,all,");
 });
 
 test("#142: date 'git Last Modified' populates page.date", async (t) => {
