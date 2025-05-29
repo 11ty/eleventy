@@ -26,7 +26,7 @@ export class TemplateDepGraph extends DependencyGraph {
 		this.addDependency(from, to);
 	}
 
-	addTag(tagName) {
+	addTag(tagName, type) {
 		if (
 			tagName === "all" ||
 			(tagName.startsWith("[") && tagName.endsWith("]")) ||
@@ -34,8 +34,13 @@ export class TemplateDepGraph extends DependencyGraph {
 		) {
 			return;
 		}
+		if (!type) {
+			throw new Error(
+				"Missing tag type for addTag. Expecting 'userconfig' or 'basic'. Received: " + type,
+			);
+		}
 
-		this.uses(`${COLLECTION_PREFIX}[basic]`, `${COLLECTION_PREFIX}${tagName}`);
+		this.uses(`${COLLECTION_PREFIX}[${type}]`, `${COLLECTION_PREFIX}${tagName}`);
 	}
 
 	addConfigCollectionName(collectionName) {
@@ -44,8 +49,7 @@ export class TemplateDepGraph extends DependencyGraph {
 		}
 
 		this.#configCollections.add(collectionName);
-
-		this.uses(`${COLLECTION_PREFIX}[userconfig]`, `${COLLECTION_PREFIX}${collectionName}`);
+		// Collection relationships to `[userconfig]` are added last, in unfilteredOrder()
 	}
 
 	addTemplate(filePath, consumes = [], publishesTo = []) {
@@ -54,14 +58,25 @@ export class TemplateDepGraph extends DependencyGraph {
 			this.uses(`${COLLECTION_PREFIX}[basic]`, filePath);
 		}
 
-		// Can’t consume and publish to `all`
-		let isConsumingAll = consumes.includes("all");
-		if (isConsumingAll) {
+		// Can’t consume AND publish to `all` simultaneously
+		let consumesAll = consumes.includes("all");
+		if (consumesAll) {
 			publishesTo = publishesTo.filter((entry) => entry !== "all");
 		}
 
 		for (let collectionName of publishesTo) {
-			this.addTag(collectionName);
+			if (!consumesAll) {
+				let tagType = "basic";
+
+				let consumesUserConfigCollection = consumes.find((entry) =>
+					this.#configCollections.has(entry),
+				);
+				if (consumesUserConfigCollection) {
+					tagType = "userconfig";
+				}
+				this.addTag(collectionName, tagType);
+			}
+
 			this.uses(`${COLLECTION_PREFIX}${collectionName}`, filePath);
 		}
 
@@ -87,11 +102,17 @@ export class TemplateDepGraph extends DependencyGraph {
 	}
 
 	unfilteredOrder() {
+		// these need to be added last, after the template map has been added (see addConfigCollectionName)
+		for (let collectionName of this.#configCollections) {
+			this.uses(`${COLLECTION_PREFIX}[userconfig]`, `${COLLECTION_PREFIX}${collectionName}`);
+		}
+
 		return super.overallOrder();
 	}
 
 	overallOrder() {
-		let filtered = super.overallOrder().filter((entry) => {
+		let unfiltered = this.unfilteredOrder();
+		let filtered = unfiltered.filter((entry) => {
 			return !entry.startsWith("[") && !entry.endsWith("]");
 		});
 

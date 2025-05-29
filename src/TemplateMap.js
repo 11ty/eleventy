@@ -152,9 +152,9 @@ class TemplateMap {
 	}
 
 	// TODO(slightlyoff): major bottleneck
-	async initDependencyMap(dependencyMap) {
+	async initDependencyMap(fullTemplateOrder) {
 		// Temporary workaround for async constructor work in templates
-		let inputPathSet = new Set(dependencyMap);
+		let inputPathSet = new Set(fullTemplateOrder);
 		await Promise.all(
 			this.map
 				.filter(({ inputPath }) => {
@@ -166,7 +166,7 @@ class TemplateMap {
 				}),
 		);
 
-		for (let depEntry of dependencyMap) {
+		for (let depEntry of fullTemplateOrder) {
 			if (GlobalDependencyMap.isTag(depEntry)) {
 				let tagName = GlobalDependencyMap.getTagName(depEntry);
 				// [NAME] is special and implied (e.g. [keys])
