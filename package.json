@@ -75,6 +75,7 @@
 		"watchMode": {
 			"ignoreChanges": [
 				"./test/stubs*/**/*",
+				"./test/**/_site/**/*",
 				".cache"
 			]
 		}
@@ -114,7 +115,7 @@
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0",
 		"rimraf": "^6.0.1",
-		"sass": "^1.86.3",
+		"sass": "^1.89.0",
 		"simple-git-hooks": "^2.12.1",
 		"tsx": "^4.19.3",
 		"typescript": "^5.8.3",
@@ -155,7 +156,7 @@
 		"posthtml-match-helper": "^2.0.3",
 		"semver": "^7.7.2",
 		"slugify": "^1.6.6",
-		"tinyglobby": "^0.2.13"
+		"tinyglobby": "^0.2.14"
 	},
 	"overrides": {
 		"gray-matter": {
