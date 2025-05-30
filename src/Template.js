@@ -1103,6 +1103,12 @@ class Template extends TemplateContent {
 				return dateValue;
 			}
 
+			if (typeof dateValue !== "string") {
+				throw new Error(
+					`Data cascade value for \`date\` (${dateValue}) is invalid for ${this.inputPath}. Expected a JavaScript Date instance, luxon DateTime instance, or String value.`,
+				);
+			}
+
 			// special strings
 			if (!this.isVirtualTemplate()) {
 				if (dateValue.toLowerCase() === "git last modified") {
