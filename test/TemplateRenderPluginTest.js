@@ -313,3 +313,11 @@ test("renderContent filter #3369 #3370 via renderTemplate (njk)", async (t) => {
   });
   t.is(html, "test content");
 });
+
+test("#3368 #3810 config init bug with RenderManager", async (t) => {
+  let elev = new Eleventy("./test/stubs-3810/", false, {
+    configPath: "./test/stubs-3810/eleventy.config.js",
+  });
+  let results = await elev.toJSON();
+  t.is(results[0].content, `<h1>Sign up for our newsletter!</h1>`);
+});

@@ -520,9 +520,6 @@ class TemplateConfig {
 		// Add to the merged config too
 		mergedConfig.uses = this.usesGraph;
 
-		// this is used for the layouts event
-		this.usesGraph.setConfig(mergedConfig);
-
 		return mergedConfig;
 	}
 

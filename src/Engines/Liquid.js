@@ -31,7 +31,7 @@ export default class Liquid extends TemplateEngine {
 	setLibrary(override) {
 		// warning, the include syntax supported here does not exactly match what Jekyll uses.
 		this.liquidLib = override || new LiquidJs(this.getLiquidOptions());
-		this.setEngineLib(this.liquidLib);
+		this.setEngineLib(this.liquidLib, Boolean(this.config.libraryOverrides.liquid));
 
 		this.addFilters(this.config.liquidFilters);
 
@@ -274,7 +274,7 @@ export default class Liquid extends TemplateEngine {
 	}
 
 	parseForSymbols(str) {
-		if(!str) {
+		if (!str) {
 			return [];
 		}
 
