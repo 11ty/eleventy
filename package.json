@@ -75,6 +75,7 @@
 		"watchMode": {
 			"ignoreChanges": [
 				"./test/stubs*/**/*",
+				"./test/**/_site/**/*",
 				".cache"
 			]
 		}
@@ -92,6 +93,7 @@
 		"@11ty/eleventy-img": "^6.0.2",
 		"@11ty/eleventy-plugin-rss": "^2.0.3",
 		"@11ty/eleventy-plugin-syntaxhighlight": "^5.0.0",
+		"@11ty/eleventy-plugin-webc": "^0.12.0-beta.3",
 		"@eslint/eslintrc": "^3.3.1",
 		"@eslint/js": "^9.24.0",
 		"@iarna/toml": "^2.2.5",
@@ -104,6 +106,7 @@
 		"eslint": "^9.24.0",
 		"eslint-config-prettier": "^10.1.2",
 		"globals": "^16.0.0",
+		"markdown-it-abbr": "^2.0.0",
 		"markdown-it-emoji": "^3.0.0",
 		"marked": "^15.0.8",
 		"nano-staged": "^0.8.0",
@@ -153,7 +156,7 @@
 		"posthtml-match-helper": "^2.0.3",
 		"semver": "^7.7.2",
 		"slugify": "^1.6.6",
-		"tinyglobby": "^0.2.13"
+		"tinyglobby": "^0.2.14"
 	},
 	"overrides": {
 		"gray-matter": {
