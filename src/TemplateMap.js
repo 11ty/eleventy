@@ -21,6 +21,12 @@ const EXTENSIONLESS_URL_ALLOWLIST = [
 	"/_headers", // Cloudflare
 ];
 
+// must match TemplateDepGraph
+const SPECIAL_COLLECTION_NAMES = {
+	keys: "[keys]",
+	all: "all",
+};
+
 class TemplateMap {
 	#dependencyMapInitialized = false;
 
@@ -74,16 +80,18 @@ class TemplateMap {
 	}
 
 	getTagTarget(str) {
+		if (str === "collections") {
+			// special, means targeting `collections` specifically
+			return SPECIAL_COLLECTION_NAMES.keys;
+		}
+
 		if (str.startsWith("collections.")) {
 			return str.slice("collections.".length);
 		}
+
 		// Fixes #2851
 		if (str.startsWith("collections['") || str.startsWith('collections["')) {
 			return str.slice("collections['".length, -2);
-		}
-		if (str === "collections") {
-			// special, means targeting `collections` specifically
-			return GlobalDependencyMap.SPECIAL_KEYS_COLLECTION_NAME;
 		}
 	}
 
@@ -94,33 +102,29 @@ class TemplateMap {
 	}
 
 	#addEntryToGlobalDependencyGraph(entry) {
-		let paginationTagTarget = this.getPaginationTagTarget(entry);
-		if (paginationTagTarget) {
-			this.config.uses.addDependencyConsumesCollection(entry.inputPath, paginationTagTarget);
-		}
+		let consumes = [];
+		consumes.push(this.getPaginationTagTarget(entry));
 
 		if (Array.isArray(entry.data.eleventyImport?.collections)) {
 			for (let tag of entry.data.eleventyImport.collections) {
-				this.config.uses.addDependencyConsumesCollection(entry.inputPath, tag);
+				consumes.push(tag);
 			}
 		}
 
 		// Important: consumers must come before publishers
 
 		// TODO it’d be nice to set the dependency relationship for addCollection here
-		let collectionNames = TemplateData.getIncludedCollectionNames(entry.data);
-		for (let name of collectionNames) {
-			this.config.uses.addDependencyPublishesToCollection(entry.inputPath, name);
-		}
+		// But collections are not yet populated (they populate after template order)
+		let publishes = TemplateData.getIncludedCollectionNames(entry.data);
 
-		// if not otherwise added, add it the graph
-		if (!this.config.uses.hasNode(entry.inputPath)) {
-			this.config.uses.addDependency(entry.inputPath);
-		}
+		this.config.uses.addNewNodeRelationships(entry.inputPath, consumes, publishes);
 	}
 
 	addAllToGlobalDependencyGraph() {
 		this.#dependencyMapInitialized = true;
+
+		// Should come before individual entry additions
+		this.config.uses.initializeUserConfigurationApiCollections();
 
 		for (let entry of this.map) {
 			this.#addEntryToGlobalDependencyGraph(entry);
@@ -148,20 +152,21 @@ class TemplateMap {
 	}
 
 	// TODO(slightlyoff): major bottleneck
-	async initDependencyMap(dependencyMap) {
+	async initDependencyMap(fullTemplateOrder) {
 		// Temporary workaround for async constructor work in templates
-		let inputPathSet = new Set(dependencyMap);
+		let inputPathSet = new Set(fullTemplateOrder);
 		await Promise.all(
 			this.map
 				.filter(({ inputPath }) => {
 					return inputPathSet.has(inputPath);
 				})
 				.map(({ template }) => {
+					// This also happens for layouts in TemplateContent->compile
 					return template.asyncTemplateInitialization();
 				}),
 		);
 
-		for (let depEntry of dependencyMap) {
+		for (let depEntry of fullTemplateOrder) {
 			if (GlobalDependencyMap.isTag(depEntry)) {
 				let tagName = GlobalDependencyMap.getTagName(depEntry);
 				// [NAME] is special and implied (e.g. [keys])
