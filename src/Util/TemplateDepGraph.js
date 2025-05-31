@@ -1,4 +1,7 @@
 import { DepGraph as DependencyGraph } from "dependency-graph";
+import debugUtil from "debug";
+
+const debug = debugUtil("Eleventy:TemplateDepGraph");
 
 const COLLECTION_PREFIX = "__collection:";
 
@@ -40,6 +43,8 @@ export class TemplateDepGraph extends DependencyGraph {
 			);
 		}
 
+		debug("collection type %o uses tag %o", tagName, type);
+
 		this.uses(`${COLLECTION_PREFIX}[${type}]`, `${COLLECTION_PREFIX}${tagName}`);
 	}
 
@@ -53,7 +58,8 @@ export class TemplateDepGraph extends DependencyGraph {
 	}
 
 	cleanupCollectionNames(collectionNames = []) {
-		if (collectionNames.includes("[userconfig]")) {
+		let s = new Set(collectionNames);
+		if (s.has("[userconfig]")) {
 			return collectionNames;
 		}
 
@@ -65,10 +71,10 @@ export class TemplateDepGraph extends DependencyGraph {
 		});
 
 		if (hasAnyConfigCollections) {
-			collectionNames.push("[userconfig]");
+			s.add("[userconfig]");
 		}
 
-		return collectionNames;
+		return Array.from(s);
 	}
 
 	addTemplate(filePath, consumes = [], publishesTo = []) {
@@ -79,12 +85,13 @@ export class TemplateDepGraph extends DependencyGraph {
 
 		consumes = this.cleanupCollectionNames(consumes);
 		publishesTo = this.cleanupCollectionNames(publishesTo);
-
 		// Can’t consume AND publish to `all` simultaneously
 		let consumesAll = consumes.includes("all");
 		if (consumesAll) {
 			publishesTo = publishesTo.filter((entry) => entry !== "all");
 		}
+
+		debug("%o consumes %o and publishes to %o", filePath, consumes, publishesTo);
 
 		for (let collectionName of publishesTo) {
 			if (!consumesAll) {
