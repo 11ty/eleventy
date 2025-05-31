@@ -369,6 +369,8 @@ class GlobalDependencyMap {
 		publishes = publishes.filter(Boolean);
 
 		debug("%o consumes %o and publishes to %o", from, consumes, publishes);
+		from = this.normalizeNode(from);
+
 		this.map.addTemplate(from, consumes, publishes);
 	}
 
