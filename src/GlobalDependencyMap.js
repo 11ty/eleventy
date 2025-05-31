@@ -16,12 +16,12 @@ class GlobalDependencyMap {
 	#templateConfig;
 	#cachedUserConfigurationCollectionApiNames;
 
-	static isTag(entry) {
+	static isCollection(entry) {
 		return entry.startsWith(this.COLLECTION_PREFIX);
 	}
 
 	static getTagName(entry) {
-		if (this.isTag(entry)) {
+		if (this.isCollection(entry)) {
 			return entry.slice(this.COLLECTION_PREFIX.length);
 		}
 	}
@@ -75,8 +75,7 @@ class GlobalDependencyMap {
 
 	filterOutLayouts(nodes = []) {
 		return nodes.filter((node) => {
-			let data = this.map.getNodeData(node);
-			if (data?.type === GlobalDependencyMap.LAYOUT_KEY) {
+			if (GlobalDependencyMap.isLayoutNode(this.map, node)) {
 				return false;
 			}
 			return true;
@@ -89,8 +88,7 @@ class GlobalDependencyMap {
 
 	static removeLayoutNodes(graph, nodeList) {
 		return nodeList.filter((node) => {
-			let data = graph.getNodeData(node);
-			if (data?.type === GlobalDependencyMap.LAYOUT_KEY) {
+			if (this.isLayoutNode(graph, node)) {
 				return false;
 			}
 			return true;
@@ -100,8 +98,7 @@ class GlobalDependencyMap {
 	removeLayoutNodes(normalizedLayouts) {
 		let nodes = this.map.overallOrder();
 		for (let node of nodes) {
-			let data = this.map.getNodeData(node);
-			if (!data || !data.type || data.type !== GlobalDependencyMap.LAYOUT_KEY) {
+			if (!GlobalDependencyMap.isLayoutNode(this.map, node)) {
 				continue;
 			}
 
@@ -250,14 +247,20 @@ class GlobalDependencyMap {
 			}
 			for (let node of this.map.dependantsOf(collectionKey)) {
 				if (!node.startsWith(GlobalDependencyMap.COLLECTION_PREFIX)) {
-					let data = this.map.getNodeData(node);
-					if (!data || !data.type || data.type != GlobalDependencyMap.LAYOUT_KEY) {
+					if (!GlobalDependencyMap.isLayoutNode(this.map, node)) {
 						templates.add(node);
 					}
 				}
 			}
 		}
 		return templates;
+	}
+
+	static isLayoutNode(graph, node) {
+		if (!graph.hasNode(node)) {
+			return false;
+		}
+		return graph.getNodeData(node)?.type === GlobalDependencyMap.LAYOUT_KEY;
 	}
 
 	getLayoutsUsedBy(node) {
@@ -270,14 +273,13 @@ class GlobalDependencyMap {
 		let layouts = [];
 
 		// include self, if layout
-		if (this.map.getNodeData(node)?.type === GlobalDependencyMap.LAYOUT_KEY) {
+		if (GlobalDependencyMap.isLayoutNode(this.map, node)) {
 			layouts.push(node);
 		}
 
 		this.map.dependantsOf(node).forEach((node) => {
-			let data = this.map.getNodeData(node);
 			// we only want layouts
-			if (data?.type === GlobalDependencyMap.LAYOUT_KEY) {
+			if (GlobalDependencyMap.isLayoutNode(this.map, node)) {
 				return layouts.push(node);
 			}
 		});

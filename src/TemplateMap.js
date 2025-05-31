@@ -167,7 +167,7 @@ class TemplateMap {
 		);
 
 		for (let depEntry of fullTemplateOrder) {
-			if (GlobalDependencyMap.isTag(depEntry)) {
+			if (GlobalDependencyMap.isCollection(depEntry)) {
 				let tagName = GlobalDependencyMap.getTagName(depEntry);
 				// [NAME] is special and implied (e.g. [keys])
 				if (!tagName.startsWith("[") && !tagName.endsWith("]")) {
@@ -179,46 +179,50 @@ class TemplateMap {
 
 			// is a template entry
 			let map = this.getMapEntryForInputPath(depEntry);
-			try {
-				map._pages = await map.template.getTemplates(map.data);
-			} catch (e) {
-				throw new EleventyMapPagesError(
-					"Error generating template page(s) for " + map.inputPath + ".",
-					e,
-				);
-			}
+			await this.#initDependencyMapEntry(map);
+		}
+	}
 
-			if (map._pages.length === 0) {
-				// Reminder: a serverless code path was removed here.
-			} else {
-				let counter = 0;
-				for (let page of map._pages) {
-					// Copy outputPath to map entry
-					// This is no longer used internally, just for backwards compatibility
-					// Error added in v3 for https://github.com/11ty/eleventy/issues/3183
-					if (map.data.pagination) {
-						if (!Object.prototype.hasOwnProperty.call(map, "outputPath")) {
-							Object.defineProperty(map, "outputPath", {
-								get() {
-									throw new Error(
-										"Internal error: `.outputPath` on a paginated map entry is not consistent. Use `_pages[…].outputPath` instead.",
-									);
-								},
-							});
-						}
-					} else if (!map.outputPath) {
-						map.outputPath = page.outputPath;
+	async #initDependencyMapEntry(map) {
+		try {
+			map._pages = await map.template.getTemplates(map.data);
+		} catch (e) {
+			throw new EleventyMapPagesError(
+				"Error generating template page(s) for " + map.inputPath + ".",
+				e,
+			);
+		}
+
+		if (map._pages.length === 0) {
+			// Reminder: a serverless code path was removed here.
+		} else {
+			let counter = 0;
+			for (let page of map._pages) {
+				// Copy outputPath to map entry
+				// This is no longer used internally, just for backwards compatibility
+				// Error added in v3 for https://github.com/11ty/eleventy/issues/3183
+				if (map.data.pagination) {
+					if (!Object.prototype.hasOwnProperty.call(map, "outputPath")) {
+						Object.defineProperty(map, "outputPath", {
+							get() {
+								throw new Error(
+									"Internal error: `.outputPath` on a paginated map entry is not consistent. Use `_pages[…].outputPath` instead.",
+								);
+							},
+						});
 					}
-
-					if (counter === 0 || map.data.pagination?.addAllPagesToCollections) {
-						if (map.data.eleventyExcludeFromCollections !== true) {
-							// is in *some* collections
-							this.collection.add(page);
-						}
-					}
-
-					counter++;
+				} else if (!map.outputPath) {
+					map.outputPath = page.outputPath;
 				}
+
+				if (counter === 0 || map.data.pagination?.addAllPagesToCollections) {
+					if (map.data.eleventyExcludeFromCollections !== true) {
+						// is in *some* collections
+						this.collection.add(page);
+					}
+				}
+
+				counter++;
 			}
 		}
 	}
@@ -231,7 +235,7 @@ class TemplateMap {
 		let fullTemplateOrder = this.config.uses
 			.getTemplateOrder()
 			.map((entry) => {
-				if (GlobalDependencyMap.isTag(entry)) {
+				if (GlobalDependencyMap.isCollection(entry)) {
 					return entry;
 				}
 
@@ -265,7 +269,6 @@ class TemplateMap {
 		);
 
 		await this.initDependencyMap(fullTemplateOrder);
-
 		await this.resolveRemainingComputedData();
 
 		let orderedPaths = this.#removeTagsFromTemplateOrder(fullTemplateOrder);
@@ -330,7 +333,7 @@ class TemplateMap {
 	}
 
 	#removeTagsFromTemplateOrder(maps) {
-		return maps.filter((dep) => !GlobalDependencyMap.isTag(dep));
+		return maps.filter((dep) => !GlobalDependencyMap.isCollection(dep));
 	}
 
 	async runDataSchemas(orderedMap) {

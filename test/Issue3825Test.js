@@ -28,7 +28,11 @@ tags: childTag
 ---
 {{ tag }}`);
 
-      eleventyConfig.addTemplate("index.njk", `{{ collections.myCollection.length }}`);
+      eleventyConfig.addTemplate("index.njk", `{{ collections.myCollection.length }}`, {
+        // eleventyImport: {
+        //   collections: ["myCollection"]
+        // }
+      });
     }
   });
 

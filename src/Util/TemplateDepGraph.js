@@ -5,7 +5,7 @@ const COLLECTION_PREFIX = "__collection:";
 export class TemplateDepGraph extends DependencyGraph {
 	static STAGES = ["[basic]", "[userconfig]", "[keys]", "all"];
 
-	#configCollections = new Set();
+	#configCollectionNames = new Set();
 
 	constructor() {
 		// BREAKING TODO move this back to non-circular with errors
@@ -30,13 +30,13 @@ export class TemplateDepGraph extends DependencyGraph {
 		if (
 			tagName === "all" ||
 			(tagName.startsWith("[") && tagName.endsWith("]")) ||
-			this.#configCollections.has(tagName)
+			this.#configCollectionNames.has(tagName)
 		) {
 			return;
 		}
 		if (!type) {
 			throw new Error(
-				"Missing tag type for addTag. Expecting 'userconfig' or 'basic'. Received: " + type,
+				`Missing tag type for addTag. Expecting one of ${TemplateDepGraph.STAGES.map((entry) => entry.slice(1, -1)).join(" or ")}. Received: ${type}`,
 			);
 		}
 
@@ -48,8 +48,27 @@ export class TemplateDepGraph extends DependencyGraph {
 			return;
 		}
 
-		this.#configCollections.add(collectionName);
+		this.#configCollectionNames.add(collectionName);
 		// Collection relationships to `[userconfig]` are added last, in unfilteredOrder()
+	}
+
+	cleanupCollectionNames(collectionNames = []) {
+		if (collectionNames.includes("[userconfig]")) {
+			return collectionNames;
+		}
+
+		let hasAnyConfigCollections = collectionNames.find((name) => {
+			if (this.#configCollectionNames.has(name)) {
+				return true;
+			}
+			return false;
+		});
+
+		if (hasAnyConfigCollections) {
+			collectionNames.push("[userconfig]");
+		}
+
+		return collectionNames;
 	}
 
 	addTemplate(filePath, consumes = [], publishesTo = []) {
@@ -57,6 +76,9 @@ export class TemplateDepGraph extends DependencyGraph {
 		if (consumes.length === 0) {
 			this.uses(`${COLLECTION_PREFIX}[basic]`, filePath);
 		}
+
+		consumes = this.cleanupCollectionNames(consumes);
+		publishesTo = this.cleanupCollectionNames(publishesTo);
 
 		// Can’t consume AND publish to `all` simultaneously
 		let consumesAll = consumes.includes("all");
@@ -68,12 +90,12 @@ export class TemplateDepGraph extends DependencyGraph {
 			if (!consumesAll) {
 				let tagType = "basic";
 
-				let consumesUserConfigCollection = consumes.find((entry) =>
-					this.#configCollections.has(entry),
-				);
+				let consumesUserConfigCollection = consumes.includes("[userconfig]");
 				if (consumesUserConfigCollection) {
-					tagType = "userconfig";
+					// must finish before [keys]
+					tagType = "keys";
 				}
+
 				this.addTag(collectionName, tagType);
 			}
 
@@ -103,8 +125,8 @@ export class TemplateDepGraph extends DependencyGraph {
 
 	unfilteredOrder() {
 		// these need to be added last, after the template map has been added (see addConfigCollectionName)
-		for (let collectionName of this.#configCollections) {
-			this.uses(`${COLLECTION_PREFIX}[userconfig]`, `${COLLECTION_PREFIX}${collectionName}`);
+		for (let collectionName of this.#configCollectionNames) {
+			this.uses(`${COLLECTION_PREFIX}[keys]`, `${COLLECTION_PREFIX}${collectionName}`);
 		}
 
 		return super.overallOrder();
