@@ -903,12 +903,10 @@ test("Dependency Map should have include orphan user config collections (in the 
   let deps = tm.getTemplateOrder();
   t.deepEqual(deps,  [
     './test/stubs/templateMapCollection/test1.md',
-    './test/stubs/templateMapCollection/test5.md',
-    '__collection:all',
-    '__collection:userCollection',
     '__collection:post',
     '__collection:dog',
-    '__collection:[keys]',
+    './test/stubs/templateMapCollection/test5.md',
+    '__collection:userCollection',
     '__collection:all'
   ]);
 
@@ -939,13 +937,11 @@ test("Dependency Map should have include orphan user config collections, mapped 
   let deps = tm.getTemplateOrder();
   t.deepEqual(deps,  [
     './test/stubs/templateMapCollection/test1.md',
-    './test/stubs/templateMapCollection/test5.md',
-    '__collection:all',
-    '__collection:userCollection',
     '__collection:post',
     '__collection:dog',
-    '__collection:[keys]',
-    '__collection:all'
+    './test/stubs/templateMapCollection/test5.md',
+    '__collection:userCollection',
+    '__collection:all',
   ]);
 
   let collections = await tm._testGetCollectionsData();
@@ -1175,7 +1171,37 @@ test("Paginate over collections.all", async (t) => {
   t.is(map[2]._pages[0].templateContent.trim(), "<h1>Test 2</h1>");
 });
 
-test("Paginate over collections.all WITH a paginate over collections (tag pages)", async (t) => {
+test("Paginate over collections (tag pages) related to #3823", async (t) => {
+  let eleventyConfig = await getTemplateConfigInstance();
+
+  let tmpl1 = await getNewTemplateByNumber(1, eleventyConfig);
+  let tmpl2 = await getNewTemplateByNumber(2, eleventyConfig);
+
+  let tm = new TemplateMap(eleventyConfig);
+
+  let tagPagesTmpl = await getNewTemplate(
+    "./test/stubs/page-target-collections/tagpagesall.njk",
+    "./test/stubs/",
+    "./test/stubs/_site",
+    eleventyConfig,
+  );
+
+  await tm.add(tagPagesTmpl);
+  await tm.add(tmpl1);
+  await tm.add(tmpl2);
+
+  let collections = await tm._testGetCollectionsData();
+  // 2 individual templates, 3 pages for tagpagesall
+  t.deepEqual(collections.all.map(entry => entry.url).sort(), [
+    '/test/stubs/page-target-collections/tagpagesall/',
+    '/test/stubs/page-target-collections/tagpagesall/1/',
+    '/test/stubs/page-target-collections/tagpagesall/2/',
+    '/test/stubs/templateMapCollection/test1/',
+    '/test/stubs/templateMapCollection/test2/',
+  ]);
+});
+
+test("Paginate over collections.all WITH a paginate over collections (tag pages) related to #3823", async (t) => {
   let eleventyConfig = await getTemplateConfigInstance();
 
   let tmpl1 = await getNewTemplateByNumber(1, eleventyConfig);

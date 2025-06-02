@@ -1,10 +1,10 @@
 import { spawn } from "node:child_process";
 import { withResolvers } from "./PromiseUtil.js";
 
-export function spawnAsync(command, args) {
+export function spawnAsync(command, args, options) {
 	let { promise, resolve, reject } = withResolvers();
 
-	const cmd = spawn(command, args);
+	const cmd = spawn(command, args, options);
 	cmd.stdout.on("data", (data) => {
 		resolve(data.toString("utf8"));
 	});

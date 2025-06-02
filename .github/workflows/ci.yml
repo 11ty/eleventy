@@ -1,5 +1,5 @@
 name: Node Unit Tests
-on: [push, pull_request]
+on: push
 permissions: read-all
 jobs:
   build:

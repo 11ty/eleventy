@@ -23,8 +23,10 @@ class TemplateContentCompileError extends EleventyBaseError {}
 class TemplateContentRenderError extends EleventyBaseError {}
 
 class TemplateContent {
+	#initialized = false;
 	#config;
 	#templateRender;
+	#preprocessorEngine;
 	#extensionMap;
 	#configOptions;
 
@@ -39,6 +41,17 @@ class TemplateContent {
 	async asyncTemplateInitialization() {
 		if (!this.hasTemplateRender()) {
 			await this.getTemplateRender();
+		}
+
+		if (this.#initialized) {
+			return;
+		}
+		this.#initialized = true;
+
+		let preprocessorEngineName = this.templateRender.getPreprocessorEngineName();
+		if (preprocessorEngineName && this.templateRender.engine.getName() !== preprocessorEngineName) {
+			let engine = await this.templateRender.getEngineByName(preprocessorEngineName);
+			this.#preprocessorEngine = engine;
 		}
 	}
 
@@ -388,6 +401,14 @@ class TemplateContent {
 		});
 	}
 
+	// checks engines
+	isTemplateCacheable() {
+		if (this.#preprocessorEngine) {
+			return this.#preprocessorEngine.cacheable;
+		}
+		return this.engine.cacheable;
+	}
+
 	_getCompileCache(str) {
 		// Caches used to be bifurcated based on engine name, now they’re based on inputPath
 		// TODO does `cacheable` need to help inform whether a cache is used here?
@@ -397,7 +418,7 @@ class TemplateContent {
 			TemplateContent._compileCache.set(this.inputPath, inputPathMap);
 		}
 
-		let cacheable = this.engine.cacheable;
+		let cacheable = this.isTemplateCacheable();
 		let { useCache, key } = this.engine.getCompileCacheKey(str, this.inputPath);
 
 		// We also tie the compile cache key to the UserConfig instance, to alleviate issues with global template cache
@@ -411,6 +432,11 @@ class TemplateContent {
 	async compile(str, options = {}) {
 		let { type, bypassMarkdown, engineOverride } = options;
 
+		// Must happen before cacheable fetch below
+		// Likely only necessary for Eleventy Layouts, see TemplateMap->initDependencyMap
+		await this.asyncTemplateInitialization();
+
+		// this.templateRender is guaranteed here
 		let tr = await this.getTemplateRender();
 		if (engineOverride !== undefined) {
 			debugDev("%o overriding template engine to use %o", this.inputPath, engineOverride);
@@ -454,6 +480,7 @@ class TemplateContent {
 			let inputPathBenchmark = this.bench.get(`> Compile${typeStr} > ${this.inputPath}`);
 			templateBenchmark.before();
 			inputPathBenchmark.before();
+
 			let fn = await tr.getCompiledTemplate(str);
 			inputPathBenchmark.after();
 			templateBenchmark.after();
@@ -480,12 +507,8 @@ class TemplateContent {
 
 		// Don’t use markdown as the engine to parse for symbols
 		// TODO pass in engineOverride here
-		let preprocessorEngine = this.templateRender.getPreprocessorEngine();
-		if (preprocessorEngine && engine.getName() !== preprocessorEngine) {
-			let replacementEngine = this.templateRender.getEngineByName(preprocessorEngine);
-			if (replacementEngine) {
-				engine = replacementEngine;
-			}
+		if (this.#preprocessorEngine) {
+			engine = this.#preprocessorEngine;
 		}
 
 		if ("parseForSymbols" in engine) {

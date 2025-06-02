@@ -29,7 +29,7 @@ export default class Markdown extends TemplateEngine {
 			this.mdLib.disable("code");
 		}
 
-		this.setEngineLib(this.mdLib);
+		this.setEngineLib(this.mdLib, Boolean(this.config.libraryOverrides.md));
 	}
 
 	setMarkdownOptions(options) {

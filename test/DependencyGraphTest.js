@@ -42,7 +42,7 @@ test("Dependency graph relationships", async (t) => {
   ]);
 });
 
-test("Do dependencies get removed when nodes are deleted?", async (t) => {
+test("Do dependencies (edges) get removed when nodes are deleted? (yes)", async (t) => {
   let graph = new DependencyGraph();
 
   graph.addNode("template-a");

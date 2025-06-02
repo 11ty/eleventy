@@ -99,7 +99,7 @@ export default class Nunjucks extends TemplateEngine {
 			// this.njkEnv.invalidateCache();
 		});
 
-		this.setEngineLib(this.njkEnv);
+		this.setEngineLib(this.njkEnv, Boolean(this.config.libraryOverrides.njk));
 
 		this.addFilters(this.config.nunjucksFilters);
 		this.addFilters(this.config.nunjucksAsyncFilters, true);
@@ -414,12 +414,12 @@ export default class Nunjucks extends TemplateEngine {
 
 	/* Outputs an Array of lodash get selectors */
 	parseForSymbols(str) {
-		if(!str) {
+		if (!str) {
 			return [];
 		}
 		const { parser, nodes } = NunjucksLib;
 		let obj = parser.parse(str, this._getParseExtensions());
-		if(!obj) {
+		if (!obj) {
 			return [];
 		}
 		let linesplit = str.split("\n");

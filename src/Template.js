@@ -209,7 +209,9 @@ class Template extends TemplateContent {
 			throw new Error("Internal error: data argument missing in Template->_getLink");
 		}
 
-		let permalink = data[this.config.keys.permalink];
+		let permalink =
+			data[this.config.keys.permalink] ??
+			data?.[this.config.keys.computed]?.[this.config.keys.permalink];
 		let permalinkValue;
 
 		// `permalink: false` means render but no file system write, e.g. use in collections only)
@@ -1099,6 +1101,12 @@ class Template extends TemplateContent {
 				// YAML does its own date parsing
 				debug("getMappedDate: found Date instance (maybe from YAML): %o", dateValue);
 				return dateValue;
+			}
+
+			if (typeof dateValue !== "string") {
+				throw new Error(
+					`Data cascade value for \`date\` (${dateValue}) is invalid for ${this.inputPath}. Expected a JavaScript Date instance, luxon DateTime instance, or String value.`,
+				);
 			}
 
 			// special strings

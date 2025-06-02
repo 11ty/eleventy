@@ -66,7 +66,10 @@ function wrapObject(target, fallback) {
 			}
 
 			// Does not exist in primary
-			if (Reflect.has(fallback, prop)) {
+			if (
+				(typeof fallback === "object" || typeof fallback === "function") &&
+				Reflect.has(fallback, prop)
+			) {
 				// fallback has prop
 				let fallbackValue = Reflect.get(fallback, prop);
 
