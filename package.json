@@ -120,7 +120,7 @@
 		"tsx": "^4.19.4",
 		"typescript": "^5.8.3",
 		"vue": "^3.5.16",
-		"zod": "^3.25.42",
+		"zod": "^3.25.48",
 		"zod-validation-error": "^3.4.1"
 	},
 	"dependencies": {
