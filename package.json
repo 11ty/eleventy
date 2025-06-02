@@ -95,7 +95,7 @@
 		"@11ty/eleventy-plugin-syntaxhighlight": "^5.0.1",
 		"@11ty/eleventy-plugin-webc": "^0.12.0-beta.3",
 		"@eslint/eslintrc": "^3.3.1",
-		"@eslint/js": "^9.27.0",
+		"@eslint/js": "^9.28.0",
 		"@iarna/toml": "^2.2.5",
 		"@mdx-js/node-loader": "^3.1.0",
 		"@types/node": "^22.15.28",
