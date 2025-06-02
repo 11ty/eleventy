@@ -30,11 +30,15 @@ function wrapObject(target, fallback) {
 		},
 		ownKeys(target) {
 			let s = new Set();
-			for (let k of Reflect.ownKeys(target)) {
-				s.add(k);
-			}
+			// The fallback keys need to come first to preserve proper key order
+			// https://github.com/11ty/eleventy/issues/3849
 			if (isPlainObject(fallback)) {
 				for (let k of Reflect.ownKeys(fallback)) {
+					s.add(k);
+				}
+			}
+			for (let k of Reflect.ownKeys(target)) {
+				if (!s.has(k)) {
 					s.add(k);
 				}
 			}
