@@ -167,7 +167,9 @@ class Template extends TemplateContent {
 	}
 
 	getTemplateSubfolder() {
-		return TemplatePath.stripLeadingSubPath(this.parsed.dir, this.inputDir);
+		let dir = TemplatePath.absolutePath(this.parsed.dir);
+		let inputDir = TemplatePath.absolutePath(this.inputDir);
+		return TemplatePath.stripLeadingSubPath(dir, inputDir);
 	}
 
 	templateUsesLayouts(pageData) {
