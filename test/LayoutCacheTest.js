@@ -1,6 +1,6 @@
 import test from "ava";
 
-import templateCache from "../src/TemplateCache.js";
+import templateCache from "../src/LayoutCache.js";
 import getNewTemplate from "./_getNewTemplateForTests.js";
 
 test("Cache can save templates", async (t) => {

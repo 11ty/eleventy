@@ -58,6 +58,10 @@ class TemplateData {
 		return this.dirs.data;
 	}
 
+	get absoluteDataDir() {
+		return TemplatePath.absolutePath(this.dataDir);
+	}
+
 	// This was async in 2.0 and prior but doesn’t need to be any more.
 	getInputDir() {
 		return this.dirs.input;
@@ -266,7 +270,8 @@ class TemplateData {
 	}
 
 	getObjectPathForDataFile(dataFilePath) {
-		let reducedPath = TemplatePath.stripLeadingSubPath(dataFilePath, this.dataDir);
+		let absoluteDataFilePath = TemplatePath.absolutePath(dataFilePath);
+		let reducedPath = TemplatePath.stripLeadingSubPath(absoluteDataFilePath, this.absoluteDataDir);
 		let parsed = path.parse(reducedPath);
 		let folders = parsed.dir ? parsed.dir.split("/") : [];
 		folders.push(parsed.name);

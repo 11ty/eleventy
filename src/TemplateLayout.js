@@ -4,7 +4,7 @@ import debugUtil from "debug";
 import TemplateLayoutPathResolver from "./TemplateLayoutPathResolver.js";
 import TemplateContent from "./TemplateContent.js";
 import TemplateData from "./Data/TemplateData.js";
-import templateCache from "./TemplateCache.js";
+import layoutCache from "./LayoutCache.js";
 
 // const debug = debugUtil("Eleventy:TemplateLayout");
 const debugDev = debugUtil("Dev:Eleventy:TemplateLayout");
@@ -54,16 +54,16 @@ class TemplateLayout extends TemplateContent {
 
 		let inputDir = eleventyConfig.directories.input;
 		let fullKey = TemplateLayout.resolveFullKey(key, inputDir);
-		if (!templateCache.has(fullKey)) {
+		if (!layoutCache.has(fullKey)) {
 			let layout = new TemplateLayout(key, extensionMap, eleventyConfig);
 
-			templateCache.add(layout);
-			debugDev("Added %o to TemplateCache", key);
+			layoutCache.add(layout);
+			debugDev("Added %o to LayoutCache", key);
 
 			return layout;
 		}
 
-		return templateCache.get(fullKey);
+		return layoutCache.get(fullKey);
 	}
 
 	async getTemplateLayoutMapEntry() {
@@ -199,8 +199,8 @@ class TemplateLayout extends TemplateContent {
 
 			return fns;
 		} catch (e) {
-			debugDev("Clearing TemplateCache after error.");
-			templateCache.clear();
+			debugDev("Clearing LayoutCache after error.");
+			layoutCache.clear();
 			throw e;
 		}
 	}
@@ -230,7 +230,6 @@ class TemplateLayout extends TemplateContent {
 
 	resetCaches(types) {
 		super.resetCaches(types);
-
 		delete this.dataCache;
 		delete this.layoutChain;
 		delete this.cachedLayoutMap;

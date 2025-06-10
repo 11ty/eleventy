@@ -362,6 +362,7 @@ function RenderPlugin(eleventyConfig, options = {}) {
 			templateLang = false;
 		}
 
+		// TODO Render plugin `templateLang` is feeding bad input paths to the addDependencies call in Custom.js
 		let fn = await compile.call(this, content, templateLang, {
 			templateConfig: opts.templateConfig || templateConfig,
 			extensionMap,
@@ -413,19 +414,32 @@ class RenderManager {
 	/** @type {Promise|undefined} */
 	#hasConfigInitialized;
 	#extensionMap;
+	#templateConfig;
 
 	constructor() {
 		this.templateConfig = new TemplateConfig(null, false);
 		this.templateConfig.setDirectories(new ProjectDirectories());
+	}
+
+	get templateConfig() {
+		return this.#templateConfig;
+	}
+
+	set templateConfig(templateConfig) {
+		if (!templateConfig || templateConfig === this.#templateConfig) {
+			return;
+		}
+
+		this.#templateConfig = templateConfig;
 
 		// This is the only plugin running on the Edge
-		this.templateConfig.userConfig.addPlugin(RenderPlugin, {
-			templateConfig: this.templateConfig,
+		this.#templateConfig.userConfig.addPlugin(RenderPlugin, {
+			templateConfig: this.#templateConfig,
 			accessGlobalData: true,
 		});
 
-		this.#extensionMap = new EleventyExtensionMap(this.templateConfig);
-		this.#extensionMap.engineManager = new TemplateEngineManager(this.templateConfig);
+		this.#extensionMap = new EleventyExtensionMap(this.#templateConfig);
+		this.#extensionMap.engineManager = new TemplateEngineManager(this.#templateConfig);
 	}
 
 	async init() {

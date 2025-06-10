@@ -255,8 +255,12 @@ class ProjectDirectories {
 			return false;
 		}
 
-		if (inputPath.startsWith(this.includes)) {
-			return false;
+		// if this.includes is "" (and thus is the same directory as this.input)
+		// we don’t actually know if this is a template file, so defer
+		if (this.includes && this.includes !== this.input) {
+			if (inputPath.startsWith(this.includes)) {
+				return false;
+			}
 		}
 
 		return inputPath.startsWith(this.input);

@@ -109,7 +109,7 @@ export default class Nunjucks extends TemplateEngine {
 			// this.njkEnv.invalidateCache();
 		});
 
-		this.setEngineLib(this.njkEnv);
+		this.setEngineLib(this.njkEnv, Boolean(this.config.libraryOverrides.njk));
 
 		this.addFilters(this.config.nunjucksFilters);
 		this.addFilters(this.config.nunjucksAsyncFilters, true);

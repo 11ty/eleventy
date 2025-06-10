@@ -480,6 +480,8 @@ export default class Eleventy extends Core {
 					await this.stopWatch();
 				}
 			}
+
+			this.config.events.emit("eleventy.afterwatch");
 		};
 
 		watcher.on("change", async (path) => {
@@ -504,6 +506,11 @@ export default class Eleventy extends Core {
 		watcher.on("unlink", (path) => {
 			this.logger.forceLog(`File deleted: ${TemplatePath.standardizeFilePath(path)}`);
 			this.fileSystemSearch.delete(path);
+		});
+
+		// wait for chokidar to be ready.
+		await new Promise((resolve) => {
+			watcher.on("ready", () => resolve());
 		});
 	}
 

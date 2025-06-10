@@ -5,7 +5,7 @@
 # Release Procedure
 
 1. (Optional) Update minor dependencies in package.json
-   - `npx npm-check-updates`
+   - `npx npm-check-updates --target minor -u`
    - or `npm outdated` + `npm update --save`
 1. Stable release only: make sure there aren’t any `@11ty/*` dependencies on pre-release versions alpha/beta/canary
 1. If the minimum Node version changed, make sure you update `package.json` engines property.
@@ -15,7 +15,7 @@
      - 2.x+ requires Node 14+
      - 3.x+ requires Node 18+
 1. `rm -rf node_modules && rm -f package-lock.json && npm install`
-1. `npm audit`
+1. `npm audit --omit=dev`
 1. Make sure `npm run check` (eslint) runs okay
 1. Make sure `npm run test` (ava) runs okay
 1. Update version in `package.json`

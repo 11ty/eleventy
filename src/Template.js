@@ -166,7 +166,9 @@ class Template extends TemplateContent {
 	}
 
 	getTemplateSubfolder() {
-		return TemplatePath.stripLeadingSubPath(this.parsed.dir, this.inputDir);
+		let dir = TemplatePath.absolutePath(this.parsed.dir);
+		let inputDir = TemplatePath.absolutePath(this.inputDir);
+		return TemplatePath.stripLeadingSubPath(dir, inputDir);
 	}
 
 	templateUsesLayouts(pageData) {
@@ -208,7 +210,9 @@ class Template extends TemplateContent {
 			throw new Error("Internal error: data argument missing in Template->_getLink");
 		}
 
-		let permalink = data[this.config.keys.permalink];
+		let permalink =
+			data[this.config.keys.permalink] ??
+			data?.[this.config.keys.computed]?.[this.config.keys.permalink];
 		let permalinkValue;
 
 		// `permalink: false` means render but no file system write, e.g. use in collections only)
@@ -531,29 +535,43 @@ class Template extends TemplateContent {
 		});
 	}
 
+	async #renderComputedUnit(entry, data) {
+		if (typeof entry === "string") {
+			return this.renderComputedData(entry, data);
+		}
+
+		if (isPlainObject(entry)) {
+			for (let key in entry) {
+				entry[key] = await this.#renderComputedUnit(entry[key], data);
+			}
+		}
+
+		if (Array.isArray(entry)) {
+			for (let j = 0, k = entry.length; j < k; j++) {
+				entry[j] = await this.#renderComputedUnit(entry[j], data);
+			}
+		}
+
+		return entry;
+	}
+
 	_addComputedEntry(computedData, obj, parentKey, declaredDependencies) {
 		// this check must come before isPlainObject
 		if (typeof obj === "function") {
 			computedData.add(parentKey, obj, declaredDependencies);
-		} else if (Array.isArray(obj)) {
-			// Arrays are treated as one entry in the dependency graph now
+		} else if (Array.isArray(obj) || typeof obj === "string") {
+			// Arrays are treated as one entry in the dependency graph now, Issue #3728
 			computedData.addTemplateString(
 				parentKey,
 				async function (innerData) {
-					return Promise.all(
-						obj.map((entry) => {
-							if (typeof entry === "string") {
-								return this.tmpl.renderComputedData(entry, innerData);
-							}
-							return entry;
-						}),
-					);
+					return this.tmpl.#renderComputedUnit(obj, innerData);
 				},
 				declaredDependencies,
 				this.getParseForSymbolsFunction(obj),
 				this,
 			);
 		} else if (isPlainObject(obj)) {
+			// Arrays used to be computed here
 			for (let key in obj) {
 				let keys = [];
 				if (parentKey) {
@@ -562,16 +580,6 @@ class Template extends TemplateContent {
 				keys.push(key);
 				this._addComputedEntry(computedData, obj[key], keys.join("."), declaredDependencies);
 			}
-		} else if (typeof obj === "string") {
-			computedData.addTemplateString(
-				parentKey,
-				async function (innerData) {
-					return this.tmpl.renderComputedData(obj, innerData);
-				},
-				declaredDependencies,
-				this.getParseForSymbolsFunction(obj),
-				this,
-			);
 		} else {
 			// Numbers, booleans, etc
 			computedData.add(parentKey, obj, declaredDependencies);
@@ -1090,6 +1098,12 @@ class Template extends TemplateContent {
 				// YAML does its own date parsing
 				debug("getMappedDate: found Date instance (maybe from YAML): %o", dateValue);
 				return dateValue;
+			}
+
+			if (typeof dateValue !== "string") {
+				throw new Error(
+					`Data cascade value for \`date\` (${dateValue}) is invalid for ${this.inputPath}. Expected a JavaScript Date instance, luxon DateTime instance, or String value.`,
+				);
 			}
 
 			// special strings
