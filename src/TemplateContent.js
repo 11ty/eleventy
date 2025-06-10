@@ -4,7 +4,7 @@ import lodash from "@11ty/lodash-custom";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
-import { EOL } from "./Adapters/Util/newline.js";
+import { EOL } from "./Adapters/Util/NewLine.js";
 import TemplateData from "./Data/TemplateData.js";
 import TemplateRender from "./TemplateRender.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
