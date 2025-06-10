@@ -12,6 +12,12 @@ test.skip("#3854 parent directory for content, with global data files", async (t
 	);
 
   let json = JSON.parse(result);
-  t.is(json.length, 1);
-  t.is(json[0]?.content.trim(), "3854");
+  t.is(json.length, 2);
+
+  json.sort((a, b) => {
+    return a.inputPath.length - b.inputPath.length;
+  })
+
+  t.is(json[0]?.content.trim(), "3854/parent");
+  t.is(json[1]?.content.trim(), "3854/child");
 });

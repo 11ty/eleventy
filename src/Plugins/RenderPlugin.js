@@ -362,6 +362,7 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 			templateLang = false;
 		}
 
+		// TODO Render plugin `templateLang` is feeding bad input paths to the addDependencies call in Custom.js
 		let fn = await compile.call(this, content, templateLang, {
 			templateConfig: opts.templateConfig || templateConfig,
 			extensionMap,
