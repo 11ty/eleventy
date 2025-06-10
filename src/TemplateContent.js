@@ -372,7 +372,7 @@ class TemplateContent {
 			virtualTemplateData = virtualTemplateDefinition.data;
 		}
 
-		let data = Object.assign(fm.data, extraData, virtualTemplateData);
+		let data = Object.assign({}, fm.data, extraData, virtualTemplateData);
 
 		TemplateData.cleanupData(data, {
 			file: this.inputPath,
