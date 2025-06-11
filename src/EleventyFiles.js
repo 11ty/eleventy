@@ -1,6 +1,6 @@
 import { existsSync, statSync, readFileSync } from "node:fs";
 
-import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
+import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import TemplateData from "./Data/TemplateData.js";

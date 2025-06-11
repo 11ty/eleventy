@@ -9,5 +9,5 @@ export async function RetrieveGlobals(code, filePath) {
 	};
 
 	// Do *not* error when imports are found because they might be mapped via an Import Map.
-	return importFromString(code, { data, filePath, adapter: "fs" });
+	return importFromString(code, { data, filePath });
 }
