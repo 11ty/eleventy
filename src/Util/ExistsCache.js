@@ -1,4 +1,4 @@
-import fs from "node:fs";
+import { existsSync, statSync } from "node:fs";
 
 // Checks both files and directories
 class ExistsCache {
@@ -20,7 +20,7 @@ class ExistsCache {
 	// Relative paths (to root directory) expected (but not enforced due to perf costs)
 	exists(path) {
 		if (!this.#exists.has(path)) {
-			let exists = fs.existsSync(path);
+			let exists = existsSync(path);
 			this.lookupCount++;
 
 			// mark for next time
@@ -38,7 +38,7 @@ class ExistsCache {
 		}
 
 		if (!this.#dirs.has(path)) {
-			let isDir = fs.statSync(path).isDirectory();
+			let isDir = statSync(path).isDirectory();
 			this.lookupCount++;
 
 			// mark for next time

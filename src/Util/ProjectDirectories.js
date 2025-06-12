@@ -1,7 +1,7 @@
-import fs from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import path from "node:path";
 import { TemplatePath } from "@11ty/eleventy-utils";
-import { isDynamicPattern } from "tinyglobby";
+import { isDynamicPattern } from "../Adapters/Util/GlobMatcher.js";
 
 /* Directories internally should always use *nix forward slashes */
 class ProjectDirectories {
@@ -138,8 +138,8 @@ class ProjectDirectories {
 		// }
 
 		// Input has to exist (assumed glob if it does not exist)
-		let inputExists = fs.existsSync(dirOrFile);
-		let inputExistsAndIsDirectory = inputExists && fs.statSync(dirOrFile).isDirectory();
+		let inputExists = existsSync(dirOrFile);
+		let inputExistsAndIsDirectory = inputExists && statSync(dirOrFile).isDirectory();
 
 		if (inputExistsAndIsDirectory) {
 			// is not a file or glob
@@ -160,7 +160,7 @@ class ProjectDirectories {
 			// Explicit Eleventy option for inputDir
 			if (inputDir) {
 				// Changed in 3.0: must exist
-				if (!fs.existsSync(inputDir)) {
+				if (!existsSync(inputDir)) {
 					throw new Error("Directory must exist (via inputDir option to Eleventy constructor).");
 				}
 

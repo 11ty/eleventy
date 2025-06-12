@@ -129,6 +129,9 @@ async function exec() {
 		} else {
 			if (!argv.to || argv.to === "fs") {
 				await elev.write();
+			} else if (argv.to.startsWith("fs:")) {
+				// `fs:templates` will skip passthrough copy
+				await elev.writeOnly(argv.to);
 			} else if (argv.to === "json") {
 				let result = await elev.toJSON()
 				console.log(JSON.stringify(result, null, 2));
