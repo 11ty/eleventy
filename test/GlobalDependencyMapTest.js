@@ -80,6 +80,7 @@ test("Collection API", (t) => {
 
   t.deepEqual(map.getTemplateOrder(), [
     "test.njk",
+    "__collection:[keys]",
     "__collection:articles",
     "feed.njk",
     "__collection:all",

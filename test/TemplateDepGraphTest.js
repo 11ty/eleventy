@@ -33,6 +33,7 @@ test("Using new Template DepGraph", async (t) => {
     "__collection:dog",
     "template-paginated-over-userconfig.njk",
     "__collection:myCollection",
+    "__collection:[keys]",
     "template-paginated-collections.njk",
     "__collection:all",
     "template-paginated-over-all.njk",
