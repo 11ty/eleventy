@@ -169,8 +169,11 @@ class TemplateMap {
 		for (let depEntry of fullTemplateOrder) {
 			if (GlobalDependencyMap.isCollection(depEntry)) {
 				let tagName = GlobalDependencyMap.getTagName(depEntry);
-				// [NAME] is special and implied (e.g. [keys])
-				if (!tagName.startsWith("[") && !tagName.endsWith("]")) {
+				// [keys] should initialize `all`
+				if (tagName === SPECIAL_COLLECTION_NAMES.keys) {
+					await this.setCollectionByTagName("all");
+					// [NAME] is special and implied (e.g. [keys])
+				} else if (!tagName.startsWith("[") && !tagName.endsWith("]")) {
 					// is a tag (collection) entry
 					await this.setCollectionByTagName(tagName);
 				}
@@ -232,8 +235,9 @@ class TemplateMap {
 		// 2. Pagination templates that consume config API collections
 		// 3. Pagination templates consuming `collections`
 		// 4. Pagination templates consuming `collections.all`
-		let fullTemplateOrder = this.config.uses
-			.getTemplateOrder()
+		let fullTemplateOrder = this.config.uses.getTemplateOrder();
+
+		return fullTemplateOrder
 			.map((entry) => {
 				if (GlobalDependencyMap.isCollection(entry)) {
 					return entry;
@@ -246,8 +250,6 @@ class TemplateMap {
 				return inputPath;
 			})
 			.filter(Boolean);
-
-		return fullTemplateOrder;
 	}
 
 	async cache() {

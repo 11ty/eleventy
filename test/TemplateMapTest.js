@@ -907,6 +907,7 @@ test("Dependency Map should have include orphan user config collections (in the 
     '__collection:dog',
     './test/stubs/templateMapCollection/test5.md',
     '__collection:userCollection',
+    '__collection:[keys]',
     '__collection:all'
   ]);
 
@@ -941,6 +942,7 @@ test("Dependency Map should have include orphan user config collections, mapped 
     '__collection:dog',
     './test/stubs/templateMapCollection/test5.md',
     '__collection:userCollection',
+    '__collection:[keys]',
     '__collection:all',
   ]);
 
@@ -1406,6 +1408,7 @@ test("TemplateMap circular references (map.templateContent) using eleventyExclud
   t.deepEqual(deps, [
     "./test/stubs/issue-522/excluded.md",
     "./test/stubs/issue-522/template.md",
+    "__collection:[keys]",
     "__collection:all",
   ]);
 

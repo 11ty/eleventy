@@ -141,13 +141,18 @@ export class TemplateDepGraph extends DependencyGraph {
 
 	overallOrder() {
 		let unfiltered = this.unfilteredOrder();
+
 		let filtered = unfiltered.filter((entry) => {
-			return !entry.startsWith("[") && !entry.endsWith("]");
+			if (entry === `${COLLECTION_PREFIX}[keys]`) {
+				return true;
+			}
+			return !entry.startsWith(`${COLLECTION_PREFIX}[`) && !entry.endsWith("]");
 		});
 
-		// Add another collections.all entry (if not already the last one)
-		if (filtered[filtered.length - 1] !== `${COLLECTION_PREFIX}all`) {
-			filtered.push(`${COLLECTION_PREFIX}all`);
+		let allKey = `${COLLECTION_PREFIX}all`;
+		// Add another collections.all entry to the end (if not already the last one)
+		if (filtered[filtered.length - 1] !== allKey) {
+			filtered.push(allKey);
 		}
 
 		return filtered;
