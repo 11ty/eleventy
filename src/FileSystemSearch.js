@@ -119,6 +119,11 @@ class FileSystemSearch {
 	delete(path) {
 		this._modify(path, "delete");
 	}
+
+	// Issue #3859 get rid of chokidar globs
+	// getAllOutputFiles() {
+	// 	return Object.values(this.outputs).map(set => Array.from(set)).flat();
+	// }
 }
 
 export default FileSystemSearch;
