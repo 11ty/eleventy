@@ -3,6 +3,7 @@ import fs from "node:fs";
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
+import DirContains from "./Util/DirContains.js";
 import TemplateData from "./Data/TemplateData.js";
 import TemplateGlob from "./TemplateGlob.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
@@ -11,6 +12,7 @@ const debug = debugUtil("Eleventy:EleventyFiles");
 
 class EleventyFiles {
 	#extensionMap;
+	#watcherGlobs;
 
 	constructor(formats, templateConfig) {
 		if (!templateConfig) {
@@ -69,8 +71,8 @@ class EleventyFiles {
 		this.setupGlobs();
 	}
 
-	get validTemplateGlobs() {
-		if (!this._validTemplateGlobs) {
+	#getWatcherGlobs() {
+		if (!this.#watcherGlobs) {
 			let globs;
 			// Input is a file
 			if (this.inputFile) {
@@ -79,9 +81,10 @@ class EleventyFiles {
 				// input is a directory
 				globs = this.extensionMap.getValidGlobs(this.inputDir);
 			}
-			this._validTemplateGlobs = globs;
+			this.#watcherGlobs = globs;
 		}
-		return this._validTemplateGlobs;
+
+		return this.#watcherGlobs;
 	}
 
 	get passthroughGlobs() {
@@ -154,7 +157,7 @@ class EleventyFiles {
 
 	setupGlobs() {
 		this.fileIgnores = this.getIgnores();
-		this.extraIgnores = this._getIncludesAndDataDirs();
+		this.extraIgnores = this.getIncludesAndDataDirs();
 		this.uniqueIgnores = this.getIgnoreGlobs();
 
 		// Conditional added for tests that don’t have a config
@@ -165,6 +168,13 @@ class EleventyFiles {
 		this.normalizedTemplateGlobs = this.templateGlobs;
 	}
 
+	normalizeIgnoreEntry(entry) {
+		if (!entry.startsWith("**/")) {
+			return TemplateGlob.normalizePath(this.localPathRoot || ".", entry);
+		}
+		return entry;
+	}
+
 	getIgnoreGlobs() {
 		let uniqueIgnores = new Set();
 		for (let ignore of this.fileIgnores) {
@@ -173,10 +183,12 @@ class EleventyFiles {
 		for (let ignore of this.extraIgnores) {
 			uniqueIgnores.add(ignore);
 		}
+
 		// Placing the config ignores last here is important to the tests
 		for (let ignore of this.config.ignores) {
-			uniqueIgnores.add(TemplateGlob.normalizePath(this.localPathRoot || ".", ignore));
+			uniqueIgnores.add(this.normalizeIgnoreEntry(ignore));
 		}
+
 		return Array.from(uniqueIgnores);
 	}
 
@@ -261,11 +273,12 @@ class EleventyFiles {
 			files.add(this.eleventyIgnoreContent);
 		}
 
-		// ignore output dir (unless this excludes all input)
-		// input: . and output: . (skip)
-		// input: ./content and output . (skip)
-		// input: . and output: ./_site (add)
-		if (!this.inputDir.startsWith(this.outputDir)) {
+		// Make sure output dir isn’t in the input dir (or it will ignore all input!)
+		// input: . and output: . (skip ignore)
+		// input: ./content and output . (skip ignore)
+		// input: . and output: ./_site (add ignore)
+		let outputContainsInputDir = DirContains(this.outputDir, this.inputDir);
+		if (!outputContainsInputDir) {
 			// both are already normalized in 3.0
 			files.add(TemplateGlob.map(this.outputDir + "/**"));
 		}
@@ -284,6 +297,7 @@ class EleventyFiles {
 		if (this.eleventyIgnoreContent === false) {
 			let absoluteInputDir = TemplatePath.absolutePath(this.inputDir);
 			ignoreFiles.add(TemplatePath.join(rootDirectory, ".eleventyignore"));
+
 			if (rootDirectory !== absoluteInputDir) {
 				ignoreFiles.add(TemplatePath.join(this.inputDir, ".eleventyignore"));
 			}
@@ -427,14 +441,16 @@ class EleventyFiles {
 	/* For `eleventy --watch` */
 	getGlobWatcherFiles() {
 		// TODO improvement: tie the includes and data to specific file extensions (currently using `**`)
-		let directoryGlobs = this._getIncludesAndDataDirs();
+		let directoryGlobs = this.getIncludesAndDataDirs();
+
+		let globs = this.#getWatcherGlobs();
 
 		if (checkPassthroughCopyBehavior(this.config, this.runMode)) {
-			return this.validTemplateGlobs.concat(directoryGlobs);
+			return globs.concat(directoryGlobs);
 		}
 
 		// Revert to old passthroughcopy copy files behavior
-		return this.validTemplateGlobs.concat(this.passthroughGlobs).concat(directoryGlobs);
+		return globs.concat(this.passthroughGlobs).concat(directoryGlobs);
 	}
 
 	/* For `eleventy --watch` */
@@ -456,7 +472,12 @@ class EleventyFiles {
 		bench.before();
 		let results = TemplatePath.addLeadingDotSlashArray(
 			await this.fileSystemSearch.search("js-dependencies", globs, {
-				ignore: ["**/node_modules/**"],
+				ignore: [
+					"**/node_modules/**",
+					".git/**",
+					// TODO outputDir
+					// this.outputDir,
+				],
 			}),
 		);
 		bench.after();
@@ -471,14 +492,14 @@ class EleventyFiles {
 		);
 
 		for (let ignore of this.config.watchIgnores) {
-			entries.add(TemplateGlob.normalizePath(this.localPathRoot || ".", ignore));
+			entries.add(this.normalizeIgnoreEntry(ignore));
 		}
 
 		// de-duplicated
 		return Array.from(entries);
 	}
 
-	_getIncludesAndDataDirs() {
+	getIncludesAndDataDirs() {
 		let rawPaths = new Set();
 		rawPaths.add(this.includesDir);
 		if (this.layoutsDir) {

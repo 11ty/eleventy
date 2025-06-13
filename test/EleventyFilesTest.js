@@ -284,7 +284,7 @@ test("Include and Data Dirs", async (t) => {
   let { eleventyFiles: evf } = getEleventyFilesInstance([], eleventyConfig);
   evf.init();
 
-  t.deepEqual(evf._getIncludesAndDataDirs(), [
+  t.deepEqual(evf.getIncludesAndDataDirs(), [
     "./test/stubs/_includes/**",
     "./test/stubs/_data/**",
   ]);

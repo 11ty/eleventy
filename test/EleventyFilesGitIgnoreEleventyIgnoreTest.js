@@ -22,7 +22,7 @@ test("Get ignores (no .eleventyignore no .gitignore)", async (t) => {
   ]);
 
   t.deepEqual(evf.getIgnoreGlobs().slice(-2), [
-    "./test/stubs/ignorelocalroot/**/node_modules/**",
+    "**/node_modules/**",
     "./test/stubs/ignorelocalroot/.git/**",
   ]);
 });
@@ -45,7 +45,7 @@ test("Get ignores (no .eleventyignore)", async (t) => {
   ]);
 
   t.deepEqual(evf.getIgnoreGlobs().slice(-2), [
-    "./test/stubs/ignorelocalrootgitignore/**/node_modules/**",
+    "**/node_modules/**",
     "./test/stubs/ignorelocalrootgitignore/.git/**",
   ]);
 });
@@ -67,7 +67,7 @@ test("Get ignores (no .eleventyignore, using setUseGitIgnore(false))", async (t)
   ]);
 
   t.deepEqual(evf.getIgnoreGlobs().slice(-2), [
-		"./test/stubs/ignorelocalroot/**/node_modules/**",
+		"**/node_modules/**",
 		"./test/stubs/ignorelocalroot/.git/**",
 	]);
 });
@@ -91,7 +91,7 @@ test("Get ignores (no .gitignore)", async (t) => {
   ]);
 
   t.deepEqual(evf.getIgnoreGlobs().slice(-2), [
-    "./test/stubs/ignorelocalroot/**/node_modules/**",
+    "**/node_modules/**",
     "./test/stubs/ignorelocalroot/.git/**",
   ]);
 });
@@ -116,7 +116,7 @@ test("Get ignores (project .eleventyignore and root .gitignore)", async (t) => {
   ]);
 
   t.deepEqual(evf.getIgnoreGlobs().slice(-2), [
-    "./test/stubs/ignorelocalrootgitignore/**/node_modules/**",
+    "**/node_modules/**",
     "./test/stubs/ignorelocalrootgitignore/.git/**",
   ]);
 });
@@ -141,7 +141,7 @@ test("Get ignores (project .eleventyignore and root .gitignore, using setUseGitI
   ]);
 
   t.deepEqual(evf.getIgnoreGlobs().slice(-2), [
-    "./test/stubs/ignorelocalrootgitignore/**/node_modules/**",
+    "**/node_modules/**",
     "./test/stubs/ignorelocalrootgitignore/.git/**",
   ]);
 });
@@ -164,7 +164,7 @@ test("Get ignores (no .eleventyignore  .gitignore exists but empty)", async (t) 
   ]);
 
   t.deepEqual(evf.getIgnoreGlobs().slice(-2), [
-    "./test/stubs/ignorelocalroot/**/node_modules/**",
+    "**/node_modules/**",
     "./test/stubs/ignorelocalroot/.git/**",
   ]);
 });
@@ -188,7 +188,7 @@ test("Get ignores (both .eleventyignore and .gitignore exists, but .gitignore is
   ]);
 
   t.deepEqual(evf.getIgnoreGlobs().slice(-2), [
-    "./test/stubs/ignorelocalroot/**/node_modules/**",
+    "**/node_modules/**",
     "./test/stubs/ignorelocalroot/.git/**",
   ]);
 });
@@ -309,7 +309,7 @@ test("De-duplicated ignores", async (t) => {
   ]);
 
   t.deepEqual(evf.getIgnoreGlobs().slice(-2), [
-    "./test/stubs/ignore-dedupe/**/node_modules/**",
+    "**/node_modules/**",
     "./test/stubs/ignore-dedupe/.git/**",
   ]);
 });
