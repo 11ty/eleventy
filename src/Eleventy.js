@@ -2,6 +2,7 @@ import chalk from "kleur";
 import { performance } from "node:perf_hooks";
 import debugUtil from "debug";
 import { filesize } from "filesize";
+import path from "node:path";
 
 /* Eleventy Deps */
 import { TemplatePath } from "@11ty/eleventy-utils";
@@ -30,7 +31,11 @@ import { isGlobMatch } from "./Util/GlobMatcher.js";
 import simplePlural from "./Util/Pluralize.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import eventBus from "./EventBus.js";
-import { getEleventyPackageJson, getWorkingProjectPackageJson } from "./Util/ImportJsonSync.js";
+import {
+	getEleventyPackageJson,
+	importJsonSync,
+	getWorkingProjectPackageJsonPath,
+} from "./Util/ImportJsonSync.js";
 import { EleventyImport } from "./Util/Require.js";
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
 import { withResolvers } from "./Util/PromiseUtil.js";
@@ -56,6 +61,8 @@ class Eleventy {
 	 * @type {object|undefined}
 	 */
 	#projectPackageJson;
+	/** @type {string} */
+	#projectPackageJsonPath;
 	/** @type {ProjectTemplateFormats|undefined} */
 	#templateFormats;
 	/** @type {ConsoleLogger|undefined} */
@@ -589,13 +596,11 @@ Verbose Output: ${this.verboseMode}`;
 
 		let configPath = this.eleventyConfig.getLocalProjectConfigFile();
 		if (configPath) {
-			let absolutePathToConfig = TemplatePath.absolutePath(configPath);
-			values.config = absolutePathToConfig;
-
-			// TODO(zachleat): if config is not in root (e.g. using --config=)
-			let root = TemplatePath.getDirFromFilePath(absolutePathToConfig);
-			values.root = root;
+			values.config = TemplatePath.absolutePath(configPath);
 		}
+
+		// Fixed: instead of configuration directory, explicit root or working directory
+		values.root = TemplatePath.getWorkingDir();
 
 		values.source = this.source;
 
@@ -1056,7 +1061,11 @@ Arguments:
 		this.watchManager = new EleventyWatch();
 		this.watchManager.incremental = this.isIncremental;
 
-		this.watchTargets.add(["./package.json"]);
+		if (this.projectPackageJsonPath) {
+			this.watchTargets.add([
+				path.relative(TemplatePath.getWorkingDir(), this.projectPackageJsonPath),
+			]);
+		}
 		this.watchTargets.add(this.eleventyFiles.getGlobWatcherFiles());
 		this.watchTargets.add(this.eleventyFiles.getIgnoreFiles());
 
@@ -1075,9 +1084,17 @@ Arguments:
 	}
 
 	// fetch from project’s package.json
+	get projectPackageJsonPath() {
+		if (this.#projectPackageJsonPath === undefined) {
+			this.#projectPackageJsonPath = getWorkingProjectPackageJsonPath() || false;
+		}
+		return this.#projectPackageJsonPath;
+	}
+
 	get projectPackageJson() {
 		if (!this.#projectPackageJson) {
-			this.#projectPackageJson = getWorkingProjectPackageJson();
+			let p = this.projectPackageJsonPath;
+			this.#projectPackageJson = p ? importJsonSync(p) : {};
 		}
 		return this.#projectPackageJson;
 	}
@@ -1106,6 +1123,7 @@ Arguments:
 			return;
 		}
 
+		// TODO use DirContains
 		let dataDir = TemplatePath.stripLeadingDotSlash(this.templateData.getDataDir());
 		function filterOutGlobalDataFiles(path) {
 			return !dataDir || !TemplatePath.stripLeadingDotSlash(path).startsWith(dataDir);
@@ -1201,7 +1219,10 @@ Arguments:
 		let rawFiles = await this.getWatchedFiles();
 		debug("Watching for changes to: %o", rawFiles);
 
-		let watcher = chokidar.watch(rawFiles, this.getChokidarConfig());
+		let options = this.getChokidarConfig();
+		console.log({ rawFiles }, options.ignored);
+
+		let watcher = chokidar.watch(rawFiles, options);
 
 		initWatchBench.after();
 

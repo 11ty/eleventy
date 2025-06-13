@@ -1,7 +1,9 @@
+import path from "node:path";
 import { glob } from "tinyglobby";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
+import ProjectDirectories from "./Util/ProjectDirectories.js";
 import { isGlobMatch } from "./Util/GlobMatcher.js";
 
 const debug = debugUtil("Eleventy:FileSystemSearch");
@@ -21,6 +23,38 @@ class FileSystemSearch {
 		return key + JSON.stringify(globs) + JSON.stringify(options);
 	}
 
+	static getParentDirPrefix(filePath = "") {
+		let count = [];
+		for (let p of filePath.split(path.sep)) {
+			if (p === "..") {
+				count.push("..");
+			} else {
+				break;
+			}
+		}
+
+		if (count.length > 0) {
+			// trailing slash
+			return count.join(path.sep) + path.sep;
+		}
+		return "";
+	}
+
+	static getShortestParentDirPrefix(filePaths) {
+		let shortest = "";
+		filePaths
+			.map((entry) => {
+				return FileSystemSearch.getParentDirPrefix(entry);
+			})
+			.filter((entry) => Boolean(entry))
+			.forEach((prefix) => {
+				if (!shortest || prefix.length < shortest.length) {
+					shortest = prefix;
+				}
+			});
+		return shortest;
+	}
+
 	// returns a promise
 	search(key, globs, options = {}) {
 		debug("Glob search (%o) searching for: %o", key, globs);
@@ -32,8 +66,21 @@ class FileSystemSearch {
 		// Strip leading slashes from everything!
 		globs = globs.map((entry) => TemplatePath.stripLeadingDotSlash(entry));
 
+		let shortestParentPrefix = FileSystemSearch.getShortestParentDirPrefix(globs);
+		if (shortestParentPrefix) {
+			options.cwd = shortestParentPrefix;
+		}
+
 		if (options.ignore && Array.isArray(options.ignore)) {
-			options.ignore = options.ignore.map((entry) => TemplatePath.stripLeadingDotSlash(entry));
+			options.ignore = options.ignore.map((entry) => {
+				entry = TemplatePath.stripLeadingDotSlash(entry);
+				if (shortestParentPrefix) {
+					if (!entry.startsWith("**/") && !entry.startsWith(".git/**")) {
+						entry = ProjectDirectories.getRelativeTo(entry, shortestParentPrefix);
+					}
+				}
+				return entry;
+			});
 			debug("Glob search (%o) ignoring: %o", key, options.ignore);
 		}
 
@@ -52,6 +99,13 @@ class FileSystemSearch {
 
 			this.count++;
 
+			globs = globs.map((entry) => {
+				if (shortestParentPrefix && entry.startsWith(shortestParentPrefix)) {
+					return ProjectDirectories.getRelativeTo(entry, shortestParentPrefix);
+				}
+				return entry;
+			});
+
 			this.promises[cacheKey] = glob(
 				globs,
 				Object.assign(
@@ -63,8 +117,14 @@ class FileSystemSearch {
 				),
 			).then((results) => {
 				this.outputs[cacheKey] = new Set(
-					results.map((entry) => TemplatePath.standardizeFilePath(entry)),
+					results.map((entry) => {
+						if (options.cwd) {
+							entry = path.join(options.cwd, entry);
+						}
+						return TemplatePath.standardizeFilePath(entry);
+					}),
 				);
+
 				return Array.from(this.outputs[cacheKey]);
 			});
 		}

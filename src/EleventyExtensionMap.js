@@ -142,8 +142,7 @@ class EleventyExtensionMap {
 		return this._getGlobs(this.unfilteredFormatKeys, inputDir);
 	}
 
-	_getGlobs(formatKeys, inputDir) {
-		let dir = TemplatePath.convertToRecursiveGlobSync(inputDir);
+	_getGlobs(formatKeys, inputDir = "") {
 		let extensions = new Set();
 
 		for (let key of formatKeys) {
@@ -156,6 +155,7 @@ class EleventyExtensionMap {
 			}
 		}
 
+		let dir = TemplatePath.convertToRecursiveGlobSync(inputDir);
 		if (extensions.size === 1) {
 			return [`${dir}/*.${Array.from(extensions)[0]}`];
 		} else if (extensions.size > 1) {
