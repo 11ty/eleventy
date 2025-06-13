@@ -46,6 +46,7 @@ import I18nPlugin, * as I18nPluginExtras from "./Plugins/I18nPlugin.js";
 import HtmlBasePlugin, * as HtmlBasePluginExtras from "./Plugins/HtmlBasePlugin.js";
 import { TransformPlugin as InputPathToUrlTransformPlugin } from "./Plugins/InputPathToUrl.js";
 import { IdAttributePlugin } from "./Plugins/IdAttributePlugin.js";
+import FileSystemRemap from "./Util/FileSystemRemap.js";
 
 const pkg = getEleventyPackageJson();
 const debug = debugUtil("Eleventy");
@@ -1220,7 +1221,22 @@ Arguments:
 		debug("Watching for changes to: %o", rawFiles);
 
 		let options = this.getChokidarConfig();
-		console.log({ rawFiles }, options.ignored);
+
+		// Remap all paths to `cwd` if in play (Issue #3854)
+		let remapper = new FileSystemRemap(rawFiles);
+		let cwd = remapper.getCwd();
+
+		if (cwd) {
+			options.cwd = cwd;
+
+			rawFiles = remapper.getInput().map((entry) => {
+				return TemplatePath.stripLeadingDotSlash(entry);
+			});
+
+			options.ignored = remapper.getRemapped(options.ignored || []).map((entry) => {
+				return TemplatePath.stripLeadingDotSlash(entry);
+			});
+		}
 
 		let watcher = chokidar.watch(rawFiles, options);
 

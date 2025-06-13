@@ -43,11 +43,3 @@ test("Base", async (t) => {
   t.deepEqual(await fs.search("key", "./test/file-system-search/*.txt"), []);
   t.is(fs.count, 1);
 });
-
-test("getParentDirPrefix", (t) => {
-  t.is(FileSystemSearch.getParentDirPrefix(""), "");
-  t.is(FileSystemSearch.getParentDirPrefix("./test/"), "");
-  t.is(FileSystemSearch.getParentDirPrefix("../test/"), "../");
-  t.is(FileSystemSearch.getParentDirPrefix("../test/../"), "../");
-  t.is(FileSystemSearch.getParentDirPrefix("../../test/"), "../../");
-});
