@@ -1,5 +1,10 @@
 import path from "node:path";
 import ProjectDirectories from "./ProjectDirectories.js";
+import PathNormalizer from "./PathNormalizer.js";
+
+// even on Windows (in cmd.exe) these paths are normalized to forward slashes
+// tinyglobby expects forward slashes on Windows
+const SEP = "/";
 
 class GlobRemap {
 	constructor(paths = []) {
@@ -25,7 +30,7 @@ class GlobRemap {
 
 	static getParentDirPrefix(filePath = "") {
 		let count = [];
-		for (let p of filePath.split(path.sep)) {
+		for (let p of filePath.split(SEP)) {
 			if (p === "..") {
 				count.push("..");
 			} else {
@@ -35,7 +40,7 @@ class GlobRemap {
 
 		if (count.length > 0) {
 			// trailing slash
-			return count.join(path.sep) + path.sep;
+			return count.join(SEP) + SEP;
 		}
 		return "";
 	}
@@ -62,8 +67,8 @@ class GlobRemap {
 
 	static remapInput(entry, cwd) {
 		if (cwd) {
-			if (!entry.startsWith("**" + path.sep) && !entry.startsWith(`.git${path.sep}**`)) {
-				return ProjectDirectories.getRelativeTo(entry, cwd);
+			if (!entry.startsWith("**" + SEP) && !entry.startsWith(`.git${SEP}**`)) {
+				return PathNormalizer.normalizeSeperator(ProjectDirectories.getRelativeTo(entry, cwd));
 			}
 		}
 		return entry;
@@ -71,7 +76,7 @@ class GlobRemap {
 
 	static remapOutput(entry, cwd) {
 		if (cwd) {
-			return path.join(cwd, entry);
+			return PathNormalizer.normalizeSeperator(path.join(cwd, entry));
 		}
 		return entry;
 	}

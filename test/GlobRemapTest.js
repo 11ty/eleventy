@@ -1,7 +1,7 @@
 import test from "ava";
 import path from "node:path";
 import GlobRemap from "../src/Util/GlobRemap.js";
-import { normalizeSeparatorArray, normalizeSeparatorString } from "./Util/normalizeSeparators.js";
+import { normalizeSeparatorString } from "./Util/normalizeSeparators.js";
 
 test("getParentDirPrefix", (t) => {
   t.is(GlobRemap.getParentDirPrefix(""), "");
@@ -12,11 +12,11 @@ test("getParentDirPrefix", (t) => {
 });
 
 test("getCwd", (t) => {
-  t.is(normalizeSeparatorString(GlobRemap.getCwd([])), "");
-  t.is(normalizeSeparatorString(GlobRemap.getCwd(["test.njk"])), "");
-  t.is(normalizeSeparatorString(GlobRemap.getCwd(["./test.njk"])), "");
-  t.is(normalizeSeparatorString(GlobRemap.getCwd(["../test.njk"])), "../");
-  t.is(normalizeSeparatorString(GlobRemap.getCwd(["../test.njk", "../../2.njk"])), "../../");
+  t.is(GlobRemap.getCwd([]), "");
+  t.is(GlobRemap.getCwd(["test.njk"]), "");
+  t.is(GlobRemap.getCwd(["./test.njk"]), "");
+  t.is(GlobRemap.getCwd(["../test.njk"]), "../");
+  t.is(GlobRemap.getCwd(["../test.njk", "../../2.njk"]), "../../");
 });
 
 test("Constructor (control)", t => {
@@ -31,7 +31,7 @@ test("Constructor (control)", t => {
     'eleventy.config.js',
   ])
 
-  t.deepEqual(normalizeSeparatorArray(m.getInput()), [
+  t.deepEqual(m.getInput(), [
     '**/*.{liquid,md,njk,html,11ty.js,11ty.cjs,11ty.mjs}',
     '**/*.txt', // passthrough copy
     '**/*.png',
@@ -55,7 +55,7 @@ test("Constructor (control with ./)", t => {
     './eleventy.config.js',
   ])
 
-  t.deepEqual(normalizeSeparatorArray(m.getInput()), [
+  t.deepEqual(m.getInput(), [
     './**/*.{liquid,md,njk,html,11ty.js,11ty.cjs,11ty.mjs}',
     './**/*.txt', // passthrough copy
     './**/*.png',
@@ -80,8 +80,9 @@ test("Constructor (up one dir)", t => {
     './eleventy.config.js',
   ])
 
-  let parentDir = path.resolve("./").split(path.sep).slice(-1).join(path.sep);
-  t.deepEqual(normalizeSeparatorArray(m.getInput()), [
+  let parentDir = normalizeSeparatorString(path.resolve("./").split(path.sep).slice(-1).join(path.sep));
+
+  t.deepEqual(m.getInput(), [
     '**/*.{liquid,md,njk,html,11ty.js,11ty.cjs,11ty.mjs}',
     '**/*.txt', // passthrough copy
     '**/*.png',
@@ -107,10 +108,10 @@ test("Constructor (up two dirs)", t => {
     './eleventy.config.js',
   ])
 
-  let childDir = path.resolve("./").split(path.sep).slice(-2).join(path.sep);
-  let parentDir = path.resolve("./").split(path.sep).slice(-2, -1).join(path.sep);
+  let childDir = normalizeSeparatorString(path.resolve("./").split(path.sep).slice(-2).join(path.sep));
+  let parentDir = normalizeSeparatorString(path.resolve("./").split(path.sep).slice(-2, -1).join(path.sep));
 
-  t.deepEqual(normalizeSeparatorArray(m.getInput()), [
+  t.deepEqual(m.getInput(), [
     '**/*.{liquid,md,njk,html,11ty.js,11ty.cjs,11ty.mjs}',
     `${parentDir}/**/*.txt`, // passthrough copy
     `${parentDir}/**/*.png`,
