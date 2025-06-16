@@ -62,7 +62,7 @@ class GlobRemap {
 
 	static remapInput(entry, cwd) {
 		if (cwd) {
-			if (!entry.startsWith("**/") && !entry.startsWith(".git/**")) {
+			if (!entry.startsWith("**" + path.sep) && !entry.startsWith(`.git${path.sep}**`)) {
 				return ProjectDirectories.getRelativeTo(entry, cwd);
 			}
 		}
