@@ -131,7 +131,7 @@
 		"@11ty/eleventy-utils": "^2.0.7",
 		"@11ty/lodash-custom": "^4.17.21",
 		"@11ty/posthtml-urls": "^1.0.1",
-		"@11ty/recursive-copy": "^4.0.1",
+		"@11ty/recursive-copy": "^4.0.2",
 		"@sindresorhus/slugify": "^2.2.1",
 		"bcp-47-normalize": "^2.3.0",
 		"chokidar": "^3.6.0",
