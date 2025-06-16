@@ -1,4 +1,4 @@
-import path from "node:path";
+import { relative } from "node:path";
 import chalk from "kleur";
 import { filesize } from "filesize";
 import debugUtil from "debug";
@@ -326,9 +326,7 @@ export default class Eleventy extends Core {
 		this.watchManager.incremental = this.isIncremental;
 
 		if (this.projectPackageJsonPath) {
-			this.watchTargets.add([
-				path.relative(TemplatePath.getWorkingDir(), this.projectPackageJsonPath),
-			]);
+			this.watchTargets.add([relative(TemplatePath.getWorkingDir(), this.projectPackageJsonPath)]);
 		}
 		this.watchTargets.add(this.eleventyFiles.getGlobWatcherFiles());
 		this.watchTargets.add(this.eleventyFiles.getIgnoreFiles());

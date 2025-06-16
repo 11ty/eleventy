@@ -11,7 +11,11 @@ import TemplateEngineManager from "./Engines/TemplateEngineManager.js";
 /* Utils */
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import ProjectDirectories from "./Util/ProjectDirectories.js";
-import { getEleventyPackageJson, getWorkingProjectPackageJson } from "./Util/ImportJsonSync.js";
+import {
+	getEleventyPackageJson,
+	importJsonSync,
+	getWorkingProjectPackageJsonPath,
+} from "./Util/ImportJsonSync.js";
 import ProjectTemplateFormats from "./Util/ProjectTemplateFormats.js";
 
 const pkg = getEleventyPackageJson();
@@ -28,6 +32,8 @@ export class Core {
 	 * @type {object|undefined}
 	 */
 	#projectPackageJson;
+	/** @type {string} */
+	#projectPackageJsonPath;
 	/** @type {ProjectTemplateFormats|undefined} */
 	#templateFormats;
 	/** @type {ConsoleLogger|undefined} */
@@ -469,13 +475,11 @@ Verbose Output: ${this.verboseMode}`;
 
 		let configPath = this.eleventyConfig.getLocalProjectConfigFile();
 		if (configPath) {
-			let absolutePathToConfig = TemplatePath.absolutePath(configPath);
-			values.config = absolutePathToConfig;
-
-			// TODO(zachleat): if config is not in root (e.g. using --config=)
-			let root = TemplatePath.getDirFromFilePath(absolutePathToConfig);
-			values.root = root;
+			values.config = TemplatePath.absolutePath(configPath);
 		}
+
+		// Fixed: instead of configuration directory, explicit root or working directory
+		values.root = TemplatePath.getWorkingDir();
 
 		values.source = this.source;
 
@@ -654,9 +658,17 @@ Verbose Output: ${this.verboseMode}`;
 	}
 
 	// fetch from project’s package.json
+	get projectPackageJsonPath() {
+		if (this.#projectPackageJsonPath === undefined) {
+			this.#projectPackageJsonPath = getWorkingProjectPackageJsonPath() || false;
+		}
+		return this.#projectPackageJsonPath;
+	}
+
 	get projectPackageJson() {
 		if (!this.#projectPackageJson) {
-			this.#projectPackageJson = getWorkingProjectPackageJson();
+			let p = this.projectPackageJsonPath;
+			this.#projectPackageJson = p ? importJsonSync(p) : {};
 		}
 		return this.#projectPackageJson;
 	}
