@@ -1,4 +1,4 @@
-/* Core */
+import path from "node:path";
 import chalk from "kleur";
 import { filesize } from "filesize";
 import debugUtil from "debug";
@@ -23,6 +23,7 @@ import PathNormalizer from "./Util/PathNormalizer.js";
 import { isGlobMatch } from "./Adapters/Util/GlobMatcher.js";
 import eventBus from "./EventBus.js";
 import { withResolvers } from "./Util/PromiseUtil.js";
+import GlobRemap from "./Util/GlobRemap.js";
 
 const pkg = getEleventyPackageJson();
 const debug = debugUtil("Eleventy");
@@ -324,7 +325,11 @@ export default class Eleventy extends Core {
 		this.watchManager = new EleventyWatch();
 		this.watchManager.incremental = this.isIncremental;
 
-		this.watchTargets.add(["./package.json"]);
+		if (this.projectPackageJsonPath) {
+			this.watchTargets.add([
+				path.relative(TemplatePath.getWorkingDir(), this.projectPackageJsonPath),
+			]);
+		}
 		this.watchTargets.add(this.eleventyFiles.getGlobWatcherFiles());
 		this.watchTargets.add(this.eleventyFiles.getIgnoreFiles());
 
@@ -350,6 +355,7 @@ export default class Eleventy extends Core {
 			return;
 		}
 
+		// TODO use DirContains
 		let dataDir = TemplatePath.stripLeadingDotSlash(this.templateData.getDataDir());
 		function filterOutGlobalDataFiles(path) {
 			return !dataDir || !TemplatePath.stripLeadingDotSlash(path).startsWith(dataDir);
@@ -445,7 +451,25 @@ export default class Eleventy extends Core {
 		let rawFiles = await this.getWatchedFiles();
 		debug("Watching for changes to: %o", rawFiles);
 
-		let watcher = chokidar.watch(rawFiles, this.getChokidarConfig());
+		let options = this.getChokidarConfig();
+
+		// Remap all paths to `cwd` if in play (Issue #3854)
+		let remapper = new GlobRemap(rawFiles);
+		let cwd = remapper.getCwd();
+
+		if (cwd) {
+			options.cwd = cwd;
+
+			rawFiles = remapper.getInput().map((entry) => {
+				return TemplatePath.stripLeadingDotSlash(entry);
+			});
+
+			options.ignored = remapper.getRemapped(options.ignored || []).map((entry) => {
+				return TemplatePath.stripLeadingDotSlash(entry);
+			});
+		}
+
+		let watcher = chokidar.watch(rawFiles, options);
 
 		initWatchBench.after();
 

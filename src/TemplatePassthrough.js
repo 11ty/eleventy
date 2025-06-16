@@ -174,8 +174,14 @@ class TemplatePassthrough {
 			throw new Error("Internal error: Missing `fileSystemSearch` property.");
 		}
 
+		// TODO perf this globs once per addPassthroughCopy entry
 		let files = TemplatePath.addLeadingDotSlashArray(
-			await this.fileSystemSearch.search("passthrough", glob),
+			await this.fileSystemSearch.search("passthrough", glob, {
+				ignore: [
+					// *only* ignores output dir (not node_modules!)
+					this.outputDir,
+				],
+			}),
 		);
 		b.after();
 		return files;

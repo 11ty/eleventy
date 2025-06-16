@@ -2,7 +2,7 @@ import test from "ava";
 
 import { spawnAsync } from "../src/Adapters/Util/spawn.js";
 
-test.skip("#3854 parent directory for content, with global data files", async (t) => {
+test("#3854 parent directory for content, with global data files", async (t) => {
   let result = await spawnAsync(
 		"node",
 		["../../../../cmd.cjs", "--to=json"],

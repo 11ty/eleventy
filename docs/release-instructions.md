@@ -5,7 +5,7 @@
 # Release Procedure
 
 1. (Optional) Update minor dependencies in package.json
-   - `npx npm-check-updates --target minor -u`
+   - `npx npm-check-updates --target minor -u --dep prod`
    - or `npm outdated` + `npm update --save`
 1. Stable release only: make sure there aren’t any `@11ty/*` dependencies on pre-release versions alpha/beta/canary
 1. If the minimum Node version changed, make sure you update `package.json` engines property.

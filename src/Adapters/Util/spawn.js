@@ -5,19 +5,23 @@ export function spawnAsync(command, args, options) {
 	let { promise, resolve, reject } = withResolvers();
 
 	const cmd = spawn(command, args, options);
+	let res = [];
 	cmd.stdout.on("data", (data) => {
-		resolve(data.toString("utf8"));
+		res.push(data.toString("utf8"));
 	});
 
+	let err = [];
 	cmd.stderr.on("data", (data) => {
-		reject(data.toString("utf8"));
+		err.push(data.toString("utf8"));
 	});
 
 	cmd.on("close", (code) => {
-		if (code === 1) {
+		if (err.length > 0) {
+			reject(err.join("\n"));
+		} else if (code === 1) {
 			reject("Internal error: process closed with error exit code.");
 		} else {
-			resolve();
+			resolve(res.join("\n"));
 		}
 	});
 

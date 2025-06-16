@@ -597,6 +597,7 @@ class TemplateData {
 				if (inputDir) {
 					debugDev("dirStr: %o; inputDir: %o", dir, inputDir);
 				}
+				// TODO use DirContains
 				if (!inputDir || (dir.startsWith(inputDir) && dir !== inputDir)) {
 					if (this.config.dataFileDirBaseNameOverride) {
 						let indexDataFile = dir + "/" + this.config.dataFileDirBaseNameOverride;
