@@ -1,10 +1,10 @@
 import path from "node:path";
 import ProjectDirectories from "./ProjectDirectories.js";
 
-class FileSystemRemap {
+class GlobRemap {
 	constructor(paths = []) {
 		this.paths = paths;
-		this.cwd = FileSystemRemap.getCwd(paths);
+		this.cwd = GlobRemap.getCwd(paths);
 	}
 
 	getCwd() {
@@ -12,7 +12,7 @@ class FileSystemRemap {
 	}
 
 	getRemapped(paths) {
-		return paths.map((entry) => FileSystemRemap.remapInput(entry, this.cwd));
+		return paths.map((entry) => GlobRemap.remapInput(entry, this.cwd));
 	}
 
 	getInput() {
@@ -20,7 +20,7 @@ class FileSystemRemap {
 	}
 
 	getOutput(paths = []) {
-		return paths.map((entry) => FileSystemRemap.remapOutput(entry, this.cwd));
+		return paths.map((entry) => GlobRemap.remapOutput(entry, this.cwd));
 	}
 
 	static getParentDirPrefix(filePath = "") {
@@ -77,4 +77,4 @@ class FileSystemRemap {
 	}
 }
 
-export default FileSystemRemap;
+export default GlobRemap;

@@ -1,25 +1,26 @@
 import test from "ava";
 import path from "node:path";
-import FileSystemRemap from "../src/Util/FileSystemRemap.js";
+import GlobRemap from "../src/Util/GlobRemap.js";
+import { normalizeSeparatorArray, normalizeSeparatorString } from "./Util/normalizeSeparators.js";
 
 test("getParentDirPrefix", (t) => {
-  t.is(FileSystemRemap.getParentDirPrefix(""), "");
-  t.is(FileSystemRemap.getParentDirPrefix("./test/"), "");
-  t.is(FileSystemRemap.getParentDirPrefix("../test/"), "../");
-  t.is(FileSystemRemap.getParentDirPrefix("../test/../"), "../");
-  t.is(FileSystemRemap.getParentDirPrefix("../../test/"), "../../");
+  t.is(GlobRemap.getParentDirPrefix(""), "");
+  t.is(GlobRemap.getParentDirPrefix("./test/"), "");
+  t.is(GlobRemap.getParentDirPrefix("../test/"), "../");
+  t.is(GlobRemap.getParentDirPrefix("../test/../"), "../");
+  t.is(GlobRemap.getParentDirPrefix("../../test/"), "../../");
 });
 
 test("getCwd", (t) => {
-  t.is(FileSystemRemap.getCwd([]), "");
-  t.is(FileSystemRemap.getCwd(["test.njk"]), "");
-  t.is(FileSystemRemap.getCwd(["./test.njk"]), "");
-  t.is(FileSystemRemap.getCwd(["../test.njk"]), "../");
-  t.is(FileSystemRemap.getCwd(["../test.njk", "../../2.njk"]), "../../");
+  t.is(normalizeSeparatorString(GlobRemap.getCwd([])), "");
+  t.is(normalizeSeparatorString(GlobRemap.getCwd(["test.njk"])), "");
+  t.is(normalizeSeparatorString(GlobRemap.getCwd(["./test.njk"])), "");
+  t.is(normalizeSeparatorString(GlobRemap.getCwd(["../test.njk"])), "../");
+  t.is(normalizeSeparatorString(GlobRemap.getCwd(["../test.njk", "../../2.njk"])), "../../");
 });
 
 test("Constructor (control)", t => {
-  let m = new FileSystemRemap([
+  let m = new GlobRemap([
     '**/*.{liquid,md,njk,html,11ty.js,11ty.cjs,11ty.mjs}',
     '**/*.txt', // passthrough copy
     '**/*.png',
@@ -30,7 +31,7 @@ test("Constructor (control)", t => {
     'eleventy.config.js',
   ])
 
-  t.deepEqual(m.getInput(), [
+  t.deepEqual(normalizeSeparatorArray(m.getInput()), [
     '**/*.{liquid,md,njk,html,11ty.js,11ty.cjs,11ty.mjs}',
     '**/*.txt', // passthrough copy
     '**/*.png',
@@ -43,7 +44,7 @@ test("Constructor (control)", t => {
 });
 
 test("Constructor (control with ./)", t => {
-  let m = new FileSystemRemap([
+  let m = new GlobRemap([
     './**/*.{liquid,md,njk,html,11ty.js,11ty.cjs,11ty.mjs}',
     './**/*.txt', // passthrough copy
     './**/*.png',
@@ -54,7 +55,7 @@ test("Constructor (control with ./)", t => {
     './eleventy.config.js',
   ])
 
-  t.deepEqual(m.getInput(), [
+  t.deepEqual(normalizeSeparatorArray(m.getInput()), [
     './**/*.{liquid,md,njk,html,11ty.js,11ty.cjs,11ty.mjs}',
     './**/*.txt', // passthrough copy
     './**/*.png',
@@ -67,7 +68,7 @@ test("Constructor (control with ./)", t => {
 });
 
 test("Constructor (up one dir)", t => {
-  let m = new FileSystemRemap([
+  let m = new GlobRemap([
     '../**/*.{liquid,md,njk,html,11ty.js,11ty.cjs,11ty.mjs}',
     '../**/*.txt', // passthrough copy
     '../**/*.png',
@@ -80,7 +81,7 @@ test("Constructor (up one dir)", t => {
   ])
 
   let parentDir = path.resolve("./").split(path.sep).slice(-1).join(path.sep);
-  t.deepEqual(m.getInput(), [
+  t.deepEqual(normalizeSeparatorArray(m.getInput()), [
     '**/*.{liquid,md,njk,html,11ty.js,11ty.cjs,11ty.mjs}',
     '**/*.txt', // passthrough copy
     '**/*.png',
@@ -94,7 +95,7 @@ test("Constructor (up one dir)", t => {
 });
 
 test("Constructor (up two dirs)", t => {
-  let m = new FileSystemRemap([
+  let m = new GlobRemap([
     '../../**/*.{liquid,md,njk,html,11ty.js,11ty.cjs,11ty.mjs}',
     '../**/*.txt', // passthrough copy
     '../**/*.png',
@@ -109,7 +110,7 @@ test("Constructor (up two dirs)", t => {
   let childDir = path.resolve("./").split(path.sep).slice(-2).join(path.sep);
   let parentDir = path.resolve("./").split(path.sep).slice(-2, -1).join(path.sep);
 
-  t.deepEqual(m.getInput(), [
+  t.deepEqual(normalizeSeparatorArray(m.getInput()), [
     '**/*.{liquid,md,njk,html,11ty.js,11ty.cjs,11ty.mjs}',
     `${parentDir}/**/*.txt`, // passthrough copy
     `${parentDir}/**/*.png`,

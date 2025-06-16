@@ -46,7 +46,7 @@ import I18nPlugin, * as I18nPluginExtras from "./Plugins/I18nPlugin.js";
 import HtmlBasePlugin, * as HtmlBasePluginExtras from "./Plugins/HtmlBasePlugin.js";
 import { TransformPlugin as InputPathToUrlTransformPlugin } from "./Plugins/InputPathToUrl.js";
 import { IdAttributePlugin } from "./Plugins/IdAttributePlugin.js";
-import FileSystemRemap from "./Util/FileSystemRemap.js";
+import FileSystemRemap from "./Util/GlobRemap.js";
 
 const pkg = getEleventyPackageJson();
 const debug = debugUtil("Eleventy");

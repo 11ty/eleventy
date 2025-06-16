@@ -2,7 +2,7 @@ import { glob } from "tinyglobby";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
-import FileSystemRemap from "./Util/FileSystemRemap.js";
+import FileSystemRemap from "./Util/GlobRemap.js";
 import { isGlobMatch } from "./Util/GlobMatcher.js";
 
 const debug = debugUtil("Eleventy:FileSystemSearch");
