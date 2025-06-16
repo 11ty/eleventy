@@ -14,6 +14,7 @@ function findFilePathInParentDirs(dir, filename) {
 	// https://docs.npmjs.com/cli/v7/configuring-npm/folders#more-information
 	// Fixes issue #3178, limited to working dir paths only
 	let workingDir = TemplatePath.getWorkingDir();
+	// TODO use DirContains
 	let allDirs = TemplatePath.getAllDirs(dir).filter((entry) => entry.startsWith(workingDir));
 
 	for (let dir of allDirs) {
@@ -49,9 +50,14 @@ function getModulePackageJson(dir) {
 	return importJsonSync(filePath);
 }
 
-function getWorkingProjectPackageJson() {
+// This will *not* find a package.json in a parent directory above root
+function getWorkingProjectPackageJsonPath() {
 	let dir = TemplatePath.absolutePath(TemplatePath.getWorkingDir());
-	let filePath = findFilePathInParentDirs(dir, "package.json");
+	return findFilePathInParentDirs(dir, "package.json");
+}
+
+function getWorkingProjectPackageJson() {
+	let filePath = getWorkingProjectPackageJsonPath();
 
 	// optional!
 	if (!filePath) {
@@ -67,4 +73,5 @@ export {
 	getEleventyPackageJson,
 	getModulePackageJson,
 	getWorkingProjectPackageJson,
+	getWorkingProjectPackageJsonPath,
 };

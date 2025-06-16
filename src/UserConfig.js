@@ -170,7 +170,7 @@ class UserConfig {
 
 		let defaultIgnores = new Set();
 		defaultIgnores.add("**/node_modules/**");
-		defaultIgnores.add(".git/**");
+		defaultIgnores.add(".git/**"); // TODO `**/.git/**`
 		this.ignores = new Set(defaultIgnores);
 		this.watchIgnores = new Set(defaultIgnores);
 
