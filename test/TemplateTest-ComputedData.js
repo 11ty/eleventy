@@ -2,11 +2,11 @@ import test from "ava";
 
 import Eleventy from "../src/Eleventy.js";
 import TemplateData from "../src/Data/TemplateData.js";
+import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 
 import getNewTemplate from "./_getNewTemplateForTests.js";
 import { renderTemplate } from "./_getRenderedTemplates.js";
-import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
-import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
+import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback, sortEleventyResults } from "./_testHelpers.js";
 
 async function getRenderedData(tmpl, pageNumber = 0) {
   let data = await tmpl.getData();
@@ -302,19 +302,16 @@ const eleventyComputed = {
   elev.disableLogger();
 
   let result = await elev.toJSON();
-  result.sort((a, b) => {
-    if(b.inputPath > a.inputPath) {
-      return -1;
-    }
-    return 1;
-  });
+  result.sort(sortEleventyResults);
 
   t.is(result.length, 2);
-  t.is(result[0].inputPath, `./test/stubs-virtual/page1.njk`);
-  t.is(result[0].content, `base,base2`);
-  t.is(result[1].inputPath, `./test/stubs-virtual/page2.njk`);
+
+  t.is(result[0].inputPath, `./test/stubs-virtual/page2.njk`);
   // A merge happened here because it was eleventyComputed -> eleventyComputed array merge before computed data
-  t.is(result[1].content, `base,base2,override,override2`);
+  t.is(result[0].content, `base,base2,override,override2`);
+
+  t.is(result[1].inputPath, `./test/stubs-virtual/page1.njk`);
+  t.is(result[1].content, `base,base2`);
 });
 
 test("Issue #3728 with Computed data with arrays and layouts (×1 eleventyComputed)", async (t) => {
@@ -343,12 +340,10 @@ const eleventyComputed = {
   elev.disableLogger();
 
   let result = await elev.toJSON();
-  result.sort((a, b) => {
-    return a.inputPath - b.inputPath;
-  });
+  result.sort(sortEleventyResults);
 
   t.is(result.length, 2);
 
-  t.is(result[0].content, `base,1`);
-  t.is(result[1].content, `override,2`);
+  t.is(result[0].content, `override,2`);
+  t.is(result[1].content, `base,1`);
 });

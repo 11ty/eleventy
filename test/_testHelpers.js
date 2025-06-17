@@ -8,7 +8,7 @@ import FileSystemSearch from "../src/FileSystemSearch.js";
 import TemplateWriter from "../src/TemplateWriter.js";
 import TemplateEngineManager from "../src/Engines/TemplateEngineManager.js";
 
-async function getTemplateConfigInstance(configObj, dirs, configObjOverride = undefined) {
+export async function getTemplateConfigInstance(configObj, dirs, configObjOverride = undefined) {
 	let eleventyConfig;
 	if(configObj instanceof TemplateConfig) {
 		eleventyConfig = configObj;
@@ -38,7 +38,7 @@ async function getTemplateConfigInstance(configObj, dirs, configObjOverride = un
 	return eleventyConfig;
 }
 
-async function getTemplateConfigInstanceCustomCallback(dirObject, configCallback) {
+export async function getTemplateConfigInstanceCustomCallback(dirObject, configCallback) {
 	let tmplCfg = new TemplateConfig();
 
 	configCallback(tmplCfg.userConfig);
@@ -52,7 +52,7 @@ async function getTemplateConfigInstanceCustomCallback(dirObject, configCallback
 	return eleventyConfig;
 }
 
-function getTemplateWriterInstance(formats, templateConfig) {
+export function getTemplateWriterInstance(formats, templateConfig) {
   let { eleventyFiles, passthroughManager } = getEleventyFilesInstance(formats, templateConfig);
   let templateWriter = new TemplateWriter(
     formats,
@@ -77,7 +77,7 @@ function getTemplateWriterInstance(formats, templateConfig) {
   }
 }
 
-function getEleventyFilesInstance(formats, templateConfig) {
+export function getEleventyFilesInstance(formats, templateConfig) {
 	let map = new EleventyExtensionMap(templateConfig);
 	map.setFormats(formats);
 
@@ -100,9 +100,11 @@ function getEleventyFilesInstance(formats, templateConfig) {
   };
 }
 
-export {
-	getTemplateConfigInstance,
-	getTemplateConfigInstanceCustomCallback,
-	getEleventyFilesInstance,
-  getTemplateWriterInstance,
-};
+export function sortEleventyResults(a, b) {
+  if(b.inputPath > a.inputPath) {
+    return -1;
+  } else if(b.inputPath < a.inputPath) {
+    return -1;
+  }
+  return 0;
+}
