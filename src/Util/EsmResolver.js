@@ -1,4 +1,6 @@
 import debugUtil from "debug";
+import { fileURLToPath } from "node:url";
+import PathNormalizer from "./PathNormalizer.js";
 
 const debug = debugUtil("Eleventy:EsmResolver");
 
@@ -31,7 +33,7 @@ export async function resolve(specifier, context, nextResolve) {
 			return nextResolve(specifier);
 		}
 
-		let absolutePath = fileUrl.pathname;
+		let absolutePath = PathNormalizer.normalizeSeperator(fileURLToPath(fileUrl));
 		// Bust the import cache if this is a recently modified file
 		if (lastModifiedPaths.has(absolutePath)) {
 			fileUrl.search = ""; // delete existing searchparams

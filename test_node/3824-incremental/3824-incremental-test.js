@@ -2,8 +2,8 @@
 // See https://github.com/privatenumber/tsx/issues/354
 // See https://github.com/nodejs/node/issues/47747
 import test from "node:test";
-import path from "node:path";
 import fs from "node:fs";
+import assert from "node:assert";
 
 import Eleventy from "../../src/Eleventy.js";
 import { withResolvers } from "../../src/Util/PromiseUtil.js";
@@ -31,8 +31,7 @@ function getOutputContent(str = "") {
 test(
 	"#3824 TSX updates during watch (incremental)",
 	{
-		timeout: 20000,
-		plan: 3,
+		timeout: 10000,
 	},
 	async (t) => {
 		let comparisonStrings = ["first", "second"];
@@ -46,7 +45,7 @@ test(
 		});
 
 		// Restore original content
-		const ROOT_DIR = path.resolve("./test_node/3824-incremental/") + "/";
+		const ROOT_DIR = "./test_node/3824-incremental/";
 		const OUTPUT_DIR = ROOT_DIR + "_site/";
 
 		const FILE_CHANGING = ROOT_DIR + "_includes/head.tsx";
@@ -75,7 +74,7 @@ test(
 
 		// Control
 		let content = fs.readFileSync(OUTPUT_FILE, "utf8");
-		t.assert.equal(content, getOutputContent());
+		assert.equal(content, getOutputContent());
 
 		// Stop after all runs are complete
 		Promise.all(runs.map((entry) => entry.promise)).then(async () => {
@@ -83,11 +82,14 @@ test(
 		});
 
 		for (let run of runs) {
+			// Windows needed this for Chokidar reasons
+			await new Promise((resolve) => setTimeout(resolve, 200));
+
 			fs.writeFileSync(FILE_CHANGING, run.input, "utf8");
 			await run.promise;
 
 			let content = fs.readFileSync(OUTPUT_FILE, "utf8");
-			t.assert.equal(content, run.expected);
+			assert.equal(content, run.expected);
 		}
 
 		fs.writeFileSync(FILE_CHANGING, getInputContent(), "utf8");
