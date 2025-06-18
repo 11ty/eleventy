@@ -29,63 +29,68 @@ function getOutputContent(str = "") {
 	return `<html><head><title>My test page${str}</title></head><body><p>Hello World</p></body></html>`;
 }
 
-test("#3824 TSX updates during watch (incremental)", async () => {
-	let comparisonStrings = ["first", "second"];
+test(
+	"#3824 TSX updates during watch (incremental)",
+	{
+		timeout: 20000,
+	},
+	async () => {
+		let comparisonStrings = ["first", "second"];
 
-	let runs = comparisonStrings.map((str) => {
-		return {
-			...withResolvers(),
-			input: getInputContent(str),
-			expected: getOutputContent(str),
-		};
-	});
+		let runs = comparisonStrings.map((str) => {
+			return {
+				...withResolvers(),
+				input: getInputContent(str),
+				expected: getOutputContent(str),
+			};
+		});
 
-	// Restore original content
-	const ROOT_DIR = path.resolve("./test_node/3824-incremental/") + "/";
-	const OUTPUT_DIR = ROOT_DIR + "_site/";
+		// Restore original content
+		const ROOT_DIR = path.resolve("./test_node/3824-incremental/") + "/";
+		const OUTPUT_DIR = ROOT_DIR + "_site/";
 
-	const FILE_CHANGING = ROOT_DIR + "_includes/head.tsx";
-	const OUTPUT_FILE = OUTPUT_DIR + "index.html";
+		const FILE_CHANGING = ROOT_DIR + "_includes/head.tsx";
+		const OUTPUT_FILE = OUTPUT_DIR + "index.html";
 
-	fs.writeFileSync(FILE_CHANGING, getInputContent(), "utf8");
+		fs.writeFileSync(FILE_CHANGING, getInputContent(), "utf8");
 
-	let index = 0;
-	let elev = new Eleventy(ROOT_DIR, OUTPUT_DIR, {
-		configPath: ROOT_DIR + "eleventy.config.js",
-		config(eleventyConfig) {
-			eleventyConfig.on("eleventy.afterwatch", () => {
-				let { resolve } = runs[index];
-				index++;
-				resolve();
-			});
-		},
-	});
+		let index = 0;
+		let elev = new Eleventy(ROOT_DIR, OUTPUT_DIR, {
+			configPath: ROOT_DIR + "eleventy.config.js",
+			config(eleventyConfig) {
+				eleventyConfig.on("eleventy.afterwatch", () => {
+					let { resolve } = runs[index];
+					index++;
+					resolve();
+				});
+			},
+		});
 
-	elev.setIncrementalBuild(true);
+		// Same as 3824-test.js except for this line
+		elev.setIncrementalBuild(true);
 
-	elev.disableLogger();
-	await elev.init();
-	await elev.watch();
+		elev.disableLogger();
+		await elev.init();
+		await elev.watch();
 
-	// Control
-	let content = fs.readFileSync(OUTPUT_FILE, "utf8");
-	assert.equal(content, getOutputContent());
-
-	// Stop after all runs are complete
-	Promise.all(runs.map((entry) => entry.promise)).then(async () => {
-		await elev.stopWatch();
-	});
-
-	for (let run of runs) {
-		fs.writeFileSync(FILE_CHANGING, run.input, "utf8");
-		await run.promise;
-
+		// Control
 		let content = fs.readFileSync(OUTPUT_FILE, "utf8");
-		assert.equal(content, run.expected);
-	}
+		assert.equal(content, getOutputContent());
 
-	fs.writeFileSync(FILE_CHANGING, getInputContent(), "utf8");
-	fs.rmSync(OUTPUT_DIR, { recursive: true });
-});
+		// Stop after all runs are complete
+		Promise.all(runs.map((entry) => entry.promise)).then(async () => {
+			await elev.stopWatch();
+		});
 
-// TODO start here add incremental build test
+		for (let run of runs) {
+			fs.writeFileSync(FILE_CHANGING, run.input, "utf8");
+			await run.promise;
+
+			let content = fs.readFileSync(OUTPUT_FILE, "utf8");
+			assert.equal(content, run.expected);
+		}
+
+		fs.writeFileSync(FILE_CHANGING, getInputContent(), "utf8");
+		fs.rmSync(OUTPUT_DIR, { recursive: true });
+	},
+);
