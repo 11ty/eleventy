@@ -4,6 +4,7 @@
 import test from "node:test";
 import path from "node:path";
 import fs from "node:fs";
+import assert from "node:assert";
 
 import Eleventy from "../../src/Eleventy.js";
 import { withResolvers } from "../../src/Util/PromiseUtil.js";
@@ -32,9 +33,8 @@ test(
 	"#3824 TSX updates during watch",
 	{
 		timeout: 20000,
-		plan: 3,
 	},
-	async (t) => {
+	async () => {
 		let comparisonStrings = ["first", "second"];
 
 		let runs = comparisonStrings.map((str) => {
@@ -72,7 +72,7 @@ test(
 
 		// Control
 		let content = fs.readFileSync(OUTPUT_FILE, "utf8");
-		t.assert.equal(content, getOutputContent());
+		assert.equal(content, getOutputContent());
 
 		// Stop after all runs are complete
 		Promise.all(runs.map((entry) => entry.promise)).then(async () => {
@@ -84,7 +84,7 @@ test(
 			await run.promise;
 
 			let content = fs.readFileSync(OUTPUT_FILE, "utf8");
-			t.assert.equal(content, run.expected);
+			assert.equal(content, run.expected);
 		}
 
 		fs.writeFileSync(FILE_CHANGING, getInputContent(), "utf8");
