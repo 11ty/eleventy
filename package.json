@@ -106,6 +106,7 @@
 		"eslint": "^9.29.0",
 		"eslint-config-prettier": "^10.1.5",
 		"globals": "^16.2.0",
+		"jsx-async-runtime": "^1.0.2",
 		"markdown-it-abbr": "^2.0.0",
 		"markdown-it-emoji": "^3.0.0",
 		"marked": "^15.0.12",
