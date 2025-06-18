@@ -1,6 +1,5 @@
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import TemplateEngineManager from "./Engines/TemplateEngineManager.js";
-import CustomEngine from "./Engines/Custom.js";
 
 // import debugUtil from "debug";
 // const debug = debugUtil("Eleventy:TemplateRender");
@@ -167,7 +166,7 @@ class TemplateRender {
 
 	getReadableEnginesListDifferingFromFileExtension() {
 		let keyFromFilename = this.extensionMap.getKey(this.engineNameOrPath);
-		if (this.engine instanceof CustomEngine) {
+		if (this.engine?.constructor?.name === "CustomEngine") {
 			if (
 				this.engine.entry &&
 				this.engine.entry.name &&

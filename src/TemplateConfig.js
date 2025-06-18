@@ -50,6 +50,7 @@ class TemplateConfig {
 	#userConfig = new UserConfig();
 	#existsCache = new ExistsCache();
 	#usesGraph;
+	#previousBuildModifiedFile;
 
 	constructor(customRootConfig, projectConfigPath) {
 		/** @type {object} */
@@ -91,6 +92,19 @@ class TemplateConfig {
 
 		this.hasConfigMerged = false;
 		this.isEsm = false;
+
+		this.userConfig.events.on("eleventy#templateModified", (inputPath, metadata = {}) => {
+			// Might support multiple at some point
+			this.setPreviousBuildModifiedFile(inputPath, metadata);
+		});
+	}
+
+	setPreviousBuildModifiedFile(inputPath, metadata = {}) {
+		this.#previousBuildModifiedFile = inputPath;
+	}
+
+	getPreviousBuildModifiedFile() {
+		return this.#previousBuildModifiedFile;
 	}
 
 	get userConfig() {

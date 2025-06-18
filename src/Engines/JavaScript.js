@@ -13,8 +13,6 @@ export default class JavaScript extends TemplateEngine {
 		super(name, templateConfig);
 		this.instances = {};
 
-		this.cacheable = false;
-
 		this.config.events.on("eleventy#templateModified", (inputPath, metadata = {}) => {
 			let { usedByDependants, relevantLayouts } = metadata;
 			// Remove from cached instances when modified
@@ -29,6 +27,10 @@ export default class JavaScript extends TemplateEngine {
 				}
 			}
 		});
+	}
+
+	get cacheable() {
+		return false;
 	}
 
 	normalize(result) {

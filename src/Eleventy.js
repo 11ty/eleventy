@@ -750,6 +750,8 @@ Verbose Output: ${this.verboseMode}`;
 			this.setIncrementalBuild(true);
 
 			this.programmaticApiIncrementalFile = TemplatePath.addLeadingDotSlash(incrementalFile);
+
+			this.eleventyConfig.setPreviousBuildModifiedFile(incrementalFile);
 		}
 	}
 
