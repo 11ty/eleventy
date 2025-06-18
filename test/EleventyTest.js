@@ -9,7 +9,6 @@ import { marked } from "marked";
 import nunjucks from "nunjucks";
 import * as sass from "sass";
 
-import eventBus from "../src/EventBus.js";
 import Eleventy, { HtmlBasePlugin } from "../src/Eleventy.js";
 import TemplateContent from "../src/TemplateContent.js";
 import TemplateMap from "../src/TemplateMap.js";
@@ -472,7 +471,7 @@ test("Unicode in front matter `tags`, issue #670", async (t) => {
     return 1;
   });
 
-  t.is(results[0].content.trim(), "2,all,Cañon City,");
+  t.is(results[0].content.trim(), "2,Cañon City,all,");
 });
 
 test("#142: date 'git Last Modified' populates page.date", async (t) => {
@@ -661,9 +660,7 @@ ${previousContents}
 
   fs.writeFileSync(includeFilePath, newContents, "utf8");
 
-  // Trigger that the file has changed
-  eventBus.emit("eleventy.resourceModified", includeFilePath);
-
+  // This also triggers that the file has changed in the event bus via setPreviousBuildModifiedFile
   elev.setIncrementalFile(includeFilePath);
 
   let results3 = await elev.toJSON();

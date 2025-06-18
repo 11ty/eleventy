@@ -192,6 +192,12 @@ class TemplateWriter {
 			// This must happen before data is generated for the incremental file only
 			if (incrementalFileShape === "template" && tmpl.inputPath === this.incrementalFile) {
 				tmpl.resetCaches();
+			} else if (
+				tmpl.isFileRelevantToThisTemplate(this.incrementalFile, {
+					isFullTemplate: incrementalFileShape === "template",
+				})
+			) {
+				tmpl.resetCaches();
 			}
 
 			// IMPORTANT: This is where the data is first generated for the template

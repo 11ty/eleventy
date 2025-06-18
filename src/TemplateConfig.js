@@ -50,6 +50,7 @@ class TemplateConfig {
 	#userConfig = new UserConfig();
 	#existsCache = new ExistsCache();
 	#usesGraph;
+	#previousBuildModifiedFile;
 
 	constructor(customRootConfig, projectConfigPath) {
 		/** @type {object} */
@@ -91,6 +92,19 @@ class TemplateConfig {
 
 		this.hasConfigMerged = false;
 		this.isEsm = false;
+
+		this.userConfig.events.on("eleventy#templateModified", (inputPath, metadata = {}) => {
+			// Might support multiple at some point
+			this.setPreviousBuildModifiedFile(inputPath, metadata);
+		});
+	}
+
+	setPreviousBuildModifiedFile(inputPath, metadata = {}) {
+		this.#previousBuildModifiedFile = inputPath;
+	}
+
+	getPreviousBuildModifiedFile() {
+		return this.#previousBuildModifiedFile;
 	}
 
 	get userConfig() {
@@ -150,16 +164,17 @@ class TemplateConfig {
 	 */
 	getLocalProjectConfigFile() {
 		let configFiles = this.getLocalProjectConfigFiles();
-		// Add the configFiles[0] in case of a test, where no file exists on the file system
-		let configFile = configFiles.find((path) => path && fs.existsSync(path)) || configFiles[0];
+
+		let configFile = configFiles.find((path) => path && fs.existsSync(path));
 		if (configFile) {
 			return configFile;
 		}
 	}
 
 	getLocalProjectConfigFiles() {
-		if (this.projectConfigPaths?.length > 0) {
-			return TemplatePath.addLeadingDotSlashArray(this.projectConfigPaths.filter((path) => path));
+		let paths = this.projectConfigPaths;
+		if (paths?.length > 0) {
+			return TemplatePath.addLeadingDotSlashArray(paths.filter((path) => Boolean(path)));
 		}
 		return [];
 	}

@@ -21,10 +21,12 @@ export default class Nunjucks extends TemplateEngine {
 		this._usingPrecompiled = Object.keys(this.nunjucksPrecompiledTemplates).length > 0;
 
 		this.setLibrary(this.config.libraryOverrides.njk);
-
-		// v3.1.0-alpha.1 we’ve moved to use Nunjucks’ internal cache instead of Eleventy’s
-		// this.cacheable = false;
 	}
+
+	// v3.1.0-alpha.1 we’ve moved to use Nunjucks’ internal cache instead of Eleventy’s
+	// get cacheable() {
+	// 	return false;
+	// }
 
 	#getFileSystemDirs() {
 		let paths = new Set();
