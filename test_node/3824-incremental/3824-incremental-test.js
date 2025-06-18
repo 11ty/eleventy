@@ -2,7 +2,6 @@
 // See https://github.com/privatenumber/tsx/issues/354
 // See https://github.com/nodejs/node/issues/47747
 import test from "node:test";
-import path from "node:path";
 import fs from "node:fs";
 import assert from "node:assert";
 
@@ -32,7 +31,7 @@ function getOutputContent(str = "") {
 test(
 	"#3824 TSX updates during watch (incremental)",
 	{
-		timeout: 20000,
+		timeout: 10000,
 	},
 	async () => {
 		let comparisonStrings = ["first", "second"];
@@ -46,7 +45,7 @@ test(
 		});
 
 		// Restore original content
-		const ROOT_DIR = path.resolve("./test_node/3824-incremental/") + "/";
+		const ROOT_DIR = "./test_node/3824-incremental/";
 		const OUTPUT_DIR = ROOT_DIR + "_site/";
 
 		const FILE_CHANGING = ROOT_DIR + "_includes/head.tsx";
@@ -83,6 +82,9 @@ test(
 		});
 
 		for (let run of runs) {
+			// Windows needed this for Chokidar reasons
+			await new Promise((resolve) => setTimeout(resolve, 200));
+
 			fs.writeFileSync(FILE_CHANGING, run.input, "utf8");
 			await run.promise;
 

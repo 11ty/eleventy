@@ -7,7 +7,7 @@ export default async function (eleventyConfig) {
 	eleventyConfig.addExtension(["11ty.jsx", "11ty.ts", "11ty.tsx"], {
 		key: "11ty.js",
 		compile: async function (inputContent, inputPath) {
-			this.addDependencies(inputPath, ["./_includes/head.tsx"]);
+			this.addDependencies(inputPath, ["./test_node/3824/_includes/head.tsx"]);
 
 			return async function (data) {
 				let content = await this.defaultRenderer(data);
