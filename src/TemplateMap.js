@@ -153,6 +153,20 @@ class TemplateMap {
 
 	// TODO(slightlyoff): major bottleneck
 	async initDependencyMap(fullTemplateOrder) {
+		// Temporary workaround for async constructor work in templates
+		// Issue #3170 #3870
+		let inputPathSet = new Set(fullTemplateOrder);
+		await Promise.all(
+			this.map
+				.filter(({ inputPath }) => {
+					return inputPathSet.has(inputPath);
+				})
+				.map(({ template }) => {
+					// This also happens for layouts in TemplateContent->compile
+					return template.asyncTemplateInitialization();
+				}),
+		);
+
 		for (let depEntry of fullTemplateOrder) {
 			if (GlobalDependencyMap.isCollection(depEntry)) {
 				let tagName = GlobalDependencyMap.getTagName(depEntry);
