@@ -2,8 +2,8 @@ import { glob } from "tinyglobby";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
-import FileSystemRemap from "./Util/GlobRemap.js";
-import { isGlobMatch } from "./Util/GlobMatcher.js";
+import GlobRemap from "./Util/GlobRemap.js";
+import { isGlobMatch } from "./Adapters/Util/GlobMatcher.js";
 
 const debug = debugUtil("Eleventy:FileSystemSearch");
 
@@ -33,7 +33,7 @@ class FileSystemSearch {
 		// Strip leading slashes from everything!
 		globs = globs.map((entry) => TemplatePath.stripLeadingDotSlash(entry));
 
-		let cwd = FileSystemRemap.getCwd(globs);
+		let cwd = GlobRemap.getCwd(globs);
 		if (cwd) {
 			options.cwd = cwd;
 		}
@@ -42,7 +42,7 @@ class FileSystemSearch {
 			options.ignore = options.ignore.map((entry) => {
 				entry = TemplatePath.stripLeadingDotSlash(entry);
 
-				return FileSystemRemap.remapInput(entry, cwd);
+				return GlobRemap.remapInput(entry, cwd);
 			});
 			debug("Glob search (%o) ignoring: %o", key, options.ignore);
 		}
@@ -64,7 +64,7 @@ class FileSystemSearch {
 
 			globs = globs.map((entry) => {
 				if (cwd && entry.startsWith(cwd)) {
-					return FileSystemRemap.remapInput(entry, cwd);
+					return GlobRemap.remapInput(entry, cwd);
 				}
 
 				return entry;
@@ -82,7 +82,7 @@ class FileSystemSearch {
 			).then((results) => {
 				this.outputs[cacheKey] = new Set(
 					results.map((entry) => {
-						let remapped = FileSystemRemap.remapOutput(entry, options.cwd);
+						let remapped = GlobRemap.remapOutput(entry, options.cwd);
 						return TemplatePath.standardizeFilePath(remapped);
 					}),
 				);

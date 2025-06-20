@@ -1,8 +1,9 @@
-import fs from "node:fs";
+import { existsSync } from "node:fs";
 import chalk from "kleur";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
+import getDefaultConfig from "./Adapters/Configuration/getDefaultConfig.js";
 import { EleventyImportRaw } from "./Util/Require.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import UserConfig from "./UserConfig.js";
@@ -167,8 +168,7 @@ class TemplateConfig {
 	 */
 	getLocalProjectConfigFile() {
 		let configFiles = this.getLocalProjectConfigFiles();
-
-		let configFile = configFiles.find((path) => path && fs.existsSync(path));
+		let configFile = configFiles.find((path) => path && existsSync(path));
 		if (configFile) {
 			return configFile;
 		}
@@ -310,8 +310,7 @@ class TemplateConfig {
 	async initializeRootConfig() {
 		this.rootConfig = this.customRootConfig;
 		if (!this.rootConfig) {
-			let { default: cfg } = await import("./defaultConfig.js");
-			this.rootConfig = cfg;
+			this.rootConfig = await getDefaultConfig();
 		}
 
 		if (typeof this.rootConfig === "function") {
@@ -378,7 +377,7 @@ class TemplateConfig {
 		let localConfig = {};
 		let exportedConfig = {};
 
-		let path = this.projectConfigPaths.filter((path) => path).find((path) => fs.existsSync(path));
+		let path = this.projectConfigPaths.filter((path) => path).find((path) => existsSync(path));
 
 		if (this.projectConfigPaths.length > 0 && this.#configManuallyDefined && !path) {
 			throw new EleventyConfigError(
@@ -479,6 +478,16 @@ class TemplateConfig {
 		// `templateFormatsAdded` is additive via `addTemplateFormats`
 		if (this.userConfig?.templateFormatsAdded) {
 			this.templateFormats.addViaConfig(this.userConfig.templateFormatsAdded);
+		}
+
+		// prefer Configuration API methods over return object
+		if (this.userConfig?.htmlTemplateEngine !== undefined) {
+			localConfig.htmlTemplateEngine = this.userConfig?.htmlTemplateEngine;
+		}
+
+		// prefer Configuration API methods over return object
+		if (this.userConfig?.markdownTemplateEngine !== undefined) {
+			localConfig.markdownTemplateEngine = this.userConfig?.markdownTemplateEngine;
 		}
 
 		let mergedConfig = Merge({}, this.rootConfig, localConfig);

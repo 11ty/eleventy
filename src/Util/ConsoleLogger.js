@@ -1,4 +1,4 @@
-import { Readable } from "node:stream";
+import { createNewStream } from "../Adapters/Util/stream.js";
 import chalk from "kleur";
 import debugUtil from "debug";
 
@@ -15,7 +15,7 @@ class ConsoleLogger {
 	#isChalkEnabled = true;
 	/** @type {object|boolean|undefined} */
 	#logger;
-	/** @type {Readable|undefined} */
+	/** @type {object|undefined} */
 	#outputStream;
 
 	constructor() {}
@@ -91,9 +91,7 @@ class ConsoleLogger {
 
 	get outputStream() {
 		if (!this.#outputStream) {
-			this.#outputStream = new Readable({
-				read() {},
-			});
+			this.#outputStream = createNewStream();
 		}
 		return this.#outputStream;
 	}

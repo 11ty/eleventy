@@ -1,4 +1,4 @@
-import fs from "node:fs";
+import { readFileSync } from "node:fs";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import { evalToken } from "liquidjs";
 
@@ -113,7 +113,7 @@ async function compileFile(inputPath, options = {}, templateLang) {
 	}
 
 	// TODO we could make this work with full templates (with front matter?)
-	let content = fs.readFileSync(inputPath, "utf8");
+	let content = readFileSync(inputPath, "utf8");
 	return tr.getCompiledTemplate(content);
 }
 
@@ -158,7 +158,7 @@ async function renderShortcodeFn(fn, data) {
  * @param {module:11ty/eleventy/UserConfig} eleventyConfig - User-land configuration instance.
  * @param {object} options - Plugin options
  */
-function eleventyRenderPlugin(eleventyConfig, options = {}) {
+function RenderPlugin(eleventyConfig, options = {}) {
 	let templateConfig;
 	eleventyConfig.on("eleventy.config", (tmplConfigInstance) => {
 		templateConfig = tmplConfigInstance;
@@ -433,7 +433,7 @@ class RenderManager {
 		this.#templateConfig = templateConfig;
 
 		// This is the only plugin running on the Edge
-		this.#templateConfig.userConfig.addPlugin(eleventyRenderPlugin, {
+		this.#templateConfig.userConfig.addPlugin(RenderPlugin, {
 			templateConfig: this.#templateConfig,
 			accessGlobalData: true,
 		});
@@ -505,16 +505,23 @@ class RenderManager {
 	}
 }
 
-Object.defineProperty(eleventyRenderPlugin, "eleventyPackage", {
+Object.defineProperty(RenderPlugin, "eleventyPackage", {
 	value: "@11ty/eleventy/render-plugin",
 });
 
-Object.defineProperty(eleventyRenderPlugin, "eleventyPluginOptions", {
+Object.defineProperty(RenderPlugin, "eleventyPluginOptions", {
 	value: {
 		unique: true,
 	},
 });
 
-export default eleventyRenderPlugin;
+// CommonJS friendly exports on .default
+Object.assign(RenderPlugin, {
+	File: compileFile,
+	String: compile,
+	RenderManager,
+});
+
+export default RenderPlugin;
 
 export { compileFile as File, compile as String, RenderManager };

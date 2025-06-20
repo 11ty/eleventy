@@ -4,6 +4,8 @@ import EleventyBaseError from "../Errors/EleventyBaseError.js";
 const debug = debugUtil("Eleventy:TemplateEngineManager");
 
 class TemplateEngineManager {
+	#CustomEngine;
+
 	constructor(eleventyConfig) {
 		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
 			throw new EleventyBaseError("Missing or invalid `config` argument.");
@@ -94,6 +96,9 @@ class TemplateEngineManager {
 	}
 
 	async getEngineClassByExtension(extension) {
+		if (this.config.extensionMapClasses[extension]) {
+			return this.config.extensionMapClasses[extension];
+		}
 		if (this.importCache[extension]) {
 			return this.importCache[extension];
 		}
@@ -102,29 +107,33 @@ class TemplateEngineManager {
 
 		// We include these as raw strings (and not more readable variables) so they’re parsed by a bundler.
 		if (extension === "md") {
-			promise = import("./Markdown.js").then((mod) => mod.default);
+			promise = import("../Adapters/Engines/Markdown.js").then((mod) => mod.default);
 		} else if (extension === "html") {
 			promise = import("./Html.js").then((mod) => mod.default);
 		} else if (extension === "njk") {
-			promise = import("./Nunjucks.js").then((mod) => mod.default);
+			promise = import("../Adapters/Engines/Nunjucks.js").then((mod) => mod.default);
 		} else if (extension === "liquid") {
-			promise = import("./Liquid.js").then((mod) => mod.default);
+			promise = import("../Adapters/Engines/Liquid.js").then((mod) => mod.default);
 		} else if (extension === "11ty.js") {
 			promise = import("./JavaScript.js").then((mod) => mod.default);
 		} else {
 			promise = this.getCustomEngineClass();
 		}
 
-		this.importCache[extension] = promise;
+		if (promise) {
+			this.importCache[extension] = promise;
+		} else {
+			throw new Error("Missing engine for file extension: " + extension);
+		}
 
 		return promise;
 	}
 
 	async getCustomEngineClass() {
-		if (!this._CustomEngine) {
-			this._CustomEngine = import("./Custom.js").then((mod) => mod.default);
+		if (!this.#CustomEngine) {
+			this.#CustomEngine = import("./Custom.js").then((mod) => mod.default);
 		}
-		return this._CustomEngine;
+		return this.#CustomEngine;
 	}
 
 	async #getEngine(name, extensionMap) {
