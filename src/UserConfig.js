@@ -70,6 +70,20 @@ class UserConfig {
 		this.#uniqueId = Math.random();
 	}
 
+	setMarkdownHighlighter(fn) {
+		this.markdownHighlighter = fn;
+	}
+
+	/**
+	 * @deprecated Use setMarkdownHighlighter instead.
+	 */
+	aaddMarkdownHighlighter(fn) {
+		console.warn(
+			"Warning: addMarkdownHighlighter is deprecated. Use setMarkdownHighlighter instead.",
+		);
+		this.setMarkdownHighlighter(fn);
+	}
+
 	// Internally used in TemplateContent for cache keys
 	_getUniqueId() {
 		return this.#uniqueId;
