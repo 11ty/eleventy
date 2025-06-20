@@ -52,6 +52,11 @@ export default class Eleventy extends Core {
 	async initializeConfig(initOverrides) {
 		await super.initializeConfig(initOverrides);
 
+		// We must destroy the previous one (if it exists) or the process will hang on SIGINT, issue #3873
+		if (this.eleventyServe) {
+			await this.eleventyServe.close();
+		}
+
 		/** @type {object} */
 		this.eleventyServe = new EleventyServe();
 		this.eleventyServe.eleventyConfig = this.eleventyConfig;
@@ -118,17 +123,6 @@ export default class Eleventy extends Core {
 		this.passthroughManager.reset();
 		// TODO
 		this.eleventyFiles.restart();
-	}
-
-	/**
-	 * Resets the config of Eleventy.
-	 *
-	 * @method
-	 */
-	async resetConfig() {
-		await super.resetConfig();
-
-		this.eleventyServe.eleventyConfig = this.eleventyConfig;
 	}
 
 	/**
@@ -223,8 +217,7 @@ export default class Eleventy extends Core {
 		if (isResetConfig) {
 			// important: run this before config resets otherwise the handlers will disappear.
 			await this.config.events.emit("eleventy.reset");
-
-			await this.resetConfig();
+			this.resetConfig();
 		}
 
 		await this.restart();
@@ -534,6 +527,9 @@ export default class Eleventy extends Core {
 		await new Promise((resolve) => {
 			watcher.on("ready", () => resolve());
 		});
+
+		// Returns for testability
+		return watchRun;
 	}
 
 	async stopWatch() {

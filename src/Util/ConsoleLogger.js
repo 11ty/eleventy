@@ -18,6 +18,8 @@ class ConsoleLogger {
 	/** @type {object|undefined} */
 	#outputStream;
 
+	constructor() {}
+
 	isLoggingEnabled() {
 		if (!this.isVerbose || process.env.DEBUG) {
 			return true;

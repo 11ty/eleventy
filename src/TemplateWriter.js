@@ -219,12 +219,20 @@ class TemplateWriter {
 			let { template: tmpl } = this._createTemplate(path, to);
 
 			// Note: removed a fix here to fetch missing templateRender instances
-			// that was tested as no longer needed (Issue #3170).
+			// that was tested as no longer needed (Issue #3170)
+			// Related: #3870, improved configuration reset
 
 			templates.push(tmpl);
 
 			// This must happen before data is generated for the incremental file only
 			if (incrementalFileShape === "template" && tmpl.inputPath === this.incrementalFile) {
+				tmpl.resetCaches();
+			} else if (
+				// Issue #3824 #3870
+				tmpl.isFileRelevantToThisTemplate(this.incrementalFile, {
+					isFullTemplate: incrementalFileShape === "template",
+				})
+			) {
 				tmpl.resetCaches();
 			}
 
@@ -413,11 +421,8 @@ class TemplateWriter {
 
 	async generateTemplates(paths, to = "fs") {
 		let promises = [];
-
-		// console.time("generateTemplates:_createTemplateMap");
 		// TODO optimize await here
 		await this._createTemplateMap(paths, to);
-		// console.timeEnd("generateTemplates:_createTemplateMap");
 		debug("Template map created.");
 
 		let usedTemplateContentTooEarlyMap = [];

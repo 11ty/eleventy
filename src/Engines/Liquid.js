@@ -25,7 +25,10 @@ export default class Liquid extends TemplateEngine {
 		this.setLibrary(this.config.libraryOverrides.liquid);
 
 		this.argLexer = moo.compile(Liquid.argumentLexerOptions);
-		this.cacheable = true;
+	}
+
+	get cacheable() {
+		return true;
 	}
 
 	setLibrary(override) {

@@ -2,7 +2,7 @@ import path from "node:path";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import { fileURLToPath } from "../Adapters/Util/url.js";
 
-class PathNormalizer {
+export default class PathNormalizer {
 	static getParts(inputPath) {
 		if (!inputPath) {
 			return [];
@@ -56,5 +56,3 @@ class PathNormalizer {
 		);
 	}
 }
-
-export default PathNormalizer;

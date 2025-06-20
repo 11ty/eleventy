@@ -16,12 +16,15 @@ export default class TemplateEngine {
 		this.name = name;
 
 		this.engineLib = null;
-		this.cacheable = false;
 
 		if (!eleventyConfig) {
 			throw new TemplateEngineConfigError("Missing `eleventyConfig` argument.");
 		}
 		this.eleventyConfig = eleventyConfig;
+	}
+
+	get cacheable() {
+		return false;
 	}
 
 	get dirs() {
