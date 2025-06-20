@@ -102,7 +102,7 @@ export function getEleventyFilesInstance(formats, templateConfig) {
 
 export function sortEleventyResults(a, b) {
   if(b.inputPath > a.inputPath) {
-    return -1;
+    return 1;
   } else if(b.inputPath < a.inputPath) {
     return -1;
   }
