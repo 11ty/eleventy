@@ -267,6 +267,7 @@ export class Core {
 
 		this.#hasConfigInitialized = true;
 
+		// after #hasConfigInitialized above
 		this.setIsVerbose(this.#preInitVerbose ?? !this.config.quietMode);
 	}
 
@@ -628,6 +629,8 @@ Verbose Output: ${this.verboseMode}`;
 			this.setIncrementalBuild(true);
 
 			this.programmaticApiIncrementalFile = TemplatePath.addLeadingDotSlash(incrementalFile);
+
+			this.eleventyConfig.setPreviousBuildModifiedFile(incrementalFile);
 		}
 	}
 
@@ -648,13 +651,10 @@ Verbose Output: ${this.verboseMode}`;
 	 * @method
 	 */
 	async resetConfig() {
-		this.env = this.getEnvironmentVariableValues();
-		this.initializeEnvironmentVariables(this.env);
-		await this.eleventyConfig.reset();
+		delete this.eleventyConfig;
 
-		this.config = this.eleventyConfig.getConfig();
-
-		this.setIsVerbose(!this.config.quietMode);
+		// ensures `initializeConfig()` will run when `init()` is called next
+		this.#hasConfigInitialized = false;
 	}
 
 	// fetch from project’s package.json
