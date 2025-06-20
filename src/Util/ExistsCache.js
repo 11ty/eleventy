@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { TemplatePath } from "@11ty/eleventy-utils";
 
 // Checks both files and directories
 class ExistsCache {
@@ -16,6 +17,13 @@ class ExistsCache {
 	has(path) {
 		return this.#exists.has(path);
 	}
+
+	set(path, isExist) {
+		this.#exists.set(TemplatePath.addLeadingDotSlash(path), Boolean(isExist));
+	}
+
+	// Not yet needed
+	// setDirectory(path, isExist) {}
 
 	// Relative paths (to root directory) expected (but not enforced due to perf costs)
 	exists(path) {

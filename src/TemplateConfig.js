@@ -96,6 +96,9 @@ class TemplateConfig {
 		this.userConfig.events.on("eleventy#templateModified", (inputPath, metadata = {}) => {
 			// Might support multiple at some point
 			this.setPreviousBuildModifiedFile(inputPath, metadata);
+
+			// Issue #3569, set that this file exists in the cache
+			this.#existsCache.set(inputPath, true);
 		});
 	}
 
