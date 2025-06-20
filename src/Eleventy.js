@@ -279,6 +279,11 @@ class Eleventy {
 			debug("Eleventy warm up time: %o (ms)", performance.now());
 		}
 
+		// We must destroy the previous one (if it exists) or the process will hang on SIGINT, issue #3873
+		if (this.eleventyServe) {
+			await this.eleventyServe.close();
+		}
+
 		/** @type {object} */
 		this.eleventyServe = new EleventyServe();
 		this.eleventyServe.eleventyConfig = this.eleventyConfig;
@@ -295,6 +300,7 @@ class Eleventy {
 
 		this.#hasConfigInitialized = true;
 
+		// after #hasConfigInitialized above
 		this.setIsVerbose(this.#preInitVerbose ?? !this.config.quietMode);
 	}
 
@@ -859,15 +865,11 @@ Arguments:
 	 *
 	 * @method
 	 */
-	async resetConfig() {
-		this.env = this.getEnvironmentVariableValues();
-		this.initializeEnvironmentVariables(this.env);
-		await this.eleventyConfig.reset();
+	resetConfig() {
+		delete this.eleventyConfig;
 
-		this.config = this.eleventyConfig.getConfig();
-		this.eleventyServe.eleventyConfig = this.eleventyConfig;
-
-		this.setIsVerbose(!this.config.quietMode);
+		// ensures `initializeConfig()` will run when `init()` is called next
+		this.#hasConfigInitialized = false;
 	}
 
 	/**
@@ -962,8 +964,7 @@ Arguments:
 		if (isResetConfig) {
 			// important: run this before config resets otherwise the handlers will disappear.
 			await this.config.events.emit("eleventy.reset");
-
-			await this.resetConfig();
+			this.resetConfig();
 		}
 
 		await this.restart();
@@ -1307,6 +1308,9 @@ Arguments:
 		await new Promise((resolve) => {
 			watcher.on("ready", () => resolve());
 		});
+
+		// Returns for testability
+		return watchRun;
 	}
 
 	async stopWatch() {

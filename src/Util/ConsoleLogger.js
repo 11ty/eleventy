@@ -15,12 +15,10 @@ class ConsoleLogger {
 	#isChalkEnabled = true;
 	/** @type {object|boolean|undefined} */
 	#logger;
+	/** @type {Readable|undefined} */
+	#outputStream;
 
-	constructor() {
-		this.outputStream = new Readable({
-			read() {},
-		});
-	}
+	constructor() {}
 
 	isLoggingEnabled() {
 		if (!this.isVerbose || process.env.DEBUG) {
@@ -89,6 +87,15 @@ class ConsoleLogger {
 	/** @param {string} msg */
 	error(msg) {
 		this.message(msg, "error", "red");
+	}
+
+	get outputStream() {
+		if (!this.#outputStream) {
+			this.#outputStream = new Readable({
+				read() {},
+			});
+		}
+		return this.#outputStream;
 	}
 
 	/** @param {string} msg */
