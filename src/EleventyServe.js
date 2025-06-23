@@ -25,6 +25,8 @@ const DEFAULT_SERVER_OPTIONS = {
 };
 
 class EleventyServe {
+	#eleventyConfig;
+
 	constructor() {
 		this.logger = new ConsoleLogger();
 		this._initOptionsFetched = false;
@@ -55,19 +57,20 @@ class EleventyServe {
 	}
 
 	get eleventyConfig() {
-		if (!this._eleventyConfig) {
+		if (!this.#eleventyConfig) {
 			throw new EleventyServeConfigError(
 				"You need to set the eleventyConfig property on EleventyServe.",
 			);
 		}
 
-		return this._eleventyConfig;
+		return this.#eleventyConfig;
 	}
 
 	set eleventyConfig(config) {
-		this._eleventyConfig = config;
-		if (checkPassthroughCopyBehavior(this._eleventyConfig.userConfig, "serve")) {
-			this._eleventyConfig.userConfig.events.on("eleventy.passthrough", ({ map }) => {
+		this.#eleventyConfig = config;
+
+		if (checkPassthroughCopyBehavior(this.#eleventyConfig.userConfig, "serve")) {
+			this.#eleventyConfig.userConfig.events.on("eleventy.passthrough", ({ map }) => {
 				// for-free passthrough copy
 				this.setAliases(map);
 			});
@@ -84,7 +87,7 @@ class EleventyServe {
 	async getServerModule(name) {
 		try {
 			if (!name || name === DEFAULT_SERVER_OPTIONS.module) {
-				return import("@11ty/eleventy-dev-server").then(i=>i.default)
+				return import("@11ty/eleventy-dev-server").then((i) => i.default);
 			}
 
 			// Look for peer dep in local project
@@ -134,7 +137,7 @@ class EleventyServe {
 					e.message,
 			);
 			debug("Eleventy server error %o", e);
-			return import("@11ty/eleventy-dev-server").then(i=>i.default)
+			return import("@11ty/eleventy-dev-server").then((i) => i.default);
 		}
 	}
 
