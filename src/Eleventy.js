@@ -52,13 +52,11 @@ export default class Eleventy extends Core {
 	async initializeConfig(initOverrides) {
 		await super.initializeConfig(initOverrides);
 
-		// We must destroy the previous one (if it exists) or the process will hang on SIGINT, issue #3873
-		if (this.eleventyServe) {
-			await this.eleventyServe.close();
+		// Careful to make sure the previous server closes on SIGINT, issue #3873
+		if (!this.eleventyServe) {
+			/** @type {object} */
+			this.eleventyServe = new EleventyServe();
 		}
-
-		/** @type {object} */
-		this.eleventyServe = new EleventyServe();
 		this.eleventyServe.eleventyConfig = this.eleventyConfig;
 
 		/** @type {object} */

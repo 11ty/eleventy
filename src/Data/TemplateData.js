@@ -660,7 +660,8 @@ class TemplateData {
 			}
 
 			// Deduplicate tags
-			return [...new Set(tags)];
+			// Coerce to string #3875
+			return [...new Set(tags)].map((entry) => String(entry));
 		}
 
 		return tags;
