@@ -1,3 +1,5 @@
 export function createNewStream() {
-	throw new Error("The `ndjson` output from Eleventy is not supported in browser.");
+	throw new Error(
+		"The `ndjson` output is not supported in Eleventy’s browser bundle (and is considered deprecated).",
+	);
 }

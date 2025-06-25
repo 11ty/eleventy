@@ -1,6 +1,6 @@
 export function isGlobMatch(filepath, globs = [], options = undefined) {
 	throw new Error(
-		"configurationApi.getFilteredByGlob method is not supported in this bundle of Eleventy.",
+		"Glob matching (e.g. getFilteredByGlob collection API method) is not supported in the minimal Eleventy browser bundle. Use the standard Eleventy browser bundle instead.",
 	);
 }
 
