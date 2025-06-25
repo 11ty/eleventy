@@ -694,22 +694,18 @@ Verbose Output: ${this.verboseMode}`;
 	 *
 	 * @async
 	 * @method
+	 * @param {String} subtype - (optional) or "templates" (skips passthrough copy) or "copy" (skips templates)
 	 * @returns {Promise<{Array}>}
 	 */
-	async write() {
-		return this.executeBuild("fs");
-	}
+	async write(subtype) {
+		if (subtype) {
+			if (subtype !== "fs" && !subtype?.startsWith("fs:")) {
+				subtype = `fs:${subtype}`;
+			}
+			return this.executeBuild(subtype);
+		}
 
-	/**
-	 * Writes templates to the file system.
-	 *
-	 * @async
-	 * @method
-	 * @param {String} subtype - (optional) or "fs:templates" (skips passthrough copy)
-	 * @returns {Promise<{Array}>}
-	 */
-	async writeOnly(subtype) {
-		return this.executeBuild(subtype || "fs:templates");
+		return this.executeBuild("fs");
 	}
 
 	/**
@@ -767,7 +763,7 @@ Verbose Output: ${this.verboseMode}`;
 
 		let returnObj;
 		let hasError = false;
-		let outputMode = to;
+		let outputMode = String(to);
 		// normalize fs:templates or fs:copy to `fs`
 		if (outputMode.includes(":")) {
 			outputMode = outputMode.split(":").shift();
