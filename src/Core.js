@@ -1,5 +1,5 @@
 import debugUtil from "debug";
-import { TemplatePath } from "@11ty/eleventy-utils";
+import { isPlainObject, TemplatePath } from "@11ty/eleventy-utils";
 
 import TemplateData from "./Data/TemplateData.js";
 import TemplateWriter from "./TemplateWriter.js";
@@ -60,6 +60,33 @@ export class Core {
 	/** @type {boolean|undefined} */
 	#isEsm;
 
+	// Support both new Eleventy(options) and new Eleventy(input, output, options)
+	#normalizeConstructorArguments(...args) {
+		let input;
+		let output;
+		let options;
+		let eleventyConfig;
+
+		if (isPlainObject(args[0])) {
+			options = args[0] || {};
+			input = options.input;
+			output = options.output;
+			eleventyConfig = args[1];
+		} else {
+			input = args[0];
+			output = args[1];
+			options = args[2] || {};
+			eleventyConfig = args[3];
+		}
+
+		return {
+			input,
+			output,
+			options,
+			eleventyConfig,
+		};
+	}
+
 	/**
 	 * @typedef {object} EleventyOptions
 	 * @property {'cli'|'script'=} source
@@ -76,7 +103,14 @@ export class Core {
 	 * @param {EleventyOptions} [options={}]
 	 * @param {TemplateConfig} [eleventyConfig]
 	 */
-	constructor(input, output, options = {}, eleventyConfig = null) {
+	constructor(...args) {
+		let {
+			input,
+			output,
+			options = {},
+			eleventyConfig = null,
+		} = this.#normalizeConstructorArguments(...args);
+
 		/**
 		 * @type {string|undefined}
 		 * @description Holds the path to the input (might be a file or folder)

@@ -1799,3 +1799,16 @@ let date = new Date();
   t.is(results.length, 1);
   t.truthy(results[0].data.page.date instanceof Date);
 });
+
+test("Cleaner constructor args #3880", async (t) => {
+  let elev = new Eleventy({
+    input: "./test/stubs-virtual/",
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.md", `# Title`)
+    }
+  });
+
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+  t.is(results[0].content.trim(), `<h1>Title</h1>`);
+});
