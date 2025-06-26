@@ -912,6 +912,11 @@ class Template extends TemplateContent {
 	}
 
 	async #renderPageEntryWithLayoutsAndTransforms(pageEntry) {
+		// Don’t run linters/transforms/layouts if we didn’t render (via incremental)!
+		if (pageEntry.template.isDryRun && pageEntry.template.isIncremental) {
+			return pageEntry.templateContent;
+		}
+
 		let content;
 		let layoutKey = pageEntry.data[this.config.keys.layout];
 		if (this.engine.useLayouts() && layoutKey) {
