@@ -224,6 +224,9 @@ class TemplateWriter {
 
 			templates.push(tmpl);
 
+			// required for tmpl.isFileRelevantToThisTemplate below
+			await tmpl.asyncTemplateInitialization();
+
 			// This must happen before data is generated for the incremental file only
 			if (incrementalFileShape === "template" && tmpl.inputPath === this.incrementalFile) {
 				tmpl.resetCaches();
