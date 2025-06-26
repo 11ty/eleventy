@@ -2,7 +2,7 @@ import bundlePlugin from "@11ty/eleventy-plugin-bundle";
 
 import urlFilter from "./Filters/Url.js";
 import slugFilter from "./Adapters/Configuration/Filters/Slug.js";
-import slugifyFilter from "./Filters/Slugify.js";
+import slugifyFilter from "./Adapters/Configuration/Filters/Slugify.js";
 import getLocaleCollectionItem from "./Filters/GetLocaleCollectionItem.js";
 import getCollectionItemIndex from "./Filters/GetCollectionItemIndex.js";
 import { FilterPlugin as InputPathToUrlFilterPlugin } from "./Plugins/InputPathToUrl.js";

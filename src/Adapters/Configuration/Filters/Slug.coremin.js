@@ -1,3 +1,5 @@
-export default function (str, options = {}) {
-	throw new Error("`slug` filter not supported in this Eleventy bundle. Use `slugify` instead.");
+export default function () {
+	throw new Error(
+		"The `slug` filter not included with the minimal Eleventy bundle. You can add it yourself via `eleventyConfig.addFilter`",
+	);
 }

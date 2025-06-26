@@ -115,6 +115,7 @@ class TemplateEngineManager {
 		} else if (extension === "liquid") {
 			promise = import("../Adapters/Engines/Liquid.js").then((mod) => mod.default);
 		} else if (extension === "11ty.js") {
+			// ~4KB cost, fine to keep
 			promise = import("./JavaScript.js").then((mod) => mod.default);
 		} else {
 			promise = this.getCustomEngineClass();

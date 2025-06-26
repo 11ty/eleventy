@@ -1,7 +1,7 @@
 import matchHelper from "posthtml-match-helper";
 import { decodeHTML } from "entities";
 
-import slugifyFilter from "../Filters/Slugify.js";
+import slugifyFilter from "../Adapters/Configuration/Filters/Slugify.js";
 import MemoizeUtil from "../Util/MemoizeFunction.js";
 
 const POSTHTML_PLUGIN_NAME = "11ty/eleventy/id-attribute";
