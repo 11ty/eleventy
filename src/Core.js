@@ -1,7 +1,7 @@
 import debugUtil from "debug";
 import chalk from "kleur";
-import { filesize } from "filesize";
 import { isPlainObject, TemplatePath } from "@11ty/eleventy-utils";
+import filesize from "./Adapters/Util/getFileSize.js";
 
 import TemplateData from "./Data/TemplateData.js";
 import TemplateWriter from "./TemplateWriter.js";

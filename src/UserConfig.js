@@ -1,9 +1,9 @@
-import chalk from "kleur";
 import matter from "@11ty/gray-matter";
 import debugUtil from "debug";
 
 import { DeepCopy, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
+import chalk from "./Adapters/Util/chalk.js";
 import { resolvePlugin } from "./Adapters/Configuration/ResolvePlugin.js";
 import { DateTime } from "./Adapters/luxonDatetime.js";
 import isAsyncFunction from "./Util/IsAsyncFunction.js";

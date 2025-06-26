@@ -1,6 +1,6 @@
 import { createNewStream } from "../Adapters/Util/stream.js";
-import chalk from "kleur";
 import debugUtil from "debug";
+import chalk from "../Adapters/Util/chalk.js";
 
 const debug = debugUtil("Eleventy:Logger");
 
