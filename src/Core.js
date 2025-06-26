@@ -1,4 +1,6 @@
 import debugUtil from "debug";
+import chalk from "kleur";
+import { filesize } from "filesize";
 import { isPlainObject, TemplatePath } from "@11ty/eleventy-utils";
 
 import TemplateData from "./Data/TemplateData.js";
@@ -9,6 +11,7 @@ import TemplateConfig from "./TemplateConfig.js";
 import TemplateEngineManager from "./Engines/TemplateEngineManager.js";
 
 /* Utils */
+import simplePlural from "./Util/Pluralize.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import ProjectDirectories from "./Util/ProjectDirectories.js";
 import {
@@ -889,5 +892,63 @@ Open an issue: https://github.com/11ty/eleventy/issues/new`);
 		}
 
 		return returnObj;
+	}
+
+	/**
+	 * Logs some statistics after a complete run of Eleventy.
+	 *
+	 * @returns {string} ret - The log message.
+	 */
+	logFinished() {
+		if (!this.writer) {
+			throw new Error(
+				"Did you call Eleventy.init to create the TemplateWriter instance? Hint: you probably didn’t.",
+			);
+		}
+
+		let ret = [];
+
+		let {
+			copyCount,
+			copySize,
+			skipCount,
+			writeCount,
+			// renderCount, // files that render (costly) but may not write to disk
+		} = this.writer.getMetadata();
+
+		let slashRet = [];
+
+		if (copyCount) {
+			debug("Total passthrough copy aggregate size: %o", filesize(copySize));
+			slashRet.push(`Copied ${chalk.bold(copyCount)}`);
+		}
+
+		slashRet.push(
+			`Wrote ${chalk.bold(writeCount)} ${simplePlural(writeCount, "file", "files")}${
+				skipCount ? ` (skipped ${skipCount})` : ""
+			}`,
+		);
+
+		// slashRet.push(
+		// 	`${renderCount} rendered`
+		// )
+
+		if (slashRet.length) {
+			ret.push(slashRet.join(" "));
+		}
+
+		let time = (this.getNewTimestamp() - this.start) / 1000;
+		ret.push(
+			`in ${chalk.bold(time.toFixed(2))} ${simplePlural(time.toFixed(2), "second", "seconds")}`,
+		);
+
+		// More than 1 second total, show estimate of per-template time
+		if (time >= 1 && writeCount > 1) {
+			ret.push(`(${((time * 1000) / writeCount).toFixed(1)}ms each, v${pkg.version})`);
+		} else {
+			ret.push(`(v${Core.getVersion()})`);
+		}
+
+		return ret.join(" ");
 	}
 }
