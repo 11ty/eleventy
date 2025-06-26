@@ -139,6 +139,10 @@ class TemplateEngineManager {
 
 	async #getEngine(name, extensionMap) {
 		let cls = await this.getEngineClassByExtension(name);
+		if (!cls) {
+			throw new Error(`Missing engine for ${name}. Do you need to use eleventyConfig.addEngine?`);
+		}
+
 		let instance = new cls(name, this.eleventyConfig);
 		instance.extensionMap = extensionMap;
 		instance.engineManager = this;

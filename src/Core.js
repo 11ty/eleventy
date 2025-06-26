@@ -667,6 +667,7 @@ Verbose Output: ${this.verboseMode}`;
 
 			this.programmaticApiIncrementalFile = TemplatePath.addLeadingDotSlash(incrementalFile);
 
+			// Used to determind template relevance for compile cache keys
 			this.eleventyConfig.setPreviousBuildModifiedFile(incrementalFile);
 		}
 	}
