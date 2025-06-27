@@ -168,6 +168,13 @@ class Template extends TemplateContent {
 	getTemplateSubfolder() {
 		let dir = TemplatePath.absolutePath(this.parsed.dir);
 		let inputDir = TemplatePath.absolutePath(this.inputDir);
+
+		// Browser virtual fs uses `/` root for absolute paths
+		// Fixed in @11ty/eleventy-utils@2.0.8 or newer (can remove this later)
+		if (inputDir === "/" && dir.startsWith("/")) {
+			return dir;
+		}
+
 		return TemplatePath.stripLeadingSubPath(dir, inputDir);
 	}
 
