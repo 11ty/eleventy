@@ -1,5 +1,4 @@
-import bundlePlugin from "@11ty/eleventy-plugin-bundle";
-
+import extendedDefaultConfig from "./Adapters/Configuration/getExtendedDefaultConfig.js";
 import urlFilter from "./Filters/Url.js";
 import slugFilter from "./Adapters/Configuration/Filters/Slug.js";
 import slugifyFilter from "./Adapters/Configuration/Filters/Slugify.js";
@@ -7,10 +6,8 @@ import getLocaleCollectionItem from "./Filters/GetLocaleCollectionItem.js";
 import getCollectionItemIndex from "./Filters/GetCollectionItemIndex.js";
 import { FilterPlugin as InputPathToUrlFilterPlugin } from "./Plugins/InputPathToUrl.js";
 
-import { getHtmlTransformer } from "./Adapters/Configuration/getHtmlTransformer.js";
 import TransformsUtil from "./Util/TransformsUtil.js";
 import MemoizeUtil from "./Util/MemoizeFunction.js";
-import { HtmlRelativeCopyPlugin } from "./Plugins/HtmlRelativeCopyPlugin.js";
 
 /**
  * @module 11ty/eleventy/defaultConfig
@@ -25,11 +22,16 @@ import { HtmlRelativeCopyPlugin } from "./Plugins/HtmlRelativeCopyPlugin.js";
 /**
  * @typedef {object} config
  * @property {addFilter} addFilter - Register a new global filter.
+ * @property {addPlugin} addPlugin - Execute or defer a plugin’s execution.
+ * @property {addTransform} addTransform - Add an Eleventy transform to postprocess template output
+ * @property {htmlTransformer} htmlTransformer - HTML modification API
  */
 
 /**
  * @typedef {object} defaultConfig
  * @property {Array<string>} templateFormats - An array of accepted template formats.
+ * @property {Array<string>} dataFileSuffixes - Array of file suffixes for data files in the Data Cascade.
+ * @property {boolean} [dataFileDirBaseNameOverride=false] - Use index.* instead of dirname.* for Directory Data File names
  * @property {string} [pathPrefix='/'] - The directory under which all output files should be written to.
  * @property {string} [markdownTemplateEngine='liquid'] - Template engine to process markdown files with.
  * @property {string} [htmlTemplateEngine='liquid'] - Template engine to process html files with.
@@ -42,6 +44,7 @@ import { HtmlRelativeCopyPlugin } from "./Plugins/HtmlRelativeCopyPlugin.js";
  * @property {string} [keys.permalinkRoot='permalinkBypassOutputDir']
  * @property {string} [keys.engineOverride='templateEngineOverride']
  * @property {string} [keys.computed='eleventyComputed']
+ * @property {string} [keys.dataSchema='eleventyDataSchema']
  * @property {object} dir
  * @property {string} [dir.input='.']
  * @property {string} [dir.includes='_includes']
@@ -60,23 +63,8 @@ import { HtmlRelativeCopyPlugin } from "./Plugins/HtmlRelativeCopyPlugin.js";
 export default function (config) {
 	let templateConfig = this;
 
-	// Used for the HTML <base>, InputPathToUrl, Image transform plugins
-	let ut = getHtmlTransformer(config);
-
-	const USING_HTML_TRANSFORMER = ut && Object.keys(ut).length > 0;
-
-	// This needs to be assigned before bundlePlugin is added below.
-	config.htmlTransformer = ut;
-
-	config.exists = (filePath) => {
-		return this.existsCache.exists(filePath);
-	};
-
-	// Remember: the transform added here runs before the `htmlTransformer` transform
-	config.addPlugin(bundlePlugin, {
-		bundles: false, // no default bundles included—must be opt-in.
-		immediate: true,
-	});
+	// add extended config (not available in minimal bundle)
+	extendedDefaultConfig(config);
 
 	// Filter: Maps an input path to output URL
 	config.addPlugin(InputPathToUrlFilterPlugin, {
@@ -128,17 +116,6 @@ export default function (config) {
 			});
 		},
 	);
-
-	// Run the `htmlTransformer` transform
-	if (USING_HTML_TRANSFORMER) {
-		config.addTransform("@11ty/eleventy/html-transformer", async function (content) {
-			// Runs **AFTER** the bundle plugin transform (except: delayed bundles)
-			return ut.transformContent(this.outputPath, content, this);
-		});
-
-		// Requires user configuration, so must run as second-stage
-		config.addPlugin(HtmlRelativeCopyPlugin);
-	}
 
 	return {
 		templateFormats: ["liquid", "md", "njk", "html", "11ty.js"],

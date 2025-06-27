@@ -94,6 +94,11 @@ class TemplateConfig {
 		this.hasConfigMerged = false;
 		this.isEsm = false;
 
+		// Wire up exists API to user config
+		this.userConfig.exists = (filePath) => {
+			return this.existsCache.exists(filePath);
+		};
+
 		this.userConfig.events.on("eleventy#templateModified", (inputPath, metadata = {}) => {
 			// Might support multiple at some point
 			this.setPreviousBuildModifiedFile(inputPath, metadata);
@@ -550,6 +555,9 @@ class TemplateConfig {
 		return mergedConfig;
 	}
 
+	/**
+	 * @type {GlobalDependencyMap}
+	 */
 	get usesGraph() {
 		if (!this.#usesGraph) {
 			this.#usesGraph = new GlobalDependencyMap();
@@ -559,6 +567,9 @@ class TemplateConfig {
 		return this.#usesGraph;
 	}
 
+	/**
+	 * @type {GlobalDependencyMap}
+	 */
 	get uses() {
 		if (!this.usesGraph) {
 			throw new Error("The Eleventy Global Dependency Graph has not yet been initialized.");
@@ -566,6 +577,9 @@ class TemplateConfig {
 		return this.usesGraph;
 	}
 
+	/**
+	 * @type {ExistsCache}
+	 */
 	get existsCache() {
 		return this.#existsCache;
 	}

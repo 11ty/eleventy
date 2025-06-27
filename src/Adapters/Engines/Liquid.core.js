@@ -1,2 +1,2 @@
-// Must load dynamically in reduced core
+// Must load dynamically in standard core
 export default undefined;
