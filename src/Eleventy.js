@@ -5,11 +5,8 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 
 import { Core } from "./Core.js";
 import EleventyServe from "./EleventyServe.js";
-import FileSystemSearch from "./FileSystemSearch.js";
 import EleventyWatch from "./EleventyWatch.js";
 import EleventyWatchTargets from "./EleventyWatchTargets.js";
-import EleventyFiles from "./EleventyFiles.js";
-import TemplatePassthroughManager from "./TemplatePassthroughManager.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 
 // Utils
@@ -60,9 +57,6 @@ export default class Eleventy extends Core {
 		/** @type {object} */
 		this.watchTargets = new EleventyWatchTargets(this.eleventyConfig);
 		this.watchTargets.addAndMakeGlob(this.config.additionalWatchTargets);
-
-		/** @type {object} */
-		this.fileSystemSearch = new FileSystemSearch();
 	}
 
 	/**
@@ -78,44 +72,11 @@ export default class Eleventy extends Core {
 		// TODO
 		// this.eleventyServe.setWatcherOptions(this.getChokidarConfig());
 
-		this.templateData.setFileSystemSearch(this.fileSystemSearch);
-
-		this.passthroughManager = new TemplatePassthroughManager(this.eleventyConfig);
-		this.passthroughManager.setRunMode(this.runMode);
-		this.passthroughManager.setDryRun(this.isDryRun);
-		this.passthroughManager.extensionMap = this.extensionMap;
-		this.passthroughManager.setFileSystemSearch(this.fileSystemSearch);
-
-		let formats = this.templateFormats.getTemplateFormats();
-		this.eleventyFiles = new EleventyFiles(formats, this.eleventyConfig);
-		this.eleventyFiles.setPassthroughManager(this.passthroughManager);
-		this.eleventyFiles.setFileSystemSearch(this.fileSystemSearch);
-		this.eleventyFiles.setRunMode(this.runMode);
-		this.eleventyFiles.extensionMap = this.extensionMap;
-		// This needs to be set before init or it’ll construct a new one
-		this.eleventyFiles.templateData = this.templateData;
-		this.eleventyFiles.init();
-
 		if (checkPassthroughCopyBehavior(this.config, this.runMode)) {
 			this.eleventyServe.watchPassthroughCopy(
 				this.eleventyFiles.getGlobWatcherFilesForPassthroughCopy(),
 			);
 		}
-
-		this.writer.setPassthroughManager(this.passthroughManager);
-		this.writer.setEleventyFiles(this.eleventyFiles);
-	}
-
-	/**
-	 * Restarts Eleventy.
-	 */
-	async restart() {
-		await super.restart();
-
-		// TODO
-		this.passthroughManager.reset();
-		// TODO
-		this.eleventyFiles.restart();
 	}
 
 	/**
@@ -629,6 +590,8 @@ export { Eleventy };
 
 /* Utils */
 export { EleventyImport as ImportFile } from "./Util/Require.js";
+
+// TODO(breaking) remove these and recommend folks use package level exports e.g. "@11ty/eleventy/plugins/i18n"
 
 /* Plugins */
 export { default as BundlePlugin } from "@11ty/eleventy-plugin-bundle";

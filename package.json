@@ -14,9 +14,19 @@
 			"require": "./src/EleventyCommonJs.cjs"
 		},
 		"./core": "./src/Core.js",
+		"./coremin": "./src/CoreMinimal.js",
+
 		"./engines/njk": "./src/Engines/Nunjucks.js",
 		"./engines/liquid": "./src/Engines/Liquid.js",
 		"./engines/md": "./src/Engines/Markdown.js",
+
+		"./plugins/i18n": "./src/Exports/I18nPlugin.js",
+		"./plugins/id-attribute": "./src/Exports/IdAttributePlugin.js",
+		"./plugins/bundle": "./src/Exports/BundlePlugin.js",
+		"./plugins/html-base": "./src/Exports/HtmlBasePlugin.js",
+		"./plugins/inputpath-to-url": "./src/Exports/InputPathToUrlPlugin.js",
+		"./plugins/render": "./src/Exports/RenderPlugin.js",
+
 		"./UserConfig": {
 			"types": "./src/UserConfig.js"
 		}
