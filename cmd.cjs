@@ -127,8 +127,9 @@ async function exec() {
 				process.exitCode = 0;
 			});
 		} else {
-			if (!argv.to || argv.to === "fs") {
-				await elev.write();
+			// `fs:templates` will skip passthrough copy
+			if (!argv.to || argv.to === "fs" || argv.to.startsWith("fs:")) {
+				await elev.write(argv.to);
 			} else if (argv.to === "json") {
 				let result = await elev.toJSON()
 				console.log(JSON.stringify(result, null, 2));

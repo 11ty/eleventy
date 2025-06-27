@@ -1,6 +1,6 @@
-import { Readable } from "node:stream";
-import chalk from "kleur";
+import { createNewStream } from "../Adapters/Util/stream.js";
 import debugUtil from "debug";
+import chalk from "../Adapters/Util/chalk.js";
 
 const debug = debugUtil("Eleventy:Logger");
 
@@ -15,7 +15,7 @@ class ConsoleLogger {
 	#isChalkEnabled = true;
 	/** @type {object|boolean|undefined} */
 	#logger;
-	/** @type {Readable|undefined} */
+	/** @type {object|undefined} */
 	#outputStream;
 
 	constructor() {}
@@ -91,9 +91,7 @@ class ConsoleLogger {
 
 	get outputStream() {
 		if (!this.#outputStream) {
-			this.#outputStream = new Readable({
-				read() {},
-			});
+			this.#outputStream = createNewStream();
 		}
 		return this.#outputStream;
 	}

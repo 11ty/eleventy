@@ -13,6 +13,20 @@
 			"import": "./src/Eleventy.js",
 			"require": "./src/EleventyCommonJs.cjs"
 		},
+		"./core": "./src/Core.js",
+		"./coremin": "./src/CoreMinimal.js",
+
+		"./engines/njk": "./src/Engines/Nunjucks.js",
+		"./engines/liquid": "./src/Engines/Liquid.js",
+		"./engines/md": "./src/Engines/Markdown.js",
+
+		"./plugins/i18n": "./src/Exports/I18nPlugin.js",
+		"./plugins/id-attribute": "./src/Exports/IdAttributePlugin.js",
+		"./plugins/bundle": "./src/Exports/BundlePlugin.js",
+		"./plugins/html-base": "./src/Exports/HtmlBasePlugin.js",
+		"./plugins/inputpath-to-url": "./src/Exports/InputPathToUrlPlugin.js",
+		"./plugins/render": "./src/Exports/RenderPlugin.js",
+
 		"./UserConfig": {
 			"types": "./src/UserConfig.js"
 		}
@@ -130,6 +144,7 @@
 		"@11ty/eleventy-dev-server": "^2.0.8",
 		"@11ty/eleventy-plugin-bundle": "^3.0.6",
 		"@11ty/eleventy-utils": "^2.0.7",
+		"@11ty/gray-matter": "^1.0.0",
 		"@11ty/lodash-custom": "^4.17.21",
 		"@11ty/posthtml-urls": "^1.0.1",
 		"@11ty/recursive-copy": "^4.0.2",
@@ -140,9 +155,8 @@
 		"dependency-graph": "^1.0.0",
 		"entities": "^6.0.1",
 		"filesize": "^10.1.6",
-		"gray-matter": "^4.0.3",
+		"import-module-string": "^2.0.1",
 		"iso-639-1": "^3.1.5",
-		"js-yaml": "^4.1.0",
 		"kleur": "^4.1.5",
 		"liquidjs": "^10.21.1",
 		"luxon": "^3.6.1",
@@ -158,10 +172,5 @@
 		"semver": "^7.7.2",
 		"slugify": "^1.6.6",
 		"tinyglobby": "^0.2.14"
-	},
-	"overrides": {
-		"gray-matter": {
-			"js-yaml": "$js-yaml"
-		}
 	}
 }
