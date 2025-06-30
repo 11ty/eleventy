@@ -619,3 +619,40 @@ test("Invalid copy mode throws error", async (t) => {
 
 	t.is(fs.existsSync("test/stubs-autocopy/_site13/test/index.html"), false);
 });
+
+test("import.meta.resolve via resolve: prefix", async (t) => {
+	let elev = new Eleventy("./test/stubs-autocopy/", "./test/stubs-autocopy/_site14", {
+		configPath: false,
+		config: function (eleventyConfig) {
+			eleventyConfig.addPassthroughCopy("**/*.js", {
+				mode: "html-relative"
+			});
+
+			eleventyConfig.on("eleventy.passthrough", copyMap => {
+				t.deepEqual(copyMap, {
+					map: {
+						"/test/4826bc6c9f959c.js": TemplatePath.normalizeOperatingSystemFilePath("node_modules/@zachleat/noop/index.js")
+					}
+				})
+			});
+
+			eleventyConfig.addTemplate("test.njk", `<script src="resolve:@zachleat/noop"></script>`)
+		},
+	});
+
+	elev.disableLogger();
+
+	let [copy, templates] = await elev.write();
+
+	t.is(copy.length, 1);
+	t.is(templates.length, 1);
+
+	t.is(templates[0].content, `<script src="/test/4826bc6c9f959c.js"></script>`);
+	t.is(fs.existsSync("test/stubs-autocopy/_site14/test/4826bc6c9f959c.js"), true);
+	t.is(fs.existsSync("test/stubs-autocopy/_site14/test/index.html"), true);
+});
+
+test.after.always("cleanup dirs", () => {
+	rimrafSync("test/stubs-autocopy/_site14");
+});
+

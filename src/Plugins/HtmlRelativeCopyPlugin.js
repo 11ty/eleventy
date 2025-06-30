@@ -23,7 +23,12 @@ function init(eleventyConfig, options) {
 		opts.extensions,
 		function (targetFilepathOrUrl) {
 			// @ts-ignore
-			htmlrel.copy(targetFilepathOrUrl, this.page.inputPath, this.page.outputPath);
+			let results = htmlrel.copy(targetFilepathOrUrl, this.page.inputPath, this.page.outputPath);
+
+			// Prefixed targets
+			if (results?.mode === "resolve") {
+				return eleventyConfig.directories.getUrlFromOutputPath(results.target);
+			}
 
 			// TODO front matter option for manual copy
 			return targetFilepathOrUrl;

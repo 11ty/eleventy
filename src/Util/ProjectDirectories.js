@@ -41,6 +41,17 @@ class ProjectDirectories {
 		return ProjectDirectories.normalizeDirectory(path.join(this.input, filePath));
 	}
 
+	getUrlFromOutputPath(outputPath) {
+		let absoluteFilePath = path.resolve(outputPath);
+		let absoluteOutputDir = path.resolve(this.output);
+
+		if (!absoluteFilePath.startsWith(absoluteOutputDir)) {
+			throw new Error("outputPath argument is not in the output directory.");
+		}
+
+		return absoluteFilePath.slice(absoluteOutputDir.length);
+	}
+
 	static addTrailingSlash(path) {
 		if (path.slice(-1) === "/") {
 			return path;
