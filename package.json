@@ -13,19 +13,19 @@
 			"import": "./src/Eleventy.js",
 			"require": "./src/EleventyCommonJs.cjs"
 		},
-		"./core": "./src/Core.js",
-		"./coremin": "./src/CoreMinimal.js",
 
-		"./engines/njk": "./src/Engines/Nunjucks.js",
-		"./engines/liquid": "./src/Engines/Liquid.js",
-		"./engines/md": "./src/Engines/Markdown.js",
+		"./bundle/core": "./src/Exports/Bundles/BundleCore.js",
+		"./bundle/eleventy": "./src/Exports/Bundles/BundleEleventy.js",
+		"./bundle/liquid": "./src/Exports/Bundles/BundleLiquid.js",
+		"./bundle/njk": "./src/Exports/Bundles/BundleNunjucks.js",
+		"./bundle/md": "./src/Exports/Bundles/BundleMarkdown.js",
 
-		"./plugins/i18n": "./src/Exports/I18nPlugin.js",
-		"./plugins/id-attribute": "./src/Exports/IdAttributePlugin.js",
-		"./plugins/bundle": "./src/Exports/BundlePlugin.js",
-		"./plugins/html-base": "./src/Exports/HtmlBasePlugin.js",
-		"./plugins/inputpath-to-url": "./src/Exports/InputPathToUrlPlugin.js",
-		"./plugins/render": "./src/Exports/RenderPlugin.js",
+		"./plugins/i18n": "./src/Exports/Plugins/I18nPlugin.js",
+		"./plugins/id-attribute": "./src/Exports/Plugins/IdAttributePlugin.js",
+		"./plugins/bundle": "./src/Exports/Plugins/BundlePlugin.js",
+		"./plugins/html-base": "./src/Exports/Plugins/HtmlBasePlugin.js",
+		"./plugins/inputpath-to-url": "./src/Exports/Plugins/InputPathToUrlPlugin.js",
+		"./plugins/render": "./src/Exports/Plugins/RenderPlugin.js",
 
 		"./UserConfig": {
 			"types": "./src/UserConfig.js"
