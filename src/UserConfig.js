@@ -1,4 +1,3 @@
-import matter from "@11ty/gray-matter";
 import debugUtil from "debug";
 
 import { DeepCopy, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
@@ -12,7 +11,6 @@ import EventEmitter from "./Util/AsyncEventEmitter.js";
 import EleventyCompatibility from "./Util/Compatibility.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import BenchmarkManager from "./Benchmark/BenchmarkManager.js";
-import JavaScriptFrontMatter from "./Engines/FrontMatter/JavaScript.js";
 import { augmentFunction } from "./Engines/Util/ContextAugmenter.js";
 
 const debug = debugUtil("Eleventy:UserConfig");
@@ -206,30 +204,8 @@ class UserConfig {
 		this.dataFileDirBaseNameOverride = false;
 
 		/** @type {object} */
-		this.frontMatterParsingOptions = {
-			// Set a project-wide default.
-			// language: "yaml",
-
-			// Supplementary engines
-			engines: {
-				// Moved to a fork of gray-matter to modernize to js-yaml@4 internally
-				// yaml: yaml.load.bind(yaml),
-
-				// Backwards compatible with `js` object front matter
-				// https://github.com/11ty/eleventy/issues/2819
-				javascript: JavaScriptFrontMatter,
-
-				// Needed for fallback behavior in the new `javascript` engine
-				// @ts-ignore
-				jsLegacy: matter.engines.javascript,
-
-				node: function () {
-					throw new Error(
-						"The `node` front matter type was a 3.0.0-alpha.x only feature, removed for stable release. Rename to `js` or `javascript` instead!",
-					);
-				},
-			},
-		};
+		// Moved into TemplateContent->getFrontMatterParsingOptions
+		this.frontMatterParsingOptions = {};
 
 		/** @type {object} */
 		this.virtualTemplates = {};

@@ -4,9 +4,12 @@ import { RetrieveGlobals } from "../../Adapters/RetrieveGlobals.js";
 export default function (frontMatterCode, context = {}) {
 	let { filePath } = context;
 
-	// context.language would be nice as a guard, but was unreliable
-	if (frontMatterCode.trimStart().startsWith("{")) {
-		return context.engines.jsLegacy.parse(frontMatterCode, context);
+	// Legacy `javascript` type was removed in @11ty/gray-matter@2 to avoid eval()
+	let trimmed = frontMatterCode.trimStart();
+	if (trimmed.startsWith("{")) {
+		return RetrieveGlobals(`export default ${trimmed}`, filePath).then((res) => {
+			return res.default;
+		});
 	}
 
 	return RetrieveGlobals(frontMatterCode, filePath);
