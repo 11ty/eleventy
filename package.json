@@ -13,23 +13,14 @@
 			"import": "./src/Eleventy.js",
 			"require": "./src/EleventyCommonJs.cjs"
 		},
-
-		"./bundle/core": "./src/Exports/Bundles/BundleCore.js",
-		"./bundle/eleventy": "./src/Exports/Bundles/BundleEleventy.js",
-		"./bundle/liquid": "./src/Exports/Bundles/BundleLiquid.js",
-		"./bundle/njk": "./src/Exports/Bundles/BundleNunjucks.js",
-		"./bundle/md": "./src/Exports/Bundles/BundleMarkdown.js",
-
-		"./plugins/i18n": "./src/Exports/Plugins/I18nPlugin.js",
-		"./plugins/id-attribute": "./src/Exports/Plugins/IdAttributePlugin.js",
-		"./plugins/bundle": "./src/Exports/Plugins/BundlePlugin.js",
-		"./plugins/html-base": "./src/Exports/Plugins/HtmlBasePlugin.js",
-		"./plugins/inputpath-to-url": "./src/Exports/Plugins/InputPathToUrlPlugin.js",
-		"./plugins/render": "./src/Exports/Plugins/RenderPlugin.js",
-
 		"./UserConfig": {
 			"types": "./src/UserConfig.js"
-		}
+		},
+		"./bundle": "./dist/client/eleventy.core.js",
+		"./bundle/eleventy": "./dist/client/eleventy.js",
+		"./bundle/liquid": "./dist/client/eleventy-liquid.js",
+		"./bundle/njk": "./dist/client/eleventy-nunjucks.js",
+		"./bundle/md": "./dist/client/eleventy-markdown.js"
 	},
 	"bin": {
 		"eleventy": "cmd.cjs"
@@ -70,7 +61,8 @@
 		"check-types": "tsc",
 		"nano-staged": "nano-staged",
 		"coverage": "npx c8 ava && npx c8 report --reporter=json-summary && cp coverage/coverage-summary.json docs/_data/coverage.json && node cmd.cjs --config=docs/eleventy.coverage.js",
-		"prepare": "simple-git-hooks"
+		"bundle": "cd bundles && node generate.js",
+		"prepare": "npm run bundle && simple-git-hooks"
 	},
 	"author": "Zach Leatherman <zachleatherman@gmail.com> (https://zachleat.com/)",
 	"repository": {
@@ -108,6 +100,7 @@
 		"@11ty/eleventy-plugin-rss": "^2.0.4",
 		"@11ty/eleventy-plugin-syntaxhighlight": "^5.0.1",
 		"@11ty/eleventy-plugin-webc": "^0.12.0-beta.3",
+		"@11ty/package-bundler": "^0.1.1",
 		"@eslint/eslintrc": "^3.3.1",
 		"@eslint/js": "^9.29.0",
 		"@iarna/toml": "^2.2.5",

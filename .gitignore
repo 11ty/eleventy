@@ -1,5 +1,6 @@
 # Generated files
 package/generated*
+dist/
 
 # Ignore installed npm modules
 node_modules/
