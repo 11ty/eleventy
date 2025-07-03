@@ -60,17 +60,3 @@ test("Message styles", (t) => {
     forceToConsole: undefined,
   });
 });
-
-test("Close Stream", (t) => {
-  return new Promise((resolve, reject) => {
-    let cl = new ConsoleLogger();
-    cl.outputStream.on("close", () => {
-      t.pass();
-      resolve();
-    });
-    cl.outputStream.on("error", reject);
-    // We need to listen for data, so a pushed null closes the stream
-    cl.outputStream.on("data", reject);
-    cl.closeStream();
-  });
-});

@@ -569,8 +569,7 @@ Arguments:
        Set to "esm" to force ESM mode, "cjs" to force CommonJS mode, or "auto" (default) to infer it from package.json.
 
      --to=json
-     --to=ndjson
-       Change the output to JSON or NDJSON (default: \`fs\`)
+       Change the output to JSON (default: \`fs\`)
 
      --to=fs:templates
        Writes templates, skips passthrough copy

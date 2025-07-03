@@ -757,15 +757,8 @@ Verbose Output: ${this.verboseMode}`;
 		return this.executeBuild("json");
 	}
 
-	/**
-	 * Returns a stream of new line delimited (NDJSON) objects
-	 *
-	 * @async
-	 * @method
-	 * @returns {Promise<{ReadableStream}>}
-	 */
-	async toNDJSON() {
-		return this.executeBuild("ndjson");
+	toNDJSON() {
+		throw new Error("Feature removed in Eleventy v4: https://github.com/11ty/eleventy/issues/3382");
 	}
 
 	/**
@@ -773,7 +766,7 @@ Verbose Output: ${this.verboseMode}`;
 	 *
 	 * @async
 	 * @method
-	 * @returns {Promise<{Array,ReadableStream}>} ret - tbd.
+	 * @returns {Promise<{Array}>} ret - tbd.
 	 */
 	async executeBuild(to = "fs") {
 		if (this.#needsInit) {
@@ -833,11 +826,9 @@ Verbose Output: ${this.verboseMode}`;
 				promise = this.writer.writeTemplates();
 			} else if (to === "json") {
 				promise = this.writer.getJSON("json");
-			} else if (to === "ndjson") {
-				promise = this.writer.getJSON("ndjson");
 			} else {
 				throw new Error(
-					`Invalid argument for \`Eleventy->executeBuild(${to})\`, expected "json", "ndjson", "fs", or "fs:templates".`,
+					`Invalid argument for \`Eleventy->executeBuild(${to})\`, expected "json", "fs", or "fs:templates".`,
 				);
 			}
 
@@ -846,11 +837,7 @@ Verbose Output: ${this.verboseMode}`;
 			// Passing the processed output to the eleventy.after event (2.0+)
 			eventsArg.results = resolved.templates;
 
-			if (to === "ndjson") {
-				// return a stream
-				// TODO this outputs all ndjson rows after all the templates have been written to the stream
-				returnObj = this.logger.closeStream();
-			} else if (to === "json" || to === "fs:templates") {
+			if (to === "json" || to === "fs:templates") {
 				// Backwards compat
 				returnObj = resolved.templates;
 			} else {

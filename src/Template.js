@@ -964,13 +964,13 @@ class Template extends TemplateContent {
 		for (let page of mapEntry._pages) {
 			let content;
 
-			// Note that behavior.render is overridden when using json or ndjson output
+			// Note that behavior.render is overridden when using json output
 			if (page.template.isRenderable()) {
 				// this reuses page.templateContent, it doesn’t render it
 				content = await page.template.renderPageEntry(page);
 			}
 
-			if (to === "json" || to === "ndjson") {
+			if (to === "json") {
 				let obj = {
 					url: page.url,
 					inputPath: page.inputPath,
@@ -981,12 +981,6 @@ class Template extends TemplateContent {
 
 				if (this.config.dataFilterSelectors?.size > 0) {
 					obj.data = this.retrieveDataForJsonOutput(page.data, this.config.dataFilterSelectors);
-				}
-
-				if (to === "ndjson") {
-					let jsonString = JSON.stringify(obj);
-					this.logger.toStream(jsonString + EOL);
-					continue;
 				}
 
 				// json

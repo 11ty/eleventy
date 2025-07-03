@@ -1,4 +1,3 @@
-import { createNewStream } from "../Adapters/Util/stream.js";
 import debugUtil from "debug";
 import chalk from "../Adapters/Util/chalk.js";
 
@@ -87,23 +86,6 @@ class ConsoleLogger {
 	/** @param {string} msg */
 	error(msg) {
 		this.message(msg, "error", "red");
-	}
-
-	get outputStream() {
-		if (!this.#outputStream) {
-			this.#outputStream = createNewStream();
-		}
-		return this.#outputStream;
-	}
-
-	/** @param {string} msg */
-	toStream(msg) {
-		this.outputStream.push(msg);
-	}
-
-	closeStream() {
-		this.outputStream.push(null);
-		return this.outputStream;
 	}
 
 	/**

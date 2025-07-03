@@ -96,7 +96,7 @@ async function exec() {
 
 		await elev.init();
 
-		if (argv.to === "json" || argv.to === "ndjson") {
+		if (argv.to === "json") {
 			// override logging output
 			elev.setIsVerbose(false);
 		}
@@ -111,8 +111,8 @@ async function exec() {
 		}
 
 		if (argv.serve || argv.watch) {
-			if(argv.to === "json" || argv.to === "ndjson") {
-				throw new SimpleError("--to=json and --to=ndjson are not compatible with --serve or --watch.");
+			if(argv.to === "json") {
+				throw new SimpleError("--to=json are not compatible with --serve or --watch.");
 			}
 
 			await elev.watch();
@@ -133,12 +133,9 @@ async function exec() {
 			} else if (argv.to === "json") {
 				let result = await elev.toJSON()
 				console.log(JSON.stringify(result, null, 2));
-			} else if (argv.to === "ndjson") {
-				let stream = await elev.toNDJSON();
-				stream.pipe(process.stdout);
 			} else {
 				throw new SimpleError(
-					`Invalid --to value: ${argv.to}. Supported values: \`fs\` (default), \`json\`, and \`ndjson\`.`,
+					`Invalid --to value: ${argv.to}. Supported values: \`fs\` (default), \`json\`.`,
 				);
 			}
 		}
