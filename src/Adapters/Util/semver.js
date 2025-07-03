@@ -1,3 +1,4 @@
+// Costs ~38 KB
 import semverSatisfies from "semver/functions/satisfies.js";
 import semverCoerce from "semver/functions/coerce.js";
 

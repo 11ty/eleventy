@@ -1,6 +1,7 @@
 # Generated files
 package/generated*
 dist/
+bundles/visualize.*
 
 # Ignore installed npm modules
 node_modules/
