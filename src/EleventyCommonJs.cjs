@@ -19,7 +19,7 @@ if(!canRequireModules()) {
       callback, for example:
 
       module.exports = async function {
-        const {EleventyRenderPlugin, EleventyI18nPlugin, EleventyHtmlBasePlugin} = await import("@11ty/eleventy");
+        const {RenderPlugin, I18nPlugin, HtmlBasePlugin} = await import("@11ty/eleventy");
       }
 
    2. (Easier) Update the JavaScript syntax in your configuration file from CommonJS to ESM (change \`require\`

@@ -1,7 +1,9 @@
 import path from "node:path";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import isValidUrl from "./ValidUrl.js";
-import { isGlobMatch } from "./GlobMatcher.js";
+import { isGlobMatch } from "../Adapters/Util/GlobMatcher.js";
+
+// https://github.com/11ty/eleventy/pull/3573
 
 class HtmlRelativeCopy {
 	#userConfig;

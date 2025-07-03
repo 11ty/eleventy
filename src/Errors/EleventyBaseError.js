@@ -8,7 +8,12 @@ class EleventyBaseError extends Error {
 	 * @param {unknown} [originalError] - The original error caught.
 	 */
 	constructor(message, originalError) {
-		super(message);
+		if (originalError) {
+			// @ts-ignore
+			super(message, { cause: originalError });
+		} else {
+			super(message);
+		}
 
 		this.name = this.constructor.name;
 

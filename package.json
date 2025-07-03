@@ -1,6 +1,6 @@
 {
 	"name": "@11ty/eleventy",
-	"version": "3.1.2",
+	"version": "4.0.0-alpha.1",
 	"description": "A simpler static site generator.",
 	"publishConfig": {
 		"access": "public",
@@ -8,6 +8,7 @@
 	},
 	"type": "module",
 	"main": "./src/Eleventy.js",
+	"browser": "./dist/client/eleventy.core.js",
 	"exports": {
 		".": {
 			"import": "./src/Eleventy.js",
@@ -15,7 +16,12 @@
 		},
 		"./UserConfig": {
 			"types": "./src/UserConfig.js"
-		}
+		},
+		"./bundle": "./dist/client/eleventy.core.js",
+		"./bundle/eleventy": "./dist/client/eleventy.js",
+		"./bundle/liquid": "./dist/client/eleventy-liquid.js",
+		"./bundle/njk": "./dist/client/eleventy-nunjucks.js",
+		"./bundle/md": "./dist/client/eleventy-markdown.js"
 	},
 	"bin": {
 		"eleventy": "cmd.cjs"
@@ -56,7 +62,8 @@
 		"check-types": "tsc",
 		"nano-staged": "nano-staged",
 		"coverage": "npx c8 ava && npx c8 report --reporter=json-summary && cp coverage/coverage-summary.json docs/_data/coverage.json && node cmd.cjs --config=docs/eleventy.coverage.js",
-		"prepare": "simple-git-hooks"
+		"bundle": "cd bundles && node generate.js",
+		"prepare": "npm run bundle && simple-git-hooks"
 	},
 	"author": "Zach Leatherman <zachleatherman@gmail.com> (https://zachleat.com/)",
 	"repository": {
@@ -94,6 +101,7 @@
 		"@11ty/eleventy-plugin-rss": "^2.0.4",
 		"@11ty/eleventy-plugin-syntaxhighlight": "^5.0.1",
 		"@11ty/eleventy-plugin-webc": "^0.12.0-beta.3",
+		"@11ty/package-bundler": "^0.2.1",
 		"@eslint/eslintrc": "^3.3.1",
 		"@eslint/js": "^9.29.0",
 		"@iarna/toml": "^2.2.5",
@@ -130,6 +138,7 @@
 		"@11ty/eleventy-dev-server": "^2.0.8",
 		"@11ty/eleventy-plugin-bundle": "^3.0.6",
 		"@11ty/eleventy-utils": "^2.0.7",
+		"@11ty/gray-matter": "^2.0.0",
 		"@11ty/lodash-custom": "^4.17.21",
 		"@11ty/posthtml-urls": "^1.0.1",
 		"@11ty/recursive-copy": "^4.0.2",
@@ -140,9 +149,8 @@
 		"dependency-graph": "^1.0.0",
 		"entities": "^6.0.1",
 		"filesize": "^10.1.6",
-		"gray-matter": "^4.0.3",
+		"import-module-string": "^2.0.1",
 		"iso-639-1": "^3.1.5",
-		"js-yaml": "^4.1.0",
 		"kleur": "^4.1.5",
 		"liquidjs": "^10.21.1",
 		"luxon": "^3.6.1",
@@ -158,10 +166,5 @@
 		"semver": "^7.7.2",
 		"slugify": "^1.6.6",
 		"tinyglobby": "^0.2.14"
-	},
-	"overrides": {
-		"gray-matter": {
-			"js-yaml": "$js-yaml"
-		}
 	}
 }
