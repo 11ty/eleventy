@@ -1300,6 +1300,7 @@ Arguments:
 		watcher.on("unlink", (path) => {
 			this.logger.forceLog(`File deleted: ${TemplatePath.standardizeFilePath(path)}`);
 			this.fileSystemSearch.delete(path);
+			await watchRun(path);
 		});
 
 		// wait for chokidar to be ready.
