@@ -1083,6 +1083,8 @@ Arguments:
 		benchmark.before();
 		await this.#initWatchDependencies();
 		benchmark.after();
+
+		eventBus.on("eleventyDevServer.rebuild", async () => await this._watch());
 	}
 
 	// fetch from project’s package.json
