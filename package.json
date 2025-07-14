@@ -8,7 +8,6 @@
 	},
 	"type": "module",
 	"main": "./src/Eleventy.js",
-	"browser": "./dist/client/eleventy.core.js",
 	"exports": {
 		".": {
 			"import": "./src/Eleventy.js",
@@ -16,12 +15,7 @@
 		},
 		"./UserConfig": {
 			"types": "./src/UserConfig.js"
-		},
-		"./bundle": "./dist/client/eleventy.core.js",
-		"./bundle/eleventy": "./dist/client/eleventy.js",
-		"./bundle/liquid": "./dist/client/eleventy-liquid.js",
-		"./bundle/njk": "./dist/client/eleventy-nunjucks.js",
-		"./bundle/md": "./dist/client/eleventy-markdown.js"
+		}
 	},
 	"bin": {
 		"eleventy": "cmd.cjs"
@@ -30,6 +24,9 @@
 	"engines": {
 		"node": ">=18"
 	},
+	"workspaces": [
+    "packages/client"
+  ],
 	"funding": {
 		"type": "opencollective",
 		"url": "https://opencollective.com/11ty"
@@ -62,8 +59,7 @@
 		"check-types": "tsc",
 		"nano-staged": "nano-staged",
 		"coverage": "npx c8 ava && npx c8 report --reporter=json-summary && cp coverage/coverage-summary.json docs/_data/coverage.json && node cmd.cjs --config=docs/eleventy.coverage.js",
-		"bundle": "cd bundles && node generate.js",
-		"prepare": "npm run bundle && simple-git-hooks"
+		"prepare": "simple-git-hooks"
 	},
 	"author": "Zach Leatherman <zachleatherman@gmail.com> (https://zachleat.com/)",
 	"repository": {
@@ -101,7 +97,6 @@
 		"@11ty/eleventy-plugin-rss": "^2.0.4",
 		"@11ty/eleventy-plugin-syntaxhighlight": "^5.0.1",
 		"@11ty/eleventy-plugin-webc": "^0.12.0-beta.3",
-		"@11ty/package-bundler": "^0.2.1",
 		"@eslint/eslintrc": "^3.3.1",
 		"@eslint/js": "^9.29.0",
 		"@iarna/toml": "^2.2.5",

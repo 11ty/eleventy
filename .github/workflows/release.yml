@@ -15,10 +15,9 @@ jobs:
         with:
           node-version: "20"
           registry-url: 'https://registry.npmjs.org'
-      - run: npm ci
-      - run: npm test
       - if: ${{ github.event.release.tag_name != '' && env.NPM_PUBLISH_TAG != '' }}
-        run: npm publish --provenance --access=public --tag=${{ env.NPM_PUBLISH_TAG }}
+        # Also runs npm ci and npm test
+        run: ./scripts/release.sh
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_PUBLISH_TAG: ${{ contains(github.event.release.tag_name, '-beta.') && 'beta' || contains(github.event.release.tag_name, '-alpha.') && 'canary' || 'latest' }}

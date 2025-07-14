@@ -1,0 +1,43 @@
+{
+  "name": "@11ty/client",
+  "version": "4.0.0-alpha.1",
+  "description": "Run Eleventy in your browser.",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "type": "module",
+  "main": "./dist/eleventy.core.js",
+  "exports": {
+    "./eleventy": "./dist/eleventy.js",
+    "./liquid": "./dist/eleventy-liquid.js",
+    "./njk": "./dist/eleventy-nunjucks.js",
+    "./md": "./dist/eleventy-markdown.js"
+  },
+  "files": [
+    "./dist/**.js"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "funding": {
+    "type": "opencollective",
+    "url": "https://opencollective.com/11ty"
+  },
+  "scripts": {
+    "test": "exit 0",
+    "prepublishOnly": "npm run test",
+    "prepare": "node update-version.js && node generate-bundle.js"
+  },
+  "author": "Zach Leatherman <zachleatherman@gmail.com> (https://zachleat.com/)",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/11ty/eleventy.git"
+  },
+  "bugs": "https://github.com/11ty/eleventy/issues",
+  "homepage": "https://www.11ty.dev/",
+  "dependencies": {
+    "@11ty/package-bundler": "^0.2.1"
+  }
+}
