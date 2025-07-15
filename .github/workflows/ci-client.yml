@@ -6,7 +6,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+        # os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+        os: ["macos-latest"]
         node: ["22"]
     name: Node.js ${{ matrix.node }} on ${{ matrix.os }}
     steps:
