@@ -4,7 +4,6 @@
 import test from "node:test";
 import fs from "node:fs";
 import assert from "node:assert";
-import { type } from "node:os";
 
 import Eleventy from "../../src/Eleventy.js";
 import { withResolvers } from "../../src/Util/PromiseUtil.js";
@@ -82,7 +81,6 @@ test(
 		for (let run of runs) {
 			// Windows/Ubuntu needed this for Chokidar reasons
 			await new Promise((resolve) => setTimeout(resolve, 200));
-
 			fs.writeFileSync(FILE_CHANGING, run.input, "utf8");
 
 			await run.promise;

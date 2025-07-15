@@ -4,7 +4,6 @@
 import test from "node:test";
 import fs from "node:fs";
 import assert from "node:assert";
-import { type } from "node:os";
 
 import Eleventy from "../../src/Eleventy.js";
 import { withResolvers } from "../../src/Util/PromiseUtil.js";
