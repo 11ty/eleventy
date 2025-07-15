@@ -112,7 +112,7 @@ async function exec() {
 
 		if (argv.serve || argv.watch) {
 			if(argv.to === "json") {
-				throw new SimpleError("--to=json are not compatible with --serve or --watch.");
+				throw new SimpleError("--to=json is not compatible with --serve or --watch.");
 			}
 
 			await elev.watch();
