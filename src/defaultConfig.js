@@ -1,6 +1,5 @@
 import extendedDefaultConfig from "./Adapters/Configuration/getExtendedDefaultConfig.js";
 import urlFilter from "./Filters/Url.js";
-import slugFilter from "./Adapters/Configuration/Filters/Slug.js";
 import slugifyFilter from "./Adapters/Configuration/Filters/Slugify.js";
 import getLocaleCollectionItem from "./Filters/GetLocaleCollectionItem.js";
 import getCollectionItemIndex from "./Filters/GetCollectionItemIndex.js";
@@ -71,8 +70,13 @@ export default function (config) {
 		immediate: true,
 	});
 
+	config.addFilter("slug", function () {
+		throw new Error(
+			"The `slug` filter (deprecated since v1) has been removed in Eleventy v4. You can add it manually to your configuration file for backwards compatibility, read more at GitHub Issue #3893: https://github.com/11ty/eleventy/issues/3893 Alternatively (more risky), you can swap to use the `slugify` filter instead (outputs may be different and production URLs may break!)",
+		);
+	});
+
 	let memoizeBench = config.benchmarkManager.get("Configuration");
-	config.addFilter("slug", MemoizeUtil(slugFilter, { name: "slug", bench: memoizeBench }));
 	config.addFilter("slugify", MemoizeUtil(slugifyFilter, { name: "slugify", bench: memoizeBench }));
 
 	// Deprecated, use HtmlBasePlugin instead.

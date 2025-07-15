@@ -5,7 +5,8 @@ export default function (str, options = {}) {
 		"" + str,
 		Object.assign(
 			{
-				// lowercase: true, // default
+				// lowercase: true,
+				// separator: "-",
 				decamelize: false,
 			},
 			options,
