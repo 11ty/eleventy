@@ -1,18 +1,16 @@
-# npm publish --provenance --access=public --tag=${{ env.NPM_PUBLISH_TAG }}
-if [ -z "$NPM_PUBLISH_TAG" ]; then
-  echo 'Release error: missing NPM_PUBLISH_TAG environment variable'
-	exit 1
-fi
-
-# npm ci --workspaces
 if ! npm ci; then
 	echo 'Release error: npm ci command failed.'
 	exit 1
 fi
 
-# npm test --workspaces
+# This step includes running packages/ test suites
 if ! npm test; then
 	echo 'Release error: npm test command failed.'
+	exit 1
+fi
+
+if [ -z "$NPM_PUBLISH_TAG" ]; then
+  echo 'Release error: missing NPM_PUBLISH_TAG environment variable'
 	exit 1
 fi
 

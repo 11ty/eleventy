@@ -23,7 +23,7 @@ export function resolvePlugin(name) {
 	// Future improvement: add support for any npm package name?
 	if (typeof filenameLookup[name] === "string") {
 		// returns promise
-		return import(filenameLookup[name]).then((plugin) => plugin.default);
+		return import(/* @vite-ignore */ filenameLookup[name]).then((plugin) => plugin.default);
 	}
 
 	// return reference

@@ -26,9 +26,9 @@
     "url": "https://opencollective.com/11ty"
   },
   "scripts": {
-    "test": "exit 0",
-    "prepublishOnly": "npm run test",
-    "prepare": "node update-version.js && node generate-bundle.js"
+    "build": "node update-version.js && node generate-bundle.js",
+    "test": "npm run build && npx vitest",
+    "prepare": "npm run build"
   },
   "author": "Zach Leatherman <zachleatherman@gmail.com> (https://zachleat.com/)",
   "repository": {
@@ -39,5 +39,10 @@
   "homepage": "https://www.11ty.dev/",
   "dependencies": {
     "@11ty/package-bundler": "^0.2.1"
+  },
+  "devDependencies": {
+    "@vitest/browser": "^3.2.4",
+    "playwright": "^1.54.1",
+    "vitest": "^3.2.4"
   }
 }

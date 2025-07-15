@@ -7,8 +7,14 @@ window.process = globalThis.process = process;
 window.global = globalThis || window;
 
 // @11ty/eleventy needs this
-window.Buffer = globalThis.Buffer = {
-	isBuffer: function () {
+class Buffer {
+	static [Symbol.hasInstance](instance) {
+		return this.isBuffer(instance);
+	}
+
+	static isBuffer() {
 		return false;
-	},
-};
+	}
+}
+
+window.Buffer = globalThis.Buffer = Buffer;
