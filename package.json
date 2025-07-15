@@ -25,8 +25,8 @@
 		"node": ">=18"
 	},
 	"workspaces": [
-    "packages/client"
-  ],
+		"packages/client"
+	],
 	"funding": {
 		"type": "opencollective",
 		"url": "https://opencollective.com/11ty"
@@ -55,7 +55,7 @@
 		"test:server": "npm run test:node && npm run test:ava",
 		"test:ava": "ava --verbose --timeout 20s",
 		"test:node": "node --test test_node/tests.js",
-		"test:client": "CI=true npm run test --workspaces",
+		"test:client": "cross-env CI=true npm run test --workspaces",
 		"format": "prettier . --write",
 		"check": "eslint src",
 		"check-types": "tsc",
@@ -108,6 +108,7 @@
 		"@zachleat/noop": "^1.0.6",
 		"ava": "^6.4.0",
 		"c8": "^10.1.3",
+		"cross-env": "^7.0.3",
 		"eslint": "^9.29.0",
 		"eslint-config-prettier": "^10.1.5",
 		"globals": "^16.2.0",
