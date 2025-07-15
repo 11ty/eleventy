@@ -1168,6 +1168,7 @@ class UserConfig {
 	}
 
 	configureTemplateHandling(options = {}) {
+		// Was used for sync/async swapping on file write operations
 		throw new Error("Internal configuration API method `configureTemplateHandling` was removed.");
 	}
 
