@@ -7,7 +7,6 @@ import debugUtil from "debug";
 import chalk from "kleur";
 
 import { fromISOtoDateUTC } from "./Adapters/luxonDatetime.js";
-import { EOL } from "./Adapters/Util/NewLine.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import getDateFromGitLastUpdated from "./Util/DateGitLastUpdated.js";
 import getDateFromGitFirstAdded from "./Util/DateGitFirstAdded.js";
