@@ -51,10 +51,11 @@
 	],
 	"scripts": {
 		"default": "npm run test",
-		"test": "npm run test:node && npm run test:ava && npm run test:packages",
+		"test": "npm run test:server && npm run test:client",
+		"test:server": "npm run test:node && npm run test:ava",
 		"test:ava": "ava --verbose --timeout 20s",
 		"test:node": "node --test test_node/tests.js",
-		"test:packages": "CI=true npm run test --workspaces",
+		"test:client": "CI=true npm run test --workspaces",
 		"format": "prettier . --write",
 		"check": "eslint src",
 		"check-types": "tsc",
