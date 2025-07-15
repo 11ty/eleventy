@@ -3,7 +3,7 @@ on: push
 permissions: read-all
 jobs:
   server:
-    name: Node.js ${{ matrix.node }} on ${{ matrix.os }}
+    name: Node.js v${{ matrix.node }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -19,7 +19,7 @@ jobs:
       - run: npm ci
       - run: npm run test:server
   client:
-    name: Vitest Browser Mode ${{ matrix.node }} on ${{ matrix.os }}
+    name: Vitest on ${{ matrix.os }} (Node.js v${{ matrix.node }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
