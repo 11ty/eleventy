@@ -1,6 +1,5 @@
 {
   "name": "@11ty/client",
-  "version": "4.0.0-alpha.1",
   "description": "Run Eleventy in your browser.",
   "publishConfig": {
     "access": "public",
@@ -18,15 +17,12 @@
     "./dist/**.js"
   ],
   "license": "MIT",
-  "engines": {
-    "node": ">=18"
-  },
   "funding": {
     "type": "opencollective",
     "url": "https://opencollective.com/11ty"
   },
   "scripts": {
-    "build": "node update-version.js && node generate-bundle.js",
+    "build": "node update-package-json.js && node generate-bundle.js",
     "test": "npm run build && npx vitest",
     "prepare": "npm run build"
   },
