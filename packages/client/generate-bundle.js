@@ -24,7 +24,8 @@ await bundleClient("./src/BundleEleventy.js", `./dist/eleventy.js`, {
 
 console.log(`${PREFIX}Wrote dist/eleventy.js`);
 
-// fs.writeFileSync("./visualize.json", JSON.stringify(result.metafile));
+// fs.mkdirSync("./visualize/");
+// fs.writeFileSync("./visualize/meta.json", JSON.stringify(result.metafile));
 // // esbuild-visualizer --metadata ./visualize/meta.json --filename visualize/stats.html
 
 await bundleClient(import.meta.resolve("./src/BundleLiquid.js"), `./dist/eleventy-liquid.js`, {
