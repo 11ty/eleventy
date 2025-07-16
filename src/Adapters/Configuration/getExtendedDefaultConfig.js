@@ -4,10 +4,6 @@ import { HtmlTransformer } from "../../Util/HtmlTransformer.js";
 import { HtmlRelativeCopyPlugin } from "../../Plugins/HtmlRelativeCopyPlugin.js";
 
 /**
- * @module 11ty/eleventy/defaultConfig
- */
-
-/**
  * @typedef {object} config
  * @property {addPlugin} addPlugin - Execute or defer a plugin’s execution.
  * @property {addTransform} addTransform - Add an Eleventy transform to postprocess template output

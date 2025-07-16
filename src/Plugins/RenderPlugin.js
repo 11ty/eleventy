@@ -175,14 +175,12 @@ function RenderPlugin(eleventyConfig, options = {}) {
 	 * @property {module:11ty/eleventy/TemplateConfig} [templateConfig] - Configuration object
 	 * @property {boolean} [accessGlobalData] - Whether or not the template has access to the page’s data.
 	 */
-	let defaultOptions = {
-		tagName: "renderTemplate",
-		tagNameFile: "renderFile",
-		filterName: "renderContent",
-		templateConfig: null,
-		accessGlobalData: false,
-	};
-	let opts = Object.assign(defaultOptions, options);
+
+	options.tagName ??= "renderTemplate";
+	options.tagNameFile ??= "renderFile";
+	options.filterName ??= "renderContent";
+	options.templateConfig ??= null;
+	options.accessGlobalData ??= false;
 
 	function liquidTemplateTag(liquidEngine, tagName, extras) {
 		const { evalToken } = extras;
@@ -215,7 +213,7 @@ function RenderPlugin(eleventyConfig, options = {}) {
 			render: function* (ctx) {
 				let normalizedContext = {};
 				if (ctx) {
-					if (opts.accessGlobalData) {
+					if (options.accessGlobalData) {
 						// parent template data cascade
 						normalizedContext.data = ctx.getAll();
 					}
@@ -316,7 +314,7 @@ function RenderPlugin(eleventyConfig, options = {}) {
 					normalizedContext.ctx = context.ctx;
 
 					// TODO .data
-					// if(opts.accessGlobalData) {
+					// if(options.accessGlobalData) {
 					//   normalizedContext.data = context.ctx;
 					// }
 
@@ -364,7 +362,7 @@ function RenderPlugin(eleventyConfig, options = {}) {
 
 		// TODO Render plugin `templateLang` is feeding bad input paths to the addDependencies call in Custom.js
 		let fn = await compile.call(this, content, templateLang, {
-			templateConfig: opts.templateConfig || templateConfig,
+			templateConfig: options.templateConfig || templateConfig,
 			extensionMap,
 		});
 
@@ -373,39 +371,39 @@ function RenderPlugin(eleventyConfig, options = {}) {
 
 	/** @this {object} */
 	async function _renderFileShortcodeFn(inputPath, data = {}, templateLang) {
-		let options = {
-			templateConfig: opts.templateConfig || templateConfig,
+		let renderFileOptions = {
+			templateConfig: options.templateConfig || templateConfig,
 			extensionMap,
 		};
 
-		let fn = await compileFile.call(this, inputPath, options, templateLang);
+		let fn = await compileFile.call(this, inputPath, renderFileOptions, templateLang);
 
 		return renderShortcodeFn.call(this, fn, data);
 	}
 
 	// Render strings
-	if (opts.tagName) {
+	if (options.tagName) {
 		// use falsy to opt-out
-		eleventyConfig.addJavaScriptFunction(opts.tagName, _renderStringShortcodeFn);
+		eleventyConfig.addJavaScriptFunction(options.tagName, _renderStringShortcodeFn);
 
-		eleventyConfig.addLiquidTag(opts.tagName, function (liquidEngine, extras) {
-			return liquidTemplateTag(liquidEngine, opts.tagName, extras);
+		eleventyConfig.addLiquidTag(options.tagName, function (liquidEngine, extras) {
+			return liquidTemplateTag(liquidEngine, options.tagName, extras);
 		});
 
-		eleventyConfig.addNunjucksTag(opts.tagName, function (nunjucksLib) {
-			return nunjucksTemplateTag(nunjucksLib, opts.tagName);
+		eleventyConfig.addNunjucksTag(options.tagName, function (nunjucksLib) {
+			return nunjucksTemplateTag(nunjucksLib, options.tagName);
 		});
 	}
 
 	// Filter for rendering strings
-	if (opts.filterName) {
-		eleventyConfig.addAsyncFilter(opts.filterName, _renderStringShortcodeFn);
+	if (options.filterName) {
+		eleventyConfig.addAsyncFilter(options.filterName, _renderStringShortcodeFn);
 	}
 
 	// Render File
 	// use `false` to opt-out
-	if (opts.tagNameFile) {
-		eleventyConfig.addAsyncShortcode(opts.tagNameFile, _renderFileShortcodeFn);
+	if (options.tagNameFile) {
+		eleventyConfig.addAsyncShortcode(options.tagNameFile, _renderFileShortcodeFn);
 	}
 }
 

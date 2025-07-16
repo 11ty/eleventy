@@ -1,15 +1,7 @@
 import slugify from "@sindresorhus/slugify";
 
 export default function (str, options = {}) {
-	return slugify(
-		"" + str,
-		Object.assign(
-			{
-				// lowercase: true,
-				// separator: "-",
-				decamelize: false,
-			},
-			options,
-		),
-	);
+	options.decamelize ??= false;
+
+	return slugify("" + str, options);
 }

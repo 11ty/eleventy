@@ -7,7 +7,7 @@ import TemplateEngineManager from "./Engines/TemplateEngineManager.js";
 class TemplateRenderUnknownEngineError extends EleventyBaseError {}
 
 // works with full path names or short engine name
-class TemplateRender {
+export default class TemplateRender {
 	#extensionMap;
 	#config;
 
@@ -288,5 +288,3 @@ class TemplateRender {
 		}
 	}
 }
-
-export default TemplateRender;

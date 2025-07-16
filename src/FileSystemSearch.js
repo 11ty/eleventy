@@ -70,16 +70,10 @@ class FileSystemSearch {
 				return entry;
 			});
 
-			this.promises[cacheKey] = glob(
-				globs,
-				Object.assign(
-					{
-						caseSensitiveMatch: false, // insensitive
-						dot: true,
-					},
-					options,
-				),
-			).then((results) => {
+			options.caseSensitiveMatch ??= false; // insensitive
+			options.dot ??= true;
+
+			this.promises[cacheKey] = glob(globs, options).then((results) => {
 				this.outputs[cacheKey] = new Set(
 					results.map((entry) => {
 						let remapped = GlobRemap.remapOutput(entry, options.cwd);
