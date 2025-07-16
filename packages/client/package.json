@@ -10,6 +10,7 @@
   "type": "module",
   "main": "./dist/eleventy.core.js",
   "exports": {
+    ".": "./dist/eleventy.core.js",
     "./eleventy": "./dist/eleventy.js",
     "./liquid": "./dist/formats/eleventy-liquid.js",
     "./njk": "./dist/formats/eleventy-nunjucks.js",
