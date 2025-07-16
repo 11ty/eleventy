@@ -28,20 +28,42 @@ console.log(`${PREFIX}Wrote dist/eleventy.js`);
 // fs.writeFileSync("./visualize/meta.json", JSON.stringify(result.metafile));
 // // esbuild-visualizer --metadata ./visualize/meta.json --filename visualize/stats.html
 
-await bundleClient(import.meta.resolve("./src/BundleLiquid.js"), `./dist/eleventy-liquid.js`, {
-	name: `Eleventy v${pkg.version} (Liquid Engine Bundle)`,
-	moduleRoot: ".",
-});
-console.log(`${PREFIX}Wrote dist/eleventy-liquid.js`);
+await bundleClient(
+	import.meta.resolve("./src/BundleLiquid.js"),
+	`./dist/formats/eleventy-liquid.js`,
+	{
+		name: `Eleventy v${pkg.version} (Liquid Engine Bundle)`,
+		moduleRoot: ".",
+	},
+);
+console.log(`${PREFIX}Wrote dist/formats/eleventy-liquid.js`);
 
-await bundleClient(import.meta.resolve("./src/BundleNunjucks.js"), `./dist/eleventy-nunjucks.js`, {
-	name: `Eleventy v${pkg.version} (Nunjucks Engine Bundle)`,
-	moduleRoot: ".",
-});
-console.log(`${PREFIX}Wrote dist/eleventy-nunjucks.js`);
+await bundleClient(
+	import.meta.resolve("./src/BundleNunjucks.js"),
+	`./dist/formats/eleventy-nunjucks.js`,
+	{
+		name: `Eleventy v${pkg.version} (Nunjucks Engine Bundle)`,
+		moduleRoot: ".",
+	},
+);
+console.log(`${PREFIX}Wrote dist/formats/eleventy-nunjucks.js`);
 
-await bundleClient(import.meta.resolve("./src/BundleMarkdown.js"), `./dist/eleventy-markdown.js`, {
-	name: `Eleventy v${pkg.version} (Markdown Engine Bundle)`,
-	moduleRoot: ".",
-});
-console.log(`${PREFIX}Wrote dist/eleventy-markdown.js`);
+await bundleClient(
+	import.meta.resolve("./src/BundleMarkdown.js"),
+	`./dist/formats/eleventy-markdown.js`,
+	{
+		name: `Eleventy v${pkg.version} (Markdown Engine Bundle)`,
+		moduleRoot: ".",
+	},
+);
+console.log(`${PREFIX}Wrote dist/formats/eleventy-markdown.js`);
+
+await bundleClient(
+	import.meta.resolve("./src/BundleI18nPlugin.js"),
+	`./dist/plugins/eleventy-plugin-i18n.js`,
+	{
+		name: `Eleventy v${pkg.version} (i18n Plugin)`,
+		moduleRoot: ".",
+	},
+);
+console.log(`${PREFIX}Wrote dist/plugins/eleventy-plugin-i18n.js`);

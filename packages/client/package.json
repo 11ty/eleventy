@@ -9,9 +9,10 @@
   "main": "./dist/eleventy.core.js",
   "exports": {
     "./eleventy": "./dist/eleventy.js",
-    "./liquid": "./dist/eleventy-liquid.js",
-    "./njk": "./dist/eleventy-nunjucks.js",
-    "./md": "./dist/eleventy-markdown.js"
+    "./liquid": "./dist/formats/eleventy-liquid.js",
+    "./njk": "./dist/formats/eleventy-nunjucks.js",
+    "./md": "./dist/formats/eleventy-markdown.js",
+    "./i18n": "./dist/plugins/eleventy-plugin-i18n.js"
   },
   "files": [
     "./dist/**.js"

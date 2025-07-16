@@ -1,8 +1,9 @@
 import { assert, test } from "vitest";
 import { Eleventy } from "../dist/eleventy.js";
-import { Markdown } from "../dist/eleventy-markdown.js";
-import { Liquid } from "../dist/eleventy-liquid.js";
-import { Nunjucks } from "../dist/eleventy-nunjucks.js";
+import { Markdown } from "../dist/formats/eleventy-markdown.js";
+import { Liquid } from "../dist/formats/eleventy-liquid.js";
+import { Nunjucks } from "../dist/formats/eleventy-nunjucks.js";
+import { I18nPlugin } from "../dist/plugins/eleventy-plugin-i18n.js";
 
 test("Get version number", async () => {
   assert.typeOf(Eleventy.getVersion(), "string");
@@ -67,4 +68,24 @@ test("Nunjucks template", async () => {
 
 	let json = await elev.toJSON();
 	assert.strictEqual(json[0].content.trim(), `<h1>Heading</h1>`);
+});
+
+test("i18n Plugin Use (with 11ty.js)", async () => {
+  let elev = new Eleventy({
+		config(eleventyConfig) {
+			eleventyConfig.addPlugin(I18nPlugin, {
+				defaultLanguage: "en"
+			});
+			eleventyConfig.addTemplate("./en/index.11ty.js", function (data) {
+				return `<a href="${this.locale_url("/")}">Home</a>`;
+			});
+			eleventyConfig.addTemplate("./es/index.11ty.js", function (data) {
+				return `<a href="${this.locale_url("/")}">Home</a>`;
+			});
+		}
+	});
+
+	let json = await elev.toJSON();
+	assert.strictEqual(json[0].content.trim(), `<a href="/en/">Home</a>`);
+	assert.strictEqual(json[1].content.trim(), `<a href="/es/">Home</a>`);
 });
