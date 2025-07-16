@@ -1,3 +1,4 @@
+// picomatch costs ~50KB minified
 import picomatch from "picomatch";
 import { TemplatePath } from "@11ty/eleventy-utils";
 

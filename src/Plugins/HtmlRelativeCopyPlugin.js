@@ -6,7 +6,7 @@ import { HtmlRelativeCopy } from "../Util/HtmlRelativeCopy.js";
 function init(eleventyConfig, options) {
 	if (!eleventyConfig.htmlTransformer) {
 		throw new Error(
-			"html-relative Passthrough Copy requires eleventyConfig.htmlTransformer support. Are you using the Eleventy minimal core bundle? Try the standard core bundle instead.",
+			"html-relative Passthrough Copy requires eleventyConfig.htmlTransformer support. Are you using the `@11ty/client` bundle? If so, try the `@11ty/client/eleventy` bundle instead.",
 		);
 	}
 

@@ -3,7 +3,7 @@ export async function RetrieveGlobals(code, filePath) {
 	return import(/* @vite-ignore */ target).then((result) => {
 		if (Object.keys(result).length === 0) {
 			console.warn(
-				`Arbitrary JavaScript front matter expects the use of \`export\` when used in Eleventy minimal browser bundle (${filePath}). You may want to use the standard Eleventy browser bundle instead.`,
+				`Arbitrary JavaScript front matter expects the use of \`export\` when used with the \`@11ty/client\` bundle (${filePath}). Add export or swap to use the \`@11ty/client/eleventy\` bundle instead.`,
 			);
 		}
 		return result;

@@ -1,3 +1,3 @@
 export function spawnAsync() {
-	throw new Error("Feature not supported in Eleventy browser bundle.");
+	throw new Error("This feature is not supported in `@11ty/client` bundles.");
 }
