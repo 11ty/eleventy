@@ -39,7 +39,7 @@ test("Message styles", (t) => {
   cl.info("test");
   t.deepEqual(logged, {
     msg: "test",
-    type: "warn",
+    type: "log",
     color: "blue",
     forceToConsole: undefined,
   });
