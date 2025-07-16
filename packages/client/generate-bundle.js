@@ -1,13 +1,14 @@
+// import fs from "node:fs";
 import { default as bundleClient } from "@11ty/package-bundler";
 import pkg from "../../package.json" with { type: "json" };
 
 const PREFIX = `[11ty/bundle/client] `;
 
 await bundleClient("./src/BundleCore.js", "./dist/eleventy.core.js", {
-	name: `Eleventy v${pkg.version} (Minimal Bundle)`,
+	name: `Eleventy v${pkg.version} (@11ty/client Bundle)`,
 	moduleRoot: ".",
 	// No core-bundled plugins, reduced feature set
-	minimalBundle: true,
+	minimalBundle: true, // uses *.coremin.js adapters
 	esbuild: {
 		// minify: true
 	},
@@ -16,23 +17,22 @@ console.log(`${PREFIX}Wrote dist/eleventy.core.js`);
 
 // Careful, this one is big!
 await bundleClient("./src/BundleEleventy.js", `./dist/eleventy.js`, {
-	name: `Eleventy v${pkg.version} (Bundle)`,
+	name: `Eleventy v${pkg.version} (@11ty/client/eleventy Bundle)`,
 	moduleRoot: ".",
-	// Named export FileSystem for using the file system in other packages
+	// Adds named export FileSystem for using the file system in other packages
 	fileSystemMode: "publish",
 });
-
 console.log(`${PREFIX}Wrote dist/eleventy.js`);
 
-// fs.mkdirSync("./visualize/");
+// fs.mkdirSync("./visualize/", { recursive: true });
 // fs.writeFileSync("./visualize/meta.json", JSON.stringify(result.metafile));
-// // esbuild-visualizer --metadata ./visualize/meta.json --filename visualize/stats.html
+// npx esbuild-visualizer --metadata ./packages/client/visualize/meta.json --filename packages/client/visualize/index.html
 
 await bundleClient(
 	import.meta.resolve("./src/BundleLiquid.js"),
 	`./dist/formats/eleventy-liquid.js`,
 	{
-		name: `Eleventy v${pkg.version} (Liquid Engine Bundle)`,
+		name: `Eleventy v${pkg.version} (@11ty/client/liquid Engine Bundle)`,
 		moduleRoot: ".",
 	},
 );
@@ -42,7 +42,7 @@ await bundleClient(
 	import.meta.resolve("./src/BundleNunjucks.js"),
 	`./dist/formats/eleventy-nunjucks.js`,
 	{
-		name: `Eleventy v${pkg.version} (Nunjucks Engine Bundle)`,
+		name: `Eleventy v${pkg.version} (@11ty/client/njk Engine Bundle)`,
 		moduleRoot: ".",
 	},
 );
@@ -52,7 +52,7 @@ await bundleClient(
 	import.meta.resolve("./src/BundleMarkdown.js"),
 	`./dist/formats/eleventy-markdown.js`,
 	{
-		name: `Eleventy v${pkg.version} (Markdown Engine Bundle)`,
+		name: `Eleventy v${pkg.version} (@11ty/client/md Engine Bundle)`,
 		moduleRoot: ".",
 	},
 );

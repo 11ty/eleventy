@@ -1,12 +1,5 @@
-import extendedDefaultConfig from "./Adapters/Configuration/getExtendedDefaultConfig.js";
-import urlFilter from "./Filters/Url.js";
-import slugifyFilter from "./Adapters/Configuration/Filters/Slugify.js";
-import getLocaleCollectionItem from "./Filters/GetLocaleCollectionItem.js";
-import getCollectionItemIndex from "./Filters/GetCollectionItemIndex.js";
-import { FilterPlugin as InputPathToUrlFilterPlugin } from "./Plugins/InputPathToUrl.js";
-
+import fullBundleDefaultConfig from "./Adapters/Configuration/getExtendedDefaultConfig.js";
 import TransformsUtil from "./Util/TransformsUtil.js";
-import MemoizeUtil from "./Util/MemoizeFunction.js";
 
 /**
  * @module 11ty/eleventy/defaultConfig
@@ -23,7 +16,6 @@ import MemoizeUtil from "./Util/MemoizeFunction.js";
  * @property {addFilter} addFilter - Register a new global filter.
  * @property {addPlugin} addPlugin - Execute or defer a plugin’s execution.
  * @property {addTransform} addTransform - Add an Eleventy transform to postprocess template output
- * @property {htmlTransformer} htmlTransformer - HTML modification API
  */
 
 /**
@@ -60,54 +52,12 @@ import MemoizeUtil from "./Util/MemoizeFunction.js";
  * @returns {defaultConfig}
  */
 export default function (config) {
-	let templateConfig = this;
-
-	// add extended config (not available in minimal bundle)
-	extendedDefaultConfig(config);
-
-	// Filter: Maps an input path to output URL
-	config.addPlugin(InputPathToUrlFilterPlugin, {
-		immediate: true,
-	});
-
-	config.addFilter("slug", function () {
-		throw new Error(
-			"The `slug` filter (deprecated since v1) has been removed in Eleventy v4. You can add it manually to your configuration file for backwards compatibility, read more at GitHub Issue #3893: https://github.com/11ty/eleventy/issues/3893 Alternatively (more risky), you can swap to use the `slugify` filter instead (outputs may be different and production URLs may break!)",
-		);
-	});
-
-	let memoizeBench = config.benchmarkManager.get("Configuration");
-	config.addFilter("slugify", MemoizeUtil(slugifyFilter, { name: "slugify", bench: memoizeBench }));
-
-	// Deprecated, use HtmlBasePlugin instead.
-	// Adds a pathPrefix manually to a URL string
-	config.addFilter("url", function addPathPrefixFilter(url, pathPrefixOverride) {
-		let pathPrefix;
-		if (pathPrefixOverride && typeof pathPrefixOverride === "string") {
-			pathPrefix = pathPrefixOverride;
-		} else {
-			pathPrefix = templateConfig.getPathPrefix();
-		}
-
-		return urlFilter.call(this, url, pathPrefix);
-	});
+	// add extra config (not available in `@11ty/client` bundle)
+	fullBundleDefaultConfig.call(this, config);
 
 	config.addFilter("log", (input, ...messages) => {
 		console.log(input, ...messages);
 		return input;
-	});
-
-	config.addFilter("getCollectionItemIndex", function (collection, pageOverride) {
-		return getCollectionItemIndex.call(this, collection, pageOverride);
-	});
-	config.addFilter("getCollectionItem", function (collection, pageOverride, langCode) {
-		return getLocaleCollectionItem.call(this, config, collection, pageOverride, langCode, 0);
-	});
-	config.addFilter("getPreviousCollectionItem", function (collection, pageOverride, langCode) {
-		return getLocaleCollectionItem.call(this, config, collection, pageOverride, langCode, -1);
-	});
-	config.addFilter("getNextCollectionItem", function (collection, pageOverride, langCode) {
-		return getLocaleCollectionItem.call(this, config, collection, pageOverride, langCode, 1);
 	});
 
 	// Process arbitrary content with transforms

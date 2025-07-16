@@ -1,8 +1,9 @@
 import debugUtil from "debug";
 import { isPlainObject, TemplatePath } from "@11ty/eleventy-utils";
-import filesize from "./Adapters/Util/getFileSize.js";
 
+import filesize from "./Adapters/Util/getFileSize.js";
 import chalk from "./Adapters/Util/chalk.js";
+
 import TemplateData from "./Data/TemplateData.js";
 import TemplateWriter from "./TemplateWriter.js";
 import EleventyExtensionMap from "./EleventyExtensionMap.js";

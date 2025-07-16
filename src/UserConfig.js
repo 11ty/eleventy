@@ -726,7 +726,7 @@ class UserConfig {
 			pluginBenchmark.after();
 		} else {
 			throw new UserConfigError(
-				"Invalid EleventyConfig.addPlugin signature. Should be a function or a valid Eleventy plugin object.",
+				"Invalid eleventyConfig.addPlugin() signature. Should be a function or a valid Eleventy plugin object.",
 			);
 		}
 		return ret;
