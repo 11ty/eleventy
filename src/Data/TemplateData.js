@@ -1,5 +1,4 @@
 import path from "node:path";
-import { coerce } from "../Adapters/Util/semver.js";
 import lodash from "@11ty/lodash-custom";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
@@ -12,6 +11,7 @@ import TemplateDataInitialGlobalData from "./TemplateDataInitialGlobalData.js";
 import { getEleventyPackageJson, getWorkingProjectPackageJson } from "../Util/ImportJsonSync.js";
 import { EleventyImport, EleventyLoadContent } from "../Util/Require.js";
 import { DeepFreeze } from "../Util/Objects/DeepFreeze.js";
+import { coerce } from "../Util/SemverCoerce.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 

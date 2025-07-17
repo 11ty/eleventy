@@ -1,5 +1,4 @@
-// Costs ~38 KB
+// Costs ~18 KB
 import semverSatisfies from "semver/functions/satisfies.js";
-import semverCoerce from "semver/functions/coerce.js";
 
-export { semverSatisfies as satisfies, semverCoerce as coerce };
+export { semverSatisfies as satisfies };
