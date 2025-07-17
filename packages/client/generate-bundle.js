@@ -9,6 +9,7 @@ await bundleClient("./src/BundleCore.js", "./dist/eleventy.core.js", {
 	moduleRoot: ".",
 	// No core-bundled plugins, reduced feature set
 	minimalBundle: true, // uses *.coremin.js adapters
+	external: ["node:fs", "node:crypto"],
 	esbuild: {
 		// minify: true
 	},

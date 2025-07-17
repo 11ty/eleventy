@@ -73,7 +73,7 @@ export default function (config) {
 
 	return {
 		templateFormats: ["liquid", "md", "njk", "html", "11ty.js"],
-		// if your site deploys to a subdirectory, change this
+		// to add a parent directory structure to URLs (not reflected on the file system), change this
 		pathPrefix: "/",
 		markdownTemplateEngine: "liquid",
 		htmlTemplateEngine: "liquid",
