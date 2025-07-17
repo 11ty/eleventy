@@ -6,11 +6,12 @@ const PREFIX = `[11ty/bundle/client] `;
 
 await bundleClient("./src/BundleCore.js", "./dist/eleventy.core.js", {
 	name: `Eleventy v${pkg.version} (@11ty/client Bundle)`,
-	moduleRoot: ".",
+	moduleRoot: "../../",
 	// No core-bundled plugins, reduced feature set
-	minimalBundle: true, // uses *.coremin.js adapters
+	adapterSuffixes: [".coremin.js", ".core.js"],
 	external: ["node:fs", "node:crypto"],
 	esbuild: {
+		keepNames: false,
 		// minify: true
 	},
 });
@@ -19,7 +20,7 @@ console.log(`${PREFIX}Wrote dist/eleventy.core.js`);
 // Careful, this one is big!
 await bundleClient("./src/BundleEleventy.js", `./dist/eleventy.js`, {
 	name: `Eleventy v${pkg.version} (@11ty/client/eleventy Bundle)`,
-	moduleRoot: ".",
+	moduleRoot: "../../",
 	// Adds named export FileSystem for using the file system in other packages
 	fileSystemMode: "publish",
 });
@@ -34,7 +35,7 @@ await bundleClient(
 	`./dist/formats/eleventy-liquid.js`,
 	{
 		name: `Eleventy v${pkg.version} (@11ty/client/liquid Engine Bundle)`,
-		moduleRoot: ".",
+		moduleRoot: "../../",
 	},
 );
 console.log(`${PREFIX}Wrote dist/formats/eleventy-liquid.js`);
@@ -44,7 +45,7 @@ await bundleClient(
 	`./dist/formats/eleventy-nunjucks.js`,
 	{
 		name: `Eleventy v${pkg.version} (@11ty/client/njk Engine Bundle)`,
-		moduleRoot: ".",
+		moduleRoot: "../../",
 	},
 );
 console.log(`${PREFIX}Wrote dist/formats/eleventy-nunjucks.js`);
@@ -54,7 +55,7 @@ await bundleClient(
 	`./dist/formats/eleventy-markdown.js`,
 	{
 		name: `Eleventy v${pkg.version} (@11ty/client/md Engine Bundle)`,
-		moduleRoot: ".",
+		moduleRoot: "../../",
 	},
 );
 console.log(`${PREFIX}Wrote dist/formats/eleventy-markdown.js`);
@@ -64,7 +65,7 @@ await bundleClient(
 	`./dist/plugins/eleventy-plugin-i18n.js`,
 	{
 		name: `Eleventy v${pkg.version} (i18n Plugin)`,
-		moduleRoot: ".",
+		moduleRoot: "../../",
 	},
 );
 console.log(`${PREFIX}Wrote dist/plugins/eleventy-plugin-i18n.js`);
