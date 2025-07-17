@@ -9,7 +9,6 @@ import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 import EleventyErrorUtil from "../src/Errors/EleventyErrorUtil.js";
 import TemplateContentPrematureUseError from "../src/Errors/TemplateContentPrematureUseError.js";
 import { normalizeNewLines } from "./Util/normalizeNewLines.js";
-import eventBus from "../src/EventBus.js";
 
 import getNewTemplate from "./_getNewTemplateForTests.js";
 import { getRenderedTemplates as getRenderedTmpls, renderLayout, renderTemplate } from "./_getRenderedTemplates.js";
@@ -1794,7 +1793,8 @@ test("Make sure layout cache takes new changes during watch (liquid)", async (t)
 
   fs.writeFileSync(filePath, `alert("bye");`, "utf8");
 
-  eventBus.emit("eleventy.resourceModified", filePath);
+  // Trigger that the file has changed
+  tmpl.eleventyConfig.setPreviousBuildModifiedFile(filePath);
 
   t.is((await renderTemplate(tmpl, data)).trim(), '<script>alert("bye");</script>');
 });

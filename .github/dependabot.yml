@@ -12,5 +12,5 @@ updates:
     labels:
       - "dependency-updates"
     versioning-strategy: increase
-    ignore:
-      dependency-type: "development"
+    allow:
+      - dependency-type: "production"

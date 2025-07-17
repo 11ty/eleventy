@@ -9,8 +9,10 @@ export default class Markdown extends TemplateEngine {
 		this.markdownOptions = {};
 
 		this.setLibrary(this.config.libraryOverrides.md);
+	}
 
-		this.cacheable = true;
+	get cacheable() {
+		return true;
 	}
 
 	setLibrary(mdLib) {

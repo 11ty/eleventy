@@ -81,7 +81,6 @@ class TemplatePermalink {
 			// empty or false
 			return false;
 		}
-
 		let cleanLink = this._addDefaultLinkFilename(this.buildLink);
 		let parsed = path.parse(cleanLink);
 
@@ -184,8 +183,7 @@ class TemplatePermalink {
 			path =
 				(dir ? dir + "/" : "") +
 				(filenameNoExt !== "index" && !hasDupeFolder ? filenameNoExt + "/" : "") +
-				"index" +
-				".html";
+				"index.html";
 		} else {
 			path = (dir ? dir + "/" : "") + filenameNoExt + "." + fileExtension;
 		}

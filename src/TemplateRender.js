@@ -1,6 +1,5 @@
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import TemplateEngineManager from "./Engines/TemplateEngineManager.js";
-import CustomEngine from "./Engines/Custom.js";
 
 // import debugUtil from "debug";
 // const debug = debugUtil("Eleventy:TemplateRender");
@@ -8,7 +7,7 @@ import CustomEngine from "./Engines/Custom.js";
 class TemplateRenderUnknownEngineError extends EleventyBaseError {}
 
 // works with full path names or short engine name
-class TemplateRender {
+export default class TemplateRender {
 	#extensionMap;
 	#config;
 
@@ -167,7 +166,7 @@ class TemplateRender {
 
 	getReadableEnginesListDifferingFromFileExtension() {
 		let keyFromFilename = this.extensionMap.getKey(this.engineNameOrPath);
-		if (this.engine instanceof CustomEngine) {
+		if (this.engine?.constructor?.name === "CustomEngine") {
 			if (
 				this.engine.entry &&
 				this.engine.entry.name &&
@@ -289,5 +288,3 @@ class TemplateRender {
 		}
 	}
 }
-
-export default TemplateRender;

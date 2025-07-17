@@ -1,14 +1,12 @@
-import util from "node:util";
-import os from "node:os";
 import path from "node:path";
-import fs from "node:fs";
+import { statSync } from "node:fs";
 
 import lodash from "@11ty/lodash-custom";
-import { DateTime } from "luxon";
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
-import chalk from "kleur";
 
+import chalk from "./Adapters/Util/chalk.js";
+import { fromISOtoDateUTC } from "./Adapters/luxonDatetime.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import getDateFromGitLastUpdated from "./Util/DateGitLastUpdated.js";
 import getDateFromGitFirstAdded from "./Util/DateGitFirstAdded.js";
@@ -28,7 +26,6 @@ import TransformsUtil from "./Util/TransformsUtil.js";
 import { FileSystemManager } from "./Util/FileSystemManager.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
-const fsStat = util.promisify(fs.stat);
 
 const debug = debugUtil("Eleventy:Template");
 const debugDev = debugUtil("Dev:Eleventy:Template");
@@ -36,6 +33,7 @@ const debugDev = debugUtil("Dev:Eleventy:Template");
 class Template extends TemplateContent {
 	#logger;
 	#fsManager;
+	#stats;
 
 	constructor(templatePath, templateData, extensionMap, config) {
 		debugDev("new Template(%o)", templatePath);
@@ -134,7 +132,7 @@ class Template extends TemplateContent {
 		if (types.data) {
 			delete this._dataCache;
 			// delete this._usePermalinkRoot;
-			// delete this._stats;
+			// delete this.#stats;
 		}
 
 		if (types.render) {
@@ -167,7 +165,16 @@ class Template extends TemplateContent {
 	}
 
 	getTemplateSubfolder() {
-		return TemplatePath.stripLeadingSubPath(this.parsed.dir, this.inputDir);
+		let dir = TemplatePath.absolutePath(this.parsed.dir);
+		let inputDir = TemplatePath.absolutePath(this.inputDir);
+
+		// Browser virtual fs uses `/` root for absolute paths
+		// Fixed in @11ty/eleventy-utils@2.0.8 or newer (can remove this later)
+		if (inputDir === "/" && dir.startsWith("/")) {
+			return dir;
+		}
+
+		return TemplatePath.stripLeadingSubPath(dir, inputDir);
 	}
 
 	templateUsesLayouts(pageData) {
@@ -534,29 +541,43 @@ class Template extends TemplateContent {
 		});
 	}
 
+	async #renderComputedUnit(entry, data) {
+		if (typeof entry === "string") {
+			return this.renderComputedData(entry, data);
+		}
+
+		if (isPlainObject(entry)) {
+			for (let key in entry) {
+				entry[key] = await this.#renderComputedUnit(entry[key], data);
+			}
+		}
+
+		if (Array.isArray(entry)) {
+			for (let j = 0, k = entry.length; j < k; j++) {
+				entry[j] = await this.#renderComputedUnit(entry[j], data);
+			}
+		}
+
+		return entry;
+	}
+
 	_addComputedEntry(computedData, obj, parentKey, declaredDependencies) {
 		// this check must come before isPlainObject
 		if (typeof obj === "function") {
 			computedData.add(parentKey, obj, declaredDependencies);
-		} else if (Array.isArray(obj)) {
-			// Arrays are treated as one entry in the dependency graph now
+		} else if (Array.isArray(obj) || typeof obj === "string") {
+			// Arrays are treated as one entry in the dependency graph now, Issue #3728
 			computedData.addTemplateString(
 				parentKey,
 				async function (innerData) {
-					return Promise.all(
-						obj.map((entry) => {
-							if (typeof entry === "string") {
-								return this.tmpl.renderComputedData(entry, innerData);
-							}
-							return entry;
-						}),
-					);
+					return this.tmpl.#renderComputedUnit(obj, innerData);
 				},
 				declaredDependencies,
 				this.getParseForSymbolsFunction(obj),
 				this,
 			);
 		} else if (isPlainObject(obj)) {
+			// Arrays used to be computed here
 			for (let key in obj) {
 				let keys = [];
 				if (parentKey) {
@@ -565,16 +586,6 @@ class Template extends TemplateContent {
 				keys.push(key);
 				this._addComputedEntry(computedData, obj[key], keys.join("."), declaredDependencies);
 			}
-		} else if (typeof obj === "string") {
-			computedData.addTemplateString(
-				parentKey,
-				async function (innerData) {
-					return this.tmpl.renderComputedData(obj, innerData);
-				},
-				declaredDependencies,
-				this.getParseForSymbolsFunction(obj),
-				this,
-			);
 		} else {
 			// Numbers, booleans, etc
 			computedData.add(parentKey, obj, declaredDependencies);
@@ -872,11 +883,7 @@ class Template extends TemplateContent {
 		let templateBenchmarkDir = this.bench.get("Template make parent directory");
 		templateBenchmarkDir.before();
 
-		if (this.eleventyConfig.templateHandling?.writeMode === "async") {
-			await this.fsManager.createDirectoryForFile(outputPath);
-		} else {
-			this.fsManager.createDirectoryForFileSync(outputPath);
-		}
+		this.fsManager.createDirectoryForFileSync(outputPath);
 
 		templateBenchmarkDir.after();
 
@@ -889,11 +896,7 @@ class Template extends TemplateContent {
 		let templateBenchmark = this.bench.get("Template Write");
 		templateBenchmark.before();
 
-		if (this.eleventyConfig.templateHandling?.writeMode === "async") {
-			await this.fsManager.writeFile(outputPath, finalContent);
-		} else {
-			this.fsManager.writeFileSync(outputPath, finalContent);
-		}
+		this.fsManager.writeFileSync(outputPath, finalContent);
 
 		templateBenchmark.after();
 		this.writeCount++;
@@ -915,6 +918,11 @@ class Template extends TemplateContent {
 	}
 
 	async #renderPageEntryWithLayoutsAndTransforms(pageEntry) {
+		// Don’t run linters/transforms/layouts if we didn’t render (via incremental)!
+		if (pageEntry.template.isDryRun && pageEntry.template.isIncremental) {
+			return pageEntry.templateContent;
+		}
+
 		let content;
 		let layoutKey = pageEntry.data[this.config.keys.layout];
 		if (this.engine.useLayouts() && layoutKey) {
@@ -955,13 +963,13 @@ class Template extends TemplateContent {
 		for (let page of mapEntry._pages) {
 			let content;
 
-			// Note that behavior.render is overridden when using json or ndjson output
+			// Note that behavior.render is overridden when using json output
 			if (page.template.isRenderable()) {
 				// this reuses page.templateContent, it doesn’t render it
 				content = await page.template.renderPageEntry(page);
 			}
 
-			if (to === "json" || to === "ndjson") {
+			if (to === "json") {
 				let obj = {
 					url: page.url,
 					inputPath: page.inputPath,
@@ -972,12 +980,6 @@ class Template extends TemplateContent {
 
 				if (this.config.dataFilterSelectors?.size > 0) {
 					obj.data = this.retrieveDataForJsonOutput(page.data, this.config.dataFilterSelectors);
-				}
-
-				if (to === "ndjson") {
-					let jsonString = JSON.stringify(obj);
-					this.logger.toStream(jsonString + os.EOL);
-					continue;
 				}
 
 				// json
@@ -1037,17 +1039,17 @@ class Template extends TemplateContent {
 		return this.renderCount;
 	}
 
-	async getInputFileStat() {
+	getInputFileStat() {
 		// @cachedproperty
-		if (!this._stats) {
-			this._stats = fsStat(this.inputPath);
+		if (!this.#stats) {
+			this.#stats = statSync(this.inputPath);
 		}
 
-		return this._stats;
+		return this.#stats;
 	}
 
 	async _getDateInstance(key = "birthtimeMs") {
-		let stat = await this.getInputFileStat();
+		let stat = this.getInputFileStat();
 
 		// Issue 1823: https://github.com/11ty/eleventy/issues/1823
 		// return current Date in a Lambda
@@ -1103,6 +1105,12 @@ class Template extends TemplateContent {
 				return dateValue;
 			}
 
+			if (typeof dateValue !== "string") {
+				throw new Error(
+					`Data cascade value for \`date\` (${dateValue}) is invalid for ${this.inputPath}. Expected a JavaScript Date instance, luxon DateTime instance, or String value.`,
+				);
+			}
+
 			// special strings
 			if (!this.isVirtualTemplate()) {
 				if (dateValue.toLowerCase() === "git last modified") {
@@ -1132,24 +1140,14 @@ class Template extends TemplateContent {
 			}
 
 			// try to parse with Luxon
-			let date = DateTime.fromISO(dateValue, { zone: "utc" });
-			if (!date.isValid) {
-				throw new Error(
-					`Data cascade value for \`date\` (${dateValue}) is invalid for ${this.inputPath}`,
-				);
-			}
-			debug("getMappedDate: Luxon parsed %o: %o and %o", dateValue, date, date.toJSDate());
-
-			return date.toJSDate();
+			return fromISOtoDateUTC(dateValue, this.inputPath);
 		}
 
 		// No Date supplied in the Data Cascade, try to find the date in the file name
 		let filepathRegex = this.inputPath.match(/(\d{4}-\d{2}-\d{2})/);
 		if (filepathRegex !== null) {
 			// if multiple are found in the path, use the first one for the date
-			let dateObj = DateTime.fromISO(filepathRegex[1], {
-				zone: "utc",
-			}).toJSDate();
+			let dateObj = fromISOtoDateUTC(filepathRegex[1], this.inputPath);
 			debug(
 				"getMappedDate: using filename regex time for %o of %o: %o",
 				this.inputPath,

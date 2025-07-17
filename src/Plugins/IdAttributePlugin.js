@@ -1,9 +1,6 @@
 import matchHelper from "posthtml-match-helper";
 import { decodeHTML } from "entities";
 
-import slugifyFilter from "../Filters/Slugify.js";
-import MemoizeUtil from "../Util/MemoizeFunction.js";
-
 const POSTHTML_PLUGIN_NAME = "11ty/eleventy/id-attribute";
 
 function getTextNodeContent(node) {
@@ -30,7 +27,7 @@ function getTextNodeContent(node) {
 
 function IdAttributePlugin(eleventyConfig, options = {}) {
 	if (!options.slugify) {
-		options.slugify = MemoizeUtil(slugifyFilter);
+		options.slugify = eleventyConfig.getFilter("slugify");
 	}
 	if (!options.selector) {
 		options.selector = "[id],h1,h2,h3,h4,h5,h6";

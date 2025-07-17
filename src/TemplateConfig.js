@@ -1,8 +1,9 @@
-import fs from "node:fs";
-import chalk from "kleur";
+import { existsSync } from "node:fs";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
+import chalk from "./Adapters/Util/chalk.js";
+import getDefaultConfig from "./Adapters/Configuration/getDefaultConfig.js";
 import { EleventyImportRaw } from "./Util/Require.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import UserConfig from "./UserConfig.js";
@@ -50,6 +51,7 @@ class TemplateConfig {
 	#userConfig = new UserConfig();
 	#existsCache = new ExistsCache();
 	#usesGraph;
+	#previousBuildModifiedFile;
 
 	constructor(customRootConfig, projectConfigPath) {
 		/** @type {object} */
@@ -91,6 +93,27 @@ class TemplateConfig {
 
 		this.hasConfigMerged = false;
 		this.isEsm = false;
+
+		// Wire up exists API to user config
+		this.userConfig.exists = (filePath) => {
+			return this.existsCache.exists(filePath);
+		};
+
+		this.userConfig.events.on("eleventy#templateModified", (inputPath, metadata = {}) => {
+			// Might support multiple at some point
+			this.setPreviousBuildModifiedFile(inputPath, metadata);
+
+			// Issue #3569, set that this file exists in the cache
+			this.#existsCache.set(inputPath, true);
+		});
+	}
+
+	setPreviousBuildModifiedFile(inputPath, metadata = {}) {
+		this.#previousBuildModifiedFile = inputPath;
+	}
+
+	getPreviousBuildModifiedFile() {
+		return this.#previousBuildModifiedFile;
 	}
 
 	get userConfig() {
@@ -150,16 +173,16 @@ class TemplateConfig {
 	 */
 	getLocalProjectConfigFile() {
 		let configFiles = this.getLocalProjectConfigFiles();
-		// Add the configFiles[0] in case of a test, where no file exists on the file system
-		let configFile = configFiles.find((path) => path && fs.existsSync(path)) || configFiles[0];
+		let configFile = configFiles.find((path) => path && existsSync(path));
 		if (configFile) {
 			return configFile;
 		}
 	}
 
 	getLocalProjectConfigFiles() {
-		if (this.projectConfigPaths?.length > 0) {
-			return TemplatePath.addLeadingDotSlashArray(this.projectConfigPaths.filter((path) => path));
+		let paths = this.projectConfigPaths;
+		if (paths?.length > 0) {
+			return TemplatePath.addLeadingDotSlashArray(paths.filter((path) => Boolean(path)));
 		}
 		return [];
 	}
@@ -292,8 +315,7 @@ class TemplateConfig {
 	async initializeRootConfig() {
 		this.rootConfig = this.customRootConfig;
 		if (!this.rootConfig) {
-			let { default: cfg } = await import("./defaultConfig.js");
-			this.rootConfig = cfg;
+			this.rootConfig = await getDefaultConfig();
 		}
 
 		if (typeof this.rootConfig === "function") {
@@ -360,7 +382,7 @@ class TemplateConfig {
 		let localConfig = {};
 		let exportedConfig = {};
 
-		let path = this.projectConfigPaths.filter((path) => path).find((path) => fs.existsSync(path));
+		let path = this.projectConfigPaths.filter((path) => path).find((path) => existsSync(path));
 
 		if (this.projectConfigPaths.length > 0 && this.#configManuallyDefined && !path) {
 			throw new EleventyConfigError(
@@ -463,6 +485,16 @@ class TemplateConfig {
 			this.templateFormats.addViaConfig(this.userConfig.templateFormatsAdded);
 		}
 
+		// prefer Configuration API methods over return object
+		if (this.userConfig?.htmlTemplateEngine !== undefined) {
+			localConfig.htmlTemplateEngine = this.userConfig?.htmlTemplateEngine;
+		}
+
+		// prefer Configuration API methods over return object
+		if (this.userConfig?.markdownTemplateEngine !== undefined) {
+			localConfig.markdownTemplateEngine = this.userConfig?.markdownTemplateEngine;
+		}
+
 		let mergedConfig = Merge({}, this.rootConfig, localConfig);
 
 		// Setup a few properties for plugins:
@@ -523,6 +555,9 @@ class TemplateConfig {
 		return mergedConfig;
 	}
 
+	/**
+	 * @type {GlobalDependencyMap}
+	 */
 	get usesGraph() {
 		if (!this.#usesGraph) {
 			this.#usesGraph = new GlobalDependencyMap();
@@ -532,6 +567,9 @@ class TemplateConfig {
 		return this.#usesGraph;
 	}
 
+	/**
+	 * @type {GlobalDependencyMap}
+	 */
 	get uses() {
 		if (!this.usesGraph) {
 			throw new Error("The Eleventy Global Dependency Graph has not yet been initialized.");
@@ -539,6 +577,9 @@ class TemplateConfig {
 		return this.usesGraph;
 	}
 
+	/**
+	 * @type {ExistsCache}
+	 */
 	get existsCache() {
 		return this.#existsCache;
 	}

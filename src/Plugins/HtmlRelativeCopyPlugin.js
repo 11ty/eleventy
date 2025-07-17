@@ -1,7 +1,15 @@
 import { HtmlRelativeCopy } from "../Util/HtmlRelativeCopy.js";
 
+// https://github.com/11ty/eleventy/pull/3573
+
 // one HtmlRelativeCopy instance per entry
 function init(eleventyConfig, options) {
+	if (!eleventyConfig.htmlTransformer) {
+		throw new Error(
+			"html-relative Passthrough Copy requires eleventyConfig.htmlTransformer support. Are you using the `@11ty/client` bundle? If so, try the `@11ty/client/eleventy` bundle instead.",
+		);
+	}
+
 	let opts = Object.assign(
 		{
 			extensions: "html",

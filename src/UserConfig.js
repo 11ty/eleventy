@@ -1,22 +1,15 @@
-import chalk from "kleur";
-import { DateTime } from "luxon";
-import yaml from "js-yaml";
-import matter from "gray-matter";
 import debugUtil from "debug";
 
 import { DeepCopy, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
-import HtmlBasePlugin from "./Plugins/HtmlBasePlugin.js";
-import RenderPlugin from "./Plugins/RenderPlugin.js";
-import InputPathToUrlPlugin from "./Plugins/InputPathToUrl.js";
-
+import chalk from "./Adapters/Util/chalk.js";
+import { resolvePlugin } from "./Adapters/Configuration/ResolvePlugin.js";
 import isAsyncFunction from "./Util/IsAsyncFunction.js";
 import objectFilter from "./Util/Objects/ObjectFilter.js";
 import EventEmitter from "./Util/AsyncEventEmitter.js";
 import EleventyCompatibility from "./Util/Compatibility.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import BenchmarkManager from "./Benchmark/BenchmarkManager.js";
-import JavaScriptFrontMatter from "./Engines/FrontMatter/JavaScript.js";
 import { augmentFunction } from "./Engines/Util/ContextAugmenter.js";
 
 const debug = debugUtil("Eleventy:UserConfig");
@@ -47,6 +40,7 @@ class UserConfig {
 		this.additionalWatchTargets = [];
 		this.watchTargetsConfigReset = new Set();
 		this.extensionMap = new Set();
+		this.extensionMapClasses = {};
 		this.dataExtensions = new Map();
 		this.urlTransforms = [];
 		this.customDateParsingCallbacks = new Set();
@@ -63,11 +57,16 @@ class UserConfig {
 		this.pathPrefix;
 		/** @type {object} */
 		this.errorReporting = {};
-		/** @type {object} */
-		this.templateHandling = {};
 
 		this.reset();
 		this.#uniqueId = Math.random();
+	}
+
+	// this.DateTime removed in v4
+	get DateTime() {
+		throw new Error(
+			'Luxon’s DateTime property in configuration was removed in Eleventy v4. Please `import { DateTime } from "luxon"` directly.',
+		);
 	}
 
 	// Internally used in TemplateContent for cache keys
@@ -124,6 +123,7 @@ class UserConfig {
 			// `dev: true` gives us better error messaging
 			environmentOptions: { dev: true },
 			precompiledTemplates: {},
+			loaders: [],
 			filters: {},
 			asyncFilters: {},
 			tags: {},
@@ -163,19 +163,19 @@ class UserConfig {
 		this.preprocessors = {};
 
 		this.activeNamespace = "";
-		this.DateTime = DateTime;
 		this.dynamicPermalinks = true;
 
 		this.useGitIgnore = true;
 
 		let defaultIgnores = new Set();
 		defaultIgnores.add("**/node_modules/**");
-		defaultIgnores.add(".git/**");
+		defaultIgnores.add(".git/**"); // TODO `**/.git/**`
 		this.ignores = new Set(defaultIgnores);
 		this.watchIgnores = new Set(defaultIgnores);
 
 		this.dataDeepMerge = true;
 		this.extensionMap = new Set();
+		this.extensionMapClasses = {};
 		/** @type {object} */
 		this.extensionConflictMap = {};
 		this.watchJavaScriptDependencies = true;
@@ -209,29 +209,8 @@ class UserConfig {
 		this.dataFileDirBaseNameOverride = false;
 
 		/** @type {object} */
-		this.frontMatterParsingOptions = {
-			// Set a project-wide default.
-			// language: "yaml",
-
-			// Supplementary engines
-			engines: {
-				yaml: yaml.load.bind(yaml),
-
-				// Backwards compatible with `js` object front matter
-				// https://github.com/11ty/eleventy/issues/2819
-				javascript: JavaScriptFrontMatter,
-
-				// Needed for fallback behavior in the new `javascript` engine
-				// @ts-ignore
-				jsLegacy: matter.engines.javascript,
-
-				node: function () {
-					throw new Error(
-						"The `node` front matter type was a 3.0.0-alpha.x only feature, removed for stable release. Rename to `js` or `javascript` instead!",
-					);
-				},
-			},
-		};
+		// Moved into TemplateContent->getFrontMatterParsingOptions
+		this.frontMatterParsingOptions = {};
 
 		/** @type {object} */
 		this.virtualTemplates = {};
@@ -240,8 +219,6 @@ class UserConfig {
 
 		/** @type {object} */
 		this.errorReporting = {};
-		/** @type {object} */
-		this.templateHandling = {};
 
 		// Before using os.availableParallelism(); see https://github.com/11ty/eleventy/issues/3596
 		this.#concurrency = 1;
@@ -365,6 +342,14 @@ class UserConfig {
 	// https://github.com/11ty/eleventy/blob/master/docs/engines/markdown.md#use-your-own-options
 	addMarkdownHighlighter(highlightFn) {
 		this.markdownHighlighter = highlightFn;
+	}
+
+	setMarkdownTemplateEngine(engineName) {
+		this.markdownTemplateEngine = engineName;
+	}
+
+	setHtmlTemplateEngine(engineName) {
+		this.htmlTemplateEngine = engineName;
 	}
 
 	/*
@@ -685,31 +670,7 @@ class UserConfig {
 
 	/** @param {string} name */
 	resolvePlugin(name) {
-		let filenameLookup = {
-			"@11ty/eleventy/html-base-plugin": HtmlBasePlugin,
-			"@11ty/eleventy/render-plugin": RenderPlugin,
-			"@11ty/eleventy/inputpath-to-url-plugin": InputPathToUrlPlugin,
-
-			// Async plugins:
-			// requires e.g. `await resolvePlugin("@11ty/eleventy/i18n-plugin")` to avoid preloading i18n dependencies.
-			// see https://github.com/11ty/eleventy-plugin-rss/issues/52
-			"@11ty/eleventy/i18n-plugin": "./Plugins/I18nPlugin.js",
-		};
-
-		if (!filenameLookup[name]) {
-			throw new Error(
-				`Invalid name "${name}" passed to resolvePlugin. Valid options: ${Object.keys(filenameLookup).join(", ")}`,
-			);
-		}
-
-		// Future improvement: add support for any npm package name?
-		if (typeof filenameLookup[name] === "string") {
-			// returns promise
-			return import(filenameLookup[name]).then((plugin) => plugin.default);
-		}
-
-		// return reference
-		return filenameLookup[name];
+		return resolvePlugin(name);
 	}
 
 	/** @param {string|PluginDefinition} plugin */
@@ -722,6 +683,13 @@ class UserConfig {
 		}
 
 		return this.plugins.some((entry) => this._getPluginName(entry.plugin) === pluginName);
+	}
+
+	addNunjucksLoader(options) {
+		if (!isPlainObject(options)) {
+			throw new Error("addNunjucksLoader expects an object literal argument.");
+		}
+		this.nunjucks.loaders.push(options);
 	}
 
 	// Using Function.name https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name#examples
@@ -763,7 +731,7 @@ class UserConfig {
 			pluginBenchmark.after();
 		} else {
 			throw new UserConfigError(
-				"Invalid EleventyConfig.addPlugin signature. Should be a function or a valid Eleventy plugin object.",
+				"Invalid eleventyConfig.addPlugin() signature. Should be a function or a valid Eleventy plugin object.",
 			);
 		}
 		return ret;
@@ -966,6 +934,17 @@ class UserConfig {
 		}
 
 		this.quietMode = !!quietMode;
+	}
+
+	addEngine(fileExtension, classInstance) {
+		if (Object.getPrototypeOf(classInstance).name !== "TemplateEngine") {
+			throw new Error(
+				`Instance of TemplateEngine expected. Received: ${Object.getPrototypeOf(classInstance).name} If you’re trying to create a custom template engine, please use the eleventyConfig.addExtension API.`,
+			);
+		}
+
+		// TODO check for conflicts
+		this.extensionMapClasses[fileExtension] = classInstance;
 	}
 
 	addExtension(fileExtension, options = {}) {
@@ -1194,8 +1173,8 @@ class UserConfig {
 	}
 
 	configureTemplateHandling(options = {}) {
-		// writeMode: "sync" // "async"
-		Object.assign(this.templateHandling, options);
+		// Was used for sync/async swapping on file write operations
+		throw new Error("Internal configuration API method `configureTemplateHandling` was removed.");
 	}
 
 	/*
@@ -1264,6 +1243,7 @@ class UserConfig {
 
 			// Nunjucks
 			nunjucksEnvironmentOptions: this.nunjucks.environmentOptions,
+			nunjucksLoaders: this.nunjucks.loaders,
 			nunjucksPrecompiledTemplates: this.nunjucks.precompiledTemplates,
 			nunjucksFilters: this.nunjucks.filters,
 			nunjucksAsyncFilters: this.nunjucks.asyncFilters,
@@ -1298,6 +1278,7 @@ class UserConfig {
 			frontMatterParsingOptions: this.frontMatterParsingOptions,
 			dataExtensions: this.dataExtensions,
 			extensionMap: this.extensionMap,
+			extensionMapClasses: this.extensionMapClasses,
 			quietMode: this.quietMode,
 			events: this.events,
 			benchmarkManager: this.benchmarkManager,
@@ -1313,7 +1294,6 @@ class UserConfig {
 			freezeReservedData: this.freezeReservedData,
 			customDateParsing: this.customDateParsingCallbacks,
 			errorReporting: this.errorReporting,
-			templateHandling: this.templateHandling,
 		};
 
 		if (Array.isArray(this.dataFileSuffixesOverride)) {
@@ -1324,6 +1304,8 @@ class UserConfig {
 		if (this.dataFileDirBaseNameOverride) {
 			obj.dataFileDirBaseNameOverride = this.dataFileDirBaseNameOverride;
 		}
+
+		// htmlTemplateEngine and markdownTemplateEngine are merged manually in TemplateConfig for config() ordering
 
 		return obj;
 	}

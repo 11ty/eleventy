@@ -28,14 +28,20 @@ Read our [Getting Started guide](https://www.11ty.dev/docs/getting-started/).
 ## Tests
 
 ```
-npm run test
+npm test
 ```
 
-- We use the [ava JavaScript test runner](https://github.com/avajs/ava) ([Assertions documentation](https://github.com/avajs/ava/blob/master/docs/03-assertions.md))
-- ℹ️ To keep tests fast, thou shalt try to avoid writing files in tests.
+We have a few test suites, for various reasons:
+
+- [ava JavaScript test runner](https://github.com/avajs/ava) ([assertions docs](https://github.com/avajs/ava/blob/main/docs/03-assertions.md)) (primary test suite in `test/`)
+- [Node.js Test runner](https://nodejs.org/api/test.html) (secondary test suite in `test_node/`)
+- [Vitest (in Browser Mode)](https://vitest.dev/guide/browser/) (client tests in `packages/client/test/`)
+- [Benchmark for Performance Regressions](https://github.com/11ty/eleventy-benchmark)
+
+These run in various environments:
+
 - [Continuous Integration on GitHub Actions](https://github.com/11ty/eleventy/actions/workflows/ci.yml)
 - [Code Coverage Statistics](https://github.com/11ty/eleventy/blob/master/docs/coverage.md)
-- [Benchmark for Performance Regressions](https://github.com/11ty/eleventy-benchmark)
 
 ## Community Roadmap
 

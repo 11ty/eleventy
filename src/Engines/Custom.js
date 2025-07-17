@@ -1,11 +1,5 @@
 import TemplateEngine from "./TemplateEngine.js";
 import getJavaScriptData from "../Util/GetJavaScriptData.js";
-import eventBus from "../EventBus.js";
-
-let lastModifiedFile = undefined;
-eventBus.on("eleventy.resourceModified", (path) => {
-	lastModifiedFile = path;
-});
 
 export default class CustomEngine extends TemplateEngine {
 	constructor(name, eleventyConfig) {
@@ -14,14 +8,7 @@ export default class CustomEngine extends TemplateEngine {
 		this.entry = this.getExtensionMapEntry();
 		this.needsInit = "init" in this.entry && typeof this.entry.init === "function";
 
-		this._defaultEngine = undefined;
-
-		// Enable cacheability for this template
-		if (this.entry?.compileOptions?.cache !== undefined) {
-			this.cacheable = this.entry.compileOptions.cache;
-		} else if (this.needsToReadFileContents()) {
-			this.cacheable = true;
-		}
+		this.setDefaultEngine(undefined);
 	}
 
 	getExtensionMapEntry() {
@@ -43,6 +30,19 @@ export default class CustomEngine extends TemplateEngine {
 
 	setDefaultEngine(defaultEngine) {
 		this._defaultEngine = defaultEngine;
+	}
+
+	get cacheable() {
+		// Enable cacheability for this template
+		if (this.entry?.compileOptions?.cache !== undefined) {
+			return this.entry.compileOptions.cache;
+		} else if (this.needsToReadFileContents()) {
+			return true;
+		} else if (this._defaultEngine?.cacheable !== undefined) {
+			return this._defaultEngine.cacheable;
+		}
+
+		return super.cacheable;
 	}
 
 	async getInstanceFromInputPath(inputPath) {
@@ -230,7 +230,7 @@ export default class CustomEngine extends TemplateEngine {
 		}
 
 		// TODO generalize this (look at JavaScript.js)
-		let fn = this.entry.compile.bind({
+		let compiledFn = this.entry.compile.bind({
 			config: this.config,
 			addDependencies: (from, toArray = []) => {
 				this.config.uses.addDependency(from, toArray);
@@ -239,11 +239,11 @@ export default class CustomEngine extends TemplateEngine {
 		})(str, inputPath);
 
 		// Support `undefined` to skip compile/render
-		if (fn) {
+		if (compiledFn) {
 			// Bind defaultRenderer to render function
-			if ("then" in fn && typeof fn.then === "function") {
+			if ("then" in compiledFn && typeof compiledFn.then === "function") {
 				// Promise, wait to bind
-				return fn.then((fn) => {
+				return compiledFn.then((fn) => {
 					if (typeof fn === "function") {
 						return fn.bind({
 							defaultRenderer: defaultCompilationFn,
@@ -251,14 +251,14 @@ export default class CustomEngine extends TemplateEngine {
 					}
 					return fn;
 				});
-			} else if ("bind" in fn && typeof fn.bind === "function") {
-				return fn.bind({
+			} else if ("bind" in compiledFn && typeof compiledFn.bind === "function") {
+				return compiledFn.bind({
 					defaultRenderer: defaultCompilationFn,
 				});
 			}
 		}
 
-		return fn;
+		return compiledFn;
 	}
 
 	get defaultTemplateFileExtension() {
@@ -283,9 +283,11 @@ export default class CustomEngine extends TemplateEngine {
 	}
 
 	getCompileCacheKey(str, inputPath) {
+		let lastModifiedFile = this.eleventyConfig.getPreviousBuildModifiedFile();
 		// Return this separately so we know whether or not to use the cached version
 		// but still return a key to cache this new render for next time
-		let useCache = !this.isFileRelevantTo(inputPath, lastModifiedFile, false);
+		let isRelevant = this.isFileRelevantTo(inputPath, lastModifiedFile, false);
+		let useCache = !isRelevant;
 
 		if (this.entry.compileOptions && "getCacheKey" in this.entry.compileOptions) {
 			if (typeof this.entry.compileOptions.getCacheKey !== "function") {

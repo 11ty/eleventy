@@ -1,7 +1,9 @@
-import fs from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import path from "node:path";
 import { TemplatePath } from "@11ty/eleventy-utils";
-import { isDynamicPattern } from "tinyglobby";
+import { isDynamicPattern } from "../Adapters/Util/GlobMatcher.js";
+
+import DirContains from "./DirContains.js";
 
 /* Directories internally should always use *nix forward slashes */
 class ProjectDirectories {
@@ -138,8 +140,8 @@ class ProjectDirectories {
 		// }
 
 		// Input has to exist (assumed glob if it does not exist)
-		let inputExists = fs.existsSync(dirOrFile);
-		let inputExistsAndIsDirectory = inputExists && fs.statSync(dirOrFile).isDirectory();
+		let inputExists = existsSync(dirOrFile);
+		let inputExistsAndIsDirectory = inputExists && statSync(dirOrFile).isDirectory();
 
 		if (inputExistsAndIsDirectory) {
 			// is not a file or glob
@@ -160,7 +162,7 @@ class ProjectDirectories {
 			// Explicit Eleventy option for inputDir
 			if (inputDir) {
 				// Changed in 3.0: must exist
-				if (!fs.existsSync(inputDir)) {
+				if (!existsSync(inputDir)) {
 					throw new Error("Directory must exist (via inputDir option to Eleventy constructor).");
 				}
 
@@ -251,6 +253,7 @@ class ProjectDirectories {
 
 	isTemplateFile(filePath) {
 		let inputPath = this.getInputPath(filePath);
+		// TODO use DirContains
 		if (this.layouts && inputPath.startsWith(this.layouts)) {
 			return false;
 		}
@@ -263,6 +266,7 @@ class ProjectDirectories {
 			}
 		}
 
+		// TODO use DirContains
 		return inputPath.startsWith(this.input);
 	}
 
@@ -309,11 +313,15 @@ class ProjectDirectories {
 	}
 
 	isFileInProjectFolder(filePath) {
-		return TemplatePath.absolutePath(filePath).startsWith(TemplatePath.getWorkingDir());
+		return DirContains(TemplatePath.getWorkingDir(), filePath);
 	}
 
 	isFileInOutputFolder(filePath) {
-		return TemplatePath.absolutePath(filePath).startsWith(TemplatePath.absolutePath(this.output));
+		return DirContains(this.output, filePath);
+	}
+
+	static getRelativeTo(targetPath, cwd) {
+		return path.relative(cwd, path.join(path.resolve("."), targetPath));
 	}
 
 	// Access the data without being able to set the data.

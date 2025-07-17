@@ -1,15 +1,5 @@
-import bundlePlugin from "@11ty/eleventy-plugin-bundle";
-
-import urlFilter from "./Filters/Url.js";
-import slugFilter from "./Filters/Slug.js";
-import slugifyFilter from "./Filters/Slugify.js";
-import getLocaleCollectionItem from "./Filters/GetLocaleCollectionItem.js";
-import getCollectionItemIndex from "./Filters/GetCollectionItemIndex.js";
-import { FilterPlugin as InputPathToUrlFilterPlugin } from "./Plugins/InputPathToUrl.js";
-import { HtmlTransformer } from "./Util/HtmlTransformer.js";
+import fullBundleDefaultConfig from "./Adapters/Configuration/getExtendedDefaultConfig.js";
 import TransformsUtil from "./Util/TransformsUtil.js";
-import MemoizeUtil from "./Util/MemoizeFunction.js";
-import { HtmlRelativeCopyPlugin } from "./Plugins/HtmlRelativeCopyPlugin.js";
 
 /**
  * @module 11ty/eleventy/defaultConfig
@@ -24,11 +14,15 @@ import { HtmlRelativeCopyPlugin } from "./Plugins/HtmlRelativeCopyPlugin.js";
 /**
  * @typedef {object} config
  * @property {addFilter} addFilter - Register a new global filter.
+ * @property {addPlugin} addPlugin - Execute or defer a plugin’s execution.
+ * @property {addTransform} addTransform - Add an Eleventy transform to postprocess template output
  */
 
 /**
  * @typedef {object} defaultConfig
  * @property {Array<string>} templateFormats - An array of accepted template formats.
+ * @property {Array<string>} dataFileSuffixes - Array of file suffixes for data files in the Data Cascade.
+ * @property {boolean} [dataFileDirBaseNameOverride=false] - Use index.* instead of dirname.* for Directory Data File names
  * @property {string} [pathPrefix='/'] - The directory under which all output files should be written to.
  * @property {string} [markdownTemplateEngine='liquid'] - Template engine to process markdown files with.
  * @property {string} [htmlTemplateEngine='liquid'] - Template engine to process html files with.
@@ -41,6 +35,7 @@ import { HtmlRelativeCopyPlugin } from "./Plugins/HtmlRelativeCopyPlugin.js";
  * @property {string} [keys.permalinkRoot='permalinkBypassOutputDir']
  * @property {string} [keys.engineOverride='templateEngineOverride']
  * @property {string} [keys.computed='eleventyComputed']
+ * @property {string} [keys.dataSchema='eleventyDataSchema']
  * @property {object} dir
  * @property {string} [dir.input='.']
  * @property {string} [dir.includes='_includes']
@@ -57,63 +52,12 @@ import { HtmlRelativeCopyPlugin } from "./Plugins/HtmlRelativeCopyPlugin.js";
  * @returns {defaultConfig}
  */
 export default function (config) {
-	let templateConfig = this;
-
-	// Used for the HTML <base>, InputPathToUrl, Image transform plugins
-	let ut = new HtmlTransformer();
-	ut.setUserConfig(config);
-
-	// This needs to be assigned before bundlePlugin is added below.
-	config.htmlTransformer = ut;
-
-	config.exists = (filePath) => {
-		return this.existsCache.exists(filePath);
-	};
-
-	// Remember: the transform added here runs before the `htmlTransformer` transform
-	config.addPlugin(bundlePlugin, {
-		bundles: false, // no default bundles included—must be opt-in.
-		immediate: true,
-	});
-
-	// Filter: Maps an input path to output URL
-	config.addPlugin(InputPathToUrlFilterPlugin, {
-		immediate: true,
-	});
-
-	let memoizeBench = config.benchmarkManager.get("Configuration");
-	config.addFilter("slug", MemoizeUtil(slugFilter, { name: "slug", bench: memoizeBench }));
-	config.addFilter("slugify", MemoizeUtil(slugifyFilter, { name: "slugify", bench: memoizeBench }));
-
-	// Deprecated, use HtmlBasePlugin instead.
-	// Adds a pathPrefix manually to a URL string
-	config.addFilter("url", function addPathPrefixFilter(url, pathPrefixOverride) {
-		let pathPrefix;
-		if (pathPrefixOverride && typeof pathPrefixOverride === "string") {
-			pathPrefix = pathPrefixOverride;
-		} else {
-			pathPrefix = templateConfig.getPathPrefix();
-		}
-
-		return urlFilter.call(this, url, pathPrefix);
-	});
+	// add extra config (not available in `@11ty/client` bundle)
+	fullBundleDefaultConfig.call(this, config);
 
 	config.addFilter("log", (input, ...messages) => {
 		console.log(input, ...messages);
 		return input;
-	});
-
-	config.addFilter("getCollectionItemIndex", function (collection, pageOverride) {
-		return getCollectionItemIndex.call(this, collection, pageOverride);
-	});
-	config.addFilter("getCollectionItem", function (collection, pageOverride, langCode) {
-		return getLocaleCollectionItem.call(this, config, collection, pageOverride, langCode, 0);
-	});
-	config.addFilter("getPreviousCollectionItem", function (collection, pageOverride, langCode) {
-		return getLocaleCollectionItem.call(this, config, collection, pageOverride, langCode, -1);
-	});
-	config.addFilter("getNextCollectionItem", function (collection, pageOverride, langCode) {
-		return getLocaleCollectionItem.call(this, config, collection, pageOverride, langCode, 1);
 	});
 
 	// Process arbitrary content with transforms
@@ -127,18 +71,9 @@ export default function (config) {
 		},
 	);
 
-	// Run the `htmlTransformer` transform
-	config.addTransform("@11ty/eleventy/html-transformer", async function (content) {
-		// Runs **AFTER** the bundle plugin transform (except: delayed bundles)
-		return ut.transformContent(this.outputPath, content, this);
-	});
-
-	// Requires user configuration, so must run as second-stage
-	config.addPlugin(HtmlRelativeCopyPlugin);
-
 	return {
 		templateFormats: ["liquid", "md", "njk", "html", "11ty.js"],
-		// if your site deploys to a subdirectory, change this
+		// to add a parent directory structure to URLs (not reflected on the file system), change this
 		pathPrefix: "/",
 		markdownTemplateEngine: "liquid",
 		htmlTemplateEngine: "liquid",
