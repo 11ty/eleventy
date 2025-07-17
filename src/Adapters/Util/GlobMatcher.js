@@ -1,7 +1,8 @@
+// picomatch costs ~50KB minified
 import picomatch from "picomatch";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
-function isGlobMatch(filepath, globs = [], options = undefined) {
+export function isGlobMatch(filepath, globs = [], options = undefined) {
 	if (!filepath || !Array.isArray(globs) || globs.length === 0) {
 		return false;
 	}
@@ -19,4 +20,8 @@ function isGlobMatch(filepath, globs = [], options = undefined) {
 	return picomatch.isMatch(inputPath, globs, opts);
 }
 
-export { isGlobMatch };
+// via tinyglobby
+export function isDynamicPattern(pattern) {
+	const s = picomatch.scan(pattern);
+	return s.isGlob || s.negated;
+}

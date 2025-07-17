@@ -392,7 +392,7 @@ test("Glob Watcher Files with Passthroughs", async (t) => {
 
   let { templateWriter: tw } = getTemplateWriterInstance(["njk", "png"], eleventyConfig);
 
-  t.deepEqual(tw.eleventyFiles.passthroughGlobs, ["./test/stubs/**/*.png"]);
+  t.deepEqual(tw.getPassthroughGlobs(), ["./test/stubs/**/*.png"]);
 });
 
 test("Pagination and TemplateContent", async (t) => {

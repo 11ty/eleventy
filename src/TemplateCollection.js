@@ -2,7 +2,7 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 
 import TemplateData from "./Data/TemplateData.js";
 import Sortable from "./Util/Objects/Sortable.js";
-import { isGlobMatch } from "./Util/GlobMatcher.js";
+import { isGlobMatch } from "./Adapters/Util/GlobMatcher.js";
 
 class TemplateCollection extends Sortable {
 	constructor() {

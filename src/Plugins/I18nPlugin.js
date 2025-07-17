@@ -154,7 +154,7 @@ function getLocaleUrlsMap(urlToInputPath, extensionMap, options = {}) {
 	return urlMap;
 }
 
-function eleventyI18nPlugin(eleventyConfig, opts = {}) {
+function I18nPlugin(eleventyConfig, opts = {}) {
 	let options = DeepCopy(
 		{
 			defaultLanguage: "",
@@ -304,14 +304,20 @@ function eleventyI18nPlugin(eleventyConfig, opts = {}) {
 
 export { Comparator, LangUtils };
 
-Object.defineProperty(eleventyI18nPlugin, "eleventyPackage", {
+Object.defineProperty(I18nPlugin, "eleventyPackage", {
 	value: "@11ty/eleventy/i18n-plugin",
 });
 
-Object.defineProperty(eleventyI18nPlugin, "eleventyPluginOptions", {
+Object.defineProperty(I18nPlugin, "eleventyPluginOptions", {
 	value: {
 		unique: true,
 	},
 });
 
-export default eleventyI18nPlugin;
+// CommonJS friendly exports on .default
+Object.assign(I18nPlugin, {
+	Comparator,
+	LangUtils,
+});
+
+export default I18nPlugin;

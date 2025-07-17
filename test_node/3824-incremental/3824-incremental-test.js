@@ -82,7 +82,7 @@ test(
 		});
 
 		for (let run of runs) {
-			// Windows needed this for Chokidar reasons
+			// Windows/Ubuntu needed this for Chokidar reasons
 			await new Promise((resolve) => setTimeout(resolve, 200));
 
 			fs.writeFileSync(FILE_CHANGING, run.input, "utf8");

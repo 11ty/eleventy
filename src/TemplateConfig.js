@@ -1,8 +1,9 @@
-import fs from "node:fs";
-import chalk from "kleur";
+import { existsSync } from "node:fs";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
+import chalk from "./Adapters/Util/chalk.js";
+import getDefaultConfig from "./Adapters/Configuration/getDefaultConfig.js";
 import { EleventyImportRaw } from "./Util/Require.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import UserConfig from "./UserConfig.js";
@@ -93,6 +94,11 @@ class TemplateConfig {
 		this.hasConfigMerged = false;
 		this.isEsm = false;
 
+		// Wire up exists API to user config
+		this.userConfig.exists = (filePath) => {
+			return this.existsCache.exists(filePath);
+		};
+
 		this.userConfig.events.on("eleventy#templateModified", (inputPath, metadata = {}) => {
 			// Might support multiple at some point
 			this.setPreviousBuildModifiedFile(inputPath, metadata);
@@ -167,8 +173,7 @@ class TemplateConfig {
 	 */
 	getLocalProjectConfigFile() {
 		let configFiles = this.getLocalProjectConfigFiles();
-
-		let configFile = configFiles.find((path) => path && fs.existsSync(path));
+		let configFile = configFiles.find((path) => path && existsSync(path));
 		if (configFile) {
 			return configFile;
 		}
@@ -310,8 +315,7 @@ class TemplateConfig {
 	async initializeRootConfig() {
 		this.rootConfig = this.customRootConfig;
 		if (!this.rootConfig) {
-			let { default: cfg } = await import("./defaultConfig.js");
-			this.rootConfig = cfg;
+			this.rootConfig = await getDefaultConfig();
 		}
 
 		if (typeof this.rootConfig === "function") {
@@ -378,7 +382,7 @@ class TemplateConfig {
 		let localConfig = {};
 		let exportedConfig = {};
 
-		let path = this.projectConfigPaths.filter((path) => path).find((path) => fs.existsSync(path));
+		let path = this.projectConfigPaths.filter((path) => path).find((path) => existsSync(path));
 
 		if (this.projectConfigPaths.length > 0 && this.#configManuallyDefined && !path) {
 			throw new EleventyConfigError(
@@ -481,6 +485,16 @@ class TemplateConfig {
 			this.templateFormats.addViaConfig(this.userConfig.templateFormatsAdded);
 		}
 
+		// prefer Configuration API methods over return object
+		if (this.userConfig?.htmlTemplateEngine !== undefined) {
+			localConfig.htmlTemplateEngine = this.userConfig?.htmlTemplateEngine;
+		}
+
+		// prefer Configuration API methods over return object
+		if (this.userConfig?.markdownTemplateEngine !== undefined) {
+			localConfig.markdownTemplateEngine = this.userConfig?.markdownTemplateEngine;
+		}
+
 		let mergedConfig = Merge({}, this.rootConfig, localConfig);
 
 		// Setup a few properties for plugins:
@@ -541,6 +555,9 @@ class TemplateConfig {
 		return mergedConfig;
 	}
 
+	/**
+	 * @type {GlobalDependencyMap}
+	 */
 	get usesGraph() {
 		if (!this.#usesGraph) {
 			this.#usesGraph = new GlobalDependencyMap();
@@ -550,6 +567,9 @@ class TemplateConfig {
 		return this.#usesGraph;
 	}
 
+	/**
+	 * @type {GlobalDependencyMap}
+	 */
 	get uses() {
 		if (!this.usesGraph) {
 			throw new Error("The Eleventy Global Dependency Graph has not yet been initialized.");
@@ -557,6 +577,9 @@ class TemplateConfig {
 		return this.usesGraph;
 	}
 
+	/**
+	 * @type {ExistsCache}
+	 */
 	get existsCache() {
 		return this.#existsCache;
 	}
