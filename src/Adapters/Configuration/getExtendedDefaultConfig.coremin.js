@@ -12,9 +12,13 @@ export default function (config) {
 	});
 
 	// Saves ~26KB (minified)
-	config.addFilter("slugify", () => {
-		throw new Error(
-			"The `slugify` filter is not included with the `@11ty/client` bundle. You can add it yourself via `eleventyConfig.addFilter()` or use the larger `@11ty/client/eleventy` bundle.",
-		);
+	// Differences from main bundle: async and not memoized
+	config.addAsyncFilter("slugify", async function (str, options = {}) {
+		return import("@sindresorhus/slugify")
+			.then((mod) => mod.default)
+			.then((slugify) => {
+				options.decamelize ??= false;
+				return slugify("" + str, options);
+			});
 	});
 }

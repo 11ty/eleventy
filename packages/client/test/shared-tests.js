@@ -88,4 +88,32 @@ export default function(Eleventy) {
 		assert.strictEqual(json[0].content.trim(), `<a href="/en/">Home</a>`);
 		assert.strictEqual(json[1].content.trim(), `<a href="/es/">Home</a>`);
 	});
+
+	// Careful, `@11ty/client` will resolve slugify via Vite instead of it bundled with the package
+	test("slugify Filter in Liquid", async () => {
+		let elev = new Eleventy({
+			config(eleventyConfig) {
+				eleventyConfig.addEngine("liquid", Liquid);
+				eleventyConfig.setTemplateFormats("liquid");
+				eleventyConfig.addTemplate("index.liquid", `{{ title | slugify }}`, { title: "This is a heading" });
+			}
+		});
+
+		let json = await elev.toJSON();
+		assert.strictEqual(json[0].content.trim(), `this-is-a-heading`);
+	});
+
+	// Careful, `@11ty/client` will resolve slugify via Vite instead of it bundled with the package
+	test("slugify Filter in Nunjucks", async () => {
+		let elev = new Eleventy({
+			config(eleventyConfig) {
+				eleventyConfig.addEngine("njk", Nunjucks);
+				eleventyConfig.setTemplateFormats("njk");
+				eleventyConfig.addTemplate("index.njk", `{{ title | slugify }}`, { title: "This is a heading" });
+			}
+		});
+
+		let json = await elev.toJSON();
+		assert.strictEqual(json[0].content.trim(), `this-is-a-heading`);
+	});
 }
