@@ -4,7 +4,6 @@ import { DeepCopy, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
 import chalk from "./Adapters/Util/chalk.js";
 import { resolvePlugin } from "./Adapters/Configuration/ResolvePlugin.js";
-import { DateTime } from "./Adapters/luxonDatetime.js";
 import isAsyncFunction from "./Util/IsAsyncFunction.js";
 import objectFilter from "./Util/Objects/ObjectFilter.js";
 import EventEmitter from "./Util/AsyncEventEmitter.js";
@@ -61,6 +60,13 @@ class UserConfig {
 
 		this.reset();
 		this.#uniqueId = Math.random();
+	}
+
+	// this.DateTime removed in v4
+	get DateTime() {
+		throw new Error(
+			'Luxon’s DateTime property in configuration was removed in Eleventy v4. Please `import { DateTime } from "luxon"` directly.',
+		);
 	}
 
 	// Internally used in TemplateContent for cache keys
@@ -157,7 +163,6 @@ class UserConfig {
 		this.preprocessors = {};
 
 		this.activeNamespace = "";
-		this.DateTime = DateTime;
 		this.dynamicPermalinks = true;
 
 		this.useGitIgnore = true;

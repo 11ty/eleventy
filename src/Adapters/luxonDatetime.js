@@ -15,5 +15,3 @@ export function fromISOtoDateUTC(dateValue, inputPath) {
 	debug("Luxon parsed %o: %o and %o", dateValue, date, date.toJSDate());
 	return date.toJSDate();
 }
-
-export { DateTime };
