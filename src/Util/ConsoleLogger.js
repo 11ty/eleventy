@@ -1,5 +1,5 @@
 import debugUtil from "debug";
-import chalk from "../Adapters/Util/chalk.js";
+import chalk from "../Adapters/Packages/chalk.js";
 
 const debug = debugUtil("Eleventy:Logger");
 

@@ -1,6 +1,6 @@
-import { EleventyLoadContent } from "../../Util/Require.js";
+import { EleventyLoadContent } from "./Require.js";
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import/with#browser_compatibility
-import eleventyPackageJson from "../../../package.json" with { type: "json" };
+import eleventyPackageJson from "../../package.json" with { type: "json" };
 
 // We *could* prune everything but `name`, `version`, and `type` here but esbuild will still bundle the entire package.json
 export { eleventyPackageJson };

@@ -8,7 +8,7 @@ const { port1, port2 } = new MessageChannel();
 // Fixes https://github.com/11ty/eleventy/issues/3270
 // ENV variable for https://github.com/11ty/eleventy/issues/3371
 if ("register" in module && !process?.env?.ELEVENTY_SKIP_ESM_RESOLVER) {
-	module.register("../../Util/EsmResolver.js", import.meta.url, {
+	module.register("./EsmResolver.js", import.meta.url, {
 		parentURL: import.meta.url,
 		data: {
 			port: port2,

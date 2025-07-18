@@ -5,7 +5,7 @@ import { DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import JavaScriptFrontMatter from "./Engines/FrontMatter/JavaScript.js";
-import { EOL } from "./Adapters/Util/NewLine.js";
+import { EOL } from "./Util/NewLineAdapter.js";
 import TemplateData from "./Data/TemplateData.js";
 import TemplateRender from "./TemplateRender.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";

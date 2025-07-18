@@ -1,5 +1,6 @@
 import path from "node:path";
 
+// TODO move this into package-bundler as a shim?
 // Thank you bare-url!
 // Apache-2.0 LICENSE https://github.com/holepunchto/bare-url/blob/main/LICENSE
 export function fileURLToPath(url) {

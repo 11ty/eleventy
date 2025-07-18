@@ -1,12 +1,8 @@
 import debugUtil from "debug";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
-import {
-	NunjucksLib,
-	Environment,
-	FileSystemLoader,
-	Template,
-} from "../Adapters/Engines/Libraries/Nunjucks.js";
+// Direct reference to avoid use of `browser` Nunjucks variant in bundles
+import { default as NunjucksLib, Environment, FileSystemLoader, Template } from "nunjucks/index.js";
 import TemplateEngine from "./TemplateEngine.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import { augmentObject } from "./Util/ContextAugmenter.js";

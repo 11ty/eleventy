@@ -1,6 +1,6 @@
 import test from "ava";
 
-import { isGlobMatch } from "../src/Adapters/Util/GlobMatcher.js";
+import { isGlobMatch } from "../src/Util/GlobMatcher.js";
 import Collection from "../src/TemplateCollection.js";
 import Sortable from "../src/Util/Objects/Sortable.js";
 

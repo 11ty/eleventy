@@ -1,4 +1,4 @@
-import { satisfies } from "../Adapters/Util/semver.js";
+import { satisfies } from "../Adapters/Packages/semver.js";
 import { getEleventyPackageJson, getWorkingProjectPackageJson } from "./ImportJsonSync.js";
 
 const pkg = getEleventyPackageJson();

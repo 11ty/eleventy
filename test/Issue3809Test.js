@@ -1,6 +1,6 @@
 import test from "ava";
 
-import { spawnAsync } from "../src/Adapters/Util/spawn.js";
+import { spawnAsync } from "../src/Util/spawn.js";
 
 test("#3809 parent directory for content, with global data files", async (t) => {
   let result = await spawnAsync(

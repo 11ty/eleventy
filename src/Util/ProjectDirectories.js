@@ -1,7 +1,7 @@
 import { existsSync, statSync } from "node:fs";
 import path from "node:path";
 import { TemplatePath } from "@11ty/eleventy-utils";
-import { isDynamicPattern } from "../Adapters/Util/GlobMatcher.js";
+import { isDynamicPattern } from "../Util/GlobMatcher.js";
 
 import DirContains from "./DirContains.js";
 

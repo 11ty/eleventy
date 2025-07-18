@@ -1,6 +1,6 @@
 import debugUtil from "debug";
 
-import { inspect } from "../Adapters/Util/inspect.js";
+import { inspect } from "../Adapters/Packages/inspect.js";
 import ConsoleLogger from "../Util/ConsoleLogger.js";
 import EleventyErrorUtil from "./EleventyErrorUtil.js";
 

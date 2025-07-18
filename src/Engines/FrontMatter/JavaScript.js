@@ -1,4 +1,4 @@
-import { RetrieveGlobals } from "../../Adapters/RetrieveGlobals.js";
+import { RetrieveGlobals } from "../../Util/RetrieveGlobals.js";
 
 // `javascript` Front Matter Type
 export default function (frontMatterCode, context = {}) {

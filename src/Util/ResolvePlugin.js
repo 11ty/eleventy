@@ -1,5 +1,5 @@
-import HtmlBasePlugin from "../../Plugins/HtmlBasePlugin.js";
-import InputPathToUrlPlugin from "../../Plugins/InputPathToUrl.js";
+import HtmlBasePlugin from "../Plugins/HtmlBasePlugin.js";
+import InputPathToUrlPlugin from "../Plugins/InputPathToUrl.js";
 
 export function resolvePlugin(name) {
 	let filenameLookup = {

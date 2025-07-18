@@ -38,7 +38,7 @@
   "bugs": "https://github.com/11ty/eleventy/issues",
   "homepage": "https://www.11ty.dev/",
   "devDependencies": {
-    "@11ty/package-bundler": "^0.3.0",
+    "@11ty/package-bundler": "^0.4.1",
     "@vitest/browser": "^3.2.4",
     "playwright": "^1.54.1",
     "vitest": "^3.2.4"

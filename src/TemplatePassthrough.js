@@ -4,8 +4,8 @@ import copy from "@11ty/recursive-copy";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
-import filesize from "./Adapters/Util/getFileSize.js";
-import { isDynamicPattern } from "./Adapters/Util/GlobMatcher.js";
+import filesize from "./Adapters/Packages/getFileSize.js";
+import { isDynamicPattern } from "./Util/GlobMatcher.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
 import ProjectDirectories from "./Util/ProjectDirectories.js";

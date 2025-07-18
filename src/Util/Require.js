@@ -2,9 +2,9 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
-import importer from "../Adapters/Util/importer.js";
-import { clearRequireCache } from "../Adapters/Util/require.js";
-import { port1 } from "../Adapters/Util/getEsmResolverPort.js";
+import importer from "./importer.js";
+import { clearRequireCache } from "../Util/RequireUtils.js";
+import { port1 } from "./EsmResolverPortAdapter.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import eventBus from "../EventBus.js";
 

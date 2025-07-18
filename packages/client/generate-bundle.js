@@ -15,12 +15,15 @@ await bundleClient("./src/BundleCore.js", "./dist/eleventy.core.js", {
 		// minify: true
 	},
 });
+
+// TODO add bundle sizes here
 console.log(`${PREFIX}Wrote dist/eleventy.core.js`);
 
 // Careful, this one is big!
 await bundleClient("./src/BundleEleventy.js", `./dist/eleventy.js`, {
 	name: `Eleventy v${pkg.version} (@11ty/client/eleventy Bundle)`,
 	moduleRoot: "../../",
+	adapterSuffixes: [".core.js"],
 	// Adds named export FileSystem for using the file system in other packages
 	fileSystemMode: "publish",
 });
@@ -36,6 +39,7 @@ await bundleClient(
 	{
 		name: `Eleventy v${pkg.version} (@11ty/client/liquid Engine Bundle)`,
 		moduleRoot: "../../",
+		adapterSuffixes: [".core.js"],
 	},
 );
 console.log(`${PREFIX}Wrote dist/formats/eleventy-liquid.js`);
@@ -56,6 +60,7 @@ await bundleClient(
 	{
 		name: `Eleventy v${pkg.version} (@11ty/client/md Engine Bundle)`,
 		moduleRoot: "../../",
+		adapterSuffixes: [".core.js"],
 	},
 );
 console.log(`${PREFIX}Wrote dist/formats/eleventy-markdown.js`);
@@ -66,6 +71,7 @@ await bundleClient(
 	{
 		name: `Eleventy v${pkg.version} (i18n Plugin)`,
 		moduleRoot: "../../",
+		adapterSuffixes: [".core.js"],
 	},
 );
 console.log(`${PREFIX}Wrote dist/plugins/eleventy-plugin-i18n.js`);

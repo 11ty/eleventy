@@ -3,7 +3,7 @@ import lodash from "@11ty/lodash-custom";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
-import { inspect } from "../Adapters/Util/inspect.js";
+import { inspect } from "../Adapters/Packages/inspect.js";
 import unique from "../Util/Objects/Unique.js";
 import TemplateGlob from "../TemplateGlob.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";

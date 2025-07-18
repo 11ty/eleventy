@@ -2,8 +2,8 @@ import debugUtil from "debug";
 
 import { DeepCopy, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 
-import chalk from "./Adapters/Util/chalk.js";
-import { resolvePlugin } from "./Adapters/Configuration/ResolvePlugin.js";
+import chalk from "./Adapters/Packages/chalk.js";
+import { resolvePlugin } from "./Util/ResolvePlugin.js";
 import isAsyncFunction from "./Util/IsAsyncFunction.js";
 import objectFilter from "./Util/Objects/ObjectFilter.js";
 import EventEmitter from "./Util/AsyncEventEmitter.js";

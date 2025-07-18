@@ -1,5 +1,5 @@
 import test from "ava";
-import JavaScriptDependencies from "../src/Adapters/JavaScriptDependencies.js";
+import JavaScriptDependencies from "../src/Util/JavaScriptDependencies.js";
 
 test("No node_modules", async (t) => {
   let deps = await JavaScriptDependencies.getDependencies([

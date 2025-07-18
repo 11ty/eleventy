@@ -2,8 +2,8 @@ import { existsSync } from "node:fs";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
-import chalk from "./Adapters/Util/chalk.js";
-import getDefaultConfig from "./Adapters/Configuration/getDefaultConfig.js";
+import chalk from "./Adapters/Packages/chalk.js";
+import getDefaultConfig from "./Adapters/getDefaultConfig.js";
 import { EleventyImportRaw } from "./Util/Require.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import UserConfig from "./UserConfig.js";

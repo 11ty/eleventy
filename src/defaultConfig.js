@@ -1,4 +1,4 @@
-import fullBundleDefaultConfig from "./Adapters/Configuration/getExtendedDefaultConfig.js";
+import fullBundleDefaultConfig from "./defaultConfigExtended.js";
 import TransformsUtil from "./Util/TransformsUtil.js";
 
 /**

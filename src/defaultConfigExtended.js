@@ -1,14 +1,14 @@
 import bundlePlugin from "@11ty/eleventy-plugin-bundle";
 import slugify from "@sindresorhus/slugify";
 
-import { HtmlTransformer } from "../../Util/HtmlTransformer.js";
-import { HtmlRelativeCopyPlugin } from "../../Plugins/HtmlRelativeCopyPlugin.js";
-import MemoizeUtil from "../../Util/MemoizeFunction.js";
+import { HtmlTransformer } from "./Util/HtmlTransformer.js";
+import { HtmlRelativeCopyPlugin } from "./Plugins/HtmlRelativeCopyPlugin.js";
+import MemoizeUtil from "./Util/MemoizeFunction.js";
 
-import urlFilter from "../../Filters/Url.js";
-import getLocaleCollectionItem from "../../Filters/GetLocaleCollectionItem.js";
-import getCollectionItemIndex from "../../Filters/GetCollectionItemIndex.js";
-import { FilterPlugin as InputPathToUrlFilterPlugin } from "../../Plugins/InputPathToUrl.js";
+import urlFilter from "./Filters/Url.js";
+import getLocaleCollectionItem from "./Filters/GetLocaleCollectionItem.js";
+import getCollectionItemIndex from "./Filters/GetCollectionItemIndex.js";
+import { FilterPlugin as InputPathToUrlFilterPlugin } from "./Plugins/InputPathToUrl.js";
 
 /**
  * @typedef {object} config

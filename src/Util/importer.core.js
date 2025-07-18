@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { importFromString } from "import-module-string";
 
-import { fileURLToPath } from "./url.core.js";
-import { EleventyLoadContent } from "../../Util/Require.js";
+import { fileURLToPath } from "../Adapters/Packages/url.js";
+import { EleventyLoadContent } from "./Require.js";
 
 export default function importer(relPath) {
 	let filePath = fileURLToPath(relPath);

@@ -1,7 +1,7 @@
 import { TemplatePath } from "@11ty/eleventy-utils";
 import { DepGraph } from "dependency-graph";
 
-import JavaScriptDependencies from "./Adapters/JavaScriptDependencies.js";
+import JavaScriptDependencies from "./Util/JavaScriptDependencies.js";
 import eventBus from "./EventBus.js";
 
 class EleventyWatchTargets {

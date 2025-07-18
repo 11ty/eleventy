@@ -3,7 +3,7 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import GlobRemap from "./Util/GlobRemap.js";
-import { isGlobMatch } from "./Adapters/Util/GlobMatcher.js";
+import { isGlobMatch } from "./Util/GlobMatcher.js";
 
 const debug = debugUtil("Eleventy:FileSystemSearch");
 

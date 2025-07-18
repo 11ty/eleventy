@@ -1,5 +1,5 @@
 import test from "ava";
-import { fromISOtoDateUTC as parse } from "../src/Adapters/luxonDatetime.js";
+import { fromISOtoDateUTC as parse } from "../src/Adapters/Packages/luxon.js";
 
 // https://moment.github.io/luxon/#/parsing?id=ad-hoc-parsing
 // ISO8601 date parsing https://github.com/11ty/eleventy/issues/3587

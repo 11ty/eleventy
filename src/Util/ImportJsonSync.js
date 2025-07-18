@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import debugUtil from "debug";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
-import { importJsonSync, eleventyPackageJson } from "../Adapters/Util/require.js";
+import { importJsonSync, eleventyPackageJson } from "./RequireUtils.js";
 
 const debug = debugUtil("Eleventy:ImportJsonSync");
 
