@@ -8,7 +8,7 @@ await bundleClient("./src/BundleCore.js", "./dist/eleventy.core.js", {
 	name: `Eleventy v${pkg.version} (@11ty/client Bundle)`,
 	moduleRoot: "../../",
 	// No core-bundled plugins, reduced feature set
-	adapterSuffixes: [".coremin.js", ".core.js"],
+	adapterSuffixes: [".client.js", ".core.js"],
 	external: ["node:fs", "node:crypto", "@sindresorhus/slugify"],
 	esbuild: {
 		keepNames: false,
