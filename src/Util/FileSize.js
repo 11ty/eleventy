@@ -1,8 +1,8 @@
 export function readableFileSize(bytes) {
 	// Uses kilobytes and not kibibytes
 	let entries = [
-		[10e6, "mB"],
-		[10e3, "kB"],
+		[1e6, "mB"],
+		[1e3, "kB"],
 	];
 	for (let [compare, suffix] of entries) {
 		if (Math.abs(bytes) >= compare) {
