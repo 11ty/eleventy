@@ -1,8 +1,14 @@
-// import fs from "node:fs";
+import fs from "node:fs";
 import { default as bundleClient } from "@11ty/package-bundler";
+
 import pkg from "../../package.json" with { type: "json" };
+import { readableFileSize } from "../../src/Util/FileSize.js";
 
 const PREFIX = `[11ty/bundle/client] `;
+
+function size(filepath) {
+	return readableFileSize(fs.statSync(filepath).size);
+}
 
 await bundleClient("./src/BundleCore.js", "./dist/eleventy.core.js", {
 	name: `Eleventy v${pkg.version} (@11ty/client Bundle)`,
@@ -16,8 +22,7 @@ await bundleClient("./src/BundleCore.js", "./dist/eleventy.core.js", {
 	},
 });
 
-// TODO add bundle sizes here
-console.log(`${PREFIX}Wrote dist/eleventy.core.js`);
+console.log(`${PREFIX}Wrote dist/eleventy.core.js: ${size("./dist/eleventy.core.js")}`);
 
 // Careful, this one is big!
 await bundleClient("./src/BundleEleventy.js", `./dist/eleventy.js`, {
@@ -27,7 +32,7 @@ await bundleClient("./src/BundleEleventy.js", `./dist/eleventy.js`, {
 	// Adds named export FileSystem for using the file system in other packages
 	fileSystemMode: "publish",
 });
-console.log(`${PREFIX}Wrote dist/eleventy.js`);
+console.log(`${PREFIX}Wrote dist/eleventy.js: ${size("./dist/eleventy.js")}`);
 
 // fs.mkdirSync("./visualize/", { recursive: true });
 // fs.writeFileSync("./visualize/meta.json", JSON.stringify(result.metafile));
@@ -42,7 +47,9 @@ await bundleClient(
 		adapterSuffixes: [".core.js"],
 	},
 );
-console.log(`${PREFIX}Wrote dist/formats/eleventy-liquid.js`);
+console.log(
+	`${PREFIX}Wrote dist/formats/eleventy-liquid.js: ${size("./dist/formats/eleventy-liquid.js")}`,
+);
 
 await bundleClient(
 	import.meta.resolve("./src/BundleNunjucks.js"),
@@ -52,7 +59,9 @@ await bundleClient(
 		moduleRoot: "../../",
 	},
 );
-console.log(`${PREFIX}Wrote dist/formats/eleventy-nunjucks.js`);
+console.log(
+	`${PREFIX}Wrote dist/formats/eleventy-nunjucks.js: ${size("./dist/formats/eleventy-nunjucks.js")}`,
+);
 
 await bundleClient(
 	import.meta.resolve("./src/BundleMarkdown.js"),
@@ -63,7 +72,9 @@ await bundleClient(
 		adapterSuffixes: [".core.js"],
 	},
 );
-console.log(`${PREFIX}Wrote dist/formats/eleventy-markdown.js`);
+console.log(
+	`${PREFIX}Wrote dist/formats/eleventy-markdown.js: ${size("./dist/formats/eleventy-markdown.js")}`,
+);
 
 await bundleClient(
 	import.meta.resolve("./src/BundleI18nPlugin.js"),
@@ -74,4 +85,6 @@ await bundleClient(
 		adapterSuffixes: [".core.js"],
 	},
 );
-console.log(`${PREFIX}Wrote dist/plugins/eleventy-plugin-i18n.js`);
+console.log(
+	`${PREFIX}Wrote dist/plugins/eleventy-plugin-i18n.js: ${size("./dist/plugins/eleventy-plugin-i18n.js")}`,
+);
