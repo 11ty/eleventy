@@ -4,7 +4,7 @@ import copy from "@11ty/recursive-copy";
 import { TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
-import filesize from "./Adapters/Packages/getFileSize.js";
+import { readableFileSize } from "./Util/FileSize.js";
 import { isDynamicPattern } from "./Util/GlobMatcher.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import checkPassthroughCopyBehavior from "./Util/PassthroughCopyBehaviorCheck.js";
@@ -285,9 +285,13 @@ class TemplatePassthrough {
 				fileCopyCount++;
 				fileSizeCount += copyOp.stats.size;
 				if (copyOp.stats.size > 5000000) {
-					debug(`Copied %o (⚠️ large) file from %o`, filesize(copyOp.stats.size), copyOp.src);
+					debug(
+						`Copied %o (⚠️ large) file from %o`,
+						readableFileSize(copyOp.stats.size),
+						copyOp.src,
+					);
 				} else {
-					debug(`Copied %o file from %o`, filesize(copyOp.stats.size), copyOp.src);
+					debug(`Copied %o file from %o`, readableFileSize(copyOp.stats.size), copyOp.src);
 				}
 				b.after();
 			})

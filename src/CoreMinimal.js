@@ -1,7 +1,6 @@
 import debugUtil from "debug";
 import { isPlainObject, TemplatePath } from "@11ty/eleventy-utils";
 
-import filesize from "./Adapters/Packages/getFileSize.js";
 import chalk from "./Adapters/Packages/chalk.js";
 
 import TemplateData from "./Data/TemplateData.js";
@@ -12,6 +11,7 @@ import TemplateConfig from "./TemplateConfig.js";
 import TemplateEngineManager from "./Engines/TemplateEngineManager.js";
 
 /* Utils */
+import { readableFileSize } from "./Util/FileSize.js";
 import simplePlural from "./Util/Pluralize.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import ProjectDirectories from "./Util/ProjectDirectories.js";
@@ -908,7 +908,7 @@ Open an issue: https://github.com/11ty/eleventy/issues/new`);
 		let slashRet = [];
 
 		if (copyCount) {
-			debug("Total passthrough copy aggregate size: %o", filesize(copySize));
+			debug("Total passthrough copy aggregate size: %o", readableFileSize(copySize));
 			slashRet.push(`Copied ${chalk.bold(copyCount)}`);
 		}
 
