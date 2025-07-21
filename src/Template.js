@@ -6,7 +6,6 @@ import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import chalk from "./Adapters/Packages/chalk.js";
-import { fromISOtoDateUTC } from "./Adapters/Packages/luxon.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import getDateFromGitLastUpdated from "./Util/DateGitLastUpdated.js";
 import getDateFromGitFirstAdded from "./Util/DateGitFirstAdded.js";
@@ -21,6 +20,7 @@ import TemplateBehavior from "./TemplateBehavior.js";
 import TemplateContentPrematureUseError from "./Errors/TemplateContentPrematureUseError.js";
 import TemplateContentUnrenderedTemplateError from "./Errors/TemplateContentUnrenderedTemplateError.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
+import { fromISOtoDateUTC } from "./Util/DateParse.js";
 import ReservedData from "./Util/ReservedData.js";
 import TransformsUtil from "./Util/TransformsUtil.js";
 import { FileSystemManager } from "./Util/FileSystemManager.js";
@@ -1094,7 +1094,7 @@ class Template extends TemplateContent {
 		if (dateValue) {
 			debug("getMappedDate: using a date in the data for %o of %o", this.inputPath, data.date);
 			if (dateValue?.constructor?.name === "DateTime") {
-				// YAML does its own date parsing
+				// a luxon instance
 				debug("getMappedDate: found DateTime instance: %o", dateValue);
 				return dateValue.toJSDate();
 			}
