@@ -139,7 +139,7 @@
 		"@11ty/eleventy-utils": "^2.0.7",
 		"@11ty/gray-matter": "^2.0.0",
 		"@11ty/lodash-custom": "^4.17.21",
-		"@11ty/parse-date-strings": "^1.0.0",
+		"@11ty/parse-date-strings": "^2.0.0",
 		"@11ty/posthtml-urls": "^1.0.1",
 		"@11ty/recursive-copy": "^4.0.2",
 		"@sindresorhus/slugify": "^2.2.1",
