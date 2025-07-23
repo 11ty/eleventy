@@ -949,8 +949,8 @@ class Template extends TemplateContent {
 	}
 
 	retrieveDataForJsonOutput(data, selectors) {
-               // if "*" is in the selectors, return all data unfiltered.
-               if (selectors.includes("*")) { return data }
+		// if "*" is in the selectors, return all data unfiltered.
+		if (selectors.includes("*")) { return data }
 
 		let filtered = {};
 		for (let selector of selectors) {
