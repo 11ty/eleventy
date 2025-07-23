@@ -939,7 +939,7 @@ class Template extends TemplateContent {
 	}
 
 	async renderPageEntry(pageEntry) {
-		// @cachedproperty
+ 		// @cachedproperty
 		if (!pageEntry.template._cacheRenderedTransformsAndLayoutsPromise) {
 			pageEntry.template._cacheRenderedTransformsAndLayoutsPromise =
 				this.#renderPageEntryWithLayoutsAndTransforms(pageEntry);
@@ -949,6 +949,9 @@ class Template extends TemplateContent {
 	}
 
 	retrieveDataForJsonOutput(data, selectors) {
+		// if "*" is in the selectors, return all data unfiltered.
+		if (selectors.includes("*")) { return data }
+
 		let filtered = {};
 		for (let selector of selectors) {
 			let value = lodashGet(data, selector);
