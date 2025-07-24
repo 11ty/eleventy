@@ -1257,7 +1257,7 @@ Arguments:
 			await watchRun(path);
 		});
 
-		watcher.on("unlink", (path) => {
+		watcher.on("unlink", async (path) => {
 			this.logger.forceLog(`File deleted: ${TemplatePath.standardizeFilePath(path)}`);
 			this.fileSystemSearch.delete(path);
 			await watchRun(path);
