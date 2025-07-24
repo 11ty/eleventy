@@ -60,9 +60,10 @@ export class MinimalCore {
 	#errorHandler;
 	/** @type {Map} */
 	#privateCaches = new Map();
-
 	/** @type {boolean|undefined} */
 	#isEsm;
+	/** @type {string} */
+	#activeConfigurationPath;
 
 	// Support both new Eleventy(options) and new Eleventy(input, output, options)
 	#normalizeConstructorArguments(...args) {
@@ -243,6 +244,9 @@ export class MinimalCore {
 		} else if (this.configPath) {
 			await this.eleventyConfig.setProjectConfigPath(this.configPath);
 		}
+
+		this.#activeConfigurationPath =
+			this.configPath ?? this.eleventyConfig.getLocalProjectConfigFile();
 
 		this.eleventyConfig.setRunMode(this.runMode);
 		this.eleventyConfig.setProjectUsingEsm(this.isEsm);
@@ -512,9 +516,8 @@ Verbose Output: ${this.verboseMode}`;
 			runMode: this.runMode,
 		};
 
-		let configPath = this.eleventyConfig.getLocalProjectConfigFile();
-		if (configPath) {
-			values.config = TemplatePath.absolutePath(configPath);
+		if (this.#activeConfigurationPath) {
+			values.config = TemplatePath.absolutePath(this.#activeConfigurationPath);
 		}
 
 		// Fixed: instead of configuration directory, explicit root or working directory
@@ -936,6 +939,10 @@ Open an issue: https://github.com/11ty/eleventy/issues/new`);
 			ret.push(`(${((time * 1000) / writeCount).toFixed(1)}ms each, v${pkg.version})`);
 		} else {
 			ret.push(`(v${MinimalCore.getVersion()})`);
+		}
+
+		if (!this.#activeConfigurationPath) {
+			ret.push("(no config file)");
 		}
 
 		return ret.join(" ");
