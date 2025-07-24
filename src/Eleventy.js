@@ -290,6 +290,8 @@ export default class Eleventy extends Core {
 		benchmark.before();
 		await this.#initWatchDependencies();
 		benchmark.after();
+
+		eventBus.on("eleventyDevServer.rebuild", async () => await this._watch());
 	}
 
 	/**
