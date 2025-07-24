@@ -14,8 +14,6 @@ class ConsoleLogger {
 	#isChalkEnabled = true;
 	/** @type {object|boolean|undefined} */
 	#logger;
-	/** @type {object|undefined} */
-	#outputStream;
 
 	constructor() {}
 
