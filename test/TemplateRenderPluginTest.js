@@ -290,12 +290,12 @@ test("Use page in renderTemplate (njk in liquid)", async (t) => {
 
 test("Use eleventy in renderTemplate (njk in liquid)", async (t) => {
   let html = await getTestOutputForFile("./test/stubs-render-plugin/njk-eleventy.liquid");
-  t.true(html.startsWith("3.0."));
+  t.true(html.startsWith("4."));
 });
 
 test("Use eleventy in renderTemplate (liquid in njk)", async (t) => {
   let html = await getTestOutputForFile("./test/stubs-render-plugin/liquid-eleventy.njk");
-  t.true(html.startsWith("3.0."));
+  t.true(html.startsWith("4."));
 });
 test.skip("Use nunjucks in liquid (access to all global data)", async (t) => {
   let html = await getTestOutputForFile("./test/stubs-render-plugin/nunjucks-global.liquid");
@@ -312,4 +312,12 @@ test("renderContent filter #3369 #3370 via renderTemplate (njk)", async (t) => {
     eleventyConfig.addShortcode("test", () => "test content")
   });
   t.is(html, "test content");
+});
+
+test("#3368 #3810 config init bug with RenderManager", async (t) => {
+  let elev = new Eleventy("./test/stubs-3810/", false, {
+    configPath: "./test/stubs-3810/eleventy.config.js",
+  });
+  let results = await elev.toJSON();
+  t.is(results[0].content, `<h1>Sign up for our newsletter!</h1>`);
 });

@@ -1,6 +1,5 @@
-import { Readable } from "node:stream";
-import chalk from "kleur";
 import debugUtil from "debug";
+import chalk from "../Adapters/Packages/chalk.js";
 
 const debug = debugUtil("Eleventy:Logger");
 
@@ -16,10 +15,13 @@ class ConsoleLogger {
 	/** @type {object|boolean|undefined} */
 	#logger;
 
-	constructor() {
-		this.outputStream = new Readable({
-			read() {},
-		});
+	constructor() {}
+
+	isLoggingEnabled() {
+		if (!this.isVerbose || process.env.DEBUG) {
+			return true;
+		}
+		return this.#logger !== false;
 	}
 
 	get isVerbose() {
@@ -71,7 +73,7 @@ class ConsoleLogger {
 
 	/** @param {string} msg */
 	info(msg) {
-		this.message(msg, "warn", "blue");
+		this.message(msg, "log", "blue");
 	}
 
 	/** @param {string} msg */
@@ -82,16 +84,6 @@ class ConsoleLogger {
 	/** @param {string} msg */
 	error(msg) {
 		this.message(msg, "error", "red");
-	}
-
-	/** @param {string} msg */
-	toStream(msg) {
-		this.outputStream.push(msg);
-	}
-
-	closeStream() {
-		this.outputStream.push(null);
-		return this.outputStream;
 	}
 
 	/**

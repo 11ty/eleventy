@@ -13,8 +13,6 @@ export default class JavaScript extends TemplateEngine {
 		super(name, templateConfig);
 		this.instances = {};
 
-		this.cacheable = false;
-
 		this.config.events.on("eleventy#templateModified", (inputPath, metadata = {}) => {
 			let { usedByDependants, relevantLayouts } = metadata;
 			// Remove from cached instances when modified
@@ -29,6 +27,10 @@ export default class JavaScript extends TemplateEngine {
 				}
 			}
 		});
+	}
+
+	get cacheable() {
+		return false;
 	}
 
 	normalize(result) {
@@ -92,8 +94,9 @@ export default class JavaScript extends TemplateEngine {
 			mod = this.eleventyConfig.userConfig.virtualTemplates[relativeInputPath].content;
 		} else {
 			let isEsm = this.eleventyConfig.getIsProjectUsingEsm();
+			let cacheBust = !this.cacheable || !this.config.useTemplateCache;
 			mod = await EleventyImport(inputPath, isEsm ? "esm" : "cjs", {
-				cacheBust: !this.config.useTemplateCache,
+				cacheBust,
 			});
 		}
 

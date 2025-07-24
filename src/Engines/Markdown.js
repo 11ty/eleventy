@@ -9,8 +9,10 @@ export default class Markdown extends TemplateEngine {
 		this.markdownOptions = {};
 
 		this.setLibrary(this.config.libraryOverrides.md);
+	}
 
-		this.cacheable = true;
+	get cacheable() {
+		return true;
 	}
 
 	setLibrary(mdLib) {
@@ -29,7 +31,7 @@ export default class Markdown extends TemplateEngine {
 			this.mdLib.disable("code");
 		}
 
-		this.setEngineLib(this.mdLib);
+		this.setEngineLib(this.mdLib, Boolean(this.config.libraryOverrides.md));
 	}
 
 	setMarkdownOptions(options) {

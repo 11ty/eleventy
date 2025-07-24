@@ -1,11 +1,11 @@
-import os from "node:os";
-
-import fs from "node:fs";
-import matter from "gray-matter";
+import { readFileSync } from "node:fs";
+import matter from "@11ty/gray-matter";
 import lodash from "@11ty/lodash-custom";
-import { TemplatePath } from "@11ty/eleventy-utils";
+import { DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
+import JavaScriptFrontMatter from "./Engines/FrontMatter/JavaScript.js";
+import { EOL } from "./Util/NewLineAdapter.js";
 import TemplateData from "./Data/TemplateData.js";
 import TemplateRender from "./TemplateRender.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
@@ -23,10 +23,13 @@ class TemplateContentCompileError extends EleventyBaseError {}
 class TemplateContentRenderError extends EleventyBaseError {}
 
 class TemplateContent {
+	#initialized = false;
 	#config;
 	#templateRender;
+	#preprocessorEngine;
 	#extensionMap;
 	#configOptions;
+	#frontMatterOptions;
 
 	constructor(inputPath, templateConfig) {
 		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
@@ -34,6 +37,23 @@ class TemplateContent {
 		}
 		this.eleventyConfig = templateConfig;
 		this.inputPath = inputPath;
+	}
+
+	async asyncTemplateInitialization() {
+		if (!this.hasTemplateRender()) {
+			await this.getTemplateRender();
+		}
+
+		if (this.#initialized) {
+			return;
+		}
+		this.#initialized = true;
+
+		let preprocessorEngineName = this.templateRender.getPreprocessorEngineName();
+		if (preprocessorEngineName && this.templateRender.engine.getName() !== preprocessorEngineName) {
+			let engine = await this.templateRender.getEngineByName(preprocessorEngineName);
+			this.#preprocessorEngine = engine;
+		}
 	}
 
 	resetCachedTemplate({ eleventyConfig }) {
@@ -189,6 +209,39 @@ class TemplateContent {
 		return this.config.virtualTemplates[inputDirRelativeInputPath];
 	}
 
+	getFrontMatterParsingOptions() {
+		if (!this.#frontMatterOptions) {
+			this.#frontMatterOptions = DeepCopy(
+				{
+					// Set a project-wide default.
+					// language: "yaml",
+
+					// Supplementary engines
+					engines: {
+						// Moved to a fork of gray-matter to modernize to js-yaml@4 internally
+						// yaml: yaml.load.bind(yaml),
+
+						// Backwards compatible with `js` object front matter
+						// https://github.com/11ty/eleventy/issues/2819
+						javascript: JavaScriptFrontMatter,
+
+						// Upstream `js` was removed in @11ty/gray-matter@2
+						js: JavaScriptFrontMatter,
+
+						node: function () {
+							throw new Error(
+								"The `node` front matter type was a 3.0.0-alpha.x only feature, removed for stable release. Rename to `js` or `javascript` instead!",
+							);
+						},
+					},
+				},
+				this.config.frontMatterParsingOptions,
+			);
+		}
+
+		return this.#frontMatterOptions;
+	}
+
 	async #read() {
 		let content = await this.inputContent;
 
@@ -201,7 +254,7 @@ class TemplateContent {
 				};
 			}
 
-			let options = this.config.frontMatterParsingOptions || {};
+			let options = this.getFrontMatterParsingOptions();
 			let fm;
 			try {
 				// Added in 3.0, passed along to front matter engines
@@ -214,11 +267,15 @@ class TemplateContent {
 				);
 			}
 
+			if (typeof fm.data?.then === "function") {
+				fm.data = await fm.data;
+			}
+
 			if (options.excerpt && fm.excerpt) {
 				let excerptString = fm.excerpt + (options.excerpt_separator || "---");
-				if (fm.content.startsWith(excerptString + os.EOL)) {
+				if (fm.content.startsWith(excerptString + EOL)) {
 					// with an os-specific newline after excerpt separator
-					fm.content = fm.excerpt.trim() + "\n" + fm.content.slice((excerptString + os.EOL).length);
+					fm.content = fm.excerpt.trim() + "\n" + fm.content.slice((excerptString + EOL).length);
 				} else if (fm.content.startsWith(excerptString + "\n")) {
 					// with a newline (\n) after excerpt separator
 					// This is necessary for some git configurations on windows
@@ -311,7 +368,7 @@ class TemplateContent {
 		}
 
 		if (!content && content !== "") {
-			let contentBuffer = fs.readFileSync(this.inputPath);
+			let contentBuffer = readFileSync(this.inputPath);
 
 			content = contentBuffer.toString("utf8");
 
@@ -354,11 +411,15 @@ class TemplateContent {
 			virtualTemplateData = virtualTemplateDefinition.data;
 		}
 
-		let data = TemplateData.mergeDeep(false, fm.data, extraData, virtualTemplateData);
-		let cleanedData = TemplateData.cleanupData(data);
+		let data = Object.assign({}, fm.data, extraData, virtualTemplateData);
+
+		TemplateData.cleanupData(data, {
+			file: this.inputPath,
+			isVirtualTemplate: Boolean(virtualTemplateData),
+		});
 
 		return {
-			data: cleanedData,
+			data,
 			excerpt: fm.excerpt,
 		};
 	}
@@ -378,6 +439,14 @@ class TemplateContent {
 		});
 	}
 
+	// checks engines
+	isTemplateCacheable() {
+		if (this.#preprocessorEngine) {
+			return this.#preprocessorEngine.cacheable;
+		}
+		return this.engine.cacheable;
+	}
+
 	_getCompileCache(str) {
 		// Caches used to be bifurcated based on engine name, now they’re based on inputPath
 		// TODO does `cacheable` need to help inform whether a cache is used here?
@@ -387,7 +456,7 @@ class TemplateContent {
 			TemplateContent._compileCache.set(this.inputPath, inputPathMap);
 		}
 
-		let cacheable = this.engine.cacheable;
+		let cacheable = this.isTemplateCacheable();
 		let { useCache, key } = this.engine.getCompileCacheKey(str, this.inputPath);
 
 		// We also tie the compile cache key to the UserConfig instance, to alleviate issues with global template cache
@@ -401,6 +470,11 @@ class TemplateContent {
 	async compile(str, options = {}) {
 		let { type, bypassMarkdown, engineOverride } = options;
 
+		// Must happen before cacheable fetch below
+		// Likely only necessary for Eleventy Layouts, see TemplateMap->initDependencyMap
+		await this.asyncTemplateInitialization();
+
+		// this.templateRender is guaranteed here
 		let tr = await this.getTemplateRender();
 		if (engineOverride !== undefined) {
 			debugDev("%o overriding template engine to use %o", this.inputPath, engineOverride);
@@ -444,6 +518,7 @@ class TemplateContent {
 			let inputPathBenchmark = this.bench.get(`> Compile${typeStr} > ${this.inputPath}`);
 			templateBenchmark.before();
 			inputPathBenchmark.before();
+
 			let fn = await tr.getCompiledTemplate(str);
 			inputPathBenchmark.after();
 			templateBenchmark.after();
@@ -470,17 +545,22 @@ class TemplateContent {
 
 		// Don’t use markdown as the engine to parse for symbols
 		// TODO pass in engineOverride here
-		let preprocessorEngine = this.templateRender.getPreprocessorEngine();
-		if (preprocessorEngine && engine.getName() !== preprocessorEngine) {
-			let replacementEngine = this.templateRender.getEngineByName(preprocessorEngine);
-			if (replacementEngine) {
-				engine = replacementEngine;
-			}
+		if (this.#preprocessorEngine) {
+			engine = this.#preprocessorEngine;
 		}
 
 		if ("parseForSymbols" in engine) {
 			return () => {
-				return engine.parseForSymbols(str);
+				if (Array.isArray(str)) {
+					return str
+						.filter((entry) => typeof entry === "string")
+						.map((entry) => engine.parseForSymbols(entry))
+						.flat();
+				}
+				if (typeof str === "string") {
+					return engine.parseForSymbols(str);
+				}
+				return [];
 			};
 		}
 	}

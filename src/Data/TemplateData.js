@@ -1,10 +1,9 @@
 import path from "node:path";
-import semver from "semver";
-
 import lodash from "@11ty/lodash-custom";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
+import { inspect } from "../Adapters/Packages/inspect.js";
 import unique from "../Util/Objects/Unique.js";
 import TemplateGlob from "../TemplateGlob.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
@@ -12,6 +11,7 @@ import TemplateDataInitialGlobalData from "./TemplateDataInitialGlobalData.js";
 import { getEleventyPackageJson, getWorkingProjectPackageJson } from "../Util/ImportJsonSync.js";
 import { EleventyImport, EleventyLoadContent } from "../Util/Require.js";
 import { DeepFreeze } from "../Util/Objects/DeepFreeze.js";
+import { coerce } from "../Util/SemverCoerce.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 
@@ -56,6 +56,10 @@ class TemplateData {
 	// if this was set but `falsy` we would fallback to inputDir
 	get dataDir() {
 		return this.dirs.data;
+	}
+
+	get absoluteDataDir() {
+		return TemplatePath.absolutePath(this.dataDir);
 	}
 
 	// This was async in 2.0 and prior but doesn’t need to be any more.
@@ -240,7 +244,10 @@ class TemplateData {
 		let fsBench = this.benchmarks.aggregate.get("Searching the file system (data)");
 		fsBench.before();
 		let globs = this.getGlobalDataGlob();
-		let paths = await this.fileSystemSearch.search("global-data", globs);
+		let paths = [];
+		if (this.fileSystemSearch) {
+			paths = await this.fileSystemSearch.search("global-data", globs);
+		}
 		fsBench.after();
 
 		// sort paths according to extension priorities
@@ -263,7 +270,8 @@ class TemplateData {
 	}
 
 	getObjectPathForDataFile(dataFilePath) {
-		let reducedPath = TemplatePath.stripLeadingSubPath(dataFilePath, this.dataDir);
+		let absoluteDataFilePath = TemplatePath.absolutePath(dataFilePath);
+		let reducedPath = TemplatePath.stripLeadingSubPath(absoluteDataFilePath, this.absoluteDataDir);
 		let parsed = path.parse(reducedPath);
 		let folders = parsed.dir ? parsed.dir.split("/") : [];
 		folders.push(parsed.name);
@@ -317,7 +325,7 @@ class TemplateData {
 
 		// #2293 for meta[name=generator]
 		const pkg = getEleventyPackageJson();
-		globalData.eleventy.version = semver.coerce(pkg.version).toString();
+		globalData.eleventy.version = coerce(pkg.version).toString();
 		globalData.eleventy.generator = `Eleventy v${globalData.eleventy.version}`;
 
 		if (this.environmentVariables) {
@@ -400,7 +408,9 @@ class TemplateData {
 				);
 			} else {
 				// clean up data for template/directory data files only.
-				let cleanedDataForPath = TemplateData.cleanupData(dataForPath);
+				let cleanedDataForPath = TemplateData.cleanupData(dataForPath, {
+					file: path,
+				});
 				for (let key in cleanedDataForPath) {
 					if (Object.prototype.hasOwnProperty.call(dataSource, key)) {
 						debugWarn(
@@ -423,7 +433,7 @@ class TemplateData {
 			let localDataPaths = await this.getLocalDataPaths(templatePath);
 			let importedData = await this.combineLocalData(localDataPaths);
 
-			this.templateDirectoryData[templatePath] = Object.assign({}, importedData);
+			this.templateDirectoryData[templatePath] = importedData;
 		}
 		return this.templateDirectoryData[templatePath];
 	}
@@ -587,6 +597,7 @@ class TemplateData {
 				if (inputDir) {
 					debugDev("dirStr: %o; inputDir: %o", dir, inputDir);
 				}
+				// TODO use DirContains
 				if (!inputDir || (dir.startsWith(inputDir) && dir !== inputDir)) {
 					if (this.config.dataFileDirBaseNameOverride) {
 						let indexDataFile = dir + "/" + this.config.dataFileDirBaseNameOverride;
@@ -634,7 +645,7 @@ class TemplateData {
 	}
 
 	/* Like cleanupData() but does not mutate */
-	static getCleanedTagsImmutable(data) {
+	static getCleanedTagsImmutable(data, options = {}) {
 		let tags = [];
 
 		if (isPlainObject(data) && data.tags) {
@@ -642,18 +653,23 @@ class TemplateData {
 				tags = (data.tags || "").split(",");
 			} else if (Array.isArray(data.tags)) {
 				tags = data.tags;
+			} else if (data.tags) {
+				throw new Error(
+					`String or Array expected for \`tags\`${options.file ? ` in ${options.isVirtualTemplate ? "virtual " : ""}template: ${options.file}` : ""}. Received: ${inspect(data.tags)}`,
+				);
 			}
 
 			// Deduplicate tags
-			return [...new Set(tags)];
+			// Coerce to string #3875
+			return [...new Set(tags)].map((entry) => String(entry));
 		}
 
 		return tags;
 	}
 
-	static cleanupData(data) {
+	static cleanupData(data, options = {}) {
 		if (isPlainObject(data) && "tags" in data) {
-			data.tags = this.getCleanedTagsImmutable(data);
+			data.tags = this.getCleanedTagsImmutable(data, options);
 		}
 
 		return data;

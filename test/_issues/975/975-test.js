@@ -54,6 +54,7 @@ test("Get ordered list of templates", async (t) => {
     "./test/_issues/975/post.md",
     "./test/_issues/975/another-post.md",
     "__collection:post",
+    "__collection:[keys]",
     "./test/_issues/975/index.md",
     "__collection:all",
   ]);
@@ -105,6 +106,7 @@ test("Get ordered list of templates (reverse add)", async (t) => {
     "./test/_issues/975/another-post.md",
     "./test/_issues/975/post.md",
     "__collection:post",
+    "__collection:[keys]",
     "./test/_issues/975/index.md",
     "__collection:all",
   ]);

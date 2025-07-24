@@ -34,7 +34,7 @@ class TemplateBehavior {
 		}
 	}
 
-	// permalink *has* a build key or output is json/ndjson
+	// permalink *has* a build key or output is json
 	isRenderable() {
 		return this.renderableOverride ?? (this.render || this.isRenderForced());
 	}
@@ -44,7 +44,7 @@ class TemplateBehavior {
 	}
 
 	isRenderForced() {
-		return this.outputFormat === "json" || this.outputFormat === "ndjson";
+		return this.outputFormat === "json";
 	}
 
 	isWriteable() {

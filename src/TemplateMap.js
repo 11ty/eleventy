@@ -21,6 +21,12 @@ const EXTENSIONLESS_URL_ALLOWLIST = [
 	"/_headers", // Cloudflare
 ];
 
+// must match TemplateDepGraph
+const SPECIAL_COLLECTION_NAMES = {
+	keys: "[keys]",
+	all: "all",
+};
+
 class TemplateMap {
 	#dependencyMapInitialized = false;
 
@@ -74,16 +80,18 @@ class TemplateMap {
 	}
 
 	getTagTarget(str) {
+		if (str === "collections") {
+			// special, means targeting `collections` specifically
+			return SPECIAL_COLLECTION_NAMES.keys;
+		}
+
 		if (str.startsWith("collections.")) {
 			return str.slice("collections.".length);
 		}
+
 		// Fixes #2851
 		if (str.startsWith("collections['") || str.startsWith('collections["')) {
 			return str.slice("collections['".length, -2);
-		}
-		if (str === "collections") {
-			// special, means targeting `collections` specifically
-			return GlobalDependencyMap.SPECIAL_KEYS_COLLECTION_NAME;
 		}
 	}
 
@@ -94,33 +102,29 @@ class TemplateMap {
 	}
 
 	#addEntryToGlobalDependencyGraph(entry) {
-		let paginationTagTarget = this.getPaginationTagTarget(entry);
-		if (paginationTagTarget) {
-			this.config.uses.addDependencyConsumesCollection(entry.inputPath, paginationTagTarget);
-		}
+		let consumes = [];
+		consumes.push(this.getPaginationTagTarget(entry));
 
 		if (Array.isArray(entry.data.eleventyImport?.collections)) {
 			for (let tag of entry.data.eleventyImport.collections) {
-				this.config.uses.addDependencyConsumesCollection(entry.inputPath, tag);
+				consumes.push(tag);
 			}
 		}
 
 		// Important: consumers must come before publishers
 
 		// TODO it’d be nice to set the dependency relationship for addCollection here
-		let collectionNames = TemplateData.getIncludedCollectionNames(entry.data);
-		for (let name of collectionNames) {
-			this.config.uses.addDependencyPublishesToCollection(entry.inputPath, name);
-		}
+		// But collections are not yet populated (they populate after template order)
+		let publishes = TemplateData.getIncludedCollectionNames(entry.data);
 
-		// if not otherwise added, add it the graph
-		if (!this.config.uses.hasNode(entry.inputPath)) {
-			this.config.uses.addDependency(entry.inputPath);
-		}
+		this.config.uses.addNewNodeRelationships(entry.inputPath, consumes, publishes);
 	}
 
 	addAllToGlobalDependencyGraph() {
 		this.#dependencyMapInitialized = true;
+
+		// Should come before individual entry additions
+		this.config.uses.initializeUserConfigurationApiCollections();
 
 		for (let entry of this.map) {
 			this.#addEntryToGlobalDependencyGraph(entry);
@@ -148,12 +152,29 @@ class TemplateMap {
 	}
 
 	// TODO(slightlyoff): major bottleneck
-	async initDependencyMap(dependencyMap) {
-		for (let depEntry of dependencyMap) {
-			if (GlobalDependencyMap.isTag(depEntry)) {
+	async initDependencyMap(fullTemplateOrder) {
+		// Temporary workaround for async constructor work in templates
+		// Issue #3170 #3870
+		let inputPathSet = new Set(fullTemplateOrder);
+		await Promise.all(
+			this.map
+				.filter(({ inputPath }) => {
+					return inputPathSet.has(inputPath);
+				})
+				.map(({ template }) => {
+					// This also happens for layouts in TemplateContent->compile
+					return template.asyncTemplateInitialization();
+				}),
+		);
+
+		for (let depEntry of fullTemplateOrder) {
+			if (GlobalDependencyMap.isCollection(depEntry)) {
 				let tagName = GlobalDependencyMap.getTagName(depEntry);
-				// [NAME] is special and implied (e.g. [keys])
-				if (!tagName.startsWith("[") && !tagName.endsWith("]")) {
+				// [keys] should initialize `all`
+				if (tagName === SPECIAL_COLLECTION_NAMES.keys) {
+					await this.setCollectionByTagName("all");
+					// [NAME] is special and implied (e.g. [keys])
+				} else if (!tagName.startsWith("[") && !tagName.endsWith("]")) {
 					// is a tag (collection) entry
 					await this.setCollectionByTagName(tagName);
 				}
@@ -162,46 +183,50 @@ class TemplateMap {
 
 			// is a template entry
 			let map = this.getMapEntryForInputPath(depEntry);
-			try {
-				map._pages = await map.template.getTemplates(map.data);
-			} catch (e) {
-				throw new EleventyMapPagesError(
-					"Error generating template page(s) for " + map.inputPath + ".",
-					e,
-				);
-			}
+			await this.#initDependencyMapEntry(map);
+		}
+	}
 
-			if (map._pages.length === 0) {
-				// Reminder: a serverless code path was removed here.
-			} else {
-				let counter = 0;
-				for (let page of map._pages) {
-					// Copy outputPath to map entry
-					// This is no longer used internally, just for backwards compatibility
-					// Error added in v3 for https://github.com/11ty/eleventy/issues/3183
-					if (map.data.pagination) {
-						if (!Object.prototype.hasOwnProperty.call(map, "outputPath")) {
-							Object.defineProperty(map, "outputPath", {
-								get() {
-									throw new Error(
-										"Internal error: `.outputPath` on a paginated map entry is not consistent. Use `_pages[…].outputPath` instead.",
-									);
-								},
-							});
-						}
-					} else if (!map.outputPath) {
-						map.outputPath = page.outputPath;
+	async #initDependencyMapEntry(map) {
+		try {
+			map._pages = await map.template.getTemplates(map.data);
+		} catch (e) {
+			throw new EleventyMapPagesError(
+				"Error generating template page(s) for " + map.inputPath + ".",
+				e,
+			);
+		}
+
+		if (map._pages.length === 0) {
+			// Reminder: a serverless code path was removed here.
+		} else {
+			let counter = 0;
+			for (let page of map._pages) {
+				// Copy outputPath to map entry
+				// This is no longer used internally, just for backwards compatibility
+				// Error added in v3 for https://github.com/11ty/eleventy/issues/3183
+				if (map.data.pagination) {
+					if (!Object.prototype.hasOwnProperty.call(map, "outputPath")) {
+						Object.defineProperty(map, "outputPath", {
+							get() {
+								throw new Error(
+									"Internal error: `.outputPath` on a paginated map entry is not consistent. Use `_pages[…].outputPath` instead.",
+								);
+							},
+						});
 					}
-
-					if (counter === 0 || map.data.pagination?.addAllPagesToCollections) {
-						if (map.data.eleventyExcludeFromCollections !== true) {
-							// is in *some* collections
-							this.collection.add(page);
-						}
-					}
-
-					counter++;
+				} else if (!map.outputPath) {
+					map.outputPath = page.outputPath;
 				}
+
+				if (counter === 0 || map.data.pagination?.addAllPagesToCollections) {
+					if (map.data.eleventyExcludeFromCollections !== true) {
+						// is in *some* collections
+						this.collection.add(page);
+					}
+				}
+
+				counter++;
 			}
 		}
 	}
@@ -211,10 +236,11 @@ class TemplateMap {
 		// 2. Pagination templates that consume config API collections
 		// 3. Pagination templates consuming `collections`
 		// 4. Pagination templates consuming `collections.all`
-		let fullTemplateOrder = this.config.uses
-			.getTemplateOrder()
+		let fullTemplateOrder = this.config.uses.getTemplateOrder();
+
+		return fullTemplateOrder
 			.map((entry) => {
-				if (GlobalDependencyMap.isTag(entry)) {
+				if (GlobalDependencyMap.isCollection(entry)) {
 					return entry;
 				}
 
@@ -225,8 +251,6 @@ class TemplateMap {
 				return inputPath;
 			})
 			.filter(Boolean);
-
-		return fullTemplateOrder;
 	}
 
 	async cache() {
@@ -248,7 +272,6 @@ class TemplateMap {
 		);
 
 		await this.initDependencyMap(fullTemplateOrder);
-
 		await this.resolveRemainingComputedData();
 
 		let orderedPaths = this.#removeTagsFromTemplateOrder(fullTemplateOrder);
@@ -299,20 +322,21 @@ class TemplateMap {
 	}
 
 	hasMapEntryForInputPath(inputPath) {
-		return this.map.some((entry) => entry.inputPath === inputPath);
+		return Boolean(this.getMapEntryForInputPath(inputPath));
 	}
 
 	// TODO(slightlyoff): hot inner loop?
 	getMapEntryForInputPath(inputPath) {
-		for (let map of this.map) {
-			if (map.inputPath === inputPath) {
-				return map;
+		let absoluteInputPath = TemplatePath.absolutePath(inputPath);
+		return this.map.find((entry) => {
+			if (entry.inputPath === inputPath || entry.inputPath === absoluteInputPath) {
+				return entry;
 			}
-		}
+		});
 	}
 
 	#removeTagsFromTemplateOrder(maps) {
-		return maps.filter((dep) => !GlobalDependencyMap.isTag(dep));
+		return maps.filter((dep) => !GlobalDependencyMap.isCollection(dep));
 	}
 
 	async runDataSchemas(orderedMap) {
@@ -486,8 +510,8 @@ class TemplateMap {
 		for (let entry of this.map) {
 			for (let page of entry._pages) {
 				let tmpl = page.template;
-				let layoutKey = page.data[this.config.keys.layout];
-				if (layoutKey) {
+				if (tmpl.templateUsesLayouts(page.data)) {
+					let layoutKey = page.data[this.config.keys.layout];
 					let layout = tmpl.getLayout(layoutKey);
 					let layoutChain = await layout.getLayoutChain();
 					let priors = [];

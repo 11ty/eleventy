@@ -9,7 +9,6 @@ import { marked } from "marked";
 import nunjucks from "nunjucks";
 import * as sass from "sass";
 
-import eventBus from "../src/EventBus.js";
 import Eleventy, { HtmlBasePlugin } from "../src/Eleventy.js";
 import TemplateContent from "../src/TemplateContent.js";
 import TemplateMap from "../src/TemplateMap.js";
@@ -19,7 +18,6 @@ import DateGitLastUpdated from "../src/Util/DateGitLastUpdated.js";
 import PathNormalizer from "../src/Util/PathNormalizer.js";
 import { normalizeNewLines, localizeNewLines } from "./Util/normalizeNewLines.js";
 
-const fsp = fs.promises;
 const lodashGet = lodash.get;
 
 test("Eleventy, defaults inherit from config", async (t) => {
@@ -276,82 +274,6 @@ test("Eleventy to json", async (t) => {
   );
 });
 
-test("Eleventy to ndjson", async (t) => {
-  let elev = new Eleventy("./test/stubs--to/");
-
-  elev.setIsVerbose(false);
-
-  let stream = await elev.toNDJSON();
-  let count = 0;
-  await new Promise((resolve) => {
-    stream.on("data", function (buf) {
-      count++;
-      let jsonObj = JSON.parse(buf.toString());
-      if (jsonObj.url === "/test/") {
-        t.deepEqual(jsonObj, {
-          url: "/test/",
-          inputPath: "./test/stubs--to/test.md",
-          outputPath: "./_site/test/index.html",
-          rawInput: localizeNewLines("# hi\n"),
-          content: "<h1>hi</h1>\n",
-        });
-      }
-      if (jsonObj.url === "/test2/") {
-        t.deepEqual(jsonObj, {
-          url: "/test2/",
-          inputPath: "./test/stubs--to/test2.liquid",
-          outputPath: "./_site/test2/index.html",
-          rawInput: `{{ hi }}`,
-          content: "hello",
-        });
-      }
-
-      if (count >= 2) {
-        resolve();
-      }
-    });
-  });
-});
-
-test("Eleventy to ndjson (returns a stream)", async (t) => {
-  let elev = new Eleventy("./test/stubs--to/");
-
-  elev.setIsVerbose(false);
-
-  let stream = await elev.toNDJSON();
-
-  await new Promise((resolve) => {
-    let results = [];
-    stream.on("data", function (entry) {
-      let jsonObj = JSON.parse(entry);
-      if (jsonObj.url === "/test/") {
-        t.deepEqual(jsonObj, {
-          url: "/test/",
-          inputPath: "./test/stubs--to/test.md",
-          outputPath: "./_site/test/index.html",
-          rawInput: localizeNewLines("# hi\n"),
-          content: "<h1>hi</h1>\n",
-        });
-      }
-      if (jsonObj.url === "/test2/") {
-        t.deepEqual(jsonObj, {
-          url: "/test2/",
-          inputPath: "./test/stubs--to/test2.liquid",
-          outputPath: "./_site/test2/index.html",
-          rawInput: "{{ hi }}",
-          content: "hello",
-        });
-      }
-
-      results.push(jsonObj);
-
-      if (results.length >= 2) {
-        resolve();
-      }
-    });
-  });
-});
-
 test("Two Eleventies, two configs!!! (config used to be a global)", async (t) => {
   let elev1 = new Eleventy();
   await elev1.initializeConfig();
@@ -473,7 +395,7 @@ test("Unicode in front matter `tags`, issue #670", async (t) => {
     return 1;
   });
 
-  t.is(results[0].content.trim(), "2,all,Cañon City,");
+  t.is(results[0].content.trim(), "2,Cañon City,all,");
 });
 
 test("#142: date 'git Last Modified' populates page.date", async (t) => {
@@ -483,12 +405,12 @@ test("#142: date 'git Last Modified' populates page.date", async (t) => {
   let [result] = results;
 
   // This doesn’t test the validity of the function, only that it populates page.date.
-  let comparisonDate = DateGitLastUpdated("./test/stubs-142/index.njk");
+  let comparisonDate = await DateGitLastUpdated("./test/stubs-142/index.njk");
   t.is(result.content.trim(), "" + comparisonDate.getTime());
 });
 
-test("DateGitLastUpdated returns undefined on nonexistent path", (t) => {
-  t.is(DateGitLastUpdated("./test/invalid.invalid"), undefined);
+test("DateGitLastUpdated returns undefined on nonexistent path", async (t) => {
+  t.is(await DateGitLastUpdated("./test/invalid.invalid"), undefined);
 });
 
 test("#2167: Pagination with permalink: false", async (t) => {
@@ -593,12 +515,12 @@ test("#2224: date 'git created' populates page.date", async (t) => {
   let [result] = results;
 
   // This doesn’t test the validity of the function, only that it populates page.date.
-  let comparisonDate = DateGitFirstAdded("./test/stubs-2224/index.njk");
+  let comparisonDate = await DateGitFirstAdded("./test/stubs-2224/index.njk");
   t.is(result.content.trim(), "" + comparisonDate.getTime());
 });
 
 test("DateGitFirstAdded returns undefined on nonexistent path", async (t) => {
-  t.is(DateGitFirstAdded("./test/invalid.invalid"), undefined);
+  t.is(await DateGitFirstAdded("./test/invalid.invalid"), undefined);
 });
 
 test("Does pathPrefix affect page URLs", async (t) => {
@@ -628,7 +550,7 @@ test("Improvements to custom template syntax APIs (includes a layout file) #2258
 }`;
   let newContents = `/* New content */`;
 
-  await fsp.writeFile(includeFilePath, previousContents, { encoding: "utf8" });
+  fs.writeFileSync(includeFilePath, previousContents, "utf8");
 
   let sizes = [TemplateContent._inputCache.size, TemplateContent._compileCache.size];
 
@@ -660,11 +582,9 @@ ${previousContents}
   t.is(sizes[0] + 1, 1);
   t.is(sizes[1] + 1, 1);
 
-  await fsp.writeFile(includeFilePath, newContents, { encoding: "utf8" });
+  fs.writeFileSync(includeFilePath, newContents, "utf8");
 
-  // Trigger that the file has changed
-  eventBus.emit("eleventy.resourceModified", includeFilePath);
-
+  // This also triggers that the file has changed in the event bus via setPreviousBuildModifiedFile
   elev.setIncrementalFile(includeFilePath);
 
   let results3 = await elev.toJSON();
@@ -675,7 +595,7 @@ ${newContents}
 /* Comment */`
   );
 
-  await fsp.writeFile(includeFilePath, previousContents, { encoding: "utf8" });
+  fs.writeFileSync(includeFilePath, previousContents, "utf8");
 });
 
 
@@ -949,6 +869,28 @@ test("Accepts absolute paths for input and output", async (t) => {
   t.is(PathNormalizer.normalizeSeperator(elev.directories.data), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/_data/") + path.sep));
   t.is(elev.directories.layouts, undefined);
   t.is(PathNormalizer.normalizeSeperator(elev.directories.output), PathNormalizer.normalizeSeperator(path.resolve("./test/noop/_site/") + path.sep));
+});
+
+test("Accepts absolute paths urls for input and output, results output #3805", async (t) => {
+  let input = path.resolve("./test/stubs-absolute/test.md");
+  let output = path.resolve("./test/stubs-absolute/_site");
+  let elev = new Eleventy(input, output);
+
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+});
+
+test("Accepts absolute paths urls for input and output and a virtual template, results output #3805", async (t) => {
+  let input = path.resolve("./test/noop/");
+  let output = path.resolve("./test/noop/_site");
+  let elev = new Eleventy(input, output, {
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.md", `# Title`)
+    }
+  });
+
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
 });
 
 test("Eleventy config export (ESM)", async (t) => {
@@ -1593,8 +1535,8 @@ test("Truthy outputPath without a file extension error message is disabled, issu
   });
   elev.disableLogger();
 
- let results = await elev.toJSON();
- t.is(results.length, 1);
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
 });
 
 test("permalink: false outputPath new error message won’t throw an error, issue #3399", async (t) => {
@@ -1605,8 +1547,8 @@ test("permalink: false outputPath new error message won’t throw an error, issu
   });
   elev.disableLogger();
 
- let results = await elev.toJSON();
- t.is(results.length, 1);
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
 });
 
 test("permalink on custom template lang, issue #3619", async (t) => {
@@ -1657,10 +1599,140 @@ test("permalink on custom template lang, issue #3619", async (t) => {
   });
   elev.disableLogger();
 
- let results = await elev.toJSON();
- t.is(results[0].url, "/testing/rewrite/index.css");
- t.is(results[0].content, `html {
+  let results = await elev.toJSON();
+  t.is(results[0].url, "/testing/rewrite/index.css");
+  t.is(results[0].content, `html {
   color: red;
 }`);
 });
 
+test("Template data throws error when tags is not an Array or String #1791", async (t) => {
+  let elev = new Eleventy("./test/noop/", "./test/noop/_site", {
+    config: function (eleventyConfig) {
+      eleventyConfig.addTemplate("index.html", "", {
+        tags: {"one": 1, "two": 2}
+      });
+    },
+  });
+  elev.disableLogger();
+
+  await t.throwsAsync(() => elev.toJSON(), {
+    // The `set*Directory` configuration API methods are not yet allowed in plugins.
+    message: "String or Array expected for `tags` in virtual template: ./test/noop/index.html. Received: { one: 1, two: 2 }",
+  });
+});
+
+test("sass docs on 11ty.dev, issue #408", async (t) => {
+  let elev = new Eleventy("./test/stubs-408-sass/", undefined, {
+    config: function (eleventyConfig) {
+      eleventyConfig.addTemplateFormats("scss");
+
+      eleventyConfig.addExtension("scss", {
+        outputFileExtension: "css",
+
+        // opt-out of Eleventy Layouts
+        useLayouts: false,
+
+        compile: async function (inputContent, inputPath) {
+          let parsed = path.parse(inputPath);
+          if(parsed.name.startsWith("_")) {
+            return;
+          }
+
+          let result = sass.compileString(inputContent, {
+            loadPaths: [
+              parsed.dir || ".",
+              this.config.dir.includes
+            ]
+          });
+
+          this.addDependencies(inputPath, result.loadedUrls);
+
+          return async (data) => {
+            return result.css;
+          };
+        },
+      });
+    },
+  });
+  elev.disableLogger();
+
+   let results = await elev.toJSON();
+   t.is(results.length, 2);
+
+   let code = results.filter(entry => entry.inputPath.endsWith("_code.scss"))[0];
+   t.is(code.url, "/_code.css");
+   t.is(code.content, undefined);
+
+   let main = results.filter(entry => entry.inputPath.endsWith("style.scss"))[0];
+   t.is(main.url, "/style.css");
+   t.is(
+    normalizeNewLines(main.content),
+    `code {
+  padding: 0.25em;
+  line-height: 0;
+}
+
+/* Comment */`);
+});
+
+test("Use a date object for `date`, issue #3022", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: function (eleventyConfig) {
+      eleventyConfig.dataFilterSelectors.add("page.date");
+      eleventyConfig.addTemplate("index.html", "", { date: new Date() })
+    },
+  });
+  elev.disableLogger();
+
+ let results = await elev.toJSON();
+ t.is(results.length, 1);
+ t.truthy(results[0].data.page.date instanceof Date);
+});
+
+test("Use a date object for `date` (js object front matter), issue #3022", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: function (eleventyConfig) {
+      eleventyConfig.dataFilterSelectors.add("page.date");
+      eleventyConfig.addTemplate("index.html", `---js
+{
+  date: new Date(),
+}
+---`);
+    },
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+  t.truthy(results[0].data.page.date instanceof Date);
+});
+
+test("Use a date object for `date` (js front matter), issue #3022", async (t) => {
+  let elev = new Eleventy("./test/stubs-virtual/", undefined, {
+    config: function (eleventyConfig) {
+      eleventyConfig.dataFilterSelectors.add("page.date");
+      eleventyConfig.addTemplate("index.html", `---js
+let date = new Date();
+---`);
+    },
+  });
+  elev.disableLogger();
+
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+  t.truthy(results[0].data.page.date instanceof Date);
+});
+
+test("Cleaner constructor args #3880", async (t) => {
+  let elev = new Eleventy({
+    input: "./test/stubs-virtual/",
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.md", `# Title`)
+    }
+  });
+
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+  t.is(results[0].content.trim(), `<h1>Title</h1>`);
+});

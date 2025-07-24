@@ -1,8 +1,9 @@
-import types from "node:util/types";
 import debugUtil from "debug";
 import { isPlainObject } from "@11ty/eleventy-utils";
 
 const debug = debugUtil("Dev:Eleventy:Proxy");
+
+const ProxySymbol = Symbol.for("11ty.ProxySymbol");
 
 function wrapObject(target, fallback) {
 	if (Object.isFrozen(target)) {
@@ -30,11 +31,15 @@ function wrapObject(target, fallback) {
 		},
 		ownKeys(target) {
 			let s = new Set();
-			for (let k of Reflect.ownKeys(target)) {
-				s.add(k);
-			}
+			// The fallback keys need to come first to preserve proper key order
+			// https://github.com/11ty/eleventy/issues/3849
 			if (isPlainObject(fallback)) {
 				for (let k of Reflect.ownKeys(fallback)) {
+					s.add(k);
+				}
+			}
+			for (let k of Reflect.ownKeys(target)) {
+				if (!s.has(k)) {
 					s.add(k);
 				}
 			}
@@ -42,12 +47,15 @@ function wrapObject(target, fallback) {
 		},
 		get(target, prop) {
 			debug("handler:get", prop);
+			if (prop === ProxySymbol) {
+				return true;
+			}
 
 			let value = Reflect.get(target, prop);
 
 			if (Reflect.has(target, prop)) {
-				// Already proxied
-				if (types.isProxy(value)) {
+				// Careful: swapped from node:util/types->isProxy test here
+				if (Reflect.get(target, ProxySymbol)) {
 					return value;
 				}
 
@@ -66,7 +74,10 @@ function wrapObject(target, fallback) {
 			}
 
 			// Does not exist in primary
-			if (Reflect.has(fallback, prop)) {
+			if (
+				(typeof fallback === "object" || typeof fallback === "function") &&
+				Reflect.has(fallback, prop)
+			) {
 				// fallback has prop
 				let fallbackValue = Reflect.get(fallback, prop);
 

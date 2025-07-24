@@ -19,15 +19,16 @@ require("please-upgrade-node")(pkg, {
 const minimist = require("minimist");
 const debug = require("debug")("Eleventy:cmd");
 
-(async function () {
-	const { EleventyErrorHandler } = await import("./src/Errors/EleventyErrorHandler.js");
-
-	class SimpleError extends Error {
-		constructor(...args) {
-			super(...args);
-			this.skipOriginalStack = true;
-		}
+class SimpleError extends Error {
+	constructor(...args) {
+		super(...args);
+		this.skipOriginalStack = true;
 	}
+}
+
+async function exec() {
+	// Notes about friendly error messaging with outdated Node versions: https://github.com/11ty/eleventy/issues/3761
+	const { EleventyErrorHandler } = await import("./src/Errors/EleventyErrorHandler.js");
 
 	try {
 		const argv = minimist(process.argv.slice(2), {
@@ -93,73 +94,60 @@ const debug = require("debug")("Eleventy:cmd");
 		// Before init
 		elev.setFormats(argv.formats);
 
-		// careful, we can’t use async/await here to error properly
-		// with old node versions in `please-upgrade-node` above.
-		elev
-			.init()
-			.then(() => {
-				if (argv.to === "json" || argv.to === "ndjson") {
-					// override logging output
-					elev.setIsVerbose(false);
-				}
+		await elev.init();
 
-				// Only relevant for watch/serve
-				elev.setIgnoreInitial(argv["ignore-initial"]);
+		if (argv.to === "json") {
+			// override logging output
+			elev.setIsVerbose(false);
+		}
 
-				if(argv.incremental) {
-					elev.setIncrementalFile(argv.incremental);
-				} else if(argv.incremental !== undefined) {
-					elev.setIncrementalBuild(argv.incremental === "" || argv.incremental);
-				}
+		// Only relevant for watch/serve
+		elev.setIgnoreInitial(argv["ignore-initial"]);
 
-				if (argv.serve || argv.watch) {
-					if(argv.to === "json" || argv.to === "ndjson") {
-						throw new SimpleError("--to=json and --to=ndjson are not compatible with --serve or --watch.");
-					}
+		if(argv.incremental) {
+			elev.setIncrementalFile(argv.incremental);
+		} else if(argv.incremental !== undefined) {
+			elev.setIncrementalBuild(argv.incremental === "" || argv.incremental);
+		}
 
-					elev
-						.watch()
-						.then(() => {
-							if (argv.serve) {
-								elev.serve(argv.port);
-							}
-						}, error => {
-							// A build error occurred and we aren’t going to --serve
-							ErrorHandler.once("error", error, "Eleventy Error (watch CLI)");
-						});
+		if (argv.serve || argv.watch) {
+			if(argv.to === "json") {
+				throw new SimpleError("--to=json is not compatible with --serve or --watch.");
+			}
 
-					process.on("SIGINT", async () => {
-						await elev.stopWatch();
-						process.exitCode = 0;
-					});
-				} else {
-					if (!argv.to || argv.to === "fs") {
-						elev.write().catch(error => {
-							ErrorHandler.once("fatal", error, "Eleventy Error (fs CLI)");
-						});
-					} else if (argv.to === "json") {
-						elev.toJSON().then(function (result) {
-							console.log(JSON.stringify(result, null, 2));
-						}, error => {
-							ErrorHandler.once("fatal", error, "Eleventy Error (json CLI)");
-						});
-					} else if (argv.to === "ndjson") {
-						elev.toNDJSON().then(function (stream) {
-							stream.pipe(process.stdout);
-						}, error => {
-							ErrorHandler.once("fatal", error, "Eleventy Error (ndjson CLI)");
-						});
-					} else {
-						throw new SimpleError(
-							`Invalid --to value: ${argv.to}. Supported values: \`fs\` (default), \`json\`, and \`ndjson\`.`,
-						);
-					}
-				}
-			}).catch(error => {
-				ErrorHandler.fatal(error, "Eleventy Error (CLI initialization)");
+			await elev.watch();
+
+			if (argv.serve) {
+				// TODO await here?
+				elev.serve(argv.port);
+			}
+
+			process.on("SIGINT", async () => {
+				await elev.stopWatch();
+				process.exitCode = 0;
 			});
+		} else {
+			// `fs:templates` will skip passthrough copy
+			if (!argv.to || argv.to === "fs" || argv.to.startsWith("fs:")) {
+				await elev.write(argv.to);
+			} else if (argv.to === "json") {
+				let result = await elev.toJSON()
+				console.log(JSON.stringify(result, null, 2));
+			} else {
+				throw new SimpleError(
+					`Invalid --to value: ${argv.to}. Supported values: \`fs\` (default), \`json\`.`,
+				);
+			}
+		}
 	} catch (error) {
-		let ErrorHandler = new EleventyErrorHandler();
-		ErrorHandler.fatal(error, "Eleventy Fatal Error (CLI)");
+		if(typeof EleventyErrorHandler !== "undefined") {
+			let ErrorHandler = new EleventyErrorHandler();
+			ErrorHandler.fatal(error, "Eleventy Fatal Error (CLI)");
+		} else {
+			console.error(error);
+			process.exitCode = 1;
+		}
 	}
-})();
+}
+
+exec();

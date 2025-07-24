@@ -1,7 +1,8 @@
-import NunjucksLib from "nunjucks";
 import debugUtil from "debug";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
+// Direct reference to avoid use of `browser` Nunjucks variant in bundles
+import { default as NunjucksLib, Environment, FileSystemLoader, Template } from "nunjucks/index.js";
 import TemplateEngine from "./TemplateEngine.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import { augmentObject } from "./Util/ContextAugmenter.js";
@@ -21,10 +22,12 @@ export default class Nunjucks extends TemplateEngine {
 		this._usingPrecompiled = Object.keys(this.nunjucksPrecompiledTemplates).length > 0;
 
 		this.setLibrary(this.config.libraryOverrides.njk);
-
-		// v3.1.0-alpha.1 we’ve moved to use Nunjucks’ internal cache instead of Eleventy’s
-		// this.cacheable = false;
 	}
+
+	// v3.1.0-alpha.1 we’ve moved to use Nunjucks’ internal cache instead of Eleventy’s
+	// get cacheable() {
+	// 	return false;
+	// }
 
 	#getFileSystemDirs() {
 		let paths = new Set();
@@ -55,13 +58,18 @@ export default class Nunjucks extends TemplateEngine {
 				};
 			};
 
-			this.njkEnv = new NunjucksLib.Environment(
-				new NodePrecompiledLoader(),
-				this.nunjucksEnvironmentOptions,
-			);
+			this.njkEnv = new Environment(new NodePrecompiledLoader(), this.nunjucksEnvironmentOptions);
 		} else {
-			let fsLoader = new NunjucksLib.FileSystemLoader(this.#getFileSystemDirs());
-			this.njkEnv = new NunjucksLib.Environment(fsLoader, this.nunjucksEnvironmentOptions);
+			let loaders = [];
+			loaders.push(new FileSystemLoader(this.#getFileSystemDirs()));
+
+			// These need to come after FileSystemLoader
+			for (let loaderOptions of this.config.nunjucksLoaders) {
+				let loader = NunjucksLib.Loader.extend(loaderOptions);
+				loaders.push(new loader());
+			}
+
+			this.njkEnv = new Environment(loaders, this.nunjucksEnvironmentOptions);
 		}
 
 		this.config.events.emit("eleventy.engine.njk", {
@@ -99,7 +107,7 @@ export default class Nunjucks extends TemplateEngine {
 			// this.njkEnv.invalidateCache();
 		});
 
-		this.setEngineLib(this.njkEnv);
+		this.setEngineLib(this.njkEnv, Boolean(this.config.libraryOverrides.njk));
 
 		this.addFilters(this.config.nunjucksFilters);
 		this.addFilters(this.config.nunjucksAsyncFilters, true);
@@ -212,8 +220,11 @@ export default class Nunjucks extends TemplateEngine {
 				// Nunjucks bug with non-paired custom tags bug still exists even
 				// though this issue is closed. Works fine for paired.
 				// https://github.com/mozilla/nunjucks/issues/158
+				// https://github.com/11ty/eleventy/issues/372
 				if (args.children.length === 0) {
-					args.addChild(new nodes.Literal(0, 0, ""));
+					// Changed from an empty string to an empty NodeList
+					// https://github.com/11ty/eleventy/issues/3788
+					args.addChild(new nodes.NodeList());
 				}
 
 				parser.advanceAfterBlockEnd(tok.value);
@@ -414,8 +425,14 @@ export default class Nunjucks extends TemplateEngine {
 
 	/* Outputs an Array of lodash get selectors */
 	parseForSymbols(str) {
+		if (!str) {
+			return [];
+		}
 		const { parser, nodes } = NunjucksLib;
 		let obj = parser.parse(str, this._getParseExtensions());
+		if (!obj) {
+			return [];
+		}
 		let linesplit = str.split("\n");
 		let values = obj.findAll(nodes.Value);
 		let symbols = obj.findAll(nodes.Symbol).map((entry) => {
@@ -452,9 +469,11 @@ export default class Nunjucks extends TemplateEngine {
 		if (this._usingPrecompiled) {
 			tmpl = this.njkEnv.getTemplate(str, true);
 		} else if (!inputPath || inputPath === "njk" || inputPath === "md") {
-			tmpl = new NunjucksLib.Template(str, this.njkEnv, null, false);
+			// Template(content, environment, path, eagerCompile)
+			tmpl = new Template(str, this.njkEnv, null, false);
 		} else {
-			tmpl = new NunjucksLib.Template(str, this.njkEnv, inputPath, false);
+			// Template(content, environment, path, eagerCompile)
+			tmpl = new Template(str, this.njkEnv, inputPath, false);
 		}
 
 		return function (data) {

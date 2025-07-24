@@ -1,7 +1,15 @@
 import assert from "node:assert";
-
 import debugUtil from "debug";
 import { Merge, DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
+
+function deepEqual(actual, expected) {
+	try {
+		assert.deepStrictEqual(actual, expected);
+		return false;
+	} catch (e) {
+		return true;
+	}
+}
 
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
@@ -25,6 +33,8 @@ const DEFAULT_SERVER_OPTIONS = {
 };
 
 class EleventyServe {
+	#eleventyConfig;
+
 	constructor() {
 		this.logger = new ConsoleLogger();
 		this._initOptionsFetched = false;
@@ -55,19 +65,20 @@ class EleventyServe {
 	}
 
 	get eleventyConfig() {
-		if (!this._eleventyConfig) {
+		if (!this.#eleventyConfig) {
 			throw new EleventyServeConfigError(
 				"You need to set the eleventyConfig property on EleventyServe.",
 			);
 		}
 
-		return this._eleventyConfig;
+		return this.#eleventyConfig;
 	}
 
 	set eleventyConfig(config) {
-		this._eleventyConfig = config;
-		if (checkPassthroughCopyBehavior(this._eleventyConfig.userConfig, "serve")) {
-			this._eleventyConfig.userConfig.events.on("eleventy.passthrough", ({ map }) => {
+		this.#eleventyConfig = config;
+
+		if (checkPassthroughCopyBehavior(this.#eleventyConfig.userConfig, "serve")) {
+			this.#eleventyConfig.userConfig.events.on("eleventy.passthrough", ({ map }) => {
 				// for-free passthrough copy
 				this.setAliases(map);
 			});
@@ -81,10 +92,16 @@ class EleventyServe {
 		this.outputDir = outputDir;
 	}
 
+	static getDevServer() {
+		// This happens on demand for performance purposes when not used by builds
+		// https://github.com/11ty/eleventy/pull/3689
+		return import("@11ty/eleventy-dev-server").then((i) => i.default);
+	}
+
 	async getServerModule(name) {
 		try {
 			if (!name || name === DEFAULT_SERVER_OPTIONS.module) {
-				return import("@11ty/eleventy-dev-server").then(i=>i.default)
+				return EleventyServe.getDevServer();
 			}
 
 			// Look for peer dep in local project
@@ -134,7 +151,8 @@ class EleventyServe {
 					e.message,
 			);
 			debug("Eleventy server error %o", e);
-			return import("@11ty/eleventy-dev-server").then(i=>i.default)
+
+			return EleventyServe.getDevServer();
 		}
 	}
 
@@ -291,12 +309,7 @@ class EleventyServe {
 	}
 
 	hasOptionsChanged() {
-		try {
-			assert.deepStrictEqual(this.config.serverOptions, this._savedConfigOptions);
-			return false;
-		} catch (e) {
-			return true;
-		}
+		return !deepEqual(this.config.serverOptions, this._savedConfigOptions);
 	}
 
 	// Live reload the server

@@ -1,6 +1,11 @@
+import debugUtil from "debug";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 
 class TemplateEngineConfigError extends EleventyBaseError {}
+
+const debug = debugUtil("Eleventy:TemplateEngine");
+
+const AMENDED_INSTANCES = new Set();
 
 export default class TemplateEngine {
 	#extensionMap;
@@ -11,12 +16,15 @@ export default class TemplateEngine {
 		this.name = name;
 
 		this.engineLib = null;
-		this.cacheable = false;
 
 		if (!eleventyConfig) {
 			throw new TemplateEngineConfigError("Missing `eleventyConfig` argument.");
 		}
 		this.eleventyConfig = eleventyConfig;
+	}
+
+	get cacheable() {
+		return false;
 	}
 
 	get dirs() {
@@ -93,10 +101,24 @@ export default class TemplateEngine {
 	/**
 	 * @protected
 	 */
-	setEngineLib(engineLib) {
+	setEngineLib(engineLib, isOverrideViaSetLibrary = false) {
 		this.engineLib = engineLib;
 
 		// Run engine amendments (via issue #2438)
+		// Issue #3816: this isn’t ideal but there is no other way to reset a markdown instance if it was also overridden by addLibrary
+		if (AMENDED_INSTANCES.has(engineLib)) {
+			return;
+		}
+
+		if (isOverrideViaSetLibrary) {
+			AMENDED_INSTANCES.add(engineLib);
+		}
+		debug(
+			"Running amendLibrary for %o (number of amendments: %o)",
+			this.name,
+			this.config.libraryAmendments[this.name]?.length,
+		);
+
 		for (let amendment of this.config.libraryAmendments[this.name] || []) {
 			// TODO it’d be nice if this were async friendly
 			amendment(engineLib);

@@ -1,5 +1,4 @@
-import semver from "semver";
-
+import { satisfies } from "../Adapters/Packages/semver.js";
 import { getEleventyPackageJson, getWorkingProjectPackageJson } from "./ImportJsonSync.js";
 
 const pkg = getEleventyPackageJson();
@@ -8,8 +7,18 @@ const pkg = getEleventyPackageJson();
 class Compatibility {
 	static NORMALIZE_PRERELEASE_REGEX = /-canary\b/g;
 
+	static #projectPackageJson;
+
 	constructor(compatibleRange) {
 		this.compatibleRange = Compatibility.getCompatibilityValue(compatibleRange);
+	}
+
+	static get projectPackageJson() {
+		if (!this.#projectPackageJson) {
+			this.#projectPackageJson = getWorkingProjectPackageJson();
+		}
+
+		return this.#projectPackageJson;
 	}
 
 	static normalizeIdentifier(identifier) {
@@ -22,9 +31,8 @@ class Compatibility {
 		}
 
 		// fetch from project’s package.json
-		let projectPackageJson = getWorkingProjectPackageJson();
-		if (projectPackageJson["11ty"]?.compatibility) {
-			return projectPackageJson["11ty"]?.compatibility;
+		if (this.projectPackageJson?.["11ty"]?.compatibility) {
+			return this.projectPackageJson["11ty"].compatibility;
 		}
 	}
 
@@ -33,7 +41,7 @@ class Compatibility {
 	}
 
 	static satisfies(version, compatibleRange) {
-		return semver.satisfies(
+		return satisfies(
 			Compatibility.normalizeIdentifier(version),
 			Compatibility.normalizeIdentifier(compatibleRange),
 			{

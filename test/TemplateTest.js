@@ -9,14 +9,11 @@ import EleventyExtensionMap from "../src/EleventyExtensionMap.js";
 import EleventyErrorUtil from "../src/Errors/EleventyErrorUtil.js";
 import TemplateContentPrematureUseError from "../src/Errors/TemplateContentPrematureUseError.js";
 import { normalizeNewLines } from "./Util/normalizeNewLines.js";
-import eventBus from "../src/EventBus.js";
 
 import getNewTemplate from "./_getNewTemplateForTests.js";
 import { getRenderedTemplates as getRenderedTmpls, renderLayout, renderTemplate } from "./_getRenderedTemplates.js";
 import { getTemplateConfigInstance, getTemplateConfigInstanceCustomCallback } from "./_testHelpers.js";
 import TemplateEngineManager from "../src/Engines/TemplateEngineManager.js";
-
-const fsp = fs.promises;
 
 async function getRenderedData(tmpl, pageNumber = 0) {
   let data = await tmpl.getData();
@@ -1761,7 +1758,7 @@ test("Engine Singletons", async (t) => {
 test("Make sure layout cache takes new changes during watch (nunjucks)", async (t) => {
   let filePath = "./test/stubs-layout-cache/_includes/include-script-1.js";
 
-  await fsp.writeFile(filePath, `alert("hi");`, { encoding: "utf8" });
+  fs.writeFileSync(filePath, `alert("hi");`, "utf8");
 
   let tmpl = await getNewTemplate(
     "./test/stubs-layout-cache/test.njk",
@@ -1773,7 +1770,7 @@ test("Make sure layout cache takes new changes during watch (nunjucks)", async (
 
   t.is((await renderTemplate(tmpl, data)).trim(), '<script>alert("hi");</script>');
 
-  await fsp.writeFile(filePath, `alert("bye");`, { encoding: "utf8" });
+  fs.writeFileSync(filePath, `alert("bye");`, "utf8");
 
   tmpl.config.events.emit("eleventy#templateModified", filePath);
 
@@ -1782,7 +1779,7 @@ test("Make sure layout cache takes new changes during watch (nunjucks)", async (
 
 test("Make sure layout cache takes new changes during watch (liquid)", async (t) => {
   let filePath = "./test/stubs-layout-cache/_includes/include-script-2.js";
-  await fsp.writeFile(filePath, `alert("hi");`, { encoding: "utf8" });
+  fs.writeFileSync(filePath, `alert("hi");`, "utf8");
 
   let tmpl = await getNewTemplate(
     "./test/stubs-layout-cache/test.liquid",
@@ -1794,9 +1791,10 @@ test("Make sure layout cache takes new changes during watch (liquid)", async (t)
 
   t.is((await renderTemplate(tmpl, data)).trim(), '<script>alert("hi");</script>');
 
-  await fsp.writeFile(filePath, `alert("bye");`, { encoding: "utf8" });
+  fs.writeFileSync(filePath, `alert("bye");`, "utf8");
 
-  eventBus.emit("eleventy.resourceModified", filePath);
+  // Trigger that the file has changed
+  tmpl.eleventyConfig.setPreviousBuildModifiedFile(filePath);
 
   t.is((await renderTemplate(tmpl, data)).trim(), '<script>alert("bye");</script>');
 });

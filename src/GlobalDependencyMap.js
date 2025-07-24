@@ -1,29 +1,27 @@
-import { DepGraph } from "dependency-graph";
 import debugUtil from "debug";
 import { TemplatePath } from "@11ty/eleventy-utils";
 
 import JavaScriptDependencies from "./Util/JavaScriptDependencies.js";
 import PathNormalizer from "./Util/PathNormalizer.js";
+import { TemplateDepGraph } from "./Util/TemplateDepGraph.js";
 
 const debug = debugUtil("Eleventy:Dependencies");
 
 class GlobalDependencyMap {
 	// dependency-graph requires these keys to be alphabetic strings
 	static LAYOUT_KEY = "layout";
-	static COLLECTION_PREFIX = "__collection:";
-	static CONFIGAPI_DATA_KEY = "[configapi]";
+	static COLLECTION_PREFIX = "__collection:"; // must match TemplateDepGraph key
 
-	static SPECIAL_ALL_COLLECTION_NAME = "all";
-	static SPECIAL_KEYS_COLLECTION_NAME = "[keys]";
-
+	#map;
 	#templateConfig;
+	#cachedUserConfigurationCollectionApiNames;
 
-	static isTag(entry) {
+	static isCollection(entry) {
 		return entry.startsWith(this.COLLECTION_PREFIX);
 	}
 
 	static getTagName(entry) {
-		if (this.isTag(entry)) {
+		if (this.isCollection(entry)) {
 			return entry.slice(this.COLLECTION_PREFIX.length);
 		}
 	}
@@ -33,8 +31,7 @@ class GlobalDependencyMap {
 	}
 
 	reset() {
-		this.config = undefined;
-		this._map = undefined;
+		this.#map = undefined;
 	}
 
 	setIsEsm(isEsm) {
@@ -43,27 +40,27 @@ class GlobalDependencyMap {
 
 	setTemplateConfig(templateConfig) {
 		this.#templateConfig = templateConfig;
-	}
-
-	setConfig(config) {
-		if (this.config) {
-			return;
-		}
-
-		this.config = config;
-
-		this.userConfigurationCollectionApiNames = config.collectionApiNames || [];
-		this.addCollectionApiNames(this.userConfigurationCollectionApiNames);
 
 		// These have leading dot slashes, but so do the paths from Eleventy
-		this.config.events.once("eleventy.layouts", async (layouts) => {
+		this.#templateConfig.userConfig.events.once("eleventy.layouts", async (layouts) => {
 			await this.addLayoutsToMap(layouts);
 		});
 	}
 
+	get userConfigurationCollectionApiNames() {
+		if (this.#cachedUserConfigurationCollectionApiNames) {
+			return this.#cachedUserConfigurationCollectionApiNames;
+		}
+		return Object.keys(this.#templateConfig.userConfig.getCollections()) || [];
+	}
+
+	initializeUserConfigurationApiCollections() {
+		this.addCollectionApiNames(this.userConfigurationCollectionApiNames);
+	}
+
 	// For Testing
 	setCollectionApiNames(names = []) {
-		this.userConfigurationCollectionApiNames = names;
+		this.#cachedUserConfigurationCollectionApiNames = names;
 	}
 
 	addCollectionApiNames(names = []) {
@@ -71,20 +68,14 @@ class GlobalDependencyMap {
 			return;
 		}
 
-		// Collection API keys add an implicit dependency on the `all` collection
-		let allKey = GlobalDependencyMap.getCollectionKeyForEntry(
-			GlobalDependencyMap.SPECIAL_ALL_COLLECTION_NAME,
-		);
-		for (let name of names) {
-			let collectionKey = GlobalDependencyMap.getCollectionKeyForEntry(name);
-			this.addDependency(collectionKey, [allKey]);
+		for (let collectionName of names) {
+			this.map.addConfigCollectionName(collectionName);
 		}
 	}
 
 	filterOutLayouts(nodes = []) {
 		return nodes.filter((node) => {
-			let data = this.map.getNodeData(node);
-			if (data?.type === GlobalDependencyMap.LAYOUT_KEY) {
+			if (GlobalDependencyMap.isLayoutNode(this.map, node)) {
 				return false;
 			}
 			return true;
@@ -97,8 +88,7 @@ class GlobalDependencyMap {
 
 	static removeLayoutNodes(graph, nodeList) {
 		return nodeList.filter((node) => {
-			let data = graph.getNodeData(node);
-			if (data?.type === GlobalDependencyMap.LAYOUT_KEY) {
+			if (this.isLayoutNode(graph, node)) {
 				return false;
 			}
 			return true;
@@ -108,8 +98,7 @@ class GlobalDependencyMap {
 	removeLayoutNodes(normalizedLayouts) {
 		let nodes = this.map.overallOrder();
 		for (let node of nodes) {
-			let data = this.map.getNodeData(node);
-			if (!data || !data.type || data.type !== GlobalDependencyMap.LAYOUT_KEY) {
+			if (!GlobalDependencyMap.isLayoutNode(this.map, node)) {
 				continue;
 			}
 
@@ -154,15 +143,16 @@ class GlobalDependencyMap {
 	}
 
 	get map() {
-		if (!this._map) {
-			this._map = new DepGraph({ circular: true });
+		if (!this.#map) {
+			// this.#map = new DepGraph({ circular: true });
+			this.#map = new TemplateDepGraph();
 		}
 
-		return this._map;
+		return this.#map;
 	}
 
 	set map(graph) {
-		this._map = graph;
+		this.#map = graph;
 	}
 
 	normalizeNode(node) {
@@ -194,13 +184,13 @@ class GlobalDependencyMap {
 
 	getDependantsFor(node) {
 		if (!node) {
-			return new Set();
+			return [];
 		}
 
 		node = this.normalizeNode(node);
 
 		if (!this.map.hasNode(node)) {
-			return new Set();
+			return [];
 		}
 
 		// Direct dependants and dependencies, both publish and consume from collections
@@ -251,20 +241,26 @@ class GlobalDependencyMap {
 	getTemplatesThatConsumeCollections(collectionNames) {
 		let templates = new Set();
 		for (let name of collectionNames) {
-			let collectionName = GlobalDependencyMap.getCollectionKeyForEntry(name);
-			if (!this.map.hasNode(collectionName)) {
+			let collectionKey = GlobalDependencyMap.getCollectionKeyForEntry(name);
+			if (!this.map.hasNode(collectionKey)) {
 				continue;
 			}
-			for (let node of this.map.dependantsOf(collectionName)) {
+			for (let node of this.map.dependantsOf(collectionKey)) {
 				if (!node.startsWith(GlobalDependencyMap.COLLECTION_PREFIX)) {
-					let data = this.map.getNodeData(node);
-					if (!data || !data.type || data.type != GlobalDependencyMap.LAYOUT_KEY) {
+					if (!GlobalDependencyMap.isLayoutNode(this.map, node)) {
 						templates.add(node);
 					}
 				}
 			}
 		}
 		return templates;
+	}
+
+	static isLayoutNode(graph, node) {
+		if (!graph.hasNode(node)) {
+			return false;
+		}
+		return graph.getNodeData(node)?.type === GlobalDependencyMap.LAYOUT_KEY;
 	}
 
 	getLayoutsUsedBy(node) {
@@ -277,14 +273,13 @@ class GlobalDependencyMap {
 		let layouts = [];
 
 		// include self, if layout
-		if (this.map.getNodeData(node)?.type === GlobalDependencyMap.LAYOUT_KEY) {
+		if (GlobalDependencyMap.isLayoutNode(this.map, node)) {
 			layouts.push(node);
 		}
 
 		this.map.dependantsOf(node).forEach((node) => {
-			let data = this.map.getNodeData(node);
 			// we only want layouts
-			if (data?.type === GlobalDependencyMap.LAYOUT_KEY) {
+			if (GlobalDependencyMap.isLayoutNode(this.map, node)) {
 				return layouts.push(node);
 			}
 		});
@@ -337,31 +332,25 @@ class GlobalDependencyMap {
 		return GlobalDependencyMap.removeLayoutNodes(this.map, this.map.dependenciesOf(node));
 	}
 
-	#addNode(name, type) {
+	#addNode(name) {
 		if (this.map.hasNode(name)) {
 			return;
 		}
-		if (type) {
-			this.map.addNode(name, {
-				type,
-			});
-		} else {
-			this.map.addNode(name);
-		}
+
+		this.map.addNode(name);
 	}
 
 	// node arguments are already normalized
 	#addDependency(from, toArray = []) {
-		this.#addNode(from);
+		this.#addNode(from); // only if not already added
 
 		if (!Array.isArray(toArray)) {
 			throw new Error("Second argument to `addDependency` must be an Array.");
 		}
 
 		// debug("%o depends on %o", from, toArray);
-
 		for (let to of toArray) {
-			this.#addNode(to);
+			this.#addNode(to); // only if not already added
 			if (from !== to) {
 				this.map.addDependency(from, to);
 			}
@@ -375,77 +364,14 @@ class GlobalDependencyMap {
 		);
 	}
 
-	isUserConfigCollectionName(name) {
-		return this.userConfigurationCollectionApiNames.includes(name);
-	}
+	addNewNodeRelationships(from, consumes = [], publishes = []) {
+		consumes = consumes.filter(Boolean);
+		publishes = publishes.filter(Boolean);
 
-	#mergeNodeData(name, newData) {
-		if (this.map.hasNode(name)) {
-			this.map.setNodeData(name, Object.assign(this.map.getNodeData(name), newData));
-		} else {
-			this.map.setNodeData(name, newData);
-		}
-	}
+		debug("%o consumes %o and publishes to %o", from, consumes, publishes);
+		from = this.normalizeNode(from);
 
-	isConfigurationApiConsumer(nodeName) {
-		if (!this.map.hasNode(nodeName)) {
-			return false;
-		}
-		return this.map.getNodeData(nodeName)?.consumes === GlobalDependencyMap.CONFIGAPI_DATA_KEY;
-	}
-
-	// via Pagination or eleventyImport
-	addDependencyConsumesCollection(from, collectionName) {
-		let nodeName = this.normalizeNode(from);
-		debug("%o depends on collection: %o", nodeName, collectionName);
-		let collectionKey = GlobalDependencyMap.getCollectionKeyForEntry(collectionName);
-		this.#addDependency(nodeName, [collectionKey]);
-
-		if (this.isUserConfigCollectionName(collectionName)) {
-			this.#mergeNodeData(nodeName, {
-				consumes: GlobalDependencyMap.CONFIGAPI_DATA_KEY,
-			});
-		}
-
-		let allKey = GlobalDependencyMap.getCollectionKeyForEntry(
-			GlobalDependencyMap.SPECIAL_ALL_COLLECTION_NAME,
-		);
-		// implied collectionName => all
-		if (collectionName === GlobalDependencyMap.SPECIAL_KEYS_COLLECTION_NAME) {
-			this.#addDependency(collectionKey, [allKey]);
-			// implied all => [keys]
-		} else if (collectionName === GlobalDependencyMap.SPECIAL_ALL_COLLECTION_NAME) {
-			let keysKey = GlobalDependencyMap.getCollectionKeyForEntry(
-				GlobalDependencyMap.SPECIAL_KEYS_COLLECTION_NAME,
-			);
-			this.#addDependency(collectionKey, [keysKey]);
-		} else if (this.isUserConfigCollectionName(collectionName)) {
-			this.#addDependency(collectionKey, [allKey]);
-		}
-	}
-
-	// via *tagged* collections (minus eleventyExcludeFromCollections)
-	addDependencyPublishesToCollection(from, collectionName) {
-		let normalizedFrom = this.normalizeNode(from);
-		let key = GlobalDependencyMap.getCollectionKeyForEntry(collectionName);
-
-		// Exception for things that publish to collections.all
-		if (
-			collectionName === GlobalDependencyMap.SPECIAL_ALL_COLLECTION_NAME &&
-			this.isConfigurationApiConsumer(normalizedFrom)
-		) {
-			// Do nothing, this relationship is already implied and adding again will mess up the order
-		} else {
-			this.#addDependency(key, [normalizedFrom]);
-		}
-
-		// Tagged collections should be calculated before [keys]
-		if (!this.isUserConfigCollectionName(collectionName)) {
-			let keysKey = GlobalDependencyMap.getCollectionKeyForEntry(
-				GlobalDependencyMap.SPECIAL_KEYS_COLLECTION_NAME,
-			);
-			this.#addDependency(keysKey, [key]);
-		}
+		this.map.addTemplate(from, consumes, publishes);
 	}
 
 	// Layouts are not relevant to compile cache and can be ignored
@@ -494,20 +420,9 @@ class GlobalDependencyMap {
 	}
 
 	getTemplateOrder() {
-		let order = this.map.overallOrder();
-		// add another collections.all entry (if not already the last one)
-		// TODO we might be able to make this check better and avoid checks if the list ends with irrelevant collections
-		let allKey = GlobalDependencyMap.getCollectionKeyForEntry(
-			GlobalDependencyMap.SPECIAL_ALL_COLLECTION_NAME,
-		);
-
-		if (order[order.length - 1] !== allKey) {
-			order.push(allKey);
-		}
-
-		// Remove duplicates when they are unnecessary
-		if (order.slice(-3).join(",") === "__collection:all,__collection:[keys],__collection:all") {
-			order = order.slice(0, -2); // keep the last __collection:all
+		let order = [];
+		for (let entry of this.map.overallOrder()) {
+			order.push(entry);
 		}
 
 		return order;
@@ -530,7 +445,7 @@ class GlobalDependencyMap {
 
 	restore(persisted) {
 		let obj = JSON.parse(persisted);
-		let graph = new DepGraph({ circular: true });
+		let graph = new TemplateDepGraph();
 
 		// https://github.com/jriecken/dependency-graph/issues/44
 		// Restore top level serialized Map objects (in stringify above)
