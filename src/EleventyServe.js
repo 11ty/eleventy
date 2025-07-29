@@ -262,7 +262,6 @@ class EleventyServe {
 		if (this._server) {
 			await this._server.close();
 
-			console.log("Server closed.");
 			this._server = undefined;
 		}
 	}
