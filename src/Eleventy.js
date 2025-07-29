@@ -6,7 +6,7 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 import { Core } from "./Core.js";
 import EleventyServe from "./EleventyServe.js";
 import EleventyWatch from "./EleventyWatch.js";
-import EleventyWatchTargets from "./EleventyWatchTargets.js";
+import WatchTargets from "./EleventyWatchTargets.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 
 // Utils
@@ -55,8 +55,8 @@ export default class Eleventy extends Core {
 		this.watchManager = new EleventyWatch();
 
 		/** @type {object} */
-		this.watchTargets = new EleventyWatchTargets(this.eleventyConfig);
-		this.watchTargets.addAndMakeGlob(this.config.additionalWatchTargets);
+		this.watchTargets = new WatchTargets(this.eleventyConfig);
+		this.watchTargets.add(this.config.additionalWatchTargets);
 	}
 
 	/**
@@ -113,9 +113,12 @@ export default class Eleventy extends Core {
 
 	shouldTriggerConfigReset(changedFiles) {
 		let configFilePaths = new Set(this.eleventyConfig.getLocalProjectConfigFiles());
-		let resetConfigGlobs = EleventyWatchTargets.normalizeToGlobs(
+
+		// https://www.11ty.dev/docs/watch-serve/#reset-configuration
+		let resetConfigGlobs = WatchTargets.normalizeToGlobs(
 			Array.from(this.eleventyConfig.userConfig.watchTargetsConfigReset),
 		);
+
 		for (let filePath of changedFiles) {
 			if (configFilePaths.has(filePath)) {
 				return true;
@@ -152,7 +155,7 @@ export default class Eleventy extends Core {
 		);
 	}
 
-	async #watch(isResetConfig = false) {
+	async #rewatch(isResetConfig = false) {
 		if (this.watchManager.isBuildRunning()) {
 			return;
 		}
@@ -185,7 +188,9 @@ export default class Eleventy extends Core {
 			await this.#initWatchDependencies();
 
 			// Add new deps to chokidar
-			this.watcher.add(this.watchTargets.getNewTargetsSinceLastReset());
+			let newWatchTargets = this.watchTargets.getNewTargetsSinceLastReset();
+			// TODO chokidar
+			this.watcher.add(newWatchTargets);
 
 			// Is a CSS input file and is not in the includes folder
 			// TODO check output path file extension of this template (not input path)
@@ -249,7 +254,7 @@ export default class Eleventy extends Core {
 					queueSize !== 1 ? "s" : ""
 				})`,
 			);
-			await this.#watch();
+			await this.#rewatch();
 		} else {
 			this.logger.log("Watching…");
 		}
@@ -328,30 +333,56 @@ export default class Eleventy extends Core {
 		);
 	}
 
+	getWatchedFiles() {
+		throw new Error(
+			"Eleventy#getWatchedFiles() has been removed in Eleventy v4. Use Eleventy#getWatchedTargets().targets instead.",
+		);
+	}
+
 	/**
-	 * Returns all watched files.
+	 * Returns all watched paths
 	 *
 	 * @async
 	 * @method
-	 * @returns {Promise<Array>} targets - The watched files.
+	 * @returns {Object} containing `cwd` string, `targets` file paths, and `ignores` globs Array
 	 */
-	async getWatchedFiles() {
-		return this.watchTargets.getTargets();
+	async getWatchedTargets() {
+		let rawWatchedGlobs = await this.watchTargets.getTargets();
+
+		let ignores = this.eleventyFiles.getGlobWatcherIgnores();
+
+		// Remap all paths to `cwd` if in play (Issue #3854)
+		let remapper = new GlobRemap(rawWatchedGlobs);
+		let cwd = remapper.getCwd();
+
+		if (cwd) {
+			rawWatchedGlobs = remapper.getInput().map((entry) => {
+				return TemplatePath.stripLeadingDotSlash(entry);
+			});
+			ignores = remapper.getRemapped(ignores || []);
+		}
+
+		ignores = ignores.map((entry) => {
+			return TemplatePath.stripLeadingDotSlash(entry);
+		});
+
+		debug("Ignoring watcher changes to: %o", ignores);
+
+		return {
+			cwd,
+			targets: rawWatchedGlobs,
+			ignores,
+		};
 	}
 
 	getChokidarConfig() {
-		let ignores = this.eleventyFiles.getGlobWatcherIgnores();
-		debug("Ignoring watcher changes to: %o", ignores);
-
 		let configOptions = this.config.chokidarConfig;
 
-		// can’t override these yet
-		// TODO maybe if array, merge the array?
+		// unsupported: using your own `ignored`
 		delete configOptions.ignored;
 
 		return Object.assign(
 			{
-				ignored: ignores,
 				ignoreInitial: true,
 				awaitWriteFinish: {
 					stabilityThreshold: 150,
@@ -384,7 +415,7 @@ export default class Eleventy extends Core {
 		}
 
 		// Note that watching indirectly depends on this for fetching dependencies from JS files
-		// See: TemplateWriter:pathCache and EleventyWatchTargets
+		// See: TemplateWriter:pathCache and WatchTargets
 		await this.write();
 
 		let initWatchBench = this.watcherBench.get("Start up --watch");
@@ -393,28 +424,28 @@ export default class Eleventy extends Core {
 		await this.initWatch();
 
 		// TODO improve unwatching if JS dependencies are removed (or files are deleted)
-		let rawFiles = await this.getWatchedFiles();
-		debug("Watching for changes to: %o", rawFiles);
+		let { targets, cwd, ignores } = await this.getWatchedTargets();
+		debug("Watching for changes to: %o", targets);
 
 		let options = this.getChokidarConfig();
 
-		// Remap all paths to `cwd` if in play (Issue #3854)
-		let remapper = new GlobRemap(rawFiles);
-		let cwd = remapper.getCwd();
-
 		if (cwd) {
 			options.cwd = cwd;
-
-			rawFiles = remapper.getInput().map((entry) => {
-				return TemplatePath.stripLeadingDotSlash(entry);
-			});
-
-			options.ignored = remapper.getRemapped(options.ignored || []).map((entry) => {
-				return TemplatePath.stripLeadingDotSlash(entry);
-			});
 		}
 
-		let watcher = chokidar.watch(rawFiles, options);
+		debug("Ignoring watcher changes to: %o", ignores);
+
+		options.alwaysStat = true;
+		options.ignored = (path, stats) => {
+			if (stats?.isFile()) {
+				let isMatch = this.watchTargets.isWatchMatch(path, ignores);
+				if (!isMatch) {
+					return true;
+				}
+			}
+		};
+
+		let watcher = chokidar.watch(targets, options);
 
 		initWatchBench.after();
 
@@ -436,7 +467,7 @@ export default class Eleventy extends Core {
 				let { promise, resolve, reject } = withResolvers();
 
 				watchDelay = setTimeout(async () => {
-					this.#watch(isResetConfig).then(resolve, reject);
+					this.#rewatch(isResetConfig).then(resolve, reject);
 				}, this.config.watchThrottleWaitTime);
 
 				await promise;
@@ -456,7 +487,9 @@ export default class Eleventy extends Core {
 		watcher.on("change", async (path) => {
 			// Emulated passthrough copy logs from the server
 			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
-				this.logger.forceLog(`File changed: ${TemplatePath.standardizeFilePath(path)}`);
+				this.logger.forceLog(
+					`File changed: ${TemplatePath.stripLeadingDotSlash(TemplatePath.standardizeFilePath(path))}`,
+				);
 			}
 
 			await watchRun(path);
@@ -465,7 +498,9 @@ export default class Eleventy extends Core {
 		watcher.on("add", async (path) => {
 			// Emulated passthrough copy logs from the server
 			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
-				this.logger.forceLog(`File added: ${TemplatePath.standardizeFilePath(path)}`);
+				this.logger.forceLog(
+					`File added: ${TemplatePath.stripLeadingDotSlash(TemplatePath.standardizeFilePath(path))}`,
+				);
 			}
 
 			this.fileSystemSearch.add(path);
@@ -473,7 +508,9 @@ export default class Eleventy extends Core {
 		});
 
 		watcher.on("unlink", async (path) => {
-			this.logger.forceLog(`File deleted: ${TemplatePath.standardizeFilePath(path)}`);
+			this.logger.forceLog(
+				`File deleted: ${TemplatePath.stripLeadingDotSlash(TemplatePath.standardizeFilePath(path))}`,
+			);
 			this.fileSystemSearch.delete(path);
 			await watchRun(path);
 		});

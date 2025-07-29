@@ -37,8 +37,8 @@ test("Add and make glob", (t) => {
   targets.setProjectUsingEsm(true);
 
   // Note the `test` directory must exist here for this to pass.
-  targets.addAndMakeGlob(["test", "test/b.js"]);
-  t.deepEqual(targets.getTargets(), ["./test/**", "./test/b.js"]);
+  targets.add(["test", "test/b.js"]);
+  t.deepEqual(targets.getTargets(), ["./test", "./test/b.js"]);
 });
 
 test("JavaScript get dependencies", async (t) => {

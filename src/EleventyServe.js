@@ -1,14 +1,14 @@
-import assert from "node:assert";
 import debugUtil from "debug";
-import { Merge, DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
+import { Merge, TemplatePath } from "@11ty/eleventy-utils";
 
-function deepEqual(actual, expected) {
-	try {
-		assert.deepStrictEqual(actual, expected);
-		return false;
-	} catch (e) {
-		return true;
-	}
+function stringifyOptions(options) {
+	return JSON.stringify(options, function replacer(key, value) {
+		if (typeof value === "function") {
+			return value.toString();
+		}
+
+		return value;
+	});
 }
 
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
@@ -34,6 +34,7 @@ const DEFAULT_SERVER_OPTIONS = {
 
 class EleventyServe {
 	#eleventyConfig;
+	#savedConfigOptions;
 
 	constructor() {
 		this.logger = new ConsoleLogger();
@@ -170,7 +171,7 @@ class EleventyServe {
 			this.config.serverOptions,
 		);
 
-		this._savedConfigOptions = DeepCopy({}, this.config.serverOptions);
+		this.#savedConfigOptions = this.config.serverOptions;
 
 		if (!this._initOptionsFetched && this.getSetupCallback()) {
 			throw new Error(
@@ -261,6 +262,7 @@ class EleventyServe {
 		if (this._server) {
 			await this._server.close();
 
+			console.log("Server closed.");
 			this._server = undefined;
 		}
 	}
@@ -309,7 +311,9 @@ class EleventyServe {
 	}
 
 	hasOptionsChanged() {
-		return !deepEqual(this.config.serverOptions, this._savedConfigOptions);
+		return (
+			stringifyOptions(this.config.serverOptions) !== stringifyOptions(this.#savedConfigOptions)
+		);
 	}
 
 	// Live reload the server
