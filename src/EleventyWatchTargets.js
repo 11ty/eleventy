@@ -1,16 +1,19 @@
 import { TemplatePath } from "@11ty/eleventy-utils";
 import { DepGraph } from "dependency-graph";
 
+import { isGlobMatch } from "./Util/GlobMatcher.js";
+import { GlobStripper } from "./Util/GlobStripper.js";
 import JavaScriptDependencies from "./Util/JavaScriptDependencies.js";
 import eventBus from "./EventBus.js";
 
-class EleventyWatchTargets {
+export default class WatchTargets {
 	#templateConfig;
 
 	constructor(templateConfig) {
 		this.targets = new Set();
 		this.dependencies = new Set();
 		this.newTargets = new Set();
+		this.globMatch = new Set();
 		this.isEsm = false;
 
 		this.graph = new DepGraph();
@@ -27,10 +30,6 @@ class EleventyWatchTargets {
 
 	reset() {
 		this.newTargets = new Set();
-	}
-
-	isWatched(target) {
-		return this.targets.has(target);
 	}
 
 	addToDependencyGraph(parent, deps) {
@@ -66,7 +65,7 @@ class EleventyWatchTargets {
 	addRaw(targets, isDependency) {
 		for (let target of targets) {
 			let path = TemplatePath.addLeadingDotSlash(target);
-			if (!this.isWatched(path)) {
+			if (!this.targets.has(target)) {
 				this.newTargets.add(path);
 			}
 
@@ -88,19 +87,37 @@ class EleventyWatchTargets {
 		return [targets];
 	}
 
-	// add only a target
-	add(targets) {
-		this.addRaw(EleventyWatchTargets.normalize(targets));
-	}
-
-	static normalizeToGlobs(targets) {
-		return EleventyWatchTargets.normalize(targets).map((entry) =>
-			TemplatePath.convertToRecursiveGlobSync(entry),
+	isWatchMatch(filepath, ignoreGlobs = []) {
+		return (
+			isGlobMatch(filepath, Array.from(this.globMatch)) &&
+			(ignoreGlobs.length > 0 ? !isGlobMatch(filepath, ignoreGlobs) : true)
 		);
 	}
 
-	addAndMakeGlob(targets) {
-		this.addRaw(EleventyWatchTargets.normalizeToGlobs(targets));
+	// add only a target
+	add(targets) {
+		let arrTargets = WatchTargets.normalize(targets)
+			.map((target) => {
+				let { path } = GlobStripper.parse(target);
+				if (!path || path !== ".") {
+					this.globMatch.add(TemplatePath.stripLeadingDotSlash(target));
+				}
+
+				if (path) {
+					if (path !== ".") {
+						return path;
+					}
+				}
+			})
+			.filter(Boolean);
+
+		this.addRaw(arrTargets);
+	}
+
+	static normalizeToGlobs(targets) {
+		return WatchTargets.normalize(targets).map((entry) =>
+			TemplatePath.convertToRecursiveGlobSync(entry),
+		);
 	}
 
 	// add only a target’s dependencies
@@ -109,7 +126,7 @@ class EleventyWatchTargets {
 			return;
 		}
 
-		targets = EleventyWatchTargets.normalize(targets);
+		targets = WatchTargets.normalize(targets);
 		let deps = await JavaScriptDependencies.getDependencies(targets, this.isEsm);
 		if (filterCallback) {
 			deps = deps.filter(filterCallback);
@@ -160,5 +177,3 @@ class EleventyWatchTargets {
 		return Array.from(this.targets);
 	}
 }
-
-export default EleventyWatchTargets;

@@ -118,11 +118,15 @@ test("Eleventy file watching", async (t) => {
   await elev.eleventyFiles.getFiles();
   await elev.initWatch();
 
-  t.deepEqual(await elev.getWatchedFiles(), [
+  let { targets, cwd, ignores } = await elev.getWatchedTargets();
+
+  t.is(cwd, "");
+
+  t.deepEqual(targets, [
     "./package.json",
-    "./test/stubs/**/*.njk",
-    "./test/stubs/_includes/**",
-    "./test/stubs/_data/**",
+    "./test/stubs",
+    "./test/stubs/_includes",
+    "./test/stubs/_data",
     "./.gitignore",
     "./.eleventyignore",
     "./test/stubs/.eleventyignore",
@@ -130,10 +134,15 @@ test("Eleventy file watching", async (t) => {
     "./eleventy.config.js",
     "./eleventy.config.mjs",
     "./eleventy.config.cjs",
-    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
     "./test/stubs/deps/dep1.cjs",
     "./test/stubs/deps/dep2.cjs",
   ]);
+
+  t.true(ignores.includes("node_modules/**"));
+  t.true(ignores.includes("**/node_modules/**"));
+  t.true(ignores.includes("test/stubs/_site/**"));
+  t.true(ignores.includes(".git/**"));
+  t.true(ignores.includes(".cache"));
 });
 
 test("Eleventy file watching (don’t watch deps of passthrough copy .js files)", async (t) => {
@@ -158,11 +167,15 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
   await elev.init();
   await elev.initWatch();
 
-  t.deepEqual(await elev.getWatchedFiles(), [
+  let { targets, cwd, ignores } = await elev.getWatchedTargets();
+
+  t.is(cwd, "");
+
+  t.deepEqual(targets, [
     "./package.json",
-    "./test/stubs/**/*.njk",
-    "./test/stubs/_includes/**",
-    "./test/stubs/_data/**",
+    "./test/stubs",
+    "./test/stubs/_includes",
+    "./test/stubs/_data",
     "./.gitignore",
     "./.eleventyignore",
     "./test/stubs/.eleventyignore",
@@ -170,8 +183,13 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
     "./eleventy.config.js",
     "./eleventy.config.mjs",
     "./eleventy.config.cjs",
-    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
   ]);
+
+  t.true(ignores.includes("node_modules/**"));
+  t.true(ignores.includes("**/node_modules/**"));
+  t.true(ignores.includes("test/stubs/_site/**"));
+  t.true(ignores.includes(".git/**"));
+  t.true(ignores.includes(".cache"));
 });
 
 test("Eleventy set input/output, one file input", async (t) => {

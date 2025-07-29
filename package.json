@@ -134,7 +134,7 @@
 	"dependencies": {
 		"@11ty/dependency-tree": "^4.0.0",
 		"@11ty/dependency-tree-esm": "^2.0.0",
-		"@11ty/eleventy-dev-server": "^2.0.8",
+		"@11ty/eleventy-dev-server": "3.0.0-alpha.1",
 		"@11ty/eleventy-plugin-bundle": "^3.0.6",
 		"@11ty/eleventy-utils": "^2.0.7",
 		"@11ty/gray-matter": "^2.0.0",
@@ -144,7 +144,7 @@
 		"@11ty/recursive-copy": "^4.0.2",
 		"@sindresorhus/slugify": "^2.2.1",
 		"bcp-47-normalize": "^2.3.0",
-		"chokidar": "^3.6.0",
+		"chokidar": "^4.0.3",
 		"debug": "^4.4.1",
 		"dependency-graph": "^1.0.0",
 		"entities": "^6.0.1",
@@ -163,5 +163,8 @@
 		"posthtml-match-helper": "^2.0.3",
 		"semver": "^7.7.2",
 		"tinyglobby": "^0.2.14"
+	},
+	"overrides": {
+		"chokidar": "$chokidar"
 	}
 }
