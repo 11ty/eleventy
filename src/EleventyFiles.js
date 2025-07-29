@@ -401,7 +401,6 @@ class EleventyFiles {
 
 	/* For `eleventy --watch` */
 	getGlobWatcherFiles() {
-		// TODO improvement: tie the includes and data to specific file extensions (currently using `**`)
 		let directoryGlobs = this.getIncludesAndDataDirs();
 
 		let globs = this.#getWatcherGlobs();

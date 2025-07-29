@@ -295,6 +295,7 @@ class EleventyServe {
 	// checkPassthroughCopyBehavior check is called upstream in Eleventy.js
 	// TODO globs are not removed from watcher
 	watchPassthroughCopy(globs) {
+		// TODO chokidar@4 doesn’t support globs!
 		this._watchedFiles = globs;
 
 		if (this._server && "watchFiles" in this.server) {

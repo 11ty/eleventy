@@ -24,6 +24,12 @@ export default class Eleventy extends Core {
 	/** @type {boolean} */
 	#isStopping = false;
 
+	/** @type {module:chokidar} */
+	#chokidar;
+
+	/** @type {EleventyWatch} */
+	#watchManager;
+
 	// constructor(input, output, options = {}, eleventyConfig = null) {
 	// 	super(input, output, options, eleventyConfig);
 	// }
@@ -36,9 +42,17 @@ export default class Eleventy extends Core {
 	setIncrementalBuild(isIncremental) {
 		super.setIncrementalBuild(isIncremental);
 
-		if (this.watchManager) {
+		if (this.#watchManager) {
 			this.watchManager.incremental = !!isIncremental;
 		}
+	}
+
+	get watchManager() {
+		if (!this.#watchManager) {
+			this.#watchManager = new EleventyWatch();
+			this.#watchManager.incremental = this.isIncremental;
+		}
+		return this.#watchManager;
 	}
 
 	async initializeConfig(initOverrides) {
@@ -50,9 +64,6 @@ export default class Eleventy extends Core {
 			this.eleventyServe = new EleventyServe();
 		}
 		this.eleventyServe.eleventyConfig = this.eleventyConfig;
-
-		/** @type {object} */
-		this.watchManager = new EleventyWatch();
 
 		/** @type {object} */
 		this.watchTargets = new WatchTargets(this.eleventyConfig);
@@ -183,13 +194,17 @@ export default class Eleventy extends Core {
 		try {
 			let [passthroughCopyResults, templateResults] = await this.write();
 
+			if (isResetConfig) {
+				// make sure this happens after write()
+				await this.setupWatcher();
+			}
+
 			this.watchTargets.reset();
 
 			await this.#initWatchDependencies();
 
 			// Add new deps to chokidar
 			let newWatchTargets = this.watchTargets.getNewTargetsSinceLastReset();
-			// TODO chokidar
 			this.watcher.add(newWatchTargets);
 
 			// Is a CSS input file and is not in the includes folder
@@ -255,8 +270,6 @@ export default class Eleventy extends Core {
 				})`,
 			);
 			await this.#rewatch();
-		} else {
-			this.logger.log("Watching…");
 		}
 	}
 
@@ -274,9 +287,6 @@ export default class Eleventy extends Core {
 	 * @method
 	 */
 	async initWatch() {
-		this.watchManager = new EleventyWatch();
-		this.watchManager.incremental = this.isIncremental;
-
 		if (this.projectPackageJsonPath) {
 			this.watchTargets.add([relative(TemplatePath.getWorkingDir(), this.projectPackageJsonPath)]);
 		}
@@ -295,6 +305,131 @@ export default class Eleventy extends Core {
 		benchmark.before();
 		await this.#initWatchDependencies();
 		benchmark.after();
+	}
+
+	get chokidar() {
+		if (!this.#chokidar) {
+			// We use a string module name and try/catch here to hide this from the zisi and esbuild serverless bundlers
+			// eslint-disable-next-line no-useless-catch
+			try {
+				let moduleName = "chokidar";
+				this.#chokidar = import(moduleName).then((mod) => mod.default);
+			} catch (e) {
+				throw e;
+			}
+		}
+		return this.#chokidar;
+	}
+
+	async setupWatcher() {
+		await this.initWatch();
+
+		let promises = [];
+		promises.push(this.chokidar);
+
+		if (this.watcher) {
+			// Close previous watcher
+			promises.push(this.watcher.close());
+		}
+
+		// TODO improve unwatching if JS dependencies are removed (or files are deleted)
+		let { targets, cwd, ignores } = await this.getWatchedTargets();
+		debug("Watching for changes to: %o", targets);
+
+		let options = this.getChokidarConfig();
+
+		if (cwd) {
+			options.cwd = cwd;
+		}
+
+		debug("Ignoring watcher changes to: %o", ignores);
+
+		options.alwaysStat = true;
+		options.ignored = (path, stats) => {
+			if (stats?.isFile()) {
+				let isMatch = this.watchTargets.isWatchMatch(path, ignores);
+				if (!isMatch) {
+					return true;
+				}
+			}
+		};
+
+		let [chokidar] = await Promise.all(promises);
+		this.watcher = chokidar.watch(targets, options);
+
+		let watchDelay;
+		let watchRun = async (path) => {
+			path = TemplatePath.normalize(path);
+			try {
+				let isResetConfig = this.#shouldResetConfig([path]);
+				this.#addFileToWatchQueue(path, isResetConfig);
+
+				clearTimeout(watchDelay);
+
+				let { promise, resolve, reject } = withResolvers();
+
+				watchDelay = setTimeout(async () => {
+					this.#rewatch(isResetConfig).then(resolve, reject);
+				}, this.config.watchThrottleWaitTime);
+
+				await promise;
+			} catch (e) {
+				if (e instanceof EleventyBaseError) {
+					this.errorHandler.error(e, "Eleventy watch error");
+					this.watchManager.setBuildFinished();
+				} else {
+					this.errorHandler.fatal(e, "Eleventy fatal watch error");
+					await this.close();
+				}
+			}
+
+			this.config.events.emit("eleventy.afterwatch");
+		};
+
+		this.watcher.on("change", async (path) => {
+			// Emulated passthrough copy logs from the server
+			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
+				this.logger.forceLog(
+					`File changed: ${TemplatePath.stripLeadingDotSlash(TemplatePath.standardizeFilePath(path))}`,
+				);
+			}
+
+			await watchRun(path);
+		});
+
+		this.watcher.on("add", async (path) => {
+			// Emulated passthrough copy logs from the server
+			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
+				this.logger.forceLog(
+					`File added: ${TemplatePath.stripLeadingDotSlash(TemplatePath.standardizeFilePath(path))}`,
+				);
+			}
+
+			this.fileSystemSearch.add(path);
+			await watchRun(path);
+		});
+
+		this.watcher.on("unlink", async (path) => {
+			// Emulated passthrough copy logs from the server
+			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
+				this.logger.forceLog(
+					`File deleted: ${TemplatePath.stripLeadingDotSlash(TemplatePath.standardizeFilePath(path))}`,
+				);
+			}
+			this.fileSystemSearch.delete(path);
+			await watchRun(path);
+		});
+
+		let { promise, resolve, reject } = withResolvers();
+		// wait for chokidar to be ready.
+		this.watcher.on("ready", () => {
+			this.logger.forceLog("Watching…");
+			resolve();
+		});
+		await promise;
+
+		// For testability
+		return watchRun;
 	}
 
 	/**
@@ -348,10 +483,11 @@ export default class Eleventy extends Core {
 	 */
 	async getWatchedTargets() {
 		let rawWatchedGlobs = await this.watchTargets.getTargets();
-
 		let ignores = this.eleventyFiles.getGlobWatcherIgnores();
 
 		// Remap all paths to `cwd` if in play (Issue #3854)
+		// This is likely unnecessary since #3854 was for tinyglobby it’s probably better to have a cwd
+		// anyway to have nice paths passed into chokidar events
 		let remapper = new GlobRemap(rawWatchedGlobs);
 		let cwd = remapper.getCwd();
 
@@ -394,7 +530,7 @@ export default class Eleventy extends Core {
 	}
 
 	/**
-	 * Start the watching of files
+	 * Start watching files
 	 *
 	 * @async
 	 * @method
@@ -403,17 +539,6 @@ export default class Eleventy extends Core {
 		this.watcherBench.setMinimumThresholdMs(500);
 		this.watcherBench.reset();
 
-		// We use a string module name and try/catch here to hide this from the zisi and esbuild serverless bundlers
-		let chokidar;
-		// eslint-disable-next-line no-useless-catch
-		try {
-			let moduleName = "chokidar";
-			let chokidarImport = await import(moduleName);
-			chokidar = chokidarImport.default;
-		} catch (e) {
-			throw e;
-		}
-
 		// Note that watching indirectly depends on this for fetching dependencies from JS files
 		// See: TemplateWriter:pathCache and WatchTargets
 		await this.write();
@@ -421,110 +546,22 @@ export default class Eleventy extends Core {
 		let initWatchBench = this.watcherBench.get("Start up --watch");
 		initWatchBench.before();
 
-		await this.initWatch();
-
-		// TODO improve unwatching if JS dependencies are removed (or files are deleted)
-		let { targets, cwd, ignores } = await this.getWatchedTargets();
-		debug("Watching for changes to: %o", targets);
-
-		let options = this.getChokidarConfig();
-
-		if (cwd) {
-			options.cwd = cwd;
-		}
-
-		debug("Ignoring watcher changes to: %o", ignores);
-
-		options.alwaysStat = true;
-		options.ignored = (path, stats) => {
-			if (stats?.isFile()) {
-				let isMatch = this.watchTargets.isWatchMatch(path, ignores);
-				if (!isMatch) {
-					return true;
-				}
-			}
-		};
-
-		let watcher = chokidar.watch(targets, options);
+		let watchRun = await this.setupWatcher();
 
 		initWatchBench.after();
 
 		this.watcherBench.finish("Watch");
 
-		this.logger.forceLog("Watching…");
-
-		this.watcher = watcher;
-
-		let watchDelay;
-		let watchRun = async (path) => {
-			path = TemplatePath.normalize(path);
-			try {
-				let isResetConfig = this.#shouldResetConfig([path]);
-				this.#addFileToWatchQueue(path, isResetConfig);
-
-				clearTimeout(watchDelay);
-
-				let { promise, resolve, reject } = withResolvers();
-
-				watchDelay = setTimeout(async () => {
-					this.#rewatch(isResetConfig).then(resolve, reject);
-				}, this.config.watchThrottleWaitTime);
-
-				await promise;
-			} catch (e) {
-				if (e instanceof EleventyBaseError) {
-					this.errorHandler.error(e, "Eleventy watch error");
-					this.watchManager.setBuildFinished();
-				} else {
-					this.errorHandler.fatal(e, "Eleventy fatal watch error");
-					await this.stopWatch();
-				}
-			}
-
-			this.config.events.emit("eleventy.afterwatch");
-		};
-
-		watcher.on("change", async (path) => {
-			// Emulated passthrough copy logs from the server
-			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
-				this.logger.forceLog(
-					`File changed: ${TemplatePath.stripLeadingDotSlash(TemplatePath.standardizeFilePath(path))}`,
-				);
-			}
-
-			await watchRun(path);
-		});
-
-		watcher.on("add", async (path) => {
-			// Emulated passthrough copy logs from the server
-			if (!this.eleventyServe.isEmulatedPassthroughCopyMatch(path)) {
-				this.logger.forceLog(
-					`File added: ${TemplatePath.stripLeadingDotSlash(TemplatePath.standardizeFilePath(path))}`,
-				);
-			}
-
-			this.fileSystemSearch.add(path);
-			await watchRun(path);
-		});
-
-		watcher.on("unlink", async (path) => {
-			this.logger.forceLog(
-				`File deleted: ${TemplatePath.stripLeadingDotSlash(TemplatePath.standardizeFilePath(path))}`,
-			);
-			this.fileSystemSearch.delete(path);
-			await watchRun(path);
-		});
-
-		// wait for chokidar to be ready.
-		await new Promise((resolve) => {
-			watcher.on("ready", () => resolve());
-		});
-
 		// Returns for testability
 		return watchRun;
 	}
 
+	// Renamed to close()
 	async stopWatch() {
+		return this.close();
+	}
+
+	async close() {
 		// Prevent multiple invocations.
 		if (this.#isStopping) {
 			return this.#isStopping;
