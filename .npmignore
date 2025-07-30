@@ -5,4 +5,4 @@ test_node
 coverage
 eslint.config.js
 .*
-packages
+packages/client/
