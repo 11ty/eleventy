@@ -3,6 +3,11 @@ if ! npm ci; then
 	exit 1
 fi
 
+if ! npx playwright install; then
+	echo 'Release error: npx playwright install command failed (for Vitest Browser Mode).'
+	exit 1
+fi
+
 # This step includes running packages/ test suites
 if ! npm test; then
 	echo 'Release error: npm test command failed.'
