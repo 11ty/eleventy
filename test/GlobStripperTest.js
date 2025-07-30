@@ -25,3 +25,9 @@ test("Star not at start of filename", (t) => {
 test("Expected failures", (t) => {
   t.throws(() => GlobStripper.parse("?/?"), { message: "Could not automatically determine top-most folder from glob pattern: ?/?"});
 });
+
+test("Issue #3910", (t) => {
+  t.deepEqual(GlobStripper.parse("./node_modules/artificial-chart/artificial-chart.css"), { path: "./node_modules/artificial-chart/artificial-chart.css" });
+  t.deepEqual(GlobStripper.parse("./node_modules/artificial-chart/artificial-chart.{css,js}"), { path: "./node_modules/artificial-chart", glob: "artificial-chart.{css,js}" });
+  t.deepEqual(GlobStripper.parse("./node_modules/artificial-chart/artificial-chart.(css|js)"), { path: "./node_modules/artificial-chart", glob: "artificial-chart.(css|js)" });
+});

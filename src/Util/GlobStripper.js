@@ -10,7 +10,14 @@ export class GlobStripper {
 		let parts = pattern.split(this.SEP);
 		let c = 0;
 		for (let p of parts) {
-			if (p === this.DOUBLE || (p.includes(this.SINGLE) && !p.includes(this.DOUBLE))) {
+			if (p === "?") {
+				continue;
+			}
+			if (
+				p === this.DOUBLE ||
+				(p.includes(this.SINGLE) && !p.includes(this.DOUBLE)) ||
+				isDynamicPattern(p)
+			) {
 				return {
 					path: parts.slice(0, c).join(this.SEP) || ".",
 					glob: parts.slice(c).join(this.SEP) || undefined,
