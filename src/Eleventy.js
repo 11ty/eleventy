@@ -70,6 +70,15 @@ export default class Eleventy extends Core {
 		this.watchTargets.add(this.config.additionalWatchTargets);
 	}
 
+	async resetConfig() {
+		await super.resetConfig();
+
+		// TODO set this.eleventyServe with this.getChokidarConfig()
+		if (checkPassthroughCopyBehavior(this.config, this.runMode)) {
+			this.eleventyServe.resetConfig();
+		}
+	}
+
 	/**
 	 * Starts Eleventy.
 	 */
@@ -79,9 +88,6 @@ export default class Eleventy extends Core {
 		// eleventyServe is always available, even when not in --serve mode
 		// TODO directorynorm
 		this.eleventyServe.setOutputDir(this.outputDir);
-
-		// TODO
-		// this.eleventyServe.setWatcherOptions(this.getChokidarConfig());
 
 		if (checkPassthroughCopyBehavior(this.config, this.runMode)) {
 			this.eleventyServe.watchPassthroughCopy(
@@ -196,7 +202,7 @@ export default class Eleventy extends Core {
 
 			if (isResetConfig) {
 				// make sure this happens after write()
-				await this.setupWatcher();
+				await this.startWatch();
 			}
 
 			this.watchTargets.reset();
@@ -280,13 +286,27 @@ export default class Eleventy extends Core {
 		return this.bench.get("Watcher");
 	}
 
+	get chokidar() {
+		if (!this.#chokidar) {
+			// We use a string module name and try/catch here to hide this from the zisi and esbuild serverless bundlers
+			// eslint-disable-next-line no-useless-catch
+			try {
+				let moduleName = "chokidar";
+				this.#chokidar = import(moduleName).then((mod) => mod.default);
+			} catch (e) {
+				throw e;
+			}
+		}
+		return this.#chokidar;
+	}
+
 	/**
 	 * Set up watchers and benchmarks.
 	 *
 	 * @async
 	 * @method
 	 */
-	async initWatch() {
+	async startWatch() {
 		if (this.projectPackageJsonPath) {
 			this.watchTargets.add([relative(TemplatePath.getWorkingDir(), this.projectPackageJsonPath)]);
 		}
@@ -305,25 +325,8 @@ export default class Eleventy extends Core {
 		benchmark.before();
 		await this.#initWatchDependencies();
 		benchmark.after();
-	}
 
-	get chokidar() {
-		if (!this.#chokidar) {
-			// We use a string module name and try/catch here to hide this from the zisi and esbuild serverless bundlers
-			// eslint-disable-next-line no-useless-catch
-			try {
-				let moduleName = "chokidar";
-				this.#chokidar = import(moduleName).then((mod) => mod.default);
-			} catch (e) {
-				throw e;
-			}
-		}
-		return this.#chokidar;
-	}
-
-	async setupWatcher() {
-		await this.initWatch();
-
+		// setup chokidar instance
 		let promises = [];
 		promises.push(this.chokidar);
 
@@ -420,13 +423,11 @@ export default class Eleventy extends Core {
 			await watchRun(path);
 		});
 
-		let { promise, resolve, reject } = withResolvers();
 		// wait for chokidar to be ready.
-		this.watcher.on("ready", () => {
-			this.logger.forceLog("Watching…");
-			resolve();
+		await new Promise((resolve) => {
+			this.watcher.on("ready", () => resolve());
 		});
-		await promise;
+		this.logger.forceLog("Watching…");
 
 		// For testability
 		return watchRun;
@@ -465,12 +466,6 @@ export default class Eleventy extends Core {
 
 		await this.watchTargets.addDependencies(
 			await this.eleventyFiles.getWatcherTemplateJavaScriptDataFiles(),
-		);
-	}
-
-	getWatchedFiles() {
-		throw new Error(
-			"Eleventy#getWatchedFiles() has been removed in Eleventy v4. Use Eleventy#getWatchedTargets().targets instead.",
 		);
 	}
 
@@ -546,7 +541,7 @@ export default class Eleventy extends Core {
 		let initWatchBench = this.watcherBench.get("Start up --watch");
 		initWatchBench.before();
 
-		let watchRun = await this.setupWatcher();
+		let watchRun = await this.startWatch();
 
 		initWatchBench.after();
 
@@ -657,6 +652,18 @@ Arguments:
 	 */
 	getHelp() {
 		return Eleventy.getHelp();
+	}
+
+	/* Removed methods */
+	initWatch() {
+		throw new Error(
+			"Eleventy#initWatch() was removed in v4. Use Eleventy#startWatch() instead (initializes and starts the watcher)",
+		);
+	}
+	getWatchedFiles() {
+		throw new Error(
+			"Eleventy#getWatchedFiles() was removed in Eleventy v4. Use Eleventy#getWatchedTargets().targets instead.",
+		);
 	}
 }
 

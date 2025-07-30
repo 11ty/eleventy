@@ -1,6 +1,8 @@
 import debugUtil from "debug";
 import { Merge, TemplatePath } from "@11ty/eleventy-utils";
 
+import { GlobStripper } from "./Util/GlobStripper.js";
+
 function stringifyOptions(options) {
 	return JSON.stringify(options, function replacer(key, value) {
 		if (typeof value === "function") {
@@ -35,12 +37,16 @@ const DEFAULT_SERVER_OPTIONS = {
 class EleventyServe {
 	#eleventyConfig;
 	#savedConfigOptions;
+	#aliases;
+	#initOptionsFetched = false;
+	// these are *not* normalized
+	#watchTargets = new Set();
+	// these *are* normalized
+	#queuedWatchTargets = new Set();
+	#defaultWatchIgnores = ["**/node_modules/**", ".git"];
 
 	constructor() {
 		this.logger = new ConsoleLogger();
-		this._initOptionsFetched = false;
-		this._aliases = undefined;
-		this._watchedFiles = new Set();
 	}
 
 	get config() {
@@ -58,7 +64,7 @@ class EleventyServe {
 	}
 
 	setAliases(aliases) {
-		this._aliases = aliases;
+		this.#aliases = aliases;
 
 		if (this._server && "setAliases" in this._server) {
 			this._server.setAliases(aliases);
@@ -173,7 +179,7 @@ class EleventyServe {
 
 		this.#savedConfigOptions = this.config.serverOptions;
 
-		if (!this._initOptionsFetched && this.getSetupCallback()) {
+		if (!this.#initOptionsFetched && this.getSetupCallback()) {
 			throw new Error(
 				"Init options have not yet been fetched in the setup callback. This probably means that `init()` has not yet been called.",
 			);
@@ -197,14 +203,29 @@ class EleventyServe {
 
 		let serverModule = await this.getServerModule(this.options.module);
 
+		// Fix for missing globs in Chokidar@4
+		if (this.options.module === DEFAULT_SERVER_OPTIONS.module) {
+			this.options.chokidarOptions ??= {};
+			((this.options.chokidarOptions.alwaysStat = true),
+				(this.options.chokidarOptions.ignored = (filepath, stats) => {
+					if (stats?.isFile()) {
+						if (
+							!isGlobMatch(filepath, Array.from(this.#watchTargets)) ||
+							isGlobMatch(filepath, this.#defaultWatchIgnores)
+						) {
+							return true;
+						}
+					}
+				}));
+		}
+
 		// Static method `getServer` was already checked in `getServerModule`
 		this._server = serverModule.getServer("eleventy-server", this.outputDir, this.options);
 
-		this.setAliases(this._aliases);
+		this.setAliases(this.#aliases);
 
-		if (this._globsNeedWatching) {
-			this._server.watchFiles(this._watchedFiles);
-			this._globsNeedWatching = false;
+		if (this.#queuedWatchTargets.size > 0) {
+			this.#watch(this.#watchTargets);
 		}
 	}
 
@@ -219,7 +240,7 @@ class EleventyServe {
 		let setupCallback = this.getSetupCallback();
 		if (setupCallback) {
 			let opts = await setupCallback();
-			this._initOptionsFetched = true;
+			this.#initOptionsFetched = true;
 
 			if (opts) {
 				Merge(this.options, opts);
@@ -274,6 +295,12 @@ class EleventyServe {
 		}
 	}
 
+	// when the configuration file changes (but server options *may* not, which would otherwise trigger restart())
+	resetConfig() {
+		this.#watchTargets = new Set();
+		this.#queuedWatchTargets = new Set();
+	}
+
 	// Restart the server entirely
 	// We don’t want to use a native `restart` method (e.g. restart() in Vite) so that
 	// we can correctly handle a `module` property change (changing the server type)
@@ -287,27 +314,52 @@ class EleventyServe {
 		await this.serve(this._commandLinePort);
 
 		// rewatch the saved watched files (passthrough copy)
-		if ("watchFiles" in this.server) {
-			this.server.watchFiles(this._watchedFiles);
+		this.#watch(this.#watchTargets);
+	}
+
+	queueWatchTargets(globs = []) {
+		for (let glob of globs) {
+			this.#queuedWatchTargets.add(glob);
+		}
+	}
+
+	unqueueWatchTargets(globs = []) {
+		for (let glob of globs) {
+			this.#queuedWatchTargets.delete(glob);
+		}
+	}
+
+	#watch(globs = []) {
+		let normalizedGlobs = Array.from(globs)
+			.map((target) => {
+				let { path } = GlobStripper.parse(target);
+				if (path && path !== ".") {
+					return path;
+				}
+			})
+			.filter(Boolean);
+
+		if (normalizedGlobs.length > 0) {
+			if (this._server && "watchFiles" in this.server) {
+				this.server.watchFiles(normalizedGlobs);
+				this.unqueueWatchTargets(normalizedGlobs);
+			} else {
+				// server not yet available
+				this.queueWatchTargets(normalizedGlobs);
+			}
 		}
 	}
 
 	// checkPassthroughCopyBehavior check is called upstream in Eleventy.js
-	// TODO globs are not removed from watcher
-	watchPassthroughCopy(globs) {
-		// TODO chokidar@4 doesn’t support globs!
-		this._watchedFiles = globs;
-
-		if (this._server && "watchFiles" in this.server) {
-			this.server.watchFiles(globs);
-			this._globsNeedWatching = false;
-		} else {
-			this._globsNeedWatching = true;
+	watchPassthroughCopy(globs = []) {
+		for (let glob of globs) {
+			this.#watchTargets.add(glob);
 		}
+		this.#watch(this.#watchTargets);
 	}
 
 	isEmulatedPassthroughCopyMatch(filepath) {
-		return isGlobMatch(filepath, this._watchedFiles);
+		return isGlobMatch(filepath, Array.from(this.#watchTargets));
 	}
 
 	hasOptionsChanged() {

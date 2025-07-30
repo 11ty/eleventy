@@ -111,12 +111,13 @@ test("Eleventy file watching", async (t) => {
     runMode: "watch" // required to spider deps
   });
   elev.setFormats("njk");
+  elev.disableLogger();
 
   await elev.init();
   let globalData = await elev.templateData.getGlobalData();
 
   await elev.eleventyFiles.getFiles();
-  await elev.initWatch();
+  await elev.startWatch();
 
   let { targets, cwd, ignores } = await elev.getWatchedTargets();
 
@@ -143,17 +144,22 @@ test("Eleventy file watching", async (t) => {
   t.true(ignores.includes("test/stubs/_site/**"));
   t.true(ignores.includes(".git/**"));
   t.true(ignores.includes(".cache"));
+
+  await elev.stopWatch();
 });
 
 test("Eleventy file watching (don’t watch deps of passthrough copy .js files)", async (t) => {
   let elev = new Eleventy("./test/stubs-1325", "./test/stubs-1325/_site");
   elev.setFormats("11ty.js,js");
+  elev.disableLogger();
 
   await elev.init();
   await elev.eleventyFiles.getFiles();
-  await elev.initWatch();
+  await elev.startWatch();
 
   t.deepEqual(await elev.eleventyFiles.getWatchPathCache(), ["./test/stubs-1325/test.11ty.js"]);
+
+   await elev.stopWatch();
 });
 
 test("Eleventy file watching (no JS dependencies)", async (t) => {
@@ -163,9 +169,10 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
     }
   });
   elev.setFormats("njk");
+  elev.disableLogger();
 
   await elev.init();
-  await elev.initWatch();
+  await elev.startWatch();
 
   let { targets, cwd, ignores } = await elev.getWatchedTargets();
 
@@ -190,6 +197,8 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
   t.true(ignores.includes("test/stubs/_site/**"));
   t.true(ignores.includes(".git/**"));
   t.true(ignores.includes(".cache"));
+
+   await elev.stopWatch();
 });
 
 test("Eleventy set input/output, one file input", async (t) => {

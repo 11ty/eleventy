@@ -103,10 +103,8 @@ export default class WatchTargets {
 					this.globMatch.add(TemplatePath.stripLeadingDotSlash(target));
 				}
 
-				if (path) {
-					if (path !== ".") {
-						return path;
-					}
+				if (path && path !== ".") {
+					return path;
 				}
 			})
 			.filter(Boolean);
