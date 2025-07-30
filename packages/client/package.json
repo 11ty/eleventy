@@ -18,7 +18,7 @@
     "./i18n": "./dist/plugins/eleventy-plugin-i18n.js"
   },
   "files": [
-    "./dist/**.js"
+    "./dist/**/*.js"
   ],
   "license": "MIT",
   "funding": {
