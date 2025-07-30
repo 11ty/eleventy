@@ -28,7 +28,6 @@
   "scripts": {
     "build": "node generate-bundle.js",
     "test": "npm run build && npx vitest",
-    "prepublishOnly": "node update-package-json.js",
     "prepare": "npm run build"
   },
   "author": "Zach Leatherman <zachleatherman@gmail.com> (https://zachleat.com/)",
