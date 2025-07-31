@@ -7,7 +7,7 @@ import PathNormalizer from "./Util/PathNormalizer.js";
  * Nonincremental builds batch.
  */
 
-class EleventyWatch {
+class WatchQueue {
 	constructor() {
 		this.incremental = false;
 		this.isActive = false;
@@ -128,4 +128,4 @@ class EleventyWatch {
 	}
 }
 
-export default EleventyWatch;
+export default WatchQueue;

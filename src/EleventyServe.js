@@ -206,17 +206,14 @@ class EleventyServe {
 		// Fix for missing globs in Chokidar@4
 		if (this.options.module === DEFAULT_SERVER_OPTIONS.module) {
 			this.options.chokidarOptions ??= {};
-			((this.options.chokidarOptions.alwaysStat = true),
-				(this.options.chokidarOptions.ignored = (filepath, stats) => {
-					if (stats?.isFile()) {
-						if (
-							!isGlobMatch(filepath, Array.from(this.#watchTargets)) ||
-							isGlobMatch(filepath, this.#defaultWatchIgnores)
-						) {
-							return true;
-						}
-					}
-				}));
+			this.options.chokidarOptions.ignored = (filepath) => {
+				if (
+					!isGlobMatch(filepath, Array.from(this.#watchTargets)) ||
+					isGlobMatch(filepath, this.#defaultWatchIgnores)
+				) {
+					return true;
+				}
+			};
 		}
 
 		// Static method `getServer` was already checked in `getServerModule`
@@ -330,15 +327,15 @@ class EleventyServe {
 	}
 
 	#watch(globs = []) {
-		let normalizedGlobs = Array.from(globs)
-			.map((target) => {
-				let { path } = GlobStripper.parse(target);
-				if (path && path !== ".") {
-					return path;
-				}
-			})
-			.filter(Boolean);
+		let uniqueSet = new Set();
+		for (let target of globs) {
+			let { path } = GlobStripper.parse(target);
+			if (path) {
+				uniqueSet.add(path);
+			}
+		}
 
+		let normalizedGlobs = Array.from(uniqueSet);
 		if (normalizedGlobs.length > 0) {
 			if (this._server && "watchFiles" in this.server) {
 				this.server.watchFiles(normalizedGlobs);

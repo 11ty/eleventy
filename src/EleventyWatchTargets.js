@@ -96,20 +96,26 @@ export default class WatchTargets {
 
 	// add only a target
 	add(targets) {
-		let arrTargets = WatchTargets.normalize(targets)
-			.map((target) => {
-				let { path } = GlobStripper.parse(target);
-				if (!path || path !== ".") {
-					this.globMatch.add(TemplatePath.stripLeadingDotSlash(target));
-				}
+		if (typeof targets === "string") {
+			targets = [targets];
+		}
 
-				if (path && path !== ".") {
-					return path;
-				}
-			})
-			.filter(Boolean);
+		let uniqueSet = new Set();
+		for (let target of targets) {
+			if (!target) {
+				continue;
+			}
 
-		this.addRaw(arrTargets);
+			let { path } = GlobStripper.parse(target);
+			if (path) {
+				uniqueSet.add(path);
+			}
+
+			// should work even without path (e.g. `./**/*` globs)
+			this.globMatch.add(TemplatePath.stripLeadingDotSlash(target));
+		}
+
+		this.addRaw(Array.from(uniqueSet));
 	}
 
 	static normalizeToGlobs(targets) {
@@ -173,5 +179,9 @@ export default class WatchTargets {
 
 	getTargets() {
 		return Array.from(this.targets);
+	}
+
+	getTargetGlobs() {
+		return Array.from(this.globMatch);
 	}
 }

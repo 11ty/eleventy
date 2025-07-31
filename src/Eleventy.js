@@ -5,7 +5,7 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 
 import { Core } from "./Core.js";
 import EleventyServe from "./EleventyServe.js";
-import EleventyWatch from "./EleventyWatch.js";
+import WatchQueue from "./WatchQueue.js";
 import WatchTargets from "./EleventyWatchTargets.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 
@@ -27,7 +27,7 @@ export default class Eleventy extends Core {
 	/** @type {module:chokidar} */
 	#chokidar;
 
-	/** @type {EleventyWatch} */
+	/** @type {WatchQueue} */
 	#watchManager;
 
 	// constructor(input, output, options = {}, eleventyConfig = null) {
@@ -49,7 +49,7 @@ export default class Eleventy extends Core {
 
 	get watchManager() {
 		if (!this.#watchManager) {
-			this.#watchManager = new EleventyWatch();
+			this.#watchManager = new WatchQueue();
 			this.#watchManager.incremental = this.isIncremental;
 		}
 		return this.#watchManager;
@@ -300,6 +300,10 @@ export default class Eleventy extends Core {
 		return this.#chokidar;
 	}
 
+	#isDirectory(path) {
+		return this.eleventyConfig.existsCache.isDirectory(path);
+	}
+
 	/**
 	 * Set up watchers and benchmarks.
 	 *
@@ -347,14 +351,29 @@ export default class Eleventy extends Core {
 
 		debug("Ignoring watcher changes to: %o", ignores);
 
-		options.alwaysStat = true;
-		options.ignored = (path, stats) => {
-			if (stats?.isFile()) {
-				let isMatch = this.watchTargets.isWatchMatch(path, ignores);
-				if (!isMatch) {
-					return true;
-				}
+		let targetGlobs = this.watchTargets.getTargetGlobs();
+
+		options.ignored = (filepath) => {
+			// don’t ignore root (if specified)
+			if (filepath === ".") {
+				return false;
 			}
+
+			if (isGlobMatch(filepath, ignores)) {
+				return true;
+			}
+
+			// don’t ignore directories that are not in ignores
+			if (this.#isDirectory(filepath)) {
+				return false;
+			}
+
+			// make sure this matches at least one glob
+			if (!isGlobMatch(filepath, targetGlobs)) {
+				return true;
+			}
+
+			return false;
 		};
 
 		let [chokidar] = await Promise.all(promises);

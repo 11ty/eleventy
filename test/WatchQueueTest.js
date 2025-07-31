@@ -1,8 +1,8 @@
 import test from "ava";
-import EleventyWatch from "../src/EleventyWatch.js";
+import WatchQueue from "../src/WatchQueue.js";
 
 test("Standard", (t) => {
-  let watch = new EleventyWatch();
+  let watch = new WatchQueue();
   t.is(watch.isBuildRunning(), false);
 
   watch.setBuildRunning();
@@ -13,7 +13,7 @@ test("Standard", (t) => {
 });
 
 test("Incremental", (t) => {
-  let watch = new EleventyWatch();
+  let watch = new WatchQueue();
   t.is(watch.getIncrementalFile(), false);
 
   watch.incremental = true;
@@ -42,7 +42,7 @@ test("Incremental", (t) => {
 });
 
 test("Incremental queue 2", (t) => {
-  let watch = new EleventyWatch();
+  let watch = new WatchQueue();
   t.is(watch.getIncrementalFile(), false);
 
   watch.incremental = true;
@@ -72,7 +72,7 @@ test("Incremental queue 2", (t) => {
 });
 
 test("Incremental add while active", (t) => {
-  let watch = new EleventyWatch();
+  let watch = new WatchQueue();
   t.is(watch.getIncrementalFile(), false);
 
   watch.incremental = true;
@@ -107,7 +107,7 @@ test("Incremental add while active", (t) => {
 });
 
 test("Non-incremental", (t) => {
-  let watch = new EleventyWatch();
+  let watch = new WatchQueue();
   t.is(watch.getIncrementalFile(), false);
 
   t.is(watch.getPendingQueueSize(), 0);
@@ -134,7 +134,7 @@ test("Non-incremental", (t) => {
 });
 
 test("Non-incremental queue 2", (t) => {
-  let watch = new EleventyWatch();
+  let watch = new WatchQueue();
   t.is(watch.getIncrementalFile(), false);
 
   t.is(watch.getPendingQueueSize(), 0);
@@ -163,7 +163,7 @@ test("Non-incremental queue 2", (t) => {
 });
 
 test("Non-incremental add while active", (t) => {
-  let watch = new EleventyWatch();
+  let watch = new WatchQueue();
   t.is(watch.getIncrementalFile(), false);
 
   t.is(watch.getPendingQueueSize(), 0);
@@ -196,7 +196,7 @@ test("Non-incremental add while active", (t) => {
 });
 
 test("Active queue tests", (t) => {
-  let watch = new EleventyWatch();
+  let watch = new WatchQueue();
   watch.addToPendingQueue("test.md");
   watch.addToPendingQueue("test2.md");
   watch.addToPendingQueue("test.css");
@@ -228,7 +228,7 @@ test("Active queue tests", (t) => {
 });
 
 test("Active queue tests, all CSS files", (t) => {
-  let watch = new EleventyWatch();
+  let watch = new WatchQueue();
   watch.addToPendingQueue("test.css");
   watch.addToPendingQueue("test2.css");
   watch.addToPendingQueue("test3.css");
