@@ -1,8 +1,6 @@
 import { TemplatePath } from "@11ty/eleventy-utils";
 import { DepGraph } from "dependency-graph";
 
-import { isGlobMatch } from "./Util/GlobMatcher.js";
-import { GlobStripper } from "./Util/GlobStripper.js";
 import JavaScriptDependencies from "./Util/JavaScriptDependencies.js";
 import eventBus from "./EventBus.js";
 
@@ -13,7 +11,6 @@ export default class WatchTargets {
 		this.targets = new Set();
 		this.dependencies = new Set();
 		this.newTargets = new Set();
-		this.globMatch = new Set();
 		this.isEsm = false;
 
 		this.graph = new DepGraph();
@@ -87,35 +84,9 @@ export default class WatchTargets {
 		return [targets];
 	}
 
-	isWatchMatch(filepath, ignoreGlobs = []) {
-		return (
-			isGlobMatch(filepath, Array.from(this.globMatch)) &&
-			(ignoreGlobs.length > 0 ? !isGlobMatch(filepath, ignoreGlobs) : true)
-		);
-	}
-
 	// add only a target
 	add(targets) {
-		if (typeof targets === "string") {
-			targets = [targets];
-		}
-
-		let uniqueSet = new Set();
-		for (let target of targets) {
-			if (!target) {
-				continue;
-			}
-
-			let { path } = GlobStripper.parse(target);
-			if (path) {
-				uniqueSet.add(path);
-			}
-
-			// should work even without path (e.g. `./**/*` globs)
-			this.globMatch.add(TemplatePath.stripLeadingDotSlash(target));
-		}
-
-		this.addRaw(Array.from(uniqueSet));
+		this.addRaw(WatchTargets.normalize(targets));
 	}
 
 	static normalizeToGlobs(targets) {
@@ -179,9 +150,5 @@ export default class WatchTargets {
 
 	getTargets() {
 		return Array.from(this.targets);
-	}
-
-	getTargetGlobs() {
-		return Array.from(this.globMatch);
 	}
 }

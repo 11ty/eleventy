@@ -791,7 +791,7 @@ Verbose Output: ${this.verboseMode}`;
 		}
 
 		let incrementalFile =
-			this.programmaticApiIncrementalFile || this.watchManager?.getIncrementalFile();
+			this.programmaticApiIncrementalFile || this.watchQueue?.getIncrementalFile();
 		if (incrementalFile) {
 			this.writer.setIncrementalFile(incrementalFile);
 		}

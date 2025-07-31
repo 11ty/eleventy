@@ -119,15 +119,13 @@ test("Eleventy file watching", async (t) => {
   await elev.eleventyFiles.getFiles();
   await elev.startWatch();
 
-  let { targets, cwd, ignores } = await elev.getWatchedTargets();
-
-  t.is(cwd, "");
+  let { targets, ignores } = await elev.getWatchedTargets();
 
   t.deepEqual(targets, [
     "./package.json",
-    "./test/stubs",
-    "./test/stubs/_includes",
-    "./test/stubs/_data",
+    "./test/stubs/**/*.njk",
+    "./test/stubs/_includes/**",
+    "./test/stubs/_data/**",
     "./.gitignore",
     "./.eleventyignore",
     "./test/stubs/.eleventyignore",
@@ -135,6 +133,7 @@ test("Eleventy file watching", async (t) => {
     "./eleventy.config.js",
     "./eleventy.config.mjs",
     "./eleventy.config.cjs",
+    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
     "./test/stubs/deps/dep1.cjs",
     "./test/stubs/deps/dep2.cjs",
   ]);
@@ -142,7 +141,7 @@ test("Eleventy file watching", async (t) => {
   t.true(ignores.includes("node_modules/**"));
   t.true(ignores.includes("**/node_modules/**"));
   t.true(ignores.includes("test/stubs/_site/**"));
-  t.true(ignores.includes(".git/**"));
+  t.true(ignores.includes("./.git/**"));
   t.true(ignores.includes(".cache"));
 
   await elev.stopWatch();
@@ -174,15 +173,13 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
   await elev.init();
   await elev.startWatch();
 
-  let { targets, cwd, ignores } = await elev.getWatchedTargets();
-
-  t.is(cwd, "");
+  let { targets, ignores } = await elev.getWatchedTargets();
 
   t.deepEqual(targets, [
     "./package.json",
-    "./test/stubs",
-    "./test/stubs/_includes",
-    "./test/stubs/_data",
+    "./test/stubs/**/*.njk",
+    "./test/stubs/_includes/**",
+    "./test/stubs/_data/**",
     "./.gitignore",
     "./.eleventyignore",
     "./test/stubs/.eleventyignore",
@@ -190,12 +187,13 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
     "./eleventy.config.js",
     "./eleventy.config.mjs",
     "./eleventy.config.cjs",
+    "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
   ]);
 
   t.true(ignores.includes("node_modules/**"));
   t.true(ignores.includes("**/node_modules/**"));
   t.true(ignores.includes("test/stubs/_site/**"));
-  t.true(ignores.includes(".git/**"));
+  t.true(ignores.includes("./.git/**"));
   t.true(ignores.includes(".cache"));
 
    await elev.stopWatch();

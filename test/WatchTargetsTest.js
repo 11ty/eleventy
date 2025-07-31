@@ -1,7 +1,7 @@
 import test from "ava";
 
 import TemplateConfig from "../src/TemplateConfig.js";
-import EleventyWatchTargets from "../src/EleventyWatchTargets.js";
+import EleventyWatchTargets from "../src/WatchTargets.js";
 import JavaScriptDependencies from "../src/Util/JavaScriptDependencies.js";
 
 test("Basic", (t) => {

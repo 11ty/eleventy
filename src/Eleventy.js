@@ -5,8 +5,9 @@ import { TemplatePath } from "@11ty/eleventy-utils";
 
 import { Core } from "./Core.js";
 import EleventyServe from "./EleventyServe.js";
+import { Watch } from "./Watch.js";
 import WatchQueue from "./WatchQueue.js";
-import WatchTargets from "./EleventyWatchTargets.js";
+import WatchTargets from "./WatchTargets.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 
 // Utils
@@ -16,7 +17,6 @@ import PathNormalizer from "./Util/PathNormalizer.js";
 import { isGlobMatch } from "./Util/GlobMatcher.js";
 import eventBus from "./EventBus.js";
 import { withResolvers } from "./Util/PromiseUtil.js";
-import GlobRemap from "./Util/GlobRemap.js";
 
 const debug = debugUtil("Eleventy");
 
@@ -24,11 +24,8 @@ export default class Eleventy extends Core {
 	/** @type {boolean} */
 	#isStopping = false;
 
-	/** @type {module:chokidar} */
-	#chokidar;
-
 	/** @type {WatchQueue} */
-	#watchManager;
+	#watchQueue;
 
 	// constructor(input, output, options = {}, eleventyConfig = null) {
 	// 	super(input, output, options, eleventyConfig);
@@ -42,17 +39,17 @@ export default class Eleventy extends Core {
 	setIncrementalBuild(isIncremental) {
 		super.setIncrementalBuild(isIncremental);
 
-		if (this.#watchManager) {
-			this.watchManager.incremental = !!isIncremental;
+		if (this.#watchQueue) {
+			this.watchQueue.incremental = !!isIncremental;
 		}
 	}
 
-	get watchManager() {
-		if (!this.#watchManager) {
-			this.#watchManager = new WatchQueue();
-			this.#watchManager.incremental = this.isIncremental;
+	get watchQueue() {
+		if (!this.#watchQueue) {
+			this.#watchQueue = new WatchQueue();
+			this.#watchQueue.incremental = this.isIncremental;
 		}
-		return this.#watchManager;
+		return this.#watchQueue;
 	}
 
 	async initializeConfig(initOverrides) {
@@ -125,7 +122,7 @@ export default class Eleventy extends Core {
 
 		this.config.events.emit("eleventy#templateModified", changedFilePath);
 
-		this.watchManager.addToPendingQueue(changedFilePath);
+		this.watchQueue.addToPendingQueue(changedFilePath);
 	}
 
 	shouldTriggerConfigReset(changedFiles) {
@@ -173,13 +170,13 @@ export default class Eleventy extends Core {
 	}
 
 	async #rewatch(isResetConfig = false) {
-		if (this.watchManager.isBuildRunning()) {
+		if (this.watchQueue.isBuildRunning()) {
 			return;
 		}
 
-		this.watchManager.setBuildRunning();
+		this.watchQueue.setBuildRunning();
 
-		let queue = this.watchManager.getActiveQueue();
+		let queue = this.watchQueue.getActiveQueue();
 
 		await this.config.events.emit("beforeWatch", queue);
 		await this.config.events.emit("eleventy.beforeWatch", queue);
@@ -211,12 +208,12 @@ export default class Eleventy extends Core {
 
 			// Add new deps to chokidar
 			let newWatchTargets = this.watchTargets.getNewTargetsSinceLastReset();
-			this.watcher.add(newWatchTargets);
+			this.watcher.watchTargets(newWatchTargets);
 
 			// Is a CSS input file and is not in the includes folder
 			// TODO check output path file extension of this template (not input path)
 			// TODO add additional API for this, maybe a config callback?
-			let onlyCssChanges = this.watchManager.hasAllQueueFiles((path) => {
+			let onlyCssChanges = this.watchQueue.hasAllQueueFiles((path) => {
 				return (
 					path.endsWith(".css") &&
 					// TODO how to make this work with relative includes?
@@ -224,7 +221,7 @@ export default class Eleventy extends Core {
 				);
 			});
 
-			let files = this.watchManager.getActiveQueue();
+			let files = this.watchQueue.getActiveQueue();
 
 			// Maps passthrough copy files to output URLs for CSS live reload
 			let stylesheetUrls = new Set();
@@ -266,9 +263,9 @@ export default class Eleventy extends Core {
 			});
 		}
 
-		this.watchManager.setBuildFinished();
+		this.watchQueue.setBuildFinished();
 
-		let queueSize = this.watchManager.getPendingQueueSize();
+		let queueSize = this.watchQueue.getPendingQueueSize();
 		if (queueSize > 0) {
 			this.logger.log(
 				`You saved while Eleventy was running, let’s run again. (${queueSize} change${
@@ -284,24 +281,6 @@ export default class Eleventy extends Core {
 	 */
 	get watcherBench() {
 		return this.bench.get("Watcher");
-	}
-
-	get chokidar() {
-		if (!this.#chokidar) {
-			// We use a string module name and try/catch here to hide this from the zisi and esbuild serverless bundlers
-			// eslint-disable-next-line no-useless-catch
-			try {
-				let moduleName = "chokidar";
-				this.#chokidar = import(moduleName).then((mod) => mod.default);
-			} catch (e) {
-				throw e;
-			}
-		}
-		return this.#chokidar;
-	}
-
-	#isDirectory(path) {
-		return this.eleventyConfig.existsCache.isDirectory(path);
 	}
 
 	/**
@@ -330,54 +309,22 @@ export default class Eleventy extends Core {
 		await this.#initWatchDependencies();
 		benchmark.after();
 
-		// setup chokidar instance
-		let promises = [];
-		promises.push(this.chokidar);
-
+		// Close previous watcher
 		if (this.watcher) {
-			// Close previous watcher
-			promises.push(this.watcher.close());
+			await this.watcher.close();
 		}
 
 		// TODO improve unwatching if JS dependencies are removed (or files are deleted)
-		let { targets, cwd, ignores } = await this.getWatchedTargets();
+		let { targets, ignores } = await this.getWatchedTargets();
 		debug("Watching for changes to: %o", targets);
 
-		let options = this.getChokidarConfig();
+		this.watcher = new Watch(this.eleventyConfig);
+		this.watcher.watchTargets(targets);
+		this.watcher.addIgnores(ignores);
 
-		if (cwd) {
-			options.cwd = cwd;
-		}
+		await this.watcher.start();
 
-		debug("Ignoring watcher changes to: %o", ignores);
-
-		let targetGlobs = this.watchTargets.getTargetGlobs();
-
-		options.ignored = (filepath) => {
-			// don’t ignore root (if specified)
-			if (filepath === ".") {
-				return false;
-			}
-
-			if (isGlobMatch(filepath, ignores)) {
-				return true;
-			}
-
-			// don’t ignore directories that are not in ignores
-			if (this.#isDirectory(filepath)) {
-				return false;
-			}
-
-			// make sure this matches at least one glob
-			if (!isGlobMatch(filepath, targetGlobs)) {
-				return true;
-			}
-
-			return false;
-		};
-
-		let [chokidar] = await Promise.all(promises);
-		this.watcher = chokidar.watch(targets, options);
+		this.logger.forceLog("Watching…");
 
 		let watchDelay;
 		let watchRun = async (path) => {
@@ -398,7 +345,7 @@ export default class Eleventy extends Core {
 			} catch (e) {
 				if (e instanceof EleventyBaseError) {
 					this.errorHandler.error(e, "Eleventy watch error");
-					this.watchManager.setBuildFinished();
+					this.watchQueue.setBuildFinished();
 				} else {
 					this.errorHandler.fatal(e, "Eleventy fatal watch error");
 					await this.close();
@@ -441,12 +388,6 @@ export default class Eleventy extends Core {
 			this.fileSystemSearch.delete(path);
 			await watchRun(path);
 		});
-
-		// wait for chokidar to be ready.
-		await new Promise((resolve) => {
-			this.watcher.on("ready", () => resolve());
-		});
-		this.logger.forceLog("Watching…");
 
 		// For testability
 		return watchRun;
@@ -493,54 +434,13 @@ export default class Eleventy extends Core {
 	 *
 	 * @async
 	 * @method
-	 * @returns {Object} containing `cwd` string, `targets` file paths, and `ignores` globs Array
+	 * @returns {Object} `targets` file paths, and `ignores` globs Array
 	 */
 	async getWatchedTargets() {
-		let rawWatchedGlobs = await this.watchTargets.getTargets();
-		let ignores = this.eleventyFiles.getGlobWatcherIgnores();
-
-		// Remap all paths to `cwd` if in play (Issue #3854)
-		// This is likely unnecessary since #3854 was for tinyglobby it’s probably better to have a cwd
-		// anyway to have nice paths passed into chokidar events
-		let remapper = new GlobRemap(rawWatchedGlobs);
-		let cwd = remapper.getCwd();
-
-		if (cwd) {
-			rawWatchedGlobs = remapper.getInput().map((entry) => {
-				return TemplatePath.stripLeadingDotSlash(entry);
-			});
-			ignores = remapper.getRemapped(ignores || []);
-		}
-
-		ignores = ignores.map((entry) => {
-			return TemplatePath.stripLeadingDotSlash(entry);
-		});
-
-		debug("Ignoring watcher changes to: %o", ignores);
-
 		return {
-			cwd,
-			targets: rawWatchedGlobs,
-			ignores,
+			targets: await this.watchTargets.getTargets(),
+			ignores: this.eleventyFiles.getGlobWatcherIgnores(),
 		};
-	}
-
-	getChokidarConfig() {
-		let configOptions = this.config.chokidarConfig;
-
-		// unsupported: using your own `ignored`
-		delete configOptions.ignored;
-
-		return Object.assign(
-			{
-				ignoreInitial: true,
-				awaitWriteFinish: {
-					stabilityThreshold: 150,
-					pollInterval: 25,
-				},
-			},
-			configOptions,
-		);
 	}
 
 	/**
