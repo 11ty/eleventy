@@ -1,6 +1,6 @@
 {
 	"name": "@11ty/eleventy",
-	"version": "4.0.0-alpha.3",
+	"version": "4.0.0-alpha.4",
 	"description": "A simpler static site generator.",
 	"publishConfig": {
 		"access": "public",
@@ -124,9 +124,9 @@
 		"react-dom": "^19.1.1",
 		"rimraf": "^6.0.1",
 		"sass": "^1.89.2",
-		"simple-git-hooks": "^2.13.0",
+		"simple-git-hooks": "^2.13.1",
 		"tsx": "^4.20.3",
-		"typescript": "^5.8.3",
+		"typescript": "^5.9.2",
 		"vue": "^3.5.18",
 		"zod": "^3.25.76",
 		"zod-validation-error": "^3.5.3"
