@@ -42,6 +42,11 @@ export class Watch {
 		return options;
 	}
 
+	// alias for watchTargets() (backwards compat)
+	add(targets = []) {
+		this.watchTargets(targets);
+	}
+
 	watchTargets(targets = []) {
 		let uniqueSet = new Set();
 		for (let target of targets) {
@@ -76,7 +81,7 @@ export class Watch {
 				return false;
 			}
 
-			if (isGlobMatch(filepath, this.#ignoredGlobs)) {
+			if (this.#ignoredGlobs.length > 0 && isGlobMatch(filepath, this.#ignoredGlobs)) {
 				debug("Ignore file (ignore globs)", filepath);
 				return true;
 			}
@@ -87,7 +92,7 @@ export class Watch {
 			}
 
 			// make sure this matches at least one of the original globs
-			if (!isGlobMatch(filepath, this.#watchedGlobs)) {
+			if (this.#watchedGlobs.length === 0 || !isGlobMatch(filepath, this.#watchedGlobs)) {
 				debug("Ignore file (no glob match)", filepath, this.#watchedGlobs);
 				return true;
 			}
@@ -105,10 +110,12 @@ export class Watch {
 
 		this.#chokidar = chokidar.watch(targets, options);
 
-		// wait for chokidar to be ready.
-		await new Promise((resolve) => {
-			this.#chokidar.on("ready", () => resolve());
-		});
+		// Note: if there are no watch targets the `ready` event doesn’t fire so skip it
+		if (targets.length > 0) {
+			await new Promise((resolve) => {
+				this.#chokidar.on("ready", () => resolve());
+			});
+		}
 	}
 
 	on(event, callback) {

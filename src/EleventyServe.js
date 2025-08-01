@@ -1,7 +1,7 @@
 import debugUtil from "debug";
 import { Merge, TemplatePath } from "@11ty/eleventy-utils";
 
-import { GlobStripper } from "./Util/GlobStripper.js";
+import { Watch } from "./Watch.js";
 
 function stringifyOptions(options) {
 	return JSON.stringify(options, function replacer(key, value) {
@@ -39,11 +39,9 @@ class EleventyServe {
 	#savedConfigOptions;
 	#aliases;
 	#initOptionsFetched = false;
+	#chokidar;
 	// these are *not* normalized
 	#watchTargets = new Set();
-	// these *are* normalized
-	#queuedWatchTargets = new Set();
-	#defaultWatchIgnores = ["**/node_modules/**", ".git"];
 
 	constructor() {
 		this.logger = new ConsoleLogger();
@@ -203,27 +201,23 @@ class EleventyServe {
 
 		let serverModule = await this.getServerModule(this.options.module);
 
-		// Fix for missing globs in Chokidar@4
 		if (this.options.module === DEFAULT_SERVER_OPTIONS.module) {
-			this.options.chokidarOptions ??= {};
-			this.options.chokidarOptions.ignored = (filepath) => {
-				if (
-					!isGlobMatch(filepath, Array.from(this.#watchTargets)) ||
-					isGlobMatch(filepath, this.#defaultWatchIgnores)
-				) {
-					return true;
-				}
-			};
+			// Fix for missing globs in Chokidar@4
+			let copyWatch = new Watch(this.eleventyConfig);
+			copyWatch.watchTargets(this.#watchTargets);
+			// Careful with ignores here: https://github.com/11ty/eleventy/issues/1134
+			// copyWatch.addIgnores();
+
+			await copyWatch.start();
+
+			this.#chokidar = copyWatch;
+			this.options.chokidar = copyWatch;
 		}
 
 		// Static method `getServer` was already checked in `getServerModule`
 		this._server = serverModule.getServer("eleventy-server", this.outputDir, this.options);
 
 		this.setAliases(this.#aliases);
-
-		if (this.#queuedWatchTargets.size > 0) {
-			this.#watch(this.#watchTargets);
-		}
 	}
 
 	getSetupCallback() {
@@ -295,7 +289,6 @@ class EleventyServe {
 	// when the configuration file changes (but server options *may* not, which would otherwise trigger restart())
 	resetConfig() {
 		this.#watchTargets = new Set();
-		this.#queuedWatchTargets = new Set();
 	}
 
 	// Restart the server entirely
@@ -309,42 +302,6 @@ class EleventyServe {
 
 		// saved --port in `serve()`
 		await this.serve(this._commandLinePort);
-
-		// rewatch the saved watched files (passthrough copy)
-		this.#watch(this.#watchTargets);
-	}
-
-	queueWatchTargets(globs = []) {
-		for (let glob of globs) {
-			this.#queuedWatchTargets.add(glob);
-		}
-	}
-
-	unqueueWatchTargets(globs = []) {
-		for (let glob of globs) {
-			this.#queuedWatchTargets.delete(glob);
-		}
-	}
-
-	#watch(globs = []) {
-		let uniqueSet = new Set();
-		for (let target of globs) {
-			let { path } = GlobStripper.parse(target);
-			if (path) {
-				uniqueSet.add(path);
-			}
-		}
-
-		let normalizedGlobs = Array.from(uniqueSet);
-		if (normalizedGlobs.length > 0) {
-			if (this._server && "watchFiles" in this.server) {
-				this.server.watchFiles(normalizedGlobs);
-				this.unqueueWatchTargets(normalizedGlobs);
-			} else {
-				// server not yet available
-				this.queueWatchTargets(normalizedGlobs);
-			}
-		}
 	}
 
 	// checkPassthroughCopyBehavior check is called upstream in Eleventy.js
@@ -352,7 +309,11 @@ class EleventyServe {
 		for (let glob of globs) {
 			this.#watchTargets.add(glob);
 		}
-		this.#watch(this.#watchTargets);
+
+		// if the watcher has already started, add the targets
+		if (this.#chokidar) {
+			this.#chokidar.watchTargets(globs);
+		}
 	}
 
 	isEmulatedPassthroughCopyMatch(filepath) {
