@@ -14,6 +14,7 @@
      - 1.x+ requires Node 12+
      - 2.x+ requires Node 14+
      - 3.x+ requires Node 18+
+     - 4.x+ requires Node 20+
 1. `rm -rf node_modules && rm -f package-lock.json && npm install`
 1. `npm audit --omit=dev`
 1. Make sure `npm run check` (eslint) runs okay

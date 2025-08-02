@@ -37,7 +37,6 @@ tags: childTag
   });
 
   let results = await elev.toJSON();
-  results.sort();
 
   t.is(results.length, 5);
   t.is(results.filter((entry) => entry.url === "/")[0]?.content.trim(), "2")
@@ -78,7 +77,6 @@ pagination:
   });
 
   let results = await elev.toJSON();
-  results.sort();
 
   t.is(results.length, 5);
   t.is(results.filter((entry) => entry.url === "/")[0]?.content.trim(), "2")
@@ -117,7 +115,6 @@ tag: someArbitraryTag
   });
 
   let results = await elev.toJSON();
-  results.sort();
 
   t.is(results.length, 5);
   t.is(results.filter((entry) => entry.url === "/")[0]?.content.trim(), "0")

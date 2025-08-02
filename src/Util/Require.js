@@ -1,34 +1,14 @@
-import fs from "node:fs";
+import { readFileSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-import module from "node:module";
-import { MessageChannel } from "node:worker_threads";
-
 import { TemplatePath } from "@11ty/eleventy-utils";
 
+import importer from "./importer.js";
+import { clearRequireCache } from "../Util/RequireUtils.js";
+import { port1 } from "./EsmResolverPortAdapter.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import eventBus from "../EventBus.js";
 
 class EleventyImportError extends EleventyBaseError {}
-
-const { port1, port2 } = new MessageChannel();
-
-// ESM Cache Buster is an enhancement that works in Node 18.19+
-// https://nodejs.org/docs/latest/api/module.html#moduleregisterspecifier-parenturl-options
-// Fixes https://github.com/11ty/eleventy/issues/3270
-// ENV variable for https://github.com/11ty/eleventy/issues/3371
-if ("register" in module && !process?.env?.ELEVENTY_SKIP_ESM_RESOLVER) {
-	module.register("./EsmResolver.js", import.meta.url, {
-		parentURL: import.meta.url,
-		data: {
-			port: port2,
-		},
-		transferList: [port2],
-	});
-}
-
-// important to clear the require.cache in CJS projects
-const require = module.createRequire(import.meta.url);
 
 const requestPromiseCache = new Map();
 
@@ -52,7 +32,7 @@ function loadContents(path, options = {}) {
 
 	try {
 		// @ts-expect-error This is an error in the upstream types
-		rawInput = fs.readFileSync(path, encoding);
+		rawInput = readFileSync(path, encoding);
 	} catch (error) {
 		// @ts-expect-error Temporary
 		if (error?.code === "ENOENT") {
@@ -83,10 +63,7 @@ eventBus.on("eleventy.importCacheReset", (fileQueue) => {
 			port1.postMessage({ path: absolutePath, newDate });
 		}
 
-		// ESM Eleventy when using `import()` on a CJS project file still adds to require.cache
-		if (absolutePath in (require?.cache || {})) {
-			delete require.cache[absolutePath];
-		}
+		clearRequireCache(absolutePath);
 	}
 });
 
@@ -144,7 +121,7 @@ async function dynamicImportAbsolutePath(absolutePath, options = {}) {
 	if (requestPromiseCache.has(urlPath)) {
 		promise = requestPromiseCache.get(urlPath);
 	} else {
-		promise = import(urlPath);
+		promise = importer(urlPath);
 		requestPromiseCache.set(urlPath, promise);
 	}
 
@@ -208,34 +185,12 @@ async function dynamicImportAbsolutePath(absolutePath, options = {}) {
 	);
 }
 
-function normalizeFilePathInEleventyPackage(file) {
-	// Back up relative paths from ./src/Util/Require.js
-	return path.resolve(fileURLToPath(import.meta.url), "../../../", file);
-}
-
-async function dynamicImportFromEleventyPackage(file) {
-	// points to files relative to the top level Eleventy directory
-	let filePath = normalizeFilePathInEleventyPackage(file);
-
-	// Returns promise
-	return dynamicImportAbsolutePath(filePath, { type: "esm" });
-}
-
 async function dynamicImport(localPath, type, options = {}) {
 	let absolutePath = TemplatePath.absolutePath(localPath);
 	options.type = type;
 
 	// Returns promise
 	return dynamicImportAbsolutePath(absolutePath, options);
-}
-
-/* Used to import default Eleventy configuration file, raw means we don’t normalize away the `default` export */
-async function dynamicImportRawFromEleventyPackage(file) {
-	// points to files relative to the top level Eleventy directory
-	let filePath = normalizeFilePathInEleventyPackage(file);
-
-	// Returns promise
-	return dynamicImportAbsolutePath(filePath, { type: "esm", returnRaw: true });
 }
 
 /* Used to import app configuration files, raw means we don’t normalize away the `default` export */
@@ -250,9 +205,4 @@ export {
 	loadContents as EleventyLoadContent,
 	dynamicImport as EleventyImport,
 	dynamicImportRaw as EleventyImportRaw,
-	normalizeFilePathInEleventyPackage,
-
-	// no longer used in core
-	dynamicImportFromEleventyPackage as EleventyImportFromEleventy,
-	dynamicImportRawFromEleventyPackage as EleventyImportRawFromEleventy,
 };

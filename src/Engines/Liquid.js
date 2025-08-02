@@ -115,7 +115,7 @@ export default class Liquid extends TemplateEngine {
 	addTag(name, tagFn) {
 		let tagObj;
 		if (typeof tagFn === "function") {
-			tagObj = tagFn(this.liquidLib);
+			tagObj = tagFn(this.liquidLib, { evalToken });
 		} else {
 			throw new Error(
 				"Liquid.addTag expects a callback function to be passed in: addTag(name, function(liquidEngine) { return { parse: …, render: … } })",

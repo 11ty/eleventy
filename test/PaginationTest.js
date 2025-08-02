@@ -1,5 +1,4 @@
 import test from "ava";
-import slugify from "slugify";
 
 import Eleventy from "../src/Eleventy.js";
 import TemplateData from "../src/Data/TemplateData.js";
@@ -173,12 +172,6 @@ test("Paginate external data file", async (t) => {
     (await renderTemplate(pages[1].template, pages[1].data)).trim(),
     "<ol><li>item6</li><li>item7</li><li>item8</li></ol>"
   );
-});
-
-test("Slugify test", (t) => {
-  t.is(slugify("This is a test", { lower: true }), "this-is-a-test");
-  t.is(slugify("This", { lower: true }), "this");
-  t.is(slugify("ThisLKSDFDS", { lower: true }), "thislksdfds");
 });
 
 test("Permalink with pagination variables", async (t) => {

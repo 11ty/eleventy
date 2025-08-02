@@ -1,6 +1,6 @@
-import util from "node:util";
 import debugUtil from "debug";
 
+import { inspect } from "../Adapters/Packages/inspect.js";
 import ConsoleLogger from "../Util/ConsoleLogger.js";
 import EleventyErrorUtil from "./EleventyErrorUtil.js";
 
@@ -34,10 +34,7 @@ class EleventyErrorHandler {
 	}
 
 	warn(e, msg) {
-		if (msg) {
-			this.initialMessage(msg, "warn", "yellow");
-		}
-		this.log(e, "warn");
+		this.log(e, "warn", "yellow", undefined, [`${msg}:`]);
 	}
 
 	fatal(e, msg) {
@@ -58,10 +55,7 @@ class EleventyErrorHandler {
 	}
 
 	error(e, msg) {
-		if (msg) {
-			this.initialMessage(msg, "error", "red", true);
-		}
-		this.log(e, "error", undefined, true);
+		this.log(e, "error", "red", true, [`${msg}:`]);
 	}
 
 	static getTotalErrorCount(e) {
@@ -75,9 +69,9 @@ class EleventyErrorHandler {
 	}
 
 	//https://nodejs.org/api/process.html
-	log(e, type = "log", chalkColor = "", forceToConsole = false) {
+	log(e, type = "log", chalkColor = "", forceToConsole = false, messages = []) {
 		if (process.env.DEBUG) {
-			debug("Full error object: %o", util.inspect(e, { showHidden: false, depth: null }));
+			debug("Full error object: %o", inspect(e));
 		}
 
 		let showStack = true;
@@ -89,6 +83,7 @@ class EleventyErrorHandler {
 		let totalErrorCount = EleventyErrorHandler.getTotalErrorCount(e);
 		let ref = e;
 		let index = 1;
+		let debugs = [];
 		while (ref) {
 			let nextRef = ref.originalError;
 
@@ -105,17 +100,14 @@ class EleventyErrorHandler {
 				showStack = false;
 			}
 
-			this.logger.message(
+			messages.push(
 				`${totalErrorCount > 1 ? `${index}. ` : ""}${(
 					EleventyErrorUtil.cleanMessage(ref.message) || "(No error message provided)"
 				).trim()}${ref.name !== "Error" ? ` (via ${ref.name})` : ""}`,
-				type,
-				chalkColor,
-				forceToConsole,
 			);
 
 			if (process.env.DEBUG) {
-				debug(`(${type} stack): ${ref.stack}`);
+				debugs.push(`(${type} stack): ${ref.stack}`);
 			} else if (!nextRef) {
 				// last error in the loop
 
@@ -129,22 +121,22 @@ class EleventyErrorHandler {
 				}
 
 				if (showStack) {
-					this.logger.message(
-						"\nOriginal error stack trace: " + stackStr,
-						type,
-						chalkColor,
-						forceToConsole,
-					);
+					messages.push("\nOriginal error stack trace: " + stackStr);
 				}
 			}
+
 			ref = nextRef;
 			index++;
 		}
-	}
 
-	initialMessage(message, type = "log", chalkColor = "blue", forceToConsole = false) {
-		if (message) {
-			this.logger.message(message + ":", type, chalkColor, forceToConsole);
+		if (messages.length) {
+			this.logger.message(messages.join("\n"), type, chalkColor, forceToConsole);
+		}
+
+		if (debugs.length > 0) {
+			for (let msg of debugs) {
+				debug(msg);
+			}
 		}
 	}
 }

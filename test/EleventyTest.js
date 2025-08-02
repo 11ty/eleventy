@@ -111,14 +111,17 @@ test("Eleventy file watching", async (t) => {
     runMode: "watch" // required to spider deps
   });
   elev.setFormats("njk");
+  elev.disableLogger();
 
   await elev.init();
   let globalData = await elev.templateData.getGlobalData();
 
   await elev.eleventyFiles.getFiles();
-  await elev.initWatch();
+  await elev.startWatch();
 
-  t.deepEqual(await elev.getWatchedFiles(), [
+  let { targets, ignores } = await elev.getWatchedTargets();
+
+  t.deepEqual(targets, [
     "./package.json",
     "./test/stubs/**/*.njk",
     "./test/stubs/_includes/**",
@@ -134,17 +137,28 @@ test("Eleventy file watching", async (t) => {
     "./test/stubs/deps/dep1.cjs",
     "./test/stubs/deps/dep2.cjs",
   ]);
+
+  t.true(ignores.includes("node_modules/**"));
+  t.true(ignores.includes("**/node_modules/**"));
+  t.true(ignores.includes("test/stubs/_site/**"));
+  t.true(ignores.includes("./.git/**"));
+  t.true(ignores.includes(".cache"));
+
+  await elev.stopWatch();
 });
 
 test("Eleventy file watching (don’t watch deps of passthrough copy .js files)", async (t) => {
   let elev = new Eleventy("./test/stubs-1325", "./test/stubs-1325/_site");
   elev.setFormats("11ty.js,js");
+  elev.disableLogger();
 
   await elev.init();
   await elev.eleventyFiles.getFiles();
-  await elev.initWatch();
+  await elev.startWatch();
 
   t.deepEqual(await elev.eleventyFiles.getWatchPathCache(), ["./test/stubs-1325/test.11ty.js"]);
+
+   await elev.stopWatch();
 });
 
 test("Eleventy file watching (no JS dependencies)", async (t) => {
@@ -154,11 +168,14 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
     }
   });
   elev.setFormats("njk");
+  elev.disableLogger();
 
   await elev.init();
-  await elev.initWatch();
+  await elev.startWatch();
 
-  t.deepEqual(await elev.getWatchedFiles(), [
+  let { targets, ignores } = await elev.getWatchedTargets();
+
+  t.deepEqual(targets, [
     "./package.json",
     "./test/stubs/**/*.njk",
     "./test/stubs/_includes/**",
@@ -172,6 +189,14 @@ test("Eleventy file watching (no JS dependencies)", async (t) => {
     "./eleventy.config.cjs",
     "./test/stubs/**/*.{json,11tydata.mjs,11tydata.cjs,11tydata.js}",
   ]);
+
+  t.true(ignores.includes("node_modules/**"));
+  t.true(ignores.includes("**/node_modules/**"));
+  t.true(ignores.includes("test/stubs/_site/**"));
+  t.true(ignores.includes("./.git/**"));
+  t.true(ignores.includes(".cache"));
+
+   await elev.stopWatch();
 });
 
 test("Eleventy set input/output, one file input", async (t) => {
@@ -272,82 +297,6 @@ test("Eleventy to json", async (t) => {
       },
     ]
   );
-});
-
-test("Eleventy to ndjson", async (t) => {
-  let elev = new Eleventy("./test/stubs--to/");
-
-  elev.setIsVerbose(false);
-
-  let stream = await elev.toNDJSON();
-  let count = 0;
-  await new Promise((resolve) => {
-    stream.on("data", function (buf) {
-      count++;
-      let jsonObj = JSON.parse(buf.toString());
-      if (jsonObj.url === "/test/") {
-        t.deepEqual(jsonObj, {
-          url: "/test/",
-          inputPath: "./test/stubs--to/test.md",
-          outputPath: "./_site/test/index.html",
-          rawInput: localizeNewLines("# hi\n"),
-          content: "<h1>hi</h1>\n",
-        });
-      }
-      if (jsonObj.url === "/test2/") {
-        t.deepEqual(jsonObj, {
-          url: "/test2/",
-          inputPath: "./test/stubs--to/test2.liquid",
-          outputPath: "./_site/test2/index.html",
-          rawInput: `{{ hi }}`,
-          content: "hello",
-        });
-      }
-
-      if (count >= 2) {
-        resolve();
-      }
-    });
-  });
-});
-
-test("Eleventy to ndjson (returns a stream)", async (t) => {
-  let elev = new Eleventy("./test/stubs--to/");
-
-  elev.setIsVerbose(false);
-
-  let stream = await elev.toNDJSON();
-
-  await new Promise((resolve) => {
-    let results = [];
-    stream.on("data", function (entry) {
-      let jsonObj = JSON.parse(entry);
-      if (jsonObj.url === "/test/") {
-        t.deepEqual(jsonObj, {
-          url: "/test/",
-          inputPath: "./test/stubs--to/test.md",
-          outputPath: "./_site/test/index.html",
-          rawInput: localizeNewLines("# hi\n"),
-          content: "<h1>hi</h1>\n",
-        });
-      }
-      if (jsonObj.url === "/test2/") {
-        t.deepEqual(jsonObj, {
-          url: "/test2/",
-          inputPath: "./test/stubs--to/test2.liquid",
-          outputPath: "./_site/test2/index.html",
-          rawInput: "{{ hi }}",
-          content: "hello",
-        });
-      }
-
-      results.push(jsonObj);
-
-      if (results.length >= 2) {
-        resolve();
-      }
-    });
-  });
 });
 
 test("Two Eleventies, two configs!!! (config used to be a global)", async (t) => {
@@ -1611,8 +1560,8 @@ test("Truthy outputPath without a file extension error message is disabled, issu
   });
   elev.disableLogger();
 
- let results = await elev.toJSON();
- t.is(results.length, 1);
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
 });
 
 test("permalink: false outputPath new error message won’t throw an error, issue #3399", async (t) => {
@@ -1623,8 +1572,8 @@ test("permalink: false outputPath new error message won’t throw an error, issu
   });
   elev.disableLogger();
 
- let results = await elev.toJSON();
- t.is(results.length, 1);
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
 });
 
 test("permalink on custom template lang, issue #3619", async (t) => {
@@ -1675,9 +1624,9 @@ test("permalink on custom template lang, issue #3619", async (t) => {
   });
   elev.disableLogger();
 
- let results = await elev.toJSON();
- t.is(results[0].url, "/testing/rewrite/index.css");
- t.is(results[0].content, `html {
+  let results = await elev.toJSON();
+  t.is(results[0].url, "/testing/rewrite/index.css");
+  t.is(results[0].content, `html {
   color: red;
 }`);
 });
@@ -1779,9 +1728,9 @@ test("Use a date object for `date` (js object front matter), issue #3022", async
   });
   elev.disableLogger();
 
- let results = await elev.toJSON();
- t.is(results.length, 1);
- t.truthy(results[0].data.page.date instanceof Date);
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+  t.truthy(results[0].data.page.date instanceof Date);
 });
 
 test("Use a date object for `date` (js front matter), issue #3022", async (t) => {
@@ -1795,7 +1744,20 @@ let date = new Date();
   });
   elev.disableLogger();
 
- let results = await elev.toJSON();
- t.is(results.length, 1);
- t.truthy(results[0].data.page.date instanceof Date);
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+  t.truthy(results[0].data.page.date instanceof Date);
+});
+
+test("Cleaner constructor args #3880", async (t) => {
+  let elev = new Eleventy({
+    input: "./test/stubs-virtual/",
+    config: eleventyConfig => {
+      eleventyConfig.addTemplate("index.md", `# Title`)
+    }
+  });
+
+  let results = await elev.toJSON();
+  t.is(results.length, 1);
+  t.is(results[0].content.trim(), `<h1>Title</h1>`);
 });

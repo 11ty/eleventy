@@ -1,6 +1,5 @@
-import fs from "node:fs";
+import { readFileSync } from "node:fs";
 import { Merge, TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
-import { evalToken } from "liquidjs";
 
 // TODO add a first-class Markdown component to expose this using Markdown-only syntax (will need to be synchronous for markdown-it)
 
@@ -12,7 +11,7 @@ import ProjectDirectories from "../Util/ProjectDirectories.js";
 import TemplateConfig from "../TemplateConfig.js";
 import EleventyExtensionMap from "../EleventyExtensionMap.js";
 import TemplateEngineManager from "../Engines/TemplateEngineManager.js";
-import Liquid from "../Engines/Liquid.js";
+import Liquid from "../Adapters/Engines/Liquid.js";
 
 class EleventyNunjucksError extends EleventyBaseError {}
 
@@ -113,7 +112,7 @@ async function compileFile(inputPath, options = {}, templateLang) {
 	}
 
 	// TODO we could make this work with full templates (with front matter?)
-	let content = fs.readFileSync(inputPath, "utf8");
+	let content = readFileSync(inputPath, "utf8");
 	return tr.getCompiledTemplate(content);
 }
 
@@ -158,7 +157,7 @@ async function renderShortcodeFn(fn, data) {
  * @param {module:11ty/eleventy/UserConfig} eleventyConfig - User-land configuration instance.
  * @param {object} options - Plugin options
  */
-function eleventyRenderPlugin(eleventyConfig, options = {}) {
+function RenderPlugin(eleventyConfig, options = {}) {
 	let templateConfig;
 	eleventyConfig.on("eleventy.config", (tmplConfigInstance) => {
 		templateConfig = tmplConfigInstance;
@@ -176,16 +175,15 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 	 * @property {module:11ty/eleventy/TemplateConfig} [templateConfig] - Configuration object
 	 * @property {boolean} [accessGlobalData] - Whether or not the template has access to the page’s data.
 	 */
-	let defaultOptions = {
-		tagName: "renderTemplate",
-		tagNameFile: "renderFile",
-		filterName: "renderContent",
-		templateConfig: null,
-		accessGlobalData: false,
-	};
-	let opts = Object.assign(defaultOptions, options);
 
-	function liquidTemplateTag(liquidEngine, tagName) {
+	options.tagName ??= "renderTemplate";
+	options.tagNameFile ??= "renderFile";
+	options.filterName ??= "renderContent";
+	options.templateConfig ??= null;
+	options.accessGlobalData ??= false;
+
+	function liquidTemplateTag(liquidEngine, tagName, extras) {
+		const { evalToken } = extras;
 		// via https://github.com/harttle/liquidjs/blob/b5a22fa0910c708fe7881ef170ed44d3594e18f3/src/builtin/tags/raw.ts
 		return {
 			parse: function (tagToken, remainTokens) {
@@ -215,7 +213,7 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 			render: function* (ctx) {
 				let normalizedContext = {};
 				if (ctx) {
-					if (opts.accessGlobalData) {
+					if (options.accessGlobalData) {
 						// parent template data cascade
 						normalizedContext.data = ctx.getAll();
 					}
@@ -316,7 +314,7 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 					normalizedContext.ctx = context.ctx;
 
 					// TODO .data
-					// if(opts.accessGlobalData) {
+					// if(options.accessGlobalData) {
 					//   normalizedContext.data = context.ctx;
 					// }
 
@@ -364,7 +362,7 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 
 		// TODO Render plugin `templateLang` is feeding bad input paths to the addDependencies call in Custom.js
 		let fn = await compile.call(this, content, templateLang, {
-			templateConfig: opts.templateConfig || templateConfig,
+			templateConfig: options.templateConfig || templateConfig,
 			extensionMap,
 		});
 
@@ -373,39 +371,39 @@ function eleventyRenderPlugin(eleventyConfig, options = {}) {
 
 	/** @this {object} */
 	async function _renderFileShortcodeFn(inputPath, data = {}, templateLang) {
-		let options = {
-			templateConfig: opts.templateConfig || templateConfig,
+		let renderFileOptions = {
+			templateConfig: options.templateConfig || templateConfig,
 			extensionMap,
 		};
 
-		let fn = await compileFile.call(this, inputPath, options, templateLang);
+		let fn = await compileFile.call(this, inputPath, renderFileOptions, templateLang);
 
 		return renderShortcodeFn.call(this, fn, data);
 	}
 
 	// Render strings
-	if (opts.tagName) {
+	if (options.tagName) {
 		// use falsy to opt-out
-		eleventyConfig.addJavaScriptFunction(opts.tagName, _renderStringShortcodeFn);
+		eleventyConfig.addJavaScriptFunction(options.tagName, _renderStringShortcodeFn);
 
-		eleventyConfig.addLiquidTag(opts.tagName, function (liquidEngine) {
-			return liquidTemplateTag(liquidEngine, opts.tagName);
+		eleventyConfig.addLiquidTag(options.tagName, function (liquidEngine, extras) {
+			return liquidTemplateTag(liquidEngine, options.tagName, extras);
 		});
 
-		eleventyConfig.addNunjucksTag(opts.tagName, function (nunjucksLib) {
-			return nunjucksTemplateTag(nunjucksLib, opts.tagName);
+		eleventyConfig.addNunjucksTag(options.tagName, function (nunjucksLib) {
+			return nunjucksTemplateTag(nunjucksLib, options.tagName);
 		});
 	}
 
 	// Filter for rendering strings
-	if (opts.filterName) {
-		eleventyConfig.addAsyncFilter(opts.filterName, _renderStringShortcodeFn);
+	if (options.filterName) {
+		eleventyConfig.addAsyncFilter(options.filterName, _renderStringShortcodeFn);
 	}
 
 	// Render File
 	// use `false` to opt-out
-	if (opts.tagNameFile) {
-		eleventyConfig.addAsyncShortcode(opts.tagNameFile, _renderFileShortcodeFn);
+	if (options.tagNameFile) {
+		eleventyConfig.addAsyncShortcode(options.tagNameFile, _renderFileShortcodeFn);
 	}
 }
 
@@ -433,7 +431,7 @@ class RenderManager {
 		this.#templateConfig = templateConfig;
 
 		// This is the only plugin running on the Edge
-		this.#templateConfig.userConfig.addPlugin(eleventyRenderPlugin, {
+		this.#templateConfig.userConfig.addPlugin(RenderPlugin, {
 			templateConfig: this.#templateConfig,
 			accessGlobalData: true,
 		});
@@ -505,16 +503,23 @@ class RenderManager {
 	}
 }
 
-Object.defineProperty(eleventyRenderPlugin, "eleventyPackage", {
+Object.defineProperty(RenderPlugin, "eleventyPackage", {
 	value: "@11ty/eleventy/render-plugin",
 });
 
-Object.defineProperty(eleventyRenderPlugin, "eleventyPluginOptions", {
+Object.defineProperty(RenderPlugin, "eleventyPluginOptions", {
 	value: {
 		unique: true,
 	},
 });
 
-export default eleventyRenderPlugin;
+// CommonJS friendly exports on .default
+Object.assign(RenderPlugin, {
+	File: compileFile,
+	String: compile,
+	RenderManager,
+});
+
+export default RenderPlugin;
 
 export { compileFile as File, compile as String, RenderManager };

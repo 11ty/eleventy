@@ -1,5 +1,5 @@
 import debugUtil from "debug";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath } from "../Adapters/Packages/url.js";
 import PathNormalizer from "./PathNormalizer.js";
 
 const debug = debugUtil("Eleventy:EsmResolver");

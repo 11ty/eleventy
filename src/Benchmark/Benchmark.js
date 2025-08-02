@@ -1,5 +1,3 @@
-import { performance } from "node:perf_hooks";
-
 class Benchmark {
 	constructor() {
 		// TypeScript slop

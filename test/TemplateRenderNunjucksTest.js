@@ -276,13 +276,13 @@ test("Nunjucks Render with getVarFromString Filter Issue #567", async (t) => {
   t.is(await fn({ "my-global-name": "Zach" }), "<p>Zach</p>");
 });
 
-test("Nunjucks Shortcode without args", async (t) => {
+test("Nunjucks Shortcode without args #372", async (t) => {
   let tr = await getNewTemplateRender("njk", "./test/stubs/");
-  tr.engine.addShortcode("postfixWithZach", function () {
-    return "Zach";
+  tr.engine.addShortcode("postfixWithZach", function (arg1) {
+    return arg1 + "Zach";
   });
 
-  t.is(await tr._testRender("{% postfixWithZach %}", {}), "Zach");
+  t.is(await tr._testRender("{% postfixWithZach %}", {}), "undefinedZach");
 });
 
 test("Nunjucks Shortcode", async (t) => {
@@ -613,13 +613,13 @@ test("Nunjucks Nested Async Paired Shortcode", async (t) => {
   );
 });
 
-test("Nunjucks Paired Shortcode without args", async (t) => {
+test("Nunjucks Paired Shortcode without args #372", async (t) => {
   let tr = await getNewTemplateRender("njk", "./test/stubs/");
-  tr.engine.addPairedShortcode("postfixWithZach", function (content) {
+  tr.engine.addPairedShortcode("postfixWithZach", function (content, arg1) {
     // Data in context
     t.is(this.page.url, "/hi/");
 
-    return content + "Zach";
+    return content + arg1 + "Zach";
   });
 
   t.is(
@@ -629,7 +629,7 @@ test("Nunjucks Paired Shortcode without args", async (t) => {
         url: "/hi/",
       },
     }),
-    "ContentZach"
+    "ContentundefinedZach"
   );
 });
 

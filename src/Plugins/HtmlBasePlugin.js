@@ -51,7 +51,7 @@ function transformUrl(url, base, opts = {}) {
 	return urlFilter(url, base);
 }
 
-function eleventyHtmlBasePlugin(eleventyConfig, defaultOptions = {}) {
+function HtmlBasePlugin(eleventyConfig, defaultOptions = {}) {
 	let opts = DeepCopy(
 		{
 			// eleventyConfig.pathPrefix is new in Eleventy 2.0.0-canary.15
@@ -146,15 +146,21 @@ function eleventyHtmlBasePlugin(eleventyConfig, defaultOptions = {}) {
 	);
 }
 
-Object.defineProperty(eleventyHtmlBasePlugin, "eleventyPackage", {
+Object.defineProperty(HtmlBasePlugin, "eleventyPackage", {
 	value: "@11ty/eleventy/html-base-plugin",
 });
 
-Object.defineProperty(eleventyHtmlBasePlugin, "eleventyPluginOptions", {
+Object.defineProperty(HtmlBasePlugin, "eleventyPluginOptions", {
 	value: {
 		unique: true,
 	},
 });
 
-export default eleventyHtmlBasePlugin;
+// CommonJS friendly exports on .default
+Object.assign(HtmlBasePlugin, {
+	applyBaseToUrl: transformUrl,
+});
+
+export default HtmlBasePlugin;
+
 export { transformUrl as applyBaseToUrl };
