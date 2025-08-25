@@ -135,7 +135,7 @@
 		"@11ty/dependency-tree": "^4.0.0",
 		"@11ty/dependency-tree-esm": "^2.0.0",
 		"@11ty/eleventy-dev-server": "3.0.0-alpha.3",
-		"@11ty/eleventy-plugin-bundle": "^3.0.6",
+		"@11ty/eleventy-plugin-bundle": "^3.0.7",
 		"@11ty/eleventy-utils": "^2.0.7",
 		"@11ty/gray-matter": "^2.0.0",
 		"@11ty/lodash-custom": "^4.17.21",
