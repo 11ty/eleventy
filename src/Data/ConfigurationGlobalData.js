@@ -6,7 +6,7 @@ const { set: lodashSet } = lodash;
 
 class TemplateDataConfigError extends EleventyBaseError {}
 
-class TemplateDataInitialGlobalData {
+export default class ConfigurationGlobalData {
 	constructor(templateConfig) {
 		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
 			throw new TemplateDataConfigError("Missing or invalid `templateConfig` (via Render plugin).");
@@ -36,5 +36,3 @@ class TemplateDataInitialGlobalData {
 		return globalData;
 	}
 }
-
-export default TemplateDataInitialGlobalData;

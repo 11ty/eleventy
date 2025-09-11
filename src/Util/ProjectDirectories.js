@@ -6,7 +6,7 @@ import { isDynamicPattern } from "../Util/GlobMatcher.js";
 import DirContains from "./DirContains.js";
 
 /* Directories internally should always use *nix forward slashes */
-class ProjectDirectories {
+export default class ProjectDirectories {
 	static defaults = {
 		input: "./",
 		data: "./_data/", // Relative to input directory
@@ -24,6 +24,10 @@ class ProjectDirectories {
 
 	inputFile = undefined;
 	inputGlob = undefined;
+
+	static relativeToProjectRoot(fileOrDir) {
+		return this.normalizePath(TemplatePath.relativePath(fileOrDir));
+	}
 
 	// Add leading dot slash
 	// Use forward slashes
@@ -365,5 +369,3 @@ class ProjectDirectories {
 		};
 	}
 }
-
-export default ProjectDirectories;

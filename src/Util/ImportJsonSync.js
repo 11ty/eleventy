@@ -45,8 +45,10 @@ function getWorkingProjectPackageJsonPath() {
 	return findFilePathInParentDirs(dir, "package.json");
 }
 
-function getWorkingProjectPackageJson() {
-	let filePath = getWorkingProjectPackageJsonPath();
+function getWorkingProjectPackageJson(filePath) {
+	if (!filePath) {
+		filePath = getWorkingProjectPackageJsonPath();
+	}
 
 	// Fails nicely
 	if (!filePath) {

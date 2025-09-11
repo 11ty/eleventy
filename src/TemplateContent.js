@@ -394,29 +394,58 @@ class TemplateContent {
 		return fm.content;
 	}
 
+	get dataCascade() {
+		if (this.templateData) {
+			return this.templateData.getTemplateDirectoryDataCascade(this.inputPath);
+		}
+	}
+
 	async #getFrontMatterData() {
 		let fm = await this.read();
+
+		let virtualTemplateDefinition = this.getVirtualTemplateDefinition();
+		let virtualTemplateData;
+		if (virtualTemplateDefinition) {
+			virtualTemplateData = virtualTemplateDefinition.data;
+
+			TemplateData.cleanupData(virtualTemplateData, {
+				file: this.inputPath,
+				isVirtualTemplate: Boolean(virtualTemplateData),
+			});
+		}
 
 		// gray-matter isn’t async-friendly but can return a promise from custom front matter
 		if (fm.data instanceof Promise) {
 			fm.data = await fm.data;
 		}
 
-		let tr = await this.getTemplateRender();
-		let extraData = await tr.engine.getExtraDataFromFile(this.inputPath);
+		let frontMatterData = Object.assign({}, fm.data);
 
-		let virtualTemplateDefinition = this.getVirtualTemplateDefinition();
-		let virtualTemplateData;
-		if (virtualTemplateDefinition) {
-			virtualTemplateData = virtualTemplateDefinition.data;
-		}
-
-		let data = Object.assign({}, fm.data, extraData, virtualTemplateData);
-
-		TemplateData.cleanupData(data, {
+		TemplateData.cleanupData(frontMatterData, {
 			file: this.inputPath,
 			isVirtualTemplate: Boolean(virtualTemplateData),
 		});
+
+		let tr = await this.getTemplateRender();
+		let extraData = await tr.engine.getExtraDataFromFile(this.inputPath);
+
+		TemplateData.cleanupData(extraData, {
+			file: this.inputPath,
+			isVirtualTemplate: Boolean(virtualTemplateData),
+		});
+
+		if (this.dataCascade) {
+			this.dataCascade.mergeTopLevel(frontMatterData, this.inputPath);
+
+			if (extraData) {
+				this.dataCascade.mergeTopLevel(extraData);
+			}
+			if (virtualTemplateData) {
+				this.dataCascade.mergeTopLevel(virtualTemplateData);
+			}
+		}
+
+		let data = Object.assign(frontMatterData, extraData, virtualTemplateData);
 
 		return {
 			data,

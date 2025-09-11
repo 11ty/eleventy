@@ -112,6 +112,7 @@ class HtmlRelativeCopy {
 		}
 
 		// Relative to source file’s input path
+		// Maybe use ProjectDirectories.relativeToProjectRoot()
 		let source = this.getFilePathRelativeToProjectRoot(fileRef, tmplInputPath);
 		if (!this.isCopyableTarget(source)) {
 			return;

@@ -2,7 +2,7 @@ import path from "node:path";
 import { statSync } from "node:fs";
 
 import lodash from "@11ty/lodash-custom";
-import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
+import { TemplatePath, isPlainObject, Merge } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
 import chalk from "./Adapters/Packages/chalk.js";
@@ -34,6 +34,9 @@ class Template extends TemplateContent {
 	#logger;
 	#fsManager;
 	#stats;
+	#dataCache;
+	#cacheRenderedPromise;
+	#cacheRenderedTransformsAndLayoutsPromise;
 
 	constructor(templatePath, templateData, extensionMap, config) {
 		debugDev("new Template(%o)", templatePath);
@@ -130,14 +133,14 @@ class Template extends TemplateContent {
 		super.resetCaches(types);
 
 		if (types.data) {
-			delete this._dataCache;
+			this.#dataCache = undefined;
 			// delete this._usePermalinkRoot;
 			// delete this.#stats;
 		}
 
 		if (types.render) {
-			delete this._cacheRenderedPromise;
-			delete this._cacheRenderedTransformsAndLayoutsPromise;
+			this.#cacheRenderedPromise = undefined;
+			this.#cacheRenderedTransformsAndLayoutsPromise = undefined;
 		}
 	}
 
@@ -374,7 +377,7 @@ class Template extends TemplateContent {
 
 		if (this.templateData) {
 			localData = await this.templateData.getTemplateDirectoryData(this.inputPath);
-			globalData = await this.templateData.getGlobalData(this.inputPath);
+			globalData = await this.templateData.getGlobalData();
 			debugDev("%o getData getTemplateDirectoryData and getGlobalData", this.inputPath);
 		}
 
@@ -411,7 +414,8 @@ class Template extends TemplateContent {
 				ReservedData.check(mergedData);
 			}
 
-			await this.addPage(mergedData);
+			let pageData = await this.getPageData(mergedData);
+			Merge(mergedData, { page: pageData });
 
 			debugDev("%o getData mergedData", this.inputPath);
 
@@ -434,38 +438,36 @@ class Template extends TemplateContent {
 	}
 
 	async getData() {
-		if (!this._dataCache) {
+		if (!this.#dataCache) {
 			// @cachedproperty
-			this._dataCache = this.#getData();
+			this.#dataCache = this.#getData();
 		}
 
-		return this._dataCache;
+		return this.#dataCache;
 	}
 
-	async addPage(data) {
-		if (!("page" in data)) {
-			data.page = {};
-		}
+	async getPageData(data) {
+		let page = {
+			// Make sure to keep these keys synchronized in src/Util/ReservedData.js
+			inputPath: this.inputPath,
+			fileSlug: this.fileSlugStr,
+			filePathStem: this.filePathStem,
+			outputFileExtension: this.engine.defaultTemplateFileExtension,
+			templateSyntax: this.templateRender.getEnginesList(data[this.config.keys.engineOverride]),
+		};
 
-		// Make sure to keep these keys synchronized in src/Util/ReservedData.js
-		data.page.inputPath = this.inputPath;
-		data.page.fileSlug = this.fileSlugStr;
-		data.page.filePathStem = this.filePathStem;
-		data.page.outputFileExtension = this.engine.defaultTemplateFileExtension;
-		data.page.templateSyntax = this.templateRender.getEnginesList(
-			data[this.config.keys.engineOverride],
-		);
-
-		let newDate = await this.getMappedDate(data);
+		let newDate = await this.getMappedDate(data?.date, page);
 		// Skip date assignment if custom date is falsy.
 		if (newDate) {
-			data.page.date = newDate;
+			page.date = newDate;
 		}
 
-		// data.page.url
-		// data.page.outputPath
-		// data.page.excerpt from gray-matter and Front Matter
-		// data.page.lang from I18nPlugin
+		// page.url
+		// page.outputPath
+		// page.excerpt from gray-matter and Front Matter
+		// page.lang from I18nPlugin
+
+		return page;
 	}
 
 	// Tests only
@@ -485,12 +487,12 @@ class Template extends TemplateContent {
 	// This is the primary render mechanism, called via TemplateMap->populateContentDataInMap
 	async renderPageEntryWithoutLayout(pageEntry) {
 		// @cachedproperty
-		if (!this._cacheRenderedPromise) {
-			this._cacheRenderedPromise = this.renderDirect(pageEntry.rawInput, pageEntry.data);
+		if (!this.#cacheRenderedPromise) {
+			this.#cacheRenderedPromise = this.renderDirect(pageEntry.rawInput, pageEntry.data);
 			this.renderCount++;
 		}
 
-		return this._cacheRenderedPromise;
+		return this.#cacheRenderedPromise;
 	}
 
 	setLinters(linters) {
@@ -938,14 +940,15 @@ class Template extends TemplateContent {
 		return content;
 	}
 
+	// This could be `static`
 	async renderPageEntry(pageEntry) {
 		// @cachedproperty
-		if (!pageEntry.template._cacheRenderedTransformsAndLayoutsPromise) {
-			pageEntry.template._cacheRenderedTransformsAndLayoutsPromise =
-				this.#renderPageEntryWithLayoutsAndTransforms(pageEntry);
+		if (!pageEntry.template.#cacheRenderedTransformsAndLayoutsPromise) {
+			pageEntry.template.#cacheRenderedTransformsAndLayoutsPromise =
+				pageEntry.template.#renderPageEntryWithLayoutsAndTransforms(pageEntry);
 		}
 
-		return pageEntry.template._cacheRenderedTransformsAndLayoutsPromise;
+		return pageEntry.template.#cacheRenderedTransformsAndLayoutsPromise;
 	}
 
 	retrieveDataForJsonOutput(data, selectors) {
@@ -1077,15 +1080,13 @@ class Template extends TemplateContent {
 		return newDate;
 	}
 
-	async getMappedDate(data) {
-		let dateValue = data?.date;
-
+	async getMappedDate(dateValue, pageData) {
 		// These can return a Date object, or a string.
 		// Already type checked to be functions in UserConfig
 		for (let fn of this.config.customDateParsing) {
 			let ret = fn.call(
 				{
-					page: data.page,
+					page: pageData,
 				},
 				dateValue,
 			);
@@ -1097,7 +1098,7 @@ class Template extends TemplateContent {
 		}
 
 		if (dateValue) {
-			debug("getMappedDate: using a date in the data for %o of %o", this.inputPath, data.date);
+			debug("getMappedDate: using a date in the data for %o of %o", this.inputPath, dateValue);
 			if (dateValue?.constructor?.name === "DateTime") {
 				// a luxon instance
 				debug("getMappedDate: found DateTime instance: %o", dateValue);

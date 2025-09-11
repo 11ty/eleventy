@@ -6,12 +6,18 @@ import debugUtil from "debug";
 import { inspect } from "../Adapters/Packages/inspect.js";
 import unique from "../Util/Objects/Unique.js";
 import TemplateGlob from "../TemplateGlob.js";
+import { DataCascade } from "./DataCascade.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
-import TemplateDataInitialGlobalData from "./TemplateDataInitialGlobalData.js";
-import { getEleventyPackageJson, getWorkingProjectPackageJson } from "../Util/ImportJsonSync.js";
+import ConfigurationGlobalData from "./ConfigurationGlobalData.js";
+import {
+	getEleventyPackageJson,
+	importJsonSync,
+	getWorkingProjectPackageJsonPath,
+} from "../Util/ImportJsonSync.js";
 import { EleventyImport, EleventyLoadContent } from "../Util/Require.js";
 import { DeepFreeze } from "../Util/Objects/DeepFreeze.js";
 import { coerce } from "../Util/SemverCoerce.js";
+import ProjectDirectories from "../Util/ProjectDirectories.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 
@@ -22,6 +28,12 @@ const debugDev = debugUtil("Dev:Eleventy:TemplateData");
 class TemplateDataParseError extends EleventyBaseError {}
 
 class TemplateData {
+	#rawImports;
+	#globalData;
+	#templateDirectoryData = {};
+	#globalDataCascade = new DataCascade();
+	#templateDirectoryDataCascade = {};
+
 	constructor(templateConfig) {
 		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
 			throw new Error(
@@ -37,12 +49,8 @@ class TemplateData {
 			aggregate: this.config.benchmarkManager.get("Aggregate"),
 		};
 
-		this.rawImports = {};
-		this.globalData = null;
-		this.templateDirectoryData = {};
 		this.isEsm = false;
-
-		this.initialGlobalData = new TemplateDataInitialGlobalData(this.templateConfig);
+		this.initialGlobalData = new ConfigurationGlobalData(this.templateConfig);
 	}
 
 	get dirs() {
@@ -114,25 +122,41 @@ class TemplateData {
 			debug(
 				"Opted-out of package.json assignment for global data with falsy value for `keys.package` configuration.",
 			);
-			return this.rawImports;
-		} else if (Object.keys(this.rawImports).length > 0) {
-			return this.rawImports;
+			return;
 		}
 
-		let pkgJson = getWorkingProjectPackageJson();
-		this.rawImports[this.config.keys.package] = pkgJson;
+		if (this.#rawImports) {
+			return this.#rawImports;
+		}
+
+		let projectPackageJsonPath = getWorkingProjectPackageJsonPath();
+		let packageJson = {};
+		if (projectPackageJsonPath) {
+			packageJson = importJsonSync(projectPackageJsonPath);
+		}
+
+		this.#rawImports = {
+			[this.config.keys.package]: packageJson,
+		};
+
+		if (projectPackageJsonPath) {
+			let relativeProjectPackageJsonPath =
+				ProjectDirectories.relativeToProjectRoot(projectPackageJsonPath);
+			this.#globalDataCascade.mergeTopLevel(this.#rawImports, relativeProjectPackageJsonPath);
+		}
 
 		if (this.config.freezeReservedData) {
-			DeepFreeze(this.rawImports);
+			DeepFreeze(this.#rawImports);
 		}
 
-		return this.rawImports;
+		return this.#rawImports;
 	}
 
 	clearData() {
-		this.globalData = null;
+		this.#globalData = null;
 		this.configApiGlobalData = null;
-		this.templateDirectoryData = {};
+		this.#templateDirectoryData = {};
+		this.#templateDirectoryDataCascade = {};
 	}
 
 	_getGlobalDataGlobByExtension(extension) {
@@ -281,15 +305,16 @@ class TemplateData {
 
 	async getAllGlobalData() {
 		let globalData = {};
+
 		let files = TemplatePath.addLeadingDotSlashArray(await this.getGlobalDataFiles());
 
 		this.config.events.emit("eleventy.globalDataFiles", files);
 
 		let dataFileConflicts = {};
 
-		for (let j = 0, k = files.length; j < k; j++) {
-			let data = await this.getDataValue(files[j]);
-			let objectPathTarget = this.getObjectPathForDataFile(files[j]);
+		for (let file of Object.values(files)) {
+			let data = await this.getDataValue(file);
+			let objectPathTarget = this.getObjectPathForDataFile(file);
 
 			// Since we're joining directory paths and an array is not usable as an objectkey since two identical arrays are not double equal,
 			// we can just join the array by a forbidden character ("/"" is chosen here, since it works on Linux, Mac and Windows).
@@ -301,53 +326,52 @@ class TemplateData {
 			// and conflict, let’s merge them.
 			if (dataFileConflicts[objectPathTargetString]) {
 				debugWarn(
-					`merging global data from ${files[j]} with an already existing global data file (${dataFileConflicts[objectPathTargetString]}). Overriding existing keys.`,
+					`merging global data from ${file} with an already existing global data file (${dataFileConflicts[objectPathTargetString]}). Overriding existing keys.`,
 				);
 
 				let oldData = lodashGet(globalData, objectPathTarget);
 				data = TemplateData.mergeDeep(this.config.dataDeepMerge, oldData, data);
 			}
 
-			dataFileConflicts[objectPathTargetString] = files[j];
-			debug(`Found global data file ${files[j]} and adding as: ${objectPathTarget}`);
+			dataFileConflicts[objectPathTargetString] = file;
+			debug(`Found global data file ${file} and adding as: ${objectPathTarget}`);
+
+			this.#globalDataCascade.mergeToLocation(data, objectPathTargetString, file);
+
 			lodashSet(globalData, objectPathTarget, data);
 		}
 
 		return globalData;
 	}
 
+	getEleventyGlobal() {
+		// #2293 for meta[name=generator]
+		const pkg = getEleventyPackageJson();
+
+		let version = coerce(pkg.version).toString();
+		let eleventy = {
+			version,
+			generator: `Eleventy v${version}`,
+		};
+		if (this.environmentVariables) {
+			eleventy.env = Object.assign({}, this.environmentVariables);
+		}
+		if (this.dirs) {
+			eleventy.directories = Object.assign({}, this.dirs.getUserspaceInstance());
+		}
+
+		// `eleventy` is Reserved
+		if (this.config.freezeReservedData) {
+			DeepFreeze(eleventy);
+		}
+
+		return eleventy;
+	}
+
 	async #getInitialGlobalData() {
 		let globalData = await this.initialGlobalData.getData();
 
-		if (!("eleventy" in globalData)) {
-			globalData.eleventy = {};
-		}
-
-		// #2293 for meta[name=generator]
-		const pkg = getEleventyPackageJson();
-		globalData.eleventy.version = coerce(pkg.version).toString();
-		globalData.eleventy.generator = `Eleventy v${globalData.eleventy.version}`;
-
-		if (this.environmentVariables) {
-			if (!("env" in globalData.eleventy)) {
-				globalData.eleventy.env = {};
-			}
-
-			Object.assign(globalData.eleventy.env, this.environmentVariables);
-		}
-
-		if (this.dirs) {
-			if (!("directories" in globalData.eleventy)) {
-				globalData.eleventy.directories = {};
-			}
-
-			Object.assign(globalData.eleventy.directories, this.dirs.getUserspaceInstance());
-		}
-
-		// Reserved
-		if (this.config.freezeReservedData) {
-			DeepFreeze(globalData.eleventy);
-		}
+		globalData.eleventy = this.getEleventyGlobal();
 
 		return globalData;
 	}
@@ -362,7 +386,16 @@ class TemplateData {
 
 	async #getGlobalData() {
 		let rawImports = this.getRawImports();
+
+		// Data from the configuration API eleventyConfig.addGLobalData and `eleventy` global
 		let configApiGlobalData = await this.getInitialGlobalData();
+
+		this.#globalDataCascade.mergeTopLevel(configApiGlobalData);
+		this.#globalDataCascade.mergeToLocation(
+			configApiGlobalData.eleventy,
+			"eleventy",
+			DataCascade.INTERNAL_KEY,
+		);
 
 		let globalJson = await this.getAllGlobalData();
 		let mergedGlobalData = Merge(globalJson, configApiGlobalData);
@@ -372,15 +405,15 @@ class TemplateData {
 	}
 
 	async getGlobalData() {
-		if (!this.globalData) {
-			this.globalData = this.#getGlobalData();
+		if (!this.#globalData) {
+			this.#globalData = this.#getGlobalData();
 		}
 
-		return this.globalData;
+		return this.#globalData;
 	}
 
 	/* Template and Directory data files */
-	async combineLocalData(localDataPaths) {
+	async combineLocalData(localDataPaths, dataCascade) {
 		let localData = {};
 		if (!Array.isArray(localDataPaths)) {
 			localDataPaths = [localDataPaths];
@@ -423,19 +456,40 @@ class TemplateData {
 					dataSource[key] = path;
 				}
 				TemplateData.mergeDeep(this.config.dataDeepMerge, localData, cleanedDataForPath);
+
+				if (dataCascade) {
+					dataCascade.mergeTopLevel(localData, path);
+				}
 			}
 		}
+
 		return localData;
 	}
 
-	async getTemplateDirectoryData(templatePath) {
-		if (!this.templateDirectoryData[templatePath]) {
-			let localDataPaths = await this.getLocalDataPaths(templatePath);
-			let importedData = await this.combineLocalData(localDataPaths);
+	getGlobalDataCascade() {
+		return this.#globalDataCascade;
+	}
 
-			this.templateDirectoryData[templatePath] = importedData;
+	async getTemplateDirectoryData(templatePath) {
+		if (!this.#templateDirectoryData[templatePath]) {
+			this.#templateDirectoryDataCascade[templatePath] = new DataCascade();
+			let localDataPaths = await this.getLocalDataPaths(templatePath);
+			let importedData = await this.combineLocalData(
+				localDataPaths,
+				this.#templateDirectoryDataCascade[templatePath],
+			);
+
+			this.#templateDirectoryData[templatePath] = importedData;
 		}
-		return this.templateDirectoryData[templatePath];
+		return this.#templateDirectoryData[templatePath];
+	}
+
+	getTemplateDirectoryDataCascade(templatePath) {
+		if (!this.#templateDirectoryDataCascade[templatePath]) {
+			throw new Error("Missing template data cascade for " + templatePath);
+		}
+
+		return this.#templateDirectoryDataCascade[templatePath];
 	}
 
 	getUserDataExtensions() {
@@ -509,7 +563,10 @@ class TemplateData {
 			// We always need to use `import()`, as `require` isn’t available in ESM.
 			let returnValue = await EleventyImport(path, type);
 
-			// TODO special exception for Global data `permalink.js`
+			// Returning a function is executed immediately (it has always done this for global data)
+
+			// TODO some API to allow returning a function without executing it immediately
+			// (e.g. `permalink.js` or `eleventyDataSchema.js` global data)
 			// module.exports = (data) => `${data.page.filePathStem}/`; // Does not work
 			// module.exports = () => ((data) => `${data.page.filePathStem}/`); // Works
 			if (typeof returnValue === "function") {
@@ -525,11 +582,14 @@ class TemplateData {
 			// Other extensions
 			let { parser, options } = this.getUserDataParser(extension);
 
-			return this._parseDataFile(path, parser, options);
+			let returnValue = this._parseDataFile(path, parser, options);
+
+			return returnValue;
 		} else if (extension === "json") {
 			// File to string, parse with JSON (preprocess)
-			const parser = (content) => JSON.parse(content);
-			return this._parseDataFile(path, parser);
+			let returnValue = this._parseDataFile(path, (content) => JSON.parse(content));
+
+			return returnValue;
 		} else {
 			throw new TemplateDataParseError(
 				`Could not find an appropriate data parser for ${path}. Do you need to add a plugin to your config file?`,
@@ -632,16 +692,16 @@ class TemplateData {
 		return unique(paths).reverse();
 	}
 
-	static mergeDeep(deepMerge, target, ...source) {
+	static mergeDeep(deepMerge, target, ...sources) {
 		if (!deepMerge && deepMerge !== undefined) {
-			return Object.assign(target, ...source);
+			return Object.assign(target, ...sources);
 		} else {
-			return TemplateData.merge(target, ...source);
+			return TemplateData.merge(target, ...sources);
 		}
 	}
 
-	static merge(target, ...source) {
-		return Merge(target, ...source);
+	static merge(target, ...sources) {
+		return Merge(target, ...sources);
 	}
 
 	/* Like cleanupData() but does not mutate */
