@@ -36,6 +36,7 @@ class TemplateMap {
 		}
 		this.eleventyConfig = eleventyConfig;
 		this.map = [];
+		this.inputPathMap = new Map(); // NEW: O(1) lookup Map for performance
 		this.collectionsData = null;
 		this.cached = false;
 		this.verboseOutput = true;
@@ -72,11 +73,26 @@ class TemplateMap {
 
 		for (let map of entries) {
 			this.map.push(map);
+			this._addToInputPathMap(map); // NEW: Add to lookup Map for O(1) access
 		}
 	}
 
 	getMap() {
 		return this.map;
+	}
+
+	// NEW: Helper method to add entries to the lookup Map
+	_addToInputPathMap(mapEntry) {
+		const inputPath = mapEntry.inputPath;
+
+		// Store under the original inputPath
+		this.inputPathMap.set(inputPath, mapEntry);
+
+		// Also store under absolute path if different
+		const absoluteInputPath = TemplatePath.absolutePath(inputPath);
+		if (absoluteInputPath !== inputPath) {
+			this.inputPathMap.set(absoluteInputPath, mapEntry);
+		}
 	}
 
 	getTagTarget(str) {
@@ -325,14 +341,17 @@ class TemplateMap {
 		return Boolean(this.getMapEntryForInputPath(inputPath));
 	}
 
-	// TODO(slightlyoff): hot inner loop?
+	// OPTIMIZED: O(1) lookup instead of O(n) search - Performance improvement for template rendering
 	getMapEntryForInputPath(inputPath) {
+		// Try direct lookup first (most common case)
+		let entry = this.inputPathMap.get(inputPath);
+		if (entry) {
+			return entry;
+		}
+
+		// Try absolute path lookup if direct lookup failed
 		let absoluteInputPath = TemplatePath.absolutePath(inputPath);
-		return this.map.find((entry) => {
-			if (entry.inputPath === inputPath || entry.inputPath === absoluteInputPath) {
-				return entry;
-			}
-		});
+		return this.inputPathMap.get(absoluteInputPath);
 	}
 
 	#removeTagsFromTemplateOrder(maps) {
