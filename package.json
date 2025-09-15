@@ -142,7 +142,7 @@
 		"@11ty/parse-date-strings": "^2.0.5",
 		"@11ty/posthtml-urls": "^1.0.1",
 		"@11ty/recursive-copy": "^4.0.2",
-		"@sindresorhus/slugify": "^2.2.1",
+		"@sindresorhus/slugify": "^3.0.0",
 		"bcp-47-normalize": "^2.3.0",
 		"chokidar": "^4.0.3",
 		"debug": "^4.4.1",
