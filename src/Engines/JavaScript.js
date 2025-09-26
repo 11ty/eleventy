@@ -158,6 +158,7 @@ export default class JavaScript extends TemplateEngine {
 
 	// Backwards compat
 	static wrapJavaScriptFunction(inst, fn) {
+		// TODO ArgumentHelper.wrapFilter(fn);
 		return augmentFunction(fn, {
 			source: inst,
 		});

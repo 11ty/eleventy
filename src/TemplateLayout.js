@@ -212,20 +212,27 @@ class TemplateLayout extends TemplateContent {
 	// Inefficient? We want to compile all the templatelayouts into a single reusable callback?
 	// Trouble: layouts may need data variables present downstream/upstream
 	// This is called from Template->renderPageEntry
-	async renderPageEntry(pageEntry) {
-		let templateContent = pageEntry.templateContent;
+	async renderLayoutPageEntry(pageEntry, dataCascade) {
+		let content = dataCascade ? pageEntry.template.getDataMapContent() : pageEntry.templateContent;
 		let compiledFunctions = await this.getCompiledLayoutFunctions();
 		for (let { render } of compiledFunctions) {
-			let data = {
-				content: templateContent,
-				...pageEntry.data,
-			};
-
-			templateContent = await render(data);
+			if(dataCascade) {
+				let dataSources = {
+					...dataCascade.getLocations(),
+					content,
+				}
+				content = await render(dataSources);
+			} else {
+				let data = {
+					content,
+					...pageEntry.data,
+				};
+				content = await render(data);
+			}
 		}
 
 		// Don’t set `templateContent` on pageEntry because collection items should not have layout markup
-		return templateContent;
+		return content;
 	}
 
 	resetCaches(types) {

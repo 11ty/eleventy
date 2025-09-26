@@ -29,6 +29,7 @@ const SPECIAL_COLLECTION_NAMES = {
 
 class TemplateMap {
 	#dependencyMapInitialized = false;
+	#templateData;
 
 	constructor(eleventyConfig) {
 		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
@@ -60,6 +61,14 @@ class TemplateMap {
 			this._config = this.eleventyConfig.getConfig();
 		}
 		return this._config;
+	}
+
+	setTemplateData(templateData) {
+		if(templateData.constructor.name !== "TemplateData") {
+			throw new Error("Internal error: invalid TemplateData instance");
+		}
+
+		this.#templateData = templateData;
 	}
 
 	async add(template) {
@@ -253,6 +262,35 @@ class TemplateMap {
 			.filter(Boolean);
 	}
 
+	mergeDataCascadeLocations() {
+		let collectionsDataCascade = this.#templateData.getCollectionsDataCascade();
+
+		for(let [name, collection] of Object.entries(this.collectionsData)) {
+			let index = 0;
+			for(let entry of collection) {
+				let dataWithoutCollections = {
+					...entry.data,
+				};
+				delete dataWithoutCollections.collections;
+
+				let readOnlyEntry = {
+					page: entry.page,
+					rawInput: entry.rawInput,
+					inputPath: entry.inputPath,
+					date: entry.date,
+					outputPath: entry.outputPath,
+					url: entry.url,
+					templateContent: "",
+					content: "",
+				};
+
+				collectionsDataCascade.mergeToLocation(readOnlyEntry, `collections[${name}][${index}]`);
+				collectionsDataCascade.mergeToLocation(dataWithoutCollections, `collections[${name}][${index}].data`, entry.inputPath);
+				index++;
+			}
+		}
+	}
+
 	async cache() {
 		if (!this.#dependencyMapInitialized) {
 			this.addAllToGlobalDependencyGraph();
@@ -273,6 +311,7 @@ class TemplateMap {
 
 		await this.initDependencyMap(fullTemplateOrder);
 		await this.resolveRemainingComputedData();
+		this.mergeDataCascadeLocations();
 
 		let orderedPaths = this.#removeTagsFromTemplateOrder(fullTemplateOrder);
 

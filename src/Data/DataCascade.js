@@ -1,60 +1,107 @@
-import { isPlainObject, Merge } from "@11ty/eleventy-utils";
+import { isPlainObject, DeepCopy } from "@11ty/eleventy-utils";
 import lodash from "@11ty/lodash-custom";
+
+import { LocationFactory, stringifyReadonlyLocation } from "./DataSourceLocation.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
 
-export class DataCascade {
-	static READ_ONLY_KEY = "11ty:readonly";
-	static UNEDITABLE_TYPE_KEY = "11ty:invalid_type";
-	static INTERNAL_KEY = "11ty:internal";
-
-	static PREFIX = "[[via::";
-	static POSTFIX = "]]";
-
+export class DataCascadeManager {
 	constructor() {
-		this.dataSourceLocations = {
-			collections: [],
-			// __useInternalDataMapSource: true, // toggle on no-op behavior for filters
-		};
+		this.dataCascades = new Map();
 	}
 
-	#getMergedSource(target, source) {
-		if (isPlainObject(target)) {
-			if (isPlainObject(source)) {
-				return Merge(target, source);
-			}
-			return target;
+	has(templatePath) {
+		return this.dataCascades.has(templatePath);
+	}
+
+	create(templatePath) {
+		let cascade = new DataCascade();
+		this.dataCascades.set(templatePath, cascade);
+		return cascade;
+	}
+
+	get(templatePath) {
+		if (!this.has(templatePath)) {
+			throw new Error("Internal error: missing data cascade for " + templatePath);
 		}
-		if (Array.isArray(target)) {
-			if (Array.isArray(source)) {
-				return [...target, ...source];
-			}
-			return target;
+
+		return this.dataCascades.get(templatePath);
+	}
+
+	reset() {
+		this.dataCascades = new Map();
+	}
+}
+
+export class DataCascade {
+	static READ_ONLY_KEY = "11ty:readonly";
+	static TOGGLE_PROP_NAME = "__useInternalDataMapSource";
+
+	constructor() {
+		this.dataSourceLocations = {};
+
+		Object.defineProperty(this.dataSourceLocations, DataCascade.TOGGLE_PROP_NAME, {
+			value: true
+		});
+	}
+
+	// TODO start here, circular references are maximum call stacking
+	static deepThaw(target) {
+		if(Array.isArray(target)) {
+			return target.map(entry => this.deepThaw(entry));
 		}
-		return source;
+
+		if(isPlainObject(target)) {
+			if(Object.isFrozen(target)) {
+				let thawed = {};
+				for(let key in target) {
+					thawed[key] = this.deepThaw(target[key]);
+				}
+				return thawed;
+			}
+
+			// reuse existing
+			for(let key in target) {
+				target[key] = this.deepThaw(target[key]);
+			}
+		}
+		return target;
 	}
 
 	// Global Data and Template Data Cascade combine
 	mergeWithUpstreamDataCascade(...upstreamDataCascades) {
 		let locations = upstreamDataCascades.map((entry) => entry.getLocations());
-		this.dataSourceLocations = Merge({}, ...locations, this.dataSourceLocations);
+		this.dataSourceLocations = DeepCopy({}, ...locations, this.dataSourceLocations);
 	}
 
-	mergeTopLevel(data, dataSourceLocation) {
+	assignFromUpstreamDataCascade(...upstreamDataCascades) {
+		let locations = upstreamDataCascades.map((entry) => entry.getLocations());
+		this.dataSourceLocations = Object.assign({}, ...locations, this.dataSourceLocations);
+	}
+
+	mergeTopLevel(data, sourceFilePath) {
 		let newSources = DataCascade.getMappingObject(
 			data,
-			dataSourceLocation || DataCascade.READ_ONLY_KEY,
+			sourceFilePath || DataCascade.READ_ONLY_KEY,
 		);
-		Merge(this.dataSourceLocations, newSources);
+		DeepCopy(this.dataSourceLocations, newSources);
 	}
 
-	mergeToLocation(data, location, dataSourceLocation) {
+	mergeToLocation(data, location, sourceFilePath, dataSourceSelector) {
 		let target = lodashGet(this.dataSourceLocations, location);
 		let source = DataCascade.getMappingObject(
 			data,
-			dataSourceLocation || DataCascade.READ_ONLY_KEY,
+			sourceFilePath || DataCascade.READ_ONLY_KEY,
+			dataSourceSelector
 		);
-		lodashSet(this.dataSourceLocations, location, this.#getMergedSource(target, source));
+
+		let merged = DeepCopy(target, source);
+		lodashSet(this.dataSourceLocations, location, merged);
+	}
+
+	// For computed data
+	markLocationAsReadOnly(location) {
+		lodashSet(this.dataSourceLocations, location, stringifyReadonlyLocation(location));
 	}
 
 	getLocations() {
@@ -73,32 +120,44 @@ export class DataCascade {
 		return propName;
 	}
 
-	static getMappingObject(target, sourceLocation, selector = "") {
+	static getMappingObject(target, sourceFilePath, dataLocationSelector = "") {
+		if (typeof target === "function") {
+			return target;
+		} else if(sourceFilePath.startsWith("11ty:")) { // readonly/internal mappings
+			// internal data may be frozen (think `eleventy` global)
+			return DataCascade.deepThaw(target);
+		}
+
+		if(sourceFilePath.startsWith("./")) {
+			sourceFilePath = sourceFilePath.slice(2);
+		}
+
+		if(typeof target === "string" || typeof target === "number") {
+			return LocationFactory(target, sourceFilePath, dataLocationSelector);
+		}
+
 		if (Array.isArray(target)) {
 			return target.map((entry, index) =>
-				this.getMappingObject(entry, sourceLocation, `${selector}[${index}]`),
+				this.getMappingObject(entry, sourceFilePath, `${dataLocationSelector}[${index}]`),
 			);
 		}
 
 		if (isPlainObject(target)) {
+			if(Object.isFrozen(target)) {
+				return DataCascade.deepThaw(target);
+			}
+
 			let obj = {};
 			for (let propName in target) {
 				obj[propName] = this.getMappingObject(
 					target[propName],
-					sourceLocation,
-					this.#getPropertySelector(selector, propName),
+					sourceFilePath,
+					this.#getPropertySelector(dataLocationSelector, propName),
 				);
 			}
 			return obj;
 		}
 
-		if (typeof target === "function") {
-			return this.UNEDITABLE_TYPE_KEY;
-		}
-
-		if (sourceLocation.startsWith("11ty:")) {
-			return this.PREFIX + sourceLocation + this.POSTFIX;
-		}
-		return this.PREFIX + sourceLocation + "::" + selector + this.POSTFIX;
+		return target;
 	}
 }

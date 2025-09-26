@@ -37,6 +37,7 @@ class Template extends TemplateContent {
 	#dataCache;
 	#cacheRenderedPromise;
 	#cacheRenderedTransformsAndLayoutsPromise;
+	#cacheRenderedDataLocationsTransformsAndLayoutsPromise;
 
 	constructor(templatePath, templateData, extensionMap, config) {
 		debugDev("new Template(%o)", templatePath);
@@ -141,6 +142,7 @@ class Template extends TemplateContent {
 		if (types.render) {
 			this.#cacheRenderedPromise = undefined;
 			this.#cacheRenderedTransformsAndLayoutsPromise = undefined;
+			this.#cacheRenderedDataLocationsTransformsAndLayoutsPromise = undefined;
 		}
 	}
 
@@ -415,6 +417,7 @@ class Template extends TemplateContent {
 			}
 
 			let pageData = await this.getPageData(mergedData);
+
 			Merge(mergedData, { page: pageData });
 
 			debugDev("%o getData mergedData", this.inputPath);
@@ -444,6 +447,30 @@ class Template extends TemplateContent {
 		}
 
 		return this.#dataCache;
+	}
+
+	mergeDataCascadeLocations(data) {
+		// Set page.* as read only
+		this.dataCascade.mergeToLocation( data.page, "page"); // read only
+
+		// TODO add support for page.date (points to `date`)
+
+		// Only works with strings here, functions are read-only (above)
+		if(typeof data?.eleventyComputed?.permalink === "string") {
+			this.dataCascade.mergeToLocation( data.page.url, "page.url", data?.eleventyComputed?.permalink, "eleventyComputed.permalink");
+			this.dataCascade.mergeToLocation( data.page.outputPath, "page.outputPath", data?.eleventyComputed?.permalink, "eleventyComputed.permalink");
+		} else if(typeof data?.permalink === "string") {
+			this.dataCascade.mergeToLocation( data.page.url, "page.url", data?.permalink, "permalink");
+			this.dataCascade.mergeToLocation( data.page.outputPath, "page.outputPath", data?.permalink, "permalink");
+		}
+
+		if(this.computedData?.computedKeys) {
+			let keys = Array.from(this.computedData?.computedKeys).filter(selector => !(["page.url", "page.outputPath"].includes(selector)));
+			for(let selector of keys) {
+				// TODO add support for string computed data
+				this.dataCascade.markLocationAsReadOnly(selector);
+			}
+		}
 	}
 
 	async getPageData(data) {
@@ -806,6 +833,8 @@ class Template extends TemplateContent {
 		if (!Pagination.hasPagination(data)) {
 			await this.addComputedData(data);
 
+			this.mergeDataCascadeLocations(data);
+
 			let obj = {
 				template: this, // not on the docs but folks are relying on it
 				rawInput,
@@ -834,6 +863,8 @@ class Template extends TemplateContent {
 
 			for (let pageEntry of pageTemplates) {
 				await pageEntry.template.addComputedData(pageEntry.data);
+
+				pageEntry.template.mergeDataCascadeLocations(pageEntry.data);
 
 				let obj = {
 					template: pageEntry.template, // not on the docs but folks are relying on it
@@ -929,7 +960,7 @@ class Template extends TemplateContent {
 		let layoutKey = pageEntry.data[this.config.keys.layout];
 		if (this.engine.useLayouts() && layoutKey) {
 			let layout = pageEntry.template.getLayout(layoutKey);
-			content = await layout.renderPageEntry(pageEntry);
+			content = await layout.renderLayoutPageEntry(pageEntry);
 		} else {
 			content = pageEntry.templateContent;
 		}
@@ -938,6 +969,38 @@ class Template extends TemplateContent {
 
 		content = await this.runTransforms(content, pageEntry);
 		return content;
+	}
+
+	async #renderDataLocationsPageEntry(pageEntry) {
+		if(!(pageEntry?.outputPath || "").endsWith(".html")) {
+			return;
+		}
+
+		// Don’t run linters/transforms/layouts if we didn’t render (via incremental)!
+		if (pageEntry.template.isDryRun && pageEntry.template.isIncremental) {
+			return pageEntry.template.getDataMapContent();
+		}
+
+		let content;
+		let layoutKey = pageEntry.data[this.config.keys.layout];
+		if (this.engine.useLayouts() && layoutKey) {
+			let layout = pageEntry.template.getLayout(layoutKey);
+			content = await layout.renderLayoutPageEntry(pageEntry, this.dataCascade);
+		} else {
+			content = pageEntry.template.getDataMapContent();
+		}
+
+		content = await this.runTransforms(content, pageEntry);
+		return content;
+	}
+
+	static async renderPageEntryDataLocations(pageEntry) {
+		// @cachedproperty
+		if(!pageEntry.template.#cacheRenderedDataLocationsTransformsAndLayoutsPromise) {
+			pageEntry.template.#cacheRenderedDataLocationsTransformsAndLayoutsPromise =
+				pageEntry.template.#renderDataLocationsPageEntry(pageEntry);
+		}
+		return pageEntry.template.#cacheRenderedDataLocationsTransformsAndLayoutsPromise;
 	}
 
 	// This could be `static`
@@ -970,11 +1033,13 @@ class Template extends TemplateContent {
 
 		for (let page of mapEntry._pages) {
 			let content;
+			let contentMap;
 
 			// Note that behavior.render is overridden when using json output
 			if (page.template.isRenderable()) {
 				// this reuses page.templateContent, it doesn’t render it
 				content = await page.template.renderPageEntry(page);
+				contentMap = await Template.renderPageEntryDataLocations(page);
 			}
 
 			if (to === "json") {
@@ -983,7 +1048,8 @@ class Template extends TemplateContent {
 					inputPath: page.inputPath,
 					outputPath: page.outputPath,
 					rawInput: page.rawInput,
-					content: content,
+					content,
+					// contentMap,
 				};
 
 				if (this.config.dataFilterSelectors?.size > 0) {
@@ -1012,6 +1078,14 @@ class Template extends TemplateContent {
 			// compile returned undefined
 			if (content !== undefined) {
 				ret.push(this._write(page, content));
+			}
+
+			// write data map
+			if (contentMap !== undefined) {
+				// TODO customize this
+				let mapOutputPath = page.outputPath + ".map";
+				this.fsManager.createDirectoryForFileSync(mapOutputPath);
+				this.fsManager.writeFileSync(mapOutputPath, contentMap);
 			}
 		}
 
@@ -1174,7 +1248,6 @@ class Template extends TemplateContent {
 	// Important reminder: Template data is first generated in TemplateMap
 	async getTemplateMapEntries(data) {
 		debugDev("%o getMapped()", this.inputPath);
-
 		this.behavior.setRenderViaDataCascade(data);
 
 		let entries = [];

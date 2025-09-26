@@ -7,6 +7,7 @@ import TemplateEngine from "./TemplateEngine.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import { augmentObject } from "./Util/ContextAugmenter.js";
 import { withResolvers } from "../Util/PromiseUtil.js";
+import { ArgumentHelper } from "../Data/DataSourceLocation.js";
 
 const debug = debugUtil("Eleventy:Nunjucks");
 
@@ -141,7 +142,8 @@ export default class Nunjucks extends TemplateEngine {
 					lazy: false, // context.env?.opts.throwOnUndefined,
 				});
 
-				return fn.call(this, ...args);
+				let callback = ArgumentHelper.wrapFilter(fn);
+				return callback.call(this, ...args);
 			} catch (e) {
 				throw new EleventyNunjucksError(
 					`Error in Nunjucks Filter \`${name}\`${this.page ? ` (${this.page.inputPath})` : ""}`,

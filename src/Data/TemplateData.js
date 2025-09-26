@@ -6,7 +6,7 @@ import debugUtil from "debug";
 import { inspect } from "../Adapters/Packages/inspect.js";
 import unique from "../Util/Objects/Unique.js";
 import TemplateGlob from "../TemplateGlob.js";
-import { DataCascade } from "./DataCascade.js";
+import { DataCascade, DataCascadeManager } from "./DataCascade.js";
 import EleventyBaseError from "../Errors/EleventyBaseError.js";
 import ConfigurationGlobalData from "./ConfigurationGlobalData.js";
 import {
@@ -31,8 +31,9 @@ class TemplateData {
 	#rawImports;
 	#globalData;
 	#templateDirectoryData = {};
+	#templateDataCascadeManager = new DataCascadeManager();
 	#globalDataCascade = new DataCascade();
-	#templateDirectoryDataCascade = {};
+	#collectionsDataCascade = new DataCascade();
 
 	constructor(templateConfig) {
 		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
@@ -156,7 +157,7 @@ class TemplateData {
 		this.#globalData = null;
 		this.configApiGlobalData = null;
 		this.#templateDirectoryData = {};
-		this.#templateDirectoryDataCascade = {};
+		this.#templateDataCascadeManager.reset();
 	}
 
 	_getGlobalDataGlobByExtension(extension) {
@@ -389,13 +390,8 @@ class TemplateData {
 
 		// Data from the configuration API eleventyConfig.addGLobalData and `eleventy` global
 		let configApiGlobalData = await this.getInitialGlobalData();
-
+		// Some day we may treat the `eleventy` global assigned here as different to Config API data (readonly vs internal)
 		this.#globalDataCascade.mergeTopLevel(configApiGlobalData);
-		this.#globalDataCascade.mergeToLocation(
-			configApiGlobalData.eleventy,
-			"eleventy",
-			DataCascade.INTERNAL_KEY,
-		);
 
 		let globalJson = await this.getAllGlobalData();
 		let mergedGlobalData = Merge(globalJson, configApiGlobalData);
@@ -466,30 +462,37 @@ class TemplateData {
 		return localData;
 	}
 
+	getCollectionsDataCascade() {
+		return this.#collectionsDataCascade;
+	}
+
 	getGlobalDataCascade() {
 		return this.#globalDataCascade;
 	}
 
 	async getTemplateDirectoryData(templatePath) {
 		if (!this.#templateDirectoryData[templatePath]) {
-			this.#templateDirectoryDataCascade[templatePath] = new DataCascade();
+			let cascade;
+			if(!this.#templateDataCascadeManager.has(templatePath)) {
+				cascade = this.#templateDataCascadeManager.create(templatePath);
+			} else {
+				cascade = this.#templateDataCascadeManager.get(templatePath);
+			}
+
 			let localDataPaths = await this.getLocalDataPaths(templatePath);
 			let importedData = await this.combineLocalData(
 				localDataPaths,
-				this.#templateDirectoryDataCascade[templatePath],
+				cascade,
 			);
 
 			this.#templateDirectoryData[templatePath] = importedData;
 		}
+
 		return this.#templateDirectoryData[templatePath];
 	}
 
 	getTemplateDirectoryDataCascade(templatePath) {
-		if (!this.#templateDirectoryDataCascade[templatePath]) {
-			throw new Error("Missing template data cascade for " + templatePath);
-		}
-
-		return this.#templateDirectoryDataCascade[templatePath];
+		return this.#templateDataCascadeManager.get(templatePath);
 	}
 
 	getUserDataExtensions() {

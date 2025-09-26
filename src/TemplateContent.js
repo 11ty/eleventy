@@ -30,6 +30,7 @@ class TemplateContent {
 	#extensionMap;
 	#configOptions;
 	#frontMatterOptions;
+	#dataMapContent;
 
 	constructor(inputPath, templateConfig) {
 		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
@@ -677,6 +678,10 @@ class TemplateContent {
 		return suffix.join("");
 	}
 
+	getDataMapContent() {
+		return this.#dataMapContent;
+	}
+
 	async _render(str, data, options = {}) {
 		let { bypassMarkdown, type } = options;
 
@@ -708,6 +713,18 @@ class TemplateContent {
 				inputPathBenchmark.before();
 			}
 
+			// Only HTML output files
+			if(this.dataCascade && type === "Content" && (data.page?.outputPath || "").endsWith(".html")) {
+				// Merge local data cascade with global
+				this.dataCascade.mergeWithUpstreamDataCascade(this.templateData.getGlobalDataCascade());
+				this.dataCascade.assignFromUpstreamDataCascade(this.templateData.getCollectionsDataCascade());
+
+				let dataSourceLocations = this.dataCascade.getLocations();
+				let dataMapContent = await fn(dataSourceLocations);
+				// cache data map html content
+				this.#dataMapContent = dataMapContent;
+			}
+
 			let rendered = await fn(data);
 
 			if (inputPathBenchmark) {
@@ -715,6 +732,7 @@ class TemplateContent {
 			}
 			templateBenchmark.after();
 			debugDev("%o getCompiledTemplate called, rendered content created", this.inputPath);
+
 			return rendered;
 		} catch (e) {
 			if (EleventyErrorUtil.isPrematureTemplateContentError(e)) {
