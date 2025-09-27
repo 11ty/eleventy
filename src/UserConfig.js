@@ -17,7 +17,7 @@ const debug = debugUtil("Eleventy:UserConfig");
 class UserConfigError extends EleventyBaseError {}
 
 /**
- * Eleventy’s user-land Configuration API
+ * Eleventy's user-land Configuration API
  * @module 11ty/eleventy/UserConfig
  */
 class UserConfig {
@@ -224,6 +224,25 @@ class UserConfig {
 		this.#concurrency = 1;
 	}
 
+	/**
+	 * Set a Markdown syntax highlighter.
+	 * @param {Function|string} highlighter
+	 */
+	setMarkdownHighlighter(highlighter) {
+		this.markdownHighlighter = highlighter;
+	}
+
+	/**
+	 * @deprecated use setMarkdownHighlighter() instead
+	 */
+	addMarkdownHighlighter(highlighter) {
+		console.warn(
+			`⚠️ Warning: addMarkdownHighlighter() is deprecated and will be removed in Eleventy v4.0. ` +
+			`Please use setMarkdownHighlighter() instead.`
+		);
+		this.setMarkdownHighlighter(highlighter);
+	}
+
 	// compatibleRange is optional in 2.0.0-beta.2
 	versionCheck(compatibleRange) {
 		let compat = new EleventyCompatibility(compatibleRange);
@@ -334,6 +353,7 @@ class UserConfig {
 	}
 
 	/*
+
 	 * Markdown
 	 */
 
@@ -723,7 +743,7 @@ class UserConfig {
 			pluginBenchmark.before();
 
 			if (options && typeof options.init === "function") {
-				// init is not yet async-friendly but it’s also barely used
+				// init is not yet async-friendly but it's also barely used
 				options.init.call(this, plugin.initArguments || {});
 			}
 
@@ -816,11 +836,11 @@ class UserConfig {
 	setLibrary(engineName, libraryInstance) {
 		if (engineName === "liquid" && Object.keys(this.liquid.options).length) {
 			debug(
-				"WARNING: using `eleventyConfig.setLibrary` will override any configuration set using `.setLiquidOptions` via the config API. You’ll need to pass these options to the library yourself.",
+				"WARNING: using `eleventyConfig.setLibrary` will override any configuration set using `.setLiquidOptions` via the config API. You'll need to pass these options to the library yourself.",
 			);
 		} else if (engineName === "njk" && Object.keys(this.nunjucks.environmentOptions).length) {
 			debug(
-				"WARNING: using `eleventyConfig.setLibrary` will override any configuration set using `.setNunjucksEnvironmentOptions` via the config API. You’ll need to pass these options to the library yourself.",
+				"WARNING: using `eleventyConfig.setLibrary` will override any configuration set using `.setNunjucksEnvironmentOptions` via the config API. You'll need to pass these options to the library yourself.",
 			);
 		}
 

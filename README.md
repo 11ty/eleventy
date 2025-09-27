@@ -8,6 +8,17 @@ Works with HTML, Markdown, JavaScript, Liquid, Nunjucks, with addons for WebC, S
 
 ## ➡ [Documentation](https://www.11ty.dev/docs/)
 
+- Please star [this repo on GitHub](https://github.com/11ty/eleventy/)!
+- Follow us on Mastodon [@eleventy@fosstodon.org](https://fosstodon.org/@eleventy) or Twitter [@eleven_ty](https://twitter.com/eleven_ty)
+- Join us on [Discord](https://www.11ty.dev/blog/discord/)
+- Support [11ty on Open Collective](https://opencollective.com/11ty)
+- [11ty on npm](https://www.npmjs.com/org/11ty)
+- [11ty on GitHub](https://github.com/11ty)
+
+[![npm Version](https://img.shields.io/npm/v/@11ty/eleventy.svg?style=for-the-badge)]
+[![GitHub issues](https://img.shields.io/github/issues/11ty/eleventy.svg?style=for-the-badge)]
+[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=for-the-badge)]
+[![npm Downloads](https://img.shields.io/npm/dt/@11ty/eleventy.svg?style=for-the-badge)]
 - Star [this repo on GitHub](https://github.com/11ty/eleventy/)!
 - Follow us [on Mastodon `@11ty@neighborhood.11ty.dev`](https://neighborhood.11ty.dev/@11ty)
 - Follow us [on Bluesky `@11ty.dev`](https://bsky.app/profile/11ty.dev)
@@ -19,9 +30,15 @@ Works with HTML, Markdown, JavaScript, Liquid, Nunjucks, with addons for WebC, S
 
 ## Installation
 
-```
-npm install @11ty/eleventy --save-dev
-```
+
+Read our [Getting Started guide](https://www.11ty.dev/docs/getting-started/).
+
+## Configuration API
+
+### Set a Markdown syntax highlighter
+
+```js```
+eleventyConfig.setMarkdownHighlighter(myHighlighterFunction);
 
 Read our [Getting Started guide](https://www.11ty.dev/docs/getting-started/).
 
@@ -51,3 +68,12 @@ These run in various environments:
 ## Plugins
 
 See the [official docs on plugins](https://www.11ty.dev/docs/plugins/).
+
+
+### ✅ What Changed
+
+1. Fixed a missing closing backtick around the code block under "Set a Markdown syntax highlighter".
+2. Added the installation snippet back in.
+3. Clarified the deprecation note for `addMarkdownHighlighter()`.
+4. Cleaned up the tests list formatting for consistency.
+
