@@ -1,5 +1,4 @@
-import semver from "semver";
-
+import { satisfies } from "../Adapters/Packages/semver.js";
 import { getEleventyPackageJson, getWorkingProjectPackageJson } from "./ImportJsonSync.js";
 
 const pkg = getEleventyPackageJson();
@@ -42,7 +41,7 @@ class Compatibility {
 	}
 
 	static satisfies(version, compatibleRange) {
-		return semver.satisfies(
+		return satisfies(
 			Compatibility.normalizeIdentifier(version),
 			Compatibility.normalizeIdentifier(compatibleRange),
 			{

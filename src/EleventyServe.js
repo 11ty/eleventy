@@ -1,7 +1,17 @@
-import assert from "node:assert";
-
 import debugUtil from "debug";
-import { Merge, DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
+import { Merge, TemplatePath } from "@11ty/eleventy-utils";
+
+import { Watch } from "./Watch.js";
+
+function stringifyOptions(options) {
+	return JSON.stringify(options, function replacer(key, value) {
+		if (typeof value === "function") {
+			return value.toString();
+		}
+
+		return value;
+	});
+}
 
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
@@ -26,12 +36,15 @@ const DEFAULT_SERVER_OPTIONS = {
 
 class EleventyServe {
 	#eleventyConfig;
+	#savedConfigOptions;
+	#aliases;
+	#initOptionsFetched = false;
+	#chokidar;
+	// these are *not* normalized
+	#watchTargets = new Set();
 
 	constructor() {
 		this.logger = new ConsoleLogger();
-		this._initOptionsFetched = false;
-		this._aliases = undefined;
-		this._watchedFiles = new Set();
 	}
 
 	get config() {
@@ -49,7 +62,7 @@ class EleventyServe {
 	}
 
 	setAliases(aliases) {
-		this._aliases = aliases;
+		this.#aliases = aliases;
 
 		if (this._server && "setAliases" in this._server) {
 			this._server.setAliases(aliases);
@@ -84,10 +97,16 @@ class EleventyServe {
 		this.outputDir = outputDir;
 	}
 
+	static getDevServer() {
+		// This happens on demand for performance purposes when not used by builds
+		// https://github.com/11ty/eleventy/pull/3689
+		return import("@11ty/eleventy-dev-server").then((i) => i.default);
+	}
+
 	async getServerModule(name) {
 		try {
 			if (!name || name === DEFAULT_SERVER_OPTIONS.module) {
-				return import("@11ty/eleventy-dev-server").then((i) => i.default);
+				return EleventyServe.getDevServer();
 			}
 
 			// Look for peer dep in local project
@@ -137,7 +156,8 @@ class EleventyServe {
 					e.message,
 			);
 			debug("Eleventy server error %o", e);
-			return import("@11ty/eleventy-dev-server").then((i) => i.default);
+
+			return EleventyServe.getDevServer();
 		}
 	}
 
@@ -155,9 +175,9 @@ class EleventyServe {
 			this.config.serverOptions,
 		);
 
-		this._savedConfigOptions = DeepCopy({}, this.config.serverOptions);
+		this.#savedConfigOptions = this.config.serverOptions;
 
-		if (!this._initOptionsFetched && this.getSetupCallback()) {
+		if (!this.#initOptionsFetched && this.getSetupCallback()) {
 			throw new Error(
 				"Init options have not yet been fetched in the setup callback. This probably means that `init()` has not yet been called.",
 			);
@@ -181,15 +201,23 @@ class EleventyServe {
 
 		let serverModule = await this.getServerModule(this.options.module);
 
+		if (this.options.module === DEFAULT_SERVER_OPTIONS.module) {
+			// Fix for missing globs in Chokidar@4
+			let copyWatch = new Watch(this.eleventyConfig);
+			copyWatch.watchTargets(this.#watchTargets);
+			// Careful with ignores here: https://github.com/11ty/eleventy/issues/1134
+			// copyWatch.addIgnores();
+
+			await copyWatch.start();
+
+			this.#chokidar = copyWatch;
+			this.options.chokidar = copyWatch;
+		}
+
 		// Static method `getServer` was already checked in `getServerModule`
 		this._server = serverModule.getServer("eleventy-server", this.outputDir, this.options);
 
-		this.setAliases(this._aliases);
-
-		if (this._globsNeedWatching) {
-			this._server.watchFiles(this._watchedFiles);
-			this._globsNeedWatching = false;
-		}
+		this.setAliases(this.#aliases);
 	}
 
 	getSetupCallback() {
@@ -203,7 +231,7 @@ class EleventyServe {
 		let setupCallback = this.getSetupCallback();
 		if (setupCallback) {
 			let opts = await setupCallback();
-			this._initOptionsFetched = true;
+			this.#initOptionsFetched = true;
 
 			if (opts) {
 				Merge(this.options, opts);
@@ -258,6 +286,11 @@ class EleventyServe {
 		}
 	}
 
+	// when the configuration file changes (but server options *may* not, which would otherwise trigger restart())
+	resetConfig() {
+		this.#watchTargets = new Set();
+	}
+
 	// Restart the server entirely
 	// We don’t want to use a native `restart` method (e.g. restart() in Vite) so that
 	// we can correctly handle a `module` property change (changing the server type)
@@ -269,37 +302,28 @@ class EleventyServe {
 
 		// saved --port in `serve()`
 		await this.serve(this._commandLinePort);
-
-		// rewatch the saved watched files (passthrough copy)
-		if ("watchFiles" in this.server) {
-			this.server.watchFiles(this._watchedFiles);
-		}
 	}
 
 	// checkPassthroughCopyBehavior check is called upstream in Eleventy.js
-	// TODO globs are not removed from watcher
-	watchPassthroughCopy(globs) {
-		this._watchedFiles = globs;
+	watchPassthroughCopy(globs = []) {
+		for (let glob of globs) {
+			this.#watchTargets.add(glob);
+		}
 
-		if (this._server && "watchFiles" in this.server) {
-			this.server.watchFiles(globs);
-			this._globsNeedWatching = false;
-		} else {
-			this._globsNeedWatching = true;
+		// if the watcher has already started, add the targets
+		if (this.#chokidar) {
+			this.#chokidar.watchTargets(globs);
 		}
 	}
 
 	isEmulatedPassthroughCopyMatch(filepath) {
-		return isGlobMatch(filepath, this._watchedFiles);
+		return isGlobMatch(filepath, Array.from(this.#watchTargets));
 	}
 
 	hasOptionsChanged() {
-		try {
-			assert.deepStrictEqual(this.config.serverOptions, this._savedConfigOptions);
-			return false;
-		} catch (e) {
-			return true;
-		}
+		return (
+			stringifyOptions(this.config.serverOptions) !== stringifyOptions(this.#savedConfigOptions)
+		);
 	}
 
 	// Live reload the server

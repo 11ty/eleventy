@@ -1,14 +1,11 @@
-import util from "node:util";
-import os from "node:os";
 import path from "node:path";
-import fs from "node:fs";
+import { statSync } from "node:fs";
 
 import lodash from "@11ty/lodash-custom";
-import { DateTime } from "luxon";
 import { TemplatePath, isPlainObject } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
-import chalk from "kleur";
 
+import chalk from "./Adapters/Packages/chalk.js";
 import ConsoleLogger from "./Util/ConsoleLogger.js";
 import getDateFromGitLastUpdated from "./Util/DateGitLastUpdated.js";
 import getDateFromGitFirstAdded from "./Util/DateGitFirstAdded.js";
@@ -23,12 +20,12 @@ import TemplateBehavior from "./TemplateBehavior.js";
 import TemplateContentPrematureUseError from "./Errors/TemplateContentPrematureUseError.js";
 import TemplateContentUnrenderedTemplateError from "./Errors/TemplateContentUnrenderedTemplateError.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
+import { fromISOtoDateUTC } from "./Util/DateParse.js";
 import ReservedData from "./Util/ReservedData.js";
 import TransformsUtil from "./Util/TransformsUtil.js";
 import { FileSystemManager } from "./Util/FileSystemManager.js";
 
 const { set: lodashSet, get: lodashGet } = lodash;
-const fsStat = util.promisify(fs.stat);
 
 const debug = debugUtil("Eleventy:Template");
 const debugDev = debugUtil("Dev:Eleventy:Template");
@@ -36,6 +33,7 @@ const debugDev = debugUtil("Dev:Eleventy:Template");
 class Template extends TemplateContent {
 	#logger;
 	#fsManager;
+	#stats;
 
 	constructor(templatePath, templateData, extensionMap, config) {
 		debugDev("new Template(%o)", templatePath);
@@ -134,7 +132,7 @@ class Template extends TemplateContent {
 		if (types.data) {
 			delete this._dataCache;
 			// delete this._usePermalinkRoot;
-			// delete this._stats;
+			// delete this.#stats;
 		}
 
 		if (types.render) {
@@ -169,6 +167,13 @@ class Template extends TemplateContent {
 	getTemplateSubfolder() {
 		let dir = TemplatePath.absolutePath(this.parsed.dir);
 		let inputDir = TemplatePath.absolutePath(this.inputDir);
+
+		// Browser virtual fs uses `/` root for absolute paths
+		// Fixed in @11ty/eleventy-utils@2.0.8 or newer (can remove this later)
+		if (inputDir === "/" && dir.startsWith("/")) {
+			return dir;
+		}
+
 		return TemplatePath.stripLeadingSubPath(dir, inputDir);
 	}
 
@@ -878,11 +883,7 @@ class Template extends TemplateContent {
 		let templateBenchmarkDir = this.bench.get("Template make parent directory");
 		templateBenchmarkDir.before();
 
-		if (this.eleventyConfig.templateHandling?.writeMode === "async") {
-			await this.fsManager.createDirectoryForFile(outputPath);
-		} else {
-			this.fsManager.createDirectoryForFileSync(outputPath);
-		}
+		this.fsManager.createDirectoryForFileSync(outputPath);
 
 		templateBenchmarkDir.after();
 
@@ -895,11 +896,7 @@ class Template extends TemplateContent {
 		let templateBenchmark = this.bench.get("Template Write");
 		templateBenchmark.before();
 
-		if (this.eleventyConfig.templateHandling?.writeMode === "async") {
-			await this.fsManager.writeFile(outputPath, finalContent);
-		} else {
-			this.fsManager.writeFileSync(outputPath, finalContent);
-		}
+		this.fsManager.writeFileSync(outputPath, finalContent);
 
 		templateBenchmark.after();
 		this.writeCount++;
@@ -921,6 +918,11 @@ class Template extends TemplateContent {
 	}
 
 	async #renderPageEntryWithLayoutsAndTransforms(pageEntry) {
+		// Don’t run linters/transforms/layouts if we didn’t render (via incremental)!
+		if (pageEntry.template.isDryRun && pageEntry.template.isIncremental) {
+			return pageEntry.templateContent;
+		}
+
 		let content;
 		let layoutKey = pageEntry.data[this.config.keys.layout];
 		if (this.engine.useLayouts() && layoutKey) {
@@ -947,6 +949,11 @@ class Template extends TemplateContent {
 	}
 
 	retrieveDataForJsonOutput(data, selectors) {
+		// if "*" is in the selectors, return all data unfiltered.
+		if (selectors.has("*")) {
+			return data;
+		}
+
 		let filtered = {};
 		for (let selector of selectors) {
 			let value = lodashGet(data, selector);
@@ -961,13 +968,13 @@ class Template extends TemplateContent {
 		for (let page of mapEntry._pages) {
 			let content;
 
-			// Note that behavior.render is overridden when using json or ndjson output
+			// Note that behavior.render is overridden when using json output
 			if (page.template.isRenderable()) {
 				// this reuses page.templateContent, it doesn’t render it
 				content = await page.template.renderPageEntry(page);
 			}
 
-			if (to === "json" || to === "ndjson") {
+			if (to === "json") {
 				let obj = {
 					url: page.url,
 					inputPath: page.inputPath,
@@ -978,12 +985,6 @@ class Template extends TemplateContent {
 
 				if (this.config.dataFilterSelectors?.size > 0) {
 					obj.data = this.retrieveDataForJsonOutput(page.data, this.config.dataFilterSelectors);
-				}
-
-				if (to === "ndjson") {
-					let jsonString = JSON.stringify(obj);
-					this.logger.toStream(jsonString + os.EOL);
-					continue;
 				}
 
 				// json
@@ -1043,17 +1044,17 @@ class Template extends TemplateContent {
 		return this.renderCount;
 	}
 
-	async getInputFileStat() {
+	getInputFileStat() {
 		// @cachedproperty
-		if (!this._stats) {
-			this._stats = fsStat(this.inputPath);
+		if (!this.#stats) {
+			this.#stats = statSync(this.inputPath);
 		}
 
-		return this._stats;
+		return this.#stats;
 	}
 
 	async _getDateInstance(key = "birthtimeMs") {
-		let stat = await this.getInputFileStat();
+		let stat = this.getInputFileStat();
 
 		// Issue 1823: https://github.com/11ty/eleventy/issues/1823
 		// return current Date in a Lambda
@@ -1098,7 +1099,7 @@ class Template extends TemplateContent {
 		if (dateValue) {
 			debug("getMappedDate: using a date in the data for %o of %o", this.inputPath, data.date);
 			if (dateValue?.constructor?.name === "DateTime") {
-				// YAML does its own date parsing
+				// a luxon instance
 				debug("getMappedDate: found DateTime instance: %o", dateValue);
 				return dateValue.toJSDate();
 			}
@@ -1144,24 +1145,14 @@ class Template extends TemplateContent {
 			}
 
 			// try to parse with Luxon
-			let date = DateTime.fromISO(dateValue, { zone: "utc" });
-			if (!date.isValid) {
-				throw new Error(
-					`Data cascade value for \`date\` (${dateValue}) is invalid for ${this.inputPath}`,
-				);
-			}
-			debug("getMappedDate: Luxon parsed %o: %o and %o", dateValue, date, date.toJSDate());
-
-			return date.toJSDate();
+			return fromISOtoDateUTC(dateValue, this.inputPath);
 		}
 
 		// No Date supplied in the Data Cascade, try to find the date in the file name
 		let filepathRegex = this.inputPath.match(/(\d{4}-\d{2}-\d{2})/);
 		if (filepathRegex !== null) {
 			// if multiple are found in the path, use the first one for the date
-			let dateObj = DateTime.fromISO(filepathRegex[1], {
-				zone: "utc",
-			}).toJSDate();
+			let dateObj = fromISOtoDateUTC(filepathRegex[1], this.inputPath);
 			debug(
 				"getMappedDate: using filename regex time for %o of %o: %o",
 				this.inputPath,

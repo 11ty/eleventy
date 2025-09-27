@@ -19,6 +19,14 @@ Works with HTML, Markdown, JavaScript, Liquid, Nunjucks, with addons for WebC, S
 [![GitHub issues](https://img.shields.io/github/issues/11ty/eleventy.svg?style=for-the-badge)]
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=for-the-badge)]
 [![npm Downloads](https://img.shields.io/npm/dt/@11ty/eleventy.svg?style=for-the-badge)]
+- Star [this repo on GitHub](https://github.com/11ty/eleventy/)!
+- Follow us [on Mastodon `@11ty@neighborhood.11ty.dev`](https://neighborhood.11ty.dev/@11ty)
+- Follow us [on Bluesky `@11ty.dev`](https://bsky.app/profile/11ty.dev)
+- Install [from npm](https://www.npmjs.com/org/11ty)
+- Follow [on GitHub](https://github.com/11ty)
+- Watch us [on YouTube](https://www.youtube.com/c/EleventyVideo)
+- Chat on [Discord](https://www.11ty.dev/blog/discord/)
+- Latest: [![npm Version](https://img.shields.io/npm/v/@11ty/eleventy.svg?style=for-the-badge)](https://www.npmjs.com/package/@11ty/eleventy)
 
 ## Installation
 
@@ -37,14 +45,20 @@ Read our [Getting Started guide](https://www.11ty.dev/docs/getting-started/).
 ## Tests
 
 ```
-npm run test
+npm test
 ```
 
-- We use the [ava JavaScript test runner](https://github.com/avajs/ava) ([Assertions documentation](https://github.com/avajs/ava/blob/master/docs/03-assertions.md))
-- ℹ️ To keep tests fast, thou shalt try to avoid writing files in tests.
+We have a few test suites, for various reasons:
+
+- [ava JavaScript test runner](https://github.com/avajs/ava) ([assertions docs](https://github.com/avajs/ava/blob/main/docs/03-assertions.md)) (primary test suite in `test/`)
+- [Node.js Test runner](https://nodejs.org/api/test.html) (secondary test suite in `test_node/`)
+- [Vitest (in Browser Mode)](https://vitest.dev/guide/browser/) (client tests in `packages/client/test/`)
+- [Benchmark for Performance Regressions](https://github.com/11ty/eleventy-benchmark)
+
+These run in various environments:
+
 - [Continuous Integration on GitHub Actions](https://github.com/11ty/eleventy/actions/workflows/ci.yml)
 - [Code Coverage Statistics](https://github.com/11ty/eleventy/blob/master/docs/coverage.md)
-- [Benchmark for Performance Regressions](https://github.com/11ty/eleventy-benchmark)
 
 ## Community Roadmap
 

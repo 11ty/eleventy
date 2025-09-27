@@ -1,6 +1,6 @@
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { TemplatePath } from "@11ty/eleventy-utils";
+import { fileURLToPath } from "../Adapters/Packages/url.js";
 
 export default class PathNormalizer {
 	static getParts(inputPath) {

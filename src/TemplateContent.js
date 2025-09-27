@@ -1,11 +1,11 @@
-import os from "node:os";
-
-import fs from "node:fs";
-import matter from "gray-matter";
+import { readFileSync } from "node:fs";
+import matter from "@11ty/gray-matter";
 import lodash from "@11ty/lodash-custom";
-import { TemplatePath } from "@11ty/eleventy-utils";
+import { DeepCopy, TemplatePath } from "@11ty/eleventy-utils";
 import debugUtil from "debug";
 
+import JavaScriptFrontMatter from "./Engines/FrontMatter/JavaScript.js";
+import { EOL } from "./Util/NewLineAdapter.js";
 import TemplateData from "./Data/TemplateData.js";
 import TemplateRender from "./TemplateRender.js";
 import EleventyBaseError from "./Errors/EleventyBaseError.js";
@@ -29,6 +29,7 @@ class TemplateContent {
 	#preprocessorEngine;
 	#extensionMap;
 	#configOptions;
+	#frontMatterOptions;
 
 	constructor(inputPath, templateConfig) {
 		if (!templateConfig || templateConfig.constructor.name !== "TemplateConfig") {
@@ -208,6 +209,39 @@ class TemplateContent {
 		return this.config.virtualTemplates[inputDirRelativeInputPath];
 	}
 
+	getFrontMatterParsingOptions() {
+		if (!this.#frontMatterOptions) {
+			this.#frontMatterOptions = DeepCopy(
+				{
+					// Set a project-wide default.
+					// language: "yaml",
+
+					// Supplementary engines
+					engines: {
+						// Moved to a fork of gray-matter to modernize to js-yaml@4 internally
+						// yaml: yaml.load.bind(yaml),
+
+						// Backwards compatible with `js` object front matter
+						// https://github.com/11ty/eleventy/issues/2819
+						javascript: JavaScriptFrontMatter,
+
+						// Upstream `js` was removed in @11ty/gray-matter@2
+						js: JavaScriptFrontMatter,
+
+						node: function () {
+							throw new Error(
+								"The `node` front matter type was a 3.0.0-alpha.x only feature, removed for stable release. Rename to `js` or `javascript` instead!",
+							);
+						},
+					},
+				},
+				this.config.frontMatterParsingOptions,
+			);
+		}
+
+		return this.#frontMatterOptions;
+	}
+
 	async #read() {
 		let content = await this.inputContent;
 
@@ -220,7 +254,7 @@ class TemplateContent {
 				};
 			}
 
-			let options = this.config.frontMatterParsingOptions || {};
+			let options = this.getFrontMatterParsingOptions();
 			let fm;
 			try {
 				// Added in 3.0, passed along to front matter engines
@@ -233,11 +267,15 @@ class TemplateContent {
 				);
 			}
 
+			if (typeof fm.data?.then === "function") {
+				fm.data = await fm.data;
+			}
+
 			if (options.excerpt && fm.excerpt) {
 				let excerptString = fm.excerpt + (options.excerpt_separator || "---");
-				if (fm.content.startsWith(excerptString + os.EOL)) {
+				if (fm.content.startsWith(excerptString + EOL)) {
 					// with an os-specific newline after excerpt separator
-					fm.content = fm.excerpt.trim() + "\n" + fm.content.slice((excerptString + os.EOL).length);
+					fm.content = fm.excerpt.trim() + "\n" + fm.content.slice((excerptString + EOL).length);
 				} else if (fm.content.startsWith(excerptString + "\n")) {
 					// with a newline (\n) after excerpt separator
 					// This is necessary for some git configurations on windows
@@ -330,7 +368,7 @@ class TemplateContent {
 		}
 
 		if (!content && content !== "") {
-			let contentBuffer = fs.readFileSync(this.inputPath);
+			let contentBuffer = readFileSync(this.inputPath);
 
 			content = contentBuffer.toString("utf8");
 
@@ -373,7 +411,7 @@ class TemplateContent {
 			virtualTemplateData = virtualTemplateDefinition.data;
 		}
 
-		let data = Object.assign(fm.data, extraData, virtualTemplateData);
+		let data = Object.assign({}, fm.data, extraData, virtualTemplateData);
 
 		TemplateData.cleanupData(data, {
 			file: this.inputPath,
