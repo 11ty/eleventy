@@ -64,10 +64,6 @@ class TemplateMap {
 	}
 
 	setTemplateData(templateData) {
-		if(templateData.constructor.name !== "TemplateData") {
-			throw new Error("Internal error: invalid TemplateData instance");
-		}
-
 		this.#templateData = templateData;
 	}
 
@@ -263,11 +259,14 @@ class TemplateMap {
 	}
 
 	mergeDataCascadeLocations() {
-		let collectionsDataCascade = this.#templateData.getCollectionsDataCascade();
+		let collectionsDataCascade = this.#templateData?.getCollectionsDataCascade();
+		if (!collectionsDataCascade) {
+			return;
+		}
 
-		for(let [name, collection] of Object.entries(this.collectionsData)) {
+		for (let [name, collection] of Object.entries(this.collectionsData)) {
 			let index = 0;
-			for(let entry of collection) {
+			for (let entry of collection) {
 				let dataWithoutCollections = {
 					...entry.data,
 				};
@@ -285,7 +284,11 @@ class TemplateMap {
 				};
 
 				collectionsDataCascade.mergeToLocation(readOnlyEntry, `collections[${name}][${index}]`);
-				collectionsDataCascade.mergeToLocation(dataWithoutCollections, `collections[${name}][${index}].data`, entry.inputPath);
+				collectionsDataCascade.mergeToLocation(
+					dataWithoutCollections,
+					`collections[${name}][${index}].data`,
+					entry.inputPath,
+				);
 				index++;
 			}
 		}

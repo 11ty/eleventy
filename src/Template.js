@@ -450,23 +450,44 @@ class Template extends TemplateContent {
 	}
 
 	mergeDataCascadeLocations(data) {
+		if (!this.dataCascade) {
+			return;
+		}
+
 		// Set page.* as read only
-		this.dataCascade.mergeToLocation( data.page, "page"); // read only
+		this.dataCascade.mergeToLocation(data.page, "page"); // read only
 
 		// TODO add support for page.date (points to `date`)
 
 		// Only works with strings here, functions are read-only (above)
-		if(typeof data?.eleventyComputed?.permalink === "string") {
-			this.dataCascade.mergeToLocation( data.page.url, "page.url", data?.eleventyComputed?.permalink, "eleventyComputed.permalink");
-			this.dataCascade.mergeToLocation( data.page.outputPath, "page.outputPath", data?.eleventyComputed?.permalink, "eleventyComputed.permalink");
-		} else if(typeof data?.permalink === "string") {
-			this.dataCascade.mergeToLocation( data.page.url, "page.url", data?.permalink, "permalink");
-			this.dataCascade.mergeToLocation( data.page.outputPath, "page.outputPath", data?.permalink, "permalink");
+		if (typeof data?.eleventyComputed?.permalink === "string") {
+			this.dataCascade.mergeToLocation(
+				data.page.url,
+				"page.url",
+				data?.eleventyComputed?.permalink,
+				"eleventyComputed.permalink",
+			);
+			this.dataCascade.mergeToLocation(
+				data.page.outputPath,
+				"page.outputPath",
+				data?.eleventyComputed?.permalink,
+				"eleventyComputed.permalink",
+			);
+		} else if (typeof data?.permalink === "string") {
+			this.dataCascade.mergeToLocation(data.page.url, "page.url", data?.permalink, "permalink");
+			this.dataCascade.mergeToLocation(
+				data.page.outputPath,
+				"page.outputPath",
+				data?.permalink,
+				"permalink",
+			);
 		}
 
-		if(this.computedData?.computedKeys) {
-			let keys = Array.from(this.computedData?.computedKeys).filter(selector => !(["page.url", "page.outputPath"].includes(selector)));
-			for(let selector of keys) {
+		if (this.computedData?.computedKeys) {
+			let keys = Array.from(this.computedData?.computedKeys).filter(
+				(selector) => !["page.url", "page.outputPath"].includes(selector),
+			);
+			for (let selector of keys) {
 				// TODO add support for string computed data
 				this.dataCascade.markLocationAsReadOnly(selector);
 			}
@@ -972,7 +993,7 @@ class Template extends TemplateContent {
 	}
 
 	async #renderDataLocationsPageEntry(pageEntry) {
-		if(!(pageEntry?.outputPath || "").endsWith(".html")) {
+		if (!(pageEntry?.outputPath || "").endsWith(".html")) {
 			return;
 		}
 
@@ -995,8 +1016,12 @@ class Template extends TemplateContent {
 	}
 
 	static async renderPageEntryDataLocations(pageEntry) {
+		if (!pageEntry.template.dataCascade) {
+			return;
+		}
+
 		// @cachedproperty
-		if(!pageEntry.template.#cacheRenderedDataLocationsTransformsAndLayoutsPromise) {
+		if (!pageEntry.template.#cacheRenderedDataLocationsTransformsAndLayoutsPromise) {
 			pageEntry.template.#cacheRenderedDataLocationsTransformsAndLayoutsPromise =
 				pageEntry.template.#renderDataLocationsPageEntry(pageEntry);
 		}

@@ -32,6 +32,7 @@ class UserConfig {
 	/** @type {number} */
 	#concurrency = 1;
 	// Before using os.availableParallelism(); see https://github.com/11ty/eleventy/issues/3596
+	#experimentalFlags = [];
 
 	constructor() {
 		// These are completely unnecessary lines to satisfy TypeScript
@@ -60,13 +61,6 @@ class UserConfig {
 
 		this.reset();
 		this.#uniqueId = Math.random();
-	}
-
-	// this.DateTime removed in v4
-	get DateTime() {
-		throw new Error(
-			'Luxon’s DateTime property in configuration was removed in Eleventy v4. Please `import { DateTime } from "luxon"` directly.',
-		);
 	}
 
 	// Internally used in TemplateContent for cache keys
@@ -797,9 +791,6 @@ class UserConfig {
 	/*
 	 * Template Formats
 	 */
-	_normalizeTemplateFormats() {
-		throw new Error("The internal _normalizeTemplateFormats() method was removed in Eleventy 3.0");
-	}
 
 	setTemplateFormats(templateFormats) {
 		this.templateFormats = templateFormats;
@@ -1172,11 +1163,6 @@ class UserConfig {
 		Object.assign(this.errorReporting, options);
 	}
 
-	configureTemplateHandling(options = {}) {
-		// Was used for sync/async swapping on file write operations
-		throw new Error("Internal configuration API method `configureTemplateHandling` was removed.");
-	}
-
 	/*
 	 * Collections
 	 */
@@ -1219,6 +1205,10 @@ class UserConfig {
 
 	getConcurrency() {
 		return this.#concurrency;
+	}
+
+	addExperimentalBehavior(flag) {
+		this.#experimentalFlags.push(flag);
 	}
 
 	getMergingConfigObject() {
@@ -1294,6 +1284,7 @@ class UserConfig {
 			freezeReservedData: this.freezeReservedData,
 			customDateParsing: this.customDateParsingCallbacks,
 			errorReporting: this.errorReporting,
+			experimentalFlags: this.#experimentalFlags,
 		};
 
 		if (Array.isArray(this.dataFileSuffixesOverride)) {
@@ -1308,6 +1299,23 @@ class UserConfig {
 		// htmlTemplateEngine and markdownTemplateEngine are merged manually in TemplateConfig for config() ordering
 
 		return obj;
+	}
+
+	// Throws an error (no backwards compat)
+	get DateTime() {
+		// this.DateTime removed in v4
+		throw new Error(
+			'Luxon’s DateTime property in configuration was removed in Eleventy v4. Please `import { DateTime } from "luxon"` directly.',
+		);
+	}
+
+	_normalizeTemplateFormats() {
+		throw new Error("The internal _normalizeTemplateFormats() method was removed in Eleventy 3.0");
+	}
+
+	configureTemplateHandling(options = {}) {
+		// Was used for sync/async swapping on file write operations
+		throw new Error("Internal configuration API method `configureTemplateHandling` was removed.");
 	}
 
 	// No-op functions for backwards compat

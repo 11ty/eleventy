@@ -6,21 +6,46 @@ import { LocationFactory, stringifyReadonlyLocation } from "./DataSourceLocation
 const { set: lodashSet, get: lodashGet } = lodash;
 
 export class DataCascadeManager {
+	static FLAGS = {
+		DATA_LOCATION: "INTERNAL_DATA_LOCATION_MAPPING",
+	};
+
+	#factoryEnabled = false;
+
 	constructor() {
 		this.dataCascades = new Map();
+	}
+
+	setEnabled(isEnabled) {
+		this.#factoryEnabled = Boolean(isEnabled);
 	}
 
 	has(templatePath) {
 		return this.dataCascades.has(templatePath);
 	}
 
+	factory() {
+		if (!this.#factoryEnabled) {
+			return;
+		}
+		return new DataCascade();
+	}
+
 	create(templatePath) {
-		let cascade = new DataCascade();
+		let cascade = this.factory();
+		if (!cascade) {
+			return;
+		}
+
 		this.dataCascades.set(templatePath, cascade);
 		return cascade;
 	}
 
 	get(templatePath) {
+		if (!this.#factoryEnabled) {
+			return;
+		}
+
 		if (!this.has(templatePath)) {
 			throw new Error("Internal error: missing data cascade for " + templatePath);
 		}
@@ -41,27 +66,27 @@ export class DataCascade {
 		this.dataSourceLocations = {};
 
 		Object.defineProperty(this.dataSourceLocations, DataCascade.TOGGLE_PROP_NAME, {
-			value: true
+			value: true,
 		});
 	}
 
 	// TODO start here, circular references are maximum call stacking
 	static deepThaw(target) {
-		if(Array.isArray(target)) {
-			return target.map(entry => this.deepThaw(entry));
+		if (Array.isArray(target)) {
+			return target.map((entry) => this.deepThaw(entry));
 		}
 
-		if(isPlainObject(target)) {
-			if(Object.isFrozen(target)) {
+		if (isPlainObject(target)) {
+			if (Object.isFrozen(target)) {
 				let thawed = {};
-				for(let key in target) {
+				for (let key in target) {
 					thawed[key] = this.deepThaw(target[key]);
 				}
 				return thawed;
 			}
 
 			// reuse existing
-			for(let key in target) {
+			for (let key in target) {
 				target[key] = this.deepThaw(target[key]);
 			}
 		}
@@ -92,7 +117,7 @@ export class DataCascade {
 		let source = DataCascade.getMappingObject(
 			data,
 			sourceFilePath || DataCascade.READ_ONLY_KEY,
-			dataSourceSelector
+			dataSourceSelector,
 		);
 
 		let merged = DeepCopy(target, source);
@@ -123,16 +148,17 @@ export class DataCascade {
 	static getMappingObject(target, sourceFilePath, dataLocationSelector = "") {
 		if (typeof target === "function") {
 			return target;
-		} else if(sourceFilePath.startsWith("11ty:")) { // readonly/internal mappings
+		} else if (sourceFilePath.startsWith("11ty:")) {
+			// readonly/internal mappings
 			// internal data may be frozen (think `eleventy` global)
 			return DataCascade.deepThaw(target);
 		}
 
-		if(sourceFilePath.startsWith("./")) {
+		if (sourceFilePath.startsWith("./")) {
 			sourceFilePath = sourceFilePath.slice(2);
 		}
 
-		if(typeof target === "string" || typeof target === "number") {
+		if (typeof target === "string" || typeof target === "number") {
 			return LocationFactory(target, sourceFilePath, dataLocationSelector);
 		}
 
@@ -143,7 +169,7 @@ export class DataCascade {
 		}
 
 		if (isPlainObject(target)) {
-			if(Object.isFrozen(target)) {
+			if (Object.isFrozen(target)) {
 				return DataCascade.deepThaw(target);
 			}
 

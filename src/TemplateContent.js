@@ -396,9 +396,10 @@ class TemplateContent {
 	}
 
 	get dataCascade() {
-		if (this.templateData) {
-			return this.templateData.getTemplateDirectoryDataCascade(this.inputPath);
+		if (!this.templateData) {
+			return;
 		}
+		return this.templateData.getTemplateDirectoryDataCascade(this.inputPath);
 	}
 
 	async #getFrontMatterData() {
@@ -714,10 +715,21 @@ class TemplateContent {
 			}
 
 			// Only HTML output files
-			if(this.dataCascade && type === "Content" && (data.page?.outputPath || "").endsWith(".html")) {
+			if (
+				this.dataCascade &&
+				type === "Content" &&
+				(data.page?.outputPath || "").endsWith(".html")
+			) {
 				// Merge local data cascade with global
-				this.dataCascade.mergeWithUpstreamDataCascade(this.templateData.getGlobalDataCascade());
-				this.dataCascade.assignFromUpstreamDataCascade(this.templateData.getCollectionsDataCascade());
+				let globalDataCascade = this.templateData.getGlobalDataCascade();
+				if (globalDataCascade) {
+					this.dataCascade.mergeWithUpstreamDataCascade(globalDataCascade);
+				}
+
+				let collectionsDataCascade = this.templateData.getCollectionsDataCascade();
+				if (collectionsDataCascade) {
+					this.dataCascade.assignFromUpstreamDataCascade(collectionsDataCascade);
+				}
 
 				let dataSourceLocations = this.dataCascade.getLocations();
 				let dataMapContent = await fn(dataSourceLocations);
