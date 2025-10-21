@@ -38,6 +38,7 @@ class Template extends TemplateContent {
 	#cacheRenderedPromise;
 	#cacheRenderedTransformsAndLayoutsPromise;
 	#cacheRenderedDataLocationsTransformsAndLayoutsPromise;
+	#layoutDataCascade;
 
 	constructor(templatePath, templateData, extensionMap, config) {
 		debugDev("new Template(%o)", templatePath);
@@ -372,6 +373,10 @@ class Template extends TemplateContent {
 		return {};
 	}
 
+	getLayoutDataCascade() {
+		return this.#layoutDataCascade;
+	}
+
 	async #getData() {
 		debugDev("%o getData", this.inputPath);
 		let localData = {};
@@ -398,6 +403,9 @@ class Template extends TemplateContent {
 				let layout = this.getLayout(layoutKey);
 
 				mergedLayoutData = await layout.getData();
+
+				// TODO disable/toggle enabled
+				this.#layoutDataCascade = layout.getLayoutDataCascade();
 				debugDev("%o getData merged layout chain front matter", this.inputPath);
 			}
 		}
@@ -702,6 +710,12 @@ class Template extends TemplateContent {
 			let { href, path } = await this.getOutputLocations(data);
 			data.page.url = href;
 			data.page.outputPath = path;
+			if (this.dataCascade) {
+				data.page.mapUrl =
+					this.eleventyConfig.directories.getOutputPathRelativeToOutputDirectory(
+						data.page.outputPath,
+					) + ".map";
+			}
 		}
 	}
 
@@ -1106,7 +1120,7 @@ class Template extends TemplateContent {
 			}
 
 			// write data map
-			if (contentMap !== undefined) {
+			if (contentMap !== undefined && page.outputPath) {
 				// TODO customize this
 				let mapOutputPath = page.outputPath + ".map";
 				this.fsManager.createDirectoryForFileSync(mapOutputPath);

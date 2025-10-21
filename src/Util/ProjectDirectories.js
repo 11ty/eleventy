@@ -291,6 +291,14 @@ export default class ProjectDirectories {
 		return TemplatePath.stripLeadingSubPath(filePathRelativeToInputDir, inputDir);
 	}
 
+	// Removes output dir from path
+	getOutputPathRelativeToOutputDirectory(filePathRelativeToRootDir) {
+		let filePath = TemplatePath.addLeadingDotSlash(filePathRelativeToRootDir);
+		let outputDir = TemplatePath.addLeadingDotSlash(TemplatePath.join(this.output));
+
+		return "/" + TemplatePath.stripLeadingSubPath(filePath, outputDir);
+	}
+
 	// for a hypothetical Eleventy layout file
 	getLayoutPath(filePathRelativeToLayoutDir) {
 		return TemplatePath.addLeadingDotSlash(

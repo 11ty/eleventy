@@ -12,17 +12,17 @@ export class ArgumentHelper {
 	}
 
 	static getFriendlyType(obj) {
-		if(this.hasLocation(obj)) {
+		if (this.hasLocation(obj)) {
 			let original = obj.getOriginalValue();
-			if(this.hasLocation(original)) {
-				throw new Error("Internal error: data source location mapped to self (circular reference)")
+			if (this.hasLocation(original)) {
+				throw new Error("Internal error: data source location mapped to self (circular reference)");
 			}
 			return this.getFriendlyType(original);
 		}
-		if(Array.isArray(obj)) {
+		if (Array.isArray(obj)) {
 			return "array";
 		}
-		if(isPlainObject(obj)) {
+		if (isPlainObject(obj)) {
 			return "object";
 		}
 		return typeof obj;
@@ -30,9 +30,9 @@ export class ArgumentHelper {
 
 	static hasArgumentParity(args = []) {
 		let types = {};
-		for(let a of args) {
+		for (let a of args) {
 			let type = this.getFriendlyType(a);
-			if(!types[type]) {
+			if (!types[type]) {
 				types[type] = 0;
 			}
 			types[type]++;
@@ -44,13 +44,13 @@ export class ArgumentHelper {
 	// TODO add configuration option to hard-code the execution mode for a filter
 	static getExecutionMode(...args) {
 		// skips if args.length is 1
-		if(!this.hasArgumentParity(args)) {
+		if (!this.hasArgumentParity(args)) {
 			return "partial";
 		}
 
 		// some args are not primitives and aren’t location-aware
-		let complexArgs = args.filter(a => this.isComplexArgument(a));
-		if(complexArgs.length > 0) {
+		let complexArgs = args.filter((a) => this.isComplexArgument(a));
+		if (complexArgs.length > 0) {
 			return "execute";
 		}
 
@@ -59,24 +59,24 @@ export class ArgumentHelper {
 	}
 
 	static mapToLocation(args) {
-		return args.filter(a => this.hasLocation(a)).map(a => a.getLocation());
+		return args.filter((a) => this.hasLocation(a)).map((a) => a.getLocation());
 	}
 
 	static wrapFilter(callback) {
-		return function(...args) {
-			if(this.__useInternalDataMapSource) {
+		return function (...args) {
+			if (this.__useInternalDataMapSource) {
 				let mode = ArgumentHelper.getExecutionMode(...args);
-				if(mode === "passthrough") {
+				if (mode === "passthrough") {
 					return ArgumentHelper.mapToLocation(args);
 				}
 
-				if(mode === "partial") {
+				if (mode === "partial") {
 					args = args.map((entry, index) => {
-						if(index > 0 && ArgumentHelper.hasLocation(entry)) {
+						if (index > 0 && ArgumentHelper.hasLocation(entry)) {
 							return entry.getOriginalValue();
 						}
 						return entry;
-					})
+					});
 				}
 			}
 
@@ -87,17 +87,17 @@ export class ArgumentHelper {
 }
 
 function stringifyLocation(target) {
-	return `[[via::${target.filePath}::${target.selectorLocation}]]`;
+	return `{via::${target.filePath}::${target.selectorLocation}::${("" + target).length}}`;
 }
 export function stringifyReadonlyLocation(label) {
-	return `[[via::11ty_readonly${label ? `::${label}` : ""}]]`;
+	return `{via::11ty_readonly${label ? `::${label}` : ""}}`;
 }
 
 class StringLocation extends String {
 	constructor(val, filePath, selectorLocation) {
 		super(val);
 		this.original = val;
-		this.val = ""+val;
+		this.val = "" + val;
 		this.filePath = filePath;
 		this.selectorLocation = selectorLocation;
 	}
@@ -146,11 +146,14 @@ class NumberLocation extends Number {
 }
 
 export function LocationFactory(val, ...args) {
-	if(typeof val === "number") {
+	if (typeof val === "number") {
 		return new NumberLocation(val, ...args);
-	} else if(typeof val === "string") {
+	}
+	if (typeof val === "string") {
 		return new StringLocation(val, ...args);
 	}
-
-	throw new Error("Incorrect type passed to LocationFactory, needs string or number.");
+	// Not supported yet (there is no userland way to intercept boolean coercion, e.g. `new BooleanLocation()` would always return true)
+	// if(typeof val === "boolean") {
+	// 	return val;
+	// }
 }

@@ -722,19 +722,18 @@ class TemplateContent {
 			) {
 				// Merge local data cascade with global
 				let globalDataCascade = this.templateData.getGlobalDataCascade();
-				if (globalDataCascade) {
-					this.dataCascade.mergeWithUpstreamDataCascade(globalDataCascade);
-				}
+				let layoutDataCascade = this.getLayoutDataCascade();
+				this.dataCascade.mergeWithUpstreamDataCascade(layoutDataCascade, globalDataCascade);
 
 				let collectionsDataCascade = this.templateData.getCollectionsDataCascade();
-				if (collectionsDataCascade) {
-					this.dataCascade.assignFromUpstreamDataCascade(collectionsDataCascade);
-				}
+				this.dataCascade.assignFromUpstreamDataCascade(collectionsDataCascade);
 
 				let dataSourceLocations = this.dataCascade.getLocations();
 				let dataMapContent = await fn(dataSourceLocations);
 				// cache data map html content
 				this.#dataMapContent = dataMapContent;
+			} else {
+				this.#dataMapContent = undefined;
 			}
 
 			let rendered = await fn(data);

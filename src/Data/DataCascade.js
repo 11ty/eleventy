@@ -70,7 +70,6 @@ export class DataCascade {
 		});
 	}
 
-	// TODO start here, circular references are maximum call stacking
 	static deepThaw(target) {
 		if (Array.isArray(target)) {
 			return target.map((entry) => this.deepThaw(entry));
@@ -95,13 +94,17 @@ export class DataCascade {
 
 	// Global Data and Template Data Cascade combine
 	mergeWithUpstreamDataCascade(...upstreamDataCascades) {
-		let locations = upstreamDataCascades.map((entry) => entry.getLocations());
-		this.dataSourceLocations = DeepCopy({}, ...locations, this.dataSourceLocations);
+		let locations = upstreamDataCascades.filter(Boolean).map((entry) => entry.getLocations());
+		if (locations.length > 0) {
+			this.dataSourceLocations = DeepCopy({}, ...locations, this.dataSourceLocations);
+		}
 	}
 
 	assignFromUpstreamDataCascade(...upstreamDataCascades) {
-		let locations = upstreamDataCascades.map((entry) => entry.getLocations());
-		this.dataSourceLocations = Object.assign({}, ...locations, this.dataSourceLocations);
+		let locations = upstreamDataCascades.filter(Boolean).map((entry) => entry.getLocations());
+		if (locations.length > 0) {
+			this.dataSourceLocations = Object.assign({}, ...locations, this.dataSourceLocations);
+		}
 	}
 
 	mergeTopLevel(data, sourceFilePath) {
@@ -158,12 +161,14 @@ export class DataCascade {
 			sourceFilePath = sourceFilePath.slice(2);
 		}
 
-		if (typeof target === "string" || typeof target === "number") {
-			return LocationFactory(target, sourceFilePath, dataLocationSelector);
+		let primitiveLocation = LocationFactory(target, sourceFilePath, dataLocationSelector);
+		if (primitiveLocation !== undefined) {
+			return primitiveLocation;
 		}
 
 		if (Array.isArray(target)) {
 			return target.map((entry, index) =>
+				// Array property [] index
 				this.getMappingObject(entry, sourceFilePath, `${dataLocationSelector}[${index}]`),
 			);
 		}

@@ -5,11 +5,14 @@ import TemplateLayoutPathResolver from "./TemplateLayoutPathResolver.js";
 import TemplateContent from "./TemplateContent.js";
 import TemplateData from "./Data/TemplateData.js";
 import layoutCache from "./LayoutCache.js";
+import { DataCascade } from "./Data/DataCascade.js";
 
 // const debug = debugUtil("Eleventy:TemplateLayout");
 const debugDev = debugUtil("Dev:Eleventy:TemplateLayout");
 
 class TemplateLayout extends TemplateContent {
+	#layoutDataCascade = new DataCascade();
+
 	constructor(key, extensionMap, eleventyConfig) {
 		if (!eleventyConfig || eleventyConfig.constructor.name !== "TemplateConfig") {
 			throw new Error("Expected `eleventyConfig` in TemplateLayout constructor.");
@@ -28,6 +31,10 @@ class TemplateLayout extends TemplateContent {
 		this.key = resolver.getNormalizedLayoutKey();
 		this.dataKeyLayoutPath = key;
 		this.inputPath = resolvedPath;
+	}
+
+	getLayoutDataCascade() {
+		return this.#layoutDataCascade;
 	}
 
 	getKey() {
@@ -71,6 +78,8 @@ class TemplateLayout extends TemplateContent {
 		return {
 			// Used by `TemplateLayout.getTemplate()`
 			key: this.dataKeyLayoutPath,
+
+			inputPath: this.inputPath,
 
 			// used by `this.getData()`
 			frontMatterData,
@@ -140,6 +149,7 @@ class TemplateLayout extends TemplateContent {
 		let dataToMerge = [];
 		for (let j = map.length - 1; j >= 0; j--) {
 			dataToMerge.push(map[j].frontMatterData);
+			this.#layoutDataCascade.mergeTopLevel(map[j].frontMatterData, map[j].inputPath);
 		}
 
 		// Deep merge of layout front matter
@@ -216,11 +226,11 @@ class TemplateLayout extends TemplateContent {
 		let content = dataCascade ? pageEntry.template.getDataMapContent() : pageEntry.templateContent;
 		let compiledFunctions = await this.getCompiledLayoutFunctions();
 		for (let { render } of compiledFunctions) {
-			if(dataCascade) {
+			if (dataCascade) {
 				let dataSources = {
 					...dataCascade.getLocations(),
 					content,
-				}
+				};
 				content = await render(dataSources);
 			} else {
 				let data = {
