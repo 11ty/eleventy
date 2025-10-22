@@ -337,9 +337,9 @@ class UserConfig {
 	 * Markdown
 	 */
 
-	// This is a method for plugins, probably shouldn’t use this in projects.
-	// Projects should use `setLibrary` as documented here:
-	// https://github.com/11ty/eleventy/blob/master/docs/engines/markdown.md#use-your-own-options
+	// Don’t use this, projects should use `amendLibrary` as documented here:
+	// https://www.11ty.dev/docs/languages/markdown/#optional-amend-the-library-instance
+	// Warning: this is in use by the Syntax Highlighting plugin (as of v5.0.2)
 	addMarkdownHighlighter(highlightFn) {
 		this.markdownHighlighter = highlightFn;
 	}
