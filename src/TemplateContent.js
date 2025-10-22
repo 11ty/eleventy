@@ -433,6 +433,10 @@ class TemplateContent {
 		return this._frontMatterDataCache;
 	}
 
+	getEngineNames(engineOverride) {
+		return this.templateRender.getEnginesList(engineOverride);
+	}
+
 	async getEngineOverride() {
 		return this.getFrontMatterData().then((data) => {
 			return data[this.config.keys.engineOverride];

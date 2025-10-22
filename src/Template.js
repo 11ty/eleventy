@@ -452,9 +452,7 @@ class Template extends TemplateContent {
 		data.page.fileSlug = this.fileSlugStr;
 		data.page.filePathStem = this.filePathStem;
 		data.page.outputFileExtension = this.engine.defaultTemplateFileExtension;
-		data.page.templateSyntax = this.templateRender.getEnginesList(
-			data[this.config.keys.engineOverride],
-		);
+		data.page.templateSyntax = this.getEngineNames(data[this.config.keys.engineOverride]);
 
 		let newDate = await this.getMappedDate(data);
 		// Skip date assignment if custom date is falsy.
