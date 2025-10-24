@@ -202,15 +202,6 @@ class Template extends TemplateContent {
 		return this.extensionMap.removeTemplateExtension(this.parsed.base);
 	}
 
-	async _getRawPermalinkInstance(permalinkValue) {
-		let perm = new TemplatePermalink(permalinkValue, this.extraOutputSubdirectory);
-		perm.setUrlTransforms(this.config.urlTransforms);
-
-		this.behavior.setFromPermalink(perm);
-
-		return perm;
-	}
-
 	async _getLink(data) {
 		if (!data) {
 			throw new Error("Internal error: data argument missing in Template->_getLink");
@@ -220,13 +211,16 @@ class Template extends TemplateContent {
 			data[this.config.keys.permalink] ??
 			data?.[this.config.keys.computed]?.[this.config.keys.permalink];
 		let permalinkValue;
+		let isDynamicPermalinkEnabled =
+			this.config.dynamicPermalinks && data.dynamicPermalink !== false;
 
 		// `permalink: false` means render but no file system write, e.g. use in collections only)
 		// `permalink: true` throws an error
 		if (typeof permalink === "boolean") {
 			debugDev("Using boolean permalink %o", permalink);
 			permalinkValue = permalink;
-		} else if (permalink && (!this.config.dynamicPermalinks || data.dynamicPermalink === false)) {
+		} else if (permalink && !isDynamicPermalinkEnabled) {
+			// Issue #838
 			debugDev("Not using dynamic permalinks, using %o", permalink);
 			permalinkValue = permalink;
 		} else if (isPlainObject(permalink)) {
@@ -270,7 +264,7 @@ class Template extends TemplateContent {
 		}
 
 		// Override default permalink behavior. Only do this if permalink was _not_ in the data cascade
-		if (!permalink && this.config.dynamicPermalinks && data.dynamicPermalink !== false) {
+		if (!permalink && isDynamicPermalinkEnabled) {
 			let tr = await this.getTemplateRender();
 			let permalinkCompilation = tr.engine.permalinkNeedsCompilation("");
 			if (typeof permalinkCompilation === "function") {
@@ -288,7 +282,14 @@ class Template extends TemplateContent {
 		}
 
 		if (permalinkValue !== undefined) {
-			return this._getRawPermalinkInstance(permalinkValue);
+			let p = new TemplatePermalink(
+				permalinkValue,
+				this.extraOutputSubdirectory,
+				isDynamicPermalinkEnabled,
+			);
+			p.setUrlTransforms(this.config.urlTransforms);
+			this.behavior.setFromPermalink(p);
+			return p;
 		}
 
 		// No `permalink` specified in data cascade, do the default
@@ -297,6 +298,7 @@ class Template extends TemplateContent {
 			this.baseFile,
 			this.extraOutputSubdirectory,
 			this.engine.defaultTemplateFileExtension,
+			isDynamicPermalinkEnabled,
 		);
 		p.setUrlTransforms(this.config.urlTransforms);
 		return p;
