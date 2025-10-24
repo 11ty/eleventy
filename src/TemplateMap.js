@@ -11,6 +11,15 @@ import GlobalDependencyMap from "./GlobalDependencyMap.js";
 
 const debug = debugUtil("Eleventy:TemplateMap");
 
+// Perf instrumentation (no-op unless ELEVENTY_PERF=1)
+const __ELEVENTY_PERF = process?.env?.ELEVENTY_PERF === "1";
+function __perfStart(label) {
+	if (__ELEVENTY_PERF && typeof console.time === "function") console.time(label);
+}
+function __perfEnd(label) {
+	if (__ELEVENTY_PERF && typeof console.timeEnd === "function") console.timeEnd(label);
+}
+
 class EleventyMapPagesError extends EleventyBaseError {}
 class EleventyDataSchemaError extends EleventyBaseError {}
 
@@ -131,28 +140,34 @@ class TemplateMap {
 		}
 	}
 
-	async setCollectionByTagName(tagName) {
+ async setCollectionByTagName(tagName) {
+		__perfStart("TemplateMap:setCollectionByTagName");
+		let result;
 		if (this.isUserConfigCollectionName(tagName)) {
 			// async
-			this.collectionsData[tagName] = await this.getUserConfigCollection(tagName);
+			result = await this.getUserConfigCollection(tagName);
 		} else {
-			this.collectionsData[tagName] = this.getTaggedCollection(tagName);
+			result = this.getTaggedCollection(tagName);
 		}
 
 		let precompiled = this.config.precompiledCollections;
 		if (precompiled?.[tagName]) {
 			if (
 				tagName === "all" ||
-				!Array.isArray(this.collectionsData[tagName]) ||
-				this.collectionsData[tagName].length === 0
+				!Array.isArray(result) ||
+				result.length === 0
 			) {
-				this.collectionsData[tagName] = precompiled[tagName];
+				result = precompiled[tagName];
 			}
 		}
+
+		this.collectionsData[tagName] = result;
+		__perfEnd("TemplateMap:setCollectionByTagName");
 	}
 
 	// TODO(slightlyoff): major bottleneck
-	async initDependencyMap(fullTemplateOrder) {
+ async initDependencyMap(fullTemplateOrder) {
+ 	__perfStart("TemplateMap:initDependencyMap");
 		// Temporary workaround for async constructor work in templates
 		// Issue #3170 #3870
 		let inputPathSet = new Set(fullTemplateOrder);
@@ -185,6 +200,7 @@ class TemplateMap {
 			let map = this.getMapEntryForInputPath(depEntry);
 			await this.#initDependencyMapEntry(map);
 		}
+		__perfEnd("TemplateMap:initDependencyMap");
 	}
 
 	async #initDependencyMapEntry(map) {
@@ -254,6 +270,7 @@ class TemplateMap {
 	}
 
 	async cache() {
+		__perfStart("TemplateMap:cache");
 		if (!this.#dependencyMapInitialized) {
 			this.addAllToGlobalDependencyGraph();
 		}
@@ -297,6 +314,7 @@ class TemplateMap {
 		this.checkForMissingFileExtensions();
 
 		await this.config.events.emitLazy("eleventy.layouts", () => this.generateLayoutsMap());
+		__perfEnd("TemplateMap:cache");
 	}
 
 	generateInputUrlContentMap(orderedMap) {
